@@ -105,6 +105,21 @@ sudo systemctl enable --now remote-station
 sudo systemctl status remote-station --no-pager
 ```
 
+### Créer tous les comptes du club en une fois
+
+Mettez la liste des indicatifs dans un fichier texte, un par ligne (par exemple `membres.txt`, copié dans `/home/on6dp` avec WinSCP), puis :
+
+```bash
+sudo install -m 644 /home/on6dp/membres.txt /tmp/membres.txt
+cd /opt/remote-station && sudo -u remotestation node importusers.js /tmp/membres.txt
+sudo mv /opt/remote-station/comptes-*.csv /home/on6dp/ && sudo chown on6dp: /home/on6dp/comptes-*.csv
+```
+
+- Chaque nouveau compte reçoit un mot de passe aléatoire, du type `K7QPM-H3XWA`.
+- Les comptes existants ne sont pas modifiés (option `--reset` pour leur donner un nouveau mot de passe).
+- Le fichier `comptes-AAAA-MM-JJ.csv` (indicatif ; mot de passe ; droits) s'ouvre dans Excel : remettez à chaque membre son mot de passe, puis **supprimez le fichier** du VPS et de votre PC.
+- Pas besoin de redémarrer le service : les comptes sont lus à chaque connexion.
+
 ### nginx + certificat
 
 ```bash
@@ -174,7 +189,7 @@ sudo grep tx_start /opt/remote-station/logs/access-$(date +%Y-%m).log | tail
 | `public/index.html`, `public/js/app.js`, `public/css/rp.css`, `public/css/rp-tokens.css` | Face avant des membres |
 | `public/css/panel.css` | Styles de la page Station |
 | `public/fonts/` | Police Roboto Mono (SIL OFL) |
-| `adduser.js`, `init-config.js` | Gestion des membres et de la configuration |
+| `adduser.js`, `importusers.js`, `init-config.js` | Gestion des membres (un par un ou en une fois) et de la configuration |
 | `deploy/` | Service systemd et site nginx |
 
 ## Suite prévue
