@@ -1,4 +1,4 @@
-# Remote Station — v0.1.7 (CAT seul)
+# Remote Station — v0.1.8 (CAT seul)
 
 Pilotage à distance d'un transceiver du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
 Trois modèles sont pris en charge : **Yaesu FTX-1**, **Yaesu FTDX10** et **Icom IC-7300**. Un seul est branché à la fois ; on choisit lequel sur la page Station du club, et la face avant des membres s'adapte toute seule.
@@ -86,7 +86,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.1.7.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.1.8.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -94,7 +94,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.1.7.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.1.8.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station
@@ -182,6 +182,8 @@ Mise en route :
 3. Page Station → Réglages → « Modèle du TRX » : choisir le modèle. La page se recharge avec le bon pilote et la bonne vitesse.
 4. La première fois pour ce modèle, cliquer « Choisir le port du TRX » et prendre le port de cette radio. Le port est ensuite mémorisé **par modèle** : les fois suivantes, il suffit de choisir le modèle.
 5. Le journal doit afficher « … répond » avec le nom du nouveau TRX. Les membres n'ont rien à faire : leur page affiche le nouveau modèle et s'adapte.
+
+**Changer de TRX à distance** (administrateurs seulement, par exemple ON6DP) : en haut à gauche de la page opérateur, les trois TRX sont affichés et celui en service est coché (✓). Un administrateur clique sur **STATION** : un menu propose les TRX dont le port a déjà été choisi une fois au club. Après confirmation, la page Station du club se recharge avec l'autre pilote et rouvre le port de cette radio ; la main est conservée. Le changement est refusé pendant une émission, et noté dans le journal d'activité. Les deux radios doivent rester branchées au PC du club.
 
 **Démarrage automatique** :
 - Windows : raccourci dans `shell:startup` vers

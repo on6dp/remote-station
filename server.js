@@ -62,7 +62,7 @@ fs.mkdirSync(LOG_DIR, { recursive: true });
 
 // ---------------------------------------------------------------- journal des accès
 // Événements visibles par les membres connectés (sans adresse IP)
-const PUBLIC_EVENTS = ['login', 'logout', 'control_take', 'control_release', 'tx_start', 'tx_stop', 'tune', 'power_limit',
+const PUBLIC_EVENTS = ['login', 'logout', 'control_take', 'control_release', 'tx_start', 'tx_stop', 'tune', 'power_limit', 'rig_switch',
   'station_online', 'station_offline', 'trx_online', 'trx_offline'];
 const recentEvents = [];
 function journal(ev, data) {
@@ -225,7 +225,10 @@ function publicState() {
     ptt: { active: ptt.active, by: ptt.active ? ptt.conn.user.call : null, since: ptt.since },
     txOk: inTxRange(txFreq()),
     txFreq: txFreq(),
-    rigName: rig().NAME
+    rigName: station ? rig().NAME : null,
+    rigModel: station ? rig().ID : null,
+    // TRX dont le port série est mémorisé sur le PC du club (changement à distance possible)
+    rigPorts: station ? station.ports : {}
   };
 }
 
@@ -350,6 +353,7 @@ async function onLogin(conn, m) {
     maxWatts: conn.user.maxWatts,
     clubName: cfg.clubName,
     stationCall: cfg.stationCall,
+    rigs: Object.keys(DRIVERS).map((id) => ({ id, name: DRIVERS[id].NAME })),
     sessionIdleMinutes: cfg.sessionIdleMinutes
   });
   send(conn, { t: 'events', list: recentEvents });
@@ -377,6 +381,20 @@ function onOperator(conn, m) {
       journal('control_take', { call: conn.user.call, force: !!m.force });
       limitPower(conn, 'prise de main');
       return broadcast();
+
+    case 'switch_rig': {
+      // Changement de TRX à distance : administrateurs seulement, jamais pendant une émission
+      const model = typeof m.model === 'string' ? m.model : '';
+      if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Changement de TRX réservé aux administrateurs' });
+      if (!station) return send(conn, { t: 'notice', level: 'error', msg: 'Station hors ligne : changement impossible' });
+      if (!Object.prototype.hasOwnProperty.call(DRIVERS, model)) return send(conn, { t: 'notice', level: 'error', msg: 'Modèle inconnu' });
+      if (ptt.active || radio.tx) return send(conn, { t: 'notice', level: 'error', msg: 'Impossible pendant une émission' });
+      if (model === rig().ID) return;
+      if (!station.ports[model]) return send(conn, { t: 'notice', level: 'error', msg: 'Port du ' + DRIVERS[model].NAME + ' jamais choisi sur le PC du club : à faire une fois sur place' });
+      journal('rig_switch', { call: conn.user.call, from: rig().ID, to: model, name: DRIVERS[model].NAME });
+      send(station.conn, { t: 'switch', model, by: conn.user.call });
+      return send(conn, { t: 'notice', level: 'warn', msg: 'Passage au ' + DRIVERS[model].NAME + ' demandé : la station redémarre (quelques secondes)' });
+    }
 
     case 'release':
       if (controller !== conn) return;
@@ -471,7 +489,7 @@ function onStationAuth(conn, m) {
     return setTimeout(() => conn.close(4001, 'jeton invalide'), 300);
   }
   const model = typeof m.model === 'string' ? m.model : 'ftx1';
-  if (!DRIVERS[model]) {
+  if (!Object.prototype.hasOwnProperty.call(DRIVERS, model)) {
     send(conn, { t: 'error', msg: 'Modèle de radio non pris en charge par ce serveur : ' + model });
     return setTimeout(() => conn.close(4003, 'modèle inconnu'), 300);
   }
@@ -479,7 +497,9 @@ function onStationAuth(conn, m) {
     send(station.conn, { t: 'error', msg: 'Remplacée par une nouvelle connexion station' });
     station.conn.close(4002, 'remplacée');
   }
-  station = { conn, ip: conn.ip, since: Date.now(), rig: DRIVERS[model] };
+  const ports = {};
+  if (m.ports && typeof m.ports === 'object') for (const id in DRIVERS) ports[id] = m.ports[id] === true;
+  station = { conn, ip: conn.ip, since: Date.now(), rig: DRIVERS[model], ports };
   conn.isStation = true;
   journal('station_online', { ip: conn.ip, model });
   send(conn, { t: 'welcome', stationCall: cfg.stationCall });
@@ -487,6 +507,10 @@ function onStationAuth(conn, m) {
 }
 
 function onStation(conn, m) {
+  if (m.t === 'ports' && m.ports && typeof m.ports === 'object' && station && station.conn === conn) {
+    for (const id in DRIVERS) station.ports[id] = m.ports[id] === true;
+    return broadcast();
+  }
   if (m.t !== 'radio' || !m.radio) return;
   const r = m.radio;
   const was = radio.connected;

@@ -263,6 +263,10 @@
       b.addEventListener('click', () => setStep(s));
       $('stepKeys').appendChild(b);
     }
+    $('lampStation').addEventListener('click', (ev) => { ev.stopPropagation(); toggleRigMenu(); });
+    $('rigMenu').addEventListener('click', (ev) => ev.stopPropagation());
+    document.addEventListener('click', closeRigMenu);
+    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeRigMenu(); });
     $('tgtA').addEventListener('click', () => setTarget('A'));
     $('tgtB').addEventListener('click', () => setTarget('B'));
     $('tuneUp').addEventListener('click', () => tune(step));
@@ -524,6 +528,64 @@
     el.querySelector('.mt-bar i').style.width = Math.max(0, Math.min(100, (frac || 0) * 100)) + '%';
   }
 
+  // ------------------------------------------------------------ TRX du club (barre du haut, changement par un admin)
+  const shortName = (n) => String(n).replace(/^\S+\s/, '');
+  function rigList() { return (me && me.rigs) || []; }
+  function drawRigList() {
+    const el = $('rigLabel');
+    const list = rigList();
+    el.textContent = '';
+    if (!list.length) { el.textContent = st && st.rigName ? st.rigName : 'TRX'; return; }
+    for (const r of list) {
+      const s = document.createElement('span');
+      s.className = 'rig' + (st && st.rigModel === r.id ? ' cur' : '');
+      s.textContent = shortName(r.name);
+      el.appendChild(s);
+    }
+  }
+  function drawRigMenu() {
+    const box = $('rigMenu');
+    box.textContent = '';
+    const h = document.createElement('h3');
+    h.textContent = 'TRX du club';
+    box.appendChild(h);
+    const onAir = !!(st && ((st.ptt && st.ptt.active) || (st.radio && st.radio.tx)));
+    for (const r of rigList()) {
+      const cur = !!(st && st.rigModel === r.id);
+      const port = !!(st && st.rigPorts && st.rigPorts[r.id]);
+      const b = mkBtn('', 'accent rig-opt' + (cur ? ' cur' : ''));
+      const name = document.createElement('span');
+      name.textContent = r.name;
+      const note = document.createElement('small');
+      note.textContent = cur ? '✓ en service' : !st || !st.station ? 'station hors ligne' : port ? 'disponible' : 'port à choisir au club';
+      b.append(name, note);
+      b.setAttribute('role', 'menuitem');
+      b.setAttribute('aria-pressed', String(cur));
+      b.disabled = cur || !st || !st.station || !port || onAir;
+      b.addEventListener('click', () => {
+        if (!confirm('Passer sur le ' + r.name + ' ?\nLa station redémarre quelques secondes et la main est conservée.')) return;
+        send({ t: 'switch_rig', model: r.id });
+        closeRigMenu();
+      });
+      box.appendChild(b);
+    }
+    const p = document.createElement('p');
+    p.textContent = onAir ? 'Changement impossible pendant une émission.'
+      : 'Le TRX choisi doit être branché au PC du club, et son port déjà choisi une fois sur la page Station.';
+    box.appendChild(p);
+  }
+  function closeRigMenu() {
+    $('rigMenu').hidden = true;
+    $('lampStation').setAttribute('aria-expanded', 'false');
+  }
+  function toggleRigMenu() {
+    if (!me || !me.admin) return;
+    const open = $('rigMenu').hidden;
+    if (open) drawRigMenu();
+    $('rigMenu').hidden = !open;
+    $('lampStation').setAttribute('aria-expanded', String(open));
+  }
+
   function render() {
     lamp('lampLink', ws && ws.readyState === 1 && me ? 'on' : null);
     const r = (st && st.radio) || {};
@@ -533,7 +595,10 @@
     if (st) {
       lamp('lampStation', st.station ? 'on' : null);
       lamp('lampTrx', r.connected ? (txing ? 'tx' : 'on') : st.station ? 'warn' : null);
-      $('rigLabel').textContent = st.rigName || 'TRX';
+      drawRigList();
+      $('lampStation').classList.toggle('admin', !!(me && me.admin));
+      $('lampStation').title = me && me.admin ? 'Station — cliquer pour changer de TRX' : 'Station';
+      if (!$('rigMenu').hidden) drawRigMenu();
     }
 
     // VFO A et B : deux écrans, émission signalée sur celui qui émet (VFO B en SPLIT)
@@ -682,6 +747,7 @@
       case 'tx_stop': return [c + 'fin d’émission (' + e.durationS + ' s)' + (e.reason && e.reason !== 'relâché' ? ' — ' + e.reason : ''), e.reason && e.reason !== 'relâché' ? 'warn' : ''];
       case 'tune': return [c + 'lance l’accord sur ' + MHZ(e.freq), 'tx'];
       case 'power_limit': return [c + 'puissance ramenée de ' + e.from + ' à ' + e.to + ' W', 'warn'];
+      case 'rig_switch': return [c + 'passe sur le ' + (e.name || e.to), 'warn'];
       case 'station_online': return ['Station en ligne' + (e.model ? ' (' + e.model + ')' : ''), 'ok'];
       case 'station_offline': return ['Station hors ligne', 'warn'];
       case 'trx_online': return ['TRX connecté', 'ok'];

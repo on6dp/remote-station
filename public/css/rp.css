@@ -457,3 +457,32 @@ input[type='range']:disabled { opacity: .45; }
   font-size: 13px;
 }
 .idle-banner[hidden] { display: none; }
+
+/* ------------------------------------------------------------ choix du TRX (barre du haut) */
+.tb-station { position: relative; display: inline-flex; }
+.lamp-btn { background: none; border: 0; padding: 2px 0; font: inherit; cursor: default; }
+.lamp-btn.admin { cursor: pointer; }
+.lamp-btn.admin:hover span, .lamp-btn[aria-expanded='true'] span { color: var(--v2-text-bright); text-decoration: underline; text-underline-offset: 3px; }
+.rig-list { display: inline-flex; gap: 8px; }
+.rig-list .rig { color: var(--v2-text-dim); }
+.rig-list .rig.cur { color: var(--v2-text-bright); font-weight: 700; }
+.rig-list .rig.cur::before { content: '✓ '; color: var(--v2-accent-green); }
+.rig-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 40;
+  min-width: 260px;
+  padding: 8px;
+  border: 1px solid var(--v2-border);
+  border-radius: 6px;
+  background: var(--v2-bg-app);
+  box-shadow: var(--v2-shadow-lg);
+  font-size: 11px;
+}
+.rig-menu[hidden] { display: none; }
+.rig-menu h3 { margin: 2px 4px 8px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--v2-text-header); font-weight: 400; }
+.rig-menu .rig-opt { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; margin-bottom: 4px; text-align: left; }
+.rig-menu .rig-opt small { color: var(--v2-text-dim); font-size: 10px; text-transform: none; letter-spacing: 0; }
+.rig-menu .rig-opt.cur small { color: var(--v2-accent-green); }
+.rig-menu p { margin: 6px 4px 2px; color: var(--v2-text-dim); font-size: 10px; line-height: 1.5; }

@@ -16,8 +16,11 @@
   <header class="topbar">
     <div class="tb-left">
       <span class="lamp" id="lampLink" title="Serveur"><i></i><span>Serveur</span></span>
-      <span class="lamp" id="lampStation" title="Station"><i></i><span>Station</span></span>
-      <span class="lamp" id="lampTrx" title="TRX"><i></i><span id="rigLabel">TRX</span></span>
+      <span class="tb-station">
+        <button class="lamp lamp-btn" id="lampStation" type="button" title="Station" aria-haspopup="menu" aria-expanded="false"><i></i><span>Station</span></button>
+        <div class="rig-menu" id="rigMenu" role="menu" hidden></div>
+      </span>
+      <span class="lamp" id="lampTrx" title="TRX"><i></i><span id="rigLabel" class="rig-list">TRX</span></span>
     </div>
     <div class="tb-title"><b id="clubName">Remote Station</b> <span id="stationCall"></span></div>
     <div class="tb-right">

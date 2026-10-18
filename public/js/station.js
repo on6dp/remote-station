@@ -80,6 +80,21 @@
     }
   });
 
+  // Modèles dont le port série a déjà été choisi sur ce PC (le changement à distance ne marche que pour eux)
+  function rememberedPorts() {
+    const out = {};
+    for (const r of window.RIG_CATALOG) if (r.ready && window.RIGS[r.id]) out[r.id] = Number(store.get('port.' + r.id, '-1')) >= 0;
+    return out;
+  }
+  // Changement de TRX demandé à distance par un administrateur : on recharge la page avec l'autre pilote
+  function switchModel(model, by) {
+    if (!window.RIGS[model] || model === MODEL) return;
+    log('Changement de TRX demandé par ' + (by || '?') + ' : ' + window.RIGS[model].NAME, 'st-warn');
+    store.set('model', model);
+    core.stop();
+    setTimeout(() => location.reload(), 300);
+  }
+
   // ------------------------------------------------------------ WebSocket vers le VPS
   function connectWs() {
     clearTimeout(wsTimer);
@@ -90,7 +105,7 @@
     }
     if (ws) { ws.onclose = null; ws.close(); }
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
-    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL }));
+    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts() }));
     ws.onmessage = (e) => {
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
@@ -100,6 +115,8 @@
         $('tVps').textContent = 'Connecté — station ' + (m.stationCall || '');
         log('Connecté au serveur');
         core.wsOpened();
+      } else if (m.t === 'switch') {
+        switchModel(m.model, m.by);
       } else if (m.t === 'error') {
         log('Serveur : ' + m.msg, 'st-bad');
         $('tVps').textContent = m.msg;
@@ -187,6 +204,7 @@
       await closePort(false);
       const ports = await navigator.serial.getPorts();
       store.set(PORT_KEY, String(ports.indexOf(p)));
+      if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'ports', ports: rememberedPorts() }));
       await openPort(p);
     } catch (e) {
       if (e.name !== 'NotFoundError') log('Choix du port : ' + e.message, 'st-bad');
