@@ -436,3 +436,24 @@ input[type='range']:disabled { opacity: .45; }
   .txtimer { position: static; margin-top: 6px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ------------------------------------------------------------ avertissement d'inactivité */
+.idle-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 16px;
+  border: 1px solid var(--v2-border);
+  border-radius: 6px;
+  background: var(--v2-bg-app);
+  box-shadow: var(--v2-shadow-lg);
+  color: var(--v2-text-primary);
+  font-size: 13px;
+}
+.idle-banner[hidden] { display: none; }

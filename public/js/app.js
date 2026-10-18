@@ -50,8 +50,49 @@
   try { const s = Number(localStorage.getItem('rs.step')); if (STEPS.some((x) => x[0] === s)) step = s; } catch (e) {}
 
   // ------------------------------------------------------------ outils
-  const iControl = () => !!(st && me && st.controller === me.call);
-  function send(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+  // La main appartient à une connexion (un onglet) : un même indicatif peut avoir plusieurs onglets ouverts
+  const iControl = () => !!(st && me && (st.controllerCid != null ? st.controllerCid === me.cid : st.controller === me.call));
+  const otherTab = () => !!(st && me && st.controller === me.call && !iControl());
+  let hadControl = false; // cet onglet avait la main quand la liaison a été coupée
+  function send(o) {
+    if (ws && ws.readyState === 1) ws.send(JSON.stringify(o));
+    if (o.t !== 'ping') hideIdle(); // toute action compte comme activité côté serveur
+  }
+  // Avertissement avant déconnexion pour inactivité
+  let idleTimer = null;
+  function idleBanner() {
+    let el = $('idleBanner');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'idleBanner';
+    el.className = 'idle-banner';
+    el.setAttribute('role', 'alertdialog');
+    el.hidden = true;
+    const t = document.createElement('span');
+    t.id = 'idleText';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn accent';
+    b.textContent = 'Rester connecté';
+    b.addEventListener('click', () => send({ t: 'stay' }));
+    el.append(t, b);
+    document.body.appendChild(el);
+    return el;
+  }
+  function showIdle(seconds) {
+    const el = idleBanner();
+    let left = seconds;
+    const draw = () => { $('idleText').textContent = 'Sans activité, vous serez déconnecté dans ' + left + ' s.'; };
+    draw();
+    el.hidden = false;
+    clearInterval(idleTimer);
+    idleTimer = setInterval(() => { left = Math.max(0, left - 1); draw(); }, 1000);
+  }
+  function hideIdle() {
+    clearInterval(idleTimer);
+    const el = $('idleBanner');
+    if (el) el.hidden = true;
+  }
   function say(text, level, ms) {
     const el = $('msg');
     el.textContent = text || '';
@@ -239,7 +280,7 @@
     $('ctrlBtn').addEventListener('click', () => {
       if (!st) return;
       if (iControl()) send({ t: 'release' });
-      else if (!st.controller) send({ t: 'take' });
+      else if (!st.controller || otherTab()) send({ t: 'take' });
       else if (me.admin && confirm('Reprendre la main à ' + st.controller + ' ?')) send({ t: 'take', force: true });
     });
     const nudgePower = (dir) => {
@@ -257,6 +298,7 @@
     $('pwrUp').addEventListener('click', () => nudgePower(1));
     $('logout').addEventListener('click', () => {
       creds = null;
+      hadControl = false;
       if (ws) ws.close();
       me = null;
       showLogin('');
@@ -597,10 +639,11 @@
     if (!st) return;
     // qui a la main
     const mine = iControl();
-    $('ctrlText').textContent = mine ? 'Vous pilotez la station.' : st.controller ? st.controller + ' pilote la station.' : 'Personne n’a la main.';
+    const other = otherTab();
+    $('ctrlText').textContent = mine ? 'Vous pilotez la station.' : other ? 'Vous pilotez depuis un autre onglet ou appareil.' : st.controller ? st.controller + ' pilote la station.' : 'Personne n’a la main.';
     const cb = $('ctrlBtn');
-    cb.textContent = mine ? 'Libérer la main' : !st.controller ? 'Prendre la main' : me && me.admin ? 'Reprendre la main' : 'Main occupée';
-    cb.disabled = !!(st.controller && !mine && !(me && me.admin));
+    cb.textContent = mine ? 'Libérer la main' : other ? 'Prendre la main ici' : !st.controller ? 'Prendre la main' : me && me.admin ? 'Reprendre la main' : 'Main occupée';
+    cb.disabled = !!(st.controller && !mine && !other && !(me && me.admin));
     cb.classList.toggle('on', mine);
     const who = $('who');
     who.textContent = '';
@@ -686,8 +729,21 @@
       } else if (m.t === 'login_fail') {
         creds = null;
         showLogin(m.msg);
+      } else if (m.t === 'idle_warn') {
+        showIdle(m.seconds || 60);
+      } else if (m.t === 'session_end') {
+        // Déconnexion pour inactivité : pas de reconnexion automatique
+        creds = null;
+        hadControl = false;
+        hideIdle();
+        showLogin(m.msg);
       } else if (m.t === 'state') {
         st = m;
+        // Après une coupure (redémarrage du serveur, réseau…), l'onglet qui avait la main la reprend si elle est libre
+        if (hadControl && me && me.cid != null) {
+          hadControl = false;
+          if (!st.controller) send({ t: 'take' });
+        }
         for (const w of ['A', 'B']) if (pend[w] != null && (w === 'A' ? st.radio.freq : st.radio.freqB) === pend[w]) pend[w] = null;
         if (RIG().ID !== ctlModel) buildControls();
         render();
@@ -704,6 +760,8 @@
       }
     };
     ws.onclose = () => {
+      hadControl = !!creds && (hadControl || iControl()); // reste vrai si plusieurs tentatives de reconnexion échouent
+      me = me && Object.assign({}, me, { cid: null });
       if (pttHeld) { pttHeld = false; clearInterval(hbTimer); }
       render();
       if (!creds) return;

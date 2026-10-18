@@ -31,6 +31,8 @@ const DEFAULTS = {
   maxTxSeconds: 120,
   pttHeartbeatMs: 1500,
   controlIdleMinutes: 15,
+  // Déconnexion automatique d'un membre resté inactif (0 = jamais). Jamais pendant une émission.
+  sessionIdleMinutes: 15,
   usersFile: 'users.json',
   logDir: 'logs',
   txRanges: [],
@@ -147,6 +149,7 @@ let station = null; // { conn, ip, since }
 let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
+let connSeq = 0;
 let lastCtrlActivity = 0;
 let ptt = { active: false, conn: null, since: 0, lastBeat: 0 };
 const fails = new Map(); // ip -> { n, until }
@@ -217,6 +220,7 @@ function publicState() {
     station: !!station,
     radio,
     controller: controller ? controller.user.call : null,
+    controllerCid: controller ? controller.cid : null,
     users: calls.sort(),
     ptt: { active: ptt.active, by: ptt.active ? ptt.conn.user.call : null, since: ptt.since },
     txOk: inTxRange(txFreq()),
@@ -276,6 +280,8 @@ setInterval(() => {
     else if (now - ptt.since > cfg.maxTxSeconds * 1000) stopPtt('durée maximale atteinte (' + cfg.maxTxSeconds + ' s)');
     else toStation({ t: 'txka' });
   }
+  // Aucune libération ni déconnexion pour inactivité tant que le TRX est en émission
+  if (ptt.active || radio.tx) return;
   if (controller && now - lastCtrlActivity > cfg.controlIdleMinutes * 60000) {
     const c = controller;
     stopPtt('inactivité');
@@ -283,6 +289,23 @@ setInterval(() => {
     send(c, { t: 'notice', level: 'warn', msg: 'Main libérée après ' + cfg.controlIdleMinutes + ' min d’inactivité' });
     journal('control_release', { call: c.user.call, reason: 'inactivité' });
     broadcast();
+  }
+  const lim = Number(cfg.sessionIdleMinutes) * 60000;
+  if (lim > 0) {
+    for (const c of ops) {
+      const idle = now - (c.lastActive || now);
+      const warnMs = Math.min(60000, lim / 4);
+      if (idle > lim - warnMs && !c.idleWarned) {
+        // Toujours un avertissement une minute avant (même juste après une émission qui a retardé l'échéance)
+        c.idleWarned = true;
+        c.lastActive = now - Math.min(idle, lim - warnMs);
+        send(c, { t: 'idle_warn', seconds: Math.round(warnMs / 1000) });
+      } else if (idle > lim) {
+        send(c, { t: 'session_end', msg: 'Déconnecté après ' + cfg.sessionIdleMinutes + ' min sans activité' });
+        journal('session_idle', { call: c.user.call, ip: c.ip });
+        c.close(4005, 'inactivité');
+      }
+    }
   }
 }, 250);
 
@@ -312,10 +335,13 @@ async function onLogin(conn, m) {
   const rxOnly = auth.isRxOnly(call, cfg.rxOnlyPrefixes);
   conn.user = { call, admin: !!rec.admin, tx: rec.tx !== false && !rxOnly, rxOnly, maxWatts: rxOnly ? 0 : maxWattsFor(call) };
   ops.add(conn);
+  conn.lastActive = now;
+  conn.idleWarned = false;
   journal('login', { call, ip: conn.ip });
   send(conn, {
     t: 'hello',
     call,
+    cid: conn.cid,
     admin: conn.user.admin,
     canTx: conn.user.tx,
     rxOnly: conn.user.rxOnly,
@@ -323,7 +349,8 @@ async function onLogin(conn, m) {
     maxTxSeconds: cfg.maxTxSeconds,
     maxWatts: conn.user.maxWatts,
     clubName: cfg.clubName,
-    stationCall: cfg.stationCall
+    stationCall: cfg.stationCall,
+    sessionIdleMinutes: cfg.sessionIdleMinutes
   });
   send(conn, { t: 'events', list: recentEvents });
   broadcast();
@@ -333,7 +360,11 @@ function onOperator(conn, m) {
   const now = Date.now();
   switch (m.t) {
     case 'take':
-      if (controller && controller !== conn) {
+      if (controller && controller !== conn && controller.user.call === conn.user.call) {
+        // même indicatif dans un autre onglet ou sur un autre appareil : la main passe ici, sans forcer
+        stopPtt('main passée sur un autre onglet');
+        send(controller, { t: 'notice', level: 'warn', msg: 'La main est passée sur un autre onglet ou appareil' });
+      } else if (controller && controller !== conn) {
         if (!(m.force && conn.user.admin)) {
           return send(conn, { t: 'notice', level: 'error', msg: controller.user.call + ' a déjà la main' });
         }
@@ -498,6 +529,7 @@ ws.attach(server, {
   maxPayload: 64 * 1024,
   onConnection(conn, req) {
     conn.ip = clientIp(req);
+    conn.cid = ++connSeq; // identifie l'onglet : la main appartient à une connexion, pas seulement à un indicatif
     conn.user = null;
     conn.isStation = false;
     const authTimer = setTimeout(() => {
@@ -514,7 +546,12 @@ ws.attach(server, {
       }
       if (!m || typeof m.t !== 'string') return;
       if (conn.isStation) return onStation(conn, m);
-      if (conn.user) return onOperator(conn, m);
+      if (conn.user) {
+        // Toute action du membre compte comme activité (sauf les pings automatiques)
+        if (m.t !== 'ping') { conn.lastActive = Date.now(); conn.idleWarned = false; }
+        if (m.t === 'stay') return;
+        return onOperator(conn, m);
+      }
       if (m.t === 'login') return onLogin(conn, m).catch((e) => console.error(e));
       if (m.t === 'station') return onStationAuth(conn, m);
     });
