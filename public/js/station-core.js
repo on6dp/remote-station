@@ -1,6 +1,6 @@
 /*
  * station-core.js — logique de la page Station (au club), indépendante du transport.
- * Relie le port CAT du FTX-1 (Web Serial) au serveur VPS (WebSocket).
+ * Relie le port CAT du transceiver (Web Serial) au serveur VPS (WebSocket), via un pilote de radio (ex. ftx1.js).
  *
  * Sécurités côté station :
  *  - TX0 si plus de "keepalive" du VPS pendant une émission (perte réseau, VPS planté…)
@@ -9,7 +9,8 @@
  */
 (function (root) {
   'use strict';
-  const FTX1 = (typeof module !== 'undefined' && module.exports) ? require('./ftx1.js') : root.FTX1;
+  const DEFAULT_RIG = (typeof module !== 'undefined' && module.exports) ? require('./ftx1.js') : root.FTX1;
+  const TX_METER_KEYS = ['m3', 'm4', 'm5', 'm6'];
 
   class StationCore {
     /**
@@ -18,8 +19,11 @@
      * @param {(obj:object)=>void} o.sendWs     envoie un message JSON au VPS
      * @param {(msg:string)=>void} [o.log]
      * @param {(radio:object)=>void} [o.onRadio]
+     * @param {object} [o.rig]  pilote de radio (FTX-1 par défaut)
      */
     constructor(o) {
+      this.rig = o.rig || DEFAULT_RIG;
+      const FTX1 = this.rig;
       this.writeSerial = o.writeSerial;
       this.sendWs = o.sendWs;
       this.log = o.log || function () {};
@@ -28,7 +32,9 @@
       this.kaTimeoutMs = o.kaTimeoutMs || 2000;
       this.radioTimeoutMs = o.radioTimeoutMs || 3000;
       this.split = new FTX1.Splitter();
-      this.radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0, power: null, powerHead: null };
+      this.radio = { model: this.rig.ID, connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0, power: null, powerHead: null };
+      this.ticks = 0;
+      this.forceSlow = true;
       this.serialOpen = false;
       this.wsUp = false;
       this.catKeyed = false;
@@ -42,8 +48,9 @@
     // ---------- côté série ----------
     serialOpened() {
       this.serialOpen = true;
-      this.split = new FTX1.Splitter();
+      this.split = new this.rig.Splitter();
       this.lastRx = 0;
+      this.forceSlow = true;
       this._write('AI0;'); // pas d'auto-information : on travaille en polling
       if (!this.timer) this.timer = setInterval(() => this.tick(), this.pollMs);
       this.log('Port CAT ouvert');
@@ -62,6 +69,7 @@
 
     onSerialData(text) {
       const toks = this.split.push(text);
+      const FTX1 = this.rig;
       for (const t of toks) {
         const p = FTX1.parse(t);
         if (!p) continue;
@@ -69,7 +77,7 @@
         if (!this.radio.connected) {
           this.radio.connected = true;
           this.dirty = true;
-          this.log('FTX-1 répond');
+          this.log(FTX1.NAME + ' répond');
         }
         if (p.error) continue;
         for (const k in p) {
@@ -78,6 +86,8 @@
             this.dirty = true;
           }
         }
+        // Retour en réception : les mesures d'émission n'ont plus de sens
+        if (p.tx === 0) for (const k of TX_METER_KEYS) if (this.radio[k] != null) { this.radio[k] = null; this.dirty = true; }
         // Radio en "CAT TX" sans demande de notre part → on coupe
         if (p.tx === 1 && !this.catKeyed) {
           this._write(FTX1.cmdPtt(false));
@@ -93,9 +103,15 @@
       if (this.radio.connected && this.lastRx && now - this.lastRx > this.radioTimeoutMs) {
         this.radio.connected = false;
         this.dirty = true;
-        this.log('Plus de réponse du FTX-1 (radio éteinte ? mauvais port ?)');
+        this.log('Plus de réponse de la radio (éteinte ? mauvais port ?)');
       }
-      this._write(FTX1.POLL);
+      const rig = this.rig;
+      let q = rig.FAST;
+      if (this.radio.tx) q += rig.TXMETERS;
+      if (this.forceSlow || this.ticks % 4 === 0) q += rig.SLOW;
+      this.forceSlow = false;
+      this.ticks++;
+      this._write(q);
       this._push(false);
     }
 
@@ -117,11 +133,20 @@
         return;
       }
       if (m.t !== 'cmd') return;
+      const FTX1 = this.rig;
       try {
         if (m.op === 'freq') {
           this._write(FTX1.cmdFreq(m.hz));
+        } else if (m.op === 'freqB') {
+          this._write(FTX1.cmdFreqB(m.hz));
         } else if (m.op === 'mode') {
-          this._write(FTX1.cmdMode(m.code));
+          this._write(FTX1.cmdMode(m.code, !!m.sub));
+        } else if (m.op === 'ctl') {
+          const v = FTX1.validate(m.id, m.value, this.radio, { skipWhen: true });
+          if (FTX1.CONTROL[m.id].transmits && (!this.serialOpen || !this.radio.connected)) return this.log('Refusé : radio non connectée');
+          this._write(FTX1.CONTROL[m.id].write(v, this.radio));
+          this.forceSlow = true;
+          if (FTX1.CONTROL[m.id].transmits) this.log(FTX1.CONTROL[m.id].label + ' (' + (m.by || '?') + ')');
         } else if (m.op === 'power') {
           this._write(FTX1.cmdPower(m.watts, this.radio.powerHead));
           this.log('Puissance réglée à ' + m.watts + ' W' + (m.reason ? ' (' + m.reason + ')' : ''));
@@ -144,7 +169,7 @@
     unkey(reason) {
       const was = this.catKeyed;
       this.catKeyed = false;
-      this._write(FTX1.cmdPtt(false));
+      this._write(this.rig.cmdPtt(false));
       if (was) this.log('TX OFF — ' + reason);
     }
 

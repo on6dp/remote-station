@@ -1,8 +1,8 @@
-# Remote Station — v0.1.1 (CAT seul)
+# Remote Station — v0.1.2 (CAT seul)
 
 Pilotage à distance du **Yaesu FTX-1** du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
 
-Cette version gère : fréquence (VFO A et B), mode, S-mètre, puissance, PTT, comptes par indicatif, une seule personne aux commandes, journal des accès. **L'audio (réception et micro) arrive en v0.2.**
+Cette version gère : fréquence (VFO A et B), mode, S-mètre, puissance, PTT, les fonctions du transceiver (voir ci-dessous), comptes par indicatif, une seule personne aux commandes, journal des accès. **L'audio (réception et micro) arrive en v0.2.**
 
 ## Comment ça marche
 
@@ -15,6 +15,27 @@ Cette version gère : fréquence (VFO A et B), mode, S-mètre, puissance, PTT, c
 - Le PC du club **se connecte vers** le VPS : aucun port à ouvrir au club, le CGNAT n'est pas un problème.
 - Le VPS n'a besoin d'**aucun paquet npm** : uniquement Node.js (modules natifs).
 - L'application écoute seulement sur `127.0.0.1:9000` ; nginx fait le relais en HTTPS.
+
+## Fonctions du transceiver
+
+La face avant a un panneau à quatre onglets, généré à partir du pilote de la radio :
+
+- **VFO et SPLIT** : SPLIT, VFO active, A ⇄ B, A → B, B → A, RIT, XIT et décalage, LOCK de la face avant du club.
+- **Filtres et DSP** : WIDTH (selon le mode), NARROW, IF SHIFT, CONTOUR, APF (en CW), DNF, NOTCH et sa fréquence, NB, DNR.
+- **Réception** : AF, RF, squelch, AGC, préampli (IPO/AMP1/AMP2, jusqu'à 54 MHz), ATT (jusqu'à 60 MHz).
+- **Émission** : gain micro, processeur et niveau, VOX, tuner et TUNE.
+
+La VFO B s'accorde aussi : cliquez sur la ligne SUB de l'écran, et le bouton, les touches de mode et de bande et « Aller à » agissent alors sur B. En émission, l'écran affiche la puissance relative, le SWR et l'ALC.
+
+Règles de sécurité propres à ces fonctions :
+- **SPLIT et XIT** : le contrôle des bandes autorisées porte sur la fréquence réellement émise (VFO B en SPLIT, décalage XIT compris).
+- **TUNE** est une émission : il obéit aux mêmes règles que le PTT (main, bandes, puissance, licence) et il est journalisé.
+- **VOX** : on peut le couper à distance, jamais l'activer. S'il est actif au club, le PTT est refusé.
+- Aucun réglage n'est accepté pendant une émission.
+
+### Modèles de transceivers
+
+La page Station propose une liste de modèles. Le **Yaesu FTX-1** est pris en charge. Les Icom IC-7300, IC-705, IC-7610, IC-9700, les Xiegu X6100 et X6200 et le Lab599 TX-500 sont listés comme « prévu » : leur pilote reste à écrire. Le serveur refuse une station qui annonce un modèle sans pilote.
 
 ## Accès et puissance selon la licence
 
@@ -44,7 +65,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.1.1.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.1.2.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -52,7 +73,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.1.1.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.1.2.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station
@@ -135,7 +156,9 @@ sudo grep tx_start /opt/remote-station/logs/access-$(date +%Y-%m).log | tail
 | `server.js` | Serveur VPS : comptes, contrôle, PTT, relais, journal |
 | `lib/ws-lite.js` | Serveur WebSocket minimal, sans dépendance |
 | `lib/auth.js` | Mots de passe (scrypt) |
-| `public/js/ftx1.js` | Protocole CAT FTX-1 + FTX-1 virtuel pour les tests |
+| `public/js/ftx1.js` | Pilote CAT FTX-1 (commandes, réglages, FTX-1 virtuel pour les tests) |
+| `public/js/rigs-catalog.js` | Liste des modèles proposés sur la page Station |
+| `TIERS.md` | Sources et licences de tiers (RigPlane Core, MIT) |
 | `public/js/station-core.js` | Logique de la page Station (polling, sécurités) |
 | `public/station.html`, `public/js/station.js` | Page Station (Web Serial) |
 | `public/index.html`, `public/js/app.js`, `public/css/panel.css` | Face avant des membres |

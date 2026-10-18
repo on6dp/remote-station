@@ -39,6 +39,18 @@
   let hbTimer = null;
   let txLocalSince = 0;
   let msgTimer = null;
+  let target = 'A';          // VFO accordée par le bouton : A (MAIN) ou B (SUB)
+  let pendingB = null;
+  let pendingBAt = 0;
+  let ctlRefs = {};
+  let ctlModel = null;
+  let ctlTab = 'vfo';
+  const ctlPending = {};
+  const ctlTimers = {};
+
+  // Pilote de la radio annoncée par la station (FTX-1 par défaut)
+  const RIG = () => (st && st.radio && window.RIGS && window.RIGS[st.radio.model]) || window.FTX1;
+  try { ctlTab = localStorage.getItem('rs.tab') || 'vfo'; } catch (e) {}
 
   try { const s = Number(localStorage.getItem('rs.step')); if (STEPS.indexOf(s) >= 0) step = s; } catch (e) {}
 
@@ -68,7 +80,7 @@
       if (interactive) {
         b.type = 'button';
         b.setAttribute('aria-label', 'Chiffre, pas ' + fmtStep(place));
-        b.addEventListener('click', () => setStep(place >= 10 ? place : 10));
+        b.addEventListener('click', () => { target = 'A'; setStep(place >= 10 ? place : 10); });
         b.addEventListener('wheel', (ev) => {
           ev.preventDefault();
           tune((ev.deltaY < 0 ? 1 : -1) * Math.max(place, 10));
@@ -105,18 +117,23 @@
       // les zéros de tête restent éteints, comme sur une vraie radio
       const lit = ch && ch !== ' ' && !(ch === '0' && s.slice(0, i).trim() === '' && i < 2) ? MAP[Number(ch)] : '';
       el.querySelectorAll('.seg').forEach((p) => p.classList.toggle('lit', lit.indexOf(p.dataset.s) >= 0));
-      el.classList.toggle('cursor', withCursor !== false && els === digitEls && Number(el.dataset.place) === step);
+      el.classList.toggle('cursor', withCursor !== false && els === (target === 'B' ? digitElsB : digitEls) && Number(el.dataset.place) === step);
     });
   }
 
-  function drawMeter(v, tx) {
-    const n = tx ? 0 : Math.round((Math.min(255, Math.max(0, v || 0)) / 255) * 30);
+  // En réception : S-mètre. En émission : puissance relative (PO), avec SWR et ALC à côté.
+  function drawMeter(r, tx) {
+    const raw = tx ? r.m5 : r.smeter;
+    const n = Math.round((Math.min(255, Math.max(0, raw || 0)) / 255) * 30);
     const kids = $('bars').children;
     for (let i = 0; i < kids.length; i++) {
       kids[i].classList.toggle('lit', i < n);
-      kids[i].classList.toggle('over', i >= 16); // au-delà de S9
+      kids[i].classList.toggle('over', !tx && i >= 16); // au-delà de S9
     }
-    $('sRead').textContent = tx ? 'TX' : FTX1.smeterLabel(v);
+    $('mLabel').textContent = tx ? 'Puissance' : 'Signal';
+    $('sRead').textContent = tx ? (r.m5 != null ? Math.round((r.m5 / 255) * 100) + ' %' : 'TX') : RIG().smeterLabel(r.smeter);
+    const swr = tx && RIG().swrValue ? RIG().swrValue(r.m6) : null;
+    $('txMeters').textContent = tx && r.m6 != null ? 'SWR ' + swr.toFixed(1).replace('.', ',') + (r.m4 != null ? ' · ALC ' + Math.round((r.m4 / 255) * 100) + ' %' : '') : '';
   }
 
   // ------------------------------------------------------------ helpers
@@ -142,12 +159,17 @@
   function setStep(s) {
     step = s;
     try { localStorage.setItem('rs.step', String(s)); } catch (e) {}
-    $('stepRead').textContent = fmtStep(s);
+    $('stepRead').textContent = fmtStep(s) + ' · VFO ' + target;
     render();
   }
 
   // ------------------------------------------------------------ accord
-  function currentFreq() {
+  function currentFreq(which) {
+    which = which || 'A';
+    if (which === 'B') {
+      if (pendingB != null && Date.now() - pendingBAt < 1500) return pendingB;
+      return st && st.radio ? st.radio.freqB : null;
+    }
     if (pending != null && Date.now() - pendingAt < 1500) return pending;
     return st && st.radio ? st.radio.freq : null;
   }
@@ -155,22 +177,32 @@
   function tune(delta) {
     if (!iControl()) return say('Prenez la main pour régler la radio.', 'warn');
     if (st.ptt && st.ptt.active) return say('Réglage bloqué pendant l’émission.', 'warn');
-    const f = currentFreq();
+    const f = currentFreq(target);
     if (f == null) return;
-    setFreq(f + delta);
+    setFreq(f + delta, target);
   }
 
-  function setFreq(hz) {
-    hz = Math.round(Math.min(FTX1.FREQ_MAX, Math.max(FTX1.FREQ_MIN, hz)));
-    pending = hz;
-    pendingAt = Date.now();
+  function setFreq(hz, which) {
+    which = which || 'A';
+    hz = Math.round(Math.min(RIG().FREQ_MAX, Math.max(RIG().FREQ_MIN, hz)));
+    if (which === 'B') { pendingB = hz; pendingBAt = Date.now(); } else { pending = hz; pendingAt = Date.now(); }
     render();
     if (!sendTimer) {
       sendTimer = setTimeout(() => {
         sendTimer = null;
-        send({ t: 'set', freq: pending });
+        const msg = { t: 'set' };
+        if (pending != null && Date.now() - pendingAt < 1500) msg.freq = pending;
+        if (pendingB != null && Date.now() - pendingBAt < 1500) msg.freqB = pendingB;
+        send(msg);
       }, 120);
     }
+  }
+
+  function setTarget(w) {
+    target = w;
+    $('subRow').classList.toggle('target', w === 'B');
+    $('stepRead').textContent = fmtStep(step) + ' · VFO ' + w;
+    render();
   }
 
   // bouton VFO : un cran tous les 12°
@@ -229,7 +261,7 @@
       b.setAttribute('aria-pressed', 'false');
       b.addEventListener('click', () => {
         if (!iControl()) return say('Prenez la main pour changer de mode.', 'warn');
-        send({ t: 'set', mode: code });
+        send({ t: 'set', mode: code, sub: target === 'B' });
       });
       mk.appendChild(b);
     }
@@ -245,8 +277,8 @@
       b.addEventListener('click', () => {
         if (!iControl()) return say('Prenez la main pour changer de bande.', 'warn');
         if (st.ptt && st.ptt.active) return say('Réglage bloqué pendant l’émission.', 'warn');
-        setFreq(khz * 1000);
-        if (mode) setTimeout(() => send({ t: 'set', mode }), 200);
+        setFreq(khz * 1000, target);
+        if (mode) setTimeout(() => send({ t: 'set', mode, sub: target === 'B' }), 200);
       });
       bk.appendChild(b);
     }
@@ -255,7 +287,7 @@
       const v = parseFloat($('gotoInput').value.replace(/\s/g, '').replace(',', '.'));
       if (!isFinite(v)) return say('Entrez une fréquence en kHz, par exemple 14195,5.', 'warn');
       if (!iControl()) return say('Prenez la main pour régler la radio.', 'warn');
-      setFreq(v * 1000);
+      setFreq(v * 1000, target);
       $('gotoInput').value = '';
     });
     $('ctrlBtn').addEventListener('click', () => {
@@ -267,7 +299,7 @@
     const nudgePower = (dir) => {
       if (!iControl()) return say('Prenez la main pour régler la puissance.', 'warn');
       const r = st.radio || {};
-      const range = FTX1.POWER_RANGE[r.powerHead];
+      const range = RIG().POWER_RANGE[r.powerHead];
       if (!range || r.power == null) return say('Puissance du TRX pas encore lue.', 'warn');
       const stepW = r.powerHead === '2' ? 5 : 0.5;
       const top = Math.min(range[1], me.maxWatts);
@@ -275,6 +307,8 @@
       if (w === r.power) return say(dir > 0 ? 'Maximum atteint : ' + top + ' W' + (me.maxWatts < range[1] ? ' (limite de votre licence)' : '') : 'Minimum atteint : ' + range[0] + ' W', 'warn');
       send({ t: 'set', power: w });
     };
+    $('subRow').addEventListener('click', () => setTarget(target === 'B' ? 'A' : 'B'));
+    $('freq').addEventListener('click', () => { if (target !== 'A') setTarget('A'); });
     $('pwrDown').addEventListener('click', () => nudgePower(-1));
     $('pwrUp').addEventListener('click', () => nudgePower(1));
     $('logout').addEventListener('click', () => {
@@ -285,6 +319,174 @@
     });
   }
 
+  // ------------------------------------------------------------ panneau de fonctions (généré depuis le pilote)
+  function mkKey(label) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key';
+    b.textContent = label;
+    return b;
+  }
+  function mkLabel(text) {
+    const l = document.createElement('span');
+    l.className = 'ctl-label';
+    l.textContent = text;
+    return l;
+  }
+  function ctlValue(id) {
+    const p = ctlPending[id];
+    if (p && Date.now() - p.at < 1500) return p.v;
+    return st && st.radio ? st.radio[id] : null;
+  }
+  function fmtCtl(c, v, r) {
+    if (v == null) return '—';
+    if (c.type === 'width') {
+      const t = RIG().widthTable(r && r.mode);
+      return t && t[v - 1] ? t[v - 1] + ' Hz' : '—';
+    }
+    if (c.pct) return Math.round((v / 255) * 100) + ' %';
+    if (c.off0 && v === 0) return 'OFF';
+    if (c.unit) return (c.min < 0 && v > 0 ? '+' : '') + v + ' ' + c.unit;
+    return String(v);
+  }
+  function ctlBlocked() {
+    if (!iControl()) return 'Prenez la main pour régler la radio.';
+    if (st.ptt && st.ptt.active) return 'Réglage bloqué pendant l’émission.';
+    return null;
+  }
+  function sendCtl(c, v) {
+    const why = ctlBlocked();
+    if (why) return say(why, 'warn');
+    if (c.type !== 'action') ctlPending[c.id] = { v, at: Date.now() };
+    send({ t: 'set', ctl: c.id, value: v });
+    render();
+  }
+  function sendCtlThrottled(c, v) {
+    if (ctlTimers[c.id]) return;
+    ctlTimers[c.id] = setTimeout(() => {
+      ctlTimers[c.id] = null;
+      const p = ctlPending[c.id];
+      if (p && !ctlBlocked()) send({ t: 'set', ctl: c.id, value: p.v });
+    }, 200);
+  }
+  function showTab() {
+    document.querySelectorAll('#ctlTabs .key').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.g === ctlTab)));
+    document.querySelectorAll('#ctlBody .ctl-pane').forEach((p) => { p.hidden = p.dataset.g !== ctlTab; });
+  }
+  function buildControls() {
+    const R = RIG();
+    ctlModel = R.ID;
+    ctlRefs = {};
+    const tabs = $('ctlTabs');
+    const body = $('ctlBody');
+    tabs.textContent = '';
+    body.textContent = '';
+    if (!R.GROUPS || !R.GROUPS.some((g) => g[0] === ctlTab)) ctlTab = R.GROUPS ? R.GROUPS[0][0] : 'vfo';
+    for (const [g, label] of R.GROUPS || []) {
+      const t = mkKey(label);
+      t.classList.add('tab');
+      t.setAttribute('role', 'tab');
+      t.dataset.g = g;
+      t.addEventListener('click', () => {
+        ctlTab = g;
+        try { localStorage.setItem('rs.tab', g); } catch (e) {}
+        showTab();
+      });
+      tabs.appendChild(t);
+      const pane = document.createElement('div');
+      pane.className = 'ctl-pane';
+      pane.dataset.g = g;
+      pane.setAttribute('role', 'tabpanel');
+      body.appendChild(pane);
+    }
+    for (const c of R.CONTROLS || []) {
+      const pane = body.querySelector('.ctl-pane[data-g="' + c.g + '"]');
+      const cell = document.createElement('div');
+      cell.className = 'ctl ctl-' + c.type;
+      pane.appendChild(cell);
+      const ref = { c, cell };
+      if (c.type === 'toggle' || c.type === 'action') {
+        const b = mkKey(c.label);
+        if (c.type === 'toggle') b.setAttribute('aria-pressed', 'false');
+        if (c.transmits) b.classList.add('key-tx');
+        b.addEventListener('click', () => sendCtl(c, c.type === 'action' ? null : (ctlValue(c.id) ? 0 : 1)));
+        cell.appendChild(b);
+        ref.btn = b;
+      } else if (c.type === 'select') {
+        cell.appendChild(mkLabel(c.label));
+        const grp = document.createElement('div');
+        grp.className = 'seg';
+        ref.opts = c.options.map(([v, l]) => {
+          const b = mkKey(l);
+          b.setAttribute('aria-pressed', 'false');
+          b.addEventListener('click', () => sendCtl(c, v));
+          grp.appendChild(b);
+          return [v, b];
+        });
+        cell.appendChild(grp);
+      } else {
+        const head = document.createElement('div');
+        head.className = 'ctl-head';
+        const out = document.createElement('output');
+        out.className = 'ctl-val';
+        head.append(mkLabel(c.label), out);
+        const inp = document.createElement('input');
+        inp.type = 'range';
+        inp.min = c.type === 'level' ? c.min : 1;
+        inp.max = c.type === 'level' ? c.max : 1;
+        inp.step = c.type === 'level' ? c.step : 1;
+        inp.setAttribute('aria-label', c.label);
+        inp.addEventListener('input', () => {
+          const v = Number(inp.value);
+          if (ctlBlocked()) return;
+          ctlPending[c.id] = { v, at: Date.now() };
+          out.textContent = fmtCtl(c, v, st && st.radio);
+          sendCtlThrottled(c, v);
+        });
+        inp.addEventListener('change', () => sendCtl(c, Number(inp.value)));
+        cell.append(head, inp);
+        ref.inp = inp;
+        ref.out = out;
+      }
+      ctlRefs[c.id] = ref;
+    }
+    showTab();
+  }
+  function updateControls(r, onAir) {
+    const blocked = !iControl() || onAir;
+    for (const id in ctlRefs) {
+      const { c, cell, btn, opts, inp, out } = ctlRefs[id];
+      const v = ctlValue(id);
+      const avail = !!r.connected && (!c.when || c.when(r)) && (c.type === 'action' || v != null);
+      cell.classList.toggle('unavail', !avail);
+      if (btn) {
+        btn.disabled = blocked || !avail || (c.offOnly && !v);
+        if (c.type === 'toggle') btn.setAttribute('aria-pressed', String(!!v));
+        if (c.offOnly) btn.title = v ? 'Couper ' + c.label : c.label + ' ne peut pas être activé à distance';
+        if (c.transmits) {
+          btn.disabled = btn.disabled || !!pttReason();
+          btn.title = pttReason() || 'Lance l’accord (émission de quelques secondes)';
+          btn.classList.toggle('busy', !!r.tuning);
+        }
+      }
+      if (opts) for (const [ov, b] of opts) {
+        b.setAttribute('aria-pressed', String(v === ov));
+        b.disabled = blocked || !avail;
+      }
+      if (inp) {
+        if (c.type === 'width') {
+          const t = RIG().widthTable(r.mode);
+          inp.max = t ? t.length : 1;
+        }
+        inp.disabled = blocked || !avail;
+        const p = ctlPending[id];
+        const dragging = p && Date.now() - p.at < 1500;
+        if (!dragging && v != null) inp.value = v;
+        out.textContent = avail ? fmtCtl(c, v, r) : '—';
+      }
+    }
+  }
+
   // ------------------------------------------------------------ PTT
   function pttReason() {
     if (!me) return 'Connectez-vous';
@@ -293,7 +495,8 @@
     if (!st || !st.station) return 'Station hors ligne';
     if (!st.radio.connected) return 'TRX non connecté';
     if (!iControl()) return 'Prenez la main pour émettre';
-    if (!st.txOk) return 'Hors des bandes autorisées';
+    if (st.radio.vox) return 'VOX actif au club : coupez-le d’abord';
+    if (!st.txOk) return st.radio.txVfo === 1 ? 'VFO B (SPLIT) hors des bandes autorisées' : 'Hors des bandes autorisées';
     if (st.radio.power != null && st.radio.power > me.maxWatts) return 'Puissance au-delà de votre limite (' + me.maxWatts + ' W)';
     return null;
   }
@@ -354,22 +557,29 @@
     lamp('lampTrx', r.connected ? 'on' : st.station ? 'warn' : null);
     lamp('lampTx', onAir || r.tx ? 'tx' : null);
 
-    drawFreq(r.connected || pending != null ? currentFreq() : null);
-    drawFreq(r.connected ? r.freqB : null, digitElsB);
-    drawMeter(r.smeter, onAir || r.tx);
+    drawFreq(r.connected || pending != null ? currentFreq('A') : null);
+    drawFreq(r.connected || pendingB != null ? currentFreq('B') : null, digitElsB);
+    drawMeter(r, onAir || r.tx);
     $('modeTag').textContent = r.connected && r.mode ? r.mode : '---';
     $('modeTagB').textContent = r.connected && r.modeB ? r.modeB : '---';
+    $('splitTag').className = 'tag ' + (r.connected && r.split ? '' : 'ghost');
+    const clarOn = r.connected && (r.rit || r.xit);
+    $('clarTag').className = 'tag ' + (clarOn ? '' : 'ghost');
+    $('clarTag').textContent = clarOn ? (r.rit && r.xit ? 'RIT+XIT' : r.rit ? 'RIT' : 'XIT') + ' ' + (r.clar > 0 ? '+' : '') + (r.clar || 0) : 'RIT';
+    $('txBTag').className = 'tag ' + (r.connected && r.txVfo === 1 ? (onAir || r.tx ? 'txtag' : '') : 'ghost');
+    $('txTag').textContent = r.connected && r.txVfo === 1 ? 'TX→B' : 'TX';
     const pw = r.connected && r.power != null ? String(r.power).replace('.', ',') + ' W' : '-- W';
     $('pwrTag').textContent = pw;
     $('pwrRead').textContent = pw;
-    const pwrOk = iControl() && !!FTX1.POWER_RANGE[r.powerHead] && !(st.ptt && st.ptt.active);
+    const pwrOk = iControl() && !!RIG().POWER_RANGE[r.powerHead] && !(st.ptt && st.ptt.active);
     $('pwrDown').disabled = !pwrOk;
     $('pwrUp').disabled = !pwrOk;
     $('pwrLimit').textContent = me ? 'Votre limite : ' + me.maxWatts + ' W' + (r.powerHead === '1' ? ' · tête Field 0,5–10 W' : r.powerHead === '2' ? ' · TRX 5–100 W' : '') : '';
     $('txTag').className = 'tag ' + (onAir || r.tx ? 'txtag' : 'ghost');
     $('glass').classList.toggle('tx', !!(onAir || r.tx));
-    document.querySelectorAll('#modeKeys .key').forEach((b) => b.setAttribute('aria-pressed', String(!!r.connected && b.dataset.code === r.modeCode)));
-    const fNow = currentFreq();
+    const mc = target === 'B' ? r.modeCodeB : r.modeCode;
+    document.querySelectorAll('#modeKeys .key').forEach((b) => b.setAttribute('aria-pressed', String(!!r.connected && b.dataset.code === mc)));
+    const fNow = currentFreq(target);
     document.querySelectorAll('#bandKeys .key').forEach((b) => {
       const on = !!r.connected && fNow != null && fNow >= Number(b.dataset.lo) && fNow <= Number(b.dataset.hi);
       b.setAttribute('aria-pressed', String(on));
@@ -404,6 +614,8 @@
     p.classList.toggle('held', pttHeld);
     p.classList.toggle('on-air', !!myTx);
     $('pttHint').textContent = why ? why : myTx ? 'En émission — relâchez pour repasser en réception' : pttCut ? 'Relâchez puis réappuyez' : 'Maintenir pour émettre';
+
+    updateControls(r, onAir);
 
     // minuterie TX (horloge locale, pour éviter les décalages d'horloge)
     if (onAir) {
@@ -449,6 +661,8 @@
       } else if (m.t === 'state') {
         st = m;
         if (pending != null && st.radio && st.radio.freq === pending) pending = null;
+        if (pendingB != null && st.radio && st.radio.freqB === pendingB) pendingB = null;
+        if (RIG().ID !== ctlModel) buildControls();
         render();
       } else if (m.t === 'notice') {
         if (m.pttCut) { pttCut = true; }
@@ -479,11 +693,12 @@
   // ------------------------------------------------------------ démarrage
   buildDisplay();
   buildKeys();
+  buildControls();
   bindKnob();
   bindPtt();
-  $('stepRead').textContent = fmtStep(step);
+  $('stepRead').textContent = fmtStep(step) + ' · VFO A';
   drawFreq(null);
-  drawMeter(0, false);
+  drawMeter({}, false);
   try { $('loginCall').value = localStorage.getItem('rs.call') || ''; } catch (e) {}
   fetch('/api/info').then((r) => r.json()).then((i) => {
     document.title = i.clubName;

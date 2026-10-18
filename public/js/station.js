@@ -1,4 +1,4 @@
-/* Page Station : Web Serial (FTX-1) + WebSocket (VPS) autour de StationCore */
+/* Page Station : Web Serial (port CAT du TRX) + WebSocket (VPS) autour de StationCore */
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -33,7 +33,23 @@
   let sim = null;
   const enc = new TextEncoder();
 
+  // ------------------------------------------------------------ modèle de radio
+  const MODEL = (window.RIGS && window.RIGS[store.get('model', 'ftx1')]) ? store.get('model', 'ftx1') : 'ftx1';
+  const RIG = window.RIGS[MODEL];
+  $('rigName').textContent = RIG.NAME;
+  const sel = $('cfgModel');
+  for (const r of window.RIG_CATALOG) {
+    const o = document.createElement('option');
+    o.value = r.id;
+    o.textContent = r.name + (r.ready && window.RIGS[r.id] ? '' : ' (prévu)');
+    o.disabled = !(r.ready && window.RIGS[r.id]);
+    sel.appendChild(o);
+  }
+  sel.value = MODEL;
+  if (MODEL !== 'ftx1') $('rigHint').hidden = true;
+
   const core = new StationCore({
+    rig: RIG,
     writeSerial(s) {
       if (sim) return sim.write(s);
       if (!writer) return;
@@ -45,9 +61,9 @@
     log: (m) => log(m, /TX ON/.test(m) ? 'st-warn' : /Sécurité|TX OFF —/.test(m) ? 'st-warn' : ''),
     onRadio(r) {
       lamp('lTrx', r.connected ? (r.tx ? 'tx' : 'on') : (port || sim) ? 'warn' : null);
-      $('tTrx').textContent = r.connected ? (sim ? 'Simulation active' : 'Le FTX-1 répond') : (port || sim) ? 'Port ouvert, pas de réponse' : 'Aucun port choisi';
+      $('tTrx').textContent = r.connected ? (sim ? 'Simulation active' : 'La radio répond') : (port || sim) ? 'Port ouvert, pas de réponse' : 'Aucun port choisi';
       $('read').textContent = r.connected && r.freq
-        ? (r.freq / 1e6).toFixed(6).replace(/(\d)(\d{3})$/, '$1 $2') + ' MHz · ' + (r.mode || '?') + ' · ' + (r.tx ? 'TX' : FTX1.smeterLabel(r.smeter))
+        ? (r.freq / 1e6).toFixed(6).replace(/(\d)(\d{3})$/, '$1 $2') + ' MHz · ' + (r.mode || '?') + (r.split ? ' · SPLIT' : '') + ' · ' + (r.tx ? 'TX' : RIG.smeterLabel(r.smeter))
         : '—';
     }
   });
@@ -62,7 +78,7 @@
     }
     if (ws) { ws.onclose = null; ws.close(); }
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
-    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token }));
+    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL }));
     ws.onmessage = (e) => {
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
@@ -94,8 +110,8 @@
 
   // ------------------------------------------------------------ Web Serial
   async function openPort(p) {
-    const baudRate = Number(store.get('baud', '38400'));
-    const stopBits = Number(store.get('stop', '1'));
+    const baudRate = Number(store.get('baud', String(RIG.serial.baudRate)));
+    const stopBits = Number(store.get('stop', String(RIG.serial.stopBits)));
     try {
       await p.open({ baudRate, dataBits: 8, stopBits, parity: 'none', flowControl: 'none', bufferSize: 4096 });
     } catch (e) {
@@ -167,7 +183,7 @@
 
   if ('serial' in navigator) {
     navigator.serial.addEventListener('disconnect', (e) => {
-      if (port && e.target === port) { log('FTX-1 débranché (USB)', 'st-warn'); closePort(false); }
+      if (port && e.target === port) { log(RIG.NAME + ' débranché (USB)', 'st-warn'); closePort(false); }
     });
     navigator.serial.addEventListener('connect', () => {
       log('Périphérique USB rebranché');
@@ -190,11 +206,11 @@
   $('btnSim').addEventListener('click', async () => {
     if (sim) return stopSim();
     await closePort(false);
-    sim = new FTX1.FakeFTX1();
+    sim = new RIG.Fake();
     sim.onData = (s) => core.onSerialData(s);
     core.serialOpened();
     $('btnSim').textContent = 'Arrêter la simulation';
-    log('Simulation : FTX-1 virtuel actif (aucune émission réelle)', 'st-warn');
+    log('Simulation : ' + RIG.NAME + ' virtuel actif (aucune émission réelle)', 'st-warn');
   });
 
   // ------------------------------------------------------------ réglages
@@ -205,6 +221,12 @@
     store.set('token', $('cfgToken').value.trim());
     store.set('baud', $('cfgBaud').value);
     store.set('stop', $('cfgStop').value);
+    if ($('cfgModel').value !== MODEL) {
+      store.set('model', $('cfgModel').value);
+      log('Modèle changé : rechargement de la page');
+      core.stop();
+      return setTimeout(() => location.reload(), 300);
+    }
     log('Réglages enregistrés');
     connectWs();
     if (port) {

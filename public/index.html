@@ -37,15 +37,18 @@
           <span class="tag" id="modeTag">---</span>
           <span class="tag ghost" id="txTag">TX</span>
           <span class="tag" id="pwrTag">-- W</span>
+          <span class="tag ghost" id="splitTag">SPLIT</span>
+          <span class="tag ghost" id="clarTag">RIT</span>
         </div>
         <span id="ctrlTag">Lecture seule</span>
       </div>
 
       <div class="freq" id="freq" aria-label="Fréquence" role="group"></div>
 
-      <div class="sub-row" aria-label="VFO B">
+      <div class="sub-row" id="subRow" aria-label="VFO B : cliquer pour l'accorder" title="Cliquer pour accorder la VFO B">
         <span class="tag">SUB</span>
         <span class="tag" id="modeTagB">---</span>
+        <span class="tag ghost" id="txBTag">TX</span>
         <div class="freq sub" id="freqB" aria-hidden="true"></div>
       </div>
 
@@ -54,7 +57,8 @@
         <div class="scale"><span>1</span><span>3</span><span>5</span><span>7</span><span>9</span><span>+20</span><span>+40</span><span>+60</span></div>
       </div>
       <div class="meter-read">
-        <span>Signal <b id="sRead">—</b></span>
+        <span><span id="mLabel">Signal</span> <b id="sRead">—</b></span>
+        <span id="txMeters"></span>
         <span id="txTimer"></span>
       </div>
       <div class="g-msg" id="msg" role="status"></div>
@@ -79,6 +83,11 @@
         <button class="key" type="submit">Accorder</button>
       </form>
     </div>
+  </section>
+
+  <section class="ctl-panel" aria-label="Fonctions du transceiver">
+    <div class="ctl-tabs" id="ctlTabs" role="tablist"></div>
+    <div class="ctl-body" id="ctlBody"></div>
   </section>
 
   <section class="bottom">

@@ -14,7 +14,7 @@
 <main class="st-wrap">
   <section class="st-card">
     <h1>Page Station</h1>
-    <p>Cet onglet relie le FTX-1 du club au serveur. Laissez-le ouvert en permanence sur le PC de la station.</p>
+    <p>Cet onglet relie le transceiver du club au serveur. Laissez-le ouvert en permanence sur le PC de la station.</p>
     <p id="noSerial" class="st-bad" hidden>Ce navigateur ne gère pas le port série (Web Serial). Ouvrez cette page dans Chrome, Edge ou Chromium.</p>
 
     <div class="st-links">
@@ -23,14 +23,14 @@
         <p id="tVps">Pas encore connecté</p>
       </div>
       <div class="st-link">
-        <span class="lamp" id="lTrx"><i></i>FTX-1</span>
+        <span class="lamp" id="lTrx"><i></i><span id="rigName">TRX</span></span>
         <p id="tTrx">Aucun port choisi</p>
       </div>
     </div>
     <div class="st-read" id="read">—</div>
 
     <div class="st-actions">
-      <button class="key" id="btnPort" type="button">Choisir le port du FTX-1</button>
+      <button class="key" id="btnPort" type="button">Choisir le port du TRX</button>
       <button class="key" id="btnClose" type="button">Libérer le port</button>
       <button class="key" id="btnSim" type="button">Tester sans radio (simulation)</button>
     </div>
@@ -38,8 +38,11 @@
 
   <section class="st-card">
     <h2>Réglages</h2>
-    <p>Dans le FTX-1 : menu Operation setting → General, « CAT-1 rate » et « CAT-1 CAT-3 stop bit » doivent correspondre à ces valeurs. Choisissez le port <b>Enhanced COM Port</b> (CAT-1).</p>
+    <p id="rigHint">Pour le FTX-1 : menu Operation setting → General, « CAT-1 rate » et « CAT-1 CAT-3 stop bit » doivent correspondre à ces valeurs. Choisissez le port <b>Enhanced COM Port</b> (CAT-1).</p>
     <form class="st-form" id="cfgForm">
+      <label>Modèle du TRX
+        <select id="cfgModel"></select>
+      </label>
       <label>Jeton de la station
         <input id="cfgToken" type="password" autocomplete="off" required placeholder="donné par init-config.js">
       </label>
@@ -63,6 +66,7 @@
   </section>
 </main>
 
+<script src="/js/rigs-catalog.js"></script>
 <script src="/js/ftx1.js"></script>
 <script src="/js/station-core.js"></script>
 <script src="/js/station.js"></script>
