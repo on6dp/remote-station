@@ -416,6 +416,7 @@
   function pttReason() {
     if (!me) return 'Connectez-vous';
     if (!me.allowTx) return 'Émission désactivée sur ce serveur';
+    if (me.rxOnly) return 'Indicatif d’écouteur : émission interdite';
     if (!me.canTx) return 'Votre compte est en écoute seule';
     if (!st || !st.station) return 'Station hors ligne';
     if (!st.radio.connected) return 'TRX non connecté';
@@ -545,10 +546,10 @@
 
     // puissance
     $('pwrRead').textContent = live && r.power != null ? String(r.power).replace('.', ',') + ' W' : '-- W';
-    const pwrOk = iControl() && !!RIG().POWER_RANGE[r.powerHead] && !onAir;
+    const pwrOk = iControl() && !!RIG().POWER_RANGE[r.powerHead] && !onAir && !(me && me.rxOnly);
     $('pwrDown').disabled = !pwrOk;
     $('pwrUp').disabled = !pwrOk;
-    $('pwrLimit').textContent = me ? 'Votre limite : ' + me.maxWatts + ' W' + (r.powerHead === '1' ? ' · tête Field 0,5–10 W' : r.powerHead === '2' ? ' · TRX 5–100 W' : '') : '';
+    $('pwrLimit').textContent = !me ? '' : me.rxOnly ? 'Écouteur : émission interdite' : !me.canTx ? 'Compte en écoute seule' : 'Votre limite : ' + me.maxWatts + ' W' + (r.powerHead === '1' ? ' · tête Field 0,5–10 W' : r.powerHead === '2' ? ' · TRX 5–100 W' : '');
 
     // RX / TX
     $('rxtx').classList.toggle('tx', live && txing);

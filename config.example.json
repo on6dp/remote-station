@@ -40,5 +40,8 @@
       "maxWatts": 25
     }
   ],
-  "defaultMaxWatts": 1500
+  "defaultMaxWatts": 1500,
+  "rxOnlyPrefixes": [
+    "ONL"
+  ]
 }

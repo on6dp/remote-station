@@ -1,4 +1,4 @@
-# Remote Station — v0.1.3 (CAT seul)
+# Remote Station — v0.1.4 (CAT seul)
 
 Pilotage à distance du **Yaesu FTX-1** du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
 
@@ -49,12 +49,13 @@ La page Station propose une liste de modèles. Le **Yaesu FTX-1** est pris en ch
 ## Accès et puissance selon la licence
 
 - **Connexion** : seuls les indicatifs belges sont acceptés (préfixes `ON`, `OO`, `OP`, `OQ`, `OR`, `OS`, `OT`), à la connexion comme à la création d'un compte avec `adduser.js`.
+- **Écouteurs (ONL)** : les indicatifs d'écouteur, comme `ONL12345`, peuvent se connecter et régler la réception quand ils ont la main, mais ne peuvent **jamais émettre** : ni PTT, ni TUNE, ni réglage de puissance, même si leur compte a été créé sans `--no-tx`. Liste modifiable avec `rxOnlyPrefixes` dans `config.json`.
 - **Puissance** : les indicatifs commençant par `ON3` sont limités à **25 W**, tous les autres à **1500 W**. Concrètement, le FTX-1 ne dépasse pas 100 W (ampli SPA-1) ou 10 W (tête Field), donc seule la limite ON3 agit sur la radio :
   - à la prise de main par un ON3, la puissance du TRX est ramenée à 25 W ;
   - un ON3 ne peut pas régler plus de 25 W ;
   - si la puissance dépasse la limite de l'opérateur en émission (bouton tourné au club, par exemple), l'émission est coupée et la puissance ramenée à la limite ;
   - le PTT est refusé tant que la puissance du TRX n'a pas été lue.
-- Ces règles se modifient dans `config.json` : `allowedPrefixes`, `powerRules` (la première règle dont le préfixe correspond s'applique) et `defaultMaxWatts`. Sans ces lignes, les valeurs ci-dessus s'appliquent par défaut.
+- Ces règles se modifient dans `config.json` : `allowedPrefixes`, `rxOnlyPrefixes`, `powerRules` (la première règle dont le préfixe correspond s'applique) et `defaultMaxWatts`. Sans ces lignes, les valeurs ci-dessus s'appliquent par défaut.
 - **Ampli linéaire** : la limite porte sur la puissance réglée dans le FTX-1. Si un ampli externe est branché après le TRX, le logiciel ne le voit pas : il doit être hors circuit quand un ON3 opère.
 
 ## Sécurités d'émission
@@ -74,7 +75,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.1.3.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.1.4.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -82,7 +83,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.1.3.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.1.4.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station

@@ -34,7 +34,9 @@ const DEFAULTS = {
   allowedPrefixes: ['ON', 'OO', 'OP', 'OQ', 'OR', 'OS', 'OT'],
   // Puissance maximale par début d'indicatif (première règle qui correspond), sinon defaultMaxWatts
   powerRules: [{ prefix: 'ON3', maxWatts: 25 }],
-  defaultMaxWatts: 1500
+  defaultMaxWatts: 1500,
+  // Indicatifs qui ne peuvent jamais émettre (écouteurs ONL), quel que soit leur compte
+  rxOnlyPrefixes: ['ONL']
 };
 let cfg;
 try {
@@ -164,7 +166,7 @@ function maxWattsFor(call) {
 // Ramène la puissance du TRX sous la limite de licence de cet opérateur. Retourne true si une commande a été envoyée.
 let lastPowerFix = 0;
 function limitPower(conn, why) {
-  if (!conn || !conn.user || radio.power == null || radio.power <= conn.user.maxWatts) return false;
+  if (!conn || !conn.user || conn.user.rxOnly || radio.power == null || radio.power <= conn.user.maxWatts) return false;
   const range = rig().POWER_RANGE[radio.powerHead];
   if (!range || conn.user.maxWatts < range[0]) return false;
   const now = Date.now();
@@ -191,6 +193,7 @@ function txFreq() {
 // Raison qui empêche cet opérateur d'émettre (PTT ou TUNE), ou null
 function txBlockReason(conn) {
   return !cfg.allowTx ? 'émission désactivée sur ce serveur' :
+    conn.user.rxOnly ? 'indicatif d’écouteur (' + conn.user.call + ') : émission interdite' :
     !conn.user.tx ? 'votre compte n’est pas autorisé à émettre' :
     controller !== conn ? 'prenez d’abord la main' :
     !station ? 'station hors ligne' :
@@ -302,7 +305,8 @@ async function onLogin(conn, m) {
     return setTimeout(() => send(conn, { t: 'login_fail', msg: 'Indicatif ou mot de passe incorrect' }), 600);
   }
   fails.delete(conn.ip);
-  conn.user = { call, admin: !!rec.admin, tx: rec.tx !== false, maxWatts: maxWattsFor(call) };
+  const rxOnly = auth.isRxOnly(call, cfg.rxOnlyPrefixes);
+  conn.user = { call, admin: !!rec.admin, tx: rec.tx !== false && !rxOnly, rxOnly, maxWatts: rxOnly ? 0 : maxWattsFor(call) };
   ops.add(conn);
   journal('login', { call, ip: conn.ip });
   send(conn, {
@@ -310,6 +314,7 @@ async function onLogin(conn, m) {
     call,
     admin: conn.user.admin,
     canTx: conn.user.tx,
+    rxOnly: conn.user.rxOnly,
     allowTx: cfg.allowTx,
     maxTxSeconds: cfg.maxTxSeconds,
     maxWatts: conn.user.maxWatts,
@@ -390,6 +395,7 @@ function onOperator(conn, m) {
         const w = Number(m.power);
         const range = rig().POWER_RANGE[radio.powerHead];
         if (!range) return send(conn, { t: 'notice', level: 'error', msg: 'Puissance non réglable : type de tête du TRX inconnu' });
+        if (conn.user.rxOnly) return send(conn, { t: 'notice', level: 'error', msg: 'Indicatif d’écouteur : réglage de puissance non autorisé' });
         if (!(w <= conn.user.maxWatts)) return send(conn, { t: 'notice', level: 'error', msg: 'Limite de votre licence : ' + conn.user.maxWatts + ' W' });
         if (!(w >= range[0] && w <= range[1])) return send(conn, { t: 'notice', level: 'error', msg: 'Puissance possible : ' + range[0] + ' à ' + range[1] + ' W' });
         toStation({ t: 'cmd', op: 'power', watts: w });
