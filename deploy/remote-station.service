@@ -1,5 +1,5 @@
 [Unit]
-Description=Remote Station (pilotage à distance du FTX-1 du club)
+Description=Remote Station (pilotage à distance du TRX du club)
 After=network-online.target
 Wants=network-online.target
 
