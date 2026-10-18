@@ -22,7 +22,7 @@
   const FREQ_MAX = 470000000;   // 470 MHz
 
   // Commandes de lecture envoyées à chaque cycle de polling
-  const POLL = 'FA;MD0;SM0;TX;';
+  const POLL = 'FA;MD0;FB;MD1;SM0;TX;';
 
   function cmdFreq(hz) {
     hz = Math.round(Number(hz));
@@ -43,7 +43,9 @@
   function parse(tok) {
     let m;
     if ((m = /^FA(\d{9})$/.exec(tok))) return { freq: parseInt(m[1], 10) };
+    if ((m = /^FB(\d{9})$/.exec(tok))) return { freqB: parseInt(m[1], 10) };
     if ((m = /^MD0([0-9A-Z])$/.exec(tok))) return { modeCode: m[1], mode: MODES[m[1]] || ('?' + m[1]) };
+    if ((m = /^MD1([0-9A-Z])$/.exec(tok))) return { modeCodeB: m[1], modeB: MODES[m[1]] || ('?' + m[1]) };
     if ((m = /^SM0(\d{3})$/.exec(tok))) return { smeter: parseInt(m[1], 10) };
     if ((m = /^TX([0-2])$/.exec(tok))) return { tx: parseInt(m[1], 10) }; // 0 off, 1 CAT TX, 2 TX radio
     if (tok === '?') return { error: true };
@@ -82,6 +84,8 @@
     constructor() {
       this.freq = 14250000;
       this.mode = '2';
+      this.freqB = 7074000;
+      this.modeB = 'C';
       this.tx = 0;
       this.onData = null;
       this.sp = new Splitter();
@@ -93,7 +97,11 @@
         let m;
         if (c === 'FA') out.push('FA' + String(this.freq).padStart(9, '0') + ';');
         else if ((m = /^FA(\d{9})$/.exec(c))) this.freq = parseInt(m[1], 10);
+        else if (c === 'FB') out.push('FB' + String(this.freqB).padStart(9, '0') + ';');
+        else if ((m = /^FB(\d{9})$/.exec(c))) this.freqB = parseInt(m[1], 10);
         else if (c === 'MD0') out.push('MD0' + this.mode + ';');
+        else if (c === 'MD1') out.push('MD1' + this.modeB + ';');
+        else if ((m = /^MD1([0-9A-Z])$/.exec(c)) && MODES[m[1]]) this.modeB = m[1];
         else if ((m = /^MD0([0-9A-Z])$/.exec(c)) && MODES[m[1]]) this.mode = m[1];
         else if (c === 'SM0') {
           this.t += 0.15;

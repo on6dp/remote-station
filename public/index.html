@@ -24,6 +24,12 @@
   </header>
 
   <section class="top">
+    <div class="vfo-block">
+      <div class="knob" id="knob" role="slider" tabindex="0" aria-label="Bouton d'accord" aria-valuetext="" aria-disabled="true">
+        <div class="knob-cap" id="knobCap"></div>
+      </div>
+      <div class="step-read">Pas <b id="stepRead">100 Hz</b></div>
+    </div>
     <div class="glass" id="glass">
       <div class="g-row g-tags">
         <div class="g-row">
@@ -36,6 +42,12 @@
 
       <div class="freq" id="freq" aria-label="Fréquence" role="group"></div>
 
+      <div class="sub-row" aria-label="VFO B">
+        <span class="tag">SUB</span>
+        <span class="tag" id="modeTagB">---</span>
+        <div class="freq sub" id="freqB" aria-hidden="true"></div>
+      </div>
+
       <div class="meter" aria-hidden="true">
         <div class="bars" id="bars"></div>
         <div class="scale"><span>1</span><span>3</span><span>5</span><span>7</span><span>9</span><span>+20</span><span>+40</span><span>+60</span></div>
@@ -47,12 +59,6 @@
       <div class="g-msg" id="msg" role="status"></div>
     </div>
 
-    <div class="vfo-block">
-      <div class="knob" id="knob" role="slider" tabindex="0" aria-label="Bouton d'accord" aria-valuetext="" aria-disabled="true">
-        <div class="knob-cap" id="knobCap"></div>
-      </div>
-      <div class="step-read">Pas <b id="stepRead">100 Hz</b></div>
-    </div>
   </section>
 
   <section class="keys">

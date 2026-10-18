@@ -15,6 +15,13 @@
     ['12 m', 24950, '2'], ['10 m', 28500, '2'], ['6 m', 50150, '2'], ['2 m', 144300, '2'],
     ['70 cm', 432200, '2']
   ];
+  // limites (kHz) servant seulement à éclairer la touche de la bande en cours
+  const BAND_EDGES = {
+    '160 m': [1800, 2000], '80 m': [3500, 4000], '60 m': [5250, 5450], '40 m': [7000, 7300],
+    '30 m': [10100, 10150], '20 m': [14000, 14350], '17 m': [18068, 18168], '15 m': [21000, 21450],
+    '12 m': [24890, 24990], '10 m': [28000, 29700], '6 m': [50000, 54000], '2 m': [144000, 148000],
+    '70 cm': [430000, 440000]
+  };
   const STEPS = [10, 100, 1000, 10000, 100000, 1000000];
   const NDIG = 9; // jusqu'à 470 MHz
 
@@ -43,28 +50,32 @@
     f: V(8, 8, 50), b: V(52, 8, 50), e: V(8, 50, 92), c: V(52, 50, 92)
   };
   const MAP = ['abcdef', 'bc', 'abged', 'abcdg', 'bcfg', 'acdfg', 'acdefg', 'abc', 'abcdefg', 'abcdfg'];
-  const digitEls = [];
+  let digitEls = [];
+  let digitElsB = [];
 
-  function buildDisplay() {
-    const box = $('freq');
+  // interactive = true pour la VFO A (réglage au clic / à la molette), false pour la VFO B
+  function buildDigits(box, interactive) {
+    const els = [];
     for (let i = 0; i < NDIG; i++) {
       const place = Math.pow(10, NDIG - 1 - i);
-      const b = document.createElement('button');
-      b.type = 'button';
+      const b = document.createElement(interactive ? 'button' : 'span');
       b.className = 'digit';
       b.dataset.place = place;
-      b.setAttribute('aria-label', 'Chiffre, pas ' + fmtStep(place));
       let svg = '<svg viewBox="0 0 60 100" aria-hidden="true"><g transform="skewX(-6) translate(6 0)">';
       for (const k of 'abcdefg') svg += `<polygon class="seg" data-s="${k}" points="${SEGS[k]}"/>`;
       svg += '</g></svg>';
       b.innerHTML = svg;
-      b.addEventListener('click', () => setStep(place >= 10 ? place : 10));
-      b.addEventListener('wheel', (ev) => {
-        ev.preventDefault();
-        tune((ev.deltaY < 0 ? 1 : -1) * Math.max(place, 10));
-      }, { passive: false });
+      if (interactive) {
+        b.type = 'button';
+        b.setAttribute('aria-label', 'Chiffre, pas ' + fmtStep(place));
+        b.addEventListener('click', () => setStep(place >= 10 ? place : 10));
+        b.addEventListener('wheel', (ev) => {
+          ev.preventDefault();
+          tune((ev.deltaY < 0 ? 1 : -1) * Math.max(place, 10));
+        }, { passive: false });
+      }
       box.appendChild(b);
-      digitEls.push(b);
+      els.push(b);
       if (i === 2 || i === 5) {
         const dp = document.createElement('span');
         dp.className = 'dp';
@@ -75,19 +86,26 @@
     u.className = 'unit';
     u.textContent = 'MHz';
     box.appendChild(u);
+    return els;
+  }
+
+  function buildDisplay() {
+    digitEls = buildDigits($('freq'), true);
+    digitElsB = buildDigits($('freqB'), false);
 
     const bars = $('bars');
     for (let i = 0; i < 30; i++) bars.appendChild(document.createElement('span'));
   }
 
-  function drawFreq(hz) {
+  function drawFreq(hz, els, withCursor) {
+    els = els || digitEls;
     const s = hz == null ? '' : String(hz).padStart(NDIG, ' ');
-    digitEls.forEach((el, i) => {
+    els.forEach((el, i) => {
       const ch = s[i];
       // les zéros de tête restent éteints, comme sur une vraie radio
       const lit = ch && ch !== ' ' && !(ch === '0' && s.slice(0, i).trim() === '' && i < 2) ? MAP[Number(ch)] : '';
       el.querySelectorAll('.seg').forEach((p) => p.classList.toggle('lit', lit.indexOf(p.dataset.s) >= 0));
-      el.classList.toggle('cursor', Number(el.dataset.place) === step);
+      el.classList.toggle('cursor', withCursor !== false && els === digitEls && Number(el.dataset.place) === step);
     });
   }
 
@@ -221,6 +239,9 @@
       b.type = 'button';
       b.className = 'key';
       b.textContent = name;
+      b.dataset.lo = BAND_EDGES[name][0] * 1000;
+      b.dataset.hi = BAND_EDGES[name][1] * 1000;
+      b.setAttribute('aria-pressed', 'false');
       b.addEventListener('click', () => {
         if (!iControl()) return say('Prenez la main pour changer de bande.', 'warn');
         if (st.ptt && st.ptt.active) return say('Réglage bloqué pendant l’émission.', 'warn');
@@ -320,11 +341,18 @@
     lamp('lampTx', onAir || r.tx ? 'tx' : null);
 
     drawFreq(r.connected || pending != null ? currentFreq() : null);
+    drawFreq(r.connected ? r.freqB : null, digitElsB);
     drawMeter(r.smeter, onAir || r.tx);
     $('modeTag').textContent = r.connected && r.mode ? r.mode : '---';
+    $('modeTagB').textContent = r.connected && r.modeB ? r.modeB : '---';
     $('txTag').className = 'tag ' + (onAir || r.tx ? 'txtag' : 'ghost');
     $('glass').classList.toggle('tx', !!(onAir || r.tx));
-    document.querySelectorAll('#modeKeys .key').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.code === r.modeCode)));
+    document.querySelectorAll('#modeKeys .key').forEach((b) => b.setAttribute('aria-pressed', String(!!r.connected && b.dataset.code === r.modeCode)));
+    const fNow = currentFreq();
+    document.querySelectorAll('#bandKeys .key').forEach((b) => {
+      const on = !!r.connected && fNow != null && fNow >= Number(b.dataset.lo) && fNow <= Number(b.dataset.hi);
+      b.setAttribute('aria-pressed', String(on));
+    });
 
     // contrôle
     const mine = iControl();

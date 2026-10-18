@@ -28,7 +28,7 @@
       this.kaTimeoutMs = o.kaTimeoutMs || 2000;
       this.radioTimeoutMs = o.radioTimeoutMs || 3000;
       this.split = new FTX1.Splitter();
-      this.radio = { connected: false, freq: null, mode: null, modeCode: null, tx: 0, smeter: 0 };
+      this.radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
       this.serialOpen = false;
       this.wsUp = false;
       this.catKeyed = false;

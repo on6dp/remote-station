@@ -116,7 +116,7 @@ const server = http.createServer((req, res) => {
 
 // ---------------------------------------------------------------- état
 let station = null; // { conn, ip, since }
-let radio = { connected: false, freq: null, mode: null, modeCode: null, tx: 0, smeter: 0 };
+let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
 let lastCtrlActivity = 0;
@@ -343,6 +343,9 @@ function onStation(conn, m) {
     freq: Number.isFinite(r.freq) ? r.freq : null,
     mode: typeof r.mode === 'string' ? r.mode.slice(0, 12) : null,
     modeCode: typeof r.modeCode === 'string' ? r.modeCode.slice(0, 1) : null,
+    freqB: Number.isFinite(r.freqB) ? r.freqB : null,
+    modeB: typeof r.modeB === 'string' ? r.modeB.slice(0, 12) : null,
+    modeCodeB: typeof r.modeCodeB === 'string' ? r.modeCodeB.slice(0, 1) : null,
     tx: [0, 1, 2].indexOf(r.tx) >= 0 ? r.tx : 0,
     smeter: Number.isFinite(r.smeter) ? r.smeter : 0
   };
