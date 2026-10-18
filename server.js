@@ -149,6 +149,14 @@ let station = null; // { conn, ip, since }
 let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
+// Messages entre membres (mémoire seulement, perdus au redémarrage) : discussion, demandes de main, passages de main
+const chatLog = [];
+function chatPush(item) {
+  item.ts = Date.now();
+  chatLog.push(item);
+  while (chatLog.length > 40) chatLog.shift();
+  for (const c of ops) send(c, { t: 'chat', m: item });
+}
 let connSeq = 0;
 let lastCtrlActivity = 0;
 let ptt = { active: false, conn: null, since: 0, lastBeat: 0 };
@@ -357,6 +365,7 @@ async function onLogin(conn, m) {
     sessionIdleMinutes: cfg.sessionIdleMinutes
   });
   send(conn, { t: 'events', list: recentEvents });
+  send(conn, { t: 'chatlog', list: chatLog });
   broadcast();
 }
 
@@ -394,6 +403,40 @@ function onOperator(conn, m) {
       journal('rig_switch', { call: conn.user.call, from: rig().ID, to: model, name: DRIVERS[model].NAME });
       send(station.conn, { t: 'switch', model, by: conn.user.call });
       return send(conn, { t: 'notice', level: 'warn', msg: 'Passage au ' + DRIVERS[model].NAME + ' demandé : la station redémarre (quelques secondes)' });
+    }
+
+    case 'chat': {
+      const text = String(m.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 300);
+      if (!text) return;
+      if (now - (conn.lastChat || 0) < 1000) return send(conn, { t: 'notice', level: 'warn', msg: 'Un message par seconde au maximum' });
+      conn.lastChat = now;
+      journal('chat', { call: conn.user.call, text });
+      return chatPush({ kind: 'msg', call: conn.user.call, text });
+    }
+
+    case 'ask': {
+      // Demande de la main à celui qui pilote
+      if (!controller || controller.user.call === conn.user.call) return;
+      if (now - (conn.lastAsk || 0) < 15000) return send(conn, { t: 'notice', level: 'warn', msg: 'Demande déjà envoyée, patientez un peu' });
+      conn.lastAsk = now;
+      journal('control_ask', { call: conn.user.call, to: controller.user.call });
+      return chatPush({ kind: 'ask', call: conn.user.call, cid: conn.cid, to: controller.user.call });
+    }
+
+    case 'handover': {
+      // Celui qui a la main la passe directement à un membre qui l'a demandée (jamais pendant une émission)
+      if (controller !== conn) return send(conn, { t: 'notice', level: 'error', msg: 'Vous n’avez pas la main' });
+      if (ptt.active || radio.tx) return send(conn, { t: 'notice', level: 'error', msg: 'Terminez d’abord votre émission' });
+      let target = null;
+      for (const c of ops) if (c.cid === Number(m.cid)) target = c;
+      if (!target || target === conn) return send(conn, { t: 'notice', level: 'error', msg: 'Ce membre n’est plus connecté' });
+      controller = target;
+      lastCtrlActivity = now;
+      journal('control_take', { call: target.user.call, from: conn.user.call });
+      chatPush({ kind: 'give', call: conn.user.call, to: target.user.call });
+      send(target, { t: 'notice', level: 'warn', msg: conn.user.call + ' vous passe la main' });
+      limitPower(target, 'prise de main');
+      return broadcast();
     }
 
     case 'release':

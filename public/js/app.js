@@ -267,6 +267,18 @@
     $('rigMenu').addEventListener('click', (ev) => ev.stopPropagation());
     document.addEventListener('click', closeRigMenu);
     document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeRigMenu(); });
+    $('askBtn').addEventListener('click', () => {
+      send({ t: 'ask' });
+      $('askBtn').disabled = true;
+      setTimeout(() => { $('askBtn').disabled = false; }, 15000);
+    });
+    $('chatForm').addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const v = $('chatInput').value.trim();
+      if (!v) return;
+      send({ t: 'chat', text: v });
+      $('chatInput').value = '';
+    });
     $('tgtA').addEventListener('click', () => setTarget('A'));
     $('tgtB').addEventListener('click', () => setTarget('B'));
     $('tuneUp').addEventListener('click', () => tune(step));
@@ -710,6 +722,7 @@
     cb.textContent = mine ? 'Libérer la main' : other ? 'Prendre la main ici' : !st.controller ? 'Prendre la main' : me && me.admin ? 'Reprendre la main' : 'Main occupée';
     cb.disabled = !!(st.controller && !mine && !other && !(me && me.admin));
     cb.classList.toggle('on', mine);
+    updateChatButtons();
     const who = $('who');
     who.textContent = '';
     for (const c of st.users || []) {
@@ -741,7 +754,7 @@
     switch (e.ev) {
       case 'login': return [c + 'connecté', ''];
       case 'logout': return [c + 'déconnecté', ''];
-      case 'control_take': return [c + (e.force ? 'reprend la main (admin)' : 'prend la main'), 'ok'];
+      case 'control_take': return [c + (e.force ? 'reprend la main (admin)' : e.from ? 'reçoit la main de ' + e.from : 'prend la main'), 'ok'];
       case 'control_release': return [c + 'libère la main' + (e.reason && e.reason !== 'volontaire' ? ' (' + e.reason + ')' : ''), ''];
       case 'tx_start': return [c + 'émet sur ' + MHZ(e.freq) + (e.mode ? ' ' + e.mode : '') + (e.watts != null ? ' · ' + e.watts + ' W' : '') + (e.split ? ' · SPLIT' : ''), 'tx'];
       case 'tx_stop': return [c + 'fin d’émission (' + e.durationS + ' s)' + (e.reason && e.reason !== 'relâché' ? ' — ' + e.reason : ''), e.reason && e.reason !== 'relâché' ? 'warn' : ''];
@@ -770,6 +783,57 @@
     row.append(tm, tx);
     if (top) box.prepend(row); else box.appendChild(row);
     while (box.children.length > 60) box.lastChild.remove();
+  }
+
+  // ------------------------------------------------------------ messages entre membres
+  const chatItems = [];
+  let chatKey = '';
+  function chatRow(m) {
+    const row = document.createElement('div');
+    row.className = 'cm' + (m.kind !== 'msg' ? ' ' + m.kind : '') + (me && m.call === me.call ? ' me' : '');
+    const tm = document.createElement('time');
+    tm.textContent = new Date(m.ts).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' });
+    const who = document.createElement('b');
+    who.textContent = m.call;
+    const txt = document.createElement('span');
+    txt.textContent = m.kind === 'ask' ? 'demande la main à ' + m.to : m.kind === 'give' ? 'passe la main à ' + m.to : m.text;
+    row.append(tm, who, txt);
+    // Celui qui pilote peut passer la main directement au demandeur (pas pendant une émission)
+    const onAir = !!(st && ((st.ptt && st.ptt.active) || (st.radio && st.radio.tx)));
+    const last = chatItems.filter((x) => x.kind === 'ask' && x.cid === m.cid).pop() === m;
+    const done = chatItems.some((x) => x.kind === 'give' && x.to === m.call && x.ts > m.ts);
+    if (m.kind === 'ask' && last && !done && iControl() && st.users && st.users.indexOf(m.call) >= 0) {
+      const b = mkBtn('Passer la main à ' + m.call, 'accent');
+      b.disabled = onAir;
+      b.title = onAir ? 'Terminez d’abord votre émission' : '';
+      b.addEventListener('click', () => send({ t: 'handover', cid: m.cid }));
+      row.appendChild(b);
+    }
+    return row;
+  }
+  function drawChat() {
+    const box = $('chat');
+    const atEnd = box.scrollHeight - box.scrollTop - box.clientHeight < 30;
+    box.textContent = '';
+    if (!chatItems.length) { box.innerHTML = '<p class="chat-empty">Aucun message.</p>'; return; }
+    for (const m of chatItems) box.appendChild(chatRow(m));
+    if (atEnd) box.scrollTop = box.scrollHeight;
+  }
+  function addChat(m, live) {
+    chatItems.push(m);
+    while (chatItems.length > 40) chatItems.shift();
+    drawChat();
+    $('chat').scrollTop = $('chat').scrollHeight;
+    if (live && m.kind === 'ask' && iControl()) say(m.call + ' vous demande la main (voir Opérateurs)', 'warn', 10000);
+  }
+  // Redessine les boutons « Passer la main » seulement quand la situation change
+  function updateChatButtons() {
+    const onAir = !!(st && ((st.ptt && st.ptt.active) || (st.radio && st.radio.tx)));
+    const key = [iControl(), onAir, (st && st.users || []).join(',')].join('|');
+    if (key !== chatKey) { chatKey = key; drawChat(); }
+    const ask = $('askBtn');
+    ask.hidden = !(st && st.controller && !iControl() && !otherTab());
+    if (!ask.hidden) ask.textContent = 'Demander la main à ' + st.controller;
   }
 
   // ------------------------------------------------------------ connexion
@@ -819,6 +883,13 @@
         if (!$('events').children.length) $('events').innerHTML = '<p class="ev-empty">Aucune activité pour l’instant.</p>';
       } else if (m.t === 'event') {
         addEvent(m.e, true);
+      } else if (m.t === 'chatlog') {
+        chatItems.length = 0;
+        (m.list || []).forEach((x) => chatItems.push(x));
+        drawChat();
+        $('chat').scrollTop = $('chat').scrollHeight;
+      } else if (m.t === 'chat') {
+        addChat(m.m, true);
       } else if (m.t === 'notice') {
         if (m.pttCut) pttCut = true;
         say(m.msg, m.level === 'error' ? 'error' : 'warn', 7000);

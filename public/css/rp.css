@@ -486,3 +486,29 @@ input[type='range']:disabled { opacity: .45; }
 .rig-menu .rig-opt small { color: var(--v2-text-dim); font-size: 10px; text-transform: none; letter-spacing: 0; }
 .rig-menu .rig-opt.cur small { color: var(--v2-accent-green); }
 .rig-menu p { margin: 6px 4px 2px; color: var(--v2-text-dim); font-size: 10px; line-height: 1.5; }
+
+/* ------------------------------------------------------------ messages entre membres */
+.ask-btn { width: 100%; margin-top: 8px; }
+.ask-btn[hidden] { display: none; }
+.chat { margin-top: 10px; max-height: 210px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; font-size: 11px; line-height: 1.45; }
+.chat-empty { margin: 0; color: var(--v2-text-dim); font-size: 11px; }
+.chat .cm { overflow-wrap: anywhere; color: var(--v2-text-secondary); }
+.chat .cm time { color: var(--v2-text-dim); margin-right: 6px; }
+.chat .cm b { color: var(--v2-text-bright); margin-right: 4px; }
+.chat .cm.me b { color: var(--main); }
+.chat .cm.ask { color: var(--v2-accent-yellow); }
+.chat .cm.give { color: var(--v2-accent-cyan-bright); }
+.chat .cm .btn { display: block; margin-top: 4px; width: 100%; }
+.chat-form { display: flex; gap: 4px; margin-top: 8px; }
+.chat-form input {
+  flex: 1;
+  min-width: 0;
+  height: var(--btn-h);
+  padding: 0 8px;
+  border: 1px solid var(--v2-border-dark);
+  border-radius: 4px;
+  background: var(--v2-bg-input, #0b0f14);
+  color: var(--v2-text-primary);
+  font: inherit;
+  font-size: 11px;
+}

@@ -160,6 +160,12 @@
         <div class="panel-b">
           <p class="ctrl-text" id="ctrlText">Personne n'a la main.</p>
           <div class="who" id="who"></div>
+          <button class="btn accent ask-btn" id="askBtn" type="button" hidden>Demander la main</button>
+          <div class="chat" id="chat" aria-live="polite"><p class="chat-empty">Aucun message.</p></div>
+          <form class="chat-form" id="chatForm" autocomplete="off">
+            <input id="chatInput" type="text" maxlength="300" placeholder="Message aux connectés…" aria-label="Message aux connectés">
+            <button class="btn accent" type="submit">Envoyer</button>
+          </form>
           <div id="sec-other"></div>
         </div>
       </section>
