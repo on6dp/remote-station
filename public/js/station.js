@@ -131,6 +131,12 @@
         $('tVps').textContent = 'Jeton refusé : vérifiez-le dans les réglages';
         return;
       }
+      if (e.code === 4002) {
+        // Une autre page Station (autre PC ou autre onglet) a pris le relais : ne pas se reconnecter en boucle
+        $('tVps').textContent = 'Remplacée par une autre page Station. « Enregistrer et reconnecter » pour reprendre ici.';
+        log('Une autre page Station s’est connectée : celle-ci se met en retrait', 'st-warn');
+        return;
+      }
       $('tVps').textContent = 'Liaison perdue, nouvelle tentative…';
       wsRetry = Math.min(wsRetry + 1, 6);
       wsTimer = setTimeout(connectWs, 1000 * Math.pow(2, wsRetry - 1));
