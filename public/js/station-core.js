@@ -1,6 +1,7 @@
 /*
  * station-core.js — logique de la page Station (au club), indépendante du transport.
- * Relie le port CAT du transceiver (Web Serial) au serveur VPS (WebSocket), via un pilote de radio (ex. ftx1.js).
+ * Relie le port CAT du transceiver (Web Serial) au serveur VPS (WebSocket), via un pilote de radio
+ * (ftx1.js, ftdx10.js : CAT texte Yaesu ; ic7300.js : CI-V binaire Icom).
  *
  * Sécurités côté station :
  *  - TX0 si plus de "keepalive" du VPS pendant une émission (perte réseau, VPS planté…)
@@ -15,7 +16,7 @@
   class StationCore {
     /**
      * @param {object} o
-     * @param {(s:string)=>void} o.writeSerial  envoie une chaîne CAT à la radio
+     * @param {(s:string|Uint8Array)=>void} o.writeSerial  envoie une commande à la radio (texte ou octets)
      * @param {(obj:object)=>void} o.sendWs     envoie un message JSON au VPS
      * @param {(msg:string)=>void} [o.log]
      * @param {(radio:object)=>void} [o.onRadio]
@@ -28,7 +29,7 @@
       this.sendWs = o.sendWs;
       this.log = o.log || function () {};
       this.onRadio = o.onRadio || function () {};
-      this.pollMs = o.pollMs || 250;
+      this.pollMs = o.pollMs || this.rig.POLL_MS || 250;
       this.kaTimeoutMs = o.kaTimeoutMs || 2000;
       this.radioTimeoutMs = o.radioTimeoutMs || 3000;
       this.split = new FTX1.Splitter();
@@ -43,6 +44,9 @@
       this.lastPush = 0;
       this.dirty = true;
       this.timer = null;
+      this.queue = [];       // trames de lecture en attente (pilotes à trames, ex. CI-V)
+      this.queueTimer = null;
+      this.slowPos = 0;
     }
 
     // ---------- côté série ----------
@@ -51,7 +55,9 @@
       this.split = new this.rig.Splitter();
       this.lastRx = 0;
       this.forceSlow = true;
-      this._write('AI0;'); // pas d'auto-information : on travaille en polling
+      this.queue = [];
+      // Initialisation propre au pilote (Yaesu : AI0, pas d'auto-information ; Icom : TX OFF)
+      for (const c of [].concat(this.rig.INIT || [])) this._write(c);
       if (!this.timer) this.timer = setInterval(() => this.tick(), this.pollMs);
       this.log('Port CAT ouvert');
     }
@@ -67,8 +73,9 @@
       this.log('Port CAT fermé');
     }
 
-    onSerialData(text) {
-      const toks = this.split.push(text);
+    /** Données reçues de la radio : texte ou octets (Uint8Array). */
+    onSerialData(chunk) {
+      const toks = this.split.push(chunk);
       const FTX1 = this.rig;
       for (const t of toks) {
         const p = FTX1.parse(t);
@@ -79,7 +86,9 @@
           this.dirty = true;
           this.log(FTX1.NAME + ' répond');
         }
-        if (p.error) continue;
+        if (p.error || p.ok) continue;
+        // Radio qui ne dit pas d'où vient l'émission (Icom) : émission demandée par nous = CAT (1), sinon radio (2)
+        if (FTX1.TX_SOURCE_UNKNOWN && p.tx === 1 && !this.catKeyed) p.tx = 2;
         for (const k in p) {
           if (this.radio[k] !== p[k]) {
             this.radio[k] = p[k];
@@ -106,12 +115,24 @@
         this.log('Plus de réponse de la radio (éteinte ? mauvais port ?)');
       }
       const rig = this.rig;
-      let q = rig.FAST;
-      if (this.radio.tx) q += rig.TXMETERS;
-      if (this.forceSlow || this.ticks % 4 === 0) q += rig.SLOW;
+      if (rig.FRAME_GAP_MS) {
+        // Pilote à trames : une tranche des lectures lentes par cycle, trames espacées
+        if (!this.queue.length) {
+          const n = rig.SLOW_PER_TICK || 4;
+          const slow = [];
+          for (let i = 0; i < n * (this.forceSlow ? 2 : 1); i++) slow.push(rig.SLOW[(this.slowPos + i) % rig.SLOW.length]);
+          this.slowPos = (this.slowPos + slow.length) % rig.SLOW.length;
+          this.queue = rig.FAST.concat(this.radio.tx ? rig.TXMETERS : [], slow);
+          this._drain();
+        }
+      } else {
+        let q = rig.FAST;
+        if (this.radio.tx) q += rig.TXMETERS;
+        if (this.forceSlow || this.ticks % 4 === 0) q += rig.SLOW;
+        this._write(q);
+      }
       this.forceSlow = false;
       this.ticks++;
-      this._write(q);
       this._push(false);
     }
 
@@ -140,7 +161,7 @@
         } else if (m.op === 'freqB') {
           this._write(FTX1.cmdFreqB(m.hz));
         } else if (m.op === 'mode') {
-          this._write(FTX1.cmdMode(m.code, !!m.sub));
+          this._write(FTX1.cmdMode(m.code, !!m.sub, this.radio));
         } else if (m.op === 'ctl') {
           const v = FTX1.validate(m.id, m.value, this.radio, { skipWhen: true });
           if (FTX1.CONTROL[m.id].transmits && (!this.serialOpen || !this.radio.connected)) return this.log('Refusé : radio non connectée');
@@ -177,6 +198,9 @@
       if (this.catKeyed) this.unkey('arrêt');
       clearInterval(this.timer);
       this.timer = null;
+      clearTimeout(this.queueTimer);
+      this.queueTimer = null;
+      this.queue = [];
     }
 
     // ---------- interne ----------
@@ -187,6 +211,19 @@
       } catch (e) {
         this.log('Erreur écriture série : ' + e.message);
       }
+    }
+
+    _drain() {
+      if (this.queueTimer) return;
+      const next = () => {
+        this.queueTimer = null;
+        if (!this.serialOpen) { this.queue = []; return; }
+        const f = this.queue.shift();
+        if (!f) return;
+        this._write(f);
+        if (this.queue.length) this.queueTimer = setTimeout(next, this.rig.FRAME_GAP_MS);
+      };
+      next();
     }
 
     _push(force) {

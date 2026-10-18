@@ -4,18 +4,14 @@
   const $ = (id) => document.getElementById(id);
 
   // ------------------------------------------------------------ données
-  const MODE_KEYS = [
-    ['1', 'LSB'], ['2', 'USB'], ['7', 'CW-L'], ['3', 'CW-U'], ['6', 'RTTY-L'], ['9', 'RTTY-U'],
-    ['8', 'DATA-L'], ['C', 'DATA-U'], ['E', 'PSK'], ['5', 'AM'], ['D', 'AM-N'], ['4', 'FM'],
-    ['B', 'FM-N'], ['A', 'DATA-FM']
-  ];
-  // [libellé, kHz par défaut, mode conseillé (code MD) ou null, limites en kHz]
+  // Les touches de mode viennent du pilote de la radio connectée (codes différents chez Yaesu et Icom)
+  // [libellé, kHz par défaut, mode conseillé (libellé) ou null, limites en kHz]
   const BANDS = [
-    ['160M', 1840, '1', 1800, 2000], ['80M', 3700, '1', 3500, 4000], ['60M', 5357, null, 5250, 5450],
-    ['40M', 7100, '1', 7000, 7300], ['30M', 10136, null, 10100, 10150], ['20M', 14200, '2', 14000, 14350],
-    ['17M', 18130, '2', 18068, 18168], ['15M', 21250, '2', 21000, 21450], ['12M', 24950, '2', 24890, 24990],
-    ['10M', 28500, '2', 28000, 29700], ['6M', 50150, '2', 50000, 54000], ['2M', 144300, '2', 144000, 148000],
-    ['70CM', 432200, '2', 430000, 440000]
+    ['160M', 1840, 'LSB', 1800, 2000], ['80M', 3700, 'LSB', 3500, 4000], ['60M', 5357, null, 5250, 5450],
+    ['40M', 7100, 'LSB', 7000, 7300], ['30M', 10136, null, 10100, 10150], ['20M', 14200, 'USB', 14000, 14350],
+    ['17M', 18130, 'USB', 18068, 18168], ['15M', 21250, 'USB', 21000, 21450], ['12M', 24950, 'USB', 24890, 24990],
+    ['10M', 28500, 'USB', 28000, 29700], ['6M', 50150, 'USB', 50000, 54000], ['2M', 144300, 'USB', 144000, 148000],
+    ['70CM', 432200, 'USB', 430000, 440000]
   ];
   const STEPS = [[10, '10 Hz'], [100, '100 Hz'], [1000, '1 kHz'], [10000, '10 kHz'], [100000, '100 kHz']];
   // Où placer chaque réglage du pilote dans la page
@@ -72,6 +68,12 @@
     if (hz == null) return '—';
     const b = BANDS.find((x) => hz >= x[3] * 1000 && hz <= x[4] * 1000);
     return b ? b[0] : 'GEN';
+  }
+  function powerRangeText(r) {
+    const range = RIG().POWER_RANGE && RIG().POWER_RANGE[r.powerHead];
+    if (!range) return '';
+    const fmt = (w) => String(w).replace('.', ',');
+    return ' · ' + (r.powerHead === '1' ? 'tête Field' : RIG().NAME.replace(/^\S+ /, '')) + ' ' + fmt(range[0]) + '–' + fmt(range[1]) + ' W';
   }
   function badge(el, text, cls) {
     el.textContent = text;
@@ -183,8 +185,11 @@
     b.textContent = label;
     return b;
   }
-  function buildStatic() {
-    for (const [code, name] of MODE_KEYS) {
+  // Touches de mode et de bande : dépendent du modèle connecté (codes de mode, couverture)
+  function buildKeys(R) {
+    $('modeKeys').textContent = '';
+    $('bandKeys').textContent = '';
+    for (const [code, name] of R.MODE_KEYS || []) {
       const b = mkBtn(name);
       b.dataset.code = code;
       b.setAttribute('aria-pressed', 'false');
@@ -195,7 +200,9 @@
       });
       $('modeKeys').appendChild(b);
     }
-    for (const [name, khz, mode] of BANDS) {
+    for (const [name, khz, modeName] of BANDS) {
+      if (khz * 1000 > R.FREQ_MAX) continue;
+      const mk = modeName && (R.MODE_KEYS || []).find((x) => x[1] === modeName);
       const b = mkBtn(name);
       b.dataset.band = name;
       b.setAttribute('aria-pressed', 'false');
@@ -203,10 +210,12 @@
         if (!iControl()) return say('Prenez la main pour changer de bande.', 'warn');
         if (st.ptt && st.ptt.active) return say('Réglage bloqué pendant l’émission.', 'warn');
         setFreq(khz * 1000, target);
-        if (mode) setTimeout(() => send({ t: 'set', mode, sub: target === 'B' }), 200);
+        if (mk) setTimeout(() => send({ t: 'set', mode: mk[0], sub: target === 'B' }), 200);
       });
       $('bandKeys').appendChild(b);
     }
+  }
+  function buildStatic() {
     for (const [s, label] of STEPS) {
       const b = mkBtn(label, 'accent');
       b.dataset.step = s;
@@ -238,7 +247,7 @@
       const r = st.radio || {};
       const range = RIG().POWER_RANGE[r.powerHead];
       if (!range || r.power == null) return say('Puissance du TRX pas encore lue.', 'warn');
-      const stepW = r.powerHead === '2' ? 5 : 0.5;
+      const stepW = (RIG().POWER_STEP && RIG().POWER_STEP[r.powerHead]) || 5;
       const top = Math.min(range[1], me.maxWatts);
       const w = Math.max(range[0], Math.min(top, Math.round((r.power + dir * stepW) / stepW) * stepW));
       if (w === r.power) return say(dir > 0 ? 'Maximum atteint : ' + top + ' W' + (me.maxWatts < range[1] ? ' (limite de votre licence)' : '') : 'Minimum atteint : ' + range[0] + ' W', 'warn');
@@ -272,6 +281,7 @@
       const hz = t && t[v - 1];
       return hz ? (hz >= 1000 ? (hz / 1000).toFixed(hz % 100 ? 2 : 1) + ' kHz' : hz + ' Hz') : '—';
     }
+    if (c.fmt) return c.fmt(v);
     if (c.pct) return Math.round((v / 255) * 100) + ' %';
     if (c.off0 && v === 0) return 'OFF';
     if (c.unit) return (c.min < 0 && v > 0 ? '+' : '') + v + ' ' + c.unit;
@@ -309,6 +319,7 @@
     const R = RIG();
     ctlModel = R.ID;
     ctlRefs = {};
+    buildKeys(R);
     const boxes = { front: 'sec-front', filter: 'sec-filter', dual: 'sec-dual', audio: 'sec-audio', dsp: 'sec-dsp', tx: 'sec-tx' };
     for (const k in boxes) $(boxes[k]).textContent = '';
     $('sec-other').textContent = '';
@@ -317,7 +328,7 @@
     for (const k in LAYOUT) for (const id of LAYOUT[k]) { where[id] = boxes[k]; if (R.CONTROL && R.CONTROL[id]) order.push(R.CONTROL[id]); }
     for (const c of R.CONTROLS || []) if (order.indexOf(c) < 0) order.push(c);
     for (const c of order) {
-      const box = $(where[c.id] || 'sec-other');
+      const box = $(where[c.id] || boxes[c.sec] || 'sec-other');
       const label = SHORT[c.id] || c.label;
       const ref = { c };
       if (c.type === 'toggle' || c.type === 'action') {
@@ -498,7 +509,7 @@
       badge($('mode' + w), live ? (w === 'A' ? r.mode : r.modeB) || '---' : '---', 'b-mode');
     }
     const wt = RIG().widthTable && RIG().widthTable(r.mode);
-    $('widthA').textContent = 'BW ' + (live && r.narrow ? 'NAR' : live && wt && r.width && wt[r.width - 1] ? (wt[r.width - 1] / 1000).toFixed(1) + 'K' : live && r.mode && /AM|FM/.test(r.mode) ? 'FIX' : '—');
+    $('widthA').textContent = RIG().bwText ? (live ? RIG().bwText(r) : '—') : 'BW ' + (live && r.narrow ? 'NAR' : live && wt && r.width && wt[r.width - 1] ? (wt[r.width - 1] / 1000).toFixed(1) + 'K' : live && r.mode && /AM|FM/.test(r.mode) ? 'FIX' : '—');
     // S-mètre en réception, puissance relative en émission
     const raw = txing ? r.m5 : r.smeter;
     const n = live ? Math.round((Math.min(255, raw || 0) / 255) * 30) : 0;
@@ -519,14 +530,18 @@
     bA.textContent = '';
     if (live) {
       const add = (txt, cls) => { const s = document.createElement('span'); badge(s, txt, cls); bA.appendChild(s); };
-      add('ATT', r.att ? 'green' : '');
-      add(r.preamp ? 'AMP' + r.preamp : 'IPO', r.preamp ? 'green' : '');
-      add(r.nb ? 'NB ' + r.nb : 'NB', r.nb ? 'amber' : '');
-      add(r.nr ? 'DNR ' + r.nr : 'DNR', r.nr ? 'amber' : '');
-      add('NOTCH', r.notch ? 'amber' : '');
-      add('DNF', r.dnf ? 'amber' : '');
-      add('NAR', r.narrow ? 'cyan' : '');
-      if (r.agc != null) add('AGC ' + ['OFF', 'FAST', 'MID', 'SLOW', 'AUTO'][r.agc], 'cyan');
+      const C = RIG().CONTROL || {};
+      const optLabel = (id, v) => { const o = C[id] && C[id].options && C[id].options.find((x) => x[0] === v); return o ? o[1] : null; };
+      // Interrupteur seul (« NB ») ou niveau avec arrêt à 0 (« NB 3 ») selon le pilote
+      const flag = (id, txt, cls) => { if (!C[id]) return; const t = C[id].badge || txt; add(r[id] && C[id].type === 'level' ? t + ' ' + r[id] : t, r[id] ? cls : ''); };
+      if (C.att) add(r.att && C.att.type === 'select' ? 'ATT ' + optLabel('att', r.att) : C.att.badge || 'ATT', r.att ? 'green' : '');
+      if (C.preamp) add(optLabel('preamp', r.preamp) || 'PRE', r.preamp ? 'green' : '');
+      flag('nb', 'NB', 'amber');
+      flag('nr', 'DNR', 'amber');
+      flag('notch', 'NOTCH', 'amber');
+      flag('dnf', 'DNF', 'amber');
+      flag('narrow', 'NAR', 'cyan');
+      if (r.agc != null && optLabel('agc', r.agc)) add('AGC ' + optLabel('agc', r.agc), 'cyan');
       if (r.rf != null && r.rf < 255) add('RFG ' + Math.round((r.rf / 255) * 100), 'amber');
       if (r.lock) add('LOCK', 'amber');
     }
@@ -549,7 +564,7 @@
     const pwrOk = iControl() && !!RIG().POWER_RANGE[r.powerHead] && !onAir && !(me && me.rxOnly);
     $('pwrDown').disabled = !pwrOk;
     $('pwrUp').disabled = !pwrOk;
-    $('pwrLimit').textContent = !me ? '' : me.rxOnly ? 'Écouteur : émission interdite' : !me.canTx ? 'Compte en écoute seule' : 'Votre limite : ' + me.maxWatts + ' W' + (r.powerHead === '1' ? ' · tête Field 0,5–10 W' : r.powerHead === '2' ? ' · TRX 5–100 W' : '');
+    $('pwrLimit').textContent = !me ? '' : me.rxOnly ? 'Écouteur : émission interdite' : !me.canTx ? 'Compte en écoute seule' : 'Votre limite : ' + me.maxWatts + ' W' + powerRangeText(r);
 
     // RX / TX
     $('rxtx').classList.toggle('tx', live && txing);
@@ -567,7 +582,8 @@
     $('mMode').textContent = live && txing ? 'TX' : 'RX';
     $('mMode').classList.toggle('tx', live && txing);
     const tx = live && txing;
-    meter('mtPo', tx && r.m5 != null, tx && r.m5 != null ? Math.round((r.m5 / 255) * 100) + ' %' : '0 W', tx && r.m5 != null ? r.m5 / 255 : 0);
+    const po = r.m5 == null ? null : R.poFrac ? R.poFrac(r.m5) : r.m5 / 255;
+    meter('mtPo', tx && po != null, tx && po != null ? Math.round(po * 100) + ' %' : '0 W', tx && po != null ? po : 0);
     const swr = R.swrValue && r.m6 != null ? R.swrValue(r.m6) : null;
     meter('mtSwr', tx && swr != null, tx && swr != null ? swr.toFixed(1) : '1.0', tx && swr != null ? (swr - 1) / 4 : 0);
     meter('mtAlc', tx && r.m4 != null, tx && r.m4 != null ? Math.round((r.m4 / 255) * 100) + ' %' : '0 %', tx && r.m4 != null ? r.m4 / 255 : 0);

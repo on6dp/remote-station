@@ -1,14 +1,15 @@
-# Remote Station — v0.1.4 (CAT seul)
+# Remote Station — v0.1.5 (CAT seul)
 
-Pilotage à distance du **Yaesu FTX-1** du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
+Pilotage à distance d'un transceiver du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
+Trois modèles sont pris en charge : **Yaesu FTX-1**, **Yaesu FTDX10** et **Icom IC-7300**. Un seul est branché à la fois ; on choisit lequel sur la page Station du club, et la face avant des membres s'adapte toute seule.
 
 Cette version gère : fréquence (VFO A et B), mode, S-mètre, puissance, PTT, les fonctions du transceiver (voir ci-dessous), comptes par indicatif, une seule personne aux commandes, journal des accès. **L'audio (réception et micro) arrive en v0.2.**
 
 ## Comment ça marche
 
 ```
- FTX-1 ──USB──► PC du club (Chrome)          VPS VEX 57.131.159.97            Membre (navigateur)
-  CAT-1        page https://remote.op0p.be/station ─wss──► nginx ─► Node :9000 ◄──wss── https://remote.op0p.be
+ TRX ────USB──► PC du club (Chrome)          VPS VEX 57.131.159.97            Membre (navigateur)
+  CAT / CI-V   page https://remote.op0p.be/station ─wss──► nginx ─► Node :9000 ◄──wss── https://remote.op0p.be
                (Web Serial, sortant seulement)                (comptes, PTT, journal)
 ```
 
@@ -23,16 +24,20 @@ La page opérateur reprend la disposition de l'interface de RigPlane Core (licen
 - entre les deux, la colonne **DUAL** : VFO active, A → B, B → A, A ⇄ B, SPLIT, RIT, XIT, LOCK ;
 - à gauche : RF front end, modes, filtre ; à droite : audio, DSP, TX (PTT, puissance), opérateurs ;
 - en bas, les **mesures de la station** : Po, SWR, ALC, Id, Vd, COMP, S ;
-- à la place du spectre (non transmis par le CAT du FTX-1) : l'accord (pas, bandes, aller à) et le **journal d'activité** en direct.
+- à la place du spectre (non transmis par la liaison CAT) : l'accord (pas, bandes, aller à) et le **journal d'activité** en direct.
 
 ## Fonctions du transceiver
 
-La face avant a un panneau à quatre onglets, généré à partir du pilote de la radio :
+Les réglages affichés sont générés à partir du pilote de la radio connectée : les touches de mode, les bandes et les réglages changent selon le modèle. Pour le FTX-1 :
 
 - **VFO et SPLIT** : SPLIT, VFO active, A ⇄ B, A → B, B → A, RIT, XIT et décalage, LOCK de la face avant du club.
 - **Filtres et DSP** : WIDTH (selon le mode), NARROW, IF SHIFT, CONTOUR, APF (en CW), DNF, NOTCH et sa fréquence, NB, DNR.
 - **Réception** : AF, RF, squelch, AGC, préampli (IPO/AMP1/AMP2, jusqu'à 54 MHz), ATT (jusqu'à 60 MHz).
 - **Émission** : gain micro, processeur et niveau, VOX, tuner et TUNE.
+
+Différences des autres modèles :
+- **FTDX10** : mêmes fonctions, avec ATT 6/12/18 dB, NB et DNR en interrupteur + niveau, puissance 5–100 W, couverture jusqu'à 75 MHz (pas de 2 m ni 70 cm).
+- **IC-7300** : modes LSB, USB, CW, CW-R, RTTY, RTTY-R, AM, FM et les modes DATA (USB-D…) ; filtres FIL1/FIL2/FIL3 et PBT intérieur/extérieur à la place de WIDTH/SHIFT ; NB, NR, NOTCH manuel (position) et AUTO NOTCH ; ATT 20 dB, P.AMP1/2, AGC FAST/MID/SLOW ; COMP ; tuner et TUNE ; RIT/XIT (ΔTX). Pas de B → A ni de choix de la VFO active (l'IC-7300 ne les donne pas par CI-V) : la VFO A de l'écran est la VFO sélectionnée sur la radio.
 
 La VFO B s'accorde aussi : cliquez sur la ligne SUB de l'écran, et le bouton, les touches de mode et de bande et « Aller à » agissent alors sur B. En émission, l'écran affiche la puissance relative, le SWR et l'ALC.
 
@@ -44,19 +49,23 @@ Règles de sécurité propres à ces fonctions :
 
 ### Modèles de transceivers
 
-La page Station propose une liste de modèles. Le **Yaesu FTX-1** est pris en charge. Les Icom IC-7300, IC-705, IC-7610, IC-9700, les Xiegu X6100 et X6200 et le Lab599 TX-500 sont listés comme « prévu » : leur pilote reste à écrire. Le serveur refuse une station qui annonce un modèle sans pilote.
+Sur la page Station, la liste « Modèle du TRX » propose les trois transceivers du club : **Yaesu FTX-1**, **Yaesu FTDX10** et **Icom IC-7300**. Choisir un modèle recharge la page avec son pilote ; la vitesse série est mémorisée pour chaque modèle (38400 bps pour les Yaesu, 115200 pour l'IC-7300). Les membres voient le nom du TRX connecté en haut de leur page, et leurs touches s'adaptent.
+
+Les pilotes FTDX10 et IC-7300 sont écrits d'après les manuels CAT/CI-V et testés sur des radios simulées : faites le premier essai réel en réception seule, puis l'émission sur charge fictive, comme pour le FTX-1.
+
+Les Icom IC-705, IC-7610, IC-9700, les Xiegu X6100 et X6200 et le Lab599 TX-500 restent listés comme « prévu ». Le serveur refuse une station qui annonce un modèle sans pilote.
 
 ## Accès et puissance selon la licence
 
 - **Connexion** : seuls les indicatifs belges sont acceptés (préfixes `ON`, `OO`, `OP`, `OQ`, `OR`, `OS`, `OT`), à la connexion comme à la création d'un compte avec `adduser.js`.
 - **Écouteurs (ONL)** : les indicatifs d'écouteur, comme `ONL12345`, peuvent se connecter et régler la réception quand ils ont la main, mais ne peuvent **jamais émettre** : ni PTT, ni TUNE, ni réglage de puissance, même si leur compte a été créé sans `--no-tx`. Liste modifiable avec `rxOnlyPrefixes` dans `config.json`.
-- **Puissance** : les indicatifs commençant par `ON3` sont limités à **25 W**, tous les autres à **1500 W**. Concrètement, le FTX-1 ne dépasse pas 100 W (ampli SPA-1) ou 10 W (tête Field), donc seule la limite ON3 agit sur la radio :
+- **Puissance** : les indicatifs commençant par `ON3` sont limités à **25 W**, tous les autres à **1500 W**. Concrètement, les trois TRX du club ne dépassent pas 100 W (le FTX-1 : 100 W avec l'ampli SPA-1, 10 W avec la tête Field seule), donc seule la limite ON3 agit sur la radio :
   - à la prise de main par un ON3, la puissance du TRX est ramenée à 25 W ;
   - un ON3 ne peut pas régler plus de 25 W ;
   - si la puissance dépasse la limite de l'opérateur en émission (bouton tourné au club, par exemple), l'émission est coupée et la puissance ramenée à la limite ;
   - le PTT est refusé tant que la puissance du TRX n'a pas été lue.
 - Ces règles se modifient dans `config.json` : `allowedPrefixes`, `rxOnlyPrefixes`, `powerRules` (la première règle dont le préfixe correspond s'applique) et `defaultMaxWatts`. Sans ces lignes, les valeurs ci-dessus s'appliquent par défaut.
-- **Ampli linéaire** : la limite porte sur la puissance réglée dans le FTX-1. Si un ampli externe est branché après le TRX, le logiciel ne le voit pas : il doit être hors circuit quand un ON3 opère.
+- **Ampli linéaire** : la limite porte sur la puissance réglée dans le TRX. Si un ampli externe est branché après le TRX, le logiciel ne le voit pas : il doit être hors circuit quand un ON3 opère.
 
 ## Sécurités d'émission
 
@@ -75,7 +84,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.1.4.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.1.5.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -83,7 +92,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.1.4.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.1.5.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station
@@ -131,11 +140,13 @@ sudo certbot --nginx -d remote.op0p.be
 
 Le HTTPS est **obligatoire** : Chrome n'autorise le Web Serial que sur une page sécurisée.
 
-Test immédiat : ouvre `https://remote.op0p.be/station`, colle le jeton, clique « Enregistrer et reconnecter », puis « Tester sans radio ». Dans un autre onglet, connecte-toi sur `https://remote.op0p.be` : tu pilotes le FTX-1 virtuel.
+Test immédiat : ouvre `https://remote.op0p.be/station`, colle le jeton, clique « Enregistrer et reconnecter », puis « Tester sans radio ». Dans un autre onglet, connecte-toi sur `https://remote.op0p.be` : tu pilotes le TRX virtuel du modèle choisi.
 
 ## 2. Au club : PC de la station
 
 **Navigateur** : Chrome, Edge ou Chromium (Firefox et Safari ne gèrent pas le Web Serial).
+
+Choisir d'abord le **modèle du TRX** branché dans « Réglages » (FTX-1, FTDX10 ou IC-7300). La page rappelle les réglages de la radio correspondants.
 
 **FTX-1** (firmware MAIN 1.08 ou plus récent, exigé pour le CAT) :
 - Operation setting → General → **CAT-1 RATE : 38400**
@@ -144,13 +155,23 @@ Test immédiat : ouvre `https://remote.op0p.be/station`, colle le jeton, clique 
 
 **Windows** : installer le pilote « Virtual COM port » de Yaesu. Le FTX-1 crée deux ports : il faut choisir **Enhanced COM Port** (CAT-1), pas Standard.
 
+**FTDX10** :
+- Operation setting → General → **CAT RATE : 38400** (ou la vitesse choisie sur la page)
+- RPTT SELECT laissé sur **OFF**
+- Windows : pilote « Virtual COM port » de Yaesu ; choisir le port **Enhanced COM Port**.
+
+**IC-7300** :
+- MENU → SET → Connectors → CI-V : **CI-V USB Baud Rate : 115200**, **CI-V Address : 94h**, **CI-V USB Echo Back : OFF**
+- MENU → SET → Connectors : **USB SEND** et **USB Keying (CW/RTTY)** sur **OFF**
+- Windows : pilote USB Icom (Silicon Labs CP210x) ; l'IC-7300 crée un seul port COM.
+
 **Raspberry Pi / Linux** : `sudo usermod -aG dialout $USER` puis redémarrer la session. Dans `ls -l /dev/serial/by-id/`, le port qui finit par `-if00` est en général le port Enhanced.
 
-**Aucun autre logiciel** (WSJT-X, logiciel de log…) ne doit utiliser le port CAT-1 en même temps.
+**Aucun autre logiciel** (WSJT-X, logiciel de log…) ne doit utiliser le port CAT en même temps.
 
 Mise en route :
 1. Ouvrir `https://remote.op0p.be/station`, coller le jeton, « Enregistrer et reconnecter ».
-2. « Choisir le port du FTX-1 » → Enhanced COM Port. Le journal doit afficher « FTX-1 répond ».
+2. « Choisir le port du TRX » → le port de la radio. Le journal doit afficher « Yaesu FTX-1 répond » (ou FTDX10, IC-7300).
 3. L'autorisation du port est mémorisée : au prochain démarrage, la page rouvre le port toute seule.
 
 **Démarrage automatique** :
@@ -162,7 +183,7 @@ Mise en route :
 ## 3. Activer l'émission
 
 1. Essais sur **charge fictive**, en présence d'un membre au club : PTT, relâchement, débranchement du câble réseau du PC du club pendant l'émission, fermeture de l'onglet du membre pendant l'émission.
-2. Si le menu du FTX-1 propose un temporisateur d'émission (TOT), le régler : c'est la dernière sécurité si le PC du club plante en pleine émission.
+2. Si le menu du TRX propose un temporisateur d'émission (TOT), le régler : c'est la dernière sécurité si le PC du club plante en pleine émission.
 3. Vérifier les plages `txRanges` de `config.json` par rapport à la licence de la station du club (IBPT). Les valeurs fournies sont celles de la Région 1 IARU, **à valider**.
 4. Mettre `"allowTx": true` puis `sudo systemctl restart remote-station`.
 
@@ -181,7 +202,9 @@ sudo grep tx_start /opt/remote-station/logs/access-$(date +%Y-%m).log | tail
 | `server.js` | Serveur VPS : comptes, contrôle, PTT, relais, journal |
 | `lib/ws-lite.js` | Serveur WebSocket minimal, sans dépendance |
 | `lib/auth.js` | Mots de passe (scrypt) |
-| `public/js/ftx1.js` | Pilote CAT FTX-1 (commandes, réglages, FTX-1 virtuel pour les tests) |
+| `public/js/yaesu.js` | Base commune des pilotes CAT Yaesu |
+| `public/js/ftx1.js`, `public/js/ftdx10.js` | Pilotes FTX-1 et FTDX10 (différences par rapport à la base, radio virtuelle pour les tests) |
+| `public/js/ic7300.js` | Pilote CI-V de l'IC-7300 (trames binaires, radio virtuelle pour les tests) |
 | `public/js/rigs-catalog.js` | Liste des modèles proposés sur la page Station |
 | `TIERS.md` | Sources et licences de tiers (RigPlane Core, MIT) |
 | `public/js/station-core.js` | Logique de la page Station (polling, sécurités) |
@@ -194,5 +217,5 @@ sudo grep tx_start /opt/remote-station/logs/access-$(date +%Y-%m).log | tail
 
 ## Suite prévue
 
-- **v0.2 — audio** : audio RX capté sur la carte son USB du FTX-1, relayé par le VPS (plusieurs membres peuvent écouter), micro du membre vers le TRX pendant le PTT.
+- **v0.2 — audio** : audio RX capté sur la carte son USB du TRX, relayé par le VPS (plusieurs membres peuvent écouter), micro du membre vers le TRX pendant le PTT.
 - **v0.3** : réservation de créneaux, mesures en émission (puissance, ROS, ALC), plages d'émission par membre selon sa classe de licence.

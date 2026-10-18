@@ -10,7 +10,11 @@ const path = require('path');
 const ws = require('./lib/ws-lite');
 const auth = require('./lib/auth');
 // Pilotes de radio disponibles (le modèle est annoncé par la page Station)
-const DRIVERS = { ftx1: require('./public/js/ftx1.js') };
+const DRIVERS = {
+  ftx1: require('./public/js/ftx1.js'),
+  ftdx10: require('./public/js/ftdx10.js'),
+  ic7300: require('./public/js/ic7300.js')
+};
 const DEFAULT_RIG = DRIVERS.ftx1;
 const rig = () => (station && station.rig) || DEFAULT_RIG;
 
@@ -459,14 +463,14 @@ function onStation(conn, m) {
     connected: !!r.connected,
     freq: Number.isFinite(r.freq) ? r.freq : null,
     mode: typeof r.mode === 'string' ? r.mode.slice(0, 12) : null,
-    modeCode: typeof r.modeCode === 'string' ? r.modeCode.slice(0, 1) : null,
+    modeCode: typeof r.modeCode === 'string' && /^[0-9A-Z]{1,3}$/.test(r.modeCode) ? r.modeCode : null,
     freqB: Number.isFinite(r.freqB) ? r.freqB : null,
     modeB: typeof r.modeB === 'string' ? r.modeB.slice(0, 12) : null,
-    modeCodeB: typeof r.modeCodeB === 'string' ? r.modeCodeB.slice(0, 1) : null,
+    modeCodeB: typeof r.modeCodeB === 'string' && /^[0-9A-Z]{1,3}$/.test(r.modeCodeB) ? r.modeCodeB : null,
     tx: [0, 1, 2].indexOf(r.tx) >= 0 ? r.tx : 0,
     smeter: Number.isFinite(r.smeter) ? r.smeter : 0,
     power: Number.isFinite(r.power) ? r.power : null,
-    powerHead: r.powerHead === '1' || r.powerHead === '2' ? r.powerHead : null,
+    powerHead: typeof r.powerHead === 'string' && Object.prototype.hasOwnProperty.call(rig().POWER_RANGE, r.powerHead) ? r.powerHead : null,
     model: station && station.rig ? station.rig.ID : null
   };
   // Réglages propres au pilote (SPLIT, filtres, mesures…) : nombres uniquement

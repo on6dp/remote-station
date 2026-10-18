@@ -38,7 +38,7 @@
 
   <section class="st-card">
     <h2>Réglages</h2>
-    <p id="rigHint">Pour le FTX-1 : menu Operation setting → General, « CAT-1 rate » et « CAT-1 CAT-3 stop bit » doivent correspondre à ces valeurs. Choisissez le port <b>Enhanced COM Port</b> (CAT-1).</p>
+    <p id="rigHint"></p>
     <form class="st-form" id="cfgForm">
       <label>Modèle du TRX
         <select id="cfgModel"></select>
@@ -48,7 +48,7 @@
       </label>
       <label>Vitesse (bps)
         <select id="cfgBaud">
-          <option>4800</option><option>9600</option><option>19200</option><option selected>38400</option><option>115200</option>
+          <option>4800</option><option>9600</option><option>19200</option><option selected>38400</option><option>57600</option><option>115200</option>
         </select>
       </label>
       <label>Bits de stop
@@ -67,7 +67,10 @@
 </main>
 
 <script src="/js/rigs-catalog.js"></script>
+<script src="/js/yaesu.js"></script>
 <script src="/js/ftx1.js"></script>
+<script src="/js/ftdx10.js"></script>
+<script src="/js/ic7300.js"></script>
 <script src="/js/station-core.js"></script>
 <script src="/js/station.js"></script>
 </body>

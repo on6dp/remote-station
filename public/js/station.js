@@ -46,14 +46,23 @@
     sel.appendChild(o);
   }
   sel.value = MODEL;
-  if (MODEL !== 'ftx1') $('rigHint').hidden = true;
+  // Changer de modèle recharge la page avec le bon pilote (la vitesse série mémorisée pour ce modèle est reprise)
+  sel.addEventListener('change', () => {
+    if (sel.value === MODEL) return;
+    store.set('model', sel.value);
+    core.stop();
+    setTimeout(() => location.reload(), 200);
+  });
+  $('rigHint').textContent = RIG.hint || '';
+  $('rigHint').hidden = !RIG.hint;
 
   const core = new StationCore({
     rig: RIG,
     writeSerial(s) {
       if (sim) return sim.write(s);
       if (!writer) return;
-      writeChain = writeChain.then(() => writer && writer.write(enc.encode(s))).catch((e) => log('Écriture série : ' + e.message, 'st-bad'));
+      const bytes = typeof s === 'string' ? enc.encode(s) : s;
+      writeChain = writeChain.then(() => writer && writer.write(bytes)).catch((e) => log('Écriture série : ' + e.message, 'st-bad'));
     },
     sendWs(o) {
       if (ws && ws.readyState === 1) ws.send(JSON.stringify(o));
@@ -110,8 +119,8 @@
 
   // ------------------------------------------------------------ Web Serial
   async function openPort(p) {
-    const baudRate = Number(store.get('baud', String(RIG.serial.baudRate)));
-    const stopBits = Number(store.get('stop', String(RIG.serial.stopBits)));
+    const baudRate = Number(store.get('baud.' + MODEL, String(RIG.serial.baudRate)));
+    const stopBits = Number(store.get('stop.' + MODEL, String(RIG.serial.stopBits)));
     try {
       await p.open({ baudRate, dataBits: 8, stopBits, parity: 'none', flowControl: 'none', bufferSize: 4096 });
     } catch (e) {
@@ -130,12 +139,11 @@
   }
 
   async function readLoop() {
-    const dec = new TextDecoder();
     try {
       for (;;) {
         const { value, done } = await reader.read();
         if (done) break;
-        if (value) core.onSerialData(dec.decode(value, { stream: true }));
+        if (value) core.onSerialData(value); // octets bruts : le pilote les découpe (texte Yaesu ou trames CI-V)
       }
     } catch (e) {
       log('Lecture série interrompue : ' + e.message, 'st-warn');
@@ -215,12 +223,13 @@
 
   // ------------------------------------------------------------ réglages
   $('cfgToken').value = store.get('token', '');
-  $('cfgBaud').value = store.get('baud', '38400');
-  $('cfgStop').value = store.get('stop', '1');
+  // Vitesse et bits de stop mémorisés par modèle (FTX-1/FTDX10 : 38400 ; IC-7300 : 115200)
+  $('cfgBaud').value = store.get('baud.' + MODEL, String(RIG.serial.baudRate));
+  $('cfgStop').value = store.get('stop.' + MODEL, String(RIG.serial.stopBits));
   $('btnSave').addEventListener('click', async () => {
     store.set('token', $('cfgToken').value.trim());
-    store.set('baud', $('cfgBaud').value);
-    store.set('stop', $('cfgStop').value);
+    store.set('baud.' + MODEL, $('cfgBaud').value);
+    store.set('stop.' + MODEL, $('cfgStop').value);
     if ($('cfgModel').value !== MODEL) {
       store.set('model', $('cfgModel').value);
       log('Modèle changé : rechargement de la page');
