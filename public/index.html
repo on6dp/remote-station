@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Remote Station</title>
+<meta name="theme-color" content="#1b2026">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/panel.css">
+</head>
+<body>
+
+<main class="rig" id="rig">
+  <header class="rig-head">
+    <div class="engrave" id="clubName">Remote Station<small id="stationCall"></small></div>
+    <div class="lamps" aria-live="polite">
+      <span class="lamp" id="lampLink"><i></i>Serveur</span>
+      <span class="lamp" id="lampStation"><i></i>Station</span>
+      <span class="lamp" id="lampTrx"><i></i>TRX</span>
+      <span class="lamp" id="lampTx"><i></i>Émission</span>
+    </div>
+  </header>
+
+  <section class="top">
+    <div class="glass" id="glass">
+      <div class="g-row g-tags">
+        <div class="g-row">
+          <span class="tag">MAIN</span>
+          <span class="tag" id="modeTag">---</span>
+          <span class="tag ghost" id="txTag">TX</span>
+        </div>
+        <span id="ctrlTag">Lecture seule</span>
+      </div>
+
+      <div class="freq" id="freq" aria-label="Fréquence" role="group"></div>
+
+      <div class="meter" aria-hidden="true">
+        <div class="bars" id="bars"></div>
+        <div class="scale"><span>1</span><span>3</span><span>5</span><span>7</span><span>9</span><span>+20</span><span>+40</span><span>+60</span></div>
+      </div>
+      <div class="meter-read">
+        <span>Signal <b id="sRead">—</b></span>
+        <span id="txTimer"></span>
+      </div>
+      <div class="g-msg" id="msg" role="status"></div>
+    </div>
+
+    <div class="vfo-block">
+      <div class="knob" id="knob" role="slider" tabindex="0" aria-label="Bouton d'accord" aria-valuetext="" aria-disabled="true">
+        <div class="knob-cap" id="knobCap"></div>
+      </div>
+      <div class="step-read">Pas <b id="stepRead">100 Hz</b></div>
+    </div>
+  </section>
+
+  <section class="keys">
+    <div class="key-row" id="modeKeys"><span class="lbl">Mode</span></div>
+    <div class="key-row" id="bandKeys"><span class="lbl">Bande</span></div>
+    <div class="key-row">
+      <span class="lbl">Aller à</span>
+      <form class="goto" id="gotoForm">
+        <input id="gotoInput" inputmode="decimal" placeholder="14195,0 kHz" aria-label="Fréquence en kHz">
+        <button class="key" type="submit">Accorder</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="bottom">
+    <div class="ptt-wrap">
+      <button class="ptt" id="ptt" type="button" disabled>PTT<small id="pttHint">Prenez la main pour émettre</small></button>
+    </div>
+    <div class="ops">
+      <div class="ops-line">
+        <p id="ctrlText">Personne n'a la main.</p>
+        <button class="key ctrl-btn" id="ctrlBtn" type="button">Prendre la main</button>
+      </div>
+      <div class="who" id="who" aria-label="Opérateurs connectés"></div>
+      <p class="fine">Audio de réception et micro : prévus pour la prochaine version. Barre d'espace = PTT, flèches haut/bas = accord.</p>
+      <p class="fine">Connecté en tant que <b id="meCall">—</b> · <button class="link-btn" id="logout" type="button">Se déconnecter</button></p>
+    </div>
+  </section>
+</main>
+
+<div class="login" id="login">
+  <form id="loginForm" autocomplete="on">
+    <h1 id="loginTitle">Remote Station</h1>
+    <p>Connectez-vous avec votre indicatif et le mot de passe reçu du club.</p>
+    <label>Indicatif<input name="call" id="loginCall" autocomplete="username" required maxlength="12" autocapitalize="characters" spellcheck="false"></label>
+    <label>Mot de passe<input name="pass" id="loginPass" type="password" autocomplete="current-password" required></label>
+    <button class="primary" type="submit" id="loginBtn">Se connecter</button>
+    <p class="err" id="loginErr" role="alert"></p>
+  </form>
+</div>
+
+<script src="/js/ftx1.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

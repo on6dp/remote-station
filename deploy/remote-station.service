@@ -1,0 +1,29 @@
+[Unit]
+Description=Remote Station (pilotage à distance du FTX-1 du club)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=remotestation
+Group=remotestation
+WorkingDirectory=/opt/remote-station
+ExecStart=/usr/bin/node /opt/remote-station/server.js
+Restart=always
+RestartSec=3
+Environment=NODE_ENV=production
+
+# Durcissement
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/remote-station/logs
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

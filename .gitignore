@@ -1,0 +1,6 @@
+# Secrets et données locales : ne jamais publier
+config.json
+users.json
+users.json.tmp
+logs/*.log
+node_modules/
