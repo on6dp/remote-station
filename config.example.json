@@ -1,8 +1,8 @@
 {
   "listen": "127.0.0.1",
   "port": 9000,
-  "clubName": "Remote Station du club",
-  "stationCall": "OP0P",
+  "clubName": "Remote Station UBA-LGE",
+  "stationCall": "ON5VL / OR0L",
   "stationToken": "",
   "allowTx": false,
   "maxTxSeconds": 120,

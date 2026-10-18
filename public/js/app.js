@@ -924,10 +924,20 @@
   render();
   try { $('loginCall').value = localStorage.getItem('rs.call') || ''; } catch (e) {}
   fetch('/api/info').then((r) => r.json()).then((i) => {
-    document.title = i.clubName;
+    // Titre : indicatif(s) de la station puis nom, ex. « ON5VL / OR0L  Remote Station UBA-LGE »
+    const full = (i.stationCall ? i.stationCall + '  ' : '') + i.clubName;
+    document.title = full;
     $('clubName').textContent = i.clubName;
-    $('stationCall').textContent = i.stationCall;
-    $('loginTitle').textContent = i.clubName;
+    $('stationCall').textContent = i.stationCall || '';
+    const lt = $('loginTitle');
+    lt.textContent = '';
+    if (i.stationCall) {
+      const c = document.createElement('span');
+      c.className = 'login-call';
+      c.textContent = i.stationCall;
+      lt.append(c, document.createElement('br'));
+    }
+    lt.append(document.createTextNode(i.clubName));
   }).catch(() => {});
   showLogin('');
   setInterval(() => { if (st && st.ptt && st.ptt.active) render(); }, 500);
