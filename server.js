@@ -26,7 +26,12 @@ const DEFAULTS = {
   controlIdleMinutes: 15,
   usersFile: 'users.json',
   logDir: 'logs',
-  txRanges: []
+  txRanges: [],
+  // Seuls ces préfixes peuvent se connecter
+  allowedPrefixes: ['ON', 'OO', 'OP', 'OQ', 'OR', 'OS', 'OT'],
+  // Puissance maximale par début d'indicatif (première règle qui correspond), sinon defaultMaxWatts
+  powerRules: [{ prefix: 'ON3', maxWatts: 25 }],
+  defaultMaxWatts: 1500
 };
 let cfg;
 try {
@@ -132,6 +137,29 @@ function send(conn, obj) {
   if (conn && conn.open) conn.send(JSON.stringify(obj));
 }
 
+function maxWattsFor(call) {
+  for (const r of cfg.powerRules || []) {
+    if (call.startsWith(String(r.prefix).toUpperCase())) return Number(r.maxWatts);
+  }
+  return Number(cfg.defaultMaxWatts);
+}
+
+// Ramène la puissance du TRX sous la limite de licence de cet opérateur. Retourne true si une commande a été envoyée.
+let lastPowerFix = 0;
+function limitPower(conn, why) {
+  if (!conn || !conn.user || radio.power == null || radio.power <= conn.user.maxWatts) return false;
+  const range = FTX1.POWER_RANGE[radio.powerHead];
+  if (!range || conn.user.maxWatts < range[0]) return false;
+  const now = Date.now();
+  if (now - lastPowerFix < 2000) return true;
+  lastPowerFix = now;
+  const target = Math.min(conn.user.maxWatts, range[1]);
+  toStation({ t: 'cmd', op: 'power', watts: target, reason: why + ' ' + conn.user.call });
+  send(conn, { t: 'notice', level: 'warn', msg: 'Puissance ramenée à ' + target + ' W (limite de votre licence : ' + conn.user.maxWatts + ' W)' });
+  journal('power_limit', { call: conn.user.call, from: radio.power, to: target });
+  return true;
+}
+
 function inTxRange(hz) {
   return cfg.txRanges.some((r) => hz >= r[0] && hz <= r[1]);
 }
@@ -189,14 +217,17 @@ function startPtt(conn) {
     !station ? 'station hors ligne' :
     !radio.connected ? 'TRX non connecté' :
     radio.freq == null || !inTxRange(radio.freq) ? 'fréquence hors des bandes autorisées' :
+    radio.power == null ? 'puissance du TRX inconnue' :
+    radio.power > conn.user.maxWatts ? 'puissance ' + radio.power + ' W au-delà de votre limite (' + conn.user.maxWatts + ' W)' :
     null;
+  if (why && radio.power != null && radio.power > conn.user.maxWatts) limitPower(conn, 'avant émission');
   if (why) return send(conn, { t: 'notice', level: 'error', msg: 'PTT refusé : ' + why });
   const now = Date.now();
   ptt = { active: true, conn, since: now, lastBeat: now };
   lastCtrlActivity = now;
   toStation({ t: 'cmd', op: 'ptt', on: true, by: conn.user.call });
   toStation({ t: 'txka' });
-  journal('tx_start', { call: conn.user.call, ip: conn.ip, freq: radio.freq, mode: radio.mode });
+  journal('tx_start', { call: conn.user.call, ip: conn.ip, freq: radio.freq, mode: radio.mode, watts: radio.power });
   broadcast();
 }
 
@@ -226,7 +257,11 @@ async function onLogin(conn, m) {
   }
   const call = auth.normCall(m.call);
   const users = auth.loadUsers(USERS_FILE);
-  const rec = auth.validCall(call) ? users[call] : null;
+  if (!auth.validCall(call, cfg.allowedPrefixes)) {
+    journal('login_refused_prefix', { call, ip: conn.ip });
+    return setTimeout(() => send(conn, { t: 'login_fail', msg: 'Accès réservé aux indicatifs belges (' + cfg.allowedPrefixes.join(', ') + ')' }), 600);
+  }
+  const rec = users[call];
   const ok = rec && !rec.disabled && (await auth.verifyPassword(m.pass, rec));
   if (!ok) {
     const expired = f && f.until && f.until <= now;
@@ -236,7 +271,7 @@ async function onLogin(conn, m) {
     return setTimeout(() => send(conn, { t: 'login_fail', msg: 'Indicatif ou mot de passe incorrect' }), 600);
   }
   fails.delete(conn.ip);
-  conn.user = { call, admin: !!rec.admin, tx: rec.tx !== false };
+  conn.user = { call, admin: !!rec.admin, tx: rec.tx !== false, maxWatts: maxWattsFor(call) };
   ops.add(conn);
   journal('login', { call, ip: conn.ip });
   send(conn, {
@@ -246,6 +281,7 @@ async function onLogin(conn, m) {
     canTx: conn.user.tx,
     allowTx: cfg.allowTx,
     maxTxSeconds: cfg.maxTxSeconds,
+    maxWatts: conn.user.maxWatts,
     clubName: cfg.clubName,
     stationCall: cfg.stationCall
   });
@@ -267,6 +303,7 @@ function onOperator(conn, m) {
       controller = conn;
       lastCtrlActivity = now;
       journal('control_take', { call: conn.user.call, force: !!m.force });
+      limitPower(conn, 'prise de main');
       return broadcast();
 
     case 'release':
@@ -288,6 +325,15 @@ function onOperator(conn, m) {
         }
         toStation({ t: 'cmd', op: 'freq', hz });
         radio.freq = hz; // affichage optimiste, corrigé au prochain polling
+      }
+      if (m.power != null) {
+        const w = Number(m.power);
+        const range = FTX1.POWER_RANGE[radio.powerHead];
+        if (!range) return send(conn, { t: 'notice', level: 'error', msg: 'Puissance non réglable : type de tête du TRX inconnu' });
+        if (!(w <= conn.user.maxWatts)) return send(conn, { t: 'notice', level: 'error', msg: 'Limite de votre licence : ' + conn.user.maxWatts + ' W' });
+        if (!(w >= range[0] && w <= range[1])) return send(conn, { t: 'notice', level: 'error', msg: 'Puissance possible : ' + range[0] + ' à ' + range[1] + ' W' });
+        toStation({ t: 'cmd', op: 'power', watts: w });
+        radio.power = w; // affichage optimiste
       }
       if (m.mode != null) {
         const code = String(m.mode).toUpperCase();
@@ -347,13 +393,23 @@ function onStation(conn, m) {
     modeB: typeof r.modeB === 'string' ? r.modeB.slice(0, 12) : null,
     modeCodeB: typeof r.modeCodeB === 'string' ? r.modeCodeB.slice(0, 1) : null,
     tx: [0, 1, 2].indexOf(r.tx) >= 0 ? r.tx : 0,
-    smeter: Number.isFinite(r.smeter) ? r.smeter : 0
+    smeter: Number.isFinite(r.smeter) ? r.smeter : 0,
+    power: Number.isFinite(r.power) ? r.power : null,
+    powerHead: r.powerHead === '1' || r.powerHead === '2' ? r.powerHead : null
   };
   if (was !== radio.connected) journal(radio.connected ? 'trx_online' : 'trx_offline', {});
   // Sécurité : la radio est en CAT TX alors qu'aucun PTT n'est actif côté serveur
   if (radio.tx === 1 && !ptt.active) toStation({ t: 'cmd', op: 'ptt', on: false, reason: 'incohérence serveur' });
   // Sécurité : sortie de bande pendant l'émission
   if (ptt.active && radio.freq != null && !inTxRange(radio.freq)) stopPtt('fréquence hors bande');
+  // Sécurité : puissance au-delà de la licence (ex. bouton tourné au club pendant l'émission)
+  if (ptt.active && radio.power != null && radio.power > ptt.conn.user.maxWatts) {
+    const c = ptt.conn;
+    stopPtt('puissance au-delà de la limite de licence (' + c.user.maxWatts + ' W)');
+    limitPower(c, 'dépassement');
+  } else if (controller && radio.power != null && radio.power > controller.user.maxWatts) {
+    limitPower(controller, 'dépassement');
+  }
   broadcast();
 }
 

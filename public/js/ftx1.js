@@ -22,7 +22,7 @@
   const FREQ_MAX = 470000000;   // 470 MHz
 
   // Commandes de lecture envoyées à chaque cycle de polling
-  const POLL = 'FA;MD0;FB;MD1;SM0;TX;';
+  const POLL = 'FA;MD0;FB;MD1;SM0;TX;PC;';
 
   function cmdFreq(hz) {
     hz = Math.round(Number(hz));
@@ -33,6 +33,21 @@
     code = String(code).toUpperCase();
     if (SETTABLE.indexOf(code) < 0) throw new Error('mode non autorisé');
     return 'MD0' + code + ';';
+  }
+  /**
+   * Réglage de puissance. Le FTX-1 indique sa tête dans la réponse PC :
+   *  P1 = 1 : tête Field, 0,5 à 10 W (dixièmes sous 10 W : "PC10.5;" = 0,5 W, "PC1005;" = 5 W)
+   *  P1 = 2 : ampli SPA-1, 5 à 100 W ("PC2025;" = 25 W)
+   */
+  const POWER_RANGE = { '1': [0.5, 10], '2': [5, 100] };
+  function cmdPower(watts, head) {
+    const r = POWER_RANGE[head];
+    if (!r) throw new Error('type de tête inconnu, puissance non réglable');
+    let w = Math.round(Number(watts) * 2) / 2;
+    if (!(w >= r[0] && w <= r[1])) throw new Error('puissance hors plage (' + r[0] + '–' + r[1] + ' W)');
+    if (head === '2') w = Math.round(w);
+    const p = Number.isInteger(w) ? String(w).padStart(3, '0') : w.toFixed(1);
+    return 'PC' + head + p + ';';
   }
   function cmdPtt(on) {
     // TX1 = "CAT TX ON", TX0 = "CAT TX OFF"
@@ -48,6 +63,7 @@
     if ((m = /^MD1([0-9A-Z])$/.exec(tok))) return { modeCodeB: m[1], modeB: MODES[m[1]] || ('?' + m[1]) };
     if ((m = /^SM0(\d{3})$/.exec(tok))) return { smeter: parseInt(m[1], 10) };
     if ((m = /^TX([0-2])$/.exec(tok))) return { tx: parseInt(m[1], 10) }; // 0 off, 1 CAT TX, 2 TX radio
+    if ((m = /^PC([12])(\d{3}|\d\.\d)$/.exec(tok))) return { powerHead: m[1], power: parseFloat(m[2]) };
     if (tok === '?') return { error: true };
     return null;
   }
@@ -85,6 +101,8 @@
       this.freq = 14250000;
       this.mode = '2';
       this.freqB = 7074000;
+      this.head = '2';
+      this.power = 100;
       this.modeB = 'C';
       this.tx = 0;
       this.onData = null;
@@ -108,6 +126,12 @@
           const v = this.tx ? 0 : Math.round(70 + 45 * Math.sin(this.t) + 20 * Math.random());
           out.push('SM0' + String(Math.max(0, Math.min(255, v))).padStart(3, '0') + ';');
         } else if (c === 'TX') out.push('TX' + this.tx + ';');
+        else if (c === 'PC') out.push('PC' + this.head + String(this.power).padStart(3, '0') + ';');
+        else if ((m = /^PC([12])(\d{3}|\d\.\d)$/.exec(c)) && m[1] === this.head) {
+          const w = parseFloat(m[2]);
+          if (w >= POWER_RANGE[this.head][0] && w <= POWER_RANGE[this.head][1]) this.power = w;
+          else out.push('?;');
+        }
         else if (c === 'TX1') this.tx = 1;
         else if (c === 'TX0') this.tx = 0;
         else if (c === 'AI0') { /* auto-information off */ }
@@ -120,7 +144,7 @@
     }
   }
 
-  const api = { MODES, SETTABLE, POLL, FREQ_MIN, FREQ_MAX, cmdFreq, cmdMode, cmdPtt, parse, Splitter, smeterLabel, FakeFTX1 };
+  const api = { MODES, SETTABLE, POLL, FREQ_MIN, FREQ_MAX, POWER_RANGE, cmdFreq, cmdMode, cmdPower, cmdPtt, parse, Splitter, smeterLabel, FakeFTX1 };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.FTX1 = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

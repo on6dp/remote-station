@@ -53,8 +53,9 @@ function askHidden(q) {
   }
 
   const call = auth.normCall(args[0]);
-  if (!auth.validCall(call)) {
-    console.error('Indicatif invalide : ' + call);
+  const prefixes = cfg.allowedPrefixes || auth.BE_PREFIXES;
+  if (!auth.validCall(call, prefixes)) {
+    console.error('Indicatif refusé : ' + call + ' (préfixes autorisés : ' + prefixes.join(', ') + ')');
     process.exit(1);
   }
   const p1 = await askHidden('Mot de passe pour ' + call + ' : ');
@@ -72,5 +73,7 @@ function askHidden(q) {
   rec.tx = !args.includes('--no-tx');
   users[call] = rec;
   auth.saveUsers(USERS, users);
-  console.log(call + ' enregistré' + (rec.admin ? ' (admin)' : '') + (rec.tx ? '' : ' (écoute seule)') + '.');
+  const rule = (cfg.powerRules || [{ prefix: 'ON3', maxWatts: 25 }]).find((r) => call.startsWith(String(r.prefix).toUpperCase()));
+  const watts = rule ? rule.maxWatts : (cfg.defaultMaxWatts || 1500);
+  console.log(call + ' enregistré' + (rec.admin ? ' (admin)' : '') + (rec.tx ? ', puissance max ' + watts + ' W' : ' (écoute seule)') + '.');
 })();

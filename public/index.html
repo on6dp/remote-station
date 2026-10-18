@@ -36,6 +36,7 @@
           <span class="tag">MAIN</span>
           <span class="tag" id="modeTag">---</span>
           <span class="tag ghost" id="txTag">TX</span>
+          <span class="tag" id="pwrTag">-- W</span>
         </div>
         <span id="ctrlTag">Lecture seule</span>
       </div>
@@ -64,6 +65,13 @@
   <section class="keys">
     <div class="key-row" id="modeKeys"><span class="lbl">Mode</span></div>
     <div class="key-row" id="bandKeys"><span class="lbl">Bande</span></div>
+    <div class="key-row">
+      <span class="lbl">Puissance</span>
+      <button class="key" id="pwrDown" type="button" aria-label="Diminuer la puissance">−</button>
+      <output class="pwr-read" id="pwrRead">-- W</output>
+      <button class="key" id="pwrUp" type="button" aria-label="Augmenter la puissance">+</button>
+      <span class="pwr-limit" id="pwrLimit"></span>
+    </div>
     <div class="key-row">
       <span class="lbl">Aller à</span>
       <form class="goto" id="gotoForm">

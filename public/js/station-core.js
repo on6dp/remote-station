@@ -28,7 +28,7 @@
       this.kaTimeoutMs = o.kaTimeoutMs || 2000;
       this.radioTimeoutMs = o.radioTimeoutMs || 3000;
       this.split = new FTX1.Splitter();
-      this.radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
+      this.radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0, power: null, powerHead: null };
       this.serialOpen = false;
       this.wsUp = false;
       this.catKeyed = false;
@@ -122,6 +122,9 @@
           this._write(FTX1.cmdFreq(m.hz));
         } else if (m.op === 'mode') {
           this._write(FTX1.cmdMode(m.code));
+        } else if (m.op === 'power') {
+          this._write(FTX1.cmdPower(m.watts, this.radio.powerHead));
+          this.log('Puissance réglée à ' + m.watts + ' W' + (m.reason ? ' (' + m.reason + ')' : ''));
         } else if (m.op === 'ptt') {
           if (m.on) {
             if (!this.serialOpen || !this.radio.connected) return this.log('PTT refusé : radio non connectée');

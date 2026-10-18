@@ -24,5 +24,21 @@
     [50000000, 52000000],
     [144000000, 146000000],
     [430000000, 440000000]
-  ]
+  ],
+  "allowedPrefixes": [
+    "ON",
+    "OO",
+    "OP",
+    "OQ",
+    "OR",
+    "OS",
+    "OT"
+  ],
+  "powerRules": [
+    {
+      "prefix": "ON3",
+      "maxWatts": 25
+    }
+  ],
+  "defaultMaxWatts": 1500
 }

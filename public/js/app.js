@@ -264,6 +264,19 @@
       else if (!st.controller) send({ t: 'take' });
       else if (me.admin && confirm('Reprendre la main à ' + st.controller + ' ?')) send({ t: 'take', force: true });
     });
+    const nudgePower = (dir) => {
+      if (!iControl()) return say('Prenez la main pour régler la puissance.', 'warn');
+      const r = st.radio || {};
+      const range = FTX1.POWER_RANGE[r.powerHead];
+      if (!range || r.power == null) return say('Puissance du TRX pas encore lue.', 'warn');
+      const stepW = r.powerHead === '2' ? 5 : 0.5;
+      const top = Math.min(range[1], me.maxWatts);
+      const w = Math.max(range[0], Math.min(top, Math.round((r.power + dir * stepW) / stepW) * stepW));
+      if (w === r.power) return say(dir > 0 ? 'Maximum atteint : ' + top + ' W' + (me.maxWatts < range[1] ? ' (limite de votre licence)' : '') : 'Minimum atteint : ' + range[0] + ' W', 'warn');
+      send({ t: 'set', power: w });
+    };
+    $('pwrDown').addEventListener('click', () => nudgePower(-1));
+    $('pwrUp').addEventListener('click', () => nudgePower(1));
     $('logout').addEventListener('click', () => {
       creds = null;
       if (ws) ws.close();
@@ -281,6 +294,7 @@
     if (!st.radio.connected) return 'TRX non connecté';
     if (!iControl()) return 'Prenez la main pour émettre';
     if (!st.txOk) return 'Hors des bandes autorisées';
+    if (st.radio.power != null && st.radio.power > me.maxWatts) return 'Puissance au-delà de votre limite (' + me.maxWatts + ' W)';
     return null;
   }
 
@@ -345,6 +359,13 @@
     drawMeter(r.smeter, onAir || r.tx);
     $('modeTag').textContent = r.connected && r.mode ? r.mode : '---';
     $('modeTagB').textContent = r.connected && r.modeB ? r.modeB : '---';
+    const pw = r.connected && r.power != null ? String(r.power).replace('.', ',') + ' W' : '-- W';
+    $('pwrTag').textContent = pw;
+    $('pwrRead').textContent = pw;
+    const pwrOk = iControl() && !!FTX1.POWER_RANGE[r.powerHead] && !(st.ptt && st.ptt.active);
+    $('pwrDown').disabled = !pwrOk;
+    $('pwrUp').disabled = !pwrOk;
+    $('pwrLimit').textContent = me ? 'Votre limite : ' + me.maxWatts + ' W' + (r.powerHead === '1' ? ' · tête Field 0,5–10 W' : r.powerHead === '2' ? ' · TRX 5–100 W' : '') : '';
     $('txTag').className = 'tag ' + (onAir || r.tx ? 'txtag' : 'ghost');
     $('glass').classList.toggle('tx', !!(onAir || r.tx));
     document.querySelectorAll('#modeKeys .key').forEach((b) => b.setAttribute('aria-pressed', String(!!r.connected && b.dataset.code === r.modeCode)));
