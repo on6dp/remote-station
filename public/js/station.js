@@ -36,6 +36,9 @@
   // ------------------------------------------------------------ modèle de radio
   const MODEL = (window.RIGS && window.RIGS[store.get('model', 'ftx1')]) ? store.get('model', 'ftx1') : 'ftx1';
   const RIG = window.RIGS[MODEL];
+  // Port série mémorisé par modèle : si plusieurs TRX restent branchés au PC, changer de modèle rouvre le bon port
+  const PORT_KEY = 'port.' + MODEL;
+  if (store.get(PORT_KEY, null) == null && store.get('portIndex', null) != null && MODEL === 'ftx1') store.set(PORT_KEY, store.get('portIndex', '-1'));
   $('rigName').textContent = RIG.NAME;
   const sel = $('cfgModel');
   for (const r of window.RIG_CATALOG) {
@@ -167,10 +170,12 @@
   async function reopenRemembered() {
     if (!('serial' in navigator)) return;
     const ports = await navigator.serial.getPorts();
-    const idx = Number(store.get('portIndex', '-1'));
+    const idx = Number(store.get(PORT_KEY, '-1'));
     if (ports.length && idx >= 0 && idx < ports.length) {
-      log('Réouverture du port mémorisé');
+      log('Réouverture du port mémorisé pour ' + RIG.NAME);
       await openPort(ports[idx]);
+    } else if (idx < 0) {
+      log('Aucun port mémorisé pour ' + RIG.NAME + ' : cliquez sur « Choisir le port du TRX »');
     }
   }
 
@@ -181,13 +186,13 @@
       const p = await navigator.serial.requestPort();
       await closePort(false);
       const ports = await navigator.serial.getPorts();
-      store.set('portIndex', String(ports.indexOf(p)));
+      store.set(PORT_KEY, String(ports.indexOf(p)));
       await openPort(p);
     } catch (e) {
       if (e.name !== 'NotFoundError') log('Choix du port : ' + e.message, 'st-bad');
     }
   });
-  $('btnClose').addEventListener('click', () => { stopSim(); store.set('portIndex', '-1'); closePort(true); });
+  $('btnClose').addEventListener('click', () => { stopSim(); store.set(PORT_KEY, '-1'); closePort(true); });
 
   if ('serial' in navigator) {
     navigator.serial.addEventListener('disconnect', (e) => {
@@ -239,9 +244,9 @@
     log('Réglages enregistrés');
     connectWs();
     if (port) {
-      const idx = store.get('portIndex', '-1');
+      const idx = store.get(PORT_KEY, '-1');
       await closePort(false);
-      store.set('portIndex', idx);
+      store.set(PORT_KEY, idx);
       reopenRemembered();
     }
   });

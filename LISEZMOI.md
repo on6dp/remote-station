@@ -1,4 +1,4 @@
-# Remote Station — v0.1.5 (CAT seul)
+# Remote Station — v0.1.6 (CAT seul)
 
 Pilotage à distance d'un transceiver du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
 Trois modèles sont pris en charge : **Yaesu FTX-1**, **Yaesu FTDX10** et **Icom IC-7300**. Un seul est branché à la fois ; on choisit lequel sur la page Station du club, et la face avant des membres s'adapte toute seule.
@@ -84,7 +84,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.1.5.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.1.6.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -92,7 +92,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.1.5.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.1.6.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station
@@ -173,6 +173,13 @@ Mise en route :
 1. Ouvrir `https://remote.op0p.be/station`, coller le jeton, « Enregistrer et reconnecter ».
 2. « Choisir le port du TRX » → le port de la radio. Le journal doit afficher « Yaesu FTX-1 répond » (ou FTDX10, IC-7300).
 3. L'autorisation du port est mémorisée : au prochain démarrage, la page rouvre le port toute seule.
+
+**Changer de TRX** (au club, sur le PC de la station) :
+1. Prévenir les membres : pendant le changement, la station est hors ligne quelques secondes (une émission en cours est coupée).
+2. Brancher le câble USB du nouveau TRX (ou le laisser branché en permanence : les trois peuvent rester reliés au PC).
+3. Page Station → Réglages → « Modèle du TRX » : choisir le modèle. La page se recharge avec le bon pilote et la bonne vitesse.
+4. La première fois pour ce modèle, cliquer « Choisir le port du TRX » et prendre le port de cette radio. Le port est ensuite mémorisé **par modèle** : les fois suivantes, il suffit de choisir le modèle.
+5. Le journal doit afficher « … répond » avec le nom du nouveau TRX. Les membres n'ont rien à faire : leur page affiche le nouveau modèle et s'adapte.
 
 **Démarrage automatique** :
 - Windows : raccourci dans `shell:startup` vers
