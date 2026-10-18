@@ -4,107 +4,180 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Remote Station</title>
-<meta name="theme-color" content="#1b2026">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/panel.css">
+<meta name="theme-color" content="#0b1018">
+<!-- Design inspiré de l'interface « bureau » de RigPlane Core (licence MIT) — voir TIERS.md -->
+<link rel="stylesheet" href="/css/rp-tokens.css">
+<link rel="stylesheet" href="/css/rp.css">
 </head>
 <body>
 
-<main class="rig" id="rig">
-  <header class="rig-head">
-    <div class="engrave" id="clubName">Remote Station<small id="stationCall"></small></div>
-    <div class="lamps" aria-live="polite">
-      <span class="lamp" id="lampLink"><i></i>Serveur</span>
-      <span class="lamp" id="lampStation"><i></i>Station</span>
-      <span class="lamp" id="lampTrx"><i></i>TRX</span>
-      <span class="lamp" id="lampTx"><i></i>Émission</span>
+<div class="app" id="app">
+  <!-- ============================================================ barre du haut -->
+  <header class="topbar">
+    <div class="tb-left">
+      <span class="lamp" id="lampLink" title="Serveur"><i></i><span>Serveur</span></span>
+      <span class="lamp" id="lampStation" title="Station"><i></i><span>Station</span></span>
+      <span class="lamp" id="lampTrx" title="TRX"><i></i><span id="rigLabel">TRX</span></span>
+    </div>
+    <div class="tb-title"><b id="clubName">Remote Station</b> <span id="stationCall"></span></div>
+    <div class="tb-right">
+      <span class="tb-call" id="meCall">—</span>
+      <button class="btn" id="ctrlBtn" type="button">Prendre la main</button>
+      <button class="btn btn-off" id="logout" type="button">Déconnexion</button>
     </div>
   </header>
 
-  <section class="top">
-    <div class="vfo-block">
-      <div class="knob" id="knob" role="slider" tabindex="0" aria-label="Bouton d'accord" aria-valuetext="" aria-disabled="true">
-        <div class="knob-cap" id="knobCap"></div>
-      </div>
-      <div class="step-read">Pas <b id="stepRead">100 Hz</b></div>
-    </div>
-    <div class="glass" id="glass">
-      <div class="g-row g-tags">
-        <div class="g-row">
-          <span class="tag">MAIN</span>
-          <span class="tag" id="modeTag">---</span>
-          <span class="tag ghost" id="txTag">TX</span>
-          <span class="tag" id="pwrTag">-- W</span>
-          <span class="tag ghost" id="splitTag">SPLIT</span>
-          <span class="tag ghost" id="clarTag">RIT</span>
+  <div class="workspace">
+    <!-- ============================================================ colonne gauche -->
+    <aside class="side side-left">
+      <section class="panel">
+        <h2 class="panel-h">RF front end</h2>
+        <div class="panel-b" id="sec-front"></div>
+      </section>
+      <section class="panel">
+        <h2 class="panel-h">Mode</h2>
+        <div class="panel-b">
+          <div class="grid2" id="modeKeys"></div>
+          <div class="sub-h">Mode appliqué à <b id="modeTarget">VFO A</b></div>
         </div>
-        <span id="ctrlTag">Lecture seule</span>
+      </section>
+      <section class="panel">
+        <h2 class="panel-h">Filtre</h2>
+        <div class="panel-b" id="sec-filter"></div>
+      </section>
+    </aside>
+
+    <!-- ============================================================ centre -->
+    <main class="center">
+      <div class="vfo-row">
+        <!-- VFO A / MAIN -->
+        <section class="vfo vfo-main" id="vfoA" data-v="A" aria-label="VFO A (MAIN)">
+          <div class="vfo-top">
+            <span class="badge b-tx" id="txA">RX</span>
+            <span class="badge b-info" id="widthA">BW —</span>
+            <span class="vfo-name">MAIN · <span id="bandA">—</span></span>
+          </div>
+          <div class="smeter">
+            <div class="sm-scale"><span>S</span><span>1</span><span>3</span><span>5</span><span>7</span><span>9</span><span class="hot">+20</span><span class="hot">+40</span><span class="hot">+60</span></div>
+            <div class="sm-bars" id="barsA"></div>
+            <span class="sm-read" id="sA">S —</span>
+          </div>
+          <div class="vfo-mid">
+            <span class="vfo-tag">VFO <b>A</b></span>
+            <span class="badge b-mode" id="modeA">---</span>
+            <span class="vfo-side">
+              <span class="clar-line"><span class="badge" id="ritBadge">RIT</span><span class="clar-val" id="ritVal">+0.00 kHz</span></span>
+              <span class="clar-line"><span class="badge" id="xitBadge">XIT</span><span class="clar-val" id="xitVal">+0.00 kHz</span></span>
+            </span>
+          </div>
+          <div class="freq-wrap"><div class="freq" id="freqA"></div><span class="unit">MHz</span></div>
+          <div class="vfo-badges" id="badgesA"></div>
+        </section>
+
+        <!-- colonne DUAL -->
+        <section class="dual" aria-label="VFO et SPLIT">
+          <div class="dual-h">— Dual —</div>
+          <div class="dual-b" id="sec-dual"></div>
+        </section>
+
+        <!-- VFO B / SUB -->
+        <section class="vfo vfo-sub" id="vfoB" data-v="B" aria-label="VFO B (SUB)">
+          <div class="vfo-top">
+            <span class="badge b-tx" id="txB">RX</span>
+            <span class="vfo-name">SUB · <span id="bandB">—</span></span>
+          </div>
+          <div class="smeter smeter-dim" aria-hidden="true">
+            <div class="sm-scale"><span>S</span><span>1</span><span>3</span><span>5</span><span>7</span><span>9</span><span class="hot">+20</span><span class="hot">+40</span><span class="hot">+60</span></div>
+            <div class="sm-bars" id="barsB"></div>
+            <span class="sm-read">S —</span>
+          </div>
+          <div class="vfo-mid">
+            <span class="vfo-tag">VFO <b>B</b></span>
+            <span class="badge b-mode" id="modeB">---</span>
+            <span class="vfo-side"><span class="clar-line"><span class="badge" id="splitBadge">SPLIT TX</span></span></span>
+          </div>
+          <div class="freq-wrap"><div class="freq" id="freqB"></div><span class="unit">MHz</span></div>
+          <div class="vfo-badges" id="badgesB"></div>
+        </section>
       </div>
 
-      <div class="freq" id="freq" aria-label="Fréquence" role="group"></div>
+      <!-- bande d'accord (le spectre du FTX-1 ne passe pas par le CAT) -->
+      <section class="panel tune-panel">
+        <div class="toolbar">
+          <span class="tl">Step</span>
+          <div class="seg" id="stepKeys"></div>
+          <span class="tl">VFO</span>
+          <div class="seg"><button class="btn accent" id="tgtA" type="button">A</button><button class="btn accent" id="tgtB" type="button">B</button></div>
+          <button class="btn" id="tuneDown" type="button" aria-label="Descendre d'un pas">◀</button>
+          <button class="btn" id="tuneUp" type="button" aria-label="Monter d'un pas">▶</button>
+          <form class="goto" id="gotoForm">
+            <input id="gotoInput" inputmode="decimal" placeholder="kHz" aria-label="Fréquence en kHz">
+            <button class="btn" type="submit">Aller</button>
+          </form>
+        </div>
+        <div class="bands" id="bandKeys"></div>
+        <p class="hint">Molette ou glisser vertical sur un chiffre pour l'accorder · clic sur un VFO pour le sélectionner · flèches ↑ ↓ du clavier · barre d'espace = PTT. Spectre : non transmis par le CAT du FTX-1.</p>
+        <p class="msg" id="msg" role="status"></p>
+      </section>
 
-      <div class="sub-row" id="subRow" aria-label="VFO B : cliquer pour l'accorder" title="Cliquer pour accorder la VFO B">
-        <span class="tag">SUB</span>
-        <span class="tag" id="modeTagB">---</span>
-        <span class="tag ghost" id="txBTag">TX</span>
-        <div class="freq sub" id="freqB" aria-hidden="true"></div>
-      </div>
+      <section class="panel activity">
+        <h2 class="panel-h">Activité de la station</h2>
+        <div class="panel-b" id="events" aria-live="polite"><p class="ev-empty">Aucune activité pour l'instant.</p></div>
+      </section>
+    </main>
 
-      <div class="meter" aria-hidden="true">
-        <div class="bars" id="bars"></div>
-        <div class="scale"><span>1</span><span>3</span><span>5</span><span>7</span><span>9</span><span>+20</span><span>+40</span><span>+60</span></div>
-      </div>
-      <div class="meter-read">
-        <span><span id="mLabel">Signal</span> <b id="sRead">—</b></span>
-        <span id="txMeters"></span>
-        <span id="txTimer"></span>
-      </div>
-      <div class="g-msg" id="msg" role="status"></div>
+    <!-- ============================================================ colonne droite -->
+    <aside class="side side-right">
+      <section class="panel">
+        <h2 class="panel-h">RX audio</h2>
+        <div class="panel-b">
+          <div id="sec-audio"></div>
+          <p class="note">Écoute à distance : prochaine version (v0.2).</p>
+        </div>
+      </section>
+      <section class="panel">
+        <h2 class="panel-h">DSP</h2>
+        <div class="panel-b" id="sec-dsp"></div>
+      </section>
+      <section class="panel">
+        <h2 class="panel-h">TX</h2>
+        <div class="panel-b">
+          <div class="rxtx" id="rxtx"><i></i><span id="rxtxText">RX</span></div>
+          <button class="ptt" id="ptt" type="button" disabled>PTT<small id="pttHint">Prenez la main pour émettre</small></button>
+          <div class="ctl">
+            <div class="ctl-head"><span class="ctl-label">Puissance</span><output class="ctl-val" id="pwrRead">-- W</output></div>
+            <div class="seg seg-fill"><button class="btn" id="pwrDown" type="button" aria-label="Diminuer la puissance">−</button><button class="btn" id="pwrUp" type="button" aria-label="Augmenter la puissance">+</button></div>
+            <div class="ctl-foot" id="pwrLimit"></div>
+          </div>
+          <div id="sec-tx"></div>
+        </div>
+      </section>
+      <section class="panel">
+        <h2 class="panel-h">Opérateurs</h2>
+        <div class="panel-b">
+          <p class="ctrl-text" id="ctrlText">Personne n'a la main.</p>
+          <div class="who" id="who"></div>
+          <div id="sec-other"></div>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <!-- ============================================================ mesures -->
+  <footer class="meters">
+    <div class="meters-h"><span>Station meters</span><span class="m-mode" id="mMode">RX</span></div>
+    <div class="meters-row">
+      <div class="mt" id="mtPo"><span class="mt-l">Po</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+      <div class="mt" id="mtSwr"><span class="mt-l">SWR</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+      <div class="mt" id="mtAlc"><span class="mt-l">ALC</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+      <div class="mt" id="mtId"><span class="mt-l">Id</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+      <div class="mt" id="mtVd"><span class="mt-l">Vd</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+      <div class="mt" id="mtComp"><span class="mt-l">COMP</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+      <div class="mt" id="mtS"><span class="mt-l">S</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
     </div>
-
-  </section>
-
-  <section class="keys">
-    <div class="key-row" id="modeKeys"><span class="lbl">Mode</span></div>
-    <div class="key-row" id="bandKeys"><span class="lbl">Bande</span></div>
-    <div class="key-row">
-      <span class="lbl">Puissance</span>
-      <button class="key" id="pwrDown" type="button" aria-label="Diminuer la puissance">−</button>
-      <output class="pwr-read" id="pwrRead">-- W</output>
-      <button class="key" id="pwrUp" type="button" aria-label="Augmenter la puissance">+</button>
-      <span class="pwr-limit" id="pwrLimit"></span>
-    </div>
-    <div class="key-row">
-      <span class="lbl">Aller à</span>
-      <form class="goto" id="gotoForm">
-        <input id="gotoInput" inputmode="decimal" placeholder="14195,0 kHz" aria-label="Fréquence en kHz">
-        <button class="key" type="submit">Accorder</button>
-      </form>
-    </div>
-  </section>
-
-  <section class="ctl-panel" aria-label="Fonctions du transceiver">
-    <div class="ctl-tabs" id="ctlTabs" role="tablist"></div>
-    <div class="ctl-body" id="ctlBody"></div>
-  </section>
-
-  <section class="bottom">
-    <div class="ptt-wrap">
-      <button class="ptt" id="ptt" type="button" disabled>PTT<small id="pttHint">Prenez la main pour émettre</small></button>
-    </div>
-    <div class="ops">
-      <div class="ops-line">
-        <p id="ctrlText">Personne n'a la main.</p>
-        <button class="key ctrl-btn" id="ctrlBtn" type="button">Prendre la main</button>
-      </div>
-      <div class="who" id="who" aria-label="Opérateurs connectés"></div>
-      <p class="fine">Audio de réception et micro : prévus pour la prochaine version. Barre d'espace = PTT, flèches haut/bas = accord.</p>
-      <p class="fine">Connecté en tant que <b id="meCall">—</b> · <button class="link-btn" id="logout" type="button">Se déconnecter</button></p>
-    </div>
-  </section>
-</main>
+    <div class="txtimer" id="txTimer"></div>
+  </footer>
+</div>
 
 <div class="login" id="login">
   <form id="loginForm" autocomplete="on">
@@ -112,7 +185,7 @@
     <p>Connectez-vous avec votre indicatif et le mot de passe reçu du club.</p>
     <label>Indicatif<input name="call" id="loginCall" autocomplete="username" required maxlength="12" autocapitalize="characters" spellcheck="false"></label>
     <label>Mot de passe<input name="pass" id="loginPass" type="password" autocomplete="current-password" required></label>
-    <button class="primary" type="submit" id="loginBtn">Se connecter</button>
+    <button class="btn btn-primary" type="submit" id="loginBtn">Se connecter</button>
     <p class="err" id="loginErr" role="alert"></p>
   </form>
 </div>

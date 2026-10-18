@@ -53,9 +53,23 @@ const LOG_DIR = path.resolve(ROOT, cfg.logDir);
 fs.mkdirSync(LOG_DIR, { recursive: true });
 
 // ---------------------------------------------------------------- journal des accès
+// Événements visibles par les membres connectés (sans adresse IP)
+const PUBLIC_EVENTS = ['login', 'logout', 'control_take', 'control_release', 'tx_start', 'tx_stop', 'tune', 'power_limit',
+  'station_online', 'station_offline', 'trx_online', 'trx_offline'];
+const recentEvents = [];
 function journal(ev, data) {
   const d = new Date();
   const line = JSON.stringify(Object.assign({ ts: d.toISOString(), ev }, data)) + '\n';
+  if (PUBLIC_EVENTS.indexOf(ev) >= 0) {
+    const e = Object.assign({ ts: d.toISOString(), ev }, data);
+    delete e.ip;
+    recentEvents.unshift(e);
+    if (recentEvents.length > 40) recentEvents.pop();
+    if (typeof ops !== 'undefined') {
+      const msg = JSON.stringify({ t: 'event', e });
+      for (const c of ops) if (c.open) c.send(msg);
+    }
+  }
   const f = path.join(LOG_DIR, 'access-' + d.toISOString().slice(0, 7) + '.log');
   fs.appendFile(f, line, () => {});
   console.log('[' + ev + ']', JSON.stringify(data));
@@ -302,6 +316,7 @@ async function onLogin(conn, m) {
     clubName: cfg.clubName,
     stationCall: cfg.stationCall
   });
+  send(conn, { t: 'events', list: recentEvents });
   broadcast();
 }
 

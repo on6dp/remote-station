@@ -1,4 +1,4 @@
-# Remote Station — v0.1.2 (CAT seul)
+# Remote Station — v0.1.3 (CAT seul)
 
 Pilotage à distance du **Yaesu FTX-1** du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
 
@@ -15,6 +15,15 @@ Cette version gère : fréquence (VFO A et B), mode, S-mètre, puissance, PTT, l
 - Le PC du club **se connecte vers** le VPS : aucun port à ouvrir au club, le CGNAT n'est pas un problème.
 - Le VPS n'a besoin d'**aucun paquet npm** : uniquement Node.js (modules natifs).
 - L'application écoute seulement sur `127.0.0.1:9000` ; nginx fait le relais en HTTPS.
+
+## Face avant
+
+La page opérateur reprend la disposition de l'interface de RigPlane Core (licence MIT) :
+- au centre, **deux écrans VFO** côte à côte, MAIN (A) et SUB (B). Celui qui émet passe en rouge, ce qui rend le SPLIT immédiatement lisible ;
+- entre les deux, la colonne **DUAL** : VFO active, A → B, B → A, A ⇄ B, SPLIT, RIT, XIT, LOCK ;
+- à gauche : RF front end, modes, filtre ; à droite : audio, DSP, TX (PTT, puissance), opérateurs ;
+- en bas, les **mesures de la station** : Po, SWR, ALC, Id, Vd, COMP, S ;
+- à la place du spectre (non transmis par le CAT du FTX-1) : l'accord (pas, bandes, aller à) et le **journal d'activité** en direct.
 
 ## Fonctions du transceiver
 
@@ -65,7 +74,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.1.2.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.1.3.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -73,7 +82,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.1.2.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.1.3.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station
@@ -161,7 +170,9 @@ sudo grep tx_start /opt/remote-station/logs/access-$(date +%Y-%m).log | tail
 | `TIERS.md` | Sources et licences de tiers (RigPlane Core, MIT) |
 | `public/js/station-core.js` | Logique de la page Station (polling, sécurités) |
 | `public/station.html`, `public/js/station.js` | Page Station (Web Serial) |
-| `public/index.html`, `public/js/app.js`, `public/css/panel.css` | Face avant des membres |
+| `public/index.html`, `public/js/app.js`, `public/css/rp.css`, `public/css/rp-tokens.css` | Face avant des membres |
+| `public/css/panel.css` | Styles de la page Station |
+| `public/fonts/` | Police Roboto Mono (SIL OFL) |
 | `adduser.js`, `init-config.js` | Gestion des membres et de la configuration |
 | `deploy/` | Service systemd et site nginx |
 

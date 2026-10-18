@@ -68,12 +68,13 @@
     { cmd: 'VX;', re: /^VX([01])$/, parse: (m) => ({ vox: +m[1] }), sim: 'VX0' },
     { cmd: 'AC;', re: /^AC([01])([0-2])([0-3])$/, parse: (m) => ({ tuner: m[3] === '0' ? 0 : 1, tuning: m[3] === '3' ? 1 : 0 }), sim: 'AC000' }
   ];
-  const SLOW = READS.map((r) => r.cmd).join('');
+  // + tension (RM8, VDD) et courant (RM7, IDD), lisibles aussi en réception
+  const SLOW = READS.map((r) => r.cmd).join('') + 'RM7;RM8;';
 
   // Clés d'état numériques relayées par le serveur (en plus de freq, mode, etc.)
   const STATE_KEYS = ['txVfo', 'split', 'vfoSel', 'rit', 'xit', 'clar', 'lock', 'width', 'narrow', 'shift', 'contour', 'apf',
     'dnf', 'notch', 'notchFreq', 'nb', 'nr', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox',
-    'tuner', 'tuning', 'm3', 'm4', 'm5', 'm6'];
+    'tuner', 'tuning', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'];
 
   // ------------------------------------------------------------ largeurs de filtre (manuel CAT, Table 5)
   const WIDTH_SSB = [300, 400, 600, 850, 1100, 1200, 1500, 1650, 1800, 1950, 2100, 2250, 2400, 2450, 2500, 2600, 2700, 2800, 2900, 3000, 3200, 3500, 4000];
@@ -205,7 +206,7 @@
     if ((m = /^SM0(\d{3})$/.exec(tok))) return { smeter: parseInt(m[1], 10) };
     if ((m = /^TX([0-2])$/.exec(tok))) return { tx: parseInt(m[1], 10) }; // 0 RX, 1 TX par CAT, 2 TX par la radio
     if ((m = /^FT([01])$/.exec(tok))) return { txVfo: +m[1] };
-    if ((m = /^RM([3-6])(\d{3})(\d{3})$/.exec(tok))) return { ['m' + m[1]]: +m[2] };
+    if ((m = /^RM([3-8])(\d{3})(\d{3})$/.exec(tok))) return { ['m' + m[1]]: +m[2] };
     if (tok === '?') return { error: true };
     for (const r of READS) if ((m = r.re.exec(tok))) return r.parse(m);
     return null;
@@ -247,6 +248,10 @@
     return 5;
   }
 
+  // Tension et courant : étalonnage à deux points mesuré par RigPlane (210 → 13,8 V ; 29 → 1,0 A)
+  function vdValue(raw) { return raw == null ? null : (raw / 210) * 13.8; }
+  function idValue(raw) { return raw == null ? null : raw / 29; }
+
   // ------------------------------------------------------------ simulateur (tests sans radio)
   class FakeFTX1 {
     constructor() {
@@ -284,8 +289,9 @@
         else if (c === 'TX1') this.tx = 1;
         else if (c === 'TX0') this.tx = 0;
         else if (c === 'FT') out.push('FT' + (this.split ? 1 : 0) + ';');
-        else if ((m = /^RM([3-6])$/.exec(c))) {
-          const raw = !this.tx ? 0 : { 3: 20, 4: 60, 5: Math.round(this.power * 2.4), 6: 40 }[m[1]];
+        else if ((m = /^RM([3-8])$/.exec(c))) {
+          const raw = m[1] === '8' ? (this.tx ? 205 : 212) : m[1] === '7' ? (this.tx ? Math.round(this.power * 0.6) : 0)
+            : !this.tx ? 0 : { 3: 20, 4: 60, 5: Math.round(this.power * 2.4), 6: 40 }[m[1]];
           out.push('RM' + m[1] + pad(raw, 3) + '000;');
         } else if (c === 'PC') out.push('PC' + this.head + pad(this.power, 3) + ';');
         else if ((m = /^PC([12])(\d{3}|\d\.\d)$/.exec(c))) {
@@ -315,7 +321,7 @@
   const api = {
     ID, NAME, MODES, SETTABLE, FREQ_MIN, FREQ_MAX, POWER_RANGE, FAST, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,
     GROUPS, CONTROLS, CONTROL, validate, widthTable, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
-    smeterLabel, swrValue, FakeFTX1, Fake: FakeFTX1,
+    smeterLabel, swrValue, vdValue, idValue, FakeFTX1, Fake: FakeFTX1,
     serial: { baudRate: 38400, stopBits: 1, portHint: 'Enhanced COM Port (CAT-1)' }
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
