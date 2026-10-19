@@ -139,7 +139,14 @@
         <h2 class="panel-h">RX audio</h2>
         <div class="panel-b">
           <div id="sec-audio"></div>
-          <p class="note">Écoute à distance : prochaine version (v0.2).</p>
+          <div class="listen">
+            <button class="btn accent listen-btn" id="listenBtn" type="button" aria-pressed="false">🔊 Écouter le TRX</button>
+            <div class="ctl">
+              <div class="ctl-head"><span class="ctl-label">Volume</span><output class="ctl-val" id="listenVolOut">80 %</output></div>
+              <input type="range" id="listenVol" min="0" max="150" step="1" value="80" aria-label="Volume d'écoute">
+            </div>
+            <p class="note" id="listenInfo">Cliquez pour entendre la BF du TRX.</p>
+          </div>
         </div>
       </section>
       <section class="panel">
@@ -207,6 +214,7 @@
 <script src="/js/ftx1.js"></script>
 <script src="/js/ftdx10.js"></script>
 <script src="/js/ic7300.js"></script>
+<script src="/js/ulaw.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>

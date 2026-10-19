@@ -1,9 +1,9 @@
-# Remote Station — v0.1.13 (CAT seul)
+# Remote Station — v0.2.0 (CAT + écoute de la BF)
 
 Pilotage à distance d'un transceiver du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
 Trois modèles sont pris en charge : **Yaesu FTX-1**, **Yaesu FTDX10** et **Icom IC-7300**. Un seul est branché à la fois ; on choisit lequel sur la page Station du club, et la face avant des membres s'adapte toute seule.
 
-Cette version gère : fréquence (VFO A et B), mode, S-mètre, puissance, PTT, les fonctions du transceiver (voir ci-dessous), comptes par indicatif, une seule personne aux commandes, journal des accès. **L'audio (réception et micro) arrive en v0.2.**
+Cette version gère : fréquence (VFO A et B), mode, S-mètre, puissance, PTT, les fonctions du transceiver (voir ci-dessous), comptes par indicatif, une seule personne aux commandes, journal des accès. **La BF du TRX est relayée aux membres (écoute) ; le micro vers le TRX arrive en v0.3.**
 
 ## Comment ça marche
 
@@ -87,7 +87,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.1.13.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.2.0.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -95,7 +95,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.1.13.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.2.0.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station
@@ -186,9 +186,17 @@ Mise en route :
 
 **Changer de TRX à distance** (administrateurs seulement, par exemple ON6DP) : en haut à gauche de la page opérateur, les trois TRX sont affichés et celui en service est coché (✓). Un administrateur clique sur **STATION** : un menu propose les TRX dont le port a déjà été choisi une fois au club. Après confirmation, la page Station du club se recharge avec l'autre pilote et rouvre le port de cette radio ; la main est conservée. Le changement est refusé pendant une émission, et noté dans le journal d'activité. Les deux radios doivent rester branchées au PC du club.
 
+**Audio : faire entendre le TRX aux membres**
+1. Le TRX est relié en USB : sa carte son intégrée apparaît dans Windows (souvent « USB Audio CODEC »).
+2. Page Station → cadre **« Audio du TRX »** → **« Activer l'audio »**. La première fois, Chrome demande l'accès au micro : répondre **Autoriser** (c'est l'entrée son du TRX, pas un micro).
+3. Choisir l'**entrée son** du TRX dans la liste. La barre de niveau doit bouger avec la BF ; régler le niveau de sortie USB dans le menu du TRX si elle est trop faible ou toujours au maximum.
+4. Le son n'est envoyé que si au moins un membre écoute (64 kbit/s par écouteur, qualité « téléphone » 8 kHz).
+
+Après un redémarrage, la page réactive l'audio toute seule. Si elle affiche « Audio en pause », un clic n'importe où sur la page suffit ; pour éviter ce clic, ajouter `--autoplay-policy=no-user-gesture-required` au raccourci de démarrage de Chrome.
+
 **Démarrage automatique** :
 - Windows : raccourci dans `shell:startup` vers
-  `"C:\Program Files\Google\Chrome\Application\chrome.exe" --app=https://remote.op0p.be/station`
+  `"C:\Program Files\Google\Chrome\Application\chrome.exe" --autoplay-policy=no-user-gesture-required --app=https://remote.op0p.be/station`
   et désactiver la mise en veille du PC.
 - Raspberry Pi : lancer `chromium --app=https://remote.op0p.be/station` au démarrage de la session graphique.
 
@@ -229,5 +237,6 @@ sudo grep tx_start /opt/remote-station/logs/access-$(date +%Y-%m).log | tail
 
 ## Suite prévue
 
-- **v0.2 — audio** : audio RX capté sur la carte son USB du TRX, relayé par le VPS (plusieurs membres peuvent écouter), micro du membre vers le TRX pendant le PTT.
+- **v0.2 — audio RX (fait)** : BF du TRX captée sur sa carte son USB par la page Station, relayée par le VPS à tous les membres qui écoutent.
+- **v0.3 — audio TX** : micro du membre vers le TRX pendant le PTT.
 - **v0.3** : réservation de créneaux, mesures en émission (puissance, ROS, ALC), plages d'émission par membre selon sa classe de licence.

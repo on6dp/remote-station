@@ -148,6 +148,14 @@ Les heures du journal systemd sont en **UTC** (heure belge − 1 h en hiver, −
 
 Aucun autre logiciel (WSJT-X, log…) ne doit utiliser le port CAT en même temps.
 
+### Audio : faire entendre le TRX aux membres
+1. Le TRX est relié en USB : sa carte son intégrée apparaît dans Windows (souvent « USB Audio CODEC »).
+2. Page Station → cadre **« Audio du TRX »** → **« Activer l'audio »**. La première fois, Chrome demande l'accès au micro : répondre **Autoriser** (c'est l'entrée son du TRX, pas un micro).
+3. Choisir l'**entrée son** du TRX dans la liste. La barre de niveau doit bouger avec la BF ; régler le niveau de sortie USB dans le menu du TRX si elle est trop faible ou toujours au maximum.
+4. Le son n'est envoyé que si au moins un membre écoute (64 kbit/s par écouteur, qualité « téléphone » 8 kHz).
+
+Après un redémarrage, la page réactive l'audio toute seule. Si elle affiche « Audio en pause », un clic n'importe où sur la page suffit ; pour éviter ce clic, ajouter `--autoplay-policy=no-user-gesture-required` au raccourci de démarrage de Chrome.
+
 ### Changer de TRX
 - **Au club** : page Station → Réglages → « Modèle du TRX ». La première fois pour un modèle, choisir son port ; ensuite il est mémorisé.
 - **À distance (administrateurs)** : sur https://remote.op0p.be, cliquer sur **STATION** en haut à gauche → choisir le TRX. Possible seulement si le TRX est branché au PC du club, que son port a déjà été choisi une fois au club, et jamais pendant une émission.
@@ -159,7 +167,8 @@ Aucun autre logiciel (WSJT-X, log…) ne doit utiliser le port CAT en même temp
 1. Aller sur https://remote.op0p.be, se connecter avec **son indicatif** et **son mot de passe**.
 2. **Prendre la main** (une seule personne pilote à la fois). Si quelqu'un l'a déjà : **Demander la main** dans le cadre Opérateurs, ou lui écrire un message.
 3. Accorder : molette ou glisser sur les chiffres, flèches ↑ ↓, touches de bande et de mode. **PTT** : bouton ou barre d'espace (maintenir).
-4. **Libérer la main** en partant.
+4. **Écouter** : cadre RX AUDIO → « 🔊 Écouter le TRX », réglage du volume juste en dessous. Tout le monde peut écouter, même sans avoir la main (écouteurs ONL compris).
+5. **Libérer la main** en partant.
 
 Automatique : main libérée après 15 min sans action, déconnexion après 15 min d'inactivité (avertissement une minute avant, bouton « Rester connecté »). **Jamais pendant une émission.**
 

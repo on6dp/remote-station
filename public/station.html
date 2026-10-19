@@ -37,6 +37,21 @@
   </section>
 
   <section class="st-card">
+    <h2>Audio du TRX (BF vers les membres)</h2>
+    <p>Choisissez l'entrée son du TRX (carte son USB intégrée, souvent « USB Audio CODEC »). Le son n'est envoyé que lorsqu'au moins un membre écoute.</p>
+    <form class="st-form" id="audForm">
+      <label>Entrée son
+        <select id="audDev"><option value="">— autoriser d'abord l'accès au son —</option></select>
+      </label>
+    </form>
+    <div class="st-meter" aria-hidden="true"><i id="audLvl"></i></div>
+    <p class="st-audio-state" id="tAudio">Audio arrêté</p>
+    <div class="st-actions">
+      <button class="key" id="btnAudio" type="button">Activer l'audio</button>
+    </div>
+  </section>
+
+  <section class="st-card">
     <h2>Réglages</h2>
     <p id="rigHint"></p>
     <form class="st-form" id="cfgForm">
@@ -71,6 +86,7 @@
 <script src="/js/ftx1.js"></script>
 <script src="/js/ftdx10.js"></script>
 <script src="/js/ic7300.js"></script>
+<script src="/js/ulaw.js"></script>
 <script src="/js/station-core.js"></script>
 <script src="/js/station.js"></script>
 </body>

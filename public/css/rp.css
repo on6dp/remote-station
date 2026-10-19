@@ -520,3 +520,8 @@ input[type='range']:disabled { opacity: .45; }
 
 .login-call { color: var(--main); }
 .clar-ghost { visibility: hidden; }
+
+/* ------------------------------------------------------------ écoute de la BF */
+.listen { display: grid; gap: 8px; margin-top: 8px; }
+.listen-btn { width: 100%; }
+.listen-btn[aria-pressed='true'] { color: var(--v2-accent-green); border-color: var(--v2-accent-green); }

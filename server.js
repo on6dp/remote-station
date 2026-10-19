@@ -149,6 +149,26 @@ let station = null; // { conn, ip, since }
 let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
+// Audio BF du TRX : la station n'envoie le son que si au moins un membre écoute
+let audio = { active: false, want: false, frames: 0 };
+function listeners() {
+  let n = 0;
+  for (const c of ops) if (c.listen) n++;
+  return n;
+}
+function updateAudioWant() {
+  const want = listeners() > 0;
+  if (want !== audio.want) {
+    audio.want = want;
+    toStation({ t: 'audio_want', on: want });
+  }
+}
+// Trame audio de la station → chaque membre à l'écoute (un client trop lent saute des trames au lieu d'accumuler du retard)
+function relayAudio(buf) {
+  if (!buf || buf.length < 2 || buf.length > 4000 || buf[0] !== 0x01) return;
+  audio.frames++;
+  for (const c of ops) if (c.listen && c.backlog < 32768) c.send(buf);
+}
 // Messages entre membres (mémoire seulement, perdus au redémarrage) : discussion, demandes de main, passages de main
 const chatLog = [];
 function chatPush(item) {
@@ -233,6 +253,7 @@ function publicState() {
     ptt: { active: ptt.active, by: ptt.active ? ptt.conn.user.call : null, since: ptt.since },
     txOk: inTxRange(txFreq()),
     txFreq: txFreq(),
+    audio: { active: !!(station && audio.active), listeners: listeners() },
     rigName: station ? rig().NAME : null,
     rigModel: station ? rig().ID : null,
     // TRX dont le port série est mémorisé sur le PC du club (changement à distance possible)
@@ -405,6 +426,12 @@ function onOperator(conn, m) {
       return send(conn, { t: 'notice', level: 'warn', msg: 'Passage au ' + DRIVERS[model].NAME + ' demandé : la station redémarre (quelques secondes)' });
     }
 
+    case 'listen':
+      conn.listen = !!m.on;
+      journal(m.on ? 'listen_on' : 'listen_off', { call: conn.user.call });
+      updateAudioWant();
+      return broadcast();
+
     case 'chat': {
       const text = String(m.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 300);
       if (!text) return;
@@ -546,10 +573,17 @@ function onStationAuth(conn, m) {
   conn.isStation = true;
   journal('station_online', { ip: conn.ip, model });
   send(conn, { t: 'welcome', stationCall: cfg.stationCall });
+  audio.active = false;
+  send(conn, { t: 'audio_want', on: listeners() > 0 });
+  audio.want = listeners() > 0;
   broadcast();
 }
 
 function onStation(conn, m) {
+  if (m.t === 'audio_state') {
+    audio.active = !!m.active;
+    return broadcast();
+  }
   if (m.t === 'ports' && m.ports && typeof m.ports === 'object' && station && station.conn === conn) {
     for (const id in DRIVERS) station.ports[id] = m.ports[id] === true;
     return broadcast();
@@ -604,7 +638,11 @@ ws.attach(server, {
     }, 15000);
 
     conn.on('message', (data, isBinary) => {
-      if (isBinary) return; // réservé à l'audio (phase 2)
+      if (isBinary) {
+        // Seule la station envoie du binaire : la BF du TRX
+        if (conn.isStation && station && station.conn === conn) relayAudio(data);
+        return;
+      }
       let m;
       try {
         m = JSON.parse(data);
@@ -634,6 +672,7 @@ ws.attach(server, {
       }
       if (conn.user) {
         ops.delete(conn);
+        if (conn.listen) updateAudioWant();
         if (ptt.active && ptt.conn === conn) stopPtt('opérateur déconnecté');
         if (controller === conn) {
           controller = null;

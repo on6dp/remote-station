@@ -115,6 +115,10 @@
         $('tVps').textContent = 'Connecté — station ' + (m.stationCall || '');
         log('Connecté au serveur');
         core.wsOpened();
+        if (aud.ctx) ws.send(JSON.stringify({ t: 'audio_state', active: true }));
+      } else if (m.t === 'audio_want') {
+        aud.want = !!m.on;
+        drawAudio();
       } else if (m.t === 'switch') {
         switchModel(m.model, m.by);
       } else if (m.t === 'error') {
@@ -249,6 +253,126 @@
     $('btnSim').textContent = 'Arrêter la simulation';
     log('Simulation : ' + RIG.NAME + ' virtuel actif (aucune émission réelle)', 'st-warn');
   });
+
+  // ------------------------------------------------------------ audio BF du TRX → VPS
+  // Capture de l'entrée son choisie, rééchantillonnée à 8 kHz par le navigateur, codée en µ-law,
+  // envoyée par paquets de 40 ms (320 échantillons) seulement quand un membre écoute.
+  const aud = { ctx: null, stream: null, want: false, sent: 0, peak: 0 };
+  const CAPTURE_WORKLET = `
+    class RsCapture extends AudioWorkletProcessor {
+      constructor() { super(); this.buf = new Float32Array(320); this.n = 0; }
+      process(inputs) {
+        const ch = inputs[0] && inputs[0][0];
+        if (ch) for (let i = 0; i < ch.length; i++) {
+          this.buf[this.n++] = ch[i];
+          if (this.n === 320) { this.port.postMessage(this.buf.slice(0)); this.n = 0; }
+        }
+        return true;
+      }
+    }
+    registerProcessor('rs-capture', RsCapture);`;
+
+  function drawAudio() {
+    $('tAudio').textContent = !aud.ctx ? 'Audio arrêté'
+      : aud.ctx.state !== 'running' ? 'Audio en pause : cliquez n’importe où sur la page pour le relancer'
+      : aud.want ? 'Audio envoyé aux membres à l’écoute' : 'Audio prêt (personne n’écoute en ce moment, rien n’est envoyé)';
+    $('btnAudio').textContent = aud.ctx ? 'Arrêter l’audio' : 'Activer l’audio';
+  }
+
+  async function listInputs(selectId) {
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audioinput');
+    const sel = $('audDev');
+    sel.textContent = '';
+    for (const d of devs) {
+      const o = document.createElement('option');
+      o.value = d.deviceId;
+      o.textContent = d.label || 'Entrée son ' + (sel.length + 1);
+      sel.appendChild(o);
+    }
+    const saved = store.get('audio.label', '');
+    const pick = devs.find((d) => d.deviceId === selectId) || devs.find((d) => saved && d.label === saved)
+      || devs.find((d) => /usb audio codec|codec|yaesu|ftx|ftdx|ic-?7300|icom/i.test(d.label));
+    if (pick) sel.value = pick.deviceId;
+    return devs;
+  }
+
+  async function startAudio() {
+    if (!navigator.mediaDevices || !window.AudioWorkletNode) return log('Audio impossible : navigateur trop ancien', 'st-bad');
+    try {
+      // Première fois : demander l'autorisation pour connaître le nom des entrées, puis choisir celle du TRX
+      if (!$('audDev').value || !$('audDev').selectedOptions[0] || !$('audDev').selectedOptions[0].textContent.trim()) {
+        const tmp = await navigator.mediaDevices.getUserMedia({ audio: true });
+        tmp.getTracks().forEach((t) => t.stop());
+        await listInputs();
+      }
+      const deviceId = $('audDev').value;
+      aud.stream = await navigator.mediaDevices.getUserMedia({
+        audio: Object.assign({ echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 },
+          deviceId ? { deviceId: { exact: deviceId } } : {})
+      });
+      const track = aud.stream.getAudioTracks()[0];
+      await listInputs(track && track.getSettings().deviceId);
+      if (track) store.set('audio.label', track.label);
+      aud.ctx = new AudioContext({ sampleRate: ULAW.RATE });
+      const url = URL.createObjectURL(new Blob([CAPTURE_WORKLET], { type: 'application/javascript' }));
+      await aud.ctx.audioWorklet.addModule(url);
+      URL.revokeObjectURL(url);
+      const src = aud.ctx.createMediaStreamSource(aud.stream);
+      const node = new AudioWorkletNode(aud.ctx, 'rs-capture');
+      const mute = aud.ctx.createGain();
+      mute.gain.value = 0; // rien n'est joué sur le PC du club
+      src.connect(node);
+      node.connect(mute).connect(aud.ctx.destination);
+      node.port.onmessage = (e) => {
+        const buf = e.data;
+        let p = 0;
+        for (let i = 0; i < buf.length; i++) { const a = Math.abs(buf[i]); if (a > p) p = a; }
+        aud.peak = Math.max(p, aud.peak * 0.85);
+        if (aud.want && ws && ws.readyState === 1 && ws.bufferedAmount < 65536) {
+          ws.send(ULAW.encodeFrame(buf));
+          aud.sent++;
+        }
+      };
+      aud.ctx.onstatechange = drawAudio;
+      store.set('audio.on', '1');
+      log('Audio activé : ' + (track ? track.label : 'entrée par défaut'));
+      if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'audio_state', active: true }));
+    } catch (e) {
+      log('Audio : ' + (e.name === 'NotAllowedError' ? 'accès au son refusé (autorisez le micro pour ce site)' : e.message), 'st-bad');
+      stopAudio(false);
+    }
+    drawAudio();
+  }
+
+  function stopAudio(manual) {
+    if (aud.stream) aud.stream.getTracks().forEach((t) => t.stop());
+    if (aud.ctx) aud.ctx.close().catch(() => {});
+    aud.stream = null;
+    aud.ctx = null;
+    aud.peak = 0;
+    if (manual) {
+      store.set('audio.on', '0');
+      log('Audio arrêté');
+    }
+    if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'audio_state', active: false }));
+    drawAudio();
+  }
+
+  $('btnAudio').addEventListener('click', () => (aud.ctx ? stopAudio(true) : startAudio()));
+  $('audDev').addEventListener('change', () => {
+    const o = $('audDev').selectedOptions[0];
+    if (o) store.set('audio.label', o.textContent);
+    if (aud.ctx) { stopAudio(false); startAudio(); }
+  });
+  // Chrome peut suspendre l'audio d'une page sans clic : le premier clic le relance
+  document.addEventListener('click', () => { if (aud.ctx && aud.ctx.state === 'suspended') aud.ctx.resume().then(drawAudio); });
+  setInterval(() => { $('audLvl').style.width = Math.min(100, Math.round(aud.peak * 100)) + '%'; aud.peak *= 0.9; }, 100);
+  if (navigator.mediaDevices) {
+    navigator.mediaDevices.addEventListener('devicechange', () => listInputs($('audDev').value).catch(() => {}));
+    // Réactivation automatique si l'audio était en marche (l'autorisation du site est mémorisée par Chrome)
+    if (store.get('audio.on', '0') === '1') listInputs().catch(() => {}).then(startAudio);
+  }
+  drawAudio();
 
   // ------------------------------------------------------------ réglages
   $('cfgToken').value = store.get('token', '');

@@ -267,6 +267,10 @@
     $('rigMenu').addEventListener('click', (ev) => ev.stopPropagation());
     document.addEventListener('click', closeRigMenu);
     document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeRigMenu(); });
+    $('listenBtn').addEventListener('click', () => (player.on ? stopListen() : startListen()));
+    try { const v = localStorage.getItem('rs.vol'); if (v != null) $('listenVol').value = v; } catch (e) {}
+    $('listenVol').addEventListener('input', playerVolume);
+    playerVolume();
     $('askBtn').addEventListener('click', () => {
       send({ t: 'ask' });
       $('askBtn').disabled = true;
@@ -315,6 +319,7 @@
     $('logout').addEventListener('click', () => {
       creds = null;
       hadControl = false;
+      if (player.on) stopListen();
       if (ws) ws.close();
       me = null;
       showLogin('');
@@ -723,6 +728,7 @@
     cb.disabled = !!(st.controller && !mine && !other && !(me && me.admin));
     cb.classList.toggle('on', mine);
     updateChatButtons();
+    drawListen();
     const who = $('who');
     who.textContent = '';
     for (const c of st.users || []) {
@@ -783,6 +789,64 @@
     row.append(tm, tx);
     if (top) box.prepend(row); else box.appendChild(row);
     while (box.children.length > 60) box.lastChild.remove();
+  }
+
+  // ------------------------------------------------------------ écoute de la BF du TRX
+  // Trames µ-law à 8 kHz reçues du serveur, jouées avec un petit tampon (~0,2 s) contre les à-coups du réseau.
+  const player = { on: false, ctx: null, gain: null, next: 0, got: 0, late: 0 };
+  function playerVolume() {
+    const v = Number($('listenVol').value) / 100;
+    if (player.gain) player.gain.gain.value = v;
+    $('listenVolOut').textContent = Math.round(v * 100) + ' %';
+    try { localStorage.setItem('rs.vol', String($('listenVol').value)); } catch (e) {}
+  }
+  function startListen() {
+    if (!player.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return say('Votre navigateur ne peut pas jouer le son.', 'warn');
+      player.ctx = new AC();
+      player.gain = player.ctx.createGain();
+      player.gain.connect(player.ctx.destination);
+      playerVolume();
+    }
+    player.ctx.resume();
+    player.on = true;
+    player.next = 0;
+    send({ t: 'listen', on: true });
+    drawListen();
+  }
+  function stopListen() {
+    player.on = false;
+    send({ t: 'listen', on: false });
+    if (player.ctx) player.ctx.suspend();
+    drawListen();
+  }
+  function onAudio(data) {
+    if (!player.on || !player.ctx) return;
+    const pcm = ULAW.decodeFrame(new Uint8Array(data));
+    if (!pcm) return;
+    player.got++;
+    const ctx = player.ctx;
+    const now = ctx.currentTime;
+    if (player.next < now + 0.05) player.next = now + 0.2;      // démarrage ou trou : on se recale avec 0,2 s d'avance
+    else if (player.next > now + 0.8) { player.late++; return; } // trop de retard accumulé : on saute ce paquet
+    const buf = ctx.createBuffer(1, pcm.length, ULAW.RATE);
+    buf.copyToChannel(pcm, 0);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(player.gain);
+    src.start(player.next);
+    player.next += buf.duration;
+  }
+  function drawListen() {
+    const b = $('listenBtn');
+    b.setAttribute('aria-pressed', String(player.on));
+    b.textContent = player.on ? '🔇 Arrêter l’écoute' : '🔊 Écouter le TRX';
+    const a = (st && st.audio) || {};
+    $('listenInfo').textContent = !player.on
+      ? (a.active ? 'Cliquez pour entendre la BF du TRX.' : 'La station n’envoie pas de son en ce moment.') + (a.listeners ? ' ' + a.listeners + ' à l’écoute.' : '')
+      : !a.active ? 'En attente du son : l’audio n’est pas activé sur la page Station.'
+      : 'En écoute' + (a.listeners > 1 ? ' avec ' + (a.listeners - 1) + ' autre(s)' : '') + '.';
   }
 
   // ------------------------------------------------------------ messages entre membres
@@ -846,7 +910,9 @@
   function connect() {
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
     ws.onopen = () => { retry = 0; if (creds) send({ t: 'login', call: creds.call, pass: creds.pass }); };
+    ws.binaryType = 'arraybuffer';
     ws.onmessage = (e) => {
+      if (typeof e.data !== 'string') return onAudio(e.data);
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if (m.t === 'hello') {
@@ -855,6 +921,7 @@
         $('meCall').textContent = m.call;
         try { localStorage.setItem('rs.call', m.call); } catch (x) {}
         if (!m.allowTx) say('Émission désactivée sur ce serveur : réglages et écoute uniquement.', 'warn', 8000);
+        if (player.on) send({ t: 'listen', on: true }); // reprise de l'écoute après une reconnexion
         render();
       } else if (m.t === 'login_fail') {
         creds = null;
@@ -865,6 +932,8 @@
         // Déconnexion pour inactivité : pas de reconnexion automatique
         creds = null;
         hadControl = false;
+        player.on = false;
+        if (player.ctx) player.ctx.suspend();
         hideIdle();
         showLogin(m.msg);
       } else if (m.t === 'state') {

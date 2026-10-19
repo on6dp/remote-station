@@ -527,3 +527,8 @@ button, input, select { font: inherit; color: inherit; }
 .st-warn { color: var(--warn); }
 .st-bad { color: #ff8a80; }
 @media (max-width: 560px) { .st-links { grid-template-columns: 1fr; } }
+
+/* niveau audio de la page Station */
+.st-meter { height: 8px; margin: 10px 0 6px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; }
+.st-meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #3fb950, #d29922 75%, #f85149); transition: width .1s linear; }
+.st-audio-state { margin: 0 0 8px; font-size: 13px; opacity: .85; }
