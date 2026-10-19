@@ -59,7 +59,8 @@
   // FAST : à chaque cycle. SLOW : une tranche par cycle (tour complet en ~1,5 s). TXMETERS : en émission.
   const q = (...b) => frame(b);
   const FAST = [q(0x25, 0x00), q(0x26, 0x00), q(0x15, 0x02), q(0x1C, 0x00)];
-  const TXMETERS = [q(0x15, 0x11), q(0x15, 0x12), q(0x15, 0x13), q(0x15, 0x14)];
+  // En émission : mesures, plus puissance et VOX (contrôles de sécurité plus rapides)
+  const TXMETERS = [q(0x15, 0x11), q(0x15, 0x12), q(0x15, 0x13), q(0x15, 0x14), q(0x14, 0x0A), q(0x16, 0x46)];
   const SLOW = [
     q(0x25, 0x01), q(0x26, 0x01), q(0x0F), q(0x14, 0x0A), q(0x21, 0x00), q(0x21, 0x01), q(0x21, 0x02),
     q(0x14, 0x01), q(0x14, 0x02), q(0x14, 0x03), q(0x11), q(0x16, 0x02), q(0x16, 0x12),
@@ -90,6 +91,10 @@
   ];
   const SIMPLE_MAP = {};
   for (const s of SIMPLE) SIMPLE_MAP[s[0] * 256 + s[1]] = s;
+  // Trame de lecture de chaque clé d'état : relue juste après un réglage
+  const READ_FOR = { power: q(0x14, 0x0A), split: q(0x0F), att: q(0x11), clar: q(0x21, 0x00), fil: q(0x26, 0x00), tuner: q(0x1C, 0x01) };
+  for (const s of SIMPLE) if (s[2] !== 'powerRaw' && s[0] !== 0x15) READ_FOR[s[2]] = q(s[0], s[1]);
+  const readFor = (id) => READ_FOR[id] || null;
 
   // ------------------------------------------------------------ réglages
   const setLvl = (c, s) => (v) => q(c, s, ...lvlBytes(v));
@@ -363,7 +368,7 @@
 
   const api = {
     ID, NAME, MODES, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX, POWER_RANGE, POWER_STEP, INIT,
-    FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, TX_SOURCE_UNKNOWN: true, STATE_KEYS,
+    FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS,
     GROUPS, CONTROLS, CONTROL, validate, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
     smeterLabel, swrValue, vdValue, idValue, poFrac,
     bwText: (r) => (r.fil ? 'FIL' + r.fil : '—'),

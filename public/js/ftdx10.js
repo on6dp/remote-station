@@ -69,7 +69,7 @@
     { cmd: 'NB0;', re: /^NB0([01])$/, parse: (m) => ({ nb: +m[1] }), sim: 'NB00' },
     { cmd: 'NR0;', re: /^NR0([01])$/, parse: (m) => ({ nr: +m[1] }), sim: 'NR00' }
   );
-  api.SLOW += 'NB0;NR0;';
+  api.SLOW.push('NB0;', 'NR0;');
   api.STATE_KEYS.push('nbLvl', 'nrLvl');
   const extra = [
     { id: 'nbLvl', g: 'flt', sec: 'dsp', label: 'Niveau NB', type: 'level', min: 0, max: 10, step: 1, write: (v) => 'NL0' + pad(v, 3) + ';' },

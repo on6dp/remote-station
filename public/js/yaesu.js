@@ -156,9 +156,25 @@
       const o = spec.readOverrides && Object.prototype.hasOwnProperty.call(spec.readOverrides, r.cmd) ? spec.readOverrides[r.cmd] : r;
       if (o) READS.push(Object.assign({ cmd: r.cmd }, o));
     }
-    const FAST = 'FA;MD0;FB;MD1;SM0;TX;FT;';
-    const TXMETERS = 'RM3;RM4;RM5;RM6;'; // COMP, ALC, PO, SWR (émission seulement)
-    const SLOW = READS.map((r) => r.cmd).join('') + 'RM7;RM8;'; // + IDD, VDD
+    // Les commandes partent une par une, espacées (FRAME_GAP_MS) : une rafale de 30 commandes
+    // déborde le tampon CAT de la radio, qui en perd une partie (mode non lu, « plus de réponse »…)
+    const FAST = ['FA;', 'MD0;', 'FB;', 'MD1;', 'SM0;', 'TX;', 'FT;'];
+    // En émission : mesures COMP, ALC, PO, SWR, et aussi puissance et VOX (contrôles de sécurité plus rapides)
+    const TXMETERS = ['RM3;', 'RM4;', 'RM5;', 'RM6;', P.read, 'VX;'];
+    const SLOW = READS.map((r) => r.cmd).concat(['RM7;', 'RM8;']); // + IDD, VDD
+    // Commande de lecture de chaque clé d'état : relue juste après un réglage, sans attendre le tour complet
+    const READ_FOR = {};
+    function readFor(id) {
+      if (!Object.keys(READ_FOR).length) {
+        for (const r of READS) {
+          const m = r.sim && r.re.exec(r.sim);
+          if (m) for (const k of Object.keys(r.parse(m))) READ_FOR[k] = r.cmd;
+        }
+        READ_FOR.power = P.read;
+        READ_FOR.powerHead = P.read;
+      }
+      return READ_FOR[id] || null;
+    }
     const STATE_KEYS = ['txVfo', 'split', 'vfoSel', 'rit', 'xit', 'clar', 'lock', 'width', 'narrow', 'shift', 'contour', 'apf',
       'dnf', 'notch', 'notchFreq', 'nb', 'nr', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox',
       'tuner', 'tuning', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'];
@@ -319,6 +335,7 @@
       ID, NAME, MODES: MODES_ALL, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX,
       POWER_RANGE: P.range, POWER_STEP: P.step, INIT: 'AI0;',
       FAST, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,
+      FRAME_GAP_MS: 20, SLOW_PER_TICK: 4, POLL_MS: 250, readFor,
       GROUPS: [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']],
       CONTROLS, CONTROL, validate, widthTable, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
       smeterLabel, swrValue, vdValue, idValue, Fake, FakeFTX1: Fake,

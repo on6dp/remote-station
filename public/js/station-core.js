@@ -47,6 +47,13 @@
       this.queue = [];       // trames de lecture en attente (pilotes à trames, ex. CI-V)
       this.queueTimer = null;
       this.slowPos = 0;
+      this.unknown = new Set();
+      this.prio = [];
+    }
+    /** Demande la relecture d'une clé d'état au prochain cycle (pilotes à trames). */
+    _readBack(id) {
+      const r = this.rig.readFor && this.rig.readFor(id);
+      if (r && this.prio.indexOf(r) < 0) this.prio.push(r);
     }
 
     // ---------- côté série ----------
@@ -79,7 +86,16 @@
       const FTX1 = this.rig;
       for (const t of toks) {
         const p = FTX1.parse(t);
-        if (!p) continue;
+        if (!p) {
+          // Diagnostic : réponse inconnue du pilote (affichée une fois par type, 20 au plus)
+          const key = typeof t === 'string' ? t.slice(0, 4) : Array.from(t.slice(2, 4)).join(',');
+          if (!this.unknown.has(key) && this.unknown.size < 20) {
+            this.unknown.add(key);
+            const raw = typeof t === 'string' ? t + ';' : Array.from(t, (b) => b.toString(16).padStart(2, '0')).join(' ');
+            this.log('Réponse non reconnue de la radio : ' + raw.slice(0, 60));
+          }
+          continue;
+        }
         this.lastRx = Date.now();
         if (!this.radio.connected) {
           this.radio.connected = true;
@@ -90,6 +106,8 @@
         // Radio qui ne dit pas d'où vient l'émission (Icom) : émission demandée par nous = CAT (1), sinon radio (2)
         if (FTX1.TX_SOURCE_UNKNOWN && p.tx === 1 && !this.catKeyed) p.tx = 2;
         for (const k in p) {
+          // Mesure d'émission arrivée après le retour en réception (lecture déjà en file) : ignorée
+          if (TX_METER_KEYS.indexOf(k) >= 0 && !this.radio.tx && p.tx == null) continue;
           if (this.radio[k] !== p[k]) {
             this.radio[k] = p[k];
             this.dirty = true;
@@ -122,7 +140,9 @@
           const slow = [];
           for (let i = 0; i < n * (this.forceSlow ? 2 : 1); i++) slow.push(rig.SLOW[(this.slowPos + i) % rig.SLOW.length]);
           this.slowPos = (this.slowPos + slow.length) % rig.SLOW.length;
-          this.queue = rig.FAST.concat(this.radio.tx ? rig.TXMETERS : [], slow);
+          // Relectures prioritaires (réglage qui vient d'être modifié), puis lectures rapides, puis tranche lente
+          this.queue = this.prio.concat(rig.FAST, this.radio.tx ? rig.TXMETERS : [], slow);
+          this.prio = [];
           this._drain();
         }
       } else {
@@ -167,9 +187,13 @@
           if (FTX1.CONTROL[m.id].transmits && (!this.serialOpen || !this.radio.connected)) return this.log('Refusé : radio non connectée');
           this._write(FTX1.CONTROL[m.id].write(v, this.radio));
           this.forceSlow = true;
+          this._readBack(m.id);
+          if (m.id === 'rit' || m.id === 'xit') this._readBack(m.id === 'rit' ? 'xit' : 'rit');
+          if (FTX1.CONTROL[m.id].transmits) this._readBack('tuner');
           if (FTX1.CONTROL[m.id].transmits) this.log(FTX1.CONTROL[m.id].label + ' (' + (m.by || '?') + ')');
         } else if (m.op === 'power') {
           this._write(FTX1.cmdPower(m.watts, this.radio.powerHead));
+          this._readBack('power');
           this.log('Puissance réglée à ' + m.watts + ' W' + (m.reason ? ' (' + m.reason + ')' : ''));
         } else if (m.op === 'ptt') {
           if (m.on) {
