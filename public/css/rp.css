@@ -217,6 +217,7 @@ input[type='range']:disabled { opacity: .45; }
   border: 1px solid var(--v2-border-panel);
   cursor: pointer;
   min-width: 0;
+  container-type: inline-size; /* la taille des chiffres suit la largeur de l'écran VFO */
 }
 .vfo.target.vfo-main { border-color: var(--v2-vfo-main-control-border); box-shadow: 0 0 0 1px var(--v2-vfo-main-control-glow), 0 0 22px -8px var(--v2-vfo-main-panel-glow-outer); }
 .vfo.target.vfo-sub { border-color: var(--v2-vfo-sub-control-border); box-shadow: 0 0 0 1px var(--v2-vfo-sub-control-glow), 0 0 22px -8px var(--v2-vfo-sub-panel-glow-outer); }
@@ -273,6 +274,8 @@ input[type='range']:disabled { opacity: .45; }
   display: flex;
   font-weight: 700;
   font-size: clamp(30px, 3.6vw, 52px);
+  /* 9 chiffres + 2 séparateurs + « MHz » doivent tenir dans l'écran VFO */
+  font-size: clamp(26px, calc((100cqi - 70px) / 7), 56px);
   line-height: 1;
   letter-spacing: .02em;
   user-select: none;
@@ -282,7 +285,7 @@ input[type='range']:disabled { opacity: .45; }
 .freq .d { cursor: ns-resize; padding: 0 .01em; border-bottom: 2px solid transparent; }
 .freq .d.lead { display: none; }
 .freq .d.cur { border-bottom-color: currentColor; }
-.freq .sep { width: .3em; margin: 0 -.03em; text-align: center; }
+.freq .sep { display: inline-block; width: .5em; margin: 0 .08em; text-align: center; }
 .vfo-main .freq { color: var(--v2-vfo-main-freq-active); text-shadow: var(--v2-vfo-main-freq-glow); }
 .vfo-sub .freq { color: var(--v2-vfo-sub-freq-active); text-shadow: var(--v2-vfo-sub-freq-glow); }
 .vfo:not(.live) .freq { color: var(--v2-text-muted); text-shadow: none; }
@@ -431,7 +434,7 @@ input[type='range']:disabled { opacity: .45; }
   .vfo-row { grid-template-columns: minmax(0, 1fr); }
   .dual { order: 3; }
   .dual-b { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .freq { font-size: clamp(30px, 10vw, 44px); }
+  .freq { font-size: clamp(26px, calc((100cqi - 70px) / 7), 44px); }
   .meters-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .goto { margin-left: 0; }
   .ptt { position: fixed; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto; z-index: 5; min-height: 72px; }
