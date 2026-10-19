@@ -519,3 +519,4 @@ input[type='range']:disabled { opacity: .45; }
 }
 
 .login-call { color: var(--main); }
+.clar-ghost { visibility: hidden; }

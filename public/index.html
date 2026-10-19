@@ -97,7 +97,11 @@
           <div class="vfo-mid">
             <span class="vfo-tag">VFO <b>B</b></span>
             <span class="badge b-mode" id="modeB">---</span>
-            <span class="vfo-side"><span class="clar-line"><span class="badge" id="splitBadge">SPLIT TX</span></span></span>
+            <span class="vfo-side">
+              <span class="clar-line"><span class="badge" id="splitBadge">SPLIT TX</span></span>
+              <!-- ligne vide de même hauteur que RIT/XIT du MAIN : les deux fréquences restent alignées -->
+              <span class="clar-line clar-ghost" aria-hidden="true"><span class="badge">XIT</span></span>
+            </span>
           </div>
           <div class="freq-wrap"><div class="freq" id="freqB"></div><span class="unit">MHz</span></div>
           <div class="vfo-badges" id="badgesB"></div>
