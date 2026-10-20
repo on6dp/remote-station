@@ -494,6 +494,13 @@ function onOperator(conn, m) {
         toStation({ t: 'cmd', op: 'freqB', hz });
         radio.freqB = hz;
       }
+      if (m.band != null) {
+        const R = rig();
+        if (!R.cmdBand || !R.BAND_CODES || !Object.prototype.hasOwnProperty.call(R.BAND_CODES, String(m.band))) {
+          return send(conn, { t: 'notice', level: 'error', msg: 'Bande non disponible sur ce TRX' });
+        }
+        toStation({ t: 'cmd', op: 'band', band: String(m.band), sub: !!m.sub });
+      }
       if (m.ctl != null) {
         const R = rig();
         const c = R.CONTROL[m.ctl];

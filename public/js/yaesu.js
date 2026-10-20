@@ -234,6 +234,13 @@
     }
     const cmdPower = P.cmd;
     function cmdPtt(on) { return on ? 'TX1;' : 'TX0;'; } // TX1 = CAT TX ON, TX0 = CAT TX OFF
+    // Changement de bande par BS (BAND SELECT), comme la touche BAND : la radio rappelle sa propre mémoire de bande
+    // (dernière fréquence et dernier mode). Seulement pour les modèles qui déclarent leurs codes de bande.
+    const BAND_CODES = spec.bandCodes || null;
+    function cmdBand(name, sub) {
+      if (!BAND_CODES || !Object.prototype.hasOwnProperty.call(BAND_CODES, name)) throw new Error('bande inconnue');
+      return 'BS' + (sub ? '1' : '0') + BAND_CODES[name][0] + ';';
+    }
 
     function parse(tok) {
       let m;
@@ -317,6 +324,12 @@
           else if (c === 'BA') { this.freq = this.freqB; this.mode = this.modeB; }
           else if (CONTROL.tune && c + ';' === CONTROL.tune.write()) this.ans['AC;'] = spec.fakeTuning || 'AC001';
           else if (c === 'AI0') { /* auto-information coupée */ }
+          else if ((m = /^BS([01])(\d\d)$/.exec(c)) && BAND_CODES) {
+            const b = Object.keys(BAND_CODES).find((k) => BAND_CODES[k][0] === m[2]);
+            if (!b) out.push('?;');
+            else if (m[1] === '1') this.freqB = BAND_CODES[b][1];
+            else this.freq = BAND_CODES[b][1];
+          }
           else if (this.ans[c + ';'] != null) out.push(this.ans[c + ';'] + ';');
           else {
             const r = READS.find((x) => !x.power && x.re.test(c));
@@ -338,6 +351,7 @@
       FRAME_GAP_MS: 20, SLOW_PER_TICK: 4, POLL_MS: 250, readFor,
       GROUPS: [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']],
       CONTROLS, CONTROL, validate, widthTable, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
+      BAND_CODES, cmdBand: BAND_CODES ? cmdBand : null,
       smeterLabel, swrValue, vdValue, idValue, Fake, FakeFTX1: Fake,
       serial: spec.serial, hint: spec.hint
     };

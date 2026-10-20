@@ -102,6 +102,11 @@
           this.dirty = true;
           this.log(FTX1.NAME + ' répond');
         }
+        // Commande refusée par la radio (« ?; ») juste après un réglage : on le signale dans le journal
+        if (p.error && this.lastCmd && Date.now() - this.lastCmd.at < 600) {
+          this.log('La radio a refusé la commande ' + this.lastCmd.s);
+          this.lastCmd = null;
+        }
         if (p.error || p.ok) continue;
         // Radio qui ne dit pas d'où vient l'émission (Icom) : émission demandée par nous = CAT (1), sinon radio (2)
         if (FTX1.TX_SOURCE_UNKNOWN && p.tx === 1 && !this.catKeyed) p.tx = 2;
@@ -149,7 +154,7 @@
         let q = rig.FAST;
         if (this.radio.tx) q += rig.TXMETERS;
         if (this.forceSlow || this.ticks % 4 === 0) q += rig.SLOW;
-        this._write(q);
+        this._write(q, true);
       }
       this.forceSlow = false;
       this.ticks++;
@@ -180,6 +185,9 @@
           this._write(FTX1.cmdFreq(m.hz));
         } else if (m.op === 'freqB') {
           this._write(FTX1.cmdFreqB(m.hz));
+        } else if (m.op === 'band') {
+          this._write(FTX1.cmdBand(m.band, !!m.sub));
+          this.forceSlow = true;
         } else if (m.op === 'mode') {
           this._write(FTX1.cmdMode(m.code, !!m.sub, this.radio));
         } else if (m.op === 'ctl') {
@@ -228,8 +236,9 @@
     }
 
     // ---------- interne ----------
-    _write(s) {
+    _write(s, poll) {
       if (!this.serialOpen) return;
+      if (!poll && typeof s === 'string') this.lastCmd = { s, at: Date.now() }; // pour signaler un refus éventuel
       try {
         this.writeSerial(s);
       } catch (e) {
@@ -244,7 +253,7 @@
         if (!this.serialOpen) { this.queue = []; return; }
         const f = this.queue.shift();
         if (!f) return;
-        this._write(f);
+        this._write(f, true);
         if (this.queue.length) this.queueTimer = setTimeout(next, this.rig.FRAME_GAP_MS);
       };
       next();

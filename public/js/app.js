@@ -250,6 +250,8 @@
       b.addEventListener('click', () => {
         if (!iControl()) return say('Prenez la main pour changer de bande.', 'warn');
         if (st.ptt && st.ptt.active) return say('Réglage bloqué pendant l’émission.', 'warn');
+        // TRX avec sélection de bande (FTX-1) : comme la touche BAND, il rappelle sa dernière fréquence et son mode
+        if (R.cmdBand && R.BAND_CODES && R.BAND_CODES[name]) return send({ t: 'set', band: name, sub: target === 'B' });
         setFreq(khz * 1000, target);
         if (mk) setTimeout(() => send({ t: 'set', mode: mk[0], sub: target === 'B' }), 200);
       });
