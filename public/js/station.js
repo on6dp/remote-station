@@ -33,6 +33,20 @@
   let sim = null;
   const enc = new TextEncoder();
 
+  // ------------------------------------------------------------ jeton
+  // Le jeton peut aussi être donné dans l'adresse : https://remote.op0p.be/station#jeton=XXXX
+  // (raccourci de démarrage du PC du club). La partie après « # » n'est jamais envoyée au serveur.
+  let hashToken = '';
+  {
+    const m = /(?:^|[#&])(?:jeton|token)=([A-Za-z0-9_-]{20,})/.exec(location.hash);
+    if (m) {
+      hashToken = m[1];
+      store.set('token', hashToken);
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} // ne pas laisser le jeton visible
+    }
+  }
+  const getToken = () => hashToken || store.get('token', '');
+
   // ------------------------------------------------------------ modèle de radio
   const MODEL = (window.RIGS && window.RIGS[store.get('model', 'ftx1')]) ? store.get('model', 'ftx1') : 'ftx1';
   const RIG = window.RIGS[MODEL];
@@ -98,7 +112,7 @@
   // ------------------------------------------------------------ WebSocket vers le VPS
   function connectWs() {
     clearTimeout(wsTimer);
-    const token = store.get('token', '');
+    const token = getToken();
     if (!token) {
       $('tVps').textContent = 'Entrez le jeton de la station ci-dessous';
       return;
@@ -399,20 +413,21 @@
   drawAudio();
 
   // ------------------------------------------------------------ réglages
-  $('cfgToken').value = store.get('token', '');
+  $('cfgToken').value = getToken();
   // Vitesse et bits de stop mémorisés par modèle (FTX-1/FTDX10 : 38400 ; IC-7300 : 115200)
   $('cfgBaud').value = store.get('baud.' + MODEL, String(RIG.serial.baudRate));
   $('cfgStop').value = store.get('stop.' + MODEL, String(RIG.serial.stopBits));
   $('btnSave').addEventListener('click', async () => {
     // Le jeton n'est remplacé que par une valeur plausible (jamais vidé ni écrasé par autre chose par erreur)
     const tok = $('cfgToken').value.trim().replace(/^"|",?$/g, '');
-    if (tok && tok !== store.get('token', '')) {
+    if (tok && tok !== getToken()) {
       if (/^[0-9a-f]{32,}$/i.test(tok) || /^[A-Za-z0-9_-]{20,}$/.test(tok)) {
         store.set('token', tok);
+        hashToken = tok;
         log('Nouveau jeton enregistré');
       } else {
         log('Jeton non enregistré : il doit faire au moins 20 caractères (chiffres et lettres), sans espace ni guillemet', 'st-bad');
-        $('cfgToken').value = store.get('token', '');
+        $('cfgToken').value = getToken();
       }
     }
     store.set('baud.' + MODEL, $('cfgBaud').value);
@@ -444,6 +459,12 @@
 
   // ------------------------------------------------------------ démarrage
   log('Page Station chargée' + (window.RS_WORKER_TIMERS ? ' (fonctionne aussi en arrière-plan)' : ''));
+  try {
+    localStorage.setItem('rs.st.test', '1');
+    localStorage.removeItem('rs.st.test');
+  } catch (e) {
+    log('Chrome n’enregistre pas les données de ce site : le jeton et le port seront oubliés à chaque fois (voir Paramètres → Confidentialité → Données des sites)', 'st-bad');
+  }
   keepAwake();
   connectWs();
   reopenRemembered();
