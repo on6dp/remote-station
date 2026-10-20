@@ -377,7 +377,8 @@
       dial.appendChild(o);
     }
     dial.value = store.get('rtdial', '14085');
-    dial.addEventListener('change', () => store.set('rtdial', dial.value));
+    // Choisir une bande dans la liste y envoie directement le TRX (QSY)
+    dial.addEventListener('change', () => { store.set('rtdial', dial.value); qsyTo(Number(dial.value)); });
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
     $('rtClear').addEventListener('click', () => { $('rtRx').textContent = ''; });
     $('rtTxClear').addEventListener('click', () => { $('rtTxt').value = ''; });
@@ -621,7 +622,11 @@
     qsyTo(khz);
   }
   function qsyTo(khz) {
-    if (!api.iControl()) return api.say('Prenez la main pour changer de fréquence.', 'warn');
+    if (!api.iControl()) {
+      lastBand = 0; // la liste revient sur la bande réelle du TRX
+      if ($('rtDial')) $('rtDial').value = store.get('rtdial', '14085');
+      return api.say('Prenez la main pour changer de fréquence.', 'warn');
+    }
     const st = api.state();
     if (st && st.ptt && st.ptt.active) return api.say('Réglage bloqué pendant l’émission.', 'warn');
     api.setFreq(Math.round(khz * 1000), 'A');
@@ -709,7 +714,8 @@
       // Clic sur FT8 / FT4 : comme dans WSJT-X, le TRX va sur la fréquence d'appel de ce mode dans sa bande
       document.querySelectorAll('#dgModes .btn').forEach((b) => b.addEventListener('click', () => { setMode(b.dataset.mode); autoQsy(); }));
       $('dgQsy').addEventListener('click', qsy);
-      $('dgDial').addEventListener('change', () => store.set('dial.' + mode, $('dgDial').value));
+      // Choisir une fréquence dans la liste y envoie directement le TRX (QSY)
+      $('dgDial').addEventListener('change', () => { store.set('dial.' + mode, $('dgDial').value); qsy(); });
       $('dgClear').addEventListener('click', () => { hist.length = 0; redrawAll(); });
       // Split : clic gauche = fréquence de réception, clic droit = fréquence d'émission
       const fAt = (e) => { const r = e.currentTarget.getBoundingClientRect(); return ((e.clientX - r.left) / r.width) * WF_MAX_HZ; };
