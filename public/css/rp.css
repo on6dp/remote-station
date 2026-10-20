@@ -679,3 +679,17 @@ body.digi-popup .dg-list { max-height: none; }
 body.digi-popup .rt-rx { max-height: none; }
 @media (max-width: 900px) { .rt-grid { grid-template-columns: 1fr; } }
 .meters #mtS { grid-column: 1 / -1; }
+
+/* ===================================================================== WSPR */
+.ws-col { flex: 1; min-height: 260px; }
+.ws-th, .ws-row { display: grid; grid-template-columns: 44px 32px 36px 118px 44px minmax(70px, 1fr) 60px 128px 82px; gap: 6px; padding: 2px 8px; font-size: 11px; }
+.ws-th { color: var(--v2-text-dim); font-size: 9px; letter-spacing: .8px; text-transform: uppercase; border-bottom: 1px solid var(--v2-border-dark); padding-block: 4px; }
+.ws-th span:nth-child(-n+5), .ws-row span:nth-child(-n+5), .ws-th span:nth-child(n+8), .ws-row span:nth-child(n+8) { text-align: right; }
+.ws-row { color: var(--v2-text-secondary); white-space: nowrap; }
+.ws-row span { overflow: hidden; text-overflow: ellipsis; }
+.ws-row span:nth-child(6) { color: var(--v2-text-bright); font-weight: 700; }
+.ws-row span:nth-child(7) { color: var(--v2-accent-cyan-bright); }
+.ws-row:hover { background: rgba(154, 120, 224, .1); }
+.ws-row.me { background: rgba(255, 32, 32, .2); }
+.ws-list { max-height: 380px; }
+body.digi-popup .ws-list { max-height: none; }

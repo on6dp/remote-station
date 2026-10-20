@@ -1,5 +1,9 @@
 # Journal des versions — Remote Station UBA-LGE (ON5VL / OR0L)
 
+## v0.5 — WSPR
+
+- **0.5.0** — Fenêtre **WSPR** : décodage des périodes de 2 minutes sur le serveur avec wsprd de WSJT-X (K9AN / K1JT, GPL v3) compilé en WebAssembly, exécuté entièrement en mémoire. Liste des stations entendues : heure, dB, DT, fréquence réelle, dérive, indicatif, locator, puissance (dBm et W), distance depuis le locator de la station ; fréquences WSPR par bande (QSY direct) ; compte à rebours de la période.
+
 ## v0.4 — RTTY
 
 - **0.4.2** — Choisir une bande dans les listes FT8 · FT4 et RTTY met directement le TRX sur cette fréquence, en DATA-U (plus besoin de cliquer sur QSY).

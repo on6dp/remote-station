@@ -203,8 +203,8 @@ function relayAudio(buf) {
 
 // ---------------------------------------------------------------- modes numériques (FT8 / FT4)
 // Le décodage tourne dans un Worker (lib/digi-worker.js) dès qu'un membre ouvre la fenêtre FT8/FT4.
-const digi = { worker: null, hist: { FT8: [], FT4: [] }, latency: null, ms: 0, last: 0 };
-const DIGI_MODES = ['FT8', 'FT4', 'RTTY'];
+const digi = { worker: null, hist: { FT8: [], FT4: [], WSPR: [] }, latency: null, ms: 0, last: 0, dial: 0 };
+const DIGI_MODES = ['FT8', 'FT4', 'RTTY', 'WSPR'];
 // Réglages RTTY d'un membre (chacun peut suivre un signal différent) → clé du démodulateur
 function rttyCfg(r) {
   if (!r || typeof r !== 'object') return null;
@@ -240,6 +240,7 @@ function updateDigi() {
   if (modes.size) startDigi();
   if (digi.worker) {
     digi.worker.postMessage({ t: 'modes', modes: Array.from(modes) });
+    digi.worker.postMessage({ t: 'dial', hz: radio.freq || 0 });
     const cfgs = {};
     for (const c of ops) if (c.digi === 'RTTY' && c.rtty) cfgs[c.rtty.key] = c.rtty;
     digi.worker.postMessage({ t: 'rtty', cfgs: Object.values(cfgs) });
@@ -255,6 +256,7 @@ function onDigi(m) {
     for (const c of ops) if (c.digi && c.backlog < 65536) c.send(fr);
     return;
   }
+  if (m.t === 'log') return console.error(m.msg);
   if (m.t === 'rtty_text' || m.t === 'rtty_lvl') {
     const msg = JSON.stringify(m.t === 'rtty_text' ? { t: 'rtty', text: m.text } : { t: 'rtty_lvl', m: m.m, s: m.s, c: m.c });
     for (const c of ops) if (c.digi === 'RTTY' && c.rtty && c.rtty.key === m.key) c.send(msg);
@@ -835,6 +837,8 @@ function onStation(conn, m) {
   // Réglages propres au pilote (SPLIT, filtres, mesures…) : nombres uniquement
   for (const k of rig().STATE_KEYS || []) radio[k] = Number.isFinite(r[k]) ? r[k] : null;
   if (was !== radio.connected) journal(radio.connected ? 'trx_online' : 'trx_offline', {});
+  // Fréquence du VFO pour les fréquences WSPR affichées
+  if (digi.worker && radio.freq && radio.freq !== digi.dial) { digi.dial = radio.freq; digi.worker.postMessage({ t: 'dial', hz: radio.freq }); }
   // Sécurité : la radio est en CAT TX alors qu'aucun PTT n'est actif côté serveur
   if (radio.tx === 1 && !ptt.active) toStation({ t: 'cmd', op: 'ptt', on: false, reason: 'incohérence serveur' });
   // Sécurité : sortie de bande pendant l'émission

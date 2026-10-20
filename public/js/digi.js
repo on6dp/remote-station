@@ -47,7 +47,6 @@
   ];
   const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'sync'];
   const SOON = {
-    wspr: '<b>WSPR</b> (périodes de 2 minutes, signaux très faibles) : liste des balises entendues avec indicatif, locator, puissance et distance.',
     jt65: '<b>JT65</b> (périodes d’une minute) : décodage et QSO, comme dans WSJT-X.'
   };
   const FTX_PANE = `
@@ -115,6 +114,20 @@
         </div>
       </div>
     </div>`;
+  const WSPR_PANE = `
+    <div class="dg-bar">
+      <select id="wsDial" aria-label="Fréquence WSPR"></select>
+      <button class="btn" type="button" id="wsQsy" title="Met le VFO A sur la fréquence WSPR choisie">QSY</button>
+      <span class="dg-f">Bande WSPR : <b>1400 – 1600 Hz</b> audio</span>
+      <span class="dg-clock" id="wsClock">--:--</span>
+      <span class="dg-status" id="wsStatus"></span>
+    </div>
+    <div class="dg-wf-slot" data-slot="wspr"></div>
+    <div class="dg-col ws-col">
+      <div class="dg-h"><span>Stations WSPR entendues <b id="wsCount"></b></span><span class="dg-note">périodes de 2 minutes · décodage une dizaine de secondes après la minute paire</span><button class="dg-mini" type="button" id="wsClear">Effacer</button></div>
+      <div class="ws-th"><span>UTC</span><span>dB</span><span>DT</span><span>Fréquence</span><span>Dérive</span><span>Indicatif</span><span>Locator</span><span>Puiss.</span><span>Distance</span></div>
+      <div class="dg-list ws-list" id="wsList"></div>
+    </div>`;
   const SYNC_PANE = `
     <div class="sy-grid">
       <div class="sy-box"><span>Heure du serveur (UTC)</span><b id="syVps">--:--:--</b><small>référence de tous les décodages</small></div>
@@ -157,6 +170,7 @@
     };
     add('ftx', 'dg', FTX_PANE);
     add('rtty', 'dg rt', RTTY_PANE);
+    add('wspr', 'dg ws', WSPR_PANE);
     for (const k in SOON) add(k, 'dg-soon', '<p>' + SOON[k] + '</p><p class="dg-note">En préparation.</p>');
     add('sync', 'dg-sync', SYNC_PANE);
     add('away', 'dg-soon', '<p>Les modes numériques sont ouverts dans une <b>fenêtre séparée</b>.</p><p><button class="btn" type="button" id="dgBack">Ramener ici</button></p>');
@@ -171,7 +185,7 @@
     document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
     document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== pane; });
     // Une seule cascade, déplacée dans la fenêtre affichée (FT8/FT4 ou RTTY)
-    if (pane === 'ftx' || pane === 'rtty') {
+    if (pane === 'ftx' || pane === 'rtty' || pane === 'wspr') {
       const slot = document.querySelector('.dg-wf-slot[data-slot="' + pane + '"]');
       const el = document.querySelector('.dg-wf');
       if (slot && el && el.parentElement !== slot) slot.appendChild(el);
@@ -183,15 +197,16 @@
   }
   function setDetached(on) {
     detached = !!on;
-    if (!on) needHist = true; // retour de la fenêtre séparée : on récupère ce qui a été décodé entre-temps
+    if (!on) { needHist = true; wsNeedHist = true; } // retour de la fenêtre séparée : on récupère ce qui a été décodé entre-temps
     // Fenêtre séparée ouverte : le centre du dashboard revient sur l'activité de la station
     showTab(on && !POPUP && MODE_TABS.indexOf(tab) >= 0 ? 'events' : tab);
   }
   // Le serveur ne décode (et la station n'envoie la BF) que si au moins un membre regarde la fenêtre
   function announce() {
     if (!api || (detached && !POPUP)) return; // la fenêtre séparée annonce elle-même
-    const watching = (tab === 'ftx' || tab === 'rtty') && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
+    const watching = (tab === 'ftx' || tab === 'rtty' || tab === 'wspr') && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
     if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rt });
+    if (watching && tab === 'wspr') { api.send({ t: 'digi', mode: 'WSPR', hist: wsNeedHist }); wsNeedHist = false; return; }
     api.send({ t: 'digi', mode: watching ? mode : null, hist: watching && needHist });
     if (watching) needHist = false;
   }
@@ -230,7 +245,7 @@
   })();
   let floor = null;
   function onRow(bytes) {
-    if ((tab !== 'ftx' && tab !== 'rtty') || detached || !wf.ctx) return;
+    if ((tab !== 'ftx' && tab !== 'rtty' && tab !== 'wspr') || detached || !wf.ctx) return;
     // bytes[0] = 0x10, puis une case de 6,25 Hz par octet (dB*2+240), depuis 0 Hz
     const n = Math.min(bytes.length - 1, Math.ceil(WF_MAX_HZ / 6.25));
     const vals = bytes.subarray(1, 1 + n);
@@ -278,6 +293,7 @@
       }
     }
     if (tab === 'rtty') return drawRttyMarks(c, w);
+    if (tab === 'wspr') return drawWsprMarks(c, w);
     // Largeur d'un signal FT8 (50 Hz) / FT4 (83 Hz) : TX en rouge (haut), RX en vert (bas)
     const bw = mode === 'FT4' ? 83 : 50;
     const mark = (f, y, h, fill, edge) => {
@@ -404,6 +420,96 @@
     }
   }
 
+
+  // ------------------------------------------------------------------ WSPR
+  const WSPR_DIAL = [['160 m', 1836.6], ['80 m', 3568.6], ['60 m', 5364.7], ['40 m', 7038.6], ['30 m', 10138.7], ['20 m', 14095.6],
+    ['17 m', 18104.6], ['15 m', 21094.6], ['12 m', 24924.6], ['10 m', 28124.6], ['6 m', 50293], ['2 m', 144489], ['70 cm', 432300]];
+  let wsNeedHist = true;
+  const wsHist = []; // { slot, list }
+  let wsLast = 0;
+  // Locator Maidenhead → latitude / longitude (centre du carré)
+  function grid2ll(g) {
+    g = String(g || '').toUpperCase();
+    if (!/^[A-R]{2}\d{2}([A-X]{2})?$/.test(g)) return null;
+    let lon = (g.charCodeAt(0) - 65) * 20 - 180 + Number(g[2]) * 2;
+    let lat = (g.charCodeAt(1) - 65) * 10 - 90 + Number(g[3]);
+    if (g.length === 6) { lon += (g.charCodeAt(4) - 65) / 12 + 1 / 24; lat += (g.charCodeAt(5) - 65) / 24 + 1 / 48; }
+    else { lon += 1; lat += 0.5; }
+    return [lat, lon];
+  }
+  function distKm(a, b) {
+    const r = Math.PI / 180;
+    const d = Math.sin((b[0] - a[0]) * r / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin((b[1] - a[1]) * r / 2) ** 2;
+    return Math.round(6371 * 2 * Math.asin(Math.sqrt(d)));
+  }
+  const dbmW = (dbm) => { const w = Math.pow(10, dbm / 10) / 1000; return w >= 1 ? (Math.round(w * 10) / 10) + ' W' : Math.round(w * 1000) + ' mW'; };
+  function wsRow(slot, d) {
+    const r = document.createElement('div');
+    r.className = 'ws-row' + (stationCalls.indexOf(String(d.call).toUpperCase()) >= 0 ? ' me' : '');
+    const me = grid2ll(myGrid);
+    const them = grid2ll(d.grid);
+    const km = me && them ? distKm(me, them) : null;
+    const fmtF = d.freq > 100000 ? (d.freq / 1e6).toFixed(6) + ' MHz' : d.f + ' Hz';
+    const cells = [utc(slot).slice(0, 4), (d.db >= 0 ? '+' : '') + d.db, Number(d.dt).toFixed(1), fmtF, d.drift, d.call, d.grid || '—',
+      d.dbm != null ? d.dbm + ' dBm (' + dbmW(d.dbm) + ')' : '—', km != null ? km.toLocaleString('fr-BE') + ' km' : '—'];
+    for (const v of cells) { const s = document.createElement('span'); s.textContent = String(v); r.appendChild(s); }
+    r.title = d.msg;
+    r.addEventListener('dblclick', () => setDx({ call: d.call, grid: d.grid || '', rpt: fmtRpt(d.db) }));
+    return r;
+  }
+  function wsAdd(item) {
+    const el = $('wsList');
+    stickToBottom(el, () => {
+      if (item.list.length) el.appendChild(sepEl(item.slot, 'WSPR'));
+      for (const d of item.list) el.appendChild(wsRow(item.slot, d));
+    });
+    $('wsCount').textContent = '(' + new Set(wsHist.flatMap((h) => h.list.map((d) => d.call))).size + ' stations)';
+  }
+  function wsRedraw() {
+    $('wsList').textContent = '';
+    for (const it of wsHist) wsAdd(it);
+  }
+  function drawWsprMarks(c, w) {
+    // Sous-bande WSPR (1400–1600 Hz audio)
+    const x0 = (1400 / WF_MAX_HZ) * w;
+    const x1 = (1600 / WF_MAX_HZ) * w;
+    c.fillStyle = 'rgba(154, 120, 224, .35)';
+    c.fillRect(x0, 14, x1 - x0, 16);
+    c.fillStyle = '#b79cf0';
+    c.fillRect(x0, 14, 1, 16);
+    c.fillRect(x1 - 1, 14, 1, 16);
+    const pos = (el, f, bw) => { el.style.left = (f / WF_MAX_HZ) * 100 + '%'; el.style.width = (bw / WF_MAX_HZ) * 100 + '%'; };
+    pos($('dgMkRx'), 1400, 200);
+    pos($('dgMkTx'), 1400, 0);
+  }
+  function initWspr() {
+    const dial = $('wsDial');
+    for (const [b, khz] of WSPR_DIAL) {
+      const o = document.createElement('option');
+      o.value = String(khz);
+      o.textContent = b + ' · ' + khz.toLocaleString('fr-BE', { minimumFractionDigits: khz % 1 ? 1 : 0 }) + ' kHz';
+      dial.appendChild(o);
+    }
+    dial.value = store.get('wsdial', '14095.6');
+    dial.addEventListener('change', () => { store.set('wsdial', dial.value); qsyTo(Number(dial.value)); });
+    $('wsQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
+    $('wsClear').addEventListener('click', () => { wsHist.length = 0; wsRedraw(); $('wsCount').textContent = ''; });
+  }
+  function wsClock() {
+    const t = now() / 1000;
+    const s = 120 - (t % 120);
+    const st = api && api.state();
+    const busy = s > 6 && t % 120 < 115;
+    $('wsClock').textContent = 'Prochaine période dans ' + Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+    const el = $('wsStatus');
+    let txt;
+    let warn = false;
+    if (!st || !st.station) { txt = 'Station hors ligne'; warn = true; }
+    else if (!st.audio || !st.audio.active) { txt = 'La page Station n’envoie pas la BF : « Activer l’audio » sur le PC du club'; warn = true; }
+    else txt = wsLast ? 'BF reçue · dernier décodage à ' + utc(wsLast).replace(/(\d\d)(\d\d)(\d\d)/, '$1:$2') + ' UTC' : 'BF reçue · premier décodage à la fin de la période en cours' + (busy ? '' : '…');
+    el.textContent = txt;
+    el.classList.toggle('warn', warn);
+  }
 
   // ------------------------------------------------------------------ correspondant et messages pré-enregistrés
   // Correspondant commun à tous les modes (bas du dashboard, fenêtre RTTY, fenêtre séparée : synchronisés)
@@ -724,6 +830,7 @@
         $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'rtty') setRttyF(fAt(e)); else setTx(fAt(e)); });
       }
       initRtty();
+      initWspr();
       initMsgs();
       $('dgTxRx').addEventListener('click', () => setTx(rxF));
       $('dgRxTx').addEventListener('click', () => setRx(txF));
@@ -738,12 +845,14 @@
         if (detached) return;
         if (tab === 'ftx') { clock(); status(); followBand(); }
         if (tab === 'rtty') status();
+        if (tab === 'wspr') wsClock();
         if (tab === 'sync') drawSync();
       }, 500);
     },
     insertRtty,
     onHello(me, info) {
       needHist = true;
+      wsNeedHist = true;
       if (info && info.digiCall) myCall = info.digiCall;
       if (info) myGrid = info.stationGrid || '';
       drawMsgs();
@@ -762,6 +871,20 @@
       }
       if (m.t === 'rtty') { rttyAppend(m.text || ''); return true; }
       if (m.t === 'rtty_lvl') { rttyLevels(m); return true; }
+      if ((m.t === 'ftx_hist' || m.t === 'ftx') && m.mode === 'WSPR') {
+        if (m.t === 'ftx_hist') {
+          wsHist.length = 0;
+          for (const it of m.items || []) wsHist.push({ slot: it.slot, list: it.list || [] });
+          wsRedraw();
+        } else {
+          wsLast = m.slot;
+          const it = { slot: m.slot, list: m.list || [] };
+          wsHist.push(it);
+          while (wsHist.length > 60) wsHist.shift();
+          wsAdd(it);
+        }
+        return true;
+      }
       if (m.t === 'ftx_hist') {
         // Historique à l'ouverture : on remplace ce qu'on a pour ce mode
         for (let i = hist.length - 1; i >= 0; i--) if (hist[i].mode === m.mode) hist.splice(i, 1);

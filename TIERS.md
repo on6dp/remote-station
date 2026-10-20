@@ -1,5 +1,14 @@
 # Composants et sources de tiers
 
+## wsprd (décodeur WSPR de WSJT-X)
+
+`lib/wsprd.wasm` est compilé (voir `native/wspr/build.sh`) à partir des sources C de wsprd, le décodeur WSPR de WSJT-X, copiées sans modification dans `native/wspr/` : Copyright 2001-2018 Joe Taylor (K1JT), 2014-2018 Steven Franke (K9AN). FFTW y est remplacé par KISS FFT (`native/wspr/shim/fftw3.h`) et le décodage OSD en Fortran n'est pas utilisé (`native/wspr/shim/osd_stub.c`).
+
+- Projet : https://wsjt.sourceforge.io (WSJT-X)
+- Licence : **GNU General Public License v3** — texte complet dans `native/wspr/COPYING`
+
+Conséquence : le projet Remote Station, qui inclut ce décodeur, doit être redistribué sous GPL v3 (sources complètes fournies avec toute copie distribuée).
+
 ## ft8_lib (décodeur FT8 / FT4)
 
 `lib/ftx.wasm` est compilé (voir `native/ftx/build.sh`) à partir de ft8_lib, bibliothèque de décodage FT8/FT4 de Kārlis Goba (YL3JG), et de l'interface `native/ftx/ftx_wasm.c` propre à ce projet. ft8_lib inclut KISS FFT (Mark Borgerding, licence BSD).
