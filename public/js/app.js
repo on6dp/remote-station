@@ -468,7 +468,9 @@
       cell.classList.toggle('unavail', !avail);
       if (btn) {
         btn.disabled = blocked || !avail || (c.offOnly && !v);
-        if (c.type === 'toggle') btn.setAttribute('aria-pressed', String(!!v));
+        // Fonction inactive dans ce mode (ex. APF hors CW) : pas affichée comme enclenchée, même si la radio la garde en mémoire
+        if (c.type === 'toggle') btn.setAttribute('aria-pressed', String(!!v && avail));
+        if (c.type === 'toggle' && v && !avail) btn.title = c.label + ' : activé dans la radio, sans effet dans ce mode';
         if (c.offOnly) btn.title = v ? 'Couper ' + c.label : c.label + ' ne peut pas être activé à distance';
         if (c.transmits) {
           const why = pttReason();
