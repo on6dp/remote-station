@@ -333,7 +333,7 @@
         } else if (c === 0x1C && d[0] === 0x00) {
           if (d.length === 1) r(0x00, v.tx); else { v.tx = d[1] ? 1 : 0; ok(); }
         } else if (c === 0x1C && d[0] === 0x01) {
-          if (d.length === 1) r(0x01, v.tuner); else { v.tuner = d[1]; ok(); }
+          if (d.length === 1) r(0x01, v.tuner); else { v.tuner = d[1]; if (d[1] === 2) this.swrRaw = 30; ok(); }
         } else if (c === 0x21 && d[0] === 0x00) {
           const a = Math.abs(v.clar);
           if (d.length === 1) r(0x00, bcd(a % 100), bcd(Math.floor(a / 100)), v.clar < 0 ? 1 : 0);
@@ -343,7 +343,7 @@
           let val = this.lv[k] || 0;
           if (d[0] === 0x02) { this.t += 0.15; val = v.tx ? 0 : Math.max(0, Math.min(241, Math.round(70 + 50 * Math.sin(this.t) + 20 * Math.random()))); }
           else if (d[0] === 0x11) val = v.tx ? Math.round((v.power / 255) * 213) : 0;
-          else if (d[0] === 0x12) val = v.tx ? 30 : 0;
+          else if (d[0] === 0x12) val = v.tx ? (this.swrRaw || 30) : 0;
           else if (d[0] === 0x13) val = v.tx ? 40 : 0;
           else if (d[0] === 0x14) val = v.tx ? 15 : 0;
           else if (d[0] === 0x16) val = v.tx ? Math.round((v.power / 255) * 180) : 5;

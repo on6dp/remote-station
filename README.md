@@ -180,6 +180,8 @@ Automatique : main libérée après 15 min sans action, déconnexion après 15 m
 
 ## Sécurités d'émission (résumé)
 
+- **Protection du PA (ROS)** : si le ROS dépasse **2,5:1** pendant 0,7 s en émission, l'émission est coupée. Le PTT reste ensuite refusé sur cette fréquence (±25 kHz) jusqu'à un **accord (TUNE)**. Réglable dans `config.json` : `maxSwr` (0 = pas de protection) et `swrHoldMs`. Après chaque changement de bande, le dashboard rappelle de faire TUNE.
+
 - Émission seulement dans les bandes autorisées (`txRanges`), contrôlée sur la fréquence réellement émise (VFO B en SPLIT, XIT compris).
 - Durée maximale d'émission : 120 s, puis coupure (relâcher le PTT avant de réémettre).
 - Coupure immédiate si le membre perd la liaison, si le PC du club perd internet, ou si la page Station se ferme.

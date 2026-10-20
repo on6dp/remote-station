@@ -31,6 +31,10 @@ const DEFAULTS = {
   maxTxSeconds: 120,
   pttHeartbeatMs: 1500,
   controlIdleMinutes: 15,
+  // Protection du PA : émission coupée si le ROS dépasse maxSwr pendant swrHoldMs (0 = pas de protection).
+  // Le PTT reste ensuite refusé sur cette fréquence (±25 kHz) jusqu'à un accord (TUNE).
+  maxSwr: 2.5,
+  swrHoldMs: 700,
   // Déconnexion automatique d'un membre resté inactif (0 = jamais). Jamais pendant une émission.
   sessionIdleMinutes: 15,
   usersFile: 'users.json',
@@ -62,7 +66,7 @@ fs.mkdirSync(LOG_DIR, { recursive: true });
 
 // ---------------------------------------------------------------- journal des accès
 // Événements visibles par les membres connectés (sans adresse IP)
-const PUBLIC_EVENTS = ['login', 'logout', 'control_take', 'control_release', 'tx_start', 'tx_stop', 'tune', 'power_limit', 'rig_switch',
+const PUBLIC_EVENTS = ['login', 'logout', 'control_take', 'control_release', 'tx_start', 'tx_stop', 'tune', 'power_limit', 'rig_switch', 'swr_cut',
   'station_online', 'station_offline', 'trx_online', 'trx_offline'];
 const recentEvents = [];
 function journal(ev, data) {
@@ -149,6 +153,8 @@ let station = null; // { conn, ip, since }
 let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
+let swrLock = null;     // { freq, swr } : ROS trop élevé constaté à cette fréquence
+let swrHighSince = 0;
 // Audio BF du TRX : la station n'envoie le son que si au moins un membre écoute
 let audio = { active: false, want: false, frames: 0 };
 function listeners() {
@@ -225,8 +231,13 @@ function txFreq() {
   return base + (radio.xit ? radio.clar || 0 : 0);
 }
 
+function swrLocked() {
+  const f = txFreq();
+  return !!(swrLock && f != null && Math.abs(f - swrLock.freq) < 25000);
+}
+
 // Raison qui empêche cet opérateur d'émettre (PTT ou TUNE), ou null
-function txBlockReason(conn) {
+function txBlockReason(conn, forTune) {
   return !cfg.allowTx ? 'émission désactivée sur ce serveur' :
     conn.user.rxOnly ? 'indicatif d’écouteur (' + conn.user.call + ') : émission interdite' :
     !conn.user.tx ? 'votre compte n’est pas autorisé à émettre' :
@@ -237,6 +248,7 @@ function txBlockReason(conn) {
     !inTxRange(txFreq()) ? 'fréquence d’émission hors des bandes autorisées' + (radio.txVfo === 1 ? ' (VFO B en SPLIT)' : '') :
     radio.power == null ? 'puissance du TRX inconnue' :
     radio.power > conn.user.maxWatts ? 'puissance ' + radio.power + ' W au-delà de votre limite (' + conn.user.maxWatts + ' W)' :
+    !forTune && swrLocked() ? 'ROS trop élevé sur cette fréquence (' + swrLock.swr.toFixed(1).replace('.', ',') + ':1) : faites d’abord un accord (TUNE)' :
     null;
 }
 
@@ -253,6 +265,8 @@ function publicState() {
     ptt: { active: ptt.active, by: ptt.active ? ptt.conn.user.call : null, since: ptt.since },
     txOk: inTxRange(txFreq()),
     txFreq: txFreq(),
+    swrLock: swrLocked() ? { freq: swrLock.freq, swr: Math.round(swrLock.swr * 10) / 10 } : null,
+    maxSwr: cfg.maxSwr,
     audio: { active: !!(station && audio.active), listeners: listeners() },
     rigName: station ? rig().NAME : null,
     rigModel: station ? rig().ID : null,
@@ -511,12 +525,13 @@ function onOperator(conn, m) {
           return send(conn, { t: 'notice', level: 'error', msg: e.message });
         }
         if (c.transmits) {
-          const why = txBlockReason(conn);
+          const why = txBlockReason(conn, true);
           if (why) {
             if (radio.power != null && radio.power > conn.user.maxWatts) limitPower(conn, 'avant ' + c.label);
             return send(conn, { t: 'notice', level: 'error', msg: c.label + ' refusé : ' + why });
           }
           journal('tune', { call: conn.user.call, ip: conn.ip, freq: txFreq(), watts: radio.power });
+          swrLock = null; // l'accord est justement ce qu'il fallait faire ; si le ROS reste mauvais, la coupure recommencera
         }
         toStation({ t: 'cmd', op: 'ctl', id: m.ctl, value: v, by: conn.user.call });
         if (c.type !== 'action') radio[m.ctl] = v; // affichage optimiste
@@ -643,6 +658,20 @@ function onStation(conn, m) {
     limitPower(c, 'dépassement');
   } else if (controller && radio.power != null && radio.power > controller.user.maxWatts) {
     limitPower(controller, 'dépassement');
+  }
+  // Protection du PA : ROS trop élevé pendant une émission par le PTT (pas pendant un accord)
+  const swr = ptt.active && !radio.tuning && radio.m6 != null && rig().swrValue ? rig().swrValue(radio.m6) : null;
+  if (swr != null && cfg.maxSwr > 0 && swr >= cfg.maxSwr) {
+    const now = Date.now();
+    if (!swrHighSince) swrHighSince = now;
+    else if (now - swrHighSince >= cfg.swrHoldMs) {
+      swrHighSince = 0;
+      swrLock = { freq: txFreq(), swr };
+      journal('swr_cut', { call: ptt.conn.user.call, freq: txFreq(), swr: Math.round(swr * 10) / 10 });
+      stopPtt('ROS trop élevé (' + swr.toFixed(1).replace('.', ',') + ':1) — faites un accord (TUNE) avant de réémettre');
+    }
+  } else {
+    swrHighSince = 0;
   }
   broadcast();
 }

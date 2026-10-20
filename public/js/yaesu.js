@@ -290,6 +290,7 @@
         this.onData = null;
         this.sp = new Splitter();
         this.t = 0;
+        this.swrRaw = 40; // ROS simulé (40 ≈ 1,4:1) ; un accord le ramène à 40
       }
       get split() { return this.ans['ST;'] !== 'ST0'; }
       write(str) {
@@ -314,7 +315,7 @@
           else if (c === 'FT') out.push('FT' + (this.split ? 1 : 0) + ';');
           else if ((m = /^RM([3-8])$/.exec(c))) {
             const raw = m[1] === '8' ? (this.tx ? 205 : 212) : m[1] === '7' ? (this.tx ? Math.round(this.power * 0.6) : 0)
-              : !this.tx ? 0 : { 3: 20, 4: 60, 5: Math.round(this.power * 2.4), 6: 40 }[m[1]];
+              : !this.tx ? 0 : { 3: 20, 4: 60, 5: Math.round(this.power * 2.4), 6: this.swrRaw }[m[1]];
             out.push('RM' + m[1] + pad(raw, 3) + '000;');
           } else if (c + ';' === P.read) out.push(P.fakeRead(this) + ';');
           else if (P.re.test(c)) { if (!P.fakeWrite(this, c)) out.push('?;'); }
@@ -322,7 +323,7 @@
             [this.freq, this.freqB, this.mode, this.modeB] = [this.freqB, this.freq, this.modeB, this.mode];
           } else if (c === 'AB') { this.freqB = this.freq; this.modeB = this.mode; }
           else if (c === 'BA') { this.freq = this.freqB; this.mode = this.modeB; }
-          else if (CONTROL.tune && c + ';' === CONTROL.tune.write()) this.ans['AC;'] = spec.fakeTuning || 'AC001';
+          else if (CONTROL.tune && c + ';' === CONTROL.tune.write()) { this.ans['AC;'] = spec.fakeTuning || 'AC001'; this.swrRaw = 40; }
           else if (c === 'AI0') { /* auto-information coupée */ }
           else if ((m = /^BS([01])(\d\d)$/.exec(c)) && BAND_CODES) {
             const b = Object.keys(BAND_CODES).find((k) => BAND_CODES[k][0] === m[2]);

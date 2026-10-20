@@ -8,6 +8,8 @@
   "maxTxSeconds": 120,
   "pttHeartbeatMs": 1500,
   "controlIdleMinutes": 15,
+  "maxSwr": 2.5,
+  "swrHoldMs": 700,
   "sessionIdleMinutes": 15,
   "usersFile": "users.json",
   "logDir": "logs",

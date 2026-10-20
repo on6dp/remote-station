@@ -251,6 +251,7 @@
         if (!iControl()) return say('Prenez la main pour changer de bande.', 'warn');
         if (st.ptt && st.ptt.active) return say('Réglage bloqué pendant l’émission.', 'warn');
         // TRX avec sélection de bande (FTX-1) : comme la touche BAND, il rappelle sa dernière fréquence et son mode
+        if (me && me.canTx && R.CONTROL && R.CONTROL.tune) say('Nouvelle bande : faites un accord (TUNE) avant d’émettre si l’antenne n’est pas accordée.', 'warn', 6000);
         if (R.cmdBand && R.BAND_CODES && R.BAND_CODES[name]) return send({ t: 'set', band: name, sub: target === 'B' });
         setFreq(khz * 1000, target);
         if (mk) setTimeout(() => send({ t: 'set', mode: mk[0], sub: target === 'B' }), 200);
@@ -502,6 +503,7 @@
     if (st.radio.vox) return 'VOX actif au club : coupez-le d’abord';
     if (!st.txOk) return st.radio.txVfo === 1 ? 'VFO B (SPLIT) hors des bandes autorisées' : 'Hors des bandes autorisées';
     if (st.radio.power != null && st.radio.power > me.maxWatts) return 'Puissance au-delà de votre limite (' + me.maxWatts + ' W)';
+    if (st.swrLock) return 'ROS trop élevé ici (' + String(st.swrLock.swr).replace('.', ',') + ':1) : faites TUNE d’abord';
     return null;
   }
   function pttDown() {
@@ -771,6 +773,7 @@
       case 'tune': return [c + 'lance l’accord sur ' + MHZ(e.freq), 'tx'];
       case 'power_limit': return [c + 'puissance ramenée de ' + e.from + ' à ' + e.to + ' W', 'warn'];
       case 'rig_switch': return [c + 'passe sur le ' + (e.name || e.to), 'warn'];
+      case 'swr_cut': return [c + 'émission coupée : ROS ' + String(e.swr).replace('.', ',') + ':1 sur ' + MHZ(e.freq), 'warn'];
       case 'station_online': return ['Station en ligne' + (e.model ? ' (' + e.model + ')' : ''), 'ok'];
       case 'station_offline': return ['Station hors ligne', 'warn'];
       case 'trx_online': return ['TRX connecté', 'ok'];
