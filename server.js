@@ -571,12 +571,24 @@ function onStationAuth(conn, m) {
     return setTimeout(() => conn.close(4003, 'modèle inconnu'), 300);
   }
   if (station) {
-    send(station.conn, { t: 'error', msg: 'Remplacée par une nouvelle connexion station' });
-    station.conn.close(4002, 'remplacée');
+    // Une station vivante avec son TRX connecté garde la place : une 2e page Station (autre onglet, autre PC)
+    // ne peut pas la déloger, sinon une page sans radio pourrait prendre la place de celle qui a le TRX.
+    const alive = station.conn.open && Date.now() - (station.lastMsg || 0) < 10000;
+    const samePage = typeof m.page === 'string' && m.page && station.page === m.page;
+    if (alive && radio.connected && !samePage) {
+      journal('station_refused', { ip: conn.ip, reason: 'déjà en service' });
+      send(conn, { t: 'error', msg: 'Une autre page Station, avec le TRX connecté, est déjà en service. Fermez l’une des deux.' });
+      return setTimeout(() => conn.close(4004, 'station déjà en service'), 300);
+    }
+    const old = station.conn;
+    old.isStation = false; // sa fermeture ne doit pas annoncer « station hors ligne »
+    send(old, { t: 'error', msg: 'Remplacée par une nouvelle connexion station' });
+    old.close(4002, 'remplacée');
+    journal('station_replaced', { ip: old.ip });
   }
   const ports = {};
   if (m.ports && typeof m.ports === 'object') for (const id in DRIVERS) ports[id] = m.ports[id] === true;
-  station = { conn, ip: conn.ip, since: Date.now(), rig: DRIVERS[model], ports };
+  station = { conn, ip: conn.ip, since: Date.now(), rig: DRIVERS[model], ports, lastMsg: Date.now(), page: typeof m.page === 'string' ? m.page.slice(0, 40) : '' };
   conn.isStation = true;
   journal('station_online', { ip: conn.ip, model });
   send(conn, { t: 'welcome', stationCall: cfg.stationCall });
@@ -589,6 +601,7 @@ function onStationAuth(conn, m) {
 function onStation(conn, m) {
   // Seule la station en service est écoutée (une ancienne connexion remplacée ne doit rien écraser)
   if (!station || station.conn !== conn) return;
+  station.lastMsg = Date.now();
   if (m.t === 'ping') return send(conn, { t: 'pong', ts: m.ts }); // contrôle de vie de la liaison
   if (m.t === 'audio_state') {
     audio.active = !!m.active;

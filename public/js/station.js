@@ -119,7 +119,7 @@
     }
     if (ws) { ws.onclose = null; ws.close(); }
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
-    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts() }));
+    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID }));
     lastServerMsg = Date.now();
     ws.onmessage = (e) => {
       lastServerMsg = Date.now();
@@ -151,6 +151,13 @@
         $('tVps').textContent = 'Jeton refusé : vérifiez-le dans les réglages';
         return;
       }
+      if (e.code === 4004) {
+        // Une autre page Station a déjà le TRX : on réessaie seulement de temps en temps (si elle disparaît, on prend le relais)
+        $('tVps').textContent = 'Une autre page Station (avec le TRX) est déjà en service : nouvel essai dans 30 s';
+        log('Refusée : une autre page Station, avec le TRX connecté, est déjà en service', 'st-warn');
+        wsTimer = setTimeout(connectWs, 30000);
+        return;
+      }
       if (e.code === 4002) {
         // Une autre page Station (autre PC ou autre onglet) a pris le relais : ne pas se reconnecter en boucle
         $('tVps').textContent = 'Remplacée par une autre page Station. « Enregistrer et reconnecter » pour reprendre ici.';
@@ -167,6 +174,8 @@
   // redémarre…). Le navigateur croit alors être connecté et envoie dans le vide. On demande un « pong » au
   // serveur toutes les 5 s ; sans aucune nouvelle pendant 15 s, on abandonne cette connexion et on se reconnecte.
   let lastServerMsg = Date.now();
+  // Identifiant de cette page : sa propre reconnexion peut remplacer son ancienne connexion, pas une autre page
+  const PAGE_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
   setInterval(() => {
     if (!ws || ws.readyState !== 1) return;
     if (Date.now() - lastServerMsg > 15000) {
@@ -458,6 +467,7 @@
   window.addEventListener('beforeunload', () => core.stop());
 
   // ------------------------------------------------------------ démarrage
+  // Une seule page Station par navigateur : un 2e onglet /station ne se connecte pas (il volerait la place du premier)
   log('Page Station chargée' + (window.RS_WORKER_TIMERS ? ' (fonctionne aussi en arrière-plan)' : ''));
   try {
     localStorage.setItem('rs.st.test', '1');
@@ -466,6 +476,20 @@
     log('Chrome n’enregistre pas les données de ce site : le jeton et le port seront oubliés à chaque fois (voir Paramètres → Confidentialité → Données des sites)', 'st-bad');
   }
   keepAwake();
-  connectWs();
-  reopenRemembered();
+  const start = () => { connectWs(); reopenRemembered(); };
+  if (navigator.locks) {
+    navigator.locks.request('remote-station-page', { ifAvailable: true }, (lock) => {
+      if (lock) { start(); return new Promise(() => {}); } // verrou gardé tant que la page est ouverte
+      $('tVps').textContent = 'Une autre page Station est déjà ouverte dans ce navigateur : celle-ci attend';
+      log('Une autre page Station est déjà ouverte dans ce navigateur (autre onglet). Fermez celle en trop.', 'st-bad');
+      navigator.locks.request('remote-station-page', () => {
+        log('L’autre page Station a été fermée : celle-ci prend le relais');
+        start();
+        return new Promise(() => {});
+      });
+      return undefined;
+    });
+  } else {
+    start();
+  }
 })();
