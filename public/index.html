@@ -52,6 +52,22 @@
         <h2 class="panel-h">Filtre</h2>
         <div class="panel-b" id="sec-filter"></div>
       </section>
+      <!-- Mesures de la station (sous le filtre : la largeur du bas sert aux messages pré-enregistrés) -->
+      <section class="panel meters">
+        <h2 class="panel-h">Station meters</h2>
+        <div class="panel-b">
+          <div class="meters-h"><span class="m-mode" id="mMode">RX</span><span class="txtimer" id="txTimer"></span></div>
+          <div class="meters-row">
+            <div class="mt" id="mtPo"><span class="mt-l">Po</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+            <div class="mt" id="mtSwr"><span class="mt-l">SWR</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+            <div class="mt" id="mtAlc"><span class="mt-l">ALC</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+            <div class="mt" id="mtId"><span class="mt-l">Id</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+            <div class="mt" id="mtVd"><span class="mt-l">Vd</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+            <div class="mt" id="mtComp"><span class="mt-l">COMP</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+            <div class="mt" id="mtS"><span class="mt-l">S</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+          </div>
+        </div>
+      </section>
     </aside>
 
     <!-- ============================================================ centre -->
@@ -194,19 +210,18 @@
     </aside>
   </div>
 
-  <!-- ============================================================ mesures -->
-  <footer class="meters">
-    <div class="meters-h"><span>Station meters</span><span class="m-mode" id="mMode">RX</span></div>
-    <div class="meters-row">
-      <div class="mt" id="mtPo"><span class="mt-l">Po</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
-      <div class="mt" id="mtSwr"><span class="mt-l">SWR</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
-      <div class="mt" id="mtAlc"><span class="mt-l">ALC</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
-      <div class="mt" id="mtId"><span class="mt-l">Id</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
-      <div class="mt" id="mtVd"><span class="mt-l">Vd</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
-      <div class="mt" id="mtComp"><span class="mt-l">COMP</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
-      <div class="mt" id="mtS"><span class="mt-l">S</span><b class="mt-v">—</b><i class="mt-bar"><i></i></i></div>
+  <!-- ============================================================ messages pré-enregistrés -->
+  <footer class="msgs" id="msgs">
+    <div class="msgs-h">
+      <span class="msgs-t">Messages pré-enregistrés</span>
+      <label>Correspondant <input id="dxCall" maxlength="12" placeholder="indicatif" autocomplete="off" spellcheck="false"></label>
+      <label>Locator <input id="dxGrid" maxlength="6" placeholder="—" autocomplete="off" spellcheck="false"></label>
+      <label>Report <input id="dxRpt" maxlength="4" value="-10" autocomplete="off"></label>
+      <span class="msgs-note">Indicatif émis : <b>ON5VL</b> · émission des messages : prochaine version</span>
     </div>
-    <div class="txtimer" id="txTimer"></div>
+    <div class="msgs-row"><span class="msgs-l">FT8 · FT4</span><div class="msgs-b" id="msgFtx"></div></div>
+    <div class="msgs-row"><span class="msgs-l">RTTY</span><div class="msgs-b" id="msgRtty"></div></div>
+    <div class="msgs-row"><span class="msgs-l">CW</span><div class="msgs-b" id="msgCw"></div></div>
   </footer>
 </div>
 

@@ -43,6 +43,9 @@ const DEFAULTS = {
   swrHoldMs: 700,
   // Déconnexion automatique d'un membre resté inactif (0 = jamais). Jamais pendant une émission.
   sessionIdleMinutes: 15,
+  // Modes numériques : indicatif émis (FT8, FT4, RTTY, CW) et locator de la station (messages CQ)
+  digiCall: 'ON5VL',
+  stationGrid: '',
   // Un membre reste connecté quand il actualise la page ou revient plus tard (sur le même navigateur),
   // jusqu'à rememberDays jours après sa dernière visite (0 = mot de passe à chaque fois). « Déconnexion » l'oublie.
   rememberDays: 7,
@@ -545,6 +548,8 @@ function loggedIn(conn, call, rec, sessionTok) {
     stationCall: cfg.stationCall,
     rigs: Object.keys(DRIVERS).map((id) => ({ id, name: DRIVERS[id].NAME })),
     sessionIdleMinutes: cfg.sessionIdleMinutes,
+    digiCall: String(cfg.digiCall || '').toUpperCase(),
+    stationGrid: String(cfg.stationGrid || '').toUpperCase(),
     session: sessionTok || null
   });
   send(conn, { t: 'events', list: recentEvents });

@@ -79,7 +79,7 @@
         <div class="dg-list" id="dgBand"></div>
       </div>
       <div class="dg-col">
-        <div class="dg-h"><span>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX</span></div>
+        <div class="dg-h"><span>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span></div>
         <div class="dg-th"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span></div>
         <div class="dg-list" id="dgRx"></div>
       </div>
@@ -355,8 +355,8 @@
     $('rtS').style.width = Math.max(0, Math.min(100, (m.s / 40) * 100)) + '%';
   }
   function macroText(t) {
-    const call = ($('rtCall').value || '').trim().toUpperCase() || '???';
-    return t.replace(/\{MY\}/g, 'ON5VL').replace(/\{CALL\}/g, call);
+    const call = (dx.call || '').trim().toUpperCase() || '???';
+    return t.replace(/\{MY\}/g, myCall).replace(/\{CALL\}/g, call);
   }
   function initRtty() {
     $('rtShift').value = String(rt.shift);
@@ -384,7 +384,7 @@
     // Double-clic sur un mot reçu qui ressemble à un indicatif : il devient le correspondant
     $('rtRx').addEventListener('dblclick', () => {
       const w = String(window.getSelection() || '').trim().toUpperCase();
-      if (/^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}[A-Z](\/[A-Z0-9]+)?$/.test(w)) $('rtCall').value = w;
+      if (CALL_RE.test(w)) setDx({ call: w });
     });
     for (const [name, t] of RTTY_MACROS) {
       const b = document.createElement('button');
@@ -401,6 +401,102 @@
       });
       $('rtMacros').appendChild(b);
     }
+  }
+
+
+  // ------------------------------------------------------------------ correspondant et messages pré-enregistrés
+  // Correspondant commun à tous les modes (bas du dashboard, fenêtre RTTY, fenêtre séparée : synchronisés)
+  let myCall = 'ON5VL';
+  let myGrid = '';
+  const loadDx = () => { try { return Object.assign({ call: '', grid: '', rpt: '-10' }, JSON.parse(store.get('dx', '{}')) || {}); } catch (e) { return { call: '', grid: '', rpt: '-10' }; } };
+  let dx = loadDx();
+  let ftxSel = Number(store.get('ftxsel', '5')) || 0;
+  const CALL_RE = /^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}[A-Z](\/[A-Z0-9]+)?$/;
+  const GRID_RE = /^[A-R]{2}[0-9]{2}([A-X]{2})?$/;
+  const fmtRpt = (db) => (db >= 0 ? '+' : '-') + String(Math.min(30, Math.abs(Math.round(db)))).padStart(2, '0');
+  function setDx(o) {
+    dx = Object.assign(loadDx(), o);
+    dx.call = String(dx.call || '').toUpperCase().slice(0, 12);
+    dx.grid = String(dx.grid || '').toUpperCase().slice(0, 6);
+    store.set('dx', JSON.stringify(dx));
+    syncDx();
+  }
+  function syncDx() {
+    const put = (id, v) => { const el = $(id); if (el && document.activeElement !== el) el.value = v; };
+    put('dxCall', dx.call);
+    put('dxGrid', dx.grid);
+    put('dxRpt', dx.rpt);
+    put('rtCall', dx.call);
+    drawMsgs();
+  }
+  window.addEventListener('storage', (e) => { if (e.key === 'rs.dg.dx') { dx = loadDx(); syncDx(); } });
+  // Double-clic sur un message FT8/FT4 : son émetteur devient le correspondant (comme dans WSJT-X)
+  function pickFromDecode(d) {
+    const w = d.msg.toUpperCase().split(/\s+/).map((x) => x.replace(/^<|>$/g, ''));
+    let call = '';
+    if (w[0] === 'CQ') call = CALL_RE.test(w[1] || '') ? w[1] : (w[2] || '');
+    else call = w[1] || '';
+    if (!CALL_RE.test(call)) return api && api.say('Pas d’indicatif à reprendre dans ce message.', 'warn');
+    const last = w[w.length - 1];
+    setDx({ call, grid: GRID_RE.test(last) && last !== 'RR73' ? last : '', rpt: fmtRpt(d.db) });
+    setRx(d.f);
+    ftxSel = w[0] === 'CQ' ? 0 : 1;
+    store.set('ftxsel', ftxSel);
+    drawMsgs();
+  }
+  function ftxMsgs() {
+    const c = dx.call || '{CORRESP}';
+    const g = myGrid || '{LOCATOR}';
+    const r = /^[+-]?\d{1,2}$/.test(dx.rpt) ? (dx.rpt[0] === '+' || dx.rpt[0] === '-' ? dx.rpt : '+' + dx.rpt) : '-10';
+    return [c + ' ' + myCall + ' ' + g, c + ' ' + myCall + ' ' + r, c + ' ' + myCall + ' R' + r, c + ' ' + myCall + ' RR73', c + ' ' + myCall + ' 73', 'CQ ' + myCall + ' ' + g];
+  }
+  const CW_MACROS = [
+    ['CQ', 'CQ CQ CQ DE {MY} {MY} {MY} K'], ['Appel', '{CALL} DE {MY} {MY} K'], ['Report', '{CALL} TU UR 5NN 5NN BK'],
+    ['R TU', 'R TU 73 {CALL} DE {MY} SK'], ['73', '{CALL} TNX FER QSO 73 DE {MY} SK'], ['QRZ?', 'QRZ? DE {MY} K'], ['AGN?', 'AGN? AGN?']
+  ];
+  function drawMsgs() {
+    if (!$('msgFtx')) return;
+    const mk = (box, label, text, onClick, sel) => {
+      const b = document.createElement('button');
+      b.className = 'btn' + (sel ? ' sel' : '');
+      b.type = 'button';
+      if (label) { const s = document.createElement('small'); s.textContent = label; b.appendChild(s); }
+      b.appendChild(document.createTextNode(text));
+      b.addEventListener('click', onClick);
+      box.appendChild(b);
+      return b;
+    };
+    const f = $('msgFtx');
+    f.textContent = '';
+    ftxMsgs().forEach((t, i) => mk(f, 'Tx' + (i + 1), t, () => { ftxSel = i; store.set('ftxsel', i); drawMsgs(); }, i === ftxSel)
+      .title = 'Prochain message FT8/FT4 à émettre (émission : prochaine version)');
+    const r = $('msgRtty');
+    r.textContent = '';
+    for (const [name, t] of RTTY_MACROS) {
+      mk(r, '', name, () => {
+        const inst = (window.DG && window.DG()) || window.RSDIGI;
+        inst.insertRtty(t);
+      }).title = macroText(t).replace(/\n/g, ' ⏎ ');
+    }
+    const cw = $('msgCw');
+    cw.textContent = '';
+    for (const [name, t] of CW_MACROS) {
+      mk(cw, '', name, () => api && api.say('Émission CW (par le manipulateur du TRX) : prochaine version.', 'warn')).title = macroText(t);
+    }
+  }
+  function insertRtty(t) {
+    showTab('rtty');
+    const ta = $('rtTxt');
+    ta.value += macroText(t);
+    ta.scrollTop = ta.scrollHeight;
+    ta.focus();
+  }
+  function initMsgs() {
+    for (const [id, k] of [['dxCall', 'call'], ['dxGrid', 'grid'], ['dxRpt', 'rpt'], ['rtCall', 'call']]) {
+      const el = $(id);
+      if (el) el.addEventListener('input', () => setDx({ [k]: el.value.trim() }));
+    }
+    syncDx();
   }
 
   function setTx(f) {
@@ -429,7 +525,7 @@
   function rowEl(slot, d) {
     const r = document.createElement('div');
     r.className = 'dg-row ' + cls(d.msg);
-    r.title = d.f + ' Hz · clic gauche : réception ici · clic droit : émission ici';
+    r.title = d.f + ' Hz · clic gauche : réception ici · clic droit : émission ici · double-clic : répondre à cette station';
     const cells = [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
     for (const v of cells) {
       const s = document.createElement('span');
@@ -438,6 +534,7 @@
     }
     r.addEventListener('click', () => setRx(d.f));
     r.addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(d.f); });
+    r.addEventListener('dblclick', () => pickFromDecode(d));
     return r;
   }
   function sepEl(slot, m) {
@@ -621,6 +718,7 @@
         $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'rtty') setRttyF(fAt(e)); else setTx(fAt(e)); });
       }
       initRtty();
+      initMsgs();
       $('dgTxRx').addEventListener('click', () => setTx(rxF));
       $('dgRxTx').addEventListener('click', () => setRx(txF));
       // Repli du panneau ou onglet du navigateur caché : le serveur arrête de décoder pour ce membre
@@ -637,8 +735,12 @@
         if (tab === 'sync') drawSync();
       }, 500);
     },
+    insertRtty,
     onHello(me, info) {
       needHist = true;
+      if (info && info.digiCall) myCall = info.digiCall;
+      if (info) myGrid = info.stationGrid || '';
+      drawMsgs();
       if (info && info.stationCall) stationCalls = String(info.stationCall).toUpperCase().split(/[\s/,]+/).filter(Boolean);
       announce(); // reprise après reconnexion
     },

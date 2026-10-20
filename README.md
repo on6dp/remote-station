@@ -11,9 +11,9 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.4.0** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.4.1** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
-**Télécharger un paquet prêt à installer** : onglet **Releases** (ou **Tags**) du dépôt → version voulue → `Source code (tar.gz)`. Le paquet s'installe avec la procédure « Mettre à jour le serveur » ci-dessous (le dossier extrait s'appelle alors `remote-station-0.4.0` : le renommer en `remote-station`, ou utiliser l'archive `remote-station-X.Y.Z.tar.gz` fournie avec la version).
+**Télécharger un paquet prêt à installer** : onglet **Releases** (ou **Tags**) du dépôt → version voulue → `Source code (tar.gz)`. Le paquet s'installe avec la procédure « Mettre à jour le serveur » ci-dessous (le dossier extrait s'appelle alors `remote-station-0.4.1` : le renommer en `remote-station`, ou utiliser l'archive `remote-station-X.Y.Z.tar.gz` fournie avec la version).
 
 Le guide complet est dans [LISEZMOI.md](LISEZMOI.md). Ci-dessous, l'aide-mémoire des opérations courantes.
 
@@ -104,6 +104,13 @@ sudo sed -i 's|"clubName": *"[^"]*"|"clubName": "Remote Station UBA-LGE"|' /opt/
 sudo sed -i 's|"stationCall": *"[^"]*"|"stationCall": "ON5VL / OR0L"|' /opt/remote-station/config.json
 ```
 ```bash
+sudo systemctl restart remote-station
+```
+
+### 4 bis. Indicatif et locator des modes numériques
+Les messages FT8 / FT4 / RTTY / CW utilisent l'indicatif `digiCall` (ON5VL par défaut) et le locator `stationGrid` de `config.json` :
+```
+sudo nano /opt/remote-station/config.json      # "digiCall": "ON5VL", "stationGrid": "JO20"
 sudo systemctl restart remote-station
 ```
 

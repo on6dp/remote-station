@@ -2,6 +2,7 @@
 
 ## v0.4 — RTTY
 
+- **0.4.1** — « Station meters » dans la colonne de gauche, sous le filtre. En bas de page : **messages pré-enregistrés** sur trois lignes (FT8 · FT4 Tx1 à Tx6, RTTY, CW) avec correspondant, locator et report communs à tous les modes ; double-clic sur un message FT8/FT4 décodé = répondre à cette station (indicatif, locator et report repris). Réglages `digiCall` (indicatif émis, ON5VL) et `stationGrid` (locator des CQ).
 - **0.4.0** — Fenêtre **RTTY** : démodulateur AFSK sur le serveur (Baudot ITA2, shift 170/200/425/850 Hz, 45,45 à 100 bauds, inversé, silencieux réglable), un réglage par membre ; clic sur la cascade pour se caler (repères Mark jaune / Space bleu), indicateur d'accord, texte reçu en continu ; zone d'émission avec correspondant et macros (CQ, Appel, Report, Contest, 73, QRZ?). L'émission RTTY arrive avec l'émission des modes numériques.
 
 ## v0.3 — modes numériques
