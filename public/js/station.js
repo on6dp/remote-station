@@ -106,7 +106,9 @@
     if (ws) { ws.onclose = null; ws.close(); }
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
     ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts() }));
+    lastServerMsg = Date.now();
     ws.onmessage = (e) => {
+      lastServerMsg = Date.now();
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if (m.t === 'welcome') {
@@ -146,6 +148,28 @@
       wsTimer = setTimeout(connectWs, 1000 * Math.pow(2, wsRetry - 1));
     };
   }
+
+  // Contrôle de vie : une connexion peut mourir sans prévenir (changement d'adresse IP chez Starlink, box qui
+  // redémarre…). Le navigateur croit alors être connecté et envoie dans le vide. On demande un « pong » au
+  // serveur toutes les 5 s ; sans aucune nouvelle pendant 15 s, on abandonne cette connexion et on se reconnecte.
+  let lastServerMsg = Date.now();
+  setInterval(() => {
+    if (!ws || ws.readyState !== 1) return;
+    if (Date.now() - lastServerMsg > 15000) {
+      log('Plus de nouvelles du serveur depuis 15 s : reconnexion automatique', 'st-warn');
+      const old = ws;
+      old.onclose = null;
+      old.onmessage = null;
+      try { old.close(); } catch (e) {}
+      ws = null;
+      core.wsClosed();
+      lamp('lVps', null);
+      $('tVps').textContent = 'Liaison perdue, reconnexion…';
+      connectWs();
+      return;
+    }
+    try { ws.send(JSON.stringify({ t: 'ping', ts: Date.now() })); } catch (e) {}
+  }, 5000);
 
   // ------------------------------------------------------------ Web Serial
   async function openPort(p) {
@@ -380,7 +404,17 @@
   $('cfgBaud').value = store.get('baud.' + MODEL, String(RIG.serial.baudRate));
   $('cfgStop').value = store.get('stop.' + MODEL, String(RIG.serial.stopBits));
   $('btnSave').addEventListener('click', async () => {
-    store.set('token', $('cfgToken').value.trim());
+    // Le jeton n'est remplacé que par une valeur plausible (jamais vidé ni écrasé par autre chose par erreur)
+    const tok = $('cfgToken').value.trim().replace(/^"|",?$/g, '');
+    if (tok && tok !== store.get('token', '')) {
+      if (/^[0-9a-f]{32,}$/i.test(tok) || /^[A-Za-z0-9_-]{20,}$/.test(tok)) {
+        store.set('token', tok);
+        log('Nouveau jeton enregistré');
+      } else {
+        log('Jeton non enregistré : il doit faire au moins 20 caractères (chiffres et lettres), sans espace ni guillemet', 'st-bad');
+        $('cfgToken').value = store.get('token', '');
+      }
+    }
     store.set('baud.' + MODEL, $('cfgBaud').value);
     store.set('stop.' + MODEL, $('cfgStop').value);
     if ($('cfgModel').value !== MODEL) {

@@ -59,7 +59,10 @@
         <select id="cfgModel"></select>
       </label>
       <label>Jeton de la station
-        <input id="cfgToken" type="password" autocomplete="off" required placeholder="donné par init-config.js">
+        <!-- Champ texte masqué, pas un champ « mot de passe » : sinon le gestionnaire de mots de passe de Chrome
+             le remplit avec un mot de passe enregistré, qui remplace le jeton au prochain « Enregistrer ». -->
+        <input id="cfgToken" class="masked" type="text" name="rs-station-token" autocomplete="off" autocapitalize="off"
+               spellcheck="false" data-lpignore="true" data-1p-ignore placeholder="jeton (48 caractères)">
       </label>
       <label>Vitesse (bps)
         <select id="cfgBaud">

@@ -909,16 +909,34 @@
     $('loginBtn').disabled = false;
     setTimeout(() => ($('loginCall').value ? $('loginPass') : $('loginCall')).focus(), 50);
   }
+  // Contrôle de vie (même principe que la page Station) : ping toutes les 5 s, reconnexion si 15 s sans nouvelles
+  let lastServerMsg = Date.now();
+  setInterval(() => {
+    if (!ws || ws.readyState !== 1 || !creds) return;
+    if (Date.now() - lastServerMsg > 15000) {
+      const old = ws;
+      old.onclose = null;
+      old.onmessage = null;
+      try { old.close(); } catch (e) {}
+      say('Liaison perdue avec le serveur, reconnexion…', 'warn', 0);
+      connect();
+      return;
+    }
+    send({ t: 'ping', ts: Date.now() });
+  }, 5000);
   function connect() {
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
     ws.onopen = () => { retry = 0; if (creds) send({ t: 'login', call: creds.call, pass: creds.pass }); };
     ws.binaryType = 'arraybuffer';
+    lastServerMsg = Date.now();
     ws.onmessage = (e) => {
+      lastServerMsg = Date.now();
       if (typeof e.data !== 'string') return onAudio(e.data);
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if (m.t === 'hello') {
         me = m;
+        if (/^Liaison perdue/.test($('msg').textContent)) say('');
         $('login').hidden = true;
         $('meCall').textContent = m.call;
         try { localStorage.setItem('rs.call', m.call); } catch (x) {}

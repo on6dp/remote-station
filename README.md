@@ -192,6 +192,7 @@ Automatique : main libérée après 15 min sans action, déconnexion après 15 m
 | L'ancien design s'affiche | Une ancienne archive a été décompressée : refaire la mise à jour (section 1), en supprimant d'abord `public` et `lib`. |
 | « permission denied » avec `adduser.js` | `sudo chown -R remotestation:remotestation /opt/remote-station` |
 | Page Station : « Jeton refusé » | Recoller le jeton (sans guillemets ni espaces). |
+| Dashboard figé ou « Station hors ligne » alors que la page Station dit « Connecté » | Coupure réseau silencieuse (ex. Starlink qui change d'adresse IP). Depuis la v0.2.3, la page Station le détecte en 15 s et se reconnecte seule ; sinon « Enregistrer et reconnecter ». |
 | Page Station : « Remplacée par une autre page Station » | Une autre page Station est ouverte ailleurs : la fermer, puis « Enregistrer et reconnecter ». |
 | « Port ouvert, pas de réponse » | Mauvais port (essayer l'autre), mauvaise vitesse, ou autre logiciel sur le port. |
 | Je n'ai pas la main alors que je suis connecté | La main appartient à un onglet : fermer les autres onglets ou cliquer « Prendre la main ici ». |

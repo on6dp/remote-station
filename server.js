@@ -587,6 +587,9 @@ function onStationAuth(conn, m) {
 }
 
 function onStation(conn, m) {
+  // Seule la station en service est écoutée (une ancienne connexion remplacée ne doit rien écraser)
+  if (!station || station.conn !== conn) return;
+  if (m.t === 'ping') return send(conn, { t: 'pong', ts: m.ts }); // contrôle de vie de la liaison
   if (m.t === 'audio_state') {
     audio.active = !!m.active;
     return broadcast();
@@ -701,6 +704,8 @@ const allConns = () => {
 setInterval(() => {
   for (const c of allConns()) {
     if (!c.isAlive) {
+      // Plus de réponse depuis 15 à 30 s : liaison morte (coupure réseau, changement d'adresse IP…)
+      journal('link_timeout', { who: c.isStation ? 'station' : (c.user ? c.user.call : '?'), ip: c.ip });
       c.terminate();
       continue;
     }
