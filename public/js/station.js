@@ -409,7 +409,7 @@
   window.addEventListener('beforeunload', () => core.stop());
 
   // ------------------------------------------------------------ démarrage
-  log('Page Station chargée');
+  log('Page Station chargée' + (window.RS_WORKER_TIMERS ? ' (fonctionne aussi en arrière-plan)' : ''));
   keepAwake();
   connectWs();
   reopenRemembered();

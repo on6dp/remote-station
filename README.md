@@ -137,6 +137,7 @@ Les heures du journal systemd sont en **UTC** (heure belge − 1 h en hiver, −
 3. **Réglages** : choisir le **Modèle du TRX**, coller le **jeton**, « Enregistrer et reconnecter » → voyant Serveur vert.
 4. « **Choisir le port du TRX** » → le bon port → le journal affiche « … répond ».
 5. Laisser l'onglet ouvert en permanence. **Une seule page Station** à la fois.
+6. Dans Chrome : **Paramètres → Performances → « Toujours garder ces sites actifs » → Ajouter `remote.op0p.be`**, sinon l'économiseur de mémoire peut mettre l'onglet en veille.
 
 ### Réglages des radios
 

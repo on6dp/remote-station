@@ -1,4 +1,4 @@
-# Remote Station — v0.2.0 (CAT + écoute de la BF)
+# Remote Station — v0.2.1 (CAT + écoute de la BF)
 
 Pilotage à distance d'un transceiver du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
 Trois modèles sont pris en charge : **Yaesu FTX-1**, **Yaesu FTDX10** et **Icom IC-7300**. Un seul est branché à la fois ; on choisit lequel sur la page Station du club, et la face avant des membres s'adapte toute seule.
@@ -87,7 +87,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.2.0.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.2.1.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -95,7 +95,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.2.0.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.2.1.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station
@@ -175,7 +175,8 @@ Choisir d'abord le **modèle du TRX** branché dans « Réglages » (FTX-1, FTDX
 Mise en route :
 1. Ouvrir `https://remote.op0p.be/station`, coller le jeton, « Enregistrer et reconnecter ».
 2. « Choisir le port du TRX » → le port de la radio. Le journal doit afficher « Yaesu FTX-1 répond » (ou FTDX10, IC-7300).
-3. L'autorisation du port est mémorisée : au prochain démarrage, la page rouvre le port toute seule.
+3. Dans Chrome : Paramètres → Performances → « Toujours garder ces sites actifs » → ajouter `remote.op0p.be` (sinon l'économiseur de mémoire peut endormir l'onglet).
+4. L'autorisation du port est mémorisée : au prochain démarrage, la page rouvre le port toute seule.
 
 **Changer de TRX** (au club, sur le PC de la station) :
 1. Prévenir les membres : pendant le changement, la station est hors ligne quelques secondes (une émission en cours est coupée).
