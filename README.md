@@ -202,6 +202,7 @@ Automatique : main libérée après 15 min sans action, déconnexion après 15 m
 | Page Station : « Une autre page Station est déjà ouverte dans ce navigateur » | Deux onglets /station : fermer celui en trop (l'autre prend le relais tout seul). |
 | Page Station : « …avec le TRX, est déjà en service » | Une page Station avec le TRX tourne déjà sur un autre PC : la fermer si c'est celle-ci qui doit servir. |
 | « Port ouvert, pas de réponse » | Mauvais port (essayer l'autre), mauvaise vitesse, ou autre logiciel sur le port. |
+| Voyant TRX **jaune** sur le dashboard | La station est en ligne mais le TRX ne répond pas (radio éteinte, câble USB). Rien à faire : la page Station rouvre le port toute seule dès que la radio répond à nouveau. |
 | Je n'ai pas la main alors que je suis connecté | La main appartient à un onglet : fermer les autres onglets ou cliquer « Prendre la main ici ». |
 
 ---

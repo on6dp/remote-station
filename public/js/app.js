@@ -618,6 +618,9 @@
     if (st) {
       lamp('lampStation', st.station ? 'on' : null);
       lamp('lampTrx', r.connected ? (txing ? 'tx' : 'on') : st.station ? 'warn' : null);
+      $('lampTrx').title = r.connected ? 'TRX connecté' : st.station
+        ? 'La page Station est en ligne mais le TRX ne répond pas : elle rouvre le port toute seule (radio éteinte ? câble USB ?)'
+        : 'Station hors ligne : la page Station n’est pas ouverte au club';
       drawRigList();
       $('lampStation').classList.toggle('admin', !!(me && me.admin));
       $('lampStation').title = me && me.admin ? 'Station — cliquer pour changer de TRX' : 'Station';

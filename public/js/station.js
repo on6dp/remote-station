@@ -253,6 +253,41 @@
     }
   }
 
+  // Surveillance du port : si le TRX ne répond plus (câble USB, mise en veille USB de Windows, radio redémarrée…)
+  // ou si le port s'est fermé, la page le rouvre toute seule, sans intervention au club.
+  let radioDownSince = 0;
+  let recycleWait = 10000;
+  let recycling = false;
+  let lastPortTry = 0;
+  setInterval(async () => {
+    if (sim || recycling || !('serial' in navigator)) return;
+    const now = Date.now();
+    const remembered = Number(store.get(PORT_KEY, '-1')) >= 0;
+    if (port) {
+      if (core.radio.connected) { radioDownSince = 0; recycleWait = 10000; return; }
+      if (!radioDownSince) { radioDownSince = now; return; }
+      if (now - radioDownSince < recycleWait || !remembered) return;
+      recycling = true;
+      log('Le TRX ne répond plus depuis ' + Math.round(recycleWait / 1000) + ' s : réouverture automatique du port', 'st-warn');
+      recycleWait = Math.min(recycleWait * 2, 60000); // si la radio est éteinte, on espace les essais
+      radioDownSince = now;
+      try {
+        const idx = store.get(PORT_KEY, '-1');
+        await closePort(false);
+        store.set(PORT_KEY, idx);
+        await new Promise((r) => setTimeout(r, 800));
+        await reopenRemembered();
+      } catch (e) { log('Réouverture : ' + e.message, 'st-bad'); }
+      recycling = false;
+    } else if (remembered && now - lastPortTry > 10000) {
+      // Port fermé (câble débranché puis rebranché, erreur de lecture…) : nouvel essai toutes les 10 s
+      lastPortTry = now;
+      recycling = true;
+      try { await reopenRemembered(); } catch (e) {}
+      recycling = false;
+    }
+  }, 3000);
+
   $('btnPort').addEventListener('click', async () => {
     if (!('serial' in navigator)) return;
     stopSim();
