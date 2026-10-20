@@ -2,6 +2,7 @@
 
 ## v0.2 — écoute de la BF, robustesse, protection du PA
 
+- **0.2.16** — Cause trouvée des « station hors ligne » : l'onglet de la page Station était réutilisé pour ouvrir le dashboard (code 1001 = page quittée). La page Station demande maintenant confirmation avant d'être quittée, propose un bouton « Ouvrir le dashboard dans une autre fenêtre », et le dashboard affiche la cause de chaque coupure (« page Station fermée ou quittée », « coupure réseau »…).
 - **0.2.15** — Le dashboard reste connecté quand on actualise la page (session mémorisée 7 jours sur ce navigateur, oubliée par « Déconnexion » ou après une déconnexion pour inactivité ; seule une empreinte est gardée sur le serveur, `sessions.json`). La page Station signale quand Chrome l'a mise en pause ou déchargée.
 - **0.2.14** — La page Station se reconnecte au VPS sans trou : la nouvelle liaison est ouverte avant de fermer l'ancienne (plus de « station hors ligne » sur le dashboard pendant une reconnexion), nouvel essai toutes les 5 s au plus ; après chaque coupure, la page Station envoie au serveur la cause et la durée (`station_diag` dans le journal).
 - **0.2.13** — Une page Station rechargée (Ctrl+F5) sur le PC du club reprend toujours sa place tout de suite (elle était parfois refusée 30 s : fréquence sur la page Station mais pas sur le dashboard).

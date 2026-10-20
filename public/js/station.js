@@ -68,7 +68,7 @@
     if (sel.value === MODEL) return;
     store.set('model', sel.value);
     core.stop();
-    setTimeout(() => location.reload(), 200);
+    setTimeout(() => reloadPage(), 200);
   });
   $('rigHint').textContent = RIG.hint || '';
   $('rigHint').hidden = !RIG.hint;
@@ -106,7 +106,7 @@
     log('Changement de TRX demandé par ' + (by || '?') + ' : ' + window.RIGS[model].NAME, 'st-warn');
     store.set('model', model);
     core.stop();
-    setTimeout(() => location.reload(), 300);
+    setTimeout(() => reloadPage(), 300);
   }
 
   // ------------------------------------------------------------ WebSocket vers le VPS
@@ -540,7 +540,7 @@
       store.set('model', $('cfgModel').value);
       log('Modèle changé : rechargement de la page');
       core.stop();
-      return setTimeout(() => location.reload(), 300);
+      return setTimeout(() => reloadPage(), 300);
     }
     log('Réglages enregistrés');
     lastDrop = { how: 'bouton Enregistrer et reconnecter', at: Date.now() };
@@ -560,7 +560,18 @@
   }
   document.addEventListener('visibilitychange', keepAwake);
 
-  window.addEventListener('beforeunload', () => core.stop());
+  // Garde-fou : quitter cette page (taper une autre adresse dans cet onglet, le fermer…) coupe la station.
+  // Chrome demande alors confirmation. Les rechargements voulus par la page elle-même passent sans question.
+  let leaving = false;
+  function reloadPage() { leaving = true; location.reload(); }
+  window.addEventListener('beforeunload', (e) => {
+    if (leaving || (!port && !sim)) return;
+    e.preventDefault();
+    e.returnValue = 'Quitter la page Station coupe la station : le dashboard n’aura plus le TRX.';
+    return e.returnValue;
+  });
+  window.addEventListener('pagehide', () => core.stop());
+  $('btnDash').addEventListener('click', () => window.open('/', 'rs-dashboard', 'width=1400,height=900'));
 
   // ------------------------------------------------------------ démarrage
   // Une seule page Station par navigateur : un 2e onglet /station ne se connecte pas (il volerait la place du premier)

@@ -826,7 +826,7 @@
       case 'tx_watchdog': return ['Sécurité : ' + (e.reason || 'retour en réception forcé'), 'warn'];
       case 'swr_cut': return [c + 'émission coupée : ROS ' + String(e.swr).replace('.', ',') + ':1 sur ' + MHZ(e.freq), 'warn'];
       case 'station_online': return ['Station en ligne' + (e.model ? ' (' + e.model + ')' : ''), 'ok'];
-      case 'station_offline': return ['Station hors ligne', 'warn'];
+      case 'station_offline': return ['Station hors ligne' + (e.why ? ' (' + e.why + ')' : ''), 'warn'];
       case 'trx_online': return ['TRX connecté', 'ok'];
       case 'trx_offline': return ['TRX déconnecté', 'warn'];
       default: return null;

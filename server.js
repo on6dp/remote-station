@@ -805,7 +805,11 @@ ws.attach(server, {
         if (ptt.active) stopPtt('station déconnectée');
         station = null;
         radio = Object.assign({}, radio, { connected: false, tx: 0 });
-        journal('station_offline', { ip: conn.ip, by: conn.closeBy || '?', code: conn.closeCode || null });
+        // 1001 = page Station fermée, rechargée ou remplacée par une autre adresse dans son onglet
+        const why = conn.closeCode === 1001 ? 'page Station fermée ou quittée'
+          : conn.closeBy === 'client' ? 'page Station déconnectée'
+          : conn.closeBy === 'serveur' ? 'coupée par le serveur' : 'coupure réseau';
+        journal('station_offline', { ip: conn.ip, by: conn.closeBy || '?', code: conn.closeCode || null, why });
         broadcast();
       }
       if (conn.user) {
