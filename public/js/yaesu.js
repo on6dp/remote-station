@@ -315,7 +315,7 @@
           else if (c === 'FT') out.push('FT' + (this.split ? 1 : 0) + ';');
           else if ((m = /^RM([3-8])$/.exec(c))) {
             const raw = m[1] === '8' ? (this.tx ? 205 : 212) : m[1] === '7' ? (this.tx ? Math.round(this.power * 0.6) : 0)
-              : !this.tx ? 0 : { 3: 20, 4: 60, 5: Math.round(this.power * 2.4), 6: this.swrRaw }[m[1]];
+              : !this.tx ? 0 : { 3: 20, 4: 60, 5: this.silent ? 0 : Math.round(this.power * 2.4), 6: this.swrRaw }[m[1]];
             out.push('RM' + m[1] + pad(raw, 3) + '000;');
           } else if (c + ';' === P.read) out.push(P.fakeRead(this) + ';');
           else if (P.re.test(c)) { if (!P.fakeWrite(this, c)) out.push('?;'); }

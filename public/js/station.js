@@ -130,6 +130,7 @@
         lamp('lVps', 'on');
         $('tVps').textContent = 'Connecté — station ' + (m.stationCall || '');
         log('Connecté au serveur');
+        core.setTxLimits(m.txSilenceSeconds, m.txHardMaxSeconds);
         core.wsOpened();
         if (aud.ctx) ws.send(JSON.stringify({ t: 'audio_state', active: true }));
       } else if (m.t === 'audio_want') {

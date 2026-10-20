@@ -2,6 +2,7 @@
 
 ## v0.2 — écoute de la BF, robustesse, protection du PA
 
+- **0.2.12** — Chien de garde d'émission dans la page Station : retour en réception si le TRX émet 2 min sans modulation ou 5 min sans interruption (PTT ou micro bloqué), même sans liaison avec le VPS.
 - **0.2.11** — Encart « Accord (tuner) » juste au-dessus du TX ; caché si le TRX n'a pas de boîte d'accord.
 - **0.2.10** — Fenêtre de connexion : « L'utilisation de la REMOTE STATION nécessite Google CHROME ou Microsoft EDGE », avertissement si un autre navigateur est détecté.
 - **0.2.9** — Nombre de membres connectés (👥) dans la barre du haut, liste au clic : qui a la main, qui émet, écouteurs.

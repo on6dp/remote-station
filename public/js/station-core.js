@@ -31,6 +31,12 @@
       this.onRadio = o.onRadio || function () {};
       this.pollMs = o.pollMs || this.rig.POLL_MS || 250;
       this.kaTimeoutMs = o.kaTimeoutMs || 2000;
+      // Chien de garde d'émission (indépendant du serveur) : TRX en émission sans modulation pendant txSilenceMs,
+      // ou en émission continue pendant txHardMaxMs, quelle qu'en soit la cause (PTT ou micro bloqué au club…) → TX0
+      this.txSilenceMs = o.txSilenceMs || 120000;
+      this.txHardMaxMs = o.txHardMaxMs || 300000;
+      this.txSince = 0;
+      this.lastMod = 0;
       this.radioTimeoutMs = o.radioTimeoutMs || 3000;
       this.split = new FTX1.Splitter();
       this.radio = { model: this.rig.ID, connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0, power: null, powerHead: null };
@@ -128,10 +134,37 @@
       }
     }
 
+    /** Limites du chien de garde fixées par le serveur (en secondes). */
+    setTxLimits(silenceS, hardMaxS) {
+      if (silenceS > 0) this.txSilenceMs = silenceS * 1000;
+      if (hardMaxS > 0) this.txHardMaxMs = hardMaxS * 1000;
+    }
+
+    _txWatchdog(now) {
+      if (!this.radio.tx || !this.radio.connected) { this.txSince = 0; return; }
+      if (!this.txSince) { this.txSince = now; this.lastMod = now; }
+      // Modulation présente si la puissance de sortie dépasse ~4 % de la pleine échelle (SSB : rien sans voix)
+      const po = this.radio.m5;
+      if (po != null && po > (this.rig.PO_MOD_MIN || 8)) this.lastMod = now;
+      const silent = now - this.lastMod > this.txSilenceMs;
+      const tooLong = now - this.txSince > this.txHardMaxMs;
+      if (!silent && !tooLong) return;
+      const dur = (ms) => (ms >= 120000 ? Math.round(ms / 60000) + ' min' : Math.round(ms / 1000) + ' s');
+      const why = silent ? 'en émission depuis ' + dur(this.txSilenceMs) + ' sans modulation' : 'en émission continue depuis ' + dur(this.txHardMaxMs);
+      this._write(this.rig.cmdPtt(false));
+      this.catKeyed = false;
+      this.log('Sécurité : TRX ' + why + ' → retour en réception');
+      if (this.wsUp) this.sendWs({ t: 'safety', reason: 'TRX ' + why + ' : retour en réception forcé' });
+      // Si la radio reste bloquée (PTT physique enfoncé…), nouvel essai toutes les 10 s
+      this.txSince = now - this.txHardMaxMs + 10000;
+      this.lastMod = now - this.txSilenceMs + 10000;
+    }
+
     tick() {
       const now = Date.now();
       if (this.catKeyed && now - this.lastKa > this.kaTimeoutMs) this.unkey('keepalive VPS perdu');
       if (!this.serialOpen) return;
+      this._txWatchdog(now);
       if (this.radio.connected && this.lastRx && now - this.lastRx > this.radioTimeoutMs) {
         this.radio.connected = false;
         this.dirty = true;

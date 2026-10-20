@@ -342,7 +342,7 @@
           const k = c * 256 + d[0];
           let val = this.lv[k] || 0;
           if (d[0] === 0x02) { this.t += 0.15; val = v.tx ? 0 : Math.max(0, Math.min(241, Math.round(70 + 50 * Math.sin(this.t) + 20 * Math.random()))); }
-          else if (d[0] === 0x11) val = v.tx ? Math.round((v.power / 255) * 213) : 0;
+          else if (d[0] === 0x11) val = v.tx && !this.silent ? Math.round((v.power / 255) * 213) : 0;
           else if (d[0] === 0x12) val = v.tx ? (this.swrRaw || 30) : 0;
           else if (d[0] === 0x13) val = v.tx ? 40 : 0;
           else if (d[0] === 0x14) val = v.tx ? 15 : 0;

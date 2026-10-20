@@ -33,6 +33,10 @@ const DEFAULTS = {
   controlIdleMinutes: 15,
   // Protection du PA : émission coupée si le ROS dépasse maxSwr pendant swrHoldMs (0 = pas de protection).
   // Le PTT reste ensuite refusé sur cette fréquence (±25 kHz) jusqu'à un accord (TUNE).
+  // Chien de garde de la page Station : retour en réception si le TRX émet sans modulation pendant txSilenceSeconds,
+  // ou sans interruption pendant txHardMaxSeconds (PTT ou micro bloqué au club…)
+  txSilenceSeconds: 120,
+  txHardMaxSeconds: 300,
   maxSwr: 2.5,
   swrHoldMs: 700,
   // Déconnexion automatique d'un membre resté inactif (0 = jamais). Jamais pendant une émission.
@@ -66,7 +70,7 @@ fs.mkdirSync(LOG_DIR, { recursive: true });
 
 // ---------------------------------------------------------------- journal des accès
 // Événements visibles par les membres connectés (sans adresse IP)
-const PUBLIC_EVENTS = ['login', 'logout', 'control_take', 'control_release', 'tx_start', 'tx_stop', 'tune', 'power_limit', 'rig_switch', 'swr_cut',
+const PUBLIC_EVENTS = ['login', 'logout', 'control_take', 'control_release', 'tx_start', 'tx_stop', 'tune', 'power_limit', 'rig_switch', 'swr_cut', 'tx_watchdog',
   'station_online', 'station_offline', 'trx_online', 'trx_offline'];
 const recentEvents = [];
 function journal(ev, data) {
@@ -608,7 +612,7 @@ function onStationAuth(conn, m) {
   station = { conn, ip: conn.ip, since: Date.now(), rig: DRIVERS[model], ports, lastMsg: Date.now(), page: typeof m.page === 'string' ? m.page.slice(0, 40) : '' };
   conn.isStation = true;
   journal('station_online', { ip: conn.ip, model });
-  send(conn, { t: 'welcome', stationCall: cfg.stationCall });
+  send(conn, { t: 'welcome', stationCall: cfg.stationCall, txSilenceSeconds: cfg.txSilenceSeconds, txHardMaxSeconds: cfg.txHardMaxSeconds });
   audio.active = false;
   send(conn, { t: 'audio_want', on: listeners() > 0 });
   audio.want = listeners() > 0;
@@ -620,6 +624,12 @@ function onStation(conn, m) {
   if (!station || station.conn !== conn) return;
   station.lastMsg = Date.now();
   if (m.t === 'ping') return send(conn, { t: 'pong', ts: m.ts }); // contrôle de vie de la liaison
+  if (m.t === 'safety') {
+    const reason = String(m.reason || 'sécurité de la station').slice(0, 160);
+    journal('tx_watchdog', { reason });
+    if (ptt.active) stopPtt(reason);
+    return;
+  }
   if (m.t === 'audio_state') {
     audio.active = !!m.active;
     return broadcast();

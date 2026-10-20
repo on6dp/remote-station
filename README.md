@@ -11,9 +11,9 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.2.11** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.2.12** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
-**Télécharger un paquet prêt à installer** : onglet **Releases** (ou **Tags**) du dépôt → version voulue → `Source code (tar.gz)`. Le paquet s'installe avec la procédure « Mettre à jour le serveur » ci-dessous (le dossier extrait s'appelle alors `remote-station-0.2.11` : le renommer en `remote-station`, ou utiliser l'archive `remote-station-X.Y.Z.tar.gz` fournie avec la version).
+**Télécharger un paquet prêt à installer** : onglet **Releases** (ou **Tags**) du dépôt → version voulue → `Source code (tar.gz)`. Le paquet s'installe avec la procédure « Mettre à jour le serveur » ci-dessous (le dossier extrait s'appelle alors `remote-station-0.2.12` : le renommer en `remote-station`, ou utiliser l'archive `remote-station-X.Y.Z.tar.gz` fournie avec la version).
 
 Le guide complet est dans [LISEZMOI.md](LISEZMOI.md). Ci-dessous, l'aide-mémoire des opérations courantes.
 
@@ -184,6 +184,7 @@ Automatique : main libérée après 15 min sans action, déconnexion après 15 m
 
 ## Sécurités d'émission (résumé)
 
+- **TRX bloqué en émission** : la page Station (au club, même sans liaison avec le VPS) repasse le TRX en réception s'il émet **2 min sans modulation**, ou **5 min sans interruption**, quelle qu'en soit la cause (PTT ou micro bloqué au club…). Nouvel essai toutes les 10 s si la radio reste bloquée. Réglable : `txSilenceSeconds`, `txHardMaxSeconds`.
 - **Protection du PA (ROS)** : si le ROS dépasse **2,5:1** pendant 0,7 s en émission, l'émission est coupée. Le PTT reste ensuite refusé sur cette fréquence (±25 kHz) jusqu'à un **accord (TUNE)**. Réglable dans `config.json` : `maxSwr` (0 = pas de protection) et `swrHoldMs`. Après chaque changement de bande, le dashboard rappelle de faire TUNE.
 
 - Émission seulement dans les bandes autorisées (`txRanges`), contrôlée sur la fréquence réellement émise (VFO B en SPLIT, XIT compris).

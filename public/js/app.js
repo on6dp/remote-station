@@ -821,6 +821,7 @@
       case 'tune': return [c + 'lance l’accord sur ' + MHZ(e.freq), 'tx'];
       case 'power_limit': return [c + 'puissance ramenée de ' + e.from + ' à ' + e.to + ' W', 'warn'];
       case 'rig_switch': return [c + 'passe sur le ' + (e.name || e.to), 'warn'];
+      case 'tx_watchdog': return ['Sécurité : ' + (e.reason || 'retour en réception forcé'), 'warn'];
       case 'swr_cut': return [c + 'émission coupée : ROS ' + String(e.swr).replace('.', ',') + ':1 sur ' + MHZ(e.freq), 'warn'];
       case 'station_online': return ['Station en ligne' + (e.model ? ' (' + e.model + ')' : ''), 'ok'];
       case 'station_offline': return ['Station hors ligne', 'warn'];

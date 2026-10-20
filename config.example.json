@@ -8,6 +8,8 @@
   "maxTxSeconds": 120,
   "pttHeartbeatMs": 1500,
   "controlIdleMinutes": 15,
+  "txSilenceSeconds": 120,
+  "txHardMaxSeconds": 300,
   "maxSwr": 2.5,
   "swrHoldMs": 700,
   "sessionIdleMinutes": 15,
