@@ -350,7 +350,15 @@
     const near = f ? DIAL[mode].reduce((a, x) => (Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a)) : null;
     const saved = store.get('dial.' + mode, '');
     if (near && Math.abs(near[1] * 1000 - f) < 500000) sel.value = String(near[1]);
-    else if (saved) sel.value = saved;
+    else if (f) {
+      // Pas de fréquence d'appel de ce mode sur la bande du TRX (ex. FT4 sur 70 cm) : on le dit au lieu d'afficher 80 m
+      const o = document.createElement('option');
+      o.value = '';
+      o.textContent = 'Pas de fréquence ' + mode + ' sur cette bande';
+      o.disabled = true;
+      sel.insertBefore(o, sel.firstChild);
+      sel.value = '';
+    } else if (saved) sel.value = saved;
   }
   function setMode(m) {
     mode = m;
@@ -367,6 +375,7 @@
     const st = api.state();
     if (st && st.ptt && st.ptt.active) return api.say('Réglage bloqué pendant l’émission.', 'warn');
     const khz = Number($('dgDial').value);
+    if (!khz) return api.say('Choisissez d’abord une fréquence d’appel dans la liste.', 'warn');
     store.set('dial.' + mode, khz);
     api.setFreq(Math.round(khz * 1000), 'A');
     // Mode DATA-U (Yaesu) / USB-D (Icom) : le filtre et la sortie audio conviennent aux modes numériques
