@@ -7,6 +7,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const ws = require('./lib/ws-lite');
 const auth = require('./lib/auth');
 // Pilotes de radio disponibles (le modèle est annoncé par la page Station)
@@ -41,6 +42,9 @@ const DEFAULTS = {
   swrHoldMs: 700,
   // Déconnexion automatique d'un membre resté inactif (0 = jamais). Jamais pendant une émission.
   sessionIdleMinutes: 15,
+  // Un membre reste connecté quand il actualise la page ou revient plus tard (sur le même navigateur),
+  // jusqu'à rememberDays jours après sa dernière visite (0 = mot de passe à chaque fois). « Déconnexion » l'oublie.
+  rememberDays: 7,
   usersFile: 'users.json',
   logDir: 'logs',
   txRanges: [],
@@ -191,6 +195,33 @@ let connSeq = 0;
 let lastCtrlActivity = 0;
 let ptt = { active: false, conn: null, since: 0, lastBeat: 0 };
 const fails = new Map(); // ip -> { n, until }
+
+// ---------------------------------------------------------------- sessions mémorisées (« rester connecté »)
+// Seule l'empreinte SHA-256 du jeton de session est gardée (sessions.json) : le fichier ne permet pas de se connecter.
+const SESS_FILE = path.join(ROOT, 'sessions.json');
+let sessions = {};
+try { sessions = JSON.parse(fs.readFileSync(SESS_FILE, 'utf8')) || {}; } catch (e) { sessions = {}; }
+let sessSaveTimer = null;
+function saveSessions() {
+  clearTimeout(sessSaveTimer);
+  sessSaveTimer = setTimeout(() => {
+    const now = Date.now();
+    for (const h in sessions) if (!sessions[h] || sessions[h].exp < now) delete sessions[h];
+    fs.writeFile(SESS_FILE, JSON.stringify(sessions), { mode: 0o600 }, (e) => { if (e) console.error('sessions.json : ' + e.message); });
+  }, 500);
+}
+const sessHash = (tok) => crypto.createHash('sha256').update(String(tok)).digest('hex');
+function newSession(call) {
+  if (!(cfg.rememberDays > 0)) return null;
+  const tok = crypto.randomBytes(32).toString('base64url');
+  sessions[sessHash(tok)] = { call, exp: Date.now() + cfg.rememberDays * 86400000 };
+  saveSessions();
+  return tok;
+}
+function dropSession(conn) {
+  if (conn.sessHash && sessions[conn.sessHash]) { delete sessions[conn.sessHash]; saveSessions(); }
+  conn.sessHash = null;
+}
 
 function clientIp(req) {
   const xf = req.headers['x-forwarded-for'];
@@ -355,6 +386,7 @@ setInterval(() => {
       } else if (idle > lim) {
         send(c, { t: 'session_end', msg: 'Déconnecté après ' + cfg.sessionIdleMinutes + ' min sans activité' });
         journal('session_idle', { call: c.user.call, ip: c.ip });
+        dropSession(c); // après une déconnexion pour inactivité, mot de passe exigé
         c.close(4005, 'inactivité');
       }
     }
@@ -364,6 +396,20 @@ setInterval(() => {
 // ---------------------------------------------------------------- messages opérateurs
 async function onLogin(conn, m) {
   const now = Date.now();
+  if (typeof m.session === 'string' && m.session) {
+    // Retour d'un membre déjà identifié sur ce navigateur (page actualisée, reconnexion…)
+    const h = sessHash(m.session);
+    const s = sessions[h];
+    const rec = s && s.exp > now ? auth.loadUsers(USERS_FILE)[s.call] : null;
+    if (!rec || rec.disabled || !auth.validCall(s.call, cfg.allowedPrefixes)) {
+      if (s) { delete sessions[h]; saveSessions(); }
+      return send(conn, { t: 'login_fail', session: true, msg: '' });
+    }
+    s.exp = now + cfg.rememberDays * 86400000;
+    saveSessions();
+    conn.sessHash = h;
+    return loggedIn(conn, s.call, rec, m.session);
+  }
   const f = fails.get(conn.ip);
   if (f && f.until > now) {
     return send(conn, { t: 'login_fail', msg: 'Trop d’essais, réessayez dans quelques minutes' });
@@ -384,6 +430,13 @@ async function onLogin(conn, m) {
     return setTimeout(() => send(conn, { t: 'login_fail', msg: 'Indicatif ou mot de passe incorrect' }), 600);
   }
   fails.delete(conn.ip);
+  const tok = newSession(call);
+  if (tok) conn.sessHash = sessHash(tok);
+  return loggedIn(conn, call, rec, tok);
+}
+
+function loggedIn(conn, call, rec, sessionTok) {
+  const now = Date.now();
   const rxOnly = auth.isRxOnly(call, cfg.rxOnlyPrefixes);
   conn.user = { call, admin: !!rec.admin, tx: rec.tx !== false && !rxOnly, rxOnly, maxWatts: rxOnly ? 0 : maxWattsFor(call) };
   ops.add(conn);
@@ -403,7 +456,8 @@ async function onLogin(conn, m) {
     clubName: cfg.clubName,
     stationCall: cfg.stationCall,
     rigs: Object.keys(DRIVERS).map((id) => ({ id, name: DRIVERS[id].NAME })),
-    sessionIdleMinutes: cfg.sessionIdleMinutes
+    sessionIdleMinutes: cfg.sessionIdleMinutes,
+    session: sessionTok || null
   });
   send(conn, { t: 'events', list: recentEvents });
   send(conn, { t: 'chatlog', list: chatLog });
@@ -614,6 +668,7 @@ function onStationAuth(conn, m) {
   if (m.ports && typeof m.ports === 'object') for (const id in DRIVERS) ports[id] = m.ports[id] === true;
   station = { conn, ip: conn.ip, since: Date.now(), rig: DRIVERS[model], ports, lastMsg: Date.now(), page: typeof m.page === 'string' ? m.page.slice(0, 40) : '' };
   conn.isStation = true;
+  conn.everStation = true;
   journal('station_online', { ip: conn.ip, model });
   send(conn, { t: 'welcome', stationCall: cfg.stationCall, txSilenceSeconds: cfg.txSilenceSeconds, txHardMaxSeconds: cfg.txHardMaxSeconds });
   audio.active = false;
@@ -709,6 +764,7 @@ ws.attach(server, {
   maxPayload: 64 * 1024,
   onConnection(conn, req) {
     conn.ip = clientIp(req);
+    conn.openedAt = Date.now();
     conn.cid = ++connSeq; // identifie l'onglet : la main appartient à une connexion, pas seulement à un indicatif
     conn.user = null;
     conn.isStation = false;
@@ -734,6 +790,7 @@ ws.attach(server, {
         // Toute action du membre compte comme activité (sauf les pings automatiques)
         if (m.t !== 'ping') { conn.lastActive = Date.now(); conn.idleWarned = false; }
         if (m.t === 'stay') return;
+        if (m.t === 'logout') { dropSession(conn); return conn.close(1000, 'déconnexion'); }
         return onOperator(conn, m);
       }
       if (m.t === 'login') return onLogin(conn, m).catch((e) => console.error(e));
@@ -742,6 +799,8 @@ ws.attach(server, {
 
     conn.on('close', () => {
       clearTimeout(authTimer);
+      // Connexion fermée avant toute identification (page Station qui n'arrive pas à s'annoncer, robot…)
+      if (!conn.user && !conn.everStation) journal('ws_noauth', { ip: conn.ip, by: conn.closeBy || '?', code: conn.closeCode || null, s: Math.round((Date.now() - conn.openedAt) / 1000) });
       if (conn.isStation && station && station.conn === conn) {
         if (ptt.active) stopPtt('station déconnectée');
         station = null;

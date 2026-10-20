@@ -4,3 +4,4 @@ users.json
 users.json.tmp
 logs/*.log
 node_modules/
+sessions.json

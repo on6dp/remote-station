@@ -324,6 +324,8 @@
     $('pwrDown').addEventListener('click', () => nudgePower(-1));
     $('pwrUp').addEventListener('click', () => nudgePower(1));
     $('logout').addEventListener('click', () => {
+      if (ws && ws.readyState === 1) send({ t: 'logout' }); // le serveur oublie la session mémorisée
+      forgetSession();
       creds = null;
       hadControl = false;
       if (player.on) stopListen();
@@ -957,6 +959,12 @@
   }
 
   // ------------------------------------------------------------ connexion
+  function forgetSession() {
+    try { localStorage.removeItem('rs.sess'); } catch (e) {}
+  }
+  function savedSession() {
+    try { return localStorage.getItem('rs.sess') || ''; } catch (e) { return ''; }
+  }
   function showLogin(err) {
     $('login').hidden = false;
     $('loginErr').textContent = err || '';
@@ -980,7 +988,7 @@
   }, 5000);
   function connect() {
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
-    ws.onopen = () => { retry = 0; if (creds) send({ t: 'login', call: creds.call, pass: creds.pass }); };
+    ws.onopen = () => { retry = 0; if (creds) send(creds.session ? { t: 'login', session: creds.session } : { t: 'login', call: creds.call, pass: creds.pass }); };
     ws.binaryType = 'arraybuffer';
     lastServerMsg = Date.now();
     ws.onmessage = (e) => {
@@ -994,17 +1002,24 @@
         $('login').hidden = true;
         $('meCall').textContent = m.call;
         try { localStorage.setItem('rs.call', m.call); } catch (x) {}
+        // Session mémorisée : la page actualisée se reconnecte seule (le mot de passe n'est plus gardé)
+        if (m.session) {
+          creds = { session: m.session };
+          try { localStorage.setItem('rs.sess', m.session); } catch (x) {}
+        }
         if (!m.allowTx) say('Émission désactivée sur ce serveur : réglages et écoute uniquement.', 'warn', 8000);
         if (player.on) send({ t: 'listen', on: true }); // reprise de l'écoute après une reconnexion
         render();
       } else if (m.t === 'login_fail') {
         creds = null;
+        if (m.session) forgetSession();
         showLogin(m.msg);
       } else if (m.t === 'idle_warn') {
         showIdle(m.seconds || 60);
       } else if (m.t === 'session_end') {
         // Déconnexion pour inactivité : pas de reconnexion automatique
         creds = null;
+        forgetSession();
         hadControl = false;
         player.on = false;
         if (player.ctx) player.ctx.suspend();
@@ -1090,6 +1105,14 @@
       (/Chrome\//.test(ua) && !/OPR\/|Brave|SamsungBrowser|Firefox|FxiOS/.test(ua) && !!window.chrome) || /CriOS|EdgiOS/.test(ua);
     $('browserBad').hidden = ok;
   })();
-  showLogin('');
+  // Déjà identifié sur ce navigateur : reconnexion directe, sans indicatif ni mot de passe
+  const sess = savedSession();
+  if (sess) {
+    creds = { session: sess };
+    $('login').hidden = true;
+    connect();
+  } else {
+    showLogin('');
+  }
   setInterval(() => { if (st && st.ptt && st.ptt.active) render(); }, 500);
 })();

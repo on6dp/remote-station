@@ -142,6 +142,7 @@
         log('Connecté au serveur');
         core.setTxLimits(m.txSilenceSeconds, m.txHardMaxSeconds);
         // Diagnostic : le serveur note pourquoi la liaison précédente est tombée et combien de temps elle l'a été
+        while (pendingDiag.length) ws.send(JSON.stringify(Object.assign({ t: 'diag' }, pendingDiag.shift())));
         if (lastDrop) {
           const d = lastDrop;
           lastDrop = null;
@@ -200,6 +201,43 @@
   // serveur toutes les 5 s ; sans aucune nouvelle pendant 15 s, on abandonne cette connexion et on se reconnecte.
   let lastServerMsg = Date.now();
   let lastDrop = null; // dernière coupure de la liaison (pour le diagnostic envoyé au serveur)
+  const pendingDiag = [];
+  function sendDiag(o) {
+    if (ws && ws.readyState === 1 && core.wsUp) ws.send(JSON.stringify(Object.assign({ t: 'diag' }, o)));
+    else if (pendingDiag.length < 10) pendingDiag.push(o);
+  }
+
+  // Chrome peut mettre en pause (« figer ») ou décharger un onglet en arrière-plan pour économiser l'énergie
+  // ou la mémoire : la page Station ne fait alors plus rien. On le détecte pour l'afficher et le signaler au serveur.
+  let tick = Date.now();
+  setInterval(() => {
+    const now = Date.now();
+    const gap = now - tick;
+    tick = now;
+    if (gap > 6000) {
+      const s = Math.round(gap / 1000);
+      log('La page Station a été mise en pause pendant ' + s + ' s (Chrome, veille du PC…)', 'st-bad');
+      sendDiag({ how: 'page Station en pause (Chrome ou veille du PC)', down: s });
+    }
+  }, 1000);
+  document.addEventListener('freeze', () => store.set('frozenAt', String(Date.now())));
+  document.addEventListener('resume', () => {
+    const at = Number(store.get('frozenAt', '0'));
+    const s = at ? Math.round((Date.now() - at) / 1000) : null;
+    log('Chrome avait figé cette page' + (s != null ? ' pendant ' + s + ' s' : '') + ' (économiseur d’énergie / onglet en arrière-plan)', 'st-bad');
+    sendDiag({ how: 'page figée par Chrome (freeze)', down: s });
+  });
+  window.addEventListener('pagehide', () => store.set('hiddenAt', String(Date.now())));
+  (function () {
+    const at = Number(store.get('hiddenAt', '0'));
+    const s = at ? Math.round((Date.now() - at) / 1000) : null;
+    if (document.wasDiscarded) {
+      log('Chrome avait déchargé cette page' + (s != null ? ' (' + s + ' s sans page Station)' : '') + ' : économiseur de mémoire. Voir le guide pour garder remote.op0p.be toujours actif.', 'st-bad');
+      sendDiag({ how: 'page déchargée par Chrome (économiseur de mémoire)', down: s });
+    } else if (s != null && s < 3600) {
+      sendDiag({ how: 'page Station rechargée ou rouverte', down: s });
+    }
+  })();
   // Identifiant de cette page : sa propre reconnexion peut remplacer son ancienne connexion, pas une autre page
   const PAGE_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
   setInterval(() => {
