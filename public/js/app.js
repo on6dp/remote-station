@@ -21,7 +21,8 @@
     dual: ['vfoSel', 'aToB', 'bToA', 'swap', 'split', 'rit', 'xit', 'clar', 'lock'],
     audio: ['af', 'sql'],
     dsp: ['nb', 'nr', 'notch', 'notchFreq', 'dnf'],
-    tx: ['mic', 'proc', 'procLvl', 'vox', 'tuner', 'tune']
+    tune: ['tuner', 'tune'],
+    tx: ['mic', 'proc', 'procLvl', 'vox']
   };
   const SHORT = { aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décalage', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE' };
 
@@ -389,7 +390,7 @@
     ctlModel = R.ID;
     ctlRefs = {};
     buildKeys(R);
-    const boxes = { front: 'sec-front', filter: 'sec-filter', dual: 'sec-dual', audio: 'sec-audio', dsp: 'sec-dsp', tx: 'sec-tx' };
+    const boxes = { front: 'sec-front', filter: 'sec-filter', dual: 'sec-dual', audio: 'sec-audio', dsp: 'sec-dsp', tune: 'sec-tune', tx: 'sec-tx' };
     for (const k in boxes) $(boxes[k]).textContent = '';
     $('sec-other').textContent = '';
     const where = {};
@@ -469,6 +470,8 @@
     if (!r.connected) trxSince = 0; else if (!trxSince) trxSince = Date.now();
     // Pas de boîte d'accord (ex. FTX-1 sans l'ampli SPA-1) : la radio ne répond pas à la lecture du tuner → on cache TUNER et TUNE
     const noTuner = !!r.connected && r.tuner == null && Date.now() - trxSince > 4000;
+    // Encart « Accord » visible seulement si le TRX a une boîte d'accord
+    $('panelTune').hidden = noTuner || !(ctlRefs.tuner || ctlRefs.tune);
     for (const id in ctlRefs) {
       const { c, cell, btn, opts, inp, out } = ctlRefs[id];
       cell.hidden = noTuner && (id === 'tuner' || id === 'tune');

@@ -544,3 +544,5 @@ input[type='range']:disabled { opacity: .45; }
 .login p.browser-req b, .login p.browser-bad b { font-weight: 700; }
 .login p.browser-bad { padding: 8px 10px; border: 1px solid var(--v2-accent-red-alt); border-radius: 4px; color: var(--v2-accent-red-alt); font-size: 12px; }
 .login p.browser-bad[hidden] { display: none; }
+
+.panel[hidden] { display: none !important; }
