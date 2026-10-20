@@ -525,3 +525,6 @@ input[type='range']:disabled { opacity: .45; }
 .listen { display: grid; gap: 8px; margin-top: 8px; }
 .listen-btn { width: 100%; }
 .listen-btn[aria-pressed='true'] { color: var(--v2-accent-green); border-color: var(--v2-accent-green); }
+
+/* éléments cachés (ex. TUNER/TUNE sans boîte d’accord) */
+.btn[hidden], .ctl[hidden] { display: none !important; }

@@ -248,7 +248,9 @@ function txBlockReason(conn, forTune) {
     !inTxRange(txFreq()) ? 'fréquence d’émission hors des bandes autorisées' + (radio.txVfo === 1 ? ' (VFO B en SPLIT)' : '') :
     radio.power == null ? 'puissance du TRX inconnue' :
     radio.power > conn.user.maxWatts ? 'puissance ' + radio.power + ' W au-delà de votre limite (' + conn.user.maxWatts + ' W)' :
-    !forTune && swrLocked() ? 'ROS trop élevé sur cette fréquence (' + swrLock.swr.toFixed(1).replace('.', ',') + ':1) : faites d’abord un accord (TUNE)' :
+    forTune && radio.tuner == null ? 'pas de boîte d’accord sur ce TRX (FTX-1 : ampli SPA-1 débranché ?)' :
+    !forTune && swrLocked() ? 'ROS trop élevé sur cette fréquence (' + swrLock.swr.toFixed(1).replace('.', ',') + ':1) : ' +
+      (radio.tuner == null ? 'changez de fréquence ou faites vérifier l’antenne' : 'faites d’abord un accord (TUNE)') :
     null;
 }
 
@@ -668,7 +670,8 @@ function onStation(conn, m) {
       swrHighSince = 0;
       swrLock = { freq: txFreq(), swr };
       journal('swr_cut', { call: ptt.conn.user.call, freq: txFreq(), swr: Math.round(swr * 10) / 10 });
-      stopPtt('ROS trop élevé (' + swr.toFixed(1).replace('.', ',') + ':1) — faites un accord (TUNE) avant de réémettre');
+      stopPtt('ROS trop élevé (' + swr.toFixed(1).replace('.', ',') + ':1) — ' +
+        (radio.tuner == null ? 'pas de boîte d’accord : changez de fréquence ou faites vérifier l’antenne' : 'faites un accord (TUNE) avant de réémettre'));
     }
   } else {
     swrHighSince = 0;

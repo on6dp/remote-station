@@ -251,7 +251,7 @@
         if (!iControl()) return say('Prenez la main pour changer de bande.', 'warn');
         if (st.ptt && st.ptt.active) return say('Réglage bloqué pendant l’émission.', 'warn');
         // TRX avec sélection de bande (FTX-1) : comme la touche BAND, il rappelle sa dernière fréquence et son mode
-        if (me && me.canTx && R.CONTROL && R.CONTROL.tune) say('Nouvelle bande : faites un accord (TUNE) avant d’émettre si l’antenne n’est pas accordée.', 'warn', 6000);
+        if (me && me.canTx && R.CONTROL && R.CONTROL.tune && st.radio && st.radio.tuner != null) say('Nouvelle bande : faites un accord (TUNE) avant d’émettre si l’antenne n’est pas accordée.', 'warn', 6000);
         if (R.cmdBand && R.BAND_CODES && R.BAND_CODES[name]) return send({ t: 'set', band: name, sub: target === 'B' });
         setFreq(khz * 1000, target);
         if (mk) setTimeout(() => send({ t: 'set', mode: mk[0], sub: target === 'B' }), 200);
@@ -460,10 +460,15 @@
       ctlRefs[c.id] = ref;
     }
   }
+  let trxSince = 0;
   function updateControls(r, onAir) {
     const blocked = !iControl() || onAir;
+    if (!r.connected) trxSince = 0; else if (!trxSince) trxSince = Date.now();
+    // Pas de boîte d'accord (ex. FTX-1 sans l'ampli SPA-1) : la radio ne répond pas à la lecture du tuner → on cache TUNER et TUNE
+    const noTuner = !!r.connected && r.tuner == null && Date.now() - trxSince > 4000;
     for (const id in ctlRefs) {
       const { c, cell, btn, opts, inp, out } = ctlRefs[id];
+      cell.hidden = noTuner && (id === 'tuner' || id === 'tune');
       const v = ctlValue(id);
       const avail = !!r.connected && (!c.when || c.when(r)) && (c.type === 'action' || v != null);
       cell.classList.toggle('unavail', !avail);
@@ -503,7 +508,7 @@
     if (st.radio.vox) return 'VOX actif au club : coupez-le d’abord';
     if (!st.txOk) return st.radio.txVfo === 1 ? 'VFO B (SPLIT) hors des bandes autorisées' : 'Hors des bandes autorisées';
     if (st.radio.power != null && st.radio.power > me.maxWatts) return 'Puissance au-delà de votre limite (' + me.maxWatts + ' W)';
-    if (st.swrLock) return 'ROS trop élevé ici (' + String(st.swrLock.swr).replace('.', ',') + ':1) : faites TUNE d’abord';
+    if (st.swrLock) return 'ROS trop élevé ici (' + String(st.swrLock.swr).replace('.', ',') + ':1) : ' + (st.radio.tuner == null ? 'changez de fréquence ou vérifiez l’antenne' : 'faites TUNE d’abord');
     return null;
   }
   function pttDown() {
