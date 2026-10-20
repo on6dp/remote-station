@@ -117,7 +117,16 @@
       $('tVps').textContent = 'Entrez le jeton de la station ci-dessous';
       return;
     }
-    if (ws) { ws.onclose = null; ws.close(); }
+    // L'ancienne connexion n'est fermée qu'une fois la nouvelle acceptée : le serveur passe de l'une à l'autre
+    // sans annoncer « station hors ligne » au dashboard (pas de trou à l'écran pendant une reconnexion).
+    const prev = ws;
+    if (prev) {
+      prev.onclose = null;
+      prev.onmessage = null;
+      if (!lastDrop) lastDrop = { how: 'reconnexion demandée sur la page', at: Date.now() };
+    }
+    const closePrev = () => { if (prev) { try { prev.close(); } catch (e) {} } };
+    setTimeout(closePrev, 10000);
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
     ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID }));
     lastServerMsg = Date.now();
@@ -126,11 +135,20 @@
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if (m.t === 'welcome') {
+        closePrev();
         wsRetry = 0;
         lamp('lVps', 'on');
         $('tVps').textContent = 'Connecté — station ' + (m.stationCall || '');
         log('Connecté au serveur');
         core.setTxLimits(m.txSilenceSeconds, m.txHardMaxSeconds);
+        // Diagnostic : le serveur note pourquoi la liaison précédente est tombée et combien de temps elle l'a été
+        if (lastDrop) {
+          const d = lastDrop;
+          lastDrop = null;
+          const down = Math.round((Date.now() - d.at) / 1000);
+          ws.send(JSON.stringify({ t: 'diag', how: d.how, code: d.code || null, reason: d.reason || '', down, tries: d.tries || 0 }));
+          if (down >= 5) log('Liaison rétablie après ' + down + ' s (' + d.how + ')', 'st-warn');
+        }
         core.wsOpened();
         if (aud.ctx) ws.send(JSON.stringify({ t: 'audio_state', active: true }));
       } else if (m.t === 'audio_want') {
@@ -146,6 +164,10 @@
       }
     };
     ws.onclose = (e) => {
+      closePrev();
+      if (!lastDrop) lastDrop = { how: 'fermeture', code: e.code, reason: e.reason, at: Date.now() };
+      lastDrop.tries = (lastDrop.tries || 0) + 1;
+      log('Liaison avec le serveur fermée (code ' + e.code + (e.reason ? ', ' + e.reason : '') + ')', e.code === 1000 ? '' : 'st-warn');
       core.wsClosed();
       lamp('lVps', null);
       if (e.code === 4001) {
@@ -165,9 +187,11 @@
         log('Une autre page Station s’est connectée : celle-ci se met en retrait', 'st-warn');
         return;
       }
-      $('tVps').textContent = 'Liaison perdue, nouvelle tentative…';
+      // La station doit revenir vite : nouvel essai après 1, 2, 4 puis toutes les 5 s
       wsRetry = Math.min(wsRetry + 1, 6);
-      wsTimer = setTimeout(connectWs, 1000 * Math.pow(2, wsRetry - 1));
+      const wait = Math.min(5000, 1000 * Math.pow(2, wsRetry - 1));
+      $('tVps').textContent = 'Liaison perdue (code ' + e.code + '), nouvel essai dans ' + Math.round(wait / 1000) + ' s…';
+      wsTimer = setTimeout(connectWs, wait);
     };
   }
 
@@ -175,17 +199,14 @@
   // redémarre…). Le navigateur croit alors être connecté et envoie dans le vide. On demande un « pong » au
   // serveur toutes les 5 s ; sans aucune nouvelle pendant 15 s, on abandonne cette connexion et on se reconnecte.
   let lastServerMsg = Date.now();
+  let lastDrop = null; // dernière coupure de la liaison (pour le diagnostic envoyé au serveur)
   // Identifiant de cette page : sa propre reconnexion peut remplacer son ancienne connexion, pas une autre page
   const PAGE_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
   setInterval(() => {
     if (!ws || ws.readyState !== 1) return;
     if (Date.now() - lastServerMsg > 15000) {
       log('Plus de nouvelles du serveur depuis 15 s : reconnexion automatique', 'st-warn');
-      const old = ws;
-      old.onclose = null;
-      old.onmessage = null;
-      try { old.close(); } catch (e) {}
-      ws = null;
+      lastDrop = { how: 'aucune réponse du serveur pendant 15 s', at: Date.now() };
       core.wsClosed();
       lamp('lVps', null);
       $('tVps').textContent = 'Liaison perdue, reconnexion…';
@@ -484,6 +505,7 @@
       return setTimeout(() => location.reload(), 300);
     }
     log('Réglages enregistrés');
+    lastDrop = { how: 'bouton Enregistrer et reconnecter', at: Date.now() };
     connectWs();
     if (port) {
       const idx = store.get(PORT_KEY, '-1');

@@ -627,6 +627,17 @@ function onStation(conn, m) {
   if (!station || station.conn !== conn) return;
   station.lastMsg = Date.now();
   if (m.t === 'ping') return send(conn, { t: 'pong', ts: m.ts }); // contrôle de vie de la liaison
+  if (m.t === 'diag') {
+    // Rapport de la page Station après une reconnexion : cause de la coupure vue côté club
+    journal('station_diag', {
+      how: String(m.how || '?').slice(0, 80),
+      code: Number.isFinite(m.code) ? m.code : null,
+      reason: String(m.reason || '').slice(0, 80),
+      down_s: Number.isFinite(m.down) ? m.down : null,
+      tries: Number.isFinite(m.tries) ? m.tries : 0
+    });
+    return;
+  }
   if (m.t === 'safety') {
     const reason = String(m.reason || 'sécurité de la station').slice(0, 160);
     journal('tx_watchdog', { reason });
@@ -735,7 +746,7 @@ ws.attach(server, {
         if (ptt.active) stopPtt('station déconnectée');
         station = null;
         radio = Object.assign({}, radio, { connected: false, tx: 0 });
-        journal('station_offline', { ip: conn.ip });
+        journal('station_offline', { ip: conn.ip, by: conn.closeBy || '?', code: conn.closeCode || null });
         broadcast();
       }
       if (conn.user) {

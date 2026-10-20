@@ -2,6 +2,7 @@
 
 ## v0.2 — écoute de la BF, robustesse, protection du PA
 
+- **0.2.14** — La page Station se reconnecte au VPS sans trou : la nouvelle liaison est ouverte avant de fermer l'ancienne (plus de « station hors ligne » sur le dashboard pendant une reconnexion), nouvel essai toutes les 5 s au plus ; après chaque coupure, la page Station envoie au serveur la cause et la durée (`station_diag` dans le journal).
 - **0.2.13** — Une page Station rechargée (Ctrl+F5) sur le PC du club reprend toujours sa place tout de suite (elle était parfois refusée 30 s : fréquence sur la page Station mais pas sur le dashboard).
 - **0.2.12** — Chien de garde d'émission dans la page Station : retour en réception si le TRX émet 2 min sans modulation ou 5 min sans interruption (PTT ou micro bloqué), même sans liaison avec le VPS.
 - **0.2.11** — Encart « Accord (tuner) » juste au-dessus du TX ; caché si le TRX n'a pas de boîte d'accord.
