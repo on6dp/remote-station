@@ -528,3 +528,13 @@ input[type='range']:disabled { opacity: .45; }
 
 /* éléments cachés (ex. TUNER/TUNE sans boîte d’accord) */
 .btn[hidden], .ctl[hidden] { display: none !important; }
+
+/* ------------------------------------------------------------ membres connectés (barre du haut) */
+.tb-users { position: relative; display: inline-flex; }
+.users-btn b { color: var(--v2-text-bright); margin-left: 2px; }
+.users-menu { left: 0; right: auto; min-width: 220px; }
+.users-menu .u { display: flex; justify-content: space-between; gap: 12px; padding: 5px 6px; border-radius: 4px; font-size: 12px; color: var(--v2-text-secondary); }
+.users-menu .u b { color: var(--v2-text-bright); }
+.users-menu .u.me b { color: var(--main); }
+.users-menu .u small { color: var(--v2-text-dim); font-size: 10px; }
+.users-menu .u.ctrl small { color: var(--v2-badge-amber-text); }

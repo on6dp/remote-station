@@ -267,6 +267,9 @@
       $('stepKeys').appendChild(b);
     }
     $('lampStation').addEventListener('click', (ev) => { ev.stopPropagation(); toggleRigMenu(); });
+    $('usersBtn').addEventListener('click', (ev) => { ev.stopPropagation(); closeRigMenu(); toggleUsersMenu(); });
+    $('usersMenu').addEventListener('click', (ev) => ev.stopPropagation());
+    document.addEventListener('click', () => { $('usersMenu').hidden = true; $('usersBtn').setAttribute('aria-expanded', 'false'); });
     $('rigMenu').addEventListener('click', (ev) => ev.stopPropagation());
     document.addEventListener('click', closeRigMenu);
     document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeRigMenu(); });
@@ -602,6 +605,38 @@
       : 'Le TRX choisi doit être branché au PC du club, et son port déjà choisi une fois sur la page Station.';
     box.appendChild(p);
   }
+  // Membres connectés : nombre dans la barre du haut, liste au clic
+  function drawUsersMenu() {
+    const box = $('usersMenu');
+    box.textContent = '';
+    const h = document.createElement('h3');
+    const list = (st && st.users) || [];
+    h.textContent = list.length + (list.length > 1 ? ' membres connectés' : ' membre connecté');
+    box.appendChild(h);
+    for (const call of list) {
+      const row = document.createElement('div');
+      const isCtrl = st.controller === call;
+      row.className = 'u' + (me && call === me.call ? ' me' : '') + (isCtrl ? ' ctrl' : '');
+      const b = document.createElement('b');
+      b.textContent = call;
+      const note = document.createElement('small');
+      const tx = st.ptt && st.ptt.active && st.ptt.by === call;
+      note.textContent = tx ? 'en émission' : isCtrl ? 'a la main' : me && call === me.call ? 'vous' : /^ONL/.test(call) ? 'écouteur' : '';
+      row.append(b, note);
+      box.appendChild(row);
+    }
+    if (st && st.audio && st.audio.listeners) {
+      const p = document.createElement('p');
+      p.textContent = '🔊 ' + st.audio.listeners + ' à l’écoute de la BF';
+      box.appendChild(p);
+    }
+  }
+  function toggleUsersMenu() {
+    const open = $('usersMenu').hidden;
+    if (open) drawUsersMenu();
+    $('usersMenu').hidden = !open;
+    $('usersBtn').setAttribute('aria-expanded', String(open));
+  }
   function closeRigMenu() {
     $('rigMenu').hidden = true;
     $('lampStation').setAttribute('aria-expanded', 'false');
@@ -627,6 +662,8 @@
         ? 'La page Station est en ligne mais le TRX ne répond pas : elle rouvre le port toute seule (radio éteinte ? câble USB ?)'
         : 'Station hors ligne : la page Station n’est pas ouverte au club';
       drawRigList();
+      $('usersCount').textContent = String((st.users || []).length);
+      if (!$('usersMenu').hidden) drawUsersMenu();
       $('lampStation').classList.toggle('admin', !!(me && me.admin));
       $('lampStation').title = me && me.admin ? 'Station — cliquer pour changer de TRX' : 'Station';
       if (!$('rigMenu').hidden) drawRigMenu();
