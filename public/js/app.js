@@ -881,7 +881,7 @@
   }
   function onAudio(data) {
     const bytes = new Uint8Array(data);
-    if (window.RSDIGI && RSDIGI.onBinary(bytes)) return; // ligne de cascade FT8/FT4
+    if (DG() && DG().onBinary(bytes)) return; // ligne de cascade FT8/FT4
     if (!player.on || !player.ctx) return;
     const pcm = ULAW.decodeFrame(bytes);
     if (!pcm) return;
@@ -1022,10 +1022,10 @@
       if (typeof e.data !== 'string') return onAudio(e.data);
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
-      if (window.RSDIGI && RSDIGI.onMessage(m)) return;
+      if (DG() && DG().onMessage(m)) return;
       if (m.t === 'hello') {
         me = m;
-        if (window.RSDIGI) RSDIGI.onHello(m, m);
+        if (DG()) DG().onHello(m, m);
         if (/^Liaison perdue/.test($('msg').textContent)) say('');
         $('login').hidden = true;
         $('meCall').textContent = m.call;
@@ -1063,7 +1063,7 @@
         for (const w of ['A', 'B']) if (pend[w] != null && (w === 'A' ? st.radio.freq : st.radio.freqB) === pend[w]) pend[w] = null;
         if (RIG().ID !== ctlModel) buildControls();
         render();
-        if (window.RSDIGI) RSDIGI.onState(st);
+        if (DG()) DG().onState(st);
       } else if (m.t === 'events') {
         $('events').textContent = '';
         (m.list || []).forEach((e) => addEvent(e, false)); // déjà du plus récent au plus ancien
@@ -1107,7 +1107,34 @@
   // ------------------------------------------------------------ démarrage
   buildStatic();
   initCollapsible();
-  if (window.RSDIGI) RSDIGI.init({ send, say, setFreq, iControl: () => iControl(), state: () => st, rig: () => RIG() });
+  // Modes numériques : au centre, ou dans une fenêtre séparée (digi.html) qui utilise cette connexion
+  const digiApi = { send, say, setFreq, iControl: () => iControl(), state: () => st, rig: () => RIG() };
+  const digiHost = { win: null, inst: null };
+  window.DG = function () {
+    if (digiHost.inst && digiHost.win && !digiHost.win.closed) return digiHost.inst;
+    if (digiHost.inst) releasePopup();
+    return window.RSDIGI || null;
+  };
+  function releasePopup() {
+    digiHost.inst = null;
+    digiHost.win = null;
+    if (window.RSDIGI) { window.RSDIGI.setDetached(false); if (me) window.RSDIGI.onHello(me, me); }
+  }
+  window.RSHOST = {
+    api: digiApi,
+    attach(win, inst, popupApi) {
+      if (digiHost.win && digiHost.win !== win && !digiHost.win.closed) { try { digiHost.win.close(); } catch (e) {} }
+      digiHost.win = win;
+      digiHost.inst = inst;
+      if (window.RSDIGI) window.RSDIGI.setDetached(true);
+      inst.init(popupApi || digiApi);
+      if (me) inst.onHello(me, me);
+      if (st) inst.onState(st);
+    },
+    detach(inst) { if (digiHost.inst === inst) releasePopup(); },
+    closePopup() { const w = digiHost.win; releasePopup(); if (w && !w.closed) try { w.close(); } catch (e) {} }
+  };
+  if (window.RSDIGI) window.RSDIGI.init(digiApi);
   buildControls();
   bindPtt();
   render();

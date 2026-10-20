@@ -108,7 +108,7 @@ const TYPES = {
   '.json': 'application/json; charset=utf-8',
   '.webmanifest': 'application/manifest+json'
 };
-const ROUTES = { '/': '/index.html', '/station': '/station.html' };
+const ROUTES = { '/': '/index.html', '/station': '/station.html', '/digi': '/digi.html' };
 
 function sendJson(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -171,9 +171,10 @@ function listeners() {
   for (const c of ops) if (c.listen) n++;
   return n;
 }
+function audioWanted() { return listeners() > 0 || digiModes().size > 0; }
 function updateAudioWant() {
   // La station envoie la BF s'il y a un membre à l'écoute ou une fenêtre de décodage ouverte
-  const want = listeners() > 0 || digiModes().size > 0;
+  const want = audioWanted();
   if (want !== audio.want) {
     audio.want = want;
     toStation({ t: 'audio_want', on: want });
@@ -568,10 +569,11 @@ function onOperator(conn, m) {
     case 'digi': {
       // Fenêtre de décodage ouverte (FT8 / FT4) ou fermée (null) par ce membre
       const mode = DIGI_MODES.indexOf(m.mode) >= 0 ? m.mode : null;
-      if (conn.digi === mode) return;
+      const changed = conn.digi !== mode;
       conn.digi = mode;
-      updateDigi();
-      if (mode) send(conn, { t: 'ftx_hist', mode, items: digi.hist[mode] });
+      if (changed) updateDigi();
+      // Historique : à l'ouverture, ou sur demande (fenêtre séparée qui s'ouvre, retour dans le dashboard)
+      if (mode && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.hist[mode] });
       return;
     }
 
@@ -704,7 +706,7 @@ function onOperator(conn, m) {
       return;
 
     case 'ping':
-      return send(conn, { t: 'pong', ts: m.ts });
+      return send(conn, { t: 'pong', ts: m.ts, now: Date.now() }); // now : horloge du serveur (onglet Synchro)
   }
 }
 
@@ -747,8 +749,9 @@ function onStationAuth(conn, m) {
   journal('station_online', { ip: conn.ip, model });
   send(conn, { t: 'welcome', stationCall: cfg.stationCall, txSilenceSeconds: cfg.txSilenceSeconds, txHardMaxSeconds: cfg.txHardMaxSeconds });
   audio.active = false;
-  send(conn, { t: 'audio_want', on: listeners() > 0 });
-  audio.want = listeners() > 0;
+  // BF voulue s'il y a un écouteur ou une fenêtre FT8/FT4 ouverte (même règle que updateAudioWant)
+  audio.want = audioWanted();
+  send(conn, { t: 'audio_want', on: audio.want });
   broadcast();
 }
 

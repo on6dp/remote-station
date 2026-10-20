@@ -1,8 +1,10 @@
 /*
- * digi.js — fenêtres du centre du dashboard : onglets Activité / FT8·FT4 / RTTY,
+ * digi.js — fenêtres des modes numériques : onglets Activité / FT8·FT4 / RTTY / WSPR / JT65 / Synchro,
  * et fenêtre FT8 / FT4 (cascade, activité de bande, fréquence RX).
  * Le décodage se fait sur le serveur ; cette page affiche les messages et la cascade qu'il envoie.
  * app.js appelle RSDIGI.init(api) au démarrage, puis onMessage / onBinary / onState / onHello.
+ * Fenêtre séparée (digi.html) : ce même fichier s'y accroche au dashboard qui l'a ouverte (window.opener.RSHOST)
+ * et utilise sa connexion ; le dashboard lui transmet les messages tant qu'elle est ouverte.
  */
 (function () {
   'use strict';
@@ -22,28 +24,129 @@
   const WF_MAX_HZ = 3000;
   const RX_WIDTH = 60; // Hz de part et d'autre de la fréquence RX
 
+  const POPUP = document.body.dataset.digiPopup === '1';
   let api = null;
-  let tab = store.get('tab', 'events');
+  let detached = false;  // dashboard : les modes numériques sont dans la fenêtre séparée
+  let needHist = true;   // demander l'historique des décodages à la prochaine annonce
+  let clockOff = 0;      // écart horloge du serveur − horloge de ce PC (ms)
+  let bestRtt = Infinity;
+  let tab = store.get(POPUP ? 'ptab' : 'tab', POPUP ? 'ftx' : 'events');
   let mode = store.get('mode', 'FT8') === 'FT4' ? 'FT4' : 'FT8';
   let rxF = Number(store.get('rxf', '1500')) || 1500;
   let lastDecode = 0;
   let lastBand = 0;
   let stationCalls = ['ON5VL', 'OR0L'];
 
+
+  // ------------------------------------------------------------------ construction des onglets et des fenêtres
+  // Même code pour le centre du dashboard et pour la fenêtre séparée (digi.html, sans l'onglet Activité).
+  const TABS = [
+    ['events', 'Activité'], ['ftx', 'FT8 · FT4'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['gap', ''], ['sync', 'Synchro']
+  ];
+  const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'sync'];
+  const SOON = {
+    rtty: '<b>RTTY</b> (45,45 bauds, shift 170 Hz) : texte reçu en continu, zone d’émission et macros (CQ, RST, 73…).',
+    wspr: '<b>WSPR</b> (périodes de 2 minutes, signaux très faibles) : liste des balises entendues avec indicatif, locator, puissance et distance.',
+    jt65: '<b>JT65</b> (périodes d’une minute) : décodage et QSO, comme dans WSJT-X.'
+  };
+  const FTX_PANE = `
+    <div class="dg-bar">
+      <div class="seg" id="dgModes">
+        <button class="btn" type="button" data-mode="FT8" aria-pressed="true">FT8</button>
+        <button class="btn" type="button" data-mode="FT4" aria-pressed="false">FT4</button>
+      </div>
+      <select id="dgDial" aria-label="Fréquence d'appel"></select>
+      <button class="btn" type="button" id="dgQsy" title="Met le VFO A sur la fréquence choisie, en DATA-U">QSY</button>
+      <span class="dg-clock" id="dgClock">--:--:--</span>
+      <span class="dg-status" id="dgStatus"></span>
+    </div>
+    <div class="dg-wf">
+      <canvas id="dgScale" height="22"></canvas>
+      <canvas id="dgWf" height="140"></canvas>
+    </div>
+    <div class="dg-cols">
+      <div class="dg-col">
+        <div class="dg-h"><span>Activité de bande</span><button class="dg-mini" type="button" id="dgClear">Effacer</button></div>
+        <div class="dg-th"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span></div>
+        <div class="dg-list" id="dgBand"></div>
+      </div>
+      <div class="dg-col">
+        <div class="dg-h"><span>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic sur la cascade ou sur une ligne</span></div>
+        <div class="dg-th"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span></div>
+        <div class="dg-list" id="dgRx"></div>
+      </div>
+    </div>
+    <p class="dg-tx">Émission FT8 / FT4 sous l'indicatif <b>ON5VL</b> : prochaine étape (messages Tx1 à Tx6, séquence automatique).</p>`;
+  const SYNC_PANE = `
+    <div class="sy-grid">
+      <div class="sy-box"><span>Heure du serveur (UTC)</span><b id="syVps">--:--:--</b><small>référence de tous les décodages</small></div>
+      <div class="sy-box"><span>Votre PC</span><b id="syPc">—</b><small id="syPcNote">écart avec le serveur</small></div>
+      <div class="sy-box"><span>Liaison station → serveur</span><b id="syLat">—</b><small>délai mesuré et corrigé automatiquement</small></div>
+      <div class="sy-box"><span>DT médian</span><b id="syDt">—</b><small id="syDtNote">derniers décodages FT8 / FT4</small></div>
+    </div>
+    <p class="sy-note">Le décodage se cale sur l'horloge du serveur (synchronisée par NTP) : l'heure du PC du club et celle de votre PC
+      n'interviennent pas. Le délai de la liaison est mesuré d'après les stations décodées ; un DT médian proche de 0,0 s montre que tout est calé.</p>`;
+
+  function buildDom() {
+    const bar = $('ctabs');
+    bar.textContent = '';
+    for (const [id, label] of TABS) {
+      if (id === 'events' && POPUP) continue;
+      if (id === 'gap') { const g = document.createElement('span'); g.className = 'ctab-gap'; bar.appendChild(g); continue; }
+      const b = document.createElement('button');
+      b.className = 'ctab';
+      b.type = 'button';
+      b.setAttribute('role', 'tab');
+      b.dataset.tab = id;
+      b.textContent = label;
+      bar.appendChild(b);
+    }
+    const det = document.createElement('button');
+    det.className = 'ctab-detach';
+    det.type = 'button';
+    det.id = 'dgDetach';
+    det.textContent = POPUP ? '⧉ Ramener dans le dashboard' : '⧉';
+    det.title = POPUP ? 'Fermer cette fenêtre et ramener les modes numériques dans le dashboard' : 'Ouvrir les modes numériques dans une fenêtre séparée';
+    bar.appendChild(det);
+    const panel = $('centerPanel');
+    const add = (id, cls, html) => {
+      const d = document.createElement('div');
+      d.className = 'ctab-pane ' + cls;
+      d.dataset.pane = id;
+      d.hidden = true;
+      d.innerHTML = html;
+      panel.appendChild(d);
+    };
+    add('ftx', 'dg', FTX_PANE);
+    for (const k in SOON) add(k, 'dg-soon', '<p>' + SOON[k] + '</p><p class="dg-note">En préparation.</p>');
+    add('sync', 'dg-sync', SYNC_PANE);
+    add('away', 'dg-soon', '<p>Les modes numériques sont ouverts dans une <b>fenêtre séparée</b>.</p><p><button class="btn" type="button" id="dgBack">Ramener ici</button></p>');
+  }
+
   // ------------------------------------------------------------------ onglets
   function showTab(t) {
+    if (!document.querySelector('#centerPanel .ctab[data-tab="' + t + '"]')) t = POPUP ? 'ftx' : 'events';
     tab = t;
-    store.set('tab', t);
+    store.set(POPUP ? 'ptab' : 'tab', t);
+    const pane = detached && MODE_TABS.indexOf(t) >= 0 ? 'away' : t;
     document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
-    document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== t; });
-    if (t === 'ftx') sizeCanvas();
+    document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== pane; });
+    if (pane === 'ftx') sizeCanvas();
+    if (pane === 'sync') drawSync();
     announce();
+  }
+  function setDetached(on) {
+    detached = !!on;
+    if (!on) needHist = true; // retour de la fenêtre séparée : on récupère ce qui a été décodé entre-temps
+    // Fenêtre séparée ouverte : le centre du dashboard revient sur l'activité de la station
+    showTab(on && !POPUP && MODE_TABS.indexOf(tab) >= 0 ? 'events' : tab);
   }
   // Le serveur ne décode (et la station n'envoie la BF) que si au moins un membre regarde la fenêtre
   function announce() {
-    if (!api) return;
+    if (!api || (detached && !POPUP)) return; // la fenêtre séparée annonce elle-même
     const watching = tab === 'ftx' && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
-    api.send({ t: 'digi', mode: watching ? mode : null });
+    api.send({ t: 'digi', mode: watching ? mode : null, hist: watching && needHist });
+    if (watching) needHist = false;
   }
 
   // ------------------------------------------------------------------ cascade
@@ -80,7 +183,7 @@
   })();
   let floor = null;
   function onRow(bytes) {
-    if (tab !== 'ftx' || !wf.ctx) return;
+    if (tab !== 'ftx' || detached || !wf.ctx) return;
     // bytes[0] = 0x10, puis une case de 6,25 Hz par octet (dB*2+240), depuis 0 Hz
     const n = Math.min(bytes.length - 1, Math.ceil(WF_MAX_HZ / 6.25));
     const vals = bytes.subarray(1, 1 + n);
@@ -259,18 +362,58 @@
     el.textContent = txt;
     el.classList.toggle('warn', warn);
   }
+  const now = () => Date.now() + clockOff; // heure du serveur
   function clock() {
-    const d = new Date();
+    const d = new Date(now());
     const L = mode === 'FT8' ? 15 : 7.5;
     const s = (d.getTime() / 1000) % L;
     $('dgClock').textContent = pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' UTC · ' + (L - s).toFixed(0).padStart(2, ' ') + ' s';
   }
 
+  // ------------------------------------------------------------------ synchro
+  function medianDt() {
+    const v = [];
+    for (let i = hist.length - 1; i >= 0 && v.length < 80; i--) for (const d of hist[i].list) if (Math.abs(d.dt) < 2.5) v.push(d.dt);
+    if (v.length < 3) return null;
+    v.sort((a, b) => a - b);
+    return { med: v[v.length >> 1], n: v.length };
+  }
+  function drawSync() {
+    if (tab !== 'sync' || detached) return;
+    const d = new Date(now());
+    $('syVps').textContent = pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds());
+    if (bestRtt < Infinity) {
+      const s = -clockOff / 1000; // positif : ce PC est en avance
+      $('syPc').textContent = (Math.abs(s) < 0.05 ? '0,0' : (s > 0 ? '+' : '−') + Math.abs(s).toFixed(1).replace('.', ',')) + ' s';
+      $('syPc').className = Math.abs(s) < 1 ? 'ok' : 'warn';
+      $('syPcNote').textContent = Math.abs(s) < 1 ? 'à l’heure (aucune incidence sur le décodage)' : (s > 0 ? 'en avance' : 'en retard') + ' sur le serveur (aucune incidence sur le décodage)';
+    }
+    const st = api && api.state();
+    const lat = st && st.digi && st.digi.latency;
+    $('syLat').textContent = lat != null ? lat + ' ms' : '—';
+    const m = medianDt();
+    $('syDt').textContent = m ? (m.med >= 0 ? '+' : '−') + Math.abs(m.med).toFixed(1).replace('.', ',') + ' s' : '—';
+    $('syDt').className = m ? (Math.abs(m.med) <= 0.3 ? 'ok' : 'warn') : '';
+    $('syDtNote').textContent = m ? m.n + ' messages récents' + (Math.abs(m.med) > 0.3 ? ' · recalage en cours' : ' · calé') : 'en attente de décodages FT8 / FT4';
+  }
+
   // ------------------------------------------------------------------ interface avec app.js
   window.RSDIGI = {
+    setDetached,
+    isPopup: POPUP,
     init(a) {
+      const again = !!api;
       api = a;
+      if (again) { announce(); return; } // fenêtre séparée raccrochée à un dashboard rechargé
+      buildDom();
       document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); showTab(b.dataset.tab); }));
+      $('dgDetach').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (POPUP) return window.close();
+        const w = window.open('/digi.html', 'rs-digi', 'width=1200,height=860');
+        if (!w) api.say('Fenêtre bloquée par Chrome : autorisez les fenêtres pop-up pour ce site.', 'warn');
+      });
+      $('dgBack').addEventListener('click', () => { if (window.RSHOST) window.RSHOST.closePopup(); });
       document.querySelectorAll('#dgModes .btn').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
       $('dgQsy').addEventListener('click', qsy);
       $('dgDial').addEventListener('change', () => store.set('dial.' + mode, $('dgDial').value));
@@ -287,14 +430,28 @@
       window.addEventListener('resize', () => { if (tab === 'ftx') sizeCanvas(); });
       fillDial();
       setMode(mode);
-      showTab(tab === 'ftx' || tab === 'rtty' ? tab : 'events');
-      setInterval(() => { if (tab === 'ftx') { clock(); status(); } }, 500);
+      showTab(tab);
+      setInterval(() => {
+        if (detached) return;
+        if (tab === 'ftx') { clock(); status(); followBand(); }
+        if (tab === 'sync') drawSync();
+      }, 500);
     },
     onHello(me, info) {
+      needHist = true;
       if (info && info.stationCall) stationCalls = String(info.stationCall).toUpperCase().split(/[\s/,]+/).filter(Boolean);
       announce(); // reprise après reconnexion
     },
     onMessage(m) {
+      if (m.t === 'pong' && Number.isFinite(m.now) && Number.isFinite(m.ts)) {
+        // Écart d'horloge avec le serveur, d'après l'aller-retour le plus court
+        const rtt = Date.now() - m.ts;
+        if (rtt >= 0 && rtt <= bestRtt * 1.5 + 20) {
+          bestRtt = Math.min(bestRtt, rtt);
+          clockOff = m.now - (m.ts + rtt / 2);
+        }
+        return false;
+      }
       if (m.t === 'ftx_hist') {
         // Historique à l'ouverture : on remplace ce qu'on a pour ce mode
         for (let i = hist.length - 1; i >= 0; i--) if (hist[i].mode === m.mode) hist.splice(i, 1);
@@ -317,13 +474,42 @@
       if (bytes[0] === 0x10) { onRow(bytes); return true; }
       return false;
     },
-    onState(st) {
-      if (tab !== 'ftx') return;
-      status();
-      // Le TRX a changé de bande : la liste des fréquences d'appel suit
+    onState() { if (tab === 'ftx') { status(); followBand(); } }
+  };
+  // Le TRX a changé de bande : la liste des fréquences d'appel suit (vérifié aussi chaque demi-seconde)
+  function followBand() {
+      const st = api && api.state();
       const f = st && st.radio && st.radio.freq;
+      if (!f) return;
       const band = f ? DIAL[mode].reduce((a, x) => (Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a))[1] : 0;
       if (band !== lastBand) { lastBand = band; fillDial(); }
-    }
-  };
+  }
+
+  // ------------------------------------------------------------------ fenêtre séparée (digi.html)
+  if (POPUP) {
+    let host = null;
+    const toast = (msg, level) => {
+      const el = $('dgToast');
+      el.textContent = msg || '';
+      el.className = 'dg-toast ' + (level || '');
+      clearTimeout(toast.t);
+      if (msg) toast.t = setTimeout(() => { el.textContent = ''; }, 6000);
+    };
+    const link = () => {
+      const op = window.opener;
+      const h = op && !op.closed && op.RSHOST;
+      if (h && h !== host) {
+        host = h;
+        // Même connexion que le dashboard ; les messages d'alerte s'affichent dans cette fenêtre
+        h.attach(window, window.RSDIGI, Object.assign({}, h.api, { say: toast }));
+        $('dgOrphan').hidden = true;
+      } else if (!h) {
+        host = null;
+        $('dgOrphan').hidden = false;
+      }
+    };
+    window.addEventListener('pagehide', () => { if (host) try { host.detach(window.RSDIGI); } catch (e) {} });
+    link();
+    setInterval(link, 1000); // dashboard rechargé : on s'y raccroche ; fermé : avertissement
+  }
 })();
