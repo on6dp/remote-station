@@ -2,6 +2,7 @@
 
 ## v0.2 — écoute de la BF, robustesse, protection du PA
 
+- **0.2.13** — Une page Station rechargée (Ctrl+F5) sur le PC du club reprend toujours sa place tout de suite (elle était parfois refusée 30 s : fréquence sur la page Station mais pas sur le dashboard).
 - **0.2.12** — Chien de garde d'émission dans la page Station : retour en réception si le TRX émet 2 min sans modulation ou 5 min sans interruption (PTT ou micro bloqué), même sans liaison avec le VPS.
 - **0.2.11** — Encart « Accord (tuner) » juste au-dessus du TX ; caché si le TRX n'a pas de boîte d'accord.
 - **0.2.10** — Fenêtre de connexion : « L'utilisation de la REMOTE STATION nécessite Google CHROME ou Microsoft EDGE », avertissement si un autre navigateur est détecté.

@@ -596,7 +596,10 @@ function onStationAuth(conn, m) {
     // ne peut pas la déloger, sinon une page sans radio pourrait prendre la place de celle qui a le TRX.
     const alive = station.conn.open && Date.now() - (station.lastMsg || 0) < 10000;
     const samePage = typeof m.page === 'string' && m.page && station.page === m.page;
-    if (alive && radio.connected && !samePage) {
+    // Même adresse IP = même PC du club (page rechargée avec Ctrl+F5, reconnexion…) : il reprend toujours la place.
+    // Le refus ne vise qu'une page Station ouverte ailleurs pendant que celle qui a le TRX tourne.
+    const sameSite = station.ip === conn.ip;
+    if (alive && radio.connected && !samePage && !sameSite) {
       journal('station_refused', { ip: conn.ip, reason: 'déjà en service' });
       send(conn, { t: 'error', msg: 'Une autre page Station, avec le TRX connecté, est déjà en service. Fermez l’une des deux.' });
       return setTimeout(() => conn.close(4004, 'station déjà en service'), 300);

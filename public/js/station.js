@@ -154,9 +154,9 @@
       }
       if (e.code === 4004) {
         // Une autre page Station a déjà le TRX : on réessaie seulement de temps en temps (si elle disparaît, on prend le relais)
-        $('tVps').textContent = 'Une autre page Station (avec le TRX) est déjà en service : nouvel essai dans 30 s';
-        log('Refusée : une autre page Station, avec le TRX connecté, est déjà en service', 'st-warn');
-        wsTimer = setTimeout(connectWs, 30000);
+        $('tVps').textContent = 'Une autre page Station (avec le TRX) est déjà en service ailleurs : nouvel essai dans 15 s';
+        log('Refusée : une autre page Station, avec le TRX connecté, est déjà en service sur un autre PC', 'st-warn');
+        wsTimer = setTimeout(connectWs, 15000);
         return;
       }
       if (e.code === 4002) {
