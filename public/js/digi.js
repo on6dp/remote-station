@@ -33,6 +33,8 @@
   let tab = store.get(POPUP ? 'ptab' : 'tab', POPUP ? 'ftx' : 'events');
   let mode = store.get('mode', 'FT8') === 'FT4' ? 'FT4' : 'FT8';
   let rxF = Number(store.get('rxf', '1500')) || 1500;
+  let txF = Number(store.get('txf', '1500')) || 1500; // fréquence audio d'émission (split : différente de RX)
+  const SCALE_H = 30;
   let lastDecode = 0;
   let lastBand = 0;
   let stationCalls = ['ON5VL', 'OR0L'];
@@ -57,12 +59,19 @@
       </div>
       <select id="dgDial" aria-label="Fréquence d'appel"></select>
       <button class="btn" type="button" id="dgQsy" title="Met le VFO A sur la fréquence choisie, en DATA-U">QSY</button>
+      <span class="dg-split">
+        <span class="dg-f rx">RX <b id="dgRxF2">1500</b> Hz</span>
+        <button class="btn" type="button" id="dgTxRx" title="Émettre sur la fréquence de réception">TX ← RX</button>
+        <button class="btn" type="button" id="dgRxTx" title="Recevoir sur la fréquence d'émission">RX ← TX</button>
+        <span class="dg-f tx">TX <b id="dgTxF">1500</b> Hz</span>
+      </span>
       <span class="dg-clock" id="dgClock">--:--:--</span>
       <span class="dg-status" id="dgStatus"></span>
     </div>
     <div class="dg-wf">
-      <canvas id="dgScale" height="22"></canvas>
+      <canvas id="dgScale" height="30"></canvas>
       <canvas id="dgWf" height="140"></canvas>
+      <i class="dg-mk dg-mk-tx" id="dgMkTx"></i><i class="dg-mk dg-mk-rx" id="dgMkRx"></i>
     </div>
     <div class="dg-cols">
       <div class="dg-col">
@@ -71,7 +80,7 @@
         <div class="dg-list" id="dgBand"></div>
       </div>
       <div class="dg-col">
-        <div class="dg-h"><span>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic sur la cascade ou sur une ligne</span></div>
+        <div class="dg-h"><span>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX</span></div>
         <div class="dg-th"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span></div>
         <div class="dg-list" id="dgRx"></div>
       </div>
@@ -211,9 +220,10 @@
     const c = wf.sctx;
     if (!c) return;
     const w = wf.w;
-    c.clearRect(0, 0, w, 22);
+    const H = SCALE_H;
+    c.clearRect(0, 0, w, H);
     c.fillStyle = '#0b1018';
-    c.fillRect(0, 0, w, 22);
+    c.fillRect(0, 0, w, H);
     c.font = '10px "Roboto Mono", monospace';
     c.textBaseline = 'top';
     for (let f = 0; f <= WF_MAX_HZ; f += 100) {
@@ -221,23 +231,38 @@
       const big = f % 500 === 0;
       c.strokeStyle = big ? '#5a6878' : '#2b3644';
       c.beginPath();
-      c.moveTo(x, big ? 12 : 16);
-      c.lineTo(x, 22);
+      c.moveTo(x, big ? 12 : 17);
+      c.lineTo(x, H);
       c.stroke();
       if (big && f > 0 && f < WF_MAX_HZ) {
         c.fillStyle = '#8b98a8';
         c.fillText(String(f), x - c.measureText(String(f)).width / 2, 1);
       }
     }
-    // Fréquence RX (vert) : largeur d'un signal FT8 (50 Hz) / FT4 (83 Hz)
+    // Largeur d'un signal FT8 (50 Hz) / FT4 (83 Hz) : TX en rouge (haut), RX en vert (bas)
     const bw = mode === 'FT4' ? 83 : 50;
-    const x0 = (rxF / WF_MAX_HZ) * w;
-    const x1 = ((rxF + bw) / WF_MAX_HZ) * w;
-    c.fillStyle = 'rgba(0, 204, 102, .35)';
-    c.fillRect(x0, 12, Math.max(2, x1 - x0), 10);
-    c.fillStyle = '#4ED37B';
-    c.fillRect(x0, 10, 2, 12);
+    const mark = (f, y, h, fill, edge) => {
+      const x0 = (f / WF_MAX_HZ) * w;
+      const x1 = ((f + bw) / WF_MAX_HZ) * w;
+      c.fillStyle = fill;
+      c.fillRect(x0, y, Math.max(2, x1 - x0), h);
+      c.fillStyle = edge;
+      c.fillRect(x0, y, 2, h);
+    };
+    mark(txF, 12, 8, 'rgba(255, 32, 32, .45)', '#ff5a4a');
+    mark(rxF, 21, 9, 'rgba(0, 204, 102, .45)', '#4ED37B');
+    // Repères sur la cascade
+    const pos = (el, f) => { el.style.left = (f / WF_MAX_HZ) * 100 + '%'; el.style.width = (bw / WF_MAX_HZ) * 100 + '%'; };
+    pos($('dgMkRx'), rxF);
+    pos($('dgMkTx'), txF);
     $('dgRxF').textContent = Math.round(rxF) + ' Hz';
+    $('dgRxF2').textContent = Math.round(rxF);
+    $('dgTxF').textContent = Math.round(txF);
+  }
+  function setTx(f) {
+    txF = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(f)));
+    store.set('txf', txF);
+    drawScale();
   }
   function setRx(f) {
     rxF = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(f)));
@@ -260,7 +285,7 @@
   function rowEl(slot, d) {
     const r = document.createElement('div');
     r.className = 'dg-row ' + cls(d.msg);
-    r.title = 'Clic : fréquence RX sur ' + d.f + ' Hz';
+    r.title = d.f + ' Hz · clic gauche : réception ici · clic droit : émission ici';
     const cells = [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
     for (const v of cells) {
       const s = document.createElement('span');
@@ -268,6 +293,7 @@
       r.appendChild(s);
     }
     r.addEventListener('click', () => setRx(d.f));
+    r.addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(d.f); });
     return r;
   }
   function sepEl(slot, m) {
@@ -418,12 +444,14 @@
       $('dgQsy').addEventListener('click', qsy);
       $('dgDial').addEventListener('change', () => store.set('dial.' + mode, $('dgDial').value));
       $('dgClear').addEventListener('click', () => { hist.length = 0; redrawAll(); });
-      const pick = (e) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        setRx(((e.clientX - r.left) / r.width) * WF_MAX_HZ);
-      };
-      $('dgWf').addEventListener('click', pick);
-      $('dgScale').addEventListener('click', pick);
+      // Split : clic gauche = fréquence de réception, clic droit = fréquence d'émission
+      const fAt = (e) => { const r = e.currentTarget.getBoundingClientRect(); return ((e.clientX - r.left) / r.width) * WF_MAX_HZ; };
+      for (const id of ['dgWf', 'dgScale']) {
+        $(id).addEventListener('click', (e) => setRx(fAt(e)));
+        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(fAt(e)); });
+      }
+      $('dgTxRx').addEventListener('click', () => setTx(rxF));
+      $('dgRxTx').addEventListener('click', () => setRx(txF));
       // Repli du panneau ou onglet du navigateur caché : le serveur arrête de décoder pour ce membre
       new MutationObserver(announce).observe($('centerPanel'), { attributes: true, attributeFilter: ['class'] });
       document.addEventListener('visibilitychange', announce);
