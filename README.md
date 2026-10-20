@@ -11,9 +11,9 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.2.16** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.2.17** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
-**Télécharger un paquet prêt à installer** : onglet **Releases** (ou **Tags**) du dépôt → version voulue → `Source code (tar.gz)`. Le paquet s'installe avec la procédure « Mettre à jour le serveur » ci-dessous (le dossier extrait s'appelle alors `remote-station-0.2.16` : le renommer en `remote-station`, ou utiliser l'archive `remote-station-X.Y.Z.tar.gz` fournie avec la version).
+**Télécharger un paquet prêt à installer** : onglet **Releases** (ou **Tags**) du dépôt → version voulue → `Source code (tar.gz)`. Le paquet s'installe avec la procédure « Mettre à jour le serveur » ci-dessous (le dossier extrait s'appelle alors `remote-station-0.2.17` : le renommer en `remote-station`, ou utiliser l'archive `remote-station-X.Y.Z.tar.gz` fournie avec la version).
 
 Le guide complet est dans [LISEZMOI.md](LISEZMOI.md). Ci-dessous, l'aide-mémoire des opérations courantes.
 
@@ -206,7 +206,7 @@ Automatique : main libérée après 15 min sans action, déconnexion après 15 m
 | Dashboard figé ou « Station hors ligne » alors que la page Station dit « Connecté » | Coupure réseau silencieuse (ex. Starlink qui change d'adresse IP). Depuis la v0.2.3, la page Station le détecte en 15 s et se reconnecte seule ; sinon « Enregistrer et reconnecter ». |
 | « Station hors ligne (page Station fermée ou quittée) » | L'onglet de la page Station a servi à ouvrir autre chose (souvent le dashboard). Sur le PC du club, garder la page Station **seule dans sa fenêtre** et ouvrir le dashboard par son bouton « Ouvrir le dashboard dans une autre fenêtre ». |
 | La page Station signale « mise en pause » ou « déchargée par Chrome » | Chrome économise l'énergie ou la mémoire sur les onglets en arrière-plan. Sur le PC du club : Chrome → **Paramètres → Performances** → **Économiseur de mémoire** → « Toujours garder ces sites actifs » → **Ajouter** `remote.op0p.be` ; désactiver l'**Économiseur d'énergie** ; Windows : mise en veille sur **Jamais**. Le journal du serveur indique la cause (`station_diag`). |
-| Il faut retaper le mot de passe à chaque actualisation | Corrigé en v0.2.16 : le navigateur reste connecté 7 jours (`rememberDays`). « Déconnexion » l'oublie ; à faire sur un PC partagé. |
+| Il faut retaper le mot de passe à chaque actualisation | Corrigé en v0.2.17 : le navigateur reste connecté 7 jours (`rememberDays`). « Déconnexion » l'oublie ; à faire sur un PC partagé. |
 | Page Station : « Remplacée par une autre page Station » | Une autre page Station est ouverte ailleurs : la fermer, puis « Enregistrer et reconnecter ». |
 | Page Station : « Une autre page Station est déjà ouverte dans ce navigateur » | Deux onglets /station : fermer celui en trop (l'autre prend le relais tout seul). |
 | Page Station : « …avec le TRX, est déjà en service » | Une page Station avec le TRX tourne déjà sur un autre PC : la fermer si c'est celle-ci qui doit servir. |

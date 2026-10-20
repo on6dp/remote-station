@@ -162,7 +162,16 @@ button, input, select { font: inherit; color: inherit; }
   color: var(--v2-text-header);
   border-bottom: 1px solid var(--v2-border-dark);
 }
-.panel-h::before { content: '▾'; color: var(--v2-text-dim); margin-right: 6px; }
+.panel-h::before { content: '▾'; display: inline-block; width: 10px; color: var(--v2-text-dim); margin-right: 6px; transition: transform .15s; }
+/* Panneaux repliables : clic sur le titre */
+.panel > .panel-h { cursor: pointer; user-select: none; }
+.panel > .panel-h:hover { color: var(--v2-text-bright); }
+.panel > .panel-h:hover::before { color: var(--v2-accent-cyan-bright); }
+.panel > .panel-h:focus-visible { outline: 1px solid var(--v2-accent-cyan); outline-offset: -2px; }
+.panel.collapsed > .panel-h { border-bottom-color: transparent; }
+.panel.collapsed > .panel-h::before { transform: rotate(-90deg); }
+.panel.collapsed > :not(.panel-h) { display: none !important; }
+.panel.activity.collapsed { align-self: start; }
 .panel-b { padding: 10px 12px 12px; display: grid; gap: 10px; }
 .panel-b > div:empty { display: none; }
 .sub-h { font-size: 10px; color: var(--v2-text-dim); }

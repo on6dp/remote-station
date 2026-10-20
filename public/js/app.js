@@ -958,6 +958,30 @@
     if (!ask.hidden) ask.textContent = 'Demander la main à ' + st.controller;
   }
 
+  // ------------------------------------------------------------ panneaux repliables
+  // Clic (ou Entrée / Espace) sur le titre d'un panneau : il se replie ou se déplie ; l'état est mémorisé.
+  function initCollapsible() {
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('rs.collapsed') || '{}') || {}; } catch (e) { saved = {}; }
+    document.querySelectorAll('.panel > .panel-h').forEach((h) => {
+      const panel = h.parentElement;
+      const key = h.textContent.trim();
+      h.setAttribute('role', 'button');
+      h.tabIndex = 0;
+      const apply = (c) => { panel.classList.toggle('collapsed', c); h.setAttribute('aria-expanded', String(!c)); };
+      apply(!!saved[key]);
+      const toggle = () => {
+        const c = !panel.classList.contains('collapsed');
+        apply(c);
+        if (c) saved[key] = 1; else delete saved[key];
+        try { localStorage.setItem('rs.collapsed', JSON.stringify(saved)); } catch (e) {}
+      };
+      h.addEventListener('click', toggle);
+      // Entrée seulement : la barre d'espace reste le PTT, même quand un titre a le focus
+      h.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); toggle(); } });
+    });
+  }
+
   // ------------------------------------------------------------ connexion
   function forgetSession() {
     try { localStorage.removeItem('rs.sess'); } catch (e) {}
@@ -1077,6 +1101,7 @@
 
   // ------------------------------------------------------------ démarrage
   buildStatic();
+  initCollapsible();
   buildControls();
   bindPtt();
   render();
