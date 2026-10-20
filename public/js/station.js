@@ -433,7 +433,8 @@
     }
     const saved = store.get('audio.label', '');
     const pick = devs.find((d) => d.deviceId === selectId) || devs.find((d) => saved && d.label === saved)
-      || devs.find((d) => /usb audio codec|codec|yaesu|ftx|ftdx|ic-?7300|icom/i.test(d.label));
+      // Carte son USB du TRX : « USB Audio CODEC » (Icom, FTDX10), « USB Audio Device » (FTX-1)… jamais « Mixage stéréo »
+      || devs.find((d) => /usb audio|codec|yaesu|ftx|ftdx|ic-?7300|icom/i.test(d.label) && !/mixage|stereo mix/i.test(d.label));
     if (pick) sel.value = pick.deviceId;
     return devs;
   }
