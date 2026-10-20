@@ -553,7 +553,7 @@
   }
   function ftxMsgs() {
     const c = dx.call || '{CORRESP}';
-    const g = myGrid || '{LOCATOR}';
+    const g = myGrid ? myGrid.slice(0, 4) : '{LOCATOR}'; // FT8 / FT4 : locator à 4 caractères
     const r = /^[+-]?\d{1,2}$/.test(dx.rpt) ? (dx.rpt[0] === '+' || dx.rpt[0] === '-' ? dx.rpt : '+' + dx.rpt) : '-10';
     return [c + ' ' + myCall + ' ' + g, c + ' ' + myCall + ' ' + r, c + ' ' + myCall + ' R' + r, c + ' ' + myCall + ' RR73', c + ' ' + myCall + ' 73', 'CQ ' + myCall + ' ' + g];
   }
