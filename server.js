@@ -201,7 +201,19 @@ function relayAudio(buf) {
 // ---------------------------------------------------------------- modes numériques (FT8 / FT4)
 // Le décodage tourne dans un Worker (lib/digi-worker.js) dès qu'un membre ouvre la fenêtre FT8/FT4.
 const digi = { worker: null, hist: { FT8: [], FT4: [] }, latency: null, ms: 0, last: 0 };
-const DIGI_MODES = ['FT8', 'FT4'];
+const DIGI_MODES = ['FT8', 'FT4', 'RTTY'];
+// Réglages RTTY d'un membre (chacun peut suivre un signal différent) → clé du démodulateur
+function rttyCfg(r) {
+  if (!r || typeof r !== 'object') return null;
+  const f = Math.round(Number(r.f));
+  const shift = [170, 200, 425, 850].indexOf(Number(r.shift)) >= 0 ? Number(r.shift) : 170;
+  const baud = [45.45, 50, 75, 100].indexOf(Number(r.baud)) >= 0 ? Number(r.baud) : 45.45;
+  const squelch = Math.max(4, Math.min(25, Math.round(Number(r.squelch) || 12)));
+  if (!(f >= 200 && f <= 2900)) return null;
+  const c = { f, shift, baud, rev: !!r.rev, squelch };
+  c.key = [f, shift, baud, c.rev ? 1 : 0, squelch].join('/');
+  return c;
+}
 function digiModes() {
   const s = new Set();
   for (const c of ops) if (c.digi) s.add(c.digi);
@@ -223,7 +235,12 @@ function startDigi() {
 function updateDigi() {
   const modes = digiModes();
   if (modes.size) startDigi();
-  if (digi.worker) digi.worker.postMessage({ t: 'modes', modes: Array.from(modes) });
+  if (digi.worker) {
+    digi.worker.postMessage({ t: 'modes', modes: Array.from(modes) });
+    const cfgs = {};
+    for (const c of ops) if (c.digi === 'RTTY' && c.rtty) cfgs[c.rtty.key] = c.rtty;
+    digi.worker.postMessage({ t: 'rtty', cfgs: Object.values(cfgs) });
+  }
   updateAudioWant();
 }
 function onDigi(m) {
@@ -233,6 +250,11 @@ function onDigi(m) {
     fr[0] = 0x10;
     Buffer.from(m.row.buffer, m.row.byteOffset, m.row.length).copy(fr, 1);
     for (const c of ops) if (c.digi && c.backlog < 65536) c.send(fr);
+    return;
+  }
+  if (m.t === 'rtty_text' || m.t === 'rtty_lvl') {
+    const msg = JSON.stringify(m.t === 'rtty_text' ? { t: 'rtty', text: m.text } : { t: 'rtty_lvl', m: m.m, s: m.s, c: m.c });
+    for (const c of ops) if (c.digi === 'RTTY' && c.rtty && c.rtty.key === m.key) c.send(msg);
     return;
   }
   if (m.t === 'decodes') {
@@ -568,12 +590,15 @@ function onOperator(conn, m) {
 
     case 'digi': {
       // Fenêtre de décodage ouverte (FT8 / FT4) ou fermée (null) par ce membre
-      const mode = DIGI_MODES.indexOf(m.mode) >= 0 ? m.mode : null;
-      const changed = conn.digi !== mode;
+      let mode = DIGI_MODES.indexOf(m.mode) >= 0 ? m.mode : null;
+      const rc = mode === 'RTTY' ? rttyCfg(m.rtty) : null;
+      if (mode === 'RTTY' && !rc) mode = null;
+      const changed = conn.digi !== mode || (conn.rtty && conn.rtty.key) !== (rc && rc.key);
       conn.digi = mode;
+      conn.rtty = rc;
       if (changed) updateDigi();
       // Historique : à l'ouverture, ou sur demande (fenêtre séparée qui s'ouvre, retour dans le dashboard)
-      if (mode && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.hist[mode] });
+      if (digi.hist[mode] && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.hist[mode] });
       return;
     }
 

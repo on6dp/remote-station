@@ -1,5 +1,9 @@
 # Journal des versions — Remote Station UBA-LGE (ON5VL / OR0L)
 
+## v0.4 — RTTY
+
+- **0.4.0** — Fenêtre **RTTY** : démodulateur AFSK sur le serveur (Baudot ITA2, shift 170/200/425/850 Hz, 45,45 à 100 bauds, inversé, silencieux réglable), un réglage par membre ; clic sur la cascade pour se caler (repères Mark jaune / Space bleu), indicateur d'accord, texte reçu en continu ; zone d'émission avec correspondant et macros (CQ, Appel, Report, Contest, 73, QRZ?). L'émission RTTY arrive avec l'émission des modes numériques.
+
 ## v0.3 — modes numériques
 
 - **0.3.3** — Clic sur FT8 ou FT4 : le TRX va sur la fréquence d'appel de ce mode dans sa bande, en DATA-U (il faut avoir la main), comme dans WSJT-X. Bande sans fréquence d'appel pour ce mode (ex. FT4 sur 70 cm) : « Pas de fréquence FT4 sur cette bande » au lieu de 80 m.
