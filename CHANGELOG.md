@@ -2,6 +2,7 @@
 
 ## v0.3 — modes numériques
 
+- **0.3.3** — Clic sur FT8 ou FT4 : le TRX va sur la fréquence d'appel de ce mode dans sa bande, en DATA-U (il faut avoir la main), comme dans WSJT-X. Bande sans fréquence d'appel pour ce mode (ex. FT4 sur 70 cm) : « Pas de fréquence FT4 sur cette bande » au lieu de 80 m.
 - **0.3.2** — FT8 / FT4 en **split** : clic gauche sur la cascade (ou sur une ligne) = fréquence de réception (repère vert), clic droit = fréquence d'émission (repère rouge) ; boutons « TX ← RX » et « RX ← TX ».
 - **0.3.1** — Onglets RTTY, WSPR, JT65 (en préparation) et **Synchro** (heure du serveur, écart de votre PC, délai de la liaison station, DT médian). Bouton ⧉ : les modes numériques s'ouvrent dans une **fenêtre séparée** qui utilise la connexion du dashboard (« Ramener dans le dashboard » pour revenir). La liste des fréquences d'appel suit la bande du TRX. Correction : une page Station rechargée pendant qu'une fenêtre FT8/FT4 était ouverte (sans écouteur) n'envoyait plus la BF (cascade figée).
 - **0.3.0** — Onglets au centre du dashboard : Activité, **FT8 · FT4**, RTTY. Fenêtre FT8/FT4 : cascade, activité de bande, fréquence RX, fréquences d'appel et QSY. Décodage sur le VPS (ft8_lib en WebAssembly, dans un fil séparé), à l'heure du VPS, avec recalage automatique du délai. La page Station envoie la BF en 12 kHz / 16 bits quand quelqu'un écoute ou regarde la fenêtre. RTTY et émission FT8/FT4 : prochaines versions.

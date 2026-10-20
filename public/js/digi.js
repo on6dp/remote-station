@@ -383,6 +383,15 @@
     const mk = (R.MODE_KEYS || []).find((x) => /^(DATA-U|USB-D|D-U|USB-DATA)$/i.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
     if (mk) setTimeout(() => api.send({ t: 'set', mode: mk[0], sub: false }), 250);
   }
+  function autoQsy() {
+    const st = api && api.state();
+    const f = st && st.radio && st.radio.freq;
+    const khz = Number($('dgDial').value);
+    if (!f || !khz) return api.say('Pas de fréquence ' + mode + ' sur cette bande : choisissez une bande dans la liste puis QSY.', 'warn');
+    if (Math.abs(f - khz * 1000) < 50 && st.radio.mode && /DATA|-D/i.test(st.radio.mode)) return; // déjà dessus
+    if (!api.iControl()) return api.say('Prenez la main pour aller sur ' + khz.toLocaleString('fr-BE') + ' kHz (' + mode + ').', 'warn');
+    qsy();
+  }
   function status() {
     if (!api || tab !== 'ftx') return;
     const st = api.state();
@@ -449,7 +458,8 @@
         if (!w) api.say('Fenêtre bloquée par Chrome : autorisez les fenêtres pop-up pour ce site.', 'warn');
       });
       $('dgBack').addEventListener('click', () => { if (window.RSHOST) window.RSHOST.closePopup(); });
-      document.querySelectorAll('#dgModes .btn').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+      // Clic sur FT8 / FT4 : comme dans WSJT-X, le TRX va sur la fréquence d'appel de ce mode dans sa bande
+      document.querySelectorAll('#dgModes .btn').forEach((b) => b.addEventListener('click', () => { setMode(b.dataset.mode); autoQsy(); }));
       $('dgQsy').addEventListener('click', qsy);
       $('dgDial').addEventListener('change', () => store.set('dial.' + mode, $('dgDial').value));
       $('dgClear').addEventListener('click', () => { hist.length = 0; redrawAll(); });
