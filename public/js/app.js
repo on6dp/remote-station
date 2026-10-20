@@ -1078,6 +1078,14 @@
     }
     lt.append(document.createTextNode(i.clubName));
   }).catch(() => {});
+  // Navigateur : Chrome ou Edge exigés (détection simple ; Brave, Opera… se présentent comme Chrome)
+  (() => {
+    const ua = navigator.userAgent;
+    const brands = (navigator.userAgentData && navigator.userAgentData.brands || []).map((b) => b.brand).join(' ');
+    const ok = /Google Chrome|Microsoft Edge/.test(brands) || (/Chromium/.test(brands) && !/Brave|Opera|Vivaldi|Yandex|Samsung/.test(brands)) || (!navigator.userAgentData && /Edg\//.test(ua)) ||
+      (/Chrome\//.test(ua) && !/OPR\/|Brave|SamsungBrowser|Firefox|FxiOS/.test(ua) && !!window.chrome) || /CriOS|EdgiOS/.test(ua);
+    $('browserBad').hidden = ok;
+  })();
   showLogin('');
   setInterval(() => { if (st && st.ptt && st.ptt.active) render(); }, 500);
 })();

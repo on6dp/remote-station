@@ -538,3 +538,9 @@ input[type='range']:disabled { opacity: .45; }
 .users-menu .u.me b { color: var(--main); }
 .users-menu .u small { color: var(--v2-text-dim); font-size: 10px; }
 .users-menu .u.ctrl small { color: var(--v2-badge-amber-text); }
+
+/* ------------------------------------------------------------ navigateur requis (fenêtre de connexion) */
+.login p.browser-req { padding: 8px 10px; border: 1px solid var(--v2-badge-amber-border); border-radius: 4px; background: var(--v2-badge-amber-bg); color: var(--v2-badge-amber-text); font-size: 12px; }
+.login p.browser-req b, .login p.browser-bad b { font-weight: 700; }
+.login p.browser-bad { padding: 8px 10px; border: 1px solid var(--v2-accent-red-alt); border-radius: 4px; color: var(--v2-accent-red-alt); font-size: 12px; }
+.login p.browser-bad[hidden] { display: none; }

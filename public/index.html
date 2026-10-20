@@ -207,6 +207,8 @@
   <form id="loginForm" autocomplete="on">
     <h1 id="loginTitle">Remote Station</h1>
     <p>Connectez-vous avec votre indicatif et le mot de passe reçu du club.</p>
+    <p class="browser-req"><b>⚠ Utilisez obligatoirement Google Chrome ou Microsoft Edge.</b></p>
+    <p class="browser-bad" id="browserBad" hidden><b>Ce navigateur n’est ni Chrome ni Edge : ouvrez cette page dans Google Chrome ou Microsoft Edge.</b></p>
     <label>Indicatif<input name="call" id="loginCall" autocomplete="username" required maxlength="12" autocapitalize="characters" spellcheck="false"></label>
     <label>Mot de passe<input name="pass" id="loginPass" type="password" autocomplete="current-password" required></label>
     <button class="btn btn-primary" type="submit" id="loginBtn">Se connecter</button>
