@@ -1,5 +1,12 @@
 # Composants et sources de tiers
 
+## ft8_lib (décodeur FT8 / FT4)
+
+`lib/ftx.wasm` est compilé (voir `native/ftx/build.sh`) à partir de ft8_lib, bibliothèque de décodage FT8/FT4 de Kārlis Goba (YL3JG), et de l'interface `native/ftx/ftx_wasm.c` propre à ce projet. ft8_lib inclut KISS FFT (Mark Borgerding, licence BSD).
+
+- Projet : https://github.com/kgoba/ft8_lib
+- Licence : MIT — Copyright (c) 2018 Kārlis Goba
+
 ## RigPlane Core
 
 Les formats des commandes CAT du Yaesu FTX-1 utilisés dans `public/js/yaesu.js` et `public/js/ftx1.js` (réglages, filtres, mesures, tables de largeur de filtre, étalonnages indicatifs du S-mètre et du SWR) ont été repris du profil `rigs/ftx1.toml` de RigPlane Core, vérifié sur une radio réelle.

@@ -10,6 +10,7 @@ const path = require('path');
 const crypto = require('crypto');
 const ws = require('./lib/ws-lite');
 const auth = require('./lib/auth');
+const ULAW = require('./public/js/ulaw.js');
 // Pilotes de radio disponibles (le modèle est annoncé par la page Station)
 const DRIVERS = {
   ftx1: require('./public/js/ftx1.js'),
@@ -171,17 +172,80 @@ function listeners() {
   return n;
 }
 function updateAudioWant() {
-  const want = listeners() > 0;
+  // La station envoie la BF s'il y a un membre à l'écoute ou une fenêtre de décodage ouverte
+  const want = listeners() > 0 || digiModes().size > 0;
   if (want !== audio.want) {
     audio.want = want;
     toStation({ t: 'audio_want', on: want });
   }
 }
-// Trame audio de la station → chaque membre à l'écoute (un client trop lent saute des trames au lieu d'accumuler du retard)
+// Trame audio de la station → décodeur et chaque membre à l'écoute (un client trop lent saute des trames
+// au lieu d'accumuler du retard). 0x01 : µ-law 8 kHz (ancienne page Station), 0x02 : PCM 16 bits 12 kHz.
 function relayAudio(buf) {
-  if (!buf || buf.length < 2 || buf.length > 4000 || buf[0] !== 0x01) return;
+  if (!buf || buf.length < 2 || buf.length > 4000) return;
   audio.frames++;
-  for (const c of ops) if (c.listen && c.backlog < 32768) c.send(buf);
+  let out = buf;
+  if (buf[0] === 0x02) {
+    const pcm = ULAW.decodeFrame(buf);
+    if (!pcm) return;
+    if (digi.worker && digiModes().size) digi.worker.postMessage({ t: 'audio', samples: pcm, at: Date.now() }, [pcm.buffer]);
+    if (!listeners()) return;
+    out = Buffer.from(ULAW.encodeFrame(ULAW.decodeFrame(buf), 12000)); // µ-law 12 kHz pour l'écoute (96 kbit/s)
+  } else if (buf[0] !== 0x01) {
+    return;
+  }
+  for (const c of ops) if (c.listen && c.backlog < 32768) c.send(out);
+}
+
+// ---------------------------------------------------------------- modes numériques (FT8 / FT4)
+// Le décodage tourne dans un Worker (lib/digi-worker.js) dès qu'un membre ouvre la fenêtre FT8/FT4.
+const digi = { worker: null, hist: { FT8: [], FT4: [] }, latency: null, ms: 0, last: 0 };
+const DIGI_MODES = ['FT8', 'FT4'];
+function digiModes() {
+  const s = new Set();
+  for (const c of ops) if (c.digi) s.add(c.digi);
+  return s;
+}
+function startDigi() {
+  if (digi.worker) return;
+  try {
+    const { Worker } = require('worker_threads');
+    digi.worker = new Worker(path.join(ROOT, 'lib', 'digi-worker.js'));
+  } catch (e) {
+    console.error('Décodeur FT8/FT4 indisponible : ' + e.message);
+    return;
+  }
+  digi.worker.on('message', onDigi);
+  digi.worker.on('error', (e) => console.error('Décodeur FT8/FT4 : ' + e.message));
+  digi.worker.on('exit', () => { digi.worker = null; });
+}
+function updateDigi() {
+  const modes = digiModes();
+  if (modes.size) startDigi();
+  if (digi.worker) digi.worker.postMessage({ t: 'modes', modes: Array.from(modes) });
+  updateAudioWant();
+}
+function onDigi(m) {
+  if (m.t === 'wf') {
+    // Ligne de cascade : [0x10, octets dB*2+240 par case de 6,25 Hz depuis 0 Hz]
+    const fr = Buffer.allocUnsafe(m.row.length + 1);
+    fr[0] = 0x10;
+    Buffer.from(m.row.buffer, m.row.byteOffset, m.row.length).copy(fr, 1);
+    for (const c of ops) if (c.digi && c.backlog < 65536) c.send(fr);
+    return;
+  }
+  if (m.t === 'decodes') {
+    const item = { slot: m.slot, list: m.list };
+    const h = digi.hist[m.mode];
+    if (!h) return;
+    h.push(item);
+    while (h.length > 40) h.shift();
+    digi.latency = m.latency;
+    digi.ms = m.ms;
+    digi.last = Date.now();
+    const msg = JSON.stringify({ t: 'ftx', mode: m.mode, slot: m.slot, list: m.list, latency: m.latency });
+    for (const c of ops) if (c.digi === m.mode) c.send(msg);
+  }
 }
 // Messages entre membres (mémoire seulement, perdus au redémarrage) : discussion, demandes de main, passages de main
 const chatLog = [];
@@ -305,6 +369,7 @@ function publicState() {
     swrLock: swrLocked() ? { freq: swrLock.freq, swr: Math.round(swrLock.swr * 10) / 10 } : null,
     maxSwr: cfg.maxSwr,
     audio: { active: !!(station && audio.active), listeners: listeners() },
+    digi: { modes: Array.from(digiModes()), latency: digi.latency },
     rigName: station ? rig().NAME : null,
     rigModel: station ? rig().ID : null,
     // TRX dont le port série est mémorisé sur le PC du club (changement à distance possible)
@@ -498,6 +563,16 @@ function onOperator(conn, m) {
       journal('rig_switch', { call: conn.user.call, from: rig().ID, to: model, name: DRIVERS[model].NAME });
       send(station.conn, { t: 'switch', model, by: conn.user.call });
       return send(conn, { t: 'notice', level: 'warn', msg: 'Passage au ' + DRIVERS[model].NAME + ' demandé : la station redémarre (quelques secondes)' });
+    }
+
+    case 'digi': {
+      // Fenêtre de décodage ouverte (FT8 / FT4) ou fermée (null) par ce membre
+      const mode = DIGI_MODES.indexOf(m.mode) >= 0 ? m.mode : null;
+      if (conn.digi === mode) return;
+      conn.digi = mode;
+      updateDigi();
+      if (mode) send(conn, { t: 'ftx_hist', mode, items: digi.hist[mode] });
+      return;
     }
 
     case 'listen':
@@ -814,7 +889,8 @@ ws.attach(server, {
       }
       if (conn.user) {
         ops.delete(conn);
-        if (conn.listen) updateAudioWant();
+        if (conn.digi) updateDigi();
+        else if (conn.listen) updateAudioWant();
         if (ptt.active && ptt.conn === conn) stopPtt('opérateur déconnecté');
         if (controller === conn) {
           controller = null;

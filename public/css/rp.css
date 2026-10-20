@@ -555,3 +555,52 @@ input[type='range']:disabled { opacity: .45; }
 .login p.browser-bad[hidden] { display: none; }
 
 .panel[hidden] { display: none !important; }
+
+/* ===================================================================== fenêtres du centre (onglets) */
+.ctabs { display: flex; gap: 2px; padding: 6px 10px 0; border-bottom: 1px solid var(--v2-border-dark); }
+.ctab {
+  font: inherit; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--v2-text-dim); background: transparent; border: 1px solid transparent; border-bottom: 0;
+  border-radius: 5px 5px 0 0; padding: 6px 14px; cursor: pointer; margin-bottom: -1px;
+}
+.ctab:hover { color: var(--v2-text-bright); }
+.ctab[aria-selected='true'] { color: var(--v2-accent-cyan-bright); background: var(--v2-bg-darker); border-color: var(--v2-border-dark); }
+.ctab-pane[hidden] { display: none !important; }
+.dg-soon { padding: 16px 14px; font-size: 11px; color: var(--v2-text-secondary); }
+
+/* ===================================================================== FT8 / FT4 */
+.dg { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; min-height: 560px; flex: 1; }
+.dg-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.dg-bar select {
+  font: inherit; font-size: 11px; color: var(--v2-text-bright); background: var(--v2-bg-input);
+  border: 1px solid var(--v2-border); border-radius: 5px; padding: 6px 8px; min-width: 170px;
+}
+.dg-clock { margin-left: auto; font-size: 11px; color: var(--v2-accent-cyan-bright); white-space: pre; }
+.dg-status { flex-basis: 100%; font-size: 10px; color: var(--v2-text-dim); }
+.dg-status.warn { color: var(--v2-accent-yellow); }
+.dg-wf { border: 1px solid var(--v2-border-dark); border-radius: 6px; overflow: hidden; background: #05080d; }
+.dg-wf canvas { display: block; width: 100%; cursor: crosshair; }
+#dgWf { height: 140px; }
+#dgScale { height: 22px; }
+.dg-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1; min-height: 260px; }
+.dg-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; border: 1px solid var(--v2-border-dark); border-radius: 6px; background: var(--v2-bg-darker); }
+.dg-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 8px; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--v2-text-header); border-bottom: 1px solid var(--v2-border-dark); }
+.dg-h b { color: var(--v2-accent-green-bright); font-weight: 700; }
+.dg-note { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--v2-text-dim); }
+.dg-mini { font: inherit; font-size: 9px; letter-spacing: .8px; text-transform: uppercase; color: var(--v2-text-dim); background: none; border: 1px solid var(--v2-border); border-radius: 4px; padding: 2px 6px; cursor: pointer; }
+.dg-mini:hover { color: var(--v2-text-bright); }
+.dg-th, .dg-row { display: grid; grid-template-columns: 54px 30px 34px 40px 1fr; gap: 6px; padding: 2px 8px; font-size: 11px; }
+.dg-th { color: var(--v2-text-dim); font-size: 9px; letter-spacing: .8px; text-transform: uppercase; border-bottom: 1px solid var(--v2-border-dark); padding-block: 4px; }
+.dg-th span:nth-child(-n+4), .dg-row span:nth-child(-n+4) { text-align: right; }
+.dg-list { flex: 1; overflow: auto; min-height: 0; max-height: 360px; }
+.dg-row { color: var(--v2-text-secondary); cursor: pointer; white-space: nowrap; }
+.dg-row span:last-child { overflow: hidden; text-overflow: ellipsis; color: var(--v2-text-bright); }
+.dg-row:hover { background: rgba(0, 212, 255, .08); }
+.dg-row.cq { background: rgba(0, 204, 102, .14); }
+.dg-row.cq span:last-child { color: #8ff0b6; }
+.dg-row.me { background: rgba(255, 32, 32, .2); }
+.dg-row.me span:last-child { color: #ffc4b8; font-weight: 700; }
+.dg-sep { font-size: 9px; color: var(--v2-text-dim); text-align: center; padding: 3px 0; letter-spacing: .6px; border-top: 1px dashed var(--v2-border-dark); }
+.dg-tx { margin: 0; font-size: 10px; color: var(--v2-text-dim); }
+.dg-tx b { color: var(--v2-accent-cyan-bright); }
+@media (max-width: 900px) { .dg-cols { grid-template-columns: 1fr; } }

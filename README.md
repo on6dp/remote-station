@@ -11,9 +11,9 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.2.17** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.3.0** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
-**Télécharger un paquet prêt à installer** : onglet **Releases** (ou **Tags**) du dépôt → version voulue → `Source code (tar.gz)`. Le paquet s'installe avec la procédure « Mettre à jour le serveur » ci-dessous (le dossier extrait s'appelle alors `remote-station-0.2.17` : le renommer en `remote-station`, ou utiliser l'archive `remote-station-X.Y.Z.tar.gz` fournie avec la version).
+**Télécharger un paquet prêt à installer** : onglet **Releases** (ou **Tags**) du dépôt → version voulue → `Source code (tar.gz)`. Le paquet s'installe avec la procédure « Mettre à jour le serveur » ci-dessous (le dossier extrait s'appelle alors `remote-station-0.3.0` : le renommer en `remote-station`, ou utiliser l'archive `remote-station-X.Y.Z.tar.gz` fournie avec la version).
 
 Le guide complet est dans [LISEZMOI.md](LISEZMOI.md). Ci-dessous, l'aide-mémoire des opérations courantes.
 
@@ -161,7 +161,7 @@ Aucun autre logiciel (WSJT-X, log…) ne doit utiliser le port CAT en même temp
 1. Le TRX est relié en USB : sa carte son intégrée apparaît dans Windows (souvent « USB Audio CODEC »).
 2. Page Station → cadre **« Audio du TRX »** → **« Activer l'audio »**. La première fois, Chrome demande l'accès au micro : répondre **Autoriser** (c'est l'entrée son du TRX, pas un micro).
 3. Choisir l'**entrée son** du TRX dans la liste. La barre de niveau doit bouger avec la BF ; régler le niveau de sortie USB dans le menu du TRX si elle est trop faible ou toujours au maximum.
-4. Le son n'est envoyé que si au moins un membre écoute (64 kbit/s par écouteur, qualité « téléphone » 8 kHz).
+4. Le son n'est envoyé que si au moins un membre écoute ou regarde la fenêtre FT8 · FT4 (12 kHz, 192 kbit/s depuis le club ; 96 kbit/s vers chaque écouteur).
 
 Après un redémarrage, la page réactive l'audio toute seule. Si elle affiche « Audio en pause », un clic n'importe où sur la page suffit ; pour éviter ce clic, ajouter `--autoplay-policy=no-user-gesture-required` au raccourci de démarrage de Chrome.
 
@@ -178,6 +178,7 @@ Après un redémarrage, la page réactive l'audio toute seule. Si elle affiche �
 3. Accorder : molette ou glisser sur les chiffres, flèches ↑ ↓, touches de bande et de mode. **PTT** : bouton ou barre d'espace (maintenir).
 4. **Écouter** : cadre RX AUDIO → « 🔊 Écouter le TRX », réglage du volume juste en dessous. Tout le monde peut écouter, même sans avoir la main (écouteurs ONL compris).
 5. **Libérer la main** en partant.
+6. **FT8 · FT4** : onglet au centre de la page. Cascade 0–3000 Hz, « Activité de bande » (tous les messages décodés, CQ en vert, messages avec ON5VL / OR0L en rouge) et « Fréquence RX » (clic sur la cascade ou sur une ligne). « QSY » met le VFO A sur la fréquence d'appel choisie, en DATA-U (il faut avoir la main). Le décodage se fait sur le serveur, à l'heure du VPS : l'heure du PC du club n'a pas d'importance. L'émission FT8 / FT4 (indicatif ON5VL) et la fenêtre RTTY arrivent dans les prochaines versions.
 
 Automatique : main libérée après 15 min sans action, déconnexion après 15 min d'inactivité (avertissement une minute avant, bouton « Rester connecté »). **Jamais pendant une émission.**
 
@@ -206,7 +207,7 @@ Automatique : main libérée après 15 min sans action, déconnexion après 15 m
 | Dashboard figé ou « Station hors ligne » alors que la page Station dit « Connecté » | Coupure réseau silencieuse (ex. Starlink qui change d'adresse IP). Depuis la v0.2.3, la page Station le détecte en 15 s et se reconnecte seule ; sinon « Enregistrer et reconnecter ». |
 | « Station hors ligne (page Station fermée ou quittée) » | L'onglet de la page Station a servi à ouvrir autre chose (souvent le dashboard). Sur le PC du club, garder la page Station **seule dans sa fenêtre** et ouvrir le dashboard par son bouton « Ouvrir le dashboard dans une autre fenêtre ». |
 | La page Station signale « mise en pause » ou « déchargée par Chrome » | Chrome économise l'énergie ou la mémoire sur les onglets en arrière-plan. Sur le PC du club : Chrome → **Paramètres → Performances** → **Économiseur de mémoire** → « Toujours garder ces sites actifs » → **Ajouter** `remote.op0p.be` ; désactiver l'**Économiseur d'énergie** ; Windows : mise en veille sur **Jamais**. Le journal du serveur indique la cause (`station_diag`). |
-| Il faut retaper le mot de passe à chaque actualisation | Corrigé en v0.2.17 : le navigateur reste connecté 7 jours (`rememberDays`). « Déconnexion » l'oublie ; à faire sur un PC partagé. |
+| Il faut retaper le mot de passe à chaque actualisation | Corrigé en v0.2.15 : le navigateur reste connecté 7 jours (`rememberDays`). « Déconnexion » l'oublie ; à faire sur un PC partagé. |
 | Page Station : « Remplacée par une autre page Station » | Une autre page Station est ouverte ailleurs : la fermer, puis « Enregistrer et reconnecter ». |
 | Page Station : « Une autre page Station est déjà ouverte dans ce navigateur » | Deux onglets /station : fermer celui en trop (l'autre prend le relais tout seul). |
 | Page Station : « …avec le TRX, est déjà en service » | Une page Station avec le TRX tourne déjà sur un autre PC : la fermer si c'est celle-ci qui doit servir. |
@@ -221,11 +222,13 @@ Automatique : main libérée après 15 min sans action, déconnexion après 15 m
 | Fichier | Rôle |
 |---|---|
 | `server.js` | Serveur : comptes, contrôle, PTT, sécurités, messages, journal |
-| `lib/` | WebSocket minimal et mots de passe (aucune dépendance npm) |
+| `lib/` | WebSocket minimal, mots de passe, décodeur FT8/FT4 (`ftx.wasm`, `ftx.js`, `digi-worker.js`) — aucune dépendance npm |
+| `native/ftx/` | Source et script de compilation du décodeur WebAssembly (ft8_lib) |
+| `public/js/digi.js` | Onglets du centre et fenêtre FT8 · FT4 |
 | `public/index.html`, `public/js/app.js`, `public/css/` | Page des membres |
 | `public/station.html`, `public/js/station.js`, `public/js/station-core.js` | Page Station (Web Serial) |
 | `public/js/yaesu.js`, `ftx1.js`, `ftdx10.js`, `ic7300.js` | Pilotes des TRX |
 | `adduser.js`, `importusers.js`, `init-config.js` | Gestion des membres et de la configuration |
 | `deploy/` | Service systemd et site nginx |
 | `LISEZMOI.md` | Guide complet |
-| `TIERS.md` | Licences des éléments repris (RigPlane Core, MIT ; police Roboto Mono, OFL) |
+| `TIERS.md` | Licences des éléments repris (RigPlane Core et ft8_lib, MIT ; police Roboto Mono, OFL) |

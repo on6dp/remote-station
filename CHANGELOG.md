@@ -1,5 +1,9 @@
 # Journal des versions — Remote Station UBA-LGE (ON5VL / OR0L)
 
+## v0.3 — modes numériques
+
+- **0.3.0** — Onglets au centre du dashboard : Activité, **FT8 · FT4**, RTTY. Fenêtre FT8/FT4 : cascade, activité de bande, fréquence RX, fréquences d'appel et QSY. Décodage sur le VPS (ft8_lib en WebAssembly, dans un fil séparé), à l'heure du VPS, avec recalage automatique du délai. La page Station envoie la BF en 12 kHz / 16 bits quand quelqu'un écoute ou regarde la fenêtre. RTTY et émission FT8/FT4 : prochaines versions.
+
 ## v0.2 — écoute de la BF, robustesse, protection du PA
 
 - **0.2.17** — Les panneaux du dashboard se replient et se déplient d'un clic sur leur titre (flèche ▾/▸), état mémorisé dans le navigateur.

@@ -880,15 +880,17 @@
     drawListen();
   }
   function onAudio(data) {
+    const bytes = new Uint8Array(data);
+    if (window.RSDIGI && RSDIGI.onBinary(bytes)) return; // ligne de cascade FT8/FT4
     if (!player.on || !player.ctx) return;
-    const pcm = ULAW.decodeFrame(new Uint8Array(data));
+    const pcm = ULAW.decodeFrame(bytes);
     if (!pcm) return;
     player.got++;
     const ctx = player.ctx;
     const now = ctx.currentTime;
     if (player.next < now + 0.05) player.next = now + 0.2;      // démarrage ou trou : on se recale avec 0,2 s d'avance
     else if (player.next > now + 0.8) { player.late++; return; } // trop de retard accumulé : on saute ce paquet
-    const buf = ctx.createBuffer(1, pcm.length, ULAW.RATE);
+    const buf = ctx.createBuffer(1, pcm.length, pcm.rate || ULAW.RATE);
     buf.copyToChannel(pcm, 0);
     const src = ctx.createBufferSource();
     src.buffer = buf;
@@ -1020,8 +1022,10 @@
       if (typeof e.data !== 'string') return onAudio(e.data);
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (window.RSDIGI && RSDIGI.onMessage(m)) return;
       if (m.t === 'hello') {
         me = m;
+        if (window.RSDIGI) RSDIGI.onHello(m, m);
         if (/^Liaison perdue/.test($('msg').textContent)) say('');
         $('login').hidden = true;
         $('meCall').textContent = m.call;
@@ -1059,6 +1063,7 @@
         for (const w of ['A', 'B']) if (pend[w] != null && (w === 'A' ? st.radio.freq : st.radio.freqB) === pend[w]) pend[w] = null;
         if (RIG().ID !== ctlModel) buildControls();
         render();
+        if (window.RSDIGI) RSDIGI.onState(st);
       } else if (m.t === 'events') {
         $('events').textContent = '';
         (m.list || []).forEach((e) => addEvent(e, false)); // déjà du plus récent au plus ancien
@@ -1102,6 +1107,7 @@
   // ------------------------------------------------------------ démarrage
   buildStatic();
   initCollapsible();
+  if (window.RSDIGI) RSDIGI.init({ send, say, setFreq, iControl: () => iControl(), state: () => st, rig: () => RIG() });
   buildControls();
   bindPtt();
   render();

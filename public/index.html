@@ -131,9 +131,49 @@
         <p class="msg" id="msg" role="status"></p>
       </section>
 
-      <section class="panel activity">
-        <h2 class="panel-h">Activité de la station</h2>
-        <div class="panel-b" id="events" aria-live="polite"><p class="ev-empty">Aucune activité pour l'instant.</p></div>
+      <section class="panel activity" id="centerPanel">
+        <h2 class="panel-h">Activité et modes numériques</h2>
+        <div class="ctabs" role="tablist" aria-label="Fenêtres du centre">
+          <button class="ctab" type="button" role="tab" data-tab="events" aria-selected="true">Activité</button>
+          <button class="ctab" type="button" role="tab" data-tab="ftx" aria-selected="false">FT8 · FT4</button>
+          <button class="ctab" type="button" role="tab" data-tab="rtty" aria-selected="false">RTTY</button>
+        </div>
+        <div class="panel-b ctab-pane" id="events" data-pane="events" aria-live="polite"><p class="ev-empty">Aucune activité pour l'instant.</p></div>
+
+        <!-- Fenêtre FT8 / FT4 : cascade, activité de bande, fréquence RX (décodage sur le serveur) -->
+        <div class="ctab-pane dg" data-pane="ftx" hidden>
+          <div class="dg-bar">
+            <div class="seg" id="dgModes">
+              <button class="btn" type="button" data-mode="FT8" aria-pressed="true">FT8</button>
+              <button class="btn" type="button" data-mode="FT4" aria-pressed="false">FT4</button>
+            </div>
+            <select id="dgDial" aria-label="Fréquence d'appel"></select>
+            <button class="btn" type="button" id="dgQsy" title="Met le VFO A sur la fréquence choisie, en DATA-U">QSY</button>
+            <span class="dg-clock" id="dgClock">--:--:--</span>
+            <span class="dg-status" id="dgStatus"></span>
+          </div>
+          <div class="dg-wf">
+            <canvas id="dgScale" height="22"></canvas>
+            <canvas id="dgWf" height="140"></canvas>
+          </div>
+          <div class="dg-cols">
+            <div class="dg-col">
+              <div class="dg-h"><span>Activité de bande</span><button class="dg-mini" type="button" id="dgClear">Effacer</button></div>
+              <div class="dg-th"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span></div>
+              <div class="dg-list" id="dgBand"></div>
+            </div>
+            <div class="dg-col">
+              <div class="dg-h"><span>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic sur la cascade ou sur une ligne</span></div>
+              <div class="dg-th"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span></div>
+              <div class="dg-list" id="dgRx"></div>
+            </div>
+          </div>
+          <p class="dg-tx" id="dgTx">Émission FT8 / FT4 sous l'indicatif <b>ON5VL</b> : prochaine étape (messages Tx1 à Tx6, séquence automatique).</p>
+        </div>
+
+        <div class="ctab-pane dg-soon" data-pane="rtty" hidden>
+          <p><b>RTTY</b> (45,45 bauds, shift 170 Hz) : fenêtre de réception et d'émission avec macros — prochaine étape.</p>
+        </div>
       </section>
     </main>
 
@@ -226,6 +266,7 @@
 <script src="/js/ftdx10.js"></script>
 <script src="/js/ic7300.js"></script>
 <script src="/js/ulaw.js"></script>
+<script src="/js/digi.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>

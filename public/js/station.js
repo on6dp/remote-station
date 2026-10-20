@@ -402,12 +402,12 @@
   const aud = { ctx: null, stream: null, want: false, sent: 0, peak: 0 };
   const CAPTURE_WORKLET = `
     class RsCapture extends AudioWorkletProcessor {
-      constructor() { super(); this.buf = new Float32Array(320); this.n = 0; }
+      constructor() { super(); this.buf = new Float32Array(480); this.n = 0; }
       process(inputs) {
         const ch = inputs[0] && inputs[0][0];
         if (ch) for (let i = 0; i < ch.length; i++) {
           this.buf[this.n++] = ch[i];
-          if (this.n === 320) { this.port.postMessage(this.buf.slice(0)); this.n = 0; }
+          if (this.n === 480) { this.port.postMessage(this.buf.slice(0)); this.n = 0; }
         }
         return true;
       }
@@ -455,7 +455,8 @@
       const track = aud.stream.getAudioTracks()[0];
       await listInputs(track && track.getSettings().deviceId);
       if (track) store.set('audio.label', track.label);
-      aud.ctx = new AudioContext({ sampleRate: ULAW.RATE });
+      // 12 kHz, PCM 16 bits : qualité nécessaire au décodage FT8 / FT4 / RTTY sur le serveur (trames de 40 ms)
+      aud.ctx = new AudioContext({ sampleRate: ULAW.RATE_HQ });
       const url = URL.createObjectURL(new Blob([CAPTURE_WORKLET], { type: 'application/javascript' }));
       await aud.ctx.audioWorklet.addModule(url);
       URL.revokeObjectURL(url);
@@ -471,7 +472,7 @@
         for (let i = 0; i < buf.length; i++) { const a = Math.abs(buf[i]); if (a > p) p = a; }
         aud.peak = Math.max(p, aud.peak * 0.85);
         if (aud.want && ws && ws.readyState === 1 && ws.bufferedAmount < 65536) {
-          ws.send(ULAW.encodeFrame(buf));
+          ws.send(ULAW.encodePcm(buf));
           aud.sent++;
         }
       };
