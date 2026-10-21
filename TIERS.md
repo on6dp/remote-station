@@ -9,6 +9,13 @@
 
 Conséquence : le projet Remote Station, qui inclut ce décodeur, doit être redistribué sous GPL v3 (sources complètes fournies avec toute copie distribuée).
 
+## Décodeur JT65 de WSJT-X
+
+`lib/bin/jt65` est le programme de test « jt65 » de WSJT-X 3.3 (fichiers `lib/jt65*.f90`, `decode65*.f90`, `sync65.f90`, Reed-Solomon de Phil Karn KA9Q, décodeur FT de K9AN…), compilé en exécutable Linux x86-64 par `native/wsjtx/build.py` à partir d'une copie du dépôt https://github.com/WSJTX/wsjtx (étiquette v3.3.0-beta2). FFTW est remplacé par `native/wsjtx/fftw_kiss.c` (KISS FFT).
+
+- Copyright Joe Taylor (K1JT), Steven Franke (K9AN) et l'équipe WSJT-X
+- Licence : GNU GPL v3 (texte dans `native/wspr/COPYING`)
+
 ## ft8_lib (décodeur FT8 / FT4)
 
 `lib/ftx.wasm` est compilé (voir `native/ftx/build.sh`) à partir de ft8_lib, bibliothèque de décodage FT8/FT4 de Kārlis Goba (YL3JG), et de l'interface `native/ftx/ftx_wasm.c` propre à ce projet. ft8_lib inclut KISS FFT (Mark Borgerding, licence BSD).

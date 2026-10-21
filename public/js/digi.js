@@ -18,6 +18,8 @@
   const DIAL = {
     FT8: [['160 m', 1840], ['80 m', 3573], ['60 m', 5357], ['40 m', 7074], ['30 m', 10136], ['20 m', 14074], ['17 m', 18100],
       ['15 m', 21074], ['12 m', 24915], ['10 m', 28074], ['6 m', 50313], ['2 m', 144174], ['70 cm', 432174]],
+    JT65: [['160 m', 1838], ['80 m', 3576], ['40 m', 7076], ['30 m', 10138], ['20 m', 14076], ['17 m', 18102], ['15 m', 21076],
+      ['12 m', 24917], ['10 m', 28076], ['6 m', 50310]],
     FT4: [['80 m', 3575.5], ['40 m', 7047.5], ['30 m', 10140], ['20 m', 14080], ['17 m', 18104], ['15 m', 21140],
       ['12 m', 24919], ['10 m', 28180], ['6 m', 50318], ['2 m', 144170]]
   };
@@ -31,7 +33,7 @@
   let clockOff = 0;      // écart horloge du serveur − horloge de ce PC (ms)
   let bestRtt = Infinity;
   let tab = store.get(POPUP ? 'ptab' : 'tab', POPUP ? 'ftx' : 'events');
-  let mode = store.get('mode', 'FT8') === 'FT4' ? 'FT4' : 'FT8';
+  let mode = store.get('ftmode', store.get('mode', 'FT8')) === 'FT4' ? 'FT4' : 'FT8';
   let rxF = Number(store.get('rxf', '1500')) || 1500;
   let txF = Number(store.get('txf', '1500')) || 1500; // fréquence audio d'émission (split : différente de RX)
   const SCALE_H = 30;
@@ -47,7 +49,6 @@
   ];
   const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'sync'];
   const SOON = {
-    jt65: '<b>JT65</b> (périodes d’une minute) : décodage et QSO, comme dans WSJT-X.'
   };
   const FTX_PANE = `
     <div class="dg-bar">
@@ -181,7 +182,14 @@
     if (!document.querySelector('#centerPanel .ctab[data-tab="' + t + '"]')) t = POPUP ? 'ftx' : 'events';
     tab = t;
     store.set(POPUP ? 'ptab' : 'tab', t);
-    const pane = detached && MODE_TABS.indexOf(t) >= 0 ? 'away' : t;
+    // JT65 utilise la même fenêtre que FT8 / FT4 (cascade, activité de bande, fréquence RX, split)
+    let pane = detached && MODE_TABS.indexOf(t) >= 0 ? 'away' : t === 'jt65' ? 'ftx' : t;
+    if (pane === 'ftx') {
+      const want = t === 'jt65' ? 'JT65' : (store.get('ftmode', 'FT8') === 'FT4' ? 'FT4' : 'FT8');
+      if (mode !== want) { mode = want; modeChanged(); if (api && t === 'jt65' && api.iControl()) setTimeout(autoQsy, 0); }
+      const seg = $('dgModes');
+      if (seg) seg.style.display = t === 'jt65' ? 'none' : ''; // JT65 : pas de choix FT8 / FT4
+    }
     document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
     document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== pane; });
     // Une seule cascade, déplacée dans la fenêtre affichée (FT8/FT4 ou RTTY)
@@ -204,7 +212,7 @@
   // Le serveur ne décode (et la station n'envoie la BF) que si au moins un membre regarde la fenêtre
   function announce() {
     if (!api || (detached && !POPUP)) return; // la fenêtre séparée annonce elle-même
-    const watching = (tab === 'ftx' || tab === 'rtty' || tab === 'wspr') && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
+    const watching = (tab === 'ftx' || tab === 'jt65' || tab === 'rtty' || tab === 'wspr') && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
     if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rt });
     if (watching && tab === 'wspr') { api.send({ t: 'digi', mode: 'WSPR', hist: wsNeedHist }); wsNeedHist = false; return; }
     api.send({ t: 'digi', mode: watching ? mode : null, hist: watching && needHist });
@@ -245,7 +253,7 @@
   })();
   let floor = null;
   function onRow(bytes) {
-    if ((tab !== 'ftx' && tab !== 'rtty' && tab !== 'wspr') || detached || !wf.ctx) return;
+    if ((tab !== 'ftx' && tab !== 'jt65' && tab !== 'rtty' && tab !== 'wspr') || detached || !wf.ctx) return;
     // bytes[0] = 0x10, puis une case de 6,25 Hz par octet (dB*2+240), depuis 0 Hz
     const n = Math.min(bytes.length - 1, Math.ceil(WF_MAX_HZ / 6.25));
     const vals = bytes.subarray(1, 1 + n);
@@ -295,7 +303,7 @@
     if (tab === 'rtty') return drawRttyMarks(c, w);
     if (tab === 'wspr') return drawWsprMarks(c, w);
     // Largeur d'un signal FT8 (50 Hz) / FT4 (83 Hz) : TX en rouge (haut), RX en vert (bas)
-    const bw = mode === 'FT4' ? 83 : 50;
+    const bw = mode === 'FT4' ? 83 : mode === 'JT65' ? 178 : 50;
     const mark = (f, y, h, fill, edge) => {
       const x0 = (f / WF_MAX_HZ) * w;
       const x1 = ((f + bw) / WF_MAX_HZ) * w;
@@ -710,12 +718,16 @@
   }
   function setMode(m) {
     mode = m;
-    store.set('mode', m);
-    document.querySelectorAll('#dgModes .btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+    if (m !== 'JT65') store.set('ftmode', m);
+    modeChanged();
+    announce();
+  }
+  function modeChanged() {
+    document.querySelectorAll('#dgModes .btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+    lastBand = 0;
     fillDial();
     drawScale();
     redrawAll();
-    announce();
   }
   function qsy() {
     if (!api) return;
@@ -751,7 +763,7 @@
     qsy();
   }
   function status() {
-    if (!api || (tab !== 'ftx' && tab !== 'rtty')) return;
+    if (!api || (tab !== 'ftx' && tab !== 'jt65' && tab !== 'rtty')) return;
     const st = api.state();
     const el = $(tab === 'rtty' ? 'rtStatus' : 'dgStatus');
     let txt = '';
@@ -759,7 +771,7 @@
     if (!st || !st.station) { txt = 'Station hors ligne'; warn = true; }
     else if (!st.audio || !st.audio.active) { txt = 'La page Station n’envoie pas la BF : « Activer l’audio » sur le PC du club'; warn = true; }
     else if (tab === 'rtty') txt = 'BF reçue';
-    else if (!lastDecode || Date.now() - lastDecode > (mode === 'FT8' ? 40000 : 20000)) txt = 'BF reçue · décodage au prochain cycle…';
+    else if (!lastDecode || Date.now() - lastDecode > (mode === 'JT65' ? 130000 : mode === 'FT8' ? 40000 : 20000)) txt = 'BF reçue · décodage au prochain cycle' + (mode === 'JT65' ? ' (vers la 52e seconde de chaque minute)' : '') + '…';
     else txt = 'BF reçue · décodage OK' + (st.digi && st.digi.latency != null ? ' · délai ' + st.digi.latency + ' ms' : '');
     if (st && st.radio && st.radio.mode && !/DATA|USB|-D/i.test(st.radio.mode)) { txt += ' · mode ' + st.radio.mode + ' : passez en DATA-U'; warn = true; }
     el.textContent = txt;
@@ -768,7 +780,7 @@
   const now = () => Date.now() + clockOff; // heure du serveur
   function clock() {
     const d = new Date(now());
-    const L = mode === 'FT8' ? 15 : 7.5;
+    const L = mode === 'JT65' ? 60 : mode === 'FT8' ? 15 : 7.5;
     const s = (d.getTime() / 1000) % L;
     $('dgClock').textContent = pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' UTC · ' + (L - s).toFixed(0).padStart(2, ' ') + ' s';
   }
@@ -837,13 +849,13 @@
       // Repli du panneau ou onglet du navigateur caché : le serveur arrête de décoder pour ce membre
       new MutationObserver(announce).observe($('centerPanel'), { attributes: true, attributeFilter: ['class'] });
       document.addEventListener('visibilitychange', announce);
-      window.addEventListener('resize', () => { if (tab === 'ftx') sizeCanvas(); });
+      window.addEventListener('resize', () => { if (tab === 'ftx' || tab === 'jt65' || tab === 'rtty' || tab === 'wspr') sizeCanvas(); });
       fillDial();
       setMode(mode);
       showTab(tab);
       setInterval(() => {
         if (detached) return;
-        if (tab === 'ftx') { clock(); status(); followBand(); }
+        if (tab === 'ftx' || tab === 'jt65') { clock(); status(); followBand(); }
         if (tab === 'rtty') status();
         if (tab === 'wspr') wsClock();
         if (tab === 'sync') drawSync();
@@ -907,7 +919,7 @@
       if (bytes[0] === 0x10) { onRow(bytes); return true; }
       return false;
     },
-    onState() { if (tab === 'ftx') { status(); followBand(); } }
+    onState() { if (tab === 'ftx' || tab === 'jt65') { status(); followBand(); } }
   };
   // Le TRX a changé de bande : la liste des fréquences d'appel suit (vérifié aussi chaque demi-seconde)
   function followBand() {

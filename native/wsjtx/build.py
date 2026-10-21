@@ -22,6 +22,7 @@ ap.add_argument('--out', required=True)
 ap.add_argument('--extra', action='append', default=[], help='source supplémentaire (relative au dépôt)')
 ap.add_argument('--prefer', action='append', default=[], help='nom=fichier : fichier à préférer pour un symbole')
 ap.add_argument('-v', action='store_true')
+ap.add_argument('--static', action='store_true', help='édition de liens entièrement statique')
 a = ap.parse_args()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -62,9 +63,11 @@ def pick(name, cands):
     cands = sorted(set(cands), key=lambda p: (os.path.splitext(os.path.basename(p))[0].lower() != name, p.count('/'), len(p)))
     return cands[0]
 
-FFLAGS = ['-O2', '-fno-second-underscore', '-ffree-line-length-none', '-fallow-argument-mismatch', '-fopenmp', '-w',
+# Sans OpenMP : les décodeurs tournent sur un seul cœur ; les grands tableaux locaux restent en mémoire
+# statique (pas sur la pile, qui déborderait). omp_lib.f90 (à côté de ce script) remplace le module OpenMP.
+FFLAGS = ['-O2', '-fno-second-underscore', '-ffree-line-length-none', '-fallow-argument-mismatch', '-w',
           '-I' + build, '-J' + build, '-I' + LIB]
-CFLAGS = ['-O2', '-w', '-DBIGSYM=1', '-I' + LIB, '-I' + a.ft8lib, '-fopenmp']
+CFLAGS = ['-O2', '-w', '-DBIGSYM=1', '-I' + LIB, '-I' + a.ft8lib]
 
 objs = {}
 def compile_file(p, stack=()):
@@ -100,9 +103,12 @@ compile_file(os.path.join(a.wsjtx, a.main))
 for e in a.extra: compile_file(os.path.join(a.wsjtx, e))
 
 os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+# libquadmath en statique aussi (absente de beaucoup de serveurs) : seule la libc reste partagée
+quad = subprocess.run([a.fc, '-print-file-name=libquadmath.a'], capture_output=True, text=True).stdout.strip()
+extra_objs += [quad] if os.path.isabs(quad) and os.path.exists(quad) else []
 tried = set()
 for _ in range(200):
-    cmd = [a.fc, '-o', a.out] + list(objs.values()) + extra_objs + ['-static-libgfortran', '-static-libgcc', '-fopenmp', '-static', '-lm']
+    cmd = [a.fc, '-o', a.out, '-Wl,--as-needed'] + list(objs.values()) + extra_objs + ['-static-libgfortran', '-static-libquadmath', '-static-libgcc', '-lm'] + (['-static'] if a.static else []) + ['-lm']
     r = subprocess.run(cmd, capture_output=True, text=True)
     if r.returncode == 0:
         print('OK :', a.out, os.path.getsize(a.out), 'octets,', len(objs), 'fichiers WSJT-X')

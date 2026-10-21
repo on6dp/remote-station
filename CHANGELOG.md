@@ -1,5 +1,9 @@
 # Journal des versions — Remote Station UBA-LGE (ON5VL / OR0L)
 
+## v0.6 — JT65
+
+- **0.6.0** — Onglet **JT65** (JT65A, périodes d'une minute) : décodeur de WSJT-X (GPL v3) compilé en programme Linux autonome (`lib/bin/jt65`, lancé dans un processus séparé), décodage vers la 52e seconde ; même fenêtre que FT8 · FT4 (cascade, activité de bande, fréquence RX, split, double-clic pour répondre) ; fréquences JT65 par bande, l'onglet met le TRX sur la fréquence JT65 de sa bande. Correction : locator à 4 caractères dans les messages FT8/FT4.
+
 ## v0.5 — WSPR
 
 - **0.5.0** — Fenêtre **WSPR** : décodage des périodes de 2 minutes sur le serveur avec wsprd de WSJT-X (K9AN / K1JT, GPL v3) compilé en WebAssembly, exécuté entièrement en mémoire. Liste des stations entendues : heure, dB, DT, fréquence réelle, dérive, indicatif, locator, puissance (dBm et W), distance depuis le locator de la station ; fréquences WSPR par bande (QSY direct) ; compte à rebours de la période.

@@ -203,8 +203,8 @@ function relayAudio(buf) {
 
 // ---------------------------------------------------------------- modes numériques (FT8 / FT4)
 // Le décodage tourne dans un Worker (lib/digi-worker.js) dès qu'un membre ouvre la fenêtre FT8/FT4.
-const digi = { worker: null, hist: { FT8: [], FT4: [], WSPR: [] }, latency: null, ms: 0, last: 0, dial: 0 };
-const DIGI_MODES = ['FT8', 'FT4', 'RTTY', 'WSPR'];
+const digi = { worker: null, hist: { FT8: [], FT4: [], WSPR: [], JT65: [] }, latency: null, ms: 0, last: 0, dial: 0 };
+const DIGI_MODES = ['FT8', 'FT4', 'RTTY', 'WSPR', 'JT65'];
 // Réglages RTTY d'un membre (chacun peut suivre un signal différent) → clé du démodulateur
 function rttyCfg(r) {
   if (!r || typeof r !== 'object') return null;
