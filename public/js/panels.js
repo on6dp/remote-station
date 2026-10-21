@@ -29,6 +29,10 @@
       if (o.win && !o.win.closed) {
         const el = o.win.document.getElementById(id);
         if (el) return el;
+      } else if (o.el) {
+        // Fenêtre en train de se fermer : le cadre revient au prochain contrôle ; on écrit dans le cadre lui-même
+        const el = o.el.id === id ? o.el : o.el.querySelector('#' + CSS.escape(id));
+        if (el) return el;
       }
     }
     return null;
