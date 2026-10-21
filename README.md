@@ -190,7 +190,7 @@ Après un redémarrage, la page réactive l'audio toute seule. Si elle affiche �
 
 ## Pour les membres
 
-Manuel complet : bouton **HELP** du dashboard, ou https://remote.op0p.be/aide (français) et https://remote.op0p.be/help (English). Sources : `public/aide.html`, `public/help.html` — à tenir à jour avec chaque nouvelle fonction.
+Manuel complet : **[MANUEL.md](MANUEL.md)** (français) · **[USER-MANUAL.md](USER-MANUAL.md)** (English), aussi dans le dashboard (bouton **HELP**, https://remote.op0p.be/aide et /help). Source : `public/aide.html` et `public/help.html` ; après chaque modification, `node native/manual2md.js` refait les deux fichiers .md.
 
 
 1. Aller sur https://remote.op0p.be, se connecter avec **son indicatif** et **son mot de passe**.

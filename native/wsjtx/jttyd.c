@@ -14,6 +14,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#endif
 
 extern int jtty_rx_create(void);
 extern void jtty_rx_begin(int h, int64_t session, int64_t grid_origin, int64_t first_search, int nsps);
@@ -42,6 +46,11 @@ int main(int argc, char **argv)
     int n = 0;
     static char text[CAP * 80];
     int64_t ids[CAP]; float fr[CAP]; double st[CAP], la[CAP]; int te[CAP], sn[CAP];
+#ifdef _WIN32
+    /* Windows : flux binaires (pas de conversion des fins de ligne ni arrêt sur l'octet 0x1A) */
+    _setmode(_fileno(stdin), _O_BINARY);
+    _setmode(_fileno(stdout), _O_BINARY);
+#endif
     setvbuf(stdout, NULL, _IOLBF, 0);
     for (;;) {
         if (n > BUF - 2400) { /* sécurité : jamais atteint en temps normal */
@@ -72,6 +81,7 @@ int main(int argc, char **argv)
             for (int k = 79; k >= 0 && (m[k] == ' ' || m[k] == 0); k--) m[k] = 0;
             for (char *p = m; *p; p++) if (*p == '\t' || *p == '\n' || *p == '\r') *p = ' ';
             printf("U\t%lld\t%.1f\t%d\t%d\t%.2f\t%.2f\t%s\n", (long long)ids[i], fr[i], sn[i], te[i], st[i], la[i], m);
+            fflush(stdout); /* _IOLBF n'existe pas sous Windows (tampon complet) */
         }
     }
     return 0;
