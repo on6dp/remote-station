@@ -1,5 +1,9 @@
 # Journal des versions — Remote Station UBA-LGE (ON5VL / OR0L)
 
+## v0.7 — écran large et cadres détachables
+
+- **0.7.0** — Écran large (1920 × 1080 et plus) : tout le dashboard tient sur un écran, en quatre colonnes (réglages · VFO et modes numériques · audio, DSP, accord, TX · opérateurs et messages pré-enregistrés) ; chaque colonne défile seule si besoin. Bouton **⧉** sur chaque cadre (RF front end, Mode, Filtre, Station meters, VFO, Step et bandes, RX audio, DSP, Accord, TX, Opérateurs, Messages) : le cadre s'ouvre dans sa propre fenêtre, tout y fonctionne (PTT et flèches compris), « Ramener » le remet en place ; disposition et position des fenêtres mémorisées.
+
 ## v0.6 — JT65
 
 - **0.6.0** — Onglet **JT65** (JT65A, périodes d'une minute) : décodeur de WSJT-X (GPL v3) compilé en programme Linux autonome (`lib/bin/jt65`, lancé dans un processus séparé), décodage vers la 52e seconde ; même fenêtre que FT8 · FT4 (cascade, activité de bande, fréquence RX, split, double-clic pour répondre) ; fréquences JT65 par bande, l'onglet met le TRX sur la fréquence JT65 de sa bande. Correction : locator à 4 caractères dans les messages FT8/FT4.

@@ -1,7 +1,9 @@
 /* Remote Station — page opérateur (disposition inspirée de RigPlane Core, licence MIT) */
 (function () {
   'use strict';
-  const $ = (id) => document.getElementById(id);
+  // Élément du dashboard, ou d'un cadre détaché dans sa propre fenêtre (panels.js)
+  const $ = (id) => document.getElementById(id) || (window.RSPANELS ? window.RSPANELS.find(id) : null);
+  const $$ = (sel) => (window.RSPANELS ? window.RSPANELS.all(sel) : Array.from(document.querySelectorAll(sel)));
 
   // ------------------------------------------------------------ données
   // Les touches de mode viennent du pilote de la radio connectée (codes différents chez Yaesu et Icom)
@@ -731,10 +733,10 @@
 
     // touches
     const mc = target === 'B' ? r.modeCodeB : r.modeCode;
-    document.querySelectorAll('#modeKeys .btn').forEach((b) => b.setAttribute('aria-pressed', String(live && b.dataset.code === mc)));
+    $$('#modeKeys .btn').forEach((b) => b.setAttribute('aria-pressed', String(live && b.dataset.code === mc)));
     const bn = bandName(currentFreq(target));
-    document.querySelectorAll('#bandKeys .btn').forEach((b) => b.setAttribute('aria-pressed', String(live && b.dataset.band === bn)));
-    document.querySelectorAll('#stepKeys .btn').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.step) === step)));
+    $$('#bandKeys .btn').forEach((b) => b.setAttribute('aria-pressed', String(live && b.dataset.band === bn)));
+    $$('#stepKeys .btn').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.step) === step)));
     $('tgtA').setAttribute('aria-pressed', String(target === 'A'));
     $('tgtB').setAttribute('aria-pressed', String(target === 'B'));
     $('modeTarget').textContent = 'VFO ' + target;
@@ -1107,6 +1109,7 @@
   // ------------------------------------------------------------ démarrage
   buildStatic();
   initCollapsible();
+  if (window.RSPANELS) window.RSPANELS.init({ say });
   // Modes numériques : au centre, ou dans une fenêtre séparée (digi.html) qui utilise cette connexion
   const digiApi = { send, say, setFreq, iControl: () => iControl(), state: () => st, rig: () => RIG() };
   const digiHost = { win: null, inst: null };

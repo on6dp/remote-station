@@ -128,9 +128,14 @@ button, input, select { font: inherit; color: inherit; }
 .workspace {
   display: grid;
   grid-template-columns: 236px minmax(0, 1fr) 248px;
+  grid-template-rows: auto 1fr;
   gap: 10px;
   align-items: start;
 }
+.side-left { grid-column: 1; grid-row: 1 / span 2; }
+.center { grid-column: 2; grid-row: 1 / span 2; }
+.side-right { grid-column: 3; grid-row: 1; }
+.side-far { grid-column: 3; grid-row: 2; }
 .side { display: grid; gap: 10px; min-width: 0; align-content: start; }
 .center { display: grid; gap: 10px; min-width: 0; grid-template-rows: auto auto minmax(160px, 1fr); align-self: stretch; }
 .seg-fill .btn, .ctl-row .btn { min-width: 0; width: 100%; padding-inline: 4px; overflow: hidden; text-overflow: ellipsis; }
@@ -442,6 +447,7 @@ input[type='range']:disabled { opacity: .45; }
   .side-left { grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
   .center { grid-column: 1; grid-row: 1; }
   .side-right { grid-column: 2; grid-row: 1; }
+  .side-far { grid-column: 1 / -1; grid-row: 3; }
 }
 /* ------------------------------------------------------------ téléphone */
 @media (max-width: 820px) {
@@ -449,7 +455,7 @@ input[type='range']:disabled { opacity: .45; }
   .topbar { flex-wrap: wrap; }
   .tb-title { order: -1; width: 100%; white-space: normal; font-size: 15px; }
   .workspace { grid-template-columns: minmax(0, 1fr); }
-  .center, .side-left, .side-right { grid-column: 1; grid-row: auto; }
+  .center, .side-left, .side-right, .side-far { grid-column: 1; grid-row: auto; }
   .center { order: -1; grid-template-rows: auto; }
   .activity .panel-b { max-height: 260px; }
   .side-left { grid-template-columns: minmax(0, 1fr); }
@@ -464,6 +470,48 @@ input[type='range']:disabled { opacity: .45; }
   .txtimer { position: static; margin-top: 6px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ------------------------------------------------------------ écran large (1920 × 1080 et plus) : tout sur un écran */
+@media (min-width: 1800px) and (min-height: 860px) {
+  body { overflow: hidden; }
+  .app { max-width: none; height: 100vh; margin: 0; box-sizing: border-box; border-radius: 0; border: 0;
+    grid-template-rows: auto minmax(0, 1fr) auto; padding: 8px 10px; gap: 8px; }
+  .workspace { grid-template-columns: 236px minmax(0, 1fr) 250px 310px; grid-template-rows: minmax(0, 1fr); min-height: 0; align-items: stretch; gap: 8px; }
+  /* Plus compact pour tout faire tenir en hauteur */
+  :root { --btn-h: 26px; }
+  .panel-h { padding: 7px 10px 5px; }
+  .panel-b { padding: 8px 10px 9px; gap: 7px; }
+  .tune-panel { padding: 8px 10px; gap: 6px; }
+  .tune-panel .hint, .tune-panel .msg:empty { display: none; }
+  .meters-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+  .meters .mt { padding: 4px 6px; gap: 2px; }
+  .meters .mt-v { font-size: 13px; }
+  .meters #mtS { grid-column: auto; }
+  #dgWf { height: 130px; }
+  /* Messages pré-enregistrés : dans la 4e colonne, sous les opérateurs (déplacés par panels.js) */
+  .side-far .msgs { border-radius: var(--v2-panel-radius); }
+  .side-far .msgs-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .side-far .msgs-note { margin-left: 0; }
+  .side-far .msgs-b .btn { white-space: normal; text-align: left; justify-content: flex-start; }
+  .side-left, .center, .side-right, .side-far { grid-row: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
+  .side-left { grid-column: 1; } .center { grid-column: 2; } .side-right { grid-column: 3; } .side-far { grid-column: 4; }
+  .side { gap: 8px; }
+  .center { grid-template-rows: auto auto minmax(0, 1fr); gap: 8px; overflow: hidden; }
+  .center > .activity { min-height: 0; }
+  .center .activity:not(.collapsed) { display: flex; flex-direction: column; }
+  .dg { min-height: 0; flex: 1; overflow: hidden; }
+  .dg-cols, .rt-grid { min-height: 0; flex: 1; }
+  .ws-col { min-height: 0; }
+  .dg-col { min-height: 0; }
+  .dg-list, .rt-rx, .ws-list { max-height: none; }
+  .rt-rx { min-height: 0; }
+  .activity .panel-b { min-height: 0; }
+  /* Opérateurs : toute la hauteur de la 4e colonne, discussion extensible */
+  .side-far .panel[data-panel='ops']:not(.collapsed) { display: flex; flex-direction: column; box-sizing: border-box; flex: 1; min-height: 260px; }
+  .side-far { display: flex; flex-direction: column; }
+  .side-far .panel[data-panel='ops'] > .panel-b { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .side-far .chat { max-height: none; flex: 1; min-height: 120px; }
+}
 
 /* ------------------------------------------------------------ avertissement d'inactivité */
 .idle-banner {
@@ -693,3 +741,24 @@ body.digi-popup .rt-rx { max-height: none; }
 .ws-row.me { background: rgba(255, 32, 32, .2); }
 .ws-list { max-height: 380px; }
 body.digi-popup .ws-list { max-height: none; }
+
+/* ------------------------------------------------------------ cadres détachables (panels.js) */
+.detach-btn {
+  float: right; margin: -2px -2px 0 8px; font: inherit; font-size: 10px; line-height: 1; letter-spacing: 0; text-transform: none;
+  color: var(--v2-text-dim); background: none; border: 1px solid transparent; border-radius: 4px; padding: 2px 5px; cursor: pointer;
+}
+.detach-btn:hover { color: var(--v2-accent-cyan-bright); border-color: var(--v2-border); }
+.msgs-h .detach-btn, .toolbar .detach-btn { float: none; margin: 0 0 0 auto; }
+.msgs-h .msgs-note + .detach-btn { margin-left: 8px; }
+.detach-btn.floating { position: absolute; top: 4px; right: 4px; z-index: 2; float: none; margin: 0; }
+.vfo-row { position: relative; }
+.vfo-row > .detach-btn.floating { top: -2px; right: 50%; transform: translateX(50%); }
+.detached-ph { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; font-size: 10px; color: var(--v2-text-dim); border-style: dashed; }
+.detached-ph .btn { --btn-h: 24px; }
+body.panel-popup { padding: 8px; min-height: 100vh; box-sizing: border-box; overflow: auto; }
+body.panel-popup > [data-panel] { width: 100%; box-sizing: border-box; margin: 0; }
+body.panel-popup .chat { max-height: none; }
+body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
+.msgs { position: relative; }
+.msgs-h { padding-right: 34px; }
+.msgs-h .detach-btn, .msgs-h .msgs-note + .detach-btn { position: absolute; top: 8px; right: 8px; margin: 0; }

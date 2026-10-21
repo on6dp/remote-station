@@ -37,23 +37,23 @@
   <div class="workspace">
     <!-- ============================================================ colonne gauche -->
     <aside class="side side-left">
-      <section class="panel">
+      <section data-panel="rf" class="panel">
         <h2 class="panel-h">RF front end</h2>
         <div class="panel-b" id="sec-front"></div>
       </section>
-      <section class="panel">
+      <section data-panel="mode" class="panel">
         <h2 class="panel-h">Mode</h2>
         <div class="panel-b">
           <div class="grid2" id="modeKeys"></div>
           <div class="sub-h">Mode appliqué à <b id="modeTarget">VFO A</b></div>
         </div>
       </section>
-      <section class="panel">
+      <section data-panel="filter" class="panel">
         <h2 class="panel-h">Filtre</h2>
         <div class="panel-b" id="sec-filter"></div>
       </section>
       <!-- Mesures de la station (sous le filtre : la largeur du bas sert aux messages pré-enregistrés) -->
-      <section class="panel meters">
+      <section data-panel="meters" class="panel meters">
         <h2 class="panel-h">Station meters</h2>
         <div class="panel-b">
           <div class="meters-h"><span class="m-mode" id="mMode">RX</span><span class="txtimer" id="txTimer"></span></div>
@@ -72,7 +72,7 @@
 
     <!-- ============================================================ centre -->
     <main class="center">
-      <div class="vfo-row">
+      <div class="vfo-row" data-panel="vfo">
         <!-- VFO A / MAIN -->
         <section class="vfo vfo-main" id="vfoA" data-v="A" aria-label="VFO A (MAIN)">
           <div class="vfo-top">
@@ -129,7 +129,7 @@
       </div>
 
       <!-- bande d'accord (le spectre du FTX-1 ne passe pas par le CAT) -->
-      <section class="panel tune-panel">
+      <section data-panel="bands" class="panel tune-panel">
         <div class="toolbar">
           <span class="tl">Step</span>
           <div class="seg" id="stepKeys"></div>
@@ -157,7 +157,7 @@
 
     <!-- ============================================================ colonne droite -->
     <aside class="side side-right">
-      <section class="panel">
+      <section data-panel="audio" class="panel">
         <h2 class="panel-h">RX audio</h2>
         <div class="panel-b">
           <div id="sec-audio"></div>
@@ -171,16 +171,16 @@
           </div>
         </div>
       </section>
-      <section class="panel">
+      <section data-panel="dsp" class="panel">
         <h2 class="panel-h">DSP</h2>
         <div class="panel-b" id="sec-dsp"></div>
       </section>
       <!-- Accord avant d'émettre : juste au-dessus du TX (caché si le TRX n'a pas de boîte d'accord) -->
-      <section class="panel" id="panelTune">
+      <section data-panel="tune" class="panel" id="panelTune">
         <h2 class="panel-h">Accord (tuner)</h2>
         <div class="panel-b" id="sec-tune"></div>
       </section>
-      <section class="panel">
+      <section data-panel="tx" class="panel">
         <h2 class="panel-h">TX</h2>
         <div class="panel-b">
           <div class="rxtx" id="rxtx"><i></i><span id="rxtxText">RX</span></div>
@@ -193,7 +193,11 @@
           <div id="sec-tx"></div>
         </div>
       </section>
-      <section class="panel">
+    </aside>
+
+    <!-- ============================================================ 4e colonne : opérateurs et messages -->
+    <aside class="side side-far">
+      <section data-panel="ops" class="panel">
         <h2 class="panel-h">Opérateurs</h2>
         <div class="panel-b">
           <p class="ctrl-text" id="ctrlText">Personne n'a la main.</p>
@@ -211,7 +215,7 @@
   </div>
 
   <!-- ============================================================ messages pré-enregistrés -->
-  <footer class="msgs" id="msgs">
+  <footer data-panel="msgs" class="msgs" id="msgs">
     <div class="msgs-h">
       <span class="msgs-t">Messages pré-enregistrés</span>
       <label>Correspondant <input id="dxCall" maxlength="12" placeholder="indicatif" autocomplete="off" spellcheck="false"></label>
@@ -243,6 +247,7 @@
 <script src="/js/ftdx10.js"></script>
 <script src="/js/ic7300.js"></script>
 <script src="/js/ulaw.js"></script>
+<script src="/js/panels.js"></script>
 <script src="/js/digi.js"></script>
 <script src="/js/app.js"></script>
 </body>

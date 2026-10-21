@@ -8,7 +8,7 @@
  */
 (function () {
   'use strict';
-  const $ = (id) => document.getElementById(id);
+  const $ = (id) => document.getElementById(id) || (window.RSPANELS ? window.RSPANELS.find(id) : null);
   const store = {
     get(k, d) { try { const v = localStorage.getItem('rs.dg.' + k); return v == null ? d : v; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem('rs.dg.' + k, String(v)); } catch (e) {} }

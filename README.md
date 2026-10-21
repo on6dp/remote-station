@@ -11,9 +11,9 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.6.0** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.7.0** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
-**Télécharger un paquet prêt à installer** : onglet **Releases** (ou **Tags**) du dépôt → version voulue → `Source code (tar.gz)`. Le paquet s'installe avec la procédure « Mettre à jour le serveur » ci-dessous (le dossier extrait s'appelle alors `remote-station-0.6.0` : le renommer en `remote-station`, ou utiliser l'archive `remote-station-X.Y.Z.tar.gz` fournie avec la version).
+**Télécharger un paquet prêt à installer** : onglet **Releases** (ou **Tags**) du dépôt → version voulue → `Source code (tar.gz)`. Le paquet s'installe avec la procédure « Mettre à jour le serveur » ci-dessous (le dossier extrait s'appelle alors `remote-station-0.7.0` : le renommer en `remote-station`, ou utiliser l'archive `remote-station-X.Y.Z.tar.gz` fournie avec la version).
 
 Le guide complet est dans [LISEZMOI.md](LISEZMOI.md). Ci-dessous, l'aide-mémoire des opérations courantes.
 
@@ -185,6 +185,8 @@ Après un redémarrage, la page réactive l'audio toute seule. Si elle affiche �
 3. Accorder : molette ou glisser sur les chiffres, flèches ↑ ↓, touches de bande et de mode. **PTT** : bouton ou barre d'espace (maintenir).
 4. **Écouter** : cadre RX AUDIO → « 🔊 Écouter le TRX », réglage du volume juste en dessous. Tout le monde peut écouter, même sans avoir la main (écouteurs ONL compris).
 5. **Libérer la main** en partant.
+
+**Disposition** : sur un écran 1920 × 1080 ou plus, tout tient sur un seul écran. Chaque cadre a un bouton **⧉** (en haut à droite) qui l'ouvre dans sa propre fenêtre, à placer où l'on veut (2e écran…) ; « Ramener » le remet dans le dashboard. La disposition est retenue : si Chrome autorise les fenêtres pop-up pour remote.op0p.be, les fenêtres se rouvrent à leur place au chargement suivant.
 6. **FT8 · FT4** : onglet au centre de la page. Cascade 0–3000 Hz, « Activité de bande » (tous les messages décodés, CQ en vert, messages avec ON5VL / OR0L en rouge) et « Fréquence RX ». Split comme dans WSJT-X : **clic gauche** sur la cascade ou sur une ligne = fréquence de **réception** (vert), **clic droit** = fréquence d'**émission** (rouge) ; boutons « TX ← RX » et « RX ← TX ». Un clic sur **FT8** ou **FT4** met le TRX sur la fréquence d'appel de ce mode dans sa bande, en DATA-U ; « QSY » va sur la fréquence choisie dans la liste (il faut avoir la main dans les deux cas). Le bouton **⧉** à droite des onglets ouvre les modes numériques dans une **fenêtre séparée** (à placer sur un 2e écran) ; l'onglet **Synchro** montre l'heure du serveur, l'écart de votre PC et le calage des DT. Le décodage se fait sur le serveur, à l'heure du VPS : l'heure du PC du club n'a pas d'importance. L'émission FT8 / FT4 et RTTY (indicatif ON5VL) arrive dans une prochaine version.
 7. **RTTY** : onglet RTTY, régler shift et vitesse (170 Hz / 45,45 bauds par défaut), cliquer sur le signal dans la cascade (les repères jaune = Mark et bleu = Space doivent tomber sur ses deux traces ; sinon « Inversé »). Le texte reçu défile à gauche ; à droite, le correspondant (double-clic sur un indicatif reçu) et les macros préparent le texte à émettre.
 8. **WSPR** : onglet WSPR, choisir la bande dans la liste (le TRX y va). Toutes les 2 minutes, une dizaine de secondes après la minute paire, la liste des stations entendues se complète : indicatif, locator, puissance, fréquence, dérive et distance (si `stationGrid` est réglé).
