@@ -799,3 +799,16 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
   .side-far .msgs-h label { display: grid; gap: 2px; flex: none; }
   .side-far .msgs-row { margin-top: 4px; }
 }
+
+/* ------------------------------------------------------------------ JTTY */
+.jt-th, .jt-row { display: grid; grid-template-columns: 54px 30px 40px minmax(0, 1fr); gap: 6px; padding: 2px 8px; font-size: 11px; }
+.jt-th { color: var(--v2-text-dim); font-size: 9px; letter-spacing: .8px; text-transform: uppercase; border-bottom: 1px solid var(--v2-border-dark); padding-block: 4px; }
+.jt-th span:nth-child(-n+3), .jt-row span:nth-child(-n+3) { text-align: right; }
+.dg-row.jt-row span:nth-child(4) { white-space: normal; overflow-wrap: anywhere; text-align: left; }
+.dg-row.jt-row.live span:nth-child(4) { color: var(--v2-accent-cyan-bright); }
+.dg-row.jt-row.live.me span:nth-child(4) { color: #ffc4b8; }
+.jt-chat .jt-row { padding-block: 3px; }
+.jt-tx { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--v2-border-dark); border-radius: 6px; background: var(--v2-bg-darker); padding-bottom: 8px; }
+.jt-tx .dg-tx { padding: 0 8px; }
+.jt-tx-row { display: flex; gap: 6px; padding: 0 8px; }
+.jt-tx-row input { flex: 1; min-width: 0; font: inherit; font-size: 13px; color: #ffd9d0; background: #07090d; border: 1px solid var(--v2-border); border-radius: 5px; padding: 6px 8px; text-transform: uppercase; }

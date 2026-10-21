@@ -99,6 +99,10 @@ for c in [shim] + kiss:
     subprocess.run([a.cc] + CFLAGS + ['-c', c, '-o', o], check=True)
     extra_objs.append(o)
 
+# Module OpenMP de remplacement (un seul fil)
+omp = os.path.join(HERE, 'omp_lib.f90')
+mods['omp_lib'] = [omp]
+
 compile_file(os.path.join(a.wsjtx, a.main))
 for e in a.extra: compile_file(os.path.join(a.wsjtx, e))
 

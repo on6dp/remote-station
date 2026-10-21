@@ -45,9 +45,9 @@
   // ------------------------------------------------------------------ construction des onglets et des fenêtres
   // Même code pour le centre du dashboard et pour la fenêtre séparée (digi.html, sans l'onglet Activité).
   const TABS = [
-    ['events', 'Activité'], ['ftx', 'FT8 · FT4'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['gap', ''], ['sync', 'Synchro']
+    ['events', 'Activité'], ['ftx', 'FT8 · FT4'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['gap', ''], ['sync', 'Synchro']
   ];
-  const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'sync'];
+  const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'sync'];
   const SOON = {
   };
   const FTX_PANE = `
@@ -129,6 +129,35 @@
       <div class="ws-th"><span>UTC</span><span>dB</span><span>DT</span><span>Fréquence</span><span>Dérive</span><span>Indicatif</span><span>Locator</span><span>Puiss.</span><span>Distance</span></div>
       <div class="dg-list ws-list" id="wsList"></div>
     </div>`;
+  const JTTY_PANE = `
+    <div class="dg-bar">
+      <select id="jtDial" aria-label="Fréquence JTTY"></select>
+      <button class="btn" type="button" id="jtQsy" title="Met le VFO A sur la fréquence JTTY choisie, en DATA-U">QSY</button>
+      <span class="dg-f rx">RX <b id="jtRxF">1500</b> Hz</span>
+      <span class="dg-f tx">TX <b id="jtTxF">1500</b> Hz</span>
+      <span class="dg-note">4-GFSK · 31,25 bauds · 127 Hz · trames de 1,9 s, à tout moment</span>
+      <span class="dg-status" id="jtStatus"></span>
+    </div>
+    <div class="dg-wf-slot" data-slot="jtty"></div>
+    <div class="dg-cols">
+      <div class="dg-col">
+        <div class="dg-h"><span>Activité JTTY</span><button class="dg-mini" type="button" id="jtClear">Effacer</button></div>
+        <div class="jt-th"><span>UTC</span><span>dB</span><span>Fréq</span><span>Message</span></div>
+        <div class="dg-list" id="jtBand"></div>
+      </div>
+      <div class="dg-col">
+        <div class="dg-h"><span>Fréquence RX <b id="jtRxF2">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span></div>
+        <div class="dg-list jt-chat" id="jtRx"></div>
+      </div>
+    </div>
+    <div class="jt-tx">
+      <div class="rt-macros" id="jtMacros"></div>
+      <div class="jt-tx-row">
+        <input id="jtTxt" maxlength="160" placeholder="Texte à émettre (F1 à F8 : macros)…" autocomplete="off" spellcheck="false">
+        <button class="btn btn-tx" type="button" id="jtSend" disabled>Émettre</button>
+      </div>
+      <p class="dg-tx">Émission JTTY sous <b>ON5VL</b> : avec l'émission des modes numériques (prochaine version).</p>
+    </div>`;
   const SYNC_PANE = `
     <div class="sy-grid">
       <div class="sy-box"><span>Heure du serveur (UTC)</span><b id="syVps">--:--:--</b><small>référence de tous les décodages</small></div>
@@ -172,6 +201,7 @@
     add('ftx', 'dg', FTX_PANE);
     add('rtty', 'dg rt', RTTY_PANE);
     add('wspr', 'dg ws', WSPR_PANE);
+    add('jtty', 'dg jt', JTTY_PANE);
     for (const k in SOON) add(k, 'dg-soon', '<p>' + SOON[k] + '</p><p class="dg-note">En préparation.</p>');
     add('sync', 'dg-sync', SYNC_PANE);
     add('away', 'dg-soon', '<p>Les modes numériques sont ouverts dans une <b>fenêtre séparée</b>.</p><p><button class="btn" type="button" id="dgBack">Ramener ici</button></p>');
@@ -193,7 +223,7 @@
     document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
     document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== pane; });
     // Une seule cascade, déplacée dans la fenêtre affichée (FT8/FT4 ou RTTY)
-    if (pane === 'ftx' || pane === 'rtty' || pane === 'wspr') {
+    if (pane === 'ftx' || pane === 'rtty' || pane === 'wspr' || pane === 'jtty') {
       const slot = document.querySelector('.dg-wf-slot[data-slot="' + pane + '"]');
       const el = document.querySelector('.dg-wf');
       if (slot && el && el.parentElement !== slot) slot.appendChild(el);
@@ -205,14 +235,15 @@
   }
   function setDetached(on) {
     detached = !!on;
-    if (!on) { needHist = true; wsNeedHist = true; } // retour de la fenêtre séparée : on récupère ce qui a été décodé entre-temps
+    if (!on) { needHist = true; wsNeedHist = true; jtNeedHist = true; } // retour de la fenêtre séparée : on récupère ce qui a été décodé entre-temps
     // Fenêtre séparée ouverte : le centre du dashboard revient sur l'activité de la station
     showTab(on && !POPUP && MODE_TABS.indexOf(tab) >= 0 ? 'events' : tab);
   }
   // Le serveur ne décode (et la station n'envoie la BF) que si au moins un membre regarde la fenêtre
   function announce() {
     if (!api || (detached && !POPUP)) return; // la fenêtre séparée annonce elle-même
-    const watching = (tab === 'ftx' || tab === 'jt65' || tab === 'rtty' || tab === 'wspr') && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
+    const watching = (tab === 'ftx' || tab === 'jt65' || tab === 'rtty' || tab === 'wspr' || tab === 'jtty') && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
+    if (watching && tab === 'jtty') { api.send({ t: 'digi', mode: 'JTTY', hist: jtNeedHist }); jtNeedHist = false; return; }
     if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rt });
     if (watching && tab === 'wspr') { api.send({ t: 'digi', mode: 'WSPR', hist: wsNeedHist }); wsNeedHist = false; return; }
     api.send({ t: 'digi', mode: watching ? mode : null, hist: watching && needHist });
@@ -253,7 +284,7 @@
   })();
   let floor = null;
   function onRow(bytes) {
-    if ((tab !== 'ftx' && tab !== 'jt65' && tab !== 'rtty' && tab !== 'wspr') || detached || !wf.ctx) return;
+    if ((tab !== 'ftx' && tab !== 'jt65' && tab !== 'rtty' && tab !== 'wspr' && tab !== 'jtty') || detached || !wf.ctx) return;
     // bytes[0] = 0x10, puis une case de 6,25 Hz par octet (dB*2+240), depuis 0 Hz
     const n = Math.min(bytes.length - 1, Math.ceil(WF_MAX_HZ / 6.25));
     const vals = bytes.subarray(1, 1 + n);
@@ -302,8 +333,8 @@
     }
     if (tab === 'rtty') return drawRttyMarks(c, w);
     if (tab === 'wspr') return drawWsprMarks(c, w);
-    // Largeur d'un signal FT8 (50 Hz) / FT4 (83 Hz) : TX en rouge (haut), RX en vert (bas)
-    const bw = mode === 'FT4' ? 83 : mode === 'JT65' ? 178 : 50;
+    // Largeur d'un signal FT8 (50 Hz) / FT4 (83 Hz) / JT65 (178 Hz) / JTTY (127 Hz, centré) : TX en rouge, RX en vert
+    const bw = tab === 'jtty' ? 127 : mode === 'FT4' ? 83 : mode === 'JT65' ? 178 : 50;
     const mark = (f, y, h, fill, edge) => {
       const x0 = (f / WF_MAX_HZ) * w;
       const x1 = ((f + bw) / WF_MAX_HZ) * w;
@@ -321,6 +352,7 @@
     $('dgRxF').textContent = Math.round(rxF) + ' Hz';
     $('dgRxF2').textContent = Math.round(rxF);
     $('dgTxF').textContent = Math.round(txF);
+    if ($('jtRxF')) { $('jtRxF').textContent = Math.round(rxF); $('jtTxF').textContent = Math.round(txF); $('jtRxF2').textContent = Math.round(rxF) + ' Hz'; }
   }
   // ------------------------------------------------------------------ RTTY
   const RTTY_DIAL = [['80 m', 3590], ['40 m', 7040], ['30 m', 10142], ['20 m', 14085], ['17 m', 18101], ['15 m', 21085], ['12 m', 24910], ['10 m', 28085]];
@@ -346,6 +378,17 @@
       { name: 'AGN?', text: 'AGN? AGN? PSE\n' },
       { name: 'RYRY', text: 'RYRYRYRYRYRYRYRYRYRYRYRY\n' },
       { name: 'Heure', text: 'UTC <ZT> <ZD>\n' }
+    ],
+    // JTTY : les 8 touches de fonction de WSJT-X (forme compacte : 1 ou 2 trames par message)
+    JTTY: [
+      { name: 'CQ', text: 'CQ <MYCALL> CQ' },
+      { name: 'Échange', text: '<CALL> 599 <CNTR>' },
+      { name: 'TU', text: '<CALL> TU CQ <MYCALL> CQ' },
+      { name: 'Mon ind.', text: '<MYCALL>' },
+      { name: 'Son ind.', text: '<CALL>' },
+      { name: 'TU NOW', text: 'TU NOW <CALL> 599 <CNTR>' },
+      { name: 'AGN?', text: '<CALL> AGN?' },
+      { name: '599', text: '599 <CNTR>' }
     ],
     CW: [
       { name: 'CQ', text: 'CQ CQ CQ DE <MYCALL> <MYCALL> <MYCALL> K' },
@@ -553,6 +596,114 @@
     el.classList.toggle('warn', warn);
   }
 
+  // ------------------------------------------------------------------ JTTY (WSJT-X 3.3) : clavier à clavier, trames de 1,9 s
+  // Fréquences d'appel JTTY de WSJT-X (FrequencyList) — USB / DATA-U
+  const JTTY_DIAL = [['160 m', 1839], ['80 m', 3572], ['40 m', 7078], ['30 m', 10140], ['20 m', 14090], ['17 m', 18104],
+    ['15 m', 21090], ['12 m', 24920], ['10 m', 28090], ['6 m', 50160], ['2 m', 144160]];
+  const JT_RX_WIDTH = 80;
+  let jtNeedHist = true;
+  const jtMsgs = new Map(); // clé → dernière version du message { key, f, db, done, t, text }
+  let jtLast = 0;
+  const jtMe = (u) => String(u.text || '').toUpperCase().split(/[^A-Z0-9/]+/).some((x) => stationCalls.indexOf(x) >= 0);
+  function jtRow(u) {
+    const r = document.createElement('div');
+    const up = String(u.text || '').toUpperCase();
+    const me = jtMe(u);
+    r.className = 'dg-row jt-row' + (me ? ' me' : /^CQ\b/.test(up) ? ' cq' : '') + (u.done ? ' done' : ' live');
+    r.dataset.key = u.key;
+    const cells = [utc(u.t).slice(0, 6), (u.db >= 0 ? '+' : '') + u.db, u.f, u.text + (u.done ? '' : ' ▌')];
+    for (const v of cells) { const s = document.createElement('span'); s.textContent = String(v); r.appendChild(s); }
+    r.title = u.f + ' Hz · ' + (u.done ? 'message terminé' : 'réception en cours') + ' · clic gauche : réception ici · clic droit : émission ici · double-clic : correspondant';
+    r.addEventListener('click', () => setRx(u.f));
+    r.addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(u.f); });
+    r.addEventListener('dblclick', () => jtPick(u));
+    return r;
+  }
+  const jtInRx = (u) => Math.abs(u.f - rxF) <= JT_RX_WIDTH || jtMe(u);
+  // Double-clic : l'indicatif du message (après CQ / DE, sinon le dernier) devient le correspondant
+  function jtPick(u) {
+    const w = String(u.text || '').toUpperCase().split(/\s+/).filter(Boolean);
+    const calls = w.filter((x) => CALL_RE.test(x) && stationCalls.indexOf(x) < 0);
+    let call = '';
+    const i = w.findIndex((x) => x === 'CQ' || x === 'DE');
+    if (i >= 0) call = w.slice(i + 1).find((x) => CALL_RE.test(x) && stationCalls.indexOf(x) < 0) || '';
+    if (!call) call = calls[calls.length - 1] || '';
+    if (!call) { setRx(u.f); return api && api.say('Pas d’indicatif à reprendre dans ce message.', 'warn'); }
+    const g = w.find((x) => GRID_RE.test(x) && x !== 'RR73');
+    setDx({ call, grid: g || '', rpt: fmtRpt(u.db) });
+    setRx(u.f);
+  }
+  // Mise à jour d'un message : la ligne existante est remplacée (le texte grandit trame après trame)
+  function jtUpdate(u) {
+    if (!u || !u.key) return;
+    jtMsgs.set(u.key, u);
+    if (jtMsgs.size > 300) jtMsgs.delete(jtMsgs.keys().next().value);
+    jtLast = Date.now();
+    for (const [id, inRx] of [['jtBand', true], ['jtRx', jtInRx(u)]]) {
+      const box = $(id);
+      if (!box) continue;
+      const old = box.querySelector('[data-key="' + CSS.escape(u.key) + '"]');
+      if (old) { old.replaceWith(jtRow(u)); continue; }
+      if (inRx) stickToBottom(box, () => box.appendChild(jtRow(u)));
+    }
+  }
+  function jtRedraw() {
+    const band = $('jtBand');
+    const rx = $('jtRx');
+    if (!band) return;
+    band.textContent = '';
+    rx.textContent = '';
+    const list = Array.from(jtMsgs.values()).sort((a, b) => a.t - b.t);
+    for (const u of list) {
+      band.appendChild(jtRow(u));
+      if (jtInRx(u)) rx.appendChild(jtRow(u));
+    }
+    band.scrollTop = band.scrollHeight;
+    rx.scrollTop = rx.scrollHeight;
+  }
+  function insertJtty(t) {
+    showTab('jtty');
+    const el = $('jtTxt');
+    // JTTY : une ligne, majuscules ; les retours à la ligne des macros deviennent des espaces
+    const add = macroText(t, true).replace(/\s*\n\s*/g, ' ').trim().toUpperCase();
+    el.value = (el.value.trim() ? el.value.trim() + ' ' : '') + add;
+    el.focus();
+  }
+  function initJtty() {
+    const dial = $('jtDial');
+    for (const [b, khz] of JTTY_DIAL) {
+      const o = document.createElement('option');
+      o.value = String(khz);
+      o.textContent = b + ' · ' + khz.toLocaleString('fr-BE') + ' kHz';
+      dial.appendChild(o);
+    }
+    dial.value = store.get('jtdial', '14090');
+    dial.addEventListener('change', () => { store.set('jtdial', dial.value); qsyTo(Number(dial.value)); });
+    $('jtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
+    $('jtClear').addEventListener('click', () => { jtMsgs.clear(); jtRedraw(); });
+    $('jtTxt').addEventListener('input', (e) => {
+      const el = e.target;
+      const p = el.selectionStart;
+      el.value = el.value.toUpperCase();
+      el.setSelectionRange(p, p);
+    });
+    $('jtSend').title = 'Émission JTTY : prochaine version';
+    drawMacroRow($('jtMacros'), 'JTTY', (t) => insertJtty(t));
+  }
+  function jtStatus() {
+    const st = api && api.state();
+    const el = $('jtStatus');
+    if (!el) return;
+    let txt;
+    let warn = false;
+    if (!st || !st.station) { txt = 'Station hors ligne'; warn = true; }
+    else if (!st.audio || !st.audio.active) { txt = 'La page Station n’envoie pas la BF : « Activer l’audio » sur le PC du club'; warn = true; }
+    else txt = jtLast && Date.now() - jtLast < 60000 ? 'BF reçue · réception JTTY en cours' : 'BF reçue · à l’écoute (décodage continu, 200 à 2800 Hz)';
+    if (st && st.radio && st.radio.mode && !/DATA|USB|-D/i.test(st.radio.mode)) { txt += ' · mode ' + st.radio.mode + ' : passez en DATA-U'; warn = true; }
+    el.textContent = txt;
+    el.classList.toggle('warn', warn);
+  }
+
   // ------------------------------------------------------------------ correspondant et messages pré-enregistrés
   // Correspondant commun à tous les modes (bas du dashboard, fenêtre RTTY, fenêtre séparée : synchronisés)
   let myCall = 'ON5VL';
@@ -635,6 +786,10 @@
       const inst = (window.DG && window.DG()) || window.RSDIGI;
       inst.insertRtty(t);
     });
+    drawMacroRow($('msgJtty'), 'JTTY', (t) => {
+      const inst = (window.DG && window.DG()) || window.RSDIGI;
+      inst.insertJtty(t);
+    });
     drawMacroRow($('msgCw'), 'CW', () => api && api.say('Émission CW (par le manipulateur du TRX) : prochaine version.', 'warn'));
   }
   // Rangée de macros : clic = utiliser, clic droit = modifier, ✎ = modifier
@@ -645,7 +800,7 @@
       const b = box.ownerDocument.createElement('button');
       b.className = 'btn';
       b.type = 'button';
-      if (mode === 'RTTY') { const s = box.ownerDocument.createElement('small'); s.textContent = 'F' + (i + 1); b.appendChild(s); }
+      if (mode === 'RTTY' || mode === 'JTTY') { const s = box.ownerDocument.createElement('small'); s.textContent = 'F' + (i + 1); b.appendChild(s); }
       b.appendChild(box.ownerDocument.createTextNode(m.name || '—'));
       b.title = macroText(m.text).replace(/\n/g, ' ⏎ ') + '\n(clic droit : modifier)';
       b.addEventListener('mouseenter', () => { b.title = macroText(m.text).replace(/\n/g, ' ⏎ ') + '\n(clic droit : modifier)'; });
@@ -746,6 +901,7 @@
   function redrawMacros() {
     drawMsgs();
     drawRttyMacros();
+    drawMacroRow($('jtMacros'), 'JTTY', (t) => insertJtty(t));
   }
   function insertRtty(t) {
     showTab('rtty');
@@ -772,6 +928,7 @@
     store.set('rxf', rxF);
     drawScale();
     redrawRx();
+    if (tab === 'jtty') jtRedraw();
   }
 
   // ------------------------------------------------------------------ listes de messages
@@ -973,6 +1130,8 @@
       $('dgDetach').addEventListener('click', (e) => {
         e.stopPropagation();
         if (POPUP) return window.close();
+        // La fenêtre séparée s'ouvre sur le mode affiché
+        if (MODE_TABS.indexOf(tab) >= 0) store.set('ptab', tab);
         const w = window.open('/digi.html', 'rs-digi', 'width=1200,height=860');
         if (!w) api.say('Fenêtre bloquée par Chrome : autorisez les fenêtres pop-up pour ce site.', 'warn');
       });
@@ -991,23 +1150,24 @@
       }
       initRtty();
       initWspr();
+      initJtty();
       initMsgs();
       // Touches F1 à F12 dans la fenêtre RTTY : macros (comme FLDIGI)
       document.addEventListener('keydown', (e) => {
-        if (tab !== 'rtty' || detached || e.ctrlKey || e.altKey || e.metaKey) return;
+        if ((tab !== 'rtty' && tab !== 'jtty') || detached || e.ctrlKey || e.altKey || e.metaKey) return;
         const n = /^F(\d{1,2})$/.exec(e.key);
         if (!n) return;
-        const m = macroList('RTTY')[Number(n[1]) - 1];
+        const m = macroList(tab === 'jtty' ? 'JTTY' : 'RTTY')[Number(n[1]) - 1];
         if (!m) return;
         e.preventDefault();
-        insertRtty(m.text);
+        if (tab === 'jtty') insertJtty(m.text); else insertRtty(m.text);
       });
       $('dgTxRx').addEventListener('click', () => setTx(rxF));
       $('dgRxTx').addEventListener('click', () => setRx(txF));
       // Repli du panneau ou onglet du navigateur caché : le serveur arrête de décoder pour ce membre
       new MutationObserver(announce).observe($('centerPanel'), { attributes: true, attributeFilter: ['class'] });
       document.addEventListener('visibilitychange', announce);
-      window.addEventListener('resize', () => { if (tab === 'ftx' || tab === 'jt65' || tab === 'rtty' || tab === 'wspr') sizeCanvas(); });
+      window.addEventListener('resize', () => { if (tab === 'ftx' || tab === 'jt65' || tab === 'rtty' || tab === 'wspr' || tab === 'jtty') sizeCanvas(); });
       fillDial();
       setMode(mode);
       showTab(tab);
@@ -1016,13 +1176,16 @@
         if (tab === 'ftx' || tab === 'jt65') { clock(); status(); followBand(); }
         if (tab === 'rtty') status();
         if (tab === 'wspr') wsClock();
+        if (tab === 'jtty') jtStatus();
         if (tab === 'sync') drawSync();
       }, 500);
     },
     insertRtty,
+    insertJtty,
     onHello(me, info) {
       needHist = true;
       wsNeedHist = true;
+      jtNeedHist = true;
       if (info && info.digiCall) myCall = info.digiCall;
       if (info) myGrid = info.stationGrid || '';
       if (info) myQth = info.stationQth || '';
@@ -1048,6 +1211,8 @@
         return true;
       }
       if (m.t === 'rtty') { rttyAppend(m.text || ''); return true; }
+      if (m.t === 'jtty') { jtUpdate(m.u); return true; }
+      if (m.t === 'jtty_hist') { jtMsgs.clear(); for (const u of m.items || []) jtMsgs.set(u.key, u); jtRedraw(); return true; }
       if (m.t === 'rtty_lvl') { rttyLevels(m); return true; }
       if ((m.t === 'ftx_hist' || m.t === 'ftx') && m.mode === 'WSPR') {
         if (m.t === 'ftx_hist') {

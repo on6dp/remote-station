@@ -204,8 +204,8 @@ function relayAudio(buf) {
 
 // ---------------------------------------------------------------- modes numériques (FT8 / FT4)
 // Le décodage tourne dans un Worker (lib/digi-worker.js) dès qu'un membre ouvre la fenêtre FT8/FT4.
-const digi = { worker: null, hist: { FT8: [], FT4: [], WSPR: [], JT65: [] }, latency: null, ms: 0, last: 0, dial: 0 };
-const DIGI_MODES = ['FT8', 'FT4', 'RTTY', 'WSPR', 'JT65'];
+const digi = { worker: null, hist: { FT8: [], FT4: [], WSPR: [], JT65: [] }, latency: null, ms: 0, last: 0, dial: 0, jtty: new Map() };
+const DIGI_MODES = ['FT8', 'FT4', 'RTTY', 'WSPR', 'JT65', 'JTTY'];
 // Réglages RTTY d'un membre (chacun peut suivre un signal différent) → clé du démodulateur
 function rttyCfg(r) {
   if (!r || typeof r !== 'object') return null;
@@ -258,6 +258,14 @@ function onDigi(m) {
     return;
   }
   if (m.t === 'log') return console.error(m.msg);
+  if (m.t === 'jtty') {
+    // Messages JTTY : dernière version de chaque message (le texte grandit trame après trame)
+    digi.jtty.set(m.u.key, m.u);
+    if (digi.jtty.size > 150) digi.jtty.delete(digi.jtty.keys().next().value);
+    const msg = JSON.stringify({ t: 'jtty', u: m.u });
+    for (const c of ops) if (c.digi === 'JTTY') c.send(msg);
+    return;
+  }
   if (m.t === 'rtty_text' || m.t === 'rtty_lvl') {
     const msg = JSON.stringify(m.t === 'rtty_text' ? { t: 'rtty', text: m.text } : { t: 'rtty_lvl', m: m.m, s: m.s, c: m.c });
     for (const c of ops) if (c.digi === 'RTTY' && c.rtty && c.rtty.key === m.key) c.send(msg);
@@ -298,7 +306,7 @@ function saveMacros() {
   fs.writeFile(MACROS_FILE, JSON.stringify(macros), { mode: 0o600 }, (e) => { if (e) console.error('macros.json : ' + e.message); });
 }
 function setMacros(call, mode, list) {
-  if (['RTTY', 'CW', 'FT8'].indexOf(mode) < 0 || !Array.isArray(list)) return false;
+  if (['RTTY', 'CW', 'FT8', 'JTTY'].indexOf(mode) < 0 || !Array.isArray(list)) return false;
   const clean = list.slice(0, 24).map((m) => ({
     name: String((m && m.name) || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 14),
     text: String((m && m.text) || '').replace(/\r/g, '').replace(/[\u0000-\u0009\u000b-\u001f]/g, ' ').slice(0, 600)
@@ -628,6 +636,7 @@ function onOperator(conn, m) {
       if (changed) updateDigi();
       // Historique : à l'ouverture, ou sur demande (fenêtre séparée qui s'ouvre, retour dans le dashboard)
       if (digi.hist[mode] && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.hist[mode] });
+      if (mode === 'JTTY' && (changed || m.hist)) send(conn, { t: 'jtty_hist', items: Array.from(digi.jtty.values()) });
       return;
     }
 

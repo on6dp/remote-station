@@ -16,6 +16,13 @@ Conséquence : le projet Remote Station, qui inclut ce décodeur, doit être red
 - Copyright Joe Taylor (K1JT), Steven Franke (K9AN) et l'équipe WSJT-X
 - Licence : GNU GPL v3 (texte dans `native/wspr/COPYING`)
 
+## Décodeur JTTY de WSJT-X
+
+`lib/bin/jttyd` est le récepteur JTTY en continu de WSJT-X 3.3 (interface `jtty_rx_*` : `lib/jtty/*.f90`, codes convolutifs et CRC associés), relié à un petit programme propre à ce projet, `native/wsjtx/jttyd.c` (lit la BF 16 bits / 12 kHz sur l'entrée standard, écrit chaque mise à jour de message), et compilé par `native/wsjtx/build.py` à partir du même dépôt WSJT-X (étiquette v3.3.0-beta2), sans OpenMP (`native/wsjtx/omp_lib.f90`) et sans FFTW.
+
+- Copyright Joe Taylor (K1JT), Steven Franke (K9AN) et l'équipe WSJT-X
+- Licence : GNU GPL v3 (texte dans `native/wspr/COPYING`)
+
 ## ft8_lib (décodeur FT8 / FT4)
 
 `lib/ftx.wasm` est compilé (voir `native/ftx/build.sh`) à partir de ft8_lib, bibliothèque de décodage FT8/FT4 de Kārlis Goba (YL3JG), et de l'interface `native/ftx/ftx_wasm.c` propre à ce projet. ft8_lib inclut KISS FFT (Mark Borgerding, licence BSD).
