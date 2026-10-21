@@ -9,3 +9,7 @@ macros.json
 sstv/
 dist/
 windows/.cache/
+logbook.json
+logbook.json.tmp
+logbook-config.json
+comptes-*.csv

@@ -18,7 +18,9 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/remote-station/logs
+# Le service écrit ses données à côté du programme (sessions.json, macros.json, sstv/) et dans logs/
+# (journaux, carnet de trafic logbook.json, réglages des logs en ligne logbook-config.json)
+ReadWritePaths=/opt/remote-station
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true

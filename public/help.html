@@ -40,6 +40,7 @@
   <a href="#keys">11. Keyboard shortcuts</a>
   <a href="#trouble">12. Troubleshooting</a>
   <a href="#club">13. The club PC (Station page)</a>
+  <a href="#logs">14. Logs online (station logbook)</a>
 </nav>
 
 <div class="note">The dashboard runs in any recent browser (Chrome, Edge, Firefox) on a PC, Mac, tablet or phone. It is designed for a
@@ -252,6 +253,37 @@ start with Windows, no sleep; it can also install the server itself on that PC (
   <li>Chrome → Settings → Performance: always keep remote.op0p.be active; Windows: sleep set to Never.</li>
 </ol>
 <p>Server installation and settings: see <code>LISEZMOI.md</code> and <code>README.md</code> (project repository).</p>
+
+
+<h2 id="logs">14. Logs online (station logbook)</h2>
+<p><b>Logs online</b> tab (the last one, right of Synchro): the station logbook, shared by all members, with upload to <b>LoTW</b>, <b>eQSL</b>, <b>Club Log</b> and
+<b>QRZ.com</b>, <b>ADIF</b> or <b>Cabrillo</b> export, and <b>UDP</b> forwarding to PC logbooks (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).</p>
+<ul>
+  <li><b>Logging a QSO</b>: <span class="k">⇩ TRX</span> takes the transceiver frequency and mode (in DATA: the mode of the tab on screen, FT8, RTTY…), the power,
+    and the correspondent from the bottom of the page (call, name, QTH, locator). The UTC time is taken when you type the first letter of the call; <span class="k">⟳ Maintenant</span> (now) resets it.
+    <span class="k">Enter</span> or <span class="k">Enregistrer le QSO</span> (save). A duplicate (same call, band and mode within half an hour) is reported before saving.</li>
+  <li><b>QO-100</b>: with the converter IF (e.g. 432.525 MHz) the QO-100 box is ticked and the 2400.xxx MHz uplink frequency is logged (QO-100 satellite, downlink 10489.xxx MHz).</li>
+  <li><b>List</b>: the last 300 QSOs (search by call, name or operator). Columns LoTW, eQSL, CL (Club Log), QRZ: <b>·</b> not sent yet, <b>✓</b> sent, <b>✗</b> rejected
+    (hover for details), <b>★</b> confirmed on LoTW. Click a row to edit or delete the QSO (its author or an administrator).</li>
+  <li><b>Exporter ▾</b> (export): ADIF 3 (.adi) or Cabrillo 3 (.log, with the contest name), for one call and an optional date range.</li>
+  <li><b>Synchronisation ▾</b> (administrators): one window per service, as in Swisslog — <b>Détails</b> tab (call, optional date range, resend QSOs already sent,
+    delay; Club Log: « Effacer le log ClubLog existant », clear the existing log) then <span class="k">Télécharger</span> (upload); <b>Traitement</b> tab: progress, report, <span class="k">Arrêt</span> (stop).
+    <b>Opérations LoTW</b>: export, sign with TQSL, upload, read confirmations, status; <span class="k">Confirmations</span> only reads the confirmations received.</li>
+  <li><b>⚙ Configuration</b> (administrators): tabs CLUBLOG, eQSL, LoTW, QRZ, UDP. « Upload QSOs automatically when they are logged » box, logins and passwords
+    (👁 button to see them while typing), delay, <span class="k">Tester</span> (test). Passwords and keys stay on the server: the window only shows « enregistré » (stored);
+    an empty field keeps the value, ✕ deletes it.</li>
+</ul>
+<table>
+  <tr><th>Service</th><th>What you need</th></tr>
+  <tr><td>Club Log</td><td>Account e-mail, an application password (Club Log → Settings → App Passwords), the application API key (requested once from the Club Log helpdesk). An access refusal stops uploads until the configuration is saved again.</td></tr>
+  <tr><td>eQSL</td><td>eQSL call and password; « QTH Nickname » if the account has several QTHs.</td></tr>
+  <tr><td>QRZ.com</td><td>One QRZ logbook API key per call (QRZ → Logbook → Settings), XML subscription or higher.</td></tr>
+  <tr><td>LoTW</td><td><b>TQSL</b> and the call's <b>certificate</b> installed on the PC running the server (the club's Windows server), the TQSL « Station Location » name, and
+    the LoTW website login for confirmations. The certificate and its password never leave that PC. With the server on the VPS: « Exporter pour TQSL (.adi) »,
+    sign the file with TQSL on the club PC, then « Marquer comme envoyés » (mark as sent).</td></tr>
+  <tr><td>UDP</td><td>Address, port and format expected by the logbook: WSJT-X « Logged ADIF » (Swisslog, Log4OM, HRD Logbook; usually port 2237), N1MM (port 12060), or raw ADIF.
+    Packets are sent by the server: 127.0.0.1 when the server runs on the club PC.</td></tr>
+</table>
 
 <footer>Remote Station UBA-LGE — ON5VL / OR0L. Decoders: ft8_lib (MIT), WSJT-X (GPL v3: WSPR, JT65, JTTY); see TIERS.md.
 <a href="/aide">Version française</a></footer>

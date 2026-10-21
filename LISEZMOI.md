@@ -1,4 +1,4 @@
-# Remote Station — v0.13.0 (CAT + écoute de la BF)
+# Remote Station — v0.14.0 (CAT + écoute de la BF)
 
 Pilotage à distance d'un transceiver du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
 Trois modèles sont pris en charge : **Yaesu FTX-1**, **Yaesu FTDX10** et **Icom IC-7300**. Un seul est branché à la fois ; on choisit lequel sur la page Station du club, et la face avant des membres s'adapte toute seule.
@@ -87,7 +87,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.13.0.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.14.0.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -95,7 +95,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.13.0.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.14.0.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station
@@ -208,6 +208,24 @@ Après un redémarrage, la page réactive l'audio toute seule. Si elle affiche �
 3. Vérifier les plages `txRanges` de `config.json` par rapport à la licence de la station du club (IBPT). Les valeurs fournies sont celles de la Région 1 IARU, **à valider**.
 4. Mettre `"allowTx": true` puis `sudo systemctl restart remote-station`.
 
+## Logs online (carnet de trafic, v0.14)
+
+Onglet « Logs online » du dashboard : carnet de la station, envois LoTW / eQSL / Club Log / QRZ.com, export ADIF et Cabrillo, UDP vers les
+logbooks du PC. Mode d'emploi : manuel, section 14 (`/aide#logs`). Côté serveur :
+
+- Le carnet est dans `logs/logbook.json`, les réglages des services (mots de passe, clés API) dans `logs/logbook-config.json` (droits 600).
+  Ni l'un ni l'autre ne doit être publié ; ils sont gardés lors des mises à jour. Les mots de passe ne sont jamais renvoyés aux navigateurs.
+- Seuls les **administrateurs** (`adduser.js … --admin`) ouvrent la configuration et lancent les synchronisations ; tous les membres
+  (sauf les écouteurs ONL) enregistrent des QSO, et modifient ou suppriment les leurs.
+- **LoTW** : le certificat de l'indicatif reste sur le PC où TQSL est installé. Si le serveur tourne sur ce PC (installateur Windows, partie
+  Serveur), Remote Station appelle TQSL lui-même. Sur le VPS (sans certificat) : « Exporter pour TQSL (.adi) » dans Synchronisation LoTW,
+  signer le fichier avec TQSL sur le PC du club, puis « Marquer comme envoyés ».
+- **UDP** : les paquets partent du serveur. Pour Swisslog / N1MM sur le PC du club, le serveur doit tourner sur ce PC (adresse 127.0.0.1),
+  sinon le PC doit être joignable depuis le VPS (redirection de port UDP).
+- Le service systemd doit pouvoir écrire dans `/opt/remote-station` (sessions, macros, images SSTV) : depuis la v0.14, le fichier
+  `deploy/remote-station.service` le permet (`ReadWritePaths=/opt/remote-station`). Après une mise à jour :
+  `sudo cp deploy/remote-station.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl restart remote-station`.
+
 ## Journal des accès
 
 `/opt/remote-station/logs/access-AAAA-MM.log`, une ligne JSON par événement : connexions, échecs de connexion, prise et libération de la main, début et fin d'émission (indicatif, IP, fréquence, mode, durée, raison de la coupure).
@@ -234,6 +252,8 @@ sudo grep tx_start /opt/remote-station/logs/access-$(date +%Y-%m).log | tail
 | `public/css/panel.css` | Styles de la page Station |
 | `public/fonts/` | Police Roboto Mono (SIL OFL) |
 | `adduser.js`, `importusers.js`, `init-config.js` | Gestion des membres (un par un ou en une fois) et de la configuration |
+| `lib/logbook.js`, `lib/logsync.js` | Carnet de trafic (ADIF, Cabrillo) et envois LoTW / eQSL / Club Log / QRZ / UDP |
+| `public/js/logbook.js` | Onglet « Logs online » du dashboard |
 | `deploy/` | Service systemd et site nginx |
 
 ## Suite prévue

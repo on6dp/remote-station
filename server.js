@@ -339,6 +339,99 @@ function onDigi(m) {
     for (const c of ops) if (c.digi === m.mode) c.send(msg);
   }
 }
+
+// ---------------------------------------------------------------- carnet de trafic et carnets en ligne (version « extended »)
+const LB = require('./lib/logbook.js');
+const { Sync, SERVICES: LOG_SERVICES } = require('./lib/logsync.js');
+const VERSION = (() => { try { return require('./package.json').version; } catch (e) { return '0'; } })();
+// Dans le dossier des journaux par défaut : le seul où le service systemd du VPS peut écrire (ReadWritePaths)
+const book = new LB.Logbook(cfg.logbookFile ? path.resolve(ROOT, cfg.logbookFile) : path.join(LOG_DIR, 'logbook.json'));
+const LOGCFG_FILE = cfg.logbookConfig ? path.resolve(ROOT, cfg.logbookConfig) : path.join(LOG_DIR, 'logbook-config.json');
+const LOGCFG_DEFAULT = {
+  clublog: { auto: false, email: '', password: '', api: '', delay: 15 },
+  eqsl: { auto: false, user: '', password: '', nickname: '', delay: 5 },
+  qrz: { auto: false, keys: {}, delay: 5 },
+  lotw: { auto: false, tqsl: process.platform === 'win32' ? 'C:\\Program Files (x86)\\TrustedQSL\\tqsl.exe' : '/usr/bin/tqsl', tqslDir: '', location: '', password: '', login: '', webPassword: '', delay: 0, lastConfirm: '' },
+  udp: []
+};
+let logCfg = (() => {
+  let c = {};
+  try { c = JSON.parse(fs.readFileSync(LOGCFG_FILE, 'utf8')); } catch (e) { /* pas encore réglé */ }
+  const out = {};
+  for (const k of Object.keys(LOGCFG_DEFAULT)) out[k] = Array.isArray(LOGCFG_DEFAULT[k]) ? (Array.isArray(c[k]) ? c[k] : []) : Object.assign({}, LOGCFG_DEFAULT[k], c[k] || {});
+  return out;
+})();
+function saveLogCfg() {
+  fs.writeFileSync(LOGCFG_FILE, JSON.stringify(logCfg, null, 2) + '\n', { mode: 0o600 });
+}
+// Champs secrets : jamais renvoyés au navigateur (seulement « déjà enregistré »)
+const SECRETS = { clublog: ['password', 'api'], eqsl: ['password'], lotw: ['password', 'webPassword'] };
+function logCfgPublic() {
+  const o = JSON.parse(JSON.stringify(logCfg));
+  for (const [s, keys] of Object.entries(SECRETS)) for (const k of keys) { o[s]['has_' + k] = !!o[s][k]; o[s][k] = ''; }
+  o.qrz.has_keys = {};
+  for (const [c, v] of Object.entries(o.qrz.keys || {})) o.qrz.has_keys[c] = !!v;
+  o.qrz.keys = {};
+  return o;
+}
+function setLogCfg(n) {
+  if (!n || typeof n !== 'object') return;
+  const str = (v, max) => String(v == null ? '' : v).slice(0, max || 200);
+  for (const s of ['clublog', 'eqsl', 'qrz', 'lotw']) {
+    const src = n[s];
+    if (!src || typeof src !== 'object') continue;
+    const dst = logCfg[s];
+    dst.auto = !!src.auto;
+    const d = Number(src.delay);
+    if (Number.isFinite(d)) dst.delay = Math.max(0, Math.min(120, Math.round(d)));
+    for (const k of Object.keys(LOGCFG_DEFAULT[s])) {
+      if (k === 'auto' || k === 'delay' || k === 'keys' || k === 'lastConfirm' || src[k] === undefined) continue;
+      const secret = (SECRETS[s] || []).indexOf(k) >= 0;
+      if (secret && src[k] === '') continue;               // champ laissé vide : on garde l'ancien
+      dst[k] = src[k] === '__effacer__' ? '' : str(src[k], 300);
+    }
+    if (s === 'qrz' && src.keys && typeof src.keys === 'object') {
+      for (const [c, v] of Object.entries(src.keys)) {
+        const call = String(c).toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
+        if (!call || v === '') continue;
+        if (v === '__effacer__') delete dst.keys[call]; else dst.keys[call] = str(v, 80);
+      }
+    }
+  }
+  // Le serveur n'exécute que TQSL (pas n'importe quel programme choisi depuis le dashboard)
+  if (!/^tqsl(\.exe)?$/i.test(path.basename(String(logCfg.lotw.tqsl || '').replace(/\\/g, '/')))) logCfg.lotw.tqsl = LOGCFG_DEFAULT.lotw.tqsl;
+  if (Array.isArray(n.udp)) {
+    logCfg.udp = n.udp.slice(0, 8).map((u) => ({
+      enabled: !!u.enabled, host: str(u.host, 100).trim(), port: Math.max(0, Math.min(65535, parseInt(u.port, 10) || 0)),
+      format: ['wsjtx-adif', 'wsjtx-qso', 'n1mm', 'adif'].indexOf(u.format) >= 0 ? u.format : 'wsjtx-adif', label: str(u.label, 40)
+    })).filter((u) => u.host && u.port);
+  }
+  saveLogCfg();
+  sync.resetStops();
+}
+const stationCalls = () => Array.from(new Set([cfg.digiCall].concat(String(cfg.stationCall || '').split(/[\s/,]+/)).map((c) => String(c || '').toUpperCase()).filter((c) => /^[A-Z0-9]{3,10}$/.test(c))));
+const sync = new Sync({
+  book, version: VERSION, station: String(cfg.digiCall || 'ON5VL').toUpperCase(), urls: cfg.logUrls, // logUrls : essais seulement
+  getCfg: () => logCfg,
+  setLastConfirm: (d) => { logCfg.lotw.lastConfirm = d; saveLogCfg(); },
+  log: (m) => console.error('Logs : ' + m),
+  onJob: (job, ev) => {
+    const msg = { t: 'log_job', job: { id: job.id, service: job.service, name: job.name, total: job.total, done: job.done, ok: job.ok, fail: job.fail, auto: job.auto, by: job.by }, line: ev.line, fin: !!ev.fin, step: ev.step };
+    for (const c of ops) if (c.user.admin || (job.by && c.user.call === job.by)) send(c, msg);
+    if (ev.fin) {
+      if (job.fail && job.auto) journal('log_sync_fail', { service: job.service, line: ev.line });
+      for (const c of ops) send(c, { t: 'log_changed' });
+    }
+  }
+});
+function logCtx(conn, m) {
+  const calls = stationCalls();
+  const st = String((m && m.station) || cfg.digiCall || calls[0] || '').toUpperCase();
+  return { operator: conn.user.call, stationCallsign: calls.indexOf(st) >= 0 ? st : calls[0], myGrid: cfg.stationGrid || '' };
+}
+function logCanEdit(conn, q) { return conn.user.admin || (q && q.by === conn.user.call); }
+function qsoForClient(q) { return Object.assign({}, q); }
+
 // Messages entre membres (mémoire seulement, perdus au redémarrage) : discussion, demandes de main, passages de main
 const chatLog = [];
 function chatPush(item) {
@@ -704,6 +797,99 @@ function onOperator(conn, m) {
       // Image demandée par un membre (galerie, ou image recalculée en fin de réception)
       const it = conn.digi === 'SSTV' && sstvStore.get(Number(m.id));
       if (it) sstvSendImage(conn, it);
+      return;
+    }
+
+    // ------------------------------------------------------------ carnet de trafic
+    case 'log_list': {
+      const all = book.query({ q: m.q, from: m.from, to: m.to });
+      const lim = Math.max(1, Math.min(1000, Number(m.limit) || 200));
+      return send(conn, { t: 'log_list', total: book.qsos.length, count: all.length, items: all.slice(-lim).reverse().map(qsoForClient),
+        calls: stationCalls(), admin: !!conn.user.admin, services: LOG_SERVICES, auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto])) });
+    }
+    case 'log_add':
+    case 'log_edit': {
+      if (conn.user.rxOnly) return send(conn, { t: 'notice', level: 'error', msg: 'Indicatif d’écouteur : pas d’enregistrement de QSO' });
+      let q;
+      try { q = LB.clean(m.qso, logCtx(conn, m.qso)); } catch (e) { return send(conn, { t: 'notice', level: 'error', msg: 'QSO non enregistré : ' + e.message }); }
+      if (m.t === 'log_edit') {
+        const old = book.get(m.id);
+        if (!old) return send(conn, { t: 'notice', level: 'error', msg: 'QSO introuvable' });
+        if (!logCanEdit(conn, old)) return send(conn, { t: 'notice', level: 'error', msg: 'Seul l’auteur du QSO ou un administrateur peut le modifier' });
+        q.operator = old.operator;
+        q = book.update(m.id, q);
+        journal('log_edit', { call: conn.user.call, qso: q.call });
+        send(conn, { t: 'log_saved', qso: qsoForClient(q), edited: true });
+      } else {
+        const d = !m.force && book.dupe(q);
+        if (d) return send(conn, { t: 'log_dupe', qso: m.qso, prev: qsoForClient(d) });
+        q = book.add(q, conn.user.call);
+        if (book.error) send(conn, { t: 'notice', level: 'error', msg: 'ATTENTION : carnet non écrit sur le disque du serveur (' + book.error + ')' });
+        journal('log_add', { call: conn.user.call, qso: q.call, band: q.band, mode: q.mode });
+        sync.auto(q);
+        send(conn, { t: 'log_saved', qso: qsoForClient(q), auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto && !sync.stopped[s]])) });
+      }
+      for (const c of ops) send(c, { t: 'log_changed' });
+      return;
+    }
+    case 'log_del': {
+      const q = book.get(m.id);
+      if (!q) return;
+      if (!logCanEdit(conn, q)) return send(conn, { t: 'notice', level: 'error', msg: 'Seul l’auteur du QSO ou un administrateur peut le supprimer' });
+      book.remove(m.id);
+      journal('log_del', { call: conn.user.call, qso: q.call, date: q.qso_date });
+      for (const c of ops) send(c, { t: 'log_changed' });
+      return;
+    }
+    case 'log_pending':
+      if (!conn.user.admin || LOG_SERVICES.indexOf(m.service) < 0) return;
+      return send(conn, { t: 'log_pending', service: m.service, n: sync.pending(m.service, { from: m.from, to: m.to, callsign: m.callsign, all: !!m.all }).length,
+        busy: !!sync.busy[m.service], stopped: !!sync.stopped[m.service] });
+    case 'log_mark': {
+      // QSO signés à la main avec TQSL (serveur sans certificat, ex. le VPS) : notés « envoyés »
+      if (!conn.user.admin || LOG_SERVICES.indexOf(m.service) < 0 || !Array.isArray(m.ids)) return;
+      let n = 0;
+      for (const id of m.ids.slice(0, 20000)) { const q = book.get(id); if (q) { sync.mark(q, m.service, { ok: true, msg: 'envoyé à la main (' + conn.user.call + ')' }); n++; } }
+      book.save();
+      journal('log_mark', { call: conn.user.call, service: m.service, n });
+      send(conn, { t: 'notice', level: 'info', msg: n + ' QSO notés comme envoyés à ' + m.service.toUpperCase() });
+      for (const c of ops) send(c, { t: 'log_changed' });
+      return;
+    }
+    case 'log_export': {
+      let list = book.query({ from: m.from, to: m.to }).filter((q) => !m.callsign || q.station_callsign === m.callsign);
+      if (m.pending && LOG_SERVICES.indexOf(m.pending) >= 0) list = sync.pending(m.pending, { from: m.from, to: m.to, callsign: m.callsign });
+      const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const who = String(m.callsign || cfg.digiCall || 'ON5VL').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (m.fmt === 'cabrillo') {
+        return send(conn, { t: 'log_export', name: who + '-' + stamp + '.log', mime: 'text/plain', data: LB.toCabrillo(list, { callsign: m.callsign || cfg.digiCall, contest: m.contest, grid: cfg.stationGrid, club: cfg.clubName && /UBA/.test(cfg.clubName) ? 'UBA-LGE' : '', version: VERSION }), count: list.length });
+      }
+      return send(conn, { t: 'log_export', name: who + '-' + stamp + (m.pending ? '-' + m.pending : '') + '.adi', mime: 'text/plain', data: LB.toAdif(list, 'RemoteStation', VERSION), count: list.length,
+        pending: m.pending || '', ids: m.pending ? list.map((q) => q.id) : undefined });
+    }
+    case 'log_cfg_get':
+      if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Réglages des carnets en ligne : administrateurs seulement' });
+      return send(conn, { t: 'log_cfg', cfg: logCfgPublic(), calls: stationCalls(), quiet: !!m.quiet });
+    case 'log_cfg_set':
+      if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Réglages des carnets en ligne : administrateurs seulement' });
+      setLogCfg(m.cfg);
+      journal('log_cfg', { call: conn.user.call });
+      send(conn, { t: 'log_cfg', cfg: logCfgPublic(), calls: stationCalls(), saved: true });
+      return;
+    case 'log_test':
+      if (!conn.user.admin || LOG_SERVICES.indexOf(m.service) < 0) return;
+      sync.test(m.service).then((r) => send(conn, { t: 'log_test', service: m.service, ok: r.ok, msg: r.msg }));
+      return;
+    case 'log_sync': {
+      if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Synchronisation des carnets : administrateurs seulement' });
+      if (m.action === 'stop') return sync.stop(m.service);
+      if (m.service === 'lotw' && m.action === 'confirm') { sync.confirmLotw(conn.user.call); return; }
+      if (LOG_SERVICES.indexOf(m.service) < 0) return;
+      // Club Log « effacer le log existant » : tout le carnet de l'indicatif, en un seul fichier
+      const f = { from: m.from, to: m.to, callsign: m.callsign, all: !!m.all || !!m.clear };
+      const list = sync.pending(m.service, f);
+      journal('log_sync', { call: conn.user.call, service: m.service, n: list.length, clear: !!m.clear });
+      sync.run(m.service, list, { by: conn.user.call, clear: m.service === 'clublog' && !!m.clear, delay: m.delay });
       return;
     }
 

@@ -26,6 +26,7 @@
 - [11. Keyboard shortcuts](#keys)
 - [12. Troubleshooting](#trouble)
 - [13. The club PC (Station page)](#club)
+- [14. Logs online (station logbook)](#logs)
 
 > [!NOTE]
 > The dashboard runs in any recent browser (Chrome, Edge, Firefox) on a PC, Mac, tablet or phone. It is designed for a **1920 × 1080** screen or larger; on smaller screens the panels rearrange themselves. The interface is in French; the button and panel names are quoted below as they appear on screen. After a server update, press `Ctrl` + `F5` to reload the page.
@@ -258,3 +259,23 @@ For club managers. The PC connected to the transceiver opens **https://remote.op
 4. Chrome → Settings → Performance: always keep remote.op0p.be active; Windows: sleep set to Never.
 
 Server installation and settings: see `LISEZMOI.md` and `README.md` (project repository).
+
+<a id="logs"></a>
+## 14. Logs online (station logbook)
+
+**Logs online** tab (the last one, right of Synchro): the station logbook, shared by all members, with upload to **LoTW**, **eQSL**, **Club Log** and **QRZ.com**, **ADIF** or **Cabrillo** export, and **UDP** forwarding to PC logbooks (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
+
+- **Logging a QSO**: `⇩ TRX` takes the transceiver frequency and mode (in DATA: the mode of the tab on screen, FT8, RTTY…), the power, and the correspondent from the bottom of the page (call, name, QTH, locator). The UTC time is taken when you type the first letter of the call; `⟳ Maintenant` (now) resets it. `Enter` or `Enregistrer le QSO` (save). A duplicate (same call, band and mode within half an hour) is reported before saving.
+- **QO-100**: with the converter IF (e.g. 432.525 MHz) the QO-100 box is ticked and the 2400.xxx MHz uplink frequency is logged (QO-100 satellite, downlink 10489.xxx MHz).
+- **List**: the last 300 QSOs (search by call, name or operator). Columns LoTW, eQSL, CL (Club Log), QRZ: **·** not sent yet, **✓** sent, **✗** rejected (hover for details), **★** confirmed on LoTW. Click a row to edit or delete the QSO (its author or an administrator).
+- **Exporter ▾** (export): ADIF 3 (.adi) or Cabrillo 3 (.log, with the contest name), for one call and an optional date range.
+- **Synchronisation ▾** (administrators): one window per service, as in Swisslog — **Détails** tab (call, optional date range, resend QSOs already sent, delay; Club Log: « Effacer le log ClubLog existant », clear the existing log) then `Télécharger` (upload); **Traitement** tab: progress, report, `Arrêt` (stop). **Opérations LoTW**: export, sign with TQSL, upload, read confirmations, status; `Confirmations` only reads the confirmations received.
+- **⚙ Configuration** (administrators): tabs CLUBLOG, eQSL, LoTW, QRZ, UDP. « Upload QSOs automatically when they are logged » box, logins and passwords (👁 button to see them while typing), delay, `Tester` (test). Passwords and keys stay on the server: the window only shows « enregistré » (stored); an empty field keeps the value, ✕ deletes it.
+
+| Service | What you need |
+|---|---|
+| Club Log | Account e-mail, an application password (Club Log → Settings → App Passwords), the application API key (requested once from the Club Log helpdesk). An access refusal stops uploads until the configuration is saved again. |
+| eQSL | eQSL call and password; « QTH Nickname » if the account has several QTHs. |
+| QRZ.com | One QRZ logbook API key per call (QRZ → Logbook → Settings), XML subscription or higher. |
+| LoTW | **TQSL** and the call's **certificate** installed on the PC running the server (the club's Windows server), the TQSL « Station Location » name, and the LoTW website login for confirmations. The certificate and its password never leave that PC. With the server on the VPS: « Exporter pour TQSL (.adi) », sign the file with TQSL on the club PC, then « Marquer comme envoyés » (mark as sent). |
+| UDP | Address, port and format expected by the logbook: WSJT-X « Logged ADIF » (Swisslog, Log4OM, HRD Logbook; usually port 2237), N1MM (port 12060), or raw ADIF. Packets are sent by the server: 127.0.0.1 when the server runs on the club PC. |

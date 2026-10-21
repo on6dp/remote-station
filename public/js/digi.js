@@ -85,7 +85,7 @@
   // ------------------------------------------------------------------ construction des onglets et des fenêtres
   // Même code pour le centre du dashboard et pour la fenêtre séparée (digi.html, sans l'onglet Activité).
   const TABS = [
-    ['events', 'Activité'], ['ftx', 'FT8 · FT4'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['gap', ''], ['sync', 'Synchro']
+    ['events', 'Activité'], ['ftx', 'FT8 · FT4'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['gap', ''], ['sync', 'Synchro'], ['log', 'Logs online']
   ];
   const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'cw', 'sstv', 'sync'];
   const WF_TABS = ['ftx', 'jt65', 'rtty', 'wspr', 'jtty', 'cw', 'sstv']; // onglets avec cascade
@@ -286,6 +286,7 @@
     bar.textContent = '';
     for (const [id, label] of TABS) {
       if (id === 'events' && POPUP) continue;
+      if (id === 'log' && (POPUP || !window.RSLOG)) continue; // carnet de trafic : dashboard seulement
       if (id === 'gap') { const g = document.createElement('span'); g.className = 'ctab-gap'; bar.appendChild(g); continue; }
       const b = document.createElement('button');
       b.className = 'ctab';
@@ -319,6 +320,7 @@
     add('sstv', 'dg ss', SSTV_PANE);
     for (const k in SOON) add(k, 'dg-soon', '<p>' + SOON[k] + '</p><p class="dg-note">En préparation.</p>');
     add('sync', 'dg-sync', SYNC_PANE);
+    if (!POPUP && window.RSLOG) { add('log', 'lg', ''); window.RSLOG.mount(panel.lastElementChild); }
     add('away', 'dg-soon', '<p>Les modes numériques sont ouverts dans une <b>fenêtre séparée</b>.</p><p><button class="btn" type="button" id="dgBack">Ramener ici</button></p>');
   }
 
@@ -346,6 +348,7 @@
       sizeCanvas();
     }
     if (pane === 'sync') drawSync();
+    if (pane === 'log' && window.RSLOG) window.RSLOG.show();
     if (pane === 'sstv' && ssShown) { const it = ssImgs.get(ssShown); if (it && it.data) ssCanvasFor(it.meta).putImageData(it.data, 0, 0); ssThumbs(); }
     announce();
   }
@@ -1759,6 +1762,13 @@
   window.RSDIGI = {
     setDetached,
     isPopup: POPUP,
+    /** Mode numérique affiché (pour le carnet de trafic quand le TRX est en DATA) */
+    logMode() {
+      const t = tab;
+      if (t === 'ftx') return mode;
+      return { jt65: 'JT65', rtty: 'RTTY', jtty: 'JTTY', cw: 'CW', sstv: 'SSTV', wspr: 'WSPR' }[t] || store.get('ftmode', 'FT8');
+    },
+    qo100If: () => Object.assign({}, qoIf),
     init(a) {
       const again = !!api;
       api = a;

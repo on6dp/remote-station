@@ -26,6 +26,7 @@
 - [11. Raccourcis clavier](#clavier)
 - [12. Problèmes fréquents](#problemes)
 - [13. Le PC du club (page Station)](#club)
+- [14. Logs online (carnet de trafic)](#logs)
 
 > [!NOTE]
 > Le dashboard fonctionne dans un navigateur récent (Chrome, Edge, Firefox) sur PC, Mac, tablette ou téléphone. Il est conçu pour un écran de **1920 × 1080** ou plus ; sur un écran plus petit, les cadres se réorganisent. Après une mise à jour du serveur, faites `Ctrl` + `F5` pour recharger la page.
@@ -258,3 +259,23 @@ Pour les responsables du club. Le PC relié au TRX ouvre **https://remote.op0p.b
 4. Chrome → Paramètres → Performances : garder remote.op0p.be toujours actif ; Windows : mise en veille sur Jamais.
 
 Installation et réglages du serveur : voir `LISEZMOI.md` et `README.md` (dépôt du projet).
+
+<a id="logs"></a>
+## 14. Logs online (carnet de trafic)
+
+Onglet **Logs online** (le dernier, à droite de Synchro) : le carnet de trafic de la station, partagé par tous les membres, avec l'envoi vers **LoTW**, **eQSL**, **Club Log** et **QRZ.com**, l'export **ADIF** ou **Cabrillo** et l'envoi en **UDP** aux logbooks du PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
+
+- **Enregistrer un QSO** : `⇩ TRX` reprend la fréquence et le mode du TRX (en DATA : le mode de l'onglet affiché, FT8, RTTY…), la puissance, et le correspondant du bas de page (indicatif, prénom, QTH, locator). L'heure UTC est prise à la première lettre de l'indicatif ; `⟳ Maintenant` la remet à l'heure. `Entrée` ou `Enregistrer le QSO`. Un doublon (même indicatif, bande et mode dans la demi-heure) est signalé avant l'enregistrement.
+- **QO-100** : avec la FI du convertisseur (ex. 432,525 MHz), la case QO-100 se coche et la fréquence de montée 2400,xxx MHz est enregistrée (satellite QO-100, descente 10 489,xxx MHz).
+- **Liste** : les 300 derniers QSO (recherche par indicatif, nom ou opérateur). Colonnes LoTW, eQSL, CL (Club Log), QRZ : **·** pas encore envoyé, **✓** envoyé, **✗** refusé (survol = détail), **★** confirmé sur LoTW. Clic sur une ligne : modifier ou supprimer le QSO (son auteur ou un administrateur).
+- **Exporter ▾** : ADIF 3 (.adi) ou Cabrillo 3 (.log, avec le nom du concours), pour un indicatif et une plage de dates au choix.
+- **Synchronisation ▾** (administrateurs) : une fenêtre par service, comme dans Swisslog — onglet **Détails** (indicatif, plage de dates facultative, renvoyer les QSO déjà envoyés, temporisation ; Club Log : « Effacer le log ClubLog existant ») puis `Télécharger` ; onglet **Traitement** : progression, compte rendu, `Arrêt`. **Opérations LoTW** : exporter, signer avec TQSL, envoyer, lire les confirmations, statut ; `Confirmations` lit seulement les confirmations reçues.
+- **⚙ Configuration** (administrateurs) : onglets CLUBLOG, eQSL, LoTW, QRZ, UDP. Case « Télécharger automatiquement les QSO lors de leur enregistrement », identifiants et mots de passe (bouton 👁 pour les voir pendant la saisie), temporisation, `Tester`. Les mots de passe et clés restent sur le serveur : la fenêtre affiche seulement « enregistré » ; laisser le champ vide garde la valeur, ✕ l'efface.
+
+| Service | À préparer |
+|---|---|
+| Club Log | E-mail du compte, mot de passe d'application (Club Log → Settings → App Passwords), clé API de l'application (demandée une fois au helpdesk Club Log). Un refus d'accès arrête les envois jusqu'au prochain OK de la configuration. |
+| eQSL | Indicatif et mot de passe eQSL ; « QTH Nickname » si le compte a plusieurs QTH. |
+| QRZ.com | Une clé API du carnet QRZ par indicatif (QRZ → Logbook → Settings), abonnement XML ou supérieur. |
+| LoTW | **TQSL** et le **certificat** de l'indicatif installés sur le PC où tourne le serveur (serveur Windows du club), le nom du « Station Location » de TQSL, et l'identifiant du site LoTW pour les confirmations. Le certificat et son mot de passe ne quittent jamais ce PC. Avec le serveur sur le VPS : « Exporter pour TQSL (.adi) », signer le fichier avec TQSL sur le PC du club, puis « Marquer comme envoyés ». |
+| UDP | Adresse, port et format attendus par le logbook : WSJT-X « Logged ADIF » (Swisslog, Log4OM, HRD Logbook ; port 2237 en général), N1MM (port 12060), ou ADIF brut. Les paquets partent du serveur : 127.0.0.1 si le serveur tourne sur le PC du club. |

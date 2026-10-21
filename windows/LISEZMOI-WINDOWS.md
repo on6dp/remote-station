@@ -30,7 +30,12 @@ Google Chrome est conseillé (la page Station a besoin du port série Web Serial
 - Accès depuis internet : rediriger le port 9000 du routeur vers ce PC, et de préférence passer en HTTPS : mettre un
   certificat dans `config.json` (`"tls": { "cert": "cert.pem", "key": "key.pem" }`) ou utiliser un tunnel (ex. Cloudflare Tunnel).
   La page Station, elle, doit être ouverte sur ce même PC (http://localhost:9000/station) ou en HTTPS.
-- Une réinstallation ou une mise à jour garde la configuration, les comptes, les macros, les journaux et les images SSTV.
+- Une réinstallation ou une mise à jour garde la configuration, les comptes, les macros, les journaux, le carnet de trafic et les images SSTV.
+- **LoTW** (onglet Logs online) : installer **TQSL** (ARRL) sur ce PC et y importer le certificat de l'indicatif ; dans la configuration
+  LoTW du dashboard, indiquer le chemin de `tqsl.exe` (par défaut `C:\Program Files (x86)\TrustedQSL\tqsl.exe`) et le nom du lieu de station
+  TQSL. Le certificat et son mot de passe restent sur ce PC. Le service tourne sous le compte Système : remplir aussi « Dossier TrustedQSL »
+  avec le dossier du compte Windows où le certificat a été importé (`C:\Users\<nom>\AppData\Roaming\TrustedQSL`).
+- **Swisslog, N1MM… sur ce PC** : dans Configuration → UDP du dashboard, adresse 127.0.0.1 et le port attendu par le logbook.
 
 ## Désinstallation
 

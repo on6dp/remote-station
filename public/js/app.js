@@ -1041,9 +1041,11 @@
       if (typeof e.data !== 'string') return onAudio(e.data);
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (window.RSLOG && /^log_/.test(m.t)) { window.RSLOG.onMessage(m); return; }
       if (DG() && DG().onMessage(m)) return;
       if (m.t === 'hello') {
         me = m;
+        if (window.RSLOG) window.RSLOG.onHello(m);
         if (DG()) DG().onHello(m, m);
         if (/^Liaison perdue/.test($('msg').textContent)) say('');
         $('login').hidden = true;
@@ -1098,7 +1100,7 @@
         addChat(m.m, true);
       } else if (m.t === 'notice') {
         if (m.pttCut) pttCut = true;
-        say(m.msg, m.level === 'error' ? 'error' : 'warn', 7000);
+        say(m.msg, m.level === 'error' ? 'error' : m.level === 'info' ? '' : 'warn', 7000);
         render();
       }
     };
@@ -1154,6 +1156,7 @@
     detach(inst) { if (digiHost.inst === inst) releasePopup(); },
     closePopup() { const w = digiHost.win; releasePopup(); if (w && !w.closed) try { w.close(); } catch (e) {} }
   };
+  if (window.RSLOG) window.RSLOG.init(digiApi); // onglet « Logs online » (monté par digi.js)
   if (window.RSDIGI) window.RSDIGI.init(digiApi);
   buildControls();
   bindPtt();

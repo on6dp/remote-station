@@ -213,6 +213,7 @@ Manuel complet : **[MANUEL.md](MANUEL.md)** (français) · **[USER-MANUAL.md](US
 10. **JTTY** : onglet JTTY, choisir la bande (le TRX va sur la fréquence JTTY, en DATA-U). Pas de périodes : le texte de chaque message apparaît au fil des trames de 1,9 s (▌ = en cours). Clic gauche = réception, clic droit = émission, double-clic = correspondant ; macros F1 à F8 (clic droit pour les modifier).
 11. **CW** : onglet CW, choisir la bande (le TRX va en CW). Cliquer sur un signal dans la cascade : le décodeur s'y cale tout seul (repère jaune) et apprend la vitesse. Filtre 100 Hz par défaut (50 Hz si QRM, 200–400 Hz si l'on cherche) ; silencieux à monter si des lettres apparaissent sur le bruit. Double-clic sur un indicatif reçu = correspondant ; macros F1 à F12.
 12. **SSTV** : onglet SSTV, choisir la bande (14 230 kHz…). Les images arrivent toutes seules (code VIS) et s'affichent ligne après ligne ; la galerie garde les 12 dernières, « PNG » enregistre l'image affichée. À droite : choisir une image de votre PC (ou la carte CQ), écrire le texte (balises <CALL>, <MYCALL>, <RST>…), choisir le mode ; « Écouter » / « WAV » pour essayer (l'émission viendra plus tard).
+13. **Logs online** : dernier onglet. « ⇩ TRX » remplit fréquence, mode et correspondant ; Entrée enregistre le QSO dans le carnet de la station. Colonnes LoTW / eQSL / CL / QRZ : envoyé ✓, refusé ✗, confirmé ★. « Exporter » : ADIF ou Cabrillo. Administrateurs : « Synchronisation » (une fenêtre par service : Détails, puis Traitement avec Arrêt) et « ⚙ Configuration » (Club Log, eQSL, LoTW, QRZ, UDP vers Swisslog / N1MM…, envoi automatique à chaque QSO).
 
 Automatique : main libérée après 15 min sans action, déconnexion après 15 min d'inactivité (avertissement une minute avant, bouton « Rester connecté »). **Jamais pendant une émission.**
 
@@ -262,6 +263,7 @@ Automatique : main libérée après 15 min sans action, déconnexion après 15 m
 | `native/wspr/` | Sources de wsprd (WSJT-X, GPL v3) et script de compilation de `lib/wsprd.wasm` |
 | `public/js/digi.js` | Onglets du centre : FT8 · FT4, RTTY, WSPR, JT65, JTTY, CW, SSTV, Synchro |
 | `public/js/sstv.js` | Modes SSTV et codeur (image → signal), communs au serveur et au navigateur |
+| `lib/logbook.js`, `lib/logsync.js`, `public/js/logbook.js` | Carnet de trafic, exports ADIF / Cabrillo, envois LoTW (TQSL), eQSL, Club Log, QRZ.com et UDP (WSJT-X, N1MM, ADIF) ; onglet « Logs online » |
 | `public/index.html`, `public/js/app.js`, `public/css/` | Page des membres |
 | `public/station.html`, `public/js/station.js`, `public/js/station-core.js` | Page Station (Web Serial) |
 | `public/js/yaesu.js`, `ftx1.js`, `ftdx10.js`, `ic7300.js` | Pilotes des TRX |

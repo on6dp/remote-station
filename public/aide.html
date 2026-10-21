@@ -40,6 +40,7 @@
   <a href="#clavier">11. Raccourcis clavier</a>
   <a href="#problemes">12. Problèmes fréquents</a>
   <a href="#club">13. Le PC du club (page Station)</a>
+  <a href="#logs">14. Logs online (carnet de trafic)</a>
 </nav>
 
 <div class="note">Le dashboard fonctionne dans un navigateur récent (Chrome, Edge, Firefox) sur PC, Mac, tablette ou téléphone.
@@ -253,6 +254,37 @@ lancement au démarrage de Windows, pas de mise en veille ; il peut aussi instal
   <li>Chrome → Paramètres → Performances : garder remote.op0p.be toujours actif ; Windows : mise en veille sur Jamais.</li>
 </ol>
 <p>Installation et réglages du serveur : voir <code>LISEZMOI.md</code> et <code>README.md</code> (dépôt du projet).</p>
+
+
+<h2 id="logs">14. Logs online (carnet de trafic)</h2>
+<p>Onglet <b>Logs online</b> (le dernier, à droite de Synchro) : le carnet de trafic de la station, partagé par tous les membres, avec l'envoi vers
+<b>LoTW</b>, <b>eQSL</b>, <b>Club Log</b> et <b>QRZ.com</b>, l'export <b>ADIF</b> ou <b>Cabrillo</b> et l'envoi en <b>UDP</b> aux logbooks du PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).</p>
+<ul>
+  <li><b>Enregistrer un QSO</b> : <span class="k">⇩ TRX</span> reprend la fréquence et le mode du TRX (en DATA : le mode de l'onglet affiché, FT8, RTTY…), la puissance,
+    et le correspondant du bas de page (indicatif, prénom, QTH, locator). L'heure UTC est prise à la première lettre de l'indicatif ; <span class="k">⟳ Maintenant</span> la remet à l'heure.
+    <span class="k">Entrée</span> ou <span class="k">Enregistrer le QSO</span>. Un doublon (même indicatif, bande et mode dans la demi-heure) est signalé avant l'enregistrement.</li>
+  <li><b>QO-100</b> : avec la FI du convertisseur (ex. 432,525 MHz), la case QO-100 se coche et la fréquence de montée 2400,xxx MHz est enregistrée (satellite QO-100, descente 10 489,xxx MHz).</li>
+  <li><b>Liste</b> : les 300 derniers QSO (recherche par indicatif, nom ou opérateur). Colonnes LoTW, eQSL, CL (Club Log), QRZ : <b>·</b> pas encore envoyé, <b>✓</b> envoyé, <b>✗</b> refusé
+    (survol = détail), <b>★</b> confirmé sur LoTW. Clic sur une ligne : modifier ou supprimer le QSO (son auteur ou un administrateur).</li>
+  <li><b>Exporter ▾</b> : ADIF 3 (.adi) ou Cabrillo 3 (.log, avec le nom du concours), pour un indicatif et une plage de dates au choix.</li>
+  <li><b>Synchronisation ▾</b> (administrateurs) : une fenêtre par service, comme dans Swisslog — onglet <b>Détails</b> (indicatif, plage de dates facultative,
+    renvoyer les QSO déjà envoyés, temporisation ; Club Log : « Effacer le log ClubLog existant ») puis <span class="k">Télécharger</span> ; onglet <b>Traitement</b> : progression, compte rendu, <span class="k">Arrêt</span>.
+    <b>Opérations LoTW</b> : exporter, signer avec TQSL, envoyer, lire les confirmations, statut ; <span class="k">Confirmations</span> lit seulement les confirmations reçues.</li>
+  <li><b>⚙ Configuration</b> (administrateurs) : onglets CLUBLOG, eQSL, LoTW, QRZ, UDP. Case « Télécharger automatiquement les QSO lors de leur enregistrement »,
+    identifiants et mots de passe (bouton 👁 pour les voir pendant la saisie), temporisation, <span class="k">Tester</span>. Les mots de passe et clés restent sur le serveur :
+    la fenêtre affiche seulement « enregistré » ; laisser le champ vide garde la valeur, ✕ l'efface.</li>
+</ul>
+<table>
+  <tr><th>Service</th><th>À préparer</th></tr>
+  <tr><td>Club Log</td><td>E-mail du compte, mot de passe d'application (Club Log → Settings → App Passwords), clé API de l'application (demandée une fois au helpdesk Club Log). Un refus d'accès arrête les envois jusqu'au prochain OK de la configuration.</td></tr>
+  <tr><td>eQSL</td><td>Indicatif et mot de passe eQSL ; « QTH Nickname » si le compte a plusieurs QTH.</td></tr>
+  <tr><td>QRZ.com</td><td>Une clé API du carnet QRZ par indicatif (QRZ → Logbook → Settings), abonnement XML ou supérieur.</td></tr>
+  <tr><td>LoTW</td><td><b>TQSL</b> et le <b>certificat</b> de l'indicatif installés sur le PC où tourne le serveur (serveur Windows du club), le nom du « Station Location » de TQSL, et
+    l'identifiant du site LoTW pour les confirmations. Le certificat et son mot de passe ne quittent jamais ce PC. Avec le serveur sur le VPS : « Exporter pour TQSL (.adi) »,
+    signer le fichier avec TQSL sur le PC du club, puis « Marquer comme envoyés ».</td></tr>
+  <tr><td>UDP</td><td>Adresse, port et format attendus par le logbook : WSJT-X « Logged ADIF » (Swisslog, Log4OM, HRD Logbook ; port 2237 en général), N1MM (port 12060), ou ADIF brut.
+    Les paquets partent du serveur : 127.0.0.1 si le serveur tourne sur le PC du club.</td></tr>
+</table>
 
 <footer>Remote Station UBA-LGE — ON5VL / OR0L. Décodeurs : ft8_lib (MIT), WSJT-X (GPL v3, WSPR, JT65, JTTY) ; voir TIERS.md.
 <a href="/help">English version</a></footer>
