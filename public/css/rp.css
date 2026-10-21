@@ -822,3 +822,39 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .cw-bar b.low { background: #4a5566; }
 #cwDb { min-width: 36px; text-align: right; }
 #cwSpeed { width: 48px; }
+
+/* ------------------------------------------------------------------ SSTV */
+.ss-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; flex: 1; min-height: 0; }
+.ss-rx, .ss-tx { min-height: 0; overflow: hidden; }
+.ss-view { position: relative; flex: 1; min-height: 150px; margin: 8px; border-radius: 5px; overflow: hidden; background: #05080d; }
+.ss-view canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.ss-empty[hidden] { display: none; }
+.ss-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; margin: 0; color: var(--v2-text-dim); font-size: 12px; }
+.ss-gal { display: flex; gap: 6px; padding: 0 8px 8px; overflow-x: auto; scrollbar-width: thin; flex: none; }
+.ss-thumb { flex: none; border: 1px solid var(--v2-border-dark); border-radius: 4px; cursor: pointer; background: #05080d; }
+.ss-gal .ss-thumb { height: 54px; width: auto; }
+.ss-thumbs .ss-thumb { height: 36px; width: auto; }
+.ss-thumb:hover { border-color: var(--v2-accent-cyan-bright); }
+.ss-thumb.sel { border-color: #F2CF4A; box-shadow: 0 0 0 1px #F2CF4A; }
+.ss-tx .dg-h select { font: inherit; font-size: 11px; text-transform: none; letter-spacing: 0; }
+.ss-tx.drop { outline: 2px dashed var(--v2-accent-cyan-bright); outline-offset: -4px; }
+.ss-src { display: flex; align-items: center; gap: 8px; padding: 8px 8px 0; flex: none; }
+.ss-file { flex: none; cursor: pointer; }
+.ss-thumbs { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+.ss-txbody { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 8px; padding: 8px; flex: 1; min-height: 0; }
+.ss-cview { position: relative; min-height: 120px; border-radius: 5px; overflow: hidden; border: 1px solid var(--v2-border-dark); background: #05080d; }
+.ss-compose { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.ss-text { display: flex; flex-direction: column; gap: 5px; min-width: 0; overflow-y: auto; scrollbar-width: thin; }
+.ss-text label { display: flex; flex-direction: column; gap: 2px; font-size: 9px; color: var(--v2-text-dim); text-transform: uppercase; letter-spacing: .8px; }
+.ss-text input[id^=ssT] { font: inherit; font-size: 12px; text-transform: none; letter-spacing: 0; color: var(--v2-text-bright); background: #07090d; border: 1px solid var(--v2-border); border-radius: 4px; padding: 4px 6px; min-width: 0; }
+.ss-opt { display: flex; align-items: center; gap: 6px; }
+.ss-opt input[type=color] { width: 34px; height: 24px; padding: 0; border: 1px solid var(--v2-border); background: none; border-radius: 4px; }
+.ss-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.ss-act { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; }
+.ss-note { padding: 0 8px 8px; flex: none; }
+.ss-prog { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--v2-text-secondary); }
+.ss-prog i { width: 110px; height: 8px; border-radius: 4px; background: #0b1018; border: 1px solid var(--v2-border-dark); overflow: hidden; position: relative; }
+.ss-prog b { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #9a78e0, #F2CF4A); }
+.dg.ss { min-height: 600px; }
+@media (min-width: 1800px) and (min-height: 860px) { .dg.ss { min-height: 0; } }
+@media (max-width: 1100px) { .ss-grid { grid-template-columns: 1fr; } .ss-view { min-height: 240px; } .ss-cview { min-height: 200px; } }

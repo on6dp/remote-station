@@ -1,5 +1,9 @@
 # Journal des versions — Remote Station UBA-LGE (ON5VL / OR0L)
 
+## v0.10 — SSTV
+
+- **0.10.0** — Onglet **SSTV** (à droite de CW). Réception sur le serveur (`lib/sstv-dec.js`, sans dépendance) : départ automatique sur le code VIS, modes Martin M1 / M2, Scottie S1 / S2 / DX, Robot 36 / 72, PD 50 / 90 / 120 / 160 / 180 / 240 / 290 ; TRX mal calé corrigé (décalage mesuré sur l'amorce), correction de pente (horloges de carte son différentes), image affichée ligne après ligne puis redressée à la fin ; tient le QSB et le QRM de courte durée. Galerie des 12 dernières images (vignettes), enregistrement PNG sur votre PC ; chaque image reçue est aussi gardée sur le serveur (dossier `sstv/`, 200 dernières). Préparation des images à émettre : images de votre PC (bouton ou glisser-déposer, gardées dans le navigateur), carte CQ, mire ou image reçue, recadrage au format du mode, trois lignes de texte (balises <CALL> <MYCALL> <RST> <NAME> <MYLOC> <ZT>, taille, couleur), aperçu, durée ; « Écouter » joue le signal SSTV sur le PC et « WAV » l'enregistre (essai avec un autre logiciel). L'émission SSTV arrive avec l'émission des modes numériques.
+
 ## v0.9 — CW
 
 - **0.9.0** — Onglet **CW** (à droite de JTTY), à la manière de FLDIGI : décodeur Morse sur le serveur (`lib/cw.js`, sans dépendance), un par réglage de membre. Clic sur la cascade = calage automatique sur le signal le plus proche (±60 Hz) ; filtre 50 / 100 / 200 / 400 Hz ; silencieux en dB au-dessus du bruit ; vitesse apprise toute seule (5 à 60 mots/min, affichée), y compris la manipulation à la main et les traits allongés ; suit le QSB ; signes ? / = + , . et abréviations <SK> <KN> <AS>… Indicateur de niveau avec voyant qui suit la manipulation. Fréquences CW par bande (QSY en CW-U / CW). Zone d'émission : macros CW F1 à F12 (touches du clavier, modifiables, aussi en bas de page), vitesse du manipulateur ; l'émission CW par le manipulateur du TRX arrive dans une prochaine version.

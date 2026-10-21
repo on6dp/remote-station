@@ -205,7 +205,14 @@ function relayAudio(buf) {
 // ---------------------------------------------------------------- modes numériques (FT8 / FT4)
 // Le décodage tourne dans un Worker (lib/digi-worker.js) dès qu'un membre ouvre la fenêtre FT8/FT4.
 const digi = { worker: null, hist: { FT8: [], FT4: [], WSPR: [], JT65: [] }, latency: null, ms: 0, last: 0, dial: 0, jtty: new Map() };
-const DIGI_MODES = ['FT8', 'FT4', 'RTTY', 'WSPR', 'JT65', 'JTTY', 'CW'];
+const DIGI_MODES = ['FT8', 'FT4', 'RTTY', 'WSPR', 'JT65', 'JTTY', 'CW', 'SSTV'];
+// Images SSTV reçues (mémoire + dossier sstv/)
+const { SstvStore } = require('./lib/sstv-store.js');
+const sstvStore = new SstvStore(path.join(ROOT, 'sstv'), (m) => console.error(m));
+function sstvSendImage(conn, it) {
+  send(conn, { t: 'sstv_img', img: sstvStore.meta(it) });
+  for (let y = 0; y < it.lines; y++) conn.send(sstvStore.frame(it, y));
+}
 // Réglages CW d'un membre : tonalité (Hz), largeur du filtre, silencieux → clé du décodeur
 function cwCfg(r) {
   if (!r || typeof r !== 'object') return null;
@@ -281,6 +288,22 @@ function onDigi(m) {
   if (m.t === 'rtty_text' || m.t === 'rtty_lvl') {
     const msg = JSON.stringify(m.t === 'rtty_text' ? { t: 'rtty', text: m.text } : { t: 'rtty_lvl', m: m.m, s: m.s, c: m.c });
     for (const c of ops) if (c.digi === 'RTTY' && c.rtty && c.rtty.key === m.key) c.send(msg);
+    return;
+  }
+  if (m.t === 'sstv') {
+    const e = m.e;
+    const watchers = Array.from(ops).filter((c) => c.digi === 'SSTV');
+    if (e.t === 'start') {
+      const it = sstvStore.start(e);
+      journal('sstv_rx', { mode: e.mode, shift: e.shift });
+      for (const c of watchers) send(c, { t: 'sstv_start', img: sstvStore.meta(it), shift: e.shift });
+    } else if (e.t === 'line') {
+      const it = sstvStore.line(e);
+      if (it) { const fr = sstvStore.frame(it, e.y); for (const c of watchers) c.send(fr); }
+    } else if (e.t === 'end') {
+      const it = sstvStore.end(e);
+      if (it) for (const c of watchers) send(c, { t: 'sstv_end', img: sstvStore.meta(it), refreshed: !!e.rgb, slant: e.slant, why: e.why });
+    }
     return;
   }
   if (m.t === 'cw_text' || m.t === 'cw_lvl') {
@@ -657,6 +680,14 @@ function onOperator(conn, m) {
       // Historique : à l'ouverture, ou sur demande (fenêtre séparée qui s'ouvre, retour dans le dashboard)
       if (digi.hist[mode] && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.hist[mode] });
       if (mode === 'JTTY' && (changed || m.hist)) send(conn, { t: 'jtty_hist', items: Array.from(digi.jtty.values()) });
+      if (mode === 'SSTV' && (changed || m.hist)) send(conn, { t: 'sstv_list', items: sstvStore.list() });
+      return;
+    }
+
+    case 'sstv_get': {
+      // Image demandée par un membre (galerie, ou image recalculée en fin de réception)
+      const it = conn.digi === 'SSTV' && sstvStore.get(Number(m.id));
+      if (it) sstvSendImage(conn, it);
       return;
     }
 

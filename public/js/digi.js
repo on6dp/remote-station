@@ -45,10 +45,10 @@
   // ------------------------------------------------------------------ construction des onglets et des fenêtres
   // Même code pour le centre du dashboard et pour la fenêtre séparée (digi.html, sans l'onglet Activité).
   const TABS = [
-    ['events', 'Activité'], ['ftx', 'FT8 · FT4'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['gap', ''], ['sync', 'Synchro']
+    ['events', 'Activité'], ['ftx', 'FT8 · FT4'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['gap', ''], ['sync', 'Synchro']
   ];
-  const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'cw', 'sync'];
-  const WF_TABS = ['ftx', 'jt65', 'rtty', 'wspr', 'jtty', 'cw']; // onglets avec cascade
+  const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'cw', 'sstv', 'sync'];
+  const WF_TABS = ['ftx', 'jt65', 'rtty', 'wspr', 'jtty', 'cw', 'sstv']; // onglets avec cascade
   const SOON = {
   };
   const FTX_PANE = `
@@ -188,6 +188,49 @@
         </div>
       </div>
     </div>`;
+  const SSTV_PANE = `
+    <div class="dg-bar">
+      <select id="ssDial" aria-label="Fréquence SSTV"></select>
+      <button class="btn" type="button" id="ssQsy" title="Met le VFO A sur la fréquence SSTV choisie">QSY</button>
+      <span class="dg-f">Image : <b>1500 – 2300 Hz</b> · synchro 1200 Hz</span>
+      <span class="ss-prog"><i><b id="ssProg"></b></i><span id="ssProgT"></span></span>
+      <span class="dg-status" id="ssStatus"></span>
+    </div>
+    <div class="dg-wf-slot" data-slot="sstv"></div>
+    <div class="ss-grid">
+      <div class="dg-col ss-rx">
+        <div class="dg-h"><span>Réception SSTV <b id="ssCap"></b></span><span class="dg-note">Martin, Scottie, Robot, PD : départ automatique sur le code VIS</span><button class="dg-mini" type="button" id="ssSave" title="Enregistrer l'image affichée sur votre PC">PNG</button></div>
+        <div class="ss-view"><canvas id="ssCanvas" width="320" height="256"></canvas><p class="ss-empty" id="ssEmpty">En attente d'une image…</p></div>
+        <div class="ss-gal" id="ssGal" aria-label="Dernières images reçues"></div>
+      </div>
+      <div class="dg-col ss-tx">
+        <div class="dg-h"><span>Émission</span>
+          <select id="ssTxMode" aria-label="Mode d'émission"></select><span class="dg-note" id="ssDur"></span></div>
+        <div class="ss-src">
+          <label class="btn ss-file" title="Choisir une ou plusieurs images sur votre PC">Images du PC…<input type="file" id="ssFile" accept="image/*" multiple hidden></label>
+          <div class="ss-thumbs" id="ssThumbs"></div>
+        </div>
+        <div class="ss-txbody">
+          <div class="ss-cview"><canvas id="ssCompose" class="ss-compose" width="320" height="256"></canvas></div>
+          <div class="ss-text">
+            <input id="ssT0" maxlength="40" spellcheck="false" autocomplete="off" placeholder="Texte en haut" aria-label="Texte en haut" title="Texte en haut de l'image">
+            <input id="ssT1" maxlength="40" spellcheck="false" autocomplete="off" placeholder="Texte au centre" aria-label="Texte au centre" title="Texte au centre de l'image">
+            <input id="ssT2" maxlength="40" spellcheck="false" autocomplete="off" placeholder="Texte en bas" aria-label="Texte en bas" title="Texte en bas de l'image">
+            <div class="ss-opt">
+              <select id="ssSize" aria-label="Taille du texte"><option value="0.075">Petit</option><option value="0.1">Moyen</option><option value="0.13">Grand</option></select>
+              <input type="color" id="ssColor" value="#ffe14a" aria-label="Couleur du texte" title="Couleur du texte">
+            </div>
+            <div class="ss-tags" id="ssTags"></div>
+            <div class="ss-act">
+              <button class="btn" type="button" id="ssPlay" title="Joue le signal SSTV sur les haut-parleurs de votre PC (essai, sans émission)">▶ Écouter</button>
+              <button class="btn" type="button" id="ssWav" title="Enregistre le signal SSTV en fichier WAV (essai avec un autre logiciel)">WAV</button>
+              <button class="btn btn-tx" type="button" id="ssSend" disabled>Émettre</button>
+            </div>
+          </div>
+        </div>
+        <p class="dg-tx ss-note">Émission SSTV sous <b>ON5VL</b> : avec l'émission des modes numériques (prochaine version). Clic droit sur une vignette : la retirer · glisser-déposer accepté.</p>
+      </div>
+    </div>`;
   const SYNC_PANE = `
     <div class="sy-grid">
       <div class="sy-box"><span>Heure du serveur (UTC)</span><b id="syVps">--:--:--</b><small>référence de tous les décodages</small></div>
@@ -233,6 +276,7 @@
     add('wspr', 'dg ws', WSPR_PANE);
     add('jtty', 'dg jt', JTTY_PANE);
     add('cw', 'dg rt cwp', CW_PANE);
+    add('sstv', 'dg ss', SSTV_PANE);
     for (const k in SOON) add(k, 'dg-soon', '<p>' + SOON[k] + '</p><p class="dg-note">En préparation.</p>');
     add('sync', 'dg-sync', SYNC_PANE);
     add('away', 'dg-soon', '<p>Les modes numériques sont ouverts dans une <b>fenêtre séparée</b>.</p><p><button class="btn" type="button" id="dgBack">Ramener ici</button></p>');
@@ -262,11 +306,12 @@
       sizeCanvas();
     }
     if (pane === 'sync') drawSync();
+    if (pane === 'sstv' && ssShown) { const it = ssImgs.get(ssShown); if (it && it.data) ssCanvasFor(it.meta).putImageData(it.data, 0, 0); ssThumbs(); }
     announce();
   }
   function setDetached(on) {
     detached = !!on;
-    if (!on) { needHist = true; wsNeedHist = true; jtNeedHist = true; } // retour de la fenêtre séparée : on récupère ce qui a été décodé entre-temps
+    if (!on) { needHist = true; wsNeedHist = true; jtNeedHist = true; ssNeedHist = true; } // retour de la fenêtre séparée : on récupère ce qui a été décodé entre-temps
     // Fenêtre séparée ouverte : le centre du dashboard revient sur l'activité de la station
     showTab(on && !POPUP && MODE_TABS.indexOf(tab) >= 0 ? 'events' : tab);
   }
@@ -275,6 +320,7 @@
     if (!api || (detached && !POPUP)) return; // la fenêtre séparée annonce elle-même
     const watching = WF_TABS.indexOf(tab) >= 0 && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
     if (watching && tab === 'cw') return api.send({ t: 'digi', mode: 'CW', cw: cwc });
+    if (watching && tab === 'sstv') { api.send({ t: 'digi', mode: 'SSTV', hist: ssNeedHist }); ssNeedHist = false; return; }
     if (watching && tab === 'jtty') { api.send({ t: 'digi', mode: 'JTTY', hist: jtNeedHist }); jtNeedHist = false; return; }
     if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rt });
     if (watching && tab === 'wspr') { api.send({ t: 'digi', mode: 'WSPR', hist: wsNeedHist }); wsNeedHist = false; return; }
@@ -367,6 +413,7 @@
     if (tab === 'rtty') return drawRttyMarks(c, w);
     if (tab === 'wspr') return drawWsprMarks(c, w);
     if (tab === 'cw') return drawCwMarks(c, w);
+    if (tab === 'sstv') return drawSstvMarks(c, w);
     // Largeur d'un signal FT8 (50 Hz) / FT4 (83 Hz) / JT65 (178 Hz) / JTTY (127 Hz, centré) : TX en rouge, RX en vert
     const bw = tab === 'jtty' ? 127 : mode === 'FT4' ? 83 : mode === 'JT65' ? 178 : 50;
     const mark = (f, y, h, fill, edge) => {
@@ -855,6 +902,416 @@
     el.classList.toggle('warn', warn);
   }
 
+  // ------------------------------------------------------------------ SSTV : réception (décodeur du serveur) et préparation des images à émettre
+  const SSTV_DIAL = [['80 m', 3735], ['40 m', 7165], ['20 m', 14230], ['20 m (2)', 14233], ['17 m', 18160], ['15 m', 21340], ['12 m', 24975], ['10 m', 28680], ['6 m', 50510]];
+  let ssNeedHist = true;
+  const ssImgs = new Map(); // id → { meta, data: ImageData | null }
+  let ssShown = 0;
+  let ssLive = 0;
+  let ssLast = 0;
+  function ssCanvasFor(meta) {
+    const c = $('ssCanvas');
+    if (c.width !== meta.w || c.height !== meta.h) { c.width = meta.w; c.height = meta.h; }
+    return c.getContext('2d');
+  }
+  function ssShow(id) {
+    const it = ssImgs.get(id);
+    if (!it) return;
+    ssShown = id;
+    const ctx = ssCanvasFor(it.meta);
+    if (it.data) ctx.putImageData(it.data, 0, 0);
+    else { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, it.meta.w, it.meta.h); api.send({ t: 'sstv_get', id }); }
+    $('ssEmpty').hidden = true;
+    ssCaption();
+    ssGallery();
+  }
+  function ssCaption() {
+    const it = ssImgs.get(ssShown);
+    if (!it) { $('ssCap').textContent = ''; return; }
+    const m = it.meta;
+    $('ssCap').textContent = m.name + ' · ' + utc(m.at).replace(/(\d\d)(\d\d)(\d\d)/, '$1:$2') + ' UTC' + (m.done ? (m.ok ? '' : ' · incomplète') : ' · en cours');
+  }
+  function ssGallery() {
+    const g = $('ssGal');
+    if (!g) return;
+    g.textContent = '';
+    const list = Array.from(ssImgs.values()).sort((a, b) => b.meta.at - a.meta.at);
+    for (const it of list) {
+      const c = document.createElement('canvas');
+      c.width = 96;
+      c.height = Math.round(96 * it.meta.h / it.meta.w);
+      c.className = 'ss-thumb' + (it.meta.id === ssShown ? ' sel' : '');
+      c.title = it.meta.name + ' · ' + utc(it.meta.at).replace(/(\d\d)(\d\d)(\d\d)/, '$1:$2') + ' UTC';
+      const x = c.getContext('2d');
+      if (it.data) { const t = document.createElement('canvas'); t.width = it.meta.w; t.height = it.meta.h; t.getContext('2d').putImageData(it.data, 0, 0); x.drawImage(t, 0, 0, c.width, c.height); }
+      else if (it.thumb) {
+        // Vignette envoyée par le serveur (image complète chargée au clic)
+        const raw = atob(it.thumb.b64);
+        const id = new ImageData(it.thumb.w, it.thumb.h);
+        for (let i = 0, j = 0; i < raw.length; i += 3, j += 4) { id.data[j] = raw.charCodeAt(i); id.data[j + 1] = raw.charCodeAt(i + 1); id.data[j + 2] = raw.charCodeAt(i + 2); id.data[j + 3] = 255; }
+        const t = document.createElement('canvas'); t.width = it.thumb.w; t.height = it.thumb.h; t.getContext('2d').putImageData(id, 0, 0);
+        x.drawImage(t, 0, 0, c.width, c.height);
+      } else { x.fillStyle = '#10161f'; x.fillRect(0, 0, c.width, c.height); x.fillStyle = '#8b98a8'; x.font = '10px sans-serif'; x.fillText(it.meta.mode, 6, 14); }
+      c.addEventListener('click', () => ssShow(it.meta.id));
+      g.appendChild(c);
+    }
+  }
+  function ssAdd(meta) {
+    const old = ssImgs.get(meta.id);
+    if (old) { old.meta = meta; return old; }
+    const it = { meta, data: null };
+    ssImgs.set(meta.id, it);
+    while (ssImgs.size > 12) ssImgs.delete(Array.from(ssImgs.values()).sort((a, b) => a.meta.at - b.meta.at)[0].meta.id);
+    return it;
+  }
+  // Trame binaire 0x11 : une ligne d'image
+  function ssLine(b) {
+    const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    const id = dv.getUint32(1);
+    const y = dv.getUint16(5);
+    const w = dv.getUint16(7);
+    const it = ssImgs.get(id);
+    if (!it || w !== it.meta.w || y >= it.meta.h) return;
+    if (!it.data) it.data = new ImageData(it.meta.w, it.meta.h);
+    const d = it.data.data;
+    for (let x = 0; x < w; x++) { const o = (y * w + x) * 4; d[o] = b[9 + x * 3]; d[o + 1] = b[10 + x * 3]; d[o + 2] = b[11 + x * 3]; d[o + 3] = 255; }
+    if (id === ssShown && tab === 'sstv') {
+      const ctx = ssCanvasFor(it.meta);
+      ctx.putImageData(it.data, 0, 0, 0, y, w, 1);
+    }
+    if (id === ssLive) {
+      it.meta.lines = Math.max(it.meta.lines || 0, y + 1);
+      ssProgress(it.meta);
+    }
+    if (y === it.meta.h - 1 || (y % 32 === 31 && id === ssShown)) ssGallery();
+  }
+  function ssProgress(meta) {
+    const p = meta ? Math.min(100, Math.round((meta.lines / meta.h) * 100)) : 0;
+    if ($('ssProg')) { $('ssProg').style.width = p + '%'; $('ssProgT').textContent = meta && !meta.done ? meta.name + ' · ligne ' + meta.lines + ' / ' + meta.h : ''; }
+  }
+  function ssSave() {
+    const it = ssImgs.get(ssShown);
+    if (!it || !it.data) return api && api.say('Pas d’image à enregistrer.', 'warn');
+    const c = document.createElement('canvas');
+    c.width = it.meta.w;
+    c.height = it.meta.h;
+    c.getContext('2d').putImageData(it.data, 0, 0);
+    const d = new Date(it.meta.at);
+    const p2 = (n) => String(n).padStart(2, '0');
+    const name = 'SSTV-' + d.getUTCFullYear() + p2(d.getUTCMonth() + 1) + p2(d.getUTCDate()) + '-' + p2(d.getUTCHours()) + p2(d.getUTCMinutes()) + '-' + it.meta.mode + '.png';
+    c.toBlob((blob) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    }, 'image/png');
+  }
+  function ssMessage(m) {
+    if (m.t === 'sstv_list') {
+      for (const meta of m.items || []) { const th = meta.thumb; delete meta.thumb; const it = ssAdd(meta); if (th) it.thumb = th; }
+      const last = (m.items || []).slice(-1)[0];
+      if (last && !ssShown) ssShow(last.id); else ssGallery();
+      return true;
+    }
+    if (m.t === 'sstv_img') {
+      const it = ssAdd(m.img);
+      it.data = new ImageData(m.img.w, m.img.h);
+      if (ssShown === m.img.id) ssCanvasFor(m.img);
+      return true;
+    }
+    if (m.t === 'sstv_start') {
+      const it = ssAdd(m.img);
+      it.data = new ImageData(m.img.w, m.img.h);
+      ssLive = m.img.id;
+      ssLast = Date.now();
+      ssShown = m.img.id;
+      const ctx = ssCanvasFor(m.img);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, m.img.w, m.img.h);
+      $('ssEmpty').hidden = true;
+      ssCaption();
+      ssGallery();
+      ssProgress(m.img);
+      if (api) api.say('SSTV : réception d’une image ' + m.img.name + (m.shift ? ' (décalage ' + (m.shift > 0 ? '+' : '') + m.shift + ' Hz)' : ''), 'ok', 4000);
+      return true;
+    }
+    if (m.t === 'sstv_end') {
+      const it = ssAdd(m.img);
+      if (ssLive === m.img.id) ssLive = 0;
+      ssLast = Date.now();
+      ssProgress(null);
+      // Image redressée par le serveur (pente corrigée) : on la recharge
+      if (m.refreshed) { it.data = null; if (ssShown === m.img.id) api.send({ t: 'sstv_get', id: m.img.id }); }
+      ssCaption();
+      ssGallery();
+      return true;
+    }
+    return false;
+  }
+  function drawSstvMarks(c, w) {
+    const X = (f) => (f / WF_MAX_HZ) * w;
+    c.fillStyle = 'rgba(154, 120, 224, .3)';
+    c.fillRect(X(1500), 14, X(2300) - X(1500), 16);
+    c.fillStyle = '#b79cf0';
+    c.fillRect(X(1500), 14, 1, 16);
+    c.fillRect(X(2300) - 1, 14, 1, 16);
+    c.fillStyle = '#F2CF4A';
+    c.fillRect(X(1200) - 1, 12, 2, 18);
+    const pos = (el, f, bw) => { el.style.left = (f / WF_MAX_HZ) * 100 + '%'; el.style.width = (bw / WF_MAX_HZ) * 100 + '%'; };
+    pos($('dgMkRx'), 1500, 800);
+    pos($('dgMkTx'), 1200, 0);
+  }
+  function sstvStatus() {
+    const st = api && api.state();
+    const el = $('ssStatus');
+    if (!el) return;
+    let txt;
+    let warn = false;
+    if (!st || !st.station) { txt = 'Station hors ligne'; warn = true; }
+    else if (!st.audio || !st.audio.active) { txt = 'La page Station n’envoie pas la BF : « Activer l’audio » sur le PC du club'; warn = true; }
+    else txt = ssLive ? 'BF reçue · réception en cours' : 'BF reçue · en attente d’une image (code VIS)';
+    if (st && st.radio && st.radio.mode && /CW|AM|LSB/i.test(st.radio.mode)) { txt += ' · mode ' + st.radio.mode + ' : SSTV en USB / DATA-U'; warn = true; }
+    el.textContent = txt;
+    el.classList.toggle('warn', warn);
+  }
+
+  // --- Préparation de l'image à émettre : images du PC, texte par-dessus, aperçu au format du mode
+  const SS_TX_MODES = ['M1', 'M2', 'S1', 'S2', 'SDX', 'R36', 'R72', 'PD50', 'PD90', 'PD120', 'PD160', 'PD180', 'PD240', 'PD290'];
+  let ssSrc = []; // { name, url } (images du PC, réduites, gardées dans ce navigateur)
+  try { ssSrc = JSON.parse(store.get('sstvsrc', '[]')) || []; } catch (e) { ssSrc = []; }
+  let ssSel = store.get('sstvsel', 'cq');
+  const ssImgCache = new Map();
+  function ssSaveSrc() {
+    // Stockage local limité : on retire les plus anciennes si nécessaire
+    for (;;) {
+      try { localStorage.setItem('rs.dg.sstvsrc', JSON.stringify(ssSrc)); return; } catch (e) { if (!ssSrc.length) return; ssSrc.shift(); }
+    }
+  }
+  function ssLoadFiles(files) {
+    for (const f of Array.from(files || []).slice(0, 10)) {
+      if (!/^image\//.test(f.type)) continue;
+      const rd = new FileReader();
+      rd.onload = () => {
+        const im = new Image();
+        im.onload = () => {
+          // Réduite à 800 × 616 au plus (plus grand format SSTV), en JPEG
+          const k = Math.min(1, 800 / im.width, 616 / im.height);
+          const c = document.createElement('canvas');
+          c.width = Math.round(im.width * k);
+          c.height = Math.round(im.height * k);
+          c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+          const url = c.toDataURL('image/jpeg', 0.85);
+          ssSrc.push({ name: f.name.slice(0, 60), url });
+          while (ssSrc.length > 10) ssSrc.shift();
+          ssSel = 'u' + (ssSrc.length - 1);
+          store.set('sstvsel', ssSel);
+          ssSaveSrc();
+          ssThumbs();
+          ssCompose();
+        };
+        im.src = rd.result;
+      };
+      rd.readAsDataURL(f);
+    }
+  }
+  function ssImage(url, cb) {
+    if (ssImgCache.has(url)) { const im = ssImgCache.get(url); if (im.complete) return cb(im); im.addEventListener('load', () => cb(im)); return; }
+    const im = new Image();
+    im.onload = () => cb(im);
+    im.src = url;
+    ssImgCache.set(url, im);
+  }
+  function ssThumbs() {
+    const box = $('ssThumbs');
+    if (!box) return;
+    box.textContent = '';
+    const mk = (key, title, draw) => {
+      const c = document.createElement('canvas');
+      c.width = 64;
+      c.height = 48;
+      c.className = 'ss-thumb' + (ssSel === key ? ' sel' : '');
+      c.title = title;
+      draw(c.getContext('2d'), c);
+      c.addEventListener('click', () => { ssSel = key; store.set('sstvsel', key); ssThumbs(); ssCompose(); });
+      box.appendChild(c);
+      return c;
+    };
+    mk('cq', 'Carte CQ (fond dégradé)', (x, c) => { ssBackground(x, c.width, c.height); });
+    mk('bars', 'Mire de couleurs', (x, c) => { ssBars(x, c.width, c.height); });
+    if (ssShown && ssImgs.get(ssShown) && ssImgs.get(ssShown).data) mk('rx', 'Image reçue affichée à gauche', (x, c) => { const it = ssImgs.get(ssShown); const t = document.createElement('canvas'); t.width = it.meta.w; t.height = it.meta.h; t.getContext('2d').putImageData(it.data, 0, 0); x.drawImage(t, 0, 0, c.width, c.height); });
+    ssSrc.forEach((s, i) => {
+      const c = mk('u' + i, s.name + ' (clic droit : retirer)', (x, cv) => ssImage(s.url, (im) => ssCover(x, im, cv.width, cv.height)));
+      c.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        ssSrc.splice(i, 1);
+        ssSaveSrc();
+        if (ssSel === 'u' + i) ssSel = 'cq';
+        ssThumbs();
+        ssCompose();
+      });
+    });
+  }
+  function ssBackground(x, w, h) {
+    const g = x.createLinearGradient(0, 0, w, h);
+    g.addColorStop(0, '#0a2a6b');
+    g.addColorStop(0.55, '#1b6fb3');
+    g.addColorStop(1, '#f0a020');
+    x.fillStyle = g;
+    x.fillRect(0, 0, w, h);
+  }
+  function ssBars(x, w, h) {
+    const cols = ['#fff', '#ff0', '#0ff', '#0f0', '#f0f', '#f00', '#00f', '#000'];
+    cols.forEach((c, i) => { x.fillStyle = c; x.fillRect(Math.floor(i * w / 8), 0, Math.ceil(w / 8), h * 0.7); });
+    const g = x.createLinearGradient(0, 0, w, 0);
+    g.addColorStop(0, '#000');
+    g.addColorStop(1, '#fff');
+    x.fillStyle = g;
+    x.fillRect(0, h * 0.7, w, h * 0.3);
+  }
+  // Image recadrée pour remplir tout le format (comme « remplir » d'un fond d'écran)
+  function ssCover(x, im, w, h) {
+    const k = Math.max(w / im.width, h / im.height);
+    const iw = im.width * k;
+    const ih = im.height * k;
+    x.drawImage(im, (w - iw) / 2, (h - ih) / 2, iw, ih);
+  }
+  function ssCompose() {
+    const c = $('ssCompose');
+    if (!c) return;
+    const m = SSTV.MODES[$('ssTxMode').value] || SSTV.MODES.M1;
+    if (c.width !== m.w || c.height !== m.h) { c.width = m.w; c.height = m.h; }
+    const x = c.getContext('2d');
+    const w = m.w;
+    const h = m.h;
+    const texts = () => {
+      const size = Math.round(h * (Number($('ssSize').value) || 0.1));
+      x.font = '700 ' + size + 'px "Roboto", "Arial", sans-serif';
+      x.textAlign = 'center';
+      x.lineJoin = 'round';
+      const lines = [[$('ssT0').value, size * 1.05, 'top'], [$('ssT1').value, h / 2, 'middle'], [$('ssT2').value, h - size * 0.5, 'bottom']];
+      for (const [t, y, base] of lines) {
+        // Sans correspondant : « CQ » à la place de « ??? »
+        const txt = macroText(String(t || ''), false).replace(/\?\?\?/g, 'CQ').replace(/\s*\n\s*/g, ' ').replace(/^[\s·\-–]+|[\s·\-–]+$/g, '').trim();
+        if (!txt) continue;
+        x.textBaseline = base === 'top' ? 'middle' : base === 'bottom' ? 'alphabetic' : 'middle';
+        const yy = base === 'top' ? size * 0.75 : y;
+        x.lineWidth = Math.max(3, size / 6);
+        x.strokeStyle = '#000';
+        x.strokeText(txt, w / 2, yy, w * 0.96);
+        x.fillStyle = $('ssColor').value || '#ffe14a';
+        x.fillText(txt, w / 2, yy, w * 0.96);
+      }
+    };
+    const sel = ssSel;
+    if (sel === 'bars') { ssBars(x, w, h); texts(); }
+    else if (sel === 'rx' && ssImgs.get(ssShown) && ssImgs.get(ssShown).data) {
+      const it = ssImgs.get(ssShown);
+      const t = document.createElement('canvas');
+      t.width = it.meta.w;
+      t.height = it.meta.h;
+      t.getContext('2d').putImageData(it.data, 0, 0);
+      ssCover(x, t, w, h);
+      texts();
+    } else if (/^u\d+$/.test(sel) && ssSrc[Number(sel.slice(1))]) {
+      ssImage(ssSrc[Number(sel.slice(1))].url, (im) => { if (ssSel !== sel) return; ssCover(x, im, w, h); texts(); });
+    } else { ssBackground(x, w, h); texts(); }
+    const d = SSTV.duration(m.id);
+    $('ssDur').textContent = m.w + ' × ' + m.h + ' · ' + Math.floor(d / 60) + ' min ' + String(Math.round(d % 60)).padStart(2, '0') + ' s';
+  }
+  function ssSignal(rate) {
+    const c = $('ssCompose');
+    const id = $('ssTxMode').value;
+    const px = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    return SSTV.encode(id, px, rate, 4);
+  }
+  let ssPlayer = null;
+  function ssPlay() {
+    if (ssPlayer) { try { ssPlayer.src.stop(); ssPlayer.ctx.close(); } catch (e) {} ssPlayer = null; $('ssPlay').textContent = '▶ Écouter'; return; }
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const sig = ssSignal(ctx.sampleRate);
+    const buf = ctx.createBuffer(1, sig.length, ctx.sampleRate);
+    buf.copyToChannel(sig, 0);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const g = ctx.createGain();
+    g.gain.value = 0.5;
+    src.connect(g).connect(ctx.destination);
+    src.onended = () => { if (ssPlayer && ssPlayer.src === src) { ssPlayer = null; $('ssPlay').textContent = '▶ Écouter'; try { ctx.close(); } catch (e) {} } };
+    src.start();
+    ssPlayer = { ctx, src };
+    $('ssPlay').textContent = '■ Arrêter';
+  }
+  function ssWav() {
+    const rate = 12000;
+    const sig = ssSignal(rate);
+    const b = new ArrayBuffer(44 + sig.length * 2);
+    const v = new DataView(b);
+    const str = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+    str(0, 'RIFF'); v.setUint32(4, 36 + sig.length * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, rate, true);
+    v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, 'data'); v.setUint32(40, sig.length * 2, true);
+    for (let i = 0; i < sig.length; i++) v.setInt16(44 + i * 2, Math.max(-32767, Math.min(32767, Math.round(sig[i] * 32767))), true);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([b], { type: 'audio/wav' }));
+    a.download = 'SSTV-' + $('ssTxMode').value + '.wav';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  function initSstv() {
+    const dial = $('ssDial');
+    for (const [b, khz] of SSTV_DIAL) {
+      const o = document.createElement('option');
+      o.value = String(khz);
+      o.textContent = b + ' · ' + khz.toLocaleString('fr-BE') + ' kHz';
+      dial.appendChild(o);
+    }
+    dial.value = store.get('ssdial', '14230');
+    dial.addEventListener('change', () => { store.set('ssdial', dial.value); qsyTo(Number(dial.value)); });
+    $('ssQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
+    $('ssSave').addEventListener('click', ssSave);
+    const tm = $('ssTxMode');
+    for (const id of SS_TX_MODES) { const o = document.createElement('option'); o.value = id; o.textContent = SSTV.MODES[id].name; tm.appendChild(o); }
+    tm.value = store.get('sstvtx', 'M1');
+    tm.addEventListener('change', () => { store.set('sstvtx', tm.value); ssCompose(); });
+    const defs = ['<CALL> DE <MYCALL>', '', 'UR <RST> · <MYLOC>'];
+    ['ssT0', 'ssT1', 'ssT2'].forEach((id, i) => {
+      const el = $(id);
+      el.value = store.get(id, defs[i]);
+      el.addEventListener('input', () => { store.set(id, el.value); ssCompose(); });
+      el.addEventListener('focus', () => { ssFocus = el; });
+    });
+    $('ssSize').value = store.get('sssize', '0.1');
+    $('ssSize').addEventListener('change', () => { store.set('sssize', $('ssSize').value); ssCompose(); });
+    $('ssColor').value = store.get('sscolor', '#ffe14a');
+    $('ssColor').addEventListener('input', () => { store.set('sscolor', $('ssColor').value); ssCompose(); });
+    // Balises : ajoutées dans la dernière ligne de texte utilisée
+    let ssFocus = $('ssT0');
+    for (const t of ['<CALL>', '<MYCALL>', '<RST>', '<NAME>', '<MYLOC>', '<ZT>']) {
+      const b = document.createElement('button');
+      b.className = 'dg-mini';
+      b.type = 'button';
+      b.textContent = t;
+      b.title = 'Ajouter ' + t + ' au texte';
+      b.addEventListener('mousedown', (e) => e.preventDefault());
+      b.addEventListener('click', () => { ssFocus.value = (ssFocus.value ? ssFocus.value + ' ' : '') + t; store.set(ssFocus.id, ssFocus.value); ssCompose(); });
+      $('ssTags').appendChild(b);
+    }
+    $('ssFile').addEventListener('change', (e) => { ssLoadFiles(e.target.files); e.target.value = ''; });
+    $('ssPlay').addEventListener('click', ssPlay);
+    $('ssWav').addEventListener('click', ssWav);
+    $('ssSend').title = 'Émission SSTV : prochaine version';
+    // Glisser-déposer d'images sur la zone d'émission
+    const zone = document.querySelector('.ss-tx');
+    zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drop'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drop'));
+    zone.addEventListener('drop', (e) => { e.preventDefault(); zone.classList.remove('drop'); ssLoadFiles(e.dataTransfer.files); });
+    ssThumbs();
+    ssCompose();
+  }
+
   // ------------------------------------------------------------------ correspondant et messages pré-enregistrés
   // Correspondant commun à tous les modes (bas du dashboard, fenêtre RTTY, fenêtre séparée : synchronisés)
   let myCall = 'ON5VL';
@@ -1303,13 +1760,14 @@
       // Split : clic gauche = fréquence de réception, clic droit = fréquence d'émission
       const fAt = (e) => { const r = e.currentTarget.getBoundingClientRect(); return ((e.clientX - r.left) / r.width) * WF_MAX_HZ; };
       for (const id of ['dgWf', 'dgScale']) {
-        $(id).addEventListener('click', (e) => (tab === 'rtty' ? setRttyF(fAt(e)) : tab === 'cw' ? setCwF(fAt(e), true) : setRx(fAt(e))));
-        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'rtty') setRttyF(fAt(e)); else if (tab === 'cw') setCwF(fAt(e), false); else setTx(fAt(e)); });
+        $(id).addEventListener('click', (e) => (tab === 'sstv' ? null : tab === 'rtty' ? setRttyF(fAt(e)) : tab === 'cw' ? setCwF(fAt(e), true) : setRx(fAt(e))));
+        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'sstv') return; if (tab === 'rtty') setRttyF(fAt(e)); else if (tab === 'cw') setCwF(fAt(e), false); else setTx(fAt(e)); });
       }
       initRtty();
       initWspr();
       initJtty();
       initCw();
+      initSstv();
       initMsgs();
       // Touches F1 à F12 dans la fenêtre RTTY : macros (comme FLDIGI)
       document.addEventListener('keydown', (e) => {
@@ -1338,6 +1796,7 @@
         if (tab === 'wspr') wsClock();
         if (tab === 'jtty') jtStatus();
         if (tab === 'cw') cwStatus();
+        if (tab === 'sstv') sstvStatus();
         if (tab === 'sync') drawSync();
       }, 500);
     },
@@ -1375,6 +1834,7 @@
       if (m.t === 'rtty') { rttyAppend(m.text || ''); return true; }
       if (m.t === 'jtty') { jtUpdate(m.u); return true; }
       if (m.t === 'cw') { cwAppend(m.text || ''); return true; }
+      if (/^sstv_/.test(m.t)) return ssMessage(m);
       if (m.t === 'cw_lvl') { cwLevels(m); return true; }
       if (m.t === 'jtty_hist') { jtMsgs.clear(); for (const u of m.items || []) jtMsgs.set(u.key, u); jtRedraw(); return true; }
       if (m.t === 'rtty_lvl') { rttyLevels(m); return true; }
@@ -1412,6 +1872,7 @@
     },
     onBinary(bytes) {
       if (bytes[0] === 0x10) { onRow(bytes); return true; }
+      if (bytes[0] === 0x11) { ssLine(bytes); return true; }
       return false;
     },
     onState() { if (tab === 'ftx' || tab === 'jt65') { status(); followBand(); } }

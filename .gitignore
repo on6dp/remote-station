@@ -6,3 +6,4 @@ logs/*.log
 node_modules/
 sessions.json
 macros.json
+sstv/
