@@ -13,7 +13,7 @@
 (function () {
   'use strict';
   const NAMES = {
-    rf: 'RF front end', mode: 'Mode', filter: 'Filtre', meters: 'Station meters', vfo: 'VFO', bands: 'Step et bandes',
+    ant: 'Antenne', rf: 'RF front end', mode: 'Mode', filter: 'Filtre', meters: 'Station meters', vfo: 'VFO', bands: 'Step et bandes',
     audio: 'RX audio', dsp: 'DSP', tune: 'Accord (tuner)', tx: 'TX', ops: 'Opérateurs', msgs: 'Messages pré-enregistrés'
   };
   const store = {

@@ -190,6 +190,9 @@ Après un redémarrage, la page réactive l'audio toute seule. Si elle affiche �
 
 ## Pour les membres
 
+Manuel complet : bouton **HELP** du dashboard, ou https://remote.op0p.be/aide (français) et https://remote.op0p.be/help (English). Sources : `public/aide.html`, `public/help.html` — à tenir à jour avec chaque nouvelle fonction.
+
+
 1. Aller sur https://remote.op0p.be, se connecter avec **son indicatif** et **son mot de passe**.
 2. **Prendre la main** (une seule personne pilote à la fois). Si quelqu'un l'a déjà : **Demander la main** dans le cadre Opérateurs, ou lui écrire un message.
 3. Accorder : molette ou glisser sur les chiffres, flèches ↑ ↓, touches de bande et de mode. **PTT** : bouton ou barre d'espace (maintenir).

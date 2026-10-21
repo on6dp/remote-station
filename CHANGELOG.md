@@ -1,5 +1,9 @@
 # Journal des versions — Remote Station UBA-LGE (ON5VL / OR0L)
 
+## v0.12 — manuel d'utilisation
+
+- **0.12.0** — **Manuel d'utilisation** en français (`/aide`) et en anglais (`/help`) : connexion, écran, main, réglages du TRX, écoute, émission et sécurités, discussion, fenêtres séparées, tous les modes numériques (FT8 · FT4, JT65, RTTY, WSPR, JTTY, CW, SSTV, Synchro, QO-100), macros et balises, raccourcis clavier, problèmes fréquents, PC du club ; imprimable. Bouton **HELP** dans le bandeau du dashboard (manuel dans la langue du navigateur) et liens sur la page Station. Choix d'antenne ANT 1 / ANT 2 dans son propre cadre, en haut à gauche.
+
 ## v0.11 — QO-100 et choix d'antenne
 
 - **0.11.0** — **QO-100** : les listes de fréquences FT8 · FT4, RTTY et CW proposent la FI du convertisseur 2,4 GHz (2 m, 70 cm, 23 cm) pour monter sur 2400,040 MHz (FT8 / FT4, comme WSJT-X), 2400,025 (CW) et 2400,090 (RTTY) ; par défaut 432,540 MHz en FT8 (convertisseur à OL 1967,5 MHz), réglable par `qo100If` ; seules les FI couvertes par le TRX sont proposées, et la liste ne bascule jamais d'elle-même d'une fréquence 70 cm terrestre vers QO-100. **Antenne** : cadre RF front end, ANT 1 / ANT 2 sur le FTX-1 (menu EX030704, prises de l'ampli SPA-1), refusé pendant une émission ; FTDX10 et IC-7300 n'offrent pas ce choix par CAT (indiqué, boutons grisés).

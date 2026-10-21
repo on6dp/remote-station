@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>User manual — Remote Station UBA-LGE</title>
+<meta name="theme-color" content="#0e131b">
+<link rel="stylesheet" href="/css/manual.css">
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1><span>ON5VL / OR0L</span> Remote Station UBA-LGE</h1>
+    <p class="sub">User manual for club members — dashboard https://remote.op0p.be</p>
+  </div>
+  <nav><a href="/aide" lang="fr">Français</a><a href="/help" class="on" lang="en">English</a><a href="/">Back to the dashboard</a></nav>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <a href="#login">1. Logging in</a>
+  <a href="#screen">2. The screen</a>
+  <a href="#control">3. Taking and handing over control</a>
+  <a href="#trx">4. Operating the transceiver</a>
+  <a href="#listen">5. Listening</a>
+  <a href="#tx">6. Transmitting and safety</a>
+  <a href="#operators">7. Operators and chat</a>
+  <a href="#layout">8. Layout and separate windows</a>
+  <a href="#digital">9. Digital modes</a>
+  <a href="#ft8">9.1 FT8 · FT4</a>
+  <a href="#jt65">9.2 JT65</a>
+  <a href="#rtty">9.3 RTTY</a>
+  <a href="#wspr">9.4 WSPR</a>
+  <a href="#jtty">9.5 JTTY</a>
+  <a href="#cw">9.6 CW</a>
+  <a href="#sstv">9.7 SSTV</a>
+  <a href="#sync">9.8 Synchro</a>
+  <a href="#qo100">9.9 QO-100</a>
+  <a href="#messages">10. Stored messages and macros</a>
+  <a href="#keys">11. Keyboard shortcuts</a>
+  <a href="#trouble">12. Troubleshooting</a>
+  <a href="#club">13. The club PC (Station page)</a>
+</nav>
+
+<div class="note">The dashboard runs in any recent browser (Chrome, Edge, Firefox) on a PC, Mac, tablet or phone. It is designed for a
+<b>1920 × 1080</b> screen or larger; on smaller screens the panels rearrange themselves. The interface is in French; the button and panel names
+are quoted below as they appear on screen. After a server update, press <kbd>Ctrl</kbd> + <kbd>F5</kbd> to reload the page.</div>
+
+<h2 id="login">1. Logging in</h2>
+<ol>
+  <li>Open <a href="https://remote.op0p.be">https://remote.op0p.be</a>.</li>
+  <li>Enter <b>your callsign</b> and <b>your password</b> (given by a club administrator), then <b>Se connecter</b> (log in).</li>
+  <li>The browser stays logged in for <b>7 days</b>: reloading the page takes you straight back to the dashboard.</li>
+  <li><b>Déconnexion</b> (log out, top right) ends the session and forgets the browser: do this on a shared PC.</li>
+</ol>
+<p><b>Listener</b> callsigns (ONL…) can see and hear everything but cannot transmit or change the power.
+After 15 minutes without any action you are logged out (a warning appears one minute before, with a « Rester connecté » / stay logged in button) — never during a transmission.</p>
+
+<h2 id="screen">2. The screen</h2>
+<h3>Top bar</h3>
+<table>
+  <tr><th>Item</th><th>Meaning</th></tr>
+  <tr><td><span class="k">● Serveur</span></td><td>Link between your browser and the server (green = connected).</td></tr>
+  <tr><td><span class="k">● Station</span></td><td>The Station page on the club PC is online. For administrators, a click opens the transceiver choice.</td></tr>
+  <tr><td><span class="k">● FTX-1 FTDX10 IC-7300</span></td><td>The connected transceiver (highlighted) and its CAT link.</td></tr>
+  <tr><td><span class="k">👥 n</span></td><td>Number of members online; click for the list.</td></tr>
+  <tr><td><span class="k">Prendre la main</span></td><td>Take control (see section 3).</td></tr>
+  <tr><td><span class="k">HELP</span></td><td>This manual.</td></tr>
+</table>
+<h3>Columns (wide screen)</h3>
+<ol>
+  <li><b>Left</b>: Antenne (antenna), RF front end, Mode, Filtre (filter), Station meters.</li>
+  <li><b>Centre</b>: VFO A and B (MAIN / SUB), Step and bands, then « Activité et modes numériques » (activity and digital modes).</li>
+  <li><b>Right</b>: RX audio, DSP, Accord (tuner), TX.</li>
+  <li><b>Far right</b>: Opérateurs (operators and chat) and Messages pré-enregistrés (stored messages).</li>
+</ol>
+<p>Each panel folds with the small arrow <span class="k">▾</span> before its title, and can open in its own window with <span class="k">⧉</span> (section 8).</p>
+
+<h2 id="control">3. Taking and handing over control</h2>
+<ul>
+  <li>Only one person <b>has control</b> (« a la main ») of the transceiver; everybody else can see and listen.</li>
+  <li><b>Prendre la main</b> (take control): button in the top bar, when nobody has control.</li>
+  <li>If someone already has it: <b>Demander la main</b> (request control) in the Operators panel, or send them a chat message.
+    The operator in control can <b>hand it over</b> to another member.</li>
+  <li><b>Libérer la main</b> (release control) when you leave. Control is released automatically after <b>15 minutes</b> without action.</li>
+  <li>Without control, the commands are greyed out and a message reminds you to take control (« Prenez la main »).</li>
+</ul>
+
+<h2 id="trx">4. Operating the transceiver</h2>
+<h3>Frequency (VFO panel)</h3>
+<ul>
+  <li>Mouse <b>wheel</b> over the digits, or <b>drag</b> the digits; keyboard arrows <kbd>↑</kbd> <kbd>↓</kbd>; buttons <span class="k">◀</span> <span class="k">▶</span>.</li>
+  <li>Choose the tuning step in <b>Step</b> (10 Hz to 100 kHz); <span class="k">A</span> / <span class="k">B</span> selects the VFO being tuned.</li>
+  <li>Direct entry: type the frequency in kHz, then <b>Aller</b> (go).</li>
+  <li><b>Bands</b>: 160 m to 70 cm (depending on the transceiver).</li>
+</ul>
+<h3>Mode and filter</h3>
+<ul>
+  <li><b>Mode</b>: LSB, USB, CW-L/CW-U, RTTY, DATA-L/DATA-U (digital modes), AM, FM… (applied to the VFO shown).</li>
+  <li><b>Filtre</b>: bandwidth BW, NARROW, IF SHIFT, CONTOUR, APF (in CW).</li>
+</ul>
+<h3>Antenna</h3>
+<p><b>Antenne</b> panel, top left: <span class="k">ANT 1</span> / <span class="k">ANT 2</span> on the FTX-1 (SPA-1 amplifier sockets).
+The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Changing antenna is refused during a transmission.</p>
+<h3>RF front end, DSP, dual VFO</h3>
+<ul>
+  <li><b>RF front end</b>: RF gain, ATT, preamplifier (IPO / AMP1 / AMP2…), AGC.</li>
+  <li><b>DSP</b>: NB, DNR, NOTCH (and its frequency), DNF.</li>
+  <li><b>Dual</b> (between the two VFOs): MAIN / SUB, A → B, B → A, A ⇄ B, SPLIT, RIT, XIT, offset, LOCK.</li>
+</ul>
+<div class="tip">Settings act on the real club transceiver and are shown to everybody. The indicators in the VFO panel (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) summarise its state.</div>
+
+<h2 id="listen">5. Listening</h2>
+<ul>
+  <li><b>RX audio</b> panel → <span class="k">🔊 Écouter le TRX</span> (listen); set your own <b>Volume</b> just below (affects only you).</li>
+  <li><b>AF level</b> and <b>Squelch</b> act on the transceiver itself.</li>
+  <li>Everybody can listen, even without control. If you hear nothing, see section 12 (audio must be enabled on the club PC).</li>
+</ul>
+
+<h2 id="tx">6. Transmitting and safety</h2>
+<ul>
+  <li><b>PTT</b>: hold the big PTT button or the <kbd>Space</kbd> bar. Release = receive.</li>
+  <li><b>Power</b>: − / + buttons in the TX panel; your personal limit is displayed (e.g. ON3: 25 W).</li>
+  <li><b>Tuning</b>: after changing band, press <span class="k">TUNE</span> (Accord panel) before transmitting. TUNE counts as a transmission.</li>
+  <li>Mic gain, PROC and level, VOX (can be switched off remotely, never on).</li>
+</ul>
+<div class="warn"><b>Automatic safety features</b> (cannot be bypassed from the dashboard):
+<ul>
+  <li>Transmission only in the authorised bands, checked on the frequency actually transmitted (SPLIT and XIT included).</li>
+  <li>Maximum length of one transmission: <b>120 s</b>, then cut; release the PTT before transmitting again.</li>
+  <li>Immediate cut if you lose the link, if the club PC loses internet, or if the Station page closes.</li>
+  <li><b>SWR</b> above 2.5:1: transmission cut and PTT refused on that frequency (±25 kHz) until a TUNE.</li>
+  <li>At the club, the transceiver is returned to receive if it transmits 2 min without modulation or 5 min without a break.</li>
+  <li>Power limited to your licence class; listener callsigns: no transmission at all.</li>
+</ul></div>
+<p>Transmitting is only possible if the administrators have enabled it on the server.</p>
+
+<h2 id="operators">7. Operators and chat</h2>
+<ul>
+  <li>The <b>Opérateurs</b> panel shows who has control and is a <b>chat</b> between connected members (messages are not kept after a server restart).</li>
+  <li>Control requests and hand-overs also appear there.</li>
+  <li>The <b>Activité</b> tab (centre) lists events: logins, control changes, station online, transceiver connected…</li>
+</ul>
+
+<h2 id="layout">8. Layout and separate windows</h2>
+<ul>
+  <li><span class="k">⧉</span> button at the top right of a panel: the panel opens in <b>its own window</b>, to place wherever you like (second screen…). <span class="k">⧉ Ramener</span> puts it back.</li>
+  <li>The <span class="k">⧉</span> button to the right of the tabs opens <b>all digital modes</b> in a separate window, on the mode currently shown.</li>
+  <li>The layout is remembered: on the next visit the windows reopen in place if Chrome <b>allows pop-up windows</b> for remote.op0p.be (icon at the right of the address bar → Always allow).</li>
+</ul>
+
+<h2 id="digital">9. Digital modes</h2>
+<p>The centre tabs: <b>Activité</b>, <b>FT8 · FT4</b>, <b>RTTY</b>, <b>WSPR</b>, <b>JT65</b>, <b>JTTY</b>, <b>CW</b>, <b>SSTV</b> and, further right, <b>Synchro</b>.</p>
+<ul>
+  <li><b>Decoding runs on the server</b>, on the server's (synchronised) clock: the clocks of your PC and of the club PC do not matter.</li>
+  <li>Transceiver audio is only sent while someone listens or watches a digital-mode tab.</li>
+  <li>Choosing a frequency in a tab's list sends the transceiver there (<b>QSY</b>), in <b>DATA-U</b> (in CW for the CW tab) — you need control.</li>
+  <li>Each tab has a <b>waterfall</b> (0 to 3000 Hz); a status line reports problems (station offline, audio not enabled, transceiver not in DATA-U…).</li>
+  <li>Transmitting in the digital modes (as <b>ON5VL</b>) comes in a future version <span class="later">soon</span>: the « Émettre » (transmit) buttons are greyed out, but messages and macros can already be prepared.</li>
+</ul>
+
+<h3 id="ft8">9.1 FT8 · FT4</h3>
+<ul>
+  <li><span class="k">FT8</span> / <span class="k">FT4</span> buttons: the transceiver goes to that mode's calling frequency on its band.</li>
+  <li><b>Activité de bande</b> (band activity): all decoded messages (CQ in <span class="grn">green</span>, messages for ON5VL / OR0L in <span class="red">red</span>); <b>Fréquence RX</b>: those on your frequency.</li>
+  <li><b>Split</b> as in WSJT-X: <b>left click</b> on the waterfall or a line = <span class="grn">receive</span> frequency, <b>right click</b> = <span class="red">transmit</span> frequency; « TX ← RX » and « RX ← TX » buttons.</li>
+  <li><b>Double-click</b> a message: its sender becomes the contact (callsign, locator, report) and messages Tx1 to Tx6 are prepared.</li>
+</ul>
+<h3 id="jt65">9.2 JT65</h3>
+<p>Same window as FT8 (one-minute periods); the transceiver goes to the JT65 frequency of its band. Decodes arrive around second 52.</p>
+<h3 id="rtty">9.3 RTTY</h3>
+<ul>
+  <li>Set the <b>shift</b> and <b>speed</b> (170 Hz / 45.45 baud by default), then <b>click on the signal</b> in the waterfall: the <span class="yel">yellow (Mark)</span> and blue (Space) markers must sit on its two traces; otherwise press <span class="k">Inversé</span> (reverse).</li>
+  <li>The M / S bars of the tuning indicator should flicker alternately. Raise the <b>squelch</b> (« Silencieux ») if characters appear on noise.</li>
+  <li>Received text scrolls on the left; double-click a received callsign = contact. On the right: macros <kbd>F1</kbd> to <kbd>F12</kbd> and the text to send.</li>
+</ul>
+<h3 id="wspr">9.4 WSPR</h3>
+<p>Choose the band; every 2 minutes (about ten seconds after each even minute) the list grows:
+callsign, locator, power, frequency, drift and distance from the station.</p>
+<h3 id="jtty">9.5 JTTY</h3>
+<ul>
+  <li>New WSJT-X 3.3 mode for keyboard-to-keyboard and contests: no periods, each message appears <b>frame by frame</b> (1.9 s); <span class="k">▌</span> = message still arriving.</li>
+  <li>Left click = receive, right click = transmit, double-click = contact; macros <kbd>F1</kbd> to <kbd>F8</kbd> (the WSJT-X ones).</li>
+</ul>
+<h3 id="cw">9.6 CW</h3>
+<ul>
+  <li>The transceiver goes to CW. <b>Click on a signal</b> in the waterfall: the decoder locks onto the nearest one (yellow marker) and learns the speed (shown in words per minute). Right click: exact tuning where you click.</li>
+  <li><b>Filter</b> 100 Hz by default (50 Hz with QRM, 200–400 Hz to search); raise the <b>squelch</b> if letters appear on noise. The LED follows the keying.</li>
+  <li>Double-click a received callsign = contact; macros <kbd>F1</kbd> to <kbd>F12</kbd>.</li>
+</ul>
+<h3 id="sstv">9.7 SSTV</h3>
+<ul>
+  <li><b>Receive</b>: pictures start by themselves (VIS code) and are drawn line by line. Modes Martin M1/M2, Scottie S1/S2/DX, Robot 36/72, PD 50 to PD 290; frequency offset and slant corrected.
+    The <b>gallery</b> keeps the last 12 (click = show); <span class="k">PNG</span> saves the picture shown to your PC. The server also keeps every picture.</li>
+  <li><b>Prepare a picture</b>: <span class="k">Images du PC…</span> (pictures from your PC, or drag and drop), CQ card, test pattern or received picture; it is cropped to the selected mode's format.
+    Three text lines (top, centre, bottom) with tags <code>&lt;CALL&gt;</code>, <code>&lt;MYCALL&gt;</code>, <code>&lt;RST&gt;</code>…; size and colour. Right click a thumbnail: remove it.</li>
+  <li><span class="k">▶ Écouter</span> plays the SSTV signal on your PC; <span class="k">WAV</span> saves it (test with MMSSTV or a phone app).</li>
+</ul>
+<h3 id="sync">9.8 Synchro</h3>
+<p>Server time, offset of your PC, delay of the link with the station and mean DT of FT8 decodes: useful to check that everything is in step.</p>
+<h3 id="qo100">9.9 QO-100</h3>
+<p>The FT8 · FT4, RTTY and CW lists offer « <b>QO-100 · FI 2 m / 70 cm</b> »: the frequency to set on the transceiver <b>before the 2.4 GHz up-converter</b>,
+to transmit on 2400.040 MHz (FT8 / FT4), 2400.025 MHz (CW) or 2400.090 MHz (RTTY). Example: FT8 on <b>432.540 MHz</b> with the club's 70 cm converter.
+Only the IFs the connected transceiver can reach are listed (2 m and 70 cm: FTX-1).</p>
+
+<h2 id="messages">10. Stored messages and macros</h2>
+<ul>
+  <li><b>Messages pré-enregistrés</b> panel: contact (callsign, first name, QTH, locator, FT8 report, RST), then one row per mode: FT8 · FT4 (Tx1 to Tx7), RTTY, JTTY, CW.</li>
+  <li>Clicking a macro adds it to the text to send in its tab. <b>Right click</b> (or <span class="k">✎</span>): edit it — name, text, preview, back to the default. Your macros are stored on the server, for you only.</li>
+  <li>Tx7: free FT8 / FT4 text, 13 characters.</li>
+</ul>
+<table>
+  <tr><th>Tag</th><th>Replaced by</th><th>Tag</th><th>Replaced by</th></tr>
+  <tr><td><code>&lt;MYCALL&gt;</code></td><td>transmitted callsign (ON5VL)</td><td><code>&lt;CALL&gt;</code></td><td>contact</td></tr>
+  <tr><td><code>&lt;NAME&gt;</code></td><td>their first name</td><td><code>&lt;QTH&gt;</code></td><td>their QTH</td></tr>
+  <tr><td><code>&lt;RST&gt;</code></td><td>report sent</td><td><code>&lt;LOC&gt;</code></td><td>their locator</td></tr>
+  <tr><td><code>&lt;MYLOC&gt;</code></td><td>station locator</td><td><code>&lt;MYQTH&gt;</code></td><td>station QTH</td></tr>
+  <tr><td><code>&lt;OPCALL&gt;</code></td><td>your own callsign (operator)</td><td><code>&lt;CNTR&gt;</code></td><td>serial number (001…)</td></tr>
+  <tr><td><code>&lt;INCR&gt;</code></td><td>moves to the next serial</td><td><code>&lt;ZT&gt;</code> / <code>&lt;ZD&gt;</code></td><td>UTC time / date</td></tr>
+</table>
+
+<h2 id="keys">11. Keyboard shortcuts</h2>
+<table>
+  <tr><th>Key</th><th>Action</th></tr>
+  <tr><td><kbd>Space</kbd> (hold)</td><td>PTT — also from a panel opened in a separate window</td></tr>
+  <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Frequency ± one step</td></tr>
+  <tr><td><kbd>F1</kbd> … <kbd>F12</kbd></td><td>Macros in the RTTY and CW tabs (<kbd>F1</kbd>…<kbd>F8</kbd> in JTTY)</td></tr>
+  <tr><td><kbd>Ctrl</kbd> + <kbd>F5</kbd></td><td>Reload the page after an update</td></tr>
+</table>
+<p>These keys are ignored while typing in a text field.</p>
+
+<h2 id="trouble">12. Troubleshooting</h2>
+<table>
+  <tr><th>Symptom</th><th>Solution</th></tr>
+  <tr><td>Odd display, a button does nothing after an update</td><td><kbd>Ctrl</kbd> + <kbd>F5</kbd>.</td></tr>
+  <tr><td>« Station hors ligne » (station offline)</td><td>The Station page on the club PC is closed or the PC has lost internet: tell a club manager.</td></tr>
+  <tr><td>No sound, empty waterfall, « La page Station n'envoie pas la BF »</td><td>At the club, the Station page must have « Activer l'audio » (enable audio) on and the right sound input (see section 13).</td></tr>
+  <tr><td>« Prenez la main… »</td><td>You do not have control: « Prendre la main » or « Demander la main ».</td></tr>
+  <tr><td>Nothing decoded in FT8 / RTTY…</td><td>Check the transceiver mode (DATA-U; CW for CW) and the frequency; the Synchro tab shows whether audio is arriving.</td></tr>
+  <tr><td>A separate window does not open</td><td>Allow pop-up windows for remote.op0p.be (icon at the right of the address bar).</td></tr>
+  <tr><td>PTT refused</td><td>The message gives the reason: outside the authorised bands, SWR (press TUNE), transmitting not enabled, listener callsign, maximum duration…</td></tr>
+</table>
+
+<h2 id="club">13. The club PC (Station page)</h2>
+<p>For club managers. The PC connected to the transceiver opens <b>https://remote.op0p.be/station</b> in Chrome (Web Serial):</p>
+<ol>
+  <li>Paste the <b>station token</b> (given by the server administrator), choose the transceiver <b>model</b> and its <b>CAT port</b> (first time only).</li>
+  <li><b>Activer l'audio</b> (enable audio) and choose the transceiver's sound input (often « USB Audio CODEC »); the level bar must move.</li>
+  <li>Keep the Station page <b>alone in its window</b>; open the dashboard with its « Ouvrir le dashboard dans une autre fenêtre » button.</li>
+  <li>Chrome → Settings → Performance: always keep remote.op0p.be active; Windows: sleep set to Never.</li>
+</ol>
+<p>Server installation and settings: see <code>LISEZMOI.md</code> and <code>README.md</code> (project repository).</p>
+
+<footer>Remote Station UBA-LGE — ON5VL / OR0L. Decoders: ft8_lib (MIT), WSJT-X (GPL v3: WSPR, JT65, JTTY); see TIERS.md.
+<a href="/aide">Version française</a></footer>
+</div>
+</body>
+</html>

@@ -30,6 +30,7 @@
       </span>
       <span class="tb-call" id="meCall">—</span>
       <button class="btn" id="ctrlBtn" type="button">Prendre la main</button>
+      <a class="btn help-btn" id="helpBtn" href="/aide" target="_blank" rel="noopener" title="Manuel d'utilisation / User manual">HELP</a>
       <button class="btn btn-off" id="logout" type="button">Déconnexion</button>
     </div>
   </header>
@@ -37,6 +38,10 @@
   <div class="workspace">
     <!-- ============================================================ colonne gauche -->
     <aside class="side side-left">
+      <section data-panel="ant" class="panel panel-ant">
+        <h2 class="panel-h">Antenne</h2>
+        <div class="panel-b" id="sec-ant"></div>
+      </section>
       <section data-panel="rf" class="panel">
         <h2 class="panel-h">RF front end</h2>
         <div class="panel-b" id="sec-front"></div>

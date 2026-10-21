@@ -18,7 +18,8 @@
   const STEPS = [[10, '10 Hz'], [100, '100 Hz'], [1000, '1 kHz'], [10000, '10 kHz'], [100000, '100 kHz']];
   // Où placer chaque réglage du pilote dans la page
   const LAYOUT = {
-    front: ['ant', 'rf', 'att', 'preamp', 'agc'],
+    ant: ['ant'],
+    front: ['rf', 'att', 'preamp', 'agc'],
     filter: ['width', 'narrow', 'shift', 'contour', 'apf'],
     dual: ['vfoSel', 'aToB', 'bToA', 'swap', 'split', 'rit', 'xit', 'clar', 'lock'],
     audio: ['af', 'sql'],
@@ -28,6 +29,8 @@
   };
   const SHORT = { ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décalage', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE' };
 
+  // Bouton HELP : manuel en français, ou en anglais si le navigateur n'est pas en français
+  try { if (!/^fr\b/i.test(navigator.language || 'fr')) document.getElementById('helpBtn').href = '/help'; } catch (e) {}
   let ws = null;
   let creds = null;          // gardés en mémoire uniquement, pour se reconnecter
   let me = null;
@@ -394,7 +397,7 @@
     ctlModel = R.ID;
     ctlRefs = {};
     buildKeys(R);
-    const boxes = { front: 'sec-front', filter: 'sec-filter', dual: 'sec-dual', audio: 'sec-audio', dsp: 'sec-dsp', tune: 'sec-tune', tx: 'sec-tx' };
+    const boxes = { ant: 'sec-ant', front: 'sec-front', filter: 'sec-filter', dual: 'sec-dual', audio: 'sec-audio', dsp: 'sec-dsp', tune: 'sec-tune', tx: 'sec-tx' };
     for (const k in boxes) $(boxes[k]).textContent = '';
     $('sec-other').textContent = '';
     const where = {};
@@ -477,9 +480,9 @@
       h.innerHTML = '<span class="ctl-label">ANT</span><span class="ctl-val">non pilotable à distance</span>';
       const grp = document.createElement('div');
       grp.className = 'seg seg-fill';
-      for (const l of ['ANT 1', 'ANT 2', 'ANT 3 / RX']) { const b = mkBtn(l, 'accent'); b.disabled = true; grp.appendChild(b); }
+      for (const l of ['ANT 1', 'ANT 2']) { const b = mkBtn(l, 'accent'); b.disabled = true; grp.appendChild(b); }
       cell.append(h, grp);
-      $(boxes.front).insertBefore(cell, $(boxes.front).firstChild);
+      $(boxes.ant).appendChild(cell);
     }
   }
   let trxSince = 0;
