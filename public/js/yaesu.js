@@ -135,7 +135,8 @@
   /**
    * Construit un pilote Yaesu.
    * spec : ID, NAME, FREQ_MAX, extraModes, power {read, re, parse, range, step, cmd, fakeRead, fakeWrite},
-   *        readOverrides {cmd: lecture|null}, controlOverrides {id: modifs|null}, widthTable, tuneCmd, serial, hint
+   *        readOverrides {cmd: lecture|null}, controlOverrides {id: modifs|null}, extraReads, extraControls,
+   *        widthTable, tuneCmd, serial, hint
    */
   function build(spec) {
     const ID = spec.ID;
@@ -156,6 +157,7 @@
       const o = spec.readOverrides && Object.prototype.hasOwnProperty.call(spec.readOverrides, r.cmd) ? spec.readOverrides[r.cmd] : r;
       if (o) READS.push(Object.assign({ cmd: r.cmd }, o));
     }
+    for (const r of spec.extraReads || []) READS.push(r);
     // Les commandes partent une par une, espacées (FRAME_GAP_MS) : une rafale de 30 commandes
     // déborde le tampon CAT de la radio, qui en perd une partie (mode non lu, « plus de réponse »…)
     const FAST = ['FA;', 'MD0;', 'FB;', 'MD1;', 'SM0;', 'TX;', 'FT;'];
@@ -177,7 +179,7 @@
     }
     const STATE_KEYS = ['txVfo', 'split', 'vfoSel', 'rit', 'xit', 'clar', 'lock', 'width', 'narrow', 'shift', 'contour', 'apf',
       'dnf', 'notch', 'notchFreq', 'nb', 'nr', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox',
-      'tuner', 'tuning', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'];
+      'tuner', 'tuning', 'ant', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'];
 
     // Réglages
     const CONTROLS = [];
@@ -186,6 +188,7 @@
       if (ov === null) continue;
       CONTROLS.push(Object.assign({}, c, ov || {}));
     }
+    for (const c of spec.extraControls || []) CONTROLS.push(c);
     const CONTROL = {};
     CONTROLS.forEach((c) => { CONTROL[c.id] = c; });
 

@@ -1,5 +1,9 @@
 # Journal des versions — Remote Station UBA-LGE (ON5VL / OR0L)
 
+## v0.11 — QO-100 et choix d'antenne
+
+- **0.11.0** — **QO-100** : les listes de fréquences FT8 · FT4, RTTY et CW proposent la FI du convertisseur 2,4 GHz (2 m, 70 cm, 23 cm) pour monter sur 2400,040 MHz (FT8 / FT4, comme WSJT-X), 2400,025 (CW) et 2400,090 (RTTY) ; par défaut 432,540 MHz en FT8 (convertisseur à OL 1967,5 MHz), réglable par `qo100If` ; seules les FI couvertes par le TRX sont proposées, et la liste ne bascule jamais d'elle-même d'une fréquence 70 cm terrestre vers QO-100. **Antenne** : cadre RF front end, ANT 1 / ANT 2 sur le FTX-1 (menu EX030704, prises de l'ampli SPA-1), refusé pendant une émission ; FTDX10 et IC-7300 n'offrent pas ce choix par CAT (indiqué, boutons grisés).
+
 ## v0.10 — SSTV
 
 - **0.10.0** — Onglet **SSTV** (à droite de CW). Réception sur le serveur (`lib/sstv-dec.js`, sans dépendance) : départ automatique sur le code VIS, modes Martin M1 / M2, Scottie S1 / S2 / DX, Robot 36 / 72, PD 50 / 90 / 120 / 160 / 180 / 240 / 290 ; TRX mal calé corrigé (décalage mesuré sur l'amorce), correction de pente (horloges de carte son différentes), image affichée ligne après ligne puis redressée à la fin ; tient le QSB et le QRM de courte durée. Galerie des 12 dernières images (vignettes), enregistrement PNG sur votre PC ; chaque image reçue est aussi gardée sur le serveur (dossier `sstv/`, 200 dernières). Préparation des images à émettre : images de votre PC (bouton ou glisser-déposer, gardées dans le navigateur), carte CQ, mire ou image reçue, recadrage au format du mode, trois lignes de texte (balises <CALL> <MYCALL> <RST> <NAME> <MYLOC> <ZT>, taille, couleur), aperçu, durée ; « Écouter » joue le signal SSTV sur le PC et « WAV » l'enregistre (essai avec un autre logiciel). L'émission SSTV arrive avec l'émission des modes numériques.

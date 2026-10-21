@@ -23,6 +23,46 @@
     FT4: [['80 m', 3575.5], ['40 m', 7047.5], ['30 m', 10140], ['20 m', 14080], ['17 m', 18104], ['15 m', 21140],
       ['12 m', 24919], ['10 m', 28180], ['6 m', 50318], ['2 m', 144170]]
   };
+  // QO-100 (Es'hail-2) : on émet sur la FI du convertisseur 2,4 GHz (2 m, 70 cm ou 23 cm). qoIf = FI (MHz) qui
+  // correspond à 2400,000 MHz (réglage qo100If du serveur ; 432,500 pour un convertisseur à OL 1967,5 MHz).
+  let qoIf = { '2m': 144.5, '70cm': 432.5, '23cm': 1296.5 };
+  // Fréquences de montée (MHz) : FT8 / FT4 2400,040 (WSJT-X), CW 2400,025, RTTY 2400,090 (plan de bande AMSAT-DL)
+  const QO_UP = { FT8: 2400.040, FT4: 2400.040, RTTY: 2400.090, CW: 2400.025 };
+  const QO_LBL = { '2m': '2 m', '70cm': '70 cm', '23cm': '23 cm' };
+  function qoEntries(m) {
+    const up = QO_UP[m];
+    if (!up) return [];
+    // FI hors de la couverture du TRX (ex. 23 cm sur FTX-1, FTDX10, IC-7300) : pas proposée
+    const R = api && api.rig && api.rig();
+    const max = R && R.FREQ_MAX ? R.FREQ_MAX : Infinity;
+    return Object.keys(QO_LBL).filter((k) => Number(qoIf[k]) > 0).map((k) => ['QO-100 · FI ' + QO_LBL[k], Math.round((Number(qoIf[k]) + up - 2400) * 1e6) / 1000])
+      .filter((x) => x[1] * 1000 <= max);
+  }
+  const withQo = (list, m) => list.filter((x) => !/^QO-100/.test(x[0])).concat(qoEntries(m));
+  const dialList = (m) => withQo(DIAL[m], m);
+  let lastRig = '';
+  function refillQo() {
+    if (!$('dgDial')) return;
+    lastBand = 0;
+    fillDial();
+    fillList($('rtDial'), withQo(RTTY_DIAL, 'RTTY'), store.get('rtdial', '14085'));
+    fillList($('cwDial'), withQo(CW_DIAL, 'CW'), store.get('cwdial', '14030'));
+  }
+  // Fréquences candidates pour suivre la bande du TRX : une fréquence QO-100 seulement si le TRX est déjà
+  // tout près (± 250 kHz) — on ne bascule pas sur le convertisseur depuis une fréquence terrestre 70 cm
+  const nearList = (m, f) => { const l = dialList(m).filter((x) => !/^QO-100/.test(x[0]) || Math.abs(x[1] * 1000 - f) < 250000); return l.length ? l : DIAL[m]; };
+  // Remplit une liste de fréquences en gardant le choix en cours
+  function fillList(sel, list, keep) {
+    if (!sel) return;
+    sel.textContent = '';
+    for (const [b, khz] of list) {
+      const o = document.createElement('option');
+      o.value = String(khz);
+      o.textContent = b + ' · ' + khz.toLocaleString('fr-BE', { minimumFractionDigits: khz % 1 ? 1 : 0 }) + ' kHz';
+      sel.appendChild(o);
+    }
+    if (keep != null) sel.value = String(keep);
+  }
   const WF_MAX_HZ = 3000;
   const RX_WIDTH = 60; // Hz de part et d'autre de la fréquence RX
 
@@ -566,13 +606,7 @@
     $('rtSq').addEventListener('input', () => { $('rtSqV').textContent = $('rtSq').value; });
     $('rtSq').addEventListener('change', () => { rt.squelch = Number($('rtSq').value); saveRtty(true); });
     const dial = $('rtDial');
-    for (const [b, khz] of RTTY_DIAL) {
-      const o = document.createElement('option');
-      o.value = String(khz);
-      o.textContent = b + ' · ' + khz.toLocaleString('fr-BE') + ' kHz';
-      dial.appendChild(o);
-    }
-    dial.value = store.get('rtdial', '14085');
+    fillList(dial, withQo(RTTY_DIAL, 'RTTY'), store.get('rtdial', '14085'));
     // Choisir une bande dans la liste y envoie directement le TRX (QSY)
     dial.addEventListener('change', () => { store.set('rtdial', dial.value); qsyTo(Number(dial.value)); });
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
@@ -864,13 +898,7 @@
     sp.value = store.get('cwspeed', '22');
     sp.addEventListener('change', () => { const v = Math.max(5, Math.min(50, Math.round(Number(sp.value) || 22))); sp.value = v; store.set('cwspeed', v); });
     const dial = $('cwDial');
-    for (const [b, khz] of CW_DIAL) {
-      const o = document.createElement('option');
-      o.value = String(khz);
-      o.textContent = b + ' · ' + khz.toLocaleString('fr-BE') + ' kHz';
-      dial.appendChild(o);
-    }
-    dial.value = store.get('cwdial', '14030');
+    fillList(dial, withQo(CW_DIAL, 'CW'), store.get('cwdial', '14030'));
     dial.addEventListener('change', () => { store.set('cwdial', dial.value); qsyTo(Number(dial.value), 'CW'); });
     $('cwQsy').addEventListener('click', () => qsyTo(Number(dial.value), 'CW'));
     $('cwClear').addEventListener('click', () => { $('cwRx').textContent = ''; });
@@ -1611,16 +1639,11 @@
   function fillDial() {
     const sel = $('dgDial');
     sel.textContent = '';
-    for (const [b, khz] of DIAL[mode]) {
-      const o = document.createElement('option');
-      o.value = String(khz);
-      o.textContent = b + ' · ' + khz.toLocaleString('fr-BE', { minimumFractionDigits: khz % 1 ? 1 : 0 }) + ' kHz';
-      sel.appendChild(o);
-    }
+    fillList(sel, dialList(mode));
     // Par défaut : la fréquence d'appel de la bande où se trouve le TRX
     const st = api && api.state();
     const f = st && st.radio && st.radio.freq;
-    const near = f ? DIAL[mode].reduce((a, x) => (Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a)) : null;
+    const near = f && nearList(mode, f).length ? nearList(mode, f).reduce((a, x) => (Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a)) : null;
     const saved = store.get('dial.' + mode, '');
     if (near && Math.abs(near[1] * 1000 - f) < 500000) sel.value = String(near[1]);
     else if (f) {
@@ -1810,6 +1833,8 @@
       if (info && info.digiCall) myCall = info.digiCall;
       if (info) myGrid = info.stationGrid || '';
       if (info) myQth = info.stationQth || '';
+      if (info && info.qo100If && typeof info.qo100If === 'object') qoIf = Object.assign({}, info.qo100If);
+      refillQo();
       if (me && me.call) opCall = me.call;
       drawMsgs();
       if (info && info.stationCall) stationCalls = String(info.stationCall).toUpperCase().split(/[\s/,]+/).filter(Boolean);
@@ -1875,14 +1900,19 @@
       if (bytes[0] === 0x11) { ssLine(bytes); return true; }
       return false;
     },
-    onState() { if (tab === 'ftx' || tab === 'jt65') { status(); followBand(); } }
+    onState() {
+      // Autre TRX (couverture différente) : les fréquences QO-100 proposées changent
+      const R = api && api.rig && api.rig();
+      if (R && R.ID !== lastRig) { lastRig = R.ID; refillQo(); }
+      if (tab === 'ftx' || tab === 'jt65') { status(); followBand(); }
+    }
   };
   // Le TRX a changé de bande : la liste des fréquences d'appel suit (vérifié aussi chaque demi-seconde)
   function followBand() {
       const st = api && api.state();
       const f = st && st.radio && st.radio.freq;
       if (!f) return;
-      const band = f ? DIAL[mode].reduce((a, x) => (Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a))[1] : 0;
+      const band = f ? nearList(mode, f).reduce((a, x) => (Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a))[1] : 0;
       if (band !== lastBand) { lastBand = band; fillDial(); }
   }
 

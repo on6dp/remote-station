@@ -18,7 +18,7 @@
   const STEPS = [[10, '10 Hz'], [100, '100 Hz'], [1000, '1 kHz'], [10000, '10 kHz'], [100000, '100 kHz']];
   // Où placer chaque réglage du pilote dans la page
   const LAYOUT = {
-    front: ['rf', 'att', 'preamp', 'agc'],
+    front: ['ant', 'rf', 'att', 'preamp', 'agc'],
     filter: ['width', 'narrow', 'shift', 'contour', 'apf'],
     dual: ['vfoSel', 'aToB', 'bToA', 'swap', 'split', 'rit', 'xit', 'clar', 'lock'],
     audio: ['af', 'sql'],
@@ -26,7 +26,7 @@
     tune: ['tuner', 'tune'],
     tx: ['mic', 'proc', 'procLvl', 'vox']
   };
-  const SHORT = { aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décalage', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE' };
+  const SHORT = { ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décalage', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE' };
 
   let ws = null;
   let creds = null;          // gardés en mémoire uniquement, pour se reconnecter
@@ -466,6 +466,20 @@
         Object.assign(ref, { cell, inp, out });
       }
       ctlRefs[c.id] = ref;
+    }
+    // TRX sans choix d'antenne par CAT (FTDX10, IC-7300) : on l'indique au lieu de cacher la ligne
+    if (!(R.CONTROL && R.CONTROL.ant)) {
+      const cell = document.createElement('div');
+      cell.className = 'ctl ctl-na';
+      cell.title = 'Le ' + (R.NAME || 'TRX') + ' ne permet pas de choisir l’antenne par CAT : le faire sur la face avant (ou un commutateur d’antennes séparé).';
+      const h = document.createElement('div');
+      h.className = 'ctl-head';
+      h.innerHTML = '<span class="ctl-label">ANT</span><span class="ctl-val">non pilotable à distance</span>';
+      const grp = document.createElement('div');
+      grp.className = 'seg seg-fill';
+      for (const l of ['ANT 1', 'ANT 2', 'ANT 3 / RX']) { const b = mkBtn(l, 'accent'); b.disabled = true; grp.appendChild(b); }
+      cell.append(h, grp);
+      $(boxes.front).insertBefore(cell, $(boxes.front).firstChild);
     }
   }
   let trxSince = 0;

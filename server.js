@@ -47,6 +47,9 @@ const DEFAULTS = {
   digiCall: 'ON5VL',
   stationGrid: '',
   stationQth: 'LIEGE',
+  // QO-100 : fréquence de la FI (MHz) qui correspond à 2400,000 MHz pour chaque convertisseur 2,4 GHz
+  // (432,5 = OL 1967,5 MHz, ex. DXpatrol ; mettre 432 pour un OL 1968 MHz ; 0 = pas de convertisseur sur cette bande)
+  qo100If: { '2m': 144.5, '70cm': 432.5, '23cm': 1296.5 },
   // Un membre reste connecté quand il actualise la page ou revient plus tard (sur le même navigateur),
   // jusqu'à rememberDays jours après sa dernière visite (0 = mot de passe à chaque fois). « Déconnexion » l'oublie.
   rememberDays: 7,
@@ -621,6 +624,7 @@ function loggedIn(conn, call, rec, sessionTok) {
     digiCall: String(cfg.digiCall || '').toUpperCase(),
     stationGrid: String(cfg.stationGrid || '').toUpperCase(),
     stationQth: String(cfg.stationQth || '').toUpperCase(),
+    qo100If: cfg.qo100If && typeof cfg.qo100If === 'object' ? cfg.qo100If : DEFAULTS.qo100If,
     session: sessionTok || null
   });
   send(conn, { t: 'macros', data: macros[call] || {} });
@@ -781,6 +785,8 @@ function onOperator(conn, m) {
         } catch (e) {
           return send(conn, { t: 'notice', level: 'error', msg: e.message });
         }
+        // Changer d'antenne pendant une émission : jamais (le PA verrait un circuit ouvert)
+        if (c.noTx && (ptt.active || radio.tx)) return send(conn, { t: 'notice', level: 'error', msg: c.label + ' : impossible pendant une émission' });
         if (c.transmits) {
           const why = txBlockReason(conn, true);
           if (why) {

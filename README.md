@@ -114,6 +114,16 @@ sudo nano /opt/remote-station/config.json      # "digiCall": "ON5VL", "stationGr
 sudo systemctl restart remote-station
 ```
 
+### 4 ter. QO-100 : fréquences de la FI du convertisseur 2,4 GHz
+Les listes FT8 · FT4, RTTY et CW proposent « QO-100 · FI 2 m / 70 cm / 23 cm » : la fréquence à mettre sur le TRX, avant le
+convertisseur, pour monter sur 2400,040 MHz (FT8 / FT4), 2400,025 MHz (CW) ou 2400,090 MHz (RTTY). `qo100If` donne, pour chaque
+convertisseur, la FI qui correspond à 2400,000 MHz :
+```
+"qo100If": { "2m": 144.5, "70cm": 432.5, "23cm": 1296.5 }
+```
+432,5 = oscillateur à 1967,5 MHz (ex. DXpatrol : FT8 sur 432,540 MHz). Avec un oscillateur à 1968 MHz, mettre 432 (FT8 sur 432,040) ;
+0 = pas de convertisseur sur cette bande. Seules les FI couvertes par le TRX branché sont proposées (2 m et 70 cm : FTX-1).
+
 ### 5. Autoriser l'émission (après les essais sur charge fictive)
 
 ```bash
