@@ -1,5 +1,9 @@
 # Journal des versions — Remote Station UBA-LGE (ON5VL / OR0L)
 
+## v0.9 — CW
+
+- **0.9.0** — Onglet **CW** (à droite de JTTY), à la manière de FLDIGI : décodeur Morse sur le serveur (`lib/cw.js`, sans dépendance), un par réglage de membre. Clic sur la cascade = calage automatique sur le signal le plus proche (±60 Hz) ; filtre 50 / 100 / 200 / 400 Hz ; silencieux en dB au-dessus du bruit ; vitesse apprise toute seule (5 à 60 mots/min, affichée), y compris la manipulation à la main et les traits allongés ; suit le QSB ; signes ? / = + , . et abréviations <SK> <KN> <AS>… Indicateur de niveau avec voyant qui suit la manipulation. Fréquences CW par bande (QSY en CW-U / CW). Zone d'émission : macros CW F1 à F12 (touches du clavier, modifiables, aussi en bas de page), vitesse du manipulateur ; l'émission CW par le manipulateur du TRX arrive dans une prochaine version.
+
 ## v0.8 — JTTY
 
 - **0.8.0** — Onglet **JTTY** (nouveau mode de WSJT-X 3.2 / 3.3 : 4-GFSK, 31,25 bauds, 127 Hz, trames de 1,9 s, émission à tout moment) à droite de JT65. Décodeur de réception en continu de WSJT-X 3.3 (GPL v3) compilé en programme Linux autonome (`lib/bin/jttyd`, processus séparé, ~15 % d'un cœur) : le texte de chaque message apparaît trame après trame (▌ = en cours, puis terminé). Fenêtre : fréquences d'appel JTTY par bande (QSY direct en DATA-U), cascade avec repères RX / TX (clic gauche / clic droit), « Activité JTTY » et « Fréquence RX » (±80 Hz ou messages avec ON5VL / OR0L), double-clic = correspondant ; zone d'émission avec les 8 macros JTTY de WSJT-X (F1 à F8, modifiables et gardées par membre), aussi en bas de page. La fenêtre séparée des modes numériques s'ouvre sur le mode affiché. L'émission JTTY arrive avec l'émission des modes numériques.

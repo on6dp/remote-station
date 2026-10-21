@@ -192,6 +192,7 @@ Après un redémarrage, la page réactive l'audio toute seule. Si elle affiche �
 8. **WSPR** : onglet WSPR, choisir la bande dans la liste (le TRX y va). Toutes les 2 minutes, une dizaine de secondes après la minute paire, la liste des stations entendues se complète : indicatif, locator, puissance, fréquence, dérive et distance (si `stationGrid` est réglé).
 9. **JT65** : onglet JT65, même fenêtre que FT8 (le TRX va sur la fréquence JT65 de sa bande, en DATA-U). Décodage vers la 52e seconde de chaque minute.
 10. **JTTY** : onglet JTTY, choisir la bande (le TRX va sur la fréquence JTTY, en DATA-U). Pas de périodes : le texte de chaque message apparaît au fil des trames de 1,9 s (▌ = en cours). Clic gauche = réception, clic droit = émission, double-clic = correspondant ; macros F1 à F8 (clic droit pour les modifier).
+11. **CW** : onglet CW, choisir la bande (le TRX va en CW). Cliquer sur un signal dans la cascade : le décodeur s'y cale tout seul (repère jaune) et apprend la vitesse. Filtre 100 Hz par défaut (50 Hz si QRM, 200–400 Hz si l'on cherche) ; silencieux à monter si des lettres apparaissent sur le bruit. Double-clic sur un indicatif reçu = correspondant ; macros F1 à F12.
 
 Automatique : main libérée après 15 min sans action, déconnexion après 15 min d'inactivité (avertissement une minute avant, bouton « Rester connecté »). **Jamais pendant une émission.**
 
@@ -235,11 +236,11 @@ Automatique : main libérée après 15 min sans action, déconnexion après 15 m
 | Fichier | Rôle |
 |---|---|
 | `server.js` | Serveur : comptes, contrôle, PTT, sécurités, messages, journal |
-| `lib/` | WebSocket minimal, mots de passe, décodeur FT8/FT4 (`ftx.wasm`, `ftx.js`), démodulateur RTTY (`rtty.js`), fil de décodage (`digi-worker.js`) — aucune dépendance npm |
+| `lib/` | WebSocket minimal, mots de passe, décodeur FT8/FT4 (`ftx.wasm`, `ftx.js`), démodulateur RTTY (`rtty.js`), décodeur CW (`cw.js`), fil de décodage (`digi-worker.js`) — aucune dépendance npm |
 | `native/ftx/` | Source et script de compilation du décodeur WebAssembly (ft8_lib) |
 | `native/wsjtx/` | Script de compilation des décodeurs de WSJT-X en programmes Linux autonomes (`lib/bin/jt65`, `lib/bin/jttyd` ; source de `jttyd` : `jttyd.c`), sans FFTW (`fftw_kiss.c`) |
 | `native/wspr/` | Sources de wsprd (WSJT-X, GPL v3) et script de compilation de `lib/wsprd.wasm` |
-| `public/js/digi.js` | Onglets du centre : FT8 · FT4, RTTY, WSPR, JT65, JTTY, Synchro |
+| `public/js/digi.js` | Onglets du centre : FT8 · FT4, RTTY, WSPR, JT65, JTTY, CW, Synchro |
 | `public/index.html`, `public/js/app.js`, `public/css/` | Page des membres |
 | `public/station.html`, `public/js/station.js`, `public/js/station-core.js` | Page Station (Web Serial) |
 | `public/js/yaesu.js`, `ftx1.js`, `ftdx10.js`, `ic7300.js` | Pilotes des TRX |

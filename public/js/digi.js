@@ -45,9 +45,10 @@
   // ------------------------------------------------------------------ construction des onglets et des fenêtres
   // Même code pour le centre du dashboard et pour la fenêtre séparée (digi.html, sans l'onglet Activité).
   const TABS = [
-    ['events', 'Activité'], ['ftx', 'FT8 · FT4'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['gap', ''], ['sync', 'Synchro']
+    ['events', 'Activité'], ['ftx', 'FT8 · FT4'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['gap', ''], ['sync', 'Synchro']
   ];
-  const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'sync'];
+  const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'cw', 'sync'];
+  const WF_TABS = ['ftx', 'jt65', 'rtty', 'wspr', 'jtty', 'cw']; // onglets avec cascade
   const SOON = {
   };
   const FTX_PANE = `
@@ -158,6 +159,35 @@
       </div>
       <p class="dg-tx">Émission JTTY sous <b>ON5VL</b> : avec l'émission des modes numériques (prochaine version).</p>
     </div>`;
+  const CW_PANE = `
+    <div class="dg-bar">
+      <select id="cwDial" aria-label="Fréquence CW"></select>
+      <button class="btn" type="button" id="cwQsy" title="Met le VFO A sur la fréquence choisie, en CW">QSY</button>
+      <select id="cwBw" aria-label="Filtre du décodeur" title="Largeur du filtre du décodeur : étroit = moins de bruit et de QRM, mais il faut être bien calé"><option value="50">Filtre 50 Hz</option><option value="100">Filtre 100 Hz</option><option value="200">Filtre 200 Hz</option><option value="400">Filtre 400 Hz</option></select>
+      <label class="rt-sq" title="Niveau minimal du signal au-dessus du bruit : plus haut = moins de lettres au hasard sur le bruit">Silencieux
+        <input type="range" id="cwSq" min="0" max="20" step="1" aria-label="Silencieux"><output id="cwSqV">5</output></label>
+      <span class="cw-lvl" title="Niveau du signal au-dessus du bruit (dB) ; le voyant suit la manipulation"><i class="cw-led" id="cwLed"></i><i class="cw-bar"><b id="cwBar"></b></i><span id="cwDb">0 dB</span></span>
+      <span class="dg-f rx">Tonalité <b id="cwF">700</b> Hz</span>
+      <span class="dg-f">Vitesse <b id="cwWpm">—</b> mots/min</span>
+      <span class="dg-status" id="cwStatus"></span>
+    </div>
+    <div class="dg-wf-slot" data-slot="cw"></div>
+    <div class="rt-grid">
+      <div class="dg-col rt-rx-col">
+        <div class="dg-h"><span>Réception CW</span><span class="dg-note">clic sur la cascade : se caler sur le signal le plus proche · double-clic sur un indicatif : le reprendre</span><button class="dg-mini" type="button" id="cwClear">Effacer</button></div>
+        <pre class="rt-rx" id="cwRx"></pre>
+      </div>
+      <div class="dg-col rt-tx-col">
+        <div class="dg-h"><span>Émission</span><label class="rt-call">Vitesse <input id="cwSpeed" type="number" min="5" max="50" step="1" title="Vitesse du manipulateur du TRX (mots/minute)"> mots/min</label></div>
+        <div class="rt-macros" id="cwMacros"></div>
+        <textarea id="cwTxt" rows="4" placeholder="Texte à émettre (F1 à F12 : macros)…" spellcheck="false"></textarea>
+        <div class="rt-tx-act">
+          <button class="btn btn-tx" type="button" id="cwSend" disabled>Émettre</button>
+          <button class="btn" type="button" id="cwTxClear">Effacer</button>
+          <span class="dg-note">Émission CW sous <b>ON5VL</b> par le manipulateur du TRX : prochaine version.</span>
+        </div>
+      </div>
+    </div>`;
   const SYNC_PANE = `
     <div class="sy-grid">
       <div class="sy-box"><span>Heure du serveur (UTC)</span><b id="syVps">--:--:--</b><small>référence de tous les décodages</small></div>
@@ -202,6 +232,7 @@
     add('rtty', 'dg rt', RTTY_PANE);
     add('wspr', 'dg ws', WSPR_PANE);
     add('jtty', 'dg jt', JTTY_PANE);
+    add('cw', 'dg rt cwp', CW_PANE);
     for (const k in SOON) add(k, 'dg-soon', '<p>' + SOON[k] + '</p><p class="dg-note">En préparation.</p>');
     add('sync', 'dg-sync', SYNC_PANE);
     add('away', 'dg-soon', '<p>Les modes numériques sont ouverts dans une <b>fenêtre séparée</b>.</p><p><button class="btn" type="button" id="dgBack">Ramener ici</button></p>');
@@ -223,11 +254,11 @@
     document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
     document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== pane; });
     // Une seule cascade, déplacée dans la fenêtre affichée (FT8/FT4 ou RTTY)
-    if (pane === 'ftx' || pane === 'rtty' || pane === 'wspr' || pane === 'jtty') {
+    if (WF_TABS.indexOf(pane) >= 0) {
       const slot = document.querySelector('.dg-wf-slot[data-slot="' + pane + '"]');
       const el = document.querySelector('.dg-wf');
       if (slot && el && el.parentElement !== slot) slot.appendChild(el);
-      el.classList.toggle('is-rtty', pane === 'rtty');
+      el.classList.toggle('is-rtty', pane === 'rtty' || pane === 'cw');
       sizeCanvas();
     }
     if (pane === 'sync') drawSync();
@@ -242,7 +273,8 @@
   // Le serveur ne décode (et la station n'envoie la BF) que si au moins un membre regarde la fenêtre
   function announce() {
     if (!api || (detached && !POPUP)) return; // la fenêtre séparée annonce elle-même
-    const watching = (tab === 'ftx' || tab === 'jt65' || tab === 'rtty' || tab === 'wspr' || tab === 'jtty') && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
+    const watching = WF_TABS.indexOf(tab) >= 0 && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
+    if (watching && tab === 'cw') return api.send({ t: 'digi', mode: 'CW', cw: cwc });
     if (watching && tab === 'jtty') { api.send({ t: 'digi', mode: 'JTTY', hist: jtNeedHist }); jtNeedHist = false; return; }
     if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rt });
     if (watching && tab === 'wspr') { api.send({ t: 'digi', mode: 'WSPR', hist: wsNeedHist }); wsNeedHist = false; return; }
@@ -284,10 +316,11 @@
   })();
   let floor = null;
   function onRow(bytes) {
-    if ((tab !== 'ftx' && tab !== 'jt65' && tab !== 'rtty' && tab !== 'wspr' && tab !== 'jtty') || detached || !wf.ctx) return;
+    if (WF_TABS.indexOf(tab) < 0 || detached || !wf.ctx) return;
     // bytes[0] = 0x10, puis une case de 6,25 Hz par octet (dB*2+240), depuis 0 Hz
     const n = Math.min(bytes.length - 1, Math.ceil(WF_MAX_HZ / 6.25));
     const vals = bytes.subarray(1, 1 + n);
+    if (tab === 'cw') { cwRows.push(Uint8Array.from(vals)); if (cwRows.length > 12) cwRows.shift(); }
     // Plancher de bruit : médiane de la ligne, lissée
     const sorted = Array.from(vals).sort((a, b) => a - b);
     const med = sorted[sorted.length >> 1];
@@ -333,6 +366,7 @@
     }
     if (tab === 'rtty') return drawRttyMarks(c, w);
     if (tab === 'wspr') return drawWsprMarks(c, w);
+    if (tab === 'cw') return drawCwMarks(c, w);
     // Largeur d'un signal FT8 (50 Hz) / FT4 (83 Hz) / JT65 (178 Hz) / JTTY (127 Hz, centré) : TX en rouge, RX en vert
     const bw = tab === 'jtty' ? 127 : mode === 'FT4' ? 83 : mode === 'JT65' ? 178 : 50;
     const mark = (f, y, h, fill, edge) => {
@@ -704,6 +738,123 @@
     el.classList.toggle('warn', warn);
   }
 
+  // ------------------------------------------------------------------ CW (décodeur sur le serveur, à la manière de FLDIGI)
+  const CW_DIAL = [['160 m', 1830], ['80 m', 3530], ['40 m', 7025], ['30 m', 10115], ['20 m', 14030], ['17 m', 18080],
+    ['15 m', 21030], ['12 m', 24900], ['10 m', 28030], ['6 m', 50090], ['2 m', 144050]];
+  const cwc = (() => {
+    let o;
+    try { o = JSON.parse(store.get('cw', '{}')) || {}; } catch (e) { o = {}; }
+    return { f: Number(o.f) || 700, bw: [50, 100, 200, 400].indexOf(o.bw) >= 0 ? o.bw : 100, squelch: Number.isFinite(o.squelch) ? o.squelch : 5 };
+  })();
+  const cwRows = []; // dernières lignes de cascade (calage sur le signal)
+  let cwLast = 0;
+  function saveCw(reannounce) {
+    store.set('cw', JSON.stringify(cwc));
+    if (reannounce) announce();
+  }
+  function drawCwMarks(c, w) {
+    const x0 = ((cwc.f - cwc.bw / 2) / WF_MAX_HZ) * w;
+    c.fillStyle = 'rgba(242, 207, 74, .35)';
+    c.fillRect(x0, 14, Math.max(2, (cwc.bw / WF_MAX_HZ) * w), 16);
+    c.fillStyle = '#F2CF4A';
+    c.fillRect((cwc.f / WF_MAX_HZ) * w - 1, 12, 2, 18);
+    const el = $('dgMkRx');
+    el.style.left = ((cwc.f - cwc.bw / 2) / WF_MAX_HZ) * 100 + '%';
+    el.style.width = (cwc.bw / WF_MAX_HZ) * 100 + '%';
+    $('dgMkTx').style.width = '0';
+    $('cwF').textContent = Math.round(cwc.f);
+  }
+  // Clic sur la cascade : calage sur le signal le plus fort à ±60 Hz (sinon, là où l'on a cliqué)
+  function setCwF(f, snap) {
+    if (snap && cwRows.length) {
+      const b0 = Math.max(0, Math.floor((f - 60) / 6.25));
+      const b1 = Math.ceil((f + 60) / 6.25);
+      let best = -1;
+      let bv = -1;
+      const sum = (b) => cwRows.reduce((a, r) => a + (r[b] || 0), 0);
+      const all = [];
+      for (let b = b0; b <= b1; b++) { const v = sum(b); all.push(v); if (v > bv) { bv = v; best = b; } }
+      all.sort((a, b) => a - b);
+      // Pic au moins 6 dB (12 octets par ligne) au-dessus de la médiane du voisinage
+      if (best >= 0 && bv - all[all.length >> 1] > 12 * cwRows.length) f = best * 6.25;
+    }
+    cwc.f = Math.max(200, Math.min(2800, Math.round(f)));
+    saveCw(true);
+    drawScale();
+  }
+  function cwAppend(text) {
+    const el = $('cwRx');
+    if (!el) return;
+    const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
+    el.appendChild(document.createTextNode(text));
+    if (el.textContent.length > 20000) el.textContent = el.textContent.slice(-15000);
+    if (atEnd) el.scrollTop = el.scrollHeight;
+    cwLast = Date.now();
+  }
+  function cwLevels(m) {
+    if (!$('cwBar')) return;
+    $('cwBar').style.width = Math.max(0, Math.min(100, (m.s / 30) * 100)) + '%';
+    $('cwDb').textContent = m.s + ' dB';
+    $('cwLed').classList.toggle('on', !!m.on);
+    $('cwBar').classList.toggle('low', m.s < cwc.squelch);
+    if (m.s >= cwc.squelch) $('cwWpm').textContent = String(m.wpm);
+  }
+  function insertCw(t) {
+    showTab('cw');
+    const ta = $('cwTxt');
+    ta.value += macroText(t, true).toUpperCase();
+    ta.scrollTop = ta.scrollHeight;
+    ta.focus();
+  }
+  function initCw() {
+    $('cwBw').value = String(cwc.bw);
+    $('cwSq').value = String(cwc.squelch);
+    $('cwSqV').textContent = String(cwc.squelch);
+    $('cwBw').addEventListener('change', () => { cwc.bw = Number($('cwBw').value); saveCw(true); drawScale(); });
+    $('cwSq').addEventListener('input', () => { $('cwSqV').textContent = $('cwSq').value; });
+    $('cwSq').addEventListener('change', () => { cwc.squelch = Number($('cwSq').value); saveCw(true); });
+    const sp = $('cwSpeed');
+    sp.value = store.get('cwspeed', '22');
+    sp.addEventListener('change', () => { const v = Math.max(5, Math.min(50, Math.round(Number(sp.value) || 22))); sp.value = v; store.set('cwspeed', v); });
+    const dial = $('cwDial');
+    for (const [b, khz] of CW_DIAL) {
+      const o = document.createElement('option');
+      o.value = String(khz);
+      o.textContent = b + ' · ' + khz.toLocaleString('fr-BE') + ' kHz';
+      dial.appendChild(o);
+    }
+    dial.value = store.get('cwdial', '14030');
+    dial.addEventListener('change', () => { store.set('cwdial', dial.value); qsyTo(Number(dial.value), 'CW'); });
+    $('cwQsy').addEventListener('click', () => qsyTo(Number(dial.value), 'CW'));
+    $('cwClear').addEventListener('click', () => { $('cwRx').textContent = ''; });
+    $('cwTxClear').addEventListener('click', () => { $('cwTxt').value = ''; });
+    $('cwTxt').addEventListener('input', (e) => {
+      const el = e.target;
+      const p = el.selectionStart;
+      el.value = el.value.toUpperCase();
+      el.setSelectionRange(p, p);
+    });
+    $('cwRx').addEventListener('dblclick', () => {
+      const w = String(window.getSelection() || '').trim().toUpperCase();
+      if (CALL_RE.test(w)) setDx({ call: w });
+    });
+    $('cwSend').title = 'Émission CW : prochaine version';
+    drawMacroRow($('cwMacros'), 'CW', (t) => insertCw(t));
+  }
+  function cwStatus() {
+    const st = api && api.state();
+    const el = $('cwStatus');
+    if (!el) return;
+    let txt;
+    let warn = false;
+    if (!st || !st.station) { txt = 'Station hors ligne'; warn = true; }
+    else if (!st.audio || !st.audio.active) { txt = 'La page Station n’envoie pas la BF : « Activer l’audio » sur le PC du club'; warn = true; }
+    else txt = cwLast && Date.now() - cwLast < 20000 ? 'BF reçue · décodage en cours' : 'BF reçue · cliquez sur un signal CW dans la cascade';
+    if (st && st.radio && st.radio.mode && !/CW/i.test(st.radio.mode)) txt += ' · TRX en ' + st.radio.mode + ' (CW conseillé : filtre étroit, tonalité = pitch)';
+    el.textContent = txt;
+    el.classList.toggle('warn', warn);
+  }
+
   // ------------------------------------------------------------------ correspondant et messages pré-enregistrés
   // Correspondant commun à tous les modes (bas du dashboard, fenêtre RTTY, fenêtre séparée : synchronisés)
   let myCall = 'ON5VL';
@@ -790,7 +941,10 @@
       const inst = (window.DG && window.DG()) || window.RSDIGI;
       inst.insertJtty(t);
     });
-    drawMacroRow($('msgCw'), 'CW', () => api && api.say('Émission CW (par le manipulateur du TRX) : prochaine version.', 'warn'));
+    drawMacroRow($('msgCw'), 'CW', (t) => {
+      const inst = (window.DG && window.DG()) || window.RSDIGI;
+      inst.insertCw(t);
+    });
   }
   // Rangée de macros : clic = utiliser, clic droit = modifier, ✎ = modifier
   function drawMacroRow(box, mode, use) {
@@ -800,7 +954,7 @@
       const b = box.ownerDocument.createElement('button');
       b.className = 'btn';
       b.type = 'button';
-      if (mode === 'RTTY' || mode === 'JTTY') { const s = box.ownerDocument.createElement('small'); s.textContent = 'F' + (i + 1); b.appendChild(s); }
+      if (mode !== 'FT8') { const s = box.ownerDocument.createElement('small'); s.textContent = 'F' + (i + 1); b.appendChild(s); }
       b.appendChild(box.ownerDocument.createTextNode(m.name || '—'));
       b.title = macroText(m.text).replace(/\n/g, ' ⏎ ') + '\n(clic droit : modifier)';
       b.addEventListener('mouseenter', () => { b.title = macroText(m.text).replace(/\n/g, ' ⏎ ') + '\n(clic droit : modifier)'; });
@@ -822,7 +976,7 @@
   // ------------------------------------------------------------------ éditeur de macros (fenêtre de dialogue)
   function editMacro(doc, mode, idx) {
     const list = macroList(mode).map((m) => Object.assign({}, m));
-    while (mode === 'RTTY' && list.length < 12) list.push({ name: '', text: '' });
+    while (mode !== 'FT8' && list.length < (mode === 'JTTY' ? 8 : 12)) list.push({ name: '', text: '' });
     let cur = Math.min(idx, list.length - 1);
     const old = doc.getElementById('macroDlg');
     if (old) old.remove();
@@ -902,6 +1056,7 @@
     drawMsgs();
     drawRttyMacros();
     drawMacroRow($('jtMacros'), 'JTTY', (t) => insertJtty(t));
+    drawMacroRow($('cwMacros'), 'CW', (t) => insertCw(t));
   }
   function insertRtty(t) {
     showTab('rtty');
@@ -1044,10 +1199,11 @@
     store.set('dial.' + mode, khz);
     qsyTo(khz);
   }
-  function qsyTo(khz) {
+  function qsyTo(khz, want) {
     if (!api.iControl()) {
       lastBand = 0; // la liste revient sur la bande réelle du TRX
       if ($('rtDial')) $('rtDial').value = store.get('rtdial', '14085');
+      if ($('cwDial')) $('cwDial').value = store.get('cwdial', '14030');
       return api.say('Prenez la main pour changer de fréquence.', 'warn');
     }
     const st = api.state();
@@ -1055,7 +1211,9 @@
     api.setFreq(Math.round(khz * 1000), 'A');
     // Mode DATA-U (Yaesu) / USB-D (Icom) : le filtre et la sortie audio conviennent aux modes numériques
     const R = api.rig();
-    const mk = (R.MODE_KEYS || []).find((x) => /^(DATA-U|USB-D|D-U|USB-DATA)$/i.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
+    const mk = want === 'CW'
+      ? (R.MODE_KEYS || []).find((x) => /^(CW-U|CW|CW-USB)$/i.test(x[1]))
+      : (R.MODE_KEYS || []).find((x) => /^(DATA-U|USB-D|D-U|USB-DATA)$/i.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
     if (mk) setTimeout(() => api.send({ t: 'set', mode: mk[0], sub: false }), 250);
   }
   function autoQsy() {
@@ -1145,29 +1303,31 @@
       // Split : clic gauche = fréquence de réception, clic droit = fréquence d'émission
       const fAt = (e) => { const r = e.currentTarget.getBoundingClientRect(); return ((e.clientX - r.left) / r.width) * WF_MAX_HZ; };
       for (const id of ['dgWf', 'dgScale']) {
-        $(id).addEventListener('click', (e) => (tab === 'rtty' ? setRttyF(fAt(e)) : setRx(fAt(e))));
-        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'rtty') setRttyF(fAt(e)); else setTx(fAt(e)); });
+        $(id).addEventListener('click', (e) => (tab === 'rtty' ? setRttyF(fAt(e)) : tab === 'cw' ? setCwF(fAt(e), true) : setRx(fAt(e))));
+        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'rtty') setRttyF(fAt(e)); else if (tab === 'cw') setCwF(fAt(e), false); else setTx(fAt(e)); });
       }
       initRtty();
       initWspr();
       initJtty();
+      initCw();
       initMsgs();
       // Touches F1 à F12 dans la fenêtre RTTY : macros (comme FLDIGI)
       document.addEventListener('keydown', (e) => {
-        if ((tab !== 'rtty' && tab !== 'jtty') || detached || e.ctrlKey || e.altKey || e.metaKey) return;
+        const MODE = { rtty: 'RTTY', jtty: 'JTTY', cw: 'CW' }[tab];
+        if (!MODE || detached || e.ctrlKey || e.altKey || e.metaKey) return;
         const n = /^F(\d{1,2})$/.exec(e.key);
         if (!n) return;
-        const m = macroList(tab === 'jtty' ? 'JTTY' : 'RTTY')[Number(n[1]) - 1];
+        const m = macroList(MODE)[Number(n[1]) - 1];
         if (!m) return;
         e.preventDefault();
-        if (tab === 'jtty') insertJtty(m.text); else insertRtty(m.text);
+        if (tab === 'jtty') insertJtty(m.text); else if (tab === 'cw') insertCw(m.text); else insertRtty(m.text);
       });
       $('dgTxRx').addEventListener('click', () => setTx(rxF));
       $('dgRxTx').addEventListener('click', () => setRx(txF));
       // Repli du panneau ou onglet du navigateur caché : le serveur arrête de décoder pour ce membre
       new MutationObserver(announce).observe($('centerPanel'), { attributes: true, attributeFilter: ['class'] });
       document.addEventListener('visibilitychange', announce);
-      window.addEventListener('resize', () => { if (tab === 'ftx' || tab === 'jt65' || tab === 'rtty' || tab === 'wspr' || tab === 'jtty') sizeCanvas(); });
+      window.addEventListener('resize', () => { if (WF_TABS.indexOf(tab) >= 0) sizeCanvas(); });
       fillDial();
       setMode(mode);
       showTab(tab);
@@ -1177,11 +1337,13 @@
         if (tab === 'rtty') status();
         if (tab === 'wspr') wsClock();
         if (tab === 'jtty') jtStatus();
+        if (tab === 'cw') cwStatus();
         if (tab === 'sync') drawSync();
       }, 500);
     },
     insertRtty,
     insertJtty,
+    insertCw,
     onHello(me, info) {
       needHist = true;
       wsNeedHist = true;
@@ -1212,6 +1374,8 @@
       }
       if (m.t === 'rtty') { rttyAppend(m.text || ''); return true; }
       if (m.t === 'jtty') { jtUpdate(m.u); return true; }
+      if (m.t === 'cw') { cwAppend(m.text || ''); return true; }
+      if (m.t === 'cw_lvl') { cwLevels(m); return true; }
       if (m.t === 'jtty_hist') { jtMsgs.clear(); for (const u of m.items || []) jtMsgs.set(u.key, u); jtRedraw(); return true; }
       if (m.t === 'rtty_lvl') { rttyLevels(m); return true; }
       if ((m.t === 'ftx_hist' || m.t === 'ftx') && m.mode === 'WSPR') {

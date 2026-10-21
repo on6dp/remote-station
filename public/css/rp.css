@@ -812,3 +812,13 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .jt-tx .dg-tx { padding: 0 8px; }
 .jt-tx-row { display: flex; gap: 6px; padding: 0 8px; }
 .jt-tx-row input { flex: 1; min-width: 0; font: inherit; font-size: 13px; color: #ffd9d0; background: #07090d; border: 1px solid var(--v2-border); border-radius: 5px; padding: 6px 8px; text-transform: uppercase; }
+
+/* ------------------------------------------------------------------ CW */
+.cw-lvl { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--v2-text-secondary); }
+.cw-led { width: 10px; height: 10px; border-radius: 50%; background: #2a3442; box-shadow: inset 0 0 0 1px #3a4656; }
+.cw-led.on { background: #F2CF4A; box-shadow: 0 0 8px rgba(242, 207, 74, .8); }
+.cw-bar { position: relative; width: 90px; height: 8px; border-radius: 4px; background: #0b1018; border: 1px solid var(--v2-border-dark); overflow: hidden; }
+.cw-bar b { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #4ED37B, #F2CF4A); transition: width .12s; }
+.cw-bar b.low { background: #4a5566; }
+#cwDb { min-width: 36px; text-align: right; }
+#cwSpeed { width: 48px; }

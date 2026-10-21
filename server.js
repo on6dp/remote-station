@@ -205,7 +205,16 @@ function relayAudio(buf) {
 // ---------------------------------------------------------------- modes numériques (FT8 / FT4)
 // Le décodage tourne dans un Worker (lib/digi-worker.js) dès qu'un membre ouvre la fenêtre FT8/FT4.
 const digi = { worker: null, hist: { FT8: [], FT4: [], WSPR: [], JT65: [] }, latency: null, ms: 0, last: 0, dial: 0, jtty: new Map() };
-const DIGI_MODES = ['FT8', 'FT4', 'RTTY', 'WSPR', 'JT65', 'JTTY'];
+const DIGI_MODES = ['FT8', 'FT4', 'RTTY', 'WSPR', 'JT65', 'JTTY', 'CW'];
+// Réglages CW d'un membre : tonalité (Hz), largeur du filtre, silencieux → clé du décodeur
+function cwCfg(r) {
+  if (!r || typeof r !== 'object') return null;
+  const f = Math.round(Number(r.f));
+  const bw = [50, 100, 200, 400].indexOf(Number(r.bw)) >= 0 ? Number(r.bw) : 100;
+  const squelch = Math.max(0, Math.min(20, Math.round(Number(r.squelch))));
+  if (!(f >= 200 && f <= 2800) || !Number.isFinite(squelch)) return null;
+  return { f, bw, squelch, key: [f, bw, squelch].join('/') };
+}
 // Réglages RTTY d'un membre (chacun peut suivre un signal différent) → clé du démodulateur
 function rttyCfg(r) {
   if (!r || typeof r !== 'object') return null;
@@ -245,6 +254,9 @@ function updateDigi() {
     const cfgs = {};
     for (const c of ops) if (c.digi === 'RTTY' && c.rtty) cfgs[c.rtty.key] = c.rtty;
     digi.worker.postMessage({ t: 'rtty', cfgs: Object.values(cfgs) });
+    const cwc = {};
+    for (const c of ops) if (c.digi === 'CW' && c.cw) cwc[c.cw.key] = c.cw;
+    digi.worker.postMessage({ t: 'cw', cfgs: Object.values(cwc) });
   }
   updateAudioWant();
 }
@@ -269,6 +281,11 @@ function onDigi(m) {
   if (m.t === 'rtty_text' || m.t === 'rtty_lvl') {
     const msg = JSON.stringify(m.t === 'rtty_text' ? { t: 'rtty', text: m.text } : { t: 'rtty_lvl', m: m.m, s: m.s, c: m.c });
     for (const c of ops) if (c.digi === 'RTTY' && c.rtty && c.rtty.key === m.key) c.send(msg);
+    return;
+  }
+  if (m.t === 'cw_text' || m.t === 'cw_lvl') {
+    const msg = JSON.stringify(m.t === 'cw_text' ? { t: 'cw', text: m.text } : { t: 'cw_lvl', s: m.s, wpm: m.wpm, on: m.on });
+    for (const c of ops) if (c.digi === 'CW' && c.cw && c.cw.key === m.key) c.send(msg);
     return;
   }
   if (m.t === 'decodes') {
@@ -630,9 +647,12 @@ function onOperator(conn, m) {
       let mode = DIGI_MODES.indexOf(m.mode) >= 0 ? m.mode : null;
       const rc = mode === 'RTTY' ? rttyCfg(m.rtty) : null;
       if (mode === 'RTTY' && !rc) mode = null;
-      const changed = conn.digi !== mode || (conn.rtty && conn.rtty.key) !== (rc && rc.key);
+      const cc = mode === 'CW' ? cwCfg(m.cw) : null;
+      if (mode === 'CW' && !cc) mode = null;
+      const changed = conn.digi !== mode || (conn.rtty && conn.rtty.key) !== (rc && rc.key) || (conn.cw && conn.cw.key) !== (cc && cc.key);
       conn.digi = mode;
       conn.rtty = rc;
+      conn.cw = cc;
       if (changed) updateDigi();
       // Historique : à l'ouverture, ou sur demande (fenêtre séparée qui s'ouvre, retour dans le dashboard)
       if (digi.hist[mode] && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.hist[mode] });
