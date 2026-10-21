@@ -762,3 +762,40 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .msgs { position: relative; }
 .msgs-h { padding-right: 34px; }
 .msgs-h .detach-btn, .msgs-h .msgs-note + .detach-btn { position: absolute; top: 8px; right: 8px; margin: 0; }
+
+/* ------------------------------------------------------------ macros (FLDIGI) et correspondant */
+#dxName { width: 90px; } #dxQth { width: 110px; } #dxRst { width: 42px; }
+.msgs-b .btn.mini { padding-inline: 6px; color: var(--v2-text-dim); }
+.macro-dlg { width: min(720px, 94vw); padding: 0; border: 1px solid var(--v2-border); border-radius: 10px; background: var(--v2-bg-app); color: var(--v2-text-secondary); font: inherit; box-shadow: var(--v2-shadow-lg); }
+.macro-dlg::backdrop { background: rgba(0, 0, 0, .55); }
+.macro-dlg form { display: grid; gap: 10px; padding: 14px 16px; }
+.macro-dlg h3 { margin: 0; font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--v2-text-header); }
+.macro-dlg label { display: grid; gap: 4px; font-size: 10px; text-transform: uppercase; letter-spacing: .8px; color: var(--v2-text-dim); }
+.macro-dlg input, .macro-dlg textarea { font: inherit; font-size: 13px; color: var(--v2-text-bright); background: #07090d; border: 1px solid var(--v2-border); border-radius: 5px; padding: 6px 8px; text-transform: uppercase; letter-spacing: 0; }
+.macro-dlg textarea { resize: vertical; min-height: 110px; }
+.md-keys { display: flex; flex-wrap: wrap; gap: 4px; }
+.md-keys .btn { font-size: 10px; }
+.md-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.md-tag { font: inherit; font-size: 10px; color: var(--v2-accent-cyan-bright); background: var(--v2-bg-input); border: 1px solid var(--v2-border); border-radius: 4px; padding: 3px 6px; cursor: pointer; }
+.md-tag:hover { border-color: var(--v2-accent-cyan-teal); }
+.md-prev { margin: 0; font-size: 11px; color: #ffd9d0; white-space: pre-wrap; word-break: break-word; }
+.md-act { display: flex; gap: 6px; align-items: center; }
+.md-act span { flex: 1; }
+@media (min-width: 1800px) and (min-height: 860px) {
+  /* Opérateurs plus compact : la place va aux messages pré-enregistrés */
+  .side-far .panel[data-panel='ops']:not(.collapsed) { flex: 0 0 auto; min-height: 0; }
+  .side-far .chat { flex: none; max-height: 150px; min-height: 60px; }
+  .side-far .msgs { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+  .side-far .msgs-h label { flex: 1 1 40%; }
+  .side-far .msgs-h input { width: 100%; box-sizing: border-box; }
+  .side-far .msgs-b .btn { font-size: 10px; }
+}
+.rt-macros .btn small { color: var(--v2-text-dim); margin-right: 5px; font-weight: 700; }
+.rt-macros .btn.mini { padding-inline: 6px; color: var(--v2-text-dim); }
+@media (min-width: 1800px) and (min-height: 860px) {
+  .side-far .msgs { align-content: start; }
+  .side-far .msgs-h { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; align-items: end; }
+  .side-far .msgs-h .msgs-t, .side-far .msgs-h .msgs-note { grid-column: 1 / -1; }
+  .side-far .msgs-h label { display: grid; gap: 2px; flex: none; }
+  .side-far .msgs-row { margin-top: 4px; }
+}

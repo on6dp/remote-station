@@ -46,6 +46,7 @@ const DEFAULTS = {
   // Modes numériques : indicatif émis (FT8, FT4, RTTY, CW) et locator de la station (messages CQ)
   digiCall: 'ON5VL',
   stationGrid: '',
+  stationQth: 'LIEGE',
   // Un membre reste connecté quand il actualise la page ou revient plus tard (sur le même navigateur),
   // jusqu'à rememberDays jours après sa dernière visite (0 = mot de passe à chaque fois). « Déconnexion » l'oublie.
   rememberDays: 7,
@@ -287,6 +288,25 @@ let connSeq = 0;
 let lastCtrlActivity = 0;
 let ptt = { active: false, conn: null, since: 0, lastBeat: 0 };
 const fails = new Map(); // ip -> { n, until }
+
+// ---------------------------------------------------------------- macros personnelles (RTTY, CW…) de chaque membre
+// Comme dans FLDIGI : chaque opérateur garde ses propres messages, quel que soit le PC d'où il se connecte.
+const MACROS_FILE = path.join(ROOT, 'macros.json');
+let macros = {};
+try { macros = JSON.parse(fs.readFileSync(MACROS_FILE, 'utf8')) || {}; } catch (e) { macros = {}; }
+function saveMacros() {
+  fs.writeFile(MACROS_FILE, JSON.stringify(macros), { mode: 0o600 }, (e) => { if (e) console.error('macros.json : ' + e.message); });
+}
+function setMacros(call, mode, list) {
+  if (['RTTY', 'CW', 'FT8'].indexOf(mode) < 0 || !Array.isArray(list)) return false;
+  const clean = list.slice(0, 24).map((m) => ({
+    name: String((m && m.name) || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 14),
+    text: String((m && m.text) || '').replace(/\r/g, '').replace(/[\u0000-\u0009\u000b-\u001f]/g, ' ').slice(0, 600)
+  }));
+  macros[call] = Object.assign({}, macros[call], { [mode]: clean });
+  saveMacros();
+  return true;
+}
 
 // ---------------------------------------------------------------- sessions mémorisées (« rester connecté »)
 // Seule l'empreinte SHA-256 du jeton de session est gardée (sessions.json) : le fichier ne permet pas de se connecter.
@@ -552,8 +572,10 @@ function loggedIn(conn, call, rec, sessionTok) {
     sessionIdleMinutes: cfg.sessionIdleMinutes,
     digiCall: String(cfg.digiCall || '').toUpperCase(),
     stationGrid: String(cfg.stationGrid || '').toUpperCase(),
+    stationQth: String(cfg.stationQth || '').toUpperCase(),
     session: sessionTok || null
   });
+  send(conn, { t: 'macros', data: macros[call] || {} });
   send(conn, { t: 'events', list: recentEvents });
   send(conn, { t: 'chatlog', list: chatLog });
   broadcast();
@@ -608,6 +630,12 @@ function onOperator(conn, m) {
       if (digi.hist[mode] && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.hist[mode] });
       return;
     }
+
+    case 'macros_set':
+      if (!setMacros(conn.user.call, m.mode, m.list)) return;
+      // Toutes les fenêtres de ce membre reçoivent la nouvelle liste
+      for (const c of ops) if (c.user.call === conn.user.call) send(c, { t: 'macros', data: macros[conn.user.call] || {} });
+      return;
 
     case 'listen':
       conn.listen = !!m.on;

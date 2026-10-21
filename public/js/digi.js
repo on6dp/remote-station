@@ -330,14 +330,40 @@
     return { f: Number(o.f) || 1500, shift: [170, 200, 425, 850].indexOf(o.shift) >= 0 ? o.shift : 170,
       baud: [45.45, 50, 75, 100].indexOf(o.baud) >= 0 ? o.baud : 45.45, rev: !!o.rev, squelch: Number(o.squelch) || 12 };
   })();
-  const RTTY_MACROS = [
-    ['CQ', 'CQ CQ CQ DE {MY} {MY} {MY}\nCQ CQ CQ DE {MY} {MY} {MY} PSE K\n'],
-    ['Appel', '{CALL} {CALL} DE {MY} {MY} {MY} K\n'],
-    ['Report', '{CALL} DE {MY} TNX FER CALL UR RST 599 599 QTH LIEGE LIEGE BTU {CALL} DE {MY} K\n'],
-    ['Contest', '{CALL} TU 599 599 {CALL}\n'],
-    ['73', '{CALL} DE {MY} TNX FER QSO 73 GL {CALL} DE {MY} SK\n'],
-    ['QRZ?', 'QRZ? DE {MY} K\n']
+  // ------------------------------------------------------------------ macros (comme FLDIGI : F1 à F12, modifiables)
+  // Balises : <MYCALL> <CALL> <NAME> <QTH> <RST> <LOC> <MYLOC> <MYQTH> <OPCALL> <CNTR> <INCR> <ZT> <ZD>
+  const DEF_MACROS = {
+    RTTY: [
+      { name: 'CQ', text: 'CQ CQ CQ DE <MYCALL> <MYCALL> <MYCALL>\nCQ CQ CQ DE <MYCALL> <MYCALL> <MYCALL> PSE K\n' },
+      { name: 'Appel', text: '<CALL> <CALL> DE <MYCALL> <MYCALL> <MYCALL> K\n' },
+      { name: 'QSO', text: '<CALL> DE <MYCALL> TNX FER CALL <NAME>\nUR RST <RST> <RST> QTH <MYQTH> <MYQTH> LOC <MYLOC>\nHW? <CALL> DE <MYCALL> K\n' },
+      { name: 'Station', text: 'STATION DU CLUB UBA-LGE <MYCALL> - OPERATEUR <OPCALL>\n' },
+      { name: 'BTU', text: 'BTU <CALL> DE <MYCALL> K\n' },
+      { name: '73', text: '<CALL> TNX FER QSO <NAME> 73 GL\n<CALL> DE <MYCALL> SK\n' },
+      { name: 'QRZ?', text: 'QRZ? DE <MYCALL> K\n' },
+      { name: 'Contest', text: '<CALL> 599 <CNTR> <CNTR>\n' },
+      { name: 'TU', text: 'TU <INCR><MYCALL> TEST\n' },
+      { name: 'AGN?', text: 'AGN? AGN? PSE\n' },
+      { name: 'RYRY', text: 'RYRYRYRYRYRYRYRYRYRYRYRY\n' },
+      { name: 'Heure', text: 'UTC <ZT> <ZD>\n' }
+    ],
+    CW: [
+      { name: 'CQ', text: 'CQ CQ CQ DE <MYCALL> <MYCALL> <MYCALL> K' },
+      { name: 'Appel', text: '<CALL> DE <MYCALL> <MYCALL> K' },
+      { name: 'Report', text: '<CALL> TU UR 5NN 5NN BK' },
+      { name: 'R TU', text: 'R TU 73 <CALL> DE <MYCALL> SK' },
+      { name: '73', text: '<CALL> TNX FER QSO 73 DE <MYCALL> SK' },
+      { name: 'QRZ?', text: 'QRZ? DE <MYCALL> K' },
+      { name: 'AGN?', text: 'AGN? AGN?' }
+    ]
+  };
+  const TAGS = [
+    ['<MYCALL>', 'indicatif émis (ON5VL)'], ['<CALL>', 'correspondant'], ['<NAME>', 'son prénom'], ['<QTH>', 'son QTH'],
+    ['<RST>', 'report envoyé'], ['<LOC>', 'son locator'], ['<MYLOC>', 'locator de la station'], ['<MYQTH>', 'QTH de la station'],
+    ['<OPCALL>', 'votre indicatif (opérateur)'], ['<CNTR>', 'numéro de série'], ['<INCR>', 'numéro suivant'], ['<ZT>', 'heure UTC'], ['<ZD>', 'date UTC']
   ];
+  let macros = (() => { try { return JSON.parse(store.get('macros', '{}')) || {}; } catch (e) { return {}; } })();
+  const macroList = (mode) => (macros[mode] && macros[mode].length ? macros[mode] : DEF_MACROS[mode] || []);
   function saveRtty(reannounce) {
     store.set('rtty', JSON.stringify(rt));
     if (reannounce) announce();
@@ -378,9 +404,31 @@
     $('rtM').style.width = Math.max(0, Math.min(100, (m.m / 40) * 100)) + '%';
     $('rtS').style.width = Math.max(0, Math.min(100, (m.s / 40) * 100)) + '%';
   }
-  function macroText(t) {
-    const call = (dx.call || '').trim().toUpperCase() || '???';
-    return t.replace(/\{MY\}/g, myCall).replace(/\{CALL\}/g, call);
+  // Remplace les balises d'une macro ; <INCR> fait avancer le numéro de série (seulement si apply)
+  function macroText(t, apply) {
+    const up = (v) => String(v || '').trim().toUpperCase();
+    const d = new Date(now());
+    const p2 = (n) => String(n).padStart(2, '0');
+    let cntr = Number(store.get('cntr', '1')) || 1;
+    let out = String(t)
+      .replace(/<MYCALL>|\{MY\}/g, myCall)
+      .replace(/<CALL>|\{CALL\}/g, up(dx.call) || '???')
+      .replace(/<NAME>/g, up(dx.name))
+      .replace(/<QTH>/g, up(dx.qth))
+      .replace(/<RST>/g, up(dx.rst) || '599')
+      .replace(/<LOC>/g, up(dx.grid))
+      .replace(/<MYLOC>/g, myGrid)
+      .replace(/<MYQTH>/g, myQth)
+      .replace(/<OPCALL>/g, opCall)
+      .replace(/<ZT>/g, p2(d.getUTCHours()) + p2(d.getUTCMinutes()))
+      .replace(/<ZD>/g, d.getUTCFullYear() + p2(d.getUTCMonth() + 1) + p2(d.getUTCDate()));
+    const pad3 = (n) => String(n).padStart(3, '0');
+    out = out.replace(/<CNTR>/g, pad3(cntr));
+    if (/<INCR>/.test(out)) {
+      if (apply) { cntr++; store.set('cntr', cntr); }
+      out = out.replace(/<INCR>/g, '');
+    }
+    return out;
   }
   function initRtty() {
     $('rtShift').value = String(rt.shift);
@@ -411,21 +459,7 @@
       const w = String(window.getSelection() || '').trim().toUpperCase();
       if (CALL_RE.test(w)) setDx({ call: w });
     });
-    for (const [name, t] of RTTY_MACROS) {
-      const b = document.createElement('button');
-      b.className = 'btn';
-      b.type = 'button';
-      b.textContent = name;
-      b.title = macroText(t).replace(/\n/g, ' ⏎ ');
-      b.addEventListener('mouseenter', () => { b.title = macroText(t).replace(/\n/g, ' ⏎ '); });
-      b.addEventListener('click', () => {
-        const ta = $('rtTxt');
-        ta.value += macroText(t);
-        ta.scrollTop = ta.scrollHeight;
-        ta.focus();
-      });
-      $('rtMacros').appendChild(b);
-    }
+    drawRttyMacros();
   }
 
 
@@ -523,14 +557,19 @@
   // Correspondant commun à tous les modes (bas du dashboard, fenêtre RTTY, fenêtre séparée : synchronisés)
   let myCall = 'ON5VL';
   let myGrid = '';
-  const loadDx = () => { try { return Object.assign({ call: '', grid: '', rpt: '-10' }, JSON.parse(store.get('dx', '{}')) || {}); } catch (e) { return { call: '', grid: '', rpt: '-10' }; } };
+  let myQth = '';
+  let opCall = '';
+  const loadDx = () => { try { return Object.assign({ call: '', grid: '', rpt: '-10', name: '', qth: '', rst: '599' }, JSON.parse(store.get('dx', '{}')) || {}); } catch (e) { return { call: '', grid: '', rpt: '-10', name: '', qth: '', rst: '599' }; } };
   let dx = loadDx();
   let ftxSel = Number(store.get('ftxsel', '5')) || 0;
   const CALL_RE = /^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}[A-Z](\/[A-Z0-9]+)?$/;
   const GRID_RE = /^[A-R]{2}[0-9]{2}([A-X]{2})?$/;
   const fmtRpt = (db) => (db >= 0 ? '+' : '-') + String(Math.min(30, Math.abs(Math.round(db)))).padStart(2, '0');
   function setDx(o) {
-    dx = Object.assign(loadDx(), o);
+    const before = loadDx();
+    // Nouveau correspondant : son prénom et son QTH repartent à vide
+    if (o.call != null && String(o.call).toUpperCase() !== String(before.call).toUpperCase() && o.name == null) { before.name = ''; before.qth = ''; }
+    dx = Object.assign(before, o);
     dx.call = String(dx.call || '').toUpperCase().slice(0, 12);
     dx.grid = String(dx.grid || '').toUpperCase().slice(0, 6);
     store.set('dx', JSON.stringify(dx));
@@ -542,6 +581,9 @@
     put('dxGrid', dx.grid);
     put('dxRpt', dx.rpt);
     put('rtCall', dx.call);
+    put('dxName', dx.name || '');
+    put('dxQth', dx.qth || '');
+    put('dxRst', dx.rst || '599');
     drawMsgs();
   }
   window.addEventListener('storage', (e) => { if (e.key === 'rs.dg.dx') { dx = loadDx(); syncDx(); } });
@@ -565,10 +607,6 @@
     const r = /^[+-]?\d{1,2}$/.test(dx.rpt) ? (dx.rpt[0] === '+' || dx.rpt[0] === '-' ? dx.rpt : '+' + dx.rpt) : '-10';
     return [c + ' ' + myCall + ' ' + g, c + ' ' + myCall + ' ' + r, c + ' ' + myCall + ' R' + r, c + ' ' + myCall + ' RR73', c + ' ' + myCall + ' 73', 'CQ ' + myCall + ' ' + g];
   }
-  const CW_MACROS = [
-    ['CQ', 'CQ CQ CQ DE {MY} {MY} {MY} K'], ['Appel', '{CALL} DE {MY} {MY} K'], ['Report', '{CALL} TU UR 5NN 5NN BK'],
-    ['R TU', 'R TU 73 {CALL} DE {MY} SK'], ['73', '{CALL} TNX FER QSO 73 DE {MY} SK'], ['QRZ?', 'QRZ? DE {MY} K'], ['AGN?', 'AGN? AGN?']
-  ];
   function drawMsgs() {
     if (!$('msgFtx')) return;
     const mk = (box, label, text, onClick, sel) => {
@@ -585,29 +623,139 @@
     f.textContent = '';
     ftxMsgs().forEach((t, i) => mk(f, 'Tx' + (i + 1), t, () => { ftxSel = i; store.set('ftxsel', i); drawMsgs(); }, i === ftxSel)
       .title = 'Prochain message FT8/FT4 à émettre (émission : prochaine version)');
-    const r = $('msgRtty');
-    r.textContent = '';
-    for (const [name, t] of RTTY_MACROS) {
-      mk(r, '', name, () => {
-        const inst = (window.DG && window.DG()) || window.RSDIGI;
-        inst.insertRtty(t);
-      }).title = macroText(t).replace(/\n/g, ' ⏎ ');
+    // Tx7 : texte libre de 13 caractères au plus (comme WSJT-X)
+    const free = String(store.get('ftxfree', '')).toUpperCase();
+    const fb = mk(f, 'Tx7', free || 'texte libre…', () => { ftxSel = 6; store.set('ftxsel', 6); drawMsgs(); }, ftxSel === 6);
+    fb.title = 'Texte libre FT8/FT4 (13 caractères) · clic droit pour le modifier';
+    fb.addEventListener('contextmenu', (e) => { e.preventDefault(); editFree(fb.ownerDocument); });
+    const ed = mk(f, '', '✎', () => editFree(f.ownerDocument));
+    ed.title = 'Modifier le texte libre (Tx7)';
+    ed.classList.add('mini');
+    drawMacroRow($('msgRtty'), 'RTTY', (t) => {
+      const inst = (window.DG && window.DG()) || window.RSDIGI;
+      inst.insertRtty(t);
+    });
+    drawMacroRow($('msgCw'), 'CW', () => api && api.say('Émission CW (par le manipulateur du TRX) : prochaine version.', 'warn'));
+  }
+  // Rangée de macros : clic = utiliser, clic droit = modifier, ✎ = modifier
+  function drawMacroRow(box, mode, use) {
+    if (!box) return;
+    box.textContent = '';
+    macroList(mode).forEach((m, i) => {
+      const b = box.ownerDocument.createElement('button');
+      b.className = 'btn';
+      b.type = 'button';
+      if (mode === 'RTTY') { const s = box.ownerDocument.createElement('small'); s.textContent = 'F' + (i + 1); b.appendChild(s); }
+      b.appendChild(box.ownerDocument.createTextNode(m.name || '—'));
+      b.title = macroText(m.text).replace(/\n/g, ' ⏎ ') + '\n(clic droit : modifier)';
+      b.addEventListener('mouseenter', () => { b.title = macroText(m.text).replace(/\n/g, ' ⏎ ') + '\n(clic droit : modifier)'; });
+      b.addEventListener('click', () => use(m.text));
+      b.addEventListener('contextmenu', (e) => { e.preventDefault(); editMacro(box.ownerDocument, mode, i); });
+      box.appendChild(b);
+    });
+    const ed = box.ownerDocument.createElement('button');
+    ed.className = 'btn mini';
+    ed.type = 'button';
+    ed.textContent = '✎';
+    ed.title = 'Modifier les macros ' + mode;
+    ed.addEventListener('click', () => editMacro(box.ownerDocument, mode, 0));
+    box.appendChild(ed);
+  }
+  function drawRttyMacros() {
+    drawMacroRow($('rtMacros'), 'RTTY', (t) => insertRtty(t, true));
+  }
+  // ------------------------------------------------------------------ éditeur de macros (fenêtre de dialogue)
+  function editMacro(doc, mode, idx) {
+    const list = macroList(mode).map((m) => Object.assign({}, m));
+    while (mode === 'RTTY' && list.length < 12) list.push({ name: '', text: '' });
+    let cur = Math.min(idx, list.length - 1);
+    const old = doc.getElementById('macroDlg');
+    if (old) old.remove();
+    const dlg = doc.createElement('dialog');
+    dlg.id = 'macroDlg';
+    dlg.className = 'macro-dlg';
+    dlg.innerHTML = '<form method="dialog">' +
+      '<h3>Macros ' + mode + '</h3>' +
+      '<div class="md-keys"></div>' +
+      '<label>Nom du bouton <input name="name" maxlength="14" autocomplete="off"></label>' +
+      '<label>Texte <textarea name="text" rows="6" spellcheck="false"></textarea></label>' +
+      '<div class="md-tags"></div>' +
+      '<p class="md-prev"></p>' +
+      '<div class="md-act"><button class="btn" value="reset" type="button" data-a="reset">Défaut</button>' +
+      '<span></span><button class="btn" value="cancel" data-a="cancel">Annuler</button><button class="btn btn-primary" type="button" data-a="save">Enregistrer</button></div>' +
+      '</form>';
+    doc.body.appendChild(dlg);
+    const f = dlg.querySelector('form');
+    const keys = dlg.querySelector('.md-keys');
+    const prev = () => { dlg.querySelector('.md-prev').textContent = 'Aperçu : ' + macroText(f.text.value).replace(/\n/g, ' ⏎ '); };
+    const keep = () => { list[cur] = { name: f.name.value.trim(), text: f.text.value }; };
+    const show = () => {
+      keys.textContent = '';
+      list.forEach((m, i) => {
+        const k = doc.createElement('button');
+        k.type = 'button';
+        k.className = 'btn' + (i === cur ? ' on' : '');
+        k.textContent = (mode === 'RTTY' ? 'F' + (i + 1) + ' ' : '') + (m.name || '—');
+        k.addEventListener('click', () => { keep(); cur = i; show(); });
+        keys.appendChild(k);
+      });
+      f.name.value = list[cur].name || '';
+      f.text.value = list[cur].text || '';
+      prev();
+    };
+    for (const [tag, help] of TAGS) {
+      const t = doc.createElement('button');
+      t.type = 'button';
+      t.className = 'md-tag';
+      t.textContent = tag;
+      t.title = help;
+      t.addEventListener('click', () => {
+        const ta = f.text;
+        const a = ta.selectionStart, z = ta.selectionEnd;
+        ta.value = ta.value.slice(0, a) + tag + ta.value.slice(z);
+        ta.selectionStart = ta.selectionEnd = a + tag.length;
+        ta.focus();
+        prev();
+      });
+      dlg.querySelector('.md-tags').appendChild(t);
     }
-    const cw = $('msgCw');
-    cw.textContent = '';
-    for (const [name, t] of CW_MACROS) {
-      mk(cw, '', name, () => api && api.say('Émission CW (par le manipulateur du TRX) : prochaine version.', 'warn')).title = macroText(t);
-    }
+    f.text.addEventListener('input', prev);
+    dlg.querySelector('[data-a="reset"]').addEventListener('click', () => {
+      const d = (DEF_MACROS[mode] || [])[cur] || { name: '', text: '' };
+      f.name.value = d.name; f.text.value = d.text; prev();
+    });
+    dlg.querySelector('[data-a="save"]').addEventListener('click', () => {
+      keep();
+      const clean = list.filter((m, i) => mode === 'RTTY' || m.name || m.text);
+      macros[mode] = clean;
+      store.set('macros', JSON.stringify(macros));
+      if (api) api.send({ t: 'macros_set', mode, list: clean });
+      dlg.close();
+      redrawMacros();
+    });
+    dlg.addEventListener('close', () => dlg.remove());
+    show();
+    dlg.showModal();
+  }
+  function editFree(doc) {
+    const v = (doc.defaultView || window).prompt('Texte libre FT8 / FT4 (13 caractères au plus : lettres, chiffres, espace + - . / ?)', store.get('ftxfree', ''));
+    if (v == null) return;
+    store.set('ftxfree', String(v).toUpperCase().replace(/[^A-Z0-9 +\-./?]/g, '').slice(0, 13));
+    drawMsgs();
+  }
+  function redrawMacros() {
+    drawMsgs();
+    drawRttyMacros();
   }
   function insertRtty(t) {
     showTab('rtty');
     const ta = $('rtTxt');
-    ta.value += macroText(t);
+    ta.value += macroText(t, true);
     ta.scrollTop = ta.scrollHeight;
     ta.focus();
   }
   function initMsgs() {
-    for (const [id, k] of [['dxCall', 'call'], ['dxGrid', 'grid'], ['dxRpt', 'rpt'], ['rtCall', 'call']]) {
+    for (const [id, k] of [['dxCall', 'call'], ['dxGrid', 'grid'], ['dxRpt', 'rpt'], ['rtCall', 'call'], ['dxName', 'name'], ['dxQth', 'qth'], ['dxRst', 'rst']]) {
       const el = $(id);
       if (el) el.addEventListener('input', () => setDx({ [k]: el.value.trim() }));
     }
@@ -844,6 +992,16 @@
       initRtty();
       initWspr();
       initMsgs();
+      // Touches F1 à F12 dans la fenêtre RTTY : macros (comme FLDIGI)
+      document.addEventListener('keydown', (e) => {
+        if (tab !== 'rtty' || detached || e.ctrlKey || e.altKey || e.metaKey) return;
+        const n = /^F(\d{1,2})$/.exec(e.key);
+        if (!n) return;
+        const m = macroList('RTTY')[Number(n[1]) - 1];
+        if (!m) return;
+        e.preventDefault();
+        insertRtty(m.text);
+      });
       $('dgTxRx').addEventListener('click', () => setTx(rxF));
       $('dgRxTx').addEventListener('click', () => setRx(txF));
       // Repli du panneau ou onglet du navigateur caché : le serveur arrête de décoder pour ce membre
@@ -867,6 +1025,8 @@
       wsNeedHist = true;
       if (info && info.digiCall) myCall = info.digiCall;
       if (info) myGrid = info.stationGrid || '';
+      if (info) myQth = info.stationQth || '';
+      if (me && me.call) opCall = me.call;
       drawMsgs();
       if (info && info.stationCall) stationCalls = String(info.stationCall).toUpperCase().split(/[\s/,]+/).filter(Boolean);
       announce(); // reprise après reconnexion
@@ -880,6 +1040,12 @@
           clockOff = m.now - (m.ts + rtt / 2);
         }
         return false;
+      }
+      if (m.t === 'macros') {
+        macros = m.data || {};
+        store.set('macros', JSON.stringify(macros));
+        redrawMacros();
+        return true;
       }
       if (m.t === 'rtty') { rttyAppend(m.text || ''); return true; }
       if (m.t === 'rtty_lvl') { rttyLevels(m); return true; }

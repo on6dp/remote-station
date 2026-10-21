@@ -15,6 +15,7 @@
   "sessionIdleMinutes": 15,
   "digiCall": "ON5VL",
   "stationGrid": "JO20SO",
+  "stationQth": "LIEGE",
   "rememberDays": 7,
   "usersFile": "users.json",
   "logDir": "logs",

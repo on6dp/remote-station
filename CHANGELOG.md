@@ -2,6 +2,7 @@
 
 ## v0.7 — écran large et cadres détachables
 
+- **0.7.1** — Macros RTTY à la manière de FLDIGI : 12 macros F1 à F12 (touches du clavier dans l'onglet RTTY), modifiables (clic droit ou ✎ : nom, texte, balises <MYCALL> <CALL> <NAME> <QTH> <RST> <LOC> <MYLOC> <MYQTH> <OPCALL> <CNTR> <INCR> <ZT> <ZD>, aperçu, retour au défaut), gardées sur le serveur pour chaque membre ; macros CW modifiables de la même façon ; correspondant avec nom, QTH et RST ; Tx7 = texte libre FT8/FT4 ; cadre Opérateurs plus compact sur écran large.
 - **0.7.0** — Écran large (1920 × 1080 et plus) : tout le dashboard tient sur un écran, en quatre colonnes (réglages · VFO et modes numériques · audio, DSP, accord, TX · opérateurs et messages pré-enregistrés) ; chaque colonne défile seule si besoin. Bouton **⧉** sur chaque cadre (RF front end, Mode, Filtre, Station meters, VFO, Step et bandes, RX audio, DSP, Accord, TX, Opérateurs, Messages) : le cadre s'ouvre dans sa propre fenêtre, tout y fonctionne (PTT et flèches compris), « Ramener » le remet en place ; disposition et position des fenêtres mémorisées.
 
 ## v0.6 — JT65
