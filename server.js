@@ -122,7 +122,19 @@ function sendJson(res, code, obj) {
   res.end(JSON.stringify(obj));
 }
 
-const server = http.createServer((req, res) => {
+// HTTPS direct (serveur Windows sans nginx) : "tls": { "cert": "cert.pem", "key": "key.pem" } dans config.json
+function makeServer(handler) {
+  const t = cfg.tls;
+  if (t && t.cert && t.key) {
+    try {
+      return require('https').createServer({ cert: fs.readFileSync(path.resolve(ROOT, t.cert)), key: fs.readFileSync(path.resolve(ROOT, t.key)) }, handler);
+    } catch (e) {
+      console.error('Certificat TLS illisible (' + e.message + ') : serveur en HTTP');
+    }
+  }
+  return http.createServer(handler);
+}
+const server = makeServer((req, res) => {
   let p;
   try {
     p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
@@ -1054,10 +1066,13 @@ setInterval(() => {
 }, 15000);
 
 server.listen(cfg.port, cfg.listen, () => {
-  console.log('Remote Station à l’écoute sur ' + cfg.listen + ':' + cfg.port + ' — TX ' + (cfg.allowTx ? 'AUTORISÉ' : 'désactivé'));
+  console.log('Remote Station à l’écoute sur ' + (server instanceof require('https').Server ? 'https://' : 'http://') + cfg.listen + ':' + cfg.port + ' — TX ' + (cfg.allowTx ? 'AUTORISÉ' : 'désactivé'));
 });
 
-process.on('SIGTERM', () => {
-  if (ptt.active) stopPtt('arrêt du serveur');
-  setTimeout(() => process.exit(0), 300);
-});
+// Arrêt (systemd : SIGTERM ; service Windows : Ctrl+C / SIGINT) : on coupe d'abord une émission en cours
+for (const sig of ['SIGTERM', 'SIGINT']) {
+  process.on(sig, () => {
+    if (ptt.active) stopPtt('arrêt du serveur');
+    setTimeout(() => process.exit(0), 300);
+  });
+}

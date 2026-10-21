@@ -188,6 +188,12 @@ Après un redémarrage, la page réactive l'audio toute seule. Si elle affiche �
 
 ---
 
+## Installation sous Windows 10 / 11
+
+`RemoteStation-Setup-<version>.exe` installe, au choix, le **kit du PC du club** (page Station avec les bons réglages de Chrome,
+démarrage automatique, pas de veille) et/ou le **serveur** en service Windows. Détails : [windows/LISEZMOI-WINDOWS.md](windows/LISEZMOI-WINDOWS.md).
+Fabrication sous Linux : `windows/build.sh` (NSIS 3, WinSW).
+
 ## Pour les membres
 
 Manuel complet : **[MANUEL.md](MANUEL.md)** (français) · **[USER-MANUAL.md](USER-MANUAL.md)** (English), aussi dans le dashboard (bouton **HELP**, https://remote.op0p.be/aide et /help). Source : `public/aide.html` et `public/help.html` ; après chaque modification, `node native/manual2md.js` refait les deux fichiers .md.

@@ -1,0 +1,4 @@
+*.cmd text eol=crlf
+*.nsi text eol=crlf
+*.exe binary
+*.ico binary

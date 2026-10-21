@@ -7,3 +7,5 @@ node_modules/
 sessions.json
 macros.json
 sstv/
+dist/
+windows/.cache/

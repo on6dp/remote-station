@@ -1,5 +1,9 @@
 # Journal des versions — Remote Station UBA-LGE (ON5VL / OR0L)
 
+## v0.13 — installateur Windows
+
+- **0.13.0** — **Installateur Windows 10 / 11** (`RemoteStation-Setup-0.13.0.exe`, fabriqué par `windows/build.sh`), deux parties au choix : **PC du club** (raccourci « Page Station » qui ouvre Chrome ou Edge dans sa fenêtre, avec un profil à part et les réglages anti-coupure ; dashboard ; lancement au démarrage de Windows ; pas de mise en veille ; adresse du serveur demandée) et **serveur Remote Station** (service Windows via WinSW, démarrage automatique et relance en cas d'arrêt, Node.js installé par winget si besoin, pare-feu en option, outils du menu Démarrer : ajouter / lister / supprimer un membre, jeton de la station, configuration, redémarrage, journaux). Mise à jour sans perte (configuration, comptes, macros, images SSTV), désinstallation propre, installation silencieuse possible. Décodeurs JT65 et JTTY compilés pour Windows (`lib/bin/*.exe`, MinGW-w64). Serveur : HTTPS direct possible (`"tls": { "cert", "key" }`), arrêt propre sous Windows. Manuel aussi en Markdown sur GitHub (MANUEL.md, USER-MANUAL.md).
+
 ## v0.12 — manuel d'utilisation
 
 - **0.12.0** — **Manuel d'utilisation** en français (`/aide`) et en anglais (`/help`) : connexion, écran, main, réglages du TRX, écoute, émission et sécurités, discussion, fenêtres séparées, tous les modes numériques (FT8 · FT4, JT65, RTTY, WSPR, JTTY, CW, SSTV, Synchro, QO-100), macros et balises, raccourcis clavier, problèmes fréquents, PC du club ; imprimable. Bouton **HELP** dans le bandeau du dashboard (manuel dans la langue du navigateur) et liens sur la page Station. Choix d'antenne ANT 1 / ANT 2 dans son propre cadre, en haut à gauche.
