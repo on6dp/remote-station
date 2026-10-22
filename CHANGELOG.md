@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.18.7** — **Cascade comme WSJT-X** : réglages Gain (contraste) et Zéro (niveau du fond), fond « Plat » (bruit égal sur toute la largeur, pente du filtre corrigée), trois jeux de couleurs (bleu, arc-en-ciel, gris), retour aux réglages d'origine ; dessin lissé entre les cases de 6,25 Hz. Réglages mémorisés dans le navigateur, communs à toutes les cascades.
 - **0.18.6** — Le côté actif du TRX est mis en évidence dans l'en-tête de son écran VFO : « MAIN » sur fond cyan (VFO A) ou « SUB » sur fond orange (VFO B), selon MAIN / SUB ou le RX choisi.
 - **0.18.5** — Plus de colonne entre les deux VFO : MAIN / SUB / SPLIT, A → B, B → A, A ⇄ B et LOCK passent à droite de la ligne des bandes ; le réglage « Décal. » disparaît (RIT / XIT / CLEAR sur chaque écran VFO). Écrans VFO plus larges et colonnes latérales élargies (236 / 220 / 280 px).
 - **0.18.4** — Cadre « Messages pré-enregistrés » plus aéré : correspondant sur toute la largeur, nom | QTH, locator | report | RST, indications discrètes dans les champs vides (au lieu de faux contenus en majuscules), séparation avant les rangées de messages.

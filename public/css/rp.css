@@ -710,6 +710,12 @@ input[type='range']:disabled { opacity: .45; }
 #dgWf { height: 140px; }
 #dgScale { height: 30px; }
 .dg-wf { position: relative; }
+/* Réglages de la cascade : gain, zéro, fond plat, couleurs */
+.wf-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 3px 8px; font-size: 10.5px; color: var(--v2-text-secondary); background: rgba(0, 0, 0, .35); border-bottom: 1px solid var(--v2-border-dark); }
+.wf-ctl label { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.wf-ctl input[type='range'] { width: 110px; }
+.wf-ctl select { font: inherit; font-size: 10.5px; padding: 1px 4px; height: 20px; }
+.wf-ctl .dg-mini { margin-left: auto; }
 .dg-grip { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; cursor: ns-resize; z-index: 3; touch-action: none;
   background: linear-gradient(to bottom, transparent 3px, rgba(255, 255, 255, .18) 3px, rgba(255, 255, 255, .18) 5px, transparent 5px); }
 .dg-grip:hover { background: linear-gradient(to bottom, transparent 2px, rgba(0, 212, 255, .7) 2px, rgba(0, 212, 255, .7) 6px, transparent 6px); }

@@ -120,6 +120,13 @@
       <span class="dg-tl"><span class="dg-status" id="dgStatus"></span><span class="dg-clock" id="dgClock">--:--:--</span></span>
     </div>
     <div class="dg-wf-slot" data-slot="ftx"><div class="dg-wf">
+      <div class="wf-ctl" title="Réglages de la cascade (comme WSJT-X)">
+        <label title="Contraste : plus à droite, les signaux faibles ressortent davantage">Gain <input id="wfGain" type="range" min="-20" max="20" step="1" value="0"></label>
+        <label title="Niveau du bruit de fond : plus à droite, le fond est plus clair">Zéro <input id="wfZero" type="range" min="-20" max="20" step="1" value="0"></label>
+        <label title="Aplatit le bruit de fond sur toute la largeur (corrige la pente du filtre du TRX)"><input id="wfFlat" type="checkbox" checked> Plat</label>
+        <select id="wfPal" aria-label="Couleurs de la cascade"><option value="classic">Couleurs : bleu</option><option value="wsjtx">Couleurs : arc-en-ciel</option><option value="gray">Couleurs : gris</option></select>
+        <button class="dg-mini" type="button" id="wfReset" title="Réglages d'origine">↺</button>
+      </div>
       <canvas id="dgScale" height="30"></canvas>
       <canvas id="dgWf" height="140"></canvas>
       <i class="dg-mk dg-mk-tx" id="dgMkTx"></i><i class="dg-mk dg-mk-rx" id="dgMkRx"></i>
@@ -389,6 +396,8 @@
   function sizeCanvas() {
     const c = $('dgWf');
     const s = $('dgScale');
+    // Repères RX / TX sous l'échelle (la barre de réglages au-dessus peut tenir sur une ou deux lignes)
+    for (const id of ['dgMkRx', 'dgMkTx']) if ($(id)) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
     const w = Math.max(200, Math.floor(c.clientWidth || c.parentElement.clientWidth));
     if (w === wf.w && wf.ctx) return drawScale();
     const old = wf.ctx ? wf.ctx.getImageData(0, 0, wf.w, wf.h) : null;
@@ -403,8 +412,12 @@
     drawScale();
   }
   // Palette : bruit sombre → bleu → cyan → jaune → rouge
-  const PAL = (() => {
-    const stops = [[0, 5, 8, 13], [0.25, 10, 40, 110], [0.5, 0, 170, 220], [0.75, 240, 220, 70], [1, 255, 60, 30]];
+  const PALS = {
+    classic: [[0, 5, 8, 13], [0.25, 10, 40, 110], [0.5, 0, 170, 220], [0.75, 240, 220, 70], [1, 255, 60, 30]],
+    wsjtx: [[0, 0, 0, 0], [0.18, 0, 0, 120], [0.36, 0, 70, 255], [0.54, 0, 210, 220], [0.7, 140, 255, 60], [0.84, 255, 210, 0], [0.94, 255, 70, 0], [1, 255, 255, 255]],
+    gray: [[0, 0, 0, 0], [1, 255, 255, 255]]
+  };
+  const mkPal = (stops) => {
     const p = new Uint8Array(256 * 3);
     for (let i = 0; i < 256; i++) {
       const x = i / 255;
@@ -415,8 +428,17 @@
       for (let j = 0; j < 3; j++) p[i * 3 + j] = Math.round(a[j + 1] + (b[j + 1] - a[j + 1]) * u);
     }
     return p;
-  })();
+  };
+  // Réglages de la cascade (gardés dans ce navigateur) : gain = contraste, zéro = niveau du fond, plat = fond aplati
+  const wfCfg = {
+    gain: Number(store.get('wfgain', '0')) || 0,
+    zero: Number(store.get('wfzero', '0')) || 0,
+    flat: store.get('wfflat', '1') === '1',
+    pal: PALS[store.get('wfpal', 'classic')] ? store.get('wfpal', 'classic') : 'classic'
+  };
+  let PAL = mkPal(PALS[wfCfg.pal]);
   let floor = null;
+  let binFloor = null; // plancher de bruit de chaque case (fond aplati)
   function onRow(bytes) {
     if (WF_TABS.indexOf(tab) < 0 || detached || !wf.ctx) return;
     // bytes[0] = 0x10, puis une case de 6,25 Hz par octet (dB*2+240), depuis 0 Hz
@@ -427,14 +449,37 @@
     const sorted = Array.from(vals).sort((a, b) => a - b);
     const med = sorted[sorted.length >> 1];
     floor = floor == null ? med : floor * 0.9 + med * 0.1;
+    // Fond aplati : niveau moyen du bruit de chaque case (les signaux, 6 dB au-dessus, ne le relèvent presque pas),
+    // lissé sur ± 4 cases (± 25 Hz) pour ne pas créer de stries verticales
+    if (!binFloor || binFloor.length !== n) { binFloor = Float32Array.from(vals); wf.sb = new Float32Array(n); }
+    for (let k = 0; k < n; k++) {
+      const b = binFloor[k];
+      binFloor[k] = vals[k] > b + 12 ? b + 0.05 : b * 0.97 + vals[k] * 0.03;
+    }
+    const sb = wf.sb;
+    for (let k = 0, acc = 0, cnt = 0; k < n; k++) {
+      acc = 0; cnt = 0;
+      for (let j = Math.max(0, k - 4); j <= Math.min(n - 1, k + 4); j++) { acc += binFloor[j]; cnt++; }
+      sb[k] = acc / cnt;
+    }
     const ctx = wf.ctx;
     ctx.drawImage(ctx.canvas, 0, 0, wf.w, wf.h - 1, 0, 1, wf.w, wf.h - 1); // la cascade descend d'une ligne
     if (!wf.img || wf.img.width !== wf.w) wf.img = ctx.createImageData(wf.w, 1);
     const d = wf.img.data;
+    // Gain : plage de couleurs de 50 dB (−20) à 12,5 dB (+20), 25 dB au milieu ; zéro : fond ± 10 dB
+    const range = 2 * 25 / Math.pow(2, wfCfg.gain / 10); // en octets (2 par dB)
+    const off = wfCfg.zero + 3;                            // octets
+    const flatLvl = floor + 0; // fond aplati ramené au plancher moyen
     for (let x = 0; x < wf.w; x++) {
-      const v = vals[Math.min(n - 1, Math.floor((x / wf.w) * n))];
-      // 0 dB au-dessus du bruit → sombre ; +25 dB → rouge (octets : 2 par dB)
-      let i = Math.round(((v - floor) / 50 + 0.06) * 255);
+      // Interpolation entre deux cases (pas d'escalier quand la cascade est plus large que le nombre de cases)
+      const fx = Math.max(0, Math.min(n - 1, (x + 0.5) / wf.w * n - 0.5));
+      const k0 = Math.floor(fx);
+      const k1 = Math.min(n - 1, k0 + 1);
+      const u = fx - k0;
+      let v = vals[k0] * (1 - u) + vals[k1] * u;
+      const base = wfCfg.flat ? sb[k0] * (1 - u) + sb[k1] * u : floor;
+      if (wfCfg.flat) v = v - base + flatLvl;
+      let i = Math.round(((v - floor + off) / range) * 255);
       i = i < 0 ? 0 : i > 255 ? 255 : i;
       d[x * 4] = PAL[i * 3];
       d[x * 4 + 1] = PAL[i * 3 + 1];
@@ -1916,6 +1961,14 @@
       // Choisir une fréquence dans la liste y envoie directement le TRX (QSY)
       $('dgDial').addEventListener('change', () => { store.set('dial.' + mode, $('dgDial').value); qsy(); });
       $('dgClear').addEventListener('click', () => { hist.length = 0; redrawAll(); });
+      // Réglages de la cascade
+      const wfUi = () => { $('wfGain').value = wfCfg.gain; $('wfZero').value = wfCfg.zero; $('wfFlat').checked = wfCfg.flat; $('wfPal').value = wfCfg.pal; };
+      wfUi();
+      $('wfGain').addEventListener('input', () => { wfCfg.gain = Number($('wfGain').value); store.set('wfgain', String(wfCfg.gain)); });
+      $('wfZero').addEventListener('input', () => { wfCfg.zero = Number($('wfZero').value); store.set('wfzero', String(wfCfg.zero)); });
+      $('wfFlat').addEventListener('change', () => { wfCfg.flat = $('wfFlat').checked; store.set('wfflat', wfCfg.flat ? '1' : '0'); });
+      $('wfPal').addEventListener('change', () => { wfCfg.pal = $('wfPal').value; PAL = mkPal(PALS[wfCfg.pal]); store.set('wfpal', wfCfg.pal); });
+      $('wfReset').addEventListener('click', () => { Object.assign(wfCfg, { gain: 0, zero: 0, flat: true, pal: 'classic' }); PAL = mkPal(PALS.classic); for (const k of ['wfgain', 'wfzero']) store.set(k, '0'); store.set('wfflat', '1'); store.set('wfpal', 'classic'); wfUi(); });
       // Poignée sous la cascade : plus petite cascade = listes « Activité de bande » / « Fréquence RX » plus hautes
       const WF_DEF = 140;
       const setWfH = (h, save) => {
