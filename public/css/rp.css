@@ -219,7 +219,7 @@ input[type='range']::-moz-range-thumb { width: 12px; height: 20px; border-radius
 input[type='range']:disabled { opacity: .45; }
 
 /* ------------------------------------------------------------ VFO */
-.vfo-row { display: grid; grid-template-columns: minmax(0, 1fr) 186px minmax(0, 1fr); gap: 10px; }
+.vfo-row { display: grid; grid-template-columns: minmax(0, 1fr) 162px minmax(0, 1fr); gap: 10px; }
 .vfo {
   position: relative;
   display: grid;
@@ -242,9 +242,9 @@ input[type='range']:disabled { opacity: .45; }
 .vfo.on-air { border-color: var(--v2-accent-red) !important; box-shadow: 0 0 0 1px rgba(255,32,32,.3), 0 0 26px -6px rgba(255,32,32,.55) !important; }
 .vfo-top { display: flex; align-items: center; gap: 6px; }
 .vfo-name { margin-left: auto; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: var(--v2-text-header); text-transform: uppercase; }
-.vfo-mid { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.vfo-mid { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; }
 /* Écran VFO étroit : la fréquence passe sur sa propre ligne */
-@container (max-width: 380px) {
+@container (max-width: 320px) {
   .vfo-mid { grid-template-columns: auto auto; justify-content: space-between; }
   .vfo-mid .freq-wrap { grid-column: 1 / -1; grid-row: 2; }
   .vfo-mid .freq { font-size: clamp(26px, calc((100cqi - 70px) / 7), 44px); }
@@ -254,7 +254,7 @@ input[type='range']:disabled { opacity: .45; }
 .vfo-tag b { font-size: 15px; color: var(--v2-text-bright); }
 .vfo-side { margin-left: auto; display: grid; gap: 3px; justify-items: end; }
 .clar-line { display: flex; gap: 6px; align-items: center; }
-.clar-val { font-size: 11px; color: var(--v2-text-dim); min-width: 6.2em; text-align: right; }
+.clar-val { font-size: 11px; color: var(--v2-text-dim); min-width: 5.8em; text-align: right; }
 .clar-val.on { color: var(--v2-accent-yellow); }
 
 .badge {
@@ -303,7 +303,7 @@ input[type='range']:disabled { opacity: .45; }
   font-size: clamp(30px, 3.6vw, 52px);
   /* 9 chiffres + 2 séparateurs + « MHz » doivent tenir dans l'écran VFO */
   /* 9 chiffres + 2 séparateurs + « MHz » entre « VFO / mode » et RIT / XIT */
-  font-size: clamp(22px, calc((100cqi - 225px) / 6.2), 46px);
+  font-size: clamp(18px, calc((100cqi - 180px) / 7.6), 46px);
   line-height: 1;
   letter-spacing: .02em;
   user-select: none;
