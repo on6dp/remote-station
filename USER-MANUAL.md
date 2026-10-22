@@ -13,7 +13,7 @@
 - [7. Operators and chat](#operators)
 - [8. Layout and separate windows](#layout)
 - [9. Digital modes](#digital)
-   - [9.1 FT8 · FT4](#ft8)
+   - [9.1 FT8 · FT4 · FT2](#ft8)
    - [9.2 JT65](#jt65)
    - [9.3 RTTY](#rtty)
    - [9.4 WSPR](#wspr)
@@ -153,9 +153,10 @@ The centre tabs: **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT65**, **
 - Transmitting in the digital modes (as **ON5VL**) comes in a future version *(soon)*: the « Émettre » (transmit) buttons are greyed out, but messages and macros can already be prepared.
 
 <a id="ft8"></a>
-### 9.1 FT8 · FT4
+### 9.1 FT8 · FT4 · FT2
 
-- `FT8` / `FT4` buttons: the transceiver goes to that mode's calling frequency on its band.
+- `FT8` / `FT4` / `FT2` buttons: the transceiver goes to that mode's calling frequency on its band.
+- **FT2**: the fast mode of Decodium (IU8LMC) — 3.75 s periods, 2.5 s signal, 167 Hz wide (frequencies: Decodium's list, e.g. 14084 kHz). Stations transmitting « asynchronously » (at any time) are decoded too; the time shown is then that of the period in which the signal starts (larger DT). The FT2 of « WSJT-X Improved » is a different, incompatible mode.
 - **Activité de bande** (band activity): all decoded messages (CQ in green, messages for ON5VL / OR0L in red); **Fréquence RX**: those on your frequency.
 - **Split** as in WSJT-X: **left click** on the waterfall or a line = receive frequency, **right click** = transmit frequency; « TX ← RX » and « RX ← TX » buttons.
 - **Double-click** a message: its sender becomes the contact (callsign, locator, report) and messages Tx1 to Tx6 are prepared.

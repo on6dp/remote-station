@@ -1,5 +1,9 @@
 # Journal des versions — Remote Station UBA-LGE (ON5VL / OR0L)
 
+## v0.15 — FT2
+
+- **0.15.0** — Mode **FT2** (Decodium, IU8LMC) dans la fenêtre FT8 · FT4 · FT2 : bouton FT2, fréquences de la liste de Decodium 4.0 (1 843 … 432 177 kHz), périodes de 3,75 s. FT2 est le signal FT4 à vitesse double (24 ms par symbole, 4-GFSK, 167 Hz) : décodé par ft8_lib (décodeur FT4 remis à l'échelle), fenêtres analysées toutes les 1,25 s pour attraper aussi les émissions asynchrones, doublons retirés. Carnet : MODE MFSK / SUBMODE FT2 (ADIF 3.1.7). Nouveau codeur FT8 / FT4 / FT2 en WebAssembly (`public/js/ftx-enc.wasm`, `public/js/ftxenc.js`), base de l'émission des modes numériques qui suit. Le FT2 de « WSJT-X Improved » (DG2YCB) est un autre mode, incompatible, non pris en charge.
+
 ## v0.14 — Logs online (version « extended »)
 
 - **0.14.1** — **Page Station réservée aux administrateurs** : /station demande d'abord l'indicatif et le mot de passe d'un administrateur ; la page et son programme (station.js, station-core.js) ne sont envoyés qu'ensuite. Le PC reste autorisé un an (cookie HttpOnly, SameSite=Strict, Secure en HTTPS, renouvelé à chaque ouverture ; seule son empreinte est gardée dans `logs/station-sessions.json`), bouton « Se déconnecter » ; un membre non administrateur est refusé, les mauvais mots de passe sont freinés (5 essais / 10 min) et notés dans le journal (`station_page_login`, `station_page_fail`, `station_page_refused`). Le jeton de station reste exigé pour brancher le TRX.

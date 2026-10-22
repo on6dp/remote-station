@@ -21,7 +21,10 @@
     JT65: [['160 m', 1838], ['80 m', 3576], ['40 m', 7076], ['30 m', 10138], ['20 m', 14076], ['17 m', 18102], ['15 m', 21076],
       ['12 m', 24917], ['10 m', 28076], ['6 m', 50310]],
     FT4: [['80 m', 3575.5], ['40 m', 7047.5], ['30 m', 10140], ['20 m', 14080], ['17 m', 18104], ['15 m', 21140],
-      ['12 m', 24919], ['10 m', 28180], ['6 m', 50318], ['2 m', 144170]]
+      ['12 m', 24919], ['10 m', 28180], ['6 m', 50318], ['2 m', 144170]],
+    // FT2 (Decodium, IU8LMC) : fréquences de la liste de Decodium 4.0
+    FT2: [['160 m', 1843], ['80 m', 3568], ['60 m', 5360], ['40 m', 7062], ['30 m', 10144], ['20 m', 14084], ['17 m', 18108],
+      ['15 m', 21144], ['12 m', 24923], ['10 m', 28184], ['6 m', 50316], ['4 m', 70157], ['2 m', 144177], ['70 cm', 432177]]
   };
   // QO-100 (Es'hail-2) : on émet sur la FI du convertisseur 2,4 GHz (2 m, 70 cm ou 23 cm). qoIf = FI (MHz) qui
   // correspond à 2400,000 MHz (réglage qo100If du serveur ; 432,500 pour un convertisseur à OL 1967,5 MHz).
@@ -73,7 +76,9 @@
   let clockOff = 0;      // écart horloge du serveur − horloge de ce PC (ms)
   let bestRtt = Infinity;
   let tab = store.get(POPUP ? 'ptab' : 'tab', POPUP ? 'ftx' : 'events');
-  let mode = store.get('ftmode', store.get('mode', 'FT8')) === 'FT4' ? 'FT4' : 'FT8';
+  const FT_MODES = ['FT8', 'FT4', 'FT2'];
+  const ftStored = () => { const v = store.get('ftmode', store.get('mode', 'FT8')); return FT_MODES.indexOf(v) >= 0 ? v : 'FT8'; };
+  let mode = ftStored();
   let rxF = Number(store.get('rxf', '1500')) || 1500;
   let txF = Number(store.get('txf', '1500')) || 1500; // fréquence audio d'émission (split : différente de RX)
   const SCALE_H = 30;
@@ -85,7 +90,7 @@
   // ------------------------------------------------------------------ construction des onglets et des fenêtres
   // Même code pour le centre du dashboard et pour la fenêtre séparée (digi.html, sans l'onglet Activité).
   const TABS = [
-    ['events', 'Activité'], ['ftx', 'FT8 · FT4'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['gap', ''], ['sync', 'Synchro'], ['log', 'Logs online']
+    ['events', 'Activité'], ['ftx', 'FT8 · FT4 · FT2'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['gap', ''], ['sync', 'Synchro'], ['log', 'Logs online']
   ];
   const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'cw', 'sstv', 'sync'];
   const WF_TABS = ['ftx', 'jt65', 'rtty', 'wspr', 'jtty', 'cw', 'sstv']; // onglets avec cascade
@@ -96,6 +101,7 @@
       <div class="seg" id="dgModes">
         <button class="btn" type="button" data-mode="FT8" aria-pressed="true">FT8</button>
         <button class="btn" type="button" data-mode="FT4" aria-pressed="false">FT4</button>
+        <button class="btn" type="button" data-mode="FT2" aria-pressed="false" title="FT2 de Decodium (IU8LMC) : périodes de 3,75 s">FT2</button>
       </div>
       <select id="dgDial" aria-label="Fréquence d'appel"></select>
       <button class="btn" type="button" id="dgQsy" title="Met le VFO A sur la fréquence choisie, en DATA-U">QSY</button>
@@ -332,7 +338,7 @@
     // JT65 utilise la même fenêtre que FT8 / FT4 (cascade, activité de bande, fréquence RX, split)
     let pane = detached && MODE_TABS.indexOf(t) >= 0 ? 'away' : t === 'jt65' ? 'ftx' : t;
     if (pane === 'ftx') {
-      const want = t === 'jt65' ? 'JT65' : (store.get('ftmode', 'FT8') === 'FT4' ? 'FT4' : 'FT8');
+      const want = t === 'jt65' ? 'JT65' : ftStored();
       if (mode !== want) { mode = want; modeChanged(); if (api && t === 'jt65' && api.iControl()) setTimeout(autoQsy, 0); }
       const seg = $('dgModes');
       if (seg) seg.style.display = t === 'jt65' ? 'none' : ''; // JT65 : pas de choix FT8 / FT4
@@ -458,7 +464,7 @@
     if (tab === 'cw') return drawCwMarks(c, w);
     if (tab === 'sstv') return drawSstvMarks(c, w);
     // Largeur d'un signal FT8 (50 Hz) / FT4 (83 Hz) / JT65 (178 Hz) / JTTY (127 Hz, centré) : TX en rouge, RX en vert
-    const bw = tab === 'jtty' ? 127 : mode === 'FT4' ? 83 : mode === 'JT65' ? 178 : 50;
+    const bw = tab === 'jtty' ? 127 : mode === 'FT4' ? 83 : mode === 'FT2' ? 167 : mode === 'JT65' ? 178 : 50;
     const mark = (f, y, h, fill, edge) => {
       const x0 = (f / WF_MAX_HZ) * w;
       const x1 = ((f + bw) / WF_MAX_HZ) * w;
@@ -1577,7 +1583,8 @@
   // ------------------------------------------------------------------ listes de messages
   const hist = []; // { slot, mode, list }
   const pad = (n) => String(n).padStart(2, '0');
-  const utc = (ms) => { const d = new Date(ms); return pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()); };
+  // FT2 : périodes de 3,75 s (…:18,75) → dixième de seconde affiché
+  const utc = (ms) => { const d = new Date(ms); return pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + (ms % 1000 ? '.' + Math.floor((ms % 1000) / 100) : ''); };
   const callsIn = (msg) => msg.toUpperCase().split(/\s+/).map((w) => w.replace(/^<|>$/g, ''));
   function cls(msg) {
     const w = callsIn(msg);
@@ -1604,7 +1611,7 @@
     const s = document.createElement('div');
     s.className = 'dg-sep';
     const d = new Date(slot);
-    s.textContent = '— ' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' UTC · ' + m + ' —';
+    s.textContent = '— ' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + (slot % 1000 ? '.' + Math.floor((slot % 1000) / 100) : '') + ' UTC · ' + m + ' —';
     return s;
   }
   function stickToBottom(el, fn) {
@@ -1717,7 +1724,7 @@
     if (!st || !st.station) { txt = 'Station hors ligne'; warn = true; }
     else if (!st.audio || !st.audio.active) { txt = 'La page Station n’envoie pas la BF : « Activer l’audio » sur le PC du club'; warn = true; }
     else if (tab === 'rtty') txt = 'BF reçue';
-    else if (!lastDecode || Date.now() - lastDecode > (mode === 'JT65' ? 130000 : mode === 'FT8' ? 40000 : 20000)) txt = 'BF reçue · décodage au prochain cycle' + (mode === 'JT65' ? ' (vers la 52e seconde de chaque minute)' : '') + '…';
+    else if (!lastDecode || Date.now() - lastDecode > (mode === 'JT65' ? 130000 : mode === 'FT8' ? 40000 : mode === 'FT2' ? 10000 : 20000)) txt = 'BF reçue · décodage au prochain cycle' + (mode === 'JT65' ? ' (vers la 52e seconde de chaque minute)' : '') + '…';
     else txt = 'BF reçue · décodage OK' + (st.digi && st.digi.latency != null ? ' · délai ' + st.digi.latency + ' ms' : '');
     if (st && st.radio && st.radio.mode && !/DATA|USB|-D/i.test(st.radio.mode)) { txt += ' · mode ' + st.radio.mode + ' : passez en DATA-U'; warn = true; }
     el.textContent = txt;
@@ -1726,9 +1733,9 @@
   const now = () => Date.now() + clockOff; // heure du serveur
   function clock() {
     const d = new Date(now());
-    const L = mode === 'JT65' ? 60 : mode === 'FT8' ? 15 : 7.5;
+    const L = mode === 'JT65' ? 60 : mode === 'FT8' ? 15 : mode === 'FT2' ? 3.75 : 7.5;
     const s = (d.getTime() / 1000) % L;
-    $('dgClock').textContent = pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' UTC · ' + (L - s).toFixed(0).padStart(2, ' ') + ' s';
+    $('dgClock').textContent = pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' UTC · ' + (L - s).toFixed(L < 5 ? 1 : 0).padStart(2, ' ') + ' s';
   }
 
   // ------------------------------------------------------------------ synchro
@@ -1899,7 +1906,7 @@
         lastDecode = Date.now();
         const it = { slot: m.slot, mode: m.mode, list: m.list || [] };
         hist.push(it);
-        while (hist.length > 120) hist.shift();
+        while (hist.length > 240) hist.shift();
         if (m.mode === mode) addSlot(it, false);
         return true;
       }

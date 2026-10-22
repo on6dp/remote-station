@@ -13,7 +13,7 @@
 - [7. Opérateurs et discussion](#operateurs)
 - [8. Disposition et fenêtres séparées](#disposition)
 - [9. Modes numériques](#numeriques)
-   - [9.1 FT8 · FT4](#ft8)
+   - [9.1 FT8 · FT4 · FT2](#ft8)
    - [9.2 JT65](#jt65)
    - [9.3 RTTY](#rtty)
    - [9.4 WSPR](#wspr)
@@ -153,9 +153,10 @@ Les onglets du centre : **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT6
 - L'émission des modes numériques (sous l'indicatif **ON5VL**) arrive dans une prochaine version *(bientôt)* : les boutons « Émettre » sont grisés, mais les messages et macros se préparent déjà.
 
 <a id="ft8"></a>
-### 9.1 FT8 · FT4
+### 9.1 FT8 · FT4 · FT2
 
-- Boutons `FT8` / `FT4` : le TRX va sur la fréquence d'appel de ce mode dans sa bande.
+- Boutons `FT8` / `FT4` / `FT2` : le TRX va sur la fréquence d'appel de ce mode dans sa bande.
+- **FT2** : le mode rapide de Decodium (IU8LMC) — périodes de 3,75 s, signal de 2,5 s et 167 Hz de large (fréquences : liste de Decodium, ex. 14 084 kHz). Les stations qui émettent « en asynchrone » (à tout moment) sont aussi décodées ; l'heure affichée est alors celle de la période où le signal commence (DT plus grand). Le FT2 de « WSJT-X Improved » est un autre mode, incompatible.
 - **Activité de bande** : tous les messages décodés (CQ en vert, messages pour ON5VL / OR0L en rouge) ; **Fréquence RX** : ceux de votre fréquence.
 - **Split** comme dans WSJT-X : **clic gauche** sur la cascade ou une ligne = fréquence de réception, **clic droit** = fréquence d'émission ; boutons « TX ← RX » et « RX ← TX ».
 - **Double-clic** sur un message : son émetteur devient le correspondant (indicatif, locator, report) et les messages Tx1 à Tx6 se préparent.

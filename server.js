@@ -232,8 +232,8 @@ function relayAudio(buf) {
 
 // ---------------------------------------------------------------- modes numériques (FT8 / FT4)
 // Le décodage tourne dans un Worker (lib/digi-worker.js) dès qu'un membre ouvre la fenêtre FT8/FT4.
-const digi = { worker: null, hist: { FT8: [], FT4: [], WSPR: [], JT65: [] }, latency: null, ms: 0, last: 0, dial: 0, jtty: new Map() };
-const DIGI_MODES = ['FT8', 'FT4', 'RTTY', 'WSPR', 'JT65', 'JTTY', 'CW', 'SSTV'];
+const digi = { worker: null, hist: { FT8: [], FT4: [], FT2: [], WSPR: [], JT65: [] }, latency: null, ms: 0, last: 0, dial: 0, jtty: new Map() };
+const DIGI_MODES = ['FT8', 'FT4', 'FT2', 'RTTY', 'WSPR', 'JT65', 'JTTY', 'CW', 'SSTV'];
 // Images SSTV reçues (mémoire + dossier sstv/)
 const { SstvStore } = require('./lib/sstv-store.js');
 const sstvStore = new SstvStore(path.join(ROOT, 'sstv'), (m) => console.error(m));
@@ -344,7 +344,7 @@ function onDigi(m) {
     const h = digi.hist[m.mode];
     if (!h) return;
     h.push(item);
-    while (h.length > 40) h.shift();
+    while (h.length > (m.mode === 'FT2' ? 120 : 40)) h.shift();
     digi.latency = m.latency;
     digi.ms = m.ms;
     digi.last = Date.now();

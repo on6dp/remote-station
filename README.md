@@ -263,6 +263,7 @@ Automatique : main libérée après 15 min sans action, déconnexion après 15 m
 | `native/wspr/` | Sources de wsprd (WSJT-X, GPL v3) et script de compilation de `lib/wsprd.wasm` |
 | `public/js/digi.js` | Onglets du centre : FT8 · FT4, RTTY, WSPR, JT65, JTTY, CW, SSTV, Synchro |
 | `public/js/sstv.js` | Modes SSTV et codeur (image → signal), communs au serveur et au navigateur |
+| `public/js/ftxenc.js`, `public/js/ftx-enc.wasm`, `native/ftx/ftx_enc.c` | Codeur FT8 / FT4 / FT2 (ft8_lib, MIT) pour l'émission |
 | `lib/logbook.js`, `lib/logsync.js`, `public/js/logbook.js` | Carnet de trafic, exports ADIF / Cabrillo, envois LoTW (TQSL), eQSL, Club Log, QRZ.com et UDP (WSJT-X, N1MM, ADIF) ; onglet « Logs online » |
 | `public/index.html`, `public/js/app.js`, `public/css/` | Page des membres |
 | `public/station.html`, `public/js/station.js`, `public/js/station-core.js` | Page Station (Web Serial) |

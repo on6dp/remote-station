@@ -2,7 +2,9 @@
  * ftx_wasm.c — interface WebAssembly du décodeur FT8 / FT4 (ft8_lib de Kārlis Goba, licence MIT)
  * pour le serveur Remote Station. Compilé en lib/ftx.wasm par native/ftx/build.sh.
  *
- * Deux décodeurs (FT8 = 0, FT4 = 1) et un « moniteur d'affichage » qui produit les lignes de la cascade.
+ * Trois décodeurs (FT8 = 0, FT4 = 1, FT2 = 3) et un « moniteur d'affichage » (2) qui produit les lignes de la cascade.
+ * FT2 (Decodium, IU8LMC) est le signal FT4 à vitesse double (288 échantillons par symbole à 12 kHz, période 3,75 s) :
+ * il est décodé par le décodeur FT4 en lui annonçant 6 kHz au lieu de 12 kHz (fréquences et temps remis à l'échelle).
  * Les échantillons sont des float (-1..1) à 12 kHz, déposés dans ftx_buf() avant chaque appel.
  */
 #include <stdlib.h>
@@ -64,8 +66,10 @@ static bool ht_lookup(ftx_callsign_hash_type_t type, uint32_t hash, char* call)
 static ftx_callsign_hash_interface_t hash_if = { .lookup_hash = ht_lookup, .save_hash = ht_add };
 
 /* ------------------------------------------------------------------ moniteurs */
-static monitor_t mon[3];      /* 0 = FT8, 1 = FT4, 2 = cascade (affichage) */
-static bool mon_ok[3];
+static monitor_t mon[4];      /* 0 = FT8, 1 = FT4, 2 = cascade (affichage), 3 = FT2 */
+static bool mon_ok[4];
+/* Échelle de temps réelle : FT2 = FT4 deux fois plus rapide */
+#define TSCALE(h) ((h) == 3 ? 0.5f : 1.0f)
 static float buf[4096];
 static char out[MAX_DEC * 64];
 
@@ -76,12 +80,12 @@ static void init_mon(int h)
 {
     if (mon_ok[h]) return;
     monitor_config_t cfg = {
-        .f_min = h == 2 ? 0 : 100,
-        .f_max = h == 2 ? 3200 : 3100,
-        .sample_rate = SAMPLE_RATE,
+        .f_min = h == 2 ? 0 : h == 3 ? 50 : 100,
+        .f_max = h == 2 ? 3200 : h == 3 ? 1550 : 3100,
+        .sample_rate = h == 3 ? SAMPLE_RATE / 2 : SAMPLE_RATE,
         .time_osr = h == 2 ? 1 : 2,
         .freq_osr = h == 2 ? 1 : 2,
-        .protocol = h == 1 ? FTX_PROTOCOL_FT4 : FTX_PROTOCOL_FT8
+        .protocol = (h == 1 || h == 3) ? FTX_PROTOCOL_FT4 : FTX_PROTOCOL_FT8
     };
     monitor_init(&mon[h], &cfg);
     mon_ok[h] = true;
@@ -114,12 +118,15 @@ EXPORT(ftx_wf_row) int ftx_wf_row(void)
 EXPORT(ftx_wf_f0) float ftx_wf_f0(void) { init_mon(2); return mon[2].min_bin / mon[2].symbol_period; }
 
 /**
- * Décode la période accumulée par ftx_process (h = 0 FT8, 1 FT4).
+ * Décode la période accumulée par ftx_process (h = 0 FT8, 1 FT4, 3 FT2).
  * Résultat dans out : une ligne par message « score;temps_s;freq_hz;texte\n ». Renvoie le nombre de messages.
  */
+extern int ftx_t_min, ftx_t_max;   /* plage de départ cherchée, en symboles (ft8/decode.c retouché par build.sh) */
 EXPORT(ftx_decode) int ftx_decode(int h)
 {
     init_mon(h);
+    /* FT2 : le signal (105 symboles) peut partir n'importe où dans la fenêtre de 156 symboles */
+    if (h == 3) { ftx_t_min = -12; ftx_t_max = 60; } else { ftx_t_min = -10; ftx_t_max = 20; }
     const monitor_t* m = &mon[h];
     const ftx_waterfall_t* wf = &m->wf;
     static ftx_candidate_t cand[MAX_CAND];
@@ -148,8 +155,8 @@ EXPORT(ftx_decode) int ftx_decode(int h)
         char text[FTX_MAX_MESSAGE_LENGTH];
         ftx_message_offsets_t offs;
         if (ftx_message_decode(&msg, &hash_if, text, &offs) != FTX_MESSAGE_RC_OK) continue;
-        float f = (m->min_bin + c->freq_offset + (float)c->freq_sub / wf->freq_osr) / m->symbol_period;
-        float t = (c->time_offset + (float)c->time_sub / wf->time_osr) * m->symbol_period;
+        float f = (m->min_bin + c->freq_offset + (float)c->freq_sub / wf->freq_osr) / (m->symbol_period * TSCALE(h));
+        float t = (c->time_offset + (float)c->time_sub / wf->time_osr) * m->symbol_period * TSCALE(h);
         int room = (int)(sizeof(out) - (p - out));
         int w = snprintf(p, room, "%d;%.2f;%.1f;%s\n", c->score, t, f, text);
         if (w <= 0 || w >= room) break;

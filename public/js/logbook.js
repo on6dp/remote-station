@@ -14,8 +14,8 @@
   const SV = ['lotw', 'eqsl', 'clublog', 'qrz'];
   const NAMES = { lotw: 'LoTW', eqsl: 'eQSL', clublog: 'Club Log', qrz: 'QRZ.com' };
   const SHORT = { lotw: 'LoTW', eqsl: 'eQSL', clublog: 'CL', qrz: 'QRZ' };
-  const MODES = ['SSB', 'USB', 'LSB', 'CW', 'AM', 'FM', 'RTTY', 'FT8', 'FT4', 'JT65', 'JTTY', 'SSTV', 'PSK31', 'WSPR', 'C4FM', 'DATA'];
-  const DIGI = ['FT8', 'FT4', 'JT65', 'JTTY', 'WSPR'];
+  const MODES = ['SSB', 'USB', 'LSB', 'CW', 'AM', 'FM', 'RTTY', 'FT8', 'FT4', 'FT2', 'JT65', 'JTTY', 'SSTV', 'PSK31', 'WSPR', 'C4FM', 'DATA'];
+  const DIGI = ['FT8', 'FT4', 'FT2', 'JT65', 'JTTY', 'WSPR'];
   const PHONE = ['SSB', 'USB', 'LSB', 'AM', 'FM', 'C4FM'];
   const CONTESTS = ['DX', 'UBA-DX-CW', 'UBA-DX-SSB', 'UBA-SPRING-CW', 'UBA-SPRING-SSB', 'ON-CONTEST', 'IARU-HF', 'CQ-WW-CW', 'CQ-WW-SSB', 'CQ-WPX-CW',
     'CQ-WPX-SSB', 'ARRL-DX-CW', 'ARRL-DX-SSB', 'WAE-CW', 'WAE-SSB', 'EU-HF', 'IARU-VHF', 'IARU-UHF'];

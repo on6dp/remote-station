@@ -27,7 +27,7 @@
   <a href="#operators">7. Operators and chat</a>
   <a href="#layout">8. Layout and separate windows</a>
   <a href="#digital">9. Digital modes</a>
-  <a href="#ft8">9.1 FT8 · FT4</a>
+  <a href="#ft8">9.1 FT8 · FT4 · FT2</a>
   <a href="#jt65">9.2 JT65</a>
   <a href="#rtty">9.3 RTTY</a>
   <a href="#wspr">9.4 WSPR</a>
@@ -160,9 +160,12 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
   <li>Transmitting in the digital modes (as <b>ON5VL</b>) comes in a future version <span class="later">soon</span>: the « Émettre » (transmit) buttons are greyed out, but messages and macros can already be prepared.</li>
 </ul>
 
-<h3 id="ft8">9.1 FT8 · FT4</h3>
+<h3 id="ft8">9.1 FT8 · FT4 · FT2</h3>
 <ul>
-  <li><span class="k">FT8</span> / <span class="k">FT4</span> buttons: the transceiver goes to that mode's calling frequency on its band.</li>
+  <li><span class="k">FT8</span> / <span class="k">FT4</span> / <span class="k">FT2</span> buttons: the transceiver goes to that mode's calling frequency on its band.</li>
+  <li><b>FT2</b>: the fast mode of Decodium (IU8LMC) — 3.75 s periods, 2.5 s signal, 167 Hz wide (frequencies: Decodium's list, e.g. 14084 kHz).
+    Stations transmitting « asynchronously » (at any time) are decoded too; the time shown is then that of the period in which the signal starts (larger DT).
+    The FT2 of « WSJT-X Improved » is a different, incompatible mode.</li>
   <li><b>Activité de bande</b> (band activity): all decoded messages (CQ in <span class="grn">green</span>, messages for ON5VL / OR0L in <span class="red">red</span>); <b>Fréquence RX</b>: those on your frequency.</li>
   <li><b>Split</b> as in WSJT-X: <b>left click</b> on the waterfall or a line = <span class="grn">receive</span> frequency, <b>right click</b> = <span class="red">transmit</span> frequency; « TX ← RX » and « RX ← TX » buttons.</li>
   <li><b>Double-click</b> a message: its sender becomes the contact (callsign, locator, report) and messages Tx1 to Tx6 are prepared.</li>

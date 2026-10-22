@@ -27,7 +27,7 @@
   <a href="#operateurs">7. Opérateurs et discussion</a>
   <a href="#disposition">8. Disposition et fenêtres séparées</a>
   <a href="#numeriques">9. Modes numériques</a>
-  <a href="#ft8">9.1 FT8 · FT4</a>
+  <a href="#ft8">9.1 FT8 · FT4 · FT2</a>
   <a href="#jt65">9.2 JT65</a>
   <a href="#rtty">9.3 RTTY</a>
   <a href="#wspr">9.4 WSPR</a>
@@ -161,9 +161,12 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
   <li>L'émission des modes numériques (sous l'indicatif <b>ON5VL</b>) arrive dans une prochaine version <span class="later">bientôt</span> : les boutons « Émettre » sont grisés, mais les messages et macros se préparent déjà.</li>
 </ul>
 
-<h3 id="ft8">9.1 FT8 · FT4</h3>
+<h3 id="ft8">9.1 FT8 · FT4 · FT2</h3>
 <ul>
-  <li>Boutons <span class="k">FT8</span> / <span class="k">FT4</span> : le TRX va sur la fréquence d'appel de ce mode dans sa bande.</li>
+  <li>Boutons <span class="k">FT8</span> / <span class="k">FT4</span> / <span class="k">FT2</span> : le TRX va sur la fréquence d'appel de ce mode dans sa bande.</li>
+  <li><b>FT2</b> : le mode rapide de Decodium (IU8LMC) — périodes de 3,75 s, signal de 2,5 s et 167 Hz de large (fréquences : liste de Decodium, ex. 14 084 kHz).
+    Les stations qui émettent « en asynchrone » (à tout moment) sont aussi décodées ; l'heure affichée est alors celle de la période où le signal commence (DT plus grand).
+    Le FT2 de « WSJT-X Improved » est un autre mode, incompatible.</li>
   <li><b>Activité de bande</b> : tous les messages décodés (CQ en <span class="grn">vert</span>, messages pour ON5VL / OR0L en <span class="red">rouge</span>) ; <b>Fréquence RX</b> : ceux de votre fréquence.</li>
   <li><b>Split</b> comme dans WSJT-X : <b>clic gauche</b> sur la cascade ou une ligne = fréquence de <span class="grn">réception</span>, <b>clic droit</b> = fréquence d'<span class="red">émission</span> ; boutons « TX ← RX » et « RX ← TX ».</li>
   <li><b>Double-clic</b> sur un message : son émetteur devient le correspondant (indicatif, locator, report) et les messages Tx1 à Tx6 se préparent.</li>
