@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.18.3** — Largeur des colonnes : colonne de gauche un peu plus large, colonnes de droite plus étroites.
 - **0.18.2** — Fréquence des VFO ajustée automatiquement à la place disponible (plus de chevauchement avec « VFO A / DATA-U » en Verdana, 9 chiffres en 70 cm) ; colonnes latérales et colonne centrale des VFO plus étroites, écrans VFO plus larges.
 - **0.18.1** — Police du dashboard : **Verdana** (équivalent libre DejaVu Sans hors Windows) pour les fréquences et toutes les inscriptions ; le 0 et le 8 se distinguent bien. IBM Plex Mono retirée.
 - **0.18.0** — **SPLIT selon la règle des TRX (FTX-1)** : sans SPLIT on émet sur le VFO où l'on écoute (MAIN → A, SUB → B) ; avec SPLIT sur l'autre (RX A → TX B, RX B → TX A). Les voyants TX / RX, l'affichage, le PTT et l'émission FT8 / FT4 / FT2 suivent ; clic sur TX d'un VFO = SPLIT si on écoute sur l'autre.
