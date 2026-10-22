@@ -6,7 +6,6 @@ taken verbatim from the name tables of the vendored files.
 
 | Family | Files | Copyright / Reserved Font Name | Source |
 |---|---|---|---|
-| IBM Plex Mono | `IBMPlexMono-*.woff2` (Regular, Medium, SemiBold, Bold) | Copyright © 2017 IBM Corp. with Reserved Font Name "Plex" — texte complet dans `IBMPlexMono-OFL.txt` | https://github.com/IBM/plex (`packages/plex-mono/fonts/complete/woff2`), copié le 2026-10-22 |
 | Roboto Mono | `roboto-mono-*.woff2` | Copyright 2015 The Roboto Mono Project Authors (https://github.com/googlefonts/robotomono) | Google Fonts css2 API, `robotomono/v31` (variable-font subset files) |
 | Orbitron | `orbitron-latin.woff2` | Copyright 2018 The Orbitron Project Authors (https://github.com/theleagueof/orbitron), Reserved Font Name "Orbitron" | Google Fonts css2 API, `orbitron/v35` |
 | Share Tech Mono | `share-tech-mono-latin.woff2` | Copyright (c) 2012, Carrois Type Design, Ralph du Carrois, Reserved Font Name "Share" | Google Fonts css2 API, `sharetechmono/v16` |

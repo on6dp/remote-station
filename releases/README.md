@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.18.1 | [RemoteStation-Setup-0.18.1.exe](0.18.1/RemoteStation-Setup-0.18.1.exe) | [remote-station-0.18.1.tar.gz](0.18.1/remote-station-0.18.1.tar.gz) | Police Verdana — [empreintes SHA-256](0.18.1/SHA256SUMS.txt) |
 | 0.18.0 | [RemoteStation-Setup-0.18.0.exe](0.18.0/RemoteStation-Setup-0.18.0.exe) | [remote-station-0.18.0.tar.gz](0.18.0/remote-station-0.18.0.tar.gz) | SPLIT selon la règle des TRX, police IBM Plex Mono — [empreintes SHA-256](0.18.0/SHA256SUMS.txt) |
 | 0.17.6 | [RemoteStation-Setup-0.17.6.exe](0.17.6/RemoteStation-Setup-0.17.6.exe) | [remote-station-0.17.6.tar.gz](0.17.6/remote-station-0.17.6.tar.gz) | Passage en émission vérifié (TX1 renvoyé si perdu) — [empreintes SHA-256](0.17.6/SHA256SUMS.txt) |
 | 0.17.5 | [RemoteStation-Setup-0.17.5.exe](0.17.5/RemoteStation-Setup-0.17.5.exe) | [remote-station-0.17.5.tar.gz](0.17.5/remote-station-0.17.5.tar.gz) | FTX-1 : retour sur MAIN sans émission — [empreintes SHA-256](0.17.5/SHA256SUMS.txt) |

@@ -19,39 +19,11 @@
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-/* IBM Plex Mono (SIL OFL 1.1) : zéro barré d'un point, bien distinct du 8 même en petit (voir fonts/LICENSES.md) */
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('../fonts/IBMPlexMono-Regular.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('../fonts/IBMPlexMono-Medium.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('../fonts/IBMPlexMono-SemiBold.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('../fonts/IBMPlexMono-Bold.woff2') format('woff2');
-}
 
 :root {
   color-scheme: dark;
-  --mono: 'IBM Plex Mono', 'Roboto Mono', ui-monospace, monospace;
+  /* Verdana (Windows) : 0 et 8 bien distincts même en petit ; DejaVu Sans en est l'équivalent libre (Linux) */
+  --mono: Verdana, 'DejaVu Sans', 'Bitstream Vera Sans', Arial, sans-serif;
   --main: var(--v2-receiver-main-accent);
   --sub: var(--v2-receiver-sub-accent);
   --btn-h: 30px;

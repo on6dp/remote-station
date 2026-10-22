@@ -66,7 +66,7 @@
   --v2-text-subtle: #7b8da1;
 
   /* ── Typography ──────────────────────────────────────────────────────────── */
-  --v2-font-mono: 'IBM Plex Mono', 'Roboto Mono', monospace;
+  --v2-font-mono: Verdana, 'DejaVu Sans', 'Bitstream Vera Sans', Arial, sans-serif;
   --v2-font-size-xs: 7px;
   --v2-font-size-sm: 9px;
   --v2-font-size-md: 11px;
@@ -294,7 +294,7 @@
   --v2-vfo-freq-glow-intensity: 1.0;  /* 0.0-2.0, multiplier for glow strength */
   
   /* VFO Font Customization (7-segment, digital, retro) */
-  --v2-vfo-font-family: 'IBM Plex Mono', 'Roboto Mono', monospace;  /* Default: monospace */
+  --v2-vfo-font-family: Verdana, 'DejaVu Sans', 'Bitstream Vera Sans', Arial, sans-serif;  /* Default: monospace */
   --v2-vfo-font-weight: 700;
   --v2-vfo-font-style: normal;
 }

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.18.1** — Police du dashboard : **Verdana** (équivalent libre DejaVu Sans hors Windows) pour les fréquences et toutes les inscriptions ; le 0 et le 8 se distinguent bien. IBM Plex Mono retirée.
 - **0.18.0** — **SPLIT selon la règle des TRX (FTX-1)** : sans SPLIT on émet sur le VFO où l'on écoute (MAIN → A, SUB → B) ; avec SPLIT sur l'autre (RX A → TX B, RX B → TX A). Les voyants TX / RX, l'affichage, le PTT et l'émission FT8 / FT4 / FT2 suivent ; clic sur TX d'un VFO = SPLIT si on écoute sur l'autre.
   - **Police plus lisible** : IBM Plex Mono (SIL OFL) avec zéro pointé, bien distinct du 8, sur tout le dashboard ; listes FT8 / FT4 / FT2 et lignes d'état en plus grand.
 - **0.17.6** — **Passage en émission vérifié** : après TX1, la page Station relit l'état du TRX ; s'il est resté en réception (commande perdue par la radio), TX1 est renvoyé jusqu'à 3 fois avant le départ du signal, sinon pas d'émission et message. FTX-1 : plus aucune commande FT / VS autour d'une émission sur MAIN quand le TRX y est déjà ; après une émission en SPLIT, FT / VS remis 150 ms après TX0.
