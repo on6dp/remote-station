@@ -2,6 +2,11 @@
 
 ## v0.15 — FT2
 
+- **0.16.0** — **Émission FT8 / FT4 / FT2.** Un clic sur un message Tx1 à Tx7 l'émet une fois au prochain créneau, puis retour automatique en réception.
+  - Le serveur choisit le créneau (heure du VPS) : période « auto » (opposée au correspondant choisi par double-clic) ou imposée (1re / 2e) ; bouton « ■ Arrêter ».
+  - La page Station code le message (ft8_lib en WebAssembly), met le TRX en émission juste avant le créneau (VFO B en SPLIT, confirmé par FT avant d'émettre) et joue le signal à l'heure du VPS sur la **sortie son vers le TRX** (nouveau réglage, avec niveau d'émission), même si l'horloge de Windows est décalée.
+  - Fin du signal → retour en réception ; mêmes sécurités que le PTT (main, licence, puissance, ROS, bande, chien de garde). Refus clair si le VFO d'émission n'est pas en DATA-U, si le message est incomplet ou si la page Station n'a pas de sortie son.
+  - Le message émis s'affiche en jaune dans les listes, comme dans WSJT-X.
 - **0.15.17** — FTX-1 : badge **BW** sur l'écran du VFO B (largeur de filtre du récepteur SUB, SH1). Mention « Émission » raccourcie sur les écrans étroits pour garder l'en-tête sur une ligne.
 - **0.15.16** — Mention **« Émission sur A »** ou **« Émission sur B »** dans l'en-tête du VFO d'émission (entre BW et MAIN / SUB). FTX-1 : **badges d'état du récepteur SUB** sur l'écran du VFO B (ATT, AMP, NB, DNR, NOTCH, DNF, NAR, AGC, RFG). **Préampli selon la bande** : IPO / AMP1 / AMP2 en HF et 50 MHz (PA0), bouton **AMP** ON / OFF en 144 et 430 MHz (PA1 / PA2) ; l'ancien badge affichait le réglage HF même en 70 cm.
 - **0.15.15** — **SPLIT du FTX-1 : émission vérifiée sur le bon VFO.** Avant d'émettre en SPLIT, la page Station envoie le VFO d'émission puis relit `FT;` : elle n'émet que si le TRX confirme SUB (essais `FT1;`, puis `FT3;`, puis `VS1;FT1;`, la façon acceptée est retenue). Sinon, pas d'émission et message clair. Chiffres rouges sur le VFO qui émet réellement (FT relu), émission coupée si le TRX émet plus d'1,5 s sur l'autre VFO, réception remise après l'émission sur le VFO d'avant le PTT.

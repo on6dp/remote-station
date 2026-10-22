@@ -516,7 +516,7 @@ let catAsk = null; // dernière lecture CAT demandée par un administrateur (ré
 let stationBounce = null; // rechargement à distance d'une ancienne page Station en cours
 const STATION_CODE = (() => {
   const h = crypto.createHash('sha256');
-  for (const f of ['station.html', 'js/station.js', 'js/station-core.js', 'js/yaesu.js', 'js/ftx1.js', 'js/ftdx10.js', 'js/ic7300.js', 'js/rigs-catalog.js', 'js/ulaw.js']) {
+  for (const f of ['station.html', 'js/station.js', 'js/station-core.js', 'js/yaesu.js', 'js/ftx1.js', 'js/ftdx10.js', 'js/ic7300.js', 'js/rigs-catalog.js', 'js/ulaw.js', 'js/ftxenc.js', 'js/ftx-enc.wasm']) {
     try { h.update(fs.readFileSync(path.join(PUB, f))); } catch (e) { h.update(f); }
   }
   return h.digest('hex').slice(0, 16);
@@ -732,7 +732,9 @@ function publicState() {
     controller: controller ? controller.user.call : null,
     controllerCid: controller ? controller.cid : null,
     users: calls.sort(),
-    ptt: { active: ptt.active, by: ptt.active ? ptt.conn.user.call : null, since: ptt.since },
+    ptt: { active: ptt.active, by: ptt.active ? ptt.conn.user.call : null, since: ptt.since, digi: !!(ptt.active && ptt.digi) },
+    // Émission FT8 / FT4 / FT2 programmée ou en cours
+    ftx: ftxPend ? { state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call } : null,
     txOk: inTxRange(txFreq()),
     txFreq: txFreq(),
     swrLock: swrLocked() ? { freq: swrLock.freq, swr: Math.round(swrLock.swr * 10) / 10 } : null,
@@ -766,10 +768,12 @@ function stopPtt(reason) {
   if (!ptt.active) return;
   const who = ptt.conn;
   const dur = Math.round((Date.now() - ptt.since) / 100) / 10;
+  const digiEnd = !!ptt.digi && reason === FTX_END;
+  if (ptt.digi && ftxPend && ftxPend.id === ptt.digi.id) { clearTimeout(ftxPend.timer); ftxPend = null; }
   ptt = { active: false, conn: null, since: 0, lastBeat: 0 };
   toStation({ t: 'cmd', op: 'ptt', on: false, reason });
   journal('tx_stop', { call: who.user.call, durationS: dur, reason, freq: txFreq() });
-  if (reason !== 'relâché') {
+  if (reason !== 'relâché' && !digiEnd) {
     // Coupure forcée : l'opérateur doit relâcher le PTT avant de pouvoir réémettre
     who.needRelease = true;
     send(who, { t: 'notice', level: 'warn', msg: 'Émission coupée : ' + reason, pttCut: true });
@@ -794,15 +798,103 @@ function startPtt(conn) {
   broadcast();
 }
 
+// ---------------------------------------------------------------- émission FT8 / FT4 / FT2
+// Clic sur un message (Tx1…Tx7) : le serveur choisit le créneau (heure du VPS, NTP), la page Station code le
+// message tout de suite, puis le serveur met le TRX en émission juste avant le début du créneau ; la page joue le
+// signal à l'heure dite et prévient à la fin → retour en réception. Une émission par clic.
+const FTX_SLOT = { FT8: 15000, FT4: 7500, FT2: 3750 };
+const FTX_T0 = 500; // début du signal après le début de la période (ms), comme WSJT-X
+const FTX_LATE = { FT8: 1500, FT4: 700, FT2: 250 }; // départ en retard encore accepté dans la période en cours
+const FTX_KEY_LEAD = 400; // passage en émission avant le début du signal (ms)
+const FTX_END = 'fin du message';
+let ftxPend = null; // { id, conn, mode, text, f0, at, state: 'wait' | 'tx', ready, seconds, sent, timer }
+let ftxSeq = 0;
+
+/** Prochain départ du signal : début de période + 0,5 s, parité imposée ou non, au plus tôt dans 0,9 s. */
+function ftxSlot(mode, parity, now) {
+  const P = FTX_SLOT[mode];
+  const earliest = now + 900;
+  for (let k = Math.floor(now / P); k < Math.floor(now / P) + 4; k++) {
+    if (parity != null && k % 2 !== parity) continue;
+    const nominal = k * P + FTX_T0;
+    if (earliest <= nominal) return { at: nominal, parity: k % 2 };
+    if (earliest - nominal <= FTX_LATE[mode]) return { at: earliest, parity: k % 2 };
+  }
+  return null;
+}
+
+function ftxCancel(reason, quiet) {
+  const p = ftxPend;
+  if (!p) return;
+  clearTimeout(p.timer);
+  ftxPend = null;
+  if (ptt.active && ptt.digi && ptt.digi.id === p.id) stopPtt(reason);
+  else if (!quiet) send(p.conn, { t: 'notice', level: 'warn', msg: 'Émission ' + p.mode + ' annulée : ' + reason });
+  broadcast();
+}
+
+function ftxRequest(conn, m) {
+  const err = (msg) => send(conn, { t: 'notice', level: 'error', msg });
+  const mode = String(m.mode || '');
+  if (!FTX_SLOT[mode]) return err('Mode numérique inconnu');
+  const text = String(m.text || '').toUpperCase().replace(/[^ -~]/g, '').replace(/\s+/g, ' ').trim().slice(0, 37);
+  if (!text || /[{}]/.test(text)) return err('Message incomplet : ' + (text || '(vide)') + ' — choisissez d’abord le correspondant');
+  const f0 = Math.round(Number(m.f0));
+  if (!(f0 >= 200 && f0 <= 2900)) return err('Fréquence d’émission audio hors plage (200 à 2900 Hz)');
+  if (!station || station.caps.indexOf('ftxtx') < 0) {
+    return err('La page Station du club ne sait pas encore émettre en ' + mode + ' (ancienne version) : ' +
+      (conn.user.admin ? 'rechargez-la (voyant STATION → « Recharger la page Station »).' : 'un administrateur doit la recharger.'));
+  }
+  if (ptt.active) return err('Émission déjà en cours : attendez la fin');
+  const why = txBlockReason(conn);
+  if (why && radio.power != null && radio.power > conn.user.maxWatts) limitPower(conn, 'avant émission');
+  if (why) return err('Émission refusée : ' + why);
+  const md = (radio.txVfo === 1 ? radio.modeB : radio.mode) || '';
+  if (!/DATA|USB|PKT|DIG/i.test(md)) return err('Mettez d’abord le VFO d’émission en DATA-U (mode actuel : ' + (md || '?') + ')');
+  const now = Date.now();
+  const slot = ftxSlot(mode, m.parity === 0 || m.parity === 1 ? m.parity : null, now);
+  if (!slot) return err('Aucun créneau trouvé');
+  if (ftxPend) ftxCancel('remplacée par le nouveau message', true);
+  const p = { id: ++ftxSeq, conn, mode, text, f0, at: slot.at, parity: slot.parity, state: 'wait', ready: false, seconds: 0, sent: null, timer: null };
+  ftxPend = p;
+  lastCtrlActivity = now;
+  toStation({ t: 'cmd', op: 'ftxprep', id: p.id, mode, text, f0 });
+  p.timer = setTimeout(() => ftxKey(p), Math.max(0, p.at - FTX_KEY_LEAD - now));
+  broadcast();
+}
+
+/** Juste avant le créneau : dernières vérifications puis passage en émission avec le signal préparé. */
+function ftxKey(p) {
+  if (ftxPend !== p) return;
+  if (!p.ready) return ftxCancel('la page Station n’a pas préparé le signal à temps');
+  if (controller !== p.conn) return ftxCancel('main perdue');
+  if (ptt.active) return ftxCancel('émission déjà en cours');
+  const why = txBlockReason(p.conn);
+  if (why) return ftxCancel(why);
+  const now = Date.now();
+  p.state = 'tx';
+  ptt = { active: true, conn: p.conn, since: now, lastBeat: now, digi: { id: p.id, mode: p.mode } };
+  lastCtrlActivity = now;
+  toStation({ t: 'cmd', op: 'ptt', on: true, by: p.conn.user.call, txVfo: rig().VIRTUAL_SPLIT && radio.hwSplit !== 1 ? txSel : undefined, digi: { id: p.id, at: p.at } });
+  toStation({ t: 'txka' });
+  journal('tx_start', { call: p.conn.user.call, ip: p.conn.ip, freq: txFreq(), mode: p.mode, text: p.sent || p.text, f0: p.f0, split: !!radio.split, watts: radio.power });
+  // Filet : fin du message non signalée par la page Station
+  p.timer = setTimeout(() => { if (ptt.active && ptt.digi && ptt.digi.id === p.id) stopPtt('fin du message non confirmée par la page Station'); },
+    Math.max(1000, p.at + p.seconds * 1000 + 2500 - Date.now()));
+  broadcast();
+}
+
 setInterval(() => {
   const now = Date.now();
   if (ptt.active) {
-    if (now - ptt.lastBeat > cfg.pttHeartbeatMs) stopPtt('perte de liaison avec l’opérateur');
+    if (!ptt.digi && now - ptt.lastBeat > cfg.pttHeartbeatMs) stopPtt('perte de liaison avec l’opérateur');
     else if (now - ptt.since > cfg.maxTxSeconds * 1000) stopPtt('durée maximale atteinte (' + cfg.maxTxSeconds + ' s)');
     else toStation({ t: 'txka' });
   }
+  // Émission numérique programmée : annulée si l'opérateur n'a plus la main ou si la station a disparu
+  if (ftxPend && ftxPend.state === 'wait' && (controller !== ftxPend.conn || !station)) ftxCancel(!station ? 'station hors ligne' : 'main perdue');
   // Aucune libération ni déconnexion pour inactivité tant que le TRX est en émission
-  if (ptt.active || radio.tx) return;
+  if (ptt.active || radio.tx || ftxPend) return;
   if (controller && now - lastCtrlActivity > cfg.controlIdleMinutes * 60000) {
     const c = controller;
     stopPtt('inactivité');
@@ -1244,6 +1336,14 @@ function onOperator(conn, m) {
       }
       return;
 
+    case 'ftx_tx':
+      return ftxRequest(conn, m);
+
+    case 'ftx_stop':
+      if (ftxPend && ftxPend.conn === conn) ftxCancel('arrêt demandé', true);
+      else if (ptt.active && ptt.digi && ptt.conn === conn) stopPtt('arrêt demandé');
+      return broadcast();
+
     case 'ping':
       return send(conn, { t: 'pong', ts: m.ts, now: Date.now() }); // now : horloge du serveur (onglet Synchro)
   }
@@ -1305,7 +1405,7 @@ function onStation(conn, m) {
   // Seule la station en service est écoutée (une ancienne connexion remplacée ne doit rien écraser)
   if (!station || station.conn !== conn) return;
   station.lastMsg = Date.now();
-  if (m.t === 'ping') return send(conn, { t: 'pong', ts: m.ts }); // contrôle de vie de la liaison
+  if (m.t === 'ping') return send(conn, { t: 'pong', ts: m.ts, now: Date.now() }); // contrôle de vie de la liaison (+ horloge du VPS)
   if (m.t === 'diag') {
     // Rapport de la page Station après une reconnexion : cause de la coupure vue côté club
     journal('station_diag', {
@@ -1315,6 +1415,19 @@ function onStation(conn, m) {
       down_s: Number.isFinite(m.down) ? m.down : null,
       tries: Number.isFinite(m.tries) ? m.tries : 0
     });
+    return;
+  }
+  if (m.t === 'ftx_ready') {
+    const p = ftxPend;
+    if (!p || p.id !== m.id) return;
+    if (!m.ok) return ftxCancel(String(m.err || 'message refusé par la page Station').slice(0, 160));
+    p.ready = true;
+    p.seconds = Number(m.seconds) || 0;
+    p.sent = String(m.text || p.text).slice(0, 40);
+    return broadcast();
+  }
+  if (m.t === 'ftx_done') {
+    if (ptt.active && ptt.digi && ptt.digi.id === m.id) stopPtt(FTX_END);
     return;
   }
   if (m.t === 'cat_reply') {

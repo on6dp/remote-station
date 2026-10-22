@@ -48,7 +48,14 @@
       <label>Entrée son
         <select id="audDev"><option value="">— autoriser d'abord l'accès au son —</option></select>
       </label>
+      <label>Sortie son vers le TRX (émission FT8 / FT4 / FT2)
+        <select id="audOut"><option value="">— autoriser d'abord l'accès au son —</option></select>
+      </label>
+      <label>Niveau d'émission <span id="audTxPct">30 %</span>
+        <input id="audTxLvl" type="range" min="1" max="100" step="1" value="30">
+      </label>
     </form>
+    <p class="st-audio-state" id="tAudioOut">Sortie vers le TRX : pas encore active</p>
     <div class="st-meter" aria-hidden="true"><i id="audLvl"></i></div>
     <p class="st-audio-state" id="tAudio">Audio arrêté</p>
     <div class="st-actions">
@@ -96,6 +103,7 @@
 <script src="/js/ftdx10.js"></script>
 <script src="/js/ic7300.js"></script>
 <script src="/js/ulaw.js"></script>
+<script src="/js/ftxenc.js"></script>
 <script>
   // Administrateur connecté (page réservée) ; la déconnexion demande confirmation car elle ferme la station
   fetch('/station/whoami', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((a) => {

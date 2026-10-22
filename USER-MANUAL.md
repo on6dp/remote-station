@@ -162,6 +162,9 @@ The centre tabs: **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT65**, **
 - **Activité de bande** (band activity): all decoded messages (CQ in green, messages for ON5VL / OR0L in red); **Fréquence RX**: those on your frequency.
 - **Split** as in WSJT-X: **left click** on the waterfall or a line = receive frequency, **right click** = transmit frequency; « TX ← RX » and « RX ← TX » buttons.
 - **Double-click** a message: its sender becomes the contact (callsign, locator, report) and messages Tx1 to Tx6 are prepared.
+- **Transmitting**: clicking a message **Tx1 to Tx7** (« Messages pré-enregistrés » panel, at the bottom) sends it **once**, in the next period of the tab's mode (FT8, FT4 or FT2), then the transceiver goes back to receive by itself. You need control, the TX VFO in **DATA-U** and power within your limit. The sent message shows in yellow in the lists; the line under the lists says when it goes out.
+- **Période**: « auto » transmits in the other period than the contact picked by double-click (Tx1 to Tx5), otherwise in the next period; « 1re » / « 2e » force it (1st = 00 and 30 s in FT8). `■ Arrêter` cancels the planned transmission or cuts the current one (releasing the space bar too).
+- Transmit frequency: the red TX marker on the waterfall (right click to move it). In **SPLIT**, the message goes out on VFO B, like the PTT.
 
 <a id="jt65"></a>
 ### 9.2 JT65
@@ -215,7 +218,7 @@ The FT8 · FT4, RTTY and CW lists offer « **QO-100 · FI 2 m / 70 cm** »: the 
 
 - **Messages pré-enregistrés** panel: contact (callsign, first name, QTH, locator, FT8 report, RST), then one row per mode: FT8 · FT4 (Tx1 to Tx7), RTTY, JTTY, CW.
 - Clicking a macro adds it to the text to send in its tab. **Right click** (or `✎`): edit it — name, text, preview, back to the default. Your macros are stored on the server, for you only.
-- Tx7: free FT8 / FT4 text, 13 characters.
+- FT8 · FT4 · FT2: **clicking Tx1 to Tx7 transmits the message** in the next period (see 9.1). Tx7: free text, 13 characters (right click to edit).
 
 | Tag | Replaced by | Tag | Replaced by |
 |---|---|---|---|
@@ -260,8 +263,9 @@ The Station page is **reserved for administrators**: the first time it is opened
 
 1. Paste the **station token** (given by the server administrator), choose the transceiver **model** and its **CAT port** (first time only).
 2. **Activer l'audio** (enable audio) and choose the transceiver's sound input (often « USB Audio CODEC »); the level bar must move.
-3. Keep the Station page **alone in its window**; open the dashboard with its « Ouvrir le dashboard dans une autre fenêtre » button.
-4. Chrome → Settings → Performance: always keep remote.op0p.be active; Windows: sleep set to Never.
+3. **Sortie son vers le TRX** (sound output to the transceiver, for FT8 / FT4 / FT2): the transceiver's USB sound card (« Speakers (USB Audio CODEC) »…), picked automatically when possible. Never the PC speakers. The transceiver must take DATA modulation from USB (transceiver menu). Set the **transmit level** so that ALC stays low. Transmissions start on the VPS clock, even if the Windows clock is off.
+4. Keep the Station page **alone in its window**; open the dashboard with its « Ouvrir le dashboard dans une autre fenêtre » button.
+5. Chrome → Settings → Performance: always keep remote.op0p.be active; Windows: sleep set to Never.
 
 Server installation and settings: see `LISEZMOI.md` and `README.md` (project repository).
 

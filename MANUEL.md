@@ -162,6 +162,9 @@ Les onglets du centre : **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT6
 - **Activité de bande** : tous les messages décodés (CQ en vert, messages pour ON5VL / OR0L en rouge) ; **Fréquence RX** : ceux de votre fréquence.
 - **Split** comme dans WSJT-X : **clic gauche** sur la cascade ou une ligne = fréquence de réception, **clic droit** = fréquence d'émission ; boutons « TX ← RX » et « RX ← TX ».
 - **Double-clic** sur un message : son émetteur devient le correspondant (indicatif, locator, report) et les messages Tx1 à Tx6 se préparent.
+- **Émettre** : un clic sur un message **Tx1 à Tx7** (cadre « Messages pré-enregistrés », en bas) l'émet **une fois**, au prochain créneau du mode de l'onglet (FT8, FT4 ou FT2), puis le TRX repasse tout seul en réception. Il faut avoir la main, le VFO d'émission en **DATA-U** et une puissance dans votre limite. Le message émis s'affiche en jaune dans les listes ; la ligne sous les listes dit quand il part.
+- **Période** : « auto » émet dans l'autre période que le correspondant choisi par double-clic (Tx1 à Tx5), sinon à la prochaine période ; « 1re » / « 2e » l'imposent (1re = 00 et 30 s en FT8). `■ Arrêter` annule l'émission prévue ou coupe celle en cours (relâcher la barre d'espace aussi).
+- Fréquence d'émission : le repère rouge TX de la cascade (clic droit pour le déplacer). En **SPLIT**, le message part sur le VFO B, comme le PTT.
 
 <a id="jt65"></a>
 ### 9.2 JT65
@@ -215,7 +218,7 @@ Les listes FT8 · FT4, RTTY et CW proposent « **QO-100 · FI 2 m / 70 cm** » :
 
 - Cadre **Messages pré-enregistrés** : correspondant (indicatif, prénom, QTH, locator, report FT8, RST), puis une ligne par mode : FT8 · FT4 (Tx1 à Tx7), RTTY, JTTY, CW.
 - Un clic sur une macro l'ajoute au texte à émettre de son onglet. **Clic droit** (ou `✎`) : la modifier — nom, texte, aperçu, retour au texte d'origine. Vos macros sont gardées sur le serveur, pour vous seul.
-- Tx7 : texte libre FT8 / FT4 de 13 caractères.
+- FT8 · FT4 · FT2 : **un clic sur Tx1 à Tx7 émet le message** au prochain créneau (voir 9.1). Tx7 : texte libre de 13 caractères (clic droit pour le modifier).
 
 | Balise | Remplacée par | Balise | Remplacée par |
 |---|---|---|---|
@@ -260,8 +263,9 @@ La page Station est **réservée aux administrateurs** : à la première ouvertu
 
 1. Coller le **jeton de station** (donné par l'administrateur du serveur), choisir le **modèle** du TRX et son **port CAT** (la première fois).
 2. **Activer l'audio** et choisir l'entrée son du TRX (souvent « USB Audio CODEC ») ; la barre de niveau doit bouger.
-3. Garder la page Station **seule dans sa fenêtre** ; ouvrir le dashboard avec son bouton « Ouvrir le dashboard dans une autre fenêtre ».
-4. Chrome → Paramètres → Performances : garder remote.op0p.be toujours actif ; Windows : mise en veille sur Jamais.
+3. **Sortie son vers le TRX** (émission FT8 / FT4 / FT2) : la carte son USB du TRX (« Haut-parleurs (USB Audio CODEC) »…), choisie toute seule si possible. Jamais les haut-parleurs du PC. Le TRX doit prendre la modulation DATA sur l'USB (menu du TRX). Régler le **niveau d'émission** pour que l'ALC reste faible. L'émission part à l'heure du VPS, même si l'horloge de Windows est décalée.
+4. Garder la page Station **seule dans sa fenêtre** ; ouvrir le dashboard avec son bouton « Ouvrir le dashboard dans une autre fenêtre ».
+5. Chrome → Paramètres → Performances : garder remote.op0p.be toujours actif ; Windows : mise en veille sur Jamais.
 
 Installation et réglages du serveur : voir `LISEZMOI.md` et `README.md` (dépôt du projet).
 

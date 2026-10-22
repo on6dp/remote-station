@@ -174,6 +174,12 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
   <li><b>Activité de bande</b> (band activity): all decoded messages (CQ in <span class="grn">green</span>, messages for ON5VL / OR0L in <span class="red">red</span>); <b>Fréquence RX</b>: those on your frequency.</li>
   <li><b>Split</b> as in WSJT-X: <b>left click</b> on the waterfall or a line = <span class="grn">receive</span> frequency, <b>right click</b> = <span class="red">transmit</span> frequency; « TX ← RX » and « RX ← TX » buttons.</li>
   <li><b>Double-click</b> a message: its sender becomes the contact (callsign, locator, report) and messages Tx1 to Tx6 are prepared.</li>
+  <li><b>Transmitting</b>: clicking a message <b>Tx1 to Tx7</b> (« Messages pré-enregistrés » panel, at the bottom) sends it <b>once</b>, in the next period of the tab's mode
+    (FT8, FT4 or FT2), then the transceiver goes back to receive by itself. You need control, the TX VFO in <b>DATA-U</b> and power within your limit.
+    The sent message shows in <span class="yel">yellow</span> in the lists; the line under the lists says when it goes out.</li>
+  <li><b>Période</b>: « auto » transmits in the other period than the contact picked by double-click (Tx1 to Tx5), otherwise in the next period;
+    « 1re » / « 2e » force it (1st = 00 and 30 s in FT8). <span class="k">■ Arrêter</span> cancels the planned transmission or cuts the current one (releasing the space bar too).</li>
+  <li>Transmit frequency: the <span class="red">red</span> TX marker on the waterfall (right click to move it). In <b>SPLIT</b>, the message goes out on VFO B, like the PTT.</li>
 </ul>
 <h3 id="jt65">9.2 JT65</h3>
 <p>Same window as FT8 (one-minute periods); the transceiver goes to the JT65 frequency of its band. Decodes arrive around second 52.</p>
@@ -216,7 +222,7 @@ Only the IFs the connected transceiver can reach are listed (2 m and 70 cm: FTX-
 <ul>
   <li><b>Messages pré-enregistrés</b> panel: contact (callsign, first name, QTH, locator, FT8 report, RST), then one row per mode: FT8 · FT4 (Tx1 to Tx7), RTTY, JTTY, CW.</li>
   <li>Clicking a macro adds it to the text to send in its tab. <b>Right click</b> (or <span class="k">✎</span>): edit it — name, text, preview, back to the default. Your macros are stored on the server, for you only.</li>
-  <li>Tx7: free FT8 / FT4 text, 13 characters.</li>
+  <li>FT8 · FT4 · FT2: <b>clicking Tx1 to Tx7 transmits the message</b> in the next period (see 9.1). Tx7: free text, 13 characters (right click to edit).</li>
 </ul>
 <table>
   <tr><th>Tag</th><th>Replaced by</th><th>Tag</th><th>Replaced by</th></tr>
@@ -261,6 +267,9 @@ click the <b>STATION</b> lamp at the top left → « ↻ Recharger la page Stati
 <ol>
   <li>Paste the <b>station token</b> (given by the server administrator), choose the transceiver <b>model</b> and its <b>CAT port</b> (first time only).</li>
   <li><b>Activer l'audio</b> (enable audio) and choose the transceiver's sound input (often « USB Audio CODEC »); the level bar must move.</li>
+  <li><b>Sortie son vers le TRX</b> (sound output to the transceiver, for FT8 / FT4 / FT2): the transceiver's USB sound card (« Speakers (USB Audio CODEC) »…), picked automatically when possible.
+    Never the PC speakers. The transceiver must take DATA modulation from USB (transceiver menu). Set the <b>transmit level</b> so that ALC stays low.
+    Transmissions start on the VPS clock, even if the Windows clock is off.</li>
   <li>Keep the Station page <b>alone in its window</b>; open the dashboard with its « Ouvrir le dashboard dans une autre fenêtre » button.</li>
   <li>Chrome → Settings → Performance: always keep remote.op0p.be active; Windows: sleep set to Never.</li>
 </ol>

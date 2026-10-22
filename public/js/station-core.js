@@ -29,6 +29,11 @@
       this.sendWs = o.sendWs;
       this.log = o.log || function () {};
       this.onRadio = o.onRadio || function () {};
+      // Émission des modes numériques : signal fabriqué et joué par la page (sortie son vers le TRX)
+      //   txAudio.prepare(id, mode, text, f0) → { ok, text, seconds, err } ; play(id, atLocalMs, onEnd) → bool ; stop()
+      this.txAudio = o.txAudio || null;
+      this.clockOffset = 0; // heure du VPS − heure de ce PC (ms), mesurée par la page
+      this.digiTx = null;
       this.pollMs = o.pollMs || this.rig.POLL_MS || 250;
       this.kaTimeoutMs = o.kaTimeoutMs || 2000;
       // Chien de garde d'émission (indépendant du serveur) : TRX en émission sans modulation pendant txSilenceMs,
@@ -77,6 +82,7 @@
 
     serialClosed() {
       this.serialOpen = false;
+      if (this.digiTx) { this.digiTx = null; if (this.txAudio) this.txAudio.stop(); }
       this.catKeyed = false;
       if (this.radio.connected) {
         this.radio.connected = false;
@@ -150,6 +156,9 @@
       }
     }
 
+    /** Écart d'horloge mesuré par la page : heure du VPS − heure de ce PC (ms). */
+    setClock(offsetMs) { if (Number.isFinite(offsetMs)) this.clockOffset = offsetMs; }
+
     /** Limites du chien de garde fixées par le serveur (en secondes). */
     setTxLimits(silenceS, hardMaxS) {
       if (silenceS > 0) this.txSilenceMs = silenceS * 1000;
@@ -168,6 +177,7 @@
       const dur = (ms) => (ms >= 120000 ? Math.round(ms / 60000) + ' min' : Math.round(ms / 1000) + ' s');
       const why = silent ? 'en émission depuis ' + dur(this.txSilenceMs) + ' sans modulation' : 'en émission continue depuis ' + dur(this.txHardMaxMs);
       this._write(this.rig.cmdPtt(false));
+      if (this.digiTx) { this.digiTx = null; if (this.txAudio) this.txAudio.stop(); }
       this.catKeyed = false;
       this.log('Sécurité : TRX ' + why + ' → retour en réception');
       if (this.wsUp) this.sendWs({ t: 'safety', reason: 'TRX ' + why + ' : retour en réception forcé' });
@@ -230,6 +240,18 @@
       if (m.t !== 'cmd') return;
       const FTX1 = this.rig;
       try {
+        if (m.op === 'ftxprep') {
+          // Message FT8 / FT4 / FT2 à émettre au prochain créneau : codé tout de suite, réponse au serveur
+          let r;
+          if (!this.txAudio) r = { ok: false, err: 'cette page Station ne sait pas émettre en numérique' };
+          else {
+            try { r = this.txAudio.prepare(m.id, m.mode, m.text, m.f0); } catch (e) { r = { ok: false, err: e.message }; }
+          }
+          this.sendWs(Object.assign({ t: 'ftx_ready', id: m.id }, r));
+          if (r.ok) this.log('Message ' + m.mode + ' prêt : « ' + r.text + ' » (' + r.seconds.toFixed(1).replace('.', ',') + ' s, ' + m.f0 + ' Hz)');
+          else this.log('Message ' + m.mode + ' refusé : ' + r.err, 'st-bad');
+          return;
+        }
         if (m.op === 'freq') {
           this._write(FTX1.cmdFreq(m.hz));
         } else if (m.op === 'freqB') {
@@ -265,6 +287,8 @@
             if (!this.serialOpen || !this.radio.connected) return this.log('PTT refusé : radio non connectée');
             this.catKeyed = true;
             this.lastKa = Date.now();
+            // Émission numérique : le signal préparé part à l'heure dite (heure du VPS ramenée à l'heure de ce PC)
+            this.digiTx = m.digi && m.digi.id ? { id: m.digi.id, at: Number(m.digi.at) - this.clockOffset, started: false } : null;
             // SPLIT virtuel (FTX-1) : VFO d'émission envoyé juste avant d'émettre, et relu (« FT; ») avant TX1 :
             // on n'émet jamais sur un VFO que le TRX n'a pas confirmé
             if (FTX1.txVfoTries && (m.txVfo === 0 || m.txVfo === 1)) {
@@ -278,6 +302,7 @@
             }
             this._write(FTX1.cmdPtt(true));
             this.log('TX ON (' + (m.by || '?') + ')');
+            this._startDigi();
           } else {
             this.unkey(m.reason || 'fin d’émission');
           }
@@ -297,6 +322,7 @@
       if (k >= order.length) {
         // Aucune façon n'a pris : pas d'émission, retour à l'état de réception
         const seen = this.ftSeen || 'aucune réponse';
+        if (this.digiTx) { this.digiTx = null; if (this.txAudio) this.txAudio.stop(); }
         this.catKeyed = false;
         this._write(rig.cmdPtt(false));
         this._restoreTxVfo();
@@ -333,7 +359,27 @@
       if ((this.txVfoOk || 0) !== w.i) this.log('Le TRX accepte « ' + w.cmd + ' » pour choisir le VFO d’émission : retenu');
       this.txVfoOk = w.i;
       this._write(this.rig.cmdPtt(true));
+      this._startDigi();
       this.log('TX ON (' + (w.by || '?') + ') — émission sur ' + (w.v ? 'SUB (VFO B)' : 'MAIN (VFO A)') + ', ' + this.ftSeen + ' confirmé par le TRX');
+    }
+
+    /** Émission numérique : lance le signal préparé une fois le TRX en émission ; fin du signal → message au serveur. */
+    _startDigi() {
+      const d = this.digiTx;
+      if (!d || d.started) return;
+      d.started = true;
+      const ok = this.txAudio && this.txAudio.play(d.id, d.at, () => {
+        if (this.digiTx !== d) return;
+        this.digiTx = null;
+        this.sendWs({ t: 'ftx_done', id: d.id });
+      });
+      if (!ok) {
+        this.digiTx = null;
+        const why = 'signal numérique introuvable ou sortie son vers le TRX indisponible';
+        this.unkey(why);
+        this.log('Sécurité : ' + why + ' → pas d’émission', 'st-bad');
+        if (this.wsUp) this.sendWs({ t: 'safety', reason: why });
+      }
     }
 
     /** Après une émission en SPLIT virtuel : émission et réception remises sur le VFO de réception. */
@@ -350,6 +396,7 @@
     unkey(reason) {
       const was = this.catKeyed;
       if (this.ftWait) { clearTimeout(this.ftWait.timer); this.ftWait = null; }
+      if (this.digiTx) { this.digiTx = null; if (this.txAudio) this.txAudio.stop(); }
       this.catKeyed = false;
       this._write(this.rig.cmdPtt(false));
       // SPLIT virtuel : émission et réception remises sur le VFO de réception

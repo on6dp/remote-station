@@ -111,6 +111,11 @@
         <button class="btn" type="button" id="dgRxTx" title="Recevoir sur la fréquence d'émission">RX ← TX</button>
         <span class="dg-f tx">TX <b id="dgTxF">1500</b> Hz</span>
       </span>
+      <span class="dg-f">Période</span>
+      <select id="dgPar" class="dg-par" aria-label="Période d'émission" title="Période d'émission. Auto : à l'opposé du correspondant choisi (double-clic sur son message), sinon la prochaine période. 1re = 00 / 30 s en FT8.">
+        <option value="auto">auto</option><option value="0">1re</option><option value="1">2e</option>
+      </select>
+      <button class="btn dg-stop" type="button" id="dgStop" disabled title="Annule l'émission prévue ou coupe l'émission en cours">■ Arrêter</button>
       <span class="dg-clock" id="dgClock">--:--:--</span>
       <span class="dg-status" id="dgStatus"></span>
     </div>
@@ -131,7 +136,7 @@
         <div class="dg-list" id="dgRx"></div>
       </div>
     </div>
-    <p class="dg-tx">Émission FT8 / FT4 sous l'indicatif <b>ON5VL</b> : prochaine étape (messages Tx1 à Tx6, séquence automatique).</p>`;
+    <p class="dg-tx" id="dgTxState">Émission : cliquez sur un message Tx1 à Tx7 (en bas de la page). Il part une fois, au prochain créneau, puis retour en réception.</p>`;
   const RTTY_PANE = `
     <div class="dg-bar">
       <select id="rtShift" aria-label="Shift"><option value="170">Shift 170 Hz</option><option value="200">Shift 200 Hz</option><option value="425">Shift 425 Hz</option><option value="850">Shift 850 Hz</option></select>
@@ -1384,7 +1389,11 @@
   }
   window.addEventListener('storage', (e) => { if (e.key === 'rs.dg.dx') { dx = loadDx(); syncDx(); } });
   // Double-clic sur un message FT8/FT4 : son émetteur devient le correspondant (comme dans WSJT-X)
-  function pickFromDecode(d) {
+  // Période du correspondant (parité du créneau de son message) : on émet dans l'autre période
+  let dxPar = null;
+  const SLOT_MS = { FT8: 15000, FT4: 7500, FT2: 3750 };
+  function pickFromDecode(d, slot) {
+    if (slot && SLOT_MS[mode]) dxPar = { mode, call: '', parity: Math.round(slot / SLOT_MS[mode]) % 2 };
     const w = d.msg.toUpperCase().split(/\s+/).map((x) => x.replace(/^<|>$/g, ''));
     let call = '';
     if (w[0] === 'CQ') call = CALL_RE.test(w[1] || '') ? w[1] : (w[2] || '');
@@ -1392,6 +1401,7 @@
     if (!CALL_RE.test(call)) return api && api.say('Pas d’indicatif à reprendre dans ce message.', 'warn');
     const last = w[w.length - 1];
     setDx({ call, grid: GRID_RE.test(last) && last !== 'RR73' ? last : '', rpt: fmtRpt(d.db) });
+    if (dxPar) dxPar.call = call;
     setRx(d.f);
     ftxSel = w[0] === 'CQ' ? 0 : 1;
     store.set('ftxsel', ftxSel);
@@ -1417,12 +1427,12 @@
     };
     const f = $('msgFtx');
     f.textContent = '';
-    ftxMsgs().forEach((t, i) => mk(f, 'Tx' + (i + 1), t, () => { ftxSel = i; store.set('ftxsel', i); drawMsgs(); }, i === ftxSel)
-      .title = 'Prochain message FT8/FT4 à émettre (émission : prochaine version)');
+    ftxMsgs().forEach((t, i) => mk(f, 'Tx' + (i + 1), t, () => ftxSend(i, t), i === ftxSel)
+      .title = 'Clic : émis une fois au prochain créneau (FT8 / FT4 / FT2 selon l’onglet), puis retour en réception');
     // Tx7 : texte libre de 13 caractères au plus (comme WSJT-X)
     const free = String(store.get('ftxfree', '')).toUpperCase();
-    const fb = mk(f, 'Tx7', free || 'texte libre…', () => { ftxSel = 6; store.set('ftxsel', 6); drawMsgs(); }, ftxSel === 6);
-    fb.title = 'Texte libre FT8/FT4 (13 caractères) · clic droit pour le modifier';
+    const fb = mk(f, 'Tx7', free || 'texte libre…', () => (free ? ftxSend(6, free) : editFree(f.ownerDocument)), ftxSel === 6);
+    fb.title = 'Texte libre FT8 / FT4 / FT2 (13 caractères) · clic : émission · clic droit : modifier';
     fb.addEventListener('contextmenu', (e) => { e.preventDefault(); editFree(fb.ownerDocument); });
     const ed = mk(f, '', '✎', () => editFree(f.ownerDocument));
     ed.title = 'Modifier le texte libre (Tx7)';
@@ -1440,6 +1450,44 @@
       inst.insertCw(t);
     });
   }
+  // ------------------------------------------------------------------ émission FT8 / FT4 / FT2
+  // Clic sur Tx1…Tx7 : le serveur choisit le créneau, la page Station du club fabrique et joue le signal
+  function ftxSend(i, text) {
+    ftxSel = i;
+    store.set('ftxsel', i);
+    drawMsgs();
+    if (!api) return;
+    if (/[{}]/.test(text)) return api.say('Message incomplet : choisissez d’abord le correspondant (double-clic sur son message) ou réglez votre locator.', 'warn');
+    const m = FT_MODES.indexOf(mode) >= 0 ? mode : ftStored();
+    const sel = $('dgPar') ? $('dgPar').value : store.get('ftxpar', 'auto');
+    let parity = sel === '0' ? 0 : sel === '1' ? 1 : null;
+    // Auto : réponse à un correspondant (Tx1 à Tx5) → l'autre période que la sienne
+    if (parity == null && i < 5 && dxPar && dxPar.mode === m && dxPar.call === dx.call) parity = 1 - dxPar.parity;
+    api.send({ t: 'ftx_tx', mode: m, text, f0: Math.round(Number(store.get('txf', String(txF))) || txF), parity });
+  }
+  let lastTxAt = 0;
+  function ftxState() {
+    const st = api && api.state();
+    const x = st && st.ftx;
+    const el = $('dgTxState');
+    if ($('dgStop')) $('dgStop').disabled = !(x || (st && st.ptt && st.ptt.digi));
+    if (el) {
+      const hm = (ms) => { const d = new Date(ms); return pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + (ms % 1000 >= 100 && ms % 1000 !== 500 ? '.' + Math.floor((ms % 1000) / 100) : ''); };
+      el.textContent = !x ? 'Émission : cliquez sur un message Tx1 à Tx7 (en bas de la page). Il part une fois, au prochain créneau, puis retour en réception.'
+        : x.state === 'tx' ? '● En émission ' + x.mode + ' (' + x.by + ') : « ' + x.text + ' » à ' + x.f0 + ' Hz'
+        : 'Émission ' + x.mode + ' prévue à ' + hm(x.at - 500) + ' UTC (' + x.by + ') : « ' + x.text + ' » à ' + x.f0 + ' Hz';
+      el.classList.toggle('on', !!x);
+      el.classList.toggle('air', !!(x && x.state === 'tx'));
+    }
+    // Message émis : ajouté aux listes comme dans WSJT-X
+    if (x && x.state === 'tx' && x.at !== lastTxAt) {
+      lastTxAt = x.at;
+      const it = { slot: Math.floor((x.at - 500) / 100) * 100, mode: x.mode, tx: true, list: [{ tx: true, db: 0, dt: 0, f: x.f0, msg: x.text }] };
+      hist.push(it);
+      if (x.mode === mode) addSlot(it, false);
+    }
+  }
+
   // Rangée de macros : clic = utiliser, clic droit = modifier, ✎ = modifier
   function drawMacroRow(box, mode, use) {
     if (!box) return;
@@ -1594,9 +1642,9 @@
   }
   function rowEl(slot, d) {
     const r = document.createElement('div');
-    r.className = 'dg-row ' + cls(d.msg);
-    r.title = d.f + ' Hz · clic gauche : réception ici · clic droit : émission ici · double-clic : répondre à cette station';
-    const cells = [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
+    r.className = 'dg-row ' + (d.tx ? 'tx' : cls(d.msg));
+    r.title = d.tx ? 'Message émis' : d.f + ' Hz · clic gauche : réception ici · clic droit : émission ici · double-clic : répondre à cette station';
+    const cells = d.tx ? [utc(slot), 'TX', '', d.f, d.msg] : [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
     for (const v of cells) {
       const s = document.createElement('span');
       s.textContent = String(v);
@@ -1604,7 +1652,7 @@
     }
     r.addEventListener('click', () => setRx(d.f));
     r.addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(d.f); });
-    r.addEventListener('dblclick', () => pickFromDecode(d));
+    r.addEventListener('dblclick', () => { if (!d.tx) pickFromDecode(d, slot); });
     return r;
   }
   function sepEl(slot, m) {
@@ -1623,7 +1671,7 @@
   function addSlot(item, quiet) {
     const band = $('dgBand');
     stickToBottom(band, () => {
-      if (item.list.length) band.appendChild(sepEl(item.slot, item.mode));
+      if (item.list.length && !item.tx) band.appendChild(sepEl(item.slot, item.mode));
       for (const d of item.list) band.appendChild(rowEl(item.slot, d));
     });
     const mine = item.list.filter(inRx);
@@ -1632,7 +1680,7 @@
       stickToBottom(rx, () => { for (const d of mine) rx.appendChild(rowEl(item.slot, d)); });
     }
   }
-  function inRx(d) { return Math.abs(d.f - rxF) <= RX_WIDTH || cls(d.msg) === 'me'; }
+  function inRx(d) { return d.tx || Math.abs(d.f - rxF) <= RX_WIDTH || cls(d.msg) === 'me'; }
   function redrawRx() {
     const rx = $('dgRx');
     rx.textContent = '';
@@ -1821,6 +1869,9 @@
         if (tab === 'jtty') insertJtty(m.text); else if (tab === 'cw') insertCw(m.text); else insertRtty(m.text);
       });
       $('dgTxRx').addEventListener('click', () => setTx(rxF));
+      $('dgPar').value = store.get('ftxpar', 'auto');
+      $('dgPar').addEventListener('change', () => store.set('ftxpar', $('dgPar').value));
+      $('dgStop').addEventListener('click', () => api && api.send({ t: 'ftx_stop' }));
       $('dgRxTx').addEventListener('click', () => setRx(txF));
       // Repli du panneau ou onglet du navigateur caché : le serveur arrête de décoder pour ce membre
       new MutationObserver(announce).observe($('centerPanel'), { attributes: true, attributeFilter: ['class'] });
@@ -1922,6 +1973,7 @@
       const R = api && api.rig && api.rig();
       if (R && R.ID !== lastRig) { lastRig = R.ID; refillQo(); }
       if (tab === 'ftx' || tab === 'jt65') { status(); followBand(); }
+      ftxState();
     }
   };
   // Le TRX a changé de bande : la liste des fréquences d'appel suit (vérifié aussi chaque demi-seconde)

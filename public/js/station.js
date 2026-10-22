@@ -75,6 +75,7 @@
 
   const core = new StationCore({
     rig: RIG,
+    txAudio: { prepare: (...a) => txPrepare(...a), play: (...a) => txPlay(...a), stop: () => txStop() },
     writeSerial(s) {
       if (sim) return sim.write(s);
       if (!writer) return;
@@ -84,7 +85,7 @@
     sendWs(o) {
       if (ws && ws.readyState === 1) ws.send(JSON.stringify(o));
     },
-    log: (m) => log(m, /TX ON/.test(m) ? 'st-warn' : /Sécurité|TX OFF —/.test(m) ? 'st-warn' : ''),
+    log: (m, cls) => log(m, cls || (/TX ON/.test(m) ? 'st-warn' : /Sécurité|TX OFF —/.test(m) ? 'st-warn' : '')),
     onRadio(r) {
       lamp('lTrx', r.connected ? (r.tx ? 'tx' : 'on') : (port || sim) ? 'warn' : null);
       $('tTrx').textContent = r.connected ? (sim ? 'Simulation active' : 'La radio répond') : (port || sim) ? 'Port ouvert, pas de réponse' : 'Aucun port choisi';
@@ -130,7 +131,7 @@
     setTimeout(closePrev, 10000);
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
     // caps : ce que sait faire cette version de la page (ftsplit : SPLIT du FTX-1 par FT0 / FT1, sans ST1)
-    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq'] }));
+    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq', 'ftxtx'] }));
     lastServerMsg = Date.now();
     ws.onmessage = (e) => {
       lastServerMsg = Date.now();
@@ -161,6 +162,9 @@
         }
         core.wsOpened();
         if (aud.ctx) ws.send(JSON.stringify({ t: 'audio_state', active: true }));
+        try { ws.send(JSON.stringify({ t: 'ping', ts: Date.now() })); } catch (e) {} // première mesure de l'horloge
+      } else if (m.t === 'pong') {
+        onPong(m);
       } else if (m.t === 'audio_want') {
         aud.want = !!m.on;
         drawAudio();
@@ -470,6 +474,7 @@
       const track = aud.stream.getAudioTracks()[0];
       await listInputs(track && track.getSettings().deviceId);
       if (track) store.set('audio.label', track.label);
+      if (!tx.ctx) listOutputs().then(() => startTxOut()).catch(() => {});
       // 12 kHz, PCM 16 bits : qualité nécessaire au décodage FT8 / FT4 / RTTY sur le serveur (trames de 40 ms)
       aud.ctx = new AudioContext({ sampleRate: ULAW.RATE_HQ });
       const url = URL.createObjectURL(new Blob([CAPTURE_WORKLET], { type: 'application/javascript' }));
@@ -531,6 +536,145 @@
     if (store.get('audio.on', '0') === '1') listInputs().catch(() => {}).then(startAudio);
   }
   drawAudio();
+
+  // ------------------------------------------------------------ horloge du VPS
+  // L'émission FT8 / FT4 / FT2 part à l'heure du VPS (synchronisé par NTP) : l'horloge de Windows peut être
+  // décalée de plusieurs secondes. Écart mesuré à chaque « pong » (aller-retour le plus court = mesure la plus fiable).
+  const clk = { best: Infinity, at: 0, off: null };
+  function onPong(m) {
+    if (!Number.isFinite(m.now) || !Number.isFinite(m.ts)) return;
+    const t = Date.now();
+    const rtt = t - m.ts;
+    if (rtt < 0 || rtt > 5000) return;
+    if (rtt > clk.best && t - clk.at < 120000) return;
+    clk.best = rtt;
+    clk.at = t;
+    const off = Math.round(m.now - (m.ts + rtt / 2));
+    if (clk.off == null || Math.abs(off - clk.off) > 500) {
+      if (Math.abs(off) > 1000) log('L’horloge de ce PC est décalée de ' + (off / 1000).toFixed(1).replace('.', ',') + ' s par rapport au VPS : corrigé pour l’émission numérique', 'st-warn');
+    }
+    clk.off = off;
+    core.setClock(off);
+  }
+
+  // ------------------------------------------------------------ audio vers le TRX (émission numérique)
+  // Le signal FT8 / FT4 / FT2 est fabriqué ici (ft8_lib en WebAssembly) et joué sur la carte son USB du TRX,
+  // pendant que le TRX est en émission (PTT par CAT). Rien n'est joué sur les haut-parleurs du PC.
+  const tx = { ctx: null, gain: null, enc: null, prep: null, src: null, label: '' };
+  if (window.RSFTXENC) {
+    window.RSFTXENC.load('/js/ftx-enc.wasm').then((e) => { tx.enc = e; }).catch((e) => log('Codeur FT8 / FT4 / FT2 non chargé : ' + e.message, 'st-bad'));
+  }
+  const txLevel = () => Math.max(1, Math.min(100, Number(store.get('txlevel', '30')) || 30));
+  function drawTxOut() {
+    $('audTxLvl').value = String(txLevel());
+    $('audTxPct').textContent = txLevel() + ' %';
+    $('tAudioOut').textContent = !tx.ctx ? 'Sortie vers le TRX : aucune (émission FT8 / FT4 / FT2 impossible)'
+      : tx.ctx.state !== 'running' ? 'Sortie vers le TRX en pause : cliquez n’importe où sur la page pour la relancer'
+      : 'Sortie vers le TRX : ' + tx.label + (tx.src ? ' · émission en cours' : '');
+  }
+  async function listOutputs() {
+    if (!navigator.mediaDevices) return [];
+    const all = await navigator.mediaDevices.enumerateDevices();
+    const outs = all.filter((d) => d.kind === 'audiooutput');
+    const sel = $('audOut');
+    const cur = sel.value;
+    sel.textContent = '';
+    const none = document.createElement('option');
+    none.value = '';
+    none.textContent = '— aucune (pas d’émission numérique) —';
+    sel.appendChild(none);
+    for (const d of outs) {
+      const o = document.createElement('option');
+      o.value = d.deviceId;
+      o.textContent = d.label || 'Sortie son ' + sel.length;
+      sel.appendChild(o);
+    }
+    const saved = store.get('audio.outLabel', null);
+    const real = outs.filter((d) => d.deviceId !== 'default' && d.deviceId !== 'communications');
+    const inDev = all.find((d) => d.kind === 'audioinput' && d.deviceId === $('audDev').value);
+    // Choix mémorisé, sinon la même carte son que l'entrée du TRX, sinon un nom de carte son de TRX (jamais les haut-parleurs du PC)
+    const pick = (saved != null ? outs.find((d) => d.label === saved) : null)
+      || (saved == null && inDev && inDev.groupId ? real.find((d) => d.groupId === inDev.groupId) : null)
+      || (saved == null ? real.find((d) => /usb audio|codec|yaesu|ftx|ftdx|ic-?7300|icom/i.test(d.label)) : null);
+    sel.value = pick ? pick.deviceId : (saved === '' ? '' : cur && outs.find((d) => d.deviceId === cur) ? cur : '');
+    return outs;
+  }
+  function stopTxOut() {
+    txStop();
+    if (tx.ctx) tx.ctx.close().catch(() => {});
+    tx.ctx = null;
+    tx.gain = null;
+    tx.prep = null;
+  }
+  async function startTxOut() {
+    stopTxOut();
+    const o = $('audOut').selectedOptions[0];
+    if (!o || !o.value) { drawTxOut(); return; }
+    try {
+      const ctx = new AudioContext({ sampleRate: 48000 });
+      if (!ctx.setSinkId) { ctx.close(); throw new Error('Chrome trop ancien pour choisir la sortie son (version 110 ou plus récente nécessaire)'); }
+      await ctx.setSinkId(o.value);
+      tx.gain = ctx.createGain();
+      tx.gain.gain.value = txLevel() / 100;
+      tx.gain.connect(ctx.destination);
+      tx.ctx = ctx;
+      tx.label = o.textContent;
+      ctx.onstatechange = drawTxOut;
+      log('Sortie son vers le TRX : ' + o.textContent);
+    } catch (e) {
+      log('Sortie son vers le TRX : ' + e.message, 'st-bad');
+    }
+    drawTxOut();
+  }
+  function txPrepare(id, mode, text, f0) {
+    if (!tx.enc) return { ok: false, err: 'codeur FT8 / FT4 / FT2 pas encore chargé sur la page Station' };
+    if (!tx.ctx) return { ok: false, err: 'aucune sortie son vers le TRX choisie sur la page Station' };
+    if (tx.ctx.state !== 'running') { tx.ctx.resume().catch(() => {}); return { ok: false, err: 'sortie son vers le TRX en pause sur la page Station (un clic sur la page au club la relance)' }; }
+    const f = Number(f0);
+    if (!(f >= 100 && f <= 3000)) return { ok: false, err: 'fréquence audio hors plage (100 à 3000 Hz)' };
+    const r = tx.enc.encode(mode, text, tx.ctx.sampleRate, f);
+    if (!r) return { ok: false, err: 'message impossible à coder en ' + mode + ' : « ' + String(text).slice(0, 40) + ' »' };
+    tx.prep = { id, samples: r.samples };
+    return { ok: true, text: r.text, seconds: r.seconds };
+  }
+  function txPlay(id, atLocal, onEnd) {
+    const ctx = tx.ctx;
+    if (!tx.prep || tx.prep.id !== id || !ctx || ctx.state !== 'running') return false;
+    const s = tx.prep.samples;
+    tx.prep = null;
+    txStop();
+    const buf = ctx.createBuffer(1, s.length, ctx.sampleRate);
+    buf.copyToChannel(s, 0);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(tx.gain);
+    // Heure de départ dans l'horloge audio, en tenant compte du retard de la sortie son
+    const lat = ctx.outputLatency || ctx.baseLatency || 0;
+    const when = Math.max(ctx.currentTime + 0.02, ctx.currentTime + (atLocal - Date.now()) / 1000 - lat);
+    src.onended = () => { if (tx.src === src) { tx.src = null; drawTxOut(); onEnd(); } };
+    src.start(when);
+    tx.src = src;
+    drawTxOut();
+    return true;
+  }
+  function txStop() {
+    const src = tx.src;
+    tx.src = null;
+    if (src) { src.onended = null; try { src.stop(); } catch (e) {} }
+  }
+  $('audOut').addEventListener('change', () => {
+    const o = $('audOut').selectedOptions[0];
+    store.set('audio.outLabel', o && o.value ? o.textContent : '');
+    startTxOut();
+  });
+  $('audTxLvl').addEventListener('input', () => {
+    store.set('txlevel', $('audTxLvl').value);
+    if (tx.gain) tx.gain.gain.value = txLevel() / 100;
+    drawTxOut();
+  });
+  document.addEventListener('click', () => { if (tx.ctx && tx.ctx.state === 'suspended') tx.ctx.resume().then(drawTxOut); });
+  if (navigator.mediaDevices) navigator.mediaDevices.addEventListener('devicechange', () => { if (!tx.src) listOutputs().catch(() => {}); });
+  drawTxOut();
 
   // ------------------------------------------------------------ réglages
   $('cfgToken').value = getToken();
