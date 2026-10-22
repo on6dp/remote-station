@@ -162,8 +162,11 @@ Les onglets du centre : **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT6
 - **Activité de bande** : tous les messages décodés (CQ en vert, messages pour ON5VL / OR0L en rouge) ; **Fréquence RX** : ceux de votre fréquence.
 - **Split** comme dans WSJT-X : **clic gauche** sur la cascade ou une ligne = fréquence de réception, **clic droit** = fréquence d'émission ; boutons « TX ← RX » et « RX ← TX ».
 - **Double-clic** sur un message : son émetteur devient le correspondant (indicatif, locator, report) et les messages Tx1 à Tx6 se préparent.
-- **Émettre** : un clic sur un message **Tx1 à Tx7** (cadre « Messages pré-enregistrés », en bas) l'émet **une fois**, au prochain créneau du mode de l'onglet (FT8, FT4 ou FT2), puis le TRX repasse tout seul en réception. Il faut avoir la main, le VFO d'émission en **DATA-U** et une puissance dans votre limite. Le message émis s'affiche en jaune dans les listes ; la ligne sous les listes dit quand il part.
-- **Période** : « auto » émet dans l'autre période que le correspondant choisi par double-clic (Tx1 à Tx5), sinon à la prochaine période ; « 1re » / « 2e » l'imposent (1re = 00 et 30 s en FT8). `■ Arrêter` annule l'émission prévue ou coupe celle en cours (relâcher la barre d'espace aussi).
+- **Émettre** (comme « Enable Tx » + « Auto Seq » de WSJT-X) : un clic sur un message **Tx1 à Tx7** (cadre « Messages pré-enregistrés », en bas) le fait partir **à chaque période** (une sur deux), jusqu'à la réponse. Il faut avoir la main, le VFO d'émission en **DATA-U** et une puissance dans votre limite. Le message émis s'affiche en jaune dans les listes ; la barre sous les listes est verte en réception, rouge en émission.
+- **La séquence avance toute seule** d'après ce que répond le correspondant : son locator → Tx2 (report) ; son report → Tx3 (R+report) ; R+report → Tx4 (RR73) ; RRR ou RR73 → Tx5 (73). Après l'envoi du RR73 ou du 73 : fin du QSO, émission coupée, retour sur Tx6 (CQ) et proposition d'**enregistrer le QSO dans le carnet**.
+- **Répondre au 1er** : en appel CQ (Tx6), la station qui vous répond devient le correspondant et la séquence démarre sans clic (« Call 1st » de WSJT-X). Pour répondre à un CQ : double-clic sur son message, puis clic sur Tx1.
+- **Période** : « auto » émet dans l'autre période que le correspondant (double-clic sur son message), sinon garde celle du premier message ; « 1re » / « 2e » l'imposent (1re = 00 et 30 s en FT8).
+- Arrêts : `■ Arrêter` (ou la barre d'espace) ; le correspondant appelé répond à quelqu'un d'autre ; le même message depuis 6 min sans réponse (chien de garde) ; main perdue.
 - Fréquence d'émission : le repère rouge TX de la cascade (clic droit pour le déplacer). En **SPLIT**, le message part sur le VFO B, comme le PTT.
 
 <a id="jt65"></a>
@@ -218,7 +221,7 @@ Les listes FT8 · FT4, RTTY et CW proposent « **QO-100 · FI 2 m / 70 cm** » :
 
 - Cadre **Messages pré-enregistrés** : correspondant (indicatif, prénom, QTH, locator, report FT8, RST), puis une ligne par mode : FT8 · FT4 (Tx1 à Tx7), RTTY, JTTY, CW.
 - Un clic sur une macro l'ajoute au texte à émettre de son onglet. **Clic droit** (ou `✎`) : la modifier — nom, texte, aperçu, retour au texte d'origine. Vos macros sont gardées sur le serveur, pour vous seul.
-- FT8 · FT4 · FT2 : **un clic sur Tx1 à Tx7 émet le message** au prochain créneau (voir 9.1). Tx7 : texte libre de 13 caractères (clic droit pour le modifier).
+- FT8 · FT4 · FT2 : **un clic sur Tx1 à Tx7 lance l'émission automatique** de ce message (voir 9.1). Tx7 : texte libre de 13 caractères (clic droit pour le modifier).
 
 | Balise | Remplacée par | Balise | Remplacée par |
 |---|---|---|---|

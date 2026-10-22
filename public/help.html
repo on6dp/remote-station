@@ -174,11 +174,16 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
   <li><b>Activité de bande</b> (band activity): all decoded messages (CQ in <span class="grn">green</span>, messages for ON5VL / OR0L in <span class="red">red</span>); <b>Fréquence RX</b>: those on your frequency.</li>
   <li><b>Split</b> as in WSJT-X: <b>left click</b> on the waterfall or a line = <span class="grn">receive</span> frequency, <b>right click</b> = <span class="red">transmit</span> frequency; « TX ← RX » and « RX ← TX » buttons.</li>
   <li><b>Double-click</b> a message: its sender becomes the contact (callsign, locator, report) and messages Tx1 to Tx6 are prepared.</li>
-  <li><b>Transmitting</b>: clicking a message <b>Tx1 to Tx7</b> (« Messages pré-enregistrés » panel, at the bottom) sends it <b>once</b>, in the next period of the tab's mode
-    (FT8, FT4 or FT2), then the transceiver goes back to receive by itself. You need control, the TX VFO in <b>DATA-U</b> and power within your limit.
-    The sent message shows in <span class="yel">yellow</span> in the lists; the line under the lists says when it goes out.</li>
-  <li><b>Période</b>: « auto » transmits in the other period than the contact picked by double-click (Tx1 to Tx5), otherwise in the next period;
-    « 1re » / « 2e » force it (1st = 00 and 30 s in FT8). <span class="k">■ Arrêter</span> cancels the planned transmission or cuts the current one (releasing the space bar too).</li>
+  <li><b>Transmitting</b> (like « Enable Tx » + « Auto Seq » in WSJT-X): clicking a message <b>Tx1 to Tx7</b> (« Messages pré-enregistrés » panel, at the bottom)
+    sends it <b>every period</b> (one in two) until an answer comes. You need control, the TX VFO in <b>DATA-U</b> and power within your limit.
+    The sent message shows in <span class="yel">yellow</span> in the lists; the bar under the lists is <span class="grn">green</span> while receiving, <span class="red">red</span> while transmitting.</li>
+  <li><b>The sequence advances by itself</b> from the contact's answers: his locator → Tx2 (report); his report → Tx3 (R+report); R+report → Tx4 (RR73);
+    RRR or RR73 → Tx5 (73). After sending RR73 or 73: end of QSO, transmission stops, back to Tx6 (CQ) and an offer to <b>save the QSO in the logbook</b>.</li>
+  <li><b>Répondre au 1er</b> (answer the first): while calling CQ (Tx6), the station answering you becomes the contact and the sequence starts without a click (« Call 1st » in WSJT-X).
+    To answer a CQ: double-click his message, then click Tx1.</li>
+  <li><b>Période</b>: « auto » transmits in the other period than the contact (double-click his message), otherwise keeps the period of the first message;
+    « 1re » / « 2e » force it (1st = 00 and 30 s in FT8).</li>
+  <li>Stops: <span class="k">■ Arrêter</span> (or the space bar); the called contact answers someone else; the same message for 6 min without answer (watchdog); control lost.</li>
   <li>Transmit frequency: the <span class="red">red</span> TX marker on the waterfall (right click to move it). In <b>SPLIT</b>, the message goes out on VFO B, like the PTT.</li>
 </ul>
 <h3 id="jt65">9.2 JT65</h3>
@@ -222,7 +227,7 @@ Only the IFs the connected transceiver can reach are listed (2 m and 70 cm: FTX-
 <ul>
   <li><b>Messages pré-enregistrés</b> panel: contact (callsign, first name, QTH, locator, FT8 report, RST), then one row per mode: FT8 · FT4 (Tx1 to Tx7), RTTY, JTTY, CW.</li>
   <li>Clicking a macro adds it to the text to send in its tab. <b>Right click</b> (or <span class="k">✎</span>): edit it — name, text, preview, back to the default. Your macros are stored on the server, for you only.</li>
-  <li>FT8 · FT4 · FT2: <b>clicking Tx1 to Tx7 transmits the message</b> in the next period (see 9.1). Tx7: free text, 13 characters (right click to edit).</li>
+  <li>FT8 · FT4 · FT2: <b>clicking Tx1 to Tx7 starts automatic transmission</b> of that message (see 9.1). Tx7: free text, 13 characters (right click to edit).</li>
 </ul>
 <table>
   <tr><th>Tag</th><th>Replaced by</th><th>Tag</th><th>Replaced by</th></tr>

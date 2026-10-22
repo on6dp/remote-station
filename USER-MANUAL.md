@@ -162,8 +162,11 @@ The centre tabs: **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT65**, **
 - **Activité de bande** (band activity): all decoded messages (CQ in green, messages for ON5VL / OR0L in red); **Fréquence RX**: those on your frequency.
 - **Split** as in WSJT-X: **left click** on the waterfall or a line = receive frequency, **right click** = transmit frequency; « TX ← RX » and « RX ← TX » buttons.
 - **Double-click** a message: its sender becomes the contact (callsign, locator, report) and messages Tx1 to Tx6 are prepared.
-- **Transmitting**: clicking a message **Tx1 to Tx7** (« Messages pré-enregistrés » panel, at the bottom) sends it **once**, in the next period of the tab's mode (FT8, FT4 or FT2), then the transceiver goes back to receive by itself. You need control, the TX VFO in **DATA-U** and power within your limit. The sent message shows in yellow in the lists; the line under the lists says when it goes out.
-- **Période**: « auto » transmits in the other period than the contact picked by double-click (Tx1 to Tx5), otherwise in the next period; « 1re » / « 2e » force it (1st = 00 and 30 s in FT8). `■ Arrêter` cancels the planned transmission or cuts the current one (releasing the space bar too).
+- **Transmitting** (like « Enable Tx » + « Auto Seq » in WSJT-X): clicking a message **Tx1 to Tx7** (« Messages pré-enregistrés » panel, at the bottom) sends it **every period** (one in two) until an answer comes. You need control, the TX VFO in **DATA-U** and power within your limit. The sent message shows in yellow in the lists; the bar under the lists is green while receiving, red while transmitting.
+- **The sequence advances by itself** from the contact's answers: his locator → Tx2 (report); his report → Tx3 (R+report); R+report → Tx4 (RR73); RRR or RR73 → Tx5 (73). After sending RR73 or 73: end of QSO, transmission stops, back to Tx6 (CQ) and an offer to **save the QSO in the logbook**.
+- **Répondre au 1er** (answer the first): while calling CQ (Tx6), the station answering you becomes the contact and the sequence starts without a click (« Call 1st » in WSJT-X). To answer a CQ: double-click his message, then click Tx1.
+- **Période**: « auto » transmits in the other period than the contact (double-click his message), otherwise keeps the period of the first message; « 1re » / « 2e » force it (1st = 00 and 30 s in FT8).
+- Stops: `■ Arrêter` (or the space bar); the called contact answers someone else; the same message for 6 min without answer (watchdog); control lost.
 - Transmit frequency: the red TX marker on the waterfall (right click to move it). In **SPLIT**, the message goes out on VFO B, like the PTT.
 
 <a id="jt65"></a>
@@ -218,7 +221,7 @@ The FT8 · FT4, RTTY and CW lists offer « **QO-100 · FI 2 m / 70 cm** »: the 
 
 - **Messages pré-enregistrés** panel: contact (callsign, first name, QTH, locator, FT8 report, RST), then one row per mode: FT8 · FT4 (Tx1 to Tx7), RTTY, JTTY, CW.
 - Clicking a macro adds it to the text to send in its tab. **Right click** (or `✎`): edit it — name, text, preview, back to the default. Your macros are stored on the server, for you only.
-- FT8 · FT4 · FT2: **clicking Tx1 to Tx7 transmits the message** in the next period (see 9.1). Tx7: free text, 13 characters (right click to edit).
+- FT8 · FT4 · FT2: **clicking Tx1 to Tx7 starts automatic transmission** of that message (see 9.1). Tx7: free text, 13 characters (right click to edit).
 
 | Tag | Replaced by | Tag | Replaced by |
 |---|---|---|---|

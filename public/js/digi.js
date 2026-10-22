@@ -115,7 +115,8 @@
       <select id="dgPar" class="dg-par" aria-label="Période d'émission" title="Période d'émission. Auto : à l'opposé du correspondant choisi (double-clic sur son message), sinon la prochaine période. 1re = 00 / 30 s en FT8.">
         <option value="auto">auto</option><option value="0">1re</option><option value="1">2e</option>
       </select>
-      <button class="btn dg-stop" type="button" id="dgStop" disabled title="Annule l'émission prévue ou coupe l'émission en cours">■ Arrêter</button>
+      <label class="dg-chk" title="En appel CQ (Tx6), celui qui vous répond devient le correspondant et la séquence continue toute seule (Call 1st de WSJT-X)"><input type="checkbox" id="dgCall1st"> Répondre au 1er</label>
+      <button class="btn dg-stop" type="button" id="dgStop" disabled title="Arrête l'émission automatique (Halt Tx)">■ Arrêter</button>
       <span class="dg-clock" id="dgClock">--:--:--</span>
       <span class="dg-status" id="dgStatus"></span>
     </div>
@@ -136,6 +137,7 @@
         <div class="dg-list" id="dgRx"></div>
       </div>
     </div>
+    <div class="dg-prog" id="dgProg" title="Période en cours : vert = réception, rouge = émission"><i id="dgProgBar"></i><span id="dgProgTxt"></span></div>
     <p class="dg-tx" id="dgTxState">Émission : cliquez sur un message Tx1 à Tx7 (en bas de la page). Il part une fois, au prochain créneau, puis retour en réception.</p>`;
   const RTTY_PANE = `
     <div class="dg-bar">
@@ -1403,7 +1405,10 @@
     setDx({ call, grid: GRID_RE.test(last) && last !== 'RR73' ? last : '', rpt: fmtRpt(d.db) });
     if (dxPar) dxPar.call = call;
     setRx(d.f);
-    ftxSel = w[0] === 'CQ' ? 0 : 1;
+    // Message suivant comme WSJT-X : réponse à un CQ → Tx1 ; message qui nous est adressé → selon son contenu
+    const toMe = stationCalls.indexOf(w[0]) >= 0;
+    const p = toMe ? (w[2] || '') : '';
+    ftxSel = !toMe ? 0 : GRID_RE.test(p) && p !== 'RR73' ? 1 : /^[+-]\d{2}$/.test(p) ? 2 : /^R[+-]\d{2}$/.test(p) ? 3 : /^(RRR|RR73)$/.test(p) ? 4 : p === '73' ? 4 : 0;
     store.set('ftxsel', ftxSel);
     drawMsgs();
   }
@@ -1428,7 +1433,7 @@
     const f = $('msgFtx');
     f.textContent = '';
     ftxMsgs().forEach((t, i) => mk(f, 'Tx' + (i + 1), t, () => ftxSend(i, t), i === ftxSel)
-      .title = 'Clic : émis une fois au prochain créneau (FT8 / FT4 / FT2 selon l’onglet), puis retour en réception');
+      .title = 'Clic : ce message part à chaque période (FT8 / FT4 / FT2 selon l’onglet) jusqu’à la réponse ; la séquence avance toute seule. ■ Arrêter pour couper.');
     // Tx7 : texte libre de 13 caractères au plus (comme WSJT-X)
     const free = String(store.get('ftxfree', '')).toUpperCase();
     const fb = mk(f, 'Tx7', free || 'texte libre…', () => (free ? ftxSend(6, free) : editFree(f.ownerDocument)), ftxSel === 6);
@@ -1459,24 +1464,75 @@
     if (!api) return;
     if (/[{}]/.test(text)) return api.say('Message incomplet : choisissez d’abord le correspondant (double-clic sur son message) ou réglez votre locator.', 'warn');
     const m = FT_MODES.indexOf(mode) >= 0 ? mode : ftStored();
+    api.send({ t: 'ftx_tx', mode: m, ntx: i + 1, f0: curTxF(), parity: txParity(i), dx: { call: dx.call, grid: dx.grid }, rpt: dx.rpt,
+      free: String(store.get('ftxfree', '')), call1st: store.get('call1st', '1') === '1' });
+  }
+  const curTxF = () => Math.round(Number(store.get('txf', String(txF))) || txF);
+  // Période d'émission : imposée, ou (auto) l'autre que celle du correspondant choisi par double-clic
+  function txParity(i) {
     const sel = $('dgPar') ? $('dgPar').value : store.get('ftxpar', 'auto');
-    let parity = sel === '0' ? 0 : sel === '1' ? 1 : null;
-    // Auto : réponse à un correspondant (Tx1 à Tx5) → l'autre période que la sienne
-    if (parity == null && i < 5 && dxPar && dxPar.mode === m && dxPar.call === dx.call) parity = 1 - dxPar.parity;
-    api.send({ t: 'ftx_tx', mode: m, text, f0: Math.round(Number(store.get('txf', String(txF))) || txF), parity });
+    if (sel === '0' || sel === '1') return Number(sel);
+    const m = FT_MODES.indexOf(mode) >= 0 ? mode : ftStored();
+    if (i < 5 && dxPar && dxPar.mode === m && dxPar.call === dx.call) return 1 - dxPar.parity;
+    return null;
+  }
+  function ftxCfg() {
+    const st = api && api.state();
+    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), parity: txParity(ftxSel), call1st: store.get('call1st', '1') === '1' });
+  }
+  // Fin de QSO (73 / RR73) : proposition d'enregistrement dans le carnet, comme « Prompt me to log QSO » de WSJT-X
+  function qsoPrompt(q) {
+    const doc = ($('msgFtx') && $('msgFtx').ownerDocument) || document;
+    const old = doc.getElementById('qsoDlg');
+    if (old) old.remove();
+    const dlg = doc.createElement('dialog');
+    dlg.id = 'qsoDlg';
+    dlg.className = 'macro-dlg qso-dlg';
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    dlg.innerHTML = '<div class="qso-b"><h3>QSO terminé</h3><p><b>' + esc(q.call) + '</b>' + (q.gridsquare ? ' · ' + esc(q.gridsquare) : '') + ' · ' + esc(q.mode) + ' · ' +
+      esc(Number(q.freq).toFixed(6)) + ' MHz<br>Report envoyé ' + esc(q.rst_sent || '—') + ' · reçu ' + esc(q.rst_rcvd || '—') + ' · ' +
+      esc(q.time_on.slice(0, 2) + ':' + q.time_on.slice(2, 4)) + '–' + esc(q.time_off.slice(0, 2) + ':' + q.time_off.slice(2, 4)) + ' UTC</p>' +
+      '<div class="md-act"><button class="btn" type="button" data-a="log">Enregistrer dans le carnet</button><button class="btn" type="button" data-a="no">Ne pas enregistrer</button></div></div>';
+    doc.body.appendChild(dlg);
+    try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
+    dlg.addEventListener('close', () => dlg.remove());
+    dlg.querySelector('[data-a="log"]').addEventListener('click', () => {
+      const qso = Object.assign({}, q);
+      if (!qso.gridsquare) delete qso.gridsquare;
+      if (!qso.tx_pwr) delete qso.tx_pwr;
+      api.send({ t: 'log_add', qso });
+      dlg.remove();
+    });
+    dlg.querySelector('[data-a="no"]').addEventListener('click', () => dlg.remove());
   }
   let lastTxAt = 0;
+  let seqSeen = '';
   function ftxState() {
     const st = api && api.state();
     const x = st && st.ftx;
+    const sq = st && st.seq;
     const el = $('dgTxState');
-    if ($('dgStop')) $('dgStop').disabled = !(x || (st && st.ptt && st.ptt.digi));
+    const mine = !!(sq && sq.by === opCall);
+    if ($('dgStop')) $('dgStop').disabled = !(x || (sq && sq.on) || (st && st.ptt && st.ptt.digi));
+    // Séquence automatique : le message choisi et le correspondant suivent ce que décide le serveur
+    if (mine) {
+      const key = [sq.ntx, sq.dx, sq.grid, sq.rpt, sq.on].join('|');
+      if (key !== seqSeen) {
+        seqSeen = key;
+        ftxSel = sq.ntx - 1;
+        store.set('ftxsel', ftxSel);
+        if (sq.dx && (sq.dx !== dx.call || (sq.grid && sq.grid !== dx.grid) || (sq.rpt && sq.rpt !== dx.rpt))) setDx({ call: sq.dx, grid: sq.grid || dx.grid, rpt: sq.rpt || dx.rpt });
+        else drawMsgs();
+      }
+    }
     if (el) {
       const hm = (ms) => { const d = new Date(ms); return pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + (ms % 1000 >= 100 && ms % 1000 !== 500 ? '.' + Math.floor((ms % 1000) / 100) : ''); };
-      el.textContent = !x ? 'Émission : cliquez sur un message Tx1 à Tx7 (en bas de la page). Il part une fois, au prochain créneau, puis retour en réception.'
-        : x.state === 'tx' ? '● En émission ' + x.mode + ' (' + x.by + ') : « ' + x.text + ' » à ' + x.f0 + ' Hz'
-        : 'Émission ' + x.mode + ' prévue à ' + hm(x.at - 500) + ' UTC (' + x.by + ') : « ' + x.text + ' » à ' + x.f0 + ' Hz';
-      el.classList.toggle('on', !!x);
+      const auto = sq && sq.on ? 'Émission auto (' + sq.by + ') · Tx' + sq.ntx + ' · ' : '';
+      el.textContent = x && x.state === 'tx' ? '● ' + auto + 'en émission ' + x.mode + ' : « ' + x.text + ' » à ' + x.f0 + ' Hz'
+        : x ? auto + x.mode + ' prévu à ' + hm(x.at - 500) + ' UTC : « ' + x.text + ' » à ' + x.f0 + ' Hz'
+        : sq && sq.on ? auto + '« ' + sq.text + ' » à la prochaine période'
+        : 'Émission : clic sur un message Tx1 à Tx7 (en bas de la page) → il part à chaque période jusqu’à la réponse ; la séquence avance toute seule (comme WSJT-X). ■ Arrêter pour couper.';
+      el.classList.toggle('on', !!(x || (sq && sq.on)));
       el.classList.toggle('air', !!(x && x.state === 'tx'));
     }
     // Message émis : ajouté aux listes comme dans WSJT-X
@@ -1619,6 +1675,7 @@
     txF = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(f)));
     store.set('txf', txF);
     drawScale();
+    ftxCfg();
   }
   function setRx(f) {
     rxF = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(f)));
@@ -1671,7 +1728,8 @@
   function addSlot(item, quiet) {
     const band = $('dgBand');
     stickToBottom(band, () => {
-      if (item.list.length && !item.tx) band.appendChild(sepEl(item.slot, item.mode));
+      // Une seule ligne de séparation par période (décodage anticipé puis complet)
+      if (item.list.length && !item.tx && band.dataset.sep !== item.mode + item.slot) { band.appendChild(sepEl(item.slot, item.mode)); band.dataset.sep = item.mode + item.slot; }
       for (const d of item.list) band.appendChild(rowEl(item.slot, d));
     });
     const mine = item.list.filter(inRx);
@@ -1689,6 +1747,7 @@
   }
   function redrawAll() {
     $('dgBand').textContent = '';
+    $('dgBand').dataset.sep = '';
     for (const it of hist) if (it.mode === mode) addSlot(it, true);
     redrawRx();
   }
@@ -1779,7 +1838,19 @@
     el.classList.toggle('warn', warn);
   }
   const now = () => Date.now() + clockOff; // heure du serveur
+  function progBar() {
+    const bar = $('dgProgBar');
+    if (!bar) return;
+    const L = mode === 'FT8' ? 15 : mode === 'FT2' ? 3.75 : 7.5;
+    const s = (now() / 1000) % L;
+    const st = api && api.state();
+    const txing = !!(st && ((st.ftx && st.ftx.state === 'tx') || (st.ptt && st.ptt.active) || (st.radio && st.radio.tx)));
+    bar.style.width = (100 * s / L).toFixed(1) + '%';
+    $('dgProg').classList.toggle('tx', txing);
+    $('dgProgTxt').textContent = (txing ? 'TX ' : 'RX ') + s.toFixed(1).replace('.', ',') + ' s';
+  }
   function clock() {
+    progBar();
     const d = new Date(now());
     const L = mode === 'JT65' ? 60 : mode === 'FT8' ? 15 : mode === 'FT2' ? 3.75 : 7.5;
     const s = (d.getTime() / 1000) % L;
@@ -1870,7 +1941,9 @@
       });
       $('dgTxRx').addEventListener('click', () => setTx(rxF));
       $('dgPar').value = store.get('ftxpar', 'auto');
-      $('dgPar').addEventListener('change', () => store.set('ftxpar', $('dgPar').value));
+      $('dgPar').addEventListener('change', () => { store.set('ftxpar', $('dgPar').value); ftxCfg(); });
+      $('dgCall1st').checked = store.get('call1st', '1') === '1';
+      $('dgCall1st').addEventListener('change', () => { store.set('call1st', $('dgCall1st').checked ? '1' : '0'); ftxCfg(); });
       $('dgStop').addEventListener('click', () => api && api.send({ t: 'ftx_stop' }));
       $('dgRxTx').addEventListener('click', () => setRx(txF));
       // Repli du panneau ou onglet du navigateur caché : le serveur arrête de décoder pour ce membre
@@ -1880,6 +1953,7 @@
       fillDial();
       setMode(mode);
       showTab(tab);
+      setInterval(() => { if (!detached && tab === 'ftx') progBar(); }, 100);
       setInterval(() => {
         if (detached) return;
         if (tab === 'ftx' || tab === 'jt65') { clock(); status(); followBand(); }
@@ -1909,6 +1983,7 @@
       announce(); // reprise après reconnexion
     },
     onMessage(m) {
+      if (m.t === 'ftx_qso' && m.qso) { qsoPrompt(m.qso); return true; }
       if (m.t === 'pong' && Number.isFinite(m.now) && Number.isFinite(m.ts)) {
         // Écart d'horloge avec le serveur, d'après l'aller-retour le plus court
         const rtt = Date.now() - m.ts;

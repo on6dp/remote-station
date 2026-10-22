@@ -1,4 +1,4 @@
-# Remote Station — v0.16.0 (CAT + écoute de la BF)
+# Remote Station — v0.17.0 (CAT + écoute de la BF)
 
 Pilotage à distance d'un transceiver du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
 Trois modèles sont pris en charge : **Yaesu FTX-1**, **Yaesu FTDX10** et **Icom IC-7300**. Un seul est branché à la fois ; on choisit lequel sur la page Station du club, et la face avant des membres s'adapte toute seule.
@@ -87,7 +87,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.16.0.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.17.0.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -95,7 +95,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.16.0.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.17.0.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station
@@ -263,6 +263,6 @@ sudo grep tx_start /opt/remote-station/logs/access-$(date +%Y-%m).log | tail
 ## Suite prévue
 
 - **v0.2 — audio RX (fait)** : BF du TRX captée sur sa carte son USB par la page Station, relayée par le VPS à tous les membres qui écoutent.
-- **v0.16 — émission FT8 / FT4 / FT2 (fait)** : clic sur Tx1 à Tx7 = une émission au prochain créneau ; sortie son de la page Station vers la carte son USB du TRX.
+- **v0.16 – v0.17 — émission FT8 / FT4 / FT2 (fait)** : clic sur Tx1 à Tx7 = émission automatique avec séquence comme WSJT-X ; sortie son de la page Station vers la carte son USB du TRX.
 - **Ensuite** : émission RTTY, JTTY, SSTV, CW (manipulateur du TRX) ; micro du membre vers le TRX pendant le PTT.
 - **v0.3** : réservation de créneaux, mesures en émission (puissance, ROS, ALC), plages d'émission par membre selon sa classe de licence.

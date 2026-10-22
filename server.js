@@ -31,6 +31,7 @@ const DEFAULTS = {
   stationToken: '',
   allowTx: false,
   maxTxSeconds: 120,
+  ftxWatchdogMinutes: 6, // émission auto FT8 / FT4 / FT2 : arrêt si le même message part depuis ce temps (WSJT-X : 6 min)
   pttHeartbeatMs: 1500,
   controlIdleMinutes: 15,
   // Protection du PA : émission coupée si le ROS dépasse maxSwr pendant swrHoldMs (0 = pas de protection).
@@ -270,6 +271,7 @@ function rttyCfg(r) {
 function digiModes() {
   const s = new Set();
   for (const c of ops) if (c.digi) s.add(c.digi);
+  if (seq && seq.on) s.add(seq.mode); // émission auto : il faut décoder les réponses, même panneau replié
   return s;
 }
 function startDigi() {
@@ -355,6 +357,7 @@ function onDigi(m) {
     digi.last = Date.now();
     const msg = JSON.stringify({ t: 'ftx', mode: m.mode, slot: m.slot, list: m.list, latency: m.latency });
     for (const c of ops) if (c.digi === m.mode) c.send(msg);
+    seqOnDecodes(m.mode, m.slot, m.list);
   }
 }
 
@@ -734,6 +737,7 @@ function publicState() {
     users: calls.sort(),
     ptt: { active: ptt.active, by: ptt.active ? ptt.conn.user.call : null, since: ptt.since, digi: !!(ptt.active && ptt.digi) },
     // Émission FT8 / FT4 / FT2 programmée ou en cours
+    seq: seqPublic(),
     ftx: ftxPend ? { state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call } : null,
     txOk: inTxRange(txFreq()),
     txFreq: txFreq(),
@@ -769,7 +773,10 @@ function stopPtt(reason) {
   const who = ptt.conn;
   const dur = Math.round((Date.now() - ptt.since) / 100) / 10;
   const digiEnd = !!ptt.digi && reason === FTX_END;
-  if (ptt.digi && ftxPend && ftxPend.id === ptt.digi.id) { clearTimeout(ftxPend.timer); ftxPend = null; }
+  let sentP = null;
+  if (ptt.digi && ftxPend && ftxPend.id === ptt.digi.id) { clearTimeout(ftxPend.timer); sentP = ftxPend; ftxPend = null; }
+  if (ptt.digi && !digiEnd && seq && seq.on) { seq.on = false; setTimeout(updateDigi, 0); }
+  if (digiEnd && sentP) setTimeout(() => seqAfterTx(sentP), 0);
   ptt = { active: false, conn: null, since: 0, lastBeat: 0 };
   toStation({ t: 'cmd', op: 'ptt', on: false, reason });
   journal('tx_stop', { call: who.user.call, durationS: dur, reason, freq: txFreq() });
@@ -828,13 +835,14 @@ function ftxCancel(reason, quiet) {
   if (!p) return;
   clearTimeout(p.timer);
   ftxPend = null;
+  if (!quiet && seq && seq.on && seq.conn === p.conn) { seq.on = false; updateDigi(); }
   if (ptt.active && ptt.digi && ptt.digi.id === p.id) stopPtt(reason);
   else if (!quiet) send(p.conn, { t: 'notice', level: 'warn', msg: 'Émission ' + p.mode + ' annulée : ' + reason });
   broadcast();
 }
 
 function ftxRequest(conn, m) {
-  const err = (msg) => send(conn, { t: 'notice', level: 'error', msg });
+  const err = (msg) => msg;
   const mode = String(m.mode || '');
   if (!FTX_SLOT[mode]) return err('Mode numérique inconnu');
   const text = String(m.text || '').toUpperCase().replace(/[^ -~]/g, '').replace(/\s+/g, ' ').trim().slice(0, 37);
@@ -855,12 +863,237 @@ function ftxRequest(conn, m) {
   const slot = ftxSlot(mode, m.parity === 0 || m.parity === 1 ? m.parity : null, now);
   if (!slot) return err('Aucun créneau trouvé');
   if (ftxPend) ftxCancel('remplacée par le nouveau message', true);
-  const p = { id: ++ftxSeq, conn, mode, text, f0, at: slot.at, parity: slot.parity, state: 'wait', ready: false, seconds: 0, sent: null, timer: null };
+  const p = { id: ++ftxSeq, conn, mode, text, f0, at: slot.at, parity: slot.parity, state: 'wait', ready: false, seconds: 0, sent: null, timer: null, ntx: m.ntx || 0 };
   ftxPend = p;
-  lastCtrlActivity = now;
   toStation({ t: 'cmd', op: 'ftxprep', id: p.id, mode, text, f0 });
   p.timer = setTimeout(() => ftxKey(p), Math.max(0, p.at - FTX_KEY_LEAD - now));
   broadcast();
+  return null;
+}
+
+// ---------------------------------------------------------------- séquence automatique (comme WSJT-X)
+// Clic sur Tx1…Tx7 = « Enable Tx » : le message part à chaque période de l'opérateur (paire / impaire) jusqu'à
+// la fin du QSO, « ■ Arrêter », la perte de la main ou le chien de garde (même message depuis 6 min).
+// « Auto Seq » : les réponses du correspondant décodées font avancer le message (règles de WSJT-X 3.x,
+// DecodedMessageReaction::planProcessMessage) ; « Répondre au 1er » (Call 1st) : en appel CQ, celui qui
+// répond devient le correspondant. Après l'envoi d'un 73 ou d'un RR73 : fin du QSO, émission auto coupée,
+// retour sur Tx6 (CQ) et proposition d'enregistrer le QSO dans le carnet (comme « Prompt me to log QSO »).
+const PROG = { CALLING: 0, REPLYING: 1, REPORT: 2, ROGER_REPORT: 3, ROGERS: 4, SIGNOFF: 5 };
+const NTX_PROG = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 0 };
+let seq = null; // { conn, on, mode, f0, parity, ntx, progress, dx: { call, grid }, rptSent, rptRcvd, free, call1st, watchMsg, watchSince, qsoStart }
+const seqMe = () => String(cfg.digiCall || stationCalls()[0] || '').toUpperCase();
+const seqGrid = () => String(cfg.stationGrid || '').toUpperCase().slice(0, 4);
+const baseCall = (c) => String(c || '').toUpperCase().replace(/[<>]/g, '').split('/').reduce((a, x) => (x.length > a.length ? x : a), '');
+const fmtRpt = (v) => {
+  const n = Math.round(Number(v));
+  if (!Number.isFinite(n)) return '-10';
+  const k = Math.max(-30, Math.min(30, n));
+  return (k >= 0 ? '+' : '-') + String(Math.abs(k)).padStart(2, '0');
+};
+const RPT_RE = /^[+-]\d{2}$/;
+const RRPT_RE = /^R[+-]\d{2}$/;
+const GRID4_RE = /^[A-R]{2}[0-9]{2}$/;
+const SEQ_CALL_RE = /^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}[A-Z]$/;
+
+function seqText(s) {
+  const me = seqMe();
+  const c = s.dx.call;
+  const r = s.rptSent || '-10';
+  switch (s.ntx) {
+    case 1: return c + ' ' + me + ' ' + seqGrid();
+    case 2: return c + ' ' + me + ' ' + r;
+    case 3: return c + ' ' + me + ' R' + r;
+    case 4: return c + ' ' + me + ' RR73';
+    case 5: return c + ' ' + me + ' 73';
+    case 6: return 'CQ ' + me + ' ' + seqGrid();
+    default: return String(s.free || '');
+  }
+}
+function seqPublic() {
+  if (!seq) return null;
+  return { on: !!seq.on, mode: seq.mode, ntx: seq.ntx, dx: seq.dx.call, grid: seq.dx.grid, rpt: seq.rptSent, rptRcvd: seq.rptRcvd || '',
+    parity: seq.parity, call1st: !!seq.call1st, by: seq.conn.user.call, text: seqText(seq) };
+}
+function seqOff(reason, level) {
+  if (!seq || !seq.on) return;
+  seq.on = false;
+  if (ftxPend && ftxPend.state === 'wait' && ftxPend.conn === seq.conn) ftxCancel(reason || 'arrêt', true);
+  if (reason) send(seq.conn, { t: 'notice', level: level || 'warn', msg: 'Émission auto arrêtée : ' + reason });
+  updateDigi();
+  broadcast();
+}
+/** Prochaine émission de la séquence (message courant, période de l'opérateur). */
+function seqNext() {
+  if (!seq || !seq.on || ftxPend || ptt.active) return;
+  if (controller !== seq.conn) return seqOff('main perdue');
+  if (seq.ntx >= 1 && seq.ntx <= 5 && !SEQ_CALL_RE.test(baseCall(seq.dx.call))) return seqOff('pas de correspondant (double-clic sur son message)', 'error');
+  const text = seqText(seq);
+  const now = Date.now();
+  if (text !== seq.watchMsg) { seq.watchMsg = text; seq.watchSince = now; }
+  else if (now - seq.watchSince > cfg.ftxWatchdogMinutes * 60000) {
+    return seqOff('même message depuis ' + cfg.ftxWatchdogMinutes + ' min sans réponse (chien de garde, comme WSJT-X)');
+  }
+  const err = ftxRequest(seq.conn, { mode: seq.mode, text, f0: seq.f0, parity: seq.parity, ntx: seq.ntx });
+  if (err) seqOff(err, 'error');
+}
+/** Message changé par une réponse : l'émission prévue (pas encore partie) est remplacée. */
+function seqChanged() {
+  if (seq && seq.on && ftxPend && ftxPend.state === 'wait' && ftxPend.conn === seq.conn
+      && (ftxPend.text !== seqText(seq) || ftxPend.parity !== seq.parity)) ftxCancel('message changé', true);
+  seqNext();
+  broadcast();
+}
+function seqSetNtx(n) {
+  seq.ntx = n;
+  if (NTX_PROG[n] != null) seq.progress = NTX_PROG[n];
+}
+/** Réponse du correspondant (« MOI LUI xxx ») : message suivant selon WSJT-X. Renvoie true si le QSO est terminé. */
+function seqReact(payload, d) {
+  const p = String(payload || '').toUpperCase();
+  if (GRID4_RE.test(p)) {
+    // Réponse à notre CQ avec son locator → on lui donne son report
+    seq.dx.grid = p;
+    seq.rptSent = fmtRpt(d.db);
+    seqSetNtx(2);
+  } else if (RPT_RE.test(p)) {
+    // Son report → R + notre report
+    seq.rptRcvd = p;
+    if (seq.progress <= PROG.REPLYING) seq.rptSent = fmtRpt(d.db);
+    seqSetNtx(3);
+  } else if (RRPT_RE.test(p)) {
+    // R + report → RR73
+    seq.rptRcvd = p.slice(1);
+    seqSetNtx(4);
+  } else if (p === 'RRR' || p === 'RR73') {
+    seqSetNtx(5);
+  } else if (p === '73') {
+    if (seq.progress >= PROG.ROGERS) return true; // il confirme notre RR73 : QSO terminé
+    seqSetNtx(5);
+  } else return false;
+  if (!seq.qsoStart) seq.qsoStart = Date.now();
+  return false;
+}
+/** Décodages d'une période : la séquence avance si le correspondant (ou, en appel CQ, celui qui répond) nous écrit. */
+function seqOnDecodes(mode, slot, list) {
+  if (!seq || !seq.on || seq.mode !== mode || !Array.isArray(list) || !FTX_SLOT[mode]) return;
+  const me = baseCall(seqMe());
+  const theirParity = Math.round(slot / FTX_SLOT[mode]) % 2;
+  const words = (d) => String(d.msg || '').toUpperCase().replace(/[<>]/g, '').split(/\s+/).filter(Boolean);
+  const dxBase = baseCall(seq.dx.call);
+  // 1) le correspondant
+  if (dxBase && seq.ntx !== 6) {
+    for (const d of list) {
+      const w = words(d);
+      if (w.length < 2 || baseCall(w[1]) !== dxBase) continue;
+      if (baseCall(w[0]) === me) {
+        seq.parity = 1 - theirParity;
+        if (seqReact(w[2], d)) return seqQsoDone('73 reçu');
+        return seqChanged();
+      }
+      // On l'appelait (Tx1) et il répond à quelqu'un d'autre sur notre fréquence → arrêt (WSJT-X)
+      if (seq.progress === PROG.REPLYING && !/^(CQ|QRZ|DE)$/.test(w[0]) && Math.abs(d.f - seq.f0) <= 100) {
+        return seqOff(seq.dx.call + ' répond à ' + w[0]);
+      }
+    }
+  }
+  // 2) Appel CQ + « Répondre au 1er » : le plus fort de ceux qui nous répondent devient le correspondant
+  if (seq.ntx === 6 && seq.call1st) {
+    let best = null;
+    for (const d of list) {
+      const w = words(d);
+      if (w.length < 3 || baseCall(w[0]) !== me || !SEQ_CALL_RE.test(baseCall(w[1]))) continue;
+      if (!(GRID4_RE.test(w[2]) || RPT_RE.test(w[2]) || RRPT_RE.test(w[2]))) continue;
+      if (!best || d.db > best.d.db) best = { d, w };
+    }
+    if (best) {
+      seq.dx = { call: best.w[1], grid: '' };
+      seq.rptSent = fmtRpt(best.d.db);
+      seq.rptRcvd = '';
+      seq.qsoStart = 0;
+      seq.parity = 1 - theirParity;
+      seq.progress = PROG.CALLING;
+      seqReact(best.w[2], best.d);
+      send(seq.conn, { t: 'notice', level: 'info', msg: best.w[1] + ' répond à votre CQ : réponse automatique « ' + seqText(seq) + ' »' });
+      return seqChanged();
+    }
+  }
+}
+/** Fin du QSO : émission auto coupée, retour sur CQ, proposition d'enregistrement dans le carnet. */
+function seqQsoDone(why) {
+  const s = seq;
+  if (!s) return;
+  const call = s.dx.call;
+  if (ftxPend && ftxPend.state === 'wait' && ftxPend.conn === s.conn) ftxCancel('QSO terminé', true);
+  s.on = false;
+  seqSetNtx(6);
+  if (SEQ_CALL_RE.test(baseCall(call)) && s.qsoStart) {
+    const start = new Date(s.qsoStart);
+    const end = new Date();
+    const d8 = (x) => x.toISOString().slice(0, 10).replace(/-/g, '');
+    const t6 = (x) => x.toISOString().slice(11, 19).replace(/:/g, '');
+    const dial = s.txDial || txFreq() || 0;
+    send(s.conn, { t: 'ftx_qso', why, qso: { call, gridsquare: s.dx.grid || '', mode: s.mode,
+      freq: ((dial + s.f0) / 1e6).toFixed(6), rst_sent: s.rptSent || '', rst_rcvd: s.rptRcvd || '',
+      qso_date: d8(start), time_on: t6(start), qso_date_off: d8(end), time_off: t6(end), tx_pwr: radio.power || '' } });
+  }
+  s.qsoStart = 0;
+  s.rptRcvd = '';
+  updateDigi();
+  broadcast();
+}
+/** Fin d'une émission de la séquence : 73 / RR73 envoyé → fin du QSO ; sinon la même chose à la prochaine période. */
+function seqAfterTx(p) {
+  if (!seq || !seq.on || !p || p.conn !== seq.conn) return;
+  seq.txDial = txFreq();
+  // Période « auto » sans correspondant (CQ) : on garde celle de la première émission (une période sur deux)
+  if (seq.parity == null) seq.parity = p.parity;
+  if (p.ntx >= 1 && p.ntx <= 5 && !seq.qsoStart) seq.qsoStart = Date.now();
+  if (p.ntx === 4 || p.ntx === 5) return seqQsoDone(p.ntx === 4 ? 'RR73 envoyé' : '73 envoyé');
+  setTimeout(seqNext, 50);
+}
+/** Clic sur Tx1…Tx7 : émission auto de ce message. */
+function seqStart(conn, m) {
+  const err = (msg) => send(conn, { t: 'notice', level: 'error', msg });
+  if (controller !== conn) return err('Prenez d’abord la main');
+  const mode = String(m.mode || '');
+  if (!FTX_SLOT[mode]) return err('Mode numérique inconnu');
+  const ntx = Math.round(Number(m.ntx));
+  if (!(ntx >= 1 && ntx <= 7)) return err('Message inconnu');
+  const dx = m.dx && typeof m.dx === 'object' ? m.dx : {};
+  const call = String(dx.call || '').toUpperCase().trim().slice(0, 13);
+  const grid = String(dx.grid || '').toUpperCase().trim().slice(0, 4);
+  const free = String(m.free || '').toUpperCase().replace(/[^A-Z0-9 +\-./?]/g, '').trim().slice(0, 13);
+  if (ntx <= 5 && !SEQ_CALL_RE.test(baseCall(call))) return err('Choisissez d’abord le correspondant (double-clic sur son message)');
+  if (ntx === 7 && !free) return err('Texte libre vide');
+  if ((ntx === 1 || ntx === 6) && !GRID4_RE.test(seqGrid())) return err('Locator de la station non configuré sur le serveur (stationGrid)');
+  if (ptt.active && !ptt.digi) return err('Émission en cours : attendez la fin');
+  const f0 = Math.round(Number(m.f0));
+  if (!(f0 >= 200 && f0 <= 2900)) return err('Fréquence d’émission audio hors plage (200 à 2900 Hz)');
+  const same = seq && seq.conn === conn && baseCall(seq.dx.call) === baseCall(call) && seq.mode === mode;
+  seq = {
+    conn, on: true, mode, f0,
+    parity: m.parity === 0 || m.parity === 1 ? m.parity : null,
+    ntx, progress: NTX_PROG[ntx] != null ? NTX_PROG[ntx] : (same ? seq.progress : 0),
+    dx: { call, grid: GRID4_RE.test(grid) ? grid : '' },
+    rptSent: RPT_RE.test(String(m.rpt || '')) ? String(m.rpt) : fmtRpt(m.rpt),
+    rptRcvd: same ? seq.rptRcvd : '', free, call1st: m.call1st !== false,
+    watchMsg: '', watchSince: 0, qsoStart: same ? seq.qsoStart : 0, txDial: 0
+  };
+  lastCtrlActivity = Date.now();
+  // Émission en cours (message précédent) : le nouveau message part à la période suivante
+  if (ftxPend && ftxPend.state === 'wait') ftxCancel('remplacée par le nouveau message', true);
+  updateDigi();
+  seqNext();
+  broadcast();
+}
+/** Réglages changés pendant l'émission auto (fréquence audio, période, répondre au 1er). */
+function seqCfg(conn, m) {
+  if (!seq || seq.conn !== conn) return;
+  const f0 = Math.round(Number(m.f0));
+  if (f0 >= 200 && f0 <= 2900) seq.f0 = f0;
+  if (m.parity === 0 || m.parity === 1 || m.parity === null) seq.parity = m.parity;
+  if (typeof m.call1st === 'boolean') seq.call1st = m.call1st;
+  seqChanged();
 }
 
 /** Juste avant le créneau : dernières vérifications puis passage en émission avec le signal préparé. */
@@ -893,8 +1126,9 @@ setInterval(() => {
   }
   // Émission numérique programmée : annulée si l'opérateur n'a plus la main ou si la station a disparu
   if (ftxPend && ftxPend.state === 'wait' && (controller !== ftxPend.conn || !station)) ftxCancel(!station ? 'station hors ligne' : 'main perdue');
+  if (seq && seq.on && (controller !== seq.conn || !station)) seqOff(!station ? 'station hors ligne' : 'main perdue');
   // Aucune libération ni déconnexion pour inactivité tant que le TRX est en émission
-  if (ptt.active || radio.tx || ftxPend) return;
+  if (ptt.active || radio.tx || ftxPend || (seq && seq.on)) return;
   if (controller && now - lastCtrlActivity > cfg.controlIdleMinutes * 60000) {
     const c = controller;
     stopPtt('inactivité');
@@ -1337,11 +1571,15 @@ function onOperator(conn, m) {
       return;
 
     case 'ftx_tx':
-      return ftxRequest(conn, m);
+      return seqStart(conn, m);
+
+    case 'ftx_cfg':
+      return seqCfg(conn, m);
 
     case 'ftx_stop':
+      if (seq && seq.conn === conn && seq.on) { seq.on = false; updateDigi(); }
       if (ftxPend && ftxPend.conn === conn) ftxCancel('arrêt demandé', true);
-      else if (ptt.active && ptt.digi && ptt.conn === conn) stopPtt('arrêt demandé');
+      if (ptt.active && ptt.digi && ptt.conn === conn) stopPtt('arrêt demandé');
       return broadcast();
 
     case 'ping':

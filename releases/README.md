@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.17.0 | [RemoteStation-Setup-0.17.0.exe](0.17.0/RemoteStation-Setup-0.17.0.exe) | [remote-station-0.17.0.tar.gz](0.17.0/remote-station-0.17.0.tar.gz) | Émission auto FT8 / FT4 / FT2 comme WSJT-X — [empreintes SHA-256](0.17.0/SHA256SUMS.txt) |
 | 0.16.0 | [RemoteStation-Setup-0.16.0.exe](0.16.0/RemoteStation-Setup-0.16.0.exe) | [remote-station-0.16.0.tar.gz](0.16.0/remote-station-0.16.0.tar.gz) | Émission FT8 / FT4 / FT2 (Tx1 à Tx7) — [empreintes SHA-256](0.16.0/SHA256SUMS.txt) |
 | 0.15.17 | [RemoteStation-Setup-0.15.17.exe](0.15.17/RemoteStation-Setup-0.15.17.exe) | [remote-station-0.15.17.tar.gz](0.15.17/remote-station-0.15.17.tar.gz) | BW sur le VFO B (FTX-1) — [empreintes SHA-256](0.15.17/SHA256SUMS.txt) |
 | 0.15.16 | [RemoteStation-Setup-0.15.16.exe](0.15.16/RemoteStation-Setup-0.15.16.exe) | [remote-station-0.15.16.tar.gz](0.15.16/remote-station-0.15.16.tar.gz) | Émission sur A / B dans l'en-tête, badges du VFO B, préampli V/UHF — [empreintes SHA-256](0.15.16/SHA256SUMS.txt) |

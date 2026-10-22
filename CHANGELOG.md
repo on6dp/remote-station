@@ -2,6 +2,13 @@
 
 ## v0.15 — FT2
 
+- **0.17.0** — **Émission automatique FT8 / FT4 / FT2, comme WSJT-X** (« Enable Tx » + « Auto Seq », règles reprises du code de WSJT-X 3.x).
+  - Clic sur Tx1 à Tx7 : le message part à chaque période de l'opérateur (une sur deux) jusqu'à la réponse.
+  - La séquence avance toute seule avec les réponses décodées : locator → Tx2, report → Tx3, R+report → Tx4 (RR73), RRR / RR73 → Tx5 (73). Après RR73 ou 73 envoyé : fin du QSO, émission coupée, retour sur Tx6 et proposition d'enregistrer le QSO dans le carnet.
+  - « Répondre au 1er » (Call 1st) : en appel CQ, la station qui répond devient le correspondant. Double-clic sur un message : le bon Tx est choisi selon son contenu, période opposée.
+  - Arrêts : ■ Arrêter, barre d'espace, correspondant qui répond à un autre, chien de garde (même message depuis `ftxWatchdogMinutes`, 6 min), main perdue.
+  - Décodage anticipé FT8 / FT4 en fin de signal (13,4 s en FT8) : la réponse part dès la période suivante.
+  - Barre de progression de la période sous les listes : verte en réception, rouge en émission.
 - **0.16.0** — **Émission FT8 / FT4 / FT2.** Un clic sur un message Tx1 à Tx7 l'émet une fois au prochain créneau, puis retour automatique en réception.
   - Le serveur choisit le créneau (heure du VPS) : période « auto » (opposée au correspondant choisi par double-clic) ou imposée (1re / 2e) ; bouton « ■ Arrêter ».
   - La page Station code le message (ft8_lib en WebAssembly), met le TRX en émission juste avant le créneau (VFO B en SPLIT, confirmé par FT avant d'émettre) et joue le signal à l'heure du VPS sur la **sortie son vers le TRX** (nouveau réglage, avec niveau d'émission), même si l'horloge de Windows est décalée.
