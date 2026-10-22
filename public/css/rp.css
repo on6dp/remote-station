@@ -681,11 +681,18 @@ input[type='range']:disabled { opacity: .45; }
 .dg-clock { margin-left: auto; font-size: 11px; color: var(--v2-accent-cyan-bright); white-space: pre; }
 .dg-status { flex-basis: 100%; font-size: 10px; color: var(--v2-text-dim); }
 .dg-status.warn { color: var(--v2-accent-yellow); }
+/* État de la BF et heure UTC sur la même ligne (FT8 / FT4 / FT2) */
+.dg-tl { margin-left: auto; flex: 1 1 320px; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.dg-tl .dg-status { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dg-tl .dg-clock { margin-left: 0; flex: none; }
 .dg-wf { border: 1px solid var(--v2-border-dark); border-radius: 6px; overflow: hidden; background: #05080d; }
 .dg-wf canvas { display: block; width: 100%; cursor: crosshair; }
 #dgWf { height: 140px; }
 #dgScale { height: 30px; }
 .dg-wf { position: relative; }
+.dg-grip { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; cursor: ns-resize; z-index: 3; touch-action: none;
+  background: linear-gradient(to bottom, transparent 3px, rgba(255, 255, 255, .18) 3px, rgba(255, 255, 255, .18) 5px, transparent 5px); }
+.dg-grip:hover { background: linear-gradient(to bottom, transparent 2px, rgba(0, 212, 255, .7) 2px, rgba(0, 212, 255, .7) 6px, transparent 6px); }
 .dg-mk { position: absolute; top: 30px; bottom: 0; pointer-events: none; }
 .dg-mk-rx { border-left: 2px solid rgba(78, 211, 123, .9); background: rgba(0, 204, 102, .08); }
 .dg-mk-tx { border-left: 2px dashed rgba(255, 90, 74, .9); background: rgba(255, 32, 32, .07); }
@@ -704,7 +711,7 @@ input[type='range']:disabled { opacity: .45; }
 .dg-th, .dg-row { display: grid; grid-template-columns: 54px 30px 34px 40px 1fr; gap: 6px; padding: 2px 8px; font-size: 11px; }
 .dg-th { color: var(--v2-text-dim); font-size: 9px; letter-spacing: .8px; text-transform: uppercase; border-bottom: 1px solid var(--v2-border-dark); padding-block: 4px; }
 .dg-th span:nth-child(-n+4), .dg-row span:nth-child(-n+4) { text-align: right; }
-.dg-list { flex: 1; overflow: auto; min-height: 0; max-height: 360px; }
+.dg-list { flex: 1; overflow: auto; min-height: 0; max-height: var(--dg-list-max, 360px); }
 .dg-row { color: var(--v2-text-secondary); cursor: pointer; white-space: nowrap; }
 .dg-row span:last-child { overflow: hidden; text-overflow: ellipsis; color: var(--v2-text-bright); }
 .dg-row:hover { background: rgba(0, 212, 255, .08); }

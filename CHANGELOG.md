@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.17.1** — Onglet FT8 · FT4 · FT2 : état de la BF (« BF reçue · décodage OK · délai ») sur la ligne de l'heure UTC ; **poignée sous la cascade** pour régler à la souris la hauteur de la cascade et des listes « Activité de bande » / « Fréquence RX » (mémorisée, double-clic : taille d'origine).
 - **0.17.0** — **Émission automatique FT8 / FT4 / FT2, comme WSJT-X** (« Enable Tx » + « Auto Seq », règles reprises du code de WSJT-X 3.x).
   - Clic sur Tx1 à Tx7 : le message part à chaque période de l'opérateur (une sur deux) jusqu'à la réponse.
   - La séquence avance toute seule avec les réponses décodées : locator → Tx2, report → Tx3, R+report → Tx4 (RR73), RRR / RR73 → Tx5 (73). Après RR73 ou 73 envoyé : fin du QSO, émission coupée, retour sur Tx6 et proposition d'enregistrer le QSO dans le carnet.

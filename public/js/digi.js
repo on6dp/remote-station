@@ -117,13 +117,13 @@
       </select>
       <label class="dg-chk" title="En appel CQ (Tx6), celui qui vous répond devient le correspondant et la séquence continue toute seule (Call 1st de WSJT-X)"><input type="checkbox" id="dgCall1st"> Répondre au 1er</label>
       <button class="btn dg-stop" type="button" id="dgStop" disabled title="Arrête l'émission automatique (Halt Tx)">■ Arrêter</button>
-      <span class="dg-clock" id="dgClock">--:--:--</span>
-      <span class="dg-status" id="dgStatus"></span>
+      <span class="dg-tl"><span class="dg-status" id="dgStatus"></span><span class="dg-clock" id="dgClock">--:--:--</span></span>
     </div>
     <div class="dg-wf-slot" data-slot="ftx"><div class="dg-wf">
       <canvas id="dgScale" height="30"></canvas>
       <canvas id="dgWf" height="140"></canvas>
       <i class="dg-mk dg-mk-tx" id="dgMkTx"></i><i class="dg-mk dg-mk-rx" id="dgMkRx"></i>
+      <i class="dg-grip" id="dgGrip" title="Glisser vers le haut ou le bas : hauteur de la cascade et des listes de messages (double-clic : taille d'origine)"></i>
     </div></div>
     <div class="dg-cols">
       <div class="dg-col">
@@ -1531,7 +1531,7 @@
       el.textContent = x && x.state === 'tx' ? '● ' + auto + 'en émission ' + x.mode + ' : « ' + x.text + ' » à ' + x.f0 + ' Hz'
         : x ? auto + x.mode + ' prévu à ' + hm(x.at - 500) + ' UTC : « ' + x.text + ' » à ' + x.f0 + ' Hz'
         : sq && sq.on ? auto + '« ' + sq.text + ' » à la prochaine période'
-        : 'Émission : clic sur un message Tx1 à Tx7 (en bas de la page) → il part à chaque période jusqu’à la réponse ; la séquence avance toute seule (comme WSJT-X). ■ Arrêter pour couper.';
+        : 'Émission : clic sur Tx1 à Tx7 (en bas) → à chaque période jusqu’à la réponse, séquence automatique comme WSJT-X.';
       el.classList.toggle('on', !!(x || (sq && sq.on)));
       el.classList.toggle('air', !!(x && x.state === 'tx'));
     }
@@ -1916,6 +1916,30 @@
       // Choisir une fréquence dans la liste y envoie directement le TRX (QSY)
       $('dgDial').addEventListener('change', () => { store.set('dial.' + mode, $('dgDial').value); qsy(); });
       $('dgClear').addEventListener('click', () => { hist.length = 0; redrawAll(); });
+      // Poignée sous la cascade : plus petite cascade = listes « Activité de bande » / « Fréquence RX » plus hautes
+      const WF_DEF = 140;
+      const setWfH = (h, save) => {
+        const v = Math.max(40, Math.min(420, Math.round(h)));
+        $('dgWf').style.height = v + 'px';
+        const root = $('dgWf').closest('.dg') || document.documentElement;
+        root.style.setProperty('--dg-list-max', Math.max(160, 360 + WF_DEF - v) + 'px');
+        if (save) store.set('wfh', String(v));
+        return v;
+      };
+      if (Number(store.get('wfh', '0')) > 0) setWfH(Number(store.get('wfh', '0')), false);
+      const grip = $('dgGrip');
+      grip.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        grip.setPointerCapture(e.pointerId);
+        const y0 = e.clientY;
+        const h0 = $('dgWf').getBoundingClientRect().height;
+        const mv = (ev) => setWfH(h0 + ev.clientY - y0, false);
+        const up = (ev) => { grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up); setWfH(h0 + ev.clientY - y0, true); };
+        grip.addEventListener('pointermove', mv);
+        grip.addEventListener('pointerup', up);
+        grip.addEventListener('pointercancel', up);
+      });
+      grip.addEventListener('dblclick', () => { $('dgWf').style.height = ''; const root = $('dgWf').closest('.dg') || document.documentElement; root.style.removeProperty('--dg-list-max'); store.set('wfh', '0'); });
       // Split : clic gauche = fréquence de réception, clic droit = fréquence d'émission
       const fAt = (e) => { const r = e.currentTarget.getBoundingClientRect(); return ((e.clientX - r.left) / r.width) * WF_MAX_HZ; };
       for (const id of ['dgWf', 'dgScale']) {
