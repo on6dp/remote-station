@@ -159,7 +159,8 @@ const server = makeServer((req, res) => {
       stationCall: cfg.stationCall,
       allowTx: cfg.allowTx,
       maxTxSeconds: cfg.maxTxSeconds,
-      txRanges: cfg.txRanges
+      txRanges: cfg.txRanges,
+      version: VERSION
     });
   }
   p = ROUTES[p] || p;

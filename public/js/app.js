@@ -1236,6 +1236,8 @@
     const full = (i.stationCall ? i.stationCall + '  ' : '') + i.clubName;
     document.title = full;
     $('clubName').textContent = i.clubName;
+    // Version du serveur, visible au survol du titre et dans le bouton HELP
+    if (i.version) { $('clubName').title = 'Remote Station v' + i.version; $('helpBtn').title = 'Mode d’emploi · Remote Station v' + i.version; }
     $('stationCall').textContent = i.stationCall || '';
     const lt = $('loginTitle');
     lt.textContent = '';
