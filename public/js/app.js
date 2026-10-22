@@ -29,7 +29,7 @@
   };
   // Réglages affichés sur les écrans VFO eux-mêmes (pas de bouton dans les cadres)
   const IN_VFO = ['rit', 'xit', 'clarClr', 'ritB', 'xitB', 'clarB', 'clarClrB', 'splitHw'];
-  const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE' };
+  const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE', preampVU: 'AMP' };
 
   // Bouton HELP : manuel en français, ou en anglais si le navigateur n'est pas en français
   try { if (!/^fr\b/i.test(navigator.language || 'fr')) document.getElementById('helpBtn').href = '/help'; } catch (e) {}

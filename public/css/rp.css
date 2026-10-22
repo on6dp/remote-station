@@ -719,7 +719,7 @@ input[type='range']:disabled { opacity: .45; }
 .dg-row.cq span:last-child { color: #8ff0b6; }
 .dg-row.me { background: rgba(255, 32, 32, .2); }
 .dg-row.me span:last-child { color: #ffc4b8; font-weight: 700; }
-.dg-sep { font-size: 10.5px; font-weight: 700; color: var(--v2-accent-cyan-bright); text-align: center; padding: 3px 0; margin-top: 2px; letter-spacing: .8px; background: rgba(0, 212, 255, .10); border-top: 1px solid rgba(0, 212, 255, .55); border-bottom: 1px solid rgba(0, 212, 255, .2); }
+.dg-sep { font-size: 10px; font-weight: 700; line-height: 13px; color: var(--v2-accent-cyan-bright); text-align: center; padding: 0; margin-top: 1px; letter-spacing: .8px; background: rgba(0, 212, 255, .10); border-top: 1px solid rgba(0, 212, 255, .55); }
 .dg-tx { margin: 0; font-size: 10px; color: var(--v2-text-dim); }
 .dg-tx.on { font-size: 11px; color: var(--v2-badge-amber-text); }
 .dg-tx.air { color: #ff6b5e; font-weight: 700; }
