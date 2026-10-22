@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.17.5** — **FTX-1 : clic sur MAIN (ou RX du VFO A) avec SUB actif ne fait plus émettre le TRX.** Le FTX-1 émet s'il se trouve un instant en « émission sur MAIN » (FT0) avec le côté SUB actif (VS1) : vers MAIN, VS0 est envoyé avant FT0 ; vers SUB, FT1 avant VS1 ; même ordre avant et après chaque émission en SPLIT. Essai FT1;VS1 risqué retiré.
 - **0.17.4** — **Molette de la souris sur « BW »** de chaque écran VFO : largeur de filtre de ce VFO ; FTX-1 : filtre du récepteur SUB réglable sur le VFO B (SH1). FTX-1 : ATT et IPO / AMP1 / AMP2 sous 144 MHz, AMP seul en 144 et 430 MHz.
 - **0.17.3** — Bouton « AMP » (préampli 144 / 430 MHz du FTX-1) avec un libellé court au lieu de « AMP (144 / 430 MHz) » coupé ; séparations des périodes FT8 / FT4 / FT2 moins hautes.
 - **0.17.2** — FT8 · FT4 · FT2 : lignes de séparation des périodes (heure UTC · mode) plus visibles (cyan, en gras, sur fond).

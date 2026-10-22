@@ -305,7 +305,12 @@
       get split() { return this.ans['ST;'] !== 'ST0'; }
       write(str) {
         const out = [];
+        const ftvs = () => {
+          // FTX-1 réel : « émission sur MAIN » (FT0) pendant que le côté SUB est actif (VS1) → le TRX passe en émission
+          if (spec.splitIsFT && !(this.txv || 0) && this.ans['VS;'] === 'VS1' && !this.tx) { this.tx = 2; this.keyedByFtVs = (this.keyedByFtVs || 0) + 1; }
+        };
         for (const c of this.sp.push(str)) {
+          ftvs();
           let m;
           if (c === 'FA') out.push('FA' + pad(this.freq, 9) + ';');
           else if ((m = /^FA(\d{9})$/.exec(c))) this.freq = parseInt(m[1], 10);
@@ -350,6 +355,7 @@
             else out.push('?;');
           }
         }
+        ftvs();
         if (out.length && this.onData) {
           const s = out.join('');
           setTimeout(() => this.onData && this.onData(s), 5);
@@ -365,8 +371,8 @@
       CAT_QUERIES: Array.from(new Set(READS.map((r) => r.cmd).concat(FAST, TXMETERS, ['IF;', 'OI;', 'FR;', 'ID;', 'VS;', 'FT;', 'ST;', 'FA;', 'FB;']))),
       VIRTUAL_SPLIT: !!spec.virtualSplit, cmdTxVfo: spec.virtualSplit ? (v) => 'FT' + (v ? 1 : 0) + ';' : null,
       // Façons de désigner le VFO d'émission, essayées dans l'ordre jusqu'à ce que « FT; » relu le confirme
-      // (FT0/FT1 comme Hamlib ; FT2/FT3 comme les FTDX10 / FT-991 ; VS puis FT si le TRX lie les deux)
-      txVfoTries: spec.virtualSplit ? (v) => ['FT' + (v ? 1 : 0) + ';', 'FT' + (v ? 3 : 2) + ';', 'VS' + (v ? 1 : 0) + ';FT' + (v ? 1 : 0) + ';'] : null,
+      // (FT0/FT1 comme Hamlib ; FT2/FT3 comme les FTDX10 / FT-991). Jamais VS1 avant FT1 : FT0 avec VS1 fait émettre le FTX-1.
+      txVfoTries: spec.virtualSplit ? (v) => ['FT' + (v ? 1 : 0) + ';', 'FT' + (v ? 3 : 2) + ';'] : null,
       cmdVfoSel: (v) => 'VS' + (v ? 1 : 0) + ';', // FTX-1 : sortir d'un éventuel ST1 (SUB bloqué en émission)
       FAST, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,
       FRAME_GAP_MS: 20, SLOW_PER_TICK: 4, POLL_MS: 250, readFor,

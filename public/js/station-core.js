@@ -332,7 +332,8 @@
         return;
       }
       const i = order[k];
-      const cmd = rig.txVfoTries(v)[i];
+      // Émission sur MAIN alors que le côté SUB est actif : VS0 d'abord (FT0 avec VS1 met le FTX-1 en émission)
+      const cmd = (v === 0 && rig.cmdVfoSel ? rig.cmdVfoSel(0) : '') + rig.txVfoTries(v)[i];
       this.ftSeen = null;
       this._write(cmd);
       this._write('FT;');
@@ -389,8 +390,10 @@
       const rig = this.rig;
       const rx = this.rxVfo != null ? this.rxVfo : this.radio.vfoSel ? 1 : 0;
       this.rxVfo = null;
-      this._write(rig.txVfoTries ? rig.txVfoTries(rx)[this.txVfoOk || 0] : rig.cmdTxVfo(rx));
-      if (rig.cmdVfoSel) this._write(rig.cmdVfoSel(rx));
+      const ft = rig.txVfoTries ? rig.txVfoTries(rx)[this.txVfoOk || 0] : rig.cmdTxVfo(rx);
+      // Retour sur MAIN : VS0 avant FT0 ; sur SUB : FT1 avant VS1 (FT0 avec VS1 met le FTX-1 en émission)
+      if (rx === 0 && rig.cmdVfoSel) { this._write(rig.cmdVfoSel(0)); this._write(ft); }
+      else { this._write(ft); if (rig.cmdVfoSel) this._write(rig.cmdVfoSel(rx)); }
     }
 
     unkey(reason) {

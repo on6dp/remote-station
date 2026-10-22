@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.17.5 | [RemoteStation-Setup-0.17.5.exe](0.17.5/RemoteStation-Setup-0.17.5.exe) | [remote-station-0.17.5.tar.gz](0.17.5/remote-station-0.17.5.tar.gz) | FTX-1 : retour sur MAIN sans émission — [empreintes SHA-256](0.17.5/SHA256SUMS.txt) |
 | 0.17.4 | [RemoteStation-Setup-0.17.4.exe](0.17.4/RemoteStation-Setup-0.17.4.exe) | [remote-station-0.17.4.tar.gz](0.17.4/remote-station-0.17.4.tar.gz) | BW à la molette sur chaque VFO — [empreintes SHA-256](0.17.4/SHA256SUMS.txt) |
 | 0.17.3 | [RemoteStation-Setup-0.17.3.exe](0.17.3/RemoteStation-Setup-0.17.3.exe) | [remote-station-0.17.3.tar.gz](0.17.3/remote-station-0.17.3.tar.gz) | Bouton AMP V/UHF, séparations plus fines — [empreintes SHA-256](0.17.3/SHA256SUMS.txt) |
 | 0.17.2 | [RemoteStation-Setup-0.17.2.exe](0.17.2/RemoteStation-Setup-0.17.2.exe) | [remote-station-0.17.2.tar.gz](0.17.2/remote-station-0.17.2.tar.gz) | Séparations des périodes plus visibles — [empreintes SHA-256](0.17.2/SHA256SUMS.txt) |

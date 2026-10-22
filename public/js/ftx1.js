@@ -119,7 +119,9 @@
     controlOverrides: {
       // FTX-1 : ATT et IPO / AMP1 / AMP2 sous 144 MHz, un seul préampli AMP (ON / OFF) en 144 et 430 MHz (constaté au club)
       preamp: { hideUnavail: true, when: (s) => s.freq != null && s.freq < 144000000 },
-      att: { when: (s) => s.freq != null && s.freq < 144000000 && !s.vfoSel }, split: { write: (v) => 'FT' + (v ? 1 : 0) + ';' }, vfoSel: { write: (v) => 'FT' + (v ? 1 : 0) + ';VS' + (v ? 1 : 0) + ';' } },
+      att: { when: (s) => s.freq != null && s.freq < 144000000 && !s.vfoSel }, split: { write: (v) => 'FT' + (v ? 1 : 0) + ';' }, // MAIN / SUB : jamais l'état « émission sur MAIN, opération sur SUB » (FT0 avec VS1), qui met le FTX-1 en émission
+      // (constaté au club : VS1 seul, puis FT0 avant VS0). Vers SUB : FT1 puis VS1 ; vers MAIN : VS0 puis FT0.
+      vfoSel: { write: (v) => (v ? 'FT1;VS1;' : 'VS0;FT0;') } },
     extraControlsLate: [{ id: 'splitHw', g: 'vfo', label: 'SPLIT du TRX (coupure)', type: 'toggle', offOnly: true, write: () => 'ST0;' }],
     serial: { baudRate: 38400, stopBits: 1, portHint: 'Enhanced COM Port (CAT-1)' },
     hint: 'FTX-1 : menu Operation setting → General, « CAT-1 RATE » et « CAT-1 CAT-3 STOP BIT » doivent correspondre à ces valeurs. Choisissez le port Enhanced COM Port (CAT-1).'
