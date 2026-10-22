@@ -360,6 +360,8 @@
       ID, NAME, MODES: MODES_ALL, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX,
       POWER_RANGE: P.range, POWER_STEP: P.step, INIT: spec.splitIsFT ? 'AI0;ST0;' : 'AI0;', UNKEY_EXTRA: spec.splitIsFT ? 'ST0;' : '',
       // SPLIT « virtuel » (FTX-1) : le VFO d'émission n'est envoyé au TRX qu'au moment d'émettre (FT), puis remis
+      // Lectures CAT autorisées depuis la console de diagnostic (administrateurs) : lectures seulement
+      CAT_QUERIES: Array.from(new Set(READS.map((r) => r.cmd).concat(FAST, TXMETERS, ['IF;', 'OI;', 'FR;', 'ID;', 'VS;', 'FT;', 'ST;', 'FA;', 'FB;']))),
       VIRTUAL_SPLIT: !!spec.virtualSplit, cmdTxVfo: spec.virtualSplit ? (v) => 'FT' + (v ? 1 : 0) + ';' : null,
       cmdVfoSel: (v) => 'VS' + (v ? 1 : 0) + ';', // FTX-1 : sortir d'un éventuel ST1 (SUB bloqué en émission)
       FAST, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,

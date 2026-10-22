@@ -685,6 +685,18 @@
       closeRigMenu();
     });
     box.appendChild(rl);
+    // Console CAT de diagnostic : lecture d'une valeur brute du TRX (FB;, VS;, FT;, IF;…)
+    if (RIG().CAT_QUERIES) {
+      const cq = mkBtn('⌨ Lecture CAT…', 'accent rig-opt');
+      cq.disabled = !st || !st.station;
+      cq.title = 'Diagnostic : lire une valeur brute du TRX (lecture seulement)';
+      cq.addEventListener('click', () => {
+        const c = prompt('Commande de lecture CAT (ex. FB; VS; FT; ST; IF; OI;) :', 'FB;');
+        if (c) send({ t: 'cat_query', cmd: c });
+        closeRigMenu();
+      });
+      box.appendChild(cq);
+    }
   }
   // Membres connectés : nombre dans la barre du haut, liste au clic
   function drawUsersMenu() {

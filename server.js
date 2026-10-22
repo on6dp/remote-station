@@ -511,6 +511,7 @@ function dropSession(conn) {
 // Empreinte du programme de la page Station (page, pilotes des TRX) : après une mise à jour du serveur, la page Station
 // ouverte au club la compare à celle qu'elle a chargée et se recharge toute seule si le programme a changé
 // (sinon elle continuerait à envoyer au TRX les commandes de l'ancienne version).
+let catAsk = null; // dernière lecture CAT demandée par un administrateur (réponse renvoyée à lui seul)
 let stationBounce = null; // rechargement à distance d'une ancienne page Station en cours
 const STATION_CODE = (() => {
   const h = crypto.createHash('sha256');
@@ -927,6 +928,18 @@ function onOperator(conn, m) {
       limitPower(conn, 'prise de main');
       return broadcast();
 
+    case 'cat_query': {
+      // Console CAT de diagnostic (administrateurs) : lectures seulement, réponse brute du TRX
+      if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Réservé aux administrateurs' });
+      const cmd = String(m.cmd || '').toUpperCase().replace(/\s+/g, '');
+      const q = cmd.endsWith(';') ? cmd : cmd + ';';
+      if (!station || station.caps.indexOf('catq') < 0) return send(conn, { t: 'notice', level: 'error', msg: 'Page Station sans console CAT : rechargez-la' });
+      if (!rig().CAT_QUERIES || rig().CAT_QUERIES.indexOf(q) < 0) return send(conn, { t: 'notice', level: 'error', msg: 'Lecture non autorisée : ' + q.slice(0, 12) + ' (lectures possibles : ' + (rig().CAT_QUERIES || []).join(' ') + ')' });
+      catAsk = { conn, at: Date.now() };
+      toStation({ t: 'cmd', op: 'query', cmd: q, id: Date.now() });
+      return;
+    }
+
     case 'station_reload': {
       // Recharger à distance la page Station du club (administrateurs, jamais pendant une émission)
       if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Réservé aux administrateurs' });
@@ -1301,6 +1314,11 @@ function onStation(conn, m) {
       down_s: Number.isFinite(m.down) ? m.down : null,
       tries: Number.isFinite(m.tries) ? m.tries : 0
     });
+    return;
+  }
+  if (m.t === 'cat_reply') {
+    if (catAsk && Date.now() - catAsk.at < 5000) send(catAsk.conn, { t: 'notice', level: 'info', msg: 'CAT ' + String(m.cmd).slice(0, 12) + ' → ' + String(m.reply).slice(0, 60) });
+    catAsk = null;
     return;
   }
   if (m.t === 'safety') {

@@ -91,6 +91,11 @@
       const toks = this.split.push(chunk);
       const FTX1 = this.rig;
       for (const t of toks) {
+        // Console CAT de diagnostic : réponse brute renvoyée au serveur
+        if (this.query && typeof t === 'string' && t.slice(0, 2) === this.query.prefix && Date.now() < this.query.until) {
+          if (this.wsUp) this.sendWs({ t: 'cat_reply', cmd: this.query.cmd, reply: t + ';', id: this.query.id });
+          this.query = null;
+        }
         const p = FTX1.parse(t);
         if (!p) {
           // Diagnostic : réponse inconnue du pilote (affichée une fois par type, 20 au plus)
@@ -248,6 +253,12 @@
           this._write(FTX1.cmdPower(m.watts, this.radio.powerHead));
           this._readBack('power');
           this.log('Puissance réglée à ' + m.watts + ' W' + (m.reason ? ' (' + m.reason + ')' : ''));
+        } else if (m.op === 'query') {
+          // Lecture seule, commande prise dans la liste du pilote
+          const cmd = String(m.cmd || '');
+          if (!FTX1.CAT_QUERIES || FTX1.CAT_QUERIES.indexOf(cmd) < 0) return this.log('Lecture CAT refusée : ' + cmd.slice(0, 12));
+          this.query = { cmd, prefix: cmd.slice(0, 2), until: Date.now() + 2000, id: m.id };
+          this._write(cmd);
         } else if (m.op === 'ptt') {
           if (m.on) {
             if (!this.serialOpen || !this.radio.connected) return this.log('PTT refusé : radio non connectée');
