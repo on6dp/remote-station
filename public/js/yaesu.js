@@ -325,7 +325,7 @@
             const v = this.tx ? 0 : Math.round(70 + 45 * Math.sin(this.t) + 20 * Math.random());
             out.push('SM0' + pad(Math.max(0, Math.min(255, v)), 3) + ';');
           } else if (c === 'TX') out.push('TX' + this.tx + ';');
-          else if (c === 'TX1') this.tx = 1;
+          else if (c === 'TX1') { this.tx1n = (this.tx1n || 0) + 1; if (!(this.loseTx1 && this.loseTx1(this.tx1n))) this.tx = 1; }
           else if (c === 'TX0') this.tx = 0;
           else if (c === 'FT') out.push('FT' + (spec.splitIsFT ? this.txv || 0 : this.split ? 1 : 0) + ';');
           else if ((m = /^FT([0-3])$/.exec(c))) { if (this.ftMode === 'deaf') { /* essai : TRX qui ignore FT */ } else if (this.ftMode === 'x23' ? +m[1] >= 2 : +m[1] < 2) this.txv = +m[1] % 2; else if (this.ftMode === 'x23') out.push('?;'); }
