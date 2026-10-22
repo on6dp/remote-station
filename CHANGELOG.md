@@ -2,6 +2,8 @@
 
 ## v0.15 — FT2
 
+- **0.15.8** — FTX-1 : le serveur **refuse le SPLIT** tant que la page Station du club est une version d'avant la 0.15.5 (qui enverrait ST1 et mettrait le TRX en émission), avec le message « rechargez la page Station au club ». La page Station annonce désormais ce qu'elle sait faire au serveur.
+
 - **0.15.7** — **La page Station se met à jour toute seule** : après une mise à jour du serveur, elle compare son programme (page et pilotes des TRX) à celui du serveur et se recharge si besoin (jamais pendant une émission). Avant, une page Station restée ouverte au club gardait les anciens pilotes — c'est pourquoi le SPLIT du FTX-1 envoyait encore ST1 (passage en émission) malgré la 0.15.5. **Filet de sécurité** : si le TRX passe en émission dans la seconde et demie qui suit un réglage SPLIT / VFO envoyé à distance, sans PTT, la page Station le remet en réception (TX0, et ST0 sur le FTX-1) et tous les membres sont prévenus.
 
 - **0.15.6** — Fréquence grisée sur le VFO qui ne sert ni à recevoir ni à émettre (VFO B hors SPLIT) ; elle redevient blanche dès que le SPLIT est mis (TX sur B). Le SPLIT ne fait que désigner le VFO d'émission : l'émission ne part qu'au PTT (ou plus tard, aux commandes d'émission des modes numériques).

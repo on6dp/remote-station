@@ -1104,6 +1104,10 @@ function onOperator(conn, m) {
         } catch (e) {
           return send(conn, { t: 'notice', level: 'error', msg: e.message });
         }
+        // FTX-1 : une page Station d'avant la 0.15.5 enverrait ST1 pour le SPLIT, ce qui met le TRX en émission
+        if (m.ctl === 'split' && R.ID === 'ftx1' && station && station.caps.indexOf('ftsplit') < 0) {
+          return send(conn, { t: 'notice', level: 'error', msg: 'SPLIT refusé : la page Station du club est une ancienne version (elle mettrait le FTX-1 en émission). Rechargez-la au club avec Ctrl + F5.' });
+        }
         // Changer d'antenne pendant une émission : jamais (le PA verrait un circuit ouvert)
         if (c.noTx && (ptt.active || radio.tx)) return send(conn, { t: 'notice', level: 'error', msg: c.label + ' : impossible pendant une émission' });
         if (c.transmits) {
@@ -1188,7 +1192,8 @@ function onStationAuth(conn, m) {
   }
   const ports = {};
   if (m.ports && typeof m.ports === 'object') for (const id in DRIVERS) ports[id] = m.ports[id] === true;
-  station = { conn, ip: conn.ip, since: Date.now(), rig: DRIVERS[model], ports, lastMsg: Date.now(), page: typeof m.page === 'string' ? m.page.slice(0, 40) : '' };
+  station = { conn, ip: conn.ip, since: Date.now(), rig: DRIVERS[model], ports, lastMsg: Date.now(), page: typeof m.page === 'string' ? m.page.slice(0, 40) : '',
+    caps: Array.isArray(m.caps) ? m.caps.map(String).slice(0, 20) : [] };
   conn.isStation = true;
   conn.everStation = true;
   journal('station_online', { ip: conn.ip, model });

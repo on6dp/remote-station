@@ -129,7 +129,8 @@
     const closePrev = () => { if (prev) { try { prev.close(); } catch (e) {} } };
     setTimeout(closePrev, 10000);
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
-    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID }));
+    // caps : ce que sait faire cette version de la page (ftsplit : SPLIT du FTX-1 par FT0 / FT1, sans ST1)
+    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload'] }));
     lastServerMsg = Date.now();
     ws.onmessage = (e) => {
       lastServerMsg = Date.now();
