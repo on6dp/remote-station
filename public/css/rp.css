@@ -442,6 +442,7 @@ input[type='range']:disabled { opacity: .45; }
 .msgs-h { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 10px; color: var(--v2-text-dim); }
 .msgs-t { font-size: 10px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--v2-text-header); }
 .msgs-h label { display: inline-flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: .8px; }
+.msgs-h input::placeholder { color: var(--v2-text-muted); font-weight: 400; text-transform: none; opacity: .8; }
 .msgs-h input { font: inherit; font-size: 12px; font-weight: 700; color: var(--v2-accent-cyan-bright); background: var(--v2-bg-input); border: 1px solid var(--v2-border); border-radius: 4px; padding: 3px 6px; text-transform: uppercase; width: 100px; letter-spacing: 0; }
 #dxGrid { width: 70px; }
 #dxRpt { width: 52px; }
@@ -861,10 +862,20 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .rt-macros .btn.mini { padding-inline: 6px; color: var(--v2-text-dim); }
 @media (min-width: 1800px) and (min-height: 860px) {
   .side-far .msgs { align-content: start; }
-  .side-far .msgs-h { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; align-items: end; }
+  /* Correspondant sur toute la largeur ; nom | QTH ; locator | report | RST ; note en dessous */
+  .side-far .msgs-h { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px 8px; align-items: end; padding-bottom: 10px; border-bottom: 1px solid var(--v2-border-dark); }
   .side-far .msgs-h .msgs-t, .side-far .msgs-h .msgs-note { grid-column: 1 / -1; }
-  .side-far .msgs-h label { display: grid; gap: 2px; flex: none; }
-  .side-far .msgs-row { margin-top: 4px; }
+  .side-far .msgs-h label { display: grid; gap: 3px; flex: none; grid-column: span 2; font-size: 9.5px; }
+  .side-far .msgs-h label:nth-of-type(1) { grid-column: 1 / -1; }
+  .side-far .msgs-h label:nth-of-type(2), .side-far .msgs-h label:nth-of-type(3) { grid-column: span 3; }
+  .side-far .msgs-h label:nth-of-type(1) input { font-size: 14px; padding: 5px 8px; }
+  .side-far .msgs-h input { padding: 4px 6px; }
+  .side-far .msgs-h .msgs-note { font-size: 10px; line-height: 1.45; color: var(--v2-text-dim); }
+  .side-far .msgs-row { margin-top: 10px; gap: 5px; }
+  .side-far .msgs-h { padding-right: 0; }
+  .side-far .msgs-t { letter-spacing: .9px; padding-right: 30px; }
+  .side-far .msgs-h label input { width: 100%; }
+  .side-far .msgs-l { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: var(--v2-text-header); text-transform: uppercase; }
 }
 
 /* ------------------------------------------------------------------ JTTY */

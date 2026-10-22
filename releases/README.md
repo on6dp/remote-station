@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.18.4 | [RemoteStation-Setup-0.18.4.exe](0.18.4/RemoteStation-Setup-0.18.4.exe) | [remote-station-0.18.4.tar.gz](0.18.4/remote-station-0.18.4.tar.gz) | Messages pré-enregistrés plus aérés — [empreintes SHA-256](0.18.4/SHA256SUMS.txt) |
 | 0.18.3 | [RemoteStation-Setup-0.18.3.exe](0.18.3/RemoteStation-Setup-0.18.3.exe) | [remote-station-0.18.3.tar.gz](0.18.3/remote-station-0.18.3.tar.gz) | Largeur des colonnes rééquilibrée — [empreintes SHA-256](0.18.3/SHA256SUMS.txt) |
 | 0.18.2 | [RemoteStation-Setup-0.18.2.exe](0.18.2/RemoteStation-Setup-0.18.2.exe) | [remote-station-0.18.2.tar.gz](0.18.2/remote-station-0.18.2.tar.gz) | Fréquence ajustée à la place, colonnes plus étroites — [empreintes SHA-256](0.18.2/SHA256SUMS.txt) |
 | 0.18.1 | [RemoteStation-Setup-0.18.1.exe](0.18.1/RemoteStation-Setup-0.18.1.exe) | [remote-station-0.18.1.tar.gz](0.18.1/remote-station-0.18.1.tar.gz) | Police Verdana — [empreintes SHA-256](0.18.1/SHA256SUMS.txt) |

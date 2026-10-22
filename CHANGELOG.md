@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.18.4** — Cadre « Messages pré-enregistrés » plus aéré : correspondant sur toute la largeur, nom | QTH, locator | report | RST, indications discrètes dans les champs vides (au lieu de faux contenus en majuscules), séparation avant les rangées de messages.
 - **0.18.3** — Largeur des colonnes : colonne de gauche un peu plus large, colonnes de droite plus étroites.
 - **0.18.2** — Fréquence des VFO ajustée automatiquement à la place disponible (plus de chevauchement avec « VFO A / DATA-U » en Verdana, 9 chiffres en 70 cm) ; colonnes latérales et colonne centrale des VFO plus étroites, écrans VFO plus larges.
 - **0.18.1** — Police du dashboard : **Verdana** (équivalent libre DejaVu Sans hors Windows) pour les fréquences et toutes les inscriptions ; le 0 et le 8 se distinguent bien. IBM Plex Mono retirée.
