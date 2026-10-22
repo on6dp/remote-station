@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.15.15 | [RemoteStation-Setup-0.15.15.exe](0.15.15/RemoteStation-Setup-0.15.15.exe) | [remote-station-0.15.15.tar.gz](0.15.15/remote-station-0.15.15.tar.gz) | SPLIT FTX-1 : émission vérifiée sur le bon VFO — [empreintes SHA-256](0.15.15/SHA256SUMS.txt) |
 | 0.15.14 | [RemoteStation-Setup-0.15.14.exe](0.15.14/RemoteStation-Setup-0.15.14.exe) | [remote-station-0.15.14.tar.gz](0.15.14/remote-station-0.15.14.tar.gz) | Lecture CAT de diagnostic (administrateurs) — [empreintes SHA-256](0.15.14/SHA256SUMS.txt) |
 | 0.15.13 | [RemoteStation-Setup-0.15.13.exe](0.15.13/RemoteStation-Setup-0.15.13.exe) | [remote-station-0.15.13.tar.gz](0.15.13/remote-station-0.15.13.tar.gz) | FTX-1 : SPLIT de la face avant suivi ; fréquences remises après une émission en SPLIT — [empreintes SHA-256](0.15.13/SHA256SUMS.txt) |
 | 0.15.12 | [RemoteStation-Setup-0.15.12.exe](0.15.12/RemoteStation-Setup-0.15.12.exe) | [remote-station-0.15.12.tar.gz](0.15.12/remote-station-0.15.12.tar.gz) | FTX-1 : MAIN / SUB sans passage en émission (FT et VS ensemble) — [empreintes SHA-256](0.15.12/SHA256SUMS.txt) |

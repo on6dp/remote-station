@@ -1,4 +1,4 @@
-# Remote Station — v0.15.14 (CAT + écoute de la BF)
+# Remote Station — v0.15.15 (CAT + écoute de la BF)
 
 Pilotage à distance d'un transceiver du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
 Trois modèles sont pris en charge : **Yaesu FTX-1**, **Yaesu FTDX10** et **Icom IC-7300**. Un seul est branché à la fois ; on choisit lequel sur la page Station du club, et la face avant des membres s'adapte toute seule.
@@ -87,7 +87,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.15.14.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.15.15.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -95,7 +95,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.15.14.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.15.15.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station

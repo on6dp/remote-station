@@ -96,6 +96,7 @@
           if (this.wsUp) this.sendWs({ t: 'cat_reply', cmd: this.query.cmd, reply: t + ';', id: this.query.id });
           this.query = null;
         }
+        if (this.ftWait && typeof t === 'string') this._ftReply(t);
         const p = FTX1.parse(t);
         if (!p) {
           // Diagnostic : réponse inconnue du pilote (affichée une fois par type, 20 au plus)
@@ -264,11 +265,16 @@
             if (!this.serialOpen || !this.radio.connected) return this.log('PTT refusé : radio non connectée');
             this.catKeyed = true;
             this.lastKa = Date.now();
-            // SPLIT virtuel (FTX-1) : VFO d'émission envoyé juste avant d'émettre
-            if (FTX1.cmdTxVfo && (m.txVfo === 0 || m.txVfo === 1)) {
-              this._write(FTX1.cmdTxVfo(m.txVfo));
+            // SPLIT virtuel (FTX-1) : VFO d'émission envoyé juste avant d'émettre, et relu (« FT; ») avant TX1 :
+            // on n'émet jamais sur un VFO que le TRX n'a pas confirmé
+            if (FTX1.txVfoTries && (m.txVfo === 0 || m.txVfo === 1)) {
               this.txVfoSet = true;
+              this.rxVfo = this.radio.vfoSel ? 1 : 0; // VFO de réception avant l'émission (le TRX peut déplacer VS avec FT)
               this.freqsBeforeTx = { a: this.radio.freq, b: this.radio.freqB }; // remises en place après l'émission si besoin
+              const n = FTX1.txVfoTries(0).length;
+              const order = [this.txVfoOk || 0].concat(Array.from({ length: n }, (_, i) => i).filter((i) => i !== (this.txVfoOk || 0)));
+              this._tryTxVfo(m.txVfo, m.by, order, 0);
+              return;
             }
             this._write(FTX1.cmdPtt(true));
             this.log('TX ON (' + (m.by || '?') + ')');
@@ -281,16 +287,74 @@
       }
     }
 
+    /** SPLIT virtuel : envoie une façon de désigner le VFO d'émission, relit FT, émet si confirmé, sinon essai suivant. */
+    _tryTxVfo(v, by, order, k) {
+      const rig = this.rig;
+      if (this.ftWait) clearTimeout(this.ftWait.timer);
+      this.ftWait = null;
+      if (!this.catKeyed) return;
+      const side = v ? 'SUB (VFO B)' : 'MAIN (VFO A)';
+      if (k >= order.length) {
+        // Aucune façon n'a pris : pas d'émission, retour à l'état de réception
+        const seen = this.ftSeen || 'aucune réponse';
+        this.catKeyed = false;
+        this._write(rig.cmdPtt(false));
+        this._restoreTxVfo();
+        const why = 'le TRX n’a pas accepté l’émission sur ' + side + ' (FT relu : ' + seen + ') : émission annulée';
+        this.log('Sécurité : ' + why, 'st-bad');
+        if (this.wsUp) this.sendWs({ t: 'safety', reason: why });
+        return;
+      }
+      const i = order[k];
+      const cmd = rig.txVfoTries(v)[i];
+      this.ftSeen = null;
+      this._write(cmd);
+      this._write('FT;');
+      this.ftWait = {
+        v, by, i, cmd,
+        timer: setTimeout(() => {
+          if (!this.ftWait || this.ftWait.i !== i) return;
+          this.log('Le TRX n’a pas pris « ' + cmd + ' » (FT relu : ' + (this.ftSeen || 'aucune réponse') + ')');
+          this._tryTxVfo(v, by, order, k + 1);
+        }, 450)
+      };
+    }
+
+    /** Réponse « FT » reçue pendant l'attente : émission si elle confirme le VFO demandé. */
+    _ftReply(t) {
+      const w = this.ftWait;
+      const mm = /^FT([0-3])$/.exec(t);
+      if (!w || !mm) return;
+      this.ftSeen = 'FT' + mm[1];
+      if (+mm[1] % 2 !== w.v) return; // pas (encore) le bon VFO : on attend la relecture suivante
+      clearTimeout(w.timer);
+      this.ftWait = null;
+      if (!this.catKeyed) return;
+      if ((this.txVfoOk || 0) !== w.i) this.log('Le TRX accepte « ' + w.cmd + ' » pour choisir le VFO d’émission : retenu');
+      this.txVfoOk = w.i;
+      this._write(this.rig.cmdPtt(true));
+      this.log('TX ON (' + (w.by || '?') + ') — émission sur ' + (w.v ? 'SUB (VFO B)' : 'MAIN (VFO A)') + ', ' + this.ftSeen + ' confirmé par le TRX');
+    }
+
+    /** Après une émission en SPLIT virtuel : émission et réception remises sur le VFO de réception. */
+    _restoreTxVfo() {
+      if (!this.txVfoSet) return;
+      this.txVfoSet = false;
+      const rig = this.rig;
+      const rx = this.rxVfo != null ? this.rxVfo : this.radio.vfoSel ? 1 : 0;
+      this.rxVfo = null;
+      this._write(rig.txVfoTries ? rig.txVfoTries(rx)[this.txVfoOk || 0] : rig.cmdTxVfo(rx));
+      if (rig.cmdVfoSel) this._write(rig.cmdVfoSel(rx));
+    }
+
     unkey(reason) {
       const was = this.catKeyed;
+      if (this.ftWait) { clearTimeout(this.ftWait.timer); this.ftWait = null; }
       this.catKeyed = false;
       this._write(this.rig.cmdPtt(false));
       // SPLIT virtuel : émission et réception remises sur le VFO de réception
-      if (this.txVfoSet && this.rig.cmdTxVfo) {
-        this.txVfoSet = false;
-        const rx = this.radio.vfoSel ? 1 : 0;
-        this._write(this.rig.cmdTxVfo(rx));
-        if (this.rig.cmdVfoSel) this._write(this.rig.cmdVfoSel(rx));
+      if (this.txVfoSet) {
+        this._restoreTxVfo();
         // Le TRX a pu recopier la fréquence d'un VFO sur l'autre pendant l'émission en SPLIT : on les remet comme avant
         const f = this.freqsBeforeTx;
         this.freqsBeforeTx = null;

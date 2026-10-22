@@ -194,6 +194,7 @@ const server = makeServer((req, res) => {
 // ---------------------------------------------------------------- état
 let station = null; // { conn, ip, since }
 let lastHwSplit = null; // dernier état du SPLIT de la face avant (FTX-1)
+let txMismatchAt = 0; // SPLIT virtuel : depuis quand le TRX émet sur un autre VFO que celui choisi
 let txSel = 0; // SPLIT virtuel (FTX-1) : VFO d'émission choisi (0 = A, 1 = B), envoyé au TRX seulement en émission
 let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
@@ -1360,6 +1361,12 @@ function onStation(conn, m) {
     if (radio.hwSplit === 1 && lastHwSplit !== 1) txSel = 1;
     if (radio.hwSplit === 0 && lastHwSplit === 1) txSel = 0;
     lastHwSplit = radio.hwSplit;
+    // VFO qui émet réellement d'après le TRX (FT relu), pour afficher la vérité pendant l'émission
+    radio.txReal = radio.txVfo === 0 || radio.txVfo === 1 ? radio.txVfo : null;
+    if (radio.tx && radio.txReal != null && radio.hwSplit !== 1 && radio.txReal !== txSel) {
+      if (!txMismatchAt) txMismatchAt = Date.now();
+      else if (Date.now() - txMismatchAt > 1500 && ptt.active) stopPtt('le TRX émet sur ' + (radio.txReal ? 'SUB (VFO B)' : 'MAIN (VFO A)') + ' au lieu de ' + (txSel ? 'SUB (VFO B)' : 'MAIN (VFO A)'));
+    } else txMismatchAt = 0;
     radio.txVfo = txSel;
     radio.split = txSel; // affichage et contrôles : choix de l'opérateur
   }

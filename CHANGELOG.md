@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.15.15** — **SPLIT du FTX-1 : émission vérifiée sur le bon VFO.** Avant d'émettre en SPLIT, la page Station envoie le VFO d'émission puis relit `FT;` : elle n'émet que si le TRX confirme SUB (essais `FT1;`, puis `FT3;`, puis `VS1;FT1;`, la façon acceptée est retenue). Sinon, pas d'émission et message clair. Chiffres rouges sur le VFO qui émet réellement (FT relu), émission coupée si le TRX émet plus d'1,5 s sur l'autre VFO, réception remise après l'émission sur le VFO d'avant le PTT.
 - **0.15.14** — **Lecture CAT** de diagnostic pour les administrateurs (voyant STATION → « ⌨ Lecture CAT… ») : envoie une commande de lecture au TRX (FB;, VS;, FT;, IF;, OI;…) et affiche sa réponse brute. Lectures seulement (liste fermée par pilote), jamais de réglage ni d'émission.
 
 - **0.15.13** — FTX-1 : le **SPLIT mis sur la face avant du TRX** est suivi par le dashboard (lecture de ST) ; le couper au dashboard envoie ST0 (ST1 n'est jamais envoyé par CAT) ; en SPLIT de face avant, le PTT n'envoie que TX1 / TX0. Après une émission en SPLIT virtuel, si le TRX a recopié la fréquence d'un VFO sur l'autre, la page Station remet les deux fréquences comme avant l'émission (et le note dans son journal).

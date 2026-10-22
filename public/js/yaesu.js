@@ -322,7 +322,7 @@
           else if (c === 'TX1') this.tx = 1;
           else if (c === 'TX0') this.tx = 0;
           else if (c === 'FT') out.push('FT' + (spec.splitIsFT ? this.txv || 0 : this.split ? 1 : 0) + ';');
-          else if ((m = /^FT([01])$/.exec(c))) this.txv = +m[1];
+          else if ((m = /^FT([0-3])$/.exec(c))) { if (this.ftMode === 'deaf') { /* essai : TRX qui ignore FT */ } else if (this.ftMode === 'x23' ? +m[1] >= 2 : +m[1] < 2) this.txv = +m[1] % 2; else if (this.ftMode === 'x23') out.push('?;'); }
           else if (spec.splitIsFT && /^ST[0-2]$/.test(c)) { this.ans['ST;'] = c; if (c !== 'ST0') this.tx = 2; } // ST1 par CAT : le FTX-1 émet sur le SUB
           else if ((m = /^RM([3-8])$/.exec(c))) {
             const raw = m[1] === '8' ? (this.tx ? 205 : 212) : m[1] === '7' ? (this.tx ? Math.round(this.power * 0.6) : 0)
@@ -363,6 +363,9 @@
       // Lectures CAT autorisées depuis la console de diagnostic (administrateurs) : lectures seulement
       CAT_QUERIES: Array.from(new Set(READS.map((r) => r.cmd).concat(FAST, TXMETERS, ['IF;', 'OI;', 'FR;', 'ID;', 'VS;', 'FT;', 'ST;', 'FA;', 'FB;']))),
       VIRTUAL_SPLIT: !!spec.virtualSplit, cmdTxVfo: spec.virtualSplit ? (v) => 'FT' + (v ? 1 : 0) + ';' : null,
+      // Façons de désigner le VFO d'émission, essayées dans l'ordre jusqu'à ce que « FT; » relu le confirme
+      // (FT0/FT1 comme Hamlib ; FT2/FT3 comme les FTDX10 / FT-991 ; VS puis FT si le TRX lie les deux)
+      txVfoTries: spec.virtualSplit ? (v) => ['FT' + (v ? 1 : 0) + ';', 'FT' + (v ? 3 : 2) + ';', 'VS' + (v ? 1 : 0) + ';FT' + (v ? 1 : 0) + ';'] : null,
       cmdVfoSel: (v) => 'VS' + (v ? 1 : 0) + ';', // FTX-1 : sortir d'un éventuel ST1 (SUB bloqué en émission)
       FAST, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,
       FRAME_GAP_MS: 20, SLOW_PER_TICK: 4, POLL_MS: 250, readFor,

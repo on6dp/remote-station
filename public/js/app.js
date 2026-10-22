@@ -767,6 +767,8 @@
     const pSplit = ctlPending.split && Date.now() - ctlPending.split.at < 1500 ? ctlPending.split.v : null;
     const pSel = ctlPending.vfoSel && Date.now() - ctlPending.vfoSel.at < 1500 ? ctlPending.vfoSel.v : null;
     const txOnB = pSplit != null ? Number(pSplit) === 1 : r.txVfo === 1;
+    // Pendant l'émission : chiffres rouges sur le VFO qui émet vraiment d'après le TRX (FT relu), pas sur le choix affiché
+    const airOnB = txing && (r.txReal === 0 || r.txReal === 1) ? r.txReal === 1 : txOnB;
     const rxW = (pSel != null ? Number(pSel) : r.vfoSel) === 1 ? 'B' : 'A'; // VFO en réception (MAIN, sauf si le TRX opère sur SUB)
     for (const w of ['A', 'B']) {
       const el = $('vfo' + w);
@@ -775,7 +777,7 @@
       el.classList.toggle('target', w === target);   // VFO réglé (molette, flèches, bandes)
       el.classList.toggle('txsel', live && isTx);     // cadre : VFO désigné pour l'émission
       el.classList.toggle('idle', live && !isTx && w !== rxW); // VFO ni en réception ni en émission (B hors SPLIT) : grisé
-      el.classList.toggle('on-air', live && txing && isTx);
+      el.classList.toggle('on-air', live && txing && (w === 'B' ? airOnB : !airOnB));
       const f = live || pend[w] != null ? currentFreq(w) : null;
       drawFreq(w, f);
       $('band' + w).textContent = bandName(f);
