@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.15.17 | [RemoteStation-Setup-0.15.17.exe](0.15.17/RemoteStation-Setup-0.15.17.exe) | [remote-station-0.15.17.tar.gz](0.15.17/remote-station-0.15.17.tar.gz) | BW sur le VFO B (FTX-1) — [empreintes SHA-256](0.15.17/SHA256SUMS.txt) |
 | 0.15.16 | [RemoteStation-Setup-0.15.16.exe](0.15.16/RemoteStation-Setup-0.15.16.exe) | [remote-station-0.15.16.tar.gz](0.15.16/remote-station-0.15.16.tar.gz) | Émission sur A / B dans l'en-tête, badges du VFO B, préampli V/UHF — [empreintes SHA-256](0.15.16/SHA256SUMS.txt) |
 | 0.15.15 | [RemoteStation-Setup-0.15.15.exe](0.15.15/RemoteStation-Setup-0.15.15.exe) | [remote-station-0.15.15.tar.gz](0.15.15/remote-station-0.15.15.tar.gz) | SPLIT FTX-1 : émission vérifiée sur le bon VFO — [empreintes SHA-256](0.15.15/SHA256SUMS.txt) |
 | 0.15.14 | [RemoteStation-Setup-0.15.14.exe](0.15.14/RemoteStation-Setup-0.15.14.exe) | [remote-station-0.15.14.tar.gz](0.15.14/remote-station-0.15.14.tar.gz) | Lecture CAT de diagnostic (administrateurs) — [empreintes SHA-256](0.15.14/SHA256SUMS.txt) |

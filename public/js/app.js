@@ -790,6 +790,12 @@
     }
     const wt = RIG().widthTable && RIG().widthTable(r.mode);
     $('widthA').textContent = RIG().bwText ? (live ? RIG().bwText(r) : '—') : 'BW ' + (live && r.narrow ? 'NAR' : live && wt && r.width && wt[r.width - 1] ? (wt[r.width - 1] / 1000).toFixed(1) + 'K' : live && r.mode && /AM|FM/.test(r.mode) ? 'FIX' : '—');
+    // Largeur de filtre du récepteur SUB (FTX-1)
+    $('widthB').hidden = !RIG().SUB_BADGES;
+    if (RIG().SUB_BADGES) {
+      const wtB = RIG().widthTable && RIG().widthTable(r.modeB);
+      $('widthB').textContent = 'BW ' + (live && r.narrowB ? 'NAR' : live && wtB && r.widthB && wtB[r.widthB - 1] ? (wtB[r.widthB - 1] / 1000).toFixed(1) + 'K' : live && r.modeB && /AM|FM/.test(r.modeB) ? 'FIX' : '—');
+    }
     // S-mètre en réception, puissance relative en émission
     const raw = txing ? r.m5 : r.smeter;
     const n = live ? Math.round((Math.min(255, raw || 0) / 255) * 30) : 0;
