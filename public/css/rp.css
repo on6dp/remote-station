@@ -247,6 +247,10 @@ input[type='range']:disabled { opacity: .45; }
 .vfo-top .txon[hidden] { display: none; }
 .vfo-top .badge, .vfo-name { white-space: nowrap; }
 .vfo-top .badge.bw { cursor: ns-resize; }
+/* MAIN / SUB : le côté actif (choisi par MAIN / SUB ou RX) sur fond coloré */
+.side-tag { display: inline-block; padding: 1px 7px; border-radius: 3px; border: 1px solid transparent; }
+.vfo-main .side-tag.on { background: var(--main); color: #00141c; border-color: var(--main); box-shadow: 0 0 10px rgba(0, 212, 255, .55); }
+.vfo-sub .side-tag.on { background: var(--sub); color: #1c0a00; border-color: var(--sub); box-shadow: 0 0 10px rgba(255, 106, 0, .55); }
 .vfo-top .badge.bw:hover { border-color: var(--v2-accent-cyan-bright); color: var(--v2-text-bright); }
 @container (max-width: 400px) { .vfo-top .txon-sfx { display: none; } .vfo-top { gap: 4px; } }
 .vfo-name { margin-left: auto; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: var(--v2-text-header); text-transform: uppercase; }

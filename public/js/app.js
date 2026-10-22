@@ -842,6 +842,7 @@
       // TX en rouge sur le VFO d'émission (rouge vif pendant l'émission), RX en vert sur le VFO de réception
       badge($('tx' + w), 'TX', live && isTx ? (txing ? 'b-tx live' : 'b-tx armed') : 'b-tx');
       $('txOn' + w).hidden = !(live && isTx);
+      $('side' + w).classList.toggle('on', live && w === rxW); // MAIN / SUB : côté actif mis en évidence
       badge($('rx' + w), 'RX', live && w === rxW && !txing ? 'b-rx on' : 'b-rx');
       badge($('mode' + w), live ? (w === 'A' ? r.mode : r.modeB) || '---' : '---', 'b-mode');
     }
