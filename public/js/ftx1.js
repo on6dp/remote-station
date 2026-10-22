@@ -70,12 +70,12 @@
     // (rigs/yaesu/ftx1/ftx1_vfo.c). Le choix du VFO d'émission passe donc par FT0 (TX MAIN) / FT1 (TX SUB) ; ST n'est ni lu ni envoyé.
     splitIsFT: true,
     readOverrides: { 'ST;': null },
-    // Réception et émission indépendantes : le FTX-1 peut déplacer l'une quand on change l'autre ; chaque réglage
-    // renvoie donc aussi l'autre côté tel qu'il était (SPLIT → FT puis VS inchangé ; RX → VS puis FT inchangé)
-    controlOverrides: {
-      split: { write: (v, s) => 'FT' + (v ? 1 : 0) + ';VS' + (s && s.vfoSel ? 1 : 0) + ';' },
-      vfoSel: { write: (v, s) => 'VS' + (v ? 1 : 0) + ';FT' + (s && s.txVfo ? 1 : 0) + ';' }
-    },
+    // Sur le FTX-1, réception (VS) et émission (FT) basculent ensemble d'un côté à l'autre, et un VFO d'émission
+    // différent de celui de réception peut faire émettre le TRX. Le choix du VFO d'émission (SPLIT, clic sur TX) est
+    // donc gardé par le serveur (« SPLIT virtuel », comme Hamlib) et n'est envoyé au TRX qu'au moment d'émettre :
+    // FT du VFO choisi, TX1… puis TX0 et retour de FT / VS sur le VFO de réception. Clic sur RX = VS seul.
+    virtualSplit: true,
+    controlOverrides: { split: { write: (v) => 'FT' + (v ? 1 : 0) + ';' }, vfoSel: { write: (v) => 'VS' + (v ? 1 : 0) + ';' } },
     serial: { baudRate: 38400, stopBits: 1, portHint: 'Enhanced COM Port (CAT-1)' },
     hint: 'FTX-1 : menu Operation setting → General, « CAT-1 RATE » et « CAT-1 CAT-3 STOP BIT » doivent correspondre à ces valeurs. Choisissez le port Enhanced COM Port (CAT-1).'
   });

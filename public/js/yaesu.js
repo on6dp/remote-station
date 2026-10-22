@@ -357,7 +357,10 @@
 
     return {
       ID, NAME, MODES: MODES_ALL, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX,
-      POWER_RANGE: P.range, POWER_STEP: P.step, INIT: spec.splitIsFT ? 'AI0;ST0;' : 'AI0;', UNKEY_EXTRA: spec.splitIsFT ? 'ST0;' : '', // FTX-1 : sortir d'un éventuel ST1 (SUB bloqué en émission)
+      POWER_RANGE: P.range, POWER_STEP: P.step, INIT: spec.splitIsFT ? 'AI0;ST0;' : 'AI0;', UNKEY_EXTRA: spec.splitIsFT ? 'ST0;' : '',
+      // SPLIT « virtuel » (FTX-1) : le VFO d'émission n'est envoyé au TRX qu'au moment d'émettre (FT), puis remis
+      VIRTUAL_SPLIT: !!spec.virtualSplit, cmdTxVfo: spec.virtualSplit ? (v) => 'FT' + (v ? 1 : 0) + ';' : null,
+      cmdVfoSel: (v) => 'VS' + (v ? 1 : 0) + ';', // FTX-1 : sortir d'un éventuel ST1 (SUB bloqué en émission)
       FAST, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,
       FRAME_GAP_MS: 20, SLOW_PER_TICK: 4, POLL_MS: 250, readFor,
       GROUPS: [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']],

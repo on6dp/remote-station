@@ -253,6 +253,8 @@
             if (!this.serialOpen || !this.radio.connected) return this.log('PTT refusé : radio non connectée');
             this.catKeyed = true;
             this.lastKa = Date.now();
+            // SPLIT virtuel (FTX-1) : VFO d'émission envoyé juste avant d'émettre
+            if (FTX1.cmdTxVfo && (m.txVfo === 0 || m.txVfo === 1)) { this._write(FTX1.cmdTxVfo(m.txVfo)); this.txVfoSet = true; }
             this._write(FTX1.cmdPtt(true));
             this.log('TX ON (' + (m.by || '?') + ')');
           } else {
@@ -268,6 +270,13 @@
       const was = this.catKeyed;
       this.catKeyed = false;
       this._write(this.rig.cmdPtt(false));
+      // SPLIT virtuel : émission et réception remises sur le VFO de réception
+      if (this.txVfoSet && this.rig.cmdTxVfo) {
+        this.txVfoSet = false;
+        const rx = this.radio.vfoSel ? 1 : 0;
+        this._write(this.rig.cmdTxVfo(rx));
+        if (this.rig.cmdVfoSel) this._write(this.rig.cmdVfoSel(rx));
+      }
       if (was) this.log('TX OFF — ' + reason);
     }
 
