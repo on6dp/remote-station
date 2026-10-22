@@ -2,6 +2,8 @@
 
 ## v0.15 — FT2
 
+- **0.15.6** — Fréquence grisée sur le VFO qui ne sert ni à recevoir ni à émettre (VFO B hors SPLIT) ; elle redevient blanche dès que le SPLIT est mis (TX sur B). Le SPLIT ne fait que désigner le VFO d'émission : l'émission ne part qu'au PTT (ou plus tard, aux commandes d'émission des modes numériques).
+
 - **0.15.5** — **Correction FTX-1** : SPLIT, et le clic sur TX du VFO B, faisaient passer le TRX en émission. Sur le FTX-1, la commande CAT ST1 (split) met le côté SUB en émission (défaut connu du firmware, signalé par Hamlib) : le VFO d'émission est maintenant choisi par FT0 / FT1, ST n'est plus lu ni envoyé, et ST0 est envoyé à l'ouverture du port pour sortir d'un éventuel ST1. FTDX10 et IC-7300 inchangés. En émission, les chiffres de la fréquence du VFO qui émet passent en rouge.
 
 - **0.15.4** — **RIT / XIT / CLEAR sur chaque écran VFO** : clic sur RIT ou XIT pour les allumer / éteindre, molette sur le décalage (± 10 Hz, ± 100 Hz avec Maj), CLEAR en dessous pour le remettre à zéro ; retirés de la colonne du milieu (MAIN SUB SPLIT · A→B B→A A⇄B · décalage LOCK). VFO B : clarifier du côté SUB du FTX-1 (CF1…, comme Hamlib) ; FTDX10 et IC-7300 n'ont qu'un clarifier (VFO A).

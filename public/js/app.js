@@ -752,6 +752,7 @@
       el.classList.toggle('live', live);
       el.classList.toggle('target', w === target);   // VFO réglé (molette, flèches, bandes)
       el.classList.toggle('txsel', live && isTx);     // cadre : VFO désigné pour l'émission
+      el.classList.toggle('idle', live && !isTx && w !== rxW); // VFO ni en réception ni en émission (B hors SPLIT) : grisé
       el.classList.toggle('on-air', live && txing && isTx);
       const f = live || pend[w] != null ? currentFreq(w) : null;
       drawFreq(w, f);
