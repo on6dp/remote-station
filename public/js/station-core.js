@@ -58,7 +58,7 @@
     }
     /** Demande la relecture d'une clé d'état au prochain cycle (pilotes à trames). */
     _readBack(id) {
-      const r = this.rig.readFor && this.rig.readFor(id);
+      const r = this.rig.readFor && this.rig.readFor(id, this.radio);
       if (r && this.prio.indexOf(r) < 0) this.prio.push(r);
     }
 

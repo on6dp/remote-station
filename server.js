@@ -1356,6 +1356,7 @@ function onStation(conn, m) {
   };
   // Réglages propres au pilote (SPLIT, filtres, mesures…) : nombres uniquement
   for (const k of rig().STATE_KEYS || []) radio[k] = Number.isFinite(r[k]) ? r[k] : null;
+  if (rig().derive) rig().derive(radio);
   if (rig().VIRTUAL_SPLIT) {
     // SPLIT mis ou retiré sur la face avant du TRX : suivi par le dashboard
     if (radio.hwSplit === 1 && lastHwSplit !== 1) txSel = 1;

@@ -56,15 +56,49 @@
     extraReads: [
       { cmd: 'EX030704;', re: /^EX030704([01])$/, parse: (m) => ({ ant: +m[1] + 1 }), sim: 'EX0307040' },
       { cmd: 'CF100;', re: /^CF100([01])([01])\d{3}$/, parse: (m) => ({ ritB: +m[1], xitB: +m[2] }), sim: 'CF10000000' },
-      { cmd: 'CF101;', re: /^CF101([+-])(\d{4})$/, parse: (m) => ({ clarB: (m[1] === '-' ? -1 : 1) * +m[2] }), sim: 'CF101+0000' }
+      { cmd: 'CF101;', re: /^CF101([+-])(\d{4})$/, parse: (m) => ({ clarB: (m[1] === '-' ? -1 : 1) * +m[2] }), sim: 'CF101+0000' },
+      // Préampli : PA P1 = gamme (0 HF/50 MHz : IPO/AMP1/AMP2 ; 1 = 144 MHz, 2 = 430 MHz : OFF/ON), pas MAIN/SUB
+      // (Hamlib rigs/yaesu/ftx1/ftx1_preamp.c). Réglage propre à chaque gamme, commun aux deux côtés.
+      { cmd: 'PA1;', re: /^PA1([01])$/, parse: (m) => ({ preampV: +m[1] }), sim: 'PA11' },
+      { cmd: 'PA2;', re: /^PA2([01])$/, parse: (m) => ({ preampU: +m[1] }), sim: 'PA21' },
+      // Côté SUB (VFO B) : P1 = 1 (Hamlib ftx1_noise.c, ftx1_filter.c, ftx1_audio.c) — affichés sur l'écran du VFO B
+      { cmd: 'NL1;', re: /^NL1(\d{3})$/, parse: (m) => ({ nbB: +m[1] }), sim: 'NL1000' },
+      { cmd: 'RL1;', re: /^RL1(\d{2})$/, parse: (m) => ({ nrB: +m[1] }), sim: 'RL100' },
+      { cmd: 'BP10;', re: /^BP10(\d{3})$/, parse: (m) => ({ notchB: +m[1] ? 1 : 0 }), sim: 'BP10000' },
+      { cmd: 'BC1;', re: /^BC1([01])$/, parse: (m) => ({ dnfB: +m[1] }), sim: 'BC10' },
+      { cmd: 'NA1;', re: /^NA1([01])$/, parse: (m) => ({ narrowB: +m[1] }), sim: 'NA10' },
+      { cmd: 'GT1;', re: /^GT1(\d)$/, parse: (m) => ({ agcB: Math.min(4, +m[1]) }), sim: 'GT14' },
+      { cmd: 'RG1;', re: /^RG1(\d{3})$/, parse: (m) => ({ rfB: +m[1] }), sim: 'RG1255' }
     ],
+    extraStateKeys: ['preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
+    subBadges: true,
+    // Préampli de la gamme du VFO A (144 / 430 MHz), pour le bouton AMP
+    derive(r) {
+      const f = r.freq;
+      r.preampVU = f == null ? null : f >= 420000000 ? r.preampU : f >= 144000000 ? r.preampV : null;
+    },
+    readForState: (id, s) => (id === 'preampVU' ? (s.freq >= 420000000 ? 'PA2;' : 'PA1;') : null),
+    // Texte du badge préampli d'un VFO : [texte, allumé]
+    preampText(r, w) {
+      const f = w === 'B' ? r.freqB : r.freq;
+      if (f == null) return null;
+      if (f >= 144000000) {
+        const v = f >= 420000000 ? r.preampU : r.preampV;
+        return v == null ? null : ['AMP', !!v];
+      }
+      if (r.preamp == null) return null;
+      return [['IPO', 'AMP1', 'AMP2'][r.preamp] || 'IPO', r.preamp > 0];
+    },
     extraControls: [
       { id: 'ant', g: 'rx', label: 'Antenne', type: 'select', noTx: true, options: [[1, 'ANT 1'], [2, 'ANT 2']], write: (v) => 'EX030704' + (v - 1) + ';' },
       { id: 'ritB', g: 'vfo', label: 'RIT (VFO B)', type: 'toggle', write: (v, s) => 'CF100' + v + (s.xitB || 0) + '000;' },
       { id: 'xitB', g: 'vfo', label: 'XIT (VFO B)', type: 'toggle', write: (v, s) => 'CF100' + (s.ritB || 0) + v + '000;' },
       { id: 'clarB', g: 'vfo', label: 'Décalage RIT/XIT (VFO B)', type: 'level', min: -9999, max: 9999, step: 10, unit: 'Hz',
         write: (v) => 'CF101' + (v < 0 ? '-' : '+') + pad(Math.abs(v), 4) + ';' },
-      { id: 'clarClrB', g: 'vfo', label: 'CLEAR (décalage VFO B à zéro)', type: 'action', write: () => 'CF101+0000;' }
+      { id: 'clarClrB', g: 'vfo', label: 'CLEAR (décalage VFO B à zéro)', type: 'action', write: () => 'CF101+0000;' },
+      // 144 / 430 MHz : un seul préampli, AMP ON / OFF (AMP1 / AMP2 n'existent qu'en HF et 50 MHz)
+      { id: 'preampVU', g: 'rx', label: 'AMP (144 / 430 MHz)', type: 'toggle', write: (v, s) => 'PA' + (s.freq >= 420000000 ? 2 : 1) + v + ';',
+        when: (s) => s.freq != null && s.freq >= 144000000, hideUnavail: true }
     ],
     // SPLIT : sur le FTX-1, ST1 met le côté SUB en émission (PTT) — défaut connu du firmware, signalé par Hamlib
     // (rigs/yaesu/ftx1/ftx1_vfo.c). Le choix du VFO d'émission passe donc par FT0 (TX MAIN) / FT1 (TX SUB) ; ST n'est ni lu ni envoyé.
@@ -78,7 +112,7 @@
     // MAIN / SUB (clic sur RX) : FT puis VS sur le même côté — VS seul laisserait FT sur l'autre côté, et ce
     // désaccord fait émettre le FTX-1 (constaté au club).
     virtualSplit: true,
-    controlOverrides: { split: { write: (v) => 'FT' + (v ? 1 : 0) + ';' }, vfoSel: { write: (v) => 'FT' + (v ? 1 : 0) + ';VS' + (v ? 1 : 0) + ';' } },
+    controlOverrides: { preamp: { hideUnavail: true }, split: { write: (v) => 'FT' + (v ? 1 : 0) + ';' }, vfoSel: { write: (v) => 'FT' + (v ? 1 : 0) + ';VS' + (v ? 1 : 0) + ';' } },
     extraControlsLate: [{ id: 'splitHw', g: 'vfo', label: 'SPLIT du TRX (coupure)', type: 'toggle', offOnly: true, write: () => 'ST0;' }],
     serial: { baudRate: 38400, stopBits: 1, portHint: 'Enhanced COM Port (CAT-1)' },
     hint: 'FTX-1 : menu Operation setting → General, « CAT-1 RATE » et « CAT-1 CAT-3 STOP BIT » doivent correspondre à ces valeurs. Choisissez le port Enhanced COM Port (CAT-1).'

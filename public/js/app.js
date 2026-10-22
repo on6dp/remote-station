@@ -19,7 +19,7 @@
   // Où placer chaque réglage du pilote dans la page
   const LAYOUT = {
     ant: ['ant'],
-    front: ['rf', 'att', 'preamp', 'agc'],
+    front: ['rf', 'att', 'preamp', 'preampVU', 'agc'],
     filter: ['width', 'narrow', 'shift', 'contour', 'apf'],
     dual: ['vfoSel', 'split', 'aToB', 'bToA', 'swap', 'clar', 'lock'],
     audio: ['af', 'sql'],
@@ -542,7 +542,8 @@
     $('panelTune').hidden = noTuner || !(ctlRefs.tuner || ctlRefs.tune);
     for (const id in ctlRefs) {
       const { c, cell, btn, opts, inp, out } = ctlRefs[id];
-      cell.hidden = noTuner && (id === 'tuner' || id === 'tune');
+      // Réglage remplacé par un autre selon la bande (FTX-1 : préampli HF / AMP 144-430) : caché plutôt que grisé
+      cell.hidden = (noTuner && (id === 'tuner' || id === 'tune')) || (!!c.hideUnavail && !!r.connected && !!c.when && !c.when(r));
       const v = ctlValue(id);
       const avail = !!r.connected && (!c.when || c.when(r)) && (c.type === 'action' || v != null);
       cell.classList.toggle('unavail', !avail);
@@ -783,6 +784,7 @@
       $('band' + w).textContent = bandName(f);
       // TX en rouge sur le VFO d'émission (rouge vif pendant l'émission), RX en vert sur le VFO de réception
       badge($('tx' + w), 'TX', live && isTx ? (txing ? 'b-tx live' : 'b-tx armed') : 'b-tx');
+      $('txOn' + w).hidden = !(live && isTx);
       badge($('rx' + w), 'RX', live && w === rxW && !txing ? 'b-rx on' : 'b-rx');
       badge($('mode' + w), live ? (w === 'A' ? r.mode : r.modeB) || '---' : '---', 'b-mode');
     }
@@ -817,7 +819,9 @@
       // Interrupteur seul (« NB ») ou niveau avec arrêt à 0 (« NB 3 ») selon le pilote
       const flag = (id, txt, cls) => { if (!C[id]) return; const t = C[id].badge || txt; add(r[id] && C[id].type === 'level' ? t + ' ' + r[id] : t, r[id] ? cls : ''); };
       if (C.att) add(r.att && C.att.type === 'select' ? 'ATT ' + optLabel('att', r.att) : C.att.badge || 'ATT', r.att ? 'green' : '');
-      if (C.preamp) add(optLabel('preamp', r.preamp) || 'PRE', r.preamp ? 'green' : '');
+      const pa = RIG().preampText && RIG().preampText(r, 'A');
+      if (pa) add(pa[0], pa[1] ? 'green' : '');
+      else if (C.preamp && !RIG().preampText) add(optLabel('preamp', r.preamp) || 'PRE', r.preamp ? 'green' : '');
       flag('nb', 'NB', 'amber');
       flag('nr', 'DNR', 'amber');
       flag('notch', 'NOTCH', 'amber');
@@ -827,9 +831,24 @@
       if (r.rf != null && r.rf < 255) add('RFG ' + Math.round((r.rf / 255) * 100), 'amber');
       if (r.lock) add('LOCK', 'amber');
     }
+    // badges d'état du récepteur SUB (TRX à deux récepteurs : FTX-1)
     const bB = $('badgesB');
     bB.textContent = '';
-    if (live && r.split) { const s = document.createElement('span'); badge(s, 'Émission sur B', 'amber'); bB.appendChild(s); }
+    if (live && RIG().SUB_BADGES && r.freqB != null) {
+      const add = (txt, cls) => { const s = document.createElement('span'); badge(s, txt, cls); bB.appendChild(s); };
+      const C = RIG().CONTROL || {};
+      const optLabel = (id, v) => { const o = C[id] && C[id].options && C[id].options.find((x) => x[0] === v); return o ? o[1] : null; };
+      if (C.att && r.att != null && r.freqB <= 60000000) add('ATT', r.att ? 'green' : '');
+      const pb = RIG().preampText && RIG().preampText(r, 'B');
+      if (pb) add(pb[0], pb[1] ? 'green' : '');
+      if (r.nbB != null) add(r.nbB ? 'NB ' + r.nbB : 'NB', r.nbB ? 'amber' : '');
+      if (r.nrB != null) add(r.nrB ? 'DNR ' + r.nrB : 'DNR', r.nrB ? 'amber' : '');
+      if (r.notchB != null) add('NOTCH', r.notchB ? 'amber' : '');
+      if (r.dnfB != null) add('DNF', r.dnfB ? 'amber' : '');
+      if (r.narrowB != null) add('NAR', r.narrowB ? 'cyan' : '');
+      if (r.agcB != null && optLabel('agc', r.agcB)) add('AGC ' + optLabel('agc', r.agcB), 'cyan');
+      if (r.rfB != null && r.rfB < 255) add('RFG ' + Math.round((r.rfB / 255) * 100), 'amber');
+    }
 
     // touches
     const mc = target === 'B' ? r.modeCodeB : r.modeCode;

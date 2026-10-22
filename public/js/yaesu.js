@@ -167,7 +167,8 @@
     const SLOW = READS.map((r) => r.cmd).concat(['RM7;', 'RM8;']); // + IDD, VDD
     // Commande de lecture de chaque clé d'état : relue juste après un réglage, sans attendre le tour complet
     const READ_FOR = {};
-    function readFor(id) {
+    function readFor(id, st) {
+      if (spec.readForState && st) { const x = spec.readForState(id, st); if (x) return x; }
       if (!Object.keys(READ_FOR).length) {
         for (const r of READS) {
           const m = r.sim && r.re.exec(r.sim);
@@ -183,7 +184,7 @@
     }
     const STATE_KEYS = ['txVfo', 'split', 'vfoSel', 'rit', 'xit', 'clar', 'lock', 'width', 'narrow', 'shift', 'contour', 'apf',
       'dnf', 'notch', 'notchFreq', 'nb', 'nr', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox',
-      'tuner', 'tuning', 'ant', 'ritB', 'xitB', 'clarB', 'hwSplit', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'];
+      'tuner', 'tuning', 'ant', 'ritB', 'xitB', 'clarB', 'hwSplit', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'].concat(spec.extraStateKeys || []);
 
     // Réglages
     const CONTROLS = [];
@@ -369,6 +370,7 @@
       cmdVfoSel: (v) => 'VS' + (v ? 1 : 0) + ';', // FTX-1 : sortir d'un éventuel ST1 (SUB bloqué en émission)
       FAST, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,
       FRAME_GAP_MS: 20, SLOW_PER_TICK: 4, POLL_MS: 250, readFor,
+      derive: spec.derive || null, preampText: spec.preampText || null, SUB_BADGES: !!spec.subBadges,
       GROUPS: [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']],
       CONTROLS, CONTROL, validate, widthTable, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
       BAND_CODES, cmdBand: BAND_CODES ? cmdBand : null,
