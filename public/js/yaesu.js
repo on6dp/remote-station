@@ -219,7 +219,7 @@
         return Math.round(v / c.step) * c.step;
       }
       if (c.type === 'width') {
-        const t = widthTable(st.mode) || (opts && opts.skipWhen ? WIDTH_SSB : null);
+        const t = widthTable(st[c.modeKey || 'mode']) || (opts && opts.skipWhen ? WIDTH_SSB : null);
         if (!t || !(Number.isInteger(v) && v >= 1 && v <= t.length)) throw new Error('largeur invalide pour ce mode');
         return v;
       }
@@ -370,6 +370,7 @@
       cmdVfoSel: (v) => 'VS' + (v ? 1 : 0) + ';', // FTX-1 : sortir d'un éventuel ST1 (SUB bloqué en émission)
       FAST, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,
       FRAME_GAP_MS: 20, SLOW_PER_TICK: 4, POLL_MS: 250, readFor,
+      widthTableFn: widthTable,
       derive: spec.derive || null, preampText: spec.preampText || null, SUB_BADGES: !!spec.subBadges,
       GROUPS: [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']],
       CONTROLS, CONTROL, validate, widthTable, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,

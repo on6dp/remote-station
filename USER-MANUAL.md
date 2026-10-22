@@ -86,6 +86,8 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 
 ### Mode and filter
 
+**Mouse wheel over « BW »** (top of each VFO screen): filter width of that VFO. On the FTX-1, VFO B sets the SUB receiver's filter.
+
 - **Mode**: LSB, USB, CW-L/CW-U, RTTY, DATA-L/DATA-U (digital modes), AM, FM… (applied to the VFO shown).
 - **Filtre**: bandwidth BW, NARROW, IF SHIFT, CONTOUR, APF (in CW).
 

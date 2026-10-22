@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.17.4** — **Molette de la souris sur « BW »** de chaque écran VFO : largeur de filtre de ce VFO ; FTX-1 : filtre du récepteur SUB réglable sur le VFO B (SH1). FTX-1 : ATT et IPO / AMP1 / AMP2 sous 144 MHz, AMP seul en 144 et 430 MHz.
 - **0.17.3** — Bouton « AMP » (préampli 144 / 430 MHz du FTX-1) avec un libellé court au lieu de « AMP (144 / 430 MHz) » coupé ; séparations des périodes FT8 / FT4 / FT2 moins hautes.
 - **0.17.2** — FT8 · FT4 · FT2 : lignes de séparation des périodes (heure UTC · mode) plus visibles (cyan, en gras, sur fond).
 - **0.17.1** — Onglet FT8 · FT4 · FT2 : état de la BF (« BF reçue · décodage OK · délai ») sur la ligne de l'heure UTC ; **poignée sous la cascade** pour régler à la souris la hauteur de la cascade et des listes « Activité de bande » / « Fréquence RX » (mémorisée, double-clic : taille d'origine).

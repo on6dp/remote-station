@@ -28,7 +28,7 @@
     tx: ['mic', 'proc', 'procLvl', 'vox']
   };
   // Réglages affichés sur les écrans VFO eux-mêmes (pas de bouton dans les cadres)
-  const IN_VFO = ['rit', 'xit', 'clarClr', 'ritB', 'xitB', 'clarB', 'clarClrB', 'splitHw'];
+  const IN_VFO = ['rit', 'xit', 'clarClr', 'ritB', 'xitB', 'clarB', 'clarClrB', 'splitHw', 'widthB'];
   const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE', preampVU: 'AMP' };
 
   // Bouton HELP : manuel en français, ou en anglais si le navigateur n'est pas en français
@@ -328,6 +328,36 @@
           render();
         }, { passive: false });
       }
+    }
+    // Molette sur « BW » de chaque écran VFO : largeur de filtre de ce VFO (VFO B : FTX-1, côté SUB)
+    for (const w of ['A', 'B']) {
+      $('width' + w).addEventListener('wheel', (ev) => {
+        const R = RIG();
+        const C = R.CONTROL || {};
+        const id = w === 'A' ? (C.width ? 'width' : C.fil ? 'fil' : null) : (C.widthB ? 'widthB' : null);
+        if (!id) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (ctlBlocked()) return say(ctlBlocked(), 'warn');
+        const c = C[id];
+        const r = (st && st.radio) || {};
+        const up = ev.deltaY < 0;
+        let v;
+        if (c.type === 'width') {
+          const t = R.widthTable && R.widthTable(r[c.modeKey || 'mode']);
+          if (!t) return say('Pas de réglage de largeur dans ce mode (' + (r[c.modeKey || 'mode'] || '?') + ')', 'warn');
+          if (c.when && !c.when(r)) return say(c.label + ' indisponible (NARROW enclenché ?)', 'warn');
+          v = Math.max(1, Math.min(t.length, (Number(ctlValue(id)) || 1) + (up ? 1 : -1)));
+        } else if (c.type === 'select') {
+          const o = c.options.map((x) => x[0]);
+          const i = Math.max(0, o.indexOf(Number(ctlValue(id))));
+          v = o[Math.max(0, Math.min(o.length - 1, i + (up ? 1 : -1)))];
+        } else return;
+        if (v === Number(ctlValue(id))) return;
+        ctlPending[c.id] = { v, at: Date.now() };
+        sendCtlThrottled(c);
+        render();
+      }, { passive: false });
     }
     // Voyants TX / RX cliquables : TX = VFO d'émission (SPLIT : TX sur B), RX = VFO de réception (MAIN / SUB)
     for (const w of ['A', 'B']) {
@@ -789,12 +819,14 @@
       badge($('mode' + w), live ? (w === 'A' ? r.mode : r.modeB) || '---' : '---', 'b-mode');
     }
     const wt = RIG().widthTable && RIG().widthTable(r.mode);
-    $('widthA').textContent = RIG().bwText ? (live ? RIG().bwText(r) : '—') : 'BW ' + (live && r.narrow ? 'NAR' : live && wt && r.width && wt[r.width - 1] ? (wt[r.width - 1] / 1000).toFixed(1) + 'K' : live && r.mode && /AM|FM/.test(r.mode) ? 'FIX' : '—');
+    const wA = Number(ctlValue('width')) || r.width;
+    $('widthA').textContent = RIG().bwText ? (live ? RIG().bwText(Object.assign({}, r, { fil: ctlValue('fil') != null ? ctlValue('fil') : r.fil })) : '—') : 'BW ' + (live && r.narrow ? 'NAR' : live && wt && wA && wt[wA - 1] ? (wt[wA - 1] / 1000).toFixed(1) + 'K' : live && r.mode && /AM|FM/.test(r.mode) ? 'FIX' : '—');
     // Largeur de filtre du récepteur SUB (FTX-1)
     $('widthB').hidden = !RIG().SUB_BADGES;
     if (RIG().SUB_BADGES) {
       const wtB = RIG().widthTable && RIG().widthTable(r.modeB);
-      $('widthB').textContent = 'BW ' + (live && r.narrowB ? 'NAR' : live && wtB && r.widthB && wtB[r.widthB - 1] ? (wtB[r.widthB - 1] / 1000).toFixed(1) + 'K' : live && r.modeB && /AM|FM/.test(r.modeB) ? 'FIX' : '—');
+      const wB = Number(ctlValue('widthB')) || r.widthB;
+      $('widthB').textContent = 'BW ' + (live && r.narrowB ? 'NAR' : live && wtB && wB && wtB[wB - 1] ? (wtB[wB - 1] / 1000).toFixed(1) + 'K' : live && r.modeB && /AM|FM/.test(r.modeB) ? 'FIX' : '—');
     }
     // S-mètre en réception, puissance relative en émission
     const raw = txing ? r.m5 : r.smeter;

@@ -86,6 +86,8 @@ Chaque cadre se replie avec la petite flèche `▾` devant son titre, et peut s'
 
 ### Mode et filtre
 
+**Molette de la souris sur « BW »** (en haut de chaque écran VFO) : largeur de filtre de ce VFO. Sur le FTX-1, le VFO B règle le filtre du récepteur SUB.
+
 - **Mode** : LSB, USB, CW-L/CW-U, RTTY, DATA-L/DATA-U (modes numériques), AM, FM… (appliqué au VFO indiqué).
 - **Filtre** : largeur BW, NARROW, IF SHIFT, CONTOUR, APF (en CW).
 
