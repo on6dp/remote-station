@@ -2,6 +2,8 @@
 
 ## v0.15 — FT2
 
+- **0.15.3** — Fréquence des VFO : points de séparation (MHz . kHz . Hz) rapprochés des chiffres ; la place gagnée sert à des chiffres un peu plus grands.
+
 - **0.15.2** — Voyants **TX** / **RX** des écrans VFO cliquables : clic sur TX = ce VFO émet (TX sur B = SPLIT, TX sur A = SPLIT coupé), clic sur RX = ce VFO reçoit (MAIN / SUB ; pas de choix par CAT sur l'IC-7300). Le cadre lumineux suit le VFO d'émission ; le VFO réglé par la molette a sa lettre soulignée. Bouton **CLEAR** entre RIT et XIT : décalage RIT / XIT remis à zéro (FTX-1, FTDX10, IC-7300). Colonne DUAL réorganisée (MAIN SUB SPLIT · A→B B→A A⇄B · RIT CLEAR XIT · décalage LOCK) ; la fréquence reste sur la ligne « VFO / mode » jusqu'à 1440 px de large (en dessous, elle passe sur sa propre ligne).
 
 - **0.15.1** — Écrans VFO plus compacts (246 → 149 px de haut sur 1920 × 1080) : la fréquence est sur la ligne « VFO / mode », entre le mode et RIT / XIT (l'un au-dessus de l'autre) ; écran étroit : la fréquence repasse sur sa propre ligne. Chaque VFO affiche **RX** (vert : VFO qui reçoit) et **TX** (rouge : VFO d'émission, rouge vif pendant l'émission ; en SPLIT, TX passe sur le VFO B). Colonne DUAL sur trois boutons par ligne (MAIN SUB LOCK · A→B B→A A⇄B · SPLIT RIT XIT · décalage). Plus de place pour les modes numériques en dessous.

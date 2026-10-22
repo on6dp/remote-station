@@ -303,7 +303,7 @@ input[type='range']:disabled { opacity: .45; }
   font-size: clamp(30px, 3.6vw, 52px);
   /* 9 chiffres + 2 séparateurs + « MHz » doivent tenir dans l'écran VFO */
   /* 9 chiffres + 2 séparateurs + « MHz » entre « VFO / mode » et RIT / XIT */
-  font-size: clamp(18px, calc((100cqi - 180px) / 7.6), 46px);
+  font-size: clamp(18px, calc((100cqi - 180px) / 7.35), 46px);
   line-height: 1;
   letter-spacing: .02em;
   user-select: none;
@@ -313,7 +313,7 @@ input[type='range']:disabled { opacity: .45; }
 .freq .d { cursor: ns-resize; padding: 0 .01em; border-bottom: 2px solid transparent; }
 .freq .d.lead { display: none; }
 .freq .d.cur { border-bottom-color: currentColor; }
-.freq .sep { display: inline-block; width: .5em; margin: 0 .08em; text-align: center; }
+.freq .sep { display: inline-block; width: .42em; margin: 0; text-align: center; }
 .vfo-main .freq { color: var(--v2-vfo-main-freq-active); text-shadow: var(--v2-vfo-main-freq-glow); }
 .vfo-sub .freq { color: var(--v2-vfo-sub-freq-active); text-shadow: var(--v2-vfo-sub-freq-glow); }
 .vfo:not(.live) .freq { color: var(--v2-text-muted); text-shadow: none; }
