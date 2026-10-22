@@ -468,6 +468,7 @@
         box.appendChild(cell);
         Object.assign(ref, { cell, inp, out });
       }
+      if (ref.cell) ref.cell.dataset.ctl = c.id; // placement CSS (colonne DUAL compacte)
       ctlRefs[c.id] = ref;
     }
     // TRX sans choix d'antenne par CAT (FTDX10, IC-7300) : on l'indique au lieu de cacher la ligne
@@ -695,6 +696,7 @@
 
     // VFO A et B : deux écrans, émission signalée sur celui qui émet (VFO B en SPLIT)
     const txOnB = r.txVfo === 1;
+    const rxW = r.vfoSel === 1 ? 'B' : 'A'; // VFO en réception (MAIN, sauf si le TRX opère sur SUB)
     for (const w of ['A', 'B']) {
       const el = $('vfo' + w);
       const isTx = w === 'B' ? txOnB : !txOnB;
@@ -704,7 +706,9 @@
       const f = live || pend[w] != null ? currentFreq(w) : null;
       drawFreq(w, f);
       $('band' + w).textContent = bandName(f);
-      badge($('tx' + w), live && isTx ? 'TX' : 'RX', live && isTx ? (txing ? 'b-tx live' : 'b-tx armed') : 'b-tx');
+      // TX en rouge sur le VFO d'émission (rouge vif pendant l'émission), RX en vert sur le VFO de réception
+      badge($('tx' + w), 'TX', live && isTx ? (txing ? 'b-tx live' : 'b-tx armed') : 'b-tx');
+      badge($('rx' + w), 'RX', live && w === rxW && !txing ? 'b-rx on' : 'b-rx');
       badge($('mode' + w), live ? (w === 'A' ? r.mode : r.modeB) || '---' : '---', 'b-mode');
     }
     const wt = RIG().widthTable && RIG().widthTable(r.mode);

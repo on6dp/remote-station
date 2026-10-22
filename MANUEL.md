@@ -82,6 +82,7 @@ Chaque cadre se replie avec la petite flèche `▾` devant son titre, et peut s'
 - Le pas se choisit dans **Step** (10 Hz à 100 kHz) ; `A` / `B` choisit le VFO réglé.
 - Saisie directe : tapez la fréquence en kHz puis **Aller**.
 - **Bandes** : 160 m à 70 cm (selon le TRX).
+- Sur chaque écran VFO : RX en vert = VFO qui reçoit ; TX en rouge = VFO d'émission (rouge vif pendant l'émission ; en SPLIT, c'est le VFO B).
 
 ### Mode et filtre
 

@@ -82,6 +82,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 - Choose the tuning step in **Step** (10 Hz to 100 kHz); `A` / `B` selects the VFO being tuned.
 - Direct entry: type the frequency in kHz, then **Aller** (go).
 - **Bands**: 160 m to 70 cm (depending on the transceiver).
+- On each VFO display: RX in green = the receiving VFO; TX in red = the transmit VFO (bright red while transmitting; in SPLIT it is VFO B).
 
 ### Mode and filter
 

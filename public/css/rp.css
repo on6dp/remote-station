@@ -219,13 +219,13 @@ input[type='range']::-moz-range-thumb { width: 12px; height: 20px; border-radius
 input[type='range']:disabled { opacity: .45; }
 
 /* ------------------------------------------------------------ VFO */
-.vfo-row { display: grid; grid-template-columns: minmax(0, 1fr) 132px minmax(0, 1fr); gap: 10px; }
+.vfo-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1fr); gap: 10px; }
 .vfo {
   position: relative;
   display: grid;
-  gap: 8px;
+  gap: 5px;
   align-content: start;
-  padding: 10px 12px 10px;
+  padding: 8px 12px 8px;
   border-radius: var(--v2-panel-radius);
   background: radial-gradient(120% 120% at 30% 0%, #0b1320 0%, var(--v2-bg-darkest) 70%);
   border: 1px solid var(--v2-border-panel);
@@ -238,12 +238,19 @@ input[type='range']:disabled { opacity: .45; }
 .vfo.on-air { border-color: var(--v2-accent-red) !important; box-shadow: 0 0 0 1px rgba(255,32,32,.3), 0 0 26px -6px rgba(255,32,32,.55) !important; }
 .vfo-top { display: flex; align-items: center; gap: 6px; }
 .vfo-name { margin-left: auto; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: var(--v2-text-header); text-transform: uppercase; }
-.vfo-mid { display: flex; align-items: center; gap: 8px; }
+.vfo-mid { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+/* Écran VFO étroit : la fréquence passe sur sa propre ligne */
+@container (max-width: 380px) {
+  .vfo-mid { grid-template-columns: auto auto; justify-content: space-between; }
+  .vfo-mid .freq-wrap { grid-column: 1 / -1; grid-row: 2; }
+  .vfo-mid .freq { font-size: clamp(26px, calc((100cqi - 70px) / 7), 44px); }
+}
+.vfo-id { display: grid; gap: 4px; justify-items: start; }
 .vfo-tag { font-size: 11px; color: var(--v2-text-secondary); letter-spacing: .08em; }
 .vfo-tag b { font-size: 15px; color: var(--v2-text-bright); }
 .vfo-side { margin-left: auto; display: grid; gap: 3px; justify-items: end; }
-.clar-line { display: flex; gap: 8px; align-items: center; }
-.clar-val { font-size: 11px; color: var(--v2-text-dim); min-width: 7.5em; text-align: right; }
+.clar-line { display: flex; gap: 6px; align-items: center; }
+.clar-val { font-size: 11px; color: var(--v2-text-dim); min-width: 6.2em; text-align: right; }
 .clar-val.on { color: var(--v2-accent-yellow); }
 
 .badge {
@@ -257,13 +264,15 @@ input[type='range']:disabled { opacity: .45; }
 }
 .badge.b-info, .badge.b-mode { color: var(--v2-text-bright); border-color: var(--v2-border-soft); background: var(--v2-vfo-filter-badge-bg); }
 .badge.b-mode { background: var(--v2-vfo-mode-badge-bg); border-color: var(--v2-border-cyan); }
-.badge.b-tx { color: var(--v2-badge-muted-text); border-color: var(--v2-badge-muted-border); }
-.badge.b-tx.armed { color: var(--v2-badge-red-text); border-color: var(--v2-badge-red-border); background: var(--v2-badge-red-bg); }
+.badge.b-tx, .badge.b-rx { color: var(--v2-badge-muted-text); border-color: var(--v2-badge-muted-border); min-width: 30px; }
+.badge.b-tx.armed { color: #ffb3ab; border-color: var(--v2-accent-red); background: rgba(179, 21, 15, .45); }
+.badge.b-rx.on { color: #d8ffe6; border-color: var(--v2-accent-green); background: rgba(0, 150, 75, .4); box-shadow: 0 0 8px rgba(0, 204, 102, .35); }
 .badge.b-tx.live { color: #fff; border-color: var(--v2-accent-red); background: #b3150f; box-shadow: 0 0 12px rgba(255, 32, 32, .55); }
 .badge.amber { color: var(--v2-badge-amber-text); border-color: var(--v2-badge-amber-border); background: var(--v2-badge-amber-bg); box-shadow: 0 0 8px var(--v2-badge-amber-glow); }
 .badge.green { color: var(--v2-badge-green-text); border-color: var(--v2-badge-green-border); background: var(--v2-badge-green-bg); box-shadow: 0 0 8px var(--v2-badge-green-glow); }
 .badge.cyan { color: var(--v2-badge-cyan-text); border-color: var(--v2-badge-cyan-border); background: var(--v2-badge-cyan-bg); box-shadow: 0 0 8px var(--v2-badge-cyan-glow); }
 .vfo-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+.vfo-badges:empty { display: none; }
 
 /* S-mètre segmenté */
 .smeter { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: 10px; row-gap: 3px; align-items: center; }
@@ -283,13 +292,14 @@ input[type='range']:disabled { opacity: .45; }
 .smeter-dim { opacity: .35; }
 
 /* fréquence */
-.freq-wrap { display: flex; align-items: baseline; justify-content: flex-end; gap: 6px; margin-top: 4px; }
+.freq-wrap { display: flex; align-items: baseline; justify-content: flex-end; gap: 6px; margin-top: 0; }
 .freq {
   display: flex;
   font-weight: 700;
   font-size: clamp(30px, 3.6vw, 52px);
   /* 9 chiffres + 2 séparateurs + « MHz » doivent tenir dans l'écran VFO */
-  font-size: clamp(26px, calc((100cqi - 70px) / 7), 56px);
+  /* 9 chiffres + 2 séparateurs + « MHz » entre « VFO / mode » et RIT / XIT */
+  font-size: clamp(22px, calc((100cqi - 225px) / 6.2), 46px);
   line-height: 1;
   letter-spacing: .02em;
   user-select: none;
@@ -309,15 +319,22 @@ input[type='range']:disabled { opacity: .45; }
 .dual {
   display: grid;
   align-content: start;
-  gap: 8px;
-  padding: 10px;
+  gap: 4px;
+  padding: 6px 8px;
   border-radius: var(--v2-panel-radius);
   background: linear-gradient(180deg, var(--v2-panel-bg-gradient-top), var(--v2-panel-bg-gradient-bottom));
   border: 1px solid var(--v2-border-panel);
 }
-.dual-h { text-align: center; font-size: 10px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--v2-text-dim); }
-.dual-b { display: grid; gap: 6px; }
-.dual-b .btn { width: 100%; }
+.dual-h { visibility: hidden; /* place du bouton ⧉ du cadre */ text-align: center; font-size: 9px; line-height: 12px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--v2-text-dim); }
+.dual-b { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; --btn-h: 22px; }
+.dual-b .btn { width: 100%; font-size: 10px; padding-inline: 2px; letter-spacing: 0; }
+.dual-b .ctl { gap: 0; }
+/* Trois boutons par ligne : MAIN SUB LOCK · A→B B→A A⇄B · SPLIT RIT XIT · décalage */
+.dual-b .ctl-row { display: contents; }
+.dual-b > *, .dual-b .ctl-row > * { order: 2; }
+.dual-b [data-ctl='vfoSel'] { grid-column: span 2; order: 0; }
+.dual-b [data-ctl='lock'] { order: 1; }
+.dual-b [data-ctl='clar'] { grid-column: 1 / -1; order: 3; }
 
 /* bande d'accord */
 .tune-panel { padding: 10px 12px; display: grid; gap: 10px; }
@@ -462,6 +479,8 @@ input[type='range']:disabled { opacity: .45; }
   .vfo-row { grid-template-columns: minmax(0, 1fr); }
   .dual { order: 3; }
   .dual-b { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .vfo-mid { grid-template-columns: auto auto; justify-content: space-between; }
+  .vfo-mid .freq-wrap { grid-column: 1 / -1; grid-row: 2; }
   .freq { font-size: clamp(26px, calc((100cqi - 70px) / 7), 44px); }
   .meters-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .msgs-row { grid-template-columns: minmax(0, 1fr); }

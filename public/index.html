@@ -81,7 +81,8 @@
         <!-- VFO A / MAIN -->
         <section class="vfo vfo-main" id="vfoA" data-v="A" aria-label="VFO A (MAIN)">
           <div class="vfo-top">
-            <span class="badge b-tx" id="txA">RX</span>
+            <span class="badge b-rx" id="rxA" title="Réception sur ce VFO (vert)">RX</span>
+            <span class="badge b-tx" id="txA" title="Émission sur ce VFO (rouge)">TX</span>
             <span class="badge b-info" id="widthA">BW —</span>
             <span class="vfo-name">MAIN · <span id="bandA">—</span></span>
           </div>
@@ -90,15 +91,15 @@
             <div class="sm-bars" id="barsA"></div>
             <span class="sm-read" id="sA">S —</span>
           </div>
+          <!-- une seule ligne : VFO et mode · fréquence · RIT / XIT -->
           <div class="vfo-mid">
-            <span class="vfo-tag">VFO <b>A</b></span>
-            <span class="badge b-mode" id="modeA">---</span>
+            <span class="vfo-id"><span class="vfo-tag">VFO <b>A</b></span><span class="badge b-mode" id="modeA">---</span></span>
+            <div class="freq-wrap"><div class="freq" id="freqA"></div><span class="unit">MHz</span></div>
             <span class="vfo-side">
               <span class="clar-line"><span class="badge" id="ritBadge">RIT</span><span class="clar-val" id="ritVal">+0.00 kHz</span></span>
               <span class="clar-line"><span class="badge" id="xitBadge">XIT</span><span class="clar-val" id="xitVal">+0.00 kHz</span></span>
             </span>
           </div>
-          <div class="freq-wrap"><div class="freq" id="freqA"></div><span class="unit">MHz</span></div>
           <div class="vfo-badges" id="badgesA"></div>
         </section>
 
@@ -111,7 +112,8 @@
         <!-- VFO B / SUB -->
         <section class="vfo vfo-sub" id="vfoB" data-v="B" aria-label="VFO B (SUB)">
           <div class="vfo-top">
-            <span class="badge b-tx" id="txB">RX</span>
+            <span class="badge b-rx" id="rxB" title="Réception sur ce VFO (vert)">RX</span>
+            <span class="badge b-tx" id="txB" title="Émission sur ce VFO (rouge)">TX</span>
             <span class="vfo-name">SUB · <span id="bandB">—</span></span>
           </div>
           <div class="smeter smeter-dim" aria-hidden="true">
@@ -120,15 +122,13 @@
             <span class="sm-read">S —</span>
           </div>
           <div class="vfo-mid">
-            <span class="vfo-tag">VFO <b>B</b></span>
-            <span class="badge b-mode" id="modeB">---</span>
+            <span class="vfo-id"><span class="vfo-tag">VFO <b>B</b></span><span class="badge b-mode" id="modeB">---</span></span>
+            <div class="freq-wrap"><div class="freq" id="freqB"></div><span class="unit">MHz</span></div>
             <span class="vfo-side">
               <span class="clar-line"><span class="badge" id="splitBadge">SPLIT TX</span></span>
-              <!-- ligne vide de même hauteur que RIT/XIT du MAIN : les deux fréquences restent alignées -->
-              <span class="clar-line clar-ghost" aria-hidden="true"><span class="badge">XIT</span></span>
+              <span class="clar-line clar-ghost" aria-hidden="true"><span class="badge">XIT</span><span class="clar-val">+0.00 kHz</span></span>
             </span>
           </div>
-          <div class="freq-wrap"><div class="freq" id="freqB"></div><span class="unit">MHz</span></div>
           <div class="vfo-badges" id="badgesB"></div>
         </section>
       </div>
