@@ -175,6 +175,26 @@
       }
     }
   }
+  // La fréquence doit tenir entre « VFO / mode » et RIT / XIT, quelle que soit la police (Verdana est plus large
+  // que les polices à chasse fixe) : taille réduite si elle déborde, recalculée seulement si la largeur change
+  const fitKey = { A: '', B: '' };
+  function fitFreq(w) {
+    const el = $('freq' + w);
+    const wrap = el && el.parentElement;
+    if (!wrap) return;
+    const n = el.querySelectorAll('.d:not(.lead)').length;
+    const key = n + ':' + wrap.clientWidth;
+    if (fitKey[w] === key) return;
+    fitKey[w] = key;
+    el.style.fontSize = '';
+    const unit = wrap.querySelector('.unit');
+    const need = () => el.offsetWidth + (unit ? unit.offsetWidth + 6 : 0);
+    for (let i = 0; i < 6 && need() > wrap.clientWidth; i++) {
+      const fs = parseFloat(getComputedStyle(el).fontSize);
+      el.style.fontSize = Math.max(14, Math.floor(fs * (wrap.clientWidth / need()) * 0.98)) + 'px';
+    }
+  }
+  window.addEventListener('resize', () => { fitKey.A = ''; fitKey.B = ''; });
   function drawFreq(which, hz) {
     const s = hz == null ? '---------' : String(hz).padStart(9, '0');
     let lead = true;
@@ -817,6 +837,7 @@
       el.classList.toggle('on-air', live && txing && (w === 'B' ? airOnB : !airOnB));
       const f = live || pend[w] != null ? currentFreq(w) : null;
       drawFreq(w, f);
+      fitFreq(w);
       $('band' + w).textContent = bandName(f);
       // TX en rouge sur le VFO d'émission (rouge vif pendant l'émission), RX en vert sur le VFO de réception
       badge($('tx' + w), 'TX', live && isTx ? (txing ? 'b-tx live' : 'b-tx armed') : 'b-tx');

@@ -129,7 +129,7 @@ button, input, select { font: inherit; color: inherit; }
 /* ------------------------------------------------------------ disposition */
 .workspace {
   display: grid;
-  grid-template-columns: 236px minmax(0, 1fr) 248px;
+  grid-template-columns: 204px minmax(0, 1fr) 214px;
   grid-template-rows: auto 1fr;
   gap: 10px;
   align-items: start;
@@ -221,7 +221,7 @@ input[type='range']::-moz-range-thumb { width: 12px; height: 20px; border-radius
 input[type='range']:disabled { opacity: .45; }
 
 /* ------------------------------------------------------------ VFO */
-.vfo-row { display: grid; grid-template-columns: minmax(0, 1fr) 162px minmax(0, 1fr); gap: 10px; }
+.vfo-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1fr); gap: 8px; }
 .vfo {
   position: relative;
   display: grid;
@@ -311,9 +311,9 @@ input[type='range']:disabled { opacity: .45; }
   font-size: clamp(30px, 3.6vw, 52px);
   /* 9 chiffres + 2 séparateurs + « MHz » doivent tenir dans l'écran VFO */
   /* 9 chiffres + 2 séparateurs + « MHz » entre « VFO / mode » et RIT / XIT */
-  font-size: clamp(18px, calc((100cqi - 180px) / 7.35), 46px);
+  font-size: clamp(18px, calc((100cqi - 190px) / 7.9), 46px);
   line-height: 1;
-  letter-spacing: .02em;
+  letter-spacing: 0;
   user-select: none;
   touch-action: none;
   font-variant-numeric: tabular-nums;
@@ -475,7 +475,7 @@ input[type='range']:disabled { opacity: .45; }
 
 /* ------------------------------------------------------------ largeurs intermédiaires */
 @media (max-width: 1280px) {
-  .workspace { grid-template-columns: 210px minmax(0, 1fr) 220px; }
+  .workspace { grid-template-columns: 190px minmax(0, 1fr) 200px; }
   .meters-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 1080px) {
@@ -514,7 +514,7 @@ input[type='range']:disabled { opacity: .45; }
   body { overflow: hidden; }
   .app { max-width: none; height: 100vh; margin: 0; box-sizing: border-box; border-radius: 0; border: 0;
     grid-template-rows: auto minmax(0, 1fr) auto; padding: 8px 10px; gap: 8px; }
-  .workspace { grid-template-columns: 236px minmax(0, 1fr) 250px 310px; grid-template-rows: minmax(0, 1fr); min-height: 0; align-items: stretch; gap: 8px; }
+  .workspace { grid-template-columns: 204px minmax(0, 1fr) 216px 270px; grid-template-rows: minmax(0, 1fr); min-height: 0; align-items: stretch; gap: 8px; }
   /* Plus compact pour tout faire tenir en hauteur */
   :root { --btn-h: 26px; }
   .panel-h { padding: 7px 10px 5px; }
