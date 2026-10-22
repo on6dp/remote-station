@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.15.5 | [RemoteStation-Setup-0.15.5.exe](0.15.5/RemoteStation-Setup-0.15.5.exe) | [remote-station-0.15.5.tar.gz](0.15.5/remote-station-0.15.5.tar.gz) | FTX-1 : SPLIT / TX sur B sans passage en émission ; fréquence en rouge pendant l'émission — [empreintes SHA-256](0.15.5/SHA256SUMS.txt) |
 | 0.15.4 | [RemoteStation-Setup-0.15.4.exe](0.15.4/RemoteStation-Setup-0.15.4.exe) | [remote-station-0.15.4.tar.gz](0.15.4/remote-station-0.15.4.tar.gz) | RIT / XIT / CLEAR sur chaque écran VFO — [empreintes SHA-256](0.15.4/SHA256SUMS.txt) |
 | 0.15.3 | [RemoteStation-Setup-0.15.3.exe](0.15.3/RemoteStation-Setup-0.15.3.exe) | [remote-station-0.15.3.tar.gz](0.15.3/remote-station-0.15.3.tar.gz) | Points de la fréquence rapprochés des chiffres — [empreintes SHA-256](0.15.3/SHA256SUMS.txt) |
 | 0.15.2 | [RemoteStation-Setup-0.15.2.exe](0.15.2/RemoteStation-Setup-0.15.2.exe) | [remote-station-0.15.2.tar.gz](0.15.2/remote-station-0.15.2.tar.gz) | Voyants TX / RX cliquables, cadre sur le VFO d'émission, bouton CLEAR (RIT / XIT) — [empreintes SHA-256](0.15.2/SHA256SUMS.txt) |

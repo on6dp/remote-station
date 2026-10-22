@@ -82,7 +82,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 - Choose the tuning step in **Step** (10 Hz to 100 kHz); `A` / `B` selects the VFO being tuned.
 - Direct entry: type the frequency in kHz, then **Aller** (go).
 - **Bands**: 160 m to 70 cm (depending on the transceiver).
-- On each VFO display: RX in green = the receiving VFO; TX in red = the transmit VFO (bright red while transmitting). **Click TX** on a VFO to make it the transmit VFO (TX on B = SPLIT); **click RX** to make it the receive VFO (MAIN / SUB, not on the IC-7300). The **glowing frame** surrounds the transmit VFO; the VFO tuned by the wheel, arrows and band keys has its letter underlined (click the VFO display to choose it).
+- On each VFO display: RX in green = the receiving VFO; TX in red = the transmit VFO (bright red while transmitting). **Click TX** on a VFO to make it the transmit VFO (TX on B = SPLIT); **click RX** to make it the receive VFO (MAIN / SUB, not on the IC-7300). While transmitting, its frequency turns red. The **glowing frame** surrounds the transmit VFO; the VFO tuned by the wheel, arrows and band keys has its letter underlined (click the VFO display to choose it).
 
 ### Mode and filter
 

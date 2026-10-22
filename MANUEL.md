@@ -82,7 +82,7 @@ Chaque cadre se replie avec la petite flèche `▾` devant son titre, et peut s'
 - Le pas se choisit dans **Step** (10 Hz à 100 kHz) ; `A` / `B` choisit le VFO réglé.
 - Saisie directe : tapez la fréquence en kHz puis **Aller**.
 - **Bandes** : 160 m à 70 cm (selon le TRX).
-- Sur chaque écran VFO : RX en vert = VFO qui reçoit ; TX en rouge = VFO d'émission (rouge vif pendant l'émission). **Clic sur TX** d'un VFO : il devient le VFO d'émission (TX sur B = SPLIT) ; **clic sur RX** : il devient le VFO de réception (MAIN / SUB, pas sur l'IC-7300). Le **cadre lumineux** entoure le VFO d'émission ; le VFO réglé par la molette, les flèches et les bandes a sa lettre soulignée (clic sur l'écran VFO pour le choisir).
+- Sur chaque écran VFO : RX en vert = VFO qui reçoit ; TX en rouge = VFO d'émission (rouge vif pendant l'émission). **Clic sur TX** d'un VFO : il devient le VFO d'émission (TX sur B = SPLIT) ; **clic sur RX** : il devient le VFO de réception (MAIN / SUB, pas sur l'IC-7300). Pendant l'émission, sa fréquence s'affiche en rouge. Le **cadre lumineux** entoure le VFO d'émission ; le VFO réglé par la molette, les flèches et les bandes a sa lettre soulignée (clic sur l'écran VFO pour le choisir).
 
 ### Mode et filtre
 

@@ -257,7 +257,8 @@
       if ((m = /^MD1([0-9A-Z])$/.exec(tok))) return { modeCodeB: m[1], modeB: MODES_ALL[m[1]] || ('?' + m[1]) };
       if ((m = /^SM0(\d{3})$/.exec(tok))) return { smeter: parseInt(m[1], 10) };
       if ((m = /^TX([0-2])$/.exec(tok))) return { tx: parseInt(m[1], 10) }; // 0 RX, 1 TX par CAT, 2 TX par la radio
-      if ((m = /^FT([01])$/.exec(tok))) return { txVfo: +m[1] };
+      // FT : VFO d'émission. Modèles « splitIsFT » (FTX-1) : le SPLIT, c'est FT1 (TX sur SUB), jamais ST1
+      if ((m = /^FT([01])$/.exec(tok))) return spec.splitIsFT ? { txVfo: +m[1], split: +m[1] } : { txVfo: +m[1] };
       if ((m = /^RM([3-8])(\d{3})(\d{3})$/.exec(tok))) return { ['m' + m[1]]: +m[2] };
       if (tok === '?') return { error: true };
       for (const r of READS) if ((m = r.re.exec(tok))) return r.parse(m);
@@ -319,7 +320,9 @@
           } else if (c === 'TX') out.push('TX' + this.tx + ';');
           else if (c === 'TX1') this.tx = 1;
           else if (c === 'TX0') this.tx = 0;
-          else if (c === 'FT') out.push('FT' + (this.split ? 1 : 0) + ';');
+          else if (c === 'FT') out.push('FT' + (spec.splitIsFT ? this.txv || 0 : this.split ? 1 : 0) + ';');
+          else if ((m = /^FT([01])$/.exec(c))) this.txv = +m[1];
+          else if (spec.splitIsFT && /^ST[0-2]$/.test(c)) { this.tx = c === 'ST0' ? this.tx : 2; } // ST1 du FTX-1 : met le SUB en émission
           else if ((m = /^RM([3-8])$/.exec(c))) {
             const raw = m[1] === '8' ? (this.tx ? 205 : 212) : m[1] === '7' ? (this.tx ? Math.round(this.power * 0.6) : 0)
               : !this.tx ? 0 : { 3: 20, 4: 60, 5: this.silent ? 0 : Math.round(this.power * 2.4), 6: this.swrRaw }[m[1]];
@@ -354,7 +357,7 @@
 
     return {
       ID, NAME, MODES: MODES_ALL, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX,
-      POWER_RANGE: P.range, POWER_STEP: P.step, INIT: 'AI0;',
+      POWER_RANGE: P.range, POWER_STEP: P.step, INIT: spec.splitIsFT ? 'AI0;ST0;' : 'AI0;', // FTX-1 : sortir d'un éventuel ST1 (SUB bloqué en émission)
       FAST, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,
       FRAME_GAP_MS: 20, SLOW_PER_TICK: 4, POLL_MS: 250, readFor,
       GROUPS: [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']],

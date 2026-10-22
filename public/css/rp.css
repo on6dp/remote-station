@@ -317,6 +317,8 @@ input[type='range']:disabled { opacity: .45; }
 .vfo-main .freq { color: var(--v2-vfo-main-freq-active); text-shadow: var(--v2-vfo-main-freq-glow); }
 .vfo-sub .freq { color: var(--v2-vfo-sub-freq-active); text-shadow: var(--v2-vfo-sub-freq-glow); }
 .vfo:not(.live) .freq { color: var(--v2-text-muted); text-shadow: none; }
+/* En émission : chiffres du VFO qui émet en rouge */
+.vfo.on-air .freq { color: #ff4a3d; text-shadow: 0 0 12px rgba(255, 40, 30, .55); }
 .unit { font-size: 11px; color: var(--v2-text-dim); }
 
 /* colonne DUAL */
