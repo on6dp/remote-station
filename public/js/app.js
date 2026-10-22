@@ -365,7 +365,9 @@
         ev.stopPropagation();
         const c = RIG().CONTROL && RIG().CONTROL.split;
         if (!c) return say('Choix du VFO d’émission non disponible sur ce TRX', 'warn');
-        const v = w === 'B' ? 1 : 0;
+        // FTX-1 : émettre sur ce VFO = SPLIT si on écoute sur l'autre ; autres TRX : VFO d'émission
+        const rxB = Number(ctlValue('vfoSel')) === 1;
+        const v = RIG().VIRTUAL_SPLIT ? ((w === 'B') !== rxB ? 1 : 0) : w === 'B' ? 1 : 0;
         if (Number(ctlValue('split')) !== v) sendCtl(c, v);
       });
       $('rx' + w).addEventListener('click', (ev) => {
@@ -797,7 +799,11 @@
     // Choix en cours d'envoi (clic sur TX / RX) affiché tout de suite, sans attendre la relecture du TRX
     const pSplit = ctlPending.split && Date.now() - ctlPending.split.at < 1500 ? ctlPending.split.v : null;
     const pSel = ctlPending.vfoSel && Date.now() - ctlPending.vfoSel.at < 1500 ? ctlPending.vfoSel.v : null;
-    const txOnB = pSplit != null ? Number(pSplit) === 1 : r.txVfo === 1;
+    // FTX-1 (SPLIT virtuel) : émission sur le VFO de réception, ou sur l'autre en SPLIT ; autres TRX : VFO d'émission lu
+    const rxOnB = (pSel != null ? Number(pSel) : r.vfoSel) === 1;
+    const txOnB = RIG().VIRTUAL_SPLIT
+      ? ((pSplit != null ? Number(pSplit) : r.split ? 1 : 0) ? !rxOnB : rxOnB)
+      : pSplit != null ? Number(pSplit) === 1 : r.txVfo === 1;
     // Pendant l'émission : chiffres rouges sur le VFO qui émet vraiment d'après le TRX (FT relu), pas sur le choix affiché
     const airOnB = txing && (r.txReal === 0 || r.txReal === 1) ? r.txReal === 1 : txOnB;
     const rxW = (pSel != null ? Number(pSel) : r.vfoSel) === 1 ? 'B' : 'A'; // VFO en réception (MAIN, sauf si le TRX opère sur SUB)

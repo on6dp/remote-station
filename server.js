@@ -196,7 +196,11 @@ const server = makeServer((req, res) => {
 let station = null; // { conn, ip, since }
 let lastHwSplit = null; // dernier état du SPLIT de la face avant (FTX-1)
 let txMismatchAt = 0; // SPLIT virtuel : depuis quand le TRX émet sur un autre VFO que celui choisi
-let txSel = 0; // SPLIT virtuel (FTX-1) : VFO d'émission choisi (0 = A, 1 = B), envoyé au TRX seulement en émission
+let txSel = 0; // SPLIT virtuel (FTX-1) : SPLIT enclenché (1) ou non ; envoyé au TRX seulement en émission
+// Règle des TRX : sans SPLIT on émet sur le VFO où l'on écoute ; avec SPLIT, sur l'autre.
+// Le VFO de réception est celui d'avant le PTT (le TRX peut changer de côté actif pendant l'émission).
+const rxSide = () => (ptt.active && (ptt.rx === 0 || ptt.rx === 1) ? ptt.rx : radio.vfoSel === 1 ? 1 : 0);
+const txSide = () => (txSel ? 1 - rxSide() : rxSide());
 let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
@@ -789,7 +793,7 @@ function stopPtt(reason) {
 }
 
 function startPtt(conn) {
-  if (rig().VIRTUAL_SPLIT && txSel && station && station.caps.indexOf('txsel') < 0) {
+  if (rig().VIRTUAL_SPLIT && txSide() && station && station.caps.indexOf('txsel') < 0) {
     return send(conn, { t: 'notice', level: 'error', msg: 'PTT refusé : la page Station du club est une ancienne version (émission sur le VFO B impossible). Rechargez-la : voyant STATION → « Recharger la page Station ».' });
   }
   const why = txBlockReason(conn);
@@ -799,7 +803,9 @@ function startPtt(conn) {
   ptt = { active: true, conn, since: now, lastBeat: now };
   lastCtrlActivity = now;
   // SPLIT virtuel : VFO d'émission envoyé avec le PTT, sauf si le TRX est déjà en SPLIT par sa face avant (il s'en charge)
-  toStation({ t: 'cmd', op: 'ptt', on: true, by: conn.user.call, txVfo: rig().VIRTUAL_SPLIT && radio.hwSplit !== 1 ? txSel : undefined });
+  const tv = txSide();
+  ptt.rx = rxSide();
+  toStation({ t: 'cmd', op: 'ptt', on: true, by: conn.user.call, txVfo: rig().VIRTUAL_SPLIT && radio.hwSplit !== 1 ? tv : undefined });
   toStation({ t: 'txka' });
   journal('tx_start', { call: conn.user.call, ip: conn.ip, freq: txFreq(), mode: radio.txVfo === 1 ? radio.modeB : radio.mode, split: !!radio.split, watts: radio.power });
   broadcast();
@@ -1108,7 +1114,9 @@ function ftxKey(p) {
   p.state = 'tx';
   ptt = { active: true, conn: p.conn, since: now, lastBeat: now, digi: { id: p.id, mode: p.mode } };
   lastCtrlActivity = now;
-  toStation({ t: 'cmd', op: 'ptt', on: true, by: p.conn.user.call, txVfo: rig().VIRTUAL_SPLIT && radio.hwSplit !== 1 ? txSel : undefined, digi: { id: p.id, at: p.at } });
+  const tv = txSide();
+  ptt.rx = radio.vfoSel === 1 ? 1 : 0;
+  toStation({ t: 'cmd', op: 'ptt', on: true, by: p.conn.user.call, txVfo: rig().VIRTUAL_SPLIT && radio.hwSplit !== 1 ? tv : undefined, digi: { id: p.id, at: p.at } });
   toStation({ t: 'txka' });
   journal('tx_start', { call: p.conn.user.call, ip: p.conn.ip, freq: txFreq(), mode: p.mode, text: p.sent || p.text, f0: p.f0, split: !!radio.split, watts: radio.power });
   // Filet : fin du message non signalée par la page Station
@@ -1513,7 +1521,7 @@ function onOperator(conn, m) {
         if (m.ctl === 'split' && R.VIRTUAL_SPLIT) {
           if (ptt.active || radio.tx) return send(conn, { t: 'notice', level: 'error', msg: 'Changement du VFO d’émission impossible pendant une émission' });
           txSel = v ? 1 : 0;
-          radio.txVfo = txSel;
+          radio.txVfo = txSide();
           radio.split = txSel;
           // SPLIT de la face avant encore actif : on le coupe (ST0 ; ST1 n'est jamais envoyé)
           if (!txSel && radio.hwSplit === 1) toStation({ t: 'cmd', op: 'ctl', id: 'splitHw', value: 0 });
@@ -1537,6 +1545,7 @@ function onOperator(conn, m) {
         }
         toStation({ t: 'cmd', op: 'ctl', id: m.ctl, value: v, by: conn.user.call });
         if (c.type !== 'action') radio[m.ctl] = v; // affichage optimiste
+        if (R.VIRTUAL_SPLIT && m.ctl === 'vfoSel') radio.txVfo = txSide(); // l'émission suit la réception (ou l'autre VFO en SPLIT)
       }
       if (m.power != null) {
         const w = Number(m.power);
@@ -1715,11 +1724,11 @@ function onStation(conn, m) {
     lastHwSplit = radio.hwSplit;
     // VFO qui émet réellement d'après le TRX (FT relu), pour afficher la vérité pendant l'émission
     radio.txReal = radio.txVfo === 0 || radio.txVfo === 1 ? radio.txVfo : null;
-    if (radio.tx && radio.txReal != null && radio.hwSplit !== 1 && radio.txReal !== txSel) {
+    if (radio.tx && radio.txReal != null && radio.hwSplit !== 1 && radio.txReal !== txSide()) {
       if (!txMismatchAt) txMismatchAt = Date.now();
-      else if (Date.now() - txMismatchAt > 1500 && ptt.active) stopPtt('le TRX émet sur ' + (radio.txReal ? 'SUB (VFO B)' : 'MAIN (VFO A)') + ' au lieu de ' + (txSel ? 'SUB (VFO B)' : 'MAIN (VFO A)'));
+      else if (Date.now() - txMismatchAt > 1500 && ptt.active) stopPtt('le TRX émet sur ' + (radio.txReal ? 'SUB (VFO B)' : 'MAIN (VFO A)') + ' au lieu de ' + (txSide() ? 'SUB (VFO B)' : 'MAIN (VFO A)'));
     } else txMismatchAt = 0;
-    radio.txVfo = txSel;
+    radio.txVfo = txSide();
     radio.split = txSel; // affichage et contrôles : choix de l'opérateur
   }
   if (was !== radio.connected) journal(radio.connected ? 'trx_online' : 'trx_offline', {});

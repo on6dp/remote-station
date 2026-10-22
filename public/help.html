@@ -95,7 +95,7 @@ After 15 minutes without any action you are logged out (a warning appears one mi
   <li>Direct entry: type the frequency in kHz, then <b>Aller</b> (go).</li>
   <li><b>Bands</b>: 160 m to 70 cm (depending on the transceiver).</li>
   <li>On each VFO display: <b class="grn">RX</b> in green = the receiving VFO; <b class="red">TX</b> in red = the transmit VFO (bright red while transmitting).
-    <b>Click TX</b> on a VFO to make it the transmit VFO (TX on B = SPLIT); <b>click RX</b> to make it the receive VFO (MAIN / SUB, not on the IC-7300).
+    <b>Click RX</b> on a VFO to make it the receive VFO (MAIN / SUB, not on the IC-7300); <b>click TX</b> to make it the transmit VFO. Transceiver rule: <b>without SPLIT you transmit on the VFO you listen to, with SPLIT on the other one</b> (RX A → TX B; RX B → TX A).
     While transmitting, its frequency turns red; a VFO used neither for receive nor transmit (VFO B outside SPLIT) has its frequency greyed out. The <b>glowing frame</b> surrounds the transmit VFO; the VFO tuned by the wheel, arrows and band keys has its letter underlined (click the VFO display to choose it).</li>
 </ul>
 <h3>Mode and filter</h3>
@@ -186,7 +186,7 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
     « 1re » / « 2e » force it (1st = 00 and 30 s in FT8).</li>
   <li><b>Handle under the waterfall</b>: drag it up to enlarge the message lists (double-click: original size).</li>
   <li>Stops: <span class="k">■ Arrêter</span> (or the space bar); the called contact answers someone else; the same message for 6 min without answer (watchdog); control lost.</li>
-  <li>Transmit frequency: the <span class="red">red</span> TX marker on the waterfall (right click to move it). In <b>SPLIT</b>, the message goes out on VFO B, like the PTT.</li>
+  <li>Transmit frequency: the <span class="red">red</span> TX marker on the waterfall (right click to move it). In <b>SPLIT</b>, the message goes out on the other VFO than the receive one, like the PTT.</li>
 </ul>
 <h3 id="jt65">9.2 JT65</h3>
 <p>Same window as FT8 (one-minute periods); the transceiver goes to the JT65 frequency of its band. Decodes arrive around second 52.</p>

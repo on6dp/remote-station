@@ -19,9 +19,39 @@
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
+/* IBM Plex Mono (SIL OFL 1.1) : zéro barré d'un point, bien distinct du 8 même en petit (voir fonts/LICENSES.md) */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/IBMPlexMono-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/IBMPlexMono-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/IBMPlexMono-SemiBold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/IBMPlexMono-Bold.woff2') format('woff2');
+}
+
 :root {
   color-scheme: dark;
-  --mono: 'Roboto Mono', ui-monospace, monospace;
+  --mono: 'IBM Plex Mono', 'Roboto Mono', ui-monospace, monospace;
   --main: var(--v2-receiver-main-accent);
   --sub: var(--v2-receiver-sub-accent);
   --btn-h: 30px;
@@ -681,7 +711,7 @@ input[type='range']:disabled { opacity: .45; }
   border: 1px solid var(--v2-border); border-radius: 5px; padding: 6px 8px; min-width: 170px;
 }
 .dg-clock { margin-left: auto; font-size: 11px; color: var(--v2-accent-cyan-bright); white-space: pre; }
-.dg-status { flex-basis: 100%; font-size: 10px; color: var(--v2-text-dim); }
+.dg-status { flex-basis: 100%; font-size: 11px; color: var(--v2-text-dim); }
 .dg-status.warn { color: var(--v2-accent-yellow); }
 /* État de la BF et heure UTC sur la même ligne (FT8 / FT4 / FT2) */
 .dg-tl { margin-left: auto; flex: 1 1 320px; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
@@ -710,8 +740,8 @@ input[type='range']:disabled { opacity: .45; }
 .dg-note { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--v2-text-dim); }
 .dg-mini { font: inherit; font-size: 9px; letter-spacing: .8px; text-transform: uppercase; color: var(--v2-text-dim); background: none; border: 1px solid var(--v2-border); border-radius: 4px; padding: 2px 6px; cursor: pointer; }
 .dg-mini:hover { color: var(--v2-text-bright); }
-.dg-th, .dg-row { display: grid; grid-template-columns: 54px 30px 34px 40px 1fr; gap: 6px; padding: 2px 8px; font-size: 11px; }
-.dg-th { color: var(--v2-text-dim); font-size: 9px; letter-spacing: .8px; text-transform: uppercase; border-bottom: 1px solid var(--v2-border-dark); padding-block: 4px; }
+.dg-th, .dg-row { display: grid; grid-template-columns: 62px 34px 36px 44px 1fr; gap: 6px; padding: 2px 8px; font-size: 12.5px; }
+.dg-th { color: var(--v2-text-dim); font-size: 10px; letter-spacing: .8px; text-transform: uppercase; border-bottom: 1px solid var(--v2-border-dark); padding-block: 4px; }
 .dg-th span:nth-child(-n+4), .dg-row span:nth-child(-n+4) { text-align: right; }
 .dg-list { flex: 1; overflow: auto; min-height: 0; max-height: var(--dg-list-max, 360px); }
 .dg-row { color: var(--v2-text-secondary); cursor: pointer; white-space: nowrap; }
@@ -721,9 +751,9 @@ input[type='range']:disabled { opacity: .45; }
 .dg-row.cq span:last-child { color: #8ff0b6; }
 .dg-row.me { background: rgba(255, 32, 32, .2); }
 .dg-row.me span:last-child { color: #ffc4b8; font-weight: 700; }
-.dg-sep { font-size: 10px; font-weight: 700; line-height: 13px; color: var(--v2-accent-cyan-bright); text-align: center; padding: 0; margin-top: 1px; letter-spacing: .8px; background: rgba(0, 212, 255, .10); border-top: 1px solid rgba(0, 212, 255, .55); }
-.dg-tx { margin: 0; font-size: 10px; color: var(--v2-text-dim); }
-.dg-tx.on { font-size: 11px; color: var(--v2-badge-amber-text); }
+.dg-sep { font-size: 11px; font-weight: 600; line-height: 14px; color: var(--v2-accent-cyan-bright); text-align: center; padding: 0; margin-top: 1px; letter-spacing: .8px; background: rgba(0, 212, 255, .10); border-top: 1px solid rgba(0, 212, 255, .55); }
+.dg-tx { margin: 0; font-size: 11.5px; color: var(--v2-text-dim); }
+.dg-tx.on { font-size: 12px; color: var(--v2-badge-amber-text); }
 .dg-tx.air { color: #ff6b5e; font-weight: 700; }
 .dg-row.tx { background: rgba(255, 196, 0, .16); }
 .dg-row.tx span:last-child { color: #ffd76a; font-weight: 700; }

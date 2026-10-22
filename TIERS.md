@@ -65,6 +65,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+## Police IBM Plex Mono
+
+`public/fonts/IBMPlexMono-*.woff2` (Regular, Medium, SemiBold, Bold), de https://github.com/IBM/plex — police principale
+du dashboard (zéro pointé, distinct du 8). Licence : SIL Open Font License 1.1 — `public/fonts/IBMPlexMono-OFL.txt`.
+
 ## Police Roboto Mono
 
 `public/fonts/roboto-mono-*.woff2`, repris des fichiers embarqués par RigPlane Core (issus de Google Fonts).

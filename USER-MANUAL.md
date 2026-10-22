@@ -82,7 +82,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 - Choose the tuning step in **Step** (10 Hz to 100 kHz); `A` / `B` selects the VFO being tuned.
 - Direct entry: type the frequency in kHz, then **Aller** (go).
 - **Bands**: 160 m to 70 cm (depending on the transceiver).
-- On each VFO display: RX in green = the receiving VFO; TX in red = the transmit VFO (bright red while transmitting). **Click TX** on a VFO to make it the transmit VFO (TX on B = SPLIT); **click RX** to make it the receive VFO (MAIN / SUB, not on the IC-7300). While transmitting, its frequency turns red; a VFO used neither for receive nor transmit (VFO B outside SPLIT) has its frequency greyed out. The **glowing frame** surrounds the transmit VFO; the VFO tuned by the wheel, arrows and band keys has its letter underlined (click the VFO display to choose it).
+- On each VFO display: RX in green = the receiving VFO; TX in red = the transmit VFO (bright red while transmitting). **Click RX** on a VFO to make it the receive VFO (MAIN / SUB, not on the IC-7300); **click TX** to make it the transmit VFO. Transceiver rule: **without SPLIT you transmit on the VFO you listen to, with SPLIT on the other one** (RX A → TX B; RX B → TX A). While transmitting, its frequency turns red; a VFO used neither for receive nor transmit (VFO B outside SPLIT) has its frequency greyed out. The **glowing frame** surrounds the transmit VFO; the VFO tuned by the wheel, arrows and band keys has its letter underlined (click the VFO display to choose it).
 
 ### Mode and filter
 
@@ -170,7 +170,7 @@ The centre tabs: **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT65**, **
 - **Période**: « auto » transmits in the other period than the contact (double-click his message), otherwise keeps the period of the first message; « 1re » / « 2e » force it (1st = 00 and 30 s in FT8).
 - **Handle under the waterfall**: drag it up to enlarge the message lists (double-click: original size).
 - Stops: `■ Arrêter` (or the space bar); the called contact answers someone else; the same message for 6 min without answer (watchdog); control lost.
-- Transmit frequency: the red TX marker on the waterfall (right click to move it). In **SPLIT**, the message goes out on VFO B, like the PTT.
+- Transmit frequency: the red TX marker on the waterfall (right click to move it). In **SPLIT**, the message goes out on the other VFO than the receive one, like the PTT.
 
 <a id="jt65"></a>
 ### 9.2 JT65

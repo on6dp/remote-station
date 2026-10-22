@@ -82,7 +82,7 @@ Chaque cadre se replie avec la petite flèche `▾` devant son titre, et peut s'
 - Le pas se choisit dans **Step** (10 Hz à 100 kHz) ; `A` / `B` choisit le VFO réglé.
 - Saisie directe : tapez la fréquence en kHz puis **Aller**.
 - **Bandes** : 160 m à 70 cm (selon le TRX).
-- Sur chaque écran VFO : RX en vert = VFO qui reçoit ; TX en rouge = VFO d'émission (rouge vif pendant l'émission). **Clic sur TX** d'un VFO : il devient le VFO d'émission (TX sur B = SPLIT) ; **clic sur RX** : il devient le VFO de réception (MAIN / SUB, pas sur l'IC-7300). Pendant l'émission, sa fréquence s'affiche en rouge ; un VFO qui ne sert ni à recevoir ni à émettre (VFO B hors SPLIT) a sa fréquence grisée. Le **cadre lumineux** entoure le VFO d'émission ; le VFO réglé par la molette, les flèches et les bandes a sa lettre soulignée (clic sur l'écran VFO pour le choisir).
+- Sur chaque écran VFO : RX en vert = VFO qui reçoit ; TX en rouge = VFO d'émission (rouge vif pendant l'émission). **Clic sur RX** d'un VFO : il devient le VFO de réception (MAIN / SUB, pas sur l'IC-7300). **Clic sur TX** : il devient le VFO d'émission. Règle des TRX : **sans SPLIT on émet sur le VFO où l'on écoute, avec SPLIT sur l'autre** (RX A → TX B ; RX B → TX A). Pendant l'émission, sa fréquence s'affiche en rouge ; un VFO qui ne sert ni à recevoir ni à émettre (VFO B hors SPLIT) a sa fréquence grisée. Le **cadre lumineux** entoure le VFO d'émission ; le VFO réglé par la molette, les flèches et les bandes a sa lettre soulignée (clic sur l'écran VFO pour le choisir).
 
 ### Mode et filtre
 
@@ -170,7 +170,7 @@ Les onglets du centre : **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT6
 - **Période** : « auto » émet dans l'autre période que le correspondant (double-clic sur son message), sinon garde celle du premier message ; « 1re » / « 2e » l'imposent (1re = 00 et 30 s en FT8).
 - **Poignée sous la cascade** : la glisser vers le haut agrandit les listes de messages (double-clic : taille d'origine).
 - Arrêts : `■ Arrêter` (ou la barre d'espace) ; le correspondant appelé répond à quelqu'un d'autre ; le même message depuis 6 min sans réponse (chien de garde) ; main perdue.
-- Fréquence d'émission : le repère rouge TX de la cascade (clic droit pour le déplacer). En **SPLIT**, le message part sur le VFO B, comme le PTT.
+- Fréquence d'émission : le repère rouge TX de la cascade (clic droit pour le déplacer). En **SPLIT**, le message part sur l'autre VFO que celui de réception, comme le PTT.
 
 <a id="jt65"></a>
 ### 9.2 JT65

@@ -451,7 +451,7 @@
     c.clearRect(0, 0, w, H);
     c.fillStyle = '#0b1018';
     c.fillRect(0, 0, w, H);
-    c.font = '10px "Roboto Mono", monospace';
+    c.font = '11px "IBM Plex Mono", "Roboto Mono", monospace';
     c.textBaseline = 'top';
     for (let f = 0; f <= WF_MAX_HZ; f += 100) {
       const x = Math.round((f / WF_MAX_HZ) * (w - 1)) + 0.5;

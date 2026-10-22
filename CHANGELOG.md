@@ -2,6 +2,8 @@
 
 ## v0.15 — FT2
 
+- **0.18.0** — **SPLIT selon la règle des TRX (FTX-1)** : sans SPLIT on émet sur le VFO où l'on écoute (MAIN → A, SUB → B) ; avec SPLIT sur l'autre (RX A → TX B, RX B → TX A). Les voyants TX / RX, l'affichage, le PTT et l'émission FT8 / FT4 / FT2 suivent ; clic sur TX d'un VFO = SPLIT si on écoute sur l'autre.
+  - **Police plus lisible** : IBM Plex Mono (SIL OFL) avec zéro pointé, bien distinct du 8, sur tout le dashboard ; listes FT8 / FT4 / FT2 et lignes d'état en plus grand.
 - **0.17.6** — **Passage en émission vérifié** : après TX1, la page Station relit l'état du TRX ; s'il est resté en réception (commande perdue par la radio), TX1 est renvoyé jusqu'à 3 fois avant le départ du signal, sinon pas d'émission et message. FTX-1 : plus aucune commande FT / VS autour d'une émission sur MAIN quand le TRX y est déjà ; après une émission en SPLIT, FT / VS remis 150 ms après TX0.
 - **0.17.5** — **FTX-1 : clic sur MAIN (ou RX du VFO A) avec SUB actif ne fait plus émettre le TRX.** Le FTX-1 émet s'il se trouve un instant en « émission sur MAIN » (FT0) avec le côté SUB actif (VS1) : vers MAIN, VS0 est envoyé avant FT0 ; vers SUB, FT1 avant VS1 ; même ordre avant et après chaque émission en SPLIT. Essai FT1;VS1 risqué retiré.
 - **0.17.4** — **Molette de la souris sur « BW »** de chaque écran VFO : largeur de filtre de ce VFO ; FTX-1 : filtre du récepteur SUB réglable sur le VFO B (SH1). FTX-1 : ATT et IPO / AMP1 / AMP2 sous 144 MHz, AMP seul en 144 et 430 MHz.
