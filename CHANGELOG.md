@@ -2,6 +2,8 @@
 
 ## v0.15 — FT2
 
+- **0.15.10** — FTX-1 : **réception et émission indépendantes**. Le SPLIT (TX sur B) ne déplace plus la réception : la commande FT est suivie du VFO de réception inchangé (VS) ; un clic sur RX change la réception sans toucher au VFO d'émission (VS puis FT inchangé). Toutes les combinaisons : RX A / TX B, RX B / TX B, RX B / TX A, RX A / TX A.
+
 - **0.15.9** — **Recharger la page Station à distance** (administrateurs) : voyant STATION → « ↻ Recharger la page Station ». Fonctionne aussi avec une page d'avant la 0.15.7 (elle passe un instant sur un autre pilote, sans port ouvert, puis revient sur son TRX). La page Station se connecte toute seule avec le jeton de station gardé par le navigateur du PC du club (plus besoin de mot de passe après un rechargement). Le message « SPLIT refusé » indique cette commande.
 
 - **0.15.8** — FTX-1 : le serveur **refuse le SPLIT** tant que la page Station du club est une version d'avant la 0.15.5 (qui enverrait ST1 et mettrait le TRX en émission), avec le message « rechargez la page Station au club ». La page Station annonce désormais ce qu'elle sait faire au serveur.

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.15.10 | [RemoteStation-Setup-0.15.10.exe](0.15.10/RemoteStation-Setup-0.15.10.exe) | [remote-station-0.15.10.tar.gz](0.15.10/remote-station-0.15.10.tar.gz) | FTX-1 : réception et émission indépendantes (SPLIT ne déplace plus la réception) — [empreintes SHA-256](0.15.10/SHA256SUMS.txt) |
 | 0.15.9 | [RemoteStation-Setup-0.15.9.exe](0.15.9/RemoteStation-Setup-0.15.9.exe) | [remote-station-0.15.9.tar.gz](0.15.9/remote-station-0.15.9.tar.gz) | Recharger la page Station à distance (même ancienne), connexion par le jeton — [empreintes SHA-256](0.15.9/SHA256SUMS.txt) |
 | 0.15.8 | [RemoteStation-Setup-0.15.8.exe](0.15.8/RemoteStation-Setup-0.15.8.exe) | [remote-station-0.15.8.tar.gz](0.15.8/remote-station-0.15.8.tar.gz) | FTX-1 : SPLIT refusé si la page Station du club est trop ancienne — [empreintes SHA-256](0.15.8/SHA256SUMS.txt) |
 | 0.15.7 | [RemoteStation-Setup-0.15.7.exe](0.15.7/RemoteStation-Setup-0.15.7.exe) | [remote-station-0.15.7.tar.gz](0.15.7/remote-station-0.15.7.tar.gz) | Page Station rechargée toute seule après une mise à jour ; filet de sécurité SPLIT / VFO — [empreintes SHA-256](0.15.7/SHA256SUMS.txt) |
