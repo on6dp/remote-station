@@ -166,6 +166,11 @@
         drawAudio();
       } else if (m.t === 'switch') {
         switchModel(m.model, m.by);
+      } else if (m.t === 'reload') {
+        if (core.catKeyed) return;
+        log('Rechargement de la page demandé par ' + (m.by || '?'), 'st-warn');
+        core.stop();
+        setTimeout(() => reloadPage(), 300);
       } else if (m.t === 'error') {
         log('Serveur : ' + m.msg, 'st-bad');
         $('tVps').textContent = m.msg;

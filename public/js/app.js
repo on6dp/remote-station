@@ -675,6 +675,16 @@
     p.textContent = onAir ? 'Changement impossible pendant une émission.'
       : 'Le TRX choisi doit être branché au PC du club, et son port déjà choisi une fois sur la page Station.';
     box.appendChild(p);
+    // Recharger à distance la page Station du club (nouvelle version, page bloquée…)
+    const rl = mkBtn('↻ Recharger la page Station', 'accent rig-opt');
+    rl.disabled = !st || !st.station || onAir;
+    rl.title = 'La page Station du PC du club se recharge (programme à jour) ; la station revient en une dizaine de secondes';
+    rl.addEventListener('click', () => {
+      if (!confirm('Recharger la page Station du PC du club ?\nLa station est coupée une dizaine de secondes, puis revient toute seule.')) return;
+      send({ t: 'station_reload' });
+      closeRigMenu();
+    });
+    box.appendChild(rl);
   }
   // Membres connectés : nombre dans la barre du haut, liste au clic
   function drawUsersMenu() {

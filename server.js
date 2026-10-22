@@ -144,6 +144,7 @@ const server = makeServer((req, res) => {
   }
   if (req.method === 'POST' && p === '/station/login') return stationLoginPost(req, res);
   if (req.method === 'POST' && p === '/station/logout') return stationLogout(req, res);
+  if (req.method === 'POST' && p === '/station/token') return stationTokenPost(req, res);
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.writeHead(405);
     return res.end();
@@ -507,6 +508,7 @@ function dropSession(conn) {
 // Empreinte du programme de la page Station (page, pilotes des TRX) : après une mise à jour du serveur, la page Station
 // ouverte au club la compare à celle qu'elle a chargée et se recharge toute seule si le programme a changé
 // (sinon elle continuerait à envoyer au TRX les commandes de l'ancienne version).
+let stationBounce = null; // rechargement à distance d'une ancienne page Station en cours
 const STATION_CODE = (() => {
   const h = crypto.createHash('sha256');
   for (const f of ['station.html', 'js/station.js', 'js/station-core.js', 'js/yaesu.js', 'js/ftx1.js', 'js/ftdx10.js', 'js/ic7300.js', 'js/rigs-catalog.js', 'js/ulaw.js']) {
@@ -547,6 +549,11 @@ function stationAdmin(req) {
   const h = sessHash(tok);
   const s = stSess[h];
   const now = Date.now();
+  // Session ouverte par le jeton de station : valable tant que le jeton n'a pas changé
+  if (s && s.token && s.exp > now) {
+    if (s.exp - now < (ST_DAYS - 1) * 86400000) { s.exp = now + ST_DAYS * 86400000; saveStSess(); }
+    return { call: 'STATION' };
+  }
   const rec = s && s.exp > now ? auth.loadUsers(USERS_FILE)[s.call] : null;
   if (!rec || rec.disabled || !rec.admin) {
     if (s) { delete stSess[h]; saveStSess(); }
@@ -603,6 +610,38 @@ async function stationLoginPost(req, res) {
   saveStSess();
   journal('station_page_login', { call, ip });
   res.writeHead(303, { Location: '/station', 'Set-Cookie': stCookie(req, tok, ST_DAYS * 86400), 'Cache-Control': 'no-store' });
+  res.end();
+}
+/**
+ * Le navigateur du PC du club garde le jeton de station (localStorage) : la page de connexion le présente toute seule,
+ * pour que la page Station se rouvre sans personne au club (rechargement à distance, redémarrage de Windows).
+ * Le jeton est un secret de 48 caractères connu des seuls administrateurs.
+ */
+async function stationTokenPost(req, res) {
+  const ip = clientIp(req);
+  const origin = req.headers.origin;
+  let badOrigin = false;
+  try { badOrigin = !!origin && origin !== 'null' && new URL(origin).host !== req.headers.host; } catch (e) { badOrigin = true; }
+  if (badOrigin) { res.writeHead(403); return res.end(); }
+  const body = await readBody(req, 512);
+  if (body == null) { res.writeHead(413); return res.end(); }
+  const now = Date.now();
+  const fl = fails.get(ip);
+  if (fl && fl.until > now) { res.writeHead(429); return res.end(); }
+  const tok = String(new URLSearchParams(body).get('token') || '');
+  if (!tok || !auth.safeEqual(tok, cfg.stationToken)) {
+    const n = (fl && !(fl.until && fl.until <= now) ? fl.n : 0) + 1;
+    fails.set(ip, { n, until: n >= 5 ? now + 10 * 60000 : 0 });
+    journal('station_page_fail', { call: 'jeton', ip });
+    res.writeHead(401, { 'Cache-Control': 'no-store' });
+    return res.end();
+  }
+  fails.delete(ip);
+  const c = crypto.randomBytes(32).toString('base64url');
+  stSess[sessHash(c)] = { call: 'STATION', exp: now + ST_DAYS * 86400000, ip, token: true };
+  saveStSess();
+  journal('station_page_login', { call: 'jeton de station', ip });
+  res.writeHead(204, { 'Set-Cookie': stCookie(req, c, ST_DAYS * 86400), 'Cache-Control': 'no-store' });
   res.end();
 }
 function stationLogout(req, res) {
@@ -881,6 +920,25 @@ function onOperator(conn, m) {
       limitPower(conn, 'prise de main');
       return broadcast();
 
+    case 'station_reload': {
+      // Recharger à distance la page Station du club (administrateurs, jamais pendant une émission)
+      if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Réservé aux administrateurs' });
+      if (!station) return send(conn, { t: 'notice', level: 'error', msg: 'Station hors ligne' });
+      if (ptt.active || radio.tx) return send(conn, { t: 'notice', level: 'error', msg: 'Impossible pendant une émission' });
+      journal('station_reload', { call: conn.user.call, old: station.caps.indexOf('autoreload') < 0 });
+      if (station.caps.indexOf('autoreload') >= 0) send(station.conn, { t: 'reload', by: conn.user.call });
+      else {
+        // Page d'avant la 0.15.7 : elle ne connaît que « switch ». On la fait passer un instant sur un autre pilote
+        // (dont le port n'est pas ouvert : rien n'est envoyé au TRX), ce qui la recharge avec le programme actuel,
+        // puis elle est renvoyée tout de suite sur son TRX (voir onStationAuth).
+        const back = rig().ID;
+        const temp = Object.keys(DRIVERS).find((id) => id !== back && !station.ports[id]) || Object.keys(DRIVERS).find((id) => id !== back);
+        stationBounce = { back, temp, at: Date.now() };
+        send(station.conn, { t: 'switch', model: temp, by: conn.user.call });
+      }
+      return send(conn, { t: 'notice', level: 'warn', msg: 'Rechargement de la page Station demandé : la station revient dans une dizaine de secondes' });
+    }
+
     case 'switch_rig': {
       // Changement de TRX à distance : administrateurs seulement, jamais pendant une émission
       const model = typeof m.model === 'string' ? m.model : '';
@@ -1106,7 +1164,8 @@ function onOperator(conn, m) {
         }
         // FTX-1 : une page Station d'avant la 0.15.5 enverrait ST1 pour le SPLIT, ce qui met le TRX en émission
         if (m.ctl === 'split' && R.ID === 'ftx1' && station && station.caps.indexOf('ftsplit') < 0) {
-          return send(conn, { t: 'notice', level: 'error', msg: 'SPLIT refusé : la page Station du club est une ancienne version (elle mettrait le FTX-1 en émission). Rechargez-la au club avec Ctrl + F5.' });
+          return send(conn, { t: 'notice', level: 'error', msg: 'SPLIT refusé : la page Station du club est une ancienne version (elle mettrait le FTX-1 en émission). ' +
+          (conn.user.admin ? 'Rechargez-la à distance : voyant STATION en haut à gauche → « Recharger la page Station ».' : 'Un administrateur doit la recharger (voyant STATION → « Recharger la page Station »).') });
         }
         // Changer d'antenne pendant une émission : jamais (le PA verrait un circuit ouvert)
         if (c.noTx && (ptt.active || radio.tx)) return send(conn, { t: 'notice', level: 'error', msg: c.label + ' : impossible pendant une émission' });
@@ -1197,6 +1256,12 @@ function onStationAuth(conn, m) {
   conn.isStation = true;
   conn.everStation = true;
   journal('station_online', { ip: conn.ip, model });
+  // Fin d'un rechargement à distance d'une ancienne page : retour sur le TRX d'origine
+  if (stationBounce && model === stationBounce.temp && Date.now() - stationBounce.at < 120000) {
+    const b = stationBounce;
+    stationBounce = null;
+    send(conn, { t: 'switch', model: b.back, by: 'rechargement' });
+  } else if (stationBounce && model === stationBounce.back) stationBounce = null;
   send(conn, { t: 'welcome', stationCall: cfg.stationCall, txSilenceSeconds: cfg.txSilenceSeconds, txHardMaxSeconds: cfg.txHardMaxSeconds, code: STATION_CODE });
   audio.active = false;
   // BF voulue s'il y a un écouteur ou une fenêtre FT8/FT4 ouverte (même règle que updateAudioWant)

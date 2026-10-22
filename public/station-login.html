@@ -32,5 +32,15 @@
     <p class="st-note">Membres : le dashboard est sur la <a href="/">page d'accueil</a>.</p>
   </section>
 </main>
+<script>
+  // PC du club : le navigateur garde le jeton de la station → connexion automatique (rechargement à distance)
+  (function () {
+    let tok = '';
+    try { tok = localStorage.getItem('rs.st.token') || ''; } catch (e) {}
+    if (!tok || /[?&]manuel/.test(location.search)) return;
+    fetch('/station/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'token=' + encodeURIComponent(tok) })
+      .then((r) => { if (r.ok) location.replace('/station'); }).catch(() => {});
+  })();
+</script>
 </body>
 </html>

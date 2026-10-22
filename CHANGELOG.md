@@ -2,6 +2,8 @@
 
 ## v0.15 — FT2
 
+- **0.15.9** — **Recharger la page Station à distance** (administrateurs) : voyant STATION → « ↻ Recharger la page Station ». Fonctionne aussi avec une page d'avant la 0.15.7 (elle passe un instant sur un autre pilote, sans port ouvert, puis revient sur son TRX). La page Station se connecte toute seule avec le jeton de station gardé par le navigateur du PC du club (plus besoin de mot de passe après un rechargement). Le message « SPLIT refusé » indique cette commande.
+
 - **0.15.8** — FTX-1 : le serveur **refuse le SPLIT** tant que la page Station du club est une version d'avant la 0.15.5 (qui enverrait ST1 et mettrait le TRX en émission), avec le message « rechargez la page Station au club ». La page Station annonce désormais ce qu'elle sait faire au serveur.
 
 - **0.15.7** — **La page Station se met à jour toute seule** : après une mise à jour du serveur, elle compare son programme (page et pilotes des TRX) à celui du serveur et se recharge si besoin (jamais pendant une émission). Avant, une page Station restée ouverte au club gardait les anciens pilotes — c'est pourquoi le SPLIT du FTX-1 envoyait encore ST1 (passage en émission) malgré la 0.15.5. **Filet de sécurité** : si le TRX passe en émission dans la seconde et demie qui suit un réglage SPLIT / VFO envoyé à distance, sans PTT, la page Station le remet en réception (TX0, et ST0 sur le FTX-1) et tous les membres sont prévenus.
