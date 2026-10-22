@@ -105,12 +105,6 @@
           <div class="vfo-badges" id="badgesA"></div>
         </section>
 
-        <!-- colonne DUAL -->
-        <section class="dual" aria-label="VFO et SPLIT">
-          <div class="dual-h">— Dual —</div>
-          <div class="dual-b" id="sec-dual"></div>
-        </section>
-
         <!-- VFO B / SUB -->
         <section class="vfo vfo-sub" id="vfoB" data-v="B" aria-label="VFO B (SUB)">
           <div class="vfo-top">
@@ -152,7 +146,8 @@
             <button class="btn" type="submit">Aller</button>
           </form>
         </div>
-        <div class="bands" id="bandKeys"></div>
+        <!-- bandes, puis MAIN / SUB / SPLIT, A → B, B → A, A ⇄ B, LOCK (RIT / XIT / décalage : sur les écrans VFO) -->
+        <div class="band-row"><div class="bands" id="bandKeys"></div><div class="dual-b dual-inline" id="sec-dual" aria-label="VFO et SPLIT"></div></div>
         <p class="hint">Molette ou glisser vertical sur un chiffre pour l'accorder · clic sur un VFO pour le sélectionner · flèches ↑ ↓ du clavier · barre d'espace = PTT. Spectre : non transmis par la liaison CAT.</p>
         <p class="msg" id="msg" role="status"></p>
       </section>

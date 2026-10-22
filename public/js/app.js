@@ -21,14 +21,14 @@
     ant: ['ant'],
     front: ['rf', 'att', 'preamp', 'preampVU', 'agc'],
     filter: ['width', 'narrow', 'shift', 'contour', 'apf'],
-    dual: ['vfoSel', 'split', 'aToB', 'bToA', 'swap', 'clar', 'lock'],
+    dual: ['vfoSel', 'split', 'aToB', 'bToA', 'swap', 'lock'],
     audio: ['af', 'sql'],
     dsp: ['nb', 'nr', 'notch', 'notchFreq', 'dnf'],
     tune: ['tuner', 'tune'],
     tx: ['mic', 'proc', 'procLvl', 'vox']
   };
   // Réglages affichés sur les écrans VFO eux-mêmes (pas de bouton dans les cadres)
-  const IN_VFO = ['rit', 'xit', 'clarClr', 'ritB', 'xitB', 'clarB', 'clarClrB', 'splitHw', 'widthB'];
+  const IN_VFO = ['rit', 'xit', 'clar', 'clarClr', 'ritB', 'xitB', 'clarB', 'clarClrB', 'splitHw', 'widthB'];
   const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE', preampVU: 'AMP' };
 
   // Bouton HELP : manuel en français, ou en anglais si le navigateur n'est pas en français

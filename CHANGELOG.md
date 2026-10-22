@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.18.5** — Plus de colonne entre les deux VFO : MAIN / SUB / SPLIT, A → B, B → A, A ⇄ B et LOCK passent à droite de la ligne des bandes ; le réglage « Décal. » disparaît (RIT / XIT / CLEAR sur chaque écran VFO). Écrans VFO plus larges et colonnes latérales élargies (236 / 220 / 280 px).
 - **0.18.4** — Cadre « Messages pré-enregistrés » plus aéré : correspondant sur toute la largeur, nom | QTH, locator | report | RST, indications discrètes dans les champs vides (au lieu de faux contenus en majuscules), séparation avant les rangées de messages.
 - **0.18.3** — Largeur des colonnes : colonne de gauche un peu plus large, colonnes de droite plus étroites.
 - **0.18.2** — Fréquence des VFO ajustée automatiquement à la place disponible (plus de chevauchement avec « VFO A / DATA-U » en Verdana, 9 chiffres en 70 cm) ; colonnes latérales et colonne centrale des VFO plus étroites, écrans VFO plus larges.

@@ -129,7 +129,7 @@ button, input, select { font: inherit; color: inherit; }
 /* ------------------------------------------------------------ disposition */
 .workspace {
   display: grid;
-  grid-template-columns: 224px minmax(0, 1fr) 196px;
+  grid-template-columns: 236px minmax(0, 1fr) 220px;
   grid-template-rows: auto 1fr;
   gap: 10px;
   align-items: start;
@@ -221,7 +221,7 @@ input[type='range']::-moz-range-thumb { width: 12px; height: 20px; border-radius
 input[type='range']:disabled { opacity: .45; }
 
 /* ------------------------------------------------------------ VFO */
-.vfo-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1fr); gap: 8px; }
+.vfo-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
 .vfo {
   position: relative;
   display: grid;
@@ -355,6 +355,17 @@ input[type='range']:disabled { opacity: .45; }
 .dual-b [data-ctl='clar'] .ctl-val { font-size: 11px; }
 .dual-b [data-ctl='lock'] { order: 5; align-self: end; }
 
+/* MAIN / SUB / SPLIT · A → B · B → A · A ⇄ B · LOCK : sur la ligne des bandes (plus de colonne entre les VFO) */
+.band-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.band-row .bands { flex: 0 1 auto; }
+.dual-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-left: auto; --btn-h: 28px; }
+.dual-inline .ctl, .dual-inline .ctl-row { display: contents; }
+.dual-inline .seg, .dual-inline .seg-fill { display: inline-flex; width: auto; }
+.dual-inline .seg-fill .btn, .dual-inline .ctl-row .btn { width: auto; min-width: 40px; }
+.dual-inline .btn { width: auto; font-size: 10.5px; padding-inline: 8px; }
+.dual-inline [data-ctl='split'] { margin-right: 6px; }
+.dual-inline [data-ctl='swap'] { margin-right: 6px; }
+
 /* bande d'accord */
 .tune-panel { padding: 10px 12px; display: grid; gap: 10px; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
@@ -370,7 +381,7 @@ input[type='range']:disabled { opacity: .45; }
 }
 .goto input { width: 7.5rem; }
 .bands { display: flex; flex-wrap: wrap; gap: 4px; }
-.bands .btn { min-width: 52px; }
+.bands .btn { min-width: 46px; padding-inline: 6px; }
 .msg { margin: 0; min-height: 1.4em; font-size: 11px; color: var(--v2-accent-cyan-bright); }
 .msg.warn { color: var(--v2-accent-yellow); }
 .msg.error { color: var(--v2-accent-red-alt); }
@@ -476,7 +487,7 @@ input[type='range']:disabled { opacity: .45; }
 
 /* ------------------------------------------------------------ largeurs intermédiaires */
 @media (max-width: 1280px) {
-  .workspace { grid-template-columns: 206px minmax(0, 1fr) 184px; }
+  .workspace { grid-template-columns: 214px minmax(0, 1fr) 200px; }
   .meters-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 1080px) {
@@ -515,7 +526,7 @@ input[type='range']:disabled { opacity: .45; }
   body { overflow: hidden; }
   .app { max-width: none; height: 100vh; margin: 0; box-sizing: border-box; border-radius: 0; border: 0;
     grid-template-rows: auto minmax(0, 1fr) auto; padding: 8px 10px; gap: 8px; }
-  .workspace { grid-template-columns: 224px minmax(0, 1fr) 196px 244px; grid-template-rows: minmax(0, 1fr); min-height: 0; align-items: stretch; gap: 8px; }
+  .workspace { grid-template-columns: 236px minmax(0, 1fr) 220px 280px; grid-template-rows: minmax(0, 1fr); min-height: 0; align-items: stretch; gap: 8px; }
   /* Plus compact pour tout faire tenir en hauteur */
   :root { --btn-h: 26px; }
   .panel-h { padding: 7px 10px 5px; }

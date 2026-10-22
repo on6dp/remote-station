@@ -99,7 +99,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 
 - **RF front end**: RF gain, ATT, preamplifier (IPO / AMP1 / AMP2…), AGC.
 - **DSP**: NB, DNR, NOTCH (and its frequency), DNF.
-- **Dual** (between the two VFOs): MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, VFO A RIT / XIT offset, LOCK.
+- **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK**: on the right of the band row. The RIT / XIT offset is set on each VFO display (mouse wheel on the value, CLEAR to reset it).
 - **RIT / XIT / CLEAR** on each VFO display: click RIT or XIT to switch it on / off; mouse **wheel** over the offset = ± 10 Hz (± 100 Hz with Shift); **CLEAR** = offset to zero. VFO B has its own RIT / XIT on the FTX-1 (SUB side); the FTDX10 and IC-7300 have only one, on VFO A.
 
 > [!TIP]
