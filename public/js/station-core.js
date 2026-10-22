@@ -254,7 +254,11 @@
             this.catKeyed = true;
             this.lastKa = Date.now();
             // SPLIT virtuel (FTX-1) : VFO d'émission envoyé juste avant d'émettre
-            if (FTX1.cmdTxVfo && (m.txVfo === 0 || m.txVfo === 1)) { this._write(FTX1.cmdTxVfo(m.txVfo)); this.txVfoSet = true; }
+            if (FTX1.cmdTxVfo && (m.txVfo === 0 || m.txVfo === 1)) {
+              this._write(FTX1.cmdTxVfo(m.txVfo));
+              this.txVfoSet = true;
+              this.freqsBeforeTx = { a: this.radio.freq, b: this.radio.freqB }; // remises en place après l'émission si besoin
+            }
             this._write(FTX1.cmdPtt(true));
             this.log('TX ON (' + (m.by || '?') + ')');
           } else {
@@ -276,6 +280,16 @@
         const rx = this.radio.vfoSel ? 1 : 0;
         this._write(this.rig.cmdTxVfo(rx));
         if (this.rig.cmdVfoSel) this._write(this.rig.cmdVfoSel(rx));
+        // Le TRX a pu recopier la fréquence d'un VFO sur l'autre pendant l'émission en SPLIT : on les remet comme avant
+        const f = this.freqsBeforeTx;
+        this.freqsBeforeTx = null;
+        if (f && f.a && f.b && f.a !== f.b) {
+          setTimeout(() => {
+            if (this.catKeyed || !this.serialOpen) return;
+            if (this.radio.freq !== f.a && this.radio.freq === this.radio.freqB) { this._write(this.rig.cmdFreq(f.a)); this.log('VFO A remis sur ' + (f.a / 1e6).toFixed(6) + ' MHz après l’émission en SPLIT'); }
+            if (this.radio.freqB !== f.b && this.radio.freqB === this.radio.freq) { this._write(this.rig.cmdFreqB(f.b)); this.log('VFO B remis sur ' + (f.b / 1e6).toFixed(6) + ' MHz après l’émission en SPLIT'); }
+          }, 900);
+        }
       }
       if (was) this.log('TX OFF — ' + reason);
     }

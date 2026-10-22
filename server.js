@@ -193,6 +193,7 @@ const server = makeServer((req, res) => {
 
 // ---------------------------------------------------------------- état
 let station = null; // { conn, ip, since }
+let lastHwSplit = null; // dernier état du SPLIT de la face avant (FTX-1)
 let txSel = 0; // SPLIT virtuel (FTX-1) : VFO d'émission choisi (0 = A, 1 = B), envoyé au TRX seulement en émission
 let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
@@ -784,7 +785,8 @@ function startPtt(conn) {
   const now = Date.now();
   ptt = { active: true, conn, since: now, lastBeat: now };
   lastCtrlActivity = now;
-  toStation({ t: 'cmd', op: 'ptt', on: true, by: conn.user.call, txVfo: rig().VIRTUAL_SPLIT ? txSel : undefined });
+  // SPLIT virtuel : VFO d'émission envoyé avec le PTT, sauf si le TRX est déjà en SPLIT par sa face avant (il s'en charge)
+  toStation({ t: 'cmd', op: 'ptt', on: true, by: conn.user.call, txVfo: rig().VIRTUAL_SPLIT && radio.hwSplit !== 1 ? txSel : undefined });
   toStation({ t: 'txka' });
   journal('tx_start', { call: conn.user.call, ip: conn.ip, freq: txFreq(), mode: radio.txVfo === 1 ? radio.modeB : radio.mode, split: !!radio.split, watts: radio.power });
   broadcast();
@@ -1173,6 +1175,8 @@ function onOperator(conn, m) {
           txSel = v ? 1 : 0;
           radio.txVfo = txSel;
           radio.split = txSel;
+          // SPLIT de la face avant encore actif : on le coupe (ST0 ; ST1 n'est jamais envoyé)
+          if (!txSel && radio.hwSplit === 1) toStation({ t: 'cmd', op: 'ctl', id: 'splitHw', value: 0 });
           return broadcast();
         }
         // FTX-1 : une page Station d'avant la 0.15.5 enverrait ST1 pour le SPLIT, ce qui met le TRX en émission
@@ -1333,7 +1337,14 @@ function onStation(conn, m) {
   };
   // Réglages propres au pilote (SPLIT, filtres, mesures…) : nombres uniquement
   for (const k of rig().STATE_KEYS || []) radio[k] = Number.isFinite(r[k]) ? r[k] : null;
-  if (rig().VIRTUAL_SPLIT) { radio.txVfo = txSel; radio.split = txSel; } // affichage et contrôles : choix de l'opérateur
+  if (rig().VIRTUAL_SPLIT) {
+    // SPLIT mis ou retiré sur la face avant du TRX : suivi par le dashboard
+    if (radio.hwSplit === 1 && lastHwSplit !== 1) txSel = 1;
+    if (radio.hwSplit === 0 && lastHwSplit === 1) txSel = 0;
+    lastHwSplit = radio.hwSplit;
+    radio.txVfo = txSel;
+    radio.split = txSel; // affichage et contrôles : choix de l'opérateur
+  }
   if (was !== radio.connected) journal(radio.connected ? 'trx_online' : 'trx_offline', {});
   // Fréquence du VFO pour les fréquences WSPR affichées
   if (digi.worker && radio.freq && radio.freq !== digi.dial) { digi.dial = radio.freq; digi.worker.postMessage({ t: 'dial', hz: radio.freq }); }

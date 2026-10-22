@@ -183,7 +183,7 @@
     }
     const STATE_KEYS = ['txVfo', 'split', 'vfoSel', 'rit', 'xit', 'clar', 'lock', 'width', 'narrow', 'shift', 'contour', 'apf',
       'dnf', 'notch', 'notchFreq', 'nb', 'nr', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox',
-      'tuner', 'tuning', 'ant', 'ritB', 'xitB', 'clarB', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'];
+      'tuner', 'tuning', 'ant', 'ritB', 'xitB', 'clarB', 'hwSplit', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'];
 
     // Réglages
     const CONTROLS = [];
@@ -193,6 +193,7 @@
       CONTROLS.push(Object.assign({}, c, ov || {}));
     }
     for (const c of spec.extraControls || []) CONTROLS.push(c);
+    for (const c of spec.extraControlsLate || []) CONTROLS.push(c);
     const CONTROL = {};
     CONTROLS.forEach((c) => { CONTROL[c.id] = c; });
 
@@ -322,7 +323,7 @@
           else if (c === 'TX0') this.tx = 0;
           else if (c === 'FT') out.push('FT' + (spec.splitIsFT ? this.txv || 0 : this.split ? 1 : 0) + ';');
           else if ((m = /^FT([01])$/.exec(c))) this.txv = +m[1];
-          else if (spec.splitIsFT && /^ST[0-2]$/.test(c)) { this.tx = c === 'ST0' ? this.tx : 2; } // ST1 du FTX-1 : met le SUB en émission
+          else if (spec.splitIsFT && /^ST[0-2]$/.test(c)) { this.ans['ST;'] = c; if (c !== 'ST0') this.tx = 2; } // ST1 par CAT : le FTX-1 émet sur le SUB
           else if ((m = /^RM([3-8])$/.exec(c))) {
             const raw = m[1] === '8' ? (this.tx ? 205 : 212) : m[1] === '7' ? (this.tx ? Math.round(this.power * 0.6) : 0)
               : !this.tx ? 0 : { 3: 20, 4: 60, 5: this.silent ? 0 : Math.round(this.power * 2.4), 6: this.swrRaw }[m[1]];

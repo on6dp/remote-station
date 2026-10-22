@@ -2,6 +2,8 @@
 
 ## v0.15 — FT2
 
+- **0.15.13** — FTX-1 : le **SPLIT mis sur la face avant du TRX** est suivi par le dashboard (lecture de ST) ; le couper au dashboard envoie ST0 (ST1 n'est jamais envoyé par CAT) ; en SPLIT de face avant, le PTT n'envoie que TX1 / TX0. Après une émission en SPLIT virtuel, si le TRX a recopié la fréquence d'un VFO sur l'autre, la page Station remet les deux fréquences comme avant l'émission (et le note dans son journal).
+
 - **0.15.12** — FTX-1 : MAIN / SUB (et clic sur RX) envoient FT puis VS sur le même côté. Avec VS seul, FT restait de l'autre côté et ce désaccord faisait émettre le TRX au clic sur SUB. En dehors des émissions, FT et VS sont toujours sur le même côté ; le SPLIT reste virtuel (appliqué seulement pendant l'émission). Version du serveur affichée au survol du titre et du bouton HELP.
 
 - **0.15.11** — FTX-1 : **SPLIT « virtuel »** (comme Hamlib). Sur ce TRX, réception et émission basculent ensemble, et un VFO d'émission différent de celui de réception peut le faire émettre. Le clic sur SPLIT / TX n'envoie donc plus rien au TRX : le serveur garde le choix, l'affiche, s'en sert pour les contrôles (bande autorisée, fréquence d'émission) et ne l'envoie qu'au moment d'émettre (FT du VFO choisi puis TX1 ; au relâchement TX0, puis FT et VS remis sur le VFO de réception). Le clic sur RX n'envoie que VS.
