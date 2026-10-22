@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.14.1 | [RemoteStation-Setup-0.14.1.exe](0.14.1/RemoteStation-Setup-0.14.1.exe) | [remote-station-0.14.1.tar.gz](0.14.1/remote-station-0.14.1.tar.gz) | Page Station réservée aux administrateurs (connexion indicatif + mot de passe) — [empreintes SHA-256](0.14.1/SHA256SUMS.txt) |
 | 0.14.0 | [RemoteStation-Setup-0.14.0.exe](0.14.0/RemoteStation-Setup-0.14.0.exe) | [remote-station-0.14.0.tar.gz](0.14.0/remote-station-0.14.0.tar.gz) | Logs online : carnet de trafic, LoTW (TQSL), eQSL, Club Log, QRZ.com, export ADIF / Cabrillo, UDP vers Swisslog / N1MM — [empreintes SHA-256](0.14.0/SHA256SUMS.txt) |
 | 0.13.0 | [RemoteStation-Setup-0.13.0.exe](0.13.0/RemoteStation-Setup-0.13.0.exe) | [remote-station-0.13.0.tar.gz](0.13.0/remote-station-0.13.0.tar.gz) | Installateur Windows (kit du PC du club et/ou serveur) — [empreintes SHA-256](0.13.0/SHA256SUMS.txt) |
 

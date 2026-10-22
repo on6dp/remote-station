@@ -253,6 +253,8 @@ These keys are ignored while typing in a text field.
 
 For club managers. The PC connected to the transceiver opens **https://remote.op0p.be/station** in Chrome (Web Serial). On Windows 10 / 11, the **RemoteStation-Setup** installer does it all: « Remote Station - Page Station » shortcut (Chrome with the right settings), start with Windows, no sleep; it can also install the server itself on that PC (see LISEZMOI-WINDOWS).
 
+The Station page is **reserved for administrators**: the first time it is opened on a PC, log in with an administrator's call and password. That PC then stays authorised for a year (renewed each time the page is opened), until « Se déconnecter » (log out). Non-administrator members are refused.
+
 1. Paste the **station token** (given by the server administrator), choose the transceiver **model** and its **CAT port** (first time only).
 2. **Activer l'audio** (enable audio) and choose the transceiver's sound input (often « USB Audio CODEC »); the level bar must move.
 3. Keep the Station page **alone in its window**; open the dashboard with its « Ouvrir le dashboard dans une autre fenêtre » button.

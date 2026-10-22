@@ -253,6 +253,8 @@ Ces touches sont ignorées pendant la saisie dans un champ de texte.
 
 Pour les responsables du club. Le PC relié au TRX ouvre **https://remote.op0p.be/station** dans Chrome (Web Serial). Sous Windows 10 / 11, l'installateur **RemoteStation-Setup** fait le nécessaire : raccourci « Remote Station - Page Station » (Chrome avec les bons réglages), lancement au démarrage de Windows, pas de mise en veille ; il peut aussi installer le serveur lui-même sur ce PC (voir LISEZMOI-WINDOWS).
 
+La page Station est **réservée aux administrateurs** : à la première ouverture sur un PC, connectez-vous avec l'indicatif et le mot de passe d'un administrateur. Ce PC reste autorisé un an (renouvelé à chaque ouverture), jusqu'à « Se déconnecter ». Un membre non administrateur est refusé.
+
 1. Coller le **jeton de station** (donné par l'administrateur du serveur), choisir le **modèle** du TRX et son **port CAT** (la première fois).
 2. **Activer l'audio** et choisir l'entrée son du TRX (souvent « USB Audio CODEC ») ; la barre de niveau doit bouger.
 3. Garder la page Station **seule dans sa fenêtre** ; ouvrir le dashboard avec son bouton « Ouvrir le dashboard dans une autre fenêtre ».

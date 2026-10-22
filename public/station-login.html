@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Page Station — connexion administrateur</title>
+<meta name="theme-color" content="#1b2026">
+<link rel="stylesheet" href="/css/panel.css">
+<style>
+  .st-login { max-width: 420px; margin: 60px auto; padding: 0 16px; }
+  .st-login form { display: grid; gap: 12px; }
+  .st-login label { display: grid; gap: 4px; font-size: .95rem; }
+  .st-login input { padding: 9px 10px; border-radius: 6px; border: 1px solid #15171a; background: #191b1e; box-shadow: inset 0 1px 3px rgba(0,0,0,.6); color: inherit; font: inherit; }
+  .st-login input[name='call'] { text-transform: uppercase; }
+  .st-login button { padding: 10px; border-radius: 6px; border: 0; background: linear-gradient(180deg, #6b4615, #47300e); color: #fff4df; font: inherit; font-weight: 600; cursor: pointer; }
+  .st-login .st-note { font-size: .9rem; color: var(--legend-dim); }
+</style>
+</head>
+<body>
+<main class="st-login">
+  <section class="st-card">
+    <h1>Page Station</h1>
+    <p class="st-note">Réservée aux <b>administrateurs</b> de Remote Station : connectez-vous avec votre indicatif et votre mot de passe.
+      Ce PC reste ensuite autorisé pendant un an (jusqu'à « Se déconnecter »).</p>
+    <!--MSG-->
+    <form method="post" action="/station/login" autocomplete="on">
+      <label>Indicatif <input name="call" required maxlength="12" autocomplete="username" spellcheck="false" autofocus></label>
+      <label>Mot de passe <input name="pass" type="password" required maxlength="200" autocomplete="current-password"></label>
+      <button type="submit">Se connecter</button>
+    </form>
+    <p class="st-note">Membres : le dashboard est sur la <a href="/">page d'accueil</a>.</p>
+  </section>
+</main>
+</body>
+</html>

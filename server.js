@@ -142,9 +142,15 @@ const server = makeServer((req, res) => {
     res.writeHead(400);
     return res.end();
   }
+  if (req.method === 'POST' && p === '/station/login') return stationLoginPost(req, res);
+  if (req.method === 'POST' && p === '/station/logout') return stationLogout(req, res);
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.writeHead(405);
     return res.end();
+  }
+  if (p === '/station/whoami') {
+    const a = stationAdmin(req);
+    return sendJson(res, a ? 200 : 401, a || {});
   }
   if (p === '/api/info') {
     return sendJson(res, 200, {
@@ -157,9 +163,16 @@ const server = makeServer((req, res) => {
   }
   p = ROUTES[p] || p;
   const fp = path.normalize(path.join(PUB, p));
-  if (!fp.startsWith(PUB + path.sep)) {
+  if (!fp.startsWith(PUB + path.sep) || /[:\0]/.test(path.relative(PUB, fp))) {
     res.writeHead(404);
     return res.end();
+  }
+  const key = pubKey(fp);
+  if (key === 'station-login.html') { res.writeHead(404); return res.end(); }
+  if (ST_GATED.indexOf(key) >= 0 && !stationAdmin(req)) {
+    if (key === 'station.html') return sendStationLogin(res, '');
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
+    return res.end('Réservé aux administrateurs');
   }
   fs.readFile(fp, (err, data) => {
     if (err) {
@@ -489,6 +502,103 @@ function newSession(call) {
 function dropSession(conn) {
   if (conn.sessHash && sessions[conn.sessHash]) { delete sessions[conn.sessHash]; saveSessions(); }
   conn.sessHash = null;
+}
+
+// ---------------------------------------------------------------- page Station réservée aux administrateurs
+// /station (et son programme) n'est envoyée qu'à un navigateur connecté avec un compte administrateur
+// (indicatif + mot de passe) ; cookie HttpOnly valable un an sur le PC du club, renouvelé à chaque ouverture.
+// Seule l'empreinte du cookie est gardée (logs/station-sessions.json). Le jeton de station reste exigé pour se brancher.
+const ST_COOKIE = 'rs_station';
+const ST_DAYS = 365;
+const ST_GATED = ['station.html', 'js/station.js', 'js/station-core.js'];
+// Chemin comparé tel que le système de fichiers le comprend (Windows : majuscules, points et espaces finaux ignorés)
+const pubKey = (fp) => path.relative(PUB, fp).split(path.sep).map((x) => x.replace(/[. ]+$/, '')).join('/').toLowerCase();
+const ST_FILE = path.join(LOG_DIR, 'station-sessions.json');
+let stSess = {};
+try { stSess = JSON.parse(fs.readFileSync(ST_FILE, 'utf8')) || {}; } catch (e) { stSess = {}; }
+function saveStSess() {
+  const now = Date.now();
+  for (const h in stSess) if (!stSess[h] || stSess[h].exp < now) delete stSess[h];
+  fs.writeFile(ST_FILE, JSON.stringify(stSess), { mode: 0o600 }, (e) => { if (e) console.error('station-sessions.json : ' + e.message); });
+}
+function readCookie(req, name) {
+  const m = new RegExp('(?:^|;\\s*)' + name + '=([A-Za-z0-9_-]{20,100})').exec(req.headers.cookie || '');
+  return m ? m[1] : '';
+}
+const isHttps = (req) => !!(req.socket && req.socket.encrypted) || /^https$/i.test(String(req.headers['x-forwarded-proto'] || ''));
+function stCookie(req, val, maxAge) {
+  return ST_COOKIE + '=' + val + '; Path=/; Max-Age=' + maxAge + '; HttpOnly; SameSite=Strict' + (isHttps(req) ? '; Secure' : '');
+}
+/** Administrateur connecté à la page Station sur ce navigateur ? → { call } ou null */
+function stationAdmin(req) {
+  const tok = readCookie(req, ST_COOKIE);
+  if (!tok) return null;
+  const h = sessHash(tok);
+  const s = stSess[h];
+  const now = Date.now();
+  const rec = s && s.exp > now ? auth.loadUsers(USERS_FILE)[s.call] : null;
+  if (!rec || rec.disabled || !rec.admin) {
+    if (s) { delete stSess[h]; saveStSess(); }
+    return null;
+  }
+  if (s.exp - now < (ST_DAYS - 1) * 86400000) { s.exp = now + ST_DAYS * 86400000; saveStSess(); }
+  return { call: s.call };
+}
+function readBody(req, max) {
+  return new Promise((resolve) => {
+    let b = '';
+    let over = false;
+    req.on('data', (c) => { b += c; if (b.length > max) { over = true; req.destroy(); } });
+    req.on('end', () => resolve(over ? null : b));
+    req.on('error', () => resolve(null));
+  });
+}
+function sendStationLogin(res, msg, code) {
+  fs.readFile(path.join(PUB, 'station-login.html'), 'utf8', (err, html) => {
+    if (err) { res.writeHead(500); return res.end(); }
+    res.writeHead(code || 200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'no-referrer', 'X-Frame-Options': 'DENY' });
+    res.end(html.replace('<!--MSG-->', msg ? '<p class="st-bad" role="alert">' + msg + '</p>' : ''));
+  });
+}
+async function stationLoginPost(req, res) {
+  const ip = clientIp(req);
+  const origin = req.headers.origin;
+  let badOrigin = false;
+  try { badOrigin = !!origin && origin !== 'null' && new URL(origin).host !== req.headers.host; } catch (e) { badOrigin = true; }
+  if (badOrigin) { res.writeHead(403); return res.end(); }
+  const body = await readBody(req, 2048);
+  if (body == null) { res.writeHead(413); return res.end(); }
+  const f = new URLSearchParams(body);
+  const now = Date.now();
+  const fl = fails.get(ip);
+  if (fl && fl.until > now) return sendStationLogin(res, 'Trop d’essais, réessayez dans quelques minutes.', 429);
+  const call = auth.normCall(f.get('call'));
+  const rec = auth.validCall(call, cfg.allowedPrefixes) ? auth.loadUsers(USERS_FILE)[call] : null;
+  const ok = rec && !rec.disabled && (await auth.verifyPassword(String(f.get('pass') || ''), rec));
+  if (!ok) {
+    const n = (fl && !(fl.until && fl.until <= now) ? fl.n : 0) + 1;
+    fails.set(ip, { n, until: n >= 5 ? now + 10 * 60000 : 0 });
+    journal('station_page_fail', { call, ip });
+    return setTimeout(() => sendStationLogin(res, 'Indicatif ou mot de passe incorrect.', 401), 600);
+  }
+  fails.delete(ip);
+  if (!rec.admin) {
+    journal('station_page_refused', { call, ip });
+    return sendStationLogin(res, 'La page Station est réservée aux administrateurs de Remote Station.', 403);
+  }
+  const tok = crypto.randomBytes(32).toString('base64url');
+  stSess[sessHash(tok)] = { call, exp: now + ST_DAYS * 86400000, ip };
+  saveStSess();
+  journal('station_page_login', { call, ip });
+  res.writeHead(303, { Location: '/station', 'Set-Cookie': stCookie(req, tok, ST_DAYS * 86400), 'Cache-Control': 'no-store' });
+  res.end();
+}
+function stationLogout(req, res) {
+  const tok = readCookie(req, ST_COOKIE);
+  if (tok && stSess[sessHash(tok)]) { journal('station_page_logout', { call: stSess[sessHash(tok)].call, ip: clientIp(req) }); delete stSess[sessHash(tok)]; saveStSess(); }
+  res.writeHead(303, { Location: '/station', 'Set-Cookie': stCookie(req, 'x'.repeat(20), 0), 'Cache-Control': 'no-store' });
+  res.end();
 }
 
 function clientIp(req) {

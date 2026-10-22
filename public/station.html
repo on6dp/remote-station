@@ -14,7 +14,9 @@
 <main class="st-wrap">
   <section class="st-card">
     <h1>Page Station</h1>
-    <p class="st-help"><a href="/aide#club" target="_blank" rel="noopener">Manuel d’utilisation</a> · <a href="/help#club" target="_blank" rel="noopener">User manual</a></p>
+    <p class="st-help"><a href="/aide#club" target="_blank" rel="noopener">Manuel d’utilisation</a> · <a href="/help#club" target="_blank" rel="noopener">User manual</a>
+      <span id="stAdmin" hidden> · Administrateur : <b id="stAdminCall"></b>
+        <form method="post" action="/station/logout" style="display:inline"><button class="key" type="submit" id="stLogout" title="Ce PC devra se reconnecter pour rouvrir la page Station">Se déconnecter</button></form></span></p>
     <p>Cet onglet relie le transceiver du club au serveur. Laissez-le ouvert en permanence sur le PC de la station.</p>
     <p class="st-warn"><b>N’utilisez pas cet onglet pour autre chose</b> : taper une autre adresse ici (même celle du dashboard) coupe la station. Pour piloter depuis ce PC :
       <button class="key" id="btnDash" type="button">Ouvrir le dashboard dans une autre fenêtre</button></p>
@@ -94,6 +96,17 @@
 <script src="/js/ftdx10.js"></script>
 <script src="/js/ic7300.js"></script>
 <script src="/js/ulaw.js"></script>
+<script>
+  // Administrateur connecté (page réservée) ; la déconnexion demande confirmation car elle ferme la station
+  fetch('/station/whoami', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((a) => {
+    if (!a || !a.call) return;
+    document.getElementById('stAdminCall').textContent = a.call;
+    document.getElementById('stAdmin').hidden = false;
+  }).catch(() => {});
+  document.getElementById('stLogout').closest('form').addEventListener('submit', (e) => {
+    if (!confirm('Se déconnecter ? La page Station se ferme et la station passe hors ligne jusqu’à la prochaine connexion d’un administrateur.')) e.preventDefault();
+  });
+</script>
 <script src="/js/station-core.js"></script>
 <script src="/js/station.js"></script>
 </body>

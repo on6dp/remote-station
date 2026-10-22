@@ -13,7 +13,8 @@ Pour le PC relié au TRX (USB). Le serveur reste celui du club (https://remote.o
 - **Page Station au démarrage de Windows** : la station revient toute seule après une coupure de courant.
 - **Pas de mise en veille** (sur secteur).
 
-Ensuite, la première fois : ouvrir la Page Station, coller le **jeton de la station**, choisir le TRX et son port, puis
+Ensuite, la première fois : ouvrir la Page Station, se connecter avec l'indicatif et le mot de passe d'un **administrateur**
+(page réservée, le PC reste autorisé un an), coller le **jeton de la station**, choisir le TRX et son port, puis
 « Activer l'audio » et l'entrée son du TRX (voir le manuel : bouton HELP du dashboard, section 13).
 
 Google Chrome est conseillé (la page Station a besoin du port série Web Serial ; Edge le gère aussi, pas Firefox).
