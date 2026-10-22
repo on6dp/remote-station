@@ -80,6 +80,7 @@
       { id: 'rit', g: 'vfo', label: 'RIT', type: 'toggle', write: (v, s) => 'CF000' + v + (s.xit || 0) + '000;' },
       { id: 'xit', g: 'vfo', label: 'XIT', type: 'toggle', write: (v, s) => 'CF000' + (s.rit || 0) + v + '000;' },
       { id: 'clar', g: 'vfo', label: 'Décalage RIT/XIT', type: 'level', min: -9999, max: 9999, step: 10, unit: 'Hz', write: (v) => 'CF001' + signed4(v) + ';' },
+      { id: 'clarClr', g: 'vfo', label: 'CLEAR (décalage RIT/XIT à zéro)', type: 'action', write: () => 'CF001+0000;' },
       { id: 'lock', g: 'vfo', label: 'LOCK (face avant du club)', type: 'toggle', write: (v) => 'LK' + v + ';' },
 
       { id: 'width', g: 'flt', label: 'WIDTH', type: 'width', write: (v) => 'SH0' + pad(v, 3) + ';', when: (s) => !!widthTable(s.mode) && !s.narrow },

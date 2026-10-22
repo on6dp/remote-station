@@ -219,7 +219,7 @@ input[type='range']::-moz-range-thumb { width: 12px; height: 20px; border-radius
 input[type='range']:disabled { opacity: .45; }
 
 /* ------------------------------------------------------------ VFO */
-.vfo-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1fr); gap: 10px; }
+.vfo-row { display: grid; grid-template-columns: minmax(0, 1fr) 186px minmax(0, 1fr); gap: 10px; }
 .vfo {
   position: relative;
   display: grid;
@@ -233,8 +233,12 @@ input[type='range']:disabled { opacity: .45; }
   min-width: 0;
   container-type: inline-size; /* la taille des chiffres suit la largeur de l'écran VFO */
 }
-.vfo.target.vfo-main { border-color: var(--v2-vfo-main-control-border); box-shadow: 0 0 0 1px var(--v2-vfo-main-control-glow), 0 0 22px -8px var(--v2-vfo-main-panel-glow-outer); }
-.vfo.target.vfo-sub { border-color: var(--v2-vfo-sub-control-border); box-shadow: 0 0 0 1px var(--v2-vfo-sub-control-glow), 0 0 22px -8px var(--v2-vfo-sub-panel-glow-outer); }
+/* Cadre lumineux : VFO désigné pour l'émission (TX). Le VFO réglé (molette, bandes) a son nom souligné. */
+.vfo.txsel.vfo-main { border-color: var(--v2-vfo-main-control-border); box-shadow: 0 0 0 1px var(--v2-vfo-main-control-glow), 0 0 22px -8px var(--v2-vfo-main-panel-glow-outer); }
+.vfo.txsel.vfo-sub { border-color: var(--v2-vfo-sub-control-border); box-shadow: 0 0 0 1px var(--v2-vfo-sub-control-glow), 0 0 22px -8px var(--v2-vfo-sub-panel-glow-outer); }
+.vfo.target .vfo-tag b { color: var(--v2-accent-cyan-bright); text-decoration: underline; text-underline-offset: 3px; }
+.vfo .badge.b-tx, .vfo .badge.b-rx { cursor: pointer; }
+.vfo .badge.b-tx:hover, .vfo .badge.b-rx:hover { filter: brightness(1.3); }
 .vfo.on-air { border-color: var(--v2-accent-red) !important; box-shadow: 0 0 0 1px rgba(255,32,32,.3), 0 0 26px -6px rgba(255,32,32,.55) !important; }
 .vfo-top { display: flex; align-items: center; gap: 6px; }
 .vfo-name { margin-left: auto; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: var(--v2-text-header); text-transform: uppercase; }
@@ -329,12 +333,16 @@ input[type='range']:disabled { opacity: .45; }
 .dual-b { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; --btn-h: 22px; }
 .dual-b .btn { width: 100%; font-size: 10px; padding-inline: 2px; letter-spacing: 0; }
 .dual-b .ctl { gap: 0; }
-/* Trois boutons par ligne : MAIN SUB LOCK · A→B B→A A⇄B · SPLIT RIT XIT · décalage */
+/* Trois boutons par ligne : MAIN SUB SPLIT · A→B B→A A⇄B · RIT CLEAR XIT · décalage LOCK */
 .dual-b .ctl-row { display: contents; }
 .dual-b > *, .dual-b .ctl-row > * { order: 2; }
 .dual-b [data-ctl='vfoSel'] { grid-column: span 2; order: 0; }
-.dual-b [data-ctl='lock'] { order: 1; }
-.dual-b [data-ctl='clar'] { grid-column: 1 / -1; order: 3; }
+.dual-b [data-ctl='split'] { order: 1; }
+.dual-b [data-ctl='rit'], .dual-b [data-ctl='clarClr'], .dual-b [data-ctl='xit'] { order: 3; }
+.dual-b [data-ctl='clar'] { grid-column: span 2; order: 4; }
+.dual-b [data-ctl='clar'] .ctl-head { white-space: nowrap; gap: 4px; }
+.dual-b [data-ctl='clar'] .ctl-val { font-size: 11px; }
+.dual-b [data-ctl='lock'] { order: 5; align-self: end; }
 
 /* bande d'accord */
 .tune-panel { padding: 10px 12px; display: grid; gap: 10px; }

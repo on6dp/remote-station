@@ -92,7 +92,7 @@
   const SIMPLE_MAP = {};
   for (const s of SIMPLE) SIMPLE_MAP[s[0] * 256 + s[1]] = s;
   // Trame de lecture de chaque clé d'état : relue juste après un réglage
-  const READ_FOR = { power: q(0x14, 0x0A), split: q(0x0F), att: q(0x11), clar: q(0x21, 0x00), fil: q(0x26, 0x00), tuner: q(0x1C, 0x01) };
+  const READ_FOR = { power: q(0x14, 0x0A), split: q(0x0F), att: q(0x11), clar: q(0x21, 0x00), clarClr: q(0x21, 0x00), fil: q(0x26, 0x00), tuner: q(0x1C, 0x01) };
   for (const s of SIMPLE) if (s[2] !== 'powerRaw' && s[0] !== 0x15) READ_FOR[s[2]] = q(s[0], s[1]);
   const readFor = (id) => READ_FOR[id] || null;
 
@@ -116,6 +116,7 @@
       id: 'clar', g: 'vfo', label: 'Décalage RIT/XIT', type: 'level', min: -9999, max: 9999, step: 10, unit: 'Hz',
       write: (v) => { const a = Math.abs(v); return q(0x21, 0x00, bcd(a % 100), bcd(Math.floor(a / 100)), v < 0 ? 1 : 0); }
     },
+    { id: 'clarClr', g: 'vfo', label: 'CLEAR (décalage RIT/XIT à zéro)', type: 'action', write: () => q(0x21, 0x00, 0, 0, 0) },
     { id: 'lock', g: 'vfo', label: 'LOCK (face avant du club)', type: 'toggle', write: setOn(0x16, 0x50) },
 
     {

@@ -82,7 +82,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 - Choose the tuning step in **Step** (10 Hz to 100 kHz); `A` / `B` selects the VFO being tuned.
 - Direct entry: type the frequency in kHz, then **Aller** (go).
 - **Bands**: 160 m to 70 cm (depending on the transceiver).
-- On each VFO display: RX in green = the receiving VFO; TX in red = the transmit VFO (bright red while transmitting; in SPLIT it is VFO B).
+- On each VFO display: RX in green = the receiving VFO; TX in red = the transmit VFO (bright red while transmitting). **Click TX** on a VFO to make it the transmit VFO (TX on B = SPLIT); **click RX** to make it the receive VFO (MAIN / SUB, not on the IC-7300). The **glowing frame** surrounds the transmit VFO; the VFO tuned by the wheel, arrows and band keys has its letter underlined (click the VFO display to choose it).
 
 ### Mode and filter
 
@@ -97,7 +97,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 
 - **RF front end**: RF gain, ATT, preamplifier (IPO / AMP1 / AMP2…), AGC.
 - **DSP**: NB, DNR, NOTCH (and its frequency), DNF.
-- **Dual** (between the two VFOs): MAIN / SUB, A → B, B → A, A ⇄ B, SPLIT, RIT, XIT, offset, LOCK.
+- **Dual** (between the two VFOs): MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, RIT, **CLEAR** (resets the RIT / XIT offset to zero), XIT, offset, LOCK.
 
 > [!TIP]
 > Settings act on the real club transceiver and are shown to everybody. The indicators in the VFO panel (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) summarise its state.

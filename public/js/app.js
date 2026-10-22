@@ -21,13 +21,13 @@
     ant: ['ant'],
     front: ['rf', 'att', 'preamp', 'agc'],
     filter: ['width', 'narrow', 'shift', 'contour', 'apf'],
-    dual: ['vfoSel', 'aToB', 'bToA', 'swap', 'split', 'rit', 'xit', 'clar', 'lock'],
+    dual: ['vfoSel', 'split', 'aToB', 'bToA', 'swap', 'rit', 'clarClr', 'xit', 'clar', 'lock'],
     audio: ['af', 'sql'],
     dsp: ['nb', 'nr', 'notch', 'notchFreq', 'dnf'],
     tune: ['tuner', 'tune'],
     tx: ['mic', 'proc', 'procLvl', 'vox']
   };
-  const SHORT = { ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décalage', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE' };
+  const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE' };
 
   // Bouton HELP : manuel en français, ou en anglais si le navigateur n'est pas en français
   try { if (!/^fr\b/i.test(navigator.language || 'fr')) document.getElementById('helpBtn').href = '/help'; } catch (e) {}
@@ -301,6 +301,23 @@
     $('tuneDown').addEventListener('click', () => tune(-step));
     $('vfoA').addEventListener('click', (ev) => { if (!ev.target.closest('.d')) setTarget('A'); });
     $('vfoB').addEventListener('click', (ev) => { if (!ev.target.closest('.d')) setTarget('B'); });
+    // Voyants TX / RX cliquables : TX = VFO d'émission (SPLIT : TX sur B), RX = VFO de réception (MAIN / SUB)
+    for (const w of ['A', 'B']) {
+      $('tx' + w).addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const c = RIG().CONTROL && RIG().CONTROL.split;
+        if (!c) return say('Choix du VFO d’émission non disponible sur ce TRX', 'warn');
+        const v = w === 'B' ? 1 : 0;
+        if (Number(ctlValue('split')) !== v) sendCtl(c, v);
+      });
+      $('rx' + w).addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const c = RIG().CONTROL && RIG().CONTROL.vfoSel;
+        if (!c) return say('Le ' + (RIG().NAME || 'TRX') + ' ne permet pas de choisir le VFO de réception par CAT : il reçoit sur le VFO A', 'warn');
+        const v = w === 'B' ? 1 : 0;
+        if (Number(ctlValue('vfoSel')) !== v) sendCtl(c, v);
+      });
+    }
     $('gotoForm').addEventListener('submit', (ev) => {
       ev.preventDefault();
       const v = parseFloat($('gotoInput').value.replace(/\s/g, '').replace(',', '.'));
@@ -695,13 +712,17 @@
     }
 
     // VFO A et B : deux écrans, émission signalée sur celui qui émet (VFO B en SPLIT)
-    const txOnB = r.txVfo === 1;
-    const rxW = r.vfoSel === 1 ? 'B' : 'A'; // VFO en réception (MAIN, sauf si le TRX opère sur SUB)
+    // Choix en cours d'envoi (clic sur TX / RX) affiché tout de suite, sans attendre la relecture du TRX
+    const pSplit = ctlPending.split && Date.now() - ctlPending.split.at < 1500 ? ctlPending.split.v : null;
+    const pSel = ctlPending.vfoSel && Date.now() - ctlPending.vfoSel.at < 1500 ? ctlPending.vfoSel.v : null;
+    const txOnB = pSplit != null ? Number(pSplit) === 1 : r.txVfo === 1;
+    const rxW = (pSel != null ? Number(pSel) : r.vfoSel) === 1 ? 'B' : 'A'; // VFO en réception (MAIN, sauf si le TRX opère sur SUB)
     for (const w of ['A', 'B']) {
       const el = $('vfo' + w);
       const isTx = w === 'B' ? txOnB : !txOnB;
       el.classList.toggle('live', live);
-      el.classList.toggle('target', w === target);
+      el.classList.toggle('target', w === target);   // VFO réglé (molette, flèches, bandes)
+      el.classList.toggle('txsel', live && isTx);     // cadre : VFO désigné pour l'émission
       el.classList.toggle('on-air', live && txing && isTx);
       const f = live || pend[w] != null ? currentFreq(w) : null;
       drawFreq(w, f);

@@ -82,7 +82,7 @@ Chaque cadre se replie avec la petite flèche `▾` devant son titre, et peut s'
 - Le pas se choisit dans **Step** (10 Hz à 100 kHz) ; `A` / `B` choisit le VFO réglé.
 - Saisie directe : tapez la fréquence en kHz puis **Aller**.
 - **Bandes** : 160 m à 70 cm (selon le TRX).
-- Sur chaque écran VFO : RX en vert = VFO qui reçoit ; TX en rouge = VFO d'émission (rouge vif pendant l'émission ; en SPLIT, c'est le VFO B).
+- Sur chaque écran VFO : RX en vert = VFO qui reçoit ; TX en rouge = VFO d'émission (rouge vif pendant l'émission). **Clic sur TX** d'un VFO : il devient le VFO d'émission (TX sur B = SPLIT) ; **clic sur RX** : il devient le VFO de réception (MAIN / SUB, pas sur l'IC-7300). Le **cadre lumineux** entoure le VFO d'émission ; le VFO réglé par la molette, les flèches et les bandes a sa lettre soulignée (clic sur l'écran VFO pour le choisir).
 
 ### Mode et filtre
 
@@ -97,7 +97,7 @@ Cadre **Antenne**, en haut à gauche : `ANT 1` / `ANT 2` sur le FTX-1 (prises de
 
 - **RF front end** : RF gain, ATT, préampli (IPO / AMP1 / AMP2…), AGC.
 - **DSP** : NB, DNR, NOTCH (et sa fréquence), DNF.
-- **Dual** (entre les deux VFO) : MAIN / SUB, A → B, B → A, A ⇄ B, SPLIT, RIT, XIT, décalage, LOCK.
+- **Dual** (entre les deux VFO) : MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, RIT, **CLEAR** (remet le décalage RIT / XIT à zéro), XIT, décalage, LOCK.
 
 > [!TIP]
 > Les réglages agissent sur le vrai TRX du club et s'affichent pour tous. Les voyants du cadre VFO (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) résument l'état.
