@@ -96,8 +96,9 @@
             <span class="vfo-id"><span class="vfo-tag">VFO <b>A</b></span><span class="badge b-mode" id="modeA">---</span></span>
             <div class="freq-wrap"><div class="freq" id="freqA"></div><span class="unit">MHz</span></div>
             <span class="vfo-side">
-              <span class="clar-line"><span class="badge" id="ritBadge">RIT</span><span class="clar-val" id="ritVal">+0.00 kHz</span></span>
-              <span class="clar-line"><span class="badge" id="xitBadge">XIT</span><span class="clar-val" id="xitVal">+0.00 kHz</span></span>
+              <span class="clar-line"><span class="badge b-clar" id="ritBadge" title="RIT (décalage en réception) : cliquer pour l'allumer / l'éteindre">RIT</span><span class="clar-val" id="ritVal" title="Molette : décalage ± 10 Hz">+0.00 kHz</span></span>
+              <span class="clar-line"><span class="badge b-clar" id="xitBadge" title="XIT (décalage en émission) : cliquer pour l'allumer / l'éteindre">XIT</span><span class="clar-val" id="xitVal" title="Molette : décalage ± 10 Hz">+0.00 kHz</span></span>
+              <span class="clar-line"><span class="badge b-clar b-clr" id="clrA" title="Remet le décalage RIT / XIT à zéro">CLEAR</span></span>
             </span>
           </div>
           <div class="vfo-badges" id="badgesA"></div>
@@ -125,8 +126,9 @@
             <span class="vfo-id"><span class="vfo-tag">VFO <b>B</b></span><span class="badge b-mode" id="modeB">---</span></span>
             <div class="freq-wrap"><div class="freq" id="freqB"></div><span class="unit">MHz</span></div>
             <span class="vfo-side">
-              <span class="clar-line"><span class="badge" id="splitBadge">SPLIT TX</span></span>
-              <span class="clar-line clar-ghost" aria-hidden="true"><span class="badge">XIT</span><span class="clar-val">+0.00 kHz</span></span>
+              <span class="clar-line"><span class="badge b-clar" id="ritBBadge" title="RIT du VFO B (SUB) : cliquer pour l'allumer / l'éteindre">RIT</span><span class="clar-val" id="ritBVal" title="Molette : décalage ± 10 Hz">+0.00 kHz</span></span>
+              <span class="clar-line"><span class="badge b-clar" id="xitBBadge" title="XIT du VFO B (SUB) : cliquer pour l'allumer / l'éteindre">XIT</span><span class="clar-val" id="xitBVal" title="Molette : décalage ± 10 Hz">+0.00 kHz</span></span>
+              <span class="clar-line"><span class="badge b-clar b-clr" id="clrB" title="Remet le décalage RIT / XIT du VFO B à zéro">CLEAR</span></span>
             </span>
           </div>
           <div class="vfo-badges" id="badgesB"></div>

@@ -97,7 +97,8 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 
 - **RF front end**: RF gain, ATT, preamplifier (IPO / AMP1 / AMP2…), AGC.
 - **DSP**: NB, DNR, NOTCH (and its frequency), DNF.
-- **Dual** (between the two VFOs): MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, RIT, **CLEAR** (resets the RIT / XIT offset to zero), XIT, offset, LOCK.
+- **Dual** (between the two VFOs): MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, VFO A RIT / XIT offset, LOCK.
+- **RIT / XIT / CLEAR** on each VFO display: click RIT or XIT to switch it on / off; mouse **wheel** over the offset = ± 10 Hz (± 100 Hz with Shift); **CLEAR** = offset to zero. VFO B has its own RIT / XIT on the FTX-1 (SUB side); the FTDX10 and IC-7300 have only one, on VFO A.
 
 > [!TIP]
 > Settings act on the real club transceiver and are shown to everybody. The indicators in the VFO panel (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) summarise its state.

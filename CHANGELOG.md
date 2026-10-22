@@ -2,6 +2,8 @@
 
 ## v0.15 — FT2
 
+- **0.15.4** — **RIT / XIT / CLEAR sur chaque écran VFO** : clic sur RIT ou XIT pour les allumer / éteindre, molette sur le décalage (± 10 Hz, ± 100 Hz avec Maj), CLEAR en dessous pour le remettre à zéro ; retirés de la colonne du milieu (MAIN SUB SPLIT · A→B B→A A⇄B · décalage LOCK). VFO B : clarifier du côté SUB du FTX-1 (CF1…, comme Hamlib) ; FTDX10 et IC-7300 n'ont qu'un clarifier (VFO A).
+
 - **0.15.3** — Fréquence des VFO : points de séparation (MHz . kHz . Hz) rapprochés des chiffres ; la place gagnée sert à des chiffres un peu plus grands.
 
 - **0.15.2** — Voyants **TX** / **RX** des écrans VFO cliquables : clic sur TX = ce VFO émet (TX sur B = SPLIT, TX sur A = SPLIT coupé), clic sur RX = ce VFO reçoit (MAIN / SUB ; pas de choix par CAT sur l'IC-7300). Le cadre lumineux suit le VFO d'émission ; le VFO réglé par la molette a sa lettre soulignée. Bouton **CLEAR** entre RIT et XIT : décalage RIT / XIT remis à zéro (FTX-1, FTDX10, IC-7300). Colonne DUAL réorganisée (MAIN SUB SPLIT · A→B B→A A⇄B · RIT CLEAR XIT · décalage LOCK) ; la fréquence reste sur la ligne « VFO / mode » jusqu'à 1440 px de large (en dessous, elle passe sur sa propre ligne).

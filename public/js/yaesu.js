@@ -175,12 +175,15 @@
         }
         READ_FOR.power = P.read;
         READ_FOR.powerHead = P.read;
+        // CLEAR : relire le décalage tout de suite
+        if (READ_FOR.clar) READ_FOR.clarClr = READ_FOR.clar;
+        if (READ_FOR.clarB) READ_FOR.clarClrB = READ_FOR.clarB;
       }
       return READ_FOR[id] || null;
     }
     const STATE_KEYS = ['txVfo', 'split', 'vfoSel', 'rit', 'xit', 'clar', 'lock', 'width', 'narrow', 'shift', 'contour', 'apf',
       'dnf', 'notch', 'notchFreq', 'nb', 'nr', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox',
-      'tuner', 'tuning', 'ant', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'];
+      'tuner', 'tuning', 'ant', 'ritB', 'xitB', 'clarB', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'];
 
     // Réglages
     const CONTROLS = [];

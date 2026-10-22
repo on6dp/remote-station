@@ -97,7 +97,8 @@ Cadre **Antenne**, en haut à gauche : `ANT 1` / `ANT 2` sur le FTX-1 (prises de
 
 - **RF front end** : RF gain, ATT, préampli (IPO / AMP1 / AMP2…), AGC.
 - **DSP** : NB, DNR, NOTCH (et sa fréquence), DNF.
-- **Dual** (entre les deux VFO) : MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, RIT, **CLEAR** (remet le décalage RIT / XIT à zéro), XIT, décalage, LOCK.
+- **Dual** (entre les deux VFO) : MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, décalage RIT / XIT du VFO A, LOCK.
+- **RIT / XIT / CLEAR** sur chaque écran VFO : clic sur RIT ou XIT = allumer / éteindre ; **molette** sur le décalage affiché = ± 10 Hz (± 100 Hz avec Maj) ; **CLEAR** = décalage à zéro. Le VFO B a son propre RIT / XIT sur le FTX-1 (côté SUB) ; le FTDX10 et l'IC-7300 n'en ont qu'un, sur le VFO A.
 
 > [!TIP]
 > Les réglages agissent sur le vrai TRX du club et s'affichent pour tous. Les voyants du cadre VFO (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) résument l'état.

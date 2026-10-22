@@ -21,12 +21,14 @@
     ant: ['ant'],
     front: ['rf', 'att', 'preamp', 'agc'],
     filter: ['width', 'narrow', 'shift', 'contour', 'apf'],
-    dual: ['vfoSel', 'split', 'aToB', 'bToA', 'swap', 'rit', 'clarClr', 'xit', 'clar', 'lock'],
+    dual: ['vfoSel', 'split', 'aToB', 'bToA', 'swap', 'clar', 'lock'],
     audio: ['af', 'sql'],
     dsp: ['nb', 'nr', 'notch', 'notchFreq', 'dnf'],
     tune: ['tuner', 'tune'],
     tx: ['mic', 'proc', 'procLvl', 'vox']
   };
+  // Réglages affichés sur les écrans VFO eux-mêmes (pas de bouton dans les cadres)
+  const IN_VFO = ['rit', 'xit', 'clarClr', 'ritB', 'xitB', 'clarB', 'clarClrB'];
   const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE' };
 
   // Bouton HELP : manuel en français, ou en anglais si le navigateur n'est pas en français
@@ -301,6 +303,32 @@
     $('tuneDown').addEventListener('click', () => tune(-step));
     $('vfoA').addEventListener('click', (ev) => { if (!ev.target.closest('.d')) setTarget('A'); });
     $('vfoB').addEventListener('click', (ev) => { if (!ev.target.closest('.d')) setTarget('B'); });
+    // RIT / XIT / CLEAR sur chaque écran VFO (VFO B : FTX-1 seulement, clarifier du côté SUB)
+    const ctlOr = (id, what) => {
+      const c = RIG().CONTROL && RIG().CONTROL[id];
+      if (!c) say('Le ' + (RIG().NAME || 'TRX') + ' n’a pas de ' + what + ' pilotable pour ce VFO', 'warn');
+      return c;
+    };
+    const clickOn = (id, fn) => $(id).addEventListener('click', (ev) => { ev.stopPropagation(); fn(); });
+    for (const [w, sfx] of [['A', ''], ['B', 'B']]) {
+      clickOn(w === 'A' ? 'ritBadge' : 'ritBBadge', () => { const c = ctlOr('rit' + sfx, 'RIT'); if (c) sendCtl(c, ctlValue('rit' + sfx) ? 0 : 1); });
+      clickOn(w === 'A' ? 'xitBadge' : 'xitBBadge', () => { const c = ctlOr('xit' + sfx, 'XIT'); if (c) sendCtl(c, ctlValue('xit' + sfx) ? 0 : 1); });
+      clickOn('clr' + w, () => { const c = ctlOr('clarClr' + sfx, 'CLEAR'); if (c) { ctlPending['clar' + sfx] = { v: 0, at: Date.now() }; sendCtl(c, null); } });
+      // Molette sur le décalage : ± 10 Hz (± 100 Hz avec Maj)
+      for (const id of w === 'A' ? ['ritVal', 'xitVal'] : ['ritBVal', 'xitBVal']) {
+        $(id).addEventListener('wheel', (ev) => {
+          const c = RIG().CONTROL && RIG().CONTROL['clar' + sfx];
+          if (!c) return;
+          ev.preventDefault();
+          if (ctlBlocked()) return say(ctlBlocked(), 'warn');
+          const d = (ev.deltaY < 0 ? 1 : -1) * (ev.shiftKey ? 100 : 10);
+          const v = Math.max(c.min, Math.min(c.max, Number(ctlValue('clar' + sfx) || 0) + d));
+          ctlPending[c.id] = { v, at: Date.now() };
+          sendCtlThrottled(c);
+          render();
+        }, { passive: false });
+      }
+    }
     // Voyants TX / RX cliquables : TX = VFO d'émission (SPLIT : TX sur B), RX = VFO de réception (MAIN / SUB)
     for (const w of ['A', 'B']) {
       $('tx' + w).addEventListener('click', (ev) => {
@@ -422,6 +450,7 @@
     for (const k in LAYOUT) for (const id of LAYOUT[k]) { where[id] = boxes[k]; if (R.CONTROL && R.CONTROL[id]) order.push(R.CONTROL[id]); }
     for (const c of R.CONTROLS || []) if (order.indexOf(c) < 0) order.push(c);
     for (const c of order) {
+      if (IN_VFO.indexOf(c.id) >= 0) continue; // RIT / XIT / CLEAR : sur les écrans VFO
       const box = $(where[c.id] || boxes[c.sec] || 'sec-other');
       const label = SHORT[c.id] || c.label;
       const ref = { c };
@@ -740,15 +769,19 @@
     [...$('barsA').children].forEach((b, i) => { b.classList.toggle('lit', i < n); b.classList.toggle('hot', txing || i >= 16); });
     $('sA').textContent = live ? (txing ? 'PO' : RIG().smeterLabel(r.smeter).replace(/^S/, 'S ')) : 'S —';
     // RIT / XIT / SPLIT
-    const clar = r.clar || 0;
-    const clarTxt = (clar >= 0 ? '+' : '−') + (Math.abs(clar) / 1000).toFixed(2) + ' kHz';
-    badge($('ritBadge'), 'RIT', live && r.rit ? 'amber' : '');
-    badge($('xitBadge'), 'XIT', live && r.xit ? 'amber' : '');
-    $('ritVal').textContent = clarTxt;
-    $('xitVal').textContent = clarTxt;
-    $('ritVal').classList.toggle('on', !!(live && r.rit));
-    $('xitVal').classList.toggle('on', !!(live && r.xit));
-    badge($('splitBadge'), 'SPLIT TX', live && r.split ? 'amber' : '');
+    const kHz = (v) => { v = Number(v) || 0; return (v >= 0 ? '+' : '−') + (Math.abs(v) / 1000).toFixed(2) + ' kHz'; };
+    const hasB = !!(RIG().CONTROL && RIG().CONTROL.ritB);
+    for (const [w, sfx, ids] of [['A', '', ['ritBadge', 'xitBadge', 'ritVal', 'xitVal']], ['B', 'B', ['ritBBadge', 'xitBBadge', 'ritBVal', 'xitBVal']]]) {
+      const on = (k) => !!(live && Number(ctlValue(k + sfx)));
+      badge($(ids[0]), 'RIT', on('rit') ? 'b-clar amber' : 'b-clar');
+      badge($(ids[1]), 'XIT', on('xit') ? 'b-clar amber' : 'b-clar');
+      $(ids[2]).textContent = kHz(ctlValue('clar' + sfx));
+      $(ids[3]).textContent = kHz(ctlValue('clar' + sfx));
+      $(ids[2]).classList.toggle('on', on('rit'));
+      $(ids[3]).classList.toggle('on', on('xit'));
+      // TRX sans clarifier séparé pour le VFO B (FTDX10, IC-7300) : place gardée, rien d'affiché
+      if (w === 'B') $('vfoB').querySelector('.vfo-side').classList.toggle('na', !hasB);
+    }
     // badges d'état du récepteur MAIN
     const bA = $('badgesA');
     bA.textContent = '';
