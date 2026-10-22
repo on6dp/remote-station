@@ -504,6 +504,17 @@ function dropSession(conn) {
   conn.sessHash = null;
 }
 
+// Empreinte du programme de la page Station (page, pilotes des TRX) : après une mise à jour du serveur, la page Station
+// ouverte au club la compare à celle qu'elle a chargée et se recharge toute seule si le programme a changé
+// (sinon elle continuerait à envoyer au TRX les commandes de l'ancienne version).
+const STATION_CODE = (() => {
+  const h = crypto.createHash('sha256');
+  for (const f of ['station.html', 'js/station.js', 'js/station-core.js', 'js/yaesu.js', 'js/ftx1.js', 'js/ftdx10.js', 'js/ic7300.js', 'js/rigs-catalog.js', 'js/ulaw.js']) {
+    try { h.update(fs.readFileSync(path.join(PUB, f))); } catch (e) { h.update(f); }
+  }
+  return h.digest('hex').slice(0, 16);
+})();
+
 // ---------------------------------------------------------------- page Station réservée aux administrateurs
 // /station (et son programme) n'est envoyée qu'à un navigateur connecté avec un compte administrateur
 // (indicatif + mot de passe) ; cookie HttpOnly valable un an sur le PC du club, renouvelé à chaque ouverture.
@@ -1181,7 +1192,7 @@ function onStationAuth(conn, m) {
   conn.isStation = true;
   conn.everStation = true;
   journal('station_online', { ip: conn.ip, model });
-  send(conn, { t: 'welcome', stationCall: cfg.stationCall, txSilenceSeconds: cfg.txSilenceSeconds, txHardMaxSeconds: cfg.txHardMaxSeconds });
+  send(conn, { t: 'welcome', stationCall: cfg.stationCall, txSilenceSeconds: cfg.txSilenceSeconds, txHardMaxSeconds: cfg.txHardMaxSeconds, code: STATION_CODE });
   audio.active = false;
   // BF voulue s'il y a un écouteur ou une fenêtre FT8/FT4 ouverte (même règle que updateAudioWant)
   audio.want = audioWanted();
@@ -1209,6 +1220,7 @@ function onStation(conn, m) {
     const reason = String(m.reason || 'sécurité de la station').slice(0, 160);
     journal('tx_watchdog', { reason });
     if (ptt.active) stopPtt(reason);
+    else for (const c of ops) send(c, { t: 'notice', level: 'error', msg: 'Station : ' + reason });
     return;
   }
   if (m.t === 'audio_state') {

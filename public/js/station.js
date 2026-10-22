@@ -110,6 +110,7 @@
   }
 
   // ------------------------------------------------------------ WebSocket vers le VPS
+  let loadedCode = ''; // empreinte du programme de la page Station, donnée par le serveur à la première connexion
   function connectWs() {
     clearTimeout(wsTimer);
     const token = getToken();
@@ -135,6 +136,13 @@
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if (m.t === 'welcome') {
+        // Serveur mis à jour depuis le chargement de cette page : on recharge pour avoir les nouveaux pilotes
+        if (m.code && loadedCode && m.code !== loadedCode && !core.catKeyed) {
+          log('Nouvelle version du serveur : rechargement de la page Station', 'st-warn');
+          core.stop();
+          return setTimeout(() => reloadPage(), 500);
+        }
+        if (m.code && !loadedCode) loadedCode = m.code;
         closePrev();
         wsRetry = 0;
         lamp('lVps', 'on');

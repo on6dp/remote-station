@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.15.7 | [RemoteStation-Setup-0.15.7.exe](0.15.7/RemoteStation-Setup-0.15.7.exe) | [remote-station-0.15.7.tar.gz](0.15.7/remote-station-0.15.7.tar.gz) | Page Station rechargée toute seule après une mise à jour ; filet de sécurité SPLIT / VFO — [empreintes SHA-256](0.15.7/SHA256SUMS.txt) |
 | 0.15.6 | [RemoteStation-Setup-0.15.6.exe](0.15.6/RemoteStation-Setup-0.15.6.exe) | [remote-station-0.15.6.tar.gz](0.15.6/remote-station-0.15.6.tar.gz) | Fréquence grisée sur le VFO inutilisé (B hors SPLIT) — [empreintes SHA-256](0.15.6/SHA256SUMS.txt) |
 | 0.15.5 | [RemoteStation-Setup-0.15.5.exe](0.15.5/RemoteStation-Setup-0.15.5.exe) | [remote-station-0.15.5.tar.gz](0.15.5/remote-station-0.15.5.tar.gz) | FTX-1 : SPLIT / TX sur B sans passage en émission ; fréquence en rouge pendant l'émission — [empreintes SHA-256](0.15.5/SHA256SUMS.txt) |
 | 0.15.4 | [RemoteStation-Setup-0.15.4.exe](0.15.4/RemoteStation-Setup-0.15.4.exe) | [remote-station-0.15.4.tar.gz](0.15.4/remote-station-0.15.4.tar.gz) | RIT / XIT / CLEAR sur chaque écran VFO — [empreintes SHA-256](0.15.4/SHA256SUMS.txt) |

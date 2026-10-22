@@ -131,6 +131,16 @@
           this._write(FTX1.cmdPtt(false));
           this.log('Sécurité : CAT TX inattendu, TX0 envoyé');
         }
+        // Radio passée en émission juste après un réglage envoyé à distance (ex. SPLIT du FTX-1) : ce n'est pas
+        // une émission voulue (PTT) → retour en réception, et on le signale
+        if (p.tx > 0 && !this.catKeyed && this.lastCtl && Date.now() - this.lastCtl.at < 1500) {
+          const what = this.lastCtl.id;
+          this.lastCtl = null;
+          this._write(FTX1.cmdPtt(false));
+          if (FTX1.UNKEY_EXTRA) this._write(FTX1.UNKEY_EXTRA);
+          this.log('Sécurité : le TRX est passé en émission après le réglage « ' + what + ' » → retour en réception', 'st-bad');
+          if (this.wsUp) this.sendWs({ t: 'safety', reason: 'le TRX est passé en émission après le réglage « ' + what + ' » : retour en réception forcé' });
+        }
       }
     }
 
@@ -227,6 +237,8 @@
           const v = FTX1.validate(m.id, m.value, this.radio, { skipWhen: true });
           if (FTX1.CONTROL[m.id].transmits && (!this.serialOpen || !this.radio.connected)) return this.log('Refusé : radio non connectée');
           this._write(FTX1.CONTROL[m.id].write(v, this.radio));
+          // Réglages de VFO / SPLIT : une émission qui suivrait de près n'est pas voulue (filet de sécurité, FTX-1)
+          this.lastCtl = ['split', 'vfoSel', 'swap', 'aToB', 'bToA'].indexOf(m.id) >= 0 ? { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() } : null;
           this.forceSlow = true;
           this._readBack(m.id);
           if (m.id === 'rit' || m.id === 'xit') this._readBack(m.id === 'rit' ? 'xit' : 'rit');
