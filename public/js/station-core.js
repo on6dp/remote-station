@@ -480,6 +480,11 @@
         this._trace(cmd);
         this.lastCtl = { id: 'MAIN / SUB', at: Date.now(), long: true };
         this._write(cmd);
+        // État attendu retenu tout de suite (manuel : VS déplace aussi l'émetteur) : un clic rapide suivant part de là,
+        // sans attendre la relecture du TRX ; la vérification ci-dessous corrige si le TRX n'a pas suivi
+        this.radio.vfoSel = v;
+        this.radio.txVfo = v;
+        this.dirty = true;
         const check = (n) => {
           if (seq !== this.sideSeq) return;
           this._trace('VS;FT;TX;');
@@ -509,7 +514,7 @@
           });
         };
         setTimeout(() => check(0), 1200);
-      }, 400);
+      }, 250);
     }
     _toSub(by, k, then) { return this._switchSide(1, by, then); }
     /** Attend une réponse du TRX (expression régulière), sinon timeout. */
