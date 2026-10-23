@@ -469,11 +469,14 @@
     } else return;
     sendCtl(c, v);
   }
-  // Réglage effectivement visé : celui du côté SUB si le VFO B est sélectionné et que le TRX le permet
+  // Côté réglé par les cadres RF front end / Filtre / DSP : le côté actif du TRX (MAIN / SUB)
+  const panelSide = () => (Number(ctlValue('vfoSel')) === 1 ? 'B' : 'A');
+  // Réglage effectivement visé : celui du côté SUB quand SUB est actif et que le TRX le permet
   function sc(c) {
-    const b = target === 'B' && SIDE_B[c.id] && RIG().CONTROL && RIG().CONTROL[SIDE_B[c.id]];
+    const b = panelSide() === 'B' && SIDE_B[c.id] && RIG().CONTROL && RIG().CONTROL[SIDE_B[c.id]];
     return b || c;
   }
+  let lastSide = null;
   function ctlValue(id) {
     const p = ctlPending[id];
     if (p && Date.now() - p.at < 1500) return p.v;
@@ -911,6 +914,12 @@
   function render() {
     lamp('lampLink', ws && ws.readyState === 1 && me ? 'on' : null);
     const r = (st && st.radio) || {};
+    // Côté actif du TRX changé (dashboard ou face avant) : la molette, les bandes et le mode suivent ce VFO
+    if (r.connected && r.vfoSel != null) {
+      const side = r.vfoSel === 1 ? 'B' : 'A';
+      if (lastSide !== null && side !== lastSide) target = side;
+      lastSide = side;
+    }
     const live = !!(st && r.connected);
     const onAir = !!(st && st.ptt && st.ptt.active);
     const txing = onAir || !!r.tx;
@@ -1047,8 +1056,8 @@
       let t = h.querySelector('.ph-side');
       if (!t) { t = document.createElement('span'); t.className = 'ph-side'; h.appendChild(t); }
       t.hidden = !sideB;
-      t.textContent = 'VFO ' + target;
-      t.classList.toggle('b', target === 'B');
+      t.textContent = 'VFO ' + panelSide() + (panelSide() === 'B' ? ' · SUB' : ' · MAIN');
+      t.classList.toggle('b', panelSide() === 'B');
     }
 
     // puissance

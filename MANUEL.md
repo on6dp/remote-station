@@ -98,12 +98,12 @@ Cadre **Antenne**, en haut à gauche : `ANT 1` / `ANT 2` sur le FTX-1 (prises de
 
 - **RF front end** : RF gain, AGC. ATT et préampli (IPO / AMP1 / AMP2, AMP) : badges de l'écran VFO.
 - **DSP** : NB, DNR, NOTCH (et sa fréquence), DNF.
-- **FTX-1 : les cadres RF front end, Filtre et DSP règlent le VFO sélectionné** (étiquette « VFO A » / « VFO B » dans leur titre) : VFO B choisi (touche B de la ligne des pas, clic sur son écran, ou SUB) → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF du côté SUB.
+- **FTX-1 : les cadres RF front end, Filtre et DSP règlent le côté actif du TRX** (étiquette « VFO A · MAIN » / « VFO B · SUB » dans leur titre) : SUB actif → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF du côté SUB. Les touches A / B de la ligne des pas choisissent seulement le VFO dont on change la fréquence, la bande et le mode ; elles suivent MAIN / SUB quand le côté actif change.
 - **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK** : sur la ligne des pas (Step), après ◀ ▶. Le décalage RIT / XIT se règle sur chaque écran VFO (molette sur la valeur, CLEAR pour le remettre à zéro).
 - **RIT / XIT / CLEAR** sur chaque écran VFO : clic sur RIT ou XIT = allumer / éteindre ; **molette** sur le décalage affiché = ± 10 Hz (± 100 Hz avec Maj) ; **CLEAR** = décalage à zéro. Le VFO B a son propre RIT / XIT sur le FTX-1 (côté SUB) ; le FTDX10 et l'IC-7300 n'en ont qu'un, sur le VFO A.
 
 > [!TIP]
-> Les réglages agissent sur le vrai TRX du club et s'affichent pour tous. Les voyants du cadre VFO (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) résument l'état ; **un clic sur ATT, IPO / AMP1 / AMP2, AMP, NB, DNR, NOTCH, DNF ou NAR l'enclenche ou le coupe** (IPO → AMP1 → AMP2 → IPO). Sur le FTX-1, l'écran du VFO B règle NB, DNR, NOTCH, DNF et NAR du côté SUB ; l'ATT et le préampli de SUB (badges ATT et IPO / AMP du VFO B, essai) sont envoyés en passant un instant le TRX sur SUB, puis retour sur MAIN ; le TRX ne les renvoie pas, le badge montre le dernier réglage envoyé (« ? » au départ).
+> Les réglages agissent sur le vrai TRX du club et s'affichent pour tous. Les voyants du cadre VFO (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) résument l'état ; **un clic sur ATT, IPO / AMP1 / AMP2, AMP, NB, DNR, NOTCH, DNF ou NAR l'enclenche ou le coupe** (IPO → AMP1 → AMP2 → IPO). Sur le FTX-1, l'écran du VFO B règle NB, DNR, NOTCH, DNF et NAR du côté SUB ; l'ATT et le préampli sont propres à chaque côté : le TRX ne les donne que pour le côté actif, donc un clic sur ceux de l'autre VFO le fait passer un instant de ce côté (sans émission), puis revenir ; ceux du côté inactif sont lus quand il redevient actif (« ? » tant qu'ils n'ont jamais été lus).
 
 <a id="ecoute"></a>
 ## 5. Écouter

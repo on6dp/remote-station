@@ -80,6 +80,12 @@
     extraQueries: ['RA1;', 'PA0;', 'PA1;', 'PA2;'],
     extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
+    // PA0 / RA0 lus avec le côté SUB actif : ce sont l'ATT et le préampli du VFO B
+    remapRead(p, r) {
+      if (r.vfoSel !== 1) return;
+      if (p.preamp != null) { p.preampB = p.preamp; delete p.preamp; }
+      if (p.att != null) { p.attB = p.att; delete p.att; }
+    },
     // Préampli de la gamme du VFO A (144 / 430 MHz), pour le bouton AMP
     derive(r) {
       const f = r.freq;
@@ -107,8 +113,8 @@
       // Largeur de filtre du côté SUB (VFO B) : SH1 0 nn (Hamlib ftx1_audio.c) — molette sur « BW » de l'écran du VFO B
       { id: 'widthB', g: 'flt', label: 'WIDTH (VFO B)', type: 'width', modeKey: 'modeB', write: (v) => 'SH1' + pad(v, 3) + ';',
         when: (s) => !!api.widthTableFn && !!api.widthTableFn(s.modeB) && !s.narrowB },
-      // ATT et préampli du côté SUB (essai) : le CAT ne les lit pas (PA0 / RA0 renvoient MAIN). La page Station passe sur SUB
-      // (FT confirmé avant VS1), envoie RA0 / PA0, puis revient sur MAIN. Valeur affichée = dernier réglage envoyé.
+      // ATT et préampli du côté SUB : PA0 / RA0 agissent sur le côté actif. Côté MAIN actif, la page Station passe sur SUB
+      // (FT confirmé avant VS1), envoie RA0 / PA0, puis revient sur MAIN. Lus quand SUB est actif (remapRead).
       { id: 'attB', g: 'rx', label: 'ATT (VFO B)', type: 'toggle', viaSub: true, write: (v) => 'RA0' + v + ';',
         when: (s) => s.freqB != null && s.freqB < 144000000 },
       { id: 'preampB', g: 'rx', label: 'Préampli (VFO B)', type: 'select', options: [[0, 'IPO'], [1, 'AMP1'], [2, 'AMP2']], viaSub: true,
@@ -143,8 +149,10 @@
     virtualSplit: true,
     controlOverrides: {
       // FTX-1 : ATT et IPO / AMP1 / AMP2 sous 144 MHz, un seul préampli AMP (ON / OFF) en 144 et 430 MHz (constaté au club)
-      preamp: { hideUnavail: true, when: (s) => s.freq != null && s.freq < 144000000 },
-      att: { when: (s) => s.freq != null && s.freq < 144000000 && !s.vfoSel }, split: { write: (v) => 'FT' + (v ? 1 : 0) + ';' }, // MAIN / SUB : jamais l'état « émission sur MAIN, opération sur SUB » (FT0 avec VS1), qui met le FTX-1 en émission
+      // ATT et IPO / AMP1 / AMP2 propres à chaque côté ; le CAT (PA0 / RA0) agit sur le côté actif (constaté au club) :
+      // côté SUB actif, la page Station repasse un instant sur MAIN pour régler ceux du VFO A (viaMain)
+      preamp: { hideUnavail: true, viaMain: true, when: (s) => s.freq != null && s.freq < 144000000 },
+      att: { viaMain: true, when: (s) => s.freq != null && s.freq < 144000000 }, split: { write: (v) => 'FT' + (v ? 1 : 0) + ';' }, // MAIN / SUB : jamais l'état « émission sur MAIN, opération sur SUB » (FT0 avec VS1), qui met le FTX-1 en émission
       // (constaté au club : VS1 seul, puis FT0 avant VS0). Vers SUB : FT1 puis VS1 ; vers MAIN : VS0 puis FT0.
       vfoSel: { write: (v) => (v ? 'FT1;VS1;' : 'VS0;FT0;') } },
     extraControlsLate: [{ id: 'splitHw', g: 'vfo', label: 'SPLIT du TRX (coupure)', type: 'toggle', offOnly: true, write: () => 'ST0;' }],

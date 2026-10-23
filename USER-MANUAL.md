@@ -98,12 +98,12 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 
 - **RF front end**: RF gain, AGC. ATT and preamplifier (IPO / AMP1 / AMP2, AMP): badges on the VFO display.
 - **DSP**: NB, DNR, NOTCH (and its frequency), DNF.
-- **FTX-1: the RF front end, Filtre and DSP panels act on the selected VFO** (« VFO A » / « VFO B » tag in their title): with VFO B selected (B key on the Step row, click on its display, or SUB) → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF of the SUB side.
+- **FTX-1: the RF front end, Filtre and DSP panels act on the active side of the rig** (« VFO A · MAIN » / « VFO B · SUB » tag in their title): SUB active → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF of the SUB side. The A / B keys on the Step row only choose which VFO's frequency, band and mode you change; they follow MAIN / SUB when the active side changes.
 - **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK**: on the Step row, after ◀ ▶. The RIT / XIT offset is set on each VFO display (mouse wheel on the value, CLEAR to reset it).
 - **RIT / XIT / CLEAR** on each VFO display: click RIT or XIT to switch it on / off; mouse **wheel** over the offset = ± 10 Hz (± 100 Hz with Shift); **CLEAR** = offset to zero. VFO B has its own RIT / XIT on the FTX-1 (SUB side); the FTDX10 and IC-7300 have only one, on VFO A.
 
 > [!TIP]
-> Settings act on the real club transceiver and are shown to everybody. The indicators in the VFO panel (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) summarise its state; **clicking ATT, IPO / AMP1 / AMP2, AMP, NB, DNR, NOTCH, DNF or NAR switches it on or off** (IPO → AMP1 → AMP2 → IPO). On the FTX-1, the VFO B display sets NB, DNR, NOTCH, DNF and NAR of the SUB side; the SUB ATT and preamp (ATT and IPO / AMP badges of VFO B, trial) are sent by switching the rig to SUB for a moment, then back to MAIN; the rig does not report them, so the badge shows the last setting sent (« ? » at first).
+> Settings act on the real club transceiver and are shown to everybody. The indicators in the VFO panel (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) summarise its state; **clicking ATT, IPO / AMP1 / AMP2, AMP, NB, DNR, NOTCH, DNF or NAR switches it on or off** (IPO → AMP1 → AMP2 → IPO). On the FTX-1, the VFO B display sets NB, DNR, NOTCH, DNF and NAR of the SUB side; ATT and preamp belong to each side: the rig only reports them for the active side, so clicking those of the other VFO switches the rig to that side for a moment (no transmission) and back; those of the inactive side are read when it becomes active again (« ? » until first read).
 
 <a id="listen"></a>
 ## 5. Listening

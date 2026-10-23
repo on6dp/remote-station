@@ -377,7 +377,7 @@
       FAST, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,
       FRAME_GAP_MS: 20, SLOW_PER_TICK: 4, POLL_MS: 250, readFor,
       widthTableFn: widthTable,
-      derive: spec.derive || null, preampText: spec.preampText || null, SUB_BADGES: !!spec.subBadges,
+      derive: spec.derive || null, preampText: spec.preampText || null, SUB_BADGES: !!spec.subBadges, remapRead: spec.remapRead || null,
       GROUPS: [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']],
       CONTROLS, CONTROL, validate, widthTable, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
       BAND_CODES, cmdBand: BAND_CODES ? cmdBand : null,

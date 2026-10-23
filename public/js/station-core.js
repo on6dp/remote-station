@@ -128,6 +128,8 @@
           this.lastCmd = null;
         }
         if (p.error || p.ok) continue;
+        // Lecture qui dépend du côté actif (FTX-1 : PA0 / RA0 → VFO B quand SUB est actif)
+        if (FTX1.remapRead) FTX1.remapRead(p, this.radio);
         // Radio qui ne dit pas d'où vient l'émission (Icom) : émission demandée par nous = CAT (1), sinon radio (2)
         if (FTX1.TX_SOURCE_UNKNOWN && p.tx === 1 && !this.catKeyed) p.tx = 2;
         if (p.tx != null) this.txReadAt = Date.now(); // dernière lecture de l'état émission / réception
@@ -298,6 +300,7 @@
             this.lastCtl = { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() };
             this.forceSlow = true;
             if (this.radio.vfoSel === 1) { this._write(cmd); done(); return; }
+            if (this.pollHold && Date.now() < this.pollHold) return this.log('Changement de côté en cours : ' + (FTX1.CONTROL[m.id].label || m.id) + ' ignoré');
             return this._toSub(m.by, 0, () => {
               this._write(cmd);
               done();
@@ -305,6 +308,23 @@
                 if (this.catKeyed) return;
                 this.lastCtl = { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() };
                 this._toMain(m.by, () => this.log(FTX1.CONTROL[m.id].label + ' : envoyé côté SUB, retour sur MAIN'));
+              }, 200);
+            });
+          }
+          // Réglage du côté MAIN que le CAT n'adresse qu'au côté actif (ATT / préampli du VFO A, FTX-1) avec SUB actif :
+          // retour sur MAIN (sûr), commande, puis retour sur SUB (FT confirmé avant VS1)
+          if (FTX1.CONTROL[m.id].viaMain && FTX1.VIRTUAL_SPLIT && FTX1.txVfoTries && this.radio.vfoSel === 1) {
+            const cmd = FTX1.CONTROL[m.id].write(v, this.radio);
+            if (this.pollHold && Date.now() < this.pollHold) return this.log('Changement de côté en cours : ' + (FTX1.CONTROL[m.id].label || m.id) + ' ignoré');
+            this.lastCtl = { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() };
+            this.forceSlow = true;
+            return this._toMain(m.by, () => {
+              this._write(cmd);
+              this.radio[m.id] = v; this.dirty = true; this._push(true);
+              setTimeout(() => {
+                if (this.catKeyed) return;
+                this.lastCtl = { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() };
+                this._toSub(m.by, 0, () => this.log(FTX1.CONTROL[m.id].label + ' : envoyé côté MAIN, retour sur SUB'));
               }, 200);
             });
           }
@@ -429,10 +449,10 @@
       const i = order[k];
       const w = { i, cmd: forms[i], by, timer: null, then };
       this.subWait = w;
-      this.pollHold = Date.now() + 1500;
+      this.pollHold = Date.now() + 3000;
       this._write(forms[i]);
       this._write('FT;');
-      w.timer = setTimeout(() => { if (this.subWait === w) this._toSub(by, k + 1, then); }, 700);
+      w.timer = setTimeout(() => { if (this.subWait === w) this._toSub(by, k + 1, then); }, 1600); // réponses des lectures déjà envoyées d'abord
     }
     /** Attend une réponse du TRX (expression régulière), sinon timeout. */
     _await(re, ms, cb) {
@@ -448,7 +468,7 @@
     _toMain(by, then, k) {
       const rig = this.rig;
       k = k || 0;
-      this.pollHold = Date.now() + 1500;
+      this.pollHold = Date.now() + 3000;
       if (k >= 3) {
         const why = 'le TRX n’a pas confirmé le retour sur MAIN (VS0) : FT laissé sur SUB pour ne pas le mettre en émission';
         this.log('Sécurité : ' + why, 'st-bad');
@@ -459,7 +479,7 @@
       }
       this._write('VS0;');
       this._write('VS;');
-      this._await(/^VS[01]$/, 500, (t) => {
+      this._await(/^VS[01]$/, 1500, (t) => {
         if (this.catKeyed) return;
         if (t !== 'VS0') return this._toMain(by, then, k + 1);
         const forms = rig.txVfoTries(0);
@@ -473,7 +493,7 @@
           }
           this._write(forms[order[j]]);
           this._write('FT;');
-          this._await(/^FT[0-3]$/, 600, (f) => {
+          this._await(/^FT[0-3]$/, 1500, (f) => {
             if (f) this.ftSeen = f;
             if (f && +f[2] % 2 === 0) {
               this.txVfoOk = order[j];
