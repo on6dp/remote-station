@@ -64,14 +64,14 @@ After 15 minutes without any action you are logged out (a warning appears one mi
   <tr><td><span class="k">● Serveur</span></td><td>Link between your browser and the server (green = connected).</td></tr>
   <tr><td><span class="k">● Station</span></td><td>The Station page on the club PC is online. For administrators, a click opens the transceiver choice.</td></tr>
   <tr><td><span class="k">● FTX-1 FTDX10 IC-7300</span></td><td>The connected transceiver (highlighted) and its CAT link.</td></tr>
-  <tr><td><span class="k">👥 n</span></td><td>Number of members online; click for the list.</td></tr>
+  <tr><td><span class="k">👥 n</span></td><td>Number of members online; click to open the <b>Opérateurs</b> panel (who is online, who has control, chat). Red dot = new message.</td></tr>
   <tr><td><span class="k">Prendre la main</span></td><td>Take control (see section 3).</td></tr>
   <tr><td><span class="k">HELP</span></td><td>This manual.</td></tr>
 </table>
 <h3>Columns (wide screen)</h3>
 <ol>
   <li><b>Left</b>: Antenne (antenna), RF front end, Mode, Filtre (filter), Station meters.</li>
-  <li><b>Centre</b>: VFO A and B (MAIN / SUB), Step and bands, then « Activité et modes numériques » (activity and digital modes).</li>
+  <li><b>Centre</b>: VFO A and B (MAIN / SUB), the Step row (step, A / B, ◀ ▶, MAIN / SUB / SPLIT, A → B, B → A, A ⇄ B, LOCK) and bands, then « Activité et modes numériques » (activity and digital modes) with the <b>Correspondant</b> line below the tabs.</li>
   <li><b>Right</b>: RX audio, DSP, Accord (tuner), TX.</li>
   <li><b>Opérateurs</b> (operators): panel opened by the <span class="k">👥</span> button in the top bar (number of connected members), closed by default.</li>
 </ol>
@@ -91,9 +91,10 @@ After 15 minutes without any action you are logged out (a warning appears one mi
 <h3>Frequency (VFO panel)</h3>
 <ul>
   <li>Mouse <b>wheel</b> over the digits, or <b>drag</b> the digits; keyboard arrows <kbd>↑</kbd> <kbd>↓</kbd>; buttons <span class="k">◀</span> <span class="k">▶</span>.</li>
-  <li>Choose the tuning step in <b>Step</b> (10 Hz to 100 kHz); <span class="k">A</span> / <span class="k">B</span> selects the VFO being tuned.</li>
+  <li>Choose the tuning step in <b>Step</b> (10 Hz to 100 kHz). <span class="k">A</span> / <span class="k">B</span>: on the FTX-1 they act like <b>MAIN / SUB</b> (the rig moves to that side); on the FTDX10 and IC-7300 they select the VFO being tuned. The mouse wheel on a VFO's digits always tunes that VFO.</li>
   <li><b>Bands</b>: 160 m to 70 cm (depending on the transceiver).</li>
-  <li>On each VFO display: <b class="grn">RX</b> in green = the receiving VFO; <b class="red">TX</b> in red = the transmit VFO (bright red while transmitting).
+  <li>On each VFO display: <b class="grn">RX</b> in green = the receiving VFO; <b class="red">TX</b> dark red = the <b>transmit VFO</b> (where a transmission would go; it stays lit while receiving).
+    <b>Actual transmission</b>: TX bright red with a glow, frequency digits in red, TRX lamp in the top bar red.
     <b>Click RX</b> on a VFO to make it the receive VFO (MAIN / SUB, not on the IC-7300); <b>click TX</b> to make it the transmit VFO. Transceiver rule: <b>without SPLIT you transmit on the VFO you listen to, with SPLIT on the other one</b> (RX A → TX B; RX B → TX A).
     While transmitting, its frequency turns red; a VFO used neither for receive nor transmit (VFO B outside SPLIT) has its frequency greyed out. The <b>glowing frame</b> surrounds the transmit VFO; the VFO tuned by the wheel, arrows and band keys has its letter underlined (click the VFO display to choose it).</li>
 </ul>
@@ -110,7 +111,7 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
 <ul>
   <li><b>RF front end</b>: RF gain, AGC. ATT and preamplifier (IPO / AMP1 / AMP2, AMP): badges on the VFO display.</li>
   <li><b>DSP</b>: NB, DNR, NOTCH (and its frequency), DNF.</li>
-  <li><b>FTX-1: MAIN / SUB</b> through the VS CAT command alone (Yaesu manual: VS0 = MAIN transmit / receive, VS1 = SUB transmit / receive), like the front-panel key. At the club, the Station page must use the FTX-1 <b>Enhanced COM Port</b>; the Standard COM Port controls transmission through RTS / DTR (RPTT SELECT, PC KEYING) and may key the rig.</li>
+  <li><b>FTX-1: MAIN / SUB</b> (or A / B) chooses the active side of the rig, receive and transmit together, exactly like the front-panel MAIN / SUB key, without transmitting. The change takes one or two seconds. (Technical: VS CAT command alone, from Yaesu's CAT manual.)</li>
   <li><b>FTX-1: the RF front end, Filtre and DSP panels act on the active side of the rig</b> (« VFO A · MAIN » / « VFO B · SUB » tag in their title): SUB active → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF of the SUB side. The A / B keys on the Step row act like MAIN / SUB (tuned VFO and active side of the rig); use the mouse wheel on the other VFO's digits to change its frequency without changing side.</li>
   <li><b>MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK</b>: on the Step row, after ◀ ▶. The RIT / XIT offset is set on each VFO display (mouse wheel on the value, CLEAR to reset it).</li>
   <li><b>RIT / XIT / CLEAR</b> on each VFO display: click RIT or XIT to switch it on / off; mouse <b>wheel</b> over the offset = ± 10 Hz (± 100 Hz with Shift);
@@ -199,9 +200,11 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
 <ul>
   <li>Set the <b>shift</b> and <b>speed</b> (170 Hz / 45.45 baud by default), then <b>click on the signal</b> in the waterfall: the <span class="yel">yellow (Mark)</span> and blue (Space) markers must sit on its two traces; otherwise press <span class="k">Inversé</span> (reverse).</li>
   <li>The M / S bars of the tuning indicator should flicker alternately. Raise the <b>squelch</b> (« Silencieux ») if characters appear on noise.</li>
-  <li>Received text scrolls on the left; double-click a received callsign = contact. On the right: macros <kbd>F1</kbd> to <kbd>F12</kbd> and the text to send.</li>
+  <li>Received text scrolls across the full width (<span class="k">Effacer</span> on the right of its title clears it); double-click a received callsign = contact.
+    Below: macros <kbd>F1</kbd> to <kbd>F12</kbd> on one row, then the text to send with <span class="k">Émettre</span>, <span class="k">Effacer</span> and <span class="k">Log QSO</span>.</li>
+  <li><b>Macros</b>: a click (or <kbd>F1</kbd>…) transmits at once (section 10); <b>Shift+click</b> adds the macro to the text without transmitting.</li>
   <li><b>Émettre</b> (or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>): the text goes out in RTTY on the receive frequency (same shift and speed), then the transceiver returns to receive.
-    The sent text shows in <span class="red">red</span> in the receive window; while transmitting the button becomes <span class="k">■ Arrêter</span> (stop).
+    The sent text shows in the receive window, first grey then <span class="red">red</span> letter by letter as it goes out (« fin dans N s »); while transmitting the button becomes <span class="k">■ Arrêter</span> (stop).
     The transceiver must be in <b>DATA-U</b> (the signal goes through its sound card), 600 characters at most per send.</li>
 </ul>
 <h3 id="wspr">9.4 WSPR</h3>
@@ -210,7 +213,7 @@ callsign, locator, power, frequency, drift and distance from the station.</p>
 <h3 id="jtty">9.5 JTTY</h3>
 <ul>
   <li>New WSJT-X 3.3 mode for keyboard-to-keyboard and contests: no periods, each message appears <b>frame by frame</b> (1.9 s); <span class="k">▌</span> = message still arriving.</li>
-  <li>Left click = receive, right click = transmit, double-click = contact; macros <kbd>F1</kbd> to <kbd>F8</kbd> (the WSJT-X ones).</li>
+  <li>Left click = receive, right click = transmit, double-click = contact; macros <kbd>F1</kbd> to <kbd>F8</kbd> (the WSJT-X ones): a click transmits at once, <b>Shift+click</b> adds them to the message.</li>
   <li><b>Émettre</b> (or <kbd>Enter</kbd>): the message goes out at once (no periods) on the TX frequency, encoded by WSJT-X, then back to receive.
     80 characters per message (longer: two messages in a row); transceiver in <b>DATA-U</b>.</li>
 </ul>
@@ -218,7 +221,7 @@ callsign, locator, power, frequency, drift and distance from the station.</p>
 <ul>
   <li>The transceiver goes to CW. <b>Click on a signal</b> in the waterfall: the decoder locks onto the nearest one (yellow marker) and learns the speed (shown in words per minute). Right click: exact tuning where you click.</li>
   <li><b>Filter</b> 100 Hz by default (50 Hz with QRM, 200–400 Hz to search); raise the <b>squelch</b> if letters appear on noise. The LED follows the keying.</li>
-  <li>Double-click a received callsign = contact; macros <kbd>F1</kbd> to <kbd>F12</kbd>.</li>
+  <li>Double-click a received callsign = contact; macros <kbd>F1</kbd> to <kbd>F12</kbd> (added to the text: CW transmission comes in a future version); <span class="k">Log QSO</span>.</li>
 </ul>
 <h3 id="sstv">9.7 SSTV</h3>
 <ul>
@@ -251,6 +254,8 @@ Only the IFs the connected transceiver can reach are listed (2 m and 70 cm: FTX-
   <tr><td><code>&lt;MYLOC&gt;</code></td><td>station locator</td><td><code>&lt;MYQTH&gt;</code></td><td>station QTH</td></tr>
   <tr><td><code>&lt;OPCALL&gt;</code></td><td>your own callsign (operator)</td><td><code>&lt;CNTR&gt;</code></td><td>serial number (001…)</td></tr>
   <tr><td><code>&lt;INCR&gt;</code></td><td>moves to the next serial</td><td><code>&lt;ZT&gt;</code> / <code>&lt;ZD&gt;</code></td><td>UTC time / date</td></tr>
+  <tr><td><code>&lt;TX&gt;</code></td><td>at the start: transmit at once on click (RTTY, JTTY)</td><td><code>&lt;RX&gt;</code></td><td>back to receive at the end (always done)</td></tr>
+  <tr><td><code>&lt;LOG&gt;</code></td><td>opens the « Enregistrer le QSO » form</td><td></td><td></td></tr>
 </table>
 
 <h2 id="keys">11. Keyboard shortcuts</h2>
@@ -258,7 +263,8 @@ Only the IFs the connected transceiver can reach are listed (2 m and 70 cm: FTX-
   <tr><th>Key</th><th>Action</th></tr>
   <tr><td><kbd>Space</kbd> (hold)</td><td>PTT — also from a panel opened in a separate window</td></tr>
   <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Frequency ± one step</td></tr>
-  <tr><td><kbd>F1</kbd> … <kbd>F12</kbd></td><td>Macros in the RTTY and CW tabs (<kbd>F1</kbd>…<kbd>F8</kbd> in JTTY)</td></tr>
+  <tr><td><kbd>F1</kbd> … <kbd>F12</kbd></td><td>Macros in the RTTY and CW tabs (<kbd>F1</kbd>…<kbd>F8</kbd> in JTTY): transmitted at once if the macro starts with <code>&lt;TX&gt;</code></td></tr>
+  <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd> / <kbd>Enter</kbd></td><td>Transmit the typed text in RTTY / in JTTY</td></tr>
   <tr><td><kbd>Ctrl</kbd> + <kbd>F5</kbd></td><td>Reload the page after an update</td></tr>
 </table>
 <p>These keys are ignored while typing in a text field.</p>
@@ -273,6 +279,9 @@ Only the IFs the connected transceiver can reach are listed (2 m and 70 cm: FTX-
   <tr><td>Nothing decoded in FT8 / RTTY…</td><td>Check the transceiver mode (DATA-U; CW for CW) and the frequency; the Synchro tab shows whether audio is arriving.</td></tr>
   <tr><td>A separate window does not open</td><td>Allow pop-up windows for remote.op0p.be (icon at the right of the address bar).</td></tr>
   <tr><td>PTT refused</td><td>The message gives the reason: outside the authorised bands, SWR (press TUNE), transmitting not enabled, listener callsign, maximum duration…</td></tr>
+  <tr><td>The TX badge is red although I am not transmitting</td><td>Normal: dark red = transmit VFO. An actual transmission shows red frequency digits and a bright red TX badge.</td></tr>
+  <tr><td>Clicking ATT / IPO of the other VFO: the rig changes side for a moment</td><td>Normal on the FTX-1: these settings only apply to the active side; the rig goes there for 2 to 3 s, without transmitting, then comes back.</td></tr>
+  <tr><td>« Passage MAIN ↔ SUB par le dashboard désactivé »</td><td>An administrator set <code>ftx1SubCat</code> to <code>false</code> in <code>config.json</code>: MAIN / SUB on the front panel only.</td></tr>
 </table>
 
 <h2 id="club">13. The club PC (Station page)</h2>
@@ -284,7 +293,7 @@ That PC then stays authorised for a year (renewed each time the page is opened),
 The club PC's browser, which keeps the station token, also logs in by itself. An administrator can <b>reload the Station page remotely</b>:
 click the <b>STATION</b> lamp at the top left → « ↻ Recharger la page Station » (the station is back within about ten seconds).</p>
 <ol>
-  <li>Paste the <b>station token</b> (given by the server administrator), choose the transceiver <b>model</b> and its <b>CAT port</b> (first time only).</li>
+  <li>Paste the <b>station token</b> (given by the server administrator), choose the transceiver <b>model</b> and its <b>CAT port</b> (first time only). FTX-1: the <b>Enhanced COM Port</b> (CAT-1), and on the rig <b>RPTT SELECT</b> and <b>PC KEYING</b> set to OFF (factory default): transmission is controlled through CAT.</li>
   <li><b>Activer l'audio</b> (enable audio) and choose the transceiver's sound input (often « USB Audio CODEC »); the level bar must move.</li>
   <li><b>Sortie son vers le TRX</b> (sound output to the transceiver, for FT8 / FT4 / FT2): the transceiver's USB sound card (« Speakers (USB Audio CODEC) »…), picked automatically when possible.
     Never the PC speakers. The transceiver must take DATA modulation from USB (transceiver menu). Set the <b>transmit level</b> so that ALC stays low.

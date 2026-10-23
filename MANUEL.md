@@ -51,14 +51,14 @@ Les indicatifs d'**écouteurs** (ONL…) peuvent tout voir et tout écouter, mai
 | `● Serveur` | Liaison entre votre navigateur et le serveur (vert = connecté). |
 | `● Station` | La page Station du PC du club est en ligne. Pour les administrateurs, un clic ouvre le choix du TRX. |
 | `● FTX-1 FTDX10 IC-7300` | Le TRX branché (en surbrillance) et sa liaison CAT. |
-| `👥 n` | Nombre de membres connectés ; un clic en donne la liste. |
+| `👥 n` | Nombre de membres connectés ; un clic ouvre le volet **Opérateurs** (qui est là, qui a la main, discussion). Point rouge = nouveau message. |
 | `Prendre la main` | Devenir l'opérateur (voir section 3). |
 | `HELP` | Ce manuel (en français ou en anglais selon la langue du navigateur). |
 
 ### Les colonnes (écran large)
 
 1. **Gauche** : Antenne, RF front end, Mode, Filtre, Station meters.
-2. **Centre** : VFO A et B (MAIN / SUB), Step et bandes, puis « Activité et modes numériques ».
+2. **Centre** : VFO A et B (MAIN / SUB), ligne Step (pas, A / B, ◀ ▶, MAIN / SUB / SPLIT, A → B, B → A, A ⇄ B, LOCK) et bandes, puis « Activité et modes numériques » avec la ligne **Correspondant** sous les onglets.
 3. **Droite** : RX audio, DSP, Accord (tuner), TX.
 4. **Opérateurs** : volet du bouton `👥` du bandeau (nombre de connectés), fermé par défaut.
 
@@ -79,9 +79,9 @@ Chaque cadre se replie avec la petite flèche `▾` devant son titre, et peut s'
 ### Fréquence (cadre VFO)
 
 - **Molette** sur les chiffres, ou **glisser** sur les chiffres ; flèches `↑` `↓` du clavier ; boutons `◀` `▶`.
-- Le pas se choisit dans **Step** (10 Hz à 100 kHz) ; `A` / `B` choisit le VFO réglé.
+- Le pas se choisit dans **Step** (10 Hz à 100 kHz). `A` / `B` : sur le FTX-1, comme **MAIN / SUB** (le TRX passe de ce côté) ; sur le FTDX10 et l'IC-7300, choix du VFO réglé. La molette sur les chiffres d'un VFO règle toujours celui-là.
 - **Bandes** : 160 m à 70 cm (selon le TRX).
-- Sur chaque écran VFO : RX en vert = VFO qui reçoit ; TX en rouge = VFO d'émission (rouge vif pendant l'émission). **Clic sur RX** d'un VFO : il devient le VFO de réception (MAIN / SUB, pas sur l'IC-7300). **Clic sur TX** : il devient le VFO d'émission. Règle des TRX : **sans SPLIT on émet sur le VFO où l'on écoute, avec SPLIT sur l'autre** (RX A → TX B ; RX B → TX A). Pendant l'émission, sa fréquence s'affiche en rouge ; un VFO qui ne sert ni à recevoir ni à émettre (VFO B hors SPLIT) a sa fréquence grisée. Le **cadre lumineux** entoure le VFO d'émission ; le VFO réglé par la molette, les flèches et les bandes a sa lettre soulignée (clic sur l'écran VFO pour le choisir).
+- Sur chaque écran VFO : RX en vert = VFO qui reçoit ; TX rouge foncé = **VFO d'émission** (c'est là que partirait l'émission ; il reste allumé en réception). **Émission réelle** : TX rouge vif avec halo, chiffres de la fréquence en rouge, voyant TRX du bandeau rouge. **Clic sur RX** d'un VFO : il devient le VFO de réception (MAIN / SUB, pas sur l'IC-7300). **Clic sur TX** : il devient le VFO d'émission. Règle des TRX : **sans SPLIT on émet sur le VFO où l'on écoute, avec SPLIT sur l'autre** (RX A → TX B ; RX B → TX A). Pendant l'émission, sa fréquence s'affiche en rouge ; un VFO qui ne sert ni à recevoir ni à émettre (VFO B hors SPLIT) a sa fréquence grisée. Le **cadre lumineux** entoure le VFO d'émission ; le VFO réglé par la molette, les flèches et les bandes a sa lettre soulignée (clic sur l'écran VFO pour le choisir).
 
 ### Mode et filtre
 
@@ -98,7 +98,7 @@ Cadre **Antenne**, en haut à gauche : `ANT 1` / `ANT 2` sur le FTX-1 (prises de
 
 - **RF front end** : RF gain, AGC. ATT et préampli (IPO / AMP1 / AMP2, AMP) : badges de l'écran VFO.
 - **DSP** : NB, DNR, NOTCH (et sa fréquence), DNF.
-- **FTX-1 : MAIN / SUB** par la commande CAT VS seule (manuel Yaesu : VS0 = MAIN en émission / réception, VS1 = SUB en émission / réception), comme la touche de la face avant. Au club, la page Station doit utiliser l'**Enhanced COM Port** du FTX-1 ; le Standard COM Port commande l'émission par RTS / DTR (RPTT SELECT, PC KEYING) et peut faire émettre le TRX.
+- **FTX-1 : MAIN / SUB** (ou A / B) choisit le côté actif du TRX, réception et émission ensemble, exactement comme la touche MAIN / SUB de la face avant, sans émission. Le changement prend une à deux secondes. (Technique : commande CAT VS seule, d'après le manuel CAT de Yaesu.)
 - **FTX-1 : les cadres RF front end, Filtre et DSP règlent le côté actif du TRX** (étiquette « VFO A · MAIN » / « VFO B · SUB » dans leur titre) : SUB actif → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF du côté SUB. Les touches A / B de la ligne des pas font comme MAIN / SUB (VFO réglé et côté actif du TRX) ; molette sur les chiffres de l'autre VFO pour changer sa fréquence sans changer de côté.
 - **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK** : sur la ligne des pas (Step), après ◀ ▶. Le décalage RIT / XIT se règle sur chaque écran VFO (molette sur la valeur, CLEAR pour le remettre à zéro).
 - **RIT / XIT / CLEAR** sur chaque écran VFO : clic sur RIT ou XIT = allumer / éteindre ; **molette** sur le décalage affiché = ± 10 Hz (± 100 Hz avec Maj) ; **CLEAR** = décalage à zéro. Le VFO B a son propre RIT / XIT sur le FTX-1 (côté SUB) ; le FTDX10 et l'IC-7300 n'en ont qu'un, sur le VFO A.
@@ -185,8 +185,9 @@ Même fenêtre que FT8 (périodes d'une minute) ; le TRX va sur la fréquence JT
 
 - Réglez le **shift** et la **vitesse** (170 Hz / 45,45 bauds par défaut), puis **cliquez sur le signal** dans la cascade : les repères jaune (Mark) et bleu (Space) doivent tomber sur ses deux traces ; sinon `Inversé`.
 - Les barres M / S de l'indicateur d'accord doivent battre en alternance. Montez le **silencieux** si des caractères apparaissent sur le bruit.
-- Le texte reçu défile à gauche ; double-clic sur un indicatif reçu = correspondant. À droite : macros `F1` à `F12` et texte à émettre.
-- **Émettre** (ou `Ctrl`+`Entrée`) : le texte part en RTTY sur la fréquence de réception (même shift, même vitesse), puis le TRX repasse en réception. Le texte émis s'affiche en rouge dans la réception ; pendant l'émission le bouton devient `■ Arrêter`. Le TRX doit être en **DATA-U** (le signal passe par sa carte son), 600 caractères au plus par envoi.
+- Le texte reçu défile sur toute la largeur (`Effacer` à droite de son titre la vide) ; double-clic sur un indicatif reçu = correspondant. En dessous : les macros `F1` à `F12` sur une ligne, puis le texte à émettre avec `Émettre`, `Effacer` et `Log QSO`.
+- **Macros** : un clic (ou `F1`…) émet tout de suite (section 10) ; **Maj+clic** ajoute la macro au texte sans émettre.
+- **Émettre** (ou `Ctrl`+`Entrée`) : le texte part en RTTY sur la fréquence de réception (même shift, même vitesse), puis le TRX repasse en réception. Le texte émis s'affiche dans la réception, en gris puis en rouge lettre par lettre à mesure qu'il part (« fin dans N s ») ; pendant l'émission le bouton devient `■ Arrêter`. Le TRX doit être en **DATA-U** (le signal passe par sa carte son), 600 caractères au plus par envoi.
 
 <a id="wspr"></a>
 ### 9.4 WSPR
@@ -197,7 +198,7 @@ Choisissez la bande ; toutes les 2 minutes (une dizaine de secondes après la mi
 ### 9.5 JTTY
 
 - Nouveau mode de WSJT-X 3.3 pour le clavier à clavier et les concours : pas de périodes, chaque message apparaît **trame après trame** (1,9 s) ; `▌` = message en cours.
-- Clic gauche = réception, clic droit = émission, double-clic = correspondant ; macros `F1` à `F8` (celles de WSJT-X).
+- Clic gauche = réception, clic droit = émission, double-clic = correspondant ; macros `F1` à `F8` (celles de WSJT-X) : un clic émet tout de suite, **Maj+clic** les ajoute au message.
 - **Émettre** (ou `Entrée`) : le message part tout de suite (pas de période) sur la fréquence TX, codé par WSJT-X, puis retour en réception. 80 caractères par message (au-delà : deux messages à la suite) ; TRX en **DATA-U**.
 
 <a id="cw"></a>
@@ -205,7 +206,7 @@ Choisissez la bande ; toutes les 2 minutes (une dizaine de secondes après la mi
 
 - Le TRX va en CW. **Cliquez sur un signal** dans la cascade : le décodeur se cale tout seul sur le plus proche (repère jaune) et apprend la vitesse (affichée en mots/minute). Clic droit : calage exact là où vous cliquez.
 - **Filtre** 100 Hz par défaut (50 Hz en cas de QRM, 200–400 Hz pour chercher) ; montez le **silencieux** si des lettres apparaissent sur le bruit. Le voyant suit la manipulation.
-- Double-clic sur un indicatif reçu = correspondant ; macros `F1` à `F12`.
+- Double-clic sur un indicatif reçu = correspondant ; macros `F1` à `F12` (ajoutées au texte : l'émission CW arrive dans une prochaine version) ; `Log QSO`.
 
 <a id="sstv"></a>
 ### 9.7 SSTV
@@ -241,6 +242,8 @@ Les listes FT8 · FT4, RTTY et CW proposent « **QO-100 · FI 2 m / 70 cm** » :
 | `<MYLOC>` | locator de la station | `<MYQTH>` | QTH de la station |
 | `<OPCALL>` | votre indicatif (opérateur) | `<CNTR>` | numéro de série (001…) |
 | `<INCR>` | passe au numéro suivant | `<ZT>` / `<ZD>` | heure / date UTC |
+| `<TX>` | en tête : émission immédiate au clic (RTTY, JTTY) | `<RX>` | retour en réception à la fin (toujours fait) |
+| `<LOG>` | ouvre la fiche « Enregistrer le QSO » |  |  |
 
 <a id="clavier"></a>
 ## 11. Raccourcis clavier
@@ -249,7 +252,8 @@ Les listes FT8 · FT4, RTTY et CW proposent « **QO-100 · FI 2 m / 70 cm** » :
 |---|---|
 | `Espace` (maintenir) | PTT — aussi depuis un cadre ouvert dans une fenêtre séparée |
 | `↑` `↓` | Fréquence ± un pas |
-| `F1` … `F12` | Macros dans les onglets RTTY et CW (`F1`…`F8` en JTTY) |
+| `F1` … `F12` | Macros dans les onglets RTTY et CW (`F1`…`F8` en JTTY) : émission immédiate si la macro commence par `<TX>` |
+| `Ctrl` + `Entrée` / `Entrée` | Émettre le texte tapé en RTTY / en JTTY |
 | `Ctrl` + `F5` | Recharger la page après une mise à jour |
 
 Ces touches sont ignorées pendant la saisie dans un champ de texte.
@@ -266,6 +270,9 @@ Ces touches sont ignorées pendant la saisie dans un champ de texte.
 | Rien n'est décodé en FT8 / RTTY… | Vérifiez le mode du TRX (DATA-U ; CW en CW) et la fréquence ; l'onglet Synchro montre si la BF arrive. |
 | Une fenêtre séparée ne s'ouvre pas | Autorisez les fenêtres pop-up pour remote.op0p.be (icône à droite de la barre d'adresse). |
 | PTT refusé | Le message indique la raison : hors bande autorisée, ROS (faire TUNE), émission non autorisée, indicatif d'écouteur, durée maximale… |
+| Le badge TX est rouge alors que je n'émets pas | Normal : rouge foncé = VFO d'émission. L'émission réelle se voit aux chiffres de la fréquence en rouge et au badge TX rouge vif. |
+| Clic sur ATT / IPO de l'autre VFO : le TRX change de côté un instant | Normal sur le FTX-1 : ces réglages ne se font que sur le côté actif ; le TRX y passe 2 à 3 s, sans émettre, puis revient. |
+| « Passage MAIN ↔ SUB par le dashboard désactivé » | Un administrateur a mis `ftx1SubCat` à `false` dans `config.json` : MAIN / SUB sur la face avant seulement. |
 
 <a id="club"></a>
 ## 13. Le PC du club (page Station)
@@ -274,7 +281,7 @@ Pour les responsables du club. Le PC relié au TRX ouvre **https://remote.op0p.b
 
 La page Station est **réservée aux administrateurs** : à la première ouverture sur un PC, connectez-vous avec l'indicatif et le mot de passe d'un administrateur. Ce PC reste autorisé un an (renouvelé à chaque ouverture), jusqu'à « Se déconnecter ». Un membre non administrateur est refusé. Le navigateur du PC du club, qui garde le jeton de la station, se reconnecte aussi tout seul. Un administrateur peut **recharger la page Station à distance** : clic sur le voyant **STATION** en haut à gauche → « ↻ Recharger la page Station » (la station revient en une dizaine de secondes).
 
-1. Coller le **jeton de station** (donné par l'administrateur du serveur), choisir le **modèle** du TRX et son **port CAT** (la première fois).
+1. Coller le **jeton de station** (donné par l'administrateur du serveur), choisir le **modèle** du TRX et son **port CAT** (la première fois). FTX-1 : l'**Enhanced COM Port** (CAT-1), et sur le TRX les réglages **RPTT SELECT** et **PC KEYING** sur OFF (réglage d'usine) : l'émission se commande par CAT.
 2. **Activer l'audio** et choisir l'entrée son du TRX (souvent « USB Audio CODEC ») ; la barre de niveau doit bouger.
 3. **Sortie son vers le TRX** (émission FT8 / FT4 / FT2) : la carte son USB du TRX (« Haut-parleurs (USB Audio CODEC) »…), choisie toute seule si possible. Jamais les haut-parleurs du PC. Le TRX doit prendre la modulation DATA sur l'USB (menu du TRX). Régler le **niveau d'émission** pour que l'ALC reste faible. L'émission part à l'heure du VPS, même si l'horloge de Windows est décalée.
 4. Garder la page Station **seule dans sa fenêtre** ; ouvrir le dashboard avec son bouton « Ouvrir le dashboard dans une autre fenêtre ».

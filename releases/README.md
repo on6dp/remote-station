@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.2 | [RemoteStation-Setup-0.22.2.exe](0.22.2/RemoteStation-Setup-0.22.2.exe) | [remote-station-0.22.2.tar.gz](0.22.2/remote-station-0.22.2.tar.gz) | Aide à jour ; FTX-1 : vérification MAIN / SUB plus patiente — [empreintes SHA-256](0.22.2/SHA256SUMS.txt) |
 | 0.22.1 | [RemoteStation-Setup-0.22.1.exe](0.22.1/RemoteStation-Setup-0.22.1.exe) | [remote-station-0.22.1.tar.gz](0.22.1/remote-station-0.22.1.tar.gz) | FTX-1 : MAIN / SUB rapides suivis — [empreintes SHA-256](0.22.1/SHA256SUMS.txt) |
 | 0.22.0 | [RemoteStation-Setup-0.22.0.exe](0.22.0/RemoteStation-Setup-0.22.0.exe) | [remote-station-0.22.0.tar.gz](0.22.0/remote-station-0.22.0.tar.gz) | FTX-1 : MAIN / SUB depuis le dashboard, sans émission — [empreintes SHA-256](0.22.0/SHA256SUMS.txt) |
 | 0.21.17 | [RemoteStation-Setup-0.21.17.exe](0.21.17/RemoteStation-Setup-0.21.17.exe) | [remote-station-0.21.17.tar.gz](0.21.17/remote-station-0.21.17.tar.gz) | FTX-1 : MAIN / SUB par VS seul (manuel CAT Yaesu) — [empreintes SHA-256](0.21.17/SHA256SUMS.txt) |

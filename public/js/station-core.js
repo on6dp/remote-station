@@ -494,6 +494,11 @@
           this._await(/^VS[01]$/, 2500, (t) => {
             if (seq !== this.sideSeq) return;
             if (!t && n < 3) return check(n + 1);
+            // Pas encore du bon côté (le TRX change de côté lentement, ou VS perdu) : relecture, VS renvoyé une fois
+            if (t && t !== 'VS' + v && n < 4) {
+              if (n === 1) { this._trace('VS' + v + '; (renvoyé)'); this._write('VS' + v + ';'); }
+              return setTimeout(() => check(n + 1), 900);
+            }
             setTimeout(() => {
               if (seq !== this.sideSeq) return;
               // FT relu différent du côté actif (n'a pas suivi VS) : remis d'accord, puis nouvelle vérification
