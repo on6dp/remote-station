@@ -779,7 +779,9 @@
       dlg.className = 'macro-dlg cat-dlg';
       dlg.innerHTML = '<form method="dialog"><h3>Lecture CAT (diagnostic, lecture seulement)</h3>' +
         '<div class="cat-row"><input name="cmd" maxlength="12" value="PA0;" autocomplete="off" spellcheck="false"><button class="btn btn-primary" type="button" data-a="go">Lire</button></div>' +
-        '<div class="cat-quick"></div><pre class="cat-out"></pre>' +
+        '<div class="cat-quick"></div>' +
+        (RIG().ID === 'ftx1' ? '<button class="btn accent cat-test" type="button" data-a="sidetest">Test automatique : ATT et préampli de chaque côté (MAIN / SUB)</button>' : '') +
+        '<pre class="cat-out"></pre>' +
         '<p class="md-prev cat-help"></p><div class="md-act"><span></span><button class="btn" value="close">Fermer</button></div></form>';
       document.body.appendChild(dlg);
       const f = dlg.querySelector('form');
@@ -791,6 +793,8 @@
         send({ t: 'cat_query', cmd: c });
       };
       dlg.querySelector('[data-a="go"]').addEventListener('click', () => go());
+      const t = dlg.querySelector('[data-a="sidetest"]');
+      if (t) t.addEventListener('click', () => sideTest(t));
       f.cmd.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
       for (const c of ['PA0;', 'PA1;', 'PA2;', 'RA0;', 'RA1;', 'VS;', 'FT;', 'ST;', 'FA;', 'FB;', 'IF;']) {
         if (RIG().CAT_QUERIES.indexOf(c) < 0) continue;
@@ -803,6 +807,41 @@
     }
     try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
     dlg.querySelector('input').focus();
+  }
+  // Lecture CAT qui attend sa réponse (test automatique)
+  let catWait = null;
+  function catAsk(cmd) {
+    return new Promise((res) => {
+      catWait = res;
+      send({ t: 'cat_query', cmd });
+      setTimeout(() => { if (catWait === res) { catWait = null; res(null); } }, 3000);
+    });
+  }
+  const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+  // FTX-1 : PA0 / RA0 suivent-ils le côté actif ? Lecture côté MAIN, passage sur SUB (ordre FT / VS sûr), lecture, retour sur MAIN
+  async function sideTest(btn) {
+    if (!iControl()) return catOut('Prenez d’abord la main.');
+    if (st.ptt && st.ptt.active) return catOut('Pas pendant une émission.');
+    const sel = (st.radio || {}).vfoSel ? 1 : 0;
+    const c = RIG().CONTROL.vfoSel;
+    btn.disabled = true;
+    catOut('— Test : lecture côté MAIN, puis côté SUB, puis retour —');
+    try {
+      if (sel) { sendCtl(c, 0); await pause(1500); }
+      const pm = await catAsk('PA0;'); const am = await catAsk('RA0;');
+      catOut('MAIN : préampli ' + pm + ' · ATT ' + am);
+      sendCtl(c, 1); await pause(1500);
+      const ps = await catAsk('PA0;'); const as = await catAsk('RA0;');
+      catOut('SUB  : préampli ' + ps + ' · ATT ' + as);
+      sendCtl(c, sel); await pause(800);
+      const name = (r) => { const m = /^PA0(\d)/.exec(r || ''); return m ? ['IPO', 'AMP1', 'AMP2'][+m[1]] : '?'; };
+      const att = (r) => { const m = /^RA0(\d)/.exec(r || ''); return m ? (+m[1] ? 'ON' : 'OFF') : '?'; };
+      catOut('Lu par CAT — MAIN : ' + name(pm) + ', ATT ' + att(am) + ' · SUB : ' + name(ps) + ', ATT ' + att(as));
+      if (!pm || !ps) catOut('⚠ Pas de réponse du TRX : test à refaire.');
+      else if (pm !== ps || am !== as) catOut('✔ RÉSULTAT : le CAT lit le côté actif. ATT et préampli peuvent être réglés séparément pour chaque VFO.');
+      else catOut('✘ RÉSULTAT : même lecture des deux côtés. Si l’écran du TRX montre des réglages différents pour MAIN et SUB, le CAT ne voit que MAIN.');
+      catOut('Comparez avec l’écran du TRX (bas des cadres MAIN et SUB) et envoyez une capture de cette fenêtre.');
+    } finally { btn.disabled = false; }
   }
   function catOut(line) {
     const o = document.querySelector('#catDlg .cat-out');
@@ -1332,7 +1371,8 @@
       } else if (m.t === 'chat') {
         addChat(m.m, true);
       } else if (m.t === 'cat_answer') {
-        if (!catOut('← ' + m.reply)) say('CAT ' + m.cmd + ' → ' + m.reply, '', 10000);
+        if (catWait) { const w = catWait; catWait = null; w(m.reply); }
+        else if (!catOut('← ' + m.reply)) say('CAT ' + m.cmd + ' → ' + m.reply, '', 10000);
       } else if (m.t === 'notice') {
         if (m.pttCut) pttCut = true;
         say(m.msg, m.level === 'error' ? 'error' : m.level === 'info' ? '' : 'warn', 7000);
