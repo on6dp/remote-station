@@ -325,8 +325,14 @@
       send({ t: 'chat', text: v });
       $('chatInput').value = '';
     });
-    $('tgtA').addEventListener('click', () => setTarget('A'));
-    $('tgtB').addEventListener('click', () => setTarget('B'));
+    // Touches A / B : VFO réglé ; sur un TRX qui choisit son côté par CAT (FTX-1 : MAIN / SUB), aussi le côté actif
+    const pickVfo = (w) => {
+      setTarget(w);
+      const c = RIG().CONTROL && RIG().CONTROL.vfoSel;
+      if (c && RIG().VIRTUAL_SPLIT && iControl() && Number(ctlValue('vfoSel')) !== (w === 'B' ? 1 : 0)) sendCtl(c, w === 'B' ? 1 : 0);
+    };
+    $('tgtA').addEventListener('click', () => pickVfo('A'));
+    $('tgtB').addEventListener('click', () => pickVfo('B'));
     $('tuneUp').addEventListener('click', () => tune(step));
     $('tuneDown').addEventListener('click', () => tune(-step));
     $('vfoA').addEventListener('click', (ev) => { if (!ev.target.closest('.d')) setTarget('A'); });

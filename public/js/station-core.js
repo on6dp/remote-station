@@ -458,10 +458,10 @@
       const i = order[k];
       const w = { i, cmd: forms[i], by, timer: null, then };
       this.subWait = w;
-      this.pollHold = Date.now() + 3000;
+      this.pollHold = Date.now() + 5000;
       this._write(forms[i]);
       this._write('FT;');
-      w.timer = setTimeout(() => { if (this.subWait === w) this._toSub(by, k + 1, then); }, 1600); // réponses des lectures déjà envoyées d'abord
+      w.timer = setTimeout(() => { if (this.subWait === w) this._toSub(by, k + 1, then); }, 3000); // changement de bande du côté actif : le TRX répond plus lentement
     }
     /** Attend une réponse du TRX (expression régulière), sinon timeout. */
     _await(re, ms, cb) {
@@ -479,7 +479,7 @@
       k = k || 0;
       if (!k) { this._cancelSide(); this.log('Retour sur MAIN (' + (by || '?') + ')'); }
       const seq = this.sideSeq;
-      this.pollHold = Date.now() + 3000;
+      this.pollHold = Date.now() + 5000;
       if (k >= 3) {
         const why = 'le TRX n’a pas confirmé le retour sur MAIN (VS0) : FT laissé sur SUB pour ne pas le mettre en émission';
         this.log('Sécurité : ' + why, 'st-bad');
@@ -490,7 +490,7 @@
       }
       this._write('VS0;');
       this._write('VS;');
-      this._await(/^VS[01]$/, 1500, (t) => {
+      this._await(/^VS[01]$/, 3000, (t) => {
         if (this.catKeyed || seq !== this.sideSeq) return; // émission commencée ou nouveau clic entre-temps
         if (t !== 'VS0') { this.log('VS relu : ' + (t || 'pas de réponse') + ' → VS0 renvoyé', 'st-warn'); return this._toMain(by, then, k + 1); }
         const forms = rig.txVfoTries(0);
@@ -504,7 +504,7 @@
           }
           this._write(forms[order[j]]);
           this._write('FT;');
-          this._await(/^FT[0-3]$/, 1500, (f) => {
+          this._await(/^FT[0-3]$/, 3000, (f) => {
             if (seq !== this.sideSeq) return;
             if (f) this.ftSeen = f;
             if (f && +f[2] % 2 === 0) {
