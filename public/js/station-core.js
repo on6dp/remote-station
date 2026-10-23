@@ -103,6 +103,7 @@
           this.query = null;
         }
         if (this.ftWait && typeof t === 'string') this._ftReply(t);
+        if (this.sideTrace && typeof t === 'string' && /^(VS|FT|\?)/.test(t) && this.sideTrace.length < 24) this.sideTrace.push(t);
         if (this.subWait && typeof t === 'string') this._subReply(t);
         if (this.waitRe && typeof t === 'string' && this.waitRe.re.test(t)) { const w = this.waitRe; this.waitRe = null; clearTimeout(w.timer); w.cb(t); }
         const p = FTX1.parse(t);
@@ -434,6 +435,8 @@
 
     /** FTX-1 : passage sur SUB sans jamais l'état FT0 + VS1 (émission) — FT confirmé par le TRX avant VS1. */
     /** Changement de côté MAIN / SUB en cours annulé (nouveau clic) : plus aucune commande VS / FT de l'ancien. */
+    _trace(s) { if (this.sideTrace && this.sideTrace.length < 24) this.sideTrace.push('>' + s); }
+    _traceText() { return this.sideTrace && this.sideTrace.length ? ' [échanges : ' + this.sideTrace.join(' ') + ']' : ''; }
     _cancelSide() {
       if (this.subWait) clearTimeout(this.subWait.timer);
       this.subWait = null;
@@ -443,13 +446,13 @@
     }
     _toSub(by, k, then) {
       const rig = this.rig;
-      if (!k) { this._cancelSide(); this.log('Passage sur SUB (' + (by || '?') + ')'); }
+      if (!k) { this._cancelSide(); this.sideTrace = []; this.log('Passage sur SUB (' + (by || '?') + ')'); }
       if (this.subWait) clearTimeout(this.subWait.timer);
       this.subWait = null;
       const forms = rig.txVfoTries(1);
       const order = [this.txVfoOk || 0].concat(forms.map((_, i) => i).filter((i) => i !== (this.txVfoOk || 0)));
       if (k >= order.length) {
-        const why = 'le TRX n’a pas confirmé le VFO d’émission SUB (FT relu : ' + (this.ftSeen || 'aucune réponse') + ') : passage sur SUB annulé (il aurait mis le TRX en émission)';
+        const why = 'le TRX n’a pas confirmé le VFO d’émission SUB (FT relu : ' + (this.ftSeen || 'aucune réponse') + ') : passage sur SUB annulé (il aurait mis le TRX en émission)' + this._traceText();
         this.log('Sécurité : ' + why, 'st-bad');
         if (this.wsUp) this.sendWs({ t: 'safety', reason: why });
         this._readBack('vfoSel');
@@ -459,6 +462,7 @@
       const w = { i, cmd: forms[i], by, timer: null, then };
       this.subWait = w;
       this.pollHold = Date.now() + 5000;
+      this._trace(forms[i].replace(';', ''));
       this._write(forms[i]);
       this._write('FT;');
       w.timer = setTimeout(() => { if (this.subWait === w) this._toSub(by, k + 1, then); }, 3000); // changement de bande du côté actif : le TRX répond plus lentement
@@ -477,17 +481,18 @@
     _toMain(by, then, k) {
       const rig = this.rig;
       k = k || 0;
-      if (!k) { this._cancelSide(); this.log('Retour sur MAIN (' + (by || '?') + ')'); }
+      if (!k) { this._cancelSide(); this.sideTrace = []; this.log('Retour sur MAIN (' + (by || '?') + ')'); }
       const seq = this.sideSeq;
       this.pollHold = Date.now() + 5000;
       if (k >= 3) {
-        const why = 'le TRX n’a pas confirmé le retour sur MAIN (VS0) : FT laissé sur SUB pour ne pas le mettre en émission';
+        const why = 'le TRX n’a pas confirmé le retour sur MAIN (VS0) : FT laissé sur SUB pour ne pas le mettre en émission' + this._traceText();
         this.log('Sécurité : ' + why, 'st-bad');
         if (this.wsUp) this.sendWs({ t: 'safety', reason: why });
         this.pollHold = 0;
         this._readBack('vfoSel');
         return;
       }
+      this._trace('VS0');
       this._write('VS0;');
       this._write('VS;');
       this._await(/^VS[01]$/, 3000, (t) => {
@@ -497,11 +502,13 @@
         const order = [this.txVfoOk || 0].concat(forms.map((_, i) => i).filter((i) => i !== (this.txVfoOk || 0)));
         const tryFt = (j) => {
           if (j >= order.length) {
-            this.log('Le TRX n’a pas confirmé l’émission sur MAIN (FT relu : ' + (this.ftSeen || '?') + ') ; réception sur MAIN', 'st-warn');
+            this.log('Le TRX n’a pas confirmé l’émission sur MAIN (FT relu : ' + (this.ftSeen || '?') + ') ; réception sur MAIN' + this._traceText(), 'st-warn');
+            if (this.wsUp) this.sendWs({ t: 'safety', reason: 'retour sur MAIN : émission laissée sur SUB (FT relu : ' + (this.ftSeen || '?') + ')' + this._traceText() });
             this.pollHold = 0;
             this._readBack('vfoSel');
             return;
           }
+          this._trace(forms[order[j]].replace(';', ''));
           this._write(forms[order[j]]);
           this._write('FT;');
           this._await(/^FT[0-3]$/, 3000, (f) => {
