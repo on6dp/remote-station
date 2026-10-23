@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.21.14 | [RemoteStation-Setup-0.21.14.exe](0.21.14/RemoteStation-Setup-0.21.14.exe) | [remote-station-0.21.14.tar.gz](0.21.14/remote-station-0.21.14.tar.gz) | FTX-1 : SUB refusé sans clignotement, diagnostic MAIN / SUB — [empreintes SHA-256](0.21.14/SHA256SUMS.txt) |
 | 0.21.13 | [RemoteStation-Setup-0.21.13.exe](0.21.13/RemoteStation-Setup-0.21.13.exe) | [remote-station-0.21.13.tar.gz](0.21.13/remote-station-0.21.13.tar.gz) | FTX-1 : passage sur SUB par CAT désactivé (sécurité) — [empreintes SHA-256](0.21.13/SHA256SUMS.txt) |
 | 0.21.12 | [RemoteStation-Setup-0.21.12.exe](0.21.12/RemoteStation-Setup-0.21.12.exe) | [remote-station-0.21.12.tar.gz](0.21.12/remote-station-0.21.12.tar.gz) | FTX-1 : réponses du TRX dans le message d'échec MAIN / SUB — [empreintes SHA-256](0.21.12/SHA256SUMS.txt) |
 | 0.21.11 | [RemoteStation-Setup-0.21.11.exe](0.21.11/RemoteStation-Setup-0.21.11.exe) | [remote-station-0.21.11.tar.gz](0.21.11/remote-station-0.21.11.tar.gz) | FTX-1 : A / B = MAIN / SUB, attente allongée — [empreintes SHA-256](0.21.11/SHA256SUMS.txt) |

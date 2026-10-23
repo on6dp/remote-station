@@ -510,6 +510,10 @@
   function sendCtl(c, v) {
     const why = ctlBlocked();
     if (why) return say(why, 'warn');
+    // FTX-1 : passage sur SUB par CAT désactivé (il faisait émettre le TRX) — refus immédiat, sans faire clignoter SUB
+    if (RIG().ID === 'ftx1' && me && !me.subCat && (c.id === 'vfoSel' && v === 1 || (c.viaSub && Number(ctlValue('vfoSel')) !== 1) || (c.viaMain && Number(ctlValue('vfoSel')) === 1))) {
+      return say('Passage MAIN ↔ SUB par le dashboard désactivé (il mettait le FTX-1 en émission) : choisissez MAIN / SUB sur la face avant du TRX ; le dashboard suit.', 'warn', 8000);
+    }
     if (c.id === 'vfoSel' && v != null) target = v ? 'B' : 'A'; // MAIN / SUB : les cadres suivent ce VFO
     if (c.type !== 'action') ctlPending[c.id] = { v, at: Date.now() };
     send({ t: 'set', ctl: c.id, value: v });
@@ -802,7 +806,6 @@
       dlg.innerHTML = '<form method="dialog"><h3>Lecture CAT (diagnostic, lecture seulement)</h3>' +
         '<div class="cat-row"><input name="cmd" maxlength="12" value="PA0;" autocomplete="off" spellcheck="false"><button class="btn btn-primary" type="button" data-a="go">Lire</button></div>' +
         '<div class="cat-quick"></div>' +
-        (RIG().ID === 'ftx1' ? '<button class="btn accent cat-test" type="button" data-a="sidetest">Test automatique : ATT et préampli de chaque côté (MAIN / SUB)</button>' : '') +
         '<pre class="cat-out"></pre>' +
         '<p class="md-prev cat-help"></p><div class="md-act"><span></span><button class="btn" value="close">Fermer</button></div></form>';
       document.body.appendChild(dlg);

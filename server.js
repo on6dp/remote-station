@@ -1341,6 +1341,7 @@ function loggedIn(conn, call, rec, sessionTok) {
     rigs: Object.keys(DRIVERS).map((id) => ({ id, name: DRIVERS[id].NAME })),
     sessionIdleMinutes: cfg.sessionIdleMinutes,
     digiCall: String(cfg.digiCall || '').toUpperCase(),
+    subCat: !!cfg.ftx1SubCat,
     stationGrid: String(cfg.stationGrid || '').toUpperCase(),
     stationQth: String(cfg.stationQth || '').toUpperCase(),
     qo100If: cfg.qo100If && typeof cfg.qo100If === 'object' ? cfg.qo100If : DEFAULTS.qo100If,
@@ -1812,8 +1813,15 @@ function onStation(conn, m) {
     catAsk = null;
     return;
   }
+  if (m.t === 'diag') {
+    // Déroulé d'un changement de côté MAIN / SUB (FTX-1) : affiché à celui qui pilote, gardé dans le journal
+    const text = String(m.text || '').replace(/[\u0000-\u001f]/g, ' ').slice(0, 500);
+    journal('side_diag', { text });
+    if (controller) send(controller, { t: 'notice', level: 'info', msg: 'Station : ' + text });
+    return;
+  }
   if (m.t === 'safety') {
-    const reason = String(m.reason || 'sécurité de la station').slice(0, 160);
+    const reason = String(m.reason || 'sécurité de la station').slice(0, 400);
     journal('tx_watchdog', { reason });
     if (ptt.active) stopPtt(reason);
     else for (const c of ops) send(c, { t: 'notice', level: 'error', msg: 'Station : ' + reason });

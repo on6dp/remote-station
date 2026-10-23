@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.21.14** — FTX-1 : clic sur SUB refusé tout de suite par le dashboard (le bouton ne s'allume plus 2-3 s avant de revenir sur MAIN). Retour sur MAIN déjà fait : plus de VS0 envoyé (le TRX répondait « ? » puis se taisait). Diagnostic : déroulé de chaque changement de côté (commandes, réponses VS / FT / TX) affiché à celui qui pilote et gardé dans le journal du serveur. Bouton « Test automatique » de la console CAT retiré. **Recharger la page Station.**
 - **0.21.13** — **FTX-1 : passage sur SUB par le dashboard désactivé** (le TRX passait en émission à chaque clic sur SUB, constaté au club). MAIN / SUB se choisissent sur la face avant du TRX, le dashboard suit (lectures, cadres, badges). Retour sur MAIN et touche A toujours possibles ; touche B = VFO réglé seulement. Refus côté serveur et côté page Station ; réactivable pour essais (`ftx1SubCat: true` dans config.json). **Recharger la page Station.**
 - **0.21.12** — FTX-1, diagnostic : en cas d'échec du passage MAIN ↔ SUB, le message affiché sur le dashboard contient les commandes envoyées et les réponses du TRX (ex. « [échanges : >VS0 VS1 …] »). **Recharger la page Station.**
 - **0.21.11** — FTX-1 : touches **A / B** de la ligne des pas = MAIN / SUB (VFO réglé et côté actif du TRX). Changement de côté entre deux bandes éloignées (ex. 70 cm ↔ 20 m) : le TRX répond plus lentement, attente de confirmation portée à 3 s par essai (plus de « le TRX n'a pas confirmé le retour sur MAIN » à tort). **Recharger la page Station.**

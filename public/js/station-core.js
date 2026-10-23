@@ -103,7 +103,7 @@
           this.query = null;
         }
         if (this.ftWait && typeof t === 'string') this._ftReply(t);
-        if (this.sideTrace && typeof t === 'string' && /^(VS|FT|\?)/.test(t) && this.sideTrace.length < 24) this.sideTrace.push(t);
+        if (this.sideTrace && typeof t === 'string' && /^(VS|FT|TX|\?)/.test(t) && this.sideTrace.length < 40) this.sideTrace.push(t);
         if (this.subWait && typeof t === 'string') this._subReply(t);
         if (this.waitRe && typeof t === 'string' && this.waitRe.re.test(t)) { const w = this.waitRe; this.waitRe = null; clearTimeout(w.timer); w.cb(t); }
         const p = FTX1.parse(t);
@@ -439,7 +439,13 @@
 
     /** FTX-1 : passage sur SUB sans jamais l'état FT0 + VS1 (émission) — FT confirmé par le TRX avant VS1. */
     /** Changement de côté MAIN / SUB en cours annulé (nouveau clic) : plus aucune commande VS / FT de l'ancien. */
-    _trace(s) { if (this.sideTrace && this.sideTrace.length < 24) this.sideTrace.push('>' + s); }
+    _trace(s) { if (this.sideTrace && this.sideTrace.length < 40) this.sideTrace.push('>' + s); }
+    // Diagnostic : déroulé complet d'un changement de côté (commandes, réponses, état TX) envoyé au dashboard
+    _diag(what) {
+      const tr = this._traceText();
+      if (tr && this.wsUp) this.sendWs({ t: 'diag', text: what + tr });
+      this.log(what + tr);
+    }
     _traceText() { return this.sideTrace && this.sideTrace.length ? ' [échanges : ' + this.sideTrace.join(' ') + ']' : ''; }
     _cancelSide() {
       if (this.subWait) clearTimeout(this.subWait.timer);
@@ -469,6 +475,7 @@
       this._trace(forms[i].replace(';', ''));
       this._write(forms[i]);
       this._write('FT;');
+      this._write('TX;');
       w.timer = setTimeout(() => { if (this.subWait === w) this._toSub(by, k + 1, then); }, 3000); // changement de bande du côté actif : le TRX répond plus lentement
     }
     /** Attend une réponse du TRX (expression régulière), sinon timeout. */
@@ -496,9 +503,10 @@
         this._readBack('vfoSel');
         return;
       }
-      this._trace('VS0');
-      this._write('VS0;');
-      this._write('VS;');
+      // Déjà sur MAIN (VS0 relu) : pas de VS0 (le FTX-1 répond « ? » et se tait un instant), on vérifie seulement FT
+      const already = k === 0 && this.radio.vfoSel === 0;
+      if (already) { this._trace('VS;'); this._write('VS;'); }
+      else { this._trace('VS0'); this._write('VS0;'); this._write('VS;'); this._write('TX;'); }
       this._await(/^VS[01]$/, 3000, (t) => {
         if (this.catKeyed || seq !== this.sideSeq) return; // émission commencée ou nouveau clic entre-temps
         if (t !== 'VS0') { this.log('VS relu : ' + (t || 'pas de réponse') + ' → VS0 renvoyé', 'st-warn'); return this._toMain(by, then, k + 1); }
@@ -515,12 +523,15 @@
           this._trace(forms[order[j]].replace(';', ''));
           this._write(forms[order[j]]);
           this._write('FT;');
+          this._write('TX;');
           this._await(/^FT[0-3]$/, 3000, (f) => {
             if (seq !== this.sideSeq) return;
             if (f) this.ftSeen = f;
             if (f && +f[2] % 2 === 0) {
               this.txVfoOk = order[j];
-              this.pollHold = Date.now() + 300;
+              this._write('TX;');
+              setTimeout(() => this._diag('Retour sur MAIN'), 600);
+              this.pollHold = 0; // lectures normales tout de suite (émission terminée, mesures à effacer)
               this._readBack('vfoSel');
               if (then) then();
               return;
@@ -542,9 +553,14 @@
       if (this.catKeyed) return; // une émission a commencé entre-temps : on ne touche plus à VS
       if ((this.txVfoOk || 0) !== w.i) this.log('Le TRX accepte « ' + w.cmd + ' » pour choisir le VFO d’émission : retenu');
       this.txVfoOk = w.i;
+      this._trace('VS1');
       this._write('VS1;');
+      this._write('VS;');
+      this._write('TX;');
+      setTimeout(() => { this._write('TX;'); }, 400);
+      setTimeout(() => this._diag('Passage sur SUB'), 900);
       this._readBack('vfoSel');
-      this.pollHold = Date.now() + 300;
+      this.pollHold = Date.now() + 400;
       if (w.then) setTimeout(() => { if (!this.catKeyed) w.then(); }, 150);
     }
 
