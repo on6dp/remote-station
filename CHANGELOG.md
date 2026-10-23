@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.21.2** — Console « Lecture CAT » (administrateurs) dans une fenêtre de la page : boutons de lecture rapide (PA0, PA1, PA2, RA0, RA1, VS, FT, ST, FA, FB, IF), réponses listées, « pas de réponse du TRX » après 2,5 s. Réponse reconnue par la commande complète (PA1 ne prend plus la réponse de la lecture PA0 du polling). FTX-1 : lecture RA1 ajoutée.
 - **0.21.1** — Saisie « kHz / Aller » supprimée (fréquence à la souris, bandes en un clic) ; MAIN / SUB / SPLIT, A → B, B → A, A ⇄ B et LOCK passent sur la ligne des pas, juste après ◀ ▶, entre les deux écrans VFO.
 - **0.21.0** — **Plus de 4e colonne : le centre s'élargit.**
   - **Opérateurs** : volet du bouton 👥 du bandeau, fermé par défaut ; point rouge sur 👥 quand un message arrive ; le volet s'ouvre tout seul chez celui qui pilote quand quelqu'un demande la main.

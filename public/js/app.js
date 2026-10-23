@@ -766,13 +766,50 @@
       const cq = mkBtn('⌨ Lecture CAT…', 'accent rig-opt');
       cq.disabled = !st || !st.station;
       cq.title = 'Diagnostic : lire une valeur brute du TRX (lecture seulement)';
-      cq.addEventListener('click', () => {
-        const c = prompt('Commande de lecture CAT (ex. FB; VS; FT; ST; IF; OI;) :', 'FB;');
-        if (c) send({ t: 'cat_query', cmd: c });
-        closeRigMenu();
-      });
+      cq.addEventListener('click', () => { closeRigMenu(); catConsole(); });
       box.appendChild(cq);
     }
+  }
+  // Console de lecture CAT (fenêtre dans la page, réponses listées) : lectures seulement, commandes de la liste du pilote
+  function catConsole() {
+    let dlg = document.getElementById('catDlg');
+    if (!dlg) {
+      dlg = document.createElement('dialog');
+      dlg.id = 'catDlg';
+      dlg.className = 'macro-dlg cat-dlg';
+      dlg.innerHTML = '<form method="dialog"><h3>Lecture CAT (diagnostic, lecture seulement)</h3>' +
+        '<div class="cat-row"><input name="cmd" maxlength="12" value="PA0;" autocomplete="off" spellcheck="false"><button class="btn btn-primary" type="button" data-a="go">Lire</button></div>' +
+        '<div class="cat-quick"></div><pre class="cat-out"></pre>' +
+        '<p class="md-prev cat-help"></p><div class="md-act"><span></span><button class="btn" value="close">Fermer</button></div></form>';
+      document.body.appendChild(dlg);
+      const f = dlg.querySelector('form');
+      const go = (c) => {
+        c = String(c || f.cmd.value).toUpperCase().replace(/\s+/g, '');
+        if (!c) return;
+        if (!c.endsWith(';')) c += ';';
+        catOut('→ ' + c);
+        send({ t: 'cat_query', cmd: c });
+      };
+      dlg.querySelector('[data-a="go"]').addEventListener('click', () => go());
+      f.cmd.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+      for (const c of ['PA0;', 'PA1;', 'PA2;', 'RA0;', 'RA1;', 'VS;', 'FT;', 'ST;', 'FA;', 'FB;', 'IF;']) {
+        if (RIG().CAT_QUERIES.indexOf(c) < 0) continue;
+        const b = mkBtn(c, 'accent');
+        b.type = 'button';
+        b.addEventListener('click', () => go(c));
+        dlg.querySelector('.cat-quick').appendChild(b);
+      }
+      dlg.querySelector('.cat-help').textContent = 'Lectures possibles : ' + RIG().CAT_QUERIES.join(' ');
+    }
+    try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
+    dlg.querySelector('input').focus();
+  }
+  function catOut(line) {
+    const o = document.querySelector('#catDlg .cat-out');
+    if (!o) return false;
+    o.textContent += line + '\n';
+    o.scrollTop = o.scrollHeight;
+    return true;
   }
   // Membres connectés : nombre dans la barre du haut, liste au clic
   function drawUsersMenu() {
@@ -1294,6 +1331,8 @@
         $('chat').scrollTop = $('chat').scrollHeight;
       } else if (m.t === 'chat') {
         addChat(m.m, true);
+      } else if (m.t === 'cat_answer') {
+        if (!catOut('← ' + m.reply)) say('CAT ' + m.cmd + ' → ' + m.reply, '', 10000);
       } else if (m.t === 'notice') {
         if (m.pttCut) pttCut = true;
         say(m.msg, m.level === 'error' ? 'error' : m.level === 'info' ? '' : 'warn', 7000);

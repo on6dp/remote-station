@@ -1378,7 +1378,8 @@ function onOperator(conn, m) {
       const q = cmd.endsWith(';') ? cmd : cmd + ';';
       if (!station || station.caps.indexOf('catq') < 0) return send(conn, { t: 'notice', level: 'error', msg: 'Page Station sans console CAT : rechargez-la' });
       if (!rig().CAT_QUERIES || rig().CAT_QUERIES.indexOf(q) < 0) return send(conn, { t: 'notice', level: 'error', msg: 'Lecture non autorisée : ' + q.slice(0, 12) + ' (lectures possibles : ' + (rig().CAT_QUERIES || []).join(' ') + ')' });
-      catAsk = { conn, at: Date.now() };
+      if (catAsk) clearTimeout(catAsk.timer);
+      catAsk = { conn, at: Date.now(), timer: setTimeout(() => { if (catAsk && catAsk.conn === conn) { send(conn, { t: 'cat_answer', cmd: q, reply: 'pas de réponse du TRX' }); catAsk = null; } }, 2500) };
       toStation({ t: 'cmd', op: 'query', cmd: q, id: Date.now() });
       return;
     }
@@ -1797,7 +1798,10 @@ function onStation(conn, m) {
     return;
   }
   if (m.t === 'cat_reply') {
-    if (catAsk && Date.now() - catAsk.at < 5000) send(catAsk.conn, { t: 'notice', level: 'info', msg: 'CAT ' + String(m.cmd).slice(0, 12) + ' → ' + String(m.reply).slice(0, 60) });
+    if (catAsk && Date.now() - catAsk.at < 5000) {
+      clearTimeout(catAsk.timer);
+      send(catAsk.conn, { t: 'cat_answer', cmd: String(m.cmd).slice(0, 12), reply: String(m.reply).slice(0, 60) });
+    }
     catAsk = null;
     return;
   }

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.21.2 | [RemoteStation-Setup-0.21.2.exe](0.21.2/RemoteStation-Setup-0.21.2.exe) | [remote-station-0.21.2.tar.gz](0.21.2/remote-station-0.21.2.tar.gz) | Console Lecture CAT dans une fenêtre — [empreintes SHA-256](0.21.2/SHA256SUMS.txt) |
 | 0.21.1 | [RemoteStation-Setup-0.21.1.exe](0.21.1/RemoteStation-Setup-0.21.1.exe) | [remote-station-0.21.1.tar.gz](0.21.1/remote-station-0.21.1.tar.gz) | MAIN / SUB / SPLIT sur la ligne des pas, plus de « kHz / Aller » — [empreintes SHA-256](0.21.1/SHA256SUMS.txt) |
 | 0.21.0 | [RemoteStation-Setup-0.21.0.exe](0.21.0/RemoteStation-Setup-0.21.0.exe) | [remote-station-0.21.0.tar.gz](0.21.0/remote-station-0.21.0.tar.gz) | Plus de 4e colonne, macros dans les onglets, badges VFO cliquables — [empreintes SHA-256](0.21.0/SHA256SUMS.txt) |
 | 0.20.0 | [RemoteStation-Setup-0.20.0.exe](0.20.0/RemoteStation-Setup-0.20.0.exe) | [remote-station-0.20.0.tar.gz](0.20.0/remote-station-0.20.0.tar.gz) | Log QSO depuis les onglets RTTY / JTTY / CW — [empreintes SHA-256](0.20.0/SHA256SUMS.txt) |

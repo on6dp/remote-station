@@ -71,6 +71,8 @@
       { cmd: 'SH1;', re: /^SH1(\d{3})$/, parse: (m) => ({ widthB: +m[1] }), sim: 'SH1013' },
       { cmd: 'RG1;', re: /^RG1(\d{3})$/, parse: (m) => ({ rfB: +m[1] }), sim: 'RG1255' }
     ],
+    // Console CAT : lectures supplémentaires pour le diagnostic (ATT / préampli par côté)
+    extraQueries: ['RA1;', 'PA0;', 'PA1;', 'PA2;'],
     extraStateKeys: ['widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
     // Préampli de la gamme du VFO A (144 / 430 MHz), pour le bouton AMP
