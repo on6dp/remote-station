@@ -31,9 +31,8 @@ const DEFAULTS = {
   stationToken: '',
   allowTx: false,
   maxTxSeconds: 120,
-  // FTX-1 : passage sur SUB par CAT (VS1) bloqué — le TRX passait en émission à chaque clic sur SUB (club, 23/10/2026).
-  // Le côté SUB se choisit sur la face avant. true pour réactiver (essais seulement).
-  ftx1SubCat: false,
+  // FTX-1 : passage MAIN / SUB par CAT (VS seul, selon le manuel CAT). false pour le bloquer (face avant seulement).
+  ftx1SubCat: true,
   ftxWatchdogMinutes: 6, // émission auto FT8 / FT4 / FT2 : arrêt si le même message part depuis ce temps (WSJT-X : 6 min)
   pttHeartbeatMs: 1500,
   controlIdleMinutes: 15,
@@ -1817,7 +1816,8 @@ function onStation(conn, m) {
     // Déroulé d'un changement de côté MAIN / SUB (FTX-1) : affiché à celui qui pilote, gardé dans le journal
     const text = String(m.text || '').replace(/[\u0000-\u001f]/g, ' ').slice(0, 500);
     journal('side_diag', { text });
-    if (controller) send(controller, { t: 'notice', level: 'info', msg: 'Station : ' + text });
+    // Affiché seulement s'il s'est passé quelque chose d'anormal (émission, FT qui n'a pas suivi, commande refusée « ? »)
+    if (controller && /TX[12]|n’a pas suivi|\?/.test(text)) send(controller, { t: 'notice', level: 'warn', msg: 'Station : ' + text });
     return;
   }
   if (m.t === 'safety') {

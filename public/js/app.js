@@ -329,8 +329,9 @@
     const pickVfo = (w) => {
       setTarget(w);
       const c = RIG().CONTROL && RIG().CONTROL.vfoSel;
-      // FTX-1 : le passage sur SUB par CAT est désactivé côté serveur (il faisait émettre le TRX) ; B ne choisit que le VFO réglé
-      if (c && RIG().VIRTUAL_SPLIT && iControl() && w === 'A' && Number(ctlValue('vfoSel')) !== 0) sendCtl(c, 0);
+      // FTX-1 : passage sur SUB par CAT bloqué si le serveur le demande (ftx1SubCat: false) ; B ne choisit alors que le VFO réglé
+      const subOk = !(RIG().ID === 'ftx1' && me && !me.subCat);
+      if (c && RIG().VIRTUAL_SPLIT && iControl() && (w === 'A' || subOk) && Number(ctlValue('vfoSel')) !== (w === 'B' ? 1 : 0)) sendCtl(c, w === 'B' ? 1 : 0);
     };
     $('tgtA').addEventListener('click', () => pickVfo('A'));
     $('tgtB').addEventListener('click', () => pickVfo('B'));

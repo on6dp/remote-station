@@ -98,6 +98,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 
 - **RF front end**: RF gain, AGC. ATT and preamplifier (IPO / AMP1 / AMP2, AMP): badges on the VFO display.
 - **DSP**: NB, DNR, NOTCH (and its frequency), DNF.
+- **FTX-1: MAIN / SUB** through the VS CAT command alone (Yaesu manual: VS0 = MAIN transmit / receive, VS1 = SUB transmit / receive), like the front-panel key. At the club, the Station page must use the FTX-1 **Enhanced COM Port**; the Standard COM Port controls transmission through RTS / DTR (RPTT SELECT, PC KEYING) and may key the rig.
 - **FTX-1: the RF front end, Filtre and DSP panels act on the active side of the rig** (« VFO A · MAIN » / « VFO B · SUB » tag in their title): SUB active → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF of the SUB side. The A / B keys on the Step row act like MAIN / SUB (tuned VFO and active side of the rig); use the mouse wheel on the other VFO's digits to change its frequency without changing side.
 - **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK**: on the Step row, after ◀ ▶. The RIT / XIT offset is set on each VFO display (mouse wheel on the value, CLEAR to reset it).
 - **RIT / XIT / CLEAR** on each VFO display: click RIT or XIT to switch it on / off; mouse **wheel** over the offset = ± 10 Hz (± 100 Hz with Shift); **CLEAR** = offset to zero. VFO B has its own RIT / XIT on the FTX-1 (SUB side); the FTDX10 and IC-7300 have only one, on VFO A.

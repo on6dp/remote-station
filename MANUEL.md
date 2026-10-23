@@ -98,6 +98,7 @@ Cadre **Antenne**, en haut à gauche : `ANT 1` / `ANT 2` sur le FTX-1 (prises de
 
 - **RF front end** : RF gain, AGC. ATT et préampli (IPO / AMP1 / AMP2, AMP) : badges de l'écran VFO.
 - **DSP** : NB, DNR, NOTCH (et sa fréquence), DNF.
+- **FTX-1 : MAIN / SUB** par la commande CAT VS seule (manuel Yaesu : VS0 = MAIN en émission / réception, VS1 = SUB en émission / réception), comme la touche de la face avant. Au club, la page Station doit utiliser l'**Enhanced COM Port** du FTX-1 ; le Standard COM Port commande l'émission par RTS / DTR (RPTT SELECT, PC KEYING) et peut faire émettre le TRX.
 - **FTX-1 : les cadres RF front end, Filtre et DSP règlent le côté actif du TRX** (étiquette « VFO A · MAIN » / « VFO B · SUB » dans leur titre) : SUB actif → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF du côté SUB. Les touches A / B de la ligne des pas font comme MAIN / SUB (VFO réglé et côté actif du TRX) ; molette sur les chiffres de l'autre VFO pour changer sa fréquence sans changer de côté.
 - **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK** : sur la ligne des pas (Step), après ◀ ▶. Le décalage RIT / XIT se règle sur chaque écran VFO (molette sur la valeur, CLEAR pour le remettre à zéro).
 - **RIT / XIT / CLEAR** sur chaque écran VFO : clic sur RIT ou XIT = allumer / éteindre ; **molette** sur le décalage affiché = ± 10 Hz (± 100 Hz avec Maj) ; **CLEAR** = décalage à zéro. Le VFO B a son propre RIT / XIT sur le FTX-1 (côté SUB) ; le FTDX10 et l'IC-7300 n'en ont qu'un, sur le VFO A.

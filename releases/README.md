@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.0 | [RemoteStation-Setup-0.22.0.exe](0.22.0/RemoteStation-Setup-0.22.0.exe) | [remote-station-0.22.0.tar.gz](0.22.0/remote-station-0.22.0.tar.gz) | FTX-1 : MAIN / SUB depuis le dashboard, sans émission — [empreintes SHA-256](0.22.0/SHA256SUMS.txt) |
 | 0.21.17 | [RemoteStation-Setup-0.21.17.exe](0.21.17/RemoteStation-Setup-0.21.17.exe) | [remote-station-0.21.17.tar.gz](0.21.17/remote-station-0.21.17.tar.gz) | FTX-1 : MAIN / SUB par VS seul (manuel CAT Yaesu) — [empreintes SHA-256](0.21.17/SHA256SUMS.txt) |
 | 0.21.16 | [RemoteStation-Setup-0.21.16.exe](0.21.16/RemoteStation-Setup-0.21.16.exe) | [remote-station-0.21.16.tar.gz](0.21.16/remote-station-0.21.16.tar.gz) | FTX-1 : MAIN / SUB d'un bloc (FT et VS ensemble) — [empreintes SHA-256](0.21.16/SHA256SUMS.txt) |
 | 0.21.15 | [RemoteStation-Setup-0.21.15.exe](0.21.15/RemoteStation-Setup-0.21.15.exe) | [remote-station-0.21.15.tar.gz](0.21.15/remote-station-0.21.15.tar.gz) | FTX-1 : pas de commande sans effet MAIN / SUB — [empreintes SHA-256](0.21.15/SHA256SUMS.txt) |
