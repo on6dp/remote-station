@@ -98,6 +98,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 
 - **RF front end**: RF gain, AGC. ATT and preamplifier (IPO / AMP1 / AMP2, AMP): badges on the VFO display.
 - **DSP**: NB, DNR, NOTCH (and its frequency), DNF.
+- **FTX-1: the RF front end, Filtre and DSP panels act on the selected VFO** (« VFO A » / « VFO B » tag in their title): with VFO B selected (B key on the Step row, click on its display, or SUB) → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF of the SUB side.
 - **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK**: on the Step row, after ◀ ▶. The RIT / XIT offset is set on each VFO display (mouse wheel on the value, CLEAR to reset it).
 - **RIT / XIT / CLEAR** on each VFO display: click RIT or XIT to switch it on / off; mouse **wheel** over the offset = ± 10 Hz (± 100 Hz with Shift); **CLEAR** = offset to zero. VFO B has its own RIT / XIT on the FTX-1 (SUB side); the FTDX10 and IC-7300 have only one, on VFO A.
 

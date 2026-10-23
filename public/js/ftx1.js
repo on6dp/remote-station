@@ -9,6 +9,7 @@
   'use strict';
   const Y = (typeof module !== 'undefined' && module.exports) ? require('./yaesu.js') : root.YAESU;
   const pad = Y.pad;
+  const signed4 = (v) => (Number(v) < 0 ? '-' : '+') + pad(v, 4);
 
   // Puissance : la réponse PC indique la tête. P1 = 1 tête Field (0,5–10 W, dixièmes sous 10 W : "PC10.5;"),
   // P1 = 2 ampli SPA-1 (5–100 W : "PC2025;").
@@ -69,11 +70,15 @@
       { cmd: 'NA1;', re: /^NA1([01])$/, parse: (m) => ({ narrowB: +m[1] }), sim: 'NA10' },
       { cmd: 'GT1;', re: /^GT1(\d)$/, parse: (m) => ({ agcB: Math.min(4, +m[1]) }), sim: 'GT14' },
       { cmd: 'SH1;', re: /^SH1(\d{3})$/, parse: (m) => ({ widthB: +m[1] }), sim: 'SH1013' },
-      { cmd: 'RG1;', re: /^RG1(\d{3})$/, parse: (m) => ({ rfB: +m[1] }), sim: 'RG1255' }
+      { cmd: 'RG1;', re: /^RG1(\d{3})$/, parse: (m) => ({ rfB: +m[1] }), sim: 'RG1255' },
+      { cmd: 'BP11;', re: /^BP11(\d{3})$/, parse: (m) => ({ notchFreqB: +m[1] * 10 }), sim: 'BP11150' },
+      { cmd: 'IS1;', re: /^IS1[01]([+-])(\d{4})$/, parse: (m) => ({ shiftB: (m[1] === '-' ? -1 : 1) * +m[2] }), sim: 'IS10+0000' },
+      { cmd: 'CO10;', re: /^CO10(\d{4})$/, parse: (m) => ({ contourB: +m[1] ? 1 : 0 }), sim: 'CO100000' },
+      { cmd: 'CO12;', re: /^CO12(\d{4})$/, parse: (m) => ({ apfB: +m[1] ? 1 : 0 }), sim: 'CO120000' }
     ],
     // Console CAT : lectures supplémentaires pour le diagnostic (ATT / préampli par côté)
     extraQueries: ['RA1;', 'PA0;', 'PA1;', 'PA2;'],
-    extraStateKeys: ['attB', 'preampB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
+    extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
     // Préampli de la gamme du VFO A (144 / 430 MHz), pour le bouton AMP
     derive(r) {
@@ -114,6 +119,12 @@
       { id: 'nrB', g: 'flt', label: 'DNR (VFO B)', type: 'level', min: 0, max: 10, step: 1, off0: true, write: (v) => 'RL1' + pad(v, 2) + ';' },
       { id: 'notchB', g: 'flt', label: 'NOTCH (VFO B)', type: 'toggle', write: (v) => 'BP10' + pad(v, 3) + ';' },
       { id: 'dnfB', g: 'flt', label: 'DNF (VFO B)', type: 'toggle', write: (v) => 'BC1' + v + ';' },
+      { id: 'notchFreqB', g: 'flt', label: 'Fréquence NOTCH (VFO B)', type: 'level', min: 10, max: 3200, step: 10, unit: 'Hz', write: (v) => 'BP11' + pad(v / 10, 3) + ';', when: (s) => !/FM/.test(s.modeB || '') },
+      { id: 'shiftB', g: 'flt', label: 'IF SHIFT (VFO B)', type: 'level', min: -1200, max: 1200, step: 20, unit: 'Hz', write: (v) => 'IS10' + signed4(v) + ';' },
+      { id: 'contourB', g: 'flt', label: 'CONTOUR (VFO B)', type: 'toggle', write: (v) => 'CO10' + pad(v, 4) + ';' },
+      { id: 'apfB', g: 'flt', label: 'APF (VFO B)', type: 'toggle', write: (v) => 'CO12' + pad(v, 4) + ';', when: (s) => /^CW/.test(s.modeB || '') },
+      { id: 'agcB', g: 'rx', label: 'AGC (VFO B)', type: 'select', options: [[0, 'OFF'], [1, 'FAST'], [2, 'MID'], [3, 'SLOW'], [4, 'AUTO']], write: (v) => 'GT1' + v + ';' },
+      { id: 'rfB', g: 'rx', label: 'RF gain (VFO B)', type: 'level', min: 0, max: 255, step: 1, pct: true, write: (v) => 'RG1' + pad(v, 3) + ';' },
       // 144 / 430 MHz : un seul préampli, AMP ON / OFF (AMP1 / AMP2 n'existent qu'en HF et 50 MHz)
       { id: 'preampVU', g: 'rx', label: 'AMP (144 / 430 MHz)', type: 'toggle', write: (v, s) => 'PA' + (s.freq >= 420000000 ? 2 : 1) + v + ';',
         when: (s) => s.freq != null && s.freq >= 144000000, hideUnavail: true }

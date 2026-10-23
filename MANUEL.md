@@ -98,6 +98,7 @@ Cadre **Antenne**, en haut à gauche : `ANT 1` / `ANT 2` sur le FTX-1 (prises de
 
 - **RF front end** : RF gain, AGC. ATT et préampli (IPO / AMP1 / AMP2, AMP) : badges de l'écran VFO.
 - **DSP** : NB, DNR, NOTCH (et sa fréquence), DNF.
+- **FTX-1 : les cadres RF front end, Filtre et DSP règlent le VFO sélectionné** (étiquette « VFO A » / « VFO B » dans leur titre) : VFO B choisi (touche B de la ligne des pas, clic sur son écran, ou SUB) → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF du côté SUB.
 - **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK** : sur la ligne des pas (Step), après ◀ ▶. Le décalage RIT / XIT se règle sur chaque écran VFO (molette sur la valeur, CLEAR pour le remettre à zéro).
 - **RIT / XIT / CLEAR** sur chaque écran VFO : clic sur RIT ou XIT = allumer / éteindre ; **molette** sur le décalage affiché = ± 10 Hz (± 100 Hz avec Maj) ; **CLEAR** = décalage à zéro. Le VFO B a son propre RIT / XIT sur le FTX-1 (côté SUB) ; le FTDX10 et l'IC-7300 n'en ont qu'un, sur le VFO A.
 

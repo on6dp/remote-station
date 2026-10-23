@@ -30,7 +30,10 @@
   // Réglages affichés sur les écrans VFO eux-mêmes (pas de bouton dans les cadres)
   // ATT, préampli (IPO / AMP1 / AMP2, AMP) et NARROW : un clic sur leur badge de l'écran VFO (plus de bouton dans les cadres)
   const IN_VFO = ['rit', 'xit', 'clar', 'clarClr', 'ritB', 'xitB', 'clarB', 'clarClrB', 'splitHw', 'widthB',
-    'att', 'preamp', 'preampVU', 'narrow', 'narrowB', 'nbB', 'nrB', 'notchB', 'dnfB', 'attB', 'preampB'];
+    'att', 'preamp', 'preampVU', 'narrow', 'narrowB', 'nbB', 'nrB', 'notchB', 'dnfB', 'attB', 'preampB', 'agcB', 'rfB', 'notchFreqB', 'shiftB', 'contourB', 'apfB'];
+  // Réglages des cadres (RF front end, Filtre, DSP) qui suivent le VFO sélectionné (A / B) quand le TRX a leur équivalent côté SUB
+  const SIDE_B = { nb: 'nbB', nr: 'nrB', notch: 'notchB', dnf: 'dnfB', narrow: 'narrowB', agc: 'agcB', rf: 'rfB', width: 'widthB',
+    notchFreq: 'notchFreqB', shift: 'shiftB', contour: 'contourB', apf: 'apfB' };
   const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE', preampVU: 'AMP' };
 
   // Bouton HELP : manuel en français, ou en anglais si le navigateur n'est pas en français
@@ -466,6 +469,11 @@
     } else return;
     sendCtl(c, v);
   }
+  // Réglage effectivement visé : celui du côté SUB si le VFO B est sélectionné et que le TRX le permet
+  function sc(c) {
+    const b = target === 'B' && SIDE_B[c.id] && RIG().CONTROL && RIG().CONTROL[SIDE_B[c.id]];
+    return b || c;
+  }
   function ctlValue(id) {
     const p = ctlPending[id];
     if (p && Date.now() - p.at < 1500) return p.v;
@@ -474,7 +482,7 @@
   function fmtCtl(c, v, r) {
     if (v == null) return '—';
     if (c.type === 'width') {
-      const t = RIG().widthTable(r && r.mode);
+      const t = RIG().widthTable(r && r[c.modeKey || 'mode']);
       const hz = t && t[v - 1];
       return hz ? (hz >= 1000 ? (hz / 1000).toFixed(hz % 100 ? 2 : 1) + ' kHz' : hz + ' Hz') : '—';
     }
@@ -492,6 +500,7 @@
   function sendCtl(c, v) {
     const why = ctlBlocked();
     if (why) return say(why, 'warn');
+    if (c.id === 'vfoSel' && v != null) target = v ? 'B' : 'A'; // MAIN / SUB : les cadres suivent ce VFO
     if (c.type !== 'action') ctlPending[c.id] = { v, at: Date.now() };
     send({ t: 'set', ctl: c.id, value: v });
     render();
@@ -532,7 +541,7 @@
       if (c.type === 'toggle' || c.type === 'action') {
         const b = mkBtn(label, c.transmits ? 'btn-tx' : 'accent');
         if (c.type === 'toggle') b.setAttribute('aria-pressed', 'false');
-        b.addEventListener('click', () => sendCtl(c, c.type === 'action' ? null : (ctlValue(c.id) ? 0 : 1)));
+        b.addEventListener('click', () => { const k = sc(c); sendCtl(k, k.type === 'action' ? null : (ctlValue(k.id) ? 0 : 1)); });
         rowFor(box).appendChild(b);
         ref.btn = b;
         ref.cell = b;
@@ -553,7 +562,7 @@
         ref.opts = c.options.map(([v, l]) => {
           const b = mkBtn(l.replace(/ \(.\)$/, ''), 'accent');
           b.setAttribute('aria-pressed', 'false');
-          b.addEventListener('click', () => sendCtl(c, v));
+          b.addEventListener('click', () => sendCtl(sc(c), v));
           grp.appendChild(b);
           return [v, b];
         });
@@ -580,11 +589,12 @@
         inp.addEventListener('input', () => {
           if (ctlBlocked()) return;
           const v = Number(inp.value);
-          ctlPending[c.id] = { v, at: Date.now() };
-          out.textContent = fmtCtl(c, v, st && st.radio);
-          sendCtlThrottled(c);
+          const k = sc(c);
+          ctlPending[k.id] = { v, at: Date.now() };
+          out.textContent = fmtCtl(k, v, st && st.radio);
+          sendCtlThrottled(k);
         });
-        inp.addEventListener('change', () => sendCtl(c, Number(inp.value)));
+        inp.addEventListener('change', () => sendCtl(sc(c), Number(inp.value)));
         cell.append(head, inp);
         box.appendChild(cell);
         Object.assign(ref, { cell, inp, out });
@@ -616,10 +626,12 @@
     // Encart « Accord » visible seulement si le TRX a une boîte d'accord
     $('panelTune').hidden = noTuner || !(ctlRefs.tuner || ctlRefs.tune);
     for (const id in ctlRefs) {
-      const { c, cell, btn, opts, inp, out } = ctlRefs[id];
+      const c0 = ctlRefs[id].c;
+      const { cell, btn, opts, inp, out } = ctlRefs[id];
+      const c = sc(c0); // VFO B sélectionné : réglage du côté SUB
       // Réglage remplacé par un autre selon la bande (FTX-1 : préampli HF / AMP 144-430) : caché plutôt que grisé
       cell.hidden = (noTuner && (id === 'tuner' || id === 'tune')) || (!!c.hideUnavail && !!r.connected && !!c.when && !c.when(r));
-      const v = ctlValue(id);
+      const v = ctlValue(c.id);
       const avail = !!r.connected && (!c.when || c.when(r)) && (c.type === 'action' || v != null);
       cell.classList.toggle('unavail', !avail);
       if (btn) {
@@ -637,9 +649,9 @@
       }
       if (opts) for (const [ov, b] of opts) { b.setAttribute('aria-pressed', String(v === ov)); b.disabled = blocked || !avail; }
       if (inp) {
-        if (c.type === 'width') { const t = RIG().widthTable(r.mode); inp.max = t ? t.length : 1; }
+        if (c.type === 'width') { const t = RIG().widthTable(r[c.modeKey || 'mode']); inp.max = t ? t.length : 1; }
         inp.disabled = blocked || !avail;
-        const p = ctlPending[id];
+        const p = ctlPending[c.id];
         if (!(p && Date.now() - p.at < 1500) && v != null) inp.value = v;
         out.textContent = avail ? fmtCtl(c, v, r) : '—';
       }
@@ -1027,6 +1039,17 @@
     $('tgtA').setAttribute('aria-pressed', String(target === 'A'));
     $('tgtB').setAttribute('aria-pressed', String(target === 'B'));
     $('modeTarget').textContent = 'VFO ' + target;
+    // Cadres RF front end, Filtre, DSP : VFO réglé indiqué dans le titre (TRX avec réglages propres au côté SUB)
+    const sideB = !!(RIG().CONTROL && RIG().CONTROL.nbB);
+    for (const k of ['rf', 'filter', 'dsp']) {
+      const h = document.querySelector('[data-panel="' + k + '"] > .panel-h');
+      if (!h) continue;
+      let t = h.querySelector('.ph-side');
+      if (!t) { t = document.createElement('span'); t.className = 'ph-side'; h.appendChild(t); }
+      t.hidden = !sideB;
+      t.textContent = 'VFO ' + target;
+      t.classList.toggle('b', target === 'B');
+    }
 
     // puissance
     $('pwrRead').textContent = live && r.power != null ? String(r.power).replace('.', ',') + ' W' : '-- W';
