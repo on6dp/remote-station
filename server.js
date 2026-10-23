@@ -1102,6 +1102,84 @@ function seqCfg(conn, m) {
   seqChanged();
 }
 
+// ---------------------------------------------------------------- émission RTTY / JTTY
+// Pas de créneau : le serveur fabrique le signal (RTTY : AFSK ; JTTY : codeur de WSJT-X, lib/bin/jttygen),
+// l'envoie à la page Station, puis met le TRX en émission dès que la page l'a reçu ; retour en réception à la fin.
+const RTTY_GEN = require('./lib/rtty.js').generate;
+const JTTY_GEN = path.join(ROOT, 'lib', 'bin', 'jttygen' + (process.platform === 'win32' ? '.exe' : ''));
+const AUDIO_RATE = 12000;
+function jttyWave(text, f0) {
+  return new Promise((resolve, reject) => {
+    const { execFile } = require('child_process');
+    execFile(JTTY_GEN, [String(Math.round(f0)), text], { encoding: 'buffer', maxBuffer: 64 * 1024 * 1024, timeout: 10000 }, (err, out, errout) => {
+      if (err) return reject(new Error(err.code === 2 ? 'message JTTY impossible à coder : « ' + text + ' »' : 'codeur JTTY indisponible sur le serveur'));
+      resolve(new Int16Array(out.buffer.slice(out.byteOffset, out.byteOffset + (out.length & ~1))));
+    });
+  });
+}
+async function audioRequest(conn, m) {
+  const err = (msg) => send(conn, { t: 'notice', level: 'error', msg });
+  const mode = String(m.mode || '');
+  if (mode !== 'RTTY' && mode !== 'JTTY') return err('Mode inconnu');
+  if (controller !== conn) return err('Prenez d’abord la main');
+  if (!station || station.caps.indexOf('audiotx') < 0) {
+    return err('La page Station du club ne sait pas encore émettre en ' + mode + ' (ancienne version) : ' +
+      (conn.user.admin ? 'rechargez-la (voyant STATION → « Recharger la page Station »).' : 'un administrateur doit la recharger.'));
+  }
+  if (ptt.active || ftxPend) return err('Émission déjà en cours ou prévue : attendez la fin');
+  if (seq && seq.on) return err('Émission automatique FT8 / FT4 / FT2 en cours : arrêtez-la d’abord');
+  const why = txBlockReason(conn);
+  if (why && radio.power != null && radio.power > conn.user.maxWatts) limitPower(conn, 'avant émission');
+  if (why) return err('Émission refusée : ' + why);
+  const md = (radio.txVfo === 1 ? radio.modeB : radio.mode) || '';
+  if (!/DATA|USB|PKT|DIG/i.test(md)) return err('Mettez d’abord le VFO d’émission en DATA-U (mode actuel : ' + (md || '?') + ') : le signal ' + mode + ' passe par la carte son');
+  const f0 = Math.round(Number(m.f0));
+  if (!(f0 >= 300 && f0 <= 2800)) return err('Fréquence d’émission audio hors plage (300 à 2800 Hz)');
+  let text = String(m.text || '').toUpperCase().replace(/\r/g, '').replace(/[^\n -~]/g, '').replace(/[ \t]+/g, ' ');
+  text = mode === 'JTTY' ? text.replace(/\s*\n\s*/g, ' ').trim() : text.replace(/^\n+|\s+$/g, '');
+  if (!text) return err('Rien à émettre : tapez un texte ou choisissez une macro');
+  if (text.length > (mode === 'JTTY' ? 160 : 600)) return err('Texte trop long (' + (mode === 'JTTY' ? 160 : 600) + ' caractères au plus)');
+  let pcm;
+  try {
+    if (mode === 'RTTY') {
+      const shift = [170, 200, 425, 850].indexOf(Number(m.shift)) >= 0 ? Number(m.shift) : 170;
+      const baud = [45.45, 50, 75, 100].indexOf(Number(m.baud)) >= 0 ? Number(m.baud) : 45.45;
+      // Début de ligne propre chez le correspondant : retour chariot + saut de ligne avant le texte
+      const w = RTTY_GEN('\n' + text + ' ', { f: f0, shift, baud, rev: !!m.rev, rate: AUDIO_RATE });
+      pcm = new Int16Array(w.length);
+      const ramp = Math.round(AUDIO_RATE * 0.005);
+      for (let i = 0; i < w.length; i++) {
+        const g = Math.min(1, i / ramp, (w.length - 1 - i) / ramp);
+        pcm[i] = Math.round(w[i] * g * 0.85 * 32767);
+      }
+    } else {
+      // JTTY : 80 caractères au plus par message (WSJT-X) ; au-delà, deux messages à la suite
+      const parts = [];
+      let rest = text;
+      while (rest.length > 80) { let cut = rest.lastIndexOf(' ', 80); if (cut < 20) cut = 80; parts.push(rest.slice(0, cut).trim()); rest = rest.slice(cut).trim(); }
+      if (rest) parts.push(rest);
+      const waves = [];
+      for (const t of parts) waves.push(await jttyWave(t, f0));
+      const gap = Math.round(AUDIO_RATE * 0.1);
+      pcm = new Int16Array(waves.reduce((a, w) => a + w.length + gap, 0));
+      let o = 0;
+      for (const w of waves) { pcm.set(w, o); o += w.length + gap; }
+    }
+  } catch (e) {
+    return err('Émission ' + mode + ' impossible : ' + e.message);
+  }
+  const seconds = pcm.length / AUDIO_RATE;
+  if (seconds > cfg.maxTxSeconds - 2) return err('Texte trop long : ' + Math.round(seconds) + ' s d’émission (limite du serveur : ' + cfg.maxTxSeconds + ' s)');
+  if (controller !== conn || ptt.active || ftxPend) return; // situation changée pendant la fabrication du signal
+  const p = { id: ++ftxSeq, conn, mode, text, f0, at: 0, parity: 0, state: 'wait', ready: false, seconds, sent: text.replace(/\n/g, ' ').slice(0, 60), timer: null, ntx: 0, kind: 'audio' };
+  ftxPend = p;
+  lastCtrlActivity = Date.now();
+  toStation({ t: 'cmd', op: 'audioprep', id: p.id, mode, rate: AUDIO_RATE, data: Buffer.from(pcm.buffer, pcm.byteOffset, pcm.byteLength).toString('base64') });
+  // Page Station trop lente à recevoir le signal : abandon
+  p.timer = setTimeout(() => { if (ftxPend === p && !p.ready) ftxCancel('la page Station n’a pas reçu le signal à temps'); }, 20000);
+  broadcast();
+}
+
 /** Juste avant le créneau : dernières vérifications puis passage en émission avec le signal préparé. */
 function ftxKey(p) {
   if (ftxPend !== p) return;
@@ -1585,6 +1663,10 @@ function onOperator(conn, m) {
     case 'ftx_cfg':
       return seqCfg(conn, m);
 
+    case 'dtx':
+      audioRequest(conn, m).catch((e) => send(conn, { t: 'notice', level: 'error', msg: 'Émission impossible : ' + e.message }));
+      return;
+
     case 'ftx_stop':
       if (seq && seq.conn === conn && seq.on) { seq.on = false; updateDigi(); }
       if (ftxPend && ftxPend.conn === conn) ftxCancel('arrêt demandé', true);
@@ -1669,6 +1751,13 @@ function onStation(conn, m) {
     if (!p || p.id !== m.id) return;
     if (!m.ok) return ftxCancel(String(m.err || 'message refusé par la page Station').slice(0, 160));
     p.ready = true;
+    if (p.kind === 'audio') {
+      // RTTY / JTTY : départ 0,6 s après la réception du signal par la page Station
+      clearTimeout(p.timer);
+      p.at = Date.now() + 600;
+      p.timer = setTimeout(() => ftxKey(p), 600 - FTX_KEY_LEAD);
+      return broadcast();
+    }
     p.seconds = Number(m.seconds) || 0;
     p.sent = String(m.text || p.text).slice(0, 40);
     return broadcast();

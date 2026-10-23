@@ -163,7 +163,7 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
   <li>Transceiver audio is only sent while someone listens or watches a digital-mode tab.</li>
   <li>Choosing a frequency in a tab's list sends the transceiver there (<b>QSY</b>), in <b>DATA-U</b> (in CW for the CW tab) — you need control.</li>
   <li>Each tab has a <b>waterfall</b> (0 to 3000 Hz); a status line reports problems (station offline, audio not enabled, transceiver not in DATA-U…).</li>
-  <li>Transmitting in the digital modes (as <b>ON5VL</b>) comes in a future version <span class="later">soon</span>: the « Émettre » (transmit) buttons are greyed out, but messages and macros can already be prepared.</li>
+  <li>Transmission is done as <b>ON5VL</b> in <b>FT8 · FT4 · FT2</b>, <b>RTTY</b> and <b>JTTY</b> (you need control and transmit enabled); WSPR, JT65, CW and SSTV are receive-only for now <span class="later">soon</span>.</li>
 </ul>
 
 <h3 id="ft8">9.1 FT8 · FT4 · FT2</h3>
@@ -198,6 +198,9 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
   <li>Set the <b>shift</b> and <b>speed</b> (170 Hz / 45.45 baud by default), then <b>click on the signal</b> in the waterfall: the <span class="yel">yellow (Mark)</span> and blue (Space) markers must sit on its two traces; otherwise press <span class="k">Inversé</span> (reverse).</li>
   <li>The M / S bars of the tuning indicator should flicker alternately. Raise the <b>squelch</b> (« Silencieux ») if characters appear on noise.</li>
   <li>Received text scrolls on the left; double-click a received callsign = contact. On the right: macros <kbd>F1</kbd> to <kbd>F12</kbd> and the text to send.</li>
+  <li><b>Émettre</b> (or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>): the text goes out in RTTY on the receive frequency (same shift and speed), then the transceiver returns to receive.
+    The sent text shows in <span class="red">red</span> in the receive window; while transmitting the button becomes <span class="k">■ Arrêter</span> (stop).
+    The transceiver must be in <b>DATA-U</b> (the signal goes through its sound card), 600 characters at most per send.</li>
 </ul>
 <h3 id="wspr">9.4 WSPR</h3>
 <p>Choose the band; every 2 minutes (about ten seconds after each even minute) the list grows:
@@ -206,6 +209,8 @@ callsign, locator, power, frequency, drift and distance from the station.</p>
 <ul>
   <li>New WSJT-X 3.3 mode for keyboard-to-keyboard and contests: no periods, each message appears <b>frame by frame</b> (1.9 s); <span class="k">▌</span> = message still arriving.</li>
   <li>Left click = receive, right click = transmit, double-click = contact; macros <kbd>F1</kbd> to <kbd>F8</kbd> (the WSJT-X ones).</li>
+  <li><b>Émettre</b> (or <kbd>Enter</kbd>): the message goes out at once (no periods) on the TX frequency, encoded by WSJT-X, then back to receive.
+    80 characters per message (longer: two messages in a row); transceiver in <b>DATA-U</b>.</li>
 </ul>
 <h3 id="cw">9.6 CW</h3>
 <ul>

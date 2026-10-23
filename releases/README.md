@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.19.0 | [RemoteStation-Setup-0.19.0.exe](0.19.0/RemoteStation-Setup-0.19.0.exe) | [remote-station-0.19.0.tar.gz](0.19.0/remote-station-0.19.0.tar.gz) | Émission RTTY et JTTY — [empreintes SHA-256](0.19.0/SHA256SUMS.txt) |
 | 0.18.7 | [RemoteStation-Setup-0.18.7.exe](0.18.7/RemoteStation-Setup-0.18.7.exe) | [remote-station-0.18.7.tar.gz](0.18.7/remote-station-0.18.7.tar.gz) | Cascade : gain, zéro, fond plat, couleurs — [empreintes SHA-256](0.18.7/SHA256SUMS.txt) |
 | 0.18.6 | [RemoteStation-Setup-0.18.6.exe](0.18.6/RemoteStation-Setup-0.18.6.exe) | [remote-station-0.18.6.tar.gz](0.18.6/remote-station-0.18.6.tar.gz) | MAIN / SUB actif sur fond coloré — [empreintes SHA-256](0.18.6/SHA256SUMS.txt) |
 | 0.18.5 | [RemoteStation-Setup-0.18.5.exe](0.18.5/RemoteStation-Setup-0.18.5.exe) | [remote-station-0.18.5.tar.gz](0.18.5/remote-station-0.18.5.tar.gz) | MAIN / SUB / SPLIT sur la ligne des bandes, VFO plus larges — [empreintes SHA-256](0.18.5/SHA256SUMS.txt) |

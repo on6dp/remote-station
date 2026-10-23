@@ -75,7 +75,7 @@
 
   const core = new StationCore({
     rig: RIG,
-    txAudio: { prepare: (...a) => txPrepare(...a), play: (...a) => txPlay(...a), stop: () => txStop() },
+    txAudio: { prepare: (...a) => txPrepare(...a), prepareSamples: (...a) => txPrepareSamples(...a), play: (...a) => txPlay(...a), stop: () => txStop() },
     writeSerial(s) {
       if (sim) return sim.write(s);
       if (!writer) return;
@@ -131,7 +131,7 @@
     setTimeout(closePrev, 10000);
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
     // caps : ce que sait faire cette version de la page (ftsplit : SPLIT du FTX-1 par FT0 / FT1, sans ST1)
-    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq', 'ftxtx'] }));
+    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq', 'ftxtx', 'audiotx'] }));
     lastServerMsg = Date.now();
     ws.onmessage = (e) => {
       lastServerMsg = Date.now();
@@ -637,13 +637,26 @@
     tx.prep = { id, samples: r.samples };
     return { ok: true, text: r.text, seconds: r.seconds };
   }
+  // RTTY / JTTY : signal déjà fabriqué par le serveur (entiers 16 bits en base64, `rate` Hz)
+  function txPrepareSamples(id, rate, b64) {
+    if (!tx.ctx) return { ok: false, err: 'aucune sortie son vers le TRX choisie sur la page Station' };
+    if (tx.ctx.state !== 'running') { tx.ctx.resume().catch(() => {}); return { ok: false, err: 'sortie son vers le TRX en pause sur la page Station (un clic sur la page au club la relance)' }; }
+    const bin = atob(b64);
+    const n = bin.length >> 1;
+    if (!n || !(rate >= 3000 && rate <= 96000)) return { ok: false, err: 'signal vide ou invalide' };
+    const s = new Float32Array(n);
+    for (let i = 0; i < n; i++) { let v = bin.charCodeAt(2 * i) | (bin.charCodeAt(2 * i + 1) << 8); if (v > 32767) v -= 65536; s[i] = v / 32768; }
+    tx.prep = { id, samples: s, rate };
+    return { ok: true, text: '', seconds: n / rate };
+  }
   function txPlay(id, atLocal, onEnd) {
     const ctx = tx.ctx;
     if (!tx.prep || tx.prep.id !== id || !ctx || ctx.state !== 'running') return false;
     const s = tx.prep.samples;
+    const rate = tx.prep.rate || ctx.sampleRate;
     tx.prep = null;
     txStop();
-    const buf = ctx.createBuffer(1, s.length, ctx.sampleRate);
+    const buf = ctx.createBuffer(1, s.length, rate);
     buf.copyToChannel(s, 0);
     const src = ctx.createBufferSource();
     src.buffer = buf;

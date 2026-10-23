@@ -170,9 +170,9 @@
         <div class="rt-macros" id="rtMacros"></div>
         <textarea id="rtTxt" rows="4" placeholder="Texte à émettre (les macros s'ajoutent ici)…" spellcheck="false"></textarea>
         <div class="rt-tx-act">
-          <button class="btn btn-tx" type="button" id="rtSend" disabled>Émettre</button>
+          <button class="btn btn-tx" type="button" id="rtSend" title="Émet le texte en RTTY sur la fréquence de réception (Shift et vitesse choisis en haut), puis retour en réception">Émettre</button>
           <button class="btn" type="button" id="rtTxClear">Effacer</button>
-          <span class="dg-note">Émission RTTY sous <b>ON5VL</b> : avec l'émission des modes numériques (prochaine version).</span>
+          <span class="dg-note" id="rtTxState">Émission RTTY sous <b>ON5VL</b> : texte ci-dessus, puis « Émettre » (Ctrl+Entrée).</span>
         </div>
       </div>
     </div>`;
@@ -215,9 +215,9 @@
       <div class="rt-macros" id="jtMacros"></div>
       <div class="jt-tx-row">
         <input id="jtTxt" maxlength="160" placeholder="Texte à émettre (F1 à F8 : macros)…" autocomplete="off" spellcheck="false">
-        <button class="btn btn-tx" type="button" id="jtSend" disabled>Émettre</button>
+        <button class="btn btn-tx" type="button" id="jtSend" title="Émet le message en JTTY sur la fréquence TX (repère rouge), puis retour en réception">Émettre</button>
       </div>
-      <p class="dg-tx">Émission JTTY sous <b>ON5VL</b> : avec l'émission des modes numériques (prochaine version).</p>
+      <p class="dg-tx" id="jtTxState">Émission JTTY sous <b>ON5VL</b> : message ci-dessus, puis « Émettre » (Entrée).</p>
     </div>`;
   const CW_PANE = `
     <div class="dg-bar">
@@ -673,6 +673,8 @@
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
     $('rtClear').addEventListener('click', () => { $('rtRx').textContent = ''; });
     $('rtTxClear').addEventListener('click', () => { $('rtTxt').value = ''; });
+    $('rtSend').addEventListener('click', () => dtxClick('RTTY'));
+    $('rtTxt').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); dtxClick('RTTY'); } });
     // Double-clic sur un mot reçu qui ressemble à un indicatif : il devient le correspondant
     $('rtRx').addEventListener('dblclick', () => {
       const w = String(window.getSelection() || '').trim().toUpperCase();
@@ -863,7 +865,8 @@
       el.value = el.value.toUpperCase();
       el.setSelectionRange(p, p);
     });
-    $('jtSend').title = 'Émission JTTY : prochaine version';
+    $('jtSend').addEventListener('click', () => dtxClick('JTTY'));
+    $('jtTxt').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); dtxClick('JTTY'); } });
     drawMacroRow($('jtMacros'), 'JTTY', (t) => insertJtty(t));
   }
   function jtStatus() {
@@ -1550,6 +1553,52 @@
     });
     dlg.querySelector('[data-a="no"]').addEventListener('click', () => dlg.remove());
   }
+  // ------------------------------------------------------------------ émission RTTY / JTTY (signal fabriqué par le serveur)
+  let dtxPend = null; // { mode, text } : texte à effacer de la zone d'écriture une fois l'émission partie
+  function dtxClick(mode) {
+    if (!api) return;
+    const st = api.state();
+    const x = st && st.ftx;
+    // Pendant l'émission (ou si elle est prévue) : le bouton coupe
+    if (x && x.mode === mode) return api.send({ t: 'ftx_stop' });
+    const el = mode === 'RTTY' ? $('rtTxt') : $('jtTxt');
+    const text = el.value;
+    if (!text.trim()) return api.say('Rien à émettre : tapez un texte ou choisissez une macro.', 'warn');
+    const m = { t: 'dtx', mode, text };
+    if (mode === 'RTTY') Object.assign(m, { f0: Math.round(rt.f), shift: rt.shift, baud: rt.baud, rev: !!rt.rev });
+    else m.f0 = curTxF();
+    dtxPend = { mode, text };
+    api.send(m);
+  }
+  function dtxState(x) {
+    for (const mode of ['RTTY', 'JTTY']) {
+      const b = $(mode === 'RTTY' ? 'rtSend' : 'jtSend');
+      const note = $(mode === 'RTTY' ? 'rtTxState' : 'jtTxState');
+      if (!b) continue;
+      const mine = !!(x && x.mode === mode);
+      b.textContent = mine ? '■ Arrêter' : 'Émettre';
+      b.classList.toggle('on-air', mine && x.state === 'tx');
+      if (note) {
+        note.classList.toggle('air', mine && x.state === 'tx');
+        note.textContent = mine ? (x.state === 'tx' ? '● En émission ' + mode + ' (' + x.by + ') : « ' + x.text + ' »' : 'Préparation de l’émission ' + mode + '…')
+          : mode === 'RTTY' ? 'Émission RTTY sous ' + myCall + ' : texte ci-dessus, puis « Émettre » (Ctrl+Entrée).' : 'Émission JTTY sous ' + myCall + ' : message ci-dessus, puis « Émettre » (Entrée).';
+      }
+    }
+    // Émission partie : le texte envoyé quitte la zone d'écriture et s'affiche dans la réception
+    if (dtxPend && x && x.mode === dtxPend.mode && x.state === 'tx') {
+      const el = dtxPend.mode === 'RTTY' ? $('rtTxt') : $('jtTxt');
+      if (el && el.value === dtxPend.text) el.value = '';
+      if (dtxPend.mode === 'RTTY' && $('rtRx')) {
+        const s = document.createElement('span');
+        s.className = 'rt-txline';
+        s.textContent = '\n' + dtxPend.text.toUpperCase().replace(/\s+$/, '') + '\n';
+        $('rtRx').appendChild(s);
+        $('rtRx').scrollTop = $('rtRx').scrollHeight;
+      }
+      dtxPend = null;
+    }
+  }
+
   let lastTxAt = 0;
   let seqSeen = '';
   function ftxState() {
@@ -1557,6 +1606,7 @@
     const x = st && st.ftx;
     const sq = st && st.seq;
     const el = $('dgTxState');
+    dtxState(x);
     const mine = !!(sq && sq.by === opCall);
     if ($('dgStop')) $('dgStop').disabled = !(x || (sq && sq.on) || (st && st.ptt && st.ptt.digi));
     // Séquence automatique : le message choisi et le correspondant suivent ce que décide le serveur
@@ -1581,7 +1631,7 @@
       el.classList.toggle('air', !!(x && x.state === 'tx'));
     }
     // Message émis : ajouté aux listes comme dans WSJT-X
-    if (x && x.state === 'tx' && x.at !== lastTxAt) {
+    if (x && x.state === 'tx' && x.at !== lastTxAt && FT_MODES.indexOf(x.mode) >= 0) {
       lastTxAt = x.at;
       const it = { slot: Math.floor((x.at - 500) / 100) * 100, mode: x.mode, tx: true, list: [{ tx: true, db: 0, dt: 0, f: x.f0, msg: x.text }] };
       hist.push(it);

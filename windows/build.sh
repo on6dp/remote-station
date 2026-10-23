@@ -3,7 +3,7 @@
 #
 # Besoins : node (lecture de la version), git, makensis (NSIS 3 ; ex. paquet « nsis », ou le makensis Linux des
 # binaires d'electron-builder : MAKENSIS=/chemin/linux/makensis NSISDIR=/chemin/nsis), curl (WinSW, une fois).
-# Les décodeurs Windows lib/bin/jt65.exe et lib/bin/jttyd.exe sont dans le dépôt. Pour les recompiler :
+# Les programmes Windows lib/bin/jt65.exe, lib/bin/jttyd.exe et lib/bin/jttygen.exe sont dans le dépôt. Pour les recompiler :
 #   MINGW=/chemin/xpack-mingw-w64-gcc-14.2.0-1/bin WSJTX=/chemin/wsjtx FT8LIB=/chemin/ft8_lib windows/build.sh
 set -eu
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -18,7 +18,8 @@ mkdir -p "$CACHE" "$ROOT/dist"
 if [ -n "${MINGW:-}" ]; then
   export PATH="$MINGW:$PATH"
   for spec in "jt65:lib/jt65.f90:--extra lib/ftrsd/init_rs.c --extra lib/ftrsd/encode_rs.c --extra lib/ftrsd/decode_rs.c --extra lib/wrapkarn.c" \
-              "jttyd:$ROOT/native/wsjtx/jttyd.c:--extra lib/jtty/jtty_receive_context.f90"; do
+              "jttyd:$ROOT/native/wsjtx/jttyd.c:--extra lib/jtty/jtty_receive_context.f90" \
+              "jttygen:$ROOT/native/wsjtx/jttygen.c:--extra lib/jtty/genjtty.f90 --extra lib/jtty/gen_jttywave.f90"; do
     name=${spec%%:*}; rest=${spec#*:}; main=${rest%%:*}; extra=${rest#*:}
     # shellcheck disable=SC2086
     python3 "$ROOT/native/wsjtx/build.py" --wsjtx "$WSJTX" --ft8lib "$FT8LIB" --cc x86_64-w64-mingw32-gcc --fc x86_64-w64-mingw32-gfortran \
@@ -36,7 +37,7 @@ STAGE=$(mktemp -d)
 trap 'rm -rf "$STAGE"' EXIT
 mkdir -p "$STAGE/serveur" "$STAGE/outils"
 (cd "$ROOT" && git ls-files -z --cached --others --exclude-standard | tar --null -T - -cf -) | tar -xf - -C "$STAGE/serveur"
-rm -rf "$STAGE/serveur/native" "$STAGE/serveur/windows" "$STAGE/serveur/deploy" "$STAGE/serveur/releases" "$STAGE/serveur/lib/bin/jt65" "$STAGE/serveur/lib/bin/jttyd" \
+rm -rf "$STAGE/serveur/native" "$STAGE/serveur/windows" "$STAGE/serveur/deploy" "$STAGE/serveur/releases" "$STAGE/serveur/lib/bin/jt65" "$STAGE/serveur/lib/bin/jttyd" "$STAGE/serveur/lib/bin/jttygen" \
        "$STAGE/serveur/.gitignore" "$STAGE/serveur/.gitattributes"
 cp "$ROOT/windows/setup.js" "$STAGE/serveur/windows-setup.js"
 cp "$ROOT/windows/outils/"*.cmd "$STAGE/outils/"

@@ -20,6 +20,8 @@ Conséquence : le projet Remote Station, qui inclut ce décodeur, doit être red
 
 `lib/bin/jttyd` est le récepteur JTTY en continu de WSJT-X 3.3 (interface `jtty_rx_*` : `lib/jtty/*.f90`, codes convolutifs et CRC associés), relié à un petit programme propre à ce projet, `native/wsjtx/jttyd.c` (lit la BF 16 bits / 12 kHz sur l'entrée standard, écrit chaque mise à jour de message), et compilé par `native/wsjtx/build.py` à partir du même dépôt WSJT-X (étiquette v3.3.0-beta2), sans OpenMP (`native/wsjtx/omp_lib.f90`) et sans FFTW.
 
+`lib/bin/jttygen` (et `jttygen.exe`) fabrique le signal JTTY à émettre avec le codeur de WSJT-X 3.3 (`genjtty_profile`, `gen_jttywave` : `lib/jtty/genjtty.f90`, `gen_jttywave.f90`, GPL v3), relié à `native/wsjtx/jttygen.c` (message → entiers 16 bits / 12 kHz sur la sortie standard), compilé de la même façon.
+
 - Copyright Joe Taylor (K1JT), Steven Franke (K9AN) et l'équipe WSJT-X
 - Licence : GNU GPL v3 (texte dans `native/wspr/COPYING`)
 

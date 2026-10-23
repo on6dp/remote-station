@@ -154,7 +154,7 @@ Les onglets du centre : **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT6
 - La BF du TRX n'est envoyée que si quelqu'un écoute ou regarde un onglet de mode numérique.
 - Choisir une fréquence dans la liste d'un onglet y envoie le TRX (**QSY**), en **DATA-U** (en CW pour l'onglet CW) — il faut avoir la main.
 - Chaque onglet a une **cascade** (0 à 3000 Hz) ; une ligne d'état signale les problèmes (station hors ligne, BF non activée, TRX pas en DATA-U…).
-- L'émission des modes numériques (sous l'indicatif **ON5VL**) arrive dans une prochaine version *(bientôt)* : les boutons « Émettre » sont grisés, mais les messages et macros se préparent déjà.
+- L'émission se fait sous l'indicatif **ON5VL** en **FT8 · FT4 · FT2**, **RTTY** et **JTTY** (il faut avoir la main et l'émission autorisée) ; WSPR, JT65, CW et SSTV sont en réception seulement *(bientôt)*.
 
 <a id="ft8"></a>
 ### 9.1 FT8 · FT4 · FT2
@@ -184,6 +184,7 @@ Même fenêtre que FT8 (périodes d'une minute) ; le TRX va sur la fréquence JT
 - Réglez le **shift** et la **vitesse** (170 Hz / 45,45 bauds par défaut), puis **cliquez sur le signal** dans la cascade : les repères jaune (Mark) et bleu (Space) doivent tomber sur ses deux traces ; sinon `Inversé`.
 - Les barres M / S de l'indicateur d'accord doivent battre en alternance. Montez le **silencieux** si des caractères apparaissent sur le bruit.
 - Le texte reçu défile à gauche ; double-clic sur un indicatif reçu = correspondant. À droite : macros `F1` à `F12` et texte à émettre.
+- **Émettre** (ou `Ctrl`+`Entrée`) : le texte part en RTTY sur la fréquence de réception (même shift, même vitesse), puis le TRX repasse en réception. Le texte émis s'affiche en rouge dans la réception ; pendant l'émission le bouton devient `■ Arrêter`. Le TRX doit être en **DATA-U** (le signal passe par sa carte son), 600 caractères au plus par envoi.
 
 <a id="wspr"></a>
 ### 9.4 WSPR
@@ -195,6 +196,7 @@ Choisissez la bande ; toutes les 2 minutes (une dizaine de secondes après la mi
 
 - Nouveau mode de WSJT-X 3.3 pour le clavier à clavier et les concours : pas de périodes, chaque message apparaît **trame après trame** (1,9 s) ; `▌` = message en cours.
 - Clic gauche = réception, clic droit = émission, double-clic = correspondant ; macros `F1` à `F8` (celles de WSJT-X).
+- **Émettre** (ou `Entrée`) : le message part tout de suite (pas de période) sur la fréquence TX, codé par WSJT-X, puis retour en réception. 80 caractères par message (au-delà : deux messages à la suite) ; TRX en **DATA-U**.
 
 <a id="cw"></a>
 ### 9.6 CW

@@ -241,6 +241,18 @@
       if (m.t !== 'cmd') return;
       const FTX1 = this.rig;
       try {
+        if (m.op === 'audioprep') {
+          // RTTY / JTTY : signal fabriqué par le serveur (16 bits, base64), gardé jusqu'au passage en émission
+          let r;
+          if (!this.txAudio || !this.txAudio.prepareSamples) r = { ok: false, err: 'cette page Station ne sait pas émettre en ' + (m.mode || 'numérique') };
+          else {
+            try { r = this.txAudio.prepareSamples(m.id, Number(m.rate) || 12000, String(m.data || '')); } catch (e) { r = { ok: false, err: e.message }; }
+          }
+          this.sendWs(Object.assign({ t: 'ftx_ready', id: m.id }, r));
+          if (r.ok) this.log('Signal ' + (m.mode || '') + ' reçu (' + r.seconds.toFixed(1).replace('.', ',') + ' s)');
+          else this.log('Signal ' + (m.mode || '') + ' refusé : ' + r.err, 'st-bad');
+          return;
+        }
         if (m.op === 'ftxprep') {
           // Message FT8 / FT4 / FT2 à émettre au prochain créneau : codé tout de suite, réponse au serveur
           let r;

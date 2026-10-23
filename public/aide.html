@@ -164,7 +164,7 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
   <li>La BF du TRX n'est envoyée que si quelqu'un écoute ou regarde un onglet de mode numérique.</li>
   <li>Choisir une fréquence dans la liste d'un onglet y envoie le TRX (<b>QSY</b>), en <b>DATA-U</b> (en CW pour l'onglet CW) — il faut avoir la main.</li>
   <li>Chaque onglet a une <b>cascade</b> (0 à 3000 Hz) ; une ligne d'état signale les problèmes (station hors ligne, BF non activée, TRX pas en DATA-U…).</li>
-  <li>L'émission des modes numériques (sous l'indicatif <b>ON5VL</b>) arrive dans une prochaine version <span class="later">bientôt</span> : les boutons « Émettre » sont grisés, mais les messages et macros se préparent déjà.</li>
+  <li>L'émission se fait sous l'indicatif <b>ON5VL</b> en <b>FT8 · FT4 · FT2</b>, <b>RTTY</b> et <b>JTTY</b> (il faut avoir la main et l'émission autorisée) ; WSPR, JT65, CW et SSTV sont en réception seulement <span class="later">bientôt</span>.</li>
 </ul>
 
 <h3 id="ft8">9.1 FT8 · FT4 · FT2</h3>
@@ -199,6 +199,9 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
   <li>Réglez le <b>shift</b> et la <b>vitesse</b> (170 Hz / 45,45 bauds par défaut), puis <b>cliquez sur le signal</b> dans la cascade : les repères <span class="yel">jaune (Mark)</span> et bleu (Space) doivent tomber sur ses deux traces ; sinon <span class="k">Inversé</span>.</li>
   <li>Les barres M / S de l'indicateur d'accord doivent battre en alternance. Montez le <b>silencieux</b> si des caractères apparaissent sur le bruit.</li>
   <li>Le texte reçu défile à gauche ; double-clic sur un indicatif reçu = correspondant. À droite : macros <kbd>F1</kbd> à <kbd>F12</kbd> et texte à émettre.</li>
+  <li><b>Émettre</b> (ou <kbd>Ctrl</kbd>+<kbd>Entrée</kbd>) : le texte part en RTTY sur la fréquence de réception (même shift, même vitesse), puis le TRX repasse en réception.
+    Le texte émis s'affiche en <span class="red">rouge</span> dans la réception ; pendant l'émission le bouton devient <span class="k">■ Arrêter</span>.
+    Le TRX doit être en <b>DATA-U</b> (le signal passe par sa carte son), 600 caractères au plus par envoi.</li>
 </ul>
 <h3 id="wspr">9.4 WSPR</h3>
 <p>Choisissez la bande ; toutes les 2 minutes (une dizaine de secondes après la minute paire), la liste se complète :
@@ -207,6 +210,8 @@ indicatif, locator, puissance, fréquence, dérive et distance depuis la station
 <ul>
   <li>Nouveau mode de WSJT-X 3.3 pour le clavier à clavier et les concours : pas de périodes, chaque message apparaît <b>trame après trame</b> (1,9 s) ; <span class="k">▌</span> = message en cours.</li>
   <li>Clic gauche = réception, clic droit = émission, double-clic = correspondant ; macros <kbd>F1</kbd> à <kbd>F8</kbd> (celles de WSJT-X).</li>
+  <li><b>Émettre</b> (ou <kbd>Entrée</kbd>) : le message part tout de suite (pas de période) sur la fréquence TX, codé par WSJT-X, puis retour en réception.
+    80 caractères par message (au-delà : deux messages à la suite) ; TRX en <b>DATA-U</b>.</li>
 </ul>
 <h3 id="cw">9.6 CW</h3>
 <ul>

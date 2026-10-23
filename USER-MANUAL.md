@@ -154,7 +154,7 @@ The centre tabs: **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT65**, **
 - Transceiver audio is only sent while someone listens or watches a digital-mode tab.
 - Choosing a frequency in a tab's list sends the transceiver there (**QSY**), in **DATA-U** (in CW for the CW tab) — you need control.
 - Each tab has a **waterfall** (0 to 3000 Hz); a status line reports problems (station offline, audio not enabled, transceiver not in DATA-U…).
-- Transmitting in the digital modes (as **ON5VL**) comes in a future version *(soon)*: the « Émettre » (transmit) buttons are greyed out, but messages and macros can already be prepared.
+- Transmission is done as **ON5VL** in **FT8 · FT4 · FT2**, **RTTY** and **JTTY** (you need control and transmit enabled); WSPR, JT65, CW and SSTV are receive-only for now *(soon)*.
 
 <a id="ft8"></a>
 ### 9.1 FT8 · FT4 · FT2
@@ -184,6 +184,7 @@ Same window as FT8 (one-minute periods); the transceiver goes to the JT65 freque
 - Set the **shift** and **speed** (170 Hz / 45.45 baud by default), then **click on the signal** in the waterfall: the yellow (Mark) and blue (Space) markers must sit on its two traces; otherwise press `Inversé` (reverse).
 - The M / S bars of the tuning indicator should flicker alternately. Raise the **squelch** (« Silencieux ») if characters appear on noise.
 - Received text scrolls on the left; double-click a received callsign = contact. On the right: macros `F1` to `F12` and the text to send.
+- **Émettre** (or `Ctrl`+`Enter`): the text goes out in RTTY on the receive frequency (same shift and speed), then the transceiver returns to receive. The sent text shows in red in the receive window; while transmitting the button becomes `■ Arrêter` (stop). The transceiver must be in **DATA-U** (the signal goes through its sound card), 600 characters at most per send.
 
 <a id="wspr"></a>
 ### 9.4 WSPR
@@ -195,6 +196,7 @@ Choose the band; every 2 minutes (about ten seconds after each even minute) the 
 
 - New WSJT-X 3.3 mode for keyboard-to-keyboard and contests: no periods, each message appears **frame by frame** (1.9 s); `▌` = message still arriving.
 - Left click = receive, right click = transmit, double-click = contact; macros `F1` to `F8` (the WSJT-X ones).
+- **Émettre** (or `Enter`): the message goes out at once (no periods) on the TX frequency, encoded by WSJT-X, then back to receive. 80 characters per message (longer: two messages in a row); transceiver in **DATA-U**.
 
 <a id="cw"></a>
 ### 9.6 CW
