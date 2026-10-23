@@ -236,7 +236,8 @@ Only the IFs the connected transceiver can reach are listed (2 m and 70 cm: FTX-
 <h2 id="messages">10. Stored messages and macros</h2>
 <ul>
   <li><b>Messages pré-enregistrés</b> panel: contact (callsign, first name, QTH, locator, FT8 report, RST), then one row per mode: FT8 · FT4 (Tx1 to Tx7), RTTY, JTTY, CW.</li>
-  <li>Clicking a macro adds it to the text to send in its tab. <b>Right click</b> (or <span class="k">✎</span>): edit it — name, text, preview, back to the default. Your macros are stored on the server, for you only.</li>
+  <li><b>RTTY and JTTY: a macro starting with <code>&lt;TX&gt;</code> is transmitted at once</b> when clicked (or with its <kbd>F1</kbd>… key), as in FLDIGI, then the rig goes back to receive (<code>&lt;RX&gt;</code>, always done at the end of the message). These macros have a red edge on the left; all default macros do. <b>Shift+click</b>: add the macro to the text to send without transmitting, to build a custom message then « Émettre ». If the macro contains <code>&lt;CALL&gt;</code> and no contact is chosen, nothing is sent.</li>
+  <li>A macro without <code>&lt;TX&gt;</code> (and every CW macro) is added to the text to send in its tab. <b>Right click</b> (or <span class="k">✎</span>): edit it — name, text, preview, back to the default. Your macros are stored on the server, for you only.</li>
   <li>FT8 · FT4 · FT2: <b>clicking Tx1 to Tx7 starts automatic transmission</b> of that message (see 9.1). Tx7: free text, 13 characters (right click to edit).</li>
 </ul>
 <table>

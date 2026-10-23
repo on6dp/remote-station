@@ -884,6 +884,8 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 }
 .rt-macros .btn small { color: var(--v2-text-dim); margin-right: 5px; font-weight: 700; }
 .rt-macros .btn.mini { padding-inline: 6px; color: var(--v2-text-dim); }
+/* Macro <TX> : part directement à l'émission (petit liseré rouge à gauche) */
+.rt-macros .btn.mac-tx, .msgs-b .btn.mac-tx { box-shadow: inset 3px 0 0 var(--v2-accent-red-alt); }
 @media (min-width: 1800px) and (min-height: 860px) {
   .side-far .msgs { align-content: start; }
   /* Correspondant sur toute la largeur ; nom | QTH ; locator | report | RST ; note en dessous */

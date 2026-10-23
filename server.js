@@ -475,6 +475,26 @@ const fails = new Map(); // ip -> { n, until }
 const MACROS_FILE = path.join(ROOT, 'macros.json');
 let macros = {};
 try { macros = JSON.parse(fs.readFileSync(MACROS_FILE, 'utf8')) || {}; } catch (e) { macros = {}; }
+// Depuis 0.19.1, une macro RTTY / JTTY commençant par <TX> part tout de suite à l'émission (comme FLDIGI).
+// Les macros déjà personnalisées sont mises à jour une fois : <TX> en tête, <RX> en fin (repère _tx).
+{
+  let changed = false;
+  for (const call of Object.keys(macros)) {
+    const mc = macros[call];
+    if (!mc || typeof mc !== 'object' || mc._tx) continue;
+    for (const mode of ['RTTY', 'JTTY']) {
+      if (!Array.isArray(mc[mode])) continue;
+      mc[mode] = mc[mode].map((m) => {
+        const t = String((m && m.text) || '');
+        if (!t.trim() || /<TX>|<RX>/i.test(t)) return m;
+        return Object.assign({}, m, { text: '<TX>' + t + '<RX>' });
+      });
+    }
+    mc._tx = 1;
+    changed = true;
+  }
+  if (changed) setTimeout(() => saveMacros(), 0);
+}
 function saveMacros() {
   fs.writeFile(MACROS_FILE, JSON.stringify(macros), { mode: 0o600 }, (e) => { if (e) console.error('macros.json : ' + e.message); });
 }
@@ -484,7 +504,7 @@ function setMacros(call, mode, list) {
     name: String((m && m.name) || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 14),
     text: String((m && m.text) || '').replace(/\r/g, '').replace(/[\u0000-\u0009\u000b-\u001f]/g, ' ').slice(0, 600)
   }));
-  macros[call] = Object.assign({}, macros[call], { [mode]: clean });
+  macros[call] = Object.assign({}, macros[call], { [mode]: clean, _tx: 1 });
   saveMacros();
   return true;
 }

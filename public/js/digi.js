@@ -168,7 +168,7 @@
       <div class="dg-col rt-tx-col">
         <div class="dg-h"><span>Émission</span><label class="rt-call">Correspondant <input id="rtCall" maxlength="12" placeholder="indicatif" autocomplete="off" spellcheck="false"></label></div>
         <div class="rt-macros" id="rtMacros"></div>
-        <textarea id="rtTxt" rows="4" placeholder="Texte à émettre (les macros s'ajoutent ici)…" spellcheck="false"></textarea>
+        <textarea id="rtTxt" rows="4" placeholder="Message personnalisé, puis « Émettre » (Maj+clic sur une macro : l'ajoute ici)…" spellcheck="false"></textarea>
         <div class="rt-tx-act">
           <button class="btn btn-tx" type="button" id="rtSend" title="Émet le texte en RTTY sur la fréquence de réception (Shift et vitesse choisis en haut), puis retour en réception">Émettre</button>
           <button class="btn" type="button" id="rtTxClear">Effacer</button>
@@ -214,7 +214,7 @@
     <div class="jt-tx">
       <div class="rt-macros" id="jtMacros"></div>
       <div class="jt-tx-row">
-        <input id="jtTxt" maxlength="160" placeholder="Texte à émettre (F1 à F8 : macros)…" autocomplete="off" spellcheck="false">
+        <input id="jtTxt" maxlength="160" placeholder="Message personnalisé, puis « Émettre » (macros F1 à F8 : émission directe)…" autocomplete="off" spellcheck="false">
         <button class="btn btn-tx" type="button" id="jtSend" title="Émet le message en JTTY sur la fréquence TX (repère rouge), puis retour en réception">Émettre</button>
       </div>
       <p class="dg-tx" id="jtTxState">Émission JTTY sous <b>ON5VL</b> : message ci-dessus, puis « Émettre » (Entrée).</p>
@@ -545,32 +545,33 @@
       baud: [45.45, 50, 75, 100].indexOf(o.baud) >= 0 ? o.baud : 45.45, rev: !!o.rev, squelch: Number(o.squelch) || 12 };
   })();
   // ------------------------------------------------------------------ macros (comme FLDIGI : F1 à F12, modifiables)
+  // <TX> en tête : la macro part tout de suite à l'émission (comme FLDIGI) ; <RX> : retour en réception (toujours fait en fin de message)
   // Balises : <MYCALL> <CALL> <NAME> <QTH> <RST> <LOC> <MYLOC> <MYQTH> <OPCALL> <CNTR> <INCR> <ZT> <ZD>
   const DEF_MACROS = {
     RTTY: [
-      { name: 'CQ', text: 'CQ CQ CQ DE <MYCALL> <MYCALL> <MYCALL>\nCQ CQ CQ DE <MYCALL> <MYCALL> <MYCALL> PSE K\n' },
-      { name: 'Appel', text: '<CALL> <CALL> DE <MYCALL> <MYCALL> <MYCALL> K\n' },
-      { name: 'QSO', text: '<CALL> DE <MYCALL> TNX FER CALL <NAME>\nUR RST <RST> <RST> QTH <MYQTH> <MYQTH> LOC <MYLOC>\nHW? <CALL> DE <MYCALL> K\n' },
-      { name: 'Station', text: 'STATION DU CLUB UBA-LGE <MYCALL> - OPERATEUR <OPCALL>\n' },
-      { name: 'BTU', text: 'BTU <CALL> DE <MYCALL> K\n' },
-      { name: '73', text: '<CALL> TNX FER QSO <NAME> 73 GL\n<CALL> DE <MYCALL> SK\n' },
-      { name: 'QRZ?', text: 'QRZ? DE <MYCALL> K\n' },
-      { name: 'Contest', text: '<CALL> 599 <CNTR> <CNTR>\n' },
-      { name: 'TU', text: 'TU <INCR><MYCALL> TEST\n' },
-      { name: 'AGN?', text: 'AGN? AGN? PSE\n' },
-      { name: 'RYRY', text: 'RYRYRYRYRYRYRYRYRYRYRYRY\n' },
-      { name: 'Heure', text: 'UTC <ZT> <ZD>\n' }
+      { name: 'CQ', text: '<TX>CQ CQ CQ DE <MYCALL> <MYCALL> <MYCALL>\nCQ CQ CQ DE <MYCALL> <MYCALL> <MYCALL> PSE K\n<RX>' },
+      { name: 'Appel', text: '<TX><CALL> <CALL> DE <MYCALL> <MYCALL> <MYCALL> K\n<RX>' },
+      { name: 'QSO', text: '<TX><CALL> DE <MYCALL> TNX FER CALL <NAME>\nUR RST <RST> <RST> QTH <MYQTH> <MYQTH> LOC <MYLOC>\nHW? <CALL> DE <MYCALL> K\n<RX>' },
+      { name: 'Station', text: '<TX>STATION DU CLUB UBA-LGE <MYCALL> - OPERATEUR <OPCALL>\n<RX>' },
+      { name: 'BTU', text: '<TX>BTU <CALL> DE <MYCALL> K\n<RX>' },
+      { name: '73', text: '<TX><CALL> TNX FER QSO <NAME> 73 GL\n<CALL> DE <MYCALL> SK\n<RX>' },
+      { name: 'QRZ?', text: '<TX>QRZ? DE <MYCALL> K\n<RX>' },
+      { name: 'Contest', text: '<TX><CALL> 599 <CNTR> <CNTR>\n<RX>' },
+      { name: 'TU', text: '<TX>TU <INCR><MYCALL> TEST\n<RX>' },
+      { name: 'AGN?', text: '<TX>AGN? AGN? PSE\n<RX>' },
+      { name: 'RYRY', text: '<TX>RYRYRYRYRYRYRYRYRYRYRYRY\n<RX>' },
+      { name: 'Heure', text: '<TX>UTC <ZT> <ZD>\n<RX>' }
     ],
     // JTTY : les 8 touches de fonction de WSJT-X (forme compacte : 1 ou 2 trames par message)
     JTTY: [
-      { name: 'CQ', text: 'CQ <MYCALL> CQ' },
-      { name: 'Échange', text: '<CALL> 599 <CNTR>' },
-      { name: 'TU', text: '<CALL> TU CQ <MYCALL> CQ' },
-      { name: 'Mon ind.', text: '<MYCALL>' },
-      { name: 'Son ind.', text: '<CALL>' },
-      { name: 'TU NOW', text: 'TU NOW <CALL> 599 <CNTR>' },
-      { name: 'AGN?', text: '<CALL> AGN?' },
-      { name: '599', text: '599 <CNTR>' }
+      { name: 'CQ', text: '<TX>CQ <MYCALL> CQ<RX>' },
+      { name: 'Échange', text: '<TX><CALL> 599 <CNTR><RX>' },
+      { name: 'TU', text: '<TX><CALL> TU CQ <MYCALL> CQ<RX>' },
+      { name: 'Mon ind.', text: '<TX><MYCALL><RX>' },
+      { name: 'Son ind.', text: '<TX><CALL><RX>' },
+      { name: 'TU NOW', text: '<TX>TU NOW <CALL> 599 <CNTR><RX>' },
+      { name: 'AGN?', text: '<TX><CALL> AGN?<RX>' },
+      { name: '599', text: '<TX>599 <CNTR><RX>' }
     ],
     CW: [
       { name: 'CQ', text: 'CQ CQ CQ DE <MYCALL> <MYCALL> <MYCALL> K' },
@@ -583,6 +584,7 @@
     ]
   };
   const TAGS = [
+    ['<TX>', 'émission immédiate au clic (sinon : texte ajouté à la zone d’écriture)'], ['<RX>', 'retour en réception à la fin (toujours fait)'],
     ['<MYCALL>', 'indicatif émis (ON5VL)'], ['<CALL>', 'correspondant'], ['<NAME>', 'son prénom'], ['<QTH>', 'son QTH'],
     ['<RST>', 'report envoyé'], ['<LOC>', 'son locator'], ['<MYLOC>', 'locator de la station'], ['<MYQTH>', 'QTH de la station'],
     ['<OPCALL>', 'votre indicatif (opérateur)'], ['<CNTR>', 'numéro de série'], ['<INCR>', 'numéro suivant'], ['<ZT>', 'heure UTC'], ['<ZD>', 'date UTC']
@@ -636,6 +638,7 @@
     const p2 = (n) => String(n).padStart(2, '0');
     let cntr = Number(store.get('cntr', '1')) || 1;
     let out = String(t)
+      .replace(/<TX>|<RX>/gi, '')
       .replace(/<MYCALL>|\{MY\}/g, myCall)
       .replace(/<CALL>|\{CALL\}/g, up(dx.call) || '???')
       .replace(/<NAME>/g, up(dx.name))
@@ -867,7 +870,7 @@
     });
     $('jtSend').addEventListener('click', () => dtxClick('JTTY'));
     $('jtTxt').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); dtxClick('JTTY'); } });
-    drawMacroRow($('jtMacros'), 'JTTY', (t) => insertJtty(t));
+    drawMacroRow($('jtMacros'), 'JTTY', (t, ins) => useMacro('JTTY', t, ins));
   }
   function jtStatus() {
     const st = api && api.state();
@@ -1490,13 +1493,13 @@
     const ed = mk(f, '', '✎', () => editFree(f.ownerDocument));
     ed.title = 'Modifier le texte libre (Tx7)';
     ed.classList.add('mini');
-    drawMacroRow($('msgRtty'), 'RTTY', (t) => {
+    drawMacroRow($('msgRtty'), 'RTTY', (t, ins) => {
       const inst = (window.DG && window.DG()) || window.RSDIGI;
-      inst.insertRtty(t);
+      inst.useMacro('RTTY', t, ins);
     });
-    drawMacroRow($('msgJtty'), 'JTTY', (t) => {
+    drawMacroRow($('msgJtty'), 'JTTY', (t, ins) => {
       const inst = (window.DG && window.DG()) || window.RSDIGI;
-      inst.insertJtty(t);
+      inst.useMacro('JTTY', t, ins);
     });
     drawMacroRow($('msgCw'), 'CW', (t) => {
       const inst = (window.DG && window.DG()) || window.RSDIGI;
@@ -1562,12 +1565,18 @@
     // Pendant l'émission (ou si elle est prévue) : le bouton coupe
     if (x && x.mode === mode) return api.send({ t: 'ftx_stop' });
     const el = mode === 'RTTY' ? $('rtTxt') : $('jtTxt');
-    const text = el.value;
-    if (!text.trim()) return api.say('Rien à émettre : tapez un texte ou choisissez une macro.', 'warn');
+    if (!el.value.trim()) return api.say('Rien à émettre : tapez un texte ou choisissez une macro.', 'warn');
+    dtxSend(mode, el.value, true);
+  }
+  // zone = true : texte de la zone d'écriture (effacé quand l'émission part) ; false : macro <TX>
+  function dtxSend(mode, text, zone) {
+    if (!api) return;
+    const st = api.state();
+    if (st && (st.ftx || (st.ptt && st.ptt.active))) return api.say('Émission en cours : attendez la fin (ou « ■ Arrêter »).', 'warn');
     const m = { t: 'dtx', mode, text };
     if (mode === 'RTTY') Object.assign(m, { f0: Math.round(rt.f), shift: rt.shift, baud: rt.baud, rev: !!rt.rev });
     else m.f0 = curTxF();
-    dtxPend = { mode, text };
+    dtxPend = { mode, text, zone };
     api.send(m);
   }
   function dtxState(x) {
@@ -1581,13 +1590,13 @@
       if (note) {
         note.classList.toggle('air', mine && x.state === 'tx');
         note.textContent = mine ? (x.state === 'tx' ? '● En émission ' + mode + ' (' + x.by + ') : « ' + x.text + ' »' : 'Préparation de l’émission ' + mode + '…')
-          : mode === 'RTTY' ? 'Émission RTTY sous ' + myCall + ' : texte ci-dessus, puis « Émettre » (Ctrl+Entrée).' : 'Émission JTTY sous ' + myCall + ' : message ci-dessus, puis « Émettre » (Entrée).';
+          : mode === 'RTTY' ? 'Émission RTTY sous ' + myCall + ' : macro (émission directe) ou texte ci-dessus puis « Émettre » (Ctrl+Entrée).' : 'Émission JTTY sous ' + myCall + ' : macro (émission directe) ou message ci-dessus puis « Émettre » (Entrée).';
       }
     }
     // Émission partie : le texte envoyé quitte la zone d'écriture et s'affiche dans la réception
     if (dtxPend && x && x.mode === dtxPend.mode && x.state === 'tx') {
       const el = dtxPend.mode === 'RTTY' ? $('rtTxt') : $('jtTxt');
-      if (el && el.value === dtxPend.text) el.value = '';
+      if (el && dtxPend.zone && el.value === dtxPend.text) el.value = '';
       if (dtxPend.mode === 'RTTY' && $('rtRx')) {
         const s = document.createElement('span');
         s.className = 'rt-txline';
@@ -1649,9 +1658,12 @@
       b.type = 'button';
       if (mode !== 'FT8') { const s = box.ownerDocument.createElement('small'); s.textContent = 'F' + (i + 1); b.appendChild(s); }
       b.appendChild(box.ownerDocument.createTextNode(m.name || '—'));
-      b.title = macroText(m.text).replace(/\n/g, ' ⏎ ') + '\n(clic droit : modifier)';
-      b.addEventListener('mouseenter', () => { b.title = macroText(m.text).replace(/\n/g, ' ⏎ ') + '\n(clic droit : modifier)'; });
-      b.addEventListener('click', () => use(m.text));
+      const tip = () => macroText(m.text).replace(/\n/g, ' ⏎ ') + '\n' +
+        (/<TX>/i.test(m.text) && mode !== 'CW' ? 'clic : émission immédiate · Maj+clic : ajouter au texte · clic droit : modifier' : 'clic : ajouter au texte · clic droit : modifier');
+      if (/<TX>/i.test(m.text) && mode !== 'CW') b.classList.add('mac-tx');
+      b.title = tip();
+      b.addEventListener('mouseenter', () => { b.title = tip(); });
+      b.addEventListener('click', (e) => use(m.text, e.shiftKey));
       b.addEventListener('contextmenu', (e) => { e.preventDefault(); editMacro(box.ownerDocument, mode, i); });
       box.appendChild(b);
     });
@@ -1664,7 +1676,7 @@
     box.appendChild(ed);
   }
   function drawRttyMacros() {
-    drawMacroRow($('rtMacros'), 'RTTY', (t) => insertRtty(t, true));
+    drawMacroRow($('rtMacros'), 'RTTY', (t, ins) => useMacro('RTTY', t, ins));
   }
   // ------------------------------------------------------------------ éditeur de macros (fenêtre de dialogue)
   function editMacro(doc, mode, idx) {
@@ -1748,8 +1760,21 @@
   function redrawMacros() {
     drawMsgs();
     drawRttyMacros();
-    drawMacroRow($('jtMacros'), 'JTTY', (t) => insertJtty(t));
+    drawMacroRow($('jtMacros'), 'JTTY', (t, ins) => useMacro('JTTY', t, ins));
     drawMacroRow($('cwMacros'), 'CW', (t) => insertCw(t));
+  }
+  // Clic sur une macro (ou F1…F12) : <TX> = émission immédiate, sinon texte ajouté à la zone d'écriture.
+  // Maj+clic : toujours ajouter à la zone (pour composer un message avant « Émettre »).
+  function useMacro(mode, t, ins) {
+    if (mode === 'CW') return insertCw(t);
+    if (ins || !/<TX>/i.test(t)) return mode === 'JTTY' ? insertJtty(t) : insertRtty(t);
+    showTab(mode === 'JTTY' ? 'jtty' : 'rtty');
+    if (/<CALL>|\{CALL\}/.test(t) && !String(dx.call || '').trim()) {
+      return api && api.say('Pas de correspondant : double-cliquez d’abord sur son indicatif (ou tapez-le dans « Correspondant »).', 'warn');
+    }
+    let text = macroText(t, true);
+    if (mode === 'JTTY') text = text.replace(/\s*\n\s*/g, ' ').trim().toUpperCase();
+    dtxSend(mode, text, false);
   }
   function insertRtty(t) {
     showTab('rtty');
@@ -2064,7 +2089,7 @@
         const m = macroList(MODE)[Number(n[1]) - 1];
         if (!m) return;
         e.preventDefault();
-        if (tab === 'jtty') insertJtty(m.text); else if (tab === 'cw') insertCw(m.text); else insertRtty(m.text);
+        useMacro(MODE, m.text, e.shiftKey);
       });
       $('dgTxRx').addEventListener('click', () => setTx(rxF));
       $('dgPar').value = store.get('ftxpar', 'auto');
@@ -2093,6 +2118,7 @@
       }, 500);
     },
     insertRtty,
+    useMacro,
     insertJtty,
     insertCw,
     onHello(me, info) {

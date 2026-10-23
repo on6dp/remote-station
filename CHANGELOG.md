@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.19.1** — **Macros RTTY et JTTY émises d'un clic, comme dans FLDIGI** : une macro qui commence par `<TX>` part tout de suite à l'émission (clic ou F1…F12), puis retour en réception (`<RX>`). Toutes les macros d'origine en ont, les macros déjà personnalisées reçoivent `<TX>` … `<RX>` une fois. Maj+clic : ajouter la macro au texte sans émettre, pour composer un message puis « Émettre ». Liseré rouge sur les macros qui émettent ; refus si `<CALL>` sans correspondant choisi.
 - **0.19.0** — **Émission RTTY et JTTY** depuis le dashboard. RTTY : taper le texte puis « Émettre » (ou Ctrl+Entrée) ; envoyé sur la fréquence de réception RTTY, même shift, même vitesse, même sens (inversion). JTTY : « Émettre » (ou Entrée) part tout de suite sur le repère TX, comme dans WSJT-X 3.3 (codeur repris de WSJT-X : jttygen). Le signal est fabriqué par le serveur et joué par la page Station sur la sortie audio du TRX ; le bouton devient « ■ Arrêter » pendant l'émission. TRX en DATA-U conseillé (USB accepté).
 - **0.18.7** — **Cascade comme WSJT-X** : réglages Gain (contraste) et Zéro (niveau du fond), fond « Plat » (bruit égal sur toute la largeur, pente du filtre corrigée), trois jeux de couleurs (bleu, arc-en-ciel, gris), retour aux réglages d'origine ; dessin lissé entre les cases de 6,25 Hz. Réglages mémorisés dans le navigateur, communs à toutes les cascades.
 - **0.18.6** — Le côté actif du TRX est mis en évidence dans l'en-tête de son écran VFO : « MAIN » sur fond cyan (VFO A) ou « SUB » sur fond orange (VFO B), selon MAIN / SUB ou le RX choisi.

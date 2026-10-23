@@ -226,7 +226,8 @@ The FT8 · FT4, RTTY and CW lists offer « **QO-100 · FI 2 m / 70 cm** »: the 
 ## 10. Stored messages and macros
 
 - **Messages pré-enregistrés** panel: contact (callsign, first name, QTH, locator, FT8 report, RST), then one row per mode: FT8 · FT4 (Tx1 to Tx7), RTTY, JTTY, CW.
-- Clicking a macro adds it to the text to send in its tab. **Right click** (or `✎`): edit it — name, text, preview, back to the default. Your macros are stored on the server, for you only.
+- **RTTY and JTTY: a macro starting with `<TX>` is transmitted at once** when clicked (or with its `F1`… key), as in FLDIGI, then the rig goes back to receive (`<RX>`, always done at the end of the message). These macros have a red edge on the left; all default macros do. **Shift+click**: add the macro to the text to send without transmitting, to build a custom message then « Émettre ». If the macro contains `<CALL>` and no contact is chosen, nothing is sent.
+- A macro without `<TX>` (and every CW macro) is added to the text to send in its tab. **Right click** (or `✎`): edit it — name, text, preview, back to the default. Your macros are stored on the server, for you only.
 - FT8 · FT4 · FT2: **clicking Tx1 to Tx7 starts automatic transmission** of that message (see 9.1). Tx7: free text, 13 characters (right click to edit).
 
 | Tag | Replaced by | Tag | Replaced by |

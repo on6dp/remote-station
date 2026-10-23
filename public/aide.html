@@ -237,7 +237,8 @@ Seules les FI que le TRX branché peut atteindre sont proposées (2 m et 70 cm :
 <h2 id="messages">10. Messages pré-enregistrés et macros</h2>
 <ul>
   <li>Cadre <b>Messages pré-enregistrés</b> : correspondant (indicatif, prénom, QTH, locator, report FT8, RST), puis une ligne par mode : FT8 · FT4 (Tx1 à Tx7), RTTY, JTTY, CW.</li>
-  <li>Un clic sur une macro l'ajoute au texte à émettre de son onglet. <b>Clic droit</b> (ou <span class="k">✎</span>) : la modifier — nom, texte, aperçu, retour au texte d'origine. Vos macros sont gardées sur le serveur, pour vous seul.</li>
+  <li><b>RTTY et JTTY : une macro qui commence par <code>&lt;TX&gt;</code> part tout de suite à l'émission</b> au clic (ou avec sa touche <kbd>F1</kbd>…), comme dans FLDIGI, puis le TRX repasse en réception (<code>&lt;RX&gt;</code>, toujours fait en fin de message). Ces macros ont un liseré rouge à gauche ; c'est le cas de toutes les macros d'origine. <b>Maj+clic</b> : ajouter la macro au texte à émettre sans émettre, pour composer un message personnalisé puis « Émettre ». Si la macro contient <code>&lt;CALL&gt;</code> sans correspondant choisi, rien ne part.</li>
+  <li>Une macro sans <code>&lt;TX&gt;</code> (et toutes les macros CW) s'ajoute au texte à émettre de son onglet. <b>Clic droit</b> (ou <span class="k">✎</span>) : la modifier — nom, texte, aperçu, retour au texte d'origine. Vos macros sont gardées sur le serveur, pour vous seul.</li>
   <li>FT8 · FT4 · FT2 : <b>un clic sur Tx1 à Tx7 lance l'émission automatique</b> de ce message (voir 9.1). Tx7 : texte libre de 13 caractères (clic droit pour le modifier).</li>
 </ul>
 <table>

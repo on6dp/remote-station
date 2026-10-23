@@ -226,7 +226,8 @@ Les listes FT8 · FT4, RTTY et CW proposent « **QO-100 · FI 2 m / 70 cm** » :
 ## 10. Messages pré-enregistrés et macros
 
 - Cadre **Messages pré-enregistrés** : correspondant (indicatif, prénom, QTH, locator, report FT8, RST), puis une ligne par mode : FT8 · FT4 (Tx1 à Tx7), RTTY, JTTY, CW.
-- Un clic sur une macro l'ajoute au texte à émettre de son onglet. **Clic droit** (ou `✎`) : la modifier — nom, texte, aperçu, retour au texte d'origine. Vos macros sont gardées sur le serveur, pour vous seul.
+- **RTTY et JTTY : une macro qui commence par `<TX>` part tout de suite à l'émission** au clic (ou avec sa touche `F1`…), comme dans FLDIGI, puis le TRX repasse en réception (`<RX>`, toujours fait en fin de message). Ces macros ont un liseré rouge à gauche ; c'est le cas de toutes les macros d'origine. **Maj+clic** : ajouter la macro au texte à émettre sans émettre, pour composer un message personnalisé puis « Émettre ». Si la macro contient `<CALL>` sans correspondant choisi, rien ne part.
+- Une macro sans `<TX>` (et toutes les macros CW) s'ajoute au texte à émettre de son onglet. **Clic droit** (ou `✎`) : la modifier — nom, texte, aperçu, retour au texte d'origine. Vos macros sont gardées sur le serveur, pour vous seul.
 - FT8 · FT4 · FT2 : **un clic sur Tx1 à Tx7 lance l'émission automatique** de ce message (voir 9.1). Tx7 : texte libre de 13 caractères (clic droit pour le modifier).
 
 | Balise | Remplacée par | Balise | Remplacée par |
