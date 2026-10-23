@@ -1,8 +1,8 @@
 /*
  * panels.js — disposition personnalisable du dashboard.
  *
- * 1. Écran large (1920 × 1080 et plus) : les messages pré-enregistrés passent dans la 4e colonne,
- *    sous les opérateurs, pour laisser toute la hauteur au centre (voir rp.css).
+ * 1. Le cadre « Correspondant » (#msgs) est placé sous les onglets des modes numériques ;
+ *    les opérateurs sont dans le volet du bouton 👥 du bandeau (plus de 4e colonne).
  * 2. Chaque cadre (data-panel) peut être détaché dans sa propre fenêtre (bouton ⧉) et ramené.
  *    Le cadre est déplacé tel quel dans la fenêtre (même page, mêmes commandes) : tout continue
  *    de fonctionner. La disposition (cadres détachés, position et taille des fenêtres) est mémorisée
@@ -14,7 +14,7 @@
   'use strict';
   const NAMES = {
     ant: 'Antenne', rf: 'RF front end', mode: 'Mode', filter: 'Filtre', meters: 'Station meters', vfo: 'VFO', bands: 'Step et bandes',
-    audio: 'RX audio', dsp: 'DSP', tune: 'Accord (tuner)', tx: 'TX', ops: 'Opérateurs', msgs: 'Messages pré-enregistrés'
+    audio: 'RX audio', dsp: 'DSP', tune: 'Accord (tuner)', tx: 'TX', ops: 'Opérateurs', msgs: 'Correspondant'
   };
   const store = {
     get() { try { return JSON.parse(localStorage.getItem('rs.detached') || '{}') || {}; } catch (e) { return {}; } },
@@ -48,10 +48,11 @@
   const msgs = document.getElementById('msgs');
   const msgsHome = document.createComment('place des messages pré-enregistrés');
   if (msgs) msgs.before(msgsHome);
+  // Correspondant : une ligne dans « Activité et modes numériques », juste sous les onglets (toutes largeurs d'écran)
   function placeMsgs() {
     if (!msgs || open.has('msgs')) return;
-    const far = document.querySelector('.side-far');
-    if (WIDE.matches && far) { if (msgs.parentElement !== far) far.appendChild(msgs); }
+    const tabs = document.getElementById('ctabs');
+    if (tabs) { if (msgs.previousElementSibling !== tabs) tabs.after(msgs); }
     else if (msgs.previousSibling !== msgsHome) msgsHome.after(msgs);
   }
   WIDE.addEventListener('change', placeMsgs);

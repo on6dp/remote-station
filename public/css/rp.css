@@ -530,7 +530,7 @@ input[type='range']:disabled { opacity: .45; }
   body { overflow: hidden; }
   .app { max-width: none; height: 100vh; margin: 0; box-sizing: border-box; border-radius: 0; border: 0;
     grid-template-rows: auto minmax(0, 1fr) auto; padding: 8px 10px; gap: 8px; }
-  .workspace { grid-template-columns: 236px minmax(0, 1fr) 220px 280px; grid-template-rows: minmax(0, 1fr); min-height: 0; align-items: stretch; gap: 8px; }
+  .workspace { grid-template-columns: 236px minmax(0, 1fr) 236px; grid-template-rows: minmax(0, 1fr); min-height: 0; align-items: stretch; gap: 8px; }
   /* Plus compact pour tout faire tenir en hauteur */
   :root { --btn-h: 26px; }
   .panel-h { padding: 7px 10px 5px; }
@@ -1095,3 +1095,54 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .msgs-h .btn-log { border: 1px solid var(--v2-accent-cyan); color: var(--v2-accent-cyan-bright); background: rgba(0, 212, 255, .08); border-radius: 5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; cursor: pointer; }
 .rt-tx-act .btn-log, .jt-tx-row .btn-log { border-color: var(--v2-accent-cyan); color: var(--v2-accent-cyan-bright); }
 @media (min-width: 1800px) and (min-height: 860px) { .side-far .msgs-h .btn-log { grid-column: 1 / -1; padding: 6px 8px; font-size: 10.5px; } }
+/* RTTY : réception sur toute la largeur, émission dessous (macros F1 à F12 sur une ligne, comme JTTY) */
+.rt-grid.rt-stack { display: flex; flex-direction: column; gap: 8px; }
+.rt-stack .rt-rx-col { flex: 1; min-height: 160px; }
+.rt-stack .rt-tx-col { flex: none; padding-bottom: 8px; gap: 6px; }
+.rt-stack .rt-macros { padding: 6px 8px 0; }
+.rt-tx-row { display: flex; gap: 8px; padding: 0 8px; align-items: stretch; }
+.rt-stack .rt-tx-col textarea { margin: 0; flex: 1; min-width: 0; min-height: 52px; height: 58px; }
+.rt-stack .rt-tx-act { flex-direction: column; flex-wrap: nowrap; align-items: stretch; padding: 0; gap: 4px; }
+.rt-stack .rt-tx-act .btn { padding-block: 4px; }
+.rt-tx-note { padding: 0 8px; }
+
+/* ------------------------------------------------------------------ Opérateurs : volet sous le bouton 👥 du bandeau */
+.ops-pop { width: 340px; max-width: calc(100vw - 24px); display: grid; gap: 8px; padding: 10px; font-size: 12px; }
+.ops-pop .who { display: none; } /* la liste des membres (#usersList) suffit */
+.ops-pop .chat { margin-top: 0; max-height: 260px; min-height: 60px; }
+.ops-pop .chat-form { display: flex; gap: 6px; }
+.ops-pop .chat-form input { flex: 1; min-width: 0; }
+.ops-pop #sec-other:empty { display: none; }
+.ops-pop h3 { margin: 0 0 4px; }
+.users-btn { position: relative; }
+.users-dot { position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; border-radius: 50%; background: var(--v2-accent-red-alt); box-shadow: 0 0 6px rgba(241, 76, 66, .8); }
+
+/* ------------------------------------------------------------------ Correspondant : une ligne sous les onglets des modes numériques */
+.activity > .msgs { padding: 6px 10px; border: 0; border-bottom: 1px solid var(--v2-border-dark); border-radius: 0; background: transparent; gap: 0; }
+.activity > .msgs .msgs-h { gap: 6px 12px; padding-right: 30px; }
+.activity > .msgs .msgs-t { color: var(--v2-text-dim); }
+.activity > .msgs .msgs-h input { width: 90px; padding: 3px 6px; }
+.activity > .msgs #dxCall { width: 100px; }
+.activity > .msgs #dxGrid { width: 64px; }
+.activity > .msgs #dxRpt, .activity > .msgs #dxRst { width: 42px; }
+.activity > .msgs .btn-log { margin-left: auto; font-size: 10px; padding: 4px 10px; }
+.activity.collapsed > .msgs { display: none; }
+
+/* Messages Tx1 à Tx7 dans l'onglet FT8 · FT4 · FT2 (comme WSJT-X) */
+.ft-tx { border: 1px solid var(--v2-border-dark); border-radius: 6px; background: var(--v2-bg-darker); padding: 6px 8px; }
+.ft-msgs .btn { font-size: 11px; padding: 5px 9px; }
+.rt-stack .rt-tx-act { min-width: 170px; }
+.rt-tx-act2 { display: flex; gap: 4px; }
+.rt-tx-act2 .btn { flex: 1; }
+.rt-stack .rt-tx-col { padding-top: 0; }
+.activity > .msgs .msgs-h label { letter-spacing: .5px; }
+@media (max-width: 1799px) {
+  .activity > .msgs .msgs-h { gap: 6px 8px; }
+  .activity > .msgs .msgs-h input { width: 76px; }
+  .activity > .msgs #dxCall { width: 92px; }
+  .activity > .msgs #dxGrid { width: 58px; }
+  .activity > .msgs #dxRpt, .activity > .msgs #dxRst { width: 38px; }
+}
+/* Badges des écrans VFO réglables d'un clic (ATT, IPO / AMP1 / AMP2, AMP, NAR, NB, DNR, NOTCH, DNF) */
+.vfo-badges .badge.clk { cursor: pointer; }
+.vfo-badges .badge.clk:hover { border-color: var(--v2-accent-cyan); color: var(--v2-text-bright); }

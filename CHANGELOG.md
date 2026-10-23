@@ -2,6 +2,11 @@
 
 ## v0.15 — FT2
 
+- **0.21.0** — **Plus de 4e colonne : le centre s'élargit.**
+  - **Opérateurs** : volet du bouton 👥 du bandeau, fermé par défaut ; point rouge sur 👥 quand un message arrive ; le volet s'ouvre tout seul chez celui qui pilote quand quelqu'un demande la main.
+  - **Correspondant** (indicatif, prénom, QTH, locator, report, RST, Log QSO) : une ligne sous les onglets des modes numériques.
+  - **Messages et macros dans leur onglet** : Tx1 à Tx7 sous les listes FT8 · FT4 · FT2 (comme WSJT-X) ; RTTY et CW : réception sur toute la largeur, macros F1 à F12 sur une ligne au-dessus du texte à émettre (comme JTTY).
+  - **Badges des écrans VFO cliquables** : ATT, IPO → AMP1 → AMP2, AMP (144 / 430 MHz), NAR, NB, DNR, NOTCH, DNF s'enclenchent ou se coupent d'un clic ; FTX-1 : aussi sur l'écran du VFO B (côté SUB : NA1, NL1, RL1, BP10, BC1). Les boutons ATT, IPO / AMP1 / AMP2, AMP et NARROW quittent les colonnes de gauche.
 - **0.20.0** — **Enregistrer un QSO RTTY / JTTY / CW sans quitter l'onglet** : bouton « Log QSO » à côté de « Émettre » et sous le correspondant (« Messages pré-enregistrés »), comme « Save QSO » de FLDIGI. Fiche pré-remplie (indicatif, prénom, QTH, locator, RST, fréquence — en RTTY celle du signal —, mode de l'onglet, puissance, heure de début = choix du correspondant, heure de fin), puis « Enregistrer dans le carnet » ; doublons signalés. Balise de macro `<LOG>` : ouvre la fiche.
 - **0.19.3** — RTTY / JTTY : plus de double affichage de notre propre émission. La BF du TRX contient le signal émis et le décodeur le réaffichait en blanc sous le texte émis ; rien n'est plus décodé pendant l'émission ni dans la seconde et demie qui suit (3 s en JTTY).
 - **0.19.2** — **RTTY : suivi de l'émission lettre par lettre**. Dans la fenêtre RTTY, le texte émis s'affiche d'abord en gris puis passe en rouge à mesure que chaque lettre part (minutage exact du signal, inversions lettres / chiffres comprises) ; la ligne d'état indique « fin dans N s ». Après « Arrêter », la partie non émise reste grise et barrée.

@@ -25,8 +25,20 @@
     <div class="tb-title"><span id="stationCall"></span> <b id="clubName">Remote Station</b></div>
     <div class="tb-right">
       <span class="tb-users">
-        <button class="btn users-btn" id="usersBtn" type="button" title="Membres connectés" aria-haspopup="true" aria-expanded="false">👥 <b id="usersCount">0</b></button>
-        <div class="rig-menu users-menu" id="usersMenu" hidden></div>
+        <button class="btn users-btn" id="usersBtn" type="button" title="Opérateurs : membres connectés, main, messages (cliquer pour ouvrir)" aria-haspopup="true" aria-expanded="false">👥 <b id="usersCount">0</b><i class="users-dot" id="usersDot" hidden></i></button>
+        <!-- Opérateurs : volet sous le bouton 👥, fermé par défaut (pastille rouge quand un message arrive) -->
+        <div class="rig-menu users-menu ops-pop" id="usersMenu" hidden>
+          <div id="usersList"></div>
+          <p class="ctrl-text" id="ctrlText">Personne n'a la main.</p>
+          <div class="who" id="who"></div>
+          <button class="btn accent ask-btn" id="askBtn" type="button" hidden>Demander la main</button>
+          <div class="chat" id="chat" aria-live="polite"><p class="chat-empty">Aucun message.</p></div>
+          <form class="chat-form" id="chatForm" autocomplete="off">
+            <input id="chatInput" type="text" maxlength="300" placeholder="Message aux connectés…" aria-label="Message aux connectés">
+            <button class="btn accent" type="submit">Envoyer</button>
+          </form>
+          <div id="sec-other"></div>
+        </div>
       </span>
       <span class="tb-call" id="meCall">—</span>
       <button class="btn" id="ctrlBtn" type="button">Prendre la main</button>
@@ -200,29 +212,11 @@
       </section>
     </aside>
 
-    <!-- ============================================================ 4e colonne : opérateurs et messages -->
-    <aside class="side side-far">
-      <section data-panel="ops" class="panel">
-        <h2 class="panel-h">Opérateurs</h2>
-        <div class="panel-b">
-          <p class="ctrl-text" id="ctrlText">Personne n'a la main.</p>
-          <div class="who" id="who"></div>
-          <button class="btn accent ask-btn" id="askBtn" type="button" hidden>Demander la main</button>
-          <div class="chat" id="chat" aria-live="polite"><p class="chat-empty">Aucun message.</p></div>
-          <form class="chat-form" id="chatForm" autocomplete="off">
-            <input id="chatInput" type="text" maxlength="300" placeholder="Message aux connectés…" aria-label="Message aux connectés">
-            <button class="btn accent" type="submit">Envoyer</button>
-          </form>
-          <div id="sec-other"></div>
-        </div>
-      </section>
-    </aside>
   </div>
 
-  <!-- ============================================================ messages pré-enregistrés -->
+  <!-- ============================================================ correspondant (indicatif, prénom, QTH, locator, reports) + Log QSO -->
   <footer data-panel="msgs" class="msgs" id="msgs">
     <div class="msgs-h">
-      <span class="msgs-t">Messages pré-enregistrés</span>
       <label>Correspondant <input id="dxCall" maxlength="12" placeholder="indicatif" autocomplete="off" spellcheck="false"></label>
       <label>Nom <input id="dxName" maxlength="14" placeholder="prénom" autocomplete="off" spellcheck="false"></label>
       <label>QTH <input id="dxQth" maxlength="20" placeholder="ville" autocomplete="off" spellcheck="false"></label>
@@ -230,12 +224,8 @@
       <label title="Report FT8 / FT4 en dB">Report <input id="dxRpt" maxlength="4" value="-10" autocomplete="off"></label>
       <label title="RST envoyé en RTTY / CW">RST <input id="dxRst" maxlength="3" value="599" autocomplete="off"></label>
       <button class="btn btn-log" type="button" id="dxLog" title="Enregistrer le QSO dans le carnet de la station (RTTY, JTTY, CW… : correspondant, RST, fréquence et mode du TRX)">Log QSO</button>
-      <span class="msgs-note">Indicatif émis : <b>ON5VL</b> · FT8 / FT4 / FT2 : clic sur un message = émission auto jusqu’à la réponse</span>
+      
     </div>
-    <div class="msgs-row"><span class="msgs-l">FT8 · FT4 · FT2</span><div class="msgs-b" id="msgFtx"></div></div>
-    <div class="msgs-row"><span class="msgs-l">RTTY</span><div class="msgs-b" id="msgRtty"></div></div>
-    <div class="msgs-row"><span class="msgs-l">JTTY</span><div class="msgs-b" id="msgJtty"></div></div>
-    <div class="msgs-row"><span class="msgs-l">CW</span><div class="msgs-b" id="msgCw"></div></div>
   </footer>
 </div>
 

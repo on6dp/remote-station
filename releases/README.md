@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.21.0 | [RemoteStation-Setup-0.21.0.exe](0.21.0/RemoteStation-Setup-0.21.0.exe) | [remote-station-0.21.0.tar.gz](0.21.0/remote-station-0.21.0.tar.gz) | Plus de 4e colonne, macros dans les onglets, badges VFO cliquables — [empreintes SHA-256](0.21.0/SHA256SUMS.txt) |
 | 0.20.0 | [RemoteStation-Setup-0.20.0.exe](0.20.0/RemoteStation-Setup-0.20.0.exe) | [remote-station-0.20.0.tar.gz](0.20.0/remote-station-0.20.0.tar.gz) | Log QSO depuis les onglets RTTY / JTTY / CW — [empreintes SHA-256](0.20.0/SHA256SUMS.txt) |
 | 0.19.3 | [RemoteStation-Setup-0.19.3.exe](0.19.3/RemoteStation-Setup-0.19.3.exe) | [remote-station-0.19.3.tar.gz](0.19.3/remote-station-0.19.3.tar.gz) | RTTY / JTTY : propre émission plus décodée en double — [empreintes SHA-256](0.19.3/SHA256SUMS.txt) |
 | 0.19.2 | [RemoteStation-Setup-0.19.2.exe](0.19.2/RemoteStation-Setup-0.19.2.exe) | [remote-station-0.19.2.tar.gz](0.19.2/remote-station-0.19.2.tar.gz) | RTTY : texte émis coloré lettre par lettre — [empreintes SHA-256](0.19.2/SHA256SUMS.txt) |

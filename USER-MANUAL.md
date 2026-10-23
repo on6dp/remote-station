@@ -22,7 +22,7 @@
    - [9.7 SSTV](#sstv)
    - [9.8 Synchro](#sync)
    - [9.9 QO-100](#qo100)
-- [10. Stored messages and macros](#messages)
+- [10. Correspondent, messages and macros](#messages)
 - [11. Keyboard shortcuts](#keys)
 - [12. Troubleshooting](#trouble)
 - [13. The club PC (Station page)](#club)
@@ -60,7 +60,7 @@
 1. **Left**: Antenne (antenna), RF front end, Mode, Filtre (filter), Station meters.
 2. **Centre**: VFO A and B (MAIN / SUB), Step and bands, then « Activité et modes numériques » (activity and digital modes).
 3. **Right**: RX audio, DSP, Accord (tuner), TX.
-4. **Far right**: Opérateurs (operators and chat) and Messages pré-enregistrés (stored messages).
+4. **Opérateurs** (operators): panel opened by the `👥` button in the top bar (number of connected members), closed by default.
 
 Each panel folds with the small arrow `▾` before its title, and can open in its own window with `⧉` (section 8).
 
@@ -69,7 +69,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 
 - Only one person **has control** (« a la main ») of the transceiver; everybody else can see and listen.
 - **Prendre la main** (take control): button in the top bar, when nobody has control.
-- If someone already has it: **Demander la main** (request control) in the Operators panel, or send them a chat message. The operator in control can **hand it over** to another member.
+- If someone already has it: **Demander la main** (request control) in the Operators panel (`👥` button in the top bar; their panel opens with the request), or send them a chat message. The operator in control can **hand it over** to another member.
 - **Libérer la main** (release control) when you leave. Control is released automatically after **15 minutes** without action.
 - Without control, the commands are greyed out and a message reminds you to take control (« Prenez la main »).
 
@@ -89,7 +89,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 **Mouse wheel over « BW »** (top of each VFO screen): filter width of that VFO. On the FTX-1, VFO B sets the SUB receiver's filter.
 
 - **Mode**: LSB, USB, CW-L/CW-U, RTTY, DATA-L/DATA-U (digital modes), AM, FM… (applied to the VFO shown).
-- **Filtre**: bandwidth BW, NARROW, IF SHIFT, CONTOUR, APF (in CW).
+- **Filtre**: bandwidth BW, IF SHIFT, CONTOUR, APF (in CW). NARROW: **NAR** badge on the VFO display.
 
 ### Antenna
 
@@ -97,13 +97,13 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 
 ### RF front end, DSP, dual VFO
 
-- **RF front end**: RF gain, ATT, preamplifier (IPO / AMP1 / AMP2…), AGC.
+- **RF front end**: RF gain, AGC. ATT and preamplifier (IPO / AMP1 / AMP2, AMP): badges on the VFO display.
 - **DSP**: NB, DNR, NOTCH (and its frequency), DNF.
 - **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK**: on the right of the band row. The RIT / XIT offset is set on each VFO display (mouse wheel on the value, CLEAR to reset it).
 - **RIT / XIT / CLEAR** on each VFO display: click RIT or XIT to switch it on / off; mouse **wheel** over the offset = ± 10 Hz (± 100 Hz with Shift); **CLEAR** = offset to zero. VFO B has its own RIT / XIT on the FTX-1 (SUB side); the FTDX10 and IC-7300 have only one, on VFO A.
 
 > [!TIP]
-> Settings act on the real club transceiver and are shown to everybody. The indicators in the VFO panel (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) summarise its state.
+> Settings act on the real club transceiver and are shown to everybody. The indicators in the VFO panel (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) summarise its state; **clicking ATT, IPO / AMP1 / AMP2, AMP, NB, DNR, NOTCH, DNF or NAR switches it on or off** (IPO → AMP1 → AMP2 → IPO; on the FTX-1, also on the VFO B display for the SUB side).
 
 <a id="listen"></a>
 ## 5. Listening
@@ -134,7 +134,8 @@ Transmitting is only possible if the administrators have enabled it on the serve
 <a id="operators"></a>
 ## 7. Operators and chat
 
-- The **Opérateurs** panel shows who has control and is a **chat** between connected members (messages are not kept after a server restart).
+- The **Opérateurs** panel opens and closes with the `👥` button in the top bar (number of connected members). A red dot on `👥` means a new message.
+- It shows who has control and is a **chat** between connected members (messages are not kept after a server restart).
 - Control requests and hand-overs also appear there.
 - The **Activité** tab (centre) lists events: logins, control changes, station online, transceiver connected…
 
@@ -164,7 +165,7 @@ The centre tabs: **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT65**, **
 - **Activité de bande** (band activity): all decoded messages (CQ in green, messages for ON5VL / OR0L in red); **Fréquence RX**: those on your frequency.
 - **Split** as in WSJT-X: **left click** on the waterfall or a line = receive frequency, **right click** = transmit frequency; « TX ← RX » and « RX ← TX » buttons.
 - **Double-click** a message: its sender becomes the contact (callsign, locator, report) and messages Tx1 to Tx6 are prepared.
-- **Transmitting** (like « Enable Tx » + « Auto Seq » in WSJT-X): clicking a message **Tx1 to Tx7** (« Messages pré-enregistrés » panel, at the bottom) sends it **every period** (one in two) until an answer comes. You need control, the TX VFO in **DATA-U** and power within your limit. The sent message shows in yellow in the lists; the bar under the lists is green while receiving, red while transmitting.
+- **Transmitting** (like « Enable Tx » + « Auto Seq » in WSJT-X): clicking a message **Tx1 to Tx7** (below the lists of the tab, as in WSJT-X) sends it **every period** (one in two) until an answer comes. You need control, the TX VFO in **DATA-U** and power within your limit. The sent message shows in yellow in the lists; the bar under the lists is green while receiving, red while transmitting.
 - **The sequence advances by itself** from the contact's answers: his locator → Tx2 (report); his report → Tx3 (R+report); R+report → Tx4 (RR73); RRR or RR73 → Tx5 (73). After sending RR73 or 73: end of QSO, transmission stops, back to Tx6 (CQ) and an offer to **save the QSO in the logbook**.
 - **Répondre au 1er** (answer the first): while calling CQ (Tx6), the station answering you becomes the contact and the sequence starts without a click (« Call 1st » in WSJT-X). To answer a CQ: double-click his message, then click Tx1.
 - **Période**: « auto » transmits in the other period than the contact (double-click his message), otherwise keeps the period of the first message; « 1re » / « 2e » force it (1st = 00 and 30 s in FT8).
@@ -223,9 +224,9 @@ Server time, offset of your PC, delay of the link with the station and mean DT o
 The FT8 · FT4, RTTY and CW lists offer « **QO-100 · FI 2 m / 70 cm** »: the frequency to set on the transceiver **before the 2.4 GHz up-converter**, to transmit on 2400.040 MHz (FT8 / FT4), 2400.025 MHz (CW) or 2400.090 MHz (RTTY). Example: FT8 on **432.540 MHz** with the club's 70 cm converter. Only the IFs the connected transceiver can reach are listed (2 m and 70 cm: FTX-1).
 
 <a id="messages"></a>
-## 10. Stored messages and macros
+## 10. Correspondent, messages and macros
 
-- **Messages pré-enregistrés** panel: contact (callsign, first name, QTH, locator, FT8 report, RST), then one row per mode: FT8 · FT4 (Tx1 to Tx7), RTTY, JTTY, CW.
+- **Correspondant** line, below the digital-mode tabs: callsign, first name, QTH, locator, FT8 report, RST and the `Log QSO` button. Messages and macros are in each tab: **Tx1 to Tx7** in FT8 · FT4 · FT2 (below the lists), **F1 to F12** in RTTY and CW and **F1 to F8** in JTTY (on one row, above the text to send).
 - **RTTY and JTTY: a macro starting with `<TX>` is transmitted at once** when clicked (or with its `F1`… key), as in FLDIGI, then the rig goes back to receive (`<RX>`, always done at the end of the message). These macros have a red edge on the left; all default macros do. **Shift+click**: add the macro to the text to send without transmitting, to build a custom message then « Émettre ». If the macro contains `<CALL>` and no contact is chosen, nothing is sent.
 - In **RTTY**, the transmitted text appears in the receive window first in grey, then each letter turns red as it goes out; the status line shows « fin dans N s » (ends in N s), so you can get the next macro ready. After « Arrêter », the part not sent stays grey and struck through. RTTY / JTTY decoding is paused while transmitting (the rig feeds our own signal back into its audio).
 - A macro without `<TX>` (and every CW macro) is added to the text to send in its tab. **Right click** (or `✎`): edit it — name, text, preview, back to the default. Your macros are stored on the server, for you only.
@@ -285,8 +286,8 @@ Server installation and settings: see `LISEZMOI.md` and `README.md` (project rep
 
 **Logs online** tab (the last one, right of Synchro): the station logbook, shared by all members, with upload to **LoTW**, **eQSL**, **Club Log** and **QRZ.com**, **ADIF** or **Cabrillo** export, and **UDP** forwarding to PC logbooks (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
 
-- **Logging a QSO**: `⇩ TRX` takes the transceiver frequency and mode (in DATA: the mode of the tab on screen, FT8, RTTY…), the power, and the correspondent from the bottom of the page (call, name, QTH, locator). The UTC time is taken when you type the first letter of the call; `⟳ Maintenant` (now) resets it. `Enter` or `Enregistrer le QSO` (save). A duplicate (same call, band and mode within half an hour) is reported before saving.
-- **Without leaving the RTTY, JTTY or CW tab**: `Log QSO` button (next to « Émettre », and under the correspondent in « Messages pré-enregistrés »), like FLDIGI's « Save QSO ». A form opens, already filled in: call, name, QTH, locator and RST of the correspondent, frequency (in RTTY: the signal frequency, carrier + audio offset) and the tab's mode, power, start time (when the correspondent was chosen) and end time (now). Correct if needed (RST received…), then `Enregistrer dans le carnet` (save). A macro containing `<LOG>` (e.g. the « 73 ») also opens this form.
+- **Logging a QSO**: `⇩ TRX` takes the transceiver frequency and mode (in DATA: the mode of the tab on screen, FT8, RTTY…), the power, and the Correspondant line (call, name, QTH, locator). The UTC time is taken when you type the first letter of the call; `⟳ Maintenant` (now) resets it. `Enter` or `Enregistrer le QSO` (save). A duplicate (same call, band and mode within half an hour) is reported before saving.
+- **Without leaving the RTTY, JTTY or CW tab**: `Log QSO` button (next to « Émettre », and at the end of the Correspondant line), like FLDIGI's « Save QSO ». A form opens, already filled in: call, name, QTH, locator and RST of the correspondent, frequency (in RTTY: the signal frequency, carrier + audio offset) and the tab's mode, power, start time (when the correspondent was chosen) and end time (now). Correct if needed (RST received…), then `Enregistrer dans le carnet` (save). A macro containing `<LOG>` (e.g. the « 73 ») also opens this form.
 - **QO-100**: with the converter IF (e.g. 432.525 MHz) the QO-100 box is ticked and the 2400.xxx MHz uplink frequency is logged (QO-100 satellite, downlink 10489.xxx MHz).
 - **List**: the last 300 QSOs (search by call, name or operator). Columns LoTW, eQSL, CL (Club Log), QRZ: **·** not sent yet, **✓** sent, **✗** rejected (hover for details), **★** confirmed on LoTW. Click a row to edit or delete the QSO (its author or an administrator).
 - **Exporter ▾** (export): ADIF 3 (.adi) or Cabrillo 3 (.log, with the contest name), for one call and an optional date range.

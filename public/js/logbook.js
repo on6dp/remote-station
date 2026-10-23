@@ -1,7 +1,7 @@
 /*
  * logbook.js — onglet « Logs online » du dashboard (version extended).
  *
- *  - Saisie d'un QSO, pré-remplie avec la fréquence et le mode du TRX et le correspondant du bas de page.
+ *  - Saisie d'un QSO, pré-remplie avec la fréquence et le mode du TRX et la ligne Correspondant.
  *  - Carnet de trafic de la station (serveur : logbook.json), état des envois LoTW / eQSL / Club Log / QRZ.
  *  - Menu Synchronisation (administrateurs) : fenêtres « Télécharger vers … » (Détails / Traitement), comme Swisslog.
  *  - Exporter : ADIF (.adi) ou Cabrillo (.log).
@@ -33,7 +33,7 @@
   let cdlg = null;         // fenêtre de configuration ouverte
   let lastExport = null;   // dernier export « QSO non envoyés à LoTW » (identifiants, pour les marquer envoyés)
   let pendingDupe = null;
-  let lastLogged = '';     // dernier indicatif enregistré : pas repris du bas de page juste après
+  let lastLogged = '';     // dernier indicatif enregistré : pas repris de la ligne Correspondant juste après
 
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const q$ = (sel, el) => (el || root).querySelector(sel);
@@ -62,7 +62,7 @@
         <button class="btn" type="button" data-a="now" title="Date et heure actuelles (UTC)">⟳ Maintenant</button>
         <label class="lg-w8">Fréquence MHz <input name="freq" inputmode="decimal" required placeholder="14.074"></label>
         <label>Mode <select name="mode"></select></label>
-        <button class="btn" type="button" data-a="trx" title="Fréquence et mode du TRX, correspondant du bas de page">⇩ TRX</button>
+        <button class="btn" type="button" data-a="trx" title="Fréquence et mode du TRX, ligne Correspondant">⇩ TRX</button>
         <label class="lg-w5">RST env. <input name="rst_sent" maxlength="8"></label>
         <label class="lg-w5">RST reçu <input name="rst_rcvd" maxlength="8"></label>
       </div>

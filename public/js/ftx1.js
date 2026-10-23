@@ -100,6 +100,12 @@
       // Largeur de filtre du côté SUB (VFO B) : SH1 0 nn (Hamlib ftx1_audio.c) — molette sur « BW » de l'écran du VFO B
       { id: 'widthB', g: 'flt', label: 'WIDTH (VFO B)', type: 'width', modeKey: 'modeB', write: (v) => 'SH1' + pad(v, 3) + ';',
         when: (s) => !!api.widthTableFn && !!api.widthTableFn(s.modeB) && !s.narrowB },
+      // Côté SUB (VFO B) : réglés d'un clic sur les badges de l'écran du VFO B (P1 = 1, comme les lectures NL1, RL1, BP10, BC1, NA1)
+      { id: 'narrowB', g: 'flt', label: 'NARROW (VFO B)', type: 'toggle', write: (v) => 'NA1' + v + ';' },
+      { id: 'nbB', g: 'flt', label: 'NB (VFO B)', type: 'level', min: 0, max: 10, step: 1, off0: true, write: (v) => 'NL1' + pad(v, 3) + ';' },
+      { id: 'nrB', g: 'flt', label: 'DNR (VFO B)', type: 'level', min: 0, max: 10, step: 1, off0: true, write: (v) => 'RL1' + pad(v, 2) + ';' },
+      { id: 'notchB', g: 'flt', label: 'NOTCH (VFO B)', type: 'toggle', write: (v) => 'BP10' + pad(v, 3) + ';' },
+      { id: 'dnfB', g: 'flt', label: 'DNF (VFO B)', type: 'toggle', write: (v) => 'BC1' + v + ';' },
       // 144 / 430 MHz : un seul préampli, AMP ON / OFF (AMP1 / AMP2 n'existent qu'en HF et 50 MHz)
       { id: 'preampVU', g: 'rx', label: 'AMP (144 / 430 MHz)', type: 'toggle', write: (v, s) => 'PA' + (s.freq >= 420000000 ? 2 : 1) + v + ';',
         when: (s) => s.freq != null && s.freq >= 144000000, hideUnavail: true }

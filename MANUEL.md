@@ -22,7 +22,7 @@
    - [9.7 SSTV](#sstv)
    - [9.8 Synchro](#synchro)
    - [9.9 QO-100](#qo100)
-- [10. Messages pré-enregistrés et macros](#messages)
+- [10. Correspondant, messages et macros](#messages)
 - [11. Raccourcis clavier](#clavier)
 - [12. Problèmes fréquents](#problemes)
 - [13. Le PC du club (page Station)](#club)
@@ -60,7 +60,7 @@ Les indicatifs d'**écouteurs** (ONL…) peuvent tout voir et tout écouter, mai
 1. **Gauche** : Antenne, RF front end, Mode, Filtre, Station meters.
 2. **Centre** : VFO A et B (MAIN / SUB), Step et bandes, puis « Activité et modes numériques ».
 3. **Droite** : RX audio, DSP, Accord (tuner), TX.
-4. **Extrême droite** : Opérateurs (discussion) et Messages pré-enregistrés.
+4. **Opérateurs** : volet du bouton `👥` du bandeau (nombre de connectés), fermé par défaut.
 
 Chaque cadre se replie avec la petite flèche `▾` devant son titre, et peut s'ouvrir dans sa propre fenêtre avec `⧉` (section 8).
 
@@ -69,7 +69,7 @@ Chaque cadre se replie avec la petite flèche `▾` devant son titre, et peut s'
 
 - Une seule personne **a la main** (pilote le TRX) ; tout le monde voit et entend.
 - **Prendre la main** : bouton du bandeau, si personne ne l'a.
-- Si quelqu'un l'a déjà : **Demander la main** dans le cadre Opérateurs (il reçoit la demande) ou lui écrire un message. Celui qui a la main peut la **passer** à un autre membre.
+- Si quelqu'un l'a déjà : **Demander la main** dans le volet Opérateurs (bouton `👥` du bandeau ; il reçoit la demande et son volet s'ouvre) ou lui écrire un message. Celui qui a la main peut la **passer** à un autre membre.
 - **Libérer la main** en partant. Elle est libérée automatiquement après **15 minutes** sans action.
 - Sans la main, les commandes sont grisées et un message rappelle « Prenez la main ».
 
@@ -89,7 +89,7 @@ Chaque cadre se replie avec la petite flèche `▾` devant son titre, et peut s'
 **Molette de la souris sur « BW »** (en haut de chaque écran VFO) : largeur de filtre de ce VFO. Sur le FTX-1, le VFO B règle le filtre du récepteur SUB.
 
 - **Mode** : LSB, USB, CW-L/CW-U, RTTY, DATA-L/DATA-U (modes numériques), AM, FM… (appliqué au VFO indiqué).
-- **Filtre** : largeur BW, NARROW, IF SHIFT, CONTOUR, APF (en CW).
+- **Filtre** : largeur BW, IF SHIFT, CONTOUR, APF (en CW). NARROW : badge **NAR** de l'écran VFO.
 
 ### Antenne
 
@@ -97,13 +97,13 @@ Cadre **Antenne**, en haut à gauche : `ANT 1` / `ANT 2` sur le FTX-1 (prises de
 
 ### RF front end, DSP, deux VFO
 
-- **RF front end** : RF gain, ATT, préampli (IPO / AMP1 / AMP2…), AGC.
+- **RF front end** : RF gain, AGC. ATT et préampli (IPO / AMP1 / AMP2, AMP) : badges de l'écran VFO.
 - **DSP** : NB, DNR, NOTCH (et sa fréquence), DNF.
 - **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK** : à droite de la ligne des bandes. Le décalage RIT / XIT se règle sur chaque écran VFO (molette sur la valeur, CLEAR pour le remettre à zéro).
 - **RIT / XIT / CLEAR** sur chaque écran VFO : clic sur RIT ou XIT = allumer / éteindre ; **molette** sur le décalage affiché = ± 10 Hz (± 100 Hz avec Maj) ; **CLEAR** = décalage à zéro. Le VFO B a son propre RIT / XIT sur le FTX-1 (côté SUB) ; le FTDX10 et l'IC-7300 n'en ont qu'un, sur le VFO A.
 
 > [!TIP]
-> Les réglages agissent sur le vrai TRX du club et s'affichent pour tous. Les voyants du cadre VFO (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) résument l'état.
+> Les réglages agissent sur le vrai TRX du club et s'affichent pour tous. Les voyants du cadre VFO (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) résument l'état ; **un clic sur ATT, IPO / AMP1 / AMP2, AMP, NB, DNR, NOTCH, DNF ou NAR l'enclenche ou le coupe** (IPO → AMP1 → AMP2 → IPO ; sur le FTX-1, aussi sur l'écran du VFO B pour le côté SUB).
 
 <a id="ecoute"></a>
 ## 5. Écouter
@@ -134,7 +134,8 @@ L'émission n'est possible que si les administrateurs l'ont autorisée sur le se
 <a id="operateurs"></a>
 ## 7. Opérateurs et discussion
 
-- Le cadre **Opérateurs** indique qui a la main et sert de **discussion** entre les membres connectés (les messages ne sont pas conservés après un redémarrage du serveur).
+- Le volet **Opérateurs** s'ouvre et se ferme avec le bouton `👥` du bandeau (nombre de membres connectés). Un point rouge sur `👥` signale un nouveau message.
+- Il indique qui a la main et sert de **discussion** entre les membres connectés (les messages ne sont pas conservés après un redémarrage du serveur).
 - Les demandes et passages de main y apparaissent aussi.
 - L'onglet **Activité** (au centre) liste les événements : connexions, prise de main, station en ligne, TRX connecté…
 
@@ -164,7 +165,7 @@ Les onglets du centre : **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT6
 - **Activité de bande** : tous les messages décodés (CQ en vert, messages pour ON5VL / OR0L en rouge) ; **Fréquence RX** : ceux de votre fréquence.
 - **Split** comme dans WSJT-X : **clic gauche** sur la cascade ou une ligne = fréquence de réception, **clic droit** = fréquence d'émission ; boutons « TX ← RX » et « RX ← TX ».
 - **Double-clic** sur un message : son émetteur devient le correspondant (indicatif, locator, report) et les messages Tx1 à Tx6 se préparent.
-- **Émettre** (comme « Enable Tx » + « Auto Seq » de WSJT-X) : un clic sur un message **Tx1 à Tx7** (cadre « Messages pré-enregistrés », en bas) le fait partir **à chaque période** (une sur deux), jusqu'à la réponse. Il faut avoir la main, le VFO d'émission en **DATA-U** et une puissance dans votre limite. Le message émis s'affiche en jaune dans les listes ; la barre sous les listes est verte en réception, rouge en émission.
+- **Émettre** (comme « Enable Tx » + « Auto Seq » de WSJT-X) : un clic sur un message **Tx1 à Tx7** (sous les listes de l'onglet, comme dans WSJT-X) le fait partir **à chaque période** (une sur deux), jusqu'à la réponse. Il faut avoir la main, le VFO d'émission en **DATA-U** et une puissance dans votre limite. Le message émis s'affiche en jaune dans les listes ; la barre sous les listes est verte en réception, rouge en émission.
 - **La séquence avance toute seule** d'après ce que répond le correspondant : son locator → Tx2 (report) ; son report → Tx3 (R+report) ; R+report → Tx4 (RR73) ; RRR ou RR73 → Tx5 (73). Après l'envoi du RR73 ou du 73 : fin du QSO, émission coupée, retour sur Tx6 (CQ) et proposition d'**enregistrer le QSO dans le carnet**.
 - **Répondre au 1er** : en appel CQ (Tx6), la station qui vous répond devient le correspondant et la séquence démarre sans clic (« Call 1st » de WSJT-X). Pour répondre à un CQ : double-clic sur son message, puis clic sur Tx1.
 - **Période** : « auto » émet dans l'autre période que le correspondant (double-clic sur son message), sinon garde celle du premier message ; « 1re » / « 2e » l'imposent (1re = 00 et 30 s en FT8).
@@ -223,9 +224,9 @@ Heure du serveur, écart de votre PC, délai de la liaison avec la station et DT
 Les listes FT8 · FT4, RTTY et CW proposent « **QO-100 · FI 2 m / 70 cm** » : la fréquence à mettre sur le TRX **avant le convertisseur** 2,4 GHz, pour monter sur 2400,040 MHz (FT8 / FT4), 2400,025 MHz (CW) ou 2400,090 MHz (RTTY). Exemple : FT8 sur **432,540 MHz** avec le convertisseur 70 cm du club. Seules les FI que le TRX branché peut atteindre sont proposées (2 m et 70 cm : FTX-1).
 
 <a id="messages"></a>
-## 10. Messages pré-enregistrés et macros
+## 10. Correspondant, messages et macros
 
-- Cadre **Messages pré-enregistrés** : correspondant (indicatif, prénom, QTH, locator, report FT8, RST), puis une ligne par mode : FT8 · FT4 (Tx1 à Tx7), RTTY, JTTY, CW.
+- Ligne **Correspondant**, sous les onglets des modes numériques : indicatif, prénom, QTH, locator, report FT8, RST et bouton `Log QSO`. Les messages et macros sont dans chaque onglet : **Tx1 à Tx7** en FT8 · FT4 · FT2 (sous les listes), **F1 à F12** en RTTY et CW et **F1 à F8** en JTTY (sur une ligne, au-dessus du texte à émettre).
 - **RTTY et JTTY : une macro qui commence par `<TX>` part tout de suite à l'émission** au clic (ou avec sa touche `F1`…), comme dans FLDIGI, puis le TRX repasse en réception (`<RX>`, toujours fait en fin de message). Ces macros ont un liseré rouge à gauche ; c'est le cas de toutes les macros d'origine. **Maj+clic** : ajouter la macro au texte à émettre sans émettre, pour composer un message personnalisé puis « Émettre ». Si la macro contient `<CALL>` sans correspondant choisi, rien ne part.
 - En **RTTY**, le texte émis s'affiche dans la fenêtre de réception d'abord en gris, puis chaque lettre passe en rouge au moment où elle part ; la ligne d'état indique « fin dans N s » : de quoi préparer la macro suivante. Après « Arrêter », la partie non émise reste grise et barrée. Pendant l'émission, le décodage RTTY / JTTY est suspendu (le TRX renvoie notre propre signal dans sa BF).
 - Une macro sans `<TX>` (et toutes les macros CW) s'ajoute au texte à émettre de son onglet. **Clic droit** (ou `✎`) : la modifier — nom, texte, aperçu, retour au texte d'origine. Vos macros sont gardées sur le serveur, pour vous seul.
@@ -285,8 +286,8 @@ Installation et réglages du serveur : voir `LISEZMOI.md` et `README.md` (dépô
 
 Onglet **Logs online** (le dernier, à droite de Synchro) : le carnet de trafic de la station, partagé par tous les membres, avec l'envoi vers **LoTW**, **eQSL**, **Club Log** et **QRZ.com**, l'export **ADIF** ou **Cabrillo** et l'envoi en **UDP** aux logbooks du PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
 
-- **Enregistrer un QSO** : `⇩ TRX` reprend la fréquence et le mode du TRX (en DATA : le mode de l'onglet affiché, FT8, RTTY…), la puissance, et le correspondant du bas de page (indicatif, prénom, QTH, locator). L'heure UTC est prise à la première lettre de l'indicatif ; `⟳ Maintenant` la remet à l'heure. `Entrée` ou `Enregistrer le QSO`. Un doublon (même indicatif, bande et mode dans la demi-heure) est signalé avant l'enregistrement.
-- **Sans quitter l'onglet RTTY, JTTY ou CW** : bouton `Log QSO` (à côté de « Émettre », et sous le correspondant dans « Messages pré-enregistrés »), comme « Save QSO » de FLDIGI. Une fiche s'ouvre, déjà remplie : indicatif, prénom, QTH, locator et RST du correspondant, fréquence (en RTTY : celle du signal, porteuse + fréquence audio) et mode de l'onglet, puissance, heure de début (quand le correspondant a été choisi) et de fin (maintenant). Corriger au besoin (RST reçu…), puis `Enregistrer dans le carnet`. Une macro qui contient `<LOG>` (par exemple le « 73 ») ouvre aussi cette fiche.
+- **Enregistrer un QSO** : `⇩ TRX` reprend la fréquence et le mode du TRX (en DATA : le mode de l'onglet affiché, FT8, RTTY…), la puissance, et la ligne Correspondant (indicatif, prénom, QTH, locator). L'heure UTC est prise à la première lettre de l'indicatif ; `⟳ Maintenant` la remet à l'heure. `Entrée` ou `Enregistrer le QSO`. Un doublon (même indicatif, bande et mode dans la demi-heure) est signalé avant l'enregistrement.
+- **Sans quitter l'onglet RTTY, JTTY ou CW** : bouton `Log QSO` (à côté de « Émettre », et au bout de la ligne Correspondant), comme « Save QSO » de FLDIGI. Une fiche s'ouvre, déjà remplie : indicatif, prénom, QTH, locator et RST du correspondant, fréquence (en RTTY : celle du signal, porteuse + fréquence audio) et mode de l'onglet, puissance, heure de début (quand le correspondant a été choisi) et de fin (maintenant). Corriger au besoin (RST reçu…), puis `Enregistrer dans le carnet`. Une macro qui contient `<LOG>` (par exemple le « 73 ») ouvre aussi cette fiche.
 - **QO-100** : avec la FI du convertisseur (ex. 432,525 MHz), la case QO-100 se coche et la fréquence de montée 2400,xxx MHz est enregistrée (satellite QO-100, descente 10 489,xxx MHz).
 - **Liste** : les 300 derniers QSO (recherche par indicatif, nom ou opérateur). Colonnes LoTW, eQSL, CL (Club Log), QRZ : **·** pas encore envoyé, **✓** envoyé, **✗** refusé (survol = détail), **★** confirmé sur LoTW. Clic sur une ligne : modifier ou supprimer le QSO (son auteur ou un administrateur).
 - **Exporter ▾** : ADIF 3 (.adi) ou Cabrillo 3 (.log, avec le nom du concours), pour un indicatif et une plage de dates au choix.

@@ -19,8 +19,8 @@
   // Où placer chaque réglage du pilote dans la page
   const LAYOUT = {
     ant: ['ant'],
-    front: ['rf', 'att', 'preamp', 'preampVU', 'agc'],
-    filter: ['width', 'narrow', 'shift', 'contour', 'apf'],
+    front: ['rf', 'agc'],
+    filter: ['width', 'shift', 'contour', 'apf'],
     dual: ['vfoSel', 'split', 'aToB', 'bToA', 'swap', 'lock'],
     audio: ['af', 'sql'],
     dsp: ['nb', 'nr', 'notch', 'notchFreq', 'dnf'],
@@ -28,7 +28,9 @@
     tx: ['mic', 'proc', 'procLvl', 'vox']
   };
   // Réglages affichés sur les écrans VFO eux-mêmes (pas de bouton dans les cadres)
-  const IN_VFO = ['rit', 'xit', 'clar', 'clarClr', 'ritB', 'xitB', 'clarB', 'clarClrB', 'splitHw', 'widthB'];
+  // ATT, préampli (IPO / AMP1 / AMP2, AMP) et NARROW : un clic sur leur badge de l'écran VFO (plus de bouton dans les cadres)
+  const IN_VFO = ['rit', 'xit', 'clar', 'clarClr', 'ritB', 'xitB', 'clarB', 'clarClrB', 'splitHw', 'widthB',
+    'att', 'preamp', 'preampVU', 'narrow', 'narrowB', 'nbB', 'nrB', 'notchB', 'dnfB'];
   const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE', preampVU: 'AMP' };
 
   // Bouton HELP : manuel en français, ou en anglais si le navigateur n'est pas en français
@@ -297,7 +299,10 @@
     $('lampStation').addEventListener('click', (ev) => { ev.stopPropagation(); toggleRigMenu(); });
     $('usersBtn').addEventListener('click', (ev) => { ev.stopPropagation(); closeRigMenu(); toggleUsersMenu(); });
     $('usersMenu').addEventListener('click', (ev) => ev.stopPropagation());
+    $('badgesA').addEventListener('click', badgeClick);
+    $('badgesB').addEventListener('click', badgeClick);
     document.addEventListener('click', () => { $('usersMenu').hidden = true; $('usersBtn').setAttribute('aria-expanded', 'false'); });
+    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !$('usersMenu').hidden) toggleUsersMenu(false); });
     $('rigMenu').addEventListener('click', (ev) => ev.stopPropagation());
     document.addEventListener('click', closeRigMenu);
     document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeRigMenu(); });
@@ -443,6 +448,32 @@
   }
 
   // ------------------------------------------------------------ réglages générés depuis le pilote
+  // Badge d'un écran VFO lié à un réglage : un clic l'enclenche / le coupe (liste : valeur suivante ; niveau : 0 ↔ dernier niveau)
+  const badgeLvl = {};
+  function badgeCtl(el, c, r) {
+    if (!c) return;
+    const ok = !c.when || c.when(r);
+    if (!ok) return;
+    el.dataset.ctl = c.id;
+    el.classList.add('clk');
+    el.title = c.label + ' : clic pour ' + (c.type === 'select' ? 'passer au réglage suivant' : 'enclencher / couper');
+  }
+  function badgeClick(ev) {
+    const el = ev.target.closest('[data-ctl]');
+    if (!el) return;
+    const c = (RIG().CONTROL || {})[el.dataset.ctl];
+    if (!c) return;
+    if (ctlBlocked()) return say(ctlBlocked(), 'warn');
+    const cur = Number(ctlValue(c.id)) || 0;
+    let v;
+    if (c.type === 'toggle') v = cur ? 0 : 1;
+    else if (c.type === 'select') { const o = c.options.map((x) => x[0]); v = o[(o.indexOf(cur) + 1) % o.length]; }
+    else if (c.type === 'level') {
+      if (cur) badgeLvl[c.id] = cur;
+      v = cur ? (c.off0 ? 0 : c.min) : badgeLvl[c.id] || Math.round((c.min + c.max) / 2) || c.max;
+    } else return;
+    sendCtl(c, v);
+  }
   function ctlValue(id) {
     const p = ctlPending[id];
     if (p && Date.now() - p.at < 1500) return p.v;
@@ -753,7 +784,7 @@
   }
   // Membres connectés : nombre dans la barre du haut, liste au clic
   function drawUsersMenu() {
-    const box = $('usersMenu');
+    const box = $('usersList');
     box.textContent = '';
     const h = document.createElement('h3');
     const list = (st && st.users) || [];
@@ -777,11 +808,12 @@
       box.appendChild(p);
     }
   }
-  function toggleUsersMenu() {
-    const open = $('usersMenu').hidden;
-    if (open) drawUsersMenu();
+  function toggleUsersMenu(force) {
+    const open = force != null ? force : $('usersMenu').hidden;
+    if (open) { drawUsersMenu(); $('usersDot').hidden = true; }
     $('usersMenu').hidden = !open;
     $('usersBtn').setAttribute('aria-expanded', String(open));
+    if (open) $('chat').scrollTop = $('chat').scrollHeight;
   }
   function closeRigMenu() {
     $('rigMenu').hidden = true;
@@ -879,15 +911,15 @@
     const bA = $('badgesA');
     bA.textContent = '';
     if (live) {
-      const add = (txt, cls) => { const s = document.createElement('span'); badge(s, txt, cls); bA.appendChild(s); };
       const C = RIG().CONTROL || {};
+      const add = (txt, cls, ctl) => { const s = document.createElement('span'); badge(s, txt, cls); badgeCtl(s, C[ctl], r); bA.appendChild(s); };
       const optLabel = (id, v) => { const o = C[id] && C[id].options && C[id].options.find((x) => x[0] === v); return o ? o[1] : null; };
       // Interrupteur seul (« NB ») ou niveau avec arrêt à 0 (« NB 3 ») selon le pilote
-      const flag = (id, txt, cls) => { if (!C[id]) return; const t = C[id].badge || txt; add(r[id] && C[id].type === 'level' ? t + ' ' + r[id] : t, r[id] ? cls : ''); };
-      if (C.att) add(r.att && C.att.type === 'select' ? 'ATT ' + optLabel('att', r.att) : C.att.badge || 'ATT', r.att ? 'green' : '');
+      const flag = (id, txt, cls) => { if (!C[id]) return; const t = C[id].badge || txt; add(r[id] && C[id].type === 'level' ? t + ' ' + r[id] : t, r[id] ? cls : '', id); };
+      if (C.att) add(r.att && C.att.type === 'select' ? 'ATT ' + optLabel('att', r.att) : C.att.badge || 'ATT', r.att ? 'green' : '', 'att');
       const pa = RIG().preampText && RIG().preampText(r, 'A');
-      if (pa) add(pa[0], pa[1] ? 'green' : '');
-      else if (C.preamp && !RIG().preampText) add(optLabel('preamp', r.preamp) || 'PRE', r.preamp ? 'green' : '');
+      if (pa) add(pa[0], pa[1] ? 'green' : '', r.freq >= 144000000 ? 'preampVU' : 'preamp');
+      else if (C.preamp && !RIG().preampText) add(optLabel('preamp', r.preamp) || 'PRE', r.preamp ? 'green' : '', 'preamp');
       flag('nb', 'NB', 'amber');
       flag('nr', 'DNR', 'amber');
       flag('notch', 'NOTCH', 'amber');
@@ -901,17 +933,19 @@
     const bB = $('badgesB');
     bB.textContent = '';
     if (live && RIG().SUB_BADGES && r.freqB != null) {
-      const add = (txt, cls) => { const s = document.createElement('span'); badge(s, txt, cls); bB.appendChild(s); };
       const C = RIG().CONTROL || {};
+      const add = (txt, cls, ctl) => { const s = document.createElement('span'); badge(s, txt, cls); badgeCtl(s, C[ctl], r); bB.appendChild(s); };
       const optLabel = (id, v) => { const o = C[id] && C[id].options && C[id].options.find((x) => x[0] === v); return o ? o[1] : null; };
       if (C.att && r.att != null && r.freqB <= 60000000) add('ATT', r.att ? 'green' : '');
+      // Préampli : réglage par gamme, commun aux deux côtés — cliquable si le VFO A est dans la même gamme
       const pb = RIG().preampText && RIG().preampText(r, 'B');
-      if (pb) add(pb[0], pb[1] ? 'green' : '');
-      if (r.nbB != null) add(r.nbB ? 'NB ' + r.nbB : 'NB', r.nbB ? 'amber' : '');
-      if (r.nrB != null) add(r.nrB ? 'DNR ' + r.nrB : 'DNR', r.nrB ? 'amber' : '');
-      if (r.notchB != null) add('NOTCH', r.notchB ? 'amber' : '');
-      if (r.dnfB != null) add('DNF', r.dnfB ? 'amber' : '');
-      if (r.narrowB != null) add('NAR', r.narrowB ? 'cyan' : '');
+      const gam = (f) => (f >= 420000000 ? 2 : f >= 144000000 ? 1 : 0);
+      if (pb) add(pb[0], pb[1] ? 'green' : '', gam(r.freqB) === gam(r.freq) ? (r.freqB >= 144000000 ? 'preampVU' : 'preamp') : null);
+      if (r.nbB != null) add(r.nbB ? 'NB ' + r.nbB : 'NB', r.nbB ? 'amber' : '', 'nbB');
+      if (r.nrB != null) add(r.nrB ? 'DNR ' + r.nrB : 'DNR', r.nrB ? 'amber' : '', 'nrB');
+      if (r.notchB != null) add('NOTCH', r.notchB ? 'amber' : '', 'notchB');
+      if (r.dnfB != null) add('DNF', r.dnfB ? 'amber' : '', 'dnfB');
+      if (r.narrowB != null) add('NAR', r.narrowB ? 'cyan' : '', 'narrowB');
       if (r.agcB != null && optLabel('agc', r.agcB)) add('AGC ' + optLabel('agc', r.agcB), 'cyan');
       if (r.rfB != null && r.rfB < 255) add('RFG ' + Math.round((r.rfB / 255) * 100), 'amber');
     }
@@ -1135,7 +1169,9 @@
     while (chatItems.length > 40) chatItems.shift();
     drawChat();
     $('chat').scrollTop = $('chat').scrollHeight;
-    if (live && m.kind === 'ask' && iControl()) say(m.call + ' vous demande la main (voir Opérateurs)', 'warn', 10000);
+    // Volet Opérateurs fermé : pastille rouge sur 👥 ; demande de la main à celui qui pilote : volet ouvert
+    if (live && (!me || m.call !== me.call) && $('usersMenu').hidden) $('usersDot').hidden = false;
+    if (live && m.kind === 'ask' && iControl()) { toggleUsersMenu(true); say(m.call + ' vous demande la main (volet 👥 en haut)', 'warn', 10000); }
   }
   // Redessine les boutons « Passer la main » seulement quand la situation change
   function updateChatButtons() {

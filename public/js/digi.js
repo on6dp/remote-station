@@ -145,7 +145,9 @@
       </div>
     </div>
     <div class="dg-prog" id="dgProg" title="Période en cours : vert = réception, rouge = émission"><i id="dgProgBar"></i><span id="dgProgTxt"></span></div>
-    <p class="dg-tx" id="dgTxState">Émission : cliquez sur un message Tx1 à Tx7 (en bas de la page). Il part une fois, au prochain créneau, puis retour en réception.</p>`;
+    <!-- Messages Tx1 à Tx7 dans l'onglet, sous les listes (comme WSJT-X) -->
+    <div class="ft-tx"><div class="msgs-b ft-msgs" id="msgFtx"></div></div>
+    <p class="dg-tx" id="dgTxState">Émission : cliquez sur un message Tx1 à Tx7 ci-dessus : il part à chaque période jusqu’à la réponse, la séquence avance toute seule.</p>`;
   const RTTY_PANE = `
     <div class="dg-bar">
       <select id="rtShift" aria-label="Shift"><option value="170">Shift 170 Hz</option><option value="200">Shift 200 Hz</option><option value="425">Shift 425 Hz</option><option value="850">Shift 850 Hz</option></select>
@@ -160,21 +162,23 @@
       <span class="dg-status" id="rtStatus"></span>
     </div>
     <div class="dg-wf-slot" data-slot="rtty"></div>
-    <div class="rt-grid">
+    <div class="rt-grid rt-stack">
       <div class="dg-col rt-rx-col">
         <div class="dg-h"><span>Réception RTTY</span><span class="dg-note">clic sur la cascade : se caler · double-clic sur un indicatif : le reprendre</span><button class="dg-mini" type="button" id="rtClear">Effacer</button></div>
         <pre class="rt-rx" id="rtRx"></pre>
       </div>
+      <!-- Émission sous la réception, sur toute la largeur (comme JTTY et FLDIGI) : macros F1 à F12 sur une ligne -->
       <div class="dg-col rt-tx-col">
-        <div class="dg-h"><span>Émission</span><label class="rt-call">Correspondant <input id="rtCall" maxlength="12" placeholder="indicatif" autocomplete="off" spellcheck="false"></label></div>
         <div class="rt-macros" id="rtMacros"></div>
-        <textarea id="rtTxt" rows="4" placeholder="Message personnalisé, puis « Émettre » (Maj+clic sur une macro : l'ajoute ici)…" spellcheck="false"></textarea>
-        <div class="rt-tx-act">
-          <button class="btn btn-tx" type="button" id="rtSend" title="Émet le texte en RTTY sur la fréquence de réception (Shift et vitesse choisis en haut), puis retour en réception">Émettre</button>
-          <button class="btn" type="button" id="rtTxClear">Effacer</button>
-          <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station (correspondant, RST, heure…)">Log QSO</button>
-          <span class="dg-note" id="rtTxState">Émission RTTY sous <b>ON5VL</b> : texte ci-dessus, puis « Émettre » (Ctrl+Entrée).</span>
+        <div class="rt-tx-row">
+          <textarea id="rtTxt" rows="2" placeholder="Message personnalisé, puis « Émettre » (Maj+clic sur une macro : l'ajoute ici)…" spellcheck="false"></textarea>
+          <div class="rt-tx-act">
+            <button class="btn btn-tx" type="button" id="rtSend" title="Émet le texte en RTTY sur la fréquence de réception (Shift et vitesse choisis en haut), puis retour en réception">Émettre</button>
+            <div class="rt-tx-act2"><button class="btn" type="button" id="rtTxClear">Effacer</button>
+            <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station (correspondant, RST, heure…)">Log QSO</button></div>
+          </div>
         </div>
+        <p class="dg-tx rt-tx-note" id="rtTxState">Émission RTTY sous <b>ON5VL</b> : texte ci-dessus, puis « Émettre » (Ctrl+Entrée).</p>
       </div>
     </div>`;
   const WSPR_PANE = `
@@ -234,7 +238,7 @@
       <span class="dg-status" id="cwStatus"></span>
     </div>
     <div class="dg-wf-slot" data-slot="cw"></div>
-    <div class="rt-grid">
+    <div class="rt-grid rt-stack">
       <div class="dg-col rt-rx-col">
         <div class="dg-h"><span>Réception CW</span><span class="dg-note">clic sur la cascade : se caler sur le signal le plus proche · double-clic sur un indicatif : le reprendre</span><button class="dg-mini" type="button" id="cwClear">Effacer</button></div>
         <pre class="rt-rx" id="cwRx"></pre>
@@ -242,13 +246,15 @@
       <div class="dg-col rt-tx-col">
         <div class="dg-h"><span>Émission</span><label class="rt-call">Vitesse <input id="cwSpeed" type="number" min="5" max="50" step="1" title="Vitesse du manipulateur du TRX (mots/minute)"> mots/min</label></div>
         <div class="rt-macros" id="cwMacros"></div>
-        <textarea id="cwTxt" rows="4" placeholder="Texte à émettre (F1 à F12 : macros)…" spellcheck="false"></textarea>
-        <div class="rt-tx-act">
-          <button class="btn btn-tx" type="button" id="cwSend" disabled>Émettre</button>
-          <button class="btn" type="button" id="cwTxClear">Effacer</button>
-          <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station">Log QSO</button>
-          <span class="dg-note">Émission CW sous <b>ON5VL</b> par le manipulateur du TRX : prochaine version.</span>
+        <div class="rt-tx-row">
+          <textarea id="cwTxt" rows="2" placeholder="Texte à émettre (F1 à F12 : macros)…" spellcheck="false"></textarea>
+          <div class="rt-tx-act">
+            <button class="btn btn-tx" type="button" id="cwSend" disabled>Émettre</button>
+            <div class="rt-tx-act2"><button class="btn" type="button" id="cwTxClear">Effacer</button>
+            <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station">Log QSO</button></div>
+          </div>
         </div>
+        <p class="dg-tx rt-tx-note">Émission CW sous <b>ON5VL</b> par le manipulateur du TRX : prochaine version.</p>
       </div>
     </div>`;
   const SSTV_PANE = `
@@ -1410,7 +1416,7 @@
     ssCompose();
   }
 
-  // ------------------------------------------------------------------ correspondant et messages pré-enregistrés
+  // ------------------------------------------------------------------ correspondant (ligne sous les onglets) et messages Tx1 à Tx7
   // Correspondant commun à tous les modes (bas du dashboard, fenêtre RTTY, fenêtre séparée : synchronisés)
   let myCall = 'ON5VL';
   let myGrid = '';
@@ -1478,10 +1484,10 @@
   function drawMsgs() {
     if (!$('msgFtx')) return;
     const mk = (box, label, text, onClick, sel) => {
-      const b = document.createElement('button');
+      const b = box.ownerDocument.createElement('button');
       b.className = 'btn' + (sel ? ' sel' : '');
       b.type = 'button';
-      if (label) { const s = document.createElement('small'); s.textContent = label; b.appendChild(s); }
+      if (label) { const s = box.ownerDocument.createElement('small'); s.textContent = label; b.appendChild(s); }
       b.appendChild(document.createTextNode(text));
       b.addEventListener('click', onClick);
       box.appendChild(b);
@@ -1499,18 +1505,6 @@
     const ed = mk(f, '', '✎', () => editFree(f.ownerDocument));
     ed.title = 'Modifier le texte libre (Tx7)';
     ed.classList.add('mini');
-    drawMacroRow($('msgRtty'), 'RTTY', (t, ins) => {
-      const inst = (window.DG && window.DG()) || window.RSDIGI;
-      inst.useMacro('RTTY', t, ins);
-    });
-    drawMacroRow($('msgJtty'), 'JTTY', (t, ins) => {
-      const inst = (window.DG && window.DG()) || window.RSDIGI;
-      inst.useMacro('JTTY', t, ins);
-    });
-    drawMacroRow($('msgCw'), 'CW', (t) => {
-      const inst = (window.DG && window.DG()) || window.RSDIGI;
-      inst.insertCw(t);
-    });
   }
   // ------------------------------------------------------------------ émission FT8 / FT4 / FT2
   // Clic sur Tx1…Tx7 : le serveur choisit le créneau, la page Station du club fabrique et joue le signal
@@ -1845,7 +1839,7 @@
     syncDx();
   }
   // ------------------------------------------------------------------ fiche du QSO → carnet de la station (RTTY, JTTY, CW…)
-  // Comme « Save QSO » / <LOG> de FLDIGI : correspondant, nom, QTH, locator, RST du bas de page ; fréquence et mode du TRX.
+  // Comme « Save QSO » / <LOG> de FLDIGI : correspondant, nom, QTH, locator, RST de la ligne Correspondant ; fréquence et mode du TRX.
   function logQso() {
     if (!api) return;
     if (!window.RSLOG) return api.say('Carnet de trafic non disponible dans cette version du dashboard.', 'warn');
