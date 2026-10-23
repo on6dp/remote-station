@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.19.2 | [RemoteStation-Setup-0.19.2.exe](0.19.2/RemoteStation-Setup-0.19.2.exe) | [remote-station-0.19.2.tar.gz](0.19.2/remote-station-0.19.2.tar.gz) | RTTY : texte émis coloré lettre par lettre — [empreintes SHA-256](0.19.2/SHA256SUMS.txt) |
 | 0.19.1 | [RemoteStation-Setup-0.19.1.exe](0.19.1/RemoteStation-Setup-0.19.1.exe) | [remote-station-0.19.1.tar.gz](0.19.1/remote-station-0.19.1.tar.gz) | Macros RTTY / JTTY émises d'un clic (&lt;TX&gt;) — [empreintes SHA-256](0.19.1/SHA256SUMS.txt) |
 | 0.19.0 | [RemoteStation-Setup-0.19.0.exe](0.19.0/RemoteStation-Setup-0.19.0.exe) | [remote-station-0.19.0.tar.gz](0.19.0/remote-station-0.19.0.tar.gz) | Émission RTTY et JTTY — [empreintes SHA-256](0.19.0/SHA256SUMS.txt) |
 | 0.18.7 | [RemoteStation-Setup-0.18.7.exe](0.18.7/RemoteStation-Setup-0.18.7.exe) | [remote-station-0.18.7.tar.gz](0.18.7/remote-station-0.18.7.tar.gz) | Cascade : gain, zéro, fond plat, couleurs — [empreintes SHA-256](0.18.7/SHA256SUMS.txt) |

@@ -762,6 +762,9 @@ select.dg-par { width: auto; min-width: 0; }
 .qso-b h3 { margin: 0; color: var(--v2-text-bright); }
 .qso-b p { margin: 0; line-height: 1.6; }
 .rt-txline { color: #ff8a7a; font-weight: 700; }
+/* RTTY : texte en attente d'émission (gris), lettres déjà émises (rouge) ; reste non émis après « Arrêter » barré */
+.rt-txline .rt-todo { color: #7d8794; font-weight: 400; }
+.rt-txline .rt-todo.rt-cut { text-decoration: line-through; }
 .btn.btn-tx.on-air { background: rgba(255, 50, 40, .25); border-color: #ff5a4a; color: #fff; }
 #jtTxState.air, #rtTxState.air { color: #ff6b5e; font-weight: 700; }
 #dgStop:not(:disabled) { color: #ff8a80; border-color: rgba(255, 90, 74, .6); }

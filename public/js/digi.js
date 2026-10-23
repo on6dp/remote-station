@@ -1598,13 +1598,58 @@
       const el = dtxPend.mode === 'RTTY' ? $('rtTxt') : $('jtTxt');
       if (el && dtxPend.zone && el.value === dtxPend.text) el.value = '';
       if (dtxPend.mode === 'RTTY' && $('rtRx')) {
+        // Texte exact émis (envoyé par le serveur) : gris tant qu'il attend, rouge lettre par lettre une fois parti
+        const info = dtxInfo && dtxInfo.id === x.id ? dtxInfo : null;
+        const text = info ? info.text : dtxPend.text.toUpperCase().replace(/\s+$/, '');
         const s = document.createElement('span');
         s.className = 'rt-txline';
-        s.textContent = '\n' + dtxPend.text.toUpperCase().replace(/\s+$/, '') + '\n';
+        const done = document.createElement('span');
+        done.className = 'rt-done';
+        const todo = document.createElement('span');
+        todo.className = 'rt-todo';
+        s.append('\n', done, todo, '\n');
         $('rtRx').appendChild(s);
+        if (info && info.ms && info.ms.length === text.length) {
+          todo.textContent = text;
+          rtLive = { id: x.id, at: x.at, text, ms: info.ms, seconds: info.seconds, done, todo, n: 0 };
+          rtTick();
+        } else {
+          done.textContent = text;
+        }
         $('rtRx').scrollTop = $('rtRx').scrollHeight;
       }
       dtxPend = null;
+    }
+    // Fin de l'émission (normale ou « Arrêter ») : dernière mise à jour, puis plus de suivi
+    if (rtLive && !(x && x.id === rtLive.id && x.state === 'tx')) {
+      rtTick();
+      rtLive.todo.classList.add('rt-cut');
+      rtLive = null;
+      clearInterval(rtTimer);
+      rtTimer = null;
+    }
+    if (rtLive && !rtTimer) rtTimer = setInterval(rtTick, 80);
+    if (rtLive) rtTick();
+  }
+  // Suivi de l'émission RTTY lettre par lettre (minutage calculé par le serveur)
+  let dtxInfo = null; // { id, mode, text, ms, seconds } : reçu du serveur à la préparation
+  let rtLive = null;
+  let rtTimer = null;
+  function rtTick() {
+    const L = rtLive;
+    if (!L) return;
+    const t = now() - L.at;
+    let n = L.n;
+    while (n < L.ms.length && L.ms[n] <= t) n++;
+    if (n !== L.n) {
+      L.n = n;
+      L.done.textContent = L.text.slice(0, n);
+      L.todo.textContent = L.text.slice(n);
+    }
+    const note = $('rtTxState');
+    if (note && note.classList.contains('air')) {
+      const left = Math.max(0, Math.ceil(L.seconds - t / 1000));
+      note.textContent = '● En émission RTTY — ' + (n >= L.ms.length ? 'fin du message' : 'fin dans ' + left + ' s') + ' : « ' + L.text.replace(/\n/g, ' ').slice(0, 50) + (L.text.length > 50 ? '…' : '') + ' »';
     }
   }
 
@@ -2152,6 +2197,7 @@
         redrawMacros();
         return true;
       }
+      if (m.t === 'dtx_text') { dtxInfo = m; return true; }
       if (m.t === 'rtty') { rttyAppend(m.text || ''); return true; }
       if (m.t === 'jtty') { jtUpdate(m.u); return true; }
       if (m.t === 'cw') { cwAppend(m.text || ''); return true; }

@@ -762,7 +762,7 @@ function publicState() {
     ptt: { active: ptt.active, by: ptt.active ? ptt.conn.user.call : null, since: ptt.since, digi: !!(ptt.active && ptt.digi) },
     // Émission FT8 / FT4 / FT2 programmée ou en cours
     seq: seqPublic(),
-    ftx: ftxPend ? { state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call } : null,
+    ftx: ftxPend ? { id: ftxPend.id, state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call, seconds: ftxPend.seconds } : null,
     txOk: inTxRange(txFreq()),
     txFreq: txFreq(),
     swrLock: swrLocked() ? { freq: swrLock.freq, swr: Math.round(swrLock.swr * 10) / 10 } : null,
@@ -1160,12 +1160,14 @@ async function audioRequest(conn, m) {
   if (!text) return err('Rien à émettre : tapez un texte ou choisissez une macro');
   if (text.length > (mode === 'JTTY' ? 160 : 600)) return err('Texte trop long (' + (mode === 'JTTY' ? 160 : 600) + ' caractères au plus)');
   let pcm;
+  let charMs = null; // RTTY : fin de chaque caractère (ms depuis le début du signal), pour la page de l'opérateur
   try {
     if (mode === 'RTTY') {
       const shift = [170, 200, 425, 850].indexOf(Number(m.shift)) >= 0 ? Number(m.shift) : 170;
       const baud = [45.45, 50, 75, 100].indexOf(Number(m.baud)) >= 0 ? Number(m.baud) : 45.45;
       // Début de ligne propre chez le correspondant : retour chariot + saut de ligne avant le texte
       const w = RTTY_GEN('\n' + text + ' ', { f: f0, shift, baud, rev: !!m.rev, rate: AUDIO_RATE });
+      charMs = w.charMs ? w.charMs.slice(1, 1 + text.length) : null;
       pcm = new Int16Array(w.length);
       const ramp = Math.round(AUDIO_RATE * 0.005);
       for (let i = 0; i < w.length; i++) {
@@ -1194,6 +1196,8 @@ async function audioRequest(conn, m) {
   const p = { id: ++ftxSeq, conn, mode, text, f0, at: 0, parity: 0, state: 'wait', ready: false, seconds, sent: text.replace(/\n/g, ' ').slice(0, 60), timer: null, ntx: 0, kind: 'audio' };
   ftxPend = p;
   lastCtrlActivity = Date.now();
+  // Texte exact émis et minutage lettre par lettre : la page de l'opérateur colore chaque lettre une fois partie
+  send(conn, { t: 'dtx_text', id: p.id, mode, text, ms: charMs, seconds: Math.round(seconds * 10) / 10 });
   toStation({ t: 'cmd', op: 'audioprep', id: p.id, mode, rate: AUDIO_RATE, data: Buffer.from(pcm.buffer, pcm.byteOffset, pcm.byteLength).toString('base64') });
   // Page Station trop lente à recevoir le signal : abandon
   p.timer = setTimeout(() => { if (ftxPend === p && !p.ready) ftxCancel('la page Station n’a pas reçu le signal à temps'); }, 20000);
