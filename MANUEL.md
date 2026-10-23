@@ -80,7 +80,6 @@ Chaque cadre se replie avec la petite flèche `▾` devant son titre, et peut s'
 
 - **Molette** sur les chiffres, ou **glisser** sur les chiffres ; flèches `↑` `↓` du clavier ; boutons `◀` `▶`.
 - Le pas se choisit dans **Step** (10 Hz à 100 kHz) ; `A` / `B` choisit le VFO réglé.
-- Saisie directe : tapez la fréquence en kHz puis **Aller**.
 - **Bandes** : 160 m à 70 cm (selon le TRX).
 - Sur chaque écran VFO : RX en vert = VFO qui reçoit ; TX en rouge = VFO d'émission (rouge vif pendant l'émission). **Clic sur RX** d'un VFO : il devient le VFO de réception (MAIN / SUB, pas sur l'IC-7300). **Clic sur TX** : il devient le VFO d'émission. Règle des TRX : **sans SPLIT on émet sur le VFO où l'on écoute, avec SPLIT sur l'autre** (RX A → TX B ; RX B → TX A). Pendant l'émission, sa fréquence s'affiche en rouge ; un VFO qui ne sert ni à recevoir ni à émettre (VFO B hors SPLIT) a sa fréquence grisée. Le **cadre lumineux** entoure le VFO d'émission ; le VFO réglé par la molette, les flèches et les bandes a sa lettre soulignée (clic sur l'écran VFO pour le choisir).
 
@@ -99,7 +98,7 @@ Cadre **Antenne**, en haut à gauche : `ANT 1` / `ANT 2` sur le FTX-1 (prises de
 
 - **RF front end** : RF gain, AGC. ATT et préampli (IPO / AMP1 / AMP2, AMP) : badges de l'écran VFO.
 - **DSP** : NB, DNR, NOTCH (et sa fréquence), DNF.
-- **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK** : à droite de la ligne des bandes. Le décalage RIT / XIT se règle sur chaque écran VFO (molette sur la valeur, CLEAR pour le remettre à zéro).
+- **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK** : sur la ligne des pas (Step), après ◀ ▶. Le décalage RIT / XIT se règle sur chaque écran VFO (molette sur la valeur, CLEAR pour le remettre à zéro).
 - **RIT / XIT / CLEAR** sur chaque écran VFO : clic sur RIT ou XIT = allumer / éteindre ; **molette** sur le décalage affiché = ± 10 Hz (± 100 Hz avec Maj) ; **CLEAR** = décalage à zéro. Le VFO B a son propre RIT / XIT sur le FTX-1 (côté SUB) ; le FTDX10 et l'IC-7300 n'en ont qu'un, sur le VFO A.
 
 > [!TIP]

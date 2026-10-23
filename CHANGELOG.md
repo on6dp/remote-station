@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.21.1** — Saisie « kHz / Aller » supprimée (fréquence à la souris, bandes en un clic) ; MAIN / SUB / SPLIT, A → B, B → A, A ⇄ B et LOCK passent sur la ligne des pas, juste après ◀ ▶, entre les deux écrans VFO.
 - **0.21.0** — **Plus de 4e colonne : le centre s'élargit.**
   - **Opérateurs** : volet du bouton 👥 du bandeau, fermé par défaut ; point rouge sur 👥 quand un message arrive ; le volet s'ouvre tout seul chez celui qui pilote quand quelqu'un demande la main.
   - **Correspondant** (indicatif, prénom, QTH, locator, report, RST, Log QSO) : une ligne sous les onglets des modes numériques.

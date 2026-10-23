@@ -153,13 +153,10 @@
           <div class="seg"><button class="btn accent" id="tgtA" type="button">A</button><button class="btn accent" id="tgtB" type="button">B</button></div>
           <button class="btn" id="tuneDown" type="button" aria-label="Descendre d'un pas">◀</button>
           <button class="btn" id="tuneUp" type="button" aria-label="Monter d'un pas">▶</button>
-          <form class="goto" id="gotoForm">
-            <input id="gotoInput" inputmode="decimal" placeholder="kHz" aria-label="Fréquence en kHz">
-            <button class="btn" type="submit">Aller</button>
-          </form>
+          <!-- MAIN / SUB / SPLIT, A → B, B → A, A ⇄ B, LOCK à la suite des pas (RIT / XIT / décalage : sur les écrans VFO) -->
+          <div class="dual-b dual-inline" id="sec-dual" aria-label="VFO et SPLIT"></div>
         </div>
-        <!-- bandes, puis MAIN / SUB / SPLIT, A → B, B → A, A ⇄ B, LOCK (RIT / XIT / décalage : sur les écrans VFO) -->
-        <div class="band-row"><div class="bands" id="bandKeys"></div><div class="dual-b dual-inline" id="sec-dual" aria-label="VFO et SPLIT"></div></div>
+        <div class="band-row"><div class="bands" id="bandKeys"></div></div>
         <p class="hint">Molette ou glisser vertical sur un chiffre pour l'accorder · clic sur un VFO pour le sélectionner · flèches ↑ ↓ du clavier · barre d'espace = PTT. Spectre : non transmis par la liaison CAT.</p>
         <p class="msg" id="msg" role="status"></p>
       </section>

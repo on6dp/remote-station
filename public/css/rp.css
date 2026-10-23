@@ -1146,3 +1146,6 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 /* Badges des écrans VFO réglables d'un clic (ATT, IPO / AMP1 / AMP2, AMP, NAR, NB, DNR, NOTCH, DNF) */
 .vfo-badges .badge.clk { cursor: pointer; }
 .vfo-badges .badge.clk:hover { border-color: var(--v2-accent-cyan); color: var(--v2-text-bright); }
+/* MAIN / SUB / SPLIT… sur la ligne des pas, après ◀ ▶ (plus de saisie « kHz / Aller ») */
+.toolbar .dual-inline { margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--v2-border-dark); }
+@media (max-width: 1599px) { .toolbar .dual-inline { margin-left: 0; padding-left: 0; border-left: 0; } }

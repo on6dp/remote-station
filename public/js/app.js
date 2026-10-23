@@ -403,14 +403,6 @@
         if (Number(ctlValue('vfoSel')) !== v) sendCtl(c, v);
       });
     }
-    $('gotoForm').addEventListener('submit', (ev) => {
-      ev.preventDefault();
-      const v = parseFloat($('gotoInput').value.replace(/\s/g, '').replace(',', '.'));
-      if (!isFinite(v)) return say('Entrez une fréquence en kHz, par exemple 14195,5.', 'warn');
-      if (!iControl()) return say('Prenez la main pour régler la radio.', 'warn');
-      setFreq(v * 1000, target);
-      $('gotoInput').value = '';
-    });
     $('ctrlBtn').addEventListener('click', () => {
       if (!st) return;
       if (iControl()) send({ t: 'release' });
