@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.21.4 | [RemoteStation-Setup-0.21.4.exe](0.21.4/RemoteStation-Setup-0.21.4.exe) | [remote-station-0.21.4.tar.gz](0.21.4/remote-station-0.21.4.tar.gz) | FTX-1 : plus d'ATT / préampli faux sur le VFO B — [empreintes SHA-256](0.21.4/SHA256SUMS.txt) |
 | 0.21.3 | [RemoteStation-Setup-0.21.3.exe](0.21.3/RemoteStation-Setup-0.21.3.exe) | [remote-station-0.21.3.tar.gz](0.21.3/remote-station-0.21.3.tar.gz) | Test automatique ATT / préampli MAIN / SUB — [empreintes SHA-256](0.21.3/SHA256SUMS.txt) |
 | 0.21.2 | [RemoteStation-Setup-0.21.2.exe](0.21.2/RemoteStation-Setup-0.21.2.exe) | [remote-station-0.21.2.tar.gz](0.21.2/remote-station-0.21.2.tar.gz) | Console Lecture CAT dans une fenêtre — [empreintes SHA-256](0.21.2/SHA256SUMS.txt) |
 | 0.21.1 | [RemoteStation-Setup-0.21.1.exe](0.21.1/RemoteStation-Setup-0.21.1.exe) | [remote-station-0.21.1.tar.gz](0.21.1/remote-station-0.21.1.tar.gz) | MAIN / SUB / SPLIT sur la ligne des pas, plus de « kHz / Aller » — [empreintes SHA-256](0.21.1/SHA256SUMS.txt) |

@@ -828,16 +828,17 @@
     catOut('— Test : lecture côté MAIN, puis côté SUB, puis retour —');
     try {
       if (sel) { sendCtl(c, 0); await pause(1500); }
-      const pm = await catAsk('PA0;'); const am = await catAsk('RA0;');
+      const ok = (x) => (x && /^(PA|RA)\d/.test(x) ? x : null);
+      const pm = ok(await catAsk('PA0;')); const am = ok(await catAsk('RA0;'));
       catOut('MAIN : préampli ' + pm + ' · ATT ' + am);
       sendCtl(c, 1); await pause(1500);
-      const ps = await catAsk('PA0;'); const as = await catAsk('RA0;');
+      const ps = ok(await catAsk('PA0;')); const as = ok(await catAsk('RA0;'));
       catOut('SUB  : préampli ' + ps + ' · ATT ' + as);
       sendCtl(c, sel); await pause(800);
       const name = (r) => { const m = /^PA0(\d)/.exec(r || ''); return m ? ['IPO', 'AMP1', 'AMP2'][+m[1]] : '?'; };
       const att = (r) => { const m = /^RA0(\d)/.exec(r || ''); return m ? (+m[1] ? 'ON' : 'OFF') : '?'; };
       catOut('Lu par CAT — MAIN : ' + name(pm) + ', ATT ' + att(am) + ' · SUB : ' + name(ps) + ', ATT ' + att(as));
-      if (!pm || !ps) catOut('⚠ Pas de réponse du TRX : test à refaire.');
+      if (!pm || !ps || !am || !as) catOut('⚠ Une lecture sans réponse du TRX : test à refaire.');
       else if (pm !== ps || am !== as) catOut('✔ RÉSULTAT : le CAT lit le côté actif. ATT et préampli peuvent être réglés séparément pour chaque VFO.');
       else catOut('✘ RÉSULTAT : même lecture des deux côtés. Si l’écran du TRX montre des réglages différents pour MAIN et SUB, le CAT ne voit que MAIN.');
       catOut('Comparez avec l’écran du TRX (bas des cadres MAIN et SUB) et envoyez une capture de cette fenêtre.');
@@ -987,6 +988,7 @@
       if (C.att) add(r.att && C.att.type === 'select' ? 'ATT ' + optLabel('att', r.att) : C.att.badge || 'ATT', r.att ? 'green' : '', 'att');
       const pa = RIG().preampText && RIG().preampText(r, 'A');
       if (pa) add(pa[0], pa[1] ? 'green' : '', r.freq >= 144000000 ? 'preampVU' : 'preamp');
+
       else if (C.preamp && !RIG().preampText) add(optLabel('preamp', r.preamp) || 'PRE', r.preamp ? 'green' : '', 'preamp');
       flag('nb', 'NB', 'amber');
       flag('nr', 'DNR', 'amber');
@@ -1004,11 +1006,8 @@
       const C = RIG().CONTROL || {};
       const add = (txt, cls, ctl) => { const s = document.createElement('span'); badge(s, txt, cls); badgeCtl(s, C[ctl], r); bB.appendChild(s); };
       const optLabel = (id, v) => { const o = C[id] && C[id].options && C[id].options.find((x) => x[0] === v); return o ? o[1] : null; };
-      if (C.att && r.att != null && r.freqB <= 60000000) add('ATT', r.att ? 'green' : '');
-      // Préampli : réglage par gamme, commun aux deux côtés — cliquable si le VFO A est dans la même gamme
-      const pb = RIG().preampText && RIG().preampText(r, 'B');
-      const gam = (f) => (f >= 420000000 ? 2 : f >= 144000000 ? 1 : 0);
-      if (pb) add(pb[0], pb[1] ? 'green' : '', gam(r.freqB) === gam(r.freq) ? (r.freqB >= 144000000 ? 'preampVU' : 'preamp') : null);
+      // ATT et préampli du côté SUB : propres à SUB sur le TRX, mais le CAT du FTX-1 ne lit et ne règle que ceux de MAIN
+      // (vérifié au club : PA0 / RA0 renvoient les valeurs de MAIN même côté SUB actif). Rien d'affiché plutôt qu'une valeur fausse.
       if (r.nbB != null) add(r.nbB ? 'NB ' + r.nbB : 'NB', r.nbB ? 'amber' : '', 'nbB');
       if (r.nrB != null) add(r.nrB ? 'DNR ' + r.nrB : 'DNR', r.nrB ? 'amber' : '', 'nrB');
       if (r.notchB != null) add('NOTCH', r.notchB ? 'amber' : '', 'notchB');

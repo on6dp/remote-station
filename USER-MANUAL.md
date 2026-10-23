@@ -102,7 +102,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 - **RIT / XIT / CLEAR** on each VFO display: click RIT or XIT to switch it on / off; mouse **wheel** over the offset = ± 10 Hz (± 100 Hz with Shift); **CLEAR** = offset to zero. VFO B has its own RIT / XIT on the FTX-1 (SUB side); the FTDX10 and IC-7300 have only one, on VFO A.
 
 > [!TIP]
-> Settings act on the real club transceiver and are shown to everybody. The indicators in the VFO panel (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) summarise its state; **clicking ATT, IPO / AMP1 / AMP2, AMP, NB, DNR, NOTCH, DNF or NAR switches it on or off** (IPO → AMP1 → AMP2 → IPO; on the FTX-1, also on the VFO B display for the SUB side).
+> Settings act on the real club transceiver and are shown to everybody. The indicators in the VFO panel (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) summarise its state; **clicking ATT, IPO / AMP1 / AMP2, AMP, NB, DNR, NOTCH, DNF or NAR switches it on or off** (IPO → AMP1 → AMP2 → IPO). On the FTX-1, the VFO B display sets NB, DNR, NOTCH, DNF and NAR of the SUB side; the SUB ATT and preamp cannot be reached by CAT (front panel only), so they are not shown on VFO B.
 
 <a id="listen"></a>
 ## 5. Listening
