@@ -456,7 +456,13 @@
     }
     _toSub(by, k, then) {
       const rig = this.rig;
-      if (!k) { this._cancelSide(); this.sideTrace = []; this.log('Passage sur SUB (' + (by || '?') + ')'); }
+      if (!k) {
+        this._cancelSide(); this.sideTrace = []; this.log('Passage sur SUB (' + (by || '?') + ')');
+        // Déjà sur SUB (VS1, FT1) : rien à envoyer (le FTX-1 répond « ? » à une commande sans effet, puis se tait un instant)
+        if (this.radio.vfoSel === 1 && this.radio.txVfo === 1) { this.log('Déjà sur SUB'); if (then) then(); return; }
+        // Émission déjà sur SUB (FT1) : seulement VS1
+        if (this.radio.txVfo === 1) { this._trace('FT déjà 1'); this.subWait = { i: this.txVfoOk || 0, cmd: 'FT1;', by, timer: null, then }; return this._subReply('FT1'); }
+      }
       if (this.subWait) clearTimeout(this.subWait.timer);
       this.subWait = null;
       const forms = rig.txVfoTries(1);
@@ -512,6 +518,15 @@
         if (t !== 'VS0') { this.log('VS relu : ' + (t || 'pas de réponse') + ' → VS0 renvoyé', 'st-warn'); return this._toMain(by, then, k + 1); }
         const forms = rig.txVfoTries(0);
         const order = [this.txVfoOk || 0].concat(forms.map((_, i) => i).filter((i) => i !== (this.txVfoOk || 0)));
+        // Émission déjà sur MAIN (FT0) : rien à envoyer
+        if (this.radio.txVfo === 0) {
+          this._trace('FT déjà 0');
+          this.pollHold = 0;
+          this._readBack('vfoSel');
+          setTimeout(() => this._diag('Retour sur MAIN'), 300);
+          if (then) then();
+          return;
+        }
         const tryFt = (j) => {
           if (j >= order.length) {
             this.log('Le TRX n’a pas confirmé l’émission sur MAIN (FT relu : ' + (this.ftSeen || '?') + ') ; réception sur MAIN' + this._traceText(), 'st-warn');
