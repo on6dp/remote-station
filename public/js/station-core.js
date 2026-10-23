@@ -151,7 +151,7 @@
         }
         // Radio passée en émission juste après un réglage envoyé à distance (ex. SPLIT du FTX-1) : ce n'est pas
         // une émission voulue (PTT) → retour en réception, et on le signale
-        if (p.tx > 0 && !this.catKeyed && this.lastCtl && Date.now() - this.lastCtl.at < 1500) {
+        if (p.tx > 0 && !this.catKeyed && this.lastCtl && Date.now() - this.lastCtl.at < (this.lastCtl.long ? 8000 : 1500)) {
           const what = this.lastCtl.id;
           this.lastCtl = null;
           this._write(FTX1.cmdPtt(false));
@@ -291,6 +291,10 @@
           // FTX-1 : passage sur SUB par CAT seulement si le serveur l'autorise explicitement (m.subOk)
           if (FTX1.ID === 'ftx1' && !m.subOk && ((m.id === 'vfoSel' && v === 1) || (FTX1.CONTROL[m.id].viaSub && this.radio.vfoSel !== 1) || (FTX1.CONTROL[m.id].viaMain && this.radio.vfoSel === 1))) {
             return this.log('Sécurité : passage MAIN ↔ SUB par CAT refusé (' + (FTX1.CONTROL[m.id].label || m.id) + ') — face avant du TRX', 'st-bad');
+          }
+          // Changement de côté en cours (lectures suspendues, côté actif pas encore relu) : réglage propre à un côté refusé
+          if ((FTX1.CONTROL[m.id].viaSub || FTX1.CONTROL[m.id].viaMain) && this.pollHold && Date.now() < this.pollHold) {
+            return this.log('Changement de côté MAIN / SUB en cours : ' + (FTX1.CONTROL[m.id].label || m.id) + ' ignoré, recommencez dans quelques secondes', 'st-warn');
           }
           if (m.id === 'vfoSel' && FTX1.VIRTUAL_SPLIT && FTX1.txVfoTries) {
             this.lastCtl = { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() };
@@ -454,36 +458,54 @@
       this.waitRe = null;
       this.sideSeq = (this.sideSeq || 0) + 1;
     }
-    _toSub(by, k, then) {
-      const rig = this.rig;
-      if (!k) {
-        this._cancelSide(); this.sideTrace = []; this.log('Passage sur SUB (' + (by || '?') + ')');
-        // Déjà sur SUB (VS1, FT1) : rien à envoyer (le FTX-1 répond « ? » à une commande sans effet, puis se tait un instant)
-        if (this.radio.vfoSel === 1 && this.radio.txVfo === 1) { this.log('Déjà sur SUB'); if (then) then(); return; }
-        // Émission déjà sur SUB (FT1) : seulement VS1
-        if (this.radio.txVfo === 1) { this._trace('FT déjà 1'); this.subWait = { i: this.txVfoOk || 0, cmd: 'FT1;', by, timer: null, then }; return this._subReply('FT1'); }
-      }
-      if (this.subWait) clearTimeout(this.subWait.timer);
-      this.subWait = null;
-      const forms = rig.txVfoTries(1);
-      const order = [this.txVfoOk || 0].concat(forms.map((_, i) => i).filter((i) => i !== (this.txVfoOk || 0)));
-      if (k >= order.length) {
-        const why = 'le TRX n’a pas confirmé le VFO d’émission SUB (FT relu : ' + (this.ftSeen || 'aucune réponse') + ') : passage sur SUB annulé (il aurait mis le TRX en émission)' + this._traceText();
-        this.log('Sécurité : ' + why, 'st-bad');
-        if (this.wsUp) this.sendWs({ t: 'safety', reason: why });
-        this._readBack('vfoSel');
-        return;
-      }
-      const i = order[k];
-      const w = { i, cmd: forms[i], by, timer: null, then };
-      this.subWait = w;
-      this.pollHold = Date.now() + 5000;
-      this._trace(forms[i].replace(';', ''));
-      this._write(forms[i]);
-      this._write('FT;');
-      this._write('TX;');
-      w.timer = setTimeout(() => { if (this.subWait === w) this._toSub(by, k + 1, then); }, 3000); // changement de bande du côté actif : le TRX répond plus lentement
+    /**
+     * FTX-1 : changement de côté MAIN / SUB. Le TRX émet s'il reste un instant avec FT (émission) et VS (côté actif)
+     * en désaccord (constaté au club : FT1 seul, puis VS1 relu plus tard, le mettait en émission). Les deux commandes
+     * partent donc d'un bloc (« FT1;VS1; » vers SUB, « VS0;FT0; » vers MAIN), comme la touche de la face avant, sans
+     * commande sans effet (le FTX-1 répond « ? » puis se tait). Lectures suspendues avant (réponses en attente écoulées)
+     * et vérification après (le TRX peut se taire plusieurs secondes pendant le changement).
+     */
+    _switchSide(v, by, then) {
+      this._cancelSide();
+      this.sideTrace = [];
+      const seq = this.sideSeq;
+      const name = v ? 'Passage sur SUB' : 'Retour sur MAIN';
+      this.log(name + ' (' + (by || '?') + ')');
+      if (this.radio.vfoSel === v && this.radio.txVfo === v) { this.log((v ? 'Déjà sur SUB' : 'Déjà sur MAIN')); if (then) then(); return; }
+      this.pollHold = Date.now() + 9000;
+      setTimeout(() => {
+        if (seq !== this.sideSeq || this.catKeyed) return;
+        const ft = this.radio.txVfo === v ? '' : this.rig.txVfoTries(v)[this.txVfoOk || 0];
+        const vs = this.radio.vfoSel === v ? '' : 'VS' + v + ';';
+        const cmd = v ? ft + vs : vs + ft;
+        this._trace(cmd);
+        this.lastCtl = { id: 'MAIN / SUB', at: Date.now(), long: true };
+        this._write(cmd);
+        const check = (n) => {
+          if (seq !== this.sideSeq) return;
+          this._trace('VS;FT;TX;');
+          this._write('VS;');
+          this._write('FT;');
+          this._write('TX;');
+          this._await(/^VS[01]$/, 2500, (t) => {
+            if (seq !== this.sideSeq) return;
+            if (!t && n < 3) return check(n + 1);
+            setTimeout(() => {
+              if (seq !== this.sideSeq) return;
+              this.pollHold = 0;
+              this._readBack('vfoSel');
+              const ok = this.radio.vfoSel === v && this.radio.txVfo === v;
+              if (ok) { this._diag(name); if (then && !this.catKeyed) then(); return; }
+              const why = name + ' non confirmé par le TRX (VS ' + this.radio.vfoSel + ', FT ' + this.radio.txVfo + ')' + this._traceText();
+              this.log('Sécurité : ' + why, 'st-bad');
+              if (this.wsUp) this.sendWs({ t: 'safety', reason: why });
+            }, 400);
+          });
+        };
+        setTimeout(() => check(0), 1500);
+      }, 400);
     }
+    _toSub(by, k, then) { return this._switchSide(1, by, then); }
     /** Attend une réponse du TRX (expression régulière), sinon timeout. */
     _await(re, ms, cb) {
       if (this.waitRe) clearTimeout(this.waitRe.timer);
@@ -491,72 +513,7 @@
       this.waitRe = w;
       w.timer = setTimeout(() => { if (this.waitRe === w) { this.waitRe = null; cb(null); } }, ms);
     }
-    /**
-     * FTX-1 : retour sur MAIN sans jamais l'état FT0 + VS1 (émission). VS0 d'abord, relu et confirmé (jusqu'à 3 envois),
-     * puis seulement le VFO d'émission MAIN (FT0 ou FT2), relu. Sans VS0 confirmé, FT n'est pas touché (le TRX reste sur SUB).
-     */
-    _toMain(by, then, k) {
-      const rig = this.rig;
-      k = k || 0;
-      if (!k) { this._cancelSide(); this.sideTrace = []; this.log('Retour sur MAIN (' + (by || '?') + ')'); }
-      const seq = this.sideSeq;
-      this.pollHold = Date.now() + 5000;
-      if (k >= 3) {
-        const why = 'le TRX n’a pas confirmé le retour sur MAIN (VS0) : FT laissé sur SUB pour ne pas le mettre en émission' + this._traceText();
-        this.log('Sécurité : ' + why, 'st-bad');
-        if (this.wsUp) this.sendWs({ t: 'safety', reason: why });
-        this.pollHold = 0;
-        this._readBack('vfoSel');
-        return;
-      }
-      // Déjà sur MAIN (VS0 relu) : pas de VS0 (le FTX-1 répond « ? » et se tait un instant), on vérifie seulement FT
-      const already = k === 0 && this.radio.vfoSel === 0;
-      if (already) { this._trace('VS;'); this._write('VS;'); }
-      else { this._trace('VS0'); this._write('VS0;'); this._write('VS;'); this._write('TX;'); }
-      this._await(/^VS[01]$/, 3000, (t) => {
-        if (this.catKeyed || seq !== this.sideSeq) return; // émission commencée ou nouveau clic entre-temps
-        if (t !== 'VS0') { this.log('VS relu : ' + (t || 'pas de réponse') + ' → VS0 renvoyé', 'st-warn'); return this._toMain(by, then, k + 1); }
-        const forms = rig.txVfoTries(0);
-        const order = [this.txVfoOk || 0].concat(forms.map((_, i) => i).filter((i) => i !== (this.txVfoOk || 0)));
-        // Émission déjà sur MAIN (FT0) : rien à envoyer
-        if (this.radio.txVfo === 0) {
-          this._trace('FT déjà 0');
-          this.pollHold = 0;
-          this._readBack('vfoSel');
-          setTimeout(() => this._diag('Retour sur MAIN'), 300);
-          if (then) then();
-          return;
-        }
-        const tryFt = (j) => {
-          if (j >= order.length) {
-            this.log('Le TRX n’a pas confirmé l’émission sur MAIN (FT relu : ' + (this.ftSeen || '?') + ') ; réception sur MAIN' + this._traceText(), 'st-warn');
-            if (this.wsUp) this.sendWs({ t: 'safety', reason: 'retour sur MAIN : émission laissée sur SUB (FT relu : ' + (this.ftSeen || '?') + ')' + this._traceText() });
-            this.pollHold = 0;
-            this._readBack('vfoSel');
-            return;
-          }
-          this._trace(forms[order[j]].replace(';', ''));
-          this._write(forms[order[j]]);
-          this._write('FT;');
-          this._write('TX;');
-          this._await(/^FT[0-3]$/, 3000, (f) => {
-            if (seq !== this.sideSeq) return;
-            if (f) this.ftSeen = f;
-            if (f && +f[2] % 2 === 0) {
-              this.txVfoOk = order[j];
-              this._write('TX;');
-              setTimeout(() => this._diag('Retour sur MAIN'), 600);
-              this.pollHold = 0; // lectures normales tout de suite (émission terminée, mesures à effacer)
-              this._readBack('vfoSel');
-              if (then) then();
-              return;
-            }
-            tryFt(j + 1);
-          });
-        };
-        tryFt(0);
-      });
-    }
+    _toMain(by, then) { return this._switchSide(0, by, then); }
     _subReply(t) {
       const w = this.subWait;
       const mm = /^FT([0-3])$/.exec(t);
@@ -634,9 +591,14 @@
       const rx = this.rxVfo != null ? this.rxVfo : this.radio.vfoSel ? 1 : 0;
       this.rxVfo = null;
       const ft = rig.txVfoTries ? rig.txVfoTries(rx)[this.txVfoOk || 0] : rig.cmdTxVfo(rx);
-      // Retour sur MAIN : VS0 confirmé avant FT0 ; sur SUB : FT1 avant VS1 (FT0 avec VS1 met le FTX-1 en émission)
-      if (rx === 0 && rig.cmdVfoSel && rig.txVfoTries) this._toMain('restauration');
-      else if (rx === 0 && rig.cmdVfoSel) { this._write(rig.cmdVfoSel(0)); this._write(ft); }
+      // FT et VS remis d'un bloc, seulement ce qui change (FTX-1 : un désaccord FT / VS qui dure le met en émission,
+      // une commande sans effet lui fait répondre « ? » et ignorer la suite)
+      if (rig.txVfoTries && rig.cmdVfoSel) {
+        const f = this.radio.txVfo === rx ? '' : ft;
+        const v = this.radio.vfoSel === rx ? '' : rig.cmdVfoSel(rx);
+        const cmd = rx ? f + v : v + f;
+        if (cmd) this._write(cmd);
+      } else if (rx === 0 && rig.cmdVfoSel) { this._write(rig.cmdVfoSel(0)); this._write(ft); }
       else { this._write(ft); if (rig.cmdVfoSel) this._write(rig.cmdVfoSel(rx)); }
     }
 
