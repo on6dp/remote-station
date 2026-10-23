@@ -172,6 +172,7 @@
         <div class="rt-tx-act">
           <button class="btn btn-tx" type="button" id="rtSend" title="Émet le texte en RTTY sur la fréquence de réception (Shift et vitesse choisis en haut), puis retour en réception">Émettre</button>
           <button class="btn" type="button" id="rtTxClear">Effacer</button>
+          <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station (correspondant, RST, heure…)">Log QSO</button>
           <span class="dg-note" id="rtTxState">Émission RTTY sous <b>ON5VL</b> : texte ci-dessus, puis « Émettre » (Ctrl+Entrée).</span>
         </div>
       </div>
@@ -216,6 +217,7 @@
       <div class="jt-tx-row">
         <input id="jtTxt" maxlength="160" placeholder="Message personnalisé, puis « Émettre » (macros F1 à F8 : émission directe)…" autocomplete="off" spellcheck="false">
         <button class="btn btn-tx" type="button" id="jtSend" title="Émet le message en JTTY sur la fréquence TX (repère rouge), puis retour en réception">Émettre</button>
+        <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station">Log QSO</button>
       </div>
       <p class="dg-tx" id="jtTxState">Émission JTTY sous <b>ON5VL</b> : message ci-dessus, puis « Émettre » (Entrée).</p>
     </div>`;
@@ -244,6 +246,7 @@
         <div class="rt-tx-act">
           <button class="btn btn-tx" type="button" id="cwSend" disabled>Émettre</button>
           <button class="btn" type="button" id="cwTxClear">Effacer</button>
+          <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station">Log QSO</button>
           <span class="dg-note">Émission CW sous <b>ON5VL</b> par le manipulateur du TRX : prochaine version.</span>
         </div>
       </div>
@@ -584,7 +587,7 @@
     ]
   };
   const TAGS = [
-    ['<TX>', 'émission immédiate au clic (sinon : texte ajouté à la zone d’écriture)'], ['<RX>', 'retour en réception à la fin (toujours fait)'],
+    ['<TX>', 'émission immédiate au clic (sinon : texte ajouté à la zone d’écriture)'], ['<RX>', 'retour en réception à la fin (toujours fait)'], ['<LOG>', 'ouvre la fiche du QSO pour l’enregistrer dans le carnet'],
     ['<MYCALL>', 'indicatif émis (ON5VL)'], ['<CALL>', 'correspondant'], ['<NAME>', 'son prénom'], ['<QTH>', 'son QTH'],
     ['<RST>', 'report envoyé'], ['<LOC>', 'son locator'], ['<MYLOC>', 'locator de la station'], ['<MYQTH>', 'QTH de la station'],
     ['<OPCALL>', 'votre indicatif (opérateur)'], ['<CNTR>', 'numéro de série'], ['<INCR>', 'numéro suivant'], ['<ZT>', 'heure UTC'], ['<ZD>', 'date UTC']
@@ -638,7 +641,7 @@
     const p2 = (n) => String(n).padStart(2, '0');
     let cntr = Number(store.get('cntr', '1')) || 1;
     let out = String(t)
-      .replace(/<TX>|<RX>/gi, '')
+      .replace(/<TX>|<RX>|<LOG>/gi, '')
       .replace(/<MYCALL>|\{MY\}/g, myCall)
       .replace(/<CALL>|\{CALL\}/g, up(dx.call) || '???')
       .replace(/<NAME>/g, up(dx.name))
@@ -1423,8 +1426,11 @@
     const before = loadDx();
     // Nouveau correspondant : son prénom et son QTH repartent à vide
     if (o.call != null && String(o.call).toUpperCase() !== String(before.call).toUpperCase() && o.name == null) { before.name = ''; before.qth = ''; }
+    const newCall = o.call != null && String(o.call).trim() && String(o.call).toUpperCase() !== String(before.call || '').toUpperCase();
     dx = Object.assign(before, o);
     dx.call = String(dx.call || '').toUpperCase().slice(0, 12);
+    // Début du QSO (heure UTC pour le carnet) : quand le correspondant est choisi
+    if (newCall) dx.t0 = now();
     dx.grid = String(dx.grid || '').toUpperCase().slice(0, 6);
     store.set('dx', JSON.stringify(dx));
     syncDx();
@@ -1811,7 +1817,8 @@
   // Clic sur une macro (ou F1…F12) : <TX> = émission immédiate, sinon texte ajouté à la zone d'écriture.
   // Maj+clic : toujours ajouter à la zone (pour composer un message avant « Émettre »).
   function useMacro(mode, t, ins) {
-    if (mode === 'CW') return insertCw(t);
+    if (mode === 'CW') { if (/<LOG>/i.test(t) && !ins) setTimeout(() => logQso(), 0); return insertCw(t); }
+    if (/<LOG>/i.test(t) && !ins) setTimeout(() => logQso(), 0);
     if (ins || !/<TX>/i.test(t)) return mode === 'JTTY' ? insertJtty(t) : insertRtty(t);
     showTab(mode === 'JTTY' ? 'jtty' : 'rtty');
     if (/<CALL>|\{CALL\}/.test(t) && !String(dx.call || '').trim()) {
@@ -1833,7 +1840,77 @@
       const el = $(id);
       if (el) el.addEventListener('input', () => setDx({ [k]: el.value.trim() }));
     }
+    for (const id of ['dxLog']) { const b = $(id); if (b) b.addEventListener('click', () => { const inst = (window.DG && window.DG()) || window.RSDIGI; inst.logQso(); }); }
+    document.querySelectorAll('#centerPanel [data-log]').forEach((b) => b.addEventListener('click', () => logQso()));
     syncDx();
+  }
+  // ------------------------------------------------------------------ fiche du QSO → carnet de la station (RTTY, JTTY, CW…)
+  // Comme « Save QSO » / <LOG> de FLDIGI : correspondant, nom, QTH, locator, RST du bas de page ; fréquence et mode du TRX.
+  function logQso() {
+    if (!api) return;
+    if (!window.RSLOG) return api.say('Carnet de trafic non disponible dans cette version du dashboard.', 'warn');
+    const doc = ($('msgs') && $('msgs').ownerDocument) || document;
+    const old = doc.getElementById('qsoLogDlg');
+    if (old) old.remove();
+    const st = api.state() || {};
+    const r = st.radio || {};
+    const m = (window.RSDIGI && window.RSDIGI.logMode ? window.RSDIGI.logMode() : '') || 'RTTY';
+    const rxB = r.vfoSel === 1 && r.freqB;
+    let hz = Number(rxB ? r.freqB : r.freq) || 0;
+    // RTTY : fréquence du signal (porteuse + milieu mark / space), comme FLDIGI
+    if (m === 'RTTY' && hz) hz += Math.round(rt.f);
+    const p2 = (n) => String(n).padStart(2, '0');
+    const end = new Date(now());
+    const t0 = Number(dx.t0) && end - Number(dx.t0) < 3 * 3600 * 1000 && end - Number(dx.t0) >= 0 ? new Date(Number(dx.t0)) : end;
+    const hhmm = (d) => p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes());
+    const ymd = (d) => d.getUTCFullYear() + '-' + p2(d.getUTCMonth() + 1) + '-' + p2(d.getUTCDate());
+    const digiRpt = ['FT8', 'FT4', 'FT2', 'JT65', 'WSPR'].indexOf(m) >= 0;
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const MODES = ['RTTY', 'JTTY', 'CW', 'SSTV', 'FT8', 'FT4', 'FT2', 'JT65', 'PSK31', 'USB', 'LSB', 'FM', 'AM'];
+    const dlg = doc.createElement('dialog');
+    dlg.id = 'qsoLogDlg';
+    dlg.className = 'macro-dlg qso-log';
+    dlg.innerHTML = '<form method="dialog"><h3>Enregistrer le QSO</h3><div class="ql-g">' +
+      '<label>Indicatif <input name="call" maxlength="15" value="' + esc(dx.call) + '"></label>' +
+      '<label>Date UTC <input name="date" type="date" value="' + ymd(t0) + '"></label>' +
+      '<label>Début UTC <input name="time" maxlength="5" value="' + hhmm(t0) + '"></label>' +
+      '<label>Fin UTC <input name="toff" maxlength="5" value="' + hhmm(end) + '"></label>' +
+      '<label>Fréquence MHz <input name="freq" inputmode="decimal" value="' + (hz ? (hz / 1e6).toFixed(6) : '') + '"></label>' +
+      '<label>Mode <select name="mode">' + MODES.concat(MODES.indexOf(m) < 0 ? [m] : []).map((x) => '<option' + (x === m ? ' selected' : '') + '>' + x + '</option>').join('') + '</select></label>' +
+      '<label>RST envoyé <input name="rst_sent" maxlength="8" value="' + esc(digiRpt ? dx.rpt || '-10' : dx.rst || '599') + '"></label>' +
+      '<label>RST reçu <input name="rst_rcvd" maxlength="8" value="' + (digiRpt ? '' : '599') + '"></label>' +
+      '<label>Nom <input name="name" maxlength="40" value="' + esc(dx.name) + '"></label>' +
+      '<label>QTH <input name="qth" maxlength="60" value="' + esc(dx.qth) + '"></label>' +
+      '<label>Locator <input name="grid" maxlength="8" value="' + esc(dx.grid) + '"></label>' +
+      '<label>Puiss. W <input name="pwr" inputmode="decimal" maxlength="5" value="' + (r.power ? Math.round(r.power) : '') + '"></label>' +
+      '<label class="ql-wide">Remarque <input name="comment" maxlength="200"></label></div>' +
+      '<p class="md-prev ql-msg"></p>' +
+      '<div class="md-act"><span></span><button class="btn" value="cancel">Annuler</button><button class="btn btn-primary" type="button" data-a="save">Enregistrer dans le carnet</button></div></form>';
+    doc.body.appendChild(dlg);
+    const f = dlg.querySelector('form');
+    const msg = dlg.querySelector('.ql-msg');
+    f.mode.addEventListener('change', () => {
+      const d = ['FT8', 'FT4', 'FT2', 'JT65'].indexOf(f.mode.value) >= 0;
+      const ph = ['USB', 'LSB', 'FM', 'AM'].indexOf(f.mode.value) >= 0;
+      f.rst_sent.value = d ? dx.rpt || '-10' : ph ? '59' : dx.rst || '599';
+      f.rst_rcvd.value = d ? '' : ph ? '59' : '599';
+    });
+    dlg.querySelector('[data-a="save"]').addEventListener('click', () => {
+      const call = f.call.value.trim().toUpperCase();
+      const fr = Number(String(f.freq.value).replace(',', '.'));
+      const tt = (v) => { const t = String(v).replace(/\D/g, ''); return (t.length === 3 ? '0' + t : t).padEnd(6, '0').slice(0, 6); };
+      if (!/^(?=.*[0-9])[A-Z0-9/]{3,15}$/.test(call)) { msg.textContent = 'Indicatif du correspondant ?'; f.call.focus(); return; }
+      if (!(fr > 0)) { msg.textContent = 'Fréquence en MHz ? (ex. 14.085)'; f.freq.focus(); return; }
+      const qso = { call, qso_date: f.date.value.replace(/\D/g, ''), time_on: tt(f.time.value), time_off: tt(f.toff.value), freq: Math.round(fr * 1e6) / 1e6,
+        mode: f.mode.value, rst_sent: f.rst_sent.value.trim(), rst_rcvd: f.rst_rcvd.value.trim(), name: f.name.value.trim(), qth: f.qth.value.trim(),
+        gridsquare: f.grid.value.trim().toUpperCase(), tx_pwr: f.pwr.value.trim(), comment: f.comment.value.trim() };
+      for (const k of Object.keys(qso)) if (qso[k] === '') delete qso[k];
+      api.send({ t: 'log_add', qso });
+      dlg.close();
+    });
+    dlg.addEventListener('close', () => dlg.remove());
+    try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
+    (dx.call ? f.querySelector('[data-a="save"]') : f.call).focus();
   }
 
   function setTx(f) {
@@ -2164,6 +2241,7 @@
     },
     insertRtty,
     useMacro,
+    logQso: () => logQso(),
     insertJtty,
     insertCw,
     onHello(me, info) {

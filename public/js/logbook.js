@@ -656,20 +656,24 @@
     } else if (m.t === 'log_saved') {
       const q = m.qso || {};
       if (m.edited) { lastLogged = q.call; endEdit(); say('QSO avec ' + q.call + ' modifié.', ''); return; }
-      const f = q$('#lgForm');
       const auto = SV.filter((s) => m.auto && m.auto[s]);
+      const okMsg = '✓ QSO avec ' + q.call + ' enregistré (' + q.band + ' ' + modeName(q) + ').' + (auto.length ? ' Envoi automatique : ' + auto.map((s) => NAMES[s]).join(', ') + '.' : '');
       lastLogged = q.call;
+      // Enregistré depuis un autre onglet (fiche du QSO RTTY / JTTY / CW, FT8 auto) : message en bas de l'écran
+      if (!root || root.hidden || !root.offsetParent) say(okMsg, 'ok');
+      if (!root) return;
+      const f = q$('#lgForm');
       for (const k of ['call', 'name', 'qth', 'gridsquare', 'comment', 'rst_rcvd']) f[k].value = '';
       delete f.time.dataset.manual;
       defaultRst(true);
-      fmsg('✓ QSO avec ' + q.call + ' enregistré (' + q.band + ' ' + modeName(q) + ').' + (auto.length ? ' Envoi automatique : ' + auto.map((s) => NAMES[s]).join(', ') + '.' : ''), 'ok');
+      fmsg(okMsg, 'ok');
       f.call.focus();
     } else if (m.t === 'log_dupe') {
       const p = m.prev || {};
       pendingDupe = m.qso;
       if (window.confirm('Doublon possible : ' + p.call + ' déjà dans le carnet sur ' + p.band + ' ' + modeName(p) + ' le ' + fmtDate(p.qso_date) + ' à ' + fmtTime(p.time_on) + ' UTC.\nEnregistrer quand même ?')) {
         api.send({ t: 'log_add', qso: pendingDupe, force: true });
-      } else fmsg('QSO non enregistré (doublon).', 'warn');
+      } else if (root && !root.hidden && root.offsetParent) fmsg('QSO non enregistré (doublon).', 'warn'); else say('QSO non enregistré (doublon).', 'warn');
       pendingDupe = null;
     } else if (m.t === 'log_export') {
       download(m);

@@ -300,6 +300,10 @@ click the <b>STATION</b> lamp at the top left → « ↻ Recharger la page Stati
   <li><b>Logging a QSO</b>: <span class="k">⇩ TRX</span> takes the transceiver frequency and mode (in DATA: the mode of the tab on screen, FT8, RTTY…), the power,
     and the correspondent from the bottom of the page (call, name, QTH, locator). The UTC time is taken when you type the first letter of the call; <span class="k">⟳ Maintenant</span> (now) resets it.
     <span class="k">Enter</span> or <span class="k">Enregistrer le QSO</span> (save). A duplicate (same call, band and mode within half an hour) is reported before saving.</li>
+  <li><b>Without leaving the RTTY, JTTY or CW tab</b>: <span class="k">Log QSO</span> button (next to « Émettre », and under the correspondent in « Messages pré-enregistrés »), like FLDIGI's « Save QSO ».
+    A form opens, already filled in: call, name, QTH, locator and RST of the correspondent, frequency (in RTTY: the signal frequency, carrier + audio offset) and the tab's mode, power,
+    start time (when the correspondent was chosen) and end time (now). Correct if needed (RST received…), then <span class="k">Enregistrer dans le carnet</span> (save).
+    A macro containing <code>&lt;LOG&gt;</code> (e.g. the « 73 ») also opens this form.</li>
   <li><b>QO-100</b>: with the converter IF (e.g. 432.525 MHz) the QO-100 box is ticked and the 2400.xxx MHz uplink frequency is logged (QO-100 satellite, downlink 10489.xxx MHz).</li>
   <li><b>List</b>: the last 300 QSOs (search by call, name or operator). Columns LoTW, eQSL, CL (Club Log), QRZ: <b>·</b> not sent yet, <b>✓</b> sent, <b>✗</b> rejected
     (hover for details), <b>★</b> confirmed on LoTW. Click a row to edit or delete the QSO (its author or an administrator).</li>

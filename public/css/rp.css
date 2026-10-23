@@ -1083,3 +1083,15 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
   .lg-row label { flex: 1 1 40%; }
   .lg-search { width: 100%; }
 }
+/* Fiche « Enregistrer le QSO » (RTTY, JTTY, CW…) */
+.qso-log .ql-g { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 10px; }
+.qso-log .ql-wide { grid-column: span 4; }
+.qso-log .ql-g input, .qso-log .ql-g select { width: 100%; min-width: 0; box-sizing: border-box; }
+.qso-log select { font: inherit; font-size: 13px; color: var(--v2-text-bright); background: #07090d; border: 1px solid var(--v2-border); border-radius: 5px; padding: 5px 6px; }
+.qso-log .ql-msg { color: #ffb4a8; min-height: 1em; margin: 0; }
+.btn.btn-log { white-space: nowrap; }
+.msgs-h .btn-log { font-size: 10px; padding: 4px 8px; align-self: end; }
+@media (max-width: 640px) { .qso-log .ql-g { grid-template-columns: repeat(2, minmax(0, 1fr)); } .qso-log .ql-wide { grid-column: span 2; } }
+.msgs-h .btn-log { border: 1px solid var(--v2-accent-cyan); color: var(--v2-accent-cyan-bright); background: rgba(0, 212, 255, .08); border-radius: 5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; cursor: pointer; }
+.rt-tx-act .btn-log, .jt-tx-row .btn-log { border-color: var(--v2-accent-cyan); color: var(--v2-accent-cyan-bright); }
+@media (min-width: 1800px) and (min-height: 860px) { .side-far .msgs-h .btn-log { grid-column: 1 / -1; padding: 6px 8px; font-size: 10.5px; } }
