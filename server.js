@@ -31,6 +31,9 @@ const DEFAULTS = {
   stationToken: '',
   allowTx: false,
   maxTxSeconds: 120,
+  // FTX-1 : passage sur SUB par CAT (VS1) bloqué — le TRX passait en émission à chaque clic sur SUB (club, 23/10/2026).
+  // Le côté SUB se choisit sur la face avant. true pour réactiver (essais seulement).
+  ftx1SubCat: false,
   ftxWatchdogMinutes: 6, // émission auto FT8 / FT4 / FT2 : arrêt si le même message part depuis ce temps (WSJT-X : 6 min)
   pttHeartbeatMs: 1500,
   controlIdleMinutes: 15,
@@ -1620,6 +1623,10 @@ function onOperator(conn, m) {
       if (m.ctl != null) {
         const R = rig();
         const c = R.CONTROL[m.ctl];
+        // FTX-1 : aucun passage sur SUB par CAT (VS1) tant que ftx1SubCat n'est pas activé
+        if (R.ID === 'ftx1' && !cfg.ftx1SubCat && ((m.ctl === 'vfoSel' && Number(m.value) === 1) || (c && c.viaSub && radio.vfoSel !== 1) || (c && c.viaMain && radio.vfoSel === 1))) {
+          return send(conn, { t: 'notice', level: 'error', msg: 'Passage MAIN ↔ SUB par le dashboard désactivé : il mettait le FTX-1 en émission. Choisissez MAIN / SUB sur la face avant du TRX ; le dashboard suit.' });
+        }
         let v;
         try {
           v = R.validate(m.ctl, m.value, radio);
@@ -1652,7 +1659,7 @@ function onOperator(conn, m) {
           journal('tune', { call: conn.user.call, ip: conn.ip, freq: txFreq(), watts: radio.power });
           swrLock = null; // l'accord est justement ce qu'il fallait faire ; si le ROS reste mauvais, la coupure recommencera
         }
-        toStation({ t: 'cmd', op: 'ctl', id: m.ctl, value: v, by: conn.user.call });
+        toStation({ t: 'cmd', op: 'ctl', id: m.ctl, value: v, by: conn.user.call, subOk: !!cfg.ftx1SubCat });
         if (c.type !== 'action') radio[m.ctl] = v; // affichage optimiste
         if (R.VIRTUAL_SPLIT && m.ctl === 'vfoSel') radio.txVfo = txSide(); // l'émission suit la réception (ou l'autre VFO en SPLIT)
       }

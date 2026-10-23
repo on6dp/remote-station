@@ -288,6 +288,10 @@
           if (FTX1.CONTROL[m.id].transmits && (!this.serialOpen || !this.radio.connected)) return this.log('Refusé : radio non connectée');
           // FTX-1 : passage sur SUB. VS1 avec FT0 met le TRX en émission : FT (VFO d'émission) d'abord, relu, et VS1
           // seulement si le TRX confirme FT1 / FT3 ; sinon pas de VS1 (le TRX reste sur MAIN, en réception)
+          // FTX-1 : passage sur SUB par CAT seulement si le serveur l'autorise explicitement (m.subOk)
+          if (FTX1.ID === 'ftx1' && !m.subOk && ((m.id === 'vfoSel' && v === 1) || (FTX1.CONTROL[m.id].viaSub && this.radio.vfoSel !== 1) || (FTX1.CONTROL[m.id].viaMain && this.radio.vfoSel === 1))) {
+            return this.log('Sécurité : passage MAIN ↔ SUB par CAT refusé (' + (FTX1.CONTROL[m.id].label || m.id) + ') — face avant du TRX', 'st-bad');
+          }
           if (m.id === 'vfoSel' && FTX1.VIRTUAL_SPLIT && FTX1.txVfoTries) {
             this.lastCtl = { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() };
             this.forceSlow = true;
