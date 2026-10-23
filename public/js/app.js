@@ -30,7 +30,7 @@
   // Réglages affichés sur les écrans VFO eux-mêmes (pas de bouton dans les cadres)
   // ATT, préampli (IPO / AMP1 / AMP2, AMP) et NARROW : un clic sur leur badge de l'écran VFO (plus de bouton dans les cadres)
   const IN_VFO = ['rit', 'xit', 'clar', 'clarClr', 'ritB', 'xitB', 'clarB', 'clarClrB', 'splitHw', 'widthB',
-    'att', 'preamp', 'preampVU', 'narrow', 'narrowB', 'nbB', 'nrB', 'notchB', 'dnfB'];
+    'att', 'preamp', 'preampVU', 'narrow', 'narrowB', 'nbB', 'nrB', 'notchB', 'dnfB', 'attB', 'preampB'];
   const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE', preampVU: 'AMP' };
 
   // Bouton HELP : manuel en français, ou en anglais si le navigateur n'est pas en français
@@ -1006,8 +1006,9 @@
       const C = RIG().CONTROL || {};
       const add = (txt, cls, ctl) => { const s = document.createElement('span'); badge(s, txt, cls); badgeCtl(s, C[ctl], r); bB.appendChild(s); };
       const optLabel = (id, v) => { const o = C[id] && C[id].options && C[id].options.find((x) => x[0] === v); return o ? o[1] : null; };
-      // ATT et préampli du côté SUB : propres à SUB sur le TRX, mais le CAT du FTX-1 ne lit et ne règle que ceux de MAIN
-      // (vérifié au club : PA0 / RA0 renvoient les valeurs de MAIN même côté SUB actif). Rien d'affiché plutôt qu'une valeur fausse.
+      // ATT et préampli du côté SUB (essai) : le CAT ne les lit pas ; affichés d'après le dernier réglage envoyé (« ? » si aucun)
+      if (C.attB) add(r.attB == null ? 'ATT ?' : 'ATT', r.attB ? 'green' : '', 'attB');
+      if (C.preampB && r.freqB < 144000000) add(r.preampB == null ? 'IPO ?' : ['IPO', 'AMP1', 'AMP2'][r.preampB] || 'IPO', r.preampB ? 'green' : '', 'preampB');
       if (r.nbB != null) add(r.nbB ? 'NB ' + r.nbB : 'NB', r.nbB ? 'amber' : '', 'nbB');
       if (r.nrB != null) add(r.nrB ? 'DNR ' + r.nrB : 'DNR', r.nrB ? 'amber' : '', 'nrB');
       if (r.notchB != null) add('NOTCH', r.notchB ? 'amber' : '', 'notchB');

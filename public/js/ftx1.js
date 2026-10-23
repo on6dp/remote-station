@@ -73,7 +73,7 @@
     ],
     // Console CAT : lectures supplémentaires pour le diagnostic (ATT / préampli par côté)
     extraQueries: ['RA1;', 'PA0;', 'PA1;', 'PA2;'],
-    extraStateKeys: ['widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
+    extraStateKeys: ['attB', 'preampB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
     // Préampli de la gamme du VFO A (144 / 430 MHz), pour le bouton AMP
     derive(r) {
@@ -102,6 +102,12 @@
       // Largeur de filtre du côté SUB (VFO B) : SH1 0 nn (Hamlib ftx1_audio.c) — molette sur « BW » de l'écran du VFO B
       { id: 'widthB', g: 'flt', label: 'WIDTH (VFO B)', type: 'width', modeKey: 'modeB', write: (v) => 'SH1' + pad(v, 3) + ';',
         when: (s) => !!api.widthTableFn && !!api.widthTableFn(s.modeB) && !s.narrowB },
+      // ATT et préampli du côté SUB (essai) : le CAT ne les lit pas (PA0 / RA0 renvoient MAIN). La page Station passe sur SUB
+      // (FT confirmé avant VS1), envoie RA0 / PA0, puis revient sur MAIN. Valeur affichée = dernier réglage envoyé.
+      { id: 'attB', g: 'rx', label: 'ATT (VFO B)', type: 'toggle', viaSub: true, write: (v) => 'RA0' + v + ';',
+        when: (s) => s.freqB != null && s.freqB < 144000000 },
+      { id: 'preampB', g: 'rx', label: 'Préampli (VFO B)', type: 'select', options: [[0, 'IPO'], [1, 'AMP1'], [2, 'AMP2']], viaSub: true,
+        write: (v) => 'PA0' + v + ';', when: (s) => s.freqB != null && s.freqB < 144000000 },
       // Côté SUB (VFO B) : réglés d'un clic sur les badges de l'écran du VFO B (P1 = 1, comme les lectures NL1, RL1, BP10, BC1, NA1)
       { id: 'narrowB', g: 'flt', label: 'NARROW (VFO B)', type: 'toggle', write: (v) => 'NA1' + v + ';' },
       { id: 'nbB', g: 'flt', label: 'NB (VFO B)', type: 'level', min: 0, max: 10, step: 1, off0: true, write: (v) => 'NL1' + pad(v, 3) + ';' },

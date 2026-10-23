@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.21.6** — FTX-1 (essai) : badges **ATT** et **IPO / AMP1 / AMP2** de retour sur l'écran du VFO B. Un clic passe le TRX sur SUB (FT confirmé avant VS1, sans émission), envoie RA0 / PA0, puis revient sur MAIN (VS0, FT0). Le CAT ne relisant pas ces réglages de SUB, le badge affiche le dernier réglage envoyé (« ? » au départ). **Recharger la page Station.**
 - **0.21.5** — **FTX-1 : clic sur SUB ne fait plus émettre le TRX.** Si le TRX n'accepte pas « FT1 » (VFO d'émission SUB), l'ancienne commande « FT1;VS1; » laissait l'état FT0 + VS1, qui met le FTX-1 en émission. Le passage sur SUB envoie maintenant FT1 (ou FT3), relit FT et n'envoie VS1 que si le TRX confirme ; sinon il reste sur MAIN, en réception, avec un message. Filet de sécurité : émission après un réglage de VFO → TX0 puis retour complet sur MAIN (VS0, FT0). **Recharger la page Station.**
 - **0.21.4** — FTX-1 : l'ATT et le préampli du côté SUB ne sont pas accessibles par le CAT (vérifié au club : PA0 / RA0 renvoient les réglages de MAIN même côté SUB actif). Ils ne sont plus affichés sur l'écran du VFO B (c'étaient ceux de MAIN) ; ATT et IPO / AMP1 / AMP2 du VFO A règlent MAIN. Test automatique : une lecture sans réponse n'est plus prise pour une réponse.
 - **0.21.3** — FTX-1 : bouton « Test automatique : ATT et préampli de chaque côté » dans la console Lecture CAT (lecture PA0 / RA0 côté MAIN, passage sur SUB par l'ordre FT / VS sûr, lecture, retour) avec conclusion en clair.

@@ -287,6 +287,27 @@
             this.forceSlow = true;
             return this._toSub(m.by, 0);
           }
+          // Réglage du côté SUB que le CAT n'adresse qu'au côté actif (ATT / préampli du VFO B, FTX-1) :
+          // passage sur SUB (sûr), commande, retour sur MAIN (VS0 puis FT0)
+          if (FTX1.CONTROL[m.id].viaSub && FTX1.VIRTUAL_SPLIT && FTX1.txVfoTries) {
+            const cmd = FTX1.CONTROL[m.id].write(v, this.radio);
+            const done = () => { this.radio[m.id] = v; this.dirty = true; this._push(true); };
+            this.lastCtl = { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() };
+            this.forceSlow = true;
+            if (this.radio.vfoSel === 1) { this._write(cmd); done(); return; }
+            return this._toSub(m.by, 0, () => {
+              this._write(cmd);
+              done();
+              setTimeout(() => {
+                if (this.catKeyed) return;
+                this.lastCtl = { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() };
+                this._write(FTX1.cmdVfoSel(0));
+                this._write(FTX1.txVfoTries(0)[this.txVfoOk || 0]);
+                this._readBack('vfoSel');
+                this.log(FTX1.CONTROL[m.id].label + ' : envoyé côté SUB, retour sur MAIN');
+              }, 200);
+            });
+          }
           this._write(FTX1.CONTROL[m.id].write(v, this.radio));
           // Réglages de VFO / SPLIT : une émission qui suivrait de près n'est pas voulue (filet de sécurité, FTX-1)
           this.lastCtl = ['split', 'vfoSel', 'swap', 'aToB', 'bToA'].indexOf(m.id) >= 0 ? { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() } : null;
@@ -392,7 +413,7 @@
     }
 
     /** FTX-1 : passage sur SUB sans jamais l'état FT0 + VS1 (émission) — FT confirmé par le TRX avant VS1. */
-    _toSub(by, k) {
+    _toSub(by, k, then) {
       const rig = this.rig;
       if (this.subWait) clearTimeout(this.subWait.timer);
       this.subWait = null;
@@ -406,11 +427,11 @@
         return;
       }
       const i = order[k];
-      const w = { i, cmd: forms[i], by, timer: null };
+      const w = { i, cmd: forms[i], by, timer: null, then };
       this.subWait = w;
       this._write(forms[i]);
       this._write('FT;');
-      w.timer = setTimeout(() => { if (this.subWait === w) this._toSub(by, k + 1); }, 700);
+      w.timer = setTimeout(() => { if (this.subWait === w) this._toSub(by, k + 1, then); }, 700);
     }
     _subReply(t) {
       const w = this.subWait;
@@ -425,6 +446,7 @@
       this.txVfoOk = w.i;
       this._write('VS1;');
       this._readBack('vfoSel');
+      if (w.then) setTimeout(() => { if (!this.catKeyed) w.then(); }, 150);
     }
 
     /**
