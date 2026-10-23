@@ -104,6 +104,7 @@
         }
         if (this.ftWait && typeof t === 'string') this._ftReply(t);
         if (this.subWait && typeof t === 'string') this._subReply(t);
+        if (this.waitRe && typeof t === 'string' && this.waitRe.re.test(t)) { const w = this.waitRe; this.waitRe = null; clearTimeout(w.timer); w.cb(t); }
         const p = FTX1.parse(t);
         if (!p) {
           // Diagnostic : réponse inconnue du pilote (affichée une fois par type, 20 au plus)
@@ -195,6 +196,8 @@
       if (this.catKeyed && now - this.lastKa > this.kaTimeoutMs) this.unkey('keepalive VPS perdu');
       if (!this.serialOpen) return;
       this._txWatchdog(now);
+      // Changement de côté MAIN / SUB en cours : pas de lectures en rafale (le TRX perdrait des commandes)
+      if (now < (this.pollHold || 0)) return;
       if (this.radio.connected && this.lastRx && now - this.lastRx > this.radioTimeoutMs) {
         this.radio.connected = false;
         this.dirty = true;
@@ -282,10 +285,10 @@
           if (FTX1.CONTROL[m.id].transmits && (!this.serialOpen || !this.radio.connected)) return this.log('Refusé : radio non connectée');
           // FTX-1 : passage sur SUB. VS1 avec FT0 met le TRX en émission : FT (VFO d'émission) d'abord, relu, et VS1
           // seulement si le TRX confirme FT1 / FT3 ; sinon pas de VS1 (le TRX reste sur MAIN, en réception)
-          if (m.id === 'vfoSel' && v === 1 && FTX1.VIRTUAL_SPLIT && FTX1.txVfoTries) {
+          if (m.id === 'vfoSel' && FTX1.VIRTUAL_SPLIT && FTX1.txVfoTries) {
             this.lastCtl = { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() };
             this.forceSlow = true;
-            return this._toSub(m.by, 0);
+            return v === 1 ? this._toSub(m.by, 0) : this._toMain(m.by);
           }
           // Réglage du côté SUB que le CAT n'adresse qu'au côté actif (ATT / préampli du VFO B, FTX-1) :
           // passage sur SUB (sûr), commande, retour sur MAIN (VS0 puis FT0)
@@ -301,10 +304,7 @@
               setTimeout(() => {
                 if (this.catKeyed) return;
                 this.lastCtl = { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() };
-                this._write(FTX1.cmdVfoSel(0));
-                this._write(FTX1.txVfoTries(0)[this.txVfoOk || 0]);
-                this._readBack('vfoSel');
-                this.log(FTX1.CONTROL[m.id].label + ' : envoyé côté SUB, retour sur MAIN');
+                this._toMain(m.by, () => this.log(FTX1.CONTROL[m.id].label + ' : envoyé côté SUB, retour sur MAIN'));
               }, 200);
             });
           }
@@ -429,9 +429,64 @@
       const i = order[k];
       const w = { i, cmd: forms[i], by, timer: null, then };
       this.subWait = w;
+      this.pollHold = Date.now() + 1500;
       this._write(forms[i]);
       this._write('FT;');
       w.timer = setTimeout(() => { if (this.subWait === w) this._toSub(by, k + 1, then); }, 700);
+    }
+    /** Attend une réponse du TRX (expression régulière), sinon timeout. */
+    _await(re, ms, cb) {
+      if (this.waitRe) clearTimeout(this.waitRe.timer);
+      const w = { re, cb, timer: null };
+      this.waitRe = w;
+      w.timer = setTimeout(() => { if (this.waitRe === w) { this.waitRe = null; cb(null); } }, ms);
+    }
+    /**
+     * FTX-1 : retour sur MAIN sans jamais l'état FT0 + VS1 (émission). VS0 d'abord, relu et confirmé (jusqu'à 3 envois),
+     * puis seulement le VFO d'émission MAIN (FT0 ou FT2), relu. Sans VS0 confirmé, FT n'est pas touché (le TRX reste sur SUB).
+     */
+    _toMain(by, then, k) {
+      const rig = this.rig;
+      k = k || 0;
+      this.pollHold = Date.now() + 1500;
+      if (k >= 3) {
+        const why = 'le TRX n’a pas confirmé le retour sur MAIN (VS0) : FT laissé sur SUB pour ne pas le mettre en émission';
+        this.log('Sécurité : ' + why, 'st-bad');
+        if (this.wsUp) this.sendWs({ t: 'safety', reason: why });
+        this.pollHold = 0;
+        this._readBack('vfoSel');
+        return;
+      }
+      this._write('VS0;');
+      this._write('VS;');
+      this._await(/^VS[01]$/, 500, (t) => {
+        if (this.catKeyed) return;
+        if (t !== 'VS0') return this._toMain(by, then, k + 1);
+        const forms = rig.txVfoTries(0);
+        const order = [this.txVfoOk || 0].concat(forms.map((_, i) => i).filter((i) => i !== (this.txVfoOk || 0)));
+        const tryFt = (j) => {
+          if (j >= order.length) {
+            this.log('Le TRX n’a pas confirmé l’émission sur MAIN (FT relu : ' + (this.ftSeen || '?') + ') ; réception sur MAIN', 'st-warn');
+            this.pollHold = 0;
+            this._readBack('vfoSel');
+            return;
+          }
+          this._write(forms[order[j]]);
+          this._write('FT;');
+          this._await(/^FT[0-3]$/, 600, (f) => {
+            if (f) this.ftSeen = f;
+            if (f && +f[2] % 2 === 0) {
+              this.txVfoOk = order[j];
+              this.pollHold = Date.now() + 300;
+              this._readBack('vfoSel');
+              if (then) then();
+              return;
+            }
+            tryFt(j + 1);
+          });
+        };
+        tryFt(0);
+      });
     }
     _subReply(t) {
       const w = this.subWait;
@@ -446,6 +501,7 @@
       this.txVfoOk = w.i;
       this._write('VS1;');
       this._readBack('vfoSel');
+      this.pollHold = Date.now() + 300;
       if (w.then) setTimeout(() => { if (!this.catKeyed) w.then(); }, 150);
     }
 
@@ -504,8 +560,9 @@
       const rx = this.rxVfo != null ? this.rxVfo : this.radio.vfoSel ? 1 : 0;
       this.rxVfo = null;
       const ft = rig.txVfoTries ? rig.txVfoTries(rx)[this.txVfoOk || 0] : rig.cmdTxVfo(rx);
-      // Retour sur MAIN : VS0 avant FT0 ; sur SUB : FT1 avant VS1 (FT0 avec VS1 met le FTX-1 en émission)
-      if (rx === 0 && rig.cmdVfoSel) { this._write(rig.cmdVfoSel(0)); this._write(ft); }
+      // Retour sur MAIN : VS0 confirmé avant FT0 ; sur SUB : FT1 avant VS1 (FT0 avec VS1 met le FTX-1 en émission)
+      if (rx === 0 && rig.cmdVfoSel && rig.txVfoTries) this._toMain('restauration');
+      else if (rx === 0 && rig.cmdVfoSel) { this._write(rig.cmdVfoSel(0)); this._write(ft); }
       else { this._write(ft); if (rig.cmdVfoSel) this._write(rig.cmdVfoSel(rx)); }
     }
 

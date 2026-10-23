@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.21.7 | [RemoteStation-Setup-0.21.7.exe](0.21.7/RemoteStation-Setup-0.21.7.exe) | [remote-station-0.21.7.tar.gz](0.21.7/remote-station-0.21.7.tar.gz) | FTX-1 : retour sur MAIN protégé ; ATT / préampli du VFO B (essai) — [empreintes SHA-256](0.21.7/SHA256SUMS.txt) |
 | 0.21.6 | [RemoteStation-Setup-0.21.6.exe](0.21.6/RemoteStation-Setup-0.21.6.exe) | [remote-station-0.21.6.tar.gz](0.21.6/remote-station-0.21.6.tar.gz) | FTX-1 : ATT / préampli du VFO B (essai, par passage sur SUB) — [empreintes SHA-256](0.21.6/SHA256SUMS.txt) |
 | 0.21.5 | [RemoteStation-Setup-0.21.5.exe](0.21.5/RemoteStation-Setup-0.21.5.exe) | [remote-station-0.21.5.tar.gz](0.21.5/remote-station-0.21.5.tar.gz) | FTX-1 : SUB ne fait plus émettre (FT confirmé avant VS1) — [empreintes SHA-256](0.21.5/SHA256SUMS.txt) |
 | 0.21.4 | [RemoteStation-Setup-0.21.4.exe](0.21.4/RemoteStation-Setup-0.21.4.exe) | [remote-station-0.21.4.tar.gz](0.21.4/remote-station-0.21.4.tar.gz) | FTX-1 : plus d'ATT / préampli faux sur le VFO B — [empreintes SHA-256](0.21.4/SHA256SUMS.txt) |
