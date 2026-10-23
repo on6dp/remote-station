@@ -459,11 +459,11 @@
       this.sideSeq = (this.sideSeq || 0) + 1;
     }
     /**
-     * FTX-1 : changement de côté MAIN / SUB. Le TRX émet s'il reste un instant avec FT (émission) et VS (côté actif)
-     * en désaccord (constaté au club : FT1 seul, puis VS1 relu plus tard, le mettait en émission). Les deux commandes
-     * partent donc d'un bloc (« FT1;VS1; » vers SUB, « VS0;FT0; » vers MAIN), comme la touche de la face avant, sans
-     * commande sans effet (le FTX-1 répond « ? » puis se tait). Lectures suspendues avant (réponses en attente écoulées)
-     * et vérification après (le TRX peut se taire plusieurs secondes pendant le changement).
+     * FTX-1 : changement de côté MAIN / SUB. Manuel CAT (FTX-1_CAT_OM_ENG_2508-C) :
+     *   VS0 = côté MAIN en émission / réception, SUB en réception ; VS1 = MAIN en réception, côté SUB en émission / réception.
+     * VS fait donc tout, comme la touche MAIN / SUB de la face avant. FT (FUNCTION TX) n'est pas envoyé : un FT différent
+     * du côté actif met le FTX-1 en émission (constaté au club). Seulement si FT n'a pas suivi VS (état laissé par une
+     * ancienne version), FT est remis sur le côté actif pour sortir de ce désaccord. Pas de commande sans effet (« ? »).
      */
     _switchSide(v, by, then) {
       this._cancelSide();
@@ -475,9 +475,8 @@
       this.pollHold = Date.now() + 9000;
       setTimeout(() => {
         if (seq !== this.sideSeq || this.catKeyed) return;
-        const ft = this.radio.txVfo === v ? '' : this.rig.txVfoTries(v)[this.txVfoOk || 0];
-        const vs = this.radio.vfoSel === v ? '' : 'VS' + v + ';';
-        const cmd = v ? ft + vs : vs + ft;
+        // Côté actif déjà bon mais FT en désaccord : remettre FT d'accord ; sinon VS seul
+        const cmd = this.radio.vfoSel === v ? this.rig.txVfoTries(v)[this.txVfoOk || 0] : 'VS' + v + ';';
         this._trace(cmd);
         this.lastCtl = { id: 'MAIN / SUB', at: Date.now(), long: true };
         this._write(cmd);
@@ -492,9 +491,16 @@
             if (!t && n < 3) return check(n + 1);
             setTimeout(() => {
               if (seq !== this.sideSeq) return;
+              // FT relu différent du côté actif (n'a pas suivi VS) : remis d'accord, puis nouvelle vérification
+              if (this.radio.vfoSel === v && this.radio.txVfo != null && this.radio.txVfo !== v && n < 3) {
+                const f = this.rig.txVfoTries(v)[this.txVfoOk || 0];
+                this._trace(f + ' (FT n’a pas suivi)');
+                this._write(f);
+                return setTimeout(() => check(n + 1), 800);
+              }
               this.pollHold = 0;
               this._readBack('vfoSel');
-              const ok = this.radio.vfoSel === v && this.radio.txVfo === v;
+              const ok = this.radio.vfoSel === v && (this.radio.txVfo == null || this.radio.txVfo === v);
               if (ok) { this._diag(name); if (then && !this.catKeyed) then(); return; }
               const why = name + ' non confirmé par le TRX (VS ' + this.radio.vfoSel + ', FT ' + this.radio.txVfo + ')' + this._traceText();
               this.log('Sécurité : ' + why, 'st-bad');
@@ -502,7 +508,7 @@
             }, 400);
           });
         };
-        setTimeout(() => check(0), 1500);
+        setTimeout(() => check(0), 1200);
       }, 400);
     }
     _toSub(by, k, then) { return this._switchSide(1, by, then); }

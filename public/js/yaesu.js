@@ -329,6 +329,8 @@
           else if (c === 'TX0') this.tx = 0;
           else if (c === 'FT') out.push('FT' + (spec.splitIsFT ? this.txv || 0 : this.split ? 1 : 0) + ';');
           else if ((m = /^FT([0-3])$/.exec(c))) { if (this.ftMode === 'deaf') { /* essai : TRX qui ignore FT */ } else if (this.ftMode === 'x23' ? +m[1] >= 2 : +m[1] < 2) this.txv = +m[1] % 2; else if (this.ftMode === 'x23') out.push('?;'); }
+          // FTX-1 (manuel CAT) : VS0 = MAIN en émission / réception, VS1 = SUB en émission / réception — VS déplace aussi l'émetteur
+          else if (spec.splitIsFT && /^VS[01]$/.test(c)) { this.ans['VS;'] = c; this.txv = +c[2]; }
           else if (spec.splitIsFT && /^ST[0-2]$/.test(c)) { this.ans['ST;'] = c; if (c !== 'ST0') this.tx = 2; } // ST1 par CAT : le FTX-1 émet sur le SUB
           else if ((m = /^RM([3-8])$/.exec(c))) {
             const raw = m[1] === '8' ? (this.tx ? 205 : 212) : m[1] === '7' ? (this.tx ? Math.round(this.power * 0.6) : 0)
