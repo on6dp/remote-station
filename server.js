@@ -316,6 +316,7 @@ function onDigi(m) {
     return;
   }
   if (m.t === 'log') return console.error(m.msg);
+  if ((m.t === 'jtty' || m.t === 'rtty_text') && rxMuted(m.t === 'jtty' ? 3000 : 1500)) return;
   if (m.t === 'jtty') {
     // Messages JTTY : dernière version de chaque message (le texte grandit trame après trame)
     digi.jtty.set(m.u.key, m.u);
@@ -468,6 +469,10 @@ function chatPush(item) {
 let connSeq = 0;
 let lastCtrlActivity = 0;
 let ptt = { active: false, conn: null, since: 0, lastBeat: 0 };
+// Pendant une émission, la BF du TRX contient notre propre signal : le décodage RTTY / JTTY l'afficherait
+// une deuxième fois. Rien n'est affiché pendant l'émission ni juste après (retard de la BF + fin du caractère).
+let pttEndAt = 0;
+const rxMuted = (tailMs) => ptt.active || Date.now() - pttEndAt < tailMs + (Number(digi.latency) || 150);
 const fails = new Map(); // ip -> { n, until }
 
 // ---------------------------------------------------------------- macros personnelles (RTTY, CW…) de chaque membre
@@ -802,6 +807,7 @@ function stopPtt(reason) {
   if (ptt.digi && !digiEnd && seq && seq.on) { seq.on = false; setTimeout(updateDigi, 0); }
   if (digiEnd && sentP) setTimeout(() => seqAfterTx(sentP), 0);
   ptt = { active: false, conn: null, since: 0, lastBeat: 0 };
+  pttEndAt = Date.now();
   toStation({ t: 'cmd', op: 'ptt', on: false, reason });
   journal('tx_stop', { call: who.user.call, durationS: dur, reason, freq: txFreq() });
   if (reason !== 'relâché' && !digiEnd) {
