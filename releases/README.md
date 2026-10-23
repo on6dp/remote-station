@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.21.10 | [RemoteStation-Setup-0.21.10.exe](0.21.10/RemoteStation-Setup-0.21.10.exe) | [remote-station-0.21.10.tar.gz](0.21.10/remote-station-0.21.10.tar.gz) | FTX-1 : clics MAIN / SUB rapprochés sans conflit — [empreintes SHA-256](0.21.10/SHA256SUMS.txt) |
 | 0.21.9 | [RemoteStation-Setup-0.21.9.exe](0.21.9/RemoteStation-Setup-0.21.9.exe) | [remote-station-0.21.9.tar.gz](0.21.9/remote-station-0.21.9.tar.gz) | FTX-1 : ATT / préampli par VFO, cadres sur le côté actif — [empreintes SHA-256](0.21.9/SHA256SUMS.txt) |
 | 0.21.8 | [RemoteStation-Setup-0.21.8.exe](0.21.8/RemoteStation-Setup-0.21.8.exe) | [remote-station-0.21.8.tar.gz](0.21.8/remote-station-0.21.8.tar.gz) | FTX-1 : RF, Filtre, DSP suivent le VFO sélectionné — [empreintes SHA-256](0.21.8/SHA256SUMS.txt) |
 | 0.21.7 | [RemoteStation-Setup-0.21.7.exe](0.21.7/RemoteStation-Setup-0.21.7.exe) | [remote-station-0.21.7.tar.gz](0.21.7/remote-station-0.21.7.tar.gz) | FTX-1 : retour sur MAIN protégé ; ATT / préampli du VFO B (essai) — [empreintes SHA-256](0.21.7/SHA256SUMS.txt) |

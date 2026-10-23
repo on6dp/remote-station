@@ -433,8 +433,17 @@
     }
 
     /** FTX-1 : passage sur SUB sans jamais l'état FT0 + VS1 (émission) — FT confirmé par le TRX avant VS1. */
+    /** Changement de côté MAIN / SUB en cours annulé (nouveau clic) : plus aucune commande VS / FT de l'ancien. */
+    _cancelSide() {
+      if (this.subWait) clearTimeout(this.subWait.timer);
+      this.subWait = null;
+      if (this.waitRe) clearTimeout(this.waitRe.timer);
+      this.waitRe = null;
+      this.sideSeq = (this.sideSeq || 0) + 1;
+    }
     _toSub(by, k, then) {
       const rig = this.rig;
+      if (!k) { this._cancelSide(); this.log('Passage sur SUB (' + (by || '?') + ')'); }
       if (this.subWait) clearTimeout(this.subWait.timer);
       this.subWait = null;
       const forms = rig.txVfoTries(1);
@@ -468,6 +477,8 @@
     _toMain(by, then, k) {
       const rig = this.rig;
       k = k || 0;
+      if (!k) { this._cancelSide(); this.log('Retour sur MAIN (' + (by || '?') + ')'); }
+      const seq = this.sideSeq;
       this.pollHold = Date.now() + 3000;
       if (k >= 3) {
         const why = 'le TRX n’a pas confirmé le retour sur MAIN (VS0) : FT laissé sur SUB pour ne pas le mettre en émission';
@@ -480,8 +491,8 @@
       this._write('VS0;');
       this._write('VS;');
       this._await(/^VS[01]$/, 1500, (t) => {
-        if (this.catKeyed) return;
-        if (t !== 'VS0') return this._toMain(by, then, k + 1);
+        if (this.catKeyed || seq !== this.sideSeq) return; // émission commencée ou nouveau clic entre-temps
+        if (t !== 'VS0') { this.log('VS relu : ' + (t || 'pas de réponse') + ' → VS0 renvoyé', 'st-warn'); return this._toMain(by, then, k + 1); }
         const forms = rig.txVfoTries(0);
         const order = [this.txVfoOk || 0].concat(forms.map((_, i) => i).filter((i) => i !== (this.txVfoOk || 0)));
         const tryFt = (j) => {
@@ -494,6 +505,7 @@
           this._write(forms[order[j]]);
           this._write('FT;');
           this._await(/^FT[0-3]$/, 1500, (f) => {
+            if (seq !== this.sideSeq) return;
             if (f) this.ftSeen = f;
             if (f && +f[2] % 2 === 0) {
               this.txVfoOk = order[j];
