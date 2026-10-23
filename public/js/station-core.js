@@ -103,6 +103,7 @@
           this.query = null;
         }
         if (this.ftWait && typeof t === 'string') this._ftReply(t);
+        if (this.subWait && typeof t === 'string') this._subReply(t);
         const p = FTX1.parse(t);
         if (!p) {
           // Diagnostic : réponse inconnue du pilote (affichée une fois par type, 20 au plus)
@@ -151,6 +152,8 @@
           this.lastCtl = null;
           this._write(FTX1.cmdPtt(false));
           if (FTX1.UNKEY_EXTRA) this._write(FTX1.UNKEY_EXTRA);
+          // FTX-1 : l'émission vient de l'état FT0 + VS1 ; TX0 seul ne suffit pas, retour complet sur MAIN (VS0 puis FT0)
+          if (FTX1.VIRTUAL_SPLIT && FTX1.cmdVfoSel) { this._write(FTX1.cmdVfoSel(0)); this._write(FTX1.cmdTxVfo(0)); }
           this.log('Sécurité : le TRX est passé en émission après le réglage « ' + what + ' » → retour en réception', 'st-bad');
           if (this.wsUp) this.sendWs({ t: 'safety', reason: 'le TRX est passé en émission après le réglage « ' + what + ' » : retour en réception forcé' });
         }
@@ -277,6 +280,13 @@
         } else if (m.op === 'ctl') {
           const v = FTX1.validate(m.id, m.value, this.radio, { skipWhen: true });
           if (FTX1.CONTROL[m.id].transmits && (!this.serialOpen || !this.radio.connected)) return this.log('Refusé : radio non connectée');
+          // FTX-1 : passage sur SUB. VS1 avec FT0 met le TRX en émission : FT (VFO d'émission) d'abord, relu, et VS1
+          // seulement si le TRX confirme FT1 / FT3 ; sinon pas de VS1 (le TRX reste sur MAIN, en réception)
+          if (m.id === 'vfoSel' && v === 1 && FTX1.VIRTUAL_SPLIT && FTX1.txVfoTries) {
+            this.lastCtl = { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() };
+            this.forceSlow = true;
+            return this._toSub(m.by, 0);
+          }
           this._write(FTX1.CONTROL[m.id].write(v, this.radio));
           // Réglages de VFO / SPLIT : une émission qui suivrait de près n'est pas voulue (filet de sécurité, FTX-1)
           this.lastCtl = ['split', 'vfoSel', 'swap', 'aToB', 'bToA'].indexOf(m.id) >= 0 ? { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() } : null;
@@ -379,6 +389,42 @@
       this._checkKeyed(w.by);
       this._startDigi();
       this.log('TX ON (' + (w.by || '?') + ') — émission sur ' + (w.v ? 'SUB (VFO B)' : 'MAIN (VFO A)') + ', ' + this.ftSeen + ' confirmé par le TRX');
+    }
+
+    /** FTX-1 : passage sur SUB sans jamais l'état FT0 + VS1 (émission) — FT confirmé par le TRX avant VS1. */
+    _toSub(by, k) {
+      const rig = this.rig;
+      if (this.subWait) clearTimeout(this.subWait.timer);
+      this.subWait = null;
+      const forms = rig.txVfoTries(1);
+      const order = [this.txVfoOk || 0].concat(forms.map((_, i) => i).filter((i) => i !== (this.txVfoOk || 0)));
+      if (k >= order.length) {
+        const why = 'le TRX n’a pas confirmé le VFO d’émission SUB (FT relu : ' + (this.ftSeen || 'aucune réponse') + ') : passage sur SUB annulé (il aurait mis le TRX en émission)';
+        this.log('Sécurité : ' + why, 'st-bad');
+        if (this.wsUp) this.sendWs({ t: 'safety', reason: why });
+        this._readBack('vfoSel');
+        return;
+      }
+      const i = order[k];
+      const w = { i, cmd: forms[i], by, timer: null };
+      this.subWait = w;
+      this._write(forms[i]);
+      this._write('FT;');
+      w.timer = setTimeout(() => { if (this.subWait === w) this._toSub(by, k + 1); }, 700);
+    }
+    _subReply(t) {
+      const w = this.subWait;
+      const mm = /^FT([0-3])$/.exec(t);
+      if (!w || !mm) return;
+      this.ftSeen = 'FT' + mm[1];
+      if (+mm[1] % 2 !== 1) return; // pas encore SUB : on attend la relecture ou l'essai suivant
+      clearTimeout(w.timer);
+      this.subWait = null;
+      if (this.catKeyed) return; // une émission a commencé entre-temps : on ne touche plus à VS
+      if ((this.txVfoOk || 0) !== w.i) this.log('Le TRX accepte « ' + w.cmd + ' » pour choisir le VFO d’émission : retenu');
+      this.txVfoOk = w.i;
+      this._write('VS1;');
+      this._readBack('vfoSel');
     }
 
     /**
