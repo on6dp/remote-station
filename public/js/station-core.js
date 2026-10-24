@@ -218,13 +218,13 @@
           for (let i = 0; i < n * (this.forceSlow ? 2 : 1); i++) slow.push(rig.SLOW[(this.slowPos + i) % rig.SLOW.length]);
           this.slowPos = (this.slowPos + slow.length) % rig.SLOW.length;
           // Relectures prioritaires (réglage qui vient d'être modifié), puis lectures rapides, puis tranche lente
-          this.queue = this.prio.concat(rig.FAST, this.radio.dualRx === 1 && rig.FAST_SUB ? rig.FAST_SUB : [], this.radio.tx ? rig.TXMETERS : [], slow);
+          this.queue = this.prio.concat(rig.FAST, this.radio.dualRx !== 0 && rig.FAST_SUB ? rig.FAST_SUB : [], this.radio.tx ? rig.TXMETERS : [], slow);
           this.prio = [];
           this._drain();
         }
       } else {
         let q = rig.FAST;
-        if (this.radio.dualRx === 1 && rig.FAST_SUB) q += [].concat(rig.FAST_SUB).join('');
+        if (this.radio.dualRx !== 0 && rig.FAST_SUB) q += [].concat(rig.FAST_SUB).join('');
         if (this.radio.tx) q += rig.TXMETERS;
         if (this.forceSlow || this.ticks % 4 === 0) q += rig.SLOW;
         this._write(q, true);

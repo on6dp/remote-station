@@ -994,13 +994,15 @@
     // Pendant l'émission : chiffres rouges sur le VFO qui émet vraiment d'après le TRX (FT relu), pas sur le choix affiché
     const airOnB = txing && (r.txReal === 0 || r.txReal === 1) ? r.txReal === 1 : txOnB;
     const rxW = (pSel != null ? Number(pSel) : r.vfoSel) === 1 ? 'B' : 'A'; // VFO en réception (MAIN, sauf si le TRX opère sur SUB)
+    // FTX-1 en double réception (FR00) : les deux côtés reçoivent (RX vert, fréquence pas grisée), comme sur l'écran du TRX
+    const dual = r.dualRx === 1;
     for (const w of ['A', 'B']) {
       const el = $('vfo' + w);
       const isTx = w === 'B' ? txOnB : !txOnB;
       el.classList.toggle('live', live);
       el.classList.toggle('target', w === target);   // VFO réglé (molette, flèches, bandes)
       el.classList.toggle('txsel', live && isTx);     // cadre : VFO désigné pour l'émission
-      el.classList.toggle('idle', live && !isTx && w !== rxW); // VFO ni en réception ni en émission (B hors SPLIT) : grisé
+      el.classList.toggle('idle', live && !isTx && w !== rxW && !dual); // VFO ni en réception ni en émission (B hors SPLIT) : grisé
       el.classList.toggle('on-air', live && txing && (w === 'B' ? airOnB : !airOnB));
       const f = live || pend[w] != null ? currentFreq(w) : null;
       drawFreq(w, f);
@@ -1010,7 +1012,8 @@
       badge($('tx' + w), 'TX', live && isTx ? (txing ? 'b-tx live' : 'b-tx armed') : 'b-tx');
       $('txOn' + w).hidden = !(live && isTx);
       $('side' + w).classList.toggle('on', live && w === rxW); // MAIN / SUB : côté actif mis en évidence
-      badge($('rx' + w), 'RX', live && w === rxW && !txing ? 'b-rx on' : 'b-rx');
+      const sends = txing && (w === 'B' ? airOnB : !airOnB);
+      badge($('rx' + w), 'RX', live && (dual ? !sends : w === rxW && !txing) ? 'b-rx on' : 'b-rx');
       badge($('mode' + w), live ? (w === 'A' ? r.mode : r.modeB) || '---' : '---', 'b-mode');
     }
     const wt = RIG().widthTable && RIG().widthTable(r.mode);

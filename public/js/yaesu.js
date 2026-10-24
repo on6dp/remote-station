@@ -166,9 +166,9 @@
     // Les commandes partent une par une, espacées (FRAME_GAP_MS) : une rafale de 30 commandes
     // déborde le tampon CAT de la radio, qui en perd une partie (mode non lu, « plus de réponse »…)
     const FAST = ['FA;', 'MD0;', 'FB;', 'MD1;', 'SM0;', 'TX;', 'FT;'];
-    // Deux récepteurs (FTX-1) : S-mètre du côté SUB (SM1), lu seulement en double réception (FR00) ; en réception simple
-    // le TRX ne répond pas à SM1 et SM0 donne le S-mètre du côté actif
-    const FAST_SUB = spec.subBadges ? ['SM1;'] : [];
+    // Deux récepteurs (FTX-1) : S-mètre du côté SUB par READ METER « RM2 » (manuel CAT : RM P1 2 = S SUB-side ;
+    // le FTX-1 ne répond pas à SM1), lu en double réception (FR00) ; en réception simple, SM0 = côté actif
+    const FAST_SUB = spec.subBadges ? ['RM2;'] : [];
     // En émission : mesures COMP, ALC, PO, SWR, et aussi puissance et VOX (contrôles de sécurité plus rapides)
     const TXMETERS = ['RM3;', 'RM4;', 'RM5;', 'RM6;', P.read, 'VX;'];
     const SLOW = READS.map((r) => r.cmd).concat(['RM7;', 'RM8;']); // + IDD, VDD
@@ -266,6 +266,7 @@
       if ((m = /^MD1([0-9A-Z])$/.exec(tok))) return { modeCodeB: m[1], modeB: MODES_ALL[m[1]] || ('?' + m[1]) };
       if ((m = /^SM0(\d{3})$/.exec(tok))) return { smeter: parseInt(m[1], 10) };
       if ((m = /^SM1(\d{3})$/.exec(tok))) return { smeterB: parseInt(m[1], 10) };
+      if ((m = /^RM2(\d{3})(\d{3})$/.exec(tok))) return { smeterB: parseInt(m[1], 10) };
       if ((m = /^TX([0-2])$/.exec(tok))) return { tx: parseInt(m[1], 10) }; // 0 RX, 1 TX par CAT, 2 TX par la radio
       // FT : VFO d'émission. Modèles « splitIsFT » (FTX-1) : le SPLIT, c'est FT1 (TX sur SUB), jamais ST1
       if ((m = /^FT([01])$/.exec(tok))) return spec.splitIsFT ? { txVfo: +m[1], split: +m[1] } : { txVfo: +m[1] };
@@ -329,8 +330,8 @@
           else if ((m = /^MD0([0-9A-Z])$/.exec(c)) && MODES_ALL[m[1]]) this.mode = m[1];
           else if ((m = /^MD1([0-9A-Z])$/.exec(c)) && MODES_ALL[m[1]]) this.modeB = m[1];
           else if (c === 'FR') out.push('FR' + (this.single ? '01' : '00') + ';');
-          else if (c === 'SM1' && this.single) { /* réception simple : pas de réponse */ }
-          else if (c === 'SM1') out.push('SM1' + pad(this.tx ? 0 : Math.round(40 + 25 * Math.sin(this.t * 0.7)), 3) + ';');
+          else if (c === 'SM1') { /* FTX-1 réel : pas de réponse à SM1 */ }
+          else if (c === 'RM2') out.push('RM2' + pad(this.single || this.tx ? 0 : Math.round(40 + 25 * Math.sin(this.t * 0.7)), 3) + '000;');
           else if (c === 'SM0') {
             this.t += 0.15;
             const v = this.tx ? 0 : Math.round(70 + 45 * Math.sin(this.t) + 20 * Math.random());
