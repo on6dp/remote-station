@@ -1497,6 +1497,7 @@
         if (RIG().ID !== ctlModel) buildControls();
         render();
         if (DG()) DG().onState(st);
+        if (window.RSLOG && window.RSLOG.onState) window.RSLOG.onState();
       } else if (m.t === 'events') {
         $('events').textContent = '';
         (m.list || []).forEach((e) => addEvent(e, false)); // déjà du plus récent au plus ancien

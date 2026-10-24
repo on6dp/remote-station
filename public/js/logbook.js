@@ -139,6 +139,9 @@
     f.call.addEventListener('change', () => { const c = f.call.value.trim(); if (/^[A-Z0-9/]{3,15}$/.test(c) && api) api.send({ t: 'qrz', call: c }); });
     f.gridsquare.addEventListener('input', () => { f.gridsquare.value = f.gridsquare.value.toUpperCase(); });
     f.freq.addEventListener('change', qoCheck);
+    // Fréquence ou mode tapés à la main : ils ne suivent plus le TRX jusqu'au prochain QSO (ou ⇩ TRX)
+    f.freq.addEventListener('input', () => { f.freq.dataset.manual = '1'; });
+    f.mode.addEventListener('change', () => { f.mode.dataset.manual = '1'; });
     const search = q$('#lgSearch');
     search.addEventListener('input', () => { clearTimeout(listTimer); listTimer = setTimeout(reload, 300); });
     // Menus déroulants
@@ -214,11 +217,15 @@
     const f = q$('#lgForm');
     const st = api && api.state && api.state();
     const r = st && st.radio;
-    if (r && r.freq) {
-      f.freq.value = (r.freq / 1e6).toFixed(6).replace(/0{1,3}$/, '');
-      const m = trxMode(r.mode);
-      if (m) f.mode.value = m;
+    // VFO actif du TRX (côté SUB → VFO B)
+    const hz = r && (r.vfoSel === 1 && r.freqB ? r.freqB : r.freq);
+    if (hz) {
+      f.freq.value = (hz / 1e6).toFixed(6).replace(/0{1,3}$/, '');
+      const m = trxMode(r.vfoSel === 1 && r.modeB ? r.modeB : r.mode);
+      if (m && (withDx || !f.mode.dataset.manual)) f.mode.value = m;
       if (r.power && !f.tx_pwr.value) f.tx_pwr.value = String(Math.round(r.power));
+      delete f.freq.dataset.manual;
+      qoCheck();
     }
     if (withDx || !f.call.value) {
       const dx = loadDx();
@@ -302,6 +309,8 @@
     editing = null;
     const f = q$('#lgForm');
     f.reset();
+    delete f.freq.dataset.manual;
+    delete f.mode.dataset.manual;
     f.querySelector('[data-a="save"]').textContent = 'Enregistrer le QSO';
     f.querySelector('[data-a="del"]').hidden = true;
     f.querySelector('[data-a="cancel"]').hidden = true;
@@ -675,6 +684,8 @@
       const f = q$('#lgForm');
       for (const k of ['call', 'name', 'qth', 'gridsquare', 'comment', 'rst_rcvd']) f[k].value = '';
       delete f.time.dataset.manual;
+      delete f.freq.dataset.manual;
+      delete f.mode.dataset.manual;
       defaultRst(true);
       fmsg(okMsg, 'ok');
       f.call.focus();
@@ -711,6 +722,20 @@
 
   window.RSLOG = {
     init(a) { api = a; },
+    // Fiche du carnet : fréquence et mode suivent tout seuls le VFO actif du TRX (sauf saisie à la main ou modification d'un QSO)
+    onState() {
+      if (!root || root.hidden || editing) return;
+      const f = q$('#lgForm');
+      if (!f || f.freq.dataset.manual || f.contains(document.activeElement) && document.activeElement === f.freq) return;
+      const st = api && api.state && api.state();
+      const r = st && st.radio;
+      const hz = r && (r.vfoSel === 1 && r.freqB ? r.freqB : r.freq);
+      if (!hz) return;
+      const v = (hz / 1e6).toFixed(6).replace(/0{1,3}$/, '');
+      if (f.freq.value !== v) { f.freq.value = v; qoCheck(); }
+      const m = trxMode(r.vfoSel === 1 && r.modeB ? r.modeB : r.mode);
+      if (m && !f.mode.dataset.manual && f.mode.value !== m) f.mode.value = m;
+    },
     onQrz(m) {
       const f = root && q$('#lgForm');
       if (!f || !m.ok || !m.info || String(f.call.value).toUpperCase() !== String(m.call).toUpperCase()) return;

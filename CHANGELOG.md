@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.33** — Carnet (onglet Logs) : la fréquence et le mode de la fiche suivent tout seuls le VFO actif du TRX (VFO B sur SUB), sans cliquer sur ⇩ TRX ; une saisie à la main est gardée jusqu’au QSO suivant. Ctrl+F5 sur le dashboard suffit.
 - **0.22.32** — Réglage `ftx1SubSingle` (false par défaut) : autorise, pour un essai surveillé, le passage MAIN ↔ SUB par le dashboard en réception simple (deux bandes HF), avec VS seul (plus jamais FT depuis la 0.22.29). **Recharger la page Station.**
 - **0.22.31** — FTX-1 en réception simple (deux bandes HF) : les touches A / B ne choisissent que le VFO réglé (molette, flèches, bandes), sans demander de changement de côté refusé ; un message rappelle que le côté actif se change avec la touche MAIN / SUB du TRX. Ctrl+F5 sur le dashboard suffit.
 - **0.22.30** — DUAL RX : le FTX-1 refuse la double réception avec les deux VFO en HF / 50 MHz (constaté au club : 14 + 21 MHz refusé, 432 + 21 MHz accepté) ; le dashboard l’explique au lieu d’envoyer une commande sans effet. Ctrl+F5 sur le dashboard suffit.
