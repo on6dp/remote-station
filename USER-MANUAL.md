@@ -276,7 +276,7 @@ The centre tabs: **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT65**, **
 - **Waterfall settings** (above the scale, as in WSJT-X): **Gain** = contrast (to the right, weak signals stand out), **Zéro** = background level, **Plat** = flat background across the width (corrects the transceiver filter slope), three colour sets, ↺ = defaults. They apply to every waterfall (FT8, RTTY, CW…) and are remembered in your browser.
 - **Handle under the waterfall**: drag it up to enlarge the message lists (double-click: original size).
 - Stops: `■ Arrêter` (or the space bar); the called contact answers someone else; the same message for 6 min without answer (watchdog); control lost.
-- Transmit frequency: the red « TX 1500 » flag below the scale and the dashed red line on the waterfall (right click to move it); receive: green « RX 1500 » flag and solid green line (left click). In **SPLIT**, the message goes out on the other VFO than the receive one, like the PTT.
+- Transmit frequency: the red « TX 1500 » flag below the scale and the solid red line on the waterfall (right click to move it); receive: green « RX 1500 » flag and solid green line (left click). In **SPLIT**, the message goes out on the other VFO than the receive one, like the PTT.
 
 <a id="jt65"></a>
 ### 9.2 JT65

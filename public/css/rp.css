@@ -731,7 +731,7 @@ input[type='range']:disabled { opacity: .45; }
 .dg-grip:hover { background: linear-gradient(to bottom, transparent 2px, rgba(0, 212, 255, .7) 2px, rgba(0, 212, 255, .7) 6px, transparent 6px); }
 .dg-mk { position: absolute; top: 44px; bottom: 0; pointer-events: none; }
 .dg-mk-rx { border-left: 3px solid rgba(78, 211, 123, .95); background: rgba(0, 204, 102, .10); }
-.dg-mk-tx { border-left: 3px dashed rgba(255, 90, 74, .95); background: rgba(255, 32, 32, .09); }
+.dg-mk-tx { border-left: 3px solid rgba(255, 90, 74, .95); background: rgba(255, 32, 32, .09); }
 .dg-split { display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; }
 .dg-f { font-size: 11px; color: var(--v2-text-secondary); white-space: nowrap; }
 .dg-f b { font-weight: 700; }

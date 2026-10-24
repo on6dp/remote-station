@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.20 | [RemoteStation-Setup-0.22.20.exe](0.22.20/RemoteStation-Setup-0.22.20.exe) | [remote-station-0.22.20.tar.gz](0.22.20/remote-station-0.22.20.tar.gz) | Aide complète, drapeaux TX / RX, trait TX plein — [empreintes SHA-256](0.22.20/SHA256SUMS.txt) |
 | 0.22.19 | [RemoteStation-Setup-0.22.19.exe](0.22.19/RemoteStation-Setup-0.22.19.exe) | [remote-station-0.22.19.tar.gz](0.22.19/remote-station-0.22.19.tar.gz) | Aide : toutes les commandes et SPLIT ; drapeaux TX / RX avec fréquence — [empreintes SHA-256](0.22.19/SHA256SUMS.txt) |
 | 0.22.18 | [RemoteStation-Setup-0.22.18.exe](0.22.18/RemoteStation-Setup-0.22.18.exe) | [remote-station-0.22.18.tar.gz](0.22.18/remote-station-0.22.18.tar.gz) | Clic sur l’indicatif = réponse FT8 — [empreintes SHA-256](0.22.18/SHA256SUMS.txt) |
 | 0.22.17 | [RemoteStation-Setup-0.22.17.exe](0.22.17/RemoteStation-Setup-0.22.17.exe) | [remote-station-0.22.17.tar.gz](0.22.17/remote-station-0.22.17.tar.gz) | Double-clic = réponse FT8, plus de double décodage, ALC ≤ 8 %, onglet Logs — [empreintes SHA-256](0.22.17/SHA256SUMS.txt) |

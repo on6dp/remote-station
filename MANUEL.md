@@ -276,7 +276,7 @@ Les onglets du centre : **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT6
 - **Réglages de la cascade** (au-dessus de l'échelle, comme dans WSJT-X) : **Gain** = contraste (à droite, les signaux faibles ressortent), **Zéro** = niveau du fond, **Plat** = fond égal sur toute la largeur (corrige la pente du filtre du TRX), trois jeux de couleurs, ↺ = réglages d'origine. Ils valent pour toutes les cascades (FT8, RTTY, CW…) et restent mémorisés dans votre navigateur.
 - **Poignée sous la cascade** : la glisser vers le haut agrandit les listes de messages (double-clic : taille d'origine).
 - Arrêts : `■ Arrêter` (ou la barre d'espace) ; le correspondant appelé répond à quelqu'un d'autre ; le même message depuis 6 min sans réponse (chien de garde) ; main perdue.
-- Fréquence d'émission : le drapeau rouge « TX 1500 » sous l'échelle et le trait pointillé rouge de la cascade (clic droit pour le déplacer) ; réception : drapeau vert « RX 1500 » et trait plein vert (clic gauche). En **SPLIT**, le message part sur l'autre VFO que celui de réception, comme le PTT.
+- Fréquence d'émission : le drapeau rouge « TX 1500 » sous l'échelle et le trait plein rouge de la cascade (clic droit pour le déplacer) ; réception : drapeau vert « RX 1500 » et trait plein vert (clic gauche). En **SPLIT**, le message part sur l'autre VFO que celui de réception, comme le PTT.
 
 <a id="jt65"></a>
 ### 9.2 JT65
