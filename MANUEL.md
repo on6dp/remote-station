@@ -224,7 +224,7 @@ Heure du serveur, écart de votre PC, délai de la liaison avec la station et DT
 <a id="qo100"></a>
 ### 9.9 QO-100
 
-Les listes FT8 · FT4, RTTY et CW proposent « **QO-100 · FI 2 m / 70 cm** » : la fréquence à mettre sur le TRX **avant le convertisseur** 2,4 GHz, pour monter sur 2400,040 MHz (FT8 / FT4), 2400,025 MHz (CW) ou 2400,090 MHz (RTTY). Exemple : FT8 sur **432,540 MHz** avec le convertisseur 70 cm du club. Les FI 2 m (144,540), 70 cm (432,540) et 23 cm (1296,540 MHz en FT8) sont listées ; celles que le TRX branché ne peut pas atteindre sont grisées (23 cm sur le FTX-1).
+Les listes FT8 · FT4, RTTY et CW proposent « **QO-100 · FI 2 m / 70 cm** » : la fréquence à mettre sur le TRX **avant le convertisseur** 2,4 GHz, pour monter sur 2400,040 MHz (FT8 / FT4), 2400,025 MHz (CW) ou 2400,090 MHz (RTTY). Exemple : FT8 sur **432,540 MHz** avec le convertisseur 70 cm du club. Seules les FI que le TRX branché peut atteindre sont proposées (2 m et 70 cm : FTX-1).
 
 <a id="messages"></a>
 ## 10. Correspondant, messages et macros

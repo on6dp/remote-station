@@ -224,7 +224,7 @@ Server time, offset of your PC, delay of the link with the station and mean DT o
 <a id="qo100"></a>
 ### 9.9 QO-100
 
-The FT8 · FT4, RTTY and CW lists offer « **QO-100 · FI 2 m / 70 cm** »: the frequency to set on the transceiver **before the 2.4 GHz up-converter**, to transmit on 2400.040 MHz (FT8 / FT4), 2400.025 MHz (CW) or 2400.090 MHz (RTTY). Example: FT8 on **432.540 MHz** with the club's 70 cm converter. The 2 m (144.540), 70 cm (432.540) and 23 cm (1296.540 MHz for FT8) IFs are listed; those the connected transceiver cannot reach are greyed out (23 cm on the FTX-1).
+The FT8 · FT4, RTTY and CW lists offer « **QO-100 · FI 2 m / 70 cm** »: the frequency to set on the transceiver **before the 2.4 GHz up-converter**, to transmit on 2400.040 MHz (FT8 / FT4), 2400.025 MHz (CW) or 2400.090 MHz (RTTY). Example: FT8 on **432.540 MHz** with the club's 70 cm converter. Only the IFs the connected transceiver can reach are listed (2 m and 70 cm: FTX-1).
 
 <a id="messages"></a>
 ## 10. Correspondent, messages and macros

@@ -35,13 +35,11 @@
   function qoEntries(m) {
     const up = QO_UP[m];
     if (!up) return [];
-    // FI hors de la couverture du TRX (ex. 23 cm sur FTX-1, FTDX10, IC-7300) : affichée mais grisée
+    // FI hors de la couverture du TRX (ex. 23 cm sur FTX-1, FTDX10, IC-7300) : pas proposée
     const R = api && api.rig && api.rig();
     const max = R && R.FREQ_MAX ? R.FREQ_MAX : Infinity;
-    return Object.keys(QO_LBL).filter((k) => Number(qoIf[k]) > 0).map((k) => {
-      const khz = Math.round((Number(qoIf[k]) + up - 2400) * 1e6) / 1000;
-      return ['QO-100 · FI ' + QO_LBL[k], khz, khz * 1000 > max];
-    });
+    return Object.keys(QO_LBL).filter((k) => Number(qoIf[k]) > 0).map((k) => ['QO-100 · FI ' + QO_LBL[k], Math.round((Number(qoIf[k]) + up - 2400) * 1e6) / 1000])
+      .filter((x) => x[1] * 1000 <= max);
   }
   const withQo = (list, m) => list.filter((x) => !/^QO-100/.test(x[0])).concat(qoEntries(m));
   const dialList = (m) => withQo(DIAL[m], m);
