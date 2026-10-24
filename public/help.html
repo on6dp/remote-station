@@ -293,8 +293,10 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
   <li><b>Période</b>: « auto » transmits in the other period than the contact (double-click his message), otherwise keeps the period of the first message;
     « 1re » / « 2e » force it (1st = 00 and 30 s in FT8).</li>
   <li><b>Waterfall settings</b> (above the scale, as in WSJT-X): <b>Gain</b> = contrast (to the right, weak signals stand out),
-    <b>Zéro</b> = background level, <b>Plat</b> = flat background across the width (corrects the transceiver filter slope), three colour sets, ↺ = defaults.
+    <b>Zéro</b> = background level, <b>Plat</b> = flat background across the width (corrects the transceiver filter slope), four colour sets (<b>JTDX</b> by default: blue noise, yellow signals, red strong signals), ↺ = defaults.
     They apply to every waterfall (FT8, RTTY, CW…) and are remembered in your browser.</li>
+  <li><b>Fine JTDX-style waterfall</b>: 2.9 Hz bins (instead of 6.25 Hz), one line every 0.16 s; scale ticks every 50 / 100 / 500 Hz.
+    In FT8 / FT4 / FT2 / JT65, a white line marks the start of each period, with the UTC time and the band (« 19:55:15  20m »), as in JTDX.</li>
   <li><b>Handle under the waterfall</b>: drag it up to enlarge the message lists (double-click: original size).</li>
   <li>Stops: <span class="k">■ Arrêter</span> (or the space bar); the called contact answers someone else; the same message for 6 min without answer (watchdog); control lost.</li>
   <li>Transmit frequency: the <span class="red">red</span> « TX 1500 » flag below the scale and the solid red line on the waterfall (right click to move it); receive: <span class="grn">green</span> « RX 1500 » flag and solid green line (left click). In <b>SPLIT</b>, the message goes out on the other VFO than the receive one, like the PTT.</li>

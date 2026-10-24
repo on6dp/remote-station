@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.37** — Cascade façon JTDX : FFT de 8192 points (1,46 Hz par case) moyennée sur 0,8 s (les signaux FT8 deviennent des blocs pleins, le bruit est lisse), affichée aux vrais pixels de l’écran (écrans à 125 / 150 %, cascade agrandie) ; couleurs JTDX par défaut (bruit bleu, signaux jaunes, forts en rouge) ; trait de début de période avec heure UTC et bande ; échelle graduée tous les 50 / 100 / 500 Hz. Redémarrer le service puis Ctrl+F5 sur le dashboard.
 - **0.22.36** — « VFO » de la ligne Step en jaune fluo gras (comme STEP) ; boutons DNF et TUNER en blanc gras. Ctrl+F5 sur le dashboard suffit.
 - **0.22.35** — Menu DX Cluster : dx.op0p.be s’appelle « Ultimate Cluster ». Ctrl+F5 sur le dashboard suffit.
 - **0.22.34** — **TXW** (à droite de DUAL RX, ou touche W maintenue) : écoute de la fréquence d’émission tant que le bouton est maintenu (VFO échangés, remis en place au relâchement, après 15 s ou si la liaison se coupe ; PTT refusé pendant TXW ; ni rappel de bande ni tuner automatique). **DX Cluster ▾** dans le bandeau : dx.op0p.be (Ultimate Cluster) ou cluster.op0p.be (CC-Cluster OP0P), dans un nouvel onglet. FTX-1 : MAIN / SUB aussi en réception simple par défaut (`ftx1SubSingle: true`, essai concluant au club). Aide mise à jour.

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.37 | [RemoteStation-Setup-0.22.37.exe](0.22.37/RemoteStation-Setup-0.22.37.exe) | [remote-station-0.22.37.tar.gz](0.22.37/remote-station-0.22.37.tar.gz) | Cascade façon JTDX (plus fine, couleurs bleu / jaune / rouge, repères de période) — [empreintes SHA-256](0.22.37/SHA256SUMS.txt) |
 | 0.22.36 | [RemoteStation-Setup-0.22.36.exe](0.22.36/RemoteStation-Setup-0.22.36.exe) | [remote-station-0.22.36.tar.gz](0.22.36/remote-station-0.22.36.tar.gz) | VFO en jaune, DNF et TUNER en blanc gras — [empreintes SHA-256](0.22.36/SHA256SUMS.txt) |
 | 0.22.35 | [RemoteStation-Setup-0.22.35.exe](0.22.35/RemoteStation-Setup-0.22.35.exe) | [remote-station-0.22.35.tar.gz](0.22.35/remote-station-0.22.35.tar.gz) | TXW ; DX Cluster (Ultimate Cluster, CC-Cluster) ; SUB en réception simple — [empreintes SHA-256](0.22.35/SHA256SUMS.txt) |
 | 0.22.34 | [RemoteStation-Setup-0.22.34.exe](0.22.34/RemoteStation-Setup-0.22.34.exe) | [remote-station-0.22.34.tar.gz](0.22.34/remote-station-0.22.34.tar.gz) | TXW ; bouton DX Cluster ; SUB en réception simple — [empreintes SHA-256](0.22.34/SHA256SUMS.txt) |

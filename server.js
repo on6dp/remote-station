@@ -340,10 +340,13 @@ function updateDigi() {
 }
 function onDigi(m) {
   if (m.t === 'wf') {
-    // Ligne de cascade : [0x10, octets dB*2+240 par case de 6,25 Hz depuis 0 Hz]
-    const fr = Buffer.allocUnsafe(m.row.length + 1);
-    fr[0] = 0x10;
-    Buffer.from(m.row.buffer, m.row.byteOffset, m.row.length).copy(fr, 1);
+    // Ligne de cascade : [0x13, largeur de case (mHz, 2 octets), heure de capture (dixièmes de s du jour UTC, 4 octets),
+    // octets dB*2+240 par case depuis 0 Hz]
+    const fr = Buffer.allocUnsafe(m.row.length + 7);
+    fr[0] = 0x13;
+    fr.writeUInt16BE(Math.round((m.df || 6.25) * 1000), 1);
+    fr.writeUInt32BE(Math.floor(((m.at || Date.now()) % 86400000) / 100), 3);
+    Buffer.from(m.row.buffer, m.row.byteOffset, m.row.length).copy(fr, 7);
     for (const c of ops) if (c.digi && c.backlog < 65536) c.send(fr);
     return;
   }

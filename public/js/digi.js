@@ -126,7 +126,7 @@
         <label title="Contraste : plus à droite, les signaux faibles ressortent davantage">Gain <input id="wfGain" type="range" min="-20" max="20" step="1" value="0"></label>
         <label title="Niveau du bruit de fond : plus à droite, le fond est plus clair">Zéro <input id="wfZero" type="range" min="-20" max="20" step="1" value="0"></label>
         <label title="Aplatit le bruit de fond sur toute la largeur (corrige la pente du filtre du TRX)"><input id="wfFlat" type="checkbox" checked> Plat</label>
-        <select id="wfPal" aria-label="Couleurs de la cascade"><option value="classic">Couleurs : bleu</option><option value="wsjtx">Couleurs : arc-en-ciel</option><option value="gray">Couleurs : gris</option></select>
+        <select id="wfPal" aria-label="Couleurs de la cascade"><option value="jtdx">Couleurs : JTDX</option><option value="classic">Couleurs : bleu</option><option value="wsjtx">Couleurs : arc-en-ciel</option><option value="gray">Couleurs : gris</option></select>
         <button class="dg-mini" type="button" id="wfReset" title="Réglages d'origine">↺</button>
       </div>
       <canvas id="dgScale" height="44"></canvas>
@@ -445,21 +445,37 @@
     const s = $('dgScale');
     // Repères RX / TX sous l'échelle (la barre de réglages au-dessus peut tenir sur une ou deux lignes)
     for (const id of ['dgMkRx', 'dgMkTx']) if ($(id)) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
-    const w = Math.max(200, Math.floor(c.clientWidth || c.parentElement.clientWidth));
-    if (w === wf.w && wf.ctx) return drawScale();
-    const old = wf.ctx ? wf.ctx.getImageData(0, 0, wf.w, wf.h) : null;
+    // Pixels de l'écran (pas les pixels CSS) : sur un écran à 125 / 150 %, la cascade reste aussi fine que l'écran le permet,
+    // et une cascade agrandie avec la poignée montre plus d'historique au lieu d'étirer les lignes
+    const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+    const cw = Math.max(200, Math.floor(c.clientWidth || c.parentElement.clientWidth));
+    const ch = Math.max(40, Math.round(c.clientHeight || 140));
+    const w = Math.round(cw * dpr);
+    const h = Math.round(ch * dpr);
+    if (w === wf.w && h === wf.h && wf.ctx) return drawScale();
+    let old = null;
+    if (wf.ctx) { old = document.createElement('canvas'); old.width = wf.w; old.height = wf.h; old.getContext('2d').drawImage(c, 0, 0); }
+    const ow = wf.w, oh = wf.h;
     c.width = w;
+    c.height = h;
     s.width = w;
+    s.height = Math.round(SCALE_H * dpr);
     wf.w = w;
+    wf.h = h;
+    wf.cw = cw;
+    wf.dpr = dpr;
     wf.ctx = c.getContext('2d');
     wf.sctx = s.getContext('2d');
+    wf.sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     wf.ctx.fillStyle = '#05080d';
-    wf.ctx.fillRect(0, 0, w, wf.h);
-    if (old) wf.ctx.putImageData(old, 0, 0);
+    wf.ctx.fillRect(0, 0, w, h);
+    if (old) wf.ctx.drawImage(old, 0, 0, ow, oh, 0, 0, w, oh); // largeur remise à l'échelle, lignes gardées telles quelles
     drawScale();
   }
   // Palette : bruit sombre → bleu → cyan → jaune → rouge
   const PALS = {
+    // JTDX : bruit bleu, signaux jaunes, signaux forts orange puis rouge
+    jtdx: [[0, 0, 0, 24], [0.12, 0, 8, 105], [0.28, 10, 45, 215], [0.4, 60, 105, 255], [0.52, 235, 225, 40], [0.62, 255, 200, 0], [0.8, 255, 110, 0], [1, 235, 0, 0]],
     classic: [[0, 5, 8, 13], [0.25, 10, 40, 110], [0.5, 0, 170, 220], [0.75, 240, 220, 70], [1, 255, 60, 30]],
     wsjtx: [[0, 0, 0, 0], [0.18, 0, 0, 120], [0.36, 0, 70, 255], [0.54, 0, 210, 220], [0.7, 140, 255, 60], [0.84, 255, 210, 0], [0.94, 255, 70, 0], [1, 255, 255, 255]],
     gray: [[0, 0, 0, 0], [1, 255, 255, 255]]
@@ -481,32 +497,42 @@
     gain: Number(store.get('wfgain', '0')) || 0,
     zero: Number(store.get('wfzero', '0')) || 0,
     flat: store.get('wfflat', '1') === '1',
-    pal: PALS[store.get('wfpal', 'classic')] ? store.get('wfpal', 'classic') : 'classic'
+    pal: PALS[store.get('wfpal2', 'jtdx')] ? store.get('wfpal2', 'jtdx') : 'jtdx'
   };
   let PAL = mkPal(PALS[wfCfg.pal]);
   let floor = null;
   let binFloor = null; // plancher de bruit de chaque case (fond aplati)
   function onRow(bytes) {
     if (WF_TABS.indexOf(tab) < 0 || detached || !wf.ctx) return;
-    // bytes[0] = 0x10, puis une case de 6,25 Hz par octet (dB*2+240), depuis 0 Hz
-    const n = Math.min(bytes.length - 1, Math.ceil(WF_MAX_HZ / 6.25));
-    const vals = bytes.subarray(1, 1 + n);
-    if (tab === 'cw') { cwRows.push(Uint8Array.from(vals)); if (cwRows.length > 12) cwRows.shift(); }
+    // 0x10 : une case de 6,25 Hz par octet (dB*2+240) depuis 0 Hz (ancien serveur)
+    // 0x13 : largeur de case (mHz, 2 octets), heure de capture (dixièmes de s du jour UTC, 4 octets), puis les cases
+    const fine = bytes[0] === 0x13;
+    const df = fine ? ((bytes[1] << 8) | bytes[2]) / 1000 : 6.25;
+    const tday = fine ? (((bytes[3] << 24) >>> 0) + (bytes[4] << 16) + (bytes[5] << 8) + bytes[6]) * 100 : null;
+    const hdr = fine ? 7 : 1;
+    const n = Math.min(bytes.length - hdr, Math.ceil(WF_MAX_HZ / df));
+    const vals = bytes.subarray(hdr, hdr + n);
+    if (tab === 'cw') { if (cwDf !== df) cwRows.length = 0; cwDf = df; cwRows.push(Uint8Array.from(vals)); if (cwRows.length > 12) cwRows.shift(); }
     // Plancher de bruit : médiane de la ligne, lissée
     const sorted = Array.from(vals).sort((a, b) => a - b);
     const med = sorted[sorted.length >> 1];
     floor = floor == null ? med : floor * 0.9 + med * 0.1;
     // Fond aplati : niveau moyen du bruit de chaque case (les signaux, 6 dB au-dessus, ne le relèvent presque pas),
     // lissé sur ± 4 cases (± 25 Hz) pour ne pas créer de stries verticales
-    if (!binFloor || binFloor.length !== n) { binFloor = Float32Array.from(vals); wf.sb = new Float32Array(n); }
+    if (!binFloor || binFloor.length !== n) { binFloor = new Float32Array(n).fill(med); wf.sb = new Float32Array(n); wf.fr = 0; floor = med; }
+    // Premières secondes (ou retour après une coupure) : on s'adapte vite ; ensuite lentement, sans suivre les signaux
+    const fast = ++wf.fr < 40;
+    const lo = floor - 10; // jamais plus de 5 dB sous le bruit médian (sinon tout le fond vire au jaune)
     for (let k = 0; k < n; k++) {
       const b = binFloor[k];
-      binFloor[k] = vals[k] > b + 12 ? b + 0.05 : b * 0.97 + vals[k] * 0.03;
+      let nb = fast ? b * 0.8 + Math.min(vals[k], med + 6) * 0.2 : vals[k] > b + 12 ? b + 0.05 : b * 0.97 + vals[k] * 0.03;
+      binFloor[k] = nb < lo ? lo : nb;
     }
     const sb = wf.sb;
+    const hw = Math.max(1, Math.round(25 / df)); // ± 25 Hz
     for (let k = 0, acc = 0, cnt = 0; k < n; k++) {
       acc = 0; cnt = 0;
-      for (let j = Math.max(0, k - 4); j <= Math.min(n - 1, k + 4); j++) { acc += binFloor[j]; cnt++; }
+      for (let j = Math.max(0, k - hw); j <= Math.min(n - 1, k + hw); j++) { acc += binFloor[j]; cnt++; }
       sb[k] = acc / cnt;
     }
     const ctx = wf.ctx;
@@ -514,12 +540,14 @@
     if (!wf.img || wf.img.width !== wf.w) wf.img = ctx.createImageData(wf.w, 1);
     const d = wf.img.data;
     // Gain : plage de couleurs de 50 dB (−20) à 12,5 dB (+20), 25 dB au milieu ; zéro : fond ± 10 dB
-    const range = 2 * 25 / Math.pow(2, wfCfg.gain / 10); // en octets (2 par dB)
-    const off = wfCfg.zero + 3;                            // octets
+    // Cascade fine moyennée (0x13) : bruit plus régulier, donc plage plus serrée (16 dB) et fond un peu relevé (bleu)
+    const range = 2 * (fine ? 16 : 25) / Math.pow(2, wfCfg.gain / 10); // en octets (2 par dB)
+    const off = wfCfg.zero + (fine ? 8 : 3);                             // octets
     const flatLvl = floor + 0; // fond aplati ramené au plancher moyen
+    const nHz = WF_MAX_HZ / df; // cases sur la largeur affichée (0–3000 Hz)
     for (let x = 0; x < wf.w; x++) {
       // Interpolation entre deux cases (pas d'escalier quand la cascade est plus large que le nombre de cases)
-      const fx = Math.max(0, Math.min(n - 1, (x + 0.5) / wf.w * n - 0.5));
+      const fx = Math.max(0, Math.min(n - 1, (x + 0.5) / wf.w * nHz - 0.5));
       const k0 = Math.floor(fx);
       const k1 = Math.min(n - 1, k0 + 1);
       const u = fx - k0;
@@ -534,28 +562,68 @@
       d[x * 4 + 3] = 255;
     }
     ctx.putImageData(wf.img, 0, 0);
+    periodMark(ctx, tday);
+  }
+  // Repères de période (comme JTDX) : trait à chaque début de période FT8 / FT4 / FT2 / JT65, puis heure UTC et bande
+  // écrites juste au-dessus du trait, dans la nouvelle période, une fois qu'elle a assez défilé
+  const wfMark = { per: null, label: null, rows: 0 };
+  const BANDS_M = [[1.8, 2, '160m'], [3.5, 4, '80m'], [5.2, 5.5, '60m'], [7, 7.3, '40m'], [10.1, 10.15, '30m'], [14, 14.35, '20m'], [18.06, 18.17, '17m'],
+    [21, 21.45, '15m'], [24.89, 24.99, '12m'], [28, 29.7, '10m'], [50, 54, '6m'], [70, 71, '4m'], [144, 148, '2m'], [430, 440, '70cm'], [1240, 1300, '23cm']];
+  function periodMark(ctx, tday) {
+    if (tday == null || (tab !== 'ftx' && tab !== 'jt65')) { wfMark.per = null; wfMark.label = null; return; }
+    const P = { FT8: 15000, FT4: 7500, FT2: 3750, JT65: 60000 }[tab === 'jt65' ? 'JT65' : mode] || 15000;
+    const per = Math.floor(tday / P);
+    if (wfMark.per != null && per !== wfMark.per) {
+      ctx.fillStyle = 'rgba(255, 255, 255, .55)';
+      ctx.fillRect(0, 0, wf.w, 1);
+      const t = per * P;
+      const pad2 = (v) => String(v).padStart(2, '0');
+      const st = api && api.state && api.state();
+      const f = st && st.radio && (st.radio.vfoSel === 1 ? st.radio.freqB : st.radio.freq);
+      const mhz = f ? f / 1e6 : 0;
+      const b = BANDS_M.find((x) => mhz >= x[0] && mhz <= x[1]);
+      wfMark.label = pad2(Math.floor(t / 3600000) % 24) + ':' + pad2(Math.floor(t / 60000) % 60) + ':' + pad2(Math.floor(t / 1000) % 60) + (b ? '   ' + b[2] : '');
+      wfMark.rows = 0;
+    }
+    wfMark.per = per;
+    const r = wf.dpr || 1;
+    if (wfMark.label != null && ++wfMark.rows === Math.round(13 * r)) {
+      ctx.font = 'bold ' + Math.round(10 * r) + 'px Verdana, "DejaVu Sans", Arial, sans-serif';
+      ctx.textBaseline = 'alphabetic';
+      ctx.lineWidth = 3 * r;
+      ctx.strokeStyle = 'rgba(0, 0, 0, .75)';
+      ctx.strokeText(wfMark.label, 6 * r, 11 * r);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(wfMark.label, 6 * r, 11 * r);
+      wfMark.label = null;
+    }
   }
   function drawScale() {
     const c = wf.sctx;
     if (!c) return;
-    const w = wf.w;
+    const w = wf.cw;
     const H = SCALE_H;
     c.clearRect(0, 0, w, H);
     c.fillStyle = '#0b1018';
     c.fillRect(0, 0, w, H);
     c.font = 'bold 11px Verdana, "DejaVu Sans", Arial, sans-serif'; // graduations 500, 1000… en blanc gras
     c.textBaseline = 'top';
-    for (let f = 0; f <= WF_MAX_HZ; f += 100) {
+    // Graduations fines façon JTDX : ligne de base, petit trait tous les 50 Hz, moyen tous les 100 Hz, grand tous les 500 Hz
+    c.strokeStyle = '#46546a';
+    c.beginPath(); c.moveTo(0, 13.5); c.lineTo(w, 13.5); c.stroke();
+    const step = w / WF_MAX_HZ >= 0.25 ? 50 : 100;
+    for (let f = 0; f <= WF_MAX_HZ; f += step) {
       const x = Math.round((f / WF_MAX_HZ) * (w - 1)) + 0.5;
       const big = f % 500 === 0;
-      c.strokeStyle = big ? '#5a6878' : '#2b3644';
+      const mid = f % 100 === 0;
+      c.strokeStyle = big ? '#8a9bb0' : mid ? '#5d6c80' : '#3c4859';
       c.beginPath();
-      c.moveTo(x, big ? 12 : 17);
-      c.lineTo(x, H);
+      c.moveTo(x, big ? 11 : 14);
+      c.lineTo(x, big ? H : mid ? 20 : 17);
       c.stroke();
       if (big && f > 0 && f < WF_MAX_HZ) {
         c.fillStyle = '#F0F5FA';
-        c.fillText(String(f), x - c.measureText(String(f)).width / 2, 1);
+        c.fillText(String(f), x - c.measureText(String(f)).width / 2, 0);
       }
     }
     if (tab === 'rtty') return drawRttyMarks(c, w);
@@ -949,6 +1017,7 @@
     return { f: Number(o.f) || 700, bw: [50, 100, 200, 400].indexOf(o.bw) >= 0 ? o.bw : 100, squelch: Number.isFinite(o.squelch) ? o.squelch : 5 };
   })();
   const cwRows = []; // dernières lignes de cascade (calage sur le signal)
+  let cwDf = 6.25;   // largeur d'une case de ces lignes (Hz)
   let cwLast = 0;
   function saveCw(reannounce) {
     store.set('cw', JSON.stringify(cwc));
@@ -969,8 +1038,9 @@
   // Clic sur la cascade : calage sur le signal le plus fort à ±60 Hz (sinon, là où l'on a cliqué)
   function setCwF(f, snap) {
     if (snap && cwRows.length) {
-      const b0 = Math.max(0, Math.floor((f - 60) / 6.25));
-      const b1 = Math.ceil((f + 60) / 6.25);
+      const df = cwDf || 6.25;
+      const b0 = Math.max(0, Math.floor((f - 60) / df));
+      const b1 = Math.ceil((f + 60) / df);
       let best = -1;
       let bv = -1;
       const sum = (b) => cwRows.reduce((a, r) => a + (r[b] || 0), 0);
@@ -978,7 +1048,7 @@
       for (let b = b0; b <= b1; b++) { const v = sum(b); all.push(v); if (v > bv) { bv = v; best = b; } }
       all.sort((a, b) => a - b);
       // Pic au moins 6 dB (12 octets par ligne) au-dessus de la médiane du voisinage
-      if (best >= 0 && bv - all[all.length >> 1] > 12 * cwRows.length) f = best * 6.25;
+      if (best >= 0 && bv - all[all.length >> 1] > 12 * cwRows.length) f = best * df;
     }
     cwc.f = Math.max(200, Math.min(2800, Math.round(f)));
     saveCw(true);
@@ -2271,8 +2341,8 @@
       $('wfGain').addEventListener('input', () => { wfCfg.gain = Number($('wfGain').value); store.set('wfgain', String(wfCfg.gain)); });
       $('wfZero').addEventListener('input', () => { wfCfg.zero = Number($('wfZero').value); store.set('wfzero', String(wfCfg.zero)); });
       $('wfFlat').addEventListener('change', () => { wfCfg.flat = $('wfFlat').checked; store.set('wfflat', wfCfg.flat ? '1' : '0'); });
-      $('wfPal').addEventListener('change', () => { wfCfg.pal = $('wfPal').value; PAL = mkPal(PALS[wfCfg.pal]); store.set('wfpal', wfCfg.pal); });
-      $('wfReset').addEventListener('click', () => { Object.assign(wfCfg, { gain: 0, zero: 0, flat: true, pal: 'classic' }); PAL = mkPal(PALS.classic); for (const k of ['wfgain', 'wfzero']) store.set(k, '0'); store.set('wfflat', '1'); store.set('wfpal', 'classic'); wfUi(); });
+      $('wfPal').addEventListener('change', () => { wfCfg.pal = $('wfPal').value; PAL = mkPal(PALS[wfCfg.pal]); store.set('wfpal2', wfCfg.pal); });
+      $('wfReset').addEventListener('click', () => { Object.assign(wfCfg, { gain: 0, zero: 0, flat: true, pal: 'jtdx' }); PAL = mkPal(PALS.jtdx); for (const k of ['wfgain', 'wfzero']) store.set(k, '0'); store.set('wfflat', '1'); store.set('wfpal2', 'jtdx'); wfUi(); });
       // Poignée sous la cascade : plus petite cascade = listes « Activité de bande » / « Fréquence RX » plus hautes
       const WF_DEF = 140;
       const setWfH = (h, save) => {
@@ -2281,6 +2351,7 @@
         const root = $('dgWf').closest('.dg') || document.documentElement;
         root.style.setProperty('--dg-list-max', Math.max(160, 360 + WF_DEF - v) + 'px');
         if (save) store.set('wfh', String(v));
+        if (wf.ctx) sizeCanvas();
         return v;
       };
       if (Number(store.get('wfh', '0')) > 0) setWfH(Number(store.get('wfh', '0')), false);
@@ -2296,7 +2367,7 @@
         grip.addEventListener('pointerup', up);
         grip.addEventListener('pointercancel', up);
       });
-      grip.addEventListener('dblclick', () => { $('dgWf').style.height = ''; const root = $('dgWf').closest('.dg') || document.documentElement; root.style.removeProperty('--dg-list-max'); store.set('wfh', '0'); });
+      grip.addEventListener('dblclick', () => { $('dgWf').style.height = ''; const root = $('dgWf').closest('.dg') || document.documentElement; root.style.removeProperty('--dg-list-max'); store.set('wfh', '0'); if (wf.ctx) sizeCanvas(); });
       // Split : clic gauche = fréquence de réception, clic droit = fréquence d'émission
       const fAt = (e) => { const r = e.currentTarget.getBoundingClientRect(); return ((e.clientX - r.left) / r.width) * WF_MAX_HZ; };
       for (const id of ['dgWf', 'dgScale']) {
@@ -2424,7 +2495,7 @@
       return false;
     },
     onBinary(bytes) {
-      if (bytes[0] === 0x10) { onRow(bytes); return true; }
+      if (bytes[0] === 0x10 || bytes[0] === 0x13) { onRow(bytes); return true; }
       if (bytes[0] === 0x11) { ssLine(bytes); return true; }
       return false;
     },
