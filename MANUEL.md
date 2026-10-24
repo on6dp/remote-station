@@ -55,7 +55,7 @@ Les indicatifs d'**écouteurs** (ONL…) peuvent tout voir et tout écouter, mai
 | `● FTX-1 FTDX10 IC-7300` | Le TRX branché (en surbrillance) et sa liaison CAT. |
 | `👥 n` | Nombre de membres connectés ; un clic ouvre le volet **Opérateurs** (qui est là, qui a la main, discussion). Point rouge = nouveau message. |
 | `Prendre la main` | Devenir l'opérateur (voir section 3). |
-| `DX Cluster ▾` | Ouvre dans un nouvel onglet l'un des deux clusters : **dx.op0p.be** (HolyCluster) ou **cluster.op0p.be** (CC-Cluster OP0P). |
+| `DX Cluster ▾` | Ouvre dans un nouvel onglet l'un des deux clusters : **dx.op0p.be** (Ultimate Cluster) ou **cluster.op0p.be** (CC-Cluster OP0P). |
 | `HELP` | Ce manuel (en français ou en anglais selon la langue du navigateur). |
 
 ### Les colonnes (écran large)

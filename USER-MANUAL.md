@@ -55,7 +55,7 @@
 | `● FTX-1 FTDX10 IC-7300` | The connected transceiver (highlighted) and its CAT link. |
 | `👥 n` | Number of members online; click to open the **Opérateurs** panel (who is online, who has control, chat). Red dot = new message. |
 | `Prendre la main` | Take control (see section 3). |
-| `DX Cluster ▾` | Opens one of the two clusters in a new tab: **dx.op0p.be** (HolyCluster) or **cluster.op0p.be** (CC-Cluster OP0P). |
+| `DX Cluster ▾` | Opens one of the two clusters in a new tab: **dx.op0p.be** (Ultimate Cluster) or **cluster.op0p.be** (CC-Cluster OP0P). |
 | `HELP` | This manual. |
 
 ### Columns (wide screen)
