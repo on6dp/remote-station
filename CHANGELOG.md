@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.10** — Titres des cadres en blanc (cyan au survol), pour guider l’œil ; étiquette « A · MAIN » / « B · SUB » en plus grand. Ctrl+F5 sur le dashboard suffit.
 - **0.22.9** — QO-100 : la FI 23 cm ne figure plus dans les listes quand le TRX ne l’atteint pas (retour au comportement d’avant la 0.22.6). Ctrl+F5 sur le dashboard suffit.
 - **0.22.8** — Cadres RF front end, Filtre et DSP : étiquette du côté réglé raccourcie (« A · MAIN » / « B · SUB ») et gardée sur la ligne du titre, même dans une colonne étroite (détail au survol). Ctrl+F5 sur le dashboard suffit.
 - **0.22.7** — **Protection du PA : TUNE sans accord.** Le FTX-1 est relu en continu (RI0 : HI-SWR, accord en cours). Si le TRX signale HI-SWR à la fin d’un TUNE, l’émission est bloquée sur toute la bande (PTT et modes numériques ; TUNE toujours permis), avec un message rouge à droite de la ligne des bandes et dans le journal d’activité ; le blocage tombe dès qu’un nouveau TUNE réussit. HI-SWR signalé par le TRX pendant une émission : coupure immédiate et PTT refusé sur cette fréquence jusqu’à un TUNE. Bouton **QSY** remplacé par **↺** « Revenir sur cette fréquence » (FT8 · FT4 · FT2, RTTY, WSPR, JTTY, CW, SSTV). **Recharger la page Station.**

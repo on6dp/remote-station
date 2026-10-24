@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.10 | [RemoteStation-Setup-0.22.10.exe](0.22.10/RemoteStation-Setup-0.22.10.exe) | [remote-station-0.22.10.tar.gz](0.22.10/remote-station-0.22.10.tar.gz) | Titres des cadres en blanc, étiquette A · MAIN plus grande — [empreintes SHA-256](0.22.10/SHA256SUMS.txt) |
 | 0.22.9 | [RemoteStation-Setup-0.22.9.exe](0.22.9/RemoteStation-Setup-0.22.9.exe) | [remote-station-0.22.9.tar.gz](0.22.9/remote-station-0.22.9.tar.gz) | QO-100 : FI 23 cm retirée des listes (FTX-1) — [empreintes SHA-256](0.22.9/SHA256SUMS.txt) |
 | 0.22.8 | [RemoteStation-Setup-0.22.8.exe](0.22.8/RemoteStation-Setup-0.22.8.exe) | [remote-station-0.22.8.tar.gz](0.22.8/remote-station-0.22.8.tar.gz) | Étiquette « A · MAIN » / « B · SUB » sur la ligne du titre — [empreintes SHA-256](0.22.8/SHA256SUMS.txt) |
 | 0.22.7 | [RemoteStation-Setup-0.22.7.exe](0.22.7/RemoteStation-Setup-0.22.7.exe) | [remote-station-0.22.7.tar.gz](0.22.7/remote-station-0.22.7.tar.gz) | TUNE sans accord (HI-SWR) : émission bloquée sur la bande ; QSY → ↺ — [empreintes SHA-256](0.22.7/SHA256SUMS.txt) |
