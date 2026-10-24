@@ -82,7 +82,7 @@
   let mode = ftStored();
   let rxF = Number(store.get('rxf', '1500')) || 1500;
   let txF = Number(store.get('txf', '1500')) || 1500; // fréquence audio d'émission (split : différente de RX)
-  const SCALE_H = 30;
+  const SCALE_H = 44; // graduations + drapeaux TX / RX avec leur fréquence
   let lastDecode = 0;
   let lastBand = 0;
   let stationCalls = ['ON5VL', 'OR0L'];
@@ -128,7 +128,7 @@
         <select id="wfPal" aria-label="Couleurs de la cascade"><option value="classic">Couleurs : bleu</option><option value="wsjtx">Couleurs : arc-en-ciel</option><option value="gray">Couleurs : gris</option></select>
         <button class="dg-mini" type="button" id="wfReset" title="Réglages d'origine">↺</button>
       </div>
-      <canvas id="dgScale" height="30"></canvas>
+      <canvas id="dgScale" height="44"></canvas>
       <canvas id="dgWf" height="140"></canvas>
       <i class="dg-mk dg-mk-tx" id="dgMkTx"></i><i class="dg-mk dg-mk-rx" id="dgMkRx"></i>
       <i class="dg-grip" id="dgGrip" title="Glisser vers le haut ou le bas : hauteur de la cascade et des listes de messages (double-clic : taille d'origine)"></i>
@@ -563,16 +563,23 @@
     if (tab === 'sstv') return drawSstvMarks(c, w);
     // Largeur d'un signal FT8 (50 Hz) / FT4 (83 Hz) / JT65 (178 Hz) / JTTY (127 Hz, centré) : TX en rouge, RX en vert
     const bw = tab === 'jtty' ? 127 : mode === 'FT4' ? 83 : mode === 'FT2' ? 167 : mode === 'JT65' ? 178 : 50;
-    const mark = (f, y, h, fill, edge) => {
+    // Drapeaux TX (rouge) et RX (vert) avec leur fréquence ; hampe à la fréquence exacte, drapeau retourné près du bord droit
+    c.font = 'bold 11px Verdana, "DejaVu Sans", Arial, sans-serif';
+    c.textBaseline = 'middle';
+    const flag = (f, y, h, fill, pole, label) => {
       const x0 = (f / WF_MAX_HZ) * w;
-      const x1 = ((f + bw) / WF_MAX_HZ) * w;
+      const sw = Math.max(3, ((f + bw) / WF_MAX_HZ) * w - x0);
+      const fw = Math.max(sw, c.measureText(label).width + 12);
+      const left = x0 + fw > w ? Math.max(0, x0 + sw - fw) : x0;
       c.fillStyle = fill;
-      c.fillRect(x0, y, Math.max(2, x1 - x0), h);
-      c.fillStyle = edge;
-      c.fillRect(x0, y, 2, h);
+      c.fillRect(left, y, fw, h);
+      c.fillStyle = pole;
+      c.fillRect(x0, y, 3, h);
+      c.fillStyle = '#FFFFFF';
+      c.fillText(label, left + (left < x0 ? 5 : 7), y + h / 2 + 1);
     };
-    mark(txF, 12, 8, 'rgba(255, 32, 32, .45)', '#ff5a4a');
-    mark(rxF, 21, 9, 'rgba(0, 204, 102, .45)', '#4ED37B');
+    flag(txF, 14, 14, 'rgba(190, 28, 28, .92)', '#ff7a6a', 'TX ' + Math.round(txF));
+    flag(rxF, 29, 15, 'rgba(0, 140, 66, .92)', '#7CF29F', 'RX ' + Math.round(rxF));
     // Repères sur la cascade
     const pos = (el, f) => { el.style.left = (f / WF_MAX_HZ) * 100 + '%'; el.style.width = (bw / WF_MAX_HZ) * 100 + '%'; };
     pos($('dgMkRx'), rxF);

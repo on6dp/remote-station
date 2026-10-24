@@ -22,6 +22,8 @@
   <a href="#ecran">2. L'écran</a>
   <a href="#main">3. Prendre et passer la main</a>
   <a href="#trx">4. Piloter le TRX</a>
+  <a href="#commandes">4.1 Toutes les commandes</a>
+  <a href="#split">4.2 Trafic en SPLIT</a>
   <a href="#ecoute">5. Écouter</a>
   <a href="#emission">6. Émettre et sécurités</a>
   <a href="#operateurs">7. Opérateurs et discussion</a>
@@ -121,6 +123,103 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
 </ul>
 <div class="tip">Les réglages agissent sur le vrai TRX du club et s'affichent pour tous. Les voyants du cadre VFO (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) résument l'état ; <b>un clic sur ATT, IPO / AMP1 / AMP2, AMP, NB, DNR, NOTCH, DNF ou NAR l'enclenche ou le coupe</b> (IPO → AMP1 → AMP2 → IPO). Sur le FTX-1, l'écran du VFO B règle NB, DNR, NOTCH, DNF et NAR du côté SUB ; l'ATT et le préampli sont propres à chaque côté : le TRX ne les donne que pour le côté actif, donc un clic sur ceux de l'autre VFO le fait passer un instant de ce côté (sans émission), puis revenir ; ceux du côté inactif sont lus quand il redevient actif (« ? » tant qu'ils n'ont jamais été lus).</div>
 
+
+<h3 id="commandes">4.1 Toutes les commandes, cadre par cadre</h3>
+<p>Toutes les commandes demandent d'<b>avoir la main</b>, sauf l'écoute, le volume et l'affichage. Les réglages agissent sur le vrai TRX du club et tout le monde les voit.</p>
+
+<p><b>Écrans VFO A (MAIN) et VFO B (SUB)</b>, en haut au centre</p>
+<table>
+  <tr><th>Commande</th><th>Ce qu'elle fait</th></tr>
+  <tr><td><span class="k">RX</span></td><td>Vert : ce VFO reçoit. Clic : ce VFO devient celui de réception (comme MAIN / SUB).</td></tr>
+  <tr><td><span class="k">TX</span></td><td>Rouge foncé : VFO d'émission. Rouge vif avec halo : émission en cours. Clic sur TX de l'autre VFO = SPLIT (section 4.2).</td></tr>
+  <tr><td><span class="k">BW 1.2K</span></td><td>Largeur du filtre de ce VFO ; molette de la souris dessus pour l'élargir ou la rétrécir.</td></tr>
+  <tr><td>Bandeau « ÉMISSION SUR A / B »</td><td>Rappelle le VFO sur lequel partirait l'émission.</td></tr>
+  <tr><td>MAIN / SUB · 20M</td><td>Côté du TRX et bande de ce VFO.</td></tr>
+  <tr><td>S-mètre (S, +20…)</td><td>Signal reçu ; en émission, voir Station meters.</td></tr>
+  <tr><td>Chiffres de la fréquence</td><td>Molette ou glisser vers le haut / bas sur un chiffre : il monte ou descend. Clic sur l'écran : ce VFO devient celui réglé par les flèches et les bandes (lettre soulignée).</td></tr>
+  <tr><td>Mode (DATA-U, USB…)</td><td>Mode de ce VFO ; il se change dans le cadre Mode.</td></tr>
+  <tr><td><span class="k">RIT</span> / <span class="k">XIT</span></td><td>Clic : allume / éteint le décalage de réception (RIT) ou d'émission (XIT). Molette sur la valeur affichée : ± 10 Hz (± 100 Hz avec <kbd>Maj</kbd>).</td></tr>
+  <tr><td><span class="k">CLEAR</span></td><td>Remet le décalage RIT / XIT à zéro.</td></tr>
+  <tr><td><span class="k">ATT</span></td><td>Atténuateur d'entrée (signaux très forts), clic = marche / arrêt. Grisé en 2 m / 70 cm.</td></tr>
+  <tr><td><span class="k">IPO</span> / <span class="k">AMP1</span> / <span class="k">AMP2</span></td><td>Préampli HF / 6 m ; chaque clic passe au suivant (IPO = sans préampli). En 2 m / 70 cm : <span class="k">AMP</span> marche / arrêt.</td></tr>
+  <tr><td><span class="k">NB</span> <span class="k">DNR</span> <span class="k">NOTCH</span> <span class="k">DNF</span></td><td>Antiparasite, réducteur de bruit, filtre notch manuel, notch automatique : clic = marche / arrêt (les niveaux se règlent dans le cadre DSP).</td></tr>
+  <tr><td><span class="k">NAR</span></td><td>Filtre étroit (NARROW), clic = marche / arrêt.</td></tr>
+  <tr><td><span class="k">AGC AUTO</span></td><td>Rappel de l'AGC (réglée dans RF front end).</td></tr>
+</table>
+
+<p><b>Ligne Step et ligne des bandes</b>, sous les écrans VFO</p>
+<table>
+  <tr><th>Commande</th><th>Ce qu'elle fait</th></tr>
+  <tr><td><span class="k">10 Hz</span> … <span class="k">100 kHz</span></td><td>Pas des flèches ◀ ▶, des flèches du clavier et de la molette.</td></tr>
+  <tr><td><span class="k">A</span> / <span class="k">B</span></td><td>FTX-1 : comme MAIN / SUB (le TRX passe de ce côté). FTDX10, IC-7300 : choix du VFO réglé.</td></tr>
+  <tr><td><span class="k">◀</span> <span class="k">▶</span></td><td>Descendre / monter d'un pas.</td></tr>
+  <tr><td><span class="k">MAIN</span> / <span class="k">SUB</span></td><td>Côté actif du TRX (réception et émission ensemble), comme la touche MAIN / SUB de la face avant, sans émission ; prend une à deux secondes.</td></tr>
+  <tr><td><span class="k">SPLIT</span></td><td>Émettre sur l'autre VFO que celui de réception (section 4.2).</td></tr>
+  <tr><td><span class="k">A → B</span> / <span class="k">B → A</span></td><td>Recopie la fréquence et le mode d'un VFO sur l'autre.</td></tr>
+  <tr><td><span class="k">A ⇄ B</span></td><td>Échange les deux VFO.</td></tr>
+  <tr><td><span class="k">LOCK</span></td><td>Verrouille les commandes de la <b>face avant du TRX au club</b> (pour que personne ne les touche) ; le dashboard reste utilisable.</td></tr>
+  <tr><td><span class="k">160M</span> … <span class="k">70CM</span></td><td>Change de bande (dernière fréquence et dernier mode utilisés sur cette bande). À droite : rappel « TUNE obligatoire » ou blocage HI-SWR en rouge.</td></tr>
+</table>
+
+<p><b>Colonne de gauche</b></p>
+<table>
+  <tr><th>Cadre / commande</th><th>Ce qu'elle fait</th></tr>
+  <tr><td>Antenne : <span class="k">ANT 1</span> / <span class="k">ANT 2</span></td><td>Prise d'antenne du FTX-1 (sur le SPA-1) ; refusé pendant une émission.</td></tr>
+  <tr><td>RF front end : <b>RF GAIN</b></td><td>Gain HF du récepteur ; le baisser calme un signal très fort ou une bande bruyante.</td></tr>
+  <tr><td>RF front end : <b>AGC</b> <span class="k">OFF</span> <span class="k">FAST</span> <span class="k">MID</span> <span class="k">SLOW</span> <span class="k">AUTO</span></td><td>Vitesse de la commande automatique de gain. AUTO convient presque toujours ; FAST en CW / numérique, SLOW en BLU.</td></tr>
+  <tr><td>Mode : <span class="k">LSB</span> <span class="k">USB</span> <span class="k">CW-L</span> <span class="k">CW-U</span> <span class="k">RTTY-L</span> <span class="k">RTTY-U</span> <span class="k">DATA-L</span> <span class="k">DATA-U</span> <span class="k">PSK</span> <span class="k">AM</span> <span class="k">AM-N</span> <span class="k">FM</span> <span class="k">FM-N</span> <span class="k">DATA-FM</span></td><td>Mode du VFO indiqué sous les boutons (« Mode appliqué à VFO A »). Modes numériques (FT8, RTTY par la BF…) : <b>DATA-U</b>.</td></tr>
+  <tr><td>Filtres : <b>BW</b></td><td>Largeur du filtre de réception.</td></tr>
+  <tr><td>Filtres : <b>IF SHIFT</b></td><td>Déplace la bande passante vers le haut ou le bas (écarter un signal gênant d'un côté).</td></tr>
+  <tr><td>Filtres : <span class="k">CONTOUR</span> / <span class="k">APF</span></td><td>Correcteur de tonalité ; APF = filtre audio de pointe, en CW seulement.</td></tr>
+  <tr><td>Station meters : <b>Po SWR ALC Id Vd COMP S</b></td><td>Puissance émise, ROS, ALC (en numérique : ≤ 8 %), courant et tension du PA, compression, S-mètre. RX / TX en haut à gauche, durée d'émission à droite.</td></tr>
+</table>
+
+<p><b>Colonne de droite</b></p>
+<table>
+  <tr><th>Cadre / commande</th><th>Ce qu'elle fait</th></tr>
+  <tr><td>RX audio : <b>AF LEVEL</b> / <b>SQUELCH</b></td><td>Volume et silencieux <b>du TRX</b> (pour tout le monde).</td></tr>
+  <tr><td>RX audio : <span class="k">🔊 Écouter le TRX</span> / <b>VOLUME</b></td><td>Écouter la BF du TRX dans votre navigateur ; le volume n'agit que chez vous.</td></tr>
+  <tr><td>DSP : <b>NB</b> / <b>DNR</b></td><td>Niveau de l'antiparasite et du réducteur de bruit (OFF, puis 1 à 10).</td></tr>
+  <tr><td>DSP : <span class="k">NOTCH</span> + <b>FRÉQ. NOTCH</b></td><td>Filtre qui creuse une fréquence (une porteuse qui siffle) ; régler la fréquence à l'oreille.</td></tr>
+  <tr><td>DSP : <span class="k">DNF</span></td><td>Notch automatique (élimine tout seul les porteuses).</td></tr>
+  <tr><td>Accord : <span class="k">TUNER</span></td><td>Boîte d'accord du SPA-1 en service (allumée par défaut en HF / 6 m).</td></tr>
+  <tr><td>Accord : <span class="k">TUNE</span></td><td>Lance l'accord : le TRX émet une porteuse quelques secondes. Obligatoire après un changement de bande ; vérifier ensuite le SWR.</td></tr>
+  <tr><td>TX : voyant <span class="k">RX</span> / <span class="k">TX</span></td><td>État réel du TRX.</td></tr>
+  <tr><td>TX : <span class="k">PTT</span></td><td>Maintenir pour émettre (ou la barre d'espace) ; relâcher = réception.</td></tr>
+  <tr><td>TX : <b>PUISSANCE</b> <span class="k">−</span> <span class="k">+</span></td><td>Puissance du TRX ; votre limite de licence est affichée dessous.</td></tr>
+  <tr><td>TX : <b>GAIN MICRO</b>, <span class="k">PROC</span>, <b>NIVEAU PROC</b></td><td>Réglages de la modulation en phonie (compresseur de modulation et son niveau).</td></tr>
+  <tr><td>TX : <span class="k">VOX</span></td><td>Peut seulement être coupé à distance (jamais activé).</td></tr>
+</table>
+
+<p><b>Centre : activité et modes numériques</b></p>
+<table>
+  <tr><th>Commande</th><th>Ce qu'elle fait</th></tr>
+  <tr><td>Onglets <span class="k">ACTIVITÉ</span> … <span class="k">SSTV</span>, <span class="k">SYNCHRO</span>, <span class="k">LOGS</span></td><td>Journal de la station, modes numériques (section 9), horloges, carnet de trafic (section 14).</td></tr>
+  <tr><td><span class="k">👁 Suivre</span></td><td>Votre dashboard suit l'onglet de celui qui a la main (section 3).</td></tr>
+  <tr><td><span class="k">⧉</span></td><td>Ouvre les modes numériques dans une fenêtre séparée.</td></tr>
+  <tr><td>Ligne <b>CORRESPONDANT</b>, NOM, QTH, LOCATOR, REPORT, RST, <span class="k">LOG QSO</span></td><td>La station contactée et ses reports ; LOG QSO l'enregistre dans le carnet (section 10).</td></tr>
+</table>
+
+<h3 id="split">4.2 Trafic en SPLIT (émission et réception sur deux fréquences)</h3>
+<p>Le SPLIT sert surtout pour une <b>expédition DX</b> qui écoute ailleurs que sur sa fréquence (« UP 5 », « listening 14 200 to 14 210 »). On <b>écoute le DX sur le VFO A</b> et on <b>émet sur le VFO B</b>.</p>
+<ol>
+  <li>Réglez le <b>VFO A</b> (MAIN) sur la fréquence du DX, dans le bon mode. Vérifiez que <span class="k">RX</span> est vert sur le VFO A.</li>
+  <li>Cliquez <span class="k">A → B</span> : le VFO B prend la même fréquence et le même mode.</li>
+  <li>Réglez la <b>fréquence d'émission sur le VFO B</b> : molette (ou glisser) sur les chiffres du VFO B, par exemple +5 kHz pour « UP 5 ». Sur le FTX-1, la molette sur les chiffres du VFO B ne change pas le côté actif : vous continuez d'écouter sur A.</li>
+  <li>Cliquez <span class="k">SPLIT</span> (ou <span class="k">TX</span> sur l'écran du VFO B). Le voyant <b>TX</b> et le cadre lumineux passent sur le VFO B, sa fréquence redevient blanche et le bandeau indique « ÉMISSION SUR B ».</li>
+  <li>Écoutez le DX sur A ; pour l'appeler, <b>PTT</b> : l'émission part sur la fréquence du VFO B (chiffres en rouge). En relâchant, retour en réception sur A.</li>
+  <li>Pour finir : cliquez de nouveau <span class="k">SPLIT</span> (ou <span class="k">TX</span> du VFO A). Le voyant TX revient sur A.</li>
+</ol>
+<div class="tip"><b>Bon à savoir</b>
+<ul>
+  <li>Règle des TRX : sans SPLIT on émet sur le VFO où l'on écoute ; avec SPLIT, sur l'autre (RX sur A → TX sur B ; si vous écoutez sur B, TX sur A).</li>
+  <li><b>FTX-1</b> : le SPLIT est géré par le dashboard (SPLIT « virtuel », comme Hamlib) parce que la commande split du FTX-1 met le TRX en émission. Au PTT, le TRX passe sur le côté SUB pour émettre puis revient sur MAIN ; le TRX du club affiche donc un instant SUB pendant l'émission, c'est normal. Un SPLIT mis sur la face avant du TRX est suivi par le dashboard.</li>
+  <li>La fréquence <b>réellement émise</b> (VFO B, XIT compris) est contrôlée : en dehors des bandes autorisées, le PTT est refusé (message « VFO B en SPLIT »).</li>
+  <li>Petit écart (quelques kHz au plus) : <span class="k">XIT</span> sur le VFO A décale seulement l'émission, sans SPLIT ; molette sur la valeur pour régler l'écart, <span class="k">CLEAR</span> pour revenir.</li>
+  <li>En <b>FT8 / FT4 / FT2</b>, inutile de mettre SPLIT : l'émission se place dans la bande passante avec le repère TX de la cascade (clic droit). Si SPLIT est mis, le message part sur l'autre VFO, comme le PTT.</li>
+  <li>N'oubliez pas de couper le SPLIT en fin de pile-up : sinon, le prochain opérateur émettrait sur le VFO B.</li>
+</ul></div>
+
 <h2 id="ecoute">5. Écouter</h2>
 <ul>
   <li>Cadre <b>RX audio</b> → <span class="k">🔊 Écouter le TRX</span> ; réglez votre <b>Volume</b> juste en dessous (n'agit que chez vous).</li>
@@ -180,7 +279,7 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
     Le FT2 de « WSJT-X Improved » est un autre mode, incompatible.</li>
   <li><b>Activité de bande</b> : tous les messages décodés (CQ en <span class="grn">vert</span>, messages pour ON5VL / OR0L en <span class="red">rouge</span>) ; <b>Fréquence RX</b> : ceux de votre fréquence.</li>
   <li><b>Split</b> comme dans WSJT-X : <b>clic gauche</b> sur la cascade ou une ligne = fréquence de <span class="grn">réception</span>, <b>clic droit</b> = fréquence d'<span class="red">émission</span> ; boutons « TX ← RX » et « RX ← TX ».</li>
-  <li><b>Double-clic</b> sur un message : son émetteur devient le correspondant (indicatif, locator, report) et les messages Tx1 à Tx6 se préparent.</li>
+  <li><b>Clic sur l'indicatif</b> (souligné) ou <b>double-clic</b> sur un message : son émetteur devient le correspondant (indicatif, locator, report), les messages Tx1 à Tx6 se préparent et, avec la main, l'émission part à la période suivante.</li>
   <li><b>Émettre</b> (comme « Enable Tx » + « Auto Seq » de WSJT-X) : un clic sur un message <b>Tx1 à Tx7</b> (sous les listes de l'onglet, comme dans WSJT-X)
     le fait partir <b>à chaque période</b> (une sur deux), jusqu'à la réponse. Il faut avoir la main, le VFO d'émission en <b>DATA-U</b> et une puissance dans votre limite.
     Le message émis s'affiche en <span class="yel">jaune</span> dans les listes ; la barre sous les listes est <span class="grn">verte</span> en réception, <span class="red">rouge</span> en émission.</li>
@@ -195,7 +294,7 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
     Ils valent pour toutes les cascades (FT8, RTTY, CW…) et restent mémorisés dans votre navigateur.</li>
   <li><b>Poignée sous la cascade</b> : la glisser vers le haut agrandit les listes de messages (double-clic : taille d'origine).</li>
   <li>Arrêts : <span class="k">■ Arrêter</span> (ou la barre d'espace) ; le correspondant appelé répond à quelqu'un d'autre ; le même message depuis 6 min sans réponse (chien de garde) ; main perdue.</li>
-  <li>Fréquence d'émission : le repère <span class="red">rouge</span> TX de la cascade (clic droit pour le déplacer). En <b>SPLIT</b>, le message part sur l'autre VFO que celui de réception, comme le PTT.</li>
+  <li>Fréquence d'émission : le drapeau <span class="red">rouge</span> « TX 1500 » sous l'échelle et le trait pointillé rouge de la cascade (clic droit pour le déplacer) ; réception : drapeau <span class="grn">vert</span> « RX 1500 » et trait plein vert (clic gauche). En <b>SPLIT</b>, le message part sur l'autre VFO que celui de réception, comme le PTT.</li>
 </ul>
 <h3 id="jt65">9.2 JT65</h3>
 <p>Même fenêtre que FT8 (périodes d'une minute) ; le TRX va sur la fréquence JT65 de sa bande. Les décodages arrivent vers la 52<sup>e</sup> seconde.</p>

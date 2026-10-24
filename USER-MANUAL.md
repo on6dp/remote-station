@@ -8,6 +8,8 @@
 - [2. The screen](#screen)
 - [3. Taking and handing over control](#control)
 - [4. Operating the transceiver](#trx)
+   - [4.1 Every command](#commandes)
+   - [4.2 Operating SPLIT](#split)
 - [5. Listening](#listen)
 - [6. Transmitting and safety](#tx)
 - [7. Operators and chat](#operators)
@@ -107,6 +109,105 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 > [!TIP]
 > Settings act on the real club transceiver and are shown to everybody. The indicators in the VFO panel (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) summarise its state; **clicking ATT, IPO / AMP1 / AMP2, AMP, NB, DNR, NOTCH, DNF or NAR switches it on or off** (IPO → AMP1 → AMP2 → IPO). On the FTX-1, the VFO B display sets NB, DNR, NOTCH, DNF and NAR of the SUB side; ATT and preamp belong to each side: the rig only reports them for the active side, so clicking those of the other VFO switches the rig to that side for a moment (no transmission) and back; those of the inactive side are read when it becomes active again (« ? » until first read).
 
+<a id="commandes"></a>
+### 4.1 Every command, panel by panel
+
+All commands need **control** (« la main »), except listening, your volume and the display. Settings act on the real transceiver at the club and everybody sees them.
+
+**VFO A (MAIN) and VFO B (SUB) displays**, top centre
+
+| Command | What it does |
+|---|---|
+| `RX` | Green: this VFO receives. Click: this VFO becomes the receive VFO (like MAIN / SUB). |
+| `TX` | Dark red: transmit VFO. Bright red with a glow: transmitting. Click TX on the other VFO = SPLIT (section 4.2). |
+| `BW 1.2K` | Filter width of this VFO; mouse wheel on it to widen or narrow. |
+| « ÉMISSION SUR A / B » banner | Reminds you which VFO a transmission would use. |
+| MAIN / SUB · 20M | Transceiver side and band of this VFO. |
+| S-meter (S, +20…) | Received signal; when transmitting, see Station meters. |
+| Frequency digits | Mouse wheel or drag up / down on a digit: it goes up or down. Click the display: this VFO becomes the one tuned by the arrows and bands (underlined letter). |
+| Mode (DATA-U, USB…) | Mode of this VFO; change it in the Mode panel. |
+| `RIT` / `XIT` | Click: switch the receive (RIT) or transmit (XIT) offset on / off. Mouse wheel on the value: ± 10 Hz (± 100 Hz with `Shift`). |
+| `CLEAR` | Sets the RIT / XIT offset back to zero. |
+| `ATT` | Input attenuator (very strong signals), click = on / off. Greyed out on 2 m / 70 cm. |
+| `IPO` / `AMP1` / `AMP2` | HF / 6 m preamp; each click moves to the next (IPO = no preamp). On 2 m / 70 cm: `AMP` on / off. |
+| `NB` `DNR` `NOTCH` `DNF` | Noise blanker, noise reduction, manual notch, automatic notch: click = on / off (levels are set in the DSP panel). |
+| `NAR` | Narrow filter (NARROW), click = on / off. |
+| `AGC AUTO` | AGC reminder (set in RF front end). |
+
+**Step row and band row**, below the VFO displays
+
+| Command | What it does |
+|---|---|
+| `10 Hz` … `100 kHz` | Step of the ◀ ▶ arrows, keyboard arrows and mouse wheel. |
+| `A` / `B` | FTX-1: like MAIN / SUB (the transceiver moves to that side). FTDX10, IC-7300: choice of the tuned VFO. |
+| `◀` `▶` | One step down / up. |
+| `MAIN` / `SUB` | Active side of the transceiver (receive and transmit together), like the front-panel MAIN / SUB key, without transmitting; takes one or two seconds. |
+| `SPLIT` | Transmit on the other VFO than the receive one (section 4.2). |
+| `A → B` / `B → A` | Copies the frequency and mode of one VFO to the other. |
+| `A ⇄ B` | Swaps both VFOs. |
+| `LOCK` | Locks the **front-panel controls of the transceiver at the club** (so nobody touches them); the dashboard keeps working. |
+| `160M` … `70CM` | Band change (last frequency and mode used on that band). On the right: « TUNE obligatoire » reminder or red HI-SWR block. |
+
+**Left column**
+
+| Panel / command | What it does |
+|---|---|
+| Antenne: `ANT 1` / `ANT 2` | FTX-1 antenna socket (on the SPA-1); refused while transmitting. |
+| RF front end: **RF GAIN** | Receiver RF gain; lower it to calm a very strong signal or a noisy band. |
+| RF front end: **AGC** `OFF` `FAST` `MID` `SLOW` `AUTO` | Automatic gain control speed. AUTO suits almost always; FAST for CW / digital, SLOW for SSB. |
+| Mode: `LSB` `USB` `CW-L` `CW-U` `RTTY-L` `RTTY-U` `DATA-L` `DATA-U` `PSK` `AM` `AM-N` `FM` `FM-N` `DATA-FM` | Mode of the VFO shown below the buttons (« Mode appliqué à VFO A »). Digital modes (FT8, audio RTTY…): **DATA-U**. |
+| Filtres: **BW** | Receive filter width. |
+| Filtres: **IF SHIFT** | Moves the passband up or down (pushes an interfering signal out on one side). |
+| Filtres: `CONTOUR` / `APF` | Tone shaping; APF = audio peak filter, CW only. |
+| Station meters: **Po SWR ALC Id Vd COMP S** | Output power, SWR, ALC (digital modes: ≤ 8 %), PA current and voltage, compression, S-meter. RX / TX top left, transmit time on the right. |
+
+**Right column**
+
+| Panel / command | What it does |
+|---|---|
+| RX audio: **AF LEVEL** / **SQUELCH** | Volume and squelch **of the transceiver** (for everybody). |
+| RX audio: `🔊 Écouter le TRX` / **VOLUME** | Listen to the transceiver audio in your browser; the volume only acts for you. |
+| DSP: **NB** / **DNR** | Noise blanker and noise reduction level (OFF, then 1 to 10). |
+| DSP: `NOTCH` + **FRÉQ. NOTCH** | Filter that removes one frequency (a whistling carrier); set the frequency by ear. |
+| DSP: `DNF` | Automatic notch (removes carriers on its own). |
+| Accord: `TUNER` | SPA-1 antenna tuner in line (on by default on HF / 6 m). |
+| Accord: `TUNE` | Starts tuning: the transceiver sends a carrier for a few seconds. Mandatory after a band change; then check the SWR. |
+| TX: `RX` / `TX` lamp | Real state of the transceiver. |
+| TX: `PTT` | Hold to transmit (or the space bar); release = receive. |
+| TX: **PUISSANCE** `−` `+` | Transceiver power; your licence limit is shown below. |
+| TX: **GAIN MICRO**, `PROC`, **NIVEAU PROC** | Phone modulation settings (speech processor and its level). |
+| TX: `VOX` | Can only be switched off remotely (never on). |
+
+**Centre: activity and digital modes**
+
+| Command | What it does |
+|---|---|
+| Tabs `ACTIVITÉ` … `SSTV`, `SYNCHRO`, `LOGS` | Station log, digital modes (section 9), clocks, logbook (section 14). |
+| `👁 Suivre` | Your dashboard follows the tab of the operator in control (section 3). |
+| `⧉` | Opens the digital modes in a separate window. |
+| **CORRESPONDANT** line, NOM, QTH, LOCATOR, REPORT, RST, `LOG QSO` | The station worked and its reports; LOG QSO saves it in the logbook (section 10). |
+
+<a id="split"></a>
+### 4.2 Operating SPLIT (transmit and receive on two frequencies)
+
+SPLIT is mainly used for a **DX expedition** listening away from its own frequency (« UP 5 », « listening 14 200 to 14 210 »). You **listen to the DX on VFO A** and **transmit on VFO B**.
+
+1. Set **VFO A** (MAIN) on the DX frequency, in the right mode. Check that `RX` is green on VFO A.
+2. Click `A → B`: VFO B takes the same frequency and mode.
+3. Set the **transmit frequency on VFO B**: mouse wheel (or drag) on the VFO B digits, e.g. +5 kHz for « UP 5 ». On the FTX-1 the wheel on VFO B digits does not change the active side: you keep listening on A.
+4. Click `SPLIT` (or `TX` on the VFO B display). The **TX** lamp and the glowing frame move to VFO B, its frequency turns white again and the banner shows « ÉMISSION SUR B ».
+5. Listen to the DX on A; to call, **PTT**: the transmission goes out on the VFO B frequency (digits in red). On release, back to receive on A.
+6. To finish: click `SPLIT` again (or `TX` on VFO A). The TX lamp goes back to A.
+
+> [!TIP]
+> **Good to know**
+> - Transceiver rule: without SPLIT you transmit on the VFO you listen on; with SPLIT, on the other one (RX on A → TX on B; if you listen on B, TX on A).
+> - **FTX-1**: SPLIT is handled by the dashboard (« virtual » SPLIT, as in Hamlib) because the FTX-1 split command keys the transmitter. On PTT the transceiver moves to the SUB side to transmit, then back to MAIN; the transceiver at the club therefore briefly shows SUB while transmitting, which is normal. A SPLIT set on the transceiver front panel is followed by the dashboard.
+> - The frequency **actually transmitted** (VFO B, XIT included) is checked: outside the authorised bands the PTT is refused (message « VFO B en SPLIT »).
+> - Small offset (a few kHz at most): `XIT` on VFO A shifts only the transmission, without SPLIT; mouse wheel on the value to set the offset, `CLEAR` to go back.
+> - In **FT8 / FT4 / FT2** there is no need for SPLIT: the transmission is placed in the passband with the TX marker of the waterfall (right click). If SPLIT is on, the message goes out on the other VFO, like the PTT.
+> - Do not forget to switch SPLIT off at the end of the pile-up: otherwise the next operator would transmit on VFO B.
+
 <a id="listen"></a>
 ## 5. Listening
 
@@ -167,7 +268,7 @@ The centre tabs: **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT65**, **
 - **FT2**: the fast mode of Decodium (IU8LMC) — 3.75 s periods, 2.5 s signal, 167 Hz wide (frequencies: Decodium's list, e.g. 14084 kHz). Stations transmitting « asynchronously » (at any time) are decoded too; the time shown is then that of the period in which the signal starts (larger DT). The FT2 of « WSJT-X Improved » is a different, incompatible mode.
 - **Activité de bande** (band activity): all decoded messages (CQ in green, messages for ON5VL / OR0L in red); **Fréquence RX**: those on your frequency.
 - **Split** as in WSJT-X: **left click** on the waterfall or a line = receive frequency, **right click** = transmit frequency; « TX ← RX » and « RX ← TX » buttons.
-- **Double-click** a message: its sender becomes the contact (callsign, locator, report) and messages Tx1 to Tx6 are prepared.
+- **Click the callsign** (underlined) or **double-click** a message: its sender becomes the contact (callsign, locator, report), messages Tx1 to Tx6 are prepared and, with control, the transmission starts in the next period.
 - **Transmitting** (like « Enable Tx » + « Auto Seq » in WSJT-X): clicking a message **Tx1 to Tx7** (below the lists of the tab, as in WSJT-X) sends it **every period** (one in two) until an answer comes. You need control, the TX VFO in **DATA-U** and power within your limit. The sent message shows in yellow in the lists; the bar under the lists is green while receiving, red while transmitting.
 - **The sequence advances by itself** from the contact's answers: his locator → Tx2 (report); his report → Tx3 (R+report); R+report → Tx4 (RR73); RRR or RR73 → Tx5 (73). After sending RR73 or 73: end of QSO, transmission stops, back to Tx6 (CQ) and an offer to **save the QSO in the logbook**.
 - **Répondre au 1er** (answer the first): while calling CQ (Tx6), the station answering you becomes the contact and the sequence starts without a click (« Call 1st » in WSJT-X). **To answer a CQ: click his callsign** (dotted underline in the message) **or double-click his message** (with control): the transceiver sends Tx1 in the next period, opposite to the station's, then the sequence runs on its own, as in WSJT-X. A click elsewhere on the line only sets the receive frequency. Our own transmission is no longer decoded a second time in the lists.
@@ -175,7 +276,7 @@ The centre tabs: **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT65**, **
 - **Waterfall settings** (above the scale, as in WSJT-X): **Gain** = contrast (to the right, weak signals stand out), **Zéro** = background level, **Plat** = flat background across the width (corrects the transceiver filter slope), three colour sets, ↺ = defaults. They apply to every waterfall (FT8, RTTY, CW…) and are remembered in your browser.
 - **Handle under the waterfall**: drag it up to enlarge the message lists (double-click: original size).
 - Stops: `■ Arrêter` (or the space bar); the called contact answers someone else; the same message for 6 min without answer (watchdog); control lost.
-- Transmit frequency: the red TX marker on the waterfall (right click to move it). In **SPLIT**, the message goes out on the other VFO than the receive one, like the PTT.
+- Transmit frequency: the red « TX 1500 » flag below the scale and the dashed red line on the waterfall (right click to move it); receive: green « RX 1500 » flag and solid green line (left click). In **SPLIT**, the message goes out on the other VFO than the receive one, like the PTT.
 
 <a id="jt65"></a>
 ### 9.2 JT65
