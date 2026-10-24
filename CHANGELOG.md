@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.14** — AGC et CORRESPONDANT en jaune fluo, bouton ÉCOUTER LE TRX en vert fluo. Ctrl+F5 sur le dashboard suffit.
 - **0.22.13** — Libellés des réglages en gras (AGC, VOLUME et PUISSANCE en blanc, les curseurs en jaune). Station meters : RX / TX en gras blanc, Po, SWR, ALC, Id, Vd, COMP et S en jaune. Ctrl+F5 sur le dashboard suffit.
 - **0.22.12** — Jaune fluo pour tous les repères jaunes. En jaune aussi : STEP, LOCK, onglets ACTIVITÉ / SYNCHRO / LOGS ONLINE, titres des listes des modes numériques (ACTIVITÉ DE BANDE, FRÉQUENCE RX, RÉCEPTION RTTY…). Cadre « Filtre » renommé « Filtres ». Ctrl+F5 sur le dashboard suffit.
 - **0.22.11** — Libellés des réglages : curseurs en jaune (RF GAIN, BW, IF SHIFT, AF LEVEL, SQUELCH, NB, DNR, FRÉQ. NOTCH, GAIN MICRO, NIVEAU PROC), AGC, VOLUME et PUISSANCE en blanc. Titres DSP et RF front end / Filtre : même espacement que les autres titres. Ctrl+F5 sur le dashboard suffit.

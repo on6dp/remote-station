@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.14 | [RemoteStation-Setup-0.22.14.exe](0.22.14/RemoteStation-Setup-0.22.14.exe) | [remote-station-0.22.14.tar.gz](0.22.14/remote-station-0.22.14.tar.gz) | AGC / Correspondant en jaune, Écouter le TRX en vert — [empreintes SHA-256](0.22.14/SHA256SUMS.txt) |
 | 0.22.13 | [RemoteStation-Setup-0.22.13.exe](0.22.13/RemoteStation-Setup-0.22.13.exe) | [remote-station-0.22.13.tar.gz](0.22.13/remote-station-0.22.13.tar.gz) | Libellés en gras, Station meters en jaune — [empreintes SHA-256](0.22.13/SHA256SUMS.txt) |
 | 0.22.12 | [RemoteStation-Setup-0.22.12.exe](0.22.12/RemoteStation-Setup-0.22.12.exe) | [remote-station-0.22.12.tar.gz](0.22.12/remote-station-0.22.12.tar.gz) | Jaune fluo, nouveaux repères jaunes, « Filtres » — [empreintes SHA-256](0.22.12/SHA256SUMS.txt) |
 | 0.22.11 | [RemoteStation-Setup-0.22.11.exe](0.22.11/RemoteStation-Setup-0.22.11.exe) | [remote-station-0.22.11.tar.gz](0.22.11/remote-station-0.22.11.tar.gz) | Libellés des réglages en jaune / blanc — [empreintes SHA-256](0.22.11/SHA256SUMS.txt) |
