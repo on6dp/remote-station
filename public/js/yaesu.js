@@ -38,6 +38,10 @@
   const SWR_CAL = [[0, 1.0], [48, 1.5], [96, 2.0], [160, 3.0], [255, 5.0]];
 
   /** Lectures communes (toutes les secondes). Chaque entrée : commande, motif de réponse, analyse, réponse simulée. */
+  // AC P1 P2 P3 : P1 = tuner interne (0) / externe (1), P2 = tuner (0) / ATAS (2). On renvoie ceux relus au TRX
+  // (le FTX-1 refuse « AC00x » si son menu TUNER SELECT est sur EXT ou ATAS).
+  function acHead(r) { return (r && /^[01][0-2]$/.test(r.acHead || '')) ? r.acHead : '00'; }
+
   function baseReads() {
     return [
       { cmd: 'ST;', re: /^ST([0-2])$/, parse: (m) => ({ split: m[1] === '0' ? 0 : 1 }), sim: 'ST0' },
@@ -65,7 +69,7 @@
       { cmd: 'PR0;', re: /^PR0([01])$/, parse: (m) => ({ proc: +m[1] }), sim: 'PR00' },
       { cmd: 'PL;', re: /^PL(\d{3})$/, parse: (m) => ({ procLvl: +m[1] }), sim: 'PL050' },
       { cmd: 'VX;', re: /^VX([01])$/, parse: (m) => ({ vox: +m[1] }), sim: 'VX0' },
-      { cmd: 'AC;', re: /^AC([01])([0-2])([0-3])$/, parse: (m) => ({ tuner: m[3] === '0' ? 0 : 1, tuning: m[3] === '3' ? 1 : 0 }), sim: 'AC000' }
+      { cmd: 'AC;', re: /^AC([01])([0-2])([0-3])$/, parse: (m) => ({ tuner: m[3] === '0' ? 0 : 1, tuning: m[3] === '3' ? 1 : 0, acHead: m[1] + m[2] }), sim: 'AC000' }
     ];
   }
 
@@ -106,8 +110,8 @@
       { id: 'procLvl', g: 'tx', label: 'Niveau PROC', type: 'level', min: 0, max: 100, step: 1, write: (v) => 'PL' + pad(v, 3) + ';' },
       // VOX : on peut le couper à distance, jamais l'activer (il pourrait émettre hors du contrôle du PTT)
       { id: 'vox', g: 'tx', label: 'VOX', type: 'toggle', offOnly: true, write: (v) => 'VX' + v + ';' },
-      { id: 'tuner', g: 'tx', label: 'Tuner', type: 'toggle', write: (v) => 'AC00' + v + ';' },
-      { id: 'tune', g: 'tx', label: 'TUNE', type: 'action', transmits: true, write: () => 'AC003;' }
+      { id: 'tuner', g: 'tx', label: 'Tuner', type: 'toggle', write: (v, r) => 'AC' + acHead(r) + v + ';' },
+      { id: 'tune', g: 'tx', label: 'TUNE', type: 'action', transmits: true, write: (v, r) => 'AC' + acHead(r) + '3;' }
     ];
   }
 
