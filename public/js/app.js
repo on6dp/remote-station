@@ -639,7 +639,7 @@
     }
   }
   let trxSince = 0;
-  let lastBand = null, warnBand = null; // bande affichée / bande changée en attente d'un TUNE
+  let lastBand = null, warnBand = null, warnAt = 0; // bande affichée / bande changée en attente d'un TUNE
   function updateControls(r, onAir) {
     const blocked = !iControl() || onAir;
     if (!r.connected) trxSince = 0; else if (!trxSince) trxSince = Date.now();
@@ -1063,12 +1063,22 @@
     const bn = bandName(currentFreq(target));
     $$('#bandKeys .btn').forEach((b) => b.setAttribute('aria-pressed', String(live && b.dataset.band === bn)));
     // Rappel « TUNE obligatoire » : affiché à chaque changement de bande (touche, VFO, face avant), jusqu'au TUNE
+    // HF / 6 m : TUNE obligatoire ; 2 m / 70 cm (pas de tuner, FTX-1 + SPA-1 : HF et 6 m seulement) : SWR seulement, 20 s
+    const fNow = currentFreq(target);
     if (live && bn !== '—') {
-      if (lastBand && bn !== lastBand && bn !== 'GEN') warnBand = bn;
+      if (lastBand && bn !== lastBand && bn !== 'GEN') { warnBand = bn; warnAt = Date.now(); }
       lastBand = bn;
     }
     if (r.tuning) warnBand = null;
-    $('bandWarn').hidden = !(live && warnBand && warnBand === bn && !$('panelTune').hidden);
+    const vhf = fNow != null && fNow > 60e6;
+    if (vhf && Date.now() - warnAt > 20000) warnBand = null;
+    const showW = !!(live && warnBand && warnBand === bn && !$('panelTune').hidden);
+    if (showW && $('bandWarn').dataset.vhf !== String(vhf)) {
+      $('bandWarn').dataset.vhf = String(vhf);
+      $('bandWarn').innerHTML = vhf ? '⚠ Changement de bande : vérifiez le <b>SWR</b> (en bas à gauche) avant d’émettre.'
+        : '⚠ Changement de bande : <b>TUNE obligatoire</b>, puis vérifiez le <b>SWR</b> (en bas à gauche) avant d’émettre.';
+    }
+    $('bandWarn').hidden = !showW;
     $$('#stepKeys .btn').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.step) === step)));
     $('tgtA').setAttribute('aria-pressed', String(target === 'A'));
     $('tgtB').setAttribute('aria-pressed', String(target === 'B'));

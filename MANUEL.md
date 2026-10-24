@@ -118,7 +118,7 @@ Cadre **Antenne**, en haut à gauche : `ANT 1` / `ANT 2` sur le FTX-1 (prises de
 
 - **PTT** : maintenez le gros bouton PTT ou la barre d'espace `Espace`. Relâcher = réception.
 - **Puissance** : boutons − / + du cadre TX ; votre limite personnelle est affichée (ex. ON3 : 25 W).
-- **Accord** : après un changement de bande, un `TUNE` est **obligatoire** (cadre Accord) avant d'émettre, puis vérifiez le **SWR** (en bas à gauche du dashboard) ; à chaque changement de bande, un rappel clignote à droite de la touche 70CM et reste affiché jusqu'au TUNE. TUNE compte comme une émission. FTX-1 : le tuner interne est dans l'ampli SPA-1, qui doit être raccordé et allumé ; sinon TUNER et TUNE n'ont pas d'effet.
+- **Accord** : après un changement de bande, un `TUNE` est **obligatoire** (cadre Accord) avant d'émettre, puis vérifiez le **SWR** (en bas à gauche du dashboard) ; à chaque changement de bande, un rappel clignote à droite de la touche 70CM et reste affiché jusqu'au TUNE (en 2 m et 70 cm, pas de tuner : seulement « vérifiez le SWR », 20 s). Le tuner du SPA-1 ne travaille qu'en HF et 6 m. TUNE compte comme une émission. FTX-1 : le tuner interne est dans l'ampli SPA-1, qui doit être raccordé et allumé ; sinon TUNER et TUNE n'ont pas d'effet.
 - Gain micro, PROC et niveau, VOX (on peut le couper à distance, jamais l'activer).
 
 > [!WARNING]
@@ -223,7 +223,7 @@ Heure du serveur, écart de votre PC, délai de la liaison avec la station et DT
 <a id="qo100"></a>
 ### 9.9 QO-100
 
-Les listes FT8 · FT4, RTTY et CW proposent « **QO-100 · FI 2 m / 70 cm** » : la fréquence à mettre sur le TRX **avant le convertisseur** 2,4 GHz, pour monter sur 2400,040 MHz (FT8 / FT4), 2400,025 MHz (CW) ou 2400,090 MHz (RTTY). Exemple : FT8 sur **432,540 MHz** avec le convertisseur 70 cm du club. Seules les FI que le TRX branché peut atteindre sont proposées (2 m et 70 cm : FTX-1).
+Les listes FT8 · FT4, RTTY et CW proposent « **QO-100 · FI 2 m / 70 cm** » : la fréquence à mettre sur le TRX **avant le convertisseur** 2,4 GHz, pour monter sur 2400,040 MHz (FT8 / FT4), 2400,025 MHz (CW) ou 2400,090 MHz (RTTY). Exemple : FT8 sur **432,540 MHz** avec le convertisseur 70 cm du club. Les FI 2 m (144,540), 70 cm (432,540) et 23 cm (1296,540 MHz en FT8) sont listées ; celles que le TRX branché ne peut pas atteindre sont grisées (23 cm sur le FTX-1).
 
 <a id="messages"></a>
 ## 10. Correspondant, messages et macros

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.6** — QO-100 : la FI 23 cm (1296,540 MHz en FT8) figure dans les listes FT8 · FT4, RTTY et CW, grisée « hors couverture du TRX » quand le TRX ne l’atteint pas (FTX-1). Rappel de changement de bande : en 2 m et 70 cm (pas de tuner, celui du SPA-1 ne travaille qu’en HF et 6 m), seulement « vérifiez le SWR », 20 s. « MD… » refusé par le TRX (mode déjà en place après un QSY) n’est plus signalé. **Recharger la page Station.**
 - **0.22.5** — **Rappel « TUNE obligatoire »** : à chaque changement de bande (touche de bande, VFO, face avant du TRX), « ⚠ Changement de bande : TUNE obligatoire, puis vérifiez le SWR (en bas à gauche) avant d’émettre » clignote à droite de la touche 70CM et reste affiché jusqu’au TUNE. Aide mise à jour (FTX-1 : tuner interne dans le SPA-1).
 - **0.22.4** — TUNER / TUNE : la commande AC reprend le type de tuner relu au TRX (interne, externe ou ATAS, selon son menu TUNER SELECT) au lieu de toujours « tuner interne » ; le FTX-1 refusait « AC000 » / « AC001 ». **Recharger la page Station.**
 - **0.22.3** — **TUNER : diagnostic.** Si le TRX ne met pas son tuner en service (relu « hors service » après le clic), le dashboard le dit et rappelle quoi vérifier : FTX-1 raccordé au SPA-1 (le tuner interne de l'Optima est dans le SPA-1) ou tuner externe, menus TUNER SELECT et TUNER TYPE SEL. Toute commande refusée par le TRX (réponse « ?; ») est signalée à celui qui pilote. Console Lecture CAT : boutons AC, RI0 et menus du tuner (EX030103, EX030104, EX030701, EX030702). **Recharger la page Station.**

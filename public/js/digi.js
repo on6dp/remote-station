@@ -35,11 +35,13 @@
   function qoEntries(m) {
     const up = QO_UP[m];
     if (!up) return [];
-    // FI hors de la couverture du TRX (ex. 23 cm sur FTX-1, FTDX10, IC-7300) : pas proposée
+    // FI hors de la couverture du TRX (ex. 23 cm sur FTX-1, FTDX10, IC-7300) : affichée mais grisée
     const R = api && api.rig && api.rig();
     const max = R && R.FREQ_MAX ? R.FREQ_MAX : Infinity;
-    return Object.keys(QO_LBL).filter((k) => Number(qoIf[k]) > 0).map((k) => ['QO-100 · FI ' + QO_LBL[k], Math.round((Number(qoIf[k]) + up - 2400) * 1e6) / 1000])
-      .filter((x) => x[1] * 1000 <= max);
+    return Object.keys(QO_LBL).filter((k) => Number(qoIf[k]) > 0).map((k) => {
+      const khz = Math.round((Number(qoIf[k]) + up - 2400) * 1e6) / 1000;
+      return ['QO-100 · FI ' + QO_LBL[k], khz, khz * 1000 > max];
+    });
   }
   const withQo = (list, m) => list.filter((x) => !/^QO-100/.test(x[0])).concat(qoEntries(m));
   const dialList = (m) => withQo(DIAL[m], m);
@@ -53,15 +55,16 @@
   }
   // Fréquences candidates pour suivre la bande du TRX : une fréquence QO-100 seulement si le TRX est déjà
   // tout près (± 250 kHz) — on ne bascule pas sur le convertisseur depuis une fréquence terrestre 70 cm
-  const nearList = (m, f) => { const l = dialList(m).filter((x) => !/^QO-100/.test(x[0]) || Math.abs(x[1] * 1000 - f) < 250000); return l.length ? l : DIAL[m]; };
+  const nearList = (m, f) => { const l = dialList(m).filter((x) => !x[2] && (!/^QO-100/.test(x[0]) || Math.abs(x[1] * 1000 - f) < 250000)); return l.length ? l : DIAL[m]; };
   // Remplit une liste de fréquences en gardant le choix en cours
   function fillList(sel, list, keep) {
     if (!sel) return;
     sel.textContent = '';
-    for (const [b, khz] of list) {
+    for (const [b, khz, out] of list) {
       const o = document.createElement('option');
       o.value = String(khz);
-      o.textContent = b + ' · ' + khz.toLocaleString('fr-BE', { minimumFractionDigits: khz % 1 ? 1 : 0 }) + ' kHz';
+      o.textContent = b + ' · ' + khz.toLocaleString('fr-BE', { minimumFractionDigits: khz % 1 ? 1 : 0 }) + ' kHz' + (out ? ' — hors couverture du TRX' : '');
+      if (out) o.disabled = true;
       sel.appendChild(o);
     }
     if (keep != null) sel.value = String(keep);
