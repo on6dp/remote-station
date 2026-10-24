@@ -567,6 +567,8 @@
     ctlRefs = {};
     buildKeys(R);
     const boxes = { ant: 'sec-ant', front: 'sec-front', filter: 'sec-filter', dual: 'sec-dual', audio: 'sec-audio', dsp: 'sec-dsp', tune: 'sec-tune', tx: 'sec-tx' };
+    // TXW (placé dans la rangée MAIN / SUB) mis de côté avant de vider les cadres, puis remis par render()
+    if ($('txwBtn') && $('txwBtn').closest('#sec-dual')) $('sec-dual').after($('txwBtn'));
     for (const k in boxes) $(boxes[k]).textContent = '';
     $('sec-other').textContent = '';
     const where = {};
@@ -977,6 +979,16 @@
   function render() {
     lamp('lampLink', ws && ws.readyState === 1 && me ? 'on' : null);
     drawTxCall();
+    if ($('txwBtn')) {
+      // TXW juste à droite de DUAL RX (sinon de SPLIT) dans la rangée MAIN / SUB / SPLIT…
+      const anchor = document.querySelector('#sec-dual [data-ctl="dualRx"]') || document.querySelector('#sec-dual [data-ctl="split"]');
+      const cell = anchor && (anchor.closest('#sec-dual > *') || anchor);
+      if (cell && cell.nextElementSibling !== $('txwBtn')) cell.after($('txwBtn'));
+      const hasSwap = !!(RIG().CONTROL && RIG().CONTROL.swap);
+      $('txwBtn').hidden = !hasSwap;
+      $('txwBtn').setAttribute('aria-pressed', String(!!(st && st.txw)));
+      $('txwBtn').disabled = !iControl() || !!(st && st.ptt && st.ptt.active);
+    }
     const r = (st && st.radio) || {};
     // Côté actif du TRX changé (dashboard ou face avant) : la molette, les bandes et le mode suivent ce VFO
     if (r.connected && r.vfoSel != null) {
@@ -1129,7 +1141,7 @@
     // Rappel « TUNE obligatoire » : affiché à chaque changement de bande (touche, VFO, face avant), jusqu'au TUNE
     // HF / 6 m : TUNE obligatoire ; 2 m / 70 cm (pas de tuner, FTX-1 + SPA-1 : HF et 6 m seulement) : SWR seulement, 20 s
     const fNow = currentFreq(target);
-    if (live && bn !== '—') {
+    if (live && bn !== '—' && !(st && st.txw)) { // TXW : VFO échangés un instant, pas un changement de bande
       if (lastBand && bn !== lastBand && bn !== 'GEN') { warnBand = bn; warnAt = Date.now(); }
       lastBand = bn;
     }
@@ -1574,6 +1586,36 @@
   };
   if (window.RSLOG) window.RSLOG.init(digiApi); // onglet « Logs » (monté par digi.js)
   if (window.RSDIGI) window.RSDIGI.init(digiApi);
+  // TXW : maintenir le bouton (ou la touche W) pour écouter la fréquence d'émission ; nouvelles toutes les 0,7 s au serveur
+  let txwHold = null;
+  const txwDown = (e) => {
+    if (e) e.preventDefault();
+    if (txwHold) return;
+    if (!iControl()) return say('Prenez la main pour utiliser TXW.', 'warn');
+    send({ t: 'txw', on: true });
+    txwHold = setInterval(() => send({ t: 'txw', on: true }), 700);
+    $('txwBtn').classList.add('held');
+  };
+  const txwUp = () => {
+    if (!txwHold) return;
+    clearInterval(txwHold);
+    txwHold = null;
+    $('txwBtn').classList.remove('held');
+    send({ t: 'txw', on: false });
+  };
+  $('txwBtn').addEventListener('pointerdown', txwDown);
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) $('txwBtn').addEventListener(ev, txwUp);
+  window.addEventListener('blur', txwUp);
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'w' || e.key === 'W') && !e.repeat && !e.ctrlKey && !e.altKey && !e.metaKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) txwDown(e);
+  });
+  document.addEventListener('keyup', (e) => { if (e.key === 'w' || e.key === 'W') txwUp(); });
+  // DX Cluster : menu de deux liens (nouvel onglet)
+  const dxcShow = (on) => { $('dxcMenu').hidden = !on; $('dxcBtn').setAttribute('aria-expanded', String(on)); };
+  $('dxcBtn').addEventListener('click', (e) => { e.stopPropagation(); dxcShow($('dxcMenu').hidden); });
+  $('dxcMenu').addEventListener('click', () => dxcShow(false));
+  document.addEventListener('click', (e) => { if (!$('dxcMenu').hidden && !e.target.closest('.dxc-wrap')) dxcShow(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') dxcShow(false); });
   $('txCallSel').addEventListener('change', () => {
     if (!iControl()) return render();
     const own = !!me && $('txCallSel').value === String(me.call).toUpperCase();

@@ -36,10 +36,10 @@ const DEFAULTS = {
   // Tuner (boîte d'accord) remis en service tout seul à la connexion du TRX et à chaque changement de bande HF / 6 m,
   // pour ne pas l'oublier ; un clic sur TUNER le coupe jusqu'au prochain changement de bande. false : jamais tout seul.
   tunerAuto: true,
-  // FTX-1 : passage MAIN ↔ SUB par le dashboard aussi en réception simple (DUAL RX coupé). false par défaut : le 24/10
-  // un clic sur SUB en réception simple a mis le TRX en émission (avant la 0.22.29, qui n'envoie plus jamais FT) ; à
-  // n'activer que pour un essai surveillé au club, puissance au minimum.
-  ftx1SubSingle: false,
+  // FTX-1 : passage MAIN ↔ SUB par le dashboard aussi en réception simple (DUAL RX coupé). Le 24/10, un clic sur SUB en
+  // réception simple avait mis le TRX en émission (commande FT envoyée après VS, supprimée en 0.22.29) ; essai au club
+  // ensuite concluant (VS seul, pas d'émission). false : SUB seulement en double réception.
+  ftx1SubSingle: true,
   ftxWatchdogMinutes: 6, // émission auto FT8 / FT4 / FT2 : arrêt si le même message part depuis ce temps (WSJT-X : 6 min)
   pttHeartbeatMs: 1500,
   controlIdleMinutes: 15,
@@ -213,7 +213,27 @@ const txSide = () => (txSel ? 1 - rxSide() : rxSide());
 let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
-let ctlView = null;    // onglet affiché par celui qui a la main { conn, tab, mode } (« Suivre l'opérateur »)
+let ctlView = null;
+// TXW (écoute de la fréquence d'émission, comme la touche TXW des TRX) : tant que le bouton est maintenu, les VFO sont
+// échangés (A ⇄ B) ; au relâchement, sans nouvelles du bouton (2,5 s), au bout de 15 s ou si la main change : échange inverse
+let txw = null; // { conn, since, beat }
+function txwSwap(by) {
+  const R = rig();
+  if (!R.CONTROL || !R.CONTROL.swap || !station) return false;
+  let v;
+  try { v = R.validate('swap', undefined, radio); } catch (e) { return false; }
+  toStation({ t: 'cmd', op: 'ctl', id: 'swap', value: v, by, subOk: !!cfg.ftx1SubCat, subSingle: !!cfg.ftx1SubSingle });
+  return true;
+}
+function txwOff(reason) {
+  if (!txw) return;
+  const t = txw;
+  txw = null;
+  txwSwap('TXW');
+  if (reason && t.conn) t.conn.txwRelease = true; // coupure forcée : relâcher le bouton avant de recommencer
+  if (reason && t.conn && t.conn.open !== false) send(t.conn, { t: 'notice', level: 'warn', msg: 'TXW relâché : ' + reason });
+  broadcast();
+}    // onglet affiché par celui qui a la main { conn, tab, mode } (« Suivre l'opérateur »)
 let swrLock = null;     // { freq, swr } : ROS trop élevé constaté à cette fréquence ; { tune: true, band } : accord impossible sur cette bande
 let tuneWatch = null;
 let tunerAuto = { band: '', until: 0 }; // bande HF / 6 m sur laquelle le tuner a été remis en service tout seul   // accord en cours de suivi { freq, at, saw, endAt, call }
@@ -773,6 +793,7 @@ function txFreq() {
 function autoTuner() {
   if (!radio.connected || !station) { tunerAuto = { band: '', until: 0 }; return; }
   if (cfg.tunerAuto === false || !rig().CONTROL || !rig().CONTROL.tuner) return;
+  if (txw) return; // TXW : VFO échangés un instant, pas un changement de bande
   const f = txFreq();
   const band = f && f < 54e6 ? LB.bandOf(f / 1e6) : '';
   const now = Date.now();
@@ -835,7 +856,8 @@ function swrLockText() {
 
 // Raison qui empêche cet opérateur d'émettre (PTT ou TUNE), ou null
 function txBlockReason(conn, forTune) {
-  return !cfg.allowTx ? 'émission désactivée sur ce serveur' :
+  return txw ? 'TXW enfoncé (écoute de la fréquence d’émission) : relâchez-le d’abord' :
+    !cfg.allowTx ? 'émission désactivée sur ce serveur' :
     conn.user.rxOnly ? 'indicatif d’écouteur (' + conn.user.call + ') : émission interdite' :
     !conn.user.tx ? 'votre compte n’est pas autorisé à émettre' :
     controller !== conn ? 'prenez d’abord la main' :
@@ -865,6 +887,7 @@ function publicState() {
     seq: seqPublic(),
     ftx: ftxPend ? { id: ftxPend.id, state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call, seconds: ftxPend.seconds } : null,
     txCall: txCall(),
+    txw: txw ? txw.conn.user.call : null,
     view: ctlView && controller && ctlView.conn === controller ? { tab: ctlView.tab, mode: ctlView.mode } : null,
     txOk: inTxRange(txFreq()),
     txFreq: txFreq(),
@@ -1357,6 +1380,12 @@ function ftxKey(p) {
 
 setInterval(() => {
   const now = Date.now();
+  if (txw) {
+    if (controller !== txw.conn) txwOff('main perdue');
+    else if (!station || !radio.connected) txwOff('station ou TRX hors ligne');
+    else if (now - txw.beat > 2500) txwOff('perte de liaison');
+    else if (now - txw.since > 15000) txwOff('15 s au plus');
+  }
   if (ptt.active) {
     if (!ptt.digi && now - ptt.lastBeat > cfg.pttHeartbeatMs) stopPtt('perte de liaison avec l’opérateur');
     else if (now - ptt.since > cfg.maxTxSeconds * 1000) stopPtt('durée maximale atteinte (' + cfg.maxTxSeconds + ' s)');
@@ -1853,6 +1882,22 @@ function onOperator(conn, m) {
         toStation({ t: 'cmd', op: 'mode', code, sub: !!m.sub });
       }
       return broadcast();
+
+    case 'txw': {
+      if (m.on) {
+        if (controller !== conn) return send(conn, { t: 'notice', level: 'warn', msg: 'Prenez la main pour utiliser TXW.' });
+        if (txw && txw.conn === conn) { txw.beat = now; return; }
+        if (txw || conn.txwRelease) return;
+        if (ptt.active || radio.tx || (ftxPend && ftxPend.state === 'tx')) return send(conn, { t: 'notice', level: 'warn', msg: 'TXW : impossible pendant une émission.' });
+        if (!txwSwap(conn.user.call)) return send(conn, { t: 'notice', level: 'warn', msg: 'TXW : ce TRX ne permet pas l’échange des VFO.' });
+        txw = { conn, since: now, beat: now };
+        lastCtrlActivity = now;
+        return broadcast();
+      }
+      conn.txwRelease = false;
+      if (txw && txw.conn === conn) txwOff('');
+      return;
+    }
 
     case 'ptt':
       if (m.on) {

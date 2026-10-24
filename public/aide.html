@@ -69,6 +69,7 @@ Après 15 minutes sans aucune action, vous êtes déconnecté (un avertissement 
   <tr><td><span class="k">● FTX-1 FTDX10 IC-7300</span></td><td>Le TRX branché (en surbrillance) et sa liaison CAT.</td></tr>
   <tr><td><span class="k">👥 n</span></td><td>Nombre de membres connectés ; un clic ouvre le volet <b>Opérateurs</b> (qui est là, qui a la main, discussion). Point rouge = nouveau message.</td></tr>
   <tr><td><span class="k">Prendre la main</span></td><td>Devenir l'opérateur (voir section 3).</td></tr>
+  <tr><td><span class="k">DX Cluster ▾</span></td><td>Ouvre dans un nouvel onglet l'un des deux clusters : <b>dx.op0p.be</b> (HolyCluster) ou <b>cluster.op0p.be</b> (CC-Cluster OP0P).</td></tr>
   <tr><td><span class="k">HELP</span></td><td>Ce manuel (en français ou en anglais selon la langue du navigateur).</td></tr>
 </table>
 <h3>Les colonnes (écran large)</h3>
@@ -116,7 +117,7 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
   <li><b>RF front end</b> : RF gain, AGC. ATT et préampli (IPO / AMP1 / AMP2, AMP) : badges de l'écran VFO.</li>
   <li><b>DSP</b> : NB, DNR, NOTCH (et sa fréquence), DNF.</li>
   <li><b>FTX-1 : MAIN / SUB</b> (ou A / B) choisit le côté actif du TRX, réception et émission ensemble, exactement comme la touche MAIN / SUB de la face avant, sans émission. Le changement prend une à deux secondes. (Technique : commande CAT VS seule, d'après le manuel CAT de Yaesu.)</li>
-  <li><b>FTX-1 : les cadres RF front end, Filtres et DSP règlent le côté actif du TRX</b> (étiquette « A · MAIN » / « B · SUB » dans leur titre, sur la même ligne) : SUB actif → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF du côté SUB. Les touches A / B de la ligne des pas font comme MAIN / SUB (VFO réglé et côté actif du TRX) ; en réception simple (deux bandes HF), elles ne choisissent que le VFO réglé, le TRX reste sur son côté actif ; molette sur les chiffres de l'autre VFO pour changer sa fréquence sans changer de côté.</li>
+  <li><b>FTX-1 : les cadres RF front end, Filtres et DSP règlent le côté actif du TRX</b> (étiquette « A · MAIN » / « B · SUB » dans leur titre, sur la même ligne) : SUB actif → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF du côté SUB. Les touches A / B de la ligne des pas font comme MAIN / SUB (VFO réglé et côté actif du TRX) ;  molette sur les chiffres de l'autre VFO pour changer sa fréquence sans changer de côté.</li>
   <li><b>MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK</b> : sur la ligne des pas (Step), après ◀ ▶. Le décalage RIT / XIT se règle sur chaque écran VFO (molette sur la valeur, CLEAR pour le remettre à zéro).</li>
   <li><b>RIT / XIT / CLEAR</b> sur chaque écran VFO : clic sur RIT ou XIT = allumer / éteindre ; <b>molette</b> sur le décalage affiché = ± 10 Hz (± 100 Hz avec Maj) ;
     <b>CLEAR</b> = décalage à zéro. Le VFO B a son propre RIT / XIT sur le FTX-1 (côté SUB) ; le FTDX10 et l'IC-7300 n'en ont qu'un, sur le VFO A.</li>
@@ -155,7 +156,8 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
   <tr><td><span class="k">◀</span> <span class="k">▶</span></td><td>Descendre / monter d'un pas.</td></tr>
   <tr><td><span class="k">MAIN</span> / <span class="k">SUB</span></td><td>Côté actif du TRX (réception et émission ensemble), comme la touche MAIN / SUB de la face avant, sans émission ; prend une à deux secondes.</td></tr>
   <tr><td><span class="k">SPLIT</span></td><td>Émettre sur l'autre VFO que celui de réception (section 4.2).</td></tr>
-  <tr><td><span class="k">DUAL RX</span></td><td>FTX-1 : double réception (MAIN et SUB écoutés ensemble, S-mètre et RX sur les deux VFO) ou réception simple (seulement le côté actif). <b>Modes numériques</b> : en double réception, la BF envoyée par le TRX contient aussi le côté SUB (ex. le FT8 du 20 m pendant un trafic QO-100 sur MAIN) ; couper DUAL RX pour ne décoder que le côté actif. <b>DUAL RX coupé, MAIN / SUB est refusé par le dashboard</b> (un clic sur SUB a mis le TRX en émission au club) : allumer DUAL RX avant de changer de côté, ou utiliser la touche MAIN / SUB du TRX. Le S-mètre du VFO inactif reste affiché, grisé. Le FTX-1 n'accepte la double réception que si un des deux VFO est en 144 / 430 MHz (pas HF + HF).</td></tr>
+  <tr><td><span class="k">TXW</span></td><td><b>Maintenir</b> le bouton (ou la touche <kbd>W</kbd>) pour écouter la fréquence d'émission (en SPLIT : le pile-up sur le VFO B) ; relâcher = retour sur le DX. Les VFO sont échangés pendant l'appui puis remis en place tout seuls (aussi après 15 s, ou si la liaison se coupe). PTT refusé tant que TXW est enfoncé.</td></tr>
+  <tr><td><span class="k">DUAL RX</span></td><td>FTX-1 : double réception (MAIN et SUB écoutés ensemble, S-mètre et RX sur les deux VFO) ou réception simple (seulement le côté actif). <b>Modes numériques</b> : en double réception, la BF envoyée par le TRX contient aussi le côté SUB (ex. le FT8 du 20 m pendant un trafic QO-100 sur MAIN) ; couper DUAL RX pour ne décoder que le côté actif. MAIN / SUB fonctionne avec ou sans DUAL RX (réglage <code>ftx1SubSingle</code> du serveur ; à <code>false</code>, SUB seulement en double réception). Le S-mètre du VFO inactif reste affiché, grisé. Le FTX-1 n'accepte la double réception que si un des deux VFO est en 144 / 430 MHz (pas HF + HF).</td></tr>
   <tr><td><span class="k">A → B</span> / <span class="k">B → A</span></td><td>Recopie la fréquence et le mode d'un VFO sur l'autre.</td></tr>
   <tr><td><span class="k">A ⇄ B</span></td><td>Échange les deux VFO.</td></tr>
   <tr><td><span class="k">LOCK</span></td><td>Verrouille les commandes de la <b>face avant du TRX au club</b> (pour que personne ne les touche) ; le dashboard reste utilisable.</td></tr>
@@ -209,7 +211,7 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
   <li>Cliquez <span class="k">A → B</span> : le VFO B prend la même fréquence et le même mode.</li>
   <li>Réglez la <b>fréquence d'émission sur le VFO B</b> : molette (ou glisser) sur les chiffres du VFO B, par exemple +5 kHz pour « UP 5 ». Sur le FTX-1, la molette sur les chiffres du VFO B ne change pas le côté actif : vous continuez d'écouter sur A.</li>
   <li>Cliquez <span class="k">SPLIT</span> (ou <span class="k">TX</span> sur l'écran du VFO B). Le voyant <b>TX</b> et le cadre lumineux passent sur le VFO B, sa fréquence redevient blanche et le bandeau indique « ÉMISSION SUR B ».</li>
-  <li>Écoutez le DX sur A ; pour l'appeler, <b>PTT</b> : l'émission part sur la fréquence du VFO B (chiffres en rouge). En relâchant, retour en réception sur A.</li>
+  <li>Écoutez le DX sur A ; <b>maintenez TXW</b> (ou <kbd>W</kbd>) pour écouter le pile-up sur la fréquence d'émission. Pour l'appeler, <b>PTT</b> : l'émission part sur la fréquence du VFO B (chiffres en rouge). En relâchant, retour en réception sur A.</li>
   <li>Pour finir : cliquez de nouveau <span class="k">SPLIT</span> (ou <span class="k">TX</span> du VFO A). Le voyant TX revient sur A.</li>
 </ol>
 <div class="tip"><b>Bon à savoir</b>
@@ -366,6 +368,7 @@ Seules les FI que le TRX branché peut atteindre sont proposées (2 m et 70 cm :
 <table>
   <tr><th>Touche</th><th>Action</th></tr>
   <tr><td><kbd>Espace</kbd> (maintenir)</td><td>PTT — aussi depuis un cadre ouvert dans une fenêtre séparée</td></tr>
+  <tr><td><kbd>W</kbd> (maintenir)</td><td>TXW : écoute de la fréquence d'émission (SPLIT)</td></tr>
   <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Fréquence ± un pas</td></tr>
   <tr><td><kbd>F1</kbd> … <kbd>F12</kbd></td><td>Macros dans les onglets RTTY et CW (<kbd>F1</kbd>…<kbd>F8</kbd> en JTTY) : émission immédiate si la macro commence par <code>&lt;TX&gt;</code></td></tr>
   <tr><td><kbd>Ctrl</kbd> + <kbd>Entrée</kbd> / <kbd>Entrée</kbd></td><td>Émettre le texte tapé en RTTY / en JTTY</td></tr>

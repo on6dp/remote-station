@@ -68,6 +68,7 @@ After 15 minutes without any action you are logged out (a warning appears one mi
   <tr><td><span class="k">● FTX-1 FTDX10 IC-7300</span></td><td>The connected transceiver (highlighted) and its CAT link.</td></tr>
   <tr><td><span class="k">👥 n</span></td><td>Number of members online; click to open the <b>Opérateurs</b> panel (who is online, who has control, chat). Red dot = new message.</td></tr>
   <tr><td><span class="k">Prendre la main</span></td><td>Take control (see section 3).</td></tr>
+  <tr><td><span class="k">DX Cluster ▾</span></td><td>Opens one of the two clusters in a new tab: <b>dx.op0p.be</b> (HolyCluster) or <b>cluster.op0p.be</b> (CC-Cluster OP0P).</td></tr>
   <tr><td><span class="k">HELP</span></td><td>This manual.</td></tr>
 </table>
 <h3>Columns (wide screen)</h3>
@@ -115,7 +116,7 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
   <li><b>RF front end</b>: RF gain, AGC. ATT and preamplifier (IPO / AMP1 / AMP2, AMP): badges on the VFO display.</li>
   <li><b>DSP</b>: NB, DNR, NOTCH (and its frequency), DNF.</li>
   <li><b>FTX-1: MAIN / SUB</b> (or A / B) chooses the active side of the rig, receive and transmit together, exactly like the front-panel MAIN / SUB key, without transmitting. The change takes one or two seconds. (Technical: VS CAT command alone, from Yaesu's CAT manual.)</li>
-  <li><b>FTX-1: the RF front end, Filtres and DSP panels act on the active side of the rig</b> (« A · MAIN » / « B · SUB » tag on their title line): SUB active → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF of the SUB side. The A / B keys on the Step row act like MAIN / SUB (tuned VFO and active side of the rig); in single receive (two HF bands) they only choose the tuned VFO and the rig stays on its active side; use the mouse wheel on the other VFO's digits to change its frequency without changing side.</li>
+  <li><b>FTX-1: the RF front end, Filtres and DSP panels act on the active side of the rig</b> (« A · MAIN » / « B · SUB » tag on their title line): SUB active → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF of the SUB side. The A / B keys on the Step row act like MAIN / SUB (tuned VFO and active side of the rig); use the mouse wheel on the other VFO's digits to change its frequency without changing side.</li>
   <li><b>MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK</b>: on the Step row, after ◀ ▶. The RIT / XIT offset is set on each VFO display (mouse wheel on the value, CLEAR to reset it).</li>
   <li><b>RIT / XIT / CLEAR</b> on each VFO display: click RIT or XIT to switch it on / off; mouse <b>wheel</b> over the offset = ± 10 Hz (± 100 Hz with Shift);
     <b>CLEAR</b> = offset to zero. VFO B has its own RIT / XIT on the FTX-1 (SUB side); the FTDX10 and IC-7300 have only one, on VFO A.</li>
@@ -154,7 +155,8 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
   <tr><td><span class="k">◀</span> <span class="k">▶</span></td><td>One step down / up.</td></tr>
   <tr><td><span class="k">MAIN</span> / <span class="k">SUB</span></td><td>Active side of the transceiver (receive and transmit together), like the front-panel MAIN / SUB key, without transmitting; takes one or two seconds.</td></tr>
   <tr><td><span class="k">SPLIT</span></td><td>Transmit on the other VFO than the receive one (section 4.2).</td></tr>
-  <tr><td><span class="k">DUAL RX</span></td><td>FTX-1: dual receive (MAIN and SUB heard together, S-meter and RX on both VFOs) or single receive (active side only). <b>Digital modes</b>: in dual receive the audio sent by the transceiver also contains the SUB side (e.g. 20 m FT8 during a QO-100 contact on MAIN); switch DUAL RX off to decode the active side only. <b>With DUAL RX off the dashboard refuses MAIN / SUB</b> (a click on SUB keyed the transceiver at the club): switch DUAL RX on before changing side, or use the MAIN / SUB key of the transceiver. The S-meter of the inactive VFO stays visible, greyed out. The FTX-1 only accepts dual receive when one of the VFOs is on 144 / 430 MHz (not HF + HF).</td></tr>
+  <tr><td><span class="k">TXW</span></td><td><b>Hold</b> the button (or the <kbd>W</kbd> key) to listen on the transmit frequency (in SPLIT: the pile-up on VFO B); release = back to the DX. The VFOs are swapped while held and put back automatically (also after 15 s, or if the link drops). PTT refused while TXW is held.</td></tr>
+  <tr><td><span class="k">DUAL RX</span></td><td>FTX-1: dual receive (MAIN and SUB heard together, S-meter and RX on both VFOs) or single receive (active side only). <b>Digital modes</b>: in dual receive the audio sent by the transceiver also contains the SUB side (e.g. 20 m FT8 during a QO-100 contact on MAIN); switch DUAL RX off to decode the active side only. MAIN / SUB works with or without DUAL RX (server setting <code>ftx1SubSingle</code>; with <code>false</code>, SUB only in dual receive). The S-meter of the inactive VFO stays visible, greyed out. The FTX-1 only accepts dual receive when one of the VFOs is on 144 / 430 MHz (not HF + HF).</td></tr>
   <tr><td><span class="k">A → B</span> / <span class="k">B → A</span></td><td>Copies the frequency and mode of one VFO to the other.</td></tr>
   <tr><td><span class="k">A ⇄ B</span></td><td>Swaps both VFOs.</td></tr>
   <tr><td><span class="k">LOCK</span></td><td>Locks the <b>front-panel controls of the transceiver at the club</b> (so nobody touches them); the dashboard keeps working.</td></tr>
@@ -208,7 +210,7 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
   <li>Click <span class="k">A → B</span>: VFO B takes the same frequency and mode.</li>
   <li>Set the <b>transmit frequency on VFO B</b>: mouse wheel (or drag) on the VFO B digits, e.g. +5 kHz for « UP 5 ». On the FTX-1 the wheel on VFO B digits does not change the active side: you keep listening on A.</li>
   <li>Click <span class="k">SPLIT</span> (or <span class="k">TX</span> on the VFO B display). The <b>TX</b> lamp and the glowing frame move to VFO B, its frequency turns white again and the banner shows « ÉMISSION SUR B ».</li>
-  <li>Listen to the DX on A; to call, <b>PTT</b>: the transmission goes out on the VFO B frequency (digits in red). On release, back to receive on A.</li>
+  <li>Listen to the DX on A; <b>hold TXW</b> (or <kbd>W</kbd>) to listen to the pile-up on the transmit frequency. To call, <b>PTT</b>: the transmission goes out on the VFO B frequency (digits in red). On release, back to receive on A.</li>
   <li>To finish: click <span class="k">SPLIT</span> again (or <span class="k">TX</span> on VFO A). The TX lamp goes back to A.</li>
 </ol>
 <div class="tip"><b>Good to know</b>
@@ -365,6 +367,7 @@ Only the IFs the connected transceiver can reach are listed (2 m and 70 cm: FTX-
 <table>
   <tr><th>Key</th><th>Action</th></tr>
   <tr><td><kbd>Space</kbd> (hold)</td><td>PTT — also from a panel opened in a separate window</td></tr>
+  <tr><td><kbd>W</kbd> (hold)</td><td>TXW: listen on the transmit frequency (SPLIT)</td></tr>
   <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Frequency ± one step</td></tr>
   <tr><td><kbd>F1</kbd> … <kbd>F12</kbd></td><td>Macros in the RTTY and CW tabs (<kbd>F1</kbd>…<kbd>F8</kbd> in JTTY): transmitted at once if the macro starts with <code>&lt;TX&gt;</code></td></tr>
   <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd> / <kbd>Enter</kbd></td><td>Transmit the typed text in RTTY / in JTTY</td></tr>

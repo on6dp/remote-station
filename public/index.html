@@ -42,6 +42,13 @@
       </span>
       <span class="tb-call" id="meCall">—</span>
       <button class="btn" id="ctrlBtn" type="button">Prendre la main</button>
+      <span class="dxc-wrap">
+        <button class="btn dxc-btn" id="dxcBtn" type="button" aria-haspopup="true" aria-expanded="false" title="DX cluster : ouvrir dans un nouvel onglet">DX Cluster ▾</button>
+        <span class="dxc-menu" id="dxcMenu" role="menu" hidden>
+          <a role="menuitem" href="http://dx.op0p.be" target="_blank" rel="noopener">dx.op0p.be <small>HolyCluster</small></a>
+          <a role="menuitem" href="http://cluster.op0p.be" target="_blank" rel="noopener">cluster.op0p.be <small>CC-Cluster OP0P</small></a>
+        </span>
+      </span>
       <a class="btn help-btn" id="helpBtn" href="/aide" target="_blank" rel="noopener" title="Manuel d'utilisation / User manual">HELP</a>
       <button class="btn btn-off" id="logout" type="button">Déconnexion</button>
     </div>
@@ -155,6 +162,7 @@
           <button class="btn" id="tuneUp" type="button" aria-label="Monter d'un pas">▶</button>
           <!-- MAIN / SUB / SPLIT, A → B, B → A, A ⇄ B, LOCK à la suite des pas (RIT / XIT / décalage : sur les écrans VFO) -->
           <div class="dual-b dual-inline" id="sec-dual" aria-label="VFO et SPLIT"></div>
+          <button class="btn txw-btn" id="txwBtn" type="button" title="TXW : maintenir pour écouter la fréquence d’émission (VFO B en SPLIT) ; relâcher = retour. Touche W du clavier." aria-pressed="false">TXW</button>
         </div>
         <div class="band-row"><div class="bands" id="bandKeys"></div><p class="band-warn" id="bandWarn" role="note">⚠ Changement de bande : <b>TUNE obligatoire</b>, puis vérifiez le <b>SWR</b> (en bas à gauche) avant d’émettre.</p></div>
         <p class="hint">Molette ou glisser vertical sur un chiffre pour l'accorder · clic sur un VFO pour le sélectionner · flèches ↑ ↓ du clavier · barre d'espace = PTT. Spectre : non transmis par la liaison CAT.</p>

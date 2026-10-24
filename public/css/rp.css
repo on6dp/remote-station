@@ -1203,3 +1203,14 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .msgs-h .txc select:disabled { opacity: .75; }
 .lg-h4 { margin: 14px 0 4px; font-size: 11px; letter-spacing: .8px; text-transform: uppercase; color: var(--v2-accent-yellow); }
 .lg-dlg .lg-grid td.txc, .lg-grid td.txc { font-weight: 700; }
+/* TXW : écoute de la fréquence d'émission tant que le bouton est maintenu */
+.txw-btn[aria-pressed='true'], .txw-btn.held { color: #061018; background: #39FF14; border-color: #39FF14; }
+/* Bouton DX Cluster et son menu */
+.dxc-wrap { position: relative; display: inline-flex; }
+.dxc-btn { color: var(--v2-accent-yellow); font-weight: 700; }
+.dxc-menu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 50; min-width: 230px; display: flex; flex-direction: column; padding: 4px;
+  background: var(--v2-bg-darker, #0b1018); border: 1px solid var(--v2-border); border-radius: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, .5); }
+.dxc-menu[hidden] { display: none; }
+.dxc-menu a { display: flex; justify-content: space-between; gap: 10px; padding: 7px 10px; border-radius: 4px; color: var(--v2-text-bright); text-decoration: none; font-size: 12px; font-weight: 700; }
+.dxc-menu a small { color: var(--v2-text-dim); font-weight: 400; }
+.dxc-menu a:hover, .dxc-menu a:focus-visible { background: var(--v2-bg-panel, #141c27); color: var(--v2-accent-cyan-bright, #00D4FF); }

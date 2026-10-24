@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.34 | [RemoteStation-Setup-0.22.34.exe](0.22.34/RemoteStation-Setup-0.22.34.exe) | [remote-station-0.22.34.tar.gz](0.22.34/remote-station-0.22.34.tar.gz) | TXW ; bouton DX Cluster ; SUB en réception simple — [empreintes SHA-256](0.22.34/SHA256SUMS.txt) |
 | 0.22.33 | [RemoteStation-Setup-0.22.33.exe](0.22.33/RemoteStation-Setup-0.22.33.exe) | [remote-station-0.22.33.tar.gz](0.22.33/remote-station-0.22.33.tar.gz) | Carnet : fréquence du VFO actif automatique — [empreintes SHA-256](0.22.33/SHA256SUMS.txt) |
 | 0.22.32 | [RemoteStation-Setup-0.22.32.exe](0.22.32/RemoteStation-Setup-0.22.32.exe) | [remote-station-0.22.32.tar.gz](0.22.32/remote-station-0.22.32.tar.gz) | Réglage d’essai ftx1SubSingle — [empreintes SHA-256](0.22.32/SHA256SUMS.txt) |
 | 0.22.31 | [RemoteStation-Setup-0.22.31.exe](0.22.31/RemoteStation-Setup-0.22.31.exe) | [remote-station-0.22.31.tar.gz](0.22.31/remote-station-0.22.31.tar.gz) | A / B en réception simple : VFO réglé seulement — [empreintes SHA-256](0.22.31/SHA256SUMS.txt) |
