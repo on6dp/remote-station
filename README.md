@@ -258,8 +258,9 @@ Automatique : main libérée après 15 min sans action, déconnexion après 15 m
 |---|---|
 | `server.js` | Serveur : comptes, contrôle, PTT, sécurités, messages, journal |
 | `lib/` | WebSocket minimal, mots de passe, décodeur FT8/FT4 (`ftx.wasm`, `ftx.js`), démodulateur RTTY (`rtty.js`), décodeur CW (`cw.js`), décodeur SSTV (`sstv-dec.js`) et galerie (`sstv-store.js`), fil de décodage (`digi-worker.js`) — aucune dépendance npm |
-| `native/ftx/` | Source et script de compilation du décodeur WebAssembly (ft8_lib) |
-| `native/wsjtx/` | Script de compilation des décodeurs de WSJT-X en programmes Linux autonomes (`lib/bin/jt65`, `lib/bin/jttyd` ; source de `jttyd` : `jttyd.c`), sans FFTW (`fftw_kiss.c`) |
+| `native/ftx/` | Source et script de compilation du décodeur WebAssembly (ft8_lib : secours si `lib/bin/wsjtxd` ne peut pas tourner) |
+| `lib/wsjtx.js`, `lib/data/ALLCALL7.TXT` | Pilotage du moteur de décodage WSJT-X (FT8 / FT4 / FT2, passes anticipée / normale / profonde, AP) ; base d'indicatifs de JTDX |
+| `native/wsjtx/` | Script de compilation des décodeurs de WSJT-X en programmes autonomes (`lib/bin/jt65`, `lib/bin/jttyd`, `lib/bin/wsjtxd` — moteur FT8 / FT4 / FT2, source `wsjtxd.c`, `build-wsjtxd.sh`), sans FFTW (`fftw_kiss.c`) ni Boost (`crc.c`) |
 | `native/wspr/` | Sources de wsprd (WSJT-X, GPL v3) et script de compilation de `lib/wsprd.wasm` |
 | `public/js/digi.js` | Onglets du centre : FT8 · FT4, RTTY, WSPR, JT65, JTTY, CW, SSTV, Synchro |
 | `public/js/sstv.js` | Modes SSTV et codeur (image → signal), communs au serveur et au navigateur |

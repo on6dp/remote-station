@@ -280,6 +280,14 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
   <li><b>FT2</b>: the fast mode of Decodium (IU8LMC) — 3.75 s periods, 2.5 s signal, 167 Hz wide (frequencies: Decodium's list, e.g. 14084 kHz).
     Stations transmitting « asynchronously » (at any time) are decoded too; the time shown is then that of the period in which the signal starts (larger DT).
     The FT2 of « WSJT-X Improved » is a different, incompatible mode.</li>
+  <li><b>Decoder</b>: the <b>WSJT-X 3</b> decoding engine, which includes the multi-pass FT8 decoder of <b>JTDX</b> (the status line shows « moteur WSJT-X »).
+    In FT8, three passes per period, as in WSJT-X / JTDX: an <b>early pass</b> at 11.8 s (the reply can go out in the next period), a <b>normal pass</b> at the end of the signal,
+    then a <b>deep pass</b> (subtraction of decoded signals, several cycles, OSD) that adds the weakest stations a few seconds later.
+    Measured sensitivity (single signal, white noise, 50 % decodes): FT8 −22 dB without help, about −24 dB with a priori help; FT4 −17.5 dB; FT2 about 3 dB better than before.</li>
+  <li><b>A priori help (AP)</b>, as in WSJT-X / JTDX: the decoder knows the call we transmit under (TX CALL) and, during a QSO, the correspondent and the sequence step;
+    it then looks for the expected messages down to 2 to 3 dB lower. Such decodes carry the mark <b>a1</b>…<b>a7</b> after the message.
+    The JTDX callsign database (~100,000 calls) rejects very weak false decodes.</li>
+  <li><b>dB</b>: the signal-to-noise ratio is WSJT-X's (in 2.5 kHz); reports sent are therefore real reports, as with WSJT-X / JTDX.</li>
   <li><b>Activité de bande</b> (band activity): all decoded messages (CQ in <span class="grn">green</span>, messages for ON5VL / OR0L in <span class="red">red</span>); <b>Fréquence RX</b>: those on your frequency.</li>
   <li><b>Split</b> as in WSJT-X: <b>left click</b> on the waterfall or a line = <span class="grn">receive</span> frequency, <b>right click</b> = <span class="red">transmit</span> frequency; « TX ← RX » and « RX ← TX » buttons.</li>
   <li><b>Click the callsign</b> (underlined) or <b>double-click</b> a message: its sender becomes the contact (callsign, locator, report), messages Tx1 to Tx6 are prepared and, with control, the transmission starts in the next period.</li>
@@ -295,7 +303,7 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
   <li><b>Waterfall settings</b> (above the scale, as in WSJT-X): <b>Gain</b> = contrast (to the right, weak signals stand out),
     <b>Zéro</b> = background level, <b>Plat</b> = flat background across the width (corrects the transceiver filter slope), four colour sets (<b>JTDX</b> by default: blue noise, yellow signals, red strong signals), scrolling <b>speed</b> (like JTDX « Spd »: <i>slow</i> = tighter signals and more history, <i>normal</i> by default), ↺ = defaults.
     They apply to every waterfall (FT8, RTTY, CW…) and are remembered in your browser.</li>
-  <li><b>Fine JTDX-style waterfall</b>: 2.9 Hz bins (instead of 6.25 Hz), one line every 0.16 s; scale ticks every 50 / 100 / 500 Hz.
+  <li><b>Fine JTDX-style waterfall</b>: 1.46 Hz bins (instead of 6.25 Hz), averaged over 0.8 s (FT8 signals become solid blocks); scale ticks every 50 / 100 / 500 Hz.
     In FT8 / FT4 / FT2 / JT65, a white line marks the start of each period, with the UTC time and the band (« 19:55:15  20m »), as in JTDX.</li>
   <li><b>Handle under the waterfall</b>: drag it up to enlarge the message lists (double-click: original size).</li>
   <li>Stops: <span class="k">■ Arrêter</span> (or the space bar); the called contact answers someone else; the same message for 6 min without answer (watchdog); control lost.</li>
@@ -448,7 +456,7 @@ click the <b>STATION</b> lamp at the top left → « ↻ Recharger la page Stati
     Packets are sent by the server: 127.0.0.1 when the server runs on the club PC.</td></tr>
 </table>
 
-<footer>Remote Station UBA-LGE — ON5VL / OR0L. Decoders: ft8_lib (MIT), WSJT-X (GPL v3: WSPR, JT65, JTTY); see TIERS.md.
+<footer>Remote Station UBA-LGE — ON5VL / OR0L. Decoders: WSJT-X 3 (GPL v3: FT8, FT4, FT2, WSPR, JT65, JTTY; JTDX callsign database), ft8_lib (MIT, fallback and transmit); see TIERS.md.
 <a href="/aide">Version française</a></footer>
 </div>
 </body>

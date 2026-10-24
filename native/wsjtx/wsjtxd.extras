@@ -1,0 +1,1 @@
+--extra @W@/crc.c --extra @W@/stubs.c --extra lib/init_random_seed.c --extra lib/ftrsd/init_rs.c --extra lib/ftrsd/encode_rs.c --extra lib/ftrsd/decode_rs.c --extra lib/wrapkarn.c --extra lib/wsprd/nhash.c --extra lib/qra/q65/qra15_65_64_irr_e23.c --extra lib/superfox/qpc/np_qpc.c --extra lib/superfox/qpc/qpc_n127k50q128.c --extra lib/fst4/genfst4.f90

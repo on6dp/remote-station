@@ -26,6 +26,11 @@ if [ -n "${MINGW:-}" ]; then
       --static --main "$main" $extra --out "$ROOT/lib/bin/$name.exe"
     x86_64-w64-mingw32-strip "$ROOT/lib/bin/$name.exe"
   done
+  # Moteur de décodage FT8 / FT4 / FT2 de WSJT-X 3 (processus permanent, OpenMP)
+  W="$ROOT/native/wsjtx"
+  python3 "$W/build.py" --wsjtx "$WSJTX" --ft8lib "$FT8LIB" --cc x86_64-w64-mingw32-gcc --fc x86_64-w64-mingw32-gfortran \
+    --static --openmp --skip wsprd/wsprd,jtty/wava --main "$W/wsjtxd.c" $(cat "$W/wsjtxd.extras" | sed "s#@W@#$W#g") --out "$ROOT/lib/bin/wsjtxd.exe"
+  x86_64-w64-mingw32-strip "$ROOT/lib/bin/wsjtxd.exe"
 fi
 
 # WinSW (service Windows), vérifié par son empreinte
@@ -37,7 +42,7 @@ STAGE=$(mktemp -d)
 trap 'rm -rf "$STAGE"' EXIT
 mkdir -p "$STAGE/serveur" "$STAGE/outils"
 (cd "$ROOT" && git ls-files -z --cached --others --exclude-standard | tar --null -T - -cf -) | tar -xf - -C "$STAGE/serveur"
-rm -rf "$STAGE/serveur/native" "$STAGE/serveur/windows" "$STAGE/serveur/deploy" "$STAGE/serveur/releases" "$STAGE/serveur/lib/bin/jt65" "$STAGE/serveur/lib/bin/jttyd" "$STAGE/serveur/lib/bin/jttygen" \
+rm -rf "$STAGE/serveur/native" "$STAGE/serveur/windows" "$STAGE/serveur/deploy" "$STAGE/serveur/releases" "$STAGE/serveur/lib/bin/jt65" "$STAGE/serveur/lib/bin/jttyd" "$STAGE/serveur/lib/bin/jttygen" "$STAGE/serveur/lib/bin/wsjtxd" \
        "$STAGE/serveur/.gitignore" "$STAGE/serveur/.gitattributes"
 cp "$ROOT/windows/setup.js" "$STAGE/serveur/windows-setup.js"
 cp "$ROOT/windows/outils/"*.cmd "$STAGE/outils/"

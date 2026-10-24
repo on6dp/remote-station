@@ -2134,6 +2134,14 @@
       }
       r.appendChild(s);
     });
+    // Décodage aidé « a priori » (AP) : repère « a1 »… après le message, comme WSJT-X
+    if (!d.tx && d.ap > 0 && r.lastChild) {
+      const a = document.createElement('i');
+      a.className = 'dg-ap';
+      a.textContent = ' a' + d.ap;
+      a.title = 'Décodé avec l’aide a priori (AP) de WSJT-X : le décodeur a supposé une partie du message (CQ, notre indicatif, celui du correspondant…). Fiable, mais à confirmer si le signal est très faible.';
+      r.lastChild.appendChild(a);
+    }
     r.addEventListener('click', () => setRx(d.f));
     r.addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(d.f); });
     r.addEventListener('dblclick', () => { if (!d.tx) pickFromDecode(d, slot); });
@@ -2259,7 +2267,7 @@
     else if (!st.audio || !st.audio.active) { txt = 'La page Station n’envoie pas la BF : « Activer l’audio » sur le PC du club'; warn = true; }
     else if (tab === 'rtty') txt = 'BF reçue';
     else if (!lastDecode || Date.now() - lastDecode > (mode === 'JT65' ? 130000 : mode === 'FT8' ? 40000 : mode === 'FT2' ? 10000 : 20000)) txt = 'BF reçue · décodage au prochain cycle' + (mode === 'JT65' ? ' (vers la 52e seconde de chaque minute)' : '') + '…';
-    else txt = 'BF reçue · décodage OK' + (st.digi && st.digi.latency != null ? ' · délai ' + st.digi.latency + ' ms' : '');
+    else txt = 'BF reçue · décodage OK' + (st.digi && st.digi.engine === 'wsjtx' ? ' (moteur WSJT-X)' : '') + (st.digi && st.digi.latency != null ? ' · délai ' + st.digi.latency + ' ms' : '');
     if (st && st.radio && st.radio.mode && !/DATA|USB|-D/i.test(st.radio.mode)) { txt += ' · mode ' + st.radio.mode + ' : passez en DATA-U'; warn = true; }
     el.textContent = txt;
     el.classList.toggle('warn', warn);

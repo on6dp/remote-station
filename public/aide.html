@@ -281,6 +281,14 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
   <li><b>FT2</b> : le mode rapide de Decodium (IU8LMC) — périodes de 3,75 s, signal de 2,5 s et 167 Hz de large (fréquences : liste de Decodium, ex. 14 084 kHz).
     Les stations qui émettent « en asynchrone » (à tout moment) sont aussi décodées ; l'heure affichée est alors celle de la période où le signal commence (DT plus grand).
     Le FT2 de « WSJT-X Improved » est un autre mode, incompatible.</li>
+  <li><b>Décodeur</b> : le moteur de décodage de <b>WSJT-X 3</b>, celui qui intègre le décodeur FT8 multi-passes de <b>JTDX</b> (la ligne d'état indique « moteur WSJT-X »).
+    En FT8, trois passes par période, comme WSJT-X / JTDX : une <b>passe anticipée</b> à 11,8 s (la réponse peut partir dès la période suivante), une <b>passe normale</b> à la fin du signal,
+    puis une <b>passe profonde</b> (soustraction des signaux décodés, plusieurs cycles, OSD) qui ajoute les stations les plus faibles quelques secondes plus tard.
+    Sensibilité mesurée (signal unique, bruit blanc, 50 % de décodages) : FT8 −22 dB sans aide, environ −24 dB avec l'aide a priori ; FT4 −17,5 dB ; FT2 environ 3 dB de mieux qu'avant.</li>
+  <li><b>Aide a priori (AP)</b>, comme WSJT-X / JTDX : le décodeur sait sous quel indicatif on émet (TX CALL) et, pendant un QSO, qui est le correspondant et où en est la séquence ;
+    il cherche alors les messages attendus jusqu'à 2 à 3 dB plus bas. Ces décodages portent la marque <b>a1</b>…<b>a7</b> après le message.
+    La base d'indicatifs de JTDX (~100 000 indicatifs) écarte les faux décodages très faibles.</li>
+  <li><b>dB</b> : le rapport signal/bruit est celui de WSJT-X (dans 2,5 kHz) ; les reports envoyés sont donc les vrais reports, comme avec WSJT-X / JTDX.</li>
   <li><b>Activité de bande</b> : tous les messages décodés (CQ en <span class="grn">vert</span>, messages pour ON5VL / OR0L en <span class="red">rouge</span>) ; <b>Fréquence RX</b> : ceux de votre fréquence.</li>
   <li><b>Split</b> comme dans WSJT-X : <b>clic gauche</b> sur la cascade ou une ligne = fréquence de <span class="grn">réception</span>, <b>clic droit</b> = fréquence d'<span class="red">émission</span> ; boutons « TX ← RX » et « RX ← TX ».</li>
   <li><b>Clic sur l'indicatif</b> (souligné) ou <b>double-clic</b> sur un message : son émetteur devient le correspondant (indicatif, locator, report), les messages Tx1 à Tx6 se préparent et, avec la main, l'émission part à la période suivante.</li>
@@ -296,7 +304,7 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
   <li><b>Réglages de la cascade</b> (au-dessus de l'échelle, comme dans WSJT-X) : <b>Gain</b> = contraste (à droite, les signaux faibles ressortent),
     <b>Zéro</b> = niveau du fond, <b>Plat</b> = fond égal sur toute la largeur (corrige la pente du filtre du TRX), quatre jeux de couleurs (<b>JTDX</b> par défaut : bruit bleu, signaux jaunes, signaux forts rouges), <b>Vitesse</b> de défilement (comme « Spd » de JTDX : <i>lente</i> = signaux plus ramassés et plus d'historique, <i>normale</i> par défaut), ↺ = réglages d'origine.
     Ils valent pour toutes les cascades (FT8, RTTY, CW…) et restent mémorisés dans votre navigateur.</li>
-  <li><b>Cascade fine façon JTDX</b> : une case de 2,9 Hz (au lieu de 6,25 Hz), une ligne toutes les 0,16 s ; échelle graduée tous les 50 / 100 / 500 Hz.
+  <li><b>Cascade fine façon JTDX</b> : une case de 1,46 Hz (au lieu de 6,25 Hz), moyennée sur 0,8 s (les signaux FT8 deviennent des blocs pleins) ; échelle graduée tous les 50 / 100 / 500 Hz.
     En FT8 / FT4 / FT2 / JT65, un trait blanc marque le début de chaque période, avec l'heure UTC et la bande (« 19:55:15  20m »), comme dans JTDX.</li>
   <li><b>Poignée sous la cascade</b> : la glisser vers le haut agrandit les listes de messages (double-clic : taille d'origine).</li>
   <li>Arrêts : <span class="k">■ Arrêter</span> (ou la barre d'espace) ; le correspondant appelé répond à quelqu'un d'autre ; le même message depuis 6 min sans réponse (chien de garde) ; main perdue.</li>
@@ -449,7 +457,7 @@ clic sur le voyant <b>STATION</b> en haut à gauche → « ↻ Recharger la page
     Les paquets partent du serveur : 127.0.0.1 si le serveur tourne sur le PC du club.</td></tr>
 </table>
 
-<footer>Remote Station UBA-LGE — ON5VL / OR0L. Décodeurs : ft8_lib (MIT), WSJT-X (GPL v3, WSPR, JT65, JTTY) ; voir TIERS.md.
+<footer>Remote Station UBA-LGE — ON5VL / OR0L. Décodeurs : WSJT-X 3 (GPL v3 : FT8, FT4, FT2, WSPR, JT65, JTTY ; base d'indicatifs de JTDX), ft8_lib (MIT, secours et émission) ; voir TIERS.md.
 <a href="/help">English version</a></footer>
 </div>
 </body>

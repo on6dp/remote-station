@@ -16,6 +16,15 @@ Conséquence : le projet Remote Station, qui inclut ce décodeur, doit être red
 - Copyright Joe Taylor (K1JT), Steven Franke (K9AN) et l'équipe WSJT-X
 - Licence : GNU GPL v3 (texte dans `native/wspr/COPYING`)
 
+## Moteur de décodage FT8 / FT4 / FT2 de WSJT-X (avec le décodeur FT8 de JTDX)
+
+`lib/bin/wsjtxd` (Linux x86-64) et `lib/bin/wsjtxd.exe` (Windows x64) relient le moteur de décodage de WSJT-X 3.3 (`DecoderEngine.h`, `lib/decoder_engine.f90` et les décodeurs FT8 « classique » et « MTD » multi-passes — ce dernier repris de JTDX —, FT4, etc.) à un petit programme propre à ce projet, `native/wsjtx/wsjtxd.c` (processus permanent : périodes reçues sur l'entrée standard, décodages sur la sortie standard). Compilé par `native/wsjtx/build.py` (avec OpenMP, `native/wsjtx/build-wsjtxd.sh` ; Windows : `windows/build.sh`) à partir du dépôt https://github.com/WSJTX/wsjtx (étiquette v3.3.0-beta2), sans FFTW (`fftw_kiss.c`) ni Boost (`native/wsjtx/crc.c` remplace `crc10/13/14.cpp`) ; `stubs.c` neutralise le suivi IPC et ThreadSanitizer de l'application.
+
+`lib/data/ALLCALL7.TXT` est la base d'indicatifs de JTDX livrée avec WSJT-X (indicatifs vus sur PSK Reporter), utilisée par le décodeur FT8 pour écarter les faux décodages.
+
+- Copyright Joe Taylor (K1JT), Steven Franke (K9AN), l'équipe WSJT-X et les auteurs de JTDX
+- Licence : GNU GPL v3 (texte dans `native/wspr/COPYING`)
+
 ## Décodeur JTTY de WSJT-X
 
 `lib/bin/jttyd` est le récepteur JTTY en continu de WSJT-X 3.3 (interface `jtty_rx_*` : `lib/jtty/*.f90`, codes convolutifs et CRC associés), relié à un petit programme propre à ce projet, `native/wsjtx/jttyd.c` (lit la BF 16 bits / 12 kHz sur l'entrée standard, écrit chaque mise à jour de message), et compilé par `native/wsjtx/build.py` à partir du même dépôt WSJT-X (étiquette v3.3.0-beta2), sans OpenMP (`native/wsjtx/omp_lib.f90`) et sans FFTW.

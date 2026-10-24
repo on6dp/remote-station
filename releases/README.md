@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.39 | [RemoteStation-Setup-0.22.39.exe](0.22.39/RemoteStation-Setup-0.22.39.exe) | [remote-station-0.22.39.tar.gz](0.22.39/remote-station-0.22.39.tar.gz) | Décodage FT8 / FT4 / FT2 avec le moteur WSJT-X 3 (décodeur JTDX, AP) — [empreintes SHA-256](0.22.39/SHA256SUMS.txt) |
 | 0.22.38 | [RemoteStation-Setup-0.22.38.exe](0.22.38/RemoteStation-Setup-0.22.38.exe) | [remote-station-0.22.38.tar.gz](0.22.38/remote-station-0.22.38.tar.gz) | Cascade : vitesse de défilement (comme « Spd » de JTDX) — [empreintes SHA-256](0.22.38/SHA256SUMS.txt) |
 | 0.22.37 | [RemoteStation-Setup-0.22.37.exe](0.22.37/RemoteStation-Setup-0.22.37.exe) | [remote-station-0.22.37.tar.gz](0.22.37/remote-station-0.22.37.tar.gz) | Cascade façon JTDX (plus fine, couleurs bleu / jaune / rouge, repères de période) — [empreintes SHA-256](0.22.37/SHA256SUMS.txt) |
 | 0.22.36 | [RemoteStation-Setup-0.22.36.exe](0.22.36/RemoteStation-Setup-0.22.36.exe) | [remote-station-0.22.36.tar.gz](0.22.36/remote-station-0.22.36.tar.gz) | VFO en jaune, DNF et TUNER en blanc gras — [empreintes SHA-256](0.22.36/SHA256SUMS.txt) |

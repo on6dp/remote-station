@@ -21,6 +21,8 @@ ap.add_argument('--main', required=True, help='programme principal, relatif au d
 ap.add_argument('--out', required=True)
 ap.add_argument('--extra', action='append', default=[], help='source supplémentaire (relative au dépôt)')
 ap.add_argument('--prefer', action='append', default=[], help='nom=fichier : fichier à préférer pour un symbole')
+ap.add_argument('--skip', default='qra/q65/,wsprd,jtty/wava', help='dossiers ignorés (séparés par des virgules)')
+ap.add_argument('--openmp', action='store_true', help='vrai OpenMP (plusieurs cœurs), libgomp liée statiquement')
 ap.add_argument('-v', action='store_true')
 ap.add_argument('--static', action='store_true', help='édition de liens entièrement statique')
 a = ap.parse_args()
@@ -31,7 +33,7 @@ build = tempfile.mkdtemp(prefix='wsjtx-build-')
 
 # ------------------------------------------------------------------ index des sources
 mods, procs, cfuncs = {}, {}, {}
-skip_dirs = ('qra/q65/', 'wsprd', 'jtty/wava')
+skip_dirs = tuple(x for x in a.skip.split(',') if x)
 files = []
 for root, dirs, fs in os.walk(LIB):
     for f in fs:
@@ -67,7 +69,7 @@ def pick(name, cands):
 # statique (pas sur la pile, qui déborderait). omp_lib.f90 (à côté de ce script) remplace le module OpenMP.
 FFLAGS = ['-O2', '-fno-second-underscore', '-ffree-line-length-none', '-fallow-argument-mismatch', '-w',
           '-I' + build, '-J' + build, '-I' + LIB]
-CFLAGS = ['-O2', '-w', '-DBIGSYM=1', '-I' + LIB, '-I' + a.ft8lib]
+CFLAGS = ['-O2', '-w', '-DBIGSYM=1', '-I' + LIB, '-I' + a.wsjtx, '-I' + a.ft8lib]
 
 objs = {}
 def compile_file(p, stack=()):
@@ -75,8 +77,15 @@ def compile_file(p, stack=()):
     if p in stack: return
     o = os.path.join(build, re.sub(r'[^\w]', '_', os.path.relpath(p, a.wsjtx)) + '.o')
     is_c = p.endswith('.c')
+    src = p
+    if not is_c:
+        t = open(p, errors='replace').read()
+        # Quelques fichiers incluent « '/lib/ft8/…' » (chemin absolu erroné) : copie corrigée, résolue par -I lib
+        if re.search(r"include\s+'/lib/", t):
+            src = os.path.join(build, 'fix_' + re.sub(r'[^\w.]', '_', os.path.relpath(p, a.wsjtx)))
+            open(src, 'w').write(re.sub(r"(include\s+')/lib/", r"\1", t))
     for _ in range(40):
-        cmd = ([a.cc] + CFLAGS if is_c else [a.fc] + FFLAGS) + ['-c', p, '-o', o]
+        cmd = ([a.cc] + CFLAGS if is_c else [a.fc] + FFLAGS + ['-I' + os.path.dirname(p)]) + ['-c', src, '-o', o]
         r = subprocess.run(cmd, capture_output=True, text=True, cwd=os.path.dirname(p))
         if r.returncode == 0:
             objs[p] = o
@@ -99,9 +108,14 @@ for c in [shim] + kiss:
     subprocess.run([a.cc] + CFLAGS + ['-c', c, '-o', o], check=True)
     extra_objs.append(o)
 
-# Module OpenMP de remplacement (un seul fil)
-omp = os.path.join(HERE, 'omp_lib.f90')
-mods['omp_lib'] = [omp]
+# Module OpenMP de remplacement (un seul fil), sauf avec --openmp
+if a.openmp:
+    FFLAGS.append('-fopenmp')
+    CFLAGS.append('-fopenmp')
+    mods.pop('omp_lib', None)
+else:
+    omp = os.path.join(HERE, 'omp_lib.f90')
+    mods['omp_lib'] = [omp]
 
 compile_file(os.path.join(a.wsjtx, a.main))
 for e in a.extra: compile_file(os.path.join(a.wsjtx, e))
@@ -112,7 +126,18 @@ quad = subprocess.run([a.fc, '-print-file-name=libquadmath.a'], capture_output=T
 extra_objs += [quad] if os.path.isabs(quad) and os.path.exists(quad) else []
 tried = set()
 for _ in range(200):
-    cmd = [a.fc, '-o', a.out, '-Wl,--as-needed'] + list(objs.values()) + extra_objs + ['-static-libgfortran', '-static-libquadmath', '-static-libgcc', '-lm'] + (['-static'] if a.static else []) + ['-lm']
+    gomp = []
+    if a.openmp:
+        lg = subprocess.run([a.fc, '-print-file-name=libgomp.a'], capture_output=True, text=True).stdout.strip()
+        gomp = ([lg] if os.path.isabs(lg) and os.path.exists(lg) else ['-fopenmp']) + ['-lpthread']
+    # Windows : pile de 64 Mo (gros tableaux locaux des décodeurs, comme Decodium)
+    stack = ['-Wl,--stack,67108864'] if 'mingw' in a.fc else []
+    # Linux : fmod de l'ancienne glibc (voir glibc_compat.c) — l'exécutable n'exige plus glibc 2.38
+    if 'mingw' not in a.fc and not a.static and sys.platform.startswith('linux'):
+        gc = os.path.join(build, 'glibc_compat.o')
+        if not os.path.exists(gc): subprocess.run([a.cc, '-O2', '-c', os.path.join(HERE, 'glibc_compat.c'), '-o', gc], check=True)
+        stack = ['-Wl,--wrap=fmod', gc]
+    cmd = [a.fc, '-o', a.out, '-Wl,--as-needed'] + stack + list(objs.values()) + extra_objs + gomp + ['-static-libgfortran', '-static-libquadmath', '-static-libgcc', '-lm'] + (['-static'] if a.static else []) + ['-lm']
     r = subprocess.run(cmd, capture_output=True, text=True)
     if r.returncode == 0:
         print('OK :', a.out, os.path.getsize(a.out), 'octets,', len(objs), 'fichiers WSJT-X')

@@ -320,6 +320,7 @@ function startDigi() {
     return;
   }
   digi.worker.on('message', onDigi);
+  digi.apKey = '';
   digi.worker.on('error', (e) => console.error('Décodeur FT8/FT4 : ' + e.message));
   digi.worker.on('exit', () => { digi.worker = null; });
 }
@@ -403,6 +404,7 @@ function onDigi(m) {
     while (h.length > (m.mode === 'FT2' ? 120 : 40)) h.shift();
     digi.latency = m.latency;
     digi.ms = m.ms;
+    if (m.engine) digi.engine = m.engine;
     digi.last = Date.now();
     const msg = JSON.stringify({ t: 'ftx', mode: m.mode, slot: m.slot, list: m.list, latency: m.latency });
     for (const c of ops) if (c.digi === m.mode) c.send(msg);
@@ -897,7 +899,7 @@ function publicState() {
     swrLock: swrLocked() ? { freq: swrLock.freq, swr: swrLock.swr != null ? Math.round(swrLock.swr * 10) / 10 : null, tune: !!swrLock.tune, band: swrLock.band || null, text: swrLockText() } : null,
     maxSwr: cfg.maxSwr,
     audio: { active: !!(station && audio.active), listeners: listeners() },
-    digi: { modes: Array.from(digiModes()), latency: digi.latency },
+    digi: { modes: Array.from(digiModes()), latency: digi.latency, engine: digi.engine || '', ms: digi.ms || 0 },
     rigName: station ? rig().NAME : null,
     rigModel: station ? rig().ID : null,
     // TRX dont le port série est mémorisé sur le PC du club (changement à distance possible)
@@ -2095,6 +2097,14 @@ function onStation(conn, m) {
   if (was !== radio.connected) journal(radio.connected ? 'trx_online' : 'trx_offline', {});
   // Fréquence du VFO pour les fréquences WSPR affichées
   if (digi.worker && radio.freq && radio.freq !== digi.dial) { digi.dial = radio.freq; digi.worker.postMessage({ t: 'dial', hz: radio.freq }); }
+  // Contexte AP du décodeur WSJT-X (comme WSJT-X / JTDX) : notre indicatif, le correspondant du QSO en cours, l'étape du QSO
+  if (digi.worker) {
+    const on = !!(seq && seq.on);
+    const ap = { t: 'ap', mycall: txCall(), mygrid: String(cfg.stationGrid || ''), hiscall: on ? seq.dx.call : '', hisgrid: on ? seq.dx.grid : '',
+      qp: on ? seq.progress || 0 : 0, rx: seq ? seq.f0 : 1500, tx: seq ? seq.f0 : 1500 };
+    const k = JSON.stringify(ap);
+    if (k !== digi.apKey) { digi.apKey = k; digi.worker.postMessage(ap); }
+  }
   // Sécurité : la radio est en CAT TX alors qu'aucun PTT n'est actif côté serveur
   if (radio.tx === 1 && !ptt.active) toStation({ t: 'cmd', op: 'ptt', on: false, reason: 'incohérence serveur' });
   // Sécurité : sortie de bande pendant l'émission
