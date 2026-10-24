@@ -362,6 +362,11 @@ input[type='range']:disabled { opacity: .45; }
 /* MAIN / SUB / SPLIT · A → B · B → A · A ⇄ B · LOCK : sur la ligne des bandes (plus de colonne entre les VFO) */
 .band-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .band-row .bands { flex: 0 1 auto; }
+.band-warn { flex: 1 1 260px; margin: 0 0 0 6px; text-align: left; color: var(--v2-accent-yellow); font-size: 12px; letter-spacing: .02em; line-height: 1.35; }
+.band-warn b { color: inherit; font-weight: 700; }
+.band-warn:not([hidden]) { animation: bandWarn 1s ease-in-out 3; }
+@keyframes bandWarn { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .band-warn:not([hidden]) { animation: none; } }
 .dual-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-left: auto; --btn-h: 28px; }
 .dual-inline .ctl, .dual-inline .ctl-row { display: contents; }
 .dual-inline .seg, .dual-inline .seg-fill { display: inline-flex; width: auto; }

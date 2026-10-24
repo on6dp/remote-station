@@ -284,7 +284,6 @@
         if (!iControl()) return say('Prenez la main pour changer de bande.', 'warn');
         if (st.ptt && st.ptt.active) return say('Réglage bloqué pendant l’émission.', 'warn');
         // TRX avec sélection de bande (FTX-1) : comme la touche BAND, il rappelle sa dernière fréquence et son mode
-        if (me && me.canTx && R.CONTROL && R.CONTROL.tune && st.radio && st.radio.tuner != null) say('Nouvelle bande : faites un accord (TUNE) avant d’émettre si l’antenne n’est pas accordée.', 'warn', 6000);
         if (R.cmdBand && R.BAND_CODES && R.BAND_CODES[name]) return send({ t: 'set', band: name, sub: target === 'B' });
         setFreq(khz * 1000, target);
         if (mk) setTimeout(() => send({ t: 'set', mode: mk[0], sub: target === 'B' }), 200);
@@ -640,6 +639,7 @@
     }
   }
   let trxSince = 0;
+  let lastBand = null, warnBand = null; // bande affichée / bande changée en attente d'un TUNE
   function updateControls(r, onAir) {
     const blocked = !iControl() || onAir;
     if (!r.connected) trxSince = 0; else if (!trxSince) trxSince = Date.now();
@@ -1062,6 +1062,13 @@
     $$('#modeKeys .btn').forEach((b) => b.setAttribute('aria-pressed', String(live && b.dataset.code === mc)));
     const bn = bandName(currentFreq(target));
     $$('#bandKeys .btn').forEach((b) => b.setAttribute('aria-pressed', String(live && b.dataset.band === bn)));
+    // Rappel « TUNE obligatoire » : affiché à chaque changement de bande (touche, VFO, face avant), jusqu'au TUNE
+    if (live && bn !== '—') {
+      if (lastBand && bn !== lastBand && bn !== 'GEN') warnBand = bn;
+      lastBand = bn;
+    }
+    if (r.tuning) warnBand = null;
+    $('bandWarn').hidden = !(live && warnBand && warnBand === bn && !$('panelTune').hidden);
     $$('#stepKeys .btn').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.step) === step)));
     $('tgtA').setAttribute('aria-pressed', String(target === 'A'));
     $('tgtB').setAttribute('aria-pressed', String(target === 'B'));
@@ -1172,6 +1179,7 @@
     }
   }
   function addEvent(e, top) {
+    if (e.ev === 'tune' && top) warnBand = null; // accord lancé : rappel retiré
     const t = evText(e);
     if (!t) return;
     const box = $('events');

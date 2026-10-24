@@ -118,7 +118,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 
 - **PTT**: hold the big PTT button or the `Space` bar. Release = receive.
 - **Power**: − / + buttons in the TX panel; your personal limit is displayed (e.g. ON3: 25 W).
-- **Tuning**: after changing band, press `TUNE` (Accord panel) before transmitting. TUNE counts as a transmission.
+- **Tuning**: after changing band, a `TUNE` is **mandatory** (Accord panel) before transmitting, then check the **SWR** (bottom left of the dashboard); after each band change a reminder flashes to the right of the 70CM key and stays until the TUNE. TUNE counts as a transmission. FTX-1: the internal tuner is in the SPA-1 amplifier, which must be connected and switched on; otherwise TUNER and TUNE have no effect.
 - Mic gain, PROC and level, VOX (can be switched off remotely, never on).
 
 > [!WARNING]

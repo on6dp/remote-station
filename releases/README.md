@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.5 | [RemoteStation-Setup-0.22.5.exe](0.22.5/RemoteStation-Setup-0.22.5.exe) | [remote-station-0.22.5.tar.gz](0.22.5/remote-station-0.22.5.tar.gz) | Rappel « TUNE obligatoire » après un changement de bande — [empreintes SHA-256](0.22.5/SHA256SUMS.txt) |
 | 0.22.4 | [RemoteStation-Setup-0.22.4.exe](0.22.4/RemoteStation-Setup-0.22.4.exe) | [remote-station-0.22.4.tar.gz](0.22.4/remote-station-0.22.4.tar.gz) | TUNER / TUNE : type de tuner relu au TRX — [empreintes SHA-256](0.22.4/SHA256SUMS.txt) |
 | 0.22.3 | [RemoteStation-Setup-0.22.3.exe](0.22.3/RemoteStation-Setup-0.22.3.exe) | [remote-station-0.22.3.tar.gz](0.22.3/remote-station-0.22.3.tar.gz) | TUNER : diagnostic (SPA-1, menus du tuner) ; commandes refusées par le TRX signalées — [empreintes SHA-256](0.22.3/SHA256SUMS.txt) |
 | 0.22.2 | [RemoteStation-Setup-0.22.2.exe](0.22.2/RemoteStation-Setup-0.22.2.exe) | [remote-station-0.22.2.tar.gz](0.22.2/remote-station-0.22.2.tar.gz) | Aide à jour ; FTX-1 : vérification MAIN / SUB plus patiente — [empreintes SHA-256](0.22.2/SHA256SUMS.txt) |
