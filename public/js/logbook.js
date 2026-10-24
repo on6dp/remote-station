@@ -228,6 +228,8 @@
       }
     }
     if (!f.date.value || withDx) { const n = utcNow(); f.date.value = n.date; f.time.value = n.time; delete f.time.dataset.manual; }
+    // Station : l'indicatif sous lequel on émet (« Émis sous ») s'il est dans la liste
+    if (st && st.txCall && [...f.station.options].some((o) => o.value === st.txCall)) f.station.value = st.txCall;
     defaultRst(withDx);
     qoCheck();
   }

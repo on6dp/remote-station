@@ -1198,3 +1198,6 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 @media (max-width: 1799px) { .ctab-follow .fol-x { display: none; } }
 .dg-row .dg-call { font-weight: 700; text-decoration: underline dotted; text-underline-offset: 2px; cursor: pointer; }
 .dg-row .dg-call:hover { color: #39FF14; text-decoration-style: solid; }
+/* « Émis sous » : indicatif des émissions numériques */
+.msgs-h .txc select { font: inherit; font-size: 11px; font-weight: 700; color: var(--v2-text-bright); background: var(--v2-bg-darker); border: 1px solid var(--v2-border); border-radius: 4px; padding: 2px 4px; }
+.msgs-h .txc select:disabled { opacity: .75; }

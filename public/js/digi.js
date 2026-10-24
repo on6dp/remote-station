@@ -86,6 +86,7 @@
   let lastDecode = 0;
   let lastBand = 0;
   let stationCalls = ['ON5VL', 'OR0L'];
+  let baseCalls = stationCalls.slice(); // indicatifs de la station ; + celui sous lequel on émet (« Émis sous »)
 
 
   // ------------------------------------------------------------------ construction des onglets et des fenêtres
@@ -1958,7 +1959,7 @@
       if (!(fr > 0)) { msg.textContent = 'Fréquence en MHz ? (ex. 14.085)'; f.freq.focus(); return; }
       const qso = { call, qso_date: f.date.value.replace(/\D/g, ''), time_on: tt(f.time.value), time_off: tt(f.toff.value), freq: Math.round(fr * 1e6) / 1e6,
         mode: f.mode.value, rst_sent: f.rst_sent.value.trim(), rst_rcvd: f.rst_rcvd.value.trim(), name: f.name.value.trim(), qth: f.qth.value.trim(),
-        gridsquare: f.grid.value.trim().toUpperCase(), tx_pwr: f.pwr.value.trim(), comment: f.comment.value.trim() };
+        gridsquare: f.grid.value.trim().toUpperCase(), tx_pwr: f.pwr.value.trim(), comment: f.comment.value.trim(), station: myCall };
       for (const k of Object.keys(qso)) if (qso[k] === '') delete qso[k];
       api.send({ t: 'log_add', qso });
       dlg.close();
@@ -2336,7 +2337,7 @@
       refillQo();
       if (me && me.call) opCall = me.call;
       drawMsgs();
-      if (info && info.stationCall) stationCalls = String(info.stationCall).toUpperCase().split(/[\s/,]+/).filter(Boolean);
+      if (info && info.stationCall) { baseCalls = String(info.stationCall).toUpperCase().split(/[\s/,]+/).filter(Boolean); stationCalls = Array.from(new Set(baseCalls.concat(myCall))); }
       announce(); // reprise après reconnexion
     },
     onMessage(m) {
@@ -2402,6 +2403,15 @@
       return false;
     },
     onState() {
+      // « Émis sous » : indicatif des émissions numériques (station ou celui qui a la main)
+      const stx = api && api.state();
+      const tc = stx && stx.txCall ? String(stx.txCall).toUpperCase() : '';
+      if (tc && tc !== myCall) {
+        myCall = tc;
+        stationCalls = Array.from(new Set(baseCalls.concat(myCall)));
+        drawMsgs();
+        redrawAll();
+      }
       // Suivre l'opérateur : bouton caché pour celui qui a la main, qui annonce son onglet
       const fb = $('dgFollow');
       const mine = !!(api && api.iControl());

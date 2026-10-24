@@ -362,7 +362,7 @@ function onDigi(m) {
   if (m.t === 'decodes') {
     // Notre propre émission décodée (la BF du TRX renvoie le signal émis) : retirée, comme WSJT-X qui n'écoute pas en émission
     if (Array.isArray(m.list) && ftTxSlots.some((x) => x.mode === m.mode && Math.abs(x.slot - m.slot) < 1500)) {
-      const mine = stationCalls();
+      const mine = myCalls();
       const sent = ftTxSlots.filter((x) => x.mode === m.mode && Math.abs(x.slot - m.slot) < 1500).map((x) => norm(x.text));
       m.list = m.list.filter((d) => {
         const w = norm(d && d.msg).split(' ').map((x) => x.replace(/^<|>$/g, ''));
@@ -455,6 +455,16 @@ function setLogCfg(n) {
 // Créneaux FT8 / FT4 / FT2 où la station a émis { mode, slot, text } (pour écarter le décodage de notre propre signal)
 const ftTxSlots = [];
 const norm = (s) => String(s || '').toUpperCase().replace(/\s+/g, ' ').trim();
+// « Émettre sous » (modes numériques) : indicatif de celui qui a la main s'il l'a choisi, sinon celui de la station (digiCall)
+const txOwn = new Map(); // indicatif du membre → true s'il veut émettre sous son propre indicatif
+const ownCallOk = (u) => !!(u && u.tx && !u.rxOnly && /^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}[A-Z](\/[A-Z0-9]{1,4})?$/.test(String(u.call || '')));
+function txCall() {
+  const c = controller;
+  if (c && txOwn.get(c.user.call) && ownCallOk(c.user)) return String(c.user.call).toUpperCase();
+  return String(cfg.digiCall || 'ON5VL').toUpperCase();
+}
+// Indicatifs « à nous » pour les modes numériques : ceux de la station + celui sous lequel on émet en ce moment
+const myCalls = () => Array.from(new Set(stationCalls().concat(txCall())));
 const stationCalls = () => Array.from(new Set([cfg.digiCall].concat(String(cfg.stationCall || '').split(/[\s/,]+/)).map((c) => String(c || '').toUpperCase()).filter((c) => /^[A-Z0-9]{3,10}$/.test(c))));
 const sync = new Sync({
   book, version: VERSION, station: String(cfg.digiCall || 'ON5VL').toUpperCase(), urls: cfg.logUrls, // logUrls : essais seulement
@@ -471,10 +481,12 @@ const sync = new Sync({
   }
 });
 function logCtx(conn, m) {
-  const calls = stationCalls();
+  const calls = logCalls(conn);
   const st = String((m && m.station) || cfg.digiCall || calls[0] || '').toUpperCase();
   return { operator: conn.user.call, stationCallsign: calls.indexOf(st) >= 0 ? st : calls[0], myGrid: cfg.stationGrid || '' };
 }
+// Indicatifs de station proposés dans le carnet : ceux du club, plus le sien (QSO faits sous son indicatif)
+function logCalls(conn) { return Array.from(new Set(stationCalls().concat(ownCallOk(conn.user) ? [String(conn.user.call).toUpperCase()] : []))); }
 function logCanEdit(conn, q) { return conn.user.admin || (q && q.by === conn.user.call); }
 function qsoForClient(q) { return Object.assign({}, q); }
 
@@ -840,6 +852,7 @@ function publicState() {
     // Émission FT8 / FT4 / FT2 programmée ou en cours
     seq: seqPublic(),
     ftx: ftxPend ? { id: ftxPend.id, state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call, seconds: ftxPend.seconds } : null,
+    txCall: txCall(),
     view: ctlView && controller && ctlView.conn === controller ? { tab: ctlView.tab, mode: ctlView.mode } : null,
     txOk: inTxRange(txFreq()),
     txFreq: txFreq(),
@@ -875,15 +888,16 @@ function stopPtt(reason) {
   const who = ptt.conn;
   const dur = Math.round((Date.now() - ptt.since) / 100) / 10;
   const digiEnd = !!ptt.digi && reason === FTX_END;
+  const sw = !!ptt.digi && reason === FTX_SWITCH;
   let sentP = null;
   if (ptt.digi && ftxPend && ftxPend.id === ptt.digi.id) { clearTimeout(ftxPend.timer); sentP = ftxPend; ftxPend = null; }
-  if (ptt.digi && !digiEnd && seq && seq.on) { seq.on = false; setTimeout(updateDigi, 0); }
+  if (ptt.digi && !digiEnd && !sw && seq && seq.on) { seq.on = false; setTimeout(updateDigi, 0); }
   if (digiEnd && sentP) setTimeout(() => seqAfterTx(sentP), 0);
   ptt = { active: false, conn: null, since: 0, lastBeat: 0 };
   pttEndAt = Date.now();
   toStation({ t: 'cmd', op: 'ptt', on: false, reason });
   journal('tx_stop', { call: who.user.call, durationS: dur, reason, freq: txFreq() });
-  if (reason !== 'relâché' && !digiEnd) {
+  if (reason !== 'relâché' && !digiEnd && !sw) {
     // Coupure forcée : l'opérateur doit relâcher le PTT avant de pouvoir réémettre
     who.needRelease = true;
     send(who, { t: 'notice', level: 'warn', msg: 'Émission coupée : ' + reason, pttCut: true });
@@ -921,6 +935,7 @@ const FTX_T0 = 500; // début du signal après le début de la période (ms), co
 const FTX_LATE = { FT8: 2000, FT4: 800, FT2: 250 };
 const FTX_KEY_LEAD = 400; // passage en émission avant le début du signal (ms)
 const FTX_END = 'fin du message';
+const FTX_SWITCH = 'message suivant'; // émission coupée pour repartir aussitôt avec le message suivant de la séquence
 let ftxPend = null; // { id, conn, mode, text, f0, at, state: 'wait' | 'tx', ready, seconds, sent, timer }
 let ftxSeq = 0;
 
@@ -988,7 +1003,7 @@ function ftxRequest(conn, m) {
 const PROG = { CALLING: 0, REPLYING: 1, REPORT: 2, ROGER_REPORT: 3, ROGERS: 4, SIGNOFF: 5 };
 const NTX_PROG = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 0 };
 let seq = null; // { conn, on, mode, f0, parity, ntx, progress, dx: { call, grid }, rptSent, rptRcvd, free, call1st, watchMsg, watchSince, qsoStart }
-const seqMe = () => String(cfg.digiCall || stationCalls()[0] || '').toUpperCase();
+const seqMe = () => txCall();
 const seqGrid = () => String(cfg.stationGrid || '').toUpperCase().slice(0, 4);
 const baseCall = (c) => String(c || '').toUpperCase().replace(/[<>]/g, '').split('/').reduce((a, x) => (x.length > a.length ? x : a), '');
 const fmtRpt = (v) => {
@@ -1047,6 +1062,19 @@ function seqNext() {
 function seqChanged() {
   if (seq && seq.on && ftxPend && ftxPend.state === 'wait' && ftxPend.conn === seq.conn
       && (ftxPend.text !== seqText(seq) || ftxPend.parity !== seq.parity)) ftxCancel('message changé', true);
+  // Réponse décodée alors que notre émission de cette période vient de partir (ex. RR73 reçu pendant qu'on renvoie
+  // R-report) : si le nouveau message peut encore partir dans cette période (départ en retard accepté), on coupe
+  // et on repart aussitôt avec lui, au lieu de perdre une période (comme le changement de message en cours de WSJT-X)
+  const p = ftxPend;
+  if (seq && seq.on && p && p.state === 'tx' && p.conn === seq.conn && FTX_SLOT[p.mode] && p.text !== seqText(seq)
+      && ptt.active && ptt.digi && ptt.digi.id === p.id) {
+    const P = FTX_SLOT[p.mode];
+    const nominal = Math.floor(p.at / P) * P + FTX_T0;
+    if (Date.now() + 900 + 300 - nominal <= FTX_LATE[p.mode]) {
+      stopPtt(FTX_SWITCH);
+      seq.parity = Math.floor(p.at / P) % 2;
+    }
+  }
   seqNext();
   broadcast();
 }
@@ -1139,7 +1167,7 @@ function seqQsoDone(why) {
     const d8 = (x) => x.toISOString().slice(0, 10).replace(/-/g, '');
     const t6 = (x) => x.toISOString().slice(11, 19).replace(/:/g, '');
     const dial = s.txDial || txFreq() || 0;
-    send(s.conn, { t: 'ftx_qso', why, qso: { call, gridsquare: s.dx.grid || '', mode: s.mode,
+    send(s.conn, { t: 'ftx_qso', why, qso: { call, gridsquare: s.dx.grid || '', mode: s.mode, station: seqMe(),
       freq: ((dial + s.f0) / 1e6).toFixed(6), rst_sent: s.rptSent || '', rst_rcvd: s.rptRcvd || '',
       qso_date: d8(start), time_on: t6(start), qso_date_off: d8(end), time_off: t6(end), tx_pwr: radio.power || '' } });
   }
@@ -1528,7 +1556,7 @@ function onOperator(conn, m) {
       const all = book.query({ q: m.q, from: m.from, to: m.to });
       const lim = Math.max(1, Math.min(1000, Number(m.limit) || 200));
       return send(conn, { t: 'log_list', total: book.qsos.length, count: all.length, items: all.slice(-lim).reverse().map(qsoForClient),
-        calls: stationCalls(), admin: !!conn.user.admin, services: LOG_SERVICES, auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto])) });
+        calls: logCalls(conn), admin: !!conn.user.admin, services: LOG_SERVICES, auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto])) });
     }
     case 'log_add':
     case 'log_edit': {
@@ -1549,8 +1577,11 @@ function onOperator(conn, m) {
         q = book.add(q, conn.user.call);
         if (book.error) send(conn, { t: 'notice', level: 'error', msg: 'ATTENTION : carnet non écrit sur le disque du serveur (' + book.error + ')' });
         journal('log_add', { call: conn.user.call, qso: q.call, band: q.band, mode: q.mode });
-        sync.auto(q);
-        send(conn, { t: 'log_saved', qso: qsoForClient(q), auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto && !sync.stopped[s]])) });
+        // QSO fait sous un indicatif personnel : gardé dans le carnet, pas d'envoi automatique vers les comptes du club
+        const club = stationCalls().indexOf(q.station_callsign) >= 0;
+        if (club) sync.auto(q);
+        else send(conn, { t: 'notice', level: 'info', msg: 'QSO enregistré sous ' + q.station_callsign + ' : pas d’envoi automatique vers les logs en ligne du club (export ADIF pour votre propre carnet).' });
+        send(conn, { t: 'log_saved', qso: qsoForClient(q), auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, club && !!logCfg[s].auto && !sync.stopped[s]])) });
       }
       for (const c of ops) send(c, { t: 'log_changed' });
       return;
@@ -1592,12 +1623,12 @@ function onOperator(conn, m) {
     }
     case 'log_cfg_get':
       if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Réglages des carnets en ligne : administrateurs seulement' });
-      return send(conn, { t: 'log_cfg', cfg: logCfgPublic(), calls: stationCalls(), quiet: !!m.quiet });
+      return send(conn, { t: 'log_cfg', cfg: logCfgPublic(), calls: logCalls(conn), quiet: !!m.quiet });
     case 'log_cfg_set':
       if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Réglages des carnets en ligne : administrateurs seulement' });
       setLogCfg(m.cfg);
       journal('log_cfg', { call: conn.user.call });
-      send(conn, { t: 'log_cfg', cfg: logCfgPublic(), calls: stationCalls(), saved: true });
+      send(conn, { t: 'log_cfg', cfg: logCfgPublic(), calls: logCalls(conn), saved: true });
       return;
     case 'log_test':
       if (!conn.user.admin || LOG_SERVICES.indexOf(m.service) < 0) return;
@@ -1659,6 +1690,15 @@ function onOperator(conn, m) {
       chatPush({ kind: 'give', call: conn.user.call, to: target.user.call });
       send(target, { t: 'notice', level: 'warn', msg: conn.user.call + ' vous passe la main' });
       limitPower(target, 'prise de main');
+      return broadcast();
+    }
+
+    case 'txcall': {
+      // Choix « Émettre sous » : son indicatif ou celui de la station (modes numériques)
+      const own = !!m.own;
+      if (own && !ownCallOk(conn.user)) return send(conn, { t: 'notice', level: 'error', msg: 'Votre indicatif ne peut pas émettre (compte d’écouteur ou sans émission).' });
+      if (seq && seq.on && controller === conn && (txOwn.get(conn.user.call) || false) !== own) return send(conn, { t: 'notice', level: 'warn', msg: 'Arrêtez d’abord l’émission automatique en cours (■ Arrêter) pour changer d’indicatif.' });
+      txOwn.set(conn.user.call, own);
       return broadcast();
     }
 

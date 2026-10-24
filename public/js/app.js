@@ -929,8 +929,35 @@
     $('lampStation').setAttribute('aria-expanded', String(open));
   }
 
+  // « Émis sous » : indicatif des émissions numériques (station ou le sien), choisi par celui qui a la main
+  let txcSent = null;
+  function drawTxCall() {
+    const sel = $('txCallSel');
+    if (!sel || !me) return;
+    const club = String(me.digiCall || 'ON5VL').toUpperCase();
+    const mine = String(me.call || '').toUpperCase();
+    const opts = [club].concat(me.canTx && !me.rxOnly && mine && mine !== club ? [mine] : []);
+    if (sel.dataset.opts !== opts.join(',')) {
+      sel.dataset.opts = opts.join(',');
+      sel.textContent = '';
+      for (const c of opts) sel.add(new Option(c === club ? c + ' (station)' : c, c));
+    }
+    const cur = String((st && st.txCall) || club).toUpperCase();
+    if (opts.indexOf(cur) < 0) { sel.add(new Option(cur, cur)); sel.dataset.opts = ''; }
+    sel.value = cur;
+    sel.disabled = !iControl() || opts.length < 2;
+    // Avec la main : le choix gardé dans ce navigateur est rappelé au serveur
+    let want = null;
+    try { want = localStorage.getItem('rs.txown'); } catch (x) {}
+    if (iControl() && opts.length > 1 && want != null) {
+      const own = want === '1';
+      if ((cur === mine) !== own && txcSent !== want) { txcSent = want; send({ t: 'txcall', own }); }
+    }
+    if (!iControl()) txcSent = null;
+  }
   function render() {
     lamp('lampLink', ws && ws.readyState === 1 && me ? 'on' : null);
+    drawTxCall();
     const r = (st && st.radio) || {};
     // Côté actif du TRX changé (dashboard ou face avant) : la molette, les bandes et le mode suivent ce VFO
     if (r.connected && r.vfoSel != null) {
@@ -1509,6 +1536,13 @@
   };
   if (window.RSLOG) window.RSLOG.init(digiApi); // onglet « Logs » (monté par digi.js)
   if (window.RSDIGI) window.RSDIGI.init(digiApi);
+  $('txCallSel').addEventListener('change', () => {
+    if (!iControl()) return render();
+    const own = !!me && $('txCallSel').value === String(me.call).toUpperCase();
+    try { localStorage.setItem('rs.txown', own ? '1' : '0'); } catch (x) {}
+    txcSent = own ? '1' : '0';
+    send({ t: 'txcall', own });
+  });
   buildControls();
   bindPtt();
   render();
