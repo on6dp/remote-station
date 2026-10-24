@@ -143,6 +143,7 @@ All commands need **control** (« la main »), except listening, your volume and
 | `◀` `▶` | One step down / up. |
 | `MAIN` / `SUB` | Active side of the transceiver (receive and transmit together), like the front-panel MAIN / SUB key, without transmitting; takes one or two seconds. |
 | `SPLIT` | Transmit on the other VFO than the receive one (section 4.2). |
+| `DUAL RX` | FTX-1: dual receive (MAIN and SUB heard together, S-meter and RX on both VFOs) or single receive (active side only). **Digital modes**: in dual receive the audio sent by the transceiver also contains the SUB side (e.g. 20 m FT8 during a QO-100 contact on MAIN); switch DUAL RX off to decode the active side only. |
 | `A → B` / `B → A` | Copies the frequency and mode of one VFO to the other. |
 | `A ⇄ B` | Swaps both VFOs. |
 | `LOCK` | Locks the **front-panel controls of the transceiver at the club** (so nobody touches them); the dashboard keeps working. |

@@ -21,7 +21,7 @@
     ant: ['ant'],
     front: ['rf', 'agc'],
     filter: ['width', 'shift', 'contour', 'apf'],
-    dual: ['vfoSel', 'split', 'aToB', 'bToA', 'swap', 'lock'],
+    dual: ['vfoSel', 'split', 'dualRx', 'aToB', 'bToA', 'swap', 'lock'],
     audio: ['af', 'sql'],
     dsp: ['nb', 'nr', 'notch', 'notchFreq', 'dnf'],
     tune: ['tuner', 'tune'],

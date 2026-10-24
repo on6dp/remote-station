@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.27 | [RemoteStation-Setup-0.22.27.exe](0.22.27/RemoteStation-Setup-0.22.27.exe) | [remote-station-0.22.27.tar.gz](0.22.27/remote-station-0.22.27.tar.gz) | DUAL RX ; S-mètre SUB (RM2) — [empreintes SHA-256](0.22.27/SHA256SUMS.txt) |
 | 0.22.26 | [RemoteStation-Setup-0.22.26.exe](0.22.26/RemoteStation-Setup-0.22.26.exe) | [remote-station-0.22.26.tar.gz](0.22.26/remote-station-0.22.26.tar.gz) | Double réception : S-mètre SUB (RM2), VFO B en réception — [empreintes SHA-256](0.22.26/SHA256SUMS.txt) |
 | 0.22.25 | [RemoteStation-Setup-0.22.25.exe](0.22.25/RemoteStation-Setup-0.22.25.exe) | [remote-station-0.22.25.tar.gz](0.22.25/remote-station-0.22.25.tar.gz) | S-mètre sur le VFO du côté actif (réception simple) ou les deux (double réception) — [empreintes SHA-256](0.22.25/SHA256SUMS.txt) |
 | 0.22.24 | [RemoteStation-Setup-0.22.24.exe](0.22.24/RemoteStation-Setup-0.22.24.exe) | [remote-station-0.22.24.tar.gz](0.22.24/remote-station-0.22.24.tar.gz) | RR73 → 73 ; recherche QRZ.com ; TX call au carnet ; S-mètre VFO B — [empreintes SHA-256](0.22.24/SHA256SUMS.txt) |
