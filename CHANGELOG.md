@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.15** — **Tuner en service par défaut** : remis en service tout seul à la connexion du TRX et à chaque changement de bande HF / 6 m (une fois par bande, jamais pendant une émission) ; un clic sur TUNER le coupe jusqu’au prochain changement de bande. Réglage `tunerAuto` (true par défaut ; false : jamais tout seul). Ligne Correspondant : NOM, QTH, LOCATOR, REPORT et RST en blanc gras italique.
 - **0.22.14** — AGC et CORRESPONDANT en jaune fluo, bouton ÉCOUTER LE TRX en vert fluo. Ctrl+F5 sur le dashboard suffit.
 - **0.22.13** — Libellés des réglages en gras (AGC, VOLUME et PUISSANCE en blanc, les curseurs en jaune). Station meters : RX / TX en gras blanc, Po, SWR, ALC, Id, Vd, COMP et S en jaune. Ctrl+F5 sur le dashboard suffit.
 - **0.22.12** — Jaune fluo pour tous les repères jaunes. En jaune aussi : STEP, LOCK, onglets ACTIVITÉ / SYNCHRO / LOGS ONLINE, titres des listes des modes numériques (ACTIVITÉ DE BANDE, FRÉQUENCE RX, RÉCEPTION RTTY…). Cadre « Filtre » renommé « Filtres ». Ctrl+F5 sur le dashboard suffit.

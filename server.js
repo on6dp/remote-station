@@ -33,6 +33,9 @@ const DEFAULTS = {
   maxTxSeconds: 120,
   // FTX-1 : passage MAIN / SUB par CAT (VS seul, selon le manuel CAT). false pour le bloquer (face avant seulement).
   ftx1SubCat: true,
+  // Tuner (boîte d'accord) remis en service tout seul à la connexion du TRX et à chaque changement de bande HF / 6 m,
+  // pour ne pas l'oublier ; un clic sur TUNER le coupe jusqu'au prochain changement de bande. false : jamais tout seul.
+  tunerAuto: true,
   ftxWatchdogMinutes: 6, // émission auto FT8 / FT4 / FT2 : arrêt si le même message part depuis ce temps (WSJT-X : 6 min)
   pttHeartbeatMs: 1500,
   controlIdleMinutes: 15,
@@ -207,7 +210,8 @@ let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: n
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
 let swrLock = null;     // { freq, swr } : ROS trop élevé constaté à cette fréquence ; { tune: true, band } : accord impossible sur cette bande
-let tuneWatch = null;   // accord en cours de suivi { freq, at, saw, endAt, call }
+let tuneWatch = null;
+let tunerAuto = { band: '', until: 0 }; // bande HF / 6 m sur laquelle le tuner a été remis en service tout seul   // accord en cours de suivi { freq, at, saw, endAt, call }
 let swrHighSince = 0;
 // Audio BF du TRX : la station n'envoie le son que si au moins un membre écoute
 let audio = { active: false, want: false, frames: 0 };
@@ -732,6 +736,23 @@ function txFreq() {
   const base = radio.txVfo === 1 ? radio.freqB : radio.freq;
   if (base == null) return null;
   return base + (radio.xit ? radio.clar || 0 : 0);
+}
+
+function autoTuner() {
+  if (!radio.connected || !station) { tunerAuto.band = ''; return; }
+  if (cfg.tunerAuto === false || !rig().CONTROL || !rig().CONTROL.tuner) return;
+  const f = txFreq();
+  const band = f && f < 54e6 ? LB.bandOf(f / 1e6) : '';
+  const now = Date.now();
+  // Nouvelle bande : 4 s pour relire l'état du tuner de cette bande
+  if (band && band !== tunerAuto.band) tunerAuto = { band, until: now + 4000 };
+  if (!band) tunerAuto.band = '';
+  if (tunerAuto.until && now < tunerAuto.until && radio.tuner === 0 && !radio.tx && !ptt.active) {
+    tunerAuto.until = 0;
+    toStation({ t: 'cmd', op: 'ctl', id: 'tuner', value: 1, by: 'auto', subOk: !!cfg.ftx1SubCat });
+    radio.tuner = 1; // affichage optimiste, relu ensuite
+    if (controller) send(controller, { t: 'notice', level: 'info', msg: 'Tuner mis en service (' + band + ').' });
+  }
 }
 
 // Suivi d'un accord lancé par TUNE : accord vu en cours (AC / RI / émission), puis fini → verdict d'après le HI-SWR du TRX
@@ -1924,6 +1945,8 @@ function onStation(conn, m) {
   } else if (controller && radio.power != null && radio.power > controller.user.maxWatts) {
     limitPower(controller, 'dépassement');
   }
+  // Tuner remis en service tout seul : à la connexion du TRX et à chaque nouvelle bande HF / 6 m (une seule fois par bande)
+  autoTuner();
   // Protection du PA : résultat de l'accord. Le TRX signale HI-SWR après le TUNE → émission bloquée sur toute la bande
   if (tuneWatch) checkTune();
   // Protection du PA : le TRX signale lui-même HI-SWR pendant une émission par le PTT

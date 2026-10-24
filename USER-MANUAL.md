@@ -118,7 +118,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 
 - **PTT**: hold the big PTT button or the `Space` bar. Release = receive.
 - **Power**: − / + buttons in the TX panel; your personal limit is displayed (e.g. ON3: 25 W).
-- **Tuning**: after changing band, a `TUNE` is **mandatory** (Accord panel) before transmitting, then check the **SWR** (bottom left of the dashboard); after each band change a reminder flashes to the right of the 70CM key and stays until the TUNE (on 2 m and 70 cm, no tuner: only « check the SWR », 20 s). The SPA-1 tuner works on HF and 6 m only. TUNE counts as a transmission. FTX-1: the internal tuner is in the SPA-1 amplifier, which must be connected and switched on; otherwise TUNER and TUNE have no effect.
+- **Tuning**: after changing band, a `TUNE` is **mandatory** (Accord panel) before transmitting, then check the **SWR** (bottom left of the dashboard); after each band change a reminder flashes to the right of the 70CM key and stays until the TUNE (on 2 m and 70 cm, no tuner: only « check the SWR », 20 s). The SPA-1 tuner works on HF and 6 m only. TUNE counts as a transmission. FTX-1: the internal tuner is in the SPA-1 amplifier, which must be connected and switched on; otherwise TUNER and TUNE have no effect. The **tuner is switched on automatically** when the transceiver connects and at each HF / 6 m band change; clicking `TUNER` switches it off until the next band change.
 - Mic gain, PROC and level, VOX (can be switched off remotely, never on).
 
 > [!WARNING]

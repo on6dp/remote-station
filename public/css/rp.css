@@ -1186,3 +1186,4 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .ctl[data-ctl='agc'] .ctl-label, .ctl[data-ctl='agcB'] .ctl-label, .dx-lbl { color: var(--v2-accent-yellow) !important; font-weight: 700; }
 #listenBtn { font-weight: 700; }
 #listenBtn:not([aria-pressed='true']) { color: #39FF14; }
+.dx-l { color: var(--v2-text-bright); font-weight: 700; font-style: italic; }

@@ -118,7 +118,7 @@ Cadre **Antenne**, en haut à gauche : `ANT 1` / `ANT 2` sur le FTX-1 (prises de
 
 - **PTT** : maintenez le gros bouton PTT ou la barre d'espace `Espace`. Relâcher = réception.
 - **Puissance** : boutons − / + du cadre TX ; votre limite personnelle est affichée (ex. ON3 : 25 W).
-- **Accord** : après un changement de bande, un `TUNE` est **obligatoire** (cadre Accord) avant d'émettre, puis vérifiez le **SWR** (en bas à gauche du dashboard) ; à chaque changement de bande, un rappel clignote à droite de la touche 70CM et reste affiché jusqu'au TUNE (en 2 m et 70 cm, pas de tuner : seulement « vérifiez le SWR », 20 s). Le tuner du SPA-1 ne travaille qu'en HF et 6 m. TUNE compte comme une émission. FTX-1 : le tuner interne est dans l'ampli SPA-1, qui doit être raccordé et allumé ; sinon TUNER et TUNE n'ont pas d'effet.
+- **Accord** : après un changement de bande, un `TUNE` est **obligatoire** (cadre Accord) avant d'émettre, puis vérifiez le **SWR** (en bas à gauche du dashboard) ; à chaque changement de bande, un rappel clignote à droite de la touche 70CM et reste affiché jusqu'au TUNE (en 2 m et 70 cm, pas de tuner : seulement « vérifiez le SWR », 20 s). Le tuner du SPA-1 ne travaille qu'en HF et 6 m. TUNE compte comme une émission. FTX-1 : le tuner interne est dans l'ampli SPA-1, qui doit être raccordé et allumé ; sinon TUNER et TUNE n'ont pas d'effet. Le **tuner est mis en service tout seul** à la connexion du TRX et à chaque changement de bande HF / 6 m ; un clic sur `TUNER` le coupe jusqu'au prochain changement de bande.
 - Gain micro, PROC et niveau, VOX (on peut le couper à distance, jamais l'activer).
 
 > [!WARNING]
