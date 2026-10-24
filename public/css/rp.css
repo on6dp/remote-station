@@ -1201,3 +1201,5 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 /* « Émis sous » : indicatif des émissions numériques */
 .msgs-h .txc select { font: inherit; font-size: 11px; font-weight: 700; color: var(--v2-text-bright); background: var(--v2-bg-darker); border: 1px solid var(--v2-border); border-radius: 4px; padding: 2px 4px; }
 .msgs-h .txc select:disabled { opacity: .75; }
+.lg-h4 { margin: 14px 0 4px; font-size: 11px; letter-spacing: .8px; text-transform: uppercase; color: var(--v2-accent-yellow); }
+.lg-dlg .lg-grid td.txc, .lg-grid td.txc { font-weight: 700; }

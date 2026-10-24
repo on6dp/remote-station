@@ -343,7 +343,7 @@ Seules les FI que le TRX branché peut atteindre sont proposées (2 m et 70 cm :
 
 <h2 id="messages">10. Correspondant, messages et macros</h2>
 <ul>
-  <li>Ligne <b>Correspondant</b>, sous les onglets des modes numériques : indicatif, prénom, QTH, locator, report FT8, RST et bouton <span class="k">Log QSO</span>. Les messages et macros sont dans chaque onglet : <b>Tx1 à Tx7</b> en FT8 · FT4 · FT2 (sous les listes), <b>F1 à F12</b> en RTTY et CW et <b>F1 à F8</b> en JTTY (sur une ligne, au-dessus du texte à émettre).</li>
+  <li>Ligne <b>Correspondant</b>, sous les onglets des modes numériques : indicatif, prénom, QTH, locator, report FT8, RST et bouton <span class="k">Log QSO</span>. Prénom, QTH et locator sont cherchés sur <b>QRZ.com</b> dès qu'un nouveau correspondant est choisi (si un compte QRZ est réglé dans Logs → Configuration). Les messages et macros sont dans chaque onglet : <b>Tx1 à Tx7</b> en FT8 · FT4 · FT2 (sous les listes), <b>F1 à F12</b> en RTTY et CW et <b>F1 à F8</b> en JTTY (sur une ligne, au-dessus du texte à émettre).</li>
   <li><b>RTTY et JTTY : une macro qui commence par <code>&lt;TX&gt;</code> part tout de suite à l'émission</b> au clic (ou avec sa touche <kbd>F1</kbd>…), comme dans FLDIGI, puis le TRX repasse en réception (<code>&lt;RX&gt;</code>, toujours fait en fin de message). Ces macros ont un liseré rouge à gauche ; c'est le cas de toutes les macros d'origine. <b>Maj+clic</b> : ajouter la macro au texte à émettre sans émettre, pour composer un message personnalisé puis « Émettre ». Si la macro contient <code>&lt;CALL&gt;</code> sans correspondant choisi, rien ne part.</li>
   <li>En <b>RTTY</b>, le texte émis s'affiche dans la fenêtre de réception d'abord en gris, puis chaque lettre passe en rouge au moment où elle part ; la ligne d'état indique « fin dans N s » : de quoi préparer la macro suivante. Après « Arrêter », la partie non émise reste grise et barrée. Pendant l'émission, le décodage RTTY / JTTY est suspendu (le TRX renvoie notre propre signal dans sa BF).</li>
   <li>Une macro sans <code>&lt;TX&gt;</code> (et toutes les macros CW) s'ajoute au texte à émettre de son onglet. <b>Clic droit</b> (ou <span class="k">✎</span>) : la modifier — nom, texte, aperçu, retour au texte d'origine. Vos macros sont gardées sur le serveur, pour vous seul.</li>
@@ -419,7 +419,7 @@ clic sur le voyant <b>STATION</b> en haut à gauche → « ↻ Recharger la page
     heure de début (quand le correspondant a été choisi) et de fin (maintenant). Corriger au besoin (RST reçu…), puis <span class="k">Enregistrer dans le carnet</span>.
     Une macro qui contient <code>&lt;LOG&gt;</code> (par exemple le « 73 ») ouvre aussi cette fiche.</li>
   <li><b>QO-100</b> : avec la FI du convertisseur (ex. 432,525 MHz), la case QO-100 se coche et la fréquence de montée 2400,xxx MHz est enregistrée (satellite QO-100, descente 10 489,xxx MHz).</li>
-  <li><b>Liste</b> : les 300 derniers QSO (recherche par indicatif, nom ou opérateur). Colonnes LoTW, eQSL, CL (Club Log), QRZ : <b>·</b> pas encore envoyé, <b>✓</b> envoyé, <b>✗</b> refusé
+  <li><b>Liste</b> : les 300 derniers QSO (recherche par indicatif, nom ou opérateur). Colonne <b>TX call</b> : l'indicatif sous lequel le QSO a été fait, le même que TX CALL du dashboard au moment du QSO (l'opérateur s'affiche au survol). Colonnes LoTW, eQSL, CL (Club Log), QRZ : <b>·</b> pas encore envoyé, <b>✓</b> envoyé, <b>✗</b> refusé
     (survol = détail), <b>★</b> confirmé sur LoTW. Clic sur une ligne : modifier ou supprimer le QSO (son auteur ou un administrateur).</li>
   <li><b>Exporter ▾</b> : ADIF 3 (.adi) ou Cabrillo 3 (.log, avec le nom du concours), pour un indicatif et une plage de dates au choix.</li>
   <li><b>Synchronisation ▾</b> (administrateurs) : une fenêtre par service, comme dans Swisslog — onglet <b>Détails</b> (indicatif, plage de dates facultative,
@@ -427,7 +427,8 @@ clic sur le voyant <b>STATION</b> en haut à gauche → « ↻ Recharger la page
     <b>Opérations LoTW</b> : exporter, signer avec TQSL, envoyer, lire les confirmations, statut ; <span class="k">Confirmations</span> lit seulement les confirmations reçues.</li>
   <li><b>⚙ Configuration</b> (administrateurs) : onglets CLUBLOG, eQSL, LoTW, QRZ, UDP. Case « Télécharger automatiquement les QSO lors de leur enregistrement »,
     identifiants et mots de passe (bouton 👁 pour les voir pendant la saisie), temporisation, <span class="k">Tester</span>. Les mots de passe et clés restent sur le serveur :
-    la fenêtre affiche seulement « enregistré » ; laisser le champ vide garde la valeur, ✕ l'efface.</li>
+    la fenêtre affiche seulement « enregistré » ; laisser le champ vide garde la valeur, ✕ l'efface.
+    Onglet QRZ, <b>Recherche des correspondants</b> : identifiant et mot de passe d'un compte QRZ.com ; dès qu'un correspondant est choisi (clic sur un indicatif, ligne Correspondant, fiche du carnet), son prénom, sa ville (QTH) et, avec un abonnement XML, son locator sont remplis tout seuls (cases vides seulement), avec un rappel « QRZ.com : … » sous les bandes.</li>
 </ul>
 <table>
   <tr><th>Service</th><th>À préparer</th></tr>

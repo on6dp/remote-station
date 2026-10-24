@@ -72,7 +72,7 @@
         <label class="lg-w6">Locator <input name="gridsquare" maxlength="8"></label>
         <label class="lg-w5">Puiss. W <input name="tx_pwr" inputmode="decimal" maxlength="5"></label>
         <label class="lg-wide">Remarque <input name="comment" maxlength="200"></label>
-        <label>Station <select name="station"></select></label>
+        <label>TX call <select name="station" title="Indicatif sous lequel le QSO a été fait (STATION_CALLSIGN)"></select></label>
         <label class="lg-chk" title="QSO via le satellite QO-100 : fréquence de montée 2400,xxx MHz (la FI du convertisseur est convertie)"><input type="checkbox" name="qo100"> QO-100</label>
       </div>
       <div class="lg-row lg-act">
@@ -106,7 +106,7 @@
     </div>
     <div class="lg-tw">
       <table class="lg-table">
-        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th>Mode</th><th class="r">MHz</th><th>Env.</th><th>Reçu</th><th>Nom</th><th>Opérateur</th>
+        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th>Mode</th><th class="r">MHz</th><th>Env.</th><th>Reçu</th><th>Nom</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th>
           <th class="c" title="LoTW (★ = confirmé)">LoTW</th><th class="c">eQSL</th><th class="c" title="Club Log">CL</th><th class="c">QRZ</th></tr></thead>
         <tbody id="lgBody"><tr><td colspan="14" class="lg-empty">Chargement du carnet…</td></tr></tbody>
       </table>
@@ -135,6 +135,8 @@
       if (!editing && f.call.value.length === 1 && !f.time.dataset.manual) { const n = utcNow(); f.date.value = n.date; f.time.value = n.time; }
     });
     f.time.addEventListener('input', () => { f.time.dataset.manual = '1'; });
+    // Indicatif tapé : nom, QTH et locator cherchés sur QRZ.com (si un compte QRZ est réglé), cases vides seulement
+    f.call.addEventListener('change', () => { const c = f.call.value.trim(); if (/^[A-Z0-9/]{3,15}$/.test(c) && api) api.send({ t: 'qrz', call: c }); });
     f.gridsquare.addEventListener('input', () => { f.gridsquare.value = f.gridsquare.value.toUpperCase(); });
     f.freq.addEventListener('change', qoCheck);
     const search = q$('#lgSearch');
@@ -332,7 +334,7 @@
       body.innerHTML = items.map((q) => '<tr data-id="' + esc(q.id) + '"' + (editing && editing.id === q.id ? ' class="sel"' : '') + ' title="Cliquer pour modifier">' +
         '<td>' + fmtDate(q.qso_date) + '</td><td>' + fmtTime(q.time_on) + '</td><td class="call">' + esc(q.call) + '</td><td>' + esc(q.band) +
         (q.sat_name ? ' <span class="sat">' + esc(q.sat_name) + '</span>' : '') + '</td><td>' + esc(modeName(q)) + '</td><td class="r">' + esc(q.freq) +
-        '</td><td>' + esc(q.rst_sent || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td>' + esc(q.name || '') + '</td><td>' + esc(q.operator || '') + '</td>' +
+        '</td><td>' + esc(q.rst_sent || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td>' + esc(q.name || '') + '</td><td class="txc" title="' + esc(q.operator ? 'Opérateur : ' + q.operator : '') + '">' + esc(q.station_callsign || '') + '</td>' +
         SV.map((s) => upCell(q, s)).join('') + '</tr>').join('');
     }
     const c = q$('#lgCount');
@@ -576,7 +578,13 @@
       '<p class="lg-note">Une clé API du carnet QRZ par indicatif de station (QRZ.com → Logbook → Settings → API Key ; abonnement XML ou supérieur).</p>' +
       '<table class="lg-grid" data-g="qrz"><thead><tr><th>Indicatif</th><th>Clé API</th><th></th></tr></thead><tbody>' +
       Object.entries(keys).map(([c, h]) => qrzRow(c, h)).join('') + '</tbody></table>' +
-      '<div class="lg-btns"><button class="btn" type="button" data-a="addq">+ Ajouter un indicatif</button></div>' + testRow('qrz') + '</div>' +
+      '<div class="lg-btns"><button class="btn" type="button" data-a="addq">+ Ajouter un indicatif</button></div>' + testRow('qrz') +
+      '<h4 class="lg-h4">Recherche des correspondants (nom, QTH, locator)</h4>' +
+      '<p class="lg-note">Compte QRZ.com utilisé pour remplir tout seul le nom et le QTH du correspondant (ligne Correspondant, carnet). ' +
+      'Sans abonnement XML, QRZ ne donne que le prénom, le nom, la ville et le pays ; avec, aussi le locator. Gardé sur le serveur, jamais renvoyé au navigateur.</p>' +
+      textField('Identifiant QRZ.com', 'qrz.lookupUser', cfg.qrz.lookupUser, '', 'maxlength="40" autocomplete="off"') +
+      secretField('Mot de passe QRZ.com', 'qrz', 'lookupPassword', cfg) +
+      testRow('qrzxml') + '</div>' +
       // UDP
       '<div data-p="udp" class="lg-pp" hidden>' +
       '<p class="lg-note">Chaque QSO enregistré est aussi envoyé en UDP aux logbooks du PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+, DXKeeper…). ' +
@@ -616,7 +624,7 @@
         const out = d.querySelector('[data-tr="' + b.dataset.test + '"]');
         out.textContent = 'Enregistrez d’abord (OK) les réglages modifiés · test en cours…';
         out.className = 'lg-tres';
-        api.send({ t: 'log_test', service: b.dataset.test });
+        api.send(b.dataset.test === 'qrzxml' ? { t: 'qrz_test' } : { t: 'log_test', service: b.dataset.test });
       } else if (b.dataset.a === 'ok') {
         api.send({ t: 'log_cfg_set', cfg: readCfg(f) });
       }
@@ -626,7 +634,7 @@
   function readCfg(f) {
     const v = (n) => { const i = f.elements[n]; if (!i) return undefined; if (i.type === 'checkbox') return i.checked; if (i.dataset.clear === '1' && !i.value) return '__effacer__'; return i.value.trim(); };
     const out = {};
-    const fields = { clublog: ['auto', 'delay', 'email', 'password', 'api'], eqsl: ['auto', 'delay', 'user', 'password', 'nickname'], qrz: ['auto', 'delay'],
+    const fields = { clublog: ['auto', 'delay', 'email', 'password', 'api'], eqsl: ['auto', 'delay', 'user', 'password', 'nickname'], qrz: ['auto', 'delay', 'lookupUser', 'lookupPassword'],
       lotw: ['auto', 'delay', 'tqsl', 'tqslDir', 'location', 'password', 'login', 'webPassword'] };
     for (const [s, ks] of Object.entries(fields)) { out[s] = {}; for (const k of ks) { const x = v(s + '.' + k); if (x !== undefined) out[s][k] = x; } }
     if (out.eqsl.user) out.eqsl.user = out.eqsl.user.toUpperCase();
@@ -703,6 +711,15 @@
 
   window.RSLOG = {
     init(a) { api = a; },
+    onQrz(m) {
+      const f = root && q$('#lgForm');
+      if (!f || !m.ok || !m.info || String(f.call.value).toUpperCase() !== String(m.call).toUpperCase()) return;
+      const v = m.info;
+      const first = (v.nick || v.fname || '').split(/\s+/)[0];
+      if (!f.name.value && first) f.name.value = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+      if (!f.qth.value && v.qth) f.qth.value = v.qth;
+      if (!f.gridsquare.value && v.grid) f.gridsquare.value = v.grid;
+    },
     mount,
     onHello(h) {
       me = { call: h.call, admin: !!h.admin, rxOnly: !!h.rxOnly };

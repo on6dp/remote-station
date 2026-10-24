@@ -1485,6 +1485,31 @@
     dx.grid = String(dx.grid || '').toUpperCase().slice(0, 6);
     store.set('dx', JSON.stringify(dx));
     syncDx();
+    // Nouveau correspondant : nom, QTH (et locator) cherchés sur QRZ.com, un instant après la dernière frappe
+    if (newCall) qrzAsk(dx.call);
+  }
+  let qrzTimer = null;
+  let qrzWarned = false;
+  function qrzAsk(call) {
+    clearTimeout(qrzTimer);
+    if (!api || !CALL_RE.test(String(call || '').replace(/\/.*$/, ''))) return;
+    qrzTimer = setTimeout(() => api.send({ t: 'qrz', call }), 900);
+  }
+  // Fiche QRZ.com reçue : on ne remplit que les cases vides du correspondant
+  function qrzInfo(m) {
+    if (!m || String(m.call).toUpperCase() !== String(dx.call).toUpperCase()) return;
+    if (!m.ok) {
+      if (!m.off && m.msg && !qrzWarned) { qrzWarned = true; api.say('QRZ.com : ' + m.msg.replace(/^QRZ\.com : /, ''), 'warn', 6000); }
+      return;
+    }
+    const v = m.info || {};
+    const o = {};
+    const first = (v.nick || v.fname || '').split(/\s+/)[0];
+    if (!dx.name && first) o.name = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+    if (!dx.qth && v.qth) o.qth = v.qth;
+    if (!dx.grid && v.grid) o.grid = v.grid.slice(0, 6);
+    if (Object.keys(o).length) setDx(o);
+    api.say('QRZ.com : ' + m.call + ' — ' + [[v.fname, v.name].filter(Boolean).join(' '), v.qth, v.country].filter(Boolean).join(', '), '', 6000);
   }
   function syncDx() {
     const put = (id, v) => { const el = $(id); if (el && document.activeElement !== el) el.value = v; };
@@ -1529,7 +1554,7 @@
         setTimeout(() => {
           const x = api.state() && api.state().ftx;
           if (!x) return;
-          const s = Math.max(0, Math.round((x.at - Date.now()) / 1000));
+          const s = Math.max(0, Math.round((x.at - now()) / 1000)); // horloge du serveur (celle de votre PC peut être décalée)
           const d = new Date(x.at);
           api.say(x.state === 'tx' ? 'Réponse à ' + call + ' : en émission (Tx' + (ftxSel + 1) + ').'
             : 'Réponse à ' + call + ' : Tx' + (ftxSel + 1) + ' part dans ' + s + ' s (' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' UTC, période de ' + call + ' + 1).', '', 8000);
@@ -2341,6 +2366,7 @@
       announce(); // reprise après reconnexion
     },
     onMessage(m) {
+      if (m.t === 'qrz_info') { qrzInfo(m); if (window.RSLOG && window.RSLOG.onQrz) window.RSLOG.onQrz(m); return true; }
       if (m.t === 'ftx_qso' && m.qso) { qsoPrompt(m.qso); return true; }
       if (m.t === 'pong' && Number.isFinite(m.now) && Number.isFinite(m.ts)) {
         // Écart d'horloge avec le serveur, d'après l'aller-retour le plus court

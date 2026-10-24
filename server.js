@@ -393,7 +393,7 @@ const LOGCFG_FILE = cfg.logbookConfig ? path.resolve(ROOT, cfg.logbookConfig) : 
 const LOGCFG_DEFAULT = {
   clublog: { auto: false, email: '', password: '', api: '', delay: 15 },
   eqsl: { auto: false, user: '', password: '', nickname: '', delay: 5 },
-  qrz: { auto: false, keys: {}, delay: 5 },
+  qrz: { auto: false, keys: {}, delay: 5, lookupUser: '', lookupPassword: '' },
   lotw: { auto: false, tqsl: process.platform === 'win32' ? 'C:\\Program Files (x86)\\TrustedQSL\\tqsl.exe' : '/usr/bin/tqsl', tqslDir: '', location: '', password: '', login: '', webPassword: '', delay: 0, lastConfirm: '' },
   udp: []
 };
@@ -408,7 +408,10 @@ function saveLogCfg() {
   fs.writeFileSync(LOGCFG_FILE, JSON.stringify(logCfg, null, 2) + '\n', { mode: 0o600 });
 }
 // Champs secrets : jamais renvoyés au navigateur (seulement « déjà enregistré »)
-const SECRETS = { clublog: ['password', 'api'], eqsl: ['password'], lotw: ['password', 'webPassword'] };
+const SECRETS = { clublog: ['password', 'api'], eqsl: ['password'], lotw: ['password', 'webPassword'], qrz: ['lookupPassword'] };
+// Recherche des indicatifs sur QRZ.com (nom, QTH, locator du correspondant) avec le compte QRZ réglé dans le carnet
+const { Qrz } = require('./lib/qrz.js');
+const qrzx = new Qrz(() => ({ user: logCfg.qrz.lookupUser, password: logCfg.qrz.lookupPassword }), 'RemoteStation-' + VERSION);
 function logCfgPublic() {
   const o = JSON.parse(JSON.stringify(logCfg));
   for (const [s, keys] of Object.entries(SECRETS)) for (const k of keys) { o[s]['has_' + k] = !!o[s][k]; o[s][k] = ''; }
@@ -932,7 +935,7 @@ const FTX_SLOT = { FT8: 15000, FT4: 7500, FT2: 3750 };
 const FTX_T0 = 500; // début du signal après le début de la période (ms), comme WSJT-X
 // Départ en retard encore accepté dans la période en cours (réponse cliquée juste après le décodage, comme WSJT-X) :
 // le correspondant décode encore (DT jusqu'à +2,5 s en FT8)
-const FTX_LATE = { FT8: 2000, FT4: 800, FT2: 250 };
+const FTX_LATE = { FT8: 2300, FT4: 800, FT2: 250 };
 const FTX_KEY_LEAD = 400; // passage en émission avant le début du signal (ms)
 const FTX_END = 'fin du message';
 const FTX_SWITCH = 'message suivant'; // émission coupée pour repartir aussitôt avec le message suivant de la séquence
@@ -942,7 +945,7 @@ let ftxSeq = 0;
 /** Prochain départ du signal : début de période + 0,5 s, parité imposée ou non, au plus tôt dans 0,9 s. */
 function ftxSlot(mode, parity, now) {
   const P = FTX_SLOT[mode];
-  const earliest = now + 900;
+  const earliest = now + 700; // le temps que la page Station fabrique le signal
   for (let k = Math.floor(now / P); k < Math.floor(now / P) + 4; k++) {
     if (parity != null && k % 2 !== parity) continue;
     const nominal = k * P + FTX_T0;
@@ -1070,7 +1073,7 @@ function seqChanged() {
       && ptt.active && ptt.digi && ptt.digi.id === p.id) {
     const P = FTX_SLOT[p.mode];
     const nominal = Math.floor(p.at / P) * P + FTX_T0;
-    if (Date.now() + 900 + 300 - nominal <= FTX_LATE[p.mode]) {
+    if (Date.now() + 700 + 300 - nominal <= FTX_LATE[p.mode]) {
       stopPtt(FTX_SWITCH);
       seq.parity = Math.floor(p.at / P) % 2;
     }
@@ -1085,7 +1088,10 @@ function seqSetNtx(n) {
 /** Réponse du correspondant (« MOI LUI xxx ») : message suivant selon WSJT-X. Renvoie true si le QSO est terminé. */
 function seqReact(payload, d) {
   const p = String(payload || '').toUpperCase();
-  if (GRID4_RE.test(p)) {
+  // « RR73 » a la forme d'un locator (RR73 = carré au milieu de l'océan) : c'est toujours la fin de QSO, comme dans WSJT-X
+  if (p === 'RR73' || p === 'RRR') {
+    seqSetNtx(5);
+  } else if (GRID4_RE.test(p)) {
     // Réponse à notre CQ avec son locator → on lui donne son report
     seq.dx.grid = p;
     seq.rptSent = fmtRpt(d.db);
@@ -1137,7 +1143,7 @@ function seqOnDecodes(mode, slot, list) {
     for (const d of list) {
       const w = words(d);
       if (w.length < 3 || baseCall(w[0]) !== me || !SEQ_CALL_RE.test(baseCall(w[1]))) continue;
-      if (!(GRID4_RE.test(w[2]) || RPT_RE.test(w[2]) || RRPT_RE.test(w[2]))) continue;
+      if (!((GRID4_RE.test(w[2]) && w[2] !== 'RR73') || RPT_RE.test(w[2]) || RRPT_RE.test(w[2]))) continue;
       if (!best || d.db > best.d.db) best = { d, w };
     }
     if (best) {
@@ -1627,8 +1633,27 @@ function onOperator(conn, m) {
     case 'log_cfg_set':
       if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Réglages des carnets en ligne : administrateurs seulement' });
       setLogCfg(m.cfg);
+      qrzx.reset();
       journal('log_cfg', { call: conn.user.call });
       send(conn, { t: 'log_cfg', cfg: logCfgPublic(), calls: logCalls(conn), saved: true });
+      return;
+    case 'qrz': {
+      // Fiche QRZ.com d'un indicatif (correspondant) : pour tous les membres connectés, une demande par seconde au plus
+      const call = String(m.call || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
+      if (!/^[A-Z0-9/]{3,15}$/.test(call)) return;
+      const now = Date.now();
+      if (now - (conn.qrzAt || 0) < 1000) return;
+      conn.qrzAt = now;
+      if (!qrzx.configured()) return send(conn, { t: 'qrz_info', call, ok: false, off: true });
+      qrzx.lookup(call).then((v) => send(conn, { t: 'qrz_info', call, ok: !!v, info: v, msg: v ? '' : call + ' : inconnu sur QRZ.com' }))
+        .catch((e) => send(conn, { t: 'qrz_info', call, ok: false, msg: String(e.message || e).slice(0, 200) }));
+      return;
+    }
+    case 'qrz_test':
+      if (!conn.user.admin) return;
+      qrzx.reset();
+      qrzx.login().then((r) => send(conn, { t: 'log_test', service: 'qrzxml', ok: true, msg: 'Connexion QRZ.com réussie' + (r.sub && !/non-subscriber/i.test(r.sub) ? ' (abonnement XML jusqu’au ' + r.sub + ')' : ' — sans abonnement XML : prénom, nom, ville et pays seulement') }))
+        .catch((e) => send(conn, { t: 'log_test', service: 'qrzxml', ok: false, msg: String(e.message || e).slice(0, 200) }));
       return;
     case 'log_test':
       if (!conn.user.admin || LOG_SERVICES.indexOf(m.service) < 0) return;

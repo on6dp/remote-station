@@ -165,7 +165,8 @@
     for (const r of spec.extraReads || []) READS.push(r);
     // Les commandes partent une par une, espacées (FRAME_GAP_MS) : une rafale de 30 commandes
     // déborde le tampon CAT de la radio, qui en perd une partie (mode non lu, « plus de réponse »…)
-    const FAST = ['FA;', 'MD0;', 'FB;', 'MD1;', 'SM0;', 'TX;', 'FT;'];
+    // Deux récepteurs (FTX-1, subBadges) : S-mètre du côté SUB aussi (SM1), pour le bargraphe du VFO B
+    const FAST = ['FA;', 'MD0;', 'FB;', 'MD1;', 'SM0;'].concat(spec.subBadges ? ['SM1;'] : [], ['TX;', 'FT;']);
     // En émission : mesures COMP, ALC, PO, SWR, et aussi puissance et VOX (contrôles de sécurité plus rapides)
     const TXMETERS = ['RM3;', 'RM4;', 'RM5;', 'RM6;', P.read, 'VX;'];
     const SLOW = READS.map((r) => r.cmd).concat(['RM7;', 'RM8;']); // + IDD, VDD
@@ -186,7 +187,7 @@
       }
       return READ_FOR[id] || null;
     }
-    const STATE_KEYS = ['txVfo', 'split', 'vfoSel', 'rit', 'xit', 'clar', 'lock', 'width', 'narrow', 'shift', 'contour', 'apf',
+    const STATE_KEYS = ['smeterB', 'txVfo', 'split', 'vfoSel', 'rit', 'xit', 'clar', 'lock', 'width', 'narrow', 'shift', 'contour', 'apf',
       'dnf', 'notch', 'notchFreq', 'nb', 'nr', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox',
       'tuner', 'tuning', 'ant', 'ritB', 'xitB', 'clarB', 'hwSplit', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'].concat(spec.extraStateKeys || []);
 
@@ -262,6 +263,7 @@
       if ((m = /^MD0([0-9A-Z])$/.exec(tok))) return { modeCode: m[1], mode: MODES_ALL[m[1]] || ('?' + m[1]) };
       if ((m = /^MD1([0-9A-Z])$/.exec(tok))) return { modeCodeB: m[1], modeB: MODES_ALL[m[1]] || ('?' + m[1]) };
       if ((m = /^SM0(\d{3})$/.exec(tok))) return { smeter: parseInt(m[1], 10) };
+      if ((m = /^SM1(\d{3})$/.exec(tok))) return { smeterB: parseInt(m[1], 10) };
       if ((m = /^TX([0-2])$/.exec(tok))) return { tx: parseInt(m[1], 10) }; // 0 RX, 1 TX par CAT, 2 TX par la radio
       // FT : VFO d'émission. Modèles « splitIsFT » (FTX-1) : le SPLIT, c'est FT1 (TX sur SUB), jamais ST1
       if ((m = /^FT([01])$/.exec(tok))) return spec.splitIsFT ? { txVfo: +m[1], split: +m[1] } : { txVfo: +m[1] };
@@ -324,6 +326,7 @@
           else if (c === 'MD1') out.push('MD1' + this.modeB + ';');
           else if ((m = /^MD0([0-9A-Z])$/.exec(c)) && MODES_ALL[m[1]]) this.mode = m[1];
           else if ((m = /^MD1([0-9A-Z])$/.exec(c)) && MODES_ALL[m[1]]) this.modeB = m[1];
+          else if (c === 'SM1') out.push('SM1' + pad(this.tx ? 0 : Math.round(40 + 25 * Math.sin(this.t * 0.7)), 3) + ';');
           else if (c === 'SM0') {
             this.t += 0.15;
             const v = this.tx ? 0 : Math.round(70 + 45 * Math.sin(this.t) + 20 * Math.random());

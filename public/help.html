@@ -342,7 +342,7 @@ Only the IFs the connected transceiver can reach are listed (2 m and 70 cm: FTX-
 
 <h2 id="messages">10. Correspondent, messages and macros</h2>
 <ul>
-  <li><b>Correspondant</b> line, below the digital-mode tabs: callsign, first name, QTH, locator, FT8 report, RST and the <span class="k">Log QSO</span> button. Messages and macros are in each tab: <b>Tx1 to Tx7</b> in FT8 · FT4 · FT2 (below the lists), <b>F1 to F12</b> in RTTY and CW and <b>F1 to F8</b> in JTTY (on one row, above the text to send).</li>
+  <li><b>Correspondant</b> line, below the digital-mode tabs: callsign, first name, QTH, locator, FT8 report, RST and the <span class="k">Log QSO</span> button. First name, QTH and locator are looked up on <b>QRZ.com</b> as soon as a new contact is chosen (if a QRZ account is set in Logs → Configuration). Messages and macros are in each tab: <b>Tx1 to Tx7</b> in FT8 · FT4 · FT2 (below the lists), <b>F1 to F12</b> in RTTY and CW and <b>F1 to F8</b> in JTTY (on one row, above the text to send).</li>
   <li><b>RTTY and JTTY: a macro starting with <code>&lt;TX&gt;</code> is transmitted at once</b> when clicked (or with its <kbd>F1</kbd>… key), as in FLDIGI, then the rig goes back to receive (<code>&lt;RX&gt;</code>, always done at the end of the message). These macros have a red edge on the left; all default macros do. <b>Shift+click</b>: add the macro to the text to send without transmitting, to build a custom message then « Émettre ». If the macro contains <code>&lt;CALL&gt;</code> and no contact is chosen, nothing is sent.</li>
   <li>In <b>RTTY</b>, the transmitted text appears in the receive window first in grey, then each letter turns red as it goes out; the status line shows « fin dans N s » (ends in N s), so you can get the next macro ready. After « Arrêter », the part not sent stays grey and struck through. RTTY / JTTY decoding is paused while transmitting (the rig feeds our own signal back into its audio).</li>
   <li>A macro without <code>&lt;TX&gt;</code> (and every CW macro) is added to the text to send in its tab. <b>Right click</b> (or <span class="k">✎</span>): edit it — name, text, preview, back to the default. Your macros are stored on the server, for you only.</li>
@@ -418,7 +418,7 @@ click the <b>STATION</b> lamp at the top left → « ↻ Recharger la page Stati
     start time (when the correspondent was chosen) and end time (now). Correct if needed (RST received…), then <span class="k">Enregistrer dans le carnet</span> (save).
     A macro containing <code>&lt;LOG&gt;</code> (e.g. the « 73 ») also opens this form.</li>
   <li><b>QO-100</b>: with the converter IF (e.g. 432.525 MHz) the QO-100 box is ticked and the 2400.xxx MHz uplink frequency is logged (QO-100 satellite, downlink 10489.xxx MHz).</li>
-  <li><b>List</b>: the last 300 QSOs (search by call, name or operator). Columns LoTW, eQSL, CL (Club Log), QRZ: <b>·</b> not sent yet, <b>✓</b> sent, <b>✗</b> rejected
+  <li><b>List</b>: the last 300 QSOs (search by call, name or operator). <b>TX call</b> column: the callsign the QSO was made under, the same as TX CALL on the dashboard at the time (the operator shows on hover). Columns LoTW, eQSL, CL (Club Log), QRZ: <b>·</b> not sent yet, <b>✓</b> sent, <b>✗</b> rejected
     (hover for details), <b>★</b> confirmed on LoTW. Click a row to edit or delete the QSO (its author or an administrator).</li>
   <li><b>Exporter ▾</b> (export): ADIF 3 (.adi) or Cabrillo 3 (.log, with the contest name), for one call and an optional date range.</li>
   <li><b>Synchronisation ▾</b> (administrators): one window per service, as in Swisslog — <b>Détails</b> tab (call, optional date range, resend QSOs already sent,
@@ -426,7 +426,8 @@ click the <b>STATION</b> lamp at the top left → « ↻ Recharger la page Stati
     <b>Opérations LoTW</b>: export, sign with TQSL, upload, read confirmations, status; <span class="k">Confirmations</span> only reads the confirmations received.</li>
   <li><b>⚙ Configuration</b> (administrators): tabs CLUBLOG, eQSL, LoTW, QRZ, UDP. « Upload QSOs automatically when they are logged » box, logins and passwords
     (👁 button to see them while typing), delay, <span class="k">Tester</span> (test). Passwords and keys stay on the server: the window only shows « enregistré » (stored);
-    an empty field keeps the value, ✕ deletes it.</li>
+    an empty field keeps the value, ✕ deletes it.
+    QRZ tab, <b>Contact lookup</b>: user name and password of a QRZ.com account; as soon as a contact is chosen (click on a callsign, Correspondant line, logbook form), their first name, town (QTH) and, with an XML subscription, locator are filled in automatically (empty fields only), with a « QRZ.com: … » note below the bands.</li>
 </ul>
 <table>
   <tr><th>Service</th><th>What you need</th></tr>

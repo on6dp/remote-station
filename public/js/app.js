@@ -1023,11 +1023,18 @@
       const wB = Number(ctlValue('widthB')) || r.widthB;
       $('widthB').textContent = 'BW ' + (live && r.narrowB ? 'NAR' : live && wtB && wB && wtB[wB - 1] ? (wtB[wB - 1] / 1000).toFixed(1) + 'K' : live && r.modeB && /AM|FM/.test(r.modeB) ? 'FIX' : '—');
     }
-    // S-mètre en réception, puissance relative en émission
-    const raw = txing ? r.m5 : r.smeter;
-    const n = live ? Math.round((Math.min(255, raw || 0) / 255) * 30) : 0;
-    [...$('barsA').children].forEach((b, i) => { b.classList.toggle('lit', i < n); b.classList.toggle('hot', txing || i >= 16); });
-    $('sA').textContent = live ? (txing ? 'PO' : RIG().smeterLabel(r.smeter).replace(/^S/, 'S ')) : 'S —';
+    // S-mètre en réception, puissance relative en émission (sur le VFO qui émet) ; VFO B : S-mètre du côté SUB (FTX-1)
+    const txB = txing && r.txVfo === 1;
+    const hasSmB = r.smeterB != null;
+    const meterOn = (bars, sId, isTx, val) => {
+      const raw = isTx ? r.m5 : val;
+      const n = live ? Math.round((Math.min(255, raw || 0) / 255) * 30) : 0;
+      [...$(bars).children].forEach((b, i) => { b.classList.toggle('lit', i < n); b.classList.toggle('hot', isTx || i >= 16); });
+      $(sId).textContent = live ? (isTx ? 'PO' : val != null ? RIG().smeterLabel(val).replace(/^S/, 'S ') : 'S —') : 'S —';
+    };
+    meterOn('barsA', 'sA', txing && (!txB || !hasSmB), r.smeter);
+    $('smB').classList.toggle('smeter-dim', !hasSmB);
+    if (hasSmB) meterOn('barsB', 'sB', txB, r.smeterB);
     // RIT / XIT / SPLIT
     const kHz = (v) => { v = Number(v) || 0; return (v >= 0 ? '+' : '−') + (Math.abs(v) / 1000).toFixed(2) + ' kHz'; };
     const hasB = !!(RIG().CONTROL && RIG().CONTROL.ritB);
