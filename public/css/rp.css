@@ -1176,7 +1176,7 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 :is([data-panel=rf], [data-panel=filter], [data-panel=audio], [data-panel=dsp], [data-panel=tx]) .ctl:has(input[type=range]) .ctl-label { color: var(--v2-accent-yellow); }
 [data-panel=audio] .listen .ctl:has(input[type=range]) .ctl-label { color: var(--v2-text-bright); }
 /* Repères en jaune : Step, LOCK, onglets Activité / Synchro / Logs online, titres des listes des modes numériques */
-.tune-panel .toolbar > .tl:first-child { color: var(--v2-accent-yellow); }
+.tune-panel .toolbar > .tl { color: var(--v2-accent-yellow); font-weight: 700; } /* STEP et VFO */
 [data-ctl='lock']:not([aria-pressed='true']) { color: var(--v2-accent-yellow); }
 .ctab:is([data-tab='events'], [data-tab='sync'], [data-tab='log']) { color: var(--v2-accent-yellow); }
 .dg-h > span:first-child { color: var(--v2-accent-yellow); }
@@ -1214,3 +1214,6 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .dxc-menu a { display: flex; justify-content: space-between; gap: 10px; padding: 7px 10px; border-radius: 4px; color: var(--v2-text-bright); text-decoration: none; font-size: 12px; font-weight: 700; }
 .dxc-menu a small { color: var(--v2-text-dim); font-weight: 400; }
 .dxc-menu a:hover, .dxc-menu a:focus-visible { background: var(--v2-bg-panel, #141c27); color: var(--v2-accent-cyan-bright, #00D4FF); }
+/* DNF (DSP) et TUNER (Accord) en blanc gras */
+button[data-ctl='dnf']:not([aria-pressed='true']), button[data-ctl='dnfB']:not([aria-pressed='true']), button[data-ctl='tuner']:not([aria-pressed='true']) { color: var(--v2-text-bright); }
+button[data-ctl='dnf'], button[data-ctl='dnfB'], button[data-ctl='tuner'] { font-weight: 700; }

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.36** — « VFO » de la ligne Step en jaune fluo gras (comme STEP) ; boutons DNF et TUNER en blanc gras. Ctrl+F5 sur le dashboard suffit.
 - **0.22.35** — Menu DX Cluster : dx.op0p.be s’appelle « Ultimate Cluster ». Ctrl+F5 sur le dashboard suffit.
 - **0.22.34** — **TXW** (à droite de DUAL RX, ou touche W maintenue) : écoute de la fréquence d’émission tant que le bouton est maintenu (VFO échangés, remis en place au relâchement, après 15 s ou si la liaison se coupe ; PTT refusé pendant TXW ; ni rappel de bande ni tuner automatique). **DX Cluster ▾** dans le bandeau : dx.op0p.be (Ultimate Cluster) ou cluster.op0p.be (CC-Cluster OP0P), dans un nouvel onglet. FTX-1 : MAIN / SUB aussi en réception simple par défaut (`ftx1SubSingle: true`, essai concluant au club). Aide mise à jour.
 - **0.22.33** — Carnet (onglet Logs) : la fréquence et le mode de la fiche suivent tout seuls le VFO actif du TRX (VFO B sur SUB), sans cliquer sur ⇩ TRX ; une saisie à la main est gardée jusqu’au QSO suivant. Ctrl+F5 sur le dashboard suffit.
