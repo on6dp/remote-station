@@ -767,15 +767,20 @@ function txFreq() {
 }
 
 function autoTuner() {
-  if (!radio.connected || !station) { tunerAuto.band = ''; return; }
+  if (!radio.connected || !station) { tunerAuto = { band: '', until: 0 }; return; }
   if (cfg.tunerAuto === false || !rig().CONTROL || !rig().CONTROL.tuner) return;
   const f = txFreq();
   const band = f && f < 54e6 ? LB.bandOf(f / 1e6) : '';
   const now = Date.now();
+  const side = radio.vfoSel === 1 ? 1 : 0;
+  // Changement de côté MAIN / SUB (la bande du VFO d'émission change sans changement de bande) : rien n'est envoyé
+  // (constaté au club : tuner mis en service pendant un passage sur SUB, TRX en émission)
+  if (tunerAuto.side != null && tunerAuto.side !== side) { tunerAuto = { band, until: 0, side }; return; }
+  tunerAuto.side = side;
   // Nouvelle bande : 4 s pour relire l'état du tuner de cette bande
-  if (band && band !== tunerAuto.band) tunerAuto = { band, until: now + 4000 };
+  if (band && band !== tunerAuto.band) tunerAuto = { band, until: now + 4000, side };
   if (!band) tunerAuto.band = '';
-  if (tunerAuto.until && now < tunerAuto.until && radio.tuner === 0 && !radio.tx && !ptt.active) {
+  if (tunerAuto.until && now < tunerAuto.until && radio.tuner === 0 && !radio.tx && !ptt.active && controller) {
     tunerAuto.until = 0;
     toStation({ t: 'cmd', op: 'ctl', id: 'tuner', value: 1, by: 'auto', subOk: !!cfg.ftx1SubCat });
     radio.tuner = 1; // affichage optimiste, relu ensuite
@@ -1479,6 +1484,7 @@ function onOperator(conn, m) {
         stopPtt('reprise de la main par ' + conn.user.call);
         send(prev, { t: 'notice', level: 'warn', msg: conn.user.call + ' (admin) a repris la main' });
       }
+      if (controller !== conn) tunerAuto.until = Date.now() + 4000; // prise de main : tuner remis en service s'il est coupé (HF / 6 m)
       controller = conn;
       lastCtrlActivity = now;
       journal('control_take', { call: conn.user.call, force: !!m.force });
@@ -1780,6 +1786,12 @@ function onOperator(conn, m) {
         // FTX-1 : aucun passage sur SUB par CAT (VS1) tant que ftx1SubCat n'est pas activé
         if (R.ID === 'ftx1' && !cfg.ftx1SubCat && ((m.ctl === 'vfoSel' && Number(m.value) === 1) || (c && c.viaSub && radio.vfoSel !== 1) || (c && c.viaMain && radio.vfoSel === 1))) {
           return send(conn, { t: 'notice', level: 'error', msg: 'Passage MAIN ↔ SUB par le dashboard désactivé : il mettait le FTX-1 en émission. Choisissez MAIN / SUB sur la face avant du TRX ; le dashboard suit.' });
+        }
+        // FTX-1 en réception simple (DUAL RX coupé) : passage MAIN ↔ SUB par CAT refusé (constaté au club le 24/10 :
+        // clic sur SUB → le TRX passe en émission) ; DUAL RX d'abord, ou face avant
+        const sideMove = (m.ctl === 'vfoSel' && Number(m.value) !== (radio.vfoSel === 1 ? 1 : 0)) || (c && c.viaSub && radio.vfoSel !== 1) || (c && c.viaMain && radio.vfoSel === 1);
+        if (R.ID === 'ftx1' && radio.dualRx === 0 && sideMove) {
+          return send(conn, { t: 'notice', level: 'error', msg: 'Passage MAIN ↔ SUB refusé en réception simple (il a mis le FTX-1 en émission) : allumez d’abord DUAL RX, ou utilisez la touche MAIN / SUB du TRX.' });
         }
         let v;
         try {

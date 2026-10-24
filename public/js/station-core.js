@@ -136,7 +136,6 @@
         // Radio qui ne dit pas d'où vient l'émission (Icom) : émission demandée par nous = CAT (1), sinon radio (2)
         if (FTX1.TX_SOURCE_UNKNOWN && p.tx === 1 && !this.catKeyed) p.tx = 2;
         if (p.tx != null) this.txReadAt = Date.now(); // dernière lecture de l'état émission / réception
-        if (p.dualRx === 0 && this.radio.smeterB != null) { this.radio.smeterB = null; this.dirty = true; }
         for (const k in p) {
           // Mesure d'émission arrivée après le retour en réception (lecture déjà en file) : ignorée
           if (TX_METER_KEYS.indexOf(k) >= 0 && !this.radio.tx && p.tx == null) continue;
@@ -218,13 +217,13 @@
           for (let i = 0; i < n * (this.forceSlow ? 2 : 1); i++) slow.push(rig.SLOW[(this.slowPos + i) % rig.SLOW.length]);
           this.slowPos = (this.slowPos + slow.length) % rig.SLOW.length;
           // Relectures prioritaires (réglage qui vient d'être modifié), puis lectures rapides, puis tranche lente
-          this.queue = this.prio.concat(rig.FAST, this.radio.dualRx !== 0 && rig.FAST_SUB ? rig.FAST_SUB : [], this.radio.tx ? rig.TXMETERS : [], slow);
+          this.queue = this.prio.concat(rig.FAST, rig.FAST_SUB || [], this.radio.tx ? rig.TXMETERS : [], slow);
           this.prio = [];
           this._drain();
         }
       } else {
         let q = rig.FAST;
-        if (this.radio.dualRx !== 0 && rig.FAST_SUB) q += [].concat(rig.FAST_SUB).join('');
+        if (rig.FAST_SUB) q += [].concat(rig.FAST_SUB).join('');
         if (this.radio.tx) q += rig.TXMETERS;
         if (this.forceSlow || this.ticks % 4 === 0) q += rig.SLOW;
         this._write(q, true);
@@ -295,6 +294,10 @@
           // FTX-1 : passage sur SUB par CAT seulement si le serveur l'autorise explicitement (m.subOk)
           if (FTX1.ID === 'ftx1' && !m.subOk && ((m.id === 'vfoSel' && v === 1) || (FTX1.CONTROL[m.id].viaSub && this.radio.vfoSel !== 1) || (FTX1.CONTROL[m.id].viaMain && this.radio.vfoSel === 1))) {
             return this.log('Sécurité : passage MAIN ↔ SUB par CAT refusé (' + (FTX1.CONTROL[m.id].label || m.id) + ') — face avant du TRX', 'st-bad');
+          }
+          // Réception simple (FR01) : pas de changement de côté par CAT (a mis le TRX en émission au club)
+          if (FTX1.ID === 'ftx1' && this.radio.dualRx === 0 && ((m.id === 'vfoSel' && v !== (this.radio.vfoSel === 1 ? 1 : 0)) || (FTX1.CONTROL[m.id].viaSub && this.radio.vfoSel !== 1) || (FTX1.CONTROL[m.id].viaMain && this.radio.vfoSel === 1))) {
+            return this.log('Sécurité : passage MAIN ↔ SUB refusé en réception simple (DUAL RX coupé) — face avant du TRX', 'st-bad');
           }
           // Changement de côté en cours (lectures suspendues, côté actif pas encore relu) : réglage propre à un côté refusé
           if ((FTX1.CONTROL[m.id].viaSub || FTX1.CONTROL[m.id].viaMain) && this.pollHold && Date.now() < this.pollHold) {
@@ -479,8 +482,8 @@
       this.pollHold = Date.now() + 9000;
       setTimeout(() => {
         if (seq !== this.sideSeq || this.catKeyed) return;
-        // Côté actif déjà bon mais FT en désaccord : remettre FT d'accord ; sinon VS seul
-        const cmd = this.radio.vfoSel === v ? this.rig.txVfoTries(v)[this.txVfoOk || 0] : 'VS' + v + ';';
+        // VS seul, toujours (FT n'est jamais envoyé : FT seul a déjà mis le FTX-1 en émission) ; côté déjà bon : VS renvoyé
+        const cmd = 'VS' + v + ';';
         this._trace(cmd);
         this.lastCtl = { id: 'MAIN / SUB', at: Date.now(), long: true };
         this._write(cmd);
@@ -505,13 +508,7 @@
             }
             setTimeout(() => {
               if (seq !== this.sideSeq) return;
-              // FT relu différent du côté actif (n'a pas suivi VS) : remis d'accord, puis nouvelle vérification
-              if (this.radio.vfoSel === v && this.radio.txVfo != null && this.radio.txVfo !== v && n < 3) {
-                const f = this.rig.txVfoTries(v)[this.txVfoOk || 0];
-                this._trace(f + ' (FT n’a pas suivi)');
-                this._write(f);
-                return setTimeout(() => check(n + 1), 800);
-              }
+              // FT relu différent du côté actif (n'a pas suivi VS) : plus de FT envoyé (risque d'émission) — signalé ci-dessous
               this.pollHold = 0;
               this._readBack('vfoSel');
               const ok = this.radio.vfoSel === v && (this.radio.txVfo == null || this.radio.txVfo === v);

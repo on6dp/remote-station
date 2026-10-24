@@ -143,7 +143,7 @@ Toutes les commandes demandent d'**avoir la main**, sauf l'écoute, le volume et
 | `◀` `▶` | Descendre / monter d'un pas. |
 | `MAIN` / `SUB` | Côté actif du TRX (réception et émission ensemble), comme la touche MAIN / SUB de la face avant, sans émission ; prend une à deux secondes. |
 | `SPLIT` | Émettre sur l'autre VFO que celui de réception (section 4.2). |
-| `DUAL RX` | FTX-1 : double réception (MAIN et SUB écoutés ensemble, S-mètre et RX sur les deux VFO) ou réception simple (seulement le côté actif). **Modes numériques** : en double réception, la BF envoyée par le TRX contient aussi le côté SUB (ex. le FT8 du 20 m pendant un trafic QO-100 sur MAIN) ; couper DUAL RX pour ne décoder que le côté actif. |
+| `DUAL RX` | FTX-1 : double réception (MAIN et SUB écoutés ensemble, S-mètre et RX sur les deux VFO) ou réception simple (seulement le côté actif). **Modes numériques** : en double réception, la BF envoyée par le TRX contient aussi le côté SUB (ex. le FT8 du 20 m pendant un trafic QO-100 sur MAIN) ; couper DUAL RX pour ne décoder que le côté actif. **DUAL RX coupé, MAIN / SUB est refusé par le dashboard** (un clic sur SUB a mis le TRX en émission au club) : allumer DUAL RX avant de changer de côté, ou utiliser la touche MAIN / SUB du TRX. Le S-mètre du VFO inactif reste affiché, grisé. |
 | `A → B` / `B → A` | Recopie la fréquence et le mode d'un VFO sur l'autre. |
 | `A ⇄ B` | Échange les deux VFO. |
 | `LOCK` | Verrouille les commandes de la **face avant du TRX au club** (pour que personne ne les touche) ; le dashboard reste utilisable. |

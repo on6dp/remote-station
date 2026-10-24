@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.29 | [RemoteStation-Setup-0.22.29.exe](0.22.29/RemoteStation-Setup-0.22.29.exe) | [remote-station-0.22.29.tar.gz](0.22.29/remote-station-0.22.29.tar.gz) | Sécurité : SUB refusé en réception simple, tuner auto pas au changement de côté — [empreintes SHA-256](0.22.29/SHA256SUMS.txt) |
 | 0.22.28 | [RemoteStation-Setup-0.22.28.exe](0.22.28/RemoteStation-Setup-0.22.28.exe) | [remote-station-0.22.28.tar.gz](0.22.28/remote-station-0.22.28.tar.gz) | Bande du VFO B en réception simple — [empreintes SHA-256](0.22.28/SHA256SUMS.txt) |
 | 0.22.27 | [RemoteStation-Setup-0.22.27.exe](0.22.27/RemoteStation-Setup-0.22.27.exe) | [remote-station-0.22.27.tar.gz](0.22.27/remote-station-0.22.27.tar.gz) | DUAL RX ; S-mètre SUB (RM2) — [empreintes SHA-256](0.22.27/SHA256SUMS.txt) |
 | 0.22.26 | [RemoteStation-Setup-0.22.26.exe](0.22.26/RemoteStation-Setup-0.22.26.exe) | [remote-station-0.22.26.tar.gz](0.22.26/remote-station-0.22.26.tar.gz) | Double réception : S-mètre SUB (RM2), VFO B en réception — [empreintes SHA-256](0.22.26/SHA256SUMS.txt) |
