@@ -123,7 +123,7 @@ button, input, select { font: inherit; color: inherit; }
 .lamp i { width: 8px; height: 8px; border-radius: 50%; background: var(--v2-tx-idle); }
 .lamp.on i { background: var(--v2-accent-green); box-shadow: 0 0 8px rgba(0, 204, 102, .6); }
 .lamp.on { color: var(--v2-text-secondary); }
-.lamp.warn i { background: var(--v2-accent-yellow); box-shadow: 0 0 8px rgba(242, 207, 74, .5); }
+.lamp.warn i { background: var(--v2-accent-yellow); box-shadow: 0 0 8px rgba(255, 242, 26, .5); }
 .lamp.tx i { background: var(--v2-accent-red); box-shadow: 0 0 10px rgba(255, 32, 32, .7); }
 
 /* ------------------------------------------------------------ disposition */
@@ -1175,3 +1175,8 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 :is([data-panel=rf], [data-panel=filter], [data-panel=audio], [data-panel=dsp], [data-panel=tx]) .ctl-label { color: var(--v2-text-bright); }
 :is([data-panel=rf], [data-panel=filter], [data-panel=audio], [data-panel=dsp], [data-panel=tx]) .ctl:has(input[type=range]) .ctl-label { color: var(--v2-accent-yellow); }
 [data-panel=audio] .listen .ctl .ctl-label { color: var(--v2-text-bright); }
+/* Repères en jaune : Step, LOCK, onglets Activité / Synchro / Logs online, titres des listes des modes numériques */
+.tune-panel .toolbar > .tl:first-child { color: var(--v2-accent-yellow); }
+[data-ctl='lock']:not([aria-pressed='true']) { color: var(--v2-accent-yellow); }
+.ctab:is([data-tab='events'], [data-tab='sync'], [data-tab='log']) { color: var(--v2-accent-yellow); }
+.dg-h > span:first-child { color: var(--v2-accent-yellow); }

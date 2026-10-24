@@ -57,7 +57,7 @@ Les indicatifs d'**écouteurs** (ONL…) peuvent tout voir et tout écouter, mai
 
 ### Les colonnes (écran large)
 
-1. **Gauche** : Antenne, RF front end, Mode, Filtre, Station meters.
+1. **Gauche** : Antenne, RF front end, Mode, Filtres, Station meters.
 2. **Centre** : VFO A et B (MAIN / SUB), ligne Step (pas, A / B, ◀ ▶, MAIN / SUB / SPLIT, A → B, B → A, A ⇄ B, LOCK) et bandes, puis « Activité et modes numériques » avec la ligne **Correspondant** sous les onglets.
 3. **Droite** : RX audio, DSP, Accord (tuner), TX.
 4. **Opérateurs** : volet du bouton `👥` du bandeau (nombre de connectés), fermé par défaut.
@@ -88,7 +88,7 @@ Chaque cadre se replie avec la petite flèche `▾` devant son titre, et peut s'
 **Molette de la souris sur « BW »** (en haut de chaque écran VFO) : largeur de filtre de ce VFO. Sur le FTX-1, le VFO B règle le filtre du récepteur SUB.
 
 - **Mode** : LSB, USB, CW-L/CW-U, RTTY, DATA-L/DATA-U (modes numériques), AM, FM… (appliqué au VFO indiqué).
-- **Filtre** : largeur BW, IF SHIFT, CONTOUR, APF (en CW). NARROW : badge **NAR** de l'écran VFO.
+- **Filtres** : largeur BW, IF SHIFT, CONTOUR, APF (en CW). NARROW : badge **NAR** de l'écran VFO.
 
 ### Antenne
 
@@ -99,7 +99,7 @@ Cadre **Antenne**, en haut à gauche : `ANT 1` / `ANT 2` sur le FTX-1 (prises de
 - **RF front end** : RF gain, AGC. ATT et préampli (IPO / AMP1 / AMP2, AMP) : badges de l'écran VFO.
 - **DSP** : NB, DNR, NOTCH (et sa fréquence), DNF.
 - **FTX-1 : MAIN / SUB** (ou A / B) choisit le côté actif du TRX, réception et émission ensemble, exactement comme la touche MAIN / SUB de la face avant, sans émission. Le changement prend une à deux secondes. (Technique : commande CAT VS seule, d'après le manuel CAT de Yaesu.)
-- **FTX-1 : les cadres RF front end, Filtre et DSP règlent le côté actif du TRX** (étiquette « A · MAIN » / « B · SUB » dans leur titre, sur la même ligne) : SUB actif → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF du côté SUB. Les touches A / B de la ligne des pas font comme MAIN / SUB (VFO réglé et côté actif du TRX) ; molette sur les chiffres de l'autre VFO pour changer sa fréquence sans changer de côté.
+- **FTX-1 : les cadres RF front end, Filtres et DSP règlent le côté actif du TRX** (étiquette « A · MAIN » / « B · SUB » dans leur titre, sur la même ligne) : SUB actif → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF du côté SUB. Les touches A / B de la ligne des pas font comme MAIN / SUB (VFO réglé et côté actif du TRX) ; molette sur les chiffres de l'autre VFO pour changer sa fréquence sans changer de côté.
 - **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK** : sur la ligne des pas (Step), après ◀ ▶. Le décalage RIT / XIT se règle sur chaque écran VFO (molette sur la valeur, CLEAR pour le remettre à zéro).
 - **RIT / XIT / CLEAR** sur chaque écran VFO : clic sur RIT ou XIT = allumer / éteindre ; **molette** sur le décalage affiché = ± 10 Hz (± 100 Hz avec Maj) ; **CLEAR** = décalage à zéro. Le VFO B a son propre RIT / XIT sur le FTX-1 (côté SUB) ; le FTDX10 et l'IC-7300 n'en ont qu'un, sur le VFO A.
 
