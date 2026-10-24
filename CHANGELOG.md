@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.11** — Libellés des réglages : curseurs en jaune (RF GAIN, BW, IF SHIFT, AF LEVEL, SQUELCH, NB, DNR, FRÉQ. NOTCH, GAIN MICRO, NIVEAU PROC), AGC, VOLUME et PUISSANCE en blanc. Titres DSP et RF front end / Filtre : même espacement que les autres titres. Ctrl+F5 sur le dashboard suffit.
 - **0.22.10** — Titres des cadres en blanc (cyan au survol), pour guider l’œil ; étiquette « A · MAIN » / « B · SUB » en plus grand. Ctrl+F5 sur le dashboard suffit.
 - **0.22.9** — QO-100 : la FI 23 cm ne figure plus dans les listes quand le TRX ne l’atteint pas (retour au comportement d’avant la 0.22.6). Ctrl+F5 sur le dashboard suffit.
 - **0.22.8** — Cadres RF front end, Filtre et DSP : étiquette du côté réglé raccourcie (« A · MAIN » / « B · SUB ») et gardée sur la ligne du titre, même dans une colonne étroite (détail au survol). Ctrl+F5 sur le dashboard suffit.
