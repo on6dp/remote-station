@@ -1812,7 +1812,7 @@ function onStation(conn, m) {
     catAsk = null;
     return;
   }
-  if (m.t === 'diag') {
+  if (m.t === 'trx_note') {
     // Déroulé d'un changement de côté MAIN / SUB (FTX-1) : affiché à celui qui pilote, gardé dans le journal
     const text = String(m.text || '').replace(/[\u0000-\u001f]/g, ' ').slice(0, 500);
     journal('side_diag', { text });

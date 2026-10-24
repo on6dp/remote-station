@@ -518,6 +518,13 @@
     if (c.id === 'vfoSel' && v != null) target = v ? 'B' : 'A'; // MAIN / SUB : les cadres suivent ce VFO
     if (c.type !== 'action') ctlPending[c.id] = { v, at: Date.now() };
     send({ t: 'set', ctl: c.id, value: v });
+    // Tuner mis en service mais relu « hors service » : le TRX ne l'a pas pris (menu du TRX, tuner absent…)
+    if (c.id === 'tuner' && v === 1) {
+      setTimeout(() => {
+        const r = (st && st.radio) || {};
+        if (r.connected && !r.tuner) say('Le TRX n’a pas mis son tuner en service. Vérifiez : FTX-1 raccordé au SPA-1 (le tuner interne est dans le SPA-1) ou tuner externe branché, menu TUNER SELECT (INT / INT FAST / EXT / ATAS) et TUNER TYPE SEL de l’antenne.', 'warn', 12000);
+      }, 3500);
+    }
     render();
   }
   function sendCtlThrottled(c) {
@@ -822,7 +829,7 @@
       const t = dlg.querySelector('[data-a="sidetest"]');
       if (t) t.addEventListener('click', () => sideTest(t));
       f.cmd.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
-      for (const c of ['PA0;', 'PA1;', 'PA2;', 'RA0;', 'RA1;', 'VS;', 'FT;', 'ST;', 'FA;', 'FB;', 'IF;']) {
+      for (const c of ['VS;', 'FT;', 'ST;', 'FA;', 'FB;', 'IF;', 'PA0;', 'RA0;', 'AC;', 'RI0;', 'EX030103;', 'EX030104;', 'EX030701;', 'EX030702;']) {
         if (RIG().CAT_QUERIES.indexOf(c) < 0) continue;
         const b = mkBtn(c, 'accent');
         b.type = 'button';
