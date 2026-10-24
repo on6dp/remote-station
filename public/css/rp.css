@@ -433,7 +433,7 @@ input[type='range']:disabled { opacity: .45; }
 /* ------------------------------------------------------------ mesures */
 /* Panneau de la colonne de gauche : 2 colonnes de mesures */
 .meters-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 10px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--v2-text-header); }
-.m-mode { color: var(--v2-text-secondary); }
+.m-mode { color: var(--v2-text-bright); font-weight: 700; }
 .m-mode.tx { color: var(--v2-accent-red); }
 .meters-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .meters .mt { padding: 6px 8px; }
@@ -1172,11 +1172,13 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .panel-h:has(.ph-side) { white-space: nowrap; overflow: hidden; letter-spacing: 1.2px; }
 
 /* Libellés des réglages : curseurs en jaune, groupes de touches (AGC, Puissance) et volume d'écoute en blanc */
-:is([data-panel=rf], [data-panel=filter], [data-panel=audio], [data-panel=dsp], [data-panel=tx]) .ctl-label { color: var(--v2-text-bright); }
+:is([data-panel=rf], [data-panel=filter], [data-panel=audio], [data-panel=dsp], [data-panel=tx]) .ctl-label { color: var(--v2-text-bright); font-weight: 700; }
 :is([data-panel=rf], [data-panel=filter], [data-panel=audio], [data-panel=dsp], [data-panel=tx]) .ctl:has(input[type=range]) .ctl-label { color: var(--v2-accent-yellow); }
-[data-panel=audio] .listen .ctl .ctl-label { color: var(--v2-text-bright); }
+[data-panel=audio] .listen .ctl:has(input[type=range]) .ctl-label { color: var(--v2-text-bright); }
 /* Repères en jaune : Step, LOCK, onglets Activité / Synchro / Logs online, titres des listes des modes numériques */
 .tune-panel .toolbar > .tl:first-child { color: var(--v2-accent-yellow); }
 [data-ctl='lock']:not([aria-pressed='true']) { color: var(--v2-accent-yellow); }
 .ctab:is([data-tab='events'], [data-tab='sync'], [data-tab='log']) { color: var(--v2-accent-yellow); }
 .dg-h > span:first-child { color: var(--v2-accent-yellow); }
+/* Station meters : noms des mesures en jaune */
+.meters .mt-l { color: var(--v2-accent-yellow); font-weight: 700; }
