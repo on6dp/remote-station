@@ -86,7 +86,7 @@
   let lastDecode = 0;
   let lastBand = 0;
   let stationCalls = ['ON5VL', 'OR0L'];
-  let baseCalls = stationCalls.slice(); // indicatifs de la station ; + celui sous lequel on émet (« Émis sous »)
+  let baseCalls = stationCalls.slice(); // indicatifs de la station ; + celui sous lequel on émet (« TX call »)
 
 
   // ------------------------------------------------------------------ construction des onglets et des fenêtres
@@ -2403,7 +2403,7 @@
       return false;
     },
     onState() {
-      // « Émis sous » : indicatif des émissions numériques (station ou celui qui a la main)
+      // « TX call » : indicatif des émissions numériques (station ou celui qui a la main)
       const stx = api && api.state();
       const tc = stx && stx.txCall ? String(stx.txCall).toUpperCase() : '';
       if (tc && tc !== myCall) {

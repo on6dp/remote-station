@@ -186,7 +186,7 @@ All commands need **control** (« la main »), except listening, your volume and
 | `👁 Suivre` | Your dashboard follows the tab of the operator in control (section 3). |
 | `⧉` | Opens the digital modes in a separate window. |
 | **CORRESPONDANT** line, NOM, QTH, LOCATOR, REPORT, RST, `LOG QSO` | The station worked and its reports; LOG QSO saves it in the logbook (section 10). |
-| **ÉMIS SOUS** `ON5VL (station)` / `your callsign` | Callsign of digital transmissions (FT8 / FT4 / FT2, RTTY, JTTY): the station's or yours; chosen by the operator in control and remembered for next time. Messages Tx1 to Tx6, `<MYCALL>` macros and the logbook (Station) follow. A QSO logged under your callsign stays in the club logbook but is not uploaded automatically to the club's LoTW, eQSL, Club Log or QRZ (export ADIF for your own log). |
+| **TX CALL** `ON5VL (station)` / `your callsign` | Callsign of digital transmissions (FT8 / FT4 / FT2, RTTY, JTTY): the station's or yours; chosen by the operator in control and remembered for next time. Messages Tx1 to Tx6, `<MYCALL>` macros and the logbook (Station) follow. A QSO logged under your callsign stays in the club logbook but is not uploaded automatically to the club's LoTW, eQSL, Club Log or QRZ (export ADIF for your own log). |
 
 <a id="split"></a>
 ### 4.2 Operating SPLIT (transmit and receive on two frequencies)

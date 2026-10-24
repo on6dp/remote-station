@@ -929,7 +929,7 @@
     $('lampStation').setAttribute('aria-expanded', String(open));
   }
 
-  // « Émis sous » : indicatif des émissions numériques (station ou le sien), choisi par celui qui a la main
+  // « TX call » : indicatif des émissions numériques (station ou le sien), choisi par celui qui a la main
   let txcSent = null;
   function drawTxCall() {
     const sel = $('txCallSel');

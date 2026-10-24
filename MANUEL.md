@@ -186,7 +186,7 @@ Toutes les commandes demandent d'**avoir la main**, sauf l'écoute, le volume et
 | `👁 Suivre` | Votre dashboard suit l'onglet de celui qui a la main (section 3). |
 | `⧉` | Ouvre les modes numériques dans une fenêtre séparée. |
 | Ligne **CORRESPONDANT**, NOM, QTH, LOCATOR, REPORT, RST, `LOG QSO` | La station contactée et ses reports ; LOG QSO l'enregistre dans le carnet (section 10). |
-| **ÉMIS SOUS** `ON5VL (station)` / `votre indicatif` | Indicatif des émissions numériques (FT8 / FT4 / FT2, RTTY, JTTY) : celui de la station ou le vôtre ; choisi par celui qui a la main et retenu pour la prochaine fois. Les messages Tx1 à Tx6, les macros `<MYCALL>` et le carnet (Station) suivent. Un QSO enregistré sous votre indicatif reste dans le carnet du club mais n'est pas envoyé automatiquement vers LoTW, eQSL, Club Log ou QRZ du club (export ADIF pour votre carnet). |
+| **TX CALL** `ON5VL (station)` / `votre indicatif` | Indicatif des émissions numériques (FT8 / FT4 / FT2, RTTY, JTTY) : celui de la station ou le vôtre ; choisi par celui qui a la main et retenu pour la prochaine fois. Les messages Tx1 à Tx6, les macros `<MYCALL>` et le carnet (Station) suivent. Un QSO enregistré sous votre indicatif reste dans le carnet du club mais n'est pas envoyé automatiquement vers LoTW, eQSL, Club Log ou QRZ du club (export ADIF pour votre carnet). |
 
 <a id="split"></a>
 ### 4.2 Trafic en SPLIT (émission et réception sur deux fréquences)
