@@ -127,6 +127,7 @@
         <label title="Niveau du bruit de fond : plus à droite, le fond est plus clair">Zéro <input id="wfZero" type="range" min="-20" max="20" step="1" value="0"></label>
         <label title="Aplatit le bruit de fond sur toute la largeur (corrige la pente du filtre du TRX)"><input id="wfFlat" type="checkbox" checked> Plat</label>
         <select id="wfPal" aria-label="Couleurs de la cascade"><option value="jtdx">Couleurs : JTDX</option><option value="classic">Couleurs : bleu</option><option value="wsjtx">Couleurs : arc-en-ciel</option><option value="gray">Couleurs : gris</option></select>
+        <select id="wfSpd" aria-label="Vitesse de la cascade" title="Vitesse de défilement (comme « Spd » de JTDX) : plus lent = signaux plus ramassés et plus d'historique"><option value="1">Vitesse : rapide</option><option value="2">Vitesse : normale</option><option value="3">Vitesse : lente</option></select>
         <button class="dg-mini" type="button" id="wfReset" title="Réglages d'origine">↺</button>
       </div>
       <canvas id="dgScale" height="44"></canvas>
@@ -497,7 +498,8 @@
     gain: Number(store.get('wfgain', '0')) || 0,
     zero: Number(store.get('wfzero', '0')) || 0,
     flat: store.get('wfflat', '1') === '1',
-    pal: PALS[store.get('wfpal2', 'jtdx')] ? store.get('wfpal2', 'jtdx') : 'jtdx'
+    pal: PALS[store.get('wfpal2', 'jtdx')] ? store.get('wfpal2', 'jtdx') : 'jtdx',
+    spd: [1, 2, 3].indexOf(Number(store.get('wfspd', '2'))) >= 0 ? Number(store.get('wfspd', '2')) : 2
   };
   let PAL = mkPal(PALS[wfCfg.pal]);
   let floor = null;
@@ -511,8 +513,21 @@
     const tday = fine ? (((bytes[3] << 24) >>> 0) + (bytes[4] << 16) + (bytes[5] << 8) + bytes[6]) * 100 : null;
     const hdr = fine ? 7 : 1;
     const n = Math.min(bytes.length - hdr, Math.ceil(WF_MAX_HZ / df));
-    const vals = bytes.subarray(hdr, hdr + n);
+    let vals = bytes.subarray(hdr, hdr + n);
     if (tab === 'cw') { if (cwDf !== df) cwRows.length = 0; cwDf = df; cwRows.push(Uint8Array.from(vals)); if (cwRows.length > 12) cwRows.shift(); }
+    // Vitesse (comme « Spd » de JTDX) : 1, 2 ou 3 lignes reçues fondues en une (moyenne des puissances) ;
+    // plus lent = signaux plus ramassés, plus d'historique à l'écran
+    const spd = wfCfg.spd;
+    if (spd > 1) {
+      if (!wf.acc || wf.acc.length !== n) { wf.acc = new Float32Array(n); wf.accN = 0; }
+      const acc = wf.acc;
+      for (let k = 0; k < n; k++) acc[k] += Math.pow(10, vals[k] / 20);
+      if (++wf.accN < spd) return;
+      const m = new Uint8Array(n);
+      for (let k = 0; k < n; k++) { const v = Math.round(20 * Math.log10(acc[k] / wf.accN)); m[k] = v < 0 ? 0 : v > 255 ? 255 : v; acc[k] = 0; }
+      wf.accN = 0;
+      vals = m;
+    }
     // Plancher de bruit : médiane de la ligne, lissée
     const sorted = Array.from(vals).sort((a, b) => a - b);
     const med = sorted[sorted.length >> 1];
@@ -2336,13 +2351,14 @@
       $('dgDial').addEventListener('change', () => { store.set('dial.' + mode, $('dgDial').value); qsy(); });
       $('dgClear').addEventListener('click', () => { hist.length = 0; redrawAll(); });
       // Réglages de la cascade
-      const wfUi = () => { $('wfGain').value = wfCfg.gain; $('wfZero').value = wfCfg.zero; $('wfFlat').checked = wfCfg.flat; $('wfPal').value = wfCfg.pal; };
+      const wfUi = () => { $('wfGain').value = wfCfg.gain; $('wfZero').value = wfCfg.zero; $('wfFlat').checked = wfCfg.flat; $('wfPal').value = wfCfg.pal; $('wfSpd').value = String(wfCfg.spd); };
       wfUi();
       $('wfGain').addEventListener('input', () => { wfCfg.gain = Number($('wfGain').value); store.set('wfgain', String(wfCfg.gain)); });
       $('wfZero').addEventListener('input', () => { wfCfg.zero = Number($('wfZero').value); store.set('wfzero', String(wfCfg.zero)); });
       $('wfFlat').addEventListener('change', () => { wfCfg.flat = $('wfFlat').checked; store.set('wfflat', wfCfg.flat ? '1' : '0'); });
       $('wfPal').addEventListener('change', () => { wfCfg.pal = $('wfPal').value; PAL = mkPal(PALS[wfCfg.pal]); store.set('wfpal2', wfCfg.pal); });
-      $('wfReset').addEventListener('click', () => { Object.assign(wfCfg, { gain: 0, zero: 0, flat: true, pal: 'jtdx' }); PAL = mkPal(PALS.jtdx); for (const k of ['wfgain', 'wfzero']) store.set(k, '0'); store.set('wfflat', '1'); store.set('wfpal2', 'jtdx'); wfUi(); });
+      $('wfSpd').addEventListener('change', () => { wfCfg.spd = Number($('wfSpd').value) || 2; wf.accN = 0; if (wf.acc) wf.acc.fill(0); store.set('wfspd', String(wfCfg.spd)); });
+      $('wfReset').addEventListener('click', () => { Object.assign(wfCfg, { gain: 0, zero: 0, flat: true, pal: 'jtdx', spd: 2 }); PAL = mkPal(PALS.jtdx); for (const k of ['wfgain', 'wfzero']) store.set(k, '0'); store.set('wfflat', '1'); store.set('wfpal2', 'jtdx'); store.set('wfspd', '2'); wf.accN = 0; if (wf.acc) wf.acc.fill(0); wfUi(); });
       // Poignée sous la cascade : plus petite cascade = listes « Activité de bande » / « Fréquence RX » plus hautes
       const WF_DEF = 140;
       const setWfH = (h, save) => {
