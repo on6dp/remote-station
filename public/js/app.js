@@ -692,7 +692,7 @@
     if (st.radio.vox) return 'VOX actif au club : coupez-le d’abord';
     if (!st.txOk) return st.radio.txVfo === 1 ? 'VFO B (SPLIT) hors des bandes autorisées' : 'Hors des bandes autorisées';
     if (st.radio.power != null && st.radio.power > me.maxWatts) return 'Puissance au-delà de votre limite (' + me.maxWatts + ' W)';
-    if (st.swrLock) return 'ROS trop élevé ici (' + String(st.swrLock.swr).replace('.', ',') + ':1) : ' + (st.radio.tuner == null ? 'changez de fréquence ou vérifiez l’antenne' : 'faites TUNE d’abord');
+    if (st.swrLock) return st.swrLock.text || 'ROS trop élevé ici : ' + (st.radio.tuner == null ? 'changez de fréquence ou vérifiez l’antenne' : 'faites TUNE d’abord');
     return null;
   }
   function pttDown() {
@@ -1072,10 +1072,15 @@
     if (r.tuning) warnBand = null;
     const vhf = fNow != null && fNow > 60e6;
     if (vhf && Date.now() - warnAt > 20000) warnBand = null;
-    const showW = !!(live && warnBand && warnBand === bn && !$('panelTune').hidden);
-    if (showW && $('bandWarn').dataset.vhf !== String(vhf)) {
-      $('bandWarn').dataset.vhf = String(vhf);
-      $('bandWarn').innerHTML = vhf ? '⚠ Changement de bande : vérifiez le <b>SWR</b> (en bas à gauche) avant d’émettre.'
+    // TUNE sans accord (HI-SWR) : émission bloquée sur la bande, affiché en rouge tant que ça dure
+    const lockT = live && st.swrLock && st.swrLock.tune ? st.swrLock.band || '' : null;
+    const showW = lockT != null || !!(live && warnBand && warnBand === bn && !$('panelTune').hidden);
+    const kind = lockT != null ? 'lock:' + lockT : String(vhf);
+    if (showW && $('bandWarn').dataset.kind !== kind) {
+      $('bandWarn').dataset.kind = kind;
+      $('bandWarn').classList.toggle('lock', lockT != null);
+      $('bandWarn').innerHTML = lockT != null ? '⛔ TUNE sans accord (HI-SWR)' + (lockT ? ' sur le ' + lockT : '') + ' : <b>émission bloquée</b>. Refaites TUNE ou essayez l’autre antenne.'
+        : vhf ? '⚠ Changement de bande : vérifiez le <b>SWR</b> (en bas à gauche) avant d’émettre.'
         : '⚠ Changement de bande : <b>TUNE obligatoire</b>, puis vérifiez le <b>SWR</b> (en bas à gauche) avant d’émettre.';
     }
     $('bandWarn').hidden = !showW;
@@ -1180,7 +1185,8 @@
       case 'power_limit': return [c + 'puissance ramenée de ' + e.from + ' à ' + e.to + ' W', 'warn'];
       case 'rig_switch': return [c + 'passe sur le ' + (e.name || e.to), 'warn'];
       case 'tx_watchdog': return ['Sécurité : ' + (e.reason || 'retour en réception forcé'), 'warn'];
-      case 'swr_cut': return [c + 'émission coupée : ROS ' + String(e.swr).replace('.', ',') + ':1 sur ' + MHZ(e.freq), 'warn'];
+      case 'swr_cut': return [c + 'émission coupée : ' + (e.swr != null ? 'ROS ' + String(e.swr).replace('.', ',') + ':1' : 'HI-SWR signalé par le TRX') + ' sur ' + MHZ(e.freq), 'warn'];
+      case 'tune_fail': return [c + 'TUNE sans accord (HI-SWR) sur ' + MHZ(e.freq) + ' : émission bloquée sur cette bande', 'warn'];
       case 'station_online': return ['Station en ligne' + (e.model ? ' (' + e.model + ')' : ''), 'ok'];
       case 'station_offline': return ['Station hors ligne' + (e.why ? ' (' + e.why + ')' : ''), 'warn'];
       case 'trx_online': return ['TRX connecté', 'ok'];

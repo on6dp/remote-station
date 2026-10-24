@@ -346,7 +346,14 @@
             [this.freq, this.freqB, this.mode, this.modeB] = [this.freqB, this.freq, this.modeB, this.mode];
           } else if (c === 'AB') { this.freqB = this.freq; this.modeB = this.mode; }
           else if (c === 'BA') { this.freq = this.freqB; this.mode = this.modeB; }
-          else if (CONTROL.tune && c + ';' === CONTROL.tune.write()) { this.ans['AC;'] = spec.fakeTuning || 'AC001'; this.swrRaw = 40; }
+          else if (CONTROL.tune && c + ';' === CONTROL.tune.write()) {
+            this.ans['AC;'] = spec.fakeTuning || 'AC001';
+            this.swrRaw = 40;
+            if (this.ans['RI0;'] != null) {
+              this.ans['RI0;'] = 'RI00000100';
+              setTimeout(() => { this.ans['RI0;'] = 'RI0' + (this.tuneFail ? '1' : '0') + '000000'; }, this.tuneMs || 2000);
+            }
+          }
           else if (c === 'AI0') { /* auto-information coupée */ }
           else if ((m = /^BS([01])(\d\d)$/.exec(c)) && BAND_CODES) {
             const b = Object.keys(BAND_CODES).find((k) => BAND_CODES[k][0] === m[2]);

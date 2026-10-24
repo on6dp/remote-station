@@ -138,7 +138,8 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
   <li>Transmission only in the authorised bands, checked on the frequency actually transmitted (SPLIT and XIT included).</li>
   <li>Maximum length of one transmission: <b>120 s</b>, then cut; release the PTT before transmitting again.</li>
   <li>Immediate cut if you lose the link, if the club PC loses internet, or if the Station page closes.</li>
-  <li><b>SWR</b> above 2.5:1: transmission cut and PTT refused on that frequency (±25 kHz) until a TUNE.</li>
+  <li><b>SWR</b> above 2.5:1, or <b>HI-SWR</b> reported by the transceiver while transmitting: transmission cut and PTT refused on that frequency (±25 kHz) until a TUNE.</li>
+  <li><b>TUNE without a match</b>: if the FTX-1 reports HI-SWR at the end of a TUNE, transmitting is <b>blocked on the whole band</b> (PTT, digital modes; TUNE still allowed) to protect the PA. A red message appears to the right of the band row. The block is lifted as soon as a new TUNE succeeds; otherwise try the other antenna or tell a station manager.</li>
   <li>At the club, the transceiver is returned to receive if it transmits 2 min without modulation or 5 min without a break.</li>
   <li>Power limited to your licence class; listener callsigns: no transmission at all.</li>
 </ul></div>
@@ -164,7 +165,7 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
 <ul>
   <li><b>Decoding runs on the server</b>, on the server's (synchronised) clock: the clocks of your PC and of the club PC do not matter.</li>
   <li>Transceiver audio is only sent while someone listens or watches a digital-mode tab.</li>
-  <li>Choosing a frequency in a tab's list sends the transceiver there (<b>QSY</b>), in <b>DATA-U</b> (in CW for the CW tab) — you need control.</li>
+  <li>Choosing a frequency in a tab's list sends the transceiver there, in <b>DATA-U</b> (in CW for the CW tab) — you need control. The <span class="k">↺</span> button next to the list brings the transceiver back to that frequency after you have turned the VFO.</li>
   <li>Each tab has a <b>waterfall</b> (0 to 3000 Hz); a status line reports problems (station offline, audio not enabled, transceiver not in DATA-U…).</li>
   <li>Transmission is done as <b>ON5VL</b> in <b>FT8 · FT4 · FT2</b>, <b>RTTY</b> and <b>JTTY</b> (you need control and transmit enabled); WSPR, JT65, CW and SSTV are receive-only for now <span class="later">soon</span>.</li>
 </ul>

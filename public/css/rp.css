@@ -364,6 +364,8 @@ input[type='range']:disabled { opacity: .45; }
 .band-row .bands { flex: 0 1 auto; }
 .band-warn { flex: 1 1 260px; margin: 0 0 0 6px; text-align: left; color: var(--v2-accent-yellow); font-size: 12px; letter-spacing: .02em; line-height: 1.35; }
 .band-warn b { color: inherit; font-weight: 700; }
+.dg-back { min-width: 30px; padding-inline: 6px; font-size: 15px; line-height: 1; }
+.band-warn.lock { color: var(--v2-accent-red-alt); }
 .band-warn:not([hidden]) { animation: bandWarn 1s ease-in-out 3; }
 @keyframes bandWarn { 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { .band-warn:not([hidden]) { animation: none; } }

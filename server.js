@@ -85,7 +85,7 @@ fs.mkdirSync(LOG_DIR, { recursive: true });
 
 // ---------------------------------------------------------------- journal des accès
 // Événements visibles par les membres connectés (sans adresse IP)
-const PUBLIC_EVENTS = ['login', 'logout', 'control_take', 'control_release', 'tx_start', 'tx_stop', 'tune', 'power_limit', 'rig_switch', 'swr_cut', 'tx_watchdog',
+const PUBLIC_EVENTS = ['login', 'logout', 'control_take', 'control_release', 'tx_start', 'tx_stop', 'tune', 'power_limit', 'rig_switch', 'swr_cut', 'tune_fail', 'tx_watchdog',
   'station_online', 'station_offline', 'trx_online', 'trx_offline'];
 const recentEvents = [];
 function journal(ev, data) {
@@ -206,7 +206,8 @@ const txSide = () => (txSel ? 1 - rxSide() : rxSide());
 let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
-let swrLock = null;     // { freq, swr } : ROS trop élevé constaté à cette fréquence
+let swrLock = null;     // { freq, swr } : ROS trop élevé constaté à cette fréquence ; { tune: true, band } : accord impossible sur cette bande
+let tuneWatch = null;   // accord en cours de suivi { freq, at, saw, endAt, call }
 let swrHighSince = 0;
 // Audio BF du TRX : la station n'envoie le son que si au moins un membre écoute
 let audio = { active: false, want: false, frames: 0 };
@@ -733,9 +734,45 @@ function txFreq() {
   return base + (radio.xit ? radio.clar || 0 : 0);
 }
 
+// Suivi d'un accord lancé par TUNE : accord vu en cours (AC / RI / émission), puis fini → verdict d'après le HI-SWR du TRX
+function checkTune() {
+  const w = tuneWatch;
+  const now = Date.now();
+  const busy = !!(radio.tuning || radio.tuningRi || radio.tx);
+  if (busy) { w.saw = true; w.endAt = 0; } else if (w.saw && !w.endAt) w.endAt = now;
+  // Accord trop long : pas de verdict
+  if (now - w.at > 60000) { tuneWatch = null; return; }
+  // Accord jamais vu en cours (trop court pour les lectures) : verdict au bout de 8 s, seulement pour bloquer
+  const unseen = !w.saw && now - w.at > 8000;
+  // Fin d'accord : on attend une relecture de RI (1 s) avant de conclure
+  if (!unseen && (!w.endAt || now - w.endAt < 1600)) return;
+  tuneWatch = null;
+  if (radio.hiSwr == null) return; // TRX qui ne dit pas s'il a trouvé un accord
+  if (unseen && radio.hiSwr !== 1) return;
+  const band = LB.bandOf(w.freq / 1e6);
+  if (radio.hiSwr === 1) {
+    swrLock = { freq: w.freq, swr: null, tune: true, band: band || null };
+    journal('tune_fail', { call: w.call, freq: w.freq });
+    const msg = 'TUNE : pas d’accord possible (HI-SWR)' + (band ? ' sur le ' + band : '') + '. Émission bloquée' + (band ? ' sur cette bande' : ' sur cette fréquence') +
+      ' pour protéger le PA : refaites TUNE, essayez l’autre antenne ou prévenez un responsable de la station.';
+    for (const c of ops) send(c, { t: 'notice', level: 'error', msg });
+  } else if (swrLock && swrLock.tune) {
+    swrLock = null;
+    if (w.conn) send(w.conn, { t: 'notice', level: 'info', msg: 'Accord réussi : émission de nouveau possible' + (band ? ' sur le ' + band : '') + '.' });
+  }
+}
+
 function swrLocked() {
   const f = txFreq();
-  return !!(swrLock && f != null && Math.abs(f - swrLock.freq) < 25000);
+  if (!swrLock || f == null) return false;
+  if (swrLock.band) return LB.bandOf(f / 1e6) === swrLock.band; // accord impossible : toute la bande
+  return Math.abs(f - swrLock.freq) < 25000;
+}
+function swrLockText() {
+  if (swrLock.tune) return 'le dernier TUNE n’a pas trouvé d’accord (HI-SWR) sur le ' + swrLock.band +
+    ' : émission bloquée sur cette bande — refaites TUNE, essayez l’autre antenne ou prévenez un responsable de la station';
+  return 'ROS trop élevé sur cette fréquence' + (swrLock.swr != null ? ' (' + swrLock.swr.toFixed(1).replace('.', ',') + ':1)' : ' (HI-SWR du TRX)') + ' : ' +
+    (radio.tuner == null ? 'changez de fréquence ou faites vérifier l’antenne' : 'faites d’abord un accord (TUNE)');
 }
 
 // Raison qui empêche cet opérateur d'émettre (PTT ou TUNE), ou null
@@ -751,8 +788,7 @@ function txBlockReason(conn, forTune) {
     radio.power == null ? 'puissance du TRX inconnue' :
     radio.power > conn.user.maxWatts ? 'puissance ' + radio.power + ' W au-delà de votre limite (' + conn.user.maxWatts + ' W)' :
     forTune && radio.tuner == null ? 'pas de boîte d’accord sur ce TRX (FTX-1 : ampli SPA-1 débranché ?)' :
-    !forTune && swrLocked() ? 'ROS trop élevé sur cette fréquence (' + swrLock.swr.toFixed(1).replace('.', ',') + ':1) : ' +
-      (radio.tuner == null ? 'changez de fréquence ou faites vérifier l’antenne' : 'faites d’abord un accord (TUNE)') :
+    !forTune && swrLocked() ? swrLockText() :
     null;
 }
 
@@ -772,7 +808,7 @@ function publicState() {
     ftx: ftxPend ? { id: ftxPend.id, state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call, seconds: ftxPend.seconds } : null,
     txOk: inTxRange(txFreq()),
     txFreq: txFreq(),
-    swrLock: swrLocked() ? { freq: swrLock.freq, swr: Math.round(swrLock.swr * 10) / 10 } : null,
+    swrLock: swrLocked() ? { freq: swrLock.freq, swr: swrLock.swr != null ? Math.round(swrLock.swr * 10) / 10 : null, tune: !!swrLock.tune, band: swrLock.band || null, text: swrLockText() } : null,
     maxSwr: cfg.maxSwr,
     audio: { active: !!(station && audio.active), listeners: listeners() },
     digi: { modes: Array.from(digiModes()), latency: digi.latency },
@@ -1657,7 +1693,10 @@ function onOperator(conn, m) {
             return send(conn, { t: 'notice', level: 'error', msg: c.label + ' refusé : ' + why });
           }
           journal('tune', { call: conn.user.call, ip: conn.ip, freq: txFreq(), watts: radio.power });
-          swrLock = null; // l'accord est justement ce qu'il fallait faire ; si le ROS reste mauvais, la coupure recommencera
+          // ROS mesuré trop haut : l'accord est justement ce qu'il fallait faire (si le ROS reste mauvais, la coupure recommencera).
+          // Accord impossible (HI-SWR) : le blocage ne tombe que si ce nouvel accord réussit.
+          if (!(swrLock && swrLock.tune)) swrLock = null;
+          tuneWatch = { freq: txFreq(), at: Date.now(), saw: false, endAt: 0, call: conn.user.call, conn };
         }
         toStation({ t: 'cmd', op: 'ctl', id: m.ctl, value: v, by: conn.user.call, subOk: !!cfg.ftx1SubCat });
         if (c.type !== 'action') radio[m.ctl] = v; // affichage optimiste
@@ -1884,6 +1923,14 @@ function onStation(conn, m) {
     limitPower(c, 'dépassement');
   } else if (controller && radio.power != null && radio.power > controller.user.maxWatts) {
     limitPower(controller, 'dépassement');
+  }
+  // Protection du PA : résultat de l'accord. Le TRX signale HI-SWR après le TUNE → émission bloquée sur toute la bande
+  if (tuneWatch) checkTune();
+  // Protection du PA : le TRX signale lui-même HI-SWR pendant une émission par le PTT
+  if (ptt.active && radio.hiSwr === 1 && !radio.tuning && !radio.tuningRi && !tuneWatch) {
+    swrLock = { freq: txFreq(), swr: null };
+    journal('swr_cut', { call: ptt.conn.user.call, freq: txFreq(), swr: null, hi: true });
+    stopPtt('le TRX signale HI-SWR — ' + (radio.tuner == null ? 'changez de fréquence ou faites vérifier l’antenne' : 'faites un accord (TUNE) avant de réémettre'));
   }
   // Protection du PA : ROS trop élevé pendant une émission par le PTT (pas pendant un accord)
   const swr = ptt.active && !radio.tuning && radio.m6 != null && rig().swrValue ? rig().swrValue(radio.m6) : null;

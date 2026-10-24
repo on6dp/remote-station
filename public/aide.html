@@ -139,7 +139,8 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
   <li>Émission seulement dans les bandes autorisées, vérifiée sur la fréquence réellement émise (SPLIT et XIT compris).</li>
   <li>Durée maximale d'une émission : <b>120 s</b>, puis coupure ; relâchez le PTT avant de réémettre.</li>
   <li>Coupure immédiate si vous perdez la liaison, si le PC du club perd internet ou si la page Station se ferme.</li>
-  <li><b>ROS</b> supérieur à 2,5:1 : émission coupée et PTT refusé sur cette fréquence (±25 kHz) jusqu'à un TUNE.</li>
+  <li><b>ROS</b> supérieur à 2,5:1, ou <b>HI-SWR</b> signalé par le TRX pendant une émission : émission coupée et PTT refusé sur cette fréquence (±25 kHz) jusqu'à un TUNE.</li>
+  <li><b>TUNE sans accord</b> : si le FTX-1 signale HI-SWR à la fin d'un TUNE, l'émission est <b>bloquée sur toute la bande</b> (PTT, modes numériques, TUNE excepté) pour protéger le PA. Un message rouge s'affiche à droite de la ligne des bandes. Le blocage tombe dès qu'un nouveau TUNE réussit ; sinon, essayer l'autre antenne ou prévenir un responsable de la station.</li>
   <li>Au club, le TRX est repassé en réception s'il émet 2 min sans modulation ou 5 min sans interruption.</li>
   <li>Puissance ramenée à la limite de votre licence ; indicatifs d'écouteurs : aucune émission.</li>
 </ul></div>
@@ -165,7 +166,7 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
 <ul>
   <li>Le <b>décodage se fait sur le serveur</b>, à l'heure du serveur (synchronisée) : l'heure de votre PC et de celui du club n'a pas d'importance.</li>
   <li>La BF du TRX n'est envoyée que si quelqu'un écoute ou regarde un onglet de mode numérique.</li>
-  <li>Choisir une fréquence dans la liste d'un onglet y envoie le TRX (<b>QSY</b>), en <b>DATA-U</b> (en CW pour l'onglet CW) — il faut avoir la main.</li>
+  <li>Choisir une fréquence dans la liste d'un onglet y envoie le TRX, en <b>DATA-U</b> (en CW pour l'onglet CW) — il faut avoir la main. Le bouton <span class="k">↺</span> à côté de la liste ramène le TRX sur cette fréquence après avoir tourné le VFO.</li>
   <li>Chaque onglet a une <b>cascade</b> (0 à 3000 Hz) ; une ligne d'état signale les problèmes (station hors ligne, BF non activée, TRX pas en DATA-U…).</li>
   <li>L'émission se fait sous l'indicatif <b>ON5VL</b> en <b>FT8 · FT4 · FT2</b>, <b>RTTY</b> et <b>JTTY</b> (il faut avoir la main et l'émission autorisée) ; WSPR, JT65, CW et SSTV sont en réception seulement <span class="later">bientôt</span>.</li>
 </ul>

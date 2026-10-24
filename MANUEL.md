@@ -126,7 +126,8 @@ Cadre **Antenne**, en haut à gauche : `ANT 1` / `ANT 2` sur le FTX-1 (prises de
 > - Émission seulement dans les bandes autorisées, vérifiée sur la fréquence réellement émise (SPLIT et XIT compris).
 > - Durée maximale d'une émission : **120 s**, puis coupure ; relâchez le PTT avant de réémettre.
 > - Coupure immédiate si vous perdez la liaison, si le PC du club perd internet ou si la page Station se ferme.
-> - **ROS** supérieur à 2,5:1 : émission coupée et PTT refusé sur cette fréquence (±25 kHz) jusqu'à un TUNE.
+> - **ROS** supérieur à 2,5:1, ou **HI-SWR** signalé par le TRX pendant une émission : émission coupée et PTT refusé sur cette fréquence (±25 kHz) jusqu'à un TUNE.
+> - **TUNE sans accord** : si le FTX-1 signale HI-SWR à la fin d'un TUNE, l'émission est **bloquée sur toute la bande** (PTT, modes numériques, TUNE excepté) pour protéger le PA. Un message rouge s'affiche à droite de la ligne des bandes. Le blocage tombe dès qu'un nouveau TUNE réussit ; sinon, essayer l'autre antenne ou prévenir un responsable de la station.
 > - Au club, le TRX est repassé en réception s'il émet 2 min sans modulation ou 5 min sans interruption.
 > - Puissance ramenée à la limite de votre licence ; indicatifs d'écouteurs : aucune émission.
 
@@ -154,7 +155,7 @@ Les onglets du centre : **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT6
 
 - Le **décodage se fait sur le serveur**, à l'heure du serveur (synchronisée) : l'heure de votre PC et de celui du club n'a pas d'importance.
 - La BF du TRX n'est envoyée que si quelqu'un écoute ou regarde un onglet de mode numérique.
-- Choisir une fréquence dans la liste d'un onglet y envoie le TRX (**QSY**), en **DATA-U** (en CW pour l'onglet CW) — il faut avoir la main.
+- Choisir une fréquence dans la liste d'un onglet y envoie le TRX, en **DATA-U** (en CW pour l'onglet CW) — il faut avoir la main. Le bouton `↺` à côté de la liste ramène le TRX sur cette fréquence après avoir tourné le VFO.
 - Chaque onglet a une **cascade** (0 à 3000 Hz) ; une ligne d'état signale les problèmes (station hors ligne, BF non activée, TRX pas en DATA-U…).
 - L'émission se fait sous l'indicatif **ON5VL** en **FT8 · FT4 · FT2**, **RTTY** et **JTTY** (il faut avoir la main et l'émission autorisée) ; WSPR, JT65, CW et SSTV sont en réception seulement *(bientôt)*.
 

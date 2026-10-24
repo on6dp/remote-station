@@ -126,7 +126,8 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 > - Transmission only in the authorised bands, checked on the frequency actually transmitted (SPLIT and XIT included).
 > - Maximum length of one transmission: **120 s**, then cut; release the PTT before transmitting again.
 > - Immediate cut if you lose the link, if the club PC loses internet, or if the Station page closes.
-> - **SWR** above 2.5:1: transmission cut and PTT refused on that frequency (±25 kHz) until a TUNE.
+> - **SWR** above 2.5:1, or **HI-SWR** reported by the transceiver while transmitting: transmission cut and PTT refused on that frequency (±25 kHz) until a TUNE.
+> - **TUNE without a match**: if the FTX-1 reports HI-SWR at the end of a TUNE, transmitting is **blocked on the whole band** (PTT, digital modes; TUNE still allowed) to protect the PA. A red message appears to the right of the band row. The block is lifted as soon as a new TUNE succeeds; otherwise try the other antenna or tell a station manager.
 > - At the club, the transceiver is returned to receive if it transmits 2 min without modulation or 5 min without a break.
 > - Power limited to your licence class; listener callsigns: no transmission at all.
 
@@ -154,7 +155,7 @@ The centre tabs: **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT65**, **
 
 - **Decoding runs on the server**, on the server's (synchronised) clock: the clocks of your PC and of the club PC do not matter.
 - Transceiver audio is only sent while someone listens or watches a digital-mode tab.
-- Choosing a frequency in a tab's list sends the transceiver there (**QSY**), in **DATA-U** (in CW for the CW tab) — you need control.
+- Choosing a frequency in a tab's list sends the transceiver there, in **DATA-U** (in CW for the CW tab) — you need control. The `↺` button next to the list brings the transceiver back to that frequency after you have turned the VFO.
 - Each tab has a **waterfall** (0 to 3000 Hz); a status line reports problems (station offline, audio not enabled, transceiver not in DATA-U…).
 - Transmission is done as **ON5VL** in **FT8 · FT4 · FT2**, **RTTY** and **JTTY** (you need control and transmit enabled); WSPR, JT65, CW and SSTV are receive-only for now *(soon)*.
 

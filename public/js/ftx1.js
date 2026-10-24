@@ -74,13 +74,15 @@
       { cmd: 'BP11;', re: /^BP11(\d{3})$/, parse: (m) => ({ notchFreqB: +m[1] * 10 }), sim: 'BP11150' },
       { cmd: 'IS1;', re: /^IS1[01]([+-])(\d{4})$/, parse: (m) => ({ shiftB: (m[1] === '-' ? -1 : 1) * +m[2] }), sim: 'IS10+0000' },
       { cmd: 'CO10;', re: /^CO10(\d{4})$/, parse: (m) => ({ contourB: +m[1] ? 1 : 0 }), sim: 'CO100000' },
-      { cmd: 'CO12;', re: /^CO12(\d{4})$/, parse: (m) => ({ apfB: +m[1] ? 1 : 0 }), sim: 'CO120000' }
+      { cmd: 'CO12;', re: /^CO12(\d{4})$/, parse: (m) => ({ apfB: +m[1] ? 1 : 0 }), sim: 'CO120000' },
+      // RADIO INFORMATION (manuel CAT) : RI0 P2 … P8 — P2 1 = Hi-SWR, P6 1 = tuner en cours d'accord
+      { cmd: 'RI0;', re: /^RI0(\d)(\d)(\d)(\d)(\d)(\d)(\d)$/, parse: (m) => ({ hiSwr: m[1] === '1' ? 1 : 0, tuningRi: m[5] === '1' ? 1 : 0 }), sim: 'RI00000000' }
     ],
     // Console CAT : lectures supplémentaires pour le diagnostic (ATT / préampli par côté)
     // + tuner : AC (état), RI0 (accord en cours), menus TUN/LIN PORT SELECT (EX030103), TUNER SELECT (EX030104),
     // TUNER TYPE SEL ANT1 / ANT2 (EX030701 / EX030702) — numéros du manuel CAT FTX-1 (Table 3)
     extraQueries: ['RA1;', 'PA0;', 'PA1;', 'PA2;', 'AC;', 'RI0;', 'EX030103;', 'EX030104;', 'EX030701;', 'EX030702;'],
-    extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
+    extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'hiSwr', 'tuningRi'],
     subBadges: true,
     // PA0 / RA0 lus avec le côté SUB actif : ce sont l'ATT et le préampli du VFO B
     remapRead(p, r) {

@@ -107,7 +107,7 @@
         <button class="btn" type="button" data-mode="FT2" aria-pressed="false" title="FT2 de Decodium (IU8LMC) : périodes de 3,75 s">FT2</button>
       </div>
       <select id="dgDial" aria-label="Fréquence d'appel"></select>
-      <button class="btn" type="button" id="dgQsy" title="Met le VFO A sur la fréquence choisie, en DATA-U">QSY</button>
+      <button class="btn dg-back" type="button" id="dgQsy" title="Revenir sur cette fréquence (VFO A, en DATA-U)" aria-label="Revenir sur cette fréquence (VFO A, en DATA-U)">↺</button>
       <span class="dg-split">
         <span class="dg-f rx">RX <b id="dgRxF2">1500</b> Hz</span>
         <button class="btn" type="button" id="dgTxRx" title="Émettre sur la fréquence de réception">TX ← RX</button>
@@ -159,7 +159,7 @@
       <label class="rt-sq" title="Seuil de contraste Mark/Space : plus haut = moins de caractères au hasard sur le bruit">Silencieux
         <input type="range" id="rtSq" min="4" max="25" step="1" aria-label="Silencieux"><output id="rtSqV">12</output></label>
       <select id="rtDial" aria-label="Fréquence RTTY"></select>
-      <button class="btn" type="button" id="rtQsy" title="Met le VFO A sur la fréquence choisie, en DATA-U">QSY</button>
+      <button class="btn dg-back" type="button" id="rtQsy" title="Revenir sur cette fréquence (VFO A, en DATA-U)" aria-label="Revenir sur cette fréquence (VFO A, en DATA-U)">↺</button>
       <span class="rt-tune" title="Accord : les deux barres doivent battre en alternance"><span>M</span><i><b id="rtM"></b></i><span>S</span><i><b id="rtS"></b></i></span>
       <span class="dg-f rx">Centre <b id="rtF">1500</b> Hz</span>
       <span class="dg-status" id="rtStatus"></span>
@@ -187,7 +187,7 @@
   const WSPR_PANE = `
     <div class="dg-bar">
       <select id="wsDial" aria-label="Fréquence WSPR"></select>
-      <button class="btn" type="button" id="wsQsy" title="Met le VFO A sur la fréquence WSPR choisie">QSY</button>
+      <button class="btn dg-back" type="button" id="wsQsy" title="Revenir sur cette fréquence WSPR (VFO A)" aria-label="Revenir sur cette fréquence WSPR (VFO A)">↺</button>
       <span class="dg-f">Bande WSPR : <b>1400 – 1600 Hz</b> audio</span>
       <span class="dg-clock" id="wsClock">--:--</span>
       <span class="dg-status" id="wsStatus"></span>
@@ -201,7 +201,7 @@
   const JTTY_PANE = `
     <div class="dg-bar">
       <select id="jtDial" aria-label="Fréquence JTTY"></select>
-      <button class="btn" type="button" id="jtQsy" title="Met le VFO A sur la fréquence JTTY choisie, en DATA-U">QSY</button>
+      <button class="btn dg-back" type="button" id="jtQsy" title="Revenir sur cette fréquence JTTY (VFO A, en DATA-U)" aria-label="Revenir sur cette fréquence JTTY (VFO A, en DATA-U)">↺</button>
       <span class="dg-f rx">RX <b id="jtRxF">1500</b> Hz</span>
       <span class="dg-f tx">TX <b id="jtTxF">1500</b> Hz</span>
       <span class="dg-note">4-GFSK · 31,25 bauds · 127 Hz · trames de 1,9 s, à tout moment</span>
@@ -231,7 +231,7 @@
   const CW_PANE = `
     <div class="dg-bar">
       <select id="cwDial" aria-label="Fréquence CW"></select>
-      <button class="btn" type="button" id="cwQsy" title="Met le VFO A sur la fréquence choisie, en CW">QSY</button>
+      <button class="btn dg-back" type="button" id="cwQsy" title="Revenir sur cette fréquence (VFO A, en CW)" aria-label="Revenir sur cette fréquence (VFO A, en CW)">↺</button>
       <select id="cwBw" aria-label="Filtre du décodeur" title="Largeur du filtre du décodeur : étroit = moins de bruit et de QRM, mais il faut être bien calé"><option value="50">Filtre 50 Hz</option><option value="100">Filtre 100 Hz</option><option value="200">Filtre 200 Hz</option><option value="400">Filtre 400 Hz</option></select>
       <label class="rt-sq" title="Niveau minimal du signal au-dessus du bruit : plus haut = moins de lettres au hasard sur le bruit">Silencieux
         <input type="range" id="cwSq" min="0" max="20" step="1" aria-label="Silencieux"><output id="cwSqV">5</output></label>
@@ -263,7 +263,7 @@
   const SSTV_PANE = `
     <div class="dg-bar">
       <select id="ssDial" aria-label="Fréquence SSTV"></select>
-      <button class="btn" type="button" id="ssQsy" title="Met le VFO A sur la fréquence SSTV choisie">QSY</button>
+      <button class="btn dg-back" type="button" id="ssQsy" title="Revenir sur cette fréquence SSTV (VFO A)" aria-label="Revenir sur cette fréquence SSTV (VFO A)">↺</button>
       <span class="dg-f">Image : <b>1500 – 2300 Hz</b> · synchro 1200 Hz</span>
       <span class="ss-prog"><i><b id="ssProg"></b></i><span id="ssProgT"></span></span>
       <span class="dg-status" id="ssStatus"></span>
