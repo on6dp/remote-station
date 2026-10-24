@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.28** — FTX-1 en réception simple (DUAL RX coupé), MAIN actif : changer la bande du VFO B ne passe plus par BAND SELECT (« BS1… » refusé par le TRX, côté SUB arrêté) mais règle directement la fréquence habituelle de la bande sur le VFO B. Ctrl+F5 sur le dashboard suffit.
 - **0.22.27** — FTX-1 : bouton **DUAL RX** sur la ligne des pas (double réception FR00 / réception simple FR01). En double réception, la BF du TRX contient aussi le côté SUB (constaté au club : FT8 du 20 m décodé pendant un trafic QO-100 sur MAIN) ; DUAL RX coupé, seul le côté actif est entendu et décodé. Comprend la 0.22.26 (S-mètre SUB par RM2, VFO B en réception en double réception). **Recharger la page Station.**
 - **0.22.26** — FTX-1 en **double réception** (constaté au club : le TRX ne répond pas à SM1) : S-mètre du côté SUB lu par READ METER « RM2 » (manuel CAT) et affiché sur le VFO B ; les deux VFO ont RX en vert et leur fréquence n’est plus grisée, comme sur l’écran du TRX. Déroulé d’un passage MAIN / SUB réussi plus affiché (journal seulement). **Recharger la page Station.**
 - **0.22.25** — FTX-1, S-mètre des deux VFO : en **double réception** (FR00), S-mètre du côté SUB (SM1) sur le VFO B ; en **réception simple** (FR01, le TRX ne répond pas à SM1 et SM0 donne le côté actif), le S-mètre s’affiche sur le VFO du côté actif (MAIN → A, SUB → B), l’autre est grisé. SM1 n’est plus demandé en réception simple. **Recharger la page Station.**
