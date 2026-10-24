@@ -26,7 +26,7 @@
 - [11. Raccourcis clavier](#clavier)
 - [12. Problèmes fréquents](#problemes)
 - [13. Le PC du club (page Station)](#club)
-- [14. Logs online (carnet de trafic)](#logs)
+- [14. Logs (carnet de trafic)](#logs)
 
 > [!NOTE]
 > Le dashboard fonctionne dans un navigateur récent (Chrome, Edge, Firefox) sur PC, Mac, tablette ou téléphone. Il est conçu pour un écran de **1920 × 1080** ou plus ; sur un écran plus petit, les cadres se réorganisent. Après une mise à jour du serveur, faites `Ctrl` + `F5` pour recharger la page.
@@ -170,7 +170,7 @@ Les onglets du centre : **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT6
 - **Double-clic** sur un message : son émetteur devient le correspondant (indicatif, locator, report) et les messages Tx1 à Tx6 se préparent.
 - **Émettre** (comme « Enable Tx » + « Auto Seq » de WSJT-X) : un clic sur un message **Tx1 à Tx7** (sous les listes de l'onglet, comme dans WSJT-X) le fait partir **à chaque période** (une sur deux), jusqu'à la réponse. Il faut avoir la main, le VFO d'émission en **DATA-U** et une puissance dans votre limite. Le message émis s'affiche en jaune dans les listes ; la barre sous les listes est verte en réception, rouge en émission.
 - **La séquence avance toute seule** d'après ce que répond le correspondant : son locator → Tx2 (report) ; son report → Tx3 (R+report) ; R+report → Tx4 (RR73) ; RRR ou RR73 → Tx5 (73). Après l'envoi du RR73 ou du 73 : fin du QSO, émission coupée, retour sur Tx6 (CQ) et proposition d'**enregistrer le QSO dans le carnet**.
-- **Répondre au 1er** : en appel CQ (Tx6), la station qui vous répond devient le correspondant et la séquence démarre sans clic (« Call 1st » de WSJT-X). Pour répondre à un CQ : double-clic sur son message, puis clic sur Tx1.
+- **Répondre au 1er** : en appel CQ (Tx6), la station qui vous répond devient le correspondant et la séquence démarre sans clic (« Call 1st » de WSJT-X). **Pour répondre à un CQ : double-clic sur son message** (avec la main) : le TRX émet Tx1 à la période suivante, dans l'autre période que la station, puis la séquence avance toute seule, comme WSJT-X. Un simple clic ne fait que caler la réception (pas d'émission par erreur). Notre propre émission n'est plus décodée une 2e fois dans les listes.
 - **Période** : « auto » émet dans l'autre période que le correspondant (double-clic sur son message), sinon garde celle du premier message ; « 1re » / « 2e » l'imposent (1re = 00 et 30 s en FT8).
 - **Réglages de la cascade** (au-dessus de l'échelle, comme dans WSJT-X) : **Gain** = contraste (à droite, les signaux faibles ressortent), **Zéro** = niveau du fond, **Plat** = fond égal sur toute la largeur (corrige la pente du filtre du TRX), trois jeux de couleurs, ↺ = réglages d'origine. Ils valent pour toutes les cascades (FT8, RTTY, CW…) et restent mémorisés dans votre navigateur.
 - **Poignée sous la cascade** : la glisser vers le haut agrandit les listes de messages (double-clic : taille d'origine).
@@ -285,16 +285,16 @@ La page Station est **réservée aux administrateurs** : à la première ouvertu
 
 1. Coller le **jeton de station** (donné par l'administrateur du serveur), choisir le **modèle** du TRX et son **port CAT** (la première fois). FTX-1 : l'**Enhanced COM Port** (CAT-1), et sur le TRX les réglages **RPTT SELECT** et **PC KEYING** sur OFF (réglage d'usine) : l'émission se commande par CAT.
 2. **Activer l'audio** et choisir l'entrée son du TRX (souvent « USB Audio CODEC ») ; la barre de niveau doit bouger.
-3. **Sortie son vers le TRX** (émission FT8 / FT4 / FT2) : la carte son USB du TRX (« Haut-parleurs (USB Audio CODEC) »…), choisie toute seule si possible. Jamais les haut-parleurs du PC. Le TRX doit prendre la modulation DATA sur l'USB (menu du TRX). Régler le **niveau d'émission** pour que l'ALC reste faible. L'émission part à l'heure du VPS, même si l'horloge de Windows est décalée.
+3. **Sortie son vers le TRX** (émission FT8 / FT4 / FT2) : la carte son USB du TRX (« Haut-parleurs (USB Audio CODEC) »…), choisie toute seule si possible. Jamais les haut-parleurs du PC. Le TRX doit prendre la modulation DATA sur l'USB (menu du TRX). Régler le **niveau d'émission** pour que l'ALC reste faible : en émission numérique (FT8 / FT4 / FT2, RTTY, JTTY…), la page Station le **baisse toute seule** dès que l'ALC dépasse **8 %**, pendant l'émission, et garde le niveau atteint pour les émissions suivantes (message « ALC … ramené de 30 à 24 % » chez celui qui a la main). Il ne remonte jamais tout seul : une puissance un peu faible en FT8 se corrige avec le réglage de puissance du TRX, pas avec la BF. L'émission part à l'heure du VPS, même si l'horloge de Windows est décalée.
 4. Garder la page Station **seule dans sa fenêtre** ; ouvrir le dashboard avec son bouton « Ouvrir le dashboard dans une autre fenêtre ».
 5. Chrome → Paramètres → Performances : garder remote.op0p.be toujours actif ; Windows : mise en veille sur Jamais.
 
 Installation et réglages du serveur : voir `LISEZMOI.md` et `README.md` (dépôt du projet).
 
 <a id="logs"></a>
-## 14. Logs online (carnet de trafic)
+## 14. Logs (carnet de trafic)
 
-Onglet **Logs online** (le dernier, à droite de Synchro) : le carnet de trafic de la station, partagé par tous les membres, avec l'envoi vers **LoTW**, **eQSL**, **Club Log** et **QRZ.com**, l'export **ADIF** ou **Cabrillo** et l'envoi en **UDP** aux logbooks du PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
+Onglet **Logs** (à droite de Synchro) : le carnet de trafic de la station, partagé par tous les membres, avec l'envoi vers **LoTW**, **eQSL**, **Club Log** et **QRZ.com**, l'export **ADIF** ou **Cabrillo** et l'envoi en **UDP** aux logbooks du PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
 
 - **Enregistrer un QSO** : `⇩ TRX` reprend la fréquence et le mode du TRX (en DATA : le mode de l'onglet affiché, FT8, RTTY…), la puissance, et la ligne Correspondant (indicatif, prénom, QTH, locator). L'heure UTC est prise à la première lettre de l'indicatif ; `⟳ Maintenant` la remet à l'heure. `Entrée` ou `Enregistrer le QSO`. Un doublon (même indicatif, bande et mode dans la demi-heure) est signalé avant l'enregistrement.
 - **Sans quitter l'onglet RTTY, JTTY ou CW** : bouton `Log QSO` (à côté de « Émettre », et au bout de la ligne Correspondant), comme « Save QSO » de FLDIGI. Une fiche s'ouvre, déjà remplie : indicatif, prénom, QTH, locator et RST du correspondant, fréquence (en RTTY : celle du signal, porteuse + fréquence audio) et mode de l'onglet, puissance, heure de début (quand le correspondant a été choisi) et de fin (maintenant). Corriger au besoin (RST reçu…), puis `Enregistrer dans le carnet`. Une macro qui contient `<LOG>` (par exemple le « 73 ») ouvre aussi cette fiche.

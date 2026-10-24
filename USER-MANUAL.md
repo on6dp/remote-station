@@ -26,7 +26,7 @@
 - [11. Keyboard shortcuts](#keys)
 - [12. Troubleshooting](#trouble)
 - [13. The club PC (Station page)](#club)
-- [14. Logs online (station logbook)](#logs)
+- [14. Logs (station logbook)](#logs)
 
 > [!NOTE]
 > The dashboard runs in any recent browser (Chrome, Edge, Firefox) on a PC, Mac, tablet or phone. It is designed for a **1920 × 1080** screen or larger; on smaller screens the panels rearrange themselves. The interface is in French; the button and panel names are quoted below as they appear on screen. After a server update, press `Ctrl` + `F5` to reload the page.
@@ -170,7 +170,7 @@ The centre tabs: **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT65**, **
 - **Double-click** a message: its sender becomes the contact (callsign, locator, report) and messages Tx1 to Tx6 are prepared.
 - **Transmitting** (like « Enable Tx » + « Auto Seq » in WSJT-X): clicking a message **Tx1 to Tx7** (below the lists of the tab, as in WSJT-X) sends it **every period** (one in two) until an answer comes. You need control, the TX VFO in **DATA-U** and power within your limit. The sent message shows in yellow in the lists; the bar under the lists is green while receiving, red while transmitting.
 - **The sequence advances by itself** from the contact's answers: his locator → Tx2 (report); his report → Tx3 (R+report); R+report → Tx4 (RR73); RRR or RR73 → Tx5 (73). After sending RR73 or 73: end of QSO, transmission stops, back to Tx6 (CQ) and an offer to **save the QSO in the logbook**.
-- **Répondre au 1er** (answer the first): while calling CQ (Tx6), the station answering you becomes the contact and the sequence starts without a click (« Call 1st » in WSJT-X). To answer a CQ: double-click his message, then click Tx1.
+- **Répondre au 1er** (answer the first): while calling CQ (Tx6), the station answering you becomes the contact and the sequence starts without a click (« Call 1st » in WSJT-X). **To answer a CQ: double-click his message** (with control): the transceiver sends Tx1 in the next period, opposite to the station's, then the sequence runs on its own, as in WSJT-X. A single click only sets the receive frequency (no accidental transmission). Our own transmission is no longer decoded a second time in the lists.
 - **Période**: « auto » transmits in the other period than the contact (double-click his message), otherwise keeps the period of the first message; « 1re » / « 2e » force it (1st = 00 and 30 s in FT8).
 - **Waterfall settings** (above the scale, as in WSJT-X): **Gain** = contrast (to the right, weak signals stand out), **Zéro** = background level, **Plat** = flat background across the width (corrects the transceiver filter slope), three colour sets, ↺ = defaults. They apply to every waterfall (FT8, RTTY, CW…) and are remembered in your browser.
 - **Handle under the waterfall**: drag it up to enlarge the message lists (double-click: original size).
@@ -285,16 +285,16 @@ The Station page is **reserved for administrators**: the first time it is opened
 
 1. Paste the **station token** (given by the server administrator), choose the transceiver **model** and its **CAT port** (first time only). FTX-1: the **Enhanced COM Port** (CAT-1), and on the rig **RPTT SELECT** and **PC KEYING** set to OFF (factory default): transmission is controlled through CAT.
 2. **Activer l'audio** (enable audio) and choose the transceiver's sound input (often « USB Audio CODEC »); the level bar must move.
-3. **Sortie son vers le TRX** (sound output to the transceiver, for FT8 / FT4 / FT2): the transceiver's USB sound card (« Speakers (USB Audio CODEC) »…), picked automatically when possible. Never the PC speakers. The transceiver must take DATA modulation from USB (transceiver menu). Set the **transmit level** so that ALC stays low. Transmissions start on the VPS clock, even if the Windows clock is off.
+3. **Sortie son vers le TRX** (sound output to the transceiver, for FT8 / FT4 / FT2): the transceiver's USB sound card (« Speakers (USB Audio CODEC) »…), picked automatically when possible. Never the PC speakers. The transceiver must take DATA modulation from USB (transceiver menu). Set the **transmit level** so that ALC stays low: in digital modes (FT8 / FT4 / FT2, RTTY, JTTY…) the Station page **lowers it automatically** as soon as ALC goes above **8 %**, during the transmission, and keeps the reached level for the next ones (message « ALC … ramené de 30 à 24 % » shown to the operator in control). It never goes back up on its own: slightly low FT8 power is corrected with the transceiver power setting, not with the audio level. Transmissions start on the VPS clock, even if the Windows clock is off.
 4. Keep the Station page **alone in its window**; open the dashboard with its « Ouvrir le dashboard dans une autre fenêtre » button.
 5. Chrome → Settings → Performance: always keep remote.op0p.be active; Windows: sleep set to Never.
 
 Server installation and settings: see `LISEZMOI.md` and `README.md` (project repository).
 
 <a id="logs"></a>
-## 14. Logs online (station logbook)
+## 14. Logs (station logbook)
 
-**Logs online** tab (the last one, right of Synchro): the station logbook, shared by all members, with upload to **LoTW**, **eQSL**, **Club Log** and **QRZ.com**, **ADIF** or **Cabrillo** export, and **UDP** forwarding to PC logbooks (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
+**Logs** tab (right of Synchro): the station logbook, shared by all members, with upload to **LoTW**, **eQSL**, **Club Log** and **QRZ.com**, **ADIF** or **Cabrillo** export, and **UDP** forwarding to PC logbooks (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
 
 - **Logging a QSO**: `⇩ TRX` takes the transceiver frequency and mode (in DATA: the mode of the tab on screen, FT8, RTTY…), the power, and the Correspondant line (call, name, QTH, locator). The UTC time is taken when you type the first letter of the call; `⟳ Maintenant` (now) resets it. `Enter` or `Enregistrer le QSO` (save). A duplicate (same call, band and mode within half an hour) is reported before saving.
 - **Without leaving the RTTY, JTTY or CW tab**: `Log QSO` button (next to « Émettre », and at the end of the Correspondant line), like FLDIGI's « Save QSO ». A form opens, already filled in: call, name, QTH, locator and RST of the correspondent, frequency (in RTTY: the signal frequency, carrier + audio offset) and the tab's mode, power, start time (when the correspondent was chosen) and end time (now). Correct if needed (RST received…), then `Enregistrer dans le carnet` (save). A macro containing `<LOG>` (e.g. the « 73 ») also opens this form.

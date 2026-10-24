@@ -1,5 +1,5 @@
 /*
- * logbook.js — onglet « Logs online » du dashboard (version extended).
+ * logbook.js — onglet « Logs » du dashboard (version extended).
  *
  *  - Saisie d'un QSO, pré-remplie avec la fréquence et le mode du TRX et la ligne Correspondant.
  *  - Carnet de trafic de la station (serveur : logbook.json), état des envois LoTW / eQSL / Club Log / QRZ.

@@ -1507,7 +1507,7 @@
     detach(inst) { if (digiHost.inst === inst) releasePopup(); },
     closePopup() { const w = digiHost.win; releasePopup(); if (w && !w.closed) try { w.close(); } catch (e) {} }
   };
-  if (window.RSLOG) window.RSLOG.init(digiApi); // onglet « Logs online » (monté par digi.js)
+  if (window.RSLOG) window.RSLOG.init(digiApi); // onglet « Logs » (monté par digi.js)
   if (window.RSDIGI) window.RSDIGI.init(digiApi);
   buildControls();
   bindPtt();

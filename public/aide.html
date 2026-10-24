@@ -40,7 +40,7 @@
   <a href="#clavier">11. Raccourcis clavier</a>
   <a href="#problemes">12. Problèmes fréquents</a>
   <a href="#club">13. Le PC du club (page Station)</a>
-  <a href="#logs">14. Logs online (carnet de trafic)</a>
+  <a href="#logs">14. Logs (carnet de trafic)</a>
 </nav>
 
 <div class="note">Le dashboard fonctionne dans un navigateur récent (Chrome, Edge, Firefox) sur PC, Mac, tablette ou téléphone.
@@ -187,7 +187,7 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
   <li><b>La séquence avance toute seule</b> d'après ce que répond le correspondant : son locator → Tx2 (report) ; son report → Tx3 (R+report) ; R+report → Tx4 (RR73) ;
     RRR ou RR73 → Tx5 (73). Après l'envoi du RR73 ou du 73 : fin du QSO, émission coupée, retour sur Tx6 (CQ) et proposition d'<b>enregistrer le QSO dans le carnet</b>.</li>
   <li><b>Répondre au 1er</b> : en appel CQ (Tx6), la station qui vous répond devient le correspondant et la séquence démarre sans clic (« Call 1st » de WSJT-X).
-    Pour répondre à un CQ : double-clic sur son message, puis clic sur Tx1.</li>
+    <b>Pour répondre à un CQ : double-clic sur son message</b> (avec la main) : le TRX émet Tx1 à la période suivante, dans l'autre période que la station, puis la séquence avance toute seule, comme WSJT-X. Un simple clic ne fait que caler la réception (pas d'émission par erreur). Notre propre émission n'est plus décodée une 2e fois dans les listes.</li>
   <li><b>Période</b> : « auto » émet dans l'autre période que le correspondant (double-clic sur son message), sinon garde celle du premier message ;
     « 1re » / « 2e » l'imposent (1re = 00 et 30 s en FT8).</li>
   <li><b>Réglages de la cascade</b> (au-dessus de l'échelle, comme dans WSJT-X) : <b>Gain</b> = contraste (à droite, les signaux faibles ressortent),
@@ -299,7 +299,7 @@ clic sur le voyant <b>STATION</b> en haut à gauche → « ↻ Recharger la page
   <li>Coller le <b>jeton de station</b> (donné par l'administrateur du serveur), choisir le <b>modèle</b> du TRX et son <b>port CAT</b> (la première fois). FTX-1 : l'<b>Enhanced COM Port</b> (CAT-1), et sur le TRX les réglages <b>RPTT SELECT</b> et <b>PC KEYING</b> sur OFF (réglage d'usine) : l'émission se commande par CAT.</li>
   <li><b>Activer l'audio</b> et choisir l'entrée son du TRX (souvent « USB Audio CODEC ») ; la barre de niveau doit bouger.</li>
   <li><b>Sortie son vers le TRX</b> (émission FT8 / FT4 / FT2) : la carte son USB du TRX (« Haut-parleurs (USB Audio CODEC) »…), choisie toute seule si possible.
-    Jamais les haut-parleurs du PC. Le TRX doit prendre la modulation DATA sur l'USB (menu du TRX). Régler le <b>niveau d'émission</b> pour que l'ALC reste faible.
+    Jamais les haut-parleurs du PC. Le TRX doit prendre la modulation DATA sur l'USB (menu du TRX). Régler le <b>niveau d'émission</b> pour que l'ALC reste faible : en émission numérique (FT8 / FT4 / FT2, RTTY, JTTY…), la page Station le <b>baisse toute seule</b> dès que l'ALC dépasse <b>8 %</b>, pendant l'émission, et garde le niveau atteint pour les émissions suivantes (message « ALC … ramené de 30 à 24 % » chez celui qui a la main). Il ne remonte jamais tout seul : une puissance un peu faible en FT8 se corrige avec le réglage de puissance du TRX, pas avec la BF.
     L'émission part à l'heure du VPS, même si l'horloge de Windows est décalée.</li>
   <li>Garder la page Station <b>seule dans sa fenêtre</b> ; ouvrir le dashboard avec son bouton « Ouvrir le dashboard dans une autre fenêtre ».</li>
   <li>Chrome → Paramètres → Performances : garder remote.op0p.be toujours actif ; Windows : mise en veille sur Jamais.</li>
@@ -307,8 +307,8 @@ clic sur le voyant <b>STATION</b> en haut à gauche → « ↻ Recharger la page
 <p>Installation et réglages du serveur : voir <code>LISEZMOI.md</code> et <code>README.md</code> (dépôt du projet).</p>
 
 
-<h2 id="logs">14. Logs online (carnet de trafic)</h2>
-<p>Onglet <b>Logs online</b> (le dernier, à droite de Synchro) : le carnet de trafic de la station, partagé par tous les membres, avec l'envoi vers
+<h2 id="logs">14. Logs (carnet de trafic)</h2>
+<p>Onglet <b>Logs</b> (à droite de Synchro) : le carnet de trafic de la station, partagé par tous les membres, avec l'envoi vers
 <b>LoTW</b>, <b>eQSL</b>, <b>Club Log</b> et <b>QRZ.com</b>, l'export <b>ADIF</b> ou <b>Cabrillo</b> et l'envoi en <b>UDP</b> aux logbooks du PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).</p>
 <ul>
   <li><b>Enregistrer un QSO</b> : <span class="k">⇩ TRX</span> reprend la fréquence et le mode du TRX (en DATA : le mode de l'onglet affiché, FT8, RTTY…), la puissance,

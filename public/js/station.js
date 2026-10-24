@@ -664,15 +664,49 @@
     // Heure de départ dans l'horloge audio, en tenant compte du retard de la sortie son
     const lat = ctx.outputLatency || ctx.baseLatency || 0;
     const when = Math.max(ctx.currentTime + 0.02, ctx.currentTime + (atLocal - Date.now()) / 1000 - lat);
-    src.onended = () => { if (tx.src === src) { tx.src = null; drawTxOut(); onEnd(); } };
+    src.onended = () => { if (tx.src === src) { tx.src = null; alcStop(); drawTxOut(); onEnd(); } };
     src.start(when);
     tx.src = src;
+    alcStart();
     drawTxOut();
     return true;
+  }
+  // ALC en émission numérique : au-delà de ALC_MAX %, le signal est déformé (harmoniques, signaux parasites).
+  // Pendant l'émission, le niveau BF envoyé au TRX baisse tout seul tant que l'ALC dépasse ALC_MAX % ; le niveau
+  // atteint est gardé pour les émissions suivantes. Il ne remonte jamais tout seul (ALC à 0 = réglage idéal).
+  const ALC_MAX = 8;
+  let alcTimer = null;
+  let alcLast = 0;
+  function alcStart() {
+    alcStop();
+    alcLast = Date.now();
+    alcTimer = setInterval(() => {
+      const r = core.radio;
+      if (!tx.src || !r || !r.tx || r.m4 == null || !tx.gain) return;
+      const pct = (r.m4 / 255) * 100;
+      if (pct <= ALC_MAX || Date.now() - alcLast < 700) return; // laisser la mesure suivre le réglage précédent
+      alcLast = Date.now();
+      const was = txLevel();
+      // Baisse proportionnelle à l'excès (au moins 10 %, au plus de moitié), 1 % au minimum
+      const k = Math.max(0.5, Math.min(0.9, Math.sqrt(ALC_MAX / pct)));
+      const now = Math.max(1, Math.min(was - 1, Math.round(was * k)));
+      if (now >= was) return;
+      store.set('txlevel', String(now));
+      tx.gain.gain.setTargetAtTime(now / 100, tx.ctx.currentTime, 0.05);
+      drawTxOut();
+      const text = 'ALC ' + Math.round(pct) + ' % en émission numérique (max ' + ALC_MAX + ' %) : niveau BF vers le TRX ramené de ' + was + ' à ' + now + ' %';
+      log(text, 'st-warn');
+      if (core.wsUp) core.sendWs({ t: 'trx_note', text });
+    }, 250);
+  }
+  function alcStop() {
+    if (alcTimer) clearInterval(alcTimer);
+    alcTimer = null;
   }
   function txStop() {
     const src = tx.src;
     tx.src = null;
+    alcStop();
     if (src) { src.onended = null; try { src.stop(); } catch (e) {} }
   }
   $('audOut').addEventListener('change', () => {

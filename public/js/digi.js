@@ -91,7 +91,7 @@
   // ------------------------------------------------------------------ construction des onglets et des fenêtres
   // Même code pour le centre du dashboard et pour la fenêtre séparée (digi.html, sans l'onglet Activité).
   const TABS = [
-    ['events', 'Activité'], ['ftx', 'FT8 · FT4 · FT2'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['gap', ''], ['sync', 'Synchro'], ['log', 'Logs online']
+    ['events', 'Activité'], ['ftx', 'FT8 · FT4 · FT2'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['gap', ''], ['sync', 'Synchro'], ['log', 'Logs']
   ];
   const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'cw', 'sstv', 'sync'];
   const WF_TABS = ['ftx', 'jt65', 'rtty', 'wspr', 'jtty', 'cw', 'sstv']; // onglets avec cascade
@@ -542,7 +542,7 @@
     c.clearRect(0, 0, w, H);
     c.fillStyle = '#0b1018';
     c.fillRect(0, 0, w, H);
-    c.font = '11px Verdana, "DejaVu Sans", Arial, sans-serif';
+    c.font = 'bold 11px Verdana, "DejaVu Sans", Arial, sans-serif'; // graduations 500, 1000… en blanc gras
     c.textBaseline = 'top';
     for (let f = 0; f <= WF_MAX_HZ; f += 100) {
       const x = Math.round((f / WF_MAX_HZ) * (w - 1)) + 0.5;
@@ -553,7 +553,7 @@
       c.lineTo(x, H);
       c.stroke();
       if (big && f > 0 && f < WF_MAX_HZ) {
-        c.fillStyle = '#8b98a8';
+        c.fillStyle = '#F0F5FA';
         c.fillText(String(f), x - c.measureText(String(f)).width / 2, 1);
       }
     }
@@ -1511,6 +1511,12 @@
     ftxSel = !toMe ? 0 : GRID_RE.test(p) && p !== 'RR73' ? 1 : /^[+-]\d{2}$/.test(p) ? 2 : /^R[+-]\d{2}$/.test(p) ? 3 : /^(RRR|RR73)$/.test(p) ? 4 : p === '73' ? 4 : 0;
     store.set('ftxsel', ftxSel);
     drawMsgs();
+    // Comme WSJT-X (« Double-click on call sets Tx enable ») : avec la main, l'émission part à la période suivante
+    // (la période opposée à celle de la station choisie), puis la séquence avance toute seule
+    if (api && api.iControl() && FT_MODES.indexOf(mode) >= 0) {
+      const t = ftxMsgs()[ftxSel];
+      if (t) ftxSend(ftxSel, t);
+    } else if (api && !api.iControl()) api.say('Correspondant ' + call + ' choisi. Prenez la main pour lui répondre.', '', 4000);
   }
   function ftxMsgs() {
     const c = dx.call || '{CORRESP}';
@@ -1973,7 +1979,7 @@
   function rowEl(slot, d) {
     const r = document.createElement('div');
     r.className = 'dg-row ' + (d.tx ? 'tx' : cls(d.msg));
-    r.title = d.tx ? 'Message émis' : d.f + ' Hz · clic gauche : réception ici · clic droit : émission ici · double-clic : répondre à cette station';
+    r.title = d.tx ? 'Message émis' : d.f + ' Hz · clic gauche : réception ici · clic droit : émission ici · double-clic : répondre à cette station (émission à la période suivante)';
     const cells = d.tx ? [utc(slot), 'TX', '', d.f, d.msg] : [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
     for (const v of cells) {
       const s = document.createElement('span');

@@ -360,6 +360,15 @@ function onDigi(m) {
     return;
   }
   if (m.t === 'decodes') {
+    // Notre propre émission décodée (la BF du TRX renvoie le signal émis) : retirée, comme WSJT-X qui n'écoute pas en émission
+    if (Array.isArray(m.list) && ftTxSlots.some((x) => x.mode === m.mode && Math.abs(x.slot - m.slot) < 1500)) {
+      const mine = stationCalls();
+      const sent = ftTxSlots.filter((x) => x.mode === m.mode && Math.abs(x.slot - m.slot) < 1500).map((x) => norm(x.text));
+      m.list = m.list.filter((d) => {
+        const w = norm(d && d.msg).split(' ').map((x) => x.replace(/^<|>$/g, ''));
+        return sent.indexOf(norm(d && d.msg)) < 0 && mine.indexOf(w[1]) < 0 && !(w[0] === 'CQ' && (mine.indexOf(w[1]) >= 0 || mine.indexOf(w[2]) >= 0));
+      });
+    }
     const item = { slot: m.slot, list: m.list };
     const h = digi.hist[m.mode];
     if (!h) return;
@@ -443,6 +452,9 @@ function setLogCfg(n) {
   saveLogCfg();
   sync.resetStops();
 }
+// Créneaux FT8 / FT4 / FT2 où la station a émis { mode, slot, text } (pour écarter le décodage de notre propre signal)
+const ftTxSlots = [];
+const norm = (s) => String(s || '').toUpperCase().replace(/\s+/g, ' ').trim();
 const stationCalls = () => Array.from(new Set([cfg.digiCall].concat(String(cfg.stationCall || '').split(/[\s/,]+/)).map((c) => String(c || '').toUpperCase()).filter((c) => /^[A-Z0-9]{3,10}$/.test(c))));
 const sync = new Sync({
   book, version: VERSION, station: String(cfg.digiCall || 'ON5VL').toUpperCase(), urls: cfg.logUrls, // logUrls : essais seulement
@@ -1281,6 +1293,10 @@ function ftxKey(p) {
   if (why) return ftxCancel(why);
   const now = Date.now();
   p.state = 'tx';
+  if (['FT8', 'FT4', 'FT2'].indexOf(p.mode) >= 0) {
+    ftTxSlots.push({ mode: p.mode, slot: Math.floor(p.at / FTX_SLOT[p.mode]) * FTX_SLOT[p.mode], text: p.sent || p.text });
+    while (ftTxSlots.length > 30) ftTxSlots.shift();
+  }
   ptt = { active: true, conn: p.conn, since: now, lastBeat: now, digi: { id: p.id, mode: p.mode } };
   lastCtrlActivity = now;
   const tv = txSide();
@@ -1891,7 +1907,7 @@ function onStation(conn, m) {
     const text = String(m.text || '').replace(/[\u0000-\u001f]/g, ' ').slice(0, 500);
     journal('side_diag', { text });
     // Affiché seulement s'il s'est passé quelque chose d'anormal (émission, FT qui n'a pas suivi, commande refusée « ? »)
-    if (controller && /TX[12]|n’a pas suivi|\?/.test(text)) send(controller, { t: 'notice', level: 'warn', msg: 'Station : ' + text });
+    if (controller && /TX[12]|n’a pas suivi|\?|^ALC/.test(text)) send(controller, { t: 'notice', level: 'warn', msg: 'Station : ' + text });
     return;
   }
   if (m.t === 'safety') {
