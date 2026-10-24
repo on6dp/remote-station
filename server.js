@@ -1974,7 +1974,8 @@ function onStation(conn, m) {
     const text = String(m.text || '').replace(/[\u0000-\u001f]/g, ' ').slice(0, 500);
     journal('side_diag', { text });
     // Affiché seulement s'il s'est passé quelque chose d'anormal (émission, FT qui n'a pas suivi, commande refusée « ? »)
-    if (controller && /TX[12]|n’a pas suivi|\?|^ALC/.test(text)) send(controller, { t: 'notice', level: 'warn', msg: 'Station : ' + text });
+    // (un « ? » du TRX pendant un passage MAIN / SUB réussi n'est pas affiché : seulement gardé dans le journal)
+    if (controller && /TX[12]|n’a pas suivi|refusé la commande|^ALC/.test(text)) send(controller, { t: 'notice', level: 'warn', msg: 'Station : ' + text });
     return;
   }
   if (m.t === 'safety') {
