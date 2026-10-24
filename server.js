@@ -209,6 +209,7 @@ const txSide = () => (txSel ? 1 - rxSide() : rxSide());
 let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
+let ctlView = null;    // onglet affiché par celui qui a la main { conn, tab, mode } (« Suivre l'opérateur »)
 let swrLock = null;     // { freq, swr } : ROS trop élevé constaté à cette fréquence ; { tune: true, band } : accord impossible sur cette bande
 let tuneWatch = null;
 let tunerAuto = { band: '', until: 0 }; // bande HF / 6 m sur laquelle le tuner a été remis en service tout seul   // accord en cours de suivi { freq, at, saw, endAt, call }
@@ -827,6 +828,7 @@ function publicState() {
     // Émission FT8 / FT4 / FT2 programmée ou en cours
     seq: seqPublic(),
     ftx: ftxPend ? { id: ftxPend.id, state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call, seconds: ftxPend.seconds } : null,
+    view: ctlView && controller && ctlView.conn === controller ? { tab: ctlView.tab, mode: ctlView.mode } : null,
     txOk: inTxRange(txFreq()),
     txFreq: txFreq(),
     swrLock: swrLocked() ? { freq: swrLock.freq, swr: swrLock.swr != null ? Math.round(swrLock.swr * 10) / 10 : null, tune: !!swrLock.tune, band: swrLock.band || null, text: swrLockText() } : null,
@@ -1639,6 +1641,18 @@ function onOperator(conn, m) {
       chatPush({ kind: 'give', call: conn.user.call, to: target.user.call });
       send(target, { t: 'notice', level: 'warn', msg: conn.user.call + ' vous passe la main' });
       limitPower(target, 'prise de main');
+      return broadcast();
+    }
+
+    case 'view': {
+      // Onglet des modes numériques affiché par celui qui a la main : les autres peuvent le suivre (formation à distance)
+      if (controller !== conn) return;
+      const TABS_OK = ['events', 'ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'cw', 'sstv', 'sync', 'log'];
+      const tab = TABS_OK.indexOf(m.tab) >= 0 ? m.tab : null;
+      const mode = ['FT8', 'FT4', 'FT2', 'JT65'].indexOf(m.mode) >= 0 ? m.mode : null;
+      if (!tab) return;
+      if (ctlView && ctlView.conn === conn && ctlView.tab === tab && ctlView.mode === mode) return;
+      ctlView = { conn, tab, mode };
       return broadcast();
     }
 

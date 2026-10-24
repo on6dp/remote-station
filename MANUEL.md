@@ -72,6 +72,7 @@ Chaque cadre se replie avec la petite flèche `▾` devant son titre, et peut s'
 - Si quelqu'un l'a déjà : **Demander la main** dans le volet Opérateurs (bouton `👥` du bandeau ; il reçoit la demande et son volet s'ouvre) ou lui écrire un message. Celui qui a la main peut la **passer** à un autre membre.
 - **Libérer la main** en partant. Elle est libérée automatiquement après **15 minutes** sans action.
 - Sans la main, les commandes sont grisées et un message rappelle « Prenez la main ».
+- **Suivre l'opérateur** (formation à distance) : bouton `👁 Suivre` à droite des onglets des modes numériques. Allumé (vert), votre dashboard affiche le même onglet que celui qui a la main (RTTY, FT8 / FT4 / FT2, CW…) et en change avec lui ; la fréquence, le mode et les réglages du TRX sont de toute façon communs à tous. Cliquer soi-même sur un autre onglet arrête le suivi ; un clic sur 👁 Suivre le relance. Le bouton n'apparaît pas chez celui qui a la main.
 
 <a id="trx"></a>
 ## 4. Piloter le TRX

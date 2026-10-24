@@ -72,6 +72,7 @@ Each panel folds with the small arrow `▾` before its title, and can open in it
 - If someone already has it: **Demander la main** (request control) in the Operators panel (`👥` button in the top bar; their panel opens with the request), or send them a chat message. The operator in control can **hand it over** to another member.
 - **Libérer la main** (release control) when you leave. Control is released automatically after **15 minutes** without action.
 - Without control, the commands are greyed out and a message reminds you to take control (« Prenez la main »).
+- **Follow the operator** (remote training): `👁 Suivre` button to the right of the digital-mode tabs. When on (green), your dashboard shows the same tab as the operator in control (RTTY, FT8 / FT4 / FT2, CW…) and changes with them; the frequency, mode and transceiver settings are shared by everybody anyway. Clicking another tab yourself stops following; click 👁 Suivre to start again. The button is not shown to the operator in control.
 
 <a id="trx"></a>
 ## 4. Operating the transceiver

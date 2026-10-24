@@ -326,6 +326,15 @@
       b.textContent = label;
       bar.appendChild(b);
     }
+    // « Suivre l'opérateur » : l'onglet suit celui de l'opérateur qui a la main (formation à distance)
+    const fol = document.createElement('button');
+    fol.className = 'ctab-follow';
+    fol.type = 'button';
+    fol.id = 'dgFollow';
+    fol.innerHTML = '👁 Suivre<span class="fol-x"> l’opérateur</span>';
+    fol.title = 'Suivre l’opérateur : afficher le même onglet que celui qui a la main (RTTY, FT8, CW…). Un clic sur un autre onglet arrête le suivi.';
+    fol.setAttribute('aria-pressed', 'false');
+    bar.appendChild(fol);
     const det = document.createElement('button');
     det.className = 'ctab-detach';
     det.type = 'button';
@@ -354,6 +363,32 @@
     add('away', 'dg-soon', '<p>Les modes numériques sont ouverts dans une <b>fenêtre séparée</b>.</p><p><button class="btn" type="button" id="dgBack">Ramener ici</button></p>');
   }
 
+  // ------------------------------------------------------------------ suivre l'opérateur
+  let follow = store.get(POPUP ? 'pfollow' : 'follow', '0') === '1';
+  let viewSent = '';
+  function setFollow(on) {
+    follow = !!on;
+    store.set(POPUP ? 'pfollow' : 'follow', follow ? '1' : '0');
+    const b = $('dgFollow');
+    if (b) b.setAttribute('aria-pressed', String(follow));
+  }
+  // Celui qui a la main annonce l'onglet affiché (la fenêtre séparée s'en charge quand les modes y sont ouverts)
+  function sendView() {
+    if (!api || !api.iControl() || (detached && !POPUP)) return;
+    const k = tab + '/' + (tab === 'ftx' || tab === 'jt65' ? mode : '');
+    if (k === viewSent) return;
+    viewSent = k;
+    api.send({ t: 'view', tab, mode: tab === 'ftx' || tab === 'jt65' ? mode : null });
+  }
+  function followView() {
+    const st = api && api.state();
+    const v = st && st.view;
+    if (!follow || !v || !v.tab || api.iControl() || (detached && !POPUP)) return;
+    if (!document.querySelector('#centerPanel .ctab[data-tab="' + v.tab + '"]')) return; // onglet absent ici (fenêtre séparée : Activité, Logs)
+    if (v.tab === 'ftx' && v.mode && v.mode !== mode && ['FT8', 'FT4', 'FT2'].indexOf(v.mode) >= 0) setMode(v.mode);
+    if (v.tab !== tab) showTab(v.tab);
+  }
+
   // ------------------------------------------------------------------ onglets
   function showTab(t) {
     if (!document.querySelector('#centerPanel .ctab[data-tab="' + t + '"]')) t = POPUP ? 'ftx' : 'events';
@@ -378,6 +413,7 @@
       sizeCanvas();
     }
     if (pane === 'sync') drawSync();
+    sendView();
     if (pane === 'log' && window.RSLOG) window.RSLOG.show();
     if (pane === 'sstv' && ssShown) { const it = ssImgs.get(ssShown); if (it && it.data) ssCanvasFor(it.meta).putImageData(it.data, 0, 0); ssThumbs(); }
     announce();
@@ -2137,7 +2173,14 @@
       api = a;
       if (again) { announce(); return; } // fenêtre séparée raccrochée à un dashboard rechargé
       buildDom();
-      document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); showTab(b.dataset.tab); }));
+      document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Choisir soi-même un autre onglet arrête le suivi de l'opérateur
+        if (follow && api && !api.iControl()) { setFollow(false); api.say('Suivi de l’opérateur arrêté (onglet choisi).', '', 4000); }
+        showTab(b.dataset.tab);
+      }));
+      $('dgFollow').addEventListener('click', (e) => { e.stopPropagation(); setFollow(!follow); if (follow) followView(); });
+      setFollow(follow);
       $('dgDetach').addEventListener('click', (e) => {
         e.stopPropagation();
         if (POPUP) return window.close();
@@ -2316,6 +2359,11 @@
       return false;
     },
     onState() {
+      // Suivre l'opérateur : bouton caché pour celui qui a la main, qui annonce son onglet
+      const fb = $('dgFollow');
+      const mine = !!(api && api.iControl());
+      if (fb) fb.hidden = mine;
+      if (mine) sendView(); else { viewSent = ''; followView(); }
       // Autre TRX (couverture différente) : les fréquences QO-100 proposées changent
       const R = api && api.rig && api.rig();
       if (R && R.ID !== lastRig) { lastRig = R.ID; refillQo(); }

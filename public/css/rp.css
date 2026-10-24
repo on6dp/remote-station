@@ -1187,3 +1187,12 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 #listenBtn { font-weight: 700; }
 #listenBtn:not([aria-pressed='true']) { color: #39FF14; }
 .dx-l { color: var(--v2-text-bright); font-weight: 700; font-style: italic; }
+/* Onglet « Suivre l'opérateur » */
+.ctab-follow {
+  font: inherit; font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; white-space: nowrap;
+  color: var(--v2-text-secondary); background: none; border: 1px solid var(--v2-border); border-radius: 5px; padding: 3px 9px; margin: 0 0 4px 8px; cursor: pointer;
+}
+.ctab-follow:hover { color: var(--v2-text-bright); }
+.ctab-follow[aria-pressed='true'] { color: #061018; background: #39FF14; border-color: #39FF14; }
+.ctab-follow[hidden] { display: none; }
+@media (max-width: 1799px) { .ctab-follow .fol-x { display: none; } }
