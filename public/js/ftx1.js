@@ -75,6 +75,8 @@
       { cmd: 'IS1;', re: /^IS1[01]([+-])(\d{4})$/, parse: (m) => ({ shiftB: (m[1] === '-' ? -1 : 1) * +m[2] }), sim: 'IS10+0000' },
       { cmd: 'CO10;', re: /^CO10(\d{4})$/, parse: (m) => ({ contourB: +m[1] ? 1 : 0 }), sim: 'CO100000' },
       { cmd: 'CO12;', re: /^CO12(\d{4})$/, parse: (m) => ({ apfB: +m[1] ? 1 : 0 }), sim: 'CO120000' },
+      // FUNCTION RX : FR00 double réception (S-mètre SUB lisible par SM1), FR01 réception simple
+      { cmd: 'FR;', re: /^FR0([01])$/, parse: (m) => ({ dualRx: m[1] === '0' ? 1 : 0 }), sim: 'FR00' },
       // RADIO INFORMATION (manuel CAT) : RI0 P2 … P8 — P2 1 = Hi-SWR, P6 1 = tuner en cours d'accord
       { cmd: 'RI0;', re: /^RI0(\d)(\d)(\d)(\d)(\d)(\d)(\d)$/, parse: (m) => ({ hiSwr: m[1] === '1' ? 1 : 0, tuningRi: m[5] === '1' ? 1 : 0 }), sim: 'RI00000000' }
     ],

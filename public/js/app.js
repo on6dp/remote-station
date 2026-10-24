@@ -1032,9 +1032,15 @@
       [...$(bars).children].forEach((b, i) => { b.classList.toggle('lit', i < n); b.classList.toggle('hot', isTx || i >= 16); });
       $(sId).textContent = live ? (isTx ? 'PO' : val != null ? RIG().smeterLabel(val).replace(/^S/, 'S ') : 'S —') : 'S —';
     };
-    meterOn('barsA', 'sA', txing && (!txB || !hasSmB), r.smeter);
-    $('smB').classList.toggle('smeter-dim', !hasSmB);
+    // Double réception (FTX-1 FR00) : S-mètre de chaque côté ; réception simple : celui du côté actif (SM0), sur son VFO
+    const single = !hasSmB && r.dualRx === 0 && RIG().SUB_BADGES;
+    const onB = single && r.vfoSel === 1;
+    meterOn('barsA', 'sA', txing && (!txB || !hasSmB) && !onB, onB ? null : r.smeter);
+    $('smA') && $('smA').classList.toggle('smeter-dim', onB);
+    $('smB').classList.toggle('smeter-dim', !hasSmB && !onB);
     if (hasSmB) meterOn('barsB', 'sB', txB, r.smeterB);
+    else if (onB) meterOn('barsB', 'sB', txing, r.smeter);
+    else { [...$('barsB').children].forEach((b) => b.classList.remove('lit')); $('sB').textContent = 'S —'; }
     // RIT / XIT / SPLIT
     const kHz = (v) => { v = Number(v) || 0; return (v >= 0 ? '+' : '−') + (Math.abs(v) / 1000).toFixed(2) + ' kHz'; };
     const hasB = !!(RIG().CONTROL && RIG().CONTROL.ritB);

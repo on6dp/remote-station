@@ -165,8 +165,10 @@
     for (const r of spec.extraReads || []) READS.push(r);
     // Les commandes partent une par une, espacées (FRAME_GAP_MS) : une rafale de 30 commandes
     // déborde le tampon CAT de la radio, qui en perd une partie (mode non lu, « plus de réponse »…)
-    // Deux récepteurs (FTX-1, subBadges) : S-mètre du côté SUB aussi (SM1), pour le bargraphe du VFO B
-    const FAST = ['FA;', 'MD0;', 'FB;', 'MD1;', 'SM0;'].concat(spec.subBadges ? ['SM1;'] : [], ['TX;', 'FT;']);
+    const FAST = ['FA;', 'MD0;', 'FB;', 'MD1;', 'SM0;', 'TX;', 'FT;'];
+    // Deux récepteurs (FTX-1) : S-mètre du côté SUB (SM1), lu seulement en double réception (FR00) ; en réception simple
+    // le TRX ne répond pas à SM1 et SM0 donne le S-mètre du côté actif
+    const FAST_SUB = spec.subBadges ? ['SM1;'] : [];
     // En émission : mesures COMP, ALC, PO, SWR, et aussi puissance et VOX (contrôles de sécurité plus rapides)
     const TXMETERS = ['RM3;', 'RM4;', 'RM5;', 'RM6;', P.read, 'VX;'];
     const SLOW = READS.map((r) => r.cmd).concat(['RM7;', 'RM8;']); // + IDD, VDD
@@ -187,7 +189,7 @@
       }
       return READ_FOR[id] || null;
     }
-    const STATE_KEYS = ['smeterB', 'txVfo', 'split', 'vfoSel', 'rit', 'xit', 'clar', 'lock', 'width', 'narrow', 'shift', 'contour', 'apf',
+    const STATE_KEYS = ['smeterB', 'dualRx', 'txVfo', 'split', 'vfoSel', 'rit', 'xit', 'clar', 'lock', 'width', 'narrow', 'shift', 'contour', 'apf',
       'dnf', 'notch', 'notchFreq', 'nb', 'nr', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox',
       'tuner', 'tuning', 'ant', 'ritB', 'xitB', 'clarB', 'hwSplit', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'].concat(spec.extraStateKeys || []);
 
@@ -326,6 +328,8 @@
           else if (c === 'MD1') out.push('MD1' + this.modeB + ';');
           else if ((m = /^MD0([0-9A-Z])$/.exec(c)) && MODES_ALL[m[1]]) this.mode = m[1];
           else if ((m = /^MD1([0-9A-Z])$/.exec(c)) && MODES_ALL[m[1]]) this.modeB = m[1];
+          else if (c === 'FR') out.push('FR' + (this.single ? '01' : '00') + ';');
+          else if (c === 'SM1' && this.single) { /* réception simple : pas de réponse */ }
           else if (c === 'SM1') out.push('SM1' + pad(this.tx ? 0 : Math.round(40 + 25 * Math.sin(this.t * 0.7)), 3) + ';');
           else if (c === 'SM0') {
             this.t += 0.15;
@@ -384,13 +388,13 @@
       POWER_RANGE: P.range, POWER_STEP: P.step, INIT: spec.splitIsFT ? 'AI0;ST0;' : 'AI0;', UNKEY_EXTRA: spec.splitIsFT ? 'ST0;' : '',
       // SPLIT « virtuel » (FTX-1) : le VFO d'émission n'est envoyé au TRX qu'au moment d'émettre (FT), puis remis
       // Lectures CAT autorisées depuis la console de diagnostic (administrateurs) : lectures seulement
-      CAT_QUERIES: Array.from(new Set(READS.map((r) => r.cmd).concat(FAST, TXMETERS, ['IF;', 'OI;', 'FR;', 'ID;', 'VS;', 'FT;', 'ST;', 'FA;', 'FB;'], spec.extraQueries || []))),
+      CAT_QUERIES: Array.from(new Set(READS.map((r) => r.cmd).concat(FAST, FAST_SUB, TXMETERS, ['IF;', 'OI;', 'FR;', 'ID;', 'VS;', 'FT;', 'ST;', 'FA;', 'FB;'], spec.extraQueries || []))),
       VIRTUAL_SPLIT: !!spec.virtualSplit, cmdTxVfo: spec.virtualSplit ? (v) => 'FT' + (v ? 1 : 0) + ';' : null,
       // Façons de désigner le VFO d'émission, essayées dans l'ordre jusqu'à ce que « FT; » relu le confirme
       // (FT0/FT1 comme Hamlib ; FT2/FT3 comme les FTDX10 / FT-991). Jamais VS1 avant FT1 : FT0 avec VS1 fait émettre le FTX-1.
       txVfoTries: spec.virtualSplit ? (v) => ['FT' + (v ? 1 : 0) + ';', 'FT' + (v ? 3 : 2) + ';'] : null,
       cmdVfoSel: (v) => 'VS' + (v ? 1 : 0) + ';', // FTX-1 : sortir d'un éventuel ST1 (SUB bloqué en émission)
-      FAST, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,
+      FAST, FAST_SUB, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,
       FRAME_GAP_MS: 20, SLOW_PER_TICK: 4, POLL_MS: 250, readFor,
       widthTableFn: widthTable,
       derive: spec.derive || null, preampText: spec.preampText || null, SUB_BADGES: !!spec.subBadges, remapRead: spec.remapRead || null,

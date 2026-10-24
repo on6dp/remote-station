@@ -136,6 +136,7 @@
         // Radio qui ne dit pas d'où vient l'émission (Icom) : émission demandée par nous = CAT (1), sinon radio (2)
         if (FTX1.TX_SOURCE_UNKNOWN && p.tx === 1 && !this.catKeyed) p.tx = 2;
         if (p.tx != null) this.txReadAt = Date.now(); // dernière lecture de l'état émission / réception
+        if (p.dualRx === 0 && this.radio.smeterB != null) { this.radio.smeterB = null; this.dirty = true; }
         for (const k in p) {
           // Mesure d'émission arrivée après le retour en réception (lecture déjà en file) : ignorée
           if (TX_METER_KEYS.indexOf(k) >= 0 && !this.radio.tx && p.tx == null) continue;
@@ -217,12 +218,13 @@
           for (let i = 0; i < n * (this.forceSlow ? 2 : 1); i++) slow.push(rig.SLOW[(this.slowPos + i) % rig.SLOW.length]);
           this.slowPos = (this.slowPos + slow.length) % rig.SLOW.length;
           // Relectures prioritaires (réglage qui vient d'être modifié), puis lectures rapides, puis tranche lente
-          this.queue = this.prio.concat(rig.FAST, this.radio.tx ? rig.TXMETERS : [], slow);
+          this.queue = this.prio.concat(rig.FAST, this.radio.dualRx === 1 && rig.FAST_SUB ? rig.FAST_SUB : [], this.radio.tx ? rig.TXMETERS : [], slow);
           this.prio = [];
           this._drain();
         }
       } else {
         let q = rig.FAST;
+        if (this.radio.dualRx === 1 && rig.FAST_SUB) q += [].concat(rig.FAST_SUB).join('');
         if (this.radio.tx) q += rig.TXMETERS;
         if (this.forceSlow || this.ticks % 4 === 0) q += rig.SLOW;
         this._write(q, true);

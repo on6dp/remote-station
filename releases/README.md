@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.25 | [RemoteStation-Setup-0.22.25.exe](0.22.25/RemoteStation-Setup-0.22.25.exe) | [remote-station-0.22.25.tar.gz](0.22.25/remote-station-0.22.25.tar.gz) | S-mètre sur le VFO du côté actif (réception simple) ou les deux (double réception) — [empreintes SHA-256](0.22.25/SHA256SUMS.txt) |
 | 0.22.24 | [RemoteStation-Setup-0.22.24.exe](0.22.24/RemoteStation-Setup-0.22.24.exe) | [remote-station-0.22.24.tar.gz](0.22.24/remote-station-0.22.24.tar.gz) | RR73 → 73 ; recherche QRZ.com ; TX call au carnet ; S-mètre VFO B — [empreintes SHA-256](0.22.24/SHA256SUMS.txt) |
 | 0.22.23 | [RemoteStation-Setup-0.22.23.exe](0.22.23/RemoteStation-Setup-0.22.23.exe) | [remote-station-0.22.23.tar.gz](0.22.23/remote-station-0.22.23.tar.gz) | TX CALL (indicatif de l’opérateur) ; 73 sans période perdue — [empreintes SHA-256](0.22.23/SHA256SUMS.txt) |
 | 0.22.22 | [RemoteStation-Setup-0.22.22.exe](0.22.22/RemoteStation-Setup-0.22.22.exe) | [remote-station-0.22.22.tar.gz](0.22.22/remote-station-0.22.22.tar.gz) | « Émis sous » (indicatif de l’opérateur) ; 73 sans période perdue — [empreintes SHA-256](0.22.22/SHA256SUMS.txt) |
