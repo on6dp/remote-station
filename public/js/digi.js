@@ -1976,16 +1976,35 @@
     if (w[0] === 'CQ') return 'cq';
     return '';
   }
+  // Indicatif de la station qui émet ce message (celui que reprend un double-clic), sinon ''
+  function senderOf(msg) {
+    const w = callsIn(msg);
+    const c = w[0] === 'CQ' ? (CALL_RE.test(w[1] || '') ? w[1] : w[2] || '') : w[1] || '';
+    return CALL_RE.test(c) && stationCalls.indexOf(c) < 0 && String(msg).toUpperCase().indexOf(c) >= 0 ? c : '';
+  }
   function rowEl(slot, d) {
     const r = document.createElement('div');
     r.className = 'dg-row ' + (d.tx ? 'tx' : cls(d.msg));
-    r.title = d.tx ? 'Message émis' : d.f + ' Hz · clic gauche : réception ici · clic droit : émission ici · double-clic : répondre à cette station (émission à la période suivante)';
+    r.title = d.tx ? 'Message émis' : d.f + ' Hz · clic sur l’indicatif (souligné) ou double-clic : répondre à cette station (émission à la période suivante) · clic ailleurs : réception ici · clic droit : émission ici';
     const cells = d.tx ? [utc(slot), 'TX', '', d.f, d.msg] : [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
-    for (const v of cells) {
+    cells.forEach((v, i) => {
       const s = document.createElement('span');
-      s.textContent = String(v);
+      const who = !d.tx && i === 4 ? senderOf(d.msg) : '';
+      if (!who) s.textContent = String(v);
+      else {
+        // Indicatif de la station qui émet ce message : un clic dessus = lui répondre (comme le double-clic)
+        const k = String(v).indexOf(who);
+        s.appendChild(document.createTextNode(String(v).slice(0, k)));
+        const c = document.createElement('b');
+        c.className = 'dg-call';
+        c.textContent = who;
+        c.title = 'Clic : répondre à ' + who + ' (émission à la période suivante, avec la main)';
+        c.addEventListener('click', (e) => { e.stopPropagation(); pickFromDecode(d, slot); });
+        s.appendChild(c);
+        s.appendChild(document.createTextNode(String(v).slice(k + who.length)));
+      }
       r.appendChild(s);
-    }
+    });
     r.addEventListener('click', () => setRx(d.f));
     r.addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(d.f); });
     r.addEventListener('dblclick', () => { if (!d.tx) pickFromDecode(d, slot); });
