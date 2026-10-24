@@ -518,6 +518,14 @@
     if (RIG().ID === 'ftx1' && me && !me.subCat && (c.id === 'vfoSel' && v === 1 || (c.viaSub && Number(ctlValue('vfoSel')) !== 1) || (c.viaMain && Number(ctlValue('vfoSel')) === 1))) {
       return say('Passage MAIN ↔ SUB par le dashboard désactivé (il mettait le FTX-1 en émission) : choisissez MAIN / SUB sur la face avant du TRX ; le dashboard suit.', 'warn', 8000);
     }
+    // FTX-1 : pas de double réception avec MAIN et SUB tous deux en HF / 50 MHz (constaté au club : 14 + 21 MHz refusé,
+    // 432 + 21 MHz accepté)
+    if (c.id === 'dualRx' && v === 1 && RIG().ID === 'ftx1') {
+      const r0 = (st && st.radio) || {};
+      if (r0.freq && r0.freqB && r0.freq < 60e6 && r0.freqB < 60e6) {
+        return say('DUAL RX : le FTX-1 n’accepte pas la double réception avec les deux VFO en HF / 50 MHz. Mettez l’un des deux en 144 ou 430 MHz.', 'warn', 9000);
+      }
+    }
     if (c.id === 'vfoSel' && v != null) target = v ? 'B' : 'A'; // MAIN / SUB : les cadres suivent ce VFO
     if (c.type !== 'action') ctlPending[c.id] = { v, at: Date.now() };
     send({ t: 'set', ctl: c.id, value: v });
