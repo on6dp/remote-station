@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.31** — FTX-1 en réception simple (deux bandes HF) : les touches A / B ne choisissent que le VFO réglé (molette, flèches, bandes), sans demander de changement de côté refusé ; un message rappelle que le côté actif se change avec la touche MAIN / SUB du TRX. Ctrl+F5 sur le dashboard suffit.
 - **0.22.30** — DUAL RX : le FTX-1 refuse la double réception avec les deux VFO en HF / 50 MHz (constaté au club : 14 + 21 MHz refusé, 432 + 21 MHz accepté) ; le dashboard l’explique au lieu d’envoyer une commande sans effet. Ctrl+F5 sur le dashboard suffit.
 - **0.22.29** — **Sécurité FTX-1** (constaté au club : clic sur SUB, DUAL RX coupé, « Tuner mis en service (15m) », TRX en émission) : passage MAIN ↔ SUB refusé par le serveur et la page Station en réception simple (DUAL RX coupé) ; plus jamais de commande FT pendant un changement de côté (VS seul) ; tuner automatique : plus rien envoyé lors d’un changement de côté MAIN / SUB, ni sans opérateur (à la prise de main et aux changements de bande seulement). S-mètre du VFO inactif gardé, grisé, en réception simple. **Recharger la page Station.**
 - **0.22.28** — FTX-1 en réception simple (DUAL RX coupé), MAIN actif : changer la bande du VFO B ne passe plus par BAND SELECT (« BS1… » refusé par le TRX, côté SUB arrêté) mais règle directement la fréquence habituelle de la bande sur le VFO B. Ctrl+F5 sur le dashboard suffit.

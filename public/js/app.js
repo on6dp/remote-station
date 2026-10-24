@@ -334,6 +334,13 @@
       const c = RIG().CONTROL && RIG().CONTROL.vfoSel;
       // FTX-1 : passage sur SUB par CAT bloqué si le serveur le demande (ftx1SubCat: false) ; B ne choisit alors que le VFO réglé
       const subOk = !(RIG().ID === 'ftx1' && me && !me.subCat);
+      // FTX-1 en réception simple (deux bandes HF) : pas de changement de côté par CAT (il a fait émettre le TRX) ;
+      // A / B ne choisissent que le VFO réglé (molette, flèches, bandes), le TRX reste sur son côté actif
+      const single = RIG().ID === 'ftx1' && st && st.radio && st.radio.dualRx === 0;
+      if (single && Number(ctlValue('vfoSel')) !== (w === 'B' ? 1 : 0)) {
+        return say('VFO ' + w + ' réglé (molette, flèches, bandes). Le TRX reste sur ' + (Number(ctlValue('vfoSel')) === 1 ? 'SUB' : 'MAIN') +
+          ' : en réception simple (deux bandes HF), le côté actif se change avec la touche MAIN / SUB du TRX.', '', 6000);
+      }
       if (c && RIG().VIRTUAL_SPLIT && iControl() && (w === 'A' || subOk) && Number(ctlValue('vfoSel')) !== (w === 'B' ? 1 : 0)) sendCtl(c, w === 'B' ? 1 : 0);
     };
     $('tgtA').addEventListener('click', () => pickVfo('A'));
