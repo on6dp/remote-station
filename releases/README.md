@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.8 | [RemoteStation-Setup-0.22.8.exe](0.22.8/RemoteStation-Setup-0.22.8.exe) | [remote-station-0.22.8.tar.gz](0.22.8/remote-station-0.22.8.tar.gz) | Étiquette « A · MAIN » / « B · SUB » sur la ligne du titre — [empreintes SHA-256](0.22.8/SHA256SUMS.txt) |
 | 0.22.7 | [RemoteStation-Setup-0.22.7.exe](0.22.7/RemoteStation-Setup-0.22.7.exe) | [remote-station-0.22.7.tar.gz](0.22.7/remote-station-0.22.7.tar.gz) | TUNE sans accord (HI-SWR) : émission bloquée sur la bande ; QSY → ↺ — [empreintes SHA-256](0.22.7/SHA256SUMS.txt) |
 | 0.22.6 | [RemoteStation-Setup-0.22.6.exe](0.22.6/RemoteStation-Setup-0.22.6.exe) | [remote-station-0.22.6.tar.gz](0.22.6/remote-station-0.22.6.tar.gz) | QO-100 FI 23 cm listée ; rappel adapté en 2 m / 70 cm — [empreintes SHA-256](0.22.6/SHA256SUMS.txt) |
 | 0.22.5 | [RemoteStation-Setup-0.22.5.exe](0.22.5/RemoteStation-Setup-0.22.5.exe) | [remote-station-0.22.5.tar.gz](0.22.5/remote-station-0.22.5.tar.gz) | Rappel « TUNE obligatoire » après un changement de bande — [empreintes SHA-256](0.22.5/SHA256SUMS.txt) |

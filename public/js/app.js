@@ -1096,7 +1096,9 @@
       let t = h.querySelector('.ph-side');
       if (!t) { t = document.createElement('span'); t.className = 'ph-side'; h.appendChild(t); }
       t.hidden = !sideB;
-      t.textContent = 'VFO ' + panelSide() + (panelSide() === 'B' ? ' · SUB' : ' · MAIN');
+      // Court (« A · MAIN ») pour tenir sur la ligne du titre dans la colonne étroite
+      t.textContent = panelSide() + (panelSide() === 'B' ? ' · SUB' : ' · MAIN');
+      t.title = 'Réglages du VFO ' + panelSide() + (panelSide() === 'B' ? ' (côté SUB)' : ' (côté MAIN)');
       t.classList.toggle('b', panelSide() === 'B');
     }
 
