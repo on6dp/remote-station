@@ -570,13 +570,13 @@
       const x0 = (f / WF_MAX_HZ) * w;
       const sw = Math.max(3, ((f + bw) / WF_MAX_HZ) * w - x0);
       const fw = Math.max(sw, c.measureText(label).width + 12);
-      const left = x0 + fw > w ? Math.max(0, x0 + sw - fw) : x0;
+      // Hampe toujours à gauche de l'étiquette, sur la fréquence (comme le trait de la cascade)
       c.fillStyle = fill;
-      c.fillRect(left, y, fw, h);
+      c.fillRect(x0, y, Math.min(fw, w - x0), h);
       c.fillStyle = pole;
       c.fillRect(x0, y, 3, h);
       c.fillStyle = '#FFFFFF';
-      c.fillText(label, left + (left < x0 ? 5 : 7), y + h / 2 + 1);
+      c.fillText(label, Math.min(x0 + 7, w - fw + 7), y + h / 2 + 1);
     };
     flag(txF, 14, 14, 'rgba(190, 28, 28, .92)', '#ff7a6a', 'TX ' + Math.round(txF));
     flag(rxF, 29, 15, 'rgba(0, 140, 66, .92)', '#7CF29F', 'RX ' + Math.round(rxF));
@@ -1522,7 +1522,18 @@
     // (la période opposée à celle de la station choisie), puis la séquence avance toute seule
     if (api && api.iControl() && FT_MODES.indexOf(mode) >= 0) {
       const t = ftxMsgs()[ftxSel];
-      if (t) ftxSend(ftxSel, t);
+      if (t) {
+        ftxSend(ftxSel, t);
+        // Retour immédiat : quand part la réponse
+        setTimeout(() => {
+          const x = api.state() && api.state().ftx;
+          if (!x) return;
+          const s = Math.max(0, Math.round((x.at - Date.now()) / 1000));
+          const d = new Date(x.at);
+          api.say(x.state === 'tx' ? 'Réponse à ' + call + ' : en émission (Tx' + (ftxSel + 1) + ').'
+            : 'Réponse à ' + call + ' : Tx' + (ftxSel + 1) + ' part dans ' + s + ' s (' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' UTC, période de ' + call + ' + 1).', '', 8000);
+        }, 700);
+      }
     } else if (api && !api.iControl()) api.say('Correspondant ' + call + ' choisi. Prenez la main pour lui répondre.', '', 4000);
   }
   function ftxMsgs() {

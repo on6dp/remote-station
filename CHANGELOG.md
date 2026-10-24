@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.21** — FT8 : réponse cliquée juste après le décodage acceptée jusqu’à 2 s après le début de la période (au lieu de 1,5 s), comme WSJT-X ; message immédiat « Réponse à EA8TJ : Tx1 part dans 12 s (15:56:00 UTC…) » ou « en émission ». Drapeaux de la cascade : hampe toujours à gauche de l’étiquette, sur la fréquence, pour TX comme pour RX.
 - **0.22.20** — Cascade : trait d’émission (TX, rouge) en trait plein. Ctrl+F5 sur le dashboard suffit.
 - **0.22.19** — **Aide** (français et anglais) : nouvelle section 4.1 « Toutes les commandes, cadre par cadre » (écrans VFO, ligne Step et bandes, colonnes de gauche et de droite, centre) et 4.2 « Trafic en SPLIT » pas à pas (A → B, fréquence d’émission sur le VFO B, SPLIT, PTT, fin ; particularités du FTX-1, XIT, FT8). Cascade des modes numériques : drapeaux **TX** (rouge) et **RX** (vert) plus grands avec leur fréquence (« TX 1500 », « RX 1200 »), traits de la cascade plus épais. Ctrl+F5 sur le dashboard suffit.
 - **0.22.18** — FT8 / FT4 / FT2 : **clic sur l’indicatif** de la station (souligné en pointillé dans le message) = lui répondre, comme le double-clic : avec la main, Tx1 part à la période suivante. Un clic ailleurs sur la ligne cale la réception. Ctrl+F5 sur le dashboard suffit.

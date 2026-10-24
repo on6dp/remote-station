@@ -916,7 +916,9 @@ function startPtt(conn) {
 // signal à l'heure dite et prévient à la fin → retour en réception. Une émission par clic.
 const FTX_SLOT = { FT8: 15000, FT4: 7500, FT2: 3750 };
 const FTX_T0 = 500; // début du signal après le début de la période (ms), comme WSJT-X
-const FTX_LATE = { FT8: 1500, FT4: 700, FT2: 250 }; // départ en retard encore accepté dans la période en cours
+// Départ en retard encore accepté dans la période en cours (réponse cliquée juste après le décodage, comme WSJT-X) :
+// le correspondant décode encore (DT jusqu'à +2,5 s en FT8)
+const FTX_LATE = { FT8: 2000, FT4: 800, FT2: 250 };
 const FTX_KEY_LEAD = 400; // passage en émission avant le début du signal (ms)
 const FTX_END = 'fin du message';
 let ftxPend = null; // { id, conn, mode, text, f0, at, state: 'wait' | 'tx', ready, seconds, sent, timer }
