@@ -771,7 +771,7 @@ Un clic sur le voyant `● Station` ouvre le menu **TRX du club** :
 |---|---|
 | Nom d'un TRX (FTX-1, FTDX10, IC-7300) | Passe sur ce TRX, après confirmation. La station redémarre quelques secondes et la main est conservée. Le TRX doit être branché au PC du club et son port choisi une fois sur la page Station. Impossible pendant une émission. |
 | `↻ Recharger la page Station` | Recharge à distance la page Station du PC du club (nouvelle version, page bloquée…). La station revient en une dizaine de secondes. |
-| `⌨ Lecture CAT…` | Diagnostic : lit une valeur brute du TRX (lecture seulement, liste de commandes autorisées). |
+| `⌨ Lecture CAT…` | Diagnostic : lit une valeur brute du TRX (lecture seulement, liste de commandes autorisées). Plusieurs lectures sur une ligne (« VS;FT;ST; ») ; `Effacer` vide la fenêtre. |
 
 Les administrateurs ont aussi accès au menu Synchronisation du carnet (14.4 et 14.5), à l'export de tous les TX call, et peuvent reprendre la main (section 6). La gestion des membres, des mots de passe et du serveur est décrite dans `LISEZMOI.md` et `README.md` (dépôt du projet).
 

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.61** — Lecture CAT (administrateurs) : bouton « Effacer » pour vider la fenêtre, et plusieurs lectures sur une ligne (« VS;FT;ST; » ou « VS, FT, ST ») lues l’une après l’autre. Ctrl+F5 sur le dashboard suffit.
 - **0.22.60** — FTX-1 : le critère « SPLIT de la face avant » de la 0.22.59 ne correspondait pas à ce qui se passe au club (il bloquait aussi le retour SUB → MAIN) ; retour à la règle simple : MAIN ↔ SUB par le dashboard en double réception seulement, ou si un administrateur l’autorise (`ftx1SubSingle: true`). Messages plus clairs (A ⇄ B pour écouter la fréquence du VFO B en HF). Redémarrer le service, recharger la page Station, puis Ctrl+F5.
 - **0.22.59** — FTX-1 : essai au club du 25/10, le passage MAIN ↔ SUB par le dashboard se fait sans émission quand le TRX affiche ses deux VFO (SPLIT mis sur la face avant, ou DUAL RX). Il est donc autorisé tout seul dans ces cas, et toujours refusé quand le TRX n’affiche qu’un VFO (c’est là qu’il passait en émission) ; `ftx1SubSingle` peut revenir à false. Redémarrer le service, recharger la page Station, puis Ctrl+F5.
 - **0.22.58** — FTX-1 : le passage MAIN ↔ SUB en réception simple peut de nouveau être autorisé pour des essais, avec `"ftx1SubSingle": true` dans config.json (refusé par défaut). Le déroulé des commandes (VS / FT / TX) s’affiche après chaque changement de côté. Redémarrer le service, recharger la page Station, puis Ctrl+F5.

@@ -771,7 +771,7 @@ A click on the `● Station` lamp opens the **TRX du club** (club TRX) menu:
 |---|---|
 | Name of a TRX (FTX-1, FTDX10, IC-7300) | Switches to that TRX, after confirmation. The station restarts for a few seconds and control is kept. The TRX must be connected to the club PC and its port chosen once on the Station page. Not possible during a transmission. |
 | `↻ Recharger la page Station` (reload the Station page) | Reloads the Station page on the club PC remotely (new version, page stuck…). The station is back within about ten seconds. |
-| `⌨ Lecture CAT…` (CAT read) | Diagnostics: reads a raw value from the TRX (read only, list of allowed commands). |
+| `⌨ Lecture CAT…` (CAT read) | Diagnostics: reads a raw value from the TRX (read only, list of allowed commands). Several reads on one line (« VS;FT;ST; »); `Effacer` (clear) empties the window. |
 
 Administrators also have access to the logbook Synchronisation menu (14.4 and 14.5), to the export of every TX call, and can take back control (section 6). Management of members, passwords and the server is described in `LISEZMOI.md` and `README.md` (project repository).
 

@@ -844,17 +844,16 @@
         '<div class="cat-row"><input name="cmd" maxlength="12" value="PA0;" autocomplete="off" spellcheck="false"><button class="btn btn-primary" type="button" data-a="go">Lire</button></div>' +
         '<div class="cat-quick"></div>' +
         '<pre class="cat-out"></pre>' +
-        '<p class="md-prev cat-help"></p><div class="md-act"><span></span><button class="btn" value="close">Fermer</button></div></form>';
+        '<p class="md-prev cat-help"></p><div class="md-act"><span></span><button class="btn" type="button" data-a="clr">Effacer</button><button class="btn" value="close">Fermer</button></div></form>';
       document.body.appendChild(dlg);
       const f = dlg.querySelector('form');
+      // Plusieurs lectures à la suite acceptées : « VS;FT;ST; » ou « VS, FT, ST »
       const go = (c) => {
-        c = String(c || f.cmd.value).toUpperCase().replace(/\s+/g, '');
-        if (!c) return;
-        if (!c.endsWith(';')) c += ';';
-        catOut('→ ' + c);
-        send({ t: 'cat_query', cmd: c });
+        const list = String(c || f.cmd.value).toUpperCase().split(/[;,\s]+/).filter(Boolean).map((x) => x + ';');
+        list.forEach((x, i) => setTimeout(() => { catOut('→ ' + x); send({ t: 'cat_query', cmd: x }); }, i * 400));
       };
       dlg.querySelector('[data-a="go"]').addEventListener('click', () => go());
+      dlg.querySelector('[data-a="clr"]').addEventListener('click', () => { dlg.querySelector('.cat-out').textContent = ''; f.cmd.focus(); });
       const t = dlg.querySelector('[data-a="sidetest"]');
       if (t) t.addEventListener('click', () => sideTest(t));
       f.cmd.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
