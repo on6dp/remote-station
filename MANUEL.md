@@ -538,7 +538,8 @@ Le RTTY est le « télétype » : on tape du texte qui défile chez le correspon
 | **Silencieux** | Plus haut = moins de caractères au hasard sur le bruit ; trop haut, les signaux faibles ne sont plus décodés. |
 | Indicateur M / S | Les deux barres doivent battre en alternance quand le décodeur est bien calé. |
 | Centre … Hz | Fréquence audio où le décodeur est calé. |
-| Échelle de la cascade | En **kHz**, fréquence réelle (porteuse du VFO + audio) ; le petit triangle blanc marque le **centre** de la cascade (1500 Hz audio). |
+| Échelle de la cascade | En **kHz**, fréquence réelle (porteuse du VFO + audio) ; le petit triangle blanc marque le **centre** de la cascade (1500 Hz audio). En **DATA-U** (mode à utiliser en RTTY), les fréquences basses sont à gauche ; en LSB, l'échelle est inversée et l'émission RTTY aussi : passez en DATA-U. |
+| Glisser / molette sur une cascade | **Glisser** la cascade à gauche ou à droite accorde le VFO (on « attrape » la bande, les signaux suivent la souris) ; **molette** : VFO ± 10 Hz par cran (± 100 Hz avec `Maj`). Les deux décodeurs restent calés sur leurs signaux. Un simple clic, lui, cale le décodeur. Il faut avoir la main. |
 | `⌖ Centrer` | Déplace le VFO pour que le signal suivi par ce décodeur tombe au milieu de la cascade : sa fréquence ne change pas, il est simplement centré dans la bande passante (il faut avoir la main). L'autre décodeur reste calé sur son signal s'il est encore dans la cascade. |
 | `TX` | Choisit le décodeur dont les réglages servent à l'émission (fréquence audio, shift, vitesse) : allumé en rouge, avec un cadre rouge autour du décodeur. |
 | `Effacer` | Vide le texte reçu de ce décodeur. |

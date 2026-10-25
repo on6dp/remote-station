@@ -888,6 +888,82 @@
     c.fillStyle = '#FFFFFF';
     c.beginPath(); c.moveTo(xc - 5, H - 1); c.lineTo(xc + 5, H - 1); c.lineTo(xc, H - 7); c.closePath(); c.fill();
   }
+  // Accord du VFO depuis une cascade RTTY (glisser / molette) : les décodeurs restent sur leurs signaux (même fréquence réelle)
+  function rtSetDial(d, nd) {
+    const delta = -d.sign * (nd - d.hz); // déplacement des signaux dans la cascade (Hz audio)
+    if (!delta) return;
+    api.setFreq(nd, d.vfo);
+    rts.forEach((x, ch) => {
+      const dd = rtDialOf(ch);
+      if (!dd || dd.vfo !== d.vfo) return;
+      const f = x.f + delta;
+      if (f >= 200 + x.shift / 2 && f <= WF_MAX_HZ - 100 - x.shift / 2) x.f = f;
+    });
+    saveRtty(true);
+    drawScale();
+  }
+  function rtTuneOk() {
+    if (!api || !api.iControl()) { api && api.say('Prenez la main pour accorder le TRX.', 'warn'); return false; }
+    const st = api.state();
+    if (st && ((st.ptt && st.ptt.active) || st.ftx)) { api.say('Réglage bloqué pendant l’émission.', 'warn'); return false; }
+    return true;
+  }
+  function rtDragInit(ids, ch) {
+    let drag = null;
+    let swallowClick = false;
+    for (const id of ids) {
+      const el = $(id);
+      el.addEventListener('pointerdown', (e) => {
+        if (tab !== 'rtty' || e.button !== 0) return;
+        const d = rtDialOf(ch);
+        if (!d) return;
+        drag = { x0: e.clientX, w: el.getBoundingClientRect().width, d, cur: d.hz, moved: false, el, id: e.pointerId, t: 0 };
+      });
+      el.addEventListener('pointermove', (e) => {
+        if (!drag || drag.el !== el) return;
+        const dx = e.clientX - drag.x0;
+        if (!drag.moved && Math.abs(dx) < 5) return;
+        if (!drag.moved) {
+          if (!rtTuneOk()) { drag = null; return; }
+          drag.moved = true;
+          try { el.setPointerCapture(drag.id); } catch (err) { /* */ }
+          el.style.cursor = 'grabbing';
+        }
+        // On « attrape » la bande : glisser à droite = les signaux suivent la souris (le VFO descend en USB)
+        const nd = Math.round((drag.d.hz - drag.d.sign * (dx / drag.w) * WF_MAX_HZ) / 10) * 10;
+        const now = Date.now();
+        if (nd !== drag.cur && now - drag.t > 120) { rtSetDial(Object.assign({}, drag.d, { hz: drag.cur }), nd); drag.cur = nd; drag.t = now; }
+        drag.pending = nd;
+      });
+      const end = () => {
+        if (!drag || drag.el !== el) return;
+        if (drag.moved) {
+          swallowClick = true;
+          if (drag.pending != null && drag.pending !== drag.cur) rtSetDial(Object.assign({}, drag.d, { hz: drag.cur }), drag.pending);
+          el.style.cursor = '';
+        }
+        drag = null;
+      };
+      el.addEventListener('pointerup', end);
+      el.addEventListener('pointercancel', end);
+      // Un glisser n'est pas un clic (le décodeur ne se recale pas)
+      el.addEventListener('click', (e) => { if (swallowClick) { swallowClick = false; e.stopImmediatePropagation(); } }, true);
+      // Molette : VFO ± 10 Hz par cran (Maj : ± 100 Hz)
+      el.addEventListener('wheel', (e) => {
+        if (tab !== 'rtty') return;
+        e.preventDefault();
+        if (!rtTuneOk()) return;
+        const d = rtDialOf(ch);
+        if (!d) return;
+        const st = (e.shiftKey ? 100 : 10) * (e.deltaY < 0 ? 1 : -1);
+        const base = rtWheelHz && rtWheelHz.vfo === d.vfo && Date.now() - rtWheelHz.t < 1500 ? rtWheelHz.hz : d.hz;
+        const nd = Math.round((base + st) / 10) * 10;
+        rtSetDial(Object.assign({}, d, { hz: base }), nd);
+        rtWheelHz = { vfo: d.vfo, hz: nd, t: Date.now() };
+      }, { passive: false });
+    }
+  }
+  let rtWheelHz = null; // molette rapide : on part de la dernière fréquence envoyée, pas de l'état relu (en retard)
   // Centrer : le VFO se déplace pour que le signal du décodeur tombe au milieu de la cascade (1500 Hz)
   function rtCenter(ch) {
     if (!api || !api.iControl()) return api && api.say('Prenez la main pour centrer le signal (le TRX change de fréquence).', 'warn');
@@ -1003,6 +1079,9 @@
       });
     });
     document.querySelectorAll('.rt-center').forEach((b) => b.addEventListener('click', () => rtCenter(Number(b.dataset.ch) === 1 ? 1 : 0)));
+    // Glisser la bande ou molette sur une cascade RTTY : accord du VFO
+    rtDragInit(['dgWf', 'dgScale'], 0);
+    rtDragInit(['rtWfB', 'rtScaleB'], 1);
     // Décodeur de l'émission : bouton TX de son en-tête
     document.querySelectorAll('.rt-txsel').forEach((b) => b.addEventListener('click', () => {
       rtTx = Number(b.dataset.ch) === 1 ? 1 : 0;

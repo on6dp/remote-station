@@ -538,7 +538,8 @@ RTTY is radio "teletype": you type text that scrolls on the other station's scre
 | **Silencieux** (squelch) | Higher = fewer random characters on noise; too high and weak signals are no longer decoded. |
 | M / S indicator | The two bars should beat alternately when the decoder is tuned correctly. |
 | Centre … Hz | Audio frequency the decoder is tuned to. |
-| Waterfall scale | In **kHz**, real frequency (VFO dial + audio); the small white triangle marks the **centre** of the waterfall (1500 Hz audio). |
+| Waterfall scale | In **kHz**, real frequency (VFO dial + audio); the small white triangle marks the **centre** of the waterfall (1500 Hz audio). In **DATA-U** (the mode to use for RTTY) low frequencies are on the left; in LSB the scale is reversed and so is the RTTY transmission: switch to DATA-U. |
+| Drag / mouse wheel on a waterfall | **Dragging** the waterfall left or right tunes the VFO (you "grab" the band, signals follow the mouse); **mouse wheel**: VFO ± 10 Hz per notch (± 100 Hz with `Shift`). Both decoders stay on their signals. A simple click tunes the decoder. You need control. |
 | `⌖ Centrer` (centre) | Moves the VFO so that the signal followed by this decoder falls in the middle of the waterfall: its frequency does not change, it is simply centred in the passband (you need control). The other decoder stays on its signal if it is still in the waterfall. |
 | `TX` | Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): lit in red, with a red frame around that decoder. |
 | `Effacer` (clear) | Clears the received text of this decoder. |
