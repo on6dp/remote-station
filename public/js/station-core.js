@@ -631,7 +631,28 @@
       if (this.txVfoSet) {
         // Le TRX repasse d'abord en réception (TX0), puis VFO de réception et d'émission remis (FT / VS)
         this.txVfoSet = false;
-        this.restoreTimer = setTimeout(() => { this.restoreTimer = null; if (!this.catKeyed) { this.txVfoSet = true; this._restoreTxVfo(); } }, 150);
+        // État FT / VS relu d'abord : celui gardé peut dater d'avant l'émission (le FTX-1 déplace VS avec FT pendant
+        // l'émission en SPLIT). Avec un état périmé, seul FT0 partait et laissait FT0 + VS1, qui garde le FTX-1 en
+        // émission sur SUB (constaté au club le 25/10 : TX qui ne retombe pas au relâchement du PTT en SPLIT).
+        this.restoreTimer = setTimeout(() => {
+          this.restoreTimer = null;
+          if (this.catKeyed) return;
+          let vs = null;
+          this._write('VS;FT;');
+          this._await(/^VS[01]$/, 700, (t) => {
+            if (t) vs = Number(t[2]);
+            this._await(/^FT[0-3]$/, 700, (t2) => {
+              if (this.catKeyed) return;
+              if (vs != null) this.radio.vfoSel = vs;
+              if (t2) this.radio.txVfo = Number(t2[2]) % 2;
+              this.txVfoSet = true;
+              this._restoreTxVfo();
+              // Filet de sécurité : si le TRX émet encore dans les secondes qui suivent, retour complet en réception
+              this.lastCtl = { id: 'fin d’émission en SPLIT', at: Date.now(), long: true };
+              setTimeout(() => { if (!this.catKeyed) this._write('TX;'); }, 400);
+            });
+          });
+        }, 150);
         // Le TRX a pu recopier la fréquence d'un VFO sur l'autre pendant l'émission en SPLIT : on les remet comme avant
         const f = this.freqsBeforeTx;
         this.freqsBeforeTx = null;

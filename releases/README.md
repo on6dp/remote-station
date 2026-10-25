@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.62 | [RemoteStation-Setup-0.22.62.exe](0.22.62/RemoteStation-Setup-0.22.62.exe) | [remote-station-0.22.62.tar.gz](0.22.62/remote-station-0.22.62.tar.gz) | Sécurité FTX-1 : retour en réception après une émission en SPLIT — [empreintes SHA-256](0.22.62/SHA256SUMS.txt) |
 | 0.22.61 | [RemoteStation-Setup-0.22.61.exe](0.22.61/RemoteStation-Setup-0.22.61.exe) | [remote-station-0.22.61.tar.gz](0.22.61/remote-station-0.22.61.tar.gz) | Lecture CAT : Effacer, plusieurs lectures par ligne — [empreintes SHA-256](0.22.61/SHA256SUMS.txt) |
 | 0.22.60 | [RemoteStation-Setup-0.22.60.exe](0.22.60/RemoteStation-Setup-0.22.60.exe) | [remote-station-0.22.60.tar.gz](0.22.60/remote-station-0.22.60.tar.gz) | FTX-1 : règle MAIN ↔ SUB simplifiée — [empreintes SHA-256](0.22.60/SHA256SUMS.txt) |
 | 0.22.59 | [RemoteStation-Setup-0.22.59.exe](0.22.59/RemoteStation-Setup-0.22.59.exe) | [remote-station-0.22.59.tar.gz](0.22.59/remote-station-0.22.59.tar.gz) | FTX-1 : MAIN ↔ SUB autorisé quand le TRX affiche ses deux VFO — [empreintes SHA-256](0.22.59/SHA256SUMS.txt) |
