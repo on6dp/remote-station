@@ -1038,7 +1038,7 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .lg-mlist[hidden] { display: none; }
 .lg-mlist button { font: inherit; font-size: 12px; text-align: left; color: var(--v2-text-secondary); background: transparent; border: 0; border-radius: 4px; padding: 7px 10px; cursor: pointer; }
 .lg-mlist button:hover, .lg-mlist button:focus-visible { background: var(--v2-bg-input); color: var(--v2-text-bright); }
-.lg-tw { flex: 1; min-height: 220px; overflow: auto; border: 1px solid var(--v2-border-dark); border-radius: 6px; background: var(--v2-bg-darker); }
+.lg-tw { flex: 1; min-height: 220px; overflow: auto; contain: inline-size; max-width: 100%; border: 1px solid var(--v2-border-dark); border-radius: 6px; background: var(--v2-bg-darker); }
 .lg-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums; }
 .lg-table th { position: sticky; top: 0; background: var(--v2-bg-card); color: #FFFFFF; font-weight: 700; font-size: 9px; letter-spacing: .8px; text-transform: uppercase; text-align: left; padding: 6px; border-bottom: 1px solid var(--v2-border-dark); white-space: nowrap; }
 .lg-table td { padding: 4px 6px; border-bottom: 1px solid var(--v2-border-dark); color: var(--v2-text-secondary); white-space: nowrap; }
@@ -1253,3 +1253,7 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 /* DNF (DSP) et TUNER (Accord) en blanc gras */
 button[data-ctl='dnf']:not([aria-pressed='true']), button[data-ctl='dnfB']:not([aria-pressed='true']), button[data-ctl='tuner']:not([aria-pressed='true']) { color: var(--v2-text-bright); }
 button[data-ctl='dnf'], button[data-ctl='dnfB'], button[data-ctl='tuner'] { font-weight: 700; }
+/* Logs : menus Synchronisation, Exporter et Configuration en jaune fluo ; entrées des sous-menus en blanc gras */
+.lg-menu > .btn, #lgCfgBtn, .lg-menu > .btn:hover:not(:disabled), #lgCfgBtn:hover:not(:disabled) { color: var(--v2-accent-yellow); font-weight: 700; }
+.lg-menu > .btn:disabled, #lgCfgBtn:disabled { color: var(--v2-text-disabled); }
+.lg-mlist button { color: #FFFFFF; font-weight: 700; }
