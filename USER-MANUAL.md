@@ -331,6 +331,8 @@ Choose the band; every 2 minutes (about ten seconds after each even minute) the 
 
 Server time, offset of your PC, delay of the link with the station and mean DT of FT8 decodes: useful to check that everything is in step.
 
+- **Votre PC** (your PC): the **current** offset between the clock of the PC running your browser and the server, in milliseconds (in seconds above one second), with its accuracy (± half the shortest network round trip). Not to be confused with the « Offset » column of NetTime or Meinberg, which shows the error found **before** their last clock correction.
+
 <a id="qo100"></a>
 ### 9.9 QO-100
 

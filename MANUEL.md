@@ -331,6 +331,8 @@ Choisissez la bande ; toutes les 2 minutes (une dizaine de secondes après la mi
 
 Heure du serveur, écart de votre PC, délai de la liaison avec la station et DT moyen des décodages FT8 : utile pour vérifier que tout est bien calé.
 
+- **Votre PC** : écart **actuel** de l'horloge du PC où tourne votre navigateur avec le serveur, en millisecondes (en secondes au-delà d'une seconde), avec sa précision (± la moitié de l'aller-retour réseau le plus court). À ne pas confondre avec la colonne « Offset » de NetTime ou de Meinberg, qui montre l'écart trouvé **avant** leur dernière correction de l'horloge.
+
 <a id="qo100"></a>
 ### 9.9 QO-100
 

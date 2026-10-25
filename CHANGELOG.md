@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.40** — Synchro : écart de votre PC en millisecondes (en secondes au-delà d’une seconde), avec sa précision ; aide : différence avec l’« Offset » de NetTime / Meinberg. Ctrl+F5 sur le dashboard suffit.
 - **0.22.39** — Décodage FT8 / FT4 / FT2 avec le moteur de **WSJT-X 3** (décodeur FT8 multi-passes de JTDX, OSD, soustraction, aide a priori avec TX CALL et correspondant, base d’indicatifs de JTDX) : passes anticipée (11,8 s), normale et profonde comme WSJT-X / JTDX. Mesuré : FT8 −22 dB sans aide (−19 dB avant), ≈ −24 dB avec AP ; FT4 −17,5 dB (−15 avant) ; FT2 ≈ 3 dB de mieux. dB = vrai rapport signal/bruit WSJT-X ; repère a1…a7 pour les décodages AP. ft8_lib reste en secours. WSPR : réglages de WSJT-X (-C 500 -d). Redémarrer le service puis Ctrl+F5.
 - **0.22.38** — Cascade : réglage « Vitesse » (rapide / normale / lente, comme « Spd » de JTDX) ; en normale (par défaut), deux lignes fondues en une : signaux FT8 en blocs ramassés, deux fois plus d’historique. Ctrl+F5 sur le dashboard suffit.
 - **0.22.37** — Cascade façon JTDX : FFT de 8192 points (1,46 Hz par case) moyennée sur 0,8 s (les signaux FT8 deviennent des blocs pleins, le bruit est lisse), affichée aux vrais pixels de l’écran (écrans à 125 / 150 %, cascade agrandie) ; couleurs JTDX par défaut (bruit bleu, signaux jaunes, forts en rouge) ; trait de début de période avec heure UTC et bande ; échelle graduée tous les 50 / 100 / 500 Hz. Redémarrer le service puis Ctrl+F5 sur le dashboard.

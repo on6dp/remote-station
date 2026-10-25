@@ -2306,9 +2306,12 @@
     $('syVps').textContent = pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds());
     if (bestRtt < Infinity) {
       const s = -clockOff / 1000; // positif : ce PC est en avance
-      $('syPc').textContent = (Math.abs(s) < 0.05 ? '0,0' : (s > 0 ? '+' : '−') + Math.abs(s).toFixed(1).replace('.', ',')) + ' s';
+      const ms = Math.round(-clockOff);
+      const prec = Math.max(1, Math.round(bestRtt / 2)); // l'aller-retour le plus court borne l'incertitude
+      // Moins d'une seconde : en millisecondes (comme NetTime / Meinberg) ; au-delà : en secondes
+      $('syPc').textContent = Math.abs(s) < 1 ? (ms > 0 ? '+' : ms < 0 ? '−' : '') + Math.abs(ms) + ' ms' : (s > 0 ? '+' : '−') + Math.abs(s).toFixed(1).replace('.', ',') + ' s';
       $('syPc').className = Math.abs(s) < 1 ? 'ok' : 'warn';
-      $('syPcNote').textContent = Math.abs(s) < 1 ? 'à l’heure (aucune incidence sur le décodage)' : (s > 0 ? 'en avance' : 'en retard') + ' sur le serveur (aucune incidence sur le décodage)';
+      $('syPcNote').textContent = (Math.abs(ms) <= Math.max(prec, 20) ? 'à l’heure' : (s > 0 ? 'en avance' : 'en retard') + ' sur le serveur') + ' · précision ± ' + prec + ' ms (aucune incidence sur le décodage)';
     }
     const st = api && api.state();
     const lat = st && st.digi && st.digi.latency;
