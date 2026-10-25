@@ -152,7 +152,9 @@
     f.call.addEventListener('change', () => { const c = f.call.value.trim(); if (/^[A-Z0-9/]{3,15}$/.test(c) && api) api.send({ t: 'qrz', call: c }); });
     // TX call du carnet = TX call de la ligne Correspondant : avec la main, le choix fait ici change aussi l'indicatif d'émission
     f.station.addEventListener('change', () => {
-      if (editing || !api || !api.iControl || !api.iControl()) return;
+      if (editing) return;
+      // Sans la main : choix gardé pour ce QSO seulement (l'indicatif d'émission est celui de l'opérateur qui a la main)
+      if (!api || !api.iControl || !api.iControl()) { f.station.dataset.manual = '1'; return; }
       const v = f.station.value;
       const mine = String(me.call || '').toUpperCase();
       const club = String(me.digiCall || '').toUpperCase();
@@ -813,6 +815,8 @@
       // Enregistré depuis un autre onglet (fiche du QSO RTTY / JTTY / CW, FT8 auto) : message en bas de l'écran
       if (!root || root.hidden || !root.offsetParent) say(okMsg, 'ok');
       if (!root) return;
+      // Fiche en cours de modification d'un autre QSO (QSO enregistré ailleurs, ex. fin de QSO FT8) : on n'y touche pas
+      if (editing) { say(okMsg, 'ok'); return; }
       const f = q$('#lgForm');
       for (const k of ['call', 'name', 'qth', 'gridsquare', 'comment', 'rst_rcvd']) f[k].value = '';
       delete f.time.dataset.manual;
@@ -871,7 +875,10 @@
       const s0 = api && api.state && api.state();
       const tc = s0 && s0.txCall ? String(s0.txCall).toUpperCase() : '';
       const f0 = q$('#lgForm');
-      if (f0 && tc && tc !== lastTxCall && [...f0.station.options].some((o) => o.value === tc)) { f0.station.value = tc; lastTxCall = tc; }
+      if (f0 && tc && [...f0.station.options].some((o) => o.value === tc)) {
+        if (tc !== lastTxCall) { delete f0.station.dataset.manual; lastTxCall = tc; }
+        if (!f0.station.dataset.manual && f0.station.value !== tc) f0.station.value = tc;
+      }
       if (root.hidden) return;
       const f = q$('#lgForm');
       if (!f || f.freq.dataset.manual || f.contains(document.activeElement) && document.activeElement === f.freq) return;

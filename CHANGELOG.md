@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.48** — TX call de la fiche du carnet toujours aligné sur celui de la ligne Correspondant (sauf QSO en cours de modification) ; un QSO enregistré ailleurs (fin de QSO FT8) ne vide plus la fiche en cours de modification. Ctrl+F5 sur le dashboard suffit.
 - **0.22.47** — FT8 / FT4 / FT2 : passes de décodage anticipée et normale plus rapides (profondeur 2 ; la passe profonde ajoute ensuite les plus faibles) ; clic pendant notre période d’émission = départ immédiat ; émission toujours arrêtée à la fin de la période (message tronqué si parti en retard) ; plus de PTT « à vide » avant la période. Synchro : heure d’arrivée de chaque passe. Carnet : colonne Préfixe (DXCC). Redémarrer le service puis Ctrl+F5.
 - **0.22.46** — Carnet : filtre sur chaque colonne (▾ à côté du titre : valeurs de la colonne avec leur nombre de QSO ; plusieurs filtres se combinent ; « ✕ Filtres » pour tout retirer). Redémarrer le service puis Ctrl+F5.
 - **0.22.45** — Carnet : titres des colonnes en blanc gras, colonne MHz à gauche de Mode. Ctrl+F5 sur le dashboard suffit.
