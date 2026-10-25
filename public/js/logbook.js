@@ -27,6 +27,7 @@
   let items = [];
   let total = 0;
   let editing = null;      // QSO en cours de modification
+  let lastTxCall = '';     // dernier TX call de la ligne Correspondant reporté dans la fiche
   let stale = true;        // liste à recharger à la prochaine ouverture de l'onglet
   let listTimer = 0;
   let sdlg = null;         // fenêtre de synchronisation ouverte { service, el, job }
@@ -106,9 +107,9 @@
     </div>
     <div class="lg-tw">
       <table class="lg-table">
-        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th>Mode</th><th class="r">MHz</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="grow">QTH</th><th class="grow" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th>
-          <th class="c" title="LoTW (★ = confirmé)">LoTW</th><th class="c">eQSL</th><th class="c" title="Club Log">CL</th><th class="c">QRZ</th></tr></thead>
-        <tbody id="lgBody"><tr><td colspan="16" class="lg-empty">Chargement du carnet…</td></tr></tbody>
+        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th>Mode</th><th class="r">MHz</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th>
+          <th class="c" title="LoTW (★ = confirmé)">LoTW</th><th class="c">eQSL</th><th class="c" title="Club Log">CL</th><th class="c">QRZ</th><th class="lg-fill"></th></tr></thead>
+        <tbody id="lgBody"><tr><td colspan="17" class="lg-empty">Chargement du carnet…</td></tr></tbody>
       </table>
     </div>
     <p class="lg-job" id="lgJob" aria-live="polite"></p>`;
@@ -137,6 +138,17 @@
     f.time.addEventListener('input', () => { f.time.dataset.manual = '1'; });
     // Indicatif tapé : nom, QTH et locator cherchés sur QRZ.com (si un compte QRZ est réglé), cases vides seulement
     f.call.addEventListener('change', () => { const c = f.call.value.trim(); if (/^[A-Z0-9/]{3,15}$/.test(c) && api) api.send({ t: 'qrz', call: c }); });
+    // TX call du carnet = TX call de la ligne Correspondant : avec la main, le choix fait ici change aussi l'indicatif d'émission
+    f.station.addEventListener('change', () => {
+      if (editing || !api || !api.iControl || !api.iControl()) return;
+      const v = f.station.value;
+      const mine = String(me.call || '').toUpperCase();
+      const club = String(me.digiCall || '').toUpperCase();
+      if (v !== mine && v !== club) return;
+      const own = v === mine;
+      try { localStorage.setItem('rs.txown', own ? '1' : '0'); } catch (e) { /* */ }
+      api.send({ t: 'txcall', own });
+    });
     f.gridsquare.addEventListener('input', () => { f.gridsquare.value = f.gridsquare.value.toUpperCase(); });
     f.freq.addEventListener('change', qoCheck);
     // Fréquence ou mode tapés à la main : ils ne suivent plus le TRX jusqu'au prochain QSO (ou ⇩ TRX)
@@ -338,14 +350,14 @@
     const body = q$('#lgBody');
     if (!body) return;
     if (!items.length) {
-      body.innerHTML = '<tr><td colspan="16" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
+      body.innerHTML = '<tr><td colspan="17" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
     } else {
       body.innerHTML = items.map((q) => '<tr data-id="' + esc(q.id) + '"' + (editing && editing.id === q.id ? ' class="sel"' : '') + ' title="Cliquer pour modifier">' +
         '<td>' + fmtDate(q.qso_date) + '</td><td>' + fmtTime(q.time_on) + '</td><td class="call">' + esc(q.call) + '</td><td>' + esc(q.band) +
         (q.sat_name ? ' <span class="sat">' + esc(q.sat_name) + '</span>' : '') + '</td><td>' + esc(modeName(q)) + '</td><td class="r">' + esc(q.freq) +
-        '</td><td>' + esc(q.rst_sent || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td class="grow">' + esc(q.name || '') + '</td><td class="grow" title="' + esc(q.qth || '') + '">' + esc(q.qth || '') +
-        '</td><td class="grow" title="' + esc(q.country || '') + '">' + esc(q.country || '') + '</td><td class="txc" title="' + esc(q.operator ? 'Opérateur : ' + q.operator : '') + '">' + esc(q.station_callsign || '') + '</td>' +
-        SV.map((s) => upCell(q, s)).join('') + '</tr>').join('');
+        '</td><td>' + esc(q.rst_sent || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td class="grow">' + esc(q.name || '') + '</td><td class="lg-qth" title="' + esc(q.qth || '') + '">' + esc(q.qth || '') +
+        '</td><td class="lg-cty" title="' + esc(q.country || '') + '">' + esc(q.country || '') + '</td><td class="txc" title="' + esc(q.operator ? 'Opérateur : ' + q.operator : '') + '">' + esc(q.station_callsign || '') + '</td>' +
+        SV.map((s) => upCell(q, s)).join('') + '<td class="lg-fill"></td></tr>').join('');
     }
     const c = q$('#lgCount');
     if (c) c.textContent = total + ' QSO au carnet' + (items.length < total ? ' · ' + items.length + ' affichés' : '');
@@ -735,7 +747,13 @@
     init(a) { api = a; },
     // Fiche du carnet : fréquence et mode suivent tout seuls le VFO actif du TRX (sauf saisie à la main ou modification d'un QSO)
     onState() {
-      if (!root || root.hidden || editing) return;
+      if (!root || editing) return;
+      // TX call de la ligne Correspondant → TX call du carnet (dès qu'il change)
+      const s0 = api && api.state && api.state();
+      const tc = s0 && s0.txCall ? String(s0.txCall).toUpperCase() : '';
+      const f0 = q$('#lgForm');
+      if (f0 && tc && tc !== lastTxCall && [...f0.station.options].some((o) => o.value === tc)) { f0.station.value = tc; lastTxCall = tc; }
+      if (root.hidden) return;
       const f = q$('#lgForm');
       if (!f || f.freq.dataset.manual || f.contains(document.activeElement) && document.activeElement === f.freq) return;
       const st = api && api.state && api.state();
@@ -758,7 +776,7 @@
     },
     mount,
     onHello(h) {
-      me = { call: h.call, admin: !!h.admin, rxOnly: !!h.rxOnly };
+      me = { call: h.call, admin: !!h.admin, rxOnly: !!h.rxOnly, digiCall: h.digiCall || '' };
       if (h.digiCall && calls.indexOf(h.digiCall) < 0) calls = [h.digiCall].concat(calls);
       rights();
       stale = true;

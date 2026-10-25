@@ -1047,7 +1047,11 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .lg-table .call { color: var(--v2-text-bright); font-weight: 700; }
 /* Colonnes courtes à la largeur de leur contenu ; nom, QTH et pays prennent la place restante */
 .lg-table th, .lg-table td { width: 1%; }
-.lg-table th.grow, .lg-table td.grow { width: auto; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+.lg-table th.grow, .lg-table td.grow { width: 120px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+/* Place restante à droite du tableau (colonne vide) plutôt que d'élargir les colonnes */
+.lg-table th.lg-fill, .lg-table td.lg-fill { width: auto; }
+.lg-table th.lg-qth, .lg-table td.lg-qth { width: 130px; max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
+.lg-table th.lg-cty, .lg-table td.lg-cty { width: 110px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
 .lg-table .r { text-align: right; }
 .lg-table .c { text-align: center; }
 .lg-table td.ok { color: var(--v2-accent-green-bright); }
