@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.53** — Documentation : manuel des membres entièrement réécrit pour les débutants (FR et EN) — lexique, premiers pas guidés (écouter, QSO en FT8, carnet), chaque commande expliquée cadre par cadre (à quoi elle sert, quand l’utiliser), problèmes fréquents complétés, menu des administrateurs ; manuel lisible sur téléphone. README mis à jour (fonctions, réglages de config.json, fichiers). Pas de changement du programme (procédure de mise à jour habituelle, puis Ctrl+F5).
 - **0.22.52** — Logs : ⚙ Configuration intégrée au menu Synchronisation ; chaque fenêtre de synchronisation affiche, avant l’envoi, les identifiants (login, mot de passe, clé…) propres à l’indicatif choisi (TX call en cours par défaut) et permet de les enregistrer pour cet indicatif ; un envoi qui mélange plusieurs TX call est fait par groupe avec les identifiants de chacun ; les identifiants généraux ne servent qu’aux indicatifs du club (ON5VL, OR0L). Redémarrer le service puis Ctrl+F5.
 - **0.22.51** — Logs : Synchronisation, Exporter et Configuration en jaune fluo, entrées des sous-menus en blanc gras ; sur un écran plus étroit, le carnet défile horizontalement au lieu d’élargir la page. Ctrl+F5 sur le dashboard suffit.
 - **0.22.50** — Carnet : export ADIF par TX call ; « Mes QSO (.adi) » télécharge d’un clic les QSO faits sous son propre indicatif ; chaque membre exporte ses QSO (son indicatif, ou ses QSO sous ON5VL / OR0L), les administrateurs tous les TX call. Redémarrer le service puis Ctrl+F5.

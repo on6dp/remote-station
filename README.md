@@ -11,18 +11,35 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.7.1** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.22.53** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
-**Télécharger un paquet prêt à installer** : onglet **Releases** (ou **Tags**) du dépôt → version voulue → `Source code (tar.gz)`. Le paquet s'installe avec la procédure « Mettre à jour le serveur » ci-dessous (le dossier extrait s'appelle alors `remote-station-0.7.1` : le renommer en `remote-station`, ou utiliser l'archive `remote-station-X.Y.Z.tar.gz` fournie avec la version).
+**Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
+`remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
+L'archive s'installe avec la procédure « Mettre à jour le serveur » ci-dessous.
 
-Le guide complet est dans [LISEZMOI.md](LISEZMOI.md). Ci-dessous, l'aide-mémoire des opérations courantes.
+| Document | Pour qui |
+|---|---|
+| **[MANUEL.md](MANUEL.md)** · [USER-MANUAL.md](USER-MANUAL.md) | Les membres : manuel complet pour débutants (lexique, premiers pas guidés, chaque commande expliquée). Aussi dans le dashboard, bouton **HELP**. |
+| [LISEZMOI.md](LISEZMOI.md) | Les administrateurs : installation complète du serveur. |
+| [windows/LISEZMOI-WINDOWS.md](windows/LISEZMOI-WINDOWS.md) | Installation sous Windows (PC du club, serveur). |
+| Ce fichier | Aide-mémoire des opérations courantes. |
+| [TIERS.md](TIERS.md) | Licences des éléments repris. |
+
+## Ce que fait la Remote Station
+
+- **Piloter le TRX** depuis un navigateur : fréquence, bandes, modes, filtres, DSP, deux VFO, SPLIT, RIT / XIT, antenne, tuner, puissance, PTT ; une seule personne « a la main » à la fois, les autres regardent et écoutent.
+- **Écouter** le TRX dans le navigateur, avec un réglage de volume propre à chacun.
+- **Modes numériques** décodés sur le serveur, sans logiciel à installer : FT8 · FT4 · FT2 (moteur WSJT-X 3 avec le décodeur multi-passes de JTDX, séquence automatique comme WSJT-X), RTTY, JTTY, WSPR, JT65, CW, SSTV ; émission en FT8 · FT4 · FT2, RTTY et JTTY.
+- **Carnet de trafic** partagé : enregistrement des QSO, colonnes et filtres, export ADIF / Cabrillo (dont « Mes QSO » pour chaque opérateur), envoi vers LoTW, eQSL, Club Log et QRZ.com avec des identifiants par indicatif, recherche des correspondants sur QRZ.com, UDP vers Swisslog, Log4OM, N1MM…
+- **Sécurités d'émission** côté serveur et côté club : bandes autorisées, puissance selon la licence, ROS, durée maximale, coupure si la liaison tombe.
+- **Opérateurs** : liste des connectés, demande et passage de la main, discussion, mode « Suivre l'opérateur » pour la formation à distance.
 
 ---
 
 ## Aide-mémoire
 
 > Dans PuTTY, lancer **une commande à la fois**.
-> Les fichiers secrets restent sur le VPS et ne sont **jamais** dans ce dépôt : `config.json` (jeton de la station), `users.json` (mots de passe), `comptes-*.csv`.
+> Les fichiers secrets restent sur le VPS et ne sont **jamais** dans ce dépôt : `config.json` (jeton de la station), `users.json` (mots de passe), `comptes-*.csv`, `logbook.json` (carnet), `logbook-config.json` (identifiants des carnets en ligne), `sessions.json`, `macros.json`.
 
 ### 1. Mettre à jour le serveur avec une nouvelle version
 
@@ -108,11 +125,31 @@ sudo systemctl restart remote-station
 ```
 
 ### 4 bis. Indicatif et locator des modes numériques
-Les messages FT8 / FT4 / RTTY / CW utilisent l'indicatif `digiCall` (ON5VL par défaut) et le locator `stationGrid` de `config.json` :
+Les messages FT8 / FT4 / FT2 / RTTY / JTTY partent sous l'indicatif `digiCall` (ON5VL par défaut) ou, si celui qui a la main le choisit (TX call), sous son propre indicatif.
+Le locator `stationGrid` sert aux messages CQ et aux distances ; `stationCall` liste les autres indicatifs du club (ex. `"ON5VL / OR0L"`) :
 ```
 sudo nano /opt/remote-station/config.json      # "digiCall": "ON5VL", "stationGrid": "JO20"
 sudo systemctl restart remote-station
 ```
+
+**Autres réglages utiles de `config.json`** (redémarrer le service après modification) :
+
+| Réglage | Par défaut | Rôle |
+|---|---|---|
+| `allowTx` | `false` | Autorise l'émission (section 5). |
+| `maxTxSeconds` | `120` | Durée maximale d'une émission. |
+| `controlIdleMinutes` / `sessionIdleMinutes` | `15` / `15` | Main libérée / membre déconnecté après ce temps sans action. |
+| `rememberDays` | `7` | Jours pendant lesquels un navigateur reste connecté. |
+| `powerRules`, `defaultMaxWatts` | ON3 : 25 W, sinon 1500 W | Puissance maximale selon l'indicatif. |
+| `rxOnlyPrefixes` | `["ONL"]` | Indicatifs en écoute seule. |
+| `maxSwr`, `swrHoldMs` | `2.5`, `700` | Coupure de l'émission sur ROS élevé. |
+| `tunerAuto` | `true` | Tuner remis en service à chaque changement de bande HF / 6 m. |
+| `ftx1SubCat`, `ftx1SubSingle` | `true`, `true` | FTX-1 : passage MAIN / SUB par le dashboard (aussi en réception simple). |
+| `digiAlcMax` | `0` | Limiteur d'ALC en émission numérique (%) ; 0 = pas de limiteur. |
+| `ftxWatchdogMinutes` | `6` | Arrêt de l'émission FT8 / FT4 / FT2 sans réponse. |
+| `qo100If` | 144,5 / 432,5 / 1296,5 | FI des convertisseurs QO-100 (section 4 ter). |
+
+Les identifiants des carnets en ligne (LoTW, eQSL, Club Log, QRZ.com) se règlent dans le dashboard (onglet Logs → Synchronisation ▾ → ⚙ Configuration, et dans chaque fenêtre de synchronisation pour les indicatifs personnels) ; ils restent dans `logbook-config.json` sur le serveur, jamais dans ce dépôt.
 
 ### 4 ter. QO-100 : fréquences de la FI du convertisseur 2,4 GHz
 Les listes FT8 · FT4, RTTY et CW proposent « QO-100 · FI 2 m / 70 cm / 23 cm » : la fréquence à mettre sur le TRX, avant le
@@ -178,7 +215,8 @@ Aucun autre logiciel (WSJT-X, log…) ne doit utiliser le port CAT en même temp
 1. Le TRX est relié en USB : sa carte son intégrée apparaît dans Windows (souvent « USB Audio CODEC »).
 2. Page Station → cadre **« Audio du TRX »** → **« Activer l'audio »**. La première fois, Chrome demande l'accès au micro : répondre **Autoriser** (c'est l'entrée son du TRX, pas un micro).
 3. Choisir l'**entrée son** du TRX dans la liste. La barre de niveau doit bouger avec la BF ; régler le niveau de sortie USB dans le menu du TRX si elle est trop faible ou toujours au maximum.
-4. Le son n'est envoyé que si au moins un membre écoute ou regarde la fenêtre FT8 · FT4 (12 kHz, 192 kbit/s depuis le club ; 96 kbit/s vers chaque écouteur).
+4. Le son n'est envoyé que si au moins un membre écoute ou regarde un onglet de mode numérique (12 kHz, 192 kbit/s depuis le club ; 96 kbit/s vers chaque écouteur).
+5. **Sortie son vers le TRX** (émission numérique) : choisir la carte son USB du TRX (« Haut-parleurs (USB Audio CODEC) »), jamais les haut-parleurs du PC ; régler le niveau pour que l'ALC reste faible.
 
 Après un redémarrage, la page réactive l'audio toute seule. Si elle affiche « Audio en pause », un clic n'importe où sur la page suffit ; pour éviter ce clic, ajouter `--autoplay-policy=no-user-gesture-required` au raccourci de démarrage de Chrome.
 
@@ -196,26 +234,16 @@ Fabrication sous Linux : `windows/build.sh` (NSIS 3, WinSW).
 
 ## Pour les membres
 
-Manuel complet : **[MANUEL.md](MANUEL.md)** (français) · **[USER-MANUAL.md](USER-MANUAL.md)** (English), aussi dans le dashboard (bouton **HELP**, https://remote.op0p.be/aide et /help). Source : `public/aide.html` et `public/help.html` ; après chaque modification, `node native/manual2md.js` refait les deux fichiers .md.
+Tout est expliqué pas à pas dans le **[manuel](MANUEL.md)** ([English](USER-MANUAL.md)), aussi dans le dashboard (bouton **HELP**, https://remote.op0p.be/aide et /help).
+Source du manuel : `public/aide.html` et `public/help.html` ; après chaque modification, `node native/manual2md.js` refait les deux fichiers .md.
 
+L'essentiel en cinq lignes :
 
-1. Aller sur https://remote.op0p.be, se connecter avec **son indicatif** et **son mot de passe**.
-2. **Prendre la main** (une seule personne pilote à la fois). Si quelqu'un l'a déjà : **Demander la main** dans le cadre Opérateurs, ou lui écrire un message.
-3. Accorder : molette ou glisser sur les chiffres, flèches ↑ ↓, touches de bande et de mode. **PTT** : bouton ou barre d'espace (maintenir).
-4. **Écouter** : cadre RX AUDIO → « 🔊 Écouter le TRX », réglage du volume juste en dessous. Tout le monde peut écouter, même sans avoir la main (écouteurs ONL compris).
-5. **Libérer la main** en partant.
-
-**Disposition** : sur un écran 1920 × 1080 ou plus, tout tient sur un seul écran. Chaque cadre a un bouton **⧉** (en haut à droite) qui l'ouvre dans sa propre fenêtre, à placer où l'on veut (2e écran…) ; « Ramener » le remet dans le dashboard. La disposition est retenue : si Chrome autorise les fenêtres pop-up pour remote.op0p.be, les fenêtres se rouvrent à leur place au chargement suivant.
-6. **FT8 · FT4** : onglet au centre de la page. Cascade 0–3000 Hz, « Activité de bande » (tous les messages décodés, CQ en vert, messages avec ON5VL / OR0L en rouge) et « Fréquence RX ». Split comme dans WSJT-X : **clic gauche** sur la cascade ou sur une ligne = fréquence de **réception** (vert), **clic droit** = fréquence d'**émission** (rouge) ; boutons « TX ← RX » et « RX ← TX ». Un clic sur **FT8** ou **FT4** met le TRX sur la fréquence d'appel de ce mode dans sa bande, en DATA-U ; « QSY » va sur la fréquence choisie dans la liste (il faut avoir la main dans les deux cas). Le bouton **⧉** à droite des onglets ouvre les modes numériques dans une **fenêtre séparée** (à placer sur un 2e écran) ; l'onglet **Synchro** montre l'heure du serveur, l'écart de votre PC et le calage des DT. Le décodage se fait sur le serveur, à l'heure du VPS : l'heure du PC du club n'a pas d'importance. L'émission FT8 / FT4 et RTTY (indicatif ON5VL) arrive dans une prochaine version.
-7. **RTTY** : onglet RTTY, régler shift et vitesse (170 Hz / 45,45 bauds par défaut), cliquer sur le signal dans la cascade (les repères jaune = Mark et bleu = Space doivent tomber sur ses deux traces ; sinon « Inversé »). Le texte reçu défile à gauche ; à droite, le correspondant (double-clic sur un indicatif reçu) et les macros préparent le texte à émettre.
-8. **WSPR** : onglet WSPR, choisir la bande dans la liste (le TRX y va). Toutes les 2 minutes, une dizaine de secondes après la minute paire, la liste des stations entendues se complète : indicatif, locator, puissance, fréquence, dérive et distance (si `stationGrid` est réglé).
-9. **JT65** : onglet JT65, même fenêtre que FT8 (le TRX va sur la fréquence JT65 de sa bande, en DATA-U). Décodage vers la 52e seconde de chaque minute.
-10. **JTTY** : onglet JTTY, choisir la bande (le TRX va sur la fréquence JTTY, en DATA-U). Pas de périodes : le texte de chaque message apparaît au fil des trames de 1,9 s (▌ = en cours). Clic gauche = réception, clic droit = émission, double-clic = correspondant ; macros F1 à F8 (clic droit pour les modifier).
-11. **CW** : onglet CW, choisir la bande (le TRX va en CW). Cliquer sur un signal dans la cascade : le décodeur s'y cale tout seul (repère jaune) et apprend la vitesse. Filtre 100 Hz par défaut (50 Hz si QRM, 200–400 Hz si l'on cherche) ; silencieux à monter si des lettres apparaissent sur le bruit. Double-clic sur un indicatif reçu = correspondant ; macros F1 à F12.
-12. **SSTV** : onglet SSTV, choisir la bande (14 230 kHz…). Les images arrivent toutes seules (code VIS) et s'affichent ligne après ligne ; la galerie garde les 12 dernières, « PNG » enregistre l'image affichée. À droite : choisir une image de votre PC (ou la carte CQ), écrire le texte (balises <CALL>, <MYCALL>, <RST>…), choisir le mode ; « Écouter » / « WAV » pour essayer (l'émission viendra plus tard).
-13. **Logs online** : dernier onglet. « ⇩ TRX » remplit fréquence, mode et correspondant ; Entrée enregistre le QSO dans le carnet de la station. Colonnes LoTW / eQSL / CL / QRZ : envoyé ✓, refusé ✗, confirmé ★. « Exporter » : ADIF ou Cabrillo. Administrateurs : « Synchronisation » (une fenêtre par service : Détails, puis Traitement avec Arrêt) et « ⚙ Configuration » (Club Log, eQSL, LoTW, QRZ, UDP vers Swisslog / N1MM…, envoi automatique à chaque QSO).
-
-Automatique : main libérée après 15 min sans action, déconnexion après 15 min d'inactivité (avertissement une minute avant, bouton « Rester connecté »). **Jamais pendant une émission.**
+1. Ouvrir https://remote.op0p.be dans **Chrome** ou **Edge**, se connecter avec **son indicatif** et **son mot de passe**.
+2. **Prendre la main** (une seule personne pilote à la fois). Si quelqu'un l'a déjà : bouton **👥** en haut → **Demander la main**.
+3. **Écouter** : cadre RX audio → « 🔊 Écouter le TRX ». Tout le monde peut écouter, même sans la main.
+4. Après un changement de bande : **TUNE**, puis vérifier le SWR avant d'émettre. FT8 : onglet FT8 · FT4 · FT2, clic sur l'indicatif d'une station qui lance appel, la séquence se fait toute seule.
+5. **Libérer la main** en partant (sinon elle est libérée après 15 min sans action).
 
 ---
 
@@ -227,6 +255,8 @@ Automatique : main libérée après 15 min sans action, déconnexion après 15 m
 - Émission seulement dans les bandes autorisées (`txRanges`), contrôlée sur la fréquence réellement émise (VFO B en SPLIT, XIT compris).
 - Durée maximale d'émission : 120 s, puis coupure (relâcher le PTT avant de réémettre).
 - Coupure immédiate si le membre perd la liaison, si le PC du club perd internet, ou si la page Station se ferme.
+- **TUNE sans accord** : si le FTX-1 signale HI-SWR à la fin d'un TUNE, l'émission est bloquée sur toute la bande (sauf TUNE) jusqu'à un TUNE réussi.
+- FT8 / FT4 / FT2 : émission arrêtée à la fin de chaque période ; arrêt de la séquence si le même message part depuis 6 min sans réponse (`ftxWatchdogMinutes`).
 - Puissance ramenée à la limite de la licence (ON3 : 25 W) ; émission coupée si on tourne le bouton au-delà.
 - VOX : peut être coupé à distance, jamais activé. TUNE compte comme une émission.
 
@@ -257,19 +287,23 @@ Automatique : main libérée après 15 min sans action, déconnexion après 15 m
 | Fichier | Rôle |
 |---|---|
 | `server.js` | Serveur : comptes, contrôle, PTT, sécurités, messages, journal |
-| `lib/` | WebSocket minimal, mots de passe, décodeur FT8/FT4 (`ftx.wasm`, `ftx.js`), démodulateur RTTY (`rtty.js`), décodeur CW (`cw.js`), décodeur SSTV (`sstv-dec.js`) et galerie (`sstv-store.js`), fil de décodage (`digi-worker.js`) — aucune dépendance npm |
+| `lib/` | WebSocket minimal, mots de passe, décodeur FT8/FT4 de secours (`ftx.wasm`, `ftx.js`), démodulateur RTTY (`rtty.js`), décodeur CW (`cw.js`), décodeur SSTV (`sstv-dec.js`) et galerie (`sstv-store.js`), WSPR (`wspr.js`, `wsprd.wasm`), fil de décodage (`digi-worker.js`) — aucune dépendance npm |
+| `lib/dxcc.js`, `lib/data/cty.dat` | Pays DXCC, préfixe, distance et azimut d'un indicatif (fichier cty.dat d'AD1C) |
+| `lib/qrz.js` | Recherche des correspondants sur QRZ.com (prénom, ville, locator) |
 | `native/ftx/` | Source et script de compilation du décodeur WebAssembly (ft8_lib : secours si `lib/bin/wsjtxd` ne peut pas tourner) |
 | `lib/wsjtx.js`, `lib/data/ALLCALL7.TXT` | Pilotage du moteur de décodage WSJT-X (FT8 / FT4 / FT2, passes anticipée / normale / profonde, AP) ; base d'indicatifs de JTDX |
 | `native/wsjtx/` | Script de compilation des décodeurs de WSJT-X en programmes autonomes (`lib/bin/jt65`, `lib/bin/jttyd`, `lib/bin/wsjtxd` — moteur FT8 / FT4 / FT2, source `wsjtxd.c`, `build-wsjtxd.sh`), sans FFTW (`fftw_kiss.c`) ni Boost (`crc.c`) |
 | `native/wspr/` | Sources de wsprd (WSJT-X, GPL v3) et script de compilation de `lib/wsprd.wasm` |
-| `public/js/digi.js` | Onglets du centre : FT8 · FT4, RTTY, WSPR, JT65, JTTY, CW, SSTV, Synchro |
+| `public/js/digi.js` | Onglets du centre : FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, CW, SSTV, Synchro |
+| `public/aide.html`, `public/help.html`, `native/manual2md.js` | Manuel des membres (FR / EN) et conversion en `MANUEL.md` / `USER-MANUAL.md` |
+| `releases/` | Versions prêtes à installer (archive serveur, installateur Windows, empreintes SHA-256) |
 | `public/js/sstv.js` | Modes SSTV et codeur (image → signal), communs au serveur et au navigateur |
 | `public/js/ftxenc.js`, `public/js/ftx-enc.wasm`, `native/ftx/ftx_enc.c` | Codeur FT8 / FT4 / FT2 (ft8_lib, MIT) pour l'émission |
-| `lib/logbook.js`, `lib/logsync.js`, `public/js/logbook.js` | Carnet de trafic, exports ADIF / Cabrillo, envois LoTW (TQSL), eQSL, Club Log, QRZ.com et UDP (WSJT-X, N1MM, ADIF) ; onglet « Logs online » |
+| `lib/logbook.js`, `lib/logsync.js`, `public/js/logbook.js` | Carnet de trafic, exports ADIF / Cabrillo, envois LoTW (TQSL), eQSL, Club Log, QRZ.com (identifiants par indicatif) et UDP (WSJT-X, N1MM, ADIF) ; onglet « Logs » |
 | `public/index.html`, `public/js/app.js`, `public/css/` | Page des membres |
 | `public/station.html`, `public/js/station.js`, `public/js/station-core.js` | Page Station (Web Serial) |
 | `public/js/yaesu.js`, `ftx1.js`, `ftdx10.js`, `ic7300.js` | Pilotes des TRX |
 | `adduser.js`, `importusers.js`, `init-config.js` | Gestion des membres et de la configuration |
 | `deploy/` | Service systemd et site nginx |
 | `LISEZMOI.md` | Guide complet |
-| `TIERS.md` | Licences des éléments repris (RigPlane Core et ft8_lib, MIT ; wsprd de WSJT-X, GPL v3 ; police Roboto Mono, OFL) |
+| `TIERS.md` | Licences des éléments repris (RigPlane Core et ft8_lib, MIT ; décodeurs de WSJT-X, GPL v3 ; base d'indicatifs de JTDX ; cty.dat d'AD1C ; police Roboto Mono, OFL) |

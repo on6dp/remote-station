@@ -39,3 +39,4 @@ footer { margin-top: 48px; border-top: 1px solid var(--line); padding-top: 12px;
   .toc { columns: 2; } header.top nav { display: none; } h2 { break-after: avoid; } table, .note, .warn, .tip { break-inside: avoid; }
   a { text-decoration: none; }
 }
+@media (max-width: 600px) { .k { white-space: normal; } table { font-size: 13px; } th, td { padding: 5px 6px; overflow-wrap: anywhere; } }
