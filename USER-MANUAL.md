@@ -257,7 +257,7 @@ Below the VFO displays.
 | `10 Hz` … `100 kHz` (Step) | Chooses the step of the ◀ ▶ arrows and of the keyboard arrows `↑` `↓`. | 100 Hz to 1 kHz to search in SSB; 10 Hz for fine tuning; 10 to 100 kHz to move across a band. |
 | `A` / `B` (VFO) | Chooses the VFO tuned by the arrows and the band keys. On the FTX-1, also switches the TRX to that side (like MAIN / SUB). | To work on VFO B. |
 | `◀` `▶` | Moves the frequency down / up by one step. | Step-by-step searching. |
-| `MAIN` / `SUB` | Active side of the TRX (receive and transmit together), like the front-panel key, without transmitting. Takes 1 to 2 seconds. | FTX-1: listen and transmit on VFO B. |
+| `MAIN` / `SUB` | Active side of the TRX (receive and transmit together), like the front-panel key, without transmitting. Takes 1 to 2 seconds. **FTX-1: only in dual receive (DUAL RX)**; in single receive the dashboard refuses (the transceiver went into transmit): use the MAIN / SUB key on the transceiver at the club. | FTX-1: listen and transmit on VFO B. |
 | `SPLIT` | Transmit on the other VFO than the one being listened to. | DX expeditions (section 7.5). |
 | `TXW` | **Hold** the button (or the `W` key): you listen on the transmit frequency; release = back to the DX. The VFOs are put back automatically (also after 15 s or if the link drops). PTT is refused while TXW is held. | In SPLIT, to listen to the pile-up and find a gap. |
 | `DUAL RX` | FTX-1: dual receive (MAIN and SUB heard together) or single receive. The FTX-1 refuses dual receive with both VFOs on HF / 50 MHz, even on the same band (tried at the club: 20 m + 15 m, then 7.074 + 7.090 MHz); one VFO must be on 144 / 430 MHz. To follow two stations on the same HF band: the two decoders of the RTTY tab. | Monitoring two frequencies. In digital modes, switch it off so that only the active side is decoded. |
@@ -759,6 +759,7 @@ These keys are ignored while you are typing in a text field.
 | A separate window does not open | Allow pop-up windows for remote.op0p.be (icon at the right of the address bar). |
 | Name and QTH not filled in | The QRZ.com account is not set up, or the station is not on QRZ.com: type them in by hand. |
 | Synchronisation: « non configuré » (not configured) | No credentials for that TX call: complete the « Identifiants … » box in the synchronisation window (14.4). |
+| « Réception simple (DUAL RX coupé) : le passage MAIN ↔ SUB par le dashboard est bloqué » (single receive: MAIN ↔ SUB switching blocked) | Normal on the FTX-1: in single receive, switching to SUB from the dashboard keys the transceiver (seen at the club). VFO B can still be tuned (mouse wheel, arrows, bands); to listen to it, use the MAIN / SUB key on the transceiver at the club, or DUAL RX with one VFO on 144 / 430 MHz. |
 | « Passage MAIN ↔ SUB par le dashboard désactivé » (MAIN ↔ SUB switching from the dashboard disabled) | An administrator has set `ftx1SubCat` to `false` in `config.json`: MAIN / SUB from the front panel only. |
 
 <a id="admin"></a>

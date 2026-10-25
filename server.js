@@ -36,10 +36,10 @@ const DEFAULTS = {
   // Tuner (boîte d'accord) remis en service tout seul à la connexion du TRX et à chaque changement de bande HF / 6 m,
   // pour ne pas l'oublier ; un clic sur TUNER le coupe jusqu'au prochain changement de bande. false : jamais tout seul.
   tunerAuto: true,
-  // FTX-1 : passage MAIN ↔ SUB par le dashboard aussi en réception simple (DUAL RX coupé). Le 24/10, un clic sur SUB en
-  // réception simple avait mis le TRX en émission (commande FT envoyée après VS, supprimée en 0.22.29) ; essai au club
-  // ensuite concluant (VS seul, pas d'émission). false : SUB seulement en double réception.
-  ftx1SubSingle: true,
+  // FTX-1 : passage MAIN ↔ SUB par le dashboard en réception simple (DUAL RX coupé) — TOUJOURS REFUSÉ.
+  // Le 24/10 puis encore le 25/10 (0.22.55, deux VFO en HF), un clic sur le VFO B en réception simple a mis le TRX
+  // en émission (VS1 seul). Ce réglage n'est plus lu : MAIN / SUB en réception simple = face avant du TRX seulement.
+  ftx1SubSingle: false,
   digiAlcMax: 0, // émission numérique : ALC maximal (%) au-delà duquel la page Station baisse le niveau BF ; 0 = pas de limite
   ftxWatchdogMinutes: 6, // émission auto FT8 / FT4 / FT2 : arrêt si le même message part depuis ce temps (WSJT-X : 6 min)
   pttHeartbeatMs: 1500,
@@ -223,7 +223,7 @@ function txwSwap(by) {
   if (!R.CONTROL || !R.CONTROL.swap || !station) return false;
   let v;
   try { v = R.validate('swap', undefined, radio); } catch (e) { return false; }
-  toStation({ t: 'cmd', op: 'ctl', id: 'swap', value: v, by, subOk: !!cfg.ftx1SubCat, subSingle: !!cfg.ftx1SubSingle });
+  toStation({ t: 'cmd', op: 'ctl', id: 'swap', value: v, by, subOk: !!cfg.ftx1SubCat, subSingle: false });
   return true;
 }
 function txwOff(reason) {
@@ -1628,7 +1628,7 @@ function loggedIn(conn, call, rec, sessionTok) {
     sessionIdleMinutes: cfg.sessionIdleMinutes,
     digiCall: String(cfg.digiCall || '').toUpperCase(),
     subCat: !!cfg.ftx1SubCat,
-    subSingle: !!cfg.ftx1SubSingle,
+    subSingle: false,
     stationGrid: String(cfg.stationGrid || '').toUpperCase(),
     stationQth: String(cfg.stationQth || '').toUpperCase(),
     qo100If: cfg.qo100If && typeof cfg.qo100If === 'object' ? cfg.qo100If : DEFAULTS.qo100If,
@@ -2036,8 +2036,8 @@ function onOperator(conn, m) {
         // FTX-1 en réception simple (DUAL RX coupé) : passage MAIN ↔ SUB par CAT refusé (constaté au club le 24/10 :
         // clic sur SUB → le TRX passe en émission) ; DUAL RX d'abord, ou face avant
         const sideMove = (m.ctl === 'vfoSel' && Number(m.value) !== (radio.vfoSel === 1 ? 1 : 0)) || (c && c.viaSub && radio.vfoSel !== 1) || (c && c.viaMain && radio.vfoSel === 1);
-        if (R.ID === 'ftx1' && radio.dualRx === 0 && sideMove && !cfg.ftx1SubSingle) {
-          return send(conn, { t: 'notice', level: 'error', msg: 'Passage MAIN ↔ SUB refusé en réception simple (il a mis le FTX-1 en émission) : allumez d’abord DUAL RX, ou utilisez la touche MAIN / SUB du TRX.' });
+        if (R.ID === 'ftx1' && radio.dualRx !== 1 && sideMove) { // réception simple (ou état inconnu) : jamais par CAT
+          return send(conn, { t: 'notice', level: 'error', msg: 'Passage MAIN ↔ SUB refusé en réception simple (DUAL RX coupé) : il met le FTX-1 en émission. Le VFO B se règle quand même (molette, flèches, bandes) ; pour écouter le VFO B, touche MAIN / SUB du TRX au club.' });
         }
         let v;
         try {
@@ -2074,7 +2074,7 @@ function onOperator(conn, m) {
           if (!(swrLock && swrLock.tune)) swrLock = null;
           tuneWatch = { freq: txFreq(), at: Date.now(), saw: false, endAt: 0, call: conn.user.call, conn };
         }
-        toStation({ t: 'cmd', op: 'ctl', id: m.ctl, value: v, by: conn.user.call, subOk: !!cfg.ftx1SubCat, subSingle: !!cfg.ftx1SubSingle });
+        toStation({ t: 'cmd', op: 'ctl', id: m.ctl, value: v, by: conn.user.call, subOk: !!cfg.ftx1SubCat, subSingle: false });
         if (c.type !== 'action') radio[m.ctl] = v; // affichage optimiste
         if (R.VIRTUAL_SPLIT && m.ctl === 'vfoSel') radio.txVfo = txSide(); // l'émission suit la réception (ou l'autre VFO en SPLIT)
       }

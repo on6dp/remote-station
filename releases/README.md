@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.57 | [RemoteStation-Setup-0.22.57.exe](0.22.57/RemoteStation-Setup-0.22.57.exe) | [remote-station-0.22.57.tar.gz](0.22.57/remote-station-0.22.57.tar.gz) | Sécurité FTX-1 : MAIN ↔ SUB bloqué en réception simple — [empreintes SHA-256](0.22.57/SHA256SUMS.txt) |
 | 0.22.56 | [RemoteStation-Setup-0.22.56.exe](0.22.56/RemoteStation-Setup-0.22.56.exe) | [remote-station-0.22.56.tar.gz](0.22.56/remote-station-0.22.56.tar.gz) | DUAL RX HF + HF refusé par le FTX-1, même bande comprise — [empreintes SHA-256](0.22.56/SHA256SUMS.txt) |
 | 0.22.55 | [RemoteStation-Setup-0.22.55.exe](0.22.55/RemoteStation-Setup-0.22.55.exe) | [remote-station-0.22.55.tar.gz](0.22.55/remote-station-0.22.55.tar.gz) | DUAL RX sur la même bande HF (FTX-1) — [empreintes SHA-256](0.22.55/SHA256SUMS.txt) |
 | 0.22.54 | [RemoteStation-Setup-0.22.54.exe](0.22.54/RemoteStation-Setup-0.22.54.exe) | [remote-station-0.22.54.tar.gz](0.22.54/remote-station-0.22.54.tar.gz) | RTTY : deux décodeurs A / B côte à côte — [empreintes SHA-256](0.22.54/SHA256SUMS.txt) |

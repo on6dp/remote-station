@@ -525,6 +525,15 @@
     if (RIG().ID === 'ftx1' && me && !me.subCat && (c.id === 'vfoSel' && v === 1 || (c.viaSub && Number(ctlValue('vfoSel')) !== 1) || (c.viaMain && Number(ctlValue('vfoSel')) === 1))) {
       return say('Passage MAIN ↔ SUB par le dashboard désactivé (il mettait le FTX-1 en émission) : choisissez MAIN / SUB sur la face avant du TRX ; le dashboard suit.', 'warn', 8000);
     }
+    // FTX-1 en réception simple (DUAL RX coupé) : aucun passage MAIN ↔ SUB par CAT (VS1 a mis le TRX en émission, 24 et 25/10)
+    if (RIG().ID === 'ftx1' && st && st.radio && st.radio.dualRx !== 1) {
+      const sel = Number(ctlValue('vfoSel')) === 1 ? 1 : 0;
+      if ((c.id === 'vfoSel' && v != null && Number(v) !== sel) || (c.viaSub && sel !== 1) || (c.viaMain && sel === 1)) {
+        if (c.id === 'vfoSel' && Number(v) === 1) setTarget('B');
+        return say('Réception simple (DUAL RX coupé) : le passage MAIN ↔ SUB par le dashboard est bloqué, il met le FTX-1 en émission. ' +
+          'Le VFO B se règle quand même (molette, flèches, bandes) ; pour écouter le VFO B : touche MAIN / SUB du TRX au club.', 'warn', 9000);
+      }
+    }
     // FTX-1 : pas de double réception avec MAIN et SUB tous deux en HF / 50 MHz, même sur la même bande
     // (constaté au club : 14 + 21 MHz refusé le 24/10, 7,074 + 7,090 MHz refusé le 25/10 ; 432 + 21 MHz accepté)
     if (c.id === 'dualRx' && v === 1 && RIG().ID === 'ftx1') {
