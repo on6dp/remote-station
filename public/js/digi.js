@@ -844,11 +844,14 @@
     const st = api && api.state && api.state();
     const r = st && st.radio;
     const dial = r ? Number(r.vfoSel === 1 && r.freqB ? r.freqB : r.freq) || 0 : 0;
+    // FTX-1 en double réception : la BF mélange MAIN et SUB ; le décodeur B est rapporté au VFO-B
+    const dual = r && r.dualRx === 1 && r.freq && r.freqB;
     rts.forEach((x, ch) => {
       const sfx = RT_SFX[ch];
       if (!$('rtF' + sfx)) return;
+      const d0 = dual ? Number(ch ? r.freqB : r.freq) : dial;
       $('rtF' + sfx).textContent = Math.round(x.f);
-      $('rtRf' + sfx).textContent = dial ? (((dial + x.f) / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kHz') : '';
+      $('rtRf' + sfx).textContent = d0 ? (((d0 + x.f) / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kHz') : '';
     });
     document.querySelectorAll('.rt-txsel').forEach((b) => {
       const on = Number(b.dataset.ch) === rtTx;
@@ -2186,6 +2189,7 @@
     const rxB = r.vfoSel === 1 && r.freqB;
     let hz = Number(rxB ? r.freqB : r.freq) || 0;
     // RTTY : fréquence du signal (porteuse + milieu mark / space), comme FLDIGI
+    if (m === 'RTTY' && rtTx === 1 && r.dualRx === 1 && r.freqB) hz = Number(r.freqB); // double réception : décodeur B = VFO-B
     if (m === 'RTTY' && hz) hz += Math.round(rts[rtTx].f);
     const p2 = (n) => String(n).padStart(2, '0');
     const end = new Date(now());

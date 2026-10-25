@@ -260,7 +260,7 @@ Sous les écrans VFO.
 | `MAIN` / `SUB` | Côté actif du TRX (réception et émission ensemble), comme la touche de la face avant, sans émission. Prend 1 à 2 secondes. | FTX-1 : écouter et émettre sur le VFO B. |
 | `SPLIT` | Émettre sur l'autre VFO que celui qu'on écoute. | Expéditions DX (section 7.5). |
 | `TXW` | **Maintenir** le bouton (ou la touche `W`) : on écoute la fréquence d'émission ; relâcher = retour sur le DX. Les VFO sont remis en place tout seuls (aussi après 15 s ou si la liaison se coupe). Le PTT est refusé tant que TXW est enfoncé. | En SPLIT, pour écouter le pile-up et trouver un trou. |
-| `DUAL RX` | FTX-1 : double réception (MAIN et SUB entendus ensemble) ou réception simple. Le FTX-1 n'accepte la double réception que si un des VFO est en 144 / 430 MHz. | Surveiller deux fréquences. En modes numériques, coupez-le pour ne décoder que le côté actif. |
+| `DUAL RX` | FTX-1 : double réception (MAIN et SUB entendus ensemble) ou réception simple. Le FTX-1 refuse la double réception avec les deux VFO sur deux bandes HF / 50 MHz différentes (ex. 20 m + 15 m) ; un VFO en 144 / 430 MHz convient toujours. Avec les deux VFO sur la même bande HF, le dashboard envoie la demande et signale si le TRX ne l'accepte pas. | Surveiller deux fréquences. En modes numériques, coupez-le pour ne décoder que le côté actif. |
 | `A → B` / `B → A` | Recopie la fréquence et le mode d'un VFO sur l'autre. | Préparer un SPLIT. |
 | `A ⇄ B` | Échange les deux VFO. | Passer rapidement d'une fréquence à l'autre. |
 | `LOCK` | Verrouille les boutons de la **face avant du TRX au club**. Le dashboard reste utilisable. | Pour qu'une personne au club ne dérègle rien pendant votre trafic. |

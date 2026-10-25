@@ -260,7 +260,7 @@ Below the VFO displays.
 | `MAIN` / `SUB` | Active side of the TRX (receive and transmit together), like the front-panel key, without transmitting. Takes 1 to 2 seconds. | FTX-1: listen and transmit on VFO B. |
 | `SPLIT` | Transmit on the other VFO than the one being listened to. | DX expeditions (section 7.5). |
 | `TXW` | **Hold** the button (or the `W` key): you listen on the transmit frequency; release = back to the DX. The VFOs are put back automatically (also after 15 s or if the link drops). PTT is refused while TXW is held. | In SPLIT, to listen to the pile-up and find a gap. |
-| `DUAL RX` | FTX-1: dual receive (MAIN and SUB heard together) or single receive. The FTX-1 only accepts dual receive when one of the VFOs is on 144 / 430 MHz. | Monitoring two frequencies. In digital modes, switch it off so that only the active side is decoded. |
+| `DUAL RX` | FTX-1: dual receive (MAIN and SUB heard together) or single receive. The FTX-1 refuses dual receive with the two VFOs on two different HF / 50 MHz bands (e.g. 20 m + 15 m); one VFO on 144 / 430 MHz always works. With both VFOs on the same HF band, the dashboard sends the request and tells you if the transceiver does not accept it. | Monitoring two frequencies. In digital modes, switch it off so that only the active side is decoded. |
 | `A → B` / `B → A` | Copies the frequency and mode of one VFO to the other. | Preparing a SPLIT. |
 | `A ⇄ B` | Swaps the two VFOs. | Switching quickly between two frequencies. |
 | `LOCK` | Locks the **front-panel controls of the TRX at the club**. The dashboard remains usable. | So that someone at the club does not change anything during your operating. |
