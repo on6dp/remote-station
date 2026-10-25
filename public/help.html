@@ -287,6 +287,11 @@ The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Cha
   <li><b>A priori help (AP)</b>, as in WSJT-X / JTDX: the decoder knows the call we transmit under (TX CALL) and, during a QSO, the correspondent and the sequence step;
     it then looks for the expected messages down to 2 to 3 dB lower. Such decodes carry the mark <b>a1</b>…<b>a7</b> after the message.
     The JTDX callsign database (~100,000 calls) rejects very weak false decodes.</li>
+  <li><b>Already worked stations</b>: messages from a station already in the log <b>under the current TX CALL</b>, on the same band and mode, are shown <span class="grn">green and struck through</span>
+    (like WSJT-X / JTDX « worked before »). With another TX CALL (e.g. your own call), only QSOs made under that call count.</li>
+  <li><b>When the reply goes out</b>: in FT8 a transmission must start at the beginning of a period (at most 2.3 s late, otherwise the correspondent no longer decodes it; FT4: 0.8 s).
+    The early decode arrives around 12.7 s: a click before the end of the correspondent's period (or in the first 2 seconds of the next one) sends the reply at once.
+    A later click sends it in the next period on the same side (30 s later in FT8); the message at the bottom of the page says so.</li>
   <li><b>dB</b>: the signal-to-noise ratio is WSJT-X's (in 2.5 kHz); reports sent are therefore real reports, as with WSJT-X / JTDX.</li>
   <li><b>Activité de bande</b> (band activity): all decoded messages (CQ in <span class="grn">green</span>, messages for ON5VL / OR0L in <span class="red">red</span>); <b>Fréquence RX</b>: those on your frequency.</li>
   <li><b>Split</b> as in WSJT-X: <b>left click</b> on the waterfall or a line = <span class="grn">receive</span> frequency, <b>right click</b> = <span class="red">transmit</span> frequency; « TX ← RX » and « RX ← TX » buttons.</li>
@@ -416,7 +421,7 @@ click the <b>STATION</b> lamp at the top left → « ↻ Recharger la page Stati
   <li>Paste the <b>station token</b> (given by the server administrator), choose the transceiver <b>model</b> and its <b>CAT port</b> (first time only). FTX-1: the <b>Enhanced COM Port</b> (CAT-1), and on the rig <b>RPTT SELECT</b> and <b>PC KEYING</b> set to OFF (factory default): transmission is controlled through CAT.</li>
   <li><b>Activer l'audio</b> (enable audio) and choose the transceiver's sound input (often « USB Audio CODEC »); the level bar must move.</li>
   <li><b>Sortie son vers le TRX</b> (sound output to the transceiver, for FT8 / FT4 / FT2): the transceiver's USB sound card (« Speakers (USB Audio CODEC) »…), picked automatically when possible.
-    Never the PC speakers. The transceiver must take DATA modulation from USB (transceiver menu). Set the <b>transmit level</b> so that ALC stays low: in digital modes (FT8 / FT4 / FT2, RTTY, JTTY…) the Station page <b>lowers it automatically</b> as soon as ALC goes above <b>8 %</b>, during the transmission, and keeps the reached level for the next ones (message « ALC … ramené de 30 à 24 % » shown to the operator in control). It never goes back up on its own: slightly low FT8 power is corrected with the transceiver power setting, not with the audio level.
+    Never the PC speakers. The transceiver must take DATA modulation from USB (transceiver menu). Set the <b>transmit level</b> so that ALC stays low. Optional limiter: with <code>"digiAlcMax": 8</code> in <code>config.json</code>, in digital modes (FT8 / FT4 / FT2, RTTY, JTTY…) the Station page <b>lowers that level automatically</b> as soon as ALC goes above 8 %, during the transmission, and keeps the reached level for the next ones (message « ALC … ramené de 30 à 24 % » shown to the operator in control); it never goes back up on its own. Default (<code>0</code>): no limiter.
     Transmissions start on the VPS clock, even if the Windows clock is off.</li>
   <li>Keep the Station page <b>alone in its window</b>; open the dashboard with its « Ouvrir le dashboard dans une autre fenêtre » button.</li>
   <li>Chrome → Settings → Performance: always keep remote.op0p.be active; Windows: sleep set to Never.</li>
@@ -430,7 +435,7 @@ click the <b>STATION</b> lamp at the top left → « ↻ Recharger la page Stati
 <ul>
   <li><b>Logging a QSO</b>: <span class="k">⇩ TRX</span> takes the transceiver frequency and mode (in DATA: the mode of the tab on screen, FT8, RTTY…), the power,
     and the Correspondant line (call, name, QTH, locator). The UTC time is taken when you type the first letter of the call; <span class="k">⟳ Maintenant</span> (now) resets it.
-    <span class="k">Enter</span> or <span class="k">Enregistrer le QSO</span> (save). A duplicate (same call, band and mode within half an hour) is reported before saving.</li>
+    <span class="k">Enter</span> or <span class="k">Enregistrer le QSO</span> (save). A duplicate (same call, band and mode within half an hour) is reported before saving; if the QSO already in the log (e.g. saved at the end of the QSO) lacks the name, QTH, locator or received RST, you are offered to <b>complete</b> it instead of creating a 2nd QSO.</li>
   <li><b>Without leaving the RTTY, JTTY or CW tab</b>: <span class="k">Log QSO</span> button (next to « Émettre », and at the end of the Correspondant line), like FLDIGI's « Save QSO ».
     A form opens, already filled in: call, name, QTH, locator and RST of the correspondent, frequency (in RTTY: the signal frequency, carrier + audio offset) and the tab's mode, power,
     start time (when the correspondent was chosen) and end time (now). Correct if needed (RST received…), then <span class="k">Enregistrer dans le carnet</span> (save).

@@ -582,8 +582,8 @@
   // Repères de période (comme JTDX) : trait à chaque début de période FT8 / FT4 / FT2 / JT65, puis heure UTC et bande
   // écrites juste au-dessus du trait, dans la nouvelle période, une fois qu'elle a assez défilé
   const wfMark = { per: null, label: null, rows: 0 };
-  const BANDS_M = [[1.8, 2, '160m'], [3.5, 4, '80m'], [5.2, 5.5, '60m'], [7, 7.3, '40m'], [10.1, 10.15, '30m'], [14, 14.35, '20m'], [18.06, 18.17, '17m'],
-    [21, 21.45, '15m'], [24.89, 24.99, '12m'], [28, 29.7, '10m'], [50, 54, '6m'], [70, 71, '4m'], [144, 148, '2m'], [430, 440, '70cm'], [1240, 1300, '23cm']];
+  const BANDS_M = [[1.8, 2, '160m'], [3.5, 4, '80m'], [5.06, 5.45, '60m'], [7, 7.3, '40m'], [10.1, 10.15, '30m'], [14, 14.35, '20m'], [18.06, 18.17, '17m'],
+    [21, 21.45, '15m'], [24.89, 24.99, '12m'], [28, 29.7, '10m'], [50, 54, '6m'], [70, 71, '4m'], [144, 148, '2m'], [420, 450, '70cm'], [1240, 1300, '23cm']];
   function periodMark(ctx, tday) {
     if (tday == null || (tab !== 'ftx' && tab !== 'jt65')) { wfMark.per = null; wfMark.label = null; return; }
     const P = { FT8: 15000, FT4: 7500, FT2: 3750, JT65: 60000 }[tab === 'jt65' ? 'JT65' : mode] || 15000;
@@ -1641,8 +1641,13 @@
           if (!x) return;
           const s = Math.max(0, Math.round((x.at - now()) / 1000)); // horloge du serveur (celle de votre PC peut être décalée)
           const d = new Date(x.at);
+          // Clic trop tard pour la période qui suit celle du correspondant : il ne décoderait plus un signal parti
+          // plus de 2,3 s (FT8) / 0,8 s (FT4) après le début de la période → départ à sa période suivante
+          const P = SLOT_MS[x.mode] || 15000;
+          const late = slot && x.at - slot > 2 * P;
           api.say(x.state === 'tx' ? 'Réponse à ' + call + ' : en émission (Tx' + (ftxSel + 1) + ').'
-            : 'Réponse à ' + call + ' : Tx' + (ftxSel + 1) + ' part dans ' + s + ' s (' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' UTC, période de ' + call + ' + 1).', '', 8000);
+            : 'Réponse à ' + call + ' : Tx' + (ftxSel + 1) + ' part dans ' + s + ' s (' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' UTC' +
+              (late ? ') — trop tard pour la période qui suivait son message (un départ plus tardif ne serait plus décodé) : cliquez dès l’affichage du décodage.' : ', période de ' + call + ' + 1).'), late ? 'warn' : '', late ? 12000 : 8000);
         }, 700);
       }
     } else if (api && !api.iControl()) api.say('Correspondant ' + call + ' choisi. Prenez la main pour lui répondre.', '', 4000);
@@ -1721,6 +1726,11 @@
     dlg.addEventListener('close', () => dlg.remove());
     dlg.querySelector('[data-a="log"]').addEventListener('click', () => {
       const qso = Object.assign({}, q);
+      // Nom et QTH du correspondant (fiche QRZ.com ou saisis dans la barre du correspondant)
+      if (dx && String(dx.call || '').toUpperCase() === String(q.call || '').toUpperCase()) {
+        if (dx.name && !qso.name) qso.name = dx.name;
+        if (dx.qth && !qso.qth) qso.qth = dx.qth;
+      }
       if (!qso.gridsquare) delete qso.gridsquare;
       if (!qso.tx_pwr) delete qso.tx_pwr;
       api.send({ t: 'log_add', qso });
@@ -2111,10 +2121,27 @@
     const c = w[0] === 'CQ' ? (CALL_RE.test(w[1] || '') ? w[1] : w[2] || '') : w[1] || '';
     return CALL_RE.test(c) && stationCalls.indexOf(c) < 0 && String(msg).toUpperCase().indexOf(c) >= 0 ? c : '';
   }
+  // Stations déjà contactées sous le TX CALL actuel (envoyées par le serveur) : « INDICATIF|BANDE|MODE »
+  let worked = new Set();
+  let workedStation = '';
+  function curBand() {
+    const st = api && api.state && api.state();
+    const f = st && st.radio && (st.radio.vfoSel === 1 ? st.radio.freqB : st.radio.freq);
+    const mhz = f ? f / 1e6 : 0;
+    const b = BANDS_M.find((x) => mhz >= x[0] && mhz <= x[1]);
+    return b ? b[2] : '';
+  }
+  function isWorked(msg) {
+    if (!worked.size || FT_MODES.indexOf(mode) < 0) return false;
+    const c = senderOf(msg);
+    return !!c && worked.has(c + '|' + curBand() + '|' + mode);
+  }
   function rowEl(slot, d) {
     const r = document.createElement('div');
-    r.className = 'dg-row ' + (d.tx ? 'tx' : cls(d.msg));
-    r.title = d.tx ? 'Message émis' : d.f + ' Hz · clic sur l’indicatif (souligné) ou double-clic : répondre à cette station (émission à la période suivante) · clic ailleurs : réception ici · clic droit : émission ici';
+    const k = d.tx ? 'tx' : cls(d.msg);
+    const wk = !d.tx && k !== 'me' && isWorked(d.msg);
+    r.className = 'dg-row ' + k + (wk ? ' wkd' : '');
+    r.title = d.tx ? 'Message émis' : (wk ? 'Déjà contacté sous ' + workedStation + ' sur cette bande dans ce mode · ' : '') + d.f + ' Hz · clic sur l’indicatif (souligné) ou double-clic : répondre à cette station (émission à la période suivante) · clic ailleurs : réception ici · clic droit : émission ici';
     const cells = d.tx ? [utc(slot), 'TX', '', d.f, d.msg] : [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
     cells.forEach((v, i) => {
       const s = document.createElement('span');
@@ -2466,6 +2493,12 @@
     onMessage(m) {
       if (m.t === 'qrz_info') { qrzInfo(m); if (window.RSLOG && window.RSLOG.onQrz) window.RSLOG.onQrz(m); return true; }
       if (m.t === 'ftx_qso' && m.qso) { qsoPrompt(m.qso); return true; }
+      if (m.t === 'worked') {
+        worked = new Set(Array.isArray(m.list) ? m.list : []);
+        workedStation = String(m.station || '');
+        if (FT_MODES.indexOf(mode) >= 0 && $('dgBand')) redrawAll();
+        return true;
+      }
       if (m.t === 'pong' && Number.isFinite(m.now) && Number.isFinite(m.ts)) {
         // Écart d'horloge avec le serveur, d'après l'aller-retour le plus court
         const rtt = Date.now() - m.ts;

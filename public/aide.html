@@ -288,6 +288,11 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
   <li><b>Aide a priori (AP)</b>, comme WSJT-X / JTDX : le décodeur sait sous quel indicatif on émet (TX CALL) et, pendant un QSO, qui est le correspondant et où en est la séquence ;
     il cherche alors les messages attendus jusqu'à 2 à 3 dB plus bas. Ces décodages portent la marque <b>a1</b>…<b>a7</b> après le message.
     La base d'indicatifs de JTDX (~100 000 indicatifs) écarte les faux décodages très faibles.</li>
+  <li><b>Stations déjà contactées</b> : les messages d'une station déjà au carnet <b>sous le TX CALL actuel</b>, sur la même bande et dans le même mode, sont en <span class="grn">vert barré</span>
+    (comme « worked before » de WSJT-X / JTDX). Avec un autre TX CALL (ex. votre indicatif personnel), seuls les QSO faits sous cet indicatif comptent.</li>
+  <li><b>Quand part la réponse</b> : en FT8, une émission doit commencer au début d'une période (au plus 2,3 s de retard, sinon le correspondant ne la décode plus ; FT4 : 0,8 s).
+    Le décodage anticipé arrive vers 12,7 s : un clic avant la fin de la période du correspondant (ou dans les 2 premières secondes de la suivante) fait partir la réponse aussitôt.
+    Un clic plus tardif la fait partir à la période suivante du même côté (30 s plus tard en FT8) ; le message en bas de page le signale.</li>
   <li><b>dB</b> : le rapport signal/bruit est celui de WSJT-X (dans 2,5 kHz) ; les reports envoyés sont donc les vrais reports, comme avec WSJT-X / JTDX.</li>
   <li><b>Activité de bande</b> : tous les messages décodés (CQ en <span class="grn">vert</span>, messages pour ON5VL / OR0L en <span class="red">rouge</span>) ; <b>Fréquence RX</b> : ceux de votre fréquence.</li>
   <li><b>Split</b> comme dans WSJT-X : <b>clic gauche</b> sur la cascade ou une ligne = fréquence de <span class="grn">réception</span>, <b>clic droit</b> = fréquence d'<span class="red">émission</span> ; boutons « TX ← RX » et « RX ← TX ».</li>
@@ -417,7 +422,7 @@ clic sur le voyant <b>STATION</b> en haut à gauche → « ↻ Recharger la page
   <li>Coller le <b>jeton de station</b> (donné par l'administrateur du serveur), choisir le <b>modèle</b> du TRX et son <b>port CAT</b> (la première fois). FTX-1 : l'<b>Enhanced COM Port</b> (CAT-1), et sur le TRX les réglages <b>RPTT SELECT</b> et <b>PC KEYING</b> sur OFF (réglage d'usine) : l'émission se commande par CAT.</li>
   <li><b>Activer l'audio</b> et choisir l'entrée son du TRX (souvent « USB Audio CODEC ») ; la barre de niveau doit bouger.</li>
   <li><b>Sortie son vers le TRX</b> (émission FT8 / FT4 / FT2) : la carte son USB du TRX (« Haut-parleurs (USB Audio CODEC) »…), choisie toute seule si possible.
-    Jamais les haut-parleurs du PC. Le TRX doit prendre la modulation DATA sur l'USB (menu du TRX). Régler le <b>niveau d'émission</b> pour que l'ALC reste faible : en émission numérique (FT8 / FT4 / FT2, RTTY, JTTY…), la page Station le <b>baisse toute seule</b> dès que l'ALC dépasse <b>8 %</b>, pendant l'émission, et garde le niveau atteint pour les émissions suivantes (message « ALC … ramené de 30 à 24 % » chez celui qui a la main). Il ne remonte jamais tout seul : une puissance un peu faible en FT8 se corrige avec le réglage de puissance du TRX, pas avec la BF.
+    Jamais les haut-parleurs du PC. Le TRX doit prendre la modulation DATA sur l'USB (menu du TRX). Régler le <b>niveau d'émission</b> pour que l'ALC reste faible. Limiteur facultatif : avec <code>"digiAlcMax": 8</code> dans <code>config.json</code>, en émission numérique (FT8 / FT4 / FT2, RTTY, JTTY…), la page Station <b>baisse toute seule</b> ce niveau dès que l'ALC dépasse 8 %, pendant l'émission, et garde le niveau atteint pour les émissions suivantes (message « ALC … ramené de 30 à 24 % » chez celui qui a la main) ; il ne remonte jamais tout seul. Par défaut (<code>0</code>), pas de limiteur.
     L'émission part à l'heure du VPS, même si l'horloge de Windows est décalée.</li>
   <li>Garder la page Station <b>seule dans sa fenêtre</b> ; ouvrir le dashboard avec son bouton « Ouvrir le dashboard dans une autre fenêtre ».</li>
   <li>Chrome → Paramètres → Performances : garder remote.op0p.be toujours actif ; Windows : mise en veille sur Jamais.</li>
@@ -431,7 +436,7 @@ clic sur le voyant <b>STATION</b> en haut à gauche → « ↻ Recharger la page
 <ul>
   <li><b>Enregistrer un QSO</b> : <span class="k">⇩ TRX</span> reprend la fréquence et le mode du TRX (en DATA : le mode de l'onglet affiché, FT8, RTTY…), la puissance,
     et la ligne Correspondant (indicatif, prénom, QTH, locator). L'heure UTC est prise à la première lettre de l'indicatif ; <span class="k">⟳ Maintenant</span> la remet à l'heure.
-    <span class="k">Entrée</span> ou <span class="k">Enregistrer le QSO</span>. Un doublon (même indicatif, bande et mode dans la demi-heure) est signalé avant l'enregistrement.</li>
+    <span class="k">Entrée</span> ou <span class="k">Enregistrer le QSO</span>. Un doublon (même indicatif, bande et mode dans la demi-heure) est signalé avant l'enregistrement ; si la fiche déjà au carnet (ex. enregistrée en fin de QSO) n'a pas le nom, le QTH, le locator ou le RST reçu, on propose de la <b>compléter</b> au lieu de créer un 2e QSO.</li>
   <li><b>Sans quitter l'onglet RTTY, JTTY ou CW</b> : bouton <span class="k">Log QSO</span> (à côté de « Émettre », et au bout de la ligne Correspondant), comme « Save QSO » de FLDIGI.
     Une fiche s'ouvre, déjà remplie : indicatif, prénom, QTH, locator et RST du correspondant, fréquence (en RTTY : celle du signal, porteuse + fréquence audio) et mode de l'onglet, puissance,
     heure de début (quand le correspondant a été choisi) et de fin (maintenant). Corriger au besoin (RST reçu…), puis <span class="k">Enregistrer dans le carnet</span>.

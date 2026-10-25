@@ -692,6 +692,16 @@
     } else if (m.t === 'log_dupe') {
       const p = m.prev || {};
       pendingDupe = m.qso;
+      // Même QSO déjà enregistré (ex. en fin de QSO) : on complète la fiche existante (nom, QTH, locator…) plutôt qu'un 2e QSO
+      const q = m.qso || {};
+      const extra = ['name', 'qth', 'gridsquare', 'rst_rcvd', 'comment', 'tx_pwr'].filter((k) => q[k] && !p[k]);
+      const LBL = { name: 'nom', qth: 'QTH', gridsquare: 'locator', rst_rcvd: 'RST reçu', comment: 'remarque', tx_pwr: 'puissance' };
+      if (p.id && extra.length && window.confirm(p.call + ' est déjà dans le carnet (' + p.band + ' ' + modeName(p) + ', ' + fmtDate(p.qso_date) + ' à ' + fmtTime(p.time_on) + ' UTC).\n' +
+          'Compléter ce QSO avec : ' + extra.map((k) => LBL[k] + ' « ' + q[k] + ' »').join(', ') + ' ?')) {
+        api.send({ t: 'log_merge', id: p.id, qso: q });
+        pendingDupe = null;
+        return;
+      }
       if (window.confirm('Doublon possible : ' + p.call + ' déjà dans le carnet sur ' + p.band + ' ' + modeName(p) + ' le ' + fmtDate(p.qso_date) + ' à ' + fmtTime(p.time_on) + ' UTC.\nEnregistrer quand même ?')) {
         api.send({ t: 'log_add', qso: pendingDupe, force: true });
       } else if (root && !root.hidden && root.offsetParent) fmsg('QSO non enregistré (doublon).', 'warn'); else say('QSO non enregistré (doublon).', 'warn');

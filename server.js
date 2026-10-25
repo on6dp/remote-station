@@ -40,6 +40,7 @@ const DEFAULTS = {
   // réception simple avait mis le TRX en émission (commande FT envoyée après VS, supprimée en 0.22.29) ; essai au club
   // ensuite concluant (VS seul, pas d'émission). false : SUB seulement en double réception.
   ftx1SubSingle: true,
+  digiAlcMax: 0, // émission numérique : ALC maximal (%) au-delà duquel la page Station baisse le niveau BF ; 0 = pas de limite
   ftxWatchdogMinutes: 6, // émission auto FT8 / FT4 / FT2 : arrêt si le même message part depuis ce temps (WSJT-X : 6 min)
   pttHeartbeatMs: 1500,
   controlIdleMinutes: 15,
@@ -509,6 +510,7 @@ const sync = new Sync({
     if (ev.fin) {
       if (job.fail && job.auto) journal('log_sync_fail', { service: job.service, line: ev.line });
       for (const c of ops) send(c, { t: 'log_changed' });
+      sendWorked(false);
     }
   }
 });
@@ -519,6 +521,20 @@ function logCtx(conn, m) {
 }
 // Indicatifs de station proposés dans le carnet : ceux du club, plus le sien (QSO faits sous son indicatif)
 function logCalls(conn) { return Array.from(new Set(stationCalls().concat(ownCallOk(conn.user) ? [String(conn.user.call).toUpperCase()] : []))); }
+// Stations déjà contactées sous l'indicatif d'émission actuel (TX CALL) : « INDICATIF|BANDE|MODE », pour les marquer
+// dans les listes des modes numériques (vert barré). Renvoyé quand le carnet ou le TX CALL change.
+let workedSig = '';
+function sendWorked(force, only) {
+  const st = txCall();
+  const sig = st + ':' + book.rev;
+  if (!force && sig === workedSig) return;
+  workedSig = sig;
+  const set = new Set();
+  for (const q of book.qsos) if (String(q.station_callsign || '').toUpperCase() === st) set.add(q.call + '|' + q.band + '|' + (q.submode || q.mode));
+  const msg = { t: 'worked', station: st, list: Array.from(set) };
+  if (only) return send(only, msg);
+  for (const c of ops) send(c, msg);
+}
 function logCanEdit(conn, q) { return conn.user.admin || (q && q.by === conn.user.call); }
 function qsoForClient(q) { return Object.assign({}, q); }
 
@@ -1504,6 +1520,7 @@ function loggedIn(conn, call, rec, sessionTok) {
   send(conn, { t: 'macros', data: macros[call] || {} });
   send(conn, { t: 'events', list: recentEvents });
   send(conn, { t: 'chatlog', list: chatLog });
+  sendWorked(true, conn);
   broadcast();
 }
 
@@ -1609,6 +1626,21 @@ function onOperator(conn, m) {
       return send(conn, { t: 'log_list', total: book.qsos.length, count: all.length, items: all.slice(-lim).reverse().map(qsoForClient),
         calls: logCalls(conn), admin: !!conn.user.admin, services: LOG_SERVICES, auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto])) });
     }
+    case 'log_merge': {
+      // Doublon : la fiche déjà au carnet (ex. enregistrée en fin de QSO) est complétée (nom, QTH…) au lieu d'un 2e QSO
+      if (conn.user.rxOnly) return;
+      const old = book.get(String(m.id || ''));
+      if (!old) return send(conn, { t: 'notice', level: 'error', msg: 'QSO introuvable' });
+      if (!logCanEdit(conn, old)) return send(conn, { t: 'notice', level: 'error', msg: 'Seul l’auteur du QSO ou un administrateur peut le compléter' });
+      let q;
+      try { q = LB.clean(m.qso, logCtx(conn, m.qso)); } catch (e) { return send(conn, { t: 'notice', level: 'error', msg: 'QSO non complété : ' + e.message }); }
+      const added = book.merge(old.id, q);
+      journal('log_edit', { call: conn.user.call, qso: old.call });
+      send(conn, { t: 'notice', level: 'info', msg: added.length ? 'QSO avec ' + old.call + ' complété (' + added.join(', ') + ').' : 'QSO avec ' + old.call + ' : rien à ajouter.' });
+      for (const c of ops) send(c, { t: 'log_changed' });
+      sendWorked(false);
+      return;
+    }
     case 'log_add':
     case 'log_edit': {
       if (conn.user.rxOnly) return send(conn, { t: 'notice', level: 'error', msg: 'Indicatif d’écouteur : pas d’enregistrement de QSO' });
@@ -1635,6 +1667,7 @@ function onOperator(conn, m) {
         send(conn, { t: 'log_saved', qso: qsoForClient(q), auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, club && !!logCfg[s].auto && !sync.stopped[s]])) });
       }
       for (const c of ops) send(c, { t: 'log_changed' });
+      sendWorked(false);
       return;
     }
     case 'log_del': {
@@ -1644,6 +1677,7 @@ function onOperator(conn, m) {
       book.remove(m.id);
       journal('log_del', { call: conn.user.call, qso: q.call, date: q.qso_date });
       for (const c of ops) send(c, { t: 'log_changed' });
+      sendWorked(false);
       return;
     }
     case 'log_pending':
@@ -1659,6 +1693,7 @@ function onOperator(conn, m) {
       journal('log_mark', { call: conn.user.call, service: m.service, n });
       send(conn, { t: 'notice', level: 'info', msg: n + ' QSO notés comme envoyés à ' + m.service.toUpperCase() });
       for (const c of ops) send(c, { t: 'log_changed' });
+      sendWorked(false);
       return;
     }
     case 'log_export': {
@@ -1984,7 +2019,7 @@ function onStationAuth(conn, m) {
     stationBounce = null;
     send(conn, { t: 'switch', model: b.back, by: 'rechargement' });
   } else if (stationBounce && model === stationBounce.back) stationBounce = null;
-  send(conn, { t: 'welcome', stationCall: cfg.stationCall, txSilenceSeconds: cfg.txSilenceSeconds, txHardMaxSeconds: cfg.txHardMaxSeconds, code: STATION_CODE });
+  send(conn, { t: 'welcome', stationCall: cfg.stationCall, txSilenceSeconds: cfg.txSilenceSeconds, txHardMaxSeconds: cfg.txHardMaxSeconds, code: STATION_CODE, alcMax: Number(cfg.digiAlcMax) || 0 });
   audio.active = false;
   // BF voulue s'il y a un écouteur ou une fenêtre FT8/FT4 ouverte (même règle que updateAudioWant)
   audio.want = audioWanted();
@@ -2097,6 +2132,7 @@ function onStation(conn, m) {
   if (was !== radio.connected) journal(radio.connected ? 'trx_online' : 'trx_offline', {});
   // Fréquence du VFO pour les fréquences WSPR affichées
   if (digi.worker && radio.freq && radio.freq !== digi.dial) { digi.dial = radio.freq; digi.worker.postMessage({ t: 'dial', hz: radio.freq }); }
+  sendWorked(false);
   // Contexte AP du décodeur WSJT-X (comme WSJT-X / JTDX) : notre indicatif, le correspondant du QSO en cours, l'étape du QSO
   if (digi.worker) {
     const on = !!(seq && seq.on);

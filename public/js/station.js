@@ -145,6 +145,7 @@
           return setTimeout(() => reloadPage(), 500);
         }
         if (m.code && !loadedCode) loadedCode = m.code;
+        ALC_MAX = Number(m.alcMax) > 0 ? Number(m.alcMax) : 0;
         closePrev();
         wsRetry = 0;
         lamp('lVps', 'on');
@@ -674,7 +675,8 @@
   // ALC en émission numérique : au-delà de ALC_MAX %, le signal est déformé (harmoniques, signaux parasites).
   // Pendant l'émission, le niveau BF envoyé au TRX baisse tout seul tant que l'ALC dépasse ALC_MAX % ; le niveau
   // atteint est gardé pour les émissions suivantes. Il ne remonte jamais tout seul (ALC à 0 = réglage idéal).
-  const ALC_MAX = 8;
+  // Réglé par le serveur (config.json « digiAlcMax », par ex. 8) ; 0 = limiteur coupé.
+  let ALC_MAX = 0;
   let alcTimer = null;
   let alcLast = 0;
   function alcStart() {
@@ -682,7 +684,7 @@
     alcLast = Date.now();
     alcTimer = setInterval(() => {
       const r = core.radio;
-      if (!tx.src || !r || !r.tx || r.m4 == null || !tx.gain) return;
+      if (!ALC_MAX || !tx.src || !r || !r.tx || r.m4 == null || !tx.gain) return;
       const pct = (r.m4 / 255) * 100;
       if (pct <= ALC_MAX || Date.now() - alcLast < 700) return; // laisser la mesure suivre le réglage précédent
       alcLast = Date.now();

@@ -753,6 +753,10 @@ input[type='range']:disabled { opacity: .45; }
 .dg-row:hover { background: rgba(0, 212, 255, .08); }
 .dg-row.cq { background: rgba(0, 204, 102, .14); }
 .dg-row.cq span:last-child { color: #8ff0b6; }
+/* Déjà contacté sous le TX CALL actuel (même bande, même mode) : vert barré */
+.dg-row.wkd { background: rgba(0, 120, 60, .12); }
+.dg-row.wkd span:last-child { color: #3fcf7f; text-decoration: line-through; text-decoration-thickness: 1px; opacity: .85; }
+.dg-row.wkd .dg-call { text-decoration: line-through; }
 .dg-row.me { background: rgba(255, 32, 32, .2); }
 .dg-row.me span:last-child { color: #ffc4b8; font-weight: 700; }
 .dg-sep { font-size: 11px; font-weight: 600; line-height: 14px; color: var(--v2-accent-cyan-bright); text-align: center; padding: 0; margin-top: 1px; letter-spacing: .8px; background: rgba(0, 212, 255, .10); border-top: 1px solid rgba(0, 212, 255, .55); }
