@@ -332,7 +332,7 @@ function updateDigi() {
     digi.worker.postMessage({ t: 'modes', modes: Array.from(modes) });
     digi.worker.postMessage({ t: 'dial', hz: radio.freq || 0 });
     const cfgs = {};
-    for (const c of ops) if (c.digi === 'RTTY' && c.rtty) cfgs[c.rtty.key] = c.rtty;
+    for (const c of ops) if (c.digi === 'RTTY') for (const r of [c.rtty, c.rtty2]) if (r) cfgs[r.key] = r;
     digi.worker.postMessage({ t: 'rtty', cfgs: Object.values(cfgs) });
     const cwc = {};
     for (const c of ops) if (c.digi === 'CW' && c.cw) cwc[c.cw.key] = c.cw;
@@ -363,8 +363,13 @@ function onDigi(m) {
     return;
   }
   if (m.t === 'rtty_text' || m.t === 'rtty_lvl') {
-    const msg = JSON.stringify(m.t === 'rtty_text' ? { t: 'rtty', text: m.text } : { t: 'rtty_lvl', m: m.m, s: m.s, c: m.c });
-    for (const c of ops) if (c.digi === 'RTTY' && c.rtty && c.rtty.key === m.key) c.send(msg);
+    // Deux décodeurs par membre (A : VFO-A, B : VFO-B) : ch = 0 ou 1
+    const out = (ch) => JSON.stringify(m.t === 'rtty_text' ? { t: 'rtty', ch, text: m.text } : { t: 'rtty_lvl', ch, m: m.m, s: m.s, c: m.c });
+    for (const c of ops) {
+      if (c.digi !== 'RTTY') continue;
+      if (c.rtty && c.rtty.key === m.key) c.send(out(0));
+      if (c.rtty2 && c.rtty2.key === m.key) c.send(out(1));
+    }
     return;
   }
   if (m.t === 'sstv') {
@@ -1709,12 +1714,15 @@ function onOperator(conn, m) {
       // Fenêtre de décodage ouverte (FT8 / FT4) ou fermée (null) par ce membre
       let mode = DIGI_MODES.indexOf(m.mode) >= 0 ? m.mode : null;
       const rc = mode === 'RTTY' ? rttyCfg(m.rtty) : null;
+      const rc2 = mode === 'RTTY' && rc ? rttyCfg(m.rtty2) : null; // 2e décodeur RTTY (VFO-B), facultatif
       if (mode === 'RTTY' && !rc) mode = null;
       const cc = mode === 'CW' ? cwCfg(m.cw) : null;
       if (mode === 'CW' && !cc) mode = null;
-      const changed = conn.digi !== mode || (conn.rtty && conn.rtty.key) !== (rc && rc.key) || (conn.cw && conn.cw.key) !== (cc && cc.key);
+      const changed = conn.digi !== mode || (conn.rtty && conn.rtty.key) !== (rc && rc.key) || (conn.rtty2 && conn.rtty2.key) !== (rc2 && rc2.key) ||
+        (conn.cw && conn.cw.key) !== (cc && cc.key);
       conn.digi = mode;
       conn.rtty = rc;
+      conn.rtty2 = rc2;
       conn.cw = cc;
       if (changed) updateDigi();
       // Historique : à l'ouverture, ou sur demande (fenêtre séparée qui s'ouvre, retour dans le dashboard)

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.54 | [RemoteStation-Setup-0.22.54.exe](0.22.54/RemoteStation-Setup-0.22.54.exe) | [remote-station-0.22.54.tar.gz](0.22.54/remote-station-0.22.54.tar.gz) | RTTY : deux décodeurs A / B côte à côte — [empreintes SHA-256](0.22.54/SHA256SUMS.txt) |
 | 0.22.53 | [RemoteStation-Setup-0.22.53.exe](0.22.53/RemoteStation-Setup-0.22.53.exe) | [remote-station-0.22.53.tar.gz](0.22.53/remote-station-0.22.53.tar.gz) | Manuel réécrit pour les débutants, README à jour — [empreintes SHA-256](0.22.53/SHA256SUMS.txt) |
 | 0.22.52 | [RemoteStation-Setup-0.22.52.exe](0.22.52/RemoteStation-Setup-0.22.52.exe) | [remote-station-0.22.52.tar.gz](0.22.52/remote-station-0.22.52.tar.gz) | Identifiants des logs en ligne par indicatif dans Synchronisation — [empreintes SHA-256](0.22.52/SHA256SUMS.txt) |
 | 0.22.51 | [RemoteStation-Setup-0.22.51.exe](0.22.51/RemoteStation-Setup-0.22.51.exe) | [remote-station-0.22.51.tar.gz](0.22.51/remote-station-0.22.51.tar.gz) | Menus du carnet en jaune fluo / blanc gras — [empreintes SHA-256](0.22.51/SHA256SUMS.txt) |

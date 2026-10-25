@@ -508,24 +508,32 @@ For transmitting, choose a clear spot in the waterfall. A white line marks the s
 <p>Same window as FT8, but with one-minute periods; the TRX goes to the JT65 frequency of its band. Decodes arrive around the 52<sup>nd</sup> second. Receive only.</p>
 
 <h3 id="rtty">12.3 RTTY</h3>
-<p>RTTY is "radio teletype": you type text that scrolls on the correspondent's screen. Widely used in contests.</p>
+<p>RTTY is radio "teletype": you type text that scrolls on the other station's screen. Widely used in contests.
+The tab has <b>two independent decoders</b>, side by side: <b>VFO-A</b> on the left and <b>VFO-B</b> on the right, each with its own waterfall, received text and settings.
+Both listen to the transceiver audio, so you can follow two stations on the same band at once (for example in a contest, or a DX and its pile-up).</p>
 <table>
-  <tr><th>Command</th><th>What it does</th></tr>
-  <tr><td><b>Shift</b> (170, 200, 425, 850 Hz)</td><td>Spacing between the two tones of the signal. Radio amateurs: 170 Hz.</td></tr>
-  <tr><td><b>Vitesse</b> (speed) (45.45 … 100 baud)</td><td>Radio amateurs: 45.45 baud.</td></tr>
-  <tr><td><span class="k">Inversé</span> (reverse)</td><td>Swaps Mark and Space if the received text makes no sense (signal "upside down").</td></tr>
+  <tr><th>Control</th><th>What it does</th></tr>
+  <tr><td>Frequency list + <span class="k">↺</span></td><td>RTTY frequencies per band (at the top, shared by both decoders).</td></tr>
+  <tr><td>Frequency (e.g. 14 086,5 kHz)</td><td>Next to VFO-A / VFO-B: frequency of the signal followed by this decoder (transceiver dial + Mark / Space centre), handy for the log or a spot.</td></tr>
+  <tr><td><b>Shift</b> (170, 200, 425, 850 Hz)</td><td>Spacing between the two tones of the signal. Amateur radio: 170 Hz.</td></tr>
+  <tr><td><b>Speed</b> (45,45 … 100 Bd)</td><td>Amateur radio: 45.45 baud.</td></tr>
+  <tr><td><span class="k">Inversé</span> (reversed)</td><td>Swaps Mark and Space when the received text makes no sense (signal "upside down").</td></tr>
   <tr><td><b>Silencieux</b> (squelch)</td><td>Higher = fewer random characters on noise; too high and weak signals are no longer decoded.</td></tr>
-  <tr><td>Frequency list + <span class="k">↺</span></td><td>RTTY frequencies per band.</td></tr>
-  <tr><td>M / S indicator</td><td>The two bars should flicker alternately when you are properly tuned.</td></tr>
+  <tr><td>M / S indicator</td><td>The two bars should beat alternately when the decoder is tuned correctly.</td></tr>
   <tr><td>Centre … Hz</td><td>Audio frequency the decoder is tuned to.</td></tr>
+  <tr><td><span class="k">TX</span></td><td>Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): lit in red, with a red frame around that decoder.</td></tr>
+  <tr><td><span class="k">Effacer</span> (clear)</td><td>Clears the received text of this decoder.</td></tr>
+  <tr><td>Vertical bar between the two</td><td>Drag it left or right: width of the two decoders (double-click: half and half). Kept in your browser.</td></tr>
 </table>
 <ol>
-  <li><b>Receiving</b>: click the signal in the waterfall. The <span class="yel">yellow (Mark)</span> and blue (Space) markers must sit on its two traces. The text is shown in <b>Réception RTTY</b> (RTTY receive) (<span class="k">Effacer</span> clears it).</li>
-  <li><b>Double-click a received callsign</b>: it becomes the correspondent.</li>
-  <li><b>Transmitting</b>: type the text in the bottom box, then <span class="k">Émettre</span> (transmit) (or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>). The text goes out on the receive frequency, with the same shift and speed, then the TRX returns to receive. It is shown in grey, then each letter turns <span class="red">red</span> as it goes out (« fin dans N s », ends in N s). While transmitting, the button becomes <span class="k">■ Arrêter</span>. 600 characters at most per send.</li>
+  <li><b>Receive</b>: click a signal in the left waterfall to tune decoder A, in the right one for decoder B. The <span class="yel">yellow (Mark)</span> and blue (Space) markers should sit on the two traces of the signal. The text appears under each waterfall.</li>
+  <li><b>Double-click a received callsign</b> (left or right): it becomes the correspondent.</li>
+  <li><b>Choose the transmit decoder</b>: the <span class="k">TX</span> button in its header. Your reply then goes out exactly on the frequency of the station that decoder follows.</li>
+  <li><b>Transmit</b>: type the text in the bottom box, then <span class="k">Émettre</span> (transmit) (or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>). The text goes out with the settings of the decoder marked TX, then the transceiver returns to receive. It appears in that decoder's received text, in grey, then each letter turns <span class="red">red</span> as it is sent (« fin dans N s », ends in N s). While transmitting, the button becomes <span class="k">■ Arrêter</span> (stop). 600 characters at most per transmission.</li>
   <li><b>Macros</b> <kbd>F1</kbd> to <kbd>F12</kbd> (on one row, above the text): a click transmits at once; <b>Shift+click</b> adds the macro to the text without transmitting (section 13).</li>
-  <li><span class="k">Effacer</span> clears the text to send; <span class="k">Log QSO</span> opens the logbook form, already filled in.</li>
+  <li><span class="k">Effacer</span> (under the transmit button) clears the text to send; <span class="k">Log QSO</span> opens the logbook form, already filled in with the frequency of the decoder marked TX.</li>
 </ol>
+<div class="note">The transceiver sends a single audio stream to the PC. Both decoders therefore read the same passband (about 3 kHz around the frequency of the VFO being received); that is why both waterfalls show the same spectrum. On the FTX-1 with DUAL RX, this audio mixes MAIN and SUB: decoder B can then follow a VFO-B signal, if its audio tone differs from the VFO-A one.</div>
 
 <h3 id="wspr">12.4 WSPR</h3>
 <p>WSPR is used to study propagation: low-power beacons transmit their callsign, locator and power every 2 minutes.

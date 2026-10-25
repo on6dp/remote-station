@@ -154,30 +154,59 @@
     <p class="dg-tx" id="dgTxState">Émission : cliquez sur un message Tx1 à Tx7 ci-dessus : il part à chaque période jusqu’à la réponse, la séquence avance toute seule.</p>`;
   const RTTY_PANE = `
     <div class="dg-bar">
-      <select id="rtShift" aria-label="Shift"><option value="170">Shift 170 Hz</option><option value="200">Shift 200 Hz</option><option value="425">Shift 425 Hz</option><option value="850">Shift 850 Hz</option></select>
-      <select id="rtBaud" aria-label="Vitesse"><option value="45.45">45,45 bauds</option><option value="50">50 bauds</option><option value="75">75 bauds</option><option value="100">100 bauds</option></select>
-      <button class="btn" type="button" id="rtRev" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>
-      <label class="rt-sq" title="Seuil de contraste Mark/Space : plus haut = moins de caractères au hasard sur le bruit">Silencieux
-        <input type="range" id="rtSq" min="4" max="25" step="1" aria-label="Silencieux"><output id="rtSqV">12</output></label>
       <select id="rtDial" aria-label="Fréquence RTTY"></select>
       <button class="btn dg-back" type="button" id="rtQsy" title="Revenir sur cette fréquence (VFO A, en DATA-U)" aria-label="Revenir sur cette fréquence (VFO A, en DATA-U)">↺</button>
-      <span class="rt-tune" title="Accord : les deux barres doivent battre en alternance"><span>M</span><i><b id="rtM"></b></i><span>S</span><i><b id="rtS"></b></i></span>
-      <span class="dg-f rx">Centre <b id="rtF">1500</b> Hz</span>
+      <span class="dg-note">Deux décodeurs : A (VFO-A) à gauche, B (VFO-B) à droite · clic sur une cascade : caler son décodeur · double-clic sur un indicatif : le reprendre</span>
       <span class="dg-status" id="rtStatus"></span>
     </div>
-    <div class="dg-wf-slot" data-slot="rtty"></div>
-    <div class="rt-grid rt-stack">
-      <div class="dg-col rt-rx-col">
-        <div class="dg-h"><span>Réception RTTY</span><span class="dg-note">clic sur la cascade : se caler · double-clic sur un indicatif : le reprendre</span><button class="dg-mini" type="button" id="rtClear">Effacer</button></div>
+    <!-- Deux décodeurs RTTY côte à côte, largeur réglable ; émission sous les deux, sur toute la largeur -->
+    <div class="rt-dual" id="rtDual">
+      <div class="dg-col rt-side" data-ch="0">
+        <div class="dg-h rt-hd">
+          <span class="rt-name">VFO-A</span><span class="rt-rf" id="rtRf" title="Fréquence du signal suivi (porteuse + centre Mark / Space)"></span>
+          <select id="rtShift" aria-label="Shift (VFO-A)"><option value="170">170 Hz</option><option value="200">200 Hz</option><option value="425">425 Hz</option><option value="850">850 Hz</option></select>
+          <select id="rtBaud" aria-label="Vitesse (VFO-A)"><option value="45.45">45,45 Bd</option><option value="50">50 Bd</option><option value="75">75 Bd</option><option value="100">100 Bd</option></select>
+          <button class="dg-mini" type="button" id="rtRev" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>
+          <label class="rt-sq" title="Seuil de contraste Mark/Space : plus haut = moins de caractères au hasard sur le bruit">Silencieux
+            <input type="range" id="rtSq" min="4" max="25" step="1" aria-label="Silencieux (VFO-A)"><output id="rtSqV">12</output></label>
+          <span class="rt-tune" title="Accord : les deux barres doivent battre en alternance"><span>M</span><i><b id="rtM"></b></i><span>S</span><i><b id="rtS"></b></i></span>
+          <span class="dg-f rx">Centre <b id="rtF">1500</b> Hz</span>
+          <button class="dg-mini rt-txsel" type="button" data-ch="0" aria-pressed="false" title="L'émission RTTY part avec les réglages de ce décodeur (fréquence audio, shift, vitesse)">TX</button>
+          <button class="dg-mini" type="button" id="rtClear">Effacer</button>
+        </div>
+        <div class="dg-wf-slot" data-slot="rtty"></div>
         <pre class="rt-rx" id="rtRx"></pre>
       </div>
+      <i class="rt-vsplit" id="rtSplit" title="Glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié)"></i>
+      <div class="dg-col rt-side" data-ch="1">
+        <div class="dg-h rt-hd">
+          <span class="rt-name">VFO-B</span><span class="rt-rf" id="rtRfB" title="Fréquence du signal suivi (porteuse + centre Mark / Space)"></span>
+          <select id="rtShiftB" aria-label="Shift (VFO-B)"><option value="170">170 Hz</option><option value="200">200 Hz</option><option value="425">425 Hz</option><option value="850">850 Hz</option></select>
+          <select id="rtBaudB" aria-label="Vitesse (VFO-B)"><option value="45.45">45,45 Bd</option><option value="50">50 Bd</option><option value="75">75 Bd</option><option value="100">100 Bd</option></select>
+          <button class="dg-mini" type="button" id="rtRevB" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>
+          <label class="rt-sq" title="Seuil de contraste Mark/Space : plus haut = moins de caractères au hasard sur le bruit">Silencieux
+            <input type="range" id="rtSqB" min="4" max="25" step="1" aria-label="Silencieux (VFO-B)"><output id="rtSqVB">12</output></label>
+          <span class="rt-tune" title="Accord : les deux barres doivent battre en alternance"><span>M</span><i><b id="rtMB"></b></i><span>S</span><i><b id="rtSB"></b></i></span>
+          <span class="dg-f rx">Centre <b id="rtFB">1500</b> Hz</span>
+          <button class="dg-mini rt-txsel" type="button" data-ch="1" aria-pressed="false" title="L'émission RTTY part avec les réglages de ce décodeur (fréquence audio, shift, vitesse)">TX</button>
+          <button class="dg-mini" type="button" id="rtClearB">Effacer</button>
+        </div>
+        <div class="dg-wf rt-wfb">
+          <canvas id="rtScaleB" height="44"></canvas>
+          <canvas id="rtWfB" height="140"></canvas>
+          <i class="dg-mk dg-mk-rx" id="rtMkMB"></i><i class="dg-mk dg-mk-tx" id="rtMkSB"></i>
+        </div>
+        <pre class="rt-rx" id="rtRxB"></pre>
+      </div>
+    </div>
+    <div class="rt-grid rt-stack">
       <!-- Émission sous la réception, sur toute la largeur (comme JTTY et FLDIGI) : macros F1 à F12 sur une ligne -->
       <div class="dg-col rt-tx-col">
         <div class="rt-macros" id="rtMacros"></div>
         <div class="rt-tx-row">
           <textarea id="rtTxt" rows="2" placeholder="Message personnalisé, puis « Émettre » (Maj+clic sur une macro : l'ajoute ici)…" spellcheck="false"></textarea>
           <div class="rt-tx-act">
-            <button class="btn btn-tx" type="button" id="rtSend" title="Émet le texte en RTTY sur la fréquence de réception (Shift et vitesse choisis en haut), puis retour en réception">Émettre</button>
+            <button class="btn btn-tx" type="button" id="rtSend" title="Émet le texte en RTTY avec les réglages du décodeur marqué TX (A ou B), puis retour en réception">Émettre</button>
             <div class="rt-tx-act2"><button class="btn" type="button" id="rtTxClear">Effacer</button>
             <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station (correspondant, RST, heure…)">Log QSO</button></div>
           </div>
@@ -440,7 +469,7 @@
     if (watching && tab === 'cw') return api.send({ t: 'digi', mode: 'CW', cw: cwc });
     if (watching && tab === 'sstv') { api.send({ t: 'digi', mode: 'SSTV', hist: ssNeedHist }); ssNeedHist = false; return; }
     if (watching && tab === 'jtty') { api.send({ t: 'digi', mode: 'JTTY', hist: jtNeedHist }); jtNeedHist = false; return; }
-    if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rt });
+    if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rts[0], rtty2: rts[1] });
     if (watching && tab === 'wspr') { api.send({ t: 'digi', mode: 'WSPR', hist: wsNeedHist }); wsNeedHist = false; return; }
     api.send({ t: 'digi', mode: watching ? mode : null, hist: watching && needHist });
     if (watching) needHist = false;
@@ -448,6 +477,29 @@
 
   // ------------------------------------------------------------------ cascade
   const wf = { ctx: null, sctx: null, w: 0, h: 140, img: null };
+  const wfB = { ctx: null, sctx: null, w: 0, h: 0, cw: 0 }; // cascade du 2e décodeur RTTY (même spectre)
+  function sizeB() {
+    const c = $('rtWfB');
+    if (tab !== 'rtty' || !c || !c.clientWidth) return;
+    const s = $('rtScaleB');
+    c.style.height = $('dgWf').clientHeight + 'px'; // même hauteur que la cascade A (poignée)
+    const dpr = wf.dpr || 1;
+    const cw = Math.max(120, Math.floor(c.clientWidth));
+    const w = Math.round(cw * dpr);
+    const h = Math.round(Math.max(40, c.clientHeight) * dpr);
+    for (const id of ['rtMkMB', 'rtMkSB']) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
+    if (w === wfB.w && h === wfB.h && wfB.ctx) return;
+    let old = null;
+    if (wfB.ctx) { old = document.createElement('canvas'); old.width = wfB.w; old.height = wfB.h; old.getContext('2d').drawImage(c, 0, 0); }
+    const ow = wfB.w, oh = wfB.h;
+    c.width = w; c.height = h;
+    s.width = w; s.height = Math.round(SCALE_H * dpr);
+    Object.assign(wfB, { w, h, cw, ctx: c.getContext('2d'), sctx: s.getContext('2d') });
+    wfB.sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    wfB.ctx.fillStyle = '#05080d';
+    wfB.ctx.fillRect(0, 0, w, h);
+    if (old) wfB.ctx.drawImage(old, 0, 0, ow, oh, 0, 0, w, oh);
+  }
   function sizeCanvas() {
     const c = $('dgWf');
     const s = $('dgScale');
@@ -460,7 +512,7 @@
     const ch = Math.max(40, Math.round(c.clientHeight || 140));
     const w = Math.round(cw * dpr);
     const h = Math.round(ch * dpr);
-    if (w === wf.w && h === wf.h && wf.ctx) return drawScale();
+    if (w === wf.w && h === wf.h && wf.ctx) { sizeB(); return drawScale(); }
     let old = null;
     if (wf.ctx) { old = document.createElement('canvas'); old.width = wf.w; old.height = wf.h; old.getContext('2d').drawImage(c, 0, 0); }
     const ow = wf.w, oh = wf.h;
@@ -478,6 +530,7 @@
     wf.ctx.fillStyle = '#05080d';
     wf.ctx.fillRect(0, 0, w, h);
     if (old) wf.ctx.drawImage(old, 0, 0, ow, oh, 0, 0, w, oh); // largeur remise à l'échelle, lignes gardées telles quelles
+    sizeB();
     drawScale();
   }
   // Palette : bruit sombre → bleu → cyan → jaune → rouge
@@ -585,6 +638,12 @@
     }
     ctx.putImageData(wf.img, 0, 0);
     periodMark(ctx, tday);
+    // RTTY : la même ligne descend aussi dans la cascade du décodeur B
+    if (tab === 'rtty' && wfB.ctx) {
+      const b = wfB.ctx;
+      b.drawImage(b.canvas, 0, 0, wfB.w, wfB.h - 1, 0, 1, wfB.w, wfB.h - 1);
+      b.drawImage(ctx.canvas, 0, 0, wf.w, 1, 0, 0, wfB.w, 1);
+    }
   }
   // Repères de période (comme JTDX) : trait à chaque début de période FT8 / FT4 / FT2 / JT65, puis heure UTC et bande
   // écrites juste au-dessus du trait, dans la nouvelle période, une fois qu'elle a assez défilé
@@ -624,6 +683,15 @@
     const c = wf.sctx;
     if (!c) return;
     const w = wf.cw;
+    ticks(c, w);
+    if (tab === 'rtty') return drawRttyMarks(c, w);
+    if (tab === 'wspr') return drawWsprMarks(c, w);
+    if (tab === 'cw') return drawCwMarks(c, w);
+    if (tab === 'sstv') return drawSstvMarks(c, w);
+    drawFlags(c, w);
+  }
+  // Échelle de 0 à 3000 Hz (graduations façon JTDX)
+  function ticks(c, w) {
     const H = SCALE_H;
     c.clearRect(0, 0, w, H);
     c.fillStyle = '#0b1018';
@@ -648,10 +716,8 @@
         c.fillText(String(f), x - c.measureText(String(f)).width / 2, 0);
       }
     }
-    if (tab === 'rtty') return drawRttyMarks(c, w);
-    if (tab === 'wspr') return drawWsprMarks(c, w);
-    if (tab === 'cw') return drawCwMarks(c, w);
-    if (tab === 'sstv') return drawSstvMarks(c, w);
+  }
+  function drawFlags(c, w) {
     // Largeur d'un signal FT8 (50 Hz) / FT4 (83 Hz) / JT65 (178 Hz) / JTTY (127 Hz, centré) : TX en rouge, RX en vert
     const bw = tab === 'jtty' ? 127 : mode === 'FT4' ? 83 : mode === 'FT2' ? 167 : mode === 'JT65' ? 178 : 50;
     // Drapeaux TX (rouge) et RX (vert) avec leur fréquence ; hampe à la fréquence exacte, drapeau retourné près du bord droit
@@ -682,12 +748,17 @@
   }
   // ------------------------------------------------------------------ RTTY
   const RTTY_DIAL = [['80 m', 3590], ['40 m', 7040], ['30 m', 10142], ['20 m', 14085], ['17 m', 18101], ['15 m', 21085], ['12 m', 24910], ['10 m', 28085]];
-  const rt = (() => {
+  // Deux décodeurs RTTY indépendants : rts[0] = A (VFO-A, à gauche), rts[1] = B (VFO-B, à droite)
+  const rtLoad = (key, f0) => {
     let o = {};
-    try { o = JSON.parse(store.get('rtty', '{}')) || {}; } catch (e) { o = {}; }
-    return { f: Number(o.f) || 1500, shift: [170, 200, 425, 850].indexOf(o.shift) >= 0 ? o.shift : 170,
+    try { o = JSON.parse(store.get(key, '{}')) || {}; } catch (e) { o = {}; }
+    return { f: Number(o.f) || f0, shift: [170, 200, 425, 850].indexOf(o.shift) >= 0 ? o.shift : 170,
       baud: [45.45, 50, 75, 100].indexOf(o.baud) >= 0 ? o.baud : 45.45, rev: !!o.rev, squelch: Number(o.squelch) || 12 };
-  })();
+  };
+  const rts = [rtLoad('rtty', 1500), rtLoad('rttyb', 2100)];
+  const rt = rts[0];
+  const RT_SFX = ['', 'B'];
+  let rtTx = store.get('rttx', '0') === '1' ? 1 : 0; // décodeur dont les réglages servent à l'émission
   // ------------------------------------------------------------------ macros (comme FLDIGI : F1 à F12, modifiables)
   // <TX> en tête : la macro part tout de suite à l'émission (comme FLDIGI) ; <RX> : retour en réception (toujours fait en fin de message)
   // Balises : <MYCALL> <CALL> <NAME> <QTH> <RST> <LOC> <MYLOC> <MYQTH> <OPCALL> <CNTR> <INCR> <ZT> <ZD>
@@ -736,14 +807,16 @@
   let macros = (() => { try { return JSON.parse(store.get('macros', '{}')) || {}; } catch (e) { return {}; } })();
   const macroList = (mode) => (macros[mode] && macros[mode].length ? macros[mode] : DEF_MACROS[mode] || []);
   function saveRtty(reannounce) {
-    store.set('rtty', JSON.stringify(rt));
+    store.set('rtty', JSON.stringify(rts[0]));
+    store.set('rttyb', JSON.stringify(rts[1]));
     if (reannounce) announce();
   }
-  function drawRttyMarks(c, w) {
-    const half = rt.shift / 2;
-    const fm = rt.rev ? rt.f - half : rt.f + half;
-    const fs = rt.rev ? rt.f + half : rt.f - half;
-    const bw = Math.max(20, rt.baud);
+  // Repères Mark (jaune) / Space (bleu) d'un décodeur sur son échelle et sa cascade
+  function rttyMarks(c, w, r, mkM, mkS) {
+    const half = r.shift / 2;
+    const fm = r.rev ? r.f - half : r.f + half;
+    const fs = r.rev ? r.f + half : r.f - half;
+    const bw = Math.max(20, r.baud);
     const bar = (f, y, h, fill, edge) => {
       const x0 = ((f - bw / 2) / WF_MAX_HZ) * w;
       c.fillStyle = fill;
@@ -753,18 +826,45 @@
     };
     bar(fm, 14, 16, 'rgba(242, 207, 74, .35)', '#F2CF4A');
     bar(fs, 14, 16, 'rgba(0, 212, 255, .3)', '#00D4FF');
-    const pos = (el, f) => { el.style.left = ((f - bw / 2) / WF_MAX_HZ) * 100 + '%'; el.style.width = (bw / WF_MAX_HZ) * 100 + '%'; };
-    pos($('dgMkRx'), fm);
-    pos($('dgMkTx'), fs);
-    $('rtF').textContent = Math.round(rt.f);
+    const pos = (el, f) => { if (!el) return; el.style.left = ((f - bw / 2) / WF_MAX_HZ) * 100 + '%'; el.style.width = (bw / WF_MAX_HZ) * 100 + '%'; };
+    pos(mkM, fm);
+    pos(mkS, fs);
   }
-  function setRttyF(f) {
-    rt.f = Math.max(200 + rt.shift / 2, Math.min(WF_MAX_HZ - 100 - rt.shift / 2, Math.round(f)));
+  function drawRttyMarks(c, w) {
+    rttyMarks(c, w, rts[0], $('dgMkRx'), $('dgMkTx'));
+    // Cascade du décodeur B : même spectre (même BF du TRX), ses propres repères
+    if (wfB.sctx) {
+      ticks(wfB.sctx, wfB.cw);
+      rttyMarks(wfB.sctx, wfB.cw, rts[1], $('rtMkMB'), $('rtMkSB'));
+    }
+    rtHeads();
+  }
+  // En-têtes des deux décodeurs : centre, fréquence du signal suivi, décodeur de l'émission
+  function rtHeads() {
+    const st = api && api.state && api.state();
+    const r = st && st.radio;
+    const dial = r ? Number(r.vfoSel === 1 && r.freqB ? r.freqB : r.freq) || 0 : 0;
+    rts.forEach((x, ch) => {
+      const sfx = RT_SFX[ch];
+      if (!$('rtF' + sfx)) return;
+      $('rtF' + sfx).textContent = Math.round(x.f);
+      $('rtRf' + sfx).textContent = dial ? (((dial + x.f) / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kHz') : '';
+    });
+    document.querySelectorAll('.rt-txsel').forEach((b) => {
+      const on = Number(b.dataset.ch) === rtTx;
+      b.setAttribute('aria-pressed', String(on));
+      b.closest('.rt-side').classList.toggle('rt-istx', on);
+    });
+  }
+  function setRttyF(f, ch) {
+    const r = rts[ch || 0];
+    r.f = Math.max(200 + r.shift / 2, Math.min(WF_MAX_HZ - 100 - r.shift / 2, Math.round(f)));
     saveRtty(true);
     drawScale();
   }
-  function rttyAppend(text) {
-    const el = $('rtRx');
+  function rttyAppend(text, ch) {
+    const el = $(ch === 1 ? 'rtRxB' : 'rtRx');
+    if (!el) return;
     const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
     el.appendChild(document.createTextNode(text));
     if (el.textContent.length > 20000) el.textContent = el.textContent.slice(-15000);
@@ -772,8 +872,10 @@
   }
   function rttyLevels(m) {
     // Barres Mark / Space : 0 à 40 dB au-dessus du plancher
-    $('rtM').style.width = Math.max(0, Math.min(100, (m.m / 40) * 100)) + '%';
-    $('rtS').style.width = Math.max(0, Math.min(100, (m.s / 40) * 100)) + '%';
+    const sfx = RT_SFX[m.ch === 1 ? 1 : 0];
+    if (!$('rtM' + sfx)) return;
+    $('rtM' + sfx).style.width = Math.max(0, Math.min(100, (m.m / 40) * 100)) + '%';
+    $('rtS' + sfx).style.width = Math.max(0, Math.min(100, (m.s / 40) * 100)) + '%';
   }
   // Remplace les balises d'une macro ; <INCR> fait avancer le numéro de série (seulement si apply)
   function macroText(t, apply) {
@@ -803,31 +905,69 @@
     return out;
   }
   function initRtty() {
-    $('rtShift').value = String(rt.shift);
-    $('rtBaud').value = String(rt.baud);
-    $('rtRev').setAttribute('aria-pressed', String(rt.rev));
-    $('rtSq').value = String(rt.squelch);
-    $('rtSqV').textContent = String(rt.squelch);
-    $('rtShift').addEventListener('change', () => { rt.shift = Number($('rtShift').value); setRttyF(rt.f); });
-    $('rtBaud').addEventListener('change', () => { rt.baud = Number($('rtBaud').value); saveRtty(true); drawScale(); });
-    $('rtRev').addEventListener('click', () => { rt.rev = !rt.rev; $('rtRev').setAttribute('aria-pressed', String(rt.rev)); saveRtty(true); drawScale(); });
-    $('rtSq').addEventListener('input', () => { $('rtSqV').textContent = $('rtSq').value; });
-    $('rtSq').addEventListener('change', () => { rt.squelch = Number($('rtSq').value); saveRtty(true); });
+    rts.forEach((r, ch) => {
+      const sfx = RT_SFX[ch];
+      $('rtShift' + sfx).value = String(r.shift);
+      $('rtBaud' + sfx).value = String(r.baud);
+      $('rtRev' + sfx).setAttribute('aria-pressed', String(r.rev));
+      $('rtSq' + sfx).value = String(r.squelch);
+      $('rtSqV' + sfx).textContent = String(r.squelch);
+      $('rtShift' + sfx).addEventListener('change', () => { r.shift = Number($('rtShift' + sfx).value); setRttyF(r.f, ch); });
+      $('rtBaud' + sfx).addEventListener('change', () => { r.baud = Number($('rtBaud' + sfx).value); saveRtty(true); drawScale(); });
+      $('rtRev' + sfx).addEventListener('click', () => { r.rev = !r.rev; $('rtRev' + sfx).setAttribute('aria-pressed', String(r.rev)); saveRtty(true); drawScale(); });
+      $('rtSq' + sfx).addEventListener('input', () => { $('rtSqV' + sfx).textContent = $('rtSq' + sfx).value; });
+      $('rtSq' + sfx).addEventListener('change', () => { r.squelch = Number($('rtSq' + sfx).value); saveRtty(true); });
+      $('rtClear' + sfx).addEventListener('click', () => { $(ch ? 'rtRxB' : 'rtRx').textContent = ''; });
+      // Double-clic sur un mot reçu qui ressemble à un indicatif : il devient le correspondant
+      $(ch ? 'rtRxB' : 'rtRx').addEventListener('dblclick', () => {
+        const w = String(window.getSelection() || '').trim().toUpperCase();
+        if (CALL_RE.test(w)) setDx({ call: w });
+      });
+    });
+    // Décodeur de l'émission : bouton TX de son en-tête
+    document.querySelectorAll('.rt-txsel').forEach((b) => b.addEventListener('click', () => {
+      rtTx = Number(b.dataset.ch) === 1 ? 1 : 0;
+      store.set('rttx', String(rtTx));
+      rtHeads();
+      dtxState(api && api.state() && api.state().ftx);
+    }));
+    // Cascade du décodeur B : clic (gauche ou droit) = caler le décodeur B
+    for (const id of ['rtWfB', 'rtScaleB']) {
+      const fB = (e) => { const r = e.currentTarget.getBoundingClientRect(); return ((e.clientX - r.left) / r.width) * WF_MAX_HZ; };
+      $(id).addEventListener('click', (e) => setRttyF(fB(e), 1));
+      $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); setRttyF(fB(e), 1); });
+    }
+    // Largeur des deux décodeurs (gardée dans ce navigateur)
+    const dual = $('rtDual');
+    const sp = $('rtSplit');
+    const setSplit = (pct, save) => {
+      if (pct == null) dual.style.removeProperty('--rt-left');
+      else dual.style.setProperty('--rt-left', Math.max(20, Math.min(80, pct)).toFixed(1) + '%');
+      if (save) store.set('rtsplit', pct == null ? '' : Math.max(20, Math.min(80, pct)).toFixed(1));
+      if (tab === 'rtty' && wf.ctx) sizeCanvas();
+    };
+    if (Number(store.get('rtsplit', '')) > 0) setSplit(Number(store.get('rtsplit', '')), false);
+    sp.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      sp.setPointerCapture(e.pointerId);
+      const at = (ev) => { const r = dual.getBoundingClientRect(); return ((ev.clientX - r.left) / r.width) * 100; };
+      const mv = (ev) => setSplit(at(ev), false);
+      const up = (ev) => { sp.removeEventListener('pointermove', mv); sp.removeEventListener('pointerup', up); sp.removeEventListener('pointercancel', up); setSplit(at(ev), true); };
+      sp.addEventListener('pointermove', mv);
+      sp.addEventListener('pointerup', up);
+      sp.addEventListener('pointercancel', up);
+    });
+    sp.addEventListener('dblclick', () => setSplit(null, true));
     const dial = $('rtDial');
     fillList(dial, withQo(RTTY_DIAL, 'RTTY'), store.get('rtdial', '14085'));
     // Choisir une bande dans la liste y envoie directement le TRX (QSY)
     dial.addEventListener('change', () => { store.set('rtdial', dial.value); qsyTo(Number(dial.value)); });
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
-    $('rtClear').addEventListener('click', () => { $('rtRx').textContent = ''; });
     $('rtTxClear').addEventListener('click', () => { $('rtTxt').value = ''; });
     $('rtSend').addEventListener('click', () => dtxClick('RTTY'));
     $('rtTxt').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); dtxClick('RTTY'); } });
-    // Double-clic sur un mot reçu qui ressemble à un indicatif : il devient le correspondant
-    $('rtRx').addEventListener('dblclick', () => {
-      const w = String(window.getSelection() || '').trim().toUpperCase();
-      if (CALL_RE.test(w)) setDx({ call: w });
-    });
     drawRttyMacros();
+    rtHeads();
   }
 
 
@@ -1767,7 +1907,7 @@
     const st = api.state();
     if (st && (st.ftx || (st.ptt && st.ptt.active))) return api.say('Émission en cours : attendez la fin (ou « ■ Arrêter »).', 'warn');
     const m = { t: 'dtx', mode, text };
-    if (mode === 'RTTY') Object.assign(m, { f0: Math.round(rt.f), shift: rt.shift, baud: rt.baud, rev: !!rt.rev });
+    if (mode === 'RTTY') { const r = rts[rtTx]; Object.assign(m, { f0: Math.round(r.f), shift: r.shift, baud: r.baud, rev: !!r.rev }); }
     else m.f0 = curTxF();
     dtxPend = { mode, text, zone };
     api.send(m);
@@ -1783,14 +1923,15 @@
       if (note) {
         note.classList.toggle('air', mine && x.state === 'tx');
         note.textContent = mine ? (x.state === 'tx' ? '● En émission ' + mode + ' (' + x.by + ') : « ' + x.text + ' »' : 'Préparation de l’émission ' + mode + '…')
-          : mode === 'RTTY' ? 'Émission RTTY sous ' + myCall + ' : macro (émission directe) ou texte ci-dessus puis « Émettre » (Ctrl+Entrée).' : 'Émission JTTY sous ' + myCall + ' : macro (émission directe) ou message ci-dessus puis « Émettre » (Entrée).';
+          : mode === 'RTTY' ? 'Émission RTTY sous ' + myCall + ', réglages du décodeur ' + (rtTx ? 'B' : 'A') + ' (' + Math.round(rts[rtTx].f) + ' Hz) : macro (émission directe) ou texte ci-dessus puis « Émettre » (Ctrl+Entrée).' : 'Émission JTTY sous ' + myCall + ' : macro (émission directe) ou message ci-dessus puis « Émettre » (Entrée).';
       }
     }
     // Émission partie : le texte envoyé quitte la zone d'écriture et s'affiche dans la réception
     if (dtxPend && x && x.mode === dtxPend.mode && x.state === 'tx') {
       const el = dtxPend.mode === 'RTTY' ? $('rtTxt') : $('jtTxt');
       if (el && dtxPend.zone && el.value === dtxPend.text) el.value = '';
-      if (dtxPend.mode === 'RTTY' && $('rtRx')) {
+      const rxEl = $(rtTx ? 'rtRxB' : 'rtRx');
+      if (dtxPend.mode === 'RTTY' && rxEl) {
         // Texte exact émis (envoyé par le serveur) : gris tant qu'il attend, rouge lettre par lettre une fois parti
         const info = dtxInfo && dtxInfo.id === x.id ? dtxInfo : null;
         const text = info ? info.text : dtxPend.text.toUpperCase().replace(/\s+$/, '');
@@ -1801,7 +1942,7 @@
         const todo = document.createElement('span');
         todo.className = 'rt-todo';
         s.append('\n', done, todo, '\n');
-        $('rtRx').appendChild(s);
+        rxEl.appendChild(s);
         if (info && info.ms && info.ms.length === text.length) {
           todo.textContent = text;
           rtLive = { id: x.id, at: x.at, text, ms: info.ms, seconds: info.seconds, done, todo, n: 0 };
@@ -1809,7 +1950,7 @@
         } else {
           done.textContent = text;
         }
-        $('rtRx').scrollTop = $('rtRx').scrollHeight;
+        rxEl.scrollTop = rxEl.scrollHeight;
       }
       dtxPend = null;
     }
@@ -2045,7 +2186,7 @@
     const rxB = r.vfoSel === 1 && r.freqB;
     let hz = Number(rxB ? r.freqB : r.freq) || 0;
     // RTTY : fréquence du signal (porteuse + milieu mark / space), comme FLDIGI
-    if (m === 'RTTY' && hz) hz += Math.round(rt.f);
+    if (m === 'RTTY' && hz) hz += Math.round(rts[rtTx].f);
     const p2 = (n) => String(n).padStart(2, '0');
     const end = new Date(now());
     const t0 = Number(dx.t0) && end - Number(dx.t0) < 3 * 3600 * 1000 && end - Number(dx.t0) >= 0 ? new Date(Number(dx.t0)) : end;
@@ -2541,7 +2682,7 @@
       setInterval(() => {
         if (detached) return;
         if (tab === 'ftx' || tab === 'jt65') { clock(); status(); followBand(); }
-        if (tab === 'rtty') status();
+        if (tab === 'rtty') { status(); rtHeads(); }
         if (tab === 'wspr') wsClock();
         if (tab === 'jtty') jtStatus();
         if (tab === 'cw') cwStatus();
@@ -2593,7 +2734,7 @@
         return true;
       }
       if (m.t === 'dtx_text') { dtxInfo = m; return true; }
-      if (m.t === 'rtty') { rttyAppend(m.text || ''); return true; }
+      if (m.t === 'rtty') { rttyAppend(m.text || '', m.ch === 1 ? 1 : 0); return true; }
       if (m.t === 'jtty') { jtUpdate(m.u); return true; }
       if (m.t === 'cw') { cwAppend(m.text || ''); return true; }
       if (/^sstv_/.test(m.t)) return ssMessage(m);

@@ -526,23 +526,31 @@ Same window as FT8, but with one-minute periods; the TRX goes to the JT65 freque
 <a id="rtty"></a>
 ### 12.3 RTTY
 
-RTTY is "radio teletype": you type text that scrolls on the correspondent's screen. Widely used in contests.
+RTTY is radio "teletype": you type text that scrolls on the other station's screen. Widely used in contests. The tab has **two independent decoders**, side by side: **VFO-A** on the left and **VFO-B** on the right, each with its own waterfall, received text and settings. Both listen to the transceiver audio, so you can follow two stations on the same band at once (for example in a contest, or a DX and its pile-up).
 
-| Command | What it does |
+| Control | What it does |
 |---|---|
-| **Shift** (170, 200, 425, 850 Hz) | Spacing between the two tones of the signal. Radio amateurs: 170 Hz. |
-| **Vitesse** (speed) (45.45 … 100 baud) | Radio amateurs: 45.45 baud. |
-| `Inversé` (reverse) | Swaps Mark and Space if the received text makes no sense (signal "upside down"). |
+| Frequency list + `↺` | RTTY frequencies per band (at the top, shared by both decoders). |
+| Frequency (e.g. 14 086,5 kHz) | Next to VFO-A / VFO-B: frequency of the signal followed by this decoder (transceiver dial + Mark / Space centre), handy for the log or a spot. |
+| **Shift** (170, 200, 425, 850 Hz) | Spacing between the two tones of the signal. Amateur radio: 170 Hz. |
+| **Speed** (45,45 … 100 Bd) | Amateur radio: 45.45 baud. |
+| `Inversé` (reversed) | Swaps Mark and Space when the received text makes no sense (signal "upside down"). |
 | **Silencieux** (squelch) | Higher = fewer random characters on noise; too high and weak signals are no longer decoded. |
-| Frequency list + `↺` | RTTY frequencies per band. |
-| M / S indicator | The two bars should flicker alternately when you are properly tuned. |
+| M / S indicator | The two bars should beat alternately when the decoder is tuned correctly. |
 | Centre … Hz | Audio frequency the decoder is tuned to. |
+| `TX` | Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): lit in red, with a red frame around that decoder. |
+| `Effacer` (clear) | Clears the received text of this decoder. |
+| Vertical bar between the two | Drag it left or right: width of the two decoders (double-click: half and half). Kept in your browser. |
 
-1. **Receiving**: click the signal in the waterfall. The yellow (Mark) and blue (Space) markers must sit on its two traces. The text is shown in **Réception RTTY** (RTTY receive) (`Effacer` clears it).
-2. **Double-click a received callsign**: it becomes the correspondent.
-3. **Transmitting**: type the text in the bottom box, then `Émettre` (transmit) (or `Ctrl`+`Enter`). The text goes out on the receive frequency, with the same shift and speed, then the TRX returns to receive. It is shown in grey, then each letter turns red as it goes out (« fin dans N s », ends in N s). While transmitting, the button becomes `■ Arrêter`. 600 characters at most per send.
-4. **Macros** `F1` to `F12` (on one row, above the text): a click transmits at once; **Shift+click** adds the macro to the text without transmitting (section 13).
-5. `Effacer` clears the text to send; `Log QSO` opens the logbook form, already filled in.
+1. **Receive**: click a signal in the left waterfall to tune decoder A, in the right one for decoder B. The yellow (Mark) and blue (Space) markers should sit on the two traces of the signal. The text appears under each waterfall.
+2. **Double-click a received callsign** (left or right): it becomes the correspondent.
+3. **Choose the transmit decoder**: the `TX` button in its header. Your reply then goes out exactly on the frequency of the station that decoder follows.
+4. **Transmit**: type the text in the bottom box, then `Émettre` (transmit) (or `Ctrl`+`Enter`). The text goes out with the settings of the decoder marked TX, then the transceiver returns to receive. It appears in that decoder's received text, in grey, then each letter turns red as it is sent (« fin dans N s », ends in N s). While transmitting, the button becomes `■ Arrêter` (stop). 600 characters at most per transmission.
+5. **Macros** `F1` to `F12` (on one row, above the text): a click transmits at once; **Shift+click** adds the macro to the text without transmitting (section 13).
+6. `Effacer` (under the transmit button) clears the text to send; `Log QSO` opens the logbook form, already filled in with the frequency of the decoder marked TX.
+
+> [!NOTE]
+> The transceiver sends a single audio stream to the PC. Both decoders therefore read the same passband (about 3 kHz around the frequency of the VFO being received); that is why both waterfalls show the same spectrum. On the FTX-1 with DUAL RX, this audio mixes MAIN and SUB: decoder B can then follow a VFO-B signal, if its audio tone differs from the VFO-A one.
 
 <a id="wspr"></a>
 ### 12.4 WSPR
