@@ -27,8 +27,8 @@
   let items = [];
   let total = 0;
   // Colonnes du carnet : largeur par défaut (px), réglable à la souris (bord droit de l'en-tête), gardée dans ce navigateur
-  const LG_COLS = [['date', 86], ['utc', 46], ['call', 84], ['band', 48], ['mode', 50], ['mhz', 72], ['env', 42], ['recu', 42], ['nom', 110],
-    ['qth', 130], ['dxcc', 110], ['txc', 66], ['lotw', 44], ['eqsl', 44], ['cl', 34], ['qrz', 40], ['fill', 0]];
+  const LG_COLS = [['date', 86], ['utc', 46], ['call', 84], ['band', 58], ['mhz', 72], ['mode', 54], ['env', 46], ['recu', 52], ['nom', 110],
+    ['qth', 130], ['dxcc', 110], ['txc', 72], ['lotw', 52], ['eqsl', 52], ['cl', 36], ['qrz', 44], ['fill', 0]];
   let editing = null;      // QSO en cours de modification
   let lastTxCall = '';     // dernier TX call de la ligne Correspondant reporté dans la fiche
   let stale = true;        // liste à recharger à la prochaine ouverture de l'onglet
@@ -111,7 +111,7 @@
     <div class="lg-tw">
       <table class="lg-table">
         <colgroup>${LG_COLS.map(([k]) => '<col data-c="' + k + '">').join('')}</colgroup>
-        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th>Mode</th><th class="r">MHz</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th>
+        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th class="r">MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th>
           <th class="c" title="LoTW (★ = confirmé)">LoTW</th><th class="c">eQSL</th><th class="c" title="Club Log">CL</th><th class="c">QRZ</th><th class="lg-fill"></th></tr></thead>
         <tbody id="lgBody"><tr><td colspan="17" class="lg-empty">Chargement du carnet…</td></tr></tbody>
       </table>
@@ -390,7 +390,7 @@
     } else {
       body.innerHTML = items.map((q) => '<tr data-id="' + esc(q.id) + '"' + (editing && editing.id === q.id ? ' class="sel"' : '') + ' title="Cliquer pour modifier">' +
         '<td>' + fmtDate(q.qso_date) + '</td><td>' + fmtTime(q.time_on) + '</td><td class="call">' + esc(q.call) + '</td><td>' + esc(q.band) +
-        (q.sat_name ? ' <span class="sat">' + esc(q.sat_name) + '</span>' : '') + '</td><td>' + esc(modeName(q)) + '</td><td class="r">' + esc(q.freq) +
+        (q.sat_name ? ' <span class="sat">' + esc(q.sat_name) + '</span>' : '') + '</td><td class="r">' + esc(q.freq) + '</td><td>' + esc(modeName(q)) +
         '</td><td>' + esc(q.rst_sent || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td class="grow">' + esc(q.name || '') + '</td><td class="lg-qth" title="' + esc(q.qth || '') + '">' + esc(q.qth || '') +
         '</td><td class="lg-cty" title="' + esc(q.country || '') + '">' + esc(q.country || '') + '</td><td class="txc" title="' + esc(q.operator ? 'Opérateur : ' + q.operator : '') + '">' + esc(q.station_callsign || '') + '</td>' +
         SV.map((s) => upCell(q, s)).join('') + '<td class="lg-fill"></td></tr>').join('');

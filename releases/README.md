@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.45 | [RemoteStation-Setup-0.22.45.exe](0.22.45/RemoteStation-Setup-0.22.45.exe) | [remote-station-0.22.45.tar.gz](0.22.45/remote-station-0.22.45.tar.gz) | Carnet : titres en blanc gras, MHz avant Mode — [empreintes SHA-256](0.22.45/SHA256SUMS.txt) |
 | 0.22.44 | [RemoteStation-Setup-0.22.44.exe](0.22.44/RemoteStation-Setup-0.22.44.exe) | [remote-station-0.22.44.tar.gz](0.22.44/remote-station-0.22.44.tar.gz) | Colonnes du carnet réglables à la souris ; titres FT8 en blanc gras — [empreintes SHA-256](0.22.44/SHA256SUMS.txt) |
 | 0.22.43 | [RemoteStation-Setup-0.22.43.exe](0.22.43/RemoteStation-Setup-0.22.43.exe) | [remote-station-0.22.43.tar.gz](0.22.43/remote-station-0.22.43.tar.gz) | TX call synchronisé (Correspondant ↔ carnet), colonnes du carnet resserrées — [empreintes SHA-256](0.22.43/SHA256SUMS.txt) |
 | 0.22.42 | [RemoteStation-Setup-0.22.42.exe](0.22.42/RemoteStation-Setup-0.22.42.exe) | [remote-station-0.22.42.tar.gz](0.22.42/remote-station-0.22.42.tar.gz) | PTT au clic, fiche au RR73, DXCC / km / azimut, RST TX / RX, carnet QTH + DXCC — [empreintes SHA-256](0.22.42/SHA256SUMS.txt) |

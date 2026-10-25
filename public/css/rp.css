@@ -1040,7 +1040,7 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .lg-mlist button:hover, .lg-mlist button:focus-visible { background: var(--v2-bg-input); color: var(--v2-text-bright); }
 .lg-tw { flex: 1; min-height: 220px; overflow: auto; border: 1px solid var(--v2-border-dark); border-radius: 6px; background: var(--v2-bg-darker); }
 .lg-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums; }
-.lg-table th { position: sticky; top: 0; background: var(--v2-bg-card); color: var(--v2-text-header); font-size: 9px; letter-spacing: .8px; text-transform: uppercase; text-align: left; padding: 6px; border-bottom: 1px solid var(--v2-border-dark); white-space: nowrap; }
+.lg-table th { position: sticky; top: 0; background: var(--v2-bg-card); color: #FFFFFF; font-weight: 700; font-size: 9px; letter-spacing: .8px; text-transform: uppercase; text-align: left; padding: 6px; border-bottom: 1px solid var(--v2-border-dark); white-space: nowrap; }
 .lg-table td { padding: 4px 6px; border-bottom: 1px solid var(--v2-border-dark); color: var(--v2-text-secondary); white-space: nowrap; }
 .lg-table tbody tr[data-id] { cursor: pointer; }
 .lg-table tbody tr[data-id]:hover td { background: var(--v2-bg-input); }

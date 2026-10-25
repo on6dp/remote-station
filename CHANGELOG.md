@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.45** — Carnet : titres des colonnes en blanc gras, colonne MHz à gauche de Mode. Ctrl+F5 sur le dashboard suffit.
 - **0.22.44** — Carnet : largeur de chaque colonne réglable à la souris (bord droit du titre, double-clic = largeur d’origine) ; FT8 / FT4 / FT2 : titres des colonnes des listes en blanc gras. Ctrl+F5 sur le dashboard suffit.
 - **0.22.43** — TX call synchronisé entre la ligne Correspondant et la fiche du carnet (avec la main, changer l’un change l’autre) ; carnet : colonnes Nom, QTH et DXCC plus étroites, place libre à droite. Ctrl+F5 sur le dashboard suffit.
 - **0.22.42** — FT8 / FT4 / FT2 : PTT dès le clic sur un indicatif (le signal part au début de la période) ; fiche de fin de QSO ouverte dès la réception du RR73 ; pays DXCC, distance (km) et azimut dans les listes ; largeur des deux listes réglable ; listes en ordre chronologique ; aide AP du QSO sur la fréquence du correspondant. Ligne Correspondant : RST TX / RST RX (dB en FT8…, 599 en RTTY / CW / SSTV), QTH plus large. Carnet : colonnes QTH et DXCC, colonnes courtes resserrées. Redémarrer le service puis Ctrl+F5.
