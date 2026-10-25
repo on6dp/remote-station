@@ -296,7 +296,7 @@
             return this.log('Sécurité : passage MAIN ↔ SUB par CAT refusé (' + (FTX1.CONTROL[m.id].label || m.id) + ') — face avant du TRX', 'st-bad');
           }
           // Réception simple (FR01) : pas de changement de côté par CAT (a mis le TRX en émission au club)
-          if (FTX1.ID === 'ftx1' && this.radio.dualRx !== 1 && ((m.id === 'vfoSel' && v !== (this.radio.vfoSel === 1 ? 1 : 0)) || (FTX1.CONTROL[m.id].viaSub && this.radio.vfoSel !== 1) || (FTX1.CONTROL[m.id].viaMain && this.radio.vfoSel === 1))) {
+          if (FTX1.ID === 'ftx1' && this.radio.dualRx !== 1 && !m.subSingle && ((m.id === 'vfoSel' && v !== (this.radio.vfoSel === 1 ? 1 : 0)) || (FTX1.CONTROL[m.id].viaSub && this.radio.vfoSel !== 1) || (FTX1.CONTROL[m.id].viaMain && this.radio.vfoSel === 1))) {
             return this.log('Sécurité : passage MAIN ↔ SUB refusé en réception simple (DUAL RX coupé) — face avant du TRX', 'st-bad');
           }
           // Changement de côté en cours (lectures suspendues, côté actif pas encore relu) : réglage propre à un côté refusé

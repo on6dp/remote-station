@@ -526,7 +526,7 @@
       return say('Passage MAIN ↔ SUB par le dashboard désactivé (il mettait le FTX-1 en émission) : choisissez MAIN / SUB sur la face avant du TRX ; le dashboard suit.', 'warn', 8000);
     }
     // FTX-1 en réception simple (DUAL RX coupé) : aucun passage MAIN ↔ SUB par CAT (VS1 a mis le TRX en émission, 24 et 25/10)
-    if (RIG().ID === 'ftx1' && st && st.radio && st.radio.dualRx !== 1) {
+    if (RIG().ID === 'ftx1' && st && st.radio && st.radio.dualRx !== 1 && !(me && me.subSingle)) {
       const sel = Number(ctlValue('vfoSel')) === 1 ? 1 : 0;
       if ((c.id === 'vfoSel' && v != null && Number(v) !== sel) || (c.viaSub && sel !== 1) || (c.viaMain && sel === 1)) {
         if (c.id === 'vfoSel' && Number(v) === 1) setTarget('B');

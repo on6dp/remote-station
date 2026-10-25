@@ -36,9 +36,9 @@ const DEFAULTS = {
   // Tuner (boîte d'accord) remis en service tout seul à la connexion du TRX et à chaque changement de bande HF / 6 m,
   // pour ne pas l'oublier ; un clic sur TUNER le coupe jusqu'au prochain changement de bande. false : jamais tout seul.
   tunerAuto: true,
-  // FTX-1 : passage MAIN ↔ SUB par le dashboard en réception simple (DUAL RX coupé) — TOUJOURS REFUSÉ.
-  // Le 24/10 puis encore le 25/10 (0.22.55, deux VFO en HF), un clic sur le VFO B en réception simple a mis le TRX
-  // en émission (VS1 seul). Ce réglage n'est plus lu : MAIN / SUB en réception simple = face avant du TRX seulement.
+  // FTX-1 : passage MAIN ↔ SUB par le dashboard en réception simple (DUAL RX coupé). Refusé par défaut : le 24/10 puis
+  // le 25/10 (deux VFO en HF), un clic sur le VFO B en réception simple a mis le TRX en émission (VS1 seul).
+  // true : autorisé (essais au club, en surveillant le TRX).
   ftx1SubSingle: false,
   digiAlcMax: 0, // émission numérique : ALC maximal (%) au-delà duquel la page Station baisse le niveau BF ; 0 = pas de limite
   ftxWatchdogMinutes: 6, // émission auto FT8 / FT4 / FT2 : arrêt si le même message part depuis ce temps (WSJT-X : 6 min)
@@ -223,7 +223,7 @@ function txwSwap(by) {
   if (!R.CONTROL || !R.CONTROL.swap || !station) return false;
   let v;
   try { v = R.validate('swap', undefined, radio); } catch (e) { return false; }
-  toStation({ t: 'cmd', op: 'ctl', id: 'swap', value: v, by, subOk: !!cfg.ftx1SubCat, subSingle: false });
+  toStation({ t: 'cmd', op: 'ctl', id: 'swap', value: v, by, subOk: !!cfg.ftx1SubCat, subSingle: !!cfg.ftx1SubSingle });
   return true;
 }
 function txwOff(reason) {
@@ -1628,7 +1628,7 @@ function loggedIn(conn, call, rec, sessionTok) {
     sessionIdleMinutes: cfg.sessionIdleMinutes,
     digiCall: String(cfg.digiCall || '').toUpperCase(),
     subCat: !!cfg.ftx1SubCat,
-    subSingle: false,
+    subSingle: !!cfg.ftx1SubSingle,
     stationGrid: String(cfg.stationGrid || '').toUpperCase(),
     stationQth: String(cfg.stationQth || '').toUpperCase(),
     qo100If: cfg.qo100If && typeof cfg.qo100If === 'object' ? cfg.qo100If : DEFAULTS.qo100If,
@@ -2036,7 +2036,7 @@ function onOperator(conn, m) {
         // FTX-1 en réception simple (DUAL RX coupé) : passage MAIN ↔ SUB par CAT refusé (constaté au club le 24/10 :
         // clic sur SUB → le TRX passe en émission) ; DUAL RX d'abord, ou face avant
         const sideMove = (m.ctl === 'vfoSel' && Number(m.value) !== (radio.vfoSel === 1 ? 1 : 0)) || (c && c.viaSub && radio.vfoSel !== 1) || (c && c.viaMain && radio.vfoSel === 1);
-        if (R.ID === 'ftx1' && radio.dualRx !== 1 && sideMove) { // réception simple (ou état inconnu) : jamais par CAT
+        if (R.ID === 'ftx1' && radio.dualRx !== 1 && sideMove && !cfg.ftx1SubSingle) { // réception simple (ou état inconnu) : refusé sauf ftx1SubSingle
           return send(conn, { t: 'notice', level: 'error', msg: 'Passage MAIN ↔ SUB refusé en réception simple (DUAL RX coupé) : il met le FTX-1 en émission. Le VFO B se règle quand même (molette, flèches, bandes) ; pour écouter le VFO B, touche MAIN / SUB du TRX au club.' });
         }
         let v;
@@ -2074,7 +2074,7 @@ function onOperator(conn, m) {
           if (!(swrLock && swrLock.tune)) swrLock = null;
           tuneWatch = { freq: txFreq(), at: Date.now(), saw: false, endAt: 0, call: conn.user.call, conn };
         }
-        toStation({ t: 'cmd', op: 'ctl', id: m.ctl, value: v, by: conn.user.call, subOk: !!cfg.ftx1SubCat, subSingle: false });
+        toStation({ t: 'cmd', op: 'ctl', id: m.ctl, value: v, by: conn.user.call, subOk: !!cfg.ftx1SubCat, subSingle: !!cfg.ftx1SubSingle });
         if (c.type !== 'action') radio[m.ctl] = v; // affichage optimiste
         if (R.VIRTUAL_SPLIT && m.ctl === 'vfoSel') radio.txVfo = txSide(); // l'émission suit la réception (ou l'autre VFO en SPLIT)
       }
