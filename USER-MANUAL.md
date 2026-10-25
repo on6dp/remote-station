@@ -4,428 +4,779 @@
 
 *Online version: **HELP** button on the dashboard or https://remote.op0p.be/help — [version française](MANUEL.md)*
 
-- [1. Logging in](#login)
-- [2. The screen](#screen)
-- [3. Taking and handing over control](#control)
-- [4. Operating the transceiver](#trx)
-   - [4.1 Every command](#commandes)
-   - [4.2 Operating SPLIT](#split)
-- [5. Listening](#listen)
-- [6. Transmitting and safety](#tx)
-- [7. Operators and chat](#operators)
-- [8. Layout and separate windows](#layout)
-- [9. Digital modes](#digital)
-   - [9.1 FT8 · FT4 · FT2](#ft8)
-   - [9.2 JT65](#jt65)
-   - [9.3 RTTY](#rtty)
-   - [9.4 WSPR](#wspr)
-   - [9.5 JTTY](#jtty)
-   - [9.6 CW](#cw)
-   - [9.7 SSTV](#sstv)
-   - [9.8 Synchro](#sync)
-   - [9.9 QO-100](#qo100)
-- [10. Correspondent, messages and macros](#messages)
-- [11. Keyboard shortcuts](#keys)
-- [12. Troubleshooting](#trouble)
-- [13. The club PC (Station page)](#club)
+- [1. Before you start](#intro)
+- [2. Short glossary](#lexique)
+- [3. Logging in](#connexion)
+- [4. Guided first steps](#premiers)
+   - [4.1 Listening to a band](#p-ecoute)
+   - [4.2 A phone QSO (SSB)](#p-phonie)
+   - [4.3 An FT8 QSO](#p-ft8)
+   - [4.4 Logging the QSO](#p-log)
+- [5. The screen at a glance](#ecran)
+- [6. Taking and handing over control](#main)
+- [7. Operating the TRX](#trx)
+   - [7.1 The VFO displays](#vfo)
+   - [7.2 Step row and bands](#step)
+   - [7.3 Left column](#gauche)
+   - [7.4 Right column](#droite)
+   - [7.5 Operating SPLIT](#split)
+- [8. Listening](#ecoute)
+- [9. Transmitting and safety](#emission)
+- [10. Operators and chat](#operateurs)
+- [11. Layout and separate windows](#disposition)
+- [12. Digital modes](#numeriques)
+   - [12.1 FT8 · FT4 · FT2](#ft8)
+   - [12.2 JT65](#jt65)
+   - [12.3 RTTY](#rtty)
+   - [12.4 WSPR](#wspr)
+   - [12.5 JTTY](#jtty)
+   - [12.6 CW](#cw)
+   - [12.7 SSTV](#sstv)
+   - [12.8 Synchro](#synchro)
+   - [12.9 QO-100](#qo100)
+- [13. Correspondent, macros and tags](#messages)
 - [14. Logs (station logbook)](#logs)
+   - [14.1 Logging a QSO](#l-fiche)
+   - [14.2 The QSO list](#l-liste)
+   - [14.3 Exporting](#l-export)
+   - [14.4 Synchronisation (LoTW, eQSL, Club Log, QRZ)](#l-sync)
+   - [14.5 Configuration](#l-config)
+- [15. Keyboard shortcuts](#clavier)
+- [16. Common problems](#problemes)
+- [17. For administrators](#admin)
+- [18. The club PC (Station page)](#club)
 
 > [!NOTE]
-> The dashboard runs in any recent browser (Chrome, Edge, Firefox) on a PC, Mac, tablet or phone. It is designed for a **1920 × 1080** screen or larger; on smaller screens the panels rearrange themselves. The interface is in French; the button and panel names are quoted below as they appear on screen. After a server update, press `Ctrl` + `F5` to reload the page.
+> The dashboard runs in **Google Chrome** or **Microsoft Edge**, on a PC, Mac, tablet or phone. It is designed for a **1920 × 1080** screen or larger; on a smaller screen, the panels stack one below the other. The interface is in French: button and field names are quoted below as they appear on screen, with an English translation. After a server update, press `Ctrl` + `F5` to reload the page.
 
-<a id="login"></a>
-## 1. Logging in
+<a id="intro"></a>
+## 1. Before you start
 
-1. Open [https://remote.op0p.be](https://remote.op0p.be).
-2. Enter **your callsign** and **your password** (given by a club administrator), then **Se connecter** (log in).
-3. The browser stays logged in for **7 days**: reloading the page takes you straight back to the dashboard.
-4. **Déconnexion** (log out, top right) ends the session and forgets the browser: do this on a shared PC.
+The **Remote Station** lets members of the UBA-LGE section use the **club transceiver (TRX)** from home, with nothing more than a web browser. The TRX (a Yaesu FTX-1 with its SPA-1 amplifier, or depending on the setup an FTDX10 or an IC-7300) is at the club, connected to a PC. That PC is linked over the internet to the server **remote.op0p.be**, and that server is what you open in your browser.
 
-**Listener** callsigns (ONL…) can see and hear everything but cannot transmit or change the power. After 15 minutes without any action you are logged out (a warning appears one minute before, with a « Rester connecté » / stay logged in button) — never during a transmission.
+1. You click a button on the dashboard (for example "20M").
+2. The server passes the command on to the club PC.
+3. The club PC sends the command to the TRX over its USB cable (the "CAT link").
+4. The TRX changes band, and every connected member sees the new frequency.
 
-<a id="screen"></a>
-## 2. The screen
+The receiver audio travels the other way: it arrives in your browser, and the digital modes (FT8, RTTY, CW…) are decoded on the server.
+
+> [!TIP]
+> **The golden rules**
+> - **Only one person operates** the TRX at a time: the one who "has control". Everybody else watches and listens.
+> - **Everything you set acts on the real club TRX**, for everybody. If you are not sure about a setting, leave it as it is.
+> - After a band change, always do a `TUNE` before transmitting (antenna tuning).
+> - Respect your licence: authorised bands and power. The server checks this anyway.
+> - When you leave, **release control** and switch SPLIT off if you used it.
+
+<a id="lexique"></a>
+## 2. Short glossary
+
+Words that come up often in this manual and on the screen.
+
+| Word | Meaning |
+|---|---|
+| TRX | Transceiver: the club's transmitter-receiver. |
+| Having control (« avoir la main ») | Being the operator who is driving the TRX right now. Without control you can watch and listen, but not change settings or transmit. |
+| VFO | The "tuning knob" of the TRX. There are two, **A** and **B** (on the FTX-1: **MAIN** and **SUB**), each with its own frequency and mode. |
+| MAIN / SUB | The two receivers of the FTX-1. MAIN corresponds to VFO A, SUB to VFO B. The "active side" is the one you listen to and adjust. |
+| PTT | Push To Talk: the button that keys the TRX into transmit for as long as you hold it. |
+| CAT | The USB cable link between the club PC and the TRX, used to control it. |
+| BF (AF) | Audio frequency ("basse fréquence" in French): the sound coming out of the receiver (what you hear, and what the decoder analyses). |
+| Mode | The way of transmitting: **LSB / USB** (SSB, phone on HF), **CW** (Morse), **AM**, **FM**, **DATA-U** (digital modes through the TRX sound card), **RTTY**… |
+| SSB (BLU) | Single sideband ("BLU" in French): phone on HF. LSB below 10 MHz, USB above. |
+| Band | A frequency range: 80 m, 40 m, 20 m… (the smaller the number, the higher the frequency). |
+| SWR (ROS) | Standing wave ratio ("ROS" in French): shows whether the antenna is properly matched. 1.0 is perfect, up to 1.5 is very good, above 2.5 transmission is cut. |
+| TUNE / tuner | The tuner (antenna tuning unit) matches the antenna to the frequency. TUNE starts the tuning: the TRX sends a carrier for a few seconds. |
+| ALC | Indicator showing whether the transmitter is being "driven" too hard. In digital modes, ALC must stay very low. |
+| S-meter | Shows the strength of the received signal, from S1 (very weak) to S9, then S9+10, +20… dB (very strong). |
+| Filter / BW | Width of the listening "window". Narrower = less noise and fewer neighbouring stations, but you must be tuned accurately. |
+| SPLIT | Listening on one frequency and transmitting on another (for DX expeditions). |
+| RIT / XIT | A small offset of the receive frequency (RIT) or transmit frequency (XIT), without touching the VFO. |
+| Waterfall (« cascade ») | The scrolling picture in the digital-mode tabs: each coloured trace is a signal; the brighter or redder it is, the stronger. |
+| QSO | A radio contact between two stations. |
+| Correspondent (« Correspondant ») | The station you are making the QSO with (DX for short). |
+| Report / RST | The signal report exchanged: **59** or **599** in phone / CW / RTTY, a number of **dB** (−15, +03…) in FT8. |
+| Locator | Position as a Maidenhead grid square (e.g. JO20 for the Liège area). |
+| TX call | The callsign under which digital transmissions go out and under which the QSO is logged: the club's (ON5VL, OR0L) or your own. |
+| UTC | Universal time, used in radio (Belgian time − 1 h in winter, − 2 h in summer). |
+| ADIF | Standard file format for exchanging QSOs between logging programs (.adi). |
+| LoTW, eQSL, Club Log, QRZ | Websites to which you upload your QSOs to get confirmations (electronic QSLs) and awards. |
+| DXCC | The official list of amateur-radio "countries" (entities). The prefix (ON, F, DL…) tells you the country of a callsign. |
+
+<a id="connexion"></a>
+## 3. Logging in
+
+1. Open [https://remote.op0p.be](https://remote.op0p.be) in Chrome or Edge.
+2. Enter **your callsign** and **your password** (given by a club administrator), then click `Se connecter` (log in).
+3. The browser stays logged in for **7 days**: when you reload the page, you go straight back to the dashboard.
+4. `Déconnexion` (log out, top right) ends the session and forgets the browser: do this on a PC that is not yours.
+
+- **Listener** callsigns (ONL…) can see and hear everything, but cannot transmit or change the power.
+- After **15 minutes without any action**, you are logged out. A warning appears one minute before, with a `Rester connecté` (stay logged in) button. This never happens during a transmission.
+- The `HELP` button at the top right opens this manual in a new tab.
+
+<a id="premiers"></a>
+## 4. Guided first steps
+
+Four "recipes" to get started. Each button is described in detail further on (sections 7 to 14).
+
+<a id="p-ecoute"></a>
+### 4.1 Listening to a band
+
+1. On the right, **RX audio** panel: click `🔊 Écouter le TRX` (listen to the TRX). Set the **Volume** slider just below (it only affects you).
+2. To change band or frequency you must **have control**: click `Prendre la main` (take control) at the top (if nobody has it).
+3. Click a band, for example `40M`, in the band row below the VFOs.
+4. Choose the mode in the **Mode** panel on the left: `LSB` for phone on 40 m, `USB` on 20 m and above.
+5. Tune the frequency: put the mouse over the digits of **VFO A** and use the **mouse wheel**. Each digit is set separately; the digit under the mouse goes up or down.
+6. A station too strong? Lower the **RF GAIN** (RF front end panel) or switch `ATT` on. Lots of noise? Try `DNR` (noise reduction).
+
+<a id="p-phonie"></a>
+### 4.2 A phone QSO (SSB)
+
+The dashboard does not yet send your microphone to the TRX: phone operation is done at the club or by another means arranged by the station managers. The dashboard is then used to set up and monitor the station. If phone transmission is available from your home, proceed as follows:
+
+1. Take control, choose the band and the mode (LSB / USB).
+2. **Accord** (tuner) panel on the right: click `TUNE` and wait for the tuning to finish. Look at the **SWR** in **Station meters** (bottom left): it should be below about 1.5.
+3. Check the **power** in the TX panel (`−` `+` buttons).
+4. Listen to make sure the frequency is clear, then hold `PTT` (or the `Space` bar) to talk; release it to listen.
+
+> [!NOTE]
+> Check with a club manager how phone modulation is set up before your first attempt.
+
+<a id="p-ft8"></a>
+### 4.3 An FT8 QSO
+
+FT8 is the easiest mode to use remotely: everything is done with the mouse and the dashboard handles the sequence just like WSJT-X.
+
+1. Take control. In the **Correspondant** (correspondent) line at the bottom, choose the **TX call**: the club callsign (ON5VL) or your own.
+2. `FT8 · FT4 · FT2` tab in the centre, `FT8` button, then choose a band in the frequency list (e.g. "14.074 · 20m"). The TRX goes there by itself, in DATA-U.
+3. Do a `TUNE` (Accord panel), then set a reasonable power (20 to 40 W is plenty for FT8).
+4. Wait one or two 15 s periods: the stations heard appear in **Activité de bande** (band activity). **CQ** calls are in green.
+5. **To answer a CQ**: click the station's **callsign** (dotted underline) or double-click its line. The TRX sends your call at the start of the next period.
+6. Let it run: the **sequence advances by itself** (report, R-report, RR73, 73). The bar below the lists is red while transmitting, green while receiving.
+7. As soon as the correspondent sends RR73, the **« Enregistrer le QSO »** (log the QSO) form opens already filled in: check it and save.
+8. To call CQ yourself: click `Tx6` (CQ). Tick **Répondre au 1er** (answer the first) so that the first station to answer is taken automatically.
+9. To stop everything: `■ Arrêter` (stop) (or the `Space` bar).
+
+<a id="p-log"></a>
+### 4.4 Logging the QSO
+
+1. After a digital QSO, the form opens by itself (FT8) or with the `Log QSO` button (RTTY, JTTY, CW, Correspondant line).
+2. For a phone QSO: `LOGS` tab, type the callsign (the UTC time fills in by itself), click `⇩ TRX` (take from the TRX) to copy the frequency and mode, then complete the reports.
+3. `Enregistrer le QSO` (save the QSO) (or `Enter`). The QSO appears in the list. Under the club callsign, it is also uploaded to the online logbooks if the administrators have set that up.
+4. To get your QSOs into your own logging program: **Exporter ▾ → Mes QSO (.adi)** (Export → My QSOs).
+
+<a id="ecran"></a>
+## 5. The screen at a glance
 
 ### Top bar
 
-| Item | Meaning |
-|---|---|
-| `● Serveur` | Link between your browser and the server (green = connected). |
-| `● Station` | The Station page on the club PC is online. For administrators, a click opens the transceiver choice. |
-| `● FTX-1 FTDX10 IC-7300` | The connected transceiver (highlighted) and its CAT link. |
-| `👥 n` | Number of members online; click to open the **Opérateurs** panel (who is online, who has control, chat). Red dot = new message. |
-| `Prendre la main` | Take control (see section 3). |
-| `DX Cluster ▾` | Opens one of the two clusters in a new tab: **dx.op0p.be** (Ultimate Cluster) or **cluster.op0p.be** (CC-Cluster OP0P). |
-| `HELP` | This manual. |
+| Item | What it is | What it does |
+|---|---|---|
+| `● Serveur` | Link lamp between your browser and the server. | Green = connected. Red or grey: check your internet connection; the page reconnects by itself. |
+| `● Station` | Lamp of the Station page on the club PC. | Green = the club PC is online. For administrators, a click opens the TRX menu (section 17). |
+| `● FTX-1 FTDX10 IC-7300` | The club transceivers; the one in use is highlighted. | Green = the TRX answers over CAT; red = the TRX is transmitting. |
+| Title in the centre | Callsign and name of the station. | — |
+| `👥 n` | Number of members online. | Opens the **Opérateurs** (operators) panel: who is there, who has control, chat (section 10). A red dot means a new message. |
+| Your callsign | The account you are logged in with. | — |
+| `Prendre la main` / `Libérer la main` | Control button (take control / release control). | You become the operator, or you give control back (section 6). |
+| `DX Cluster ▾` | Menu of the club's DX clusters. | Opens **dx.op0p.be** (Ultimate Cluster) or **cluster.op0p.be** (CC-Cluster OP0P) in a new tab: the list of spotted DX stations. |
+| `HELP` | The manual. | Opens this page (French or English depending on your browser). |
+| `Déconnexion` | End of session (log out). | Ends the session and forgets this browser. |
 
-### Columns (wide screen)
+### The screen areas
 
-1. **Left**: Antenne (antenna), RF front end, Mode, Filtres (filters), Station meters.
-2. **Centre**: VFO A and B (MAIN / SUB), the Step row (step, A / B, ◀ ▶, MAIN / SUB / SPLIT, A → B, B → A, A ⇄ B, LOCK) and bands, then « Activité et modes numériques » (activity and digital modes) with the **Correspondant** line below the tabs.
-3. **Right**: RX audio, DSP, Accord (tuner), TX.
-4. **Opérateurs** (operators): panel opened by the `👥` button in the top bar (number of connected members), closed by default.
+1. **Left column**: Antenne (antenna), RF front end (receive), Mode, Filtres (filters), Station meters (measurements).
+2. **Centre, top**: the two VFO displays (A / MAIN and B / SUB), the **Step** row (tuning step, VFO choice, SPLIT…) and the **band** row.
+3. **Centre, bottom**: « Activité et modes numériques » (activity and digital modes): tabs Activité, FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, CW, SSTV, Synchro and Logs.
+4. **Right column**: RX audio (listening), DSP (noise reduction), Accord (tuner), TX (PTT and power).
+5. **At the very bottom**: the **Correspondant** line (the station worked, its reports, the TX call and `Log QSO`).
 
-Each panel folds with the small arrow `▾` before its title, and can open in its own window with `⧉` (section 8).
+- **Fold a panel**: click its title (for example "DSP"); a second click opens it again. Your choice is remembered.
+- **Separate window**: the `⧉` button of a panel opens it in its own window (section 11).
+- Below the band row, a message line shows confirmations and refusals (« Prenez la main… » (take control…), « PTT refusé : … » (PTT refused)).
 
-<a id="control"></a>
-## 3. Taking and handing over control
+<a id="main"></a>
+## 6. Taking and handing over control
 
-- Only one person **has control** (« a la main ») of the transceiver; everybody else can see and listen.
-- **Prendre la main** (take control): button in the top bar, when nobody has control.
-- If someone already has it: **Demander la main** (request control) in the Operators panel (`👥` button in the top bar; their panel opens with the request), or send them a chat message. The operator in control can **hand it over** to another member.
-- **Libérer la main** (release control) when you leave. Control is released automatically after **15 minutes** without action.
-- Without control, the commands are greyed out and a message reminds you to take control (« Prenez la main »).
-- **Follow the operator** (remote training): `👁 Suivre` button to the right of the digital-mode tabs. When on (green), your dashboard shows the same tab as the operator in control (RTTY, FT8 / FT4 / FT2, CW…) and changes with them; the frequency, mode and transceiver settings are shared by everybody anyway. Clicking another tab yourself stops following; click 👁 Suivre to start again. The button is not shown to the operator in control.
+- Only one person **has control** (operates the TRX); everybody sees and hears the same thing.
+- `Prendre la main` (take control, top bar): possible if nobody has it. The button then becomes `Libérer la main` (release control).
+- If someone already has it: open the `👥` panel and click `Demander la main à …` (request control from …). The operator receives the request (their panel opens) and can click `Passer la main à …` (hand control to …). You can also send them a message in the chat.
+- **When you leave**, click `Libérer la main`. With no action for **15 minutes**, control is released automatically.
+- The top-bar button shows `Main occupée` (control taken) when someone else has it, and `Prendre la main ici` (take control here) if you already have it in another tab or another browser. An administrator sees `Reprendre la main` (take back control): they can take it back if needed, after confirmation.
+- Without control, the commands are greyed out and a message reminds you « Prenez la main » (take control).
+- **Following the operator** (for remote training): `👁 Suivre` (follow) button to the right of the digital-mode tabs. When on (green), your screen shows the same tab as the operator in control (RTTY, FT8, CW…) and changes along with them. Clicking another tab yourself stops following; a click on `👁 Suivre` starts it again. This button is not shown to the operator in control.
 
 <a id="trx"></a>
-## 4. Operating the transceiver
+## 7. Operating the TRX
 
-### Frequency (VFO panel)
+All the commands in this section require **having control**, except listening and the volume. They act on the real club TRX and everybody sees the result. Some exist on only one TRX: they are greyed out or absent on the others. When a button is lit (coloured), the function is on; a click switches it off.
 
-- Mouse **wheel** over the digits, or **drag** the digits; keyboard arrows `↑` `↓`; buttons `◀` `▶`.
-- Choose the tuning step in **Step** (10 Hz to 100 kHz). `A` / `B`: on the FTX-1 they act like **MAIN / SUB** (the rig moves to that side); on the FTDX10 and IC-7300 they select the VFO being tuned. The mouse wheel on a VFO's digits always tunes that VFO.
-- **Bands**: 160 m to 70 cm (depending on the transceiver).
-- On each VFO display: RX in green = the receiving VFO; TX dark red = the **transmit VFO** (where a transmission would go; it stays lit while receiving). **Actual transmission**: TX bright red with a glow, frequency digits in red, TRX lamp in the top bar red. **Click RX** on a VFO to make it the receive VFO (MAIN / SUB, not on the IC-7300); **click TX** to make it the transmit VFO. Transceiver rule: **without SPLIT you transmit on the VFO you listen to, with SPLIT on the other one** (RX A → TX B; RX B → TX A). While transmitting, its frequency turns red; a VFO used neither for receive nor transmit (VFO B outside SPLIT) has its frequency greyed out. The **glowing frame** surrounds the transmit VFO; the VFO tuned by the wheel, arrows and band keys has its letter underlined (click the VFO display to choose it).
+<a id="vfo"></a>
+### 7.1 The VFO displays
 
-### Mode and filter
+At the top centre, two displays: **VFO A (MAIN)** on the left and **VFO B (SUB)** on the right. They look like the display of the TRX.
 
-**Mouse wheel over « BW »** (top of each VFO screen): filter width of that VFO. On the FTX-1, VFO B sets the SUB receiver's filter.
-
-- **Mode**: LSB, USB, CW-L/CW-U, RTTY, DATA-L/DATA-U (digital modes), AM, FM… (applied to the VFO shown).
-- **Filtres**: bandwidth BW, IF SHIFT, CONTOUR, APF (in CW). NARROW: **NAR** badge on the VFO display.
-
-### Antenna
-
-**Antenne** panel, top left: `ANT 1` / `ANT 2` on the FTX-1 (SPA-1 amplifier sockets). The FTDX10 and IC-7300 cannot switch antennas remotely (buttons greyed out). Changing antenna is refused during a transmission.
-
-### RF front end, DSP, dual VFO
-
-- **RF front end**: RF gain, AGC. ATT and preamplifier (IPO / AMP1 / AMP2, AMP): badges on the VFO display.
-- **DSP**: NB, DNR, NOTCH (and its frequency), DNF.
-- **FTX-1: MAIN / SUB** (or A / B) chooses the active side of the rig, receive and transmit together, exactly like the front-panel MAIN / SUB key, without transmitting. The change takes one or two seconds. (Technical: VS CAT command alone, from Yaesu's CAT manual.)
-- **FTX-1: the RF front end, Filtres and DSP panels act on the active side of the rig** (« A · MAIN » / « B · SUB » tag on their title line): SUB active → RF gain, AGC, BW, IF SHIFT, CONTOUR, APF, NB, DNR, NOTCH, DNF of the SUB side. The A / B keys on the Step row act like MAIN / SUB (tuned VFO and active side of the rig); use the mouse wheel on the other VFO's digits to change its frequency without changing side.
-- **MAIN / SUB, SPLIT, A → B, B → A, A ⇄ B, LOCK**: on the Step row, after ◀ ▶. The RIT / XIT offset is set on each VFO display (mouse wheel on the value, CLEAR to reset it).
-- **RIT / XIT / CLEAR** on each VFO display: click RIT or XIT to switch it on / off; mouse **wheel** over the offset = ± 10 Hz (± 100 Hz with Shift); **CLEAR** = offset to zero. VFO B has its own RIT / XIT on the FTX-1 (SUB side); the FTDX10 and IC-7300 have only one, on VFO A.
+| Item | What it shows | What a click (or the mouse wheel) does |
+|---|---|---|
+| `RX` | Green: this is the VFO being listened to. | Click: this VFO becomes the receive VFO (like the MAIN / SUB key of the TRX; not on the IC-7300). |
+| `TX` | Dark red: a transmission would go out on this VFO. Bright red with a glow: transmitting. | Click on the TX of the other VFO: SPLIT (listen on one VFO and transmit on the other, section 7.5). Click on the TX of the VFO being listened to: SPLIT off. |
+| `BW 2.4K` | Receive filter width of this VFO. | **Mouse wheel** over it: widen or narrow the filter. |
+| « Émission sur A / B » | Orange reminder of the VFO a transmission would go out on (« transmit on A / B »). | — |
+| MAIN / SUB · 20M | Side of the TRX and band of this VFO. | — |
+| S-meter (S1 … +60) | Received signal strength. Greyed out on the VFO not being listened to. | — (when transmitting, look at Station meters). |
+| Frequency digits | The frequency in MHz. Red while transmitting; greyed out if this VFO is used neither to receive nor to transmit. | **Mouse wheel** or **drag** up / down on a digit: that digit goes up or down (MHz, kHz, hundreds of Hz…). **Click** the display: this VFO becomes the one tuned by the ◀ ▶ arrows and the band keys (its letter is underlined). |
+| Mode (USB, DATA-U…) | The mode of this VFO. | It is changed in the **Mode** panel on the left. |
+| `RIT` | Offset of the receive frequency only. | Click: on / off. **Mouse wheel** over the displayed value (+0.00 kHz): ± 10 Hz, ± 100 Hz with `Shift`. Useful if the correspondent drifts a little. |
+| `XIT` | Offset of the transmit frequency only. | Click: on / off. Mouse wheel over the value: as for RIT. Useful for a small split of a few kHz. |
+| `CLEAR` | — | Resets the RIT / XIT offset to zero. |
+| `ATT` | Input attenuator. | Click: on / off. For a very strong local station or an overloaded band (the noise drops too). Greyed out on 2 m / 70 cm. On the FTDX10: OFF, 6, 12 or 18 dB. |
+| `IPO` / `AMP1` / `AMP2` | Preamplifier (HF and 6 m). IPO = no preamp. | Each click moves to the next one. AMP1 / AMP2 help on quiet high bands (15, 10, 6 m); on 80 / 40 m, IPO is usually enough. |
+| `AMP` | Preamp on 2 m / 70 cm. | Click: on / off. |
+| `NB` | Noise blanker: suppresses impulse noise (engines, electric fences). | Click: on / off (the level is set in the DSP panel). |
+| `DNR` | Digital noise reduction (hiss). | Click: on / off; level in the DSP panel. |
+| `NOTCH` | Manual filter that cuts out one frequency (a whistle). | Click: on / off; its frequency is set in the DSP panel. |
+| `DNF` | Automatic notch: removes whistling carriers by itself. | Click: on / off. Avoid it in CW and digital modes (it can remove the wanted signal). |
+| `NAR` | Narrow filter (NARROW). | Click: on / off. |
+| `AGC AUTO` | Reminder of the AGC setting. | It is changed in RF front end. |
 
 > [!TIP]
-> Settings act on the real club transceiver and are shown to everybody. The indicators in the VFO panel (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC) summarise its state; **clicking ATT, IPO / AMP1 / AMP2, AMP, NB, DNR, NOTCH, DNF or NAR switches it on or off** (IPO → AMP1 → AMP2 → IPO). On the FTX-1, the VFO B display sets NB, DNR, NOTCH, DNF and NAR of the SUB side; ATT and preamp belong to each side: the rig only reports them for the active side, so clicking those of the other VFO switches the rig to that side for a moment (no transmission) and back; those of the inactive side are read when it becomes active again (« ? » until first read).
+> **FTX-1: the two sides, MAIN and SUB**
+> - The VFO B display sets NB, DNR, NOTCH, DNF and NAR of the SUB side.
+> - ATT and preamp belong to each side, but the TRX only reports them for the active side: a click on those of the other VFO switches the TRX to that side for 2 to 3 s, without transmitting, then back. As long as they have never been read, they show "?".
+> - The RF front end, Filtres and DSP panels set the **active side**: their title shows « A · MAIN » or « B · SUB ».
 
-<a id="commandes"></a>
-### 4.1 Every command, panel by panel
+<a id="step"></a>
+### 7.2 Step row and band row
 
-All commands need **control** (« la main »), except listening, your volume and the display. Settings act on the real transceiver at the club and everybody sees them.
+Below the VFO displays.
 
-**VFO A (MAIN) and VFO B (SUB) displays**, top centre
+| Command | What it does | When to use it |
+|---|---|---|
+| `10 Hz` … `100 kHz` (Step) | Chooses the step of the ◀ ▶ arrows and of the keyboard arrows `↑` `↓`. | 100 Hz to 1 kHz to search in SSB; 10 Hz for fine tuning; 10 to 100 kHz to move across a band. |
+| `A` / `B` (VFO) | Chooses the VFO tuned by the arrows and the band keys. On the FTX-1, also switches the TRX to that side (like MAIN / SUB). | To work on VFO B. |
+| `◀` `▶` | Moves the frequency down / up by one step. | Step-by-step searching. |
+| `MAIN` / `SUB` | Active side of the TRX (receive and transmit together), like the front-panel key, without transmitting. Takes 1 to 2 seconds. | FTX-1: listen and transmit on VFO B. |
+| `SPLIT` | Transmit on the other VFO than the one being listened to. | DX expeditions (section 7.5). |
+| `TXW` | **Hold** the button (or the `W` key): you listen on the transmit frequency; release = back to the DX. The VFOs are put back automatically (also after 15 s or if the link drops). PTT is refused while TXW is held. | In SPLIT, to listen to the pile-up and find a gap. |
+| `DUAL RX` | FTX-1: dual receive (MAIN and SUB heard together) or single receive. The FTX-1 only accepts dual receive when one of the VFOs is on 144 / 430 MHz. | Monitoring two frequencies. In digital modes, switch it off so that only the active side is decoded. |
+| `A → B` / `B → A` | Copies the frequency and mode of one VFO to the other. | Preparing a SPLIT. |
+| `A ⇄ B` | Swaps the two VFOs. | Switching quickly between two frequencies. |
+| `LOCK` | Locks the **front-panel controls of the TRX at the club**. The dashboard remains usable. | So that someone at the club does not change anything during your operating. |
+| `160M` … `70CM` | Changes band: the TRX returns to the last frequency and mode used on that band. Only the bands of the connected TRX are offered. | Changing band. A « **TUNE obligatoire** » (TUNE required) reminder then flashes on the right until the next TUNE. |
 
-| Command | What it does |
-|---|---|
-| `RX` | Green: this VFO receives. Click: this VFO becomes the receive VFO (like MAIN / SUB). |
-| `TX` | Dark red: transmit VFO. Bright red with a glow: transmitting. Click TX on the other VFO = SPLIT (section 4.2). |
-| `BW 1.2K` | Filter width of this VFO; mouse wheel on it to widen or narrow. |
-| « ÉMISSION SUR A / B » banner | Reminds you which VFO a transmission would use. |
-| MAIN / SUB · 20M | Transceiver side and band of this VFO. |
-| S-meter (S, +20…) | Received signal; when transmitting, see Station meters. |
-| Frequency digits | Mouse wheel or drag up / down on a digit: it goes up or down. Click the display: this VFO becomes the one tuned by the arrows and bands (underlined letter). |
-| Mode (DATA-U, USB…) | Mode of this VFO; change it in the Mode panel. |
-| `RIT` / `XIT` | Click: switch the receive (RIT) or transmit (XIT) offset on / off. Mouse wheel on the value: ± 10 Hz (± 100 Hz with `Shift`). |
-| `CLEAR` | Sets the RIT / XIT offset back to zero. |
-| `ATT` | Input attenuator (very strong signals), click = on / off. Greyed out on 2 m / 70 cm. |
-| `IPO` / `AMP1` / `AMP2` | HF / 6 m preamp; each click moves to the next (IPO = no preamp). On 2 m / 70 cm: `AMP` on / off. |
-| `NB` `DNR` `NOTCH` `DNF` | Noise blanker, noise reduction, manual notch, automatic notch: click = on / off (levels are set in the DSP panel). |
-| `NAR` | Narrow filter (NARROW), click = on / off. |
-| `AGC AUTO` | AGC reminder (set in RF front end). |
+The grey line below the bands is a reminder of useful actions; the message line just below it shows confirmations and refusals.
 
-**Step row and band row**, below the VFO displays
+<a id="gauche"></a>
+### 7.3 Left column
 
-| Command | What it does |
-|---|---|
-| `10 Hz` … `100 kHz` | Step of the ◀ ▶ arrows, keyboard arrows and mouse wheel. |
-| `A` / `B` | FTX-1: like MAIN / SUB (the transceiver moves to that side). FTDX10, IC-7300: choice of the tuned VFO. |
-| `◀` `▶` | One step down / up. |
-| `MAIN` / `SUB` | Active side of the transceiver (receive and transmit together), like the front-panel MAIN / SUB key, without transmitting; takes one or two seconds. |
-| `SPLIT` | Transmit on the other VFO than the receive one (section 4.2). |
-| `TXW` | **Hold** the button (or the `W` key) to listen on the transmit frequency (in SPLIT: the pile-up on VFO B); release = back to the DX. The VFOs are swapped while held and put back automatically (also after 15 s, or if the link drops). PTT refused while TXW is held. |
-| `DUAL RX` | FTX-1: dual receive (MAIN and SUB heard together, S-meter and RX on both VFOs) or single receive (active side only). **Digital modes**: in dual receive the audio sent by the transceiver also contains the SUB side (e.g. 20 m FT8 during a QO-100 contact on MAIN); switch DUAL RX off to decode the active side only. MAIN / SUB works with or without DUAL RX (server setting `ftx1SubSingle`; with `false`, SUB only in dual receive). The S-meter of the inactive VFO stays visible, greyed out. The FTX-1 only accepts dual receive when one of the VFOs is on 144 / 430 MHz (not HF + HF). |
-| `A → B` / `B → A` | Copies the frequency and mode of one VFO to the other. |
-| `A ⇄ B` | Swaps both VFOs. |
-| `LOCK` | Locks the **front-panel controls of the transceiver at the club** (so nobody touches them); the dashboard keeps working. |
-| `160M` … `70CM` | Band change (last frequency and mode used on that band). On the right: « TUNE obligatoire » reminder or red HI-SWR block. |
-
-**Left column**
-
-| Panel / command | What it does |
-|---|---|
-| Antenne: `ANT 1` / `ANT 2` | FTX-1 antenna socket (on the SPA-1); refused while transmitting. |
-| RF front end: **RF GAIN** | Receiver RF gain; lower it to calm a very strong signal or a noisy band. |
-| RF front end: **AGC** `OFF` `FAST` `MID` `SLOW` `AUTO` | Automatic gain control speed. AUTO suits almost always; FAST for CW / digital, SLOW for SSB. |
-| Mode: `LSB` `USB` `CW-L` `CW-U` `RTTY-L` `RTTY-U` `DATA-L` `DATA-U` `PSK` `AM` `AM-N` `FM` `FM-N` `DATA-FM` | Mode of the VFO shown below the buttons (« Mode appliqué à VFO A »). Digital modes (FT8, audio RTTY…): **DATA-U**. |
-| Filtres: **BW** | Receive filter width. |
-| Filtres: **IF SHIFT** | Moves the passband up or down (pushes an interfering signal out on one side). |
-| Filtres: `CONTOUR` / `APF` | Tone shaping; APF = audio peak filter, CW only. |
-| Station meters: **Po SWR ALC Id Vd COMP S** | Output power, SWR, ALC (digital modes: ≤ 8 %), PA current and voltage, compression, S-meter. RX / TX top left, transmit time on the right. |
-
-**Right column**
-
-| Panel / command | What it does |
-|---|---|
-| RX audio: **AF LEVEL** / **SQUELCH** | Volume and squelch **of the transceiver** (for everybody). |
-| RX audio: `🔊 Écouter le TRX` / **VOLUME** | Listen to the transceiver audio in your browser; the volume only acts for you. |
-| DSP: **NB** / **DNR** | Noise blanker and noise reduction level (OFF, then 1 to 10). |
-| DSP: `NOTCH` + **FRÉQ. NOTCH** | Filter that removes one frequency (a whistling carrier); set the frequency by ear. |
-| DSP: `DNF` | Automatic notch (removes carriers on its own). |
-| Accord: `TUNER` | SPA-1 antenna tuner in line (on by default on HF / 6 m). |
-| Accord: `TUNE` | Starts tuning: the transceiver sends a carrier for a few seconds. Mandatory after a band change; then check the SWR. |
-| TX: `RX` / `TX` lamp | Real state of the transceiver. |
-| TX: `PTT` | Hold to transmit (or the space bar); release = receive. |
-| TX: **PUISSANCE** `−` `+` | Transceiver power; your licence limit is shown below. |
-| TX: **GAIN MICRO**, `PROC`, **NIVEAU PROC** | Phone modulation settings (speech processor and its level). |
-| TX: `VOX` | Can only be switched off remotely (never on). |
-
-**Centre: activity and digital modes**
+**Antenne** (antenna)
 
 | Command | What it does |
 |---|---|
-| Tabs `ACTIVITÉ` … `SSTV`, `SYNCHRO`, `LOGS` | Station log, digital modes (section 9), clocks, logbook (section 14). |
-| `👁 Suivre` | Your dashboard follows the tab of the operator in control (section 3). |
-| `⧉` | Opens the digital modes in a separate window. |
-| **CORRESPONDANT** line, NOM, QTH, LOCATOR, RST TX, RST RX, `LOG QSO` | The station worked and its reports: **RST TX** = report sent by the club station, **RST RX** = report received from the correspondent. In FT8 / FT4 / FT2, WSPR and JT65 they are dB (RST RX fills itself during the sequence); in RTTY, CW, SSTV and JTTY, RST 599. LOG QSO saves it in the logbook (section 10). |
-| **TX CALL** `ON5VL (station)` / `your callsign` | Callsign of digital transmissions (FT8 / FT4 / FT2, RTTY, JTTY): the station's or yours; chosen by the operator in control and remembered for next time. Messages Tx1 to Tx6, `<MYCALL>` macros and the logbook (Station) follow. A QSO logged under your callsign stays in the club logbook but is not uploaded automatically to the club's LoTW, eQSL, Club Log or QRZ (export ADIF for your own log). |
+| `ANT 1` / `ANT 2` | Chooses the antenna socket of the SPA-1 amplifier (FTX-1). Refused during a transmission. The FTDX10 and IC-7300 do not allow this choice remotely (buttons greyed out). After changing antenna, do a new TUNE. |
+
+**RF front end** (the receiver input)
+
+| Command | What it does | Advice |
+|---|---|---|
+| **RF GAIN** | Receiver sensitivity (0 to 100 %). | Usually leave it at maximum; lower it if a band is very noisy or a nearby station overloads the receiver. |
+| **AGC** `OFF` `FAST` `MID` `SLOW` `AUTO` | Automatic gain control: how fast the receiver turns the volume down after a strong signal. | AUTO is almost always fine. FAST for CW, SLOW for SSB. Avoid OFF (very loud, distorted sound). |
+| Preamp, ATT | Same as the badges on the VFO display (section 7.1). | — |
+
+**Mode**
+
+| Button | Use |
+|---|---|
+| `LSB` / `USB` | SSB phone: LSB below 10 MHz (160, 80, 40 m), USB above (20 m…). |
+| `CW-L` / `CW-U` | Morse (CW-U is the most common). |
+| `RTTY-L` / `RTTY-U` | RTTY decoded by the TRX itself. For the dashboard's RTTY, use DATA-U. |
+| `DATA-L` / `DATA-U` | Digital modes through the TRX sound card: **DATA-U** for the dashboard's FT8, FT4, FT2, RTTY, JTTY, WSPR, JT65, SSTV. |
+| `PSK` | PSK31 decoded by the TRX. |
+| `AM` / `AM-N`, `FM` / `FM-N`, `DATA-FM` | Amplitude modulation, frequency modulation (N = narrow), digital over FM (repeaters, packet…). |
+
+Below the buttons, « Mode appliqué à **VFO A** » (mode applied to VFO A) shows which VFO changes mode (the one chosen with A / B).
+
+**Filtres** (filters)
+
+| Command | What it does | Advice |
+|---|---|---|
+| **BW** (WIDTH) | Receive filter width. | SSB: 2.4 to 2.7 kHz; CW: 300 to 500 Hz; FT8: 3 kHz (the whole audio band). |
+| **IF SHIFT** | Slides the passband up or down without changing frequency. | Pushes an interfering station out on one side. Set it back to 0 afterwards. |
+| `CONTOUR` | Tone control that attenuates part of the audio. | Makes a voice easier to understand. |
+| `APF` | Audio peak filter, CW only. | Makes a weak CW signal stand out. |
+| `NARROW` | Narrow filter (NAR badge on the VFO display). | Crowded band. |
+| IC-7300: **FILTRE**, **PBT** | FIL1 / FIL2 / FIL3 (wide, medium, narrow) and Twin PBT (narrowing from both edges). | — |
+
+**Station meters** (measurements, mostly useful when transmitting)
+
+| Meter | Meaning | Normal value |
+|---|---|---|
+| RX / TX | State of the TRX; on the right, duration of the current transmission. | — |
+| **Po** | Output power (watts). | The power set in the TX panel. |
+| **SWR** | Antenna match. | Below 1.5; above 2.5, transmission is cut. |
+| **ALC** | Is the transmitter being driven too hard? | Digital modes: as low as possible (ideally 0). Phone: a little ALC on the peaks. |
+| **Id** / **Vd** | Current and voltage of the final stage. | For the station managers (monitoring). |
+| **COMP** | Compression of the speech processor (phone). | A few dB when PROC is on. |
+| **S** | S-meter of the active side. | — |
+
+<a id="droite"></a>
+### 7.4 Right column
+
+**RX audio**
+
+| Command | What it does | Who it affects |
+|---|---|---|
+| `🔊 Écouter le TRX` | Plays the receiver audio in your browser (listen to the TRX). A second click mutes it. | Only you (no control needed). |
+| **Volume** | Volume of your listening (0 to 150 %). | Only you. |
+| **AF LEVEL** | Volume of the TRX loudspeaker at the club. | Everybody (with control). Does not affect your listening or the decoders. |
+| **SQUELCH** | Mutes the audio until a signal rises above the threshold. | Everybody. Useful in FM; leave it at 0 on HF and in digital modes, otherwise the decoders no longer hear anything. |
+
+**DSP** (signal processing)
+
+| Command | What it does |
+|---|---|
+| **NB** | Noise blanker level (OFF, then 1 to 10). Start low and raise it until the clicks disappear. |
+| **DNR** | Noise reduction level (OFF, then 1 to 10; up to 15 on the FTDX10). Too high and the voice sounds "metallic". |
+| `NOTCH` + **Fréq. NOTCH** | Switches the manual notch on and sets its frequency (10 to 3200 Hz): turn it until the whistle disappears. |
+| `DNF` | Automatic notch. |
+
+**Accord (tuner)**
+
+| Command | What it does |
+|---|---|
+| `TUNER` | Switches the antenna tuner in or out of line (the SPA-1's for the FTX-1). It is switched back in automatically when the TRX connects and at every HF / 6 m band change. |
+| `TUNE` | Starts tuning: the TRX sends a carrier for a few seconds while the tuner looks for the best match. **Required after a band change**; then check the SWR. TUNE counts as a transmission: you need control and transmit permission. |
+
+**TX**
+
+| Command | What it does |
+|---|---|
+| `RX` / `TX` lamp | Real state of the TRX (green when receiving, red when transmitting). |
+| `PTT` | **Hold** to transmit (or the `Space` bar); release = back to receive. The small text below says why PTT is unavailable (« Prenez la main pour émettre » (take control to transmit)…). |
+| **Puissance** (power) `−` `+` | Lowers or raises the TRX power. Your licence limit is shown below (e.g. ON3: 25 W); above it, the power is brought back down automatically. |
+| **Gain micro** (mic gain) | Microphone level in phone. |
+| `PROC` + **Niveau PROC** (PROC level) | Speech processor (compressor): the voice "punches through" the noise better. Keep the level moderate, otherwise the modulation sounds unpleasant. On the IC-7300: COMP. |
+| `VOX` | Voice-operated transmit: can only be **switched off** remotely, never on. |
 
 <a id="split"></a>
-### 4.2 Operating SPLIT (transmit and receive on two frequencies)
+### 7.5 Operating SPLIT (transmit and receive on two frequencies)
 
-SPLIT is mainly used for a **DX expedition** listening away from its own frequency (« UP 5 », « listening 14 200 to 14 210 »). You **listen to the DX on VFO A** and **transmit on VFO B**.
+SPLIT is mainly used for a **DX expedition** listening away from its own frequency ("UP 5", "listening 14 200 to 14 210"). You **listen to the DX on VFO A** and **transmit on VFO B**.
 
-1. Set **VFO A** (MAIN) on the DX frequency, in the right mode. Check that `RX` is green on VFO A.
+1. Set **VFO A** to the DX frequency, in the right mode. Check that `RX` is green on VFO A.
 2. Click `A → B`: VFO B takes the same frequency and mode.
-3. Set the **transmit frequency on VFO B**: mouse wheel (or drag) on the VFO B digits, e.g. +5 kHz for « UP 5 ». On the FTX-1 the wheel on VFO B digits does not change the active side: you keep listening on A.
-4. Click `SPLIT` (or `TX` on the VFO B display). The **TX** lamp and the glowing frame move to VFO B, its frequency turns white again and the banner shows « ÉMISSION SUR B ».
-5. Listen to the DX on A; **hold TXW** (or `W`) to listen to the pile-up on the transmit frequency. To call, **PTT**: the transmission goes out on the VFO B frequency (digits in red). On release, back to receive on A.
+3. Set the **transmit frequency on VFO B** with the mouse wheel on its digits, for example +5 kHz for "UP 5". On the FTX-1, the wheel on VFO B does not change the side you are listening to: you stay on A.
+4. Click `SPLIT` (or `TX` on the VFO B display). The **TX** lamp and the glowing frame move to VFO B; the reminder shows « Émission sur B » (transmit on B).
+5. Listen to the DX on A; **hold TXW** (or `W`) to listen to the pile-up on your transmit frequency. To call, **PTT**: the transmission goes out on VFO B (digits in red). On release, back to receive on A.
 6. To finish: click `SPLIT` again (or `TX` on VFO A). The TX lamp goes back to A.
 
 > [!TIP]
 > **Good to know**
-> - Transceiver rule: without SPLIT you transmit on the VFO you listen on; with SPLIT, on the other one (RX on A → TX on B; if you listen on B, TX on A).
-> - **FTX-1**: SPLIT is handled by the dashboard (« virtual » SPLIT, as in Hamlib) because the FTX-1 split command keys the transmitter. On PTT the transceiver moves to the SUB side to transmit, then back to MAIN; the transceiver at the club therefore briefly shows SUB while transmitting, which is normal. A SPLIT set on the transceiver front panel is followed by the dashboard.
-> - The frequency **actually transmitted** (VFO B, XIT included) is checked: outside the authorised bands the PTT is refused (message « VFO B en SPLIT »).
-> - Small offset (a few kHz at most): `XIT` on VFO A shifts only the transmission, without SPLIT; mouse wheel on the value to set the offset, `CLEAR` to go back.
-> - In **FT8 / FT4 / FT2** there is no need for SPLIT: the transmission is placed in the passband with the TX marker of the waterfall (right click). If SPLIT is on, the message goes out on the other VFO, like the PTT.
-> - Do not forget to switch SPLIT off at the end of the pile-up: otherwise the next operator would transmit on VFO B.
+> - Transceiver rule: without SPLIT you transmit on the VFO you listen on; with SPLIT, on the other one.
+> - **FTX-1**: SPLIT is handled by the dashboard. On PTT, the TRX briefly moves to the SUB side to transmit, then back to MAIN; this is normal. A SPLIT set on the front panel is followed by the dashboard.
+> - The frequency **actually transmitted** (VFO B, XIT included) is checked: outside the authorised bands, PTT is refused.
+> - Small offset (a few kHz): `XIT` on VFO A is enough, without SPLIT.
+> - In **FT8 / FT4 / FT2**, there is no need for SPLIT: the transmission is placed within the audio passband with the TX marker of the waterfall (right click).
+> - Switch SPLIT off at the end of the pile-up: otherwise the next operator would transmit on VFO B without knowing it.
 
-<a id="listen"></a>
-## 5. Listening
+<a id="ecoute"></a>
+## 8. Listening
 
-- **RX audio** panel → `🔊 Écouter le TRX` (listen); set your own **Volume** just below (affects only you).
-- **AF level** and **Squelch** act on the transceiver itself.
-- Everybody can listen, even without control. If you hear nothing, see section 12 (audio must be enabled on the club PC).
+- **RX audio** panel → `🔊 Écouter le TRX`, then set your **Volume**. Everybody can listen, even without control.
+- The audio arrives with a small delay (a fraction of a second): this is normal over the internet.
+- If you hear nothing: check your PC volume, then the Station lamp. The club's Station page must have audio enabled (section 18). The message below the button says what is missing.
+- **AF LEVEL** and **SQUELCH** act on the TRX itself, for everybody.
 
-<a id="tx"></a>
-## 6. Transmitting and safety
+<a id="emission"></a>
+## 9. Transmitting and safety
 
-- **PTT**: hold the big PTT button or the `Space` bar. Release = receive.
-- **Power**: − / + buttons in the TX panel; your personal limit is displayed (e.g. ON3: 25 W).
-- **Tuning**: after changing band, a `TUNE` is **mandatory** (Accord panel) before transmitting, then check the **SWR** (bottom left of the dashboard); after each band change a reminder flashes to the right of the 70CM key and stays until the TUNE (on 2 m and 70 cm, no tuner: only « check the SWR », 20 s). The SPA-1 tuner works on HF and 6 m only. TUNE counts as a transmission. FTX-1: the internal tuner is in the SPA-1 amplifier, which must be connected and switched on; otherwise TUNER and TUNE have no effect. The **tuner is switched on automatically** when the transceiver connects and at each HF / 6 m band change; clicking `TUNER` switches it off until the next band change.
-- Mic gain, PROC and level, VOX (can be switched off remotely, never on).
+1. **Have control** and an account allowed to transmit (ONL listeners cannot).
+2. Be in a **band authorised** for your licence.
+3. After a band change: `TUNE`, then check the **SWR**. A reminder flashes to the right of the 70CM key until the TUNE (on 2 m and 70 cm there is no tuner: only "check the SWR"). The SPA-1 tuner only works on HF and 6 m, and the amplifier must be switched on.
+4. Set the **power** (TX panel).
+5. Transmit: hold `PTT` (or `Space`), or use the transmit buttons of the digital modes.
 
 > [!WARNING]
 > **Automatic safety features** (cannot be bypassed from the dashboard):
 > - Transmission only in the authorised bands, checked on the frequency actually transmitted (SPLIT and XIT included).
-> - Maximum length of one transmission: **120 s**, then cut; release the PTT before transmitting again.
+> - Maximum length of one transmission: **120 s**, then it is cut; release the PTT before transmitting again.
 > - Immediate cut if you lose the link, if the club PC loses internet, or if the Station page closes.
-> - **SWR** above 2.5:1, or **HI-SWR** reported by the transceiver while transmitting: transmission cut and PTT refused on that frequency (±25 kHz) until a TUNE.
-> - **TUNE without a match**: if the FTX-1 reports HI-SWR at the end of a TUNE, transmitting is **blocked on the whole band** (PTT, digital modes; TUNE still allowed) to protect the PA. A red message appears to the right of the band row. The block is lifted as soon as a new TUNE succeeds; otherwise try the other antenna or tell a station manager.
-> - At the club, the transceiver is returned to receive if it transmits 2 min without modulation or 5 min without a break.
+> - **SWR** above 2.5:1, or **HI-SWR** reported by the TRX: transmission cut and PTT refused on that frequency (± 25 kHz) until a successful TUNE.
+> - **TUNE without a match**: if the FTX-1 reports HI-SWR at the end of a TUNE, transmitting is **blocked on the whole band** (except TUNE) to protect the amplifier. A red message appears to the right of the bands. The block is lifted as soon as a TUNE succeeds; otherwise, try the other antenna or tell a station manager.
+> - At the club, the TRX goes back to receive if it transmits for 2 min without modulation or 5 min without a break.
 > - Power limited to your licence class; listener callsigns: no transmission at all.
 
 Transmitting is only possible if the administrators have enabled it on the server.
 
-<a id="operators"></a>
-## 7. Operators and chat
+<a id="operateurs"></a>
+## 10. Operators and chat
 
-- The **Opérateurs** panel opens and closes with the `👥` button in the top bar (number of connected members). A red dot on `👥` means a new message.
-- It shows who has control and is a **chat** between connected members (messages are not kept after a server restart).
-- Control requests and hand-overs also appear there.
-- The **Activité** tab (centre) lists events: logins, control changes, station online, transceiver connected…
+- The **Opérateurs** (operators) panel opens and closes with the `👥` button in the top bar. A red dot on `👥` means a new message.
+- It shows the connected members and who has control.
+- **Chat**: type a message in « Message aux connectés… » (message to connected members) then `Envoyer` (send) (or `Enter`). All connected members see it. Messages are not kept after a server restart.
+- The `Demander la main à …` and `Passer la main à …` buttons appear there when relevant (section 6).
+- The **Activité** (activity) tab in the centre is the station log: logins, control taken and handed over, transmissions (frequency, mode, power, duration), tuning, safety cuts, station online, TRX connected…
 
-<a id="layout"></a>
-## 8. Layout and separate windows
+<a id="disposition"></a>
+## 11. Layout and separate windows
 
-- `⧉` button at the top right of a panel: the panel opens in **its own window**, to place wherever you like (second screen…). `⧉ Ramener` puts it back.
-- The `⧉` button to the right of the tabs opens **all digital modes** in a separate window, on the mode currently shown.
-- The layout is remembered: on the next visit the windows reopen in place if Chrome **allows pop-up windows** for remote.op0p.be (icon at the right of the address bar → Always allow).
+- `⧉` button at the top right of a panel: the panel opens in **its own window**, to place wherever you like (on a 2nd screen…). In that window, `⧉ Ramener` (bring back) puts it back in the dashboard.
+- The `⧉` button to the right of the tabs opens **all the digital modes** in a separate window. `⧉ Ramener dans le dashboard` (bring back into the dashboard) (or `Ramener ici` (bring back here) in the dashboard) puts them back.
+- The `Space` bar (PTT) also works from a separate window.
+- The layout is remembered: on the next load, the windows reopen in place if Chrome **allows pop-up windows** for remote.op0p.be (icon at the right of the address bar → Always allow).
 
-<a id="digital"></a>
-## 9. Digital modes
+<a id="numeriques"></a>
+## 12. Digital modes
 
-The centre tabs: **Activité**, **FT8 · FT4**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV** and, further right, **Synchro**.
+The centre tabs: **Activité**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV** and, further right, **Synchro** and **Logs**. You have **no software to install** (no WSJT-X, FLDIGI…): everything happens in the page.
 
-- **Decoding runs on the server**, on the server's (synchronised) clock: the clocks of your PC and of the club PC do not matter.
-- Transceiver audio is only sent while someone listens or watches a digital-mode tab.
-- Choosing a frequency in a tab's list sends the transceiver there, in **DATA-U** (in CW for the CW tab) — you need control. The `↺` button next to the list brings the transceiver back to that frequency after you have turned the VFO.
-- Each tab has a **waterfall** (0 to 3000 Hz); a status line reports problems (station offline, audio not enabled, transceiver not in DATA-U…).
-- Transmission is done as **ON5VL** in **FT8 · FT4 · FT2**, **RTTY** and **JTTY** (you need control and transmit enabled); WSPR, JT65, CW and SSTV are receive-only for now *(soon)*.
+- **Decoding runs on the server**, on the server's (synchronised) clock: the time on your PC and on the club PC does not matter.
+- The TRX audio is only sent while someone is listening or watching a digital-mode tab: decodes start a few seconds after the tab is opened.
+- **Frequency list** (at the top of each tab): choosing a line sends the TRX to that frequency, in **DATA-U** (in CW for the CW tab). You need control. The `↺` button next to it brings the TRX back to the chosen frequency if someone has turned the VFO in the meantime.
+- **Waterfall**: each tab shows the scrolling spectrum from 0 to 3000 Hz. A signal is a coloured trace; its horizontal position is its audio frequency.
+- **Status line** (on the right of the tab bar): reports problems (station offline, audio not enabled, TRX not in DATA-U…) or the decoder state.
+- **Transmitting** in FT8 · FT4 · FT2, RTTY and JTTY, under the **TX call** chosen in the Correspondant line (ON5VL or your callsign). You need control and transmit permission. WSPR, JT65, CW and SSTV are **receive**-only for now *(soon)*.
+
+**Waterfall settings** (above the scale, shared by all tabs and remembered in your browser)
+
+| Setting | What it does |
+|---|---|
+| **Gain** | Contrast: further to the right, weak signals stand out more. |
+| **Zéro** (zero) | Background level: further to the right, the background is brighter. |
+| **Plat** (flat) | Makes the background noise even across the whole width (corrects the slope of the TRX filter). Leave it ticked. |
+| **Couleurs** (colours) | JTDX (default: blue noise, yellow signals, strong ones in red), blue, rainbow, grey. |
+| **Vitesse** (speed) | Fast, normal or slow scrolling (slow = more compact signals and more history), like JTDX's "Spd". |
+| `↺` | Restores the default settings. |
+| Handle below the waterfall | Drag it up or down: height of the waterfall and of the lists (double-click: original size). |
 
 <a id="ft8"></a>
-### 9.1 FT8 · FT4 · FT2
+### 12.1 FT8 · FT4 · FT2
 
-- `FT8` / `FT4` / `FT2` buttons: the transceiver goes to that mode's calling frequency on its band.
-- **FT2**: the fast mode of Decodium (IU8LMC) — 3.75 s periods, 2.5 s signal, 167 Hz wide (frequencies: Decodium's list, e.g. 14084 kHz). Stations transmitting « asynchronously » (at any time) are decoded too; the time shown is then that of the period in which the signal starts (larger DT). The FT2 of « WSJT-X Improved » is a different, incompatible mode.
-- **Decoder**: the **WSJT-X 3** decoding engine, which includes the multi-pass FT8 decoder of **JTDX** (the status line shows « moteur WSJT-X »). In FT8, three passes per period, as in WSJT-X / JTDX: an **early pass** at 11.8 s (the reply can go out in the next period), a **normal pass** at the end of the signal, then a **deep pass** (subtraction of decoded signals, several cycles, OSD) that adds the weakest stations a few seconds later. Measured sensitivity (single signal, white noise, 50 % decodes): FT8 −22 dB without help, about −24 dB with a priori help; FT4 −17.5 dB; FT2 about 3 dB better than before.
-- **A priori help (AP)**, as in WSJT-X / JTDX: the decoder knows the call we transmit under (TX CALL) and, during a QSO, the correspondent and the sequence step; it then looks for the expected messages down to 2 to 3 dB lower. Such decodes carry the mark **a1**…**a7** after the message. The JTDX callsign database (~100,000 calls) rejects very weak false decodes.
-- **Country, km, Az**: for the station sending each message, the DXCC country (AD1C cty.dat file, as in WSJT-X / JTDX), the distance from the club locator and the azimuth (antenna direction). The distance comes from the locator in the message; without a locator it is approximate (centre of the country, marked « ≈ »).
-- **Width of the two lists**: drag the vertical line between « Activité de bande » and « Fréquence RX » (double-click: half and half); remembered in your browser.
-- **Already worked stations**: messages from a station already in the log **under the current TX CALL**, on the same band and mode, are shown green and struck through (like WSJT-X / JTDX « worked before »). With another TX CALL (e.g. your own call), only QSOs made under that call count.
-- **When the reply goes out**: in FT8 a transmission must start at the beginning of a period (at most 2.3 s late, otherwise the correspondent no longer decodes it; FT4: 0.8 s). The early decode arrives around 12.7 s: a click before the end of the correspondent's period (or in the first 2 seconds of the next one) sends the reply at once. A click during **your** transmit period sends the message **at once**, as WSJT-X does; transmission always stops at the end of the period (message truncated if it started late).
-- **dB**: the signal-to-noise ratio is WSJT-X's (in 2.5 kHz); reports sent are therefore real reports, as with WSJT-X / JTDX.
-- **Activité de bande** (band activity): all decoded messages (CQ in green, messages for ON5VL / OR0L in red); **Fréquence RX**: those on your frequency.
-- **Split** as in WSJT-X: **left click** on the waterfall or a line = receive frequency, **right click** = transmit frequency; « TX ← RX » and « RX ← TX » buttons.
-- **Click the callsign** (underlined) or **double-click** a message: its sender becomes the contact (callsign, locator, report), messages Tx1 to Tx6 are prepared and, with control, the transmission starts in the next period.
-- **Transmitting** (like « Enable Tx » + « Auto Seq » in WSJT-X): clicking a message **Tx1 to Tx7** (below the lists of the tab, as in WSJT-X) sends it **every period** (one in two) until an answer comes. You need control, the TX VFO in **DATA-U** and power within your limit. The sent message shows in yellow in the lists; the bar under the lists is green while receiving, red while transmitting.
-- **The sequence advances by itself** from the contact's answers: his locator → Tx2 (report); his report → Tx3 (R+report); R+report → Tx4 (RR73); RRR or RR73 → Tx5 (73), from the next period (if the answer is decoded just after our transmission started, it is cut and restarted at once with the right message in the same period, as WSJT-X does). After sending RR73 or 73: end of QSO, transmission stops, back to Tx6 (CQ) and an offer to **save the QSO in the logbook**.
-- **Répondre au 1er** (answer the first): while calling CQ (Tx6), the station answering you becomes the contact and the sequence starts without a click (« Call 1st » in WSJT-X). **To answer a CQ: click his callsign** (dotted underline in the message) **or double-click his message** (with control): the transceiver sends Tx1 in the next period, opposite to the station's, then the sequence runs on its own, as in WSJT-X. A click elsewhere on the line only sets the receive frequency. Our own transmission is no longer decoded a second time in the lists.
-- **Période**: « auto » transmits in the other period than the contact (double-click his message), otherwise keeps the period of the first message; « 1re » / « 2e » force it (1st = 00 and 30 s in FT8).
-- **Waterfall settings** (above the scale, as in WSJT-X): **Gain** = contrast (to the right, weak signals stand out), **Zéro** = background level, **Plat** = flat background across the width (corrects the transceiver filter slope), four colour sets (**JTDX** by default: blue noise, yellow signals, red strong signals), scrolling **speed** (like JTDX « Spd »: slow = tighter signals and more history, normal by default), ↺ = defaults. They apply to every waterfall (FT8, RTTY, CW…) and are remembered in your browser.
-- **Fine JTDX-style waterfall**: 1.46 Hz bins (instead of 6.25 Hz), averaged over 0.8 s (FT8 signals become solid blocks); scale ticks every 50 / 100 / 500 Hz. In FT8 / FT4 / FT2 / JT65, a white line marks the start of each period, with the UTC time and the band (« 19:55:15 20m »), as in JTDX.
-- **Handle under the waterfall**: drag it up to enlarge the message lists (double-click: original size).
-- Stops: `■ Arrêter` (or the space bar); the called contact answers someone else; the same message for 6 min without answer (watchdog); control lost.
-- Transmit frequency: the red « TX 1500 » flag below the scale and the solid red line on the waterfall (right click to move it); receive: green « RX 1500 » flag and solid green line (left click). In **SPLIT**, the message goes out on the other VFO than the receive one, like the PTT.
+FT8 is a digital mode designed for very weak signals: each station sends a short message for 15 seconds (a **period**), then listens during the next period. A complete QSO takes about a minute and a half. **FT4** is twice as fast (7.5 s), **FT2** faster still (3.75 s).
+
+**The bar at the top of the tab**
+
+| Command | What it does |
+|---|---|
+| `FT8` / `FT4` / `FT2` | Chooses the mode; the TRX goes to that mode's calling frequency on its band. FT2 is the fast mode of Decodium (IU8LMC), incompatible with the "FT2" of WSJT-X Improved. |
+| Frequency list | Calling frequencies per band (e.g. 14.074 · 20m), and QO-100 (section 12.9). |
+| `↺` | Brings the TRX back to the chosen frequency (VFO A, DATA-U). |
+| RX … Hz / TX … Hz | Receive (green) and transmit (red) audio frequencies within the 3 kHz passband. |
+| `TX ← RX` | Transmit on the same audio frequency as receive. |
+| `RX ← TX` | Receive on the transmit audio frequency. |
+| **Période** (period) auto / 1re / 2e | Which period to transmit in. « auto »: opposite to the chosen correspondent (almost always what you want); « 1re » (1st) = 00 and 30 s, « 2e » (2nd) = 15 and 45 s in FT8. |
+| ☐ **Répondre au 1er** (answer the first) | When you call CQ (Tx6), the first station to answer becomes the correspondent and the QSO runs by itself (WSJT-X's "Call 1st"). |
+| `■ Arrêter` | Stops automatic transmission at once ("Halt Tx"). The `Space` bar does the same. |
+| Clock | Server UTC time. |
+
+**The waterfall**: **left click** = receive frequency (green « RX 1500 » flag and green line), **right click** = transmit frequency (red flag and red line). For transmitting, choose a clear spot in the waterfall. A white line marks the start of each period, with the UTC time and the band.
+
+**The two message lists**
+
+- **Activité de bande** (band activity, on the left): all decoded messages. **CQ** calls are in green, messages addressed to your TX call (ON5VL, OR0L or yours) in red, your own transmissions in yellow. `Effacer` (clear) empties the list.
+- **Fréquence RX** (RX frequency, on the right): only the messages close to your receive frequency, i.e. your QSO in progress.
+- A line separates each period; messages are in chronological order.
+- **Width of the two lists**: drag the vertical line between them (double-click: half and half).
+
+| Column | Meaning |
+|---|---|
+| UTC | Start of the period in which the message was received. |
+| dB | Signal-to-noise ratio (as in WSJT-X): −24 = very weak, +10 = strong. This is the report you send. |
+| DT | Time offset of the signal (seconds). Close to 0 when everything is in step. |
+| Fréq | Audio frequency of the signal (Hz). |
+| Message | The decoded text, e.g. "CQ F4ABC JN18". A mark **a1**…**a7** at the end means a decode obtained with a priori help (see below). |
+| Pays | DXCC country of the transmitting station. |
+| km / Az | Distance and direction (azimuth in degrees) from the club. "≈": approximate (no locator in the message, centre of the country). |
+
+- **Stations already worked**: messages from a station already in the log **under the current TX call**, on the same band and in the same mode, are shown green and struck through ("worked before"). With another TX call, only QSOs made under that callsign count.
+
+**Messages Tx1 to Tx7** (below the lists, as in WSJT-X)
+
+| Message | Example | When |
+|---|---|---|
+| `Tx1` | F4ABC ON5VL JO20 | Answering a CQ (your callsign and locator). |
+| `Tx2` | F4ABC ON5VL −12 | Giving the correspondent a report. |
+| `Tx3` | F4ABC ON5VL R−12 | Acknowledging their report and giving yours. |
+| `Tx4` | F4ABC ON5VL RR73 | Everything received, goodbye. |
+| `Tx5` | F4ABC ON5VL 73 | Last message. |
+| `Tx6` | CQ ON5VL JO20 | Calling CQ. |
+| `Tx7` | free text | Free message of 13 characters at most. Right click or `✎` to edit it. |
+
+- **Clicking a Tx message** sends it **every period** (one in two) until an answer comes, like WSJT-X's "Enable Tx". You need control, the transmit VFO in **DATA-U** and power within your limit.
+- **Answering a station**: click its **callsign** (dotted underline) or **double-click** its message. It becomes the correspondent (callsign, locator, report) and, with control, the right message goes out in the next period, opposite to theirs. A click elsewhere on the line only sets the receive frequency.
+- **The sequence advances by itself** from the answer: their locator → Tx2; their report → Tx3; R+report → Tx4 (RR73); RRR or RR73 → Tx5 (73). After RR73 or 73: end of QSO, transmission stopped, back to Tx6, and the **Enregistrer le QSO** form opens already filled in.
+- **When the answer goes out**: in FT8, a transmission must start at the beginning of a period (at most 2.3 s late, otherwise it is no longer decoded; FT4: 0.8 s). Decodes arrive around 12.7 s: a click before the end of the correspondent's period (or in the first 2 seconds of the next one) sends the answer at once. Transmission always stops at the end of the period. A message at the bottom of the screen says when your answer goes out.
+- **Period bar** (below the lists): green while receiving, red while transmitting; it fills up during the period.
+- **Automatic stops**: `■ Arrêter` or `Space`; the correspondent answers someone else; the same message for 6 minutes without an answer; control lost.
+- In **SPLIT**, the message goes out on the other VFO, like the PTT.
+
+> [!TIP]
+> **The decoder**
+> - It is the **WSJT-X 3** engine, with the multi-pass decoder of **JTDX**. In FT8, three passes per period: an early one around 12 s (so you can answer right away), a normal one at the end of the signal, then a deep one that adds the weakest stations a few seconds later.
+> - **A priori help (AP)**: during a QSO, the decoder knows who the correspondent is and which message is expected; it can then find it down to 2 to 3 dB lower. These decodes carry the mark a1 … a7.
+> - Sensitivity: FT8 about −22 dB (−24 dB with a priori help), FT4 about −17.5 dB. A database of ~100,000 callsigns (JTDX's) rejects very weak false decodes.
 
 <a id="jt65"></a>
-### 9.2 JT65
+### 12.2 JT65
 
-Same window as FT8 (one-minute periods); the transceiver goes to the JT65 frequency of its band. Decodes arrive around second 52.
+Same window as FT8, but with one-minute periods; the TRX goes to the JT65 frequency of its band. Decodes arrive around the 52nd second. Receive only.
 
 <a id="rtty"></a>
-### 9.3 RTTY
+### 12.3 RTTY
 
-- Set the **shift** and **speed** (170 Hz / 45.45 baud by default), then **click on the signal** in the waterfall: the yellow (Mark) and blue (Space) markers must sit on its two traces; otherwise press `Inversé` (reverse).
-- The M / S bars of the tuning indicator should flicker alternately. Raise the **squelch** (« Silencieux ») if characters appear on noise.
-- Received text scrolls across the full width (`Effacer` on the right of its title clears it); double-click a received callsign = contact. Below: macros `F1` to `F12` on one row, then the text to send with `Émettre`, `Effacer` and `Log QSO`.
-- **Macros**: a click (or `F1`…) transmits at once (section 10); **Shift+click** adds the macro to the text without transmitting.
-- **Émettre** (or `Ctrl`+`Enter`): the text goes out in RTTY on the receive frequency (same shift and speed), then the transceiver returns to receive. The sent text shows in the receive window, first grey then red letter by letter as it goes out (« fin dans N s »); while transmitting the button becomes `■ Arrêter` (stop). The transceiver must be in **DATA-U** (the signal goes through its sound card), 600 characters at most per send.
+RTTY is "radio teletype": you type text that scrolls on the correspondent's screen. Widely used in contests.
+
+| Command | What it does |
+|---|---|
+| **Shift** (170, 200, 425, 850 Hz) | Spacing between the two tones of the signal. Radio amateurs: 170 Hz. |
+| **Vitesse** (speed) (45.45 … 100 baud) | Radio amateurs: 45.45 baud. |
+| `Inversé` (reverse) | Swaps Mark and Space if the received text makes no sense (signal "upside down"). |
+| **Silencieux** (squelch) | Higher = fewer random characters on noise; too high and weak signals are no longer decoded. |
+| Frequency list + `↺` | RTTY frequencies per band. |
+| M / S indicator | The two bars should flicker alternately when you are properly tuned. |
+| Centre … Hz | Audio frequency the decoder is tuned to. |
+
+1. **Receiving**: click the signal in the waterfall. The yellow (Mark) and blue (Space) markers must sit on its two traces. The text is shown in **Réception RTTY** (RTTY receive) (`Effacer` clears it).
+2. **Double-click a received callsign**: it becomes the correspondent.
+3. **Transmitting**: type the text in the bottom box, then `Émettre` (transmit) (or `Ctrl`+`Enter`). The text goes out on the receive frequency, with the same shift and speed, then the TRX returns to receive. It is shown in grey, then each letter turns red as it goes out (« fin dans N s », ends in N s). While transmitting, the button becomes `■ Arrêter`. 600 characters at most per send.
+4. **Macros** `F1` to `F12` (on one row, above the text): a click transmits at once; **Shift+click** adds the macro to the text without transmitting (section 13).
+5. `Effacer` clears the text to send; `Log QSO` opens the logbook form, already filled in.
 
 <a id="wspr"></a>
-### 9.4 WSPR
+### 12.4 WSPR
 
-Choose the band; every 2 minutes (about ten seconds after each even minute) the list grows: callsign, locator, power, frequency, drift and distance from the station.
+WSPR is used to study propagation: low-power beacons transmit their callsign, locator and power every 2 minutes. Choose the band in the list; about ten seconds after each even minute, the list grows: time, dB, DT, frequency, drift, callsign, locator, power and distance from the station. Receive only.
 
 <a id="jtty"></a>
-### 9.5 JTTY
+### 12.5 JTTY
 
-- New WSJT-X 3.3 mode for keyboard-to-keyboard and contests: no periods, each message appears **frame by frame** (1.9 s); `▌` = message still arriving.
-- Left click = receive, right click = transmit, double-click = contact; macros `F1` to `F8` (the WSJT-X ones): a click transmits at once, **Shift+click** adds them to the message.
-- **Émettre** (or `Enter`): the message goes out at once (no periods) on the TX frequency, encoded by WSJT-X, then back to receive. 80 characters per message (longer: two messages in a row); transceiver in **DATA-U**.
+- WSJT-X 3.3 mode for keyboard-to-keyboard and contests: no periods, each message appears **frame by frame** (1.9 s); `▌` = message still being received.
+- As in FT8: left click = receive, right click = transmit, double-click = correspondent. Two lists: Activité JTTY (JTTY activity) and Fréquence RX (RX frequency).
+- Macros `F1` to `F8`: a click transmits at once, **Shift+click** adds them to the message.
+- `Émettre` (or `Enter`): the message goes out at once on the TX frequency, then back to receive. 80 characters per message (longer: two messages in a row); TRX in **DATA-U**.
 
 <a id="cw"></a>
-### 9.6 CW
+### 12.6 CW
 
-- The transceiver goes to CW. **Click on a signal** in the waterfall: the decoder locks onto the nearest one (yellow marker) and learns the speed (shown in words per minute). Right click: exact tuning where you click.
-- **Filter** 100 Hz by default (50 Hz with QRM, 200–400 Hz to search); raise the **squelch** if letters appear on noise. The LED follows the keying.
-- Double-click a received callsign = contact; macros `F1` to `F12` (added to the text: CW transmission comes in a future version); `Log QSO`.
+| Command | What it does |
+|---|---|
+| Frequency list + `↺` | CW frequencies per band; the TRX switches to CW. |
+| **Filtre** (filter) 50 … 400 Hz | Decoder filter width: 100 Hz by default, 50 Hz with QRM, 200 to 400 Hz for searching. |
+| **Silencieux** (squelch) | Higher = fewer random letters on noise. |
+| LED and level bar | Follow the keying: the LED flashes in time with the Morse when the decoder is properly locked. |
+| Tonalité / Vitesse (tone / speed) | Audio frequency being tracked and measured speed (words per minute). |
+
+- **Click a signal** in the waterfall: the decoder locks onto the nearest signal and learns its speed. Right click: exact tuning where you click.
+- Double-click a received callsign = correspondent; `Log QSO` opens the logbook form.
+- **Émission** (transmit) section (speed, macros `F1` to `F12`, text): prepared; CW transmission will come in a future version.
 
 <a id="sstv"></a>
-### 9.7 SSTV
+### 12.7 SSTV
 
-- **Receive**: pictures start by themselves (VIS code) and are drawn line by line. Modes Martin M1/M2, Scottie S1/S2/DX, Robot 36/72, PD 50 to PD 290; frequency offset and slant corrected. The **gallery** keeps the last 12 (click = show); `PNG` saves the picture shown to your PC. The server also keeps every picture.
-- **Prepare a picture**: `Images du PC…` (pictures from your PC, or drag and drop), CQ card, test pattern or received picture; it is cropped to the selected mode's format. Three text lines (top, centre, bottom) with tags `<CALL>`, `<MYCALL>`, `<RST>`…; size and colour. Right click a thumbnail: remove it.
-- `▶ Écouter` plays the SSTV signal on your PC; `WAV` saves it (test with MMSSTV or a phone app).
+- **Receiving**: pictures arrive by themselves (VIS code) and are drawn line by line. Martin, Scottie, Robot and PD modes. The **gallery** keeps the last 12 (click = show); `PNG` saves the picture shown to your PC.
+- **Preparing a picture**: `Images du PC…` (pictures from your PC) (or drag and drop a picture), CQ card, test pattern or received picture; it is cropped to the format of the chosen mode. Three text lines (top, centre, bottom) with the tags `<CALL>`, `<MYCALL>`, `<RST>`…; text size and colour. Right click a thumbnail: remove it.
+- `▶ Écouter` (play) plays the signal on your PC (without transmitting); `WAV` saves it as a file. SSTV transmission will come in a future version.
 
-<a id="sync"></a>
-### 9.8 Synchro
+<a id="synchro"></a>
+### 12.8 Synchro
 
-Server time, offset of your PC, delay of the link with the station and mean DT of FT8 decodes: useful to check that everything is in step.
+A monitoring tab: it shows whether the clocks and the link are in step. There is nothing for you to set.
 
-- **Votre PC** (your PC): the **current** offset between the clock of the PC running your browser and the server, in milliseconds (in seconds above one second), with its accuracy (± half the shortest network round trip). Not to be confused with the « Offset » column of NetTime or Meinberg, which shows the error found **before** their last clock correction.
-- **Décodages** (decodes): arrival time of each FT8 / FT4 decoder pass after the start of the period (early around +12.5 s, normal around +15 s, deep afterwards). If the normal pass arrives more than 2 s after the end of the period, the server is overloaded: some replies go out one period later.
+| Box | Meaning |
+|---|---|
+| Heure du serveur (UTC) (server time) | The reference for all decoding. |
+| Votre PC (your PC) | Current offset between your PC clock and the server, in milliseconds. Does not matter for the dashboard. Not to be confused with the "Offset" column of NetTime or Meinberg (the error **before** their last correction). |
+| Liaison station → serveur (station → server link) | Arrival delay of the audio from the club, measured and corrected automatically. |
+| DT médian (median DT) | Average DT of the latest FT8 / FT4 decodes: close to 0.0 s = everything is in step. |
+| Décodages (decodes) | Arrival time of each decoder pass after the start of the period. If the normal pass arrives more than 2 s after the end of the period, the server is overloaded and some answers go out one period later. |
 
 <a id="qo100"></a>
-### 9.9 QO-100
+### 12.9 QO-100
 
-The FT8 · FT4, RTTY and CW lists offer « **QO-100 · FI 2 m / 70 cm** »: the frequency to set on the transceiver **before the 2.4 GHz up-converter**, to transmit on 2400.040 MHz (FT8 / FT4), 2400.025 MHz (CW) or 2400.090 MHz (RTTY). Example: FT8 on **432.540 MHz** with the club's 70 cm converter. Only the IFs the connected transceiver can reach are listed (2 m and 70 cm: FTX-1).
+QO-100 is a geostationary satellite reached on 2.4 GHz with an up-converter. The FT8 · FT4, RTTY and CW lists offer « **QO-100 · FI 2 m / 70 cm** » (IF 2 m / 70 cm): the frequency to set on the TRX **before the converter**, to uplink on 2400.040 MHz (FT8 / FT4), 2400.025 MHz (CW) or 2400.090 MHz (RTTY). Example: FT8 on **432.540 MHz** with the club's 70 cm converter. Only the IFs the connected TRX can reach are offered (FTX-1).
 
 <a id="messages"></a>
-## 10. Correspondent, messages and macros
+## 13. Correspondent, macros and tags
 
-- **Correspondant** line, below the digital-mode tabs: callsign, first name, QTH, locator, FT8 report, RST and the `Log QSO` button. First name, QTH and locator are looked up on **QRZ.com** as soon as a new contact is chosen (if a QRZ account is set in Logs → Synchronisation → Configuration). Messages and macros are in each tab: **Tx1 to Tx7** in FT8 · FT4 · FT2 (below the lists), **F1 to F12** in RTTY and CW and **F1 to F8** in JTTY (on one row, above the text to send).
-- **RTTY and JTTY: a macro starting with `<TX>` is transmitted at once** when clicked (or with its `F1`… key), as in FLDIGI, then the rig goes back to receive (`<RX>`, always done at the end of the message). These macros have a red edge on the left; all default macros do. **Shift+click**: add the macro to the text to send without transmitting, to build a custom message then « Émettre ». If the macro contains `<CALL>` and no contact is chosen, nothing is sent.
-- In **RTTY**, the transmitted text appears in the receive window first in grey, then each letter turns red as it goes out; the status line shows « fin dans N s » (ends in N s), so you can get the next macro ready. After « Arrêter », the part not sent stays grey and struck through. RTTY / JTTY decoding is paused while transmitting (the rig feeds our own signal back into its audio).
-- A macro without `<TX>` (and every CW macro) is added to the text to send in its tab. **Right click** (or `✎`): edit it — name, text, preview, back to the default. Your macros are stored on the server, for you only.
-- FT8 · FT4 · FT2: **clicking Tx1 to Tx7 starts automatic transmission** of that message (see 9.1). Tx7: free text, 13 characters (right click to edit).
+**The Correspondant line** (at the very bottom of the screen)
+
+| Field | What it contains |
+|---|---|
+| **Correspondant** (correspondent) | The callsign of the station worked. It fills in by itself when you click a callsign in a tab; you can also type it. |
+| **Nom** (name), **QTH**, **Locator** | First name, town and locator of the correspondent. They are looked up on **QRZ.com** as soon as a new correspondent is chosen (if a QRZ account has been set up by the administrators); only empty boxes are filled. |
+| **RST TX** / **RST RX** | RST TX = report **sent** by the club station; RST RX = report **received** from the correspondent. In FT8 / FT4 / FT2, WSPR and JT65 they are dB (RST RX fills itself in during the sequence); in RTTY, CW, SSTV and JTTY, RST 599. |
+| **TX call** | Callsign for digital transmissions and the logbook: the station's (ON5VL) or yours. Chosen by the operator in control and remembered for next time. Messages Tx1 to Tx6, `<MYCALL>` macros and the logbook form follow it. A QSO logged under your callsign stays in the club logbook, but is not uploaded to the club's online accounts (get it with Exporter → Mes QSO). |
+| `Log QSO` | Opens the « Enregistrer le QSO » (log the QSO) form, already filled in with this information, the frequency and the mode. |
+
+**Macros** (RTTY, JTTY, CW) are ready-made texts, on a row above the text box: **F1 to F12** in RTTY and CW, **F1 to F8** in JTTY.
+
+- A macro starting with `<TX>` (red edge on the left; this is the case for all default macros) **is transmitted at once** when clicked or with its `F1`… key, then the TRX returns to receive.
+- **Shift+click**: adds the macro to the text to send without transmitting, to build a message and then « Émettre ».
+- A macro without `<TX>` (and every CW macro) is simply added to the text.
+- **Right click** a macro (or `✎`): edit it — name, text, preview, back to the default text. Your macros are stored on the server, for you only.
+- If a macro contains `<CALL>` while no correspondent is chosen, nothing is sent.
 
 | Tag | Replaced by | Tag | Replaced by |
 |---|---|---|---|
-| `<MYCALL>` | transmitted callsign (ON5VL) | `<CALL>` | contact |
+| `<MYCALL>` | transmitted callsign (TX call) | `<CALL>` | correspondent |
 | `<NAME>` | their first name | `<QTH>` | their QTH |
 | `<RST>` | report sent | `<LOC>` | their locator |
 | `<MYLOC>` | station locator | `<MYQTH>` | station QTH |
-| `<OPCALL>` | your own callsign (operator) | `<CNTR>` | serial number (001…) |
-| `<INCR>` | moves to the next serial | `<ZT>` / `<ZD>` | UTC time / date |
-| `<TX>` | at the start: transmit at once on click (RTTY, JTTY) | `<RX>` | back to receive at the end (always done) |
+| `<OPCALL>` | your callsign (operator) | `<CNTR>` | serial number (001…) |
+| `<INCR>` | moves to the next serial number | `<ZT>` / `<ZD>` | UTC time / date |
+| `<TX>` | at the start: transmit at once on click | `<RX>` | back to receive at the end (always done) |
 | `<LOG>` | opens the « Enregistrer le QSO » form |  |  |
-
-<a id="keys"></a>
-## 11. Keyboard shortcuts
-
-| Key | Action |
-|---|---|
-| `Space` (hold) | PTT — also from a panel opened in a separate window |
-| `W` (hold) | TXW: listen on the transmit frequency (SPLIT) |
-| `↑` `↓` | Frequency ± one step |
-| `F1` … `F12` | Macros in the RTTY and CW tabs (`F1`…`F8` in JTTY): transmitted at once if the macro starts with `<TX>` |
-| `Ctrl` + `Enter` / `Enter` | Transmit the typed text in RTTY / in JTTY |
-| `Ctrl` + `F5` | Reload the page after an update |
-
-These keys are ignored while typing in a text field.
-
-<a id="trouble"></a>
-## 12. Troubleshooting
-
-| Symptom | Solution |
-|---|---|
-| Odd display, a button does nothing after an update | `Ctrl` + `F5`. |
-| « Station hors ligne » (station offline) | The Station page on the club PC is closed or the PC has lost internet: tell a club manager. |
-| No sound, empty waterfall, « La page Station n'envoie pas la BF » | At the club, the Station page must have « Activer l'audio » (enable audio) on and the right sound input (see section 13). |
-| « Prenez la main… » | You do not have control: « Prendre la main » or « Demander la main ». |
-| Nothing decoded in FT8 / RTTY… | Check the transceiver mode (DATA-U; CW for CW) and the frequency; the Synchro tab shows whether audio is arriving. |
-| A separate window does not open | Allow pop-up windows for remote.op0p.be (icon at the right of the address bar). |
-| PTT refused | The message gives the reason: outside the authorised bands, SWR (press TUNE), transmitting not enabled, listener callsign, maximum duration… |
-| The TX badge is red although I am not transmitting | Normal: dark red = transmit VFO. An actual transmission shows red frequency digits and a bright red TX badge. |
-| Clicking ATT / IPO of the other VFO: the rig changes side for a moment | Normal on the FTX-1: these settings only apply to the active side; the rig goes there for 2 to 3 s, without transmitting, then comes back. |
-| « Passage MAIN ↔ SUB par le dashboard désactivé » | An administrator set `ftx1SubCat` to `false` in `config.json`: MAIN / SUB on the front panel only. |
-
-<a id="club"></a>
-## 13. The club PC (Station page)
-
-For club managers. The PC connected to the transceiver opens **https://remote.op0p.be/station** in Chrome (Web Serial). On Windows 10 / 11, the **RemoteStation-Setup** installer does it all: « Remote Station - Page Station » shortcut (Chrome with the right settings), start with Windows, no sleep; it can also install the server itself on that PC (see LISEZMOI-WINDOWS).
-
-The Station page is **reserved for administrators**: the first time it is opened on a PC, log in with an administrator's call and password. That PC then stays authorised for a year (renewed each time the page is opened), until « Se déconnecter » (log out). Non-administrator members are refused. The club PC's browser, which keeps the station token, also logs in by itself. An administrator can **reload the Station page remotely**: click the **STATION** lamp at the top left → « ↻ Recharger la page Station » (the station is back within about ten seconds).
-
-1. Paste the **station token** (given by the server administrator), choose the transceiver **model** and its **CAT port** (first time only). FTX-1: the **Enhanced COM Port** (CAT-1), and on the rig **RPTT SELECT** and **PC KEYING** set to OFF (factory default): transmission is controlled through CAT.
-2. **Activer l'audio** (enable audio) and choose the transceiver's sound input (often « USB Audio CODEC »); the level bar must move.
-3. **Sortie son vers le TRX** (sound output to the transceiver, for FT8 / FT4 / FT2): the transceiver's USB sound card (« Speakers (USB Audio CODEC) »…), picked automatically when possible. Never the PC speakers. The transceiver must take DATA modulation from USB (transceiver menu). Set the **transmit level** so that ALC stays low. Optional limiter: with `"digiAlcMax": 8` in `config.json`, in digital modes (FT8 / FT4 / FT2, RTTY, JTTY…) the Station page **lowers that level automatically** as soon as ALC goes above 8 %, during the transmission, and keeps the reached level for the next ones (message « ALC … ramené de 30 à 24 % » shown to the operator in control); it never goes back up on its own. Default (`0`): no limiter. Transmissions start on the VPS clock, even if the Windows clock is off.
-4. Keep the Station page **alone in its window**; open the dashboard with its « Ouvrir le dashboard dans une autre fenêtre » button.
-5. Chrome → Settings → Performance: always keep remote.op0p.be active; Windows: sleep set to Never.
-
-Server installation and settings: see `LISEZMOI.md` and `README.md` (project repository).
 
 <a id="logs"></a>
 ## 14. Logs (station logbook)
 
-**Logs** tab (right of Synchro): the station logbook, shared by all members, with upload to **LoTW**, **eQSL**, **Club Log** and **QRZ.com**, **ADIF** or **Cabrillo** export, and **UDP** forwarding to PC logbooks (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
+**Logs** tab (to the right of Synchro): the station logbook, shared by all members. It can upload QSOs to **LoTW**, **eQSL**, **Club Log** and **QRZ.com**, export them as **ADIF** or **Cabrillo**, and forward them over **UDP** to logging programs on the PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
 
-- **Logging a QSO**: `⇩ TRX` takes the transceiver frequency and mode (in DATA: the mode of the tab on screen, FT8, RTTY…), the power, and the Correspondant line (call, name, QTH, locator). The UTC time is taken when you type the first letter of the call; `⟳ Maintenant` (now) resets it. `Enter` or `Enregistrer le QSO` (save). A duplicate (same call, band and mode within half an hour) is reported before saving; if the QSO already in the log (e.g. saved at the end of the QSO) lacks the name, QTH, locator or received RST, you are offered to **complete** it instead of creating a 2nd QSO.
-- **Without leaving the RTTY, JTTY or CW tab**: `Log QSO` button (next to « Émettre », and at the end of the Correspondant line), like FLDIGI's « Save QSO ». A form opens, already filled in: call, name, QTH, locator and RST of the correspondent, frequency (in RTTY: the signal frequency, carrier + audio offset) and the tab's mode, power, start time (when the correspondent was chosen) and end time (now). Correct if needed (RST received…), then `Enregistrer dans le carnet` (save). A macro containing `<LOG>` (e.g. the « 73 ») also opens this form.
-- **QO-100**: with the converter IF (e.g. 432.525 MHz) the QO-100 box is ticked and the 2400.xxx MHz uplink frequency is logged (QO-100 satellite, downlink 10489.xxx MHz).
-- **Form**: frequency and mode follow the transceiver's **active VFO** automatically (VFO B when on SUB); a frequency or mode typed by hand is kept until the next QSO (⇩ TRX to take the transceiver's again).
-- **List**: the last 300 QSOs (search by call, name or operator). **TX call** column: the callsign the QSO was made under, the same as TX CALL on the dashboard at the time (the operator shows on hover). The TX call of the form follows the one on the Correspondent line; with control, changing it in the form also changes the transmit call. **QTH**, **DXCC** (country, from the call) and **Préfixe** (main DXCC prefix: ON, LA, K…) columns. **Column width**: drag the right edge of a column title (double-click: original width); remembered in your browser. **Filters**: the **▾** next to each title offers the values of that column (dates, bands, modes, countries, TX call, upload state…) with their QSO count; a choice filters the logbook (▾ becomes ●, several columns combine); « ✕ Filtres » removes them all. Columns LoTW, eQSL, CL (Club Log), QRZ: **·** not sent yet, **✓** sent, **✗** rejected (hover for details), **★** confirmed on LoTW. Click a row to edit or delete the QSO (its author or an administrator).
-- **Exporter ▾** (export): ADIF 3 (.adi) or Cabrillo 3 (.log, with the contest name), for one TX call and an optional date range. **Mes QSO (.adi)** (my QSOs) downloads at once the QSOs made under **your** call (TX call), to import into your own logbook. Each member exports his QSOs: under his own call, or those he made himself under ON5VL / OR0L; administrators export every TX call.
-- **Synchronisation ▾** (administrators): one window per service, as in Swisslog — **Détails** tab (call, optional date range, resend QSOs already sent, delay; Club Log: « Effacer le log ClubLog existant », clear the existing log) then `Télécharger` (upload); **Traitement** tab: progress, report, `Arrêt` (stop). **Opérations LoTW**: export, sign with TQSL, upload, read confirmations, status; `Confirmations` only reads the confirmations received. **Credentials of the call**: before uploading, each window shows the « Identifiants <service> de <call> » box (call taken from the current TX call, can be changed in Détails): login, password, key… for that call; a note says whether they come from the call's own account, from the club configuration, or are missing. `Enregistrer pour cet indicatif` (save for this call) keeps them on the server (passwords masked; empty field = keep, ✕ = delete). Credentials in the general configuration are only used for the club calls (ON5VL, OR0L); a personal call (ON6DP…) needs its own credentials, otherwise its QSOs are marked « non configuré » (not configured). An upload mixing several TX calls is done group by group, each with its own credentials.
-- **Synchronisation ▾ → ⚙ Configuration…** (administrators): tabs CLUBLOG, eQSL, LoTW, QRZ, UDP. « Upload QSOs automatically when they are logged » box, logins and passwords (👁 button to see them while typing), delay, `Tester` (test). Passwords and keys stay on the server: the window only shows « enregistré » (stored); an empty field keeps the value, ✕ deletes it. QRZ tab, **Contact lookup**: user name and password of a QRZ.com account; as soon as a contact is chosen (click on a callsign, Correspondant line, logbook form), their first name, town (QTH) and, with an XML subscription, locator are filled in automatically (empty fields only), with a « QRZ.com: … » note below the bands.
+<a id="l-fiche"></a>
+### 14.1 Logging a QSO
+
+The form at the top of the tab:
+
+| Field / button | What it does |
+|---|---|
+| **Indicatif** (callsign) | The correspondent's callsign. The UTC date and time fill in as soon as you type the first letter (start of the QSO). The name, QTH and locator are looked up on QRZ.com. |
+| **Date UTC**, **Heure UTC** (UTC time) | Start of the QSO, in UTC (not Belgian time). |
+| `⟳ Maintenant` (now) | Resets the date and time to the present moment. |
+| **Fréquence MHz** (frequency), **Mode** | Follow the active VFO of the TRX by themselves. A value typed by hand is kept until the next QSO. |
+| `⇩ TRX` | Takes the frequency and mode from the TRX (in DATA: the mode of the tab on screen, FT8, RTTY…), the power, and the Correspondant line (callsign, name, QTH, locator). |
+| **RST env.** (sent) / **RST reçu** (received) | Report sent and received (59, 599 or dB depending on the mode). |
+| **Nom**, **QTH**, **Locator**, **Puiss. W** (power), **Remarque** (comment) | QSO information; the comment is free text. |
+| **TX call** | Callsign under which the QSO was made. It follows the one on the Correspondant line; with control, changing it here also changes the transmit callsign. |
+| ☐ **QO-100** | QSO via the QO-100 satellite: with the converter IF (e.g. 432.525 MHz), the box ticks itself and the 2400.xxx MHz uplink frequency is logged. |
+| `Enregistrer le QSO` (or `Enter`) | Adds the QSO to the logbook. A duplicate (same callsign, band and mode within half an hour) is reported before saving; if the entry already in the logbook lacks the name, QTH, locator or received RST, you are offered to **complete** it instead of creating a 2nd QSO. |
+| `Supprimer` (delete) / `Annuler` (cancel) | Appear when you edit an existing QSO: delete the QSO (after confirmation; online logbooks are not changed) or abandon the edit. |
+
+**Without leaving the RTTY, JTTY or CW tab**: the `Log QSO` button (next to « Émettre », and at the end of the Correspondant line) opens a form already filled in: callsign, first name, QTH, locator and RST, frequency (in RTTY: the signal frequency) and mode, power, start time (when the correspondent was chosen) and end time. Correct if needed, then `Enregistrer dans le carnet` (save to the logbook). In FT8, this form opens by itself at the end of the QSO; a macro containing `<LOG>` also opens it.
+
+<a id="l-liste"></a>
+### 14.2 The QSO list
+
+- The list shows the last 300 QSOs. The **Rechercher** (search) box finds a callsign, a name or an operator; the number of QSOs found is shown next to it.
+- **Click a row**: the QSO is loaded into the form to be edited or deleted (by its author or an administrator).
+- **Column width**: drag the right edge of a column title (double-click: original width). Setting remembered in your browser.
+- **Filters**: the **▾** next to each title offers the values of that column (dates, bands, modes, countries, TX call, upload state…) with their QSO count. A choice filters the logbook (the ▾ becomes ●); several columns combine; `✕ Filtres` (filters) removes them all.
+
+| Column | Meaning |
+|---|---|
+| Date, UTC | UTC date and time of the start of the QSO. |
+| Indicatif | The correspondent. |
+| Bande, MHz, Mode | Band, exact frequency and mode. |
+| Env., Reçu | Reports sent and received. |
+| Nom, QTH | First name and town of the correspondent. |
+| DXCC, Préfixe | Country of the correspondent (from their callsign) and its main prefix (ON for Belgium, LA for Norway, K for the USA…). |
+| TX call | The callsign under which the QSO was made; the operator is shown on hover. |
+| LoTW, eQSL, CL, QRZ | Upload state for each service: **·** not sent yet, **✓** sent, **✗** rejected (hover = details), **★** confirmed on LoTW. |
+
+<a id="l-export"></a>
+### 14.3 Exporting
+
+| Exporter ▾ menu (export) | What it does |
+|---|---|
+| **Mes QSO (.adi)** (my QSOs) | Immediately downloads the QSOs made under **your** callsign (TX call), to import into your own logging program. |
+| **ADIF (.adi)…** | Selection window: TX call and date range, then download of an ADIF 3 file. A member exports their own QSOs (under their callsign, or those they made themselves under ON5VL / OR0L: « mes QSO sous cet indicatif », my QSOs under this callsign); administrators export every TX call. |
+| **Cabrillo (.log)…** | Same choice, plus the contest name: Cabrillo 3 file to send to a contest's organisers. |
+
+<a id="l-sync"></a>
+### 14.4 Synchronisation (LoTW, eQSL, Club Log, QRZ)
+
+**Synchronisation ▾** menu, reserved for administrators: it uploads the logbook QSOs to the confirmation websites. One window per service, as in Swisslog.
+
+1. Choose the service: **Synchronisation LoTW…**, **Synchronisation eQSL…**, **Club Log…** or **QRZ…**.
+2. **Détails** (details) tab: choose the **callsign (TX call)** whose QSOs are uploaded (the current TX call is suggested).
+3. Just below, the yellow **« Identifiants <service> de <indicatif> »** (<service> credentials of <callsign>) box shows the credentials that will be used: login, password, key… A note says whether they belong to this callsign, come from the club configuration, or what is missing. Complete them if needed, then `Enregistrer pour cet indicatif` (save for this callsign). Passwords stay on the server and are never displayed: a field left empty keeps the stored value, `✕` deletes it, `👁` shows what you type.
+4. Optional: **date range**, **Renvoyer aussi les QSO déjà envoyés** (also resend QSOs already sent), **Temporisation** (delay in seconds between two QSOs, so as not to be blocked by the website). Club Log: « Effacer le log ClubLog existant » (clear the existing Club Log log) replaces the whole online log (only use it if this logbook is complete). The number of QSOs to upload is shown at the bottom.
+5. `Télécharger` (upload): the upload starts; the **Traitement** (processing) tab shows the progress and the report, QSO by QSO. `Arrêt` (stop) interrupts it; `Fermer` (close) closes the window: the upload continues on the server and its progress stays visible below the logbook list.
+
+- **Club callsigns and personal callsigns**: the credentials in the general configuration (14.5) are only used for the club callsigns (ON5VL, OR0L). A personal callsign (ON6DP…) needs **its own credentials**, otherwise its QSOs are marked « non configuré » (not configured). An upload mixing several TX calls is done group by group, each with its own credentials.
+- **LoTW operations**: export, sign with TQSL, upload, read confirmations, status. `Confirmations` only reads the confirmations received (★ in the list). With the server on the VPS (no TQSL): `Exporter pour TQSL (.adi)` (export for TQSL), sign the file with TQSL on the club PC, then `Marquer comme envoyés` (mark as sent).
+
+<a id="l-config"></a>
+### 14.5 Configuration
+
+**Synchronisation ▾ → ⚙ Configuration…** (administrators): the general settings, in tabs **CLUBLOG**, **eQSL**, **LoTW**, **QRZ** and **UDP**.
+
+- **« Télécharger automatiquement les QSO lors de leur enregistrement »** box (upload QSOs automatically when they are logged): every new QSO under a club callsign is uploaded to that service by itself.
+- Club logins and passwords (`👁` to see them while typing), delay, and `Tester` (test) to check the connection to the service. The window only shows « enregistré » (stored) for passwords; leaving the field empty keeps the value, `✕` deletes it.
+- **QRZ** tab, **Recherche des correspondants** (correspondent lookup): login and password of a QRZ.com account. As soon as a correspondent is chosen (click on a callsign, Correspondant line, logbook form), their first name, town and, with an XML subscription, locator are filled in automatically (empty boxes only), with a « QRZ.com : … » note below the bands.
+- **UDP** tab: forwarding of each QSO to logging programs (address, port, format).
 
 | Service | What you need |
 |---|---|
-| Club Log | Account e-mail, an application password (Club Log → Settings → App Passwords), the application API key (requested once from the Club Log helpdesk). An access refusal stops uploads until the configuration is saved again. |
-| eQSL | eQSL call and password; « QTH Nickname » if the account has several QTHs. |
-| QRZ.com | One QRZ logbook API key per call (QRZ → Logbook → Settings), XML subscription or higher. |
-| LoTW | **TQSL** and the call's **certificate** installed on the PC running the server (the club's Windows server), the TQSL « Station Location » name, and the LoTW website login for confirmations. The certificate and its password never leave that PC. With the server on the VPS: « Exporter pour TQSL (.adi) », sign the file with TQSL on the club PC, then « Marquer comme envoyés » (mark as sent). |
-| UDP | Address, port and format expected by the logbook: WSJT-X « Logged ADIF » (Swisslog, Log4OM, HRD Logbook; usually port 2237), N1MM (port 12060), or raw ADIF. Packets are sent by the server: 127.0.0.1 when the server runs on the club PC. |
+| Club Log | Account e-mail, an application password (Club Log → Settings → App Passwords), the application API key (requested once from the Club Log helpdesk). An access refusal stops uploads until the next successful test. |
+| eQSL | eQSL callsign and password; "QTH Nickname" if the account has several QTHs. |
+| QRZ.com | One QRZ logbook API key per callsign (QRZ → Logbook → Settings), XML subscription or higher. |
+| LoTW | **TQSL** and the callsign's **certificate** installed on the PC running the server, the TQSL "Station Location" name, and the LoTW website login for confirmations. The certificate and its password never leave that PC. |
+| UDP | Address, port and format expected by the program: WSJT-X "Logged ADIF" (Swisslog, Log4OM, HRD Logbook; usually port 2237), N1MM (port 12060), or raw ADIF. Packets are sent by the server: 127.0.0.1 if the server runs on the club PC. |
+
+<a id="clavier"></a>
+## 15. Keyboard shortcuts
+
+| Key | Action |
+|---|---|
+| `Space` (hold) | PTT; in FT8 / FT4 / FT2, stops automatic transmission. Also works from a separate window. |
+| `W` (hold) | TXW: listen on the transmit frequency (SPLIT). |
+| `↑` `↓` | Frequency ± one step (the one on the Step row). |
+| `F1` … `F12` | Macros in the RTTY and CW tabs (`F1`…`F8` in JTTY). |
+| `Ctrl` + `Enter` / `Enter` | Transmit the typed text in RTTY / in JTTY. |
+| `Enter` (logbook form) | Save the QSO. |
+| `Shift` + mouse wheel | RIT / XIT offset in 100 Hz steps. |
+| `Ctrl` + `F5` | Reload the page after an update. |
+
+These keys are ignored while you are typing in a text field.
+
+<a id="problemes"></a>
+## 16. Common problems
+
+| Symptom | Likely cause and solution |
+|---|---|
+| Odd display, a button does not respond after an update | Old version in memory: `Ctrl` + `F5`. |
+| « Ce navigateur n'est ni Chrome ni Edge » (this browser is neither Chrome nor Edge) | Open the page in Google Chrome or Microsoft Edge. |
+| Serveur lamp red | Your internet connection is down; the page reconnects by itself when it comes back. |
+| « Station hors ligne » (station offline) | The Station page on the club PC is closed or the PC has lost internet: tell a club manager. |
+| No sound, empty waterfall, « La page Station n'envoie pas la BF » (the Station page is not sending audio) | At the club, the Station page must have audio enabled and the right sound input (section 18). At home, check your PC volume and the Volume slider. |
+| Commands greyed out, « Prenez la main… » | You do not have control: `Prendre la main` or `Demander la main` (request control). |
+| Nothing decoded in FT8 / RTTY… | Check the TRX mode (DATA-U; CW for CW), the frequency (↺ button), SQUELCH at 0, and DUAL RX off. The Synchro tab shows whether audio is arriving. |
+| My FT8 answer goes out one period too late | The click came too late (more than 2 s into the next period). Click as soon as the decode appears. If it happens often, look at the "Décodages" box in the Synchro tab. |
+| PTT refused | The message gives the reason: outside the authorised bands, SWR (do a TUNE), transmitting not enabled, listener callsign, maximum duration, TXW held… |
+| The TX badge is red although I am not transmitting | Normal: dark red = transmit VFO. An actual transmission shows red frequency digits and a bright red TX badge. |
+| Clicking ATT / IPO of the other VFO: the TRX changes side for a moment | Normal on the FTX-1: these settings can only be made on the active side; the TRX goes there for 2 to 3 s, without transmitting, then comes back. |
+| « TUNE sans accord » (TUNE without a match), transmitting blocked on the band | The antenna cannot be matched on that frequency: do another TUNE, try the other antenna or another band, and tell a station manager. |
+| A separate window does not open | Allow pop-up windows for remote.op0p.be (icon at the right of the address bar). |
+| Name and QTH not filled in | The QRZ.com account is not set up, or the station is not on QRZ.com: type them in by hand. |
+| Synchronisation: « non configuré » (not configured) | No credentials for that TX call: complete the « Identifiants … » box in the synchronisation window (14.4). |
+| « Passage MAIN ↔ SUB par le dashboard désactivé » (MAIN ↔ SUB switching from the dashboard disabled) | An administrator has set `ftx1SubCat` to `false` in `config.json`: MAIN / SUB from the front panel only. |
+
+<a id="admin"></a>
+## 17. For administrators
+
+A click on the `● Station` lamp opens the **TRX du club** (club TRX) menu:
+
+| Command | What it does |
+|---|---|
+| Name of a TRX (FTX-1, FTDX10, IC-7300) | Switches to that TRX, after confirmation. The station restarts for a few seconds and control is kept. The TRX must be connected to the club PC and its port chosen once on the Station page. Not possible during a transmission. |
+| `↻ Recharger la page Station` (reload the Station page) | Reloads the Station page on the club PC remotely (new version, page stuck…). The station is back within about ten seconds. |
+| `⌨ Lecture CAT…` (CAT read) | Diagnostics: reads a raw value from the TRX (read only, list of allowed commands). |
+
+Administrators also have access to the logbook Synchronisation menu (14.4 and 14.5), to the export of every TX call, and can take back control (section 6). Management of members, passwords and the server is described in `LISEZMOI.md` and `README.md` (project repository).
+
+<a id="club"></a>
+## 18. The club PC (Station page)
+
+For club managers. The PC connected to the TRX opens **https://remote.op0p.be/station** in Chrome (Web Serial). On Windows 10 / 11, the **RemoteStation-Setup** installer does everything needed: « Remote Station - Page Station » shortcut (Chrome with the right settings), start with Windows, no sleep; it can also install the server itself on that PC (see LISEZMOI-WINDOWS).
+
+The Station page is **reserved for administrators**: the first time it is opened on a PC, log in with the callsign and password of an administrator. That PC then stays authorised for one year (renewed each time the page is opened), until « Se déconnecter » (log out). A non-administrator member is refused. The club PC's browser, which keeps the station token, also logs back in by itself.
+
+1. Paste the **station token** (given by the server administrator), choose the TRX **model** and its **CAT port** (the first time). FTX-1: the **Enhanced COM Port** (CAT-1), and on the TRX the **RPTT SELECT** and **PC KEYING** settings at OFF (factory default): transmission is controlled through CAT.
+2. **Activer l'audio** (enable audio) and choose the TRX sound input (often "USB Audio CODEC"); the level bar must move.
+3. **Sortie son vers le TRX** (sound output to the TRX, for FT8 / FT4 / FT2, RTTY, JTTY transmission): the TRX's USB sound card ("Speakers (USB Audio CODEC)"…), chosen automatically when possible. Never the PC speakers. The TRX must take DATA modulation from USB (TRX menu). Set the **transmit level** so that ALC stays low. Optional limiter: with `"digiAlcMax": 8` in `config.json`, the Station page **lowers that level by itself** as soon as ALC goes above 8 % during a digital transmission, and keeps the reached level for the following transmissions; it never goes back up by itself. By default (`0`), no limiter. Transmissions start on the server clock, even if the Windows clock is off.
+4. Keep the Station page **alone in its window**; open the dashboard with its « Ouvrir le dashboard dans une autre fenêtre » (open the dashboard in another window) button.
+5. Chrome → Settings → Performance: always keep remote.op0p.be active; Windows: sleep set to Never.
+
+Server installation and settings: see `LISEZMOI.md` and `README.md` (project repository).
