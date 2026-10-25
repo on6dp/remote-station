@@ -2036,8 +2036,9 @@ function onOperator(conn, m) {
         // FTX-1 en réception simple (DUAL RX coupé) : passage MAIN ↔ SUB par CAT refusé (constaté au club le 24/10 :
         // clic sur SUB → le TRX passe en émission) ; DUAL RX d'abord, ou face avant
         const sideMove = (m.ctl === 'vfoSel' && Number(m.value) !== (radio.vfoSel === 1 ? 1 : 0)) || (c && c.viaSub && radio.vfoSel !== 1) || (c && c.viaMain && radio.vfoSel === 1);
-        if (R.ID === 'ftx1' && radio.dualRx !== 1 && sideMove && !cfg.ftx1SubSingle) { // réception simple (ou état inconnu) : refusé sauf ftx1SubSingle
-          return send(conn, { t: 'notice', level: 'error', msg: 'Passage MAIN ↔ SUB refusé en réception simple (DUAL RX coupé) : il met le FTX-1 en émission. Le VFO B se règle quand même (molette, flèches, bandes) ; pour écouter le VFO B, touche MAIN / SUB du TRX au club.' });
+        // Sans danger quand le TRX montre ses deux VFO : DUAL RX, ou SPLIT mis sur la face avant (essai au club du 25/10)
+        if (R.ID === 'ftx1' && radio.dualRx !== 1 && radio.hwSplit !== 1 && sideMove && !cfg.ftx1SubSingle) { // réception simple sans SPLIT du TRX : refusé
+          return send(conn, { t: 'notice', level: 'error', msg: 'Passage MAIN ↔ SUB refusé : le FTX-1 n’affiche qu’un VFO (ni DUAL RX ni SPLIT sur le TRX), et dans ce cas il passe en émission. Mettez SPLIT sur la face avant du TRX (les deux VFO affichés), ou DUAL RX ; le VFO B se règle quand même (molette, flèches, bandes).' });
         }
         let v;
         try {

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.59 | [RemoteStation-Setup-0.22.59.exe](0.22.59/RemoteStation-Setup-0.22.59.exe) | [remote-station-0.22.59.tar.gz](0.22.59/remote-station-0.22.59.tar.gz) | FTX-1 : MAIN ↔ SUB autorisé quand le TRX affiche ses deux VFO — [empreintes SHA-256](0.22.59/SHA256SUMS.txt) |
 | 0.22.58 | [RemoteStation-Setup-0.22.58.exe](0.22.58/RemoteStation-Setup-0.22.58.exe) | [remote-station-0.22.58.tar.gz](0.22.58/remote-station-0.22.58.tar.gz) | FTX-1 : MAIN ↔ SUB en réception simple autorisable pour essais — [empreintes SHA-256](0.22.58/SHA256SUMS.txt) |
 | 0.22.57 | [RemoteStation-Setup-0.22.57.exe](0.22.57/RemoteStation-Setup-0.22.57.exe) | [remote-station-0.22.57.tar.gz](0.22.57/remote-station-0.22.57.tar.gz) | Sécurité FTX-1 : MAIN ↔ SUB bloqué en réception simple — [empreintes SHA-256](0.22.57/SHA256SUMS.txt) |
 | 0.22.56 | [RemoteStation-Setup-0.22.56.exe](0.22.56/RemoteStation-Setup-0.22.56.exe) | [remote-station-0.22.56.tar.gz](0.22.56/remote-station-0.22.56.tar.gz) | DUAL RX HF + HF refusé par le FTX-1, même bande comprise — [empreintes SHA-256](0.22.56/SHA256SUMS.txt) |
