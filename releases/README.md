@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.68 | [RemoteStation-Setup-0.22.68.exe](0.22.68/RemoteStation-Setup-0.22.68.exe) | [remote-station-0.22.68.tar.gz](0.22.68/remote-station-0.22.68.tar.gz) | Correctif : cascade RTTY B déplacée entre les onglets — [empreintes SHA-256](0.22.68/SHA256SUMS.txt) |
 | 0.22.67 | [RemoteStation-Setup-0.22.67.exe](0.22.67/RemoteStation-Setup-0.22.67.exe) | [remote-station-0.22.67.tar.gz](0.22.67/remote-station-0.22.67.tar.gz) | RTTY : accord du VFO par glisser / molette sur les cascades — [empreintes SHA-256](0.22.67/SHA256SUMS.txt) |
 | 0.22.66 | [RemoteStation-Setup-0.22.66.exe](0.22.66/RemoteStation-Setup-0.22.66.exe) | [remote-station-0.22.66.tar.gz](0.22.66/remote-station-0.22.66.tar.gz) | RTTY : fréquence des décodeurs (LSB, VFO écouté) — [empreintes SHA-256](0.22.66/SHA256SUMS.txt) |
 | 0.22.65 | [RemoteStation-Setup-0.22.65.exe](0.22.65/RemoteStation-Setup-0.22.65.exe) | [remote-station-0.22.65.tar.gz](0.22.65/remote-station-0.22.65.tar.gz) | RTTY : échelles en kHz, Centrer ; DUAL RX grisé en HF — [empreintes SHA-256](0.22.65/SHA256SUMS.txt) |

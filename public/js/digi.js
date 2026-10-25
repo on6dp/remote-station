@@ -447,7 +447,7 @@
     // Une seule cascade, déplacée dans la fenêtre affichée (FT8/FT4 ou RTTY)
     if (WF_TABS.indexOf(pane) >= 0) {
       const slot = document.querySelector('.dg-wf-slot[data-slot="' + pane + '"]');
-      const el = document.querySelector('.dg-wf');
+      const el = document.querySelector('.dg-wf:not(.rt-wfb)'); // cascade principale (pas celle du décodeur RTTY B)
       if (slot && el && el.parentElement !== slot) slot.appendChild(el);
       el.classList.toggle('is-rtty', pane === 'rtty' || pane === 'cw');
       sizeCanvas();

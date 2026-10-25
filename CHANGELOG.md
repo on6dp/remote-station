@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.68** — Correctif : après un passage par les onglets CW, SSTV, WSPR ou JTTY, la cascade du décodeur RTTY B pouvait être déplacée dans l’onglet suivant (échelle RTTY dans l’onglet FT8, plus de cascade à droite en RTTY). Ctrl+F5 sur le dashboard suffit.
 - **0.22.67** — RTTY : glisser une cascade à gauche ou à droite accorde le VFO (la bande suit la souris), molette : VFO ± 10 Hz par cran (± 100 Hz avec Maj) ; les deux décodeurs restent calés sur leurs signaux. Un simple clic cale toujours le décodeur. Ctrl+F5 sur le dashboard suffit.
 - **0.22.66** — RTTY : fréquence du signal suivi corrigée en LSB / DATA-L (porteuse − audio) ; en réception simple, la fréquence des deux décodeurs est rapportée au VFO réellement écouté et le précise « (VFO A) » (explication au survol) ; Log QSO reprend cette même fréquence. Ctrl+F5 sur le dashboard suffit.
 - **0.22.65** — RTTY : échelle des deux cascades en kHz (fréquence réelle, porteuse + audio), centre de la cascade marqué ; bouton « ⌖ Centrer » par décodeur : le VFO se déplace pour que le signal suivi tombe au milieu de la cascade (l’autre décodeur reste calé sur son signal). DUAL RX grisé (explication au survol) quand les deux VFO du FTX-1 sont en HF / 50 MHz. Ctrl+F5 sur le dashboard suffit.
