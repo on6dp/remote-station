@@ -171,6 +171,7 @@
             <input type="range" id="rtSq" min="4" max="25" step="1" aria-label="Silencieux (VFO-A)"><output id="rtSqV">12</output></label>
           <span class="rt-tune" title="Accord : les deux barres doivent battre en alternance"><span>M</span><i><b id="rtM"></b></i><span>S</span><i><b id="rtS"></b></i></span>
           <span class="dg-f rx">Centre <b id="rtF">1500</b> Hz</span>
+          <button class="dg-mini rt-center" type="button" data-ch="0" title="Centrer : le TRX se déplace pour que le signal de ce décodeur soit au milieu de la cascade (1500 Hz)">⌖ Centrer</button>
           <button class="dg-mini rt-txsel" type="button" data-ch="0" aria-pressed="false" title="L'émission RTTY part avec les réglages de ce décodeur (fréquence audio, shift, vitesse)">TX</button>
           <button class="dg-mini" type="button" id="rtClear">Effacer</button>
         </div>
@@ -188,6 +189,7 @@
             <input type="range" id="rtSqB" min="4" max="25" step="1" aria-label="Silencieux (VFO-B)"><output id="rtSqVB">12</output></label>
           <span class="rt-tune" title="Accord : les deux barres doivent battre en alternance"><span>M</span><i><b id="rtMB"></b></i><span>S</span><i><b id="rtSB"></b></i></span>
           <span class="dg-f rx">Centre <b id="rtFB">1500</b> Hz</span>
+          <button class="dg-mini rt-center" type="button" data-ch="1" title="Centrer : le TRX se déplace pour que le signal de ce décodeur soit au milieu de la cascade (1500 Hz)">⌖ Centrer</button>
           <button class="dg-mini rt-txsel" type="button" data-ch="1" aria-pressed="false" title="L'émission RTTY part avec les réglages de ce décodeur (fréquence audio, shift, vitesse)">TX</button>
           <button class="dg-mini" type="button" id="rtClearB">Effacer</button>
         </div>
@@ -759,6 +761,7 @@
   const rt = rts[0];
   const RT_SFX = ['', 'B'];
   let rtTx = store.get('rttx', '0') === '1' ? 1 : 0; // décodeur dont les réglages servent à l'émission
+  let rtDialKey = '';
   // ------------------------------------------------------------------ macros (comme FLDIGI : F1 à F12, modifiables)
   // <TX> en tête : la macro part tout de suite à l'émission (comme FLDIGI) ; <RX> : retour en réception (toujours fait en fin de message)
   // Balises : <MYCALL> <CALL> <NAME> <QTH> <RST> <LOC> <MYLOC> <MYQTH> <OPCALL> <CNTR> <INCR> <ZT> <ZD>
@@ -831,13 +834,80 @@
     pos(mkS, fs);
   }
   function drawRttyMarks(c, w) {
+    rtKhz(c, w, rtDialOf(0));
     rttyMarks(c, w, rts[0], $('dgMkRx'), $('dgMkTx'));
     // Cascade du décodeur B : même spectre (même BF du TRX), ses propres repères
     if (wfB.sctx) {
-      ticks(wfB.sctx, wfB.cw);
+      rtKhz(wfB.sctx, wfB.cw, rtDialOf(1));
       rttyMarks(wfB.sctx, wfB.cw, rts[1], $('rtMkMB'), $('rtMkSB'));
     }
     rtHeads();
+  }
+  // Fréquence porteuse (VFO) de chaque décodeur RTTY : le VFO reçu ; en double réception (FTX-1), B = VFO-B
+  // sign : +1 en USB / DATA-U (fréquence = porteuse + audio), −1 en LSB / DATA-L
+  function rtDialOf(ch) {
+    const st = api && api.state && api.state();
+    const r = st && st.radio;
+    if (!r) return null;
+    const dual = r.dualRx === 1 && r.freq && r.freqB;
+    const useB = dual ? ch === 1 : r.vfoSel === 1 && !!r.freqB;
+    const hz = Number(useB ? r.freqB : r.freq) || 0;
+    if (!hz) return null;
+    const md = String((useB ? r.modeB : r.mode) || '');
+    return { hz, vfo: useB ? 'B' : 'A', sign: /LSB|DATA-L|RTTY-L/i.test(md) ? -1 : 1 };
+  }
+  // Échelle RTTY en kHz (fréquence réelle : porteuse ± audio), repère au centre de la cascade (1500 Hz)
+  function rtKhz(c, w, d) {
+    if (!d) return ticks(c, w);
+    const H = SCALE_H;
+    c.clearRect(0, 0, w, H);
+    c.fillStyle = '#0b1018';
+    c.fillRect(0, 0, w, H);
+    c.font = 'bold 11px Verdana, "DejaVu Sans", Arial, sans-serif';
+    c.textBaseline = 'top';
+    c.strokeStyle = '#46546a';
+    c.beginPath(); c.moveTo(0, 13.5); c.lineTo(w, 13.5); c.stroke();
+    const xOf = (rf) => ((d.sign * (rf - d.hz)) / WF_MAX_HZ) * (w - 1);
+    const lo = d.sign > 0 ? d.hz : d.hz - WF_MAX_HZ;
+    const hi = d.sign > 0 ? d.hz + WF_MAX_HZ : d.hz;
+    const labelStep = w / WF_MAX_HZ >= 0.12 ? 500 : 1000;
+    for (let rf = Math.ceil(lo / 50) * 50; rf <= hi; rf += 50) {
+      const x = Math.round(xOf(rf)) + 0.5;
+      const big = rf % 500 === 0;
+      const mid = rf % 100 === 0;
+      c.strokeStyle = big ? '#8a9bb0' : mid ? '#5d6c80' : '#3c4859';
+      c.beginPath(); c.moveTo(x, big ? 11 : 14); c.lineTo(x, big ? H : mid ? 20 : 17); c.stroke();
+      if (rf % labelStep === 0 && x > 20 && x < w - 20) {
+        const t = (rf / 1000).toLocaleString('fr-BE', { minimumFractionDigits: rf % 1000 ? 1 : 0, maximumFractionDigits: 1 });
+        c.fillStyle = '#F0F5FA';
+        c.fillText(t, x - c.measureText(t).width / 2, 0);
+      }
+    }
+    // Centre de la cascade (1500 Hz) : petit triangle blanc
+    const xc = (1500 / WF_MAX_HZ) * (w - 1);
+    c.fillStyle = '#FFFFFF';
+    c.beginPath(); c.moveTo(xc - 5, H - 1); c.lineTo(xc + 5, H - 1); c.lineTo(xc, H - 7); c.closePath(); c.fill();
+  }
+  // Centrer : le VFO se déplace pour que le signal du décodeur tombe au milieu de la cascade (1500 Hz)
+  function rtCenter(ch) {
+    if (!api || !api.iControl()) return api && api.say('Prenez la main pour centrer le signal (le TRX change de fréquence).', 'warn');
+    const st = api.state();
+    if (st && ((st.ptt && st.ptt.active) || st.ftx)) return api.say('Réglage bloqué pendant l’émission.', 'warn');
+    const d = rtDialOf(ch);
+    if (!d) return api.say('Fréquence du TRX pas encore lue.', 'warn');
+    const r = rts[ch];
+    const nd = Math.round((d.hz + d.sign * (r.f - 1500)) / 10) * 10;
+    const delta = d.sign * (nd - d.hz); // déplacement en Hz audio
+    if (!delta) return;
+    api.setFreq(nd, d.vfo);
+    r.f -= delta;
+    // Même porteuse pour l'autre décodeur (réception simple) : il reste calé sur son signal s'il est encore dans la cascade
+    const o = rts[1 - ch];
+    const od = rtDialOf(1 - ch);
+    if (od && od.vfo === d.vfo && o.f - delta >= 200 + o.shift / 2 && o.f - delta <= WF_MAX_HZ - 100 - o.shift / 2) o.f -= delta;
+    saveRtty(true);
+    drawScale();
+    api.say('Décodeur ' + (ch ? 'B' : 'A') + ' centré : VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz.', '', 4000);
   }
   // En-têtes des deux décodeurs : centre, fréquence du signal suivi, décodeur de l'émission
   function rtHeads() {
@@ -853,6 +923,9 @@
       $('rtF' + sfx).textContent = Math.round(x.f);
       $('rtRf' + sfx).textContent = d0 ? (((d0 + x.f) / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kHz') : '';
     });
+    // Porteuse changée (molette, bandes…) : échelles en kHz redessinées
+    const dk = JSON.stringify([rtDialOf(0), rtDialOf(1)]);
+    if (dk !== rtDialKey) { rtDialKey = dk; if (tab === 'rtty') { drawScale(); return; } }
     document.querySelectorAll('.rt-txsel').forEach((b) => {
       const on = Number(b.dataset.ch) === rtTx;
       b.setAttribute('aria-pressed', String(on));
@@ -927,6 +1000,7 @@
         if (CALL_RE.test(w)) setDx({ call: w });
       });
     });
+    document.querySelectorAll('.rt-center').forEach((b) => b.addEventListener('click', () => rtCenter(Number(b.dataset.ch) === 1 ? 1 : 0)));
     // Décodeur de l'émission : bouton TX de son en-tête
     document.querySelectorAll('.rt-txsel').forEach((b) => b.addEventListener('click', () => {
       rtTx = Number(b.dataset.ch) === 1 ? 1 : 0;

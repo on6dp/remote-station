@@ -260,7 +260,7 @@ Sous les écrans VFO.
 | `MAIN` / `SUB` | Côté actif du TRX (réception et émission ensemble), comme la touche de la face avant, sans émission. Prend 1 à 2 secondes. **FTX-1 : seulement en double réception (DUAL RX, un VFO en 144 / 430 MHz).** En réception simple, le dashboard refuse : le TRX est passé en émission (constaté au club les 24 et 25/10). Pour écouter la fréquence du VFO B en HF : `A ⇄ B`. Un administrateur peut l'autoriser pour des essais (`ftx1SubSingle`). | FTX-1 : écouter et émettre sur le VFO B. |
 | `SPLIT` | Émettre sur l'autre VFO que celui qu'on écoute. | Expéditions DX (section 7.5). |
 | `TXW` | **Maintenir** le bouton (ou la touche `W`) : on écoute la fréquence d'émission ; relâcher = retour sur le DX. Les VFO sont remis en place tout seuls (aussi après 15 s ou si la liaison se coupe). Le PTT est refusé tant que TXW est enfoncé. | En SPLIT, pour écouter le pile-up et trouver un trou. |
-| `DUAL RX` | FTX-1 : double réception (MAIN et SUB entendus ensemble) ou réception simple. Le FTX-1 refuse la double réception avec les deux VFO en HF / 50 MHz, même sur la même bande (essayé au club : 20 m + 15 m, puis 7,074 + 7,090 MHz) ; il faut qu'un des VFO soit en 144 / 430 MHz. Pour suivre deux stations d'une même bande HF : les deux décodeurs de l'onglet RTTY. | Surveiller deux fréquences. En modes numériques, coupez-le pour ne décoder que le côté actif. |
+| `DUAL RX` | FTX-1 : double réception (MAIN et SUB entendus ensemble) ou réception simple. Le FTX-1 refuse la double réception avec les deux VFO en HF / 50 MHz, même sur la même bande (essayé au club : 20 m + 15 m, puis 7,074 + 7,090 MHz) ; il faut qu'un des VFO soit en 144 / 430 MHz. Le bouton est alors grisé (explication au survol). Pour suivre deux stations d'une même bande HF : les deux décodeurs de l'onglet RTTY. | Surveiller deux fréquences. En modes numériques, coupez-le pour ne décoder que le côté actif. |
 | `A → B` / `B → A` | Recopie la fréquence et le mode d'un VFO sur l'autre. | Préparer un SPLIT. |
 | `A ⇄ B` | Échange les deux VFO. | Passer rapidement d'une fréquence à l'autre. |
 | `LOCK` | Verrouille les boutons de la **face avant du TRX au club**. Le dashboard reste utilisable. | Pour qu'une personne au club ne dérègle rien pendant votre trafic. |
@@ -538,6 +538,8 @@ Le RTTY est le « télétype » : on tape du texte qui défile chez le correspon
 | **Silencieux** | Plus haut = moins de caractères au hasard sur le bruit ; trop haut, les signaux faibles ne sont plus décodés. |
 | Indicateur M / S | Les deux barres doivent battre en alternance quand le décodeur est bien calé. |
 | Centre … Hz | Fréquence audio où le décodeur est calé. |
+| Échelle de la cascade | En **kHz**, fréquence réelle (porteuse du VFO + audio) ; le petit triangle blanc marque le **centre** de la cascade (1500 Hz audio). |
+| `⌖ Centrer` | Déplace le VFO pour que le signal suivi par ce décodeur tombe au milieu de la cascade : sa fréquence ne change pas, il est simplement centré dans la bande passante (il faut avoir la main). L'autre décodeur reste calé sur son signal s'il est encore dans la cascade. |
 | `TX` | Choisit le décodeur dont les réglages servent à l'émission (fréquence audio, shift, vitesse) : allumé en rouge, avec un cadre rouge autour du décodeur. |
 | `Effacer` | Vide le texte reçu de ce décodeur. |
 | Trait vertical entre les deux | À glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié). Réglage gardé dans votre navigateur. |

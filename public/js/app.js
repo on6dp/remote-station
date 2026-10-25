@@ -691,6 +691,14 @@
         if (c.type === 'toggle') btn.setAttribute('aria-pressed', String(!!v && avail));
         if (c.type === 'toggle' && !c.offOnly) btn.title = v && !avail ? c.label + ' : activé dans la radio, sans effet dans ce mode' : '';
         if (c.offOnly) btn.title = v ? 'Couper ' + c.label : c.label + ' ne peut pas être activé à distance';
+        // FTX-1 : pas de double réception avec les deux VFO en HF / 50 MHz (refusée par le TRX) : bouton grisé, explication au survol
+        if (c.id === 'dualRx' && RIG().ID === 'ftx1' && !v) {
+          const hf = r.freq && r.freqB && r.freq < 60e6 && r.freqB < 60e6;
+          if (hf) btn.disabled = true;
+          btn.title = hf ? 'DUAL RX impossible : le FTX-1 n’écoute qu’un VFO à la fois en HF / 50 MHz. Mettez l’un des VFO en 144 ou 430 MHz.'
+            : 'Double réception : MAIN et SUB écoutés ensemble';
+          cell.title = btn.title; // un bouton grisé n'affiche pas toujours son aide au survol
+        } else if (c.id === 'dualRx') cell.title = '';
         if (c.transmits) {
           const why = pttReason();
           btn.disabled = btn.disabled || !!why;

@@ -260,7 +260,7 @@ Below the VFO displays.
 | `MAIN` / `SUB` | Active side of the TRX (receive and transmit together), like the front-panel key, without transmitting. Takes 1 to 2 seconds. **FTX-1: only in dual receive (DUAL RX, one VFO on 144 / 430 MHz).** In single receive the dashboard refuses: the transceiver went into transmit (seen at the club on 24 and 25/10). To listen to the VFO B frequency on HF: `A ⇄ B`. An administrator can allow it for tests (`ftx1SubSingle`). | FTX-1: listen and transmit on VFO B. |
 | `SPLIT` | Transmit on the other VFO than the one being listened to. | DX expeditions (section 7.5). |
 | `TXW` | **Hold** the button (or the `W` key): you listen on the transmit frequency; release = back to the DX. The VFOs are put back automatically (also after 15 s or if the link drops). PTT is refused while TXW is held. | In SPLIT, to listen to the pile-up and find a gap. |
-| `DUAL RX` | FTX-1: dual receive (MAIN and SUB heard together) or single receive. The FTX-1 refuses dual receive with both VFOs on HF / 50 MHz, even on the same band (tried at the club: 20 m + 15 m, then 7.074 + 7.090 MHz); one VFO must be on 144 / 430 MHz. To follow two stations on the same HF band: the two decoders of the RTTY tab. | Monitoring two frequencies. In digital modes, switch it off so that only the active side is decoded. |
+| `DUAL RX` | FTX-1: dual receive (MAIN and SUB heard together) or single receive. The FTX-1 refuses dual receive with both VFOs on HF / 50 MHz, even on the same band (tried at the club: 20 m + 15 m, then 7.074 + 7.090 MHz); one VFO must be on 144 / 430 MHz. The button is then greyed out (explanation on hover). To follow two stations on the same HF band: the two decoders of the RTTY tab. | Monitoring two frequencies. In digital modes, switch it off so that only the active side is decoded. |
 | `A → B` / `B → A` | Copies the frequency and mode of one VFO to the other. | Preparing a SPLIT. |
 | `A ⇄ B` | Swaps the two VFOs. | Switching quickly between two frequencies. |
 | `LOCK` | Locks the **front-panel controls of the TRX at the club**. The dashboard remains usable. | So that someone at the club does not change anything during your operating. |
@@ -538,6 +538,8 @@ RTTY is radio "teletype": you type text that scrolls on the other station's scre
 | **Silencieux** (squelch) | Higher = fewer random characters on noise; too high and weak signals are no longer decoded. |
 | M / S indicator | The two bars should beat alternately when the decoder is tuned correctly. |
 | Centre … Hz | Audio frequency the decoder is tuned to. |
+| Waterfall scale | In **kHz**, real frequency (VFO dial + audio); the small white triangle marks the **centre** of the waterfall (1500 Hz audio). |
+| `⌖ Centrer` (centre) | Moves the VFO so that the signal followed by this decoder falls in the middle of the waterfall: its frequency does not change, it is simply centred in the passband (you need control). The other decoder stays on its signal if it is still in the waterfall. |
 | `TX` | Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): lit in red, with a red frame around that decoder. |
 | `Effacer` (clear) | Clears the received text of this decoder. |
 | Vertical bar between the two | Drag it left or right: width of the two decoders (double-click: half and half). Kept in your browser. |
