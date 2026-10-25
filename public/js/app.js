@@ -525,19 +525,12 @@
     if (RIG().ID === 'ftx1' && me && !me.subCat && (c.id === 'vfoSel' && v === 1 || (c.viaSub && Number(ctlValue('vfoSel')) !== 1) || (c.viaMain && Number(ctlValue('vfoSel')) === 1))) {
       return say('Passage MAIN ↔ SUB par le dashboard désactivé (il mettait le FTX-1 en émission) : choisissez MAIN / SUB sur la face avant du TRX ; le dashboard suit.', 'warn', 8000);
     }
-    // FTX-1 : double réception MAIN + SUB tous deux en HF / 50 MHz refusée par le TRX sur deux bandes différentes
-    // (constaté au club : 14 + 21 MHz refusé, 432 + 21 MHz accepté). Sur la même bande, la commande est envoyée :
-    // si le TRX ne la prend pas (relu « DUAL RX coupé »), on l'explique.
+    // FTX-1 : pas de double réception avec MAIN et SUB tous deux en HF / 50 MHz, même sur la même bande
+    // (constaté au club : 14 + 21 MHz refusé le 24/10, 7,074 + 7,090 MHz refusé le 25/10 ; 432 + 21 MHz accepté)
     if (c.id === 'dualRx' && v === 1 && RIG().ID === 'ftx1') {
       const r0 = (st && st.radio) || {};
-      const hf = r0.freq && r0.freqB && r0.freq < 60e6 && r0.freqB < 60e6;
-      if (hf && (bandName(r0.freq) || r0.freq) !== (bandName(r0.freqB) || r0.freqB)) {
-        return say('DUAL RX : le FTX-1 n’accepte pas la double réception avec les deux VFO sur deux bandes HF / 50 MHz différentes. Mettez les deux VFO sur la même bande, ou l’un des deux en 144 ou 430 MHz.', 'warn', 9000);
-      }
-      if (hf) {
-        setTimeout(() => {
-          if (Number(ctlValue('dualRx')) !== 1) say('DUAL RX : le FTX-1 n’a pas accepté la double réception avec les deux VFO en HF sur la même bande. Pour écouter deux stations de la même bande, utilisez les deux décodeurs de l’onglet RTTY (même bande passante) ou mettez l’un des VFO en 144 / 430 MHz.', 'warn', 12000);
-        }, 3000);
+      if (r0.freq && r0.freqB && r0.freq < 60e6 && r0.freqB < 60e6) {
+        return say('DUAL RX : le FTX-1 n’accepte pas la double réception avec les deux VFO en HF / 50 MHz, même sur la même bande. Pour écouter deux stations de la même bande : les deux décodeurs de l’onglet RTTY (même bande passante) ; sinon, mettez l’un des VFO en 144 ou 430 MHz.', 'warn', 12000);
       }
     }
     if (c.id === 'vfoSel' && v != null) target = v ? 'B' : 'A'; // MAIN / SUB : les cadres suivent ce VFO
