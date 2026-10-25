@@ -398,6 +398,8 @@ function onDigi(m) {
         return sent.indexOf(norm(d && d.msg)) < 0 && mine.indexOf(w[1]) < 0 && !(w[0] === 'CQ' && (mine.indexOf(w[1]) >= 0 || mine.indexOf(w[2]) >= 0));
       });
     }
+    // Pays DXCC, distance et azimut de la station qui émet chaque message (comme JTDX)
+    if (Array.isArray(m.list) && m.mode !== 'WSPR' && m.mode !== 'JT65') for (const d of m.list) dxInfo(d);
     const item = { slot: m.slot, list: m.list };
     const h = digi.hist[m.mode];
     if (!h) return;
@@ -535,8 +537,33 @@ function sendWorked(force, only) {
   if (only) return send(only, msg);
   for (const c of ops) send(c, msg);
 }
+const DXCC = require('./lib/dxcc.js');
+const DX_CALL_RE = /^(?=.*\d)(?=.*[A-Z])[A-Z0-9/]{3,15}$/;
+/** Ajoute à un décodage FT8 / FT4 / FT2 : cty (pays DXCC), km et az (depuis le locator de la station) ; kmc = d'après le pays seulement */
+function dxInfo(d) {
+  if (!d || !d.msg) return;
+  const w = String(d.msg).toUpperCase().split(/\s+/).map((x) => x.replace(/^<|>$/g, ''));
+  const call = w[0] === 'CQ' ? (DX_CALL_RE.test(w[1] || '') ? w[1] : w[2]) : w[1];
+  if (!call || !DX_CALL_RE.test(call)) return;
+  const e = DXCC.lookup(call);
+  if (!e) return;
+  d.cty = e.name;
+  const me = DXCC.gridLL(String(cfg.stationGrid || '').slice(0, 6));
+  if (!me) return;
+  const last = w[w.length - 1];
+  const g = /^[A-R]{2}\d{2}$/.test(last) && last !== 'RR73' ? DXCC.gridLL(last) : null;
+  const r = DXCC.distAz(me, g || { lat: e.lat, lon: e.lon });
+  d.km = r.km;
+  d.az = r.az;
+  if (!g) d.kmc = true;
+}
 function logCanEdit(conn, q) { return conn.user.admin || (q && q.by === conn.user.call); }
-function qsoForClient(q) { return Object.assign({}, q); }
+// Pays DXCC du correspondant : enregistré avec le QSO (champ ADIF COUNTRY), ou calculé pour les anciens QSO
+function qsoForClient(q) {
+  const o = Object.assign({}, q);
+  if (!o.country) { const e = DXCC.lookup(o.call); if (e) o.country = e.name; }
+  return o;
+}
 
 // Messages entre membres (mémoire seulement, perdus au redémarrage) : discussion, demandes de main, passages de main
 const chatLog = [];
@@ -990,6 +1017,9 @@ const FTX_T0 = 500; // début du signal après le début de la période (ms), co
 // le correspondant décode encore (DT jusqu'à +2,5 s en FT8)
 const FTX_LATE = { FT8: 2300, FT4: 800, FT2: 250 };
 const FTX_KEY_LEAD = 400; // passage en émission avant le début du signal (ms)
+// Réponse par clic sur un indicatif : PTT dès que la page Station a préparé le signal (au clic), si le départ du
+// signal est assez proche ; le signal part quand même au début de la période (sinon le correspondant ne le décode pas)
+const FTX_KEYNOW_MAX = { FT8: 8000, FT4: 4000, FT2: 2000 };
 const FTX_END = 'fin du message';
 const FTX_SWITCH = 'message suivant'; // émission coupée pour repartir aussitôt avec le message suivant de la séquence
 let ftxPend = null; // { id, conn, mode, text, f0, at, state: 'wait' | 'tx', ready, seconds, sent, timer }
@@ -1041,7 +1071,8 @@ function ftxRequest(conn, m) {
   const slot = ftxSlot(mode, m.parity === 0 || m.parity === 1 ? m.parity : null, now);
   if (!slot) return err('Aucun créneau trouvé');
   if (ftxPend) ftxCancel('remplacée par le nouveau message', true);
-  const p = { id: ++ftxSeq, conn, mode, text, f0, at: slot.at, parity: slot.parity, state: 'wait', ready: false, seconds: 0, sent: null, timer: null, ntx: m.ntx || 0 };
+  const p = { id: ++ftxSeq, conn, mode, text, f0, at: slot.at, parity: slot.parity, state: 'wait', ready: false, seconds: 0, sent: null, timer: null, ntx: m.ntx || 0,
+    keyNow: !!m.keyNow && slot.at - now <= FTX_KEYNOW_MAX[mode] };
   ftxPend = p;
   toStation({ t: 'cmd', op: 'ftxprep', id: p.id, mode, text, f0 });
   p.timer = setTimeout(() => ftxKey(p), Math.max(0, p.at - FTX_KEY_LEAD - now));
@@ -1111,7 +1142,8 @@ function seqNext() {
   else if (now - seq.watchSince > cfg.ftxWatchdogMinutes * 60000) {
     return seqOff('même message depuis ' + cfg.ftxWatchdogMinutes + ' min sans réponse (chien de garde, comme WSJT-X)');
   }
-  const err = ftxRequest(seq.conn, { mode: seq.mode, text, f0: seq.f0, parity: seq.parity, ntx: seq.ntx });
+  const err = ftxRequest(seq.conn, { mode: seq.mode, text, f0: seq.f0, parity: seq.parity, ntx: seq.ntx, keyNow: seq.keyNow });
+  seq.keyNow = false; // seulement pour la première émission après le clic
   if (err) seqOff(err, 'error');
 }
 /** Message changé par une réponse : l'émission prévue (pas encore partie) est remplacée. */
@@ -1181,7 +1213,11 @@ function seqOnDecodes(mode, slot, list) {
       if (w.length < 2 || baseCall(w[1]) !== dxBase) continue;
       if (baseCall(w[0]) === me) {
         seq.parity = 1 - theirParity;
+        if (d.f >= 100 && d.f <= 3000) seq.rxf = Math.round(d.f);
         if (seqReact(w[2], d)) return seqQsoDone('73 reçu');
+        // RR73 / RRR reçu : la fiche de fin de QSO s'ouvre tout de suite (le 73 part quand même)
+        const pl = String(w[2] || '');
+        if ((pl === 'RR73' || pl === 'RRR') && seq.qsoStart) seqLogPrompt(seq, pl + ' reçu');
         return seqChanged();
       }
       // On l'appelait (Tx1) et il répond à quelqu'un d'autre sur notre fréquence → arrêt (WSJT-X)
@@ -1201,6 +1237,7 @@ function seqOnDecodes(mode, slot, list) {
     }
     if (best) {
       seq.dx = { call: best.w[1], grid: '' };
+      if (best.d.f >= 100 && best.d.f <= 3000) seq.rxf = Math.round(best.d.f);
       seq.rptSent = fmtRpt(best.d.db);
       seq.rptRcvd = '';
       seq.qsoStart = 0;
@@ -1212,6 +1249,20 @@ function seqOnDecodes(mode, slot, list) {
     }
   }
 }
+/** Proposition d'enregistrement du QSO dans le carnet (une seule fois par QSO). */
+function seqLogPrompt(s, why) {
+  const call = s.dx.call;
+  if (!SEQ_CALL_RE.test(baseCall(call)) || !s.qsoStart || s.prompted === s.qsoStart) return;
+  s.prompted = s.qsoStart;
+  const start = new Date(s.qsoStart);
+  const end = new Date();
+  const d8 = (x) => x.toISOString().slice(0, 10).replace(/-/g, '');
+  const t6 = (x) => x.toISOString().slice(11, 19).replace(/:/g, '');
+  const dial = s.txDial || txFreq() || 0;
+  send(s.conn, { t: 'ftx_qso', why, qso: { call, gridsquare: s.dx.grid || '', mode: s.mode, station: seqMe(),
+    freq: ((dial + s.f0) / 1e6).toFixed(6), rst_sent: s.rptSent || '', rst_rcvd: s.rptRcvd || '',
+    qso_date: d8(start), time_on: t6(start), qso_date_off: d8(end), time_off: t6(end), tx_pwr: radio.power || '' } });
+}
 /** Fin du QSO : émission auto coupée, retour sur CQ, proposition d'enregistrement dans le carnet. */
 function seqQsoDone(why) {
   const s = seq;
@@ -1220,16 +1271,7 @@ function seqQsoDone(why) {
   if (ftxPend && ftxPend.state === 'wait' && ftxPend.conn === s.conn) ftxCancel('QSO terminé', true);
   s.on = false;
   seqSetNtx(6);
-  if (SEQ_CALL_RE.test(baseCall(call)) && s.qsoStart) {
-    const start = new Date(s.qsoStart);
-    const end = new Date();
-    const d8 = (x) => x.toISOString().slice(0, 10).replace(/-/g, '');
-    const t6 = (x) => x.toISOString().slice(11, 19).replace(/:/g, '');
-    const dial = s.txDial || txFreq() || 0;
-    send(s.conn, { t: 'ftx_qso', why, qso: { call, gridsquare: s.dx.grid || '', mode: s.mode, station: seqMe(),
-      freq: ((dial + s.f0) / 1e6).toFixed(6), rst_sent: s.rptSent || '', rst_rcvd: s.rptRcvd || '',
-      qso_date: d8(start), time_on: t6(start), qso_date_off: d8(end), time_off: t6(end), tx_pwr: radio.power || '' } });
-  }
+  if (s.prompted !== s.qsoStart) seqLogPrompt(s, why);
   s.qsoStart = 0;
   s.rptRcvd = '';
   updateDigi();
@@ -1271,7 +1313,9 @@ function seqStart(conn, m) {
     dx: { call, grid: GRID4_RE.test(grid) ? grid : '' },
     rptSent: RPT_RE.test(String(m.rpt || '')) ? String(m.rpt) : fmtRpt(m.rpt),
     rptRcvd: same ? seq.rptRcvd : '', free, call1st: m.call1st !== false,
-    watchMsg: '', watchSince: 0, qsoStart: same ? seq.qsoStart : 0, txDial: 0
+    watchMsg: '', watchSince: 0, qsoStart: same ? seq.qsoStart : 0, txDial: 0, keyNow: !!m.keyNow,
+    // Fréquence audio du correspondant (fréquence RX) : l'aide AP du décodeur pour ce QSO s'y applique (comme WSJT-X)
+    rxf: Number(m.rxf) >= 100 && Number(m.rxf) <= 3000 ? Math.round(Number(m.rxf)) : (same && seq.rxf) || 0
   };
   lastCtrlActivity = Date.now();
   // Émission en cours (message précédent) : le nouveau message part à la période suivante
@@ -1651,12 +1695,14 @@ function onOperator(conn, m) {
         if (!old) return send(conn, { t: 'notice', level: 'error', msg: 'QSO introuvable' });
         if (!logCanEdit(conn, old)) return send(conn, { t: 'notice', level: 'error', msg: 'Seul l’auteur du QSO ou un administrateur peut le modifier' });
         q.operator = old.operator;
+        if (!q.country) { const e = DXCC.lookup(q.call); if (e) q.country = e.name; }
         q = book.update(m.id, q);
         journal('log_edit', { call: conn.user.call, qso: q.call });
         send(conn, { t: 'log_saved', qso: qsoForClient(q), edited: true });
       } else {
         const d = !m.force && book.dupe(q);
         if (d) return send(conn, { t: 'log_dupe', qso: m.qso, prev: qsoForClient(d) });
+        if (!q.country) { const e = DXCC.lookup(q.call); if (e) q.country = e.name; }
         q = book.add(q, conn.user.call);
         if (book.error) send(conn, { t: 'notice', level: 'error', msg: 'ATTENTION : carnet non écrit sur le disque du serveur (' + book.error + ')' });
         journal('log_add', { call: conn.user.call, qso: q.call, band: q.band, mode: q.mode });
@@ -2057,6 +2103,8 @@ function onStation(conn, m) {
     }
     p.seconds = Number(m.seconds) || 0;
     p.sent = String(m.text || p.text).slice(0, 40);
+    // Réponse cliquée : le TRX passe en émission tout de suite (le signal part à l'heure prévue)
+    if (p.keyNow && p.state === 'wait' && !ptt.active && p.at - Date.now() > FTX_KEY_LEAD) { clearTimeout(p.timer); ftxKey(p); return; }
     return broadcast();
   }
   if (m.t === 'ftx_done') {
@@ -2137,7 +2185,7 @@ function onStation(conn, m) {
   if (digi.worker) {
     const on = !!(seq && seq.on);
     const ap = { t: 'ap', mycall: txCall(), mygrid: String(cfg.stationGrid || ''), hiscall: on ? seq.dx.call : '', hisgrid: on ? seq.dx.grid : '',
-      qp: on ? seq.progress || 0 : 0, rx: seq ? seq.f0 : 1500, tx: seq ? seq.f0 : 1500 };
+      qp: on ? seq.progress || 0 : 0, rx: seq ? seq.rxf || seq.f0 : 1500, tx: seq ? seq.f0 : 1500 };
     const k = JSON.stringify(ap);
     if (k !== digi.apKey) { digi.apKey = k; digi.worker.postMessage(ap); }
   }

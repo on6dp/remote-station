@@ -138,12 +138,13 @@
     <div class="dg-cols">
       <div class="dg-col">
         <div class="dg-h"><span>Activité de bande</span><button class="dg-mini" type="button" id="dgClear">Effacer</button></div>
-        <div class="dg-th"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span></div>
+        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span>Pays</span><span>km</span><span>Az</span></div>
         <div class="dg-list" id="dgBand"></div>
       </div>
+      <i class="dg-vsplit" id="dgSplit" title="Glisser à gauche ou à droite : largeur des deux listes (double-clic : moitié-moitié)"></i>
       <div class="dg-col">
         <div class="dg-h"><span>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span></div>
-        <div class="dg-th"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span></div>
+        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span>Pays</span><span>km</span><span>Az</span></div>
         <div class="dg-list" id="dgRx"></div>
       </div>
     </div>
@@ -214,6 +215,7 @@
         <div class="jt-th"><span>UTC</span><span>dB</span><span>Fréq</span><span>Message</span></div>
         <div class="dg-list" id="jtBand"></div>
       </div>
+      <i class="dg-vsplit" title="Glisser à gauche ou à droite : largeur des deux listes (double-clic : moitié-moitié)"></i>
       <div class="dg-col">
         <div class="dg-h"><span>Fréquence RX <b id="jtRxF2">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span></div>
         <div class="dg-list jt-chat" id="jtRx"></div>
@@ -395,6 +397,10 @@
   function showTab(t) {
     if (!document.querySelector('#centerPanel .ctab[data-tab="' + t + '"]')) t = POPUP ? 'ftx' : 'events';
     tab = t;
+    // Ligne Correspondant : reports en dB (FT8 / FT4 / FT2, WSPR, JT65) ou RST 599 (RTTY, CW, SSTV, JTTY)
+    const mb = document.getElementById('msgs');
+    if (mb && ['ftx', 'wspr', 'jt65'].indexOf(t) >= 0) mb.dataset.rk = 'db';
+    else if (mb && ['rtty', 'cw', 'sstv', 'jtty'].indexOf(t) >= 0) mb.dataset.rk = 'rst';
     store.set(POPUP ? 'ptab' : 'tab', t);
     // JT65 utilise la même fenêtre que FT8 / FT4 (cascade, activité de bande, fréquence RX, split)
     let pane = detached && MODE_TABS.indexOf(t) >= 0 ? 'away' : t === 'jt65' ? 'ftx' : t;
@@ -1552,7 +1558,7 @@
   let myGrid = '';
   let myQth = '';
   let opCall = '';
-  const loadDx = () => { try { return Object.assign({ call: '', grid: '', rpt: '-10', name: '', qth: '', rst: '599' }, JSON.parse(store.get('dx', '{}')) || {}); } catch (e) { return { call: '', grid: '', rpt: '-10', name: '', qth: '', rst: '599' }; } };
+  const loadDx = () => { try { return Object.assign({ call: '', grid: '', rpt: '-10', rptRx: '', name: '', qth: '', rst: '599', rstRx: '599' }, JSON.parse(store.get('dx', '{}')) || {}); } catch (e) { return { call: '', grid: '', rpt: '-10', rptRx: '', name: '', qth: '', rst: '599', rstRx: '599' }; } };
   let dx = loadDx();
   let ftxSel = Number(store.get('ftxsel', '5')) || 0;
   const CALL_RE = /^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}[A-Z](\/[A-Z0-9]+)?$/;
@@ -1562,6 +1568,8 @@
     const before = loadDx();
     // Nouveau correspondant : son prénom et son QTH repartent à vide
     if (o.call != null && String(o.call).toUpperCase() !== String(before.call).toUpperCase() && o.name == null) { before.name = ''; before.qth = ''; }
+    // Nouveau correspondant : reports reçus remis à zéro
+    if (o.call != null && String(o.call).toUpperCase() !== String(before.call).toUpperCase()) { if (o.rptRx == null) before.rptRx = ''; if (o.rstRx == null) before.rstRx = '599'; }
     const newCall = o.call != null && String(o.call).trim() && String(o.call).toUpperCase() !== String(before.call || '').toUpperCase();
     dx = Object.assign(before, o);
     dx.call = String(dx.call || '').toUpperCase().slice(0, 12);
@@ -1605,6 +1613,8 @@
     put('dxName', dx.name || '');
     put('dxQth', dx.qth || '');
     put('dxRst', dx.rst || '599');
+    put('dxRptRx', dx.rptRx || '');
+    put('dxRstRx', dx.rstRx || '599');
     drawMsgs();
   }
   window.addEventListener('storage', (e) => { if (e.key === 'rs.dg.dx') { dx = loadDx(); syncDx(); } });
@@ -1634,7 +1644,7 @@
     if (api && api.iControl() && FT_MODES.indexOf(mode) >= 0) {
       const t = ftxMsgs()[ftxSel];
       if (t) {
-        ftxSend(ftxSel, t);
+        ftxSend(ftxSel, t, true); // PTT au clic (le signal part au début de la période)
         // Retour immédiat : quand part la réponse
         setTimeout(() => {
           const x = api.state() && api.state().ftx;
@@ -1645,7 +1655,7 @@
           // plus de 2,3 s (FT8) / 0,8 s (FT4) après le début de la période → départ à sa période suivante
           const P = SLOT_MS[x.mode] || 15000;
           const late = slot && x.at - slot > 2 * P;
-          api.say(x.state === 'tx' ? 'Réponse à ' + call + ' : en émission (Tx' + (ftxSel + 1) + ').'
+          api.say(x.state === 'tx' ? 'Réponse à ' + call + ' : TRX en émission (Tx' + (ftxSel + 1) + (s > 0 ? ', le signal part dans ' + s + ' s, au début de la période' : '') + ').'
             : 'Réponse à ' + call + ' : Tx' + (ftxSel + 1) + ' part dans ' + s + ' s (' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' UTC' +
               (late ? ') — trop tard pour la période qui suivait son message (un départ plus tardif ne serait plus décodé) : cliquez dès l’affichage du décodage.' : ', période de ' + call + ' + 1).'), late ? 'warn' : '', late ? 12000 : 8000);
         }, 700);
@@ -1685,7 +1695,7 @@
   }
   // ------------------------------------------------------------------ émission FT8 / FT4 / FT2
   // Clic sur Tx1…Tx7 : le serveur choisit le créneau, la page Station du club fabrique et joue le signal
-  function ftxSend(i, text) {
+  function ftxSend(i, text, keyNow) {
     ftxSel = i;
     store.set('ftxsel', i);
     drawMsgs();
@@ -1693,7 +1703,7 @@
     if (/[{}]/.test(text)) return api.say('Message incomplet : choisissez d’abord le correspondant (double-clic sur son message) ou réglez votre locator.', 'warn');
     const m = FT_MODES.indexOf(mode) >= 0 ? mode : ftStored();
     api.send({ t: 'ftx_tx', mode: m, ntx: i + 1, f0: curTxF(), parity: txParity(i), dx: { call: dx.call, grid: dx.grid }, rpt: dx.rpt,
-      free: String(store.get('ftxfree', '')), call1st: store.get('call1st', '1') === '1' });
+      free: String(store.get('ftxfree', '')), call1st: store.get('call1st', '1') === '1', keyNow: !!keyNow, rxf: rxF });
   }
   const curTxF = () => Math.round(Number(store.get('txf', String(txF))) || txF);
   // Période d'émission : imposée, ou (auto) l'autre que celle du correspondant choisi par double-clic
@@ -2012,7 +2022,7 @@
     ta.focus();
   }
   function initMsgs() {
-    for (const [id, k] of [['dxCall', 'call'], ['dxGrid', 'grid'], ['dxRpt', 'rpt'], ['rtCall', 'call'], ['dxName', 'name'], ['dxQth', 'qth'], ['dxRst', 'rst']]) {
+    for (const [id, k] of [['dxCall', 'call'], ['dxGrid', 'grid'], ['dxRpt', 'rpt'], ['rtCall', 'call'], ['dxName', 'name'], ['dxQth', 'qth'], ['dxRst', 'rst'], ['dxRptRx', 'rptRx'], ['dxRstRx', 'rstRx']]) {
       const el = $(id);
       if (el) el.addEventListener('input', () => setDx({ [k]: el.value.trim() }));
     }
@@ -2054,7 +2064,7 @@
       '<label>Fréquence MHz <input name="freq" inputmode="decimal" value="' + (hz ? (hz / 1e6).toFixed(6) : '') + '"></label>' +
       '<label>Mode <select name="mode">' + MODES.concat(MODES.indexOf(m) < 0 ? [m] : []).map((x) => '<option' + (x === m ? ' selected' : '') + '>' + x + '</option>').join('') + '</select></label>' +
       '<label>RST envoyé <input name="rst_sent" maxlength="8" value="' + esc(digiRpt ? dx.rpt || '-10' : dx.rst || '599') + '"></label>' +
-      '<label>RST reçu <input name="rst_rcvd" maxlength="8" value="' + (digiRpt ? '' : '599') + '"></label>' +
+      '<label>RST reçu <input name="rst_rcvd" maxlength="8" value="' + esc(digiRpt ? dx.rptRx || '' : dx.rstRx || '599') + '"></label>' +
       '<label>Nom <input name="name" maxlength="40" value="' + esc(dx.name) + '"></label>' +
       '<label>QTH <input name="qth" maxlength="60" value="' + esc(dx.qth) + '"></label>' +
       '<label>Locator <input name="grid" maxlength="8" value="' + esc(dx.grid) + '"></label>' +
@@ -2069,7 +2079,7 @@
       const d = ['FT8', 'FT4', 'FT2', 'JT65'].indexOf(f.mode.value) >= 0;
       const ph = ['USB', 'LSB', 'FM', 'AM'].indexOf(f.mode.value) >= 0;
       f.rst_sent.value = d ? dx.rpt || '-10' : ph ? '59' : dx.rst || '599';
-      f.rst_rcvd.value = d ? '' : ph ? '59' : '599';
+      f.rst_rcvd.value = d ? dx.rptRx || '' : ph ? '59' : dx.rstRx || '599';
     });
     dlg.querySelector('[data-a="save"]').addEventListener('click', () => {
       const call = f.call.value.trim().toUpperCase();
@@ -2140,11 +2150,12 @@
     const r = document.createElement('div');
     const k = d.tx ? 'tx' : cls(d.msg);
     const wk = !d.tx && k !== 'me' && isWorked(d.msg);
-    r.className = 'dg-row ' + k + (wk ? ' wkd' : '');
+    r.className = 'dg-row ft ' + k + (wk ? ' wkd' : '');
     r.title = d.tx ? 'Message émis' : (wk ? 'Déjà contacté sous ' + workedStation + ' sur cette bande dans ce mode · ' : '') + d.f + ' Hz · clic sur l’indicatif (souligné) ou double-clic : répondre à cette station (émission à la période suivante) · clic ailleurs : réception ici · clic droit : émission ici';
     const cells = d.tx ? [utc(slot), 'TX', '', d.f, d.msg] : [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
     cells.forEach((v, i) => {
       const s = document.createElement('span');
+      if (i === 4) s.className = 'msg';
       const who = !d.tx && i === 4 ? senderOf(d.msg) : '';
       if (!who) s.textContent = String(v);
       else {
@@ -2162,13 +2173,18 @@
       r.appendChild(s);
     });
     // Décodage aidé « a priori » (AP) : repère « a1 »… après le message, comme WSJT-X
-    if (!d.tx && d.ap > 0 && r.lastChild) {
+    if (!d.tx && d.ap > 0 && r.querySelector('span.msg')) {
       const a = document.createElement('i');
       a.className = 'dg-ap';
       a.textContent = ' a' + d.ap;
       a.title = 'Décodé avec l’aide a priori (AP) de WSJT-X : le décodeur a supposé une partie du message (CQ, notre indicatif, celui du correspondant…). Fiable, mais à confirmer si le signal est très faible.';
-      r.lastChild.appendChild(a);
+      r.querySelector('span.msg').appendChild(a);
     }
+    // Pays DXCC, distance et azimut de la station qui émet (calculés par le serveur depuis le locator du club)
+    const ex = [[d.tx ? '' : d.cty || '', 'x cty', d.cty ? d.cty : ''],
+      [d.tx || d.km == null ? '' : (d.kmc ? '≈' : '') + d.km, 'x', d.km == null ? '' : (d.kmc ? 'Distance approximative (centre du pays : pas de locator dans le message)' : 'Distance depuis le locator du club')],
+      [d.tx || d.az == null ? '' : d.az + '°', 'x', d.az == null ? '' : 'Azimut (direction de l’antenne) depuis le club']];
+    for (const [t, c, ti] of ex) { const e = document.createElement('span'); e.className = c; e.textContent = t; if (ti) e.title = ti; r.appendChild(e); }
     r.addEventListener('click', () => setRx(d.f));
     r.addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(d.f); });
     r.addEventListener('dblclick', () => { if (!d.tx) pickFromDecode(d, slot); });
@@ -2187,24 +2203,37 @@
     while (el.children.length > 400) el.removeChild(el.firstChild);
     if (atEnd) el.scrollTop = el.scrollHeight;
   }
+  // Ordre chronologique : les décodages de la passe profonde (quelques secondes après la fin de la période) et
+  // nos émissions sont rangés à leur place (période, puis émission avant les décodages de cette période)
+  const slotKey = (item, rank) => {
+    const P = SLOT_MS[item.mode] || 15000;
+    return Math.floor((item.slot + (item.tx ? 600 : 0)) / P) * P * 10 + rank;
+  };
+  function insertSorted(list, el, key) {
+    el.dataset.k = String(key);
+    let ref = null;
+    for (let c = list.lastElementChild; c && Number(c.dataset.k || 0) > key; c = c.previousElementSibling) ref = c;
+    list.insertBefore(el, ref);
+  }
   function addSlot(item, quiet) {
     const band = $('dgBand');
     stickToBottom(band, () => {
-      // Une seule ligne de séparation par période (décodage anticipé puis complet)
-      if (item.list.length && !item.tx && band.dataset.sep !== item.mode + item.slot) { band.appendChild(sepEl(item.slot, item.mode)); band.dataset.sep = item.mode + item.slot; }
-      for (const d of item.list) band.appendChild(rowEl(item.slot, d));
+      // Une seule ligne de séparation par période (passes anticipée, normale et profonde)
+      const sk = slotKey(item, 1);
+      if (item.list.length && !item.tx && !band.querySelector('.dg-sep[data-k="' + sk + '"]')) insertSorted(band, sepEl(item.slot, item.mode), sk);
+      for (const d of item.list) insertSorted(band, rowEl(item.slot, d), slotKey(item, item.tx ? 0 : 2));
     });
     const mine = item.list.filter(inRx);
     if (mine.length) {
       const rx = $('dgRx');
-      stickToBottom(rx, () => { for (const d of mine) rx.appendChild(rowEl(item.slot, d)); });
+      stickToBottom(rx, () => { for (const d of mine) insertSorted(rx, rowEl(item.slot, d), slotKey(item, item.tx ? 0 : 2)); });
     }
   }
   function inRx(d) { return d.tx || Math.abs(d.f - rxF) <= RX_WIDTH || cls(d.msg) === 'me'; }
   function redrawRx() {
     const rx = $('dgRx');
     rx.textContent = '';
-    for (const it of hist) if (it.mode === mode) for (const d of it.list) if (inRx(d)) rx.appendChild(rowEl(it.slot, d));
+    for (const it of hist) if (it.mode === mode) for (const d of it.list) if (inRx(d)) insertSorted(rx, rowEl(it.slot, d), slotKey(it, it.tx ? 0 : 2));
     rx.scrollTop = rx.scrollHeight;
   }
   function redrawAll() {
@@ -2422,6 +2451,31 @@
         grip.addEventListener('pointercancel', up);
       });
       grip.addEventListener('dblclick', () => { $('dgWf').style.height = ''; const root = $('dgWf').closest('.dg') || document.documentElement; root.style.removeProperty('--dg-list-max'); store.set('wfh', '0'); if (wf.ctx) sizeCanvas(); });
+      // Séparateurs entre les deux listes (FT8 / FT4 / FT2 et JTTY) : largeur réglable, gardée dans ce navigateur
+      const splits = Array.from($('dgSplit').ownerDocument.querySelectorAll('.dg-vsplit'));
+      const setSplit = (pct, save) => {
+        for (const sp of splits) {
+          const cols = sp.parentElement;
+          if (pct == null) cols.style.removeProperty('--dg-left');
+          else cols.style.setProperty('--dg-left', Math.max(20, Math.min(80, pct)).toFixed(1) + '%');
+        }
+        if (save) store.set('dgsplit', pct == null ? '' : Math.max(20, Math.min(80, pct)).toFixed(1));
+      };
+      if (Number(store.get('dgsplit', '')) > 0) setSplit(Number(store.get('dgsplit', '')), false);
+      for (const sp of splits) {
+        const cols = sp.parentElement;
+        sp.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          sp.setPointerCapture(e.pointerId);
+          const at = (ev) => { const r = cols.getBoundingClientRect(); return ((ev.clientX - r.left) / r.width) * 100; };
+          const mv = (ev) => setSplit(at(ev), false);
+          const up = (ev) => { sp.removeEventListener('pointermove', mv); sp.removeEventListener('pointerup', up); sp.removeEventListener('pointercancel', up); setSplit(at(ev), true); };
+          sp.addEventListener('pointermove', mv);
+          sp.addEventListener('pointerup', up);
+          sp.addEventListener('pointercancel', up);
+        });
+        sp.addEventListener('dblclick', () => setSplit(null, true));
+      }
       // Split : clic gauche = fréquence de réception, clic droit = fréquence d'émission
       const fAt = (e) => { const r = e.currentTarget.getBoundingClientRect(); return ((e.clientX - r.left) / r.width) * WF_MAX_HZ; };
       for (const id of ['dgWf', 'dgScale']) {
@@ -2562,6 +2616,9 @@
     onState() {
       // « TX call » : indicatif des émissions numériques (station ou celui qui a la main)
       const stx = api && api.state();
+      // Report reçu du correspondant pendant la séquence FT8 / FT4 / FT2 → « RST RX »
+      const sqr = stx && stx.seq;
+      if (sqr && sqr.rptRcvd && sqr.dx && String(sqr.dx).toUpperCase() === String(dx.call || '').toUpperCase() && sqr.rptRcvd !== dx.rptRx) setDx({ rptRx: sqr.rptRcvd });
       const tc = stx && stx.txCall ? String(stx.txCall).toUpperCase() : '';
       if (tc && tc !== myCall) {
         myCall = tc;

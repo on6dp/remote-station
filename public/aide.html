@@ -200,7 +200,8 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
   <tr><td>Onglets <span class="k">ACTIVITÉ</span> … <span class="k">SSTV</span>, <span class="k">SYNCHRO</span>, <span class="k">LOGS</span></td><td>Journal de la station, modes numériques (section 9), horloges, carnet de trafic (section 14).</td></tr>
   <tr><td><span class="k">👁 Suivre</span></td><td>Votre dashboard suit l'onglet de celui qui a la main (section 3).</td></tr>
   <tr><td><span class="k">⧉</span></td><td>Ouvre les modes numériques dans une fenêtre séparée.</td></tr>
-  <tr><td>Ligne <b>CORRESPONDANT</b>, NOM, QTH, LOCATOR, REPORT, RST, <span class="k">LOG QSO</span></td><td>La station contactée et ses reports ; LOG QSO l'enregistre dans le carnet (section 10).</td></tr>
+  <tr><td>Ligne <b>CORRESPONDANT</b>, NOM, QTH, LOCATOR, RST TX, RST RX, <span class="k">LOG QSO</span></td><td>La station contactée et ses reports : <b>RST TX</b> = report envoyé par la station du club, <b>RST RX</b> = report reçu du correspondant.
+    En FT8 / FT4 / FT2, WSPR et JT65 ce sont des dB (RST RX se remplit tout seul pendant la séquence) ; en RTTY, CW, SSTV et JTTY, des RST 599. LOG QSO l'enregistre dans le carnet (section 10).</td></tr>
   <tr><td><b>TX CALL</b> <span class="k">ON5VL (station)</span> / <span class="k">votre indicatif</span></td><td>Indicatif des émissions numériques (FT8 / FT4 / FT2, RTTY, JTTY) : celui de la station ou le vôtre ; choisi par celui qui a la main et retenu pour la prochaine fois. Les messages Tx1 à Tx6, les macros <code>&lt;MYCALL&gt;</code> et le carnet (Station) suivent. Un QSO enregistré sous votre indicatif reste dans le carnet du club mais n'est pas envoyé automatiquement vers LoTW, eQSL, Club Log ou QRZ du club (export ADIF pour votre carnet).</td></tr>
 </table>
 
@@ -288,11 +289,15 @@ Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés).
   <li><b>Aide a priori (AP)</b>, comme WSJT-X / JTDX : le décodeur sait sous quel indicatif on émet (TX CALL) et, pendant un QSO, qui est le correspondant et où en est la séquence ;
     il cherche alors les messages attendus jusqu'à 2 à 3 dB plus bas. Ces décodages portent la marque <b>a1</b>…<b>a7</b> après le message.
     La base d'indicatifs de JTDX (~100 000 indicatifs) écarte les faux décodages très faibles.</li>
+  <li><b>Pays, km, Az</b> : pour la station qui émet chaque message, le pays DXCC (fichier cty.dat d'AD1C, comme WSJT-X / JTDX), la distance depuis le locator du club et l'azimut (direction de l'antenne).
+    La distance vient du locator du message ; sans locator, elle est approximative (centre du pays, marquée « ≈ »).</li>
+  <li><b>Largeur des deux listes</b> : glisser le trait vertical entre « Activité de bande » et « Fréquence RX » (double-clic : moitié-moitié) ; réglage gardé dans votre navigateur.</li>
   <li><b>Stations déjà contactées</b> : les messages d'une station déjà au carnet <b>sous le TX CALL actuel</b>, sur la même bande et dans le même mode, sont en <span class="grn">vert barré</span>
     (comme « worked before » de WSJT-X / JTDX). Avec un autre TX CALL (ex. votre indicatif personnel), seuls les QSO faits sous cet indicatif comptent.</li>
   <li><b>Quand part la réponse</b> : en FT8, une émission doit commencer au début d'une période (au plus 2,3 s de retard, sinon le correspondant ne la décode plus ; FT4 : 0,8 s).
     Le décodage anticipé arrive vers 12,7 s : un clic avant la fin de la période du correspondant (ou dans les 2 premières secondes de la suivante) fait partir la réponse aussitôt.
-    Un clic plus tardif la fait partir à la période suivante du même côté (30 s plus tard en FT8) ; le message en bas de page le signale.</li>
+    Un clic plus tardif la fait partir à la période suivante du même côté (30 s plus tard en FT8) ; le message en bas de page le signale.
+    <b>Le TRX passe en émission dès le clic</b> (si le signal part dans les 8 s en FT8, 4 s en FT4, 2 s en FT2) ; le signal lui-même part au début de la période.</li>
   <li><b>dB</b> : le rapport signal/bruit est celui de WSJT-X (dans 2,5 kHz) ; les reports envoyés sont donc les vrais reports, comme avec WSJT-X / JTDX.</li>
   <li><b>Activité de bande</b> : tous les messages décodés (CQ en <span class="grn">vert</span>, messages pour ON5VL / OR0L en <span class="red">rouge</span>) ; <b>Fréquence RX</b> : ceux de votre fréquence.</li>
   <li><b>Split</b> comme dans WSJT-X : <b>clic gauche</b> sur la cascade ou une ligne = fréquence de <span class="grn">réception</span>, <b>clic droit</b> = fréquence d'<span class="red">émission</span> ; boutons « TX ← RX » et « RX ← TX ».</li>

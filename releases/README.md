@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.42 | [RemoteStation-Setup-0.22.42.exe](0.22.42/RemoteStation-Setup-0.22.42.exe) | [remote-station-0.22.42.tar.gz](0.22.42/remote-station-0.22.42.tar.gz) | PTT au clic, fiche au RR73, DXCC / km / azimut, RST TX / RX, carnet QTH + DXCC — [empreintes SHA-256](0.22.42/SHA256SUMS.txt) |
 | 0.22.41 | [RemoteStation-Setup-0.22.41.exe](0.22.41/RemoteStation-Setup-0.22.41.exe) | [remote-station-0.22.41.tar.gz](0.22.41/remote-station-0.22.41.tar.gz) | Stations déjà contactées en vert barré ; nom / QTH au carnet ; ALC sans limite — [empreintes SHA-256](0.22.41/SHA256SUMS.txt) |
 | 0.22.40 | [RemoteStation-Setup-0.22.40.exe](0.22.40/RemoteStation-Setup-0.22.40.exe) | [remote-station-0.22.40.tar.gz](0.22.40/remote-station-0.22.40.tar.gz) | Synchro : écart du PC en millisecondes — [empreintes SHA-256](0.22.40/SHA256SUMS.txt) |
 | 0.22.39 | [RemoteStation-Setup-0.22.39.exe](0.22.39/RemoteStation-Setup-0.22.39.exe) | [remote-station-0.22.39.tar.gz](0.22.39/remote-station-0.22.39.tar.gz) | Décodage FT8 / FT4 / FT2 avec le moteur WSJT-X 3 (décodeur JTDX, AP) — [empreintes SHA-256](0.22.39/SHA256SUMS.txt) |

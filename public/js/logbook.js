@@ -106,9 +106,9 @@
     </div>
     <div class="lg-tw">
       <table class="lg-table">
-        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th>Mode</th><th class="r">MHz</th><th>Env.</th><th>Reçu</th><th>Nom</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th>
+        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th>Mode</th><th class="r">MHz</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="grow">QTH</th><th class="grow" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th>
           <th class="c" title="LoTW (★ = confirmé)">LoTW</th><th class="c">eQSL</th><th class="c" title="Club Log">CL</th><th class="c">QRZ</th></tr></thead>
-        <tbody id="lgBody"><tr><td colspan="14" class="lg-empty">Chargement du carnet…</td></tr></tbody>
+        <tbody id="lgBody"><tr><td colspan="16" class="lg-empty">Chargement du carnet…</td></tr></tbody>
       </table>
     </div>
     <p class="lg-job" id="lgJob" aria-live="polite"></p>`;
@@ -338,12 +338,13 @@
     const body = q$('#lgBody');
     if (!body) return;
     if (!items.length) {
-      body.innerHTML = '<tr><td colspan="14" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
+      body.innerHTML = '<tr><td colspan="16" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
     } else {
       body.innerHTML = items.map((q) => '<tr data-id="' + esc(q.id) + '"' + (editing && editing.id === q.id ? ' class="sel"' : '') + ' title="Cliquer pour modifier">' +
         '<td>' + fmtDate(q.qso_date) + '</td><td>' + fmtTime(q.time_on) + '</td><td class="call">' + esc(q.call) + '</td><td>' + esc(q.band) +
         (q.sat_name ? ' <span class="sat">' + esc(q.sat_name) + '</span>' : '') + '</td><td>' + esc(modeName(q)) + '</td><td class="r">' + esc(q.freq) +
-        '</td><td>' + esc(q.rst_sent || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td>' + esc(q.name || '') + '</td><td class="txc" title="' + esc(q.operator ? 'Opérateur : ' + q.operator : '') + '">' + esc(q.station_callsign || '') + '</td>' +
+        '</td><td>' + esc(q.rst_sent || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td class="grow">' + esc(q.name || '') + '</td><td class="grow" title="' + esc(q.qth || '') + '">' + esc(q.qth || '') +
+        '</td><td class="grow" title="' + esc(q.country || '') + '">' + esc(q.country || '') + '</td><td class="txc" title="' + esc(q.operator ? 'Opérateur : ' + q.operator : '') + '">' + esc(q.station_callsign || '') + '</td>' +
         SV.map((s) => upCell(q, s)).join('') + '</tr>').join('');
     }
     const c = q$('#lgCount');

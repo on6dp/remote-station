@@ -25,6 +25,10 @@ Conséquence : le projet Remote Station, qui inclut ce décodeur, doit être red
 - Copyright Joe Taylor (K1JT), Steven Franke (K9AN), l'équipe WSJT-X et les auteurs de JTDX
 - Licence : GNU GPL v3 (texte dans `native/wspr/COPYING`)
 
+## cty.dat (pays DXCC)
+
+`lib/data/cty.dat` est le fichier des préfixes DXCC de Jim Reisert (AD1C), https://www.country-files.com, tel que livré avec WSJT-X / Decodium ; utilisé par `lib/dxcc.js` (pays, distance et azimut des stations décodées). Licence de type MIT : texte dans `lib/data/cty.dat_copyright.txt`.
+
 ## Décodeur JTTY de WSJT-X
 
 `lib/bin/jttyd` est le récepteur JTTY en continu de WSJT-X 3.3 (interface `jtty_rx_*` : `lib/jtty/*.f90`, codes convolutifs et CRC associés), relié à un petit programme propre à ce projet, `native/wsjtx/jttyd.c` (lit la BF 16 bits / 12 kHz sur l'entrée standard, écrit chaque mise à jour de message), et compilé par `native/wsjtx/build.py` à partir du même dépôt WSJT-X (étiquette v3.3.0-beta2), sans OpenMP (`native/wsjtx/omp_lib.f90`) et sans FFTW.
