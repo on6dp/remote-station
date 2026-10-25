@@ -408,6 +408,8 @@ function onDigi(m) {
     digi.latency = m.latency;
     digi.ms = m.ms;
     if (m.engine) digi.engine = m.engine;
+    // Heure d'arrivée de chaque passe FT8 / FT4 (après le début de la période) : affichée dans l'onglet Synchro
+    if (m.phase && FTX_SLOT[m.mode]) { digi.timing = digi.timing || {}; digi.timing[m.phase] = { at: Date.now() - m.slot, ms: m.ms, mode: m.mode }; }
     digi.last = Date.now();
     const msg = JSON.stringify({ t: 'ftx', mode: m.mode, slot: m.slot, list: m.list, latency: m.latency });
     for (const c of ops) if (c.digi === m.mode) c.send(msg);
@@ -562,6 +564,7 @@ const LG_COL = {
   date: (q) => q.qso_date || '', utc: (q) => String(q.time_on || '').slice(0, 2), call: (q) => q.call || '', band: (q) => q.band || '',
   mhz: (q) => String(q.freq || ''), mode: (q) => LB.modeName(q), env: (q) => q.rst_sent || '', recu: (q) => q.rst_rcvd || '',
   nom: (q) => q.name || '', qth: (q) => q.qth || '', dxcc: (q) => q.country || ((DXCC.lookup(q.call) || {}).name || ''),
+  pfx: (q) => (DXCC.lookup(q.call) || {}).pfx || '',
   txc: (q) => q.station_callsign || '',
   lotw: (q) => lgUp(q, 'lotw'), eqsl: (q) => lgUp(q, 'eqsl'), cl: (q) => lgUp(q, 'clublog'), qrz: (q) => lgUp(q, 'qrz')
 };
@@ -580,7 +583,9 @@ function logCanEdit(conn, q) { return conn.user.admin || (q && q.by === conn.use
 // Pays DXCC du correspondant : enregistré avec le QSO (champ ADIF COUNTRY), ou calculé pour les anciens QSO
 function qsoForClient(q) {
   const o = Object.assign({}, q);
-  if (!o.country) { const e = DXCC.lookup(o.call); if (e) o.country = e.name; }
+  const e = DXCC.lookup(o.call);
+  if (!o.country && e) o.country = e.name;
+  if (e) o.dxcc_pfx = e.pfx;
   return o;
 }
 
@@ -961,7 +966,7 @@ function publicState() {
     swrLock: swrLocked() ? { freq: swrLock.freq, swr: swrLock.swr != null ? Math.round(swrLock.swr * 10) / 10 : null, tune: !!swrLock.tune, band: swrLock.band || null, text: swrLockText() } : null,
     maxSwr: cfg.maxSwr,
     audio: { active: !!(station && audio.active), listeners: listeners() },
-    digi: { modes: Array.from(digiModes()), latency: digi.latency, engine: digi.engine || '', ms: digi.ms || 0 },
+    digi: { modes: Array.from(digiModes()), latency: digi.latency, engine: digi.engine || '', ms: digi.ms || 0, timing: digi.timing || null },
     rigName: station ? rig().NAME : null,
     rigModel: station ? rig().ID : null,
     // TRX dont le port série est mémorisé sur le PC du club (changement à distance possible)
@@ -1038,21 +1043,24 @@ const FTX_LATE = { FT8: 2300, FT4: 800, FT2: 250 };
 const FTX_KEY_LEAD = 400; // passage en émission avant le début du signal (ms)
 // Réponse par clic sur un indicatif : PTT dès que la page Station a préparé le signal (au clic), si le départ du
 // signal est assez proche ; le signal part quand même au début de la période (sinon le correspondant ne le décode pas)
-const FTX_KEYNOW_MAX = { FT8: 8000, FT4: 4000, FT2: 2000 };
+// Clic pendant notre propre période d'émission : départ immédiat (comme WSJT-X), message tronqué à la fin de la période.
+// Il faut au moins ce temps restant dans la période (ms) ; sinon la période suivante de même parité.
+const FTX_CLICK_MIN = { FT8: 2500, FT4: 1500, FT2: 900 };
 const FTX_END = 'fin du message';
 const FTX_SWITCH = 'message suivant'; // émission coupée pour repartir aussitôt avec le message suivant de la séquence
 let ftxPend = null; // { id, conn, mode, text, f0, at, state: 'wait' | 'tx', ready, seconds, sent, timer }
 let ftxSeq = 0;
 
 /** Prochain départ du signal : début de période + 0,5 s, parité imposée ou non, au plus tôt dans 0,9 s. */
-function ftxSlot(mode, parity, now) {
+function ftxSlot(mode, parity, now, lateMax) {
   const P = FTX_SLOT[mode];
   const earliest = now + 700; // le temps que la page Station fabrique le signal
+  const late = lateMax != null ? lateMax : FTX_LATE[mode];
   for (let k = Math.floor(now / P); k < Math.floor(now / P) + 4; k++) {
     if (parity != null && k % 2 !== parity) continue;
     const nominal = k * P + FTX_T0;
     if (earliest <= nominal) return { at: nominal, parity: k % 2 };
-    if (earliest - nominal <= FTX_LATE[mode]) return { at: earliest, parity: k % 2 };
+    if (earliest - nominal <= late) return { at: earliest, parity: k % 2 };
   }
   return null;
 }
@@ -1087,11 +1095,14 @@ function ftxRequest(conn, m) {
   const md = (radio.txVfo === 1 ? radio.modeB : radio.mode) || '';
   if (!/DATA|USB|PKT|DIG/i.test(md)) return err('Mettez d’abord le VFO d’émission en DATA-U (mode actuel : ' + (md || '?') + ')');
   const now = Date.now();
-  const slot = ftxSlot(mode, m.parity === 0 || m.parity === 1 ? m.parity : null, now);
+  // Réponse cliquée : on peut partir en retard dans notre période (le message est coupé à la fin de la période)
+  const lateMax = m.keyNow ? FTX_SLOT[mode] - FTX_T0 - 700 - FTX_CLICK_MIN[mode] : null;
+  const slot = ftxSlot(mode, m.parity === 0 || m.parity === 1 ? m.parity : null, now, lateMax);
   if (!slot) return err('Aucun créneau trouvé');
   if (ftxPend) ftxCancel('remplacée par le nouveau message', true);
   const p = { id: ++ftxSeq, conn, mode, text, f0, at: slot.at, parity: slot.parity, state: 'wait', ready: false, seconds: 0, sent: null, timer: null, ntx: m.ntx || 0,
-    keyNow: !!m.keyNow && slot.at - now <= FTX_KEYNOW_MAX[mode] };
+    // PTT tout de suite seulement si le signal part tout de suite (jamais d'émission « à vide » avant la période)
+    keyNow: !!m.keyNow && slot.at - now <= 1000 };
   ftxPend = p;
   toStation({ t: 'cmd', op: 'ftxprep', id: p.id, mode, text, f0 });
   p.timer = setTimeout(() => ftxKey(p), Math.max(0, p.at - FTX_KEY_LEAD - now));
@@ -1456,6 +1467,14 @@ function ftxKey(p) {
   toStation({ t: 'cmd', op: 'ptt', on: true, by: p.conn.user.call, txVfo: rig().VIRTUAL_SPLIT && radio.hwSplit !== 1 ? tv : undefined, digi: { id: p.id, at: p.at } });
   toStation({ t: 'txka' });
   journal('tx_start', { call: p.conn.user.call, ip: p.conn.ip, freq: txFreq(), mode: p.mode, text: p.sent || p.text, f0: p.f0, split: !!radio.split, watts: radio.power });
+  // FT8 / FT4 / FT2 : jamais au-delà de la fin de notre période (départ en retard → message tronqué, comme WSJT-X)
+  const P = FTX_SLOT[p.mode];
+  if (P) {
+    const pend = Math.floor(p.at / P) * P + P - 60;
+    if (p.at + p.seconds * 1000 > pend) {
+      p.cut = setTimeout(() => { if (ptt.active && ptt.digi && ptt.digi.id === p.id) stopPtt(FTX_END); }, Math.max(0, pend - Date.now()));
+    }
+  }
   // Filet : fin du message non signalée par la page Station
   p.timer = setTimeout(() => { if (ptt.active && ptt.digi && ptt.digi.id === p.id) stopPtt('fin du message non confirmée par la page Station'); },
     Math.max(1000, p.at + p.seconds * 1000 + 2500 - Date.now()));

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.47 | [RemoteStation-Setup-0.22.47.exe](0.22.47/RemoteStation-Setup-0.22.47.exe) | [remote-station-0.22.47.tar.gz](0.22.47/remote-station-0.22.47.tar.gz) | Décodage plus rapide, émission bornée à la période, colonne Préfixe — [empreintes SHA-256](0.22.47/SHA256SUMS.txt) |
 | 0.22.46 | [RemoteStation-Setup-0.22.46.exe](0.22.46/RemoteStation-Setup-0.22.46.exe) | [remote-station-0.22.46.tar.gz](0.22.46/remote-station-0.22.46.tar.gz) | Carnet : filtre sur chaque colonne — [empreintes SHA-256](0.22.46/SHA256SUMS.txt) |
 | 0.22.45 | [RemoteStation-Setup-0.22.45.exe](0.22.45/RemoteStation-Setup-0.22.45.exe) | [remote-station-0.22.45.tar.gz](0.22.45/remote-station-0.22.45.tar.gz) | Carnet : titres en blanc gras, MHz avant Mode — [empreintes SHA-256](0.22.45/SHA256SUMS.txt) |
 | 0.22.44 | [RemoteStation-Setup-0.22.44.exe](0.22.44/RemoteStation-Setup-0.22.44.exe) | [remote-station-0.22.44.tar.gz](0.22.44/remote-station-0.22.44.tar.gz) | Colonnes du carnet réglables à la souris ; titres FT8 en blanc gras — [empreintes SHA-256](0.22.44/SHA256SUMS.txt) |

@@ -311,6 +311,7 @@
       <div class="sy-box"><span>Votre PC</span><b id="syPc">—</b><small id="syPcNote">écart avec le serveur</small></div>
       <div class="sy-box"><span>Liaison station → serveur</span><b id="syLat">—</b><small>délai mesuré et corrigé automatiquement</small></div>
       <div class="sy-box"><span>DT médian</span><b id="syDt">—</b><small id="syDtNote">derniers décodages FT8 / FT4</small></div>
+      <div class="sy-box"><span>Décodages (dernière période)</span><b id="syDec">—</b><small id="syDecNote">arrivée de chaque passe après le début de la période</small></div>
     </div>
     <p class="sy-note">Le décodage se cale sur l'horloge du serveur (synchronisée par NTP) : l'heure du PC du club et celle de votre PC
       n'interviennent pas. Le délai de la liaison est mesuré d'après les stations décodées ; un DT médian proche de 0,0 s montre que tout est calé.</p>`;
@@ -2375,6 +2376,16 @@
     const m = medianDt();
     $('syDt').textContent = m ? (m.med >= 0 ? '+' : '−') + Math.abs(m.med).toFixed(1).replace('.', ',') + ' s' : '—';
     $('syDt').className = m ? (Math.abs(m.med) <= 0.3 ? 'ok' : 'warn') : '';
+    // Passes du décodeur : heure d'arrivée après le début de la période (la réponse doit pouvoir partir à la suivante)
+    const tm = st && st.digi && st.digi.timing;
+    if (tm && $('syDec')) {
+      const f = (x) => (x ? '+' + (x.at / 1000).toFixed(1).replace('.', ',') + ' s' : '—');
+      const P = SLOT_MS[(tm.normal || tm.early || {}).mode] || 15000;
+      $('syDec').textContent = f(tm.normal);
+      $('syDec').className = tm.normal && tm.normal.at > P + 2000 ? 'warn' : 'ok';
+      $('syDecNote').textContent = 'anticipée ' + f(tm.early) + ' · normale ' + f(tm.normal) + ' · profonde ' + f(tm.deep) +
+        (tm.normal && tm.normal.at > P + 2000 ? ' — serveur lent : réponses parfois une période plus tard' : '');
+    }
     $('syDtNote').textContent = m ? m.n + ' messages récents' + (Math.abs(m.med) > 0.3 ? ' · recalage en cours' : ' · calé') : 'en attente de décodages FT8 / FT4';
   }
 
