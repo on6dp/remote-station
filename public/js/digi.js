@@ -2218,23 +2218,36 @@
   }
   function addSlot(item, quiet) {
     const band = $('dgBand');
+    // Une seule ligne de séparation par période (passes anticipée, normale et profonde, émission), dans les deux listes
+    const sep = (list) => {
+      const sk = slotKey(item, 0);
+      if (!list.querySelector('.dg-sep[data-k="' + sk + '"]')) {
+        const P = SLOT_MS[item.mode] || 15000;
+        insertSorted(list, sepEl(Math.floor((item.slot + (item.tx ? 600 : 0)) / P) * P, item.mode), sk);
+      }
+    };
     stickToBottom(band, () => {
-      // Une seule ligne de séparation par période (passes anticipée, normale et profonde)
-      const sk = slotKey(item, 1);
-      if (item.list.length && !item.tx && !band.querySelector('.dg-sep[data-k="' + sk + '"]')) insertSorted(band, sepEl(item.slot, item.mode), sk);
-      for (const d of item.list) insertSorted(band, rowEl(item.slot, d), slotKey(item, item.tx ? 0 : 2));
+      if (item.list.length) sep(band);
+      for (const d of item.list) insertSorted(band, rowEl(item.slot, d), slotKey(item, item.tx ? 1 : 2));
     });
     const mine = item.list.filter(inRx);
     if (mine.length) {
       const rx = $('dgRx');
-      stickToBottom(rx, () => { for (const d of mine) insertSorted(rx, rowEl(item.slot, d), slotKey(item, item.tx ? 0 : 2)); });
+      stickToBottom(rx, () => { sep(rx); for (const d of mine) insertSorted(rx, rowEl(item.slot, d), slotKey(item, item.tx ? 1 : 2)); });
     }
   }
   function inRx(d) { return d.tx || Math.abs(d.f - rxF) <= RX_WIDTH || cls(d.msg) === 'me'; }
   function redrawRx() {
     const rx = $('dgRx');
     rx.textContent = '';
-    for (const it of hist) if (it.mode === mode) for (const d of it.list) if (inRx(d)) insertSorted(rx, rowEl(it.slot, d), slotKey(it, it.tx ? 0 : 2));
+    for (const it of hist) {
+      if (it.mode !== mode) continue;
+      const mine = it.list.filter(inRx);
+      if (!mine.length) continue;
+      const sk = slotKey(it, 0);
+      if (!rx.querySelector('.dg-sep[data-k="' + sk + '"]')) { const P = SLOT_MS[it.mode] || 15000; insertSorted(rx, sepEl(Math.floor((it.slot + (it.tx ? 600 : 0)) / P) * P, it.mode), sk); }
+      for (const d of mine) insertSorted(rx, rowEl(it.slot, d), slotKey(it, it.tx ? 1 : 2));
+    }
     rx.scrollTop = rx.scrollHeight;
   }
   function redrawAll() {
