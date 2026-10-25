@@ -531,7 +531,7 @@ RTTY is radio "teletype": you type text that scrolls on the other station's scre
 | Control | What it does |
 |---|---|
 | Frequency list + `↺` | RTTY frequencies per band (at the top, shared by both decoders). |
-| Frequency (e.g. 14 086,5 kHz) | Next to VFO-A / VFO-B: frequency of the signal followed by this decoder (transceiver dial + Mark / Space centre), handy for the log or a spot. |
+| Frequency (e.g. 14 086,5 kHz) | Next to VFO-A / VFO-B: frequency of the signal followed by this decoder: dial of the VFO being received + Mark / Space centre (− in LSB), handy for the log or a spot. In single receive (always the case with both VFOs on HF on the FTX-1), both decoders read the same receiver: both frequencies are computed from the VFO being received, shown in brackets, e.g. « 7 079,1 kHz (VFO A) ». VFO B is then not received. |
 | **Shift** (170, 200, 425, 850 Hz) | Spacing between the two tones of the signal. Amateur radio: 170 Hz. |
 | **Speed** (45,45 … 100 Bd) | Amateur radio: 45.45 baud. |
 | `Inversé` (reversed) | Swaps Mark and Space when the received text makes no sense (signal "upside down"). |

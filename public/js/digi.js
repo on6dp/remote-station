@@ -913,15 +913,17 @@
   function rtHeads() {
     const st = api && api.state && api.state();
     const r = st && st.radio;
-    const dial = r ? Number(r.vfoSel === 1 && r.freqB ? r.freqB : r.freq) || 0 : 0;
-    // FTX-1 en double réception : la BF mélange MAIN et SUB ; le décodeur B est rapporté au VFO-B
-    const dual = r && r.dualRx === 1 && r.freq && r.freqB;
+    // Fréquence du signal suivi : porteuse du VFO réellement écouté ± fréquence audio (− en LSB / DATA-L).
+    // En réception simple, les deux décodeurs lisent le même récepteur : B est alors rapporté au VFO écouté, pas au VFO-B.
     rts.forEach((x, ch) => {
       const sfx = RT_SFX[ch];
       if (!$('rtF' + sfx)) return;
-      const d0 = dual ? Number(ch ? r.freqB : r.freq) : dial;
+      const d = rtDialOf(ch);
       $('rtF' + sfx).textContent = Math.round(x.f);
-      $('rtRf' + sfx).textContent = d0 ? (((d0 + x.f) / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kHz') : '';
+      const own = d && d.vfo === (ch ? 'B' : 'A');
+      $('rtRf' + sfx).textContent = d ? (((d.hz + d.sign * x.f) / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kHz' + (own ? '' : ' (VFO ' + d.vfo + ')')) : '';
+      $('rtRf' + sfx).title = !d ? '' : own ? 'Fréquence du signal suivi : VFO ' + d.vfo + ' ' + (d.sign > 0 ? '+' : '−') + ' ' + Math.round(x.f) + ' Hz'
+        : 'Réception simple : ce décodeur lit le même récepteur que l’autre, celui du VFO ' + d.vfo + ' (le VFO ' + (ch ? 'B' : 'A') + ' n’est pas écouté). Fréquence = VFO ' + d.vfo + ' ' + (d.sign > 0 ? '+' : '−') + ' ' + Math.round(x.f) + ' Hz.';
     });
     // Porteuse changée (molette, bandes…) : échelles en kHz redessinées
     const dk = JSON.stringify([rtDialOf(0), rtDialOf(1)]);
@@ -2263,8 +2265,8 @@
     const rxB = r.vfoSel === 1 && r.freqB;
     let hz = Number(rxB ? r.freqB : r.freq) || 0;
     // RTTY : fréquence du signal (porteuse + milieu mark / space), comme FLDIGI
-    if (m === 'RTTY' && rtTx === 1 && r.dualRx === 1 && r.freqB) hz = Number(r.freqB); // double réception : décodeur B = VFO-B
-    if (m === 'RTTY' && hz) hz += Math.round(rts[rtTx].f);
+    // RTTY : fréquence du signal suivi par le décodeur de l'émission (porteuse ± audio, − en LSB)
+    if (m === 'RTTY') { const d = rtDialOf(rtTx); if (d) hz = d.hz + d.sign * Math.round(rts[rtTx].f); }
     const p2 = (n) => String(n).padStart(2, '0');
     const end = new Date(now());
     const t0 = Number(dx.t0) && end - Number(dx.t0) < 3 * 3600 * 1000 && end - Number(dx.t0) >= 0 ? new Date(Number(dx.t0)) : end;

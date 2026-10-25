@@ -531,7 +531,7 @@ Le RTTY est le « télétype » : on tape du texte qui défile chez le correspon
 | Commande | Ce qu'elle fait |
 |---|---|
 | Liste des fréquences + `↺` | Fréquences RTTY par bande (en haut, commune aux deux décodeurs). |
-| Fréquence (ex. 14 086,5 kHz) | À côté de VFO-A / VFO-B : fréquence du signal suivi par ce décodeur (porteuse du TRX + centre Mark / Space), utile pour le carnet ou un spot. |
+| Fréquence (ex. 14 086,5 kHz) | À côté de VFO-A / VFO-B : fréquence du signal suivi par ce décodeur : porteuse du VFO écouté + centre Mark / Space (− en LSB), utile pour le carnet ou un spot. En réception simple (toujours le cas avec deux VFO en HF sur le FTX-1), les deux décodeurs lisent le même récepteur : leurs fréquences sont toutes deux calculées sur le VFO écouté, indiqué entre parenthèses, par ex. « 7 079,1 kHz (VFO A) ». Le VFO-B n'est alors pas écouté. |
 | **Shift** (170, 200, 425, 850 Hz) | Écart entre les deux tonalités du signal. Radioamateurs : 170 Hz. |
 | **Vitesse** (45,45 … 100 Bd) | Radioamateurs : 45,45 bauds. |
 | `Inversé` | Échange Mark et Space si le texte reçu n'a aucun sens (signal « à l'envers »). |
