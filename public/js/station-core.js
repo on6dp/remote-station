@@ -372,6 +372,9 @@
             // SPLIT virtuel (FTX-1) : VFO d'émission envoyé juste avant d'émettre, et relu (« FT; ») avant TX1 :
             // on n'émet jamais sur un VFO que le TRX n'a pas confirmé
             // Émission sur MAIN, TRX déjà sur MAIN (FT0, VS0) : aucune commande FT / VS autour de l'émission (cas courant)
+            // SPLIT (émission sur l'autre VFO) : par échange A ⇄ B, l'émission part du côté actif (FTX-1)
+            const side = this.radio.vfoSel === 1 ? 1 : 0;
+            if (FTX1.SPLIT_SWAP && (this.swapTx || ((m.txVfo === 0 || m.txVfo === 1) && m.txVfo !== side))) return this._swapPtt(m.by, m.txVfo);
             const already = m.txVfo === 0 && this.radio.txVfo === 0 && this.radio.vfoSel !== 1;
             if (FTX1.txVfoTries && (m.txVfo === 0 || m.txVfo === 1) && !already) {
               this.txVfoSet = true;
@@ -393,6 +396,111 @@
       } catch (e) {
         this.log('Commande refusée : ' + e.message);
       }
+    }
+
+    /**
+     * SPLIT par échange A ⇄ B (FTX-1) : SV, FA relu pour confirmer l'échange, puis TX1 sur le côté actif.
+     * Au relâchement (unkey) : TX0, TX relu jusqu'à TX0, puis SV de retour et FA relu.
+     */
+    _swapPtt(by, tv) {
+      const s = this.swapTx;
+      const cancel = (why) => {
+        if (this.digiTx) { this.digiTx = null; if (this.txAudio) this.txAudio.stop(); }
+        this.catKeyed = false;
+        this.log('Sécurité : ' + why, 'st-bad');
+        if (this.wsUp) this.sendWs({ t: 'safety', reason: why });
+      };
+      if (s) {
+        // Nouvel appui avant le retour : les VFO sont encore échangés → émission tout de suite
+        if (s.swapped && s.backTimer && !s.backing) {
+          clearTimeout(s.backTimer);
+          s.backTimer = null;
+          this._write(this.rig.cmdPtt(true));
+          this._checkKeyed(by);
+          this._startDigi();
+          this.log('TX ON (' + (by || '?') + ') — SPLIT, VFO encore échangés');
+          return;
+        }
+        return cancel('SPLIT : échange A ⇄ B précédent pas encore terminé, émission annulée (réessayez dans une seconde)');
+      }
+      const a = this.radio.freq, b = this.radio.freqB;
+      if (!a || !b) return cancel('SPLIT : fréquences des VFO pas encore lues, émission annulée');
+      this.swapTx = { a, b, tv, swapped: false, backTimer: null, backing: false };
+      this.lastCtl = null;
+      // Lectures en cours terminées d'abord (une réponse FA d'avant l'échange ne doit pas passer pour la relecture)
+      this.pollHold = Date.now() + 1500;
+      const w = this.swapTx;
+      setTimeout(() => {
+        if (this.swapTx !== w) return;
+        if (!this.catKeyed) { this.swapTx = null; this.pollHold = 0; return; } // relâché avant l'échange
+        this._write('SV;FA;');
+        this._await(/^FA\d{9}$/, 900, (t) => this._swapSeen(w, t, by, cancel, 0));
+      }, 200);
+    }
+    _swapSeen(w, t, by, cancel, n) {
+      if (this.swapTx !== w) return;
+      const { a, b } = w;
+      const fa = t ? Number(t.slice(2)) : null;
+      if (a !== b && fa !== b) {
+        // Pas encore vu échangé : une relecture (le TRX peut répondre avant d'avoir traité SV)
+        if (n < 2) {
+          setTimeout(() => { if (this.swapTx !== w) return; this._write('FA;'); this._await(/^FA\d{9}$/, 900, (t2) => this._swapSeen(w, t2, by, cancel, n + 1)); }, 250);
+          return;
+        }
+        if (fa === a) { this.swapTx = null; this.pollHold = 0; return cancel('SPLIT : le TRX n’a pas échangé les VFO (A ⇄ B), émission annulée'); }
+        // Réponse absente : état inconnu, on considère l'échange fait (le retour relira FA)
+      }
+      this.pollHold = 0;
+      {
+        w.swapped = true;
+        this.dirty = true;
+        if (!this.catKeyed) return this._swapBack(0); // PTT relâché pendant l'échange
+        this._write(this.rig.cmdPtt(true));
+        this._checkKeyed(by);
+        this._startDigi();
+        this.log('TX ON (' + (by || '?') + ') — SPLIT : VFO échangés (A ⇄ B), émission sur ' + ((b / 1e6).toFixed(6)) + ' MHz');
+      }
+    }
+    _swapBack(n) {
+      const s = this.swapTx;
+      if (!s) return;
+      if (!s.swapped) return; // l'échange n'est pas encore confirmé : son retour le fera
+      if (s.backTimer || s.backing) return;
+      s.backTimer = setTimeout(() => {
+        s.backTimer = null;
+        if (this.catKeyed || this.swapTx !== s) return;
+        s.backing = true;
+        this.pollHold = Date.now() + 2500;
+        this._write('TX;');
+        this._await(/^TX[0-2]$/, 800, (t) => {
+          if (this.swapTx !== s) return;
+          if (this.catKeyed) { s.backing = false; return; }
+          if (t !== 'TX0') {
+            // Encore en émission (ou pas de réponse) : TX0 renvoyé, jamais d'échange pendant une émission
+            this._write(this.rig.cmdPtt(false));
+            s.backing = false;
+            if (n < 6) return this._swapBack(n + 1);
+            this.pollHold = 0;
+            const why = 'SPLIT : le TRX ne confirme pas le retour en réception (' + (t || 'pas de réponse') + ') ; VFO A et B laissés échangés';
+            this.log('Sécurité : ' + why, 'st-bad');
+            if (this.wsUp) this.sendWs({ t: 'safety', reason: why });
+            return;
+          }
+          this._write('SV;FA;');
+          this._await(/^FA\d{9}$/, 900, (t2) => {
+            const fa = t2 ? Number(t2.slice(2)) : null;
+            this.swapTx = null;
+            this.pollHold = 0;
+            this.dirty = true;
+            if (fa != null && fa !== s.a && s.a !== s.b) {
+              const why = 'SPLIT : retour de l’échange A ⇄ B non confirmé (VFO A sur ' + (fa / 1e6).toFixed(6) + ' MHz au lieu de ' + (s.a / 1e6).toFixed(6) + ')';
+              this.log(why, 'st-warn');
+              if (this.wsUp) this.sendWs({ t: 'safety', reason: why });
+            } else this.log('SPLIT : VFO remis en place après l’émission');
+            this._push(true);
+          });
+        });
+      }, n ? 300 : 150);
     }
 
     /** SPLIT virtuel : envoie une façon de désigner le VFO d'émission, relit FT, émet si confirmé, sinon essai suivant. */
@@ -627,6 +735,8 @@
       this.keyTimer = null;
       this.catKeyed = false;
       this._write(this.rig.cmdPtt(false));
+      // SPLIT par échange A ⇄ B : retour en réception vérifié, puis échange de retour
+      if (this.swapTx) this._swapBack(0);
       // SPLIT virtuel : émission et réception remises sur le VFO de réception
       if (this.txVfoSet) {
         // Le TRX repasse d'abord en réception (TX0), puis VFO de réception et d'émission remis (FT / VS)
@@ -705,8 +815,16 @@
       if (!force && !this.dirty && now - this.lastPush < 2000) return;
       this.dirty = false;
       this.lastPush = now;
-      this.onRadio(Object.assign({}, this.radio));
-      if (this.wsUp) this.sendWs({ t: 'radio', radio: Object.assign({}, this.radio, { catKeyed: this.catKeyed }) });
+      // SPLIT par échange A ⇄ B : le dashboard voit les VFO à leur place, émission sur le VFO choisi
+      const r = Object.assign({}, this.radio);
+      const sw = this.swapTx;
+      if (sw && sw.swapped) {
+        [r.freq, r.freqB, r.mode, r.modeB, r.modeCode, r.modeCodeB] = [r.freqB, r.freq, r.modeB, r.mode, r.modeCodeB, r.modeCode];
+        r.txVfo = sw.tv;
+        r.swapSplit = 1;
+      }
+      this.onRadio(Object.assign({}, r));
+      if (this.wsUp) this.sendWs({ t: 'radio', radio: Object.assign({}, r, { catKeyed: this.catKeyed }) });
     }
   }
 

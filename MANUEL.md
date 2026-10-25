@@ -375,7 +375,7 @@ Le SPLIT sert surtout pour une **expédition DX** qui écoute ailleurs que sur s
 > [!TIP]
 > **Bon à savoir**
 > - Règle des TRX : sans SPLIT on émet sur le VFO où l'on écoute ; avec SPLIT, sur l'autre.
-> - **FTX-1** : le SPLIT est géré par le dashboard. Au PTT, le TRX passe un instant sur le côté SUB pour émettre puis revient sur MAIN ; c'est normal. Un SPLIT mis sur la face avant est suivi par le dashboard.
+> - **FTX-1** : le SPLIT est géré par le dashboard, par échange des VFO. Au PTT, la page Station échange A et B sur le TRX (A ⇄ B), émet du côté actif sur la fréquence et dans le mode du VFO d'émission, puis, une fois la réception confirmée, remet les VFO en place. Sur l'écran du TRX, les fréquences s'échangent pendant l'émission : c'est normal ; le dashboard, lui, montre les VFO à leur place. Un appui très court (moins d'un quart de seconde) n'émet pas. Un SPLIT mis sur la face avant est suivi par le dashboard.
 > - La fréquence **réellement émise** (VFO B, XIT compris) est contrôlée : hors des bandes autorisées, le PTT est refusé.
 > - Petit écart (quelques kHz) : `XIT` sur le VFO A suffit, sans SPLIT.
 > - En **FT8 / FT4 / FT2**, inutile de mettre SPLIT : l'émission se place dans la bande audio avec le repère TX de la cascade (clic droit).

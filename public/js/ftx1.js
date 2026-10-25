@@ -156,6 +156,10 @@
     // MAIN / SUB (clic sur RX) : FT puis VS sur le même côté — VS seul laisserait FT sur l'autre côté, et ce
     // désaccord fait émettre le FTX-1 (constaté au club).
     virtualSplit: true,
+    // SPLIT par échange A ⇄ B (depuis 0.22.63) : au PTT, SV (les VFO s'échangent), émission sur le côté actif, puis TX0
+    // vérifié et SV de retour. Plus aucun FT / VS autour de l'émission : en réception simple, le FTX-1 refusait FT1 ou
+    // restait en émission dans l'état FT0 + VS1 (constaté au club le 25/10).
+    splitSwap: true,
     controlOverrides: {
       // FTX-1 : ATT et IPO / AMP1 / AMP2 sous 144 MHz, un seul préampli AMP (ON / OFF) en 144 et 430 MHz (constaté au club)
       // ATT et IPO / AMP1 / AMP2 propres à chaque côté ; le CAT (PA0 / RA0) agit sur le côté actif (constaté au club) :

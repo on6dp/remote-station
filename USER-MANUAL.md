@@ -375,7 +375,7 @@ SPLIT is mainly used for a **DX expedition** listening away from its own frequen
 > [!TIP]
 > **Good to know**
 > - Transceiver rule: without SPLIT you transmit on the VFO you listen on; with SPLIT, on the other one.
-> - **FTX-1**: SPLIT is handled by the dashboard. On PTT, the TRX briefly moves to the SUB side to transmit, then back to MAIN; this is normal. A SPLIT set on the front panel is followed by the dashboard.
+> - **FTX-1**: SPLIT is handled by the dashboard, by swapping the VFOs. On PTT, the Station page swaps A and B on the transceiver (A ⇄ B), transmits from the active side on the frequency and in the mode of the transmit VFO, then, once receive is confirmed, puts the VFOs back. On the transceiver display the frequencies swap during the transmission: this is normal; the dashboard shows the VFOs in place. A very short press (under a quarter of a second) does not transmit. A SPLIT set on the front panel is followed by the dashboard.
 > - The frequency **actually transmitted** (VFO B, XIT included) is checked: outside the authorised bands, PTT is refused.
 > - Small offset (a few kHz): `XIT` on VFO A is enough, without SPLIT.
 > - In **FT8 / FT4 / FT2**, there is no need for SPLIT: the transmission is placed within the audio passband with the TX marker of the waterfall (right click).

@@ -391,7 +391,7 @@
       // SPLIT « virtuel » (FTX-1) : le VFO d'émission n'est envoyé au TRX qu'au moment d'émettre (FT), puis remis
       // Lectures CAT autorisées depuis la console de diagnostic (administrateurs) : lectures seulement
       CAT_QUERIES: Array.from(new Set(READS.map((r) => r.cmd).concat(FAST, FAST_SUB, TXMETERS, ['IF;', 'OI;', 'FR;', 'ID;', 'VS;', 'FT;', 'ST;', 'FA;', 'FB;'], spec.extraQueries || []))),
-      VIRTUAL_SPLIT: !!spec.virtualSplit, cmdTxVfo: spec.virtualSplit ? (v) => 'FT' + (v ? 1 : 0) + ';' : null,
+      VIRTUAL_SPLIT: !!spec.virtualSplit, SPLIT_SWAP: !!spec.splitSwap, cmdTxVfo: spec.virtualSplit ? (v) => 'FT' + (v ? 1 : 0) + ';' : null,
       // Façons de désigner le VFO d'émission, essayées dans l'ordre jusqu'à ce que « FT; » relu le confirme
       // (FT0/FT1 comme Hamlib ; FT2/FT3 comme les FTDX10 / FT-991). Jamais VS1 avant FT1 : FT0 avec VS1 fait émettre le FTX-1.
       txVfoTries: spec.virtualSplit ? (v) => ['FT' + (v ? 1 : 0) + ';', 'FT' + (v ? 3 : 2) + ';'] : null,
