@@ -26,6 +26,9 @@
   let calls = [];
   let items = [];
   let total = 0;
+  // Colonnes du carnet : largeur par défaut (px), réglable à la souris (bord droit de l'en-tête), gardée dans ce navigateur
+  const LG_COLS = [['date', 86], ['utc', 46], ['call', 84], ['band', 48], ['mode', 50], ['mhz', 72], ['env', 42], ['recu', 42], ['nom', 110],
+    ['qth', 130], ['dxcc', 110], ['txc', 66], ['lotw', 44], ['eqsl', 44], ['cl', 34], ['qrz', 40], ['fill', 0]];
   let editing = null;      // QSO en cours de modification
   let lastTxCall = '';     // dernier TX call de la ligne Correspondant reporté dans la fiche
   let stale = true;        // liste à recharger à la prochaine ouverture de l'onglet
@@ -107,6 +110,7 @@
     </div>
     <div class="lg-tw">
       <table class="lg-table">
+        <colgroup>${LG_COLS.map(([k]) => '<col data-c="' + k + '">').join('')}</colgroup>
         <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th>Mode</th><th class="r">MHz</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th>
           <th class="c" title="LoTW (★ = confirmé)">LoTW</th><th class="c">eQSL</th><th class="c" title="Club Log">CL</th><th class="c">QRZ</th><th class="lg-fill"></th></tr></thead>
         <tbody id="lgBody"><tr><td colspan="17" class="lg-empty">Chargement du carnet…</td></tr></tbody>
@@ -117,6 +121,7 @@
   function mount(el) {
     root = el;
     root.innerHTML = PANE;
+    initCols();
     const f = q$('#lgForm');
     for (const m of MODES) f.mode.add(new Option(m, m));
     f.addEventListener('submit', (e) => { e.preventDefault(); save(false); });
@@ -195,6 +200,37 @@
     sel.textContent = '';
     for (const c of calls) sel.add(new Option(c, c));
     if (keep && calls.indexOf(keep) >= 0) sel.value = keep;
+  }
+  function initCols() {
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('rs.lgcols') || '{}') || {}; } catch (e) { saved = {}; }
+    const cols = Array.from(root.querySelectorAll('.lg-table col'));
+    const ths = Array.from(root.querySelectorAll('.lg-table thead th'));
+    const store = () => { try { localStorage.setItem('rs.lgcols', JSON.stringify(saved)); } catch (e) { /* */ } };
+    const apply = () => cols.forEach((c, i) => { const [k, w] = LG_COLS[i]; const v = saved[k] || w; c.style.width = v ? v + 'px' : ''; });
+    apply();
+    ths.forEach((th, i) => {
+      const [k, w] = LG_COLS[i] || [];
+      if (!k || !w) return;
+      const h = document.createElement('i');
+      h.className = 'lg-rz';
+      h.title = 'Glisser : largeur de la colonne · double-clic : largeur d’origine';
+      th.appendChild(h);
+      h.addEventListener('click', (e) => e.stopPropagation());
+      h.addEventListener('dblclick', (e) => { e.stopPropagation(); delete saved[k]; apply(); store(); });
+      h.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        h.setPointerCapture(e.pointerId);
+        const x0 = e.clientX;
+        const w0 = th.getBoundingClientRect().width || saved[k] || w;
+        const mv = (ev) => { saved[k] = Math.max(24, Math.min(600, Math.round(w0 + ev.clientX - x0))); cols[i].style.width = saved[k] + 'px'; };
+        const up = () => { h.removeEventListener('pointermove', mv); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up); store(); };
+        h.addEventListener('pointermove', mv);
+        h.addEventListener('pointerup', up);
+        h.addEventListener('pointercancel', up);
+      });
+    });
   }
   function fmsg(t, cls) {
     const el = q$('#lgFmsg');

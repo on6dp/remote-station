@@ -749,6 +749,7 @@ input[type='range']:disabled { opacity: .45; }
 .dg-mini:hover { color: var(--v2-text-bright); }
 .dg-th, .dg-row { display: grid; grid-template-columns: 62px 34px 36px 44px 1fr; gap: 6px; padding: 2px 8px; font-size: 12.5px; }
 .dg-th { color: var(--v2-text-dim); font-size: 10px; letter-spacing: .8px; text-transform: uppercase; border-bottom: 1px solid var(--v2-border-dark); padding-block: 4px; }
+.dg-th.ft { color: #FFFFFF; font-weight: 700; }
 .dg-th span:nth-child(-n+4), .dg-row span:nth-child(-n+4) { text-align: right; }
 .dg-list { flex: 1; overflow: auto; min-height: 0; max-height: var(--dg-list-max, 360px); }
 .dg-row { color: var(--v2-text-secondary); cursor: pointer; white-space: nowrap; }
@@ -1038,20 +1039,18 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .lg-mlist button { font: inherit; font-size: 12px; text-align: left; color: var(--v2-text-secondary); background: transparent; border: 0; border-radius: 4px; padding: 7px 10px; cursor: pointer; }
 .lg-mlist button:hover, .lg-mlist button:focus-visible { background: var(--v2-bg-input); color: var(--v2-text-bright); }
 .lg-tw { flex: 1; min-height: 220px; overflow: auto; border: 1px solid var(--v2-border-dark); border-radius: 6px; background: var(--v2-bg-darker); }
-.lg-table { width: 100%; border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums; }
+.lg-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums; }
 .lg-table th { position: sticky; top: 0; background: var(--v2-bg-card); color: var(--v2-text-header); font-size: 9px; letter-spacing: .8px; text-transform: uppercase; text-align: left; padding: 6px; border-bottom: 1px solid var(--v2-border-dark); white-space: nowrap; }
 .lg-table td { padding: 4px 6px; border-bottom: 1px solid var(--v2-border-dark); color: var(--v2-text-secondary); white-space: nowrap; }
 .lg-table tbody tr[data-id] { cursor: pointer; }
 .lg-table tbody tr[data-id]:hover td { background: var(--v2-bg-input); }
 .lg-table tr.sel td { background: rgba(242, 207, 74, .08); }
 .lg-table .call { color: var(--v2-text-bright); font-weight: 700; }
-/* Colonnes courtes à la largeur de leur contenu ; nom, QTH et pays prennent la place restante */
-.lg-table th, .lg-table td { width: 1%; }
-.lg-table th.grow, .lg-table td.grow { width: 120px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
-/* Place restante à droite du tableau (colonne vide) plutôt que d'élargir les colonnes */
-.lg-table th.lg-fill, .lg-table td.lg-fill { width: auto; }
-.lg-table th.lg-qth, .lg-table td.lg-qth { width: 130px; max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
-.lg-table th.lg-cty, .lg-table td.lg-cty { width: 110px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+/* Largeurs des colonnes : <colgroup> (réglables à la souris) ; texte trop long coupé, entier au survol */
+.lg-table th, .lg-table td { overflow: hidden; text-overflow: ellipsis; }
+.lg-rz { position: absolute; top: 0; right: 0; width: 7px; height: 100%; cursor: col-resize; touch-action: none; }
+.lg-rz::after { content: ''; position: absolute; right: 2px; top: 25%; bottom: 25%; width: 1px; background: var(--v2-border); }
+.lg-rz:hover::after { background: var(--v2-accent-cyan-bright, #00d4ff); width: 2px; }
 .lg-table .r { text-align: right; }
 .lg-table .c { text-align: center; }
 .lg-table td.ok { color: var(--v2-accent-green-bright); }
