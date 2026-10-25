@@ -336,10 +336,10 @@
       const subOk = !(RIG().ID === 'ftx1' && me && !me.subCat);
       // FTX-1 en réception simple (deux bandes HF) : pas de changement de côté par CAT (il a fait émettre le TRX) ;
       // A / B ne choisissent que le VFO réglé (molette, flèches, bandes), le TRX reste sur son côté actif
-      const single = RIG().ID === 'ftx1' && st && st.radio && st.radio.dualRx !== 1 && st.radio.hwSplit !== 1 && !(me && me.subSingle);
+      const single = RIG().ID === 'ftx1' && st && st.radio && st.radio.dualRx !== 1 && !(me && me.subSingle);
       if (single && Number(ctlValue('vfoSel')) !== (w === 'B' ? 1 : 0)) {
         return say('VFO ' + w + ' réglé (molette, flèches, bandes). Le TRX reste sur ' + (Number(ctlValue('vfoSel')) === 1 ? 'SUB' : 'MAIN') +
-          ' : le TRX n’affiche qu’un VFO (ni DUAL RX ni SPLIT sur le TRX) ; pour passer sur SUB, mettez SPLIT sur la face avant du TRX (les deux VFO affichés).', '', 8000);
+          ' : en réception simple, le changement de côté par le dashboard est bloqué (il a mis le FTX-1 en émission) ; pour écouter la fréquence du VFO B : A ⇄ B.', '', 8000);
       }
       if (c && RIG().VIRTUAL_SPLIT && iControl() && (w === 'A' || subOk) && Number(ctlValue('vfoSel')) !== (w === 'B' ? 1 : 0)) sendCtl(c, w === 'B' ? 1 : 0);
     };
@@ -526,12 +526,11 @@
       return say('Passage MAIN ↔ SUB par le dashboard désactivé (il mettait le FTX-1 en émission) : choisissez MAIN / SUB sur la face avant du TRX ; le dashboard suit.', 'warn', 8000);
     }
     // FTX-1 en réception simple (DUAL RX coupé) : aucun passage MAIN ↔ SUB par CAT (VS1 a mis le TRX en émission, 24 et 25/10)
-    if (RIG().ID === 'ftx1' && st && st.radio && st.radio.dualRx !== 1 && st.radio.hwSplit !== 1 && !(me && me.subSingle)) {
+    if (RIG().ID === 'ftx1' && st && st.radio && st.radio.dualRx !== 1 && !(me && me.subSingle)) {
       const sel = Number(ctlValue('vfoSel')) === 1 ? 1 : 0;
       if ((c.id === 'vfoSel' && v != null && Number(v) !== sel) || (c.viaSub && sel !== 1) || (c.viaMain && sel === 1)) {
         if (c.id === 'vfoSel' && Number(v) === 1) setTarget('B');
-        return say('MAIN ↔ SUB bloqué : le FTX-1 n’affiche qu’un VFO (ni DUAL RX ni SPLIT sur le TRX), et dans ce cas il passe en émission. ' +
-          'Mettez SPLIT sur la face avant du TRX (les deux VFO affichés) ou DUAL RX. Le VFO B se règle quand même (molette, flèches, bandes).', 'warn', 10000);
+        return say('Passage MAIN ↔ SUB refusé en réception simple (DUAL RX coupé) : le 25/10, il a mis le FTX-1 en émission. En HF, le FTX-1 n’écoute qu’un côté à la fois ; pour écouter la fréquence du VFO B, utilisez A ⇄ B. Un administrateur peut l’autoriser pour des essais (ftx1SubSingle). Le VFO B se règle quand même (molette, flèches, bandes).', 'warn', 12000);
       }
     }
     // FTX-1 : pas de double réception avec MAIN et SUB tous deux en HF / 50 MHz, même sur la même bande

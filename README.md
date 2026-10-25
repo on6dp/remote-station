@@ -11,7 +11,7 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.22.59** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.22.60** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
 **Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
 `remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
@@ -144,7 +144,7 @@ sudo systemctl restart remote-station
 | `rxOnlyPrefixes` | `["ONL"]` | Indicatifs en écoute seule. |
 | `maxSwr`, `swrHoldMs` | `2.5`, `700` | Coupure de l'émission sur ROS élevé. |
 | `tunerAuto` | `true` | Tuner remis en service à chaque changement de bande HF / 6 m. |
-| `ftx1SubCat`, `ftx1SubSingle` | `true`, `false` | FTX-1 : passage MAIN / SUB par le dashboard quand le TRX affiche ses deux VFO (DUAL RX, ou SPLIT de la face avant) ; avec un seul VFO affiché, refusé (il a mis le TRX en émission les 24 et 25/10) sauf `ftx1SubSingle: true` (essais seulement). |
+| `ftx1SubCat`, `ftx1SubSingle` | `true`, `false` | FTX-1 : passage MAIN / SUB par le dashboard en double réception (DUAL RX) ; en réception simple, refusé (il a mis le TRX en émission les 24 et 25/10) sauf `ftx1SubSingle: true` (essais seulement). |
 | `digiAlcMax` | `0` | Limiteur d'ALC en émission numérique (%) ; 0 = pas de limiteur. |
 | `ftxWatchdogMinutes` | `6` | Arrêt de l'émission FT8 / FT4 / FT2 sans réponse. |
 | `qo100If` | 144,5 / 432,5 / 1296,5 | FI des convertisseurs QO-100 (section 4 ter). |
