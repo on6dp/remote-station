@@ -434,8 +434,17 @@
         if (this.swapTx !== w) return;
         if (!this.catKeyed) { this.swapTx = null; this.pollHold = 0; return; } // relâché avant l'échange
         this._write('SV;FA;');
+        this._swapLocal();
+        w.swapped = true; // vue du dashboard : VFO à leur place dès maintenant
+        this._push(true);
         this._await(/^FA\d{9}$/, 900, (t) => this._swapSeen(w, t, by, cancel, 0));
-      }, 200);
+      }, 120);
+    }
+    /** Échange A ⇄ B reporté tout de suite dans l'état gardé (sans attendre les lectures) : pas de clignotement des VFO. */
+    _swapLocal() {
+      const r = this.radio;
+      [r.freq, r.freqB, r.mode, r.modeB, r.modeCode, r.modeCodeB] = [r.freqB, r.freq, r.modeB, r.mode, r.modeCodeB, r.modeCode];
+      this.dirty = true;
     }
     _swapSeen(w, t, by, cancel, n) {
       if (this.swapTx !== w) return;
@@ -447,7 +456,7 @@
           setTimeout(() => { if (this.swapTx !== w) return; this._write('FA;'); this._await(/^FA\d{9}$/, 900, (t2) => this._swapSeen(w, t2, by, cancel, n + 1)); }, 250);
           return;
         }
-        if (fa === a) { this.swapTx = null; this.pollHold = 0; return cancel('SPLIT : le TRX n’a pas échangé les VFO (A ⇄ B), émission annulée'); }
+        if (fa === a) { this._swapLocal(); this.swapTx = null; this.pollHold = 0; this._push(true); return cancel('SPLIT : le TRX n’a pas échangé les VFO (A ⇄ B), émission annulée'); }
         // Réponse absente : état inconnu, on considère l'échange fait (le retour relira FA)
       }
       this.pollHold = 0;
@@ -487,9 +496,11 @@
             return;
           }
           this._write('SV;FA;');
+          this._swapLocal();
+          this.swapTx = null; // vue = état gardé, déjà remis en place
+          this._push(true);
           this._await(/^FA\d{9}$/, 900, (t2) => {
             const fa = t2 ? Number(t2.slice(2)) : null;
-            this.swapTx = null;
             this.pollHold = 0;
             this.dirty = true;
             if (fa != null && fa !== s.a && s.a !== s.b) {
@@ -500,7 +511,7 @@
             this._push(true);
           });
         });
-      }, n ? 300 : 150);
+      }, n ? 300 : 60);
     }
 
     /** SPLIT virtuel : envoie une façon de désigner le VFO d'émission, relit FT, émet si confirmé, sinon essai suivant. */

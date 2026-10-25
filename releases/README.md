@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.64 | [RemoteStation-Setup-0.22.64.exe](0.22.64/RemoteStation-Setup-0.22.64.exe) | [remote-station-0.22.64.tar.gz](0.22.64/remote-station-0.22.64.tar.gz) | SPLIT FTX-1 : plus de double changement affiché, commutation plus rapide — [empreintes SHA-256](0.22.64/SHA256SUMS.txt) |
 | 0.22.63 | [RemoteStation-Setup-0.22.63.exe](0.22.63/RemoteStation-Setup-0.22.63.exe) | [remote-station-0.22.63.tar.gz](0.22.63/remote-station-0.22.63.tar.gz) | Sécurité FTX-1 : SPLIT par échange des VFO — [empreintes SHA-256](0.22.63/SHA256SUMS.txt) |
 | 0.22.62 | [RemoteStation-Setup-0.22.62.exe](0.22.62/RemoteStation-Setup-0.22.62.exe) | [remote-station-0.22.62.tar.gz](0.22.62/remote-station-0.22.62.tar.gz) | Sécurité FTX-1 : retour en réception après une émission en SPLIT — [empreintes SHA-256](0.22.62/SHA256SUMS.txt) |
 | 0.22.61 | [RemoteStation-Setup-0.22.61.exe](0.22.61/RemoteStation-Setup-0.22.61.exe) | [remote-station-0.22.61.tar.gz](0.22.61/remote-station-0.22.61.tar.gz) | Lecture CAT : Effacer, plusieurs lectures par ligne — [empreintes SHA-256](0.22.61/SHA256SUMS.txt) |
