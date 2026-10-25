@@ -100,6 +100,8 @@
           <button type="button" role="menuitem" data-s="eqsl">Synchronisation eQSL…</button>
           <button type="button" role="menuitem" data-s="clublog">Club Log…</button>
           <button type="button" role="menuitem" data-s="qrz">QRZ…</button>
+          <hr class="lg-msep">
+          <button type="button" role="menuitem" data-a="cfg" title="Réglages des carnets en ligne, de QRZ.com et des ports UDP">⚙ Configuration…</button>
         </div>
       </div>
       <div class="lg-menu">
@@ -110,7 +112,6 @@
           <button type="button" role="menuitem" data-x="cabrillo">Cabrillo (.log)…</button>
         </div>
       </div>
-      <button class="btn" type="button" id="lgCfgBtn" title="Réglages des carnets en ligne et des ports UDP (administrateurs)">⚙ Configuration</button>
     </div>
     <div class="lg-tw">
       <table class="lg-table">
@@ -185,7 +186,7 @@
     root.querySelectorAll('[data-x]').forEach((b) => b.addEventListener('click', () => { closeMenus(); openExport(b.dataset.x); }));
     // « Mes QSO » : tous les QSO faits sous mon indicatif personnel (TX call), en ADIF, tout de suite
     root.querySelectorAll('[data-xm]').forEach((b) => b.addEventListener('click', () => { closeMenus(); api.send({ t: 'log_export', fmt: 'adif', callsign: me.call }); }));
-    q$('#lgCfgBtn').addEventListener('click', openCfg);
+    root.querySelector('.lg-mlist [data-a="cfg"]').addEventListener('click', () => { closeMenus(); openCfg(); });
     q$('#lgBody').addEventListener('click', (e) => {
       const tr = e.target.closest('tr[data-id]');
       if (tr) startEdit(tr.dataset.id);
@@ -206,7 +207,6 @@
     if (ro) fmsg('Indicatif d’écouteur : consultation du carnet seulement.', 'warn');
     q$('[data-m="sync"]').disabled = !me.admin;
     q$('[data-m="sync"]').title = me.admin ? '' : 'Réservé aux administrateurs';
-    q$('#lgCfgBtn').disabled = !me.admin;
     const sel = f.station;
     const keep = sel.value;
     sel.textContent = '';
@@ -528,7 +528,10 @@
       '<h3>' + title + '</h3>' +
       '<div class="lg-tabs" role="tablist"><button type="button" data-t="det" aria-selected="true">Détails</button><button type="button" data-t="proc" aria-selected="false">Traitement</button></div>' +
       '<div data-p="det" class="lg-pp">' +
-      '<label>Indicatif <select name="callsign">' + callOptions('Tous les indicatifs') + '</select></label>' +
+      '<label>Indicatif (TX call) <select name="callsign">' + callOptions('Tous les indicatifs') + '</select></label>' +
+      // Identifiants du service pour l'indicatif choisi : à vérifier avant chaque synchronisation (un compte par indicatif)
+      '<fieldset class="lg-acct"><legend>Identifiants ' + NAMES[s] + ' de <b data-acall>—</b></legend><div class="lg-acf"></div><p class="lg-anote"></p>' +
+      '<div class="lg-btns"><button type="button" class="btn" data-a="acct">Enregistrer pour cet indicatif</button></div></fieldset>' +
       '<fieldset><legend>Plage de dates (facultatif)</legend><label>Du <input type="date" name="from"></label><label>Au <input type="date" name="to"></label></fieldset>' +
       '<label class="lg-chk"><input type="checkbox" name="all"> Renvoyer aussi les QSO déjà envoyés</label>' +
       (s === 'clublog' ? '<label class="lg-chk warn"><input type="checkbox" name="clear"> Effacer le log ClubLog existant (remplacé par tout le carnet de l’indicatif)</label>' : '') +
@@ -547,6 +550,28 @@
     sdlg = { service: s, el: d, job: null };
     tabs(d);
     const f = d.querySelector('form');
+    // Indicatif proposé : le TX call actuel (ou le premier de la liste), pour voir tout de suite ses identifiants
+    const stx = api && api.state && api.state();
+    const cur = stx && stx.txCall && calls.indexOf(stx.txCall) >= 0 ? stx.txCall : calls[0];
+    if (cur) f.callsign.value = cur;
+    const acctAsk = () => {
+      const c = f.callsign.value;
+      d.querySelector('[data-acall]').textContent = c || '—';
+      const box = d.querySelector('.lg-acf');
+      d.querySelector('[data-a="acct"]').hidden = !c;
+      if (!c) { box.innerHTML = ''; d.querySelector('.lg-anote').textContent = 'Choisissez un indicatif pour voir et régler ses identifiants : chaque indicatif est envoyé avec les siens.'; return; }
+      box.innerHTML = '<p class="lg-anote">Chargement…</p>';
+      api.send({ t: 'log_acct_get', service: s, call: c });
+    };
+    f.callsign.addEventListener('change', acctAsk);
+    acctAsk();
+    d.querySelector('[data-a="acct"]').addEventListener('click', () => {
+      const c = f.callsign.value;
+      if (!c) return;
+      const fields = {};
+      d.querySelectorAll('.lg-acf [data-af]').forEach((i) => { fields[i.dataset.af] = i.dataset.clear === '1' && !i.value.trim() ? '__effacer__' : i.value.trim(); });
+      api.send({ t: 'log_acct_set', service: s, call: c, fields });
+    });
     const filt = () => ({ callsign: f.callsign.value, from: f.from.value, to: f.to.value, all: f.all.checked || !!(f.clear && f.clear.checked) });
     const askPending = () => api.send(Object.assign({ t: 'log_pending', service: s }, filt()));
     for (const n of ['callsign', 'from', 'to', 'all', 'clear']) if (f[n]) f[n].addEventListener('change', askPending);
@@ -871,6 +896,34 @@
         p.textContent = m.n + ' QSO à envoyer vers ' + NAMES[m.service] + (m.busy ? ' · un envoi est déjà en cours' : '') + (m.stopped ? ' · envois arrêtés après un refus d’accès : vérifiez la configuration' : '');
         p.classList.toggle('warn', !!m.stopped);
       }
+    } else if (m.t === 'log_acct') {
+      if (!sdlg || !sdlg.el.open || sdlg.service !== m.service) return;
+      const f = sdlg.el.querySelector('form');
+      if (f.callsign.value !== m.call) return;
+      const UI = {
+        clublog: [['email', 'E-mail du compte Club Log'], ['password', 'Mot de passe', 1], ['api', 'Clé API (application)', 1]],
+        eqsl: [['user', 'Indicatif / identifiant eQSL'], ['password', 'Mot de passe', 1], ['nickname', 'QTH nickname (facultatif)']],
+        lotw: [['location', 'Lieu de station TQSL (Station Location)'], ['password', 'Mot de passe du certificat (facultatif)', 1], ['login', 'Identifiant du site LoTW (confirmations)'], ['webPassword', 'Mot de passe du site LoTW', 1]],
+        qrz: [['key', 'Clé API du logbook QRZ.com', 1]]
+      }[m.service] || [];
+      const box = sdlg.el.querySelector('.lg-acf');
+      box.innerHTML = UI.map(([k, lab, sec]) => '<label>' + esc(lab) + ' ' + (sec
+        ? '<span class="lg-pw"><input data-af="' + k + '" type="password" autocomplete="new-password" placeholder="' + (m.has && m.has[k] ? SECRET_PH : 'à renseigner') + '">' +
+          '<button type="button" class="lg-eye" title="Afficher / masquer" aria-label="Afficher le mot de passe">👁</button>' +
+          (m.source === 'compte' && m.has && m.has[k] ? '<button type="button" class="lg-clr" data-aclr="' + k + '" title="Effacer la valeur enregistrée pour cet indicatif">✕</button>' : '') + '</span>'
+        : '<input data-af="' + k + '" value="' + esc((m.fields || {})[k] || '') + '" autocomplete="off">') + '</label>').join('');
+      box.onclick = (e) => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        const i = b.parentElement.querySelector('input');
+        if (b.classList.contains('lg-eye')) i.type = i.type === 'password' ? 'text' : 'password';
+        else if (b.dataset.aclr) { i.value = ''; i.dataset.clear = '1'; i.placeholder = 'sera effacé à l’enregistrement'; b.remove(); }
+      };
+      const missing = UI.filter(([k, , sec]) => k !== 'nickname' && k !== 'login' && k !== 'webPassword' && !(m.service === 'lotw' && k === 'password') && !(sec ? m.has && m.has[k] : (m.fields || {})[k]));
+      const note = sdlg.el.querySelector('.lg-anote');
+      note.textContent = (m.source === 'compte' ? 'Identifiants propres à ' + m.call + '.' : m.source === 'club' ? 'Identifiants généraux du club (⚙ Configuration), utilisés pour ' + m.call + ' ; vous pouvez lui en donner de propres ici.' : 'Aucun identifiant pour ' + m.call + ' : à renseigner avant la synchronisation.') +
+        (missing.length ? ' Manque : ' + missing.map((x) => x[1].toLowerCase()).join(', ') + '.' : '') + (m.saved ? ' ✓ Enregistré.' : '');
+      note.classList.toggle('warn', !!missing.length);
     } else if (m.t === 'log_cfg') {
       calls = m.calls || calls;
       if (sdlg && sdlg.el.open) {

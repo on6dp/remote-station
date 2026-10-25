@@ -1254,6 +1254,14 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 button[data-ctl='dnf']:not([aria-pressed='true']), button[data-ctl='dnfB']:not([aria-pressed='true']), button[data-ctl='tuner']:not([aria-pressed='true']) { color: var(--v2-text-bright); }
 button[data-ctl='dnf'], button[data-ctl='dnfB'], button[data-ctl='tuner'] { font-weight: 700; }
 /* Logs : menus Synchronisation, Exporter et Configuration en jaune fluo ; entrées des sous-menus en blanc gras */
-.lg-menu > .btn, #lgCfgBtn, .lg-menu > .btn:hover:not(:disabled), #lgCfgBtn:hover:not(:disabled) { color: var(--v2-accent-yellow); font-weight: 700; }
-.lg-menu > .btn:disabled, #lgCfgBtn:disabled { color: var(--v2-text-disabled); }
+.lg-menu > .btn, .lg-menu > .btn:hover:not(:disabled) { color: var(--v2-accent-yellow); font-weight: 700; }
+.lg-menu > .btn:disabled { color: var(--v2-text-disabled); }
+.lg-msep { border: 0; border-top: 1px solid var(--v2-border); margin: 4px 6px; }
 .lg-mlist button { color: #FFFFFF; font-weight: 700; }
+/* Synchronisation : identifiants de l'indicatif choisi */
+.lg-acct { border: 1px solid var(--v2-accent-yellow); border-radius: 6px; padding: 8px 10px; }
+.lg-acct legend { color: var(--v2-accent-yellow); font-weight: 700; padding: 0 4px; }
+.lg-acct legend b { color: #FFFFFF; }
+.lg-acf { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px 10px; }
+.lg-anote { margin: 6px 0 0; font-size: 12px; color: var(--v2-text-secondary); }
+.lg-anote.warn { color: var(--v2-accent-yellow); }

@@ -446,8 +446,37 @@ const SECRETS = { clublog: ['password', 'api'], eqsl: ['password'], lotw: ['pass
 // Recherche des indicatifs sur QRZ.com (nom, QTH, locator du correspondant) avec le compte QRZ réglé dans le carnet
 const { Qrz } = require('./lib/qrz.js');
 const qrzx = new Qrz(() => ({ user: logCfg.qrz.lookupUser, password: logCfg.qrz.lookupPassword }), 'RemoteStation-' + VERSION);
+// Identifiants propres à chaque indicatif (TX call) : logCfg[service].accounts[INDICATIF] = { champs du service }.
+// Les identifiants « généraux » (⚙ Configuration) restent ceux des indicatifs du club (ON5VL, OR0L) ; un indicatif
+// personnel n'utilise que les siens (jamais ceux du club : ses QSO iraient sur le compte du club).
+const ACCT_FIELDS = { clublog: ['email', 'password', 'api'], eqsl: ['user', 'password', 'nickname'], lotw: ['location', 'password', 'login', 'webPassword'], qrz: ['key'] };
+function credFor(s, call) {
+  const base = Object.assign({}, logCfg[s] || {});
+  call = String(call || '').toUpperCase();
+  const acct = (logCfg[s] && logCfg[s].accounts && logCfg[s].accounts[call]) || null;
+  const club = !call || stationCalls().indexOf(call) >= 0;
+  if (s === 'qrz') {
+    const k = acct && acct.key ? acct.key : (logCfg.qrz.keys || {})[call] || '';
+    return Object.assign(base, { key: k, keys: Object.assign({}, logCfg.qrz.keys || {}, k ? { [call]: k } : {}) });
+  }
+  if (!club) for (const k of ACCT_FIELDS[s]) base[k] = '';
+  if (acct) for (const k of ACCT_FIELDS[s]) if (acct[k]) base[k] = acct[k];
+  return base;
+}
+function acctPublic(s, call) {
+  const c = credFor(s, call);
+  const out = { fields: {}, has: {} };
+  const acct = (logCfg[s] && logCfg[s].accounts && logCfg[s].accounts[call]) || null;
+  for (const k of ACCT_FIELDS[s]) {
+    const secret = (SECRETS[s] || []).indexOf(k) >= 0 || (s === 'qrz' && k === 'key');
+    if (secret) out.has[k] = !!c[k]; else out.fields[k] = c[k] || '';
+  }
+  out.source = acct ? 'compte' : stationCalls().indexOf(call) >= 0 ? 'club' : 'aucun';
+  return out;
+}
 function logCfgPublic() {
   const o = JSON.parse(JSON.stringify(logCfg));
+  for (const sv of Object.keys(ACCT_FIELDS)) if (o[sv]) delete o[sv].accounts; // jamais les identifiants par indicatif
   for (const [s, keys] of Object.entries(SECRETS)) for (const k of keys) { o[s]['has_' + k] = !!o[s][k]; o[s][k] = ''; }
   o.qrz.has_keys = {};
   for (const [c, v] of Object.entries(o.qrz.keys || {})) o.qrz.has_keys[c] = !!v;
@@ -506,6 +535,7 @@ const stationCalls = () => Array.from(new Set([cfg.digiCall].concat(String(cfg.s
 const sync = new Sync({
   book, version: VERSION, station: String(cfg.digiCall || 'ON5VL').toUpperCase(), urls: cfg.logUrls, // logUrls : essais seulement
   getCfg: () => logCfg,
+  getCred: (s, call) => credFor(s, call),
   setLastConfirm: (d) => { logCfg.lotw.lastConfirm = d; saveLogCfg(); },
   log: (m) => console.error('Logs : ' + m),
   onJob: (job, ev) => {
@@ -1847,10 +1877,36 @@ function onOperator(conn, m) {
       if (!conn.user.admin || LOG_SERVICES.indexOf(m.service) < 0) return;
       sync.test(m.service).then((r) => send(conn, { t: 'log_test', service: m.service, ok: r.ok, msg: r.msg }));
       return;
+    case 'log_acct_get': {
+      if (!conn.user.admin) return;
+      const sv = String(m.service || ''), call = String(m.call || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
+      if (!ACCT_FIELDS[sv] || !call) return;
+      return send(conn, Object.assign({ t: 'log_acct', service: sv, call }, acctPublic(sv, call)));
+    }
+    case 'log_acct_set': {
+      if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Identifiants des carnets en ligne : administrateurs seulement' });
+      const sv = String(m.service || ''), call = String(m.call || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
+      if (!ACCT_FIELDS[sv] || !call || !m.fields || typeof m.fields !== 'object') return;
+      logCfg[sv].accounts = logCfg[sv].accounts || {};
+      const a = Object.assign({}, logCfg[sv].accounts[call] || {});
+      for (const k of ACCT_FIELDS[sv]) {
+        const v = m.fields[k];
+        if (v === undefined) continue;
+        const secret = (SECRETS[sv] || []).indexOf(k) >= 0 || (sv === 'qrz' && k === 'key');
+        if (secret && v === '') continue;                    // vide : on garde l'ancien
+        if (v === '__effacer__' || v === '') delete a[k]; else a[k] = String(v).slice(0, 300);
+      }
+      if (Object.keys(a).length) logCfg[sv].accounts[call] = a; else delete logCfg[sv].accounts[call];
+      saveLogCfg();
+      sync.resetStops();
+      journal('log_acct', { call: conn.user.call, service: sv, for: call });
+      send(conn, { t: 'notice', level: 'info', msg: 'Identifiants ' + sv + ' de ' + call + ' enregistrés.' });
+      return send(conn, Object.assign({ t: 'log_acct', service: sv, call, saved: true }, acctPublic(sv, call)));
+    }
     case 'log_sync': {
       if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Synchronisation des carnets : administrateurs seulement' });
       if (m.action === 'stop') return sync.stop(m.service);
-      if (m.service === 'lotw' && m.action === 'confirm') { sync.confirmLotw(conn.user.call); return; }
+      if (m.service === 'lotw' && m.action === 'confirm') { sync.confirmLotw(conn.user.call, m.callsign); return; }
       if (LOG_SERVICES.indexOf(m.service) < 0) return;
       // Club Log « effacer le log existant » : tout le carnet de l'indicatif, en un seul fichier
       const f = { from: m.from, to: m.to, callsign: m.callsign, all: !!m.all || !!m.clear };
