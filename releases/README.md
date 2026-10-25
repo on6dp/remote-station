@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.50 | [RemoteStation-Setup-0.22.50.exe](0.22.50/RemoteStation-Setup-0.22.50.exe) | [remote-station-0.22.50.tar.gz](0.22.50/remote-station-0.22.50.tar.gz) | Export ADIF par TX call, « Mes QSO » — [empreintes SHA-256](0.22.50/SHA256SUMS.txt) |
 | 0.22.49 | [RemoteStation-Setup-0.22.49.exe](0.22.49/RemoteStation-Setup-0.22.49.exe) | [remote-station-0.22.49.tar.gz](0.22.49/remote-station-0.22.49.tar.gz) | Séparateurs de période dans « Fréquence RX » — [empreintes SHA-256](0.22.49/SHA256SUMS.txt) |
 | 0.22.48 | [RemoteStation-Setup-0.22.48.exe](0.22.48/RemoteStation-Setup-0.22.48.exe) | [remote-station-0.22.48.tar.gz](0.22.48/remote-station-0.22.48.tar.gz) | TX call du carnet toujours synchronisé — [empreintes SHA-256](0.22.48/SHA256SUMS.txt) |
 | 0.22.47 | [RemoteStation-Setup-0.22.47.exe](0.22.47/RemoteStation-Setup-0.22.47.exe) | [remote-station-0.22.47.tar.gz](0.22.47/remote-station-0.22.47.tar.gz) | Décodage plus rapide, émission bornée à la période, colonne Préfixe — [empreintes SHA-256](0.22.47/SHA256SUMS.txt) |

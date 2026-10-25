@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.50** — Carnet : export ADIF par TX call ; « Mes QSO (.adi) » télécharge d’un clic les QSO faits sous son propre indicatif ; chaque membre exporte ses QSO (son indicatif, ou ses QSO sous ON5VL / OR0L), les administrateurs tous les TX call. Redémarrer le service puis Ctrl+F5.
 - **0.22.49** — FT8 / FT4 / FT2 : ligne de séparation entre les périodes aussi dans la liste « Fréquence RX » (et pour nos émissions). Ctrl+F5 sur le dashboard suffit.
 - **0.22.48** — TX call de la fiche du carnet toujours aligné sur celui de la ligne Correspondant (sauf QSO en cours de modification) ; un QSO enregistré ailleurs (fin de QSO FT8) ne vide plus la fiche en cours de modification. Ctrl+F5 sur le dashboard suffit.
 - **0.22.47** — FT8 / FT4 / FT2 : passes de décodage anticipée et normale plus rapides (profondeur 2 ; la passe profonde ajoute ensuite les plus faibles) ; clic pendant notre période d’émission = départ immédiat ; émission toujours arrêtée à la fin de la période (message tronqué si parti en retard) ; plus de PTT « à vide » avant la période. Synchro : heure d’arrivée de chaque passe. Carnet : colonne Préfixe (DXCC). Redémarrer le service puis Ctrl+F5.

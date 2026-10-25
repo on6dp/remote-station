@@ -1718,9 +1718,11 @@ function onOperator(conn, m) {
     }
     case 'log_list': {
       const all = lgFilter(book.query({ q: m.q, from: m.from, to: m.to }), m.f);
+      // TX call présents dans le carnet (export par indicatif)
+      const txcalls = Array.from(new Set(book.qsos.map((q) => String(q.station_callsign || '').toUpperCase()).filter(Boolean))).sort();
       const lim = Math.max(1, Math.min(1000, Number(m.limit) || 200));
       return send(conn, { t: 'log_list', total: book.qsos.length, count: all.length, items: all.slice(-lim).reverse().map(qsoForClient),
-        calls: logCalls(conn), admin: !!conn.user.admin, services: LOG_SERVICES, auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto])) });
+        calls: logCalls(conn), txcalls: conn.user.admin ? txcalls : undefined, stationCalls: stationCalls(), admin: !!conn.user.admin, services: LOG_SERVICES, auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto])) });
     }
     case 'log_merge': {
       // Doublon : la fiche déjà au carnet (ex. enregistrée en fin de QSO) est complétée (nom, QTH…) au lieu d'un 2e QSO
@@ -1795,10 +1797,18 @@ function onOperator(conn, m) {
       return;
     }
     case 'log_export': {
-      let list = book.query({ from: m.from, to: m.to }).filter((q) => !m.callsign || q.station_callsign === m.callsign);
+      // Chaque opérateur récupère ses QSO : son indicatif personnel (TX call), ou ses QSO faits sous l'indicatif du club
+      // (« mine ») ; les administrateurs exportent tout, par TX call ou en entier
+      const me = String(conn.user.call).toUpperCase();
+      m.callsign = String(m.callsign || '').toUpperCase();
+      if (!conn.user.admin) {
+        if (m.pending) return send(conn, { t: 'notice', level: 'error', msg: 'Export pour les carnets en ligne : administrateurs seulement' });
+        if (m.callsign !== me && !(m.mine && stationCalls().indexOf(m.callsign) >= 0)) { m.callsign = me; m.mine = false; }
+      }
+      let list = book.query({ from: m.from, to: m.to }).filter((q) => (!m.callsign || q.station_callsign === m.callsign) && (!m.mine || q.operator === me || q.by === me));
       if (m.pending && LOG_SERVICES.indexOf(m.pending) >= 0) list = sync.pending(m.pending, { from: m.from, to: m.to, callsign: m.callsign });
       const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      const who = String(m.callsign || cfg.digiCall || 'ON5VL').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const who = (String(m.callsign || 'TOUS').toUpperCase().replace(/[^A-Z0-9]/g, '')) + (m.mine ? '-' + me.replace(/[^A-Z0-9]/g, '') : '');
       if (m.fmt === 'cabrillo') {
         return send(conn, { t: 'log_export', name: who + '-' + stamp + '.log', mime: 'text/plain', data: LB.toCabrillo(list, { callsign: m.callsign || cfg.digiCall, contest: m.contest, grid: cfg.stationGrid, club: cfg.clubName && /UBA/.test(cfg.clubName) ? 'UBA-LGE' : '', version: VERSION }), count: list.length });
       }

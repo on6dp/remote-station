@@ -105,6 +105,7 @@
       <div class="lg-menu">
         <button class="btn" type="button" data-m="exp" aria-haspopup="true" aria-expanded="false">Exporter ▾</button>
         <div class="lg-mlist" role="menu" hidden>
+          <button type="button" role="menuitem" data-xm="1">Mes QSO (.adi)</button>
           <button type="button" role="menuitem" data-x="adif">ADIF (.adi)…</button>
           <button type="button" role="menuitem" data-x="cabrillo">Cabrillo (.log)…</button>
         </div>
@@ -182,6 +183,8 @@
     document.addEventListener('click', closeMenus);
     root.querySelectorAll('[data-s]').forEach((b) => b.addEventListener('click', () => { closeMenus(); openSync(b.dataset.s); }));
     root.querySelectorAll('[data-x]').forEach((b) => b.addEventListener('click', () => { closeMenus(); openExport(b.dataset.x); }));
+    // « Mes QSO » : tous les QSO faits sous mon indicatif personnel (TX call), en ADIF, tout de suite
+    root.querySelectorAll('[data-xm]').forEach((b) => b.addEventListener('click', () => { closeMenus(); api.send({ t: 'log_export', fmt: 'adif', callsign: me.call }); }));
     q$('#lgCfgBtn').addEventListener('click', openCfg);
     q$('#lgBody').addEventListener('click', (e) => {
       const tr = e.target.closest('tr[data-id]');
@@ -498,6 +501,19 @@
     d.querySelectorAll('.lg-tabs [data-t]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.t === t)));
     d.querySelectorAll('[data-p]').forEach((p) => { p.hidden = p.dataset.p !== t; });
   }
+  // Export : administrateurs = tous les TX call du carnet ; membres = leur indicatif et leurs QSO sous les indicatifs du club
+  let txcalls = [];
+  let stCalls = [];
+  function exportOptions() {
+    const mine = String(me.call || '').toUpperCase();
+    if (me.admin) {
+      const l = Array.from(new Set([mine].concat(stCalls, txcalls).filter(Boolean)));
+      return '<option value="">Tous les TX call</option>' + l.map((c) => '<option value="' + esc(c) + '"' + (c === mine ? ' selected' : '') + '>' + esc(c) + '</option>').join('') +
+        stCalls.map((c) => '<option value="' + esc(c) + '|mine">' + esc(c) + ' — mes QSO</option>').join('');
+    }
+    return '<option value="' + esc(mine) + '">' + esc(mine) + ' (mon indicatif)</option>' +
+      stCalls.map((c) => '<option value="' + esc(c) + '|mine">' + esc(c) + ' — mes QSO sous cet indicatif</option>').join('');
+  }
   const callOptions = (all) => (all ? '<option value="">' + esc(all) + '</option>' : '') + calls.map((c) => '<option>' + esc(c) + '</option>').join('');
 
   // ---------- Synchronisation (Télécharger vers …)
@@ -614,7 +630,7 @@
   function openExport(fmt) {
     const d = mkDlg('lg-exp', '<form method="dialog"><h3>Exporter le carnet</h3><div class="lg-pp">' +
       '<label>Format <select name="fmt"><option value="adif">ADIF 3 (.adi) — logbooks, LoTW, eQSL, Club Log…</option><option value="cabrillo">Cabrillo 3 (.log) — concours</option></select></label>' +
-      '<label>Indicatif <select name="callsign">' + callOptions('Tous les indicatifs') + '</select></label>' +
+      '<label>TX call <select name="callsign">' + exportOptions() + '</select></label>' +
       '<fieldset><legend>Plage de dates (facultatif)</legend><label>Du <input type="date" name="from"></label><label>Au <input type="date" name="to"></label></fieldset>' +
       '<label data-cab>Concours (CONTEST) <input name="contest" list="lgContests" placeholder="DX" maxlength="40"></label>' +
       '<datalist id="lgContests">' + CONTESTS.map((c) => '<option value="' + c + '">').join('') + '</datalist>' +
@@ -629,7 +645,8 @@
     f.fmt.addEventListener('change', upd);
     upd();
     d.querySelector('[data-a="go"]').addEventListener('click', () => {
-      api.send({ t: 'log_export', fmt: f.fmt.value, callsign: f.callsign.value, from: f.from.value, to: f.to.value, contest: f.contest.value.trim() });
+      const [cs, mine] = String(f.callsign.value).split('|');
+      api.send({ t: 'log_export', fmt: f.fmt.value, callsign: cs, mine: mine === 'mine', from: f.from.value, to: f.to.value, contest: f.contest.value.trim() });
       d.close();
     });
   }
@@ -802,6 +819,8 @@
       items = m.items || [];
       total = m.total || 0;
       if (Array.isArray(m.calls)) { calls = m.calls; rights(); }
+      if (Array.isArray(m.txcalls)) txcalls = m.txcalls;
+      if (Array.isArray(m.stationCalls)) stCalls = m.stationCalls;
       if (editing) editing = items.find((x) => x.id === editing.id) || editing;
       drawList();
     } else if (m.t === 'log_changed') {
