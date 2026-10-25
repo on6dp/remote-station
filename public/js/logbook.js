@@ -27,10 +27,12 @@
   let items = [];
   let total = 0;
   // Colonnes du carnet : largeur par défaut (px), réglable à la souris (bord droit de l'en-tête), gardée dans ce navigateur
-  const LG_COLS = [['date', 86], ['utc', 46], ['call', 84], ['band', 58], ['mhz', 72], ['mode', 54], ['env', 46], ['recu', 52], ['nom', 110],
-    ['qth', 130], ['dxcc', 110], ['txc', 72], ['lotw', 52], ['eqsl', 52], ['cl', 36], ['qrz', 44], ['fill', 0]];
+  const LG_COLS = [['date', 98], ['utc', 58], ['call', 96], ['band', 70], ['mhz', 82], ['mode', 66], ['env', 58], ['recu', 64], ['nom', 116],
+    ['qth', 136], ['dxcc', 116], ['txc', 84], ['lotw', 62], ['eqsl', 62], ['cl', 46], ['qrz', 54], ['fill', 0]];
   let editing = null;      // QSO en cours de modification
   let lastTxCall = '';     // dernier TX call de la ligne Correspondant reporté dans la fiche
+  let filt = {};           // filtres par colonne { date: '20261025', band: '20m', … }
+  let fltMenu = null;      // menu ouvert : { col, el }
   let stale = true;        // liste à recharger à la prochaine ouverture de l'onglet
   let listTimer = 0;
   let sdlg = null;         // fenêtre de synchronisation ouverte { service, el, job }
@@ -89,6 +91,7 @@
     <div class="lg-bar">
       <input class="lg-search" id="lgSearch" placeholder="Rechercher (indicatif, nom, opérateur)" aria-label="Rechercher dans le carnet">
       <span class="lg-count" id="lgCount"></span>
+      <button class="btn lg-fclr" type="button" id="lgFclr" hidden title="Retirer tous les filtres de colonne">✕ Filtres</button>
       <span class="lg-sp"></span>
       <div class="lg-menu">
         <button class="btn" type="button" data-m="sync" aria-haspopup="true" aria-expanded="false">Synchronisation ▾</button>
@@ -121,7 +124,11 @@
   function mount(el) {
     root = el;
     root.innerHTML = PANE;
+    if (getComputedStyle(root).position === 'static') root.style.position = 'relative'; // menus des filtres de colonne
     initCols();
+    document.addEventListener('click', () => closeFlt());
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeFlt(); });
+    q$('#lgFclr').addEventListener('click', () => { filt = {}; reload(); });
     const f = q$('#lgForm');
     for (const m of MODES) f.mode.add(new Option(m, m));
     f.addEventListener('submit', (e) => { e.preventDefault(); save(false); });
@@ -212,6 +219,13 @@
     ths.forEach((th, i) => {
       const [k, w] = LG_COLS[i] || [];
       if (!k || !w) return;
+      // Choix d'une valeur (filtre) à côté du titre
+      const fb = document.createElement('b');
+      fb.className = 'lg-flt';
+      fb.textContent = '▾';
+      fb.title = 'Choisir une valeur de cette colonne';
+      fb.addEventListener('click', (e) => { e.stopPropagation(); if (fltMenu && fltMenu.col === k) closeFlt(); else openFlt(k, th); });
+      th.insertBefore(fb, th.firstChild ? th.firstChild.nextSibling : null);
       const h = document.createElement('i');
       h.className = 'lg-rz';
       h.title = 'Glisser : largeur de la colonne · double-clic : largeur d’origine';
@@ -373,7 +387,72 @@
   function reload() {
     if (!api || !root) return;
     stale = false;
-    api.send({ t: 'log_list', q: q$('#lgSearch').value.trim(), limit: 300 });
+    api.send({ t: 'log_list', q: q$('#lgSearch').value.trim(), limit: 300, f: filt });
+    drawFilt();
+  }
+  // ------------------------------------------------------------------ filtres par colonne (choix sous chaque titre)
+  const FLT_FMT = {
+    date: (v) => fmtDate(v), utc: (v) => (v ? v + ' h UTC' : '—'),
+    lotw: (v) => v, eqsl: (v) => v, cl: (v) => v, qrz: (v) => v
+  };
+  const fltLabel = (col, v) => (v === '' ? '(vide)' : FLT_FMT[col] ? FLT_FMT[col](v) : v);
+  function drawFilt() {
+    if (!root) return;
+    root.querySelectorAll('.lg-table thead th').forEach((th, i) => {
+      const k = (LG_COLS[i] || [])[0];
+      const b = th.querySelector('.lg-flt');
+      if (!b) return;
+      const on = filt[k] != null;
+      th.classList.toggle('flt-on', on);
+      b.textContent = on ? '●' : '▾';
+      b.title = on ? 'Filtre : ' + fltLabel(k, filt[k]) + ' (clic : changer)' : 'Choisir une valeur de cette colonne';
+    });
+    const c = q$('#lgFclr');
+    if (c) c.hidden = !Object.keys(filt).length;
+  }
+  function closeFlt() { if (fltMenu) { fltMenu.el.remove(); fltMenu = null; } }
+  function openFlt(col, th) {
+    closeFlt();
+    const el = document.createElement('div');
+    el.className = 'lg-fmenu';
+    el.innerHTML = '<input class="lg-fq" placeholder="Rechercher…" aria-label="Rechercher une valeur"><div class="lg-fl"><p class="lg-fw">Chargement…</p></div>';
+    root.appendChild(el);
+    const r = th.getBoundingClientRect();
+    const rr = root.getBoundingClientRect();
+    el.style.left = Math.max(0, Math.min(r.left - rr.left, rr.width - 240)) + 'px';
+    el.style.top = (r.bottom - rr.top + 2) + 'px';
+    fltMenu = { col, el, values: [] };
+    el.addEventListener('click', (e) => e.stopPropagation());
+    el.querySelector('.lg-fq').addEventListener('input', () => fillFlt());
+    el.querySelector('.lg-fq').focus();
+    api.send({ t: 'log_values', col, q: q$('#lgSearch').value.trim(), f: filt });
+  }
+  function fillFlt() {
+    if (!fltMenu) return;
+    const { col, el, values } = fltMenu;
+    const qq = el.querySelector('.lg-fq').value.trim().toUpperCase();
+    const list = el.querySelector('.lg-fl');
+    list.textContent = '';
+    const add = (label, n, v, cur) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lg-fi' + (cur ? ' cur' : '');
+      b.innerHTML = '<span></span><small></small>';
+      b.firstChild.textContent = label;
+      b.lastChild.textContent = n == null ? '' : n;
+      b.addEventListener('click', () => {
+        if (v == null) delete filt[col]; else filt[col] = v;
+        closeFlt();
+        reload();
+      });
+      list.appendChild(b);
+    };
+    add('(tous)', null, null, filt[col] == null);
+    for (const [v, n] of values) {
+      const lab = fltLabel(col, v);
+      if (qq && String(lab).toUpperCase().indexOf(qq) < 0) continue;
+      add(lab, n, v, filt[col] === v);
+    }
   }
   function upCell(q, s) {
     const u = q.up && q.up[s];
@@ -386,7 +465,7 @@
     const body = q$('#lgBody');
     if (!body) return;
     if (!items.length) {
-      body.innerHTML = '<tr><td colspan="17" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
+      body.innerHTML = '<tr><td colspan="17" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche ou aux filtres.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
     } else {
       body.innerHTML = items.map((q) => '<tr data-id="' + esc(q.id) + '"' + (editing && editing.id === q.id ? ' class="sel"' : '') + ' title="Cliquer pour modifier">' +
         '<td>' + fmtDate(q.qso_date) + '</td><td>' + fmtTime(q.time_on) + '</td><td class="call">' + esc(q.call) + '</td><td>' + esc(q.band) +
@@ -713,6 +792,10 @@
 
   // ------------------------------------------------------------------ messages du serveur
   function onMessage(m) {
+    if (m.t === 'log_values') {
+      if (fltMenu && fltMenu.col === m.col) { fltMenu.values = m.values || []; fillFlt(); }
+      return;
+    }
     if (m.t === 'log_list') {
       items = m.items || [];
       total = m.total || 0;

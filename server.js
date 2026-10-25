@@ -557,6 +557,25 @@ function dxInfo(d) {
   d.az = r.az;
   if (!g) d.kmc = true;
 }
+// Filtres par colonne du carnet : valeur d'un QSO pour chaque colonne affichée
+const LG_COL = {
+  date: (q) => q.qso_date || '', utc: (q) => String(q.time_on || '').slice(0, 2), call: (q) => q.call || '', band: (q) => q.band || '',
+  mhz: (q) => String(q.freq || ''), mode: (q) => LB.modeName(q), env: (q) => q.rst_sent || '', recu: (q) => q.rst_rcvd || '',
+  nom: (q) => q.name || '', qth: (q) => q.qth || '', dxcc: (q) => q.country || ((DXCC.lookup(q.call) || {}).name || ''),
+  txc: (q) => q.station_callsign || '',
+  lotw: (q) => lgUp(q, 'lotw'), eqsl: (q) => lgUp(q, 'eqsl'), cl: (q) => lgUp(q, 'clublog'), qrz: (q) => lgUp(q, 'qrz')
+};
+function lgUp(q, s) {
+  if (s === 'lotw' && q.lotw_qsl_rcvd === 'Y') return 'confirmé';
+  const u = q.up && q.up[s];
+  return !u ? 'pas envoyé' : u.ok ? 'envoyé' : 'refusé';
+}
+const lgKey = (q, col) => String(LG_COL[col](q));
+function lgFilter(list, f) {
+  const fs = Object.entries(f && typeof f === 'object' ? f : {}).filter(([k, v]) => LG_COL[k] && v != null && v !== '');
+  if (!fs.length) return list;
+  return list.filter((q) => fs.every(([k, v]) => lgKey(q, k) === String(v)));
+}
 function logCanEdit(conn, q) { return conn.user.admin || (q && q.by === conn.user.call); }
 // Pays DXCC du correspondant : enregistré avec le QSO (champ ADIF COUNTRY), ou calculé pour les anciens QSO
 function qsoForClient(q) {
@@ -1664,8 +1683,22 @@ function onOperator(conn, m) {
     }
 
     // ------------------------------------------------------------ carnet de trafic
+    case 'log_values': {
+      // Valeurs d'une colonne du carnet (choix proposés sous son titre), avec leur nombre de QSO
+      const col = String(m.col || '');
+      if (!LG_COL[col]) return;
+      const f = Object.assign({}, m.f || {});
+      delete f[col];
+      const cnt = new Map();
+      for (const q of lgFilter(book.query({ q: m.q }), f)) { const v = lgKey(q, col); cnt.set(v, (cnt.get(v) || 0) + 1); }
+      let vals = Array.from(cnt.entries());
+      if (col === 'date') vals.sort((a, b) => b[0].localeCompare(a[0]));
+      else if (col === 'utc' || col === 'mhz') vals.sort((a, b) => Number(a[0]) - Number(b[0]));
+      else vals.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+      return send(conn, { t: 'log_values', col, values: vals.slice(0, 400) });
+    }
     case 'log_list': {
-      const all = book.query({ q: m.q, from: m.from, to: m.to });
+      const all = lgFilter(book.query({ q: m.q, from: m.from, to: m.to }), m.f);
       const lim = Math.max(1, Math.min(1000, Number(m.limit) || 200));
       return send(conn, { t: 'log_list', total: book.qsos.length, count: all.length, items: all.slice(-lim).reverse().map(qsoForClient),
         calls: logCalls(conn), admin: !!conn.user.admin, services: LOG_SERVICES, auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto])) });
