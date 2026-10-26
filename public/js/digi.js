@@ -1138,7 +1138,8 @@
     if (!p || !bm) return;
     // En haut de la colonne : les écrans VFO (s'ils sont dans la colonne), sinon le cadre Step / Bands
     const tp = ['.center > .vfo-row', '.center > [data-panel="bands"]'].map((q) => document.querySelector(q)).find((x) => x && x.offsetParent);
-    const tall = !bm.hidden && !POPUP && window.innerWidth >= 1700 && !!tp && tp.parentElement === p.parentElement && !!tp.offsetParent
+    const zz = (window.RSZOOM && window.RSZOOM.z()) || 1;
+    const tall = !bm.hidden && !POPUP && window.innerWidth / zz >= 1700 && !!tp && tp.parentElement === p.parentElement && !!tp.offsetParent
       && tp.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING && !p.classList.contains('collapsed');
     document.body.classList.toggle('bm-tall', tall);
     // getBoundingClientRect est en pixels agrandis quand le dashboard est zoomé (zoom.js) : on revient en pixels CSS

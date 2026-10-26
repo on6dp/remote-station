@@ -10,7 +10,8 @@
   const KEY = 'rs_zoom';
   const REF_W = 1920, REF_H = 1000;   // place utile d'un écran 1920 × 1080 dans Chrome
   const MIN_W = 1800, MIN_H = 860;    // en dessous, la mise en page « grand écran » ne tient plus
-  const CHOICES = [1, 1.1, 1.25, 1.33, 1.5, 1.75, 2, 2.5];
+  const CHOICES = [0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.33, 1.5, 1.75, 2];
+  const ZMIN = 0.5, ZMAX = 2;
   let pref = 'auto';
   try { pref = localStorage.getItem(KEY) || 'auto'; } catch (e) { /* stockage bloqué */ }
   let cur = 1;
@@ -24,8 +25,8 @@
     return z < 1.05 ? 1 : Math.floor(z * 20) / 20;
   }
   function apply() {
-    let z = pref === 'auto' ? autoZoom() : Number(pref) || 1;
-    z = Math.max(1, Math.min(z, maxZoom()));
+    let z = pref === 'auto' ? Math.max(1, Math.min(autoZoom(), maxZoom())) : Number(pref) || 1;
+    z = Math.max(ZMIN, Math.min(ZMAX, z)); // choix manuel : de 50 à 200 %, même si cela dépasse l'écran
     z = Math.round(z * 100) / 100;
     const changed = z !== cur;
     cur = z;
@@ -44,7 +45,8 @@
     const mx = maxZoom();
     m.querySelectorAll('button').forEach((x) => {
       x.setAttribute('aria-checked', String(x.dataset.z === String(pref)));
-      x.disabled = x.dataset.z !== 'auto' && Number(x.dataset.z) > mx + 0.001;
+      // au-delà de ce que l'écran permet sans serrer la mise en page : signalé, mais permis
+      x.classList.toggle('zoom-big', x.dataset.z !== 'auto' && Number(x.dataset.z) > mx + 0.001);
     });
   }
   function set(v) {
@@ -58,7 +60,7 @@
     const wrap = document.createElement('span');
     wrap.className = 'dxc-wrap zoom-wrap';
     wrap.innerHTML = '<button class="btn zoom-btn" id="zoomBtn" type="button" aria-haspopup="true" aria-expanded="false"'
-      + ' title="Taille du dashboard : Auto = adaptée à l’écran (agrandie sur un écran plus grand que 1920 × 1080)"></button>'
+      + ' title="Taille du dashboard : Auto = adaptée à l’écran (agrandie sur un écran plus grand que 1920 × 1080) ; 50 à 200 % au choix"></button>'
       + '<span class="dxc-menu zoom-menu" id="zoomMenu" role="menu" hidden></span>';
     help.parentNode.insertBefore(wrap, help);
     const m = wrap.querySelector('#zoomMenu');
@@ -73,7 +75,7 @@
       m.appendChild(b);
     };
     add('auto', 'Auto', 'adaptée à l’écran');
-    for (const z of CHOICES) add(z, Math.round(z * 100) + ' %', z === 1 ? 'écran 1920 × 1080' : z === 1.33 ? '2560 × 1440' : z === 2 ? '3840 × 2160 (4K)' : '');
+    for (const z of CHOICES) add(z, Math.round(z * 100) + ' %', z === 1 ? 'écran 1920 × 1080' : z === 1.33 ? '2560 × 1440' : z === 2 ? '3840 × 2160 (4K)' : z === 0.67 ? 'tout voir sur un portable' : '');
     const btn = wrap.querySelector('#zoomBtn');
     const show = (on) => { m.hidden = !on; btn.setAttribute('aria-expanded', String(on)); if (on) label(); };
     btn.addEventListener('click', (e) => { e.stopPropagation(); show(m.hidden); });
