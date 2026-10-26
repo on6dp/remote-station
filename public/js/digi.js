@@ -162,9 +162,9 @@
       <select id="rtDial" aria-label="Fréquence RTTY"></select>
       <button class="btn dg-back" type="button" id="rtQsy" title="Revenir sur cette fréquence (VFO A, en DATA-U)" aria-label="Revenir sur cette fréquence (VFO A, en DATA-U)">↺</button>
       <select id="rtSpan" aria-label="Largeur de la cascade" title="Bande audio affichée. 4 kHz : ouvrez aussi le filtre du TRX (BW 4.0K), sinon le bord droit reste noir"><option value="3000">Bande 3 kHz</option><option value="4000">Bande 4 kHz</option></select>
-      <select id="rtZoom" aria-label="Zoom de la cascade" title="Zoom : la cascade montre une plage plus étroite, plus détaillée, centrée sur le décodeur de l'émission (comme MixW)"><option value="1">Zoom ×1</option><option value="2">Zoom ×2</option><option value="4">Zoom ×4</option></select>
+      <select id="rtZoom" aria-label="Zoom de la cascade" title="Zoom (aussi à la molette sur la cascade : vers soi = plus étroit, vers l'avant = plus large) : plage plus étroite et plus détaillée, comme MixW"><option value="1">Zoom ×1</option><option value="1.5">Zoom ×1,5</option><option value="2">Zoom ×2</option><option value="3">Zoom ×3</option><option value="4">Zoom ×4</option><option value="6">Zoom ×6</option><option value="8">Zoom ×8</option></select>
       <button class="btn" type="button" id="rtSplitBtn" aria-pressed="false" title="SPLIT : réception sur le VFO A, émission sur le VFO B (même bouton que SPLIT sur la ligne Step)">SPLIT</button>
-      <span class="dg-note">clic gauche : décodeur A · clic droit : décodeur B · glisser / molette : accorder · double-clic sur un indicatif : le reprendre</span>
+      <span class="dg-note">clic gauche : décodeur A · clic droit : décodeur B · molette : zoom · glisser ou Maj+molette : accorder · double-clic sur un indicatif : le reprendre</span>
       <span class="dg-status" id="rtStatus"></span>
     </div>
     <!-- Une seule cascade (le TRX n'envoie qu'un son) avec les repères des deux décodeurs -->
@@ -979,14 +979,32 @@
       el.addEventListener('pointercancel', end);
       // Un glisser n'est pas un clic (le décodeur ne se recale pas)
       el.addEventListener('click', (e) => { if (swallowClick) { swallowClick = false; e.stopImmediatePropagation(); } }, true);
-      // Molette : VFO ± 10 Hz par cran (Maj : ± 100 Hz)
+      // Molette : zoom de la cascade autour de la souris (vers soi = plus étroit, vers l'avant = plus large, jusqu'à ×1) ;
+      // Maj + molette : VFO ± 10 Hz par cran
       el.addEventListener('wheel', (e) => {
         if (tab !== 'rtty') return;
         e.preventDefault();
+        if (!e.shiftKey) {
+          const now = Date.now();
+          if (now - rtZoomAt < 90 || !e.deltaY) return; // pavé tactile : un cran à la fois
+          rtZoomAt = now;
+          const i = RT_ZOOMS.indexOf(rtZoom);
+          const ni = Math.max(0, Math.min(RT_ZOOMS.length - 1, i + (e.deltaY > 0 ? 1 : -1)));
+          if (ni === i) return;
+          const rc = el.getBoundingClientRect();
+          const x = Math.max(0, Math.min(1, (e.clientX - rc.left) / rc.width));
+          const f = WF_LO + x * WF_MAX_HZ;
+          rtZoom = RT_ZOOMS[ni];
+          store.set('rtzoom', String(rtZoom));
+          if ($('rtZoom')) $('rtZoom').value = String(rtZoom);
+          applySpan(true, { f, x });
+          drawScale();
+          return;
+        }
         if (!rtTuneOk()) return;
         const d = rtDialOf(ch);
         if (!d) return;
-        const st = (e.shiftKey ? 100 : 10) * (e.deltaY < 0 ? 1 : -1);
+        const st = 10 * (e.deltaY < 0 ? 1 : -1);
         const base = rtWheelHz && rtWheelHz.vfo === d.vfo && Date.now() - rtWheelHz.t < 1500 ? rtWheelHz.hz : d.hz;
         const nd = Math.round((base + st) / 10) * 10;
         rtSetDial(Object.assign({}, d, { hz: base }), nd);
@@ -994,6 +1012,7 @@
       }, { passive: false });
     }
   }
+  let rtZoomAt = 0;
   let rtWheelHz = null; // molette rapide : on part de la dernière fréquence envoyée, pas de l'état relu (en retard)
   // Centrer : le VFO se déplace pour que le signal du décodeur tombe au milieu de la cascade (1500 Hz)
   function rtCenter(ch) {
@@ -1058,8 +1077,10 @@
   // Bande audio et zoom de la cascade RTTY (comme MixW) : fenêtre centrée sur le décodeur de l'émission,
   // déplacée seulement quand il s'approche d'un bord (l'historique de la cascade glisse avec elle)
   let rtSpan = Number(store.get('rtspan', '3000')) === 4000 ? 4000 : 3000;
-  let rtZoom = [1, 2, 4].indexOf(Number(store.get('rtzoom', '1'))) >= 0 ? Number(store.get('rtzoom', '1')) : 1;
-  function applySpan(force) {
+  const RT_ZOOMS = [1, 1.5, 2, 3, 4, 6, 8];
+  let rtZoom = RT_ZOOMS.indexOf(Number(store.get('rtzoom', '1'))) >= 0 ? Number(store.get('rtzoom', '1')) : 1;
+  // anchor : { f, x } = garder la fréquence audio f sous la même position x (0–1) de la cascade (zoom à la molette)
+  function applySpan(force, anchor) {
     const rt = tab === 'rtty' && !detached;
     const top = rt ? rtSpan : 3000;
     const span = rt ? top / rtZoom : 3000;
@@ -1067,25 +1088,30 @@
     if (rt && span < top) {
       const f = rts[rtTx].f;
       lo = WF_LO;
-      if (span !== WF_MAX_HZ || f < lo + span * 0.15 || f > lo + span * 0.85) lo = f - span / 2;
+      if (anchor) lo = anchor.f - anchor.x * span;
+      else if (span !== WF_MAX_HZ || f < lo + span * 0.15 || f > lo + span * 0.85) lo = f - span / 2;
       lo = Math.max(0, Math.min(top - span, Math.round(lo / 10) * 10));
     }
     if (top === WF_TOP && span === WF_MAX_HZ && lo === WF_LO && !force) return false;
-    const sameSpan = span === WF_MAX_HZ;
-    const shift = lo - WF_LO;
+    const oldLo = WF_LO, oldSpan = WF_MAX_HZ, sameTop = top === WF_TOP;
     WF_TOP = top;
     WF_MAX_HZ = span;
     WF_LO = lo;
     if (wf.ctx) {
-      // Même largeur : l'historique est décalé d'autant ; sinon la cascade repart à vide
+      // Historique de la cascade recalé sur la nouvelle fenêtre (décalage et zoom) ; il repart à vide si la bande change
       let tmp = null;
-      if (sameSpan && Math.abs(shift) < span) {
+      if (sameTop) {
         tmp = document.createElement('canvas'); tmp.width = wf.w; tmp.height = wf.h;
         tmp.getContext('2d').drawImage(wf.ctx.canvas, 0, 0);
       }
       wf.ctx.fillStyle = '#05080d';
       wf.ctx.fillRect(0, 0, wf.w, wf.h);
-      if (tmp) wf.ctx.drawImage(tmp, Math.round((-shift / span) * wf.w), 0);
+      if (tmp) {
+        const k = oldSpan / span;
+        wf.ctx.imageSmoothingEnabled = k < 1;
+        wf.ctx.drawImage(tmp, ((oldLo - lo) / span) * wf.w, 0, wf.w * k, wf.h);
+        wf.ctx.imageSmoothingEnabled = true;
+      }
     }
     wf.acc = null;
     return true;
@@ -1166,7 +1192,7 @@
       if (rtSpan === 4000) api && api.say('Bande 4 kHz : ouvrez aussi le filtre du TRX (BW 4.0K), sinon le bord droit de la cascade reste noir.', '', 7000);
     });
     $('rtZoom').addEventListener('change', () => {
-      rtZoom = [1, 2, 4].indexOf(Number($('rtZoom').value)) >= 0 ? Number($('rtZoom').value) : 1;
+      rtZoom = RT_ZOOMS.indexOf(Number($('rtZoom').value)) >= 0 ? Number($('rtZoom').value) : 1;
       store.set('rtzoom', String(rtZoom));
       applySpan(true);
       drawScale();

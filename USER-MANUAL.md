@@ -532,12 +532,12 @@ RTTY is radio "teletype": you type text that scrolls on the other station's scre
 |---|---|
 | Frequency list + `↺` | RTTY frequencies per band; the transceiver goes there in DATA-U. |
 | **Bande** 3 kHz / 4 kHz (band) | Audio width shown. The transceiver only sends the audio after its filter: for 4 kHz also open its filter (BW 4.0K), otherwise the right edge stays black. It cannot go wider with these transceivers (their screen's scope does not go through USB). |
-| **Zoom** ×1 / ×2 / ×4 | As in MixW: the waterfall shows a narrower, more detailed range (×4: 750 Hz in the 3 kHz band), centred on the decoder marked TX; it moves by itself when that decoder gets near an edge. |
+| **Zoom** ×1 to ×8, or **mouse wheel** on the waterfall | As in MixW: the waterfall shows a narrower, more detailed range (×4: 750 Hz in the 3 kHz band). **Wheel towards you**: narrower, around the mouse; **wheel away**: wider, up to the whole band (×1). The list does the same, centred on the decoder marked TX; the window follows that decoder when it gets near an edge. |
 | `SPLIT` | Receive on VFO A, transmit on VFO B (same command as SPLIT on the Step row). Lit in red: « SPLIT · TX sur B ». |
 | Waterfall scale | In **kHz**, real frequency (VFO dial + audio); the small white triangle marks the middle of the audio band. In **DATA-U** (the mode to use for RTTY) low frequencies are on the left; in LSB the scale is reversed and so is the RTTY transmission: switch to DATA-U. |
 | Markers on the waterfall | Decoder **A**: yellow (Mark) and blue (Space). Decoder **B**: magenta (Mark) and green (Space). The letter A or B is written next to them. |
 | Left click / right click | Left click on a signal: tune decoder **A** on it; right click: decoder **B**. |
-| Drag / mouse wheel on the waterfall | **Dragging** the waterfall left or right tunes the VFO (you "grab" the band, signals follow the mouse); **mouse wheel**: VFO ± 10 Hz per notch (± 100 Hz with `Shift`). Both decoders stay on their signals. You need control. |
+| Drag / Shift + wheel on the waterfall | **Dragging** the waterfall left or right tunes the VFO (you "grab" the band, signals follow the mouse); `Shift` + **wheel**: VFO ± 10 Hz per notch. Both decoders stay on their signals. You need control. |
 | Frequency (e.g. 7 074,9 kHz) | Next to VFO-A / VFO-B: frequency of the signal followed by this decoder (dial of the VFO being received + Mark / Space centre, − in LSB), handy for the log or a spot. In single receive (always the case with both VFOs on HF on the FTX-1), both decoders read the same receiver: their frequencies are computed from the VFO being received, shown in brackets, e.g. « 7 079,1 kHz (VFO A) ». |
 | **Shift** (170, 200, 425, 850 Hz) / **Speed** (45,45 … 100 Bd) | Amateur radio: 170 Hz and 45.45 baud. |
 | `Inversé` (reversed) | Swaps Mark and Space when the received text makes no sense (signal "upside down"). |
