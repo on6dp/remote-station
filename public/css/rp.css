@@ -1296,8 +1296,8 @@ button[data-ctl='dnf'], button[data-ctl='dnfB'], button[data-ctl='tuner'] { font
 
 /* ------------------------------------------------------------------ carte de bande (DX cluster), colonne à droite en RTTY */
 #centerPanel { position: relative; }
-#centerPanel { --bm-w: 220px; }
-@media (max-width: 1500px) { #centerPanel { --bm-w: 180px; } }
+:root { --bm-w: 220px; }
+@media (max-width: 1500px) { :root { --bm-w: 180px; } }
 #centerPanel.bm-on > :not(.panel-h):not(.bm) { margin-right: var(--bm-w); }
 #centerPanel.collapsed > .bm { display: none; }
 .bm { position: absolute; right: 0; bottom: 0; width: var(--bm-w); box-sizing: border-box; display: flex; flex-direction: column; border-left: 1px solid var(--v2-border-dark); background: var(--v2-bg-darker, #0b1018); }
@@ -1334,3 +1334,19 @@ button[data-ctl='dnf'], button[data-ctl='dnfB'], button[data-ctl='tuner'] { font
 #centerPanel { min-width: 0; }
 @media (max-width: 1500px) { #centerPanel.bm-on .ctab { padding-inline: 9px; letter-spacing: .8px; } }
 .rt-side.rt-istx > .rt-hd { background: rgba(255, 90, 74, .10); }
+/* Ligne des bandes : titre BANDS en jaune, comme STEP et VFO */
+.tune-panel .band-row > .tl { color: var(--v2-accent-yellow); font-weight: 700; min-width: 34px; }
+/* Onglets : Synchro, Logs et Log QSO un peu à l'écart des modes ; Suivre l'opérateur encore séparé (autre chose) */
+.ctabs .ctab[data-tab='sync'] { margin-left: 28px; }
+.ctabs .ctab-log { align-self: center; margin: 0 0 3px 8px; font-size: 10px; padding: 4px 10px; border: 1px solid var(--v2-accent-cyan); color: var(--v2-accent-cyan-bright); background: rgba(0, 212, 255, .08); border-radius: 5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; cursor: pointer; }
+.ctabs .ctab-follow { margin-left: 36px; }
+@media (max-width: 1500px) { .ctabs .ctab[data-tab='sync'] { margin-left: 14px; } .ctabs .ctab-follow { margin-left: 18px; } }
+/* Carte de bande sur toute la hauteur du cadre « Activité et modes numériques » (titre compris) */
+.bm { top: 0; border-radius: 0 var(--v2-panel-radius) var(--v2-panel-radius) 0; overflow: hidden; }
+#centerPanel.bm-on > .panel-h { margin-right: var(--bm-w); }
+.ctabs .ctab-log { align-self: flex-end; margin-bottom: 2px; padding: 3px 10px; }
+/* Écran large : la carte de bande monte jusqu'en haut du cadre STEP / BANDS (place libre à droite) */
+body.bm-tall .center > [data-panel='bands'] { margin-right: calc(var(--bm-w) + 8px); }
+body.bm-tall .bm { border: 1px solid var(--v2-border-panel); border-radius: var(--v2-panel-radius); right: -1px; bottom: -1px; }
+@media (max-width: 1500px) { #centerPanel.bm-on .ctab { padding-inline: 7px; letter-spacing: .5px; } }
+#rtTip[hidden], #rtStatus:empty { display: none; }

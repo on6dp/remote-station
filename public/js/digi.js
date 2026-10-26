@@ -164,7 +164,7 @@
       <select id="rtSpan" aria-label="Largeur de la cascade" title="Bande audio affichée. 4 kHz : ouvrez aussi le filtre du TRX (BW 4.0K), sinon le bord droit reste noir"><option value="3000">Bande 3 kHz</option><option value="4000">Bande 4 kHz</option></select>
       <select id="rtZoom" aria-label="Zoom de la cascade" title="Zoom (aussi à la molette sur la cascade : vers soi = plus étroit, vers l'avant = plus large) : plage plus étroite et plus détaillée, comme MixW"><option value="1">Zoom ×1</option><option value="1.5">Zoom ×1,5</option><option value="2">Zoom ×2</option><option value="3">Zoom ×3</option><option value="4">Zoom ×4</option><option value="6">Zoom ×6</option><option value="8">Zoom ×8</option></select>
       <button class="btn" type="button" id="rtSplitBtn" aria-pressed="false" title="SPLIT : réception sur le VFO A, émission sur le VFO B (même bouton que SPLIT sur la ligne Step)">SPLIT</button>
-      <span class="dg-note">clic gauche : décodeur A · clic droit : décodeur B · molette : zoom · glisser ou Maj+molette : accorder · double-clic sur un indicatif : le reprendre</span>
+      <span class="dg-note rt-tip" id="rtTip">clic gauche : décodeur A · clic droit : décodeur B · molette : zoom · glisser ou Maj+molette : accorder · double-clic sur un indicatif : le reprendre</span>
       <span class="dg-status" id="rtStatus"></span>
     </div>
     <!-- Une seule cascade (le TRX n'envoie qu'un son) avec les repères des deux décodeurs -->
@@ -373,6 +373,9 @@
       b.textContent = label;
       bar.appendChild(b);
     }
+    // Log QSO (ligne Correspondant) : juste à droite de l'onglet Logs, sur la ligne des onglets
+    const lq = document.getElementById('dxLog');
+    if (lq && !POPUP) { lq.classList.add('ctab-log'); bar.appendChild(lq); }
     // « Suivre l'opérateur » : l'onglet suit celui de l'opérateur qui a la main (formation à distance)
     const fol = document.createElement('button');
     fol.className = 'ctab-follow';
@@ -415,7 +418,7 @@
     bm.hidden = true;
     bm.setAttribute('aria-label', 'Carte de bande');
     bm.innerHTML = '<div class="bm-h"><span class="bm-st" id="bmSt"></span><b id="bmBandT">—</b><span class="bm-t">Spots</span>'
-      + '<select id="bmFilt" aria-label="Spots affichés" title="RTTY : spots RTTY et spots sans mode indiqué · Tous : tous les spots de la plage"><option value="rtty">RTTY</option><option value="all">Tous</option></select></div>'
+      + '<select id="bmFilt" aria-label="Spots affichés" title="Mode de l’onglet : ses spots et ceux sans mode indiqué · Tous : tous les spots de la plage"><option value="rtty">RTTY</option><option value="all">Tous</option></select></div>'
       + '<div class="bm-r" title="Plage affichée pour cette bande (kHz), gardée par bande. Molette sur la carte : zoom · glisser : déplacer · double-clic : plage d’origine">'
       + '<input id="bmLo" inputmode="decimal" aria-label="Début de la plage (kHz)"><span>–</span><input id="bmHi" inputmode="decimal" aria-label="Fin de la plage (kHz)"><span>kHz</span></div>'
       + '<div class="bm-body" id="bmBody"><canvas id="bmCv"></canvas><div class="bm-lbls" id="bmLbls"></div></div>'
@@ -451,6 +454,7 @@
   }
 
   // ------------------------------------------------------------------ onglets
+  let rtTipT = 0;
   function showTab(t) {
     if (!document.querySelector('#centerPanel .ctab[data-tab="' + t + '"]')) t = POPUP ? 'ftx' : 'events';
     tab = t;
@@ -470,6 +474,13 @@
     document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
     document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== pane; });
     bmShow();
+    // RTTY : l'aide de la cascade s'affiche 3 secondes à l'arrivée sur l'onglet, puis s'efface (reste au survol de la cascade)
+    if (pane === 'rtty' && $('rtTip')) {
+      $('rtTip').hidden = false;
+      clearTimeout(rtTipT);
+      rtTipT = setTimeout(() => { if ($('rtTip')) { $('rtTip').hidden = true; sizeCanvas(); } }, 3000);
+    }
+    if ($('dgWf')) $('dgWf').title = pane === 'rtty' && $('rtTip') ? $('rtTip').textContent : '';
     // Une seule cascade, déplacée dans la fenêtre affichée (FT8/FT4 ou RTTY)
     if (WF_TABS.indexOf(pane) >= 0) {
       // RTTY sur un TRX qui envoie ses deux récepteurs séparément (DUAL_AUDIO, ex. FTDX101D / MP) : une cascade par
@@ -1057,6 +1068,20 @@
   // de la cascade) et l'indicatif passe dans Correspondant. Molette : zoom ; glisser : déplacer ; double-clic : plage d'origine.
   const BM_DEF = { '160m': [1800, 1850], '80m': [3570, 3600], '40m': [7030, 7120], '30m': [10130, 10150], '20m': [14080, 14150],
     '17m': [18095, 18110], '15m': [21080, 21150], '12m': [24910, 24930], '10m': [28080, 28150], '6m': [50090, 50150] };
+  // CW et modes numériques à fréquence fixe (FT8 / FT4 / FT2, WSPR, JT65, JTTY) : plages propres
+  const BM_CW = { '160m': [1800, 1840], '80m': [3500, 3560], '40m': [7000, 7040], '30m': [10100, 10130], '20m': [14000, 14070],
+    '17m': [18068, 18095], '15m': [21000, 21070], '12m': [24890, 24915], '10m': [28000, 28070], '6m': [50000, 50100] };
+  const BM_DG = { '160m': [1836, 1845], '80m': [3567, 3580], '40m': [7038, 7080], '30m': [10130, 10145], '20m': [14070, 14100],
+    '17m': [18095, 18110], '15m': [21070, 21100], '12m': [24910, 24925], '10m': [28070, 28130], '6m': [50300, 50330] };
+  const BM_TABS = ['ftx', 'jt65', 'rtty', 'wspr', 'jtty', 'cw']; // pas en SSTV (une seule fréquence)
+  const BM_ANY = /\b(RTTY|BPS|RY|CW|WPM|FT8|FT4|FT2|PSK\d*|SSB|USB|LSB|JT65|JT9|MSK144|Q65|OLIVIA|SSTV|FM|AM|WSPR|JTTY|BEACON|NCDXF)\b/i;
+  function bmGroup() { return tab === 'rtty' ? 'rtty' : tab === 'cw' ? 'cw' : 'dg'; }
+  // Mode suivi par l'onglet : nom (filtre, « déjà contacté ») et mots qui le reconnaissent dans le commentaire du spot
+  function bmMode() {
+    const m = tab === 'ftx' ? mode : { rtty: 'RTTY', cw: 'CW', jt65: 'JT65', wspr: 'WSPR', jtty: 'JTTY' }[tab] || 'RTTY';
+    const want = m === 'RTTY' ? /RTTY|\bBPS\b|\bRY\b/i : m === 'CW' ? /\bCW\b|WPM/i : new RegExp('\\b' + m + '\\b', 'i');
+    return { name: m, want };
+  }
   const BM_KEEP = 30 * 60000;
   const bmSpots = new Map();
   let bmState = '', bmHost = '', bmRaf = 0, bmBand = '', bmLay = [];
@@ -1072,11 +1097,13 @@
     const b = BANDS_M.find((x) => khz / 1000 >= x[0] && khz / 1000 <= x[1]);
     return b ? b[2] : '';
   }
+  function bmKey(band) { const g = bmGroup(); return 'bm_' + (g === 'rtty' ? '' : g + '_') + band; }
   function bmRange(band) {
-    const s = store.get('bm_' + band, '');
+    const s = store.get(bmKey(band), '');
     const m = /^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/.exec(s);
     if (m && Number(m[2]) - Number(m[1]) >= 2) return [Number(m[1]), Number(m[2])];
-    if (BM_DEF[band]) return BM_DEF[band].slice();
+    const def = { rtty: BM_DEF, cw: BM_CW, dg: BM_DG }[bmGroup()];
+    if (def[band]) return def[band].slice();
     const b = BANDS_M.find((x) => x[2] === band);
     return b ? [b[0] * 1000, Math.min(b[1] * 1000, b[0] * 1000 + 300)] : [7030, 7120];
   }
@@ -1085,24 +1112,36 @@
     const e0 = b ? b[0] * 1000 - 5 : 0, e1 = b ? b[1] * 1000 + 5 : 1e9;
     let w = Math.max(2, Math.min(e1 - e0, hi - lo));
     lo = Math.max(e0, Math.min(e1 - w, lo));
-    store.set('bm_' + band, (Math.round(lo * 10) / 10) + '-' + (Math.round((lo + w) * 10) / 10));
+    store.set(bmKey(band), (Math.round(lo * 10) / 10) + '-' + (Math.round((lo + w) * 10) / 10));
     bmDraw();
   }
-  // Mode du spot d'après son commentaire : les spots RTTY, et ceux qui ne disent rien, restent en filtre RTTY
-  function bmIsRtty(s) {
-    if (/RTTY|\bBPS\b|\bRY\b/i.test(s.cmt)) return true;
-    return !/\b(CW|WPM|FT8|FT4|FT2|PSK\d*|SSB|USB|LSB|JT65|JT9|MSK144|Q65|OLIVIA|SSTV|FM|AM|BEACON|NCDXF)\b/i.test(s.cmt);
+  // Mode du spot d'après son commentaire : ceux du mode de l'onglet, et ceux qui ne disent rien, restent affichés
+  function bmMatch(s, want) {
+    if (want.test(s.cmt)) return true;
+    return !BM_ANY.test(s.cmt);
   }
   function bmShown() {
-    return tab === 'rtty' && !detached && !!$('bandMap') && !$('centerPanel').classList.contains('collapsed');
+    return BM_TABS.indexOf(tab) >= 0 && !detached && !!$('bandMap') && !$('centerPanel').classList.contains('collapsed');
   }
   function bmShow() {
-    const on = tab === 'rtty' && !detached;
+    const on = BM_TABS.indexOf(tab) >= 0 && !detached;
     const p = $('centerPanel'), bm = $('bandMap');
     if (!p || !bm) return;
     p.classList.toggle('bm-on', on);
     bm.hidden = !on;
-    if (on) { bm.style.top = ($('ctabs') ? $('ctabs').offsetTop : 40) + 'px'; bmDraw(); }
+    bmPlace();
+    if (on) bmDraw();
+  }
+  // Écran large (≥ 1700 px) : la carte monte jusqu'en haut du cadre STEP / BANDS, juste au-dessus, où il reste de la place
+  function bmPlace() {
+    const p = $('centerPanel'), bm = $('bandMap');
+    if (!p || !bm) return;
+    const tp = document.querySelector('.center > [data-panel="bands"]');
+    const tall = !bm.hidden && !POPUP && window.innerWidth >= 1700 && !!tp && tp.parentElement === p.parentElement && !!tp.offsetParent
+      && tp.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING && !p.classList.contains('collapsed');
+    document.body.classList.toggle('bm-tall', tall);
+    const top = tall ? Math.round(tp.getBoundingClientRect().top - p.getBoundingClientRect().top) + 'px' : '0px';
+    if (bm.style.top !== top) { bm.style.top = top; bmDraw(); }
   }
   function bmDraw() {
     if (bmRaf || !bmShown()) return;
@@ -1118,7 +1157,10 @@
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.clearRect(0, 0, W, H);
-    const d = rtDialOf(rtTx) || rtDialOf(0);
+    const d = (tab === 'rtty' && rtDialOf(rtTx)) || rtDialOf(0);
+    const md = bmMode();
+    const fo = $('bmFilt').options[0];
+    if (fo.textContent !== md.name) fo.textContent = md.name;
     const band = d ? bmBandOf(d.hz / 1000) : bmBand || '40m';
     if (band && band !== bmBand) bmBand = band;
     const [lo, hi] = bmRange(bmBand || '40m');
@@ -1132,7 +1174,20 @@
     c.fillStyle = '#0b1018'; c.fillRect(0, 0, RX, H);
     c.strokeStyle = '#46546a'; c.beginPath(); c.moveTo(RX + 0.5, 0); c.lineTo(RX + 0.5, H); c.stroke();
     // fenêtre audio de la cascade (fréquences réelles) et repères des décodeurs
-    if (d) {
+    const line = (khz, col, txt, bold) => {
+      const y = yOf(khz);
+      if (y < 0 || y > H) return;
+      c.strokeStyle = col;
+      c.lineWidth = bold ? 2 : 1;
+      c.beginPath(); c.moveTo(0, Math.round(y) + 0.5); c.lineTo(W, Math.round(y) + 0.5); c.stroke();
+      c.lineWidth = 1;
+      c.fillStyle = col;
+      c.font = 'bold 10px Verdana, "DejaVu Sans", Arial, sans-serif';
+      c.textBaseline = 'middle';
+      c.fillText(txt, 2, Math.max(6, Math.min(H - 6, y - 7)));
+    };
+    if (d && tab === 'cw') line(d.hz / 1000, '#F2CF4A', 'VFO', true); // CW : fréquence du VFO (battement nul)
+    else if (d) {
       const a = (d.hz + d.sign * WF_LO) / 1000, b = (d.hz + d.sign * (WF_LO + WF_MAX_HZ)) / 1000;
       const y0 = yOf(Math.min(a, b)), y1 = yOf(Math.max(a, b));
       if (y1 >= 0 && y0 <= H) {
@@ -1141,20 +1196,17 @@
         c.strokeStyle = 'rgba(0, 212, 255, .55)';
         c.strokeRect(0.5, Math.max(0, y0) + 0.5, W - 1, Math.max(2, Math.min(H, y1) - Math.max(0, y0)) - 1);
       }
-      rts.forEach((x, ch) => {
-        const dd = rtDialOf(ch);
-        if (!dd || dd.vfo !== d.vfo) return;
-        const y = yOf((dd.hz + dd.sign * x.f) / 1000);
-        if (y < 0 || y > H) return;
-        c.strokeStyle = ch ? '#e040fb' : '#ffd400';
-        c.lineWidth = ch === rtTx ? 2 : 1;
-        c.beginPath(); c.moveTo(0, Math.round(y) + 0.5); c.lineTo(W, Math.round(y) + 0.5); c.stroke();
-        c.lineWidth = 1;
-        c.fillStyle = ch ? '#e040fb' : '#ffd400';
-        c.font = 'bold 10px Verdana, "DejaVu Sans", Arial, sans-serif';
-        c.textBaseline = 'middle';
-        c.fillText((ch ? 'B' : 'A') + (ch === rtTx ? ' TX' : ''), 2, Math.max(6, Math.min(H - 6, y - 7)));
-      });
+      if (tab === 'rtty') {
+        rts.forEach((x, ch) => {
+          const dd = rtDialOf(ch);
+          if (!dd || dd.vfo !== d.vfo) return;
+          line((dd.hz + dd.sign * x.f) / 1000, ch ? '#e040fb' : '#ffd400', (ch ? 'B' : 'A') + (ch === rtTx ? ' TX' : ''), ch === rtTx);
+        });
+      } else if (tab !== 'wspr') {
+        // FT8 / FT4 / FT2, JT65, JTTY : fréquences de réception (vert) et d'émission (rouge)
+        if (tab !== 'jtty' && Math.abs(txF - rxF) > 20) line((d.hz + d.sign * txF) / 1000, '#ff5a4a', 'TX', false);
+        line((d.hz + d.sign * rxF) / 1000, '#3ee07f', tab === 'jtty' || Math.abs(txF - rxF) <= 20 ? 'RX TX' : 'RX', true);
+      }
       // VFO hors de la plage : flèche en haut ou en bas
       const vk = d.hz / 1000;
       if (vk < lo || vk > hi) {
@@ -1183,7 +1235,7 @@
     const now = Date.now();
     for (const [k, s] of bmSpots) if (now - s.at > BM_KEEP) bmSpots.delete(k);
     const LH = 15, room = Math.max(1, Math.floor((H - 2) / LH));
-    let list = Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi && (bmFilt === 'all' || bmIsRtty(s)));
+    let list = Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi && (bmFilt === 'all' || bmMatch(s, md.want)));
     if (list.length > room) list = list.sort((a, b) => b.at - a.at).slice(0, room);
     list.sort((a, b) => a.f - b.f);
     const pos = list.map((s) => yOf(s.f) - LH / 2);
@@ -1204,7 +1256,7 @@
       b.className = 'bm-s';
       const cq = s.skim || /\bCQ\b|\bTEST\b|CONTEST/i.test(s.cmt);
       if (cq) b.classList.add('bm-cq');
-      if (worked.has(s.call + '|' + bandKey + '|RTTY')) b.classList.add('bm-wkd');
+      if (worked.has(s.call + '|' + bandKey + '|' + md.name)) b.classList.add('bm-wkd');
       b.style.top = Math.round(pos[i]) + 'px';
       b.style.left = LX + 'px';
       b.style.opacity = String(Math.max(0.45, 1 - (now - s.at) / BM_KEEP * 0.55));
@@ -1214,7 +1266,7 @@
       b.firstChild.textContent = s.call;
       b.lastChild.textContent = ' ' + s.f.toFixed(1).replace('.', ',');
       b.title = s.call + ' · ' + s.f.toFixed(1).replace('.', ',') + ' kHz · ' + (s.cmt || '—') + ' · de ' + s.de + ' · il y a ' + min + ' min'
-        + (b.classList.contains('bm-wkd') ? ' · déjà contacté sur cette bande en RTTY' : '') + '\nClic : le TRX se cale sur ce signal (décodeur TX au milieu de la cascade) et l’indicatif passe dans Correspondant';
+        + (b.classList.contains('bm-wkd') ? ' · déjà contacté sur cette bande en ' + md.name : '') + '\nClic : le TRX se cale sur ce signal et l’indicatif passe dans Correspondant';
       lbls.appendChild(b);
     });
     const n = Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi).length;
@@ -1229,9 +1281,10 @@
     if (!api || !api.iControl()) return api && api.say('Prenez la main pour vous caler sur ' + (call || 'cette fréquence') + ' (le TRX change de fréquence).', 'warn');
     const st = api.state();
     if (st && ((st.ptt && st.ptt.active) || st.ftx)) return api.say('Réglage bloqué pendant l’émission.', 'warn');
+    const hz = Math.round(khz * 1000);
+    if (tab !== 'rtty') return bmTuneOther(hz, call);
     const d = rtDialOf(rtTx);
     if (!d) return api.say('Fréquence du TRX pas encore lue.', 'warn');
-    const hz = Math.round(khz * 1000);
     const r = rts[rtTx];
     const audio = d.sign * (hz - d.hz);
     // déjà dans la cascade : seul le décodeur bouge
@@ -1249,6 +1302,27 @@
     drawScale();
     bmDraw();
     api.say((call ? call + ' : ' : '') + 'VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz, décodeur ' + (rtTx ? 'B' : 'A') + ' sur le signal.', '', 4000);
+  }
+  // CW : le VFO va sur la station (battement nul : elle sort à la tonalité du TRX, où le décodeur est déjà calé).
+  // FT8 / FT4 / FT2, JT65, JTTY, WSPR : la fréquence de réception se place sur le signal ; hors de la bande audio,
+  // le VFO bouge pour le mettre à 1500 Hz.
+  function bmTuneOther(hz, call) {
+    const d = rtDialOf(0);
+    if (!d) return api.say('Fréquence du TRX pas encore lue.', 'warn');
+    const who = call ? call + ' : ' : '';
+    if (tab === 'cw') {
+      const nd = Math.round(hz / 10) * 10;
+      api.setFreq(nd, d.vfo);
+      bmDraw();
+      return api.say(who + 'VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz.', '', 4000);
+    }
+    const audio = d.sign * (hz - d.hz);
+    if (audio >= 150 && audio <= WF_MAX_HZ - 150) { setRx(audio); bmDraw(); return; }
+    const nd = Math.round((hz - d.sign * 1500) / 100) * 100;
+    api.setFreq(nd, d.vfo);
+    setRx(d.sign * (hz - nd));
+    bmDraw();
+    api.say(who + 'VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz, réception sur le signal.', '', 4000);
   }
   function bmInit() {
     const body = $('bmBody');
@@ -1294,7 +1368,7 @@
     body.addEventListener('dblclick', (e) => {
       e.stopPropagation();
       if (e.target.closest('.bm-s')) return;
-      store.set('bm_' + bmBand, '');
+      store.set(bmKey(bmBand), '');
       bmDraw();
     });
     const num = (v) => Number(String(v).replace(',', '.').replace(/\s/g, ''));
@@ -1309,7 +1383,7 @@
     $('bmFilt').value = bmFilt;
     $('bmFilt').addEventListener('change', () => { bmFilt = $('bmFilt').value === 'all' ? 'all' : 'rtty'; store.set('bmfilt', bmFilt); bmDraw(); });
     if (window.ResizeObserver) new ResizeObserver(() => bmDraw()).observe(body);
-    window.addEventListener('resize', () => { if (tab === 'rtty') bmShow(); });
+    window.addEventListener('resize', () => { if (BM_TABS.indexOf(tab) >= 0) bmShow(); });
   }
   // En-têtes des deux décodeurs : centre, fréquence du signal suivi, décodeur de l'émission
   function rtHeads() {
@@ -2818,11 +2892,13 @@
     store.set('txf', txF);
     drawScale();
     ftxCfg();
+    bmDraw();
   }
   function setRx(f) {
     rxF = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(f)));
     store.set('rxf', rxF);
     drawScale();
+    bmDraw();
     redrawRx();
     if (tab === 'jtty') jtRedraw();
   }
@@ -3048,7 +3124,7 @@
     let warn = false;
     if (!st || !st.station) { txt = 'Station hors ligne'; warn = true; }
     else if (!st.audio || !st.audio.active) { txt = 'La page Station n’envoie pas la BF : « Activer l’audio » sur le PC du club'; warn = true; }
-    else if (tab === 'rtty') txt = 'BF reçue';
+    else if (tab === 'rtty') txt = ''; // RTTY : rien quand tout va bien (place pour les fenêtres de réception)
     else if (!lastDecode || Date.now() - lastDecode > (mode === 'JT65' ? 130000 : mode === 'FT8' ? 40000 : mode === 'FT2' ? 10000 : 20000)) txt = 'BF reçue · décodage au prochain cycle' + (mode === 'JT65' ? ' (vers la 52e seconde de chaque minute)' : '') + '…';
     else txt = 'BF reçue · décodage OK' + (st.digi && st.digi.engine === 'wsjtx' ? ' (moteur WSJT-X)' : '') + (st.digi && st.digi.latency != null ? ' · délai ' + st.digi.latency + ' ms' : '');
     if (st && st.radio && st.radio.mode && !/DATA|USB|-D/i.test(st.radio.mode)) { txt += ' · mode ' + st.radio.mode + ' : passez en DATA-U'; warn = true; }
@@ -3261,7 +3337,8 @@
       setInterval(() => {
         if (detached) return;
         if (tab === 'ftx' || tab === 'jt65') { clock(); status(); followBand(); }
-        if (tab === 'rtty') { status(); rtHeads(); bmDraw(); }
+        if (tab === 'rtty') { status(); rtHeads(); }
+        if (BM_TABS.indexOf(tab) >= 0) { bmPlace(); bmDraw(); }
         if (tab === 'wspr') wsClock();
         if (tab === 'jtty') jtStatus();
         if (tab === 'cw') cwStatus();

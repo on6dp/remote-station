@@ -170,7 +170,7 @@ The TRX (a Yaesu FTX-1 with its SPA-1 amplifier, or depending on the setup an FT
 
 <h3 id="p-log">4.4 Logging the QSO</h3>
 <ol>
-  <li>After a digital QSO, the form opens by itself (FT8) or with the <span class="k">Log QSO</span> button (RTTY, JTTY, CW, Correspondant line).</li>
+  <li>After a digital QSO, the form opens by itself (FT8) or with the <span class="k">Log QSO</span> button (RTTY, JTTY, CW; also on the tab row, right of Logs).</li>
   <li>For a phone QSO: <span class="k">LOGS</span> tab, type the callsign (the UTC time fills in by itself), click <span class="k">⇩ TRX</span> (take from the TRX) to copy the frequency and mode, then complete the reports.</li>
   <li><span class="k">Enregistrer le QSO</span> (save the QSO) (or <kbd>Enter</kbd>). The QSO appears in the list. Under the club callsign, it is also uploaded to the online logbooks if the administrators have set that up.</li>
   <li>To get your QSOs into your own logging program: <b>Exporter ▾ → Mes QSO (.adi)</b> (Export → My QSOs).</li>
@@ -197,7 +197,7 @@ The TRX (a Yaesu FTX-1 with its SPA-1 amplifier, or depending on the setup an FT
   <li><b>Centre, top</b>: the two VFO displays (A / MAIN and B / SUB), the <b>Step</b> row (tuning step, VFO choice, SPLIT…) and the <b>band</b> row.</li>
   <li><b>Centre, bottom</b>: « Activité et modes numériques » (activity and digital modes): tabs Activité, FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, CW, SSTV, Synchro and Logs.</li>
   <li><b>Right column</b>: RX audio (listening), DSP (noise reduction), Accord (tuner), TX (PTT and power).</li>
-  <li><b>At the very bottom</b>: the <b>Correspondant</b> line (the station worked, its reports, the TX call and <span class="k">Log QSO</span>).</li>
+  <li>Under the tabs: the <b>Correspondant</b> line (the station worked, its reports and the TX call). <span class="k">Log QSO</span> is on the tab row, right of Logs, followed by <span class="k">👁 Suivre</span> (follow the operator). On the right, the <b>band map</b> (DX cluster spots), in every mode tab except SSTV.</li>
 </ol>
 <ul>
   <li><b>Fold a panel</b>: click its title (for example "DSP"); a second click opens it again. Your choice is remembered.</li>
@@ -266,7 +266,7 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
   <tr><td><span class="k">A → B</span> / <span class="k">B → A</span></td><td>Copies the frequency and mode of one VFO to the other.</td><td>Preparing a SPLIT.</td></tr>
   <tr><td><span class="k">A ⇄ B</span></td><td>Swaps the two VFOs.</td><td>Switching quickly between two frequencies.</td></tr>
   <tr><td><span class="k">LOCK</span></td><td>Locks the <b>front-panel controls of the TRX at the club</b>. The dashboard remains usable.</td><td>So that someone at the club does not change anything during your operating.</td></tr>
-  <tr><td><span class="k">160M</span> … <span class="k">70CM</span></td><td>Changes band: the TRX returns to the last frequency and mode used on that band. Only the bands of the connected TRX are offered.</td><td>Changing band. A « <b>TUNE obligatoire</b> » (TUNE required) reminder then flashes on the right until the next TUNE.</td></tr>
+  <tr><td><b>Bands</b>: <span class="k">160M</span> … <span class="k">70CM</span></td><td>Changes band: the TRX returns to the last frequency and mode used on that band. Only the bands of the connected TRX are offered.</td><td>Changing band. A « <b>TUNE obligatoire</b> » (TUNE required) reminder then flashes on the right until the next TUNE.</td></tr>
 </table>
 <p>The grey line below the bands is a reminder of useful actions; the message line just below it shows confirmations and refusals.</p>
 
@@ -416,7 +416,8 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
 </ul>
 
 <h2 id="numeriques">12. Digital modes</h2>
-<p>The centre tabs: <b>Activité</b>, <b>FT8 · FT4 · FT2</b>, <b>RTTY</b>, <b>WSPR</b>, <b>JT65</b>, <b>JTTY</b>, <b>CW</b>, <b>SSTV</b>, then <b>Synchro</b> and <b>Logs</b>.
+<p>The centre tabs: <b>Activité</b>, <b>FT8 · FT4 · FT2</b>, <b>RTTY</b>, <b>WSPR</b>, <b>JT65</b>, <b>JTTY</b>, <b>CW</b>, <b>SSTV</b>, then <b>Synchro</b>, <b>Logs</b> and the <span class="k">Log QSO</span> button.
+On the right of the FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY and CW tabs, the <b>band map</b> shows the DX cluster spots (see 12.3, « Band map »).
 You have <b>no software to install</b> (no WSJT-X, FLDIGI…): everything happens in the page.</p>
 <ul>
   <li><b>Decoding runs on the server</b>, on the server's (synchronised) clock: the time on your PC and on the club PC does not matter.</li>
@@ -512,6 +513,7 @@ For transmitting, choose a clear spot in the waterfall. A white line marks the s
 The tab has <b>two independent decoders</b>: <b>A</b> (VFO-A, left) and <b>B</b> (VFO-B, right), each with its own received text and settings.
 The FTX-1, FTDX10 and IC-7300 send a single audio stream to the PC, so there is <b>one waterfall</b>, full width, carrying the markers of both decoders.
 You can follow two stations on the same band at once (contest, a DX and its pile-up). A transceiver that sends its two receivers separately (FTDX101D / MP) will get one waterfall per decoder, side by side.</p>
+<p>Above the waterfall, the help line (« clic gauche : décodeur A… ») is shown for <b>3 seconds</b> when you open the tab, then disappears to leave more room for the receive windows; it stays as a tooltip on the waterfall. The status line only appears when something is wrong (no audio, TRX not in DATA-U…).</p>
 <table>
   <tr><th>Control</th><th>What it does</th></tr>
   <tr><td>Frequency list + <span class="k">↺</span></td><td>RTTY frequencies per band; the transceiver goes there in DATA-U.</td></tr>
@@ -542,21 +544,33 @@ You can follow two stations on the same band at once (contest, a DX and its pile
   <li><span class="k">Effacer</span> (under the transmit button) clears the text to send; <span class="k">Log QSO</span> opens the logbook form, with the frequency of the decoder marked TX.</li>
 </ol>
 
+<h4 id="rtty-pratique">In practice: an RTTY contest QSO, almost without leaving the keyboard</h4>
+<ol>
+  <li><b>Take control</b>, <b>RTTY</b> tab, TRX in <b>DATA-U</b> (<span class="k">↺</span> button of the frequency list).</li>
+  <li><b>Find a station</b>: click a <span class="grn">green</span> callsign on the <b>band map</b>. The TRX tunes to it, the transmit decoder decodes it and its callsign goes into Correspondant. Or: left click on a trace in the waterfall (decoder A), right click (decoder B).</li>
+  <li><b>Choose the transmit window</b>: one click in the VFO-A or VFO-B window (« ● TX ici »). Double-clicking a received callsign puts it in Correspondant and selects its window at the same time.</li>
+  <li><b>Reply</b>: <kbd>F2</kbd> key (or the reply macro), then the report macro. <kbd>Esc</kbd> stops the current transmission.</li>
+  <li><b>Log the QSO</b>: a macro containing <code>&lt;LOG&gt;</code> (form opens by itself) or the <span class="k">Log QSO</span> button.</li>
+  <li><b>Call yourself</b> (CQ): choose the transmit window, then <kbd>F1</kbd>. With two decoders you can call CQ on A while watching another station on B.</li>
+  <li><b>Station outside the waterfall and not spotted</b>: click the band map at that frequency (the TRX goes there), or drag the waterfall, or <kbd>Shift</kbd> + wheel.</li>
+</ol>
+
 <h4 id="carte-bande">Band map (DX cluster)</h4>
-<p>On the right of the RTTY tab, a <b>vertical column</b> shows the band as a ruler: low frequencies <b>at the top</b>, high at the bottom (by default 7030–7120 kHz on 40 m, 14080–14150 kHz on 20 m, 3570–3600 kHz on 80 m…).
+<p>On the right of the FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY and CW tabs (not SSTV: a single frequency), a <b>vertical column</b> shows the band as a ruler: low frequencies <b>at the top</b>, high at the bottom (by default 7030–7120 kHz on 40 m, 14080–14150 kHz on 20 m, 3570–3600 kHz on 80 m…).
 <b>Spots</b> from the club's DX cluster (OP0P, including stations found by the Reverse Beacon Network) appear at their frequency. You see the whole RTTY part of the band at a glance, while the waterfall only shows 3 or 4 kHz.</p>
 <table>
   <tr><th>Item</th><th>What it shows or does</th></tr>
   <tr><td>Green / red dot, <b>20 m</b></td><td>Link to the cluster (green = connected), band of the VFO being heard.</td></tr>
-  <tr><td><b>RTTY</b> / <b>Tous</b> (all)</td><td>RTTY: RTTY spots and spots with no mode given. Tous: also CW, FT8… spots.</td></tr>
-  <tr><td>Two kHz boxes</td><td>Range shown, kept for each band. Type your limits (e.g. 7030 and 7120).</td></tr>
+  <tr><td><b>RTTY</b> (or FT8, CW…) / <b>Tous</b> (all)</td><td>The tab's mode: its spots and spots with no mode given. Tous: also spots of other modes.</td></tr>
+  <tr><td>Two kHz boxes</td><td>Range shown, kept for each band, separately for RTTY, CW and the other digital modes. Type your limits (e.g. 7030 and 7120). Defaults on 40 m: RTTY 7030–7120, CW 7000–7040, FT8 and others 7038–7080 kHz.</td></tr>
   <tr><td>Callsign in <span class="grn">green</span></td><td>Station calling (CQ, RBN skimmer spot).</td></tr>
   <tr><td><s>Struck-out</s> callsign</td><td>Already worked in RTTY on this band (under the chosen TX call).</td></tr>
   <tr><td>Faded callsign</td><td>Old spot (kept 30 minutes). On hover: comment, who spotted it, how many minutes ago.</td></tr>
   <tr><td>Blue area</td><td>The part of the band visible in the waterfall right now.</td></tr>
-  <tr><td>Yellow / magenta line</td><td>Decoder A / B; « TX » next to the transmit one. « ▲ VFO » or « ▼ VFO »: the VFO is outside the range.</td></tr>
+  <tr><td>Yellow / magenta line</td><td>RTTY: decoder A / B; « TX » next to the transmit one. FT8, JT65, JTTY: green line = receive frequency, red = transmit. CW: yellow line = VFO frequency. « ▲ VFO » or « ▼ VFO »: the VFO is outside the range.</td></tr>
   <tr><td><b>Click on a spot</b></td><td>The transceiver tunes to the station: if it is already in the waterfall, only the transmit decoder moves onto it; otherwise the VFO moves to put it in the middle of the waterfall, with the decoder on it. The callsign goes into Correspondant. Then just press the reply macro (<kbd>F2</kbd>…). You must have control.</td></tr>
   <tr><td>Click elsewhere on the map</td><td>Same on that frequency, without a callsign (to scan the band).</td></tr>
+  <tr><td>Click in the other tabs</td><td><b>CW</b>: the VFO goes to the station (it comes out at the TRX pitch, where the CW decoder is set). <b>FT8 · FT4 · FT2, JT65, JTTY, WSPR</b>: the receive frequency moves onto the signal; if it is outside the audio band, the VFO moves to put it at 1500 Hz.</td></tr>
   <tr><td><b>Wheel</b> / drag / double-click</td><td>Wheel: zoom around the mouse; drag up or down: move the range; double-click: the band's original range.</td></tr>
 </table>
 <p>Cluster settings (administrator, <code>config.json</code>, then restart the service): <code>clusterHost</code> (op0p.be by default; empty = no cluster), <code>clusterPort</code> (8000), <code>clusterCall</code> (login callsign with an SSID; empty = digiCall followed by -7, i.e. ON5VL-7) and <code>clusterCmds</code> (commands sent after logging in: <code>set/skimmer</code> for RBN spots).</p>
@@ -612,14 +626,14 @@ the frequency to set on the TRX <b>before the converter</b>, to uplink on 2400.0
 Example: FT8 on <b>432.540 MHz</b> with the club's 70 cm converter. Only the IFs the connected TRX can reach are offered (FTX-1).</p>
 
 <h2 id="messages">13. Correspondent, macros and tags</h2>
-<p><b>The Correspondant line</b> (at the very bottom of the screen)</p>
+<p><b>The Correspondant line</b> (under the digital-mode tabs)</p>
 <table>
   <tr><th>Field</th><th>What it contains</th></tr>
   <tr><td><b>Correspondant</b> (correspondent)</td><td>The callsign of the station worked. It fills in by itself when you click a callsign in a tab; you can also type it.</td></tr>
   <tr><td><b>Nom</b> (name), <b>QTH</b>, <b>Locator</b></td><td>First name, town and locator of the correspondent. They are looked up on <b>QRZ.com</b> as soon as a new correspondent is chosen (if a QRZ account has been set up by the administrators); only empty boxes are filled.</td></tr>
   <tr><td><b>RST TX</b> / <b>RST RX</b></td><td>RST TX = report <b>sent</b> by the club station; RST RX = report <b>received</b> from the correspondent. In FT8 / FT4 / FT2, WSPR and JT65 they are dB (RST RX fills itself in during the sequence); in RTTY, CW, SSTV and JTTY, RST 599.</td></tr>
   <tr><td><b>TX call</b></td><td>Callsign for digital transmissions and the logbook: the station's (ON5VL) or yours. Chosen by the operator in control and remembered for next time. Messages Tx1 to Tx6, <code>&lt;MYCALL&gt;</code> macros and the logbook form follow it. A QSO logged under your callsign stays in the club logbook, but is not uploaded to the club's online accounts (get it with Exporter → Mes QSO).</td></tr>
-  <tr><td><span class="k">Log QSO</span></td><td>Opens the « Enregistrer le QSO » (log the QSO) form, already filled in with this information, the frequency and the mode.</td></tr>
+  <tr><td><span class="k">Log QSO</span> (tab row, right of Logs)</td><td>Opens the « Enregistrer le QSO » (log the QSO) form, already filled in with this information, the frequency and the mode.</td></tr>
 </table>
 <p><b>Macros</b> (RTTY, JTTY, CW) are ready-made texts, on a row above the text box: <b>F1 to F12</b> in RTTY and CW, <b>F1 to F8</b> in JTTY.</p>
 <ul>
@@ -661,7 +675,7 @@ Example: FT8 on <b>432.540 MHz</b> with the club's 70 cm converter. Only the IFs
   <tr><td><span class="k">Enregistrer le QSO</span> (or <kbd>Enter</kbd>)</td><td>Adds the QSO to the logbook. A duplicate (same callsign, band and mode within half an hour) is reported before saving; if the entry already in the logbook lacks the name, QTH, locator or received RST, you are offered to <b>complete</b> it instead of creating a 2nd QSO.</td></tr>
   <tr><td><span class="k">Supprimer</span> (delete) / <span class="k">Annuler</span> (cancel)</td><td>Appear when you edit an existing QSO: delete the QSO (after confirmation; online logbooks are not changed) or abandon the edit.</td></tr>
 </table>
-<p><b>Without leaving the RTTY, JTTY or CW tab</b>: the <span class="k">Log QSO</span> button (next to « Émettre », and on the Correspondant line, after TX call) opens a form already filled in:
+<p><b>Without leaving the RTTY, JTTY or CW tab</b>: the <span class="k">Log QSO</span> button (next to « Émettre », and on the tab row, right of Logs) opens a form already filled in:
 callsign, first name, QTH, locator and RST, frequency (in RTTY: the signal frequency) and mode, power, start time (when the correspondent was chosen) and end time. Correct if needed, then <span class="k">Enregistrer dans le carnet</span> (save to the logbook).
 In FT8, this form opens by itself at the end of the QSO; a macro containing <code>&lt;LOG&gt;</code> also opens it.</p>
 

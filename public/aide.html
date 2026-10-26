@@ -170,7 +170,7 @@ Le TRX (un Yaesu FTX-1 avec son ampli SPA-1, ou selon le cas un FTDX10 ou un IC-
 
 <h3 id="p-log">4.4 Noter le QSO dans le carnet</h3>
 <ol>
-  <li>Après un QSO numérique, la fiche s'ouvre toute seule (FT8) ou avec le bouton <span class="k">Log QSO</span> (RTTY, JTTY, CW, ligne Correspondant).</li>
+  <li>Après un QSO numérique, la fiche s'ouvre toute seule (FT8) ou avec le bouton <span class="k">Log QSO</span> (RTTY, JTTY, CW ; aussi sur la ligne des onglets, à droite de Logs).</li>
   <li>Pour un QSO en phonie : onglet <span class="k">LOGS</span>, tapez l'indicatif (l'heure UTC se met toute seule), cliquez <span class="k">⇩ TRX</span> pour reprendre fréquence et mode, complétez les reports.</li>
   <li><span class="k">Enregistrer le QSO</span> (ou <kbd>Entrée</kbd>). Le QSO apparaît dans la liste. Sous l'indicatif du club, il est aussi envoyé aux carnets en ligne si les administrateurs l'ont prévu.</li>
   <li>Pour récupérer vos QSO dans votre propre logiciel : <b>Exporter ▾ → Mes QSO (.adi)</b>.</li>
@@ -195,9 +195,9 @@ Le TRX (un Yaesu FTX-1 avec son ampli SPA-1, ou selon le cas un FTDX10 ou un IC-
 <ol>
   <li><b>Colonne de gauche</b> : Antenne, RF front end (réception), Mode, Filtres, Station meters (mesures).</li>
   <li><b>Centre, en haut</b> : les deux écrans VFO (A / MAIN et B / SUB), la ligne <b>Step</b> (pas d'accord, choix du VFO, SPLIT…) et la ligne des <b>bandes</b>.</li>
-  <li><b>Centre, en bas</b> : « Activité et modes numériques » : onglets Activité, FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, CW, SSTV, Synchro et Logs.</li>
+  <li><b>Centre, en bas</b> : « Activité et modes numériques » : onglets Activité, FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, CW, SSTV, puis Synchro, Logs et le bouton <span class="k">Log QSO</span>, puis <span class="k">👁 Suivre l'opérateur</span>. À droite, la <b>carte de bande</b> (spots du DX cluster), dans tous les onglets de modes sauf SSTV.</li>
   <li><b>Colonne de droite</b> : RX audio (écoute), DSP (antiparasites), Accord (tuner), TX (PTT et puissance).</li>
-  <li><b>Tout en bas</b> : la ligne <b>Correspondant</b> (la station contactée, ses reports, le TX call et <span class="k">Log QSO</span>).</li>
+  <li>Sous les onglets : la ligne <b>Correspondant</b> (la station contactée, ses reports et le TX call).</li>
 </ol>
 <ul>
   <li><b>Replier un cadre</b> : cliquez sur son titre (par exemple « DSP ») ; un deuxième clic le rouvre. Votre choix est retenu.</li>
@@ -266,7 +266,7 @@ Certaines n'existent que sur un TRX : elles sont grisées ou absentes sur les au
   <tr><td><span class="k">A → B</span> / <span class="k">B → A</span></td><td>Recopie la fréquence et le mode d'un VFO sur l'autre.</td><td>Préparer un SPLIT.</td></tr>
   <tr><td><span class="k">A ⇄ B</span></td><td>Échange les deux VFO.</td><td>Passer rapidement d'une fréquence à l'autre.</td></tr>
   <tr><td><span class="k">LOCK</span></td><td>Verrouille les boutons de la <b>face avant du TRX au club</b>. Le dashboard reste utilisable.</td><td>Pour qu'une personne au club ne dérègle rien pendant votre trafic.</td></tr>
-  <tr><td><span class="k">160M</span> … <span class="k">70CM</span></td><td>Change de bande : le TRX reprend la dernière fréquence et le dernier mode utilisés sur cette bande. Seules les bandes du TRX branché sont proposées.</td><td>Changer de bande. Un rappel « <b>TUNE obligatoire</b> » clignote ensuite à droite jusqu'au prochain TUNE.</td></tr>
+  <tr><td><b>Bands</b> : <span class="k">160M</span> … <span class="k">70CM</span></td><td>Change de bande : le TRX reprend la dernière fréquence et le dernier mode utilisés sur cette bande. Seules les bandes du TRX branché sont proposées.</td><td>Changer de bande. Un rappel « <b>TUNE obligatoire</b> » clignote ensuite à droite jusqu'au prochain TUNE.</td></tr>
 </table>
 <p>La ligne grise sous les bandes rappelle les gestes utiles ; la ligne de messages juste en dessous affiche les confirmations et les refus.</p>
 
@@ -416,7 +416,8 @@ Certaines n'existent que sur un TRX : elles sont grisées ou absentes sur les au
 </ul>
 
 <h2 id="numeriques">12. Modes numériques</h2>
-<p>Les onglets du centre : <b>Activité</b>, <b>FT8 · FT4 · FT2</b>, <b>RTTY</b>, <b>WSPR</b>, <b>JT65</b>, <b>JTTY</b>, <b>CW</b>, <b>SSTV</b>, puis <b>Synchro</b> et <b>Logs</b>.
+<p>Les onglets du centre : <b>Activité</b>, <b>FT8 · FT4 · FT2</b>, <b>RTTY</b>, <b>WSPR</b>, <b>JT65</b>, <b>JTTY</b>, <b>CW</b>, <b>SSTV</b>, puis <b>Synchro</b>, <b>Logs</b> et le bouton <span class="k">Log QSO</span>.
+À droite des onglets FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY et CW, la <b>carte de bande</b> montre les spots du DX cluster (voir 12.3, « Carte de bande »).
 Vous n'avez <b>aucun logiciel à installer</b> (pas de WSJT-X, FLDIGI…) : tout se fait dans la page.</p>
 <ul>
   <li>Le <b>décodage se fait sur le serveur</b>, à l'heure du serveur (synchronisée) : l'heure de votre PC et de celui du club n'a pas d'importance.</li>
@@ -512,6 +513,7 @@ Choisissez pour l'émission un endroit libre de la cascade. Un trait blanc marqu
 L'onglet a <b>deux décodeurs indépendants</b> : <b>A</b> (VFO-A, à gauche) et <b>B</b> (VFO-B, à droite), chacun avec son texte reçu et ses réglages.
 Le FTX-1, le FTDX10 et l'IC-7300 n'envoient qu'un seul son au PC : il y a donc <b>une seule cascade</b>, sur toute la largeur, avec les repères des deux décodeurs.
 On suit ainsi deux stations de la même bande en même temps (concours, DX et son pile-up). Un TRX qui envoie ses deux récepteurs séparément (FTDX101D / MP) aura une cascade par décodeur, côte à côte.</p>
+<p>Au-dessus de la cascade, la ligne d'aide (« clic gauche : décodeur A… ») s'affiche <b>3 secondes</b> à l'arrivée sur l'onglet puis s'efface, pour laisser plus de place aux fenêtres de réception ; elle reste au survol de la cascade. La ligne d'état n'apparaît qu'en cas de problème (pas de BF, TRX pas en DATA-U…).</p>
 <table>
   <tr><th>Commande</th><th>Ce qu'elle fait</th></tr>
   <tr><td>Liste des fréquences + <span class="k">↺</span></td><td>Fréquences RTTY par bande ; le TRX y va en DATA-U.</td></tr>
@@ -542,21 +544,33 @@ On suit ainsi deux stations de la même bande en même temps (concours, DX et so
   <li><span class="k">Effacer</span> (sous Émettre) vide le texte à émettre ; <span class="k">Log QSO</span> ouvre la fiche du carnet, avec la fréquence du décodeur marqué TX.</li>
 </ol>
 
+<h4 id="rtty-pratique">En pratique : un QSO RTTY en concours, presque sans quitter le clavier</h4>
+<ol>
+  <li><b>Prendre la main</b>, onglet <b>RTTY</b>, TRX en <b>DATA-U</b> (bouton <span class="k">↺</span> de la liste des fréquences).</li>
+  <li><b>Chercher une station</b> : clic sur un indicatif <span class="grn">vert</span> de la <b>carte de bande</b>. Le TRX se cale dessus, le décodeur de l'émission la décode et son indicatif passe dans Correspondant. Ou bien : clic gauche sur une trace de la cascade (décodeur A), clic droit (décodeur B).</li>
+  <li><b>Choisir la fenêtre d'émission</b> : un clic dans la fenêtre VFO-A ou VFO-B (« ● TX ici »). Un double-clic sur un indicatif reçu le met dans Correspondant et choisit en même temps sa fenêtre.</li>
+  <li><b>Répondre</b> : touche <kbd>F2</kbd> (ou la macro de réponse), puis échange avec la macro du report. <kbd>Échap</kbd> arrête l'émission en cours.</li>
+  <li><b>Noter le QSO</b> : macro qui contient <code>&lt;LOG&gt;</code> (fiche ouverte toute seule) ou bouton <span class="k">Log QSO</span>.</li>
+  <li><b>Appeler soi-même</b> (CQ) : choisir la fenêtre d'émission, puis <kbd>F1</kbd>. Avec deux décodeurs, on peut lancer CQ sur A tout en surveillant une autre station sur B.</li>
+  <li><b>Station hors de la cascade mais pas spottée</b> : clic sur la carte de bande à la bonne fréquence (le TRX y va), ou glisser la cascade, ou <kbd>Maj</kbd> + molette.</li>
+</ol>
+
 <h4 id="carte-bande">Carte de bande (DX cluster)</h4>
-<p>À droite de l'onglet RTTY, une <b>colonne verticale</b> montre la bande comme une règle : fréquences basses <b>en haut</b>, hautes en bas (par défaut 7030–7120 kHz en 40 m, 14080–14150 kHz en 20 m, 3570–3600 kHz en 80 m…).
+<p>À droite des onglets FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY et CW (pas en SSTV : une seule fréquence), une <b>colonne verticale</b> montre la bande comme une règle : fréquences basses <b>en haut</b>, hautes en bas (par défaut 7030–7120 kHz en 40 m, 14080–14150 kHz en 20 m, 3570–3600 kHz en 80 m…).
 Les <b>spots</b> du DX cluster du club (OP0P, avec les stations repérées par le Reverse Beacon Network) s'y affichent à leur fréquence. On voit d'un coup d'œil toute la portion RTTY de la bande, alors que la cascade ne montre que 3 ou 4 kHz.</p>
 <table>
   <tr><th>Élément</th><th>Ce qu'il montre ou fait</th></tr>
   <tr><td>Point vert / rouge, <b>20 m</b></td><td>Liaison avec le cluster (vert = connecté), bande du VFO écouté.</td></tr>
-  <tr><td><b>RTTY</b> / <b>Tous</b></td><td>RTTY : spots RTTY et spots sans mode indiqué. Tous : aussi les spots CW, FT8…</td></tr>
-  <tr><td>Deux cases kHz</td><td>Plage affichée, gardée pour chaque bande. Tapez-y vos limites (ex. 7030 et 7120).</td></tr>
+  <tr><td><b>RTTY</b> (ou FT8, CW…) / <b>Tous</b></td><td>Mode de l'onglet : ses spots et les spots sans mode indiqué. Tous : aussi les spots des autres modes.</td></tr>
+  <tr><td>Deux cases kHz</td><td>Plage affichée, gardée pour chaque bande, à part pour le RTTY, le CW et les autres modes numériques. Tapez-y vos limites (ex. 7030 et 7120). Par défaut en 40 m : RTTY 7030–7120, CW 7000–7040, FT8 et autres 7038–7080 kHz.</td></tr>
   <tr><td>Indicatif en <span class="grn">vert</span></td><td>Station qui appelle (CQ, spot d'un skimmer RBN).</td></tr>
   <tr><td>Indicatif <s>barré</s></td><td>Déjà contacté en RTTY sur cette bande (sous le TX call choisi).</td></tr>
   <tr><td>Indicatif pâle</td><td>Spot ancien (gardé 30 minutes). Au survol : commentaire, qui l'a spotté, il y a combien de minutes.</td></tr>
   <tr><td>Zone bleue</td><td>La partie de la bande visible dans la cascade en ce moment.</td></tr>
-  <tr><td>Trait jaune / magenta</td><td>Décodeur A / B ; « TX » à côté de celui de l'émission. « ▲ VFO » ou « ▼ VFO » : le VFO est hors de la plage.</td></tr>
+  <tr><td>Trait jaune / magenta</td><td>RTTY : décodeur A / B ; « TX » à côté de celui de l'émission. FT8, JT65, JTTY : trait vert = fréquence de réception, rouge = émission. CW : trait jaune = fréquence du VFO. « ▲ VFO » ou « ▼ VFO » : le VFO est hors de la plage.</td></tr>
   <tr><td><b>Clic sur un spot</b></td><td>Le TRX se cale sur la station : si elle est déjà dans la cascade, seul le décodeur de l'émission s'y place ; sinon le VFO bouge pour la mettre au milieu de la cascade, avec le décodeur dessus. L'indicatif passe dans Correspondant. Il reste à appuyer sur la macro de réponse (<kbd>F2</kbd>…). Il faut avoir la main.</td></tr>
   <tr><td>Clic ailleurs sur la carte</td><td>Même chose sur cette fréquence, sans indicatif (balayer la bande).</td></tr>
+  <tr><td>Clic dans les autres onglets</td><td><b>CW</b> : le VFO va sur la station (elle sort à la tonalité du TRX, là où le décodeur CW est calé). <b>FT8 · FT4 · FT2, JT65, JTTY, WSPR</b> : la fréquence de réception se place sur le signal ; s'il est hors de la bande audio, le VFO bouge pour le mettre à 1500 Hz.</td></tr>
   <tr><td><b>Molette</b> / glisser / double-clic</td><td>Molette : zoom autour de la souris ; glisser vers le haut ou le bas : déplacer la plage ; double-clic : plage d'origine de la bande.</td></tr>
 </table>
 <p>Réglages du cluster (administrateur, <code>config.json</code>, puis redémarrer le service) : <code>clusterHost</code> (op0p.be par défaut ; vide = pas de cluster), <code>clusterPort</code> (8000), <code>clusterCall</code> (indicatif de connexion avec un SSID ; vide = digiCall suivi de -7, donc ON5VL-7) et <code>clusterCmds</code> (commandes envoyées après la connexion : <code>set/skimmer</code> pour les spots RBN).</p>
@@ -612,14 +626,14 @@ la fréquence à mettre sur le TRX <b>avant le convertisseur</b>, pour monter su
 Exemple : FT8 sur <b>432,540 MHz</b> avec le convertisseur 70 cm du club. Seules les FI que le TRX branché peut atteindre sont proposées (FTX-1).</p>
 
 <h2 id="messages">13. Correspondant, macros et balises</h2>
-<p><b>La ligne Correspondant</b> (tout en bas de l'écran)</p>
+<p><b>La ligne Correspondant</b> (sous les onglets des modes numériques)</p>
 <table>
   <tr><th>Champ</th><th>Ce qu'il contient</th></tr>
   <tr><td><b>Correspondant</b></td><td>L'indicatif de la station contactée. Il se remplit tout seul quand vous cliquez sur un indicatif dans un onglet ; vous pouvez aussi le taper.</td></tr>
   <tr><td><b>Nom</b>, <b>QTH</b>, <b>Locator</b></td><td>Prénom, ville et locator du correspondant. Ils sont cherchés sur <b>QRZ.com</b> dès qu'un nouveau correspondant est choisi (si un compte QRZ est réglé par les administrateurs) ; seules les cases vides sont remplies.</td></tr>
   <tr><td><b>RST TX</b> / <b>RST RX</b></td><td>RST TX = report <b>envoyé</b> par la station du club ; RST RX = report <b>reçu</b> du correspondant. En FT8 / FT4 / FT2, WSPR et JT65 ce sont des dB (RST RX se remplit tout seul pendant la séquence) ; en RTTY, CW, SSTV et JTTY, des RST 599.</td></tr>
   <tr><td><b>TX call</b></td><td>Indicatif des émissions numériques et du carnet : celui de la station (ON5VL) ou le vôtre. Choisi par celui qui a la main et retenu pour la prochaine fois. Les messages Tx1 à Tx6, les macros <code>&lt;MYCALL&gt;</code> et la fiche du carnet suivent. Un QSO enregistré sous votre indicatif reste dans le carnet du club, mais n'est pas envoyé vers les comptes en ligne du club (récupérez-le avec Exporter → Mes QSO).</td></tr>
-  <tr><td><span class="k">Log QSO</span></td><td>Ouvre la fiche « Enregistrer le QSO », déjà remplie avec ces informations, la fréquence et le mode.</td></tr>
+  <tr><td><span class="k">Log QSO</span> (ligne des onglets, à droite de Logs)</td><td>Ouvre la fiche « Enregistrer le QSO », déjà remplie avec ces informations, la fréquence et le mode.</td></tr>
 </table>
 <p><b>Les macros</b> (RTTY, JTTY, CW) sont des textes tout prêts, sur une ligne au-dessus de la zone de texte : <b>F1 à F12</b> en RTTY et CW, <b>F1 à F8</b> en JTTY.</p>
 <ul>
@@ -661,7 +675,7 @@ Exemple : FT8 sur <b>432,540 MHz</b> avec le convertisseur 70 cm du club. Seules
   <tr><td><span class="k">Enregistrer le QSO</span> (ou <kbd>Entrée</kbd>)</td><td>Ajoute le QSO au carnet. Un doublon (même indicatif, bande et mode dans la demi-heure) est signalé avant l'enregistrement ; si la fiche déjà au carnet n'a pas le nom, le QTH, le locator ou le RST reçu, on propose de la <b>compléter</b> au lieu de créer un 2e QSO.</td></tr>
   <tr><td><span class="k">Supprimer</span> / <span class="k">Annuler</span></td><td>Apparaissent quand vous modifiez un QSO existant : supprimer le QSO (après confirmation ; les carnets en ligne ne sont pas modifiés) ou abandonner la modification.</td></tr>
 </table>
-<p><b>Sans quitter l'onglet RTTY, JTTY ou CW</b> : le bouton <span class="k">Log QSO</span> (à côté de « Émettre », et sur la ligne Correspondant, après TX call) ouvre une fiche déjà remplie :
+<p><b>Sans quitter l'onglet RTTY, JTTY ou CW</b> : le bouton <span class="k">Log QSO</span> (à côté de « Émettre », et sur la ligne des onglets, à droite de Logs) ouvre une fiche déjà remplie :
 indicatif, prénom, QTH, locator et RST, fréquence (en RTTY : celle du signal) et mode, puissance, heure de début (quand le correspondant a été choisi) et de fin. Corrigez au besoin, puis <span class="k">Enregistrer dans le carnet</span>.
 En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contient <code>&lt;LOG&gt;</code> l'ouvre aussi.</p>
 
