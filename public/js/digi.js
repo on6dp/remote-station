@@ -860,7 +860,8 @@
   }
   // Repères Mark (jaune) / Space (bleu) d'un décodeur sur son échelle et sa cascade
   function rttyMarks(c, w, r, mkM, mkS, cols, letter) {
-    const C = cols || ['rgba(242, 207, 74, .35)', '#F2CF4A', 'rgba(0, 212, 255, .3)', '#00D4FF'];
+    // Couleurs foncées et saturées : restent visibles sur un écran très lumineux
+    const C = cols || ['rgba(230, 170, 0, .6)', '#E0A800', 'rgba(0, 102, 255, .55)', '#0066FF'];
     const half = r.shift / 2;
     const fm = r.rev ? r.f - half : r.f + half;
     const fs = r.rev ? r.f + half : r.f - half;
@@ -876,16 +877,21 @@
     bar(fs, 14, 16, C[2], C[3]);
     if (letter) {
       // Lettre du décodeur au-dessus de ses repères
-      c.font = 'bold 10px Verdana, "DejaVu Sans", Arial, sans-serif';
-      c.textBaseline = 'top';
+      // Lettre du décodeur, grande, sur une pastille de sa couleur (lisible même sur un écran très lumineux)
+      c.font = 'bold 14px Verdana, "DejaVu Sans", Arial, sans-serif';
+      c.textBaseline = 'middle';
+      const lx = ((Math.max(fm, fs) + bw / 2 - WF_LO) / WF_MAX_HZ) * w + 4;
+      const tw = c.measureText(letter).width;
       c.fillStyle = C[1];
-      c.fillText(letter, ((Math.max(fm, fs) + bw / 2 - WF_LO) / WF_MAX_HZ) * w + 3, 31);
+      c.fillRect(lx - 3, 29, tw + 6, 15);
+      c.fillStyle = '#000000';
+      c.fillText(letter, lx, 37);
     }
     const pos = (el, f) => { if (!el) return; el.style.left = ((f - bw / 2 - WF_LO) / WF_MAX_HZ) * 100 + '%'; el.style.width = (bw / WF_MAX_HZ) * 100 + '%'; };
     pos(mkM, fm);
     pos(mkS, fs);
   }
-  const RT_COLS_B = ['rgba(255, 90, 209, .35)', '#FF5AD1', 'rgba(126, 242, 104, .3)', '#7EF268'];
+  const RT_COLS_B = ['rgba(170, 51, 255, .6)', '#AA33FF', 'rgba(0, 160, 60, .55)', '#00A03C'];
   function drawRttyMarks(c, w) {
     rtKhz(c, w, rtDialOf(0));
     rttyMarks(c, w, rts[0], $('dgMkRx'), $('dgMkTx'), null, 'A');
@@ -894,7 +900,7 @@
     // Cascade du décodeur B : même spectre (même BF du TRX), ses propres repères
     if (wfB.sctx) {
       rtKhz(wfB.sctx, wfB.cw, rtDialOf(1));
-      rttyMarks(wfB.sctx, wfB.cw, rts[1], $('rtMkMB'), $('rtMkSB'));
+      rttyMarks(wfB.sctx, wfB.cw, rts[1], $('rtMkMB'), $('rtMkSB'), RT_COLS_B, 'B');
     }
     rtHeads();
   }
@@ -1204,7 +1210,7 @@
         rts.forEach((x, ch) => {
           const dd = rtDialOf(ch);
           if (!dd || dd.vfo !== d.vfo) return;
-          line((dd.hz + dd.sign * x.f) / 1000, ch ? '#e040fb' : '#ffd400', (ch ? 'B' : 'A') + (ch === rtTx ? ' TX' : ''), ch === rtTx);
+          line((dd.hz + dd.sign * x.f) / 1000, ch ? '#AA33FF' : '#E0A800', (ch ? 'B' : 'A') + (ch === rtTx ? ' TX' : ' RX'), ch === rtTx);
         });
       } else if (tab !== 'wspr') {
         // FT8 / FT4 / FT2, JT65, JTTY : fréquences de réception (vert) et d'émission (rouge)
@@ -1420,9 +1426,9 @@
     document.querySelectorAll('.rt-txsel').forEach((b) => {
       const on = Number(b.dataset.ch) === rtTx;
       b.setAttribute('aria-pressed', String(on));
-      b.textContent = on ? (txing ? '■ Arrêter' : '▶ TX ici') : 'TX';
+      b.textContent = on ? (txing ? '■ Arrêter' : '▶ TX ici') : 'RX ici';
       b.title = on ? (txing ? 'Arrêter l’émission RTTY en cours (ou Échap)' : 'Émet le texte personnalisé (cadre du bas) sur la fréquence de ce décodeur, comme « Émettre ». Les macros F1 à F12 partent aussi d’ici.')
-        : 'Choisir ce décodeur pour l’émission (ou cliquer dans sa fenêtre). Un 2e clic émet le texte personnalisé.';
+        : 'Fenêtre en réception seulement. Clic : elle devient la fenêtre d’émission (▶ TX ici), l’autre passe en RX ici. Un 2e clic émet le texte personnalisé.';
       b.closest('.rt-side').classList.toggle('rt-istx', on);
     });
   }

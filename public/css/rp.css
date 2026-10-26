@@ -824,8 +824,8 @@ body.digi-popup .dg-list { max-height: none; }
 
 /* ===================================================================== RTTY */
 .dg-wf-slot:empty { display: none; }
-.dg-wf.is-rtty .dg-mk-rx { border-left: 0; background: rgba(242, 207, 74, .14); box-shadow: inset 0 0 0 1px rgba(242, 207, 74, .5); }
-.dg-wf.is-rtty .dg-mk-tx { border-left: 0; background: rgba(0, 212, 255, .12); box-shadow: inset 0 0 0 1px rgba(0, 212, 255, .45); }
+.dg-wf.is-rtty .dg-mk-rx { border-left: 0; background: rgba(224, 168, 0, .22); box-shadow: inset 0 0 0 2px rgba(224, 168, 0, .95); }
+.dg-wf.is-rtty .dg-mk-tx { border-left: 0; background: rgba(0, 102, 255, .22); box-shadow: inset 0 0 0 2px rgba(0, 102, 255, .95); }
 .rt-sq { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; color: var(--v2-text-dim); text-transform: uppercase; letter-spacing: .8px; }
 .rt-sq input { width: 90px; }
 .rt-sq output { font-size: 11px; color: var(--v2-text-bright); min-width: 18px; }
@@ -1284,13 +1284,13 @@ button[data-ctl='dnf'], button[data-ctl='dnfB'], button[data-ctl='tuner'] { font
 .rt-wfb canvas { display: block; width: 100%; cursor: crosshair; }
 #rtWfB { height: 140px; }
 #rtScaleB { height: 44px; }
-.rt-wfb .dg-mk-rx { border-left: 0; background: rgba(242, 207, 74, .14); box-shadow: inset 0 0 0 1px rgba(242, 207, 74, .5); }
-.rt-wfb .dg-mk-tx { border-left: 0; background: rgba(0, 212, 255, .12); box-shadow: inset 0 0 0 1px rgba(0, 212, 255, .45); }
+.rt-wfb .dg-mk-rx { border-left: 0; background: rgba(170, 51, 255, .22); box-shadow: inset 0 0 0 2px rgba(170, 51, 255, .95); }
+.rt-wfb .dg-mk-tx { border-left: 0; background: rgba(0, 160, 60, .22); box-shadow: inset 0 0 0 2px rgba(0, 160, 60, .95); }
 @media (max-width: 900px) { .rt-dual { grid-template-columns: 1fr; gap: 10px; } .rt-vsplit { display: none; } }
 .rt-dual + .rt-grid { flex: none; min-height: 0; }
 /* RTTY : repères du décodeur B sur la cascade commune (magenta = Mark, vert = Space) */
-.dg-wf .dg-mk-bm { border-left: 0; background: rgba(255, 90, 209, .14); box-shadow: inset 0 0 0 1px rgba(255, 90, 209, .55); }
-.dg-wf .dg-mk-bs { border-left: 0; background: rgba(126, 242, 104, .12); box-shadow: inset 0 0 0 1px rgba(126, 242, 104, .5); }
+.dg-wf .dg-mk-bm { border-left: 0; background: rgba(170, 51, 255, .22); box-shadow: inset 0 0 0 2px rgba(170, 51, 255, .95); }
+.dg-wf .dg-mk-bs { border-left: 0; background: rgba(0, 160, 60, .22); box-shadow: inset 0 0 0 2px rgba(0, 160, 60, .95); }
 .rt-dual .rt-side .rt-rx { min-height: 140px; }
 #rtSplitBtn[aria-pressed='true'] { color: #FFFFFF; background: var(--v2-accent-red-alt, #c0392b); border-color: var(--v2-accent-red-alt, #c0392b); }
 
@@ -1361,3 +1361,7 @@ body.bm-tall .bm { border: 1px solid var(--v2-border-panel); border-radius: var(
 .zoom-menu button[aria-checked='true'] { color: var(--v2-accent-yellow); }
 .zoom-menu button.zoom-big span { color: var(--v2-text-dim); } /* plus grand que l'écran : la mise en page se serre */
 .zoom-info { padding: 6px 10px 8px; margin-bottom: 4px; border-bottom: 1px solid var(--v2-border-dark); color: var(--v2-text-secondary); font-size: 11px; line-height: 1.4; max-width: 270px; }
+/* RTTY : l'autre fenêtre est « RX ici » en vert (réception seule) */
+.rt-hd .rt-txsel[aria-pressed='false'] { color: #FFFFFF; background: #1e8e4e; border-color: #1e8e4e; }
+.rt-side:not(.rt-istx) { border-color: rgba(46, 204, 113, .45); }
+.rt-side:not(.rt-istx) > .rt-hd { background: rgba(46, 204, 113, .08); }
