@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.96 | [RemoteStation-Setup-0.22.96.exe](0.22.96/RemoteStation-Setup-0.22.96.exe) | [remote-station-0.22.96.tar.gz](0.22.96/remote-station-0.22.96.tar.gz) | « Émission CW / SSTV sous » = TX CALL choisi — [empreintes SHA-256](0.22.96/SHA256SUMS.txt) |
 | 0.22.95 | [RemoteStation-Setup-0.22.95.exe](0.22.95/RemoteStation-Setup-0.22.95.exe) | [remote-station-0.22.95.tar.gz](0.22.95/remote-station-0.22.95.tar.gz) | Manuel complété commande par commande, chiffre des Hz à la molette — [empreintes SHA-256](0.22.95/SHA256SUMS.txt) |
 | 0.22.94 | [RemoteStation-Setup-0.22.94.exe](0.22.94/RemoteStation-Setup-0.22.94.exe) | [remote-station-0.22.94.tar.gz](0.22.94/remote-station-0.22.94.tar.gz) | Relance de la carte son du TRX (assistant Windows), badges en un clic, <-> orange — [empreintes SHA-256](0.22.94/SHA256SUMS.txt) |
 | 0.22.93 | [RemoteStation-Setup-0.22.93.exe](0.22.93/RemoteStation-Setup-0.22.93.exe) | [remote-station-0.22.93.tar.gz](0.22.93/remote-station-0.22.93.tar.gz) | Page Station : carte son réelle au lieu des alias Windows — [empreintes SHA-256](0.22.93/SHA256SUMS.txt) |

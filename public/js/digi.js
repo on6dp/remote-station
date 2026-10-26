@@ -301,7 +301,7 @@
             <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station">Log QSO</button></div>
           </div>
         </div>
-        <p class="dg-tx rt-tx-note">Émission CW sous <b>ON5VL</b> par le manipulateur du TRX : prochaine version.</p>
+        <p class="dg-tx rt-tx-note">Émission CW sous <b class="dg-txcall">ON5VL</b> par le manipulateur du TRX : prochaine version.</p>
       </div>
     </div>`;
   const SSTV_PANE = `
@@ -344,7 +344,7 @@
             </div>
           </div>
         </div>
-        <p class="dg-tx ss-note">Émission SSTV sous <b>ON5VL</b> : avec l'émission des modes numériques (prochaine version). Clic droit sur une vignette : la retirer · glisser-déposer accepté.</p>
+        <p class="dg-tx ss-note">Émission SSTV sous <b class="dg-txcall">ON5VL</b> : avec l'émission des modes numériques (prochaine version). Clic droit sur une vignette : la retirer · glisser-déposer accepté.</p>
       </div>
     </div>`;
   const SYNC_PANE = `
@@ -861,7 +861,7 @@
   };
   const TAGS = [
     ['<TX>', 'émission immédiate au clic (sinon : texte ajouté à la zone d’écriture)'], ['<RX>', 'retour en réception à la fin (toujours fait)'], ['<LOG>', 'ouvre la fiche du QSO pour l’enregistrer dans le carnet'],
-    ['<MYCALL>', 'indicatif émis (ON5VL)'], ['<CALL>', 'correspondant'], ['<NAME>', 'son prénom'], ['<QTH>', 'son QTH'],
+    ['<MYCALL>', 'indicatif émis (TX call)'], ['<CALL>', 'correspondant'], ['<NAME>', 'son prénom'], ['<QTH>', 'son QTH'],
     ['<RST>', 'report envoyé'], ['<LOC>', 'son locator'], ['<MYLOC>', 'locator de la station'], ['<MYQTH>', 'QTH de la station'],
     ['<OPCALL>', 'votre indicatif (opérateur)'], ['<CNTR>', 'numéro de série'], ['<INCR>', 'numéro suivant'], ['<ZT>', 'heure UTC'], ['<ZD>', 'date UTC']
   ];
@@ -3614,7 +3614,10 @@
         stationCalls = Array.from(new Set(baseCalls.concat(myCall)));
         drawMsgs();
         redrawAll();
+        dtxState(stx.ftx); // notes « Émission RTTY / JTTY sous … »
       }
+      // Notes « Émission CW / SSTV sous … » : même indicatif que TX CALL
+      for (const el of document.querySelectorAll('.dg-txcall')) if (el.textContent !== myCall) el.textContent = myCall;
       // Suivre l'opérateur : bouton caché pour celui qui a la main, qui annonce son onglet
       const fb = $('dgFollow');
       const mine = !!(api && api.iControl());
