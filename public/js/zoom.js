@@ -87,7 +87,7 @@
     info.id = 'zoomInfo';
     m.appendChild(info);
     add('auto', 'Auto', 'adaptée à l’écran');
-    for (const z of CHOICES) add(z, Math.round(z * 100) + ' %', z === 1 ? 'pour 1920 × 1080' : z === 1.33 ? 'pour 2560 × 1440' : z === 2 ? 'pour 3840 × 2160 (4K)' : z === 0.67 ? 'tout voir sur un portable' : '');
+    for (const z of CHOICES) add(z, Math.round(z * 100) + ' %', z === 1 ? 'pour 1920 × 1080' : z === 1.33 ? 'pour 2560 × 1440' : z === 2 ? 'pour 4K (3840 × 2160)' : z === 0.67 ? 'portable : tout voir' : '');
     const btn = wrap.querySelector('#zoomBtn');
     const show = (on) => { m.hidden = !on; btn.setAttribute('aria-expanded', String(on)); if (on) label(); };
     btn.addEventListener('click', (e) => { e.stopPropagation(); show(m.hidden); });

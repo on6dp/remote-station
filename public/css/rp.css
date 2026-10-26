@@ -1352,10 +1352,12 @@ body.bm-tall .bm { border: 1px solid var(--v2-border-panel); border-radius: var(
 #rtTip[hidden], #rtStatus:empty { display: none; }
 /* Taille du dashboard (zoom.js) */
 .zoom-btn { font-weight: 700; white-space: nowrap; }
-.zoom-menu { min-width: 200px; }
+.zoom-menu { min-width: 270px; }
+.zoom-menu button span { white-space: nowrap; flex: none; }
+.zoom-menu button small { white-space: nowrap; text-align: right; }
 .zoom-menu button { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; border: 0; border-radius: 4px; background: none; color: var(--v2-text-bright); font: inherit; font-size: 12px; font-weight: 700; text-align: left; cursor: pointer; }
 .zoom-menu button small { color: var(--v2-text-dim); font-weight: 400; }
 .zoom-menu button:hover:not(:disabled) { background: var(--v2-bg-panel, #141c27); color: var(--v2-accent-cyan-bright, #00D4FF); }
 .zoom-menu button[aria-checked='true'] { color: var(--v2-accent-yellow); }
 .zoom-menu button.zoom-big span { color: var(--v2-text-dim); } /* plus grand que l'écran : la mise en page se serre */
-.zoom-info { padding: 6px 10px 8px; margin-bottom: 4px; border-bottom: 1px solid var(--v2-border-dark); color: var(--v2-text-secondary); font-size: 11px; line-height: 1.4; max-width: 240px; }
+.zoom-info { padding: 6px 10px 8px; margin-bottom: 4px; border-bottom: 1px solid var(--v2-border-dark); color: var(--v2-text-secondary); font-size: 11px; line-height: 1.4; max-width: 270px; }
