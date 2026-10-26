@@ -228,11 +228,11 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
   <tr><th>Item</th><th>What it shows</th><th>What a click (or the mouse wheel) does</th></tr>
   <tr><td><span class="k">RX</span></td><td>Green: this is the VFO being listened to.</td><td>Click: this VFO becomes the receive VFO (like the MAIN / SUB key of the TRX; not on the IC-7300).</td></tr>
   <tr><td><span class="k">TX</span></td><td>Dark red: a transmission would go out on this VFO. Bright red with a glow: transmitting.</td><td>Click on the TX of the other VFO: SPLIT (listen on one VFO and transmit on the other, section 7.5). Click on the TX of the VFO being listened to: SPLIT off.</td></tr>
-  <tr><td><span class="k">BW 2.4K</span></td><td>Receive filter width of this VFO.</td><td><b>Mouse wheel</b> over it: widen or narrow the filter.</td></tr>
+  <tr><td><span class="k">BW 2.4K</span></td><td>Receive filter width of this VFO.</td><td><b>Mouse wheel</b> over it: forward = wider, towards you = narrower, one notch at a time among the widths the TRX offers in this mode (on the Yaesu: 300 Hz to 4 kHz in SSB, 50 Hz to 4 kHz in CW, RTTY and DATA). « FIX » in AM / FM (fixed width), « NAR » when NARROW is on (the wheel is then refused, with a message). IC-7300: the wheel steps through FIL1, FIL2 and FIL3. On VFO B (FTX-1, FTDX101): width of the SUB side.</td></tr>
   <tr><td>« Émission sur A / B »</td><td>Orange reminder of the VFO a transmission would go out on (« transmit on A / B »).</td><td>—</td></tr>
   <tr><td>MAIN / SUB · 20M</td><td>Side of the TRX and band of this VFO.</td><td>—</td></tr>
   <tr><td>S-meter (S1 … +60)</td><td>Received signal strength. Greyed out on the VFO not being listened to.</td><td>— (when transmitting, look at Station meters).</td></tr>
-  <tr><td>Frequency digits</td><td>The frequency in MHz. Red while transmitting; greyed out if this VFO is used neither to receive nor to transmit.</td><td><b>Mouse wheel</b> or <b>drag</b> up / down on a digit: that digit goes up or down (MHz, kHz, hundreds of Hz…). <b>Click</b> the display: this VFO becomes the one tuned by the ◀ ▶ arrows and the band keys (its letter is underlined).</td></tr>
+  <tr><td>Frequency digits</td><td>The frequency in MHz. Red while transmitting; greyed out if this VFO is used neither to receive nor to transmit.</td><td><b>Mouse wheel</b> on a digit (forward = up) or <b>drag</b> up / down (one step every 14 pixels; with a finger on a tablet): that digit goes up or down, from the MHz down to the last digit, the hertz; carries are handled automatically (7.099 → 7.100). <b>Single click on a digit</b>, without moving: that digit becomes the <b>step</b> of the Step row, of the ◀ ▶ arrows and of the <kbd>↑</kbd> <kbd>↓</kbd> keys (it is underlined). <b>Click</b> elsewhere on the display: this VFO becomes the one tuned by the arrows, the keyboard and the band keys (its letter is underlined). The frequency always stays within the TRX coverage.</td></tr>
   <tr><td>Mode (USB, DATA-U…)</td><td>The mode of this VFO.</td><td>It is changed in the <b>Mode</b> panel on the left.</td></tr>
   <tr><td><span class="k">RIT</span></td><td>Offset of the receive frequency only.</td><td>Click: on / off. <b>Mouse wheel</b> over the displayed value (+0.00 kHz): ± 10 Hz, ± 100 Hz with <kbd>Shift</kbd>. Useful if the correspondent drifts a little.</td></tr>
   <tr><td><span class="k">XIT</span></td><td>Offset of the transmit frequency only.</td><td>Click: on / off. Mouse wheel over the value: as for RIT. Useful for a small split of a few kHz.</td></tr>
@@ -245,20 +245,30 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
   <tr><td><span class="k">NOTCH</span></td><td>Manual filter that cuts out one frequency (a whistle).</td><td>Click: on / off; its frequency is set in the DSP panel.</td></tr>
   <tr><td><span class="k">DNF</span></td><td>Automatic notch: removes whistling carriers by itself.</td><td>Click: on / off. Avoid it in CW and digital modes (it can remove the wanted signal).</td></tr>
   <tr><td><span class="k">NAR</span></td><td>Narrow filter (NARROW). When on, the TRX imposes its narrow width: the BW slider of the Filters box is greyed and shows « NARROW ✕ ».</td><td>Click: on / off. Clicking « NARROW ✕ » in the Filters box also turns it off and gives the BW slider back.</td></tr>
-  <tr><td><span class="k">AGC AUTO</span></td><td>Reminder of the AGC setting.</td><td>It is changed in RF front end.</td></tr>
+  <tr><td><span class="k">AGC AUTO</span></td><td>Reminder of the AGC setting.</td><td>It is changed in RF front end (this badge is not clickable).</td></tr>
+  <tr><td><span class="k">RFG 80</span></td><td>Reminder: RF GAIN is turned down (here to 80 %). Absent when it is at maximum.</td><td>Turn it back up with the RF GAIN slider of the RF front end panel.</td></tr>
+  <tr><td><span class="k">LOCK</span></td><td>The front panel of the TRX at the club is locked.</td><td>Turned off with <span class="k">LOCK</span> in the Step row.</td></tr>
 </table>
+<div class="tip"><b>Clickable badges (ATT, IPO / AMP, NB, DNR, NOTCH, DNF, NAR)</b>
+<ul>
+  <li><b>Grey</b> = function off; <b>coloured</b> = on (green for ATT and preamp, orange for NB, DNR, NOTCH, DNF, blue for NAR). On hover the badge only brightens and gets a dotted outline, without changing colour: you can see its state under the mouse.</li>
+  <li><b>One click</b> is enough: the new state shows at once, then the TRX read-back confirms it within a second. If the badge goes back to its previous state, the TRX refused it (function without effect in this mode, for example): the message under the bands says so.</li>
+  <li>You must have control; refused while transmitting. On hover, a tooltip recalls the name of the setting and what the click does.</li>
+  <li>NB and DNR: the click switches on at the last level used (or mid-range) and off; the exact level is set in the DSP panel. IPO / AMP1 / AMP2 and multi-step ATT (FTDX10, FTDX101: 6 / 12 / 18 dB): each click goes to the next step.</li>
+</ul></div>
 <div class="tip"><b>FTX-1: the two sides, MAIN and SUB</b>
 <ul>
   <li>The VFO B display sets NB, DNR, NOTCH, DNF and NAR of the SUB side.</li>
   <li>ATT and preamp belong to each side, but the TRX only reports them for the active side: a click on those of the other VFO switches the TRX to that side for 2 to 3 s, without transmitting, then back. As long as they have never been read, they show "?".</li>
   <li>The RF front end, Filtres and DSP panels set the <b>active side</b>: their title shows « A · MAIN » or « B · SUB ».</li>
+  <li><b>FTDX101D / MP</b> (true dual receiver): the VFO B display sets the SUB side directly (ATT, IPO / AMP, NB, DNR, NOTCH, DNF, NAR, BW), without changing side or TRX state.</li>
 </ul></div>
 
 <h3 id="step">7.2 Step row and band row</h3>
 <p>Below the VFO displays.</p>
 <table>
   <tr><th>Command</th><th>What it does</th><th>When to use it</th></tr>
-  <tr><td><span class="k">1 Hz</span> … <span class="k">100 kHz</span> (Step)</td><td>Chooses the step of the ◀ ▶ arrows and of the keyboard arrows <kbd>↑</kbd> <kbd>↓</kbd>.</td><td>100 Hz to 1 kHz to search in SSB; 10 Hz for fine tuning, 1 Hz for the finest (RTTY, digital modes, CW zero beat); 10 to 100 kHz to move across a band.</td></tr>
+  <tr><td><span class="k">1 Hz</span> … <span class="k">100 kHz</span> (Step)</td><td>Chooses the step of the ◀ ▶ arrows and of the keyboard arrows <kbd>↑</kbd> <kbd>↓</kbd>; the matching digit of the VFO display is underlined. A single click on a digit of a VFO display also chooses the step. Remembered in your browser.</td><td>100 Hz to 1 kHz to search in SSB; 10 Hz for fine tuning, 1 Hz for the finest (RTTY, digital modes, CW zero beat); 10 to 100 kHz to move across a band.</td></tr>
   <tr><td><span class="k">A</span> / <span class="k">B</span> (VFO)</td><td>Chooses the VFO tuned by the arrows and the band keys. On the FTX-1, also switches the TRX to that side (like MAIN / SUB).</td><td>To work on VFO B.</td></tr>
   <tr><td><span class="k">◀</span> <span class="k">▶</span></td><td>Moves the frequency down / up by one step.</td><td>Step-by-step searching.</td></tr>
   <tr><td><span class="k">MAIN</span> / <span class="k">SUB</span></td><td>Active side of the TRX (receive and transmit together), like the front-panel key, without transmitting. Takes 1 to 2 seconds. <b>FTX-1: only in dual receive (DUAL RX, one VFO on 144 / 430 MHz).</b> In single receive the dashboard refuses: the transceiver went into transmit (seen at the club on 24 and 25/10). To listen to the VFO B frequency on HF: <span class="k">A ⇄ B</span>. An administrator can allow it for tests (<code>ftx1SubSingle</code>).</td><td>FTX-1: listen and transmit on VFO B.</td></tr>
@@ -268,7 +278,7 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
   <tr><td><span class="k">A → B</span> / <span class="k">B → A</span></td><td>Copies the frequency and mode of one VFO to the other.</td><td>Preparing a SPLIT.</td></tr>
   <tr><td><span class="k">A ⇄ B</span></td><td>Swaps the two VFOs.</td><td>Switching quickly between two frequencies.</td></tr>
   <tr><td><span class="k">LOCK</span></td><td>Locks the <b>front-panel controls of the TRX at the club</b>. The dashboard remains usable.</td><td>So that someone at the club does not change anything during your operating.</td></tr>
-  <tr><td><b>Bands</b>: <span class="k">160M</span> … <span class="k">70CM</span></td><td>Changes band: the TRX returns to the last frequency and mode used on that band. Only the bands of the connected TRX are offered.</td><td>Changing band. A « <b>TUNE obligatoire</b> » (TUNE required) reminder then flashes on the right until the next TUNE.</td></tr>
+  <tr><td><b>Bands</b>: <span class="k">160M</span> … <span class="k">70CM</span></td><td>Changes band, on the chosen VFO (A / B): the FTX-1 and the FTDX101 return to the last frequency and mode used on that band (like their BAND key); the FTDX10 and the IC-7300 go to the usual frequency of the band (e.g. 7.100 MHz in LSB, 14.200 MHz in USB). Only the bands of the connected TRX are offered: <span class="k">4M</span> (70 MHz) with the FTDX10, the FTDX101 and the IC-7300, <span class="k">2M</span> and <span class="k">70CM</span> only with the FTX-1. The current band is highlighted. The small <span class="k">⧉</span> in the top right corner of the panel opens it in a separate window.</td><td>Changing band. A « <b>TUNE obligatoire</b> » (TUNE required) reminder then flashes on the right until the next TUNE.</td></tr>
 </table>
 <p>The grey line below the bands is a reminder of useful actions; the message line just below it shows confirmations and refusals.</p>
 
@@ -289,11 +299,12 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
 <table>
   <tr><th>Button</th><th>Use</th></tr>
   <tr><td><span class="k">LSB</span> / <span class="k">USB</span></td><td>SSB phone: LSB below 10 MHz (160, 80, 40 m), USB above (20 m…).</td></tr>
-  <tr><td><span class="k">CW-L</span> / <span class="k">CW-U</span></td><td>Morse (CW-U is the most common).</td></tr>
+  <tr><td><span class="k">CW-L</span> / <span class="k">CW-U</span></td><td>Morse. Both are used; the dashboard picks <b>CW-L below 10 MHz</b> and <b>CW-U above</b> by itself when it changes the mode (DX cluster spot, band map, frequency list of the CW tab), like LSB / USB in phone.</td></tr>
   <tr><td><span class="k">RTTY-L</span> / <span class="k">RTTY-U</span></td><td>RTTY decoded by the TRX itself. For the dashboard's RTTY, use DATA-U.</td></tr>
   <tr><td><span class="k">DATA-L</span> / <span class="k">DATA-U</span></td><td>Digital modes through the TRX sound card: <b>DATA-U</b> for the dashboard's FT8, FT4, FT2, RTTY, JTTY, WSPR, JT65, SSTV.</td></tr>
   <tr><td><span class="k">PSK</span></td><td>PSK31 decoded by the TRX.</td></tr>
   <tr><td><span class="k">AM</span> / <span class="k">AM-N</span>, <span class="k">FM</span> / <span class="k">FM-N</span>, <span class="k">DATA-FM</span></td><td>Amplitude modulation, frequency modulation (N = narrow), digital over FM (repeaters, packet…).</td></tr>
+  <tr><td>IC-7300: <span class="k">CW</span> / <span class="k">CW-R</span>, <span class="k">RTTY</span> / <span class="k">RTTY-R</span>, <span class="k">USB-D</span> / <span class="k">LSB-D</span>, <span class="k">AM-D</span>, <span class="k">FM-D</span></td><td>Icom names: CW = CW-U, CW-R = CW-L (reverse); <b>USB-D</b> replaces DATA-U for the dashboard digital modes.</td></tr>
 </table>
 <p>Below the buttons, « Mode appliqué à <b>VFO A</b> » (mode applied to VFO A) shows which VFO changes mode (the one chosen with A / B).</p>
 <p><b>Filtres</b> (filters)</p>
@@ -303,7 +314,7 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
   <tr><td><b>IF SHIFT</b></td><td>Slides the passband up or down without changing frequency.</td><td>Pushes an interfering station out on one side. Set it back to 0 afterwards.</td></tr>
   <tr><td><span class="k">CONTOUR</span></td><td>Tone control that attenuates part of the audio.</td><td>Makes a voice easier to understand.</td></tr>
   <tr><td><span class="k">APF</span></td><td>Audio peak filter, CW only.</td><td>Makes a weak CW signal stand out.</td></tr>
-  <tr><td><span class="k">NARROW</span></td><td>Narrow filter (NAR badge on the VFO display).</td><td>Crowded band.</td></tr>
+  <tr><td><span class="k">NARROW</span></td><td>Narrow filter: switched on and off with the <span class="k">NAR</span> badge of the VFO display. When on, the TRX imposes its narrow width: the BW slider is greyed and shows <span class="k">NARROW ✕</span> (explanation on hover); clicking <span class="k">NARROW ✕</span> turns NARROW off and gives the BW slider back.</td><td>Crowded band. If BW is greyed on one VFO and not on the other, NARROW is on for that side.</td></tr>
   <tr><td>IC-7300: <b>FILTRE</b>, <b>PBT</b></td><td>FIL1 / FIL2 / FIL3 (wide, medium, narrow) and Twin PBT (narrowing from both edges).</td><td>—</td></tr>
 </table>
 <p><b>Station meters</b> (measurements, mostly useful when transmitting)</p>
@@ -326,6 +337,7 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
   <tr><td><b>Volume</b></td><td>Volume of your listening (0 to 150 %).</td><td>Only you.</td></tr>
   <tr><td><b>AF LEVEL</b></td><td>Volume of the TRX loudspeaker at the club.</td><td>Everybody (with control). Does not affect your listening or the decoders.</td></tr>
   <tr><td><b>SQUELCH</b></td><td>Mutes the audio until a signal rises above the threshold.</td><td>Everybody. Useful in FM; leave it at 0 on HF and in digital modes, otherwise the decoders no longer hear anything.</td></tr>
+  <tr><td>« ⚠ Plus de son du TRX sur le PC du club » (no more audio from the TRX)</td><td>Orange alert: for 45 s the Station page has received no audio from the TRX although it is connected (frozen TRX USB sound card).</td><td>Everybody sees it. ON6DP and ON4LUC have the <span class="k">Relancer la carte son</span> (restart the sound card) button (section 18). It disappears as soon as audio is back.</td></tr>
 </table>
 <p><b>DSP</b> (signal processing)</p>
 <table>
@@ -346,7 +358,7 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
   <tr><th>Command</th><th>What it does</th></tr>
   <tr><td><span class="k">RX</span> / <span class="k">TX</span> lamp</td><td>Real state of the TRX (green when receiving, red when transmitting).</td></tr>
   <tr><td><span class="k">PTT</span></td><td><b>Hold</b> to transmit (or the <kbd>Space</kbd> bar); release = back to receive. The small text below says why PTT is unavailable (« Prenez la main pour émettre » (take control to transmit)…).</td></tr>
-  <tr><td><b>Puissance</b> (power) <span class="k">−</span> <span class="k">+</span></td><td>Lowers or raises the TRX power. Your licence limit is shown below (e.g. ON3: 25 W); above it, the power is brought back down automatically.</td></tr>
+  <tr><td><b>Puissance</b> (power) <span class="k">−</span> <span class="k">+</span></td><td>Lowers or raises the TRX power, one step per click: 5 W (0.5 W on the FTX-1 without the SPA-1 amplifier). Ranges: FTX-1 0.5 to 10 W alone, 5 to 100 W with the SPA-1; FTDX10, FTDX101D and IC-7300 5 to 100 W; FTDX101MP 5 to 200 W. Your licence limit is shown below (e.g. ON3: 25 W); above it, the power is brought back down automatically.</td></tr>
   <tr><td><b>Gain micro</b> (mic gain)</td><td>Microphone level in phone.</td></tr>
   <tr><td><span class="k">PROC</span> + <b>Niveau PROC</b> (PROC level)</td><td>Speech processor (compressor): the voice "punches through" the noise better. Keep the level moderate, otherwise the modulation sounds unpleasant. On the IC-7300: COMP.</td></tr>
   <tr><td><span class="k">VOX</span></td><td>Voice-operated transmit: can only be <b>switched off</b> remotely, never on.</td></tr>
@@ -378,6 +390,7 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
   <li>The audio arrives with a small delay (a fraction of a second): this is normal over the internet.</li>
   <li>If you hear nothing: check your PC volume, then the Station lamp. The club's Station page must have audio enabled (section 18). The message below the button says what is missing.</li>
   <li><b>AF LEVEL</b> and <b>SQUELCH</b> act on the TRX itself, for everybody.</li>
+  <li>No more audio, a silent waterfall with only a hum at the far left, and the orange « Plus de son du TRX » alert: the TRX USB sound card has frozen. A station manager restarts it remotely (<span class="k">Relancer la carte son</span> button), otherwise the TRX must be switched off and on at the club (section 18).</li>
 </ul>
 
 <h2 id="emission">9. Transmitting and safety</h2>
@@ -415,6 +428,9 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
   <li>The <span class="k">⧉</span> button to the right of the tabs opens <b>all the digital modes</b> in a separate window. <span class="k">⧉ Ramener dans le dashboard</span> (bring back into the dashboard) (or <span class="k">Ramener ici</span> (bring back here) in the dashboard) puts them back.</li>
   <li>The <kbd>Space</kbd> bar (PTT) also works from a separate window.</li>
   <li>The layout is remembered: on the next load, the windows reopen in place if Chrome <b>allows pop-up windows</b> for remote.op0p.be (icon at the right of the address bar → Always allow).</li>
+  <li><b>Collapse a panel</b>: click its title (or <kbd>Enter</kbd> when the title has focus); a second click reopens it. Remembered in this browser.</li>
+  <li><b>Size of the whole dashboard</b>: <span class="k">Auto 100 %</span> menu in the top bar (section 5), from 50 to 200 %.</li>
+  <li><b>Drag handles</b> (double-click: original size, remembered in this browser): under the waterfall (height of the waterfall and lists), between the two FT8 lists and between the two RTTY decoders (widths), on the left edge of the band map (its width), on the right edge of the logbook column titles (column widths).</li>
 </ul>
 
 <h2 id="numeriques">12. Digital modes</h2>
@@ -581,6 +597,11 @@ You can follow two stations on the same band at once (contest, a DX and its pile
 <h3 id="wspr">12.4 WSPR</h3>
 <p>WSPR is used to study propagation: low-power beacons transmit their callsign, locator and power every 2 minutes.
 Choose the band in the list; about ten seconds after each even minute, the list grows: time, dB, DT, frequency, drift, callsign, locator, power and distance from the station. Receive only.</p>
+<ul>
+  <li>WSPR beacons only use <b>200 Hz</b> of the audio band, from <b>1400 to 1600 Hz</b> (reminder at the top of the tab): the frequency in the list (e.g. 14.0956 MHz) is the VFO frequency in USB / DATA-U.</li>
+  <li>The <span class="k">↺</span> button brings VFO A back to the chosen WSPR frequency; <span class="k">Effacer</span> (clear) empties the list; the number of stations heard shows in the title.</li>
+  <li>The clock shows the server UTC time: each 2-minute period starts on even minutes.</li>
+</ul>
 
 <h3 id="jtty">12.5 JTTY</h3>
 <ul>
@@ -681,6 +702,15 @@ Example: FT8 on <b>432.540 MHz</b> with the club's 70 cm converter. Only the IFs
 <p><b>Without leaving the RTTY, JTTY or CW tab</b>: the <span class="k">Log QSO</span> button (next to « Émettre », and on the tab row, right of Logs) opens a form already filled in:
 callsign, first name, QTH, locator and RST, frequency (in RTTY: the signal frequency) and mode, power, start time (when the correspondent was chosen) and end time. Correct if needed, then <span class="k">Enregistrer dans le carnet</span> (save to the logbook).
 In FT8, this form opens by itself at the end of the QSO; a macro containing <code>&lt;LOG&gt;</code> also opens it.</p>
+<table>
+  <tr><th>Log QSO form field</th><th>Content</th></tr>
+  <tr><td><b>Indicatif</b> (callsign), <b>Nom</b> (name), <b>QTH</b>, <b>Locator</b></td><td>Taken from the Correspondant row (and from QRZ.com).</td></tr>
+  <tr><td><b>Date UTC</b>, <b>Début UTC</b> (start), <b>Fin UTC</b> (end)</td><td>Start: when the correspondent was chosen; end: when the form opens. Editable.</td></tr>
+  <tr><td><b>Fréquence MHz</b>, <b>Mode</b></td><td>Actual signal frequency (RTTY: carrier + decoder marked TX) and mode of the tab.</td></tr>
+  <tr><td><b>RST envoyé</b> (sent), <b>RST reçu</b> (received), <b>Puiss. W</b> (power), <b>Remarque</b> (remark)</td><td>Reports from the Correspondant row, TRX power, free text.</td></tr>
+  <tr><td><span class="k">Enregistrer dans le carnet</span> (save) / <span class="k">Annuler</span> (cancel)</td><td>Adds the QSO (duplicate check as in the Logs tab) or closes without logging anything.</td></tr>
+</table>
+<p>In <b>FT8 · FT4 · FT2</b>, at the end of the sequence, a small « <b>QSO terminé</b> » (QSO finished) window summarises the QSO (callsign, locator, mode, frequency, reports, times): <span class="k">Enregistrer dans le carnet</span> saves it, <span class="k">Ne pas enregistrer</span> (don't save) closes it.</p>
 
 <h3 id="l-liste">14.2 The QSO list</h3>
 <ul>
@@ -729,7 +759,8 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
   <li><b>« Télécharger automatiquement les QSO lors de leur enregistrement »</b> box (upload QSOs automatically when they are logged): every new QSO under a club callsign is uploaded to that service by itself.</li>
   <li>Club logins and passwords (<span class="k">👁</span> to see them while typing), delay, and <span class="k">Tester</span> (test) to check the connection to the service. The window only shows « enregistré » (stored) for passwords; leaving the field empty keeps the value, <span class="k">✕</span> deletes it.</li>
   <li><b>QRZ</b> tab, <b>Recherche des correspondants</b> (correspondent lookup): login and password of a QRZ.com account. As soon as a correspondent is chosen (click on a callsign, Correspondant line, logbook form), their first name, town and, with an XML subscription, locator are filled in automatically (empty boxes only), with a « QRZ.com : … » note below the bands.</li>
-  <li><b>UDP</b> tab: forwarding of each QSO to logging programs (address, port, format).</li>
+  <li><b>QRZ</b> tab, <b>Indicatif / Clé API</b> table (upload to the QRZ logbook): one line per callsign (TX call) with its API key; <span class="k">+ Ajouter un indicatif</span> (add a callsign) adds a line, <span class="k">✕</span> removes the key.</li>
+  <li><b>UDP</b> tab: forwarding of each QSO to logging programs. One line per destination: <b>Actif</b> (enabled) box, <b>Nom</b> (name), <b>Adresse</b> (address), <b>Port</b>, <b>Format</b> (WSJT-X « Logged ADIF », WSJT-X « QSO Logged », N1MM Logger+, raw ADIF); the <span class="k">+ WSJT-X (port 2237)</span>, <span class="k">+ N1MM Logger+ (port 12060)</span> and <span class="k">+ ADIF brut</span> buttons add a pre-filled line (address 127.0.0.1); <span class="k">✕</span> removes it.</li>
 </ul>
 <table>
   <tr><th>Service</th><th>What you need</th></tr>
@@ -750,7 +781,9 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
   <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd> / <kbd>Enter</kbd></td><td>Transmit the typed text in RTTY / in JTTY.</td></tr>
   <tr><td><kbd>Esc</kbd></td><td>Stop the current RTTY or JTTY transmission.</td></tr>
   <tr><td><kbd>Enter</kbd> (logbook form)</td><td>Save the QSO.</td></tr>
-  <tr><td><kbd>Shift</kbd> + mouse wheel</td><td>RIT / XIT offset in 100 Hz steps.</td></tr>
+  <tr><td><kbd>Shift</kbd> + mouse wheel</td><td>On the RIT / XIT value: offset in 100 Hz steps. On the RTTY waterfall: VFO ± 10 Hz per notch.</td></tr>
+  <tr><td><kbd>Esc</kbd> (menus)</td><td>Closes the open menu: Operators, club TRX, DX Cluster, dashboard size.</td></tr>
+  <tr><td><kbd>Enter</kbd> (chat)</td><td>Sends the message to the connected members.</td></tr>
   <tr><td><kbd>Ctrl</kbd> + <kbd>F5</kbd></td><td>Reload the page after an update.</td></tr>
 </table>
 <p>These keys are ignored while you are typing in a text field.</p>
@@ -774,6 +807,10 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
   <tr><td>Name and QTH not filled in</td><td>The QRZ.com account is not set up, or the station is not on QRZ.com: type them in by hand.</td></tr>
   <tr><td>Synchronisation: « non configuré » (not configured)</td><td>No credentials for that TX call: complete the « Identifiants … » box in the synchronisation window (14.4).</td></tr>
   <tr><td>« Passage MAIN ↔ SUB refusé en réception simple » (MAIN ↔ SUB switching refused in single receive)</td><td>Normal on the FTX-1: in single receive, switching to SUB from the dashboard keyed it (seen at the club). On HF it only receives one side at a time: to listen to the VFO B frequency, use <span class="k">A ⇄ B</span>. VFO B can still be tuned (mouse wheel, arrows, bands).</td></tr>
+  <tr><td>No more audio, silent waterfall (only a hum at the far left), « Plus de son du TRX » alert</td><td>The TRX USB sound card has frozen. A station manager clicks <span class="k">Relancer la carte son</span> (dashboard alert or TRX menu); if that is not enough, switch the TRX off and on at the club (section 18).</td></tr>
+  <tr><td>BW greyed, « NARROW ✕ » instead of the width</td><td>NARROW is on for that side: click <span class="k">NARROW ✕</span> or the NAR badge of the VFO display.</td></tr>
+  <tr><td>A badge (NB, ATT…) goes back to its previous state by itself</td><td>The TRX refused the setting (no effect in this mode, or inactive side): read the message under the bands.</td></tr>
+  <tr><td>&lt;-&gt; DX Cluster in orange</td><td>The cluster is open, but you do not have control: take control so that its spots tune the TRX.</td></tr>
   <tr><td>« Passage MAIN ↔ SUB par le dashboard désactivé » (MAIN ↔ SUB switching from the dashboard disabled)</td><td>An administrator has set <code>ftx1SubCat</code> to <code>false</code> in <code>config.json</code>: MAIN / SUB from the front panel only.</td></tr>
 </table>
 
@@ -783,6 +820,7 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
   <tr><th>Command</th><th>What it does</th></tr>
   <tr><td>Name of a TRX (FTX-1, FTDX10, FTDX101D / MP, IC-7300)</td><td>Switches to that TRX, after confirmation. The station restarts for a few seconds and control is kept. The TRX must be connected to the club PC and its port chosen once on the Station page. Not possible during a transmission.</td></tr>
   <tr><td><span class="k">↻ Recharger la page Station</span> (reload the Station page)</td><td>Reloads the Station page on the club PC remotely (new version, page stuck…). The station is back within about ten seconds.</td></tr>
+  <tr><td><span class="k">🔊 Relancer la carte son du TRX</span> (restart the TRX sound card)</td><td>Only for ON6DP and ON4LUC (<code>stationEditors</code>). Restarts the TRX USB sound card on the club PC when the audio no longer comes through (section 18). Asks for confirmation; refused while transmitting. The result shows under the bands (« Carte son du TRX : … redémarré ; audio relancé »).</td></tr>
   <tr><td><span class="k">⌨ Lecture CAT…</span> (CAT read)</td><td>Diagnostics: reads a raw value from the TRX (read only, list of allowed commands). Several reads on one line (« VS;FT;ST; »); <span class="k">Effacer</span> (clear) empties the window.</td></tr>
 </table>
 <p>Administrators also have access to the logbook Synchronisation menu (14.4 and 14.5), to the export of every TX call, and can take back control (section 6).
@@ -806,6 +844,27 @@ The club PC's browser, which keeps the station token, also logs back in by itsel
   <li>Keep the Station page <b>alone in its window</b>; open the dashboard with its « Ouvrir le dashboard dans une autre fenêtre » (open the dashboard in another window) button.</li>
   <li>Chrome → Settings → Performance: always keep remote.op0p.be active; Windows: sleep set to Never.</li>
 </ol>
+<h3>Station page controls</h3>
+<table>
+  <tr><th>Control / display</th><th>What it does</th></tr>
+  <tr><td>Administrateur: … <span class="k">Se déconnecter</span> (log out)</td><td>Callsign logged in to the page. Logging out (after confirmation) closes the Station page: the station goes offline until an administrator logs in again.</td></tr>
+  <tr><td><span class="k">Ouvrir le dashboard dans une autre fenêtre</span> (open the dashboard in another window)</td><td>To operate from the club PC without touching the Station tab (typing another address in that tab cuts the station off).</td></tr>
+  <tr><td><b>Serveur</b> (server) lamp</td><td>Link with remote.op0p.be; when it drops, new attempt after 1, 2, 4 then every 5 s. « Remplacée par une autre page Station » (replaced by another Station page): another page took over, this one steps back (« Enregistrer et reconnecter » to resume here).</td></tr>
+  <tr><td><b>TRX</b> lamp and read-out line</td><td>CAT port open, TRX answering; frequency, mode and state read back.</td></tr>
+  <tr><td><span class="k">Choisir le port du TRX</span> (choose the TRX port)</td><td>Chrome's list of serial ports; choose the TRX one (FTX-1: Enhanced COM Port). The port is remembered <b>for each model</b>, from the USB identity of the cable (vendor, product, rank): when switching TRX remotely, the page finds the right port even if Windows renumbered the COM ports.</td></tr>
+  <tr><td><span class="k">Libérer le port</span> (release the port)</td><td>Closes the CAT port (the TRX is no longer controlled) and forgets the automatic choice on the next load.</td></tr>
+  <tr><td><span class="k">Tester sans radio (simulation)</span> (test without radio)</td><td>Virtual TRX to try the page and the dashboard without transmitting.</td></tr>
+  <tr><td><b>Entrée son</b> (sound input)</td><td>The TRX sound card (section above). The « Par défaut » and « Communications » aliases are replaced by the real card.</td></tr>
+  <tr><td><b>Sortie son vers le TRX</b> (sound output to the TRX) + <b>Niveau d'émission</b> (transmit level)</td><td>Sound card receiving the digital transmit signal, and its level (1 to 100 %): set it so that ALC stays low. « — aucune — » (none): no digital transmission.</td></tr>
+  <tr><td>Level bar, audio state</td><td>The bar moves with the TRX audio; « Audio envoyé aux membres à l'écoute » (audio sent to listening members) or « Audio prêt (personne n'écoute…) » (audio ready, nobody listening). In orange: « Entrée son muette… » (silent input: frozen sound card).</td></tr>
+  <tr><td><span class="k">Activer l'audio</span> / <span class="k">Arrêter l'audio</span> (start / stop audio)</td><td>Starts or stops the audio capture; remembered and restarted automatically when the page reloads.</td></tr>
+  <tr><td><span class="k">Relancer la carte son du TRX</span> (restart the TRX sound card)</td><td>Restarts the TRX USB sound card through the helper (below), then restarts the audio. Greyed if the helper is not installed.</td></tr>
+  <tr><td>« Assistant carte son : … » (sound card helper)</td><td>Running, or not installed (with the <b>Télécharger l'assistant carte son</b> download link). Checked every minute.</td></tr>
+  <tr><td><b>Modèle du TRX</b> (TRX model)</td><td>FTX-1, FTDX10, FTDX101D / MP or IC-7300; administrators also change it remotely (section 17).</td></tr>
+  <tr><td><b>Jeton de la station</b>, <b>Vitesse (bps)</b>, <b>Bits de stop</b> (token, speed, stop bits)</td><td>🔒 Only ON6DP and ON4LUC can change them. Speed and stop bits must match the TRX CAT menu (38400 bps and 1 stop bit by default).</td></tr>
+  <tr><td><span class="k">Enregistrer et reconnecter</span> (save and reconnect)</td><td>Keeps the settings in this browser and restarts the link.</td></tr>
+  <tr><td><b>Journal</b> (log)</td><td>Everything that happens: link, port, TRX, audio, transmissions, sound card restarts, remote requests (reload, TRX switch…).</td></tr>
+</table>
 <h3>Frozen TRX sound card (no more audio)</h3>
 <p>The TRX's built-in USB sound card sometimes freezes silent: empty level bar on the Station page, silent waterfall (only a hum at the far left), nothing to listen to. After 45 s of silence with the TRX connected, the Station page shows it in orange, and so does the dashboard (under « Écouter le TRX », with a message to the station managers and to whoever has control).</p>
 <ul>

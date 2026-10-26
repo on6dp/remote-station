@@ -146,7 +146,7 @@
       d.addEventListener('wheel', (ev) => {
         ev.preventDefault();
         setTarget(which);
-        tune((ev.deltaY < 0 ? 1 : -1) * Math.max(place, 10), which);
+        tune((ev.deltaY < 0 ? 1 : -1) * place, which);
       }, { passive: false });
       // glisser vertical (souris ou doigt) : un pas tous les 14 px ; simple clic = choisir ce pas
       d.addEventListener('pointerdown', (ev) => {
@@ -162,11 +162,11 @@
           d._moved = true;
           d._y = ev.clientY;
           setTarget(which);
-          tune(Math.sign(dy) * Math.max(place, 10), which);
+          tune(Math.sign(dy) * place, which);
         }
       });
       d.addEventListener('pointerup', () => {
-        if (d._y != null && !d._moved) { setTarget(which); setStep(Math.max(10, Math.min(100000, place))); }
+        if (d._y != null && !d._moved) { setTarget(which); setStep(Math.max(1, Math.min(100000, place))); }
         d._y = null;
       });
       d.addEventListener('pointercancel', () => { d._y = null; });
