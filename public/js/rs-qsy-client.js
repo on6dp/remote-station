@@ -5,9 +5,10 @@
  *   window.remoteStationQsy(14074.0, 'FT8', 'DL1ABC')      // fréquence en kHz, mode, indicatif
  * Le spot passe par un relais invisible (iframe /qsy.html de la Remote Station) au dashboard ouvert dans ce même
  * navigateur ; le dashboard ne l'applique que si son utilisateur a la main (règles habituelles).
- * Pour les membres de la Remote Station (déjà connectés au dashboard dans ce navigateur), un petit badge en bas à
- * droite indique « Remote Station <-> DX Cluster » : <-> vert = dashboard ouvert avec la main, rouge sinon ; après un
- * clic, il dit si le TRX s'est calé. Rien n'est affiché pour les autres visiteurs.
+ * Pour les membres de la Remote Station (déjà connectés au dashboard dans ce navigateur), un badge indique
+ * « Remote Station <-> DX Cluster » : <-> vert = dashboard ouvert avec la main, rouge sinon ; après un clic, il dit si
+ * le TRX s'est calé. Rien n'est affiché pour les autres visiteurs. Le badge se place dans l'élément id="rs-qsy-badge"
+ * s'il existe (ex. colonne Alert / Show Only / Hide de dx.op0p.be), sinon en bas à droite de la page.
  * Le site du cluster doit être autorisé (qsyOrigins dans config.json du serveur) et servi en https.
  */
 (function () {
@@ -25,23 +26,36 @@
     fr.style.cssText = 'position:absolute;width:0;height:0;border:0;visibility:hidden';
     document.body.appendChild(fr);
   }
+  const BASE = 'background:rgba(11,16,24,.94);color:#e8eef7;border:1px solid #2c3b50;border-radius:8px;'
+    + 'font:700 15px/1.4 system-ui,Segoe UI,Arial,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.45);cursor:default;user-select:none;';
+  // Dans l'emplacement prévu par le site (pleine largeur) ou, à défaut, en bas à droite de la page
+  function place() {
+    if (!badge || !document.body) return;
+    const host = document.getElementById('rs-qsy-badge');
+    if (host) {
+      if (badge.parentNode !== host) host.appendChild(badge);
+      badge.style.cssText = BASE + 'position:static;display:block;width:100%;box-sizing:border-box;padding:9px 6px;margin:0 0 10px;text-align:center;font-size:14px';
+    } else {
+      if (badge.parentNode !== document.body) document.body.appendChild(badge);
+      badge.style.cssText = BASE + 'position:fixed;right:14px;bottom:14px;z-index:2147483000;padding:8px 14px;max-width:360px';
+    }
+  }
   function mkBadge() {
-    if (badge) return;
-    badge = document.createElement('div');
-    badge.setAttribute('role', 'status');
-    badge.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:2147483000;background:rgba(11,16,24,.92);color:#dfe7f2;'
-      + 'border:1px solid #2c3b50;border-radius:6px;padding:5px 10px;font:600 12px/1.35 system-ui,Segoe UI,Arial,sans-serif;'
-      + 'box-shadow:0 2px 8px rgba(0,0,0,.4);max-width:320px;cursor:default;user-select:none';
-    const line = document.createElement('div');
-    line.append('Remote Station ');
-    arrow = document.createElement('b');
-    arrow.textContent = '<->';
-    arrow.style.cssText = 'color:#ef4444;margin:0 2px';
-    line.append(arrow, ' DX Cluster');
-    note = document.createElement('div');
-    note.style.cssText = 'font-weight:400;font-size:11px;color:#9fb0c6;display:none';
-    badge.append(line, note);
-    document.body.appendChild(badge);
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.setAttribute('role', 'status');
+      const line = document.createElement('div');
+      line.style.cssText = 'white-space:nowrap;letter-spacing:.2px';
+      line.append('Remote Station ');
+      arrow = document.createElement('b');
+      arrow.textContent = '<->';
+      arrow.style.cssText = 'color:#ef4444;margin:0 4px;font-size:19px;vertical-align:-1px';
+      line.append(arrow, ' DX Cluster');
+      note = document.createElement('div');
+      note.style.cssText = 'font-weight:600;font-size:13px;color:#9fb0c6;display:none;margin-top:3px;white-space:normal';
+      badge.append(line, note);
+    }
+    place(); // la page peut avoir reconstruit sa colonne (application React) : on se remet dedans
   }
   function setLinked(on, dash) {
     linked = on;

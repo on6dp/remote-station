@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.90** — Badge « Remote Station <-> DX Cluster » plus grand ; sur dx.op0p.be il prend toute la largeur en haut de la colonne Alert / Show Only / Hide (script rs-patch-holycluster.py mis à jour, puis npm run build), ailleurs il reste en bas à droite. Cadre Filtres : quand NARROW est enclenché, le curseur BW grisé affiche « NARROW ✕ » (explication au survol) ; un clic dessus coupe NARROW et rend le curseur. Ctrl+F5 sur le dashboard et sur la page du cluster.
 - **0.22.89** — CW : CW-L sous 10 MHz et CW-U au-dessus (CW-R / CW sur l’IC-7300), pour les spots de DX cluster, la carte de bande et la liste de fréquences de l’onglet CW. Ctrl+F5 sur le dashboard suffit.
 - **0.22.88** — DX cluster → Remote Station : badge « Remote Station <-> DX Cluster » en bas à droite de dx.op0p.be / cluster.op0p.be (membres seulement) : <-> vert = dashboard ouvert avec la main, rouge sinon ; après un clic, « TRX calé sur le spot » ou ce qui manque. Calage plus rapide (fréquence envoyée tout de suite, mode juste derrière : environ 0,1 à 0,3 s de gagné), aussi pour la carte de bande et les listes de fréquences. Redémarrer le service, puis Ctrl+F5 sur le dashboard et sur la page du cluster.
 - **0.22.87** — Carte de bande : poignée sur son bord gauche pour en régler la largeur à la souris (140 à 520 px, gardée dans le navigateur, double-clic = largeur d’origine). Ctrl+F5 sur le dashboard suffit.

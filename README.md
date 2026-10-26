@@ -11,7 +11,7 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.22.89** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.22.90** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
 **Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
 `remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
@@ -222,7 +222,7 @@ window.remoteStationQsy(spot.freq /* kHz */, spot.mode /* 'FT8', 'CW', 'SSB', 'R
 
 Le script ajoute un relais invisible (`/qsy.html` de la Remote Station, en iframe) qui passe le spot au dashboard
 (BroadcastChannel). Pour les membres déjà connectés au dashboard dans ce navigateur, un badge « Remote Station <-> DX Cluster »
-en bas à droite de la page du cluster indique la liaison (<-> vert : dashboard ouvert avec la main ; rouge sinon) et le résultat
+en bas à droite de la page du cluster (ou dans un élément `id="rs-qsy-badge"` s'il existe, ex. la colonne des filtres de dx.op0p.be) indique la liaison (<-> vert : dashboard ouvert avec la main ; rouge sinon) et le résultat
 de chaque clic. Facultatif : `window.onRemoteStationAck = (ok, raison) => …`.
 
 ### Réglages des radios

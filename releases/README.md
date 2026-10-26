@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.90 | [RemoteStation-Setup-0.22.90.exe](0.22.90/RemoteStation-Setup-0.22.90.exe) | [remote-station-0.22.90.tar.gz](0.22.90/remote-station-0.22.90.tar.gz) | Badge DX Cluster plus grand (colonne des filtres de dx.op0p.be), BW grisé par NARROW expliqué — [empreintes SHA-256](0.22.90/SHA256SUMS.txt) |
 | 0.22.89 | [RemoteStation-Setup-0.22.89.exe](0.22.89/RemoteStation-Setup-0.22.89.exe) | [remote-station-0.22.89.tar.gz](0.22.89/remote-station-0.22.89.tar.gz) | CW-L sous 10 MHz, CW-U au-dessus — [empreintes SHA-256](0.22.89/SHA256SUMS.txt) |
 | 0.22.88 | [RemoteStation-Setup-0.22.88.exe](0.22.88/RemoteStation-Setup-0.22.88.exe) | [remote-station-0.22.88.tar.gz](0.22.88/remote-station-0.22.88.tar.gz) | Badge Remote Station <-> DX Cluster, calage plus rapide — [empreintes SHA-256](0.22.88/SHA256SUMS.txt) |
 | 0.22.87 | [RemoteStation-Setup-0.22.87.exe](0.22.87/RemoteStation-Setup-0.22.87.exe) | [remote-station-0.22.87.tar.gz](0.22.87/remote-station-0.22.87.tar.gz) | Carte de bande : largeur réglable à la souris — [empreintes SHA-256](0.22.87/SHA256SUMS.txt) |

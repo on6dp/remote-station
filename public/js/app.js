@@ -653,6 +653,11 @@
         cell.append(head, inp);
         box.appendChild(cell);
         Object.assign(ref, { cell, inp, out });
+        // BW grisé par NARROW (largeur fixe du TRX) : un clic sur « NARROW » le coupe et rend le curseur
+        if (c.type === 'width') out.addEventListener('click', () => {
+          const k = out.dataset.nar && (RIG().CONTROL || {})[out.dataset.nar];
+          if (k) sendCtl(k, 0);
+        });
       }
       if (ref.cell) ref.cell.dataset.ctl = c.id; // placement CSS (colonne DUAL compacte)
       ctlRefs[c.id] = ref;
@@ -718,6 +723,16 @@
         const p = ctlPending[c.id];
         if (!(p && Date.now() - p.at < 1500) && v != null) inp.value = v;
         out.textContent = avail ? fmtCtl(c, v, r) : '—';
+        if (c.type === 'width') {
+          // NARROW enclenché sur ce côté : la radio impose sa largeur étroite, le curseur BW n'agit plus
+          const nk = c.id === 'widthB' ? 'narrowB' : 'narrow';
+          const nar = !!r.connected && !!r[nk] && !!(RIG().CONTROL || {})[nk];
+          out.dataset.nar = nar ? nk : '';
+          out.classList.toggle('ctl-nar', nar);
+          cell.classList.toggle('nar', nar);
+          if (nar) out.textContent = 'NARROW ✕';
+          cell.title = nar ? 'NARROW est enclenché sur le VFO ' + (nk === 'narrowB' ? 'B' : 'A') + ' : le TRX impose sa largeur étroite et BW est grisé. Cliquez sur « NARROW ✕ » (ou sur le badge NAR de l’écran du VFO) pour le couper.' : '';
+        }
       }
     }
   }

@@ -194,6 +194,10 @@ button, input, select { font: inherit; color: inherit; }
 .ctl-val { font-size: 12px; font-weight: 700; color: var(--v2-text-bright); }
 .ctl-foot { font-size: 10px; color: var(--v2-text-dim); }
 .ctl.unavail { opacity: .4; }
+.ctl.unavail.nar { opacity: 1; }
+.ctl.unavail.nar .ctl-label, .ctl.unavail.nar input { opacity: .4; }
+.ctl-val.ctl-nar { color: #22d3ee; cursor: pointer; border: 1px solid #22d3ee; border-radius: 3px; padding: 0 5px; font-size: 11px; }
+.ctl-val.ctl-nar:hover { background: rgba(34, 211, 238, .18); }
 .ctl-row { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
 input[type='range'] {
   -webkit-appearance: none;
