@@ -422,7 +422,8 @@
       + '<div class="bm-r" title="Plage affichée pour cette bande (kHz), gardée par bande. Molette sur la carte : zoom · glisser : déplacer · double-clic : plage d’origine">'
       + '<input id="bmLo" inputmode="decimal" aria-label="Début de la plage (kHz)"><span>–</span><input id="bmHi" inputmode="decimal" aria-label="Fin de la plage (kHz)"><span>kHz</span></div>'
       + '<div class="bm-body" id="bmBody"><canvas id="bmCv"></canvas><div class="bm-lbls" id="bmLbls"></div></div>'
-      + '<div class="bm-f" id="bmFoot"></div>';
+      + '<div class="bm-f" id="bmFoot"></div>'
+      + '<i class="bm-grip" id="bmGrip" title="Glisser à gauche ou à droite : largeur de la carte de bande (double-clic : largeur d’origine)"></i>';
     panel.appendChild(bm);
     add('away', 'dg-soon', '<p>Les modes numériques sont ouverts dans une <b>fenêtre séparée</b>.</p><p><button class="btn" type="button" id="dgBack">Ramener ici</button></p>');
   }
@@ -1230,7 +1231,7 @@
     $('bmBandT').textContent = (bmBand || '—').replace('m', ' m').replace('c m', ' cm');
     if (document.activeElement !== $('bmLo')) $('bmLo').value = String(lo).replace('.', ',');
     if (document.activeElement !== $('bmHi')) $('bmHi').value = String(hi).replace('.', ',');
-    const PAD = 6, RX = 46; // règle : x de 0 à RX
+    const PAD = 6, RX = 50; // règle : x de 0 à RX (poignée de largeur sur les 6 premiers pixels)
     const yOf = (khz) => PAD + ((khz - lo) / (hi - lo)) * (H - 2 * PAD);
     bmLay = [lo, hi, PAD, H];
     // fond de la règle
@@ -1247,7 +1248,7 @@
       c.fillStyle = col;
       c.font = 'bold 10px Verdana, "DejaVu Sans", Arial, sans-serif';
       c.textBaseline = 'middle';
-      c.fillText(txt, 2, Math.max(6, Math.min(H - 6, y - 7)));
+      c.fillText(txt, 7, Math.max(6, Math.min(H - 6, y - 7)));
     };
     if (d && tab === 'cw') line(d.hz / 1000, '#F2CF4A', 'VFO', true); // CW : fréquence du VFO (battement nul)
     else if (d) {
@@ -1291,7 +1292,7 @@
       if (major) {
         c.fillStyle = '#c8d3e3';
         const t = step < 1 ? f.toFixed(1).replace('.', ',') : String(Math.round(f));
-        c.fillText(t.length > 5 ? t.slice(-5) : t, 2, y);
+        c.fillText(t.length > 5 ? t.slice(-5) : t, 7, y);
       }
     }
     // spots de la plage : les plus récents d'abord s'il n'y a pas la place pour tous
@@ -1486,6 +1487,40 @@
     $('bmFilt').value = bmFilt;
     $('bmFilt').addEventListener('change', () => { bmFilt = $('bmFilt').value === 'all' ? 'all' : 'rtty'; store.set('bmfilt', bmFilt); bmDraw(); });
     if (window.ResizeObserver) new ResizeObserver(() => bmDraw()).observe(body);
+    // Poignée sur le bord gauche : largeur de la carte de bande, gardée dans ce navigateur
+    const root = document.documentElement;
+    const setW = (w, save) => {
+      if (w == null) { root.style.removeProperty('--bm-w'); if (save) store.set('bmw', ''); }
+      else {
+        w = Math.max(140, Math.min(520, Math.round(w)));
+        root.style.setProperty('--bm-w', w + 'px');
+        if (save) store.set('bmw', String(w));
+      }
+      bmPlace();
+      if (WF_TABS.indexOf(tab) >= 0) sizeCanvas();
+      bmDraw();
+    };
+    const saved = Number(store.get('bmw', ''));
+    if (saved >= 140) setW(saved, false);
+    const grip = $('bmGrip');
+    grip.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      grip.setPointerCapture(e.pointerId);
+      const zf = (window.RSZOOM && window.RSZOOM.z()) || 1;
+      const x0 = e.clientX, w0 = $('bandMap').getBoundingClientRect().width / zf;
+      document.body.classList.add('bm-resizing');
+      const mv = (ev) => setW(w0 - (ev.clientX - x0) / zf, false);
+      const up = (ev) => {
+        grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up);
+        document.body.classList.remove('bm-resizing');
+        setW(w0 - (ev.clientX - x0) / zf, true);
+      };
+      grip.addEventListener('pointermove', mv);
+      grip.addEventListener('pointerup', up);
+      grip.addEventListener('pointercancel', up);
+    });
+    grip.addEventListener('dblclick', (e) => { e.stopPropagation(); setW(null, true); });
     window.addEventListener('resize', () => { if (BM_TABS.indexOf(tab) >= 0) bmShow(); });
   }
   // En-têtes des deux décodeurs : centre, fréquence du signal suivi, décodeur de l'émission

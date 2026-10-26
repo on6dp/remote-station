@@ -583,6 +583,7 @@ On the right of the FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY and CW tabs (not S
 | **Click on a spot** | The transceiver tunes to the station: if it is already in the waterfall, only the transmit decoder moves onto it; otherwise the VFO moves to put it in the middle of the waterfall, with the decoder on it. The callsign goes into Correspondant. Then just press the reply macro (`F2`…). You must have control. |
 | Click elsewhere on the map | Same on that frequency, without a callsign (to scan the band). |
 | Click in the other tabs | **CW**: the VFO goes to the station (it comes out at the TRX pitch, where the CW decoder is set). **FT8 · FT4 · FT2, JT65, JTTY, WSPR**: the receive frequency moves onto the signal; if it is outside the audio band, the VFO moves to put it at 1500 Hz. |
+| Handle on the left edge | Drag left or right: width of the band map (kept in this browser); double-click: original width. |
 | **Wheel** / drag / double-click | Wheel: zoom around the mouse; drag up or down: move the range; double-click: the band's original range. |
 
 Cluster settings (administrator, `config.json`, then restart the service): `clusterHost` (op0p.be by default; empty = no cluster), `clusterPort` (8000), `clusterCall` (login callsign with an SSID; empty = digiCall followed by -7, i.e. ON5VL-7) and `clusterCmds` (commands sent after logging in: `set/skimmer` for RBN spots).

@@ -583,6 +583,7 @@ Au-dessus de la cascade, la ligne d'aide (« clic gauche : décodeur A… ») s'
 | **Clic sur un spot** | Le TRX se cale sur la station : si elle est déjà dans la cascade, seul le décodeur de l'émission s'y place ; sinon le VFO bouge pour la mettre au milieu de la cascade, avec le décodeur dessus. L'indicatif passe dans Correspondant. Il reste à appuyer sur la macro de réponse (`F2`…). Il faut avoir la main. |
 | Clic ailleurs sur la carte | Même chose sur cette fréquence, sans indicatif (balayer la bande). |
 | Clic dans les autres onglets | **CW** : le VFO va sur la station (elle sort à la tonalité du TRX, là où le décodeur CW est calé). **FT8 · FT4 · FT2, JT65, JTTY, WSPR** : la fréquence de réception se place sur le signal ; s'il est hors de la bande audio, le VFO bouge pour le mettre à 1500 Hz. |
+| Poignée sur le bord gauche | Glisser à gauche ou à droite : largeur de la carte de bande (gardée dans ce navigateur) ; double-clic : largeur d'origine. |
 | **Molette** / glisser / double-clic | Molette : zoom autour de la souris ; glisser vers le haut ou le bas : déplacer la plage ; double-clic : plage d'origine de la bande. |
 
 Réglages du cluster (administrateur, `config.json`, puis redémarrer le service) : `clusterHost` (op0p.be par défaut ; vide = pas de cluster), `clusterPort` (8000), `clusterCall` (indicatif de connexion avec un SSID ; vide = digiCall suivi de -7, donc ON5VL-7) et `clusterCmds` (commandes envoyées après la connexion : `set/skimmer` pour les spots RBN).

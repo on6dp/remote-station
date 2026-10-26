@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.87** — Carte de bande : poignée sur son bord gauche pour en régler la largeur à la souris (140 à 520 px, gardée dans le navigateur, double-clic = largeur d’origine). Ctrl+F5 sur le dashboard suffit.
 - **0.22.86** — Spots d’un DX cluster : en phonie, LSB sous 10 MHz et USB au-dessus ; le mode est renvoyé jusqu’à ce que le TRX le confirme (le FTX-1 rappelait le mode mémorisé de la bande, LSB, après le changement de bande) ; spot sans mode : CW ou phonie d’après le plan de bande IARU R1. Même renvoi pour le mode DATA-U des onglets numériques. Liens du menu DX Cluster en https. Ctrl+F5 sur le dashboard suffit.
 - **0.22.85** — Correctif page Station : le port mémorisé de chaque TRX est reconnu par son identité USB (fabricant, produit, rang), plus seulement par sa place dans la liste de Chrome. Autoriser le port d’un autre TRX ou d’un autre appareil USB décalait cette liste : au retour sur le FTX-1, la page rouvrait le mauvais port et le dashboard n’affichait plus la fréquence. Redémarrer le service, recharger la page Station, puis choisir une fois le port de chaque TRX.
 - **0.22.84** — Clic sur un spot d’un DX cluster (dx.op0p.be, cluster.op0p.be) ouvert dans le même navigateur : le TRX se cale sur la station (fréquence, mode, onglet du mode, indicatif dans Correspondant), pour tous les TRX, avec les règles habituelles. Côté cluster : script public/js/rs-qsy-client.js et relais /qsy.html (réglage qsyOrigins). Redémarrer le service, puis Ctrl+F5.

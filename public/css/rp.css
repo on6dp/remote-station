@@ -1365,3 +1365,8 @@ body.bm-tall .bm { border: 1px solid var(--v2-border-panel); border-radius: var(
 .rt-hd .rt-txsel[aria-pressed='false'] { color: #FFFFFF; background: #1e8e4e; border-color: #1e8e4e; }
 .rt-side:not(.rt-istx) { border-color: rgba(46, 204, 113, .45); }
 .rt-side:not(.rt-istx) > .rt-hd { background: rgba(46, 204, 113, .08); }
+/* Poignée de largeur de la carte de bande (bord gauche) */
+.bm-grip { position: absolute; left: 0; top: 0; bottom: 0; width: 9px; cursor: ew-resize; z-index: 3; }
+.bm-grip::after { content: ''; position: absolute; left: 3px; top: 50%; width: 3px; height: 46px; margin-top: -23px; border-radius: 2px; background: var(--v2-border-panel, #3a4658); opacity: .8; }
+.bm-grip:hover::after, body.bm-resizing .bm-grip::after { background: var(--v2-accent-cyan, #00d4ff); opacity: 1; }
+body.bm-resizing { cursor: ew-resize; user-select: none; }
