@@ -523,8 +523,8 @@ You can follow two stations on the same band at once (contest, a DX and its pile
   <tr><td><span class="k">SPLIT</span></td><td>Receive on VFO A, transmit on VFO B (same command as SPLIT on the Step row). Lit in red: « SPLIT · TX sur B ».</td></tr>
   <tr><td>Waterfall scale</td><td>In <b>kHz</b>, real frequency (VFO dial + audio); the small white triangle marks the middle of the audio band. In <b>DATA-U</b> (the mode to use for RTTY) low frequencies are on the left; in LSB the scale is reversed and so is the RTTY transmission: switch to DATA-U.</td></tr>
   <tr><td>Markers on the waterfall</td><td>Decoder <b>A</b>: <span class="yel">yellow (Mark)</span> and blue (Space). Decoder <b>B</b>: mauve (Mark) and green (Space). Dark colours and thick frames: visible even on a very bright screen. The letter <b>A</b> or <b>B</b> is written large, on a badge of its colour, above the markers.</td></tr>
-  <tr><td>Left click / right click</td><td>Left click on a signal: tune decoder <b>A</b> on it; right click: decoder <b>B</b>.</td></tr>
-  <tr><td>Drag / Shift + wheel on the waterfall</td><td><b>Dragging</b> the waterfall left or right tunes the VFO (you "grab" the band, signals follow the mouse); <kbd>Shift</kbd> + <b>wheel</b>: VFO ± 10 Hz per notch. Both decoders stay on their signals. You need control.</td></tr>
+  <tr><td>Left button / right button</td><td><b>Left click</b> on a signal: tune decoder <b>A</b> on it; <b>right click</b>: decoder <b>B</b>. <b>Holding the button down</b> and dragging, both bars of the decoder (Mark and Space) follow the mouse <b>continuously</b>: left for A, right for B; decoding follows while moving. Release: the decoder stays there.</td></tr>
+  <tr><td><kbd>Shift</kbd> + drag / <kbd>Shift</kbd> + wheel on the waterfall</td><td><kbd>Shift</kbd> + <b>dragging</b> the waterfall left or right (or dragging with the middle button, wheel pressed) tunes the VFO (you "grab" the band, signals follow the mouse); <kbd>Shift</kbd> + <b>wheel</b>: VFO ± 10 Hz per notch. Both decoders stay on their signals. You need control.</td></tr>
   <tr><td>Frequency (e.g. 7 074,9 kHz)</td><td>Next to VFO-A / VFO-B: frequency of the signal followed by this decoder (dial of the VFO being received + Mark / Space centre, − in LSB), handy for the log or a spot. In single receive (always the case with both VFOs on HF on the FTX-1), both decoders read the same receiver: their frequencies are computed from the VFO being received, shown in brackets, e.g. « 7 079,1 kHz (VFO A) ».</td></tr>
   <tr><td><b>Shift</b> (170, 200, 425, 850 Hz) / <b>Speed</b> (45,45 … 100 Bd)</td><td>Amateur radio: 170 Hz and 45.45 baud.</td></tr>
   <tr><td><span class="k">Inversé</span> (reversed)</td><td>Swaps Mark and Space when the received text makes no sense (signal "upside down").</td></tr>
@@ -537,7 +537,7 @@ You can follow two stations on the same band at once (contest, a DX and its pile
   <tr><td>Vertical bar between the two texts</td><td>Drag it: width of the two decoders (double-click: half and half).</td></tr>
 </table>
 <ol>
-  <li><b>Receive</b>: left click on a signal for decoder A, right click for decoder B. The two markers should sit on the two traces of the signal. The text appears under the waterfall, A on the left, B on the right.</li>
+  <li><b>Receive</b>: left click on a signal for decoder A, right click for decoder B (button held: the bars follow the mouse continuously, to place them exactly on the traces). The two markers should sit on the two traces of the signal. The text appears under the waterfall, A on the left, B on the right.</li>
   <li><b>Double-click a received callsign</b>: it becomes the correspondent.</li>
   <li><b>Choose the transmit decoder</b>: a click in its window (VFO-A or VFO-B), or the <span class="k">TX</span> button in its header; your reply goes out on the frequency of the station it follows. Double-clicking a callsign in window B therefore does both: B becomes the transmit decoder and the callsign goes into Correspondant.</li>
   <li><b>Transmit</b>: text in the bottom box, then <span class="k">Émettre</span> (transmit) (or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>). The text goes out with the settings of the decoder marked TX (and on VFO B if SPLIT is on), then the transceiver returns to receive. It appears in grey in that decoder's received text, then each letter turns <span class="red">red</span> as it is sent. While transmitting the button becomes <span class="k">■ Arrêter</span> (stop). 600 characters at most; transmit audio frequency between 300 and 2800 Hz.</li>
@@ -553,7 +553,7 @@ You can follow two stations on the same band at once (contest, a DX and its pile
   <li><b>Reply</b>: <kbd>F2</kbd> key (or the reply macro), then the report macro. For custom text: type it in the bottom box, then <span class="k">▶ TX ici</span> (or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>). <kbd>Esc</kbd> stops the current transmission.</li>
   <li><b>Log the QSO</b>: a macro containing <code>&lt;LOG&gt;</code> (form opens by itself) or the <span class="k">Log QSO</span> button.</li>
   <li><b>Call yourself</b> (CQ): choose the transmit window, then <kbd>F1</kbd>. With two decoders you can call CQ on A while watching another station on B.</li>
-  <li><b>Station outside the waterfall and not spotted</b>: click the band map at that frequency (the TRX goes there), or drag the waterfall, or <kbd>Shift</kbd> + wheel.</li>
+  <li><b>Station outside the waterfall and not spotted</b>: click the band map at that frequency (the TRX goes there), or Shift + drag the waterfall, or <kbd>Shift</kbd> + wheel.</li>
 </ol>
 
 <h4 id="carte-bande">Band map (DX cluster)</h4>

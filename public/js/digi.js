@@ -164,7 +164,7 @@
       <select id="rtSpan" aria-label="Largeur de la cascade" title="Bande audio affichée. 4 kHz : ouvrez aussi le filtre du TRX (BW 4.0K), sinon le bord droit reste noir"><option value="3000">Bande 3 kHz</option><option value="4000">Bande 4 kHz</option></select>
       <select id="rtZoom" aria-label="Zoom de la cascade" title="Zoom (aussi à la molette sur la cascade : vers soi = plus étroit, vers l'avant = plus large) : plage plus étroite et plus détaillée, comme MixW"><option value="1">Zoom ×1</option><option value="1.5">Zoom ×1,5</option><option value="2">Zoom ×2</option><option value="3">Zoom ×3</option><option value="4">Zoom ×4</option><option value="6">Zoom ×6</option><option value="8">Zoom ×8</option></select>
       <button class="btn" type="button" id="rtSplitBtn" aria-pressed="false" title="SPLIT : réception sur le VFO A, émission sur le VFO B (même bouton que SPLIT sur la ligne Step)">SPLIT</button>
-      <span class="dg-note rt-tip" id="rtTip">clic gauche : décodeur A · clic droit : décodeur B · molette : zoom · glisser ou Maj+molette : accorder · double-clic sur un indicatif : le reprendre</span>
+      <span class="dg-note rt-tip" id="rtTip">bouton gauche (clic ou maintenu en glissant) : décodeur A · bouton droit : décodeur B · molette : zoom · Maj+glisser ou Maj+molette : accorder le VFO · double-clic sur un indicatif : le reprendre</span>
       <span class="dg-status" id="rtStatus"></span>
     </div>
     <!-- Une seule cascade (le TRX n'envoie qu'un son) avec les repères des deux décodeurs -->
@@ -971,13 +971,53 @@
     if (st && ((st.ptt && st.ptt.active) || st.ftx)) { api.say('Réglage bloqué pendant l’émission.', 'warn'); return false; }
     return true;
   }
+  // Bouton gauche maintenu : les repères du décodeur A suivent la souris en continu ; bouton droit : décodeur B
+  // (sur la cascade propre au décodeur B : les deux boutons déplacent B). Maj + glisser (ou bouton du milieu) : accorder le VFO.
+  function rtDecDrag(ids, ch) {
+    let mk = null;
+    for (const id of ids) {
+      const el = $(id);
+      const fOf = (e) => {
+        const rc = el.getBoundingClientRect();
+        return WF_LO + Math.max(0, Math.min(1, (e.clientX - rc.left) / (rc.width || 1))) * WF_MAX_HZ;
+      };
+      const move = (e, final) => {
+        const r = rts[mk.target];
+        r.f = Math.max(200 + r.shift / 2, Math.min(WF_TOP - 100 - r.shift / 2, Math.round(fOf(e))));
+        const now = Date.now();
+        if (final) { setRttyF(r.f, mk.target); return; }
+        drawScale();
+        if (now - mk.t > 150) { mk.t = now; saveRtty(true); } // le décodeur du serveur suit pendant le glisser
+      };
+      el.addEventListener('pointerdown', (e) => {
+        if (tab !== 'rtty' || e.shiftKey || (e.button !== 0 && e.button !== 2)) return;
+        mk = { el, id: e.pointerId, target: ch === 1 ? 1 : e.button === 2 ? 1 : 0, t: 0 };
+        try { el.setPointerCapture(e.pointerId); } catch (err) { /* */ }
+        el.style.cursor = 'ew-resize';
+        move(e, false);
+      });
+      el.addEventListener('pointermove', (e) => { if (mk && mk.el === el && mk.id === e.pointerId) move(e, false); });
+      const end = (e) => {
+        if (!mk || mk.el !== el) return;
+        move(e, true);
+        el.style.cursor = '';
+        mk = null;
+      };
+      el.addEventListener('pointerup', end);
+      el.addEventListener('pointercancel', end);
+    }
+  }
   function rtDragInit(ids, ch) {
     let drag = null;
     let swallowClick = false;
+    rtDecDrag(ids, ch);
     for (const id of ids) {
       const el = $(id);
+      el.addEventListener('mousedown', (e) => { if (tab === 'rtty' && e.button === 1) e.preventDefault(); }); // pas de défilement auto
       el.addEventListener('pointerdown', (e) => {
-        if (tab !== 'rtty' || e.button !== 0) return;
+        // Accord du VFO : Maj + glisser (bouton gauche) ou bouton du milieu
+        if (tab !== 'rtty' || !((e.button === 0 && e.shiftKey) || e.button === 1)) return;
+        e.preventDefault();
         const d = rtDialOf(ch);
         if (!d) return;
         drag = { x0: e.clientX, w: el.getBoundingClientRect().width, d, cur: d.hz, moved: false, el, id: e.pointerId, t: 0 };
