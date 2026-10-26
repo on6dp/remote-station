@@ -1359,7 +1359,7 @@
       return;
     }
     const nd = Math.round((hz - d.sign * WF_TOP / 2) / 10) * 10;
-    api.setFreq(nd, d.vfo);
+    api.setFreq(nd, d.vfo, true);
     r.f = d.sign * (hz - nd);
     saveRtty(true);
     applySpan(true);
@@ -1376,14 +1376,14 @@
     const who = call ? call + ' : ' : '';
     if (tab === 'cw') {
       const nd = Math.round(hz / 10) * 10;
-      api.setFreq(nd, d.vfo);
+      api.setFreq(nd, d.vfo, true);
       bmDraw();
       return api.say(who + 'VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz.', '', 4000);
     }
     const audio = d.sign * (hz - d.hz);
     if (audio >= 150 && audio <= WF_MAX_HZ - 150) { setRx(audio); bmDraw(); return; }
     const nd = Math.round((hz - d.sign * 1500) / 100) * 100;
-    api.setFreq(nd, d.vfo);
+    api.setFreq(nd, d.vfo, true);
     setRx(d.sign * (hz - nd));
     bmDraw();
     api.say(who + 'VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz, réception sur le signal.', '', 4000);
@@ -3245,7 +3245,7 @@
     }
     const st = api.state();
     if (st && st.ptt && st.ptt.active) return api.say('Réglage bloqué pendant l’émission.', 'warn');
-    api.setFreq(Math.round(khz * 1000), 'A');
+    api.setFreq(Math.round(khz * 1000), 'A', true);
     // Mode DATA-U (Yaesu) / USB-D (Icom) : le filtre et la sortie audio conviennent aux modes numériques
     const R = api.rig();
     const mk = want === 'CW'
@@ -3260,7 +3260,7 @@
         api.send({ t: 'set', mode: mk[0], sub: false });
         if (n < 2) setTimeout(() => want(n + 1), 1200);
       };
-      setTimeout(() => want(0), 250);
+      setTimeout(() => want(0), 30);
     }
   }
   function autoQsy() {

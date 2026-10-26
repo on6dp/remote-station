@@ -225,20 +225,23 @@
     if (f == null) return;
     setFreq(f + delta, which);
   }
-  function setFreq(hz, which) {
+  // now : envoi immédiat (spot, carte de bande, liste de fréquences) ; sinon regroupé sur 120 ms (molette, glisser)
+  function setFreq(hz, which, now) {
     which = which || target;
     hz = Math.round(Math.min(RIG().FREQ_MAX, Math.max(RIG().FREQ_MIN, hz)));
     pend[which] = hz;
     pendAt[which] = Date.now();
     render();
-    if (sendTimer) return;
-    sendTimer = setTimeout(() => {
+    const flush = () => {
       sendTimer = null;
       const msg = { t: 'set' };
       if (pend.A != null && Date.now() - pendAt.A < 1500) msg.freq = pend.A;
       if (pend.B != null && Date.now() - pendAt.B < 1500) msg.freqB = pend.B;
       send(msg);
-    }, 120);
+    };
+    if (now) { clearTimeout(sendTimer); return flush(); }
+    if (sendTimer) return;
+    sendTimer = setTimeout(flush, 120);
   }
   function setTarget(w) {
     if (target === w) return;
@@ -1491,7 +1494,7 @@
         if (/^Liaison perdue/.test($('msg').textContent)) say('');
         $('login').hidden = true;
         $('meCall').textContent = m.call;
-        try { localStorage.setItem('rs.call', m.call); } catch (x) {}
+        try { localStorage.setItem('rs.call', m.call); localStorage.setItem('rs.member', '1'); } catch (x) {} // rs.member : badge « Remote Station <-> DX Cluster »
         // Session mémorisée : la page actualisée se reconnecte seule (le mot de passe n'est plus gardé)
         if (m.session) {
           creds = { session: m.session };
@@ -1655,13 +1658,17 @@
     const M = spotMode(m.mode, khz);
     const call = String(m.call || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
     // Plusieurs dashboards ouverts dans ce navigateur : seul celui qui a la main agit
-    if (!iControl()) { if (document.visibilityState === 'visible') say('Spot ' + (call || '') + ' ' + khz + ' kHz : prenez la main pour que le TRX s’y cale.', 'warn'); return; }
-    if (bcQsy) bcQsy.postMessage({ type: 'rs-qsy-here' });
+    if (!iControl()) {
+      if (bcQsy) bcQsy.postMessage({ type: 'rs-qsy-here', control: false });
+      if (document.visibilityState === 'visible') say('Spot ' + (call || '') + ' ' + khz + ' kHz : prenez la main pour que le TRX s’y cale.', 'warn');
+      return;
+    }
+    if (bcQsy) bcQsy.postMessage({ type: 'rs-qsy-here', control: true });
     if (st.ptt && st.ptt.active) return say('Réglage bloqué pendant l’émission.', 'warn');
     const dg = window.DG && window.DG();
     if (dg && dg.spotQsy && dg.spotQsy(khz, M, call)) return;
     // Phonie, AM, FM, ou mode inconnu : fréquence du VFO choisi, mode si le spot l'indique
-    setFreq(Math.round(khz * 1000), target);
+    setFreq(Math.round(khz * 1000), target, true);
     const want = M === 'DATA' ? /^(DATA-U|USB-D)$/ : M ? new RegExp('^' + M + '$') : null;
     const mk = want && (R.MODE_KEYS || []).find((x) => want.test(x[1]));
     if (mk) {
@@ -1674,12 +1681,16 @@
         send({ t: 'set', mode: mk[0], sub: vfo === 'B' });
         if (n < 2) setTimeout(() => want(n + 1), 1200);
       };
-      setTimeout(() => want(0), 250);
+      want(0); // juste après la fréquence (même liaison, dans l'ordre)
     }
     say((call ? call + ' : ' : '') + 'VFO ' + target + ' sur ' + khz.toLocaleString('fr-BE') + ' kHz' + (mk ? ' en ' + mk[1] : '') + '.', '', 4000);
   }
   const bcQsy = 'BroadcastChannel' in window ? new BroadcastChannel('rs-qsy') : null;
-  if (bcQsy) bcQsy.onmessage = (e) => onSpot(e.data);
+  if (bcQsy) bcQsy.onmessage = (e) => {
+    // Question du relais (site de cluster) : ce dashboard est-il là, avec la main ?
+    if (e.data && e.data.type === 'rs-qsy-ping') return bcQsy.postMessage({ type: 'rs-qsy-here', control: !!(me && iControl()) });
+    onSpot(e.data);
+  };
   // Fenêtre du cluster ouverte depuis ce dashboard : message direct (window.opener) accepté des sites autorisés
   window.addEventListener('message', (e) => {
     const ok = (me && Array.isArray(me.qsyOrigins) ? me.qsyOrigins : []).indexOf(e.origin) >= 0;
