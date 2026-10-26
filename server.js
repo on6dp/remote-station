@@ -2473,6 +2473,12 @@ function onStation(conn, m) {
   if (m.t === 'cw_state') {
     if (!cwJob || m.id !== cwJob.id) return;
     if (m.state === 'tx') { cwJob.state = 'tx'; return broadcast(); }
+    if (m.state === 'info') {
+      // Étapes de l'émission CW (diagnostic) : affichées à l'opérateur et gardées dans le journal
+      const msg = String(m.msg || '').replace(/[\x00-\x1f]/g, ' ').slice(0, 200);
+      journal('cw_step', { msg });
+      return send(cwJob.conn, { t: 'notice', level: /refusé|pas de réponse/.test(msg) ? 'warn' : 'info', msg: 'CW : ' + msg });
+    }
     return cwEnd(m.state === 'done' ? 'fin du message' : String(m.msg || 'arrêtée par la page Station').slice(0, 200), true);
   }
   if (m.t === 'audio_silent') {

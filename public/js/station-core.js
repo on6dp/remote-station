@@ -833,6 +833,8 @@
       list.forEach((f, i) => setTimeout(() => this._write(f), i * (this.rig.FRAME_GAP_MS || 30)));
     }
     _cwSay(id, state, msg) { if (this.wsUp) this.sendWs({ t: 'cw_state', id, state, msg: msg || '' }); }
+    /** Étape de l'émission CW : journal de la page Station et dashboard de l'opérateur (diagnostic à distance). */
+    _cwInfo(job, text, cls) { this.log('CW : ' + text, cls); this._cwSay(job.id, 'info', text); }
     _cwStart(m) {
       const CW = this.rig.CW;
       if (!CW) return this._cwSay(m.id, 'error', 'émission CW par le CAT non prévue sur ce TRX');
@@ -879,7 +881,7 @@
     async _cwRun(job, chunks, wpm) {
       const CW = this.rig.CW;
       for (const c of CW.setup(wpm)) {
-        if (!(await this._cwSend(job, c))) this.log('CW : le TRX a refusé « ' + this._cwLabel(c) + ' » (réglage, on continue)', 'st-warn');
+        if (!(await this._cwSend(job, c))) this._cwInfo(job, 'le TRX a refusé « ' + this._cwLabel(c) + ' » (réglage, on continue)', 'st-warn');
         if (this.cw !== job) return;
       }
       for (let i = 0; i < chunks.length; i++) {
@@ -890,7 +892,7 @@
             if (this.cw !== job) return;
             // Mémoire refusée avec des espaces : on envoie alors mot par mot (l'espace entre mots est fait ici)
             if (/ /.test(c)) {
-              this.log('CW : le TRX a refusé « ' + this._cwLabel(CW.mem(c)) + ' » ; envoi mot par mot', 'st-warn');
+              this._cwInfo(job, 'le TRX a refusé « ' + this._cwLabel(CW.mem(c)) + ' » ; envoi mot par mot', 'st-warn');
               chunks.splice(i, 1, ...c.split(' ').filter(Boolean));
               job.words = true;
               i--;
@@ -906,15 +908,15 @@
               this._write(CW.read, true);
             });
             if (this.cw !== job) return;
-            this.log('CW : mémoire relue « ' + (got == null ? 'pas de réponse' : got.slice(0, 60)) + ' »');
+            this._cwInfo(job, 'mémoire écrite, relue « ' + (got == null ? 'pas de réponse' : got.slice(0, 60)) + ' »');
           }
         }
         let played = false;
         const plays = CW.play ? [CW.play].concat(CW.alt) : [CW.text(c)];
         for (const pc of plays) {
-          if (await this._cwSend(job, pc)) { played = true; if (pc !== plays[0]) this.log('CW : lecture acceptée avec « ' + this._cwLabel(pc) + ' »'); break; }
+          if (await this._cwSend(job, pc)) { played = true; if (i === 0) this._cwInfo(job, 'lecture « ' + this._cwLabel(pc) + ' » acceptée par le TRX, attente de l’émission…'); break; }
           if (this.cw !== job) return;
-          this.log('CW : le TRX a refusé « ' + this._cwLabel(pc) + ' »', 'st-warn');
+          this._cwInfo(job, 'le TRX a refusé « ' + this._cwLabel(pc) + ' »', 'st-warn');
         }
         if (this.cw !== job) return;
         if (!played) return this._cwFail(job, 'le TRX a refusé la lecture de la mémoire (' + plays.map((x) => '« ' + this._cwLabel(x) + ' »').join(', ') + ')');
@@ -922,7 +924,7 @@
           // Le TRX doit passer en émission (break-in) : sinon on le dit au lieu d'attendre la fin supposée
           let k = 0;
           while (!this.radio.tx && k++ < 12) { await this._cwSleep(job, 200); if (this.cw !== job) return; }
-          if (!this.radio.tx) return this._cwFail(job, 'le TRX n’est pas passé en émission (break-in, mode CW, manipulateur du TRX ?)');
+          if (!this.radio.tx) return this._cwFail(job, 'le TRX n’est pas passé en émission (vérifier sur le TRX : break-in en service, mode CW, mémoire CW 5 en TEXT)');
           this._cwSay(job.id, 'tx');
         }
         // Fin estimée du morceau, puis retour en réception (délai du break-in) avant le suivant

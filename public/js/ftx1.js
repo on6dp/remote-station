@@ -87,7 +87,9 @@
     extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'hiSwr', 'tuningRi'],
     subBadges: true,
     // CW : mémoire TEXTE 5 du manipulateur (écrasée), lue par KY05 ; KY00 = arrêt (manuel CAT FTX-1, Hamlib ftx1_cw.c)
-    cw: { mem: 'KM5', play: 'KY05;', alt: ['KY15;'], stop: 'KY00;BI0;' },
+    // EX020210 = menu CW MEMORY 5 (0 : TEXT, 1 : MESSAGE) : en MESSAGE (mémoire enregistrée au manipulateur), le texte
+    // écrit par KM5 n'est ni gardé ni joué ; le dashboard la met en TEXT avant chaque émission
+    cw: { pre: ['EX0202100;'], mem: 'KM5', play: 'KY05;', alt: ['KY15;'], stop: 'KY00;BI0;' },
     // PA0 / RA0 lus avec le côté SUB actif : ce sont l'ATT et le préampli du VFO B
     remapRead(p, r) {
       if (r.vfoSel !== 1) return;

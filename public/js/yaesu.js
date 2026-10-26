@@ -377,6 +377,7 @@
           else if (spec.cw && (m = /^KS(\d{3})$/.exec(c))) this.cwWpm = +m[1];
           else if (spec.cw && /^BI[01]$/.test(c)) { this.bi = c === 'BI1'; if (!this.bi && this.cwPlay) { clearTimeout(this.cwPlay); this.cwPlay = null; this.tx = 0; } }
           else if (spec.cw && /^KR[01]$/.test(c)) this.kr = c === 'KR1';
+          else if (spec.cw && /^EX02021[0][01]$/.test(c)) this.ans['EX020210;'] = c;
           else if (spec.cw && (m = /^KM([1-5])(.*)$/.exec(c))) { this.km = this.km || {}; if (m[2] === '') out.push('KM' + m[1] + (this.km[m[1]] || '') + ';'); else this.km[m[1]] = m[2]; }
           else if (spec.cw && /^KY/.test(c)) {
             const slot = c === spec.cw.play.slice(0, -1) ? spec.cw.mem.slice(2) : null;
@@ -428,7 +429,7 @@
       // Commandes envoyées une à une (un refus « ? » est ainsi attribué à la bonne commande)
       CW: spec.cw ? {
         max: 50,
-        setup: (wpm) => ['KS' + pad(Math.max(4, Math.min(60, wpm)), 3) + ';', 'KR1;', 'BI1;'],
+        setup: (wpm) => (spec.cw.pre || []).concat(['KS' + pad(Math.max(4, Math.min(60, wpm)), 3) + ';', 'KR1;', 'BI1;']),
         mem: (t) => spec.cw.mem + t + ';',
         read: spec.cw.mem + ';', readRe: new RegExp('^' + spec.cw.mem),
         play: spec.cw.play, alt: spec.cw.alt || [],
