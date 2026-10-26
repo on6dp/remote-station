@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.92 | [RemoteStation-Setup-0.22.92.exe](0.22.92/RemoteStation-Setup-0.22.92.exe) | [remote-station-0.22.92.tar.gz](0.22.92/remote-station-0.22.92.tar.gz) | Plus de ligne vide entre STEP et BANDS — [empreintes SHA-256](0.22.92/SHA256SUMS.txt) |
 | 0.22.91 | [RemoteStation-Setup-0.22.91.exe](0.22.91/RemoteStation-Setup-0.22.91.exe) | [remote-station-0.22.91.tar.gz](0.22.91/remote-station-0.22.91.tar.gz) | Bouton <-> DX Cluster du dashboard (ouvre et relie un cluster, vert / rouge) — [empreintes SHA-256](0.22.91/SHA256SUMS.txt) |
 | 0.22.90 | [RemoteStation-Setup-0.22.90.exe](0.22.90/RemoteStation-Setup-0.22.90.exe) | [remote-station-0.22.90.tar.gz](0.22.90/remote-station-0.22.90.tar.gz) | Badge DX Cluster plus grand (colonne des filtres de dx.op0p.be), BW grisé par NARROW expliqué — [empreintes SHA-256](0.22.90/SHA256SUMS.txt) |
 | 0.22.89 | [RemoteStation-Setup-0.22.89.exe](0.22.89/RemoteStation-Setup-0.22.89.exe) | [remote-station-0.22.89.tar.gz](0.22.89/remote-station-0.22.89.tar.gz) | CW-L sous 10 MHz, CW-U au-dessus — [empreintes SHA-256](0.22.89/SHA256SUMS.txt) |

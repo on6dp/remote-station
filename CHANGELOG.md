@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.92** — Cadre STEP / BANDS : le bouton ⧉ (fenêtre séparée) est dans le coin haut droit du cadre ; il ne passe plus seul sur une ligne vide entre STEP et BANDS (place gagnée en hauteur). Ctrl+F5 sur le dashboard suffit.
 - **0.22.91** — Barre du haut du dashboard : le bouton « DX Cluster ▾ » devient « <-> DX Cluster ▾ ». Un clic ouvre dx.op0p.be ou cluster.op0p.be dans sa propre fenêtre (2ᵉ écran), ou la remet devant si elle est déjà ouverte ; <-> vert = un cluster de ce navigateur est relié et le dashboard a la main, rouge sinon ; le cluster relié est marqué « ● relié » dans le menu. Sens unique : la liaison s'ouvre seulement depuis le dashboard (membre connecté). Ctrl+F5 sur le dashboard et sur les pages des clusters.
 - **0.22.90** — Badge « Remote Station <-> DX Cluster » plus grand ; sur dx.op0p.be il prend toute la largeur en haut de la colonne Alert / Show Only / Hide (script rs-patch-holycluster.py mis à jour, puis npm run build), ailleurs il reste en bas à droite. Cadre Filtres : quand NARROW est enclenché, le curseur BW grisé affiche « NARROW ✕ » (explication au survol) ; un clic dessus coupe NARROW et rend le curseur. Ctrl+F5 sur le dashboard et sur la page du cluster.
 - **0.22.89** — CW : CW-L sous 10 MHz et CW-U au-dessus (CW-R / CW sur l’IC-7300), pour les spots de DX cluster, la carte de bande et la liste de fréquences de l’onglet CW. Ctrl+F5 sur le dashboard suffit.

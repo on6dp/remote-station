@@ -875,6 +875,10 @@ body.digi-popup .ws-list { max-height: none; }
 .msgs-h .msgs-note + .detach-btn { margin-left: 8px; }
 .detach-btn.floating { position: absolute; top: 4px; right: 4px; z-index: 2; float: none; margin: 0; }
 .vfo-row { position: relative; }
+/* Cadre STEP / BANDS : bouton ⧉ dans le coin haut droit (il ne passe plus seul sur une ligne vide) */
+.tune-panel { position: relative; }
+.tune-panel > .toolbar { padding-right: 12px; }
+.tune-panel > .toolbar > .detach-btn { position: absolute; top: 1px; right: 1px; margin: 0; padding: 1px 4px; z-index: 2; }
 .vfo-row > .detach-btn.floating { top: -2px; right: 50%; transform: translateX(50%); }
 .detached-ph { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; font-size: 10px; color: var(--v2-text-dim); border-style: dashed; }
 .detached-ph .btn { --btn-h: 24px; }
