@@ -91,7 +91,7 @@
     // écrit par KM5 n'est ni gardé ni joué ; le dashboard la met en TEXT avant chaque émission
     // Manipulation par le port « Standard COM Port » (DTR) : menu PC KEYING (EX020114) sur DTR pendant l'émission seulement,
     // RPTT SELECT (EX020112) sur OFF pour que DTR ne commande jamais l'émission phonie
-    cw: { pre: ['EX0202100;'], mem: 'KM5', play: 'KY05;', alt: ['KY15;'], stop: 'KY00;',
+    cw: { pre: ['EX0202100;'], mem: 'KM5', play: 'KY05;', stop: 'KY00;', // KY15 (mémoire MESSAGE, enregistrée au manipulateur) ne joue pas notre texte : retiré
       dtr: { on: ['EX0201120;', 'EX0201142;', 'BI1;'], off: ['EX0201140;'] } },
     // PA0 / RA0 lus avec le côté SUB actif : ce sont l'ATT et le préampli du VFO B
     remapRead(p, r) {

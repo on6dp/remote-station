@@ -436,7 +436,8 @@
         play: spec.cw.play, alt: spec.cw.alt || [],
         stop: () => spec.cw.stop.match(/[^;]+;/g),
         dtr: spec.cw.dtr || null,
-        txPoll: ['TX;', 'RM5;'], poRe: /^RM5(\d{3})/
+        txPoll: ['TX;', 'RM5;'], poRe: /^RM5(\d{3})/,
+        pre: spec.cw.pre || []
       } : null,
       GROUPS: [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']],
       CONTROLS, CONTROL, validate, widthTable, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
