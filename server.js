@@ -757,6 +757,21 @@ try { macros = JSON.parse(fs.readFileSync(MACROS_FILE, 'utf8')) || {}; } catch (
     mc._tx = 1;
     changed = true;
   }
+  // Depuis 0.22.98, la CW émet aussi : les macros CW personnalisées avant (qui ne pouvaient que remplir le texte)
+  // reçoivent une fois <TX> en tête, pour partir au clic comme les macros d'origine (repère _cwtx)
+  for (const call of Object.keys(macros)) {
+    const mc = macros[call];
+    if (!mc || typeof mc !== 'object' || mc._cwtx) continue;
+    if (Array.isArray(mc.CW)) {
+      mc.CW = mc.CW.map((m) => {
+        const t = String((m && m.text) || '');
+        if (!t.trim() || /<TX>/i.test(t)) return m;
+        return Object.assign({}, m, { text: '<TX>' + t });
+      });
+    }
+    mc._cwtx = 1;
+    changed = true;
+  }
   if (changed) setTimeout(() => saveMacros(), 0);
 }
 function saveMacros() {
@@ -768,7 +783,7 @@ function setMacros(call, mode, list) {
     name: String((m && m.name) || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 14),
     text: String((m && m.text) || '').replace(/\r/g, '').replace(/[\u0000-\u0009\u000b-\u001f]/g, ' ').slice(0, 600)
   }));
-  macros[call] = Object.assign({}, macros[call], { [mode]: clean, _tx: 1 });
+  macros[call] = Object.assign({}, macros[call], { [mode]: clean, _tx: 1, _cwtx: 1 });
   saveMacros();
   return true;
 }
