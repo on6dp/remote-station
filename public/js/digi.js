@@ -67,7 +67,7 @@
     }
     if (keep != null) sel.value = String(keep);
   }
-  const WF_MAX_HZ = 3000;
+  let WF_MAX_HZ = 3000; // largeur de la cascade (Hz audio) : 3000, ou 4000 en RTTY si choisi
   const RX_WIDTH = 60; // Hz de part et d'autre de la fréquence RX
 
   const POPUP = document.body.dataset.digiPopup === '1';
@@ -133,6 +133,7 @@
       <canvas id="dgScale" height="44"></canvas>
       <canvas id="dgWf" height="140"></canvas>
       <i class="dg-mk dg-mk-tx" id="dgMkTx"></i><i class="dg-mk dg-mk-rx" id="dgMkRx"></i>
+      <i class="dg-mk dg-mk-bm" id="dgMkBM" hidden></i><i class="dg-mk dg-mk-bs" id="dgMkBS" hidden></i>
       <i class="dg-grip" id="dgGrip" title="Glisser vers le haut ou le bas : hauteur de la cascade et des listes de messages (double-clic : taille d'origine)"></i>
     </div></div>
     <div class="dg-cols">
@@ -156,9 +157,13 @@
     <div class="dg-bar">
       <select id="rtDial" aria-label="Fréquence RTTY"></select>
       <button class="btn dg-back" type="button" id="rtQsy" title="Revenir sur cette fréquence (VFO A, en DATA-U)" aria-label="Revenir sur cette fréquence (VFO A, en DATA-U)">↺</button>
-      <span class="dg-note">Deux décodeurs : A (VFO-A) à gauche, B (VFO-B) à droite · clic sur une cascade : caler son décodeur · double-clic sur un indicatif : le reprendre</span>
+      <select id="rtSpan" aria-label="Largeur de la cascade" title="Largeur de la cascade. 4 kHz : ouvrez aussi le filtre du TRX (BW 4.0K), sinon le bord droit reste noir"><option value="3000">Cascade 3 kHz</option><option value="4000">Cascade 4 kHz</option></select>
+      <button class="btn" type="button" id="rtSplitBtn" aria-pressed="false" title="SPLIT : réception sur le VFO A, émission sur le VFO B (même bouton que SPLIT sur la ligne Step)">SPLIT</button>
+      <span class="dg-note">clic gauche : décodeur A · clic droit : décodeur B · glisser / molette : accorder · double-clic sur un indicatif : le reprendre</span>
       <span class="dg-status" id="rtStatus"></span>
     </div>
+    <!-- Une seule cascade (le TRX n'envoie qu'un son) avec les repères des deux décodeurs -->
+    <div class="dg-wf-slot" data-slot="rtty"></div>
     <!-- Deux décodeurs RTTY côte à côte, largeur réglable ; émission sous les deux, sur toute la largeur -->
     <div class="rt-dual" id="rtDual">
       <div class="dg-col rt-side" data-ch="0">
@@ -175,7 +180,6 @@
           <button class="dg-mini rt-txsel" type="button" data-ch="0" aria-pressed="false" title="L'émission RTTY part avec les réglages de ce décodeur (fréquence audio, shift, vitesse)">TX</button>
           <button class="dg-mini" type="button" id="rtClear">Effacer</button>
         </div>
-        <div class="dg-wf-slot" data-slot="rtty"></div>
         <pre class="rt-rx" id="rtRx"></pre>
       </div>
       <i class="rt-vsplit" id="rtSplit" title="Glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié)"></i>
@@ -193,7 +197,8 @@
           <button class="dg-mini rt-txsel" type="button" data-ch="1" aria-pressed="false" title="L'émission RTTY part avec les réglages de ce décodeur (fréquence audio, shift, vitesse)">TX</button>
           <button class="dg-mini" type="button" id="rtClearB">Effacer</button>
         </div>
-        <div class="dg-wf rt-wfb">
+        <!-- Cascade propre au décodeur B : pour un TRX qui envoie ses deux récepteurs séparément (ex. FTDX101) ; cachée sinon -->
+        <div class="dg-wf rt-wfb" hidden>
           <canvas id="rtScaleB" height="44"></canvas>
           <canvas id="rtWfB" height="140"></canvas>
           <i class="dg-mk dg-mk-rx" id="rtMkMB"></i><i class="dg-mk dg-mk-tx" id="rtMkSB"></i>
@@ -506,7 +511,7 @@
     const c = $('dgWf');
     const s = $('dgScale');
     // Repères RX / TX sous l'échelle (la barre de réglages au-dessus peut tenir sur une ou deux lignes)
-    for (const id of ['dgMkRx', 'dgMkTx']) if ($(id)) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
+    for (const id of ['dgMkRx', 'dgMkTx', 'dgMkBM', 'dgMkBS']) if ($(id)) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
     // Pixels de l'écran (pas les pixels CSS) : sur un écran à 125 / 150 %, la cascade reste aussi fine que l'écran le permet,
     // et une cascade agrandie avec la poignée montre plus d'historique au lieu d'étirer les lignes
     const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
@@ -815,7 +820,8 @@
     if (reannounce) announce();
   }
   // Repères Mark (jaune) / Space (bleu) d'un décodeur sur son échelle et sa cascade
-  function rttyMarks(c, w, r, mkM, mkS) {
+  function rttyMarks(c, w, r, mkM, mkS, cols, letter) {
+    const C = cols || ['rgba(242, 207, 74, .35)', '#F2CF4A', 'rgba(0, 212, 255, .3)', '#00D4FF'];
     const half = r.shift / 2;
     const fm = r.rev ? r.f - half : r.f + half;
     const fs = r.rev ? r.f + half : r.f - half;
@@ -827,15 +833,25 @@
       c.fillStyle = edge;
       c.fillRect((f / WF_MAX_HZ) * w - 1, y, 2, h);
     };
-    bar(fm, 14, 16, 'rgba(242, 207, 74, .35)', '#F2CF4A');
-    bar(fs, 14, 16, 'rgba(0, 212, 255, .3)', '#00D4FF');
+    bar(fm, 14, 16, C[0], C[1]);
+    bar(fs, 14, 16, C[2], C[3]);
+    if (letter) {
+      // Lettre du décodeur au-dessus de ses repères
+      c.font = 'bold 10px Verdana, "DejaVu Sans", Arial, sans-serif';
+      c.textBaseline = 'top';
+      c.fillStyle = C[1];
+      c.fillText(letter, ((Math.max(fm, fs) + bw / 2) / WF_MAX_HZ) * w + 3, 31);
+    }
     const pos = (el, f) => { if (!el) return; el.style.left = ((f - bw / 2) / WF_MAX_HZ) * 100 + '%'; el.style.width = (bw / WF_MAX_HZ) * 100 + '%'; };
     pos(mkM, fm);
     pos(mkS, fs);
   }
+  const RT_COLS_B = ['rgba(255, 90, 209, .35)', '#FF5AD1', 'rgba(126, 242, 104, .3)', '#7EF268'];
   function drawRttyMarks(c, w) {
     rtKhz(c, w, rtDialOf(0));
-    rttyMarks(c, w, rts[0], $('dgMkRx'), $('dgMkTx'));
+    rttyMarks(c, w, rts[0], $('dgMkRx'), $('dgMkTx'), null, 'A');
+    // Décodeur B : sur la même cascade, repères magenta (Mark) / vert (Space)
+    rttyMarks(c, w, rts[1], $('dgMkBM'), $('dgMkBS'), RT_COLS_B, 'B');
     // Cascade du décodeur B : même spectre (même BF du TRX), ses propres repères
     if (wfB.sctx) {
       rtKhz(wfB.sctx, wfB.cw, rtDialOf(1));
@@ -884,7 +900,7 @@
       }
     }
     // Centre de la cascade (1500 Hz) : petit triangle blanc
-    const xc = (1500 / WF_MAX_HZ) * (w - 1);
+    const xc = 0.5 * (w - 1);
     c.fillStyle = '#FFFFFF';
     c.beginPath(); c.moveTo(xc - 5, H - 1); c.lineTo(xc + 5, H - 1); c.lineTo(xc, H - 7); c.closePath(); c.fill();
   }
@@ -972,7 +988,7 @@
     const d = rtDialOf(ch);
     if (!d) return api.say('Fréquence du TRX pas encore lue.', 'warn');
     const r = rts[ch];
-    const nd = Math.round((d.hz + d.sign * (r.f - 1500)) / 10) * 10;
+    const nd = Math.round((d.hz + d.sign * (r.f - WF_MAX_HZ / 2)) / 10) * 10;
     const delta = d.sign * (nd - d.hz); // déplacement en Hz audio
     if (!delta) return;
     api.setFreq(nd, d.vfo);
@@ -2803,8 +2819,8 @@
       // Split : clic gauche = fréquence de réception, clic droit = fréquence d'émission
       const fAt = (e) => { const r = e.currentTarget.getBoundingClientRect(); return ((e.clientX - r.left) / r.width) * WF_MAX_HZ; };
       for (const id of ['dgWf', 'dgScale']) {
-        $(id).addEventListener('click', (e) => (tab === 'sstv' ? null : tab === 'rtty' ? setRttyF(fAt(e)) : tab === 'cw' ? setCwF(fAt(e), true) : setRx(fAt(e))));
-        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'sstv') return; if (tab === 'rtty') setRttyF(fAt(e)); else if (tab === 'cw') setCwF(fAt(e), false); else setTx(fAt(e)); });
+        $(id).addEventListener('click', (e) => (tab === 'sstv' ? null : tab === 'rtty' ? setRttyF(fAt(e), 0) : tab === 'cw' ? setCwF(fAt(e), true) : setRx(fAt(e))));
+        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'sstv') return; if (tab === 'rtty') setRttyF(fAt(e), 1); else if (tab === 'cw') setCwF(fAt(e), false); else setTx(fAt(e)); });
       }
       initRtty();
       initWspr();
