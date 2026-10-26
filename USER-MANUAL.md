@@ -255,7 +255,7 @@ Below the VFO displays.
 
 | Command | What it does | When to use it |
 |---|---|---|
-| `10 Hz` … `100 kHz` (Step) | Chooses the step of the ◀ ▶ arrows and of the keyboard arrows `↑` `↓`. | 100 Hz to 1 kHz to search in SSB; 10 Hz for fine tuning; 10 to 100 kHz to move across a band. |
+| `1 Hz` … `100 kHz` (Step) | Chooses the step of the ◀ ▶ arrows and of the keyboard arrows `↑` `↓`. | 100 Hz to 1 kHz to search in SSB; 10 Hz for fine tuning, 1 Hz for the finest (RTTY, digital modes, CW zero beat); 10 to 100 kHz to move across a band. |
 | `A` / `B` (VFO) | Chooses the VFO tuned by the arrows and the band keys. On the FTX-1, also switches the TRX to that side (like MAIN / SUB). | To work on VFO B. |
 | `◀` `▶` | Moves the frequency down / up by one step. | Step-by-step searching. |
 | `MAIN` / `SUB` | Active side of the TRX (receive and transmit together), like the front-panel key, without transmitting. Takes 1 to 2 seconds. **FTX-1: only in dual receive (DUAL RX, one VFO on 144 / 430 MHz).** In single receive the dashboard refuses: the transceiver went into transmit (seen at the club on 24 and 25/10). To listen to the VFO B frequency on HF: `A ⇄ B`. An administrator can allow it for tests (`ftx1SubSingle`). | FTX-1: listen and transmit on VFO B. |

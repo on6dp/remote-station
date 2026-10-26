@@ -255,7 +255,7 @@ Sous les écrans VFO.
 
 | Commande | Ce qu'elle fait | Quand s'en servir |
 |---|---|---|
-| `10 Hz` … `100 kHz` (Step) | Choisit le pas des flèches ◀ ▶ et des flèches `↑` `↓` du clavier. | 100 Hz à 1 kHz pour chercher en BLU ; 10 Hz pour un réglage fin ; 10 à 100 kHz pour traverser une bande. |
+| `1 Hz` … `100 kHz` (Step) | Choisit le pas des flèches ◀ ▶ et des flèches `↑` `↓` du clavier. | 100 Hz à 1 kHz pour chercher en BLU ; 10 Hz pour un réglage fin, 1 Hz pour le plus fin (RTTY, modes numériques, battement nul en CW) ; 10 à 100 kHz pour traverser une bande. |
 | `A` / `B` (VFO) | Choisit le VFO que règlent les flèches et les bandes. Sur le FTX-1, fait aussi passer le TRX sur ce côté (comme MAIN / SUB). | Pour travailler sur le VFO B. |
 | `◀` `▶` | Descend / monte la fréquence d'un pas. | Recherche pas à pas. |
 | `MAIN` / `SUB` | Côté actif du TRX (réception et émission ensemble), comme la touche de la face avant, sans émission. Prend 1 à 2 secondes. **FTX-1 : seulement en double réception (DUAL RX, un VFO en 144 / 430 MHz).** En réception simple, le dashboard refuse : le TRX est passé en émission (constaté au club les 24 et 25/10). Pour écouter la fréquence du VFO B en HF : `A ⇄ B`. Un administrateur peut l'autoriser pour des essais (`ftx1SubSingle`). | FTX-1 : écouter et émettre sur le VFO B. |

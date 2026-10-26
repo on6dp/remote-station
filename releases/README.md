@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.80 | [RemoteStation-Setup-0.22.80.exe](0.22.80/RemoteStation-Setup-0.22.80.exe) | [remote-station-0.22.80.tar.gz](0.22.80/remote-station-0.22.80.tar.gz) | Pas d’accord de 1 Hz — [empreintes SHA-256](0.22.80/SHA256SUMS.txt) |
 | 0.22.79 | [RemoteStation-Setup-0.22.79.exe](0.22.79/RemoteStation-Setup-0.22.79.exe) | [remote-station-0.22.79.tar.gz](0.22.79/remote-station-0.22.79.tar.gz) | RTTY : repères A / B plus visibles, « RX ici » en vert — [empreintes SHA-256](0.22.79/SHA256SUMS.txt) |
 | 0.22.78 | [RemoteStation-Setup-0.22.78.exe](0.22.78/RemoteStation-Setup-0.22.78.exe) | [remote-station-0.22.78.tar.gz](0.22.78/remote-station-0.22.78.tar.gz) | Menu de taille : échelle Windows prise en compte et affichée — [empreintes SHA-256](0.22.78/SHA256SUMS.txt) |
 | 0.22.77 | [RemoteStation-Setup-0.22.77.exe](0.22.77/RemoteStation-Setup-0.22.77.exe) | [remote-station-0.22.77.tar.gz](0.22.77/remote-station-0.22.77.tar.gz) | Menu de taille sur une ligne par taille — [empreintes SHA-256](0.22.77/SHA256SUMS.txt) |

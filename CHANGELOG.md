@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.80** — Pas d’accord de 1 Hz (ligne STEP) pour le réglage le plus fin. Ctrl+F5 sur le dashboard suffit.
 - **0.22.79** — RTTY : repères des décodeurs plus foncés et plus épais sur la cascade (A jaune / bleu, B mauve / vert), lisibles sur un écran lumineux ; lettres A et B en grand sur une pastille. La fenêtre qui n’émet pas affiche « RX ici » en vert (cadre vert) ; un clic inverse les rôles avec « ▶ TX ici » (rouge). Ctrl+F5 sur le dashboard suffit.
 - **0.22.78** — Menu de taille : l’agrandissement déjà fait par Windows (échelle d’affichage 125 %, 150 %…) ou par Chrome est affiché, avec le total obtenu avec Auto ; plus d’exemples de résolution trompeurs à côté des tailles. Ctrl+F5 sur le dashboard suffit.
 - **0.22.77** — Menu de taille du dashboard plus large : chaque taille sur une seule ligne. Ctrl+F5 sur le dashboard suffit.
