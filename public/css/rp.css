@@ -1170,7 +1170,7 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .activity > .msgs #dxCall { width: 100px; }
 .activity > .msgs #dxGrid { width: 64px; }
 .activity > .msgs #dxRpt, .activity > .msgs #dxRst, .activity > .msgs #dxRptRx, .activity > .msgs #dxRstRx { width: 42px; }
-.activity > .msgs .btn-log { margin-left: auto; font-size: 10px; padding: 4px 10px; }
+.activity > .msgs .btn-log { font-size: 10px; padding: 4px 10px; }
 .activity.collapsed > .msgs { display: none; }
 
 /* Messages Tx1 à Tx7 dans l'onglet FT8 · FT4 · FT2 (comme WSJT-X) */
@@ -1293,3 +1293,44 @@ button[data-ctl='dnf'], button[data-ctl='dnfB'], button[data-ctl='tuner'] { font
 .dg-wf .dg-mk-bs { border-left: 0; background: rgba(126, 242, 104, .12); box-shadow: inset 0 0 0 1px rgba(126, 242, 104, .5); }
 .rt-dual .rt-side .rt-rx { min-height: 140px; }
 #rtSplitBtn[aria-pressed='true'] { color: #FFFFFF; background: var(--v2-accent-red-alt, #c0392b); border-color: var(--v2-accent-red-alt, #c0392b); }
+
+/* ------------------------------------------------------------------ carte de bande (DX cluster), colonne à droite en RTTY */
+#centerPanel { position: relative; }
+#centerPanel { --bm-w: 220px; }
+@media (max-width: 1500px) { #centerPanel { --bm-w: 180px; } }
+#centerPanel.bm-on > :not(.panel-h):not(.bm) { margin-right: var(--bm-w); }
+#centerPanel.collapsed > .bm { display: none; }
+.bm { position: absolute; right: 0; bottom: 0; width: var(--bm-w); box-sizing: border-box; display: flex; flex-direction: column; border-left: 1px solid var(--v2-border-dark); background: var(--v2-bg-darker, #0b1018); }
+.bm[hidden] { display: none; }
+.bm-h { display: flex; align-items: center; gap: 6px; padding: 6px 8px 4px; font-size: 11px; }
+.bm-h b { color: var(--v2-accent-yellow, #ffd400); letter-spacing: .5px; }
+.bm-t { color: var(--v2-text-dim); text-transform: uppercase; letter-spacing: .8px; font-size: 9.5px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bm-h select { font-size: 10px; padding: 1px 2px; }
+.bm-st { width: 8px; height: 8px; border-radius: 50%; background: #5a6578; flex: none; }
+.bm-st.ok { background: #22d36b; box-shadow: 0 0 5px #22d36b; }
+.bm-st.ko { background: #ff5252; }
+.bm-r { display: flex; align-items: center; gap: 4px; padding: 0 8px 6px; font-size: 10px; color: var(--v2-text-dim); border-bottom: 1px solid var(--v2-border-dark); }
+.bm-r input { width: 0; flex: 1; min-width: 0; font-size: 11px; padding: 2px 4px; text-align: center; }
+.bm-body { position: relative; flex: 1; min-height: 120px; overflow: hidden; cursor: crosshair; user-select: none; }
+.bm-body canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bm-lbls { position: absolute; inset: 0; pointer-events: none; }
+.bm-s { position: absolute; right: 2px; height: 15px; padding: 0 4px; border: 0; border-radius: 3px; background: rgba(20, 28, 40, .85); color: #dfe7f2; font: 11px/15px Verdana, "DejaVu Sans", Arial, sans-serif; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; pointer-events: auto; }
+.bm-s b { font-weight: 700; letter-spacing: .3px; }
+.bm-s small { color: #8fa0b8; font-size: 9.5px; }
+.bm-s:hover { background: #1d3a52; color: #fff; }
+.bm-s.bm-cq b { color: #3ee07f; }
+.bm-s.bm-wkd b { color: #8fa0b8; text-decoration: line-through; }
+.bm-f { padding: 4px 8px; font-size: 10px; color: var(--v2-text-dim); border-top: 1px solid var(--v2-border-dark); }
+@media (max-width: 900px) { .bm { display: none !important; } #centerPanel.bm-on > :not(.panel-h):not(.bm) { margin-right: 0; } }
+/* Carte de bande affichée : ligne Correspondant plus compacte pour tenir sur une ligne */
+#centerPanel.bm-on > .msgs #dxQth { width: 120px; }
+#centerPanel.bm-on > .msgs #dxName { width: 80px; }
+/* Fenêtres VFO-A / VFO-B : un clic dans la fenêtre la choisit pour l'émission */
+#rtDual .rt-side { cursor: default; }
+#rtDual .rt-side:not(.rt-istx) .rt-rx { cursor: pointer; }
+/* Onglets : passent à la ligne plutôt que d'élargir la fenêtre (carte de bande sur un petit écran) */
+.ctabs { flex-wrap: wrap; row-gap: 2px; }
+.ctab { white-space: nowrap; }
+#centerPanel { min-width: 0; }
+@media (max-width: 1500px) { #centerPanel.bm-on .ctab { padding-inline: 9px; letter-spacing: .8px; } }
+.rt-side.rt-istx > .rt-hd { background: rgba(255, 90, 74, .10); }

@@ -206,7 +206,7 @@ Le FT8 est le mode le plus simple à distance : tout se fait à la souris et le 
 - **En partant**, cliquez `Libérer la main`. Sans action pendant **15 minutes**, la main est libérée automatiquement.
 - Le bouton du bandeau affiche `Main occupée` quand quelqu'un d'autre l'a, et `Prendre la main ici` si vous l'avez déjà dans un autre onglet ou un autre navigateur. Un administrateur voit `Reprendre la main` : il peut la reprendre en cas de besoin, après confirmation.
 - Sans la main, les commandes sont grisées et un message rappelle « Prenez la main ».
-- **Suivre l'opérateur** (pour une formation à distance) : bouton `👁 Suivre` à droite des onglets des modes numériques. Allumé (vert), votre écran affiche le même onglet que celui qui a la main (RTTY, FT8, CW…) et en change avec lui. Cliquer vous-même sur un autre onglet arrête le suivi ; un clic sur `👁 Suivre` le relance. Ce bouton n'apparaît pas chez celui qui a la main.
+- **Suivre l'opérateur** (pour une formation à distance) : bouton `👁 Suivre` juste après les onglets des modes numériques. Allumé (vert), votre écran affiche le même onglet que celui qui a la main (RTTY, FT8, CW…) et en change avec lui. Cliquer vous-même sur un autre onglet arrête le suivi ; un clic sur `👁 Suivre` le relance. Ce bouton n'apparaît pas chez celui qui a la main.
 
 <a id="trx"></a>
 ## 7. Piloter le TRX
@@ -430,7 +430,7 @@ L'émission n'est possible que si les administrateurs l'ont autorisée sur le se
 <a id="numeriques"></a>
 ## 12. Modes numériques
 
-Les onglets du centre : **Activité**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV** et, plus à droite, **Synchro** et **Logs**. Vous n'avez **aucun logiciel à installer** (pas de WSJT-X, FLDIGI…) : tout se fait dans la page.
+Les onglets du centre : **Activité**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV**, puis **Synchro** et **Logs**. Vous n'avez **aucun logiciel à installer** (pas de WSJT-X, FLDIGI…) : tout se fait dans la page.
 
 - Le **décodage se fait sur le serveur**, à l'heure du serveur (synchronisée) : l'heure de votre PC et de celui du club n'a pas d'importance.
 - Le son du TRX n'est envoyé que si quelqu'un écoute ou regarde un onglet de mode numérique : les décodages commencent quelques secondes après l'ouverture de l'onglet.
@@ -545,16 +545,34 @@ Le RTTY est le « télétype » : on tape du texte qui défile chez le correspon
 | Indicateur M / S | Les deux barres doivent battre en alternance quand le décodeur est bien calé. |
 | Centre … Hz | Fréquence audio où le décodeur est calé. |
 | `⌖ Centrer` | Déplace le VFO pour que le signal suivi par ce décodeur tombe au milieu de la bande audio (triangle blanc) : sa fréquence ne change pas. L'autre décodeur reste calé sur son signal s'il est encore dans la bande. |
-| `TX` | Choisit le décodeur dont les réglages servent à l'émission (fréquence audio, shift, vitesse) : allumé en rouge, cadre rouge autour du décodeur. Le zoom se centre sur lui. |
+| `TX` / clic dans la fenêtre | Choisit le décodeur dont les réglages servent à l'émission (fréquence audio, shift, vitesse) : **un clic n'importe où dans la fenêtre VFO-A ou VFO-B** suffit, ou le bouton `TX` de son en-tête. Le bouton devient `● TX ici` (rouge), l'en-tête rosit et un cadre rouge entoure le décodeur. Le zoom se centre sur lui. **Ce bouton ne met pas le TRX en émission** : on émet avec une macro `F1`…`F12` ou `Émettre`. |
 | `Effacer` | Vide le texte reçu de ce décodeur. |
 | Trait vertical entre les deux textes | À glisser : largeur des deux décodeurs (double-clic : moitié-moitié). |
 
 1. **Recevoir** : clic gauche sur un signal pour le décodeur A, clic droit pour le décodeur B. Les deux repères doivent tomber sur les deux traces du signal. Le texte s'affiche sous la cascade, A à gauche, B à droite.
 2. **Double-clic sur un indicatif** reçu : il devient le correspondant.
-3. **Choisir le décodeur de l'émission** : bouton `TX` de son en-tête ; votre réponse part sur la fréquence de la station qu'il suit.
+3. **Choisir le décodeur de l'émission** : un clic dans sa fenêtre (VFO-A ou VFO-B), ou le bouton `TX` de son en-tête ; votre réponse part sur la fréquence de la station qu'il suit. Double-cliquer sur un indicatif dans la fenêtre B fait donc les deux : B devient le décodeur de l'émission et l'indicatif passe dans Correspondant.
 4. **Émettre** : texte dans la zone du bas, puis `Émettre` (ou `Ctrl`+`Entrée`). Le texte part avec les réglages du décodeur marqué TX (et sur le VFO B si SPLIT est allumé), puis le TRX repasse en réception. Il s'affiche en gris dans la réception de ce décodeur, puis chaque lettre passe en rouge au moment où elle part. Pendant l'émission, le bouton devient `■ Arrêter`. 600 caractères au plus ; fréquence audio d'émission entre 300 et 2800 Hz.
-5. **Macros** `F1` à `F12` : un clic émet tout de suite ; **Maj+clic** ajoute la macro au texte sans émettre (section 13).
+5. **Macros** `F1` à `F12` (touches du clavier ou clic) : émission tout de suite ; **Maj+clic** ajoute la macro au texte sans émettre (section 13). `Échap` arrête l'émission en cours.
 6. `Effacer` (sous Émettre) vide le texte à émettre ; `Log QSO` ouvre la fiche du carnet, avec la fréquence du décodeur marqué TX.
+
+À droite de l'onglet RTTY, une **colonne verticale** montre la bande comme une règle : fréquences basses **en haut**, hautes en bas (par défaut 7030–7120 kHz en 40 m, 14080–14150 kHz en 20 m, 3570–3600 kHz en 80 m…). Les **spots** du DX cluster du club (OP0P, avec les stations repérées par le Reverse Beacon Network) s'y affichent à leur fréquence. On voit d'un coup d'œil toute la portion RTTY de la bande, alors que la cascade ne montre que 3 ou 4 kHz.
+
+| Élément | Ce qu'il montre ou fait |
+|---|---|
+| Point vert / rouge, **20 m** | Liaison avec le cluster (vert = connecté), bande du VFO écouté. |
+| **RTTY** / **Tous** | RTTY : spots RTTY et spots sans mode indiqué. Tous : aussi les spots CW, FT8… |
+| Deux cases kHz | Plage affichée, gardée pour chaque bande. Tapez-y vos limites (ex. 7030 et 7120). |
+| Indicatif en vert | Station qui appelle (CQ, spot d'un skimmer RBN). |
+| Indicatif barré | Déjà contacté en RTTY sur cette bande (sous le TX call choisi). |
+| Indicatif pâle | Spot ancien (gardé 30 minutes). Au survol : commentaire, qui l'a spotté, il y a combien de minutes. |
+| Zone bleue | La partie de la bande visible dans la cascade en ce moment. |
+| Trait jaune / magenta | Décodeur A / B ; « TX » à côté de celui de l'émission. « ▲ VFO » ou « ▼ VFO » : le VFO est hors de la plage. |
+| **Clic sur un spot** | Le TRX se cale sur la station : si elle est déjà dans la cascade, seul le décodeur de l'émission s'y place ; sinon le VFO bouge pour la mettre au milieu de la cascade, avec le décodeur dessus. L'indicatif passe dans Correspondant. Il reste à appuyer sur la macro de réponse (`F2`…). Il faut avoir la main. |
+| Clic ailleurs sur la carte | Même chose sur cette fréquence, sans indicatif (balayer la bande). |
+| **Molette** / glisser / double-clic | Molette : zoom autour de la souris ; glisser vers le haut ou le bas : déplacer la plage ; double-clic : plage d'origine de la bande. |
+
+Réglages du cluster (administrateur, `config.json`, puis redémarrer le service) : `clusterHost` (op0p.be par défaut ; vide = pas de cluster), `clusterPort` (8000), `clusterCall` (indicatif de connexion avec un SSID ; vide = digiCall suivi de -7, donc ON5VL-7) et `clusterCmds` (commandes envoyées après la connexion : `set/skimmer` pour les spots RBN).
 
 <a id="wspr"></a>
 ### 12.4 WSPR
@@ -665,7 +683,7 @@ La fiche en haut de l'onglet :
 | `Enregistrer le QSO` (ou `Entrée`) | Ajoute le QSO au carnet. Un doublon (même indicatif, bande et mode dans la demi-heure) est signalé avant l'enregistrement ; si la fiche déjà au carnet n'a pas le nom, le QTH, le locator ou le RST reçu, on propose de la **compléter** au lieu de créer un 2e QSO. |
 | `Supprimer` / `Annuler` | Apparaissent quand vous modifiez un QSO existant : supprimer le QSO (après confirmation ; les carnets en ligne ne sont pas modifiés) ou abandonner la modification. |
 
-**Sans quitter l'onglet RTTY, JTTY ou CW** : le bouton `Log QSO` (à côté de « Émettre », et au bout de la ligne Correspondant) ouvre une fiche déjà remplie : indicatif, prénom, QTH, locator et RST, fréquence (en RTTY : celle du signal) et mode, puissance, heure de début (quand le correspondant a été choisi) et de fin. Corrigez au besoin, puis `Enregistrer dans le carnet`. En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contient `<LOG>` l'ouvre aussi.
+**Sans quitter l'onglet RTTY, JTTY ou CW** : le bouton `Log QSO` (à côté de « Émettre », et sur la ligne Correspondant, après TX call) ouvre une fiche déjà remplie : indicatif, prénom, QTH, locator et RST, fréquence (en RTTY : celle du signal) et mode, puissance, heure de début (quand le correspondant a été choisi) et de fin. Corrigez au besoin, puis `Enregistrer dans le carnet`. En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contient `<LOG>` l'ouvre aussi.
 
 <a id="l-liste"></a>
 ### 14.2 La liste des QSO
@@ -737,6 +755,7 @@ Menu **Synchronisation ▾**, réservé aux administrateurs : il envoie les QSO 
 | `↑` `↓` | Fréquence ± un pas (celui de la ligne Step). |
 | `F1` … `F12` | Macros dans les onglets RTTY et CW (`F1`…`F8` en JTTY). |
 | `Ctrl` + `Entrée` / `Entrée` | Émettre le texte tapé en RTTY / en JTTY. |
+| `Échap` | Arrêter l'émission RTTY ou JTTY en cours. |
 | `Entrée` (fiche du carnet) | Enregistrer le QSO. |
 | `Maj` + molette | Décalage RIT / XIT par pas de 100 Hz. |
 | `Ctrl` + `F5` | Recharger la page après une mise à jour. |

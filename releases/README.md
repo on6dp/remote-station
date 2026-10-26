@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.71 | [RemoteStation-Setup-0.22.71.exe](0.22.71/RemoteStation-Setup-0.22.71.exe) | [remote-station-0.22.71.tar.gz](0.22.71/remote-station-0.22.71.tar.gz) | RTTY : carte de bande (DX cluster), clic dans VFO-A / VFO-B pour l’émission ; SPLIT plus rapide — [empreintes SHA-256](0.22.71/SHA256SUMS.txt) |
 | 0.22.70 | [RemoteStation-Setup-0.22.70.exe](0.22.70/RemoteStation-Setup-0.22.70.exe) | [remote-station-0.22.70.tar.gz](0.22.70/remote-station-0.22.70.tar.gz) | RTTY : zoom de la cascade à la molette — [empreintes SHA-256](0.22.70/SHA256SUMS.txt) |
 | 0.22.69 | [RemoteStation-Setup-0.22.69.exe](0.22.69/RemoteStation-Setup-0.22.69.exe) | [remote-station-0.22.69.tar.gz](0.22.69/remote-station-0.22.69.tar.gz) | RTTY : une cascade, zoom, bande 4 kHz, SPLIT — [empreintes SHA-256](0.22.69/SHA256SUMS.txt) |
 | 0.22.68 | [RemoteStation-Setup-0.22.68.exe](0.22.68/RemoteStation-Setup-0.22.68.exe) | [remote-station-0.22.68.tar.gz](0.22.68/remote-station-0.22.68.tar.gz) | Correctif : cascade RTTY B déplacée entre les onglets — [empreintes SHA-256](0.22.68/SHA256SUMS.txt) |

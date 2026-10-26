@@ -438,7 +438,7 @@
         w.swapped = true; // vue du dashboard : VFO à leur place dès maintenant
         this._push(true);
         this._await(/^FA\d{9}$/, 900, (t) => this._swapSeen(w, t, by, cancel, 0));
-      }, 120);
+      }, 70);
     }
     /** Échange A ⇄ B reporté tout de suite dans l'état gardé (sans attendre les lectures) : pas de clignotement des VFO. */
     _swapLocal() {
@@ -452,8 +452,8 @@
       const fa = t ? Number(t.slice(2)) : null;
       if (a !== b && fa !== b) {
         // Pas encore vu échangé : une relecture (le TRX peut répondre avant d'avoir traité SV)
-        if (n < 2) {
-          setTimeout(() => { if (this.swapTx !== w) return; this._write('FA;'); this._await(/^FA\d{9}$/, 900, (t2) => this._swapSeen(w, t2, by, cancel, n + 1)); }, 250);
+        if (n < 4) {
+          setTimeout(() => { if (this.swapTx !== w) return; this._write('FA;'); this._await(/^FA\d{9}$/, 900, (t2) => this._swapSeen(w, t2, by, cancel, n + 1)); }, 100);
           return;
         }
         if (fa === a) { this._swapLocal(); this.swapTx = null; this.pollHold = 0; this._push(true); return cancel('SPLIT : le TRX n’a pas échangé les VFO (A ⇄ B), émission annulée'); }
@@ -511,7 +511,7 @@
             this._push(true);
           });
         });
-      }, n ? 300 : 60);
+      }, n ? 200 : 40);
     }
 
     /** SPLIT virtuel : envoie une façon de désigner le VFO d'émission, relit FT, émet si confirmé, sinon essai suivant. */

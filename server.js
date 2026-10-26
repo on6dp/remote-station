@@ -40,6 +40,13 @@ const DEFAULTS = {
   // le 25/10 (deux VFO en HF), un clic sur le VFO B en réception simple a mis le TRX en émission (VS1 seul).
   // true : autorisé (essais au club, en surveillant le TRX).
   ftx1SubSingle: false,
+  // DX cluster pour la carte de bande (spots à droite de la cascade). clusterHost vide = pas de cluster.
+  // clusterCall : indicatif de connexion (avec un SSID, ex. ON5VL-7) ; vide = digiCall suivi de -7.
+  // clusterCmds : commandes envoyées après la connexion (set/skimmer = spots du Reverse Beacon Network sur CC-Cluster).
+  clusterHost: 'op0p.be',
+  clusterPort: 8000,
+  clusterCall: '',
+  clusterCmds: ['set/skimmer'],
   digiAlcMax: 0, // émission numérique : ALC maximal (%) au-delà duquel la page Station baisse le niveau BF ; 0 = pas de limite
   ftxWatchdogMinutes: 6, // émission auto FT8 / FT4 / FT2 : arrêt si le même message part depuis ce temps (WSJT-X : 6 min)
   pttHeartbeatMs: 1500,
@@ -575,6 +582,42 @@ function sendWorked(force, only) {
   for (const c of ops) send(c, msg);
 }
 const DXCC = require('./lib/dxcc.js');
+
+// ---------------------------------------------------------------- DX cluster (carte de bande)
+const { Cluster } = require('./lib/cluster.js');
+let cluster = null;
+let spotBatch = [];
+let spotTimer = null;
+let clusterState = '';
+function clusterStart() {
+  const host = String(cfg.clusterHost || '').trim();
+  if (!host) return;
+  const call = String(cfg.clusterCall || ((cfg.digiCall || cfg.stationCall || '') + '-7')).toUpperCase().replace(/[^A-Z0-9/-]/g, '');
+  cluster = new Cluster({
+    host, port: Number(cfg.clusterPort) || 8000, call,
+    cmds: Array.isArray(cfg.clusterCmds) ? cfg.clusterCmds.map(String).filter((c) => c && c.length < 80) : [],
+    log: (m) => console.log(m),
+    onSpot: (sp) => {
+      spotBatch.push(sp);
+      if (spotTimer) return;
+      spotTimer = setTimeout(() => {
+        spotTimer = null;
+        const list = spotBatch; spotBatch = [];
+        const msg = JSON.stringify({ t: 'spot', list, state: cluster.state });
+        for (const c of ops) if (c.open) c.send(msg);
+      }, 1500);
+    }
+  });
+  cluster.start();
+  // état de la liaison (connecté / déconnecté) annoncé quand il change
+  setInterval(() => {
+    if (!cluster || cluster.state === clusterState) return;
+    clusterState = cluster.state;
+    const msg = JSON.stringify({ t: 'spot', list: [], state: clusterState });
+    for (const c of ops) if (c.open) c.send(msg);
+  }, 5000);
+}
+
 const DX_CALL_RE = /^(?=.*\d)(?=.*[A-Z])[A-Z0-9/]{3,15}$/;
 /** Ajoute à un décodage FT8 / FT4 / FT2 : cty (pays DXCC), km et az (depuis le locator de la station) ; kmc = d'après le pays seulement */
 function dxInfo(d) {
@@ -1634,6 +1677,7 @@ function loggedIn(conn, call, rec, sessionTok) {
     qo100If: cfg.qo100If && typeof cfg.qo100If === 'object' ? cfg.qo100If : DEFAULTS.qo100If,
     session: sessionTok || null
   });
+  send(conn, { t: 'spots', list: cluster ? cluster.list() : [], state: cluster ? cluster.state : 'non configuré', host: cluster ? cfg.clusterHost : '' });
   send(conn, { t: 'macros', data: macros[call] || {} });
   send(conn, { t: 'events', list: recentEvents });
   send(conn, { t: 'chatlog', list: chatLog });
@@ -2447,6 +2491,7 @@ setInterval(() => {
 
 server.listen(cfg.port, cfg.listen, () => {
   console.log('Remote Station à l’écoute sur ' + (server instanceof require('https').Server ? 'https://' : 'http://') + cfg.listen + ':' + cfg.port + ' — TX ' + (cfg.allowTx ? 'AUTORISÉ' : 'désactivé'));
+  clusterStart();
 });
 
 // Arrêt (systemd : SIGTERM ; service Windows : Ctrl+C / SIGINT) : on coupe d'abord une émission en cours

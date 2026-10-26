@@ -96,7 +96,7 @@
   // ------------------------------------------------------------------ construction des onglets et des fenêtres
   // Même code pour le centre du dashboard et pour la fenêtre séparée (digi.html, sans l'onglet Activité).
   const TABS = [
-    ['events', 'Activité'], ['ftx', 'FT8 · FT4 · FT2'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['gap', ''], ['sync', 'Synchro'], ['log', 'Logs']
+    ['events', 'Activité'], ['ftx', 'FT8 · FT4 · FT2'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['sync', 'Synchro'], ['log', 'Logs']
   ];
   const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'cw', 'sstv', 'sync'];
   const WF_TABS = ['ftx', 'jt65', 'rtty', 'wspr', 'jtty', 'cw', 'sstv']; // onglets avec cascade
@@ -382,6 +382,7 @@
     fol.title = 'Suivre l’opérateur : afficher le même onglet que celui qui a la main (RTTY, FT8, CW…). Un clic sur un autre onglet arrête le suivi.';
     fol.setAttribute('aria-pressed', 'false');
     bar.appendChild(fol);
+    { const g = document.createElement('span'); g.className = 'ctab-gap'; bar.appendChild(g); }
     const det = document.createElement('button');
     det.className = 'ctab-detach';
     det.type = 'button';
@@ -407,6 +408,19 @@
     for (const k in SOON) add(k, 'dg-soon', '<p>' + SOON[k] + '</p><p class="dg-note">En préparation.</p>');
     add('sync', 'dg-sync', SYNC_PANE);
     if (!POPUP && window.RSLOG) { add('log', 'lg', ''); window.RSLOG.mount(panel.lastElementChild); }
+    // Carte de bande (DX cluster) : colonne à droite de la fenêtre, onglet RTTY
+    const bm = document.createElement('aside');
+    bm.className = 'bm';
+    bm.id = 'bandMap';
+    bm.hidden = true;
+    bm.setAttribute('aria-label', 'Carte de bande');
+    bm.innerHTML = '<div class="bm-h"><span class="bm-st" id="bmSt"></span><b id="bmBandT">—</b><span class="bm-t">Spots</span>'
+      + '<select id="bmFilt" aria-label="Spots affichés" title="RTTY : spots RTTY et spots sans mode indiqué · Tous : tous les spots de la plage"><option value="rtty">RTTY</option><option value="all">Tous</option></select></div>'
+      + '<div class="bm-r" title="Plage affichée pour cette bande (kHz), gardée par bande. Molette sur la carte : zoom · glisser : déplacer · double-clic : plage d’origine">'
+      + '<input id="bmLo" inputmode="decimal" aria-label="Début de la plage (kHz)"><span>–</span><input id="bmHi" inputmode="decimal" aria-label="Fin de la plage (kHz)"><span>kHz</span></div>'
+      + '<div class="bm-body" id="bmBody"><canvas id="bmCv"></canvas><div class="bm-lbls" id="bmLbls"></div></div>'
+      + '<div class="bm-f" id="bmFoot"></div>';
+    panel.appendChild(bm);
     add('away', 'dg-soon', '<p>Les modes numériques sont ouverts dans une <b>fenêtre séparée</b>.</p><p><button class="btn" type="button" id="dgBack">Ramener ici</button></p>');
   }
 
@@ -455,6 +469,7 @@
     }
     document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
     document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== pane; });
+    bmShow();
     // Une seule cascade, déplacée dans la fenêtre affichée (FT8/FT4 ou RTTY)
     if (WF_TABS.indexOf(pane) >= 0) {
       // RTTY sur un TRX qui envoie ses deux récepteurs séparément (DUAL_AUDIO, ex. FTDX101D / MP) : une cascade par
@@ -1036,6 +1051,266 @@
     drawScale();
     api.say('Décodeur ' + (ch ? 'B' : 'A') + ' centré : VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz.', '', 4000);
   }
+  // ------------------------------------------------------------------ carte de bande (DX cluster), à droite en RTTY
+  // Colonne verticale : basses fréquences en haut, spots du cluster (et du Reverse Beacon Network), fenêtre audio de la
+  // cascade en zone ombrée, repères des décodeurs A et B. Clic sur un spot : le TRX se cale dessus (décodeur TX au milieu
+  // de la cascade) et l'indicatif passe dans Correspondant. Molette : zoom ; glisser : déplacer ; double-clic : plage d'origine.
+  const BM_DEF = { '160m': [1800, 1850], '80m': [3570, 3600], '40m': [7030, 7120], '30m': [10130, 10150], '20m': [14080, 14150],
+    '17m': [18095, 18110], '15m': [21080, 21150], '12m': [24910, 24930], '10m': [28080, 28150], '6m': [50090, 50150] };
+  const BM_KEEP = 30 * 60000;
+  const bmSpots = new Map();
+  let bmState = '', bmHost = '', bmRaf = 0, bmBand = '', bmLay = [];
+  let bmFilt = store.get('bmfilt', 'rtty') === 'all' ? 'all' : 'rtty';
+  function bmAdd(list) {
+    for (const s of list || []) {
+      if (!s || !Number.isFinite(s.f) || typeof s.call !== 'string') continue;
+      bmSpots.set(s.call + '|' + Math.round(s.f), { f: s.f, call: s.call, de: String(s.de || ''), cmt: String(s.cmt || ''), skim: !!s.skim, at: Date.now() - Math.max(0, Date.now() - (Number(s.at) || Date.now())) });
+    }
+    if (bmSpots.size > 3000) for (const k of Array.from(bmSpots.keys()).slice(0, bmSpots.size - 3000)) bmSpots.delete(k);
+  }
+  function bmBandOf(khz) {
+    const b = BANDS_M.find((x) => khz / 1000 >= x[0] && khz / 1000 <= x[1]);
+    return b ? b[2] : '';
+  }
+  function bmRange(band) {
+    const s = store.get('bm_' + band, '');
+    const m = /^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/.exec(s);
+    if (m && Number(m[2]) - Number(m[1]) >= 2) return [Number(m[1]), Number(m[2])];
+    if (BM_DEF[band]) return BM_DEF[band].slice();
+    const b = BANDS_M.find((x) => x[2] === band);
+    return b ? [b[0] * 1000, Math.min(b[1] * 1000, b[0] * 1000 + 300)] : [7030, 7120];
+  }
+  function bmSetRange(band, lo, hi) {
+    const b = BANDS_M.find((x) => x[2] === band);
+    const e0 = b ? b[0] * 1000 - 5 : 0, e1 = b ? b[1] * 1000 + 5 : 1e9;
+    let w = Math.max(2, Math.min(e1 - e0, hi - lo));
+    lo = Math.max(e0, Math.min(e1 - w, lo));
+    store.set('bm_' + band, (Math.round(lo * 10) / 10) + '-' + (Math.round((lo + w) * 10) / 10));
+    bmDraw();
+  }
+  // Mode du spot d'après son commentaire : les spots RTTY, et ceux qui ne disent rien, restent en filtre RTTY
+  function bmIsRtty(s) {
+    if (/RTTY|\bBPS\b|\bRY\b/i.test(s.cmt)) return true;
+    return !/\b(CW|WPM|FT8|FT4|FT2|PSK\d*|SSB|USB|LSB|JT65|JT9|MSK144|Q65|OLIVIA|SSTV|FM|AM|BEACON|NCDXF)\b/i.test(s.cmt);
+  }
+  function bmShown() {
+    return tab === 'rtty' && !detached && !!$('bandMap') && !$('centerPanel').classList.contains('collapsed');
+  }
+  function bmShow() {
+    const on = tab === 'rtty' && !detached;
+    const p = $('centerPanel'), bm = $('bandMap');
+    if (!p || !bm) return;
+    p.classList.toggle('bm-on', on);
+    bm.hidden = !on;
+    if (on) { bm.style.top = ($('ctabs') ? $('ctabs').offsetTop : 40) + 'px'; bmDraw(); }
+  }
+  function bmDraw() {
+    if (bmRaf || !bmShown()) return;
+    bmRaf = requestAnimationFrame(() => { bmRaf = 0; bmPaint(); });
+  }
+  function bmPaint() {
+    const body = $('bmBody'), cv = $('bmCv'), lbls = $('bmLbls');
+    if (!body || !cv) return;
+    const W = body.clientWidth, H = body.clientHeight;
+    if (W < 40 || H < 60) return;
+    const dpr = window.devicePixelRatio || 1;
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    const c = cv.getContext('2d');
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, W, H);
+    const d = rtDialOf(rtTx) || rtDialOf(0);
+    const band = d ? bmBandOf(d.hz / 1000) : bmBand || '40m';
+    if (band && band !== bmBand) bmBand = band;
+    const [lo, hi] = bmRange(bmBand || '40m');
+    $('bmBandT').textContent = (bmBand || '—').replace('m', ' m').replace('c m', ' cm');
+    if (document.activeElement !== $('bmLo')) $('bmLo').value = String(lo).replace('.', ',');
+    if (document.activeElement !== $('bmHi')) $('bmHi').value = String(hi).replace('.', ',');
+    const PAD = 6, RX = 46; // règle : x de 0 à RX
+    const yOf = (khz) => PAD + ((khz - lo) / (hi - lo)) * (H - 2 * PAD);
+    bmLay = [lo, hi, PAD, H];
+    // fond de la règle
+    c.fillStyle = '#0b1018'; c.fillRect(0, 0, RX, H);
+    c.strokeStyle = '#46546a'; c.beginPath(); c.moveTo(RX + 0.5, 0); c.lineTo(RX + 0.5, H); c.stroke();
+    // fenêtre audio de la cascade (fréquences réelles) et repères des décodeurs
+    if (d) {
+      const a = (d.hz + d.sign * WF_LO) / 1000, b = (d.hz + d.sign * (WF_LO + WF_MAX_HZ)) / 1000;
+      const y0 = yOf(Math.min(a, b)), y1 = yOf(Math.max(a, b));
+      if (y1 >= 0 && y0 <= H) {
+        c.fillStyle = 'rgba(0, 212, 255, .16)';
+        c.fillRect(0, Math.max(0, y0), W, Math.max(2, Math.min(H, y1) - Math.max(0, y0)));
+        c.strokeStyle = 'rgba(0, 212, 255, .55)';
+        c.strokeRect(0.5, Math.max(0, y0) + 0.5, W - 1, Math.max(2, Math.min(H, y1) - Math.max(0, y0)) - 1);
+      }
+      rts.forEach((x, ch) => {
+        const dd = rtDialOf(ch);
+        if (!dd || dd.vfo !== d.vfo) return;
+        const y = yOf((dd.hz + dd.sign * x.f) / 1000);
+        if (y < 0 || y > H) return;
+        c.strokeStyle = ch ? '#e040fb' : '#ffd400';
+        c.lineWidth = ch === rtTx ? 2 : 1;
+        c.beginPath(); c.moveTo(0, Math.round(y) + 0.5); c.lineTo(W, Math.round(y) + 0.5); c.stroke();
+        c.lineWidth = 1;
+        c.fillStyle = ch ? '#e040fb' : '#ffd400';
+        c.font = 'bold 10px Verdana, "DejaVu Sans", Arial, sans-serif';
+        c.textBaseline = 'middle';
+        c.fillText((ch ? 'B' : 'A') + (ch === rtTx ? ' TX' : ''), 2, Math.max(6, Math.min(H - 6, y - 7)));
+      });
+      // VFO hors de la plage : flèche en haut ou en bas
+      const vk = d.hz / 1000;
+      if (vk < lo || vk > hi) {
+        c.fillStyle = '#00d4ff'; c.font = 'bold 10px Verdana, "DejaVu Sans", Arial, sans-serif'; c.textBaseline = vk < lo ? 'top' : 'bottom';
+        c.fillText((vk < lo ? '▲ ' : '▼ ') + 'VFO ' + vk.toFixed(1).replace('.', ','), RX + 4, vk < lo ? 2 : H - 2);
+      }
+    }
+    // graduations : pas choisi pour ~40 px entre deux étiquettes
+    const span = hi - lo, pxk = (H - 2 * PAD) / span;
+    const step = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500].find((s) => s * pxk >= 34) || 1000;
+    const minor = step / (step >= 5 && step !== 20 && step !== 200 ? 5 : 2);
+    c.font = '10px Verdana, "DejaVu Sans", Arial, sans-serif';
+    c.textBaseline = 'middle';
+    for (let f = Math.ceil(lo / minor) * minor; f <= hi + 1e-9; f += minor) {
+      const y = Math.round(yOf(f)) + 0.5;
+      const major = Math.abs(f / step - Math.round(f / step)) < 1e-6;
+      c.strokeStyle = major ? '#8fa0b8' : '#46546a';
+      c.beginPath(); c.moveTo(major ? RX - 9 : RX - 5, y); c.lineTo(RX, y); c.stroke();
+      if (major) {
+        c.fillStyle = '#c8d3e3';
+        const t = step < 1 ? f.toFixed(1).replace('.', ',') : String(Math.round(f));
+        c.fillText(t.length > 5 ? t.slice(-5) : t, 2, y);
+      }
+    }
+    // spots de la plage : les plus récents d'abord s'il n'y a pas la place pour tous
+    const now = Date.now();
+    for (const [k, s] of bmSpots) if (now - s.at > BM_KEEP) bmSpots.delete(k);
+    const LH = 15, room = Math.max(1, Math.floor((H - 2) / LH));
+    let list = Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi && (bmFilt === 'all' || bmIsRtty(s)));
+    if (list.length > room) list = list.sort((a, b) => b.at - a.at).slice(0, room);
+    list.sort((a, b) => a.f - b.f);
+    const pos = list.map((s) => yOf(s.f) - LH / 2);
+    for (let i = 0; i < pos.length; i++) pos[i] = Math.max(i ? pos[i - 1] + LH : 0, pos[i]);
+    for (let i = pos.length - 1; i >= 0; i--) pos[i] = Math.min(i < pos.length - 1 ? pos[i + 1] - LH : H - LH, pos[i]);
+    for (let i = 0; i < pos.length; i++) pos[i] = Math.max(i ? pos[i - 1] + LH : 0, pos[i]);
+    const LX = RX + 16;
+    c.strokeStyle = 'rgba(143, 160, 184, .55)';
+    list.forEach((s, i) => {
+      const y = Math.round(yOf(s.f)) + 0.5, ly = pos[i] + LH / 2;
+      c.beginPath(); c.moveTo(RX, y); c.lineTo(RX + 6, y); c.lineTo(LX - 2, ly); c.stroke();
+    });
+    lbls.textContent = '';
+    const bandKey = bmBand;
+    list.forEach((s, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'bm-s';
+      const cq = s.skim || /\bCQ\b|\bTEST\b|CONTEST/i.test(s.cmt);
+      if (cq) b.classList.add('bm-cq');
+      if (worked.has(s.call + '|' + bandKey + '|RTTY')) b.classList.add('bm-wkd');
+      b.style.top = Math.round(pos[i]) + 'px';
+      b.style.left = LX + 'px';
+      b.style.opacity = String(Math.max(0.45, 1 - (now - s.at) / BM_KEEP * 0.55));
+      b.dataset.k = s.call + '|' + Math.round(s.f);
+      const min = Math.max(0, Math.round((now - s.at) / 60000));
+      b.innerHTML = '<b></b><small></small>';
+      b.firstChild.textContent = s.call;
+      b.lastChild.textContent = ' ' + s.f.toFixed(1).replace('.', ',');
+      b.title = s.call + ' · ' + s.f.toFixed(1).replace('.', ',') + ' kHz · ' + (s.cmt || '—') + ' · de ' + s.de + ' · il y a ' + min + ' min'
+        + (b.classList.contains('bm-wkd') ? ' · déjà contacté sur cette bande en RTTY' : '') + '\nClic : le TRX se cale sur ce signal (décodeur TX au milieu de la cascade) et l’indicatif passe dans Correspondant';
+      lbls.appendChild(b);
+    });
+    const n = Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi).length;
+    $('bmFoot').textContent = n + ' spot' + (n > 1 ? 's' : '') + (list.length < n ? ' (' + list.length + ' affichés)' : '');
+    const st = $('bmSt');
+    st.className = 'bm-st ' + (bmState === 'connecté' ? 'ok' : bmState ? 'ko' : '');
+    st.title = 'DX cluster' + (bmHost ? ' ' + bmHost : '') + ' : ' + (bmState || 'pas de nouvelles') + ' · spots gardés 30 min';
+  }
+  // Calage du TRX sur une fréquence réelle (kHz) : décodeur de l'émission au milieu de la cascade
+  function bmTune(khz, call) {
+    if (call) setDx({ call });
+    if (!api || !api.iControl()) return api && api.say('Prenez la main pour vous caler sur ' + (call || 'cette fréquence') + ' (le TRX change de fréquence).', 'warn');
+    const st = api.state();
+    if (st && ((st.ptt && st.ptt.active) || st.ftx)) return api.say('Réglage bloqué pendant l’émission.', 'warn');
+    const d = rtDialOf(rtTx);
+    if (!d) return api.say('Fréquence du TRX pas encore lue.', 'warn');
+    const hz = Math.round(khz * 1000);
+    const r = rts[rtTx];
+    const audio = d.sign * (hz - d.hz);
+    // déjà dans la cascade : seul le décodeur bouge
+    if (audio >= WF_LO + 150 && audio <= WF_LO + WF_MAX_HZ - 150 && audio >= 200 + r.shift / 2 && audio <= WF_TOP - 100 - r.shift / 2) {
+      setRttyF(audio, rtTx);
+      rtHeads();
+      bmDraw();
+      return;
+    }
+    const nd = Math.round((hz - d.sign * WF_TOP / 2) / 10) * 10;
+    api.setFreq(nd, d.vfo);
+    r.f = d.sign * (hz - nd);
+    saveRtty(true);
+    applySpan(true);
+    drawScale();
+    bmDraw();
+    api.say((call ? call + ' : ' : '') + 'VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz, décodeur ' + (rtTx ? 'B' : 'A') + ' sur le signal.', '', 4000);
+  }
+  function bmInit() {
+    const body = $('bmBody');
+    if (!body) return;
+    const kOf = (e) => {
+      const r = body.getBoundingClientRect();
+      const [lo, hi, PAD, H] = bmLay;
+      return lo + ((e.clientY - r.top - PAD) / (H - 2 * PAD)) * (hi - lo);
+    };
+    let drag = null;
+    body.addEventListener('mousedown', (e) => {
+      if (e.button !== 0 || !bmLay.length) return;
+      drag = { y: e.clientY, r: bmRange(bmBand), moved: false, t: e.target };
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!drag) return;
+      const dy = e.clientY - drag.y;
+      if (Math.abs(dy) > 4) drag.moved = true;
+      if (!drag.moved) return;
+      const H = bmLay[3] - 2 * bmLay[2];
+      const dk = -dy / H * (drag.r[1] - drag.r[0]);
+      bmSetRange(bmBand, drag.r[0] + dk, drag.r[1] + dk);
+    });
+    window.addEventListener('mouseup', (e) => {
+      if (!drag) return;
+      const g = drag; drag = null;
+      if (g.moved) return;
+      const b = g.t.closest && g.t.closest('.bm-s');
+      if (b) { const s = bmSpots.get(b.dataset.k); if (s) bmTune(s.f, s.call); return; }
+      if (body.contains(e.target)) bmTune(kOf(e));
+    });
+    body.addEventListener('wheel', (e) => {
+      if (!bmLay.length) return;
+      e.preventDefault();
+      const [lo, hi] = bmRange(bmBand);
+      const k = kOf(e), f = e.deltaY > 0 ? 1.25 : 0.8;
+      const nlo = k - (k - lo) * f, nhi = k + (hi - k) * f;
+      if (nhi - nlo < 3 && f < 1) return;
+      bmSetRange(bmBand, nlo, nhi);
+    }, { passive: false });
+    body.addEventListener('click', (e) => e.stopPropagation());
+    body.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      if (e.target.closest('.bm-s')) return;
+      store.set('bm_' + bmBand, '');
+      bmDraw();
+    });
+    const num = (v) => Number(String(v).replace(',', '.').replace(/\s/g, ''));
+    for (const id of ['bmLo', 'bmHi']) {
+      $(id).addEventListener('change', () => {
+        const a = num($('bmLo').value), b = num($('bmHi').value);
+        if (Number.isFinite(a) && Number.isFinite(b) && b - a >= 2) bmSetRange(bmBand, a, b);
+        else bmDraw();
+      });
+      $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
+    }
+    $('bmFilt').value = bmFilt;
+    $('bmFilt').addEventListener('change', () => { bmFilt = $('bmFilt').value === 'all' ? 'all' : 'rtty'; store.set('bmfilt', bmFilt); bmDraw(); });
+    if (window.ResizeObserver) new ResizeObserver(() => bmDraw()).observe(body);
+    window.addEventListener('resize', () => { if (tab === 'rtty') bmShow(); });
+  }
   // En-têtes des deux décodeurs : centre, fréquence du signal suivi, décodeur de l'émission
   function rtHeads() {
     const st = api && api.state && api.state();
@@ -1064,6 +1339,9 @@
     document.querySelectorAll('.rt-txsel').forEach((b) => {
       const on = Number(b.dataset.ch) === rtTx;
       b.setAttribute('aria-pressed', String(on));
+      b.textContent = on ? '● TX ici' : 'TX';
+      b.title = on ? 'L’émission RTTY (macros F1 à F12, « Émettre ») part sur la fréquence de ce décodeur. Ce bouton ne met pas le TRX en émission.'
+        : 'Choisir ce décodeur pour l’émission (ou cliquer dans sa fenêtre). Ce bouton ne met pas le TRX en émission : utilisez une macro F1 à F12 ou « Émettre ».';
       b.closest('.rt-side').classList.toggle('rt-istx', on);
     });
   }
@@ -1208,13 +1486,21 @@
     // Glisser la bande ou molette sur une cascade RTTY : accord du VFO
     rtDragInit(['dgWf', 'dgScale'], 0);
     rtDragInit(['rtWfB', 'rtScaleB'], 1);
-    // Décodeur de l'émission : bouton TX de son en-tête
-    document.querySelectorAll('.rt-txsel').forEach((b) => b.addEventListener('click', () => {
-      rtTx = Number(b.dataset.ch) === 1 ? 1 : 0;
+    // Décodeur de l'émission : bouton TX de son en-tête, ou clic n'importe où dans sa fenêtre (VFO-A / VFO-B)
+    const pickTx = (ch) => {
+      ch = ch === 1 ? 1 : 0;
+      if (ch === rtTx) return;
+      rtTx = ch;
       store.set('rttx', String(rtTx));
       if (applySpan()) drawScale();
       rtHeads();
+      bmDraw();
       dtxState(api && api.state() && api.state().ftx);
+    };
+    document.querySelectorAll('.rt-txsel').forEach((b) => b.addEventListener('click', () => pickTx(Number(b.dataset.ch))));
+    document.querySelectorAll('#rtDual .rt-side').forEach((side) => side.addEventListener('mousedown', (e) => {
+      if (e.button !== 0 || e.target.closest('select, input, label, .rt-center, #rtClear, #rtClearB, .rt-wfb')) return;
+      pickTx(Number(side.dataset.ch));
     }));
     // Cascade du décodeur B : clic (gauche ou droit) = caler le décodeur B
     for (const id of ['rtWfB', 'rtScaleB']) {
@@ -2845,6 +3131,7 @@
       api = a;
       if (again) { announce(); return; } // fenêtre séparée raccrochée à un dashboard rechargé
       buildDom();
+      bmInit();
       document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.addEventListener('click', (e) => {
         e.stopPropagation();
         // Choisir soi-même un autre onglet arrête le suivi de l'opérateur
@@ -2943,6 +3230,12 @@
       document.addEventListener('keydown', (e) => {
         const MODE = { rtty: 'RTTY', jtty: 'JTTY', cw: 'CW' }[tab];
         if (!MODE || detached || e.ctrlKey || e.altKey || e.metaKey) return;
+        // Échap : arrête l'émission RTTY / JTTY en cours (comme « ■ Arrêter »)
+        if (e.key === 'Escape' && MODE !== 'CW') {
+          const x = api && api.state() && api.state().ftx;
+          if (x && x.mode === MODE) { e.preventDefault(); api.send({ t: 'ftx_stop' }); }
+          return;
+        }
         const n = /^F(\d{1,2})$/.exec(e.key);
         if (!n) return;
         const m = macroList(MODE)[Number(n[1]) - 1];
@@ -2968,7 +3261,7 @@
       setInterval(() => {
         if (detached) return;
         if (tab === 'ftx' || tab === 'jt65') { clock(); status(); followBand(); }
-        if (tab === 'rtty') { status(); rtHeads(); }
+        if (tab === 'rtty') { status(); rtHeads(); bmDraw(); }
         if (tab === 'wspr') wsClock();
         if (tab === 'jtty') jtStatus();
         if (tab === 'cw') cwStatus();
@@ -2998,6 +3291,14 @@
     onMessage(m) {
       if (m.t === 'qrz_info') { qrzInfo(m); if (window.RSLOG && window.RSLOG.onQrz) window.RSLOG.onQrz(m); return true; }
       if (m.t === 'ftx_qso' && m.qso) { qsoPrompt(m.qso); return true; }
+      if (m.t === 'spots' || m.t === 'spot') {
+        if (m.t === 'spots') bmSpots.clear();
+        bmAdd(m.list);
+        if (typeof m.state === 'string') bmState = m.state;
+        if (typeof m.host === 'string') bmHost = m.host;
+        bmDraw();
+        return true;
+      }
       if (m.t === 'worked') {
         worked = new Set(Array.isArray(m.list) ? m.list : []);
         workedStation = String(m.station || '');

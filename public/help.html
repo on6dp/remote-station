@@ -213,7 +213,7 @@ The TRX (a Yaesu FTX-1 with its SPA-1 amplifier, or depending on the setup an FT
   <li><b>When you leave</b>, click <span class="k">Libérer la main</span>. With no action for <b>15 minutes</b>, control is released automatically.</li>
   <li>The top-bar button shows <span class="k">Main occupée</span> (control taken) when someone else has it, and <span class="k">Prendre la main ici</span> (take control here) if you already have it in another tab or another browser. An administrator sees <span class="k">Reprendre la main</span> (take back control): they can take it back if needed, after confirmation.</li>
   <li>Without control, the commands are greyed out and a message reminds you « Prenez la main » (take control).</li>
-  <li><b>Following the operator</b> (for remote training): <span class="k">👁 Suivre</span> (follow) button to the right of the digital-mode tabs. When on (green), your screen shows the same tab as the operator in control (RTTY, FT8, CW…) and changes along with them. Clicking another tab yourself stops following; a click on <span class="k">👁 Suivre</span> starts it again. This button is not shown to the operator in control.</li>
+  <li><b>Following the operator</b> (for remote training): <span class="k">👁 Suivre</span> (follow) button just after the digital-mode tabs. When on (green), your screen shows the same tab as the operator in control (RTTY, FT8, CW…) and changes along with them. Clicking another tab yourself stops following; a click on <span class="k">👁 Suivre</span> starts it again. This button is not shown to the operator in control.</li>
 </ul>
 
 <h2 id="trx">7. Operating the TRX</h2>
@@ -416,7 +416,7 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
 </ul>
 
 <h2 id="numeriques">12. Digital modes</h2>
-<p>The centre tabs: <b>Activité</b>, <b>FT8 · FT4 · FT2</b>, <b>RTTY</b>, <b>WSPR</b>, <b>JT65</b>, <b>JTTY</b>, <b>CW</b>, <b>SSTV</b> and, further right, <b>Synchro</b> and <b>Logs</b>.
+<p>The centre tabs: <b>Activité</b>, <b>FT8 · FT4 · FT2</b>, <b>RTTY</b>, <b>WSPR</b>, <b>JT65</b>, <b>JTTY</b>, <b>CW</b>, <b>SSTV</b>, then <b>Synchro</b> and <b>Logs</b>.
 You have <b>no software to install</b> (no WSJT-X, FLDIGI…): everything happens in the page.</p>
 <ul>
   <li><b>Decoding runs on the server</b>, on the server's (synchronised) clock: the time on your PC and on the club PC does not matter.</li>
@@ -529,18 +529,37 @@ You can follow two stations on the same band at once (contest, a DX and its pile
   <tr><td>M / S indicator</td><td>The two bars should beat alternately when the decoder is tuned correctly.</td></tr>
   <tr><td>Centre … Hz</td><td>Audio frequency the decoder is tuned to.</td></tr>
   <tr><td><span class="k">⌖ Centrer</span> (centre)</td><td>Moves the VFO so that the signal followed by this decoder falls in the middle of the audio band (white triangle): its frequency does not change. The other decoder stays on its signal if it is still in the band.</td></tr>
-  <tr><td><span class="k">TX</span></td><td>Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): lit in red, red frame around the decoder. The zoom centres on it.</td></tr>
+  <tr><td><span class="k">TX</span> / click in the window</td><td>Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): <b>one click anywhere in the VFO-A or VFO-B window</b> is enough, or the <span class="k">TX</span> button in its header. The button becomes <span class="k">● TX ici</span> (red), the header turns pink and a red frame surrounds the decoder. The zoom centres on it. <b>This button does not key the transceiver</b>: transmit with a macro <kbd>F1</kbd>…<kbd>F12</kbd> or <span class="k">Émettre</span>.</td></tr>
   <tr><td><span class="k">Effacer</span> (clear)</td><td>Clears the received text of this decoder.</td></tr>
   <tr><td>Vertical bar between the two texts</td><td>Drag it: width of the two decoders (double-click: half and half).</td></tr>
 </table>
 <ol>
   <li><b>Receive</b>: left click on a signal for decoder A, right click for decoder B. The two markers should sit on the two traces of the signal. The text appears under the waterfall, A on the left, B on the right.</li>
   <li><b>Double-click a received callsign</b>: it becomes the correspondent.</li>
-  <li><b>Choose the transmit decoder</b>: the <span class="k">TX</span> button in its header; your reply goes out on the frequency of the station it follows.</li>
+  <li><b>Choose the transmit decoder</b>: a click in its window (VFO-A or VFO-B), or the <span class="k">TX</span> button in its header; your reply goes out on the frequency of the station it follows. Double-clicking a callsign in window B therefore does both: B becomes the transmit decoder and the callsign goes into Correspondant.</li>
   <li><b>Transmit</b>: text in the bottom box, then <span class="k">Émettre</span> (transmit) (or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>). The text goes out with the settings of the decoder marked TX (and on VFO B if SPLIT is on), then the transceiver returns to receive. It appears in grey in that decoder's received text, then each letter turns <span class="red">red</span> as it is sent. While transmitting the button becomes <span class="k">■ Arrêter</span> (stop). 600 characters at most; transmit audio frequency between 300 and 2800 Hz.</li>
-  <li><b>Macros</b> <kbd>F1</kbd> to <kbd>F12</kbd>: a click transmits at once; <b>Shift+click</b> adds the macro to the text without transmitting (section 13).</li>
+  <li><b>Macros</b> <kbd>F1</kbd> to <kbd>F12</kbd> (keyboard keys or click): transmit at once; <b>Shift+click</b> adds the macro to the text without transmitting (section 13). <kbd>Esc</kbd> stops the current transmission.</li>
   <li><span class="k">Effacer</span> (under the transmit button) clears the text to send; <span class="k">Log QSO</span> opens the logbook form, with the frequency of the decoder marked TX.</li>
 </ol>
+
+<h4 id="carte-bande">Band map (DX cluster)</h4>
+<p>On the right of the RTTY tab, a <b>vertical column</b> shows the band as a ruler: low frequencies <b>at the top</b>, high at the bottom (by default 7030–7120 kHz on 40 m, 14080–14150 kHz on 20 m, 3570–3600 kHz on 80 m…).
+<b>Spots</b> from the club's DX cluster (OP0P, including stations found by the Reverse Beacon Network) appear at their frequency. You see the whole RTTY part of the band at a glance, while the waterfall only shows 3 or 4 kHz.</p>
+<table>
+  <tr><th>Item</th><th>What it shows or does</th></tr>
+  <tr><td>Green / red dot, <b>20 m</b></td><td>Link to the cluster (green = connected), band of the VFO being heard.</td></tr>
+  <tr><td><b>RTTY</b> / <b>Tous</b> (all)</td><td>RTTY: RTTY spots and spots with no mode given. Tous: also CW, FT8… spots.</td></tr>
+  <tr><td>Two kHz boxes</td><td>Range shown, kept for each band. Type your limits (e.g. 7030 and 7120).</td></tr>
+  <tr><td>Callsign in <span class="grn">green</span></td><td>Station calling (CQ, RBN skimmer spot).</td></tr>
+  <tr><td><s>Struck-out</s> callsign</td><td>Already worked in RTTY on this band (under the chosen TX call).</td></tr>
+  <tr><td>Faded callsign</td><td>Old spot (kept 30 minutes). On hover: comment, who spotted it, how many minutes ago.</td></tr>
+  <tr><td>Blue area</td><td>The part of the band visible in the waterfall right now.</td></tr>
+  <tr><td>Yellow / magenta line</td><td>Decoder A / B; « TX » next to the transmit one. « ▲ VFO » or « ▼ VFO »: the VFO is outside the range.</td></tr>
+  <tr><td><b>Click on a spot</b></td><td>The transceiver tunes to the station: if it is already in the waterfall, only the transmit decoder moves onto it; otherwise the VFO moves to put it in the middle of the waterfall, with the decoder on it. The callsign goes into Correspondant. Then just press the reply macro (<kbd>F2</kbd>…). You must have control.</td></tr>
+  <tr><td>Click elsewhere on the map</td><td>Same on that frequency, without a callsign (to scan the band).</td></tr>
+  <tr><td><b>Wheel</b> / drag / double-click</td><td>Wheel: zoom around the mouse; drag up or down: move the range; double-click: the band's original range.</td></tr>
+</table>
+<p>Cluster settings (administrator, <code>config.json</code>, then restart the service): <code>clusterHost</code> (op0p.be by default; empty = no cluster), <code>clusterPort</code> (8000), <code>clusterCall</code> (login callsign with an SSID; empty = digiCall followed by -7, i.e. ON5VL-7) and <code>clusterCmds</code> (commands sent after logging in: <code>set/skimmer</code> for RBN spots).</p>
 
 <h3 id="wspr">12.4 WSPR</h3>
 <p>WSPR is used to study propagation: low-power beacons transmit their callsign, locator and power every 2 minutes.
@@ -642,7 +661,7 @@ Example: FT8 on <b>432.540 MHz</b> with the club's 70 cm converter. Only the IFs
   <tr><td><span class="k">Enregistrer le QSO</span> (or <kbd>Enter</kbd>)</td><td>Adds the QSO to the logbook. A duplicate (same callsign, band and mode within half an hour) is reported before saving; if the entry already in the logbook lacks the name, QTH, locator or received RST, you are offered to <b>complete</b> it instead of creating a 2nd QSO.</td></tr>
   <tr><td><span class="k">Supprimer</span> (delete) / <span class="k">Annuler</span> (cancel)</td><td>Appear when you edit an existing QSO: delete the QSO (after confirmation; online logbooks are not changed) or abandon the edit.</td></tr>
 </table>
-<p><b>Without leaving the RTTY, JTTY or CW tab</b>: the <span class="k">Log QSO</span> button (next to « Émettre », and at the end of the Correspondant line) opens a form already filled in:
+<p><b>Without leaving the RTTY, JTTY or CW tab</b>: the <span class="k">Log QSO</span> button (next to « Émettre », and on the Correspondant line, after TX call) opens a form already filled in:
 callsign, first name, QTH, locator and RST, frequency (in RTTY: the signal frequency) and mode, power, start time (when the correspondent was chosen) and end time. Correct if needed, then <span class="k">Enregistrer dans le carnet</span> (save to the logbook).
 In FT8, this form opens by itself at the end of the QSO; a macro containing <code>&lt;LOG&gt;</code> also opens it.</p>
 
@@ -712,6 +731,7 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
   <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Frequency ± one step (the one on the Step row).</td></tr>
   <tr><td><kbd>F1</kbd> … <kbd>F12</kbd></td><td>Macros in the RTTY and CW tabs (<kbd>F1</kbd>…<kbd>F8</kbd> in JTTY).</td></tr>
   <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd> / <kbd>Enter</kbd></td><td>Transmit the typed text in RTTY / in JTTY.</td></tr>
+  <tr><td><kbd>Esc</kbd></td><td>Stop the current RTTY or JTTY transmission.</td></tr>
   <tr><td><kbd>Enter</kbd> (logbook form)</td><td>Save the QSO.</td></tr>
   <tr><td><kbd>Shift</kbd> + mouse wheel</td><td>RIT / XIT offset in 100 Hz steps.</td></tr>
   <tr><td><kbd>Ctrl</kbd> + <kbd>F5</kbd></td><td>Reload the page after an update.</td></tr>

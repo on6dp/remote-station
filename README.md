@@ -11,7 +11,7 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.22.70** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.22.71** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
 **Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
 `remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
@@ -29,7 +29,7 @@ L'archive s'installe avec la procédure « Mettre à jour le serveur » ci-desso
 
 - **Piloter le TRX** depuis un navigateur : fréquence, bandes, modes, filtres, DSP, deux VFO, SPLIT, RIT / XIT, antenne, tuner, puissance, PTT ; une seule personne « a la main » à la fois, les autres regardent et écoutent.
 - **Écouter** le TRX dans le navigateur, avec un réglage de volume propre à chacun.
-- **Modes numériques** décodés sur le serveur, sans logiciel à installer : FT8 · FT4 · FT2 (moteur WSJT-X 3 avec le décodeur multi-passes de JTDX, séquence automatique comme WSJT-X), RTTY, JTTY, WSPR, JT65, CW, SSTV ; émission en FT8 · FT4 · FT2, RTTY et JTTY.
+- **Modes numériques** décodés sur le serveur, sans logiciel à installer : FT8 · FT4 · FT2 (moteur WSJT-X 3 avec le décodeur multi-passes de JTDX, séquence automatique comme WSJT-X), RTTY, JTTY, WSPR, JT65, CW, SSTV ; émission en FT8 · FT4 · FT2, RTTY et JTTY. En RTTY, une **carte de bande** verticale affiche les spots du DX cluster (et du Reverse Beacon Network) : un clic sur un spot y cale le TRX et le décodeur.
 - **Carnet de trafic** partagé : enregistrement des QSO, colonnes et filtres, export ADIF / Cabrillo (dont « Mes QSO » pour chaque opérateur), envoi vers LoTW, eQSL, Club Log et QRZ.com avec des identifiants par indicatif, recherche des correspondants sur QRZ.com, UDP vers Swisslog, Log4OM, N1MM…
 - **Sécurités d'émission** côté serveur et côté club : bandes autorisées, puissance selon la licence, ROS, durée maximale, coupure si la liaison tombe.
 - **Opérateurs** : liste des connectés, demande et passage de la main, discussion, mode « Suivre l'opérateur » pour la formation à distance.
@@ -144,6 +144,7 @@ sudo systemctl restart remote-station
 | `rxOnlyPrefixes` | `["ONL"]` | Indicatifs en écoute seule. |
 | `maxSwr`, `swrHoldMs` | `2.5`, `700` | Coupure de l'émission sur ROS élevé. |
 | `tunerAuto` | `true` | Tuner remis en service à chaque changement de bande HF / 6 m. |
+| `clusterHost`, `clusterPort`, `clusterCall`, `clusterCmds` | `op0p.be`, `8000`, `''`, `['set/skimmer']` | DX cluster (telnet) de la carte de bande RTTY. `clusterHost` vide = pas de cluster ; `clusterCall` vide = `digiCall` suivi de `-7`. |
 | `ftx1SubCat`, `ftx1SubSingle` | `true`, `false` | FTX-1 : passage MAIN / SUB par le dashboard en double réception (DUAL RX) ; en réception simple, refusé (il a mis le TRX en émission les 24 et 25/10) sauf `ftx1SubSingle: true` (essais seulement). |
 | `digiAlcMax` | `0` | Limiteur d'ALC en émission numérique (%) ; 0 = pas de limiteur. |
 | `ftxWatchdogMinutes` | `6` | Arrêt de l'émission FT8 / FT4 / FT2 sans réponse. |
@@ -289,6 +290,7 @@ L'essentiel en cinq lignes :
 | `server.js` | Serveur : comptes, contrôle, PTT, sécurités, messages, journal |
 | `lib/` | WebSocket minimal, mots de passe, décodeur FT8/FT4 de secours (`ftx.wasm`, `ftx.js`), démodulateur RTTY (`rtty.js`), décodeur CW (`cw.js`), décodeur SSTV (`sstv-dec.js`) et galerie (`sstv-store.js`), WSPR (`wspr.js`, `wsprd.wasm`), fil de décodage (`digi-worker.js`) — aucune dépendance npm |
 | `lib/dxcc.js`, `lib/data/cty.dat` | Pays DXCC, préfixe, distance et azimut d'un indicatif (fichier cty.dat d'AD1C) |
+| `lib/cluster.js` | Client telnet du DX cluster (spots de la carte de bande RTTY) |
 | `lib/qrz.js` | Recherche des correspondants sur QRZ.com (prénom, ville, locator) |
 | `native/ftx/` | Source et script de compilation du décodeur WebAssembly (ft8_lib : secours si `lib/bin/wsjtxd` ne peut pas tourner) |
 | `lib/wsjtx.js`, `lib/data/ALLCALL7.TXT` | Pilotage du moteur de décodage WSJT-X (FT8 / FT4 / FT2, passes anticipée / normale / profonde, AP) ; base d'indicatifs de JTDX |
