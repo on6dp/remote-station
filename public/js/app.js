@@ -1635,6 +1635,12 @@
     if (/^(SSB|LSB|USB|PHONE|PH)$/.test(M)) return khz < 10000 && !(khz >= 5250 && khz <= 5450) ? 'LSB' : 'USB';
     if (/^(AM|FM)$/.test(M)) return M;
     if (/^(DIGI|DATA|PSK\d*|FT|DIG)$/.test(M)) return 'DATA';
+    if (M) return '';
+    // Mode non indiqué : d'après le plan de bande IARU Région 1 (segments CW et phonie), sinon on garde le mode du TRX
+    const CW = [[1810, 1838], [3500, 3570], [7000, 7040], [10100, 10130], [14000, 14070], [18068, 18095], [21000, 21070], [24890, 24915], [28000, 28070], [50000, 50100]];
+    const PH = [[1843, 2000], [3600, 3800], [7060, 7200], [14101, 14350], [18120, 18168], [21151, 21450], [24940, 24990], [28300, 29300], [50100, 50500]];
+    if (CW.some((r) => khz >= r[0] && khz <= r[1])) return 'CW';
+    if (PH.some((r) => khz >= r[0] && khz <= r[1])) return khz < 10000 ? 'LSB' : 'USB';
     return '';
   }
   function onSpot(m) {
@@ -1658,7 +1664,18 @@
     setFreq(Math.round(khz * 1000), target);
     const want = M === 'DATA' ? /^(DATA-U|USB-D)$/ : M ? new RegExp('^' + M + '$') : null;
     const mk = want && (R.MODE_KEYS || []).find((x) => want.test(x[1]));
-    if (mk) setTimeout(() => send({ t: 'set', mode: mk[0], sub: target === 'B' }), 250);
+    if (mk) {
+      // Changement de bande : le FTX-1 rappelle ensuite le mode mémorisé de la bande (LSB…) par-dessus le nôtre ;
+      // le mode est renvoyé tant que le TRX ne le confirme pas (2 essais de plus)
+      const vfo = target;
+      const want = (n) => {
+        const r = st && st.radio;
+        if (n && r && (vfo === 'B' ? r.modeB : r.mode) === mk[1]) return;
+        send({ t: 'set', mode: mk[0], sub: vfo === 'B' });
+        if (n < 2) setTimeout(() => want(n + 1), 1200);
+      };
+      setTimeout(() => want(0), 250);
+    }
     say((call ? call + ' : ' : '') + 'VFO ' + target + ' sur ' + khz.toLocaleString('fr-BE') + ' kHz' + (mk ? ' en ' + mk[1] : '') + '.', '', 4000);
   }
   const bcQsy = 'BroadcastChannel' in window ? new BroadcastChannel('rs-qsy') : null;

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.86 | [RemoteStation-Setup-0.22.86.exe](0.22.86/RemoteStation-Setup-0.22.86.exe) | [remote-station-0.22.86.tar.gz](0.22.86/remote-station-0.22.86.tar.gz) | Spots : USB au-dessus de 10 MHz confirmé sur le TRX — [empreintes SHA-256](0.22.86/SHA256SUMS.txt) |
 | 0.22.85 | [RemoteStation-Setup-0.22.85.exe](0.22.85/RemoteStation-Setup-0.22.85.exe) | [remote-station-0.22.85.tar.gz](0.22.85/remote-station-0.22.85.tar.gz) | Correctif : port du TRX reconnu par son identité USB — [empreintes SHA-256](0.22.85/SHA256SUMS.txt) |
 | 0.22.84 | [RemoteStation-Setup-0.22.84.exe](0.22.84/RemoteStation-Setup-0.22.84.exe) | [remote-station-0.22.84.tar.gz](0.22.84/remote-station-0.22.84.tar.gz) | Clic sur un spot de dx.op0p.be / cluster.op0p.be → le TRX s’y cale — [empreintes SHA-256](0.22.84/SHA256SUMS.txt) |
 | 0.22.83 | [RemoteStation-Setup-0.22.83.exe](0.22.83/RemoteStation-Setup-0.22.83.exe) | [remote-station-0.22.83.tar.gz](0.22.83/remote-station-0.22.83.tar.gz) | FTDX101 : RTTY B sur le récepteur SUB (stéréo) ; réglages de la page Station verrouillés — [empreintes SHA-256](0.22.83/SHA256SUMS.txt) |

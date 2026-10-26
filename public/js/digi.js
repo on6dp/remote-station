@@ -3216,7 +3216,17 @@
     const mk = want === 'CW'
       ? (R.MODE_KEYS || []).find((x) => /^(CW-U|CW|CW-USB)$/i.test(x[1]))
       : (R.MODE_KEYS || []).find((x) => /^(DATA-U|USB-D|D-U|USB-DATA)$/i.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
-    if (mk) setTimeout(() => api.send({ t: 'set', mode: mk[0], sub: false }), 250);
+    if (mk) {
+      // Changement de bande : certains TRX (FTX-1) rappellent ensuite le mode mémorisé de la bande, par-dessus le nôtre.
+      // Le mode est donc renvoyé tant que le TRX ne le confirme pas (2 essais de plus).
+      const want = (n) => {
+        const r = api.state() && api.state().radio;
+        if (n && r && r.mode === mk[1]) return;
+        api.send({ t: 'set', mode: mk[0], sub: false });
+        if (n < 2) setTimeout(() => want(n + 1), 1200);
+      };
+      setTimeout(() => want(0), 250);
+    }
   }
   function autoQsy() {
     const st = api && api.state();
