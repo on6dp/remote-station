@@ -320,13 +320,42 @@
     if (manual) log('Port libéré');
   }
 
+  // Port mémorisé : reconnu par son identité USB (fabricant, produit, rang parmi les ports identiques), pas seulement
+  // par sa place dans la liste de Chrome — cette place change quand on autorise un autre port (autre TRX, autre appareil USB),
+  // et le TRX ne répondait plus (port d'un autre appareil rouvert à sa place).
+  function portIdent(p, ports) {
+    const i = (p && p.getInfo && p.getInfo()) || {};
+    const same = ports.filter((q) => { const j = (q.getInfo && q.getInfo()) || {}; return j.usbVendorId === i.usbVendorId && j.usbProductId === i.usbProductId; });
+    return { v: i.usbVendorId || 0, p: i.usbProductId || 0, n: same.indexOf(p) };
+  }
+  function rememberPort(p, ports) {
+    store.set(PORT_KEY, String(ports.indexOf(p)));
+    store.set(PORT_KEY + '.id', JSON.stringify(portIdent(p, ports)));
+  }
+  function findRemembered(ports) {
+    if (Number(store.get(PORT_KEY, '-1')) < 0) return null;
+    let id = null;
+    try { id = JSON.parse(store.get(PORT_KEY + '.id', 'null')); } catch (e) { id = null; }
+    if (id && (id.v || id.p)) {
+      const same = ports.filter((q) => { const j = (q.getInfo && q.getInfo()) || {}; return j.usbVendorId === id.v && j.usbProductId === id.p; });
+      return same[id.n] || same[0] || null;
+    }
+    // Ancienne mémoire (place dans la liste seulement) : on la complète par l'identité USB
+    const idx = Number(store.get(PORT_KEY, '-1'));
+    const p = idx >= 0 && idx < ports.length ? ports[idx] : null;
+    if (p) store.set(PORT_KEY + '.id', JSON.stringify(portIdent(p, ports)));
+    return p;
+  }
   async function reopenRemembered() {
     if (!('serial' in navigator)) return;
     const ports = await navigator.serial.getPorts();
     const idx = Number(store.get(PORT_KEY, '-1'));
-    if (ports.length && idx >= 0 && idx < ports.length) {
+    const rp = findRemembered(ports);
+    if (rp) {
       log('Réouverture du port mémorisé pour ' + RIG.NAME);
-      await openPort(ports[idx]);
+      await openPort(rp);
+    } else if (idx >= 0) {
+      log('Port mémorisé pour ' + RIG.NAME + ' introuvable (TRX débranché ou éteint ?) : branchez-le, ou « Choisir le port du TRX »', 'st-warn');
     } else if (idx < 0) {
       log('Aucun port mémorisé pour ' + RIG.NAME + ' : cliquez sur « Choisir le port du TRX »');
     }
@@ -374,7 +403,7 @@
       const p = await navigator.serial.requestPort();
       await closePort(false);
       const ports = await navigator.serial.getPorts();
-      store.set(PORT_KEY, String(ports.indexOf(p)));
+      rememberPort(p, ports);
       if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'ports', ports: rememberedPorts() }));
       await openPort(p);
     } catch (e) {
