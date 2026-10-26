@@ -43,10 +43,11 @@
     return out;
   }
 
-  /** Float32 (-1..1) → trame PCM 16 bits [0x02, int16 little-endian…] (12 kHz) */
-  function encodePcm(samples) {
+  /** Float32 (-1..1) → trame PCM 16 bits [0x02, int16 little-endian…] (12 kHz).
+   *  hdr 0x04 : voie droite d'un TRX à deux récepteurs (FTDX101 : récepteur SUB), pour le décodage seulement */
+  function encodePcm(samples, hdr) {
     const out = new Uint8Array(samples.length * 2 + 1);
-    out[0] = 0x02;
+    out[0] = hdr === 0x04 ? 0x04 : 0x02;
     const dv = new DataView(out.buffer);
     for (let i = 0; i < samples.length; i++) {
       let v = samples[i];
@@ -67,7 +68,7 @@
     if (h === 0x01 || h === 0x03) {
       out = new Float32Array(bytes.length - 1);
       for (let i = 1; i < bytes.length; i++) out[i - 1] = DECODE[bytes[i]];
-    } else if (h === 0x02) {
+    } else if (h === 0x02 || h === 0x04) {
       const n = (bytes.length - 1) >> 1;
       out = new Float32Array(n);
       const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
@@ -76,6 +77,7 @@
       return null;
     }
     out.rate = h === 0x01 ? 8000 : 12000;
+    if (h === 0x04) out.ch = 1; // voie droite (récepteur SUB)
     return out;
   }
 

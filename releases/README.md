@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.83 | [RemoteStation-Setup-0.22.83.exe](0.22.83/RemoteStation-Setup-0.22.83.exe) | [remote-station-0.22.83.tar.gz](0.22.83/remote-station-0.22.83.tar.gz) | FTDX101 : RTTY B sur le récepteur SUB (stéréo) ; réglages de la page Station verrouillés — [empreintes SHA-256](0.22.83/SHA256SUMS.txt) |
 | 0.22.82 | [RemoteStation-Setup-0.22.82.exe](0.22.82/RemoteStation-Setup-0.22.82.exe) | [remote-station-0.22.82.tar.gz](0.22.82/remote-station-0.22.82.tar.gz) | Nouveau TRX : Yaesu FTDX101D / MP — [empreintes SHA-256](0.22.82/SHA256SUMS.txt) |
 | 0.22.81 | [RemoteStation-Setup-0.22.81.exe](0.22.81/RemoteStation-Setup-0.22.81.exe) | [remote-station-0.22.81.tar.gz](0.22.81/remote-station-0.22.81.tar.gz) | RTTY : décodeurs A / B déplacés en continu (bouton maintenu) — [empreintes SHA-256](0.22.81/SHA256SUMS.txt) |
 | 0.22.80 | [RemoteStation-Setup-0.22.80.exe](0.22.80/RemoteStation-Setup-0.22.80.exe) | [remote-station-0.22.80.tar.gz](0.22.80/remote-station-0.22.80.tar.gz) | Pas d’accord de 1 Hz — [empreintes SHA-256](0.22.80/SHA256SUMS.txt) |

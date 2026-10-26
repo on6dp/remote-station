@@ -44,6 +44,9 @@ const DEFAULTS = {
   // DX cluster pour la carte de bande (spots à droite de la cascade). clusterHost vide = pas de cluster.
   // clusterCall : indicatif de connexion (avec un SSID, ex. ON5VL-7) ; vide = digiCall suivi de -7.
   // clusterCmds : commandes envoyées après la connexion (set/skimmer = spots du Reverse Beacon Network sur CC-Cluster).
+  // Page Station : seuls ces indicatifs (connectés à la page Station avec leur indicatif et leur mot de passe
+  // d'administrateur) peuvent modifier le jeton, la vitesse et les bits de stop ; pour les autres, ces champs sont verrouillés
+  stationEditors: ['ON6DP', 'ON4LUC'],
   clusterHost: 'op0p.be',
   clusterPort: 8000,
   clusterCall: '',
@@ -170,7 +173,9 @@ const server = makeServer((req, res) => {
   }
   if (p === '/station/whoami') {
     const a = stationAdmin(req);
-    return sendJson(res, a ? 200 : 401, a || {});
+    // edit : peut modifier le jeton, la vitesse et les bits de stop de la page Station (stationEditors)
+    const eds = (Array.isArray(cfg.stationEditors) ? cfg.stationEditors : DEFAULTS.stationEditors).map((c) => String(c).toUpperCase());
+    return sendJson(res, a ? 200 : 401, a ? Object.assign({ edit: eds.indexOf(String(a.call).toUpperCase()) >= 0 }, a) : {});
   }
   if (p === '/api/info') {
     return sendJson(res, 200, {
@@ -265,20 +270,40 @@ function updateAudioWant() {
 }
 // Trame audio de la station → décodeur et chaque membre à l'écoute (un client trop lent saute des trames
 // au lieu d'accumuler du retard). 0x01 : µ-law 8 kHz (ancienne page Station), 0x02 : PCM 16 bits 12 kHz.
+// TRX à deux récepteurs en stéréo (FTDX101) : trame gauche (0x02, MAIN) puis trame droite (0x04, SUB).
+// La voie droite sert au décodeur RTTY B et, en double réception, l'écoute reçoit le mélange des deux (comme au casque).
+const stereo = { l: null, at: 0 };
+function sendListen(pcm) {
+  if (!listeners()) return;
+  const out = Buffer.from(ULAW.encodeFrame(pcm, 12000)); // µ-law 12 kHz pour l'écoute (96 kbit/s)
+  for (const c of ops) if (c.listen && c.backlog < 32768) c.send(out);
+}
 function relayAudio(buf) {
   if (!buf || buf.length < 2 || buf.length > 4000) return;
   audio.frames++;
-  let out = buf;
-  if (buf[0] === 0x02) {
+  const dualAudio = !!(station && station.rig && station.rig.DUAL_AUDIO);
+  if (buf[0] === 0x02 || buf[0] === 0x04) {
+    const right = buf[0] === 0x04;
+    if (right && !dualAudio) return;
     const pcm = ULAW.decodeFrame(buf);
     if (!pcm) return;
-    if (digi.worker && digiModes().size) digi.worker.postMessage({ t: 'audio', samples: pcm, at: Date.now() }, [pcm.buffer]);
-    if (!listeners()) return;
-    out = Buffer.from(ULAW.encodeFrame(ULAW.decodeFrame(buf), 12000)); // µ-law 12 kHz pour l'écoute (96 kbit/s)
-  } else if (buf[0] !== 0x01) {
-    return;
+    const forListen = listeners() ? Float32Array.from(pcm) : null;
+    if (digi.worker && digiModes().size) digi.worker.postMessage({ t: 'audio', samples: pcm, at: Date.now(), ch: right ? 1 : 0 }, [pcm.buffer]);
+    if (!forListen) { stereo.l = null; return; }
+    if (!dualAudio) return sendListen(forListen);
+    if (!right) {
+      if (stereo.l) sendListen(stereo.l); // voie droite absente (entrée son mono) : la gauche seule
+      stereo.l = forListen;
+      return;
+    }
+    const l = stereo.l;
+    stereo.l = null;
+    if (!l) return;
+    if (radio.dualRx === 1 && l.length === forListen.length) for (let i = 0; i < l.length; i++) l[i] = (l[i] + forListen[i]) * 0.5;
+    return sendListen(l);
   }
-  for (const c of ops) if (c.listen && c.backlog < 32768) c.send(out);
+  if (buf[0] !== 0x01) return;
+  for (const c of ops) if (c.listen && c.backlog < 32768) c.send(buf);
 }
 
 // ---------------------------------------------------------------- modes numériques (FT8 / FT4)
@@ -313,6 +338,13 @@ function rttyCfg(r) {
   c.key = [f, shift, baud, c.rev ? 1 : 0, squelch].join('/');
   return c;
 }
+// Décodeur RTTY B d'un membre : sur la voie droite (récepteur SUB) avec un TRX à deux récepteurs en double réception
+function rttyB(c) {
+  const r = c.rtty2;
+  if (!r) return null;
+  if (!(station && station.rig && station.rig.DUAL_AUDIO && radio.dualRx === 1)) return r;
+  return Object.assign({}, r, { ch: 1, key: r.key + '/R' });
+}
 function digiModes() {
   const s = new Set();
   for (const c of ops) if (c.digi) s.add(c.digi);
@@ -340,7 +372,7 @@ function updateDigi() {
     digi.worker.postMessage({ t: 'modes', modes: Array.from(modes) });
     digi.worker.postMessage({ t: 'dial', hz: radio.freq || 0 });
     const cfgs = {};
-    for (const c of ops) if (c.digi === 'RTTY') for (const r of [c.rtty, c.rtty2]) if (r) cfgs[r.key] = r;
+    for (const c of ops) if (c.digi === 'RTTY') for (const r of [c.rtty, rttyB(c)]) if (r) cfgs[r.key] = r;
     digi.worker.postMessage({ t: 'rtty', cfgs: Object.values(cfgs) });
     const cwc = {};
     for (const c of ops) if (c.digi === 'CW' && c.cw) cwc[c.cw.key] = c.cw;
@@ -352,12 +384,13 @@ function onDigi(m) {
   if (m.t === 'wf') {
     // Ligne de cascade : [0x13, largeur de case (mHz, 2 octets), heure de capture (dixièmes de s du jour UTC, 4 octets),
     // octets dB*2+240 par case depuis 0 Hz]
+    // 0x14 : même format, voie droite (récepteur SUB d'un TRX à deux récepteurs) pour la cascade du décodeur RTTY B
     const fr = Buffer.allocUnsafe(m.row.length + 7);
-    fr[0] = 0x13;
+    fr[0] = m.ch === 1 ? 0x14 : 0x13;
     fr.writeUInt16BE(Math.round((m.df || 6.25) * 1000), 1);
     fr.writeUInt32BE(Math.floor(((m.at || Date.now()) % 86400000) / 100), 3);
     Buffer.from(m.row.buffer, m.row.byteOffset, m.row.length).copy(fr, 7);
-    for (const c of ops) if (c.digi && c.backlog < 65536) c.send(fr);
+    for (const c of ops) if (c.digi && c.backlog < 65536 && (m.ch !== 1 || c.digi === 'RTTY')) c.send(fr);
     return;
   }
   if (m.t === 'log') return console.error(m.msg);
@@ -376,7 +409,8 @@ function onDigi(m) {
     for (const c of ops) {
       if (c.digi !== 'RTTY') continue;
       if (c.rtty && c.rtty.key === m.key) c.send(out(0));
-      if (c.rtty2 && c.rtty2.key === m.key) c.send(out(1));
+      const b = rttyB(c);
+      if (b && b.key === m.key) c.send(out(1));
     }
     return;
   }
@@ -2317,6 +2351,7 @@ function onStation(conn, m) {
   if (m.t !== 'radio' || !m.radio) return;
   const r = m.radio;
   const was = radio.connected;
+  const wasDual = radio.dualRx;
   radio = {
     connected: !!r.connected,
     freq: Number.isFinite(r.freq) ? r.freq : null,
@@ -2373,6 +2408,8 @@ function onStation(conn, m) {
   } else if (controller && radio.power != null && radio.power > controller.user.maxWatts) {
     limitPower(controller, 'dépassement');
   }
+  // TRX à deux récepteurs en stéréo : la double réception change la voie du décodeur RTTY B (gauche ↔ droite)
+  if (station && station.rig && station.rig.DUAL_AUDIO && radio.dualRx !== wasDual) updateDigi();
   // Tuner remis en service tout seul : à la connexion du TRX et à chaque nouvelle bande HF / 6 m (une seule fois par bande)
   autoTuner();
   // Protection du PA : résultat de l'accord. Le TRX signale HI-SWR après le TUNE → émission bloquée sur toute la bande

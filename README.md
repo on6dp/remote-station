@@ -11,7 +11,7 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.22.82** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.22.83** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
 **Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
 `remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
@@ -144,6 +144,7 @@ sudo systemctl restart remote-station
 | `rxOnlyPrefixes` | `["ONL"]` | Indicatifs en écoute seule. |
 | `maxSwr`, `swrHoldMs` | `2.5`, `700` | Coupure de l'émission sur ROS élevé. |
 | `tunerAuto` | `true` | Tuner remis en service à chaque changement de bande HF / 6 m. |
+| `stationEditors` | `['ON6DP', 'ON4LUC']` | Indicatifs (connectés à la page Station avec leur indicatif) qui peuvent modifier le jeton, la vitesse et les bits de stop de la page Station ; verrouillés pour les autres. |
 | `clusterHost`, `clusterPort`, `clusterCall`, `clusterCmds` | `op0p.be`, `8000`, `''`, `['set/skimmer']` | DX cluster (telnet) de la carte de bande RTTY. `clusterHost` vide = pas de cluster ; `clusterCall` vide = `digiCall` suivi de `-7`. |
 | `ftx1SubCat`, `ftx1SubSingle` | `true`, `false` | FTX-1 : passage MAIN / SUB par le dashboard en double réception (DUAL RX) ; en réception simple, refusé (il a mis le TRX en émission les 24 et 25/10) sauf `ftx1SubSingle: true` (essais seulement). |
 | `digiAlcMax` | `0` | Limiteur d'ALC en émission numérique (%) ; 0 = pas de limiteur. |

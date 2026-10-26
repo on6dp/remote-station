@@ -163,6 +163,10 @@
     hint: 'FTDX101 : menu OPERATION SETTING → GENERAL, « CAT RATE » doit correspondre à la vitesse choisie ici (38400 conseillé). Choisissez le port Enhanced COM Port.'
   });
 
+  // Son USB en stéréo : récepteur MAIN à gauche, SUB à droite. En double réception (FR00), la page Station envoie
+  // les deux voies : le décodeur RTTY B lit le récepteur SUB, avec sa propre cascade.
+  api.DUAL_AUDIO = true;
+
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else {
     root.RIGS = root.RIGS || {};

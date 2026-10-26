@@ -455,6 +455,7 @@
 
   // ------------------------------------------------------------------ onglets
   let rtTipT = 0;
+  let rtDualAudio = false; // RTTY : deux cascades (une par récepteur) — FTDX101 en double réception
   function showTab(t) {
     if (!document.querySelector('#centerPanel .ctab[data-tab="' + t + '"]')) t = POPUP ? 'ftx' : 'events';
     tab = t;
@@ -485,7 +486,9 @@
     if (WF_TABS.indexOf(pane) >= 0) {
       // RTTY sur un TRX qui envoie ses deux récepteurs séparément (DUAL_AUDIO, ex. FTDX101D / MP) : une cascade par
       // décodeur, côte à côte ; sinon une seule cascade pour les deux décodeurs (FTX-1, FTDX10, IC-7300 : un seul son)
-      const dualAudio = !!(api && api.rig && api.rig() && api.rig().DUAL_AUDIO);
+      // (seulement en double réception : en réception simple, la voie droite est muette)
+      rtDualAudio = dualAudioOn();
+      const dualAudio = rtDualAudio;
       if ($('rtWfB')) $('rtWfB').closest('.rt-wfb').hidden = !dualAudio;
       const slot = document.querySelector('.dg-wf-slot[data-slot="' + (pane === 'rtty' && dualAudio ? 'rtty-a' : pane) + '"]');
       const el = document.querySelector('.dg-wf:not(.rt-wfb)'); // cascade principale (pas celle du décodeur RTTY B)
@@ -607,58 +610,67 @@
     spd: [1, 2, 3].indexOf(Number(store.get('wfspd', '2'))) >= 0 ? Number(store.get('wfspd', '2')) : 2
   };
   let PAL = mkPal(PALS[wfCfg.pal]);
-  let floor = null;
-  let binFloor = null; // plancher de bruit de chaque case (fond aplati)
+  // Plancher de bruit (médiane lissée) et plancher de chaque case (fond aplati) : wf.floor / wf.binFloor,
+  // et de même pour la cascade B (voie droite d'un TRX à deux récepteurs) : wfB.floor / wfB.binFloor
+  // Voie droite (0x14) : seulement en RTTY, avec un TRX qui envoie ses deux récepteurs (FTDX101 en double réception)
+  function dualAudioOn() {
+    const st = api && api.state && api.state();
+    return !!(api && api.rig && api.rig() && api.rig().DUAL_AUDIO && st && st.radio && st.radio.dualRx === 1);
+  }
   function onRow(bytes) {
+    const isB = bytes[0] === 0x14;
+    if (isB && !(tab === 'rtty' && wfB.ctx && rtDualAudio)) return;
     if (WF_TABS.indexOf(tab) < 0 || detached || !wf.ctx) return;
+    const T = isB ? wfB : wf; // cascade dessinée
     // 0x10 : une case de 6,25 Hz par octet (dB*2+240) depuis 0 Hz (ancien serveur)
     // 0x13 : largeur de case (mHz, 2 octets), heure de capture (dixièmes de s du jour UTC, 4 octets), puis les cases
-    const fine = bytes[0] === 0x13;
+    const fine = bytes[0] === 0x13 || isB;
     const df = fine ? ((bytes[1] << 8) | bytes[2]) / 1000 : 6.25;
     const tday = fine ? (((bytes[3] << 24) >>> 0) + (bytes[4] << 16) + (bytes[5] << 8) + bytes[6]) * 100 : null;
     const hdr = fine ? 7 : 1;
     const n = Math.min(bytes.length - hdr, Math.ceil((WF_LO + WF_MAX_HZ) / df));
     let vals = bytes.subarray(hdr, hdr + n);
-    if (tab === 'cw') { if (cwDf !== df) cwRows.length = 0; cwDf = df; cwRows.push(Uint8Array.from(vals)); if (cwRows.length > 12) cwRows.shift(); }
+    if (tab === 'cw' && !isB) { if (cwDf !== df) cwRows.length = 0; cwDf = df; cwRows.push(Uint8Array.from(vals)); if (cwRows.length > 12) cwRows.shift(); }
     // Vitesse (comme « Spd » de JTDX) : 1, 2 ou 3 lignes reçues fondues en une (moyenne des puissances) ;
     // plus lent = signaux plus ramassés, plus d'historique à l'écran
     const spd = wfCfg.spd;
     if (spd > 1) {
-      if (!wf.acc || wf.acc.length !== n) { wf.acc = new Float32Array(n); wf.accN = 0; }
-      const acc = wf.acc;
+      if (!T.acc || T.acc.length !== n) { T.acc = new Float32Array(n); T.accN = 0; }
+      const acc = T.acc;
       for (let k = 0; k < n; k++) acc[k] += Math.pow(10, vals[k] / 20);
-      if (++wf.accN < spd) return;
+      if (++T.accN < spd) return;
       const m = new Uint8Array(n);
-      for (let k = 0; k < n; k++) { const v = Math.round(20 * Math.log10(acc[k] / wf.accN)); m[k] = v < 0 ? 0 : v > 255 ? 255 : v; acc[k] = 0; }
-      wf.accN = 0;
+      for (let k = 0; k < n; k++) { const v = Math.round(20 * Math.log10(acc[k] / T.accN)); m[k] = v < 0 ? 0 : v > 255 ? 255 : v; acc[k] = 0; }
+      T.accN = 0;
       vals = m;
     }
     // Plancher de bruit : médiane de la ligne, lissée
     const sorted = Array.from(vals).sort((a, b) => a - b);
     const med = sorted[sorted.length >> 1];
-    floor = floor == null ? med : floor * 0.9 + med * 0.1;
+    T.floor = T.floor == null ? med : T.floor * 0.9 + med * 0.1;
     // Fond aplati : niveau moyen du bruit de chaque case (les signaux, 6 dB au-dessus, ne le relèvent presque pas),
     // lissé sur ± 4 cases (± 25 Hz) pour ne pas créer de stries verticales
-    if (!binFloor || binFloor.length !== n) { binFloor = new Float32Array(n).fill(med); wf.sb = new Float32Array(n); wf.fr = 0; floor = med; }
+    if (!T.binFloor || T.binFloor.length !== n) { T.binFloor = new Float32Array(n).fill(med); T.sb = new Float32Array(n); T.fr = 0; T.floor = med; }
+    const binFloor = T.binFloor, floor = T.floor;
     // Premières secondes (ou retour après une coupure) : on s'adapte vite ; ensuite lentement, sans suivre les signaux
-    const fast = ++wf.fr < 40;
+    const fast = ++T.fr < 40;
     const lo = floor - 10; // jamais plus de 5 dB sous le bruit médian (sinon tout le fond vire au jaune)
     for (let k = 0; k < n; k++) {
       const b = binFloor[k];
       let nb = fast ? b * 0.8 + Math.min(vals[k], med + 6) * 0.2 : vals[k] > b + 12 ? b + 0.05 : b * 0.97 + vals[k] * 0.03;
       binFloor[k] = nb < lo ? lo : nb;
     }
-    const sb = wf.sb;
+    const sb = T.sb;
     const hw = Math.max(1, Math.round(25 / df)); // ± 25 Hz
     for (let k = 0, acc = 0, cnt = 0; k < n; k++) {
       acc = 0; cnt = 0;
       for (let j = Math.max(0, k - hw); j <= Math.min(n - 1, k + hw); j++) { acc += binFloor[j]; cnt++; }
       sb[k] = acc / cnt;
     }
-    const ctx = wf.ctx;
-    ctx.drawImage(ctx.canvas, 0, 0, wf.w, wf.h - 1, 0, 1, wf.w, wf.h - 1); // la cascade descend d'une ligne
-    if (!wf.img || wf.img.width !== wf.w) wf.img = ctx.createImageData(wf.w, 1);
-    const d = wf.img.data;
+    const ctx = T.ctx;
+    ctx.drawImage(ctx.canvas, 0, 0, T.w, T.h - 1, 0, 1, T.w, T.h - 1); // la cascade descend d'une ligne
+    if (!T.img || T.img.width !== T.w) T.img = ctx.createImageData(T.w, 1);
+    const d = T.img.data;
     // Gain : plage de couleurs de 50 dB (−20) à 12,5 dB (+20), 25 dB au milieu ; zéro : fond ± 10 dB
     // Cascade fine moyennée (0x13) : bruit plus régulier, donc plage plus serrée (16 dB) et fond un peu relevé (bleu)
     const range = 2 * (fine ? 16 : 25) / Math.pow(2, wfCfg.gain / 10); // en octets (2 par dB)
@@ -666,9 +678,9 @@
     const flatLvl = floor + 0; // fond aplati ramené au plancher moyen
     const nHz = WF_MAX_HZ / df; // cases sur la largeur affichée
     const k0f = WF_LO / df;     // première case affichée (zoom RTTY)
-    for (let x = 0; x < wf.w; x++) {
+    for (let x = 0; x < T.w; x++) {
       // Interpolation entre deux cases (pas d'escalier quand la cascade est plus large que le nombre de cases)
-      const fx = Math.max(0, Math.min(n - 1, k0f + (x + 0.5) / wf.w * nHz - 0.5));
+      const fx = Math.max(0, Math.min(n - 1, k0f + (x + 0.5) / T.w * nHz - 0.5));
       const k0 = Math.floor(fx);
       const k1 = Math.min(n - 1, k0 + 1);
       const u = fx - k0;
@@ -682,10 +694,11 @@
       d[x * 4 + 2] = PAL[i * 3 + 2];
       d[x * 4 + 3] = 255;
     }
-    ctx.putImageData(wf.img, 0, 0);
+    ctx.putImageData(T.img, 0, 0);
+    if (isB) return;
     periodMark(ctx, tday);
-    // RTTY : la même ligne descend aussi dans la cascade du décodeur B
-    if (tab === 'rtty' && wfB.ctx) {
+    // RTTY : la même ligne descend aussi dans la cascade du décodeur B (sauf si elle a sa propre voie, 0x14)
+    if (tab === 'rtty' && wfB.ctx && !rtDualAudio) {
       const b = wfB.ctx;
       b.drawImage(b.canvas, 0, 0, wfB.w, wfB.h - 1, 0, 1, wfB.w, wfB.h - 1);
       b.drawImage(ctx.canvas, 0, 0, wf.w, 1, 0, 0, wfB.w, 1);
@@ -3397,7 +3410,7 @@
       setInterval(() => {
         if (detached) return;
         if (tab === 'ftx' || tab === 'jt65') { clock(); status(); followBand(); }
-        if (tab === 'rtty') { status(); rtHeads(); }
+        if (tab === 'rtty') { status(); rtHeads(); if (dualAudioOn() !== rtDualAudio) showTab(tab); }
         if (BM_TABS.indexOf(tab) >= 0) { bmPlace(); bmDraw(); }
         if (tab === 'wspr') wsClock();
         if (tab === 'jtty') jtStatus();
@@ -3498,7 +3511,7 @@
       return false;
     },
     onBinary(bytes) {
-      if (bytes[0] === 0x10 || bytes[0] === 0x13) { onRow(bytes); return true; }
+      if (bytes[0] === 0x10 || bytes[0] === 0x13 || bytes[0] === 0x14) { onRow(bytes); return true; }
       if (bytes[0] === 0x11) { ssLine(bytes); return true; }
       return false;
     },

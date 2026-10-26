@@ -512,7 +512,7 @@ For transmitting, choose a clear spot in the waterfall. A white line marks the s
 <h3 id="rtty">12.3 RTTY</h3>
 <p>RTTY is radio "teletype": you type text that scrolls on the other station's screen. Widely used in contests.
 The tab has <b>two independent decoders</b>: <b>A</b> (VFO-A, left) and <b>B</b> (VFO-B, right), each with its own received text and settings.
-The FTX-1, FTDX10 and IC-7300 send a single audio stream to the PC (the FTDX101 too for now: splitting its two receivers is planned), so there is <b>one waterfall</b>, full width, carrying the markers of both decoders.
+The FTX-1, FTDX10 and IC-7300 send a single audio stream to the PC (the FTDX101 in single receive; in dual receive it sends both receivers in stereo: one waterfall per decoder, A = MAIN, B = SUB), so there is <b>one waterfall</b>, full width, carrying the markers of both decoders.
 You can follow two stations on the same band at once (contest, a DX and its pile-up). A transceiver that sends its two receivers separately (FTDX101D / MP) will get one waterfall per decoder, side by side.</p>
 <p>Above the waterfall, the help line (« clic gauche : décodeur A… ») is shown for <b>3 seconds</b> when you open the tab, then disappears to leave more room for the receive windows; it stays as a tooltip on the waterfall. The status line only appears when something is wrong (no audio, TRX not in DATA-U…).</p>
 <table>
@@ -793,6 +793,8 @@ start with Windows, no sleep; it can also install the server itself on that PC (
 <p>The Station page is <b>reserved for administrators</b>: the first time it is opened on a PC, log in with the callsign and password
 of an administrator. That PC then stays authorised for one year (renewed each time the page is opened), until « Se déconnecter » (log out). A non-administrator member is refused.
 The club PC's browser, which keeps the station token, also logs back in by itself.</p>
+<p>🔒 The <b>Jeton de la station</b> (station token), <b>Vitesse (bps)</b> (speed) and <b>Bits de stop</b> (stop bits) fields are <b>locked</b>, to avoid mistakes. Only <b>ON6DP</b> and <b>ON4LUC</b>, logged in to the Station page with their callsign and password, can change them: « Se déconnecter » (log out) at the top of the page, then log in again with that callsign. The list is set in <code>config.json</code> (<code>stationEditors</code>). Choosing the model, port and audio remains free.</p>
+<p><b>FTDX101D / MP</b>: USB audio in stereo (MAIN receiver on the left, SUB on the right). In dual receive (DUAL RX), the Station page sends both channels: in RTTY, decoder B reads the SUB receiver, with its own waterfall to the right of A's; listening gets the mix of both, as in headphones. In single receive, one waterfall, as on the other transceivers.</p>
 <ol>
   <li>Paste the <b>station token</b> (given by the server administrator), choose the TRX <b>model</b> and its <b>CAT port</b> (the first time). FTX-1: the <b>Enhanced COM Port</b> (CAT-1), and on the TRX the <b>RPTT SELECT</b> and <b>PC KEYING</b> settings at OFF (factory default): transmission is controlled through CAT.</li>
   <li><b>Activer l'audio</b> (enable audio) and choose the TRX sound input (often "USB Audio CODEC"); the level bar must move.</li>

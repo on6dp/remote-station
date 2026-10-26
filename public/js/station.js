@@ -421,12 +421,15 @@
   const aud = { ctx: null, stream: null, want: false, sent: 0, peak: 0 };
   const CAPTURE_WORKLET = `
     class RsCapture extends AudioWorkletProcessor {
-      constructor() { super(); this.buf = new Float32Array(480); this.n = 0; }
+      // Voie gauche (ou unique) ; voie droite gardée à part quand elle existe (FTDX101 : récepteur SUB)
+      constructor() { super(); this.buf = new Float32Array(480); this.bufR = new Float32Array(480); this.n = 0; }
       process(inputs) {
         const ch = inputs[0] && inputs[0][0];
+        const r = inputs[0] && inputs[0][1];
         if (ch) for (let i = 0; i < ch.length; i++) {
-          this.buf[this.n++] = ch[i];
-          if (this.n === 480) { this.port.postMessage(this.buf.slice(0)); this.n = 0; }
+          this.buf[this.n] = ch[i];
+          this.bufR[this.n] = r ? r[i] : 0;
+          if (++this.n === 480) { this.port.postMessage({ l: this.buf.slice(0), r: r ? this.bufR.slice(0) : null }); this.n = 0; }
         }
         return true;
       }
@@ -469,7 +472,8 @@
       }
       const deviceId = $('audDev').value;
       aud.stream = await navigator.mediaDevices.getUserMedia({
-        audio: Object.assign({ echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 },
+        // TRX à deux récepteurs avec son USB en stéréo (FTDX101 : MAIN à gauche, SUB à droite) : les deux voies
+        audio: Object.assign({ echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: RIG.DUAL_AUDIO ? 2 : 1 },
           deviceId ? { deviceId: { exact: deviceId } } : {})
       });
       const track = aud.stream.getAudioTracks()[0];
@@ -488,12 +492,15 @@
       src.connect(node);
       node.connect(mute).connect(aud.ctx.destination);
       node.port.onmessage = (e) => {
-        const buf = e.data;
+        const buf = e.data.l;
+        const bufR = RIG.DUAL_AUDIO ? e.data.r : null;
         let p = 0;
         for (let i = 0; i < buf.length; i++) { const a = Math.abs(buf[i]); if (a > p) p = a; }
+        if (bufR) for (let i = 0; i < bufR.length; i++) { const a = Math.abs(bufR[i]); if (a > p) p = a; }
         aud.peak = Math.max(p, aud.peak * 0.85);
         if (aud.want && ws && ws.readyState === 1 && ws.bufferedAmount < 65536) {
           ws.send(ULAW.encodePcm(buf));
+          if (bufR) ws.send(ULAW.encodePcm(bufR, 0x04)); // voie droite : récepteur SUB (décodage RTTY B, écoute en double réception)
           aud.sent++;
         }
       };

@@ -512,7 +512,7 @@ Choisissez pour l'émission un endroit libre de la cascade. Un trait blanc marqu
 <h3 id="rtty">12.3 RTTY</h3>
 <p>Le RTTY est le « télétype » : on tape du texte qui défile chez le correspondant. Très utilisé en concours.
 L'onglet a <b>deux décodeurs indépendants</b> : <b>A</b> (VFO-A, à gauche) et <b>B</b> (VFO-B, à droite), chacun avec son texte reçu et ses réglages.
-Le FTX-1, le FTDX10 et l'IC-7300 n'envoient qu'un seul son au PC (le FTDX101 aussi pour l'instant : la séparation de ses deux récepteurs est prévue) : il y a donc <b>une seule cascade</b>, sur toute la largeur, avec les repères des deux décodeurs.
+Le FTX-1, le FTDX10 et l'IC-7300 n'envoient qu'un seul son au PC (le FTDX101 en réception simple ; en double réception, il envoie ses deux récepteurs en stéréo : une cascade par décodeur, A = MAIN, B = SUB) : il y a donc <b>une seule cascade</b>, sur toute la largeur, avec les repères des deux décodeurs.
 On suit ainsi deux stations de la même bande en même temps (concours, DX et son pile-up). Un TRX qui envoie ses deux récepteurs séparément (FTDX101D / MP) aura une cascade par décodeur, côte à côte.</p>
 <p>Au-dessus de la cascade, la ligne d'aide (« clic gauche : décodeur A… ») s'affiche <b>3 secondes</b> à l'arrivée sur l'onglet puis s'efface, pour laisser plus de place aux fenêtres de réception ; elle reste au survol de la cascade. La ligne d'état n'apparaît qu'en cas de problème (pas de BF, TRX pas en DATA-U…).</p>
 <table>
@@ -793,6 +793,8 @@ lancement au démarrage de Windows, pas de mise en veille ; il peut aussi instal
 <p>La page Station est <b>réservée aux administrateurs</b> : à la première ouverture sur un PC, connectez-vous avec l'indicatif et le mot de passe
 d'un administrateur. Ce PC reste autorisé un an (renouvelé à chaque ouverture), jusqu'à « Se déconnecter ». Un membre non administrateur est refusé.
 Le navigateur du PC du club, qui garde le jeton de la station, se reconnecte aussi tout seul.</p>
+<p>🔒 Les champs <b>Jeton de la station</b>, <b>Vitesse (bps)</b> et <b>Bits de stop</b> sont <b>verrouillés</b>, pour éviter une fausse manœuvre. Seuls <b>ON6DP</b> et <b>ON4LUC</b>, connectés à la page Station avec leur indicatif et leur mot de passe, peuvent les modifier : « Se déconnecter » en haut de la page, puis se reconnecter avec cet indicatif. La liste se règle dans <code>config.json</code> (<code>stationEditors</code>). Le choix du modèle, du port, de l'audio reste libre.</p>
+<p><b>FTDX101D / MP</b> : son USB en stéréo (récepteur MAIN à gauche, SUB à droite). En double réception (DUAL RX), la page Station envoie les deux voies : en RTTY, le décodeur B lit le récepteur SUB, avec sa propre cascade à droite de celle de A ; l'écoute reçoit le mélange des deux, comme au casque. En réception simple, une seule cascade, comme sur les autres TRX.</p>
 <ol>
   <li>Coller le <b>jeton de station</b> (donné par l'administrateur du serveur), choisir le <b>modèle</b> du TRX et son <b>port CAT</b> (la première fois). FTX-1 : l'<b>Enhanced COM Port</b> (CAT-1), et sur le TRX les réglages <b>RPTT SELECT</b> et <b>PC KEYING</b> sur OFF (réglage d'usine) : l'émission se commande par CAT.</li>
   <li><b>Activer l'audio</b> et choisir l'entrée son du TRX (souvent « USB Audio CODEC ») ; la barre de niveau doit bouger.</li>

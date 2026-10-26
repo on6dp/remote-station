@@ -85,6 +85,7 @@
         <select id="cfgStop"><option value="1" selected>1</option><option value="2">2</option></select>
       </label>
     </form>
+    <p class="st-help" id="cfgLock" hidden>🔒 Jeton, vitesse et bits de stop verrouillés (pour éviter une fausse manœuvre). Pour les modifier : « Se déconnecter » en haut, puis se reconnecter avec l’indicatif ON6DP ou ON4LUC et son mot de passe.</p>
     <div class="st-actions">
       <button class="key" id="btnSave" type="button">Enregistrer et reconnecter</button>
     </div>
@@ -111,6 +112,16 @@
     if (!a || !a.call) return;
     document.getElementById('stAdminCall').textContent = a.call;
     document.getElementById('stAdmin').hidden = false;
+    // Jeton, vitesse et bits de stop : verrouillés sauf pour les indicatifs autorisés (stationEditors : ON6DP, ON4LUC)
+    if (!a.edit) {
+      for (const id of ['cfgToken', 'cfgBaud', 'cfgStop']) {
+        const el = document.getElementById(id);
+        el.disabled = true;
+        el.title = 'Verrouillé : seuls ON6DP et ON4LUC, connectés à cette page avec leur indicatif, peuvent le modifier';
+      }
+      const n = document.getElementById('cfgLock');
+      n.hidden = false;
+    }
   }).catch(() => {});
   document.getElementById('stLogout').closest('form').addEventListener('submit', (e) => {
     if (!confirm('Se déconnecter ? La page Station se ferme et la station passe hors ligne jusqu’à la prochaine connexion d’un administrateur.')) e.preventDefault();

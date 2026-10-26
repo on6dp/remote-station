@@ -535,3 +535,4 @@ button, input, select { font: inherit; color: inherit; }
 
 /* jeton masqué sans être un champ mot de passe */
 #cfgToken.masked { -webkit-text-security: disc; text-security: disc; }
+.st-form input:disabled, .st-form select:disabled { opacity: .5; cursor: not-allowed; }
