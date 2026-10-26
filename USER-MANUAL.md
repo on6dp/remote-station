@@ -526,34 +526,35 @@ Same window as FT8, but with one-minute periods; the TRX goes to the JT65 freque
 <a id="rtty"></a>
 ### 12.3 RTTY
 
-RTTY is radio "teletype": you type text that scrolls on the other station's screen. Widely used in contests. The tab has **two independent decoders**, side by side: **VFO-A** on the left and **VFO-B** on the right, each with its own waterfall, received text and settings. Both listen to the transceiver audio, so you can follow two stations on the same band at once (for example in a contest, or a DX and its pile-up).
+RTTY is radio "teletype": you type text that scrolls on the other station's screen. Widely used in contests. The tab has **two independent decoders**: **A** (VFO-A, left) and **B** (VFO-B, right), each with its own received text and settings. The FTX-1, FTDX10 and IC-7300 send a single audio stream to the PC, so there is **one waterfall**, full width, carrying the markers of both decoders. You can follow two stations on the same band at once (contest, a DX and its pile-up). A transceiver that sends its two receivers separately (FTDX101D / MP) will get one waterfall per decoder, side by side.
 
 | Control | What it does |
 |---|---|
-| Frequency list + `↺` | RTTY frequencies per band (at the top, shared by both decoders). |
-| Frequency (e.g. 14 086,5 kHz) | Next to VFO-A / VFO-B: frequency of the signal followed by this decoder: dial of the VFO being received + Mark / Space centre (− in LSB), handy for the log or a spot. In single receive (always the case with both VFOs on HF on the FTX-1), both decoders read the same receiver: both frequencies are computed from the VFO being received, shown in brackets, e.g. « 7 079,1 kHz (VFO A) ». VFO B is then not received. |
-| **Shift** (170, 200, 425, 850 Hz) | Spacing between the two tones of the signal. Amateur radio: 170 Hz. |
-| **Speed** (45,45 … 100 Bd) | Amateur radio: 45.45 baud. |
+| Frequency list + `↺` | RTTY frequencies per band; the transceiver goes there in DATA-U. |
+| **Bande** 3 kHz / 4 kHz (band) | Audio width shown. The transceiver only sends the audio after its filter: for 4 kHz also open its filter (BW 4.0K), otherwise the right edge stays black. It cannot go wider with these transceivers (their screen's scope does not go through USB). |
+| **Zoom** ×1 / ×2 / ×4 | As in MixW: the waterfall shows a narrower, more detailed range (×4: 750 Hz in the 3 kHz band), centred on the decoder marked TX; it moves by itself when that decoder gets near an edge. |
+| `SPLIT` | Receive on VFO A, transmit on VFO B (same command as SPLIT on the Step row). Lit in red: « SPLIT · TX sur B ». |
+| Waterfall scale | In **kHz**, real frequency (VFO dial + audio); the small white triangle marks the middle of the audio band. In **DATA-U** (the mode to use for RTTY) low frequencies are on the left; in LSB the scale is reversed and so is the RTTY transmission: switch to DATA-U. |
+| Markers on the waterfall | Decoder **A**: yellow (Mark) and blue (Space). Decoder **B**: magenta (Mark) and green (Space). The letter A or B is written next to them. |
+| Left click / right click | Left click on a signal: tune decoder **A** on it; right click: decoder **B**. |
+| Drag / mouse wheel on the waterfall | **Dragging** the waterfall left or right tunes the VFO (you "grab" the band, signals follow the mouse); **mouse wheel**: VFO ± 10 Hz per notch (± 100 Hz with `Shift`). Both decoders stay on their signals. You need control. |
+| Frequency (e.g. 7 074,9 kHz) | Next to VFO-A / VFO-B: frequency of the signal followed by this decoder (dial of the VFO being received + Mark / Space centre, − in LSB), handy for the log or a spot. In single receive (always the case with both VFOs on HF on the FTX-1), both decoders read the same receiver: their frequencies are computed from the VFO being received, shown in brackets, e.g. « 7 079,1 kHz (VFO A) ». |
+| **Shift** (170, 200, 425, 850 Hz) / **Speed** (45,45 … 100 Bd) | Amateur radio: 170 Hz and 45.45 baud. |
 | `Inversé` (reversed) | Swaps Mark and Space when the received text makes no sense (signal "upside down"). |
 | **Silencieux** (squelch) | Higher = fewer random characters on noise; too high and weak signals are no longer decoded. |
 | M / S indicator | The two bars should beat alternately when the decoder is tuned correctly. |
 | Centre … Hz | Audio frequency the decoder is tuned to. |
-| Waterfall scale | In **kHz**, real frequency (VFO dial + audio); the small white triangle marks the **centre** of the waterfall (1500 Hz audio). In **DATA-U** (the mode to use for RTTY) low frequencies are on the left; in LSB the scale is reversed and so is the RTTY transmission: switch to DATA-U. |
-| Drag / mouse wheel on a waterfall | **Dragging** the waterfall left or right tunes the VFO (you "grab" the band, signals follow the mouse); **mouse wheel**: VFO ± 10 Hz per notch (± 100 Hz with `Shift`). Both decoders stay on their signals. A simple click tunes the decoder. You need control. |
-| `⌖ Centrer` (centre) | Moves the VFO so that the signal followed by this decoder falls in the middle of the waterfall: its frequency does not change, it is simply centred in the passband (you need control). The other decoder stays on its signal if it is still in the waterfall. |
-| `TX` | Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): lit in red, with a red frame around that decoder. |
+| `⌖ Centrer` (centre) | Moves the VFO so that the signal followed by this decoder falls in the middle of the audio band (white triangle): its frequency does not change. The other decoder stays on its signal if it is still in the band. |
+| `TX` | Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): lit in red, red frame around the decoder. The zoom centres on it. |
 | `Effacer` (clear) | Clears the received text of this decoder. |
-| Vertical bar between the two | Drag it left or right: width of the two decoders (double-click: half and half). Kept in your browser. |
+| Vertical bar between the two texts | Drag it: width of the two decoders (double-click: half and half). |
 
-1. **Receive**: click a signal in the left waterfall to tune decoder A, in the right one for decoder B. The yellow (Mark) and blue (Space) markers should sit on the two traces of the signal. The text appears under each waterfall.
-2. **Double-click a received callsign** (left or right): it becomes the correspondent.
-3. **Choose the transmit decoder**: the `TX` button in its header. Your reply then goes out exactly on the frequency of the station that decoder follows.
-4. **Transmit**: type the text in the bottom box, then `Émettre` (transmit) (or `Ctrl`+`Enter`). The text goes out with the settings of the decoder marked TX, then the transceiver returns to receive. It appears in that decoder's received text, in grey, then each letter turns red as it is sent (« fin dans N s », ends in N s). While transmitting, the button becomes `■ Arrêter` (stop). 600 characters at most per transmission.
-5. **Macros** `F1` to `F12` (on one row, above the text): a click transmits at once; **Shift+click** adds the macro to the text without transmitting (section 13).
-6. `Effacer` (under the transmit button) clears the text to send; `Log QSO` opens the logbook form, already filled in with the frequency of the decoder marked TX.
-
-> [!NOTE]
-> The transceiver sends a single audio stream to the PC. Both decoders therefore read the same passband (about 3 kHz around the frequency of the VFO being received); that is why both waterfalls show the same spectrum. On the FTX-1 with DUAL RX, this audio mixes MAIN and SUB: decoder B can then follow a VFO-B signal, if its audio tone differs from the VFO-A one.
+1. **Receive**: left click on a signal for decoder A, right click for decoder B. The two markers should sit on the two traces of the signal. The text appears under the waterfall, A on the left, B on the right.
+2. **Double-click a received callsign**: it becomes the correspondent.
+3. **Choose the transmit decoder**: the `TX` button in its header; your reply goes out on the frequency of the station it follows.
+4. **Transmit**: text in the bottom box, then `Émettre` (transmit) (or `Ctrl`+`Enter`). The text goes out with the settings of the decoder marked TX (and on VFO B if SPLIT is on), then the transceiver returns to receive. It appears in grey in that decoder's received text, then each letter turns red as it is sent. While transmitting the button becomes `■ Arrêter` (stop). 600 characters at most; transmit audio frequency between 300 and 2800 Hz.
+5. **Macros** `F1` to `F12`: a click transmits at once; **Shift+click** adds the macro to the text without transmitting (section 13).
+6. `Effacer` (under the transmit button) clears the text to send; `Log QSO` opens the logbook form, with the frequency of the decoder marked TX.
 
 <a id="wspr"></a>
 ### 12.4 WSPR

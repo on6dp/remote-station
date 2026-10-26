@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.69** — RTTY : une seule cascade sur toute la largeur pour les deux décodeurs (le TRX n’envoie qu’un son), repères A jaune / bleu et B magenta / vert, clic gauche = décodeur A, clic droit = décodeur B ; largeur de bande 3 ou 4 kHz (4 kHz : ouvrir le filtre du TRX) ; zoom ×1 / ×2 / ×4 centré sur le décodeur de l’émission (comme MixW) ; bouton SPLIT dans l’onglet. La présentation à deux cascades reste prévue pour un TRX à deux récepteurs séparés (FTDX101D / MP). Redémarrer le service puis Ctrl+F5.
 - **0.22.68** — Correctif : après un passage par les onglets CW, SSTV, WSPR ou JTTY, la cascade du décodeur RTTY B pouvait être déplacée dans l’onglet suivant (échelle RTTY dans l’onglet FT8, plus de cascade à droite en RTTY). Ctrl+F5 sur le dashboard suffit.
 - **0.22.67** — RTTY : glisser une cascade à gauche ou à droite accorde le VFO (la bande suit la souris), molette : VFO ± 10 Hz par cran (± 100 Hz avec Maj) ; les deux décodeurs restent calés sur leurs signaux. Un simple clic cale toujours le décodeur. Ctrl+F5 sur le dashboard suffit.
 - **0.22.66** — RTTY : fréquence du signal suivi corrigée en LSB / DATA-L (porteuse − audio) ; en réception simple, la fréquence des deux décodeurs est rapportée au VFO réellement écouté et le précise « (VFO A) » (explication au survol) ; Log QSO reprend cette même fréquence. Ctrl+F5 sur le dashboard suffit.

@@ -526,34 +526,35 @@ Même fenêtre que FT8, mais avec des périodes d'une minute ; le TRX va sur la 
 <a id="rtty"></a>
 ### 12.3 RTTY
 
-Le RTTY est le « télétype » : on tape du texte qui défile chez le correspondant. Très utilisé en concours. L'onglet a **deux décodeurs indépendants**, côte à côte : **VFO-A** à gauche et **VFO-B** à droite, chacun avec sa cascade, son texte reçu et ses réglages. Ils écoutent tous les deux la BF du TRX : on peut ainsi suivre deux stations de la même bande en même temps (par exemple en concours, ou un DX et son pile-up).
+Le RTTY est le « télétype » : on tape du texte qui défile chez le correspondant. Très utilisé en concours. L'onglet a **deux décodeurs indépendants** : **A** (VFO-A, à gauche) et **B** (VFO-B, à droite), chacun avec son texte reçu et ses réglages. Le FTX-1, le FTDX10 et l'IC-7300 n'envoient qu'un seul son au PC : il y a donc **une seule cascade**, sur toute la largeur, avec les repères des deux décodeurs. On suit ainsi deux stations de la même bande en même temps (concours, DX et son pile-up). Un TRX qui envoie ses deux récepteurs séparément (FTDX101D / MP) aura une cascade par décodeur, côte à côte.
 
 | Commande | Ce qu'elle fait |
 |---|---|
-| Liste des fréquences + `↺` | Fréquences RTTY par bande (en haut, commune aux deux décodeurs). |
-| Fréquence (ex. 14 086,5 kHz) | À côté de VFO-A / VFO-B : fréquence du signal suivi par ce décodeur : porteuse du VFO écouté + centre Mark / Space (− en LSB), utile pour le carnet ou un spot. En réception simple (toujours le cas avec deux VFO en HF sur le FTX-1), les deux décodeurs lisent le même récepteur : leurs fréquences sont toutes deux calculées sur le VFO écouté, indiqué entre parenthèses, par ex. « 7 079,1 kHz (VFO A) ». Le VFO-B n'est alors pas écouté. |
-| **Shift** (170, 200, 425, 850 Hz) | Écart entre les deux tonalités du signal. Radioamateurs : 170 Hz. |
-| **Vitesse** (45,45 … 100 Bd) | Radioamateurs : 45,45 bauds. |
+| Liste des fréquences + `↺` | Fréquences RTTY par bande ; le TRX y va en DATA-U. |
+| **Bande** 3 kHz / 4 kHz | Largeur audio affichée. Le TRX n'envoie que le son après son filtre : pour 4 kHz, ouvrez aussi son filtre (BW 4.0K), sinon le bord droit reste noir. Impossible d'aller au-delà avec ces TRX (le scope de leur écran ne passe pas par l'USB). |
+| **Zoom** ×1 / ×2 / ×4 | Comme MixW : la cascade montre une plage plus étroite et plus détaillée (×4 : 750 Hz en bande 3 kHz), centrée sur le décodeur marqué TX ; elle se déplace toute seule quand il s'approche d'un bord. |
+| `SPLIT` | Réception sur le VFO A, émission sur le VFO B (même commande que SPLIT de la ligne Step). Allumé en rouge : « SPLIT · TX sur B ». |
+| Échelle de la cascade | En **kHz**, fréquence réelle (porteuse du VFO + audio) ; le petit triangle blanc marque le milieu de la bande audio. En **DATA-U** (mode à utiliser en RTTY), les fréquences basses sont à gauche ; en LSB, l'échelle est inversée et l'émission RTTY aussi : passez en DATA-U. |
+| Repères sur la cascade | Décodeur **A** : jaune (Mark) et bleu (Space). Décodeur **B** : magenta (Mark) et vert (Space). La lettre A ou B est écrite à côté. |
+| Clic gauche / clic droit | Clic gauche sur un signal : y caler le décodeur **A** ; clic droit : le décodeur **B**. |
+| Glisser / molette sur la cascade | **Glisser** la cascade à gauche ou à droite accorde le VFO (on « attrape » la bande, les signaux suivent la souris) ; **molette** : VFO ± 10 Hz par cran (± 100 Hz avec `Maj`). Les deux décodeurs restent calés sur leurs signaux. Il faut avoir la main. |
+| Fréquence (ex. 7 074,9 kHz) | À côté de VFO-A / VFO-B : fréquence du signal suivi par ce décodeur (porteuse du VFO écouté + centre Mark / Space, − en LSB), utile pour le carnet ou un spot. En réception simple (toujours le cas avec deux VFO en HF sur le FTX-1), les deux décodeurs lisent le même récepteur : leurs fréquences sont calculées sur le VFO écouté, indiqué entre parenthèses, par ex. « 7 079,1 kHz (VFO A) ». |
+| **Shift** (170, 200, 425, 850 Hz) / **Vitesse** (45,45 … 100 Bd) | Radioamateurs : 170 Hz et 45,45 bauds. |
 | `Inversé` | Échange Mark et Space si le texte reçu n'a aucun sens (signal « à l'envers »). |
 | **Silencieux** | Plus haut = moins de caractères au hasard sur le bruit ; trop haut, les signaux faibles ne sont plus décodés. |
 | Indicateur M / S | Les deux barres doivent battre en alternance quand le décodeur est bien calé. |
 | Centre … Hz | Fréquence audio où le décodeur est calé. |
-| Échelle de la cascade | En **kHz**, fréquence réelle (porteuse du VFO + audio) ; le petit triangle blanc marque le **centre** de la cascade (1500 Hz audio). En **DATA-U** (mode à utiliser en RTTY), les fréquences basses sont à gauche ; en LSB, l'échelle est inversée et l'émission RTTY aussi : passez en DATA-U. |
-| Glisser / molette sur une cascade | **Glisser** la cascade à gauche ou à droite accorde le VFO (on « attrape » la bande, les signaux suivent la souris) ; **molette** : VFO ± 10 Hz par cran (± 100 Hz avec `Maj`). Les deux décodeurs restent calés sur leurs signaux. Un simple clic, lui, cale le décodeur. Il faut avoir la main. |
-| `⌖ Centrer` | Déplace le VFO pour que le signal suivi par ce décodeur tombe au milieu de la cascade : sa fréquence ne change pas, il est simplement centré dans la bande passante (il faut avoir la main). L'autre décodeur reste calé sur son signal s'il est encore dans la cascade. |
-| `TX` | Choisit le décodeur dont les réglages servent à l'émission (fréquence audio, shift, vitesse) : allumé en rouge, avec un cadre rouge autour du décodeur. |
+| `⌖ Centrer` | Déplace le VFO pour que le signal suivi par ce décodeur tombe au milieu de la bande audio (triangle blanc) : sa fréquence ne change pas. L'autre décodeur reste calé sur son signal s'il est encore dans la bande. |
+| `TX` | Choisit le décodeur dont les réglages servent à l'émission (fréquence audio, shift, vitesse) : allumé en rouge, cadre rouge autour du décodeur. Le zoom se centre sur lui. |
 | `Effacer` | Vide le texte reçu de ce décodeur. |
-| Trait vertical entre les deux | À glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié). Réglage gardé dans votre navigateur. |
+| Trait vertical entre les deux textes | À glisser : largeur des deux décodeurs (double-clic : moitié-moitié). |
 
-1. **Recevoir** : cliquez sur un signal dans la cascade de gauche pour y caler le décodeur A, dans celle de droite pour le décodeur B. Les repères jaune (Mark) et bleu (Space) doivent tomber sur les deux traces du signal. Le texte s'affiche sous chaque cascade.
-2. **Double-clic sur un indicatif** reçu (à gauche ou à droite) : il devient le correspondant.
-3. **Choisir le décodeur de l'émission** : bouton `TX` de son en-tête. Votre réponse part ainsi exactement sur la fréquence de la station que ce décodeur suit.
-4. **Émettre** : tapez le texte dans la zone du bas, puis `Émettre` (ou `Ctrl`+`Entrée`). Le texte part avec les réglages du décodeur marqué TX, puis le TRX repasse en réception. Il s'affiche dans la réception de ce décodeur, en gris, puis chaque lettre passe en rouge au moment où elle part (« fin dans N s »). Pendant l'émission, le bouton devient `■ Arrêter`. 600 caractères au plus par envoi.
-5. **Macros** `F1` à `F12` (sur une ligne, au-dessus du texte) : un clic émet tout de suite ; **Maj+clic** ajoute la macro au texte sans émettre (section 13).
-6. `Effacer` (sous le bouton Émettre) vide le texte à émettre ; `Log QSO` ouvre la fiche du carnet, déjà remplie avec la fréquence du décodeur marqué TX.
-
-> [!NOTE]
-> Le TRX n'envoie qu'un seul son au PC. Les deux décodeurs lisent donc la même bande passante (environ 3 kHz autour de la fréquence du VFO qu'on écoute) ; c'est pourquoi les deux cascades montrent le même spectre. Sur le FTX-1 en DUAL RX, ce son mélange MAIN et SUB : le décodeur B peut alors suivre un signal du VFO-B, si sa tonalité audio est différente de celle du VFO-A.
+1. **Recevoir** : clic gauche sur un signal pour le décodeur A, clic droit pour le décodeur B. Les deux repères doivent tomber sur les deux traces du signal. Le texte s'affiche sous la cascade, A à gauche, B à droite.
+2. **Double-clic sur un indicatif** reçu : il devient le correspondant.
+3. **Choisir le décodeur de l'émission** : bouton `TX` de son en-tête ; votre réponse part sur la fréquence de la station qu'il suit.
+4. **Émettre** : texte dans la zone du bas, puis `Émettre` (ou `Ctrl`+`Entrée`). Le texte part avec les réglages du décodeur marqué TX (et sur le VFO B si SPLIT est allumé), puis le TRX repasse en réception. Il s'affiche en gris dans la réception de ce décodeur, puis chaque lettre passe en rouge au moment où elle part. Pendant l'émission, le bouton devient `■ Arrêter`. 600 caractères au plus ; fréquence audio d'émission entre 300 et 2800 Hz.
+5. **Macros** `F1` à `F12` : un clic émet tout de suite ; **Maj+clic** ajoute la macro au texte sans émettre (section 13).
+6. `Effacer` (sous Émettre) vide le texte à émettre ; `Log QSO` ouvre la fiche du carnet, avec la fréquence du décodeur marqué TX.
 
 <a id="wspr"></a>
 ### 12.4 WSPR

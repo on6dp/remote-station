@@ -300,7 +300,7 @@ function rttyCfg(r) {
   const shift = [170, 200, 425, 850].indexOf(Number(r.shift)) >= 0 ? Number(r.shift) : 170;
   const baud = [45.45, 50, 75, 100].indexOf(Number(r.baud)) >= 0 ? Number(r.baud) : 45.45;
   const squelch = Math.max(4, Math.min(25, Math.round(Number(r.squelch) || 12)));
-  if (!(f >= 200 && f <= 2900)) return null;
+  if (!(f >= 200 && f <= 3900)) return null;
   const c = { f, shift, baud, rev: !!r.rev, squelch };
   c.key = [f, shift, baud, c.rev ? 1 : 0, squelch].join('/');
   return c;
