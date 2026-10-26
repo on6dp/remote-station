@@ -3248,8 +3248,10 @@
     api.setFreq(Math.round(khz * 1000), 'A', true);
     // Mode DATA-U (Yaesu) / USB-D (Icom) : le filtre et la sortie audio conviennent aux modes numériques
     const R = api.rig();
+    // CW : côté bas (CW-L ; CW-R sur Icom) sous 10 MHz, côté haut (CW-U ; CW sur Icom) au-dessus — comme la phonie
     const mk = want === 'CW'
-      ? (R.MODE_KEYS || []).find((x) => /^(CW-U|CW|CW-USB)$/i.test(x[1]))
+      ? (khz < 10000 ? (R.MODE_KEYS || []).find((x) => /^(CW-L|CW-R|CW-LSB)$/i.test(x[1])) : null)
+        || (R.MODE_KEYS || []).find((x) => /^(CW-U|CW|CW-USB)$/i.test(x[1]))
       : (R.MODE_KEYS || []).find((x) => /^(DATA-U|USB-D|D-U|USB-DATA)$/i.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
     if (mk) {
       // Changement de bande : certains TRX (FTX-1) rappellent ensuite le mode mémorisé de la bande, par-dessus le nôtre.
