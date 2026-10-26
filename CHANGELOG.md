@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.78** — Menu de taille : l’agrandissement déjà fait par Windows (échelle d’affichage 125 %, 150 %…) ou par Chrome est affiché, avec le total obtenu avec Auto ; plus d’exemples de résolution trompeurs à côté des tailles. Ctrl+F5 sur le dashboard suffit.
 - **0.22.77** — Menu de taille du dashboard plus large : chaque taille sur une seule ligne. Ctrl+F5 sur le dashboard suffit.
 - **0.22.76** — Menu de taille du dashboard : en haut, l’écran du PC et la taille choisie par Auto (la hauteur décide : 2560 × 1080 reste à 100 %) ; les résolutions affichées à côté de 100 / 133 / 200 % sont des exemples (« pour 2560 × 1440 »). Ctrl+F5 sur le dashboard suffit.
 - **0.22.75** — Taille du dashboard : choix de 50 % à 200 % (67 % : tout voir sur un portable) ; les tailles plus grandes que l’écran restent permises (en gris dans le menu). Ctrl+F5 sur le dashboard suffit.

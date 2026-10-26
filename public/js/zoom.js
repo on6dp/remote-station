@@ -45,10 +45,15 @@
     const mx = maxZoom();
     const inf = document.getElementById('zoomInfo');
     if (inf) {
-      const sw = Math.round(window.screen.width * (window.devicePixelRatio || 1)), sh = Math.round(window.screen.height * (window.devicePixelRatio || 1));
+      // devicePixelRatio = mise à l'échelle de Windows (Paramètres › Affichage › Échelle) × zoom de Chrome (Ctrl + / Ctrl −)
+      const dpr = window.devicePixelRatio || 1;
+      const sw = Math.round(window.screen.width * dpr), sh = Math.round(window.screen.height * dpr);
       const za = Math.round(Math.max(1, Math.min(autoZoom(), mx)) * 100);
-      inf.textContent = 'Votre écran : ' + sw + ' × ' + sh + ' · Auto = ' + za + ' %'
-        + (za === 100 && sh <= 1200 ? ' (la hauteur décide : ' + sh + ' de haut, comme un écran 1920 × 1080)' : '');
+      const win = Math.round(dpr * 100);
+      let t = 'Votre écran : ' + sw + ' × ' + sh + '.';
+      if (win > 102) t += ' Windows (échelle d’affichage) ou Chrome agrandit déjà à ' + win + ' % ; Auto ajoute ' + za + ' %, soit environ ' + Math.round(win * za / 100) + ' % en tout.';
+      else t += ' Auto = ' + za + ' %' + (za === 100 && sh <= 1200 ? ' (la hauteur décide : ' + sh + ' de haut, comme un écran 1920 × 1080).' : '.');
+      inf.textContent = t;
     }
     m.querySelectorAll('button').forEach((x) => {
       x.setAttribute('aria-checked', String(x.dataset.z === String(pref)));
@@ -87,7 +92,7 @@
     info.id = 'zoomInfo';
     m.appendChild(info);
     add('auto', 'Auto', 'adaptée à l’écran');
-    for (const z of CHOICES) add(z, Math.round(z * 100) + ' %', z === 1 ? 'pour 1920 × 1080' : z === 1.33 ? 'pour 2560 × 1440' : z === 2 ? 'pour 4K (3840 × 2160)' : z === 0.67 ? 'portable : tout voir' : '');
+    for (const z of CHOICES) add(z, Math.round(z * 100) + ' %', z === 1 ? 'taille d’origine' : z === 0.67 ? 'portable : tout voir' : '');
     const btn = wrap.querySelector('#zoomBtn');
     const show = (on) => { m.hidden = !on; btn.setAttribute('aria-expanded', String(on)); if (on) label(); };
     btn.addEventListener('click', (e) => { e.stopPropagation(); show(m.hidden); });
