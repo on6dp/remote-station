@@ -2741,7 +2741,8 @@
   function cwSend(text, zone) {
     if (!api) return;
     const st = api.state();
-    if (st && (st.cw || st.ftx || (st.ptt && st.ptt.active))) return api.say('Émission en cours : attendez la fin (ou « ■ Arrêter »).', 'warn');
+    // Émission CW en cours : le nouveau message la remplace (le serveur l'arrête et lance le nouveau)
+    if (st && (st.ftx || (st.ptt && st.ptt.active))) return api.say('Émission en cours : attendez la fin (ou « ■ Arrêter »).', 'warn');
     if (!api.iControl()) return api.say('Prenez la main pour émettre.', 'warn');
     cwZone = zone;
     api.send({ t: 'cw', text: String(text).replace(/\n/g, ' '), wpm: Number(store.get('cwspeed', '22')) || 22 });

@@ -128,6 +128,7 @@
         if (this.subWait && typeof t === 'string') this._subReply(t);
         if (this.waitRe && typeof t === 'string' && this.waitRe.re.test(t)) { const w = this.waitRe; this.waitRe = null; clearTimeout(w.timer); w.cb(t); }
         if (this.cwRe && typeof t === 'string' && this.cwRe.re.test(t)) this.cwRe.cb(t);
+        if (this.cw && this.rig.CW && this.rig.CW.poRe && typeof t === 'string') { const mm = this.rig.CW.poRe.exec(t); if (mm) this.cwPo = +mm[1]; }
         const p = FTX1.parse(t);
         if (p && p.error && this.cwWatch) this.cwWatch.errs++;
         if (!p) {
@@ -842,7 +843,7 @@
       const CW = this.rig.CW;
       if (!CW) return this._cwSay(m.id, 'error', 'émission CW par le CAT non prévue sur ce TRX');
       if (!this.serialOpen || !this.radio.connected) return this._cwSay(m.id, 'error', 'TRX non connecté');
-      if (this.catKeyed || this.radio.tx) return this._cwSay(m.id, 'error', 'le TRX est déjà en émission');
+      if (this.catKeyed || (this.radio.tx && !this.cw)) return this._cwSay(m.id, 'error', 'le TRX est déjà en émission'); // en CW : remplacement
       if (this.cw) this._cwStop('nouveau message', false);
       const text = String(m.text || '').toUpperCase().replace(/[^A-Z0-9 /?.,=+-]/g, ' ').replace(/\s+/g, ' ').trim();
       if (!text) return this._cwSay(m.id, 'error', 'rien à émettre');
@@ -857,7 +858,7 @@
         rest = rest.slice(cut).trim();
       }
       if (rest) chunks.push(rest);
-      const job = { id: m.id, timer: null };
+      const job = { id: m.id, timer: null, t0: Date.now() };
       this.cw = job;
       this.lastCtl = null; // l'émission qui suit est voulue : pas la sécurité « émission après un réglage »
       this.log('CW (' + (m.by || '?') + ') à ' + wpm + ' mots/min : « ' + text.slice(0, 70) + (text.length > 70 ? '…' : '') + ' »');
@@ -886,7 +887,10 @@
       const CW = this.rig.CW;
       const K = this.keyer;
       job.dtr = true;
-      for (const c of CW.dtr.on) { await this._cwSend(job, c); if (this.cw !== job) return; } // « ? » = déjà réglé : sans importance
+      // Commandes une à une, 50 ms d'écart (« ? » = déjà réglé : sans importance, pas d'attente de réponse)
+      for (const c of CW.dtr.on) { this._write(c, true); await this._cwSleep(job, 50); if (this.cw !== job) return; }
+      await this._cwSleep(job, 60);
+      if (this.cw !== job) return;
       await K.set(false);
       // Suite des états : [manipulé, durée en points]
       const seq = [];
@@ -919,7 +923,7 @@
           const t0 = Date.now();
           const check = () => {
             if (this.cw !== job) return;
-            if (this.radio.tx) { this._cwSay(job.id, 'tx'); return; }
+            if (this.radio.tx) { this._cwSay(job.id, 'tx'); this._cwInfo(job, 'en émission ' + ((Date.now() - job.t0) / 1000).toFixed(1).replace('.', ',') + ' s après la demande (DTR)'); return; }
             if (Date.now() - t0 > 2500) return this._cwFail(job, 'le TRX ne passe pas en émission par DTR (menu PC KEYING sur DTR ? break-in en service ? mode CW ?)');
             setTimeout(check, 150);
           };
@@ -983,19 +987,22 @@
           }
           C.mem = c;
         }
-        // Lecture de la mémoire : essai réel au club (FTX-1), le texte ne partait qu'au 2e ou 3e clic — le TRX a besoin
-        // d'un moment pour ranger la mémoire, et ignore parfois la 1re lecture. On attend donc un peu, puis on relance la
-        // lecture (jusqu'à 4 fois, avec l'autre forme si l'une est refusée) tant qu'il n'est pas passé en émission.
+        // Lecture de la mémoire. Essais au club (FTX-1) : la 1re lecture semble parfois ignorée, et l'état d'émission
+        // (TX;) n'est peut-être pas signalé pendant la manipulation par break-in. On guette donc aussi la puissance
+        // émise (RM5), on relance la lecture une seule fois (chaque lecture recommence le message), et faute de
+        // confirmation on laisse jouer au lieu de couper : la lecture n'est arrêtée que sur demande.
         const plays = CW.play ? [CW.play].concat(CW.alt) : [CW.text(c)];
         if (CW.mem && !same) { await this._cwSleep(job, 350); if (this.cw !== job) return; }
+        const isTx = () => !!this.radio.tx || this.cwPo > 0;
         const refused = new Set();
         let pi = Math.max(0, plays.indexOf(this.cwPlayOk));
         let keyed = false;
-        let accepted = false;
-        for (let a = 0; a < 4 && !keyed; a++) {
+        let accepted = 0;
+        for (let a = 0; a < plays.length + 2 && !keyed && accepted < 2; a++) {
           let pc = plays[pi % plays.length];
           for (let g = 0; g < plays.length && refused.has(pc); g++) pc = plays[++pi % plays.length];
           if (refused.has(pc)) break;
+          this.cwPo = 0;
           if (!(await this._cwSend(job, pc))) {
             if (this.cw !== job) return;
             refused.add(pc);
@@ -1004,20 +1011,26 @@
             continue;
           }
           if (this.cw !== job) return;
-          accepted = true;
-          if (i === 0 && a === 0) this._cwInfo(job, 'lecture « ' + this._cwLabel(pc) + ' » acceptée par le TRX, attente de l’émission…');
+          accepted++;
+          if (i === 0 && accepted === 1) this._cwInfo(job, 'lecture « ' + this._cwLabel(pc) + ' » acceptée par le TRX, attente de l’émission…');
           if (i > 0) { keyed = true; break; } // morceaux suivants : le TRX est déjà en émission (break-in)
-          // État d'émission demandé directement au TRX (toutes les 100 ms) pour annoncer l'émission sans attendre le relevé
+          // État d'émission et puissance demandés directement au TRX toutes les 100 ms
           let k = 0;
-          while (!this.radio.tx && k++ < 12) { if (CW.txPoll) this._write(CW.txPoll, true); await this._cwSleep(job, 100); if (this.cw !== job) return; }
-          if (this.radio.tx) { keyed = true; this.cwPlayOk = pc; if (a > 0) this._cwInfo(job, 'émission partie au ' + (a + 1) + 'e essai de lecture'); break; }
-          if (a < 3) this._cwInfo(job, 'pas encore d’émission, nouvelle lecture…', 'st-warn');
-          if (a === 0 && CW.mem) { C.wpm = null; for (const c2 of CW.setup(wpm)) { await this._cwSend(job, c2); if (this.cw !== job) return; } C.wpm = wpm; } // break-in coupé sur le TRX ?
+          while (!isTx() && k++ < 16) { if (CW.txPoll) this._writeList(CW.txPoll, true); await this._cwSleep(job, 100); if (this.cw !== job) return; }
+          if (isTx()) {
+            keyed = true; this.cwPlayOk = pc;
+            this._cwInfo(job, 'en émission ' + ((Date.now() - job.t0) / 1000).toFixed(1).replace('.', ',') + ' s après la demande' + (accepted > 1 ? ' (2e lecture)' : '') + (same ? ', mémoire déjà prête' : ''));
+            break;
+          }
+          if (accepted === 1) {
+            this._cwInfo(job, 'émission non signalée par le TRX, 2e lecture…', 'st-warn');
+            if (CW.mem) { for (const c2 of CW.setup(wpm)) { await this._cwSend(job, c2); if (this.cw !== job) return; } } // break-in coupé sur le TRX ?
+          }
         }
         if (this.cw !== job) return;
-        if (!accepted) return this._cwFail(job, 'le TRX a refusé la lecture de la mémoire (' + plays.map((x) => '« ' + this._cwLabel(x) + ' »').join(', ') + ')');
+        if (!accepted) return this._cwFail(job, 'le TRX a refusé la lecture de la mémoire (' + plays.map((x) => '« ' + this._cwLabel(x) + ' »').join(', ') + ') — menu PC KEYING du TRX sur OFF ? mode CW ?');
         if (i === 0) {
-          if (!keyed) return this._cwFail(job, 'le TRX n’est pas passé en émission après 4 lectures (vérifier sur le TRX : break-in en service, mode CW ; ou manipulation par DTR, page Station)');
+          if (!keyed) this._cwInfo(job, 'le TRX ne signale pas l’émission par le CAT ; lecture laissée en cours (vérifier sur le TRX qu’il émet ; sinon break-in, mode CW, ou manipulation par DTR)', 'st-warn');
           this._cwSay(job.id, 'tx');
         }
         // Fin estimée du morceau, puis retour en réception (délai du break-in) avant le suivant
@@ -1034,7 +1047,7 @@
     }
     _cwStop(reason, fromServer) {
       const job = this.cw;
-      this.cwCache = null;
+      if (reason !== 'nouveau message') this.cwCache = null; // remplacement : réglages et mémoire gardés
       this.cw = null;
       if (job) clearTimeout(job.timer);
       // Manipulation DTR : clé relâchée tout de suite, PC KEYING remis sur OFF

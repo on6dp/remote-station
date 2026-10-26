@@ -340,7 +340,7 @@
             this.t += 0.15;
             const v = this.tx ? 0 : Math.round(70 + 45 * Math.sin(this.t) + 20 * Math.random());
             out.push('SM0' + pad(Math.max(0, Math.min(255, v)), 3) + ';');
-          } else if (c === 'TX') out.push('TX' + this.tx + ';');
+          } else if (c === 'TX') out.push('TX' + (this.cwTxHidden && this.cwPlay ? 0 : this.tx) + ';'); // essai : TX0 pendant le break-in
           else if (c === 'TX1') { this.tx1n = (this.tx1n || 0) + 1; if (!(this.loseTx1 && this.loseTx1(this.tx1n))) this.tx = 1; }
           else if (c === 'TX0') this.tx = 0;
           else if (c === 'FT') out.push('FT' + (spec.splitIsFT ? this.txv || 0 : this.split ? 1 : 0) + ';');
@@ -436,7 +436,7 @@
         play: spec.cw.play, alt: spec.cw.alt || [],
         stop: () => spec.cw.stop.match(/[^;]+;/g),
         dtr: spec.cw.dtr || null,
-        txPoll: 'TX;'
+        txPoll: ['TX;', 'RM5;'], poRe: /^RM5(\d{3})/
       } : null,
       GROUPS: [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']],
       CONTROLS, CONTROL, validate, widthTable, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,

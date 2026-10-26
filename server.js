@@ -1234,6 +1234,9 @@ function cwRequest(conn, m) {
       (conn.user.admin ? 'rechargez-la (voyant STATION → « Recharger la page Station »).' : 'un administrateur doit la recharger.'));
   }
   if (!rig().CW) return err('Émission CW par le CAT pas encore prévue sur le ' + rig().NAME);
+  // Nouveau message de l'opérateur pendant un message CW (ou un message dont le TRX n'a pas confirmé l'émission) :
+  // il remplace le précédent ; la page Station arrête la lecture en cours avant de lancer le nouveau
+  if (cwJob && cwJob.conn === conn) cwEnd('', true);
   if (cwJob) return err('Émission CW déjà en cours : attendez la fin (ou « ■ Arrêter »)');
   if (ptt.active || ftxPend) return err('Émission déjà en cours ou prévue : attendez la fin');
   if (seq && seq.on) return err('Émission automatique FT8 / FT4 / FT2 en cours : arrêtez-la d’abord');
