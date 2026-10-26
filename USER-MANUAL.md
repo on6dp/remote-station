@@ -632,7 +632,7 @@ WSPR is used to study propagation: low-power beacons transmit their callsign, lo
 | LED and level bar | Follow the keying: the LED flashes in time with the Morse when the decoder is properly locked. |
 | Tonalité / Vitesse (tone / speed) | Audio frequency being tracked and measured speed (words per minute). |
 
-- **Click a signal** in the waterfall: the decoder locks onto the nearest signal and learns its speed. Right click: exact tuning where you click.
+- **Click a signal** in the waterfall: the decoder locks onto the nearest signal and learns its speed. Right click: exact tuning where you click. **Left button held** while dragging: the yellow decoder marker follows the mouse **continuously** (decoding follows during the move) and stays exactly where you release, like the RTTY bars.
 - Double-click a received callsign = correspondent; `Log QSO` opens the logbook form.
 
 <a id="sstv"></a>

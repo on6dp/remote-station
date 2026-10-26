@@ -287,7 +287,7 @@
     <div class="dg-wf-slot" data-slot="cw"></div>
     <div class="rt-grid rt-stack">
       <div class="dg-col rt-rx-col">
-        <div class="dg-h"><span>Réception CW</span><span class="dg-note">clic sur la cascade : se caler sur le signal le plus proche · double-clic sur un indicatif : le reprendre</span><button class="dg-mini" type="button" id="cwClear">Effacer</button></div>
+        <div class="dg-h"><span>Réception CW</span><span class="dg-note">clic sur la cascade : se caler sur le signal le plus proche · bouton gauche maintenu : glisser le repère · double-clic sur un indicatif : le reprendre</span><button class="dg-mini" type="button" id="cwClear">Effacer</button></div>
         <pre class="rt-rx" id="cwRx"></pre>
       </div>
       <div class="dg-col rt-tx-col">
@@ -1021,6 +1021,48 @@
       el.addEventListener('pointercancel', end);
     }
   }
+  // CW : bouton gauche maintenu sur la cascade = le repère du décodeur suit la souris en continu (le décodage suit) ;
+  // un simple clic garde son effet (se caler sur le signal le plus proche)
+  let cwDragged = false;
+  function cwDragInit(ids) {
+    let mk = null;
+    for (const id of ids) {
+      const el = $(id);
+      const fOf = (e) => {
+        const rc = el.getBoundingClientRect();
+        return WF_LO + Math.max(0, Math.min(1, (e.clientX - rc.left) / (rc.width || 1))) * WF_MAX_HZ;
+      };
+      el.addEventListener('pointerdown', (e) => {
+        if (tab !== 'cw' || e.button !== 0 || e.shiftKey) return;
+        mk = { el, id: e.pointerId, x: e.clientX, moved: false, t: 0 };
+        cwDragged = false;
+        try { el.setPointerCapture(e.pointerId); } catch (err) { /* */ }
+      });
+      el.addEventListener('pointermove', (e) => {
+        if (!mk || mk.el !== el || mk.id !== e.pointerId) return;
+        if (!mk.moved && Math.abs(e.clientX - mk.x) < 3) return; // petit tremblement : reste un clic
+        mk.moved = true;
+        el.style.cursor = 'ew-resize';
+        cwc.f = Math.max(200, Math.min(2800, Math.round(fOf(e))));
+        drawScale();
+        const now = Date.now();
+        if (now - mk.t > 150) { mk.t = now; saveCw(true); } // le décodeur du serveur suit pendant le glisser
+      });
+      const end = (e) => {
+        if (!mk || mk.el !== el) return;
+        if (mk.moved) {
+          cwc.f = Math.max(200, Math.min(2800, Math.round(fOf(e))));
+          saveCw(true);
+          drawScale();
+          cwDragged = true; // le « click » qui suit ne doit pas recaler sur le signal voisin
+        }
+        el.style.cursor = '';
+        mk = null;
+      };
+      el.addEventListener('pointerup', end);
+      el.addEventListener('pointercancel', end);
+    }
+  }
   function rtDragInit(ids, ch) {
     let drag = null;
     let swallowClick = false;
@@ -1699,6 +1741,7 @@
     });
     // Glisser la bande ou molette sur une cascade RTTY : accord du VFO
     rtDragInit(['dgWf', 'dgScale'], 0);
+    cwDragInit(['dgWf', 'dgScale']);
     rtDragInit(['rtWfB', 'rtScaleB'], 1);
     // Décodeur de l'émission : bouton TX de son en-tête, ou clic n'importe où dans sa fenêtre (VFO-A / VFO-B)
     const pickTx = (ch) => {
@@ -3526,7 +3569,10 @@
       // Split : clic gauche = fréquence de réception, clic droit = fréquence d'émission
       const fAt = (e) => { const r = e.currentTarget.getBoundingClientRect(); return WF_LO + ((e.clientX - r.left) / r.width) * WF_MAX_HZ; };
       for (const id of ['dgWf', 'dgScale']) {
-        $(id).addEventListener('click', (e) => (tab === 'sstv' ? null : tab === 'rtty' ? setRttyF(fAt(e), 0) : tab === 'cw' ? setCwF(fAt(e), true) : setRx(fAt(e))));
+        $(id).addEventListener('click', (e) => {
+          if (tab === 'cw' && cwDragged) { cwDragged = false; return; } // fin d'un glisser : position gardée telle quelle
+          return tab === 'sstv' ? null : tab === 'rtty' ? setRttyF(fAt(e), 0) : tab === 'cw' ? setCwF(fAt(e), true) : setRx(fAt(e));
+        });
         $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'sstv') return; if (tab === 'rtty') setRttyF(fAt(e), 1); else if (tab === 'cw') setCwF(fAt(e), false); else setTx(fAt(e)); });
       }
       initRtty();

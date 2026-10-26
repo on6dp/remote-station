@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.23.0 | [RemoteStation-Setup-0.23.0.exe](0.23.0/RemoteStation-Setup-0.23.0.exe) | [remote-station-0.23.0.tar.gz](0.23.0/remote-station-0.23.0.tar.gz) | CW : repère du décodeur glissé en continu sur la cascade — [empreintes SHA-256](0.23.0/SHA256SUMS.txt) |
 | 0.22.99 | [RemoteStation-Setup-0.22.99.exe](0.22.99/RemoteStation-Setup-0.22.99.exe) | [remote-station-0.22.99.tar.gz](0.22.99/remote-station-0.22.99.tar.gz) | Toutes les macros CW en un clic (macros personnalisées mises à jour) — [empreintes SHA-256](0.22.99/SHA256SUMS.txt) |
 | 0.22.98 | [RemoteStation-Setup-0.22.98.exe](0.22.98/RemoteStation-Setup-0.22.98.exe) | [remote-station-0.22.98.tar.gz](0.22.98/remote-station-0.22.98.tar.gz) | Émission CW (manipulateur du TRX), macros CW en un clic — [empreintes SHA-256](0.22.98/SHA256SUMS.txt) |
 | 0.22.97 | [RemoteStation-Setup-0.22.97.exe](0.22.97/RemoteStation-Setup-0.22.97.exe) | [remote-station-0.22.97.tar.gz](0.22.97/remote-station-0.22.97.tar.gz) | Filtre CW de l'onglet = aussi BW du TRX — [empreintes SHA-256](0.22.97/SHA256SUMS.txt) |

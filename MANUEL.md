@@ -632,7 +632,7 @@ Le WSPR sert à étudier la propagation : des balises de faible puissance émett
 | Voyant et barre de niveau | Suivent la manipulation : le voyant clignote au rythme du morse quand le décodeur est bien calé. |
 | Tonalité / Vitesse | Fréquence audio suivie et vitesse mesurée (mots/minute). |
 
-- **Cliquez sur un signal** dans la cascade : le décodeur se cale sur le signal le plus proche et apprend sa vitesse. Clic droit : calage exact là où vous cliquez.
+- **Cliquez sur un signal** dans la cascade : le décodeur se cale sur le signal le plus proche et apprend sa vitesse. Clic droit : calage exact là où vous cliquez. **Bouton gauche maintenu** en glissant : le repère jaune du décodeur suit la souris **en continu** (le décodage suit pendant le déplacement) et reste exactement où vous relâchez, comme les barres du RTTY.
 - Double-clic sur un indicatif reçu = correspondant ; `Log QSO` ouvre la fiche du carnet.
 
 <a id="sstv"></a>
