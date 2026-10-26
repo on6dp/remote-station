@@ -2055,7 +2055,9 @@
     if (!el) return;
     const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
     el.appendChild(document.createTextNode(text));
-    if (el.textContent.length > 20000) el.textContent = el.textContent.slice(-15000);
+    // Trop long : les plus anciens morceaux sont retirés (sans toucher aux lignes d'émission en couleur)
+    let len = el.textContent.length;
+    while (len > 20000 && el.firstChild) { len -= el.firstChild.textContent.length; el.removeChild(el.firstChild); }
     if (atEnd) el.scrollTop = el.scrollHeight;
     cwLast = Date.now();
   }
@@ -2775,7 +2777,62 @@
     const m = macroList('CW').find((x) => /<TX>/i.test(x.text));
     if (m) cwPrepMacro(m.text, true);
   }
+  // Texte émis en CW dans la réception, lettre par lettre comme en RTTY : rouge = parti, gris = encore à émettre.
+  // Minutage : durée de chaque caractère (serveur) à partir du début de chaque morceau joué (signalé par la page Station).
+  var cwLive = null;
+  var cwLiveTimer = null;
+  function cwLiveTick(final) {
+    const L = cwLive;
+    if (!L) return;
+    const p = L.pos;
+    let n = L.n;
+    if (p) {
+      const base = Math.min(p.chars, L.text.length);
+      const baseMs = base > 0 ? L.ms[base - 1] : 0;
+      const t = now() - p.at;
+      let k = base;
+      while (k < L.ms.length && L.ms[k] - baseMs <= t) k++;
+      n = Math.max(n, k);
+      if (final) {
+        const rest = (L.ms[L.ms.length - 1] || 0) - baseMs;
+        if (t >= rest * 0.85) n = L.text.length; // fin normale : tout est parti
+      }
+    }
+    if (n !== L.n) { L.n = n; L.done.textContent = L.text.slice(0, n); L.todo.textContent = L.text.slice(n); }
+  }
+  function cwLiveUpdate(x) {
+    if (x && x.state === 'tx' && x.ms && x.ms.length === String(x.text).length) {
+      if (!cwLive || cwLive.id !== x.id) {
+        if (cwLive) cwLiveEnd();
+        const rxEl = $('cwRx');
+        if (!rxEl) return;
+        const d = rxEl.ownerDocument;
+        const s = d.createElement('span');
+        s.className = 'rt-txline';
+        const done = d.createElement('span');
+        done.className = 'rt-done';
+        const todo = d.createElement('span');
+        todo.className = 'rt-todo';
+        todo.textContent = String(x.text);
+        s.append('\n', done, todo, '\n');
+        rxEl.appendChild(s);
+        rxEl.scrollTop = rxEl.scrollHeight;
+        cwLive = { id: x.id, text: String(x.text), ms: x.ms, pos: x.pos, done, todo, n: 0 };
+        cwLiveTimer = setInterval(() => cwLiveTick(false), 80);
+      }
+      if (x.pos) cwLive.pos = x.pos;
+      cwLiveTick(false);
+    } else if (cwLive && !(x && x.id === cwLive.id)) cwLiveEnd();
+  }
+  function cwLiveEnd() {
+    clearInterval(cwLiveTimer);
+    cwLiveTimer = null;
+    cwLiveTick(true);
+    if (cwLive.n < cwLive.text.length) cwLive.todo.classList.add('rt-cut'); // arrêté avant la fin
+    cwLive = null;
+  }
   function cwTxState(x) {
+    cwLiveUpdate(x);
     // Fin d'un message : la 1re macro (CQ) est remise en mémoire, prête pour le clic suivant
     if (x) cwWasTx = true;
     else if (cwWasTx) { cwWasTx = false; cwPrepLast = ''; setTimeout(cwPrepF1, 600); }

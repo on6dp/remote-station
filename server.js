@@ -1223,8 +1223,20 @@ function cwMs(t, wpm) {
   }
   return Math.round(u * 1200 / wpm);
 }
+/** Fin de chaque caractère (ms depuis le début du texte), pour suivre l'émission lettre par lettre sur le dashboard. */
+function cwCharMs(t, wpm) {
+  const out = [];
+  let u = 0;
+  for (const ch of t) {
+    if (ch === ' ') u += 4;
+    else if (MORSE[ch]) { for (const x of MORSE[ch]) u += (x === '.' ? 1 : 3) + 1; u += 2; }
+    out.push(Math.round(u * 1200 / wpm));
+  }
+  return out;
+}
 function cwPublic() {
-  return cwJob ? { id: cwJob.id, by: cwJob.conn.user.call, text: cwJob.text, state: cwJob.state, seconds: cwJob.seconds, wpm: cwJob.wpm } : null;
+  return cwJob ? { id: cwJob.id, by: cwJob.conn.user.call, text: cwJob.text, state: cwJob.state, seconds: cwJob.seconds, wpm: cwJob.wpm,
+    ms: cwJob.ms, pos: cwJob.pos || null } : null;
 }
 function cwRequest(conn, m) {
   const err = (msg) => send(conn, { t: 'notice', level: 'error', msg });
@@ -1253,7 +1265,7 @@ function cwRequest(conn, m) {
   const seconds = cwMs(text, wpm) / 1000;
   if (seconds > cfg.maxTxSeconds - 2) return err('Texte trop long : ' + Math.round(seconds) + ' s d’émission à ' + wpm + ' mots/min (limite du serveur : ' + cfg.maxTxSeconds + ' s)');
   const id = ++ftxSeq;
-  cwJob = { id, conn, text, wpm, seconds: Math.round(seconds * 10) / 10, state: 'wait', at: Date.now(), timer: null };
+  cwJob = { id, conn, text, wpm, seconds: Math.round(seconds * 10) / 10, state: 'wait', at: Date.now(), timer: null, ms: cwCharMs(text, wpm), pos: null };
   lastCtrlActivity = Date.now();
   journal('tx_start', { call: conn.user.call, ip: conn.ip, freq: txFreq(), mode: 'CW', text: text.slice(0, 60), wpm, watts: radio.power });
   toStation({ t: 'cmd', op: 'cw', id, text, wpm, by: conn.user.call });
@@ -2489,7 +2501,13 @@ function onStation(conn, m) {
   }
   if (m.t === 'cw_state') {
     if (!cwJob || m.id !== cwJob.id) return;
-    if (m.state === 'tx') { cwJob.state = 'tx'; return broadcast(); }
+    if (m.state === 'tx') { cwJob.state = 'tx'; if (!cwJob.pos) cwJob.pos = { chars: 0, at: Date.now() }; return broadcast(); }
+    if (m.state === 'pos') {
+      // Début d'un morceau joué par le TRX : position dans le texte et moment (heure du serveur) pour le suivi lettre par lettre
+      const chars = Math.max(0, Math.min(cwJob.text.length, Math.round(Number(m.chars) || 0)));
+      cwJob.pos = { chars, at: Date.now() - Math.max(0, Math.min(5000, Math.round(Number(m.ago) || 0))) };
+      return broadcast();
+    }
     if (m.state === 'info') {
       // Étapes de l'émission CW (diagnostic) : affichées à l'opérateur et gardées dans le journal
       const msg = String(m.msg || '').replace(/[\x00-\x1f]/g, ' ').slice(0, 200);

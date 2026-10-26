@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.23.8 | [RemoteStation-Setup-0.23.8.exe](0.23.8/RemoteStation-Setup-0.23.8.exe) | [remote-station-0.23.8.tar.gz](0.23.8/remote-station-0.23.8.tar.gz) | CW : texte émis en couleur lettre par lettre ; colonnes FT8 / FT4 / FT2 resserrées — [empreintes SHA-256](0.23.8/SHA256SUMS.txt) |
 | 0.23.7 | [RemoteStation-Setup-0.23.7.exe](0.23.7/RemoteStation-Setup-0.23.7.exe) | [remote-station-0.23.7.tar.gz](0.23.7/remote-station-0.23.7.tar.gz) | CW : macro préparée d'avance dans la mémoire du TRX — [empreintes SHA-256](0.23.7/SHA256SUMS.txt) |
 | 0.23.6 | [RemoteStation-Setup-0.23.6.exe](0.23.6/RemoteStation-Setup-0.23.6.exe) | [remote-station-0.23.6.tar.gz](0.23.6/remote-station-0.23.6.tar.gz) | CW méthode mémoire : commutation plus rapide — [empreintes SHA-256](0.23.6/SHA256SUMS.txt) |
 | 0.23.5 | [RemoteStation-Setup-0.23.5.exe](0.23.5/RemoteStation-Setup-0.23.5.exe) | [remote-station-0.23.5.tar.gz](0.23.5/remote-station-0.23.5.tar.gz) | CW FTX-1 : KY15 retiré, refus de KY05 mieux attribués, DTR non coupé faute de confirmation — [empreintes SHA-256](0.23.5/SHA256SUMS.txt) |

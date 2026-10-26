@@ -903,6 +903,12 @@
         }
       })().catch(() => {}).finally(() => { this.cwPrepping = null; });
     }
+    /** Position du morceau i dans le texte complet (morceaux coupés aux espaces), envoyée au serveur. */
+    _cwPos(job, chunks, i, ago) {
+      let chars = 0;
+      for (let k = 0; k < i; k++) chars += chunks[k].length + 1;
+      if (this.wsUp) this.sendWs({ t: 'cw_state', id: job.id, state: 'pos', chars, ago: ago || 0 });
+    }
     _cwSleep(job, ms) { return new Promise((res) => { job.timer = setTimeout(res, ms); }); }
     /** Envoie une commande seule et attend un éventuel refus « ? » du TRX. */
     async _cwSend(job, cmd) {
@@ -961,6 +967,7 @@
         await K.set(on);
         if (on && first) {
           first = false;
+          this._cwPos(job, [text], 0, 0);
           this._cwInfo(job, 'manipulation par le port DTR (' + wpm + ' mots/min)');
           // Le TRX doit passer en émission au premier top (break-in) ; vérifié pendant que le texte continue
           // Essai au club : le FTX-1 ne signale pas toujours l'émission par break-in (TX0) ; on guette aussi la puissance
@@ -1065,6 +1072,8 @@
           }
           if (this.cw !== job) return;
           accepted++;
+          // Suivi lettre par lettre sur le dashboard : ce morceau commence maintenant (≈ 0,1 s après l'envoi de la lecture)
+          this._cwPos(job, chunks, i, 100);
           if (i === 0 && accepted === 1) this._cwInfo(job, 'lecture « ' + this._cwLabel(pc) + ' » acceptée par le TRX, attente de l’émission…');
           if (i > 0) { keyed = true; break; } // morceaux suivants : le TRX est déjà en émission (break-in)
           // État d'émission et puissance demandés directement au TRX toutes les 100 ms
