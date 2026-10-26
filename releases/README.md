@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.23.6 | [RemoteStation-Setup-0.23.6.exe](0.23.6/RemoteStation-Setup-0.23.6.exe) | [remote-station-0.23.6.tar.gz](0.23.6/remote-station-0.23.6.tar.gz) | CW méthode mémoire : commutation plus rapide — [empreintes SHA-256](0.23.6/SHA256SUMS.txt) |
 | 0.23.5 | [RemoteStation-Setup-0.23.5.exe](0.23.5/RemoteStation-Setup-0.23.5.exe) | [remote-station-0.23.5.tar.gz](0.23.5/remote-station-0.23.5.tar.gz) | CW FTX-1 : KY15 retiré, refus de KY05 mieux attribués, DTR non coupé faute de confirmation — [empreintes SHA-256](0.23.5/SHA256SUMS.txt) |
 | 0.23.4 | [RemoteStation-Setup-0.23.4.exe](0.23.4/RemoteStation-Setup-0.23.4.exe) | [remote-station-0.23.4.tar.gz](0.23.4/remote-station-0.23.4.tar.gz) | CW : émission reconnue à la puissance, macro qui remplace le message en cours — [empreintes SHA-256](0.23.4/SHA256SUMS.txt) |
 | 0.23.3 | [RemoteStation-Setup-0.23.3.exe](0.23.3/RemoteStation-Setup-0.23.3.exe) | [remote-station-0.23.3.tar.gz](0.23.3/remote-station-0.23.3.tar.gz) | Émission CW en un seul clic, commutation plus rapide, manipulation DTR en option — [empreintes SHA-256](0.23.3/SHA256SUMS.txt) |

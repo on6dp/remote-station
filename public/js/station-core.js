@@ -868,12 +868,12 @@
     /** Envoie une commande seule et attend un éventuel refus « ? » du TRX. */
     async _cwSend(job, cmd) {
       // Lectures du relevé suspendues le temps de l'envoi : un « ? » répondu à une lecture n'est pas pris pour un refus
-      this.cwHold = Date.now() + 400;
-      await this._cwSleep(job, 60);
+      this.cwHold = Date.now() + 300;
+      await this._cwSleep(job, 40);
       if (this.cw !== job) return true;
       this.cwWatch = { errs: 0 };
       this._write(cmd, true);
-      await this._cwSleep(job, 150);
+      await this._cwSleep(job, 100);
       const ok = !this.cwWatch || this.cwWatch.errs === 0;
       this.cwWatch = null;
       return ok;
@@ -985,7 +985,7 @@
             return this._cwFail(job, 'le TRX a refusé l’écriture de la mémoire du manipulateur (« ' + this._cwLabel(CW.mem(c)) + ' »)');
           }
           if (this.cw !== job) return;
-          if (CW.read && i === 0) {
+          if (CW.read && i === 0 && !this.cwReadOk) { // relecture de contrôle : une fois par session seulement
             const got = await new Promise((res) => {
               const tm = setTimeout(() => { this.cwRe = null; res(null); }, 600);
               this.cwRe = { re: CW.readRe, cb: (t) => { clearTimeout(tm); this.cwRe = null; res(t); } };
@@ -993,6 +993,7 @@
             });
             if (this.cw !== job) return;
             this._cwInfo(job, 'mémoire écrite, relue « ' + (got == null ? 'pas de réponse' : got.slice(0, 60)) + ' »');
+            if (got != null) this.cwReadOk = true;
           }
           C.mem = c;
         }
@@ -1001,13 +1002,8 @@
         // émise (RM5), on relance la lecture une seule fois (chaque lecture recommence le message), et faute de
         // confirmation on laisse jouer au lieu de couper : la lecture n'est arrêtée que sur demande.
         const plays = CW.play ? [CW.play].concat(CW.alt) : [CW.text(c)];
-        // Essai au club : la lecture lancée juste après l'écriture de la mémoire n'émettait pas, celle relancée ≈ 2 s
-        // plus tard (après les réglages renvoyés) partait. On laisse donc 1,2 s au TRX et on remet la mémoire 5 en TEXT.
-        if (CW.mem && !same) {
-          await this._cwSleep(job, 300); if (this.cw !== job) return;
-          for (const c2 of (CW.pre || [])) { await this._cwSend(job, c2); if (this.cw !== job) return; }
-          await this._cwSleep(job, 750); if (this.cw !== job) return;
-        }
+        // Petit délai après l'écriture de la mémoire (0.23.6 : 1 s → 0,25 s, le vrai problème était un faux refus de KY05)
+        if (CW.mem && !same) { await this._cwSleep(job, 250); if (this.cw !== job) return; }
         const isTx = () => !!this.radio.tx || this.cwPo > 0;
         const refused = new Set();
         const nRef = {};
