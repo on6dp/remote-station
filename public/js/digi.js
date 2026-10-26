@@ -2095,6 +2095,8 @@
       const p = el.selectionStart;
       el.value = el.value.toUpperCase();
       el.setSelectionRange(p, p);
+      clearTimeout(cwPrepTimer);
+      cwPrepTimer = setTimeout(() => cwPrep(el.value), 700); // texte tapé : préparé pendant la frappe
     });
     $('cwRx').addEventListener('dblclick', () => {
       const w = String(window.getSelection() || '').trim().toUpperCase();
@@ -2103,7 +2105,7 @@
     $('cwSend').title = 'Émet le texte en CW par le manipulateur du TRX (vitesse ci-dessus), puis retour en réception · pendant l’émission : arrêt';
     $('cwSend').addEventListener('click', () => cwClick());
     $('cwTxt').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); cwClick(); } });
-    drawMacroRow($('cwMacros'), 'CW', (t, ins) => useMacro('CW', t, ins));
+    drawMacroRow($('cwMacros'), 'CW', (t, ins) => useMacro('CW', t, ins), cwPrepMacro);
   }
   function cwStatus() {
     const st = api && api.state();
@@ -2747,7 +2749,37 @@
     cwZone = zone;
     api.send({ t: 'cw', text: String(text).replace(/\n/g, ' '), wpm: Number(store.get('cwspeed', '22')) || 22 });
   }
+  // Préparation d'avance (macro survolée, texte tapé, F1 au repos) : le serveur la transmet à la page Station
+  var cwPrepLast = '';
+  var cwPrepTimer = null;
+  var cwWasTx = false;
+  function cwPrep(text, force) {
+    if (!api || !api.iControl()) return;
+    const st = api.state();
+    if (st && (st.cw || st.ftx || (st.ptt && st.ptt.active))) return;
+    const r = st && st.radio;
+    if (!r || !/^CW/.test((r.vfoSel === 1 ? r.modeB : r.mode) || '')) return; // TRX pas en CW : rien à préparer
+    text = String(text || '').replace(/\n/g, ' ').trim();
+    if (!text) return;
+    const wpm = Number(store.get('cwspeed', '22')) || 22;
+    const key = wpm + '|' + text.toUpperCase();
+    if (key === cwPrepLast && !force) return; // macro survolée (force) : la page Station sait si c'est déjà en mémoire
+    cwPrepLast = key;
+    api.send({ t: 'cw_prep', text, wpm });
+  }
+  function cwPrepMacro(t, auto) {
+    if (/<CALL>|\{CALL\}/.test(t) && !String(dx.call || '').trim()) return;
+    cwPrep(macroText(t, false), !auto);
+  }
+  function cwPrepF1() {
+    const m = macroList('CW').find((x) => /<TX>/i.test(x.text));
+    if (m) cwPrepMacro(m.text, true);
+  }
   function cwTxState(x) {
+    // Fin d'un message : la 1re macro (CQ) est remise en mémoire, prête pour le clic suivant
+    if (x) cwWasTx = true;
+    else if (cwWasTx) { cwWasTx = false; cwPrepLast = ''; setTimeout(cwPrepF1, 600); }
+    else if (!cwPrepLast && tab === 'cw' && api && api.iControl()) cwPrepF1(); // onglet CW avec la main : F1 prêt
     const b = $('cwSend');
     const note = $('cwTxState');
     if (!b || !note) return;
@@ -2929,7 +2961,7 @@
   }
 
   // Rangée de macros : clic = utiliser, clic droit = modifier, ✎ = modifier
-  function drawMacroRow(box, mode, use) {
+  function drawMacroRow(box, mode, use, prep) {
     if (!box) return;
     box.textContent = '';
     macroList(mode).forEach((m, i) => {
@@ -2942,7 +2974,12 @@
         (/<TX>/i.test(m.text) ? 'clic : émission immédiate · Maj+clic : ajouter au texte · clic droit : modifier' : 'clic : ajouter au texte · clic droit : modifier');
       if (/<TX>/i.test(m.text)) b.classList.add('mac-tx');
       b.title = tip();
-      b.addEventListener('mouseenter', () => { b.title = tip(); });
+      b.addEventListener('mouseenter', () => {
+        b.title = tip();
+        // CW : macro survolée préparée d'avance dans la mémoire du TRX (le clic ne lance plus que la lecture)
+        if (prep && /<TX>/i.test(m.text)) { clearTimeout(b._prep); b._prep = setTimeout(() => prep(m.text), 120); }
+      });
+      b.addEventListener('mouseleave', () => clearTimeout(b._prep));
       b.addEventListener('click', (e) => use(m.text, e.shiftKey));
       b.addEventListener('contextmenu', (e) => { e.preventDefault(); editMacro(box.ownerDocument, mode, i); });
       box.appendChild(b);
@@ -3041,7 +3078,7 @@
     drawMsgs();
     drawRttyMacros();
     drawMacroRow($('jtMacros'), 'JTTY', (t, ins) => useMacro('JTTY', t, ins));
-    drawMacroRow($('cwMacros'), 'CW', (t, ins) => useMacro('CW', t, ins));
+    drawMacroRow($('cwMacros'), 'CW', (t, ins) => useMacro('CW', t, ins), cwPrepMacro);
   }
   // Clic sur une macro (ou F1…F12) : <TX> = émission immédiate, sinon texte ajouté à la zone d'écriture.
   // Maj+clic : toujours ajouter à la zone (pour composer un message avant « Émettre »).

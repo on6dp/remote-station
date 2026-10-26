@@ -391,6 +391,8 @@
           this._write(cmd);
         } else if (m.op === 'cw') {
           this._cwStart(m);
+        } else if (m.op === 'cwprep') {
+          this._cwPrep(m);
         } else if (m.op === 'cwstop') {
           this._cwStop(m.reason || 'arrêt demandé', true);
         } else if (m.op === 'ptt') {
@@ -864,6 +866,43 @@
       this.log('CW (' + (m.by || '?') + ') à ' + wpm + ' mots/min : « ' + text.slice(0, 70) + (text.length > 70 ? '…' : '') + ' »');
       this._cwRun(job, chunks, wpm).catch((e) => { if (this.cw === job) this._cwFail(job, e.message); });
     }
+    /** Cache des réglages et de la mémoire déjà envoyés (oublié après 20 min, un arrêt, une erreur, le port fermé). */
+    _cwCacheGet() {
+      return this.cwCache && Date.now() - this.cwCache.at < 20 * 60000 ? this.cwCache : (this.cwCache = { at: Date.now() });
+    }
+    /** Préparation sans émission : réglages et 1er morceau du texte écrits d'avance dans la mémoire du manipulateur. */
+    _cwPrep(m) {
+      const CW = this.rig.CW;
+      if (!CW || !CW.mem || this.cw || this.cwPrepping || !this.serialOpen || !this.radio.connected || this.catKeyed || this.radio.tx) return;
+      if (CW.dtr && this.keyer && this.keyer.available()) return; // manipulation DTR : pas de mémoire
+      const text = String(m.text || '').toUpperCase().replace(/[^A-Z0-9 /?.,=+-]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (!text) return;
+      let first = text;
+      if (first.length > CW.max) { let cut = first.lastIndexOf(' ', CW.max); if (cut < 8) cut = CW.max; first = first.slice(0, cut).trim(); }
+      const wpm = Math.max(5, Math.min(50, Math.round(Number(m.wpm) || 22)));
+      const C = this._cwCacheGet();
+      if (C.wpm === wpm && C.mem === first) return;
+      const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+      const send = async (cmd) => {
+        this.cwHold = Date.now() + 300;
+        await sleep(40);
+        if (this.cw) return false;
+        this.cwWatch = { errs: 0 };
+        this._write(cmd, true);
+        await sleep(100);
+        const ok = !!this.cwWatch && this.cwWatch.errs === 0;
+        this.cwWatch = null;
+        return ok;
+      };
+      this.cwPrepping = (async () => {
+        if (C.wpm !== wpm) { for (const c of CW.setup(wpm)) { if (this.cw) return; await send(c); } if (this.cw) return; C.wpm = wpm; }
+        if (C.mem !== first) {
+          C.mem = null;
+          if (this.cw) return;
+          if (await send(CW.mem(first))) { C.mem = first; C.memAt = Date.now(); }
+        }
+      })().catch(() => {}).finally(() => { this.cwPrepping = null; });
+    }
     _cwSleep(job, ms) { return new Promise((res) => { job.timer = setTimeout(res, ms); }); }
     /** Envoie une commande seule et attend un éventuel refus « ? » du TRX. */
     async _cwSend(job, cmd) {
@@ -957,7 +996,8 @@
       if (CW.dtr && this.keyer && this.keyer.available()) return this._cwRunDtr(job, chunks.join(' '), wpm);
       // Commutation rapide : les réglages (vitesse, break-in…) et le texte de la mémoire déjà envoyés au TRX ne sont pas
       // renvoyés au message suivant (oubliés après un arrêt, une erreur, une fermeture du port ou 20 minutes)
-      const C = this.cwCache && Date.now() - this.cwCache.at < 20 * 60000 ? this.cwCache : (this.cwCache = { at: Date.now() });
+      if (this.cwPrepping) { await this.cwPrepping; if (this.cw !== job) return; } // préparation en cours : elle s'arrête au pas suivant
+      const C = this._cwCacheGet();
       if (C.wpm !== wpm) {
         for (const c of CW.setup(wpm)) {
           // « ? » = réglage déjà en place sur le FTX-1 (il refuse une commande qui ne change rien) : noté au journal seulement
@@ -996,6 +1036,7 @@
             if (got != null) this.cwReadOk = true;
           }
           C.mem = c;
+          C.memAt = Date.now();
         }
         // Lecture de la mémoire. Essais au club (FTX-1) : la 1re lecture semble parfois ignorée, et l'état d'émission
         // (TX;) n'est peut-être pas signalé pendant la manipulation par break-in. On guette donc aussi la puissance
@@ -1003,7 +1044,7 @@
         // confirmation on laisse jouer au lieu de couper : la lecture n'est arrêtée que sur demande.
         const plays = CW.play ? [CW.play].concat(CW.alt) : [CW.text(c)];
         // Petit délai après l'écriture de la mémoire (0.23.6 : 1 s → 0,25 s, le vrai problème était un faux refus de KY05)
-        if (CW.mem && !same) { await this._cwSleep(job, 250); if (this.cw !== job) return; }
+        if (CW.mem) { const w = 250 - (Date.now() - (C.memAt || 0)); if (w > 0) { await this._cwSleep(job, w); if (this.cw !== job) return; } }
         const isTx = () => !!this.radio.tx || this.cwPo > 0;
         const refused = new Set();
         const nRef = {};

@@ -2339,6 +2339,20 @@ function onOperator(conn, m) {
     case 'cw':
       return cwRequest(conn, m);
 
+    case 'cw_prep': {
+      // Préparation d'une macro CW survolée (ou du texte tapé) : la page Station écrit déjà le texte dans la mémoire
+      // du manipulateur, sans émettre, pour que le clic n'ait plus qu'à lancer la lecture
+      if (controller !== conn || !station || station.caps.indexOf('cwprep') < 0 || !rig().CW) return;
+      if (cwJob || ptt.active || ftxPend || (seq && seq.on) || radio.tx) return;
+      const md = (radio.vfoSel === 1 ? radio.modeB : radio.mode) || '';
+      if (!/^CW/.test(md)) return;
+      const text = cwClean(m.text);
+      if (!text || text.length > 300) return;
+      if (Date.now() - (conn.cwPrepAt || 0) < 100) return;
+      conn.cwPrepAt = Date.now();
+      return toStation({ t: 'cmd', op: 'cwprep', text, wpm: Math.max(5, Math.min(50, Math.round(Number(m.wpm) || 22))) });
+    }
+
     case 'cw_stop':
       if (cwJob && (cwJob.conn === conn || controller === conn || conn.user.admin)) cwEnd('arrêt demandé par ' + conn.user.call, false);
       return;
