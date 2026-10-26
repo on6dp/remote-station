@@ -548,7 +548,7 @@ Above the waterfall, the help line (« clic gauche : décodeur A… ») is shown
 | M / S indicator | The two bars should beat alternately when the decoder is tuned correctly. |
 | Centre … Hz | Audio frequency the decoder is tuned to. |
 | `⌖ Centrer` (centre) | Moves the VFO so that the signal followed by this decoder falls in the middle of the audio band (white triangle): its frequency does not change. The other decoder stays on its signal if it is still in the band. |
-| `TX` / click in the window | Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): **one click anywhere in the VFO-A or VFO-B window** is enough, or the `TX` button in its header. The button becomes `● Fenêtre TX` (red), the header turns pink and a red frame surrounds the decoder. The zoom centres on it. **This button does not key the transceiver**: transmit with a macro `F1`…`F12` or `Émettre`. |
+| `TX` / click in the window | Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): **one click anywhere in the VFO-A or VFO-B window** is enough, or the `TX` button in its header. The button becomes `▶ TX ici` (TX here, red), the header turns pink and a red frame surrounds the decoder. The zoom centres on it. **A click on `▶ TX ici` transmits the custom text** typed in the bottom box (like `Émettre`); while transmitting it becomes `■ Arrêter` (stop). Macros `F1`…`F12` also go out on this window. |
 | `Effacer` (clear) | Clears the received text of this decoder. |
 | Vertical bar between the two texts | Drag it: width of the two decoders (double-click: half and half). |
 
@@ -561,13 +561,13 @@ Above the waterfall, the help line (« clic gauche : décodeur A… ») is shown
 
 1. **Take control**, **RTTY** tab, TRX in **DATA-U** (`↺` button of the frequency list).
 2. **Find a station**: click a green callsign on the **band map**. The TRX tunes to it, the transmit decoder decodes it and its callsign goes into Correspondant. Or: left click on a trace in the waterfall (decoder A), right click (decoder B).
-3. **Choose the transmit window**: one click in the VFO-A or VFO-B window (« ● Fenêtre TX »). Double-clicking a received callsign puts it in Correspondant and selects its window at the same time.
-4. **Reply**: `F2` key (or the reply macro), then the report macro. `Esc` stops the current transmission.
+3. **Choose the transmit window**: one click in the VFO-A or VFO-B window (« ▶ TX ici »). Double-clicking a received callsign puts it in Correspondant and selects its window at the same time.
+4. **Reply**: `F2` key (or the reply macro), then the report macro. For custom text: type it in the bottom box, then `▶ TX ici` (or `Ctrl`+`Enter`). `Esc` stops the current transmission.
 5. **Log the QSO**: a macro containing `<LOG>` (form opens by itself) or the `Log QSO` button.
 6. **Call yourself** (CQ): choose the transmit window, then `F1`. With two decoders you can call CQ on A while watching another station on B.
 7. **Station outside the waterfall and not spotted**: click the band map at that frequency (the TRX goes there), or drag the waterfall, or `Shift` + wheel.
 
-On the right of the FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY and CW tabs (not SSTV: a single frequency), a **vertical column** shows the band as a ruler: low frequencies **at the top**, high at the bottom (by default 7030–7120 kHz on 40 m, 14080–14150 kHz on 20 m, 3570–3600 kHz on 80 m…). **Spots** from the club's DX cluster (OP0P, including stations found by the Reverse Beacon Network) appear at their frequency. You see the whole RTTY part of the band at a glance, while the waterfall only shows 3 or 4 kHz.
+On the right of the FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY and CW tabs (not SSTV: a single frequency), a **vertical column** shows the band as a ruler (on a large screen it goes up to the top, next to the VFO A and B displays, both narrowed by the same width): low frequencies **at the top**, high at the bottom (by default 7030–7120 kHz on 40 m, 14080–14150 kHz on 20 m, 3570–3600 kHz on 80 m…). **Spots** from the club's DX cluster (OP0P, including stations found by the Reverse Beacon Network) appear at their frequency. You see the whole RTTY part of the band at a glance, while the waterfall only shows 3 or 4 kHz.
 
 | Item | What it shows or does |
 |---|---|

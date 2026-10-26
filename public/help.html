@@ -532,7 +532,7 @@ You can follow two stations on the same band at once (contest, a DX and its pile
   <tr><td>M / S indicator</td><td>The two bars should beat alternately when the decoder is tuned correctly.</td></tr>
   <tr><td>Centre … Hz</td><td>Audio frequency the decoder is tuned to.</td></tr>
   <tr><td><span class="k">⌖ Centrer</span> (centre)</td><td>Moves the VFO so that the signal followed by this decoder falls in the middle of the audio band (white triangle): its frequency does not change. The other decoder stays on its signal if it is still in the band.</td></tr>
-  <tr><td><span class="k">TX</span> / click in the window</td><td>Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): <b>one click anywhere in the VFO-A or VFO-B window</b> is enough, or the <span class="k">TX</span> button in its header. The button becomes <span class="k">● Fenêtre TX</span> (red), the header turns pink and a red frame surrounds the decoder. The zoom centres on it. <b>This button does not key the transceiver</b>: transmit with a macro <kbd>F1</kbd>…<kbd>F12</kbd> or <span class="k">Émettre</span>.</td></tr>
+  <tr><td><span class="k">TX</span> / click in the window</td><td>Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): <b>one click anywhere in the VFO-A or VFO-B window</b> is enough, or the <span class="k">TX</span> button in its header. The button becomes <span class="k">▶ TX ici</span> (TX here, red), the header turns pink and a red frame surrounds the decoder. The zoom centres on it. <b>A click on <span class="k">▶ TX ici</span> transmits the custom text</b> typed in the bottom box (like <span class="k">Émettre</span>); while transmitting it becomes <span class="k">■ Arrêter</span> (stop). Macros <kbd>F1</kbd>…<kbd>F12</kbd> also go out on this window.</td></tr>
   <tr><td><span class="k">Effacer</span> (clear)</td><td>Clears the received text of this decoder.</td></tr>
   <tr><td>Vertical bar between the two texts</td><td>Drag it: width of the two decoders (double-click: half and half).</td></tr>
 </table>
@@ -549,15 +549,15 @@ You can follow two stations on the same band at once (contest, a DX and its pile
 <ol>
   <li><b>Take control</b>, <b>RTTY</b> tab, TRX in <b>DATA-U</b> (<span class="k">↺</span> button of the frequency list).</li>
   <li><b>Find a station</b>: click a <span class="grn">green</span> callsign on the <b>band map</b>. The TRX tunes to it, the transmit decoder decodes it and its callsign goes into Correspondant. Or: left click on a trace in the waterfall (decoder A), right click (decoder B).</li>
-  <li><b>Choose the transmit window</b>: one click in the VFO-A or VFO-B window (« ● Fenêtre TX »). Double-clicking a received callsign puts it in Correspondant and selects its window at the same time.</li>
-  <li><b>Reply</b>: <kbd>F2</kbd> key (or the reply macro), then the report macro. <kbd>Esc</kbd> stops the current transmission.</li>
+  <li><b>Choose the transmit window</b>: one click in the VFO-A or VFO-B window (« ▶ TX ici »). Double-clicking a received callsign puts it in Correspondant and selects its window at the same time.</li>
+  <li><b>Reply</b>: <kbd>F2</kbd> key (or the reply macro), then the report macro. For custom text: type it in the bottom box, then <span class="k">▶ TX ici</span> (or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>). <kbd>Esc</kbd> stops the current transmission.</li>
   <li><b>Log the QSO</b>: a macro containing <code>&lt;LOG&gt;</code> (form opens by itself) or the <span class="k">Log QSO</span> button.</li>
   <li><b>Call yourself</b> (CQ): choose the transmit window, then <kbd>F1</kbd>. With two decoders you can call CQ on A while watching another station on B.</li>
   <li><b>Station outside the waterfall and not spotted</b>: click the band map at that frequency (the TRX goes there), or drag the waterfall, or <kbd>Shift</kbd> + wheel.</li>
 </ol>
 
 <h4 id="carte-bande">Band map (DX cluster)</h4>
-<p>On the right of the FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY and CW tabs (not SSTV: a single frequency), a <b>vertical column</b> shows the band as a ruler: low frequencies <b>at the top</b>, high at the bottom (by default 7030–7120 kHz on 40 m, 14080–14150 kHz on 20 m, 3570–3600 kHz on 80 m…).
+<p>On the right of the FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY and CW tabs (not SSTV: a single frequency), a <b>vertical column</b> shows the band as a ruler (on a large screen it goes up to the top, next to the VFO A and B displays, both narrowed by the same width): low frequencies <b>at the top</b>, high at the bottom (by default 7030–7120 kHz on 40 m, 14080–14150 kHz on 20 m, 3570–3600 kHz on 80 m…).
 <b>Spots</b> from the club's DX cluster (OP0P, including stations found by the Reverse Beacon Network) appear at their frequency. You see the whole RTTY part of the band at a glance, while the waterfall only shows 3 or 4 kHz.</p>
 <table>
   <tr><th>Item</th><th>What it shows or does</th></tr>

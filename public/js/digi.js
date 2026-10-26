@@ -1132,11 +1132,12 @@
     bmPlace();
     if (on) bmDraw();
   }
-  // Écran large (≥ 1700 px) : la carte monte jusqu'en haut du cadre STEP / BANDS, juste au-dessus, où il reste de la place
+  // Écran large (≥ 1700 px) : la carte monte jusqu'en haut de la colonne (écrans VFO A et B rétrécis de la même largeur)
   function bmPlace() {
     const p = $('centerPanel'), bm = $('bandMap');
     if (!p || !bm) return;
-    const tp = document.querySelector('.center > [data-panel="bands"]');
+    // En haut de la colonne : les écrans VFO (s'ils sont dans la colonne), sinon le cadre Step / Bands
+    const tp = ['.center > .vfo-row', '.center > [data-panel="bands"]'].map((q) => document.querySelector(q)).find((x) => x && x.offsetParent);
     const tall = !bm.hidden && !POPUP && window.innerWidth >= 1700 && !!tp && tp.parentElement === p.parentElement && !!tp.offsetParent
       && tp.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING && !p.classList.contains('collapsed');
     document.body.classList.toggle('bm-tall', tall);
@@ -1413,12 +1414,14 @@
       sp.setAttribute('aria-pressed', String(on));
       sp.textContent = on ? 'SPLIT · TX sur B' : 'SPLIT';
     }
+    const fx = st && st.ftx;
+    const txing = !!(fx && fx.mode === 'RTTY');
     document.querySelectorAll('.rt-txsel').forEach((b) => {
       const on = Number(b.dataset.ch) === rtTx;
       b.setAttribute('aria-pressed', String(on));
-      b.textContent = on ? '● Fenêtre TX' : 'TX';
-      b.title = on ? 'L’émission RTTY (macros F1 à F12, « Émettre ») part sur la fréquence de ce décodeur. Ce bouton ne met pas le TRX en émission.'
-        : 'Choisir ce décodeur pour l’émission (ou cliquer dans sa fenêtre). Ce bouton ne met pas le TRX en émission : utilisez une macro F1 à F12 ou « Émettre ».';
+      b.textContent = on ? (txing ? '■ Arrêter' : '▶ TX ici') : 'TX';
+      b.title = on ? (txing ? 'Arrêter l’émission RTTY en cours (ou Échap)' : 'Émet le texte personnalisé (cadre du bas) sur la fréquence de ce décodeur, comme « Émettre ». Les macros F1 à F12 partent aussi d’ici.')
+        : 'Choisir ce décodeur pour l’émission (ou cliquer dans sa fenêtre). Un 2e clic émet le texte personnalisé.';
       b.closest('.rt-side').classList.toggle('rt-istx', on);
     });
   }
@@ -1574,9 +1577,15 @@
       bmDraw();
       dtxState(api && api.state() && api.state().ftx);
     };
-    document.querySelectorAll('.rt-txsel').forEach((b) => b.addEventListener('click', () => pickTx(Number(b.dataset.ch))));
+    // Bouton de la fenêtre déjà choisie (« ▶ TX ici ») : émet le texte personnalisé (comme « Émettre »), ou arrête l'émission
+    document.querySelectorAll('.rt-txsel').forEach((b) => b.addEventListener('click', () => {
+      const ch = Number(b.dataset.ch) === 1 ? 1 : 0;
+      if (ch !== rtTx) return pickTx(ch);
+      dtxClick('RTTY');
+      setTimeout(rtHeads, 300);
+    }));
     document.querySelectorAll('#rtDual .rt-side').forEach((side) => side.addEventListener('mousedown', (e) => {
-      if (e.button !== 0 || e.target.closest('select, input, label, .rt-center, #rtClear, #rtClearB, .rt-wfb')) return;
+      if (e.button !== 0 || e.target.closest('select, input, label, .rt-center, .rt-txsel, #rtClear, #rtClearB, .rt-wfb')) return;
       pickTx(Number(side.dataset.ch));
     }));
     // Cascade du décodeur B : clic (gauche ou droit) = caler le décodeur B

@@ -1346,7 +1346,7 @@ button[data-ctl='dnf'], button[data-ctl='dnfB'], button[data-ctl='tuner'] { font
 #centerPanel.bm-on > .panel-h { margin-right: var(--bm-w); }
 .ctabs .ctab-log { align-self: flex-end; margin-bottom: 2px; padding: 3px 10px; }
 /* Écran large : la carte de bande monte jusqu'en haut du cadre STEP / BANDS (place libre à droite) */
-body.bm-tall .center > [data-panel='bands'] { margin-right: calc(var(--bm-w) + 8px); }
+body.bm-tall .center > [data-panel='bands'], body.bm-tall .center > .vfo-row { margin-right: calc(var(--bm-w) + 8px); }
 body.bm-tall .bm { border: 1px solid var(--v2-border-panel); border-radius: var(--v2-panel-radius); right: -1px; bottom: -1px; }
 @media (max-width: 1500px) { #centerPanel.bm-on .ctab { padding-inline: 7px; letter-spacing: .5px; } }
 #rtTip[hidden], #rtStatus:empty { display: none; }

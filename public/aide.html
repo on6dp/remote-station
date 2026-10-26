@@ -532,7 +532,7 @@ On suit ainsi deux stations de la même bande en même temps (concours, DX et so
   <tr><td>Indicateur M / S</td><td>Les deux barres doivent battre en alternance quand le décodeur est bien calé.</td></tr>
   <tr><td>Centre … Hz</td><td>Fréquence audio où le décodeur est calé.</td></tr>
   <tr><td><span class="k">⌖ Centrer</span></td><td>Déplace le VFO pour que le signal suivi par ce décodeur tombe au milieu de la bande audio (triangle blanc) : sa fréquence ne change pas. L'autre décodeur reste calé sur son signal s'il est encore dans la bande.</td></tr>
-  <tr><td><span class="k">TX</span> / clic dans la fenêtre</td><td>Choisit le décodeur dont les réglages servent à l'émission (fréquence audio, shift, vitesse) : <b>un clic n'importe où dans la fenêtre VFO-A ou VFO-B</b> suffit, ou le bouton <span class="k">TX</span> de son en-tête. Le bouton devient <span class="k">● Fenêtre TX</span> (rouge), l'en-tête rosit et un cadre rouge entoure le décodeur. Le zoom se centre sur lui. <b>Ce bouton ne met pas le TRX en émission</b> : on émet avec une macro <kbd>F1</kbd>…<kbd>F12</kbd> ou <span class="k">Émettre</span>.</td></tr>
+  <tr><td><span class="k">TX</span> / clic dans la fenêtre</td><td>Choisit le décodeur dont les réglages servent à l'émission (fréquence audio, shift, vitesse) : <b>un clic n'importe où dans la fenêtre VFO-A ou VFO-B</b> suffit, ou le bouton <span class="k">TX</span> de son en-tête. Le bouton devient <span class="k">▶ TX ici</span> (rouge), l'en-tête rosit et un cadre rouge entoure le décodeur. Le zoom se centre sur lui. <b>Un clic sur <span class="k">▶ TX ici</span> émet le texte personnalisé</b> tapé dans le cadre du bas (comme <span class="k">Émettre</span>) ; pendant l'émission il devient <span class="k">■ Arrêter</span>. Les macros <kbd>F1</kbd>…<kbd>F12</kbd> partent aussi sur cette fenêtre.</td></tr>
   <tr><td><span class="k">Effacer</span></td><td>Vide le texte reçu de ce décodeur.</td></tr>
   <tr><td>Trait vertical entre les deux textes</td><td>À glisser : largeur des deux décodeurs (double-clic : moitié-moitié).</td></tr>
 </table>
@@ -549,15 +549,15 @@ On suit ainsi deux stations de la même bande en même temps (concours, DX et so
 <ol>
   <li><b>Prendre la main</b>, onglet <b>RTTY</b>, TRX en <b>DATA-U</b> (bouton <span class="k">↺</span> de la liste des fréquences).</li>
   <li><b>Chercher une station</b> : clic sur un indicatif <span class="grn">vert</span> de la <b>carte de bande</b>. Le TRX se cale dessus, le décodeur de l'émission la décode et son indicatif passe dans Correspondant. Ou bien : clic gauche sur une trace de la cascade (décodeur A), clic droit (décodeur B).</li>
-  <li><b>Choisir la fenêtre d'émission</b> : un clic dans la fenêtre VFO-A ou VFO-B (« ● Fenêtre TX »). Un double-clic sur un indicatif reçu le met dans Correspondant et choisit en même temps sa fenêtre.</li>
-  <li><b>Répondre</b> : touche <kbd>F2</kbd> (ou la macro de réponse), puis échange avec la macro du report. <kbd>Échap</kbd> arrête l'émission en cours.</li>
+  <li><b>Choisir la fenêtre d'émission</b> : un clic dans la fenêtre VFO-A ou VFO-B (« ▶ TX ici »). Un double-clic sur un indicatif reçu le met dans Correspondant et choisit en même temps sa fenêtre.</li>
+  <li><b>Répondre</b> : touche <kbd>F2</kbd> (ou la macro de réponse), puis échange avec la macro du report. Pour un texte personnalisé : le taper dans le cadre du bas, puis <span class="k">▶ TX ici</span> (ou <kbd>Ctrl</kbd>+<kbd>Entrée</kbd>). <kbd>Échap</kbd> arrête l'émission en cours.</li>
   <li><b>Noter le QSO</b> : macro qui contient <code>&lt;LOG&gt;</code> (fiche ouverte toute seule) ou bouton <span class="k">Log QSO</span>.</li>
   <li><b>Appeler soi-même</b> (CQ) : choisir la fenêtre d'émission, puis <kbd>F1</kbd>. Avec deux décodeurs, on peut lancer CQ sur A tout en surveillant une autre station sur B.</li>
   <li><b>Station hors de la cascade mais pas spottée</b> : clic sur la carte de bande à la bonne fréquence (le TRX y va), ou glisser la cascade, ou <kbd>Maj</kbd> + molette.</li>
 </ol>
 
 <h4 id="carte-bande">Carte de bande (DX cluster)</h4>
-<p>À droite des onglets FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY et CW (pas en SSTV : une seule fréquence), une <b>colonne verticale</b> montre la bande comme une règle : fréquences basses <b>en haut</b>, hautes en bas (par défaut 7030–7120 kHz en 40 m, 14080–14150 kHz en 20 m, 3570–3600 kHz en 80 m…).
+<p>À droite des onglets FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY et CW (pas en SSTV : une seule fréquence), une <b>colonne verticale</b> montre la bande comme une règle (sur un grand écran, elle monte jusqu'en haut, à côté des écrans VFO A et B, rétrécis de la même largeur) : fréquences basses <b>en haut</b>, hautes en bas (par défaut 7030–7120 kHz en 40 m, 14080–14150 kHz en 20 m, 3570–3600 kHz en 80 m…).
 Les <b>spots</b> du DX cluster du club (OP0P, avec les stations repérées par le Reverse Beacon Network) s'y affichent à leur fréquence. On voit d'un coup d'œil toute la portion RTTY de la bande, alors que la cascade ne montre que 3 ou 4 kHz.</p>
 <table>
   <tr><th>Élément</th><th>Ce qu'il montre ou fait</th></tr>

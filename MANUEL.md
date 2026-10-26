@@ -548,7 +548,7 @@ Au-dessus de la cascade, la ligne d'aide (« clic gauche : décodeur A… ») s'
 | Indicateur M / S | Les deux barres doivent battre en alternance quand le décodeur est bien calé. |
 | Centre … Hz | Fréquence audio où le décodeur est calé. |
 | `⌖ Centrer` | Déplace le VFO pour que le signal suivi par ce décodeur tombe au milieu de la bande audio (triangle blanc) : sa fréquence ne change pas. L'autre décodeur reste calé sur son signal s'il est encore dans la bande. |
-| `TX` / clic dans la fenêtre | Choisit le décodeur dont les réglages servent à l'émission (fréquence audio, shift, vitesse) : **un clic n'importe où dans la fenêtre VFO-A ou VFO-B** suffit, ou le bouton `TX` de son en-tête. Le bouton devient `● Fenêtre TX` (rouge), l'en-tête rosit et un cadre rouge entoure le décodeur. Le zoom se centre sur lui. **Ce bouton ne met pas le TRX en émission** : on émet avec une macro `F1`…`F12` ou `Émettre`. |
+| `TX` / clic dans la fenêtre | Choisit le décodeur dont les réglages servent à l'émission (fréquence audio, shift, vitesse) : **un clic n'importe où dans la fenêtre VFO-A ou VFO-B** suffit, ou le bouton `TX` de son en-tête. Le bouton devient `▶ TX ici` (rouge), l'en-tête rosit et un cadre rouge entoure le décodeur. Le zoom se centre sur lui. **Un clic sur `▶ TX ici` émet le texte personnalisé** tapé dans le cadre du bas (comme `Émettre`) ; pendant l'émission il devient `■ Arrêter`. Les macros `F1`…`F12` partent aussi sur cette fenêtre. |
 | `Effacer` | Vide le texte reçu de ce décodeur. |
 | Trait vertical entre les deux textes | À glisser : largeur des deux décodeurs (double-clic : moitié-moitié). |
 
@@ -561,13 +561,13 @@ Au-dessus de la cascade, la ligne d'aide (« clic gauche : décodeur A… ») s'
 
 1. **Prendre la main**, onglet **RTTY**, TRX en **DATA-U** (bouton `↺` de la liste des fréquences).
 2. **Chercher une station** : clic sur un indicatif vert de la **carte de bande**. Le TRX se cale dessus, le décodeur de l'émission la décode et son indicatif passe dans Correspondant. Ou bien : clic gauche sur une trace de la cascade (décodeur A), clic droit (décodeur B).
-3. **Choisir la fenêtre d'émission** : un clic dans la fenêtre VFO-A ou VFO-B (« ● Fenêtre TX »). Un double-clic sur un indicatif reçu le met dans Correspondant et choisit en même temps sa fenêtre.
-4. **Répondre** : touche `F2` (ou la macro de réponse), puis échange avec la macro du report. `Échap` arrête l'émission en cours.
+3. **Choisir la fenêtre d'émission** : un clic dans la fenêtre VFO-A ou VFO-B (« ▶ TX ici »). Un double-clic sur un indicatif reçu le met dans Correspondant et choisit en même temps sa fenêtre.
+4. **Répondre** : touche `F2` (ou la macro de réponse), puis échange avec la macro du report. Pour un texte personnalisé : le taper dans le cadre du bas, puis `▶ TX ici` (ou `Ctrl`+`Entrée`). `Échap` arrête l'émission en cours.
 5. **Noter le QSO** : macro qui contient `<LOG>` (fiche ouverte toute seule) ou bouton `Log QSO`.
 6. **Appeler soi-même** (CQ) : choisir la fenêtre d'émission, puis `F1`. Avec deux décodeurs, on peut lancer CQ sur A tout en surveillant une autre station sur B.
 7. **Station hors de la cascade mais pas spottée** : clic sur la carte de bande à la bonne fréquence (le TRX y va), ou glisser la cascade, ou `Maj` + molette.
 
-À droite des onglets FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY et CW (pas en SSTV : une seule fréquence), une **colonne verticale** montre la bande comme une règle : fréquences basses **en haut**, hautes en bas (par défaut 7030–7120 kHz en 40 m, 14080–14150 kHz en 20 m, 3570–3600 kHz en 80 m…). Les **spots** du DX cluster du club (OP0P, avec les stations repérées par le Reverse Beacon Network) s'y affichent à leur fréquence. On voit d'un coup d'œil toute la portion RTTY de la bande, alors que la cascade ne montre que 3 ou 4 kHz.
+À droite des onglets FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY et CW (pas en SSTV : une seule fréquence), une **colonne verticale** montre la bande comme une règle (sur un grand écran, elle monte jusqu'en haut, à côté des écrans VFO A et B, rétrécis de la même largeur) : fréquences basses **en haut**, hautes en bas (par défaut 7030–7120 kHz en 40 m, 14080–14150 kHz en 20 m, 3570–3600 kHz en 80 m…). Les **spots** du DX cluster du club (OP0P, avec les stations repérées par le Reverse Beacon Network) s'y affichent à leur fréquence. On voit d'un coup d'œil toute la portion RTTY de la bande, alors que la cascade ne montre que 3 ou 4 kHz.
 
 | Élément | Ce qu'il montre ou fait |
 |---|---|
