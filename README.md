@@ -11,7 +11,7 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.22.72** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.22.73** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
 **Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
 `remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
@@ -29,7 +29,7 @@ L'archive s'installe avec la procédure « Mettre à jour le serveur » ci-desso
 
 - **Piloter le TRX** depuis un navigateur : fréquence, bandes, modes, filtres, DSP, deux VFO, SPLIT, RIT / XIT, antenne, tuner, puissance, PTT ; une seule personne « a la main » à la fois, les autres regardent et écoutent.
 - **Écouter** le TRX dans le navigateur, avec un réglage de volume propre à chacun.
-- **Modes numériques** décodés sur le serveur, sans logiciel à installer : FT8 · FT4 · FT2 (moteur WSJT-X 3 avec le décodeur multi-passes de JTDX, séquence automatique comme WSJT-X), RTTY, JTTY, WSPR, JT65, CW, SSTV ; émission en FT8 · FT4 · FT2, RTTY et JTTY. En RTTY, une **carte de bande** verticale affiche les spots du DX cluster (et du Reverse Beacon Network) : un clic sur un spot y cale le TRX et le décodeur.
+- **Modes numériques** décodés sur le serveur, sans logiciel à installer : FT8 · FT4 · FT2 (moteur WSJT-X 3 avec le décodeur multi-passes de JTDX, séquence automatique comme WSJT-X), RTTY, JTTY, WSPR, JT65, CW, SSTV ; émission en FT8 · FT4 · FT2, RTTY et JTTY. Une **carte de bande** verticale affiche les spots du DX cluster (et du Reverse Beacon Network) : un clic sur un spot y cale le TRX et le décodeur.
 - **Carnet de trafic** partagé : enregistrement des QSO, colonnes et filtres, export ADIF / Cabrillo (dont « Mes QSO » pour chaque opérateur), envoi vers LoTW, eQSL, Club Log et QRZ.com avec des identifiants par indicatif, recherche des correspondants sur QRZ.com, UDP vers Swisslog, Log4OM, N1MM…
 - **Sécurités d'émission** côté serveur et côté club : bandes autorisées, puissance selon la licence, ROS, durée maximale, coupure si la liaison tombe.
 - **Opérateurs** : liste des connectés, demande et passage de la main, discussion, mode « Suivre l'opérateur » pour la formation à distance.
@@ -296,7 +296,8 @@ L'essentiel en cinq lignes :
 | `lib/wsjtx.js`, `lib/data/ALLCALL7.TXT` | Pilotage du moteur de décodage WSJT-X (FT8 / FT4 / FT2, passes anticipée / normale / profonde, AP) ; base d'indicatifs de JTDX |
 | `native/wsjtx/` | Script de compilation des décodeurs de WSJT-X en programmes autonomes (`lib/bin/jt65`, `lib/bin/jttyd`, `lib/bin/wsjtxd` — moteur FT8 / FT4 / FT2, source `wsjtxd.c`, `build-wsjtxd.sh`), sans FFTW (`fftw_kiss.c`) ni Boost (`crc.c`) |
 | `native/wspr/` | Sources de wsprd (WSJT-X, GPL v3) et script de compilation de `lib/wsprd.wasm` |
-| `public/js/digi.js` | Onglets du centre : FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, CW, SSTV, Synchro |
+| `public/js/digi.js` | Onglets du centre : FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, CW, SSTV, Synchro ; carte de bande |
+| `public/js/zoom.js` | Taille du dashboard adaptée à l'écran (Auto : agrandi au-delà de 1920 × 1080) |
 | `public/aide.html`, `public/help.html`, `native/manual2md.js` | Manuel des membres (FR / EN) et conversion en `MANUEL.md` / `USER-MANUAL.md` |
 | `releases/` | Versions prêtes à installer (archive serveur, installateur Windows, empreintes SHA-256) |
 | `public/js/sstv.js` | Modes SSTV et codeur (image → signal), communs au serveur et au navigateur |

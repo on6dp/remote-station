@@ -31,7 +31,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
-  min-height: 100vh;
+  min-height: calc(100vh / var(--zoom, 1));
   background:
     radial-gradient(1200px 600px at 50% -10%, rgba(0, 120, 200, .14), transparent 60%),
     radial-gradient(900px 500px at -10% 110%, rgba(0, 90, 160, .12), transparent 60%),
@@ -538,7 +538,7 @@ input[type='range']:disabled { opacity: .45; }
 /* ------------------------------------------------------------ écran large (1920 × 1080 et plus) : tout sur un écran */
 @media (min-width: 1800px) and (min-height: 860px) {
   body { overflow: hidden; }
-  .app { max-width: none; height: 100vh; margin: 0; box-sizing: border-box; border-radius: 0; border: 0;
+  .app { max-width: none; height: calc(100vh / var(--zoom, 1)); margin: 0; box-sizing: border-box; border-radius: 0; border: 0;
     grid-template-rows: auto minmax(0, 1fr) auto; padding: 8px 10px; gap: 8px; }
   .workspace { grid-template-columns: 236px minmax(0, 1fr) 236px; grid-template-rows: minmax(0, 1fr); min-height: 0; align-items: stretch; gap: 8px; }
   /* Plus compact pour tout faire tenir en hauteur */
@@ -1350,3 +1350,11 @@ body.bm-tall .center > [data-panel='bands'] { margin-right: calc(var(--bm-w) + 8
 body.bm-tall .bm { border: 1px solid var(--v2-border-panel); border-radius: var(--v2-panel-radius); right: -1px; bottom: -1px; }
 @media (max-width: 1500px) { #centerPanel.bm-on .ctab { padding-inline: 7px; letter-spacing: .5px; } }
 #rtTip[hidden], #rtStatus:empty { display: none; }
+/* Taille du dashboard (zoom.js) */
+.zoom-btn { font-weight: 700; white-space: nowrap; }
+.zoom-menu { min-width: 200px; }
+.zoom-menu button { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; border: 0; border-radius: 4px; background: none; color: var(--v2-text-bright); font: inherit; font-size: 12px; font-weight: 700; text-align: left; cursor: pointer; }
+.zoom-menu button small { color: var(--v2-text-dim); font-weight: 400; }
+.zoom-menu button:hover:not(:disabled) { background: var(--v2-bg-panel, #141c27); color: var(--v2-accent-cyan-bright, #00D4FF); }
+.zoom-menu button[aria-checked='true'] { color: var(--v2-accent-yellow); }
+.zoom-menu button:disabled { opacity: .35; cursor: default; }

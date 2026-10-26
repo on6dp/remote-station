@@ -242,8 +242,9 @@
         e.stopPropagation();
         h.setPointerCapture(e.pointerId);
         const x0 = e.clientX;
-        const w0 = th.getBoundingClientRect().width || saved[k] || w;
-        const mv = (ev) => { saved[k] = Math.max(24, Math.min(600, Math.round(w0 + ev.clientX - x0))); cols[i].style.width = saved[k] + 'px'; };
+        const zf = (window.RSZOOM && window.RSZOOM.z()) || 1; // zoom du dashboard (zoom.js)
+        const w0 = th.getBoundingClientRect().width / zf || saved[k] || w;
+        const mv = (ev) => { saved[k] = Math.max(24, Math.min(600, Math.round(w0 + (ev.clientX - x0) / zf))); cols[i].style.width = saved[k] + 'px'; };
         const up = () => { h.removeEventListener('pointermove', mv); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up); store(); };
         h.addEventListener('pointermove', mv);
         h.addEventListener('pointerup', up);

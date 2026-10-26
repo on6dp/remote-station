@@ -182,6 +182,7 @@ FT8 is the easiest mode to use remotely: everything is done with the mouse and t
 | Your callsign | The account you are logged in with. | — |
 | `Prendre la main` / `Libérer la main` | Control button (take control / release control). | You become the operator, or you give control back (section 6). |
 | `DX Cluster ▾` | Menu of the club's DX clusters. | Opens **dx.op0p.be** (Ultimate Cluster) or **cluster.op0p.be** (CC-Cluster OP0P) in a new tab: the list of spotted DX stations. |
+| `Auto 100 %` | Dashboard size. | **Auto** (recommended): the dashboard is designed for a 1920 × 1080 screen; on a larger screen it is enlarged in the same proportion to fill the screen, without moving anything (2560 × 1440: about 130 %; 4K 3840 × 2160: 200 %). The menu also lets you choose the size yourself (100 % to 250 %); sizes too large for the screen are greyed out. Setting kept in this browser. On a screen smaller than 1920, the layout already adapts by itself; Chrome's `Ctrl` + `−` can help. |
 | `HELP` | The manual. | Opens this page (French or English depending on your browser). |
 | `Déconnexion` | End of session (log out). | Ends the session and forgets this browser. |
 
@@ -547,7 +548,7 @@ Above the waterfall, the help line (« clic gauche : décodeur A… ») is shown
 | M / S indicator | The two bars should beat alternately when the decoder is tuned correctly. |
 | Centre … Hz | Audio frequency the decoder is tuned to. |
 | `⌖ Centrer` (centre) | Moves the VFO so that the signal followed by this decoder falls in the middle of the audio band (white triangle): its frequency does not change. The other decoder stays on its signal if it is still in the band. |
-| `TX` / click in the window | Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): **one click anywhere in the VFO-A or VFO-B window** is enough, or the `TX` button in its header. The button becomes `● TX ici` (red), the header turns pink and a red frame surrounds the decoder. The zoom centres on it. **This button does not key the transceiver**: transmit with a macro `F1`…`F12` or `Émettre`. |
+| `TX` / click in the window | Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): **one click anywhere in the VFO-A or VFO-B window** is enough, or the `TX` button in its header. The button becomes `● Fenêtre TX` (red), the header turns pink and a red frame surrounds the decoder. The zoom centres on it. **This button does not key the transceiver**: transmit with a macro `F1`…`F12` or `Émettre`. |
 | `Effacer` (clear) | Clears the received text of this decoder. |
 | Vertical bar between the two texts | Drag it: width of the two decoders (double-click: half and half). |
 
@@ -560,7 +561,7 @@ Above the waterfall, the help line (« clic gauche : décodeur A… ») is shown
 
 1. **Take control**, **RTTY** tab, TRX in **DATA-U** (`↺` button of the frequency list).
 2. **Find a station**: click a green callsign on the **band map**. The TRX tunes to it, the transmit decoder decodes it and its callsign goes into Correspondant. Or: left click on a trace in the waterfall (decoder A), right click (decoder B).
-3. **Choose the transmit window**: one click in the VFO-A or VFO-B window (« ● TX ici »). Double-clicking a received callsign puts it in Correspondant and selects its window at the same time.
+3. **Choose the transmit window**: one click in the VFO-A or VFO-B window (« ● Fenêtre TX »). Double-clicking a received callsign puts it in Correspondant and selects its window at the same time.
 4. **Reply**: `F2` key (or the reply macro), then the report macro. `Esc` stops the current transmission.
 5. **Log the QSO**: a macro containing `<LOG>` (form opens by itself) or the `Log QSO` button.
 6. **Call yourself** (CQ): choose the transmit window, then `F1`. With two decoders you can call CQ on A while watching another station on B.

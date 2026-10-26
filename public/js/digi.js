@@ -552,7 +552,7 @@
     for (const id of ['dgMkRx', 'dgMkTx', 'dgMkBM', 'dgMkBS']) if ($(id)) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
     // Pixels de l'écran (pas les pixels CSS) : sur un écran à 125 / 150 %, la cascade reste aussi fine que l'écran le permet,
     // et une cascade agrandie avec la poignée montre plus d'historique au lieu d'étirer les lignes
-    const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+    const dpr = Math.min(4, Math.max(1, (window.devicePixelRatio || 1) * (window.RSZOOM ? window.RSZOOM.z() : 1)));
     const cw = Math.max(200, Math.floor(c.clientWidth || c.parentElement.clientWidth));
     const ch = Math.max(40, Math.round(c.clientHeight || 140));
     const w = Math.round(cw * dpr);
@@ -1140,7 +1140,9 @@
     const tall = !bm.hidden && !POPUP && window.innerWidth >= 1700 && !!tp && tp.parentElement === p.parentElement && !!tp.offsetParent
       && tp.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING && !p.classList.contains('collapsed');
     document.body.classList.toggle('bm-tall', tall);
-    const top = tall ? Math.round(tp.getBoundingClientRect().top - p.getBoundingClientRect().top) + 'px' : '0px';
+    // getBoundingClientRect est en pixels agrandis quand le dashboard est zoomé (zoom.js) : on revient en pixels CSS
+    const z = (window.RSZOOM && window.RSZOOM.z()) || 1;
+    const top = tall ? Math.round((tp.getBoundingClientRect().top - p.getBoundingClientRect().top) / z) + 'px' : '0px';
     if (bm.style.top !== top) { bm.style.top = top; bmDraw(); }
   }
   function bmDraw() {
@@ -1152,7 +1154,7 @@
     if (!body || !cv) return;
     const W = body.clientWidth, H = body.clientHeight;
     if (W < 40 || H < 60) return;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = (window.devicePixelRatio || 1) * (window.RSZOOM ? window.RSZOOM.z() : 1);
     if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1330,7 +1332,8 @@
     const kOf = (e) => {
       const r = body.getBoundingClientRect();
       const [lo, hi, PAD, H] = bmLay;
-      return lo + ((e.clientY - r.top - PAD) / (H - 2 * PAD)) * (hi - lo);
+      const y = ((e.clientY - r.top) / (r.height || 1)) * H; // pixels CSS, même avec le zoom du dashboard
+      return lo + ((y - PAD) / (H - 2 * PAD)) * (hi - lo);
     };
     let drag = null;
     body.addEventListener('mousedown', (e) => {
@@ -1340,7 +1343,7 @@
     });
     window.addEventListener('mousemove', (e) => {
       if (!drag) return;
-      const dy = e.clientY - drag.y;
+      const dy = (e.clientY - drag.y) / ((window.RSZOOM && window.RSZOOM.z()) || 1);
       if (Math.abs(dy) > 4) drag.moved = true;
       if (!drag.moved) return;
       const H = bmLay[3] - 2 * bmLay[2];
@@ -1413,7 +1416,7 @@
     document.querySelectorAll('.rt-txsel').forEach((b) => {
       const on = Number(b.dataset.ch) === rtTx;
       b.setAttribute('aria-pressed', String(on));
-      b.textContent = on ? '● TX ici' : 'TX';
+      b.textContent = on ? '● Fenêtre TX' : 'TX';
       b.title = on ? 'L’émission RTTY (macros F1 à F12, « Émettre ») part sur la fréquence de ce décodeur. Ce bouton ne met pas le TRX en émission.'
         : 'Choisir ce décodeur pour l’émission (ou cliquer dans sa fenêtre). Ce bouton ne met pas le TRX en émission : utilisez une macro F1 à F12 ou « Émettre ».';
       b.closest('.rt-side').classList.toggle('rt-istx', on);
@@ -3257,9 +3260,10 @@
         e.preventDefault();
         grip.setPointerCapture(e.pointerId);
         const y0 = e.clientY;
-        const h0 = $('dgWf').getBoundingClientRect().height;
-        const mv = (ev) => setWfH(h0 + ev.clientY - y0, false);
-        const up = (ev) => { grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up); setWfH(h0 + ev.clientY - y0, true); };
+        const zf = (window.RSZOOM && window.RSZOOM.z()) || 1; // zoom du dashboard : pixels de l'écran → pixels CSS
+        const h0 = $('dgWf').getBoundingClientRect().height / zf;
+        const mv = (ev) => setWfH(h0 + (ev.clientY - y0) / zf, false);
+        const up = (ev) => { grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up); setWfH(h0 + (ev.clientY - y0) / zf, true); };
         grip.addEventListener('pointermove', mv);
         grip.addEventListener('pointerup', up);
         grip.addEventListener('pointercancel', up);

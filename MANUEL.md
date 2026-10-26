@@ -182,6 +182,7 @@ Le FT8 est le mode le plus simple à distance : tout se fait à la souris et le 
 | Votre indicatif | Le compte avec lequel vous êtes connecté. | — |
 | `Prendre la main` / `Libérer la main` | Bouton de pilotage. | Vous devenez l'opérateur, ou vous rendez la main (section 6). |
 | `DX Cluster ▾` | Menu des clusters DX du club. | Ouvre dans un nouvel onglet **dx.op0p.be** (Ultimate Cluster) ou **cluster.op0p.be** (CC-Cluster OP0P) : la liste des stations DX annoncées. |
+| `Auto 100 %` | Taille du dashboard. | **Auto** (conseillé) : le dashboard est dessiné pour un écran 1920 × 1080 ; sur un écran plus grand, il est agrandi dans la même proportion pour remplir l'écran, sans rien déplacer (2560 × 1440 : environ 130 % ; 4K 3840 × 2160 : 200 %). Le menu permet aussi de choisir la taille soi-même (100 % à 250 %) ; les tailles trop grandes pour l'écran sont grisées. Réglage gardé dans ce navigateur. Sur un écran plus petit que 1920, la mise en page s'adapte déjà toute seule ; `Ctrl` + `−` de Chrome peut aider. |
 | `HELP` | Le manuel. | Ouvre cette page (français ou anglais selon votre navigateur). |
 | `Déconnexion` | Fin de session. | Ferme la session et oublie ce navigateur. |
 
@@ -547,7 +548,7 @@ Au-dessus de la cascade, la ligne d'aide (« clic gauche : décodeur A… ») s'
 | Indicateur M / S | Les deux barres doivent battre en alternance quand le décodeur est bien calé. |
 | Centre … Hz | Fréquence audio où le décodeur est calé. |
 | `⌖ Centrer` | Déplace le VFO pour que le signal suivi par ce décodeur tombe au milieu de la bande audio (triangle blanc) : sa fréquence ne change pas. L'autre décodeur reste calé sur son signal s'il est encore dans la bande. |
-| `TX` / clic dans la fenêtre | Choisit le décodeur dont les réglages servent à l'émission (fréquence audio, shift, vitesse) : **un clic n'importe où dans la fenêtre VFO-A ou VFO-B** suffit, ou le bouton `TX` de son en-tête. Le bouton devient `● TX ici` (rouge), l'en-tête rosit et un cadre rouge entoure le décodeur. Le zoom se centre sur lui. **Ce bouton ne met pas le TRX en émission** : on émet avec une macro `F1`…`F12` ou `Émettre`. |
+| `TX` / clic dans la fenêtre | Choisit le décodeur dont les réglages servent à l'émission (fréquence audio, shift, vitesse) : **un clic n'importe où dans la fenêtre VFO-A ou VFO-B** suffit, ou le bouton `TX` de son en-tête. Le bouton devient `● Fenêtre TX` (rouge), l'en-tête rosit et un cadre rouge entoure le décodeur. Le zoom se centre sur lui. **Ce bouton ne met pas le TRX en émission** : on émet avec une macro `F1`…`F12` ou `Émettre`. |
 | `Effacer` | Vide le texte reçu de ce décodeur. |
 | Trait vertical entre les deux textes | À glisser : largeur des deux décodeurs (double-clic : moitié-moitié). |
 
@@ -560,7 +561,7 @@ Au-dessus de la cascade, la ligne d'aide (« clic gauche : décodeur A… ») s'
 
 1. **Prendre la main**, onglet **RTTY**, TRX en **DATA-U** (bouton `↺` de la liste des fréquences).
 2. **Chercher une station** : clic sur un indicatif vert de la **carte de bande**. Le TRX se cale dessus, le décodeur de l'émission la décode et son indicatif passe dans Correspondant. Ou bien : clic gauche sur une trace de la cascade (décodeur A), clic droit (décodeur B).
-3. **Choisir la fenêtre d'émission** : un clic dans la fenêtre VFO-A ou VFO-B (« ● TX ici »). Un double-clic sur un indicatif reçu le met dans Correspondant et choisit en même temps sa fenêtre.
+3. **Choisir la fenêtre d'émission** : un clic dans la fenêtre VFO-A ou VFO-B (« ● Fenêtre TX »). Un double-clic sur un indicatif reçu le met dans Correspondant et choisit en même temps sa fenêtre.
 4. **Répondre** : touche `F2` (ou la macro de réponse), puis échange avec la macro du report. `Échap` arrête l'émission en cours.
 5. **Noter le QSO** : macro qui contient `<LOG>` (fiche ouverte toute seule) ou bouton `Log QSO`.
 6. **Appeler soi-même** (CQ) : choisir la fenêtre d'émission, puis `F1`. Avec deux décodeurs, on peut lancer CQ sur A tout en surveillant une autre station sur B.
