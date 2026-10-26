@@ -52,7 +52,7 @@
 <a id="intro"></a>
 ## 1. Avant de commencer
 
-La **Remote Station** permet aux membres de la section UBA-LGE d'utiliser le **transceiver (TRX) du club** depuis chez eux, avec un simple navigateur. Le TRX (un Yaesu FTX-1 avec son ampli SPA-1, ou selon le cas un FTDX10 ou un IC-7300) est au club, relié à un PC. Ce PC est relié par internet au serveur **remote.op0p.be**, et c'est ce serveur que vous ouvrez dans votre navigateur.
+La **Remote Station** permet aux membres de la section UBA-LGE d'utiliser le **transceiver (TRX) du club** depuis chez eux, avec un simple navigateur. Le TRX (un Yaesu FTX-1 avec son ampli SPA-1, ou selon le cas un FTDX10, un FTDX101D / MP ou un IC-7300) est au club, relié à un PC. Ce PC est relié par internet au serveur **remote.op0p.be**, et c'est ce serveur que vous ouvrez dans votre navigateur.
 
 1. Vous cliquez sur un bouton du dashboard (par exemple « 20M »).
 2. Le serveur transmet l'ordre au PC du club.
@@ -176,7 +176,7 @@ Le FT8 est le mode le plus simple à distance : tout se fait à la souris et le 
 |---|---|---|
 | `● Serveur` | Voyant de liaison entre votre navigateur et le serveur. | Vert = connecté. Rouge ou gris : vérifiez votre internet, la page se reconnecte toute seule. |
 | `● Station` | Voyant de la page Station du PC du club. | Vert = le PC du club est en ligne. Pour les administrateurs, un clic ouvre le menu du TRX (section 17). |
-| `● FTX-1 FTDX10 IC-7300` | Les TRX du club ; celui en service est en surbrillance. | Vert = le TRX répond par le CAT ; rouge = le TRX émet. |
+| `● FTX-1 FTDX10 FTDX101D / MP IC-7300` | Les TRX du club ; celui en service est en surbrillance. | Vert = le TRX répond par le CAT ; rouge = le TRX émet. |
 | Titre au centre | Indicatif et nom de la station. | — |
 | `👥 n` | Nombre de membres connectés. | Ouvre le volet **Opérateurs** : qui est là, qui a la main, discussion (section 10). Un point rouge signale un nouveau message. |
 | Votre indicatif | Le compte avec lequel vous êtes connecté. | — |
@@ -276,7 +276,7 @@ La ligne grise sous les bandes rappelle les gestes utiles ; la ligne de messages
 
 | Commande | Ce qu'elle fait |
 |---|---|
-| `ANT 1` / `ANT 2` | Choisit la prise d'antenne de l'ampli SPA-1 (FTX-1). Refusé pendant une émission. Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés). Après un changement d'antenne, refaites un TUNE. |
+| `ANT 1` / `ANT 2` | Choisit la prise d'antenne de l'ampli SPA-1 (FTX-1), ou ANT 1 / ANT 2 / ANT 3 sur le FTDX101. Refusé pendant une émission. Le FTDX10 et l'IC-7300 ne permettent pas ce choix à distance (boutons grisés). Après un changement d'antenne, refaites un TUNE. |
 
 **RF front end** (l'entrée du récepteur)
 
@@ -527,7 +527,7 @@ Même fenêtre que FT8, mais avec des périodes d'une minute ; le TRX va sur la 
 <a id="rtty"></a>
 ### 12.3 RTTY
 
-Le RTTY est le « télétype » : on tape du texte qui défile chez le correspondant. Très utilisé en concours. L'onglet a **deux décodeurs indépendants** : **A** (VFO-A, à gauche) et **B** (VFO-B, à droite), chacun avec son texte reçu et ses réglages. Le FTX-1, le FTDX10 et l'IC-7300 n'envoient qu'un seul son au PC : il y a donc **une seule cascade**, sur toute la largeur, avec les repères des deux décodeurs. On suit ainsi deux stations de la même bande en même temps (concours, DX et son pile-up). Un TRX qui envoie ses deux récepteurs séparément (FTDX101D / MP) aura une cascade par décodeur, côte à côte.
+Le RTTY est le « télétype » : on tape du texte qui défile chez le correspondant. Très utilisé en concours. L'onglet a **deux décodeurs indépendants** : **A** (VFO-A, à gauche) et **B** (VFO-B, à droite), chacun avec son texte reçu et ses réglages. Le FTX-1, le FTDX10 et l'IC-7300 n'envoient qu'un seul son au PC (le FTDX101 aussi pour l'instant : la séparation de ses deux récepteurs est prévue) : il y a donc **une seule cascade**, sur toute la largeur, avec les repères des deux décodeurs. On suit ainsi deux stations de la même bande en même temps (concours, DX et son pile-up). Un TRX qui envoie ses deux récepteurs séparément (FTDX101D / MP) aura une cascade par décodeur, côte à côte.
 
 Au-dessus de la cascade, la ligne d'aide (« clic gauche : décodeur A… ») s'affiche **3 secondes** à l'arrivée sur l'onglet puis s'efface, pour laisser plus de place aux fenêtres de réception ; elle reste au survol de la cascade. La ligne d'état n'apparaît qu'en cas de problème (pas de BF, TRX pas en DATA-U…).
 
@@ -804,7 +804,7 @@ Un clic sur le voyant `● Station` ouvre le menu **TRX du club** :
 
 | Commande | Ce qu'elle fait |
 |---|---|
-| Nom d'un TRX (FTX-1, FTDX10, IC-7300) | Passe sur ce TRX, après confirmation. La station redémarre quelques secondes et la main est conservée. Le TRX doit être branché au PC du club et son port choisi une fois sur la page Station. Impossible pendant une émission. |
+| Nom d'un TRX (FTX-1, FTDX10, FTDX101D / MP, IC-7300) | Passe sur ce TRX, après confirmation. La station redémarre quelques secondes et la main est conservée. Le TRX doit être branché au PC du club et son port choisi une fois sur la page Station. Impossible pendant une émission. |
 | `↻ Recharger la page Station` | Recharge à distance la page Station du PC du club (nouvelle version, page bloquée…). La station revient en une dizaine de secondes. |
 | `⌨ Lecture CAT…` | Diagnostic : lit une valeur brute du TRX (lecture seulement, liste de commandes autorisées). Plusieurs lectures sur une ligne (« VS;FT;ST; ») ; `Effacer` vide la fenêtre. |
 

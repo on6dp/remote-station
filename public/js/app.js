@@ -12,7 +12,7 @@
     ['160M', 1840, 'LSB', 1800, 2000], ['80M', 3700, 'LSB', 3500, 4000], ['60M', 5357, null, 5250, 5450],
     ['40M', 7100, 'LSB', 7000, 7300], ['30M', 10136, null, 10100, 10150], ['20M', 14200, 'USB', 14000, 14350],
     ['17M', 18130, 'USB', 18068, 18168], ['15M', 21250, 'USB', 21000, 21450], ['12M', 24950, 'USB', 24890, 24990],
-    ['10M', 28500, 'USB', 28000, 29700], ['6M', 50150, 'USB', 50000, 54000], ['2M', 144300, 'USB', 144000, 148000],
+    ['10M', 28500, 'USB', 28000, 29700], ['6M', 50150, 'USB', 50000, 54000], ['4M', 70200, 'USB', 69900, 70500], ['2M', 144300, 'USB', 144000, 148000],
     ['70CM', 432200, 'USB', 430000, 440000]
   ];
   const STEPS = [[1, '1 Hz'], [10, '10 Hz'], [100, '100 Hz'], [1000, '1 kHz'], [10000, '10 kHz'], [100000, '100 kHz']];
@@ -127,7 +127,7 @@
     const range = RIG().POWER_RANGE && RIG().POWER_RANGE[r.powerHead];
     if (!range) return '';
     const fmt = (w) => String(w).replace('.', ',');
-    return ' · ' + (r.powerHead === '1' ? 'tête Field' : RIG().NAME.replace(/^\S+ /, '')) + ' ' + fmt(range[0]) + '–' + fmt(range[1]) + ' W';
+    return ' · ' + (r.powerHead === '1' ? 'tête Field' : (RIG().HEAD_NAMES && RIG().HEAD_NAMES[r.powerHead]) || RIG().NAME.replace(/^\S+ /, '')) + ' ' + fmt(range[0]) + '–' + fmt(range[1]) + ' W';
   }
   function badge(el, text, cls) {
     el.textContent = text;
@@ -276,6 +276,8 @@
     }
     for (const [name, khz, modeName] of BANDS) {
       if (khz * 1000 > R.FREQ_MAX) continue;
+      // 4 m (70 MHz) : TRX qui le couvrent (FTDX101 : BS17 ; FTDX10, IC-7300 version européenne), pas le FTX-1
+      if (name === '4M' && (R.BAND_CODES ? !R.BAND_CODES['4M'] : false)) continue;
       const mk = modeName && (R.MODE_KEYS || []).find((x) => x[1] === modeName);
       const b = mkBtn(name);
       b.dataset.band = name;
@@ -288,7 +290,7 @@
         // on règle alors directement la fréquence du VFO B (fréquence habituelle de la bande)
         const r0 = (st && st.radio) || {};
         const subOff = target === 'B' && R.ID === 'ftx1' && r0.dualRx === 0 && r0.vfoSel !== 1;
-        if (R.cmdBand && R.BAND_CODES && R.BAND_CODES[name] && !subOff) return send({ t: 'set', band: name, sub: target === 'B' });
+        if (R.cmdBand && R.BAND_CODES && R.BAND_CODES[name] && !subOff && !(R.BAND_SIDELESS && target === 'B')) return send({ t: 'set', band: name, sub: target === 'B' });
         setFreq(khz * 1000, target);
         if (mk) setTimeout(() => send({ t: 'set', mode: mk[0], sub: target === 'B' }), 200);
       });

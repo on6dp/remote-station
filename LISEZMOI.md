@@ -1,7 +1,7 @@
-# Remote Station — v0.22.81 (CAT + écoute de la BF)
+# Remote Station — v0.22.82 (CAT + écoute de la BF)
 
 Pilotage à distance d'un transceiver du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
-Trois modèles sont pris en charge : **Yaesu FTX-1**, **Yaesu FTDX10** et **Icom IC-7300**. Un seul est branché à la fois ; on choisit lequel sur la page Station du club, et la face avant des membres s'adapte toute seule.
+Quatre modèles sont pris en charge : **Yaesu FTX-1**, **Yaesu FTDX10**, **Yaesu FTDX101D / MP** et **Icom IC-7300**. Un seul est branché à la fois ; on choisit lequel sur la page Station du club, et la face avant des membres s'adapte toute seule.
 
 Cette version gère : fréquence (VFO A et B), mode, S-mètre, puissance, PTT, les fonctions du transceiver (voir ci-dessous), comptes par indicatif, une seule personne aux commandes, journal des accès. **La BF du TRX est relayée aux membres (écoute). Émission FT8 / FT4 / FT2 (v0.16) : le signal est fabriqué et joué par la page Station sur la carte son du TRX ; le micro des membres vers le TRX est encore à faire.**
 
@@ -37,6 +37,7 @@ Les réglages affichés sont générés à partir du pilote de la radio connect�
 
 Différences des autres modèles :
 - **FTDX10** : mêmes fonctions, avec ATT 6/12/18 dB, NB et DNR en interrupteur + niveau, puissance 5–100 W, couverture jusqu'à 75 MHz (pas de 2 m ni 70 cm).
+- **FTDX101D / MP** : deux récepteurs complets (MAIN = VFO A, SUB = VFO B) : DUAL RX par FR, réglages du côté SUB directement (ATT, IPO / AMP, NB, DNR, NOTCH, DNF, NARROW, WIDTH, SHIFT, CONTOUR, APF, AGC, RF) ; ATT 6/12/18 dB ; antennes ANT 1 / 2 / 3 ; puissance 5–100 W (D) ou 5–200 W (MP, reconnu tout seul par le CAT) ; SPLIT normal (ST) ; RIT / XIT par RT / XT ; couverture jusqu'à 75 MHz avec la bande 4 m (70 MHz).
 - **IC-7300** : modes LSB, USB, CW, CW-R, RTTY, RTTY-R, AM, FM et les modes DATA (USB-D…) ; filtres FIL1/FIL2/FIL3 et PBT intérieur/extérieur à la place de WIDTH/SHIFT ; NB, NR, NOTCH manuel (position) et AUTO NOTCH ; ATT 20 dB, P.AMP1/2, AGC FAST/MID/SLOW ; COMP ; tuner et TUNE ; RIT/XIT (ΔTX). Pas de B → A ni de choix de la VFO active (l'IC-7300 ne les donne pas par CI-V) : la VFO A de l'écran est la VFO sélectionnée sur la radio.
 
 La VFO B s'accorde aussi : cliquez sur la ligne SUB de l'écran, et le bouton, les touches de mode et de bande et « Aller à » agissent alors sur B. En émission, l'écran affiche la puissance relative, le SWR et l'ALC.
@@ -49,9 +50,9 @@ Règles de sécurité propres à ces fonctions :
 
 ### Modèles de transceivers
 
-Sur la page Station, la liste « Modèle du TRX » propose les trois transceivers du club : **Yaesu FTX-1**, **Yaesu FTDX10** et **Icom IC-7300**. Choisir un modèle recharge la page avec son pilote ; la vitesse série est mémorisée pour chaque modèle (38400 bps pour les Yaesu, 115200 pour l'IC-7300). Les membres voient le nom du TRX connecté en haut de leur page, et leurs touches s'adaptent.
+Sur la page Station, la liste « Modèle du TRX » propose les transceivers pris en charge : **Yaesu FTX-1**, **Yaesu FTDX10**, **Yaesu FTDX101D / MP** et **Icom IC-7300**. Choisir un modèle recharge la page avec son pilote ; la vitesse série est mémorisée pour chaque modèle (38400 bps pour les Yaesu, 115200 pour l'IC-7300). Les membres voient le nom du TRX connecté en haut de leur page, et leurs touches s'adaptent.
 
-Les pilotes FTDX10 et IC-7300 sont écrits d'après les manuels CAT/CI-V et testés sur des radios simulées : faites le premier essai réel en réception seule, puis l'émission sur charge fictive, comme pour le FTX-1.
+Les pilotes FTDX10, FTDX101D / MP et IC-7300 sont écrits d'après les manuels CAT/CI-V et testés sur des radios simulées : faites le premier essai réel en réception seule, puis l'émission sur charge fictive, comme pour le FTX-1.
 
 Les Icom IC-705, IC-7610, IC-9700, les Xiegu X6100 et X6200 et le Lab599 TX-500 restent listés comme « prévu ». Le serveur refuse une station qui annonce un modèle sans pilote.
 
@@ -87,7 +88,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.22.81.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.22.82.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -95,7 +96,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.22.81.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.22.82.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station
@@ -153,7 +154,7 @@ Test immédiat : ouvre `https://remote.op0p.be/station`, colle le jeton, clique 
 (compte créé avec `adduser.js … --admin` ; `node adduser.js --list` montre qui l'est). Le PC reste autorisé un an, jusqu'à
 « Se déconnecter ». Le jeton de la station reste nécessaire pour brancher le TRX.
 
-Choisir d'abord le **modèle du TRX** branché dans « Réglages » (FTX-1, FTDX10 ou IC-7300). La page rappelle les réglages de la radio correspondants.
+Choisir d'abord le **modèle du TRX** branché dans « Réglages » (FTX-1, FTDX10, FTDX101D / MP ou IC-7300). La page rappelle les réglages de la radio correspondants.
 
 **FTX-1** (firmware MAIN 1.08 ou plus récent, exigé pour le CAT) :
 - Operation setting → General → **CAT-1 RATE : 38400**
@@ -164,6 +165,11 @@ Choisir d'abord le **modèle du TRX** branché dans « Réglages » (FTX-1, FTDX
 
 **FTDX10** :
 - Operation setting → General → **CAT RATE : 38400** (ou la vitesse choisie sur la page)
+- RPTT SELECT laissé sur **OFF**
+- Windows : pilote « Virtual COM port » de Yaesu ; choisir le port **Enhanced COM Port**.
+
+**FTDX101D / MP** :
+- OPERATION SETTING → GENERAL → **CAT RATE : 38400** (ou la vitesse choisie sur la page)
 - RPTT SELECT laissé sur **OFF**
 - Windows : pilote « Virtual COM port » de Yaesu ; choisir le port **Enhanced COM Port**.
 

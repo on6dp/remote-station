@@ -7,6 +7,7 @@
   const RIG_CATALOG = [
     { id: 'ftx1', name: 'Yaesu FTX-1', protocol: 'CAT Yaesu', ready: true },
     { id: 'ftdx10', name: 'Yaesu FTDX10', protocol: 'CAT Yaesu', ready: true },
+    { id: 'ftdx101', name: 'Yaesu FTDX101D / MP', protocol: 'CAT Yaesu', ready: true },
     { id: 'ic7300', name: 'Icom IC-7300', protocol: 'CI-V', ready: true },
     { id: 'ic705', name: 'Icom IC-705', protocol: 'CI-V', ready: false },
     { id: 'ic7610', name: 'Icom IC-7610', protocol: 'CI-V', ready: false },

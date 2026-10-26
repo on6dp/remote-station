@@ -67,7 +67,7 @@ After a server update, press <kbd>Ctrl</kbd> + <kbd>F5</kbd> to reload the page.
 
 <h2 id="intro">1. Before you start</h2>
 <p>The <b>Remote Station</b> lets members of the UBA-LGE section use the <b>club transceiver (TRX)</b> from home, with nothing more than a web browser.
-The TRX (a Yaesu FTX-1 with its SPA-1 amplifier, or depending on the setup an FTDX10 or an IC-7300) is at the club, connected to a PC. That PC is linked over the internet to the server
+The TRX (a Yaesu FTX-1 with its SPA-1 amplifier, or depending on the setup an FTDX10, an FTDX101D / MP or an IC-7300) is at the club, connected to a PC. That PC is linked over the internet to the server
 <b>remote.op0p.be</b>, and that server is what you open in your browser.</p>
 <ol>
   <li>You click a button on the dashboard (for example "20M").</li>
@@ -182,7 +182,7 @@ The TRX (a Yaesu FTX-1 with its SPA-1 amplifier, or depending on the setup an FT
   <tr><th>Item</th><th>What it is</th><th>What it does</th></tr>
   <tr><td><span class="k">● Serveur</span></td><td>Link lamp between your browser and the server.</td><td>Green = connected. Red or grey: check your internet connection; the page reconnects by itself.</td></tr>
   <tr><td><span class="k">● Station</span></td><td>Lamp of the Station page on the club PC.</td><td>Green = the club PC is online. For administrators, a click opens the TRX menu (section 17).</td></tr>
-  <tr><td><span class="k">● FTX-1 FTDX10 IC-7300</span></td><td>The club transceivers; the one in use is highlighted.</td><td>Green = the TRX answers over CAT; red = the TRX is transmitting.</td></tr>
+  <tr><td><span class="k">● FTX-1 FTDX10 FTDX101D / MP IC-7300</span></td><td>The club transceivers; the one in use is highlighted.</td><td>Green = the TRX answers over CAT; red = the TRX is transmitting.</td></tr>
   <tr><td>Title in the centre</td><td>Callsign and name of the station.</td><td>—</td></tr>
   <tr><td><span class="k">👥 n</span></td><td>Number of members online.</td><td>Opens the <b>Opérateurs</b> (operators) panel: who is there, who has control, chat (section 10). A red dot means a new message.</td></tr>
   <tr><td>Your callsign</td><td>The account you are logged in with.</td><td>—</td></tr>
@@ -275,7 +275,7 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
 <p><b>Antenne</b> (antenna)</p>
 <table>
   <tr><th>Command</th><th>What it does</th></tr>
-  <tr><td><span class="k">ANT 1</span> / <span class="k">ANT 2</span></td><td>Chooses the antenna socket of the SPA-1 amplifier (FTX-1). Refused during a transmission. The FTDX10 and IC-7300 do not allow this choice remotely (buttons greyed out). After changing antenna, do a new TUNE.</td></tr>
+  <tr><td><span class="k">ANT 1</span> / <span class="k">ANT 2</span></td><td>Chooses the antenna socket of the SPA-1 amplifier (FTX-1), or ANT 1 / ANT 2 / ANT 3 on the FTDX101. Refused during a transmission. The FTDX10 and IC-7300 do not allow this choice remotely (buttons greyed out). After changing antenna, do a new TUNE.</td></tr>
 </table>
 <p><b>RF front end</b> (the receiver input)</p>
 <table>
@@ -512,7 +512,7 @@ For transmitting, choose a clear spot in the waterfall. A white line marks the s
 <h3 id="rtty">12.3 RTTY</h3>
 <p>RTTY is radio "teletype": you type text that scrolls on the other station's screen. Widely used in contests.
 The tab has <b>two independent decoders</b>: <b>A</b> (VFO-A, left) and <b>B</b> (VFO-B, right), each with its own received text and settings.
-The FTX-1, FTDX10 and IC-7300 send a single audio stream to the PC, so there is <b>one waterfall</b>, full width, carrying the markers of both decoders.
+The FTX-1, FTDX10 and IC-7300 send a single audio stream to the PC (the FTDX101 too for now: splitting its two receivers is planned), so there is <b>one waterfall</b>, full width, carrying the markers of both decoders.
 You can follow two stations on the same band at once (contest, a DX and its pile-up). A transceiver that sends its two receivers separately (FTDX101D / MP) will get one waterfall per decoder, side by side.</p>
 <p>Above the waterfall, the help line (« clic gauche : décodeur A… ») is shown for <b>3 seconds</b> when you open the tab, then disappears to leave more room for the receive windows; it stays as a tooltip on the waterfall. The status line only appears when something is wrong (no audio, TRX not in DATA-U…).</p>
 <table>
@@ -779,7 +779,7 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
 <p>A click on the <span class="k">● Station</span> lamp opens the <b>TRX du club</b> (club TRX) menu:</p>
 <table>
   <tr><th>Command</th><th>What it does</th></tr>
-  <tr><td>Name of a TRX (FTX-1, FTDX10, IC-7300)</td><td>Switches to that TRX, after confirmation. The station restarts for a few seconds and control is kept. The TRX must be connected to the club PC and its port chosen once on the Station page. Not possible during a transmission.</td></tr>
+  <tr><td>Name of a TRX (FTX-1, FTDX10, FTDX101D / MP, IC-7300)</td><td>Switches to that TRX, after confirmation. The station restarts for a few seconds and control is kept. The TRX must be connected to the club PC and its port chosen once on the Station page. Not possible during a transmission.</td></tr>
   <tr><td><span class="k">↻ Recharger la page Station</span> (reload the Station page)</td><td>Reloads the Station page on the club PC remotely (new version, page stuck…). The station is back within about ten seconds.</td></tr>
   <tr><td><span class="k">⌨ Lecture CAT…</span> (CAT read)</td><td>Diagnostics: reads a raw value from the TRX (read only, list of allowed commands). Several reads on one line (« VS;FT;ST; »); <span class="k">Effacer</span> (clear) empties the window.</td></tr>
 </table>

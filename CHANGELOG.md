@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.82** — Nouveau TRX : **Yaesu FTDX101D / MP** (entre FTDX10 et IC-7300), d’après le manuel CAT 1912-D : deux récepteurs (DUAL RX, réglages SUB directs), ATT 6/12/18 dB, ANT 1/2/3, puissance 5–100 W (D) ou 5–200 W (MP, reconnu par ID), SPLIT par ST, RIT / XIT par RT / XT, bande 4 m. Testé sur simulateur ; premier essai réel en réception, puis émission sur charge fictive. Bouton 4 m aussi pour le FTDX10 et l’IC-7300. Redémarrer le service, recharger la page Station (choisir le modèle), puis Ctrl+F5.
 - **0.22.81** — RTTY : bouton gauche maintenu sur la cascade = les deux barres du décodeur A suivent la souris en continu (le décodage suit) ; bouton droit maintenu = décodeur B. L’accord du VFO en glissant passe à Maj + glisser (ou bouton du milieu) ; Maj + molette inchangé. Ctrl+F5 sur le dashboard suffit.
 - **0.22.80** — Pas d’accord de 1 Hz (ligne STEP) pour le réglage le plus fin. Ctrl+F5 sur le dashboard suffit.
 - **0.22.79** — RTTY : repères des décodeurs plus foncés et plus épais sur la cascade (A jaune / bleu, B mauve / vert), lisibles sur un écran lumineux ; lettres A et B en grand sur une pastille. La fenêtre qui n’émet pas affiche « RX ici » en vert (cadre vert) ; un clic inverse les rôles avec « ▶ TX ici » (rouge). Ctrl+F5 sur le dashboard suffit.

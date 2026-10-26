@@ -5,13 +5,13 @@ Pilotage à distance des transceivers du club depuis un navigateur.
 - **Site des membres** : https://remote.op0p.be
 - **Page Station (PC du club)** : https://remote.op0p.be/station
 - **Serveur** : VPS VEX `57.131.159.97`, dossier `/opt/remote-station`, service `remote-station` (port local 9000, derrière nginx)
-- **TRX pris en charge** : Yaesu FTX-1, Yaesu FTDX10, Icom IC-7300 (un seul branché à la fois)
+- **TRX pris en charge** : Yaesu FTX-1, Yaesu FTDX10, Yaesu FTDX101D / MP, Icom IC-7300 (un seul branché à la fois)
 
 ```
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.22.81** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.22.82** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
 **Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
 `remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
@@ -192,7 +192,7 @@ Les heures du journal systemd sont en **UTC** (heure belge − 1 h en hiver, −
 **Navigateur** : Chrome ou Edge (le Web Serial ne marche pas dans Firefox ni Safari), adresse en **https**.
 
 ### Première mise en route
-1. Brancher le TRX en USB (pilote « Virtual COM Port » de Yaesu pour FTX-1/FTDX10, pilote Icom CP210x pour l'IC-7300).
+1. Brancher le TRX en USB (pilote « Virtual COM Port » de Yaesu pour FTX-1 / FTDX10 / FTDX101, pilote Icom CP210x pour l'IC-7300).
 2. Ouvrir https://remote.op0p.be/station.
 3. **Réglages** : choisir le **Modèle du TRX**, coller le **jeton**, « Enregistrer et reconnecter » → voyant Serveur vert.
 4. « **Choisir le port du TRX** » → le bon port → le journal affiche « … répond ».
@@ -208,6 +208,7 @@ Les heures du journal systemd sont en **UTC** (heure belge − 1 h en hiver, −
 |---|---|---|---|
 | **FTX-1** | Operation setting → General : CAT-1 RATE 38400, CAT-1 CAT-3 STOP BIT 1bit, RPTT SELECT OFF | Enhanced COM Port (CAT-1) | 38400 |
 | **FTDX10** | Operation setting → General : CAT RATE 38400, RPTT SELECT OFF | Enhanced COM Port | 38400 |
+| **FTDX101D / MP** | OPERATION SETTING → GENERAL : CAT RATE 38400, RPTT SELECT OFF | Enhanced COM Port | 38400 |
 | **IC-7300** | MENU → SET → Connectors → CI-V : USB Baud Rate 115200, Address 94h, USB Echo Back OFF ; USB SEND et USB Keying OFF | port USB de l'IC-7300 | 115200 |
 
 Aucun autre logiciel (WSJT-X, log…) ne doit utiliser le port CAT en même temps.

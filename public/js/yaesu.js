@@ -255,6 +255,8 @@
     const BAND_CODES = spec.bandCodes || null;
     function cmdBand(name, sub) {
       if (!BAND_CODES || !Object.prototype.hasOwnProperty.call(BAND_CODES, name)) throw new Error('bande inconnue');
+      // FTDX101 : « BS P1P1; » sans côté (bandSideless) ; FTX-1 : « BS P1 P2P2; » avec le côté
+      if (spec.bandSideless) return 'BS' + BAND_CODES[name][0] + ';';
       return 'BS' + (sub ? '1' : '0') + BAND_CODES[name][0] + ';';
     }
 
@@ -364,12 +366,13 @@
             }
           }
           else if (c === 'AI0') { /* auto-information coupée */ }
-          else if ((m = /^BS([01])(\d\d)$/.exec(c)) && BAND_CODES) {
+          else if ((m = (spec.bandSideless ? /^BS()(\d\d)$/ : /^BS([01])(\d\d)$/).exec(c)) && BAND_CODES) {
             const b = Object.keys(BAND_CODES).find((k) => BAND_CODES[k][0] === m[2]);
             if (!b) out.push('?;');
-            else if (m[1] === '1') this.freqB = BAND_CODES[b][1];
+            else if (m[1] === '1' || (spec.bandSideless && this.ans['VS;'] === 'VS1')) this.freqB = BAND_CODES[b][1];
             else this.freq = BAND_CODES[b][1];
           }
+          else if (spec.fakeCmd && spec.fakeCmd(this, c, out)) { /* commande propre au modèle (simulateur) */ }
           else if (this.ans[c + ';'] != null) out.push(this.ans[c + ';'] + ';');
           else {
             const r = READS.find((x) => !x.power && x.re.test(c));
@@ -387,7 +390,7 @@
 
     return {
       ID, NAME, MODES: MODES_ALL, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX,
-      POWER_RANGE: P.range, POWER_STEP: P.step, INIT: spec.splitIsFT ? 'AI0;ST0;' : 'AI0;', UNKEY_EXTRA: spec.splitIsFT ? 'ST0;' : '',
+      POWER_RANGE: P.range, POWER_STEP: P.step, HEAD_NAMES: spec.headNames || null, BAND_SIDELESS: !!spec.bandSideless, INIT: (spec.splitIsFT ? 'AI0;ST0;' : 'AI0;') + (spec.initExtra || ''), UNKEY_EXTRA: spec.splitIsFT ? 'ST0;' : '',
       // SPLIT « virtuel » (FTX-1) : le VFO d'émission n'est envoyé au TRX qu'au moment d'émettre (FT), puis remis
       // Lectures CAT autorisées depuis la console de diagnostic (administrateurs) : lectures seulement
       CAT_QUERIES: Array.from(new Set(READS.map((r) => r.cmd).concat(FAST, FAST_SUB, TXMETERS, ['IF;', 'OI;', 'FR;', 'ID;', 'VS;', 'FT;', 'ST;', 'FA;', 'FB;'], spec.extraQueries || []))),
