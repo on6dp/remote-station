@@ -276,7 +276,7 @@
     <div class="dg-bar">
       <select id="cwDial" aria-label="Fréquence CW"></select>
       <button class="btn dg-back" type="button" id="cwQsy" title="Revenir sur cette fréquence (VFO A, en CW)" aria-label="Revenir sur cette fréquence (VFO A, en CW)">↺</button>
-      <select id="cwBw" aria-label="Filtre du décodeur" title="Largeur du filtre du décodeur : étroit = moins de bruit et de QRM, mais il faut être bien calé"><option value="50">Filtre 50 Hz</option><option value="100">Filtre 100 Hz</option><option value="200">Filtre 200 Hz</option><option value="400">Filtre 400 Hz</option></select>
+      <select id="cwBw" aria-label="Filtre du décodeur" title="Largeur du filtre du décodeur, et (avec la main, TRX en CW) de la largeur BW du TRX au plus près : étroit = moins de bruit et de QRM, mais il faut être bien calé"><option value="50">Filtre 50 Hz</option><option value="100">Filtre 100 Hz</option><option value="200">Filtre 200 Hz</option><option value="400">Filtre 400 Hz</option></select>
       <label class="rt-sq" title="Niveau minimal du signal au-dessus du bruit : plus haut = moins de lettres au hasard sur le bruit">Silencieux
         <input type="range" id="cwSq" min="0" max="20" step="1" aria-label="Silencieux"><output id="cwSqV">5</output></label>
       <span class="cw-lvl" title="Niveau du signal au-dessus du bruit (dB) ; le voyant suit la manipulation"><i class="cw-led" id="cwLed"></i><i class="cw-bar"><b id="cwBar"></b></i><span id="cwDb">0 dB</span></span>
@@ -2035,7 +2035,7 @@
     $('cwBw').value = String(cwc.bw);
     $('cwSq').value = String(cwc.squelch);
     $('cwSqV').textContent = String(cwc.squelch);
-    $('cwBw').addEventListener('change', () => { cwc.bw = Number($('cwBw').value); saveCw(true); drawScale(); });
+    $('cwBw').addEventListener('change', () => { cwc.bw = Number($('cwBw').value); saveCw(true); drawScale(); cwTrxWidth(cwc.bw); });
     $('cwSq').addEventListener('input', () => { $('cwSqV').textContent = $('cwSq').value; });
     $('cwSq').addEventListener('change', () => { cwc.squelch = Number($('cwSq').value); saveCw(true); });
     const sp = $('cwSpeed');
@@ -2702,6 +2702,34 @@
     else m.f0 = curTxF();
     dtxPend = { mode, text, zone };
     api.send(m);
+  }
+  // Filtre CW de l'onglet : règle aussi la largeur (BW) du TRX, au plus près, sur le VFO écouté (pour tous, comme le cadre Filtres)
+  function cwTrxWidth(hz) {
+    if (!api) return;
+    if (!api.iControl()) return api.say('Filtre du décodeur réglé à ' + hz + ' Hz ; prenez la main pour régler aussi la largeur (BW) du TRX.', 'warn');
+    const st = api.state();
+    const r = st && st.radio;
+    if (!r || !r.connected) return;
+    if ((st.ptt && st.ptt.active) || r.tx) return api.say('Émission en cours : seul le filtre du décodeur change.', 'warn');
+    const R = api.rig();
+    const C = R.CONTROL || {};
+    const sideB = Number(r.vfoSel) === 1 && !!C.widthB;
+    const mode = sideB ? r.modeB : r.mode;
+    if (!/^CW/.test(mode || '')) return api.say('TRX pas en CW (' + (mode || '?') + ') : seul le filtre du décodeur change.', 'warn');
+    // IC-7300 : trois filtres (CW : FIL2 ≈ 500 Hz, FIL3 ≈ 250 Hz par défaut)
+    if (C.fil && !C.width) {
+      const v = hz <= 250 ? 3 : 2;
+      api.send({ t: 'set', ctl: 'fil', value: v });
+      return api.say('Filtre CW : décodeur ' + hz + ' Hz, filtre du TRX FIL' + v + '.', '', 4000);
+    }
+    const t = R.widthTable && R.widthTable(mode);
+    if (!t) return;
+    let best = 0;
+    t.forEach((w, i) => { if (Math.abs(w - hz) < Math.abs(t[best] - hz)) best = i; });
+    const nar = sideB ? 'narrowB' : 'narrow';
+    if (r[nar] && C[nar]) api.send({ t: 'set', ctl: nar, value: 0 }); // NARROW imposerait sa largeur
+    api.send({ t: 'set', ctl: sideB ? 'widthB' : 'width', value: best + 1 });
+    api.say('Filtre CW : décodeur ' + hz + ' Hz, BW du TRX ' + t[best] + ' Hz (centré sur la tonalité CW du TRX : la station doit y être calée).', '', 6000);
   }
   function dtxState(x) {
     for (const mode of ['RTTY', 'JTTY']) {

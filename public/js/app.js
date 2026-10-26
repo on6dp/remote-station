@@ -200,6 +200,8 @@
     }
   }
   window.addEventListener('resize', () => { fitKey.A = ''; fitKey.B = ''; });
+  // Largeur du filtre sur l'écran VFO : « 2.4K », « 500 », « 50 » (sous 1 kHz en Hz : 50 et 100 Hz ne se confondent plus)
+  const bwK = (hz) => (hz >= 1000 ? (hz / 1000).toFixed(1) + 'K' : String(hz));
   function drawFreq(which, hz) {
     const s = hz == null ? '---------' : String(hz).padStart(9, '0');
     let lead = true;
@@ -1093,13 +1095,13 @@
     }
     const wt = RIG().widthTable && RIG().widthTable(r.mode);
     const wA = Number(ctlValue('width')) || r.width;
-    $('widthA').textContent = RIG().bwText ? (live ? RIG().bwText(Object.assign({}, r, { fil: ctlValue('fil') != null ? ctlValue('fil') : r.fil })) : '—') : 'BW ' + (live && r.narrow ? 'NAR' : live && wt && wA && wt[wA - 1] ? (wt[wA - 1] / 1000).toFixed(1) + 'K' : live && r.mode && /AM|FM/.test(r.mode) ? 'FIX' : '—');
+    $('widthA').textContent = RIG().bwText ? (live ? RIG().bwText(Object.assign({}, r, { fil: ctlValue('fil') != null ? ctlValue('fil') : r.fil })) : '—') : 'BW ' + (live && r.narrow ? 'NAR' : live && wt && wA && wt[wA - 1] ? bwK(wt[wA - 1]) : live && r.mode && /AM|FM/.test(r.mode) ? 'FIX' : '—');
     // Largeur de filtre du récepteur SUB (FTX-1)
     $('widthB').hidden = !RIG().SUB_BADGES;
     if (RIG().SUB_BADGES) {
       const wtB = RIG().widthTable && RIG().widthTable(r.modeB);
       const wB = Number(ctlValue('widthB')) || r.widthB;
-      $('widthB').textContent = 'BW ' + (live && r.narrowB ? 'NAR' : live && wtB && wB && wtB[wB - 1] ? (wtB[wB - 1] / 1000).toFixed(1) + 'K' : live && r.modeB && /AM|FM/.test(r.modeB) ? 'FIX' : '—');
+      $('widthB').textContent = 'BW ' + (live && r.narrowB ? 'NAR' : live && wtB && wB && wtB[wB - 1] ? bwK(wtB[wB - 1]) : live && r.modeB && /AM|FM/.test(r.modeB) ? 'FIX' : '—');
     }
     // S-mètre en réception, puissance relative en émission (sur le VFO qui émet) ; VFO B : S-mètre du côté SUB (FTX-1)
     const txB = txing && r.txVfo === 1;

@@ -627,7 +627,7 @@ WSPR is used to study propagation: low-power beacons transmit their callsign, lo
 | Command | What it does |
 |---|---|
 | Frequency list + `↺` | CW frequencies per band; the TRX switches to CW. |
-| **Filtre** (filter) 50 … 400 Hz | Decoder filter width: 100 Hz by default, 50 Hz with QRM, 200 to 400 Hz for searching. |
+| **Filtre** (filter) 50 … 400 Hz | Decoder filter width: 100 Hz by default, 50 Hz with QRM, 200 to 400 Hz for searching. **With control and the TRX in CW**, the choice also sets the **TRX BW** to the nearest width (for everybody, like the Filtres panel; NARROW is turned off if it was on; IC-7300: FIL3 up to 250 Hz, FIL2 above): the audio you hear narrows too. The TRX centres its filter on its own CW tone (pitch): the station must be tuned to that tone (click on the band map, or VFO), otherwise it disappears from the waterfall with a narrow filter. Without control, only the decoder changes. |
 | **Silencieux** (squelch) | Higher = fewer random letters on noise. |
 | LED and level bar | Follow the keying: the LED flashes in time with the Morse when the decoder is properly locked. |
 | Tonalité / Vitesse (tone / speed) | Audio frequency being tracked and measured speed (words per minute). |
