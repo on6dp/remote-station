@@ -320,6 +320,7 @@
           // FTX-1 réel : « émission sur MAIN » (FT0) pendant que le côté SUB est actif (VS1) → le TRX passe en émission
           if (spec.splitIsFT && !(this.txv || 0) && this.ans['VS;'] === 'VS1' && !this.tx) { this.tx = 2; this.keyedByFtVs = (this.keyedByFtVs || 0) + 1; }
         };
+        if (this.kmNoSpace) str = String(str).replace(/KM[1-5][^;]* [^;]*;/g, 'XX;'); // essai : TRX qui refuse les espaces en mémoire
         for (const c of this.sp.push(str)) {
           ftvs();
           let m;
@@ -375,7 +376,8 @@
           // Manipulateur CW (simulateur) : vitesse, break-in, mémoires, lecture (émission « par le TRX », TX2)
           else if (spec.cw && (m = /^KS(\d{3})$/.exec(c))) this.cwWpm = +m[1];
           else if (spec.cw && /^BI[01]$/.test(c)) { this.bi = c === 'BI1'; if (!this.bi && this.cwPlay) { clearTimeout(this.cwPlay); this.cwPlay = null; this.tx = 0; } }
-          else if (spec.cw && (m = /^KM([1-5])(.*)$/.exec(c))) { this.km = this.km || {}; this.km[m[1]] = m[2]; }
+          else if (spec.cw && /^KR[01]$/.test(c)) this.kr = c === 'KR1';
+          else if (spec.cw && (m = /^KM([1-5])(.*)$/.exec(c))) { this.km = this.km || {}; if (m[2] === '') out.push('KM' + m[1] + (this.km[m[1]] || '') + ';'); else this.km[m[1]] = m[2]; }
           else if (spec.cw && /^KY/.test(c)) {
             const slot = c === spec.cw.play.slice(0, -1) ? spec.cw.mem.slice(2) : null;
             if (c === 'KY00') { if (this.cwPlay) { clearTimeout(this.cwPlay); this.cwPlay = null; this.tx = 0; } }
@@ -423,11 +425,14 @@
       derive: spec.derive || null, preampText: spec.preampText || null, SUB_BADGES: !!spec.subBadges, remapRead: spec.remapRead || null,
       // Émission CW par le manipulateur du TRX : texte écrit dans une mémoire du manipulateur (KM), puis lu (KY),
       // break-in en service (BI1) pour que le TRX émette tout seul ; arrêt : fin de lecture et break-in coupé
+      // Commandes envoyées une à une (un refus « ? » est ainsi attribué à la bonne commande)
       CW: spec.cw ? {
         max: 50,
-        setup: (wpm) => ['KS' + pad(Math.max(4, Math.min(60, wpm)), 3) + ';BI1;'],
-        chunk: (t) => [spec.cw.mem + t + ';' + spec.cw.play],
-        stop: () => [spec.cw.stop]
+        setup: (wpm) => ['KS' + pad(Math.max(4, Math.min(60, wpm)), 3) + ';', 'KR1;', 'BI1;'],
+        mem: (t) => spec.cw.mem + t + ';',
+        read: spec.cw.mem + ';', readRe: new RegExp('^' + spec.cw.mem),
+        play: spec.cw.play, alt: spec.cw.alt || [],
+        stop: () => spec.cw.stop.match(/[^;]+;/g)
       } : null,
       GROUPS: [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']],
       CONTROLS, CONTROL, validate, widthTable, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,

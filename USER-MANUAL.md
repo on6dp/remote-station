@@ -628,12 +628,14 @@ WSPR is used to study propagation: low-power beacons transmit their callsign, lo
 |---|---|
 | Frequency list + `↺` | CW frequencies per band; the TRX switches to CW. |
 | **Filtre** (filter) 50 … 400 Hz | Decoder filter width: 100 Hz by default, 50 Hz with QRM, 200 to 400 Hz for searching. **With control and the TRX in CW**, the choice also sets the **TRX BW** to the nearest width (for everybody, like the Filtres panel; NARROW is turned off if it was on; IC-7300: FIL3 up to 250 Hz, FIL2 above): the audio you hear narrows too. The TRX centres its filter on its own CW tone (pitch): the station must be tuned to that tone (click on the band map, or VFO), otherwise it disappears from the waterfall with a narrow filter. Without control, only the decoder changes. |
-| **Silencieux** (squelch) | Higher = fewer random letters on noise. |
+| **Silencieux** (squelch) | Signal level (dB) below which nothing is displayed: higher = fewer random letters on noise, but very weak signals disappear. 5 by default; 3 or 4 for a very weak signal. The decoder keeps tracking the signal even with the squelch closed. |
+| **Vitesse** (speed, Émission box, right of its title) | **Transmit** speed of the TRX keyer, 5 to 50 wpm. No effect on reception: the received speed is measured by itself. |
 | LED and level bar | Follow the keying: the LED flashes in time with the Morse when the decoder is properly locked. |
 | Tonalité / Vitesse (tone / speed) | Audio frequency being tracked and measured speed (words per minute). |
 
 - **Click a signal** in the waterfall: the decoder locks onto the nearest signal and learns its speed. Right click: exact tuning where you click. **Left button held** while dragging: the yellow decoder marker follows the mouse **continuously** (decoding follows during the move) and stays exactly where you release, like the RTTY bars.
 - Double-click a received callsign = correspondent; `Log QSO` opens the logbook form.
+- **The decoder** (since 0.23.1) works like the ear: it retunes by itself to the exact tone of the signal (up to ± 60 Hz from the marker with the 100 Hz filter), filters as narrowly as the speed allows (about 1 / dot), and runs three decoders in parallel (fast, medium, slow), keeping the one whose dots and dashes have the most consistent lengths. It copies much weaker signals than before; it needs a few letters to find the speed of a new station.
 
 <a id="sstv"></a>
 ### 12.7 SSTV

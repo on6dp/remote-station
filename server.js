@@ -1255,7 +1255,8 @@ function cwRequest(conn, m) {
   journal('tx_start', { call: conn.user.call, ip: conn.ip, freq: txFreq(), mode: 'CW', text: text.slice(0, 60), wpm, watts: radio.power });
   toStation({ t: 'cmd', op: 'cw', id, text, wpm, by: conn.user.call });
   // Filet : fin non signalée par la page Station (marge pour les morceaux et le retour en réception)
-  cwJob.timer = setTimeout(() => cwEnd('fin du message non confirmée par la page Station', false), Math.round(seconds * 1000 + 3000 + 1500 * Math.ceil(text.length / 30)));
+  // (envoi mot par mot si le TRX refuse les espaces en mémoire : ~1,5 s de plus par mot)
+  cwJob.timer = setTimeout(() => cwEnd('fin du message non confirmée par la page Station', false), Math.round(seconds * 1300 + 5000 + 1500 * text.split(' ').length));
   broadcast();
 }
 /** Fin de l'émission CW ; fromStation : la page Station l'a déjà arrêtée (sinon on lui demande de couper). */

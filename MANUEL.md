@@ -628,12 +628,14 @@ Le WSPR sert à étudier la propagation : des balises de faible puissance émett
 |---|---|
 | Liste des fréquences + `↺` | Fréquences CW par bande ; le TRX passe en CW. |
 | **Filtre** 50 … 400 Hz | Largeur du filtre du décodeur : 100 Hz par défaut, 50 Hz en cas de QRM, 200 à 400 Hz pour chercher. **Avec la main et le TRX en CW**, le choix règle aussi la largeur **BW du TRX** au plus près (pour tout le monde, comme le cadre Filtres ; NARROW est coupé s'il était enclenché ; IC-7300 : FIL3 jusqu'à 250 Hz, FIL2 au-delà) : la BF entendue se rétrécit aussi. Le TRX centre son filtre sur sa propre tonalité CW (pitch) : la station doit être calée sur cette tonalité (clic sur la carte de bande, ou VFO), sinon elle disparaît de la cascade avec un filtre étroit. Sans la main, seul le décodeur change. |
-| **Silencieux** | Plus haut = moins de lettres au hasard sur le bruit. |
+| **Silencieux** | Niveau du signal (dB) au-dessous duquel rien n'est affiché : plus haut = moins de lettres au hasard sur le bruit, mais les signaux très faibles disparaissent. 5 par défaut ; 3 ou 4 pour un signal très faible. Le décodeur continue de suivre le signal même silencieux fermé. |
+| **Vitesse** (cadre Émission, à droite du titre) | Vitesse d'**émission** du manipulateur du TRX, 5 à 50 mots/min. Sans effet sur la réception : la vitesse reçue est mesurée toute seule. |
 | Voyant et barre de niveau | Suivent la manipulation : le voyant clignote au rythme du morse quand le décodeur est bien calé. |
 | Tonalité / Vitesse | Fréquence audio suivie et vitesse mesurée (mots/minute). |
 
 - **Cliquez sur un signal** dans la cascade : le décodeur se cale sur le signal le plus proche et apprend sa vitesse. Clic droit : calage exact là où vous cliquez. **Bouton gauche maintenu** en glissant : le repère jaune du décodeur suit la souris **en continu** (le décodage suit pendant le déplacement) et reste exactement où vous relâchez, comme les barres du RTTY.
 - Double-clic sur un indicatif reçu = correspondant ; `Log QSO` ouvre la fiche du carnet.
+- **Le décodeur** (depuis la 0.23.1) travaille comme l'oreille : il se recale tout seul sur la tonalité exacte du signal (jusqu'à ± 60 Hz du repère avec le filtre de 100 Hz), filtre au plus étroit que permet la vitesse (environ 1 / point), et fait tourner trois décodeurs en parallèle (rapide, moyen, lent) en gardant celui dont les points et les traits ont les durées les plus cohérentes. Il copie correctement des signaux bien plus faibles qu'avant ; il lui faut quelques lettres pour trouver la vitesse d'une nouvelle station.
 
 <a id="sstv"></a>
 ### 12.7 SSTV

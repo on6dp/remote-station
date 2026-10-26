@@ -124,7 +124,9 @@
         if (this.sideTrace && typeof t === 'string' && /^(VS|FT|TX|\?)/.test(t) && this.sideTrace.length < 40) this.sideTrace.push(t);
         if (this.subWait && typeof t === 'string') this._subReply(t);
         if (this.waitRe && typeof t === 'string' && this.waitRe.re.test(t)) { const w = this.waitRe; this.waitRe = null; clearTimeout(w.timer); w.cb(t); }
+        if (this.cwRe && typeof t === 'string' && this.cwRe.re.test(t)) this.cwRe.cb(t);
         const p = FTX1.parse(t);
+        if (p && p.error && this.cwWatch) this.cwWatch.errs++;
         if (!p) {
           // Diagnostic : réponse inconnue du pilote (affichée une fois par type, 20 au plus)
           const key = typeof t === 'string' ? t.slice(0, 4) : Array.from(t.slice(2, 4)).join(',');
@@ -850,33 +852,90 @@
         rest = rest.slice(cut).trim();
       }
       if (rest) chunks.push(rest);
-      const job = { id: m.id, chunks, wpm, i: 0, timer: null, started: false, t0: Date.now() };
+      const job = { id: m.id, timer: null };
       this.cw = job;
       this.lastCtl = null; // l'émission qui suit est voulue : pas la sécurité « émission après un réglage »
-      this._writeList(CW.setup(wpm));
       this.log('CW (' + (m.by || '?') + ') à ' + wpm + ' mots/min : « ' + text.slice(0, 70) + (text.length > 70 ? '…' : '') + ' »');
-      const waitRx = (then, limit) => {
-        // Fin d'un morceau : on attend le retour en réception (délai du break-in), au plus limit ms
-        const t0 = Date.now();
-        const poll = () => {
-          if (this.cw !== job) return;
-          if (!this.radio.tx || Date.now() - t0 > limit) return then();
-          job.timer = setTimeout(poll, 100);
-        };
-        poll();
-      };
-      const next = () => {
+      this._cwRun(job, chunks, wpm).catch((e) => { if (this.cw === job) this._cwFail(job, e.message); });
+    }
+    _cwSleep(job, ms) { return new Promise((res) => { job.timer = setTimeout(res, ms); }); }
+    /** Envoie une commande seule et attend un éventuel refus « ? » du TRX. */
+    async _cwSend(job, cmd) {
+      this.cwWatch = { errs: 0 };
+      this._write(cmd, true);
+      await this._cwSleep(job, 220);
+      const ok = !this.cwWatch || this.cwWatch.errs === 0;
+      this.cwWatch = null;
+      return ok;
+    }
+    _cwLabel(cmd) { return typeof cmd === 'string' ? cmd.slice(0, 24) : Array.from(cmd.slice(4, 8), (b) => b.toString(16).padStart(2, '0')).join(' ') + '…'; }
+    _cwFail(job, why) {
+      if (this.cw !== job) return;
+      this.log('CW : ' + why, 'st-bad');
+      this._cwStop(why, true);
+      this._cwSay(job.id, 'error', why);
+      if (this.wsUp) this.sendWs({ t: 'trx_note', text: 'CW : ' + why });
+    }
+    async _cwRun(job, chunks, wpm) {
+      const CW = this.rig.CW;
+      for (const c of CW.setup(wpm)) {
+        if (!(await this._cwSend(job, c))) this.log('CW : le TRX a refusé « ' + this._cwLabel(c) + ' » (réglage, on continue)', 'st-warn');
         if (this.cw !== job) return;
-        if (job.i >= chunks.length) {
-          return waitRx(() => { if (this.cw !== job) return; this.cw = null; this.log('CW : fin du message'); this._cwSay(job.id, 'done'); }, 4000);
+      }
+      for (let i = 0; i < chunks.length; i++) {
+        const c = chunks[i];
+        if (CW.mem) {
+          // Texte écrit dans la mémoire du manipulateur, puis relu pour vérifier
+          if (!(await this._cwSend(job, CW.mem(c)))) {
+            if (this.cw !== job) return;
+            // Mémoire refusée avec des espaces : on envoie alors mot par mot (l'espace entre mots est fait ici)
+            if (/ /.test(c)) {
+              this.log('CW : le TRX a refusé « ' + this._cwLabel(CW.mem(c)) + ' » ; envoi mot par mot', 'st-warn');
+              chunks.splice(i, 1, ...c.split(' ').filter(Boolean));
+              job.words = true;
+              i--;
+              continue;
+            }
+            return this._cwFail(job, 'le TRX a refusé l’écriture de la mémoire du manipulateur (« ' + this._cwLabel(CW.mem(c)) + ' »)');
+          }
+          if (this.cw !== job) return;
+          if (CW.read && i === 0) {
+            const got = await new Promise((res) => {
+              const tm = setTimeout(() => { this.cwRe = null; res(null); }, 600);
+              this.cwRe = { re: CW.readRe, cb: (t) => { clearTimeout(tm); this.cwRe = null; res(t); } };
+              this._write(CW.read, true);
+            });
+            if (this.cw !== job) return;
+            this.log('CW : mémoire relue « ' + (got == null ? 'pas de réponse' : got.slice(0, 60)) + ' »');
+          }
         }
-        const c = chunks[job.i++];
-        this._writeList(CW.chunk(c));
-        if (!job.started) { job.started = true; this._cwSay(job.id, 'tx'); }
-        // Le TRX commence quelques centaines de ms après la commande ; un nouveau morceau couperait celui en cours
-        job.timer = setTimeout(() => waitRx(next, 1500), cwMs(c, wpm) + 700);
-      };
-      job.timer = setTimeout(next, typeof CW.setup(wpm)[0] === 'string' ? 120 : 200);
+        let played = false;
+        const plays = CW.play ? [CW.play].concat(CW.alt) : [CW.text(c)];
+        for (const pc of plays) {
+          if (await this._cwSend(job, pc)) { played = true; if (pc !== plays[0]) this.log('CW : lecture acceptée avec « ' + this._cwLabel(pc) + ' »'); break; }
+          if (this.cw !== job) return;
+          this.log('CW : le TRX a refusé « ' + this._cwLabel(pc) + ' »', 'st-warn');
+        }
+        if (this.cw !== job) return;
+        if (!played) return this._cwFail(job, 'le TRX a refusé la lecture de la mémoire (' + plays.map((x) => '« ' + this._cwLabel(x) + ' »').join(', ') + ')');
+        if (i === 0) {
+          // Le TRX doit passer en émission (break-in) : sinon on le dit au lieu d'attendre la fin supposée
+          let k = 0;
+          while (!this.radio.tx && k++ < 12) { await this._cwSleep(job, 200); if (this.cw !== job) return; }
+          if (!this.radio.tx) return this._cwFail(job, 'le TRX n’est pas passé en émission (break-in, mode CW, manipulateur du TRX ?)');
+          this._cwSay(job.id, 'tx');
+        }
+        // Fin estimée du morceau, puis retour en réception (délai du break-in) avant le suivant
+        await this._cwSleep(job, Math.max(0, cwMs(c, wpm) - (i === 0 ? 600 : 0)) + 400);
+        if (this.cw !== job) return;
+        let k = 0;
+        while (this.radio.tx && k++ < (i === chunks.length - 1 ? 25 : 10)) { await this._cwSleep(job, 150); if (this.cw !== job) return; }
+        if (job.words && i < chunks.length - 1) { await this._cwSleep(job, Math.round(4 * 1200 / wpm)); if (this.cw !== job) return; } // espace entre mots
+      }
+      if (this.cw !== job) return;
+      this.cw = null;
+      this.log('CW : fin du message');
+      this._cwSay(job.id, 'done');
     }
     _cwStop(reason, fromServer) {
       const job = this.cw;

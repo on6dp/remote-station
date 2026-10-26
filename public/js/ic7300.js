@@ -349,7 +349,19 @@
           else if (d[0] === 0x14) val = v.tx ? 15 : 0;
           else if (d[0] === 0x16) val = v.tx ? Math.round((v.power / 255) * 180) : 5;
           r(d[0], ...lvlBytes(val));
-        } else if (c === 0x14 && d[0] === 0x0A) {
+        } else if (c === 0x17) {
+          // Manipulateur CW (simulateur) : texte joué en émission « par la radio », FF = arrêt
+          if (d[0] === 0xFF) { clearTimeout(this.cwPlay); v.tx = 0; ok(); }
+          else {
+            const ms = Math.round(d.length * 10 * 1200 / (this.cwWpm || 22));
+            setTimeout(() => { v.tx = 1; }, 150);
+            clearTimeout(this.cwPlay);
+            this.cwPlay = setTimeout(() => { v.tx = 0; }, 150 + ms);
+            ok();
+          }
+        } else if (c === 0x14 && d[0] === 0x0C) { this.cwWpm = 6 + lvlValue(d, 1) * 42 / 255; ok(); }
+        else if (c === 0x16 && d[0] === 0x47) { this.bk = d[1]; ok(); }
+        else if (c === 0x14 && d[0] === 0x0A) {
           if (d.length === 1) r(0x0A, ...lvlBytes(v.power)); else { v.power = lvlValue(d, 1); ok(); }
         } else if (SIMPLE_MAP[c * 256 + d[0]]) {
           const s = SIMPLE_MAP[c * 256 + d[0]];
@@ -378,7 +390,8 @@
     CW: {
       max: 30,
       setup: (wpm) => [q(0x14, 0x0C, ...lvlBytes(Math.round((Math.max(6, Math.min(48, wpm)) - 6) * 255 / 42))), q(0x16, 0x47, 0x01)],
-      chunk: (t) => [q(0x17, ...Array.from(t, (c) => c.charCodeAt(0)))],
+      mem: null, read: null, alt: [],
+      play: null, text: (t) => q(0x17, ...Array.from(t, (c) => c.charCodeAt(0))),
       stop: () => [q(0x17, 0xFF)]
     },
     Fake,

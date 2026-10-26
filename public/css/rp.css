@@ -1390,3 +1390,7 @@ body.bm-resizing { cursor: ew-resize; user-select: none; }
 /* BF muette : carte son USB du TRX figée (alerte de la page Station) */
 .silent-warn { color: #f59e0b; font-weight: 700; }
 .silent-warn .btn { --btn-h: 24px; margin-top: 6px; }
+
+/* CW : case « Vitesse » de l'émission toujours visible (plus de coupure par le bord droit sur un écran étroit) */
+.cwp .rt-tx-col .dg-h { flex-wrap: wrap; row-gap: 4px; }
+.cwp .rt-call input#cwSpeed { width: 56px; text-align: center; }

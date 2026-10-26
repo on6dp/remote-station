@@ -87,7 +87,7 @@
     extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'hiSwr', 'tuningRi'],
     subBadges: true,
     // CW : mémoire TEXTE 5 du manipulateur (écrasée), lue par KY05 ; KY00 = arrêt (manuel CAT FTX-1, Hamlib ftx1_cw.c)
-    cw: { mem: 'KM5', play: 'KY05;', stop: 'KY00;BI0;' },
+    cw: { mem: 'KM5', play: 'KY05;', alt: ['KY15;'], stop: 'KY00;BI0;' },
     // PA0 / RA0 lus avec le côté SUB actif : ce sont l'ATT et le préampli du VFO B
     remapRead(p, r) {
       if (r.vfoSel !== 1) return;
