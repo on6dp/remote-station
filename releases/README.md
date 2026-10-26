@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.94 | [RemoteStation-Setup-0.22.94.exe](0.22.94/RemoteStation-Setup-0.22.94.exe) | [remote-station-0.22.94.tar.gz](0.22.94/remote-station-0.22.94.tar.gz) | Relance de la carte son du TRX (assistant Windows), badges en un clic, <-> orange — [empreintes SHA-256](0.22.94/SHA256SUMS.txt) |
 | 0.22.93 | [RemoteStation-Setup-0.22.93.exe](0.22.93/RemoteStation-Setup-0.22.93.exe) | [remote-station-0.22.93.tar.gz](0.22.93/remote-station-0.22.93.tar.gz) | Page Station : carte son réelle au lieu des alias Windows — [empreintes SHA-256](0.22.93/SHA256SUMS.txt) |
 | 0.22.92 | [RemoteStation-Setup-0.22.92.exe](0.22.92/RemoteStation-Setup-0.22.92.exe) | [remote-station-0.22.92.tar.gz](0.22.92/remote-station-0.22.92.tar.gz) | Plus de ligne vide entre STEP et BANDS — [empreintes SHA-256](0.22.92/SHA256SUMS.txt) |
 | 0.22.91 | [RemoteStation-Setup-0.22.91.exe](0.22.91/RemoteStation-Setup-0.22.91.exe) | [remote-station-0.22.91.tar.gz](0.22.91/remote-station-0.22.91.tar.gz) | Bouton <-> DX Cluster du dashboard (ouvre et relie un cluster, vert / rouge) — [empreintes SHA-256](0.22.91/SHA256SUMS.txt) |

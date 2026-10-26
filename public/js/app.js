@@ -317,7 +317,8 @@
     $('rigMenu').addEventListener('click', (ev) => ev.stopPropagation());
     document.addEventListener('click', closeRigMenu);
     document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeRigMenu(); });
-    $('listenBtn').addEventListener('click', () => (player.on ? stopListen() : startListen()));
+    $('audResetBtn').addEventListener('click', askAudioReset);
+  $('listenBtn').addEventListener('click', () => (player.on ? stopListen() : startListen()));
     try { const v = localStorage.getItem('rs.vol'); if (v != null) $('listenVol').value = v; } catch (e) {}
     $('listenVol').addEventListener('input', playerVolume);
     playerVolume();
@@ -852,6 +853,14 @@
       closeRigMenu();
     });
     box.appendChild(rl);
+    // Carte son USB du TRX figée en silence : redémarrée par l'assistant Windows du PC du club (responsables seulement)
+    if (me && me.editor) {
+      const ar = mkBtn('🔊 Relancer la carte son du TRX', 'accent rig-opt');
+      ar.disabled = !st || !st.station || onAir;
+      ar.title = 'Quand la BF ne passe plus (barre de niveau vide, cascade muette) : la carte son USB du TRX est redémarrée sur le PC du club, le TRX reste allumé';
+      ar.addEventListener('click', () => { closeRigMenu(); askAudioReset(); });
+      box.appendChild(ar);
+    }
     // Console CAT de diagnostic : lecture d'une valeur brute du TRX (FB;, VS;, FT;, IF;…)
     if (RIG().CAT_QUERIES) {
       const cq = mkBtn('⌨ Lecture CAT…', 'accent rig-opt');
@@ -1127,45 +1136,52 @@
       if (w === 'B') $('vfoB').querySelector('.vfo-side').classList.toggle('na', !hasB);
     }
     // badges d'état du récepteur MAIN
-    const bA = $('badgesA');
-    bA.textContent = '';
+    // Badges reconstruits à part, et remplacés seulement s'ils ont changé : sinon une mise à jour de l'état arrivée
+    // entre l'appui et le relâchement du bouton de la souris remplaçait le badge, et le clic était perdu (2ᵉ clic nécessaire)
+    // Réglage qui vient d'être cliqué : affiché tout de suite (la radio le confirme ensuite), pour ne pas recliquer
+    const rr = Object.assign({}, r);
+    for (const k in ctlPending) if (Date.now() - ctlPending[k].at < 1500) rr[k] = ctlPending[k].v;
+    const bA = document.createElement('div');
     if (live) {
       const C = RIG().CONTROL || {};
-      const add = (txt, cls, ctl) => { const s = document.createElement('span'); badge(s, txt, cls); badgeCtl(s, C[ctl], r); bA.appendChild(s); };
+      const add = (txt, cls, ctl) => { const s = document.createElement('span'); badge(s, txt, cls); badgeCtl(s, C[ctl], rr); bA.appendChild(s); };
       const optLabel = (id, v) => { const o = C[id] && C[id].options && C[id].options.find((x) => x[0] === v); return o ? o[1] : null; };
       // Interrupteur seul (« NB ») ou niveau avec arrêt à 0 (« NB 3 ») selon le pilote
-      const flag = (id, txt, cls) => { if (!C[id]) return; const t = C[id].badge || txt; add(r[id] && C[id].type === 'level' ? t + ' ' + r[id] : t, r[id] ? cls : '', id); };
-      if (C.att) add(r.att && C.att.type === 'select' ? 'ATT ' + optLabel('att', r.att) : C.att.badge || 'ATT', r.att ? 'green' : '', 'att');
-      const pa = RIG().preampText && RIG().preampText(r, 'A');
-      if (pa) add(pa[0], pa[1] ? 'green' : '', r.freq >= 144000000 ? 'preampVU' : 'preamp');
+      const flag = (id, txt, cls) => { if (!C[id]) return; const t = C[id].badge || txt; add(rr[id] && C[id].type === 'level' ? t + ' ' + rr[id] : t, rr[id] ? cls : '', id); };
+      if (C.att) add(rr.att && C.att.type === 'select' ? 'ATT ' + optLabel('att', rr.att) : C.att.badge || 'ATT', rr.att ? 'green' : '', 'att');
+      const pa = RIG().preampText && RIG().preampText(rr, 'A');
+      if (pa) add(pa[0], pa[1] ? 'green' : '', rr.freq >= 144000000 ? 'preampVU' : 'preamp');
 
-      else if (C.preamp && !RIG().preampText) add(optLabel('preamp', r.preamp) || 'PRE', r.preamp ? 'green' : '', 'preamp');
+      else if (C.preamp && !RIG().preampText) add(optLabel('preamp', rr.preamp) || 'PRE', rr.preamp ? 'green' : '', 'preamp');
       flag('nb', 'NB', 'amber');
       flag('nr', 'DNR', 'amber');
       flag('notch', 'NOTCH', 'amber');
       flag('dnf', 'DNF', 'amber');
       flag('narrow', 'NAR', 'cyan');
-      if (r.agc != null && optLabel('agc', r.agc)) add('AGC ' + optLabel('agc', r.agc), 'cyan');
-      if (r.rf != null && r.rf < 255) add('RFG ' + Math.round((r.rf / 255) * 100), 'amber');
-      if (r.lock) add('LOCK', 'amber');
+      if (rr.agc != null && optLabel('agc', rr.agc)) add('AGC ' + optLabel('agc', rr.agc), 'cyan');
+      if (rr.rf != null && rr.rf < 255) add('RFG ' + Math.round((rr.rf / 255) * 100), 'amber');
+      if (rr.lock) add('LOCK', 'amber');
     }
     // badges d'état du récepteur SUB (TRX à deux récepteurs : FTX-1)
-    const bB = $('badgesB');
-    bB.textContent = '';
-    if (live && RIG().SUB_BADGES && r.freqB != null) {
+    const bB = document.createElement('div');
+    if (live && RIG().SUB_BADGES && rr.freqB != null) {
       const C = RIG().CONTROL || {};
-      const add = (txt, cls, ctl) => { const s = document.createElement('span'); badge(s, txt, cls); badgeCtl(s, C[ctl], r); bB.appendChild(s); };
+      const add = (txt, cls, ctl) => { const s = document.createElement('span'); badge(s, txt, cls); badgeCtl(s, C[ctl], rr); bB.appendChild(s); };
       const optLabel = (id, v) => { const o = C[id] && C[id].options && C[id].options.find((x) => x[0] === v); return o ? o[1] : null; };
       // ATT et préampli du côté SUB (essai) : le CAT ne les lit pas ; affichés d'après le dernier réglage envoyé (« ? » si aucun)
-      if (C.attB) add(r.attB == null ? 'ATT ?' : 'ATT', r.attB ? 'green' : '', 'attB');
-      if (C.preampB && r.freqB < 144000000) add(r.preampB == null ? 'IPO ?' : ['IPO', 'AMP1', 'AMP2'][r.preampB] || 'IPO', r.preampB ? 'green' : '', 'preampB');
-      if (r.nbB != null) add(r.nbB ? 'NB ' + r.nbB : 'NB', r.nbB ? 'amber' : '', 'nbB');
-      if (r.nrB != null) add(r.nrB ? 'DNR ' + r.nrB : 'DNR', r.nrB ? 'amber' : '', 'nrB');
-      if (r.notchB != null) add('NOTCH', r.notchB ? 'amber' : '', 'notchB');
-      if (r.dnfB != null) add('DNF', r.dnfB ? 'amber' : '', 'dnfB');
-      if (r.narrowB != null) add('NAR', r.narrowB ? 'cyan' : '', 'narrowB');
-      if (r.agcB != null && optLabel('agc', r.agcB)) add('AGC ' + optLabel('agc', r.agcB), 'cyan');
-      if (r.rfB != null && r.rfB < 255) add('RFG ' + Math.round((r.rfB / 255) * 100), 'amber');
+      if (C.attB) add(rr.attB == null ? 'ATT ?' : 'ATT', rr.attB ? 'green' : '', 'attB');
+      if (C.preampB && rr.freqB < 144000000) add(rr.preampB == null ? 'IPO ?' : ['IPO', 'AMP1', 'AMP2'][rr.preampB] || 'IPO', rr.preampB ? 'green' : '', 'preampB');
+      if (rr.nbB != null) add(rr.nbB ? 'NB ' + rr.nbB : 'NB', rr.nbB ? 'amber' : '', 'nbB');
+      if (rr.nrB != null) add(rr.nrB ? 'DNR ' + rr.nrB : 'DNR', rr.nrB ? 'amber' : '', 'nrB');
+      if (rr.notchB != null) add('NOTCH', rr.notchB ? 'amber' : '', 'notchB');
+      if (rr.dnfB != null) add('DNF', rr.dnfB ? 'amber' : '', 'dnfB');
+      if (rr.narrowB != null) add('NAR', rr.narrowB ? 'cyan' : '', 'narrowB');
+      if (rr.agcB != null && optLabel('agc', rr.agcB)) add('AGC ' + optLabel('agc', rr.agcB), 'cyan');
+      if (rr.rfB != null && rr.rfB < 255) add('RFG ' + Math.round((rr.rfB / 255) * 100), 'amber');
+    }
+    for (const [id, nb] of [['badgesA', bA], ['badgesB', bB]]) {
+      const el = $(id);
+      if (el.innerHTML !== nb.innerHTML) el.replaceChildren(...nb.childNodes);
     }
 
     // touches
@@ -1374,6 +1390,10 @@
     src.start(player.next);
     player.next += buf.duration;
   }
+  function askAudioReset() {
+    if (!confirm('Redémarrer la carte son USB du TRX sur le PC du club ?\nLe son est coupé une dizaine de secondes ; le TRX reste allumé.')) return;
+    send({ t: 'audio_reset' });
+  }
   function drawListen() {
     const b = $('listenBtn');
     b.setAttribute('aria-pressed', String(player.on));
@@ -1383,6 +1403,10 @@
       ? (a.active ? 'Cliquez pour entendre la BF du TRX.' : 'La station n’envoie pas de son en ce moment.') + (a.listeners ? ' ' + a.listeners + ' à l’écoute.' : '')
       : !a.active ? 'En attente du son : l’audio n’est pas activé sur la page Station.'
       : 'En écoute' + (a.listeners > 1 ? ' avec ' + (a.listeners - 1) + ' autre(s)' : '') + '.';
+    // Entrée son de la station muette alors que le TRX est connecté : carte son USB du TRX figée
+    const sw = $('silentWarn');
+    sw.hidden = !a.silent;
+    $('audResetBtn').hidden = !(a.silent && me && me.editor);
   }
 
   // ------------------------------------------------------------ messages entre membres
@@ -1728,10 +1752,15 @@
     const ctl = !!(me && iControl());
     const on = open.length > 0 && ctl;
     $('dxcArrow').classList.toggle('on', on);
+    $('dxcArrow').classList.toggle('half', !on && open.length > 0); // cluster ouvert, mais pas la main : orange
     $('dxcBtn').title = on ? 'Relié à ' + open.map(dxcName).join(' et ') + ' : un clic sur un spot cale le TRX. Clic : ouvrir / montrer un cluster.'
       : open.length ? 'Cluster ouvert (' + open.map(dxcName).join(', ') + ') mais sans la main : prenez la main pour que ses spots calent le TRX.'
         : 'Aucun DX cluster relié : clic pour ouvrir dx.op0p.be ou cluster.op0p.be dans une fenêtre reliée au TRX.';
-    $$('#dxcMenu [data-dxc]').forEach((a) => a.classList.toggle('linked', open.indexOf(a.dataset.dxc) >= 0 || open.indexOf(a.dataset.dxc.replace('https:', 'http:')) >= 0));
+    $$('#dxcMenu [data-dxc]').forEach((a) => {
+      const isOpen = open.indexOf(a.dataset.dxc) >= 0 || open.indexOf(a.dataset.dxc.replace('https:', 'http:')) >= 0;
+      a.classList.toggle('linked', isOpen && ctl);       // ● relié (vert) : ses spots calent le TRX
+      a.classList.toggle('opened', isOpen && !ctl);      // ● ouvert (orange) : prenez la main
+    });
   }
   setInterval(dxcPaint, 2000);
   const dxcShow = (on) => { $('dxcMenu').hidden = !on; $('dxcBtn').setAttribute('aria-expanded', String(on)); if (on) dxcPaint(); };

@@ -1198,7 +1198,8 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 }
 /* Badges des écrans VFO réglables d'un clic (ATT, IPO / AMP1 / AMP2, AMP, NAR, NB, DNR, NOTCH, DNF) */
 .vfo-badges .badge.clk { cursor: pointer; }
-.vfo-badges .badge.clk:hover { border-color: var(--v2-accent-cyan); color: var(--v2-text-bright); }
+/* Survol : simple éclaircissement, sans changer les couleurs — l'état (allumé / éteint) reste visible sous la souris */
+.vfo-badges .badge.clk:hover { filter: brightness(1.35); outline: 1px dotted rgba(255, 255, 255, .35); outline-offset: 1px; }
 /* MAIN / SUB / SPLIT… sur la ligne des pas, après ◀ ▶ (plus de saisie « kHz / Aller ») */
 .toolbar .dual-inline { margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--v2-border-dark); }
 @media (max-width: 1599px) { .toolbar .dual-inline { margin-left: 0; padding-left: 0; border-left: 0; } }
@@ -1254,8 +1255,11 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .dxc-btn { color: var(--v2-accent-yellow); font-weight: 700; }
 .dxc-arrow { color: #ef4444; font-size: 14px; margin-right: 3px; letter-spacing: -.5px; }
 .dxc-arrow.on { color: #22c55e; }
+.dxc-arrow.half { color: #f59e0b; }
 .dxc-head { display: block; padding: 5px 10px 6px; font-size: 11px; color: var(--v2-text-dim); border-bottom: 1px solid var(--v2-border, #2c3b50); margin-bottom: 3px; }
 .dxc-menu a.linked::after { content: '● relié'; color: #22c55e; font-size: 11px; margin-left: 6px; }
+.dxc-menu a.opened::after { content: '● ouvert, prenez la main'; color: #f59e0b; font-size: 11px; margin-left: 6px; }
+.dxc-menu:has(a.opened), .dxc-menu:has(a.linked) { min-width: 340px; }
 .dxc-menu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 50; min-width: 230px; display: flex; flex-direction: column; padding: 4px;
   background: var(--v2-bg-darker, #0b1018); border: 1px solid var(--v2-border); border-radius: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, .5); }
 .dxc-menu[hidden] { display: none; }
@@ -1382,3 +1386,7 @@ body.bm-tall .bm { border: 1px solid var(--v2-border-panel); border-radius: var(
 .bm-grip::after { content: ''; position: absolute; left: 3px; top: 50%; width: 3px; height: 46px; margin-top: -23px; border-radius: 2px; background: var(--v2-border-panel, #3a4658); opacity: .8; }
 .bm-grip:hover::after, body.bm-resizing .bm-grip::after { background: var(--v2-accent-cyan, #00d4ff); opacity: 1; }
 body.bm-resizing { cursor: ew-resize; user-select: none; }
+
+/* BF muette : carte son USB du TRX figée (alerte de la page Station) */
+.silent-warn { color: #f59e0b; font-weight: 700; }
+.silent-warn .btn { --btn-h: 24px; margin-top: 6px; }

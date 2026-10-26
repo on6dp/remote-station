@@ -1,0 +1,21 @@
+Remote Station UBA-LGE - assistant "carte son du TRX" (PC du club)
+
+A quoi ca sert
+  La carte son USB integree au TRX se fige parfois en silence : la barre de niveau de la page Station
+  reste vide et la cascade ne montre plus qu'un ronflement tout a gauche. Avant, il fallait eteindre et
+  rallumer le TRX. Avec cet assistant, la page Station (ou ON6DP / ON4LUC depuis le dashboard, menu du TRX)
+  redemarre la carte son USB du TRX, comme "Desactiver / Activer" dans le Gestionnaire de peripheriques.
+  Le port serie (CAT) du TRX n'est pas touche.
+
+Installation (une fois, sur le PC du club)
+  1. Copier les fichiers de ce dossier dans un dossier du PC (ex. Bureau\assistant-carte-son).
+  2. Double-clic sur installer-carte-son.cmd, accepter la demande d'administrateur.
+     Message attendu : "Assistant carte son installe et en marche (version 1)."
+  3. Recharger la page Station (Ctrl+F5) : la ligne "Assistant carte son" doit dire "en marche".
+     La premiere fois que la page l'appelle, Chrome peut demander l'autorisation d'acceder aux
+     appareils du reseau local : repondre "Autoriser".
+
+L'assistant demarre avec Windows (tache planifiee "RemoteStation carte son", compte SYSTEM).
+Il n'ecoute que sur le PC lui-meme (http://127.0.0.1:18099) et n'obeit qu'a la page https://remote.op0p.be.
+Journal : C:\ProgramData\RemoteStation\rs-carte-son.log
+Pour l'enlever : double-clic sur retirer-carte-son.cmd.

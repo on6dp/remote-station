@@ -532,6 +532,7 @@ button, input, select { font: inherit; color: inherit; }
 .st-meter { height: 8px; margin: 10px 0 6px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; }
 .st-meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #3fb950, #d29922 75%, #f85149); transition: width .1s linear; }
 .st-audio-state { margin: 0 0 8px; font-size: 13px; opacity: .85; }
+.st-audio-state.st-silent { color: var(--warn); opacity: 1; font-weight: 700; }
 
 /* jeton masqué sans être un champ mot de passe */
 #cfgToken.masked { -webkit-text-security: disc; text-security: disc; }

@@ -6,7 +6,8 @@
  * Le spot passe par un relais invisible (iframe /qsy.html de la Remote Station) au dashboard ouvert dans ce même
  * navigateur ; le dashboard ne l'applique que si son utilisateur a la main (règles habituelles).
  * Pour les membres de la Remote Station (déjà connectés au dashboard dans ce navigateur), un badge indique
- * « Remote Station <-> DX Cluster » : <-> vert = dashboard ouvert avec la main, rouge sinon ; après un clic, il dit si
+ * « Remote Station <-> DX Cluster » : <-> vert = dashboard ouvert avec la main, orange = ouvert sans la main,
+ * rouge = pas de dashboard ; après un clic, il dit si
  * le TRX s'est calé. Rien n'est affiché pour les autres visiteurs. Le badge se place dans l'élément id="rs-qsy-badge"
  * s'il existe (ex. colonne Alert / Show Only / Hide de dx.op0p.be), sinon en bas à droite de la page.
  * Le site du cluster doit être autorisé (qsyOrigins dans config.json du serveur) et servi en https.
@@ -60,7 +61,7 @@
   function setLinked(on, dash) {
     linked = on;
     if (!badge) return;
-    arrow.style.color = on ? '#22c55e' : '#ef4444';
+    arrow.style.color = on ? '#22c55e' : dash ? '#f59e0b' : '#ef4444'; // vert : relié · orange : dashboard sans la main · rouge : pas de dashboard
     badge.title = on ? 'Liaison active : un clic sur la fréquence d’un spot cale le TRX de la Remote Station'
       : dash ? 'Dashboard de la Remote Station ouvert, mais sans la main : prenez la main pour que les spots calent le TRX'
         : 'Dashboard de la Remote Station non ouvert dans ce navigateur (ou sans connexion)';

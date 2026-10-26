@@ -58,9 +58,13 @@
     <p class="st-audio-state" id="tAudioOut">Sortie vers le TRX : pas encore active</p>
     <div class="st-meter" aria-hidden="true"><i id="audLvl"></i></div>
     <p class="st-audio-state" id="tAudio">Audio arrêté</p>
+    <p class="st-audio-state st-silent" id="tSilent" hidden></p>
     <div class="st-actions">
       <button class="key" id="btnAudio" type="button">Activer l'audio</button>
+      <button class="key" id="btnAudReset" type="button" title="Redémarre la carte son USB du TRX (comme Désactiver / Activer dans le Gestionnaire de périphériques), sans éteindre le TRX">Relancer la carte son du TRX</button>
     </div>
+    <p class="st-audio-state" id="tHelper">Assistant carte son : recherche…</p>
+    <p class="st-audio-state" id="helperDl" hidden><a href="/outils/assistant-carte-son.zip" download>Télécharger l’assistant carte son</a> (à décompresser, puis double-clic sur installer-carte-son.cmd ; une fois sur ce PC)</p>
   </section>
 
   <section class="st-card">

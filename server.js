@@ -137,7 +137,8 @@ const TYPES = {
   '.png': 'image/png',
   '.ico': 'image/x-icon',
   '.json': 'application/json; charset=utf-8',
-  '.webmanifest': 'application/manifest+json'
+  '.webmanifest': 'application/manifest+json',
+  '.zip': 'application/zip'
 };
 function qsyOrigins() {
   return (Array.isArray(cfg.qsyOrigins) ? cfg.qsyOrigins : DEFAULTS.qsyOrigins).map(String).filter((o) => /^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o));
@@ -262,7 +263,12 @@ let tuneWatch = null;
 let tunerAuto = { band: '', until: 0 }; // bande HF / 6 m sur laquelle le tuner a été remis en service tout seul   // accord en cours de suivi { freq, at, saw, endAt, call }
 let swrHighSince = 0;
 // Audio BF du TRX : la station n'envoie le son que si au moins un membre écoute
-let audio = { active: false, want: false, frames: 0 };
+let audio = { active: false, want: false, frames: 0, silent: false };
+// Responsables de la station (stationEditors, ex. ON6DP, ON4LUC) : réglages verrouillés de la page Station, relance de la carte son
+function isEditor(call) {
+  const eds = (Array.isArray(cfg.stationEditors) ? cfg.stationEditors : DEFAULTS.stationEditors).map((c) => String(c).toUpperCase());
+  return eds.indexOf(String(call || '').toUpperCase()) >= 0;
+}
 function listeners() {
   let n = 0;
   for (const c of ops) if (c.listen) n++;
@@ -813,7 +819,7 @@ const STATION_CODE = (() => {
 // Seule l'empreinte du cookie est gardée (logs/station-sessions.json). Le jeton de station reste exigé pour se brancher.
 const ST_COOKIE = 'rs_station';
 const ST_DAYS = 365;
-const ST_GATED = ['station.html', 'js/station.js', 'js/station-core.js'];
+const ST_GATED = ['station.html', 'js/station.js', 'js/station-core.js', 'outils/assistant-carte-son.zip'];
 // Chemin comparé tel que le système de fichiers le comprend (Windows : majuscules, points et espaces finaux ignorés)
 const pubKey = (fp) => path.relative(PUB, fp).split(path.sep).map((x) => x.replace(/[. ]+$/, '')).join('/').toLowerCase();
 const ST_FILE = path.join(LOG_DIR, 'station-sessions.json');
@@ -1087,7 +1093,7 @@ function publicState() {
     txFreq: txFreq(),
     swrLock: swrLocked() ? { freq: swrLock.freq, swr: swrLock.swr != null ? Math.round(swrLock.swr * 10) / 10 : null, tune: !!swrLock.tune, band: swrLock.band || null, text: swrLockText() } : null,
     maxSwr: cfg.maxSwr,
-    audio: { active: !!(station && audio.active), listeners: listeners() },
+    audio: { active: !!(station && audio.active), listeners: listeners(), silent: !!(station && audio.silent) },
     digi: { modes: Array.from(digiModes()), latency: digi.latency, engine: digi.engine || '', ms: digi.ms || 0, timing: digi.timing || null },
     rigName: station ? rig().NAME : null,
     rigModel: station ? rig().ID : null,
@@ -1704,6 +1710,7 @@ function loggedIn(conn, call, rec, sessionTok) {
     call,
     cid: conn.cid,
     admin: conn.user.admin,
+    editor: isEditor(call),
     canTx: conn.user.tx,
     rxOnly: conn.user.rxOnly,
     allowTx: cfg.allowTx,
@@ -1783,6 +1790,17 @@ function onOperator(conn, m) {
         send(station.conn, { t: 'switch', model: temp, by: conn.user.call });
       }
       return send(conn, { t: 'notice', level: 'warn', msg: 'Rechargement de la page Station demandé : la station revient dans une dizaine de secondes' });
+    }
+
+    case 'audio_reset': {
+      // Relancer à distance la carte son USB du TRX (figée en silence), par l'assistant Windows du PC du club
+      if (!isEditor(conn.user.call)) return send(conn, { t: 'notice', level: 'error', msg: 'Réservé aux responsables de la station' });
+      if (!station) return send(conn, { t: 'notice', level: 'error', msg: 'Station hors ligne' });
+      if (station.caps.indexOf('audioreset') < 0) return send(conn, { t: 'notice', level: 'error', msg: 'Page Station trop ancienne : rechargez-la d’abord' });
+      if (ptt.active || radio.tx) return send(conn, { t: 'notice', level: 'error', msg: 'Impossible pendant une émission' });
+      journal('audio_reset', { call: conn.user.call });
+      send(station.conn, { t: 'audio_reset', by: conn.user.call });
+      return send(conn, { t: 'notice', level: 'warn', msg: 'Relance de la carte son du TRX demandée : le son est coupé une dizaine de secondes' });
     }
 
     case 'switch_rig': {
@@ -2282,6 +2300,7 @@ function onStationAuth(conn, m) {
   } else if (stationBounce && model === stationBounce.back) stationBounce = null;
   send(conn, { t: 'welcome', stationCall: cfg.stationCall, txSilenceSeconds: cfg.txSilenceSeconds, txHardMaxSeconds: cfg.txHardMaxSeconds, code: STATION_CODE, alcMax: Number(cfg.digiAlcMax) || 0 });
   audio.active = false;
+  audio.silent = false;
   // BF voulue s'il y a un écouteur ou une fenêtre FT8/FT4 ouverte (même règle que updateAudioWant)
   audio.want = audioWanted();
   send(conn, { t: 'audio_want', on: audio.want });
@@ -2349,6 +2368,23 @@ function onStation(conn, m) {
     if (ptt.active) stopPtt(reason);
     else for (const c of ops) send(c, { t: 'notice', level: 'error', msg: 'Station : ' + reason });
     return;
+  }
+  if (m.t === 'audio_silent') {
+    const on = !!m.on;
+    if (on !== audio.silent) {
+      journal('audio_silent', { on });
+      if (on) for (const c of ops) if (isEditor(c.user.call) || c === controller) send(c, { t: 'notice', level: 'warn', msg: 'Station : plus de son du TRX depuis 45 s (carte son USB figée ?)' + (isEditor(c.user.call) ? ' — menu du TRX › Relancer la carte son' : '') });
+    }
+    audio.silent = on;
+    return broadcast();
+  }
+  if (m.t === 'audio_reset_result') {
+    const ok = !!m.ok;
+    const msg = String(m.msg || '').replace(/[\x00-\x1f]/g, ' ').slice(0, 300);
+    journal('audio_reset_result', { ok, msg });
+    if (ok) audio.silent = false;
+    for (const c of ops) if (isEditor(c.user.call) || c === controller) send(c, { t: 'notice', level: ok ? 'info' : 'error', msg: 'Carte son du TRX : ' + msg });
+    return broadcast();
   }
   if (m.t === 'audio_state') {
     audio.active = !!m.active;

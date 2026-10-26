@@ -131,7 +131,7 @@
     setTimeout(closePrev, 10000);
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
     // caps : ce que sait faire cette version de la page (ftsplit : SPLIT du FTX-1 par FT0 / FT1, sans ST1)
-    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq', 'ftxtx', 'audiotx'] }));
+    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq', 'ftxtx', 'audiotx', 'audioreset'] }));
     lastServerMsg = Date.now();
     ws.onmessage = (e) => {
       lastServerMsg = Date.now();
@@ -171,6 +171,8 @@
         drawAudio();
       } else if (m.t === 'switch') {
         switchModel(m.model, m.by);
+      } else if (m.t === 'audio_reset') {
+        audioReset(m.by || '?');
       } else if (m.t === 'reload') {
         if (core.catKeyed) return;
         log('Rechargement de la page demandé par ' + (m.by || '?'), 'st-warn');
@@ -447,7 +449,7 @@
   // ------------------------------------------------------------ audio BF du TRX → VPS
   // Capture de l'entrée son choisie, rééchantillonnée à 8 kHz par le navigateur, codée en µ-law,
   // envoyée par paquets de 40 ms (320 échantillons) seulement quand un membre écoute.
-  const aud = { ctx: null, stream: null, want: false, sent: 0, peak: 0 };
+  const aud = { ctx: null, stream: null, want: false, sent: 0, peak: 0, hf: 0, quietSince: 0, silent: false, resetting: false };
   const CAPTURE_WORKLET = `
     class RsCapture extends AudioWorkletProcessor {
       // Voie gauche (ou unique) ; voie droite gardée à part quand elle existe (FTDX101 : récepteur SUB)
@@ -471,6 +473,102 @@
       : aud.want ? 'Audio envoyé aux membres à l’écoute' : 'Audio prêt (personne n’écoute en ce moment, rien n’est envoyé)';
     $('btnAudio').textContent = aud.ctx ? 'Arrêter l’audio' : 'Activer l’audio';
   }
+
+  // ------------------------------------------------------------ carte son figée : alerte et relance
+  // Entrée muette (rien que du ronflement) pendant 45 s alors que le TRX est connecté : alerte ici et sur le dashboard
+  const SILENT_HF = 0.0015, SILENT_S = 45;
+  function silentTick() {
+    const now = Date.now();
+    const live = !!aud.ctx && aud.ctx.state === 'running' && !aud.resetting;
+    if (!live || aud.hf > SILENT_HF) aud.quietSince = 0;
+    else if (!aud.quietSince) aud.quietSince = now;
+    aud.hf = 0;
+    const silent = !!aud.quietSince && now - aud.quietSince > SILENT_S * 1000 && !!(core.radio && core.radio.connected);
+    if (silent !== aud.silent) {
+      aud.silent = silent;
+      if (silent) log('Entrée son muette depuis ' + SILENT_S + ' s (TRX connecté) : carte son du TRX figée ? « Relancer la carte son du TRX », sinon éteindre et rallumer le TRX', 'st-warn');
+      if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'audio_silent', on: silent }));
+    }
+    const t = $('tSilent');
+    t.hidden = !silent;
+    t.textContent = silent ? '⚠ Entrée son muette alors que le TRX est connecté : la carte son du TRX s’est sans doute figée. Cliquez sur « Relancer la carte son du TRX » (sinon : éteindre et rallumer le TRX).' : '';
+  }
+  setInterval(silentTick, 5000);
+
+  // Assistant Windows (rs-carte-son.ps1, http://127.0.0.1:18099) : seul capable de redémarrer un périphérique
+  const HELPER = 'http://127.0.0.1:18099';
+  let helperOk = null;
+  async function helperFetch(path, opts, ms) {
+    const ac = new AbortController();
+    const tm = setTimeout(() => ac.abort(), ms || 4000);
+    try {
+      const r = await fetch(HELPER + path, Object.assign({ signal: ac.signal, cache: 'no-store' }, opts || {}));
+      return await r.json();
+    } finally { clearTimeout(tm); }
+  }
+  async function helperCheck() {
+    try { const r = await helperFetch('/etat'); helperOk = !!(r && r.ok); } catch (e) { helperOk = false; }
+    $('tHelper').textContent = helperOk ? 'Assistant carte son : en marche (la carte son du TRX peut être relancée d’ici ou depuis le dashboard)'
+      : 'Assistant carte son : non installé sur ce PC (fichier installer-carte-son.cmd, voir l’aide) — pour relancer la carte son, éteindre et rallumer le TRX';
+    $('btnAudReset').disabled = !helperOk || aud.resetting;
+    $('helperDl').hidden = helperOk;
+    return helperOk;
+  }
+  setTimeout(helperCheck, 1500);
+  setInterval(helperCheck, 60000);
+  // Identifiant USB de la carte son du TRX : Chrome l'ajoute au nom sous Windows, ex. « Microphone (USB Audio Device) (0d8c:0016) »
+  async function audioUsbId() {
+    const re = /\(([0-9a-f]{4}):([0-9a-f]{4})\)\s*$/i;
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const inDev = devs.find((d) => d.kind === 'audioinput' && d.deviceId === $('audDev').value);
+    const cands = [inDev, devs.find((d) => d.kind === 'audiooutput' && d.deviceId === $('audOut').value)]
+      .concat(inDev ? devs.filter((d) => d.groupId === inDev.groupId) : []);
+    for (const d of cands) { const m = d && re.exec(d.label); if (m) return { vid: m[1].toLowerCase(), pid: m[2].toLowerCase() }; }
+    const saved = store.get('audio.usb', '');
+    return /^[0-9a-f]{4}:[0-9a-f]{4}$/.test(saved) ? { vid: saved.slice(0, 4), pid: saved.slice(5) } : null;
+  }
+  function resetResult(ok, msg) {
+    log('Carte son du TRX : ' + msg, ok ? '' : 'st-bad');
+    if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'audio_reset_result', ok, msg: String(msg).slice(0, 300) }));
+  }
+  async function audioReset(by) {
+    if (aud.resetting) return;
+    if (core.catKeyed || (core.radio && core.radio.tx)) return resetResult(false, 'relance refusée pendant une émission');
+    if (!(await helperCheck())) return resetResult(false, 'assistant carte son absent sur le PC du club (installer-carte-son.cmd) : éteindre et rallumer le TRX');
+    const id = await audioUsbId();
+    if (!id) return resetResult(false, 'identifiant USB de la carte son inconnu (choisissez l’entrée son du TRX)');
+    store.set('audio.usb', id.vid + ':' + id.pid);
+    const wasOn = !!aud.ctx;
+    aud.resetting = true;
+    $('btnAudReset').disabled = true;
+    log('Relance de la carte son du TRX (' + id.vid + ':' + id.pid + ') demandée par ' + by, 'st-warn');
+    // La carte son doit être libérée avant d'être redémarrée (entrée et sortie)
+    stopAudio(false);
+    stopTxOut();
+    let r;
+    try { r = await helperFetch('/relancer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vid: id.vid, pid: id.pid, by }) }, 30000); }
+    catch (e) { r = { ok: false, msg: 'pas de réponse de l’assistant (' + (e.name === 'AbortError' ? 'délai dépassé' : e.message) + ')' }; }
+    // Windows remet la carte son en place en quelques secondes : on réessaie jusqu'à la retrouver
+    let back = false;
+    for (let i = 0; i < 12 && !back; i++) {
+      await new Promise((ok) => setTimeout(ok, 2500));
+      try {
+        await listInputs();
+        const o = $('audDev').selectedOptions[0];
+        back = !!(o && o.value && unAlias(o.textContent) === unAlias(store.get('audio.label', '')));
+      } catch (e) { /* carte son pas encore revenue */ }
+    }
+    aud.resetting = false;
+    aud.quietSince = 0;
+    if (wasOn || store.get('audio.on', '0') === '1') await startAudio();
+    listOutputs().then(() => startTxOut()).catch(() => {});
+    helperCheck();
+    resetResult(!!(r && r.ok) && back, (r && r.msg ? r.msg : 'échec') + (back ? ' ; audio relancé' : ' ; la carte son n’est pas revenue dans Chrome'));
+  }
+  $('btnAudReset').addEventListener('click', () => {
+    if (!confirm('Redémarrer la carte son USB du TRX ?\nLe son est coupé quelques secondes, le TRX reste allumé.')) return;
+    audioReset('page Station');
+  });
 
   const isAlias = (d) => d.deviceId === 'default' || d.deviceId === 'communications';
   const unAlias = (l) => String(l || '').replace(/^(Communications|Par défaut|Default)\s*-\s*/i, '');
@@ -541,6 +639,11 @@
         for (let i = 0; i < buf.length; i++) { const a = Math.abs(buf[i]); if (a > p) p = a; }
         if (bufR) for (let i = 0; i < bufR.length; i++) { const a = Math.abs(bufR[i]); if (a > p) p = a; }
         aud.peak = Math.max(p, aud.peak * 0.85);
+        // Carte son figée : il ne reste qu'un ronflement très grave. On mesure l'écart d'un échantillon au suivant,
+        // presque nul pour un ronflement à 50 Hz, net pour le souffle de la bande
+        let hf = 0;
+        for (let i = 1; i < buf.length; i++) { const a = Math.abs(buf[i] - buf[i - 1]); if (a > hf) hf = a; }
+        aud.hf = Math.max(aud.hf, hf);
         if (aud.want && ws && ws.readyState === 1 && ws.bufferedAmount < 65536) {
           ws.send(ULAW.encodePcm(buf));
           if (bufR) ws.send(ULAW.encodePcm(bufR, 0x04)); // voie droite : récepteur SUB (décodage RTTY B, écoute en double réception)
