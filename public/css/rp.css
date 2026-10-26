@@ -783,6 +783,7 @@ input[type='range']:disabled { opacity: .45; }
 .dg-row.ft span.x.x { color: var(--v2-text-dim); font-weight: 400; text-decoration: none; opacity: 1; overflow: hidden; text-overflow: ellipsis; font-size: 11.5px; }
 .dg-row.ft span.x.cty { text-align: right; color: #9fb6cc; }
 .dg-th.ft span:nth-child(6) { text-align: right; }
+.dg-th.ft span:nth-child(5), .dg-row.ft span:nth-child(5) { padding-left: 10px; } /* un peu d'air entre la fréquence et le message */
 select.dg-par { width: auto; min-width: 0; }
 .dg-chk { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--v2-text-secondary); white-space: nowrap; cursor: pointer; }
 .dg-prog { position: relative; height: 14px; margin: 6px 0 2px; border-radius: 3px; background: rgba(255, 255, 255, .05); border: 1px solid var(--v2-border-dark); overflow: hidden; }
