@@ -472,6 +472,8 @@
     $('btnAudio').textContent = aud.ctx ? 'Arrêter l’audio' : 'Activer l’audio';
   }
 
+  const isAlias = (d) => d.deviceId === 'default' || d.deviceId === 'communications';
+  const unAlias = (l) => String(l || '').replace(/^(Communications|Par défaut|Default)\s*-\s*/i, '');
   async function listInputs(selectId) {
     const devs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audioinput');
     const sel = $('audDev');
@@ -482,10 +484,15 @@
       o.textContent = d.label || 'Entrée son ' + (sel.length + 1);
       sel.appendChild(o);
     }
-    const saved = store.get('audio.label', '');
-    const pick = devs.find((d) => d.deviceId === selectId) || devs.find((d) => saved && d.label === saved)
+    // « Par défaut - … » et « Communications - … » ne sont que des alias de Windows : ils changent de carte son quand
+    // Windows change de périphérique par défaut (ex. un autre TRX branché) — on retient toujours la carte réelle
+    const real = devs.filter((d) => !isAlias(d));
+    const saved = unAlias(store.get('audio.label', ''));
+    const asked = devs.find((d) => d.deviceId === selectId);
+    const pick = (asked && isAlias(asked) ? real.find((d) => d.groupId === asked.groupId) || asked : asked)
+      || real.find((d) => saved && d.label === saved)
       // Carte son USB du TRX : « USB Audio CODEC » (Icom, FTDX10), « USB Audio Device » (FTX-1)… jamais « Mixage stéréo »
-      || devs.find((d) => /usb audio|codec|yaesu|ftx|ftdx|ic-?7300|icom/i.test(d.label) && !/mixage|stereo mix/i.test(d.label));
+      || real.find((d) => /usb audio|codec|yaesu|ftx|ftdx|ic-?7300|icom/i.test(d.label) && !/mixage|stereo mix/i.test(d.label));
     if (pick) sel.value = pick.deviceId;
     return devs;
   }
@@ -499,6 +506,13 @@
         tmp.getTracks().forEach((t) => t.stop());
         await listInputs();
       }
+      // Alias Windows choisi (« Communications - … », « Par défaut - … ») : on prend la carte son réelle qu'il désigne
+      const ins = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audioinput');
+      const selIn = ins.find((d) => d.deviceId === $('audDev').value);
+      if (selIn && isAlias(selIn)) {
+        const r = ins.find((d) => !isAlias(d) && d.groupId === selIn.groupId);
+        if (r) { $('audDev').value = r.deviceId; log('Entrée son : « ' + selIn.label + ' » est un alias de Windows, remplacé par « ' + r.label + ' »'); }
+      }
       const deviceId = $('audDev').value;
       aud.stream = await navigator.mediaDevices.getUserMedia({
         // TRX à deux récepteurs avec son USB en stéréo (FTDX101 : MAIN à gauche, SUB à droite) : les deux voies
@@ -507,7 +521,7 @@
       });
       const track = aud.stream.getAudioTracks()[0];
       await listInputs(track && track.getSettings().deviceId);
-      if (track) store.set('audio.label', track.label);
+      if (track) store.set('audio.label', unAlias(track.label));
       if (!tx.ctx) listOutputs().then(() => startTxOut()).catch(() => {});
       // 12 kHz, PCM 16 bits : qualité nécessaire au décodage FT8 / FT4 / RTTY sur le serveur (trames de 40 ms)
       aud.ctx = new AudioContext({ sampleRate: ULAW.RATE_HQ });
@@ -561,7 +575,7 @@
   $('btnAudio').addEventListener('click', () => (aud.ctx ? stopAudio(true) : startAudio()));
   $('audDev').addEventListener('change', () => {
     const o = $('audDev').selectedOptions[0];
-    if (o) store.set('audio.label', o.textContent);
+    if (o) store.set('audio.label', unAlias(o.textContent));
     if (aud.ctx) { stopAudio(false); startAudio(); }
   });
   // Chrome peut suspendre l'audio d'une page sans clic : le premier clic le relance
@@ -626,11 +640,12 @@
       o.textContent = d.label || 'Sortie son ' + sel.length;
       sel.appendChild(o);
     }
-    const saved = store.get('audio.outLabel', null);
-    const real = outs.filter((d) => d.deviceId !== 'default' && d.deviceId !== 'communications');
+    let saved = store.get('audio.outLabel', null);
+    if (saved) saved = unAlias(saved); // alias Windows (« Communications - … ») : la carte réelle
+    const real = outs.filter((d) => !isAlias(d));
     const inDev = all.find((d) => d.kind === 'audioinput' && d.deviceId === $('audDev').value);
     // Choix mémorisé, sinon la même carte son que l'entrée du TRX, sinon un nom de carte son de TRX (jamais les haut-parleurs du PC)
-    const pick = (saved != null ? outs.find((d) => d.label === saved) : null)
+    const pick = (saved != null ? real.find((d) => d.label === saved) : null)
       || (saved == null && inDev && inDev.groupId ? real.find((d) => d.groupId === inDev.groupId) : null)
       || (saved == null ? real.find((d) => /usb audio|codec|yaesu|ftx|ftdx|ic-?7300|icom/i.test(d.label)) : null);
     sel.value = pick ? pick.deviceId : (saved === '' ? '' : cur && outs.find((d) => d.deviceId === cur) ? cur : '');
@@ -747,9 +762,16 @@
     alcStop();
     if (src) { src.onended = null; try { src.stop(); } catch (e) {} }
   }
-  $('audOut').addEventListener('change', () => {
-    const o = $('audOut').selectedOptions[0];
-    store.set('audio.outLabel', o && o.value ? o.textContent : '');
+  $('audOut').addEventListener('change', async () => {
+    let o = $('audOut').selectedOptions[0];
+    // Alias Windows (« Communications - … », « Par défaut - … ») : la carte son réelle qu'il désigne
+    if (o && (o.value === 'default' || o.value === 'communications')) {
+      const outs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audiooutput');
+      const a = outs.find((d) => d.deviceId === o.value);
+      const r = a && outs.find((d) => !isAlias(d) && d.groupId === a.groupId);
+      if (r) { $('audOut').value = r.deviceId; log('Sortie son : « ' + a.label + ' » est un alias de Windows, remplacé par « ' + r.label + ' »'); o = $('audOut').selectedOptions[0]; }
+    }
+    store.set('audio.outLabel', o && o.value ? unAlias(o.textContent) : '');
     startTxOut();
   });
   $('audTxLvl').addEventListener('input', () => {
