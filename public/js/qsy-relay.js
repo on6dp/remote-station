@@ -28,14 +28,14 @@
     if (window.parent !== window) window.parent.postMessage({ type: 'rs-qsy-ready' }, '*'); // aucun contenu : simple signal
   }).catch(() => {});
   // Présence du dashboard : question toutes les 3 s, état envoyé au site un peu après les réponses
-  setInterval(() => { if (bc && parentOrigin) { bc.postMessage({ type: 'rs-qsy-ping' }); setTimeout(status, 400); } }, 3000);
+  setInterval(() => { if (bc && parentOrigin) { bc.postMessage({ type: 'rs-qsy-ping', from: parentOrigin }); setTimeout(status, 400); } }, 3000);
   window.addEventListener('message', (e) => {
     if (allowed.indexOf(e.origin) < 0) return;
     const m = e.data;
     if (!m) return;
     if (!parentOrigin && e.source === window.parent) {
       parentOrigin = e.origin;
-      if (bc) { bc.postMessage({ type: 'rs-qsy-ping' }); setTimeout(status, 400); }
+      if (bc) { bc.postMessage({ type: 'rs-qsy-ping', from: parentOrigin }); setTimeout(status, 400); }
     }
     if (m.type !== 'rs-qsy' || !bc) return;
     const freq = Number(m.freq);

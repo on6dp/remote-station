@@ -1703,7 +1703,11 @@
   const bcQsy = 'BroadcastChannel' in window ? new BroadcastChannel('rs-qsy') : null;
   if (bcQsy) bcQsy.onmessage = (e) => {
     // Question du relais (site de cluster) : ce dashboard est-il là, avec la main ?
-    if (e.data && e.data.type === 'rs-qsy-ping') return bcQsy.postMessage({ type: 'rs-qsy-here', control: !!(me && iControl()) });
+    if (e.data && e.data.type === 'rs-qsy-ping') {
+      dxcSeen[String(e.data.from || '?')] = Date.now();
+      dxcPaint();
+      return bcQsy.postMessage({ type: 'rs-qsy-here', control: !!(me && iControl()) });
+    }
     onSpot(e.data);
   };
   // Fenêtre du cluster ouverte depuis ce dashboard : message direct (window.opener) accepté des sites autorisés
@@ -1712,10 +1716,42 @@
     if (ok && e.data && e.data.type === 'rs-qsy') onSpot(e.data);
   });
 
-  // DX Cluster : menu de deux liens (nouvel onglet)
-  const dxcShow = (on) => { $('dxcMenu').hidden = !on; $('dxcBtn').setAttribute('aria-expanded', String(on)); };
+  // DX Cluster : <-> ouvre le cluster choisi dans sa propre fenêtre (à poser sur le 2ᵉ écran), relié au TRX.
+  // Sens unique : seul le dashboard (membre connecté) ouvre la liaison ; depuis le cluster, rien n'ouvre le dashboard.
+  // <-> vert = une page de cluster de ce navigateur est reliée (son relais répond) et ce dashboard a la main.
+  const dxcSeen = {};
+  const dxcWin = {};
+  const dxcName = (o) => String(o || '').replace(/^https?:\/\//, '');
+  function dxcPaint() {
+    const now = Date.now();
+    const open = Object.keys(dxcSeen).filter((o) => now - dxcSeen[o] < 7000);
+    const ctl = !!(me && iControl());
+    const on = open.length > 0 && ctl;
+    $('dxcArrow').classList.toggle('on', on);
+    $('dxcBtn').title = on ? 'Relié à ' + open.map(dxcName).join(' et ') + ' : un clic sur un spot cale le TRX. Clic : ouvrir / montrer un cluster.'
+      : open.length ? 'Cluster ouvert (' + open.map(dxcName).join(', ') + ') mais sans la main : prenez la main pour que ses spots calent le TRX.'
+        : 'Aucun DX cluster relié : clic pour ouvrir dx.op0p.be ou cluster.op0p.be dans une fenêtre reliée au TRX.';
+    $$('#dxcMenu [data-dxc]').forEach((a) => a.classList.toggle('linked', open.indexOf(a.dataset.dxc) >= 0 || open.indexOf(a.dataset.dxc.replace('https:', 'http:')) >= 0));
+  }
+  setInterval(dxcPaint, 2000);
+  const dxcShow = (on) => { $('dxcMenu').hidden = !on; $('dxcBtn').setAttribute('aria-expanded', String(on)); if (on) dxcPaint(); };
   $('dxcBtn').addEventListener('click', (e) => { e.stopPropagation(); dxcShow($('dxcMenu').hidden); });
-  $('dxcMenu').addEventListener('click', () => dxcShow(false));
+  $('dxcMenu').addEventListener('click', (e) => {
+    const a = e.target.closest('[data-dxc]');
+    if (a) {
+      e.preventDefault();
+      const url = a.dataset.dxc;
+      const w = dxcWin[url];
+      // Fenêtre déjà ouverte depuis ce dashboard : on la remet devant ; sinon nouvelle fenêtre (pas un onglet)
+      if (w && !w.closed) { try { w.focus(); } catch (x) { /* fenêtre d'un autre site */ } }
+      else {
+        const nw = window.open(url, 'rs-dxc-' + dxcName(url).replace(/\W/g, '-'), 'popup=yes,width=' + Math.min(1600, screen.availWidth) + ',height=' + Math.min(1000, screen.availHeight));
+        if (nw) dxcWin[url] = nw; else window.open(url, '_blank'); // fenêtres surgissantes bloquées : onglet
+      }
+      if (!iControl()) say('Cluster ouvert : prenez la main pour que ses spots calent le TRX.', 'warn', 6000);
+    }
+    dxcShow(false);
+  });
   document.addEventListener('click', (e) => { if (!$('dxcMenu').hidden && !e.target.closest('.dxc-wrap')) dxcShow(false); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') dxcShow(false); });
   $('txCallSel').addEventListener('change', () => {

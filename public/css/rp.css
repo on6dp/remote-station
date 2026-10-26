@@ -1248,6 +1248,10 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 /* Bouton DX Cluster et son menu */
 .dxc-wrap { position: relative; display: inline-flex; }
 .dxc-btn { color: var(--v2-accent-yellow); font-weight: 700; }
+.dxc-arrow { color: #ef4444; font-size: 14px; margin-right: 3px; letter-spacing: -.5px; }
+.dxc-arrow.on { color: #22c55e; }
+.dxc-head { display: block; padding: 5px 10px 6px; font-size: 11px; color: var(--v2-text-dim); border-bottom: 1px solid var(--v2-border, #2c3b50); margin-bottom: 3px; }
+.dxc-menu a.linked::after { content: '● relié'; color: #22c55e; font-size: 11px; margin-left: 6px; }
 .dxc-menu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 50; min-width: 230px; display: flex; flex-direction: column; padding: 4px;
   background: var(--v2-bg-darker, #0b1018); border: 1px solid var(--v2-border); border-radius: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, .5); }
 .dxc-menu[hidden] { display: none; }
