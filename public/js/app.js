@@ -1627,6 +1627,48 @@
     if ((e.key === 'w' || e.key === 'W') && !e.repeat && !e.ctrlKey && !e.altKey && !e.metaKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) txwDown(e);
   });
   document.addEventListener('keyup', (e) => { if (e.key === 'w' || e.key === 'W') txwUp(); });
+  // Spots cliqués sur dx.op0p.be / cluster.op0p.be : reçus par le relais public/qsy.html (BroadcastChannel, même
+  // navigateur) ; le TRX se cale sur la station (fréquence, mode, onglet du mode), avec les règles habituelles.
+  function spotMode(m, khz) {
+    const M = String(m || '').toUpperCase();
+    if (/^(FT8|FT4|FT2|JT65|WSPR|JTTY|RTTY|CW)$/.test(M)) return M;
+    if (/^(SSB|LSB|USB|PHONE|PH)$/.test(M)) return khz < 10000 && !(khz >= 5250 && khz <= 5450) ? 'LSB' : 'USB';
+    if (/^(AM|FM)$/.test(M)) return M;
+    if (/^(DIGI|DATA|PSK\d*|FT|DIG)$/.test(M)) return 'DATA';
+    return '';
+  }
+  function onSpot(m) {
+    if (!m || m.type !== 'rs-qsy') return;
+    let khz = Number(m.freq);
+    if (!(khz > 0)) return;
+    if (khz < 1000) khz *= 1000;          // MHz
+    else if (khz > 1000000) khz /= 1000;  // Hz
+    khz = Math.round(khz * 10) / 10;
+    const R = RIG();
+    if (!(khz * 1000 >= R.FREQ_MIN && khz * 1000 <= R.FREQ_MAX)) return say('Spot ' + khz + ' kHz : hors de la couverture du ' + R.NAME + '.', 'warn');
+    const M = spotMode(m.mode, khz);
+    const call = String(m.call || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
+    // Plusieurs dashboards ouverts dans ce navigateur : seul celui qui a la main agit
+    if (!iControl()) { if (document.visibilityState === 'visible') say('Spot ' + (call || '') + ' ' + khz + ' kHz : prenez la main pour que le TRX s’y cale.', 'warn'); return; }
+    if (bcQsy) bcQsy.postMessage({ type: 'rs-qsy-here' });
+    if (st.ptt && st.ptt.active) return say('Réglage bloqué pendant l’émission.', 'warn');
+    const dg = window.DG && window.DG();
+    if (dg && dg.spotQsy && dg.spotQsy(khz, M, call)) return;
+    // Phonie, AM, FM, ou mode inconnu : fréquence du VFO choisi, mode si le spot l'indique
+    setFreq(Math.round(khz * 1000), target);
+    const want = M === 'DATA' ? /^(DATA-U|USB-D)$/ : M ? new RegExp('^' + M + '$') : null;
+    const mk = want && (R.MODE_KEYS || []).find((x) => want.test(x[1]));
+    if (mk) setTimeout(() => send({ t: 'set', mode: mk[0], sub: target === 'B' }), 250);
+    say((call ? call + ' : ' : '') + 'VFO ' + target + ' sur ' + khz.toLocaleString('fr-BE') + ' kHz' + (mk ? ' en ' + mk[1] : '') + '.', '', 4000);
+  }
+  const bcQsy = 'BroadcastChannel' in window ? new BroadcastChannel('rs-qsy') : null;
+  if (bcQsy) bcQsy.onmessage = (e) => onSpot(e.data);
+  // Fenêtre du cluster ouverte depuis ce dashboard : message direct (window.opener) accepté des sites autorisés
+  window.addEventListener('message', (e) => {
+    const ok = (me && Array.isArray(me.qsyOrigins) ? me.qsyOrigins : []).indexOf(e.origin) >= 0;
+    if (ok && e.data && e.data.type === 'rs-qsy') onSpot(e.data);
+  });
+
   // DX Cluster : menu de deux liens (nouvel onglet)
   const dxcShow = (on) => { $('dxcMenu').hidden = !on; $('dxcBtn').setAttribute('aria-expanded', String(on)); };
   $('dxcBtn').addEventListener('click', (e) => { e.stopPropagation(); dxcShow($('dxcMenu').hidden); });

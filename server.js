@@ -47,6 +47,8 @@ const DEFAULTS = {
   // Page Station : seuls ces indicatifs (connectés à la page Station avec leur indicatif et leur mot de passe
   // d'administrateur) peuvent modifier le jeton, la vitesse et les bits de stop ; pour les autres, ces champs sont verrouillés
   stationEditors: ['ON6DP', 'ON4LUC'],
+  // Sites de DX cluster autorisés à envoyer un spot au dashboard (clic sur un spot → le TRX s'y cale)
+  qsyOrigins: ['https://dx.op0p.be', 'http://dx.op0p.be', 'https://cluster.op0p.be', 'http://cluster.op0p.be'],
   clusterHost: 'op0p.be',
   clusterPort: 8000,
   clusterCall: '',
@@ -137,6 +139,9 @@ const TYPES = {
   '.json': 'application/json; charset=utf-8',
   '.webmanifest': 'application/manifest+json'
 };
+function qsyOrigins() {
+  return (Array.isArray(cfg.qsyOrigins) ? cfg.qsyOrigins : DEFAULTS.qsyOrigins).map(String).filter((o) => /^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o));
+}
 const ROUTES = { '/': '/index.html', '/station': '/station.html', '/digi': '/digi.html', '/aide': '/aide.html', '/help': '/help.html' };
 
 function sendJson(res, code, obj) {
@@ -184,6 +189,7 @@ const server = makeServer((req, res) => {
       allowTx: cfg.allowTx,
       maxTxSeconds: cfg.maxTxSeconds,
       txRanges: cfg.txRanges,
+      qsyOrigins: qsyOrigins(),
       version: VERSION
     });
   }
@@ -205,12 +211,15 @@ const server = makeServer((req, res) => {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       return res.end('Introuvable');
     }
-    res.writeHead(200, {
+    const hd = {
       'Content-Type': TYPES[path.extname(fp)] || 'application/octet-stream',
       'Cache-Control': 'no-cache',
       'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'no-referrer'
-    });
+    };
+    // Relais des spots (qsy.html) : intégrable seulement dans les sites de DX cluster autorisés
+    if (key === 'qsy.html') hd['Content-Security-Policy'] = "frame-ancestors 'self' " + qsyOrigins().join(' ');
+    res.writeHead(200, hd);
     res.end(req.method === 'HEAD' ? undefined : data);
   });
 });
@@ -1707,6 +1716,7 @@ function loggedIn(conn, call, rec, sessionTok) {
     digiCall: String(cfg.digiCall || '').toUpperCase(),
     subCat: !!cfg.ftx1SubCat,
     subSingle: !!cfg.ftx1SubSingle,
+    qsyOrigins: qsyOrigins(),
     stationGrid: String(cfg.stationGrid || '').toUpperCase(),
     stationQth: String(cfg.stationQth || '').toUpperCase(),
     qo100If: cfg.qo100If && typeof cfg.qo100If === 'object' ? cfg.qo100If : DEFAULTS.qo100If,

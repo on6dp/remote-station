@@ -1387,6 +1387,45 @@
     bmDraw();
     api.say(who + 'VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz, réception sur le signal.', '', 4000);
   }
+  // Spot cliqué sur dx.op0p.be ou cluster.op0p.be (via le dashboard) : l'onglet du mode s'ouvre et le TRX se cale dessus
+  // comme avec la carte de bande. Renvoie false pour la phonie (SSB, AM, FM), réglée directement par le dashboard.
+  function spotQsy(khz, M, call) {
+    const tabFor = { RTTY: 'rtty', CW: 'cw', FT8: 'ftx', FT4: 'ftx', FT2: 'ftx', JT65: 'jt65', WSPR: 'wspr', JTTY: 'jtty' }[M];
+    if (call && M !== 'WSPR') setDx({ call });
+    if (!tabFor) return false;
+    if (!api || !api.iControl()) { api && api.say('Prenez la main pour vous caler sur ' + (call || khz + ' kHz') + '.', 'warn'); return true; }
+    const st = api.state();
+    if (st && ((st.ptt && st.ptt.active) || st.ftx)) { api.say('Réglage bloqué pendant l’émission.', 'warn'); return true; }
+    if (detached) { api.say('Les modes numériques sont dans la fenêtre séparée : le spot y est envoyé.', ''); }
+    if (['FT8', 'FT4', 'FT2'].indexOf(M) >= 0 && mode !== M) setMode(M);
+    showTab(tabFor);
+    const hz = Math.round(khz * 1000);
+    if (M === 'CW') {
+      qsyTo(hz / 1000, 'CW');
+      api.say((call ? call + ' : ' : '') + 'CW sur ' + khz.toLocaleString('fr-BE') + ' kHz (VFO A).', '', 4000);
+      return true;
+    }
+    if (M === 'RTTY') {
+      // Porteuse 1500 Hz sous le signal (DATA-U), décodeur de l'émission au milieu de la cascade
+      const nd = Math.round((hz - WF_TOP / 2) / 10) * 10;
+      qsyTo(nd / 1000);
+      rts[rtTx].f = hz - nd;
+      saveRtty(true);
+      applySpan(true);
+      drawScale();
+      bmDraw();
+      api.say((call ? call + ' : ' : '') + 'RTTY sur ' + khz.toLocaleString('fr-BE') + ' kHz, décodeur ' + (rtTx ? 'B' : 'A') + ' sur le signal.', '', 4000);
+      return true;
+    }
+    // FT8 / FT4 / FT2 / JT65 / WSPR / JTTY : fréquence d'appel habituelle si le spot est dans sa bande audio, sinon 1500 Hz sous le signal
+    const list = DIAL[M] || DIAL.FT8;
+    const std = list.map((x) => x[1]).find((d) => khz >= d && khz - d <= 3);
+    const nd = std ? Math.round(std * 1000) : Math.round((hz - 1500) / 100) * 100;
+    qsyTo(nd / 1000);
+    if (M !== 'WSPR') setRx(hz - nd);
+    api.say((call ? call + ' : ' : '') + M + ' sur ' + (nd / 1000).toLocaleString('fr-BE') + ' kHz' + (M !== 'WSPR' ? ', réception à ' + (hz - nd) + ' Hz.' : '.'), '', 4000);
+    return true;
+  }
   function bmInit() {
     const body = $('bmBody');
     if (!body) return;
@@ -3265,6 +3304,7 @@
 
   // ------------------------------------------------------------------ interface avec app.js
   window.RSDIGI = {
+    spotQsy,
     setDetached,
     isPopup: POPUP,
     /** Mode numérique affiché (pour le carnet de trafic quand le TRX est en DATA) */

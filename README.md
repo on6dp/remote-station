@@ -11,7 +11,7 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.22.83** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.22.84** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
 **Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
 `remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
@@ -144,6 +144,7 @@ sudo systemctl restart remote-station
 | `rxOnlyPrefixes` | `["ONL"]` | Indicatifs en écoute seule. |
 | `maxSwr`, `swrHoldMs` | `2.5`, `700` | Coupure de l'émission sur ROS élevé. |
 | `tunerAuto` | `true` | Tuner remis en service à chaque changement de bande HF / 6 m. |
+| `qsyOrigins` | `['https://dx.op0p.be', …, 'http://cluster.op0p.be']` | Sites de DX cluster autorisés à envoyer un spot au dashboard (clic sur un spot → le TRX s'y cale). Voir « Clic sur un spot d'un DX cluster ». |
 | `stationEditors` | `['ON6DP', 'ON4LUC']` | Indicatifs (connectés à la page Station avec leur indicatif) qui peuvent modifier le jeton, la vitesse et les bits de stop de la page Station ; verrouillés pour les autres. |
 | `clusterHost`, `clusterPort`, `clusterCall`, `clusterCmds` | `op0p.be`, `8000`, `''`, `['set/skimmer']` | DX cluster (telnet) de la carte de bande RTTY. `clusterHost` vide = pas de cluster ; `clusterCall` vide = `digiCall` suivi de `-7`. |
 | `ftx1SubCat`, `ftx1SubSingle` | `true`, `false` | FTX-1 : passage MAIN / SUB par le dashboard en double réception (DUAL RX) ; en réception simple, refusé (il a mis le TRX en émission les 24 et 25/10) sauf `ftx1SubSingle: true` (essais seulement). |
@@ -202,6 +203,25 @@ Les heures du journal systemd sont en **UTC** (heure belge − 1 h en hiver, −
 **Jeton dans l'adresse** (si Chrome oublie le jeton) : ouvrir `https://remote.op0p.be/station#jeton=LE_JETON` (sans guillemets). La page enregistre le jeton puis l'efface de la barre d'adresse ; la partie après `#` n'est jamais envoyée sur internet. Pratique pour le raccourci de démarrage du PC du club :
 `"C:\Program Files\Google\Chrome\Application\chrome.exe" --autoplay-policy=no-user-gesture-required --app=https://remote.op0p.be/station#jeton=LE_JETON`
 6. Dans Chrome : **Paramètres → Performances → « Toujours garder ces sites actifs » → Ajouter `remote.op0p.be`**, sinon l'économiseur de mémoire peut mettre l'onglet en veille.
+
+### Clic sur un spot d'un DX cluster (dx.op0p.be, cluster.op0p.be)
+
+Un clic sur un spot dans un DX cluster ouvert dans le même navigateur que le dashboard cale le TRX sur la station
+(fréquence, mode, onglet du mode, indicatif dans Correspondant), avec les règles habituelles (main, émission en cours).
+Dans le site du cluster (servi en **https**, et listé dans `qsyOrigins`) :
+
+```html
+<script src="https://remote.op0p.be/js/rs-qsy-client.js"></script>
+```
+
+puis, dans le gestionnaire du clic sur un spot :
+
+```js
+window.remoteStationQsy(spot.freq /* kHz */, spot.mode /* 'FT8', 'CW', 'SSB', 'RTTY'… */, spot.dx_call);
+```
+
+Le script ajoute un relais invisible (`/qsy.html` de la Remote Station, en iframe) qui passe le spot au dashboard
+(BroadcastChannel). Facultatif : `window.onRemoteStationAck = (ok) => …` indique si un dashboard a reçu le spot.
 
 ### Réglages des radios
 
