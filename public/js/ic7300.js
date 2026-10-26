@@ -373,6 +373,14 @@
     GROUPS, CONTROLS, CONTROL, validate, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
     smeterLabel, swrValue, vdValue, idValue, poFrac,
     bwText: (r) => (r.fil ? 'FIL' + r.fil : '—'),
+    // Émission CW par le manipulateur interne (CI-V 17 : 30 caractères au plus par trame, FF = arrêt) ;
+    // vitesse 14 0C (0–255 = 6–48 mots/min), break-in semi (16 47 01) pour que le TRX émette tout seul
+    CW: {
+      max: 30,
+      setup: (wpm) => [q(0x14, 0x0C, ...lvlBytes(Math.round((Math.max(6, Math.min(48, wpm)) - 6) * 255 / 42))), q(0x16, 0x47, 0x01)],
+      chunk: (t) => [q(0x17, ...Array.from(t, (c) => c.charCodeAt(0)))],
+      stop: () => [q(0x17, 0xFF)]
+    },
     Fake,
     serial: { baudRate: 115200, stopBits: 1, portHint: 'Silicon Labs CP210x (port USB de l’IC-7300)' },
     hint: 'IC-7300 : MENU → SET → Connectors → CI-V : « CI-V USB Baud Rate » = 115200, « CI-V Address » = 94h, « CI-V USB Echo Back » = OFF. Laissez « USB SEND » et « USB Keying » sur OFF.'

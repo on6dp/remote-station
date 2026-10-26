@@ -443,7 +443,7 @@ You have <b>no software to install</b> (no WSJT-X, FLDIGI…): everything happen
   <li><b>Frequency list</b> (at the top of each tab): choosing a line sends the TRX to that frequency, in <b>DATA-U</b> (in CW for the CW tab). You need control. The <span class="k">↺</span> button next to it brings the TRX back to the chosen frequency if someone has turned the VFO in the meantime.</li>
   <li><b>Waterfall</b>: each tab shows the scrolling spectrum from 0 to 3000 Hz. A signal is a coloured trace; its horizontal position is its audio frequency.</li>
   <li><b>Status line</b> (on the right of the tab bar): reports problems (station offline, audio not enabled, TRX not in DATA-U…) or the decoder state.</li>
-  <li><b>Transmitting</b> in FT8 · FT4 · FT2, RTTY and JTTY, under the <b>TX call</b> chosen in the Correspondant line (ON5VL or your callsign). You need control and transmit permission. WSPR, JT65, CW and SSTV are <b>receive</b>-only for now <span class="later">soon</span>.</li>
+  <li><b>Transmitting</b> in FT8 · FT4 · FT2, RTTY, JTTY and CW, under the <b>TX call</b> chosen in the Correspondant line (ON5VL or your callsign). You need control and transmit permission. WSPR, JT65 and SSTV are <b>receive</b>-only for now <span class="later">soon</span>.</li>
 </ul>
 <p><b>Waterfall settings</b> (above the scale, shared by all tabs and remembered in your browser)</p>
 <table>
@@ -623,7 +623,16 @@ Choose the band in the list; about ten seconds after each even minute, the list 
 <ul>
   <li><b>Click a signal</b> in the waterfall: the decoder locks onto the nearest signal and learns its speed. Right click: exact tuning where you click.</li>
   <li>Double-click a received callsign = correspondent; <span class="k">Log QSO</span> opens the logbook form.</li>
-  <li><b>Émission</b> (transmit) section (speed, macros <kbd>F1</kbd> to <kbd>F12</kbd>, text): prepared; CW transmission will come in a future version.</li>
+  <li><b>CW transmission</b>, by the <b>TRX keyer</b> (no audio is sent: the TRX makes the Morse itself, as with its memories):
+    <ul>
+      <li><b>Vitesse</b> (speed, 5 to 50 wpm): keyer speed, sent to the TRX with each transmission.</li>
+      <li><b>Macros</b> <kbd>F1</kbd> to <kbd>F12</kbd> (key or click): <b>red edge = immediate transmission</b> (CQ, Appel, Report, R TU, 73, QRZ?, AGN?), as in RTTY; <b>Shift+click</b> adds it to the text without transmitting. <code>&lt;CALL&gt;</code> without a correspondent: nothing is sent.</li>
+      <li><b>Text</b>: typed in the box (upper case), then <span class="k">Émettre</span> (transmit) or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>; the box empties when transmission starts. Characters sent: letters, digits, <code>/ ? . , = + -</code> and spaces; <code>&lt;AR&gt;</code> becomes + and <code>&lt;BT&gt;</code> becomes =; anything else is ignored. 300 characters at most, and no longer than the maximum transmit time.</li>
+      <li>While transmitting, the button becomes <span class="k">■ Arrêter</span> (stop) and the bottom line shows « ● En émission CW (callsign, speed, duration) »; <span class="k">■ Arrêter</span> or <kbd>Esc</kbd> stops at once.</li>
+      <li>Conditions: control, transmit permission, an allowed band and power, the TRX in <b>CW</b> (CW-L / CW-U, CW / CW-R on the IC-7300) and <b>no SPLIT</b> (the keyer transmits on the receive VFO).</li>
+      <li>What the Station page does: keyer speed, <b>break-in</b> on (the TRX transmits by itself during the Morse and returns to receive), text written to a keyer memory and played, in 50-character pieces (30 on the IC-7300). <b>Note</b>: TEXT memory 5 of the FTX-1 and memory 1 of the FTDX10 / FTDX101 are replaced by the transmitted text. On stop, break-in is turned off.</li>
+      <li>Safety: the same as any transmission (bands, power, SWR), stop if control is lost, if the link or the station drops, and maximum duration.</li>
+    </ul></li>
 </ul>
 
 <h3 id="sstv">12.7 SSTV</h3>
@@ -663,7 +672,7 @@ Example: FT8 on <b>432.540 MHz</b> with the club's 70 cm converter. Only the IFs
 <ul>
   <li>A macro starting with <code>&lt;TX&gt;</code> (red edge on the left; this is the case for all default macros) <b>is transmitted at once</b> when clicked or with its <kbd>F1</kbd>… key, then the TRX returns to receive.</li>
   <li><b>Shift+click</b>: adds the macro to the text to send without transmitting, to build a message and then « Émettre ».</li>
-  <li>A macro without <code>&lt;TX&gt;</code> (and every CW macro) is simply added to the text.</li>
+  <li>A macro without <code>&lt;TX&gt;</code> is simply added to the text (in CW too: the original macros have <code>&lt;TX&gt;</code> and go out at once).</li>
   <li><b>Right click</b> a macro (or <span class="k">✎</span>): edit it — name, text, preview, back to the default text. Your macros are stored on the server, for you only.</li>
   <li>If a macro contains <code>&lt;CALL&gt;</code> while no correspondent is chosen, nothing is sent.</li>
 </ul>
@@ -778,8 +787,8 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
   <tr><td><kbd>W</kbd> (hold)</td><td>TXW: listen on the transmit frequency (SPLIT).</td></tr>
   <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Frequency ± one step (the one on the Step row).</td></tr>
   <tr><td><kbd>F1</kbd> … <kbd>F12</kbd></td><td>Macros in the RTTY and CW tabs (<kbd>F1</kbd>…<kbd>F8</kbd> in JTTY).</td></tr>
-  <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd> / <kbd>Enter</kbd></td><td>Transmit the typed text in RTTY / in JTTY.</td></tr>
-  <tr><td><kbd>Esc</kbd></td><td>Stop the current RTTY or JTTY transmission.</td></tr>
+  <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd> / <kbd>Enter</kbd></td><td>Transmit the typed text in RTTY and CW / in JTTY.</td></tr>
+  <tr><td><kbd>Esc</kbd></td><td>Stop the current RTTY, JTTY or CW transmission.</td></tr>
   <tr><td><kbd>Enter</kbd> (logbook form)</td><td>Save the QSO.</td></tr>
   <tr><td><kbd>Shift</kbd> + mouse wheel</td><td>On the RIT / XIT value: offset in 100 Hz steps. On the RTTY waterfall: VFO ± 10 Hz per notch.</td></tr>
   <tr><td><kbd>Esc</kbd> (menus)</td><td>Closes the open menu: Operators, club TRX, DX Cluster, dashboard size.</td></tr>

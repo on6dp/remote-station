@@ -1057,6 +1057,7 @@ function swrLockText() {
 // Raison qui empêche cet opérateur d'émettre (PTT ou TUNE), ou null
 function txBlockReason(conn, forTune) {
   return txw ? 'TXW enfoncé (écoute de la fréquence d’émission) : relâchez-le d’abord' :
+    cwJob ? 'émission CW en cours : attendez la fin (ou « ■ Arrêter »)' :
     !cfg.allowTx ? 'émission désactivée sur ce serveur' :
     conn.user.rxOnly ? 'indicatif d’écouteur (' + conn.user.call + ') : émission interdite' :
     !conn.user.tx ? 'votre compte n’est pas autorisé à émettre' :
@@ -1085,6 +1086,7 @@ function publicState() {
     ptt: { active: ptt.active, by: ptt.active ? ptt.conn.user.call : null, since: ptt.since, digi: !!(ptt.active && ptt.digi) },
     // Émission FT8 / FT4 / FT2 programmée ou en cours
     seq: seqPublic(),
+    cw: cwPublic(),
     ftx: ftxPend ? { id: ftxPend.id, state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call, seconds: ftxPend.seconds } : null,
     txCall: txCall(),
     txw: txw ? txw.conn.user.call : null,
@@ -1178,6 +1180,81 @@ const FTX_END = 'fin du message';
 const FTX_SWITCH = 'message suivant'; // émission coupée pour repartir aussitôt avec le message suivant de la séquence
 let ftxPend = null; // { id, conn, mode, text, f0, at, state: 'wait' | 'tx', ready, seconds, sent, timer }
 let ftxSeq = 0;
+
+// ---------------------------------------------------------------- émission CW (manipulateur du TRX, par le CAT)
+// Le texte part dans la mémoire du manipulateur du TRX (Yaesu : KM puis KY ; Icom : commande 17), avec le
+// « break-in » en service : le TRX émet tout seul, sans PTT. La page Station suit l'émission et répond « cw_state ».
+let cwJob = null; // { id, conn, text, wpm, seconds, state: 'wait' | 'tx', at, timer }
+const MORSE = {
+  A: '.-', B: '-...', C: '-.-.', D: '-..', E: '.', F: '..-.', G: '--.', H: '....', I: '..', J: '.---', K: '-.-', L: '.-..', M: '--',
+  N: '-.', O: '---', P: '.--.', Q: '--.-', R: '.-.', S: '...', T: '-', U: '..-', V: '...-', W: '.--', X: '-..-', Y: '-.--', Z: '--..',
+  0: '-----', 1: '.----', 2: '..---', 3: '...--', 4: '....-', 5: '.....', 6: '-....', 7: '--...', 8: '---..', 9: '----.',
+  '/': '-..-.', '?': '..--..', '.': '.-.-.-', ',': '--..--', '=': '-...-', '+': '.-.-.', '-': '-....-'
+};
+/** Texte CW accepté par les manipulateurs : majuscules, chiffres, / ? . , = + - et espaces (prosignes : <AR> = +, <BT> = =, <KN> retiré). */
+function cwClean(t) {
+  return String(t || '').toUpperCase().replace(/<AR>/g, '+').replace(/<BT>/g, '=').replace(/<[A-Z]{2}>/g, ' ')
+    .replace(/[^A-Z0-9 /?.,=+-]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+/** Durée du texte en ms à wpm mots/minute (PARIS : 1 point = 1200 / wpm ms). */
+function cwMs(t, wpm) {
+  let u = 0;
+  for (const ch of t) {
+    if (ch === ' ') { u += 4; continue; } // espace entre mots : 7 points (3 déjà comptés après la lettre)
+    const c = MORSE[ch];
+    if (!c) continue;
+    for (const x of c) u += (x === '.' ? 1 : 3) + 1;
+    u += 2; // espace entre lettres : 3 points en tout
+  }
+  return Math.round(u * 1200 / wpm);
+}
+function cwPublic() {
+  return cwJob ? { id: cwJob.id, by: cwJob.conn.user.call, text: cwJob.text, state: cwJob.state, seconds: cwJob.seconds, wpm: cwJob.wpm } : null;
+}
+function cwRequest(conn, m) {
+  const err = (msg) => send(conn, { t: 'notice', level: 'error', msg });
+  if (controller !== conn) return err('Prenez d’abord la main');
+  if (!station || station.caps.indexOf('cwtx') < 0) {
+    return err('La page Station du club ne sait pas encore émettre en CW (ancienne version) : ' +
+      (conn.user.admin ? 'rechargez-la (voyant STATION → « Recharger la page Station »).' : 'un administrateur doit la recharger.'));
+  }
+  if (!rig().CW) return err('Émission CW par le CAT pas encore prévue sur le ' + rig().NAME);
+  if (cwJob) return err('Émission CW déjà en cours : attendez la fin (ou « ■ Arrêter »)');
+  if (ptt.active || ftxPend) return err('Émission déjà en cours ou prévue : attendez la fin');
+  if (seq && seq.on) return err('Émission automatique FT8 / FT4 / FT2 en cours : arrêtez-la d’abord');
+  const why = txBlockReason(conn);
+  if (why && radio.power != null && radio.power > conn.user.maxWatts) limitPower(conn, 'avant émission');
+  if (why) return err('Émission refusée : ' + why);
+  if (radio.split || radio.txVfo === 1) return err('Émission CW : coupez d’abord le SPLIT (le manipulateur émet sur le VFO écouté)');
+  const md = (radio.vfoSel === 1 ? radio.modeB : radio.mode) || '';
+  if (!/^CW/.test(md)) return err('Mettez d’abord le TRX en CW (mode actuel : ' + (md || '?') + ')');
+  const text = cwClean(m.text);
+  if (!text) return err('Rien à émettre : tapez un texte ou choisissez une macro');
+  if (text.length > 300) return err('Texte trop long (300 caractères au plus)');
+  const wpm = Math.max(5, Math.min(50, Math.round(Number(m.wpm) || 22)));
+  const seconds = cwMs(text, wpm) / 1000;
+  if (seconds > cfg.maxTxSeconds - 2) return err('Texte trop long : ' + Math.round(seconds) + ' s d’émission à ' + wpm + ' mots/min (limite du serveur : ' + cfg.maxTxSeconds + ' s)');
+  const id = ++ftxSeq;
+  cwJob = { id, conn, text, wpm, seconds: Math.round(seconds * 10) / 10, state: 'wait', at: Date.now(), timer: null };
+  lastCtrlActivity = Date.now();
+  journal('tx_start', { call: conn.user.call, ip: conn.ip, freq: txFreq(), mode: 'CW', text: text.slice(0, 60), wpm, watts: radio.power });
+  toStation({ t: 'cmd', op: 'cw', id, text, wpm, by: conn.user.call });
+  // Filet : fin non signalée par la page Station (marge pour les morceaux et le retour en réception)
+  cwJob.timer = setTimeout(() => cwEnd('fin du message non confirmée par la page Station', false), Math.round(seconds * 1000 + 3000 + 1500 * Math.ceil(text.length / 30)));
+  broadcast();
+}
+/** Fin de l'émission CW ; fromStation : la page Station l'a déjà arrêtée (sinon on lui demande de couper). */
+function cwEnd(reason, fromStation) {
+  const j = cwJob;
+  if (!j) return;
+  cwJob = null;
+  clearTimeout(j.timer);
+  if (!fromStation) toStation({ t: 'cmd', op: 'cwstop', reason });
+  journal('tx_end', { call: j.conn.user.call, mode: 'CW', reason, s: Math.round((Date.now() - j.at) / 1000) });
+  if (reason && reason !== 'fin du message') send(j.conn, { t: 'notice', level: /arrêt demandé/.test(reason) ? 'info' : 'warn', msg: 'Émission CW arrêtée : ' + reason });
+  lastCtrlActivity = Date.now();
+  broadcast();
+}
 
 /** Prochain départ du signal : début de période + 0,5 s, parité imposée ou non, au plus tôt dans 0,9 s. */
 function ftxSlot(mode, parity, now, lateMax) {
@@ -1625,8 +1702,9 @@ setInterval(() => {
   // Émission numérique programmée : annulée si l'opérateur n'a plus la main ou si la station a disparu
   if (ftxPend && ftxPend.state === 'wait' && (controller !== ftxPend.conn || !station)) ftxCancel(!station ? 'station hors ligne' : 'main perdue');
   if (seq && seq.on && (controller !== seq.conn || !station)) seqOff(!station ? 'station hors ligne' : 'main perdue');
+  if (cwJob && (controller !== cwJob.conn || !station)) cwEnd(!station ? 'station hors ligne' : 'main perdue', false);
   // Aucune libération ni déconnexion pour inactivité tant que le TRX est en émission
-  if (ptt.active || radio.tx || ftxPend || (seq && seq.on)) return;
+  if (ptt.active || radio.tx || ftxPend || cwJob || (seq && seq.on)) return;
   if (controller && now - lastCtrlActivity > cfg.controlIdleMinutes * 60000) {
     const c = controller;
     stopPtt('inactivité');
@@ -2239,6 +2317,13 @@ function onOperator(conn, m) {
     case 'ftx_cfg':
       return seqCfg(conn, m);
 
+    case 'cw':
+      return cwRequest(conn, m);
+
+    case 'cw_stop':
+      if (cwJob && (cwJob.conn === conn || controller === conn || conn.user.admin)) cwEnd('arrêt demandé par ' + conn.user.call, false);
+      return;
+
     case 'dtx':
       audioRequest(conn, m).catch((e) => send(conn, { t: 'notice', level: 'error', msg: 'Émission impossible : ' + e.message }));
       return;
@@ -2368,6 +2453,11 @@ function onStation(conn, m) {
     if (ptt.active) stopPtt(reason);
     else for (const c of ops) send(c, { t: 'notice', level: 'error', msg: 'Station : ' + reason });
     return;
+  }
+  if (m.t === 'cw_state') {
+    if (!cwJob || m.id !== cwJob.id) return;
+    if (m.state === 'tx') { cwJob.state = 'tx'; return broadcast(); }
+    return cwEnd(m.state === 'done' ? 'fin du message' : String(m.msg || 'arrêtée par la page Station').slice(0, 200), true);
   }
   if (m.t === 'audio_silent') {
     const on = !!m.on;
@@ -2529,6 +2619,7 @@ ws.attach(server, {
       if (!conn.user && !conn.everStation) journal('ws_noauth', { ip: conn.ip, by: conn.closeBy || '?', code: conn.closeCode || null, s: Math.round((Date.now() - conn.openedAt) / 1000) });
       if (conn.isStation && station && station.conn === conn) {
         if (ptt.active) stopPtt('station déconnectée');
+        if (cwJob) cwEnd('station déconnectée', true);
         station = null;
         radio = Object.assign({}, radio, { connected: false, tx: 0 });
         // 1001 = page Station fermée, rechargée ou remplacée par une autre adresse dans son onglet

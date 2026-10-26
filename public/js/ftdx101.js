@@ -102,6 +102,9 @@
     extraQueries: ['ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
     extraStateKeys: ['nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
+    // CW : mémoire 1 du manipulateur (écrasée), lue par KY6 (« Message Keyer 1 Playback », manuel CAT 1912-D) ;
+    // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
+    cw: { mem: 'KM1', play: 'KY6;', stop: 'BI0;' },
     preampText(r, w) {
       const v = w === 'B' ? r.preampB : r.preamp;
       if (v == null) return null;

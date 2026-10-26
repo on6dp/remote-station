@@ -455,7 +455,7 @@ Les onglets du centre : **Activité**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**
 - **Liste des fréquences** (en haut de chaque onglet) : choisir une ligne envoie le TRX sur cette fréquence, en **DATA-U** (en CW pour l'onglet CW). Il faut avoir la main. Le bouton `↺` à côté ramène le TRX sur la fréquence choisie si quelqu'un a tourné le VFO entre-temps.
 - **Cascade** : chaque onglet montre le spectre de 0 à 3000 Hz qui défile. Un signal est un trait coloré ; sa position horizontale est sa fréquence audio.
 - **Ligne d'état** (à droite de la barre de l'onglet) : signale les problèmes (station hors ligne, BF non activée, TRX pas en DATA-U…) ou l'état du décodeur.
-- **Émission** en FT8 · FT4 · FT2, RTTY et JTTY, sous le **TX call** choisi dans la ligne Correspondant (ON5VL ou votre indicatif). Il faut avoir la main et l'émission autorisée. WSPR, JT65, CW et SSTV sont pour l'instant en **réception** seulement *(bientôt)*.
+- **Émission** en FT8 · FT4 · FT2, RTTY, JTTY et CW, sous le **TX call** choisi dans la ligne Correspondant (ON5VL ou votre indicatif). Il faut avoir la main et l'émission autorisée. WSPR, JT65 et SSTV sont pour l'instant en **réception** seulement *(bientôt)*.
 
 **Réglages de la cascade** (au-dessus de l'échelle, communs à tous les onglets et gardés dans votre navigateur)
 
@@ -634,7 +634,6 @@ Le WSPR sert à étudier la propagation : des balises de faible puissance émett
 
 - **Cliquez sur un signal** dans la cascade : le décodeur se cale sur le signal le plus proche et apprend sa vitesse. Clic droit : calage exact là où vous cliquez.
 - Double-clic sur un indicatif reçu = correspondant ; `Log QSO` ouvre la fiche du carnet.
-- Partie **Émission** (vitesse, macros `F1` à `F12`, texte) : préparée, l'émission CW arrivera dans une prochaine version.
 
 <a id="sstv"></a>
 ### 12.7 SSTV
@@ -678,7 +677,7 @@ QO-100 est un satellite géostationnaire qu'on atteint en 2,4 GHz avec un conver
 
 - Une macro qui commence par `<TX>` (liseré rouge à gauche ; c'est le cas de toutes les macros d'origine) **part tout de suite à l'émission** au clic ou avec sa touche `F1`…, puis le TRX repasse en réception.
 - **Maj+clic** : ajoute la macro au texte à émettre sans émettre, pour composer un message puis « Émettre ».
-- Une macro sans `<TX>` (et toutes les macros CW) s'ajoute simplement au texte.
+- Une macro sans `<TX>` s'ajoute simplement au texte (en CW aussi : les macros d'origine ont `<TX>` et partent tout de suite).
 - **Clic droit** sur une macro (ou `✎`) : la modifier — nom, texte, aperçu, retour au texte d'origine. Vos macros sont gardées sur le serveur, pour vous seul.
 - Si une macro contient `<CALL>` alors qu'aucun correspondant n'est choisi, rien ne part.
 
@@ -799,8 +798,8 @@ Menu **Synchronisation ▾**, réservé aux administrateurs : il envoie les QSO 
 | `W` (maintenir) | TXW : écoute de la fréquence d'émission (SPLIT). |
 | `↑` `↓` | Fréquence ± un pas (celui de la ligne Step). |
 | `F1` … `F12` | Macros dans les onglets RTTY et CW (`F1`…`F8` en JTTY). |
-| `Ctrl` + `Entrée` / `Entrée` | Émettre le texte tapé en RTTY / en JTTY. |
-| `Échap` | Arrêter l'émission RTTY ou JTTY en cours. |
+| `Ctrl` + `Entrée` / `Entrée` | Émettre le texte tapé en RTTY et en CW / en JTTY. |
+| `Échap` | Arrêter l'émission RTTY, JTTY ou CW en cours. |
 | `Entrée` (fiche du carnet) | Enregistrer le QSO. |
 | `Maj` + molette | Sur la valeur RIT / XIT : décalage par pas de 100 Hz. Sur la cascade RTTY : VFO ± 10 Hz par cran. |
 | `Échap` (menus) | Ferme le menu ouvert : Opérateurs, TRX du club, DX Cluster, taille du dashboard. |

@@ -443,7 +443,7 @@ Vous n'avez <b>aucun logiciel à installer</b> (pas de WSJT-X, FLDIGI…) : tout
   <li><b>Liste des fréquences</b> (en haut de chaque onglet) : choisir une ligne envoie le TRX sur cette fréquence, en <b>DATA-U</b> (en CW pour l'onglet CW). Il faut avoir la main. Le bouton <span class="k">↺</span> à côté ramène le TRX sur la fréquence choisie si quelqu'un a tourné le VFO entre-temps.</li>
   <li><b>Cascade</b> : chaque onglet montre le spectre de 0 à 3000 Hz qui défile. Un signal est un trait coloré ; sa position horizontale est sa fréquence audio.</li>
   <li><b>Ligne d'état</b> (à droite de la barre de l'onglet) : signale les problèmes (station hors ligne, BF non activée, TRX pas en DATA-U…) ou l'état du décodeur.</li>
-  <li><b>Émission</b> en FT8 · FT4 · FT2, RTTY et JTTY, sous le <b>TX call</b> choisi dans la ligne Correspondant (ON5VL ou votre indicatif). Il faut avoir la main et l'émission autorisée. WSPR, JT65, CW et SSTV sont pour l'instant en <b>réception</b> seulement <span class="later">bientôt</span>.</li>
+  <li><b>Émission</b> en FT8 · FT4 · FT2, RTTY, JTTY et CW, sous le <b>TX call</b> choisi dans la ligne Correspondant (ON5VL ou votre indicatif). Il faut avoir la main et l'émission autorisée. WSPR, JT65 et SSTV sont pour l'instant en <b>réception</b> seulement <span class="later">bientôt</span>.</li>
 </ul>
 <p><b>Réglages de la cascade</b> (au-dessus de l'échelle, communs à tous les onglets et gardés dans votre navigateur)</p>
 <table>
@@ -623,7 +623,16 @@ Choisissez la bande dans la liste ; une dizaine de secondes après chaque minute
 <ul>
   <li><b>Cliquez sur un signal</b> dans la cascade : le décodeur se cale sur le signal le plus proche et apprend sa vitesse. Clic droit : calage exact là où vous cliquez.</li>
   <li>Double-clic sur un indicatif reçu = correspondant ; <span class="k">Log QSO</span> ouvre la fiche du carnet.</li>
-  <li>Partie <b>Émission</b> (vitesse, macros <kbd>F1</kbd> à <kbd>F12</kbd>, texte) : préparée, l'émission CW arrivera dans une prochaine version.</li>
+  <li><b>Émission CW</b>, par le <b>manipulateur du TRX</b> (pas de son envoyé : le TRX fabrique le morse lui-même, comme avec ses mémoires) :
+    <ul>
+      <li><b>Vitesse</b> (5 à 50 mots/min) : vitesse du manipulateur, envoyée au TRX à chaque émission.</li>
+      <li><b>Macros</b> <kbd>F1</kbd> à <kbd>F12</kbd> (touche ou clic) : <b>liseré rouge = émission immédiate</b> (CQ, Appel, Report, R TU, 73, QRZ?, AGN?), comme en RTTY ; <b>Maj+clic</b> l'ajoute au texte sans émettre. <code>&lt;CALL&gt;</code> sans correspondant : rien ne part.</li>
+      <li><b>Texte</b> : tapé dans la zone (en majuscules), puis <span class="k">Émettre</span> ou <kbd>Ctrl</kbd>+<kbd>Entrée</kbd> ; la zone se vide quand l'émission part. Caractères envoyés : lettres, chiffres, <code>/ ? . , = + -</code> et espaces ; <code>&lt;AR&gt;</code> devient + et <code>&lt;BT&gt;</code> devient = ; le reste est ignoré. 300 caractères au plus, et pas plus long que la durée maximale d'émission.</li>
+      <li>Pendant l'émission, le bouton devient <span class="k">■ Arrêter</span> et la ligne du bas indique « ● En émission CW (indicatif, vitesse, durée) » ; <span class="k">■ Arrêter</span> ou <kbd>Échap</kbd> coupe tout de suite.</li>
+      <li>Conditions : avoir la main, l'émission autorisée, une bande et une puissance permises, le TRX en <b>CW</b> (CW-L / CW-U, CW / CW-R sur l'IC-7300) et <b>sans SPLIT</b> (le manipulateur émet sur le VFO écouté).</li>
+      <li>Ce que fait la page Station : vitesse du manipulateur, <b>break-in</b> en service (le TRX émet tout seul pendant le morse et revient en réception), texte écrit dans une mémoire du manipulateur puis joué, par morceaux de 50 caractères (30 sur l'IC-7300). <b>Attention</b> : la mémoire TEXTE 5 du FTX-1 et la mémoire 1 du FTDX10 / FTDX101 sont remplacées par le texte émis. À l'arrêt, le break-in est coupé.</li>
+      <li>Sécurités : celles de toute émission (bandes, puissance, ROS), arrêt si la main est perdue, si la liaison ou la station tombe, et durée maximale.</li>
+    </ul></li>
 </ul>
 
 <h3 id="sstv">12.7 SSTV</h3>
@@ -663,7 +672,7 @@ Exemple : FT8 sur <b>432,540 MHz</b> avec le convertisseur 70 cm du club. Seules
 <ul>
   <li>Une macro qui commence par <code>&lt;TX&gt;</code> (liseré rouge à gauche ; c'est le cas de toutes les macros d'origine) <b>part tout de suite à l'émission</b> au clic ou avec sa touche <kbd>F1</kbd>…, puis le TRX repasse en réception.</li>
   <li><b>Maj+clic</b> : ajoute la macro au texte à émettre sans émettre, pour composer un message puis « Émettre ».</li>
-  <li>Une macro sans <code>&lt;TX&gt;</code> (et toutes les macros CW) s'ajoute simplement au texte.</li>
+  <li>Une macro sans <code>&lt;TX&gt;</code> s'ajoute simplement au texte (en CW aussi : les macros d'origine ont <code>&lt;TX&gt;</code> et partent tout de suite).</li>
   <li><b>Clic droit</b> sur une macro (ou <span class="k">✎</span>) : la modifier — nom, texte, aperçu, retour au texte d'origine. Vos macros sont gardées sur le serveur, pour vous seul.</li>
   <li>Si une macro contient <code>&lt;CALL&gt;</code> alors qu'aucun correspondant n'est choisi, rien ne part.</li>
 </ul>
@@ -778,8 +787,8 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
   <tr><td><kbd>W</kbd> (maintenir)</td><td>TXW : écoute de la fréquence d'émission (SPLIT).</td></tr>
   <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Fréquence ± un pas (celui de la ligne Step).</td></tr>
   <tr><td><kbd>F1</kbd> … <kbd>F12</kbd></td><td>Macros dans les onglets RTTY et CW (<kbd>F1</kbd>…<kbd>F8</kbd> en JTTY).</td></tr>
-  <tr><td><kbd>Ctrl</kbd> + <kbd>Entrée</kbd> / <kbd>Entrée</kbd></td><td>Émettre le texte tapé en RTTY / en JTTY.</td></tr>
-  <tr><td><kbd>Échap</kbd></td><td>Arrêter l'émission RTTY ou JTTY en cours.</td></tr>
+  <tr><td><kbd>Ctrl</kbd> + <kbd>Entrée</kbd> / <kbd>Entrée</kbd></td><td>Émettre le texte tapé en RTTY et en CW / en JTTY.</td></tr>
+  <tr><td><kbd>Échap</kbd></td><td>Arrêter l'émission RTTY, JTTY ou CW en cours.</td></tr>
   <tr><td><kbd>Entrée</kbd> (fiche du carnet)</td><td>Enregistrer le QSO.</td></tr>
   <tr><td><kbd>Maj</kbd> + molette</td><td>Sur la valeur RIT / XIT : décalage par pas de 100 Hz. Sur la cascade RTTY : VFO ± 10 Hz par cran.</td></tr>
   <tr><td><kbd>Échap</kbd> (menus)</td><td>Ferme le menu ouvert : Opérateurs, TRX du club, DX Cluster, taille du dashboard.</td></tr>

@@ -455,7 +455,7 @@ The centre tabs: **Activité**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT6
 - **Frequency list** (at the top of each tab): choosing a line sends the TRX to that frequency, in **DATA-U** (in CW for the CW tab). You need control. The `↺` button next to it brings the TRX back to the chosen frequency if someone has turned the VFO in the meantime.
 - **Waterfall**: each tab shows the scrolling spectrum from 0 to 3000 Hz. A signal is a coloured trace; its horizontal position is its audio frequency.
 - **Status line** (on the right of the tab bar): reports problems (station offline, audio not enabled, TRX not in DATA-U…) or the decoder state.
-- **Transmitting** in FT8 · FT4 · FT2, RTTY and JTTY, under the **TX call** chosen in the Correspondant line (ON5VL or your callsign). You need control and transmit permission. WSPR, JT65, CW and SSTV are **receive**-only for now *(soon)*.
+- **Transmitting** in FT8 · FT4 · FT2, RTTY, JTTY and CW, under the **TX call** chosen in the Correspondant line (ON5VL or your callsign). You need control and transmit permission. WSPR, JT65 and SSTV are **receive**-only for now *(soon)*.
 
 **Waterfall settings** (above the scale, shared by all tabs and remembered in your browser)
 
@@ -634,7 +634,6 @@ WSPR is used to study propagation: low-power beacons transmit their callsign, lo
 
 - **Click a signal** in the waterfall: the decoder locks onto the nearest signal and learns its speed. Right click: exact tuning where you click.
 - Double-click a received callsign = correspondent; `Log QSO` opens the logbook form.
-- **Émission** (transmit) section (speed, macros `F1` to `F12`, text): prepared; CW transmission will come in a future version.
 
 <a id="sstv"></a>
 ### 12.7 SSTV
@@ -678,7 +677,7 @@ QO-100 is a geostationary satellite reached on 2.4 GHz with an up-converter. The
 
 - A macro starting with `<TX>` (red edge on the left; this is the case for all default macros) **is transmitted at once** when clicked or with its `F1`… key, then the TRX returns to receive.
 - **Shift+click**: adds the macro to the text to send without transmitting, to build a message and then « Émettre ».
-- A macro without `<TX>` (and every CW macro) is simply added to the text.
+- A macro without `<TX>` is simply added to the text (in CW too: the original macros have `<TX>` and go out at once).
 - **Right click** a macro (or `✎`): edit it — name, text, preview, back to the default text. Your macros are stored on the server, for you only.
 - If a macro contains `<CALL>` while no correspondent is chosen, nothing is sent.
 
@@ -799,8 +798,8 @@ In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé*
 | `W` (hold) | TXW: listen on the transmit frequency (SPLIT). |
 | `↑` `↓` | Frequency ± one step (the one on the Step row). |
 | `F1` … `F12` | Macros in the RTTY and CW tabs (`F1`…`F8` in JTTY). |
-| `Ctrl` + `Enter` / `Enter` | Transmit the typed text in RTTY / in JTTY. |
-| `Esc` | Stop the current RTTY or JTTY transmission. |
+| `Ctrl` + `Enter` / `Enter` | Transmit the typed text in RTTY and CW / in JTTY. |
+| `Esc` | Stop the current RTTY, JTTY or CW transmission. |
 | `Enter` (logbook form) | Save the QSO. |
 | `Shift` + mouse wheel | On the RIT / XIT value: offset in 100 Hz steps. On the RTTY waterfall: VFO ± 10 Hz per notch. |
 | `Esc` (menus) | Closes the open menu: Operators, club TRX, DX Cluster, dashboard size. |

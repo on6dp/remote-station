@@ -14,6 +14,8 @@
   const NARROW_18 = Y.WIDTH_NARROW.slice(0, 18); // 50 … 3000 Hz
 
   const api = Y.build({
+    // CW : comme le FTDX101 (mémoire 1 du manipulateur lue par KY6 ; BI0 coupe le break-in pour arrêter)
+    cw: { mem: 'KM1', play: 'KY6;', stop: 'BI0;' },
     ID: 'ftdx10',
     NAME: 'Yaesu FTDX10',
     FREQ_MAX: 75000000,

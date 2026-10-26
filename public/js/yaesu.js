@@ -372,6 +372,24 @@
             else if (m[1] === '1' || (spec.bandSideless && this.ans['VS;'] === 'VS1')) this.freqB = BAND_CODES[b][1];
             else this.freq = BAND_CODES[b][1];
           }
+          // Manipulateur CW (simulateur) : vitesse, break-in, mémoires, lecture (émission « par le TRX », TX2)
+          else if (spec.cw && (m = /^KS(\d{3})$/.exec(c))) this.cwWpm = +m[1];
+          else if (spec.cw && /^BI[01]$/.test(c)) { this.bi = c === 'BI1'; if (!this.bi && this.cwPlay) { clearTimeout(this.cwPlay); this.cwPlay = null; this.tx = 0; } }
+          else if (spec.cw && (m = /^KM([1-5])(.*)$/.exec(c))) { this.km = this.km || {}; this.km[m[1]] = m[2]; }
+          else if (spec.cw && /^KY/.test(c)) {
+            const slot = c === spec.cw.play.slice(0, -1) ? spec.cw.mem.slice(2) : null;
+            if (c === 'KY00') { if (this.cwPlay) { clearTimeout(this.cwPlay); this.cwPlay = null; this.tx = 0; } }
+            else if (slot && this.km && this.km[slot] != null) {
+              const t = this.km[slot];
+              (this.cwLog = this.cwLog || []).push(t);
+              if (this.bi) {
+                const ms = Math.round(t.length * 10 * 1200 / (this.cwWpm || 22));
+                clearTimeout(this.cwPlay);
+                setTimeout(() => { this.tx = 2; }, 250);
+                this.cwPlay = setTimeout(() => { this.tx = 0; this.cwPlay = null; }, 250 + ms);
+              }
+            } else out.push('?;');
+          }
           else if (spec.fakeCmd && spec.fakeCmd(this, c, out)) { /* commande propre au modèle (simulateur) */ }
           else if (this.ans[c + ';'] != null) out.push(this.ans[c + ';'] + ';');
           else {
@@ -403,6 +421,14 @@
       FRAME_GAP_MS: 20, SLOW_PER_TICK: 4, POLL_MS: 250, readFor,
       widthTableFn: widthTable,
       derive: spec.derive || null, preampText: spec.preampText || null, SUB_BADGES: !!spec.subBadges, remapRead: spec.remapRead || null,
+      // Émission CW par le manipulateur du TRX : texte écrit dans une mémoire du manipulateur (KM), puis lu (KY),
+      // break-in en service (BI1) pour que le TRX émette tout seul ; arrêt : fin de lecture et break-in coupé
+      CW: spec.cw ? {
+        max: 50,
+        setup: (wpm) => ['KS' + pad(Math.max(4, Math.min(60, wpm)), 3) + ';BI1;'],
+        chunk: (t) => [spec.cw.mem + t + ';' + spec.cw.play],
+        stop: () => [spec.cw.stop]
+      } : null,
       GROUPS: [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']],
       CONTROLS, CONTROL, validate, widthTable, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
       BAND_CODES, cmdBand: BAND_CODES ? cmdBand : null,

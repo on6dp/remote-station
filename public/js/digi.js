@@ -296,12 +296,12 @@
         <div class="rt-tx-row">
           <textarea id="cwTxt" rows="2" placeholder="Texte à émettre (F1 à F12 : macros)…" spellcheck="false"></textarea>
           <div class="rt-tx-act">
-            <button class="btn btn-tx" type="button" id="cwSend" disabled>Émettre</button>
+            <button class="btn btn-tx" type="button" id="cwSend">Émettre</button>
             <div class="rt-tx-act2"><button class="btn" type="button" id="cwTxClear">Effacer</button>
             <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station">Log QSO</button></div>
           </div>
         </div>
-        <p class="dg-tx rt-tx-note">Émission CW sous <b class="dg-txcall">ON5VL</b> par le manipulateur du TRX : prochaine version.</p>
+        <p class="dg-tx rt-tx-note" id="cwTxState">Émission CW sous <b class="dg-txcall">ON5VL</b> par le manipulateur du TRX : macro (émission directe) ou texte ci-dessus puis « Émettre » (Ctrl+Entrée).</p>
       </div>
     </div>`;
   const SSTV_PANE = `
@@ -850,13 +850,13 @@
       { name: '599', text: '<TX>599 <CNTR><RX>' }
     ],
     CW: [
-      { name: 'CQ', text: 'CQ CQ CQ DE <MYCALL> <MYCALL> <MYCALL> K' },
-      { name: 'Appel', text: '<CALL> DE <MYCALL> <MYCALL> K' },
-      { name: 'Report', text: '<CALL> TU UR 5NN 5NN BK' },
-      { name: 'R TU', text: 'R TU 73 <CALL> DE <MYCALL> SK' },
-      { name: '73', text: '<CALL> TNX FER QSO 73 DE <MYCALL> SK' },
-      { name: 'QRZ?', text: 'QRZ? DE <MYCALL> K' },
-      { name: 'AGN?', text: 'AGN? AGN?' }
+      { name: 'CQ', text: '<TX>CQ CQ CQ DE <MYCALL> <MYCALL> <MYCALL> K' },
+      { name: 'Appel', text: '<TX><CALL> DE <MYCALL> <MYCALL> K' },
+      { name: 'Report', text: '<TX><CALL> TU UR 5NN 5NN BK' },
+      { name: 'R TU', text: '<TX>R TU 73 <CALL> DE <MYCALL> SK' },
+      { name: '73', text: '<TX><CALL> TNX FER QSO 73 DE <MYCALL> SK' },
+      { name: 'QRZ?', text: '<TX>QRZ? DE <MYCALL> K' },
+      { name: 'AGN?', text: '<TX>AGN? AGN?' }
     ]
   };
   const TAGS = [
@@ -2057,8 +2057,10 @@
       const w = String(window.getSelection() || '').trim().toUpperCase();
       if (CALL_RE.test(w)) setDx({ call: w });
     });
-    $('cwSend').title = 'Émission CW : prochaine version';
-    drawMacroRow($('cwMacros'), 'CW', (t) => insertCw(t));
+    $('cwSend').title = 'Émet le texte en CW par le manipulateur du TRX (vitesse ci-dessus), puis retour en réception · pendant l’émission : arrêt';
+    $('cwSend').addEventListener('click', () => cwClick());
+    $('cwTxt').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); cwClick(); } });
+    drawMacroRow($('cwMacros'), 'CW', (t, ins) => useMacro('CW', t, ins));
   }
   function cwStatus() {
     const st = api && api.state();
@@ -2682,6 +2684,42 @@
   }
   // ------------------------------------------------------------------ émission RTTY / JTTY (signal fabriqué par le serveur)
   let dtxPend = null; // { mode, text } : texte à effacer de la zone d'écriture une fois l'émission partie
+  // ------------------------------------------------------------------ émission CW (manipulateur du TRX)
+  let cwZone = false; // texte de la zone d'écriture : effacé quand l'émission part
+  let cwSeen = 0;
+  function cwClick() {
+    if (!api) return;
+    const st = api.state();
+    if (st && st.cw) return api.send({ t: 'cw_stop' });
+    const el = $('cwTxt');
+    if (!el.value.trim()) return api.say('Rien à émettre : tapez un texte ou choisissez une macro.', 'warn');
+    cwSend(el.value, true);
+  }
+  function cwSend(text, zone) {
+    if (!api) return;
+    const st = api.state();
+    if (st && (st.cw || st.ftx || (st.ptt && st.ptt.active))) return api.say('Émission en cours : attendez la fin (ou « ■ Arrêter »).', 'warn');
+    if (!api.iControl()) return api.say('Prenez la main pour émettre.', 'warn');
+    cwZone = zone;
+    api.send({ t: 'cw', text: String(text).replace(/\n/g, ' '), wpm: Number(store.get('cwspeed', '22')) || 22 });
+  }
+  function cwTxState(x) {
+    const b = $('cwSend');
+    const note = $('cwTxState');
+    if (!b || !note) return;
+    b.textContent = x ? '■ Arrêter' : 'Émettre';
+    b.classList.toggle('on-air', !!(x && x.state === 'tx'));
+    note.classList.toggle('air', !!(x && x.state === 'tx'));
+    if (x) {
+      note.textContent = (x.state === 'tx' ? '● En émission CW (' + x.by + ', ' + x.wpm + ' mots/min, ~' + Math.round(x.seconds) + ' s) : « ' : 'Préparation de l’émission CW : « ') +
+        String(x.text).slice(0, 60) + (x.text.length > 60 ? '…' : '') + ' »';
+      // Texte de la zone d'écriture parti : on la vide (une fois par émission)
+      if (x.state === 'tx' && cwZone && x.id !== cwSeen && api.iControl()) { cwSeen = x.id; cwZone = false; $('cwTxt').value = ''; }
+    } else if (!note.querySelector('.dg-txcall')) {
+      note.innerHTML = 'Émission CW sous <b class="dg-txcall"></b> par le manipulateur du TRX : macro (émission directe) ou texte ci-dessus puis « Émettre » (Ctrl+Entrée).';
+      note.querySelector('.dg-txcall').textContent = myCall;
+    }
+  }
   function dtxClick(mode) {
     if (!api) return;
     const st = api.state();
@@ -2857,8 +2895,8 @@
       if (mode !== 'FT8') { const s = box.ownerDocument.createElement('small'); s.textContent = 'F' + (i + 1); b.appendChild(s); }
       b.appendChild(box.ownerDocument.createTextNode(m.name || '—'));
       const tip = () => macroText(m.text).replace(/\n/g, ' ⏎ ') + '\n' +
-        (/<TX>/i.test(m.text) && mode !== 'CW' ? 'clic : émission immédiate · Maj+clic : ajouter au texte · clic droit : modifier' : 'clic : ajouter au texte · clic droit : modifier');
-      if (/<TX>/i.test(m.text) && mode !== 'CW') b.classList.add('mac-tx');
+        (/<TX>/i.test(m.text) ? 'clic : émission immédiate · Maj+clic : ajouter au texte · clic droit : modifier' : 'clic : ajouter au texte · clic droit : modifier');
+      if (/<TX>/i.test(m.text)) b.classList.add('mac-tx');
       b.title = tip();
       b.addEventListener('mouseenter', () => { b.title = tip(); });
       b.addEventListener('click', (e) => use(m.text, e.shiftKey));
@@ -2959,12 +2997,19 @@
     drawMsgs();
     drawRttyMacros();
     drawMacroRow($('jtMacros'), 'JTTY', (t, ins) => useMacro('JTTY', t, ins));
-    drawMacroRow($('cwMacros'), 'CW', (t) => insertCw(t));
+    drawMacroRow($('cwMacros'), 'CW', (t, ins) => useMacro('CW', t, ins));
   }
   // Clic sur une macro (ou F1…F12) : <TX> = émission immédiate, sinon texte ajouté à la zone d'écriture.
   // Maj+clic : toujours ajouter à la zone (pour composer un message avant « Émettre »).
   function useMacro(mode, t, ins) {
-    if (mode === 'CW') { if (/<LOG>/i.test(t) && !ins) setTimeout(() => logQso(), 0); return insertCw(t); }
+    if (mode === 'CW') {
+      if (/<LOG>/i.test(t) && !ins) setTimeout(() => logQso(), 0);
+      if (ins || !/<TX>/i.test(t)) return insertCw(t);
+      if (/<CALL>|\{CALL\}/.test(t) && !String(dx.call || '').trim()) {
+        return api && api.say('Pas de correspondant : double-cliquez d’abord sur son indicatif (ou tapez-le dans « Correspondant »).', 'warn');
+      }
+      return cwSend(macroText(t, true), false);
+    }
     if (/<LOG>/i.test(t) && !ins) setTimeout(() => logQso(), 0);
     if (ins || !/<TX>/i.test(t)) return mode === 'JTTY' ? insertJtty(t) : insertRtty(t);
     showTab(mode === 'JTTY' ? 'jtty' : 'rtty');
@@ -3495,8 +3540,10 @@
         const MODE = { rtty: 'RTTY', jtty: 'JTTY', cw: 'CW' }[tab];
         if (!MODE || detached || e.ctrlKey || e.altKey || e.metaKey) return;
         // Échap : arrête l'émission RTTY / JTTY en cours (comme « ■ Arrêter »)
-        if (e.key === 'Escape' && MODE !== 'CW') {
-          const x = api && api.state() && api.state().ftx;
+        if (e.key === 'Escape') {
+          const stE = api && api.state();
+          if (MODE === 'CW') { if (stE && stE.cw) { e.preventDefault(); api.send({ t: 'cw_stop' }); } return; }
+          const x = stE && stE.ftx;
           if (x && x.mode === MODE) { e.preventDefault(); api.send({ t: 'ftx_stop' }); }
           return;
         }
@@ -3644,6 +3691,7 @@
         redrawAll();
         dtxState(stx.ftx); // notes « Émission RTTY / JTTY sous … »
       }
+      cwTxState(stx && stx.cw);
       // Notes « Émission CW / SSTV sous … » : même indicatif que TX CALL
       for (const el of document.querySelectorAll('.dg-txcall')) if (el.textContent !== myCall) el.textContent = myCall;
       // Suivre l'opérateur : bouton caché pour celui qui a la main, qui annonce son onglet

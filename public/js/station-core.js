@@ -12,6 +12,24 @@
   'use strict';
   const DEFAULT_RIG = (typeof module !== 'undefined' && module.exports) ? require('./ftx1.js') : root.FTX1;
   const TX_METER_KEYS = ['m3', 'm4', 'm5', 'm6'];
+  // Durée d'un texte CW (points PARIS : 1 point = 1200 / wpm ms), pour enchaîner les morceaux du manipulateur
+  const MORSE = {
+    A: '.-', B: '-...', C: '-.-.', D: '-..', E: '.', F: '..-.', G: '--.', H: '....', I: '..', J: '.---', K: '-.-', L: '.-..', M: '--',
+    N: '-.', O: '---', P: '.--.', Q: '--.-', R: '.-.', S: '...', T: '-', U: '..-', V: '...-', W: '.--', X: '-..-', Y: '-.--', Z: '--..',
+    0: '-----', 1: '.----', 2: '..---', 3: '...--', 4: '....-', 5: '.....', 6: '-....', 7: '--...', 8: '---..', 9: '----.',
+    '/': '-..-.', '?': '..--..', '.': '.-.-.-', ',': '--..--', '=': '-...-', '+': '.-.-.', '-': '-....-'
+  };
+  function cwMs(t, wpm) {
+    let u = 0;
+    for (const ch of t) {
+      if (ch === ' ') { u += 4; continue; }
+      const c = MORSE[ch];
+      if (!c) continue;
+      for (const x of c) u += (x === '.' ? 1 : 3) + 1;
+      u += 2;
+    }
+    return Math.round(u * 1200 / wpm);
+  }
 
   class StationCore {
     /**
@@ -147,7 +165,7 @@
         // Retour en réception : les mesures d'émission n'ont plus de sens
         if (p.tx === 0) for (const k of TX_METER_KEYS) if (this.radio[k] != null) { this.radio[k] = null; this.dirty = true; }
         // Radio en "CAT TX" sans demande de notre part → on coupe
-        if (p.tx === 1 && !this.catKeyed) {
+        if (p.tx === 1 && !this.catKeyed && !this.cw) {
           this._write(FTX1.cmdPtt(false));
           this.log('Sécurité : CAT TX inattendu, TX0 envoyé');
         }
@@ -188,6 +206,8 @@
       const why = silent ? 'en émission depuis ' + dur(this.txSilenceMs) + ' sans modulation' : 'en émission continue depuis ' + dur(this.txHardMaxMs);
       this._write(this.rig.cmdPtt(false));
       if (this.digiTx) { this.digiTx = null; if (this.txAudio) this.txAudio.stop(); }
+      // Manipulateur du TRX (CW) : fin de lecture et break-in coupé, que l'émission vienne de nous ou non
+      if (this.rig.CW) this._cwStop(why, !this.cw);
       this.catKeyed = false;
       this.log('Sécurité : TRX ' + why + ' → retour en réception');
       if (this.wsUp) this.sendWs({ t: 'safety', reason: 'TRX ' + why + ' : retour en réception forcé' });
@@ -241,6 +261,7 @@
 
     wsClosed() {
       this.wsUp = false;
+      if (this.cw) this._cwStop('liaison VPS perdue', true);
       if (this.catKeyed) this.unkey('liaison VPS perdue');
     }
 
@@ -362,6 +383,10 @@
           if (!FTX1.CAT_QUERIES || FTX1.CAT_QUERIES.indexOf(cmd) < 0) return this.log('Lecture CAT refusée : ' + cmd.slice(0, 12));
           this.query = { cmd, prefix: cmd.replace(/;$/, ''), until: Date.now() + 2000, id: m.id };
           this._write(cmd);
+        } else if (m.op === 'cw') {
+          this._cwStart(m);
+        } else if (m.op === 'cwstop') {
+          this._cwStop(m.reason || 'arrêt demandé', true);
         } else if (m.op === 'ptt') {
           if (m.on) {
             if (!this.serialOpen || !this.radio.connected) return this.log('PTT refusé : radio non connectée');
@@ -798,6 +823,72 @@
     }
 
     // ---------- interne ----------
+    // ---------- émission CW (manipulateur du TRX) ----------
+    _writeList(list) {
+      // Plusieurs commandes : texte (Yaesu) en un envoi, trames (Icom) espacées
+      if (!list || !list.length) return;
+      if (typeof list[0] === 'string') return this._write(list.join(''));
+      list.forEach((f, i) => setTimeout(() => this._write(f), i * (this.rig.FRAME_GAP_MS || 30)));
+    }
+    _cwSay(id, state, msg) { if (this.wsUp) this.sendWs({ t: 'cw_state', id, state, msg: msg || '' }); }
+    _cwStart(m) {
+      const CW = this.rig.CW;
+      if (!CW) return this._cwSay(m.id, 'error', 'émission CW par le CAT non prévue sur ce TRX');
+      if (!this.serialOpen || !this.radio.connected) return this._cwSay(m.id, 'error', 'TRX non connecté');
+      if (this.catKeyed || this.radio.tx) return this._cwSay(m.id, 'error', 'le TRX est déjà en émission');
+      if (this.cw) this._cwStop('nouveau message', false);
+      const text = String(m.text || '').toUpperCase().replace(/[^A-Z0-9 /?.,=+-]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (!text) return this._cwSay(m.id, 'error', 'rien à émettre');
+      const wpm = Math.max(5, Math.min(50, Math.round(Number(m.wpm) || 22)));
+      // Morceaux à la taille de la mémoire du manipulateur (Yaesu 50, Icom 30 caractères), coupés aux espaces
+      const chunks = [];
+      let rest = text;
+      while (rest.length > CW.max) {
+        let cut = rest.lastIndexOf(' ', CW.max);
+        if (cut < 8) cut = CW.max;
+        chunks.push(rest.slice(0, cut).trim());
+        rest = rest.slice(cut).trim();
+      }
+      if (rest) chunks.push(rest);
+      const job = { id: m.id, chunks, wpm, i: 0, timer: null, started: false, t0: Date.now() };
+      this.cw = job;
+      this.lastCtl = null; // l'émission qui suit est voulue : pas la sécurité « émission après un réglage »
+      this._writeList(CW.setup(wpm));
+      this.log('CW (' + (m.by || '?') + ') à ' + wpm + ' mots/min : « ' + text.slice(0, 70) + (text.length > 70 ? '…' : '') + ' »');
+      const waitRx = (then, limit) => {
+        // Fin d'un morceau : on attend le retour en réception (délai du break-in), au plus limit ms
+        const t0 = Date.now();
+        const poll = () => {
+          if (this.cw !== job) return;
+          if (!this.radio.tx || Date.now() - t0 > limit) return then();
+          job.timer = setTimeout(poll, 100);
+        };
+        poll();
+      };
+      const next = () => {
+        if (this.cw !== job) return;
+        if (job.i >= chunks.length) {
+          return waitRx(() => { if (this.cw !== job) return; this.cw = null; this.log('CW : fin du message'); this._cwSay(job.id, 'done'); }, 4000);
+        }
+        const c = chunks[job.i++];
+        this._writeList(CW.chunk(c));
+        if (!job.started) { job.started = true; this._cwSay(job.id, 'tx'); }
+        // Le TRX commence quelques centaines de ms après la commande ; un nouveau morceau couperait celui en cours
+        job.timer = setTimeout(() => waitRx(next, 1500), cwMs(c, wpm) + 700);
+      };
+      job.timer = setTimeout(next, typeof CW.setup(wpm)[0] === 'string' ? 120 : 200);
+    }
+    _cwStop(reason, fromServer) {
+      const job = this.cw;
+      this.cw = null;
+      if (job) clearTimeout(job.timer);
+      if (this.rig.CW && (job || fromServer)) this._writeList(this.rig.CW.stop());
+      if (job) {
+        this.log('CW arrêté : ' + reason);
+        if (!fromServer) this._cwSay(job.id, 'stopped', reason);
+      }
+    }
+
     _write(s, poll) {
       if (!this.serialOpen) return;
       if (!poll && typeof s === 'string') this.lastCmd = { s, at: Date.now() }; // pour signaler un refus éventuel
