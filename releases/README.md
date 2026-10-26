@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.22.76 | [RemoteStation-Setup-0.22.76.exe](0.22.76/RemoteStation-Setup-0.22.76.exe) | [remote-station-0.22.76.tar.gz](0.22.76/remote-station-0.22.76.tar.gz) | Menu de taille : écran du PC et choix d’Auto affichés — [empreintes SHA-256](0.22.76/SHA256SUMS.txt) |
 | 0.22.75 | [RemoteStation-Setup-0.22.75.exe](0.22.75/RemoteStation-Setup-0.22.75.exe) | [remote-station-0.22.75.tar.gz](0.22.75/remote-station-0.22.75.tar.gz) | Taille du dashboard de 50 à 200 % — [empreintes SHA-256](0.22.75/SHA256SUMS.txt) |
 | 0.22.74 | [RemoteStation-Setup-0.22.74.exe](0.22.74/RemoteStation-Setup-0.22.74.exe) | [remote-station-0.22.74.tar.gz](0.22.74/remote-station-0.22.74.tar.gz) | Carte de bande pleine hauteur, « ▶ TX ici » émet le texte — [empreintes SHA-256](0.22.74/SHA256SUMS.txt) |
 | 0.22.73 | [RemoteStation-Setup-0.22.73.exe](0.22.73/RemoteStation-Setup-0.22.73.exe) | [remote-station-0.22.73.tar.gz](0.22.73/remote-station-0.22.73.tar.gz) | Taille du dashboard adaptée à l’écran (Auto) — [empreintes SHA-256](0.22.73/SHA256SUMS.txt) |

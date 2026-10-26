@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.22.76** — Menu de taille du dashboard : en haut, l’écran du PC et la taille choisie par Auto (la hauteur décide : 2560 × 1080 reste à 100 %) ; les résolutions affichées à côté de 100 / 133 / 200 % sont des exemples (« pour 2560 × 1440 »). Ctrl+F5 sur le dashboard suffit.
 - **0.22.75** — Taille du dashboard : choix de 50 % à 200 % (67 % : tout voir sur un portable) ; les tailles plus grandes que l’écran restent permises (en gris dans le menu). Ctrl+F5 sur le dashboard suffit.
 - **0.22.74** — Carte de bande sur toute la hauteur de la colonne sur un grand écran (écrans VFO A et B rétrécis de la même largeur). RTTY : le bouton de la fenêtre choisie devient « ▶ TX ici » et émet le texte personnalisé (« ■ Arrêter » pendant l’émission) ; un clic sur « TX » de l’autre fenêtre la choisit. Ctrl+F5 sur le dashboard suffit.
 - **0.22.73** — Taille du dashboard adaptée à l’écran : bouton « Auto 100 % » en haut (à côté de HELP). Auto agrandit tout dans la même proportion sur un écran plus grand que 1920 × 1080 (2560 × 1440 ≈ 130 %, 4K = 200 %), sans rien déplacer ; tailles 100 à 250 % au choix, gardées dans le navigateur. Cascades et carte de bande dessinées à la résolution de l’écran. RTTY : le bouton « ● TX ici » devient « ● Fenêtre TX » (il choisit la fenêtre, il ne fait pas émettre). Ctrl+F5 sur le dashboard suffit.

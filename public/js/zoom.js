@@ -43,6 +43,13 @@
     const m = document.getElementById('zoomMenu');
     if (!m) return;
     const mx = maxZoom();
+    const inf = document.getElementById('zoomInfo');
+    if (inf) {
+      const sw = Math.round(window.screen.width * (window.devicePixelRatio || 1)), sh = Math.round(window.screen.height * (window.devicePixelRatio || 1));
+      const za = Math.round(Math.max(1, Math.min(autoZoom(), mx)) * 100);
+      inf.textContent = 'Votre écran : ' + sw + ' × ' + sh + ' · Auto = ' + za + ' %'
+        + (za === 100 && sh <= 1200 ? ' (la hauteur décide : ' + sh + ' de haut, comme un écran 1920 × 1080)' : '');
+    }
     m.querySelectorAll('button').forEach((x) => {
       x.setAttribute('aria-checked', String(x.dataset.z === String(pref)));
       // au-delà de ce que l'écran permet sans serrer la mise en page : signalé, mais permis
@@ -74,8 +81,13 @@
       b.lastChild.textContent = sub || '';
       m.appendChild(b);
     };
+    // Écran de ce PC et taille choisie par Auto (la hauteur décide : 1080 de haut = 100 %, même en 2560 × 1080)
+    const info = document.createElement('div');
+    info.className = 'zoom-info';
+    info.id = 'zoomInfo';
+    m.appendChild(info);
     add('auto', 'Auto', 'adaptée à l’écran');
-    for (const z of CHOICES) add(z, Math.round(z * 100) + ' %', z === 1 ? 'écran 1920 × 1080' : z === 1.33 ? '2560 × 1440' : z === 2 ? '3840 × 2160 (4K)' : z === 0.67 ? 'tout voir sur un portable' : '');
+    for (const z of CHOICES) add(z, Math.round(z * 100) + ' %', z === 1 ? 'pour 1920 × 1080' : z === 1.33 ? 'pour 2560 × 1440' : z === 2 ? 'pour 3840 × 2160 (4K)' : z === 0.67 ? 'tout voir sur un portable' : '');
     const btn = wrap.querySelector('#zoomBtn');
     const show = (on) => { m.hidden = !on; btn.setAttribute('aria-expanded', String(on)); if (on) label(); };
     btn.addEventListener('click', (e) => { e.stopPropagation(); show(m.hidden); });

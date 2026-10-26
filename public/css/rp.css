@@ -1358,3 +1358,4 @@ body.bm-tall .bm { border: 1px solid var(--v2-border-panel); border-radius: var(
 .zoom-menu button:hover:not(:disabled) { background: var(--v2-bg-panel, #141c27); color: var(--v2-accent-cyan-bright, #00D4FF); }
 .zoom-menu button[aria-checked='true'] { color: var(--v2-accent-yellow); }
 .zoom-menu button.zoom-big span { color: var(--v2-text-dim); } /* plus grand que l'écran : la mise en page se serre */
+.zoom-info { padding: 6px 10px 8px; margin-bottom: 4px; border-bottom: 1px solid var(--v2-border-dark); color: var(--v2-text-secondary); font-size: 11px; line-height: 1.4; max-width: 240px; }
