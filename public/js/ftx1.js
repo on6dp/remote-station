@@ -89,7 +89,10 @@
     // CW : mémoire TEXTE 5 du manipulateur (écrasée), lue par KY05 ; KY00 = arrêt (manuel CAT FTX-1, Hamlib ftx1_cw.c)
     // EX020210 = menu CW MEMORY 5 (0 : TEXT, 1 : MESSAGE) : en MESSAGE (mémoire enregistrée au manipulateur), le texte
     // écrit par KM5 n'est ni gardé ni joué ; le dashboard la met en TEXT avant chaque émission
-    cw: { pre: ['EX0202100;'], mem: 'KM5', play: 'KY05;', alt: ['KY15;'], stop: 'KY00;BI0;' },
+    // Manipulation par le port « Standard COM Port » (DTR) : menu PC KEYING (EX020114) sur DTR pendant l'émission seulement,
+    // RPTT SELECT (EX020112) sur OFF pour que DTR ne commande jamais l'émission phonie
+    cw: { pre: ['EX0202100;'], mem: 'KM5', play: 'KY05;', alt: ['KY15;'], stop: 'KY00;',
+      dtr: { on: ['EX0201120;', 'EX0201142;', 'BI1;'], off: ['EX0201140;'] } },
     // PA0 / RA0 lus avec le côté SUB actif : ce sont l'ATT et le préampli du VFO B
     remapRead(p, r) {
       if (r.vfoSel !== 1) return;

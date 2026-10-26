@@ -384,8 +384,9 @@
             if (c === 'KY00') { if (this.cwPlay) { clearTimeout(this.cwPlay); this.cwPlay = null; this.tx = 0; } }
             else if (slot && this.km && this.km[slot] != null) {
               const t = this.km[slot];
-              (this.cwLog = this.cwLog || []).push(t);
-              if (this.bi) {
+              if (this.kyIgnore > 0) this.kyIgnore--; // essai : TRX qui ignore les premières lectures (constaté sur le FTX-1)
+              else if (this.bi) {
+                (this.cwLog = this.cwLog || []).push(t);
                 const ms = Math.round(t.length * 10 * 1200 / (this.cwWpm || 22));
                 clearTimeout(this.cwPlay);
                 setTimeout(() => { this.tx = 2; }, 250);
@@ -433,7 +434,9 @@
         mem: (t) => spec.cw.mem + t + ';',
         read: spec.cw.mem + ';', readRe: new RegExp('^' + spec.cw.mem),
         play: spec.cw.play, alt: spec.cw.alt || [],
-        stop: () => spec.cw.stop.match(/[^;]+;/g)
+        stop: () => spec.cw.stop.match(/[^;]+;/g),
+        dtr: spec.cw.dtr || null,
+        txPoll: 'TX;'
       } : null,
       GROUPS: [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']],
       CONTROLS, CONTROL, validate, widthTable, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,

@@ -73,8 +73,16 @@
   $('rigHint').textContent = RIG.hint || '';
   $('rigHint').hidden = !RIG.hint;
 
+  // Manipulation CW par la ligne DTR du 2e port USB du TRX (FTX-1 : « Standard COM Port ») : ouvert à côté du port CAT
+  let cwPort = null;
+  const CWPORT_KEY = 'cwport.' + MODEL;
+  const keyer = {
+    available: () => !!cwPort,
+    set: (on) => (cwPort ? cwPort.setSignals({ dataTerminalReady: !!on, requestToSend: false }).catch((e) => log('Manipulation DTR : ' + e.message, 'st-bad')) : Promise.resolve())
+  };
   const core = new StationCore({
     rig: RIG,
+    keyer,
     txAudio: { prepare: (...a) => txPrepare(...a), prepareSamples: (...a) => txPrepareSamples(...a), play: (...a) => txPlay(...a), stop: () => txStop() },
     writeSerial(s) {
       if (sim) return sim.write(s);
@@ -413,6 +421,62 @@
     }
   });
   $('btnClose').addEventListener('click', () => { stopSim(); store.set(PORT_KEY, '-1'); closePort(true); });
+
+  // ---------- port de manipulation CW (DTR)
+  function drawCwPort() {
+    const can = !!(RIG.CW && RIG.CW.dtr) && 'serial' in navigator;
+    $('cwPortRow').hidden = !can;
+    $('btnCwPortOff').hidden = !cwPort && !store.get(CWPORT_KEY, '');
+    $('tCwPort').textContent = cwPort ? 'CW manipulée par DTR (port ouvert)' : store.get(CWPORT_KEY, '') ? 'Port de manipulation CW mémorisé, pas encore ouvert'
+      : 'CW par la mémoire du manipulateur du TRX (sans port DTR)';
+  }
+  async function openCwPort(p) {
+    if (p === port) { log('Port de manipulation CW : c’est le port CAT ; choisissez l’autre port du TRX (FTX-1 : Standard COM Port)', 'st-bad'); return false; }
+    try {
+      await p.open({ baudRate: 9600 });
+      await p.setSignals({ dataTerminalReady: false, requestToSend: false });
+      cwPort = p;
+      log('Port de manipulation CW ouvert (DTR relâché)');
+    } catch (e) {
+      log('Port de manipulation CW : ' + e.message, 'st-bad');
+      cwPort = null;
+    }
+    drawCwPort();
+    return !!cwPort;
+  }
+  async function closeCwPort() {
+    const p = cwPort;
+    cwPort = null;
+    if (p) { try { await p.setSignals({ dataTerminalReady: false, requestToSend: false }); } catch (e) {} try { await p.close(); } catch (e) {} }
+    drawCwPort();
+  }
+  async function reopenCwPort() {
+    if (cwPort || !('serial' in navigator) || !(RIG.CW && RIG.CW.dtr)) return;
+    let id = null;
+    try { id = JSON.parse(store.get(CWPORT_KEY, 'null')); } catch (e) { id = null; }
+    if (!id) return;
+    const ports = await navigator.serial.getPorts();
+    const same = ports.filter((q) => { const j = (q.getInfo && q.getInfo()) || {}; return j.usbVendorId === id.v && j.usbProductId === id.p; });
+    const p = same[id.n];
+    if (p && p !== port) await openCwPort(p);
+  }
+  $('btnCwPort').addEventListener('click', async () => {
+    try {
+      const p = await navigator.serial.requestPort();
+      const ports = await navigator.serial.getPorts();
+      if (p === port) return log('C’est le port CAT : choisissez l’autre port du TRX (FTX-1 : Standard COM Port)', 'st-bad');
+      await closeCwPort();
+      store.set(CWPORT_KEY, JSON.stringify(portIdent(p, ports)));
+      await openCwPort(p);
+    } catch (e) {
+      if (e.name !== 'NotFoundError') log('Port de manipulation CW : ' + e.message, 'st-bad');
+    }
+  });
+  $('btnCwPortOff').addEventListener('click', async () => { store.set(CWPORT_KEY, ''); await closeCwPort(); log('CW : manipulation par DTR abandonnée (mémoire du manipulateur du TRX)'); });
+  drawCwPort();
+  setTimeout(() => reopenCwPort().catch(() => {}), 2500);
+  setInterval(() => { if (!cwPort) reopenCwPort().catch(() => {}); }, 15000);
+  if ('serial' in navigator) navigator.serial.addEventListener('disconnect', (e) => { if (cwPort && e.target === cwPort) { cwPort = null; drawCwPort(); } });
 
   if ('serial' in navigator) {
     navigator.serial.addEventListener('disconnect', (e) => {

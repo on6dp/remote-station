@@ -50,6 +50,8 @@
       // Émission des modes numériques : signal fabriqué et joué par la page (sortie son vers le TRX)
       //   txAudio.prepare(id, mode, text, f0) → { ok, text, seconds, err } ; play(id, atLocalMs, onEnd) → bool ; stop()
       this.txAudio = o.txAudio || null;
+      // Manipulateur logiciel (port « Standard COM Port », ligne DTR) : { available(), set(on) }
+      this.keyer = o.keyer || null;
       this.clockOffset = 0; // heure du VPS − heure de ce PC (ms), mesurée par la page
       this.digiTx = null;
       this.pollMs = o.pollMs || this.rig.POLL_MS || 250;
@@ -100,6 +102,7 @@
 
     serialClosed() {
       this.serialOpen = false;
+      this.cwCache = null;
       if (this.digiTx) { this.digiTx = null; if (this.txAudio) this.txAudio.stop(); }
       this.catKeyed = false;
       if (this.radio.connected) {
@@ -826,11 +829,11 @@
 
     // ---------- interne ----------
     // ---------- émission CW (manipulateur du TRX) ----------
-    _writeList(list) {
-      // Plusieurs commandes : texte (Yaesu) en un envoi, trames (Icom) espacées
+    _writeList(list, quiet) {
+      // Plusieurs commandes : texte (Yaesu) en un envoi, trames (Icom) espacées ; quiet : un refus « ? » n'est pas signalé
       if (!list || !list.length) return;
-      if (typeof list[0] === 'string') return this._write(list.join(''));
-      list.forEach((f, i) => setTimeout(() => this._write(f), i * (this.rig.FRAME_GAP_MS || 30)));
+      if (typeof list[0] === 'string') return this._write(list.join(''), !!quiet);
+      list.forEach((f, i) => setTimeout(() => this._write(f, !!quiet), i * (this.rig.FRAME_GAP_MS || 30)));
     }
     _cwSay(id, state, msg) { if (this.wsUp) this.sendWs({ t: 'cw_state', id, state, msg: msg || '' }); }
     /** Étape de l'émission CW : journal de la page Station et dashboard de l'opérateur (diagnostic à distance). */
@@ -865,7 +868,7 @@
     async _cwSend(job, cmd) {
       this.cwWatch = { errs: 0 };
       this._write(cmd, true);
-      await this._cwSleep(job, 220);
+      await this._cwSleep(job, 150);
       const ok = !this.cwWatch || this.cwWatch.errs === 0;
       this.cwWatch = null;
       return ok;
@@ -878,15 +881,83 @@
       this._cwSay(job.id, 'error', why);
       if (this.wsUp) this.sendWs({ t: 'trx_note', text: 'CW : ' + why });
     }
+    /** Émission CW manipulée ici (ligne DTR du 2e port USB du TRX), au rythme calculé par la page. */
+    async _cwRunDtr(job, text, wpm) {
+      const CW = this.rig.CW;
+      const K = this.keyer;
+      job.dtr = true;
+      for (const c of CW.dtr.on) { await this._cwSend(job, c); if (this.cw !== job) return; } // « ? » = déjà réglé : sans importance
+      await K.set(false);
+      // Suite des états : [manipulé, durée en points]
+      const seq = [];
+      const words = text.split(' ').filter(Boolean);
+      words.forEach((w, wi) => {
+        [...w].forEach((ch, ci) => {
+          const code = MORSE[ch];
+          if (!code) return;
+          for (let k = 0; k < code.length; k++) {
+            seq.push([true, code[k] === '.' ? 1 : 3]);
+            if (k < code.length - 1) seq.push([false, 1]);
+          }
+          if (ci < w.length - 1) seq.push([false, 3]);
+        });
+        if (wi < words.length - 1) seq.push([false, 7]);
+      });
+      const dit = 1200 / wpm;
+      const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      let t = now() + 60;
+      let first = true;
+      for (const [on, units] of seq) {
+        const wait = t - now();
+        if (wait > 1) await this._cwSleep(job, wait);
+        if (this.cw !== job) return;
+        await K.set(on);
+        if (on && first) {
+          first = false;
+          this._cwInfo(job, 'manipulation par le port DTR (' + wpm + ' mots/min)');
+          // Le TRX doit passer en émission au premier top (break-in) ; vérifié pendant que le texte continue
+          const t0 = Date.now();
+          const check = () => {
+            if (this.cw !== job) return;
+            if (this.radio.tx) { this._cwSay(job.id, 'tx'); return; }
+            if (Date.now() - t0 > 2500) return this._cwFail(job, 'le TRX ne passe pas en émission par DTR (menu PC KEYING sur DTR ? break-in en service ? mode CW ?)');
+            setTimeout(check, 150);
+          };
+          setTimeout(check, 150);
+        }
+        t += units * dit;
+      }
+      const wait = t - now();
+      if (wait > 1) await this._cwSleep(job, wait);
+      if (this.cw !== job) return;
+      await K.set(false);
+      let k = 0;
+      while (this.radio.tx && k++ < 20) { await this._cwSleep(job, 150); if (this.cw !== job) return; }
+      if (this.cw !== job) return;
+      this.cw = null;
+      for (const c of CW.dtr.off) this._write(c, true);
+      this.log('CW : fin du message');
+      this._cwSay(job.id, 'done');
+    }
     async _cwRun(job, chunks, wpm) {
       const CW = this.rig.CW;
-      for (const c of CW.setup(wpm)) {
-        if (!(await this._cwSend(job, c))) this._cwInfo(job, 'le TRX a refusé « ' + this._cwLabel(c) + ' » (réglage, on continue)', 'st-warn');
-        if (this.cw !== job) return;
+      if (CW.dtr && this.keyer && this.keyer.available()) return this._cwRunDtr(job, chunks.join(' '), wpm);
+      // Commutation rapide : les réglages (vitesse, break-in…) et le texte de la mémoire déjà envoyés au TRX ne sont pas
+      // renvoyés au message suivant (oubliés après un arrêt, une erreur, une fermeture du port ou 20 minutes)
+      const C = this.cwCache && Date.now() - this.cwCache.at < 20 * 60000 ? this.cwCache : (this.cwCache = { at: Date.now() });
+      if (C.wpm !== wpm) {
+        for (const c of CW.setup(wpm)) {
+          // « ? » = réglage déjà en place sur le FTX-1 (il refuse une commande qui ne change rien) : noté au journal seulement
+          if (!(await this._cwSend(job, c))) this.log('CW : « ' + this._cwLabel(c) + ' » sans effet (réglage déjà en place ?), on continue', 'st-warn');
+          if (this.cw !== job) return;
+        }
+        C.wpm = wpm;
       }
       for (let i = 0; i < chunks.length; i++) {
         const c = chunks[i];
-        if (CW.mem) {
+        const same = CW.mem && C.mem === c;
+        if (CW.mem && !same) {
+          C.mem = null;
           // Texte écrit dans la mémoire du manipulateur, puis relu pour vérifier
           if (!(await this._cwSend(job, CW.mem(c)))) {
             if (this.cw !== job) return;
@@ -910,21 +981,43 @@
             if (this.cw !== job) return;
             this._cwInfo(job, 'mémoire écrite, relue « ' + (got == null ? 'pas de réponse' : got.slice(0, 60)) + ' »');
           }
+          C.mem = c;
         }
-        let played = false;
+        // Lecture de la mémoire : essai réel au club (FTX-1), le texte ne partait qu'au 2e ou 3e clic — le TRX a besoin
+        // d'un moment pour ranger la mémoire, et ignore parfois la 1re lecture. On attend donc un peu, puis on relance la
+        // lecture (jusqu'à 4 fois, avec l'autre forme si l'une est refusée) tant qu'il n'est pas passé en émission.
         const plays = CW.play ? [CW.play].concat(CW.alt) : [CW.text(c)];
-        for (const pc of plays) {
-          if (await this._cwSend(job, pc)) { played = true; if (i === 0) this._cwInfo(job, 'lecture « ' + this._cwLabel(pc) + ' » acceptée par le TRX, attente de l’émission…'); break; }
+        if (CW.mem && !same) { await this._cwSleep(job, 350); if (this.cw !== job) return; }
+        const refused = new Set();
+        let pi = Math.max(0, plays.indexOf(this.cwPlayOk));
+        let keyed = false;
+        let accepted = false;
+        for (let a = 0; a < 4 && !keyed; a++) {
+          let pc = plays[pi % plays.length];
+          for (let g = 0; g < plays.length && refused.has(pc); g++) pc = plays[++pi % plays.length];
+          if (refused.has(pc)) break;
+          if (!(await this._cwSend(job, pc))) {
+            if (this.cw !== job) return;
+            refused.add(pc);
+            this._cwInfo(job, 'le TRX a refusé « ' + this._cwLabel(pc) + ' »', 'st-warn');
+            pi++;
+            continue;
+          }
           if (this.cw !== job) return;
-          this._cwInfo(job, 'le TRX a refusé « ' + this._cwLabel(pc) + ' »', 'st-warn');
+          accepted = true;
+          if (i === 0 && a === 0) this._cwInfo(job, 'lecture « ' + this._cwLabel(pc) + ' » acceptée par le TRX, attente de l’émission…');
+          if (i > 0) { keyed = true; break; } // morceaux suivants : le TRX est déjà en émission (break-in)
+          // État d'émission demandé directement au TRX (toutes les 100 ms) pour annoncer l'émission sans attendre le relevé
+          let k = 0;
+          while (!this.radio.tx && k++ < 12) { if (CW.txPoll) this._write(CW.txPoll, true); await this._cwSleep(job, 100); if (this.cw !== job) return; }
+          if (this.radio.tx) { keyed = true; this.cwPlayOk = pc; if (a > 0) this._cwInfo(job, 'émission partie au ' + (a + 1) + 'e essai de lecture'); break; }
+          if (a < 3) this._cwInfo(job, 'pas encore d’émission, nouvelle lecture…', 'st-warn');
+          if (a === 0 && CW.mem) { C.wpm = null; for (const c2 of CW.setup(wpm)) { await this._cwSend(job, c2); if (this.cw !== job) return; } C.wpm = wpm; } // break-in coupé sur le TRX ?
         }
         if (this.cw !== job) return;
-        if (!played) return this._cwFail(job, 'le TRX a refusé la lecture de la mémoire (' + plays.map((x) => '« ' + this._cwLabel(x) + ' »').join(', ') + ')');
+        if (!accepted) return this._cwFail(job, 'le TRX a refusé la lecture de la mémoire (' + plays.map((x) => '« ' + this._cwLabel(x) + ' »').join(', ') + ')');
         if (i === 0) {
-          // Le TRX doit passer en émission (break-in) : sinon on le dit au lieu d'attendre la fin supposée
-          let k = 0;
-          while (!this.radio.tx && k++ < 12) { await this._cwSleep(job, 200); if (this.cw !== job) return; }
-          if (!this.radio.tx) return this._cwFail(job, 'le TRX n’est pas passé en émission (vérifier sur le TRX : break-in en service, mode CW, mémoire CW 5 en TEXT)');
+          if (!keyed) return this._cwFail(job, 'le TRX n’est pas passé en émission après 4 lectures (vérifier sur le TRX : break-in en service, mode CW ; ou manipulation par DTR, page Station)');
           this._cwSay(job.id, 'tx');
         }
         // Fin estimée du morceau, puis retour en réception (délai du break-in) avant le suivant
@@ -941,9 +1034,13 @@
     }
     _cwStop(reason, fromServer) {
       const job = this.cw;
+      this.cwCache = null;
       this.cw = null;
       if (job) clearTimeout(job.timer);
-      if (this.rig.CW && (job || fromServer)) this._writeList(this.rig.CW.stop());
+      // Manipulation DTR : clé relâchée tout de suite, PC KEYING remis sur OFF
+      if (this.keyer && this.keyer.available()) { try { this.keyer.set(false); } catch (e) { /* port fermé */ } }
+      if (this.rig.CW && this.rig.CW.dtr && job && job.dtr) for (const c of this.rig.CW.dtr.off) this._write(c, true);
+      if (this.rig.CW && (job || fromServer)) this._writeList(this.rig.CW.stop(), true); // « ? » si rien ne jouait : sans importance
       if (job) {
         this.log('CW arrêté : ' + reason);
         if (!fromServer) this._cwSay(job.id, 'stopped', reason);
