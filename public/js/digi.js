@@ -3619,6 +3619,21 @@
       setTimeout(() => want(0), 30);
     }
   }
+  // Clic sur un onglet de mode numérique (avec la main) : TRX mis en DATA-U (USB-D sur l'IC-7300) sur le VFO écouté,
+  // même sous 10 MHz (les modes numériques se font toujours en bande latérale supérieure)
+  const DATA_TABS = { ftx: 'FT8 / FT4 / FT2', rtty: 'RTTY', wspr: 'WSPR', jt65: 'JT65', jtty: 'JTTY', sstv: 'SSTV' };
+  function dataU(label) {
+    if (!api || !api.iControl()) return;
+    const st = api.state();
+    const r = st && st.radio;
+    if (!r || !r.connected || r.tx || (st.ptt && st.ptt.active) || st.ftx || st.cw) return;
+    const R = api.rig();
+    const mk = (R.MODE_KEYS || []).find((x) => /^(DATA-U|USB-D|D-U|USB-DATA)$/i.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
+    const side = r.vfoSel === 1;
+    if (!mk || (side ? r.modeB : r.mode) === mk[1]) return;
+    api.send({ t: 'set', mode: mk[0], sub: side });
+    api.say('TRX mis en ' + mk[1] + ' pour ' + label + '.', '', 3000);
+  }
   function autoQsy() {
     const st = api && api.state();
     const f = st && st.radio && st.radio.freq;
@@ -3726,6 +3741,7 @@
         // Choisir soi-même un autre onglet arrête le suivi de l'opérateur
         if (follow && api && !api.iControl()) { setFollow(false); api.say('Suivi de l’opérateur arrêté (onglet choisi).', '', 4000); }
         showTab(b.dataset.tab);
+        if (DATA_TABS[b.dataset.tab]) dataU(DATA_TABS[b.dataset.tab]);
       }));
       $('dgFollow').addEventListener('click', (e) => { e.stopPropagation(); setFollow(!follow); if (follow) followView(); });
       setFollow(follow);
@@ -3739,7 +3755,7 @@
       });
       $('dgBack').addEventListener('click', () => { if (window.RSHOST) window.RSHOST.closePopup(); });
       // Clic sur FT8 / FT4 : comme dans WSJT-X, le TRX va sur la fréquence d'appel de ce mode dans sa bande
-      document.querySelectorAll('#dgModes .btn').forEach((b) => b.addEventListener('click', () => { setMode(b.dataset.mode); autoQsy(); }));
+      document.querySelectorAll('#dgModes .btn').forEach((b) => b.addEventListener('click', () => { setMode(b.dataset.mode); dataU(b.dataset.mode); autoQsy(); }));
       $('dgQsy').addEventListener('click', qsy);
       // Choisir une fréquence dans la liste y envoie directement le TRX (QSY)
       $('dgDial').addEventListener('change', () => { store.set('dial.' + mode, $('dgDial').value); qsy(); });
