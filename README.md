@@ -140,6 +140,7 @@ sudo systemctl restart remote-station
 | `maxTxSeconds` | `120` | Durée maximale d'une émission. |
 | `controlIdleMinutes` / `sessionIdleMinutes` | `15` / `15` | Main libérée / membre déconnecté après ce temps sans action. |
 | `rememberDays` | `7` | Jours pendant lesquels un navigateur reste connecté. |
+| `controlMaxMinutes`, `controlWarnSeconds`, `controlAskMinutes` | 45 min, 120 s, 15 min | Équité : main passée au membre qui l'a demandée après 45 min (avertissement 2 min avant, jamais pendant une émission). 0 = pas de limite. |
 | `powerRules`, `defaultMaxWatts` | ON2 : 100 W, ON3 : 25 W, sinon 1500 W (ON2 et ON3 plafonnés même si le réglage les oublie) | Puissance maximale selon l'indicatif. |
 | `rxOnlyPrefixes` | `["ONL"]` | Indicatifs en écoute seule. |
 | `maxSwr`, `swrHoldMs` | `2.5`, `700` | Coupure de l'émission sur ROS élevé. |

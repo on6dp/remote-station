@@ -57,6 +57,12 @@ const DEFAULTS = {
   ftxWatchdogMinutes: 6, // émission auto FT8 / FT4 / FT2 : arrêt si le même message part depuis ce temps (WSJT-X : 6 min)
   pttHeartbeatMs: 1500,
   controlIdleMinutes: 15,
+  // Équité : quand un autre membre a demandé la main (« Demander la main », valable controlAskMinutes) et que l'opérateur
+  // l'a depuis controlMaxMinutes, il est prévenu ; la main passe au demandeur controlWarnSeconds plus tard (jamais pendant
+  // une émission : à la fin de celle-ci). 0 = pas de limite.
+  controlMaxMinutes: 45,
+  controlWarnSeconds: 120,
+  controlAskMinutes: 15,
   // Protection du PA : émission coupée si le ROS dépasse maxSwr pendant swrHoldMs (0 = pas de protection).
   // Le PTT reste ensuite refusé sur cette fréquence (±25 kHz) jusqu'à un accord (TUNE).
   // Chien de garde de la page Station : retour en réception si le TRX émet sans modulation pendant txSilenceSeconds,
@@ -730,6 +736,51 @@ function chatPush(item) {
 }
 let connSeq = 0;
 let lastCtrlActivity = 0;
+// Équité de la main : depuis quand cet indicatif l'a, et avertissement en cours (voir controlMaxMinutes)
+let fair = { call: '', since: 0, warnAt: 0, to: null };
+/** Plus ancienne demande de main encore valable (membre toujours connecté, autre indicatif). */
+function fairAsker(now) {
+  let best = null;
+  const valid = (Number(cfg.controlAskMinutes) || 15) * 60000;
+  for (const c of ops) {
+    if (!controller || c.user.call === controller.user.call || !c.lastAsk || now - c.lastAsk > valid) continue;
+    if (!best || c.lastAsk < best.lastAsk) best = c;
+  }
+  return best;
+}
+/** Appelé toutes les 250 ms hors émission : avertit puis passe la main au demandeur après controlMaxMinutes. */
+function fairCheck(now) {
+  if (!controller) { fair = { call: '', since: 0, warnAt: 0, to: null }; return; }
+  if (fair.call !== controller.user.call) fair = { call: controller.user.call, since: now, warnAt: 0, to: null };
+  const max = Number(cfg.controlMaxMinutes) || 0;
+  if (!max || now - fair.since < max * 60000) return;
+  const asker = fairAsker(now);
+  if (!asker) { fair.warnAt = 0; fair.to = null; return; } // personne n'attend : on peut continuer
+  const warnS = Math.max(15, Number(cfg.controlWarnSeconds) || 120);
+  if (!fair.warnAt) {
+    fair.warnAt = now;
+    fair.to = asker;
+    const mins = Math.round((now - fair.since) / 60000);
+    send(controller, { t: 'notice', level: 'warn', msg: asker.user.call + ' attend la main : vous l’avez depuis ' + mins + ' min. Elle lui sera passée dans ' + Math.round(warnS / 60 * 10) / 10 + ' min (après votre émission en cours).' });
+    send(asker, { t: 'notice', level: 'info', msg: controller.user.call + ' a la main depuis ' + mins + ' min : elle vous sera passée dans ' + Math.round(warnS / 60 * 10) / 10 + ' min.' });
+    journal('control_fair_warn', { call: controller.user.call, to: asker.user.call, minutes: mins });
+    return;
+  }
+  if (now - fair.warnAt < warnS * 1000) return;
+  if (ptt.active || radio.tx || ftxPend || cwJob) return; // émission en cours : la main passe à la fin (FT8 auto : entre deux périodes)
+  const to = ops.has(fair.to) && fair.to.lastAsk ? fair.to : asker;
+  const prev = controller;
+  stopPtt('main passée à ' + to.user.call + ' (équité)');
+  controller = to;
+  to.lastAsk = 0;
+  lastCtrlActivity = now;
+  journal('control_take', { call: to.user.call, from: prev.user.call, reason: 'équité (' + max + ' min)' });
+  chatPush({ kind: 'give', call: prev.user.call, to: to.user.call });
+  send(prev, { t: 'notice', level: 'warn', msg: 'Main passée à ' + to.user.call + ' après ' + max + ' min (il l’avait demandée). Vous pourrez la redemander.' });
+  send(to, { t: 'notice', level: 'warn', msg: prev.user.call + ' vous passe la main (' + max + ' min écoulées)' });
+  limitPower(to, 'prise de main');
+  broadcast();
+}
 let ptt = { active: false, conn: null, since: 0, lastBeat: 0 };
 // Pendant une émission, la BF du TRX contient notre propre signal : le décodage RTTY / JTTY l'afficherait
 // une deuxième fois. Rien n'est affiché pendant l'émission ni juste après (retard de la BF + fin du caractère).
@@ -1771,6 +1822,7 @@ setInterval(() => {
   if (ftxPend && ftxPend.state === 'wait' && (controller !== ftxPend.conn || !station)) ftxCancel(!station ? 'station hors ligne' : 'main perdue');
   if (seq && seq.on && (controller !== seq.conn || !station)) seqOff(!station ? 'station hors ligne' : 'main perdue');
   if (cwJob && (controller !== cwJob.conn || !station)) cwEnd(!station ? 'station hors ligne' : 'main perdue', false);
+  fairCheck(now);
   // Aucune libération ni déconnexion pour inactivité tant que le TRX est en émission
   if (ptt.active || radio.tx || ftxPend || cwJob || (seq && seq.on)) return;
   if (controller && now - lastCtrlActivity > cfg.controlIdleMinutes * 60000) {
@@ -1901,6 +1953,7 @@ function onOperator(conn, m) {
       }
       if (controller !== conn) tunerAuto.until = Date.now() + 4000; // prise de main : tuner remis en service s'il est coupé (HF / 6 m)
       controller = conn;
+      conn.lastAsk = 0; // demande satisfaite
       lastCtrlActivity = now;
       journal('control_take', { call: conn.user.call, force: !!m.force });
       limitPower(conn, 'prise de main');
@@ -2215,6 +2268,7 @@ function onOperator(conn, m) {
       for (const c of ops) if (c.cid === Number(m.cid)) target = c;
       if (!target || target === conn) return send(conn, { t: 'notice', level: 'error', msg: 'Ce membre n’est plus connecté' });
       controller = target;
+      target.lastAsk = 0;
       lastCtrlActivity = now;
       journal('control_take', { call: target.user.call, from: conn.user.call });
       chatPush({ kind: 'give', call: conn.user.call, to: target.user.call });
