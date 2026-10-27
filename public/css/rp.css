@@ -429,6 +429,10 @@ input[type='range']:disabled { opacity: .45; }
 
 /* opérateurs */
 .ctrl-text { margin: 0; font-size: 11px; color: var(--v2-text-secondary); }
+/* Décompte de la main (barre du haut) : libération sans action, ou passage au membre qui attend */
+.ctl-timer { font: 600 12px/1 ui-monospace, 'Roboto Mono', monospace; color: var(--v2-text-secondary); padding: 4px 6px; border-radius: 4px; white-space: nowrap; cursor: help; }
+.ctl-timer.low { color: #f59e0b; }
+.ctl-timer.fair { color: #fff; background: #b91c1c; }
 .who { display: flex; flex-wrap: wrap; gap: 4px; }
 .who span { padding: 2px 7px; border-radius: 3px; border: 1px solid var(--v2-border); font-size: 10px; color: var(--v2-text-secondary); }
 .who span.me { color: var(--main); border-color: var(--v2-border-cyan); }

@@ -213,10 +213,11 @@ Le TRX (un Yaesu FTX-1 avec son ampli SPA-1, ou selon le cas un FTDX10, un FTDX1
   <li><span class="k">Prendre la main</span> (bandeau du haut) : possible si personne ne l'a. Le bouton devient <span class="k">Libérer la main</span>.</li>
   <li>Si quelqu'un l'a déjà : ouvrez le volet <span class="k">👥</span> et cliquez <span class="k">Demander la main à …</span>. L'opérateur reçoit la demande (son volet s'ouvre) et peut cliquer <span class="k">Passer la main à …</span>. Vous pouvez aussi lui écrire un message dans la discussion.</li>
   <li><b>Équité</b> : si l'opérateur a la main depuis <b>45 min</b> et qu'un autre membre l'a demandée (demande valable 15 min), il est prévenu ; la main passe au demandeur <b>2 min</b> plus tard, jamais au milieu d'une émission (à la fin de celle-ci). Sans demande en attente, on peut garder la main aussi longtemps qu'on est actif (libérée après 15 min sans aucune action).</li>
+  <li><b>Décompte</b> : à côté de <span class="k">Libérer la main</span>, <span class="k">⏱ 14:58</span> donne le temps restant avant que la main soit libérée (et la session fermée) sans aucune action ; chaque réglage ou émission le remet à 15 min ; orange sous 2 min, « ⏱ en émission » pendant une émission. Quand un membre attend la main (équité), il devient un badge rouge <span class="k">⏱ main → ON4XXX dans 1:45</span>.</li>
   <li><b>En partant</b>, cliquez <span class="k">Libérer la main</span>. Sans action pendant <b>15 minutes</b>, la main est libérée automatiquement.</li>
   <li>Le bouton du bandeau affiche <span class="k">Main occupée</span> quand quelqu'un d'autre l'a, et <span class="k">Prendre la main ici</span> si vous l'avez déjà dans un autre onglet ou un autre navigateur. Un administrateur voit <span class="k">Reprendre la main</span> : il peut la reprendre en cas de besoin, après confirmation.</li>
   <li>Sans la main, les commandes sont grisées et un message rappelle « Prenez la main ».</li>
-  <li><b>Suivre l'opérateur</b> (pour une formation à distance) : bouton <span class="k">👁 Suivre</span> juste après les onglets des modes numériques. Allumé (vert), votre écran affiche le même onglet que celui qui a la main (RTTY, FT8, CW…) et en change avec lui. Cliquer vous-même sur un autre onglet arrête le suivi ; un clic sur <span class="k">👁 Suivre</span> le relance. Ce bouton n'apparaît pas chez celui qui a la main.</li>
+  <li><b>Suivre l'opérateur</b> (pour une formation à distance) : bouton <span class="k">👁 Suivre</span> juste après les onglets des modes numériques. Allumé (vert), votre écran affiche le même onglet que celui qui a la main (RTTY, FT8, CW…) et en change avec lui. Cliquer vous-même sur un autre onglet arrête le suivi ; un clic sur <span class="k">👁 Suivre</span> le relance. Ce bouton n'apparaît pas chez celui qui a la main. Il s'enclenche <b>tout seul</b> quand vous arrivez alors qu'un autre membre a la main.</li>
 </ul>
 
 <h2 id="trx">7. Piloter le TRX</h2>
@@ -729,7 +730,7 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
 <h3 id="l-liste">14.2 La liste des QSO</h3>
 <ul>
   <li>La liste montre les 300 derniers QSO. La case <b>Rechercher</b> trouve un indicatif, un nom ou un opérateur ; le nombre de QSO trouvés s'affiche à côté.</li>
-  <li><b>Clic sur une ligne</b> : le QSO se charge dans la fiche pour être modifié ou supprimé (par son auteur ou un administrateur).</li>
+  <li><b>Clic sur une ligne</b> : le QSO s'ouvre dans la fiche. Son auteur <b>avec la main</b> (ou un administrateur) peut le modifier ou le supprimer ; tous les autres (membres sans la main, écouteurs, autres opérateurs) le voient <b>en lecture seule</b> (« Fermer » le referme). Personne ne peut jamais modifier ni supprimer le QSO d'un autre indicatif, sauf les administrateurs.</li>
   <li><b>Largeur des colonnes</b> : glisser le bord droit d'un titre de colonne (double-clic : largeur d'origine). Réglage gardé dans votre navigateur.</li>
   <li><b>Filtres</b> : le <b>▾</b> à côté de chaque titre propose les valeurs de la colonne (dates, bandes, modes, pays, TX call, état des envois…) avec leur nombre de QSO. Un choix filtre le carnet (le ▾ devient ●) ; plusieurs colonnes se combinent ; <span class="k">✕ Filtres</span> les retire tous.</li>
 </ul>
@@ -741,7 +742,8 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
   <tr><td>Env., Reçu</td><td>Reports envoyé et reçu.</td></tr>
   <tr><td>Nom, QTH</td><td>Prénom et ville du correspondant.</td></tr>
   <tr><td>DXCC, Préfixe</td><td>Pays du correspondant (d'après son indicatif) et son préfixe principal (ON pour la Belgique, LA pour la Norvège, K pour les USA…).</td></tr>
-  <tr><td>TX call</td><td>L'indicatif sous lequel le QSO a été fait ; l'opérateur s'affiche au survol.</td></tr>
+  <tr><td>TX call</td><td>L'indicatif sous lequel le QSO a été fait (celui du club ou celui de l'opérateur).</td></tr>
+  <tr><td>OP</td><td>L'opérateur : indicatif personnel du membre qui a fait le QSO, même sous l'indicatif du club (au survol : le compte qui l'a enregistré s'il est différent).</td></tr>
   <tr><td>LoTW, eQSL, CL, QRZ</td><td>État de l'envoi vers chaque service : <b>·</b> pas encore envoyé, <b>✓</b> envoyé, <b>✗</b> refusé (survol = détail), <b>★</b> confirmé sur LoTW.</td></tr>
 </table>
 

@@ -702,7 +702,7 @@ const LG_COL = {
   mhz: (q) => String(q.freq || ''), mode: (q) => LB.modeName(q), env: (q) => q.rst_sent || '', recu: (q) => q.rst_rcvd || '',
   nom: (q) => q.name || '', qth: (q) => q.qth || '', dxcc: (q) => q.country || ((DXCC.lookup(q.call) || {}).name || ''),
   pfx: (q) => (DXCC.lookup(q.call) || {}).pfx || '',
-  txc: (q) => q.station_callsign || '',
+  txc: (q) => q.station_callsign || '', op: (q) => q.operator || q.by || '',
   lotw: (q) => lgUp(q, 'lotw'), eqsl: (q) => lgUp(q, 'eqsl'), cl: (q) => lgUp(q, 'clublog'), qrz: (q) => lgUp(q, 'qrz')
 };
 function lgUp(q, s) {
@@ -716,7 +716,14 @@ function lgFilter(list, f) {
   if (!fs.length) return list;
   return list.filter((q) => fs.every(([k, v]) => lgKey(q, k) === String(v)));
 }
-function logCanEdit(conn, q) { return conn.user.admin || (q && q.by === conn.user.call); }
+// Modifier, compléter ou supprimer un QSO : administrateurs, ou l'auteur du QSO (compte qui l'a enregistré) qui a la main.
+// Sans la main (membre ou écouteur) : consultation seulement ; jamais le QSO d'un autre indicatif.
+function logCanEdit(conn, q) { return conn.user.admin || (!!q && !conn.user.rxOnly && q.by === conn.user.call && controller === conn); }
+function logEditWhy(conn, q) {
+  if (conn.user.rxOnly) return 'Indicatif d’écouteur : consultation du carnet seulement';
+  if (q && q.by !== conn.user.call) return 'QSO enregistré par ' + (q.by || q.operator || '?') + ' : seul son auteur (avec la main) ou un administrateur peut le modifier ou le supprimer';
+  return 'Prenez la main pour modifier ou supprimer vos QSO (sans la main : consultation seulement)';
+}
 // Pays DXCC du correspondant : enregistré avec le QSO (champ ADIF COUNTRY), ou calculé pour les anciens QSO
 function qsoForClient(q) {
   const o = Object.assign({}, q);
@@ -747,6 +754,20 @@ function fairAsker(now) {
     if (!best || c.lastAsk < best.lastAsk) best = c;
   }
   return best;
+}
+/** Décompte affiché à l'opérateur qui a la main : libération sans action, déconnexion, passage de main (équité). */
+function ctlTimer(now) {
+  const c = controller;
+  if (!c || now - (c.ctlTimerAt || 0) < 1000) return;
+  c.ctlTimerAt = now;
+  const busy = !!(ptt.active || radio.tx || ftxPend || cwJob || (seq && seq.on));
+  let idle = cfg.controlIdleMinutes * 60000 - (now - lastCtrlActivity);
+  const lim = Number(cfg.sessionIdleMinutes) * 60000;
+  if (lim > 0) idle = Math.min(idle, lim - (now - (c.lastActive || now)));
+  const warnS = Math.max(15, Number(cfg.controlWarnSeconds) || 120);
+  send(c, { t: 'ctl_timer', idle: busy ? null : Math.max(0, Math.round(idle)), busy,
+    fair: fair.warnAt ? Math.max(0, Math.round(fair.warnAt + warnS * 1000 - now)) : 0, to: fair.warnAt && fair.to ? fair.to.user.call : '',
+    held: fair.since ? Math.round(now - fair.since) : 0 });
 }
 /** Appelé toutes les 250 ms hors émission : avertit puis passe la main au demandeur après controlMaxMinutes. */
 function fairCheck(now) {
@@ -1823,6 +1844,7 @@ setInterval(() => {
   if (seq && seq.on && (controller !== seq.conn || !station)) seqOff(!station ? 'station hors ligne' : 'main perdue');
   if (cwJob && (controller !== cwJob.conn || !station)) cwEnd(!station ? 'station hors ligne' : 'main perdue', false);
   fairCheck(now);
+  ctlTimer(now);
   // Aucune libération ni déconnexion pour inactivité tant que le TRX est en émission
   if (ptt.active || radio.tx || ftxPend || cwJob || (seq && seq.on)) return;
   if (controller && now - lastCtrlActivity > cfg.controlIdleMinutes * 60000) {
@@ -2073,7 +2095,7 @@ function onOperator(conn, m) {
       if (conn.user.rxOnly) return;
       const old = book.get(String(m.id || ''));
       if (!old) return send(conn, { t: 'notice', level: 'error', msg: 'QSO introuvable' });
-      if (!logCanEdit(conn, old)) return send(conn, { t: 'notice', level: 'error', msg: 'Seul l’auteur du QSO ou un administrateur peut le compléter' });
+      if (!logCanEdit(conn, old)) return send(conn, { t: 'notice', level: 'error', msg: logEditWhy(conn, old) });
       let q;
       try { q = LB.clean(m.qso, logCtx(conn, m.qso)); } catch (e) { return send(conn, { t: 'notice', level: 'error', msg: 'QSO non complété : ' + e.message }); }
       const added = book.merge(old.id, q);
@@ -2091,7 +2113,7 @@ function onOperator(conn, m) {
       if (m.t === 'log_edit') {
         const old = book.get(m.id);
         if (!old) return send(conn, { t: 'notice', level: 'error', msg: 'QSO introuvable' });
-        if (!logCanEdit(conn, old)) return send(conn, { t: 'notice', level: 'error', msg: 'Seul l’auteur du QSO ou un administrateur peut le modifier' });
+        if (!logCanEdit(conn, old)) return send(conn, { t: 'notice', level: 'error', msg: logEditWhy(conn, old) });
         q.operator = old.operator;
         if (!q.country) { const e = DXCC.lookup(q.call); if (e) q.country = e.name; }
         q = book.update(m.id, q);
@@ -2117,7 +2139,7 @@ function onOperator(conn, m) {
     case 'log_del': {
       const q = book.get(m.id);
       if (!q) return;
-      if (!logCanEdit(conn, q)) return send(conn, { t: 'notice', level: 'error', msg: 'Seul l’auteur du QSO ou un administrateur peut le supprimer' });
+      if (!logCanEdit(conn, q)) return send(conn, { t: 'notice', level: 'error', msg: logEditWhy(conn, q) });
       book.remove(m.id);
       journal('log_del', { call: conn.user.call, qso: q.call, date: q.qso_date });
       for (const c of ops) send(c, { t: 'log_changed' });

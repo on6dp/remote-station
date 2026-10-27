@@ -430,6 +430,7 @@
 
   // ------------------------------------------------------------------ suivre l'opérateur
   let follow = store.get(POPUP ? 'pfollow' : 'follow', '0') === '1';
+  let autoFollowDone = false; // une fois par ouverture de la page
   let viewSent = '';
   function setFollow(on) {
     follow = !!on;
@@ -3937,6 +3938,15 @@
       const fb = $('dgFollow');
       const mine = !!(api && api.iControl());
       if (fb) fb.hidden = mine;
+      // Arrivée alors qu'un autre membre a la main : « Suivre l'opérateur » enclenché tout seul (un clic sur un onglet l'arrête)
+      const stF = api && api.state();
+      if (!autoFollowDone && stF && stF.users) {
+        autoFollowDone = true;
+        if (stF.controller && !mine && stF.controller !== opCall && !follow) {
+          setFollow(true);
+          api.say('Suivi de l’opérateur enclenché : ' + stF.controller + ' a la main (cliquez un onglet pour choisir vous-même).', '', 6000);
+        }
+      }
       if (mine) sendView(); else { viewSent = ''; followView(); }
       // Autre TRX (couverture différente) : les fréquences QO-100 proposées changent
       const R = api && api.rig && api.rig();

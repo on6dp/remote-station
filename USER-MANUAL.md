@@ -205,10 +205,12 @@ FT8 is the easiest mode to use remotely: everything is done with the mouse and t
 - Only one person **has control** (operates the TRX); everybody sees and hears the same thing.
 - `Prendre la main` (take control, top bar): possible if nobody has it. The button then becomes `Libérer la main` (release control).
 - If someone already has it: open the `👥` panel and click `Demander la main à …` (request control from …). The operator receives the request (their panel opens) and can click `Passer la main à …` (hand control to …). You can also send them a message in the chat.
+- **Fairness**: if the operator has had control for **45 min** and another member has requested it (request valid 15 min), the operator is warned; control passes to the requester **2 min** later, never in the middle of a transmission (at its end). With no pending request, you can keep control as long as you are active (released after 15 min without any action).
+- **Countdown**: next to `Libérer la main`, `⏱ 14:58` gives the time left before control is released (and the session closed) without any action; each setting or transmission resets it to 15 min; orange under 2 min, « ⏱ en émission » during a transmission. When a member is waiting for control (fairness), it turns into a red badge `⏱ main → ON4XXX dans 1:45`.
 - **When you leave**, click `Libérer la main`. With no action for **15 minutes**, control is released automatically.
 - The top-bar button shows `Main occupée` (control taken) when someone else has it, and `Prendre la main ici` (take control here) if you already have it in another tab or another browser. An administrator sees `Reprendre la main` (take back control): they can take it back if needed, after confirmation.
 - Without control, the commands are greyed out and a message reminds you « Prenez la main » (take control).
-- **Following the operator** (for remote training): `👁 Suivre` (follow) button just after the digital-mode tabs. When on (green), your screen shows the same tab as the operator in control (RTTY, FT8, CW…) and changes along with them. Clicking another tab yourself stops following; a click on `👁 Suivre` starts it again. This button is not shown to the operator in control.
+- **Following the operator** (for remote training): `👁 Suivre` (follow) button just after the digital-mode tabs. When on (green), your screen shows the same tab as the operator in control (RTTY, FT8, CW…) and changes along with them. Clicking another tab yourself stops following; a click on `👁 Suivre` starts it again. This button is not shown to the operator in control. It switches on **by itself** when you arrive while another member has control.
 
 <a id="trx"></a>
 ## 7. Operating the TRX
@@ -369,7 +371,7 @@ Below the buttons, « Mode appliqué à **VFO A** » (mode applied to VFO A) sho
 |---|---|
 | `RX` / `TX` lamp | Real state of the TRX (green when receiving, red when transmitting). |
 | `PTT` | **Hold** to transmit (or the `Space` bar); release = back to receive. The small text below says why PTT is unavailable (« Prenez la main pour émettre » (take control to transmit)…). |
-| **Puissance** (power) `−` `+` | Lowers or raises the TRX power, one step per click: 5 W (0.5 W on the FTX-1 without the SPA-1 amplifier). Ranges: FTX-1 0.5 to 10 W alone, 5 to 100 W with the SPA-1; FTDX10, FTDX101D and IC-7300 5 to 100 W; FTDX101MP 5 to 200 W. Your licence limit is shown below (e.g. ON3: 25 W); above it, the power is brought back down automatically. |
+| **Puissance** (power) `−` `+` | Lowers or raises the TRX power, one step per click: 5 W (0.5 W on the FTX-1 without the SPA-1 amplifier). Ranges: FTX-1 0.5 to 10 W alone, 5 to 100 W with the SPA-1; FTDX10, FTDX101D and IC-7300 5 to 100 W; FTDX101MP 5 to 200 W. Your licence limit is shown below (ON2: 100 W, ON3: 25 W); above it, the power is brought back down automatically. |
 | **Gain micro** (mic gain) | Microphone level in phone. |
 | `PROC` + **Niveau PROC** (PROC level) | Speech processor (compressor): the voice "punches through" the noise better. Keep the level moderate, otherwise the modulation sounds unpleasant. On the IC-7300: COMP. |
 | `VOX` | Voice-operated transmit: can only be **switched off** remotely, never on. |
@@ -735,7 +737,7 @@ In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé*
 ### 14.2 The QSO list
 
 - The list shows the last 300 QSOs. The **Rechercher** (search) box finds a callsign, a name or an operator; the number of QSOs found is shown next to it.
-- **Click a row**: the QSO is loaded into the form to be edited or deleted (by its author or an administrator).
+- **Click a row**: the QSO opens in the form. Its author **with control** (or an administrator) can edit or delete it; everyone else (members without control, listeners, other operators) sees it **read-only** (« Fermer » closes it). Nobody can ever edit or delete a QSO logged by another callsign, except administrators.
 - **Column width**: drag the right edge of a column title (double-click: original width). Setting remembered in your browser.
 - **Filters**: the **▾** next to each title offers the values of that column (dates, bands, modes, countries, TX call, upload state…) with their QSO count. A choice filters the logbook (the ▾ becomes ●); several columns combine; `✕ Filtres` (filters) removes them all.
 
@@ -747,7 +749,8 @@ In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé*
 | Env., Reçu | Reports sent and received. |
 | Nom, QTH | First name and town of the correspondent. |
 | DXCC, Préfixe | Country of the correspondent (from their callsign) and its main prefix (ON for Belgium, LA for Norway, K for the USA…). |
-| TX call | The callsign under which the QSO was made; the operator is shown on hover. |
+| TX call | The callsign under which the QSO was made (the club's or the operator's). |
+| OP | The operator: personal callsign of the member who made the QSO, even under the club callsign (on hover: the account that logged it, if different). |
 | LoTW, eQSL, CL, QRZ | Upload state for each service: **·** not sent yet, **✓** sent, **✗** rejected (hover = details), **★** confirmed on LoTW. |
 
 <a id="l-export"></a>

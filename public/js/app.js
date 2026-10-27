@@ -106,6 +106,32 @@
     const el = $('idleBanner');
     if (el) el.hidden = true;
   }
+  // Décompte pour celui qui a la main (envoyé chaque seconde par le serveur) : main libérée / déconnexion sans action,
+  // ou main passée à un membre qui l'attend (équité, après 45 min)
+  let ctlT = null;
+  const mmss = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  function drawCtlTimer() {
+    const el = document.getElementById('ctlTimer');
+    if (!el) return;
+    const T = ctlT;
+    if (!T || Date.now() - T.at > 6000) { el.hidden = true; return; }
+    const gone = Date.now() - T.at;
+    el.hidden = false;
+    el.classList.toggle('fair', !!T.fair);
+    el.classList.toggle('low', !T.fair && T.idle != null && T.idle - gone < 120000);
+    if (T.fair) {
+      el.textContent = '⏱ main → ' + T.to + ' dans ' + mmss(T.fair - gone);
+      el.title = T.to + ' a demandé la main : vous l’avez depuis ' + Math.round(T.held / 60000) + ' min. Elle lui sera passée à la fin du décompte (après votre émission en cours).';
+    } else if (T.idle == null) {
+      el.textContent = '⏱ en émission';
+      el.title = 'Pas de libération de la main ni de déconnexion pendant une émission.';
+    } else {
+      el.textContent = '⏱ ' + mmss(T.idle - gone);
+      el.title = 'Sans aucune action de votre part, la main sera libérée (et vous serez déconnecté) à la fin de ce décompte. Chaque réglage ou émission le remet à zéro.' +
+        (T.held ? ' Vous avez la main depuis ' + Math.round(T.held / 60000) + ' min.' : '');
+    }
+  }
+  setInterval(drawCtlTimer, 1000);
   function say(text, level, ms) {
     const el = $('msg');
     el.textContent = text || '';
@@ -1275,6 +1301,7 @@
     cb.textContent = mine ? 'Libérer la main' : other ? 'Prendre la main ici' : !st.controller ? 'Prendre la main' : me && me.admin ? 'Reprendre la main' : 'Main occupée';
     cb.disabled = !!(st.controller && !mine && !other && !(me && me.admin));
     cb.classList.toggle('on', mine);
+    if (!mine) { ctlT = null; drawCtlTimer(); }
     updateChatButtons();
     drawListen();
     const who = $('who');
@@ -1587,6 +1614,9 @@
       } else if (m.t === 'cat_answer') {
         if (catWait) { const w = catWait; catWait = null; w(m.reply); }
         else if (!catOut('← ' + m.reply)) say('CAT ' + m.cmd + ' → ' + m.reply, '', 10000);
+      } else if (m.t === 'ctl_timer') {
+        ctlT = { at: Date.now(), idle: m.idle, busy: m.busy, fair: m.fair, to: m.to, held: m.held };
+        drawCtlTimer();
       } else if (m.t === 'notice') {
         if (m.pttCut) pttCut = true;
         say(m.msg, m.level === 'error' ? 'error' : m.level === 'info' ? '' : 'warn', 7000);

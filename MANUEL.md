@@ -205,10 +205,12 @@ Le FT8 est le mode le plus simple à distance : tout se fait à la souris et le 
 - Une seule personne **a la main** (pilote le TRX) ; tout le monde voit et entend la même chose.
 - `Prendre la main` (bandeau du haut) : possible si personne ne l'a. Le bouton devient `Libérer la main`.
 - Si quelqu'un l'a déjà : ouvrez le volet `👥` et cliquez `Demander la main à …`. L'opérateur reçoit la demande (son volet s'ouvre) et peut cliquer `Passer la main à …`. Vous pouvez aussi lui écrire un message dans la discussion.
+- **Équité** : si l'opérateur a la main depuis **45 min** et qu'un autre membre l'a demandée (demande valable 15 min), il est prévenu ; la main passe au demandeur **2 min** plus tard, jamais au milieu d'une émission (à la fin de celle-ci). Sans demande en attente, on peut garder la main aussi longtemps qu'on est actif (libérée après 15 min sans aucune action).
+- **Décompte** : à côté de `Libérer la main`, `⏱ 14:58` donne le temps restant avant que la main soit libérée (et la session fermée) sans aucune action ; chaque réglage ou émission le remet à 15 min ; orange sous 2 min, « ⏱ en émission » pendant une émission. Quand un membre attend la main (équité), il devient un badge rouge `⏱ main → ON4XXX dans 1:45`.
 - **En partant**, cliquez `Libérer la main`. Sans action pendant **15 minutes**, la main est libérée automatiquement.
 - Le bouton du bandeau affiche `Main occupée` quand quelqu'un d'autre l'a, et `Prendre la main ici` si vous l'avez déjà dans un autre onglet ou un autre navigateur. Un administrateur voit `Reprendre la main` : il peut la reprendre en cas de besoin, après confirmation.
 - Sans la main, les commandes sont grisées et un message rappelle « Prenez la main ».
-- **Suivre l'opérateur** (pour une formation à distance) : bouton `👁 Suivre` juste après les onglets des modes numériques. Allumé (vert), votre écran affiche le même onglet que celui qui a la main (RTTY, FT8, CW…) et en change avec lui. Cliquer vous-même sur un autre onglet arrête le suivi ; un clic sur `👁 Suivre` le relance. Ce bouton n'apparaît pas chez celui qui a la main.
+- **Suivre l'opérateur** (pour une formation à distance) : bouton `👁 Suivre` juste après les onglets des modes numériques. Allumé (vert), votre écran affiche le même onglet que celui qui a la main (RTTY, FT8, CW…) et en change avec lui. Cliquer vous-même sur un autre onglet arrête le suivi ; un clic sur `👁 Suivre` le relance. Ce bouton n'apparaît pas chez celui qui a la main. Il s'enclenche **tout seul** quand vous arrivez alors qu'un autre membre a la main.
 
 <a id="trx"></a>
 ## 7. Piloter le TRX
@@ -369,7 +371,7 @@ Sous les boutons, « Mode appliqué à **VFO A** » indique quel VFO change de m
 |---|---|
 | Voyant `RX` / `TX` | État réel du TRX (vert en réception, rouge en émission). |
 | `PTT` | **Maintenir** pour émettre (ou la barre `Espace`) ; relâcher = retour en réception. Le petit texte en dessous dit pourquoi le PTT est indisponible (« Prenez la main pour émettre »…). |
-| **Puissance** `−` `+` | Baisse ou monte la puissance du TRX, d'un pas par clic : 5 W (0,5 W sur le FTX-1 sans l'ampli SPA-1). Plages : FTX-1 0,5 à 10 W seul, 5 à 100 W avec le SPA-1 ; FTDX10, FTDX101D et IC-7300 5 à 100 W ; FTDX101MP 5 à 200 W. Votre limite de licence est affichée en dessous (ex. ON3 : 25 W) ; au-delà, la puissance est ramenée automatiquement. |
+| **Puissance** `−` `+` | Baisse ou monte la puissance du TRX, d'un pas par clic : 5 W (0,5 W sur le FTX-1 sans l'ampli SPA-1). Plages : FTX-1 0,5 à 10 W seul, 5 à 100 W avec le SPA-1 ; FTDX10, FTDX101D et IC-7300 5 à 100 W ; FTDX101MP 5 à 200 W. Votre limite de licence est affichée en dessous (ON2 : 100 W, ON3 : 25 W) ; au-delà, la puissance est ramenée automatiquement. |
 | **Gain micro** | Niveau du micro en phonie. |
 | `PROC` + **Niveau PROC** | Processeur de modulation (compresseur) : la voix « porte » mieux dans le bruit. Niveau modéré, sinon la modulation est désagréable. Sur l'IC-7300 : COMP. |
 | `VOX` | Émission déclenchée par la voix : peut seulement être **coupé** à distance, jamais activé. |
@@ -735,7 +737,7 @@ En **FT8 · FT4 · FT2**, à la fin de la séquence, une petite fenêtre « **QS
 ### 14.2 La liste des QSO
 
 - La liste montre les 300 derniers QSO. La case **Rechercher** trouve un indicatif, un nom ou un opérateur ; le nombre de QSO trouvés s'affiche à côté.
-- **Clic sur une ligne** : le QSO se charge dans la fiche pour être modifié ou supprimé (par son auteur ou un administrateur).
+- **Clic sur une ligne** : le QSO s'ouvre dans la fiche. Son auteur **avec la main** (ou un administrateur) peut le modifier ou le supprimer ; tous les autres (membres sans la main, écouteurs, autres opérateurs) le voient **en lecture seule** (« Fermer » le referme). Personne ne peut jamais modifier ni supprimer le QSO d'un autre indicatif, sauf les administrateurs.
 - **Largeur des colonnes** : glisser le bord droit d'un titre de colonne (double-clic : largeur d'origine). Réglage gardé dans votre navigateur.
 - **Filtres** : le **▾** à côté de chaque titre propose les valeurs de la colonne (dates, bandes, modes, pays, TX call, état des envois…) avec leur nombre de QSO. Un choix filtre le carnet (le ▾ devient ●) ; plusieurs colonnes se combinent ; `✕ Filtres` les retire tous.
 
@@ -747,7 +749,8 @@ En **FT8 · FT4 · FT2**, à la fin de la séquence, une petite fenêtre « **QS
 | Env., Reçu | Reports envoyé et reçu. |
 | Nom, QTH | Prénom et ville du correspondant. |
 | DXCC, Préfixe | Pays du correspondant (d'après son indicatif) et son préfixe principal (ON pour la Belgique, LA pour la Norvège, K pour les USA…). |
-| TX call | L'indicatif sous lequel le QSO a été fait ; l'opérateur s'affiche au survol. |
+| TX call | L'indicatif sous lequel le QSO a été fait (celui du club ou celui de l'opérateur). |
+| OP | L'opérateur : indicatif personnel du membre qui a fait le QSO, même sous l'indicatif du club (au survol : le compte qui l'a enregistré s'il est différent). |
 | LoTW, eQSL, CL, QRZ | État de l'envoi vers chaque service : **·** pas encore envoyé, **✓** envoyé, **✗** refusé (survol = détail), **★** confirmé sur LoTW. |
 
 <a id="l-export"></a>

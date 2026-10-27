@@ -28,7 +28,7 @@
   let total = 0;
   // Colonnes du carnet : largeur par défaut (px), réglable à la souris (bord droit de l'en-tête), gardée dans ce navigateur
   const LG_COLS = [['date', 98], ['utc', 58], ['call', 96], ['band', 70], ['mhz', 82], ['mode', 66], ['env', 58], ['recu', 64], ['nom', 116],
-    ['qth', 136], ['dxcc', 116], ['pfx', 76], ['txc', 84], ['lotw', 62], ['eqsl', 62], ['cl', 46], ['qrz', 54], ['fill', 0]];
+    ['qth', 136], ['dxcc', 116], ['pfx', 76], ['txc', 84], ['op', 84], ['lotw', 62], ['eqsl', 62], ['cl', 46], ['qrz', 54], ['fill', 0]];
   let editing = null;      // QSO en cours de modification
   let lastTxCall = '';     // dernier TX call de la ligne Correspondant reporté dans la fiche
   let filt = {};           // filtres par colonne { date: '20261025', band: '20m', … }
@@ -116,9 +116,9 @@
     <div class="lg-tw">
       <table class="lg-table">
         <colgroup>${LG_COLS.map(([k]) => '<col data-c="' + k + '">').join('')}</colgroup>
-        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th class="r">MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Préfixe principal de l'entité DXCC (ex. ON pour la Belgique, LA pour la Norvège)">Préfixe</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th>
+        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th class="r">MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Préfixe principal de l'entité DXCC (ex. ON pour la Belgique, LA pour la Norvège)">Préfixe</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th><th title="Opérateur : indicatif personnel du membre qui a fait le QSO (même sous l'indicatif du club)">OP</th>
           <th class="c" title="LoTW (★ = confirmé)">LoTW</th><th class="c">eQSL</th><th class="c" title="Club Log">CL</th><th class="c">QRZ</th><th class="lg-fill"></th></tr></thead>
-        <tbody id="lgBody"><tr><td colspan="18" class="lg-empty">Chargement du carnet…</td></tr></tbody>
+        <tbody id="lgBody"><tr><td colspan="19" class="lg-empty">Chargement du carnet…</td></tr></tbody>
       </table>
     </div>
     <p class="lg-job" id="lgJob" aria-live="polite"></p>`;
@@ -344,7 +344,7 @@
     };
   }
   function save(force) {
-    if (!api) return;
+    if (!api || viewOnly) return;
     const qso = formQso();
     if (!qso.call) return fmsg('Indicatif du correspondant ?', 'err');
     if (!(qso.freq > 0)) return fmsg('Fréquence en MHz ? (ex. 14.074)', 'err');
@@ -352,11 +352,15 @@
     else api.send({ t: 'log_add', qso, force: !!force });
     fmsg('Enregistrement…', '');
   }
+  let viewOnly = false; // fiche ouverte en consultation (pas le droit de modifier ce QSO)
   function startEdit(id) {
     const q = items.find((x) => x.id === id);
     if (!q) return;
-    if (!me.admin && q.by !== me.call) return say('Seul l’auteur du QSO (' + (q.by || q.operator) + ') ou un administrateur peut le modifier.', 'warn');
+    // Tout le monde peut ouvrir la fiche ; modifier / supprimer : administrateur, ou auteur du QSO avec la main
+    const ctl = !!(api && api.iControl && api.iControl());
+    const can = me.admin || (!me.rxOnly && q.by === me.call && ctl);
     editing = q;
+    viewOnly = !can;
     const f = q$('#lgForm');
     f.call.value = q.call;
     f.date.value = q.qso_date.slice(0, 4) + '-' + q.qso_date.slice(4, 6) + '-' + q.qso_date.slice(6, 8);
@@ -367,15 +371,33 @@
     if (calls.indexOf(q.station_callsign) >= 0) f.station.value = q.station_callsign;
     f.qo100.checked = q.sat_name === 'QO-100';
     f.querySelector('[data-a="save"]').textContent = 'Modifier le QSO';
-    f.querySelector('[data-a="del"]').hidden = false;
+    f.querySelector('[data-a="save"]').hidden = viewOnly;
+    f.querySelector('[data-a="del"]').hidden = viewOnly;
     f.querySelector('[data-a="cancel"]').hidden = false;
+    f.querySelector('[data-a="cancel"]').textContent = viewOnly ? 'Fermer' : 'Annuler';
+    for (const el of f.querySelectorAll('input, select, textarea')) el.disabled = viewOnly;
+    for (const el of f.querySelectorAll('button[data-a="now"], button[data-a="trx"]')) el.disabled = viewOnly;
     f.classList.add('editing');
-    fmsg('Modification du QSO avec ' + q.call + ' (opérateur ' + (q.operator || '?') + '). Les carnets en ligne déjà servis ne sont pas modifiés : renvoyez-le si nécessaire.', 'warn');
+    f.classList.toggle('viewonly', viewOnly);
+    const info = ' — opérateur ' + (q.operator || '?') + ', enregistré par ' + (q.by || '?') + (q.country ? ', ' + q.country : '') + '.';
+    if (viewOnly) {
+      const why = me.rxOnly ? 'indicatif d’écouteur' : q.by !== me.call ? 'QSO d’un autre opérateur' : 'prenez la main pour le modifier';
+      fmsg('Consultation du QSO avec ' + q.call + info + ' Lecture seule (' + why + ').', 'warn');
+    } else {
+      fmsg('Modification du QSO avec ' + q.call + info + ' Les carnets en ligne déjà servis ne sont pas modifiés : renvoyez-le si nécessaire.', 'warn');
+    }
     drawList();
   }
   function endEdit() {
     editing = null;
     const f = q$('#lgForm');
+    if (viewOnly) {
+      viewOnly = false;
+      for (const el of f.querySelectorAll('input, select, textarea, button')) el.disabled = false;
+      f.querySelector('[data-a="save"]').hidden = false;
+      f.classList.remove('viewonly');
+    }
+    f.querySelector('[data-a="cancel"]').textContent = 'Annuler';
     f.reset();
     delete f.freq.dataset.manual;
     delete f.mode.dataset.manual;
@@ -471,13 +493,13 @@
     const body = q$('#lgBody');
     if (!body) return;
     if (!items.length) {
-      body.innerHTML = '<tr><td colspan="18" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche ou aux filtres.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
+      body.innerHTML = '<tr><td colspan="19" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche ou aux filtres.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
     } else {
       body.innerHTML = items.map((q) => '<tr data-id="' + esc(q.id) + '"' + (editing && editing.id === q.id ? ' class="sel"' : '') + ' title="Cliquer pour modifier">' +
         '<td>' + fmtDate(q.qso_date) + '</td><td>' + fmtTime(q.time_on) + '</td><td class="call">' + esc(q.call) + '</td><td>' + esc(q.band) +
         (q.sat_name ? ' <span class="sat">' + esc(q.sat_name) + '</span>' : '') + '</td><td class="r">' + esc(q.freq) + '</td><td>' + esc(modeName(q)) +
         '</td><td>' + esc(q.rst_sent || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td class="grow">' + esc(q.name || '') + '</td><td class="lg-qth" title="' + esc(q.qth || '') + '">' + esc(q.qth || '') +
-        '</td><td class="lg-cty" title="' + esc(q.country || '') + '">' + esc(q.country || '') + '</td><td>' + esc(q.dxcc_pfx || '') + '</td><td class="txc" title="' + esc(q.operator ? 'Opérateur : ' + q.operator : '') + '">' + esc(q.station_callsign || '') + '</td>' +
+        '</td><td class="lg-cty" title="' + esc(q.country || '') + '">' + esc(q.country || '') + '</td><td>' + esc(q.dxcc_pfx || '') + '</td><td class="txc">' + esc(q.station_callsign || '') + '</td><td class="op" title="' + esc(q.by && q.by !== q.operator ? 'Enregistré par ' + q.by : '') + '">' + esc(q.operator || q.by || '') + '</td>' +
         SV.map((s) => upCell(q, s)).join('') + '<td class="lg-fill"></td></tr>').join('');
     }
     const c = q$('#lgCount');
