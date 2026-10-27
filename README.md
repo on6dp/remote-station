@@ -11,7 +11,7 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.24.4** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.24.5** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
 **Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
 `remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
@@ -142,6 +142,8 @@ sudo systemctl restart remote-station
 | `rememberDays` | `7` | Jours pendant lesquels un navigateur reste connecté. |
 | `controlMaxMinutes`, `controlWarnSeconds`, `controlAskMinutes` | 45 min, 120 s, 15 min | Équité : main passée au membre qui l'a demandée après 45 min (avertissement 2 min avant, jamais pendant une émission). 0 = pas de limite. |
 | `licenceBands` | ON3 : 80, 40, 30, 20, 15, 10 m, 2 m, 70 cm | Bandes permises en émission par début d'indicatif (les autres : toutes celles de `txRanges`). |
+| `clubCalls` | ON5VL, OR0L | Indicatifs du club proposés dans « TX call » (émission et carnet, traités comme ceux de la station pour les logs en ligne). |
+| `idleExempt` | ON6DP, ON4LUC | Indicatifs jamais déconnectés pour inactivité (la main reste libérée après `controlIdleMinutes`). |
 | `powerRules`, `defaultMaxWatts` | ON2 : 100 W, ON3 : 25 W, sinon 1500 W (ON2 et ON3 plafonnés même si le réglage les oublie) | Puissance maximale selon l'indicatif. |
 | `rxOnlyPrefixes` | `["ONL"]` | Indicatifs en écoute seule. |
 | `maxSwr`, `swrHoldMs` | `2.5`, `700` | Coupure de l'émission sur ROS élevé. |

@@ -319,6 +319,7 @@
         <div class="ss-view"><canvas id="ssCanvas" width="320" height="256"></canvas><p class="ss-empty" id="ssEmpty">En attente d'une image…</p></div>
         <div class="ss-gal" id="ssGal" aria-label="Dernières images reçues"></div>
       </div>
+      <i class="ss-vsplit" id="ssSplit" title="Glisser à gauche ou à droite : largeur des fenêtres Réception et Émission (double-clic : moitié-moitié)"></i>
       <div class="dg-col ss-tx">
         <div class="dg-h"><span>Émission</span>
           <select id="ssTxMode" aria-label="Mode d'émission"></select><span class="dg-note" id="ssDur"></span></div>
@@ -3840,6 +3841,29 @@
         });
         sp.addEventListener('dblclick', () => setSplit(null, true));
       }
+      // SSTV : séparateur entre Réception et Émission, largeur gardée dans ce navigateur
+      {
+        const sp = $('ssSplit');
+        const grid = sp.parentElement;
+        const setSs = (pct, save) => {
+          if (pct == null) grid.style.removeProperty('--ss-left');
+          else grid.style.setProperty('--ss-left', Math.max(25, Math.min(75, pct)).toFixed(1) + '%');
+          if (save) store.set('sssplit', pct == null ? '' : Math.max(25, Math.min(75, pct)).toFixed(1));
+          if (save && typeof ssTx !== 'undefined' && ssTx) ssTxTick(); // repère d'émission recalé sur l'image
+        };
+        if (Number(store.get('sssplit', '')) > 0) setSs(Number(store.get('sssplit', '')), false);
+        sp.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          sp.setPointerCapture(e.pointerId);
+          const at = (ev) => { const r = grid.getBoundingClientRect(); return ((ev.clientX - r.left) / r.width) * 100; };
+          const mv = (ev) => setSs(at(ev), false);
+          const up = (ev) => { sp.removeEventListener('pointermove', mv); sp.removeEventListener('pointerup', up); sp.removeEventListener('pointercancel', up); setSs(at(ev), true); };
+          sp.addEventListener('pointermove', mv);
+          sp.addEventListener('pointerup', up);
+          sp.addEventListener('pointercancel', up);
+        });
+        sp.addEventListener('dblclick', () => setSs(null, true));
+      }
       // Split : clic gauche = fréquence de réception, clic droit = fréquence d'émission
       const fAt = (e) => { const r = e.currentTarget.getBoundingClientRect(); return WF_LO + ((e.clientX - r.left) / r.width) * WF_MAX_HZ; };
       for (const id of ['dgWf', 'dgScale']) {
@@ -3917,7 +3941,7 @@
       refillQo();
       if (me && me.call) opCall = me.call;
       drawMsgs();
-      if (info && info.stationCall) { baseCalls = String(info.stationCall).toUpperCase().split(/[\s/,]+/).filter(Boolean); stationCalls = Array.from(new Set(baseCalls.concat(myCall))); }
+      if (info && info.stationCall) { baseCalls = String(info.stationCall).toUpperCase().split(/[\s/,]+/).filter(Boolean).concat(Array.isArray(info.clubCalls) ? info.clubCalls.map((c) => String(c).toUpperCase()) : []); stationCalls = Array.from(new Set(baseCalls.concat(myCall))); }
       announce(); // reprise après reconnexion
     },
     onMessage(m) {

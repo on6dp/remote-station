@@ -355,6 +355,12 @@
       $('askBtn').disabled = true;
       setTimeout(() => { $('askBtn').disabled = false; }, 15000);
     });
+    {
+      const bb = $('chatBeep');
+      const show = () => { bb.textContent = beepOn ? '🔔' : '🔕'; bb.setAttribute('aria-pressed', String(beepOn)); };
+      show();
+      bb.addEventListener('click', (ev) => { ev.stopPropagation(); beepOn = !beepOn; try { localStorage.setItem('rs.chatbeep', beepOn ? '1' : '0'); } catch (e) {} show(); if (beepOn) chatBeep(); });
+    }
     $('chatForm').addEventListener('submit', (ev) => {
       ev.preventDefault();
       const v = $('chatInput').value.trim();
@@ -991,6 +997,7 @@
       row.className = 'u' + (me && call === me.call ? ' me' : '') + (isCtrl ? ' ctrl' : '');
       const b = document.createElement('b');
       b.textContent = call;
+      if (call === chatBlink.call && Date.now() < chatBlink.until) b.classList.add('blink');
       const note = document.createElement('small');
       const tx = st.ptt && st.ptt.active && st.ptt.by === call;
       note.textContent = tx ? 'en émission' : isCtrl ? 'a la main' : me && call === me.call ? 'vous' : /^ONL/.test(call) ? 'écouteur' : '';
@@ -1005,7 +1012,7 @@
   }
   function toggleUsersMenu(force) {
     const open = force != null ? force : $('usersMenu').hidden;
-    if (open) { drawUsersMenu(); $('usersDot').hidden = true; }
+    if (open) { drawUsersMenu(); $('usersDot').hidden = true; $('usersBtn').classList.remove('chat-new'); }
     $('usersMenu').hidden = !open;
     $('usersBtn').setAttribute('aria-expanded', String(open));
     if (open) $('chat').scrollTop = $('chat').scrollHeight;
@@ -1028,24 +1035,22 @@
     const sel = $('txCallSel');
     if (!sel || !me) return;
     const club = String(me.digiCall || 'ON5VL').toUpperCase();
+    const clubs = Array.isArray(me.clubCalls) && me.clubCalls.length ? me.clubCalls.map((c) => String(c).toUpperCase()) : [club];
     const mine = String(me.call || '').toUpperCase();
-    const opts = [club].concat(me.canTx && !me.rxOnly && mine && mine !== club ? [mine] : []);
+    const opts = clubs.concat(me.canTx && !me.rxOnly && mine && clubs.indexOf(mine) < 0 ? [mine] : []);
     if (sel.dataset.opts !== opts.join(',')) {
       sel.dataset.opts = opts.join(',');
       sel.textContent = '';
-      for (const c of opts) sel.add(new Option(c === club ? c + ' (station)' : c, c));
+      for (const c of opts) sel.add(new Option(clubs.indexOf(c) >= 0 ? c + ' (station)' : c, c));
     }
     const cur = String((st && st.txCall) || club).toUpperCase();
     if (opts.indexOf(cur) < 0) { sel.add(new Option(cur, cur)); sel.dataset.opts = ''; }
     sel.value = cur;
     sel.disabled = !iControl() || opts.length < 2;
-    // Avec la main : le choix gardé dans ce navigateur est rappelé au serveur
+    // Avec la main : le choix gardé dans ce navigateur est rappelé au serveur (rs.txcall ; anciennes pages : rs.txown)
     let want = null;
-    try { want = localStorage.getItem('rs.txown'); } catch (x) {}
-    if (iControl() && opts.length > 1 && want != null) {
-      const own = want === '1';
-      if ((cur === mine) !== own && txcSent !== want) { txcSent = want; send({ t: 'txcall', own }); }
-    }
+    try { want = localStorage.getItem('rs.txcall'); if (!want) { const o = localStorage.getItem('rs.txown'); if (o != null) want = o === '1' ? mine : club; } } catch (x) {}
+    if (iControl() && opts.length > 1 && want && opts.indexOf(want) >= 0 && cur !== want && txcSent !== want) { txcSent = want; send({ t: 'txcall', call: want }); }
     if (!iControl()) txcSent = null;
   }
   function render() {
@@ -1472,6 +1477,38 @@
     for (const m of chatItems) box.appendChild(chatRow(m));
     if (atEnd) box.scrollTop = box.scrollHeight;
   }
+  // Message d'un autre membre : bouton 👥 et indicatif de l'auteur qui clignotent, bip-bip (coupable avec 🔔)
+  var chatBlink = { call: '', until: 0 };
+  var beepOn = (() => { try { return localStorage.getItem('rs.chatbeep') !== '0'; } catch (e) { return true; } })();
+  var beepCtx = null;
+  function chatBeep() {
+    if (!beepOn) return;
+    try {
+      beepCtx = beepCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (beepCtx.state === 'suspended') beepCtx.resume();
+      const t0 = beepCtx.currentTime + 0.02;
+      for (const dt of [0, 0.18]) {
+        const o = beepCtx.createOscillator();
+        const g = beepCtx.createGain();
+        o.frequency.value = 1200;
+        g.gain.setValueAtTime(0, t0 + dt);
+        g.gain.linearRampToValueAtTime(0.18, t0 + dt + 0.01);
+        g.gain.setValueAtTime(0.18, t0 + dt + 0.09);
+        g.gain.linearRampToValueAtTime(0, t0 + dt + 0.11);
+        o.connect(g).connect(beepCtx.destination);
+        o.start(t0 + dt);
+        o.stop(t0 + dt + 0.12);
+      }
+    } catch (e) { /* pas de son dans ce navigateur */ }
+  }
+  function chatAlert(m) {
+    chatBlink = { call: m.call, until: Date.now() + 20000 };
+    $('usersBtn').classList.add('chat-new');
+    drawUsersMenu();
+    chatBeep();
+    if ($('usersMenu').hidden && m.kind !== 'ask') say('💬 ' + m.call + ' : ' + String(m.text || '').slice(0, 80), '', 6000);
+    setTimeout(() => { if (Date.now() >= chatBlink.until) { $('usersBtn').classList.remove('chat-new'); drawUsersMenu(); } }, 20100);
+  }
   function addChat(m, live) {
     chatItems.push(m);
     while (chatItems.length > 40) chatItems.shift();
@@ -1479,6 +1516,7 @@
     $('chat').scrollTop = $('chat').scrollHeight;
     // Volet Opérateurs fermé : pastille rouge sur 👥 ; demande de la main à celui qui pilote : volet ouvert
     if (live && (!me || m.call !== me.call) && $('usersMenu').hidden) $('usersDot').hidden = false;
+    if (live && me && m.call && m.call !== me.call) chatAlert(m);
     if (live && m.kind === 'ask' && iControl()) { toggleUsersMenu(true); say(m.call + ' vous demande la main (volet 👥 en haut)', 'warn', 10000); }
   }
   // Redessine les boutons « Passer la main » seulement quand la situation change
@@ -1817,10 +1855,10 @@
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') dxcShow(false); });
   $('txCallSel').addEventListener('change', () => {
     if (!iControl()) return render();
-    const own = !!me && $('txCallSel').value === String(me.call).toUpperCase();
-    try { localStorage.setItem('rs.txown', own ? '1' : '0'); } catch (x) {}
-    txcSent = own ? '1' : '0';
-    send({ t: 'txcall', own });
+    const v = $('txCallSel').value;
+    try { localStorage.setItem('rs.txcall', v); } catch (x) {}
+    txcSent = v;
+    send({ t: 'txcall', call: v });
   });
   buildControls();
   bindPtt();

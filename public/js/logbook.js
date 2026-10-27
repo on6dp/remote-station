@@ -159,11 +159,10 @@
       if (!api || !api.iControl || !api.iControl()) { f.station.dataset.manual = '1'; return; }
       const v = f.station.value;
       const mine = String(me.call || '').toUpperCase();
-      const club = String(me.digiCall || '').toUpperCase();
-      if (v !== mine && v !== club) return;
-      const own = v === mine;
-      try { localStorage.setItem('rs.txown', own ? '1' : '0'); } catch (e) { /* */ }
-      api.send({ t: 'txcall', own });
+      const clubs = (Array.isArray(me.clubCalls) && me.clubCalls.length ? me.clubCalls : [me.digiCall || '']).map((c) => String(c).toUpperCase());
+      if (v !== mine && clubs.indexOf(v) < 0) return;
+      try { localStorage.setItem('rs.txcall', v); } catch (e) { /* */ }
+      api.send({ t: 'txcall', call: v });
     });
     f.gridsquare.addEventListener('input', () => { f.gridsquare.value = f.gridsquare.value.toUpperCase(); });
     f.freq.addEventListener('change', qoCheck);
@@ -997,7 +996,7 @@
     },
     mount,
     onHello(h) {
-      me = { call: h.call, admin: !!h.admin, rxOnly: !!h.rxOnly, digiCall: h.digiCall || '' };
+      me = { call: h.call, admin: !!h.admin, rxOnly: !!h.rxOnly, digiCall: h.digiCall || '', clubCalls: Array.isArray(h.clubCalls) ? h.clubCalls : [] };
       if (h.digiCall && calls.indexOf(h.digiCall) < 0) calls = [h.digiCall].concat(calls);
       rights();
       stale = true;

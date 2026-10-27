@@ -76,8 +76,12 @@ const DEFAULTS = {
   swrHoldMs: 700,
   // Déconnexion automatique d'un membre resté inactif (0 = jamais). Jamais pendant une émission.
   sessionIdleMinutes: 15,
+  // Indicatifs jamais déconnectés pour inactivité (seulement par « Déconnexion ») ; la main reste libérée après controlIdleMinutes
+  idleExempt: ['ON6DP', 'ON4LUC'],
   // Modes numériques : indicatif émis (FT8, FT4, RTTY, CW) et locator de la station (messages CQ)
   digiCall: 'ON5VL',
+  // Indicatifs du club proposés dans « TX call » (émissions numériques, CW, SSTV, carnet), en plus de digiCall et stationCall
+  clubCalls: ['ON5VL', 'OR0L'],
   stationGrid: '',
   stationQth: 'LIEGE',
   // QO-100 : fréquence de la FI (MHz) qui correspond à 2400,000 MHz pour chaque convertisseur 2,4 GHz
@@ -595,16 +599,21 @@ function setLogCfg(n) {
 const ftTxSlots = [];
 const norm = (s) => String(s || '').toUpperCase().replace(/\s+/g, ' ').trim();
 // « Émettre sous » (modes numériques) : indicatif de celui qui a la main s'il l'a choisi, sinon celui de la station (digiCall)
-const txOwn = new Map(); // indicatif du membre → true s'il veut émettre sous son propre indicatif
+const txChoice = new Map(); // indicatif du membre → TX call choisi (un indicatif du club, ou le sien)
 const ownCallOk = (u) => !!(u && u.tx && !u.rxOnly && /^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}[A-Z](\/[A-Z0-9]{1,4})?$/.test(String(u.call || '')));
-function txCall() {
-  const c = controller;
-  if (c && txOwn.get(c.user.call) && ownCallOk(c.user)) return String(c.user.call).toUpperCase();
+/** TX call que ce membre utiliserait (choix valable, sinon l'indicatif principal de la station) */
+function txCallFor(u) {
+  const ch = u ? txChoice.get(u.call) : '';
+  if (ch && ch === String(u.call).toUpperCase() && ownCallOk(u)) return ch;
+  if (ch && stationCalls().indexOf(ch) >= 0) return ch;
   return String(cfg.digiCall || 'ON5VL').toUpperCase();
+}
+function txCall() {
+  return controller ? txCallFor(controller.user) : String(cfg.digiCall || 'ON5VL').toUpperCase();
 }
 // Indicatifs « à nous » pour les modes numériques : ceux de la station + celui sous lequel on émet en ce moment
 const myCalls = () => Array.from(new Set(stationCalls().concat(txCall())));
-const stationCalls = () => Array.from(new Set([cfg.digiCall].concat(String(cfg.stationCall || '').split(/[\s/,]+/)).map((c) => String(c || '').toUpperCase()).filter((c) => /^[A-Z0-9]{3,10}$/.test(c))));
+const stationCalls = () => Array.from(new Set([cfg.digiCall].concat(Array.isArray(cfg.clubCalls) ? cfg.clubCalls : [], String(cfg.stationCall || '').split(/[\s/,]+/)).map((c) => String(c || '').toUpperCase()).filter((c) => /^[A-Z0-9]{3,10}$/.test(c))));
 const sync = new Sync({
   book, version: VERSION, station: String(cfg.digiCall || 'ON5VL').toUpperCase(), urls: cfg.logUrls, // logUrls : essais seulement
   getCfg: () => logCfg,
@@ -757,6 +766,11 @@ function fairAsker(now) {
   }
   return best;
 }
+/** Membre jamais déconnecté pour inactivité (idleExempt : ON6DP, ON4LUC par défaut). */
+function idleExempt(c) {
+  const l = Array.isArray(cfg.idleExempt) ? cfg.idleExempt.map((x) => String(x).toUpperCase()) : [];
+  return !!(c && c.user && l.indexOf(c.user.call) >= 0);
+}
 /** Décompte affiché à l'opérateur qui a la main : libération sans action, déconnexion, passage de main (équité). */
 function ctlTimer(now) {
   const c = controller;
@@ -765,7 +779,7 @@ function ctlTimer(now) {
   const busy = !!(ptt.active || radio.tx || ftxPend || cwJob || (seq && seq.on));
   let idle = cfg.controlIdleMinutes * 60000 - (now - lastCtrlActivity);
   const lim = Number(cfg.sessionIdleMinutes) * 60000;
-  if (lim > 0) idle = Math.min(idle, lim - (now - (c.lastActive || now)));
+  if (lim > 0 && !idleExempt(c)) idle = Math.min(idle, lim - (now - (c.lastActive || now)));
   const warnS = Math.max(15, Number(cfg.controlWarnSeconds) || 120);
   send(c, { t: 'ctl_timer', idle: busy ? null : Math.max(0, Math.round(idle)), busy,
     fair: fair.warnAt ? Math.max(0, Math.round(fair.warnAt + warnS * 1000 - now)) : 0, to: fair.warnAt && fair.to ? fair.to.user.call : '',
@@ -1891,6 +1905,7 @@ setInterval(() => {
   const lim = Number(cfg.sessionIdleMinutes) * 60000;
   if (lim > 0) {
     for (const c of ops) {
+      if (idleExempt(c)) continue;
       const idle = now - (c.lastActive || now);
       const warnMs = Math.min(60000, lim / 4);
       if (idle > lim - warnMs && !c.idleWarned) {
@@ -1992,8 +2007,9 @@ function loggedIn(conn, call, rec, sessionTok) {
     clubName: cfg.clubName,
     stationCall: cfg.stationCall,
     rigs: Object.keys(DRIVERS).map((id) => ({ id, name: DRIVERS[id].NAME })),
-    sessionIdleMinutes: cfg.sessionIdleMinutes,
+    sessionIdleMinutes: idleExempt(conn) ? 0 : cfg.sessionIdleMinutes,
     digiCall: String(cfg.digiCall || '').toUpperCase(),
+    clubCalls: stationCalls(),
     subCat: !!cfg.ftx1SubCat,
     subSingle: !!cfg.ftx1SubSingle,
     qsyOrigins: qsyOrigins(),
@@ -2353,11 +2369,14 @@ function onOperator(conn, m) {
     }
 
     case 'txcall': {
-      // Choix « Émettre sous » : son indicatif ou celui de la station (modes numériques)
-      const own = !!m.own;
-      if (own && !ownCallOk(conn.user)) return send(conn, { t: 'notice', level: 'error', msg: 'Votre indicatif ne peut pas émettre (compte d’écouteur ou sans émission).' });
-      if (seq && seq.on && controller === conn && (txOwn.get(conn.user.call) || false) !== own) return send(conn, { t: 'notice', level: 'warn', msg: 'Arrêtez d’abord l’émission automatique en cours (■ Arrêter) pour changer d’indicatif.' });
-      txOwn.set(conn.user.call, own);
+      // Choix « TX call » : un indicatif du club (ON5VL, OR0L…) ou le sien (anciennes pages : own = true / false)
+      const mine = String(conn.user.call).toUpperCase();
+      let want = typeof m.call === 'string' ? m.call.toUpperCase().trim() : m.own ? mine : String(cfg.digiCall || 'ON5VL').toUpperCase();
+      if (want === mine && stationCalls().indexOf(want) < 0 && !ownCallOk(conn.user)) return send(conn, { t: 'notice', level: 'error', msg: 'Votre indicatif ne peut pas émettre (compte d’écouteur ou sans émission).' });
+      if (want !== mine && stationCalls().indexOf(want) < 0) return send(conn, { t: 'notice', level: 'error', msg: 'Indicatif ' + want + ' non prévu comme TX call' });
+      const before = txCallFor(conn.user);
+      if (seq && seq.on && controller === conn && before !== want) return send(conn, { t: 'notice', level: 'warn', msg: 'Arrêtez d’abord l’émission automatique en cours (■ Arrêter) pour changer d’indicatif.' });
+      txChoice.set(conn.user.call, want);
       return broadcast();
     }
 
