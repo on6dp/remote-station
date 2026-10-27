@@ -68,16 +68,20 @@ Le `chown` est **obligatoire** après chaque décompression, sinon les commandes
 
 ### 2. Gérer les membres
 
-```bash
-cd /opt/remote-station
-```
+Les commandes se lancent dans PuTTY, en root ou avec `sudo`. Le chemin complet `/opt/remote-station/adduser.js` permet de les taper depuis n'importe quel dossier (depuis `/home/on6dp`, `node adduser.js` seul répond « Cannot find module »).
+
 | Action | Commande |
 |---|---|
-| Ajouter un membre (ou changer son mot de passe) | `sudo -u remotestation node adduser.js ON4XXX` |
-| Ajouter un administrateur | `sudo -u remotestation node adduser.js ON4XXX --admin` |
-| Membre sans émission | `sudo -u remotestation node adduser.js ON4XXX --no-tx` |
-| Supprimer un membre | `sudo -u remotestation node adduser.js --del ON4XXX` |
-| Lister les membres | `sudo -u remotestation node adduser.js --list` |
+| Ajouter un membre (ou changer son mot de passe) | `sudo -u remotestation node /opt/remote-station/adduser.js ON4XXX` |
+| Ajouter un administrateur | `sudo -u remotestation node /opt/remote-station/adduser.js ON4XXX --admin` |
+| Membre sans émission | `sudo -u remotestation node /opt/remote-station/adduser.js ON4XXX --no-tx` |
+| Supprimer un membre | `sudo -u remotestation node /opt/remote-station/adduser.js --del ON4XXX` |
+| Lister les membres | `sudo -u remotestation node /opt/remote-station/adduser.js --list` |
+
+- Le mot de passe est **demandé deux fois** ; les caractères ne s'affichent pas pendant la frappe (normal). 8 caractères au moins.
+- Le compte est actif tout de suite (pas de redémarrage). Relancer la même commande sur un compte existant **remplace son mot de passe**.
+- Indicatifs belges seulement (ON, OO, OP, OQ, OR, OS, OT). Limites automatiques : ON2 100 W, ON3 25 W et bandes de la licence de base, ONL jamais en émission.
+- Remettre le mot de passe au membre en privé (de vive voix, message personnel), jamais dans un groupe.
 
 Créer plusieurs comptes d'un coup (un indicatif par ligne dans `membres.txt`, copié dans `/home/on6dp`) :
 
