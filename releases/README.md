@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.24.7 | [RemoteStation-Setup-0.24.7.exe](0.24.7/RemoteStation-Setup-0.24.7.exe) | [remote-station-0.24.7.tar.gz](0.24.7/remote-station-0.24.7.tar.gz) | Membres en ordre d'affiliation : désactivation et date de fin d'accès — [empreintes SHA-256](0.24.7/SHA256SUMS.txt) |
 | 0.24.6 | [RemoteStation-Setup-0.24.6.exe](0.24.6/RemoteStation-Setup-0.24.6.exe) | [remote-station-0.24.6.tar.gz](0.24.6/remote-station-0.24.6.tar.gz) | Statistiques d'utilisation (/stats) ; repères FT8 / WSPR / JT65 / JTTY glissés en continu ; ON5VL sans déconnexion automatique — [empreintes SHA-256](0.24.6/SHA256SUMS.txt) |
 | 0.24.5 | [RemoteStation-Setup-0.24.5.exe](0.24.5/RemoteStation-Setup-0.24.5.exe) | [remote-station-0.24.5.tar.gz](0.24.5/remote-station-0.24.5.tar.gz) | Discussion : clignotement et bip ; ON6DP / ON4LUC jamais déconnectés par la minuterie ; largeur SSTV réglable — [empreintes SHA-256](0.24.5/SHA256SUMS.txt) |
 | 0.24.4 | [RemoteStation-Setup-0.24.4.exe](0.24.4/RemoteStation-Setup-0.24.4.exe) | [remote-station-0.24.4.tar.gz](0.24.4/remote-station-0.24.4.tar.gz) | SSTV : format d'image conseillé 800 × 600 — [empreintes SHA-256](0.24.4/SHA256SUMS.txt) |

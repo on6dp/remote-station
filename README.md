@@ -11,7 +11,7 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.24.6** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.24.7** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
 **Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
 `remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
@@ -76,12 +76,19 @@ Les commandes se lancent dans PuTTY, en root ou avec `sudo`. Le chemin complet `
 | Ajouter un administrateur | `sudo -u remotestation node /opt/remote-station/adduser.js ON4XXX --admin` |
 | Membre sans émission | `sudo -u remotestation node /opt/remote-station/adduser.js ON4XXX --no-tx` |
 | Supprimer un membre | `sudo -u remotestation node /opt/remote-station/adduser.js --del ON4XXX` |
-| Lister les membres | `sudo -u remotestation node /opt/remote-station/adduser.js --list` |
+| Lister les membres (avec désactivés et dates de fin) | `sudo -u remotestation node /opt/remote-station/adduser.js --list` |
+| **Désactiver** un membre (affiliation non renouvelée) | `sudo -u remotestation node /opt/remote-station/adduser.js --disable ON4XXX` |
+| Le **réactiver** | `sudo -u remotestation node /opt/remote-station/adduser.js --enable ON4XXX` |
+| Accès **jusqu'à une date** (fin d'affiliation) | `sudo -u remotestation node /opt/remote-station/adduser.js --until ON4XXX 2027-03-31` |
+| Retirer la date de fin | `sudo -u remotestation node /opt/remote-station/adduser.js --until ON4XXX` |
+| Même date pour **tous** les membres (sauf administrateurs) | `sudo -u remotestation node /opt/remote-station/adduser.js --until-all 2027-03-31` |
 
 - Le mot de passe est **demandé deux fois** ; les caractères ne s'affichent pas pendant la frappe (normal). 8 caractères au moins.
 - Le compte est actif tout de suite (pas de redémarrage). Relancer la même commande sur un compte existant **remplace son mot de passe**.
 - Indicatifs belges seulement (ON, OO, OP, OQ, OR, OS, OT). Limites automatiques : ON2 100 W, ON3 25 W et bandes de la licence de base, ONL jamais en émission.
 - Remettre le mot de passe au membre en privé (de vive voix, message personnel), jamais dans un groupe.
+
+**Membres de la section LGE seulement.** Un membre qui ne renouvelle pas son affiliation est **désactivé** (`--disable`) plutôt que supprimé : son compte, ses QSO au carnet et ses statistiques restent, et `--enable` le rétablit dès qu'il est en ordre. Avec une **date de fin** (`--until`, ou `--until-all` pour tout le monde en début d'année), l'accès s'arrête tout seul le lendemain de cette date ; à chaque renouvellement, il suffit de reporter la date. Dans les deux cas : connexion refusée avec le message « Compte … désactivé / expiré le … : accès réservé aux membres en ordre d'affiliation », et une session déjà ouverte est fermée dans les 30 secondes. Le message n'apparaît qu'avec le bon mot de passe (un inconnu voit seulement « Indicatif ou mot de passe incorrect »).
 
 Créer plusieurs comptes d'un coup (un indicatif par ligne dans `membres.txt`, copié dans `/home/on6dp`) :
 

@@ -959,7 +959,7 @@ function stationAdmin(req) {
     return { call: 'STATION' };
   }
   const rec = s && s.exp > now ? auth.loadUsers(USERS_FILE)[s.call] : null;
-  if (!rec || rec.disabled || !rec.admin) {
+  if (!rec || auth.userOff(rec) || !rec.admin) {
     if (s) { delete stSess[h]; saveStSess(); }
     return null;
   }
@@ -997,7 +997,7 @@ async function stationLoginPost(req, res) {
   if (fl && fl.until > now) return sendStationLogin(res, 'Trop d’essais, réessayez dans quelques minutes.', 429);
   const call = auth.normCall(f.get('call'));
   const rec = auth.validCall(call, cfg.allowedPrefixes) ? auth.loadUsers(USERS_FILE)[call] : null;
-  const ok = rec && !rec.disabled && (await auth.verifyPassword(String(f.get('pass') || ''), rec));
+  const ok = rec && !auth.userOff(rec) && (await auth.verifyPassword(String(f.get('pass') || ''), rec));
   if (!ok) {
     const n = (fl && !(fl.until && fl.until <= now) ? fl.n : 0) + 1;
     fails.set(ip, { n, until: n >= 5 ? now + 10 * 60000 : 0 });
@@ -1954,6 +1954,27 @@ setInterval(() => {
 }, 250);
 
 // ---------------------------------------------------------------- messages opérateurs
+const offMsg = (call, why) => 'Compte ' + call + ' ' + (why === 'désactivé' ? 'désactivé' : why) + ' : l’accès à la Remote Station est réservé aux membres en ordre d’affiliation à la section. Contactez un administrateur (' +
+  (Array.isArray(cfg.stationEditors) ? cfg.stationEditors.join(', ') : 'ON6DP') + ').';
+// Compte désactivé, supprimé ou expiré pendant qu'il est connecté : session fermée dans la minute
+setInterval(() => {
+  if (!ops.size) return;
+  let users;
+  try { users = auth.loadUsers(USERS_FILE); } catch (e) { return; }
+  for (const c of Array.from(ops)) {
+    const rec = users[c.user.call];
+    const off = rec ? auth.userOff(rec) : 'supprimé';
+    if (!off) continue;
+    if (controller === c) { stopPtt('compte ' + off); controller = null; }
+    send(c, { t: 'session_end', level: 'error', msg: offMsg(c.user.call, off) });
+    journal('session_off', { call: c.user.call, ip: c.ip, why: off });
+    dropSession(c);
+    ops.delete(c);
+    try { c.close(4007, 'compte hors service'); } catch (e) { /* */ }
+    broadcast();
+  }
+}, 30000);
+
 async function onLogin(conn, m) {
   const now = Date.now();
   if (typeof m.session === 'string' && m.session) {
@@ -1961,7 +1982,7 @@ async function onLogin(conn, m) {
     const h = sessHash(m.session);
     const s = sessions[h];
     const rec = s && s.exp > now ? auth.loadUsers(USERS_FILE)[s.call] : null;
-    if (!rec || rec.disabled || !auth.validCall(s.call, cfg.allowedPrefixes)) {
+    if (!rec || auth.userOff(rec) || !auth.validCall(s.call, cfg.allowedPrefixes)) {
       if (s) { delete sessions[h]; saveSessions(); }
       return send(conn, { t: 'login_fail', session: true, msg: '' });
     }
@@ -1981,7 +2002,7 @@ async function onLogin(conn, m) {
     return setTimeout(() => send(conn, { t: 'login_fail', msg: 'Accès réservé aux indicatifs belges (' + cfg.allowedPrefixes.join(', ') + ')' }), 600);
   }
   const rec = users[call];
-  const ok = rec && !rec.disabled && (await auth.verifyPassword(m.pass, rec));
+  const ok = rec && (await auth.verifyPassword(m.pass, rec));
   if (!ok) {
     const expired = f && f.until && f.until <= now;
     const n = (f && !expired ? f.n : 0) + 1;
@@ -1990,6 +2011,12 @@ async function onLogin(conn, m) {
     return setTimeout(() => send(conn, { t: 'login_fail', msg: 'Indicatif ou mot de passe incorrect' }), 600);
   }
   fails.delete(conn.ip);
+  // Bon mot de passe mais compte hors service (affiliation non renouvelée…) : on le dit clairement
+  const off = auth.userOff(rec);
+  if (off) {
+    journal('login_refused_off', { call, ip: conn.ip, why: off });
+    return send(conn, { t: 'login_fail', msg: offMsg(call, off) });
+  }
   const tok = newSession(call);
   if (tok) conn.sessHash = sessHash(tok);
   return loggedIn(conn, call, rec, tok);
@@ -2000,7 +2027,7 @@ function onStats(conn, m, authTimer) {
   const now = Date.now();
   const s = typeof m.session === 'string' && m.session ? sessions[sessHash(m.session)] : null;
   const rec = s && s.exp > now ? auth.loadUsers(USERS_FILE)[s.call] : null;
-  if (!rec || rec.disabled) return send(conn, { t: 'stats_fail', msg: 'Connectez-vous d’abord au dashboard dans ce navigateur (compte administrateur), puis rechargez cette page.' });
+  if (!rec || auth.userOff(rec)) return send(conn, { t: 'stats_fail', msg: 'Connectez-vous d’abord au dashboard dans ce navigateur (compte administrateur), puis rechargez cette page.' });
   if (!rec.admin) return send(conn, { t: 'stats_fail', msg: 'Statistiques réservées aux administrateurs.' });
   clearTimeout(authTimer);
   conn.statsCall = s.call;
