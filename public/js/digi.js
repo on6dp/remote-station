@@ -439,12 +439,50 @@
     if (b) b.setAttribute('aria-pressed', String(follow));
   }
   // Celui qui a la main annonce l'onglet affiché (la fenêtre séparée s'en charge quand les modes y sont ouverts)
+  // … avec ses repères sur la cascade (RTTY A / B, CW, RX / TX des modes FT), pour que ceux qui le suivent les voient bouger
+  let viewTimer = null;
+  function viewMarks() {
+    const rt = (r) => ({ f: Math.round(r.f), shift: r.shift, baud: r.baud, rev: !!r.rev });
+    return { rtty: [rt(rts[0]), rt(rts[1])], rtTx, cw: { f: Math.round(cwc.f), bw: cwc.bw }, rx: rxF, tx: txF };
+  }
   function sendView() {
     if (!api || !api.iControl() || (detached && !POPUP)) return;
-    const k = tab + '/' + (tab === 'ftx' || tab === 'jt65' ? mode : '');
+    const marks = viewMarks();
+    const k = tab + '/' + (tab === 'ftx' || tab === 'jt65' ? mode : '') + '/' + JSON.stringify(marks);
     if (k === viewSent) return;
+    if (viewTimer) return; // au plus un envoi toutes les 150 ms pendant un glisser
     viewSent = k;
-    api.send({ t: 'view', tab, mode: tab === 'ftx' || tab === 'jt65' ? mode : null });
+    api.send({ t: 'view', tab, mode: tab === 'ftx' || tab === 'jt65' ? mode : null, marks });
+    viewTimer = setTimeout(() => { viewTimer = null; sendView(); }, 150);
+  }
+  // Repères de l'opérateur suivi, repris ici (et par les décodeurs de cette page, pour lire le même signal)
+  let marksSeen = '';
+  function followMarks(m) {
+    if (!m || typeof m !== 'object') return;
+    const k = JSON.stringify(m);
+    if (k === marksSeen) return;
+    marksSeen = k;
+    let rt = false;
+    (Array.isArray(m.rtty) ? m.rtty : []).slice(0, 2).forEach((x, ch) => {
+      if (!x || !(x.f > 0)) return;
+      const r = rts[ch];
+      if (r.f === x.f && r.shift === x.shift && r.baud === x.baud && !!r.rev === !!x.rev) return;
+      Object.assign(r, { f: x.f, shift: Number(x.shift) || r.shift, baud: Number(x.baud) || r.baud, rev: !!x.rev });
+      const sfx = RT_SFX[ch];
+      if ($('rtShift' + sfx)) { $('rtShift' + sfx).value = String(r.shift); $('rtBaud' + sfx).value = String(r.baud); $('rtRev' + sfx).setAttribute('aria-pressed', String(r.rev)); }
+      rt = true;
+    });
+    if ((m.rtTx === 0 || m.rtTx === 1) && m.rtTx !== rtTx) { rtTx = m.rtTx; rt = true; if (typeof rtHeads === 'function') rtHeads(); }
+    if (rt) { saveRtty(true); applySpan(); }
+    if (m.cw && m.cw.f > 0 && (m.cw.f !== Math.round(cwc.f) || m.cw.bw !== cwc.bw)) {
+      cwc.f = m.cw.f;
+      if ([50, 100, 200, 400].indexOf(m.cw.bw) >= 0) { cwc.bw = m.cw.bw; if ($('cwBw')) $('cwBw').value = String(cwc.bw); }
+      saveCw(true);
+    }
+    if (m.rx > 0 && m.rx !== rxF) { rxF = m.rx; redrawRx(); if (tab === 'jtty') jtRedraw(); }
+    if (m.tx > 0 && m.tx !== txF) txF = m.tx;
+    drawScale();
+    bmDraw();
   }
   function followView() {
     const st = api && api.state();
@@ -453,6 +491,7 @@
     if (!document.querySelector('#centerPanel .ctab[data-tab="' + v.tab + '"]')) return; // onglet absent ici (fenêtre séparée : Activité, Logs)
     if (v.tab === 'ftx' && v.mode && v.mode !== mode && ['FT8', 'FT4', 'FT2'].indexOf(v.mode) >= 0) setMode(v.mode);
     if (v.tab !== tab) showTab(v.tab);
+    if (v.marks) followMarks(v.marks);
   }
 
   // ------------------------------------------------------------------ onglets
@@ -872,6 +911,7 @@
     store.set('rtty', JSON.stringify(rts[0]));
     store.set('rttyb', JSON.stringify(rts[1]));
     if (reannounce) announce();
+    sendView();
   }
   // Repères Mark (jaune) / Space (bleu) d'un décodeur sur son échelle et sa cascade
   function rttyMarks(c, w, r, mkM, mkS, cols, letter) {
@@ -1752,6 +1792,7 @@
       store.set('rttx', String(rtTx));
       if (applySpan()) drawScale();
       rtHeads();
+      sendView();
       bmDraw();
       dtxState(api && api.state() && api.state().ftx);
     };
@@ -2019,6 +2060,7 @@
   function saveCw(reannounce) {
     store.set('cw', JSON.stringify(cwc));
     if (reannounce) announce();
+    sendView();
   }
   function drawCwMarks(c, w) {
     const x0 = ((cwc.f - cwc.bw / 2) / WF_MAX_HZ) * w;
@@ -3349,6 +3391,7 @@
     drawScale();
     ftxCfg();
     bmDraw();
+    sendView();
   }
   function setRx(f) {
     rxF = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(f)));
@@ -3357,6 +3400,7 @@
     bmDraw();
     redrawRx();
     if (tab === 'jtty') jtRedraw();
+    sendView();
   }
 
   // ------------------------------------------------------------------ listes de messages

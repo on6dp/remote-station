@@ -93,6 +93,8 @@ const DEFAULTS = {
   allowedPrefixes: ['ON', 'OO', 'OP', 'OQ', 'OR', 'OS', 'OT'],
   // Puissance maximale par début d'indicatif (première règle qui correspond), sinon defaultMaxWatts
   powerRules: [{ prefix: 'ON2', maxWatts: 100 }, { prefix: 'ON3', maxWatts: 25 }],
+  // Bandes permises en émission par début d'indicatif (licence de base ON3) ; les autres préfixes : toutes les bandes de txRanges
+  licenceBands: { ON3: ['80m', '40m', '30m', '20m', '15m', '10m', '2m', '70cm'] },
   defaultMaxWatts: 1500,
   // Indicatifs qui ne peuvent jamais émettre (écouteurs ONL), quel que soit leur compte
   rxOnlyPrefixes: ['ONL']
@@ -1037,6 +1039,21 @@ function stationLogout(req, res) {
   res.end();
 }
 
+/** Même réseau : même adresse IPv4, ou même préfixe /64 en IPv6 (chaque appareil d'une maison a sa propre adresse IPv6). */
+function sameNet(a, b) {
+  const norm = (ip) => String(ip || '').replace(/^::ffff:/i, '').toLowerCase();
+  a = norm(a); b = norm(b);
+  if (a === b) return true;
+  if (a.indexOf(':') < 0 || b.indexOf(':') < 0) return false;
+  const p64 = (ip) => {
+    const [h, t] = ip.split('::');
+    const hs = h ? h.split(':') : [];
+    const ts = t !== undefined && t ? t.split(':') : [];
+    const full = t !== undefined ? hs.concat(new Array(Math.max(0, 8 - hs.length - ts.length)).fill('0'), ts) : hs;
+    return full.slice(0, 4).map((x) => parseInt(x || '0', 16)).join(':');
+  };
+  return p64(a) === p64(b);
+}
 function clientIp(req) {
   const xf = req.headers['x-forwarded-for'];
   return (xf ? String(xf).split(',')[0] : req.socket.remoteAddress || '').trim();
@@ -1150,6 +1167,21 @@ function swrLockText() {
 }
 
 // Raison qui empêche cet opérateur d'émettre (PTT ou TUNE), ou null
+// Limites des bandes (Hz, région 1 IARU) pour les règles de licence (licenceBands)
+const LIC_BANDS = { '160m': [1810000, 2000000], '80m': [3500000, 3800000], '60m': [5351500, 5366500], '40m': [7000000, 7200000],
+  '30m': [10100000, 10150000], '20m': [14000000, 14350000], '17m': [18068000, 18168000], '15m': [21000000, 21450000],
+  '12m': [24890000, 24990000], '10m': [28000000, 29700000], '6m': [50000000, 52000000], '4m': [70000000, 70500000],
+  '2m': [144000000, 146000000], '70cm': [430000000, 440000000], '23cm': [1240000000, 1300000000] };
+/** Bande de licence interdite à cet indicatif (ON3 : 80, 40, 30, 20, 15, 10 m, 2 m et 70 cm seulement) → raison, sinon null. */
+function licenceBandWhy(call, hz) {
+  const rules = cfg.licenceBands && typeof cfg.licenceBands === 'object' ? cfg.licenceBands : {};
+  const pre = Object.keys(rules).filter((p) => String(call).startsWith(p.toUpperCase())).sort((a, b) => b.length - a.length)[0];
+  if (!pre || !Array.isArray(rules[pre]) || !(hz > 0)) return null;
+  const ok = rules[pre].some((b) => { const r = LIC_BANDS[String(b).toLowerCase()]; return r && hz >= r[0] && hz <= r[1]; });
+  if (ok) return null;
+  const band = Object.keys(LIC_BANDS).find((b) => hz >= LIC_BANDS[b][0] && hz <= LIC_BANDS[b][1]);
+  return (band ? 'bande ' + band : 'cette fréquence') + ' interdite en émission à la licence ' + pre.toUpperCase() + ' (permises : ' + rules[pre].join(', ') + ')';
+}
 function txBlockReason(conn, forTune) {
   return txw ? 'TXW enfoncé (écoute de la fréquence d’émission) : relâchez-le d’abord' :
     cwJob ? 'émission CW en cours : attendez la fin (ou « ■ Arrêter »)' :
@@ -1161,6 +1193,7 @@ function txBlockReason(conn, forTune) {
     !radio.connected ? 'TRX non connecté' :
     radio.vox ? 'VOX actif au club : coupez-le d’abord' :
     !inTxRange(txFreq()) ? 'fréquence d’émission hors des bandes autorisées' + (radio.txVfo === 1 ? ' (VFO B en SPLIT)' : '') :
+    licenceBandWhy(conn.user.call, txFreq()) ? licenceBandWhy(conn.user.call, txFreq()) :
     radio.power == null ? 'puissance du TRX inconnue' :
     radio.power > conn.user.maxWatts ? 'puissance ' + radio.power + ' W au-delà de votre limite (' + conn.user.maxWatts + ' W)' :
     forTune && radio.tuner == null ? 'pas de boîte d’accord sur ce TRX (FTX-1 : ampli SPA-1 débranché ?)' :
@@ -1185,7 +1218,7 @@ function publicState() {
     ftx: ftxPend ? { id: ftxPend.id, state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call, seconds: ftxPend.seconds, sstv: ftxPend.sstv || undefined } : null,
     txCall: txCall(),
     txw: txw ? txw.conn.user.call : null,
-    view: ctlView && controller && ctlView.conn === controller ? { tab: ctlView.tab, mode: ctlView.mode } : null,
+    view: ctlView && controller && ctlView.conn === controller ? { tab: ctlView.tab, mode: ctlView.mode, marks: ctlView.marks || null } : null,
     txOk: inTxRange(txFreq()),
     txFreq: txFreq(),
     swrLock: swrLocked() ? { freq: swrLock.freq, swr: swrLock.swr != null ? Math.round(swrLock.swr * 10) / 10 : null, tune: !!swrLock.tune, band: swrLock.band || null, text: swrLockText() } : null,
@@ -1921,6 +1954,26 @@ function loggedIn(conn, call, rec, sessionTok) {
   const now = Date.now();
   const rxOnly = auth.isRxOnly(call, cfg.rxOnlyPrefixes);
   conn.user = { call, admin: !!rec.admin, tx: rec.tx !== false && !rxOnly, rxOnly, maxWatts: rxOnly ? 0 : maxWattsFor(call) };
+  // Un compte = une adresse IP à la fois : onglets et appareils d'un même réseau permis ; une connexion depuis une autre
+  // adresse ferme les anciennes (prêt de compte), qui devront retaper le mot de passe. Les administrateurs sont prévenus.
+  const kicked = [];
+  for (const c of ops) {
+    if (c === conn || !c.user || c.user.call !== call || !c.ip || !conn.ip || sameNet(c.ip, conn.ip)) continue;
+    kicked.push(c);
+  }
+  for (const c of kicked) {
+    if (controller === c) { stopPtt('compte ouvert depuis une autre adresse'); controller = null; }
+    send(c, { t: 'session_end', level: 'error', msg: 'Votre compte ' + call + ' vient d’être ouvert depuis une autre adresse internet : session fermée ici. Un compte ne peut servir qu’à un seul opérateur à la fois.' });
+    dropSession(c);
+    ops.delete(c);
+    try { c.close(4006, 'autre adresse'); } catch (e) { /* déjà fermée */ }
+  }
+  if (kicked.length) {
+    journal('session_kicked', { call, ip: conn.ip, old: Array.from(new Set(kicked.map((c) => c.ip))) });
+    const msg = 'Sécurité : le compte ' + call + ' a été ouvert depuis une autre adresse (' + conn.ip + ') ; ancienne session fermée (' + Array.from(new Set(kicked.map((c) => c.ip))).join(', ') + ').';
+    setTimeout(() => { for (const c of ops) if (c.user && c.user.admin) send(c, { t: 'notice', level: 'warn', msg }); }, 300);
+    setTimeout(broadcast, 0);
+  }
   ops.add(conn);
   conn.lastActive = now;
   conn.idleWarned = false;
@@ -2315,8 +2368,18 @@ function onOperator(conn, m) {
       const tab = TABS_OK.indexOf(m.tab) >= 0 ? m.tab : null;
       const mode = ['FT8', 'FT4', 'FT2', 'JT65'].indexOf(m.mode) >= 0 ? m.mode : null;
       if (!tab) return;
-      if (ctlView && ctlView.conn === conn && ctlView.tab === tab && ctlView.mode === mode) return;
-      ctlView = { conn, tab, mode };
+      // Repères de la cascade (RTTY A / B, CW, RX / TX) : nombres seulement
+      const num = (v, lo, hi) => { const n = Number(v); return Number.isFinite(n) && n >= lo && n <= hi ? Math.round(n * 100) / 100 : null; };
+      let marks = null;
+      const mk = m.marks;
+      if (mk && typeof mk === 'object') {
+        const rt = (x) => (x && typeof x === 'object' ? { f: num(x.f, 100, 4000), shift: num(x.shift, 50, 1000), baud: num(x.baud, 10, 300), rev: !!x.rev } : null);
+        marks = { rtty: Array.isArray(mk.rtty) ? mk.rtty.slice(0, 2).map(rt) : null, rtTx: mk.rtTx === 1 ? 1 : 0,
+          cw: mk.cw && typeof mk.cw === 'object' ? { f: num(mk.cw.f, 100, 4000), bw: num(mk.cw.bw, 10, 1000) } : null, rx: num(mk.rx, 0, 4000), tx: num(mk.tx, 0, 4000) };
+      }
+      const mkKey = JSON.stringify(marks);
+      if (ctlView && ctlView.conn === conn && ctlView.tab === tab && ctlView.mode === mode && ctlView.mkKey === mkKey) return;
+      ctlView = { conn, tab, mode, marks, mkKey };
       return broadcast();
     }
 
