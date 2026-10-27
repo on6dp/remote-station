@@ -114,7 +114,10 @@ button, input, select { font: inherit; color: inherit; }
   border: 1px solid var(--v2-vfo-header-border);
 }
 .tb-left, .tb-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.tb-title { color: var(--v2-text-header); letter-spacing: 1px; font-size: 16px; white-space: nowrap; }
+.tb-title { color: var(--v2-text-header); letter-spacing: 1px; font-size: 16px; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 0; }
+/* Logo du club ON5VL avant et après le titre (fond blanc rendu transparent) */
+.tb-logo { height: 40px; width: auto; margin: -6px 14px; flex: none; }
+@media (max-width: 1280px) { .tb-logo { height: 30px; margin: -4px 8px; } }
 .tb-title b { color: var(--v2-text-bright); }
 .tb-title #stationCall { color: var(--main); font-weight: 700; margin-right: 10px; }
 .tb-title #stationCall, .tb-title b { display: inline-block; white-space: nowrap; }
