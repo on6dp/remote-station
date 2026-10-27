@@ -1004,6 +1004,7 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .ss-tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .ss-act { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; }
 .ss-note { padding: 0 8px 8px; flex: none; }
+.ss-fmt { font-size: 11px; color: var(--v2-text-dim); align-self: center; white-space: nowrap; cursor: help; }
 .ss-prog { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--v2-text-secondary); }
 .ss-prog i { width: 110px; height: 8px; border-radius: 4px; background: #0b1018; border: 1px solid var(--v2-border-dark); overflow: hidden; position: relative; }
 .ss-prog b { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #9a78e0, #F2CF4A); }

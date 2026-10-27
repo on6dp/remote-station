@@ -323,7 +323,8 @@
         <div class="dg-h"><span>Émission</span>
           <select id="ssTxMode" aria-label="Mode d'émission"></select><span class="dg-note" id="ssDur"></span></div>
         <div class="ss-src">
-          <label class="btn ss-file" title="Choisir une ou plusieurs images sur votre PC">Images du PC…<input type="file" id="ssFile" accept="image/*" multiple hidden></label>
+          <label class="btn ss-file" title="Choisir une ou plusieurs images sur votre PC (JPG, PNG…). Format conseillé : 800 × 600 (4:3, paysage) ; une autre taille est recadrée au centre. Les images restent dans votre navigateur (10 au plus) ; seule l'image émise passe par le serveur, sans y être gardée.">Images du PC…<input type="file" id="ssFile" accept="image/*" multiple hidden></label>
+          <span class="ss-fmt" title="Format conseillé pour vos images SSTV : 800 × 600 pixels, paysage (4:3). Robot 36 / 72 : sans recadrage ; les autres modes : environ 1 à 3 % coupés à gauche et à droite.">800 × 600 conseillé</span>
           <div class="ss-thumbs" id="ssThumbs"></div>
         </div>
         <div class="ss-txbody">
@@ -344,7 +345,7 @@
             </div>
           </div>
         </div>
-        <p class="dg-tx ss-note" id="ssTxState">Émission SSTV sous <b class="dg-txcall">ON5VL</b> : VFO d'émission en DATA-U, puissance réduite conseillée (émission continue). Clic droit sur une vignette : la retirer · glisser-déposer accepté.</p>
+        <p class="dg-tx ss-note" id="ssTxState">Émission SSTV sous <b class="dg-txcall">ON5VL</b> : VFO d'émission en DATA-U, puissance réduite conseillée (émission continue). Images : 800 × 600 conseillé · clic droit sur une vignette : la retirer · glisser-déposer accepté.</p>
       </div>
     </div>`;
   const SYNC_PANE = `
@@ -2543,7 +2544,7 @@
       ssTx = null;
       if (mask) mask.hidden = true;
       if (!note.querySelector('.dg-txcall')) {
-        note.innerHTML = 'Émission SSTV sous <b class="dg-txcall"></b> : VFO d\'émission en DATA-U, puissance réduite conseillée (émission continue). Clic droit sur une vignette : la retirer · glisser-déposer accepté.';
+        note.innerHTML = 'Émission SSTV sous <b class="dg-txcall"></b> : VFO d\'émission en DATA-U, puissance réduite conseillée (émission continue). Images : 800 × 600 conseillé · clic droit sur une vignette : la retirer · glisser-déposer accepté.';
         note.querySelector('.dg-txcall').textContent = myCall;
       }
     }
