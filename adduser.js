@@ -74,7 +74,7 @@ function askHidden(q) {
   rec.tx = !args.includes('--no-tx') && !rxOnly;
   users[call] = rec;
   auth.saveUsers(USERS, users);
-  const rule = (cfg.powerRules || [{ prefix: 'ON3', maxWatts: 25 }]).find((r) => call.startsWith(String(r.prefix).toUpperCase()));
+  const rule = (cfg.powerRules || [{ prefix: 'ON2', maxWatts: 100 }, { prefix: 'ON3', maxWatts: 25 }]).find((r) => call.startsWith(String(r.prefix).toUpperCase()));
   const watts = rule ? rule.maxWatts : (cfg.defaultMaxWatts || 1500);
   console.log(call + ' enregistré' + (rec.admin ? ' (admin)' : '') + (rec.tx ? ', puissance max ' + watts + ' W' : rxOnly ? ' (écouteur : écoute seule)' : ' (écoute seule)') + '.');
 })();

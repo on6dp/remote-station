@@ -86,7 +86,7 @@ const DEFAULTS = {
   // Seuls ces préfixes peuvent se connecter
   allowedPrefixes: ['ON', 'OO', 'OP', 'OQ', 'OR', 'OS', 'OT'],
   // Puissance maximale par début d'indicatif (première règle qui correspond), sinon defaultMaxWatts
-  powerRules: [{ prefix: 'ON3', maxWatts: 25 }],
+  powerRules: [{ prefix: 'ON2', maxWatts: 100 }, { prefix: 'ON3', maxWatts: 25 }],
   defaultMaxWatts: 1500,
   // Indicatifs qui ne peuvent jamais émettre (écouteurs ONL), quel que soit leur compte
   rxOnlyPrefixes: ['ONL']
@@ -974,11 +974,16 @@ function send(conn, obj) {
   if (conn && conn.open) conn.send(JSON.stringify(obj));
 }
 
+// Limites des licences belges, appliquées même si config.json ne les reprend pas (anciens fichiers de configuration) :
+// ON2 (licence intermédiaire) 100 W, ON3 (licence de base) 25 W. Un réglage plus bas dans powerRules reste prioritaire.
+const LICENCE_MAX_W = [{ prefix: 'ON2', maxWatts: 100 }, { prefix: 'ON3', maxWatts: 25 }];
 function maxWattsFor(call) {
+  let w = Number(cfg.defaultMaxWatts);
   for (const r of cfg.powerRules || []) {
-    if (call.startsWith(String(r.prefix).toUpperCase())) return Number(r.maxWatts);
+    if (call.startsWith(String(r.prefix).toUpperCase())) { w = Number(r.maxWatts); break; }
   }
-  return Number(cfg.defaultMaxWatts);
+  for (const r of LICENCE_MAX_W) if (call.startsWith(r.prefix)) w = Math.min(w, r.maxWatts);
+  return w;
 }
 
 // Ramène la puissance du TRX sous la limite de licence de cet opérateur. Retourne true si une commande a été envoyée.

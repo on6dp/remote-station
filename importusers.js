@@ -18,7 +18,7 @@ const cfgPath = process.env.RS_CONFIG || path.join(__dirname, 'config.json');
 const cfg = fs.existsSync(cfgPath) ? JSON.parse(fs.readFileSync(cfgPath, 'utf8')) : {};
 const USERS = path.resolve(__dirname, cfg.usersFile || 'users.json');
 const PREFIXES = cfg.allowedPrefixes || auth.BE_PREFIXES;
-const POWER_RULES = cfg.powerRules || [{ prefix: 'ON3', maxWatts: 25 }];
+const POWER_RULES = cfg.powerRules || [{ prefix: 'ON2', maxWatts: 100 }, { prefix: 'ON3', maxWatts: 25 }];
 const DEFAULT_W = cfg.defaultMaxWatts || 1500;
 
 // Mot de passe lisible : 10 caractères sans caractères ambigus (pas de 0/O, 1/I/L), ex. "K7QPM-H3XWA"

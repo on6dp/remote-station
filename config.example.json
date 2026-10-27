@@ -47,6 +47,10 @@
   ],
   "powerRules": [
     {
+      "prefix": "ON2",
+      "maxWatts": 100
+    },
+    {
       "prefix": "ON3",
       "maxWatts": 25
     }
