@@ -443,7 +443,7 @@ Vous n'avez <b>aucun logiciel à installer</b> (pas de WSJT-X, FLDIGI…) : tout
   <li><b>Liste des fréquences</b> (en haut de chaque onglet) : choisir une ligne envoie le TRX sur cette fréquence, en <b>DATA-U</b> (en CW pour l'onglet CW). Il faut avoir la main. Le bouton <span class="k">↺</span> à côté ramène le TRX sur la fréquence choisie si quelqu'un a tourné le VFO entre-temps.</li>
   <li><b>Cascade</b> : chaque onglet montre le spectre de 0 à 3000 Hz qui défile. Un signal est un trait coloré ; sa position horizontale est sa fréquence audio.</li>
   <li><b>Ligne d'état</b> (à droite de la barre de l'onglet) : signale les problèmes (station hors ligne, BF non activée, TRX pas en DATA-U…) ou l'état du décodeur.</li>
-  <li><b>Émission</b> en FT8 · FT4 · FT2, RTTY, JTTY et CW, sous le <b>TX call</b> choisi dans la ligne Correspondant (ON5VL ou votre indicatif). Il faut avoir la main et l'émission autorisée. WSPR, JT65 et SSTV sont pour l'instant en <b>réception</b> seulement <span class="later">bientôt</span>.</li>
+  <li><b>Émission</b> en FT8 · FT4 · FT2, RTTY, JTTY, CW et SSTV, sous le <b>TX call</b> choisi dans la ligne Correspondant (ON5VL ou votre indicatif). Il faut avoir la main et l'émission autorisée. WSPR et JT65 sont pour l'instant en <b>réception</b> seulement <span class="later">bientôt</span>.</li>
 </ul>
 <p><b>Réglages de la cascade</b> (au-dessus de l'échelle, communs à tous les onglets et gardés dans votre navigateur)</p>
 <table>
@@ -642,7 +642,8 @@ Choisissez la bande dans la liste ; une dizaine de secondes après chaque minute
 <ul>
   <li><b>Réception</b> : les images arrivent toutes seules (code VIS) et s'affichent ligne après ligne. Modes Martin, Scottie, Robot et PD. La <b>galerie</b> garde les 12 dernières (clic = afficher) ; <span class="k">PNG</span> enregistre l'image affichée sur votre PC.</li>
   <li><b>Préparer une image</b> : <span class="k">Images du PC…</span> (ou glisser-déposer une image), carte CQ, mire ou image reçue ; elle est recadrée au format du mode choisi. Trois lignes de texte (haut, centre, bas) avec les balises <code>&lt;CALL&gt;</code>, <code>&lt;MYCALL&gt;</code>, <code>&lt;RST&gt;</code>… ; taille et couleur du texte. Clic droit sur une vignette : la retirer.</li>
-  <li><span class="k">▶ Écouter</span> joue le signal sur votre PC (sans émettre) ; <span class="k">WAV</span> l'enregistre en fichier. L'émission SSTV arrivera dans une prochaine version.</li>
+  <li><span class="k">▶ Écouter</span> joue le signal sur votre PC (sans émettre) ; <span class="k">WAV</span> l'enregistre en fichier.</li>
+  <li><b>Émettre</b> : avec la main, VFO d'émission en <b>DATA-U</b>, <span class="k">Émettre</span> envoie l'image affichée (au format du mode choisi) au serveur, qui fabrique le signal et le confie à la page Station ; le TRX passe en émission environ une seconde plus tard. Pendant l'émission, la partie de l'image pas encore émise est <b>assombrie</b>, le trait rouge suit la ligne en cours, et la note sous l'image donne la ligne et le temps restant. <span class="k">■ Arrêter</span> ou <span class="k">Échap</span> coupe l'émission. Mêmes sécurités que RTTY (bandes, puissance, ROS, liaison). Durée : de 37 s (Robot 36) à près de 5 min (PD 290) ; la limite des autres modes ne s'applique pas, mais le serveur refuse un mode plus long que son réglage <code>maxSstvSeconds</code> (300 s par défaut). Le TRX émet <b>sans interruption</b> pendant toute l'image : réduisez la puissance (25 à 50 % conseillé).</li>
 </ul>
 
 <h3 id="synchro">12.8 Synchro</h3>

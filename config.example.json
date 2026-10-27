@@ -10,6 +10,7 @@
   "controlIdleMinutes": 15,
   "txSilenceSeconds": 120,
   "txHardMaxSeconds": 300,
+  "maxSstvSeconds": 300,
   "maxSwr": 2.5,
   "swrHoldMs": 700,
   "sessionIdleMinutes": 15,

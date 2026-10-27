@@ -63,6 +63,9 @@ const DEFAULTS = {
   // ou sans interruption pendant txHardMaxSeconds (PTT ou micro bloqué au club…)
   txSilenceSeconds: 120,
   txHardMaxSeconds: 300,
+  // Émission SSTV : durée maximale d'une image (s). Plafonnée à txHardMaxSeconds − 5 (chien de garde de la page Station).
+  // 300 permet tous les modes jusqu'à PD 290 si txHardMaxSeconds le permet ; plus bas pour ménager le PA (100 % du temps en émission).
+  maxSstvSeconds: 300,
   maxSwr: 2.5,
   swrHoldMs: 700,
   // Déconnexion automatique d'un membre resté inactif (0 = jamais). Jamais pendant une émission.
@@ -1102,7 +1105,7 @@ function publicState() {
     // Émission FT8 / FT4 / FT2 programmée ou en cours
     seq: seqPublic(),
     cw: cwPublic(),
-    ftx: ftxPend ? { id: ftxPend.id, state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call, seconds: ftxPend.seconds } : null,
+    ftx: ftxPend ? { id: ftxPend.id, state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call, seconds: ftxPend.seconds, sstv: ftxPend.sstv || undefined } : null,
     txCall: txCall(),
     txw: txw ? txw.conn.user.call : null,
     view: ctlView && controller && ctlView.conn === controller ? { tab: ctlView.tab, mode: ctlView.mode } : null,
@@ -1604,6 +1607,11 @@ function seqCfg(conn, m) {
 // Pas de créneau : le serveur fabrique le signal (RTTY : AFSK ; JTTY : codeur de WSJT-X, lib/bin/jttygen),
 // l'envoie à la page Station, puis met le TRX en émission dès que la page l'a reçu ; retour en réception à la fin.
 const RTTY_GEN = require('./lib/rtty.js').generate;
+const SSTV_ENC = require('./public/js/sstv.js');
+/** Durée maximale d'une émission SSTV (s) : réglage, sans dépasser le chien de garde de la page Station. */
+function sstvMaxSeconds() {
+  return Math.max(30, Math.min(Number(cfg.maxSstvSeconds) || 300, (Number(cfg.txHardMaxSeconds) || 300) - 5));
+}
 const JTTY_GEN = path.join(ROOT, 'lib', 'bin', 'jttygen' + (process.platform === 'win32' ? '.exe' : ''));
 const AUDIO_RATE = 12000;
 function jttyWave(text, f0) {
@@ -1618,7 +1626,21 @@ function jttyWave(text, f0) {
 async function audioRequest(conn, m) {
   const err = (msg) => send(conn, { t: 'notice', level: 'error', msg });
   const mode = String(m.mode || '');
-  if (mode !== 'RTTY' && mode !== 'JTTY') return err('Mode inconnu');
+  if (mode !== 'RTTY' && mode !== 'JTTY' && mode !== 'SSTV') return err('Mode inconnu');
+  // SSTV : image envoyée avant par morceaux (sstv_up), au format du mode (largeur × hauteur × 3 octets RGB)
+  let sstv = null;
+  if (mode === 'SSTV') {
+    const M = SSTV_ENC.MODES[String(m.sstv || '')];
+    if (!M) return err('Mode SSTV inconnu');
+    const up = conn.sstvUp;
+    if (!up || up.id !== String(m.up || '') || up.got !== up.n) return err('Image SSTV incomplète : réessayez');
+    const rgb = Buffer.concat(up.parts);
+    conn.sstvUp = null;
+    if (rgb.length !== M.w * M.h * 3) return err('Image SSTV au mauvais format (' + M.w + ' × ' + M.h + ' attendu)');
+    const d = SSTV_ENC.duration(M.id);
+    if (d > sstvMaxSeconds()) return err('Mode ' + M.name + ' trop long : ' + Math.round(d) + ' s (limite du serveur : ' + sstvMaxSeconds() + ' s) ; choisissez un mode plus court');
+    sstv = { M, rgb };
+  }
   if (controller !== conn) return err('Prenez d’abord la main');
   if (!station || station.caps.indexOf('audiotx') < 0) {
     return err('La page Station du club ne sait pas encore émettre en ' + mode + ' (ancienne version) : ' +
@@ -1631,16 +1653,25 @@ async function audioRequest(conn, m) {
   if (why) return err('Émission refusée : ' + why);
   const md = (radio.txVfo === 1 ? radio.modeB : radio.mode) || '';
   if (!/DATA|USB|PKT|DIG/i.test(md)) return err('Mettez d’abord le VFO d’émission en DATA-U (mode actuel : ' + (md || '?') + ') : le signal ' + mode + ' passe par la carte son');
-  const f0 = Math.round(Number(m.f0));
+  const f0 = sstv ? 1900 : Math.round(Number(m.f0));
   if (!(f0 >= 300 && f0 <= 2800)) return err('Fréquence d’émission audio hors plage (300 à 2800 Hz)');
-  let text = String(m.text || '').toUpperCase().replace(/\r/g, '').replace(/[^\n -~]/g, '').replace(/[ \t]+/g, ' ');
+  let text = sstv ? 'image ' + sstv.M.name : String(m.text || '').toUpperCase().replace(/\r/g, '').replace(/[^\n -~]/g, '').replace(/[ \t]+/g, ' ');
   text = mode === 'JTTY' ? text.replace(/\s*\n\s*/g, ' ').trim() : text.replace(/^\n+|\s+$/g, '');
   if (!text) return err('Rien à émettre : tapez un texte ou choisissez une macro');
   if (text.length > (mode === 'JTTY' ? 160 : 600)) return err('Texte trop long (' + (mode === 'JTTY' ? 160 : 600) + ' caractères au plus)');
   let pcm;
   let charMs = null; // RTTY : fin de chaque caractère (ms depuis le début du signal), pour la page de l'opérateur
   try {
-    if (mode === 'RTTY') {
+    if (sstv) {
+      // Image entière : en-tête VOX + VIS puis lignes (mêmes fréquences que l'aperçu « Écouter » du dashboard)
+      const w = SSTV_ENC.encode(sstv.M.id, sstv.rgb, AUDIO_RATE, 3);
+      pcm = new Int16Array(w.length);
+      const ramp = Math.round(AUDIO_RATE * 0.005);
+      for (let i = 0; i < w.length; i++) {
+        const g = Math.min(1, i / ramp, (w.length - 1 - i) / ramp);
+        pcm[i] = Math.round(w[i] / 0.8 * g * 0.85 * 32767); // crête 0,85 comme RTTY
+      }
+    } else if (mode === 'RTTY') {
       const shift = [170, 200, 425, 850].indexOf(Number(m.shift)) >= 0 ? Number(m.shift) : 170;
       const baud = [45.45, 50, 75, 100].indexOf(Number(m.baud)) >= 0 ? Number(m.baud) : 45.45;
       // Début de ligne propre chez le correspondant : retour chariot + saut de ligne avant le texte
@@ -1669,16 +1700,17 @@ async function audioRequest(conn, m) {
     return err('Émission ' + mode + ' impossible : ' + e.message);
   }
   const seconds = pcm.length / AUDIO_RATE;
-  if (seconds > cfg.maxTxSeconds - 2) return err('Texte trop long : ' + Math.round(seconds) + ' s d’émission (limite du serveur : ' + cfg.maxTxSeconds + ' s)');
+  if (!sstv && seconds > cfg.maxTxSeconds - 2) return err('Texte trop long : ' + Math.round(seconds) + ' s d’émission (limite du serveur : ' + cfg.maxTxSeconds + ' s)');
   if (controller !== conn || ptt.active || ftxPend) return; // situation changée pendant la fabrication du signal
-  const p = { id: ++ftxSeq, conn, mode, text, f0, at: 0, parity: 0, state: 'wait', ready: false, seconds, sent: text.replace(/\n/g, ' ').slice(0, 60), timer: null, ntx: 0, kind: 'audio' };
+  const p = { id: ++ftxSeq, conn, mode, text, f0, at: 0, parity: 0, state: 'wait', ready: false, seconds, sent: text.replace(/\n/g, ' ').slice(0, 60), timer: null, ntx: 0, kind: 'audio',
+    maxS: sstv ? Math.ceil(seconds) + 5 : 0, sstv: sstv ? sstv.M.id : null };
   ftxPend = p;
   lastCtrlActivity = Date.now();
   // Texte exact émis et minutage lettre par lettre : la page de l'opérateur colore chaque lettre une fois partie
   send(conn, { t: 'dtx_text', id: p.id, mode, text, ms: charMs, seconds: Math.round(seconds * 10) / 10 });
   toStation({ t: 'cmd', op: 'audioprep', id: p.id, mode, rate: AUDIO_RATE, data: Buffer.from(pcm.buffer, pcm.byteOffset, pcm.byteLength).toString('base64') });
   // Page Station trop lente à recevoir le signal : abandon
-  p.timer = setTimeout(() => { if (ftxPend === p && !p.ready) ftxCancel('la page Station n’a pas reçu le signal à temps'); }, 20000);
+  p.timer = setTimeout(() => { if (ftxPend === p && !p.ready) ftxCancel('la page Station n’a pas reçu le signal à temps'); }, sstv ? 45000 : 20000);
   broadcast();
 }
 
@@ -1696,7 +1728,7 @@ function ftxKey(p) {
     ftTxSlots.push({ mode: p.mode, slot: Math.floor(p.at / FTX_SLOT[p.mode]) * FTX_SLOT[p.mode], text: p.sent || p.text });
     while (ftTxSlots.length > 30) ftTxSlots.shift();
   }
-  ptt = { active: true, conn: p.conn, since: now, lastBeat: now, digi: { id: p.id, mode: p.mode } };
+  ptt = { active: true, conn: p.conn, since: now, lastBeat: now, digi: { id: p.id, mode: p.mode, maxS: p.maxS || 0 } };
   lastCtrlActivity = now;
   const tv = txSide();
   ptt.rx = radio.vfoSel === 1 ? 1 : 0;
@@ -1727,7 +1759,7 @@ setInterval(() => {
   }
   if (ptt.active) {
     if (!ptt.digi && now - ptt.lastBeat > cfg.pttHeartbeatMs) stopPtt('perte de liaison avec l’opérateur');
-    else if (now - ptt.since > cfg.maxTxSeconds * 1000) stopPtt('durée maximale atteinte (' + cfg.maxTxSeconds + ' s)');
+    else if (now - ptt.since > ((ptt.digi && ptt.digi.maxS) || cfg.maxTxSeconds) * 1000) stopPtt('durée maximale atteinte (' + ((ptt.digi && ptt.digi.maxS) || cfg.maxTxSeconds) + ' s)');
     else toStation({ t: 'txka' });
   }
   // Émission numérique programmée : annulée si l'opérateur n'a plus la main ou si la station a disparu
@@ -2368,6 +2400,24 @@ function onOperator(conn, m) {
     case 'cw_stop':
       if (cwJob && (cwJob.conn === conn || controller === conn || conn.user.admin)) cwEnd('arrêt demandé par ' + conn.user.call, false);
       return;
+
+    case 'sstv_up': {
+      // Image SSTV à émettre, envoyée par morceaux (messages de 64 Ko au plus) : rassemblée ici avant « dtx »
+      if (controller !== conn) return;
+      const id = String(m.id || '').slice(0, 40);
+      const n = Math.round(Number(m.n));
+      const i = Math.round(Number(m.i));
+      if (!id || !(n >= 1 && n <= 64) || !(i >= 0 && i < n)) return;
+      if (!conn.sstvUp || conn.sstvUp.id !== id) conn.sstvUp = { id, n, got: 0, parts: new Array(n), bytes: 0 };
+      const up = conn.sstvUp;
+      if (up.n !== n || up.parts[i]) return;
+      const b = Buffer.from(String(m.data || ''), 'base64');
+      up.bytes += b.length;
+      if (up.bytes > 2 * 1024 * 1024) { conn.sstvUp = null; return send(conn, { t: 'notice', level: 'error', msg: 'Image SSTV trop grande' }); }
+      up.parts[i] = b;
+      up.got++;
+      return;
+    }
 
     case 'dtx':
       audioRequest(conn, m).catch((e) => send(conn, { t: 'notice', level: 'error', msg: 'Émission impossible : ' + e.message }));

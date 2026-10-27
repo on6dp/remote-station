@@ -327,7 +327,7 @@
           <div class="ss-thumbs" id="ssThumbs"></div>
         </div>
         <div class="ss-txbody">
-          <div class="ss-cview"><canvas id="ssCompose" class="ss-compose" width="320" height="256"></canvas></div>
+          <div class="ss-cview"><canvas id="ssCompose" class="ss-compose" width="320" height="256"></canvas><div class="ss-txmask" id="ssTxMask" hidden></div></div>
           <div class="ss-text">
             <input id="ssT0" maxlength="40" spellcheck="false" autocomplete="off" placeholder="Texte en haut" aria-label="Texte en haut" title="Texte en haut de l'image">
             <input id="ssT1" maxlength="40" spellcheck="false" autocomplete="off" placeholder="Texte au centre" aria-label="Texte au centre" title="Texte au centre de l'image">
@@ -340,11 +340,11 @@
             <div class="ss-act">
               <button class="btn" type="button" id="ssPlay" title="Joue le signal SSTV sur les haut-parleurs de votre PC (essai, sans émission)">▶ Écouter</button>
               <button class="btn" type="button" id="ssWav" title="Enregistre le signal SSTV en fichier WAV (essai avec un autre logiciel)">WAV</button>
-              <button class="btn btn-tx" type="button" id="ssSend" disabled>Émettre</button>
+              <button class="btn btn-tx" type="button" id="ssSend">Émettre</button>
             </div>
           </div>
         </div>
-        <p class="dg-tx ss-note">Émission SSTV sous <b class="dg-txcall">ON5VL</b> : avec l'émission des modes numériques (prochaine version). Clic droit sur une vignette : la retirer · glisser-déposer accepté.</p>
+        <p class="dg-tx ss-note" id="ssTxState">Émission SSTV sous <b class="dg-txcall">ON5VL</b> : VFO d'émission en DATA-U, puissance réduite conseillée (émission continue). Clic droit sur une vignette : la retirer · glisser-déposer accepté.</p>
       </div>
     </div>`;
   const SYNC_PANE = `
@@ -2447,6 +2447,102 @@
     const px = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
     return SSTV.encode(id, px, rate, 4);
   }
+  // ------------------------------------------------------------------ émission SSTV par le TRX
+  // L'image composée (au format du mode) part au serveur par morceaux, qui fabrique le signal et le confie à la page Station,
+  // comme RTTY / JTTY. Pendant l'émission, la partie de l'image pas encore émise est assombrie, ligne après ligne.
+  var ssTx = null;
+  var ssTxTimer = null;
+  function ssSendClick() {
+    if (!api) return;
+    const st = api.state();
+    const x = st && st.ftx;
+    if (x && x.mode === 'SSTV') return api.send({ t: 'ftx_stop' });
+    if (st && (x || (st.ptt && st.ptt.active) || st.cw)) return api.say('Émission en cours : attendez la fin (ou « ■ Arrêter »).', 'warn');
+    if (!api.iControl()) return api.say('Prenez la main pour émettre.', 'warn');
+    if (ssPlayer) ssPlay(); // arrêt de l'écoute locale
+    ssCompose();
+    const c = $('ssCompose');
+    const id = $('ssTxMode').value;
+    const M = SSTV.MODES[id];
+    if (!M || c.width !== M.w || c.height !== M.h) return api.say('Image pas prête : réessayez.', 'warn');
+    const px = c.getContext('2d').getImageData(0, 0, M.w, M.h).data;
+    const rgb = new Uint8Array(M.w * M.h * 3);
+    for (let i = 0, j = 0; i < px.length; i += 4) { rgb[j++] = px[i]; rgb[j++] = px[i + 1]; rgb[j++] = px[i + 2]; }
+    // Morceaux de 42 000 octets (≈ 56 Ko en base64, sous la limite de 64 Ko par message)
+    const CH = 42000;
+    const n = Math.ceil(rgb.length / CH);
+    const up = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    for (let i = 0; i < n; i++) {
+      const part = rgb.subarray(i * CH, Math.min(rgb.length, (i + 1) * CH));
+      let bin = '';
+      for (let k = 0; k < part.length; k += 8192) bin += String.fromCharCode.apply(null, part.subarray(k, k + 8192));
+      api.send({ t: 'sstv_up', id: up, i, n, data: btoa(bin) });
+    }
+    api.send({ t: 'dtx', mode: 'SSTV', sstv: id, up });
+    api.say('Image ' + M.name + ' envoyée au serveur, préparation de l’émission…', 'info');
+  }
+  function ssTxState(x) {
+    const b = $('ssSend');
+    const note = $('ssTxState');
+    const mask = $('ssTxMask');
+    if (!b || !note) return;
+    const mine = !!(x && x.mode === 'SSTV');
+    b.textContent = mine ? '■ Arrêter' : 'Émettre';
+    b.classList.toggle('on-air', mine && x.state === 'tx');
+    note.classList.toggle('air', mine && x.state === 'tx');
+    if (mine) {
+      const M = SSTV.MODES[x.sstv] || null;
+      ssTx = { x, M };
+      if (!ssTxTimer) ssTxTimer = setInterval(ssTxTick, 250);
+      ssTxTick();
+    } else {
+      if (ssTxTimer) { clearInterval(ssTxTimer); ssTxTimer = null; }
+      ssTx = null;
+      if (mask) mask.hidden = true;
+      if (!note.querySelector('.dg-txcall')) {
+        note.innerHTML = 'Émission SSTV sous <b class="dg-txcall"></b> : VFO d\'émission en DATA-U, puissance réduite conseillée (émission continue). Clic droit sur une vignette : la retirer · glisser-déposer accepté.';
+        note.querySelector('.dg-txcall').textContent = myCall;
+      }
+    }
+  }
+  function ssTxTick() {
+    const T = ssTx;
+    const note = $('ssTxState');
+    const mask = $('ssTxMask');
+    if (!T || !note) return;
+    const x = T.x;
+    const M = T.M;
+    const name = M ? M.name : 'SSTV';
+    if (x.state !== 'tx') {
+      note.textContent = 'Préparation de l’émission SSTV (' + name + ', ' + Math.round(x.seconds || 0) + ' s) : signal envoyé à la page Station…';
+      if (mask) { mask.hidden = !M; if (M) ssMask(mask, 0, M); }
+      return;
+    }
+    const t = (now() - x.at) / 1000;
+    const left = Math.max(0, Math.ceil((x.seconds || 0) - t));
+    let frac = 0;
+    if (M) {
+      const head = (8 * 100 + 300 + 10 + 300 + 300 + (M.first ? M.first[0][1] : 0)) / 1000;
+      const body = M.line * M.h / M.rows / 1000;
+      frac = Math.max(0, Math.min(1, (t - head) / body));
+    }
+    note.textContent = '● En émission SSTV (' + x.by + ', ' + name + ') — ' + (t < 1.6 ? 'en-tête VIS' : 'ligne ' + Math.round(frac * (M ? M.h : 0)) + ' / ' + (M ? M.h : '?')) + ' · fin dans ' + Math.floor(left / 60) + ' min ' + String(left % 60).padStart(2, '0') + ' s';
+    if (mask && M) { mask.hidden = false; ssMask(mask, frac, M); }
+  }
+  /** Assombrit la partie de l'image pas encore émise (sous la ligne en cours), dans le cadre réel de l'image affichée. */
+  function ssMask(mask, frac, M) {
+    const box = mask.parentElement.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+    const k = Math.min(box.width / M.w, box.height / M.h);
+    const iw = M.w * k;
+    const ih = M.h * k;
+    const left = (box.width - iw) / 2;
+    const top = (box.height - ih) / 2;
+    mask.style.left = left + 'px';
+    mask.style.width = iw + 'px';
+    mask.style.top = (top + ih * frac) + 'px';
+    mask.style.height = Math.max(0, ih * (1 - frac)) + 'px';
+  }
   let ssPlayer = null;
   function ssPlay() {
     if (ssPlayer) { try { ssPlayer.src.stop(); ssPlayer.ctx.close(); } catch (e) {} ssPlayer = null; $('ssPlay').textContent = '▶ Écouter'; return; }
@@ -2523,7 +2619,8 @@
     $('ssFile').addEventListener('change', (e) => { ssLoadFiles(e.target.files); e.target.value = ''; });
     $('ssPlay').addEventListener('click', ssPlay);
     $('ssWav').addEventListener('click', ssWav);
-    $('ssSend').title = 'Émission SSTV : prochaine version';
+    $('ssSend').title = 'Émet l’image ci-contre par le TRX (VFO d’émission en DATA-U) · pendant l’émission : arrêt (ou Échap)';
+    $('ssSend').addEventListener('click', ssSendClick);
     // Glisser-déposer d'images sur la zone d'émission
     const zone = document.querySelector('.ss-tx');
     zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drop'); });
@@ -2985,6 +3082,7 @@
     const sq = st && st.seq;
     const el = $('dgTxState');
     dtxState(x);
+    ssTxState(x);
     const mine = !!(sq && sq.by === opCall);
     if ($('dgStop')) $('dgStop').disabled = !(x || (sq && sq.on) || (st && st.ptt && st.ptt.digi));
     // Séquence automatique : le message choisi et le correspondant suivent ce que décide le serveur
@@ -3678,7 +3776,7 @@
       initMsgs();
       // Touches F1 à F12 dans la fenêtre RTTY : macros (comme FLDIGI)
       document.addEventListener('keydown', (e) => {
-        const MODE = { rtty: 'RTTY', jtty: 'JTTY', cw: 'CW' }[tab];
+        const MODE = { rtty: 'RTTY', jtty: 'JTTY', cw: 'CW', sstv: 'SSTV' }[tab];
         if (!MODE || detached || e.ctrlKey || e.altKey || e.metaKey) return;
         // Échap : arrête l'émission RTTY / JTTY en cours (comme « ■ Arrêter »)
         if (e.key === 'Escape') {
@@ -3689,7 +3787,7 @@
           return;
         }
         const n = /^F(\d{1,2})$/.exec(e.key);
-        if (!n) return;
+        if (!n || MODE === 'SSTV') return;
         const m = macroList(MODE)[Number(n[1]) - 1];
         if (!m) return;
         e.preventDefault();

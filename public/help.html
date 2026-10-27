@@ -443,7 +443,7 @@ You have <b>no software to install</b> (no WSJT-X, FLDIGI…): everything happen
   <li><b>Frequency list</b> (at the top of each tab): choosing a line sends the TRX to that frequency, in <b>DATA-U</b> (in CW for the CW tab). You need control. The <span class="k">↺</span> button next to it brings the TRX back to the chosen frequency if someone has turned the VFO in the meantime.</li>
   <li><b>Waterfall</b>: each tab shows the scrolling spectrum from 0 to 3000 Hz. A signal is a coloured trace; its horizontal position is its audio frequency.</li>
   <li><b>Status line</b> (on the right of the tab bar): reports problems (station offline, audio not enabled, TRX not in DATA-U…) or the decoder state.</li>
-  <li><b>Transmitting</b> in FT8 · FT4 · FT2, RTTY, JTTY and CW, under the <b>TX call</b> chosen in the Correspondant line (ON5VL or your callsign). You need control and transmit permission. WSPR, JT65 and SSTV are <b>receive</b>-only for now <span class="later">soon</span>.</li>
+  <li><b>Transmitting</b> in FT8 · FT4 · FT2, RTTY, JTTY, CW and SSTV, under the <b>TX call</b> chosen in the Correspondant line (ON5VL or your callsign). You need control and transmit permission. WSPR and JT65 are <b>receive</b>-only for now <span class="later">soon</span>.</li>
 </ul>
 <p><b>Waterfall settings</b> (above the scale, shared by all tabs and remembered in your browser)</p>
 <table>
@@ -642,7 +642,8 @@ Choose the band in the list; about ten seconds after each even minute, the list 
 <ul>
   <li><b>Receiving</b>: pictures arrive by themselves (VIS code) and are drawn line by line. Martin, Scottie, Robot and PD modes. The <b>gallery</b> keeps the last 12 (click = show); <span class="k">PNG</span> saves the picture shown to your PC.</li>
   <li><b>Preparing a picture</b>: <span class="k">Images du PC…</span> (pictures from your PC) (or drag and drop a picture), CQ card, test pattern or received picture; it is cropped to the format of the chosen mode. Three text lines (top, centre, bottom) with the tags <code>&lt;CALL&gt;</code>, <code>&lt;MYCALL&gt;</code>, <code>&lt;RST&gt;</code>…; text size and colour. Right click a thumbnail: remove it.</li>
-  <li><span class="k">▶ Écouter</span> (play) plays the signal on your PC (without transmitting); <span class="k">WAV</span> saves it as a file. SSTV transmission will come in a future version.</li>
+  <li><span class="k">▶ Écouter</span> (play) plays the signal on your PC (without transmitting); <span class="k">WAV</span> saves it as a file.</li>
+  <li><b>Transmitting</b>: with control, TX VFO in <b>DATA-U</b>, <span class="k">Émettre</span> (transmit) sends the picture shown (in the format of the chosen mode) to the server, which builds the signal and hands it to the Station page; the TRX transmits about one second later. During transmission, the part of the picture not yet sent is <b>darkened</b>, the red line follows the current line, and the note under the picture gives the line and the time left. <span class="k">■ Arrêter</span> or <span class="k">Esc</span> stops. Same safety checks as RTTY (bands, power, SWR, link). Duration: from 37 s (Robot 36) to almost 5 min (PD 290); the limit of the other modes does not apply, but the server refuses a mode longer than its <code>maxSstvSeconds</code> setting (300 s by default). The TRX transmits <b>continuously</b> for the whole picture: reduce power (25 to 50 % advised).</li>
 </ul>
 
 <h3 id="synchro">12.8 Synchro</h3>
