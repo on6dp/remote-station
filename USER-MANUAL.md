@@ -451,7 +451,7 @@ Transmitting is only possible if the administrators have enabled it on the serve
 <a id="numeriques"></a>
 ## 12. Digital modes
 
-The centre tabs: **Activité**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV**, then **Synchro**, **Logs** and the `Log QSO` button. With control, clicking the tab of a digital mode (FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, SSTV) puts the TRX in **DATA-U** (USB-D on the IC-7300) on the VFO being received, even below 10 MHz. On the right of the FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY and CW tabs, the **band map** shows the DX cluster spots (see 12.3, « Band map »). You have **no software to install** (no WSJT-X, FLDIGI…): everything happens in the page.
+The centre tabs: **Activité**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV**, then **Synchro**, **Logs** and the `Log QSO` button. With control, clicking the tab of a digital mode (FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, SSTV) puts the TRX in **DATA-U** (USB-D on the IC-7300) on the VFO being received, even below 10 MHz; the **CW** tab puts it in CW (CW-L below 10 MHz, CW-U above; CW-R / CW on the IC-7300), unless it already is. On the right of the FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY and CW tabs, the **band map** shows the DX cluster spots (see 12.3, « Band map »). You have **no software to install** (no WSJT-X, FLDIGI…): everything happens in the page.
 
 - **Decoding runs on the server**, on the server's (synchronised) clock: the time on your PC and on the club PC does not matter.
 - The TRX audio is only sent while someone is listening or watching a digital-mode tab: decodes start a few seconds after the tab is opened.

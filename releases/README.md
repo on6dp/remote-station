@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.24.3 | [RemoteStation-Setup-0.24.3.exe](0.24.3/RemoteStation-Setup-0.24.3.exe) | [remote-station-0.24.3.tar.gz](0.24.3/remote-station-0.24.3.tar.gz) | Onglet CW → TRX en CW — [empreintes SHA-256](0.24.3/SHA256SUMS.txt) |
 | 0.24.2 | [RemoteStation-Setup-0.24.2.exe](0.24.2/RemoteStation-Setup-0.24.2.exe) | [remote-station-0.24.2.tar.gz](0.24.2/remote-station-0.24.2.tar.gz) | Onglet de mode numérique → TRX en DATA-U — [empreintes SHA-256](0.24.2/SHA256SUMS.txt) |
 | 0.24.1 | [RemoteStation-Setup-0.24.1.exe](0.24.1/RemoteStation-Setup-0.24.1.exe) | [remote-station-0.24.1.tar.gz](0.24.1/remote-station-0.24.1.tar.gz) | Retours testeur : ON2 100 W, ON3 bandes, équité 45 min, décompte, carnet en lecture seule, colonne OP, suivi auto avec repères, un compte = une adresse — [empreintes SHA-256](0.24.1/SHA256SUMS.txt) |
 | 0.24.0 | [RemoteStation-Setup-0.24.0.exe](0.24.0/RemoteStation-Setup-0.24.0.exe) | [remote-station-0.24.0.tar.gz](0.24.0/remote-station-0.24.0.tar.gz) | Émission SSTV par le TRX — [empreintes SHA-256](0.24.0/SHA256SUMS.txt) |

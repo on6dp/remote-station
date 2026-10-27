@@ -451,7 +451,7 @@ L'émission n'est possible que si les administrateurs l'ont autorisée sur le se
 <a id="numeriques"></a>
 ## 12. Modes numériques
 
-Les onglets du centre : **Activité**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV**, puis **Synchro**, **Logs** et le bouton `Log QSO`. Avec la main, un clic sur l'onglet d'un mode numérique (FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, SSTV) met le TRX en **DATA-U** (USB-D sur l'IC-7300) sur le VFO écouté, même sous 10 MHz. À droite des onglets FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY et CW, la **carte de bande** montre les spots du DX cluster (voir 12.3, « Carte de bande »). Vous n'avez **aucun logiciel à installer** (pas de WSJT-X, FLDIGI…) : tout se fait dans la page.
+Les onglets du centre : **Activité**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV**, puis **Synchro**, **Logs** et le bouton `Log QSO`. Avec la main, un clic sur l'onglet d'un mode numérique (FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, SSTV) met le TRX en **DATA-U** (USB-D sur l'IC-7300) sur le VFO écouté, même sous 10 MHz ; l'onglet **CW** le met en CW (CW-L sous 10 MHz, CW-U au-dessus ; CW-R / CW sur l'IC-7300), sauf s'il y est déjà. À droite des onglets FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY et CW, la **carte de bande** montre les spots du DX cluster (voir 12.3, « Carte de bande »). Vous n'avez **aucun logiciel à installer** (pas de WSJT-X, FLDIGI…) : tout se fait dans la page.
 
 - Le **décodage se fait sur le serveur**, à l'heure du serveur (synchronisée) : l'heure de votre PC et de celui du club n'a pas d'importance.
 - Le son du TRX n'est envoyé que si quelqu'un écoute ou regarde un onglet de mode numérique : les décodages commencent quelques secondes après l'ouverture de l'onglet.

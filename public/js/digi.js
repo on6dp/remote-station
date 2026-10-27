@@ -3634,6 +3634,24 @@
     api.send({ t: 'set', mode: mk[0], sub: side });
     api.say('TRX mis en ' + mk[1] + ' pour ' + label + '.', '', 3000);
   }
+  // Clic sur l'onglet CW (avec la main) : TRX mis en CW sur le VFO écouté — CW-L sous 10 MHz, CW-U au-dessus
+  // (IC-7300 : CW-R / CW), comme pour les spots et la liste de fréquences
+  function cwModeAuto() {
+    if (!api || !api.iControl()) return;
+    const st = api.state();
+    const r = st && st.radio;
+    if (!r || !r.connected || r.tx || (st.ptt && st.ptt.active) || st.ftx || st.cw) return;
+    const side = r.vfoSel === 1;
+    const cur = (side ? r.modeB : r.mode) || '';
+    if (/^CW/i.test(cur)) return; // déjà en CW (quel que soit le côté choisi)
+    const hz = side ? r.freqB : r.freq;
+    const R = api.rig();
+    const K = R.MODE_KEYS || [];
+    const mk = (hz && hz < 10e6 ? K.find((x) => /^(CW-L|CW-R|CW-LSB)$/i.test(x[1])) : null) || K.find((x) => /^(CW-U|CW|CW-USB)$/i.test(x[1]));
+    if (!mk) return;
+    api.send({ t: 'set', mode: mk[0], sub: side });
+    api.say('TRX mis en ' + mk[1] + ' pour la CW.', '', 3000);
+  }
   function autoQsy() {
     const st = api && api.state();
     const f = st && st.radio && st.radio.freq;
@@ -3742,6 +3760,7 @@
         if (follow && api && !api.iControl()) { setFollow(false); api.say('Suivi de l’opérateur arrêté (onglet choisi).', '', 4000); }
         showTab(b.dataset.tab);
         if (DATA_TABS[b.dataset.tab]) dataU(DATA_TABS[b.dataset.tab]);
+        else if (b.dataset.tab === 'cw') cwModeAuto();
       }));
       $('dgFollow').addEventListener('click', (e) => { e.stopPropagation(); setFollow(!follow); if (follow) followView(); });
       setFollow(follow);
