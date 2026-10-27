@@ -206,6 +206,7 @@ FT8 is the easiest mode to use remotely: everything is done with the mouse and t
 - `Prendre la main` (take control, top bar): possible if nobody has it. The button then becomes `Libérer la main` (release control).
 - If someone already has it: open the `👥` panel and click `Demander la main à …` (request control from …). The operator receives the request (their panel opens) and can click `Passer la main à …` (hand control to …). You can also send them a message in the chat.
 - **Fairness**: if the operator has had control for **45 min** and another member has requested it (request valid 15 min), the operator is warned; control passes to the requester **2 min** later, never in the middle of a transmission (at its end). With no pending request, you can keep control as long as you are active (released after 15 min without any action).
+- **📊 STATS** (administrators, top right): usage statistics page — time with control and time connected per callsign, transmitting, sessions, days, QSOs, bands and modes, chart per day, weekday × hour map (Belgian time), session log (who, when, how long, bands, modes, TRX), CSV export for Excel; period and callsign to choose. Recorded minute by minute in `logs/usage-YYYY-MM.jsonl`; before this version, durations estimated from the control log.
 - **One account, one operator**: your account can be open in several tabs or on several devices **on the same network** (same internet address). A login from **another address** closes the sessions open elsewhere (they will have to type the password again) and administrators are told: do not lend your account.
 - **Countdown**: next to `Libérer la main`, `⏱ 14:58` gives the time left before control is released (and the session closed) without any action; each setting or transmission resets it to 15 min; orange under 2 min, « ⏱ en émission » during a transmission. When a member is waiting for control (fairness), it turns into a red badge `⏱ main → ON4XXX dans 1:45`.
 - **When you leave**, click `Libérer la main`. With no action for **15 minutes**, control is released automatically.
@@ -432,7 +433,7 @@ Transmitting is only possible if the administrators have enabled it on the serve
 ## 10. Operators and chat
 
 - The **Opérateurs** (operators) panel opens and closes with the `👥` button in the top bar. A red dot on `👥` means a new message. When another member's message arrives, `👥` **blinks** (until the panel is opened), the author's callsign blinks in the list for 20 s, the message shows at the bottom of the screen and a **beep-beep** sounds; `🔔` next to « Envoyer » turns the beep off or on (🔕 = off), kept in this browser.
-- ON6DP and ON4LUC are **never logged out** for inactivity (only with « Déconnexion »); control is still released after 15 min without any action. Server setting `idleExempt`.
+- ON6DP, ON4LUC and ON5VL (the station's own account) are **never logged out** for inactivity (only with « Déconnexion »); control is still released after 15 min without any action. Server setting `idleExempt`.
 - It shows the connected members and who has control.
 - **Chat**: type a message in « Message aux connectés… » (message to connected members) then `Envoyer` (send) (or `Enter`). All connected members see it. Messages are not kept after a server restart.
 - The `Demander la main à …` and `Passer la main à …` buttons appear there when relevant (section 6).
@@ -493,7 +494,7 @@ FT8 is a digital mode designed for very weak signals: each station sends a short
 | `■ Arrêter` | Stops automatic transmission at once ("Halt Tx"). The `Space` bar does the same. |
 | Clock | Server UTC time. |
 
-**The waterfall**: **left click** = receive frequency (green « RX 1500 » flag and green line), **right click** = transmit frequency (red flag and red line). For transmitting, choose a clear spot in the waterfall. A white line marks the start of each period, with the UTC time and the band.
+**The waterfall**: **left click** = receive frequency (green « RX 1500 » flag and green line), **right click** = transmit frequency (red flag and red line). Button **held down** (left for receive, right for transmit): the line follows the mouse continuously, as in RTTY and CW (FT8 · FT4 · FT2, WSPR, JT65, JTTY); members following the operator see it move. For transmitting, choose a clear spot in the waterfall. A white line marks the start of each period, with the UTC time and the band.
 
 **The two message lists**
 

@@ -213,6 +213,7 @@ The TRX (a Yaesu FTX-1 with its SPA-1 amplifier, or depending on the setup an FT
   <li><span class="k">Prendre la main</span> (take control, top bar): possible if nobody has it. The button then becomes <span class="k">Libérer la main</span> (release control).</li>
   <li>If someone already has it: open the <span class="k">👥</span> panel and click <span class="k">Demander la main à …</span> (request control from …). The operator receives the request (their panel opens) and can click <span class="k">Passer la main à …</span> (hand control to …). You can also send them a message in the chat.</li>
   <li><b>Fairness</b>: if the operator has had control for <b>45 min</b> and another member has requested it (request valid 15 min), the operator is warned; control passes to the requester <b>2 min</b> later, never in the middle of a transmission (at its end). With no pending request, you can keep control as long as you are active (released after 15 min without any action).</li>
+  <li><b>📊 STATS</b> (administrators, top right): usage statistics page — time with control and time connected per callsign, transmitting, sessions, days, QSOs, bands and modes, chart per day, weekday × hour map (Belgian time), session log (who, when, how long, bands, modes, TRX), CSV export for Excel; period and callsign to choose. Recorded minute by minute in <code>logs/usage-YYYY-MM.jsonl</code>; before this version, durations estimated from the control log.</li>
   <li><b>One account, one operator</b>: your account can be open in several tabs or on several devices <b>on the same network</b> (same internet address). A login from <b>another address</b> closes the sessions open elsewhere (they will have to type the password again) and administrators are told: do not lend your account.</li>
   <li><b>Countdown</b>: next to <span class="k">Libérer la main</span>, <span class="k">⏱ 14:58</span> gives the time left before control is released (and the session closed) without any action; each setting or transmission resets it to 15 min; orange under 2 min, « ⏱ en émission » during a transmission. When a member is waiting for control (fairness), it turns into a red badge <span class="k">⏱ main → ON4XXX dans 1:45</span>.</li>
   <li><b>When you leave</b>, click <span class="k">Libérer la main</span>. With no action for <b>15 minutes</b>, control is released automatically.</li>
@@ -419,7 +420,7 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
 <h2 id="operateurs">10. Operators and chat</h2>
 <ul>
   <li>The <b>Opérateurs</b> (operators) panel opens and closes with the <span class="k">👥</span> button in the top bar. A red dot on <span class="k">👥</span> means a new message. When another member's message arrives, <span class="k">👥</span> <b>blinks</b> (until the panel is opened), the author's callsign blinks in the list for 20 s, the message shows at the bottom of the screen and a <b>beep-beep</b> sounds; <span class="k">🔔</span> next to « Envoyer » turns the beep off or on (🔕 = off), kept in this browser.</li>
-  <li>ON6DP and ON4LUC are <b>never logged out</b> for inactivity (only with « Déconnexion »); control is still released after 15 min without any action. Server setting <code>idleExempt</code>.</li>
+  <li>ON6DP, ON4LUC and ON5VL (the station's own account) are <b>never logged out</b> for inactivity (only with « Déconnexion »); control is still released after 15 min without any action. Server setting <code>idleExempt</code>.</li>
   <li>It shows the connected members and who has control.</li>
   <li><b>Chat</b>: type a message in « Message aux connectés… » (message to connected members) then <span class="k">Envoyer</span> (send) (or <kbd>Enter</kbd>). All connected members see it. Messages are not kept after a server restart.</li>
   <li>The <span class="k">Demander la main à …</span> and <span class="k">Passer la main à …</span> buttons appear there when relevant (section 6).</li>
@@ -478,7 +479,7 @@ A complete QSO takes about a minute and a half. <b>FT4</b> is twice as fast (7.5
   <tr><td><span class="k">■ Arrêter</span></td><td>Stops automatic transmission at once ("Halt Tx"). The <kbd>Space</kbd> bar does the same.</td></tr>
   <tr><td>Clock</td><td>Server UTC time.</td></tr>
 </table>
-<p><b>The waterfall</b>: <b>left click</b> = <span class="grn">receive</span> frequency (green « RX 1500 » flag and green line), <b>right click</b> = <span class="red">transmit</span> frequency (red flag and red line).
+<p><b>The waterfall</b>: <b>left click</b> = <span class="grn">receive</span> frequency (green « RX 1500 » flag and green line), <b>right click</b> = <span class="red">transmit</span> frequency (red flag and red line). Button <b>held down</b> (left for receive, right for transmit): the line follows the mouse continuously, as in RTTY and CW (FT8 · FT4 · FT2, WSPR, JT65, JTTY); members following the operator see it move.
 For transmitting, choose a clear spot in the waterfall. A white line marks the start of each period, with the UTC time and the band.</p>
 <p><b>The two message lists</b></p>
 <ul>

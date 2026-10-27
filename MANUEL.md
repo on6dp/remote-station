@@ -206,6 +206,7 @@ Le FT8 est le mode le plus simple à distance : tout se fait à la souris et le 
 - `Prendre la main` (bandeau du haut) : possible si personne ne l'a. Le bouton devient `Libérer la main`.
 - Si quelqu'un l'a déjà : ouvrez le volet `👥` et cliquez `Demander la main à …`. L'opérateur reçoit la demande (son volet s'ouvre) et peut cliquer `Passer la main à …`. Vous pouvez aussi lui écrire un message dans la discussion.
 - **Équité** : si l'opérateur a la main depuis **45 min** et qu'un autre membre l'a demandée (demande valable 15 min), il est prévenu ; la main passe au demandeur **2 min** plus tard, jamais au milieu d'une émission (à la fin de celle-ci). Sans demande en attente, on peut garder la main aussi longtemps qu'on est actif (libérée après 15 min sans aucune action).
+- **📊 STATS** (administrateurs, en haut à droite) : page des statistiques d'utilisation — temps avec la main et temps connecté par indicatif, émission, sessions, jours, QSO, bandes et modes, graphique par jour, carte jours de la semaine × heures (heure belge), journal des sessions (qui, quand, combien de temps, bandes, modes, TRX), export CSV pour Excel ; période et indicatif au choix. Relevé minute par minute dans `logs/usage-AAAA-MM.jsonl` ; avant cette version, durées estimées d'après le journal des prises de main.
 - **Un compte, un opérateur** : votre compte peut être ouvert dans plusieurs onglets ou sur plusieurs appareils **du même réseau** (même adresse internet). Une connexion depuis une **autre adresse** ferme les sessions ouvertes ailleurs (elles devront retaper le mot de passe) et les administrateurs sont prévenus : ne prêtez pas votre compte.
 - **Décompte** : à côté de `Libérer la main`, `⏱ 14:58` donne le temps restant avant que la main soit libérée (et la session fermée) sans aucune action ; chaque réglage ou émission le remet à 15 min ; orange sous 2 min, « ⏱ en émission » pendant une émission. Quand un membre attend la main (équité), il devient un badge rouge `⏱ main → ON4XXX dans 1:45`.
 - **En partant**, cliquez `Libérer la main`. Sans action pendant **15 minutes**, la main est libérée automatiquement.
@@ -432,7 +433,7 @@ L'émission n'est possible que si les administrateurs l'ont autorisée sur le se
 ## 10. Opérateurs et discussion
 
 - Le volet **Opérateurs** s'ouvre et se ferme avec le bouton `👥` du bandeau. Un point rouge sur `👥` signale un nouveau message. À l'arrivée d'un message d'un autre membre, `👥` **clignote** (jusqu'à l'ouverture du volet), l'indicatif de l'auteur clignote dans la liste pendant 20 s, le message s'affiche en bas de l'écran et un **bip-bip** retentit ; `🔔` à côté de « Envoyer » coupe ou remet le bip (🔕 = coupé), réglage gardé dans ce navigateur.
-- ON6DP et ON4LUC ne sont **jamais déconnectés** pour inactivité (seulement par « Déconnexion ») ; la main leur est quand même libérée après 15 min sans action. Réglage `idleExempt` du serveur.
+- ON6DP, ON4LUC et ON5VL (le compte de la station elle-même) ne sont **jamais déconnectés** pour inactivité (seulement par « Déconnexion ») ; la main leur est quand même libérée après 15 min sans action. Réglage `idleExempt` du serveur.
 - Il montre les membres connectés et qui a la main.
 - **Discussion** : tapez un message dans « Message aux connectés… » puis `Envoyer` (ou `Entrée`). Tous les connectés le voient. Les messages ne sont pas gardés après un redémarrage du serveur.
 - Les boutons `Demander la main à …` et `Passer la main à …` y apparaissent quand c'est utile (section 6).
@@ -493,7 +494,7 @@ FT8 est un mode numérique fait pour les signaux très faibles : chaque station 
 | `■ Arrêter` | Coupe l'émission automatique tout de suite (« Halt Tx »). La barre `Espace` fait de même. |
 | Horloge | Heure UTC du serveur. |
 
-**La cascade** : **clic gauche** = fréquence de réception (drapeau vert « RX 1500 » et trait vert), **clic droit** = fréquence d'émission (drapeau rouge et trait rouge). Choisissez pour l'émission un endroit libre de la cascade. Un trait blanc marque le début de chaque période, avec l'heure UTC et la bande.
+**La cascade** : **clic gauche** = fréquence de réception (drapeau vert « RX 1500 » et trait vert), **clic droit** = fréquence d'émission (drapeau rouge et trait rouge). Bouton **maintenu** (gauche pour la réception, droit pour l'émission) : le trait suit la souris en continu, comme en RTTY et en CW (FT8 · FT4 · FT2, WSPR, JT65, JTTY) ; ceux qui suivent l'opérateur le voient bouger. Choisissez pour l'émission un endroit libre de la cascade. Un trait blanc marque le début de chaque période, avec l'heure UTC et la bande.
 
 **Les deux listes de messages**
 

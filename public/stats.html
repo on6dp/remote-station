@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Statistiques — Remote Station</title>
+<meta name="theme-color" content="#0e131b">
+<link rel="stylesheet" href="/css/rp-tokens.css">
+<style>
+  :root { color-scheme: dark; --f: Verdana, 'DejaVu Sans', Arial, sans-serif; --ctl: #00d4ff; --tx: #ff6b5e; --on: #8aa4bd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #070b11; color: var(--v2-text-primary, #e6edf5); font: 13px/1.45 var(--f); }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 16px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--v2-border-dark, #1d2733); padding-bottom: 10px; }
+  h1 { margin: 0; font-size: 19px; }
+  h1 span { color: var(--ctl); }
+  header a { color: var(--v2-text-secondary, #9fb0c2); }
+  h2 { font-size: 13px; letter-spacing: .8px; text-transform: uppercase; color: #f2cf4a; margin: 22px 0 8px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+  .bar label { color: var(--v2-text-secondary, #9fb0c2); font-size: 12px; }
+  .btn, select, input { font: inherit; font-size: 12px; color: var(--v2-text-bright, #fff); background: #111923; border: 1px solid var(--v2-border, #2a3746); border-radius: 5px; padding: 5px 9px; }
+  .btn { cursor: pointer; } .btn:hover { border-color: var(--ctl); } .btn.on { border-color: var(--ctl); color: var(--ctl); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+  .card { background: #0d141d; border: 1px solid var(--v2-border-dark, #1d2733); border-radius: 7px; padding: 10px 12px; }
+  .card b { display: block; font-size: 22px; color: var(--v2-text-bright, #fff); }
+  .card span { color: var(--v2-text-secondary, #9fb0c2); font-size: 11px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { text-align: left; padding: 5px 7px; border-bottom: 1px solid #16202b; vertical-align: top; }
+  th { color: var(--v2-text-secondary, #9fb0c2); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; position: sticky; top: 0; background: #070b11; cursor: pointer; }
+  td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+  td.call { font-weight: 700; color: var(--ctl); cursor: pointer; }
+  tr:hover td { background: rgba(0, 212, 255, .05); }
+  .chips span { display: inline-block; margin: 0 4px 2px 0; padding: 0 5px; border-radius: 3px; background: #142130; font-size: 11px; white-space: nowrap; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+  .hb { display: grid; grid-template-columns: 90px 1fr 120px; gap: 6px; align-items: center; margin: 3px 0; font-size: 12px; }
+  .hb i { display: block; height: 12px; border-radius: 2px; background: var(--ctl); min-width: 2px; }
+  .hb em { font-style: normal; white-space: nowrap; text-align: right; color: var(--v2-text-secondary, #9fb0c2); font-variant-numeric: tabular-nums; }
+  .heat { display: grid; grid-template-columns: 34px repeat(24, 1fr); gap: 2px; font-size: 10px; }
+  .heat div { height: 18px; border-radius: 2px; background: #101820; }
+  .heat .l { background: none; color: var(--v2-text-secondary, #9fb0c2); display: flex; align-items: center; }
+  .heat .h { background: none; color: var(--v2-text-dim, #6c7d8f); text-align: center; height: auto; }
+  .days { display: flex; align-items: flex-end; gap: 2px; height: 120px; border-bottom: 1px solid #1d2733; overflow-x: auto; }
+  .days i { flex: 1 0 8px; max-width: 26px; background: var(--ctl); border-radius: 2px 2px 0 0; min-height: 1px; }
+  .days-x { display: flex; justify-content: space-between; color: var(--v2-text-dim, #6c7d8f); font-size: 10px; margin-top: 3px; }
+  .note { color: var(--v2-text-secondary, #9fb0c2); font-size: 11.5px; }
+  .msg { padding: 14px; border: 1px solid #5a2a24; background: #2a1411; border-radius: 6px; margin-top: 16px; }
+  .tw { max-height: 520px; overflow: auto; border: 1px solid #16202b; border-radius: 6px; }
+  .est { color: #f59e0b; font-size: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span id="sc">Remote Station</span> — statistiques d'utilisation</h1>
+    <nav><a href="/">Retour au dashboard</a></nav>
+  </header>
+  <div class="bar" id="bar">
+    <label>Période</label>
+    <button class="btn" type="button" data-p="7">7 jours</button>
+    <button class="btn on" type="button" data-p="30">30 jours</button>
+    <button class="btn" type="button" data-p="month">Ce mois</button>
+    <button class="btn" type="button" data-p="prev">Mois passé</button>
+    <button class="btn" type="button" data-p="year">Cette année</button>
+    <label for="from">du</label><input type="date" id="from"><label for="to">au</label><input type="date" id="to">
+    <label for="who">Indicatif</label><select id="who"><option value="">Tous</option></select>
+    <button class="btn" type="button" id="go">Afficher</button>
+    <button class="btn" type="button" id="csv" title="Journal des sessions (qui, quand, combien de temps, bandes, modes) en fichier CSV pour Excel">⇩ Sessions (CSV)</button>
+  </div>
+  <div id="out"><p class="note">Chargement…</p></div>
+</div>
+<script src="/js/stats.js"></script>
+</body>
+</html>

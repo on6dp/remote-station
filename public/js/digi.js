@@ -1064,6 +1064,48 @@
       el.addEventListener('pointercancel', end);
     }
   }
+  // FT8 / FT4 / FT2, WSPR, JT65, JTTY : bouton gauche maintenu = le repère RX (vert) suit la souris en continu,
+  // bouton droit maintenu = le repère TX (rouge) ; un simple clic garde son effet. Ceux qui suivent l'opérateur voient bouger.
+  const FT_TABS = ['ftx', 'wspr', 'jt65', 'jtty'];
+  function ftDragInit(ids) {
+    let mk = null;
+    for (const id of ids) {
+      const el = $(id);
+      const fOf = (e) => {
+        const rc = el.getBoundingClientRect();
+        return WF_LO + Math.max(0, Math.min(1, (e.clientX - rc.left) / (rc.width || 1))) * WF_MAX_HZ;
+      };
+      const move = (e, final) => {
+        const f = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(fOf(e))));
+        if (final) return mk.tx ? setTx(f) : setRx(f);
+        if (mk.tx) txF = f; else rxF = f;
+        drawScale();
+        bmDraw();
+        const now = Date.now();
+        if (now - mk.t > 150) { mk.t = now; sendView(); if (!mk.tx && tab === 'jtty') jtRedraw(); }
+      };
+      el.addEventListener('pointerdown', (e) => {
+        if (FT_TABS.indexOf(tab) < 0 || e.shiftKey || (e.button !== 0 && e.button !== 2)) return;
+        mk = { el, id: e.pointerId, tx: e.button === 2, x: e.clientX, moved: false, t: 0 };
+        try { el.setPointerCapture(e.pointerId); } catch (err) { /* */ }
+      });
+      el.addEventListener('pointermove', (e) => {
+        if (!mk || mk.el !== el || mk.id !== e.pointerId) return;
+        if (!mk.moved && Math.abs(e.clientX - mk.x) < 3) return; // petit tremblement : reste un clic
+        mk.moved = true;
+        el.style.cursor = 'ew-resize';
+        move(e, false);
+      });
+      const end = (e) => {
+        if (!mk || mk.el !== el) return;
+        if (mk.moved) move(e, true);
+        el.style.cursor = '';
+        mk = null;
+      };
+      el.addEventListener('pointerup', end);
+      el.addEventListener('pointercancel', end);
+    }
+  }
   // CW : bouton gauche maintenu sur la cascade = le repère du décodeur suit la souris en continu (le décodage suit) ;
   // un simple clic garde son effet (se caler sur le signal le plus proche)
   let cwDragged = false;
@@ -1785,6 +1827,7 @@
     // Glisser la bande ou molette sur une cascade RTTY : accord du VFO
     rtDragInit(['dgWf', 'dgScale'], 0);
     cwDragInit(['dgWf', 'dgScale']);
+    ftDragInit(['dgWf', 'dgScale']);
     rtDragInit(['rtWfB', 'rtScaleB'], 1);
     // Décodeur de l'émission : bouton TX de son en-tête, ou clic n'importe où dans sa fenêtre (VFO-A / VFO-B)
     const pickTx = (ch) => {

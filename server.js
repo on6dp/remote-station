@@ -77,7 +77,9 @@ const DEFAULTS = {
   // Déconnexion automatique d'un membre resté inactif (0 = jamais). Jamais pendant une émission.
   sessionIdleMinutes: 15,
   // Indicatifs jamais déconnectés pour inactivité (seulement par « Déconnexion ») ; la main reste libérée après controlIdleMinutes
-  idleExempt: ['ON6DP', 'ON4LUC'],
+  idleExempt: ['ON6DP', 'ON4LUC', 'ON5VL'],
+  // Statistiques d'utilisation (page /stats, administrateurs) : fuseau horaire des jours et heures
+  stationTz: 'Europe/Brussels',
   // Modes numériques : indicatif émis (FT8, FT4, RTTY, CW) et locator de la station (messages CQ)
   digiCall: 'ON5VL',
   // Indicatifs du club proposés dans « TX call » (émissions numériques, CW, SSTV, carnet), en plus de digiCall et stationCall
@@ -158,7 +160,7 @@ const TYPES = {
 function qsyOrigins() {
   return (Array.isArray(cfg.qsyOrigins) ? cfg.qsyOrigins : DEFAULTS.qsyOrigins).map(String).filter((o) => /^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o));
 }
-const ROUTES = { '/': '/index.html', '/station': '/station.html', '/digi': '/digi.html', '/aide': '/aide.html', '/help': '/help.html' };
+const ROUTES = { '/': '/index.html', '/station': '/station.html', '/digi': '/digi.html', '/aide': '/aide.html', '/help': '/help.html', '/stats': '/stats.html' };
 
 function sendJson(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -766,7 +768,7 @@ function fairAsker(now) {
   }
   return best;
 }
-/** Membre jamais déconnecté pour inactivité (idleExempt : ON6DP, ON4LUC par défaut). */
+/** Membre jamais déconnecté pour inactivité (idleExempt : ON6DP, ON4LUC, ON5VL par défaut). */
 function idleExempt(c) {
   const l = Array.isArray(cfg.idleExempt) ? cfg.idleExempt.map((x) => String(x).toUpperCase()) : [];
   return !!(c && c.user && l.indexOf(c.user.call) >= 0);
@@ -1110,6 +1112,33 @@ function inTxRange(hz) {
 }
 
 // Fréquence réellement émise : VFO B si la radio émet sur SUB (SPLIT), plus le décalage XIT s'il est actif
+// ---------------------------------------------------------------- statistiques d'utilisation
+// Une ligne par minute dans logs/usage-AAAA-MM.jsonl : qui a la main, qui est connecté, bande (fréquence d'émission),
+// mode (onglet numérique quand le TRX est en DATA), secondes d'émission. Lues par la page /stats (administrateurs).
+const STATS = require('./lib/stats.js');
+const usage = { txS: 0, last: 0 };
+const VIEW_MODE = { rtty: 'RTTY', jtty: 'JTTY', wspr: 'WSPR', jt65: 'JT65', sstv: 'SSTV', cw: 'CW' };
+function usageDigi() {
+  const v = ctlView && controller && ctlView.conn === controller ? ctlView : null;
+  if (!v) return '';
+  if (v.tab === 'ftx') return v.mode || 'FT8';
+  return VIEW_MODE[v.tab] || '';
+}
+function usageTick(now) {
+  if (radio.tx || ptt.active) usage.txS += 0.25;
+  const minute = Math.floor(now / 60000) * 60000;
+  if (minute === usage.last) return;
+  const prev = usage.last;
+  usage.last = minute;
+  if (!prev) { usage.txS = 0; return; } // première minute après le démarrage : incomplète
+  const users = Array.from(new Set(Array.from(ops).map((c) => c.user.call)));
+  if (!users.length && !controller) { usage.txS = 0; return; }
+  const line = { ts: prev, c: controller ? controller.user.call : null, u: users, f: txFreq() || null,
+    m: STATS.modeName(radio.txVfo === 1 ? radio.modeB : radio.mode, usageDigi()), tx: Math.round(Math.min(60, usage.txS)), rig: station ? rig().NAME : '' };
+  usage.txS = 0;
+  fs.appendFile(path.join(LOG_DIR, 'usage-' + new Date(prev).toISOString().slice(0, 7) + '.jsonl'), JSON.stringify(line) + '\n', { mode: 0o600 }, (e) => { if (e) console.error('usage : ' + e.message); });
+}
+
 function txFreq() {
   const base = radio.txVfo === 1 ? radio.freqB : radio.freq;
   if (base == null) return null;
@@ -1892,6 +1921,7 @@ setInterval(() => {
   if (cwJob && (controller !== cwJob.conn || !station)) cwEnd(!station ? 'station hors ligne' : 'main perdue', false);
   fairCheck(now);
   ctlTimer(now);
+  usageTick(now);
   // Aucune libération ni déconnexion pour inactivité tant que le TRX est en émission
   if (ptt.active || radio.tx || ftxPend || cwJob || (seq && seq.on)) return;
   if (controller && now - lastCtrlActivity > cfg.controlIdleMinutes * 60000) {
@@ -1963,6 +1993,27 @@ async function onLogin(conn, m) {
   const tok = newSession(call);
   if (tok) conn.sessHash = sessHash(tok);
   return loggedIn(conn, call, rec, tok);
+}
+
+/** Page /stats : session mémorisée d'un administrateur (celle du dashboard sur ce navigateur), statistiques calculées ici. */
+function onStats(conn, m, authTimer) {
+  const now = Date.now();
+  const s = typeof m.session === 'string' && m.session ? sessions[sessHash(m.session)] : null;
+  const rec = s && s.exp > now ? auth.loadUsers(USERS_FILE)[s.call] : null;
+  if (!rec || rec.disabled) return send(conn, { t: 'stats_fail', msg: 'Connectez-vous d’abord au dashboard dans ce navigateur (compte administrateur), puis rechargez cette page.' });
+  if (!rec.admin) return send(conn, { t: 'stats_fail', msg: 'Statistiques réservées aux administrateurs.' });
+  clearTimeout(authTimer);
+  conn.statsCall = s.call;
+  const day = 86400000;
+  let to = Number(m.to) > 0 ? Number(m.to) : now;
+  let from = Number(m.from) > 0 ? Number(m.from) : to - 30 * day;
+  to = Math.min(to, now + day);
+  if (to - from > 400 * day) from = to - 400 * day;
+  const call = typeof m.call === 'string' ? m.call.toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 12) : '';
+  let data;
+  try { data = STATS.compute({ dir: LOG_DIR, from, to, tz: cfg.stationTz || 'Europe/Brussels', call, qsos: book.qsos }); } catch (e) { return send(conn, { t: 'stats_fail', msg: 'Calcul impossible : ' + e.message }); }
+  journal('stats_view', { call: s.call, ip: conn.ip });
+  send(conn, { t: 'stats', data, by: s.call, clubName: cfg.clubName, stationCall: cfg.stationCall });
 }
 
 function loggedIn(conn, call, rec, sessionTok) {
@@ -2880,6 +2931,7 @@ ws.attach(server, {
         return onOperator(conn, m);
       }
       if (m.t === 'login') return onLogin(conn, m).catch((e) => console.error(e));
+      if (m.t === 'stats') return onStats(conn, m, authTimer);
       if (m.t === 'station') return onStationAuth(conn, m);
     });
 

@@ -8,7 +8,7 @@
   "maxTxSeconds": 120,
   "pttHeartbeatMs": 1500,
   "controlIdleMinutes": 15,
-  "idleExempt": ["ON6DP", "ON4LUC"],
+  "idleExempt": ["ON6DP", "ON4LUC", "ON5VL"],
   "controlMaxMinutes": 45,
   "controlWarnSeconds": 120,
   "controlAskMinutes": 15,

@@ -1600,6 +1600,7 @@
         if (/^Liaison perdue/.test($('msg').textContent)) say('');
         $('login').hidden = true;
         $('meCall').textContent = m.call;
+        if ($('statsBtn')) $('statsBtn').hidden = !m.admin;
         try { localStorage.setItem('rs.call', m.call); localStorage.setItem('rs.member', '1'); } catch (x) {} // rs.member : badge « Remote Station <-> DX Cluster »
         // Session mémorisée : la page actualisée se reconnecte seule (le mot de passe n'est plus gardé)
         if (m.session) {
