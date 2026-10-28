@@ -104,7 +104,10 @@
     subBadges: true,
     // CW : mémoire 1 du manipulateur (écrasée), lue par KY6 (« Message Keyer 1 Playback », manuel CAT 1912-D) ;
     // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
-    cw: { mem: 'KM1', play: 'KY6;', stop: 'BI0;' },
+    // CW : mémoire 1 du manipulateur mise en TEXT (menu CW MEMORY 1 = EX020208), texte écrit par KM1, lu par KY6 (Hamlib ;
+    // KY1 essayé si KY6 est refusé). Pas de commande d'arrêt de lecture : break-in coupé. DTR : PC KEYING = EX020115 (3 = DTR).
+    cw: { pre: ['EX0202080;'], mem: 'KM1', play: 'KY6;', alt: ['KY1;'], stop: 'BI0;',
+      dtr: { on: ['EX0201153;', 'BI1;'], off: ['EX0201150;'] } },
     preampText(r, w) {
       const v = w === 'B' ? r.preampB : r.preamp;
       if (v == null) return null;

@@ -15,7 +15,10 @@
 
   const api = Y.build({
     // CW : comme le FTDX101 (mémoire 1 du manipulateur lue par KY6 ; BI0 coupe le break-in pour arrêter)
-    cw: { mem: 'KM1', play: 'KY6;', stop: 'BI0;' },
+    // CW : mémoire 1 du manipulateur mise en TEXT (menu CW MEMORY 1 = EX020206), texte écrit par KM1, lu par KY6 (Hamlib ;
+    // KY1 essayé si KY6 est refusé). Pas de commande d'arrêt de lecture : break-in coupé. DTR : PC KEYING = EX020116 (3 = DTR).
+    cw: { pre: ['EX0202060;'], mem: 'KM1', play: 'KY6;', alt: ['KY1;'], stop: 'BI0;',
+      dtr: { on: ['EX0201163;', 'BI1;'], off: ['EX0201160;'] } },
     ID: 'ftdx10',
     NAME: 'Yaesu FTDX10',
     FREQ_MAX: 75000000,
