@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.24.9 | [RemoteStation-Setup-0.24.9.exe](0.24.9/RemoteStation-Setup-0.24.9.exe) | [remote-station-0.24.9.tar.gz](0.24.9/remote-station-0.24.9.tar.gz) | FTDX10 / FTDX101 : CW par la mémoire 1 (TEXT) ou DTR — [empreintes SHA-256](0.24.9/SHA256SUMS.txt) |
 | 0.24.8 | [RemoteStation-Setup-0.24.8.exe](0.24.8/RemoteStation-Setup-0.24.8.exe) | [remote-station-0.24.8.tar.gz](0.24.8/remote-station-0.24.8.tar.gz) | Logo du club ON5VL autour du titre — [empreintes SHA-256](0.24.8/SHA256SUMS.txt) |
 | 0.24.7 | [RemoteStation-Setup-0.24.7.exe](0.24.7/RemoteStation-Setup-0.24.7.exe) | [remote-station-0.24.7.tar.gz](0.24.7/remote-station-0.24.7.tar.gz) | Membres en ordre d'affiliation : désactivation et date de fin d'accès — [empreintes SHA-256](0.24.7/SHA256SUMS.txt) |
 | 0.24.6 | [RemoteStation-Setup-0.24.6.exe](0.24.6/RemoteStation-Setup-0.24.6.exe) | [remote-station-0.24.6.tar.gz](0.24.6/remote-station-0.24.6.tar.gz) | Statistiques d'utilisation (/stats) ; repères FT8 / WSPR / JT65 / JTTY glissés en continu ; ON5VL sans déconnexion automatique — [empreintes SHA-256](0.24.6/SHA256SUMS.txt) |
