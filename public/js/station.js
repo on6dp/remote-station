@@ -1017,7 +1017,20 @@
     log('Chrome n’enregistre pas les données de ce site : le jeton et le port seront oubliés à chaque fois (voir Paramètres → Confidentialité → Données des sites)', 'st-bad');
   }
   keepAwake();
-  const start = () => { connectWs(); reopenRemembered(); };
+  // Jeton repris du serveur (page ouverte par un administrateur connecté) : rien à recopier, même sur un autre PC
+  const start = () => {
+    fetch('/station/token', { credentials: 'same-origin', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null).then((j) => {
+      const tok = j && typeof j.token === 'string' ? j.token : '';
+      if (tok && /^[A-Za-z0-9_-]{20,}$/.test(tok) && tok !== getToken()) {
+        store.set('token', tok);
+        hashToken = tok;
+        if ($('cfgToken')) $('cfgToken').value = tok;
+        log('Jeton de la station repris du serveur');
+      }
+      connectWs();
+      reopenRemembered();
+    });
+  };
   if (navigator.locks) {
     navigator.locks.request('remote-station-page', { ifAvailable: true }, (lock) => {
       if (lock) { start(); return new Promise(() => {}); } // verrou gardé tant que la page est ouverte

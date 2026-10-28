@@ -194,6 +194,14 @@ const server = makeServer((req, res) => {
     res.writeHead(405);
     return res.end();
   }
+  if (p === '/station/token') {
+    // Jeton de la station donné à la page Station d'un navigateur déjà connecté comme administrateur (cookie de la page
+    // Station) : plus besoin de le recopier sur chaque PC, et un nouveau jeton (config.json) est repris tout seul.
+    const a = stationAdmin(req);
+    const site = String(req.headers['sec-fetch-site'] || 'same-origin');
+    if (!a || (site !== 'same-origin' && site !== 'none')) return sendJson(res, 401, {});
+    return sendJson(res, 200, { token: String(cfg.stationToken || '') });
+  }
   if (p === '/station/whoami') {
     const a = stationAdmin(req);
     // edit : peut modifier le jeton, la vitesse et les bits de stop de la page Station (stationEditors)
