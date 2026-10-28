@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.24.13 | [RemoteStation-Setup-0.24.13.exe](0.24.13/RemoteStation-Setup-0.24.13.exe) | [remote-station-0.24.13.tar.gz](0.24.13/remote-station-0.24.13.tar.gz) | FTDX101 : BW jusqu'à 4.0 kHz, ROOFING en jaune — [empreintes SHA-256](0.24.13/SHA256SUMS.txt) |
 | 0.24.12 | [RemoteStation-Setup-0.24.12.exe](0.24.12/RemoteStation-Setup-0.24.12.exe) | [remote-station-0.24.12.tar.gz](0.24.12/remote-station-0.24.12.tar.gz) | FTDX101 : ROOFING affiché dans le cadre FILTRES — [empreintes SHA-256](0.24.12/SHA256SUMS.txt) |
 | 0.24.11 | [RemoteStation-Setup-0.24.11.exe](0.24.11/RemoteStation-Setup-0.24.11.exe) | [remote-station-0.24.11.tar.gz](0.24.11/remote-station-0.24.11.tar.gz) | FTDX101 : BW jusqu'à « défaut », boutons ROOFING A / B — [empreintes SHA-256](0.24.11/SHA256SUMS.txt) |
 | 0.24.10 | [RemoteStation-Setup-0.24.10.exe](0.24.10/RemoteStation-Setup-0.24.10.exe) | [remote-station-0.24.10.tar.gz](0.24.10/remote-station-0.24.10.tar.gz) | Page Station : jeton repris automatiquement du serveur — [empreintes SHA-256](0.24.10/SHA256SUMS.txt) |

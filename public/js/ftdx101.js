@@ -19,8 +19,8 @@
   const RANGE = { D: [5, 100], M: [5, 200] };
   // Largeurs du FTDX101 (manuel CAT 1912-D, table 3) : SH P1 0 P3P3 ; 00 = largeur par défaut du TRX (voyant WIDTH éteint).
   // Différentes du FTX-1 au-delà de 2100 Hz en SSB, et 18 pas seulement (50 … 3000 Hz) en CW / RTTY / PSK / DATA.
-  const SSB_21 = [300, 400, 600, 850, 1100, 1200, 1500, 1650, 1800, 1950, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000, 3200];
-  const NARROW_18 = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 800, 1200, 1400, 1700, 2000, 2400, 3000];
+  const SSB_23 = [300, 400, 600, 850, 1100, 1200, 1500, 1650, 1800, 1950, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000, 3200, 3500, 4000];
+  const NARROW_21 = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 800, 1200, 1400, 1700, 2000, 2400, 3000, 3200, 3500, 4000];
 
   const api = Y.build({
     ID: 'ftdx101',
@@ -29,8 +29,8 @@
     headNames: { D: 'FTDX101D', M: 'FTDX101MP' },
     widthDefault: true, // WIDTH 00 = largeur par défaut (proposée en bas de l'échelle BW)
     widthTable(mode) {
-      if (mode === 'LSB' || mode === 'USB') return SSB_21;
-      if (Y.NARROW_MODES.indexOf(mode) >= 0) return NARROW_18;
+      if (mode === 'LSB' || mode === 'USB') return SSB_23;
+      if (Y.NARROW_MODES.indexOf(mode) >= 0) return NARROW_21;
       return null;
     },
     power: {

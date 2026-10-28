@@ -1249,7 +1249,7 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 /* Station meters : noms des mesures en jaune */
 .meters .mt-l { color: var(--v2-accent-yellow); font-weight: 700; }
 /* AGC et Correspondant en jaune fluo, Écouter le TRX en vert fluo */
-.ctl[data-ctl='agc'] .ctl-label, .ctl[data-ctl='agcB'] .ctl-label, .dx-lbl { color: var(--v2-accent-yellow) !important; font-weight: 700; }
+.ctl[data-ctl='agc'] .ctl-label, .ctl[data-ctl='agcB'] .ctl-label, .ctl[data-ctl='roof'] .ctl-label, .dx-lbl { color: var(--v2-accent-yellow) !important; font-weight: 700; }
 #listenBtn { font-weight: 700; }
 #listenBtn:not([aria-pressed='true']) { color: #39FF14; }
 .dx-l { color: var(--v2-text-bright); font-weight: 700; font-style: italic; }
