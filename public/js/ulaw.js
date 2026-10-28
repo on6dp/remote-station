@@ -5,6 +5,7 @@
  *   0x01 : µ-law 8 kHz (anciennes pages Station)
  *   0x02 : PCM 16 bits 12 kHz (page Station → serveur : qualité suffisante pour décoder FT8 / FT4 / RTTY)
  *   0x03 : µ-law 12 kHz (serveur → membres à l'écoute)
+ *   0x05 : µ-law 12 kHz, voix de l'opérateur (dashboard → serveur → page Station → entrée USB du TRX)
  */
 (function (root) {
   'use strict';
@@ -32,9 +33,9 @@
   }
 
   /** Float32 (-1..1) → trame µ-law [0x01 (8 kHz) ou 0x03 (12 kHz), µ-law…] */
-  function encodeFrame(samples, rate) {
+  function encodeFrame(samples, rate, hdr) {
     const out = new Uint8Array(samples.length + 1);
-    out[0] = rate === 12000 ? 0x03 : 0x01;
+    out[0] = hdr === 0x05 ? 0x05 : rate === 12000 ? 0x03 : 0x01;
     for (let i = 0; i < samples.length; i++) {
       let v = samples[i];
       v = v > 1 ? 1 : v < -1 ? -1 : v;
@@ -65,7 +66,7 @@
     if (!bytes || bytes.length < 2) return null;
     const h = bytes[0];
     let out;
-    if (h === 0x01 || h === 0x03) {
+    if (h === 0x01 || h === 0x03 || h === 0x05) {
       out = new Float32Array(bytes.length - 1);
       for (let i = 1; i < bytes.length; i++) out[i - 1] = DECODE[bytes[i]];
     } else if (h === 0x02 || h === 0x04) {

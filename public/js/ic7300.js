@@ -234,6 +234,7 @@
     if (from !== ADDR || (to !== CTRL && to !== 0x00)) return null; // écho de nos propres trames, autre appareil…
     const d = f.slice(3);
     if (c === 0xFB) return { ok: true };
+    if (c === 0x1A) return { ok: true }; // réglages 1A 05 (source de modulation de la phonie à distance…)
     if (c === 0xFA) return { error: true };
     if (c === 0x00 && d.length >= 5) return { freq: freqValue(d, 0) }; // transceive : VFO choisi
     if (c === 0x01) return { ok: true }; // transceive : mode (relu par 26 00 au cycle suivant)
@@ -359,6 +360,9 @@
             this.cwPlay = setTimeout(() => { v.tx = 0; }, 150 + ms);
             ok();
           }
+        } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x00 && d[2] === 0x66) {
+          // DATA OFF MOD (simulateur) : 00 MIC au départ
+          if (d.length === 3) r(0x05, 0x00, 0x66, this.mod66 || 0); else { this.mod66 = d[3]; (this.exLog = this.exLog || []).push('MOD' + d[3] + (v.tx ? '@TX' : '')); ok(); }
         } else if (c === 0x14 && d[0] === 0x0C) { this.cwWpm = 6 + lvlValue(d, 1) * 42 / 255; ok(); }
         else if (c === 0x16 && d[0] === 0x47) { this.bk = d[1]; ok(); }
         else if (c === 0x14 && d[0] === 0x0A) {
@@ -394,6 +398,17 @@
       mem: null, read: null, alt: [],
       play: null, text: (t) => q(0x17, ...Array.from(t, (c) => c.charCodeAt(0))),
       stop: () => [q(0x17, 0xFF)]
+    },
+    // Phonie à distance : « DATA OFF MOD » (1A 05 00 66 : 00 MIC, 01 ACC, 02 MIC/ACC, 03 USB) mis sur USB le temps de
+    // l'émission en LSB / USB / AM / FM, puis remis comme avant (le micro du club refonctionne)
+    VOICE: {
+      modes: ['LSB', 'USB', 'AM', 'FM'],
+      steps(mode) {
+        if (this.modes.indexOf(mode) < 0) return null;
+        return [{ label: 'DATA OFF MOD', read: q(0x1A, 0x05, 0x00, 0x66),
+          match: (t) => (t && typeof t !== 'string' && t.length >= 7 && t[1] === ADDR && t[2] === 0x1A && t[3] === 0x05 && t[4] === 0x00 && t[5] === 0x66 ? t[6] : null),
+          set: q(0x1A, 0x05, 0x00, 0x66, 0x03), restore: (p) => q(0x1A, 0x05, 0x00, 0x66, p) }];
+      }
     },
     Fake,
     serial: { baudRate: 115200, stopBits: 1, portHint: 'Silicon Labs CP210x (port USB de l’IC-7300)' },

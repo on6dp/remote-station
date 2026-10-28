@@ -275,6 +275,7 @@
       if ((m = /^RM([3-8])(\d{3})(\d{3})$/.exec(tok))) return { ['m' + m[1]]: +m[2] };
       if (tok === '?') return { error: true };
       for (const r of READS) if ((m = r.re.exec(tok))) return r.parse(m);
+      if (/^EX\d{6}/.test(tok)) return { ok: true }; // réponse à une lecture de menu (phonie à distance…)
       return null;
     }
 
@@ -308,6 +309,10 @@
         this.tx = 0;
         this.ans = {};
         for (const r of READS) if (!r.power) this.ans[r.cmd] = r.sim;
+        // Menus de la phonie à distance : MIC (0) au départ, comme au club
+        if (spec.voice) for (const k in spec.voice) for (const [id] of spec.voice[k]) this.ans['EX' + id + ';'] = 'EX' + id + '0';
+        // Égaliseur du TRX (simulateur) : bandes coupées, niveau 0, largeur 5
+        if (spec.trxEq) for (let i = 0; i < 18; i++) { const id = spec.trxEq.menu + pad(spec.trxEq.first + i, 2); this.ans['EX' + id + ';'] = 'EX' + id + (i % 3 === 0 ? '00' : i % 3 === 1 ? '+00' : '05'); }
         this.onData = null;
         this.sp = new Splitter();
         this.t = 0;
@@ -395,6 +400,7 @@
             } else out.push('?;');
           }
           else if (spec.fakeCmd && spec.fakeCmd(this, c, out)) { /* commande propre au modèle (simulateur) */ }
+          else if ((m = /^EX(\d{6})([+-]?\d+)$/.exec(c)) && this.ans['EX' + m[1] + ';'] != null) { this.ans['EX' + m[1] + ';'] = c; (this.exLog = this.exLog || []).push(c + (this.tx ? '@TX' : '')); }
           else if (this.ans[c + ';'] != null) out.push(this.ans[c + ';'] + ';');
           else {
             const r = READS.find((x) => !x.power && x.re.test(c));
@@ -428,6 +434,76 @@
       // Émission CW par le manipulateur du TRX : texte écrit dans une mémoire du manipulateur (KM), puis lu (KY),
       // break-in en service (BI1) pour que le TRX émette tout seul ; arrêt : fin de lecture et break-in coupé
       // Commandes envoyées une à une (un refus « ? » est ainsi attribué à la bonne commande)
+      // Phonie à distance : la voix arrive par l'entrée USB du TRX. Juste avant l'émission, le menu « MOD SOURCE » du
+      // mode est relu, mis sur USB (REAR + REAR SELECT USB sur FTDX10 / FTDX101), puis remis comme avant au retour en
+      // réception (le micro du club refonctionne). spec.voice : { MODE: [[menu EX à 6 chiffres, valeur USB], …] }
+      // Égaliseur paramétrique du TRX (menus « PRMTRC EQ1 à EQ3 », puis « P PRMTRC » = avec PROC) : 2 jeux × 3 bandes ×
+      // (fréquence, niveau, largeur), soit 18 menus EX consécutifs. Profil : { n: [{ f, l, w } ×3], p: [{ f, l, w } ×3] },
+      // f = rang de la fréquence (0 = bande coupée), l = niveau (dB), w = largeur.
+      TRX_EQ: spec.trxEq ? (() => {
+        const E = spec.trxEq;
+        const FREQS = [[100, 200, 300, 400, 500, 600, 700], [700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500],
+          [1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000, 3100, 3200]];
+        const idOf = (set, band, k) => E.menu + pad(E.first + set * 9 + band * 3 + k, 2);
+        const ids = [];
+        for (let s = 0; s < 2; s++) for (let b = 0; b < 3; b++) for (let k = 0; k < 3; k++) ids.push(idOf(s, b, k));
+        const lv = (v) => (v < 0 ? '-' : '+') + pad(Math.abs(v), 2);
+        const clean = (pr) => {
+          if (!pr || typeof pr !== 'object') return null;
+          const one = (x, b) => {
+            const f = Math.round(Number(x && x.f));
+            const l = Math.round(Number(x && x.l));
+            const w = Math.round(Number(x && x.w));
+            return { f: f >= 0 && f <= FREQS[b].length ? f : 0, l: Number.isFinite(l) ? Math.max(E.lvl[0], Math.min(E.lvl[1], l)) : 0,
+              w: Number.isFinite(w) ? Math.max(E.bw[0], Math.min(E.bw[1], w)) : Math.max(E.bw[0], 5) };
+          };
+          const set = (a) => [0, 1, 2].map((b) => one(Array.isArray(a) ? a[b] : null, b));
+          return { n: set(pr.n), p: set(pr.p) };
+        };
+        return {
+          FREQS, LVL: E.lvl.slice(), BW: E.bw.slice(), ids,
+          read: ids.map((i) => 'EX' + i + ';'),
+          // Réponses { 'menu': 'valeur' } → profil (null s'il en manque)
+          fromValues(vals) {
+            const pr = { n: [], p: [] };
+            for (let s = 0; s < 2; s++) {
+              for (let b = 0; b < 3; b++) {
+                const g = [0, 1, 2].map((k) => vals[idOf(s, b, k)]);
+                if (g.some((x) => x == null || !/^[+-]?\d+$/.test(x))) return null;
+                (s ? pr.p : pr.n).push({ f: parseInt(g[0], 10), l: parseInt(g[1], 10), w: parseInt(g[2], 10) });
+              }
+            }
+            return clean(pr);
+          },
+          write(pr) {
+            const c = clean(pr);
+            if (!c) return null;
+            const out = [];
+            for (let s = 0; s < 2; s++) (s ? c.p : c.n).forEach((x, b) => {
+              out.push('EX' + idOf(s, b, 0) + pad(x.f, 2) + ';', 'EX' + idOf(s, b, 1) + lv(x.l) + ';', 'EX' + idOf(s, b, 2) + pad(x.w, 2) + ';');
+            });
+            return out;
+          },
+          clean,
+          // Commande d'écriture acceptée par le serveur (seulement ces 18 menus, valeurs dans les plages)
+          okWrite(cmd) {
+            const m = /^EX(\d{6})([+-]?\d{2,3});$/.exec(String(cmd));
+            return !!m && ids.indexOf(m[1]) >= 0;
+          }
+        };
+      })() : null,
+      VOICE: spec.voice ? {
+        modes: Object.keys(spec.voice),
+        steps(mode) {
+          const list = spec.voice[mode];
+          if (!list) return null;
+          return list.map(([id, v]) => {
+            const re = new RegExp('^EX' + id + '(\\d)$');
+            return { label: 'EX' + id, read: 'EX' + id + ';', match: (t) => { const mm = typeof t === 'string' ? re.exec(t) : null; return mm ? mm[1] : null; },
+              set: 'EX' + id + v + ';', restore: (p) => 'EX' + id + p + ';' };
+          });
+        }
+      } : null,
       CW: spec.cw ? {
         max: 50,
         wpmMax: 60, // KS 004–060

@@ -80,6 +80,15 @@
       this.slowPos = 0;
       this.unknown = new Set();
       this.prio = [];
+      // Phonie à distance : réglages « MOD SOURCE » d'avant l'émission, à remettre au retour en réception
+      this.voiceSeq = 0;
+      this.voiceJob = null;
+      this.voiceOn = false;
+      this.voiceSaved = null;
+      this.voiceRestoreTimer = null;
+      // Menus gardés sur USB entre deux passages en émission du même opérateur (pas d'attente au PTT suivant) ;
+      // remis comme avant après ce délai sans émission en phonie, ou tout de suite à la demande du serveur (main rendue…)
+      this.voiceHoldMs = o.voiceHoldMs || 20000;
     }
     /** Demande la relecture d'une clé d'état au prochain cycle (pilotes à trames). */
     _readBack(id) {
@@ -98,12 +107,13 @@
       for (const c of [].concat(this.rig.INIT || [])) this._write(c);
       if (!this.timer) this.timer = setInterval(() => this.tick(), this.pollMs);
       this.log('Port CAT ouvert');
+      if (this.voiceSaved) setTimeout(() => this._voiceRestoreNow('port CAT rouvert'), 1500);
     }
 
     serialClosed() {
       this.serialOpen = false;
       this.cwCache = null;
-      if (this.digiTx) { this.digiTx = null; if (this.txAudio) this.txAudio.stop(); }
+      this._txAudioStop();
       this.catKeyed = false;
       if (this.radio.connected) {
         this.radio.connected = false;
@@ -126,6 +136,7 @@
         if (this.ftWait && typeof t === 'string') this._ftReply(t);
         if (this.sideTrace && typeof t === 'string' && /^(VS|FT|TX|\?)/.test(t) && this.sideTrace.length < 40) this.sideTrace.push(t);
         if (this.subWait && typeof t === 'string') this._subReply(t);
+        if (this.waitFn) { const v = this.waitFn.fn(t); if (v != null) { const w = this.waitFn; this.waitFn = null; clearTimeout(w.timer); w.cb(v); } }
         if (this.waitRe && typeof t === 'string' && this.waitRe.re.test(t)) { const w = this.waitRe; this.waitRe = null; clearTimeout(w.timer); w.cb(t); }
         if (this.cwRe && typeof t === 'string' && this.cwRe.re.test(t)) this.cwRe.cb(t);
         if (this.cw && this.rig.CW && this.rig.CW.poRe && typeof t === 'string') { const mm = this.rig.CW.poRe.exec(t); if (mm) this.cwPo = +mm[1]; }
@@ -211,7 +222,7 @@
       const dur = (ms) => (ms >= 120000 ? Math.round(ms / 60000) + ' min' : Math.round(ms / 1000) + ' s');
       const why = silent ? 'en émission depuis ' + dur(this.txSilenceMs) + ' sans modulation' : 'en émission continue depuis ' + dur(this.txHardMaxMs);
       this._write(this.rig.cmdPtt(false));
-      if (this.digiTx) { this.digiTx = null; if (this.txAudio) this.txAudio.stop(); }
+      this._txAudioStop();
       // Manipulateur du TRX (CW) : fin de lecture et break-in coupé, que l'émission vienne de nous ou non
       if (this.rig.CW) this._cwStop(why, !this.cw);
       this.catKeyed = false;
@@ -393,6 +404,17 @@
           this._cwStart(m);
         } else if (m.op === 'cwprep') {
           this._cwPrep(m);
+        } else if (m.op === 'exread') {
+          // Lecture de menus (égaliseur du TRX) : réponses une à une, puis { menu: valeur } au serveur
+          this._exRead(m.id, Array.isArray(m.cmds) ? m.cmds.slice(0, 40) : []);
+        } else if (m.op === 'exwrite') {
+          // Écriture de menus (égaliseur du TRX), jamais pendant une émission
+          const busy = this.catKeyed || this.radio.tx || !this.serialOpen || this.exBusy;
+          if (!busy) this._writeList((Array.isArray(m.cmds) ? m.cmds : []).filter((c) => /^EX\d{6}[+-]?\d{1,3};$/.test(c)).slice(0, 40));
+          if (this.wsUp) this.sendWs({ t: 'exwrite_reply', id: m.id, ok: !busy });
+        } else if (m.op === 'voiceoff') {
+          // Main rendue, micro coupé… : source de modulation remise tout de suite (sauf en pleine émission)
+          if (!this.catKeyed && this.voiceSaved) this._voiceRestoreNow(m.reason || '');
         } else if (m.op === 'cwstop') {
           this._cwStop(m.reason || 'arrêt demandé', true);
         } else if (m.op === 'ptt') {
@@ -402,6 +424,24 @@
             this.lastKa = Date.now();
             // Émission numérique : le signal préparé part à l'heure dite (heure du VPS ramenée à l'heure de ce PC)
             this.digiTx = m.digi && m.digi.id ? { id: m.digi.id, at: Number(m.digi.at) - this.clockOffset, started: false } : null;
+            // Phonie à distance : source de modulation mise sur USB avant d'émettre
+            if (m.voice) return this._voiceKey(m);
+            // Autre émission juste après une émission en phonie : micro du club remis d'abord
+            if (this.voiceSaved) this._voiceRestoreNow('');
+            this._keyPtt(m);
+          } else {
+            this.unkey(m.reason || 'fin d’émission');
+          }
+        }
+      } catch (e) {
+        this.log('Commande refusée : ' + e.message);
+      }
+    }
+
+    /** Passage en émission (après une éventuelle préparation de la phonie). */
+    _keyPtt(m) {
+      const FTX1 = this.rig;
+      try {
             // SPLIT virtuel (FTX-1) : VFO d'émission envoyé juste avant d'émettre, et relu (« FT; ») avant TX1 :
             // on n'émet jamais sur un VFO que le TRX n'a pas confirmé
             // Émission sur MAIN, TRX déjà sur MAIN (FT0, VS0) : aucune commande FT / VS autour de l'émission (cas courant)
@@ -420,15 +460,124 @@
             }
             this._write(FTX1.cmdPtt(true));
             this._checkKeyed(m.by);
-            this.log('TX ON (' + (m.by || '?') + ')');
+            this.log('TX ON (' + (m.by || '?') + ')' + (this.voiceOn ? ' — phonie à distance' : ''));
             this._startDigi();
-          } else {
-            this.unkey(m.reason || 'fin d’émission');
-          }
-        }
       } catch (e) {
         this.log('Commande refusée : ' + e.message);
       }
+    }
+
+    // ---------- phonie à distance ----------
+    /** Signal d'émission arrêté (numérique ou voix de l'opérateur). */
+    _txAudioStop() {
+      if (this.digiTx) { this.digiTx = null; if (this.txAudio) this.txAudio.stop(); }
+      this._voiceEnd();
+    }
+    /** Attente d'une réponse reconnue par fn (texte Yaesu ou trame Icom) : cb(valeur) ou cb(null) après ms. */
+    _awaitFn(fn, ms, cb) {
+      if (this.waitFn) clearTimeout(this.waitFn.timer);
+      const w = { fn, cb, timer: null };
+      this.waitFn = w;
+      w.timer = setTimeout(() => { if (this.waitFn === w) { this.waitFn = null; cb(null); } }, ms);
+    }
+    /**
+     * PTT en phonie à distance : menus « MOD SOURCE » du mode relus et gardés, mis sur USB, puis émission ; la voix
+     * de l'opérateur arrive par la sortie son de la page Station. Au retour en réception, menus remis comme avant.
+     * Rien n'est émis si un menu ne peut pas être relu (le micro du club ne doit jamais rester débranché).
+     */
+    _voiceKey(m) {
+      const V = this.rig.VOICE;
+      const mode = String(m.voice);
+      const steps = V && V.steps(mode);
+      const fail = (why) => {
+        this.voiceJob = null;
+        this.catKeyed = false;
+        this.log('Phonie à distance : ' + why, 'st-bad');
+        if (this.wsUp) this.sendWs({ t: 'safety', reason: 'phonie à distance : ' + why });
+      };
+      if (!steps) return fail('mode ' + mode + ' non prévu sur le ' + this.rig.NAME);
+      if (this.exBusy) return fail('lecture de l’égaliseur du TRX en cours : réappuyez dans un instant');
+      if (!this.txAudio || !this.txAudio.voiceStart || !this.txAudio.voiceReady()) return fail('aucune sortie son vers le TRX choisie sur la page Station');
+      const job = { id: ++this.voiceSeq };
+      this.voiceJob = job;
+      const alive = () => this.voiceJob === job && this.catKeyed;
+      // Nouvel appui juste après un relâchement (menus pas encore remis) : on garde les valeurs d'origine
+      if (this.voiceRestoreTimer) { clearTimeout(this.voiceRestoreTimer); this.voiceRestoreTimer = null; }
+      let keep = null;
+      if (this.voiceSaved) {
+        if (this.voiceSaved.mode === mode) keep = this.voiceSaved.restore;
+        else this._voiceRestoreNow('');
+      }
+      const go = (restore, already) => {
+        if (!alive()) return;
+        this.voiceSaved = { mode, restore };
+        if (!already) this._writeList(steps.map((x) => x.set));
+        setTimeout(() => {
+          if (!alive()) return;
+          this.voiceOn = true;
+          this.txAudio.voiceStart();
+          this._keyPtt(m);
+        }, already ? 0 : 150);
+      };
+      if (keep) return go(keep, true);
+      const restore = [];
+      const next = (i) => {
+        if (!alive()) return;
+        if (i >= steps.length) return go(restore);
+        const x = steps[i];
+        this._awaitFn(x.match, 800, (v) => {
+          if (!alive()) return;
+          if (v == null) return fail('le TRX n’a pas répondu à la lecture du menu ' + x.label + ' : émission annulée');
+          restore.push(x.restore(v));
+          next(i + 1);
+        });
+        this._write(x.read, true);
+      };
+      next(0);
+    }
+    /** Lecture des menus EX listés (texte Yaesu) : { 'menu à 6 chiffres': 'valeur' } envoyé au serveur. */
+    _exRead(id, cmds) {
+      const vals = {};
+      const done = (err) => { this.exBusy = false; if (this.wsUp) this.sendWs({ t: 'exread_reply', id, values: vals, err: err || '' }); };
+      if (this.catKeyed || this.radio.tx || !this.serialOpen || this.exBusy) return done('TRX occupé (émission en cours)');
+      this.exBusy = true;
+      const next = (i) => {
+        if (i >= cmds.length) return done('');
+        const mm = /^EX(\d{6});$/.exec(String(cmds[i]));
+        if (!mm) return next(i + 1);
+        const re = new RegExp('^EX' + mm[1] + '([+-]?\\d+)$');
+        this._awaitFn((t) => { const x = typeof t === 'string' ? re.exec(t) : null; return x ? x[1] : null; }, 700, (v) => {
+          if (v == null) return done('le TRX n’a pas répondu à ' + cmds[i]);
+          vals[mm[1]] = v;
+          next(i + 1);
+        });
+        this._write(cmds[i], true);
+      };
+      next(0);
+    }
+    /** Fin de la voix de l'opérateur ; menus remis après voiceHoldMs sans nouvelle émission en phonie. */
+    _voiceEnd() {
+      this.voiceJob = null;
+      if (this.voiceOn) {
+        this.voiceOn = false;
+        if (this.txAudio && this.txAudio.voiceStop) this.txAudio.voiceStop();
+      }
+      const sv = this.voiceSaved;
+      if (!sv || this.voiceRestoreTimer) return;
+      this.voiceRestoreTimer = setTimeout(() => {
+        this.voiceRestoreTimer = null;
+        if (this.voiceSaved !== sv || this.catKeyed) return;
+        this._voiceRestoreNow('');
+      }, this.voiceHoldMs);
+    }
+    _voiceRestoreNow(why) {
+      const sv = this.voiceSaved;
+      if (this.voiceRestoreTimer) { clearTimeout(this.voiceRestoreTimer); this.voiceRestoreTimer = null; }
+      if (!sv) return;
+      this.voiceSaved = null;
+      if (!this.serialOpen) { this.voiceSaved = sv; return; } // remis à la réouverture du port
+      this._writeList(sv.restore);
+      this.log('Phonie à distance : source de modulation remise comme avant' + (why ? ' (' + why + ')' : '') + ' — micro du club');
     }
 
     /**
@@ -438,7 +587,7 @@
     _swapPtt(by, tv) {
       const s = this.swapTx;
       const cancel = (why) => {
-        if (this.digiTx) { this.digiTx = null; if (this.txAudio) this.txAudio.stop(); }
+        this._txAudioStop();
         this.catKeyed = false;
         this.log('Sécurité : ' + why, 'st-bad');
         if (this.wsUp) this.sendWs({ t: 'safety', reason: why });
@@ -557,7 +706,7 @@
       if (k >= order.length) {
         // Aucune façon n'a pris : pas d'émission, retour à l'état de réception
         const seen = this.ftSeen || 'aucune réponse';
-        if (this.digiTx) { this.digiTx = null; if (this.txAudio) this.txAudio.stop(); }
+        this._txAudioStop();
         this.catKeyed = false;
         this._write(rig.cmdPtt(false));
         this._restoreTxVfo();
@@ -774,11 +923,12 @@
     unkey(reason) {
       const was = this.catKeyed;
       if (this.ftWait) { clearTimeout(this.ftWait.timer); this.ftWait = null; }
-      if (this.digiTx) { this.digiTx = null; if (this.txAudio) this.txAudio.stop(); }
+      if (this.waitFn) { const w = this.waitFn; this.waitFn = null; clearTimeout(w.timer); w.cb(null); } // lecture en cours abandonnée
       clearTimeout(this.keyTimer);
       this.keyTimer = null;
       this.catKeyed = false;
       this._write(this.rig.cmdPtt(false));
+      this._txAudioStop(); // après TX0 : les menus de la phonie sont remis une fois le TRX en réception
       // SPLIT par échange A ⇄ B : retour en réception vérifié, puis échange de retour
       if (this.swapTx) this._swapBack(0);
       // SPLIT virtuel : émission et réception remises sur le VFO de réception
@@ -823,6 +973,7 @@
 
     stop() {
       if (this.catKeyed) this.unkey('arrêt');
+      if (this.voiceSaved) this._voiceRestoreNow('arrêt de la page');
       clearInterval(this.timer);
       this.timer = null;
       clearTimeout(this.queueTimer);

@@ -9,7 +9,7 @@
 - [3. Se connecter](#connexion)
 - [4. Premiers pas guidés](#premiers)
    - [4.1 Écouter une bande](#p-ecoute)
-   - [4.2 Un QSO en phonie (BLU)](#p-phonie)
+   - [4.2 Un QSO en phonie (BLU) avec votre micro](#p-phonie)
    - [4.3 Un QSO en FT8](#p-ft8)
    - [4.4 Noter le QSO dans le carnet](#p-log)
 - [5. L'écran en un coup d'œil](#ecran)
@@ -132,17 +132,21 @@ Quatre « recettes » pour démarrer. Le détail de chaque bouton se trouve plus
 6. Une station trop forte ? Baissez le **RF GAIN** (cadre RF front end) ou allumez l'`ATT`. Beaucoup de bruit ? Essayez `DNR` (réducteur de bruit).
 
 <a id="p-phonie"></a>
-### 4.2 Un QSO en phonie (BLU)
+### 4.2 Un QSO en phonie (BLU) avec votre micro
 
-Le dashboard n'envoie pas encore votre micro vers le TRX : la phonie se fait au club ou avec un autre moyen prévu par les responsables. Le dashboard sert alors à régler et surveiller la station. Si l'émission phonie est disponible chez vous, la marche à suivre est la suivante :
+Votre micro (celui de votre PC, un micro-casque, un micro USB…) part vers le TRX pendant l'appui sur PTT : c'est la **phonie à distance**. Elle marche en **LSB / USB** (et en AM / FM sur le FTX-1 et l'IC-7300). Un micro-casque donne le meilleur résultat (pas d'effet Larsen, voix proche).
 
-1. Prenez la main, choisissez la bande et le mode (LSB / USB).
-2. Cadre **Accord** à droite : cliquez `TUNE` et attendez la fin de l'accord. Regardez le **SWR** dans **Station meters** (en bas à gauche) : il doit être sous 1,5 environ.
-3. Vérifiez la **puissance** dans le cadre TX (boutons `−` `+`).
-4. Écoutez que la fréquence est libre, puis maintenez `PTT` (ou la barre `Espace`) pour parler ; relâchez pour écouter.
+1. Prenez la main, choisissez la bande et le mode (LSB sous 10 MHz, USB au-dessus).
+2. Cadre **TX**, sous le PTT : cliquez `🎙 Mon micro`. La première fois, Chrome demande l'accès au micro : **Autoriser**. Choisissez votre micro dans la liste s'il y en a plusieurs.
+3. Le dashboard **reconnaît le type de micro** d'après son nom (micro-casque, micro USB de studio, webcam, Bluetooth, micro du PC…) et propose un réglage d'égaliseur adapté. Parlez : la barre de niveau doit rester dans le **vert**, jamais dans le rouge (**SAT**).
+4. `Égaliseur…` : coupe-bas, trois bandes réglables (fréquence, niveau, largeur), coupe-haut, gain du micro, réduction de bruit. Écoutez-vous **au casque** avec `🎧 M’écouter`, puis `Enregistrer pour ce micro` : ces réglages reviennent tout seuls chaque fois que vous utilisez ce micro, sur n'importe quel PC.
+5. Cadre **Accord** : `TUNE`, puis vérifiez le **SWR** et la **puissance**.
+6. Écoutez que la fréquence est libre, puis maintenez `PTT` (ou la barre `Espace`) et **parlez quand le voyant TX passe au rouge** (environ une demi-seconde au premier appui, aussitôt aux suivants). Relâchez pour écouter : pendant que vous parlez, l'écoute du TRX est coupée chez vous.
 
 > [!NOTE]
-> Vérifiez avec un responsable du club comment la modulation phonie est prévue avant votre premier essai.
+> Au club, la page Station met le menu « source de modulation » du TRX sur USB juste avant votre émission, puis le remet comme avant 20 s après votre dernière émission ou dès que vous rendez la main : le micro du club refonctionne. Le niveau de votre voix à l'entrée du TRX se règle sur la page Station (« Niveau phonie à distance ») : l'ALC doit à peine bouger.
+
+**Égaliseur du TRX** (FTX-1, FTDX10, FTDX101) : bouton `Égaliseur du TRX…` du même cadre. Ce sont les menus PRMTRC EQ1 à EQ3 du TRX (PROC coupé, puis PROC en service). Prenez la main, `Lire le TRX`, réglez, `Essayer sur le TRX`, puis `Enregistrer mon profil` : votre profil est mis au TRX chaque fois que vous prenez la main, et le réglage du club est remis quand vous la rendez. Les administrateurs peuvent enregistrer le réglage du club.
 
 <a id="p-ft8"></a>
 ### 4.3 Un QSO en FT8

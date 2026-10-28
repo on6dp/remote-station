@@ -91,6 +91,10 @@
     // écrit par KM5 n'est ni gardé ni joué ; le dashboard la met en TEXT avant chaque émission
     // Manipulation par le port « Standard COM Port » (DTR) : menu PC KEYING (EX020114) sur DTR pendant l'émission seulement,
     // RPTT SELECT (EX020112) sur OFF pour que DTR ne commande jamais l'émission phonie
+    // Phonie à distance : MOD SOURCE (0 MIC, 1 USB, 2 Bluetooth, 3 AUTO) du mode d'émission, mis sur USB le temps de l'émission
+    // Égaliseur paramétrique : EX030402 à EX030419 (niveau −20 à +10, largeur 0 à 10)
+    trxEq: { menu: '0304', first: 2, lvl: [-20, 10], bw: [0, 10] },
+    voice: { LSB: [['010113', '1']], USB: [['010113', '1']], AM: [['010213', '1']], 'AM-N': [['010213', '1']], FM: [['010312', '1']], 'FM-N': [['010312', '1']] },
     cw: { pre: ['EX0202100;'], mem: 'KM5', play: 'KY05;', stop: 'KY00;', // KY15 (mémoire MESSAGE, enregistrée au manipulateur) ne joue pas notre texte : retiré
       dtr: { on: ['EX0201120;', 'EX0201142;', 'BI1;'], off: ['EX0201140;'] } },
     // PA0 / RA0 lus avec le côté SUB actif : ce sont l'ATT et le préampli du VFO B

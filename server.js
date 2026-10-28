@@ -34,6 +34,8 @@ const DEFAULTS = {
   stationToken: '',
   allowTx: false,
   maxTxSeconds: 120,
+  // Phonie à distance : voix de l'opérateur (micro du navigateur) envoyée à l'entrée USB du TRX. false : PTT seul (micro du club).
+  remoteVoice: true,
   // FTX-1 : passage MAIN / SUB par CAT (VS seul, selon le manuel CAT). false pour le bloquer (face avant seulement).
   ftx1SubCat: true,
   // Tuner (boîte d'accord) remis en service tout seul à la connexion du TRX et à chaque changement de bande HF / 6 m,
@@ -877,6 +879,157 @@ try { macros = JSON.parse(fs.readFileSync(MACROS_FILE, 'utf8')) || {}; } catch (
   }
   if (changed) setTimeout(() => saveMacros(), 0);
 }
+// ---------------------------------------------------------------- profils de micro de chaque membre (phonie à distance)
+// profiles.json (sur le VPS seulement) : { INDICATIF: { mics: { « nom de l'entrée son » : réglages de l'égaliseur } } }
+const PROFILES_FILE = path.join(ROOT, 'profiles.json');
+let profiles = {};
+try { profiles = JSON.parse(fs.readFileSync(PROFILES_FILE, 'utf8')) || {}; } catch (e) { profiles = {}; }
+function saveProfiles() {
+  fs.writeFile(PROFILES_FILE, JSON.stringify(profiles), { mode: 0o600 }, (e) => { if (e) console.error('profiles.json : ' + e.message); });
+}
+const micLabel = (l) => String(l || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 120);
+// Égaliseur du navigateur : 3 bandes (fréquence, gain, Q), coupe-bas, coupe-haut, gain, options du micro
+function micEqClean(e) {
+  if (!e || typeof e !== 'object') return null;
+  const num = (v, lo, hi, d) => { const n = Number(v); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : d; };
+  const bands = (Array.isArray(e.bands) ? e.bands : []).slice(0, 3).map((b) => ({
+    f: Math.round(num(b && b.f, 80, 4000, 1000)), g: Math.round(num(b && b.g, -15, 15, 0) * 10) / 10, q: Math.round(num(b && b.q, 0.3, 8, 1) * 100) / 100
+  }));
+  return {
+    on: e.on !== false, bands, lo: Math.round(num(e.lo, 0, 600, 100)), hi: Math.round(num(e.hi, 1800, 4000, 2900)),
+    gain: Math.round(num(e.gain, 10, 400, 100)), ns: !!e.ns, ec: !!e.ec, agc: !!e.agc, name: String(e.name || '').slice(0, 30)
+  };
+}
+// ---------------------------------------------------------------- égaliseur paramétrique du TRX (Yaesu)
+// Profil de chaque membre (profiles[INDICATIF].trx[modèle]) mis au TRX quand il prend la main ; réglage du club
+// (profiles._club[modèle], lu sur le TRX la première fois ou enregistré par un administrateur) remis quand il la rend.
+// profiles._eqOn : profil actuellement au TRX (gardé si le serveur redémarre, pour pouvoir remettre celui du club).
+const eqs = { busy: null, seq: 0, retryAt: 0 };
+const trxEqAvail = () => !!(station && station.caps.indexOf('exrw') >= 0 && rig().TRX_EQ && radio.connected);
+const clubEq = () => (profiles._club && profiles._club[rig().ID]) || null;
+const userEq = (call) => (profiles[call] && profiles[call].trx && profiles[call].trx[rig().ID]) || null;
+const eqOn = () => (profiles._eqOn && profiles._eqOn.rig === rig().ID ? profiles._eqOn : null);
+function setEqOn(v) { if (v) profiles._eqOn = v; else delete profiles._eqOn; saveProfiles(); }
+function exCall(op, extra, cb) {
+  const id = ++eqs.seq;
+  const timer = setTimeout(() => { if (eqs.busy && eqs.busy.id === id) { eqs.busy = null; cb(null, 'la page Station n’a pas répondu'); } }, 25000);
+  eqs.busy = { id, op, cb, timer };
+  toStation(Object.assign({ t: 'cmd', op, id }, extra));
+}
+function exReply(m) {
+  const b = eqs.busy;
+  if (!b || b.id !== m.id) return;
+  clearTimeout(b.timer);
+  eqs.busy = null;
+  if (m.t === 'exread_reply') b.cb(m.err ? null : m.values || {}, m.err || '');
+  else b.cb(!!m.ok, m.ok ? '' : 'TRX occupé');
+}
+const eqTxBusy = () => ptt.active || radio.tx || ftxPend || cwJob || (seq && seq.on);
+// Réglage du club lu sur le TRX avant la toute première écriture (sinon on ne pourrait jamais le remettre)
+function ensureClub(cb) {
+  if (clubEq()) return cb(true);
+  const E = rig().TRX_EQ;
+  exCall('exread', { cmds: E.read }, (vals, err) => {
+    const pr = vals && E.fromValues(vals);
+    if (!pr) { journal('trx_eq', { err: err || 'lecture incomplète' }); return cb(false, err || 'lecture incomplète'); }
+    profiles._club = profiles._club || {};
+    profiles._club[rig().ID] = pr;
+    saveProfiles();
+    journal('trx_eq', { club: 'lu sur le TRX', rig: rig().ID });
+    if (controller) trxEqInfo(controller);
+    cb(true);
+  });
+}
+function eqTick(now) {
+  if (!trxEqAvail() || eqs.busy || eqTxBusy() || now < eqs.retryAt) return;
+  const E = rig().TRX_EQ;
+  const on = eqOn();
+  const call = controller ? controller.user.call : null;
+  // Profil voulu au TRX : celui de l'opérateur qui a la main (enregistré, ou en essai), sinon celui du club
+  const want = call && (userEq(call) || (on && on.call === call)) ? call : null;
+  const cur = on ? on.call : null;
+  if (want === cur) return;
+  if (want && !(on && on.call === call)) {
+    // Première fois : réglage actuel du TRX gardé comme réglage du club, pour pouvoir le remettre ensuite
+    if (!clubEq()) return ensureClub((ok) => { if (!ok) eqs.retryAt = Date.now() + 60000; });
+    const pr = userEq(want);
+    return exCall('exwrite', { cmds: E.write(pr) }, (ok) => {
+      if (!ok) { eqs.retryAt = Date.now() + 5000; return; }
+      setEqOn({ call: want, rig: rig().ID });
+      journal('trx_eq', { on: want, rig: rig().ID });
+      if (controller && controller.user.call === want) send(controller, { t: 'notice', level: 'ok', msg: 'Votre égaliseur du TRX est en place (profil ' + want + ')' });
+      broadcast();
+    });
+  }
+  const club = clubEq();
+  if (!club) { setEqOn(null); return; }
+  exCall('exwrite', { cmds: E.write(club) }, (ok) => {
+    if (!ok) { eqs.retryAt = Date.now() + 5000; return; }
+    setEqOn(null);
+    journal('trx_eq', { on: 'club', rig: rig().ID });
+    broadcast();
+  });
+}
+function trxEqInfo(conn) {
+  const c = conn.user.call;
+  const on = eqOn();
+  send(conn, { t: 'trxeq', avail: trxEqAvail(), rig: station ? rig().ID : null, mine: station ? userEq(c) : null, club: station ? clubEq() : null, on: on ? on.call : null, admin: !!conn.user.admin });
+}
+function trxEqMsg(conn, m) {
+  const c = conn.user.call;
+  const E = station && rig().TRX_EQ;
+  const no = (msg) => send(conn, { t: 'notice', level: 'warn', msg: 'Égaliseur du TRX : ' + msg });
+  if (m.t === 'trxeq_get') return trxEqInfo(conn);
+  if (!E || !trxEqAvail()) return no(station && station.caps.indexOf('exrw') < 0 ? 'page Station du club à recharger' : 'pas disponible sur ce TRX');
+  if (m.t === 'trxeq_save' || m.t === 'trxeq_club') {
+    const pr = E.clean(m.profile);
+    if (!pr) return;
+    if (m.t === 'trxeq_club') {
+      if (!conn.user.admin) return no('réservé aux administrateurs');
+      profiles._club = profiles._club || {};
+      profiles._club[rig().ID] = pr;
+      if (!eqOn()) setEqOn({ call: '#club', rig: rig().ID }); // remis au TRX au prochain passage (personne n'a son profil en place)
+      journal('trx_eq', { club: 'enregistré par ' + c, rig: rig().ID });
+    } else {
+      const p = profiles[c] = profiles[c] || {};
+      p.trx = p.trx || {};
+      p.trx[rig().ID] = pr;
+      // Opérateur qui a la main : le profil enregistré est (re)mis au TRX au prochain passage d'eqTick
+      if (controller === conn) setEqOn({ call: '#reapply', rig: rig().ID });
+    }
+    saveProfiles();
+    send(conn, { t: 'notice', level: 'ok', msg: m.t === 'trxeq_club' ? 'Réglage du club enregistré pour le ' + rig().NAME : 'Votre profil d’égaliseur est enregistré : mis au TRX chaque fois que vous prenez la main' });
+    return trxEqInfo(conn);
+  }
+  if (m.t === 'trxeq_del') {
+    if (profiles[c] && profiles[c].trx) { delete profiles[c].trx[rig().ID]; saveProfiles(); }
+    return trxEqInfo(conn);
+  }
+  if (controller !== conn) return no('prenez d’abord la main');
+  if (eqs.busy) return no('lecture ou écriture déjà en cours, un instant');
+  if (eqTxBusy()) return no('pas pendant une émission');
+  if (m.t === 'trxeq_read') {
+    return exCall('exread', { cmds: E.read }, (vals, err) => {
+      const pr = vals && E.fromValues(vals);
+      if (!pr) return no('lecture impossible (' + (err || 'réponses incomplètes') + ')');
+      send(conn, { t: 'trxeq_values', profile: pr });
+    });
+  }
+  if (m.t === 'trxeq_try') {
+    const cmds = E.write(m.profile);
+    if (!cmds) return;
+    return ensureClub((okc, err) => {
+      if (!okc) return no('réglage du club illisible (' + err + ') : essai annulé');
+      if (controller !== conn || eqTxBusy()) return no('essai annulé (main perdue ou émission en cours)');
+      exCall('exwrite', { cmds }, (ok) => {
+        if (!ok) return no('TRX occupé, réessayez');
+        setEqOn({ call: c, rig: rig().ID });
+        send(conn, { t: 'notice', level: 'ok', msg: 'Égaliseur envoyé au TRX (le réglage du club sera remis quand vous rendrez la main)' });
+        broadcast();
+      });
+    });
+  }
+}
 function saveMacros() {
   fs.writeFile(MACROS_FILE, JSON.stringify(macros), { mode: 0o600 }, (e) => { if (e) console.error('macros.json : ' + e.message); });
 }
@@ -1264,7 +1417,11 @@ function publicState() {
     controller: controller ? controller.user.call : null,
     controllerCid: controller ? controller.cid : null,
     users: calls.sort(),
-    ptt: { active: ptt.active, by: ptt.active ? ptt.conn.user.call : null, since: ptt.since, digi: !!(ptt.active && ptt.digi) },
+    ptt: { active: ptt.active, by: ptt.active ? ptt.conn.user.call : null, since: ptt.since, digi: !!(ptt.active && ptt.digi), voice: !!(ptt.active && ptt.voice) },
+    // Phonie à distance possible : modes du TRX (LSB / USB…) ; null si la page Station ou le TRX ne le permet pas
+    voice: voiceModes(),
+    // Égaliseur du TRX : profil en place (indicatif, « #club » en attente) ; null si indisponible
+    trxEq: trxEqAvail() ? { on: eqOn() ? eqOn().call : null } : null,
     // Émission FT8 / FT4 / FT2 programmée ou en cours
     seq: seqPublic(),
     cw: cwPublic(),
@@ -1311,10 +1468,12 @@ function stopPtt(reason) {
   if (ptt.digi && ftxPend && ftxPend.id === ptt.digi.id) { clearTimeout(ftxPend.timer); sentP = ftxPend; ftxPend = null; }
   if (ptt.digi && !digiEnd && !sw && seq && seq.on) { seq.on = false; setTimeout(updateDigi, 0); }
   if (digiEnd && sentP) setTimeout(() => seqAfterTx(sentP), 0);
+  const wasVoice = !!ptt.voice;
+  const voiceFrames = ptt.voiceFrames || 0;
   ptt = { active: false, conn: null, since: 0, lastBeat: 0 };
   pttEndAt = Date.now();
   toStation({ t: 'cmd', op: 'ptt', on: false, reason });
-  journal('tx_stop', { call: who.user.call, durationS: dur, reason, freq: txFreq() });
+  journal('tx_stop', { call: who.user.call, durationS: dur, reason, freq: txFreq(), voiceFrames: wasVoice ? voiceFrames : undefined });
   if (reason !== 'relâché' && !digiEnd && !sw) {
     // Coupure forcée : l'opérateur doit relâcher le PTT avant de pouvoir réémettre
     who.needRelease = true;
@@ -1323,22 +1482,57 @@ function stopPtt(reason) {
   broadcast();
 }
 
-function startPtt(conn) {
+function voiceModes() {
+  if (cfg.remoteVoice === false || !station || station.caps.indexOf('voicetx') < 0) return null;
+  const V = rig().VOICE;
+  return V ? V.modes.slice() : null;
+}
+// Voix de l'opérateur pendant son émission en phonie : relayée telle quelle (µ-law 12 kHz, trames de 20 ms) à la page Station
+function voiceIn(conn, buf) {
+  if (!buf || buf.length < 2 || buf.length > 1500 || buf[0] !== 0x05) return;
+  if (!ptt.active || ptt.conn !== conn || !ptt.voice || !station) return;
+  const now = Date.now();
+  if (!conn.vf || now - conn.vf.t > 1000) conn.vf = { t: now, n: 0 };
+  if (++conn.vf.n > 120) return; // au plus 120 trames par seconde (2,4 × le débit normal)
+  if (station.conn.backlog > 262144) return;
+  station.conn.send(buf);
+  ptt.voiceFrames = (ptt.voiceFrames || 0) + 1;
+}
+// Opérateur qui a parlé en phonie à distance : quand il rend la main (ou coupe son micro), la page Station remet
+// tout de suite la source de modulation du club (sinon après 20 s sans émission en phonie)
+let voiceUser = null;
+function voiceRelease(reason) {
+  if (!voiceUser) return;
+  voiceUser = null;
+  toStation({ t: 'cmd', op: 'voiceoff', reason });
+}
+
+function startPtt(conn, voice) {
   if (rig().VIRTUAL_SPLIT && txSide() && station && station.caps.indexOf('txsel') < 0) {
     return send(conn, { t: 'notice', level: 'error', msg: 'PTT refusé : la page Station du club est une ancienne version (émission sur le VFO B impossible). Rechargez-la : voyant STATION → « Recharger la page Station ».' });
   }
   const why = txBlockReason(conn);
   if (why && radio.power != null && radio.power > conn.user.maxWatts) limitPower(conn, 'avant émission');
   if (why) return send(conn, { t: 'notice', level: 'error', msg: 'PTT refusé : ' + why });
+  // Phonie à distance : mode du VFO d'émission (la page Station met la source de modulation de ce mode sur USB)
+  let vmode = null;
+  if (voice) {
+    const md = (radio.txVfo === 1 ? radio.modeB : radio.mode) || '';
+    const vm = voiceModes();
+    if (!vm) return send(conn, { t: 'notice', level: 'error', msg: 'PTT refusé : phonie à distance indisponible (' + (cfg.remoteVoice === false ? 'coupée sur ce serveur' : !station || station.caps.indexOf('voicetx') < 0 ? 'page Station du club à recharger' : 'pas prévue sur le ' + rig().NAME) + ')' });
+    if (vm.indexOf(md) < 0) return send(conn, { t: 'notice', level: 'error', msg: 'PTT refusé : phonie à distance en ' + vm.join(' / ') + ' seulement (mode actuel : ' + (md || '?') + ')' });
+    vmode = md;
+    voiceUser = conn;
+  }
   const now = Date.now();
-  ptt = { active: true, conn, since: now, lastBeat: now };
+  ptt = { active: true, conn, since: now, lastBeat: now, voice: vmode };
   lastCtrlActivity = now;
   // SPLIT virtuel : VFO d'émission envoyé avec le PTT, sauf si le TRX est déjà en SPLIT par sa face avant (il s'en charge)
   const tv = txSide();
   ptt.rx = rxSide();
-  toStation({ t: 'cmd', op: 'ptt', on: true, by: conn.user.call, txVfo: rig().VIRTUAL_SPLIT && radio.hwSplit !== 1 ? tv : undefined });
+  toStation({ t: 'cmd', op: 'ptt', on: true, by: conn.user.call, txVfo: rig().VIRTUAL_SPLIT && radio.hwSplit !== 1 ? tv : undefined, voice: vmode || undefined });
   toStation({ t: 'txka' });
-  journal('tx_start', { call: conn.user.call, ip: conn.ip, freq: txFreq(), mode: radio.txVfo === 1 ? radio.modeB : radio.mode, split: !!radio.split, watts: radio.power });
+  journal('tx_start', { call: conn.user.call, ip: conn.ip, freq: txFreq(), mode: radio.txVfo === 1 ? radio.modeB : radio.mode, split: !!radio.split, watts: radio.power, voice: vmode ? 1 : undefined });
   broadcast();
 }
 
@@ -1929,6 +2123,8 @@ setInterval(() => {
   if (ftxPend && ftxPend.state === 'wait' && (controller !== ftxPend.conn || !station)) ftxCancel(!station ? 'station hors ligne' : 'main perdue');
   if (seq && seq.on && (controller !== seq.conn || !station)) seqOff(!station ? 'station hors ligne' : 'main perdue');
   if (cwJob && (controller !== cwJob.conn || !station)) cwEnd(!station ? 'station hors ligne' : 'main perdue', false);
+  if (voiceUser && controller !== voiceUser && !ptt.active) voiceRelease('main rendue');
+  eqTick(now);
   fairCheck(now);
   ctlTimer(now);
   usageTick(now);
@@ -2409,6 +2605,40 @@ function onOperator(conn, m) {
       return;
     }
 
+    case 'trxeq_get':
+    case 'trxeq_read':
+    case 'trxeq_try':
+    case 'trxeq_save':
+    case 'trxeq_club':
+    case 'trxeq_del':
+      return trxEqMsg(conn, m);
+    case 'mic_off':
+      if (voiceUser === conn && !(ptt.active && ptt.conn === conn)) voiceRelease('micro coupé');
+      return;
+    case 'mic_get': {
+      // Réglages de l'égaliseur gardés pour ce micro (nom de l'entrée son) : repris tout seuls sur n'importe quel PC
+      const label = micLabel(m.label);
+      const p = profiles[conn.user.call];
+      const all = p && p.mics ? p.mics : {};
+      return send(conn, { t: 'mic_profile', label, eq: label && all[label] ? all[label] : null, known: Object.keys(all).slice(0, 20) });
+    }
+    case 'mic_set': {
+      const label = micLabel(m.label);
+      const eq = micEqClean(m.eq);
+      if (!label || !eq) return;
+      const p = profiles[conn.user.call] = profiles[conn.user.call] || {};
+      p.mics = p.mics || {};
+      if (!p.mics[label] && Object.keys(p.mics).length >= 20) return send(conn, { t: 'notice', level: 'warn', msg: '20 micros gardés au plus : supprimez-en un d’abord' });
+      p.mics[label] = eq;
+      saveProfiles();
+      return;
+    }
+    case 'mic_del': {
+      const label = micLabel(m.label);
+      const p = profiles[conn.user.call];
+      if (p && p.mics && p.mics[label]) { delete p.mics[label]; saveProfiles(); }
+      return;
+    }
     case 'macros_set':
       if (!setMacros(conn.user.call, m.mode, m.list)) return;
       // Toutes les fenêtres de ce membre reçoivent la nouvelle liste
@@ -2617,7 +2847,7 @@ function onOperator(conn, m) {
           ptt.lastBeat = now;
           lastCtrlActivity = now;
         } else if (!ptt.active) {
-          startPtt(conn);
+          startPtt(conn, !!m.voice);
         }
       } else {
         conn.needRelease = false;
@@ -2772,6 +3002,7 @@ function onStation(conn, m) {
     if (p.keyNow && p.state === 'wait' && !ptt.active && p.at - Date.now() > FTX_KEY_LEAD) { clearTimeout(p.timer); ftxKey(p); return; }
     return broadcast();
   }
+  if (m.t === 'exread_reply' || m.t === 'exwrite_reply') return exReply(m);
   if (m.t === 'ftx_done') {
     if (ptt.active && ptt.digi && ptt.digi.id === m.id) stopPtt(FTX_END);
     return;
@@ -2950,6 +3181,7 @@ ws.attach(server, {
       if (isBinary) {
         // Seule la station envoie du binaire : la BF du TRX
         if (conn.isStation && station && station.conn === conn) relayAudio(data);
+        else if (conn.user) voiceIn(conn, data); // voix de l'opérateur (phonie à distance)
         return;
       }
       let m;

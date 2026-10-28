@@ -23,7 +23,7 @@
   <a href="#connexion">3. Logging in</a>
   <a href="#premiers">4. Guided first steps</a>
   <a href="#p-ecoute">4.1 Listening to a band</a>
-  <a href="#p-phonie">4.2 A phone QSO (SSB)</a>
+  <a href="#p-phonie">4.2 A phone QSO (SSB) with your own microphone</a>
   <a href="#p-ft8">4.3 An FT8 QSO</a>
   <a href="#p-log">4.4 Logging the QSO</a>
   <a href="#ecran">5. The screen at a glance</a>
@@ -144,15 +144,18 @@ The TRX (a Yaesu FTX-1 with its SPA-1 amplifier, or depending on the setup an FT
   <li>A station too strong? Lower the <b>RF GAIN</b> (RF front end panel) or switch <span class="k">ATT</span> on. Lots of noise? Try <span class="k">DNR</span> (noise reduction).</li>
 </ol>
 
-<h3 id="p-phonie">4.2 A phone QSO (SSB)</h3>
-<p>The dashboard does not yet send your microphone to the TRX: phone operation is done at the club or by another means arranged by the station managers. The dashboard is then used to set up and monitor the station. If phone transmission is available from your home, proceed as follows:</p>
+<h3 id="p-phonie">4.2 A phone QSO (SSB) with your own microphone</h3>
+<p>Your microphone (PC microphone, headset, USB microphone…) is sent to the TRX while you hold PTT: this is <b>remote phone</b>. It works in <b>LSB / USB</b> (and AM / FM on the FTX-1 and IC-7300). A headset gives the best result (no feedback, voice close to the microphone).</p>
 <ol>
-  <li>Take control, choose the band and the mode (LSB / USB).</li>
-  <li><b>Accord</b> (tuner) panel on the right: click <span class="k">TUNE</span> and wait for the tuning to finish. Look at the <b>SWR</b> in <b>Station meters</b> (bottom left): it should be below about 1.5.</li>
-  <li>Check the <b>power</b> in the TX panel (<span class="k">−</span> <span class="k">+</span> buttons).</li>
-  <li>Listen to make sure the frequency is clear, then hold <span class="k">PTT</span> (or the <kbd>Space</kbd> bar) to talk; release it to listen.</li>
+  <li>Take control, choose the band and mode (LSB below 10 MHz, USB above).</li>
+  <li><b>TX</b> panel, under PTT: click <span class="k">🎙 Mon micro</span>. The first time, Chrome asks for microphone access: <b>Allow</b>. Pick your microphone in the list if there are several.</li>
+  <li>The dashboard <b>recognises the type of microphone</b> from its name (headset, USB studio microphone, webcam, Bluetooth, built-in PC microphone…) and proposes a matching equaliser setting. Speak: the level bar must stay in the <b>green</b>, never in the red (<b>SAT</b>).</li>
+  <li><span class="k">Égaliseur…</span>: low cut, three adjustable bands (frequency, level, width), high cut, microphone gain, noise reduction. Listen to yourself <b>on headphones</b> with <span class="k">🎧 M’écouter</span>, then <span class="k">Enregistrer pour ce micro</span>: these settings come back automatically whenever you use this microphone, on any PC.</li>
+  <li><b>Accord</b> panel: <span class="k">TUNE</span>, then check the <b>SWR</b> and the <b>power</b>.</li>
+  <li>Make sure the frequency is clear, then hold <span class="k">PTT</span> (or the <kbd>Space</kbd> bar) and <b>speak when the TX lamp turns red</b> (about half a second on the first press, immediately on the following ones). Release to listen: while you speak, the TRX audio is muted on your side.</li>
 </ol>
-<div class="note">Check with a club manager how phone modulation is set up before your first attempt.</div>
+<div class="note">At the club, the Station page switches the TRX “modulation source” menu to USB just before your transmission, and puts it back 20 s after your last transmission or as soon as you release control: the club microphone works again. The level of your voice at the TRX input is set on the Station page (“Niveau phonie à distance”): the ALC should barely move.</div>
+<p><b>TRX equaliser</b> (FTX-1, FTDX10, FTDX101): <span class="k">Égaliseur du TRX…</span> button in the same panel. These are the TRX's own PRMTRC EQ1 to EQ3 menus (PROC off, then PROC on). Take control, <span class="k">Lire le TRX</span>, adjust, <span class="k">Essayer sur le TRX</span>, then <span class="k">Enregistrer mon profil</span>: your profile is put on the TRX whenever you take control, and the club setting is restored when you release it. Administrators can save the club setting.</p>
 
 <h3 id="p-ft8">4.3 An FT8 QSO</h3>
 <p>FT8 is the easiest mode to use remotely: everything is done with the mouse and the dashboard handles the sequence just like WSJT-X.</p>

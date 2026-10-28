@@ -112,6 +112,10 @@
     // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
     // CW : mémoire 1 du manipulateur mise en TEXT (menu CW MEMORY 1 = EX020208), texte écrit par KM1, lu par KY6 (Hamlib ;
     // KY1 essayé si KY6 est refusé). Pas de commande d'arrêt de lecture : break-in coupé. DTR : PC KEYING = EX020115 (3 = DTR).
+    // Phonie à distance (SSB) : SSB MOD SOURCE = REAR (EX010111) et REAR SELECT = USB (EX010112) le temps de l'émission
+    // Égaliseur paramétrique : EX030303 à EX030320 (niveau −10 à +10, largeur 1 à 10)
+    trxEq: { menu: '0303', first: 3, lvl: [-10, 10], bw: [1, 10] },
+    voice: { LSB: [['010111', '1'], ['010112', '1']], USB: [['010111', '1'], ['010112', '1']] },
     cw: { pre: ['EX0202080;'], mem: 'KM1', play: 'KY6;', alt: ['KY1;'], stop: 'BI0;',
       dtr: { on: ['EX0201153;', 'BI1;'], off: ['EX0201150;'] } },
     preampText(r, w) {

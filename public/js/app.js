@@ -71,6 +71,11 @@
     if (ws && ws.readyState === 1) ws.send(JSON.stringify(o));
     if (o.t !== 'ping') hideIdle(); // toute action compte comme activité côté serveur
   }
+  // Binaire vers le serveur : voix de l'opérateur (phonie à distance) ; trame sautée si la liaison est engorgée
+  function sendBin(u8) {
+    if (ws && ws.readyState === 1 && ws.bufferedAmount < 32768) ws.send(u8);
+  }
+  const VX = () => window.RSVOICE || null;
   // Avertissement avant déconnexion pour inactivité
   let idleTimer = null;
   function idleBanner() {
@@ -797,14 +802,17 @@
     if (why) return say(why, 'warn');
     pttHeld = true;
     pttCut = false;
-    send({ t: 'ptt', on: true });
-    hbTimer = setInterval(() => { if (!pttCut) send({ t: 'ptt', on: true }); }, 400);
+    // Phonie à distance : votre micro part vers le TRX (micro actif, mode LSB / USB…) ; sinon micro du club
+    const voice = !!(VX() && VX().txStart());
+    send({ t: 'ptt', on: true, voice });
+    hbTimer = setInterval(() => { if (!pttCut) send({ t: 'ptt', on: true, voice }); }, 400);
     render();
   }
   function pttUp() {
     if (!pttHeld) return;
     pttHeld = false;
     clearInterval(hbTimer);
+    if (VX()) VX().txEnd();
     send({ t: 'ptt', on: false });
     render();
   }
@@ -1282,7 +1290,8 @@
     p.disabled = !!why && !pttHeld;
     p.classList.toggle('held', pttHeld);
     p.classList.toggle('on-air', !!myTx);
-    $('pttHint').textContent = why || (myTx ? 'En émission — relâchez pour repasser en réception' : pttCut ? 'Relâchez puis réappuyez' : 'Maintenir (ou barre d’espace)');
+    const vx = !!(VX() && VX().wantVoice());
+    $('pttHint').textContent = why || (myTx ? (st.ptt.voice ? 'En émission — votre micro · relâchez pour repasser en réception' : 'En émission — relâchez pour repasser en réception') : pttCut ? 'Relâchez puis réappuyez' : vx ? 'Maintenir (ou barre d’espace) · votre micro' : 'Maintenir (ou barre d’espace)');
 
     // mesures de la station
     const R = RIG();
@@ -1413,6 +1422,8 @@
     const bytes = new Uint8Array(data);
     if (DG() && DG().onBinary(bytes)) return; // ligne de cascade FT8/FT4
     if (!player.on || !player.ctx) return;
+    // Pendant que vous parlez (phonie à distance) : écoute coupée (pas d'écho de votre propre émission)
+    if (VX() && VX().talking()) { player.next = 0; return; }
     const pcm = ULAW.decodeFrame(bytes);
     if (!pcm) return;
     player.got++;
@@ -1596,11 +1607,13 @@
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if (window.RSLOG && /^log_/.test(m.t)) { window.RSLOG.onMessage(m); return; }
+      if (m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values') { if (VX()) VX().onMessage(m); return; }
       if (DG() && DG().onMessage(m)) return;
       if (m.t === 'hello') {
         me = m;
         if (window.RSLOG) window.RSLOG.onHello(m);
         if (DG()) DG().onHello(m, m);
+        if (VX()) VX().onHello(m);
         if (/^Liaison perdue/.test($('msg').textContent)) say('');
         $('login').hidden = true;
         $('meCall').textContent = m.call;
@@ -1640,6 +1653,7 @@
         if (RIG().ID !== ctlModel) buildControls();
         render();
         if (DG()) DG().onState(st);
+        if (VX()) VX().onState(st);
         if (window.RSLOG && window.RSLOG.onState) window.RSLOG.onState();
       } else if (m.t === 'events') {
         $('events').textContent = '';
@@ -1661,7 +1675,7 @@
         ctlT = { at: Date.now(), idle: m.idle, busy: m.busy, fair: m.fair, to: m.to, held: m.held };
         drawCtlTimer();
       } else if (m.t === 'notice') {
-        if (m.pttCut) pttCut = true;
+        if (m.pttCut) { pttCut = true; if (VX()) VX().txEnd(); }
         say(m.msg, m.level === 'error' ? 'error' : m.level === 'info' ? '' : 'warn', 7000);
         render();
       }
@@ -1720,6 +1734,7 @@
   };
   if (window.RSLOG) window.RSLOG.init(digiApi); // onglet « Logs » (monté par digi.js)
   if (window.RSDIGI) window.RSDIGI.init(digiApi);
+  if (window.RSVOICE) window.RSVOICE.init({ send, sendBin, say, state: () => st, me: () => me, iControl: () => iControl(), rig: () => RIG() });
   // TXW : maintenir le bouton (ou la touche W) pour écouter la fréquence d'émission ; nouvelles toutes les 0,7 s au serveur
   let txwHold = null;
   const txwDown = (e) => {

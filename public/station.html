@@ -64,6 +64,9 @@
       <label>Niveau d'émission <span id="audTxPct">30 %</span>
         <input id="audTxLvl" type="range" min="1" max="100" step="1" value="30">
       </label>
+      <label title="Phonie à distance : niveau de la voix de l'opérateur envoyée à l'entrée USB du TRX. À régler pour que l'ALC bouge à peine en SSB (comme avec le micro du club).">Niveau phonie à distance <span id="audVoicePct">50 %</span>
+        <input id="audVoiceLvl" type="range" min="1" max="100" step="1" value="50">
+      </label>
     </form>
     <p class="st-audio-state" id="tAudioOut">Sortie vers le TRX : pas encore active</p>
     <div class="st-meter" aria-hidden="true"><i id="audLvl"></i></div>

@@ -83,7 +83,8 @@
   const core = new StationCore({
     rig: RIG,
     keyer,
-    txAudio: { prepare: (...a) => txPrepare(...a), prepareSamples: (...a) => txPrepareSamples(...a), play: (...a) => txPlay(...a), stop: () => txStop() },
+    txAudio: { prepare: (...a) => txPrepare(...a), prepareSamples: (...a) => txPrepareSamples(...a), play: (...a) => txPlay(...a), stop: () => txStop(),
+      voiceReady: () => voiceReady(), voiceStart: () => voiceStart(), voiceStop: () => voiceStop() },
     writeSerial(s) {
       if (sim) return sim.write(s);
       if (!writer) return;
@@ -139,10 +140,13 @@
     setTimeout(closePrev, 10000);
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
     // caps : ce que sait faire cette version de la page (ftsplit : SPLIT du FTX-1 par FT0 / FT1, sans ST1)
-    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq', 'ftxtx', 'audiotx', 'audioreset', 'cwtx', 'cwprep'] }));
+    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq', 'ftxtx', 'audiotx', 'audioreset', 'cwtx', 'cwprep', 'voicetx', 'exrw'] }));
+    ws.binaryType = 'arraybuffer';
     lastServerMsg = Date.now();
     ws.onmessage = (e) => {
       lastServerMsg = Date.now();
+      // Binaire : voix de l'opérateur (phonie à distance), jouée vers l'entrée USB du TRX
+      if (typeof e.data !== 'string') { voiceFrame(new Uint8Array(e.data)); return; }
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if (m.t === 'welcome') {
@@ -788,7 +792,7 @@
     $('audTxPct').textContent = txLevel() + ' %';
     $('tAudioOut').textContent = !tx.ctx ? 'Sortie vers le TRX : aucune (émission FT8 / FT4 / FT2 impossible)'
       : tx.ctx.state !== 'running' ? 'Sortie vers le TRX en pause : cliquez n’importe où sur la page pour la relancer'
-      : 'Sortie vers le TRX : ' + tx.label + (tx.src ? ' · émission en cours' : '');
+      : 'Sortie vers le TRX : ' + tx.label + (tx.src ? ' · émission en cours' : voice && voice.on ? ' · phonie à distance en cours' : '');
   }
   async function listOutputs() {
     if (!navigator.mediaDevices) return [];
@@ -923,6 +927,51 @@
     if (alcTimer) clearInterval(alcTimer);
     alcTimer = null;
   }
+  // ------------------------------------------------------------ phonie à distance
+  // Voix de l'opérateur (µ-law 12 kHz, trames de 20 ms) jouée sur la sortie son vers le TRX, seulement pendant une
+  // émission en phonie (TRX en émission, source de modulation USB). Petite réserve (0,15 s) contre les à-coups du
+  // réseau ; au-delà de 0,6 s de retard, on repart à zéro (on garde le direct plutôt que d'accumuler du retard).
+  var voice = { on: false, gain: null, next: 0, frames: 0, late: 0, under: 0 }; // var : la liaison VPS peut s'ouvrir avant cette ligne
+  const voiceLevel = () => Math.max(1, Math.min(100, Number(store.get('voicelevel', '50')) || 50));
+  function voiceReady() { return !!(tx.ctx && tx.ctx.state === 'running'); }
+  function voiceStart() {
+    if (!tx.ctx) return;
+    if (!voice.gain || voice.gain.context !== tx.ctx) {
+      voice.gain = tx.ctx.createGain();
+      voice.gain.connect(tx.ctx.destination);
+    }
+    voice.gain.gain.value = voiceLevel() / 100;
+    voice.on = true;
+    voice.next = 0;
+    voice.frames = 0;
+    voice.late = 0;
+    voice.under = 0;
+    drawTxOut();
+  }
+  function voiceStop() {
+    if (!voice.on) return;
+    voice.on = false;
+    if (voice.gain) { try { voice.gain.disconnect(); } catch (e) {} voice.gain = null; } // coupe aussi la fin déjà prévue
+    log('Phonie à distance : ' + voice.frames + ' trames jouées' + (voice.under ? ', ' + voice.under + ' trou(s) réseau' : '') + (voice.late ? ', ' + voice.late + ' rattrapage(s) du retard' : ''));
+    drawTxOut();
+  }
+  function voiceFrame(u8) {
+    if (!voice || !voice.on || !core.catKeyed || !tx.ctx || !voice.gain || u8[0] !== 0x05) return;
+    const s = ULAW.decodeFrame(u8);
+    if (!s || !s.length) return;
+    const ctx = tx.ctx;
+    const buf = ctx.createBuffer(1, s.length, 12000);
+    buf.copyToChannel(s, 0);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(voice.gain);
+    const now = ctx.currentTime;
+    if (voice.next < now + 0.02) { if (voice.frames) voice.under++; voice.next = now + 0.15; }
+    else if (voice.next - now > 0.6) { voice.late++; voice.next = now + 0.15; }
+    src.start(voice.next);
+    voice.next += s.length / 12000;
+    voice.frames++;
+  }
   function txStop() {
     const src = tx.src;
     tx.src = null;
@@ -941,6 +990,15 @@
     store.set('audio.outLabel', o && o.value ? unAlias(o.textContent) : '');
     startTxOut();
   });
+  if ($('audVoiceLvl')) {
+    $('audVoiceLvl').value = String(voiceLevel());
+    $('audVoicePct').textContent = voiceLevel() + ' %';
+    $('audVoiceLvl').addEventListener('input', () => {
+      store.set('voicelevel', $('audVoiceLvl').value);
+      $('audVoicePct').textContent = voiceLevel() + ' %';
+      if (voice.gain) voice.gain.gain.value = voiceLevel() / 100;
+    });
+  }
   $('audTxLvl').addEventListener('input', () => {
     store.set('txlevel', $('audTxLvl').value);
     if (tx.gain) tx.gain.gain.value = txLevel() / 100;

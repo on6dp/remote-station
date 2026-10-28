@@ -11,7 +11,7 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.24.15** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.25.0** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
 **Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
 `remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
@@ -31,6 +31,7 @@ L'archive s'installe avec la procédure « Mettre à jour le serveur » ci-desso
 - **Écouter** le TRX dans le navigateur, avec un réglage de volume propre à chacun.
 - **Modes numériques** décodés sur le serveur, sans logiciel à installer : FT8 · FT4 · FT2 (moteur WSJT-X 3 avec le décodeur multi-passes de JTDX, séquence automatique comme WSJT-X), RTTY, JTTY, WSPR, JT65, CW, SSTV ; émission en FT8 · FT4 · FT2, RTTY et JTTY. Une **carte de bande** verticale affiche les spots du DX cluster (et du Reverse Beacon Network) : un clic sur un spot y cale le TRX et le décodeur.
 - **Carnet de trafic** partagé : enregistrement des QSO, colonnes et filtres, export ADIF / Cabrillo (dont « Mes QSO » pour chaque opérateur), envoi vers LoTW, eQSL, Club Log et QRZ.com avec des identifiants par indicatif, recherche des correspondants sur QRZ.com, UDP vers Swisslog, Log4OM, N1MM…
+- **Phonie à distance** : le micro de l'opérateur (navigateur) part vers l'entrée USB du TRX pendant le PTT, avec un égaliseur réglable et des réglages gardés pour chaque membre et chaque micro (type de micro reconnu d'après son nom) ; **égaliseur paramétrique du TRX** (menus PRMTRC des Yaesu) avec un profil par membre, mis au TRX à la prise de main et remplacé par le réglage du club quand il la rend.
 - **Sécurités d'émission** côté serveur et côté club : bandes autorisées, puissance selon la licence, ROS, durée maximale, coupure si la liaison tombe.
 - **Opérateurs** : liste des connectés, demande et passage de la main, discussion, mode « Suivre l'opérateur » pour la formation à distance.
 
@@ -39,7 +40,7 @@ L'archive s'installe avec la procédure « Mettre à jour le serveur » ci-desso
 ## Aide-mémoire
 
 > Dans PuTTY, lancer **une commande à la fois**.
-> Les fichiers secrets restent sur le VPS et ne sont **jamais** dans ce dépôt : `config.json` (jeton de la station), `users.json` (mots de passe), `comptes-*.csv`, `logbook.json` (carnet), `logbook-config.json` (identifiants des carnets en ligne), `sessions.json`, `macros.json`.
+> Les fichiers secrets restent sur le VPS et ne sont **jamais** dans ce dépôt : `config.json` (jeton de la station), `users.json` (mots de passe), `comptes-*.csv`, `logbook.json` (carnet), `logbook-config.json` (identifiants des carnets en ligne), `sessions.json`, `macros.json`, `profiles.json` (réglages de micro des membres).
 
 ### 1. Mettre à jour le serveur avec une nouvelle version
 
@@ -149,6 +150,7 @@ sudo systemctl restart remote-station
 |---|---|---|
 | `allowTx` | `false` | Autorise l'émission (section 5). |
 | `maxTxSeconds` | `120` | Durée maximale d'une émission. |
+| `remoteVoice` | `true` | Phonie à distance (micro de l'opérateur vers le TRX). `false` : le PTT garde le micro du club. |
 | `controlIdleMinutes` / `sessionIdleMinutes` | `15` / `15` | Main libérée / membre déconnecté après ce temps sans action. |
 | `rememberDays` | `7` | Jours pendant lesquels un navigateur reste connecté. |
 | `controlMaxMinutes`, `controlWarnSeconds`, `controlAskMinutes` | 45 min, 120 s, 15 min | Équité : main passée au membre qui l'a demandée après 45 min (avertissement 2 min avant, jamais pendant une émission). 0 = pas de limite. |
@@ -258,6 +260,14 @@ Aucun autre logiciel (WSJT-X, log…) ne doit utiliser le port CAT en même temp
 3. Choisir l'**entrée son** du TRX dans la liste. La barre de niveau doit bouger avec la BF ; régler le niveau de sortie USB dans le menu du TRX si elle est trop faible ou toujours au maximum.
 4. Le son n'est envoyé que si au moins un membre écoute ou regarde un onglet de mode numérique (12 kHz, 192 kbit/s depuis le club ; 96 kbit/s vers chaque écouteur).
 5. **Sortie son vers le TRX** (émission numérique) : choisir la carte son USB du TRX (« Haut-parleurs (USB Audio CODEC) »), jamais les haut-parleurs du PC ; régler le niveau pour que l'ALC reste faible.
+
+6. **Phonie à distance** : la voix de l'opérateur sort par la même **sortie son vers le TRX**. Le niveau se règle avec « Niveau phonie à distance » (l'ALC doit à peine bouger en SSB). Rien à régler dans les menus : juste avant l'émission, la page Station relit le menu « source de modulation » du mode, le met sur USB, puis le remet comme avant 20 s après la dernière émission en phonie ou dès que l'opérateur rend la main (le micro du club refonctionne) :
+   - FTX-1 : MOD SOURCE (EX010113 en SSB, EX010213 en AM, EX010312 en FM) → 1 (USB) ;
+   - FTDX10 : SSB MOD SOURCE (EX010113) → REAR, REAR SELECT (EX010114) → USB ;
+   - FTDX101D / MP : SSB MOD SOURCE (EX010111) → REAR, REAR SELECT (EX010112) → USB ;
+   - IC-7300 : DATA OFF MOD (CI-V 1A 05 00 66) → USB.
+   Si le menu ne peut pas être relu, rien n'est émis (l'opérateur est prévenu).
+7. **Égaliseur du TRX** (Yaesu, menus PRMTRC EQ1 à EQ3 et P PRMTRC) : la première fois qu'un profil de membre est mis au TRX, le réglage en place est relu et gardé comme **réglage du club** ; il est remis quand le membre rend la main. Un administrateur peut le changer (bouton « Enregistrer comme réglage du club »). Profils et réglage du club dans `profiles.json` (VPS seulement).
 
 Après un redémarrage, la page réactive l'audio toute seule. Si elle affiche « Audio en pause », un clic n'importe où sur la page suffit ; pour éviter ce clic, ajouter `--autoplay-policy=no-user-gesture-required` au raccourci de démarrage de Chrome.
 
