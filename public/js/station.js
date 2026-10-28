@@ -955,6 +955,14 @@
   // Vitesse et bits de stop mémorisés par modèle (FTX-1/FTDX10 : 38400 ; IC-7300 : 115200)
   $('cfgBaud').value = store.get('baud.' + MODEL, String(RIG.serial.baudRate));
   $('cfgStop').value = store.get('stop.' + MODEL, String(RIG.serial.stopBits));
+  // Choix d'un autre modèle : appliqué tout de suite (la page se recharge avec le pilote de ce TRX)
+  $('cfgModel').addEventListener('change', () => {
+    if ($('cfgModel').value === MODEL) return;
+    store.set('model', $('cfgModel').value);
+    log('Modèle changé : ' + (window.RIGS[$('cfgModel').value] || {}).NAME + ', rechargement de la page');
+    try { core.stop(); } catch (e) { /* */ }
+    setTimeout(() => reloadPage(), 300);
+  });
   $('btnSave').addEventListener('click', async () => {
     // Le jeton n'est remplacé que par une valeur plausible (jamais vidé ni écrasé par autre chose par erreur)
     const tok = $('cfgToken').value.trim().replace(/^"|",?$/g, '');
