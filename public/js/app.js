@@ -20,7 +20,7 @@
   const LAYOUT = {
     ant: ['ant'],
     front: ['rf', 'agc'],
-    filter: ['width', 'shift', 'contour', 'apf'],
+    filter: ['width', 'roof', 'shift', 'contour', 'apf'],
     dual: ['vfoSel', 'split', 'dualRx', 'aToB', 'bToA', 'swap', 'lock'],
     audio: ['af', 'sql'],
     dsp: ['nb', 'nr', 'notch', 'notchFreq', 'dnf'],
@@ -30,11 +30,11 @@
   // Réglages affichés sur les écrans VFO eux-mêmes (pas de bouton dans les cadres)
   // ATT, préampli (IPO / AMP1 / AMP2, AMP) et NARROW : un clic sur leur badge de l'écran VFO (plus de bouton dans les cadres)
   const IN_VFO = ['rit', 'xit', 'clar', 'clarClr', 'ritB', 'xitB', 'clarB', 'clarClrB', 'splitHw', 'widthB',
-    'att', 'preamp', 'preampVU', 'narrow', 'narrowB', 'nbB', 'nrB', 'notchB', 'dnfB', 'attB', 'preampB', 'agcB', 'rfB', 'notchFreqB', 'shiftB', 'contourB', 'apfB'];
+    'att', 'preamp', 'preampVU', 'narrow', 'narrowB', 'nbB', 'nrB', 'notchB', 'dnfB', 'attB', 'preampB', 'agcB', 'rfB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'roofB'];
   // Réglages des cadres (RF front end, Filtre, DSP) qui suivent le VFO sélectionné (A / B) quand le TRX a leur équivalent côté SUB
   const SIDE_B = { nb: 'nbB', nr: 'nrB', notch: 'notchB', dnf: 'dnfB', narrow: 'narrowB', agc: 'agcB', rf: 'rfB', width: 'widthB',
-    notchFreq: 'notchFreqB', shift: 'shiftB', contour: 'contourB', apf: 'apfB' };
-  const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', shift: 'IF shift', preamp: 'PRE', preampVU: 'AMP' };
+    notchFreq: 'notchFreqB', shift: 'shiftB', contour: 'contourB', apf: 'apfB', roof: 'roofB' };
+  const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', roof: 'ROOFING', shift: 'IF shift', preamp: 'PRE', preampVU: 'AMP' };
 
   // Bouton HELP : manuel en français, ou en anglais si le navigateur n'est pas en français
   try { if (!/^fr\b/i.test(navigator.language || 'fr')) document.getElementById('helpBtn').href = '/help'; } catch (e) {}
