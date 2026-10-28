@@ -291,7 +291,7 @@
         <pre class="rt-rx" id="cwRx"></pre>
       </div>
       <div class="dg-col rt-tx-col">
-        <div class="dg-h"><span>Émission</span><button class="btn cw-stop" type="button" id="cwStop" hidden title="Arrête tout de suite l’émission CW en cours (macro lancée par erreur…) — aussi avec la touche Échap">■ ARRÊTER (Échap)</button><label class="rt-call">Vitesse <input id="cwSpeed" type="number" min="5" max="50" step="1" title="Vitesse du manipulateur du TRX (mots/minute)"> mots/min</label></div>
+        <div class="dg-h"><span>Émission</span><button class="btn cw-stop" type="button" id="cwStop" hidden title="Arrête tout de suite l’émission CW en cours (macro lancée par erreur…) — aussi avec la touche Échap">■ ARRÊTER (Échap)</button><label class="rt-call">Vitesse <input id="cwSpeed" type="number" min="5" max="60" step="1" title="Vitesse du manipulateur du TRX (mots/minute) : 5 à 60 sur les Yaesu, 5 à 48 sur l’IC-7300"> mots/min</label></div>
         <div class="rt-macros" id="cwMacros"></div>
         <div class="rt-tx-row">
           <textarea id="cwTxt" rows="2" placeholder="Texte à émettre (F1 à F12 : macros)…" spellcheck="false"></textarea>
@@ -2173,7 +2173,9 @@
     $('cwSq').addEventListener('change', () => { cwc.squelch = Number($('cwSq').value); saveCw(true); });
     const sp = $('cwSpeed');
     sp.value = store.get('cwspeed', '22');
-    sp.addEventListener('change', () => { const v = Math.max(5, Math.min(50, Math.round(Number(sp.value) || 22))); sp.value = v; store.set('cwspeed', v); });
+    const wmax = () => { const R = api && api.rig && api.rig(); return (R && R.CW && R.CW.wpmMax) || 60; };
+    sp.addEventListener('focus', () => { sp.max = wmax(); });
+    sp.addEventListener('change', () => { const v = Math.max(5, Math.min(wmax(), Math.round(Number(sp.value) || 22))); sp.value = v; store.set('cwspeed', v); });
     const dial = $('cwDial');
     fillList(dial, withQo(CW_DIAL, 'CW'), store.get('cwdial', '14030'));
     dial.addEventListener('change', () => { store.set('cwdial', dial.value); qsyTo(Number(dial.value), 'CW'); });

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.24.15 | [RemoteStation-Setup-0.24.15.exe](0.24.15/RemoteStation-Setup-0.24.15.exe) | [remote-station-0.24.15.tar.gz](0.24.15/remote-station-0.24.15.tar.gz) | CW : vitesse jusqu'à 60 mots/min (IC-7300 : 48) — [empreintes SHA-256](0.24.15/SHA256SUMS.txt) |
 | 0.24.14 | [RemoteStation-Setup-0.24.14.exe](0.24.14/RemoteStation-Setup-0.24.14.exe) | [remote-station-0.24.14.tar.gz](0.24.14/remote-station-0.24.14.tar.gz) | CW : bouton ARRÊTER bien visible pendant l'émission — [empreintes SHA-256](0.24.14/SHA256SUMS.txt) |
 | 0.24.13 | [RemoteStation-Setup-0.24.13.exe](0.24.13/RemoteStation-Setup-0.24.13.exe) | [remote-station-0.24.13.tar.gz](0.24.13/remote-station-0.24.13.tar.gz) | FTDX101 : BW jusqu'à 4.0 kHz, ROOFING en jaune — [empreintes SHA-256](0.24.13/SHA256SUMS.txt) |
 | 0.24.12 | [RemoteStation-Setup-0.24.12.exe](0.24.12/RemoteStation-Setup-0.24.12.exe) | [remote-station-0.24.12.tar.gz](0.24.12/remote-station-0.24.12.tar.gz) | FTDX101 : ROOFING affiché dans le cadre FILTRES — [empreintes SHA-256](0.24.12/SHA256SUMS.txt) |

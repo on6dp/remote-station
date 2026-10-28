@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.24.15** — CW : **vitesse jusqu'à 60 mots/min** sur les Yaesu (FTX-1, FTDX10, FTDX101 : KS 4–60) et 48 sur l'IC-7300 (limite de leur manipulateur) ; case Vitesse élargie (3 chiffres) ; une valeur plus haute est ramenée au maximum du TRX. Redémarrer le service, Ctrl+F5 sur le dashboard et la page Station.
 - **0.24.14** — CW : gros bouton rouge **« ■ ARRÊTER (Échap) »** dans le titre du cadre Émission, au-dessus des macros, affiché pendant toute l'émission CW (préparation comprise) pour celui qui a la main : un clic coupe tout de suite (macro lancée par erreur). Échap et le bouton « Émettre » devenu « ■ Arrêter » marchent toujours. Ctrl+F5 sur le dashboard.
 - **0.24.13** — FTDX101D / MP : échelle **BW jusqu'à 4.0 kHz** (SSB : 300 à 4000 Hz en 23 pas, + 3500 et 4000 ; CW / RTTY / DATA : 50 à 4000 Hz en 21 pas, + 3200, 3500 et 4000), toujours avec « défaut » en bas. Libellé **ROOFING** en jaune comme les autres réglages du cadre FILTRES. Ctrl+F5 sur le dashboard.
 - **0.24.12** — FTDX101D / MP : la rangée **ROOFING** (12k / 3k / 1.2k / 600 / 300) est maintenant affichée dans le cadre **FILTRES**, sous BW (en 0.24.11 elle était créée dans un cadre caché). Comme BW, elle règle le VFO indiqué dans le titre du cadre : A · MAIN ou B · SUB (boutons MAIN / SUB). Ctrl+F5 sur le dashboard.

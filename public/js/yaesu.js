@@ -430,6 +430,7 @@
       // Commandes envoyées une à une (un refus « ? » est ainsi attribué à la bonne commande)
       CW: spec.cw ? {
         max: 50,
+        wpmMax: 60, // KS 004–060
         setup: (wpm) => (spec.cw.pre || []).concat(['KS' + pad(Math.max(4, Math.min(60, wpm)), 3) + ';', 'KR1;', 'BI1;']),
         mem: (t) => spec.cw.mem + t + ';',
         read: spec.cw.mem + ';', readRe: new RegExp('^' + spec.cw.mem),

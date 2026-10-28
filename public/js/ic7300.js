@@ -389,6 +389,7 @@
     // vitesse 14 0C (0–255 = 6–48 mots/min), break-in semi (16 47 01) pour que le TRX émette tout seul
     CW: {
       max: 30,
+      wpmMax: 48, // 14 0C : 6–48 mots/min
       setup: (wpm) => [q(0x14, 0x0C, ...lvlBytes(Math.round((Math.max(6, Math.min(48, wpm)) - 6) * 255 / 42))), q(0x16, 0x47, 0x01)],
       mem: null, read: null, alt: [],
       play: null, text: (t) => q(0x17, ...Array.from(t, (c) => c.charCodeAt(0))),

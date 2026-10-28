@@ -20,6 +20,8 @@ const DRIVERS = {
 };
 const DEFAULT_RIG = DRIVERS.ftx1;
 const rig = () => (station && station.rig) || DEFAULT_RIG;
+// Vitesse CW la plus haute du manipulateur du TRX (Yaesu : 60, IC-7300 : 48 mots/min)
+const cwWpmMax = () => (rig().CW && rig().CW.wpmMax) || 50;
 
 // ---------------------------------------------------------------- configuration
 const ROOT = __dirname;
@@ -1425,7 +1427,7 @@ function cwRequest(conn, m) {
   const text = cwClean(m.text);
   if (!text) return err('Rien à émettre : tapez un texte ou choisissez une macro');
   if (text.length > 300) return err('Texte trop long (300 caractères au plus)');
-  const wpm = Math.max(5, Math.min(50, Math.round(Number(m.wpm) || 22)));
+  const wpm = Math.max(5, Math.min(cwWpmMax(), Math.round(Number(m.wpm) || 22)));
   const seconds = cwMs(text, wpm) / 1000;
   if (seconds > cfg.maxTxSeconds - 2) return err('Texte trop long : ' + Math.round(seconds) + ' s d’émission à ' + wpm + ' mots/min (limite du serveur : ' + cfg.maxTxSeconds + ' s)');
   const id = ++ftxSeq;
@@ -2643,7 +2645,7 @@ function onOperator(conn, m) {
       if (!text || text.length > 300) return;
       if (Date.now() - (conn.cwPrepAt || 0) < 100) return;
       conn.cwPrepAt = Date.now();
-      return toStation({ t: 'cmd', op: 'cwprep', text, wpm: Math.max(5, Math.min(50, Math.round(Number(m.wpm) || 22))) });
+      return toStation({ t: 'cmd', op: 'cwprep', text, wpm: Math.max(5, Math.min(cwWpmMax(), Math.round(Number(m.wpm) || 22))) });
     }
 
     case 'cw_stop':

@@ -849,7 +849,7 @@
       if (this.cw) this._cwStop('nouveau message', false);
       const text = String(m.text || '').toUpperCase().replace(/[^A-Z0-9 /?.,=+-]/g, ' ').replace(/\s+/g, ' ').trim();
       if (!text) return this._cwSay(m.id, 'error', 'rien à émettre');
-      const wpm = Math.max(5, Math.min(50, Math.round(Number(m.wpm) || 22)));
+      const wpm = Math.max(5, Math.min((this.rig.CW && this.rig.CW.wpmMax) || 50, Math.round(Number(m.wpm) || 22)));
       // Morceaux à la taille de la mémoire du manipulateur (Yaesu 50, Icom 30 caractères), coupés aux espaces
       const chunks = [];
       let rest = text;
@@ -879,7 +879,7 @@
       if (!text) return;
       let first = text;
       if (first.length > CW.max) { let cut = first.lastIndexOf(' ', CW.max); if (cut < 8) cut = CW.max; first = first.slice(0, cut).trim(); }
-      const wpm = Math.max(5, Math.min(50, Math.round(Number(m.wpm) || 22)));
+      const wpm = Math.max(5, Math.min((this.rig.CW && this.rig.CW.wpmMax) || 50, Math.round(Number(m.wpm) || 22)));
       const C = this._cwCacheGet();
       if (C.wpm === wpm && C.mem === first) return;
       const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
