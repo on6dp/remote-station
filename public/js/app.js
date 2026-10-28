@@ -433,7 +433,10 @@
           const t = R.widthTable && R.widthTable(r[c.modeKey || 'mode']);
           if (!t) return say('Pas de réglage de largeur dans ce mode (' + (r[c.modeKey || 'mode'] || '?') + ')', 'warn');
           if (c.when && !c.when(r)) return say(c.label + ' indisponible (NARROW enclenché ?)', 'warn');
-          v = Math.max(1, Math.min(t.length, (Number(ctlValue(id)) || 1) + (up ? 1 : -1)));
+          // FTDX101 : 0 = largeur par défaut du TRX (en dessous du plus étroit)
+          const lo = R.WIDTH_DEF ? 0 : 1;
+          const cv = ctlValue(id) == null ? lo : Number(ctlValue(id));
+          v = Math.max(lo, Math.min(t.length, cv + (up ? 1 : -1)));
         } else if (c.type === 'select') {
           const o = c.options.map((x) => x[0]);
           const i = Math.max(0, o.indexOf(Number(ctlValue(id))));
@@ -544,6 +547,7 @@
     if (v == null) return '—';
     if (c.type === 'width') {
       const t = RIG().widthTable(r && r[c.modeKey || 'mode']);
+      if (RIG().WIDTH_DEF && Number(v) === 0) return 'défaut';
       const hz = t && t[v - 1];
       return hz ? (hz >= 1000 ? (hz / 1000).toFixed(hz % 100 ? 2 : 1) + ' kHz' : hz + ' Hz') : '—';
     }
@@ -672,7 +676,7 @@
         head.append(l, out);
         const inp = document.createElement('input');
         inp.type = 'range';
-        inp.min = c.type === 'level' ? c.min : 1;
+        inp.min = c.type === 'level' ? c.min : c.type === 'width' && RIG().WIDTH_DEF ? 0 : 1;
         inp.max = c.type === 'level' ? c.max : 1;
         inp.step = c.type === 'level' ? c.step : 1;
         inp.setAttribute('aria-label', c.label);
@@ -1125,14 +1129,14 @@
       badge($('mode' + w), live ? (w === 'A' ? r.mode : r.modeB) || '---' : '---', 'b-mode');
     }
     const wt = RIG().widthTable && RIG().widthTable(r.mode);
-    const wA = Number(ctlValue('width')) || r.width;
-    $('widthA').textContent = RIG().bwText ? (live ? RIG().bwText(Object.assign({}, r, { fil: ctlValue('fil') != null ? ctlValue('fil') : r.fil })) : '—') : 'BW ' + (live && r.narrow ? 'NAR' : live && wt && wA && wt[wA - 1] ? bwK(wt[wA - 1]) : live && r.mode && /AM|FM/.test(r.mode) ? 'FIX' : '—');
+    const wA = ctlValue('width') != null ? Number(ctlValue('width')) : r.width;
+    $('widthA').textContent = RIG().bwText ? (live ? RIG().bwText(Object.assign({}, r, { fil: ctlValue('fil') != null ? ctlValue('fil') : r.fil })) : '—') : 'BW ' + (live && r.narrow ? 'NAR' : live && wt && RIG().WIDTH_DEF && Number(wA) === 0 ? 'DEF' : live && wt && wA && wt[wA - 1] ? bwK(wt[wA - 1]) : live && r.mode && /AM|FM/.test(r.mode) ? 'FIX' : '—');
     // Largeur de filtre du récepteur SUB (FTX-1)
     $('widthB').hidden = !RIG().SUB_BADGES;
     if (RIG().SUB_BADGES) {
       const wtB = RIG().widthTable && RIG().widthTable(r.modeB);
-      const wB = Number(ctlValue('widthB')) || r.widthB;
-      $('widthB').textContent = 'BW ' + (live && r.narrowB ? 'NAR' : live && wtB && wB && wtB[wB - 1] ? bwK(wtB[wB - 1]) : live && r.modeB && /AM|FM/.test(r.modeB) ? 'FIX' : '—');
+      const wB = ctlValue('widthB') != null ? Number(ctlValue('widthB')) : r.widthB;
+      $('widthB').textContent = 'BW ' + (live && r.narrowB ? 'NAR' : live && wtB && RIG().WIDTH_DEF && Number(wB) === 0 ? 'DEF' : live && wtB && wB && wtB[wB - 1] ? bwK(wtB[wB - 1]) : live && r.modeB && /AM|FM/.test(r.modeB) ? 'FIX' : '—');
     }
     // S-mètre en réception, puissance relative en émission (sur le VFO qui émet) ; VFO B : S-mètre du côté SUB (FTX-1)
     const txB = txing && r.txVfo === 1;

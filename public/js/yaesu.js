@@ -227,7 +227,7 @@
       }
       if (c.type === 'width') {
         const t = widthTable(st[c.modeKey || 'mode']) || (opts && opts.skipWhen ? WIDTH_SSB : null);
-        if (!t || !(Number.isInteger(v) && v >= 1 && v <= t.length)) throw new Error('largeur invalide pour ce mode');
+        if (!t || !(Number.isInteger(v) && v >= (spec.widthDefault ? 0 : 1) && v <= t.length)) throw new Error('largeur invalide pour ce mode'); // FTDX101 : 0 = défaut
         return v;
       }
       throw new Error('type inconnu');
@@ -424,7 +424,7 @@
       FAST, FAST_SUB, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,
       FRAME_GAP_MS: 20, SLOW_PER_TICK: 4, POLL_MS: 250, readFor,
       widthTableFn: widthTable,
-      derive: spec.derive || null, preampText: spec.preampText || null, SUB_BADGES: !!spec.subBadges, remapRead: spec.remapRead || null,
+      derive: spec.derive || null, preampText: spec.preampText || null, SUB_BADGES: !!spec.subBadges, WIDTH_DEF: !!spec.widthDefault, remapRead: spec.remapRead || null,
       // Émission CW par le manipulateur du TRX : texte écrit dans une mémoire du manipulateur (KM), puis lu (KY),
       // break-in en service (BI1) pour que le TRX émette tout seul ; arrêt : fin de lecture et break-in coupé
       // Commandes envoyées une à une (un refus « ? » est ainsi attribué à la bonne commande)

@@ -66,7 +66,7 @@
     },
     fakeTuning: 'AC002',
     serial: { baudRate: 38400, stopBits: 1, portHint: 'Enhanced COM Port' },
-    hint: 'FTDX10 : menu Operation setting → General, « CAT RATE » doit correspondre à la vitesse choisie ici (38400 conseillé). Choisissez le port Enhanced COM Port.'
+    hint: 'FTDX10 : menu Operation setting → General, « CAT RATE » doit correspondre à la vitesse choisie ici (38400 conseillé). Choisissez le port Enhanced COM Port. Mettez « CAT RTS » sur OFF (sinon la liaison tombe toutes les 2 secondes).'
   });
 
   // Lectures et réglages propres au FTDX10 : interrupteurs NB/DNR et leurs niveaux

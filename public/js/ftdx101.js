@@ -17,17 +17,20 @@
   // Puissance : 3 chiffres sans tête (PC005…PC200). Le modèle vient de la réponse à ID : 0681 = D (100 W), 0682 = MP (200 W).
   // Tant que ID n'est pas lu, on reste prudent : plage du D.
   const RANGE = { D: [5, 100], M: [5, 200] };
-  const SSB_21 = Y.WIDTH_SSB.slice(0, 21);       // SH x 0 01…21 : 300 … 3200 Hz
-  const NARROW_21 = Y.WIDTH_NARROW.slice(0, 21); // 50 … 4000 Hz
+  // Largeurs du FTDX101 (manuel CAT 1912-D, table 3) : SH P1 0 P3P3 ; 00 = largeur par défaut du TRX (voyant WIDTH éteint).
+  // Différentes du FTX-1 au-delà de 2100 Hz en SSB, et 18 pas seulement (50 … 3000 Hz) en CW / RTTY / PSK / DATA.
+  const SSB_21 = [300, 400, 600, 850, 1100, 1200, 1500, 1650, 1800, 1950, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000, 3200];
+  const NARROW_18 = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 800, 1200, 1400, 1700, 2000, 2400, 3000];
 
   const api = Y.build({
     ID: 'ftdx101',
     NAME: 'Yaesu FTDX101D / MP',
     FREQ_MAX: 75000000,
     headNames: { D: 'FTDX101D', M: 'FTDX101MP' },
+    widthDefault: true, // WIDTH 00 = largeur par défaut (proposée en bas de l'échelle BW)
     widthTable(mode) {
       if (mode === 'LSB' || mode === 'USB') return SSB_21;
-      if (Y.NARROW_MODES.indexOf(mode) >= 0) return NARROW_21;
+      if (Y.NARROW_MODES.indexOf(mode) >= 0) return NARROW_18;
       return null;
     },
     power: {
@@ -97,10 +100,13 @@
       { cmd: 'CO10;', re: /^CO10(\d{4})$/, parse: (m) => ({ contourB: +m[1] ? 1 : 0 }), sim: 'CO100000' },
       { cmd: 'CO12;', re: /^CO12(\d{4})$/, parse: (m) => ({ apfB: +m[1] ? 1 : 0 }), sim: 'CO120000' },
       { cmd: 'RA1;', re: /^RA1([0-3])$/, parse: (m) => ({ attB: +m[1] }), sim: 'RA10' },
-      { cmd: 'PA1;', re: /^PA1([0-2])$/, parse: (m) => ({ preampB: +m[1] }), sim: 'PA10' }
+      { cmd: 'PA1;', re: /^PA1([0-2])$/, parse: (m) => ({ preampB: +m[1] }), sim: 'PA10' },
+      // Filtre de toit (ROOFING) : réglé par RF P1 1–5, relu en RF P1 6–A (12 kHz, 3 kHz, 1,2 kHz, 600 Hz, 300 Hz)
+      { cmd: 'RF0;', re: /^RF0([6-9A])$/, parse: (m) => ({ roof: '6789A'.indexOf(m[1]) + 1 }), sim: 'RF06' },
+      { cmd: 'RF1;', re: /^RF1([6-9A])$/, parse: (m) => ({ roofB: '6789A'.indexOf(m[1]) + 1 }), sim: 'RF16' }
     ],
-    extraQueries: ['ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
-    extraStateKeys: ['nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
+    extraQueries: ['RF0;', 'RF1;', 'ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
+    extraStateKeys: ['roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
     // CW : mémoire 1 du manipulateur (écrasée), lue par KY6 (« Message Keyer 1 Playback », manuel CAT 1912-D) ;
     // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
@@ -133,6 +139,9 @@
       { id: 'nbLvl', g: 'flt', sec: 'dsp', label: 'Niveau NB', type: 'level', min: 0, max: 10, step: 1, write: (v) => 'NL0' + pad(v, 3) + ';' },
       { id: 'nrLvl', g: 'flt', sec: 'dsp', label: 'Niveau DNR', type: 'level', min: 1, max: 15, step: 1, write: (v) => 'RL0' + pad(v, 2) + ';' },
       { id: 'dualRx', g: 'vfo', label: 'DUAL RX', type: 'toggle', write: (v) => 'FR0' + (v ? '0' : '1') + ';' },
+      // Filtre de toit (R.FLT) : 12 kHz (large) … 300 Hz ; 1,2 kHz et 300 Hz en option selon le TRX (refusés s'il ne les a pas)
+      { id: 'roof', g: 'flt', label: 'ROOFING (VFO A)', type: 'select', options: [[1, '12k'], [2, '3k'], [3, '1.2k'], [4, '600'], [5, '300']], write: (v) => 'RF0' + v + ';' },
+      { id: 'roofB', g: 'flt', label: 'ROOFING (VFO B)', type: 'select', options: [[1, '12k'], [2, '3k'], [3, '1.2k'], [4, '600'], [5, '300']], write: (v) => 'RF1' + v + ';' },
       { id: 'ant', g: 'rx', label: 'Antenne', type: 'select', noTx: true, options: [[1, 'ANT 1'], [2, 'ANT 2'], [3, 'ANT 3']], write: (v) => 'AN0' + v + ';' },
       // Côté SUB (VFO B), réglé directement (P1 = 1)
       { id: 'widthB', g: 'flt', label: 'WIDTH (VFO B)', type: 'width', modeKey: 'modeB', write: (v) => 'SH10' + pad(v, 2) + ';',
@@ -162,11 +171,12 @@
       if ((m = /^RT([01])$/.exec(c))) { k.rit = +m[1]; return true; }
       if ((m = /^XT([01])$/.exec(c))) { k.xit = +m[1]; return true; }
       if (c === 'RC') { k.off = 0; return true; }
+      if ((m = /^RF([01])([1-5])$/.exec(c))) { f.ans['RF' + m[1] + ';'] = 'RF' + m[1] + '6789A'[+m[2] - 1]; return true; } // roofing : réglage 1–5, relu 6–A
       if ((m = /^R([UD])(\d{4})$/.exec(c))) { k.off = Math.max(-9999, Math.min(9999, k.off + (m[1] === 'U' ? 1 : -1) * +m[2])); return true; }
       return false;
     },
     serial: { baudRate: 38400, stopBits: 1, portHint: 'Enhanced COM Port' },
-    hint: 'FTDX101 : menu OPERATION SETTING → GENERAL, « CAT RATE » doit correspondre à la vitesse choisie ici (38400 conseillé). Choisissez le port Enhanced COM Port.'
+    hint: 'FTDX101 : menu OPERATION SETTING → GENERAL, « CAT RATE » doit correspondre à la vitesse choisie ici (38400 conseillé). Choisissez le port Enhanced COM Port. Mettez « CAT RTS » sur OFF (sinon la liaison tombe toutes les 2 secondes).'
   });
 
   // Son USB en stéréo : récepteur MAIN à gauche, SUB à droite. En double réception (FR00), la page Station envoie
