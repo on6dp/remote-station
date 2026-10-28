@@ -291,7 +291,7 @@
         <pre class="rt-rx" id="cwRx"></pre>
       </div>
       <div class="dg-col rt-tx-col">
-        <div class="dg-h"><span>Émission</span><label class="rt-call">Vitesse <input id="cwSpeed" type="number" min="5" max="50" step="1" title="Vitesse du manipulateur du TRX (mots/minute)"> mots/min</label></div>
+        <div class="dg-h"><span>Émission</span><button class="btn cw-stop" type="button" id="cwStop" hidden title="Arrête tout de suite l’émission CW en cours (macro lancée par erreur…) — aussi avec la touche Échap">■ ARRÊTER (Échap)</button><label class="rt-call">Vitesse <input id="cwSpeed" type="number" min="5" max="50" step="1" title="Vitesse du manipulateur du TRX (mots/minute)"> mots/min</label></div>
         <div class="rt-macros" id="cwMacros"></div>
         <div class="rt-tx-row">
           <textarea id="cwTxt" rows="2" placeholder="Texte à émettre (F1 à F12 : macros)…" spellcheck="false"></textarea>
@@ -2194,6 +2194,7 @@
     });
     $('cwSend').title = 'Émet le texte en CW par le manipulateur du TRX (vitesse ci-dessus), puis retour en réception · pendant l’émission : arrêt';
     $('cwSend').addEventListener('click', () => cwClick());
+    $('cwStop').addEventListener('click', () => { if (api) api.send({ t: 'cw_stop' }); });
     $('cwTxt').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); cwClick(); } });
     drawMacroRow($('cwMacros'), 'CW', (t, ins) => useMacro('CW', t, ins), cwPrepMacro);
   }
@@ -3025,6 +3026,9 @@
     const b = $('cwSend');
     const note = $('cwTxState');
     if (!b || !note) return;
+    // Bouton ARRÊTER bien visible pendant toute l'émission CW (préparation comprise), pour celui qui a la main
+    const stp = $('cwStop');
+    if (stp) stp.hidden = !(x && api && api.iControl());
     b.textContent = x ? '■ Arrêter' : 'Émettre';
     b.classList.toggle('on-air', !!(x && x.state === 'tx'));
     note.classList.toggle('air', !!(x && x.state === 'tx'));
