@@ -433,6 +433,7 @@
   // ------------------------------------------------------------------ suivre l'opérateur
   let follow = store.get(POPUP ? 'pfollow' : 'follow', '0') === '1';
   let autoFollowDone = false; // une fois par ouverture de la page
+  let followCtl = null; // opérateur qui avait la main au dernier passage (nouvel opérateur : suivi remis)
   let viewSent = '';
   function setFollow(on) {
     follow = !!on;
@@ -4107,13 +4108,18 @@
       const fb = $('dgFollow');
       const mine = !!(api && api.iControl());
       if (fb) fb.hidden = mine;
-      // Arrivée alors qu'un autre membre a la main : « Suivre l'opérateur » enclenché tout seul (un clic sur un onglet l'arrête)
+      // « Suivre l'opérateur » enclenché tout seul quand un autre membre a la main : à l'arrivée sur la page, et chaque
+      // fois qu'un autre membre prend la main ensuite (un clic sur un onglet l'arrête jusqu'au prochain opérateur)
       const stF = api && api.state();
-      if (!autoFollowDone && stF && stF.users) {
-        autoFollowDone = true;
-        if (stF.controller && !mine && stF.controller !== opCall && !follow) {
-          setFollow(true);
-          api.say('Suivi de l’opérateur enclenché : ' + stF.controller + ' a la main (cliquez un onglet pour choisir vous-même).', '', 6000);
+      if (stF && stF.users) {
+        const ctl = stF.controller || null;
+        if (!autoFollowDone || ctl !== followCtl) {
+          autoFollowDone = true;
+          followCtl = ctl;
+          if (ctl && !mine && ctl !== opCall && !follow) {
+            setFollow(true);
+            api.say('Suivi de l’opérateur enclenché : ' + ctl + ' a la main (cliquez un onglet pour choisir vous-même).', '', 6000);
+          }
         }
       }
       if (mine) sendView(); else { viewSent = ''; followView(); }

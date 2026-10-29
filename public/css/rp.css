@@ -1500,3 +1500,7 @@ body.bm-resizing { cursor: ew-resize; user-select: none; }
 /* Bouton « Equalizer » (égaliseur du TRX) : vert gras comme « Écouter le TRX » */
 #vxTrxBtn, #vxEqBtn { font-weight: 800; color: #fff !important; background: linear-gradient(180deg, #1f9d45, #12692c) !important; border-color: #39FF14 !important; }
 #vxTrxBtn:hover, #vxEqBtn:hover { filter: brightness(1.12); }
+/* MODE AUTO (plan de bande IARU Région 1), à droite des touches de bande */
+.plan-btn { font-weight: 800; font-size: 10px; white-space: nowrap; margin-left: 6px; }
+.plan-btn[aria-pressed='true'] { color: #fff !important; background: linear-gradient(180deg, #1f9d45, #12692c) !important; border-color: #39FF14 !important; }
+.plan-btn[aria-pressed='false'] { color: var(--v2-text-dim) !important; }

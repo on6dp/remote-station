@@ -1279,6 +1279,7 @@ function inTxRange(hz) {
 // Une ligne par minute dans logs/usage-AAAA-MM.jsonl : qui a la main, qui est connecté, bande (fréquence d'émission),
 // mode (onglet numérique quand le TRX est en DATA), secondes d'émission. Lues par la page /stats (administrateurs).
 const STATS = require('./lib/stats.js');
+const BANDPLAN = require('./public/js/bandplan.js');
 const usage = { txS: 0, last: 0 };
 const VIEW_MODE = { rtty: 'RTTY', jtty: 'JTTY', wspr: 'WSPR', jt65: 'JT65', sstv: 'SSTV', cw: 'CW' };
 function usageDigi() {
@@ -1319,12 +1320,60 @@ function sbKey(hz) {
   const b = STATS.band(hz);
   return (b === 'hors bande' || b === 'inconnue' ? 'f' + Math.floor(hz / 1e6) : b) + (hz < 10000000 ? '<' : '>');
 }
+// ---------------------------------------------------------------- MODE AUTO : plan de bande IARU Région 1
+// Quand le VFO entre dans une autre portion du plan de bande (touche de bande, molette, flèches…), le TRX prend le mode
+// de cette portion une fois : CW, modes numériques (DATA-U), phonie (LSB sous 10 MHz, USB au-dessus, 60 m en USB), FM.
+// Dans la portion, un mode choisi à la main reste. Un mode envoyé par le dashboard juste avant ou juste après (onglet
+// numérique, spot du DX cluster) est prioritaire. Seulement quand un membre a la main et a laissé « MODE AUTO » en
+// service ; coupé pour tous avec « bandPlan »: false.
+const planWatch = { A: null, B: null };
+const planMode = { A: 0, B: 0 }; // dernier mode envoyé par le dashboard (heure) pour chaque VFO
+const planOn = () => cfg.bandPlan !== false && !!controller && controller.planAuto !== false;
+function planKey(hz) {
+  const seg = BANDPLAN.segment(hz);
+  return { seg, key: STATS.band(hz) + ':' + (seg && seg.mode ? seg.mode : '-') + (hz < 10000000 ? '<' : '>') };
+}
+function bandPlanTick() {
+  if (!station || !radio.connected) return;
+  const now = Date.now();
+  for (const [v, fk] of [['A', 'freq'], ['B', 'freqB']]) {
+    const hz = radio[fk];
+    if (!(hz > 0)) continue;
+    const { seg, key } = planKey(hz);
+    const w = planWatch[v];
+    if (!w) { planWatch[v] = { key, timer: null }; continue; } // première lecture : état pris tel quel
+    if (w.key === key) continue;
+    w.key = key;
+    clearTimeout(w.timer);
+    w.timer = null;
+    if (!seg || !seg.mode || !planOn()) continue;
+    const changedAt = now;
+    // Petite attente : un onglet numérique ou un spot envoie son mode juste après la fréquence
+    w.timer = setTimeout(() => {
+      w.timer = null;
+      if (!planOn() || ptt.active || radio.tx || ftxPend || cwJob || (seq && seq.on)) return;
+      if (planMode[v] > changedAt - 2500) return; // mode choisi par le dashboard : il a la priorité
+      const hz2 = radio[fk];
+      const now2 = planKey(hz2);
+      if (now2.key !== key || !now2.seg || !now2.seg.mode) return;
+      const K = BANDPLAN.modeKey(rig(), now2.seg.mode, hz2);
+      const cur = v === 'B' ? radio.modeB : radio.mode;
+      if (!K || cur === K[1]) return;
+      toStation({ t: 'cmd', op: 'mode', code: K[0], sub: v === 'B' });
+      journal('band_plan', { vfo: v, freq: hz2, from: cur, to: K[1], seg: now2.seg.label });
+      if (controller) send(controller, { t: 'notice', level: 'ok', msg: 'Plan de bande IARU : VFO ' + v + ' en ' + K[1] + ' (' + now2.seg.label + ', ' + (hz2 / 1e6).toFixed(3) + ' MHz)' });
+    }, 900);
+  }
+}
+
 function autoSideband() {
   if (cfg.autoSideband === false || !station || !radio.connected) return;
   const now = Date.now();
   for (const [v, fk, mk] of [['A', 'freq', 'mode'], ['B', 'freqB', 'modeB']]) {
     const hz = radio[fk];
     if (!(hz > 0)) continue;
+    // MODE AUTO en service et portion avec un mode d'usage : c'est le plan de bande qui décide
+    if (planOn()) { const sg = BANDPLAN.segment(hz); if (sg && sg.mode) { sbWatch[v] = { key: sbKey(hz), until: 0, done: true }; continue; } }
     const key = sbKey(hz);
     const w = sbWatch[v];
     // Première lecture (TRX qui vient de se connecter) : on prend l'état tel quel
@@ -2649,6 +2698,9 @@ function onOperator(conn, m) {
     case 'trxeq_club':
     case 'trxeq_del':
       return trxEqMsg(conn, m);
+    case 'plan_pref':
+      conn.planAuto = m.on !== false;
+      return;
     case 'mic_off':
       if (voiceUser === conn && !(ptt.active && ptt.conn === conn)) voiceRelease('micro coupé');
       return;
@@ -2855,6 +2907,7 @@ function onOperator(conn, m) {
         radio.power = w; // affichage optimiste
       }
       if (m.mode != null) {
+        planMode[m.sub ? 'B' : 'A'] = now; // mode choisi par le dashboard : prioritaire sur le plan de bande
         const code = String(m.mode).toUpperCase();
         if (rig().SETTABLE.indexOf(code) < 0) return send(conn, { t: 'notice', level: 'error', msg: 'Mode non disponible' });
         toStation({ t: 'cmd', op: 'mode', code, sub: !!m.sub });
@@ -3176,6 +3229,8 @@ function onStation(conn, m) {
   autoTuner();
   // Phonie : LSB sous 10 MHz, USB au-dessus, remis tout seul à chaque changement de bande
   autoSideband();
+  // MODE AUTO : mode de la portion du plan de bande IARU Région 1
+  bandPlanTick();
   // Protection du PA : résultat de l'accord. Le TRX signale HI-SWR après le TUNE → émission bloquée sur toute la bande
   if (tuneWatch) checkTune();
   // Protection du PA : le TRX signale lui-même HI-SWR pendant une émission par le PTT

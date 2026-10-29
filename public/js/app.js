@@ -76,6 +76,19 @@
     if (ws && ws.readyState === 1 && ws.bufferedAmount < 32768) ws.send(u8);
   }
   const VX = () => window.RSVOICE || null;
+  // MODE AUTO (plan de bande IARU Région 1) : préférence de chacun, gardée dans ce navigateur, envoyée au serveur
+  const planAuto = () => { try { return localStorage.getItem('rs.planauto') !== '0'; } catch (e) { return true; } };
+  function drawPlan() {
+    const b = $('planBtn');
+    if (!b) return;
+    b.setAttribute('aria-pressed', String(planAuto()));
+    b.textContent = planAuto() ? 'Mode auto' : 'Mode auto : non';
+    const r = st && st.radio;
+    const BP = window.BANDPLAN;
+    const seg = BP && r && r.freq ? BP.segment(target === 'B' ? r.freqB : r.freq) : null;
+    b.dataset.seg = seg && seg.mode ? seg.label : '';
+    b.title = b.title.split(' — ')[0] + (seg ? ' — Ici : ' + seg.label : '');
+  }
   // Avertissement avant déconnexion pour inactivité
   let idleTimer = null;
   function idleBanner() {
@@ -1614,6 +1627,8 @@
         if (window.RSLOG) window.RSLOG.onHello(m);
         if (DG()) DG().onHello(m, m);
         if (VX()) VX().onHello(m);
+        send({ t: 'plan_pref', on: planAuto() });
+        drawPlan();
         if (/^Liaison perdue/.test($('msg').textContent)) say('');
         $('login').hidden = true;
         $('meCall').textContent = m.call;
@@ -1654,6 +1669,7 @@
         render();
         if (DG()) DG().onState(st);
         if (VX()) VX().onState(st);
+        drawPlan();
         if (window.RSLOG && window.RSLOG.onState) window.RSLOG.onState();
       } else if (m.t === 'events') {
         $('events').textContent = '';
@@ -1734,6 +1750,12 @@
   };
   if (window.RSLOG) window.RSLOG.init(digiApi); // onglet « Logs » (monté par digi.js)
   if (window.RSDIGI) window.RSDIGI.init(digiApi);
+  if ($('planBtn')) $('planBtn').addEventListener('click', () => {
+    try { localStorage.setItem('rs.planauto', planAuto() ? '0' : '1'); } catch (e) { /* stockage bloqué */ }
+    send({ t: 'plan_pref', on: planAuto() });
+    drawPlan();
+    say(planAuto() ? 'MODE AUTO : le mode suit le plan de bande IARU Région 1 (CW, numérique, phonie, FM).' : 'MODE AUTO coupé : le mode ne change plus tout seul.', '', 4000);
+  });
   if (window.RSVOICE) window.RSVOICE.init({ send, sendBin, say, state: () => st, me: () => me, iControl: () => iControl(), rig: () => RIG() });
   // TXW : maintenir le bouton (ou la touche W) pour écouter la fréquence d'émission ; nouvelles toutes les 0,7 s au serveur
   let txwHold = null;

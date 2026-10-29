@@ -11,7 +11,7 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.25.5** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.26.0** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
 **Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
 `remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
@@ -150,6 +150,7 @@ sudo systemctl restart remote-station
 |---|---|---|
 | `allowTx` | `false` | Autorise l'émission (section 5). |
 | `maxTxSeconds` | `120` | Durée maximale d'une émission. |
+| `bandPlan` | `true` | MODE AUTO : quand le VFO entre dans une autre portion du plan de bande IARU Région 1, le TRX prend le mode de la portion (CW, DATA-U, LSB / USB, FM ; fréquences FT8 / FT4 / WSPR / JT65 / JTTY / SSTV en DATA-U). Un mode choisi à la main reste dans la portion. Chaque membre peut le couper (bouton « Mode auto »). Plan dans `public/js/bandplan.js`. |
 | `autoSideband` | `true` | Phonie : à chaque changement de bande (pendant qu'un membre a la main), un VFO en LSB / USB est remis en LSB sous 10 MHz et en USB au-dessus (60 m : USB). Les modes DATA, CW, AM, FM ne sont pas touchés. |
 | `remoteVoice` | `true` | Phonie à distance (micro de l'opérateur vers le TRX). `false` : le PTT garde le micro du club. |
 | `controlIdleMinutes` / `sessionIdleMinutes` | `15` / `15` | Main libérée / membre déconnecté après ce temps sans action. |

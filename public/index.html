@@ -170,7 +170,7 @@
           <div class="dual-b dual-inline" id="sec-dual" aria-label="VFO et SPLIT"></div>
           <button class="btn txw-btn" id="txwBtn" type="button" title="TXW : maintenir pour écouter la fréquence d’émission (VFO B en SPLIT) ; relâcher = retour. Touche W du clavier." aria-pressed="false">TXW</button>
         </div>
-        <div class="band-row"><span class="tl">Bands</span><div class="bands" id="bandKeys"></div><p class="band-warn" id="bandWarn" role="note">⚠ Changement de bande : <b>TUNE obligatoire</b>, puis vérifiez le <b>SWR</b> (en bas à gauche) avant d’émettre.</p></div>
+        <div class="band-row"><span class="tl">Bands</span><div class="bands" id="bandKeys"></div><button class="btn plan-btn" id="planBtn" type="button" aria-pressed="true" title="MODE AUTO : quand le VFO entre dans une autre portion de la bande, le TRX prend le mode du plan de bande IARU Région 1 (CW, modes numériques en DATA-U, phonie en LSB sous 10 MHz et USB au-dessus, FM). Un mode choisi ensuite à la main reste. Clic : couper / remettre.">Mode auto</button><p class="band-warn" id="bandWarn" role="note">⚠ Changement de bande : <b>TUNE obligatoire</b>, puis vérifiez le <b>SWR</b> (en bas à gauche) avant d’émettre.</p></div>
         <p class="hint">Molette ou glisser vertical sur un chiffre pour l'accorder · clic sur un VFO pour le sélectionner · flèches ↑ ↓ du clavier · barre d'espace = PTT. Spectre : non transmis par la liaison CAT.</p>
         <p class="msg" id="msg" role="status"></p>
       </section>
@@ -268,6 +268,7 @@
 <script src="/js/logbook.js"></script>
 <script src="/js/digi.js"></script>
 <script src="/js/voice.js"></script>
+<script src="/js/bandplan.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>
