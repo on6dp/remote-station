@@ -1,9 +1,11 @@
-# Remote Station — v0.26.0 (CAT + écoute de la BF)
+# Remote Station — v0.26.1 (CAT + écoute de la BF)
+
+> **Administrateurs : le guide à jour est [GUIDE-ADMINISTRATEUR.md](GUIDE-ADMINISTRATEUR.md).** Ce fichier garde les notes techniques détaillées ; certaines étapes y décrivent d'anciennes versions (jeton à coller, audio 8 kHz…).
 
 Pilotage à distance d'un transceiver du club depuis un navigateur, via le VPS VEX (`remote.op0p.be`).
 Quatre modèles sont pris en charge : **Yaesu FTX-1**, **Yaesu FTDX10**, **Yaesu FTDX101D / MP** et **Icom IC-7300**. Un seul est branché à la fois ; on choisit lequel sur la page Station du club, et la face avant des membres s'adapte toute seule.
 
-Cette version gère : fréquence (VFO A et B), mode, S-mètre, puissance, PTT, les fonctions du transceiver (voir ci-dessous), comptes par indicatif, une seule personne aux commandes, journal des accès. **La BF du TRX est relayée aux membres (écoute). Émission FT8 / FT4 / FT2 (v0.16) : le signal est fabriqué et joué par la page Station sur la carte son du TRX ; le micro des membres vers le TRX est encore à faire.**
+Cette version gère : fréquence (VFO A et B), mode, S-mètre, puissance, PTT, les fonctions du transceiver (voir ci-dessous), comptes par indicatif, une seule personne aux commandes, journal des accès. **La BF du TRX est relayée aux membres (écoute). Émission FT8 / FT4 / FT2, RTTY, JTTY, SSTV (signal joué par la page Station sur la carte son du TRX), CW (manipulateur du TRX) et phonie à distance (micro du membre vers l'entrée USB du TRX, depuis la v0.25).**
 
 ## Comment ça marche
 
@@ -88,7 +90,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.26.0.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.26.1.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -96,7 +98,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.26.0.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.26.1.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station
@@ -270,5 +272,5 @@ sudo grep tx_start /opt/remote-station/logs/access-$(date +%Y-%m).log | tail
 
 - **v0.2 — audio RX (fait)** : BF du TRX captée sur sa carte son USB par la page Station, relayée par le VPS à tous les membres qui écoutent.
 - **v0.16 – v0.17 — émission FT8 / FT4 / FT2 (fait)** : clic sur Tx1 à Tx7 = émission automatique avec séquence comme WSJT-X ; sortie son de la page Station vers la carte son USB du TRX.
-- **Ensuite** : émission RTTY, JTTY, SSTV, CW (manipulateur du TRX) ; micro du membre vers le TRX pendant le PTT.
+- **Fait depuis** : émission RTTY, JTTY, SSTV, CW (manipulateur du TRX) ; phonie à distance (v0.25) ; MODE AUTO, plan de bande IARU Région 1 (v0.26). Voir [CHANGELOG.md](CHANGELOG.md).
 - **v0.3** : réservation de créneaux, mesures en émission (puissance, ROS, ALC), plages d'émission par membre selon sa classe de licence.

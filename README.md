@@ -11,7 +11,7 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.26.0** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.26.1** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
 **Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
 `remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
@@ -20,7 +20,8 @@ L'archive s'installe avec la procédure « Mettre à jour le serveur » ci-desso
 | Document | Pour qui |
 |---|---|
 | **[MANUEL.md](MANUEL.md)** · [USER-MANUAL.md](USER-MANUAL.md) | Les membres : manuel complet pour débutants (lexique, premiers pas guidés, chaque commande expliquée). Aussi dans le dashboard, bouton **HELP**. |
-| [LISEZMOI.md](LISEZMOI.md) | Les administrateurs : installation complète du serveur. |
+| **[GUIDE-ADMINISTRATEUR.md](GUIDE-ADMINISTRATEUR.md)** | Les administrateurs : serveur, mises à jour, membres, réglages, PC du club, phonie à distance, égaliseurs, sauvegarde, dépannage. |
+| [LISEZMOI.md](LISEZMOI.md) | Notes techniques détaillées (historique de l'installation, fonctions par TRX). |
 | [windows/LISEZMOI-WINDOWS.md](windows/LISEZMOI-WINDOWS.md) | Installation sous Windows (PC du club, serveur). |
 | Ce fichier | Aide-mémoire des opérations courantes. |
 | [TIERS.md](TIERS.md) | Licences des éléments repris. |
@@ -172,7 +173,7 @@ sudo systemctl restart remote-station
 | `ftxWatchdogMinutes` | `6` | Arrêt de l'émission FT8 / FT4 / FT2 sans réponse. |
 | `qo100If` | 144,5 / 432,5 / 1296,5 | FI des convertisseurs QO-100 (section 4 ter). |
 
-Les identifiants des carnets en ligne (LoTW, eQSL, Club Log, QRZ.com) se règlent dans le dashboard (onglet Logs → Synchronisation ▾ → ⚙ Configuration, et dans chaque fenêtre de synchronisation pour les indicatifs personnels) ; ils restent dans `logbook-config.json` sur le serveur, jamais dans ce dépôt.
+Les identifiants des carnets en ligne (LoTW, eQSL, Club Log, QRZ.com) se règlent dans le dashboard (onglet Logbooks → Synchronisation ▾ → ⚙ Configuration, et dans chaque fenêtre de synchronisation pour les indicatifs personnels) ; ils restent dans `logbook-config.json` sur le serveur, jamais dans ce dépôt.
 
 ### 4 ter. QO-100 : fréquences de la FI du convertisseur 2,4 GHz
 Les listes FT8 · FT4, RTTY et CW proposent « QO-100 · FI 2 m / 70 cm / 23 cm » : la fréquence à mettre sur le TRX, avant le
@@ -354,7 +355,7 @@ L'essentiel en cinq lignes :
 | `releases/` | Versions prêtes à installer (archive serveur, installateur Windows, empreintes SHA-256) |
 | `public/js/sstv.js` | Modes SSTV et codeur (image → signal), communs au serveur et au navigateur |
 | `public/js/ftxenc.js`, `public/js/ftx-enc.wasm`, `native/ftx/ftx_enc.c` | Codeur FT8 / FT4 / FT2 (ft8_lib, MIT) pour l'émission |
-| `lib/logbook.js`, `lib/logsync.js`, `public/js/logbook.js` | Carnet de trafic, exports ADIF / Cabrillo, envois LoTW (TQSL), eQSL, Club Log, QRZ.com (identifiants par indicatif) et UDP (WSJT-X, N1MM, ADIF) ; onglet « Logs » |
+| `lib/logbook.js`, `lib/logsync.js`, `public/js/logbook.js` | Carnet de trafic, exports ADIF / Cabrillo, envois LoTW (TQSL), eQSL, Club Log, QRZ.com (identifiants par indicatif) et UDP (WSJT-X, N1MM, ADIF) ; onglet « Logbooks » |
 | `public/index.html`, `public/js/app.js`, `public/css/` | Page des membres |
 | `public/station.html`, `public/js/station.js`, `public/js/station-core.js` | Page Station (Web Serial) |
 | `public/js/yaesu.js`, `ftx1.js`, `ftdx10.js`, `ic7300.js` | Pilotes des TRX |

@@ -1380,10 +1380,16 @@ button[data-ctl='dnf'], button[data-ctl='dnfB'], button[data-ctl='tuner'] { font
 /* Ligne des bandes : titre BANDS en jaune, comme STEP et VFO */
 .tune-panel .band-row > .tl { color: var(--v2-accent-yellow); font-weight: 700; min-width: 34px; }
 /* Onglets : Synchro, Logs et Log QSO un peu à l'écart des modes ; Suivre l'opérateur encore séparé (autre chose) */
-.ctabs .ctab[data-tab='sync'] { margin-left: 28px; }
+/* Logbooks, Log QSO et Synchro : boutons cyan, un peu à l'écart des modes */
+.ctabs .ctab[data-tab='log'] { margin-left: 28px; }
+.ctabs .ctab[data-tab='log'], .ctabs .ctab[data-tab='sync'] { align-self: flex-end; margin-bottom: 2px; font-size: 10px; padding: 3px 10px; border: 1px solid var(--v2-accent-cyan); color: var(--v2-accent-cyan-bright); background: rgba(0, 212, 255, .08); border-radius: 5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; cursor: pointer; }
+.ctabs .ctab[data-tab='sync'] { margin-left: 8px; }
+.ctabs .ctab[data-tab='log']:hover, .ctabs .ctab[data-tab='sync']:hover, .ctabs .ctab-log:hover { background: rgba(0, 212, 255, .18); color: #fff; }
+.ctabs .ctab[data-tab='log'][aria-selected='true'], .ctabs .ctab[data-tab='sync'][aria-selected='true'] { background: rgba(0, 212, 255, .28); color: #fff; box-shadow: 0 0 8px rgba(0, 212, 255, .45); border-color: var(--v2-accent-cyan); }
+body.digi-popup .ctabs .ctab[data-tab='sync'] { margin-left: 28px; }
 .ctabs .ctab-log { align-self: center; margin: 0 0 3px 8px; font-size: 10px; padding: 4px 10px; border: 1px solid var(--v2-accent-cyan); color: var(--v2-accent-cyan-bright); background: rgba(0, 212, 255, .08); border-radius: 5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; cursor: pointer; }
 .ctabs .ctab-follow { margin-left: 36px; }
-@media (max-width: 1500px) { .ctabs .ctab[data-tab='sync'] { margin-left: 14px; } .ctabs .ctab-follow { margin-left: 18px; } }
+@media (max-width: 1500px) { .ctabs .ctab[data-tab='log'] { margin-left: 14px; } .ctabs .ctab-follow { margin-left: 18px; } }
 /* Carte de bande sur toute la hauteur du cadre « Activité et modes numériques » (titre compris) */
 .bm { top: 0; border-radius: 0 var(--v2-panel-radius) var(--v2-panel-radius) 0; overflow: hidden; }
 #centerPanel.bm-on > .panel-h { margin-right: var(--bm-w); }
@@ -1504,3 +1510,12 @@ body.bm-resizing { cursor: ew-resize; user-select: none; }
 .plan-btn { font-weight: 800; font-size: 10px; white-space: nowrap; margin-left: 6px; }
 .plan-btn[aria-pressed='true'] { color: #fff !important; background: linear-gradient(180deg, #1f9d45, #12692c) !important; border-color: #39FF14 !important; }
 .plan-btn[aria-pressed='false'] { color: var(--v2-text-dim) !important; }
+/* Fiche du QSO : TX call et QO-100 sur la 1re ligne, Remarque plus courte, « Enregistrer le QSO » à gauche sous Nom */
+.lg-row .lg-rem { flex: 0 1 340px; }
+.lg-row .lg-rem input { width: 100%; }
+.lg-row .lg-txc select { min-width: 150px; font-size: 13px; }
+.lg-chk.lg-qo { font-size: 14px !important; font-weight: 700; color: var(--v2-text-bright, #fff) !important; align-self: flex-end; padding-bottom: 6px; }
+.lg-chk.lg-qo input { transform: scale(1.35); margin-right: 3px; }
+.lg-form .lg-act { justify-content: flex-start; }
+/* Logbooks, Log QSO et Synchro : même hauteur */
+.ctabs .ctab[data-tab='log'], .ctabs .ctab[data-tab='sync'], .ctabs .ctab-log { height: 26px; min-height: 0; box-sizing: border-box; display: inline-flex; align-items: center; line-height: 1; padding-top: 0; padding-bottom: 0; }

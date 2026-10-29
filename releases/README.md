@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.26.1 | [RemoteStation-Setup-0.26.1.exe](0.26.1/RemoteStation-Setup-0.26.1.exe) | [remote-station-0.26.1.tar.gz](0.26.1/remote-station-0.26.1.tar.gz) | Guide des administrateurs, manuel à jour, fiche du QSO et onglets LOGBOOKS · LOG QSO · SYNCHRO — [empreintes SHA-256](0.26.1/SHA256SUMS.txt) |
 | 0.26.0 | [RemoteStation-Setup-0.26.0.exe](0.26.0/RemoteStation-Setup-0.26.0.exe) | [remote-station-0.26.0.tar.gz](0.26.0/remote-station-0.26.0.tar.gz) | MODE AUTO (plan de bande IARU Région 1), suivi de l'opérateur à chaque prise de main — [empreintes SHA-256](0.26.0/SHA256SUMS.txt) |
 | 0.25.5 | [RemoteStation-Setup-0.25.5.exe](0.25.5/RemoteStation-Setup-0.25.5.exe) | [remote-station-0.25.5.tar.gz](0.25.5/remote-station-0.25.5.tar.gz) | Boutons EQUALIZER TRX et EQUALIZER MICRO — [empreintes SHA-256](0.25.5/SHA256SUMS.txt) |
 | 0.25.4 | [RemoteStation-Setup-0.25.4.exe](0.25.4/RemoteStation-Setup-0.25.4.exe) | [remote-station-0.25.4.tar.gz](0.25.4/remote-station-0.25.4.tar.gz) | Bouton EQUALIZER vert, lettres blanches en gras — [empreintes SHA-256](0.25.4/SHA256SUMS.txt) |

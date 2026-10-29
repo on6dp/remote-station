@@ -96,7 +96,7 @@
   // ------------------------------------------------------------------ construction des onglets et des fenêtres
   // Même code pour le centre du dashboard et pour la fenêtre séparée (digi.html, sans l'onglet Activité).
   const TABS = [
-    ['events', 'Activité'], ['ftx', 'FT8 · FT4 · FT2'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['sync', 'Synchro'], ['log', 'Logs']
+    ['events', 'Activité'], ['ftx', 'FT8 · FT4 · FT2'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['log', 'Logbooks'], ['sync', 'Synchro']
   ];
   const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'cw', 'sstv', 'sync'];
   const WF_TABS = ['ftx', 'jt65', 'rtty', 'wspr', 'jtty', 'cw', 'sstv']; // onglets avec cascade
@@ -374,10 +374,9 @@
       b.dataset.tab = id;
       b.textContent = label;
       bar.appendChild(b);
+      // Log QSO (ligne Correspondant) : juste à droite de l'onglet Logbooks, avant Synchro
+      if (id === 'log') { const lq = document.getElementById('dxLog'); if (lq) { lq.classList.add('ctab-log'); bar.appendChild(lq); } }
     }
-    // Log QSO (ligne Correspondant) : juste à droite de l'onglet Logs, sur la ligne des onglets
-    const lq = document.getElementById('dxLog');
-    if (lq && !POPUP) { lq.classList.add('ctab-log'); bar.appendChild(lq); }
     // « Suivre l'opérateur » : l'onglet suit celui de l'opérateur qui a la main (formation à distance)
     const fol = document.createElement('button');
     fol.className = 'ctab-follow';

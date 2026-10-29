@@ -71,21 +71,21 @@
         <button class="btn" type="button" data-a="trx" title="Fréquence et mode du TRX, ligne Correspondant">⇩ TRX</button>
         <label class="lg-w5">RST env. <input name="rst_sent" maxlength="8"></label>
         <label class="lg-w5">RST reçu <input name="rst_rcvd" maxlength="8"></label>
+        <label class="lg-txc">TX call <select name="station" title="Indicatif sous lequel le QSO a été fait (STATION_CALLSIGN)"></select></label>
+        <label class="lg-chk lg-qo" title="QSO via le satellite QO-100 : fréquence de montée 2400,xxx MHz (la FI du convertisseur est convertie)"><input type="checkbox" name="qo100"> QO-100</label>
       </div>
       <div class="lg-row">
         <label>Nom <input name="name" maxlength="40"></label>
         <label>QTH <input name="qth" maxlength="60"></label>
         <label class="lg-w6">Locator <input name="gridsquare" maxlength="8"></label>
         <label class="lg-w5">Puiss. W <input name="tx_pwr" inputmode="decimal" maxlength="5"></label>
-        <label class="lg-wide">Remarque <input name="comment" maxlength="200"></label>
-        <label>TX call <select name="station" title="Indicatif sous lequel le QSO a été fait (STATION_CALLSIGN)"></select></label>
-        <label class="lg-chk" title="QSO via le satellite QO-100 : fréquence de montée 2400,xxx MHz (la FI du convertisseur est convertie)"><input type="checkbox" name="qo100"> QO-100</label>
+        <label class="lg-rem">Remarque <input name="comment" maxlength="200"></label>
       </div>
       <div class="lg-row lg-act">
-        <span class="lg-fmsg" id="lgFmsg"></span>
-        <button class="btn" type="button" data-a="del" hidden>Supprimer</button>
-        <button class="btn" type="button" data-a="cancel" hidden>Annuler</button>
         <button class="btn btn-primary" type="submit" data-a="save">Enregistrer le QSO</button>
+        <button class="btn" type="button" data-a="cancel" hidden>Annuler</button>
+        <button class="btn" type="button" data-a="del" hidden>Supprimer</button>
+        <span class="lg-fmsg" id="lgFmsg"></span>
       </div>
     </form>
     <div class="lg-bar">

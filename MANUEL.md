@@ -35,7 +35,7 @@
    - [12.8 Synchro](#synchro)
    - [12.9 QO-100](#qo100)
 - [13. Correspondant, macros et balises](#messages)
-- [14. Logs (carnet de trafic)](#logs)
+- [14. Logbooks (carnet de trafic)](#logs)
    - [14.1 Enregistrer un QSO](#l-fiche)
    - [14.2 La liste des QSO](#l-liste)
    - [14.3 Exporter](#l-export)
@@ -166,7 +166,7 @@ Le FT8 est le mode le plus simple à distance : tout se fait à la souris et le 
 <a id="p-log"></a>
 ### 4.4 Noter le QSO dans le carnet
 
-1. Après un QSO numérique, la fiche s'ouvre toute seule (FT8) ou avec le bouton `Log QSO` (RTTY, JTTY, CW ; aussi sur la ligne des onglets, à droite de Logs).
+1. Après un QSO numérique, la fiche s'ouvre toute seule (FT8) ou avec le bouton `Log QSO` (RTTY, JTTY, CW ; aussi sur la ligne des onglets, à droite de Logbooks).
 2. Pour un QSO en phonie : onglet `LOGS`, tapez l'indicatif (l'heure UTC se met toute seule), cliquez `⇩ TRX` pour reprendre fréquence et mode, complétez les reports.
 3. `Enregistrer le QSO` (ou `Entrée`). Le QSO apparaît dans la liste. Sous l'indicatif du club, il est aussi envoyé aux carnets en ligne si les administrateurs l'ont prévu.
 4. Pour récupérer vos QSO dans votre propre logiciel : **Exporter ▾ → Mes QSO (.adi)**.
@@ -195,7 +195,7 @@ Le FT8 est le mode le plus simple à distance : tout se fait à la souris et le 
 
 1. **Colonne de gauche** : Antenne, RF front end (réception), Mode, Filtres, Station meters (mesures).
 2. **Centre, en haut** : les deux écrans VFO (A / MAIN et B / SUB), la ligne **Step** (pas d'accord, choix du VFO, SPLIT…) et la ligne des **bandes**.
-3. **Centre, en bas** : « Activité et modes numériques » : onglets Activité, FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, CW, SSTV, puis Synchro, Logs et le bouton `Log QSO`, puis `👁 Suivre l'opérateur`. À droite, la **carte de bande** (spots du DX cluster), dans tous les onglets de modes sauf SSTV.
+3. **Centre, en bas** : « Activité et modes numériques » : onglets Activité, FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, CW, SSTV, puis Logbooks, le bouton `Log QSO` et Synchro, puis `👁 Suivre l'opérateur`. À droite, la **carte de bande** (spots du DX cluster), dans tous les onglets de modes sauf SSTV.
 4. **Colonne de droite** : RX audio (écoute), DSP (antiparasites), Accord (tuner), TX (PTT et puissance).
 5. Sous les onglets : la ligne **Correspondant** (la station contactée, ses reports et le TX call).
 
@@ -324,7 +324,8 @@ Sous les boutons, « Mode appliqué à **VFO A** » indique quel VFO change de m
 
 | Commande | Ce qu'elle fait | Conseil |
 |---|---|---|
-| **BW** (WIDTH) | Largeur du filtre de réception. | BLU : 2,4 à 2,7 kHz ; CW : 300 à 500 Hz ; FT8 : 3 kHz (toute la bande audio). |
+| **BW** (WIDTH) | Largeur du filtre de réception. FTDX101 : jusqu'à 4,0 kHz, et tout en bas de l'échelle **« défaut »** (badge « BW DEF ») : le TRX reprend sa largeur par défaut et son indicateur WIDTH s'éteint. | BLU : 2,4 à 2,7 kHz ; CW : 300 à 500 Hz ; FT8 : 3 kHz (toute la bande audio). |
+| **ROOFING** (FTDX101D / MP) | Filtre de toit (R.FIL du TRX) : 12k, 3k, 1.2k, 600, 300 Hz. 1.2k et 300 seulement si le filtre optionnel est monté. Comme BW, il règle le VFO indiqué dans le titre du cadre (A · MAIN ou B · SUB). | 12k ou 3k en BLU et en numérique ; 600 ou 300 en CW pour résister à une station forte toute proche. |
 | **IF SHIFT** | Fait glisser la bande passante vers le haut ou le bas sans changer de fréquence. | Écarter une station gênante d'un côté. Remettez à 0 ensuite. |
 | `CONTOUR` | Correcteur de tonalité qui atténue une partie du son. | Rendre une voix plus lisible. |
 | `APF` | Filtre audio de pointe, en CW seulement. | Faire ressortir un signal CW faible. |
@@ -379,9 +380,11 @@ Sous les boutons, « Mode appliqué à **VFO A** » indique quel VFO change de m
 | Voyant `RX` / `TX` | État réel du TRX (vert en réception, rouge en émission). |
 | `PTT` | **Maintenir** pour émettre (ou la barre `Espace`) ; relâcher = retour en réception. Le petit texte en dessous dit pourquoi le PTT est indisponible (« Prenez la main pour émettre »…). |
 | **Puissance** `−` `+` | Baisse ou monte la puissance du TRX, d'un pas par clic : 5 W (0,5 W sur le FTX-1 sans l'ampli SPA-1). Plages : FTX-1 0,5 à 10 W seul, 5 à 100 W avec le SPA-1 ; FTDX10, FTDX101D et IC-7300 5 à 100 W ; FTDX101MP 5 à 200 W. Votre limite de licence est affichée en dessous (ON2 : 100 W, ON3 : 25 W) ; au-delà, la puissance est ramenée automatiquement. **Licence ON3** : émission seulement sur 80, 40, 30, 20, 15, 10 m, 2 m et 70 cm (refusée sur 160, 60, 17, 12, 6 et 4 m, avec la raison affichée) ; la réception reste libre partout. |
-| **Gain micro** | Niveau du micro en phonie. |
+| **Gain micro** | Niveau du **micro du club** en phonie (menu MIC GAIN du TRX). La phonie à distance a son propre niveau (page Station, « Niveau phonie à distance »). Grisé quelques secondes à l'ouverture, le temps que le TRX donne sa valeur. |
 | `PROC` + **Niveau PROC** | Processeur de modulation (compresseur) : la voix « porte » mieux dans le bruit. Niveau modéré, sinon la modulation est désagréable. Sur l'IC-7300 : COMP. |
+| `MIC EQ` (FTDX10, FTDX101) | Met en service ou coupe l'égaliseur paramétrique du TRX (réglé avec `Equalizer TRX`). |
 | `VOX` | Émission déclenchée par la voix : peut seulement être **coupé** à distance, jamais activé. |
+| **SSB CONFIGURATION** | Phonie à distance (section 4.2) : `Configuration micro` (votre micro vers le TRX ; point vert = actif ; nouveau clic = coupé), `Equalizer TRX` (menus PRMTRC du TRX, votre profil), choix du micro et type reconnu, barre de niveau (restez dans le vert, jamais **SAT**), `Equalizer micro` (égaliseur de votre micro dans le navigateur), ligne d'état, `🎧 M'écouter` (au casque) et son **Volume** (0 à 300 %, sans effet sur ce qui part vers le TRX). |
 
 <a id="split"></a>
 ### 7.5 Trafic en SPLIT (émission et réception sur deux fréquences)
@@ -454,11 +457,12 @@ L'émission n'est possible que si les administrateurs l'ont autorisée sur le se
 - **Replier un cadre** : clic sur son titre (ou `Entrée` quand le titre a le focus) ; un deuxième clic le rouvre. Retenu dans ce navigateur.
 - **Taille de tout le dashboard** : menu `Auto 100 %` du bandeau (section 5), de 50 à 200 %.
 - **Poignées à glisser** (double-clic : taille d'origine, retenue dans ce navigateur) : sous la cascade (hauteur de la cascade et des listes), entre les deux listes FT8 et entre les deux décodeurs RTTY (largeurs), sur le bord gauche de la carte de bande (sa largeur), au bord droit des titres de colonnes du carnet (largeur des colonnes).
+- **Carte de bande** : sur un écran de 1920 × 1080 et plus, elle forme une colonne à part, **tout à droite**, sur toute la hauteur (la colonne RX audio / DSP / Accord / TX se place juste à sa gauche). Elle n'apparaît que sur les onglets qui ont des spots (FT8 · FT4 · FT2, JT65, RTTY, WSPR, JTTY, CW). Sur un écran plus petit, elle reste au bord droit de la fenêtre centrale.
 
 <a id="numeriques"></a>
 ## 12. Modes numériques
 
-Les onglets du centre : **Activité**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV**, puis **Synchro**, **Logs** et le bouton `Log QSO`. Avec la main, un clic sur l'onglet d'un mode numérique (FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, SSTV) met le TRX en **DATA-U** (USB-D sur l'IC-7300) sur le VFO écouté, même sous 10 MHz ; l'onglet **CW** le met en CW (CW-L sous 10 MHz, CW-U au-dessus ; CW-R / CW sur l'IC-7300), sauf s'il y est déjà. À droite des onglets FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY et CW, la **carte de bande** montre les spots du DX cluster (voir 12.3, « Carte de bande »). Vous n'avez **aucun logiciel à installer** (pas de WSJT-X, FLDIGI…) : tout se fait dans la page.
+Les onglets du centre : **Activité**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV**, puis **Logbooks**, le bouton `Log QSO` et **Synchro**. Avec la main, un clic sur l'onglet d'un mode numérique (FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, SSTV) met le TRX en **DATA-U** (USB-D sur l'IC-7300) sur le VFO écouté, même sous 10 MHz ; l'onglet **CW** le met en CW (CW-L sous 10 MHz, CW-U au-dessus ; CW-R / CW sur l'IC-7300), sauf s'il y est déjà. À droite des onglets FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY et CW, la **carte de bande** montre les spots du DX cluster (voir 12.3, « Carte de bande »). Vous n'avez **aucun logiciel à installer** (pas de WSJT-X, FLDIGI…) : tout se fait dans la page.
 
 - Le **décodage se fait sur le serveur**, à l'heure du serveur (synchronisée) : l'heure de votre PC et de celui du club n'a pas d'importance.
 - Le son du TRX n'est envoyé que si quelqu'un écoute ou regarde un onglet de mode numérique : les décodages commencent quelques secondes après l'ouverture de l'onglet.
@@ -639,7 +643,7 @@ Le WSPR sert à étudier la propagation : des balises de faible puissance émett
 | Liste des fréquences + `↺` | Fréquences CW par bande ; le TRX passe en CW. |
 | **Filtre** 50 … 400 Hz | Largeur du filtre du décodeur : 100 Hz par défaut, 50 Hz en cas de QRM, 200 à 400 Hz pour chercher. **Avec la main et le TRX en CW**, le choix règle aussi la largeur **BW du TRX** au plus près (pour tout le monde, comme le cadre Filtres ; NARROW est coupé s'il était enclenché ; IC-7300 : FIL3 jusqu'à 250 Hz, FIL2 au-delà) : la BF entendue se rétrécit aussi. Le TRX centre son filtre sur sa propre tonalité CW (pitch) : la station doit être calée sur cette tonalité (clic sur la carte de bande, ou VFO), sinon elle disparaît de la cascade avec un filtre étroit. Sans la main, seul le décodeur change. |
 | **Silencieux** | Niveau du signal (dB) au-dessous duquel rien n'est affiché : plus haut = moins de lettres au hasard sur le bruit, mais les signaux très faibles disparaissent. 5 par défaut ; 3 ou 4 pour un signal très faible. Le décodeur continue de suivre le signal même silencieux fermé. |
-| **Vitesse** (cadre Émission, à droite du titre) | Vitesse d'**émission** du manipulateur du TRX, 5 à 50 mots/min. Sans effet sur la réception : la vitesse reçue est mesurée toute seule. |
+| **Vitesse** (cadre Émission, à droite du titre) | Vitesse d'**émission** du manipulateur du TRX, 5 à 60 mots/min (48 sur l'IC-7300) ; une valeur plus haute est ramenée au maximum du TRX. Sans effet sur la réception : la vitesse reçue est mesurée toute seule. |
 | Voyant et barre de niveau | Suivent la manipulation : le voyant clignote au rythme du morse quand le décodeur est bien calé. |
 | Tonalité / Vitesse | Fréquence audio suivie et vitesse mesurée (mots/minute). |
 
@@ -684,7 +688,7 @@ QO-100 est un satellite géostationnaire qu'on atteint en 2,4 GHz avec un conver
 | **Nom**, **QTH**, **Locator** | Prénom, ville et locator du correspondant. Ils sont cherchés sur **QRZ.com** dès qu'un nouveau correspondant est choisi (si un compte QRZ est réglé par les administrateurs) ; seules les cases vides sont remplies. |
 | **RST TX** / **RST RX** | RST TX = report **envoyé** par la station du club ; RST RX = report **reçu** du correspondant. En FT8 / FT4 / FT2, WSPR et JT65 ce sont des dB (RST RX se remplit tout seul pendant la séquence) ; en RTTY, CW, SSTV et JTTY, des RST 599. |
 | **TX call** | Indicatif des émissions numériques et du carnet : un indicatif de la station (**ON5VL** ou **OR0L**, réglage `clubCalls`) ou le vôtre. Choisi par celui qui a la main et retenu pour la prochaine fois. Les messages Tx1 à Tx6, les macros `<MYCALL>` et la fiche du carnet suivent. Un QSO enregistré sous votre indicatif reste dans le carnet du club, mais n'est pas envoyé vers les comptes en ligne du club (récupérez-le avec Exporter → Mes QSO). |
-| `Log QSO` (ligne des onglets, à droite de Logs) | Ouvre la fiche « Enregistrer le QSO », déjà remplie avec ces informations, la fréquence et le mode. |
+| `Log QSO` (ligne des onglets, à droite de Logbooks) | Ouvre la fiche « Enregistrer le QSO », déjà remplie avec ces informations, la fréquence et le mode. |
 
 **Les macros** (RTTY, JTTY, CW) sont des textes tout prêts, sur une ligne au-dessus de la zone de texte : **F1 à F12** en RTTY et CW, **F1 à F8** en JTTY.
 
@@ -706,9 +710,9 @@ QO-100 est un satellite géostationnaire qu'on atteint en 2,4 GHz avec un conver
 | `<LOG>` | ouvre la fiche « Enregistrer le QSO » |  |  |
 
 <a id="logs"></a>
-## 14. Logs (carnet de trafic)
+## 14. Logbooks (carnet de trafic)
 
-Onglet **Logs** (à droite de Synchro) : le carnet de trafic de la station, partagé par tous les membres. Il sait envoyer les QSO vers **LoTW**, **eQSL**, **Club Log** et **QRZ.com**, les exporter en **ADIF** ou **Cabrillo**, et les transmettre en **UDP** aux logiciels de carnet du PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
+Onglet **Logbooks** (bouton cyan, à gauche de Log QSO et de Synchro) : le carnet de trafic de la station, partagé par tous les membres. Il sait envoyer les QSO vers **LoTW**, **eQSL**, **Club Log** et **QRZ.com**, les exporter en **ADIF** ou **Cabrillo**, et les transmettre en **UDP** aux logiciels de carnet du PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
 
 <a id="l-fiche"></a>
 ### 14.1 Enregistrer un QSO
@@ -729,7 +733,7 @@ La fiche en haut de l'onglet :
 | `Enregistrer le QSO` (ou `Entrée`) | Ajoute le QSO au carnet. Un doublon (même indicatif, bande et mode dans la demi-heure) est signalé avant l'enregistrement ; si la fiche déjà au carnet n'a pas le nom, le QTH, le locator ou le RST reçu, on propose de la **compléter** au lieu de créer un 2e QSO. |
 | `Supprimer` / `Annuler` | Apparaissent quand vous modifiez un QSO existant : supprimer le QSO (après confirmation ; les carnets en ligne ne sont pas modifiés) ou abandonner la modification. |
 
-**Sans quitter l'onglet RTTY, JTTY ou CW** : le bouton `Log QSO` (à côté de « Émettre », et sur la ligne des onglets, à droite de Logs) ouvre une fiche déjà remplie : indicatif, prénom, QTH, locator et RST, fréquence (en RTTY : celle du signal) et mode, puissance, heure de début (quand le correspondant a été choisi) et de fin. Corrigez au besoin, puis `Enregistrer dans le carnet`. En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contient `<LOG>` l'ouvre aussi.
+**Sans quitter l'onglet RTTY, JTTY ou CW** : le bouton `Log QSO` (à côté de « Émettre », et sur la ligne des onglets, à droite de Logbooks) ouvre une fiche déjà remplie : indicatif, prénom, QTH, locator et RST, fréquence (en RTTY : celle du signal) et mode, puissance, heure de début (quand le correspondant a été choisi) et de fin. Corrigez au besoin, puis `Enregistrer dans le carnet`. En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contient `<LOG>` l'ouvre aussi.
 
 | Champ de la fiche Log QSO | Contenu |
 |---|---|
@@ -737,7 +741,7 @@ La fiche en haut de l'onglet :
 | **Date UTC**, **Début UTC**, **Fin UTC** | Début : quand le correspondant a été choisi ; fin : à l'ouverture de la fiche. Modifiables. |
 | **Fréquence MHz**, **Mode** | Fréquence réelle du signal (RTTY : porteuse + décodeur marqué TX) et mode de l'onglet. |
 | **RST envoyé**, **RST reçu**, **Puiss. W**, **Remarque** | Reports de la ligne Correspondant, puissance du TRX, texte libre. |
-| `Enregistrer dans le carnet` / `Annuler` | Ajoute le QSO (contrôle des doublons comme dans l'onglet Logs) ou ferme sans rien noter. |
+| `Enregistrer dans le carnet` / `Annuler` | Ajoute le QSO (contrôle des doublons comme dans l'onglet Logbooks) ou ferme sans rien noter. |
 
 En **FT8 · FT4 · FT2**, à la fin de la séquence, une petite fenêtre « **QSO terminé** » résume le QSO (indicatif, locator, mode, fréquence, reports, heures) : `Enregistrer dans le carnet` l'enregistre, `Ne pas enregistrer` la ferme.
 
@@ -861,7 +865,7 @@ Un clic sur le voyant `● Station` ouvre le menu **TRX du club** :
 | `🔊 Relancer la carte son du TRX` | Seulement pour ON6DP et ON4LUC (`stationEditors`). Redémarre la carte son USB du TRX sur le PC du club, quand la BF ne passe plus (section 18). Confirmation demandée ; refusé pendant une émission. Le résultat s'affiche sous les bandes (« Carte son du TRX : … redémarré ; audio relancé »). |
 | `⌨ Lecture CAT…` | Diagnostic : lit une valeur brute du TRX (lecture seulement, liste de commandes autorisées). Plusieurs lectures sur une ligne (« VS;FT;ST; ») ; `Effacer` vide la fenêtre. |
 
-Les administrateurs ont aussi accès au menu Synchronisation du carnet (14.4 et 14.5), à l'export de tous les TX call, et peuvent reprendre la main (section 6). La gestion des membres, des mots de passe et du serveur est décrite dans `LISEZMOI.md` et `README.md` (dépôt du projet).
+Les administrateurs ont aussi accès au menu Synchronisation du carnet (14.4 et 14.5), à l'export de tous les TX call, et peuvent reprendre la main (section 6). Ils peuvent enregistrer le **réglage du club** de l'égaliseur du TRX (bouton `Equalizer TRX`) et ouvrir la page des **statistiques** (bouton 📊 STATS). La gestion des membres, des mots de passe et du serveur est décrite dans le **Guide des administrateurs** (`GUIDE-ADMINISTRATEUR.md`, dépôt du projet).
 
 <a id="club"></a>
 ## 18. Le PC du club (page Station)
@@ -874,7 +878,7 @@ La page Station est **réservée aux administrateurs** : à la première ouvertu
 
 **FTDX101D / MP** : son USB en stéréo (récepteur MAIN à gauche, SUB à droite). En double réception (DUAL RX), la page Station envoie les deux voies : en RTTY, le décodeur B lit le récepteur SUB, avec sa propre cascade à droite de celle de A ; l'écoute reçoit le mélange des deux, comme au casque. En réception simple, une seule cascade, comme sur les autres TRX.
 
-1. Coller le **jeton de station** (donné par l'administrateur du serveur), choisir le **modèle** du TRX et son **port CAT** (la première fois). FTX-1 : l'**Enhanced COM Port** (CAT-1), et sur le TRX les réglages **RPTT SELECT** et **PC KEYING** sur OFF (réglage d'usine) : l'émission se commande par CAT.
+1. Le **jeton de la station** est repris tout seul du serveur dès qu'un administrateur est connecté à la page (rien à recopier). Choisir le **modèle** du TRX et son **port CAT** (la première fois). FTDX10 et FTDX101 : **CAT RTS** sur OFF dans le menu du TRX (sinon la liaison tombe toutes les 2 s). FTX-1 : l'**Enhanced COM Port** (CAT-1), et sur le TRX les réglages **RPTT SELECT** et **PC KEYING** sur OFF (réglage d'usine) : l'émission se commande par CAT.
 2. **Activer l'audio** et choisir l'entrée son du TRX (« USB Audio CODEC » ou « USB Audio Device » selon le TRX) ; la barre de niveau doit bouger. Choisissez la carte elle-même, pas « Par défaut - … » ni « Communications - … » : ces entrées de Windows changent de carte quand un autre TRX est branché (la page les remplace d'ailleurs toute seule par la carte réelle).
 3. **Sortie son vers le TRX** (émission FT8 / FT4 / FT2, RTTY, JTTY) : la carte son USB du TRX (« Haut-parleurs (USB Audio CODEC) »…), choisie toute seule si possible. Jamais les haut-parleurs du PC. Le TRX doit prendre la modulation DATA sur l'USB (menu du TRX). Régler le **niveau d'émission** pour que l'ALC reste faible. Limiteur facultatif : avec `"digiAlcMax": 8` dans `config.json`, la page Station **baisse toute seule** ce niveau dès que l'ALC dépasse 8 % en émission numérique, et garde le niveau atteint pour les émissions suivantes ; il ne remonte jamais tout seul. Par défaut (`0`), pas de limiteur. L'émission part à l'heure du serveur, même si l'horloge de Windows est décalée.
 4. Garder la page Station **seule dans sa fenêtre** ; ouvrir le dashboard avec son bouton « Ouvrir le dashboard dans une autre fenêtre ».
@@ -894,6 +898,7 @@ La page Station est **réservée aux administrateurs** : à la première ouvertu
 | `Tester sans radio (simulation)` | TRX virtuel pour essayer la page et le dashboard sans émettre. |
 | **Entrée son** | Carte son du TRX (section ci-dessus). Les alias « Par défaut » et « Communications » sont remplacés par la carte réelle. |
 | **Sortie son vers le TRX** + **Niveau d'émission** | Carte son qui reçoit le signal des émissions numériques, et son niveau (1 à 100 %) : réglez-le pour que l'ALC reste faible. « — aucune — » : pas d'émission numérique. |
+| **Niveau phonie à distance** | Niveau de la voix des opérateurs (phonie à distance) envoyée par la même sortie son : réglez-le en SSB pour que l'ALC bouge à peine. Le menu « source de modulation » du TRX est mis sur USB tout seul pendant leurs émissions, puis remis (micro du club). |
 | Barre de niveau, état de l'audio | La barre bouge avec le son du TRX ; « Audio envoyé aux membres à l'écoute » ou « Audio prêt (personne n'écoute…) ». En orange : « Entrée son muette… » (carte son figée). |
 | `Activer l'audio` / `Arrêter l'audio` | Démarre ou arrête la capture du son ; retenu et relancé tout seul au rechargement de la page. |
 | `Relancer la carte son du TRX` | Redémarre la carte son USB du TRX par l'assistant (ci-dessous), puis relance l'audio. Grisé si l'assistant n'est pas installé. |
@@ -911,4 +916,4 @@ Il arrive que la carte son USB intégrée au TRX se fige en silence : barre de n
 - Il faut, une fois, installer sur le PC du club l'**assistant carte son** : lien « Télécharger l'assistant carte son » de la page Station (s'il n'est pas encore installé), décompresser, double-clic sur `installer-carte-son.cmd` et accepter la demande d'administrateur. Il démarre avec Windows, n'écoute que sur le PC lui-même (127.0.0.1:18099) et n'obéit qu'à la page Station de remote.op0p.be. La première fois, Chrome peut demander l'accès aux « appareils du réseau local » : Autoriser. La page Station indique « Assistant carte son : en marche ».
 - Si la relance ne suffit pas : éteindre et rallumer le TRX (le FTX-1 ne peut pas être rallumé par CAT).
 
-Installation et réglages du serveur : voir `LISEZMOI.md` et `README.md` (dépôt du projet).
+Installation et réglages du serveur : voir le **Guide des administrateurs**, `GUIDE-ADMINISTRATEUR.md` (dépôt du projet).
