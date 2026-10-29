@@ -146,7 +146,7 @@ Your microphone (PC microphone, headset, USB microphone…) is sent to the TRX w
 > [!NOTE]
 > At the club, the Station page switches the TRX “modulation source” menu to USB just before your transmission, and puts it back 20 s after your last transmission or as soon as you release control: the club microphone works again. The level of your voice at the TRX input is set on the Station page (“Niveau phonie à distance”): the ALC should barely move.
 
-**TRX equaliser** (FTX-1, FTDX10, FTDX101): `Égaliseur du TRX…` button in the same panel. These are the TRX's own PRMTRC EQ1 to EQ3 menus (PROC off, then PROC on). Take control, `Lire le TRX`, adjust, `Essayer sur le TRX`, then `Enregistrer mon profil`: your profile is put on the TRX whenever you take control, and the club setting is restored when you release it. Administrators can save the club setting.
+**TRX equaliser** (FTX-1, FTDX10, FTDX101): `Equalizer` button in the same panel. These are the TRX's own PRMTRC EQ1 to EQ3 menus (PROC off, then PROC on). Take control, `Lire le TRX`, adjust, `Essayer sur le TRX`, then `Enregistrer mon profil`: your profile is put on the TRX whenever you take control, and the club setting is restored when you release it. Administrators can save the club setting.
 
 <a id="p-ft8"></a>
 ### 4.3 An FT8 QSO

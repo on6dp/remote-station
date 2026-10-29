@@ -85,7 +85,7 @@
     box.innerHTML =
       '<div class="vx-h"><span class="vx-title">SSB configuration</span></div>' +
       '<button class="btn vx-on" id="vxOn" type="button" aria-pressed="false" title="Activer votre micro : votre voix part vers le TRX pendant l’appui sur PTT (LSB / USB…) ; un nouveau clic le coupe">Configuration micro</button>' +
-      '<button class="btn vx-trx" id="vxTrxBtn" type="button" hidden title="Égaliseur paramétrique du TRX (menus PRMTRC) : votre profil, mis au TRX quand vous prenez la main">Égaliseur du TRX…</button>' +
+      '<button class="btn vx-trx" id="vxTrxBtn" type="button" hidden title="Égaliseur paramétrique du TRX (menus PRMTRC) : votre profil, mis au TRX quand vous prenez la main">Equalizer</button>' +
       '<div class="vx-b" id="vxBody" hidden>' +
       '<select id="vxDev" aria-label="Entrée son (micro)"></select>' +
       '<div class="vx-type" id="vxType"></div>' +

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.25.4 | [RemoteStation-Setup-0.25.4.exe](0.25.4/RemoteStation-Setup-0.25.4.exe) | [remote-station-0.25.4.tar.gz](0.25.4/remote-station-0.25.4.tar.gz) | Bouton EQUALIZER vert, lettres blanches en gras — [empreintes SHA-256](0.25.4/SHA256SUMS.txt) |
 | 0.25.3 | [RemoteStation-Setup-0.25.3.exe](0.25.3/RemoteStation-Setup-0.25.3.exe) | [remote-station-0.25.3.tar.gz](0.25.3/remote-station-0.25.3.tar.gz) | Carte de bande tout à droite (grand écran) — [empreintes SHA-256](0.25.3/SHA256SUMS.txt) |
 | 0.25.2 | [RemoteStation-Setup-0.25.2.exe](0.25.2/RemoteStation-Setup-0.25.2.exe) | [remote-station-0.25.2.tar.gz](0.25.2/remote-station-0.25.2.tar.gz) | « M'écouter » en vert gras — [empreintes SHA-256](0.25.2/SHA256SUMS.txt) |
 | 0.25.1 | [RemoteStation-Setup-0.25.1.exe](0.25.1/RemoteStation-Setup-0.25.1.exe) | [remote-station-0.25.1.tar.gz](0.25.1/remote-station-0.25.1.tar.gz) | LSB / USB automatique en phonie, MIC EQ, réglages du cadre SSB — [empreintes SHA-256](0.25.1/SHA256SUMS.txt) |

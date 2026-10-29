@@ -146,7 +146,7 @@ Votre micro (celui de votre PC, un micro-casque, un micro USB…) part vers le T
 > [!NOTE]
 > Au club, la page Station met le menu « source de modulation » du TRX sur USB juste avant votre émission, puis le remet comme avant 20 s après votre dernière émission ou dès que vous rendez la main : le micro du club refonctionne. Le niveau de votre voix à l'entrée du TRX se règle sur la page Station (« Niveau phonie à distance ») : l'ALC doit à peine bouger.
 
-**Égaliseur du TRX** (FTX-1, FTDX10, FTDX101) : bouton `Égaliseur du TRX…` du même cadre. Ce sont les menus PRMTRC EQ1 à EQ3 du TRX (PROC coupé, puis PROC en service). Prenez la main, `Lire le TRX`, réglez, `Essayer sur le TRX`, puis `Enregistrer mon profil` : votre profil est mis au TRX chaque fois que vous prenez la main, et le réglage du club est remis quand vous la rendez. Les administrateurs peuvent enregistrer le réglage du club.
+**Égaliseur du TRX** (FTX-1, FTDX10, FTDX101) : bouton `Equalizer` du même cadre. Ce sont les menus PRMTRC EQ1 à EQ3 du TRX (PROC coupé, puis PROC en service). Prenez la main, `Lire le TRX`, réglez, `Essayer sur le TRX`, puis `Enregistrer mon profil` : votre profil est mis au TRX chaque fois que vous prenez la main, et le réglage du club est remis quand vous la rendez. Les administrateurs peuvent enregistrer le réglage du club.
 
 <a id="p-ft8"></a>
 ### 4.3 Un QSO en FT8
