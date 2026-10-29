@@ -2,9 +2,12 @@
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
+  // Carte son mémorisée par modèle de TRX (deux TRX branchés au même PC ont chacun leur carte son USB)
+  const PER_RIG = { 'audio.label': 1, 'audio.outLabel': 1, 'audio.usb': 1 };
+  const skey = (k) => 'rs.st.' + k + (PER_RIG[k] && typeof MODEL === 'string' ? '.' + MODEL : '');
   const store = {
-    get(k, d) { try { const v = localStorage.getItem('rs.st.' + k); return v == null ? d : v; } catch (e) { return d; } },
-    set(k, v) { try { localStorage.setItem('rs.st.' + k, v); } catch (e) {} }
+    get(k, d) { try { const v = localStorage.getItem(skey(k)); return v == null ? d : v; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(skey(k), v); } catch (e) {} }
   };
 
   // ------------------------------------------------------------ journal
@@ -53,6 +56,13 @@
   // Port série mémorisé par modèle : si plusieurs TRX restent branchés au PC, changer de modèle rouvre le bon port
   const PORT_KEY = 'port.' + MODEL;
   if (store.get(PORT_KEY, null) == null && store.get('portIndex', null) != null && MODEL === 'ftx1') store.set(PORT_KEY, store.get('portIndex', '-1'));
+  // Ancienne mémoire de la carte son (commune à tous les TRX) : reprise pour le TRX en service à la mise à jour
+  try {
+    if (!localStorage.getItem('rs.st.audio.perRig')) {
+      for (const k of Object.keys(PER_RIG)) { const v = localStorage.getItem('rs.st.' + k); if (v != null && store.get(k, null) == null) store.set(k, v); }
+      localStorage.setItem('rs.st.audio.perRig', MODEL);
+    }
+  } catch (e) { /* stockage indisponible */ }
   $('rigName').textContent = RIG.NAME;
   const sel = $('cfgModel');
   for (const r of window.RIG_CATALOG) {

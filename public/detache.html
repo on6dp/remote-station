@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Remote Station — fenêtre autonome</title>
+<meta name="theme-color" content="#0e131b">
+<link rel="icon" href="/img/icon-192.png">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #070b11; color: #e6edf5; font: 14px/1.5 Verdana, 'DejaVu Sans', Arial, sans-serif; }
+  .box { max-width: 520px; margin: 16px; padding: 22px 24px; border: 1px solid #1d2733; border-radius: 10px; background: #0d141d; text-align: center; }
+  h1 { margin: 0 0 8px; font-size: 18px; color: #00d4ff; }
+  p { margin: 8px 0; color: #9fb0c2; }
+  .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+  button { font: inherit; font-size: 13px; font-weight: 700; color: #fff; background: #111923; border: 1px solid #2a3746; border-radius: 6px; padding: 8px 14px; cursor: pointer; }
+  button:hover { border-color: #00d4ff; }
+  button.main { background: linear-gradient(180deg, #1f9d45, #12692c); border-color: #39ff14; }
+  #st { min-height: 1.5em; color: #f59e0b; }
+</style>
+</head>
+<body>
+<div class="box">
+  <img src="/img/on5vl-logo.png" alt="ON5VL UBA Liège" width="110" height="48">
+  <h1>Dashboard ouvert dans sa fenêtre autonome</h1>
+  <p>Déplacez-la et redimensionnez-la où vous voulez (2e écran…) : sa position et sa taille sont retenues pour la prochaine fois.</p>
+  <div class="row">
+    <button type="button" id="show">Montrer la fenêtre</button>
+    <button type="button" class="main" id="back">Ramener le dashboard ici</button>
+  </div>
+  <p id="st"></p>
+</div>
+<script>
+(function () {
+  'use strict';
+  const NAME = 'rsDash';
+  // Fenêtre déjà ouverte ? window.open('', nom) la retrouve ; sinon il en ouvre une vide, refermée tout de suite
+  function find() {
+    const w = window.open('', NAME);
+    if (!w) return null;
+    let blank = false;
+    try { blank = w.location.href === 'about:blank'; } catch (e) { blank = false; }
+    if (blank) { w.close(); return null; }
+    return w;
+  }
+  document.getElementById('show').addEventListener('click', () => {
+    const w = find();
+    if (w) w.focus(); else document.getElementById('st').textContent = 'La fenêtre autonome est fermée : « Ramener le dashboard ici ».';
+  });
+  document.getElementById('back').addEventListener('click', () => {
+    const w = find();
+    if (w) w.close();
+    location.replace('/');
+  });
+})();
+</script>
+</body>
+</html>

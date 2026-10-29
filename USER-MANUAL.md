@@ -451,6 +451,8 @@ Transmitting is only possible if the administrators have enabled it on the serve
 ## 11. Layout and separate windows
 
 - `⧉` button at the top right of a panel: the panel opens in **its own window**, to place wherever you like (on a 2nd screen…). In that window, `⧉ Ramener` (bring back) puts it back in the dashboard.
+- **The whole dashboard in its own window**: `⧉ Fenêtre` button in the top bar. The dashboard reopens in a window of its own, without address bar or tabs, that you place and size wherever you like; its position and size are remembered for next time. The original tab shows « Dashboard ouvert dans sa fenêtre » (with a button to bring it back or to the front). Chrome must **allow pop-ups** for remote.op0p.be.
+- **Install it as an app** (Chrome, Edge): `⤓ Installer` button in the top bar (or the install icon at the right of the address bar). Remote Station then gets its **desktop icon** and Start-menu entry and always opens in its own window. The button disappears once installed; to uninstall: ⋮ menu of its window → Uninstall.
 - The `⧉` button to the right of the tabs opens **all the digital modes** in a separate window. `⧉ Ramener dans le dashboard` (bring back into the dashboard) (or `Ramener ici` (bring back here) in the dashboard) puts them back.
 - The `Space` bar (PTT) also works from a separate window.
 - The layout is remembered: on the next load, the windows reopen in place if Chrome **allows pop-up windows** for remote.op0p.be (icon at the right of the address bar → Always allow).
@@ -730,6 +732,8 @@ The form at the top of the tab:
 | **Nom**, **QTH**, **Locator**, **Puiss. W** (power), **Remarque** (comment) | QSO information; the comment is free text. |
 | **TX call** | Callsign under which the QSO was made. It follows the one on the Correspondant line; with control, changing it here also changes the transmit callsign. |
 | ☐ **QO-100** | QSO via the QO-100 satellite: with the converter IF (e.g. 432.525 MHz), the box ticks itself and the 2400.xxx MHz uplink frequency is logged. |
+| **Réf. correspondant** (their references): **IOTA**, **WWFF**, **POTA**, **BOTA**, **LLOTA** | The other station's references when it is activating (island, nature reserve, park, bunker, lake…). Type the start of the reference (`ONFF-`, `BE-00`, `EU-`…) or part of the **name** (« fagnes »): a list opens under the box, pick with the mouse or the arrows then `Enter`. Empty box and callsign already typed: the list first offers the references of its country. Several references (e.g. two POTA parks at once): separate them with a comma. The reference locator fills the QSO locator if empty. These boxes are cleared after each QSO. |
+| `＋ Ma référence (activation)` (my reference) | Shows a 2nd row **Ma réf. (activation)** for the **station's** references, when the club itself activates a park, an island… They **stay filled** from one QSO to the next (in this browser) until you clear them. The button hides or shows the row again (remembered). |
 | `Enregistrer le QSO` (or `Enter`) | Adds the QSO to the logbook. A duplicate (same callsign, band and mode within half an hour) is reported before saving; if the entry already in the logbook lacks the name, QTH, locator or received RST, you are offered to **complete** it instead of creating a 2nd QSO. |
 | `Supprimer` (delete) / `Annuler` (cancel) | Appear when you edit an existing QSO: delete the QSO (after confirmation; online logbooks are not changed) or abandon the edit. |
 
@@ -884,6 +888,8 @@ The Station page is **reserved for administrators**: the first time it is opened
 4. Keep the Station page **alone in its window**; open the dashboard with its « Ouvrir le dashboard dans une autre fenêtre » (open the dashboard in another window) button.
 5. Chrome → Settings → Performance: always keep remote.op0p.be active; Windows: sleep set to Never.
 
+**Two TRX (or more) plugged into the same PC**, each on its own USB port: select each model once on the Station page, choose its CAT port and its sound card (input and output). The page remembers them **per model**. An administrator then switches from one to the other from the **STATION** menu of the dashboard (section 17): the Station page restarts with the other TRX and reopens its port and sound card within a few seconds. Never during a transmission.
+
 ### Station page controls
 
 | Control / display | What it does |
@@ -896,7 +902,7 @@ The Station page is **reserved for administrators**: the first time it is opened
 | `Libérer le port` (release the port) | Closes the CAT port (the TRX is no longer controlled) and forgets the automatic choice on the next load. |
 | `Port de manipulation CW (DTR)…` (CW keying port, FTX-1) | Choose once the TRX **2nd USB port** (« Standard COM Port », not the CAT one). The page then keys the CW itself through the DTR line of that port, with exact dot and dash timing, instead of using the TRX keyer memory. During each CW transmission the TRX menu PC KEYING is set to DTR (and RPTT SELECT to OFF), then back to OFF at the end. The port is remembered and reopened automatically; `Ne plus manipuler par DTR` (stop DTR keying) goes back to the keyer memory. |
 | `Tester sans radio (simulation)` (test without radio) | Virtual TRX to try the page and the dashboard without transmitting. |
-| **Entrée son** (sound input) | The TRX sound card (section above). The « Par défaut » and « Communications » aliases are replaced by the real card. |
+| **Entrée son** (sound input) | The TRX sound card (section above). The « Par défaut » and « Communications » aliases are replaced by the real card. Sound input and output are remembered **for each TRX model**, like the port. |
 | **Sortie son vers le TRX** (sound output to the TRX) + **Niveau d'émission** (transmit level) | Sound card receiving the digital transmit signal, and its level (1 to 100 %): set it so that ALC stays low. « — aucune — » (none): no digital transmission. |
 | **Niveau phonie à distance** (remote phone level) | Level of the operators' voice (remote phone) sent through the same sound output: set it in SSB so that ALC barely moves. The TRX "modulation source" menu is switched to USB automatically during their transmissions, then put back (club microphone). |
 | Level bar, audio state | The bar moves with the TRX audio; « Audio envoyé aux membres à l'écoute » (audio sent to listening members) or « Audio prêt (personne n'écoute…) » (audio ready, nobody listening). In orange: « Entrée son muette… » (silent input: frozen sound card). |

@@ -1516,6 +1516,30 @@ body.bm-resizing { cursor: ew-resize; user-select: none; }
 .lg-row .lg-txc select { min-width: 150px; font-size: 13px; }
 .lg-chk.lg-qo { font-size: 14px !important; font-weight: 700; color: var(--v2-text-bright, #fff) !important; align-self: flex-end; padding-bottom: 6px; }
 .lg-chk.lg-qo input { transform: scale(1.35); margin-right: 3px; }
+.lg-row.lg-refs { align-items: flex-end; gap: 8px; }
+.lg-refs-t { font-size: 12px; font-weight: 700; color: #ffd400; padding-bottom: 6px; min-width: 128px; }
+.lg-myrefs .lg-refs-t { color: #6fe36f; }
+.lg-ref input { width: 112px; text-transform: uppercase; font-family: ui-monospace, Consolas, monospace; }
+.lg-myrefs .lg-ref input { border-color: #2f8f2f; }
+.lg-myref-btn { font-size: 12px; padding: 4px 8px; }
+.lg-myref-btn[aria-pressed="true"] { background: #1f5f1f; color: #fff; font-weight: 700; }
+.lg-refbox { position: absolute; z-index: 60; min-width: 300px; max-width: 520px; max-height: 280px; overflow-y: auto;
+  background: #11161d; border: 1px solid #3a4656; border-radius: 6px; box-shadow: 0 6px 18px rgba(0,0,0,.55); padding: 3px; }
+.lg-refi { display: block; width: 100%; text-align: left; background: none; border: 0; color: #d7dde6; padding: 4px 6px;
+  font-size: 12.5px; cursor: pointer; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lg-refi b { color: #ffd400; font-family: ui-monospace, Consolas, monospace; margin-right: 4px; }
+.lg-refi small { color: #8b97a8; }
+.lg-refi.cur, .lg-refi:hover { background: #24425f; }
+.lg-refn { margin: 4px 6px; font-size: 12px; color: #f0b35a; white-space: normal; }
+.lg-reft { border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+.lg-reft th, .lg-reft td { padding: 4px 10px; border-bottom: 1px solid #2a3442; text-align: left; }
+.lg-reft .lg-bad { color: #ff7a7a; }
+td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, Consolas, monospace; }
 .lg-form .lg-act { justify-content: flex-start; }
 /* Logbooks, Log QSO et Synchro : même hauteur */
 .ctabs .ctab[data-tab='log'], .ctabs .ctab[data-tab='sync'], .ctabs .ctab-log { height: 26px; min-height: 0; box-sizing: border-box; display: inline-flex; align-items: center; line-height: 1; padding-top: 0; padding-bottom: 0; }
+.win-btn[hidden] { display: none; }
+.win-btn { white-space: nowrap; }
+/* Cadre MODE : touches plus lisibles (LSB, USB, CW-L…) */
+#modeKeys .btn { font-size: 13px; letter-spacing: .03em; min-height: 28px; color: var(--v2-text-bright, #e8edf3); }
+#modeKeys .btn[aria-pressed='true'] { color: #fff; }

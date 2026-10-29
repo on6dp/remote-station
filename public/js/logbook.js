@@ -28,7 +28,9 @@
   let total = 0;
   // Colonnes du carnet : largeur par défaut (px), réglable à la souris (bord droit de l'en-tête), gardée dans ce navigateur
   const LG_COLS = [['date', 98], ['utc', 58], ['call', 96], ['band', 70], ['mhz', 82], ['mode', 66], ['env', 58], ['recu', 64], ['nom', 116],
-    ['qth', 136], ['dxcc', 116], ['pfx', 76], ['txc', 84], ['op', 84], ['lotw', 62], ['eqsl', 62], ['cl', 46], ['qrz', 54], ['fill', 0]];
+    ['qth', 136], ['dxcc', 116], ['pfx', 76], ['txc', 84], ['op', 84], ['refs', 150], ['lotw', 62], ['eqsl', 62], ['cl', 46], ['qrz', 54], ['fill', 0]];
+  // Références des programmes « on the air » : [champ du carnet, programme, exemple]
+  const REF_KEYS = [['iota', 'IOTA', 'EU-005'], ['wwff_ref', 'WWFF', 'ONFF-0001'], ['pota_ref', 'POTA', 'BE-0001'], ['bota_ref', 'BOTA', 'B/ON-0001'], ['llota_ref', 'LLOTA', 'CE-0001']];
   let editing = null;      // QSO en cours de modification
   let lastTxCall = '';     // dernier TX call de la ligne Correspondant reporté dans la fiche
   let filt = {};           // filtres par colonne { date: '20261025', band: '20m', … }
@@ -81,6 +83,15 @@
         <label class="lg-w5">Puiss. W <input name="tx_pwr" inputmode="decimal" maxlength="5"></label>
         <label class="lg-rem">Remarque <input name="comment" maxlength="200"></label>
       </div>
+      <div class="lg-row lg-refs">
+        <span class="lg-refs-t" title="Références du correspondant (vous le chassez) : tapez le début de la référence ou un morceau du nom, puis choisissez dans la liste">Réf. correspondant</span>
+        ${REF_KEYS.map(([k, p, ph]) => '<label class="lg-ref">' + p + ' <input name="' + k + '" data-prog="' + p + '" maxlength="80" placeholder="' + ph + '" autocomplete="off"></label>').join('')}
+        <button class="btn lg-myref-btn" type="button" data-a="myrefs" aria-pressed="false" title="Afficher les références de la station (le club active un parc, une île…) ; elles restent remplies d'un QSO à l'autre">＋ Ma référence (activation)</button>
+      </div>
+      <div class="lg-row lg-refs lg-myrefs" hidden>
+        <span class="lg-refs-t" title="Références de la station pendant une activation : gardées d'un QSO à l'autre jusqu'à ce que vous les effaciez">Ma réf. (activation)</span>
+        ${REF_KEYS.map(([k, p, ph]) => '<label class="lg-ref">' + p + ' <input name="my_' + k + '" data-prog="' + p + '" data-my="1" maxlength="80" placeholder="' + ph + '" autocomplete="off"></label>').join('')}
+      </div>
       <div class="lg-row lg-act">
         <button class="btn btn-primary" type="submit" data-a="save">Enregistrer le QSO</button>
         <button class="btn" type="button" data-a="cancel" hidden>Annuler</button>
@@ -102,6 +113,7 @@
           <button type="button" role="menuitem" data-s="qrz">QRZ…</button>
           <hr class="lg-msep">
           <button type="button" role="menuitem" data-a="cfg" title="Réglages des carnets en ligne, de QRZ.com et des ports UDP">⚙ Configuration…</button>
+          <button type="button" role="menuitem" data-a="refs" title="Listes IOTA, WWFF, POTA, BOTA, LLOTA téléchargées par le serveur : état et mise à jour">Listes de références…</button>
         </div>
       </div>
       <div class="lg-menu">
@@ -116,9 +128,9 @@
     <div class="lg-tw">
       <table class="lg-table">
         <colgroup>${LG_COLS.map(([k]) => '<col data-c="' + k + '">').join('')}</colgroup>
-        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th class="r">MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Préfixe principal de l'entité DXCC (ex. ON pour la Belgique, LA pour la Norvège)">Préfixe</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th><th title="Opérateur : indicatif personnel du membre qui a fait le QSO (même sous l'indicatif du club)">OP</th>
+        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th class="r">MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Préfixe principal de l'entité DXCC (ex. ON pour la Belgique, LA pour la Norvège)">Préfixe</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th><th title="Opérateur : indicatif personnel du membre qui a fait le QSO (même sous l'indicatif du club)">OP</th><th title="Références IOTA, WWFF, POTA, BOTA, LLOTA du correspondant ; ▲ = référence de la station (activation)">Réf.</th>
           <th class="c" title="LoTW (★ = confirmé)">LoTW</th><th class="c">eQSL</th><th class="c" title="Club Log">CL</th><th class="c">QRZ</th><th class="lg-fill"></th></tr></thead>
-        <tbody id="lgBody"><tr><td colspan="19" class="lg-empty">Chargement du carnet…</td></tr></tbody>
+        <tbody id="lgBody"><tr><td colspan="20" class="lg-empty">Chargement du carnet…</td></tr></tbody>
       </table>
     </div>
     <p class="lg-job" id="lgJob" aria-live="polite"></p>`;
@@ -144,6 +156,7 @@
       endEdit();
     });
     f.mode.addEventListener('change', () => defaultRst(true));
+    initRefs(f);
     f.call.addEventListener('input', () => {
       f.call.value = f.call.value.toUpperCase();
       // Début du QSO : l'heure est prise à la première lettre tapée (sauf si elle a été écrite à la main)
@@ -186,6 +199,7 @@
     // « Mes QSO » : tous les QSO faits sous mon indicatif personnel (TX call), en ADIF, tout de suite
     root.querySelectorAll('[data-xm]').forEach((b) => b.addEventListener('click', () => { closeMenus(); api.send({ t: 'log_export', fmt: 'adif', callsign: me.call }); }));
     root.querySelector('.lg-mlist [data-a="cfg"]').addEventListener('click', () => { closeMenus(); openCfg(); });
+    root.querySelector('.lg-mlist [data-a="refs"]').addEventListener('click', () => { closeMenus(); openRefsDlg(); });
     q$('#lgBody').addEventListener('click', (e) => {
       const tr = e.target.closest('tr[data-id]');
       if (tr) startEdit(tr.dataset.id);
@@ -329,6 +343,137 @@
     } else if (v >= 2400 && v <= 2400.5) f.qo100.checked = true;
   }
 
+  // ------------------------------------------------------------------ références IOTA / WWFF / POTA / BOTA / LLOTA
+  // Listes téléchargées par le serveur ; on tape le début de la référence ou un morceau du nom, la liste propose
+  // (pays du correspondant en premier). Plusieurs références possibles, séparées par une virgule (ex. deux parcs POTA).
+  function refsCell(q) {
+    const a = REF_KEYS.filter(([k]) => q[k]).map(([k]) => q[k]);
+    const b = REF_KEYS.filter(([k]) => q['my_' + k]).map(([k]) => '▲' + q['my_' + k]);
+    const t = a.concat(b).join(' · ');
+    return '<td class="lg-refc" title="' + esc(REF_KEYS.filter(([k]) => q[k] || q['my_' + k]).map(([k, p]) => p + ' : ' + [q[k], q['my_' + k] ? 'station ' + q['my_' + k] : ''].filter(Boolean).join(', ')).join(' ; ')) + '">' + esc(t) + '</td>';
+  }
+  const RS = { box: null, input: null, items: [], sel: -1, seq: 0, timer: 0 };
+  function showMyRefs(on) {
+    const f = q$('#lgForm');
+    if (!f) return;
+    f.querySelector('.lg-myrefs').hidden = !on;
+    const b = f.querySelector('[data-a="myrefs"]');
+    b.setAttribute('aria-pressed', String(on));
+    b.textContent = on ? '− Ma référence (activation)' : '＋ Ma référence (activation)';
+    try { localStorage.setItem('rs.lg.myrefs', on ? '1' : '0'); } catch (e) { /* */ }
+  }
+  function saveMyRefs() {
+    const f = q$('#lgForm');
+    if (!f || editing) return;
+    try { localStorage.setItem('rs.lg.myrefv', JSON.stringify(Object.fromEntries(REF_KEYS.map(([k]) => [k, f['my_' + k].value.trim()])))); } catch (e) { /* */ }
+  }
+  function restoreMyRefs() {
+    const f = q$('#lgForm');
+    if (!f) return;
+    let v = {};
+    try { v = JSON.parse(localStorage.getItem('rs.lg.myrefv') || '{}') || {}; } catch (e) { v = {}; }
+    for (const [k] of REF_KEYS) f['my_' + k].value = v[k] || '';
+  }
+  function initRefs(f) {
+    const box = document.createElement('div');
+    box.className = 'lg-refbox';
+    box.hidden = true;
+    root.appendChild(box);
+    RS.box = box;
+    box.addEventListener('mousedown', (e) => {
+      const b = e.target.closest('[data-i]');
+      if (!b) return;
+      e.preventDefault();
+      pickRef(Number(b.dataset.i));
+    });
+    f.querySelector('[data-a="myrefs"]').addEventListener('click', () => showMyRefs(f.querySelector('.lg-myrefs').hidden));
+    let on = false;
+    try { on = localStorage.getItem('rs.lg.myrefs') === '1'; } catch (e) { /* */ }
+    showMyRefs(on);
+    restoreMyRefs();
+    for (const inp of f.querySelectorAll('.lg-refs input')) {
+      inp.addEventListener('input', () => { inp.value = inp.value.toUpperCase(); askRefs(inp); if (inp.dataset.my) saveMyRefs(); });
+      inp.addEventListener('focus', () => askRefs(inp));
+      inp.addEventListener('blur', () => setTimeout(() => { if (RS.input === inp) closeRefs(); }, 150));
+      inp.addEventListener('keydown', (e) => {
+        if (RS.box.hidden || RS.input !== inp) return;
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); RS.sel = Math.max(0, Math.min(RS.items.length - 1, RS.sel + (e.key === 'ArrowDown' ? 1 : -1))); drawRefs(); }
+        else if (e.key === 'Enter' && RS.sel >= 0) { e.preventDefault(); pickRef(RS.sel); }
+        else if (e.key === 'Escape') closeRefs();
+      });
+    }
+  }
+  // Morceau en cours de frappe (après la dernière virgule)
+  const refPart = (v) => { const i = v.lastIndexOf(','); return (i >= 0 ? v.slice(i + 1) : v).trim(); };
+  function askRefs(inp) {
+    RS.input = inp;
+    clearTimeout(RS.timer);
+    RS.timer = setTimeout(() => {
+      const f = q$('#lgForm');
+      const call = inp.dataset.my ? '' : f.call.value.trim();
+      const q = refPart(inp.value);
+      if (!q && !call) { closeRefs(); return; }
+      api.send({ t: 'log_refs_search', id: ++RS.seq, prog: inp.dataset.prog, q, call });
+    }, 180);
+  }
+  function refResults(m) {
+    if (!RS.input || m.id !== RS.seq) return;
+    RS.items = m.list || [];
+    RS.sel = RS.items.length ? 0 : -1;
+    RS.note = m.note || (RS.items.length ? '' : 'Aucune référence ' + m.prog + ' ne correspond');
+    drawRefs();
+  }
+  function drawRefs() {
+    const inp = RS.input;
+    if (!inp || document.activeElement !== inp) return closeRefs();
+    const r = inp.getBoundingClientRect();
+    const rr = root.getBoundingClientRect();
+    const z = (window.RSZOOM && window.RSZOOM.z()) || 1;
+    RS.box.style.left = Math.max(0, (r.left - rr.left) / z) + 'px';
+    RS.box.style.top = ((r.bottom - rr.top) / z + 2) + 'px';
+    RS.box.innerHTML = RS.items.map((x, i) => '<button type="button" class="lg-refi' + (i === RS.sel ? ' cur' : '') + '" data-i="' + i + '"><b>' + esc(x.ref) + '</b> <span>' + esc(x.name) + '</span>' +
+      (x.loc ? ' <small>' + esc(x.loc) + '</small>' : '') + '</button>').join('') + (RS.note ? '<p class="lg-refn">' + esc(RS.note) + '</p>' : '');
+    RS.box.hidden = !RS.items.length && !RS.note;
+    const cur = RS.box.querySelector('.cur');
+    if (cur) cur.scrollIntoView({ block: 'nearest' });
+  }
+  function pickRef(i) {
+    const x = RS.items[i];
+    const inp = RS.input;
+    if (!x || !inp) return;
+    const v = inp.value;
+    const c = v.lastIndexOf(',');
+    inp.value = (c >= 0 ? v.slice(0, c + 1) : '') + x.ref;
+    if (inp.dataset.my) saveMyRefs();
+    // Locator du correspondant repris de la référence s'il manque
+    const f = q$('#lgForm');
+    if (!inp.dataset.my && x.grid && /^[A-R]{2}\d{2}/.test(x.grid) && !f.gridsquare.value) f.gridsquare.value = x.grid.slice(0, 6);
+    closeRefs();
+  }
+  function closeRefs() { if (RS.box) RS.box.hidden = true; }
+  // État des listes (administrateurs) : nombre de références, date du téléchargement, erreur ; « Mettre à jour maintenant »
+  let refsDlg = null;
+  function openRefsDlg() {
+    if (!me.admin) return say('Listes de références : réservé aux administrateurs.', 'warn');
+    const d = mkDlg('lg-refsdlg', '<form method="dialog"><h3>Listes de références (IOTA, WWFF, POTA, BOTA, LLOTA)</h3>' +
+      '<p class="lg-note">Téléchargées par le serveur depuis les sites des programmes, puis mises à jour toutes seules chaque semaine. Le premier téléchargement a lieu quelques minutes après le démarrage du serveur.</p>' +
+      '<table class="lg-reft"><tbody><tr><td colspan="4">Lecture…</td></tr></tbody></table>' +
+      '<div class="lg-act"><button class="btn" type="button" data-a="go">Mettre à jour maintenant</button><button class="btn" value="x">Fermer</button></div></form>');
+    refsDlg = d;
+    d.addEventListener('close', () => { if (refsDlg === d) refsDlg = null; });
+    d.querySelector('[data-a="go"]').addEventListener('click', () => { api.send({ t: 'log_refs_refresh' }); d.querySelector('tbody').innerHTML = '<tr><td colspan="4">Téléchargement demandé au serveur (quelques minutes)…</td></tr>'; });
+    api.send({ t: 'log_refs_status' });
+  }
+  function drawRefsDlg(st) {
+    if (!refsDlg || !st) return;
+    refsDlg.querySelector('tbody').innerHTML = '<tr><th>Liste</th><th>Références</th><th>Téléchargée</th><th>État</th></tr>' +
+      REF_KEYS.map(([, pr]) => {
+        const x = st[pr] || {};
+        return '<tr><td><b>' + pr + '</b></td><td>' + (x.count || 0).toLocaleString('fr-BE') + '</td><td>' + (x.at ? new Date(x.at).toLocaleString('fr-BE') : '—') + '</td><td>' +
+          (x.busy ? 'téléchargement…' : x.err ? '<span class="lg-bad">' + esc(x.err) + '</span>' : x.count ? 'OK' : 'pas encore téléchargée') + '</td></tr>';
+      }).join('');
+  }
+
   // ------------------------------------------------------------------ enregistrement / modification
   function formQso() {
     const f = q$('#lgForm');
@@ -339,7 +484,8 @@
       call: f.call.value.trim().toUpperCase(), qso_date: f.date.value.replace(/\D/g, ''), time_on: (t.length === 3 ? '0' + t : t).padEnd(6, '0'),
       freq: Math.round(fr * 1e6) / 1e6, mode: f.mode.value, rst_sent: f.rst_sent.value.trim(), rst_rcvd: f.rst_rcvd.value.trim(),
       name: f.name.value.trim(), qth: f.qth.value.trim(), gridsquare: f.gridsquare.value.trim(), tx_pwr: f.tx_pwr.value.trim(),
-      comment: f.comment.value.trim(), station: f.station.value, qo100: f.qo100.checked
+      comment: f.comment.value.trim(), station: f.station.value, qo100: f.qo100.checked,
+      ...Object.fromEntries(REF_KEYS.flatMap(([k]) => [[k, f[k].value.trim()], ['my_' + k, f['my_' + k].value.trim()]]))
     };
   }
   function save(force) {
@@ -367,6 +513,8 @@
     f.freq.value = q.freq;
     f.mode.value = MODES.indexOf(modeName(q)) >= 0 ? modeName(q) : q.mode === 'SSB' ? 'SSB' : 'DATA';
     for (const k of ['rst_sent', 'rst_rcvd', 'name', 'qth', 'gridsquare', 'tx_pwr', 'comment']) f[k].value = q[k] || '';
+    for (const [k] of REF_KEYS) { f[k].value = q[k] || ''; f['my_' + k].value = q['my_' + k] || ''; }
+    if (REF_KEYS.some(([k]) => q['my_' + k])) showMyRefs(true);
     if (calls.indexOf(q.station_callsign) >= 0) f.station.value = q.station_callsign;
     f.qo100.checked = q.sat_name === 'QO-100';
     f.querySelector('[data-a="save"]').textContent = 'Modifier le QSO';
@@ -398,6 +546,7 @@
     }
     f.querySelector('[data-a="cancel"]').textContent = 'Annuler';
     f.reset();
+    restoreMyRefs(); // références d'activation : gardées d'un QSO à l'autre
     delete f.freq.dataset.manual;
     delete f.mode.dataset.manual;
     f.querySelector('[data-a="save"]').textContent = 'Enregistrer le QSO';
@@ -492,13 +641,13 @@
     const body = q$('#lgBody');
     if (!body) return;
     if (!items.length) {
-      body.innerHTML = '<tr><td colspan="19" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche ou aux filtres.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
+      body.innerHTML = '<tr><td colspan="20" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche ou aux filtres.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
     } else {
       body.innerHTML = items.map((q) => '<tr data-id="' + esc(q.id) + '"' + (editing && editing.id === q.id ? ' class="sel"' : '') + ' title="Cliquer pour modifier">' +
         '<td>' + fmtDate(q.qso_date) + '</td><td>' + fmtTime(q.time_on) + '</td><td class="call">' + esc(q.call) + '</td><td>' + esc(q.band) +
         (q.sat_name ? ' <span class="sat">' + esc(q.sat_name) + '</span>' : '') + '</td><td class="r">' + esc(q.freq) + '</td><td>' + esc(modeName(q)) +
         '</td><td>' + esc(q.rst_sent || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td class="grow">' + esc(q.name || '') + '</td><td class="lg-qth" title="' + esc(q.qth || '') + '">' + esc(q.qth || '') +
-        '</td><td class="lg-cty" title="' + esc(q.country || '') + '">' + esc(q.country || '') + '</td><td>' + esc(q.dxcc_pfx || '') + '</td><td class="txc">' + esc(q.station_callsign || '') + '</td><td class="op" title="' + esc(q.by && q.by !== q.operator ? 'Enregistré par ' + q.by : '') + '">' + esc(q.operator || q.by || '') + '</td>' +
+        '</td><td class="lg-cty" title="' + esc(q.country || '') + '">' + esc(q.country || '') + '</td><td>' + esc(q.dxcc_pfx || '') + '</td><td class="txc">' + esc(q.station_callsign || '') + '</td><td class="op" title="' + esc(q.by && q.by !== q.operator ? 'Enregistré par ' + q.by : '') + '">' + esc(q.operator || q.by || '') + '</td>' + refsCell(q) +
         SV.map((s) => upCell(q, s)).join('') + '<td class="lg-fill"></td></tr>').join('');
     }
     const c = q$('#lgCount');
@@ -858,6 +1007,8 @@
 
   // ------------------------------------------------------------------ messages du serveur
   function onMessage(m) {
+    if (m.t === 'log_refs') return refResults(m);
+    if (m.t === 'log_refs_status') return drawRefsDlg(m.status);
     if (m.t === 'log_values') {
       if (fltMenu && fltMenu.col === m.col) { fltMenu.values = m.values || []; fillFlt(); }
       return;
@@ -885,6 +1036,7 @@
       if (editing) { say(okMsg, 'ok'); return; }
       const f = q$('#lgForm');
       for (const k of ['call', 'name', 'qth', 'gridsquare', 'comment', 'rst_rcvd']) f[k].value = '';
+      for (const [k] of REF_KEYS) f[k].value = ''; // références du correspondant ; « ma référence » reste (activation)
       delete f.time.dataset.manual;
       delete f.freq.dataset.manual;
       delete f.mode.dataset.manual;
@@ -896,8 +1048,9 @@
       pendingDupe = m.qso;
       // Même QSO déjà enregistré (ex. en fin de QSO) : on complète la fiche existante (nom, QTH, locator…) plutôt qu'un 2e QSO
       const q = m.qso || {};
-      const extra = ['name', 'qth', 'gridsquare', 'rst_rcvd', 'comment', 'tx_pwr'].filter((k) => q[k] && !p[k]);
+      const extra = ['name', 'qth', 'gridsquare', 'rst_rcvd', 'comment', 'tx_pwr'].concat(REF_KEYS.flatMap(([k]) => [k, 'my_' + k])).filter((k) => q[k] && !p[k]);
       const LBL = { name: 'nom', qth: 'QTH', gridsquare: 'locator', rst_rcvd: 'RST reçu', comment: 'remarque', tx_pwr: 'puissance' };
+      for (const [k, pr] of REF_KEYS) { LBL[k] = pr; LBL['my_' + k] = 'ma réf. ' + pr; }
       if (p.id && extra.length && window.confirm(p.call + ' est déjà dans le carnet (' + p.band + ' ' + modeName(p) + ', ' + fmtDate(p.qso_date) + ' à ' + fmtTime(p.time_on) + ' UTC).\n' +
           'Compléter ce QSO avec : ' + extra.map((k) => LBL[k] + ' « ' + q[k] + ' »').join(', ') + ' ?')) {
         api.send({ t: 'log_merge', id: p.id, qso: q });

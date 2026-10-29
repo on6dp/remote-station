@@ -455,6 +455,8 @@ L'émission n'est possible que si les administrateurs l'ont autorisée sur le se
 - La barre `Espace` (PTT) fonctionne aussi depuis une fenêtre séparée.
 - La disposition est retenue : au chargement suivant, les fenêtres se rouvrent à leur place si Chrome **autorise les fenêtres pop-up** pour remote.op0p.be (icône à droite de la barre d'adresse → Toujours autoriser).
 - **Replier un cadre** : clic sur son titre (ou `Entrée` quand le titre a le focus) ; un deuxième clic le rouvre. Retenu dans ce navigateur.
+- **Tout le dashboard dans sa propre fenêtre** : bouton `⧉ Fenêtre` du bandeau. Le dashboard se rouvre dans une fenêtre à lui, sans barre d'adresse ni onglets, que vous placez et dimensionnez où vous voulez ; sa place et sa taille sont retenues pour la fois suivante. L'onglet d'origine affiche « Dashboard ouvert dans sa fenêtre » (bouton pour l'y ramener ou la remettre devant). Chrome doit **autoriser les fenêtres pop-up** pour remote.op0p.be.
+- **L'installer comme une application** (Chrome, Edge) : bouton `⤓ Installer` du bandeau (ou l'icône d'installation à droite de la barre d'adresse). Remote Station reçoit alors son **icône sur le bureau** et dans le menu Démarrer, et s'ouvre toujours dans sa propre fenêtre. Le bouton disparaît une fois l'application installée ; pour la désinstaller : menu ⋮ de sa fenêtre → Désinstaller.
 - **Taille de tout le dashboard** : menu `Auto 100 %` du bandeau (section 5), de 50 à 200 %.
 - **Poignées à glisser** (double-clic : taille d'origine, retenue dans ce navigateur) : sous la cascade (hauteur de la cascade et des listes), entre les deux listes FT8 et entre les deux décodeurs RTTY (largeurs), sur le bord gauche de la carte de bande (sa largeur), au bord droit des titres de colonnes du carnet (largeur des colonnes).
 - **Carte de bande** : sur un écran de 1920 × 1080 et plus, elle forme une colonne à part, **tout à droite**, sur toute la hauteur (la colonne RX audio / DSP / Accord / TX se place juste à sa gauche). Elle n'apparaît que sur les onglets qui ont des spots (FT8 · FT4 · FT2, JT65, RTTY, WSPR, JTTY, CW). Sur un écran plus petit, elle reste au bord droit de la fenêtre centrale.
@@ -730,6 +732,8 @@ La fiche en haut de l'onglet :
 | **Nom**, **QTH**, **Locator**, **Puiss. W**, **Remarque** | Informations du QSO ; la remarque est libre. |
 | **TX call** | Indicatif sous lequel le QSO a été fait. Il suit celui de la ligne Correspondant ; avec la main, le changer ici change aussi l'indicatif d'émission. |
 | ☐ **QO-100** | QSO par le satellite QO-100 : avec la FI du convertisseur (ex. 432,525 MHz), la case se coche toute seule et la fréquence de montée 2400,xxx MHz est enregistrée. |
+| **Réf. correspondant** : **IOTA**, **WWFF**, **POTA**, **BOTA**, **LLOTA** | Références du correspondant quand il est en activation (île, réserve naturelle, parc, bunker, lac…). Tapez le début de la référence (`ONFF-`, `BE-00`, `EU-`…) ou un morceau du **nom** (« fagnes ») : une liste s'ouvre sous la case, choisissez avec la souris ou les flèches puis `Entrée`. Case vide et indicatif déjà tapé : la liste propose d'abord les références de son pays. Plusieurs références (ex. deux parcs POTA en même temps) : séparez-les par une virgule. Le locator de la référence remplit celui du QSO s'il est vide. Ces cases sont vidées après chaque QSO. |
+| `＋ Ma référence (activation)` | Affiche une 2e ligne **Ma réf. (activation)** pour les références **de la station**, quand le club active lui-même un parc, une île… Elles **restent remplies** d'un QSO à l'autre (dans ce navigateur) jusqu'à ce que vous les effaciez. Le bouton cache ou remontre la ligne (retenu). |
 | `Enregistrer le QSO` (ou `Entrée`) | Ajoute le QSO au carnet. Un doublon (même indicatif, bande et mode dans la demi-heure) est signalé avant l'enregistrement ; si la fiche déjà au carnet n'a pas le nom, le QTH, le locator ou le RST reçu, on propose de la **compléter** au lieu de créer un 2e QSO. |
 | `Supprimer` / `Annuler` | Apparaissent quand vous modifiez un QSO existant : supprimer le QSO (après confirmation ; les carnets en ligne ne sont pas modifiés) ou abandonner la modification. |
 
@@ -884,6 +888,8 @@ La page Station est **réservée aux administrateurs** : à la première ouvertu
 4. Garder la page Station **seule dans sa fenêtre** ; ouvrir le dashboard avec son bouton « Ouvrir le dashboard dans une autre fenêtre ».
 5. Chrome → Paramètres → Performances : garder remote.op0p.be toujours actif ; Windows : mise en veille sur Jamais.
 
+**Deux TRX (ou plus) branchés au même PC**, chacun sur son port USB : sélectionnez une fois chaque modèle sur la page Station, choisissez son port CAT et sa carte son (entrée et sortie). La page les retient **par modèle**. Ensuite, un administrateur passe de l'un à l'autre depuis le menu **STATION** du dashboard (section 17) : la page Station redémarre avec l'autre TRX, rouvre son port et sa carte son, en quelques secondes. Jamais pendant une émission.
+
 ### Les commandes de la page Station
 
 | Commande / affichage | Ce qu'elle fait |
@@ -896,7 +902,7 @@ La page Station est **réservée aux administrateurs** : à la première ouvertu
 | `Libérer le port` | Ferme le port CAT (le TRX n'est plus piloté) et oublie le choix automatique au prochain chargement. |
 | `Port de manipulation CW (DTR)…` (FTX-1) | Choisir une fois le **2e port USB** du TRX (« Standard COM Port », pas celui du CAT). La page manipule alors elle-même la CW par la ligne DTR de ce port, au rythme exact des points et des traits, au lieu de passer par la mémoire du manipulateur du TRX. Pendant chaque émission CW, le menu PC KEYING du TRX est mis sur DTR (et RPTT SELECT sur OFF), puis remis sur OFF à la fin. Le port est retenu et rouvert tout seul ; `Ne plus manipuler par DTR` revient à la mémoire du manipulateur. |
 | `Tester sans radio (simulation)` | TRX virtuel pour essayer la page et le dashboard sans émettre. |
-| **Entrée son** | Carte son du TRX (section ci-dessus). Les alias « Par défaut » et « Communications » sont remplacés par la carte réelle. |
+| **Entrée son** | Carte son du TRX (section ci-dessus). Les alias « Par défaut » et « Communications » sont remplacés par la carte réelle. L'entrée et la sortie son sont retenues **pour chaque modèle** de TRX, comme le port. |
 | **Sortie son vers le TRX** + **Niveau d'émission** | Carte son qui reçoit le signal des émissions numériques, et son niveau (1 à 100 %) : réglez-le pour que l'ALC reste faible. « — aucune — » : pas d'émission numérique. |
 | **Niveau phonie à distance** | Niveau de la voix des opérateurs (phonie à distance) envoyée par la même sortie son : réglez-le en SSB pour que l'ALC bouge à peine. Le menu « source de modulation » du TRX est mis sur USB tout seul pendant leurs émissions, puis remis (micro du club). |
 | Barre de niveau, état de l'audio | La barre bouge avec le son du TRX ; « Audio envoyé aux membres à l'écoute » ou « Audio prêt (personne n'écoute…) ». En orange : « Entrée son muette… » (carte son figée). |

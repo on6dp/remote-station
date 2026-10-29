@@ -164,7 +164,7 @@ const TYPES = {
 function qsyOrigins() {
   return (Array.isArray(cfg.qsyOrigins) ? cfg.qsyOrigins : DEFAULTS.qsyOrigins).map(String).filter((o) => /^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o));
 }
-const ROUTES = { '/': '/index.html', '/station': '/station.html', '/digi': '/digi.html', '/aide': '/aide.html', '/help': '/help.html', '/stats': '/stats.html' };
+const ROUTES = { '/': '/index.html', '/station': '/station.html', '/digi': '/digi.html', '/aide': '/aide.html', '/help': '/help.html', '/stats': '/stats.html', '/detache': '/detache.html' };
 
 function sendJson(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -510,10 +510,16 @@ function onDigi(m) {
 
 // ---------------------------------------------------------------- carnet de trafic et carnets en ligne (version « extended »)
 const LB = require('./lib/logbook.js');
+const REFDATA = require('./lib/refdata.js');
 const { Sync, SERVICES: LOG_SERVICES } = require('./lib/logsync.js');
 const VERSION = (() => { try { return require('./package.json').version; } catch (e) { return '0'; } })();
 // Dans le dossier des journaux par défaut : le seul où le service systemd du VPS peut écrire (ReadWritePaths)
 const book = new LB.Logbook(cfg.logbookFile ? path.resolve(ROOT, cfg.logbookFile) : path.join(LOG_DIR, 'logbook.json'));
+const refs = new REFDATA.RefData(path.join(ROOT, 'refdata'), (msg) => console.error(msg));
+if (cfg.refData !== false) {
+  setTimeout(() => refs.refresh().catch(() => {}), 20000);
+  setInterval(() => refs.refresh().catch(() => {}), 6 * 3600000).unref();
+}
 const LOGCFG_FILE = cfg.logbookConfig ? path.resolve(ROOT, cfg.logbookConfig) : path.join(LOG_DIR, 'logbook-config.json');
 const LOGCFG_DEFAULT = {
   clublog: { auto: false, email: '', password: '', api: '', delay: 15 },
@@ -722,12 +728,14 @@ function dxInfo(d) {
   if (!g) d.kmc = true;
 }
 // Filtres par colonne du carnet : valeur d'un QSO pour chaque colonne affichée
+const refsOf = (q, pre) => Object.keys(LB.REF_FIELDS).filter((k) => q[(pre || '') + k]).map((k) => LB.REF_FIELDS[k]);
 const LG_COL = {
   date: (q) => q.qso_date || '', utc: (q) => String(q.time_on || '').slice(0, 2), call: (q) => q.call || '', band: (q) => q.band || '',
   mhz: (q) => String(q.freq || ''), mode: (q) => LB.modeName(q), env: (q) => q.rst_sent || '', recu: (q) => q.rst_rcvd || '',
   nom: (q) => q.name || '', qth: (q) => q.qth || '', dxcc: (q) => q.country || ((DXCC.lookup(q.call) || {}).name || ''),
   pfx: (q) => (DXCC.lookup(q.call) || {}).pfx || '',
   txc: (q) => q.station_callsign || '', op: (q) => q.operator || q.by || '',
+  refs: (q) => { const a = refsOf(q), b = refsOf(q, 'my_'); return a.concat(b.map((x) => 'ma ' + x)).join(' + '); },
   lotw: (q) => lgUp(q, 'lotw'), eqsl: (q) => lgUp(q, 'eqsl'), cl: (q) => lgUp(q, 'clublog'), qrz: (q) => lgUp(q, 'qrz')
 };
 function lgUp(q, s) {
@@ -2507,6 +2515,22 @@ function onOperator(conn, m) {
     }
 
     // ------------------------------------------------------------ carnet de trafic
+    case 'log_refs_search': {
+      // Recherche dans une liste de références (fiche du QSO) : début de référence ou morceau du nom ; le pays du
+      // correspondant (préfixe DXCC de son indicatif) passe en premier
+      const prog = String(m.prog || '').toUpperCase();
+      if (!REFDATA.SOURCES[prog]) return;
+      const hint = m.call ? ((DXCC.lookup(String(m.call).slice(0, 15)) || {}).pfx || '') : '';
+      const st = refs.status[prog];
+      return send(conn, { t: 'log_refs', id: m.id, prog, list: refs.search(prog, String(m.q || '').slice(0, 40), hint, 20),
+        note: st.count ? '' : st.busy ? 'liste ' + prog + ' en cours de téléchargement par le serveur' : 'liste ' + prog + ' pas encore téléchargée par le serveur' + (st.err ? ' (' + st.err + ')' : '') });
+    }
+    case 'log_refs_status':
+      return send(conn, { t: 'log_refs_status', status: refs.summary() });
+    case 'log_refs_refresh':
+      if (!conn.user.admin) return;
+      refs.refresh(true).then(() => send(conn, { t: 'log_refs_status', status: refs.summary() })).catch(() => {});
+      return send(conn, { t: 'notice', level: 'info', msg: 'Listes de références : téléchargement relancé (quelques minutes)' });
     case 'log_values': {
       // Valeurs d'une colonne du carnet (choix proposés sous son titre), avec leur nombre de QSO
       const col = String(m.col || '');

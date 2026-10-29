@@ -149,6 +149,7 @@ sudo systemctl restart remote-station
 | `maxTxSeconds` | 120 | Durée maximale d'une émission |
 | `remoteVoice` | `true` | Phonie à distance (section 9). `false` : le PTT garde le micro du club |
 | `bandPlan` | `true` | MODE AUTO, plan de bande IARU Région 1 (section 10) |
+| `refData` | `true` | Téléchargement des listes IOTA / WWFF / POTA / BOTA / LLOTA pour le carnet (section 11). `false` : pas de téléchargement, les cases de référence restent utilisables à la main |
 | `autoSideband` | `true` | LSB sous 10 MHz, USB au-dessus, au changement de bande (section 10) |
 | `controlIdleMinutes` / `sessionIdleMinutes` | 15 / 15 | Main libérée / membre déconnecté après ce temps sans action |
 | `idleExempt` | ON6DP, ON4LUC, ON5VL | Jamais déconnectés pour inactivité (la main est quand même libérée) |
@@ -216,6 +217,8 @@ raccourci « Remote Station - Page Station » (Chrome avec les bons réglages, s
 
 - **Au club** : page Station → Réglages → « Modèle du TRX ». La première fois pour un modèle, choisir son port ; il est ensuite mémorisé par modèle.
 - **À distance** (administrateurs) : dashboard → clic sur le voyant **STATION** en haut à gauche → choisir le TRX. Possible seulement si ce TRX est branché au PC du club et que son port a déjà été choisi une fois, et jamais pendant une émission. La main est conservée.
+- **Plusieurs TRX branchés au même PC** (chacun sur son port USB) : la page Station retient pour **chaque modèle** son port CAT (identité USB du câble) et sa carte son (entrée et sortie). Préparation au club, une fois par TRX : sélectionner le modèle, « Choisir le port du TRX », choisir l'entrée et la sortie son, « Enregistrer et reconnecter ». Ensuite la commutation à distance prend quelques secondes.
+- À la mise à jour vers la 0.27.0, la carte son déjà réglée est reprise pour le TRX en service à ce moment-là ; pour les autres modèles, choisir leur carte son une fois après la première commutation.
 
 ### Commandes à distance (menu du voyant STATION, administrateurs)
 
@@ -341,6 +344,21 @@ Ces deux automatismes n'agissent que si un membre a la main (rien ne change pour
 - Un QSO sous l'indicatif d'un membre n'est **pas** envoyé aux carnets du club (export ADIF « Mes QSO » pour son propre carnet).
 - **LoTW** : le certificat (.p12 / .tq6) et son mot de passe restent sur le PC où **TQSL** est installé, jamais sur le VPS ni sur GitHub. Sur le VPS : « Exporter pour TQSL (.adi) », signer avec TQSL sur le PC du club, puis « Marquer comme envoyés ».
 - **UDP** (Swisslog, Log4OM, N1MM) : les paquets partent du serveur ; le PC qui les reçoit doit être joignable depuis le VPS.
+
+### Listes de références IOTA, WWFF, POTA, BOTA, LLOTA
+
+- La fiche du QSO a des cases **IOTA, WWFF, POTA, BOTA, LLOTA** pour les références du correspondant, et une 2e ligne « Ma réf. (activation) » pour celles de la station. Une liste de choix s'ouvre pendant la frappe.
+- Le serveur télécharge les listes mondiales lui-même, sans clé ni compte, dans `/opt/remote-station/refdata/<PROGRAMME>.json` :
+  - POTA : `https://pota.app/all_parks_ext.csv`
+  - WWFF : `https://wwff.co/wwff-data/wwff_directory.csv`
+  - BOTA (WWBOTA) : `https://api.wwbota.org/bunkers/?format=CSV`
+  - LLOTA : `https://llota.app/api/public/references`
+  - IOTA : `https://www.iota-world.org/…/fulllist.json`
+- Premier téléchargement 20 s après le démarrage du service (une liste à la fois), puis vérification toutes les 6 h ; une liste est retéléchargée quand elle a plus de 7 jours (BOTA : 30 jours). Une liste en erreur garde la version précédente.
+- **État et mise à jour à la main** : onglet Logbooks → Synchronisation ▾ → **Listes de références…** (administrateurs) → « Mettre à jour maintenant ». Les erreurs s'affichent aussi dans `journalctl -u remote-station`.
+- Le VPS doit pouvoir joindre ces sites en HTTPS (sortie). `"refData": false` dans `config.json` coupe les téléchargements.
+- `refdata/` n'est pas à sauvegarder (il se retélécharge) et n'est jamais publié sur GitHub.
+- ADIF : `IOTA`, `POTA_REF`, `WWFF_REF`, `MY_IOTA`, `MY_POTA_REF`, `MY_WWFF_REF` ; BOTA en `SIG` = `WWBOTA` / `SIG_INFO` (LLOTA en `SIG` = `LLOTA` s'il n'y a pas de BOTA ; `MY_SIG` / `MY_SIG_INFO` pour la station), plus des champs `APP_REMOTESTATION_BOTA` / `APP_REMOTESTATION_LLOTA` (et `_MY_`) pour garder les deux.
 
 ---
 

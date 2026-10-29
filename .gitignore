@@ -16,3 +16,4 @@ logbook-config.json
 comptes-*.csv
 station-sessions.json
 logs/*.jsonl
+refdata/

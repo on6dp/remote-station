@@ -9,6 +9,7 @@
   "remoteVoice": true,
   "autoSideband": true,
   "bandPlan": true,
+  "refData": true,
   "pttHeartbeatMs": 1500,
   "controlIdleMinutes": 15,
   "idleExempt": ["ON6DP", "ON4LUC", "ON5VL"],
