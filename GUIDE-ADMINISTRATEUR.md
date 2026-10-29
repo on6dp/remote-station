@@ -81,6 +81,12 @@ sudo systemctl restart remote-station
 grep '"version"' /opt/remote-station/package.json
 ```
 
+**Ou, en une seule commande après la décompression** (à partir de la 0.28.0) : `install.sh` refait les droits, met à jour le service si besoin, redémarre et vérifie que le serveur répond :
+
+```bash
+sudo bash /opt/remote-station/deploy/install.sh
+```
+
 3. **Ctrl+F5** sur le dashboard. La page Station du club se recharge **toute seule** quand le serveur a changé de version (sauf pendant une émission) ; sinon, un administrateur clique le voyant **STATION** du dashboard → « ↻ Recharger la page Station ».
 
 - Le `chown` est **obligatoire** après chaque décompression, sinon `adduser.js` répond « permission denied ».
@@ -339,11 +345,21 @@ Ces deux automatismes n'agissent que si un membre a la main (rien ne change pour
 ## 11. Carnet de trafic et logs en ligne
 
 - Le carnet est dans `/opt/remote-station/logs/logbook.json` ; les réglages des services (mots de passe, clés API LoTW, eQSL, Club Log, QRZ.com) dans `logs/logbook-config.json` (droits 600). **Jamais publiés**, et les mots de passe ne sont jamais renvoyés aux navigateurs.
-- Configuration et synchronisations : **administrateurs** (onglet Logbooks → Synchronisation ▾ → ⚙ Configuration).
+- Configuration du club : **administrateurs** (onglet Logbooks → Synchronisation ▾ → ⚙ Configuration). Synchronisation : administrateurs pour tous les indicatifs, chaque membre pour le sien (ci-dessous).
 - Tous les membres (sauf écouteurs) enregistrent des QSO et peuvent modifier ou supprimer **les leurs** seulement. Les autres peuvent voir le détail d'un QSO, sans jamais le modifier.
-- Un QSO sous l'indicatif d'un membre n'est **pas** envoyé aux carnets du club (export ADIF « Mes QSO » pour son propre carnet).
+- Un QSO sous l'indicatif d'un membre n'est **jamais** envoyé aux carnets du club : il part vers les siens (s'il les a réglés) ou s'exporte en ADIF (« Mes QSO »).
 - **LoTW** : le certificat (.p12 / .tq6) et son mot de passe restent sur le PC où **TQSL** est installé, jamais sur le VPS ni sur GitHub. Sur le VPS : « Exporter pour TQSL (.adi) », signer avec TQSL sur le PC du club, puis « Marquer comme envoyés ».
 - **UDP** (Swisslog, Log4OM, N1MM) : les paquets partent du serveur ; le PC qui les reçoit doit être joignable depuis le VPS.
+
+### Logs en ligne par indicatif
+
+- Chaque indicatif a **ses propres identifiants** (eQSL, Club Log, clé API QRZ, lieu de station TQSL et identifiant du site LoTW), gardés dans `logs/logbook-config.json` (droits 600), jamais renvoyés aux navigateurs.
+- Les identifiants de ⚙ Configuration ne servent qu'aux indicatifs du club (ON5VL, OR0L). Un QSO n'est **jamais** envoyé avec les identifiants d'un autre indicatif.
+- **Membres** (indicatif personnel avec émission permise) : Synchronisation ▾ → service → ils ne voient et ne règlent que **leur** indicatif, envoient **leurs** QSO, peuvent cocher l'envoi automatique de chaque nouveau QSO, exporter pour TQSL et marquer comme envoyés **leurs** QSO, lire **leurs** confirmations LoTW. Jamais la configuration du club, jamais « effacer le log Club Log ».
+- **Administrateurs** : tous les indicatifs, comme avant, plus l'envoi automatique d'un indicatif personnel (case dans le cadre de ses identifiants).
+- Un refus d'accès (mauvais mot de passe) bloque **seulement cet indicatif** jusqu'à ce que ses identifiants soient réenregistrés.
+- Confirmations LoTW : lues pour l'indicatif choisi et reportées seulement sur ses QSO (date de dernière lecture gardée par indicatif).
+- Pas d'envoi UDP vers le logbook du PC du club pour un QSO fait sous un indicatif personnel.
 
 ### Listes de références IOTA, WWFF, POTA, BOTA, LLOTA
 
@@ -404,6 +420,27 @@ Les données à protéger sont toutes dans `/opt/remote-station` :
 | `logs/` | Carnet (`logbook.json`), identifiants des carnets en ligne (`logbook-config.json`), journaux d'accès, relevés d'utilisation |
 | `sstv/` | Images SSTV reçues |
 
+### Avec le script `backup.sh` (recommandé)
+
+```bash
+sudo bash /opt/remote-station/deploy/backup.sh
+```
+Sauvegarde **les données** (tout le tableau ci-dessus, sauf `refdata/` qui se retélécharge) dans `/home/on6dp/backups/remote-station-AAAA-MM-JJ_HHMM.tar.gz`, droits 600, propriétaire on6dp (à récupérer avec WinSCP). Les 30 plus récentes sont gardées (`--garder N` pour changer), les plus anciennes supprimées.
+
+| Commande (précédée de `sudo bash /opt/remote-station/deploy/backup.sh`) | Effet |
+|---|---|
+| *(rien)* | Sauvegarde des données maintenant |
+| `--complet` | Programme + données (tout le dossier) |
+| `--liste` | Sauvegardes présentes et prochaine sauvegarde automatique |
+| `--minuterie 03:30` | **Sauvegarde automatique chaque jour** à 03:30 (minuterie systemd ; rattrapée au démarrage si le VPS était éteint) |
+| `--sans-minuterie` | Arrête la sauvegarde automatique (les archives restent) |
+| `--restaurer remote-station-AAAA-MM-JJ_HHMM.tar.gz` | Restaure (après confirmation) : sauvegarde d'abord l'état actuel (« avant-restauration »), arrête le service, remet les fichiers, refait les droits, relance |
+| `--dossier DIR` | Autre dossier que `/home/on6dp/backups` |
+
+Vérifier la minuterie : `systemctl list-timers remote-station-backup` ; essai immédiat : `sudo systemctl start remote-station-backup`.
+
+### À la main (sans le script)
+
 **Sauvegarde complète** (code + données), à garder sur le VPS et sur votre PC (WinSCP), **jamais sur GitHub ni dans un message** :
 
 ```bash
@@ -463,6 +500,33 @@ Les mots de passe SSH, les clés et le jeton ne s'envoient jamais par e-mail ni 
 ---
 
 ## 17. Installation complète d'un nouveau serveur
+
+### En une commande avec `install.sh` (recommandé)
+
+Sur un VPS Debian / Ubuntu neuf, le nom du site (enregistrement DNS A) déjà pointé vers ce serveur. Copier l'archive avec WinSCP, puis :
+
+```bash
+sudo tar -xzf /home/on6dp/remote-station-X.Y.Z.tar.gz -C /opt
+```
+```bash
+sudo bash /opt/remote-station/deploy/install.sh --domaine remote.op0p.be --email on6dp@on6dp.be --admin ON6DP --sauvegarde 03:30
+```
+
+Le script installe Node.js (22 si celui du système est trop ancien), nginx et certbot ; crée l'utilisateur `remotestation` ; crée `config.json` avec un **jeton neuf, jamais affiché** (la page Station le reprend toute seule) ; crée l'administrateur (mot de passe demandé) ; installe le service systemd, le site nginx et le certificat HTTPS ; installe la sauvegarde quotidienne ; puis vérifie que le serveur répond.
+
+| Option | Rôle |
+|---|---|
+| `--domaine NOM` | Nom du site (nginx + certificat) |
+| `--email ADRESSE` | Adresse pour Let's Encrypt (sinon certbot la demande) |
+| `--admin INDICATIF` | Premier administrateur |
+| `--port N` | Port interne (9000 par défaut ; nouveau serveur seulement) |
+| `--sauvegarde HH:MM` | Sauvegarde automatique quotidienne (section 14) |
+| `--sans-https` | Pas de certificat (essais seulement : Chrome refuse alors le port série et le micro) |
+
+Ensuite : régler `clubName`, `stationCall`, `stationGrid` dans `config.json` (section 5), créer les membres (section 4). Pour reprendre un ancien serveur : `backup.sh --restaurer` avec une sauvegarde de l'ancien (section 14).
+Le script ne supprime jamais rien : relancé sur un serveur existant, il fait une simple mise à jour.
+
+### À la main
 
 Sur un VPS Debian neuf (accès PuTTY / WinSCP) :
 

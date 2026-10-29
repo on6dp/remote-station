@@ -594,7 +594,7 @@ Les <b>spots</b> du DX cluster du club (OP0P, avec les stations repérées par l
 <table>
   <tr><th>Élément</th><th>Ce qu'il montre ou fait</th></tr>
   <tr><td>Point vert / rouge, <b>20 m</b></td><td>Liaison avec le cluster (vert = connecté), bande du VFO écouté.</td></tr>
-  <tr><td><b>RTTY</b> (ou FT8, CW…) / <b>Tous</b></td><td>Mode de l'onglet : ses spots et les spots sans mode indiqué. Tous : aussi les spots des autres modes.</td></tr>
+  <tr><td><span class="k">Filtres ▾</span> (jaune) / <span class="k">Tous</span></td><td>Sous le numéro de la bande (en grand). <b>Filtres</b> ouvre la liste des modes de l'onglet (RTTY : RTTY, PSK, OLIVIA ; FT8 · FT4 · FT2 : FT8, FT4, FT2 ; JT65 : JT65, JT9, Q65…) et « Spots sans mode indiqué » : cochez ceux à afficher. Choix gardé par onglet ; <span class="k">Par défaut</span> revient au mode de l'onglet + spots sans mode. <b>Tous</b> (vert quand il est enclenché) : tous les spots de la plage, quel que soit leur mode.</td></tr>
   <tr><td>Deux cases kHz</td><td>Plage affichée, gardée pour chaque bande, à part pour le RTTY, le CW et les autres modes numériques. Tapez-y vos limites (ex. 7030 et 7120). Par défaut en 40 m : RTTY 7030–7120, CW 7000–7040, FT8 et autres 7038–7080 kHz.</td></tr>
   <tr><td>Indicatif en <span class="grn">vert</span></td><td>Station qui appelle (CQ, spot d'un skimmer RBN).</td></tr>
   <tr><td>Indicatif <s>barré</s></td><td>Déjà contacté en RTTY sur cette bande (sous le TX call choisi).</td></tr>
@@ -746,6 +746,7 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
 <ul>
   <li>La liste montre les 300 derniers QSO. La case <b>Rechercher</b> trouve un indicatif, un nom ou un opérateur ; le nombre de QSO trouvés s'affiche à côté.</li>
   <li><b>Clic sur une ligne</b> : le QSO s'ouvre dans la fiche. Son auteur <b>avec la main</b> (ou un administrateur) peut le modifier ou le supprimer ; tous les autres (membres sans la main, écouteurs, autres opérateurs) le voient <b>en lecture seule</b> (« Fermer » le referme). Personne ne peut jamais modifier ni supprimer le QSO d'un autre indicatif, sauf les administrateurs.</li>
+  <li>Colonnes : date, heure, indicatif, bande, fréquence, mode, reports, nom, QTH, <b>locator</b>, pays DXCC, préfixe, TX call, opérateur, références (IOTA, POTA…), états des envois (LoTW, eQSL, Club Log, QRZ).</li>
   <li><b>Largeur des colonnes</b> : glisser le bord droit d'un titre de colonne (double-clic : largeur d'origine). Réglage gardé dans votre navigateur.</li>
   <li><b>Filtres</b> : le <b>▾</b> à côté de chaque titre propose les valeurs de la colonne (dates, bandes, modes, pays, TX call, état des envois…) avec leur nombre de QSO. Un choix filtre le carnet (le ▾ devient ●) ; plusieurs colonnes se combinent ; <span class="k">✕ Filtres</span> les retire tous.</li>
 </ul>
@@ -771,7 +772,7 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
 </table>
 
 <h3 id="l-sync">14.4 Synchronisation (LoTW, eQSL, Club Log, QRZ)</h3>
-<p>Menu <b>Synchronisation ▾</b>, réservé aux administrateurs : il envoie les QSO du carnet vers les sites de confirmation. Une fenêtre par service, comme dans Swisslog.</p>
+<p>Menu <b>Synchronisation ▾</b> : il envoie les QSO du carnet vers les sites de confirmation. Une fenêtre par service, comme dans Swisslog. Les <b>administrateurs</b> gèrent tous les indicatifs (club et membres). Chaque <b>membre</b> qui émet sous son propre indicatif s'en sert pour <b>ses</b> QSO (voir « Vos propres logs en ligne » ci-dessous).</p>
 <ol>
   <li>Choisissez le service : <b>Synchronisation LoTW…</b>, <b>Synchronisation eQSL…</b>, <b>Club Log…</b> ou <b>QRZ…</b>.</li>
   <li>Onglet <b>Détails</b> : choisissez l'<b>indicatif (TX call)</b> dont les QSO partent (le TX call en cours est proposé).</li>
@@ -781,6 +782,8 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
 </ol>
 <ul>
   <li><b>Indicatifs du club et indicatifs personnels</b> : les identifiants de la configuration générale (14.5) ne servent qu'aux indicatifs du club (ON5VL, OR0L). Un indicatif personnel (ON6DP…) a besoin de <b>ses propres identifiants</b>, sinon ses QSO sont marqués « non configuré ». Un envoi qui mélange plusieurs TX call est fait groupe par groupe, chacun avec ses identifiants.</li>
+  <li><b>Vos propres logs en ligne (membres)</b> : dans la fenêtre, l'indicatif est le vôtre et ne peut pas être changé. Entrez <b>vos</b> identifiants (eQSL, Club Log, clé API QRZ, identifiant du site LoTW), puis <span class="k">Enregistrer pour cet indicatif</span> : ils restent sur le serveur, ne sont jamais affichés, et personne d'autre ne peut s'en servir. Cochez <b>Envoyer automatiquement chaque nouveau QSO</b> pour que chaque QSO fait sous votre indicatif parte tout seul vers ce service. Vos QSO ne partent jamais vers les comptes du club, et ceux du club jamais vers les vôtres. LoTW : <span class="k">Exporter pour TQSL</span> (vos QSO), signez avec <b>votre</b> TQSL, puis <span class="k">Marquer comme envoyés</span> ; <span class="k">Confirmations</span> lit vos confirmations avec l'identifiant de votre compte LoTW.</li>
+  <li>Un mot de passe refusé n'arrête que l'indicatif concerné (ceux du club et des autres membres continuent) ; corrigez-le puis enregistrez-le.</li>
   <li><b>Opérations LoTW</b> : exporter, signer avec TQSL, envoyer, lire les confirmations, statut. <span class="k">Confirmations</span> lit seulement les confirmations reçues (★ dans la liste). Avec le serveur sur le VPS (sans TQSL) : <span class="k">Exporter pour TQSL (.adi)</span>, signez le fichier avec TQSL sur le PC du club, puis <span class="k">Marquer comme envoyés</span>.</li>
 </ul>
 

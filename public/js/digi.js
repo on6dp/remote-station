@@ -418,8 +418,10 @@
     bm.id = 'bandMap';
     bm.hidden = true;
     bm.setAttribute('aria-label', 'Carte de bande');
-    bm.innerHTML = '<div class="bm-h"><span class="bm-st" id="bmSt"></span><b id="bmBandT">—</b><span class="bm-t">Spots</span>'
-      + '<select id="bmFilt" aria-label="Spots affichés" title="Mode de l’onglet : ses spots et ceux sans mode indiqué · Tous : tous les spots de la plage"><option value="rtty">RTTY</option><option value="all">Tous</option></select></div>'
+    bm.innerHTML = '<div class="bm-h"><span class="bm-st" id="bmSt"></span><b id="bmBandT" class="bm-band">—</b><span class="bm-t">Spots</span>'
+      + '<span class="bm-fw"><button type="button" class="bm-fbtn" id="bmFbtn" aria-haspopup="true" aria-expanded="false" title="Choisir les modes dont les spots sont affichés (liste des modes de cet onglet)">Filtres ▾</button>'
+      + '<button type="button" class="bm-all" id="bmAll" aria-pressed="false" title="Tous les spots de la plage, quel que soit leur mode (les filtres sont ignorés)">Tous</button>'
+      + '<span class="bm-fmenu" id="bmFmenu" role="menu" hidden></span></span></div>'
       + '<div class="bm-r" title="Plage affichée pour cette bande (kHz), gardée par bande. Molette sur la carte : zoom · glisser : déplacer · double-clic : plage d’origine">'
       + '<input id="bmLo" inputmode="decimal" aria-label="Début de la plage (kHz)"><span>–</span><input id="bmHi" inputmode="decimal" aria-label="Fin de la plage (kHz)"><span>kHz</span></div>'
       + '<div class="bm-body" id="bmBody"><canvas id="bmCv"></canvas><div class="bm-lbls" id="bmLbls"></div></div>'
@@ -1272,7 +1274,7 @@
   const BM_KEEP = 30 * 60000;
   const bmSpots = new Map();
   let bmState = '', bmHost = '', bmRaf = 0, bmBand = '', bmLay = [];
-  let bmFilt = store.get('bmfilt', 'rtty') === 'all' ? 'all' : 'rtty';
+  let bmFilt = store.get('bmfilt', 'rtty') === 'all' ? 'all' : 'mode';
   function bmAdd(list) {
     for (const s of list || []) {
       if (!s || !Number.isFinite(s.f) || typeof s.call !== 'string') continue;
@@ -1307,6 +1309,43 @@
     if (want.test(s.cmt)) return true;
     return !BM_ANY.test(s.cmt);
   }
+  // Filtres par onglet : modes proposés (nom, mots reconnus dans le commentaire du spot) ; « sans » = spot sans mode indiqué
+  const BM_MODES = {
+    ftx: [['FT8', /\bFT8\b/i], ['FT4', /\bFT4\b/i], ['FT2', /\bFT2\b/i]],
+    rtty: [['RTTY', /RTTY|\bBPS\b|\bRY\b/i], ['PSK', /\bPSK\d*\b|\bBPSK\d*\b/i], ['OLIVIA', /\bOLIVIA\b/i]],
+    cw: [['CW', /\bCW\b|WPM/i]],
+    jt65: [['JT65', /\bJT65\b/i], ['JT9', /\bJT9\b/i], ['Q65', /\bQ65\b/i]],
+    wspr: [['WSPR', /\bWSPR\b/i]],
+    jtty: [['JTTY', /\bJTTY\b/i]]
+  };
+  const bmModeList = () => (BM_MODES[tab] || BM_MODES.rtty).concat([['sans', null]]);
+  // Modes cochés pour cet onglet (par défaut : le mode de l'onglet et les spots sans mode, comme avant)
+  function bmChecked() {
+    const v = store.get('bmmodes_' + tab, '');
+    if (v) return v.split(',');
+    return [bmMode().name, 'sans'];
+  }
+  function bmPass(s) {
+    if (bmFilt === 'all') return true;
+    const on = bmChecked();
+    const known = BM_ANY.test(s.cmt);
+    if (!known) return on.indexOf('sans') >= 0;
+    return bmModeList().some(([n, re]) => re && on.indexOf(n) >= 0 && re.test(s.cmt));
+  }
+  function bmFiltDraw() {
+    const b = $('bmFbtn'), a = $('bmAll');
+    if (!b || !a) return;
+    a.setAttribute('aria-pressed', String(bmFilt === 'all'));
+    const on = bmChecked().filter((n) => n !== 'sans');
+    b.classList.toggle('off', bmFilt === 'all');
+    b.title = 'Modes affichés : ' + (on.length ? on.join(', ') : 'aucun') + (bmChecked().indexOf('sans') >= 0 ? ' + spots sans mode' : '') + ' (clic : changer)';
+    const m = $('bmFmenu');
+    if (m && !m.hidden) {
+      const ck = bmChecked();
+      m.innerHTML = '<span class="bm-fhd">Modes de cet onglet</span>' + bmModeList().map(([n]) => '<label><input type="checkbox" data-bmm="' + n + '"' + (ck.indexOf(n) >= 0 ? ' checked' : '') + '> ' +
+        (n === 'sans' ? 'Spots sans mode indiqué' : n) + '</label>').join('') + '<button type="button" class="bm-fdef" data-bmdef="1">Par défaut</button>';
+    }
+  }
   function bmShown() {
     return BM_TABS.indexOf(tab) >= 0 && !detached && !!$('bandMap') && !$('centerPanel').classList.contains('collapsed');
   }
@@ -1316,6 +1355,7 @@
     if (!p || !bm) return;
     p.classList.toggle('bm-on', on);
     bm.hidden = !on;
+    if (on) bmFiltDraw();
     bmPlace();
     if (on) bmDraw();
   }
@@ -1366,8 +1406,6 @@
     c.clearRect(0, 0, W, H);
     const d = (tab === 'rtty' && rtDialOf(rtTx)) || rtDialOf(0);
     const md = bmMode();
-    const fo = $('bmFilt').options[0];
-    if (fo.textContent !== md.name) fo.textContent = md.name;
     const band = d ? bmBandOf(d.hz / 1000) : bmBand || '40m';
     if (band && band !== bmBand) bmBand = band;
     const [lo, hi] = bmRange(bmBand || '40m');
@@ -1442,7 +1480,7 @@
     const now = Date.now();
     for (const [k, s] of bmSpots) if (now - s.at > BM_KEEP) bmSpots.delete(k);
     const LH = 15, room = Math.max(1, Math.floor((H - 2) / LH));
-    let list = Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi && (bmFilt === 'all' || bmMatch(s, md.want)));
+    let list = Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi && bmPass(s));
     if (list.length > room) list = list.sort((a, b) => b.at - a.at).slice(0, room);
     list.sort((a, b) => a.f - b.f);
     const pos = list.map((s) => yOf(s.f) - LH / 2);
@@ -1627,8 +1665,30 @@
       });
       $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
     }
-    $('bmFilt').value = bmFilt;
-    $('bmFilt').addEventListener('change', () => { bmFilt = $('bmFilt').value === 'all' ? 'all' : 'rtty'; store.set('bmfilt', bmFilt); bmDraw(); });
+    // Filtres (liste des modes de l'onglet) et « Tous »
+    const fm = $('bmFmenu');
+    const fClose = () => { fm.hidden = true; $('bmFbtn').setAttribute('aria-expanded', 'false'); };
+    $('bmFbtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      fm.hidden = !fm.hidden;
+      $('bmFbtn').setAttribute('aria-expanded', String(!fm.hidden));
+      if (!fm.hidden && bmFilt === 'all') { bmFilt = 'mode'; store.set('bmfilt', bmFilt); bmDraw(); } // choisir des modes = quitter « Tous »
+      bmFiltDraw();
+    });
+    fm.addEventListener('click', (e) => e.stopPropagation());
+    fm.addEventListener('change', (e) => {
+      const i = e.target.closest('[data-bmm]');
+      if (!i) return;
+      const on = Array.from(fm.querySelectorAll('[data-bmm]')).filter((x) => x.checked).map((x) => x.dataset.bmm);
+      store.set('bmmodes_' + tab, on.length ? on.join(',') : '-'); // « - » : rien de coché (aucun spot)
+      bmFiltDraw();
+      bmDraw();
+    });
+    fm.addEventListener('click', (e) => { if (e.target.closest('[data-bmdef]')) { store.set('bmmodes_' + tab, ''); bmFiltDraw(); bmDraw(); } });
+    document.addEventListener('click', () => { if (!fm.hidden) fClose(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !fm.hidden) fClose(); });
+    $('bmAll').addEventListener('click', () => { bmFilt = bmFilt === 'all' ? 'mode' : 'all'; store.set('bmfilt', bmFilt); fClose(); bmFiltDraw(); bmDraw(); });
+    bmFiltDraw();
     if (window.ResizeObserver) new ResizeObserver(() => bmDraw()).observe(body);
     // Poignée sur le bord gauche : largeur de la carte de bande, gardée dans ce navigateur
     const root = document.documentElement;

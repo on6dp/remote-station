@@ -605,7 +605,7 @@ On the right of the FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY and CW tabs (not S
 | Item | What it shows or does |
 |---|---|
 | Green / red dot, **20 m** | Link to the cluster (green = connected), band of the VFO being heard. |
-| **RTTY** (or FT8, CW…) / **Tous** (all) | The tab's mode: its spots and spots with no mode given. Tous: also spots of other modes. |
+| `Filtres ▾` (filters, yellow) / `Tous` (all) | Under the band number (large). **Filtres** opens the list of the tab's modes (RTTY: RTTY, PSK, OLIVIA; FT8 · FT4 · FT2: FT8, FT4, FT2; JT65: JT65, JT9, Q65…) and « Spots sans mode indiqué » (spots with no mode): tick those to show. Kept per tab; `Par défaut` (default) goes back to the tab's mode + spots with no mode. **Tous** (green when on): all spots in the range, whatever their mode. |
 | Two kHz boxes | Range shown, kept for each band, separately for RTTY, CW and the other digital modes. Type your limits (e.g. 7030 and 7120). Defaults on 40 m: RTTY 7030–7120, CW 7000–7040, FT8 and others 7038–7080 kHz. |
 | Callsign in green | Station calling (CQ, RBN skimmer spot). |
 | Struck-out callsign | Already worked in RTTY on this band (under the chosen TX call). |
@@ -754,6 +754,7 @@ In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé*
 
 - The list shows the last 300 QSOs. The **Rechercher** (search) box finds a callsign, a name or an operator; the number of QSOs found is shown next to it.
 - **Click a row**: the QSO opens in the form. Its author **with control** (or an administrator) can edit or delete it; everyone else (members without control, listeners, other operators) sees it **read-only** (« Fermer » closes it). Nobody can ever edit or delete a QSO logged by another callsign, except administrators.
+- Columns: date, time, callsign, band, frequency, mode, reports, name, QTH, **locator**, DXCC country, prefix, TX call, operator, references (IOTA, POTA…), upload states (LoTW, eQSL, Club Log, QRZ).
 - **Column width**: drag the right edge of a column title (double-click: original width). Setting remembered in your browser.
 - **Filters**: the **▾** next to each title offers the values of that column (dates, bands, modes, countries, TX call, upload state…) with their QSO count. A choice filters the logbook (the ▾ becomes ●); several columns combine; `✕ Filtres` (filters) removes them all.
 
@@ -781,7 +782,7 @@ In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé*
 <a id="l-sync"></a>
 ### 14.4 Synchronisation (LoTW, eQSL, Club Log, QRZ)
 
-**Synchronisation ▾** menu, reserved for administrators: it uploads the logbook QSOs to the confirmation websites. One window per service, as in Swisslog.
+**Synchronisation ▾** menu: it uploads the logbook QSOs to the confirmation websites. One window per service, as in Swisslog. **Administrators** handle every callsign (club and members). Each **member** who transmits under their own callsign uses it for **their own** QSOs: the callsign is theirs and cannot be changed; they enter **their own** credentials (kept on the server, never shown, usable by nobody else), can tick « send each new QSO automatically », and their QSOs never go to the club accounts (nor the club's to theirs). A refused password only stops that callsign.
 
 1. Choose the service: **Synchronisation LoTW…**, **Synchronisation eQSL…**, **Club Log…** or **QRZ…**.
 2. **Détails** (details) tab: choose the **callsign (TX call)** whose QSOs are uploaded (the current TX call is suggested).

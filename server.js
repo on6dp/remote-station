@@ -556,9 +556,26 @@ function credFor(s, call) {
     const k = acct && acct.key ? acct.key : (logCfg.qrz.keys || {})[call] || '';
     return Object.assign(base, { key: k, keys: Object.assign({}, logCfg.qrz.keys || {}, k ? { [call]: k } : {}) });
   }
-  if (!club) for (const k of ACCT_FIELDS[s]) base[k] = '';
+  if (!club) { for (const k of ACCT_FIELDS[s]) base[k] = ''; base.lastConfirm = ''; base.auto = false; }
   if (acct) for (const k of ACCT_FIELDS[s]) if (acct[k]) base[k] = acct[k];
+  // Indicatif personnel : ses propres options (envoi automatique, date des dernières confirmations LoTW)
+  if (!club && acct) { base.auto = acct.auto === true; base.lastConfirm = acct.lastConfirm || ''; }
   return base;
+}
+// Envoi automatique d'un nouveau QSO : réglage du club pour ON5VL / OR0L ; pour un indicatif personnel, seulement si
+// son titulaire (ou un administrateur) l'a demandé dans ses identifiants — jamais avec ceux du club
+function autoFor(s, call) {
+  call = String(call || '').toUpperCase();
+  if (!call || stationCalls().indexOf(call) >= 0) return !!(logCfg[s] && logCfg[s].auto);
+  const acct = logCfg[s] && logCfg[s].accounts && logCfg[s].accounts[call];
+  if (!acct || acct.auto !== true) return false;
+  const c = credFor(s, call);
+  return s === 'eqsl' ? !!(c.user && c.password) : s === 'clublog' ? !!(c.email && c.password && c.api) : s === 'qrz' ? !!c.key : !!(c.tqsl && c.location);
+}
+// Logs en ligne en libre-service : un membre ne gère que son propre indicatif (identifiants, envois, confirmations)
+function ownLogCall(conn, call) {
+  call = String(call || '').toUpperCase();
+  return !!call && call === String(conn.user.call || '').toUpperCase() && ownCallOk(conn.user) && stationCalls().indexOf(call) < 0;
 }
 function acctPublic(s, call) {
   const c = credFor(s, call);
@@ -569,6 +586,8 @@ function acctPublic(s, call) {
     if (secret) out.has[k] = !!c[k]; else out.fields[k] = c[k] || '';
   }
   out.source = acct ? 'compte' : stationCalls().indexOf(call) >= 0 ? 'club' : 'aucun';
+  out.club = stationCalls().indexOf(call) >= 0;
+  out.auto = out.club ? !!(logCfg[s] && logCfg[s].auto) : !!(acct && acct.auto === true);
   return out;
 }
 function logCfgPublic() {
@@ -638,7 +657,13 @@ const sync = new Sync({
   book, version: VERSION, station: String(cfg.digiCall || 'ON5VL').toUpperCase(), urls: cfg.logUrls, // logUrls : essais seulement
   getCfg: () => logCfg,
   getCred: (s, call) => credFor(s, call),
-  setLastConfirm: (d) => { logCfg.lotw.lastConfirm = d; saveLogCfg(); },
+  getAuto: (s, call) => autoFor(s, call),
+  setLastConfirm: (d, call) => {
+    call = String(call || '').toUpperCase();
+    const acct = call && stationCalls().indexOf(call) < 0 && logCfg.lotw.accounts && logCfg.lotw.accounts[call];
+    if (acct) acct.lastConfirm = d; else if (!call || stationCalls().indexOf(call) >= 0) logCfg.lotw.lastConfirm = d;
+    saveLogCfg();
+  },
   log: (m) => console.error('Logs : ' + m),
   onJob: (job, ev) => {
     const msg = { t: 'log_job', job: { id: job.id, service: job.service, name: job.name, total: job.total, done: job.done, ok: job.ok, fail: job.fail, auto: job.auto, by: job.by }, line: ev.line, fin: !!ev.fin, step: ev.step };
@@ -732,7 +757,7 @@ const refsOf = (q, pre) => Object.keys(LB.REF_FIELDS).filter((k) => q[(pre || ''
 const LG_COL = {
   date: (q) => q.qso_date || '', utc: (q) => String(q.time_on || '').slice(0, 2), call: (q) => q.call || '', band: (q) => q.band || '',
   mhz: (q) => String(q.freq || ''), mode: (q) => LB.modeName(q), env: (q) => q.rst_sent || '', recu: (q) => q.rst_rcvd || '',
-  nom: (q) => q.name || '', qth: (q) => q.qth || '', dxcc: (q) => q.country || ((DXCC.lookup(q.call) || {}).name || ''),
+  nom: (q) => q.name || '', qth: (q) => q.qth || '', loc: (q) => q.gridsquare || '', dxcc: (q) => q.country || ((DXCC.lookup(q.call) || {}).name || ''),
   pfx: (q) => (DXCC.lookup(q.call) || {}).pfx || '',
   txc: (q) => q.station_callsign || '', op: (q) => q.operator || q.by || '',
   refs: (q) => { const a = refsOf(q), b = refsOf(q, 'my_'); return a.concat(b.map((x) => 'ma ' + x)).join(' + '); },
@@ -2590,10 +2615,12 @@ function onOperator(conn, m) {
         if (book.error) send(conn, { t: 'notice', level: 'error', msg: 'ATTENTION : carnet non écrit sur le disque du serveur (' + book.error + ')' });
         journal('log_add', { call: conn.user.call, qso: q.call, band: q.band, mode: q.mode });
         // QSO fait sous un indicatif personnel : gardé dans le carnet, pas d'envoi automatique vers les comptes du club
+        // (ni UDP vers le logbook du PC du club) ; ses propres logs en ligne seulement si son titulaire l'a demandé
         const club = stationCalls().indexOf(q.station_callsign) >= 0;
-        if (club) sync.auto(q);
-        else send(conn, { t: 'notice', level: 'info', msg: 'QSO enregistré sous ' + q.station_callsign + ' : pas d’envoi automatique vers les logs en ligne du club (export ADIF pour votre propre carnet).' });
-        send(conn, { t: 'log_saved', qso: qsoForClient(q), auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, club && !!logCfg[s].auto && !sync.stopped[s]])) });
+        const auto = Object.fromEntries(LOG_SERVICES.map((s) => [s, autoFor(s, q.station_callsign) && !sync.isStopped(s, q.station_callsign)]));
+        sync.auto(q, { udp: club, by: club ? '' : String(q.station_callsign || '') });
+        if (!club && !LOG_SERVICES.some((s) => auto[s])) send(conn, { t: 'notice', level: 'info', msg: 'QSO enregistré sous ' + q.station_callsign + ' : pas d’envoi vers les logs en ligne du club. Vos propres logs en ligne : Synchronisation ▾ (vos identifiants, envoi automatique possible).' });
+        send(conn, { t: 'log_saved', qso: qsoForClient(q), auto });
       }
       for (const c of ops) send(c, { t: 'log_changed' });
       sendWorked(false);
@@ -2610,14 +2637,23 @@ function onOperator(conn, m) {
       return;
     }
     case 'log_pending':
-      if (!conn.user.admin || LOG_SERVICES.indexOf(m.service) < 0) return;
+      if (LOG_SERVICES.indexOf(m.service) < 0) return;
+      if (!conn.user.admin && !ownLogCall(conn, m.callsign)) return;
       return send(conn, { t: 'log_pending', service: m.service, n: sync.pending(m.service, { from: m.from, to: m.to, callsign: m.callsign, all: !!m.all }).length,
-        busy: !!sync.busy[m.service], stopped: !!sync.stopped[m.service] });
+        busy: !!sync.busy[m.service], stopped: sync.isStopped(m.service, m.callsign) });
     case 'log_mark': {
       // QSO signés à la main avec TQSL (serveur sans certificat, ex. le VPS) : notés « envoyés »
-      if (!conn.user.admin || LOG_SERVICES.indexOf(m.service) < 0 || !Array.isArray(m.ids)) return;
+      if (LOG_SERVICES.indexOf(m.service) < 0 || !Array.isArray(m.ids)) return;
+      // Membre : seulement les QSO de son propre indicatif
+      const mineOnly = !conn.user.admin;
+      if (mineOnly && !ownLogCall(conn, conn.user.call)) return;
       let n = 0;
-      for (const id of m.ids.slice(0, 20000)) { const q = book.get(id); if (q) { sync.mark(q, m.service, { ok: true, msg: 'envoyé à la main (' + conn.user.call + ')' }); n++; } }
+      for (const id of m.ids.slice(0, 20000)) {
+        const q = book.get(id);
+        if (!q || (mineOnly && String(q.station_callsign || '').toUpperCase() !== String(conn.user.call).toUpperCase())) continue;
+        sync.mark(q, m.service, { ok: true, msg: 'envoyé à la main (' + conn.user.call + ')' });
+        n++;
+      }
       book.save();
       journal('log_mark', { call: conn.user.call, service: m.service, n });
       send(conn, { t: 'notice', level: 'info', msg: n + ' QSO notés comme envoyés à ' + m.service.toUpperCase() });
@@ -2631,7 +2667,7 @@ function onOperator(conn, m) {
       const me = String(conn.user.call).toUpperCase();
       m.callsign = String(m.callsign || '').toUpperCase();
       if (!conn.user.admin) {
-        if (m.pending) return send(conn, { t: 'notice', level: 'error', msg: 'Export pour les carnets en ligne : administrateurs seulement' });
+        if (m.pending && !ownLogCall(conn, m.callsign)) return send(conn, { t: 'notice', level: 'error', msg: 'Export pour les carnets en ligne : votre propre indicatif seulement' });
         if (m.callsign !== me && !(m.mine && stationCalls().indexOf(m.callsign) >= 0)) { m.callsign = me; m.mine = false; }
       }
       let list = book.query({ from: m.from, to: m.to }).filter((q) => (!m.callsign || q.station_callsign === m.callsign) && (!m.mine || q.operator === me || q.by === me));
@@ -2645,7 +2681,10 @@ function onOperator(conn, m) {
         pending: m.pending || '', ids: m.pending ? list.map((q) => q.id) : undefined });
     }
     case 'log_cfg_get':
-      if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Réglages des carnets en ligne : administrateurs seulement' });
+      if (!conn.user.admin) {
+        if (m.quiet) return send(conn, { t: 'log_cfg', cfg: null, calls: logCalls(conn), quiet: true }); // fenêtre de synchronisation d'un membre
+        return send(conn, { t: 'notice', level: 'error', msg: 'Réglages des carnets en ligne : administrateurs seulement' });
+      }
       return send(conn, { t: 'log_cfg', cfg: logCfgPublic(), calls: logCalls(conn), quiet: !!m.quiet });
     case 'log_cfg_set':
       if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Réglages des carnets en ligne : administrateurs seulement' });
@@ -2677,15 +2716,15 @@ function onOperator(conn, m) {
       sync.test(m.service).then((r) => send(conn, { t: 'log_test', service: m.service, ok: r.ok, msg: r.msg }));
       return;
     case 'log_acct_get': {
-      if (!conn.user.admin) return;
       const sv = String(m.service || ''), call = String(m.call || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
       if (!ACCT_FIELDS[sv] || !call) return;
+      if (!conn.user.admin && !ownLogCall(conn, call)) return;
       return send(conn, Object.assign({ t: 'log_acct', service: sv, call }, acctPublic(sv, call)));
     }
     case 'log_acct_set': {
-      if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Identifiants des carnets en ligne : administrateurs seulement' });
       const sv = String(m.service || ''), call = String(m.call || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
       if (!ACCT_FIELDS[sv] || !call || !m.fields || typeof m.fields !== 'object') return;
+      if (!conn.user.admin && !ownLogCall(conn, call)) return send(conn, { t: 'notice', level: 'error', msg: 'Identifiants des carnets en ligne : votre propre indicatif seulement' });
       logCfg[sv].accounts = logCfg[sv].accounts || {};
       const a = Object.assign({}, logCfg[sv].accounts[call] || {});
       for (const k of ACCT_FIELDS[sv]) {
@@ -2695,7 +2734,9 @@ function onOperator(conn, m) {
         if (secret && v === '') continue;                    // vide : on garde l'ancien
         if (v === '__effacer__' || v === '') delete a[k]; else a[k] = String(v).slice(0, 300);
       }
-      if (Object.keys(a).length) logCfg[sv].accounts[call] = a; else delete logCfg[sv].accounts[call];
+      // Envoi automatique des nouveaux QSO de cet indicatif (indicatif personnel ; pour le club : ⚙ Configuration)
+      if (stationCalls().indexOf(call) < 0 && typeof m.auto === 'boolean') { if (m.auto) a.auto = true; else delete a.auto; }
+      if (Object.keys(a).some((k) => k !== 'lastConfirm' && k !== 'auto')) logCfg[sv].accounts[call] = a; else delete logCfg[sv].accounts[call];
       saveLogCfg();
       sync.resetStops();
       journal('log_acct', { call: conn.user.call, service: sv, for: call });
@@ -2703,7 +2744,12 @@ function onOperator(conn, m) {
       return send(conn, Object.assign({ t: 'log_acct', service: sv, call, saved: true }, acctPublic(sv, call)));
     }
     case 'log_sync': {
-      if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Synchronisation des carnets : administrateurs seulement' });
+      // Membre : son propre indicatif seulement (jamais « tous », jamais l'effacement du log Club Log)
+      if (!conn.user.admin) {
+        if (m.action === 'stop') return sync.jobBy[m.service] === conn.user.call ? sync.stop(m.service) : undefined;
+        if (!ownLogCall(conn, m.callsign)) return send(conn, { t: 'notice', level: 'error', msg: 'Synchronisation : votre propre indicatif seulement' });
+        m.clear = false;
+      }
       if (m.action === 'stop') return sync.stop(m.service);
       if (m.service === 'lotw' && m.action === 'confirm') { sync.confirmLotw(conn.user.call, m.callsign); return; }
       if (LOG_SERVICES.indexOf(m.service) < 0) return;

@@ -11,7 +11,7 @@ Pilotage à distance des transceivers du club depuis un navigateur.
  TRX ──USB──► PC du club (Chrome, page /station) ──internet──► VPS remote.op0p.be ◄── membres (navigateur)
 ```
 
-**Version actuelle : 0.27.2** — historique dans [CHANGELOG.md](CHANGELOG.md).
+**Version actuelle : 0.28.0** — historique dans [CHANGELOG.md](CHANGELOG.md).
 
 **Télécharger une version prête à installer** : dossier [releases/](releases/README.md) du dépôt. Chaque version y a son archive serveur
 `remote-station-X.Y.Z.tar.gz`, son installateur Windows `RemoteStation-Setup-X.Y.Z.exe` et le fichier `SHA256SUMS.txt` des empreintes.
@@ -65,6 +65,8 @@ grep '"version"' /opt/remote-station/package.json
 ```
 
 3. Ctrl+F5 dans le navigateur (page membres et page Station).
+
+Depuis la 0.28.0, après la décompression, `sudo bash /opt/remote-station/deploy/install.sh` fait le `chown`, le redémarrage et la vérification en une fois. Sauvegarde : `sudo bash /opt/remote-station/deploy/backup.sh` (ou `--minuterie 03:30` pour chaque nuit). Nouveau serveur en une commande : voir [GUIDE-ADMINISTRATEUR.md](GUIDE-ADMINISTRATEUR.md), section 17.
 
 Le `chown` est **obligatoire** après chaque décompression, sinon les commandes de gestion des membres échouent (« permission denied »).
 
@@ -361,6 +363,6 @@ L'essentiel en cinq lignes :
 | `public/station.html`, `public/js/station.js`, `public/js/station-core.js` | Page Station (Web Serial) |
 | `public/js/yaesu.js`, `ftx1.js`, `ftdx10.js`, `ic7300.js` | Pilotes des TRX |
 | `adduser.js`, `importusers.js`, `init-config.js` | Gestion des membres et de la configuration |
-| `deploy/` | Service systemd et site nginx |
+| `deploy/` | Service systemd, site nginx, `install.sh` (installation / mise à jour en une commande), `backup.sh` (sauvegarde, restauration, sauvegarde quotidienne) |
 | `LISEZMOI.md` | Guide complet |
 | `TIERS.md` | Licences des éléments repris (RigPlane Core et ft8_lib, MIT ; décodeurs de WSJT-X, GPL v3 ; base d'indicatifs de JTDX ; cty.dat d'AD1C ; police Roboto Mono, OFL) |

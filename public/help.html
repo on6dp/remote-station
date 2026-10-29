@@ -594,7 +594,7 @@ You can follow two stations on the same band at once (contest, a DX and its pile
 <table>
   <tr><th>Item</th><th>What it shows or does</th></tr>
   <tr><td>Green / red dot, <b>20 m</b></td><td>Link to the cluster (green = connected), band of the VFO being heard.</td></tr>
-  <tr><td><b>RTTY</b> (or FT8, CW…) / <b>Tous</b> (all)</td><td>The tab's mode: its spots and spots with no mode given. Tous: also spots of other modes.</td></tr>
+  <tr><td><span class="k">Filtres ▾</span> (filters, yellow) / <span class="k">Tous</span> (all)</td><td>Under the band number (large). <b>Filtres</b> opens the list of the tab's modes (RTTY: RTTY, PSK, OLIVIA; FT8 · FT4 · FT2: FT8, FT4, FT2; JT65: JT65, JT9, Q65…) and « Spots sans mode indiqué » (spots with no mode): tick those to show. Kept per tab; <span class="k">Par défaut</span> (default) goes back to the tab's mode + spots with no mode. <b>Tous</b> (green when on): all spots in the range, whatever their mode.</td></tr>
   <tr><td>Two kHz boxes</td><td>Range shown, kept for each band, separately for RTTY, CW and the other digital modes. Type your limits (e.g. 7030 and 7120). Defaults on 40 m: RTTY 7030–7120, CW 7000–7040, FT8 and others 7038–7080 kHz.</td></tr>
   <tr><td>Callsign in <span class="grn">green</span></td><td>Station calling (CQ, RBN skimmer spot).</td></tr>
   <tr><td><s>Struck-out</s> callsign</td><td>Already worked in RTTY on this band (under the chosen TX call).</td></tr>
@@ -746,6 +746,7 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
 <ul>
   <li>The list shows the last 300 QSOs. The <b>Rechercher</b> (search) box finds a callsign, a name or an operator; the number of QSOs found is shown next to it.</li>
   <li><b>Click a row</b>: the QSO opens in the form. Its author <b>with control</b> (or an administrator) can edit or delete it; everyone else (members without control, listeners, other operators) sees it <b>read-only</b> (« Fermer » closes it). Nobody can ever edit or delete a QSO logged by another callsign, except administrators.</li>
+  <li>Columns: date, time, callsign, band, frequency, mode, reports, name, QTH, <b>locator</b>, DXCC country, prefix, TX call, operator, references (IOTA, POTA…), upload states (LoTW, eQSL, Club Log, QRZ).</li>
   <li><b>Column width</b>: drag the right edge of a column title (double-click: original width). Setting remembered in your browser.</li>
   <li><b>Filters</b>: the <b>▾</b> next to each title offers the values of that column (dates, bands, modes, countries, TX call, upload state…) with their QSO count. A choice filters the logbook (the ▾ becomes ●); several columns combine; <span class="k">✕ Filtres</span> (filters) removes them all.</li>
 </ul>
@@ -771,7 +772,7 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
 </table>
 
 <h3 id="l-sync">14.4 Synchronisation (LoTW, eQSL, Club Log, QRZ)</h3>
-<p><b>Synchronisation ▾</b> menu, reserved for administrators: it uploads the logbook QSOs to the confirmation websites. One window per service, as in Swisslog.</p>
+<p><b>Synchronisation ▾</b> menu: it uploads the logbook QSOs to the confirmation websites. One window per service, as in Swisslog. <b>Administrators</b> handle every callsign (club and members). Each <b>member</b> who transmits under their own callsign uses it for <b>their own</b> QSOs: the callsign is theirs and cannot be changed; they enter <b>their own</b> credentials (kept on the server, never shown, usable by nobody else), can tick « send each new QSO automatically », and their QSOs never go to the club accounts (nor the club's to theirs). A refused password only stops that callsign.</p>
 <ol>
   <li>Choose the service: <b>Synchronisation LoTW…</b>, <b>Synchronisation eQSL…</b>, <b>Club Log…</b> or <b>QRZ…</b>.</li>
   <li><b>Détails</b> (details) tab: choose the <b>callsign (TX call)</b> whose QSOs are uploaded (the current TX call is suggested).</li>

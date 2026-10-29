@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.28.0 | [RemoteStation-Setup-0.28.0.exe](0.28.0/RemoteStation-Setup-0.28.0.exe) | [remote-station-0.28.0.tar.gz](0.28.0/remote-station-0.28.0.tar.gz) | Logs en ligne en libre-service par indicatif, install.sh et backup.sh, colonne Locator, filtres de modes de la carte de bande — [empreintes SHA-256](0.28.0/SHA256SUMS.txt) |
 | 0.27.2 | [RemoteStation-Setup-0.27.2.exe](0.27.2/RemoteStation-Setup-0.27.2.exe) | [remote-station-0.27.2.tar.gz](0.27.2/remote-station-0.27.2.tar.gz) | Bouton Prendre / Libérer la main plus grand et en couleur — [empreintes SHA-256](0.27.2/SHA256SUMS.txt) |
 | 0.27.1 | [RemoteStation-Setup-0.27.1.exe](0.27.1/RemoteStation-Setup-0.27.1.exe) | [remote-station-0.27.1.tar.gz](0.27.1/remote-station-0.27.1.tar.gz) | Fiche du QSO plus compacte (références à droite de Remarque, « Ma référence » à droite de QO-100) — [empreintes SHA-256](0.27.1/SHA256SUMS.txt) |
 | 0.27.0 | [RemoteStation-Setup-0.27.0.exe](0.27.0/RemoteStation-Setup-0.27.0.exe) | [remote-station-0.27.0.tar.gz](0.27.0/remote-station-0.27.0.tar.gz) | Références IOTA / WWFF / POTA / BOTA / LLOTA dans le carnet, dashboard dans sa fenêtre ou installé comme application, carte son par TRX, touches MODE plus lisibles — [empreintes SHA-256](0.27.0/SHA256SUMS.txt) |

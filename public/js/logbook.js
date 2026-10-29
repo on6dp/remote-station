@@ -28,7 +28,7 @@
   let total = 0;
   // Colonnes du carnet : largeur par défaut (px), réglable à la souris (bord droit de l'en-tête), gardée dans ce navigateur
   const LG_COLS = [['date', 98], ['utc', 58], ['call', 96], ['band', 70], ['mhz', 82], ['mode', 66], ['env', 58], ['recu', 64], ['nom', 116],
-    ['qth', 136], ['dxcc', 116], ['pfx', 76], ['txc', 84], ['op', 84], ['refs', 150], ['lotw', 62], ['eqsl', 62], ['cl', 46], ['qrz', 54], ['fill', 0]];
+    ['qth', 136], ['loc', 70], ['dxcc', 116], ['pfx', 76], ['txc', 84], ['op', 84], ['refs', 150], ['lotw', 62], ['eqsl', 62], ['cl', 46], ['qrz', 54], ['fill', 0]];
   // Références des programmes « on the air » : [champ du carnet, programme, exemple]
   const REF_KEYS = [['iota', 'IOTA', 'EU-005'], ['wwff_ref', 'WWFF', 'ONFF-0001'], ['pota_ref', 'POTA', 'BE-0001'], ['bota_ref', 'BOTA', 'B/ON-0001'], ['llota_ref', 'LLOTA', 'CE-0001']];
   let editing = null;      // QSO en cours de modification
@@ -127,9 +127,9 @@
     <div class="lg-tw">
       <table class="lg-table">
         <colgroup>${LG_COLS.map(([k]) => '<col data-c="' + k + '">').join('')}</colgroup>
-        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th class="r">MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Préfixe principal de l'entité DXCC (ex. ON pour la Belgique, LA pour la Norvège)">Préfixe</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th><th title="Opérateur : indicatif personnel du membre qui a fait le QSO (même sous l'indicatif du club)">OP</th><th title="Références IOTA, WWFF, POTA, BOTA, LLOTA du correspondant ; ▲ = référence de la station (activation)">Réf.</th>
+        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th class="r">MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th title="Locator (Maidenhead) du correspondant">Locator</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Préfixe principal de l'entité DXCC (ex. ON pour la Belgique, LA pour la Norvège)">Préfixe</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th><th title="Opérateur : indicatif personnel du membre qui a fait le QSO (même sous l'indicatif du club)">OP</th><th title="Références IOTA, WWFF, POTA, BOTA, LLOTA du correspondant ; ▲ = référence de la station (activation)">Réf.</th>
           <th class="c" title="LoTW (★ = confirmé)">LoTW</th><th class="c">eQSL</th><th class="c" title="Club Log">CL</th><th class="c">QRZ</th><th class="lg-fill"></th></tr></thead>
-        <tbody id="lgBody"><tr><td colspan="20" class="lg-empty">Chargement du carnet…</td></tr></tbody>
+        <tbody id="lgBody"><tr><td colspan="21" class="lg-empty">Chargement du carnet…</td></tr></tbody>
       </table>
     </div>
     <p class="lg-job" id="lgJob" aria-live="polite"></p>`;
@@ -217,8 +217,13 @@
     const ro = !!me.rxOnly;
     f.querySelector('[data-a="save"]').disabled = ro;
     if (ro) fmsg('Indicatif d’écouteur : consultation du carnet seulement.', 'warn');
-    q$('[data-m="sync"]').disabled = !me.admin;
-    q$('[data-m="sync"]').title = me.admin ? '' : 'Réservé aux administrateurs';
+    // Synchronisation : administrateurs (tous les indicatifs), membres (leur propre indicatif, avec leurs identifiants)
+    const canSync = me.admin || myLogCall() !== '';
+    q$('[data-m="sync"]').disabled = !canSync;
+    q$('[data-m="sync"]').title = canSync ? (me.admin ? '' : 'Vos QSO sous ' + myLogCall() + ' vers VOS logs en ligne (vos propres identifiants)') : 'Réservé aux administrateurs et aux membres qui émettent sous leur propre indicatif';
+    root.querySelectorAll('.lg-mlist [data-a="cfg"], .lg-mlist [data-a="refs"]').forEach((b) => { b.hidden = !me.admin; });
+    const sep = root.querySelector('.lg-mlist .lg-msep');
+    if (sep) sep.hidden = !me.admin;
     const sel = f.station;
     const keep = sel.value;
     sel.textContent = '';
@@ -640,13 +645,13 @@
     const body = q$('#lgBody');
     if (!body) return;
     if (!items.length) {
-      body.innerHTML = '<tr><td colspan="20" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche ou aux filtres.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
+      body.innerHTML = '<tr><td colspan="21" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche ou aux filtres.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
     } else {
       body.innerHTML = items.map((q) => '<tr data-id="' + esc(q.id) + '"' + (editing && editing.id === q.id ? ' class="sel"' : '') + ' title="Cliquer pour modifier">' +
         '<td>' + fmtDate(q.qso_date) + '</td><td>' + fmtTime(q.time_on) + '</td><td class="call">' + esc(q.call) + '</td><td>' + esc(q.band) +
         (q.sat_name ? ' <span class="sat">' + esc(q.sat_name) + '</span>' : '') + '</td><td class="r">' + esc(q.freq) + '</td><td>' + esc(modeName(q)) +
         '</td><td>' + esc(q.rst_sent || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td class="grow">' + esc(q.name || '') + '</td><td class="lg-qth" title="' + esc(q.qth || '') + '">' + esc(q.qth || '') +
-        '</td><td class="lg-cty" title="' + esc(q.country || '') + '">' + esc(q.country || '') + '</td><td>' + esc(q.dxcc_pfx || '') + '</td><td class="txc">' + esc(q.station_callsign || '') + '</td><td class="op" title="' + esc(q.by && q.by !== q.operator ? 'Enregistré par ' + q.by : '') + '">' + esc(q.operator || q.by || '') + '</td>' + refsCell(q) +
+        '</td><td class="lg-loc">' + esc(q.gridsquare || '') + '</td><td class="lg-cty" title="' + esc(q.country || '') + '">' + esc(q.country || '') + '</td><td>' + esc(q.dxcc_pfx || '') + '</td><td class="txc">' + esc(q.station_callsign || '') + '</td><td class="op" title="' + esc(q.by && q.by !== q.operator ? 'Enregistré par ' + q.by : '') + '">' + esc(q.operator || q.by || '') + '</td>' + refsCell(q) +
         SV.map((s) => upCell(q, s)).join('') + '<td class="lg-fill"></td></tr>').join('');
     }
     const c = q$('#lgCount');
@@ -685,12 +690,18 @@
       stCalls.map((c) => '<option value="' + esc(c) + '|mine">' + esc(c) + ' — mes QSO sous cet indicatif</option>').join('');
   }
   const callOptions = (all) => (all ? '<option value="">' + esc(all) + '</option>' : '') + calls.map((c) => '<option>' + esc(c) + '</option>').join('');
+  // Indicatif personnel du membre (s'il peut émettre sous son propre indicatif) : le seul qu'il synchronise lui-même
+  function myLogCall() {
+    const c = String(me.call || '').toUpperCase();
+    return c && !me.rxOnly && calls.indexOf(c) >= 0 && stCalls.indexOf(c) < 0 ? c : '';
+  }
 
   // ---------- Synchronisation (Télécharger vers …)
   const STEPS = [['export', 'Exporter les QSOs'], ['sign', 'Signer les QSOs (TQSL)'], ['upload', 'Téléchargement vers LoTW'], ['fetch', 'Obtenir les confirmations LoTW'],
     ['import', 'Importer les confirmations'], ['status', 'Statut d’actualisation']];
   function openSync(s) {
-    if (!me.admin) return say('Synchronisation : réservée aux administrateurs.', 'warn');
+    const own = myLogCall();
+    if (!me.admin && !own) return say('Synchronisation : réservée aux administrateurs et aux membres qui émettent sous leur propre indicatif.', 'warn');
     if (sdlg && sdlg.el.open) sdlg.el.close();
     const lotw = s === 'lotw';
     const title = lotw ? 'Opérations LoTW' : 'Télécharger vers ' + NAMES[s];
@@ -698,13 +709,15 @@
       '<h3>' + title + '</h3>' +
       '<div class="lg-tabs" role="tablist"><button type="button" data-t="det" aria-selected="true">Détails</button><button type="button" data-t="proc" aria-selected="false">Traitement</button></div>' +
       '<div data-p="det" class="lg-pp">' +
-      '<label>Indicatif (TX call) <select name="callsign">' + callOptions('Tous les indicatifs') + '</select></label>' +
+      (me.admin ? '<label>Indicatif (TX call) <select name="callsign">' + callOptions('Tous les indicatifs') + '</select></label>'
+        : '<label>Indicatif (TX call) <select name="callsign"><option>' + esc(own) + '</option></select></label>' +
+          '<p class="lg-note">Vos QSO faits sous <b>' + esc(own) + '</b> partent vers <b>vos</b> comptes, avec <b>vos</b> identifiants (gardés sur le serveur, jamais affichés). Les QSO sous ON5VL / OR0L restent gérés par les administrateurs.</p>') +
       // Identifiants du service pour l'indicatif choisi : à vérifier avant chaque synchronisation (un compte par indicatif)
       '<fieldset class="lg-acct"><legend>Identifiants ' + NAMES[s] + ' de <b data-acall>—</b></legend><div class="lg-acf"></div><p class="lg-anote"></p>' +
       '<div class="lg-btns"><button type="button" class="btn" data-a="acct">Enregistrer pour cet indicatif</button></div></fieldset>' +
       '<fieldset><legend>Plage de dates (facultatif)</legend><label>Du <input type="date" name="from"></label><label>Au <input type="date" name="to"></label></fieldset>' +
       '<label class="lg-chk"><input type="checkbox" name="all"> Renvoyer aussi les QSO déjà envoyés</label>' +
-      (s === 'clublog' ? '<label class="lg-chk warn"><input type="checkbox" name="clear"> Effacer le log ClubLog existant (remplacé par tout le carnet de l’indicatif)</label>' : '') +
+      (s === 'clublog' && me.admin ? '<label class="lg-chk warn"><input type="checkbox" name="clear"> Effacer le log ClubLog existant (remplacé par tout le carnet de l’indicatif)</label>' : '') +
       (lotw ? '' : '<label class="lg-w8">Temporisation (secondes) <input type="number" name="delay" min="0" max="120" step="1"></label>') +
       '<p class="lg-pend">…</p>' +
       (lotw ? '<div class="lg-alt"><p><b>Serveur sans TQSL</b> (VPS) : le certificat LoTW reste sur le PC du club. Exportez les QSO non envoyés, signez-les avec TQSL sur ce PC, puis notez-les comme envoyés.</p>' +
@@ -722,7 +735,7 @@
     const f = d.querySelector('form');
     // Indicatif proposé : le TX call actuel (ou le premier de la liste), pour voir tout de suite ses identifiants
     const stx = api && api.state && api.state();
-    const cur = stx && stx.txCall && calls.indexOf(stx.txCall) >= 0 ? stx.txCall : calls[0];
+    const cur = !me.admin ? own : stx && stx.txCall && calls.indexOf(stx.txCall) >= 0 ? stx.txCall : calls[0];
     if (cur) f.callsign.value = cur;
     const acctAsk = () => {
       const c = f.callsign.value;
@@ -740,7 +753,8 @@
       if (!c) return;
       const fields = {};
       d.querySelectorAll('.lg-acf [data-af]').forEach((i) => { fields[i.dataset.af] = i.dataset.clear === '1' && !i.value.trim() ? '__effacer__' : i.value.trim(); });
-      api.send({ t: 'log_acct_set', service: s, call: c, fields });
+      const au = d.querySelector('.lg-acf [data-aauto]');
+      api.send(Object.assign({ t: 'log_acct_set', service: s, call: c, fields }, au ? { auto: au.checked } : {}));
     });
     const filt = () => ({ callsign: f.callsign.value, from: f.from.value, to: f.to.value, all: f.all.checked || !!(f.clear && f.clear.checked) });
     const askPending = () => api.send(Object.assign({ t: 'log_pending', service: s }, filt()));
@@ -1015,6 +1029,7 @@
     if (m.t === 'log_list') {
       items = m.items || [];
       total = m.total || 0;
+      if (Array.isArray(m.stationCalls)) stCalls = m.stationCalls;
       if (Array.isArray(m.calls)) { calls = m.calls; rights(); }
       if (Array.isArray(m.txcalls)) txcalls = m.txcalls;
       if (Array.isArray(m.stationCalls)) stCalls = m.stationCalls;
@@ -1067,7 +1082,7 @@
     } else if (m.t === 'log_pending') {
       if (sdlg && sdlg.el.open && sdlg.service === m.service) {
         const p = sdlg.el.querySelector('.lg-pend');
-        p.textContent = m.n + ' QSO à envoyer vers ' + NAMES[m.service] + (m.busy ? ' · un envoi est déjà en cours' : '') + (m.stopped ? ' · envois arrêtés après un refus d’accès : vérifiez la configuration' : '');
+        p.textContent = m.n + ' QSO à envoyer vers ' + NAMES[m.service] + (m.busy ? ' · un envoi est déjà en cours' : '') + (m.stopped ? ' · envois arrêtés après un refus d’accès : vérifiez les identifiants puis enregistrez-les' : '');
         p.classList.toggle('warn', !!m.stopped);
       }
     } else if (m.t === 'log_acct') {
@@ -1085,7 +1100,9 @@
         ? '<span class="lg-pw"><input data-af="' + k + '" type="password" autocomplete="new-password" placeholder="' + (m.has && m.has[k] ? SECRET_PH : 'à renseigner') + '">' +
           '<button type="button" class="lg-eye" title="Afficher / masquer" aria-label="Afficher le mot de passe">👁</button>' +
           (m.source === 'compte' && m.has && m.has[k] ? '<button type="button" class="lg-clr" data-aclr="' + k + '" title="Effacer la valeur enregistrée pour cet indicatif">✕</button>' : '') + '</span>'
-        : '<input data-af="' + k + '" value="' + esc((m.fields || {})[k] || '') + '" autocomplete="off">') + '</label>').join('');
+        : '<input data-af="' + k + '" value="' + esc((m.fields || {})[k] || '') + '" autocomplete="off">') + '</label>').join('') +
+        // Indicatif personnel : envoi automatique de chaque nouveau QSO (le club se règle dans ⚙ Configuration)
+        (m.club ? '' : '<label class="lg-chk"><input type="checkbox" data-aauto' + (m.auto ? ' checked' : '') + '> Envoyer automatiquement chaque nouveau QSO de ' + esc(m.call) + ' vers ' + esc(NAMES[m.service]) + '</label>');
       box.onclick = (e) => {
         const b = e.target.closest('button');
         if (!b) return;
@@ -1100,7 +1117,7 @@
       note.classList.toggle('warn', !!missing.length);
     } else if (m.t === 'log_cfg') {
       calls = m.calls || calls;
-      if (sdlg && sdlg.el.open) {
+      if (sdlg && sdlg.el.open && m.cfg) {
         const c = m.cfg[sdlg.service] || {};
         const f = sdlg.el.querySelector('form');
         if (f.delay && f.delay.value === '') f.delay.value = c.delay;
