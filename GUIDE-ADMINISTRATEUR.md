@@ -347,7 +347,7 @@ Ces deux automatismes n'agissent que si un membre a la main (rien ne change pour
 
 ### Listes de références IOTA, WWFF, POTA, BOTA, LLOTA
 
-- La fiche du QSO a des cases **IOTA, WWFF, POTA, BOTA, LLOTA** pour les références du correspondant, et une 2e ligne « Ma réf. (activation) » pour celles de la station. Une liste de choix s'ouvre pendant la frappe.
+- La fiche du QSO a des cases **IOTA, WWFF, POTA, BOTA, LLOTA** (2e ligne, à droite de Remarque) pour les références du correspondant, et une ligne « Ma réf. (activation) » (bouton à droite de QO-100) pour celles de la station. Une liste de choix s'ouvre pendant la frappe.
 - Le serveur télécharge les listes mondiales lui-même, sans clé ni compte, dans `/opt/remote-station/refdata/<PROGRAMME>.json` :
   - POTA : `https://pota.app/all_parks_ext.csv`
   - WWFF : `https://wwff.co/wwff-data/wwff_directory.csv`

@@ -1519,7 +1519,9 @@ body.bm-resizing { cursor: ew-resize; user-select: none; }
 .lg-row.lg-refs { align-items: flex-end; gap: 8px; }
 .lg-refs-t { font-size: 12px; font-weight: 700; color: #ffd400; padding-bottom: 6px; min-width: 128px; }
 .lg-myrefs .lg-refs-t { color: #6fe36f; }
-.lg-ref input { width: 112px; text-transform: uppercase; font-family: ui-monospace, Consolas, monospace; }
+.lg-ref input { width: 96px; text-transform: uppercase; font-family: ui-monospace, Consolas, monospace; }
+.lg-row .lg-ref { color: #ffd400; font-weight: 700; }
+.lg-row .lg-gap { width: 18px; flex: 0 0 18px; }
 .lg-myrefs .lg-ref input { border-color: #2f8f2f; }
 .lg-myref-btn { font-size: 12px; padding: 4px 8px; }
 .lg-myref-btn[aria-pressed="true"] { background: #1f5f1f; color: #fff; font-weight: 700; }

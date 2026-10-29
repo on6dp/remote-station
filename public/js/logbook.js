@@ -75,6 +75,8 @@
         <label class="lg-w5">RST reçu <input name="rst_rcvd" maxlength="8"></label>
         <label class="lg-txc">TX call <select name="station" title="Indicatif sous lequel le QSO a été fait (STATION_CALLSIGN)"></select></label>
         <label class="lg-chk lg-qo" title="QSO via le satellite QO-100 : fréquence de montée 2400,xxx MHz (la FI du convertisseur est convertie)"><input type="checkbox" name="qo100"> QO-100</label>
+        <span class="lg-gap"></span>
+        <button class="btn lg-myref-btn" type="button" data-a="myrefs" aria-pressed="false" title="Afficher les références de la station (le club active un parc, une île…) ; elles restent remplies d'un QSO à l'autre">＋ Ma référence (activation)</button>
       </div>
       <div class="lg-row">
         <label>Nom <input name="name" maxlength="40"></label>
@@ -82,11 +84,8 @@
         <label class="lg-w6">Locator <input name="gridsquare" maxlength="8"></label>
         <label class="lg-w5">Puiss. W <input name="tx_pwr" inputmode="decimal" maxlength="5"></label>
         <label class="lg-rem">Remarque <input name="comment" maxlength="200"></label>
-      </div>
-      <div class="lg-row lg-refs">
-        <span class="lg-refs-t" title="Références du correspondant (vous le chassez) : tapez le début de la référence ou un morceau du nom, puis choisissez dans la liste">Réf. correspondant</span>
-        ${REF_KEYS.map(([k, p, ph]) => '<label class="lg-ref">' + p + ' <input name="' + k + '" data-prog="' + p + '" maxlength="80" placeholder="' + ph + '" autocomplete="off"></label>').join('')}
-        <button class="btn lg-myref-btn" type="button" data-a="myrefs" aria-pressed="false" title="Afficher les références de la station (le club active un parc, une île…) ; elles restent remplies d'un QSO à l'autre">＋ Ma référence (activation)</button>
+        <span class="lg-gap"></span>
+        ${REF_KEYS.map(([k, p, ph]) => '<label class="lg-ref" title="Référence ' + p + ' du correspondant : tapez le début de la référence ou un morceau du nom, puis choisissez dans la liste">' + p + ' <input name="' + k + '" data-prog="' + p + '" maxlength="80" placeholder="' + ph + '" autocomplete="off"></label>').join('')}
       </div>
       <div class="lg-row lg-refs lg-myrefs" hidden>
         <span class="lg-refs-t" title="Références de la station pendant une activation : gardées d'un QSO à l'autre jusqu'à ce que vous les effaciez">Ma réf. (activation)</span>
@@ -391,7 +390,7 @@
     try { on = localStorage.getItem('rs.lg.myrefs') === '1'; } catch (e) { /* */ }
     showMyRefs(on);
     restoreMyRefs();
-    for (const inp of f.querySelectorAll('.lg-refs input')) {
+    for (const inp of f.querySelectorAll('.lg-ref input')) {
       inp.addEventListener('input', () => { inp.value = inp.value.toUpperCase(); askRefs(inp); if (inp.dataset.my) saveMyRefs(); });
       inp.addEventListener('focus', () => askRefs(inp));
       inp.addEventListener('blur', () => setTimeout(() => { if (RS.input === inp) closeRefs(); }, 150));

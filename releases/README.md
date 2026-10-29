@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.27.1 | [RemoteStation-Setup-0.27.1.exe](0.27.1/RemoteStation-Setup-0.27.1.exe) | [remote-station-0.27.1.tar.gz](0.27.1/remote-station-0.27.1.tar.gz) | Fiche du QSO plus compacte (références à droite de Remarque, « Ma référence » à droite de QO-100) — [empreintes SHA-256](0.27.1/SHA256SUMS.txt) |
 | 0.27.0 | [RemoteStation-Setup-0.27.0.exe](0.27.0/RemoteStation-Setup-0.27.0.exe) | [remote-station-0.27.0.tar.gz](0.27.0/remote-station-0.27.0.tar.gz) | Références IOTA / WWFF / POTA / BOTA / LLOTA dans le carnet, dashboard dans sa fenêtre ou installé comme application, carte son par TRX, touches MODE plus lisibles — [empreintes SHA-256](0.27.0/SHA256SUMS.txt) |
 | 0.26.1 | [RemoteStation-Setup-0.26.1.exe](0.26.1/RemoteStation-Setup-0.26.1.exe) | [remote-station-0.26.1.tar.gz](0.26.1/remote-station-0.26.1.tar.gz) | Guide des administrateurs, manuel à jour, fiche du QSO et onglets LOGBOOKS · LOG QSO · SYNCHRO — [empreintes SHA-256](0.26.1/SHA256SUMS.txt) |
 | 0.26.0 | [RemoteStation-Setup-0.26.0.exe](0.26.0/RemoteStation-Setup-0.26.0.exe) | [remote-station-0.26.0.tar.gz](0.26.0/remote-station-0.26.0.tar.gz) | MODE AUTO (plan de bande IARU Région 1), suivi de l'opérateur à chaque prise de main — [empreintes SHA-256](0.26.0/SHA256SUMS.txt) |
