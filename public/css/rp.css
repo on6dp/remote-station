@@ -1545,3 +1545,15 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 /* Cadre MODE : touches plus lisibles (LSB, USB, CW-L…) */
 #modeKeys .btn { font-size: 13px; letter-spacing: .03em; min-height: 28px; color: var(--v2-text-bright, #e8edf3); }
 #modeKeys .btn[aria-pressed='true'] { color: #fff; }
+/* Bouton PRENDRE / LIBÉRER LA MAIN : plus grand, couleur selon l'état, bien visible dans le bandeau */
+#ctrlBtn { font-size: 14px; font-weight: 800; letter-spacing: .05em; padding: 5px 14px; min-height: 34px; border-width: 2px; border-radius: 6px; }
+#ctrlBtn[data-state='free'], #ctrlBtn[data-state='here'] { background: linear-gradient(180deg, #2fbf4a, #1c8a33); border-color: #7dff9a; color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.5); animation: ctlPulse 1.6s ease-in-out infinite; }
+#ctrlBtn[data-state='free']:hover, #ctrlBtn[data-state='here']:hover { background: linear-gradient(180deg, #3ad457, #22a03c); color: #fff; }
+#ctrlBtn[data-state='mine'] { background: linear-gradient(180deg, #ff8a1f, #c85a00); border-color: #ffd08a; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.5);
+  box-shadow: 0 0 10px rgba(255,138,31,.55); }
+#ctrlBtn[data-state='mine']:hover { background: linear-gradient(180deg, #ff9d42, #d96800); color: #fff; }
+#ctrlBtn[data-state='admin'] { background: #2a2410; border-color: #ffd400; color: #ffd400; }
+#ctrlBtn[data-state='busy'] { border-color: #5b6573; color: #aab3bf; }
+@keyframes ctlPulse { 0%, 100% { box-shadow: 0 0 4px rgba(57,255,20,.35); } 50% { box-shadow: 0 0 16px 3px rgba(57,255,20,.75); } }
+@media (prefers-reduced-motion: reduce) { #ctrlBtn[data-state='free'], #ctrlBtn[data-state='here'] { animation: none; box-shadow: 0 0 10px rgba(57,255,20,.6); } }

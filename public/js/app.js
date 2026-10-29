@@ -1332,6 +1332,9 @@
     cb.textContent = mine ? 'Libérer la main' : other ? 'Prendre la main ici' : !st.controller ? 'Prendre la main' : me && me.admin ? 'Reprendre la main' : 'Main occupée';
     cb.disabled = !!(st.controller && !mine && !other && !(me && me.admin));
     cb.classList.toggle('on', mine);
+    // Couleur selon l'état : libre (vert, clignote doucement), à moi (orange), occupée (gris), reprise possible (ambre)
+    const ctlState = mine ? 'mine' : other ? 'here' : !st.controller ? 'free' : me && me.admin ? 'admin' : 'busy';
+    if (cb.dataset.state !== ctlState) cb.dataset.state = ctlState;
     if (!mine) { ctlT = null; drawCtlTimer(); }
     updateChatButtons();
     drawListen();
