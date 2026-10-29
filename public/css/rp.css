@@ -1490,3 +1490,10 @@ body.bm-resizing { cursor: ew-resize; user-select: none; }
 /* « M'écouter » : vert gras comme « Écouter le TRX » */
 #vxMonBtn, .vx-eq [data-a='mon'] { font-weight: 700; }
 #vxMonBtn:not([aria-pressed='true']), .vx-eq [data-a='mon']:not([aria-pressed='true']) { color: #39FF14 !important; }
+/* Grand écran : carte de bande en 4e colonne, tout à droite (après la colonne des réglages) */
+@media (min-width: 1800px) and (min-height: 860px) {
+  body.bm-far .workspace { grid-template-columns: 236px minmax(0, 1fr) 236px var(--bm-w); }
+  body.bm-far .workspace > .bm { position: relative; grid-column: 4; grid-row: 1; right: auto; bottom: auto; top: auto; width: auto; min-height: 0;
+    border: 1px solid var(--v2-border-panel); border-radius: var(--v2-panel-radius); overflow: hidden; }
+  body.bm-far #centerPanel.bm-on > :not(.panel-h):not(.bm) { margin-right: 0; }
+}

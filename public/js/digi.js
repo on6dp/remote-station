@@ -1320,9 +1320,25 @@
     if (on) bmDraw();
   }
   // Écran large (≥ 1700 px) : la carte monte jusqu'en haut de la colonne (écrans VFO A et B rétrécis de la même largeur)
+  // Grand écran (mise en page sur une hauteur d'écran) : la carte de bande est une colonne à part, tout à droite,
+  // après la colonne des réglages (RX audio, DSP, accord, TX) ; sinon elle reste au bord droit de la fenêtre centrale.
+  const BM_FAR_MQ = window.matchMedia ? window.matchMedia('(min-width: 1800px) and (min-height: 860px)') : null;
+  function bmFar(p, bm) {
+    const ws = document.querySelector('.workspace');
+    const far = !!(ws && BM_FAR_MQ && BM_FAR_MQ.matches && !POPUP && !bm.hidden && !p.classList.contains('collapsed') && p.closest('.workspace') === ws);
+    if (far && bm.parentElement !== ws) ws.appendChild(bm);
+    if (!far && bm.parentElement !== p) p.appendChild(bm);
+    if (document.body.classList.contains('bm-far') !== far) {
+      document.body.classList.toggle('bm-far', far);
+      bm.style.top = '';
+      setTimeout(() => { window.dispatchEvent(new Event('resize')); bmDraw(); }, 0); // cascades redimensionnées
+    }
+    return far;
+  }
   function bmPlace() {
     const p = $('centerPanel'), bm = $('bandMap');
     if (!p || !bm) return;
+    if (bmFar(p, bm)) { document.body.classList.remove('bm-tall'); return; }
     // En haut de la colonne : les écrans VFO (s'ils sont dans la colonne), sinon le cadre Step / Bands
     const tp = ['.center > .vfo-row', '.center > [data-panel="bands"]'].map((q) => document.querySelector(q)).find((x) => x && x.offsetParent);
     const zz = (window.RSZOOM && window.RSZOOM.z()) || 1;
