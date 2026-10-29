@@ -1487,3 +1487,6 @@ body.bm-resizing { cursor: ew-resize; user-select: none; }
 .vx-monvol output { min-width: 34px; text-align: right; color: var(--v2-text-bright, #fff); font-variant-numeric: tabular-nums; }
 .vx-trxeq .vx-eq-f .btn, .vx-eq .vx-eq-f .btn { color: #fff !important; font-weight: 800; }
 .vx-eq .vx-eq-f .btn:disabled { opacity: .45; }
+/* « M'écouter » : vert gras comme « Écouter le TRX » */
+#vxMonBtn, .vx-eq [data-a='mon'] { font-weight: 700; }
+#vxMonBtn:not([aria-pressed='true']), .vx-eq [data-a='mon']:not([aria-pressed='true']) { color: #39FF14 !important; }
