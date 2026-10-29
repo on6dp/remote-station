@@ -76,13 +76,16 @@
   // Lectures et réglages propres au FTDX10 : interrupteurs NB/DNR et leurs niveaux
   api.READS.push(
     { cmd: 'NB0;', re: /^NB0([01])$/, parse: (m) => ({ nb: +m[1] }), sim: 'NB00' },
-    { cmd: 'NR0;', re: /^NR0([01])$/, parse: (m) => ({ nr: +m[1] }), sim: 'NR00' }
+    { cmd: 'NR0;', re: /^NR0([01])$/, parse: (m) => ({ nr: +m[1] }), sim: 'NR00' },
+    // MIC EQ (égaliseur paramétrique du TRX) : PR1 1 = coupé, PR1 2 = en service
+    { cmd: 'PR1;', re: /^PR1([12])$/, parse: (m) => ({ micEq: m[1] === '2' ? 1 : 0 }), sim: 'PR11' }
   );
-  api.SLOW.push('NB0;', 'NR0;');
-  api.STATE_KEYS.push('nbLvl', 'nrLvl');
+  api.SLOW.push('NB0;', 'NR0;', 'PR1;');
+  api.STATE_KEYS.push('nbLvl', 'nrLvl', 'micEq');
   const extra = [
     { id: 'nbLvl', g: 'flt', sec: 'dsp', label: 'Niveau NB', type: 'level', min: 0, max: 10, step: 1, write: (v) => 'NL0' + pad(v, 3) + ';' },
-    { id: 'nrLvl', g: 'flt', sec: 'dsp', label: 'Niveau DNR', type: 'level', min: 1, max: 15, step: 1, write: (v) => 'RL0' + pad(v, 2) + ';' }
+    { id: 'nrLvl', g: 'flt', sec: 'dsp', label: 'Niveau DNR', type: 'level', min: 1, max: 15, step: 1, write: (v) => 'RL0' + pad(v, 2) + ';' },
+    { id: 'micEq', g: 'tx', sec: 'tx', label: 'MIC EQ', type: 'toggle', write: (v) => 'PR1' + (v ? 2 : 1) + ';' }
   ];
   for (const c of extra) { api.CONTROLS.push(c); api.CONTROL[c.id] = c; }
 

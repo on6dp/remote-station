@@ -136,10 +136,10 @@ Four "recipes" to get started. Each button is described in detail further on (se
 
 Your microphone (PC microphone, headset, USB microphone…) is sent to the TRX while you hold PTT: this is **remote phone**. It works in **LSB / USB** (and AM / FM on the FTX-1 and IC-7300). A headset gives the best result (no feedback, voice close to the microphone).
 
-1. Take control, choose the band and mode (LSB below 10 MHz, USB above).
-2. **TX** panel, under PTT: click `🎙 Mon micro`. The first time, Chrome asks for microphone access: **Allow**. Pick your microphone in the list if there are several.
+1. Take control, choose the band and LSB or USB. Afterwards, at each band change, the dashboard automatically sets **LSB below 10 MHz** and **USB above** (USB on 60 m); DATA, CW, AM and FM are left alone.
+2. **TX** panel, under PTT, **SSB configuration** section: click `Configuration micro`. The first time, Chrome asks for microphone access: **Allow**. Pick your microphone in the list if there are several.
 3. The dashboard **recognises the type of microphone** from its name (headset, USB studio microphone, webcam, Bluetooth, built-in PC microphone…) and proposes a matching equaliser setting. Speak: the level bar must stay in the **green**, never in the red (**SAT**).
-4. `Égaliseur…`: low cut, three adjustable bands (frequency, level, width), high cut, microphone gain, noise reduction. Listen to yourself **on headphones** with `🎧 M’écouter`, then `Enregistrer pour ce micro`: these settings come back automatically whenever you use this microphone, on any PC.
+4. `Égaliseur…`: low cut, three adjustable bands (frequency, level, width), high cut, microphone gain, noise reduction. Listen to yourself **on headphones** with `🎧 M’écouter` (**Volume** slider just below), then `Enregistrer pour ce micro`: these settings come back automatically whenever you use this microphone, on any PC.
 5. **Accord** panel: `TUNE`, then check the **SWR** and the **power**.
 6. Make sure the frequency is clear, then hold `PTT` (or the `Space` bar) and **speak when the TX lamp turns red** (about half a second on the first press, immediately on the following ones). Release to listen: while you speak, the TRX audio is muted on your side.
 

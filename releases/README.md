@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.25.1 | [RemoteStation-Setup-0.25.1.exe](0.25.1/RemoteStation-Setup-0.25.1.exe) | [remote-station-0.25.1.tar.gz](0.25.1/remote-station-0.25.1.tar.gz) | LSB / USB automatique en phonie, MIC EQ, réglages du cadre SSB — [empreintes SHA-256](0.25.1/SHA256SUMS.txt) |
 | 0.25.0 | [RemoteStation-Setup-0.25.0.exe](0.25.0/RemoteStation-Setup-0.25.0.exe) | [remote-station-0.25.0.tar.gz](0.25.0/remote-station-0.25.0.tar.gz) | Phonie à distance, micro reconnu et égaliseur, égaliseur du TRX par membre — [empreintes SHA-256](0.25.0/SHA256SUMS.txt) |
 | 0.24.15 | [RemoteStation-Setup-0.24.15.exe](0.24.15/RemoteStation-Setup-0.24.15.exe) | [remote-station-0.24.15.tar.gz](0.24.15/remote-station-0.24.15.tar.gz) | CW : vitesse jusqu'à 60 mots/min (IC-7300 : 48) — [empreintes SHA-256](0.24.15/SHA256SUMS.txt) |
 | 0.24.14 | [RemoteStation-Setup-0.24.14.exe](0.24.14/RemoteStation-Setup-0.24.14.exe) | [remote-station-0.24.14.tar.gz](0.24.14/remote-station-0.24.14.tar.gz) | CW : bouton ARRÊTER bien visible pendant l'émission — [empreintes SHA-256](0.24.14/SHA256SUMS.txt) |

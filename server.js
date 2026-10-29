@@ -1308,6 +1308,43 @@ function txFreq() {
   return base + (radio.xit ? radio.clar || 0 : 0);
 }
 
+// ---------------------------------------------------------------- bande latérale automatique en phonie
+// Changement de bande (touche de bande, fréquence tapée, molette au club pendant qu'un membre a la main…) : un VFO
+// en LSB / USB est remis dans la bande latérale d'usage — LSB sous 10 MHz, USB au-dessus, et USB sur 60 m
+// (canaux 5 MHz, usage IARU). Une seule correction par changement de bande : un choix fait ensuite à la main reste.
+// Les autres modes (DATA, CW, AM, FM…) ne sont jamais touchés. Coupé avec « autoSideband »: false.
+const sbWatch = { A: null, B: null };
+const sideFor = (hz) => (hz >= 5250000 && hz <= 5450000 ? 'USB' : hz < 10000000 ? 'LSB' : 'USB');
+function sbKey(hz) {
+  const b = STATS.band(hz);
+  return (b === 'hors bande' || b === 'inconnue' ? 'f' + Math.floor(hz / 1e6) : b) + (hz < 10000000 ? '<' : '>');
+}
+function autoSideband() {
+  if (cfg.autoSideband === false || !station || !radio.connected) return;
+  const now = Date.now();
+  for (const [v, fk, mk] of [['A', 'freq', 'mode'], ['B', 'freqB', 'modeB']]) {
+    const hz = radio[fk];
+    if (!(hz > 0)) continue;
+    const key = sbKey(hz);
+    const w = sbWatch[v];
+    // Première lecture (TRX qui vient de se connecter) : on prend l'état tel quel
+    if (!w) { sbWatch[v] = { key, until: 0 }; continue; }
+    // Nouvelle bande : bande latérale vérifiée pendant 4 s (le TRX rappelle aussi le mode de la bande, relu un peu après)
+    if (w.key !== key) { w.key = key; w.until = now + 4000; w.done = false; }
+    if (w.done || now > w.until) continue;
+    const md = radio[mk];
+    if (md !== 'LSB' && md !== 'USB') continue;
+    w.done = true;
+    const want = sideFor(hz);
+    if (md === want || !controller || ptt.active || radio.tx) continue;
+    const K = (rig().MODE_KEYS || []).find((x) => x[1] === want);
+    if (!K) continue;
+    toStation({ t: 'cmd', op: 'mode', code: K[0], sub: v === 'B' });
+    journal('auto_sideband', { vfo: v, freq: hz, from: md, to: want });
+    send(controller, { t: 'notice', level: 'ok', msg: 'VFO ' + v + ' : ' + want + ' mis automatiquement (' + (hz / 1e6).toFixed(3) + ' MHz, ' + (want === 'LSB' ? 'sous 10 MHz' : hz < 10000000 ? 'bande des 60 m' : 'au-dessus de 10 MHz') + ')' });
+  }
+}
+
 function autoTuner() {
   if (!radio.connected || !station) { tunerAuto = { band: '', until: 0 }; return; }
   if (cfg.tunerAuto === false || !rig().CONTROL || !rig().CONTROL.tuner) return;
@@ -3137,6 +3174,8 @@ function onStation(conn, m) {
   if (station && station.rig && station.rig.DUAL_AUDIO && radio.dualRx !== wasDual) updateDigi();
   // Tuner remis en service tout seul : à la connexion du TRX et à chaque nouvelle bande HF / 6 m (une seule fois par bande)
   autoTuner();
+  // Phonie : LSB sous 10 MHz, USB au-dessus, remis tout seul à chaque changement de bande
+  autoSideband();
   // Protection du PA : résultat de l'accord. Le TRX signale HI-SWR après le TUNE → émission bloquée sur toute la bande
   if (tuneWatch) checkTune();
   // Protection du PA : le TRX signale lui-même HI-SWR pendant une émission par le PTT

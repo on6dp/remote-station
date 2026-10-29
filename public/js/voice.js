@@ -83,16 +83,17 @@
     box.id = 'vxBox';
     box.hidden = true;
     box.innerHTML =
-      '<div class="vx-h"><span class="ctl-label">Phonie à distance</span>' +
-      '<button class="btn vx-on" id="vxOn" type="button" aria-pressed="false" title="Votre micro vers le TRX pendant l’appui sur PTT (LSB / USB…)">🎙 Mon micro</button></div>' +
+      '<div class="vx-h"><span class="vx-title">SSB configuration</span></div>' +
+      '<button class="btn vx-on" id="vxOn" type="button" aria-pressed="false" title="Activer votre micro : votre voix part vers le TRX pendant l’appui sur PTT (LSB / USB…) ; un nouveau clic le coupe">Configuration micro</button>' +
       '<button class="btn vx-trx" id="vxTrxBtn" type="button" hidden title="Égaliseur paramétrique du TRX (menus PRMTRC) : votre profil, mis au TRX quand vous prenez la main">Égaliseur du TRX…</button>' +
       '<div class="vx-b" id="vxBody" hidden>' +
       '<select id="vxDev" aria-label="Entrée son (micro)"></select>' +
       '<div class="vx-type" id="vxType"></div>' +
       '<div class="vx-meter" title="Niveau de votre micro après l’égaliseur : visez le vert, jamais le rouge"><i id="vxLvl"></i><b id="vxClip">SAT</b></div>' +
-      '<div class="vx-row"><button class="btn" id="vxEqBtn" type="button">Égaliseur…</button>' +
-      '<button class="btn" id="vxMonBtn" type="button" aria-pressed="false" title="Entendre votre micro tel qu’il partira (au casque seulement : effet Larsen avec des haut-parleurs)">🎧 M’écouter</button></div>' +
+      '<div class="vx-row"><button class="btn" id="vxEqBtn" type="button">Égaliseur…</button></div>' +
       '<div class="vx-note" id="vxNote"></div>' +
+      '<div class="vx-mon"><button class="btn" id="vxMonBtn" type="button" aria-pressed="false" title="Entendre votre micro tel qu’il partira (au casque seulement : effet Larsen avec des haut-parleurs)">🎧 M’écouter</button></div>' +
+      '<label class="vx-monvol" title="Volume de « M’écouter » dans votre casque (ne change pas ce qui part vers le TRX)">Volume <input type="range" id="vxMonVol" min="0" max="300" step="5" aria-label="Volume de M’écouter"><output id="vxMonVolV"></output></label>' +
       '</div>';
     anchor.after(box);
     $('vxOn').addEventListener('click', () => (V.on ? stop(true) : start()));
@@ -100,6 +101,13 @@
     $('vxEqBtn').addEventListener('click', openEq);
     $('vxTrxBtn').addEventListener('click', openTrx);
     $('vxMonBtn').addEventListener('click', () => setMonitor(!V.monOn));
+    $('vxMonVol').value = String(monVol());
+    $('vxMonVolV').textContent = monVol() + ' %';
+    $('vxMonVol').addEventListener('input', () => {
+      store.set('monvol', $('vxMonVol').value);
+      $('vxMonVolV').textContent = monVol() + ' %';
+      if (V.mon && V.monOn) V.mon.gain.setTargetAtTime(monVol() / 100, V.ctx.currentTime, 0.02);
+    });
   }
   function note(t, warn) {
     const n = $('vxNote');
@@ -120,7 +128,8 @@
     if (!trxEq && $('vxTrx')) $('vxTrx').remove();
     if ($('vxTrx')) trxDrawState();
     $('vxOn').setAttribute('aria-pressed', String(V.on));
-    $('vxOn').textContent = V.on ? '🎙 Micro actif' : '🎙 Mon micro';
+    $('vxOn').textContent = 'Configuration micro';
+    $('vxOn').title = V.on ? 'Micro actif : votre voix part vers le TRX pendant l’appui sur PTT. Clic : couper le micro' : 'Activer votre micro : votre voix part vers le TRX pendant l’appui sur PTT (LSB / USB…)';
     $('vxBody').hidden = !V.on;
     if (!V.on) return;
     const md = txMode(st);
@@ -390,9 +399,11 @@
     for (let i = 0; i < N; i++) { const x = xOf(f[i]); const y = Math.max(0, Math.min(H, yOf(tot[i]))); if (i) g.lineTo(x, y); else g.moveTo(x, y); }
     g.stroke();
   }
+  // Volume de « M’écouter » (casque) : 0 à 300 %, gardé dans ce navigateur
+  function monVol() { const v = Number(store.get('monvol', '100')); return Number.isFinite(v) ? Math.max(0, Math.min(300, v)) : 100; }
   function setMonitor(on) {
     V.monOn = !!on && !!V.mon;
-    if (V.mon) V.mon.gain.value = V.monOn ? 1 : 0;
+    if (V.mon) V.mon.gain.value = V.monOn ? monVol() / 100 : 0;
     const b = $('vxMonBtn');
     if (b) b.setAttribute('aria-pressed', String(V.monOn));
   }
@@ -522,7 +533,8 @@
     const ctl = V.api.iControl();
     d.querySelector('#vxTrxState').innerHTML = 'Au TRX maintenant : <b>' + (on && on[0] !== '#' ? 'profil de ' + esc(on) : 'réglage du club') + '</b>' +
       ' · votre profil : <b>' + (i.mine ? 'enregistré' : 'aucun') + '</b>' + (i.club ? '' : ' · réglage du club : pas encore lu') +
-      (T.dirty ? ' · <span class="warn">modifié, pas enregistré</span>' : '') + (ctl ? '' : '<br><span class="warn">Prenez la main pour lire le TRX ou y faire un essai.</span>');
+      (T.dirty ? ' · <span class="warn">modifié, pas enregistré</span>' : '') + (ctl ? '' : '<br><span class="warn">Prenez la main pour lire le TRX ou y faire un essai.</span>') +
+      (st && st.radio && st.radio.micEq === 0 ? '<br><span class="warn">MIC EQ est coupé au TRX : l’égaliseur n’agit pas. Bouton « MIC EQ » du cadre TX pour le mettre en service.</span>' : '');
     d.querySelector('[data-a="read"]').disabled = !ctl;
     d.querySelector('[data-a="try"]').disabled = !ctl;
     d.querySelector('[data-a="del"]').disabled = !i.mine;

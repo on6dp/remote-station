@@ -136,10 +136,10 @@ Quatre « recettes » pour démarrer. Le détail de chaque bouton se trouve plus
 
 Votre micro (celui de votre PC, un micro-casque, un micro USB…) part vers le TRX pendant l'appui sur PTT : c'est la **phonie à distance**. Elle marche en **LSB / USB** (et en AM / FM sur le FTX-1 et l'IC-7300). Un micro-casque donne le meilleur résultat (pas d'effet Larsen, voix proche).
 
-1. Prenez la main, choisissez la bande et le mode (LSB sous 10 MHz, USB au-dessus).
-2. Cadre **TX**, sous le PTT : cliquez `🎙 Mon micro`. La première fois, Chrome demande l'accès au micro : **Autoriser**. Choisissez votre micro dans la liste s'il y en a plusieurs.
+1. Prenez la main, choisissez la bande et le mode LSB ou USB. Ensuite, à chaque changement de bande, le dashboard remet tout seul **LSB sous 10 MHz** et **USB au-dessus** (USB sur 60 m) ; les modes DATA, CW, AM et FM ne sont pas touchés.
+2. Cadre **TX**, sous le PTT, partie **SSB configuration** : cliquez `Configuration micro`. La première fois, Chrome demande l'accès au micro : **Autoriser**. Choisissez votre micro dans la liste s'il y en a plusieurs.
 3. Le dashboard **reconnaît le type de micro** d'après son nom (micro-casque, micro USB de studio, webcam, Bluetooth, micro du PC…) et propose un réglage d'égaliseur adapté. Parlez : la barre de niveau doit rester dans le **vert**, jamais dans le rouge (**SAT**).
-4. `Égaliseur…` : coupe-bas, trois bandes réglables (fréquence, niveau, largeur), coupe-haut, gain du micro, réduction de bruit. Écoutez-vous **au casque** avec `🎧 M’écouter`, puis `Enregistrer pour ce micro` : ces réglages reviennent tout seuls chaque fois que vous utilisez ce micro, sur n'importe quel PC.
+4. `Égaliseur…` : coupe-bas, trois bandes réglables (fréquence, niveau, largeur), coupe-haut, gain du micro, réduction de bruit. Écoutez-vous **au casque** avec `🎧 M’écouter` (curseur **Volume** juste dessous), puis `Enregistrer pour ce micro` : ces réglages reviennent tout seuls chaque fois que vous utilisez ce micro, sur n'importe quel PC.
 5. Cadre **Accord** : `TUNE`, puis vérifiez le **SWR** et la **puissance**.
 6. Écoutez que la fréquence est libre, puis maintenez `PTT` (ou la barre `Espace`) et **parlez quand le voyant TX passe au rouge** (environ une demi-seconde au premier appui, aussitôt aux suivants). Relâchez pour écouter : pendant que vous parlez, l'écoute du TRX est coupée chez vous.
 

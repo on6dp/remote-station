@@ -25,7 +25,7 @@
     audio: ['af', 'sql'],
     dsp: ['nb', 'nr', 'notch', 'notchFreq', 'dnf'],
     tune: ['tuner', 'tune'],
-    tx: ['mic', 'proc', 'procLvl', 'vox']
+    tx: ['mic', 'proc', 'micEq', 'procLvl', 'vox']
   };
   // Réglages affichés sur les écrans VFO eux-mêmes (pas de bouton dans les cadres)
   // ATT, préampli (IPO / AMP1 / AMP2, AMP) et NARROW : un clic sur leur badge de l'écran VFO (plus de bouton dans les cadres)
