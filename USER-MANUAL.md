@@ -782,7 +782,7 @@ In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé*
 <a id="l-sync"></a>
 ### 14.4 Synchronisation (LoTW, eQSL, Club Log, QRZ)
 
-**Synchronisation ▾** menu: it uploads the logbook QSOs to the confirmation websites. One window per service, as in Swisslog. **Administrators** handle every callsign (club and members). Each **member** who transmits under their own callsign uses it for **their own** QSOs: the callsign is theirs and cannot be changed; they enter **their own** credentials (kept on the server, never shown, usable by nobody else), can tick « send each new QSO automatically », and their QSOs never go to the club accounts (nor the club's to theirs). A refused password only stops that callsign.
+**Synchronisation ▾** menu: it uploads the logbook QSOs to the confirmation websites. One window per service, as in Swisslog. **Administrators** handle every callsign (club and members). Each **member** who transmits under their own callsign uses it for **their own** QSOs: the callsign is theirs and cannot be changed; they enter **their own** credentials (kept on the server, never shown, usable by nobody else), can tick « send each new QSO automatically » (not shown for ON5VL / OR0L: the club's automatic upload is set in ⚙ Configuration), and their QSOs never go to the club accounts (nor the club's to theirs). A refused password only stops that callsign.
 
 1. Choose the service: **Synchronisation LoTW…**, **Synchronisation eQSL…**, **Club Log…** or **QRZ…**.
 2. **Détails** (details) tab: choose the **callsign (TX call)** whose QSOs are uploaded (the current TX call is suggested).

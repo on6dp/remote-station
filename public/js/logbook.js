@@ -455,6 +455,19 @@
     closeRefs();
   }
   function closeRefs() { if (RS.box) RS.box.hidden = true; }
+  // Chrome remplit tout seul identifiant + mot de passe avec ceux qu'il a mémorisés (souvent ceux du membre) :
+  // cases d'identifiants en lecture seule jusqu'au clic, pour qu'aucun compte ne soit enregistré à la place d'un autre
+  function noAutofill(el) {
+    if (!el) return;
+    el.querySelectorAll('input[type="password"], input[name$=".user"], input[name$=".email"], input[name$=".login"], input[name$="lookupUser"]').forEach((i) => {
+      if (i.dataset.noauto) return;
+      i.dataset.noauto = '1';
+      i.readOnly = true;
+      const on = () => { i.readOnly = false; };
+      i.addEventListener('focus', on);
+      i.addEventListener('pointerdown', on);
+    });
+  }
   // État des listes (administrateurs) : nombre de références, date du téléchargement, erreur ; « Mettre à jour maintenant »
   let refsDlg = null;
   function openRefsDlg() {
@@ -1097,12 +1110,20 @@
       }[m.service] || [];
       const box = sdlg.el.querySelector('.lg-acf');
       box.innerHTML = UI.map(([k, lab, sec]) => '<label>' + esc(lab) + ' ' + (sec
-        ? '<span class="lg-pw"><input data-af="' + k + '" type="password" autocomplete="new-password" placeholder="' + (m.has && m.has[k] ? SECRET_PH : 'à renseigner') + '">' +
+        // readonly jusqu'au clic : Chrome ne remplit pas tout seul ces cases avec les identifiants qu'il a mémorisés
+        // (sinon ceux d'un membre pouvaient se retrouver enregistrés pour ON5VL)
+        ? '<span class="lg-pw"><input data-af="' + k + '" type="password" autocomplete="new-password" readonly data-noauto="1" placeholder="' + (m.has && m.has[k] ? SECRET_PH : 'à renseigner') + '">' +
           '<button type="button" class="lg-eye" title="Afficher / masquer" aria-label="Afficher le mot de passe">👁</button>' +
           (m.source === 'compte' && m.has && m.has[k] ? '<button type="button" class="lg-clr" data-aclr="' + k + '" title="Effacer la valeur enregistrée pour cet indicatif">✕</button>' : '') + '</span>'
-        : '<input data-af="' + k + '" value="' + esc((m.fields || {})[k] || '') + '" autocomplete="off">') + '</label>').join('') +
+        : '<input data-af="' + k + '" value="' + esc((m.fields || {})[k] || '') + '" autocomplete="off" readonly data-noauto="1">') + '</label>').join('') +
         // Indicatif personnel : envoi automatique de chaque nouveau QSO (le club se règle dans ⚙ Configuration)
-        (m.club ? '' : '<label class="lg-chk"><input type="checkbox" data-aauto' + (m.auto ? ' checked' : '') + '> Envoyer automatiquement chaque nouveau QSO de ' + esc(m.call) + ' vers ' + esc(NAMES[m.service]) + '</label>');
+        (m.club ? '<p class="lg-note">Envoi automatique des QSO de ' + esc(m.call) + ' (indicatif du club) : ⚙ Configuration.' + (me.admin ? ' Votre indicatif personnel : choisissez-le dans la liste ci-dessus.' : '') + '</p>'
+          : '<label class="lg-chk"><input type="checkbox" data-aauto' + (m.auto ? ' checked' : '') + '> Envoyer automatiquement chaque nouveau QSO de ' + esc(m.call) + ' vers ' + esc(NAMES[m.service]) + '</label>');
+      box.querySelectorAll('[data-noauto]').forEach((i) => {
+        const on = () => i.removeAttribute('readonly');
+        i.addEventListener('focus', on);
+        i.addEventListener('pointerdown', on);
+      });
       box.onclick = (e) => {
         const b = e.target.closest('button');
         if (!b) return;
@@ -1122,7 +1143,7 @@
         const f = sdlg.el.querySelector('form');
         if (f.delay && f.delay.value === '') f.delay.value = c.delay;
       }
-      if (cdlg && !m.quiet) drawCfg(m.cfg, m.saved);
+      if (cdlg && !m.quiet) { drawCfg(m.cfg, m.saved); noAutofill(cdlg.el); }
     } else if (m.t === 'log_test') {
       const out = cdlg && cdlg.el && cdlg.el.querySelector('[data-tr="' + m.service + '"]');
       if (out) { out.textContent = (m.ok ? '✓ ' : '✗ ') + m.msg; out.className = 'lg-tres ' + (m.ok ? 'ok' : 'err'); }
