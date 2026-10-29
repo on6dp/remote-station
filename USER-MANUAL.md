@@ -139,14 +139,14 @@ Your microphone (PC microphone, headset, USB microphone…) is sent to the TRX w
 1. Take control, choose the band and LSB or USB. Afterwards, at each band change, the dashboard automatically sets **LSB below 10 MHz** and **USB above** (USB on 60 m); DATA, CW, AM and FM are left alone.
 2. **TX** panel, under PTT, **SSB configuration** section: click `Configuration micro`. The first time, Chrome asks for microphone access: **Allow**. Pick your microphone in the list if there are several.
 3. The dashboard **recognises the type of microphone** from its name (headset, USB studio microphone, webcam, Bluetooth, built-in PC microphone…) and proposes a matching equaliser setting. Speak: the level bar must stay in the **green**, never in the red (**SAT**).
-4. `Égaliseur…`: low cut, three adjustable bands (frequency, level, width), high cut, microphone gain, noise reduction. Listen to yourself **on headphones** with `🎧 M’écouter` (**Volume** slider just below), then `Enregistrer pour ce micro`: these settings come back automatically whenever you use this microphone, on any PC.
+4. `Equalizer micro`: low cut, three adjustable bands (frequency, level, width), high cut, microphone gain, noise reduction. Listen to yourself **on headphones** with `🎧 M’écouter` (**Volume** slider just below), then `Enregistrer pour ce micro`: these settings come back automatically whenever you use this microphone, on any PC.
 5. **Accord** panel: `TUNE`, then check the **SWR** and the **power**.
 6. Make sure the frequency is clear, then hold `PTT` (or the `Space` bar) and **speak when the TX lamp turns red** (about half a second on the first press, immediately on the following ones). Release to listen: while you speak, the TRX audio is muted on your side.
 
 > [!NOTE]
 > At the club, the Station page switches the TRX “modulation source” menu to USB just before your transmission, and puts it back 20 s after your last transmission or as soon as you release control: the club microphone works again. The level of your voice at the TRX input is set on the Station page (“Niveau phonie à distance”): the ALC should barely move.
 
-**TRX equaliser** (FTX-1, FTDX10, FTDX101): `Equalizer` button in the same panel. These are the TRX's own PRMTRC EQ1 to EQ3 menus (PROC off, then PROC on). Take control, `Lire le TRX`, adjust, `Essayer sur le TRX`, then `Enregistrer mon profil`: your profile is put on the TRX whenever you take control, and the club setting is restored when you release it. Administrators can save the club setting.
+**TRX equaliser** (FTX-1, FTDX10, FTDX101): `Equalizer TRX` button in the same panel. These are the TRX's own PRMTRC EQ1 to EQ3 menus (PROC off, then PROC on). Take control, `Lire le TRX`, adjust, `Essayer sur le TRX`, then `Enregistrer mon profil`: your profile is put on the TRX whenever you take control, and the club setting is restored when you release it. Administrators can save the club setting.
 
 <a id="p-ft8"></a>
 ### 4.3 An FT8 QSO

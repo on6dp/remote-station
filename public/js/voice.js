@@ -85,12 +85,12 @@
     box.innerHTML =
       '<div class="vx-h"><span class="vx-title">SSB configuration</span></div>' +
       '<button class="btn vx-on" id="vxOn" type="button" aria-pressed="false" title="Activer votre micro : votre voix part vers le TRX pendant l’appui sur PTT (LSB / USB…) ; un nouveau clic le coupe">Configuration micro</button>' +
-      '<button class="btn vx-trx" id="vxTrxBtn" type="button" hidden title="Égaliseur paramétrique du TRX (menus PRMTRC) : votre profil, mis au TRX quand vous prenez la main">Equalizer</button>' +
+      '<button class="btn vx-trx" id="vxTrxBtn" type="button" hidden title="Égaliseur paramétrique du TRX (menus PRMTRC) : votre profil, mis au TRX quand vous prenez la main">Equalizer TRX</button>' +
       '<div class="vx-b" id="vxBody" hidden>' +
       '<select id="vxDev" aria-label="Entrée son (micro)"></select>' +
       '<div class="vx-type" id="vxType"></div>' +
       '<div class="vx-meter" title="Niveau de votre micro après l’égaliseur : visez le vert, jamais le rouge"><i id="vxLvl"></i><b id="vxClip">SAT</b></div>' +
-      '<div class="vx-row"><button class="btn" id="vxEqBtn" type="button">Égaliseur…</button></div>' +
+      '<div class="vx-row"><button class="btn" id="vxEqBtn" type="button" title="Égaliseur de votre micro (dans le navigateur) : réglages gardés pour ce micro">Equalizer micro</button></div>' +
       '<div class="vx-note" id="vxNote"></div>' +
       '<div class="vx-mon"><button class="btn" id="vxMonBtn" type="button" aria-pressed="false" title="Entendre votre micro tel qu’il partira (au casque seulement : effet Larsen avec des haut-parleurs)">🎧 M’écouter</button></div>' +
       '<label class="vx-monvol" title="Volume de « M’écouter » dans votre casque (ne change pas ce qui part vers le TRX)">Volume <input type="range" id="vxMonVol" min="0" max="300" step="5" aria-label="Volume de M’écouter"><output id="vxMonVolV"></output></label>' +
@@ -292,7 +292,7 @@
     d.className = 'vx-eq';
     d.id = 'vxEq';
     d.setAttribute('role', 'dialog');
-    d.setAttribute('aria-label', 'Égaliseur du micro');
+    d.setAttribute('aria-label', 'Equalizer micro');
     const bandRow = (i) => {
       const r = BAND_RANGE[i];
       return '<fieldset class="vx-band"><legend>EQ' + (i + 1) + '</legend>' +
@@ -301,7 +301,7 @@
         '<label>Largeur (Q) <output data-o="q' + i + '"></output><input type="range" data-k="q' + i + '" min="0.3" max="6" step="0.1"></label></fieldset>';
     };
     d.innerHTML =
-      '<div class="vx-eq-h"><b>Égaliseur du micro</b><span id="vxEqMic"></span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
+      '<div class="vx-eq-h"><b>Equalizer micro</b><span id="vxEqMic"></span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
       '<canvas id="vxCurve" width="560" height="150" aria-label="Courbe de l’égaliseur"></canvas>' +
       '<div class="vx-eq-meter"><i id="vxLvl2"></i></div>' +
       '<div class="vx-eq-top"><label><input type="checkbox" data-k="on"> Égaliseur en service</label>' +
@@ -470,14 +470,14 @@
     d.className = 'vx-eq vx-trxeq';
     d.id = 'vxTrx';
     d.setAttribute('role', 'dialog');
-    d.setAttribute('aria-label', 'Égaliseur du TRX');
+    d.setAttribute('aria-label', 'Equalizer TRX');
     const set = (k, title) => '<fieldset class="vx-set"><legend>' + title + '</legend><div class="vx-bands">' + [0, 1, 2].map((b) =>
       '<fieldset class="vx-band"><legend>' + BAND_NAMES[b] + '</legend>' +
       '<label>Fréquence <select data-t="' + k + b + 'f"><option value="0">coupée</option>' + E.FREQS[b].map((hz, i) => '<option value="' + (i + 1) + '">' + hz + ' Hz</option>').join('') + '</select></label>' +
       '<label>Niveau <output data-o="' + k + b + 'l"></output><input type="range" data-t="' + k + b + 'l" min="' + E.LVL[0] + '" max="' + E.LVL[1] + '" step="1"></label>' +
       '<label>Largeur <output data-o="' + k + b + 'w"></output><input type="range" data-t="' + k + b + 'w" min="' + E.BW[0] + '" max="' + E.BW[1] + '" step="1"></label></fieldset>').join('') + '</div></fieldset>';
     d.innerHTML =
-      '<div class="vx-eq-h"><b>Égaliseur du TRX</b><span>— ' + esc(R.NAME) + '</span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
+      '<div class="vx-eq-h"><b>Equalizer TRX</b><span>— ' + esc(R.NAME) + '</span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
       '<p class="vx-hint" id="vxTrxState"></p>' +
       set('n', 'PROC coupé (menus PRMTRC EQ)') + set('p', 'PROC en service (menus P PRMTRC EQ)') +
       '<p class="vx-hint">Ce sont les menus du TRX lui-même : votre profil y est mis quand vous prenez la main, et le réglage du club est remis quand vous la rendez. Il agit sur la modulation du TRX (micro du club et, si le TRX l’applique aussi à l’entrée USB, votre phonie à distance : à vérifier à l’écoute). Un essai part tout de suite au TRX ; « Enregistrer » le garde pour vos prochaines prises de main.</p>' +

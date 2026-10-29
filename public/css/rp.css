@@ -1498,5 +1498,5 @@ body.bm-resizing { cursor: ew-resize; user-select: none; }
   body.bm-far #centerPanel.bm-on > :not(.panel-h):not(.bm) { margin-right: 0; }
 }
 /* Bouton « Equalizer » (égaliseur du TRX) : vert gras comme « Écouter le TRX » */
-#vxTrxBtn { font-weight: 800; color: #fff !important; background: linear-gradient(180deg, #1f9d45, #12692c) !important; border-color: #39FF14 !important; }
-#vxTrxBtn:hover { filter: brightness(1.12); }
+#vxTrxBtn, #vxEqBtn { font-weight: 800; color: #fff !important; background: linear-gradient(180deg, #1f9d45, #12692c) !important; border-color: #39FF14 !important; }
+#vxTrxBtn:hover, #vxEqBtn:hover { filter: brightness(1.12); }

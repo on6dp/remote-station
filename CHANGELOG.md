@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.25.5** — Cadre TX : boutons **EQUALIZER TRX** (égaliseur du TRX) et **EQUALIZER MICRO** (égaliseur du micro dans le navigateur) : verts, lettres blanches en gras ; fenêtres renommées de même. Ctrl+F5 sur le dashboard.
 - **0.25.4** — Cadre TX : le bouton « Égaliseur du TRX… » s'appelle maintenant **EQUALIZER** : bouton vert, lettres blanches en gras. Ctrl+F5 sur le dashboard.
 - **0.25.3** — Grand écran (1920 × 1080) : la **carte de bande** (spots du DX cluster, onglets FT8 / FT4 / FT2, JT65, RTTY, WSPR, JTTY, CW) est maintenant une colonne à part, **tout à droite**, après la colonne des réglages (RX audio, DSP, accord, TX), sur toute la hauteur ; sur les autres onglets (Activité, SSTV, Logs…) la colonne disparaît. Écran plus petit : carte au bord droit de la fenêtre centrale, comme avant. Ctrl+F5 sur le dashboard.
 - **0.25.2** — Bouton « 🎧 M'écouter » (cadre TX et fenêtre de l'égaliseur) en vert gras, comme « Écouter le TRX ». Ctrl+F5 sur le dashboard.
