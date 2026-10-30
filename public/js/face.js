@@ -482,24 +482,37 @@
         const t1 = el('text', { x: x + cw / 2, y: y + (two ? 14 : 13), class: 'func-lab', 'text-anchor': 'middle' }, f, two ? lab.replace(' SETTING', '') : lab);
         const t2 = el('text', { x: x + cw / 2, y: y + 27, class: two ? 'func-lab' : 'func-val', 'text-anchor': 'middle' }, f, two ? 'SETTING' : '');
         el('rect', { x: x + (ci === 0 ? 1 : 0), y: y + rh - 5, width: cw - (ci === 0 ? 1 : 0), height: 2, fill: col, opacity: 0.9 }, f);
+        // Case choisie : « − » à gauche et « + » à droite, cliquables (en plus de la molette et du bouton MULTI)
+        const minus = adj && !flip ? el('text', { x: x + 9, y: y + 26, class: 'func-pm', 'text-anchor': 'middle' }, f, '−') : null;
+        const plus = adj && !flip ? el('text', { x: x + cw - 9, y: y + 26, class: 'func-pm', 'text-anchor': 'middle' }, f, '+') : null;
         const hit = el('rect', { x: x + 1, y, width: cw - 2, height: rh - 7, class: 'hs lcd-hit' }, f);
-        el('title', {}, hit, adj ? lab + (flip ? ' : clic pour changer' : ' : clic puis molette (ou MULTI) pour régler') : lab + ' : pas disponible à distance');
-        hit.addEventListener('click', () => {
+        el('title', {}, hit, adj ? lab + (flip ? ' : clic pour changer' : ' : clic pour la choisir, puis clic sur − / +, molette ou bouton MULTI') : lab + ' : pas disponible à distance');
+        hit.addEventListener('click', (ev) => {
           if (!adj) return say(lab + ' : pas disponible à distance (menus du TRX : au club).', '', 3500);
+          const wasSel = L.funcSel === id;
           L.funcSel = id;
           store.set('rs.face.funcsel', id);
           if (flip) funcAdjust(id, 1);
+          else if (wasSel) {
+            const px = toImg(ev).x - x;
+            if (px < cw * 0.38) funcAdjust(id, -1);
+            else if (px > cw * 0.62) funcAdjust(id, 1);
+          } else say(lab + ' : cliquez sur − ou + dans la case, ou tournez la molette sur la case ou le bouton MULTI.', '', 4000);
           render();
         });
+        let wacc = 0;
         hit.addEventListener('wheel', (ev) => {
           ev.preventDefault();
           if (!adj) return;
           L.funcSel = id;
-          const n = ev.deltaY < 0 ? 1 : -1;
-          funcAdjust(id, n);
+          wacc += ev.deltaMode === 1 ? ev.deltaY * 33 : ev.deltaY;
+          const n = Math.trunc(wacc / 60);
+          if (!n) return;
+          wacc -= n * 60;
+          funcAdjust(id, -n);
           showTip(ev, lab + ' ' + FUNC_BY[id][2](S()));
         }, { passive: false });
-        LCD.funcCells[id] = { box, t1, t2, two };
+        LCD.funcCells[id] = { box, t1, t2, two, minus, plus };
       });
     });
   }
@@ -510,6 +523,7 @@
     for (const id in LCD.funcCells) {
       const c = LCD.funcCells[id];
       c.box.classList.toggle('sel', L.funcSel === id);
+      if (c.minus) { c.minus.style.display = L.funcSel === id ? '' : 'none'; c.plus.style.display = L.funcSel === id ? '' : 'none'; }
       if (!c.two) c.t2.textContent = FUNC_BY[id][2](s);
     }
   }

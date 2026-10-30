@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.30.1 | [RemoteStation-Setup-0.30.1.exe](0.30.1/RemoteStation-Setup-0.30.1.exe) | [remote-station-0.30.1.tar.gz](0.30.1/remote-station-0.30.1.tar.gz) | Menu FUNC : − / + cliquables dans la case choisie — [empreintes SHA-256](0.30.1/SHA256SUMS.txt) |
 | 0.30.0 | [RemoteStation-Setup-0.30.0.exe](0.30.0/RemoteStation-Setup-0.30.0.exe) | [remote-station-0.30.0.tar.gz](0.30.0/remote-station-0.30.0.tar.gz) | Face avant FTDX101 : écran style TRX, cascade, FUNC, MODE, modes numériques dessous, écoute stéréo MAIN / SUB — [empreintes SHA-256](0.30.0/SHA256SUMS.txt) |
 | 0.29.0 | [RemoteStation-Setup-0.29.0.exe](0.29.0/RemoteStation-Setup-0.29.0.exe) | [remote-station-0.29.0.tar.gz](0.29.0/remote-station-0.29.0.tar.gz) | Face avant du FTDX101 (page /ftdx101) — [empreintes SHA-256](0.29.0/SHA256SUMS.txt) |
 | 0.28.1 | [RemoteStation-Setup-0.28.1.exe](0.28.1/RemoteStation-Setup-0.28.1.exe) | [remote-station-0.28.1.tar.gz](0.28.1/remote-station-0.28.1.tar.gz) | Identifiants des logs en ligne protégés du remplissage automatique de Chrome — [empreintes SHA-256](0.28.1/SHA256SUMS.txt) |
