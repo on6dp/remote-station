@@ -471,10 +471,11 @@ Address: **https://remote.op0p.be/ftdx101**. The FTDX101MP front panel, where **
 - **MODE**: next mode; **hold at least 1 s**: the table of all modes, click the one you want. **SSB**, **CW**, **BK-IN**, **SPLIT**, **CLAR RX / TX**, big **CLAR** (hold: offset to zero), **LOCK**, **FAST** / **FINE**.
 - **NB DNR DNF NOTCH CONT APF**: top row SUB, bottom row MAIN. **Knobs**: wheel or drag; dual knobs: centre = inner knob, edge = ring; SHIFT ◎ WIDTH: click without turning = NAR (push).
 - **MULTI**: clarifier offset when CLAR is on, otherwise the function shown in the last box of the screen (« MULTI RF POWER » at first), chosen in **FUNC**. **FUNC** opens the function menu in the screen, used with the mouse: click a box (red frame), then click **−** (left of the box) or **+** (right), wheel over it or turn MULTI (RF POWER, DNR LEVEL, NB LEVEL, R.FIL, MIC EQ, STEP DIAL; SPEED, COLOR, LEVEL for the waterfall). Grey boxes: not available remotely.
+- Under the panel: the big **PTT** button (hold, or the space bar) and the **SSB CONFIGURATION** box (your microphone, equalisers), as in the dashboard. **MOX**: latched transmit (click: TX, next click: RX). **MONI**: hear your own modulation (« M'écouter », headphones; microphone on first). **Band map**: full-height column on the right.
 - **TUNE**: tuner on / off; hold at least 1 s: tune (after confirmation). **VOX** (can only be switched off), **PROC**.
-- **PHONES** jack: listen. `🎧 Stéréo MAIN | SUB`: in dual receive, MAIN in the left ear and SUB in the right ear (handy in SPLIT with a headset).
+- **PHONES** jack: listen. `🎧 Stéréo MAIN | SUB`: switches dual receive on, then MAIN in the left ear and SUB in the right ear (handy in SPLIT with a headset).
 - **Screen**: meters (S MAIN / SUB; TX: PO, SWR) with each receiver's filter, frequencies (click to type), ANT / ATT / IPO / R.FIL / AGC (click: next value), and instead of the TRX scope (not sent over CAT) the **spectrum and waterfall of the received audio**, MAIN | SUB side by side in dual receive. Bottom row: SPAN (2 to 6 kHz), MONO (colours), MULTI (FUNC menu), HOLD (freeze).
-- No effect remotely (a message explains): ON/OFF, MOX (use the dashboard PTT), ZIN/SPOT, DISP, S.MENU, QMB, VC TUNE, C.S, SYNC, MONI, memories, KEYER.
+- No effect remotely (a message explains): ON/OFF, ZIN/SPOT, DISP, S.MENU, QMB, VC TUNE, C.S, SYNC, memories, KEYER.
 
 <a id="numeriques"></a>
 ## 12. Digital modes

@@ -31,6 +31,8 @@
 </header>
 
 <main class="fc-main">
+  <aside class="fc-bm" id="fcBm" aria-label="Carte de bande"></aside>
+  <div class="fc-left">
   <p class="fc-msg" id="msg" role="status" aria-live="polite"></p>
   <div class="fc-wrap" id="faceWrap">
     <div class="fc-panel" id="facePanel">
@@ -40,12 +42,17 @@
     </div>
     <div class="fc-cover" id="cover" hidden></div>
   </div>
+  <!-- Phonie à distance (même module que le dashboard) : PTT, micro, égaliseurs ; MOX et MONI de la face avant y sont reliés -->
+  <section class="fc-tx" id="fcTx">
+    <button class="btn ptt" id="ptt" type="button" title="Maintenir pour émettre (ou la barre d’espace) ; touche MOX de la face avant : émission maintenue jusqu’au clic suivant">PTT</button>
+  </section>
   <section class="panel activity fc-digi" id="centerPanel" aria-label="Modes numériques">
     <div class="ctabs" role="tablist" aria-label="Modes numériques" id="ctabs"></div>
   </section>
   <p class="fc-help" id="help">Clic sur une touche : sa fonction, comme sur le TRX. Boutons rotatifs : molette de la souris, ou cliquer-glisser vers le haut / le bas
     (boutons doubles : bouton central au centre, bague extérieure sur le bord). Grand bouton : molette, ou glisser en tournant. Prise PHONES : écouter le TRX.
     <span id="zoneInfo"></span></p>
+  </div>
 </main>
 
 <div class="login" id="login" hidden>
@@ -67,6 +74,7 @@
 <script src="/js/ulaw.js"></script>
 <script src="/js/sstv.js"></script>
 <script src="/js/digi.js"></script>
+<script src="/js/voice.js"></script>
 <script src="/faces/ftdx101.js"></script>
 <script src="/js/face.js"></script>
 </body>

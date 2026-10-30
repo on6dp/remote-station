@@ -108,6 +108,14 @@
     if (a.info) return say(a.info, '', 6000);
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
     if (a.local === 'func') { L.func = !L.func; return render(); }
+    if (a.local === 'mox') return L.mox ? pttUp() : (pttDown() ? (L.mox = true, render()) : null);
+    if (a.local === 'moni') {
+      const VX = window.RSVOICE;
+      if (!VX || !VX.micOn()) return say('MONI = « M’écouter » : activez d’abord votre micro (Configuration micro, sous la face avant).', 'warn', 5000);
+      VX.monitor(!VX.monitorOn());
+      say(VX.monitorOn() ? 'MONI : vous entendez votre micro tel qu’il part (au casque).' : 'MONI coupé.', '', 3000);
+      return render();
+    }
     if (a.local === 'fast' || a.local === 'fine') {
       L[a.local] = !L[a.local];
       if (a.local === 'fine' && L.fine) L.fast = false;
@@ -822,6 +830,58 @@
   }
   const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+  // ------------------------------------------------------------ émission : PTT (bouton ou barre d'espace), MOX maintenu
+  let pttHeld = false, hbTimer = 0;
+  L.mox = false;
+  function pttReason() {
+    if (!me) return 'Connectez-vous';
+    if (!me.allowTx) return 'Émission désactivée sur ce serveur';
+    if (me.rxOnly) return 'Indicatif d’écouteur : émission interdite';
+    if (!me.canTx) return 'Votre compte est en écoute seule';
+    if (!st || !st.station) return 'Station hors ligne';
+    if (!st.radio.connected) return 'TRX non connecté';
+    if (!iControl()) return 'Prenez la main pour émettre';
+    if (st.radio.vox) return 'VOX actif au club : coupez-le d’abord';
+    if (!st.txOk) return st.radio.txVfo === 1 ? 'VFO B (SPLIT) hors des bandes autorisées' : 'Hors des bandes autorisées';
+    if (st.radio.power != null && st.radio.power > me.maxWatts) return 'Puissance au-delà de votre limite (' + me.maxWatts + ' W)';
+    if (st.swrLock) return st.swrLock.text || 'ROS trop élevé ici';
+    return null;
+  }
+  function pttDown() {
+    if (pttHeld) return true;
+    const why = pttReason();
+    if (why) { say(why, 'warn'); return false; }
+    pttHeld = true;
+    const voice = !!(window.RSVOICE && window.RSVOICE.txStart());
+    send({ t: 'ptt', on: true, voice });
+    hbTimer = setInterval(() => send({ t: 'ptt', on: true, voice }), 400);
+    $('ptt').classList.add('held');
+    render();
+    return true;
+  }
+  function pttUp() {
+    L.mox = false;
+    if (!pttHeld) return render();
+    pttHeld = false;
+    clearInterval(hbTimer);
+    if (window.RSVOICE) window.RSVOICE.txEnd();
+    send({ t: 'ptt', on: false });
+    $('ptt').classList.remove('held');
+    render();
+  }
+  {
+    const b = $('ptt');
+    b.addEventListener('pointerdown', (ev) => { ev.preventDefault(); b.setPointerCapture(ev.pointerId); pttDown(); });
+    b.addEventListener('pointerup', pttUp);
+    b.addEventListener('pointercancel', pttUp);
+    b.addEventListener('lostpointercapture', () => { if (!L.mox) pttUp(); });
+    b.addEventListener('contextmenu', (ev) => ev.preventDefault());
+    const typing = (ev) => /INPUT|TEXTAREA|SELECT/.test(ev.target.tagName) && ev.target.type !== 'range';
+    document.addEventListener('keydown', (ev) => { if (ev.code === 'Space' && !ev.repeat && !typing(ev)) { ev.preventDefault(); pttDown(); } });
+    document.addEventListener('keyup', (ev) => { if (ev.code === 'Space' && !typing(ev)) { ev.preventDefault(); pttUp(); } });
+    window.addEventListener('blur', () => { if (!L.mox) pttUp(); });
+  }
+
   // ------------------------------------------------------------ écoute (prise PHONES), stéréo et cascade
   // La page reçoit toujours la BF (cascade dans l'écran du TRX) ; le son n'est joué qu'avec « Écouter » / la prise PHONES.
   // Stéréo (TRX à deux récepteurs, double réception) : MAIN dans l'oreille gauche, SUB dans la droite, comme au casque.
@@ -865,12 +925,16 @@
     store.set('rs.face.stereo', L.stereo ? '1' : '0');
     wantAudio();
     const s = S();
-    if (L.stereo && s.dualRx === 0) say('Stéréo : allumez d’abord le récepteur SUB (touche RX du SUB, à droite au-dessus du grand bouton).', 'warn', 6000);
-    else if (L.stereo) say('Stéréo : MAIN dans l’oreille gauche, SUB dans l’oreille droite.', '', 4000);
+    if (L.stereo && s.dualRx === 0) {
+      // Les deux récepteurs en service (double réception) pour entendre MAIN à gauche et SUB à droite
+      if (iControl()) { setCtl('dualRx', 1); say('Stéréo : double réception en marche ; MAIN dans l’oreille gauche, SUB dans l’oreille droite.', '', 5000); }
+      else say('Stéréo : prenez la main pour mettre en marche le récepteur SUB (double réception).', 'warn', 6000);
+    } else if (L.stereo) say('Stéréo : MAIN dans l’oreille gauche, SUB dans l’oreille droite.', '', 4000);
     render();
   }
   function play(pcm) {
     if (!L.listening || !player.ctx) return;
+    if (window.RSVOICE && window.RSVOICE.talking()) { player.next = 0; return; } // pas d'écho de sa propre émission
     const ctx = player.ctx;
     const now = ctx.currentTime;
     if (player.next < now + 0.05) player.next = now + 0.2;
@@ -1044,6 +1108,7 @@
       if (typeof e.data !== 'string') return onAudio(e.data);
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
+      if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values') && window.RSVOICE) { window.RSVOICE.onMessage(m); return; }
       if (window.RSDIGI && m.t !== 'hello' && m.t !== 'state' && window.RSDIGI.onMessage(m)) return;
       if (m.t === 'hello') {
         me = m;
@@ -1054,6 +1119,7 @@
         if (m.session) { creds = { session: m.session }; store.set('rs.sess', m.session); }
         wantAudio();
         if (window.RSDIGI) window.RSDIGI.onHello(m, m);
+        if (window.RSVOICE) window.RSVOICE.onHello(m);
         send({ t: 'plan_pref', on: store.get('rs.planauto', '1') !== '0' }); // MODE AUTO : même choix que dans le dashboard
         render();
       } else if (m.t === 'login_fail') {
@@ -1071,7 +1137,10 @@
         st = m;
         render();
         if (window.RSDIGI) window.RSDIGI.onState(st);
+        if (window.RSVOICE) window.RSVOICE.onState(st);
+        if (pttHeld && !iControl()) pttUp();
       } else if (m.t === 'notice') {
+        if (m.pttCut) pttUp();
         say(m.msg, m.level === 'error' ? 'error' : m.level === 'info' ? '' : 'warn', 7000);
       }
     };
@@ -1137,6 +1206,10 @@
   if (window.RSDIGI) {
     window.RSDIGI.init({ send, say, iControl, state: () => st, rig: () => R,
       setFreq: (hz, which) => tuneTo(which === 'B' ? 'B' : 'A', hz) });
+  }
+  if (window.RSVOICE) {
+    window.RSVOICE.init({ send, say, iControl, state: () => st, me: () => me, rig: () => R,
+      sendBin: (buf) => { if (ws && ws.readyState === 1) ws.send(buf); } });
   }
   const sess = store.get('rs.sess', '');
   if (sess) creds = { session: sess };

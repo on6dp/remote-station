@@ -7,7 +7,7 @@
  *
  * Touches : act = ce que fait la touche, led = quand son voyant est allumé (s = état du TRX, L = état local de la page).
  *   act : { band: '20M' } · { toggle: 'nb' } · { set: ['vfoSel', 1] } · { action: 'swap' } · { mode: 'ssb' | 'cw' | 'cycle' }
- *         { local: 'fast' | 'fine' | 'listen' | 'func' } · { clar: true } (RX CLAR ; appui long : décalage à zéro) · { info: 'texte' }
+ *         { local: 'fast' | 'fine' | 'listen' | 'func' | 'mox' | 'moni' } · { clar: true } (RX CLAR ; appui long : décalage à zéro) · { info: 'texte' }
  * Boutons rotatifs : inner = bouton central, outer = bague extérieure ; { ctl, label, per } (per = pas par cran de molette) ;
  *   push = réglage basculé par un clic sans tourner (le bouton qu'on pousse), ex. NAR sur SHIFT/WIDTH.
  * Touches : act.long = action d'un appui d'au moins 1 s (ex. TUNE : accord ; MAIN⇄SUB : A → B).
@@ -51,7 +51,7 @@
       // Rangée sous l'écran
       { id: 'tune', x: 150, y: 472, w: 67, h: 20, tip: 'TUNE : coupleur d’antenne en service / hors service ; appui d’au moins 1 s : accord (émission courte, avec la main)', act: { toggle: 'tuner', long: { action: 'tune' } }, led: (s) => !!(s.tuner || s.tuning), ledColor: '#ff8a1f' },
       { id: 'vox', x: 230, y: 472, w: 68, h: 20, tip: 'VOX (ne peut être que coupé à distance)', act: { toggle: 'vox' }, led: (s) => !!s.vox },
-      { id: 'mox', x: 311, y: 472, w: 67, h: 20, tip: 'MOX : émission à la main', act: info('Émission en phonie : utilisez le PTT du dashboard (barre d’espace), avec la phonie à distance.') },
+      { id: 'mox', x: 311, y: 472, w: 67, h: 20, tip: 'MOX : émission maintenue (clic : émission, clic suivant : réception) ; avec votre micro si « Configuration micro » est actif', act: { local: 'mox' }, led: (s, L) => L.mox || !!s.tx, ledColor: '#ff3b30' },
       { id: 'zin', x: 392, y: 472, w: 69, h: 20, tip: 'ZIN/SPOT', act: info('ZIN / SPOT : pas disponible à distance.') },
       { id: 'disp', x: 473, y: 472, w: 69, h: 20, tip: 'DISP', act: info('DISP : réglages de l’écran du TRX, pas disponible à distance.') },
       { id: 'smenu', x: 556, y: 472, w: 69, h: 20, tip: 'S.MENU', act: info('Menus du TRX : pas disponibles depuis la face avant à distance.') },
@@ -61,7 +61,7 @@
       { id: 'ssb', x: 767, y: 262, w: 28, h: 18, tip: 'SSB : LSB ⇄ USB', act: { mode: 'ssb' }, led: (s, L) => /SB$/.test(L.activeMode(s)) },
       { id: 'cw', x: 767, y: 304, w: 28, h: 17, tip: 'CW : CW-U ⇄ CW-L', act: { mode: 'cw' }, led: (s, L) => /^CW/.test(L.activeMode(s)) },
       { id: 'bkin', x: 767, y: 372, w: 28, h: 18, tip: 'BK-IN : break-in CW', act: { toggle: 'bkin' }, led: (s) => !!s.bkin },
-      { id: 'moni', x: 767, y: 414, w: 28, h: 18, tip: 'MONI', act: info('MONI : pas encore relié.') },
+      { id: 'moni', x: 767, y: 414, w: 28, h: 18, tip: 'MONI : entendre sa propre modulation (« M’écouter », au casque)', act: { local: 'moni' }, led: () => !!(window.RSVOICE && window.RSVOICE.monitorOn()) },
       // SYNC, SPLIT, CLAR RX / TX, FAST, LOCK
       { id: 'sync', x: 819, y: 221, w: 43, h: 16, tip: 'SYNC', act: info('SYNC : pas disponible par la liaison CAT.') },
       { id: 'split', x: 874, y: 221, w: 44, h: 16, tip: 'SPLIT : émission sur le SUB (VFO B)', act: { toggle: 'split' }, led: (s) => !!s.split },

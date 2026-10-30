@@ -584,6 +584,10 @@
     txStart,
     txEnd,
     talking: () => V.tx,
+    // Page Face avant : touche MONI = « M'écouter »
+    micOn: () => !!V.on,
+    monitor(on) { setMonitor(on); return V.monOn; },
+    monitorOn: () => !!V.monOn,
     // essais
     _v: V, micType
   };

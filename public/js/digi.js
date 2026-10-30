@@ -1364,6 +1364,19 @@
   // après la colonne des réglages (RX audio, DSP, accord, TX) ; sinon elle reste au bord droit de la fenêtre centrale.
   const BM_FAR_MQ = window.matchMedia ? window.matchMedia('(min-width: 1800px) and (min-height: 860px)') : null;
   function bmFar(p, bm) {
+    // Page Face avant : colonne à part, tout à droite, sur toute la hauteur (#fcBm)
+    const emb = document.body.dataset.digiEmbed === '1' ? document.getElementById('fcBm') : null;
+    if (emb) {
+      const on = !bm.hidden && !p.classList.contains('collapsed');
+      if (on && bm.parentElement !== emb) emb.appendChild(bm);
+      if (!on && bm.parentElement !== p) p.appendChild(bm);
+      if (document.body.classList.contains('bm-far') !== on) {
+        document.body.classList.toggle('bm-far', on);
+        bm.style.top = '';
+        setTimeout(() => { window.dispatchEvent(new Event('resize')); bmDraw(); }, 0);
+      }
+      return on;
+    }
     const ws = document.querySelector('.workspace');
     const far = !!(ws && BM_FAR_MQ && BM_FAR_MQ.matches && !POPUP && !bm.hidden && !p.classList.contains('collapsed') && p.closest('.workspace') === ws);
     if (far && bm.parentElement !== ws) ws.appendChild(bm);

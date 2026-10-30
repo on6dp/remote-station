@@ -136,3 +136,16 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .lcd-bott2 { fill: #ff3b30; font-size: 8.5px; font-weight: 800; pointer-events: none; }
 #face .lcd-hit.off:hover { fill: rgba(160, 170, 185, .06); }
 #face .func-pm { fill: #ffcf4a; font-size: 15px; font-weight: 800; pointer-events: none; }
+/* Phonie à distance sous la face avant : PTT + cadre SSB configuration (voice.js) */
+.fc-tx { max-width: 1900px; margin: 12px auto 0; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 14px; }
+.fc-tx #ptt { flex: 0 0 240px; width: 240px; min-height: 64px; font-size: 18px; font-weight: 800; }
+
+.fc-tx .vx { flex: 0 1 620px; margin: 0; }
+/* Carte de bande : colonne tout à droite, sur toute la hauteur de la fenêtre (onglets qui ont des spots) */
+.fc-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 12px; align-items: start; }
+.fc-left { min-width: 0; grid-column: 1; grid-row: 1; }
+.fc-bm { display: none; }
+body.face-page.bm-far .fc-main { grid-template-columns: minmax(0, 1fr) var(--bm-w); }
+body.face-page.bm-far .fc-bm { display: block; grid-column: 2; grid-row: 1; position: sticky; top: 64px; height: calc(100vh - 76px); }
+body.face-page .fc-bm > .bm { position: relative; inset: auto; width: 100%; height: 100%; min-height: 0; border: 1px solid var(--v2-border-panel); border-radius: var(--v2-panel-radius); overflow: hidden; }
+body.face-page.bm-far #centerPanel.bm-on > :not(.panel-h):not(.bm) { margin-right: 0; }
