@@ -47,6 +47,10 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .led.on { opacity: .42; filter: url(#glow); }
 /* PROC, KEYER : voyant orange franc, allumé tant que la fonction est en marche */
 #face .led.strong { mix-blend-mode: normal; }
+/* MAIN (blanc, texte noir) et SUB (bleu) éclairés quand ils sont choisis, comme sur le TRX */
+#face .lit { opacity: 0; transition: opacity .15s; pointer-events: none; }
+#face .lit.on { opacity: 1; filter: drop-shadow(0 0 3px rgba(160, 200, 255, .7)); }
+#face .lit-t { font: 800 11px/1 'Arial Black', Arial, sans-serif; letter-spacing: .3px; }
 #face .led.strong.on { opacity: .95; }
 #face .led.bar.on { opacity: .95; }
 #face .led.bar.bright { opacity: 1; filter: url(#glow); }

@@ -470,7 +470,7 @@ Adresse : **https://remote.op0p.be/ftdx101**. La face avant du FTDX101MP, où **
 | Sur la face avant | Ce que ça fait |
 |---|---|
 | Touches **1.8 … 70/GEN** | Changent de bande sur le récepteur actif (MAIN ou SUB). Voyant blanc sous la touche : bande du MAIN ; bleu au-dessus : bande du SUB. |
-| **MAIN** / **SUB**, **MAIN/SUB** | Choisissent le récepteur sur lequel agissent le grand bouton, les touches de bande et de mode. |
+| **MAIN** / **SUB**, **MAIN/SUB** | Choisissent le récepteur sur lequel agissent le grand bouton, les touches de bande et de mode. La touche du récepteur choisi est éclairée comme sur le TRX : MAIN en blanc (texte noir), SUB en bleu. |
 | **RX** / **TX**, **MAIN⇆SUB** | RX du SUB : double réception en marche / arrêt. TX MAIN / TX SUB : VFO d'émission (TX SUB = SPLIT). MAIN⇆SUB : échange des fréquences ; **appui d'au moins 1 s** : copie MAIN → SUB. |
 | **MODE**, **SSB**, **CW**, **BK-IN** | MODE : mode suivant ; **appui d'au moins 1 s** : le tableau de tous les modes (LSB, USB, CW-L, CW-U, AM, AM-N, FM, FM-N, DATA-L, DATA-U, DATA-FM, D-FM-N, RTTY-L, RTTY-U, PSK), clic sur le mode voulu. SSB : LSB ⇄ USB ; CW : CW-U ⇄ CW-L ; break-in CW. |
 | **SPLIT**, **CLAR RX** / **TX**, **CLAR**, **LOCK**, **FAST**, **FINE TUNING** | SPLIT ; clarifier RIT / XIT ; grande touche CLAR : RIT, et **appui long** : décalage à zéro ; LOCK ; grand bouton : 100 Hz par cran, FAST : 1 kHz, FINE : 10 Hz. |

@@ -79,8 +79,10 @@
         leds: [{ x: 1190, y: 190, w: 18, h: 4, color: '#ff3b30', on: (s) => !!s.split, bright: (s) => !!s.tx && !!s.split }] },
       { id: 'rxSub', x: 1230, y: 192, w: 65, h: 18, tip: 'RX SUB : double réception (DUAL RX) en marche / arrêt', act: { toggle: 'dualRx' },
         leds: [{ x: 1247, y: 190, w: 31, h: 4, color: '#3ddc5a', on: (s) => !!s.dualRx }] },
-      { id: 'main', x: 947, y: 221, w: 88, h: 28, tip: 'MAIN : le grand bouton et les touches agissent sur le MAIN (VFO A)', act: { set: ['vfoSel', 0] }, led: (s) => s.vfoSel !== 1, ledColor: '#5fb3ff' },
-      { id: 'sub', x: 1197, y: 221, w: 85, h: 28, tip: 'SUB : le grand bouton et les touches agissent sur le SUB (VFO B)', act: { set: ['vfoSel', 1] }, led: (s) => s.vfoSel === 1, ledColor: '#5fb3ff' },
+      { id: 'main', x: 947, y: 221, w: 88, h: 28, tip: 'MAIN : le grand bouton et les touches agissent sur le MAIN (VFO A)', act: { set: ['vfoSel', 0] }, led: (s) => s.vfoSel !== 1,
+        lit: { d: 'M951 222.5H1031L1019 249H951Q949 249 949 247V224.5Q949 222.5 951 222.5Z', bg: '#f4f6f8', fg: '#000', edge: '#ffffff', label: 'MAIN', tx: 988, ty: 240 } },
+      { id: 'sub', x: 1197, y: 221, w: 85, h: 28, tip: 'SUB : le grand bouton et les touches agissent sur le SUB (VFO B)', act: { set: ['vfoSel', 1] }, led: (s) => s.vfoSel === 1,
+        lit: { d: 'M1201 222.5H1281Q1283 222.5 1283 224.5V247Q1283 249 1281 249H1213Z', bg: '#1e6fe0', fg: '#fff', edge: '#7fb6ff', label: 'SUB', tx: 1243, ty: 240 } },
       { id: 'clar', x: 940, y: 275, w: 70, h: 38, tip: 'CLAR : clarifier de réception (appui long : décalage à zéro) ; MULTI règle le décalage', act: { clar: true }, led: (s) => !!(s.rit || s.xit) },
       { id: 'qmb', x: 932, y: 360, w: 23, h: 50, tip: 'QMB', act: info('QMB (mémoires rapides) : pas disponible à distance.') },
       { id: 'fine', x: 935, y: 450, w: 70, h: 40, tip: 'FINE TUNING : accord fin (pas de 1 Hz)', act: { local: 'fine' }, led: (s, L) => L.fine },
@@ -95,8 +97,8 @@
       { id: 'mv', x: 1349, y: 220, w: 32, h: 20, tip: 'M▸V', act: info('Mémoires : pas encore reliées.') },
       { id: 'vmw', x: 1386, y: 220, w: 32, h: 20, tip: 'V▸M', act: info('Mémoires : pas encore reliées.') },
       // Petites touches PROC et KEYER (au-dessus du bouton MIC/SPEED)
-      { id: 'proc', cx: 1451, cy: 149, r: 8, tip: 'PROC : processeur de modulation', act: { toggle: 'proc' }, led: (s) => !!s.proc, ledColor: '#ff7a00', ledStrong: true },
-      { id: 'keyer', cx: 1529, cy: 149, r: 8, tip: 'KEYER : manipulateur électronique (en CW ; aussi : pousser le bouton MIC/SPEED)', act: { toggle: 'keyer' }, led: (s) => !!s.keyer, ledColor: '#ff7a00', ledStrong: true },
+      { id: 'proc', cx: 1451, cy: 149, r: 8, tip: 'PROC : processeur de modulation', act: { toggle: 'proc' }, led: (s) => !!s.proc, ledColor: '#ff7a00', ledStrong: true, ledR: 3.6 },
+      { id: 'keyer', cx: 1529, cy: 149, r: 8, tip: 'KEYER : manipulateur électronique (en CW ; aussi : pousser le bouton MIC/SPEED)', act: { toggle: 'keyer' }, led: (s) => !!s.keyer, ledColor: '#ff7a00', ledStrong: true, ledR: 3.6 },
       // Prises
       { id: 'key', cx: 56, cy: 337, r: 20, tip: 'KEY', act: info('Manipulateur : la CW se fait par l’onglet CW du dashboard.') },
       { id: 'phones', cx: 56, cy: 410, r: 20, tip: 'PHONES : écouter le TRX (clic : marche / arrêt)', act: { local: 'listen' }, led: (s, L) => L.listening, ledColor: '#3ddc5a', ring: true },

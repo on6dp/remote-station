@@ -219,9 +219,15 @@
     // Voyants des touches (sous les zones cliquables)
     const leds = el('g', { class: 'leds' }, svg);
     for (const k of FACE.keys) {
-      if (k.led) {
+      if (k.led && k.lit) {
+        // Touche éclairée comme sur le TRX (MAIN blanc, SUB bleu) : forme de la touche, fond plein et son nom
+        const e = el('g', { class: 'lit' }, leds);
+        el('path', { d: k.lit.d, fill: k.lit.bg, stroke: k.lit.edge || 'none', 'stroke-width': 1, 'stroke-linejoin': 'round' }, e);
+        el('text', { x: k.lit.tx, y: k.lit.ty, fill: k.lit.fg, class: 'lit-t', 'text-anchor': 'middle' }, e, k.lit.label);
+        ledEls.push({ el: e, on: k.led });
+      } else if (k.led) {
         const e = k.r != null
-          ? el('circle', { cx: k.cx, cy: k.cy, r: k.r + (k.ring ? 4 : 1), class: 'led' + (k.ring ? ' ring' : '') + (k.ledStrong ? ' strong' : ''), style: '--c:' + (k.ledColor || '#ffb020') }, leds)
+          ? el('circle', { cx: k.cx, cy: k.cy, r: k.ledR || k.r + (k.ring ? 4 : 1), class: 'led' + (k.ring ? ' ring' : '') + (k.ledStrong ? ' strong' : ''), style: '--c:' + (k.ledColor || '#ffb020') }, leds)
           : el('rect', { x: k.x + 2, y: k.y + 2, width: k.w - 4, height: k.h - 4, rx: 4, class: 'led', style: '--c:' + (k.ledColor || '#ffb020') }, leds);
         ledEls.push({ el: e, on: k.led });
       }
