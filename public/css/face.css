@@ -1,11 +1,17 @@
 /* face.css — page « Face avant » (/ftdx101…) : photo du TRX + zones cliquables + écran vivant */
 body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0; }
 .face-page .topbar { position: sticky; top: 0; z-index: 5; }
-.fc-main { padding: 10px 16px 24px; }
-.fc-msg { min-height: 22px; margin: 0 auto 6px; max-width: 1900px; text-align: center; font-size: 13px; color: var(--v2-text-secondary, #c7d0dc); }
+.fc-main { padding: 4px 16px 24px; }
+/* Messages : bandeau posé sur le haut de la photo (pas de place perdue entre le titre et la face avant) */
+.fc-left { position: relative; }
+.fc-msg { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); z-index: 6; max-width: min(900px, 90%); margin: 0; padding: 5px 14px; border-radius: 6px;
+  text-align: center; font-size: 13px; color: var(--v2-text-secondary, #c7d0dc); background: rgba(8, 13, 21, .92); border: 1px solid #2b3a52; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); pointer-events: none; }
+.fc-msg:empty { display: none; }
 .fc-msg.warn { color: #ffcf4a; }
 .fc-msg.error { color: #ff6b6b; font-weight: 700; }
-.fc-wrap { position: relative; max-width: 1900px; margin: 0 auto; }
+.fc-wrap { position: relative; max-width: 1900px; margin: 0; min-width: 0; }
+/* Face avant à gauche, colonne PTT + SSB CONFIGURATION à droite */
+.fc-top { display: grid; grid-template-columns: minmax(0, 1900px) minmax(300px, 400px); gap: 12px; align-items: start; justify-content: start; }
 .fc-panel { position: relative; }
 #face { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; touch-action: none; }
 .fc-scope { position: absolute; border-radius: 3px; pointer-events: none; visibility: hidden; }
@@ -39,6 +45,9 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 /* Voyants */
 #face .led { fill: var(--c); opacity: 0; transition: opacity .15s; pointer-events: none; mix-blend-mode: screen; }
 #face .led.on { opacity: .42; filter: url(#glow); }
+/* PROC, KEYER : voyant orange franc, allumé tant que la fonction est en marche */
+#face .led.strong { mix-blend-mode: normal; }
+#face .led.strong.on { opacity: .95; }
 #face .led.bar.on { opacity: .95; }
 #face .led.bar.bright { opacity: 1; filter: url(#glow); }
 #face .led.ring { fill: none; stroke: var(--c); stroke-width: 3; }
@@ -137,17 +146,23 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .lcd-bott2 { fill: #ff3b30; font-size: 8.5px; font-weight: 800; pointer-events: none; }
 #face .lcd-hit.off:hover { fill: rgba(160, 170, 185, .06); }
 #face .func-pm { fill: #ffcf4a; font-size: 15px; font-weight: 800; pointer-events: none; }
-/* Phonie à distance sous la face avant : PTT + cadre SSB configuration (voice.js) */
-.fc-tx { max-width: 1900px; margin: 12px auto 0; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 14px; }
-.fc-tx #ptt { flex: 0 0 240px; width: 240px; min-height: 64px; font-size: 18px; font-weight: 800; }
-
-.fc-tx .vx { flex: 0 1 620px; margin: 0; }
+/* Phonie à distance à droite de la face avant : PTT + cadre SSB configuration (voice.js) */
+.fc-tx { margin: 0; display: flex; flex-direction: column; align-items: stretch; gap: 10px; min-width: 0; }
+.fc-tx #ptt { width: 100%; min-height: 72px; font-size: 20px; font-weight: 800; }
+.fc-tx .vx { margin: 0; }
+/* Écran étroit : la colonne repasse sous la face avant */
+@media (max-width: 1500px) {
+  .fc-top { grid-template-columns: minmax(0, 1fr); }
+  .fc-tx { flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
+  .fc-tx #ptt { flex: 0 0 240px; width: 240px; min-height: 64px; font-size: 18px; }
+  .fc-tx .vx { flex: 0 1 620px; }
+}
 /* Carte de bande : colonne tout à droite, sur toute la hauteur de la fenêtre (onglets qui ont des spots) */
 .fc-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 12px; align-items: start; }
 .fc-left { min-width: 0; grid-column: 1; grid-row: 1; }
 .fc-bm { display: none; }
 body.face-page.bm-far .fc-main { grid-template-columns: minmax(0, 1fr) var(--bm-w); }
-body.face-page.bm-far .fc-bm { display: block; grid-column: 2; grid-row: 1; position: sticky; top: 64px; height: calc(100vh - 76px); }
+body.face-page.bm-far .fc-bm { display: block; grid-column: 2; grid-row: 1; position: sticky; top: 52px; height: calc(100vh - 60px); }
 body.face-page .fc-bm > .bm { position: relative; inset: auto; width: 100%; height: 100%; min-height: 0; border: 1px solid var(--v2-border-panel); border-radius: var(--v2-panel-radius); overflow: hidden; }
 body.face-page.bm-far #centerPanel.bm-on > :not(.panel-h):not(.bm) { margin-right: 0; }
 
@@ -161,3 +176,15 @@ body.face-page.bm-popup .fc-bm { display: block; position: static; height: 100vh
 body.face-page.bm-popup .fc-bm > .bm { display: flex !important; }
 body.face-page.bm-popup .bm-grip { display: none; }
 body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglets RTTY, FT8 / FT4, CW… des modes numériques (pas dans l’onglet affiché).'; display: block; padding: 16px; color: #8fa0b4; font: 13px/1.4 system-ui, sans-serif; }
+
+/* S.MENU : SCOPE MENU sur le haut du scope, comme sur le TRX (se ferme seul après 3 s) */
+.fc-smenu { position: absolute; z-index: 3; box-sizing: border-box; padding: .25em .35em .4em; border-radius: .35em; background: rgba(70, 76, 86, .94);
+  border: 1px solid #9aa3af; box-shadow: 0 4px 14px rgba(0, 0, 0, .55); font-family: 'Roboto Mono', ui-monospace, monospace; }
+.fc-smenu[hidden] { display: none; }
+.fc-sm-t { text-align: center; color: #fff; font-weight: 800; letter-spacing: .25em; font-size: 1.15em; padding: .1em 0 .3em; }
+.fc-sm-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: .35em; }
+.fc-sm-row button { display: flex; flex-direction: column; align-items: center; gap: .15em; padding: .35em .2em; border-radius: .25em; cursor: pointer;
+  background: linear-gradient(#d9dde2, #b7bdc5); border: 1px solid #eef1f4; color: #3c4450; font: inherit; }
+.fc-sm-row button:hover { background: linear-gradient(#eef1f4, #c9cfd6); }
+.fc-sm-row button b { font-weight: 800; letter-spacing: .08em; }
+.fc-sm-row button i { font-style: normal; font-weight: 700; color: #b0261a; font-size: .95em; }

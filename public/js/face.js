@@ -108,6 +108,27 @@
     if (a.info) return say(a.info, '', 6000);
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
     if (a.local === 'func') { L.func = !L.func; return render(); }
+    if (a.local === 'vc') {
+      // VC TUNE (présélecteur) du récepteur actif ; en marche, MULTI l'accorde
+      const id = activeSide() === 'B' ? 'vcB' : 'vc';
+      if (!R.CONTROL[id]) return say('VC TUNE : pas disponible sur ce TRX.', 'warn');
+      if (!needControl()) return;
+      const sk = id === 'vcB' ? 'vcOkB' : 'vcOk';
+      if (s[sk] === 0) return say('VC TUNE : pas installé sur ce TRX (le TRX répond « non installé »).', 'warn', 5000);
+      const on = s[id] ? 0 : 1;
+      setCtl(id, on);
+      say('VC TUNE ' + (id === 'vcB' ? 'SUB' : 'MAIN') + (on ? ' en marche : le bouton MULTI l’accorde.' : ' arrêté.'), '', 3500);
+      return;
+    }
+    if (a.local === 'smenu') return L.smenu ? closeSmenu() : openSmenu();
+    if (a.local === 'disp') {
+      // Comme la touche DISP du TRX : 4 présentations de l'écran, l'une après l'autre
+      L.disp = (L.disp + 1) % DISPS.length;
+      store.set('rs.face.disp', String(L.disp));
+      WF.drawn = false;
+      say('DISP : ' + DISPS[L.disp] + ((L.disp === 1 || L.disp === 2) && !WF.two ? ' (SUB : bouton 🎧 Stéréo MAIN | SUB)' : ''), '', 3000);
+      return render();
+    }
     if (a.local === 'sync') {
       if (L.sync) { L.sync = false; say('SYNC coupé.', '', 2500); return render(); }
       if (!needControl()) return;
@@ -121,7 +142,7 @@
     if (a.local === 'mox') return L.mox ? pttUp() : (pttDown() ? (L.mox = true, render()) : null);
     if (a.local === 'moni') {
       const VX = window.RSVOICE;
-      if (!VX || !VX.micOn()) return say('MONI = « M’écouter » : activez d’abord votre micro (Configuration micro, sous la face avant).', 'warn', 5000);
+      if (!VX || !VX.micOn()) return say('MONI = « M’écouter » : activez d’abord votre micro (Configuration micro, à droite de la face avant).', 'warn', 5000);
       VX.monitor(!VX.monitorOn());
       say(VX.monitorOn() ? 'MONI : vous entendez votre micro tel qu’il part (au casque).' : 'MONI coupé.', '', 3000);
       return render();
@@ -200,7 +221,7 @@
     for (const k of FACE.keys) {
       if (k.led) {
         const e = k.r != null
-          ? el('circle', { cx: k.cx, cy: k.cy, r: k.r + (k.ring ? 4 : 1), class: 'led' + (k.ring ? ' ring' : ''), style: '--c:' + (k.ledColor || '#ffb020') }, leds)
+          ? el('circle', { cx: k.cx, cy: k.cy, r: k.r + (k.ring ? 4 : 1), class: 'led' + (k.ring ? ' ring' : '') + (k.ledStrong ? ' strong' : ''), style: '--c:' + (k.ledColor || '#ffb020') }, leds)
           : el('rect', { x: k.x + 2, y: k.y + 2, width: k.w - 4, height: k.h - 4, rx: 4, class: 'led', style: '--c:' + (k.ledColor || '#ffb020') }, leds);
         ledEls.push({ el: e, on: k.led });
       }
@@ -233,7 +254,69 @@
     cv.style.width = (box.w / V.w * 100) + '%';
     cv.style.height = (box.h / V.h * 100) + '%';
     LCD.scopeBox = box;
+    // S.MENU : SCOPE MENU posé sur le haut du scope (en HTML, au-dessus de la cascade, qui reste visible)
+    const sm = document.createElement('div');
+    sm.className = 'fc-smenu';
+    sm.id = 'smenu';
+    sm.hidden = true;
+    sm.style.left = ((box.x + 22 - V.x) / V.w * 100) + '%';
+    sm.style.top = ((box.y + 4 - V.y) / V.h * 100) + '%';
+    sm.style.width = ((box.w - 44) / V.w * 100) + '%';
+    sm.innerHTML = '<div class="fc-sm-t">SCOPE MENU</div><div class="fc-sm-row">' + SMENU.map((m) => '<button type="button" data-sm="' + m[0] + '" title="' + m[3] + '"><b>' + m[1] + '</b><i></i></button>').join('') + '</div>';
+    $('facePanel').appendChild(sm);
+    sm.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-sm]');
+      if (!b) return;
+      const r = b.getBoundingClientRect();
+      smAdjust(b.dataset.sm, b.dataset.sm === 'level' && e.clientX < r.left + r.width / 2 ? -1 : 1);
+    });
+    sm.addEventListener('wheel', (e) => {
+      const b = e.target.closest('[data-sm]');
+      if (!b) return;
+      e.preventDefault();
+      smAdjust(b.dataset.sm, e.deltaY < 0 ? 1 : -1);
+    }, { passive: false });
+    sm.addEventListener('pointerenter', () => { L.smHover = true; clearTimeout(L.smT); });
+    sm.addEventListener('pointerleave', () => { L.smHover = false; smArm(); });
   }
+  // SCOPE MENU (touche S.MENU) : comme sur le TRX, il se ferme seul 3 s après la dernière action
+  const PEAKS = ['OFF', 'LV1', 'LV2', 'LV3'];
+  const SMENU = [['spd', 'SPEED', () => WF_SPEEDS[L.wfSpeed][0], 'Vitesse de la cascade (clic : suivante ; molette)'],
+    ['peak', 'PEAK', () => PEAKS[L.peak], 'Crêtes du spectre gardées un moment : OFF, LV1 (longtemps) … LV3 (brièvement)'],
+    ['marker', 'MARKER', () => (L.marker ? 'ON' : 'OFF'), 'Bande passante du filtre et repère central sur le spectre'],
+    ['color', 'COLOR', () => String(L.wfColor), 'Couleurs de la cascade : 1 rouge (comme le TRX), 2 bleu / violet, 3 arc-en-ciel'],
+    ['level', 'LEVEL', () => (L.wfLevel >= 0 ? '+' : '') + L.wfLevel.toFixed(1) + 'dB', 'Niveau de la cascade : clic à gauche −, à droite + (ou molette)']];
+  L.peak = Math.max(0, Math.min(3, Number(store.get('rs.face.peak', '0')) || 0));
+  L.marker = store.get('rs.face.marker', '1') !== '0';
+  function smAdjust(id, d) {
+    if (id === 'spd') { L.wfSpeed = (L.wfSpeed + (d > 0 ? 1 : 3)) % 4; store.set('rs.face.wfspd', L.wfSpeed); }
+    else if (id === 'peak') { L.peak = (L.peak + (d > 0 ? 1 : 3)) % 4; store.set('rs.face.peak', L.peak); WF.peak = {}; }
+    else if (id === 'marker') { L.marker = !L.marker; store.set('rs.face.marker', L.marker ? '1' : '0'); }
+    else if (id === 'color') { L.wfColor = ((L.wfColor - 1 + (d > 0 ? 1 : 2)) % 3) + 1; store.set('rs.face.wfcol', L.wfColor); }
+    else if (id === 'level') { L.wfLevel = Math.max(-20, Math.min(20, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); }
+    smDraw();
+    render();
+    smArm();
+  }
+  function smDraw() {
+    const sm = $('smenu');
+    if (!sm) return;
+    for (const [id, , val] of SMENU) { const b = sm.querySelector('[data-sm="' + id + '"] i'); if (b) b.textContent = val(); }
+  }
+  function smArm() { clearTimeout(L.smT); if (!L.smHover) L.smT = setTimeout(closeSmenu, 3000); }
+  function openSmenu() {
+    const sm = $('smenu');
+    if (!sm) return;
+    L.smenu = true;
+    L.func = false;
+    // Taille du texte : suit la taille de la photo
+    sm.style.fontSize = Math.max(8, Math.round($('facePanel').clientWidth / V.w * 11)) + 'px';
+    smDraw();
+    sm.hidden = false;
+    smArm();
+    render();
+  }
+  function closeSmenu() { clearTimeout(L.smT); L.smenu = false; L.smHover = false; const sm = $('smenu'); if (sm) sm.hidden = true; render(); }
   function toImg(e) {
     const pt = svg.createSVGPoint();
     pt.x = e.clientX; pt.y = e.clientY;
@@ -311,6 +394,7 @@
   }
   function buildFilter(g, x0, y0, w, h) {
     const f = { x0, y0, w, h };
+    g = f.g = el('g', { class: 'flt' }, g); // caché en DISP « filtres agrandis » (ils sont alors dans le grand cadre)
     el('rect', { x: x0, y: y0, width: w, height: h, class: 'flt-box' }, g);
     f.bars = el('path', { d: '', class: 'flt-bars' }, g);
     f.trap = el('path', { d: '', class: 'flt-trap' }, g);
@@ -437,6 +521,9 @@
   L.wfLevel = Math.max(-20, Math.min(20, Number(store.get('rs.face.wflvl', '0')) || 0));
   L.func = false;
   const SPANS = [2000, 3000, 4000, 6000];
+  // Touche DISP : présentations de l'écran (comme sur le FTDX101)
+  const DISPS = ['cascade du MAIN', 'SUB au-dessus, MAIN en dessous', 'MAIN | SUB côte à côte', 'filtres agrandis (MAIN | SUB)'];
+  L.disp = Math.max(0, Math.min(3, Number(store.get('rs.face.disp', '0')) || 0));
   L.wfSpan = Math.max(0, Math.min(3, Number(store.get('rs.face.span', '2')) || 0));
   L.hold = false;
   L.funcSel = store.get('rs.face.funcsel', 'power');
@@ -599,6 +686,14 @@
   function turn(k, part, notches, ev) {
     if (!notches) return;
     const s = S();
+    // VC TUNE en marche sur le récepteur actif : MULTI accorde le présélecteur (un pas par cran)
+    const vcSide = activeSide() === 'B' ? 'B' : '';
+    if (k.multi && !(s.rit || s.xit) && s['vc' + vcSide] && R.CONTROL['vcUp' + vcSide]) {
+      if (!needControl()) return;
+      for (let i = 0; i < Math.min(9, Math.abs(notches)); i++) send({ t: 'set', ctl: (notches > 0 ? 'vcUp' : 'vcDn') + vcSide, value: null });
+      const pos = s['vcPos' + vcSide];
+      return showTip(ev, 'VC TUNE ' + (vcSide ? 'SUB' : 'MAIN') + (notches > 0 ? ' +' : ' −') + (pos != null ? ' · ' + pos : ''));
+    }
     if (k.multi && !(s.rit || s.xit) && FUNC_BY[L.funcSel] && FUNC_BY[L.funcSel][3]) {
       funcAdjust(L.funcSel, notches);
       return showTip(ev, FUNC_BY[L.funcSel][1] + ' ' + FUNC_BY[L.funcSel][2](S()));
@@ -775,6 +870,8 @@
       const cx = fl.x0 + fl.w / 2 + Math.max(-0.4, Math.min(0.4, sh / 2400)) * fl.w;
       const tw = fl.w * fr, top = fl.y0 + 8, bot = fl.y0 + fl.h - 5, sl = Math.min(8, tw * 0.15);
       fl.trap.setAttribute('d', 'M' + (fl.x0 + 3) + ' ' + bot + 'L' + (cx - tw / 2) + ' ' + bot + 'L' + (cx - tw / 2 + sl) + ' ' + top + 'L' + (cx + tw / 2 - sl) + ' ' + top + 'L' + (cx + tw / 2) + ' ' + bot + 'L' + (fl.x0 + fl.w - 3) + ' ' + bot);
+      LCD.flt = LCD.flt || {};
+      LCD.flt[side] = { fr, off: Math.max(-0.4, Math.min(0.4, sh / 2400)), hz, sh, mode: mode || '' };
       fl.center.setAttribute('x1', cx); fl.center.setAttribute('x2', cx);
       fl.base.setAttribute('x', cx - tw / 2 + 2); fl.base.setAttribute('width', Math.max(4, tw - 4));
       const v = LCD['v' + side];
@@ -799,13 +896,16 @@
     if (L.fine) fl.push('FINE'); else if (L.fast) fl.push('FAST');
     LCD.flags.textContent = live ? fl.join('  ·  ') : (st.station ? 'TRX muet (éteint ou câble ?)' : 'Station hors ligne');
     LCD.flags.classList.toggle('tx', tx);
-    LCD.span.textContent = (WF.two ? 'MAIN | SUB · ' : '') + 'BF 0–' + SPANS[L.wfSpan] / 1000 + ' kHz' + (L.hold ? ' · HOLD' : '');
+    LCD.span.textContent = ['', 'SUB / MAIN · ', 'MAIN | SUB · ', 'FILTRES · '][L.disp] + 'BF 0–' + SPANS[L.wfSpan] / 1000 + ' kHz' + (L.hold ? ' · HOLD' : '');
+    for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 ? 'none' : '';
     drawFunc(s);
     for (const b of LCD.bot || []) {
       if (b.t2) b.t2.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
       if (b.lab === 'HOLD') b.r.classList.toggle('on', !!L.hold);
       if (b.lab === 'SPAN') b.t.textContent = 'SPAN ' + SPANS[L.wfSpan] / 1000 + 'k';
       if (b.lab === 'MULTI' && !b.t2) b.r.classList.toggle('on', !!L.func);
+      // DISP « filtres agrandis » : comme sur le TRX, seuls MULTI, HOLD et la case MULTI restent
+      b.t.style.opacity = L.disp === 3 && !b.t2 && b.lab !== 'MULTI' && b.lab !== 'HOLD' ? '0' : '';
     }
     if (LCD.modeMenu) {
       LCD.modeMenu.style.display = L.modeMenu ? '' : 'none';
@@ -1035,6 +1135,143 @@
     2: mkPal([[0, [2, 4, 25]], [0.35, [30, 40, 170]], [0.6, [150, 60, 230]], [0.82, [255, 90, 210]], [1, [255, 240, 255]]]),
     3: mkPal([[0, [0, 0, 40]], [0.25, [0, 60, 200]], [0.5, [0, 200, 160]], [0.75, [255, 220, 0]], [1, [255, 40, 0]]])
   };
+  // Zones du scope selon DISP : MAIN seul ; SUB au-dessus de MAIN ; MAIN | SUB côte à côte
+  function scopeRegions(W, H, specs) {
+    const sub = WF.two ? specs[1] : null;
+    if (L.disp === 1) {
+      const h1 = Math.floor(H / 2) - 1;
+      return [{ sp: sub, x0: 0, y0: 0, w: W, h: h1, name: 'SUB' }, { sp: specs[0], x0: 0, y0: h1 + 2, w: W, h: H - h1 - 2, name: 'MAIN', sep: 'h' }];
+    }
+    if (L.disp === 2) {
+      const w1 = Math.floor(W / 2) - 1;
+      return [{ sp: specs[0], x0: 0, y0: 0, w: w1, h: H, name: 'MAIN' }, { sp: sub, x0: w1 + 2, y0: 0, w: W - w1 - 2, h: H, name: 'SUB', sep: 'v' }];
+    }
+    return [{ sp: specs[0], x0: 0, y0: 0, w: W, h: H, name: '' }];
+  }
+  // Un scope : spectre en haut, cascade en dessous (elle descend d'une ligne à chaque tour), échelle en bas
+  function drawScope(c2, rg, pal, nb, lvl, maxHz) {
+    const { sp, x0, y0, w, h, name } = rg;
+    const lab = 11, sh = Math.round((h - lab) * (h < 90 ? 0.5 : 0.6));
+    if (rg.sep === 'h') { c2.fillStyle = '#2b3546'; c2.fillRect(x0, y0 - 2, w, 2); }
+    if (rg.sep === 'v') { c2.fillStyle = '#2b3546'; c2.fillRect(x0 - 2, y0, 2, h); }
+    if (!sp) {
+      // SUB sans la BF du SUB : l'écoute stéréo (double réception) l'envoie séparément
+      c2.fillStyle = '#000'; c2.fillRect(x0, y0, w, h);
+      c2.fillStyle = '#6f86ff'; c2.font = 'bold 10px "Roboto Mono", monospace'; c2.textAlign = 'left'; c2.fillText(name, x0 + 4, y0 + 11);
+      c2.fillStyle = '#8a97ab'; c2.font = '11px system-ui, sans-serif'; c2.textAlign = 'center';
+      c2.fillText('SUB : bouton « 🎧 Stéréo MAIN | SUB » (double réception)', x0 + w / 2, y0 + h / 2 + 4);
+      return;
+    }
+    // Cascade : le contenu descend d'une ligne, nouvelle ligne en haut
+    if (h - lab - sh - 1 > 0) c2.drawImage(c2.canvas, x0, y0 + sh, w, h - lab - sh - 1, x0, y0 + sh + 1, w, h - lab - sh - 1);
+    c2.fillStyle = '#000';
+    c2.fillRect(x0, y0, w, sh);
+    c2.fillRect(x0, y0 + h - lab, w, lab);
+    // Un point d'écran = le plus fort des points de la FFT qu'il couvre (les pics fins restent visibles)
+    const col = new Float32Array(w);
+    for (let px = 0; px < w; px++) {
+      const i0 = Math.floor(px / w * nb), i1 = Math.max(i0 + 1, Math.floor((px + 1) / w * nb));
+      let m = 0;
+      for (let i = i0; i < i1 && i < nb; i++) if (sp[i] > m) m = sp[i];
+      col[px] = Math.max(0, Math.min(1, m + lvl));
+    }
+    // Grille
+    c2.strokeStyle = 'rgba(120,130,145,.45)';
+    c2.lineWidth = 1;
+    for (let k = 1; k < 8; k++) { const gx = Math.round(x0 + w * k / 8) + 0.5; c2.beginPath(); c2.moveTo(gx, y0); c2.lineTo(gx, y0 + sh); c2.stroke(); }
+    for (let k = 1; k < 5; k++) { const gy = Math.round(y0 + sh * k / 5) + 0.5; c2.beginPath(); c2.moveTo(x0, gy); c2.lineTo(x0 + w, gy); c2.stroke(); }
+    // MARKER (S.MENU) : bande passante du filtre de ce récepteur et repère central, sur l'échelle de la BF
+    const fl = L.marker && LCD.flt && LCD.flt[name === 'SUB' ? 'B' : 'A'];
+    if (fl) {
+      const md = fl.mode;
+      let c = /CW/.test(md) ? 700 : /DATA|RTTY|PSK/.test(md) ? 1500 : /AM|FM/.test(md) ? fl.hz / 2 : 300 + fl.hz / 2;
+      c += fl.sh || 0;
+      const lo = Math.max(0, c - fl.hz / 2), hi = Math.min(maxHz, c + fl.hz / 2);
+      const xa = x0 + lo / maxHz * w, xb = x0 + hi / maxHz * w;
+      if (xb > xa) {
+        c2.fillStyle = 'rgba(70,130,255,.16)'; c2.fillRect(xa, y0, xb - xa, sh);
+        c2.strokeStyle = 'rgba(110,160,255,.7)'; c2.beginPath(); c2.moveTo(xa + 0.5, y0); c2.lineTo(xa + 0.5, y0 + sh); c2.moveTo(xb - 0.5, y0); c2.lineTo(xb - 0.5, y0 + sh); c2.stroke();
+      }
+      const xc = x0 + Math.max(0, Math.min(maxHz, c)) / maxHz * w;
+      c2.strokeStyle = '#ff9a1f'; c2.beginPath(); c2.moveTo(xc + 0.5, y0); c2.lineTo(xc + 0.5, y0 + sh); c2.stroke();
+    }
+    // Spectre : traits blancs bleutés depuis la ligne de base
+    c2.strokeStyle = 'rgba(205,220,255,.9)';
+    c2.beginPath();
+    for (let px = 0; px < w; px++) {
+      const v = col[px];
+      c2.moveTo(x0 + px + 0.5, y0 + sh - 1);
+      c2.lineTo(x0 + px + 0.5, y0 + sh - 1 - v * v * (sh - 5));
+    }
+    c2.stroke();
+    // PEAK (S.MENU) : crêtes gardées, qui redescendent lentement (LV1) … vite (LV3)
+    if (L.peak) {
+      WF.peak = WF.peak || {};
+      const key = name || 'M';
+      let pk = WF.peak[key];
+      if (!pk || pk.length !== w) pk = WF.peak[key] = new Float32Array(w);
+      const dec = [0, 0.003, 0.009, 0.025][L.peak];
+      c2.fillStyle = 'rgba(120,205,255,.95)';
+      for (let px = 0; px < w; px++) {
+        pk[px] = Math.max(col[px], pk[px] - dec);
+        if (pk[px] > 0.02) c2.fillRect(x0 + px, y0 + sh - 1 - pk[px] * pk[px] * (sh - 5) - 1, 1, 1.5);
+      }
+    }
+    const line = c2.createImageData(w, 1);
+    for (let px = 0; px < w; px++) {
+      const cc = pal[Math.round(col[px] * 255)];
+      line.data[px * 4] = cc[0]; line.data[px * 4 + 1] = cc[1]; line.data[px * 4 + 2] = cc[2]; line.data[px * 4 + 3] = 255;
+    }
+    c2.putImageData(line, x0, y0 + sh);
+    c2.strokeStyle = 'rgba(160,170,185,.7)';
+    c2.beginPath(); c2.moveTo(x0, y0 + sh - 0.5); c2.lineTo(x0 + w, y0 + sh - 0.5); c2.stroke();
+    // Échelle : 0 à 4 kHz de BF
+    c2.fillStyle = 'rgba(200,210,225,.85)';
+    c2.font = '9px "Roboto Mono", monospace';
+    c2.textAlign = 'center';
+    for (let k = 1; k < maxHz / 1000; k++) c2.fillText(k + 'k', x0 + w * k * 1000 / maxHz, y0 + h - 2);
+    if (name) { c2.textAlign = 'left'; c2.fillStyle = '#6f86ff'; c2.font = 'bold 10px "Roboto Mono", monospace'; c2.fillText(name, x0 + 4, y0 + 11); }
+  }
+  // DISP « filtres agrandis » : le filtre de chaque récepteur (largeur, décalage) avec le spectre de sa BF
+  function drawFilters(c2, W, H, specs, nb, lvl) {
+    c2.fillStyle = '#000';
+    c2.fillRect(0, 0, W, H);
+    const half = Math.floor(W / 2);
+    for (const [i, side, sp, color] of [[0, 'A', specs[0], '#ff2b1c'], [1, 'B', WF.two ? specs[1] : null, '#d8e6ff']]) {
+      const x0 = i * half + 6, w = half - 12, y0 = 8, h = H - 26;
+      c2.strokeStyle = '#2a3140'; c2.lineWidth = 1; c2.strokeRect(x0 + 0.5, y0 + 0.5, w - 1, h);
+      const f = (LCD.flt && LCD.flt[side]) || { fr: 0.6, off: 0 };
+      const cx = x0 + w / 2 + f.off * w, tw = w * f.fr, top = y0 + 14, bot = y0 + h - 4, sl = Math.min(14, tw * 0.12);
+      // Spectre de la BF : barres
+      if (sp) {
+        c2.strokeStyle = 'rgba(215,225,240,.85)'; c2.lineWidth = 2;
+        c2.beginPath();
+        const n = Math.floor(w / 4);
+        for (let k = 0; k < n; k++) {
+          const i0 = Math.floor(k / n * nb), i1 = Math.max(i0 + 1, Math.floor((k + 1) / n * nb));
+          let m = 0;
+          for (let j = i0; j < i1 && j < nb; j++) if (sp[j] > m) m = sp[j];
+          const v = Math.max(0, Math.min(1, m + lvl));
+          const x = x0 + 4 + k * (w - 8) / n;
+          c2.moveTo(x, bot); c2.lineTo(x, bot - v * v * (bot - top - 6));
+        }
+        c2.stroke();
+      } else if (side === 'B') {
+        c2.fillStyle = '#8a97ab'; c2.font = '11px system-ui, sans-serif'; c2.textAlign = 'center';
+        c2.fillText('SUB : bouton « 🎧 Stéréo MAIN | SUB »', x0 + w / 2, y0 + h / 2);
+      }
+      // Bande passante (trapèze), repère central, base bleue
+      c2.strokeStyle = color; c2.lineWidth = 2.5; c2.lineJoin = 'round';
+      c2.beginPath();
+      c2.moveTo(x0 + 3, bot); c2.lineTo(cx - tw / 2, bot); c2.lineTo(cx - tw / 2 + sl, top); c2.lineTo(cx + tw / 2 - sl, top); c2.lineTo(cx + tw / 2, bot); c2.lineTo(x0 + w - 3, bot);
+      c2.stroke();
+      c2.strokeStyle = '#ff9a1f'; c2.lineWidth = 2;
+      c2.beginPath(); c2.moveTo(cx, top - 6); c2.lineTo(cx, bot); c2.stroke();
+      c2.fillStyle = '#3b6dff'; c2.fillRect(cx - tw / 2 + 3, bot + 2, Math.max(4, tw - 6), 3);
+      c2.fillStyle = '#6f86ff'; c2.font = 'bold 10px "Roboto Mono", monospace'; c2.textAlign = 'left';
+      c2.fillText(side === 'A' ? 'MAIN' : 'SUB', x0 + 4, y0 + 11);
+    }
+  }
   function wfTick() {
     const cv = $('scope');
     const fresh = Date.now() - WF.at < 3000;
@@ -1064,55 +1301,8 @@
         if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; WF.drawn = false; }
         if (!WF.drawn) { c2.fillStyle = '#000'; c2.fillRect(0, 0, W, H); WF.drawn = true; }
         const pal = PALS[L.wfColor] || PALS[1];
-        const lab = 11; // échelle en bas
-        const sh = Math.round((H - lab) * 0.6);
-        const parts = WF.two ? [[specs[0], 0, Math.floor(W / 2) - 1, 'MAIN'], [specs[1], Math.ceil(W / 2) + 1, W - Math.ceil(W / 2) - 1, 'SUB']] : [[specs[0], 0, W, '']];
-        // Cascade : le contenu descend d'une ligne, nouvelle ligne en haut
-        c2.drawImage(cv, 0, sh, W, H - lab - sh - 1, 0, sh + 1, W, H - lab - sh - 1);
-        c2.fillStyle = '#000';
-        c2.fillRect(0, 0, W, sh);
-        c2.fillRect(0, H - lab, W, lab);
-        const line = c2.createImageData(W, 1);
-        for (const [sp, x0, w, name] of parts) {
-          // Un point d'écran = le plus fort des points de la FFT qu'il couvre (les pics fins restent visibles)
-          const col = new Float32Array(w);
-          for (let px = 0; px < w; px++) {
-            const i0 = Math.floor(px / w * nb), i1 = Math.max(i0 + 1, Math.floor((px + 1) / w * nb));
-            let m = 0;
-            for (let i = i0; i < i1 && i < nb; i++) if (sp[i] > m) m = sp[i];
-            col[px] = Math.max(0, Math.min(1, m + lvl));
-          }
-          const val = (px) => col[px];
-          // Grille
-          c2.strokeStyle = 'rgba(120,130,145,.45)';
-          c2.lineWidth = 1;
-          for (let k = 1; k < 8; k++) { const gx = Math.round(x0 + w * k / 8) + 0.5; c2.beginPath(); c2.moveTo(gx, 0); c2.lineTo(gx, sh); c2.stroke(); }
-          for (let k = 1; k < 5; k++) { const gy = Math.round(sh * k / 5) + 0.5; c2.beginPath(); c2.moveTo(x0, gy); c2.lineTo(x0 + w, gy); c2.stroke(); }
-          // Spectre : traits blancs bleutés depuis la ligne de base
-          c2.strokeStyle = 'rgba(205,220,255,.9)';
-          c2.beginPath();
-          for (let px = 0; px < w; px += 1) {
-            const v = val(px);
-            c2.moveTo(x0 + px + 0.5, sh - 1);
-            c2.lineTo(x0 + px + 0.5, sh - 1 - v * v * (sh - 5));
-          }
-          c2.stroke();
-          for (let px = 0; px < w; px++) {
-            const cc = pal[Math.round(val(px) * 255)];
-            const o = (x0 + px) * 4;
-            line.data[o] = cc[0]; line.data[o + 1] = cc[1]; line.data[o + 2] = cc[2]; line.data[o + 3] = 255;
-          }
-          // Échelle : 0 à 4 kHz de BF
-          c2.fillStyle = 'rgba(200,210,225,.85)';
-          c2.font = '9px "Roboto Mono", monospace';
-          c2.textAlign = 'center';
-          for (let k = 1; k < maxHz / 1000; k++) c2.fillText(k + 'k', x0 + w * k * 1000 / maxHz, H - 2);
-          if (name) { c2.textAlign = 'left'; c2.fillStyle = '#6f86ff'; c2.font = 'bold 10px "Roboto Mono", monospace'; c2.fillText(name, x0 + 4, 11); }
-        }
-        if (WF.two) { c2.fillStyle = '#2b3546'; c2.fillRect(Math.floor(W / 2) - 1, 0, 2, H); }
-        c2.putImageData(line, 0, sh);
-        c2.strokeStyle = 'rgba(160,170,185,.7)';
-        c2.beginPath(); c2.moveTo(0, sh - 0.5); c2.lineTo(W, sh - 0.5); c2.stroke();
+        if (L.disp === 3) drawFilters(c2, W, H, specs, nb, lvl, maxHz);
+        else for (const rg of scopeRegions(W, H, specs)) drawScope(c2, rg, pal, nb, lvl, maxHz);
       }
     } else {
       for (const side of ['A', 'B']) if (LCD['f' + side]) LCD['f' + side].bars.setAttribute('d', '');

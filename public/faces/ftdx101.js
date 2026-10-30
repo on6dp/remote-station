@@ -53,8 +53,8 @@
       { id: 'vox', x: 230, y: 472, w: 68, h: 20, tip: 'VOX (ne peut être que coupé à distance)', act: { toggle: 'vox' }, led: (s) => !!s.vox },
       { id: 'mox', x: 311, y: 472, w: 67, h: 20, tip: 'MOX : émission maintenue (clic : émission, clic suivant : réception) ; avec votre micro si « Configuration micro » est actif', act: { local: 'mox' }, led: (s, L) => L.mox || !!s.tx, ledColor: '#ff3b30' },
       { id: 'zin', x: 392, y: 472, w: 69, h: 20, tip: 'ZIN/SPOT', act: info('ZIN / SPOT : pas disponible à distance.') },
-      { id: 'disp', x: 473, y: 472, w: 69, h: 20, tip: 'DISP', act: info('DISP : réglages de l’écran du TRX, pas disponible à distance.') },
-      { id: 'smenu', x: 556, y: 472, w: 69, h: 20, tip: 'S.MENU', act: info('Menus du TRX : pas disponibles depuis la face avant à distance.') },
+      { id: 'disp', x: 473, y: 472, w: 69, h: 20, tip: 'DISP : affichage de l’écran, comme sur le TRX — cascade MAIN → SUB au-dessus de MAIN → MAIN | SUB côte à côte → filtres agrandis → retour', act: { local: 'disp' } },
+      { id: 'smenu', x: 556, y: 472, w: 69, h: 20, tip: 'S.MENU : SCOPE MENU (SPEED, PEAK, MARKER, COLOR, LEVEL), comme sur le TRX ; se ferme seul après 3 s', act: { local: 'smenu' } },
       { id: 'func', x: 636, y: 472, w: 70, h: 20, tip: 'FUNC : menu des fonctions dans l’écran (clic sur une case, puis molette ou MULTI)', act: { local: 'func' }, led: (s, L) => L.func },
       // Colonne MODE
       { id: 'mode', x: 767, y: 219, w: 28, h: 18, tip: 'MODE : mode suivant (récepteur actif) ; appui d’au moins 1 s : tableau de tous les modes', act: { mode: 'cycle', longMenu: true } },
@@ -84,8 +84,10 @@
       { id: 'clar', x: 940, y: 275, w: 70, h: 38, tip: 'CLAR : clarifier de réception (appui long : décalage à zéro) ; MULTI règle le décalage', act: { clar: true }, led: (s) => !!(s.rit || s.xit) },
       { id: 'qmb', x: 932, y: 360, w: 23, h: 50, tip: 'QMB', act: info('QMB (mémoires rapides) : pas disponible à distance.') },
       { id: 'fine', x: 935, y: 450, w: 70, h: 40, tip: 'FINE TUNING : accord fin (pas de 1 Hz)', act: { local: 'fine' }, led: (s, L) => L.fine },
-      { id: 'vcTune', x: 1225, y: 270, w: 70, h: 55, tip: 'VC TUNE', act: info('VC TUNE : pas disponible par la liaison CAT.') },
-      { id: 'vcTune2', x: 1270, y: 340, w: 30, h: 40, tip: 'VC TUNE', act: info('VC TUNE : pas disponible par la liaison CAT.') },
+      // VC TUNE (présélecteur, VT) : marche / arrêt sur le récepteur actif ; en marche, le bouton MULTI l'accorde (voyant orange)
+      { id: 'vcTune', x: 1225, y: 270, w: 70, h: 55, tip: 'VC TUNE : présélecteur du récepteur actif en marche / arrêt ; en marche, le bouton MULTI l’accorde', act: { local: 'vc' } },
+      { id: 'vcTune2', x: 1270, y: 340, w: 30, h: 40, tip: 'VC TUNE : présélecteur du récepteur actif en marche / arrêt ; en marche, le bouton MULTI l’accorde', act: { local: 'vc' },
+        led: (s) => !!(s.vfoSel === 1 ? s.vcB : s.vc), ledColor: '#ff9a1f' },
       { id: 'cs', x: 1272, y: 390, w: 28, h: 40, tip: 'C.S', act: info('C.S (touche personnalisable) : pas disponible à distance.') },
       { id: 'mainSub', x: 1255, y: 450, w: 45, h: 50, tip: 'MAIN/SUB : passe le grand bouton de MAIN à SUB et inversement', act: { toggleSel: true } },
       // Mémoires
@@ -93,8 +95,8 @@
       { id: 'mv', x: 1349, y: 220, w: 32, h: 20, tip: 'M▸V', act: info('Mémoires : pas encore reliées.') },
       { id: 'vmw', x: 1386, y: 220, w: 32, h: 20, tip: 'V▸M', act: info('Mémoires : pas encore reliées.') },
       // Petites touches PROC et KEYER (au-dessus du bouton MIC/SPEED)
-      { id: 'proc', cx: 1451, cy: 149, r: 8, tip: 'PROC : processeur de modulation', act: { toggle: 'proc' }, led: (s) => !!s.proc },
-      { id: 'keyer', cx: 1529, cy: 149, r: 8, tip: 'KEYER : manipulateur électronique (en CW ; aussi : pousser le bouton MIC/SPEED)', act: { toggle: 'keyer' }, led: (s) => !!s.keyer },
+      { id: 'proc', cx: 1451, cy: 149, r: 8, tip: 'PROC : processeur de modulation', act: { toggle: 'proc' }, led: (s) => !!s.proc, ledColor: '#ff7a00', ledStrong: true },
+      { id: 'keyer', cx: 1529, cy: 149, r: 8, tip: 'KEYER : manipulateur électronique (en CW ; aussi : pousser le bouton MIC/SPEED)', act: { toggle: 'keyer' }, led: (s) => !!s.keyer, ledColor: '#ff7a00', ledStrong: true },
       // Prises
       { id: 'key', cx: 56, cy: 337, r: 20, tip: 'KEY', act: info('Manipulateur : la CW se fait par l’onglet CW du dashboard.') },
       { id: 'phones', cx: 56, cy: 410, r: 20, tip: 'PHONES : écouter le TRX (clic : marche / arrêt)', act: { local: 'listen' }, led: (s, L) => L.listening, ledColor: '#3ddc5a', ring: true },

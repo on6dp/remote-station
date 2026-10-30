@@ -471,7 +471,7 @@ Address: **https://remote.op0p.be/ftdx101**. The FTDX101MP front panel, where **
 - **MODE**: next mode; **hold at least 1 s**: the table of all modes, click the one you want. **SSB**, **CW**, **BK-IN**, **SPLIT**, **CLAR RX / TX**, big **CLAR** (hold: offset to zero), **LOCK**, **FAST** / **FINE**.
 - **NB DNR DNF NOTCH CONT APF**: top row SUB, bottom row MAIN. **Knobs**: wheel or drag; dual knobs: centre = inner knob, edge = ring; SHIFT ◎ WIDTH: click without turning = NAR (push).
 - **MULTI**: clarifier offset when CLAR is on, otherwise the function shown in the last box of the screen (« MULTI RF POWER » at first), chosen in **FUNC**. **FUNC** opens the function menu in the screen, used with the mouse: click a box (red frame), then click **−** (left of the box) or **+** (right), wheel over it or turn MULTI (RF POWER, DNR LEVEL, NB LEVEL, R.FIL, MIC EQ, STEP DIAL; SPEED, COLOR, LEVEL for the waterfall). Grey boxes: not available remotely.
-- Under the panel: the big **PTT** button (hold, or the space bar) and the **SSB CONFIGURATION** box (your microphone, equalisers), as in the dashboard. **MOX**: latched transmit (click: TX, next click: RX). **MONI**: hear your own modulation (« M'écouter », headphones; microphone on first). **Band map**: full-height column on the right.
+- On the right of the panel (below it on a narrow screen): the big **PTT** button (hold, or the space bar) and the **SSB CONFIGURATION** box (your microphone, equalisers), as in the dashboard. **MOX**: latched transmit (click: TX, next click: RX). **MONI**: hear your own modulation (« M'écouter », headphones; microphone on first). **Band map**: full-height column on the right.
 - **TUNE**: tuner on / off; hold at least 1 s: tune (after confirmation). **VOX** (can only be switched off), **PROC**.
 - **PHONES** jack: listen. `🎧 Stéréo MAIN | SUB`: switches dual receive on, then MAIN in the left ear and SUB in the right ear (handy in SPLIT with a headset).
 - **Screen**: meters (S MAIN / SUB; TX: PO, SWR) with each receiver's filter, frequencies (click to type), ANT / ATT / IPO / R.FIL / AGC (click: next value), and instead of the TRX scope (not sent over CAT) the **spectrum and waterfall of the received audio**, MAIN | SUB side by side in dual receive. Bottom row: SPAN (2 to 6 kHz), MONO (colours), MULTI (FUNC menu), HOLD (freeze).
@@ -479,7 +479,11 @@ Address: **https://remote.op0p.be/ftdx101**. The FTDX101MP front panel, where **
 - Finer spectrum (2048-point analysis, each column keeps the strongest peak).
 - **Band map**: right-hand column, full height. Its `⧉` button moves it into **its own window** (another screen, any size); `⧉ Ramener` or closing the window brings it back. Reopened on the next page load if Chrome allows pop-ups for the site.
 - **Digital modes**: the `⧉` button at the end of the tabs opens them in their own window (with their band map, same connection); `⧉ Ramener sous la face avant` brings them back.
-- No effect remotely (a message explains): ON/OFF, ZIN/SPOT, DISP, S.MENU, QMB, VC TUNE, C.S, memories.
+- **PROC** / **KEYER**: bright orange LED above the MIC/SPEED knob while the processor (SSB) or keyer (CW) is on; click again: off.
+- **DISP**, as on the transceiver, one click after another: MAIN waterfall → SUB above MAIN → MAIN | SUB side by side → enlarged filters (each receiver's width and shift with its audio spectrum) → back. To see SUB: `🎧 Stéréo MAIN | SUB`.
+- **VC TUNE**: preselector of the active receiver on / off (orange LED); while on, the **MULTI** knob tunes it.
+- **S.MENU**: the **SCOPE MENU** as on the transceiver, over the top of the waterfall: SPEED, PEAK (peak hold OFF / LV1 … LV3), MARKER (filter passband and centre marker), COLOR, LEVEL (click left −, right +, or wheel). Closes by itself 3 s after the last action.
+- No effect remotely (a message explains): ON/OFF, ZIN/SPOT, QMB, C.S, memories.
 
 <a id="numeriques"></a>
 ## 12. Digital modes

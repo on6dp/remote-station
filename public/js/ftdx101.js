@@ -109,10 +109,13 @@
       // Face avant (page /ftdx101) : volume du récepteur SUB (AF GAIN P1 = 1), BREAK-IN (BI), manipulateur électronique (KR)
       { cmd: 'AG1;', re: /^AG1(\d{3})$/, parse: (m) => ({ afB: +m[1] }), sim: 'AG1128' },
       { cmd: 'BI;', re: /^BI([01])$/, parse: (m) => ({ bkin: +m[1] }), sim: 'BI0' },
-      { cmd: 'KR;', re: /^KR([01])$/, parse: (m) => ({ keyer: +m[1] }), sim: 'KR0' }
+      { cmd: 'KR;', re: /^KR([01])$/, parse: (m) => ({ keyer: +m[1] }), sim: 'KR0' },
+      // VC TUNE (présélecteur) : VT P1 P2 P5P5P5 P6 (P1 0 MAIN / 1 SUB, P2 marche, P5 position 000-255, P6 0 = pas installé)
+      { cmd: 'VT0;', re: /^VT0([01])(\d{3})?(\d)?/, parse: (m) => ({ vc: +m[1], vcPos: m[2] != null ? +m[2] : null, vcOk: m[3] == null ? null : +m[3] }), sim: 'VT001281' },
+      { cmd: 'VT1;', re: /^VT1([01])(\d{3})?(\d)?/, parse: (m) => ({ vcB: +m[1], vcPosB: m[2] != null ? +m[2] : null, vcOkB: m[3] == null ? null : +m[3] }), sim: 'VT101281' }
     ],
     extraQueries: ['RF0;', 'RF1;', 'ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
-    extraStateKeys: ['afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
+    extraStateKeys: ['vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
     // CW : mémoire 1 du manipulateur (écrasée), lue par KY6 (« Message Keyer 1 Playback », manuel CAT 1912-D) ;
     // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
@@ -175,6 +178,13 @@
       { id: 'afB', g: 'rx', label: 'AF (VFO B)', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: (v) => 'AG1' + pad(v, 3) + ';' },
       { id: 'bkin', g: 'tx', label: 'BK-IN', type: 'toggle', face: true, write: (v) => 'BI' + v + ';' },
       { id: 'keyer', g: 'tx', label: 'KEYER', type: 'toggle', face: true, write: (v) => 'KR' + v + ';' },
+      // VC TUNE : marche / arrêt (pas de déplacement : +0), puis MULTI déplace l'accord du présélecteur (+ / − 1 pas)
+      { id: 'vc', g: 'rx', label: 'VC TUNE (MAIN)', type: 'toggle', face: true, write: (v) => 'VT0' + v + '+0;' },
+      { id: 'vcB', g: 'rx', label: 'VC TUNE (SUB)', type: 'toggle', face: true, write: (v) => 'VT1' + v + '+0;' },
+      { id: 'vcUp', g: 'rx', label: 'VC TUNE + (MAIN)', type: 'action', face: true, write: () => 'VT01+1;' },
+      { id: 'vcDn', g: 'rx', label: 'VC TUNE − (MAIN)', type: 'action', face: true, write: () => 'VT01-1;' },
+      { id: 'vcUpB', g: 'rx', label: 'VC TUNE + (SUB)', type: 'action', face: true, write: () => 'VT11+1;' },
+      { id: 'vcDnB', g: 'rx', label: 'VC TUNE − (SUB)', type: 'action', face: true, write: () => 'VT11-1;' },
       { id: 'rfB', g: 'rx', label: 'RF gain (VFO B)', type: 'level', min: 0, max: 255, step: 1, pct: true, write: (v) => 'RG1' + pad(v, 3) + ';' }
     ],
     fakeTuning: 'AC002',
