@@ -450,16 +450,16 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
 </ul>
 
 <h3 id="face">11.1 FTDX101 front panel (separate page)</h3>
-<p>Address: <b>https://remote.op0p.be/ftdx101</b>. The photo of the FTDX101MP front panel, where <b>each key and knob does the same as on the TRX</b>. The dashboard stays the main page (digital modes, log, remote phone…): the front panel is another way to operate, alongside it. Same login (no password to retype if you are already logged in in this browser), same <span class="k">Prendre la main</span> button, same safety rules. Only useful when the FTDX101 is the TRX in service; otherwise the page says so.</p>
+<p>Address: <b>https://remote.op0p.be/ftdx101</b>. The FTDX101MP front panel, where <b>each key and knob does the same as on the TRX</b>, with the <b>digital modes</b> below it (FT8, RTTY, WSPR, JT65, JTTY, CW, SSTV, Synchro) as in the dashboard. Same login, same <span class="k">Prendre la main</span> button, same safety rules. Only useful when the FTDX101 is the TRX in service.</p>
 <ul>
-  <li><b>Band keys</b>: change band on the active receiver (MAIN or SUB); white LED under the key = MAIN band, blue above = SUB band. <b>MAIN</b> / <b>SUB</b>, <b>MAIN/SUB</b>: choose the receiver the dial and keys act on.</li>
-  <li><b>RX / TX</b> above the dial: SUB RX = dual receive on/off; TX MAIN / TX SUB = transmit VFO (TX SUB = SPLIT); <b>MAIN⇆SUB</b> swaps frequencies.</li>
-  <li><b>MODE</b> (next mode), <b>SSB</b> (LSB ⇄ USB), <b>CW</b> (CW-U ⇄ CW-L), <b>BK-IN</b>, <b>SPLIT</b>, <b>CLAR RX / TX</b> (RIT / XIT), big <b>CLAR</b> (RIT; long press = offset to zero), <b>LOCK</b>, <b>FAST</b> / <b>FINE TUNING</b> (dial step 1 kHz / 10 Hz instead of 100 Hz).</li>
-  <li><b>NB DNR DNF NOTCH CONT APF</b>: top row = SUB receiver, bottom row = MAIN; orange LED when on.</li>
-  <li><b>Knobs</b>: mouse wheel over the knob, or click-and-drag up / down. Dual knobs: point at the <b>centre</b> for the inner knob, the <b>edge</b> for the ring (AF / RF, SHIFT / WIDTH, NOTCH, MIC gain / PROC level). <b>Dial</b>: wheel or drag in a circle; ↑ ↓ keys too. <b>MULTI</b>: clarifier offset when CLAR is on, otherwise 1 kHz steps.</li>
-  <li><b>TUNE</b> (after confirmation, usual safety rules), <b>VOX</b> (can only be switched off remotely), <b>PROC</b>. <b>PHONES</b> jack: listen to the TRX; the audio spectrum then replaces the scope.</li>
-  <li>The <b>screen</b> shows live data: S-meters (TX: PO, COMP, ALC, SWR), frequencies and modes (click a frequency to type it), ANT / ATT / IPO / R.FIL / AGC (click: next value), DSP settings; bottom soft keys: power −/+, TUNER, NAR, A → B, B → A.</li>
-  <li>No effect remotely (a message explains): ON/OFF, MOX (use the dashboard PTT), ZIN/SPOT, DISP, S.MENU, FUNC, QMB, VC TUNE, C.S, SYNC, MONI, memories, KEYER. The TRX scope is not sent over CAT.</li>
+  <li><b>Band keys</b> act on the active receiver (MAIN or SUB); white LED under = MAIN band, blue above = SUB band. <b>MAIN / SUB</b>, <b>MAIN/SUB</b> choose the receiver. <b>RX</b> SUB = dual receive; <b>TX</b> MAIN / SUB = transmit VFO (SPLIT); <b>MAIN⇆SUB</b> swaps (hold 1 s: copy MAIN → SUB).</li>
+  <li><b>MODE</b>: next mode; <b>hold at least 1 s</b>: the table of all modes, click the one you want. <b>SSB</b>, <b>CW</b>, <b>BK-IN</b>, <b>SPLIT</b>, <b>CLAR RX / TX</b>, big <b>CLAR</b> (hold: offset to zero), <b>LOCK</b>, <b>FAST</b> / <b>FINE</b>.</li>
+  <li><b>NB DNR DNF NOTCH CONT APF</b>: top row SUB, bottom row MAIN. <b>Knobs</b>: wheel or drag; dual knobs: centre = inner knob, edge = ring; SHIFT ◎ WIDTH: click without turning = NAR (push).</li>
+  <li><b>MULTI</b>: clarifier offset when CLAR is on, otherwise the function shown in the last box of the screen (« MULTI RF POWER » at first), chosen in <b>FUNC</b>. <b>FUNC</b> opens the function menu in the screen, used with the mouse: click a box, then wheel over it or turn MULTI (RF POWER, DNR LEVEL, NB LEVEL, R.FIL, MIC EQ, STEP DIAL; SPEED, COLOR, LEVEL for the waterfall). Grey boxes: not available remotely.</li>
+  <li><b>TUNE</b>: tuner on / off; hold at least 1 s: tune (after confirmation). <b>VOX</b> (can only be switched off), <b>PROC</b>.</li>
+  <li><b>PHONES</b> jack: listen. <span class="k">🎧 Stéréo MAIN | SUB</span>: in dual receive, MAIN in the left ear and SUB in the right ear (handy in SPLIT with a headset).</li>
+  <li><b>Screen</b>: meters (S MAIN / SUB; TX: PO, SWR) with each receiver's filter, frequencies (click to type), ANT / ATT / IPO / R.FIL / AGC (click: next value), and instead of the TRX scope (not sent over CAT) the <b>spectrum and waterfall of the received audio</b>, MAIN | SUB side by side in dual receive. Bottom row: SPAN (2 to 6 kHz), MONO (colours), MULTI (FUNC menu), HOLD (freeze).</li>
+  <li>No effect remotely (a message explains): ON/OFF, MOX (use the dashboard PTT), ZIN/SPOT, DISP, S.MENU, QMB, VC TUNE, C.S, SYNC, MONI, memories, KEYER.</li>
 </ul>
 
 <h2 id="numeriques">12. Digital modes</h2>

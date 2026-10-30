@@ -1,15 +1,17 @@
 /*
  * faces/ftdx101.js — face avant du Yaesu FTDX101D / MP pour la page https://remote.op0p.be/ftdx101
  *
- * Image : faces/ftdx101.webp (photo de la face avant, 1560 × 580 px, fournie par ON6DP).
+ * Image : faces/ftdx101.webp (face avant seule, découpée dans la photo 1560 × 580 px fournie par ON6DP).
  * Toutes les positions sont en pixels de cette image (x, y = coin haut gauche ; cx, cy = centre).
  * Pour une autre photo : ouvrir la page avec ?zones=1 (contours visibles, position de la souris affichée) et corriger ici.
  *
  * Touches : act = ce que fait la touche, led = quand son voyant est allumé (s = état du TRX, L = état local de la page).
  *   act : { band: '20M' } · { toggle: 'nb' } · { set: ['vfoSel', 1] } · { action: 'swap' } · { mode: 'ssb' | 'cw' | 'cycle' }
- *         { local: 'fast' | 'fine' | 'listen' } · { clar: true } (RX CLAR ; appui long : décalage à zéro) · { info: 'texte' }
- * Boutons rotatifs : inner = bouton central, outer = bague extérieure ; { ctl, label, per } (per = pas par cran de molette).
- *   dial : grand bouton d'accord (VFO actif) ; multi : bouton MULTI (décalage du clarifier s'il est actif, sinon pas de 1 kHz).
+ *         { local: 'fast' | 'fine' | 'listen' | 'func' } · { clar: true } (RX CLAR ; appui long : décalage à zéro) · { info: 'texte' }
+ * Boutons rotatifs : inner = bouton central, outer = bague extérieure ; { ctl, label, per } (per = pas par cran de molette) ;
+ *   push = réglage basculé par un clic sans tourner (le bouton qu'on pousse), ex. NAR sur SHIFT/WIDTH.
+ * Touches : act.long = action d'un appui d'au moins 1 s (ex. TUNE : accord ; MAIN⇄SUB : A → B).
+ *   dial : grand bouton d'accord (VFO actif) ; multi : bouton MULTI (décalage du clarifier s'il est actif, sinon la fonction choisie dans FUNC).
  */
 (function () {
   'use strict';
@@ -37,22 +39,25 @@
     model: 'ftdx101',
     name: 'Yaesu FTDX101D / MP',
     image: '/faces/ftdx101.webp',
+    // Photo d'origine 1560 × 580 (avec le capot et les pieds) ; seule la face avant est gardée : 1556 × 482 à partir de (4, 66).
+    // Les positions ci-dessous restent celles de la photo d'origine.
     w: 1560,
     h: 580,
+    img: { x: 4, y: 66, w: 1556, h: 482 },
     // Écran du TRX : recouvert par l'affichage de la page (fréquences, modes, mètres, réglages)
     lcd: { x: 142, y: 131, w: 570, h: 321 },
     keys: bandKeys.concat(dspKeys, [
       { id: 'onoff', x: 25, y: 112, w: 67, h: 46, tip: 'ON/OFF : la mise en marche se fait au club', act: info('Le TRX ne s’allume et ne s’éteint qu’au club.') },
       // Rangée sous l'écran
-      { id: 'tune', x: 150, y: 472, w: 67, h: 20, tip: 'TUNE : accord de l’antenne (émission courte, avec la main)', act: { action: 'tune' }, led: (s) => !!s.tuning, ledColor: '#ff3b30' },
+      { id: 'tune', x: 150, y: 472, w: 67, h: 20, tip: 'TUNE : coupleur d’antenne en service / hors service ; appui d’au moins 1 s : accord (émission courte, avec la main)', act: { toggle: 'tuner', long: { action: 'tune' } }, led: (s) => !!(s.tuner || s.tuning), ledColor: '#ff8a1f' },
       { id: 'vox', x: 230, y: 472, w: 68, h: 20, tip: 'VOX (ne peut être que coupé à distance)', act: { toggle: 'vox' }, led: (s) => !!s.vox },
       { id: 'mox', x: 311, y: 472, w: 67, h: 20, tip: 'MOX : émission à la main', act: info('Émission en phonie : utilisez le PTT du dashboard (barre d’espace), avec la phonie à distance.') },
       { id: 'zin', x: 392, y: 472, w: 69, h: 20, tip: 'ZIN/SPOT', act: info('ZIN / SPOT : pas disponible à distance.') },
       { id: 'disp', x: 473, y: 472, w: 69, h: 20, tip: 'DISP', act: info('DISP : réglages de l’écran du TRX, pas disponible à distance.') },
       { id: 'smenu', x: 556, y: 472, w: 69, h: 20, tip: 'S.MENU', act: info('Menus du TRX : pas disponibles depuis la face avant à distance.') },
-      { id: 'func', x: 636, y: 472, w: 70, h: 20, tip: 'FUNC', act: info('FUNC : fonctions de l’écran tactile, pas disponibles à distance.') },
+      { id: 'func', x: 636, y: 472, w: 70, h: 20, tip: 'FUNC : menu des fonctions dans l’écran (clic sur une case, puis molette ou MULTI)', act: { local: 'func' }, led: (s, L) => L.func },
       // Colonne MODE
-      { id: 'mode', x: 767, y: 219, w: 28, h: 18, tip: 'MODE : mode suivant (récepteur actif)', act: { mode: 'cycle' } },
+      { id: 'mode', x: 767, y: 219, w: 28, h: 18, tip: 'MODE : mode suivant (récepteur actif) ; appui d’au moins 1 s : tableau de tous les modes', act: { mode: 'cycle', longMenu: true } },
       { id: 'ssb', x: 767, y: 262, w: 28, h: 18, tip: 'SSB : LSB ⇄ USB', act: { mode: 'ssb' }, led: (s, L) => /SB$/.test(L.activeMode(s)) },
       { id: 'cw', x: 767, y: 304, w: 28, h: 17, tip: 'CW : CW-U ⇄ CW-L', act: { mode: 'cw' }, led: (s, L) => /^CW/.test(L.activeMode(s)) },
       { id: 'bkin', x: 767, y: 372, w: 28, h: 18, tip: 'BK-IN : break-in CW', act: { toggle: 'bkin' }, led: (s) => !!s.bkin },
@@ -69,7 +74,7 @@
         leds: [{ x: 955, y: 190, w: 31, h: 4, color: '#3ddc5a', on: (s) => !!s.connected }] },
       { id: 'txMain', x: 1012, y: 192, w: 45, h: 18, tip: 'TX MAIN : émission sur le MAIN (SPLIT coupé)', act: { set: ['split', 0] },
         leds: [{ x: 1024, y: 190, w: 20, h: 4, color: '#ff3b30', on: (s) => !s.split, bright: (s) => !!s.tx && !s.split }] },
-      { id: 'swap', x: 1068, y: 192, w: 95, h: 18, tip: 'MAIN ⇄ SUB : échange les fréquences des deux VFO', act: { action: 'swap' } },
+      { id: 'swap', x: 1068, y: 192, w: 95, h: 18, tip: 'MAIN ⇄ SUB : échange les fréquences des deux VFO ; appui d’au moins 1 s : copie MAIN → SUB (A → B)', act: { action: 'swap', long: { action: 'aToB' } } },
       { id: 'txSub', x: 1172, y: 192, w: 50, h: 18, tip: 'TX SUB : émission sur le SUB (SPLIT)', act: { set: ['split', 1] },
         leds: [{ x: 1190, y: 190, w: 18, h: 4, color: '#ff3b30', on: (s) => !!s.split, bright: (s) => !!s.tx && !!s.split }] },
       { id: 'rxSub', x: 1230, y: 192, w: 65, h: 18, tip: 'RX SUB : double réception (DUAL RX) en marche / arrêt', act: { toggle: 'dualRx' },
@@ -97,11 +102,11 @@
     ]),
     knobs: [
       { id: 'dial', cx: 1118, cy: 380, ro: 140, dial: true, tip: 'Grand bouton : fréquence du récepteur actif (molette ou glisser en tournant)' },
-      { id: 'multi', cx: 762, cy: 510, ro: 30, multi: true, tip: 'MULTI : décalage du clarifier (CLAR actif), sinon fréquence par pas de 1 kHz' },
+      { id: 'multi', cx: 762, cy: 510, ro: 30, multi: true, tip: 'MULTI : décalage du clarifier (CLAR actif), sinon la fonction de la case MULTI de l’écran (choisie dans FUNC, ex. RF POWER)' },
       { id: 'afSub', cx: 871, cy: 350, ri: 20, ro: 44, inner: { ctl: 'afB', label: 'AF SUB', per: 5 }, outer: { ctl: 'rfB', label: 'RF SUB', per: 5 } },
       { id: 'afMain', cx: 871, cy: 500, ri: 20, ro: 44, inner: { ctl: 'af', label: 'AF MAIN', per: 5 }, outer: { ctl: 'rf', label: 'RF MAIN', per: 5 } },
-      { id: 'swSub', cx: 1365, cy: 350, ri: 18, ro: 44, inner: { ctl: 'shiftB', label: 'SHIFT SUB', per: 20 }, outer: { ctl: 'widthB', label: 'WIDTH SUB', per: 1 } },
-      { id: 'swMain', cx: 1365, cy: 500, ri: 18, ro: 44, inner: { ctl: 'shift', label: 'SHIFT MAIN', per: 20 }, outer: { ctl: 'width', label: 'WIDTH MAIN', per: 1 } },
+      { id: 'swSub', cx: 1365, cy: 350, ri: 18, ro: 44, inner: { ctl: 'shiftB', label: 'SHIFT SUB', per: 20 }, outer: { ctl: 'widthB', label: 'WIDTH SUB', per: 1 }, push: 'narrowB', pushLabel: 'NAR SUB' },
+      { id: 'swMain', cx: 1365, cy: 500, ri: 18, ro: 44, inner: { ctl: 'shift', label: 'SHIFT MAIN', per: 20 }, outer: { ctl: 'width', label: 'WIDTH MAIN', per: 1 }, push: 'narrow', pushLabel: 'NAR MAIN' },
       { id: 'notchSub', cx: 1492, cy: 350, ri: 18, ro: 44, inner: { ctl: 'notchFreqB', label: 'NOTCH SUB', per: 50 }, outer: { info: 'CONT / APF : niveau pas encore relié' } },
       { id: 'notchMain', cx: 1492, cy: 500, ri: 18, ro: 44, inner: { ctl: 'notchFreq', label: 'NOTCH MAIN', per: 50 }, outer: { info: 'CONT / APF : niveau pas encore relié' } },
       { id: 'micProc', cx: 1492, cy: 195, ri: 18, ro: 44, inner: { ctl: 'mic', label: 'MIC GAIN', per: 2 }, outer: { ctl: 'procLvl', label: 'PROC', per: 2 } }

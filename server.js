@@ -300,9 +300,9 @@ function isEditor(call) {
   const eds = (Array.isArray(cfg.stationEditors) ? cfg.stationEditors : DEFAULTS.stationEditors).map((c) => String(c).toUpperCase());
   return eds.indexOf(String(call || '').toUpperCase()) >= 0;
 }
-function listeners() {
+function listeners(heard) {
   let n = 0;
-  for (const c of ops) if (c.listen) n++;
+  for (const c of ops) if (c.listen && !(heard && c.listenMute)) n++; // heard : sans les cascades seules (page Face avant, son coupé)
   return n;
 }
 function audioWanted() { return listeners() > 0 || digiModes().size > 0; }
@@ -319,10 +319,26 @@ function updateAudioWant() {
 // TRX à deux récepteurs en stéréo (FTDX101) : trame gauche (0x02, MAIN) puis trame droite (0x04, SUB).
 // La voie droite sert au décodeur RTTY B et, en double réception, l'écoute reçoit le mélange des deux (comme au casque).
 const stereo = { l: null, at: 0 };
-function sendListen(pcm) {
+function sendListen(pcm, l, r) {
   if (!listeners()) return;
-  const out = Buffer.from(ULAW.encodeFrame(pcm, 12000)); // µ-law 12 kHz pour l'écoute (96 kbit/s)
-  for (const c of ops) if (c.listen && c.backlog < 32768) c.send(out);
+  let out = null, st2 = null;
+  for (const c of ops) {
+    if (!c.listen || c.backlog >= 32768) continue;
+    // Écoute en stéréo (page Face avant, double réception) : MAIN à gauche, SUB à droite, dans une seule trame 0x07
+    if (c.listenStereo && l && r) {
+      if (!st2) {
+        const a = ULAW.encodeFrame(l, 12000), b = ULAW.encodeFrame(r, 12000);
+        st2 = Buffer.alloc(a.length + b.length - 1);
+        st2[0] = 0x07;
+        st2.set(a.subarray(1), 1);
+        st2.set(b.subarray(1), a.length);
+      }
+      c.send(st2);
+      continue;
+    }
+    if (!out) out = Buffer.from(ULAW.encodeFrame(pcm, 12000)); // µ-law 12 kHz pour l'écoute (96 kbit/s)
+    c.send(out);
+  }
 }
 function relayAudio(buf) {
   if (!buf || buf.length < 2 || buf.length > 4000) return;
@@ -345,7 +361,11 @@ function relayAudio(buf) {
     const l = stereo.l;
     stereo.l = null;
     if (!l) return;
-    if (radio.dualRx === 1 && l.length === forListen.length) for (let i = 0; i < l.length; i++) l[i] = (l[i] + forListen[i]) * 0.5;
+    if (radio.dualRx === 1 && l.length === forListen.length) {
+      const left = Float32Array.from(l);
+      for (let i = 0; i < l.length; i++) l[i] = (l[i] + forListen[i]) * 0.5;
+      return sendListen(l, left, forListen);
+    }
     return sendListen(l);
   }
   if (buf[0] !== 0x01) return;
@@ -1554,7 +1574,7 @@ function publicState() {
     txFreq: txFreq(),
     swrLock: swrLocked() ? { freq: swrLock.freq, swr: swrLock.swr != null ? Math.round(swrLock.swr * 10) / 10 : null, tune: !!swrLock.tune, band: swrLock.band || null, text: swrLockText() } : null,
     maxSwr: cfg.maxSwr,
-    audio: { active: !!(station && audio.active), listeners: listeners(), silent: !!(station && audio.silent) },
+    audio: { active: !!(station && audio.active), listeners: listeners(true), silent: !!(station && audio.silent) },
     digi: { modes: Array.from(digiModes()), latency: digi.latency, engine: digi.engine || '', ms: digi.ms || 0, timing: digi.timing || null },
     rigName: station ? rig().NAME : null,
     rigModel: station ? rig().ID : null,
@@ -2806,11 +2826,16 @@ function onOperator(conn, m) {
       for (const c of ops) if (c.user.call === conn.user.call) send(c, { t: 'macros', data: macros[conn.user.call] || {} });
       return;
 
-    case 'listen':
+    case 'listen': {
+      const was = conn.listen && !conn.listenMute;
       conn.listen = !!m.on;
-      journal(m.on ? 'listen_on' : 'listen_off', { call: conn.user.call });
+      conn.listenStereo = !!m.stereo;  // MAIN à gauche, SUB à droite (TRX à deux récepteurs, double réception)
+      conn.listenMute = !!m.mute;      // cascade seulement (son coupé dans le navigateur)
+      const now2 = conn.listen && !conn.listenMute;
+      if (now2 !== was) journal(now2 ? 'listen_on' : 'listen_off', { call: conn.user.call });
       updateAudioWant();
       return broadcast();
+    }
 
     case 'chat': {
       const text = String(m.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 300);

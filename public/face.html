@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/css/rp.css">
 <link rel="stylesheet" href="/css/face.css">
 </head>
-<body class="face-page">
+<body class="face-page" data-digi-popup="1" data-digi-embed="1">
 
 <header class="topbar">
   <div class="tb-left">
@@ -23,6 +23,7 @@
     <span class="tb-call" id="meCall">—</span>
     <button class="btn" id="ctrlBtn" type="button">Prendre la main</button>
     <button class="btn accent fc-listen" id="listenBtn" type="button" aria-pressed="false" title="Entendre la BF du TRX (aussi : clic sur la prise PHONES)">🔊 Écouter le TRX</button>
+    <button class="btn fc-stereo" id="stereoBtn" type="button" aria-pressed="false" title="Casque : récepteur MAIN dans l’oreille gauche, SUB dans l’oreille droite (double réception, pratique en SPLIT). Coupé : les deux mélangés dans les deux oreilles">🎧 Stéréo MAIN | SUB</button>
     <label class="fc-vol" title="Volume de l’écoute (dans ce navigateur)">🔈 <input id="listenVol" type="range" min="0" max="200" value="100"> <span id="listenVolOut">100 %</span></label>
     <a class="btn help-btn" href="/" title="Revenir au dashboard (onglets, modes numériques, carnet…)">Dashboard</a>
     <a class="btn help-btn" href="/aide#face" target="_blank" rel="noopener">HELP</a>
@@ -39,6 +40,9 @@
     </div>
     <div class="fc-cover" id="cover" hidden></div>
   </div>
+  <section class="panel activity fc-digi" id="centerPanel" aria-label="Modes numériques">
+    <div class="ctabs" role="tablist" aria-label="Modes numériques" id="ctabs"></div>
+  </section>
   <p class="fc-help" id="help">Clic sur une touche : sa fonction, comme sur le TRX. Boutons rotatifs : molette de la souris, ou cliquer-glisser vers le haut / le bas
     (boutons doubles : bouton central au centre, bague extérieure sur le bord). Grand bouton : molette, ou glisser en tournant. Prise PHONES : écouter le TRX.
     <span id="zoneInfo"></span></p>
@@ -61,6 +65,8 @@
 <script src="/js/ftdx101.js"></script>
 <script src="/js/ic7300.js"></script>
 <script src="/js/ulaw.js"></script>
+<script src="/js/sstv.js"></script>
+<script src="/js/digi.js"></script>
 <script src="/faces/ftdx101.js"></script>
 <script src="/js/face.js"></script>
 </body>

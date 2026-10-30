@@ -2,10 +2,10 @@
 body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0; }
 .face-page .topbar { position: sticky; top: 0; z-index: 5; }
 .fc-main { padding: 10px 16px 24px; }
-.fc-msg { min-height: 22px; margin: 0 auto 6px; max-width: 1560px; text-align: center; font-size: 13px; color: var(--v2-text-secondary, #c7d0dc); }
+.fc-msg { min-height: 22px; margin: 0 auto 6px; max-width: 1900px; text-align: center; font-size: 13px; color: var(--v2-text-secondary, #c7d0dc); }
 .fc-msg.warn { color: #ffcf4a; }
 .fc-msg.error { color: #ff6b6b; font-weight: 700; }
-.fc-wrap { position: relative; max-width: 1560px; margin: 0 auto; }
+.fc-wrap { position: relative; max-width: 1900px; margin: 0 auto; }
 .fc-panel { position: relative; }
 #face { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; touch-action: none; }
 .fc-scope { position: absolute; border-radius: 3px; pointer-events: none; visibility: hidden; }
@@ -14,7 +14,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-cover[hidden] { display: none; }
 .fc-cover { position: absolute; inset: 0; z-index: 4; display: grid; place-content: center; text-align: center; gap: 8px; background: rgba(5, 8, 13, .82);
   color: #e8edf3; font-size: 16px; border-radius: 10px; }
-.fc-help { max-width: 1560px; margin: 10px auto 0; font-size: 12px; color: var(--v2-text-dim, #8b97a8); text-align: center; }
+.fc-help { max-width: 1900px; margin: 10px auto 0; font-size: 12px; color: var(--v2-text-dim, #8b97a8); text-align: center; }
 .fc-vol { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--v2-text-dim, #8b97a8); }
 .fc-vol input { width: 80px; }
 .fc-listen[aria-pressed='true'] { background: #1f5f1f; color: #fff; }
@@ -80,3 +80,58 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .lcd-hit { fill: transparent; stroke: none; }
 #face .lcd-hit:hover { fill: rgba(140, 200, 255, .10); }
 @media (max-width: 900px) { .fc-vol { display: none; } }
+/* Modes numériques sous l'image du TRX (même module que le dashboard) */
+.fc-digi { max-width: none; margin: 14px auto 0; min-height: 560px; }
+.face-page .fc-digi .dg { min-height: 500px; }
+.face-page #dgDetach { display: none; }
+.fc-stereo[aria-pressed='true'] { background: #1f4f7f; color: #fff; border-color: #5fb3ff; font-weight: 700; }
+.fc-stereo[hidden] { display: none; }
+
+/* Écran dans le style du FTDX101 : galvanomètres, filtres, 7 segments */
+#face .mtr-arc { fill: none; stroke: #e9edf2; stroke-width: 1.6; }
+#face .mtr-arc.blue { stroke: #3b6dff; stroke-width: 2.4; }
+#face .mtr-arc.thick { stroke-width: 3.2; stroke: #cfd6df; }
+#face .mtr-tick { stroke: #e9edf2; stroke-width: 1; }
+#face .mtr-tick.blue { stroke: #4f7dff; }
+#face .mtr-num { fill: #e9edf2; font-size: 7px; font-weight: 700; font-style: italic; }
+#face .mtr-num.big { font-size: 8.5px; }
+#face .mtr-num.blue { fill: #4f7dff; }
+#face .mtr-name { fill: #e9edf2; font-size: 7px; font-weight: 700; font-style: italic; }
+#face .mtr-name.big { font-size: 11px; }
+#face .mtr-needle { stroke: #ff2b1c; stroke-width: 1.8; stroke-linecap: round; }
+#face .mtr-val { fill: #ffcf4a; font-size: 8.5px; font-weight: 700; }
+#face .mtr-val.tx { fill: #ff5a3c; }
+#face .flt-box { fill: #000; stroke: #2a3140; stroke-width: .8; }
+#face .flt-bars { stroke: #c9d3e3; stroke-width: 1.3; opacity: .85; }
+#face .flt-trap { fill: none; stroke: #ff2b1c; stroke-width: 1.8; stroke-linejoin: round; }
+#face .flt-ctr { stroke: #ff9a1f; stroke-width: 1.4; }
+#face .flt-base { fill: #3b6dff; }
+#face .lcd-seg { fill: #f2f4f8; filter: drop-shadow(0 0 1.2px rgba(255,255,255,.55)); }
+#face .lcd-seg.dim { fill: #5f6876; filter: none; }
+#face .lcd-cell { fill: #232a35; }
+#face .lcd-sel.on { fill: #c9d3e3; }
+/* Menu FUNC */
+#face .func-bg { fill: #04060a; }
+#face .func-cell { fill: #2a313c; stroke: #3c4554; stroke-width: .6; }
+#face .func-cell.off { fill: #1b2028; }
+#face .func-cell.sel { stroke: #ff2b1c; stroke-width: 2; }
+#face .func-lab { fill: #e9edf2; font-size: 8.5px; font-weight: 700; pointer-events: none; }
+#face .func-val { fill: #ff4a3c; font-size: 10.5px; font-weight: 700; pointer-events: none; }
+/* Tableau MODE (appui long sur MODE) */
+#face .mm-bg { fill: #3a414c; stroke: #8a929e; stroke-width: 1.2; }
+#face .mm-title { fill: #15191f; }
+#face .mm-ttl { fill: #fff; font-size: 12px; font-weight: 800; }
+#face .mm-cell { fill: #cfd4da; stroke: #f4f6f8; stroke-width: 1; }
+#face .mm-cell.on { fill: #1f6fe0; stroke: #9cc4ff; }
+#face .mm-cell.preset { fill: #6b727c; }
+#face .mm-lab { fill: #1b1f25; font-size: 12px; font-weight: 800; pointer-events: none; }
+#face .mm-lab.preset { fill: #f2f4f6; }
+#face .mm-lab.on { fill: #fff; }
+#face .mode-menu .lcd-hit:hover { fill: rgba(80, 140, 255, .18); }
+/* Rangée du bas de l'écran (CENTER … MULTI) */
+#face .lcd-bot { fill: #2a313c; stroke: #3c4554; stroke-width: .5; }
+#face .lcd-bot.on { fill: #1f5f1f; }
+#face .lcd-bot.multi { fill: #10141a; stroke: #c9d3e3; stroke-width: 1.2; }
+#face .lcd-bott { fill: #e9edf2; font-size: 10px; font-weight: 700; pointer-events: none; }
+#face .lcd-bott2 { fill: #ff3b30; font-size: 8.5px; font-weight: 800; pointer-events: none; }
+#face .lcd-hit.off:hover { fill: rgba(160, 170, 185, .06); }

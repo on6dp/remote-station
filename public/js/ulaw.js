@@ -69,6 +69,13 @@
     if (h === 0x01 || h === 0x03 || h === 0x05) {
       out = new Float32Array(bytes.length - 1);
       for (let i = 1; i < bytes.length; i++) out[i - 1] = DECODE[bytes[i]];
+    } else if (h === 0x07) {
+      // Stéréo µ-law 12 kHz : moitié gauche (récepteur MAIN) puis moitié droite (SUB), dans .r
+      const n = (bytes.length - 1) >> 1;
+      out = new Float32Array(n);
+      const r = new Float32Array(n);
+      for (let i = 0; i < n; i++) { out[i] = DECODE[bytes[1 + i]]; r[i] = DECODE[bytes[1 + n + i]]; }
+      out.r = r;
     } else if (h === 0x02 || h === 0x04) {
       const n = (bytes.length - 1) >> 1;
       out = new Float32Array(n);

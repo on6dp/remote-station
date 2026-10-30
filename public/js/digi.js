@@ -4199,7 +4199,8 @@
   }
 
   // ------------------------------------------------------------------ fenêtre séparée (digi.html)
-  if (POPUP) {
+  // Page Face avant (/ftdx101…) : les modes numériques y sont sous l'image du TRX, branchés par face.js (data-digi-embed)
+  if (POPUP && document.body.dataset.digiEmbed !== '1') {
     let host = null;
     const toast = (msg, level) => {
       const el = $('dgToast');

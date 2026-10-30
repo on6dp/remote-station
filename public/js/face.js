@@ -16,6 +16,8 @@
   const FACE = (window.RS_FACES || {})[MODEL];
   const R = (window.RIGS || {})[MODEL];
   const ZONES = /[?&]zones=1/.test(location.search);
+  // Partie de la photo affichée (face avant seule) : les positions restent celles de la photo d'origine
+  const V = FACE ? (FACE.img || { x: 0, y: 0, w: FACE.w, h: FACE.h }) : { x: 0, y: 0, w: 1, h: 1 };
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* stockage bloqué */ } }
@@ -105,6 +107,7 @@
     const s = S();
     if (a.info) return say(a.info, '', 6000);
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
+    if (a.local === 'func') { L.func = !L.func; return render(); }
     if (a.local === 'fast' || a.local === 'fine') {
       L[a.local] = !L[a.local];
       if (a.local === 'fine' && L.fine) L.fast = false;
@@ -152,7 +155,7 @@
   const ledEls = [];   // { el, on(s,L), bright? }
   const keyEls = {};
   function build() {
-    svg.setAttribute('viewBox', '0 0 ' + FACE.w + ' ' + FACE.h);
+    svg.setAttribute('viewBox', V.x + ' ' + V.y + ' ' + V.w + ' ' + V.h);
     svg.textContent = '';
     if (ZONES) svg.classList.add('zones');
     const defs = el('defs', {}, svg);
@@ -164,7 +167,7 @@
     const lg = el('linearGradient', { id: 'lcdbg', x1: '0', y1: '0', x2: '0', y2: '1' }, defs);
     el('stop', { offset: '0', 'stop-color': '#0c1220' }, lg);
     el('stop', { offset: '1', 'stop-color': '#04060b' }, lg);
-    el('image', { href: FACE.image, x: 0, y: 0, width: FACE.w, height: FACE.h }, svg);
+    el('image', { href: FACE.image, x: V.x, y: V.y, width: V.w, height: V.h }, svg);
     buildLcd();
     // Boutons rotatifs (sous les touches : une touche posée sur le bord du grand bouton reste cliquable)
     for (const k of FACE.knobs || []) {
@@ -205,12 +208,12 @@
     }
     // Spectre de l'écoute : à la place du scope du TRX
     const sc = FACE.lcd;
-    const box = { x: sc.x + 8, y: sc.y + 165, w: sc.w - 16, h: 129 };
+    const box = { x: sc.x + 5, y: sc.y + 170, w: sc.w - 10, h: 124 };
     const cv = $('scope');
-    cv.style.left = (box.x / FACE.w * 100) + '%';
-    cv.style.top = (box.y / FACE.h * 100) + '%';
-    cv.style.width = (box.w / FACE.w * 100) + '%';
-    cv.style.height = (box.h / FACE.h * 100) + '%';
+    cv.style.left = ((box.x - V.x) / V.w * 100) + '%';
+    cv.style.top = ((box.y - V.y) / V.h * 100) + '%';
+    cv.style.width = (box.w / V.w * 100) + '%';
+    cv.style.height = (box.h / V.h * 100) + '%';
     LCD.scopeBox = box;
   }
   function toImg(e) {
@@ -220,88 +223,295 @@
     return m ? pt.matrixTransform(m.inverse()) : { x: 0, y: 0 };
   }
 
-  // Écran du TRX (positions relatives à FACE.lcd)
+  // Écran du TRX (positions relatives à FACE.lcd), dans le style de l'écran du FTDX101 :
+  // deux galvanomètres (MAIN à gauche, SUB à droite) avec leur filtre, fréquences en 7 segments, ANT / ATT / IPO / R.FIL / AGC,
+  // puis le spectre et la cascade (de la BF reçue : le scope du TRX ne passe pas par la liaison CAT)
+  const SEG = { 0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd', 4: 'fgbc', 5: 'afgcd', 6: 'afgedc', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg', '-': 'g' };
+  /** Chaîne « 14.074.000 » → chemin SVG en 7 segments penchés, aligné à droite sur xr ; h = hauteur des chiffres */
+  function seg7(text, xr, y, h) {
+    const w = h * 0.52, t = h * 0.13, sk = h * 0.12, gap = h * 0.24, dot = h * 0.3, g = t * 0.18;
+    let x = xr, d = '';
+    const P = (pts) => 'M' + pts.map((p) => (p[0] + sk * (1 - (p[1] - y) / h)).toFixed(1) + ' ' + p[1].toFixed(1)).join('L') + 'Z';
+    const H = (x0, x1, yy) => P([[x0 + g, yy], [x0 + t / 2 + g, yy - t / 2], [x1 - t / 2 - g, yy - t / 2], [x1 - g, yy], [x1 - t / 2 - g, yy + t / 2], [x0 + t / 2 + g, yy + t / 2]]);
+    const Vt = (xx, y0, y1) => P([[xx, y0 + g], [xx + t / 2, y0 + t / 2 + g], [xx + t / 2, y1 - t / 2 - g], [xx, y1 - g], [xx - t / 2, y1 - t / 2 - g], [xx - t / 2, y0 + t / 2 + g]]);
+    for (const ch of String(text).split('').reverse()) {
+      if (ch === '.') {
+        x -= dot;
+        d += P([[x + dot * 0.2, y + h - t], [x + dot * 0.2 + t, y + h - t], [x + dot * 0.2 + t, y + h], [x + dot * 0.2, y + h]]);
+        continue;
+      }
+      x -= w + gap;
+      const L0 = x + t / 2, R0 = x + w - t / 2, T = y + t / 2, M = y + h / 2, B = y + h - t / 2;
+      const segs = { a: H(L0, R0, T), g: H(L0, R0, M), d: H(L0, R0, B), f: Vt(L0, T, M), b: Vt(R0, T, M), e: Vt(L0, M, B), c: Vt(R0, M, B) };
+      for (const k of SEG[ch] || '') d += segs[k];
+    }
+    return d || 'M0 0';
+  }
+  // Galvanomètre : arcs concentriques autour d'un pivot sous le cadran, aiguille rouge
+  const ARC_SPAN = 19 * Math.PI / 180;
+  function arcPt(cx, cy, r, f) { const a = -ARC_SPAN + 2 * ARC_SPAN * f; return [cx + r * Math.sin(a), cy - r * Math.cos(a)]; }
+  function arcPath(cx, cy, r, f0, f1) {
+    const p0 = arcPt(cx, cy, r, f0), p1 = arcPt(cx, cy, r, f1);
+    return 'M' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + 'A' + r + ' ' + r + ' 0 0 1 ' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1);
+  }
+  const S_POS = (raw) => (raw == null ? 0 : raw <= 130 ? raw / 130 * 0.55 : Math.min(1, 0.55 + (raw - 130) / 125 * 0.45));
+  function buildMeter(g, x0, y0, w, side) {
+    const cx = x0 + w / 2 + 4, cy = y0 + 268, m = { cx, cy };
+    el('rect', { x: x0, y: y0, width: w, height: 10, class: 'lcd-tbar' }, g);
+    m.title = el('text', { x: cx, y: y0 + 8, class: 'lcd-ttl', 'text-anchor': 'middle' }, g, side === 'A' ? 'PO METER' : 'ALC METER');
+    const scales = side === 'A'
+      ? [['S', 244, [[0.05, '1'], [0.17, '3'], [0.29, '5'], [0.41, '7'], [0.55, '9'], [0.7, '+20', 1], [0.84, '+40', 1], [0.97, '+60', 1]], true],
+        ['PO', 231, [[0.03, '0'], [0.2, '10'], [0.38, '50'], [0.52, '100'], [0.64, '150'], [0.76, '200'], [0.88, '250']]],
+        ['COMP', 218, [[0.05, '0'], [0.25, '5'], [0.45, '10'], [0.65, '15'], [0.85, '20']]],
+        ['TEMP', 205, [[0.05, '0'], [0.2, '20'], [0.36, '40'], [0.52, '60'], [0.68, '80'], [0.86, '100']]]]
+      : [['S', 244, [[0.05, '1'], [0.17, '3'], [0.29, '5'], [0.41, '7'], [0.55, '9'], [0.7, '+20', 1], [0.84, '+40', 1], [0.97, '+60', 1]], true],
+        ['ALC', 231, [[0.82, '50']]],
+        ['ID', 218, [[0.05, '0'], [0.3, '5'], [0.55, '10'], [0.8, '15']]],
+        ['SWR', 205, [[0.05, '1.0'], [0.24, '1.5'], [0.36, '2'], [0.5, '3'], [0.66, '5'], [0.95, '∞']]]];
+    for (const [name, r, ticks, isS] of scales) {
+      if (isS) {
+        el('path', { d: arcPath(cx, cy, r, 0, 0.55), class: 'mtr-arc' }, g);
+        el('path', { d: arcPath(cx, cy, r, 0.55, 1), class: 'mtr-arc blue' }, g);
+      } else el('path', { d: arcPath(cx, cy, r, 0, name === 'ALC' ? 0.5 : 0.92), class: 'mtr-arc' + (name === 'ALC' ? ' thick' : '') }, g);
+      for (const [f, lab, blue] of ticks) {
+        const p = arcPt(cx, cy, r, f), q = arcPt(cx, cy, isS ? r + 4 : r - 3, f);
+        el('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1], class: 'mtr-tick' + (blue ? ' blue' : '') }, g);
+        const tp = arcPt(cx, cy, isS ? r + 8 : r - 5, f);
+        el('text', { x: tp[0], y: tp[1], class: 'mtr-num' + (blue ? ' blue' : '') + (isS ? ' big' : ''), 'text-anchor': 'middle' }, g, lab);
+      }
+      const lp = arcPt(cx, cy, r - (isS ? 0 : 3), -0.04);
+      el('text', { x: lp[0] - 2, y: lp[1] + 3, class: 'mtr-name' + (isS ? ' big' : ''), 'text-anchor': 'end' }, g, name);
+    }
+    m.needle = el('line', { x1: cx, y1: cy, x2: cx, y2: cy - 250, class: 'mtr-needle' }, g);
+    m.val = el('text', { x: x0 + w - 4, y: y0 + 82, class: 'mtr-val', 'text-anchor': 'end' }, g, '');
+    // Le cadran est découpé à la taille du cadre
+    const cid = 'clipm' + side;
+    const cp = el('clipPath', { id: cid }, g);
+    el('rect', { x: x0, y: y0 + 10, width: w, height: 76 }, cp);
+    m.needle.setAttribute('clip-path', 'url(#' + cid + ')');
+    return m;
+  }
+  function buildFilter(g, x0, y0, w, h) {
+    const f = { x0, y0, w, h };
+    el('rect', { x: x0, y: y0, width: w, height: h, class: 'flt-box' }, g);
+    f.bars = el('path', { d: '', class: 'flt-bars' }, g);
+    f.trap = el('path', { d: '', class: 'flt-trap' }, g);
+    f.center = el('line', { x1: x0 + w / 2, y1: y0 + 6, x2: x0 + w / 2, y2: y0 + h - 4, class: 'flt-ctr' }, g);
+    f.base = el('rect', { x: x0 + 6, y: y0 + h - 4, width: w - 12, height: 2.5, class: 'flt-base' }, g);
+    return f;
+  }
   function buildLcd() {
     const c = FACE.lcd;
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const g = el('g', { class: 'lcd' }, svg);
+    LCD.c0y = c.y;
     el('rect', { x: c.x, y: c.y, width: c.w, height: c.h, rx: 6, fill: 'url(#lcdbg)' }, g);
-    const half = (c.w - 16) / 2;
-    // Mètres
+    // Galvanomètres et filtres : MAIN | filtre MAIN | SUB | filtre SUB
+    LCD.mA = buildMeter(g, X(5), Y(4), 190, 'A');
+    LCD.fA = buildFilter(g, X(199), Y(14), 82, 72);
+    LCD.mB = buildMeter(g, X(289), Y(4), 190, 'B');
+    LCD.fB = buildFilter(g, X(483), Y(14), 82, 72);
+    // Fréquences
+    const half = (c.w - 10) / 2;
     for (const [i, side] of [[0, 'A'], [1, 'B']]) {
-      const x0 = X(8 + i * (half + 0));
-      const m = LCD['m' + side] = {};
-      el('rect', { x: x0, y: Y(6), width: half - 6, height: 11, rx: 2, class: 'lcd-tbar' }, g);
-      m.title = el('text', { x: x0 + (half - 6) / 2, y: Y(15), class: 'lcd-ttl', 'text-anchor': 'middle' }, g, side === 'A' ? 'MAIN · S-MÈTRE' : 'SUB · S-MÈTRE');
-      el('rect', { x: x0 + 4, y: Y(26), width: half - 50, height: 11, rx: 2, class: 'lcd-track' }, g);
-      m.fill = el('rect', { x: x0 + 4, y: Y(26), width: 0, height: 11, rx: 2, class: 'lcd-fill' }, g);
-      m.scale = el('text', { x: x0 + 4, y: Y(48), class: 'lcd-scale' }, g, '');
-      el('rect', { x: x0 + 4, y: Y(54), width: half - 50, height: 7, rx: 2, class: 'lcd-track' }, g);
-      m.fill2 = el('rect', { x: x0 + 4, y: Y(54), width: 0, height: 7, rx: 2, class: 'lcd-fill2' }, g);
-      m.lab2 = el('text', { x: x0 + 4, y: Y(73), class: 'lcd-scale' }, g, '');
-      m.val = el('text', { x: x0 + half - 10, y: Y(38), class: 'lcd-mval', 'text-anchor': 'end' }, g, '');
-      m.val2 = el('text', { x: x0 + half - 10, y: Y(62), class: 'lcd-mval2', 'text-anchor': 'end' }, g, '');
-      m.w = half - 50;
-    }
-    // Ligne VFO
-    for (const [i, side] of [[0, 'A'], [1, 'B']]) {
-      const x0 = X(8 + i * half);
+      const x0 = X(5 + i * half);
       const v = LCD['v' + side] = {};
-      el('text', { x: x0 + 2, y: Y(97), class: 'lcd-vfo' }, g, 'VFO');
-      v.tx = el('text', { x: x0 + 36, y: Y(97), class: 'lcd-txb' }, g, '');
-      v.badge = el('rect', { x: x0 + 1, y: Y(101), width: 52, height: 15, rx: 2, class: 'lcd-mode' }, g);
-      v.mode = el('text', { x: x0 + 27, y: Y(113), class: 'lcd-modet', 'text-anchor': 'middle' }, g, '—');
-      v.freq = el('text', { x: x0 + half - 8, y: Y(118), class: 'lcd-freq', 'text-anchor': 'end' }, g, '—');
-      v.sel = el('rect', { x: x0 + 58, y: Y(121), width: half - 66, height: 2, class: 'lcd-sel' }, g);
-      v.hit = el('rect', { x: x0 + 58, y: Y(86), width: half - 66, height: 34, class: 'hs lcd-hit' }, g);
+      el('text', { x: x0 + 3, y: Y(103), class: 'lcd-vfo' }, g, 'VFO');
+      v.tx = el('text', { x: x0 + 38, y: Y(103), class: 'lcd-txb' }, g, '');
+      v.badge = el('rect', { x: x0 + 1, y: Y(106), width: 52, height: 15, rx: 1.5, class: 'lcd-mode' }, g);
+      v.mode = el('text', { x: x0 + 27, y: Y(118), class: 'lcd-modet', 'text-anchor': 'middle' }, g, '—');
+      v.freq = el('path', { d: '', class: 'lcd-seg' }, g);
+      v.xr = x0 + half - 6;
+      v.sel = el('rect', { x: x0 + 58, y: Y(126), width: half - 64, height: 1.6, class: 'lcd-sel' }, g);
+      v.hit = el('rect', { x: x0 + 58, y: Y(92), width: half - 64, height: 34, class: 'hs lcd-hit' }, g);
       el('title', {}, v.hit, 'Taper une fréquence pour le VFO ' + side);
       v.hit.addEventListener('click', () => askFreq(side));
     }
     // ANT / ATT / IPO / R.FIL / AGC
     const CELLS = [['ANT', 'ant', 'ant'], ['ATT', 'att', 'attB'], ['IPO', 'preamp', 'preampB'], ['R.FIL', 'roof', 'roofB'], ['AGC', 'agc', 'agcB']];
     for (const [i, side] of [[0, 'A'], [1, 'B']]) {
-      const x0 = X(8 + i * half);
-      const cw = (half - 6) / 5;
+      const x0 = X(5 + i * half);
+      const cw = (half - 4) / 5;
       LCD['c' + side] = CELLS.map(([lab, ka, kb], j) => {
         const id = side === 'A' ? ka : kb;
         const x = x0 + j * cw;
-        el('rect', { x: x + 1, y: Y(124), width: cw - 2, height: 24, rx: 2, class: 'lcd-cell' }, g);
-        el('text', { x: x + cw / 2, y: Y(133), class: 'lcd-clab', 'text-anchor': 'middle' }, g, lab);
-        const t = el('text', { x: x + cw / 2, y: Y(145), class: 'lcd-cval', 'text-anchor': 'middle' }, g, '—');
-        const h = el('rect', { x: x + 1, y: Y(124), width: cw - 2, height: 24, class: 'hs lcd-hit' }, g);
+        el('rect', { x: x + 0.5, y: Y(130), width: cw - 1, height: 24, class: 'lcd-cell' }, g);
+        el('text', { x: x + cw / 2, y: Y(139), class: 'lcd-clab', 'text-anchor': 'middle' }, g, lab);
+        const t = el('text', { x: x + cw / 2, y: Y(151), class: 'lcd-cval', 'text-anchor': 'middle' }, g, '—');
+        const h = el('rect', { x: x + 0.5, y: Y(130), width: cw - 1, height: 24, class: 'hs lcd-hit' }, g);
         el('title', {}, h, lab + ' ' + (side === 'A' ? 'MAIN' : 'SUB') + ' : clic pour changer');
         h.addEventListener('click', () => cycleCell(id));
         return { id, t };
       });
     }
-    // Bandeau MAIN / SUB + état
-    el('rect', { x: X(8), y: Y(151), width: c.w - 16, height: 12, rx: 2, class: 'lcd-tbar' }, g);
-    LCD.side = el('text', { x: X(14), y: Y(160), class: 'lcd-side' }, g, 'MAIN');
-    LCD.flags = el('text', { x: X(c.w - 14), y: Y(160), class: 'lcd-flags', 'text-anchor': 'end' }, g, '');
-    // Zone du scope : état des réglages (le spectre de l'écoute la recouvre)
-    const sy = Y(165);
-    el('rect', { x: X(8), y: sy, width: c.w - 16, height: 129, rx: 3, class: 'lcd-scope' }, g);
-    LCD.dsp = {};
-    for (const [i, side] of [[0, 'A'], [1, 'B']]) {
-      const x0 = X(16 + i * half);
-      LCD.dsp[side] = [0, 1, 2, 3, 4].map((j) => el('text', { x: x0, y: sy + 18 + j * 17, class: 'lcd-dsp' }, g, ''));
-    }
-    LCD.hint = el('text', { x: X(c.w / 2), y: sy + 120, class: 'lcd-hint', 'text-anchor': 'middle' }, g, 'PHONES (prise à gauche) : écouter le TRX et voir le spectre de la BF');
-    // Touches de l'écran : réglages utiles sans touche sur la face avant
-    const SOFT = [['PWR −', () => power(-5)], ['PWR', null], ['PWR +', () => power(5)], ['TUNER', () => setCtl('tuner', S().tuner ? 0 : 1)],
-      ['NAR', () => { const id = activeSide() === 'B' ? 'narrowB' : 'narrow'; setCtl(id, S()[id] ? 0 : 1); }], ['A → B', () => setCtl('aToB', null)], ['B → A', () => setCtl('bToA', null)]];
-    const sw = (c.w - 16) / SOFT.length;
-    LCD.soft = SOFT.map(([lab, fn], j) => {
-      const x = X(8) + j * sw;
-      const r = el('rect', { x: x + 2, y: Y(298), width: sw - 4, height: 19, rx: 3, class: 'lcd-soft' + (fn ? '' : ' ro') }, g);
-      const t = el('text', { x: x + sw / 2, y: Y(311), class: 'lcd-softt', 'text-anchor': 'middle' }, g, lab);
-      if (fn) {
-        const h = el('rect', { x: x + 2, y: Y(298), width: sw - 4, height: 19, class: 'hs lcd-hit' }, g);
-        el('title', {}, h, lab);
-        h.addEventListener('click', fn);
-      }
-      return { r, t, lab };
+    // Bandeau du scope : récepteur actif, état, échelle
+    el('rect', { x: X(5), y: Y(157), width: c.w - 10, height: 11, class: 'lcd-tbar' }, g);
+    LCD.side = el('text', { x: X(10), y: Y(165.5), class: 'lcd-side' }, g, 'MAIN');
+    LCD.flags = el('text', { x: X(c.w / 2), y: Y(165.5), class: 'lcd-flags', 'text-anchor': 'middle' }, g, '');
+    LCD.span = el('text', { x: X(c.w - 10), y: Y(165.5), class: 'lcd-side', 'text-anchor': 'end' }, g, 'BF | 0–4 kHz');
+    el('rect', { x: X(5), y: Y(170), width: c.w - 10, height: 124, class: 'lcd-scope' }, g);
+    // Rangée du bas, comme sur l'écran du TRX ; la dernière case montre la fonction réglée par le bouton MULTI
+    const BOT = [['CENTER'], ['SPAN', () => { L.wfSpan = (L.wfSpan + 1) % SPANS.length; store.set('rs.face.span', L.wfSpan); WF.drawn = false; render(); }],
+      ['3DSS'], ['MONO', () => { L.wfColor = L.wfColor === 1 ? 2 : 1; store.set('rs.face.wfcol', L.wfColor); render(); }], ['MULTI', () => { L.func = !L.func; render(); }],
+      ['EXPAND'], ['HOLD', () => { L.hold = !L.hold; render(); }], ['MULTI']];
+    const bw = (c.w - 10) / BOT.length;
+    LCD.bot = BOT.map(([lab, fn], j) => {
+      const x = X(5) + j * bw, last = j === BOT.length - 1;
+      const r = el('rect', { x: x + 0.5, y: Y(297), width: bw - 1, height: 21, rx: last ? 2 : 0, class: 'lcd-bot' + (last ? ' multi' : '') }, g);
+      const t = el('text', { x: x + bw / 2, y: Y(last ? 305.5 : 311), class: 'lcd-bott', 'text-anchor': 'middle' }, g, lab);
+      const t2 = last ? el('text', { x: x + bw / 2, y: Y(315), class: 'lcd-bott2', 'text-anchor': 'middle' }, g, '') : null;
+      const h = el('rect', { x: x + 0.5, y: Y(297), width: bw - 1, height: 21, class: 'hs lcd-hit' + (fn || last ? '' : ' off') }, g);
+      el('title', {}, h, last ? 'MULTI : fonction réglée par le bouton MULTI (choisie dans FUNC)' : lab + (fn ? '' : ' : pas disponible à distance'));
+      h.addEventListener('click', () => {
+        if (last) { L.func = true; return render(); }
+        if (fn) return fn();
+        say(lab + ' : réglage du scope du TRX, pas disponible à distance (la cascade est celle de la BF).', '', 3500);
+      });
+      return { r, t, t2, lab };
     });
+    LCD.hint = el('text', { x: X(c.w / 2), y: Y(236), class: 'lcd-hint', 'text-anchor': 'middle' }, g, 'Cascade : en attente du son de la station…');
+    buildFunc(g, c);
+    buildModeMenu(g, c);
+  }
+  // Tableau MODE (appui d'au moins 1 s sur MODE), comme sur le TRX : clic sur un mode pour le récepteur actif
+  const MODE_GRID = [['LSB', 'USB', 'CW-L', 'CW-U'], ['AM', 'AM-N', 'FM', 'FM-N'], ['DATA-L', 'DATA-U', 'DATA-FM', 'DATA-FM-N'], ['RTTY-L', 'RTTY-U', 'PSK', null]];
+  function buildModeMenu(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const m = LCD.modeMenu = el('g', { class: 'mode-menu', style: 'display:none' }, g);
+    const x0 = X(40), y0 = Y(70), w = c.w - 80, h = 214;
+    el('rect', { x: x0, y: y0, width: w, height: h, rx: 6, class: 'mm-bg' }, m);
+    el('rect', { x: x0 + 4, y: y0 + 4, width: w - 8, height: 18, rx: 3, class: 'mm-title' }, m);
+    el('text', { x: x0 + w / 2, y: y0 + 17, class: 'mm-ttl', 'text-anchor': 'middle' }, m, 'MODE');
+    const cw = (w - 12) / 4, rh = 46;
+    LCD.modeCells = {};
+    MODE_GRID.forEach((row, ri) => row.forEach((name, ci) => {
+      const x = x0 + 6 + ci * cw, y = y0 + 28 + ri * rh;
+      const box = el('rect', { x: x + 2, y, width: cw - 4, height: rh - 7, rx: 3, class: 'mm-cell' + (name ? '' : ' preset') }, m);
+      const lab = el('text', { x: x + cw / 2, y: y + 24, class: 'mm-lab' + (name ? '' : ' preset'), 'text-anchor': 'middle' }, m, name ? name.replace('DATA-FM-N', 'D-FM-N') : 'PRESET');
+      const hit = el('rect', { x: x + 2, y, width: cw - 4, height: rh - 7, class: 'hs lcd-hit' }, m);
+      el('title', {}, hit, name ? 'Mode ' + name : 'PRESET : réglages du TRX, au club');
+      hit.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        if (!name) return say('PRESET : réglages du TRX, pas disponibles à distance.', '', 3500);
+        closeModeMenu();
+        setMode(name);
+      });
+      if (name) LCD.modeCells[name] = [box, lab];
+    }));
+    const close = el('rect', { x: x0 + w - 24, y: y0 + 5, width: 18, height: 16, class: 'hs lcd-hit' }, m);
+    el('text', { x: x0 + w - 15, y: y0 + 17, class: 'mm-ttl', 'text-anchor': 'middle' }, m, '✕');
+    close.addEventListener('click', (ev) => { ev.stopPropagation(); closeModeMenu(); });
+  }
+  function openModeMenu() {
+    if (!LCD.modeMenu) return;
+    L.modeMenu = true;
+    render();
+    setTimeout(() => document.addEventListener('pointerdown', outsideMode, true), 0);
+  }
+  function closeModeMenu() { L.modeMenu = false; document.removeEventListener('pointerdown', outsideMode, true); render(); }
+  function outsideMode(ev) { if (!ev.target.closest || !ev.target.closest('.mode-menu')) closeModeMenu(); }
+  // Menu FUNC (comme sur le TRX, mais à la souris) : clic = choisir la case (ou basculer / changer une valeur à choix),
+  // molette sur la case ou bouton MULTI = régler la case choisie. Cases grises : pas disponibles à distance.
+  const WF_SPEEDS = [['FAST1', 30], ['FAST2', 50], ['MID', 80], ['SLOW', 140]];
+  const STEPS = [[10, '10Hz'], [100, '100Hz'], [1000, '1kHz']];
+  L.wfSpeed = Math.max(0, Math.min(3, Number(store.get('rs.face.wfspd', '1')) || 0));
+  L.wfColor = Math.max(1, Math.min(3, Number(store.get('rs.face.wfcol', '1')) || 1));
+  L.wfLevel = Math.max(-20, Math.min(20, Number(store.get('rs.face.wflvl', '0')) || 0));
+  L.func = false;
+  const SPANS = [2000, 3000, 4000, 6000];
+  L.wfSpan = Math.max(0, Math.min(3, Number(store.get('rs.face.span', '2')) || 0));
+  L.hold = false;
+  L.funcSel = store.get('rs.face.funcsel', 'power');
+  const stepNow = () => (L.fine ? 0 : L.fast ? 2 : 1);
+  function setStepIdx(i) { L.fine = i === 0; L.fast = i === 2; store.set('rs.face.fine', L.fine ? '1' : '0'); store.set('rs.face.fast', L.fast ? '1' : '0'); }
+  const FUNC = [
+    // [id, libellé, valeur affichée (s), réglage (s, pas) | null, couleur du trait, basculer au clic]
+    [['spd', 'SPEED', () => WF_SPEEDS[L.wfSpeed][0], (s, d) => { L.wfSpeed = Math.max(0, Math.min(3, L.wfSpeed + d)); store.set('rs.face.wfspd', L.wfSpeed); }, '#ff8a1f'],
+      ['peak', 'PEAK', () => '—', null, '#ff8a1f'],
+      ['marker', 'MARKER', () => 'ON', null, '#ff8a1f'],
+      ['color', 'COLOR', () => String(L.wfColor), (s, d) => { L.wfColor = ((L.wfColor - 1 + d + 30) % 3) + 1; store.set('rs.face.wfcol', L.wfColor); }, '#ff8a1f', true],
+      ['level', 'LEVEL', () => (L.wfLevel >= 0 ? '+' : '') + L.wfLevel.toFixed(1) + 'dB', (s, d) => { L.wfLevel = Math.max(-20, Math.min(20, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); }, '#ff8a1f']],
+    [['power', 'RF POWER', (s) => (s.power != null ? s.power + 'W' : '—'), (s, d) => power(d * 5), '#8a5cff'],
+      ['moni', 'MONI LEVEL', () => '—', null, '#8a5cff'],
+      ['nrLvl', 'DNR LEVEL', (s) => (s.nrLvl != null ? String(s.nrLvl) : '—'), (s, d) => setCtl('nrLvl', Math.max(1, Math.min(15, (s.nrLvl || 1) + d))), '#8a5cff'],
+      ['nbLvl', 'NB LEVEL', (s) => (s.nbLvl != null ? String(s.nbLvl) : '—'), (s, d) => setCtl('nbLvl', Math.max(0, Math.min(10, (s.nbLvl || 0) + d))), '#8a5cff'],
+      ['voxg', 'VOX GAIN', () => '—', null, '#8a5cff'],
+      ['voxd', 'VOX DELAY', () => '—', null, '#8a5cff'],
+      ['avox', 'ANTI VOX', () => '—', null, '#8a5cff'],
+      ['step', 'STEP DIAL', () => STEPS[stepNow()][1], (s, d) => setStepIdx(Math.max(0, Math.min(2, stepNow() + d))), '#8a5cff', true]],
+    [['memch', 'MEM CH', () => '', null, '#8a5cff'],
+      ['group', 'GROUP', () => '', null, '#8a5cff'],
+      ['rfil', 'R.FIL', (s) => cellText('roof', s[activeSide() === 'B' ? 'roofB' : 'roof']), (s, d) => { const id = activeSide() === 'B' ? 'roofB' : 'roof'; setCtl(id, ((s[id] || 1) - 1 + d + 50) % 5 + 1); }, '#8a5cff', true],
+      ['scan', 'SCAN', () => '', null, '#3ddc5a'],
+      ['decode', 'DECODE', () => '', null, '#3ddc5a'],
+      ['rpt', 'RPT', () => '', null, '#ff3b30'],
+      ['miceq', 'MIC EQ', (s) => (s.micEq ? 'ON' : 'OFF'), (s) => setCtl('micEq', s.micEq ? 0 : 1), '#ff3b30', true],
+      ['encdec', 'ENC/DEC', () => '', null, '#38b6ff']],
+    [['tone', 'TONE FREQ', () => '', null, '#38b6ff'],
+      ['rec', 'REC/PLAY', () => '', null, '#38b6ff'],
+      ['qmb', 'QMB LIST', () => '', null, '#38b6ff'],
+      ['radio', 'RADIO SETTING', () => '', null, '#ffb020'],
+      ['cwset', 'CW SETTING', () => '', null, '#ffb020'],
+      ['opset', 'OPERATION SETTING', () => '', null, '#ffb020'],
+      ['disp', 'DISPLAY SETTING', () => '', null, '#ffb020'],
+      ['ext', 'EXTENSION SETTING', () => '', null, '#ffb020']]
+  ];
+  const FUNC_BY = {};
+  for (const row of FUNC) for (const c of row) FUNC_BY[c[0]] = c;
+  function funcAdjust(id, d) {
+    const c = FUNC_BY[id];
+    if (!c || !c[3]) return false;
+    const local = ['spd', 'color', 'level', 'step'].indexOf(id) >= 0;
+    if (!local && !needControl()) return true;
+    c[3](S(), d);
+    render();
+    return true;
+  }
+  function buildFunc(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const f = LCD.func = el('g', { class: 'func', style: 'display:none' }, g);
+    el('rect', { x: X(3), y: Y(130), width: c.w - 6, height: 166, class: 'func-bg' }, f);
+    const cw = (c.w - 10) / 8, rh = 41;
+    LCD.funcCells = {};
+    FUNC.forEach((row, ri) => {
+      const y = Y(132 + ri * rh);
+      row.forEach(([id, lab, , adj, col, flip], ci) => {
+        const x = X(5) + ci * cw;
+        const box = el('rect', { x: x + 1, y, width: cw - 2, height: rh - 7, rx: 2, class: 'func-cell' + (adj ? '' : ' off') }, f);
+        const two = lab.indexOf(' SETTING') > 0;
+        const t1 = el('text', { x: x + cw / 2, y: y + (two ? 14 : 13), class: 'func-lab', 'text-anchor': 'middle' }, f, two ? lab.replace(' SETTING', '') : lab);
+        const t2 = el('text', { x: x + cw / 2, y: y + 27, class: two ? 'func-lab' : 'func-val', 'text-anchor': 'middle' }, f, two ? 'SETTING' : '');
+        el('rect', { x: x + (ci === 0 ? 1 : 0), y: y + rh - 5, width: cw - (ci === 0 ? 1 : 0), height: 2, fill: col, opacity: 0.9 }, f);
+        const hit = el('rect', { x: x + 1, y, width: cw - 2, height: rh - 7, class: 'hs lcd-hit' }, f);
+        el('title', {}, hit, adj ? lab + (flip ? ' : clic pour changer' : ' : clic puis molette (ou MULTI) pour régler') : lab + ' : pas disponible à distance');
+        hit.addEventListener('click', () => {
+          if (!adj) return say(lab + ' : pas disponible à distance (menus du TRX : au club).', '', 3500);
+          L.funcSel = id;
+          store.set('rs.face.funcsel', id);
+          if (flip) funcAdjust(id, 1);
+          render();
+        });
+        hit.addEventListener('wheel', (ev) => {
+          ev.preventDefault();
+          if (!adj) return;
+          L.funcSel = id;
+          const n = ev.deltaY < 0 ? 1 : -1;
+          funcAdjust(id, n);
+          showTip(ev, lab + ' ' + FUNC_BY[id][2](S()));
+        }, { passive: false });
+        LCD.funcCells[id] = { box, t1, t2, two };
+      });
+    });
+  }
+  function drawFunc(s) {
+    if (!LCD.func) return;
+    LCD.func.style.display = L.func ? '' : 'none';
+    if (!L.func) return;
+    for (const id in LCD.funcCells) {
+      const c = LCD.funcCells[id];
+      c.box.classList.toggle('sel', L.funcSel === id);
+      if (!c.two) c.t2.textContent = FUNC_BY[id][2](s);
+    }
   }
   function power(d) {
     const s = S();
@@ -338,6 +548,8 @@
       long = false;
       clearTimeout(t);
       if (k.act && k.act.clar) t = setTimeout(() => { long = true; doAct(k, true); }, 700);
+      if (k.act && k.act.longMenu) t = setTimeout(() => { long = true; openModeMenu(); }, 900);
+      if (k.act && k.act.long) t = setTimeout(() => { long = true; doAct({ act: k.act.long }, true); }, 900);
       e.classList.add('down');
     });
     const up = () => { clearTimeout(t); e.classList.remove('down'); };
@@ -355,6 +567,10 @@
   function turn(k, part, notches, ev) {
     if (!notches) return;
     const s = S();
+    if (k.multi && !(s.rit || s.xit) && FUNC_BY[L.funcSel] && FUNC_BY[L.funcSel][3]) {
+      funcAdjust(L.funcSel, notches);
+      return showTip(ev, FUNC_BY[L.funcSel][1] + ' ' + FUNC_BY[L.funcSel][2](S()));
+    }
     if (k.dial || k.multi) {
       if (k.multi && (s.rit || s.xit)) {
         const v = Math.max(-9999, Math.min(9999, (s.clar || 0) + notches * 10));
@@ -400,7 +616,7 @@
     g.addEventListener('pointerdown', (ev) => {
       if (ev.button !== 0) return;
       const p = toImg(ev);
-      drag = { part: knobPart(k, p), y: ev.clientY, a: Math.atan2(p.y - k.cy, p.x - k.cx), acc: 0 };
+      drag = { part: knobPart(k, p), y: ev.clientY, a: Math.atan2(p.y - k.cy, p.x - k.cx), acc: 0, t0: Date.now(), moved: false };
       g.setPointerCapture(ev.pointerId);
       g.classList.add('grab');
     });
@@ -420,9 +636,16 @@
         drag.y = ev.clientY;
       }
       const n = Math.trunc(drag.acc);
-      if (n) { drag.acc -= n; turn(k, drag.part, n, ev); }
+      if (n) { drag.acc -= n; drag.moved = true; turn(k, drag.part, n, ev); }
     });
-    const end = () => { drag = null; g.classList.remove('grab'); hideTip(600); };
+    const end = (ev) => {
+      // Clic sans tourner sur un bouton qui se pousse (ex. WIDTH : NAR)
+      if (drag && k.push && ev && ev.type === 'pointerup' && Math.abs(drag.acc) < 0.3 && Date.now() - drag.t0 < 500 && !drag.moved) {
+        const id = typeof k.push === 'string' ? k.push : null;
+        if (id) { const v = S()[id] ? 0 : 1; setCtl(id, v); showTip(ev, (k.pushLabel || id) + (v ? ' ON' : ' OFF')); }
+      }
+      drag = null; g.classList.remove('grab'); hideTip(600);
+    };
     g.addEventListener('pointerup', end);
     g.addEventListener('pointercancel', end);
     g.addEventListener('pointerleave', () => { if (!drag) hideTip(400); });
@@ -477,45 +700,52 @@
     }
     // Écran
     const subOn = s.dualRx !== 0;
+    const maxW = R.POWER_RANGE && R.POWER_RANGE[s.powerHead] ? R.POWER_RANGE[s.powerHead][1] : 100;
     for (const side of ['A', 'B']) {
       const m = LCD['m' + side];
       const sm = side === 'A' ? s.smeter : s.smeterB;
+      let f = 0, val = '';
       if (tx && side === 'A') {
-        const pw = s.m5 != null ? Math.round(s.m5 / 255 * ((R.POWER_RANGE && R.POWER_RANGE[s.powerHead] ? R.POWER_RANGE[s.powerHead][1] : 100))) : null;
-        m.title.textContent = 'PO · COMP';
-        m.fill.setAttribute('width', m.w * sFrac(s.m5));
-        m.fill.classList.add('tx');
-        m.scale.textContent = '0     25     50     75    100 %';
-        m.val.textContent = pw != null ? pw + ' W' : 'TX';
-        m.fill2.setAttribute('width', m.w * sFrac(s.m3));
-        m.lab2.textContent = 'COMP';
-        m.val2.textContent = s.m3 != null ? Math.round(s.m3 / 255 * 30) + ' dB' : '';
+        // PO : 0–250 W sur l'échelle du TRX (0,03 … 0,88)
+        const w = s.m5 != null ? s.m5 / 255 * maxW : 0;
+        f = w <= 10 ? 0.03 + w / 10 * 0.17 : w <= 50 ? 0.2 + (w - 10) / 40 * 0.18 : w <= 100 ? 0.38 + (w - 50) / 50 * 0.14 : Math.min(0.88, 0.52 + (w - 100) / 150 * 0.36);
+        val = Math.round(w) + ' W';
+        m.title.textContent = 'PO METER';
       } else if (tx && side === 'B') {
         const swr = R.swrValue ? R.swrValue(s.m6) : null;
-        m.title.textContent = 'ALC · SWR';
-        m.fill.setAttribute('width', m.w * sFrac(s.m4));
-        m.fill.classList.add('tx');
-        m.scale.textContent = 'ALC';
-        m.val.textContent = s.m4 != null ? Math.round(s.m4 / 255 * 100) + ' %' : '';
-        m.fill2.setAttribute('width', m.w * Math.min(1, swr ? (swr - 1) / 2 : 0));
-        m.lab2.textContent = 'SWR';
-        m.val2.textContent = swr ? swr.toFixed(1) : '';
+        f = swr ? Math.min(0.95, swr <= 1.5 ? 0.05 + (swr - 1) / 0.5 * 0.19 : swr <= 2 ? 0.24 + (swr - 1.5) / 0.5 * 0.12 : swr <= 3 ? 0.36 + (swr - 2) * 0.14 : 0.5 + (swr - 3) / 2 * 0.16) : 0.05;
+        val = swr ? 'SWR ' + swr.toFixed(1) : '';
+        m.title.textContent = 'SWR METER';
       } else {
-        m.title.textContent = (side === 'A' ? 'MAIN' : 'SUB') + ' · S-MÈTRE';
-        m.fill.classList.remove('tx');
         const show = live && (side === 'A' || subOn);
-        m.fill.setAttribute('width', show ? m.w * sFrac(sm) : 0);
-        m.scale.textContent = 'S 1   3   5   7   9  +20  +40  +60';
-        m.val.textContent = show ? R.smeterLabel(sm) : side === 'B' && !subOn ? 'SUB coupé' : '—';
-        m.fill2.setAttribute('width', 0);
-        m.lab2.textContent = side === 'A' ? 'PWR ' + (s.power != null ? s.power + ' W' : '—') : (s.vdd ? '' : '');
-        m.val2.textContent = '';
+        f = show ? S_POS(sm) : 0;
+        val = show ? R.smeterLabel(sm) : side === 'B' && !subOn ? 'SUB OFF' : '';
+        m.title.textContent = side === 'A' ? 'PO METER' : 'ALC METER';
       }
-      const v = LCD['v' + side];
+      m.f = m.f == null ? f : m.f + (f - m.f) * 0.6; // aiguille amortie
+      const p = arcPt(m.cx, m.cy, 250, m.f);
+      m.needle.setAttribute('x2', p[0].toFixed(1));
+      m.needle.setAttribute('y2', p[1].toFixed(1));
+      m.val.textContent = val;
+      m.val.classList.toggle('tx', tx);
+      // Filtre : largeur et décalage du récepteur
+      const fl = LCD['f' + side];
+      const sfx = side === 'B' ? 'B' : '';
       const mode = side === 'A' ? s.mode : s.modeB;
-      const f = side === 'A' ? s.freq : s.freqB;
+      const tab = R.widthTable(mode) || null;
+      const wi = s['width' + sfx];
+      const hz = tab && wi ? tab[wi - 1] : /CW|RTTY|PSK|DATA/.test(mode || '') && !/DATA-U|DATA-L/.test(mode || '') ? 500 : /AM|FM/.test(mode || '') ? 6000 : 2400;
+      const sh = s['shift' + sfx] || 0;
+      const fr = Math.max(0.08, Math.min(0.9, hz / 4000));
+      const cx = fl.x0 + fl.w / 2 + Math.max(-0.4, Math.min(0.4, sh / 2400)) * fl.w;
+      const tw = fl.w * fr, top = fl.y0 + 8, bot = fl.y0 + fl.h - 5, sl = Math.min(8, tw * 0.15);
+      fl.trap.setAttribute('d', 'M' + (fl.x0 + 3) + ' ' + bot + 'L' + (cx - tw / 2) + ' ' + bot + 'L' + (cx - tw / 2 + sl) + ' ' + top + 'L' + (cx + tw / 2 - sl) + ' ' + top + 'L' + (cx + tw / 2) + ' ' + bot + 'L' + (fl.x0 + fl.w - 3) + ' ' + bot);
+      fl.center.setAttribute('x1', cx); fl.center.setAttribute('x2', cx);
+      fl.base.setAttribute('x', cx - tw / 2 + 2); fl.base.setAttribute('width', Math.max(4, tw - 4));
+      const v = LCD['v' + side];
+      const fq = side === 'A' ? s.freq : s.freqB;
       v.mode.textContent = mode || '—';
-      v.freq.textContent = f ? fmtFreq(f) : '—';
+      v.freq.setAttribute('d', fq ? seg7(fmtFreq(fq), v.xr, LCD.c0y + 95, 26) : '');
       const active = (s.vfoSel === 1) === (side === 'B');
       v.freq.classList.toggle('dim', side === 'B' && !subOn);
       v.sel.classList.toggle('on', active);
@@ -523,18 +753,6 @@
       v.tx.textContent = txSide === side ? (tx ? 'TX ●' : 'TX') : '';
       v.tx.classList.toggle('on', tx && txSide === side);
       for (const c of LCD['c' + side]) c.t.textContent = cellText(c.id, s[c.id]);
-      // Réglages DSP
-      const sfx = side === 'B' ? 'B' : '';
-      const on = (k) => (s[k + sfx] ? '●' : '○');
-      const wc = R.CONTROL['width' + sfx];
-      const lines = [
-        (side === 'A' ? 'MAIN' : 'SUB') + (active ? '  ◀ actif' : ''),
-        'NB ' + on('nb') + '  DNR ' + on('nr') + '  DNF ' + on('dnf') + '  NAR ' + on('narrow'),
-        'NOTCH ' + on('notch') + ' ' + (s['notchFreq' + sfx] != null ? s['notchFreq' + sfx] + ' Hz' : '') + '  CONT ' + on('contour') + '  APF ' + on('apf'),
-        'WIDTH ' + (wc ? fmtVal(wc, s['width' + sfx], s) : '—') + '  SHIFT ' + (s['shift' + sfx] != null ? (s['shift' + sfx] > 0 ? '+' : '') + s['shift' + sfx] + ' Hz' : '—'),
-        'AF ' + (s[side === 'A' ? 'af' : 'afB'] != null ? Math.round(s[side === 'A' ? 'af' : 'afB'] / 255 * 100) + ' %' : '—') + '  RF ' + (s['rf' + sfx] != null ? Math.round(s['rf' + sfx] / 255 * 100) + ' %' : '—')
-      ];
-      LCD.dsp[side].forEach((t, j) => { t.textContent = live ? lines[j] : ''; });
     }
     LCD.side.textContent = s.vfoSel === 1 ? 'SUB' : 'MAIN';
     const fl = [];
@@ -542,19 +760,27 @@
     if (s.split) fl.push('SPLIT');
     if (s.rit || s.xit) fl.push((s.rit ? 'RIT' : '') + (s.rit && s.xit ? '/' : '') + (s.xit ? 'XIT' : '') + ' ' + ((s.clar || 0) > 0 ? '+' : '') + ((s.clar || 0) / 1000).toFixed(2) + 'k');
     if (s.lock) fl.push('LOCK');
-    if (s.tuner) fl.push('TUNER');
     if (s.proc) fl.push('PROC');
     if (L.fine) fl.push('FINE'); else if (L.fast) fl.push('FAST');
-    fl.push('PWR ' + (s.power != null ? s.power + ' W' : '—'));
     LCD.flags.textContent = live ? fl.join('  ·  ') : (st.station ? 'TRX muet (éteint ou câble ?)' : 'Station hors ligne');
     LCD.flags.classList.toggle('tx', tx);
-    for (const b of LCD.soft) {
-      if (b.lab === 'PWR') b.t.textContent = s.power != null ? s.power + ' W' : 'PWR';
-      if (b.lab === 'TUNER') b.r.classList.toggle('on', !!s.tuner);
-      if (b.lab === 'NAR') b.r.classList.toggle('on', !!s[activeSide() === 'B' ? 'narrowB' : 'narrow']);
+    LCD.span.textContent = (WF.two ? 'MAIN | SUB · ' : '') + 'BF 0–' + SPANS[L.wfSpan] / 1000 + ' kHz' + (L.hold ? ' · HOLD' : '');
+    drawFunc(s);
+    for (const b of LCD.bot || []) {
+      if (b.t2) b.t2.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
+      if (b.lab === 'HOLD') b.r.classList.toggle('on', !!L.hold);
+      if (b.lab === 'SPAN') b.t.textContent = 'SPAN ' + SPANS[L.wfSpan] / 1000 + 'k';
+      if (b.lab === 'MULTI' && !b.t2) b.r.classList.toggle('on', !!L.func);
     }
-    LCD.hint.style.display = L.listening ? 'none' : '';
-    $('scope').style.visibility = L.listening ? 'visible' : 'hidden';
+    if (LCD.modeMenu) {
+      LCD.modeMenu.style.display = L.modeMenu ? '' : 'none';
+      const cur = L.activeMode(s);
+      for (const n in LCD.modeCells) for (const e of LCD.modeCells[n]) e.classList.toggle('on', n === cur);
+    }
+    const fresh = Date.now() - WF.at < 3000;
+    LCD.hint.style.display = fresh ? 'none' : '';
+    LCD.hint.textContent = !live ? '' : st.audio && !st.audio.active ? 'Cascade : l’audio n’est pas activé sur la page Station' : 'Cascade : en attente du son de la station…';
+    $('scope').style.visibility = fresh && !L.func && !L.modeMenu ? 'visible' : 'hidden';
   }
   function lamp(id, cls) { const e = $(id); e.classList.remove('on', 'warn', 'tx'); if (cls) e.classList.add(cls); }
   function drawTop() {
@@ -572,6 +798,8 @@
     const lb = $('listenBtn');
     lb.setAttribute('aria-pressed', String(L.listening));
     lb.textContent = L.listening ? '🔇 Arrêter l’écoute' : '🔊 Écouter le TRX';
+    $('stereoBtn').setAttribute('aria-pressed', String(L.stereo));
+    $('stereoBtn').hidden = !(R && R.DUAL_AUDIO);
     // Autre TRX en service : cette face avant n'est pas la bonne
     const cover = $('cover');
     const wrong = st && st.rigModel && st.rigModel !== MODEL;
@@ -580,8 +808,16 @@
   }
   const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  // ------------------------------------------------------------ écoute (prise PHONES) et spectre
-  const player = { ctx: null, gain: null, an: null, next: 0 };
+  // ------------------------------------------------------------ écoute (prise PHONES), stéréo et cascade
+  // La page reçoit toujours la BF (cascade dans l'écran du TRX) ; le son n'est joué qu'avec « Écouter » / la prise PHONES.
+  // Stéréo (TRX à deux récepteurs, double réception) : MAIN dans l'oreille gauche, SUB dans la droite, comme au casque.
+  L.stereo = store.get('rs.face.stereo', '0') === '1';
+  const player = { ctx: null, gain: null, next: 0 };
+  function wantAudio() {
+    if (!me) return;
+    const on = document.visibilityState !== 'hidden' || L.listening; // onglet caché : plus de cascade, sauf si on écoute
+    send({ t: 'listen', on, mute: !L.listening, stereo: L.stereo });
+  }
   function volume() {
     const v = Number($('listenVol').value) / 100;
     if (player.gain) player.gain.gain.value = v;
@@ -594,91 +830,195 @@
       if (!AC) return say('Ce navigateur ne peut pas jouer le son.', 'warn');
       player.ctx = new AC();
       player.gain = player.ctx.createGain();
-      player.an = player.ctx.createAnalyser();
-      player.an.fftSize = 2048;
-      player.an.smoothingTimeConstant = 0.5;
-      player.gain.connect(player.an);
-      player.an.connect(player.ctx.destination);
+      player.gain.connect(player.ctx.destination);
       volume();
     }
     player.ctx.resume();
     L.listening = true;
     player.next = 0;
-    send({ t: 'listen', on: true });
+    wantAudio();
     if (st && st.audio && !st.audio.active) say('La station n’envoie pas encore de son (audio pas activé sur la page Station).', 'warn');
     render();
-    scopeLoop();
   }
   function stopListen() {
     L.listening = false;
-    send({ t: 'listen', on: false });
+    wantAudio();
     if (player.ctx) player.ctx.suspend();
     render();
   }
-  function onAudio(data) {
+  function setStereo(on) {
+    L.stereo = !!on;
+    store.set('rs.face.stereo', L.stereo ? '1' : '0');
+    wantAudio();
+    const s = S();
+    if (L.stereo && s.dualRx === 0) say('Stéréo : allumez d’abord le récepteur SUB (touche RX du SUB, à droite au-dessus du grand bouton).', 'warn', 6000);
+    else if (L.stereo) say('Stéréo : MAIN dans l’oreille gauche, SUB dans l’oreille droite.', '', 4000);
+    render();
+  }
+  function play(pcm) {
     if (!L.listening || !player.ctx) return;
-    const pcm = window.ULAW && ULAW.decodeFrame(new Uint8Array(data));
-    if (!pcm) return;
     const ctx = player.ctx;
     const now = ctx.currentTime;
     if (player.next < now + 0.05) player.next = now + 0.2;
     else if (player.next > now + 0.8) return;
-    const buf = ctx.createBuffer(1, pcm.length, pcm.rate || ULAW.RATE);
+    const two = !!pcm.r;
+    const buf = ctx.createBuffer(two ? 2 : 1, pcm.length, pcm.rate || ULAW.RATE);
     buf.copyToChannel(pcm, 0);
+    if (two) buf.copyToChannel(pcm.r, 1);
     const src = ctx.createBufferSource();
     src.buffer = buf;
     src.connect(player.gain);
     src.start(player.next);
     player.next += buf.duration;
   }
-  let scopeOn = false;
-  function scopeLoop() {
-    if (scopeOn) return;
-    scopeOn = true;
-    const cv = $('scope');
-    const c2 = cv.getContext('2d');
-    let wf = null;
-    const tick = () => {
-      if (!L.listening || !player.an) { scopeOn = false; return; }
-      const r = cv.getBoundingClientRect();
-      const W = Math.max(50, Math.round(r.width)), H = Math.max(40, Math.round(r.height));
-      if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; wf = null; }
-      const bins = new Uint8Array(player.an.frequencyBinCount);
-      player.an.getByteFrequencyData(bins);
-      const nyq = player.ctx.sampleRate / 2;
-      const maxHz = 4000;
-      const nb = Math.max(2, Math.floor(bins.length * maxHz / nyq));
-      const sh = Math.round(H * 0.45);
-      // Cascade (moitié basse) : on décale d'une ligne vers le bas
-      if (!wf) { c2.fillStyle = '#05070c'; c2.fillRect(0, 0, W, H); wf = true; }
-      c2.drawImage(cv, 0, sh, W, H - sh - 1, 0, sh + 1, W, H - sh - 1);
-      for (let x = 0; x < W; x++) {
-        const v = bins[Math.floor(x / W * nb)] / 255;
-        c2.fillStyle = 'hsl(' + Math.round(250 - v * 250) + ',90%,' + Math.round(8 + v * 55) + '%)';
-        c2.fillRect(x, sh, 1, 1);
-      }
-      // Spectre (moitié haute)
-      c2.fillStyle = '#05070c';
-      c2.fillRect(0, 0, W, sh);
-      c2.strokeStyle = 'rgba(80,110,160,.35)';
-      c2.lineWidth = 1;
-      for (let k = 1; k < 4; k++) { const x = Math.round(W * k * 1000 / maxHz) + 0.5; c2.beginPath(); c2.moveTo(x, 0); c2.lineTo(x, sh); c2.stroke(); }
-      c2.fillStyle = 'rgba(140,170,220,.7)';
-      c2.font = '10px "Roboto Mono", monospace';
-      for (let k = 1; k < 4; k++) c2.fillText(k + 'k', W * k * 1000 / maxHz + 3, sh - 4);
-      const gr = c2.createLinearGradient(0, 0, 0, sh);
-      gr.addColorStop(0, '#ff5bd6'); gr.addColorStop(1, '#4a5cff');
-      c2.fillStyle = gr;
-      c2.beginPath();
-      c2.moveTo(0, sh);
-      for (let x = 0; x < W; x++) c2.lineTo(x, sh - (bins[Math.floor(x / W * nb)] / 255) * (sh - 4));
-      c2.lineTo(W, sh);
-      c2.closePath();
-      c2.fill();
-      setTimeout(() => requestAnimationFrame(tick), 50);
-    };
-    tick();
+  function onAudio(data) {
+    const u8 = new Uint8Array(data);
+    if (window.RSDIGI && window.RSDIGI.onBinary(u8)) return; // lignes de cascade des modes numériques
+    const pcm = window.ULAW && ULAW.decodeFrame(u8);
+    if (!pcm) return;
+    feedWf(pcm, pcm.rate || 12000);
+    play(pcm);
   }
+
+  // Cascade : FFT de 512 points sur la BF reçue (12 kHz → 0 à 4 kHz), une ligne toutes les 50 ms
+  const WF = { at: 0, rate: 12000, l: new Float32Array(512), r: new Float32Array(512), two: false, pos: 0, drawn: false };
+  function feedWf(pcm, rate) {
+    WF.at = Date.now();
+    WF.rate = rate;
+    WF.two = !!pcm.r;
+    const n = pcm.length;
+    if (n >= 512) { WF.l.set(pcm.subarray(n - 512)); if (pcm.r) WF.r.set(pcm.r.subarray(n - 512)); return; }
+    WF.l.copyWithin(0, n); WF.l.set(pcm, 512 - n);
+    if (pcm.r) { WF.r.copyWithin(0, n); WF.r.set(pcm.r, 512 - n); }
+  }
+  const HANN = new Float32Array(512).map((_, i) => 0.5 - 0.5 * Math.cos(2 * Math.PI * i / 511));
+  function spectrum(x) {
+    // FFT radix 2 en place (re, im), puis amplitude en dB ramenée à 0..1
+    const N = 512, re = new Float32Array(N), im = new Float32Array(N);
+    for (let i = 0; i < N; i++) re[i] = x[i] * HANN[i];
+    for (let i = 1, j = 0; i < N; i++) {
+      let bit = N >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) { const t = re[i]; re[i] = re[j]; re[j] = t; }
+    }
+    for (let len = 2; len <= N; len <<= 1) {
+      const ang = -2 * Math.PI / len;
+      for (let i = 0; i < N; i += len) {
+        for (let k = 0; k < len / 2; k++) {
+          const wr = Math.cos(ang * k), wi = Math.sin(ang * k);
+          const a = i + k, b = a + len / 2;
+          const tr = re[b] * wr - im[b] * wi, ti = re[b] * wi + im[b] * wr;
+          re[b] = re[a] - tr; im[b] = im[a] - ti;
+          re[a] += tr; im[a] += ti;
+        }
+      }
+    }
+    // Niveau automatique comme le scope du TRX : le bruit de fond (médiane) reste sombre, les signaux ressortent
+    const db = new Float32Array(N / 2);
+    for (let i = 0; i < N / 2; i++) db[i] = 10 * Math.log10(re[i] * re[i] + im[i] * im[i] + 1e-12);
+    const srt = Array.from(db.subarray(4, 180)).sort((a, b) => a - b);
+    const med = srt[srt.length >> 1];
+    WF.floor = WF.floor == null ? med : WF.floor + (med - WF.floor) * 0.05;
+    const out = new Float32Array(N / 2);
+    for (let i = 0; i < N / 2; i++) out[i] = Math.max(0, Math.min(1, 0.3 + (db[i] - WF.floor) / 40));
+    return out;
+  }
+  // Palettes de la cascade (FUNC → COLOR) : 1 = rouge comme l'écran du FTDX101, 2 = bleu / violet, 3 = arc-en-ciel
+  function mkPal(stops) {
+    const out = [];
+    for (let i = 0; i < 256; i++) {
+      const v = i / 255;
+      let k = 0;
+      while (k < stops.length - 2 && v > stops[k + 1][0]) k++;
+      const [v0, c0] = stops[k], [v1, c1] = stops[k + 1];
+      const t = Math.max(0, Math.min(1, (v - v0) / (v1 - v0)));
+      out.push([0, 1, 2].map((j) => Math.round(c0[j] + (c1[j] - c0[j]) * t)));
+    }
+    return out;
+  }
+  const PALS = {
+    1: mkPal([[0, [8, 0, 2]], [0.3, [110, 0, 10]], [0.55, [215, 20, 30]], [0.78, [255, 70, 120]], [1, [255, 235, 245]]]),
+    2: mkPal([[0, [2, 4, 25]], [0.35, [30, 40, 170]], [0.6, [150, 60, 230]], [0.82, [255, 90, 210]], [1, [255, 240, 255]]]),
+    3: mkPal([[0, [0, 0, 40]], [0.25, [0, 60, 200]], [0.5, [0, 200, 160]], [0.75, [255, 220, 0]], [1, [255, 40, 0]]])
+  };
+  function wfTick() {
+    const cv = $('scope');
+    const fresh = Date.now() - WF.at < 3000;
+    if (fresh) {
+      const maxHz = Math.min(SPANS[L.wfSpan], WF.rate / 2);
+      const lvl = L.wfLevel / 70;
+      const specs = [spectrum(WF.l), WF.two ? spectrum(WF.r) : null];
+      const nb = Math.max(2, Math.floor(256 * maxHz / (WF.rate / 2)));
+      // Petit spectre dans le cadre du filtre (MAIN à gauche, SUB à droite)
+      for (const [side, sp] of [['A', specs[0]], ['B', specs[1] || (S().dualRx !== 0 && !WF.two ? null : null)]]) {
+        const fl = LCD['f' + side];
+        if (!fl) continue;
+        if (!sp) { fl.bars.setAttribute('d', ''); continue; }
+        let d = '';
+        const n = 34, bot = fl.y0 + fl.h - 6, hh = fl.h - 16;
+        for (let i = 0; i < n; i++) {
+          const v = Math.max(0, Math.min(1, sp[Math.floor(i / n * nb)] + lvl));
+          const x = fl.x0 + 6 + i * (fl.w - 12) / n;
+          d += 'M' + x.toFixed(1) + ' ' + bot + 'V' + (bot - v * v * hh).toFixed(1);
+        }
+        fl.bars.setAttribute('d', d);
+      }
+      if (cv.style.visibility !== 'hidden' && !L.hold) {
+        const c2 = cv.getContext('2d');
+        const r = cv.getBoundingClientRect();
+        const W = Math.max(50, Math.round(r.width)), H = Math.max(40, Math.round(r.height));
+        if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; WF.drawn = false; }
+        if (!WF.drawn) { c2.fillStyle = '#000'; c2.fillRect(0, 0, W, H); WF.drawn = true; }
+        const pal = PALS[L.wfColor] || PALS[1];
+        const lab = 11; // échelle en bas
+        const sh = Math.round((H - lab) * 0.6);
+        const parts = WF.two ? [[specs[0], 0, Math.floor(W / 2) - 1, 'MAIN'], [specs[1], Math.ceil(W / 2) + 1, W - Math.ceil(W / 2) - 1, 'SUB']] : [[specs[0], 0, W, '']];
+        // Cascade : le contenu descend d'une ligne, nouvelle ligne en haut
+        c2.drawImage(cv, 0, sh, W, H - lab - sh - 1, 0, sh + 1, W, H - lab - sh - 1);
+        c2.fillStyle = '#000';
+        c2.fillRect(0, 0, W, sh);
+        c2.fillRect(0, H - lab, W, lab);
+        const line = c2.createImageData(W, 1);
+        for (const [sp, x0, w, name] of parts) {
+          const val = (px) => Math.max(0, Math.min(1, sp[Math.min(nb - 1, Math.floor(px / w * nb))] + lvl));
+          // Grille
+          c2.strokeStyle = 'rgba(120,130,145,.45)';
+          c2.lineWidth = 1;
+          for (let k = 1; k < 8; k++) { const gx = Math.round(x0 + w * k / 8) + 0.5; c2.beginPath(); c2.moveTo(gx, 0); c2.lineTo(gx, sh); c2.stroke(); }
+          for (let k = 1; k < 5; k++) { const gy = Math.round(sh * k / 5) + 0.5; c2.beginPath(); c2.moveTo(x0, gy); c2.lineTo(x0 + w, gy); c2.stroke(); }
+          // Spectre : traits blancs bleutés depuis la ligne de base
+          c2.strokeStyle = 'rgba(205,220,255,.9)';
+          c2.beginPath();
+          for (let px = 0; px < w; px += 1) {
+            const v = val(px);
+            c2.moveTo(x0 + px + 0.5, sh - 1);
+            c2.lineTo(x0 + px + 0.5, sh - 1 - v * v * (sh - 5));
+          }
+          c2.stroke();
+          for (let px = 0; px < w; px++) {
+            const cc = pal[Math.round(val(px) * 255)];
+            const o = (x0 + px) * 4;
+            line.data[o] = cc[0]; line.data[o + 1] = cc[1]; line.data[o + 2] = cc[2]; line.data[o + 3] = 255;
+          }
+          // Échelle : 0 à 4 kHz de BF
+          c2.fillStyle = 'rgba(200,210,225,.85)';
+          c2.font = '9px "Roboto Mono", monospace';
+          c2.textAlign = 'center';
+          for (let k = 1; k < maxHz / 1000; k++) c2.fillText(k + 'k', x0 + w * k * 1000 / maxHz, H - 2);
+          if (name) { c2.textAlign = 'left'; c2.fillStyle = '#6f86ff'; c2.font = 'bold 10px "Roboto Mono", monospace'; c2.fillText(name, x0 + 4, 11); }
+        }
+        if (WF.two) { c2.fillStyle = '#2b3546'; c2.fillRect(Math.floor(W / 2) - 1, 0, 2, H); }
+        c2.putImageData(line, 0, sh);
+        c2.strokeStyle = 'rgba(160,170,185,.7)';
+        c2.beginPath(); c2.moveTo(0, sh - 0.5); c2.lineTo(W, sh - 0.5); c2.stroke();
+      }
+    } else {
+      for (const side of ['A', 'B']) if (LCD['f' + side]) LCD['f' + side].bars.setAttribute('d', '');
+    }
+    setTimeout(wfTick, WF_SPEEDS[L.wfSpeed][1]);
+  }
+  document.addEventListener('visibilitychange', wantAudio);
 
   // ------------------------------------------------------------ liaison avec le serveur
   function connect() {
@@ -690,6 +1030,7 @@
       if (typeof e.data !== 'string') return onAudio(e.data);
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (window.RSDIGI && m.t !== 'hello' && m.t !== 'state' && window.RSDIGI.onMessage(m)) return;
       if (m.t === 'hello') {
         me = m;
         $('login').hidden = true;
@@ -697,7 +1038,8 @@
         if (m.stationCall) $('stationCall').textContent = m.stationCall;
         if (m.clubName) $('clubName').textContent = m.clubName;
         if (m.session) { creds = { session: m.session }; store.set('rs.sess', m.session); }
-        if (L.listening) send({ t: 'listen', on: true });
+        wantAudio();
+        if (window.RSDIGI) window.RSDIGI.onHello(m, m);
         send({ t: 'plan_pref', on: store.get('rs.planauto', '1') !== '0' }); // MODE AUTO : même choix que dans le dashboard
         render();
       } else if (m.t === 'login_fail') {
@@ -714,6 +1056,7 @@
       } else if (m.t === 'state') {
         st = m;
         render();
+        if (window.RSDIGI) window.RSDIGI.onState(st);
       } else if (m.t === 'notice') {
         say(m.msg, m.level === 'error' ? 'error' : m.level === 'info' ? '' : 'warn', 7000);
       }
@@ -753,6 +1096,7 @@
     else if (me && me.admin && confirm('Reprendre la main à ' + st.controller + ' ?')) send({ t: 'take', force: true });
   });
   $('listenBtn').addEventListener('click', () => (L.listening ? stopListen() : startListen()));
+  $('stereoBtn').addEventListener('click', () => setStereo(!L.stereo));
   $('listenVol').value = store.get('rs.vol', '100');
   $('listenVol').addEventListener('input', volume);
   volume();
@@ -764,7 +1108,7 @@
     if (!dial) return;
     e.preventDefault();
     const r = svg.getBoundingClientRect();
-    turn(dial, 'outer', e.key === 'ArrowUp' ? 1 : -1, { clientX: r.left + r.width * dial.cx / FACE.w, clientY: r.top + r.height * (dial.cy - dial.ro) / FACE.h });
+    turn(dial, 'outer', e.key === 'ArrowUp' ? 1 : -1, { clientX: r.left + r.width * (dial.cx - V.x) / V.w, clientY: r.top + r.height * (dial.cy - dial.ro - V.y) / V.h });
   });
 
   // ------------------------------------------------------------ démarrage
@@ -774,6 +1118,12 @@
   }
   document.title = FACE.name + ' · Remote Station';
   build();
+  wfTick();
+  // Modes numériques (FT8, RTTY, CW…) sous l'image du TRX : le même module que le dashboard, sur la connexion de cette page
+  if (window.RSDIGI) {
+    window.RSDIGI.init({ send, say, iControl, state: () => st, rig: () => R,
+      setFreq: (hz, which) => tuneTo(which === 'B' ? 'B' : 'A', hz) });
+  }
   const sess = store.get('rs.sess', '');
   if (sess) creds = { session: sess };
   else showLogin('');
