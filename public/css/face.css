@@ -1,0 +1,82 @@
+/* face.css — page « Face avant » (/ftdx101…) : photo du TRX + zones cliquables + écran vivant */
+body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0; }
+.face-page .topbar { position: sticky; top: 0; z-index: 5; }
+.fc-main { padding: 10px 16px 24px; }
+.fc-msg { min-height: 22px; margin: 0 auto 6px; max-width: 1560px; text-align: center; font-size: 13px; color: var(--v2-text-secondary, #c7d0dc); }
+.fc-msg.warn { color: #ffcf4a; }
+.fc-msg.error { color: #ff6b6b; font-weight: 700; }
+.fc-wrap { position: relative; max-width: 1560px; margin: 0 auto; }
+.fc-panel { position: relative; }
+#face { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; touch-action: none; }
+.fc-scope { position: absolute; border-radius: 3px; pointer-events: none; visibility: hidden; }
+.fc-tip { position: absolute; z-index: 3; pointer-events: none; padding: 4px 9px; border-radius: 5px; background: rgba(10, 16, 26, .92);
+  border: 1px solid #3a7bd5; color: #fff; font: 700 13px/1.2 'Roboto Mono', monospace; white-space: nowrap; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
+.fc-cover[hidden] { display: none; }
+.fc-cover { position: absolute; inset: 0; z-index: 4; display: grid; place-content: center; text-align: center; gap: 8px; background: rgba(5, 8, 13, .82);
+  color: #e8edf3; font-size: 16px; border-radius: 10px; }
+.fc-help { max-width: 1560px; margin: 10px auto 0; font-size: 12px; color: var(--v2-text-dim, #8b97a8); text-align: center; }
+.fc-vol { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--v2-text-dim, #8b97a8); }
+.fc-vol input { width: 80px; }
+.fc-listen[aria-pressed='true'] { background: #1f5f1f; color: #fff; }
+@keyframes fcPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+#ctrlBtn.fc-pulse { animation: fcPulse .35s ease-in-out 3; }
+
+/* Zones cliquables */
+#face .hs { fill: transparent; stroke: transparent; cursor: pointer; }
+#face .hs:hover { fill: rgba(140, 200, 255, .10); stroke: rgba(140, 200, 255, .65); stroke-width: 1.2; }
+#face .hs.off:hover { stroke: rgba(160, 170, 185, .45); fill: rgba(160, 170, 185, .06); }
+#face .hs.down { fill: rgba(140, 200, 255, .28); }
+#face .kn { cursor: ns-resize; }
+#face .kn.dial { cursor: grab; }
+#face .kn.grab { cursor: grabbing; }
+#face .kn circle { fill: transparent; stroke: transparent; }
+#face .kn:hover .kn-o { stroke: rgba(140, 200, 255, .45); stroke-width: 1.5; stroke-dasharray: 4 4; }
+#face .kn:hover .kn-i { stroke: rgba(255, 210, 90, .55); stroke-width: 1.2; }
+#face.zones .hs { stroke: rgba(0, 255, 120, .8); stroke-width: 1; }
+#face.zones .kn-o { stroke: rgba(255, 230, 0, .8); stroke-width: 1; }
+#face.zones .kn-i { stroke: rgba(255, 0, 220, .8); stroke-width: 1; }
+
+/* Voyants */
+#face .led { fill: var(--c); opacity: 0; transition: opacity .15s; pointer-events: none; mix-blend-mode: screen; }
+#face .led.on { opacity: .42; filter: url(#glow); }
+#face .led.bar.on { opacity: .95; }
+#face .led.bar.bright { opacity: 1; filter: url(#glow); }
+#face .led.ring { fill: none; stroke: var(--c); stroke-width: 3; }
+#face .led.ring.on { opacity: .9; }
+
+/* Écran du TRX */
+#face .lcd text { font-family: 'Roboto Mono', ui-monospace, monospace; }
+#face .lcd-tbar { fill: #1d2433; }
+#face .lcd-ttl { fill: #6f86c9; font-size: 8.5px; font-weight: 700; letter-spacing: .6px; }
+#face .lcd-track { fill: #121a28; stroke: #2b3546; stroke-width: .6; }
+#face .lcd-fill { fill: #4f8dff; }
+#face .lcd-fill.tx { fill: #ff5a3c; }
+#face .lcd-fill2 { fill: #ffb020; }
+#face .lcd-scale { fill: #9aa7bd; font-size: 8.5px; letter-spacing: .4px; }
+#face .lcd-mval { fill: #fff; font-size: 13px; font-weight: 700; }
+#face .lcd-mval2 { fill: #ffcf4a; font-size: 10px; font-weight: 700; }
+#face .lcd-vfo { fill: #e6e9ef; font-size: 9px; font-weight: 700; font-style: italic; }
+#face .lcd-txb { fill: #ff6b5b; font-size: 9px; font-weight: 700; }
+#face .lcd-txb.on { fill: #ff2b1c; }
+#face .lcd-mode { fill: #c63a2a; }
+#face .lcd-modet { fill: #fff; font-size: 10.5px; font-weight: 700; }
+#face .lcd-freq { fill: #f4f6fa; font-size: 30px; font-weight: 700; letter-spacing: -.5px; font-style: italic; }
+#face .lcd-freq.dim { fill: #66707f; }
+#face .lcd-sel { fill: transparent; }
+#face .lcd-sel.on { fill: #4f8dff; }
+#face .lcd-cell { fill: #1a202b; }
+#face .lcd-clab { fill: #e2483a; font-size: 7.5px; font-weight: 700; }
+#face .lcd-cval { fill: #fff; font-size: 10.5px; font-weight: 700; }
+#face .lcd-side { fill: #6f86ff; font-size: 9px; font-weight: 700; }
+#face .lcd-flags { fill: #8aa0ff; font-size: 8.5px; font-weight: 700; }
+#face .lcd-flags.tx { fill: #ff5a3c; }
+#face .lcd-scope { fill: #05070c; stroke: #1c2433; stroke-width: .6; }
+#face .lcd-dsp { fill: #c9d3e3; font-size: 9.5px; }
+#face .lcd-hint { fill: #56637a; font-size: 9px; }
+#face .lcd-soft { fill: #1a202b; stroke: #333d4f; stroke-width: .6; }
+#face .lcd-soft.on { fill: #1f5f1f; stroke: #39ff14; }
+#face .lcd-soft.ro { fill: #10151d; }
+#face .lcd-softt { fill: #e9edf3; font-size: 9.5px; font-weight: 700; pointer-events: none; }
+#face .lcd-hit { fill: transparent; stroke: none; }
+#face .lcd-hit:hover { fill: rgba(140, 200, 255, .10); }
+@media (max-width: 900px) { .fc-vol { display: none; } }

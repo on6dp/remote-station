@@ -226,6 +226,14 @@ raccourci « Remote Station - Page Station » (Chrome avec les bons réglages, s
 - **Plusieurs TRX branchés au même PC** (chacun sur son port USB) : la page Station retient pour **chaque modèle** son port CAT (identité USB du câble) et sa carte son (entrée et sortie). Préparation au club, une fois par TRX : sélectionner le modèle, « Choisir le port du TRX », choisir l'entrée et la sortie son, « Enregistrer et reconnecter ». Ensuite la commutation à distance prend quelques secondes.
 - À la mise à jour vers la 0.27.0, la carte son déjà réglée est reprise pour le TRX en service à ce moment-là ; pour les autres modèles, choisir leur carte son une fois après la première commutation.
 
+### Face avant (page /ftdx101)
+
+- `https://remote.op0p.be/ftdx101` : la photo de la face avant du FTDX101MP (prise par ON6DP), avec une zone cliquable par touche et par bouton rotatif. Mêmes comptes, même main, mêmes sécurités que le dashboard ; le dashboard ne change pas.
+- Fichiers : `public/face.html`, `public/js/face.js` (fonctionnement), `public/css/face.css`, `public/faces/ftdx101.webp` (photo, voyants allumés effacés) et `public/faces/ftdx101.js` (position et fonction de chaque touche, en pixels de la photo).
+- **Vérifier ou corriger les zones** : `https://remote.op0p.be/ftdx101?zones=1` montre les contours et la position de la souris ; corriger les nombres dans `faces/ftdx101.js`.
+- **Autre modèle** (ex. FTDX10) : une photo `faces/ftdx10.webp`, une description `faces/ftdx10.js` sur le même modèle, la route `'/ftdx10': '/face.html'` dans `server.js` et la ligne `<script src="/faces/ftdx10.js">` dans `face.html`.
+- Le FTDX101 a deux réglages en plus pour cette page : AF du récepteur SUB (`AG1`) et BREAK-IN (`BI`), lus avec les autres ; ils n'apparaissent pas dans le dashboard.
+
 ### Commandes à distance (menu du voyant STATION, administrateurs)
 
 | Commande | Effet |

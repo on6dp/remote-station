@@ -24,6 +24,7 @@
 - [9. Émettre et sécurités](#emission)
 - [10. Opérateurs et discussion](#operateurs)
 - [11. Disposition et fenêtres séparées](#disposition)
+   - [11.1 Face avant du FTDX101](#face)
 - [12. Modes numériques](#numeriques)
    - [12.1 FT8 · FT4 · FT2](#ft8)
    - [12.2 JT65](#jt65)
@@ -460,6 +461,27 @@ L'émission n'est possible que si les administrateurs l'ont autorisée sur le se
 - **Taille de tout le dashboard** : menu `Auto 100 %` du bandeau (section 5), de 50 à 200 %.
 - **Poignées à glisser** (double-clic : taille d'origine, retenue dans ce navigateur) : sous la cascade (hauteur de la cascade et des listes), entre les deux listes FT8 et entre les deux décodeurs RTTY (largeurs), sur le bord gauche de la carte de bande (sa largeur), au bord droit des titres de colonnes du carnet (largeur des colonnes).
 - **Carte de bande** : sur un écran de 1920 × 1080 et plus, elle forme une colonne à part, **tout à droite**, sur toute la hauteur (la colonne RX audio / DSP / Accord / TX se place juste à sa gauche). Elle n'apparaît que sur les onglets qui ont des spots (FT8 · FT4 · FT2, JT65, RTTY, WSPR, JTTY, CW). Sur un écran plus petit, elle reste au bord droit de la fenêtre centrale.
+
+<a id="face"></a>
+### 11.1 Face avant du FTDX101 (page séparée)
+
+Adresse : **https://remote.op0p.be/ftdx101**. La photo de la face avant du FTDX101MP, où **chaque touche et chaque bouton fait la même chose que sur le TRX**. Le dashboard reste la page principale (modes numériques, carnet, phonie à distance…) : la face avant est une autre façon de piloter, à côté. Même connexion (pas de mot de passe à retaper si vous êtes déjà connecté dans ce navigateur), même bouton `Prendre la main`, mêmes sécurités. Elle ne sert que lorsque le FTDX101 est le TRX en service ; sinon la page l'indique.
+
+| Sur la face avant | Ce que ça fait |
+|---|---|
+| Touches **1.8 … 70/GEN** | Changent de bande sur le récepteur actif (MAIN ou SUB). Voyant blanc sous la touche : bande du MAIN ; bleu au-dessus : bande du SUB. |
+| **MAIN** / **SUB**, **MAIN/SUB** | Choisissent le récepteur sur lequel agissent le grand bouton, les touches de bande et de mode. |
+| **RX** / **TX** au-dessus du grand bouton, **MAIN⇆SUB** | RX du SUB : double réception en marche / arrêt. TX MAIN / TX SUB : VFO d'émission (TX SUB = SPLIT). MAIN⇆SUB : échange des fréquences. Voyants verts (réception) et rouges (émission) comme sur le TRX. |
+| **MODE**, **SSB**, **CW**, **BK-IN** | Mode suivant ; LSB ⇄ USB ; CW-U ⇄ CW-L ; break-in CW. |
+| **SPLIT**, **CLAR RX** / **TX**, **CLAR**, **LOCK** | SPLIT ; clarifier de réception (RIT) / d'émission (XIT) ; grande touche CLAR : RIT, et **appui long** : décalage à zéro ; LOCK verrouille le grand bouton du TRX. |
+| **NB**, **DNR**, **DNF**, **NOTCH**, **CONT**, **APF** | Rangée du haut : récepteur SUB ; rangée du bas : MAIN (comme sur le TRX). Voyant orange quand la fonction est en service. |
+| Boutons rotatifs | **Molette** de la souris sur le bouton, ou **cliquer-glisser** vers le haut / le bas. Boutons doubles : pointez le **centre** pour le bouton intérieur, le **bord** pour la bague. AF ◎ RF/SQL (SUB en haut, MAIN en bas) : volume au centre, gain HF sur la bague. SHIFT ◎ WIDTH : décalage au centre, largeur sur la bague. NOTCH : fréquence du notch au centre. MIC/SPEED ◎ PROC : gain micro au centre, niveau du processeur sur la bague. Une bulle montre la valeur. |
+| **Grand bouton** | Fréquence du récepteur actif : molette (100 Hz par cran), ou cliquer-glisser en tournant. **FINE TUNING** : 10 Hz par cran ; **FAST** : 1 kHz. Flèches ↑ ↓ du clavier : même chose. |
+| **MULTI** | Décalage du clarifier quand CLAR est actif (10 Hz par cran), sinon fréquence par pas de 1 kHz. |
+| **TUNE**, **VOX**, **PROC** | Accord de l'antenne (après confirmation, avec les sécurités habituelles) ; VOX (ne peut être que coupé à distance) ; processeur de modulation. |
+| Prise **PHONES** | Écouter le TRX (comme `Écouter le TRX` en haut) ; le **spectre de la BF** s'affiche alors à la place du scope. |
+| Écran | Remplacé par un affichage vivant : S-mètres MAIN et SUB (en émission : PO, COMP, ALC, SWR), fréquences et modes (clic sur une fréquence : la taper), ANT / ATT / IPO / R.FIL / AGC (clic : valeur suivante), réglages DSP des deux récepteurs. Touches du bas de l'écran : puissance −/+, TUNER, NAR, A → B, B → A. |
+| Sans effet à distance | ON/OFF, MOX (émission : PTT du dashboard), ZIN/SPOT, DISP, S.MENU, FUNC, QMB, VC TUNE, C.S, SYNC, MONI, mémoires, KEYER : un message l'explique. Le scope du TRX ne passe pas par la liaison CAT. |
 
 <a id="numeriques"></a>
 ## 12. Modes numériques

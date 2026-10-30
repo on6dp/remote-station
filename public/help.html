@@ -38,6 +38,7 @@
   <a href="#emission">9. Transmitting and safety</a>
   <a href="#operateurs">10. Operators and chat</a>
   <a href="#disposition">11. Layout and separate windows</a>
+  <a href="#face">11.1 FTDX101 front panel</a>
   <a href="#numeriques">12. Digital modes</a>
   <a href="#ft8">12.1 FT8 · FT4 · FT2</a>
   <a href="#jt65">12.2 JT65</a>
@@ -446,6 +447,19 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
   <li><b>Size of the whole dashboard</b>: <span class="k">Auto 100 %</span> menu in the top bar (section 5), from 50 to 200 %.</li>
   <li><b>Drag handles</b> (double-click: original size, remembered in this browser): under the waterfall (height of the waterfall and lists), between the two FT8 lists and between the two RTTY decoders (widths), on the left edge of the band map (its width), on the right edge of the logbook column titles (column widths).</li>
   <li><b>Band map</b>: on a 1920 × 1080 screen or larger, it is a column of its own, <b>far right</b>, full height (the RX audio / DSP / Tuner / TX column sits just to its left). It only appears on tabs with spots (FT8 · FT4 · FT2, JT65, RTTY, WSPR, JTTY, CW). On a smaller screen it stays at the right edge of the centre window.</li>
+</ul>
+
+<h3 id="face">11.1 FTDX101 front panel (separate page)</h3>
+<p>Address: <b>https://remote.op0p.be/ftdx101</b>. The photo of the FTDX101MP front panel, where <b>each key and knob does the same as on the TRX</b>. The dashboard stays the main page (digital modes, log, remote phone…): the front panel is another way to operate, alongside it. Same login (no password to retype if you are already logged in in this browser), same <span class="k">Prendre la main</span> button, same safety rules. Only useful when the FTDX101 is the TRX in service; otherwise the page says so.</p>
+<ul>
+  <li><b>Band keys</b>: change band on the active receiver (MAIN or SUB); white LED under the key = MAIN band, blue above = SUB band. <b>MAIN</b> / <b>SUB</b>, <b>MAIN/SUB</b>: choose the receiver the dial and keys act on.</li>
+  <li><b>RX / TX</b> above the dial: SUB RX = dual receive on/off; TX MAIN / TX SUB = transmit VFO (TX SUB = SPLIT); <b>MAIN⇆SUB</b> swaps frequencies.</li>
+  <li><b>MODE</b> (next mode), <b>SSB</b> (LSB ⇄ USB), <b>CW</b> (CW-U ⇄ CW-L), <b>BK-IN</b>, <b>SPLIT</b>, <b>CLAR RX / TX</b> (RIT / XIT), big <b>CLAR</b> (RIT; long press = offset to zero), <b>LOCK</b>, <b>FAST</b> / <b>FINE TUNING</b> (dial step 1 kHz / 10 Hz instead of 100 Hz).</li>
+  <li><b>NB DNR DNF NOTCH CONT APF</b>: top row = SUB receiver, bottom row = MAIN; orange LED when on.</li>
+  <li><b>Knobs</b>: mouse wheel over the knob, or click-and-drag up / down. Dual knobs: point at the <b>centre</b> for the inner knob, the <b>edge</b> for the ring (AF / RF, SHIFT / WIDTH, NOTCH, MIC gain / PROC level). <b>Dial</b>: wheel or drag in a circle; ↑ ↓ keys too. <b>MULTI</b>: clarifier offset when CLAR is on, otherwise 1 kHz steps.</li>
+  <li><b>TUNE</b> (after confirmation, usual safety rules), <b>VOX</b> (can only be switched off remotely), <b>PROC</b>. <b>PHONES</b> jack: listen to the TRX; the audio spectrum then replaces the scope.</li>
+  <li>The <b>screen</b> shows live data: S-meters (TX: PO, COMP, ALC, SWR), frequencies and modes (click a frequency to type it), ANT / ATT / IPO / R.FIL / AGC (click: next value), DSP settings; bottom soft keys: power −/+, TUNER, NAR, A → B, B → A.</li>
+  <li>No effect remotely (a message explains): ON/OFF, MOX (use the dashboard PTT), ZIN/SPOT, DISP, S.MENU, FUNC, QMB, VC TUNE, C.S, SYNC, MONI, memories, KEYER. The TRX scope is not sent over CAT.</li>
 </ul>
 
 <h2 id="numeriques">12. Digital modes</h2>

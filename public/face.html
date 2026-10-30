@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Remote Station · Face avant</title>
+<meta name="theme-color" content="#0b1018">
+<link rel="icon" href="/img/icon-192.png">
+<link rel="stylesheet" href="/css/rp-tokens.css">
+<link rel="stylesheet" href="/css/rp.css">
+<link rel="stylesheet" href="/css/face.css">
+</head>
+<body class="face-page">
+
+<header class="topbar">
+  <div class="tb-left">
+    <span class="lamp" id="lampLink" title="Serveur"><i></i><span>Serveur</span></span>
+    <span class="lamp" id="lampStation" title="Station (PC du club)"><i></i><span>Station</span></span>
+    <span class="lamp" id="lampTrx" title="TRX"><i></i><span id="rigLabel">TRX</span></span>
+  </div>
+  <div class="tb-title"><img class="tb-logo" src="/img/on5vl-logo.png" alt="ON5VL UBA Liège" width="110" height="48"><span id="stationCall"></span> <b id="clubName">Remote Station</b><img class="tb-logo" src="/img/on5vl-logo.png" alt="" aria-hidden="true" width="110" height="48"></div>
+  <div class="tb-right">
+    <span class="tb-call" id="meCall">—</span>
+    <button class="btn" id="ctrlBtn" type="button">Prendre la main</button>
+    <button class="btn accent fc-listen" id="listenBtn" type="button" aria-pressed="false" title="Entendre la BF du TRX (aussi : clic sur la prise PHONES)">🔊 Écouter le TRX</button>
+    <label class="fc-vol" title="Volume de l’écoute (dans ce navigateur)">🔈 <input id="listenVol" type="range" min="0" max="200" value="100"> <span id="listenVolOut">100 %</span></label>
+    <a class="btn help-btn" href="/" title="Revenir au dashboard (onglets, modes numériques, carnet…)">Dashboard</a>
+    <a class="btn help-btn" href="/aide#face" target="_blank" rel="noopener">HELP</a>
+  </div>
+</header>
+
+<main class="fc-main">
+  <p class="fc-msg" id="msg" role="status" aria-live="polite"></p>
+  <div class="fc-wrap" id="faceWrap">
+    <div class="fc-panel" id="facePanel">
+      <svg id="face" xmlns="http://www.w3.org/2000/svg" role="application" aria-label="Face avant du TRX"></svg>
+      <canvas class="fc-scope" id="scope" aria-hidden="true"></canvas>
+      <div class="fc-tip" id="tip" hidden></div>
+    </div>
+    <div class="fc-cover" id="cover" hidden></div>
+  </div>
+  <p class="fc-help" id="help">Clic sur une touche : sa fonction, comme sur le TRX. Boutons rotatifs : molette de la souris, ou cliquer-glisser vers le haut / le bas
+    (boutons doubles : bouton central au centre, bague extérieure sur le bord). Grand bouton : molette, ou glisser en tournant. Prise PHONES : écouter le TRX.
+    <span id="zoneInfo"></span></p>
+</main>
+
+<div class="login" id="login" hidden>
+  <form id="loginForm" autocomplete="on">
+    <h1>Remote Station</h1>
+    <p>Face avant du TRX : connectez-vous avec votre indicatif et votre mot de passe du club.</p>
+    <label>Indicatif<input name="call" id="loginCall" autocomplete="username" required maxlength="12" autocapitalize="characters" spellcheck="false"></label>
+    <label>Mot de passe<input name="pass" id="loginPass" type="password" autocomplete="current-password" required></label>
+    <button class="btn btn-primary" type="submit" id="loginBtn">Se connecter</button>
+    <p class="err" id="loginErr" role="alert"></p>
+  </form>
+</div>
+
+<script src="/js/yaesu.js"></script>
+<script src="/js/ftx1.js"></script>
+<script src="/js/ftdx10.js"></script>
+<script src="/js/ftdx101.js"></script>
+<script src="/js/ic7300.js"></script>
+<script src="/js/ulaw.js"></script>
+<script src="/faces/ftdx101.js"></script>
+<script src="/js/face.js"></script>
+</body>
+</html>

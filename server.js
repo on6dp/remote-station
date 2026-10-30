@@ -156,6 +156,8 @@ const TYPES = {
   '.css': 'text/css; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.jpg': 'image/jpeg',
   '.ico': 'image/x-icon',
   '.json': 'application/json; charset=utf-8',
   '.webmanifest': 'application/manifest+json',
@@ -164,7 +166,7 @@ const TYPES = {
 function qsyOrigins() {
   return (Array.isArray(cfg.qsyOrigins) ? cfg.qsyOrigins : DEFAULTS.qsyOrigins).map(String).filter((o) => /^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o));
 }
-const ROUTES = { '/': '/index.html', '/station': '/station.html', '/digi': '/digi.html', '/aide': '/aide.html', '/help': '/help.html', '/stats': '/stats.html', '/detache': '/detache.html' };
+const ROUTES = { '/': '/index.html', '/ftdx101': '/face.html', '/station': '/station.html', '/digi': '/digi.html', '/aide': '/aide.html', '/help': '/help.html', '/stats': '/stats.html', '/detache': '/detache.html' };
 
 function sendJson(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });

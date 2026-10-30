@@ -647,6 +647,7 @@
     for (const c of R.CONTROLS || []) if (order.indexOf(c) < 0) order.push(c);
     for (const c of order) {
       if (IN_VFO.indexOf(c.id) >= 0) continue; // RIT / XIT / CLEAR : sur les écrans VFO
+      if (c.face) continue; // réglages propres à la page Face avant (ex. AF du SUB, BK-IN du FTDX101)
       const box = $(where[c.id] || boxes[c.sec] || 'sec-other');
       const label = SHORT[c.id] || c.label;
       const ref = { c };
