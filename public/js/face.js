@@ -411,10 +411,12 @@
     f.bars = el('path', { d: '', class: 'flt-bars' }, g);
     f.trap = el('path', { d: '', class: 'flt-trap' }, g);
     f.center = el('line', { x1: x0 + w / 2, y1: y0 + 6, x2: x0 + w / 2, y2: y0 + h - 4, class: 'flt-ctr' }, g);
+    f.nline = el('line', { x1: x0, y1: y0 + 6, x2: x0, y2: y0 + h - 6, class: 'flt-notch', style: 'display:none' }, g);
     f.base = el('rect', { x: x0 + 6, y: y0 + h - 4, width: w - 12, height: 2.5, class: 'flt-base' }, g);
     return f;
   }
   // Fréquence BF du centre de la bande passante (sans le décalage SHIFT), selon le mode
+  const FLT_SPAN = 3200; // largeur (Hz de BF) représentée par le cadre du filtre
   function audioCenter(md, hz) { return /CW/.test(md) ? 700 : /DATA|RTTY|PSK/.test(md) ? 1500 : /AM|FM/.test(md) ? hz / 2 : 300 + hz / 2; }
   // NOTCH du récepteur (MAIN : notch / notchFreq ; SUB : notchB / notchFreqB) : fréquence BF et place dans le cadre du filtre
   // (cadre = 4 kHz de large ; en bande latérale inférieure, le TRX montre la bande à l'envers)
@@ -422,7 +424,7 @@
     const on = side === 'B' ? s.notchB : s.notch, f = side === 'B' ? s.notchFreqB : s.notchFreq;
     if (!on || !f || /FM/.test(md)) return null;
     const rev = /^LSB$|-L$/.test(md) ? -1 : 1;
-    return { f, rel: rev * (f - (audioCenter(md, hz) + (sh || 0))) / 4000 };
+    return { f, rel: rev * (f - (audioCenter(md, hz) + (sh || 0))) / FLT_SPAN };
   }
   // Trapèze du filtre (points), avec le creux du NOTCH s'il tombe dans la bande passante
   function trapPts(x0, w, cx, tw, top, bot, sl, nx, nw) {
@@ -897,13 +899,18 @@
       const wi = s['width' + sfx];
       const hz = tab && wi ? tab[wi - 1] : /CW|RTTY|PSK|DATA/.test(mode || '') && !/DATA-U|DATA-L/.test(mode || '') ? 500 : /AM|FM/.test(mode || '') ? 6000 : 2400;
       const sh = s['shift' + sfx] || 0;
-      const fr = Math.max(0.08, Math.min(0.9, hz / 4000));
+      const fr = Math.max(0.08, Math.min(0.9, hz / FLT_SPAN));
       const cx = fl.x0 + fl.w / 2 + Math.max(-0.4, Math.min(0.4, sh / 2400)) * fl.w;
       const tw = fl.w * fr, top = fl.y0 + 8, bot = fl.y0 + fl.h - 5, sl = Math.min(8, tw * 0.15);
       // NOTCH en service : creux étroit dans la bande passante, à sa fréquence (comme sur l'écran du TRX)
       const nf = notchOf(s, side, mode || '', hz, sh);
       const nx = nf ? cx + nf.rel * fl.w : null;
-      fl.trap.setAttribute('d', 'M' + trapPts(fl.x0, fl.w, cx, tw, top, bot, sl, nx, 2.6).map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
+      fl.trap.setAttribute('d', 'M' + trapPts(fl.x0, fl.w, cx, tw, top, bot, sl, nx, 3).map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
+      // NOTCH hors de la bande passante (sur les flancs ou au-delà) : simple trait rouge à sa place (au bord du cadre si plus loin)
+      const inPass = nx != null && nx - 3 > cx - tw / 2 + sl && nx + 3 < cx + tw / 2 - sl;
+      const nxc = nx == null ? 0 : Math.max(fl.x0 + 2, Math.min(fl.x0 + fl.w - 2, nx));
+      fl.nline.setAttribute('x1', nxc); fl.nline.setAttribute('x2', nxc);
+      fl.nline.style.display = nx != null && !inPass ? '' : 'none';
       LCD.flt = LCD.flt || {};
       LCD.flt[side] = { fr, off: Math.max(-0.4, Math.min(0.4, sh / 2400)), hz, sh, mode: mode || '', notch: nf };
       fl.center.setAttribute('x1', cx); fl.center.setAttribute('x2', cx);
@@ -1305,6 +1312,14 @@
       c2.beginPath();
       trapPts(x0, w, cx, tw, top, bot, sl, f.notch ? cx + f.notch.rel * w : null, 5).forEach((p, j) => (j ? c2.lineTo(p[0], p[1]) : c2.moveTo(p[0], p[1])));
       c2.stroke();
+      if (f.notch) {
+        const nx = cx + f.notch.rel * w;
+        if (!(nx - 5 > cx - tw / 2 + sl && nx + 5 < cx + tw / 2 - sl)) {
+          const xc = Math.max(x0 + 3, Math.min(x0 + w - 3, nx));
+          c2.strokeStyle = '#ff2b1c'; c2.lineWidth = 2; c2.setLineDash([4, 3]);
+          c2.beginPath(); c2.moveTo(xc, top); c2.lineTo(xc, bot); c2.stroke(); c2.setLineDash([]);
+        }
+      }
       c2.strokeStyle = '#ff9a1f'; c2.lineWidth = 2;
       c2.beginPath(); c2.moveTo(cx, top - 6); c2.lineTo(cx, bot); c2.stroke();
       c2.fillStyle = '#3b6dff'; c2.fillRect(cx - tw / 2 + 3, bot + 2, Math.max(4, tw - 6), 3);
