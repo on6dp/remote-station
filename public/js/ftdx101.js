@@ -14,6 +14,8 @@
   const Y = (typeof module !== 'undefined' && module.exports) ? require('./yaesu.js') : root.YAESU;
   const pad = Y.pad;
   const signed4 = Y.signed4;
+  // APF : 0000-0050 → −250 … +250 Hz (25 = centre)
+  const apfHz = (v) => { const h = (v - 25) * 10; return (h > 0 ? '+' : '') + h + ' Hz'; };
   // Puissance : 3 chiffres sans tête (PC005…PC200). Le modèle vient de la réponse à ID : 0681 = D (100 W), 0682 = MP (200 W).
   // Tant que ID n'est pas lu, on reste prudent : plage du D.
   const RANGE = { D: [5, 100], M: [5, 200] };
@@ -99,6 +101,11 @@
       { cmd: 'IS1;', re: /^IS10([+-])(\d{4})$/, parse: (m) => ({ shiftB: Y.sgn(m[1]) * +m[2] }), sim: 'IS10+0000' },
       { cmd: 'CO10;', re: /^CO10(\d{4})$/, parse: (m) => ({ contourB: +m[1] ? 1 : 0 }), sim: 'CO100000' },
       { cmd: 'CO12;', re: /^CO12(\d{4})$/, parse: (m) => ({ apfB: +m[1] ? 1 : 0 }), sim: 'CO120000' },
+      // Face avant : fréquence du CONTOUR (CO P1 1 : 0010-3200 Hz) et de l'APF (CO P1 3 : 0000-0050 = −250…+250 Hz), MAIN et SUB
+      { cmd: 'CO01;', re: /^CO01(\d{4})$/, parse: (m) => ({ contourFreq: +m[1] }), sim: 'CO011000' },
+      { cmd: 'CO11;', re: /^CO11(\d{4})$/, parse: (m) => ({ contourFreqB: +m[1] }), sim: 'CO111000' },
+      { cmd: 'CO03;', re: /^CO03(\d{4})$/, parse: (m) => ({ apfFreq: +m[1] }), sim: 'CO030025' },
+      { cmd: 'CO13;', re: /^CO13(\d{4})$/, parse: (m) => ({ apfFreqB: +m[1] }), sim: 'CO130025' },
       { cmd: 'RA1;', re: /^RA1([0-3])$/, parse: (m) => ({ attB: +m[1] }), sim: 'RA10' },
       { cmd: 'PA1;', re: /^PA1([0-2])$/, parse: (m) => ({ preampB: +m[1] }), sim: 'PA10' },
       // Filtre de toit (ROOFING) : réglé par RF P1 1–5, relu en RF P1 6–A (12 kHz, 3 kHz, 1,2 kHz, 600 Hz, 300 Hz)
@@ -115,7 +122,7 @@
       { cmd: 'VT1;', re: /^VT1([01])(\d{3})?(\d)?/, parse: (m) => ({ vcB: +m[1], vcPosB: m[2] != null ? +m[2] : null, vcOkB: m[3] == null ? null : +m[3] }), sim: 'VT101281' }
     ],
     extraQueries: ['RF0;', 'RF1;', 'ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
-    extraStateKeys: ['vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
+    extraStateKeys: ['contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
     // CW : mémoire 1 du manipulateur (écrasée), lue par KY6 (« Message Keyer 1 Playback », manuel CAT 1912-D) ;
     // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
@@ -179,6 +186,10 @@
       { id: 'bkin', g: 'tx', label: 'BK-IN', type: 'toggle', face: true, write: (v) => 'BI' + v + ';' },
       { id: 'keyer', g: 'tx', label: 'KEYER', type: 'toggle', face: true, write: (v) => 'KR' + v + ';' },
       // VC TUNE : marche / arrêt (pas de déplacement : +0), puis MULTI déplace l'accord du présélecteur (+ / − 1 pas)
+      { id: 'contourFreq', g: 'flt', label: 'Fréquence CONTOUR', type: 'level', min: 10, max: 3200, step: 10, unit: 'Hz', face: true, write: (v) => 'CO01' + pad(v, 4) + ';' },
+      { id: 'contourFreqB', g: 'flt', label: 'Fréquence CONTOUR (VFO B)', type: 'level', min: 10, max: 3200, step: 10, unit: 'Hz', face: true, write: (v) => 'CO11' + pad(v, 4) + ';' },
+      { id: 'apfFreq', g: 'flt', label: 'Fréquence APF', type: 'level', min: 0, max: 50, step: 1, face: true, fmt: apfHz, write: (v) => 'CO03' + pad(v, 4) + ';' },
+      { id: 'apfFreqB', g: 'flt', label: 'Fréquence APF (VFO B)', type: 'level', min: 0, max: 50, step: 1, face: true, fmt: apfHz, write: (v) => 'CO13' + pad(v, 4) + ';' },
       { id: 'vc', g: 'rx', label: 'VC TUNE (MAIN)', type: 'toggle', face: true, write: (v) => 'VT0' + v + '+0;' },
       { id: 'vcB', g: 'rx', label: 'VC TUNE (SUB)', type: 'toggle', face: true, write: (v) => 'VT1' + v + '+0;' },
       { id: 'vcUp', g: 'rx', label: 'VC TUNE + (MAIN)', type: 'action', face: true, write: () => 'VT01+1;' },

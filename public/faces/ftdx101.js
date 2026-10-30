@@ -63,12 +63,18 @@
       { id: 'bkin', x: 767, y: 372, w: 28, h: 18, tip: 'BK-IN : break-in CW', act: { toggle: 'bkin' }, led: (s) => !!s.bkin },
       { id: 'moni', x: 767, y: 414, w: 28, h: 18, tip: 'MONI : entendre sa propre modulation (« M’écouter », au casque)', act: { local: 'moni' }, led: () => !!(window.RSVOICE && window.RSVOICE.monitorOn()) },
       // SYNC, SPLIT, CLAR RX / TX, FAST, LOCK
-      { id: 'sync', x: 819, y: 221, w: 43, h: 16, tip: 'SYNC : met les deux VFO sur la même fréquence (celle du récepteur actif), puis le grand bouton les accorde ensemble ; nouveau clic : arrêt', act: { local: 'sync' }, led: (s, L) => L.sync },
-      { id: 'split', x: 874, y: 221, w: 44, h: 16, tip: 'SPLIT : émission sur le SUB (VFO B)', act: { toggle: 'split' }, led: (s) => !!s.split },
-      { id: 'clarRx', x: 819, y: 262, w: 43, h: 18, tip: 'CLAR RX (RIT)', act: { toggle: 'rit' }, led: (s) => !!s.rit },
-      { id: 'clarTx', x: 874, y: 262, w: 44, h: 18, tip: 'CLAR TX (XIT)', act: { toggle: 'xit' }, led: (s) => !!s.xit },
-      { id: 'fast', x: 819, y: 415, w: 43, h: 17, tip: 'FAST : accord rapide (×10)', act: { local: 'fast' }, led: (s, L) => L.fast },
-      { id: 'lock', x: 874, y: 415, w: 44, h: 17, tip: 'LOCK : verrouille le grand bouton du TRX', act: { toggle: 'lock' }, led: (s) => !!s.lock },
+      { id: 'sync', x: 819, y: 221, w: 43, h: 16, tip: 'SYNC : met les deux VFO sur la même fréquence (celle du récepteur actif), puis le grand bouton les accorde ensemble ; nouveau clic : arrêt', act: { local: 'sync' },
+        leds: [{ x: 835, y: 203.5, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s, L) => !!L.sync, bright: (s, L) => !!L.sync }] },
+      { id: 'split', x: 874, y: 221, w: 44, h: 16, tip: 'SPLIT : émission sur le SUB (VFO B)', act: { toggle: 'split' },
+        leds: [{ x: 889.5, y: 203.5, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s) => !!s.split, bright: (s) => !!s.split }] },
+      { id: 'clarRx', x: 819, y: 262, w: 43, h: 18, tip: 'CLAR RX (RIT)', act: { toggle: 'rit' },
+        leds: [{ x: 835, y: 245, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s) => !!s.rit, bright: (s) => !!s.rit }] },
+      { id: 'clarTx', x: 874, y: 262, w: 44, h: 18, tip: 'CLAR TX (XIT)', act: { toggle: 'xit' },
+        leds: [{ x: 889.5, y: 245, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s) => !!s.xit, bright: (s) => !!s.xit }] },
+      { id: 'fast', x: 819, y: 415, w: 43, h: 17, tip: 'FAST : accord rapide (×10)', act: { local: 'fast' },
+        leds: [{ x: 835, y: 403.5, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s, L) => !!L.fast, bright: (s, L) => !!L.fast }] },
+      { id: 'lock', x: 874, y: 415, w: 44, h: 17, tip: 'LOCK : verrouille le grand bouton du TRX', act: { toggle: 'lock' },
+        leds: [{ x: 889.5, y: 403.5, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s) => !!s.lock, bright: (s) => !!s.lock }] },
       // RX / TX / MAIN⇆SUB au-dessus du grand bouton
       { id: 'rxMain', x: 937, y: 192, w: 63, h: 18, tip: 'RX MAIN : le récepteur MAIN est toujours en service', act: info('Le récepteur MAIN reste toujours en service.'),
         leds: [{ x: 955, y: 190, w: 31, h: 4, color: '#3ddc5a', on: (s) => !!s.connected }] },
@@ -112,13 +118,21 @@
       { id: 'multi', cx: 762, cy: 510, ro: 30, multi: true, tip: 'MULTI : décalage du clarifier (CLAR actif), sinon la fonction de la case MULTI de l’écran (choisie dans FUNC, ex. RF POWER)' },
       { id: 'afSub', cx: 871, cy: 350, ri: 20, ro: 44, inner: { ctl: 'afB', label: 'AF SUB', per: 5 }, outer: { ctl: 'rfB', label: 'RF SUB', per: 5 } },
       { id: 'afMain', cx: 871, cy: 500, ri: 20, ro: 44, inner: { ctl: 'af', label: 'AF MAIN', per: 5 }, outer: { ctl: 'rf', label: 'RF MAIN', per: 5 } },
-      { id: 'swSub', cx: 1365, cy: 350, ri: 18, ro: 44, inner: { ctl: 'shiftB', label: 'SHIFT SUB', per: 20 }, outer: { ctl: 'widthB', label: 'WIDTH SUB', per: 1 }, push: 'narrowB', pushLabel: 'NAR SUB' },
-      { id: 'swMain', cx: 1365, cy: 500, ri: 18, ro: 44, inner: { ctl: 'shift', label: 'SHIFT MAIN', per: 20 }, outer: { ctl: 'width', label: 'WIDTH MAIN', per: 1 }, push: 'narrow', pushLabel: 'NAR MAIN' },
-      { id: 'notchSub', cx: 1492, cy: 350, ri: 18, ro: 44, inner: { ctl: 'notchFreqB', label: 'NOTCH SUB', per: 10 }, outer: { info: 'CONT / APF : niveau pas encore relié' } },
-      { id: 'notchMain', cx: 1492, cy: 500, ri: 18, ro: 44, inner: { ctl: 'notchFreq', label: 'NOTCH MAIN', per: 10 }, outer: { info: 'CONT / APF : niveau pas encore relié' } },
+      { id: 'swSub', cx: 1365, cy: 350, ri: 18, ro: 44, inner: { ctl: 'shiftB', label: 'SHIFT SUB', per: 20 }, outer: { ctl: 'widthB', label: 'WIDTH SUB', per: 1 }, push: 'narrowB', pushLabel: 'NAR SUB',
+        // Petits voyants orange : SHIFT décalé (≠ 0) à gauche, WIDTH changé (≠ largeur par défaut) à droite
+        leds: [{ x: 1321.0, y: 307.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s) => !!s.shiftB, bright: (s) => !!s.shiftB },
+          { x: 1399.5, y: 307.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s) => !!s.widthB, bright: (s) => !!s.widthB }] },
+      { id: 'swMain', cx: 1365, cy: 500, ri: 18, ro: 44, inner: { ctl: 'shift', label: 'SHIFT MAIN', per: 20 }, outer: { ctl: 'width', label: 'WIDTH MAIN', per: 1 }, push: 'narrow', pushLabel: 'NAR MAIN',
+        // Petits voyants orange : SHIFT décalé (≠ 0) à gauche, WIDTH changé (≠ largeur par défaut) à droite
+        leds: [{ x: 1321.0, y: 457.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s) => !!s.shift, bright: (s) => !!s.shift },
+          { x: 1399.5, y: 457.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s) => !!s.width, bright: (s) => !!s.width }] },
+      { id: 'notchSub', cx: 1492, cy: 350, ri: 18, ro: 44, inner: { ctl: 'notchFreqB', label: 'NOTCH SUB', per: 10 }, outer: { ctl: 'contourFreqB', label: 'CONT SUB', per: 10, offKey: 'contourB', offName: 'CONT',
+        alt: { when: (s) => /^CW/.test(s.modeB || '') && !!s.apfB, ctl: 'apfFreqB', label: 'APF SUB', per: 1 } } },
+      { id: 'notchMain', cx: 1492, cy: 500, ri: 18, ro: 44, inner: { ctl: 'notchFreq', label: 'NOTCH MAIN', per: 10 }, outer: { ctl: 'contourFreq', label: 'CONT MAIN', per: 10, offKey: 'contour', offName: 'CONT',
+        alt: { when: (s) => /^CW/.test(s.mode || '') && !!s.apf, ctl: 'apfFreq', label: 'APF MAIN', per: 1 } } },
       { id: 'micProc', cx: 1492, cy: 195, ri: 18, ro: 44, inner: { ctl: 'mic', label: 'MIC GAIN', per: 2 }, outer: { ctl: 'procLvl', label: 'PROC', per: 2 },
         // Pousser le bouton : KEYER en CW, PROC en phonie (voyant au-dessus du bouton)
-        push: (s) => (/^CW/.test((s.vfoSel === 1 ? s.modeB : s.mode) || '') ? 'keyer' : 'proc'), pushLabel: (s) => (/^CW/.test((s.vfoSel === 1 ? s.modeB : s.mode) || '') ? 'KEYER' : 'PROC') }
+        push: (s) => (/^CW/.test((s.split ? s.modeB : s.mode) || '') ? 'keyer' : 'proc'), pushLabel: (s) => (/^CW/.test((s.split ? s.modeB : s.mode) || '') ? 'KEYER' : 'PROC') }
     ]
   };
 })();

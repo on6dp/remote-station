@@ -90,6 +90,16 @@
       // remis comme avant après ce délai sans émission en phonie, ou tout de suite à la demande du serveur (main rendue…)
       this.voiceHoldMs = o.voiceHoldMs || 20000;
     }
+    /** Lecture lente dont la valeur vient de changer : relue à chaque cycle pendant 4 s (au plus 3 à la fois). */
+    _hot(k) {
+      const rig = this.rig;
+      if (!rig.FRAME_GAP_MS || TX_METER_KEYS.indexOf(k) >= 0 || /^(smeter|idd|vdd|temp|po|swr|alc|comp|vcPos)/i.test(k)) return;
+      const cmd = rig.readFor && rig.readFor(k, this.radio);
+      if (!cmd || (rig.FAST || []).indexOf(cmd) >= 0 || (rig.FAST_SUB || []).indexOf(cmd) >= 0) return;
+      this.hot = this.hot || new Map();
+      if (!this.hot.has(cmd) && this.hot.size >= 3) return;
+      this.hot.set(cmd, Date.now() + 4000);
+    }
     /** Demande la relecture d'une clé d'état au prochain cycle (pilotes à trames). */
     _readBack(id) {
       const r = this.rig.readFor && this.rig.readFor(id, this.radio);
@@ -175,6 +185,8 @@
           // Mesure d'émission arrivée après le retour en réception (lecture déjà en file) : ignorée
           if (TX_METER_KEYS.indexOf(k) >= 0 && !this.radio.tx && p.tx == null) continue;
           if (this.radio[k] !== p[k]) {
+            // Réglage tourné sur le TRX lui-même (NOTCH, SHIFT, WIDTH…) : relu à chaque cycle pendant 4 s pour le suivre en direct
+            if (this.radio[k] != null) this._hot(k);
             this.radio[k] = p[k];
             this.dirty = true;
           }
@@ -254,7 +266,9 @@
           for (let i = 0; i < n * (this.forceSlow ? 2 : 1); i++) slow.push(rig.SLOW[(this.slowPos + i) % rig.SLOW.length]);
           this.slowPos = (this.slowPos + slow.length) % rig.SLOW.length;
           // Relectures prioritaires (réglage qui vient d'être modifié), puis lectures rapides, puis tranche lente
-          this.queue = this.prio.concat(rig.FAST, rig.FAST_SUB || [], this.radio.tx ? rig.TXMETERS : [], slow);
+          const hot = [];
+          if (this.hot) for (const [c, until] of this.hot) { if (now > until) this.hot.delete(c); else if (this.prio.indexOf(c) < 0 && slow.indexOf(c) < 0) hot.push(c); }
+          this.queue = this.prio.concat(hot, rig.FAST, rig.FAST_SUB || [], this.radio.tx ? rig.TXMETERS : [], slow);
           this.prio = [];
           this._drain();
         }

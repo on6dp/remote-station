@@ -68,6 +68,16 @@
   }
 
   // ------------------------------------------------------------ commandes vers le TRX
+  // Mode d'émission : celui du VFO qui émet (SUB en SPLIT), pas forcément celui du récepteur affiché
+  function txMode(s) { return (s.split ? s.modeB : s.mode) || ''; }
+  // PROC : le TRX ne l'accepte qu'en phonie SSB / AM sur le VFO d'émission (sinon il répond « ?; »)
+  function procRefused(s, id, v) {
+    if ((id !== 'proc' && id !== 'procB') || !v) return false;
+    const m = txMode(s);
+    if (/^(LSB|USB|AM)/.test(m)) return false;
+    say('PROC : seulement en SSB ou AM sur le VFO d’émission (' + (s.split ? 'SUB' : 'MAIN') + ' en ' + (m || '?') + ').', 'warn', 5000);
+    return true;
+  }
   function setCtl(id, v) {
     if (!needControl()) return;
     const c = R && R.CONTROL[id];
@@ -174,7 +184,7 @@
       const i = CYCLE.indexOf(cur);
       return setMode(CYCLE[(i + 1) % CYCLE.length]);
     }
-    if (a.toggle) return setCtl(a.toggle, s[a.toggle] ? 0 : 1);
+    if (a.toggle) { const v = s[a.toggle] ? 0 : 1; if (procRefused(s, a.toggle, v)) return; return setCtl(a.toggle, v); }
     if (a.set) return setCtl(a.set[0], a.set[1]);
     if (a.action) {
       if (a.action === 'tune' && !confirm('TUNE : le TRX émet quelques secondes pour accorder l’antenne. Continuer ?')) return;
@@ -224,7 +234,7 @@
     }
     // Voyants des touches (sous les zones cliquables)
     const leds = el('g', { class: 'leds' }, svg);
-    for (const k of FACE.keys) {
+    for (const k of FACE.keys.concat((FACE.knobs || []).filter((x) => x.leds))) {
       if (k.led && k.lit) {
         // Touche éclairée comme sur le TRX (MAIN blanc, SUB bleu) : forme de la touche, fond plein et son nom
         const e = el('g', { class: 'lit' }, leds);
@@ -238,7 +248,7 @@
         ledEls.push({ el: e, on: k.led });
       }
       for (const d of k.leds || []) {
-        const e = el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: 1.5, class: 'led bar', style: '--c:' + d.color }, leds);
+        const e = el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: d.rx != null ? d.rx : 1.5, class: 'led bar', style: '--c:' + d.color }, leds);
         ledEls.push({ el: e, on: d.on, bright: d.bright });
       }
     }
@@ -416,7 +426,7 @@
     return f;
   }
   // Fréquence BF du centre de la bande passante (sans le décalage SHIFT), selon le mode
-  const FLT_SPAN = 3200; // largeur (Hz de BF) représentée par le cadre du filtre
+  const FLT_SPAN = 4200; // largeur (Hz de BF) représentée par le cadre du filtre
   function audioCenter(md, hz) { return /CW/.test(md) ? 700 : /DATA|RTTY|PSK/.test(md) ? 1500 : /AM|FM/.test(md) ? hz / 2 : 300 + hz / 2; }
   // NOTCH du récepteur (MAIN : notch / notchFreq ; SUB : notchB / notchFreqB) : fréquence BF et place dans le cadre du filtre
   // (cadre = 4 kHz de large ; en bande latérale inférieure, le TRX montre la bande à l'envers)
@@ -428,7 +438,7 @@
   }
   // Trapèze du filtre (points), avec le creux du NOTCH s'il tombe dans la bande passante
   function trapPts(x0, w, cx, tw, top, bot, sl, nx, nw) {
-    const a = cx - tw / 2, b = cx + tw / 2;
+    const a = Math.max(x0 + 4, cx - tw / 2), b = Math.min(x0 + w - 4, cx + tw / 2);
     const pts = [[x0 + 3, bot], [a, bot], [a + sl, top]];
     if (nx != null && nx - nw > a + sl && nx + nw < b - sl) pts.push([nx - nw, top], [nx, bot - 1], [nx + nw, top]);
     pts.push([b - sl, top], [b, bot], [x0 + w - 3, bot]);
@@ -746,8 +756,9 @@
       if (L.sync && !k.multi) tuneTo(side === 'B' ? 'A' : 'B', hz); // SYNC : les deux VFO ensemble
       return showTip(ev, (side === 'B' ? 'SUB ' : 'MAIN ') + fmtFreq(hz) + ' MHz');
     }
-    const spec = k[part];
+    let spec = k[part];
     if (!spec) return;
+    if (spec.alt && spec.alt.when(s)) spec = spec.alt; // ex. bague CONT/APF : APF en CW quand l'APF est en service
     if (spec.info) return say(spec.info, '', 4000);
     const c = R.CONTROL[spec.ctl];
     if (!c) return say(spec.label + ' : non disponible sur ce TRX.', 'warn');
@@ -755,13 +766,21 @@
     if (c.type === 'width') {
       const tab = R.widthTable(s[c.modeKey || 'mode']) || [];
       if (!tab.length) return say(spec.label + ' : pas de réglage de largeur dans ce mode.', 'warn');
-      v = Math.max(0, Math.min(tab.length, (s[spec.ctl] || 0) + notches * (spec.per || 1)));
-      try { R.validate(spec.ctl, v, s); } catch (e) { v = Math.max(1, v); }
+      if (R.WIDTH_DEF) {
+        // Comme le bouton WIDTH du TRX : la largeur par défaut (00, voyant éteint) est au milieu ; on part de là
+        const di = tab.indexOf(2400) + 1 || Math.ceil(tab.length / 2);
+        const cur = s[spec.ctl] || di;
+        const nx = Math.max(1, Math.min(tab.length, cur + notches * (spec.per || 1)));
+        v = nx === di ? 0 : nx;
+      } else {
+        v = Math.max(0, Math.min(tab.length, (s[spec.ctl] || 0) + notches * (spec.per || 1)));
+        try { R.validate(spec.ctl, v, s); } catch (e) { v = Math.max(1, v); }
+      }
     } else if (c.type === 'level') {
       v = Math.max(c.min, Math.min(c.max, (s[spec.ctl] != null ? s[spec.ctl] : c.min) + notches * (spec.per || c.step)));
     } else return;
     setCtl(spec.ctl, v);
-    showTip(ev, spec.label + ' ' + fmtVal(c, v, s));
+    showTip(ev, spec.label + ' ' + fmtVal(c, v, s) + (spec.offKey && !s[spec.offKey] ? ' (' + spec.offName + ' arrêté)' : ''));
   }
   function knobEvents(g, k) {
     let acc = 0;
@@ -805,10 +824,11 @@
         const s0 = S();
         const id = typeof k.push === 'function' ? k.push(s0, L) : k.push;
         const lab = typeof k.pushLabel === 'function' ? k.pushLabel(s0, L) : (k.pushLabel || id);
-        if (id) { const v = s0[id] ? 0 : 1; setCtl(id, v); showTip(ev, lab + (v ? ' ON' : ' OFF')); }
+        if (id) { const v = s0[id] ? 0 : 1; if (procRefused(s0, id, v)) return end2(); setCtl(id, v); showTip(ev, lab + (v ? ' ON' : ' OFF')); }
       }
-      drag = null; g.classList.remove('grab'); hideTip(600);
+      end2();
     };
+    const end2 = () => { drag = null; g.classList.remove('grab'); hideTip(600); };
     g.addEventListener('pointerup', end);
     g.addEventListener('pointercancel', end);
     g.addEventListener('pointerleave', () => { if (!drag) hideTip(400); });
@@ -831,8 +851,9 @@
     if (v == null) return '—';
     if (c.type === 'width') {
       const tab = R.widthTable(s[c.modeKey || 'mode']) || [];
-      return v === 0 ? 'défaut' : tab[v - 1] != null ? tab[v - 1] + ' Hz' : String(v);
+      return v === 0 ? 'défaut' + (R.WIDTH_DEF && tab.indexOf(2400) >= 0 ? ' (2400 Hz)' : '') : tab[v - 1] != null ? tab[v - 1] + ' Hz' : String(v);
     }
+    if (c.fmt) return c.fmt(v);
     if (c.pct) return Math.round(v / 255 * 100) + ' %';
     return v + (c.unit ? ' ' + c.unit : '');
   }
@@ -899,7 +920,7 @@
       const wi = s['width' + sfx];
       const hz = tab && wi ? tab[wi - 1] : /CW|RTTY|PSK|DATA/.test(mode || '') && !/DATA-U|DATA-L/.test(mode || '') ? 500 : /AM|FM/.test(mode || '') ? 6000 : 2400;
       const sh = s['shift' + sfx] || 0;
-      const fr = Math.max(0.08, Math.min(0.9, hz / FLT_SPAN));
+      const fr = Math.max(0.06, Math.min(0.96, hz / FLT_SPAN));
       const cx = fl.x0 + fl.w / 2 + Math.max(-0.4, Math.min(0.4, sh / 2400)) * fl.w;
       const tw = fl.w * fr, top = fl.y0 + 8, bot = fl.y0 + fl.h - 5, sl = Math.min(8, tw * 0.15);
       // NOTCH en service : creux étroit dans la bande passante, à sa fréquence (comme sur l'écran du TRX)
