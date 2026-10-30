@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.4 | [RemoteStation-Setup-0.32.4.exe](0.32.4/RemoteStation-Setup-0.32.4.exe) | [remote-station-0.32.4.tar.gz](0.32.4/remote-station-0.32.4.tar.gz) | Face avant : NOTCH visible dans le filtre (creux) et sur le spectre — [empreintes SHA-256](0.32.4/SHA256SUMS.txt) |
 | 0.32.3 | [RemoteStation-Setup-0.32.3.exe](0.32.3/RemoteStation-Setup-0.32.3.exe) | [remote-station-0.32.3.tar.gz](0.32.3/remote-station-0.32.3.tar.gz) | Face avant : VC TUNE — petite touche marche / arrêt (voyant qui s'éteint), grande touche = bague du grand bouton — [empreintes SHA-256](0.32.3/SHA256SUMS.txt) |
 | 0.32.2 | [RemoteStation-Setup-0.32.2.exe](0.32.2/RemoteStation-Setup-0.32.2.exe) | [remote-station-0.32.2.tar.gz](0.32.2/remote-station-0.32.2.tar.gz) | Face avant : MAIN blanc / SUB bleu éclairés, voyants PROC / KEYER plus petits — [empreintes SHA-256](0.32.2/SHA256SUMS.txt) |
 | 0.32.1 | [RemoteStation-Setup-0.32.1.exe](0.32.1/RemoteStation-Setup-0.32.1.exe) | [remote-station-0.32.1.tar.gz](0.32.1/remote-station-0.32.1.tar.gz) | Face avant : TRX à gauche, PTT et SSB CONFIGURATION à droite, image remontée, DISP, S.MENU, VC TUNE, voyants PROC / KEYER — [empreintes SHA-256](0.32.1/SHA256SUMS.txt) |

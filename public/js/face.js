@@ -414,6 +414,24 @@
     f.base = el('rect', { x: x0 + 6, y: y0 + h - 4, width: w - 12, height: 2.5, class: 'flt-base' }, g);
     return f;
   }
+  // Fréquence BF du centre de la bande passante (sans le décalage SHIFT), selon le mode
+  function audioCenter(md, hz) { return /CW/.test(md) ? 700 : /DATA|RTTY|PSK/.test(md) ? 1500 : /AM|FM/.test(md) ? hz / 2 : 300 + hz / 2; }
+  // NOTCH du récepteur (MAIN : notch / notchFreq ; SUB : notchB / notchFreqB) : fréquence BF et place dans le cadre du filtre
+  // (cadre = 4 kHz de large ; en bande latérale inférieure, le TRX montre la bande à l'envers)
+  function notchOf(s, side, md, hz, sh) {
+    const on = side === 'B' ? s.notchB : s.notch, f = side === 'B' ? s.notchFreqB : s.notchFreq;
+    if (!on || !f || /FM/.test(md)) return null;
+    const rev = /^LSB$|-L$/.test(md) ? -1 : 1;
+    return { f, rel: rev * (f - (audioCenter(md, hz) + (sh || 0))) / 4000 };
+  }
+  // Trapèze du filtre (points), avec le creux du NOTCH s'il tombe dans la bande passante
+  function trapPts(x0, w, cx, tw, top, bot, sl, nx, nw) {
+    const a = cx - tw / 2, b = cx + tw / 2;
+    const pts = [[x0 + 3, bot], [a, bot], [a + sl, top]];
+    if (nx != null && nx - nw > a + sl && nx + nw < b - sl) pts.push([nx - nw, top], [nx, bot - 1], [nx + nw, top]);
+    pts.push([b - sl, top], [b, bot], [x0 + w - 3, bot]);
+    return pts;
+  }
   function buildLcd() {
     const c = FACE.lcd;
     const X = (v) => c.x + v, Y = (v) => c.y + v;
@@ -882,9 +900,12 @@
       const fr = Math.max(0.08, Math.min(0.9, hz / 4000));
       const cx = fl.x0 + fl.w / 2 + Math.max(-0.4, Math.min(0.4, sh / 2400)) * fl.w;
       const tw = fl.w * fr, top = fl.y0 + 8, bot = fl.y0 + fl.h - 5, sl = Math.min(8, tw * 0.15);
-      fl.trap.setAttribute('d', 'M' + (fl.x0 + 3) + ' ' + bot + 'L' + (cx - tw / 2) + ' ' + bot + 'L' + (cx - tw / 2 + sl) + ' ' + top + 'L' + (cx + tw / 2 - sl) + ' ' + top + 'L' + (cx + tw / 2) + ' ' + bot + 'L' + (fl.x0 + fl.w - 3) + ' ' + bot);
+      // NOTCH en service : creux étroit dans la bande passante, à sa fréquence (comme sur l'écran du TRX)
+      const nf = notchOf(s, side, mode || '', hz, sh);
+      const nx = nf ? cx + nf.rel * fl.w : null;
+      fl.trap.setAttribute('d', 'M' + trapPts(fl.x0, fl.w, cx, tw, top, bot, sl, nx, 2.6).map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
       LCD.flt = LCD.flt || {};
-      LCD.flt[side] = { fr, off: Math.max(-0.4, Math.min(0.4, sh / 2400)), hz, sh, mode: mode || '' };
+      LCD.flt[side] = { fr, off: Math.max(-0.4, Math.min(0.4, sh / 2400)), hz, sh, mode: mode || '', notch: nf };
       fl.center.setAttribute('x1', cx); fl.center.setAttribute('x2', cx);
       fl.base.setAttribute('x', cx - tw / 2 + 2); fl.base.setAttribute('width', Math.max(4, tw - 4));
       const v = LCD['v' + side];
@@ -1207,6 +1228,12 @@
       }
       const xc = x0 + Math.max(0, Math.min(maxHz, c)) / maxHz * w;
       c2.strokeStyle = '#ff9a1f'; c2.beginPath(); c2.moveTo(xc + 0.5, y0); c2.lineTo(xc + 0.5, y0 + sh); c2.stroke();
+      // NOTCH : trait rouge à sa fréquence BF
+      if (fl.notch && fl.notch.f < maxHz) {
+        const xn = x0 + fl.notch.f / maxHz * w;
+        c2.strokeStyle = '#ff2b1c'; c2.setLineDash([3, 2]); c2.beginPath(); c2.moveTo(xn + 0.5, y0); c2.lineTo(xn + 0.5, y0 + sh); c2.stroke(); c2.setLineDash([]);
+        c2.fillStyle = '#ff5a3c'; c2.font = 'bold 9px "Roboto Mono", monospace'; c2.textAlign = 'left'; c2.fillText('N', xn + 3, y0 + 20);
+      }
     }
     // Spectre : traits blancs bleutés depuis la ligne de base
     c2.strokeStyle = 'rgba(205,220,255,.9)';
@@ -1276,7 +1303,7 @@
       // Bande passante (trapèze), repère central, base bleue
       c2.strokeStyle = color; c2.lineWidth = 2.5; c2.lineJoin = 'round';
       c2.beginPath();
-      c2.moveTo(x0 + 3, bot); c2.lineTo(cx - tw / 2, bot); c2.lineTo(cx - tw / 2 + sl, top); c2.lineTo(cx + tw / 2 - sl, top); c2.lineTo(cx + tw / 2, bot); c2.lineTo(x0 + w - 3, bot);
+      trapPts(x0, w, cx, tw, top, bot, sl, f.notch ? cx + f.notch.rel * w : null, 5).forEach((p, j) => (j ? c2.lineTo(p[0], p[1]) : c2.moveTo(p[0], p[1])));
       c2.stroke();
       c2.strokeStyle = '#ff9a1f'; c2.lineWidth = 2;
       c2.beginPath(); c2.moveTo(cx, top - 6); c2.lineTo(cx, bot); c2.stroke();
