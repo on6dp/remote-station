@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.6 | [RemoteStation-Setup-0.32.6.exe](0.32.6/RemoteStation-Setup-0.32.6.exe) | [remote-station-0.32.6.tar.gz](0.32.6/remote-station-0.32.6.tar.gz) | Face avant : NOTCH 10 Hz par cran — [empreintes SHA-256](0.32.6/SHA256SUMS.txt) |
 | 0.32.5 | [RemoteStation-Setup-0.32.5.exe](0.32.5/RemoteStation-Setup-0.32.5.exe) | [remote-station-0.32.5.tar.gz](0.32.5/remote-station-0.32.5.tar.gz) | Face avant : NOTCH qui suit le bouton NOTCH — [empreintes SHA-256](0.32.5/SHA256SUMS.txt) |
 | 0.32.4 | [RemoteStation-Setup-0.32.4.exe](0.32.4/RemoteStation-Setup-0.32.4.exe) | [remote-station-0.32.4.tar.gz](0.32.4/remote-station-0.32.4.tar.gz) | Face avant : NOTCH visible dans le filtre (creux) et sur le spectre — [empreintes SHA-256](0.32.4/SHA256SUMS.txt) |
 | 0.32.3 | [RemoteStation-Setup-0.32.3.exe](0.32.3/RemoteStation-Setup-0.32.3.exe) | [remote-station-0.32.3.tar.gz](0.32.3/remote-station-0.32.3.tar.gz) | Face avant : VC TUNE — petite touche marche / arrêt (voyant qui s'éteint), grande touche = bague du grand bouton — [empreintes SHA-256](0.32.3/SHA256SUMS.txt) |

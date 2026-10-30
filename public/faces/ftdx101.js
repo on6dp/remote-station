@@ -114,8 +114,8 @@
       { id: 'afMain', cx: 871, cy: 500, ri: 20, ro: 44, inner: { ctl: 'af', label: 'AF MAIN', per: 5 }, outer: { ctl: 'rf', label: 'RF MAIN', per: 5 } },
       { id: 'swSub', cx: 1365, cy: 350, ri: 18, ro: 44, inner: { ctl: 'shiftB', label: 'SHIFT SUB', per: 20 }, outer: { ctl: 'widthB', label: 'WIDTH SUB', per: 1 }, push: 'narrowB', pushLabel: 'NAR SUB' },
       { id: 'swMain', cx: 1365, cy: 500, ri: 18, ro: 44, inner: { ctl: 'shift', label: 'SHIFT MAIN', per: 20 }, outer: { ctl: 'width', label: 'WIDTH MAIN', per: 1 }, push: 'narrow', pushLabel: 'NAR MAIN' },
-      { id: 'notchSub', cx: 1492, cy: 350, ri: 18, ro: 44, inner: { ctl: 'notchFreqB', label: 'NOTCH SUB', per: 50 }, outer: { info: 'CONT / APF : niveau pas encore relié' } },
-      { id: 'notchMain', cx: 1492, cy: 500, ri: 18, ro: 44, inner: { ctl: 'notchFreq', label: 'NOTCH MAIN', per: 50 }, outer: { info: 'CONT / APF : niveau pas encore relié' } },
+      { id: 'notchSub', cx: 1492, cy: 350, ri: 18, ro: 44, inner: { ctl: 'notchFreqB', label: 'NOTCH SUB', per: 10 }, outer: { info: 'CONT / APF : niveau pas encore relié' } },
+      { id: 'notchMain', cx: 1492, cy: 500, ri: 18, ro: 44, inner: { ctl: 'notchFreq', label: 'NOTCH MAIN', per: 10 }, outer: { info: 'CONT / APF : niveau pas encore relié' } },
       { id: 'micProc', cx: 1492, cy: 195, ri: 18, ro: 44, inner: { ctl: 'mic', label: 'MIC GAIN', per: 2 }, outer: { ctl: 'procLvl', label: 'PROC', per: 2 },
         // Pousser le bouton : KEYER en CW, PROC en phonie (voyant au-dessus du bouton)
         push: (s) => (/^CW/.test((s.vfoSel === 1 ? s.modeB : s.mode) || '') ? 'keyer' : 'proc'), pushLabel: (s) => (/^CW/.test((s.vfoSel === 1 ? s.modeB : s.mode) || '') ? 'KEYER' : 'PROC') }

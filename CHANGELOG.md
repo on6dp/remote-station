@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.6** — **Face avant** : boutons NOTCH (MAIN et SUB) plus précis : 10 Hz par cran (au lieu de 50). Ctrl+F5 sur /ftdx101.
 - **0.32.5** — **Face avant, NOTCH** : le creux suit plus nettement la fréquence du notch quand on tourne le bouton NOTCH (cadre du filtre à l'échelle de la plage du notch) ; sur un flanc ou hors de la bande passante, trait rouge pointillé à sa place. Ctrl+F5 sur /ftdx101.
 - **0.32.4** — **Face avant** : le **NOTCH** en service se voit dans le filtre de chaque récepteur (creux dans la bande passante à sa fréquence, comme sur l'écran du TRX), dans les filtres agrandis (DISP) et sur le spectre (trait rouge « N », avec MARKER). Ctrl+F5 sur /ftdx101.
 - **0.32.3** — **Face avant, VC TUNE** : la petite touche met le présélecteur en marche / à l'arrêt et son voyant s'éteint vraiment à l'arrêt (voyants allumés de la photo effacés) ; la grande touche, indépendante, fait accorder le présélecteur par la bague extérieure du grand bouton (voyant à gauche). Ctrl+F5 sur /ftdx101.
