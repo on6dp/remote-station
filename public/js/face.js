@@ -117,8 +117,14 @@
       if (s[sk] === 0) return say('VC TUNE : pas installé sur ce TRX (le TRX répond « non installé »).', 'warn', 5000);
       const on = s[id] ? 0 : 1;
       setCtl(id, on);
-      say('VC TUNE ' + (id === 'vcB' ? 'SUB' : 'MAIN') + (on ? ' en marche : le bouton MULTI l’accorde.' : ' arrêté.'), '', 3500);
+      say('VC TUNE ' + (id === 'vcB' ? 'SUB' : 'MAIN') + (on ? ' en marche (grande touche VC TUNE : l’accorder avec la bague du grand bouton).' : ' arrêté.'), '', 4000);
       return;
+    }
+    if (a.local === 'ringVc') {
+      // Grande touche VC TUNE : la bague extérieure du grand bouton accorde le présélecteur (indépendant de sa mise en marche)
+      L.ringVc = !L.ringVc;
+      say(L.ringVc ? 'Bague du grand bouton : VC TUNE' + (s[activeSide() === 'B' ? 'vcB' : 'vc'] ? '.' : ' (mettez d’abord le VC TUNE en marche : petite touche VC TUNE).') : 'Bague du grand bouton : fréquence.', '', 4000);
+      return render();
     }
     if (a.local === 'smenu') return L.smenu ? closeSmenu() : openSmenu();
     if (a.local === 'disp') {
@@ -692,10 +698,11 @@
   function turn(k, part, notches, ev) {
     if (!notches) return;
     const s = S();
-    // VC TUNE en marche sur le récepteur actif : MULTI accorde le présélecteur (un pas par cran)
+    // Grande touche VC TUNE : la bague extérieure du grand bouton accorde le présélecteur (un pas par cran)
     const vcSide = activeSide() === 'B' ? 'B' : '';
-    if (k.multi && !(s.rit || s.xit) && s['vc' + vcSide] && R.CONTROL['vcUp' + vcSide]) {
+    if (k.dial && part === 'outer' && L.ringVc && R.CONTROL['vcUp' + vcSide]) {
       if (!needControl()) return;
+      if (!s['vc' + vcSide]) return say('VC TUNE arrêté : mettez-le en marche avec la petite touche VC TUNE.', 'warn', 4000);
       for (let i = 0; i < Math.min(9, Math.abs(notches)); i++) send({ t: 'set', ctl: (notches > 0 ? 'vcUp' : 'vcDn') + vcSide, value: null });
       const pos = s['vcPos' + vcSide];
       return showTip(ev, 'VC TUNE ' + (vcSide ? 'SUB' : 'MAIN') + (notches > 0 ? ' +' : ' −') + (pos != null ? ' · ' + pos : ''));
@@ -1410,7 +1417,7 @@
     if (!dial) return;
     e.preventDefault();
     const r = svg.getBoundingClientRect();
-    turn(dial, 'outer', e.key === 'ArrowUp' ? 1 : -1, { clientX: r.left + r.width * (dial.cx - V.x) / V.w, clientY: r.top + r.height * (dial.cy - dial.ro - V.y) / V.h });
+    turn(dial, 'inner', e.key === 'ArrowUp' ? 1 : -1, { clientX: r.left + r.width * (dial.cx - V.x) / V.w, clientY: r.top + r.height * (dial.cy - dial.ro - V.y) / V.h });
   });
 
   // ------------------------------------------------------------ fenêtres séparées (modes numériques, carte de bande)

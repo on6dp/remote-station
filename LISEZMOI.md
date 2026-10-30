@@ -1,4 +1,4 @@
-# Remote Station — v0.32.2 (CAT + écoute de la BF)
+# Remote Station — v0.32.3 (CAT + écoute de la BF)
 
 > **Administrateurs : le guide à jour est [GUIDE-ADMINISTRATEUR.md](GUIDE-ADMINISTRATEUR.md).** Ce fichier garde les notes techniques détaillées ; certaines étapes y décrivent d'anciennes versions (jeton à coller, audio 8 kHz…).
 
@@ -90,7 +90,7 @@ L'émission est **désactivée par défaut** (`"allowTx": false`). On l'active s
 
 ## 1. Installation sur le VPS VEX
 
-Copie `remote-station-0.32.2.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
+Copie `remote-station-0.32.3.tar.gz` dans `/home/on6dp` avec WinSCP, puis dans PuTTY :
 
 ```bash
 # Node.js (Debian 13 fournit la version 20, ça suffit)
@@ -98,7 +98,7 @@ sudo apt update && sudo apt install -y nodejs
 node -v
 
 # Fichiers + utilisateur système dédié
-sudo tar -xzf /home/on6dp/remote-station-0.32.2.tar.gz -C /opt
+sudo tar -xzf /home/on6dp/remote-station-0.32.3.tar.gz -C /opt
 sudo useradd --system --home /opt/remote-station --shell /usr/sbin/nologin remotestation
 sudo chown -R remotestation:remotestation /opt/remote-station
 cd /opt/remote-station

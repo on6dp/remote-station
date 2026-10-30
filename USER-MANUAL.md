@@ -481,7 +481,7 @@ Address: **https://remote.op0p.be/ftdx101**. The FTDX101MP front panel, where **
 - **Digital modes**: the `⧉` button at the end of the tabs opens them in their own window (with their band map, same connection); `⧉ Ramener sous la face avant` brings them back.
 - **PROC** / **KEYER**: bright orange LED above the MIC/SPEED knob while the processor (SSB) or keyer (CW) is on; click again: off.
 - **DISP**, as on the transceiver, one click after another: MAIN waterfall → SUB above MAIN → MAIN | SUB side by side → enlarged filters (each receiver's width and shift with its audio spectrum) → back. To see SUB: `🎧 Stéréo MAIN | SUB`.
-- **VC TUNE**: preselector of the active receiver on / off (orange LED); while on, the **MULTI** knob tunes it.
+- **VC TUNE**: the small key switches the preselector of the active receiver on / off (orange LED, off when stopped). The large VC TUNE key, independent, makes the **outer ring** of the main dial tune the preselector (LED to its left); click again: the ring tunes the frequency.
 - **S.MENU**: the **SCOPE MENU** as on the transceiver, over the top of the waterfall: SPEED, PEAK (peak hold OFF / LV1 … LV3), MARKER (filter passband and centre marker), COLOR, LEVEL (click left −, right +, or wheel). Closes by itself 3 s after the last action.
 - No effect remotely (a message explains): ON/OFF, ZIN/SPOT, QMB, C.S, memories.
 

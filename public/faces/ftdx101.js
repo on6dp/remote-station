@@ -87,9 +87,12 @@
       { id: 'qmb', x: 932, y: 360, w: 23, h: 50, tip: 'QMB', act: info('QMB (mémoires rapides) : pas disponible à distance.') },
       { id: 'fine', x: 935, y: 450, w: 70, h: 40, tip: 'FINE TUNING : accord fin (pas de 1 Hz)', act: { local: 'fine' }, led: (s, L) => L.fine },
       // VC TUNE (présélecteur, VT) : marche / arrêt sur le récepteur actif ; en marche, le bouton MULTI l'accorde (voyant orange)
-      { id: 'vcTune', x: 1225, y: 270, w: 70, h: 55, tip: 'VC TUNE : présélecteur du récepteur actif en marche / arrêt ; en marche, le bouton MULTI l’accorde', act: { local: 'vc' } },
-      { id: 'vcTune2', x: 1270, y: 340, w: 30, h: 40, tip: 'VC TUNE : présélecteur du récepteur actif en marche / arrêt ; en marche, le bouton MULTI l’accorde', act: { local: 'vc' },
-        led: (s) => !!(s.vfoSel === 1 ? s.vcB : s.vc), ledColor: '#ff9a1f' },
+      // Grande touche VC TUNE (autour du grand bouton) : la bague extérieure du grand bouton (MPVD) accorde le VC TUNE (voyant orange à gauche)
+      { id: 'vcTune', x: 1225, y: 270, w: 70, h: 55, tip: 'VC TUNE (grande touche) : la bague extérieure du grand bouton accorde le présélecteur ; nouveau clic : la bague revient à la fréquence', act: { local: 'ringVc' },
+        leds: [{ x: 1239.5, y: 305.5, w: 5, h: 5, color: '#ff9a1f', on: (s, L) => !!L.ringVc, bright: (s, L) => !!L.ringVc }] },
+      // Petite touche VC TUNE : présélecteur du récepteur actif en marche / arrêt (voyant orange au-dessus)
+      { id: 'vcTune2', x: 1270, y: 340, w: 30, h: 40, tip: 'VC TUNE (petite touche) : présélecteur du récepteur actif en marche / arrêt', act: { local: 'vc' },
+        leds: [{ x: 1280.5, y: 348.5, w: 12, h: 3.5, color: '#ff9a1f', on: (s) => !!(s.vfoSel === 1 ? s.vcB : s.vc), bright: (s) => !!(s.vfoSel === 1 ? s.vcB : s.vc) }] },
       { id: 'cs', x: 1272, y: 390, w: 28, h: 40, tip: 'C.S', act: info('C.S (touche personnalisable) : pas disponible à distance.') },
       { id: 'mainSub', x: 1255, y: 450, w: 45, h: 50, tip: 'MAIN/SUB : passe le grand bouton de MAIN à SUB et inversement', act: { toggleSel: true } },
       // Mémoires
@@ -105,7 +108,7 @@
       { id: 'mic', cx: 56, cy: 490, r: 32, tip: 'MIC', act: info('Micro : phonie à distance par le dashboard (Configuration micro).') }
     ]),
     knobs: [
-      { id: 'dial', cx: 1118, cy: 380, ro: 140, dial: true, tip: 'Grand bouton : fréquence du récepteur actif (molette ou glisser en tournant)' },
+      { id: 'dial', cx: 1118, cy: 380, ro: 140, ri: 116, dial: true, tip: 'Grand bouton : fréquence du récepteur actif (molette ou glisser en tournant) ; bague extérieure : idem, ou VC TUNE après la grande touche VC TUNE' },
       { id: 'multi', cx: 762, cy: 510, ro: 30, multi: true, tip: 'MULTI : décalage du clarifier (CLAR actif), sinon la fonction de la case MULTI de l’écran (choisie dans FUNC, ex. RF POWER)' },
       { id: 'afSub', cx: 871, cy: 350, ri: 20, ro: 44, inner: { ctl: 'afB', label: 'AF SUB', per: 5 }, outer: { ctl: 'rfB', label: 'RF SUB', per: 5 } },
       { id: 'afMain', cx: 871, cy: 500, ri: 20, ro: 44, inner: { ctl: 'af', label: 'AF MAIN', per: 5 }, outer: { ctl: 'rf', label: 'RF MAIN', per: 5 } },
