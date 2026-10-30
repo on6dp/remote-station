@@ -475,7 +475,11 @@ Address: **https://remote.op0p.be/ftdx101**. The FTDX101MP front panel, where **
 - **TUNE**: tuner on / off; hold at least 1 s: tune (after confirmation). **VOX** (can only be switched off), **PROC**.
 - **PHONES** jack: listen. `🎧 Stéréo MAIN | SUB`: switches dual receive on, then MAIN in the left ear and SUB in the right ear (handy in SPLIT with a headset).
 - **Screen**: meters (S MAIN / SUB; TX: PO, SWR) with each receiver's filter, frequencies (click to type), ANT / ATT / IPO / R.FIL / AGC (click: next value), and instead of the TRX scope (not sent over CAT) the **spectrum and waterfall of the received audio**, MAIN | SUB side by side in dual receive. Bottom row: SPAN (2 to 6 kHz), MONO (colours), MULTI (FUNC menu), HOLD (freeze).
-- No effect remotely (a message explains): ON/OFF, ZIN/SPOT, DISP, S.MENU, QMB, VC TUNE, C.S, SYNC, memories, KEYER.
+- **SYNC** (LED on): SUB takes the MAIN frequency and the main dial then tunes both receivers together; click again: off. **KEYER**: CW electronic keyer. Clicking the **MIC/SPEED ◎ PROC** knob without turning: KEYER in CW, PROC in SSB (LED on; click again: off).
+- Finer spectrum (2048-point analysis, each column keeps the strongest peak).
+- **Band map**: right-hand column, full height. Its `⧉` button moves it into **its own window** (another screen, any size); `⧉ Ramener` or closing the window brings it back. Reopened on the next page load if Chrome allows pop-ups for the site.
+- **Digital modes**: the `⧉` button at the end of the tabs opens them in their own window (with their band map, same connection); `⧉ Ramener sous la face avant` brings them back.
+- No effect remotely (a message explains): ON/OFF, ZIN/SPOT, DISP, S.MENU, QMB, VC TUNE, C.S, memories.
 
 <a id="numeriques"></a>
 ## 12. Digital modes

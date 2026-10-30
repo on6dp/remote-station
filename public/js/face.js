@@ -108,6 +108,16 @@
     if (a.info) return say(a.info, '', 6000);
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
     if (a.local === 'func') { L.func = !L.func; return render(); }
+    if (a.local === 'sync') {
+      if (L.sync) { L.sync = false; say('SYNC coupé.', '', 2500); return render(); }
+      if (!needControl()) return;
+      const side = activeSide(), hz = side === 'B' ? s.freqB : s.freq;
+      if (hz == null) return;
+      tuneTo(side === 'B' ? 'A' : 'B', hz);
+      L.sync = true;
+      say('SYNC : les deux VFO sur ' + fmtFreq(hz) + ' ; le grand bouton les accorde ensemble.', '', 4000);
+      return render();
+    }
     if (a.local === 'mox') return L.mox ? pttUp() : (pttDown() ? (L.mox = true, render()) : null);
     if (a.local === 'moni') {
       const VX = window.RSVOICE;
@@ -605,6 +615,7 @@
       const step = k.multi ? (L.fast ? 10000 : 1000) : (L.fine ? 10 : L.fast ? 1000 : 100);
       const hz = Math.round((cur + notches * step) / step) * step;
       tuneTo(side, hz);
+      if (L.sync && !k.multi) tuneTo(side === 'B' ? 'A' : 'B', hz); // SYNC : les deux VFO ensemble
       return showTip(ev, (side === 'B' ? 'SUB ' : 'MAIN ') + fmtFreq(hz) + ' MHz');
     }
     const spec = k[part];
@@ -663,8 +674,10 @@
     const end = (ev) => {
       // Clic sans tourner sur un bouton qui se pousse (ex. WIDTH : NAR)
       if (drag && k.push && ev && ev.type === 'pointerup' && Math.abs(drag.acc) < 0.3 && Date.now() - drag.t0 < 500 && !drag.moved) {
-        const id = typeof k.push === 'string' ? k.push : null;
-        if (id) { const v = S()[id] ? 0 : 1; setCtl(id, v); showTip(ev, (k.pushLabel || id) + (v ? ' ON' : ' OFF')); }
+        const s0 = S();
+        const id = typeof k.push === 'function' ? k.push(s0, L) : k.push;
+        const lab = typeof k.pushLabel === 'function' ? k.pushLabel(s0, L) : (k.pushLabel || id);
+        if (id) { const v = s0[id] ? 0 : 1; setCtl(id, v); showTip(ev, lab + (v ? ' ON' : ' OFF')); }
       }
       drag = null; g.classList.remove('grab'); hideTip(600);
     };
@@ -951,7 +964,7 @@
   }
   function onAudio(data) {
     const u8 = new Uint8Array(data);
-    if (window.RSDIGI && window.RSDIGI.onBinary(u8)) return; // lignes de cascade des modes numériques
+    if (DG() && DG().onBinary(u8)) return; // lignes de cascade des modes numériques
     const pcm = window.ULAW && ULAW.decodeFrame(u8);
     if (!pcm) return;
     feedWf(pcm, pcm.rate || 12000);
@@ -959,20 +972,22 @@
   }
 
   // Cascade : FFT de 512 points sur la BF reçue (12 kHz → 0 à 4 kHz), une ligne toutes les 50 ms
-  const WF = { at: 0, rate: 12000, l: new Float32Array(512), r: new Float32Array(512), two: false, pos: 0, drawn: false };
+  // FFT de 2048 points : à 12 kHz, un point tous les 5,9 Hz (spectre fin)
+  const NFFT = 2048;
+  const WF = { at: 0, rate: 12000, l: new Float32Array(NFFT), r: new Float32Array(NFFT), two: false, pos: 0, drawn: false };
   function feedWf(pcm, rate) {
     WF.at = Date.now();
     WF.rate = rate;
     WF.two = !!pcm.r;
     const n = pcm.length;
-    if (n >= 512) { WF.l.set(pcm.subarray(n - 512)); if (pcm.r) WF.r.set(pcm.r.subarray(n - 512)); return; }
-    WF.l.copyWithin(0, n); WF.l.set(pcm, 512 - n);
-    if (pcm.r) { WF.r.copyWithin(0, n); WF.r.set(pcm.r, 512 - n); }
+    if (n >= NFFT) { WF.l.set(pcm.subarray(n - NFFT)); if (pcm.r) WF.r.set(pcm.r.subarray(n - NFFT)); return; }
+    WF.l.copyWithin(0, n); WF.l.set(pcm, NFFT - n);
+    if (pcm.r) { WF.r.copyWithin(0, n); WF.r.set(pcm.r, NFFT - n); }
   }
-  const HANN = new Float32Array(512).map((_, i) => 0.5 - 0.5 * Math.cos(2 * Math.PI * i / 511));
+  const HANN = new Float32Array(NFFT).map((_, i) => 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (NFFT - 1)));
   function spectrum(x) {
     // FFT radix 2 en place (re, im), puis amplitude en dB ramenée à 0..1
-    const N = 512, re = new Float32Array(N), im = new Float32Array(N);
+    const N = NFFT, re = new Float32Array(N), im = new Float32Array(N);
     for (let i = 0; i < N; i++) re[i] = x[i] * HANN[i];
     for (let i = 1, j = 0; i < N; i++) {
       let bit = N >> 1;
@@ -995,7 +1010,7 @@
     // Niveau automatique comme le scope du TRX : le bruit de fond (médiane) reste sombre, les signaux ressortent
     const db = new Float32Array(N / 2);
     for (let i = 0; i < N / 2; i++) db[i] = 10 * Math.log10(re[i] * re[i] + im[i] * im[i] + 1e-12);
-    const srt = Array.from(db.subarray(4, 180)).sort((a, b) => a - b);
+    const srt = Array.from(db.subarray(16, Math.floor(N * 0.35))).sort((a, b) => a - b);
     const med = srt[srt.length >> 1];
     WF.floor = WF.floor == null ? med : WF.floor + (med - WF.floor) * 0.05;
     const out = new Float32Array(N / 2);
@@ -1027,7 +1042,7 @@
       const maxHz = Math.min(SPANS[L.wfSpan], WF.rate / 2);
       const lvl = L.wfLevel / 70;
       const specs = [spectrum(WF.l), WF.two ? spectrum(WF.r) : null];
-      const nb = Math.max(2, Math.floor(256 * maxHz / (WF.rate / 2)));
+      const nb = Math.max(2, Math.floor((NFFT / 2) * maxHz / (WF.rate / 2)));
       // Petit spectre dans le cadre du filtre (MAIN à gauche, SUB à droite)
       for (const [side, sp] of [['A', specs[0]], ['B', specs[1] || (S().dualRx !== 0 && !WF.two ? null : null)]]) {
         const fl = LCD['f' + side];
@@ -1059,7 +1074,15 @@
         c2.fillRect(0, H - lab, W, lab);
         const line = c2.createImageData(W, 1);
         for (const [sp, x0, w, name] of parts) {
-          const val = (px) => Math.max(0, Math.min(1, sp[Math.min(nb - 1, Math.floor(px / w * nb))] + lvl));
+          // Un point d'écran = le plus fort des points de la FFT qu'il couvre (les pics fins restent visibles)
+          const col = new Float32Array(w);
+          for (let px = 0; px < w; px++) {
+            const i0 = Math.floor(px / w * nb), i1 = Math.max(i0 + 1, Math.floor((px + 1) / w * nb));
+            let m = 0;
+            for (let i = i0; i < i1 && i < nb; i++) if (sp[i] > m) m = sp[i];
+            col[px] = Math.max(0, Math.min(1, m + lvl));
+          }
+          const val = (px) => col[px];
           // Grille
           c2.strokeStyle = 'rgba(120,130,145,.45)';
           c2.lineWidth = 1;
@@ -1109,7 +1132,7 @@
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values') && window.RSVOICE) { window.RSVOICE.onMessage(m); return; }
-      if (window.RSDIGI && m.t !== 'hello' && m.t !== 'state' && window.RSDIGI.onMessage(m)) return;
+      if (DG() && m.t !== 'hello' && m.t !== 'state' && DG().onMessage(m)) return;
       if (m.t === 'hello') {
         me = m;
         $('login').hidden = true;
@@ -1118,7 +1141,7 @@
         if (m.clubName) $('clubName').textContent = m.clubName;
         if (m.session) { creds = { session: m.session }; store.set('rs.sess', m.session); }
         wantAudio();
-        if (window.RSDIGI) window.RSDIGI.onHello(m, m);
+        if (DG()) DG().onHello(m, m);
         if (window.RSVOICE) window.RSVOICE.onHello(m);
         send({ t: 'plan_pref', on: store.get('rs.planauto', '1') !== '0' }); // MODE AUTO : même choix que dans le dashboard
         render();
@@ -1136,7 +1159,7 @@
       } else if (m.t === 'state') {
         st = m;
         render();
-        if (window.RSDIGI) window.RSDIGI.onState(st);
+        if (DG()) DG().onState(st);
         if (window.RSVOICE) window.RSVOICE.onState(st);
         if (pttHeld && !iControl()) pttUp();
       } else if (m.t === 'notice') {
@@ -1194,6 +1217,156 @@
     turn(dial, 'outer', e.key === 'ArrowUp' ? 1 : -1, { clientX: r.left + r.width * (dial.cx - V.x) / V.w, clientY: r.top + r.height * (dial.cy - dial.ro - V.y) / V.h });
   });
 
+  // ------------------------------------------------------------ fenêtres séparées (modes numériques, carte de bande)
+  // Modes numériques : bouton ⧉ des onglets → /digi.html, qui se raccroche à cette page (window.opener.RSHOST)
+  // et utilise sa connexion, comme depuis le dashboard ; sous la face avant : « Ramener ici ».
+  const digiApi = { send, say, iControl, state: () => st, rig: () => R, setFreq: (hz, which) => tuneTo(which === 'B' ? 'B' : 'A', hz) };
+  const digiHost = { win: null, inst: null };
+  function DG() {
+    if (digiHost.inst && digiHost.win && !digiHost.win.closed) return digiHost.inst;
+    if (digiHost.inst) releaseDigi();
+    return window.RSDIGI || null;
+  }
+  window.DG = DG;
+  function releaseDigi() {
+    digiHost.inst = null;
+    digiHost.win = null;
+    if (window.RSDIGI) { window.RSDIGI.setDetached(false); if (me) window.RSDIGI.onHello(me, me); if (st) window.RSDIGI.onState(st); }
+  }
+  window.RSHOST = {
+    api: digiApi,
+    attach(win, inst, popupApi) {
+      if (digiHost.win && digiHost.win !== win && !digiHost.win.closed) { try { digiHost.win.close(); } catch (e) {} }
+      bmPopClose(); // la carte de bande part avec les modes numériques (dans leur fenêtre)
+      digiHost.win = win;
+      digiHost.inst = inst;
+      if (window.RSDIGI) window.RSDIGI.setDetached(true);
+      inst.init(popupApi || digiApi);
+      if (me) inst.onHello(me, me);
+      if (st) inst.onState(st);
+    },
+    detach(inst) { if (digiHost.inst === inst) releaseDigi(); },
+    closePopup() { const w = digiHost.win; releaseDigi(); if (w && !w.closed) try { w.close(); } catch (e) {} }
+  };
+
+  // Carte de bande : la colonne de droite (#fcBm) est déplacée telle quelle dans une fenêtre à elle (bouton ⧉ de son en-tête)
+  const BMKEY = 'rs.face.bmwin';
+  const bmPop = { win: null, el: null, ph: null };
+  // digi.js cherche ses éléments par id : aussi dans la fenêtre de la carte de bande
+  window.RSPANELS = {
+    find(id) {
+      const el = bmPop.el;
+      if (!el || el.ownerDocument === document) return null;
+      return el.id === id ? el : el.querySelector('#' + CSS.escape(id));
+    },
+    all(sel) {
+      const out = Array.from(document.querySelectorAll(sel));
+      if (bmPop.el && bmPop.el.ownerDocument !== document) out.push(...bmPop.el.querySelectorAll(sel));
+      return out;
+    }
+  };
+  const bmSaved = () => { try { return JSON.parse(store.get(BMKEY, '') || 'null'); } catch (e) { return null; } };
+  const redraw = () => window.dispatchEvent(new Event('resize'));
+  function bmPopBtn() {
+    const b = window.RSPANELS.find('bmPop') || document.getElementById('bmPop');
+    if (!b) return;
+    const on = !!bmPop.win;
+    b.textContent = on ? '⧉ Ramener' : '⧉';
+    b.classList.toggle('on', on);
+    b.title = on ? 'Ramener la carte de bande à droite de la face avant (ou fermer cette fenêtre)' : 'Ouvrir la carte de bande dans une fenêtre séparée (autre écran…)';
+  }
+  function bmPopOpen(quiet) {
+    const el = document.getElementById('fcBm');
+    if (!el || bmPop.win) return true;
+    if (DG() !== window.RSDIGI) { if (!quiet) say('La carte de bande est dans la fenêtre séparée des modes numériques.', '', 5000); return true; }
+    const g = bmSaved() || { w: 380, h: Math.max(400, (screen.availHeight || 900) - 120), x: window.screenX + Math.max(0, window.outerWidth - 420), y: window.screenY + 80 };
+    const win = window.open('', 'rs-face-bm', 'popup,width=' + g.w + ',height=' + g.h + ',left=' + g.x + ',top=' + g.y);
+    if (!win) {
+      if (!quiet) say('Fenêtre bloquée par Chrome : autorisez les fenêtres pop-up pour ce site (icône à droite de la barre d’adresse).', 'warn', 8000);
+      return false;
+    }
+    const doc = win.document;
+    doc.title = 'Carte de bande — ' + (FACE ? FACE.name : 'Remote Station');
+    doc.documentElement.lang = 'fr';
+    if (!doc.body) doc.documentElement.appendChild(doc.createElement('body'));
+    doc.body.textContent = '';
+    doc.body.className = 'face-page bm-popup';
+    for (const f of ['rp-tokens.css', 'rp.css', 'face.css']) {
+      if (doc.querySelector('link[data-rs="' + f + '"]')) continue;
+      const l = doc.createElement('link');
+      l.rel = 'stylesheet';
+      l.href = location.origin + '/css/' + f;
+      l.dataset.rs = f;
+      l.onload = () => setTimeout(redraw, 0); // dimensions connues : on redessine
+      doc.head.appendChild(l);
+    }
+    if (!doc.querySelector('script[data-rs]')) {
+      // Face avant fermée : la fenêtre se ferme toute seule
+      const sc = doc.createElement('script');
+      sc.dataset.rs = '1';
+      sc.textContent = 'setInterval(function(){try{if(!opener||opener.closed)window.close();}catch(e){window.close();}},2000);';
+      doc.head.appendChild(sc);
+    }
+    const ph = document.createComment('place de la carte de bande');
+    el.before(ph);
+    try {
+      doc.body.appendChild(doc.adoptNode(el));
+    } catch (e) {
+      if (el.ownerDocument !== document) document.adoptNode(el);
+      ph.replaceWith(el);
+      try { win.close(); } catch (x) {}
+      return false;
+    }
+    Object.assign(bmPop, { win, el, ph });
+    document.body.classList.add('bm-popped');
+    // Barre d'espace (PTT), Échap et clics : transmis à la page (menus « Filtres », émission…)
+    const fwd = (type) => (e) => {
+      const t = e.target;
+      if (t && /INPUT|TEXTAREA|SELECT/.test(t.tagName)) return;
+      if (e.code !== 'Space' && e.key !== 'Escape' && e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+      if (e.code === 'Space' || e.key.indexOf('Arrow') === 0) e.preventDefault();
+      document.dispatchEvent(new KeyboardEvent(type, { key: e.key, code: e.code, repeat: e.repeat, bubbles: true }));
+    };
+    doc.addEventListener('keydown', fwd('keydown'));
+    doc.addEventListener('keyup', fwd('keyup'));
+    doc.addEventListener('click', () => document.dispatchEvent(new MouseEvent('click')));
+    win.addEventListener('resize', redraw);
+    win.addEventListener('pagehide', () => setTimeout(() => { if (bmPop.win === win) bmPopClose(); }, 50));
+    store.set(BMKEY, JSON.stringify(g));
+    bmPopBtn();
+    setTimeout(redraw, 50);
+    return true;
+  }
+  function bmPopClose(keep) {
+    const w = bmPop.win;
+    if (!w) return;
+    const el = bmPop.el, ph = bmPop.ph;
+    bmPop.win = null;
+    try { document.adoptNode(el); } catch (e) {}
+    ph.replaceWith(el);
+    bmPop.el = null;
+    document.body.classList.remove('bm-popped');
+    if (!keep) store.set(BMKEY, '');
+    try { if (!w.closed) w.close(); } catch (e) {}
+    bmPopBtn();
+    redraw();
+  }
+  // Fenêtre déplacée ou agrandie : mémorisée ; fermée par la croix : la carte revient
+  setInterval(() => {
+    const w = bmPop.win;
+    if (!w) return;
+    if (w.closed) { bmPopClose(); return; }
+    const g = { x: w.screenX, y: w.screenY, w: w.outerWidth, h: w.outerHeight };
+    if (g.w > 0 && store.get(BMKEY, '') !== JSON.stringify(g)) store.set(BMKEY, JSON.stringify(g));
+  }, 1000);
+  // Page rechargée ou fermée : la carte revient (la fenêtre se ferme) mais reste mémorisée et se rouvre au chargement
+  window.addEventListener('pagehide', () => bmPopClose(true));
+  document.addEventListener('rs-bm-pop', () => { if (bmPop.win) bmPopClose(); else bmPopOpen(); });
+  function bmPopRestore() {
+    if (!bmSaved()) return;
+    if (bmPopOpen(true) === false) say('La carte de bande n’a pas pu être rouverte dans sa fenêtre : autorisez les fenêtres pop-up pour ce site, puis rechargez la page.', 'warn', 9000);
+  }
+
   // ------------------------------------------------------------ démarrage
   if (!FACE || !R) {
     say('Pas de face avant pour « ' + MODEL + ' ».', 'error', 0);
@@ -1203,10 +1376,8 @@
   build();
   wfTick();
   // Modes numériques (FT8, RTTY, CW…) sous l'image du TRX : le même module que le dashboard, sur la connexion de cette page
-  if (window.RSDIGI) {
-    window.RSDIGI.init({ send, say, iControl, state: () => st, rig: () => R,
-      setFreq: (hz, which) => tuneTo(which === 'B' ? 'B' : 'A', hz) });
-  }
+  if (window.RSDIGI) window.RSDIGI.init(digiApi);
+  bmPopRestore();
   if (window.RSVOICE) {
     window.RSVOICE.init({ send, say, iControl, state: () => st, me: () => me, rig: () => R,
       sendBin: (buf) => { if (ws && ws.readyState === 1) ws.send(buf); } });

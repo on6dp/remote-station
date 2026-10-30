@@ -380,8 +380,8 @@
           }
           // Manipulateur CW (simulateur) : vitesse, break-in, mémoires, lecture (émission « par le TRX », TX2)
           else if (spec.cw && (m = /^KS(\d{3})$/.exec(c))) this.cwWpm = +m[1];
-          else if (spec.cw && /^BI[01]$/.test(c)) { this.bi = c === 'BI1'; if (!this.bi && this.cwPlay) { clearTimeout(this.cwPlay); this.cwPlay = null; this.tx = 0; } }
-          else if (spec.cw && /^KR[01]$/.test(c)) this.kr = c === 'KR1';
+          else if (spec.cw && /^BI[01]$/.test(c)) { this.bi = c === 'BI1'; if (this.ans['BI;'] != null) this.ans['BI;'] = c; if (!this.bi && this.cwPlay) { clearTimeout(this.cwPlay); this.cwPlay = null; this.tx = 0; } }
+          else if (spec.cw && /^KR[01]$/.test(c)) { this.kr = c === 'KR1'; if (this.ans['KR;'] != null) this.ans['KR;'] = c; } // simulateur : relu par KR;
           else if (spec.cw && /^EX02021[0][01]$/.test(c)) this.ans['EX020210;'] = c;
           else if (spec.cw && (m = /^KM([1-5])(.*)$/.exec(c))) { this.km = this.km || {}; if (m[2] === '') out.push('KM' + m[1] + (this.km[m[1]] || '') + ';'); else this.km[m[1]] = m[2]; }
           else if (spec.cw && /^KY/.test(c)) {

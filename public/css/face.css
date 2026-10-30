@@ -83,7 +83,8 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 /* Modes numériques sous l'image du TRX (même module que le dashboard) */
 .fc-digi { max-width: none; margin: 14px auto 0; min-height: 560px; }
 .face-page .fc-digi .dg { min-height: 500px; }
-.face-page #dgDetach { display: none; }
+/* ⧉ des onglets : modes numériques dans une fenêtre séparée (digi.html), comme depuis le dashboard */
+.face-page .fc-digi .ctab-detach { font-size: 15px; }
 .fc-stereo[aria-pressed='true'] { background: #1f4f7f; color: #fff; border-color: #5fb3ff; font-weight: 700; }
 .fc-stereo[hidden] { display: none; }
 
@@ -149,3 +150,14 @@ body.face-page.bm-far .fc-main { grid-template-columns: minmax(0, 1fr) var(--bm-
 body.face-page.bm-far .fc-bm { display: block; grid-column: 2; grid-row: 1; position: sticky; top: 64px; height: calc(100vh - 76px); }
 body.face-page .fc-bm > .bm { position: relative; inset: auto; width: 100%; height: 100%; min-height: 0; border: 1px solid var(--v2-border-panel); border-radius: var(--v2-panel-radius); overflow: hidden; }
 body.face-page.bm-far #centerPanel.bm-on > :not(.panel-h):not(.bm) { margin-right: 0; }
+
+/* Carte de bande dans sa fenêtre séparée (bouton ⧉ de son en-tête) */
+.bm-pop { margin-left: auto; font: 700 13px/1 inherit; padding: 3px 7px; border-radius: 4px; border: 1px solid var(--v2-border-dark); background: #141b26; color: #cfe3ff; cursor: pointer; }
+.bm-pop:hover { border-color: #5fb3ff; color: #fff; }
+.bm-pop.on { background: #1f4f7f; color: #fff; border-color: #5fb3ff; }
+body.face-page.bm-popped.bm-far .fc-main { grid-template-columns: minmax(0, 1fr); }
+body.face-page.bm-popup { height: 100vh; overflow: hidden; background: var(--v2-bg-darker, #0b1018); }
+body.face-page.bm-popup .fc-bm { display: block; position: static; height: 100vh; padding: 6px; box-sizing: border-box; }
+body.face-page.bm-popup .fc-bm > .bm { display: flex !important; }
+body.face-page.bm-popup .bm-grip { display: none; }
+body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglets RTTY, FT8 / FT4, CW… des modes numériques (pas dans l’onglet affiché).'; display: block; padding: 16px; color: #8fa0b4; font: 13px/1.4 system-ui, sans-serif; }

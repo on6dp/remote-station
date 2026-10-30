@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.0 | [RemoteStation-Setup-0.32.0.exe](0.32.0/RemoteStation-Setup-0.32.0.exe) | [remote-station-0.32.0.tar.gz](0.32.0/remote-station-0.32.0.tar.gz) | Face avant : modes numériques et carte de bande en fenêtres séparées, SYNC, KEYER / PROC, spectre plus fin — [empreintes SHA-256](0.32.0/SHA256SUMS.txt) |
 | 0.31.0 | [RemoteStation-Setup-0.31.0.exe](0.31.0/RemoteStation-Setup-0.31.0.exe) | [remote-station-0.31.0.tar.gz](0.31.0/remote-station-0.31.0.tar.gz) | Face avant : PTT, MOX, MONI, stéréo avec double réception, carte de bande pleine hauteur — [empreintes SHA-256](0.31.0/SHA256SUMS.txt) |
 | 0.30.1 | [RemoteStation-Setup-0.30.1.exe](0.30.1/RemoteStation-Setup-0.30.1.exe) | [remote-station-0.30.1.tar.gz](0.30.1/remote-station-0.30.1.tar.gz) | Menu FUNC : − / + cliquables dans la case choisie — [empreintes SHA-256](0.30.1/SHA256SUMS.txt) |
 | 0.30.0 | [RemoteStation-Setup-0.30.0.exe](0.30.0/RemoteStation-Setup-0.30.0.exe) | [remote-station-0.30.0.tar.gz](0.30.0/remote-station-0.30.0.tar.gz) | Face avant FTDX101 : écran style TRX, cascade, FUNC, MODE, modes numériques dessous, écoute stéréo MAIN / SUB — [empreintes SHA-256](0.30.0/SHA256SUMS.txt) |

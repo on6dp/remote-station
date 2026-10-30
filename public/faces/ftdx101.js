@@ -63,7 +63,7 @@
       { id: 'bkin', x: 767, y: 372, w: 28, h: 18, tip: 'BK-IN : break-in CW', act: { toggle: 'bkin' }, led: (s) => !!s.bkin },
       { id: 'moni', x: 767, y: 414, w: 28, h: 18, tip: 'MONI : entendre sa propre modulation (« M’écouter », au casque)', act: { local: 'moni' }, led: () => !!(window.RSVOICE && window.RSVOICE.monitorOn()) },
       // SYNC, SPLIT, CLAR RX / TX, FAST, LOCK
-      { id: 'sync', x: 819, y: 221, w: 43, h: 16, tip: 'SYNC', act: info('SYNC : pas disponible par la liaison CAT.') },
+      { id: 'sync', x: 819, y: 221, w: 43, h: 16, tip: 'SYNC : met les deux VFO sur la même fréquence (celle du récepteur actif), puis le grand bouton les accorde ensemble ; nouveau clic : arrêt', act: { local: 'sync' }, led: (s, L) => L.sync },
       { id: 'split', x: 874, y: 221, w: 44, h: 16, tip: 'SPLIT : émission sur le SUB (VFO B)', act: { toggle: 'split' }, led: (s) => !!s.split },
       { id: 'clarRx', x: 819, y: 262, w: 43, h: 18, tip: 'CLAR RX (RIT)', act: { toggle: 'rit' }, led: (s) => !!s.rit },
       { id: 'clarTx', x: 874, y: 262, w: 44, h: 18, tip: 'CLAR TX (XIT)', act: { toggle: 'xit' }, led: (s) => !!s.xit },
@@ -94,7 +94,7 @@
       { id: 'vmw', x: 1386, y: 220, w: 32, h: 20, tip: 'V▸M', act: info('Mémoires : pas encore reliées.') },
       // Petites touches PROC et KEYER (au-dessus du bouton MIC/SPEED)
       { id: 'proc', cx: 1451, cy: 149, r: 8, tip: 'PROC : processeur de modulation', act: { toggle: 'proc' }, led: (s) => !!s.proc },
-      { id: 'keyer', cx: 1529, cy: 149, r: 8, tip: 'KEYER', act: info('KEYER : réglé par la page CW du dashboard.') },
+      { id: 'keyer', cx: 1529, cy: 149, r: 8, tip: 'KEYER : manipulateur électronique (en CW ; aussi : pousser le bouton MIC/SPEED)', act: { toggle: 'keyer' }, led: (s) => !!s.keyer },
       // Prises
       { id: 'key', cx: 56, cy: 337, r: 20, tip: 'KEY', act: info('Manipulateur : la CW se fait par l’onglet CW du dashboard.') },
       { id: 'phones', cx: 56, cy: 410, r: 20, tip: 'PHONES : écouter le TRX (clic : marche / arrêt)', act: { local: 'listen' }, led: (s, L) => L.listening, ledColor: '#3ddc5a', ring: true },
@@ -109,7 +109,9 @@
       { id: 'swMain', cx: 1365, cy: 500, ri: 18, ro: 44, inner: { ctl: 'shift', label: 'SHIFT MAIN', per: 20 }, outer: { ctl: 'width', label: 'WIDTH MAIN', per: 1 }, push: 'narrow', pushLabel: 'NAR MAIN' },
       { id: 'notchSub', cx: 1492, cy: 350, ri: 18, ro: 44, inner: { ctl: 'notchFreqB', label: 'NOTCH SUB', per: 50 }, outer: { info: 'CONT / APF : niveau pas encore relié' } },
       { id: 'notchMain', cx: 1492, cy: 500, ri: 18, ro: 44, inner: { ctl: 'notchFreq', label: 'NOTCH MAIN', per: 50 }, outer: { info: 'CONT / APF : niveau pas encore relié' } },
-      { id: 'micProc', cx: 1492, cy: 195, ri: 18, ro: 44, inner: { ctl: 'mic', label: 'MIC GAIN', per: 2 }, outer: { ctl: 'procLvl', label: 'PROC', per: 2 } }
+      { id: 'micProc', cx: 1492, cy: 195, ri: 18, ro: 44, inner: { ctl: 'mic', label: 'MIC GAIN', per: 2 }, outer: { ctl: 'procLvl', label: 'PROC', per: 2 },
+        // Pousser le bouton : KEYER en CW, PROC en phonie (voyant au-dessus du bouton)
+        push: (s) => (/^CW/.test((s.vfoSel === 1 ? s.modeB : s.mode) || '') ? 'keyer' : 'proc'), pushLabel: (s) => (/^CW/.test((s.vfoSel === 1 ? s.modeB : s.mode) || '') ? 'KEYER' : 'PROC') }
     ]
   };
 })();

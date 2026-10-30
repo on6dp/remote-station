@@ -75,6 +75,11 @@
   const RX_WIDTH = 60; // Hz de part et d'autre de la fréquence RX
 
   const POPUP = document.body.dataset.digiPopup === '1';
+  // Page Face avant (/ftdx101…) : modes numériques intégrés sous l'image du TRX, qui peuvent eux aussi partir en fenêtre séparée
+  const EMBED = POPUP && document.body.dataset.digiEmbed === '1';
+  const HOST = !POPUP || EMBED; // page qui peut ouvrir la fenêtre séparée (dashboard ou face avant)
+  // Fenêtre séparée ouverte depuis la face avant : « Ramener » parle de la face avant
+  const FROM_FACE = POPUP && !EMBED && (() => { try { return !!(window.opener && window.opener.document.body.classList.contains('face-page')); } catch (e) { return false; } })();
   let api = null;
   let detached = false;  // dashboard : les modes numériques sont dans la fenêtre séparée
   let needHist = true;   // demander l'historique des décodages à la prochaine annonce
@@ -391,8 +396,9 @@
     det.className = 'ctab-detach';
     det.type = 'button';
     det.id = 'dgDetach';
-    det.textContent = POPUP ? '⧉ Ramener dans le dashboard' : '⧉';
-    det.title = POPUP ? 'Fermer cette fenêtre et ramener les modes numériques dans le dashboard' : 'Ouvrir les modes numériques dans une fenêtre séparée';
+    const WIN = POPUP && !EMBED; // cette page est la fenêtre séparée
+    det.textContent = WIN ? (FROM_FACE ? '⧉ Ramener sous la face avant' : '⧉ Ramener dans le dashboard') : '⧉';
+    det.title = WIN ? 'Fermer cette fenêtre et ramener les modes numériques ' + (FROM_FACE ? 'sous la face avant' : 'dans le dashboard') : 'Ouvrir les modes numériques dans une fenêtre séparée (autre écran…)';
     bar.appendChild(det);
     const panel = $('centerPanel');
     const add = (id, cls, html) => {
@@ -421,7 +427,8 @@
     bm.innerHTML = '<div class="bm-h"><span class="bm-st" id="bmSt"></span><b id="bmBandT" class="bm-band">—</b><span class="bm-t">Spots</span>'
       + '<span class="bm-fw"><button type="button" class="bm-fbtn" id="bmFbtn" aria-haspopup="true" aria-expanded="false" title="Choisir les modes dont les spots sont affichés (liste des modes de cet onglet)">Filtres ▾</button>'
       + '<button type="button" class="bm-all" id="bmAll" aria-pressed="false" title="Tous les spots de la plage, quel que soit leur mode (les filtres sont ignorés)">Tous</button>'
-      + '<span class="bm-fmenu" id="bmFmenu" role="menu" hidden></span></span></div>'
+      + '<span class="bm-fmenu" id="bmFmenu" role="menu" hidden></span></span>'
+      + (EMBED ? '<button type="button" class="bm-pop" id="bmPop" title="Ouvrir la carte de bande dans une fenêtre séparée (autre écran…) ; dans la fenêtre : la ramener à droite de la face avant">⧉</button>' : '') + '</div>'
       + '<div class="bm-r" title="Plage affichée pour cette bande (kHz), gardée par bande. Molette sur la carte : zoom · glisser : déplacer · double-clic : plage d’origine">'
       + '<input id="bmLo" inputmode="decimal" aria-label="Début de la plage (kHz)"><span>–</span><input id="bmHi" inputmode="decimal" aria-label="Fin de la plage (kHz)"><span>kHz</span></div>'
       + '<div class="bm-body" id="bmBody"><canvas id="bmCv"></canvas><div class="bm-lbls" id="bmLbls"></div></div>'
@@ -450,7 +457,7 @@
     return { rtty: [rt(rts[0]), rt(rts[1])], rtTx, cw: { f: Math.round(cwc.f), bw: cwc.bw }, rx: rxF, tx: txF };
   }
   function sendView() {
-    if (!api || !api.iControl() || (detached && !POPUP)) return;
+    if (!api || !api.iControl() || (detached && HOST)) return;
     const marks = viewMarks();
     const k = tab + '/' + (tab === 'ftx' || tab === 'jt65' ? mode : '') + '/' + JSON.stringify(marks);
     if (k === viewSent) return;
@@ -491,7 +498,7 @@
   function followView() {
     const st = api && api.state();
     const v = st && st.view;
-    if (!follow || !v || !v.tab || api.iControl() || (detached && !POPUP)) return;
+    if (!follow || !v || !v.tab || api.iControl() || (detached && HOST)) return;
     if (!document.querySelector('#centerPanel .ctab[data-tab="' + v.tab + '"]')) return; // onglet absent ici (fenêtre séparée : Activité, Logs)
     if (v.tab === 'ftx' && v.mode && v.mode !== mode && ['FT8', 'FT4', 'FT2'].indexOf(v.mode) >= 0) setMode(v.mode);
     if (v.tab !== tab) showTab(v.tab);
@@ -557,7 +564,7 @@
   }
   // Le serveur ne décode (et la station n'envoie la BF) que si au moins un membre regarde la fenêtre
   function announce() {
-    if (!api || (detached && !POPUP)) return; // la fenêtre séparée annonce elle-même
+    if (!api || (detached && HOST)) return; // la fenêtre séparée annonce elle-même
     const watching = WF_TABS.indexOf(tab) >= 0 && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
     if (watching && tab === 'cw') return api.send({ t: 'digi', mode: 'CW', cw: cwc });
     if (watching && tab === 'sstv') { api.send({ t: 'digi', mode: 'SSTV', hist: ssNeedHist }); ssNeedHist = false; return; }
@@ -1365,7 +1372,7 @@
   const BM_FAR_MQ = window.matchMedia ? window.matchMedia('(min-width: 1800px) and (min-height: 860px)') : null;
   function bmFar(p, bm) {
     // Page Face avant : colonne à part, tout à droite, sur toute la hauteur (#fcBm)
-    const emb = document.body.dataset.digiEmbed === '1' ? document.getElementById('fcBm') : null;
+    const emb = EMBED ? $('fcBm') : null; // (peut être dans sa fenêtre séparée)
     if (emb) {
       const on = !bm.hidden && !p.classList.contains('collapsed');
       if (on && bm.parentElement !== emb) emb.appendChild(bm);
@@ -1403,16 +1410,22 @@
     const top = tall ? Math.round((tp.getBoundingClientRect().top - p.getBoundingClientRect().top) / z) + 'px' : '0px';
     if (bm.style.top !== top) { bm.style.top = top; bmDraw(); }
   }
+  function bmWin() { const b = $('bandMap'); return (b && b.ownerDocument.defaultView) || window; }
+  let bmRafW = null;
   function bmDraw() {
+    if (bmRaf && bmRafW && bmRafW !== bmWin()) { try { bmRafW.cancelAnimationFrame(bmRaf); } catch (e) {} bmRaf = 0; } // carte déplacée de fenêtre
     if (bmRaf || !bmShown()) return;
-    bmRaf = requestAnimationFrame(() => { bmRaf = 0; bmPaint(); });
+    // Carte de bande dans sa fenêtre séparée (face avant) : on dessine au rythme de cette fenêtre-là
+    const bw = bmWin();
+    bmRaf = bw.requestAnimationFrame(() => { bmRaf = 0; bmPaint(); });
+    bmRafW = bw;
   }
   function bmPaint() {
     const body = $('bmBody'), cv = $('bmCv'), lbls = $('bmLbls');
     if (!body || !cv) return;
     const W = body.clientWidth, H = body.clientHeight;
     if (W < 40 || H < 60) return;
-    const dpr = (window.devicePixelRatio || 1) * (window.RSZOOM ? window.RSZOOM.z() : 1);
+    const dpr = (bmWin().devicePixelRatio || 1) * (window.RSZOOM ? window.RSZOOM.z() : 1);
     if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1633,10 +1646,13 @@
     let drag = null;
     body.addEventListener('mousedown', (e) => {
       if (e.button !== 0 || !bmLay.length) return;
-      drag = { y: e.clientY, r: bmRange(bmBand), moved: false, t: e.target };
+      drag = { y: e.clientY, r: bmRange(bmBand), moved: false, t: e.target, w: body.ownerDocument.defaultView || window };
+      drag.w.addEventListener('mousemove', bmMove);
+      drag.w.addEventListener('mouseup', bmUp);
       e.preventDefault();
     });
-    window.addEventListener('mousemove', (e) => {
+    // Déplacement et clic suivis dans la fenêtre où se trouve la carte (page, ou sa fenêtre séparée)
+    const bmMove = (e) => {
       if (!drag) return;
       const dy = (e.clientY - drag.y) / ((window.RSZOOM && window.RSZOOM.z()) || 1);
       if (Math.abs(dy) > 4) drag.moved = true;
@@ -1644,15 +1660,17 @@
       const H = bmLay[3] - 2 * bmLay[2];
       const dk = -dy / H * (drag.r[1] - drag.r[0]);
       bmSetRange(bmBand, drag.r[0] + dk, drag.r[1] + dk);
-    });
-    window.addEventListener('mouseup', (e) => {
+    };
+    const bmUp = (e) => {
       if (!drag) return;
       const g = drag; drag = null;
+      g.w.removeEventListener('mousemove', bmMove);
+      g.w.removeEventListener('mouseup', bmUp);
       if (g.moved) return;
       const b = g.t.closest && g.t.closest('.bm-s');
       if (b) { const s = bmSpots.get(b.dataset.k); if (s) bmTune(s.f, s.call); return; }
       if (body.contains(e.target)) bmTune(kOf(e));
-    });
+    };
     body.addEventListener('wheel', (e) => {
       if (!bmLay.length) return;
       e.preventDefault();
@@ -1700,6 +1718,7 @@
     fm.addEventListener('click', (e) => { if (e.target.closest('[data-bmdef]')) { store.set('bmmodes_' + tab, ''); bmFiltDraw(); bmDraw(); } });
     document.addEventListener('click', () => { if (!fm.hidden) fClose(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !fm.hidden) fClose(); });
+    if ($('bmPop')) $('bmPop').addEventListener('click', (e) => { e.stopPropagation(); document.dispatchEvent(new CustomEvent('rs-bm-pop')); });
     $('bmAll').addEventListener('click', () => { bmFilt = bmFilt === 'all' ? 'mode' : 'all'; store.set('bmfilt', bmFilt); fClose(); bmFiltDraw(); bmDraw(); });
     bmFiltDraw();
     if (window.ResizeObserver) new ResizeObserver(() => bmDraw()).observe(body);
@@ -3906,7 +3925,7 @@
       setFollow(follow);
       $('dgDetach').addEventListener('click', (e) => {
         e.stopPropagation();
-        if (POPUP) return window.close();
+        if (POPUP && !EMBED) return window.close();
         // La fenêtre séparée s'ouvre sur le mode affiché
         if (MODE_TABS.indexOf(tab) >= 0) store.set('ptab', tab);
         const w = window.open('/digi.html', 'rs-digi', 'width=1200,height=860');
