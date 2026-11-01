@@ -616,7 +616,7 @@
     el('rect', { x: X(5), y: Y(170), width: c.w - 10, height: 124, class: 'lcd-scope' }, g);
     // Rangée du bas, comme sur l'écran du TRX ; la dernière case montre la fonction réglée par le bouton MULTI
     const BOT = [['CENTER'], ['SPAN', () => { L.wfSpan = (L.wfSpan + 1) % SPANS.length; store.set('rs.face.span', L.wfSpan); WF.drawn = false; render(); }],
-      ['3DSS'], ['MONO', () => { L.wfColor = L.wfColor === 1 ? 2 : 1; store.set('rs.face.wfcol', L.wfColor); render(); }], ['MULTI', () => { L.func = !L.func; render(); }],
+      ['3DSS'], ['MONO', () => { L.wfColor = L.wfColor === 1 ? 2 : 1; store.set('rs.face.wfcol', L.wfColor); render(); }], ['MULTI', () => { L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'MULTI : scope, OSCILLOSCOPE et AF-FFT du VFO sélectionné' : 'MULTI : affichage normal', '', 2500); render(); }],
       ['EXPAND'], ['HOLD', () => { L.hold = !L.hold; render(); }], ['MULTI']];
     const bw = (c.w - 10) / BOT.length;
     LCD.bot = BOT.map(([lab, fn], j) => {
@@ -686,6 +686,7 @@
   // Touche DISP : présentations de l'écran (comme sur le FTDX101)
   const DISPS = ['cascade du MAIN', 'SUB au-dessus, MAIN en dessous', 'MAIN | SUB côte à côte', 'filtres agrandis (MAIN | SUB)'];
   L.disp = Math.max(0, Math.min(3, Number(store.get('rs.face.disp', '0')) || 0));
+  L.multi = store.get('rs.face.multi', '0') === '1';
   L.wfSpan = Math.max(0, Math.min(3, Number(store.get('rs.face.span', '2')) || 0));
   L.hold = false;
   L.funcSel = store.get('rs.face.funcsel', 'power');
@@ -1250,7 +1251,7 @@
       if (b.t2) b.t2.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
       if (b.lab === 'HOLD') b.r.classList.toggle('on', !!L.hold);
       if (b.lab === 'SPAN') b.t.textContent = 'SPAN ' + SPANS[L.wfSpan] / 1000 + 'k';
-      if (b.lab === 'MULTI' && !b.t2) b.r.classList.toggle('on', !!L.func);
+      if (b.lab === 'MULTI' && !b.t2) b.r.classList.toggle('on', !!L.multi);
       // DISP « filtres agrandis » : comme sur le TRX, seuls MULTI, HOLD et la case MULTI restent
       b.t.style.opacity = L.disp === 3 && !b.t2 && b.lab !== 'MULTI' && b.lab !== 'HOLD' ? '0' : '';
     }
@@ -1588,6 +1589,42 @@
     if (name) { c2.textAlign = 'left'; c2.fillStyle = '#6f86ff'; c2.font = 'bold 10px "Roboto Mono", monospace'; c2.fillText(name, x0 + 4, y0 + 11); }
   }
   // DISP « filtres agrandis » : le filtre de chaque récepteur (largeur, décalage) avec le spectre de sa BF
+  // Touche MULTI de l'écran (comme sur le TRX) : scope du VFO sélectionné en haut ; en bas OSCILLOSCOPE (10 ms/div) et AF-FFT (0–4 kHz)
+  function drawMulti(c2, W, H, specs, pal, nb, lvl, maxHz) {
+    const sub = activeSide() === 'B', nm = sub ? 'SUB' : 'MAIN';
+    const sp = sub ? (WF.two ? specs[1] : null) : specs[0], buf = sub ? (WF.two ? WF.r : null) : WF.l;
+    const h1 = Math.floor(H * 0.46), y1 = h1 + 3, hb = H - y1, w1 = Math.floor(W / 2) - 1;
+    drawScope(c2, { sp, x0: 0, y0: 0, w: W, h: h1, name: nm }, pal, nb, lvl, maxHz);
+    c2.fillStyle = '#2b3546'; c2.fillRect(0, h1, W, 3);
+    // OSCILLOSCOPE : forme d'onde des 40 dernières ms (4 divisions de 10 ms), gain automatique
+    const ox = 0, ow = w1, tb = 12;
+    c2.fillStyle = '#000'; c2.fillRect(ox, y1, ow, hb);
+    c2.fillStyle = '#1c2a44'; c2.fillRect(ox, y1, ow, tb);
+    c2.font = 'bold 9px "Roboto Mono", monospace'; c2.fillStyle = '#6f86ff';
+    c2.textAlign = 'left'; c2.fillText('OSCILLOSCOPE ' + nm, ox + 4, y1 + 9);
+    c2.textAlign = 'right'; c2.fillText('10ms/Div', ox + ow - 4, y1 + 9);
+    const gy0 = y1 + tb + 2, gh = hb - tb - 4;
+    c2.strokeStyle = 'rgba(120,130,145,.45)'; c2.lineWidth = 1;
+    for (let k = 1; k < 4; k++) { const gx = Math.round(ox + ow * k / 4) + 0.5; c2.beginPath(); c2.moveTo(gx, gy0); c2.lineTo(gx, gy0 + gh); c2.stroke(); }
+    for (let k = 1; k < 4; k++) { const gy = Math.round(gy0 + gh * k / 4) + 0.5; c2.beginPath(); c2.moveTo(ox, gy); c2.lineTo(ox + ow, gy); c2.stroke(); }
+    if (buf) {
+      const n = Math.min(buf.length, Math.round(0.04 * WF.rate)), s0 = buf.length - n;
+      let pk = 0;
+      for (let i = s0; i < buf.length; i++) pk = Math.max(pk, Math.abs(buf[i]));
+      WF.oscPk = Math.max(pk, (WF.oscPk || 0) * 0.94, 0.02);
+      const k = (gh / 2 - 3) / Math.max(0.35, WF.oscPk), mid = gy0 + gh / 2; // échelle fixe au-dessus d'un seuil : le bruit reste petit, comme sur le TRX
+      c2.strokeStyle = '#38e0d0'; c2.lineWidth = 1.3;
+      c2.beginPath();
+      for (let i = 0; i < n; i++) { const x = ox + i * ow / (n - 1), y = mid - buf[s0 + i] * k; i ? c2.lineTo(x, y) : c2.moveTo(x, y); }
+      c2.stroke();
+    } else {
+      c2.fillStyle = '#8a97ab'; c2.font = '10px system-ui, sans-serif'; c2.textAlign = 'center';
+      c2.fillText('SUB : bouton « 🎧 Stéréo MAIN | SUB »', ox + ow / 2, gy0 + gh / 2 + 4);
+    }
+    // AF-FFT : spectre de la BF 0–4 kHz avec sa cascade
+    const fHz = Math.min(4000, WF.rate / 2), nb4 = Math.max(2, Math.floor((NFFT / 2) * fHz / (WF.rate / 2)));
+    drawScope(c2, { sp, x0: w1 + 2, y0: y1, w: W - w1 - 2, h: hb, name: 'AF-FFT ' + nm, sep: 'v' }, pal, nb4, lvl, fHz);
+  }
   function drawFilters(c2, W, H, specs, nb, lvl) {
     // Comme l'écran du TRX (DISP « filtres agrandis ») : deux grands filtres rouges, sans cadre, séparés par un trait ;
     // le spectre n'apparaît qu'à l'intérieur de la bande passante
@@ -1684,7 +1721,8 @@
         if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; WF.drawn = false; }
         if (!WF.drawn) { c2.fillStyle = '#000'; c2.fillRect(0, 0, W, H); WF.drawn = true; }
         const pal = PALS[L.wfColor] || PALS[1];
-        if (L.disp === 3) drawFilters(c2, W, H, specs, nb, lvl, maxHz);
+        if (L.multi) drawMulti(c2, W, H, specs, pal, nb, lvl, maxHz);
+        else if (L.disp === 3) drawFilters(c2, W, H, specs, nb, lvl, maxHz);
         else for (const rg of scopeRegions(W, H, specs)) drawScope(c2, rg, pal, nb, lvl, maxHz);
       }
     } else {

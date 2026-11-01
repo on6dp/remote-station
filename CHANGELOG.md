@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.44** — **Face avant, case MULTI de l'écran** (comme sur le TRX) : scope du VFO sélectionné en haut ; en bas **OSCILLOSCOPE MAIN / SUB** (forme d'onde de la BF, 10 ms/div) et **AF-FFT MAIN / SUB** (0–4 kHz avec cascade), selon la touche MAIN / SUB. Elle n'ouvre plus le menu FUNC (touche FUNC). Ctrl+F5 sur /ftdx101.
 - **0.32.43** — **Face avant, spectre des filtres** : plus de plafond à mi-hauteur. Le niveau était borné avant d'appliquer LEVEL (un LEVEL négatif abaissait le plafond) et saturait dès ~28 dB au-dessus du bruit ; maintenant les barres utilisent toute la hauteur (jusqu'à ~45 dB au-dessus du bruit). Ctrl+F5 sur /ftdx101.
 - **0.32.42** — **Face avant, DISP « filtres agrandis » comme l'écran du TRX** : deux grands filtres rouges (MAIN et SUB) sans cadre, séparés par un trait ; spectre en barres fines **seulement dans la bande passante** ; repère orange avec son petit carré en haut ; base bleue. Ctrl+F5 sur /ftdx101.
 - **0.32.41** — **Face avant, spectre plus fin** : DISP « filtres agrandis » : une barre fine tous les 2 pixels (deux fois plus de détail, la plus forte des raies FFT couvertes) ; petits spectres dans les cadres de filtre : 64 barres fines au lieu de 34. Ctrl+F5 sur /ftdx101.
