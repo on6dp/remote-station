@@ -844,7 +844,7 @@
     if (k.dial && part === 'outer' && (s.rit || s.xit) && !(s.mpvd === 2)) {
       const v = Math.max(-9999, Math.min(9999, (s.clar || 0) + notches * 10));
       setCtl('clar', v);
-      return showTip(ev, 'CLAR ' + (s.rit && s.xit ? 'RX/TX' : s.rit ? 'RX' : 'TX') + ' ' + (v > 0 ? '+' : '') + v + ' Hz');
+      return showTip(ev, 'CLAR ' + (s.rit && s.xit ? 'TRX' : s.rit ? 'RX' : 'TX') + ' ' + (v > 0 ? '+' : '') + v + ' Hz');
     }
     // Grande touche VC TUNE : la bague extérieure du grand bouton accorde le présélecteur (un pas par cran)
     const vcSide = activeSide() === 'B' ? 'B' : '';
@@ -1184,7 +1184,7 @@
       const clarOn = side === 'A' && (s.rit || s.xit);
       v.clarG.style.display = clarOn ? '' : 'none';
       if (clarOn) {
-        v.clarT.textContent = 'CLAR ' + (s.rit && s.xit ? 'RX/TX' : s.rit ? 'RX' : 'TX');
+        v.clarT.textContent = 'CLAR ' + (s.rit && s.xit ? 'TRX' : s.rit ? 'RX' : 'TX'); // comme le TRX : CLAR RX, CLAR TX, CLAR TRX
         const cv = s.clar || 0;
         v.clarV.textContent = (cv > 0 ? '+' : cv < 0 ? '-' : '') + Math.abs(cv) + 'Hz';
       }
