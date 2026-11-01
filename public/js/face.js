@@ -161,12 +161,13 @@
       return render();
     }
     if (a.local === 'split') {
-      // SPLIT : en marche, le TRX passe l'émission sur l'autre VFO.
-      // À l'arrêt : MAIN sélectionné → l'émission reste où elle est ; SUB sélectionné → l'émission revient sur le MAIN (comme le TRX).
+      // SPLIT en marche : l'émission passe sur l'autre VFO que celui qui est sélectionné (MAIN → TX SUB, SUB → TX MAIN).
+      // SPLIT arrêté : SUB sélectionné → l'émission revient sur le SUB ; MAIN sélectionné → elle reste où elle est.
       if (!needControl()) return;
-      const on = s.split ? 0 : 1, keep = s.vfoSel === 1 ? 'A' : L.txSide(s);
+      const on = s.split ? 0 : 1;
+      const want = on ? (s.vfoSel === 1 ? 'A' : 'B') : (s.vfoSel === 1 ? 'B' : L.txSide(s));
       setCtl('split', on);
-      if (!on && R.CONTROL.txVfo) setTimeout(() => setCtl('txVfo', keep === 'B' ? 1 : 0), 250);
+      if (R.CONTROL.txVfo) setTimeout(() => setCtl('txVfo', want === 'B' ? 1 : 0), 250);
       return;
     }
     if (a.local === 'smenu') return L.smenu ? closeSmenu() : openSmenu();
