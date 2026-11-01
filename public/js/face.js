@@ -308,6 +308,17 @@
     sm.style.width = ((box.w - 44) / V.w * 100) + '%';
     sm.innerHTML = '<div class="fc-sm-t">SCOPE MENU</div><div class="fc-sm-row">' + SMENU.map((m) => '<button type="button" data-sm="' + m[0] + '" title="' + m[3] + '"><b>' + m[1] + '</b><i></i></button>').join('') + '</div>';
     $('facePanel').appendChild(sm);
+    // Cadre « SHIFT −1200Hz », « WIDTH 4000Hz »… posé sur le scope pendant un réglage, comme sur l'écran du TRX
+    const pop = document.createElement('div');
+    pop.className = 'fc-lcdpop';
+    pop.id = 'lcdPop';
+    pop.hidden = true;
+    pop.style.left = ((box.x + 60 - V.x) / V.w * 100) + '%';
+    pop.style.top = ((box.y + 6 - V.y) / V.h * 100) + '%';
+    pop.style.width = ((box.w * 0.62) / V.w * 100) + '%';
+    pop.style.height = ((box.h * 0.36) / V.h * 100) + '%';
+    pop.innerHTML = '<span class="fc-lp-l"></span><svg class="fc-lp-v" preserveAspectRatio="xMaxYMid meet"><path></path><text></text></svg>';
+    $('facePanel').appendChild(pop);
     sm.addEventListener('click', (e) => {
       const b = e.target.closest('[data-sm]');
       if (!b) return;
@@ -841,6 +852,7 @@
     } else return;
     setCtl(spec.ctl, v);
     showTip(ev, spec.label + ' ' + fmtVal(c, v, s) + (spec.offKey && !s[spec.offKey] ? ' (' + spec.offName + ' arrêté)' : ''));
+    lcdPop(spec.ctl, c, v, s);
   }
   function knobEvents(g, k) {
     let acc = 0;
@@ -929,6 +941,31 @@
     if (R.CONTROL['width' + sfx] && wi > 0 && !s['narrow' + sfx]) { setCtl('width' + sfx, wi); out.push('WIDTH ' + tab[wi - 1] + ' Hz'); }
     showTip(ev, (sfx ? 'SUB' : 'MAIN') + ' : ' + (out.join(' · ') || 'rien à remettre'));
     hideTip(2500);
+  }
+  // Cadre de réglage sur l'écran (comme le TRX) : nom de la fonction et valeur en grands chiffres, 2 s
+  const POP_NAMES = { shift: 'SHIFT', width: 'WIDTH', notchFreq: 'NOTCH', contourFreq: 'CONTOUR', apfFreq: 'APF' };
+  let popT = 0;
+  function lcdPop(id, c, v, s) {
+    const base = id.replace(/B$/, ''), sub = /B$/.test(id) && POP_NAMES[base];
+    const name = POP_NAMES[id] || (sub ? POP_NAMES[base] : null);
+    const pop = $('lcdPop');
+    if (!name || !pop) return;
+    let num;
+    if (c.type === 'width') { const tab = R.widthTable(s[c.modeKey || 'mode']) || []; num = v ? tab[v - 1] : widthDefHz(s[c.modeKey || 'mode'] || ''); }
+    else if (base === 'apfFreq') num = (v - 25) * 10;
+    else num = v;
+    if (num == null) return;
+    const txt = (num < 0 ? '-' : '') + Math.abs(num);
+    pop.querySelector('.fc-lp-l').textContent = (sub ? 'SUB ' : '') + name;
+    const svgEl = pop.querySelector('svg');
+    const h = 30, w = (txt.length + 0.2) * h * 0.76 + 46;
+    svgEl.setAttribute('viewBox', '0 0 ' + w.toFixed(0) + ' ' + (h + 4));
+    pop.querySelector('path').setAttribute('d', seg7(txt, w - 46, 2, h));
+    const t = pop.querySelector('text');
+    t.setAttribute('x', w - 44); t.setAttribute('y', h + 1); t.textContent = 'Hz';
+    pop.hidden = false;
+    clearTimeout(popT);
+    popT = setTimeout(() => { pop.hidden = true; }, 2000);
   }
   let tipT = 0;
   function showTip(ev, text) {

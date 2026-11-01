@@ -196,3 +196,12 @@ body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglet
 .fc-sm-row button:hover { background: linear-gradient(#eef1f4, #c9cfd6); }
 .fc-sm-row button b { font-weight: 800; letter-spacing: .08em; }
 .fc-sm-row button i { font-style: normal; font-weight: 700; color: #b0261a; font-size: .95em; }
+
+/* Cadre de réglage sur le scope (SHIFT, WIDTH, NOTCH, CONTOUR, APF), comme l'écran du TRX */
+.fc-lcdpop { position: absolute; z-index: 3; box-sizing: border-box; display: flex; align-items: center; gap: 4%; padding: 0 3%;
+  background: rgba(4, 6, 10, .96); border: 2px solid #8a93a0; border-radius: 6px; box-shadow: 0 3px 10px rgba(0, 0, 0, .6); pointer-events: none; }
+.fc-lcdpop[hidden] { display: none; }
+.fc-lp-l { flex: 0 0 auto; color: #e9edf2; font: 800 clamp(9px, 1.05vw, 18px)/1 'Roboto Mono', monospace; letter-spacing: .06em; }
+.fc-lp-v { flex: 1 1 auto; height: 78%; }
+.fc-lp-v path { fill: #f4f6fa; }
+.fc-lp-v text { fill: #f4f6fa; font: italic 800 30px 'Roboto Mono', monospace; }
