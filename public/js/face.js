@@ -313,12 +313,25 @@
     pop.className = 'fc-lcdpop';
     pop.id = 'lcdPop';
     pop.hidden = true;
-    pop.style.left = ((box.x + 60 - V.x) / V.w * 100) + '%';
+    pop.style.left = ((box.x + 40 - V.x) / V.w * 100) + '%';
     pop.style.top = ((box.y + 6 - V.y) / V.h * 100) + '%';
-    pop.style.width = ((box.w * 0.62) / V.w * 100) + '%';
+    pop.style.width = ((box.w * 0.74) / V.w * 100) + '%';
     pop.style.height = ((box.h * 0.36) / V.h * 100) + '%';
-    pop.innerHTML = '<span class="fc-lp-l"></span><svg class="fc-lp-v" preserveAspectRatio="xMaxYMid meet"><path></path><text></text></svg>';
+    pop.innerHTML = '<button type="button" class="fc-lp-b" data-d="-1" title="Diminuer (ou molette sur le cadre)">−</button><span class="fc-lp-l"></span>'
+      + '<svg class="fc-lp-v" preserveAspectRatio="xMaxYMid meet"><path></path><text></text></svg>'
+      + '<button type="button" class="fc-lp-b" data-d="1" title="Augmenter (ou molette sur le cadre)">+</button>';
     $('facePanel').appendChild(pop);
+    // Le cadre se règle aussi à la souris : − / +, molette ; il reste affiché tant que la souris est dessus
+    pop.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-d]');
+      if (b && popTarget) turn(popTarget.k, popTarget.part, Number(b.dataset.d), e);
+    });
+    pop.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (popTarget && Math.abs(e.deltaY) > 0) turn(popTarget.k, popTarget.part, e.deltaY < 0 ? 1 : -1, e);
+    }, { passive: false });
+    pop.addEventListener('pointerenter', () => { popHover = true; clearTimeout(popT); });
+    pop.addEventListener('pointerleave', () => { popHover = false; clearTimeout(popT); popT = setTimeout(() => { pop.hidden = true; }, 2000); });
     sm.addEventListener('click', (e) => {
       const b = e.target.closest('[data-sm]');
       if (!b) return;
@@ -852,6 +865,7 @@
     } else return;
     setCtl(spec.ctl, v);
     showTip(ev, spec.label + ' ' + fmtVal(c, v, s) + (spec.offKey && !s[spec.offKey] ? ' (' + spec.offName + ' arrêté)' : ''));
+    popTarget = { k, part };
     lcdPop(spec.ctl, c, v, s);
   }
   function knobEvents(g, k) {
@@ -944,7 +958,7 @@
   }
   // Cadre de réglage sur l'écran (comme le TRX) : nom de la fonction et valeur en grands chiffres, 2 s
   const POP_NAMES = { shift: 'SHIFT', width: 'WIDTH', notchFreq: 'NOTCH', contourFreq: 'CONTOUR', apfFreq: 'APF' };
-  let popT = 0;
+  let popT = 0, popTarget = null, popHover = false;
   function lcdPop(id, c, v, s) {
     const base = id.replace(/B$/, ''), sub = /B$/.test(id) && POP_NAMES[base];
     const name = POP_NAMES[id] || (sub ? POP_NAMES[base] : null);
@@ -965,7 +979,7 @@
     t.setAttribute('x', w - 44); t.setAttribute('y', h + 1); t.textContent = 'Hz';
     pop.hidden = false;
     clearTimeout(popT);
-    popT = setTimeout(() => { pop.hidden = true; }, 2000);
+    if (!popHover) popT = setTimeout(() => { pop.hidden = true; }, 2500);
   }
   let tipT = 0;
   function showTip(ev, text) {
