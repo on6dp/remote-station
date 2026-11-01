@@ -10,8 +10,8 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-msg.warn { color: #ffcf4a; }
 .fc-msg.error { color: #ff6b6b; font-weight: 700; }
 .fc-wrap { position: relative; max-width: 1900px; margin: 0; min-width: 0; }
-/* Face avant à gauche, colonne PTT + SSB CONFIGURATION à droite */
-.fc-top { display: grid; grid-template-columns: minmax(0, 1900px) minmax(300px, 400px); gap: 12px; align-items: start; justify-content: start; }
+/* Face avant, puis sous elle : PTT + SSB CONFIGURATION (micro, égaliseurs, M'écouter et son volume) sur une ligne */
+.fc-top { display: grid; grid-template-columns: minmax(0, 1900px); gap: 10px; align-items: start; justify-content: start; }
 .fc-panel { position: relative; }
 #face { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; touch-action: none; }
 .fc-scope { position: absolute; border-radius: 3px; pointer-events: none; visibility: hidden; }
@@ -163,17 +163,25 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .lcd-bott2 { fill: #ff3b30; font-size: 8.5px; font-weight: 800; pointer-events: none; }
 #face .lcd-hit.off:hover { fill: rgba(160, 170, 185, .06); }
 #face .func-pm { fill: #ffcf4a; font-size: 15px; font-weight: 800; pointer-events: none; }
-/* Phonie à distance à droite de la face avant : PTT + cadre SSB configuration (voice.js) */
-.fc-tx { margin: 0; display: flex; flex-direction: column; align-items: stretch; gap: 10px; min-width: 0; }
-.fc-tx #ptt { width: 100%; min-height: 72px; font-size: 20px; font-weight: 800; }
-.fc-tx .vx { margin: 0; }
-/* Écran étroit : la colonne repasse sous la face avant */
-@media (max-width: 1500px) {
-  .fc-top { grid-template-columns: minmax(0, 1fr); }
-  .fc-tx { flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
-  .fc-tx #ptt { flex: 0 0 240px; width: 240px; min-height: 64px; font-size: 18px; }
-  .fc-tx .vx { flex: 0 1 620px; }
-}
+/* Phonie à distance sous la face avant : PTT à gauche, SSB CONFIGURATION à sa droite, tout sur une ligne */
+.fc-tx { margin: 0; display: flex; flex-direction: row; flex-wrap: wrap; align-items: stretch; gap: 10px; min-width: 0; max-width: 1900px; }
+.fc-tx #ptt { flex: 0 0 220px; width: 220px; min-height: 64px; font-size: 20px; font-weight: 800; }
+.fc-tx .vx { margin: 0; flex: 1 1 600px; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.fc-tx .vx-h { flex: 0 0 auto; }
+.fc-tx .vx-on, .fc-tx .vx-trx { width: auto; flex: 0 0 auto; padding: 6px 14px; }
+.fc-tx .vx-b { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.fc-tx .vx-b select { width: 260px; flex: 0 1 260px; }
+.fc-tx .vx-type { flex: 1 1 220px; }
+.fc-tx .vx-meter { flex: 0 0 180px; }
+.fc-tx .vx-row { flex: 0 0 auto; }
+.fc-tx .vx-row .btn { flex: 0 0 auto; padding: 4px 12px; }
+.fc-tx .vx-note { flex: 1 1 100%; }
+.fc-tx .vx-mon { flex: 0 0 auto; }
+.fc-tx .vx-monvol { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; }
+.fc-tx .vx-monvol input { flex: 0 0 140px; width: 140px; }
+/* Modes numériques : dans leur propre page (bouton 📟 Modes numériques) ; le module tourne caché ici (carte de bande, suivi) */
+body.face-page #centerPanel { display: none; }
+.fc-digibtn { white-space: nowrap; }
 /* Carte de bande : colonne tout à droite, sur toute la hauteur de la fenêtre (onglets qui ont des spots) */
 .fc-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 12px; align-items: start; }
 .fc-left { min-width: 0; grid-column: 1; grid-row: 1; }

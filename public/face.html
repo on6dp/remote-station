@@ -25,6 +25,7 @@
     <button class="btn accent fc-listen" id="listenBtn" type="button" aria-pressed="false" title="Entendre la BF du TRX (aussi : clic sur la prise PHONES)">🔊 Écouter le TRX</button>
     <button class="btn fc-stereo" id="stereoBtn" type="button" aria-pressed="false" title="Casque : récepteur MAIN dans l’oreille gauche, SUB dans l’oreille droite (double réception, pratique en SPLIT). Coupé : les deux mélangés dans les deux oreilles">🎧 Stéréo MAIN | SUB</button>
     <label class="fc-vol" title="Volume de l’écoute (dans ce navigateur)">🔈 <input id="listenVol" type="range" min="0" max="200" value="100"> <span id="listenVolOut">100 %</span></label>
+    <button class="btn fc-digibtn" id="digiBtn" type="button" title="Modes numériques (FT8 / FT4, RTTY, CW, SSTV…) dans leur propre page, à côté de la face avant (autre écran…)">📟 Numériques</button>
     <a class="btn help-btn" href="/" title="Revenir au dashboard (onglets, modes numériques, carnet…)">Dashboard</a>
     <a class="btn help-btn" href="/aide#face" target="_blank" rel="noopener">HELP</a>
   </div>
@@ -34,7 +35,7 @@
   <aside class="fc-bm" id="fcBm" aria-label="Carte de bande"></aside>
   <div class="fc-left">
   <p class="fc-msg" id="msg" role="status" aria-live="polite"></p>
-  <!-- En haut : la face avant à gauche, la phonie à distance (PTT, SSB CONFIGURATION) dans la colonne à sa droite -->
+  <!-- La face avant, puis sous elle la phonie à distance (PTT, SSB CONFIGURATION, M'écouter et son volume) ; modes numériques : page à part (bouton 📟) -->
   <div class="fc-top">
   <div class="fc-wrap" id="faceWrap">
     <div class="fc-panel" id="facePanel">

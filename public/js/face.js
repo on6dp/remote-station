@@ -1814,6 +1814,12 @@
   });
   $('listenBtn').addEventListener('click', () => (L.listening ? stopListen() : startListen()));
   $('stereoBtn').addEventListener('click', () => setStereo(!L.stereo));
+  // Modes numériques : leur propre page (digi.html), raccrochée à cette page (même connexion, voir RSHOST plus bas)
+  $('digiBtn').addEventListener('click', () => {
+    const w = window.open('/digi.html', 'rs-digi', 'width=1200,height=860');
+    if (!w) say('Fenêtre bloquée par le navigateur : autorisez les fenêtres pop-up pour ce site.', 'warn', 6000);
+    else try { w.focus(); } catch (e) {}
+  });
   $('listenVol').value = store.get('rs.vol', '100');
   $('listenVol').addEventListener('input', volume);
   volume();

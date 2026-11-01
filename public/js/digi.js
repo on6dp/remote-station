@@ -397,8 +397,8 @@
     det.type = 'button';
     det.id = 'dgDetach';
     const WIN = POPUP && !EMBED; // cette page est la fenêtre séparée
-    det.textContent = WIN ? (FROM_FACE ? '⧉ Ramener sous la face avant' : '⧉ Ramener dans le dashboard') : '⧉';
-    det.title = WIN ? 'Fermer cette fenêtre et ramener les modes numériques ' + (FROM_FACE ? 'sous la face avant' : 'dans le dashboard') : 'Ouvrir les modes numériques dans une fenêtre séparée (autre écran…)';
+    det.textContent = WIN ? (FROM_FACE ? '✕ Fermer' : '⧉ Ramener dans le dashboard') : '⧉';
+    det.title = WIN ? (FROM_FACE ? 'Fermer la page des modes numériques (bouton « 📟 Modes numériques » de la face avant pour la rouvrir)' : 'Fermer cette fenêtre et ramener les modes numériques dans le dashboard') : 'Ouvrir les modes numériques dans une fenêtre séparée (autre écran…)';
     bar.appendChild(det);
     const panel = $('centerPanel');
     const add = (id, cls, html) => {
