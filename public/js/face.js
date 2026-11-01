@@ -161,9 +161,10 @@
       return render();
     }
     if (a.local === 'split') {
-      // SPLIT : en marche, le TRX passe l'émission sur l'autre VFO ; à l'arrêt, l'émission reste sur le VFO où elle est
+      // SPLIT : en marche, le TRX passe l'émission sur l'autre VFO.
+      // À l'arrêt : MAIN sélectionné → l'émission reste où elle est ; SUB sélectionné → l'émission revient sur le MAIN (comme le TRX).
       if (!needControl()) return;
-      const on = s.split ? 0 : 1, keep = L.txSide(s);
+      const on = s.split ? 0 : 1, keep = s.vfoSel === 1 ? 'A' : L.txSide(s);
       setCtl('split', on);
       if (!on && R.CONTROL.txVfo) setTimeout(() => setCtl('txVfo', keep === 'B' ? 1 : 0), 250);
       return;

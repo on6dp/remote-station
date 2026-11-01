@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.32** — **Face avant, SPLIT avec SUB sélectionné** (comme sur le TRX, d'après les photos) : SPLIT en marche → l'émission passe sur l'autre VFO ; SPLIT arrêté avec **SUB** sélectionné → l'émission revient sur le **MAIN** ; avec **MAIN** sélectionné, rien ne change (elle reste où elle est). Ctrl+F5 sur /ftdx101.
 - **0.32.31** — **Face avant, SPLIT et TX** (comme sur le TRX) : SPLIT en marche → l'émission passe sur l'autre VFO ; SPLIT arrêté → l'émission reste sur le VFO où elle est ; touches **TX MAIN / TX SUB** = choix du VFO d'émission (CAT `FT0` / `FT1`). Ctrl+F5 sur /ftdx101 et recharger la page Station.
 - **0.32.30** — **Face avant, comme le TRX** : touche MAIN éclairée en lavande, voyant de bande MAIN lavande ; triangle au-dessus du grand bouton lavande (MAIN) ou bleu (SUB) ; voyant orange de la grande touche CLAR (bague sur CLAR) ; voyants TX rouges selon le VFO d'émission lu sur le TRX (SPLIT envoie l'émission sur l'autre VFO) ; en SPLIT, la **fréquence du VFO qui va émettre s'affiche en rouge**. Ctrl+F5 sur /ftdx101.
 - **0.32.29** — **Face avant** : « CLAR RX  -90Hz » / « CLAR TX … » / « CLAR TRX … » : la valeur juste à côté, en gras ; « TX » du VFO d'émission en gras, plus grand. Ctrl+F5 sur /ftdx101.
