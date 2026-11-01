@@ -352,8 +352,8 @@
           else if (c === 'TX1') { this.tx1n = (this.tx1n || 0) + 1; if (!(this.loseTx1 && this.loseTx1(this.tx1n))) this.tx = 1; }
           else if (c === 'TX0') this.tx = 0;
           else if (c === 'FT') out.push('FT' + (spec.splitIsFT || (spec.ID === 'ftdx101' && this.txv != null) ? this.txv || 0 : this.split ? 1 : 0) + ';');
-          // FTDX101 (simulateur) : SPLIT en marche → émission sur l'autre VFO que celui sélectionné ; à l'arrêt : SUB sélectionné → émission sur le SUB, sinon inchangée
-          else if (spec.ID === 'ftdx101' && /^ST[01]$/.test(c)) { if (c === 'ST1' && !this.split) this.txv = this.ans['VS;'] === 'VS1' ? 0 : 1; if (c === 'ST0' && this.split && this.ans['VS;'] === 'VS1') this.txv = 1; this.ans['ST;'] = c; }
+          // FTDX101 (simulateur) : SPLIT en marche → émission sur le VFO non sélectionné ; à l'arrêt → sur le VFO sélectionné
+          else if (spec.ID === 'ftdx101' && /^ST[01]$/.test(c)) { if (c === 'ST1' && !this.split) this.txv = this.ans['VS;'] === 'VS1' ? 0 : 1; if (c === 'ST0' && this.split) this.txv = this.ans['VS;'] === 'VS1' ? 1 : 0; this.ans['ST;'] = c; }
           else if ((m = /^FT([0-3])$/.exec(c))) { if (this.ftMode === 'deaf') { /* essai : TRX qui ignore FT */ } else if (this.ftMode === 'x23' ? +m[1] >= 2 : +m[1] < 2) this.txv = +m[1] % 2; else if (this.ftMode === 'x23') out.push('?;'); }
           // FTX-1 (manuel CAT) : VS0 = MAIN en émission / réception, VS1 = SUB en émission / réception — VS déplace aussi l'émetteur
           else if (spec.splitIsFT && /^VS[01]$/.test(c)) { this.ans['VS;'] = c; this.txv = +c[2]; }

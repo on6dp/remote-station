@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.35 | [RemoteStation-Setup-0.32.35.exe](0.32.35/RemoteStation-Setup-0.32.35.exe) | [remote-station-0.32.35.tar.gz](0.32.35/remote-station-0.32.35.tar.gz) | Face avant : SPLIT arrêté → TX sur le VFO sélectionné — [empreintes SHA-256](0.32.35/SHA256SUMS.txt) |
 | 0.32.34 | [RemoteStation-Setup-0.32.34.exe](0.32.34/RemoteStation-Setup-0.32.34.exe) | [remote-station-0.32.34.tar.gz](0.32.34/remote-station-0.32.34.tar.gz) | Face avant : SPLIT avec SUB sélectionné ne se réactive plus — [empreintes SHA-256](0.32.34/SHA256SUMS.txt) |
 | 0.32.33 | [RemoteStation-Setup-0.32.33.exe](0.32.33/RemoteStation-Setup-0.32.33.exe) | [remote-station-0.32.33.tar.gz](0.32.33/remote-station-0.32.33.tar.gz) | Face avant : SPLIT avec SUB sélectionné (TX sur MAIN, retour sur SUB) — [empreintes SHA-256](0.32.33/SHA256SUMS.txt) |
 | 0.32.32 | [RemoteStation-Setup-0.32.32.exe](0.32.32/RemoteStation-Setup-0.32.32.exe) | [remote-station-0.32.32.tar.gz](0.32.32/remote-station-0.32.32.tar.gz) | Face avant : SPLIT avec SUB sélectionné comme le TRX — [empreintes SHA-256](0.32.32/SHA256SUMS.txt) |
