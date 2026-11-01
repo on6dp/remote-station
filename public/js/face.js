@@ -250,7 +250,8 @@
     for (const k of FACE.knobs || []) {
       const g = el('g', { class: 'kn' + (k.dial ? ' dial' : ''), 'data-knob': k.id }, svg);
       el('circle', { cx: k.cx, cy: k.cy, r: k.ro, class: 'kn-o' }, g);
-      if (k.ri) el('circle', { cx: k.cx, cy: k.cy, r: k.ri, class: 'kn-i' }, g);
+      // Bouton du centre : sur la photo, prise de biais, son capuchon est un peu décalé du centre de la bague (k.ix, k.iy)
+      if (k.ri) el('circle', { cx: k.cx + (k.ix || 0), cy: k.cy + (k.iy || 0), r: k.ri, class: 'kn-i' }, g);
       el('title', {}, g, (k.tip || [k.inner && k.inner.label, k.outer && k.outer.label].filter(Boolean).join(' (centre) · ') + ' (bague) — molette ou glisser')
         + (k.longReset ? (k.longReset[0] === 'n' ? ' ; appui d’au moins 1 s sur le centre : NOTCH, CONT et APF par défaut et arrêtés' : ' ; appui d’au moins 1 s sur le centre : SHIFT à 0 et WIDTH par défaut') : ''));
       knobEvents(g, k);
@@ -796,7 +797,7 @@
   // ------------------------------------------------------------ boutons rotatifs : molette, glisser
   function knobPart(k, p) {
     if (!k.ri) return k.inner ? 'inner' : 'outer';
-    const d = Math.hypot(p.x - k.cx, p.y - k.cy);
+    const d = Math.hypot(p.x - k.cx - (k.ix || 0), p.y - k.cy - (k.iy || 0));
     return d <= k.ri + 3 ? 'inner' : 'outer';
   }
   function turn(k, part, notches, ev) {

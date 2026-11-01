@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.20 | [RemoteStation-Setup-0.32.20.exe](0.32.20/RemoteStation-Setup-0.32.20.exe) | [remote-station-0.32.20.tar.gz](0.32.20/remote-station-0.32.20.tar.gz) | Face avant : cercle du bouton du centre recentré — [empreintes SHA-256](0.32.20/SHA256SUMS.txt) |
 | 0.32.19 | [RemoteStation-Setup-0.32.19.exe](0.32.19/RemoteStation-Setup-0.32.19.exe) | [remote-station-0.32.19.tar.gz](0.32.19/remote-station-0.32.19.tar.gz) | Face avant : NB LEVEL / DNR LEVEL réglés par MULTI ou la molette — [empreintes SHA-256](0.32.19/SHA256SUMS.txt) |
 | 0.32.18 | [RemoteStation-Setup-0.32.18.exe](0.32.18/RemoteStation-Setup-0.32.18.exe) | [remote-station-0.32.18.tar.gz](0.32.18/remote-station-0.32.18.tar.gz) | Face avant : NB / DNR — appui 1 s = NB LEVEL / DNR LEVEL — [empreintes SHA-256](0.32.18/SHA256SUMS.txt) |
 | 0.32.17 | [RemoteStation-Setup-0.32.17.exe](0.32.17/RemoteStation-Setup-0.32.17.exe) | [remote-station-0.32.17.tar.gz](0.32.17/remote-station-0.32.17.tar.gz) | Face avant : cadre de réglage avec − / + et molette — [empreintes SHA-256](0.32.17/SHA256SUMS.txt) |

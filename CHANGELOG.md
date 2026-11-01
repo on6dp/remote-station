@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.20** — **Face avant** : le cercle du bouton du centre (SHIFT ◎ WIDTH, NOTCH ◎ CONT/APF, MIC/SPEED ◎ PROC) est maintenant centré sur le capuchon de la photo (prise de biais). Ctrl+F5 sur /ftdx101.
 - **0.32.19** — **Face avant** : cadre NB LEVEL / DNR LEVEL ouvert : le bouton **MULTI** règle aussi le niveau, comme sur le TRX (en plus de la molette sur le cadre et de − / +). Ctrl+F5 sur /ftdx101.
 - **0.32.18** — **Face avant, NB et DNR** (MAIN et SUB) : clic bref = en / hors service ; appui d'au moins 1 s = cadre « NB LEVEL » / « DNR LEVEL » sur l'écran, comme le TRX, réglable avec − / + ou la molette (niveaux du SUB relus aussi). Ctrl+F5 sur /ftdx101 et recharger la page Station.
 - **0.32.17** — **Face avant** : le cadre de réglage (SHIFT, WIDTH, NOTCH, CONTOUR, APF) se règle aussi à la souris : boutons − / + et molette sur le cadre ; il reste affiché tant que la souris est dessus. Ctrl+F5 sur /ftdx101.
