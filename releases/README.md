@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.29 | [RemoteStation-Setup-0.32.29.exe](0.32.29/RemoteStation-Setup-0.32.29.exe) | [remote-station-0.32.29.tar.gz](0.32.29/remote-station-0.32.29.tar.gz) | Face avant : CLAR et TX en gras — [empreintes SHA-256](0.32.29/SHA256SUMS.txt) |
 | 0.32.28 | [RemoteStation-Setup-0.32.28.exe](0.32.28/RemoteStation-Setup-0.32.28.exe) | [remote-station-0.32.28.tar.gz](0.32.28/remote-station-0.32.28.tar.gz) | Face avant : CLAR RX / TX / TRX comme le TRX — [empreintes SHA-256](0.32.28/SHA256SUMS.txt) |
 | 0.32.27 | [RemoteStation-Setup-0.32.27.exe](0.32.27/RemoteStation-Setup-0.32.27.exe) | [remote-station-0.32.27.tar.gz](0.32.27/remote-station-0.32.27.tar.gz) | Face avant : CLAR RX / TX affiché et réglé par la bague du grand bouton — [empreintes SHA-256](0.32.27/SHA256SUMS.txt) |
 | 0.32.26 | [RemoteStation-Setup-0.32.26.exe](0.32.26/RemoteStation-Setup-0.32.26.exe) | [remote-station-0.32.26.tar.gz](0.32.26/remote-station-0.32.26.tar.gz) | Face avant : R.FIL limité aux filtres de série — [empreintes SHA-256](0.32.26/SHA256SUMS.txt) |

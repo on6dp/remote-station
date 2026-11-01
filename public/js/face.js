@@ -1184,9 +1184,10 @@
       const clarOn = side === 'A' && (s.rit || s.xit);
       v.clarG.style.display = clarOn ? '' : 'none';
       if (clarOn) {
-        v.clarT.textContent = 'CLAR ' + (s.rit && s.xit ? 'TRX' : s.rit ? 'RX' : 'TX'); // comme le TRX : CLAR RX, CLAR TX, CLAR TRX
+        // « CLAR RX -90Hz » : la valeur juste à côté, en gras (CLAR RX, CLAR TX, CLAR TRX comme sur le TRX)
         const cv = s.clar || 0;
-        v.clarV.textContent = (cv > 0 ? '+' : cv < 0 ? '-' : '') + Math.abs(cv) + 'Hz';
+        v.clarT.textContent = 'CLAR ' + (s.rit && s.xit ? 'TRX' : s.rit ? 'RX' : 'TX') + '  ' + (cv > 0 ? '+' : cv < 0 ? '-' : '') + Math.abs(cv) + 'Hz';
+        v.clarV.textContent = '';
       }
       v.tx.classList.toggle('on', tx && txSide === side);
       for (const c of LCD['c' + side]) c.t.textContent = cellText(c.id, s[c.id]);

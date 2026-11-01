@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.29** — **Face avant** : « CLAR RX  -90Hz » / « CLAR TX … » / « CLAR TRX … » : la valeur juste à côté, en gras ; « TX » du VFO d'émission en gras, plus grand. Ctrl+F5 sur /ftdx101.
 - **0.32.28** — **Face avant, CLAR** : RX et TX ensemble s'affichent « CLAR TRX », comme sur le TRX. Ctrl+F5 sur /ftdx101.
 - **0.32.27** — **Face avant, CLAR** : « CLAR RX / TX  -90Hz » en rouge au-dessus de la fréquence quand le clarifier est en service, comme sur le TRX ; la **bague extérieure du grand bouton** règle alors le décalage (10 Hz par cran ; aussi la molette sur ce texte) ; la grande touche CLAR met aussi la bague du TRX sur CLAR (SF01) et la remet sur SUB à l'arrêt. Ctrl+F5 sur /ftdx101.
 - **0.32.26** — **Face avant, R.FIL** (bouton MULTI sur « MULTI R.FIL », ou clic sur la case R.FIL) : seulement les filtres de toit de série 12 kHz, 3 kHz, 600 Hz (1,2 kHz et 300 Hz sont en option sur le FTDX101 : le TRX refusait « RF0x »). Ctrl+F5 sur /ftdx101.
