@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.10 | [RemoteStation-Setup-0.32.10.exe](0.32.10/RemoteStation-Setup-0.32.10.exe) | [remote-station-0.32.10.tar.gz](0.32.10/remote-station-0.32.10.tar.gz) | Face avant : grande touche VC TUNE reliée au TRX (SF0) — [empreintes SHA-256](0.32.10/SHA256SUMS.txt) |
 | 0.32.9 | [RemoteStation-Setup-0.32.9.exe](0.32.9/RemoteStation-Setup-0.32.9.exe) | [remote-station-0.32.9.tar.gz](0.32.9/remote-station-0.32.9.tar.gz) | Face avant : position VC TUNE affichée en continu — [empreintes SHA-256](0.32.9/SHA256SUMS.txt) |
 | 0.32.8 | [RemoteStation-Setup-0.32.8.exe](0.32.8/RemoteStation-Setup-0.32.8.exe) | [remote-station-0.32.8.tar.gz](0.32.8/remote-station-0.32.8.tar.gz) | Face avant : barre VC TUNE au-dessus du filtre — [empreintes SHA-256](0.32.8/SHA256SUMS.txt) |
 | 0.32.7 | [RemoteStation-Setup-0.32.7.exe](0.32.7/RemoteStation-Setup-0.32.7.exe) | [remote-station-0.32.7.tar.gz](0.32.7/remote-station-0.32.7.tar.gz) | Face avant : voyants SHIFT / WIDTH et au-dessus des touches, bague CONT/APF, PROC selon le mode d'émission ; Station : réglages du TRX suivis en direct — [empreintes SHA-256](0.32.7/SHA256SUMS.txt) |

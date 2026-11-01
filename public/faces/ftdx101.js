@@ -95,7 +95,7 @@
       // VC TUNE (présélecteur, VT) : marche / arrêt sur le récepteur actif ; en marche, le bouton MULTI l'accorde (voyant orange)
       // Grande touche VC TUNE (autour du grand bouton) : la bague extérieure du grand bouton (MPVD) accorde le VC TUNE (voyant orange à gauche)
       { id: 'vcTune', x: 1225, y: 270, w: 70, h: 55, tip: 'VC TUNE (grande touche) : la bague extérieure du grand bouton accorde le présélecteur ; nouveau clic : la bague revient à la fréquence', act: { local: 'ringVc' },
-        leds: [{ x: 1239.5, y: 305.5, w: 5, h: 5, color: '#ff9a1f', on: (s, L) => !!L.ringVc, bright: (s, L) => !!L.ringVc }] },
+        leds: [{ x: 1239.5, y: 305.5, w: 5, h: 5, color: '#ff9a1f', on: (s, L) => (s.mpvd != null ? s.mpvd === 2 : !!L.ringVc), bright: (s, L) => (s.mpvd != null ? s.mpvd === 2 : !!L.ringVc) }] },
       // Petite touche VC TUNE : présélecteur du récepteur actif en marche / arrêt (voyant orange au-dessus)
       { id: 'vcTune2', x: 1270, y: 340, w: 30, h: 40, tip: 'VC TUNE (petite touche) : présélecteur du récepteur actif en marche / arrêt', act: { local: 'vc' },
         leds: [{ x: 1280.5, y: 348.5, w: 12, h: 3.5, color: '#ff9a1f', on: (s) => !!(s.vfoSel === 1 ? s.vcB : s.vc), bright: (s) => !!(s.vfoSel === 1 ? s.vcB : s.vc) }] },

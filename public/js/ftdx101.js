@@ -102,6 +102,8 @@
       { cmd: 'CO10;', re: /^CO10(\d{4})$/, parse: (m) => ({ contourB: +m[1] ? 1 : 0 }), sim: 'CO100000' },
       { cmd: 'CO12;', re: /^CO12(\d{4})$/, parse: (m) => ({ apfB: +m[1] ? 1 : 0 }), sim: 'CO120000' },
       // Face avant : fréquence du CONTOUR (CO P1 1 : 0010-3200 Hz) et de l'APF (CO P1 3 : 0000-0050 = −250…+250 Hz), MAIN et SUB
+      // Bague extérieure du grand bouton (MPVD) : SF0 P2 = 1 CLAR, 2 VC TUNE, 3 SUB, 4 CS (grande touche VC TUNE allumée = 2)
+      { cmd: 'SF0;', re: /^SF0([1-4])$/, parse: (m) => ({ mpvd: +m[1] }), sim: 'SF03' },
       { cmd: 'CO01;', re: /^CO01(\d{4})$/, parse: (m) => ({ contourFreq: +m[1] }), sim: 'CO011000' },
       { cmd: 'CO11;', re: /^CO11(\d{4})$/, parse: (m) => ({ contourFreqB: +m[1] }), sim: 'CO111000' },
       { cmd: 'CO03;', re: /^CO03(\d{4})$/, parse: (m) => ({ apfFreq: +m[1] }), sim: 'CO030025' },
@@ -122,7 +124,7 @@
       { cmd: 'VT1;', re: /^VT1([01])(\d{3})?(\d)?/, parse: (m) => ({ vcB: +m[1], vcPosB: m[2] != null ? +m[2] : null, vcOkB: m[3] == null ? null : +m[3] }), sim: 'VT101281' }
     ],
     extraQueries: ['RF0;', 'RF1;', 'ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
-    extraStateKeys: ['contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
+    extraStateKeys: ['mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
     // CW : mémoire 1 du manipulateur (écrasée), lue par KY6 (« Message Keyer 1 Playback », manuel CAT 1912-D) ;
     // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
@@ -186,6 +188,7 @@
       { id: 'bkin', g: 'tx', label: 'BK-IN', type: 'toggle', face: true, write: (v) => 'BI' + v + ';' },
       { id: 'keyer', g: 'tx', label: 'KEYER', type: 'toggle', face: true, write: (v) => 'KR' + v + ';' },
       // VC TUNE : marche / arrêt (pas de déplacement : +0), puis MULTI déplace l'accord du présélecteur (+ / − 1 pas)
+      { id: 'mpvd', g: 'vfo', label: 'Bague du grand bouton (MPVD)', type: 'select', face: true, options: [[1, 'CLAR'], [2, 'VC TUNE'], [3, 'SUB'], [4, 'CS']], write: (v) => 'SF0' + v + ';' },
       { id: 'contourFreq', g: 'flt', label: 'Fréquence CONTOUR', type: 'level', min: 10, max: 3200, step: 10, unit: 'Hz', face: true, write: (v) => 'CO01' + pad(v, 4) + ';' },
       { id: 'contourFreqB', g: 'flt', label: 'Fréquence CONTOUR (VFO B)', type: 'level', min: 10, max: 3200, step: 10, unit: 'Hz', face: true, write: (v) => 'CO11' + pad(v, 4) + ';' },
       { id: 'apfFreq', g: 'flt', label: 'Fréquence APF', type: 'level', min: 0, max: 50, step: 1, face: true, fmt: apfHz, write: (v) => 'CO03' + pad(v, 4) + ';' },

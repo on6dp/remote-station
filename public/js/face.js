@@ -131,8 +131,14 @@
       return;
     }
     if (a.local === 'ringVc') {
-      // Grande touche VC TUNE : la bague extérieure du grand bouton accorde le présélecteur (indépendant de sa mise en marche)
-      L.ringVc = !L.ringVc;
+      // Grande touche VC TUNE : la bague extérieure du grand bouton accorde le présélecteur (indépendant de sa mise en marche).
+      // Sur le TRX (SF0 : fonction de la bague MPVD) : 2 = VC TUNE ; arrêt = retour à la bague SUB (3)
+      if (R.CONTROL.mpvd && s.mpvd != null) {
+        if (!needControl()) return;
+        const on = s.mpvd !== 2;
+        L.ringVc = on;
+        setCtl('mpvd', on ? 2 : 3);
+      } else L.ringVc = !L.ringVc;
       say(L.ringVc ? 'Bague du grand bouton : VC TUNE' + (s[activeSide() === 'B' ? 'vcB' : 'vc'] ? '.' : ' (mettez d’abord le VC TUNE en marche : petite touche VC TUNE).') : 'Bague du grand bouton : fréquence.', '', 4000);
       return render();
     }
@@ -758,7 +764,7 @@
     const s = S();
     // Grande touche VC TUNE : la bague extérieure du grand bouton accorde le présélecteur (un pas par cran)
     const vcSide = activeSide() === 'B' ? 'B' : '';
-    if (k.dial && part === 'outer' && L.ringVc && R.CONTROL['vcUp' + vcSide]) {
+    if (k.dial && part === 'outer' && (s.mpvd != null ? s.mpvd === 2 : L.ringVc) && R.CONTROL['vcUp' + vcSide]) {
       if (!needControl()) return;
       if (!s['vc' + vcSide]) return say('VC TUNE arrêté : mettez-le en marche avec la petite touche VC TUNE.', 'warn', 4000);
       const n = Math.max(-9, Math.min(9, notches));
