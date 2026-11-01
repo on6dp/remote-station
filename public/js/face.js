@@ -161,11 +161,16 @@
       return render();
     }
     if (a.local === 'split') {
-      // SPLIT : seulement ST1 / ST0, le TRX place lui-même l'émission, comme sa touche SPLIT :
-      // en marche → TX sur le VFO non sélectionné ; à l'arrêt → TX de nouveau sur le VFO sélectionné.
-      // Pas de FT juste après : il remettait le TRX en SPLIT.
+      // SPLIT en marche (ST1) : le TRX passe l'émission sur le VFO non sélectionné.
+      // SPLIT arrêté (ST0) : l'émission doit revenir sur le VFO sélectionné. Le TRX ne le fait pas toujours :
+      // on relit l'état ~1,2 s plus tard et, seulement si le TX n'y est pas (et le SPLIT bien arrêté), on envoie FT.
       if (!needControl()) return;
-      setCtl('split', s.split ? 0 : 1);
+      const on = s.split ? 0 : 1;
+      setCtl('split', on);
+      if (!on && R.CONTROL.txVfo) setTimeout(() => {
+        const s2 = S(), want = s2.vfoSel === 1 ? 'B' : 'A';
+        if (!s2.split && L.txSide(s2) !== want) setCtl('txVfo', want === 'B' ? 1 : 0);
+      }, 1200);
       return;
     }
     if (a.local === 'smenu') return L.smenu ? closeSmenu() : openSmenu();
