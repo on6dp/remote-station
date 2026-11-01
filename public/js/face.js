@@ -854,6 +854,9 @@
     if (c.type === 'width') {
       const tab = R.widthTable(s[c.modeKey || 'mode']) || [];
       if (!tab.length) return say(spec.label + ' : pas de réglage de largeur dans ce mode.', 'warn');
+      // NAR (filtre étroit) en service : le TRX refuse WIDTH (« ? ») → on coupe NAR d'abord
+      const nk = spec.ctl === 'widthB' ? 'narrowB' : 'narrow';
+      if (s[nk] && R.CONTROL[nk]) { setCtl(nk, 0); say('NAR (filtre étroit) coupé : WIDTH se règle.', '', 3000); }
       if (R.WIDTH_DEF) {
         // Comme le bouton WIDTH du TRX : toutes les largeurs de la liste, une par cran. On n'envoie jamais « 00 » (défaut) :
         // sa valeur dépend du filtre de toit et du mode, le TRX sauterait ailleurs. Départ de « défaut » : 2400 Hz.
@@ -956,7 +959,10 @@
     if (R.CONTROL['shift' + sfx]) { setCtl('shift' + sfx, 0); out.push('SHIFT 0 Hz'); }
     const tab = R.widthTable(md) || [];
     const wi = tab.indexOf(widthDefHz(md)) + 1;
-    if (R.CONTROL['width' + sfx] && wi > 0 && !s['narrow' + sfx]) { setCtl('width' + sfx, wi); out.push('WIDTH ' + tab[wi - 1] + ' Hz'); }
+    if (R.CONTROL['width' + sfx] && wi > 0) {
+      if (s['narrow' + sfx] && R.CONTROL['narrow' + sfx]) { setCtl('narrow' + sfx, 0); out.push('NAR coupé'); } // sinon le TRX refuse WIDTH
+      setCtl('width' + sfx, wi); out.push('WIDTH ' + tab[wi - 1] + ' Hz');
+    }
     showTip(ev, (sfx ? 'SUB' : 'MAIN') + ' : ' + (out.join(' · ') || 'rien à remettre'));
     hideTip(2500);
   }
