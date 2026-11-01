@@ -118,17 +118,17 @@
       { id: 'multi', cx: 762, cy: 510, ro: 30, multi: true, tip: 'MULTI : décalage du clarifier (CLAR actif), sinon la fonction de la case MULTI de l’écran (choisie dans FUNC, ex. RF POWER)' },
       { id: 'afSub', cx: 871, cy: 350, ri: 20, ro: 44, inner: { ctl: 'afB', label: 'AF SUB', per: 5 }, outer: { ctl: 'rfB', label: 'RF SUB', per: 5 } },
       { id: 'afMain', cx: 871, cy: 500, ri: 20, ro: 44, inner: { ctl: 'af', label: 'AF MAIN', per: 5 }, outer: { ctl: 'rf', label: 'RF MAIN', per: 5 } },
-      { id: 'swSub', cx: 1365, cy: 350, ri: 18, ro: 44, inner: { ctl: 'shiftB', label: 'SHIFT SUB', per: 20 }, outer: { ctl: 'widthB', label: 'WIDTH SUB', per: 1 }, push: 'narrowB', pushLabel: 'NAR SUB',
+      { id: 'swSub', cx: 1365, cy: 350, ri: 18, ro: 44, inner: { ctl: 'shiftB', label: 'SHIFT SUB', per: 20 }, outer: { ctl: 'widthB', label: 'WIDTH SUB', per: 1 }, push: 'narrowB', pushLabel: 'NAR SUB', longReset: 'B',
         // Petits voyants orange : SHIFT décalé (≠ 0) à gauche, WIDTH changé (≠ largeur par défaut) à droite
         leds: [{ x: 1321.0, y: 307.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s) => !!s.shiftB, bright: (s) => !!s.shiftB },
           { x: 1399.5, y: 307.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s, L) => L.widthChanged(s, 'B'), bright: (s, L) => L.widthChanged(s, 'B') }] },
-      { id: 'swMain', cx: 1365, cy: 500, ri: 18, ro: 44, inner: { ctl: 'shift', label: 'SHIFT MAIN', per: 20 }, outer: { ctl: 'width', label: 'WIDTH MAIN', per: 1 }, push: 'narrow', pushLabel: 'NAR MAIN',
+      { id: 'swMain', cx: 1365, cy: 500, ri: 18, ro: 44, inner: { ctl: 'shift', label: 'SHIFT MAIN', per: 20 }, outer: { ctl: 'width', label: 'WIDTH MAIN', per: 1 }, push: 'narrow', pushLabel: 'NAR MAIN', longReset: 'A',
         // Petits voyants orange : SHIFT décalé (≠ 0) à gauche, WIDTH changé (≠ largeur par défaut) à droite
         leds: [{ x: 1321.0, y: 457.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s) => !!s.shift, bright: (s) => !!s.shift },
           { x: 1399.5, y: 457.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s, L) => L.widthChanged(s, ''), bright: (s, L) => L.widthChanged(s, '') }] },
-      { id: 'notchSub', cx: 1492, cy: 350, ri: 18, ro: 44, inner: { ctl: 'notchFreqB', label: 'NOTCH SUB', per: 10 }, outer: { ctl: 'contourFreqB', label: 'CONT SUB', per: 10, offKey: 'contourB', offName: 'CONT',
+      { id: 'notchSub', longReset: 'nB', cx: 1492, cy: 350, ri: 18, ro: 44, inner: { ctl: 'notchFreqB', label: 'NOTCH SUB', per: 10 }, outer: { ctl: 'contourFreqB', label: 'CONT SUB', per: 10, offKey: 'contourB', offName: 'CONT',
         alt: { when: (s) => /^CW/.test(s.modeB || '') && !!s.apfB, ctl: 'apfFreqB', label: 'APF SUB', per: 1 } } },
-      { id: 'notchMain', cx: 1492, cy: 500, ri: 18, ro: 44, inner: { ctl: 'notchFreq', label: 'NOTCH MAIN', per: 10 }, outer: { ctl: 'contourFreq', label: 'CONT MAIN', per: 10, offKey: 'contour', offName: 'CONT',
+      { id: 'notchMain', longReset: 'nA', cx: 1492, cy: 500, ri: 18, ro: 44, inner: { ctl: 'notchFreq', label: 'NOTCH MAIN', per: 10 }, outer: { ctl: 'contourFreq', label: 'CONT MAIN', per: 10, offKey: 'contour', offName: 'CONT',
         alt: { when: (s) => /^CW/.test(s.mode || '') && !!s.apf, ctl: 'apfFreq', label: 'APF MAIN', per: 1 } } },
       { id: 'micProc', cx: 1492, cy: 195, ri: 18, ro: 44, inner: { ctl: 'mic', label: 'MIC GAIN', per: 2 }, outer: { ctl: 'procLvl', label: 'PROC', per: 2 },
         // Pousser le bouton : KEYER en CW, PROC en phonie (voyant au-dessus du bouton)

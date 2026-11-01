@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.15 | [RemoteStation-Setup-0.32.15.exe](0.32.15/RemoteStation-Setup-0.32.15.exe) | [remote-station-0.32.15.tar.gz](0.32.15/remote-station-0.32.15.tar.gz) | Face avant : appui 1 s au centre de SHIFT/WIDTH et NOTCH/CONT = valeurs par défaut — [empreintes SHA-256](0.32.15/SHA256SUMS.txt) |
 | 0.32.14 | [RemoteStation-Setup-0.32.14.exe](0.32.14/RemoteStation-Setup-0.32.14.exe) | [remote-station-0.32.14.tar.gz](0.32.14/remote-station-0.32.14.tar.gz) | Face avant : voyant WIDTH éteint à 3000 Hz (SSB et DATA) — [empreintes SHA-256](0.32.14/SHA256SUMS.txt) |
 | 0.32.13 | [RemoteStation-Setup-0.32.13.exe](0.32.13/RemoteStation-Setup-0.32.13.exe) | [remote-station-0.32.13.tar.gz](0.32.13/remote-station-0.32.13.tar.gz) | Face avant : voyant WIDTH selon la largeur par défaut du mode — [empreintes SHA-256](0.32.13/SHA256SUMS.txt) |
 | 0.32.12 | [RemoteStation-Setup-0.32.12.exe](0.32.12/RemoteStation-Setup-0.32.12.exe) | [remote-station-0.32.12.tar.gz](0.32.12/remote-station-0.32.12.tar.gz) | Face avant : un clic de molette = un cran (WIDTH sans valeurs sautées) — [empreintes SHA-256](0.32.12/SHA256SUMS.txt) |

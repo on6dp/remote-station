@@ -250,7 +250,8 @@
       const g = el('g', { class: 'kn' + (k.dial ? ' dial' : ''), 'data-knob': k.id }, svg);
       el('circle', { cx: k.cx, cy: k.cy, r: k.ro, class: 'kn-o' }, g);
       if (k.ri) el('circle', { cx: k.cx, cy: k.cy, r: k.ri, class: 'kn-i' }, g);
-      el('title', {}, g, k.tip || [k.inner && k.inner.label, k.outer && k.outer.label].filter(Boolean).join(' (centre) · ') + ' (bague) — molette ou glisser');
+      el('title', {}, g, (k.tip || [k.inner && k.inner.label, k.outer && k.outer.label].filter(Boolean).join(' (centre) · ') + ' (bague) — molette ou glisser')
+        + (k.longReset ? (k.longReset[0] === 'n' ? ' ; appui d’au moins 1 s sur le centre : NOTCH, CONT et APF par défaut et arrêtés' : ' ; appui d’au moins 1 s sur le centre : SHIFT à 0 et WIDTH par défaut') : ''));
       knobEvents(g, k);
     }
     // Voyants des touches (sous les zones cliquables)
@@ -861,6 +862,11 @@
       if (ev.button !== 0) return;
       const p = toImg(ev);
       drag = { part: knobPart(k, p), y: ev.clientY, a: Math.atan2(p.y - k.cy, p.x - k.cx), acc: 0, t0: Date.now(), moved: false };
+      // Appui d'au moins 1 s sur le centre sans tourner (ex. SHIFT ◎ WIDTH : retour aux valeurs par défaut)
+      if (k.longReset && drag.part === 'inner') {
+        const d0 = drag;
+        d0.lt = setTimeout(() => { if (drag === d0 && !d0.moved && Math.abs(d0.acc) < 0.5) { d0.long = true; knobReset(k, ev); } }, 1000);
+      }
       g.setPointerCapture(ev.pointerId);
       g.classList.add('grab');
     });
@@ -884,6 +890,8 @@
     });
     const end = (ev) => {
       // Clic sans tourner sur un bouton qui se pousse (ex. WIDTH : NAR)
+      if (drag) clearTimeout(drag.lt);
+      if (drag && drag.long) return end2();
       if (drag && k.push && ev && ev.type === 'pointerup' && Math.abs(drag.acc) < 0.3 && Date.now() - drag.t0 < 500 && !drag.moved) {
         const s0 = S();
         const id = typeof k.push === 'function' ? k.push(s0, L) : k.push;
@@ -896,6 +904,31 @@
     g.addEventListener('pointerup', end);
     g.addEventListener('pointercancel', end);
     g.addEventListener('pointerleave', () => { if (!drag) hideTip(400); });
+  }
+  // SHIFT ◎ WIDTH : appui long sur le centre → SHIFT à 0 et WIDTH à la largeur par défaut du mode (voyants éteints)
+  function knobReset(k, ev) {
+    if (!needControl()) return;
+    const sfx = /B$/.test(k.longReset) ? 'B' : '';
+    const s = S();
+    if (k.longReset[0] === 'n') {
+      // NOTCH ◎ CONT/APF : fréquences par défaut (NOTCH 1500 Hz, CONTOUR 1000 Hz, APF 0 Hz) et fonctions arrêtées (voyants éteints)
+      const out = [];
+      const set = (id, v, lab) => { if (R.CONTROL[id + sfx]) { setCtl(id + sfx, v); if (lab) out.push(lab); } };
+      set('notchFreq', 1500, 'NOTCH 1500 Hz');
+      set('contourFreq', 1000, 'CONT 1000 Hz');
+      if (/^CW/.test((sfx ? s.modeB : s.mode) || '')) set('apfFreq', 25, 'APF 0 Hz'); // APF : en CW seulement (sinon le TRX refuse)
+      for (const id of ['notch', 'contour', 'apf']) if (s[id + sfx] && R.CONTROL[id + sfx]) setCtl(id + sfx, 0);
+      showTip(ev, (sfx ? 'SUB' : 'MAIN') + ' : ' + out.join(' · ') + ' — NOTCH, CONT et APF arrêtés');
+      return hideTip(3000);
+    }
+    const md = (sfx ? s.modeB : s.mode) || '';
+    const out = [];
+    if (R.CONTROL['shift' + sfx]) { setCtl('shift' + sfx, 0); out.push('SHIFT 0 Hz'); }
+    const tab = R.widthTable(md) || [];
+    const wi = tab.indexOf(widthDefHz(md)) + 1;
+    if (R.CONTROL['width' + sfx] && wi > 0 && !s['narrow' + sfx]) { setCtl('width' + sfx, wi); out.push('WIDTH ' + tab[wi - 1] + ' Hz'); }
+    showTip(ev, (sfx ? 'SUB' : 'MAIN') + ' : ' + (out.join(' · ') || 'rien à remettre'));
+    hideTip(2500);
   }
   let tipT = 0;
   function showTip(ev, text) {
