@@ -802,6 +802,8 @@
   function turn(k, part, notches, ev) {
     if (!notches) return;
     const s = S();
+    // Cadre NB LEVEL / DNR LEVEL ouvert (appui long sur NB / DNR) : le bouton MULTI règle ce niveau, comme sur le TRX
+    if (k.multi && popTarget && popTarget.ctl && $('lcdPop') && !$('lcdPop').hidden) return popAdjust(notches > 0 ? 1 : -1, ev);
     // Grande touche VC TUNE : la bague extérieure du grand bouton accorde le présélecteur (un pas par cran)
     const vcSide = activeSide() === 'B' ? 'B' : '';
     if (k.dial && part === 'outer' && (s.mpvd != null ? s.mpvd === 2 : L.ringVc) && R.CONTROL['vcUp' + vcSide]) {

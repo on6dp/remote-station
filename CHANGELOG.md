@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.19** — **Face avant** : cadre NB LEVEL / DNR LEVEL ouvert : le bouton **MULTI** règle aussi le niveau, comme sur le TRX (en plus de la molette sur le cadre et de − / +). Ctrl+F5 sur /ftdx101.
 - **0.32.18** — **Face avant, NB et DNR** (MAIN et SUB) : clic bref = en / hors service ; appui d'au moins 1 s = cadre « NB LEVEL » / « DNR LEVEL » sur l'écran, comme le TRX, réglable avec − / + ou la molette (niveaux du SUB relus aussi). Ctrl+F5 sur /ftdx101 et recharger la page Station.
 - **0.32.17** — **Face avant** : le cadre de réglage (SHIFT, WIDTH, NOTCH, CONTOUR, APF) se règle aussi à la souris : boutons − / + et molette sur le cadre ; il reste affiché tant que la souris est dessus. Ctrl+F5 sur /ftdx101.
 - **0.32.16** — **Face avant** : en tournant SHIFT, WIDTH, NOTCH, CONT ou APF (MAIN et SUB), un cadre « SHIFT −20 Hz », « WIDTH 1400 Hz »… s'affiche 2 s sur le scope en grands chiffres, comme sur l'écran du TRX. Ctrl+F5 sur /ftdx101.
