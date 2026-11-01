@@ -1140,6 +1140,7 @@
   function draw() {
     drawTop();
     if (!FACE || !st) return;
+    try { bmvDraw(); } catch (e) { /* cartes de bande pas encore prêtes */ }
     const s = S();
     const live = !!s.connected;
     const tx = !!s.tx;
@@ -1743,6 +1744,7 @@
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values') && window.RSVOICE) { window.RSVOICE.onMessage(m); return; }
+      if (m.t === 'spots' || m.t === 'spot') bmvOnSpots(m); // cartes de bande A / B autour du TRX
       if (DG() && m.t !== 'hello' && m.t !== 'state' && DG().onMessage(m)) return;
       if (m.t === 'hello') {
         me = m;
@@ -1833,6 +1835,122 @@
     const r = svg.getBoundingClientRect();
     turn(dial, 'inner', e.key === 'ArrowUp' ? 1 : -1, { clientX: r.left + r.width * (dial.cx - V.x) / V.w, clientY: r.top + r.height * (dial.cy - dial.ro - V.y) / V.h });
   });
+
+  // ------------------------------------------------------------ cartes de bande A (à gauche) et B (à droite) du TRX
+  // Spots du cluster (messages « spots » / « spot ») sur la bande de chaque VFO, autour de sa fréquence ;
+  // clic sur un indicatif : ce VFO va sur sa fréquence ; molette ou − / + : plage affichée
+  const BMV = { spots: new Map(), state: '', spans: [5, 10, 20, 50, 100, 200], raf: 0, lay: { A: [], B: [] } };
+  BMV.span = { A: Number(store.get('rs.face.bmspanA', '20')) || 20, B: Number(store.get('rs.face.bmspanB', '20')) || 20 };
+  const BMV_KEEP = 30 * 60000;
+  const BMV_MODES = /\b(FT8|FT4|FT2|CW|RTTY|PSK\d*|SSB|USB|LSB|JT65|JT9|Q65|WSPR|SSTV|FM|AM|OLIVIA|MSK144)\b/i;
+  function bmvOnSpots(m) {
+    if (m.t === 'spots') BMV.spots.clear();
+    for (const s of m.list || []) {
+      if (!s || !Number.isFinite(s.f) || typeof s.call !== 'string') continue;
+      BMV.spots.set(s.call + '|' + Math.round(s.f), { f: s.f, call: s.call, cmt: String(s.cmt || ''), skim: !!s.skim, at: Number(s.at) || Date.now() });
+    }
+    if (BMV.spots.size > 3000) for (const k of Array.from(BMV.spots.keys()).slice(0, BMV.spots.size - 3000)) BMV.spots.delete(k);
+    if (typeof m.state === 'string') BMV.state = m.state;
+    bmvDraw();
+  }
+  function bmvBuild(side) {
+    const box = $('bmv' + side);
+    if (!box || box.firstChild) return box;
+    box.innerHTML = '<div class="bmv-h"><b class="bmv-band">—</b><small>' + (side === 'A' ? 'VFO-A' : 'VFO-B') + '</small>' +
+      '<span class="bmv-span"><button type="button" data-d="-1" title="Plage plus étroite">−</button><button type="button" data-d="1" title="Plage plus large">+</button></span></div>' +
+      '<div class="bmv-b"><canvas></canvas></div><div class="bmv-f"></div>';
+    const zoom = (d) => {
+      const i = Math.max(0, Math.min(BMV.spans.length - 1, BMV.spans.indexOf(BMV.span[side]) + d));
+      BMV.span[side] = BMV.spans[i < 0 ? 2 : i];
+      store.set('rs.face.bmspan' + side, String(BMV.span[side]));
+      bmvDraw();
+    };
+    box.querySelectorAll('.bmv-span button').forEach((b) => b.addEventListener('click', () => zoom(Number(b.dataset.d))));
+    const body = box.querySelector('.bmv-b');
+    body.addEventListener('wheel', (e) => { e.preventDefault(); zoom(e.deltaY > 0 ? 1 : -1); }, { passive: false });
+    body.addEventListener('click', (e) => {
+      const r = body.getBoundingClientRect(), y = e.clientY - r.top, x = e.clientX - r.left;
+      let best = null, bd = 9;
+      for (const l of BMV.lay[side]) { const d = Math.abs(l.ly - y); if (d < bd && x >= l.x0 - 4) { bd = d; best = l; } }
+      if (!best) return;
+      tuneTo(side, Math.round(best.s.f * 1000));
+      say((side === 'A' ? 'VFO-A' : 'VFO-B') + ' → ' + best.s.call + ' (' + best.s.f.toFixed(1) + ' kHz)', '', 3000);
+    });
+    body.addEventListener('mousemove', (e) => {
+      const r = body.getBoundingClientRect(), y = e.clientY - r.top;
+      const hit = BMV.lay[side].find((l) => Math.abs(l.ly - y) < 7);
+      body.title = hit ? hit.s.call + ' ' + hit.s.f.toFixed(1) + ' kHz' + (hit.s.cmt ? ' — ' + hit.s.cmt : '') + ' (clic : y aller)' : 'Molette : plage affichée';
+    });
+    return box;
+  }
+  function bmvDraw() {
+    if (BMV.raf) return;
+    BMV.raf = requestAnimationFrame(() => { BMV.raf = 0; bmvPaint('A'); bmvPaint('B'); });
+  }
+  function bmvPaint(side) {
+    const box = bmvBuild(side);
+    if (!box || !box.offsetParent) return;
+    const s = S(), f = side === 'B' ? s.freqB : s.freq;
+    const body = box.querySelector('.bmv-b'), cv = box.querySelector('canvas');
+    const W = body.clientWidth, H = body.clientHeight;
+    if (W < 40 || H < 60) return;
+    const dpr = window.devicePixelRatio || 1;
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    const c = cv.getContext('2d');
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, W, H);
+    const band = f ? BANDS.find((x) => f >= x[1] && f <= x[2]) : null;
+    box.querySelector('.bmv-band').textContent = band ? band[0].replace('M', ' m') : '—';
+    if (!f) return;
+    const span = BMV.span[side], fk = f / 1000, lo = fk - span / 2, hi = fk + span / 2, pad = 10;
+    const yOf = (k) => pad + (k - lo) / (hi - lo) * (H - 2 * pad);
+    // Hors bande : grisé
+    if (band) {
+      const b0 = band[1] / 1000, b1 = band[2] / 1000;
+      c.fillStyle = 'rgba(120,130,145,.12)';
+      if (b0 > lo) c.fillRect(0, 0, W, Math.max(0, yOf(b0)));
+      if (b1 < hi) { const y = yOf(b1); c.fillRect(0, y, W, H - y); }
+    }
+    // Échelle : un trait par pas « rond », graduations au bord gauche
+    const step = span <= 5 ? 0.5 : span <= 10 ? 1 : span <= 20 ? 2 : span <= 50 ? 5 : span <= 100 ? 10 : 20;
+    c.font = '10px "Roboto Mono", monospace'; c.textAlign = 'left'; c.textBaseline = 'middle';
+    for (let k = Math.ceil(lo / step) * step; k <= hi; k += step) {
+      const y = Math.round(yOf(k)) + 0.5;
+      c.strokeStyle = '#243042'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, y); c.lineTo(8, y); c.stroke();
+      c.fillStyle = '#6f7f93'; c.fillText((step < 1 ? k.toFixed(1) : String(Math.round(k))), 10, y);
+    }
+    const x0 = 64;
+    c.strokeStyle = '#2b3546'; c.beginPath(); c.moveTo(x0 - 6.5, 0); c.lineTo(x0 - 6.5, H); c.stroke();
+    // Spots : du plus récent au plus ancien gardés 30 min ; étiquettes poussées vers le bas si elles se chevauchent
+    const now = Date.now();
+    const list = Array.from(BMV.spots.values()).filter((p) => p.f >= lo && p.f <= hi && now - p.at < BMV_KEEP).sort((a, b) => a.f - b.f);
+    const lay = [];
+    let last = -99;
+    for (const p of list) {
+      const y = yOf(p.f), ly = Math.max(y, last + 12);
+      if (ly > H - 4) break;
+      last = ly;
+      lay.push({ s: p, y, ly, x0 });
+    }
+    BMV.lay[side] = lay;
+    c.textAlign = 'left';
+    for (const l of lay) {
+      const age = (now - l.s.at) / BMV_KEEP, md = (BMV_MODES.exec(l.s.cmt) || [])[1] || '';
+      c.strokeStyle = 'rgba(95,179,255,.55)'; c.beginPath(); c.moveTo(x0 - 6, l.y); c.lineTo(x0 - 1, l.ly); c.stroke();
+      c.fillStyle = l.s.skim ? '#7e8ea3' : age < 0.2 ? '#ffffff' : age < 0.6 ? '#d6dde6' : '#9aa6b5';
+      c.font = (l.s.skim ? '' : 'bold ') + '11px system-ui, sans-serif';
+      c.fillText(l.s.call, x0, l.ly);
+      if (md) { c.fillStyle = '#5fb3ff'; c.font = '9px "Roboto Mono", monospace'; c.fillText(md.toUpperCase(), x0 + c.measureText(l.s.call).width + 34, l.ly); }
+    }
+    // VFO : trait et triangle (rouge si c'est le VFO d'émission)
+    const yv = Math.round(yOf(fk)) + 0.5, tx = L.txSide(s) === side;
+    c.strokeStyle = tx ? '#ff3b30' : (side === 'A' ? '#cfc8ff' : '#2f7bff'); c.lineWidth = 1.5;
+    c.beginPath(); c.moveTo(0, yv); c.lineTo(W, yv); c.stroke();
+    c.fillStyle = c.strokeStyle; c.beginPath(); c.moveTo(W - 1, yv - 5); c.lineTo(W - 9, yv); c.lineTo(W - 1, yv + 5); c.closePath(); c.fill();
+    box.querySelector('.bmv-f').textContent = list.length + ' spot' + (list.length > 1 ? 's' : '') + ' · ' + span + ' kHz' + (BMV.state && BMV.state !== 'connecté' ? ' · cluster : ' + BMV.state : '');
+  }
+  setInterval(bmvDraw, 2000);
+  window.addEventListener('resize', bmvDraw);
 
   // ------------------------------------------------------------ fenêtres séparées (modes numériques, carte de bande)
   // Modes numériques : bouton ⧉ des onglets → /digi.html, qui se raccroche à cette page (window.opener.RSHOST)
@@ -2003,5 +2121,5 @@
   if (sess) creds = { session: sess };
   else showLogin('');
   connect();
-  window.RSFACE = { state: () => S(), L, face: FACE }; // essais
+  window.RSFACE = { state: () => S(), L, face: FACE, spots: (m) => bmvOnSpots(m) }; // essais
 })();

@@ -37,6 +37,8 @@
   <p class="fc-msg" id="msg" role="status" aria-live="polite"></p>
   <!-- La face avant, puis sous elle la phonie à distance (PTT, SSB CONFIGURATION, M'écouter et son volume) ; modes numériques : page à part (bouton 📟) -->
   <div class="fc-top">
+  <!-- Cartes de bande : à gauche celle de la bande du VFO A (MAIN), à droite celle du VFO B (SUB) -->
+  <aside class="fc-bmv" id="bmvA" data-side="A" aria-label="Carte de bande du VFO A"></aside>
   <div class="fc-wrap" id="faceWrap">
     <div class="fc-panel" id="facePanel">
       <svg id="face" xmlns="http://www.w3.org/2000/svg" role="application" aria-label="Face avant du TRX"></svg>
@@ -45,6 +47,7 @@
     </div>
     <div class="fc-cover" id="cover" hidden></div>
   </div>
+  <aside class="fc-bmv" id="bmvB" data-side="B" aria-label="Carte de bande du VFO B"></aside>
   <!-- Phonie à distance (même module que le dashboard) : PTT, micro, égaliseurs ; MOX et MONI de la face avant y sont reliés -->
   <section class="fc-tx" id="fcTx">
     <button class="btn ptt" id="ptt" type="button" title="Maintenir pour émettre (ou la barre d’espace) ; touche MOX de la face avant : émission maintenue jusqu’au clic suivant">PTT</button>

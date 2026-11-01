@@ -11,7 +11,21 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-msg.error { color: #ff6b6b; font-weight: 700; }
 .fc-wrap { position: relative; max-width: 1900px; margin: 0; min-width: 0; }
 /* Face avant, puis sous elle : PTT + SSB CONFIGURATION (micro, égaliseurs, M'écouter et son volume) sur une ligne */
-.fc-top { display: grid; grid-template-columns: minmax(0, 1900px); gap: 10px; align-items: start; justify-content: start; }
+.fc-top { display: grid; grid-template-columns: 190px minmax(0, 1900px) 190px; gap: 10px; align-items: stretch; justify-content: center; }
+.fc-top > .fc-tx { grid-column: 1 / -1; }
+/* Cartes de bande de part et d'autre du TRX : bande du VFO A à gauche, du VFO B à droite (spots du cluster) */
+.fc-bmv { position: relative; display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--v2-border-panel, #1d2733); border-radius: 8px; background: #05080d; overflow: hidden; }
+.fc-bmv .bmv-h { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-bottom: 1px solid #1d2733; font: 800 15px/1.1 system-ui, sans-serif; color: #f2cf4a; }
+.fc-bmv .bmv-h small { font: 700 10px/1 'Roboto Mono', monospace; letter-spacing: .04em; padding: 2px 5px; border-radius: 3px; }
+.fc-bmv[data-side='A'] .bmv-h small { background: #d8d3ff; color: #1a1838; }
+.fc-bmv[data-side='B'] .bmv-h small { background: #2f7bff; color: #fff; }
+.fc-bmv .bmv-span { margin-left: auto; display: flex; gap: 2px; }
+.fc-bmv .bmv-span button { font: 700 12px/1 system-ui; padding: 2px 6px; border-radius: 3px; border: 1px solid #2a3746; background: #111923; color: #cfe3ff; cursor: pointer; }
+.fc-bmv .bmv-span button:hover { border-color: #5fb3ff; }
+.fc-bmv .bmv-b { position: relative; flex: 1 1 auto; min-height: 200px; cursor: pointer; }
+.fc-bmv canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fc-bmv .bmv-f { padding: 3px 8px; border-top: 1px solid #1d2733; font: 11px/1.3 system-ui, sans-serif; color: #8fa0b4; }
+@media (max-width: 1300px) { .fc-top { grid-template-columns: minmax(0, 1fr); } .fc-bmv { display: none; } }
 .fc-panel { position: relative; }
 #face { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; touch-action: none; }
 .fc-scope { position: absolute; border-radius: 3px; pointer-events: none; visibility: hidden; }
@@ -22,7 +36,8 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
   color: #e8edf3; font-size: 16px; border-radius: 10px; }
 .fc-help { max-width: 1900px; margin: 10px auto 0; font-size: 12px; color: var(--v2-text-dim, #8b97a8); text-align: center; }
 .fc-vol { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--v2-text-dim, #8b97a8); }
-.fc-vol input { width: 80px; }
+.fc-vol input { width: 56px; }
+.face-page .tb-right { gap: 6px; }
 .fc-listen[aria-pressed='true'] { background: #1f5f1f; color: #fff; }
 @keyframes fcPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 #ctrlBtn.fc-pulse { animation: fcPulse .35s ease-in-out 3; }
@@ -186,8 +201,9 @@ body.face-page #centerPanel { display: none; }
 .fc-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 12px; align-items: start; }
 .fc-left { min-width: 0; grid-column: 1; grid-row: 1; }
 .fc-bm { display: none; }
-body.face-page.bm-far .fc-main { grid-template-columns: minmax(0, 1fr) var(--bm-w); }
-body.face-page.bm-far .fc-bm { display: block; grid-column: 2; grid-row: 1; position: sticky; top: 52px; height: calc(100vh - 60px); }
+/* (l'ancienne colonne de carte de bande des modes numériques n'est plus affichée ici : cartes A et B autour du TRX) */
+body.face-page.bm-far .fc-main { grid-template-columns: minmax(0, 1fr); }
+body.face-page:not(.bm-popup) .fc-bm { display: none !important; }
 body.face-page .fc-bm > .bm { position: relative; inset: auto; width: 100%; height: 100%; min-height: 0; border: 1px solid var(--v2-border-panel); border-radius: var(--v2-panel-radius); overflow: hidden; }
 body.face-page.bm-far #centerPanel.bm-on > :not(.panel-h):not(.bm) { margin-right: 0; }
 
