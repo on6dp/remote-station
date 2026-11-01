@@ -1461,7 +1461,7 @@
     const med = srt[srt.length >> 1];
     WF.floor = WF.floor == null ? med : WF.floor + (med - WF.floor) * 0.05;
     const out = new Float32Array(N / 2);
-    for (let i = 0; i < N / 2; i++) out[i] = Math.max(0, Math.min(1, 0.3 + (db[i] - WF.floor) / 40));
+    for (let i = 0; i < N / 2; i++) out[i] = Math.max(0, Math.min(2, 0.3 + (db[i] - WF.floor) / 40)); // > 1 : signaux forts (pas de plafond avant LEVEL)
     return out;
   }
   // Palettes de la cascade (FUNC → COLOR) : 1 = rouge comme l'écran du FTDX101, 2 = bleu / violet, 3 = arc-en-ciel
@@ -1613,9 +1613,10 @@
           const i0 = Math.floor(k / n * nb), i1 = Math.max(i0 + 1, Math.floor((k + 1) / n * nb));
           let m = 0;
           for (let j = i0; j < i1 && j < nb; j++) if (sp[j] > m) m = sp[j];
-          const v = Math.max(0, Math.min(1, m + lvl));
+          // Hauteur sur toute la plage (jusqu'à ~45 dB au-dessus du bruit) : plus de plafond à mi-hauteur
+          const v = Math.max(0, Math.min(1, (m + lvl) / 1.5));
           const x = x0 + 4 + k * (w - 8) / n;
-          c2.moveTo(x, bot); c2.lineTo(x, bot - v * v * (bot - top - 6));
+          c2.moveTo(x, bot); c2.lineTo(x, bot - Math.pow(v, 1.4) * (bot - top - 6));
         }
         c2.stroke();
         c2.restore();
@@ -1670,9 +1671,9 @@
         for (let i = 0; i < n; i++) {
           let m = 0;
           for (let j = Math.floor(i / n * nb), j1 = Math.max(j + 1, Math.floor((i + 1) / n * nb)); j < j1 && j < nb; j++) if (sp[j] > m) m = sp[j];
-          const v = Math.max(0, Math.min(1, m + lvl));
+          const v = Math.max(0, Math.min(1, (m + lvl) / 1.5));
           const x = fl.x0 + 6 + i * (fl.w - 12) / n;
-          d += 'M' + x.toFixed(1) + ' ' + bot + 'V' + (bot - v * v * hh).toFixed(1);
+          d += 'M' + x.toFixed(1) + ' ' + bot + 'V' + (bot - Math.pow(v, 1.4) * hh).toFixed(1);
         }
         fl.bars.setAttribute('d', d);
       }

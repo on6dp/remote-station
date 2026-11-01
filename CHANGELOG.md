@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.43** — **Face avant, spectre des filtres** : plus de plafond à mi-hauteur. Le niveau était borné avant d'appliquer LEVEL (un LEVEL négatif abaissait le plafond) et saturait dès ~28 dB au-dessus du bruit ; maintenant les barres utilisent toute la hauteur (jusqu'à ~45 dB au-dessus du bruit). Ctrl+F5 sur /ftdx101.
 - **0.32.42** — **Face avant, DISP « filtres agrandis » comme l'écran du TRX** : deux grands filtres rouges (MAIN et SUB) sans cadre, séparés par un trait ; spectre en barres fines **seulement dans la bande passante** ; repère orange avec son petit carré en haut ; base bleue. Ctrl+F5 sur /ftdx101.
 - **0.32.41** — **Face avant, spectre plus fin** : DISP « filtres agrandis » : une barre fine tous les 2 pixels (deux fois plus de détail, la plus forte des raies FFT couvertes) ; petits spectres dans les cadres de filtre : 64 barres fines au lieu de 34. Ctrl+F5 sur /ftdx101.
 - **0.32.40** — **Face avant, FUNC / S.MENU** : plages comme le TRX : COLOR 1 à 5 (4 vert, 5 gris en plus), LEVEL −30 à +30 dB (MONI LEVEL 0–100, DNR 1–15, NB 0–10, VOX GAIN 0–100, VOX DELAY 30–3000 ms, ANTI VOX 0–100 : déjà ainsi). Ctrl+F5 sur /ftdx101.

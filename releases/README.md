@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.43 | [RemoteStation-Setup-0.32.43.exe](0.32.43/RemoteStation-Setup-0.32.43.exe) | [remote-station-0.32.43.tar.gz](0.32.43/remote-station-0.32.43.tar.gz) | Face avant : spectre sans plafond — [empreintes SHA-256](0.32.43/SHA256SUMS.txt) |
 | 0.32.42 | [RemoteStation-Setup-0.32.42.exe](0.32.42/RemoteStation-Setup-0.32.42.exe) | [remote-station-0.32.42.tar.gz](0.32.42/remote-station-0.32.42.tar.gz) | Face avant : filtres agrandis comme le TRX — [empreintes SHA-256](0.32.42/SHA256SUMS.txt) |
 | 0.32.41 | [RemoteStation-Setup-0.32.41.exe](0.32.41/RemoteStation-Setup-0.32.41.exe) | [remote-station-0.32.41.tar.gz](0.32.41/remote-station-0.32.41.tar.gz) | Face avant : spectre plus fin — [empreintes SHA-256](0.32.41/SHA256SUMS.txt) |
 | 0.32.40 | [RemoteStation-Setup-0.32.40.exe](0.32.40/RemoteStation-Setup-0.32.40.exe) | [remote-station-0.32.40.tar.gz](0.32.40/remote-station-0.32.40.tar.gz) | Face avant : COLOR 1–5, LEVEL ±30 dB — [empreintes SHA-256](0.32.40/SHA256SUMS.txt) |
