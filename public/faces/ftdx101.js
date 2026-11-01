@@ -68,7 +68,7 @@
       // SYNC, SPLIT, CLAR RX / TX, FAST, LOCK
       { id: 'sync', x: 819, y: 221, w: 43, h: 16, tip: 'SYNC : met les deux VFO sur la même fréquence (celle du récepteur actif), puis le grand bouton les accorde ensemble ; nouveau clic : arrêt', act: { local: 'sync' },
         leds: [{ x: 835, y: 203.5, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s, L) => !!L.sync, bright: (s, L) => !!L.sync }] },
-      { id: 'split', x: 874, y: 221, w: 44, h: 16, tip: 'SPLIT : émission sur le SUB (VFO B)', act: { toggle: 'split' },
+      { id: 'split', x: 874, y: 221, w: 44, h: 16, tip: 'SPLIT : émission sur l’autre VFO (voyant TX rouge et fréquence d’émission en rouge)', act: { toggle: 'split' },
         leds: [{ x: 889.5, y: 203.5, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s) => !!s.split, bright: (s) => !!s.split }] },
       { id: 'clarRx', x: 819, y: 262, w: 43, h: 18, tip: 'CLAR RX (RIT)', act: { toggle: 'rit' },
         leds: [{ x: 835, y: 245, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s) => !!s.rit, bright: (s) => !!s.rit }] },
