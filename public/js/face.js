@@ -31,18 +31,22 @@
   const BANDS = [['160M', 1.8e6, 2.0e6], ['80M', 3.5e6, 4.0e6], ['60M', 5.25e6, 5.45e6], ['40M', 7.0e6, 7.3e6], ['30M', 10.1e6, 10.15e6],
     ['20M', 14.0e6, 14.35e6], ['17M', 18.068e6, 18.168e6], ['15M', 21.0e6, 21.45e6], ['12M', 24.89e6, 24.99e6], ['10M', 28.0e6, 29.7e6],
     ['6M', 50e6, 54e6], ['4M', 70e6, 70.5e6]];
+  // Largeur par défaut du FTDX101 selon le mode (R.FIL 3 kHz) : voyant WIDTH éteint sur le TRX à cette largeur.
+  // Relevé sur le TRX : SSB 2400, DATA 3000 ; CW, RTTY, PSK : à vérifier.
+  function widthDefHz(md) { return /^DATA/.test(md) ? 3000 : /^(RTTY|PSK)/.test(md) ? 500 : 2400; }
   const L = {
     fast: store.get('rs.face.fast', '0') === '1',
     fine: store.get('rs.face.fine', '0') === '1',
     listening: false,
     bandOf(hz) { const b = BANDS.find((x) => hz >= x[1] && hz <= x[2]); return b ? b[0] : ''; },
     activeMode(s) { return (s.vfoSel === 1 ? s.modeB : s.mode) || ''; },
-    /** WIDTH changé (voyant) : ni « 00 » (défaut) ni la largeur par défaut (2400 Hz, que le TRX peut renvoyer telle quelle) */
+    /** WIDTH changé (voyant) : ni « 00 » (défaut) ni la largeur par défaut du mode (que le TRX renvoie telle quelle) */
     widthChanged(s, sfx) {
       const w = s['width' + (sfx || '')];
       if (!w || !R) return false;
-      const tab = R.widthTable((sfx ? s.modeB : s.mode) || '') || [];
-      return tab.length > 0 && tab[w - 1] !== 2400;
+      const md = (sfx ? s.modeB : s.mode) || '';
+      const tab = R.widthTable(md) || [];
+      return tab.length > 0 && tab[w - 1] !== widthDefHz(md);
     }
   };
   function S() {
@@ -820,7 +824,7 @@
       if (R.WIDTH_DEF) {
         // Comme le bouton WIDTH du TRX : toutes les largeurs de la liste, une par cran. On n'envoie jamais « 00 » (défaut) :
         // sa valeur dépend du filtre de toit et du mode, le TRX sauterait ailleurs. Départ de « défaut » : 2400 Hz.
-        const di = tab.indexOf(2400) + 1 || Math.ceil(tab.length / 2);
+        const di = tab.indexOf(widthDefHz(s[c.modeKey || 'mode'] || '')) + 1 || Math.ceil(tab.length / 2);
         const cur = s[spec.ctl] || di;
         v = Math.max(1, Math.min(tab.length, cur + Math.sign(notches) * Math.min(3, Math.abs(notches)) * (spec.per || 1)));
       } else {
@@ -907,7 +911,8 @@
     if (v == null) return '—';
     if (c.type === 'width') {
       const tab = R.widthTable(s[c.modeKey || 'mode']) || [];
-      return v === 0 ? 'défaut' + (R.WIDTH_DEF && tab.indexOf(2400) >= 0 ? ' (2400 Hz)' : '') : tab[v - 1] != null ? tab[v - 1] + ' Hz' : String(v);
+      const dh = widthDefHz(s[c.modeKey || 'mode'] || '');
+      return v === 0 ? 'défaut' + (R.WIDTH_DEF && tab.indexOf(dh) >= 0 ? ' (' + dh + ' Hz)' : '') : tab[v - 1] != null ? tab[v - 1] + ' Hz' : String(v);
     }
     if (c.fmt) return c.fmt(v);
     if (c.pct) return Math.round(v / 255 * 100) + ' %';
@@ -974,7 +979,7 @@
       const mode = side === 'A' ? s.mode : s.modeB;
       const tab = R.widthTable(mode) || null;
       const wi = s['width' + sfx];
-      const hz = tab && wi ? tab[wi - 1] : /CW|RTTY|PSK|DATA/.test(mode || '') && !/DATA-U|DATA-L/.test(mode || '') ? 500 : /AM|FM/.test(mode || '') ? 6000 : 2400;
+      const hz = tab && wi ? tab[wi - 1] : tab ? widthDefHz(mode || '') : /AM|FM/.test(mode || '') ? 6000 : 2400;
       const sh = s['shift' + sfx] || 0;
       const fr = Math.max(0.06, Math.min(0.96, hz / FLT_SPAN));
       const cx = fl.x0 + fl.w / 2 + Math.max(-0.4, Math.min(0.4, sh / 2400)) * fl.w;

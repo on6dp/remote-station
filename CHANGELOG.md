@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.13** — **Face avant, voyant WIDTH** : largeur par défaut selon le mode, comme le TRX (R.FIL 3 kHz) : SSB 2400 Hz, DATA 3000 Hz (CW, RTTY, PSK à vérifier). Ctrl+F5 sur /ftdx101.
 - **0.32.12** — **Face avant** : un clic de molette = un cran sur tous les boutons (avant : deux crans selon le système, d'où des largeurs WIDTH sautées, ex. 1700, 2000, 2400) ; WIDTH passe par toutes les largeurs du TRX sans renvoyer « défaut » (qui dépend du filtre de toit). Ctrl+F5 sur /ftdx101.
 - **0.32.11** — **Face avant, voyant WIDTH** : éteint aussi quand le TRX renvoie la largeur par défaut elle-même (2400 Hz) au lieu de « 00 », comme le voyant du TRX. Ctrl+F5 sur /ftdx101.
 - **0.32.10** — **Face avant, grande touche VC TUNE** : elle commande maintenant la bague du grand bouton sur le TRX lui-même (CAT `SF0` : 2 = VC TUNE ; arrêt = retour à SUB), son voyant suit l'état réel du TRX (allumé / éteint sur le TRX et sur la page ensemble). Ctrl+F5 sur /ftdx101.

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.13 | [RemoteStation-Setup-0.32.13.exe](0.32.13/RemoteStation-Setup-0.32.13.exe) | [remote-station-0.32.13.tar.gz](0.32.13/remote-station-0.32.13.tar.gz) | Face avant : voyant WIDTH selon la largeur par défaut du mode — [empreintes SHA-256](0.32.13/SHA256SUMS.txt) |
 | 0.32.12 | [RemoteStation-Setup-0.32.12.exe](0.32.12/RemoteStation-Setup-0.32.12.exe) | [remote-station-0.32.12.tar.gz](0.32.12/remote-station-0.32.12.tar.gz) | Face avant : un clic de molette = un cran (WIDTH sans valeurs sautées) — [empreintes SHA-256](0.32.12/SHA256SUMS.txt) |
 | 0.32.11 | [RemoteStation-Setup-0.32.11.exe](0.32.11/RemoteStation-Setup-0.32.11.exe) | [remote-station-0.32.11.tar.gz](0.32.11/remote-station-0.32.11.tar.gz) | Face avant : voyant WIDTH éteint à 2400 Hz — [empreintes SHA-256](0.32.11/SHA256SUMS.txt) |
 | 0.32.10 | [RemoteStation-Setup-0.32.10.exe](0.32.10/RemoteStation-Setup-0.32.10.exe) | [remote-station-0.32.10.tar.gz](0.32.10/remote-station-0.32.10.tar.gz) | Face avant : grande touche VC TUNE reliée au TRX (SF0) — [empreintes SHA-256](0.32.10/SHA256SUMS.txt) |
