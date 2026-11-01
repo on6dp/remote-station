@@ -121,11 +121,11 @@
       { id: 'multi', cx: 762, cy: 510, ro: 30, multi: true, tip: 'MULTI : décalage du clarifier (CLAR actif), sinon la fonction de la case MULTI de l’écran (choisie dans FUNC, ex. RF POWER)' },
       { id: 'afSub', cx: 871, cy: 350, ri: 20, ro: 44, inner: { ctl: 'afB', label: 'AF SUB', per: 5 }, outer: { ctl: 'rfB', label: 'RF SUB', per: 5 } },
       { id: 'afMain', cx: 871, cy: 500, ri: 20, ro: 44, inner: { ctl: 'af', label: 'AF MAIN', per: 5 }, outer: { ctl: 'rf', label: 'RF MAIN', per: 5 } },
-      { id: 'swSub', cx: 1365, cy: 350, ri: 18, ix: 11, iy: 6, ro: 44, inner: { ctl: 'shiftB', label: 'SHIFT SUB', per: 20 }, outer: { ctl: 'widthB', label: 'WIDTH SUB', per: 1 }, push: 'narrowB', pushLabel: 'NAR SUB', longReset: 'B',
+      { id: 'swSub', cx: 1365, cy: 350, ri: 18, ix: 11, iy: 6, ro: 44, inner: { ctl: 'shiftB', label: 'SHIFT SUB', per: 20 }, outer: { ctl: 'widthB', label: 'WIDTH SUB', per: 1 }, longReset: 'B',
         // Petits voyants orange : SHIFT décalé (≠ 0) à gauche, WIDTH changé (≠ largeur par défaut) à droite
         leds: [{ x: 1321.0, y: 307.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s) => !!s.shiftB, bright: (s) => !!s.shiftB },
           { x: 1399.5, y: 307.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s, L) => L.widthChanged(s, 'B'), bright: (s, L) => L.widthChanged(s, 'B') }] },
-      { id: 'swMain', cx: 1365, cy: 500, ri: 18, ix: 12, iy: 10, ro: 44, inner: { ctl: 'shift', label: 'SHIFT MAIN', per: 20 }, outer: { ctl: 'width', label: 'WIDTH MAIN', per: 1 }, push: 'narrow', pushLabel: 'NAR MAIN', longReset: 'A',
+      { id: 'swMain', cx: 1365, cy: 500, ri: 18, ix: 12, iy: 10, ro: 44, inner: { ctl: 'shift', label: 'SHIFT MAIN', per: 20 }, outer: { ctl: 'width', label: 'WIDTH MAIN', per: 1 }, longReset: 'A',
         // Petits voyants orange : SHIFT décalé (≠ 0) à gauche, WIDTH changé (≠ largeur par défaut) à droite
         leds: [{ x: 1321.0, y: 457.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s) => !!s.shift, bright: (s) => !!s.shift },
           { x: 1399.5, y: 457.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s, L) => L.widthChanged(s, ''), bright: (s, L) => L.widthChanged(s, '') }] },

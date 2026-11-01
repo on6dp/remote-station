@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.22** — **Face avant** : un clic bref sur le centre de SHIFT ◎ WIDTH ne met plus NAR en service (ce n'est pas sa fonction sur le TRX) ; l'appui d'au moins 1 s remet toujours SHIFT et WIDTH par défaut. Ctrl+F5 sur /ftdx101.
 - **0.32.21** — **Face avant** : cercle du bouton du centre mesuré sur chaque capuchon de la photo (SHIFT ◎ WIDTH, NOTCH ◎ CONT/APF, MIC/SPEED ◎ PROC) : bien centré. Ctrl+F5 sur /ftdx101.
 - **0.32.20** — **Face avant** : le cercle du bouton du centre (SHIFT ◎ WIDTH, NOTCH ◎ CONT/APF, MIC/SPEED ◎ PROC) est maintenant centré sur le capuchon de la photo (prise de biais). Ctrl+F5 sur /ftdx101.
 - **0.32.19** — **Face avant** : cadre NB LEVEL / DNR LEVEL ouvert : le bouton **MULTI** règle aussi le niveau, comme sur le TRX (en plus de la molette sur le cadre et de − / +). Ctrl+F5 sur /ftdx101.
