@@ -693,10 +693,9 @@
           ev.preventDefault();
           if (!adj) return;
           L.funcSel = id;
-          wacc += ev.deltaMode === 1 ? ev.deltaY * 33 : ev.deltaY;
-          const n = Math.trunc(wacc / 60);
-          if (!n) return;
-          wacc -= n * 60;
+          const d = ev.deltaMode === 1 ? ev.deltaY * 33 : ev.deltaY;
+          let n;
+          if (Math.abs(d) >= 50) { wacc = 0; n = Math.sign(d); } else { wacc += d; n = Math.trunc(wacc / 100); if (!n) return; wacc -= n * 100; }
           funcAdjust(id, -n);
           showTip(ev, lab + ' ' + FUNC_BY[id][2](S()));
         }, { passive: false });
@@ -819,11 +818,11 @@
       const tab = R.widthTable(s[c.modeKey || 'mode']) || [];
       if (!tab.length) return say(spec.label + ' : pas de réglage de largeur dans ce mode.', 'warn');
       if (R.WIDTH_DEF) {
-        // Comme le bouton WIDTH du TRX : la largeur par défaut (00, voyant éteint) est au milieu ; on part de là
+        // Comme le bouton WIDTH du TRX : toutes les largeurs de la liste, une par cran. On n'envoie jamais « 00 » (défaut) :
+        // sa valeur dépend du filtre de toit et du mode, le TRX sauterait ailleurs. Départ de « défaut » : 2400 Hz.
         const di = tab.indexOf(2400) + 1 || Math.ceil(tab.length / 2);
         const cur = s[spec.ctl] || di;
-        const nx = Math.max(1, Math.min(tab.length, cur + notches * (spec.per || 1)));
-        v = nx === di ? 0 : nx;
+        v = Math.max(1, Math.min(tab.length, cur + Math.sign(notches) * Math.min(3, Math.abs(notches)) * (spec.per || 1)));
       } else {
         v = Math.max(0, Math.min(tab.length, (s[spec.ctl] || 0) + notches * (spec.per || 1)));
         try { R.validate(spec.ctl, v, s); } catch (e) { v = Math.max(1, v); }
@@ -838,10 +837,15 @@
     let acc = 0;
     g.addEventListener('wheel', (ev) => {
       ev.preventDefault();
-      acc += ev.deltaMode === 1 ? ev.deltaY * 33 : ev.deltaY;
-      const n = Math.trunc(acc / 60);
-      if (!n) return;
-      acc -= n * 60;
+      // Un clic de molette = un cran (Chrome donne 100 ou 120 selon le système) ; pavé tactile : petits pas cumulés
+      const d = ev.deltaMode === 1 ? ev.deltaY * 33 : ev.deltaMode === 2 ? ev.deltaY * 100 : ev.deltaY;
+      let n;
+      if (Math.abs(d) >= 50) { acc = 0; n = Math.sign(d); } else {
+        acc += d;
+        n = Math.trunc(acc / 100);
+        if (!n) return;
+        acc -= n * 100;
+      }
       turn(k, knobPart(k, toImg(ev)), -n, ev);
     }, { passive: false });
     let drag = null;
