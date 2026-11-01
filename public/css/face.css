@@ -124,7 +124,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .mtr-val { fill: #ffcf4a; font-size: 8.5px; font-weight: 700; }
 #face .mtr-val.tx { fill: #ff5a3c; }
 #face .flt-box { fill: #000; stroke: #2a3140; stroke-width: .8; }
-#face .flt-bars { stroke: #c9d3e3; stroke-width: 1.3; opacity: .85; }
+#face .flt-bars { stroke: #c9d3e3; stroke-width: .8; opacity: .85; }
 #face .flt-trap { fill: none; stroke: #ff2b1c; stroke-width: 1.8; stroke-linejoin: round; }
 #face .flt-ctr { stroke: #ff9a1f; stroke-width: 1.4; }
 #face .flt-vcend { fill: #e8edf3; }

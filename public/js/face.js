@@ -1599,9 +1599,10 @@
       const cx = x0 + w / 2 + f.off * w, tw = w * f.fr, top = y0 + 14, bot = y0 + h - 4, sl = Math.min(14, tw * 0.12);
       // Spectre de la BF : barres
       if (sp) {
-        c2.strokeStyle = 'rgba(215,225,240,.85)'; c2.lineWidth = 2;
+        // Une barre fine tous les 2 pixels (le plus fort des points FFT qu'elle couvre) : spectre plus détaillé
+        c2.strokeStyle = 'rgba(215,225,240,.85)'; c2.lineWidth = 1.2;
         c2.beginPath();
-        const n = Math.floor(w / 4);
+        const n = Math.floor(w / 2);
         for (let k = 0; k < n; k++) {
           const i0 = Math.floor(k / n * nb), i1 = Math.max(i0 + 1, Math.floor((k + 1) / n * nb));
           let m = 0;
@@ -1659,9 +1660,11 @@
         if (!fl) continue;
         if (!sp) { fl.bars.setAttribute('d', ''); continue; }
         let d = '';
-        const n = 34, bot = fl.y0 + fl.h - 6, hh = fl.h - 16;
+        const n = 64, bot = fl.y0 + fl.h - 6, hh = fl.h - 16;
         for (let i = 0; i < n; i++) {
-          const v = Math.max(0, Math.min(1, sp[Math.floor(i / n * nb)] + lvl));
+          let m = 0;
+          for (let j = Math.floor(i / n * nb), j1 = Math.max(j + 1, Math.floor((i + 1) / n * nb)); j < j1 && j < nb; j++) if (sp[j] > m) m = sp[j];
+          const v = Math.max(0, Math.min(1, m + lvl));
           const x = fl.x0 + 6 + i * (fl.w - 12) / n;
           d += 'M' + x.toFixed(1) + ' ' + bot + 'V' + (bot - v * v * hh).toFixed(1);
         }
