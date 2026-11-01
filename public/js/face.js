@@ -1917,7 +1917,7 @@
     for (let k = Math.ceil(lo / step) * step; k <= hi; k += step) {
       const y = Math.round(yOf(k)) + 0.5;
       c.strokeStyle = '#243042'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, y); c.lineTo(8, y); c.stroke();
-      c.fillStyle = '#6f7f93'; c.fillText((step < 1 ? k.toFixed(1) : String(Math.round(k))), 10, y);
+      c.fillStyle = '#ffffff'; c.fillText((step < 1 ? k.toFixed(1) : String(Math.round(k))), 10, y);
     }
     const x0 = 64;
     c.strokeStyle = '#2b3546'; c.beginPath(); c.moveTo(x0 - 6.5, 0); c.lineTo(x0 - 6.5, H); c.stroke();
@@ -1935,9 +1935,9 @@
     BMV.lay[side] = lay;
     c.textAlign = 'left';
     for (const l of lay) {
-      const age = (now - l.s.at) / BMV_KEEP, md = (BMV_MODES.exec(l.s.cmt) || [])[1] || '';
+      const md = (BMV_MODES.exec(l.s.cmt) || [])[1] || '';
       c.strokeStyle = 'rgba(95,179,255,.55)'; c.beginPath(); c.moveTo(x0 - 6, l.y); c.lineTo(x0 - 1, l.ly); c.stroke();
-      c.fillStyle = l.s.skim ? '#7e8ea3' : age < 0.2 ? '#ffffff' : age < 0.6 ? '#d6dde6' : '#9aa6b5';
+      c.fillStyle = '#ffffff'; // indicatifs en blanc (plus lisibles)
       c.font = (l.s.skim ? '' : 'bold ') + '11px system-ui, sans-serif';
       c.fillText(l.s.call, x0, l.ly);
       if (md) { c.fillStyle = '#5fb3ff'; c.font = '9px "Roboto Mono", monospace'; c.fillText(md.toUpperCase(), x0 + c.measureText(l.s.call).width + 34, l.ly); }

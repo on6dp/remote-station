@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.47** — **Face avant, cartes de bande** : fréquences de l'échelle et indicatifs en blanc (plus lisibles). Ctrl+F5 sur /ftdx101.
 - **0.32.46** — **Face avant** : PTT et SSB CONFIGURATION juste sous l'image du TRX (colonne du milieu) ; les deux cartes de bande (VFO A à gauche, VFO B à droite) descendent sur toute la hauteur de la fenêtre. Ctrl+F5 sur /ftdx101.
 - **0.32.45** — **Face avant, disposition** : les **modes numériques** ont leur propre page (bouton **📟 Numériques** en haut, fenêtre à part sur la même connexion ; « ✕ Fermer » dedans) ; **PTT** et **SSB CONFIGURATION** (Configuration micro, Equalizer TRX, Equalizer micro, M'écouter et son volume) passent **sous le TRX**, sur une ligne ; **cartes de bande de part et d'autre du TRX** : à gauche la bande du **VFO A**, à droite celle du **VFO B** (spots du cluster autour de la fréquence du VFO, trait du VFO rouge si c'est celui d'émission, molette ou − / + : plage 5 à 200 kHz, clic sur un indicatif : ce VFO y va). Ctrl+F5 sur /ftdx101.
 - **0.32.44** — **Face avant, case MULTI de l'écran** (comme sur le TRX) : scope du VFO sélectionné en haut ; en bas **OSCILLOSCOPE MAIN / SUB** (forme d'onde de la BF, 10 ms/div) et **AF-FFT MAIN / SUB** (0–4 kHz avec cascade), selon la touche MAIN / SUB. Elle n'ouvre plus le menu FUNC (touche FUNC). Ctrl+F5 sur /ftdx101.
