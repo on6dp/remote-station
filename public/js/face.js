@@ -385,7 +385,7 @@
   const SMENU = [['spd', 'SPEED', () => WF_SPEEDS[L.wfSpeed][0], 'Vitesse de la cascade (clic : suivante ; molette)'],
     ['peak', 'PEAK', () => PEAKS[L.peak], 'Crêtes du spectre gardées un moment : OFF, LV1 (longtemps) … LV3 (brièvement)'],
     ['marker', 'MARKER', () => (L.marker ? 'ON' : 'OFF'), 'Bande passante du filtre et repère central sur le spectre'],
-    ['color', 'COLOR', () => String(L.wfColor), 'Couleurs de la cascade : 1 rouge (comme le TRX), 2 bleu / violet, 3 arc-en-ciel'],
+    ['color', 'COLOR', () => String(L.wfColor), 'Couleurs de la cascade : 1 rouge (comme le TRX), 2 bleu / violet, 3 arc-en-ciel, 4 vert, 5 gris'],
     ['level', 'LEVEL', () => (L.wfLevel >= 0 ? '+' : '') + L.wfLevel.toFixed(1) + 'dB', 'Niveau de la cascade : clic à gauche −, à droite + (ou molette)']];
   L.peak = Math.max(0, Math.min(3, Number(store.get('rs.face.peak', '0')) || 0));
   L.marker = store.get('rs.face.marker', '1') !== '0';
@@ -393,8 +393,8 @@
     if (id === 'spd') { L.wfSpeed = (L.wfSpeed + (d > 0 ? 1 : 3)) % 4; store.set('rs.face.wfspd', L.wfSpeed); }
     else if (id === 'peak') { L.peak = (L.peak + (d > 0 ? 1 : 3)) % 4; store.set('rs.face.peak', L.peak); WF.peak = {}; }
     else if (id === 'marker') { L.marker = !L.marker; store.set('rs.face.marker', L.marker ? '1' : '0'); }
-    else if (id === 'color') { L.wfColor = ((L.wfColor - 1 + (d > 0 ? 1 : 2)) % 3) + 1; store.set('rs.face.wfcol', L.wfColor); }
-    else if (id === 'level') { L.wfLevel = Math.max(-20, Math.min(20, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); }
+    else if (id === 'color') { L.wfColor = ((L.wfColor - 1 + (d > 0 ? 1 : 4)) % 5) + 1; store.set('rs.face.wfcol', L.wfColor); }
+    else if (id === 'level') { L.wfLevel = Math.max(-30, Math.min(30, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); }
     smDraw();
     render();
     smArm();
@@ -679,8 +679,8 @@
   const WF_SPEEDS = [['FAST1', 30], ['FAST2', 50], ['MID', 80], ['SLOW', 140]];
   const STEPS = [[10, '10Hz'], [100, '100Hz'], [1000, '1kHz']];
   L.wfSpeed = Math.max(0, Math.min(3, Number(store.get('rs.face.wfspd', '1')) || 0));
-  L.wfColor = Math.max(1, Math.min(3, Number(store.get('rs.face.wfcol', '1')) || 1));
-  L.wfLevel = Math.max(-20, Math.min(20, Number(store.get('rs.face.wflvl', '0')) || 0));
+  L.wfColor = Math.max(1, Math.min(5, Number(store.get('rs.face.wfcol', '1')) || 1));
+  L.wfLevel = Math.max(-30, Math.min(30, Number(store.get('rs.face.wflvl', '0')) || 0));
   L.func = false;
   const SPANS = [2000, 3000, 4000, 6000];
   // Touche DISP : présentations de l'écran (comme sur le FTDX101)
@@ -718,8 +718,8 @@
     [['spd', 'SPEED', () => WF_SPEEDS[L.wfSpeed][0], (s, d) => { L.wfSpeed = Math.max(0, Math.min(3, L.wfSpeed + d)); store.set('rs.face.wfspd', L.wfSpeed); }, '#ff8a1f'],
       ['peak', 'PEAK', () => PEAKS[L.peak], (s, d) => { L.peak = (L.peak + (d > 0 ? 1 : 3)) % 4; store.set('rs.face.peak', L.peak); WF.peak = {}; }, '#ff8a1f'],
       ['marker', 'MARKER', () => (L.marker ? 'ON' : 'OFF'), () => { L.marker = !L.marker; store.set('rs.face.marker', L.marker ? '1' : '0'); }, '#ff8a1f', true],
-      ['color', 'COLOR', () => String(L.wfColor), (s, d) => { L.wfColor = ((L.wfColor - 1 + d + 30) % 3) + 1; store.set('rs.face.wfcol', L.wfColor); }, '#ff8a1f', true],
-      ['level', 'LEVEL', () => (L.wfLevel >= 0 ? '+' : '') + L.wfLevel.toFixed(1) + 'dB', (s, d) => { L.wfLevel = Math.max(-20, Math.min(20, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); }, '#ff8a1f']],
+      ['color', 'COLOR', () => String(L.wfColor), (s, d) => { L.wfColor = ((L.wfColor - 1 + d + 50) % 5) + 1; store.set('rs.face.wfcol', L.wfColor); }, '#ff8a1f', true],
+      ['level', 'LEVEL', () => (L.wfLevel >= 0 ? '+' : '') + L.wfLevel.toFixed(1) + 'dB', (s, d) => { L.wfLevel = Math.max(-30, Math.min(30, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); }, '#ff8a1f']],
     [['power', 'RF POWER', (s) => (s.power != null ? s.power + 'W' : '—'), (s, d) => power(d * 5), '#8a5cff'],
       ['moniLvl', 'MONI LEVEL', (s) => num(s.moniLvl), ctlStep('moniLvl', 0, 100, 1), '#8a5cff'],
       ['nrLvl', 'DNR LEVEL', (s) => (s.nrLvl != null ? String(s.nrLvl) : '—'), (s, d) => setCtl('nrLvl', Math.max(1, Math.min(15, (s.nrLvl || 1) + d))), '#8a5cff'],
@@ -1480,7 +1480,9 @@
   const PALS = {
     1: mkPal([[0, [8, 0, 2]], [0.3, [110, 0, 10]], [0.55, [215, 20, 30]], [0.78, [255, 70, 120]], [1, [255, 235, 245]]]),
     2: mkPal([[0, [2, 4, 25]], [0.35, [30, 40, 170]], [0.6, [150, 60, 230]], [0.82, [255, 90, 210]], [1, [255, 240, 255]]]),
-    3: mkPal([[0, [0, 0, 40]], [0.25, [0, 60, 200]], [0.5, [0, 200, 160]], [0.75, [255, 220, 0]], [1, [255, 40, 0]]])
+    3: mkPal([[0, [0, 0, 40]], [0.25, [0, 60, 200]], [0.5, [0, 200, 160]], [0.75, [255, 220, 0]], [1, [255, 40, 0]]]),
+    4: mkPal([[0, [0, 8, 2]], [0.35, [0, 90, 30]], [0.6, [40, 200, 60]], [0.82, [190, 255, 120]], [1, [245, 255, 235]]]),
+    5: mkPal([[0, [0, 0, 0]], [0.4, [70, 70, 80]], [0.7, [170, 170, 185]], [1, [255, 255, 255]]])
   };
   // Zones du scope selon DISP : MAIN seul ; SUB au-dessus de MAIN ; MAIN | SUB côte à côte
   function scopeRegions(W, H, specs) {

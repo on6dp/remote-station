@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.40 | [RemoteStation-Setup-0.32.40.exe](0.32.40/RemoteStation-Setup-0.32.40.exe) | [remote-station-0.32.40.tar.gz](0.32.40/remote-station-0.32.40.tar.gz) | Face avant : COLOR 1–5, LEVEL ±30 dB — [empreintes SHA-256](0.32.40/SHA256SUMS.txt) |
 | 0.32.39 | [RemoteStation-Setup-0.32.39.exe](0.32.39/RemoteStation-Setup-0.32.39.exe) | [remote-station-0.32.39.tar.gz](0.32.39/remote-station-0.32.39.tar.gz) | Face avant : menu FUNC avec valeurs réglables — [empreintes SHA-256](0.32.39/SHA256SUMS.txt) |
 | 0.32.38 | [RemoteStation-Setup-0.32.38.exe](0.32.38/RemoteStation-Setup-0.32.38.exe) | [remote-station-0.32.38.tar.gz](0.32.38/remote-station-0.32.38.tar.gz) | FTDX101 : FT relatif au VFO sélectionné (SPLIT avec SUB) — [empreintes SHA-256](0.32.38/SHA256SUMS.txt) |
 | 0.32.37 | [RemoteStation-Setup-0.32.37.exe](0.32.37/RemoteStation-Setup-0.32.37.exe) | [remote-station-0.32.37.tar.gz](0.32.37/remote-station-0.32.37.tar.gz) | Face avant : SPLIT avec SUB sélectionné → TX sur A — [empreintes SHA-256](0.32.37/SHA256SUMS.txt) |
