@@ -421,6 +421,16 @@
     f.bars = el('path', { d: '', class: 'flt-bars' }, g);
     f.trap = el('path', { d: '', class: 'flt-trap' }, g);
     f.center = el('line', { x1: x0 + w / 2, y1: y0 + 6, x2: x0 + w / 2, y2: y0 + h - 4, class: 'flt-ctr' }, g);
+    // VC TUNE : barre au-dessus du filtre, comme sur le TRX : « − » … traits rouges … « + », repère rouge à la position du présélecteur
+    f.vc = el('g', { class: 'flt-vc', style: 'display:none' }, g);
+    const vy = y0 - 5, va = x0 + 7, vb = x0 + w - 7;
+    el('circle', { cx: va - 3.5, cy: vy, r: 1.8, class: 'flt-vcend' }, f.vc);
+    el('circle', { cx: vb + 3.5, cy: vy, r: 1.8, class: 'flt-vcend' }, f.vc);
+    let d = '';
+    for (let i = 0; i <= 26; i++) { const x = va + i * (vb - va) / 26; d += 'M' + x.toFixed(1) + ' ' + (vy - 2.2) + 'V' + (vy + 2.2); }
+    el('path', { d, class: 'flt-vcticks' }, f.vc);
+    f.vcTri = el('path', { d: '', class: 'flt-vctri' }, f.vc);
+    f.vcA = va; f.vcB = vb; f.vcY = vy;
     f.nline = el('line', { x1: x0, y1: y0 + 6, x2: x0, y2: y0 + h - 6, class: 'flt-notch', style: 'display:none' }, g);
     f.base = el('rect', { x: x0 + 6, y: y0 + h - 4, width: w - 12, height: 2.5, class: 'flt-base' }, g);
     return f;
@@ -932,8 +942,15 @@
       const nxc = nx == null ? 0 : Math.max(fl.x0 + 2, Math.min(fl.x0 + fl.w - 2, nx));
       fl.nline.setAttribute('x1', nxc); fl.nline.setAttribute('x2', nxc);
       fl.nline.style.display = nx != null && !inPass ? '' : 'none';
+      // VC TUNE en service : repère rouge à la position (000-255) sous le filtre
+      const vcOn = !!s['vc' + sfx], vcPos = s['vcPos' + sfx];
+      fl.vc.style.display = vcOn ? '' : 'none';
+      if (vcOn && vcPos != null) {
+        const tx = fl.vcA + Math.max(0, Math.min(255, vcPos)) / 255 * (fl.vcB - fl.vcA), ty = fl.vcY;
+        fl.vcTri.setAttribute('d', 'M' + (tx - 2.6) + ' ' + (ty - 4.5) + 'H' + (tx + 2.6) + 'L' + (tx + 0.8) + ' ' + (ty + 3) + 'H' + (tx - 0.8) + 'Z');
+      }
       LCD.flt = LCD.flt || {};
-      LCD.flt[side] = { fr, off: Math.max(-0.4, Math.min(0.4, sh / 2400)), hz, sh, mode: mode || '', notch: nf };
+      LCD.flt[side] = { vc: vcOn && vcPos != null ? vcPos : null, fr, off: Math.max(-0.4, Math.min(0.4, sh / 2400)), hz, sh, mode: mode || '', notch: nf };
       fl.center.setAttribute('x1', cx); fl.center.setAttribute('x2', cx);
       fl.base.setAttribute('x', cx - tw / 2 + 2); fl.base.setAttribute('width', Math.max(4, tw - 4));
       const v = LCD['v' + side];
@@ -1344,6 +1361,16 @@
       c2.strokeStyle = '#ff9a1f'; c2.lineWidth = 2;
       c2.beginPath(); c2.moveTo(cx, top - 6); c2.lineTo(cx, bot); c2.stroke();
       c2.fillStyle = '#3b6dff'; c2.fillRect(cx - tw / 2 + 3, bot + 2, Math.max(4, tw - 6), 3);
+      // VC TUNE : barre « − » … « + » et repère rouge, sous le grand filtre
+      if (f.vc != null) {
+        const vy = y0 + h + 10, va = x0 + 16, vb = x0 + w - 16;
+        c2.fillStyle = '#e8edf3';
+        for (const [x, t] of [[va - 9, '−'], [vb + 9, '+']]) { c2.beginPath(); c2.arc(x, vy, 3.5, 0, 7); c2.fill(); }
+        c2.fillStyle = '#ff2b1c';
+        for (let i = 0; i <= 40; i++) c2.fillRect(va + i * (vb - va) / 40 - 1, vy - 4, 2, 8);
+        const tx = va + f.vc / 255 * (vb - va);
+        c2.beginPath(); c2.moveTo(tx - 6, vy - 9); c2.lineTo(tx + 6, vy - 9); c2.lineTo(tx + 2, vy + 5); c2.lineTo(tx - 2, vy + 5); c2.closePath(); c2.fill();
+      }
       c2.fillStyle = '#6f86ff'; c2.font = 'bold 10px "Roboto Mono", monospace'; c2.textAlign = 'left';
       c2.fillText(side === 'A' ? 'MAIN' : 'SUB', x0 + 4, y0 + 11);
     }

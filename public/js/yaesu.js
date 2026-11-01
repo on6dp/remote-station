@@ -186,6 +186,9 @@
         // CLEAR : relire le décalage tout de suite
         if (READ_FOR.clar) READ_FOR.clarClr = READ_FOR.clar;
         if (READ_FOR.clarB) READ_FOR.clarClrB = READ_FOR.clarB;
+        // VC TUNE (FTDX101) : un pas + / − se relit par la position (VT0; / VT1;)
+        if (READ_FOR.vc) READ_FOR.vcUp = READ_FOR.vcDn = READ_FOR.vc;
+        if (READ_FOR.vcB) READ_FOR.vcUpB = READ_FOR.vcDnB = READ_FOR.vcB;
       }
       return READ_FOR[id] || null;
     }

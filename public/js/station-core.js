@@ -93,7 +93,7 @@
     /** Lecture lente dont la valeur vient de changer : relue à chaque cycle pendant 4 s (au plus 3 à la fois). */
     _hot(k) {
       const rig = this.rig;
-      if (!rig.FRAME_GAP_MS || TX_METER_KEYS.indexOf(k) >= 0 || /^(smeter|idd|vdd|temp|po|swr|alc|comp|vcPos)/i.test(k)) return;
+      if (!rig.FRAME_GAP_MS || TX_METER_KEYS.indexOf(k) >= 0 || /^(smeter|idd|vdd|temp|po|swr|alc|comp)/i.test(k)) return;
       const cmd = rig.readFor && rig.readFor(k, this.radio);
       if (!cmd || (rig.FAST || []).indexOf(cmd) >= 0 || (rig.FAST_SUB || []).indexOf(cmd) >= 0) return;
       this.hot = this.hot || new Map();
