@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.23** — **Face avant, boutons doubles** (SHIFT ◎ WIDTH, NOTCH ◎ CONT/APF, MIC/SPEED ◎ PROC) : le bouton du centre = tout le bouton cranté (avec son capuchon), la bague extérieure = l'anneau à points ; SHIFT se règle donc sur le bouton cranté, WIDTH sur l'anneau, et le petit filtre au-dessus des fréquences suit le SHIFT. Ctrl+F5 sur /ftdx101.
 - **0.32.22** — **Face avant** : un clic bref sur le centre de SHIFT ◎ WIDTH ne met plus NAR en service (ce n'est pas sa fonction sur le TRX) ; l'appui d'au moins 1 s remet toujours SHIFT et WIDTH par défaut. Ctrl+F5 sur /ftdx101.
 - **0.32.21** — **Face avant** : cercle du bouton du centre mesuré sur chaque capuchon de la photo (SHIFT ◎ WIDTH, NOTCH ◎ CONT/APF, MIC/SPEED ◎ PROC) : bien centré. Ctrl+F5 sur /ftdx101.
 - **0.32.20** — **Face avant** : le cercle du bouton du centre (SHIFT ◎ WIDTH, NOTCH ◎ CONT/APF, MIC/SPEED ◎ PROC) est maintenant centré sur le capuchon de la photo (prise de biais). Ctrl+F5 sur /ftdx101.

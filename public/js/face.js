@@ -798,7 +798,7 @@
   function knobPart(k, p) {
     if (!k.ri) return k.inner ? 'inner' : 'outer';
     const d = Math.hypot(p.x - k.cx - (k.ix || 0), p.y - k.cy - (k.iy || 0));
-    return d <= k.ri + 3 ? 'inner' : 'outer';
+    return d <= k.ri + (k.ri > 25 ? 0 : 3) ? 'inner' : 'outer'; // grands boutons du centre : bague extérieure étroite, pas de marge
   }
   function turn(k, part, notches, ev) {
     if (!notches) return;
