@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.34** — **Face avant, SPLIT avec SUB sélectionné** : la page n'envoie plus que ST1 / ST0 et laisse le TRX placer l'émission, comme sa touche SPLIT (le FT envoyé juste après ST0 remettait le TRX en SPLIT au bout d'une seconde). Avec MAIN sélectionné : inchangé. Ctrl+F5 sur /ftdx101.
 - **0.32.33** — **Face avant, SPLIT avec SUB sélectionné** (corrige 0.32.32) : SPLIT en marche → l'émission passe sur le VFO **non sélectionné** (SUB sélectionné → TX MAIN, le SUB reste sélectionné) ; SPLIT arrêté avec SUB sélectionné → l'émission revient sur le **SUB**. Avec MAIN sélectionné : SPLIT → TX SUB, et à l'arrêt elle reste où elle est (inchangé). Ctrl+F5 sur /ftdx101.
 - **0.32.32** — **Face avant, SPLIT avec SUB sélectionné** (comme sur le TRX, d'après les photos) : SPLIT en marche → l'émission passe sur l'autre VFO ; SPLIT arrêté avec **SUB** sélectionné → l'émission revient sur le **MAIN** ; avec **MAIN** sélectionné, rien ne change (elle reste où elle est). Ctrl+F5 sur /ftdx101.
 - **0.32.31** — **Face avant, SPLIT et TX** (comme sur le TRX) : SPLIT en marche → l'émission passe sur l'autre VFO ; SPLIT arrêté → l'émission reste sur le VFO où elle est ; touches **TX MAIN / TX SUB** = choix du VFO d'émission (CAT `FT0` / `FT1`). Ctrl+F5 sur /ftdx101 et recharger la page Station.

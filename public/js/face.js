@@ -161,13 +161,13 @@
       return render();
     }
     if (a.local === 'split') {
-      // SPLIT en marche : l'émission passe sur l'autre VFO que celui qui est sélectionné (MAIN → TX SUB, SUB → TX MAIN).
-      // SPLIT arrêté : SUB sélectionné → l'émission revient sur le SUB ; MAIN sélectionné → elle reste où elle est.
+      // SPLIT : seulement ST1 / ST0, le TRX place lui-même l'émission (comme sa touche SPLIT).
+      // Avec MAIN sélectionné, à l'arrêt, l'émission est remise où elle était (FT), comme validé sur le TRX.
+      // Avec SUB sélectionné, aucun FT : un FT juste après ST0 faisait repasser le TRX en SPLIT.
       if (!needControl()) return;
-      const on = s.split ? 0 : 1;
-      const want = on ? (s.vfoSel === 1 ? 'A' : 'B') : (s.vfoSel === 1 ? 'B' : L.txSide(s));
+      const on = s.split ? 0 : 1, keep = L.txSide(s);
       setCtl('split', on);
-      if (R.CONTROL.txVfo) setTimeout(() => setCtl('txVfo', want === 'B' ? 1 : 0), 250);
+      if (!on && s.vfoSel !== 1 && R.CONTROL.txVfo) setTimeout(() => setCtl('txVfo', keep === 'B' ? 1 : 0), 250);
       return;
     }
     if (a.local === 'smenu') return L.smenu ? closeSmenu() : openSmenu();
