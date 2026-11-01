@@ -193,6 +193,8 @@
       // VC TUNE : marche / arrêt (pas de déplacement : +0), puis MULTI déplace l'accord du présélecteur (+ / − 1 pas)
       { id: 'nbLvlB', g: 'flt', label: 'Niveau NB (VFO B)', type: 'level', min: 0, max: 10, step: 1, face: true, write: (v) => 'NL1' + pad(v, 3) + ';' },
       { id: 'nrLvlB', g: 'flt', label: 'Niveau DNR (VFO B)', type: 'level', min: 1, max: 15, step: 1, face: true, write: (v) => 'RL1' + pad(v, 2) + ';' },
+      // VFO d'émission (touches TX MAIN / TX SUB de la face avant) : FT0 = MAIN, FT1 = SUB
+      { id: 'txVfo', g: 'vfo', label: 'TX sur le SUB', type: 'toggle', face: true, write: (v) => 'FT' + (v ? 1 : 0) + ';' },
       { id: 'mpvd', g: 'vfo', label: 'Bague du grand bouton (MPVD)', type: 'select', face: true, options: [[1, 'CLAR'], [2, 'VC TUNE'], [3, 'SUB'], [4, 'CS']], write: (v) => 'SF0' + v + ';' },
       { id: 'contourFreq', g: 'flt', label: 'Fréquence CONTOUR', type: 'level', min: 10, max: 3200, step: 10, unit: 'Hz', face: true, write: (v) => 'CO01' + pad(v, 4) + ';' },
       { id: 'contourFreqB', g: 'flt', label: 'Fréquence CONTOUR (VFO B)', type: 'level', min: 10, max: 3200, step: 10, unit: 'Hz', face: true, write: (v) => 'CO11' + pad(v, 4) + ';' },

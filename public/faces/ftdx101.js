@@ -68,7 +68,7 @@
       // SYNC, SPLIT, CLAR RX / TX, FAST, LOCK
       { id: 'sync', x: 819, y: 221, w: 43, h: 16, tip: 'SYNC : met les deux VFO sur la même fréquence (celle du récepteur actif), puis le grand bouton les accorde ensemble ; nouveau clic : arrêt', act: { local: 'sync' },
         leds: [{ x: 835, y: 203.5, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s, L) => !!L.sync, bright: (s, L) => !!L.sync }] },
-      { id: 'split', x: 874, y: 221, w: 44, h: 16, tip: 'SPLIT : émission sur l’autre VFO (voyant TX rouge et fréquence d’émission en rouge)', act: { toggle: 'split' },
+      { id: 'split', x: 874, y: 221, w: 44, h: 16, tip: 'SPLIT : émission sur l’autre VFO (voyant TX rouge et fréquence d’émission en rouge)', act: { local: 'split' },
         leds: [{ x: 889.5, y: 203.5, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s) => !!s.split, bright: (s) => !!s.split }] },
       { id: 'clarRx', x: 819, y: 262, w: 43, h: 18, tip: 'CLAR RX (RIT)', act: { toggle: 'rit' },
         leds: [{ x: 835, y: 245, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s) => !!s.rit, bright: (s) => !!s.rit }] },
@@ -81,10 +81,10 @@
       // RX / TX / MAIN⇆SUB au-dessus du grand bouton
       { id: 'rxMain', x: 937, y: 192, w: 63, h: 18, tip: 'RX MAIN : le récepteur MAIN est toujours en service', act: info('Le récepteur MAIN reste toujours en service.'),
         leds: [{ x: 955, y: 190, w: 31, h: 4, color: '#3ddc5a', on: (s) => !!s.connected }] },
-      { id: 'txMain', x: 1012, y: 192, w: 45, h: 18, tip: 'TX MAIN : émission sur le MAIN (SPLIT coupé)', act: { set: ['split', 0] },
+      { id: 'txMain', x: 1012, y: 192, w: 45, h: 18, tip: 'TX MAIN : émission sur le MAIN', act: { set: ['txVfo', 0] },
         leds: [{ x: 1024, y: 190, w: 20, h: 4, color: '#ff3b30', on: (s, L) => L.txSide(s) === 'A', bright: (s, L) => !!s.tx && L.txSide(s) === 'A' }] },
       { id: 'swap', x: 1068, y: 192, w: 95, h: 18, tip: 'MAIN ⇄ SUB : échange les fréquences des deux VFO ; appui d’au moins 1 s : copie MAIN → SUB (A → B)', act: { action: 'swap', long: { action: 'aToB' } } },
-      { id: 'txSub', x: 1172, y: 192, w: 50, h: 18, tip: 'TX SUB : émission sur le SUB (SPLIT)', act: { set: ['split', 1] },
+      { id: 'txSub', x: 1172, y: 192, w: 50, h: 18, tip: 'TX SUB : émission sur le SUB', act: { set: ['txVfo', 1] },
         leds: [{ x: 1190, y: 190, w: 18, h: 4, color: '#ff3b30', on: (s, L) => L.txSide(s) === 'B', bright: (s, L) => !!s.tx && L.txSide(s) === 'B' }] },
       { id: 'rxSub', x: 1230, y: 192, w: 65, h: 18, tip: 'RX SUB : double réception (DUAL RX) en marche / arrêt', act: { toggle: 'dualRx' },
         leds: [{ x: 1247, y: 190, w: 31, h: 4, color: '#3ddc5a', on: (s) => !!s.dualRx }] },

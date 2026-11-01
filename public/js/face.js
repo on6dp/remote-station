@@ -160,6 +160,14 @@
       say(L.ringVc ? 'Bague du grand bouton : VC TUNE' + (s[activeSide() === 'B' ? 'vcB' : 'vc'] ? '.' : ' (mettez d’abord le VC TUNE en marche : petite touche VC TUNE).') : 'Bague du grand bouton : fréquence.', '', 4000);
       return render();
     }
+    if (a.local === 'split') {
+      // SPLIT : en marche, le TRX passe l'émission sur l'autre VFO ; à l'arrêt, l'émission reste sur le VFO où elle est
+      if (!needControl()) return;
+      const on = s.split ? 0 : 1, keep = L.txSide(s);
+      setCtl('split', on);
+      if (!on && R.CONTROL.txVfo) setTimeout(() => setCtl('txVfo', keep === 'B' ? 1 : 0), 250);
+      return;
+    }
     if (a.local === 'smenu') return L.smenu ? closeSmenu() : openSmenu();
     if (a.local === 'disp') {
       // Comme la touche DISP du TRX : 4 présentations de l'écran, l'une après l'autre
