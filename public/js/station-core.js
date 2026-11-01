@@ -172,7 +172,7 @@
         if (p.error && this.lastCmd && Date.now() - this.lastCmd.at < 600) {
           this.log('La radio a refusé la commande ' + this.lastCmd.s);
           // Visible aussi sur le dashboard (le texte contient « ? » : le serveur l'affiche à celui qui pilote)
-          if (this.wsUp && !/^(VS|FT|MD)/.test(this.lastCmd.s)) this.sendWs({ t: 'trx_note', text: 'le TRX a refusé la commande « ' + String(this.lastCmd.s).slice(0, 20) + ' » (réponse ?;)' });
+          if (this.wsUp && !/^(VS|MD)/.test(this.lastCmd.s) && !(/^FT/.test(this.lastCmd.s) && FTX1.txVfoTries)) this.sendWs({ t: 'trx_note', text: 'le TRX a refusé la commande « ' + String(this.lastCmd.s).slice(0, 20) + ' » (réponse ?;)' });
           this.lastCmd = null;
         }
         if (p.error || p.ok) continue;
