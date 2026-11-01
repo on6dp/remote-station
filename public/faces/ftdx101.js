@@ -121,11 +121,11 @@
       { id: 'swSub', cx: 1365, cy: 350, ri: 18, ro: 44, inner: { ctl: 'shiftB', label: 'SHIFT SUB', per: 20 }, outer: { ctl: 'widthB', label: 'WIDTH SUB', per: 1 }, push: 'narrowB', pushLabel: 'NAR SUB',
         // Petits voyants orange : SHIFT décalé (≠ 0) à gauche, WIDTH changé (≠ largeur par défaut) à droite
         leds: [{ x: 1321.0, y: 307.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s) => !!s.shiftB, bright: (s) => !!s.shiftB },
-          { x: 1399.5, y: 307.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s) => !!s.widthB, bright: (s) => !!s.widthB }] },
+          { x: 1399.5, y: 307.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s, L) => L.widthChanged(s, 'B'), bright: (s, L) => L.widthChanged(s, 'B') }] },
       { id: 'swMain', cx: 1365, cy: 500, ri: 18, ro: 44, inner: { ctl: 'shift', label: 'SHIFT MAIN', per: 20 }, outer: { ctl: 'width', label: 'WIDTH MAIN', per: 1 }, push: 'narrow', pushLabel: 'NAR MAIN',
         // Petits voyants orange : SHIFT décalé (≠ 0) à gauche, WIDTH changé (≠ largeur par défaut) à droite
         leds: [{ x: 1321.0, y: 457.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s) => !!s.shift, bright: (s) => !!s.shift },
-          { x: 1399.5, y: 457.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s) => !!s.width, bright: (s) => !!s.width }] },
+          { x: 1399.5, y: 457.0, w: 7, h: 7, rx: 3.5, color: '#ff9a1f', on: (s, L) => L.widthChanged(s, ''), bright: (s, L) => L.widthChanged(s, '') }] },
       { id: 'notchSub', cx: 1492, cy: 350, ri: 18, ro: 44, inner: { ctl: 'notchFreqB', label: 'NOTCH SUB', per: 10 }, outer: { ctl: 'contourFreqB', label: 'CONT SUB', per: 10, offKey: 'contourB', offName: 'CONT',
         alt: { when: (s) => /^CW/.test(s.modeB || '') && !!s.apfB, ctl: 'apfFreqB', label: 'APF SUB', per: 1 } } },
       { id: 'notchMain', cx: 1492, cy: 500, ri: 18, ro: 44, inner: { ctl: 'notchFreq', label: 'NOTCH MAIN', per: 10 }, outer: { ctl: 'contourFreq', label: 'CONT MAIN', per: 10, offKey: 'contour', offName: 'CONT',

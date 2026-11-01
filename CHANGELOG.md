@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.11** — **Face avant, voyant WIDTH** : éteint aussi quand le TRX renvoie la largeur par défaut elle-même (2400 Hz) au lieu de « 00 », comme le voyant du TRX. Ctrl+F5 sur /ftdx101.
 - **0.32.10** — **Face avant, grande touche VC TUNE** : elle commande maintenant la bague du grand bouton sur le TRX lui-même (CAT `SF0` : 2 = VC TUNE ; arrêt = retour à SUB), son voyant suit l'état réel du TRX (allumé / éteint sur le TRX et sur la page ensemble). Ctrl+F5 sur /ftdx101.
 - **0.32.9** — **Face avant, VC TUNE** : la position s'affiche en continu pendant qu'on tourne la bague (info-bulle et repère de la barre), puis la valeur relue sur le TRX ; la page apprend la taille d'un pas du TRX. Ctrl+F5 sur /ftdx101.
 - **0.32.8** — **Face avant, VC TUNE** : barre rouge « − … + » au-dessus du filtre du récepteur avec le repère de position du présélecteur, comme sur l'écran du TRX (et sous le grand filtre en DISP) ; elle suit les réglages faits sur la page ou sur le TRX (relecture directe après chaque pas). Ctrl+F5 sur /ftdx101 et recharger la page Station.

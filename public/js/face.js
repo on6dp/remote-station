@@ -36,7 +36,14 @@
     fine: store.get('rs.face.fine', '0') === '1',
     listening: false,
     bandOf(hz) { const b = BANDS.find((x) => hz >= x[1] && hz <= x[2]); return b ? b[0] : ''; },
-    activeMode(s) { return (s.vfoSel === 1 ? s.modeB : s.mode) || ''; }
+    activeMode(s) { return (s.vfoSel === 1 ? s.modeB : s.mode) || ''; },
+    /** WIDTH changé (voyant) : ni « 00 » (défaut) ni la largeur par défaut (2400 Hz, que le TRX peut renvoyer telle quelle) */
+    widthChanged(s, sfx) {
+      const w = s['width' + (sfx || '')];
+      if (!w || !R) return false;
+      const tab = R.widthTable((sfx ? s.modeB : s.mode) || '') || [];
+      return tab.length > 0 && tab[w - 1] !== 2400;
+    }
   };
   function S() {
     const s = Object.assign({}, (st && st.radio) || {});
