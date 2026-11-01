@@ -131,6 +131,7 @@
     const a = k.act || {};
     const s = S();
     if (a.info) return say(a.info, '', 6000);
+    if (a.pop) return popCtl(a.pop);
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
     if (a.local === 'func') { L.func = !L.func; return render(); }
     if (a.local === 'vc') {
@@ -324,11 +325,11 @@
     // Le cadre se règle aussi à la souris : − / +, molette ; il reste affiché tant que la souris est dessus
     pop.addEventListener('click', (e) => {
       const b = e.target.closest('[data-d]');
-      if (b && popTarget) turn(popTarget.k, popTarget.part, Number(b.dataset.d), e);
+      if (b && popTarget) popAdjust(Number(b.dataset.d), e);
     });
     pop.addEventListener('wheel', (e) => {
       e.preventDefault();
-      if (popTarget && Math.abs(e.deltaY) > 0) turn(popTarget.k, popTarget.part, e.deltaY < 0 ? 1 : -1, e);
+      if (popTarget && Math.abs(e.deltaY) > 0) popAdjust(e.deltaY < 0 ? 1 : -1, e);
     }, { passive: false });
     pop.addEventListener('pointerenter', () => { popHover = true; clearTimeout(popT); });
     pop.addEventListener('pointerleave', () => { popHover = false; clearTimeout(popT); popT = setTimeout(() => { pop.hidden = true; }, 2000); });
@@ -957,7 +958,25 @@
     hideTip(2500);
   }
   // Cadre de réglage sur l'écran (comme le TRX) : nom de la fonction et valeur en grands chiffres, 2 s
-  const POP_NAMES = { shift: 'SHIFT', width: 'WIDTH', notchFreq: 'NOTCH', contourFreq: 'CONTOUR', apfFreq: 'APF' };
+  const POP_NAMES = { shift: 'SHIFT', width: 'WIDTH', notchFreq: 'NOTCH', contourFreq: 'CONTOUR', apfFreq: 'APF', nbLvl: 'NB LEVEL', nrLvl: 'DNR LEVEL' };
+  const POP_NOUNIT = { nbLvl: 1, nrLvl: 1 };
+  // Cadre ouvert par une touche (NB, DNR : appui long) : réglage d'un niveau avec − / + ou la molette
+  function popCtl(id) {
+    const c = R.CONTROL[id];
+    if (!c) return say('Réglage non disponible sur ce TRX.', 'warn');
+    const s = S();
+    popTarget = { ctl: id };
+    lcdPop(id, c, s[id] != null ? s[id] : c.min, s);
+  }
+  function popAdjust(d, ev) {
+    if (!popTarget) return;
+    if (!popTarget.ctl) return turn(popTarget.k, popTarget.part, d, ev);
+    const id = popTarget.ctl, c = R.CONTROL[id], s = S();
+    if (!c || !needControl()) return;
+    const v = Math.max(c.min, Math.min(c.max, (s[id] != null ? s[id] : c.min) + d * (c.step || 1)));
+    setCtl(id, v);
+    lcdPop(id, c, v, s);
+  }
   let popT = 0, popTarget = null, popHover = false;
   function lcdPop(id, c, v, s) {
     const base = id.replace(/B$/, ''), sub = /B$/.test(id) && POP_NAMES[base];
@@ -972,14 +991,15 @@
     const txt = (num < 0 ? '-' : '') + Math.abs(num);
     pop.querySelector('.fc-lp-l').textContent = (sub ? 'SUB ' : '') + name;
     const svgEl = pop.querySelector('svg');
-    const h = 30, w = (txt.length + 0.2) * h * 0.76 + 46;
+    const unit = POP_NOUNIT[base] ? '' : 'Hz', uw = unit ? 46 : 4;
+    const h = 30, w = (txt.length + 0.2) * h * 0.76 + uw;
     svgEl.setAttribute('viewBox', '0 0 ' + w.toFixed(0) + ' ' + (h + 4));
-    pop.querySelector('path').setAttribute('d', seg7(txt, w - 46, 2, h));
+    pop.querySelector('path').setAttribute('d', seg7(txt, w - uw, 2, h));
     const t = pop.querySelector('text');
-    t.setAttribute('x', w - 44); t.setAttribute('y', h + 1); t.textContent = 'Hz';
+    t.setAttribute('x', w - 44); t.setAttribute('y', h + 1); t.textContent = unit;
     pop.hidden = false;
     clearTimeout(popT);
-    if (!popHover) popT = setTimeout(() => { pop.hidden = true; }, 2500);
+    if (!popHover) popT = setTimeout(() => { pop.hidden = true; }, popTarget && popTarget.ctl ? 5000 : 2500);
   }
   let tipT = 0;
   function showTip(ev, text) {

@@ -31,7 +31,10 @@
   for (const [side, y, suf] of [['SUB', 260, 'B'], ['MAIN', 412, '']]) {
     for (const [lab, x, w, id] of DSP) {
       const ctl = id + suf;
-      dspKeys.push({ id: 'dsp' + lab + side, x, y, w, h: 23, tip: lab + ' ' + side, act: { toggle: ctl }, led: (s) => !!s[ctl] });
+      // NB, DNR : clic bref = en / hors service ; appui d'au moins 1 s = cadre « NB LEVEL » / « DNR LEVEL » sur l'écran (comme le TRX)
+      const lvl = id === 'nb' ? 'nbLvl' + suf : id === 'nr' ? 'nrLvl' + suf : null;
+      dspKeys.push({ id: 'dsp' + lab + side, x, y, w, h: 23, tip: lab + ' ' + side + (lvl ? ' — appui d’au moins 1 s : niveau ' + lab : ''),
+        act: Object.assign({ toggle: ctl }, lvl ? { long: { pop: lvl } } : {}), led: (s) => !!s[ctl] });
     }
   }
   const info = (t) => ({ info: t });
