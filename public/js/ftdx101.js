@@ -22,6 +22,7 @@
   // Largeurs du FTDX101 (manuel CAT 1912-D, table 3) : SH P1 0 P3P3 ; 00 = largeur par défaut du TRX (voyant WIDTH éteint).
   // Différentes du FTX-1 au-delà de 2100 Hz en SSB, et 18 pas seulement (50 … 3000 Hz) en CW / RTTY / PSK / DATA.
   const SSB_23 = [300, 400, 600, 850, 1100, 1200, 1500, 1650, 1800, 1950, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000, 3200, 3500, 4000];
+  const ENCDEC = [[0, 'OFF'], [1, 'ENC/DEC'], [2, 'ENC'], [3, 'DCS'], [4, 'DCS ENC']];
   const NARROW_21 = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 800, 1200, 1400, 1700, 2000, 2400, 3000, 3200, 3500, 4000];
 
   const api = Y.build({
@@ -130,10 +131,23 @@
       { cmd: 'KR;', re: /^KR([01])$/, parse: (m) => ({ keyer: +m[1] }), sim: 'KR0' },
       // VC TUNE (présélecteur) : VT P1 P2 P5P5P5 P6 (P1 0 MAIN / 1 SUB, P2 marche, P5 position 000-255, P6 0 = pas installé)
       { cmd: 'VT0;', re: /^VT0([01])(\d{3})?(\d)?/, parse: (m) => ({ vc: +m[1], vcPos: m[2] != null ? +m[2] : null, vcOk: m[3] == null ? null : +m[3] }), sim: 'VT001281' },
-      { cmd: 'VT1;', re: /^VT1([01])(\d{3})?(\d)?/, parse: (m) => ({ vcB: +m[1], vcPosB: m[2] != null ? +m[2] : null, vcOkB: m[3] == null ? null : +m[3] }), sim: 'VT101281' }
+      { cmd: 'VT1;', re: /^VT1([01])(\d{3})?(\d)?/, parse: (m) => ({ vcB: +m[1], vcPosB: m[2] != null ? +m[2] : null, vcOkB: m[3] == null ? null : +m[3] }), sim: 'VT101281' },
+      // Menu FUNC de la face avant : MONI LEVEL (ML1), VOX GAIN (VG), VOX DELAY (VD, ms), ANTI VOX (AV),
+      // décalage relais FM (OS P1 : 0 simplex, 1 +, 2 −), CTCSS / DCS (CT P1 : 0 OFF, 1 ENC/DEC, 2 ENC, 3 DCS ENC/DEC, 4 DCS ENC),
+      // tonalité CTCSS (CN P1 0 P3P3P3 : numéro 000–049)
+      { cmd: 'ML1;', re: /^ML1(\d{3})$/, parse: (m) => ({ moniLvl: +m[1] }), sim: 'ML1050' },
+      { cmd: 'VG;', re: /^VG(\d{3})$/, parse: (m) => ({ voxGain: +m[1] }), sim: 'VG050' },
+      { cmd: 'VD;', re: /^VD(\d{4})$/, parse: (m) => ({ voxDelay: +m[1] }), sim: 'VD0500' },
+      { cmd: 'AV;', re: /^AV(\d{3})$/, parse: (m) => ({ antiVox: +m[1] }), sim: 'AV050' },
+      { cmd: 'OS0;', re: /^OS0([0-2])$/, parse: (m) => ({ rpt: +m[1] }), sim: 'OS00' },
+      { cmd: 'OS1;', re: /^OS1([0-2])$/, parse: (m) => ({ rptB: +m[1] }), sim: 'OS10' },
+      { cmd: 'CT0;', re: /^CT0([0-4])$/, parse: (m) => ({ encDec: +m[1] }), sim: 'CT00' },
+      { cmd: 'CT1;', re: /^CT1([0-4])$/, parse: (m) => ({ encDecB: +m[1] }), sim: 'CT10' },
+      { cmd: 'CN00;', re: /^CN00(\d{3})$/, parse: (m) => ({ toneIdx: +m[1] }), sim: 'CN00012' },
+      { cmd: 'CN10;', re: /^CN10(\d{3})$/, parse: (m) => ({ toneIdxB: +m[1] }), sim: 'CN10012' }
     ],
     extraQueries: ['RF0;', 'RF1;', 'ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
-    extraStateKeys: ['nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
+    extraStateKeys: ['moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
     // CW : mémoire 1 du manipulateur (écrasée), lue par KY6 (« Message Keyer 1 Playback », manuel CAT 1912-D) ;
     // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
@@ -212,6 +226,17 @@
       { id: 'vcDn', g: 'rx', label: 'VC TUNE − (MAIN)', type: 'action', face: true, write: () => 'VT01-1;' },
       { id: 'vcUpB', g: 'rx', label: 'VC TUNE + (SUB)', type: 'action', face: true, write: () => 'VT11+1;' },
       { id: 'vcDnB', g: 'rx', label: 'VC TUNE − (SUB)', type: 'action', face: true, write: () => 'VT11-1;' },
+      // Menu FUNC (face avant)
+      { id: 'moniLvl', g: 'tx', label: 'MONI LEVEL', type: 'level', min: 0, max: 100, step: 1, face: true, write: (v) => 'ML1' + pad(v, 3) + ';' },
+      { id: 'voxGain', g: 'tx', label: 'VOX GAIN', type: 'level', min: 0, max: 100, step: 1, face: true, write: (v) => 'VG' + pad(v, 3) + ';' },
+      { id: 'voxDelay', g: 'tx', label: 'VOX DELAY', type: 'level', min: 30, max: 3000, step: 10, unit: 'ms', face: true, write: (v) => 'VD' + pad(v, 4) + ';' },
+      { id: 'antiVox', g: 'tx', label: 'ANTI VOX', type: 'level', min: 0, max: 100, step: 1, face: true, write: (v) => 'AV' + pad(v, 3) + ';' },
+      { id: 'rpt', g: 'vfo', label: 'RPT (MAIN)', type: 'select', face: true, options: [[0, 'SIMP'], [1, '+'], [2, '−']], write: (v) => 'OS0' + v + ';' },
+      { id: 'rptB', g: 'vfo', label: 'RPT (SUB)', type: 'select', face: true, options: [[0, 'SIMP'], [1, '+'], [2, '−']], write: (v) => 'OS1' + v + ';' },
+      { id: 'encDec', g: 'vfo', label: 'ENC/DEC (MAIN)', type: 'select', face: true, options: ENCDEC, write: (v) => 'CT0' + v + ';' },
+      { id: 'encDecB', g: 'vfo', label: 'ENC/DEC (SUB)', type: 'select', face: true, options: ENCDEC, write: (v) => 'CT1' + v + ';' },
+      { id: 'toneIdx', g: 'vfo', label: 'TONE FREQ (MAIN)', type: 'level', min: 0, max: 49, step: 1, face: true, write: (v) => 'CN00' + pad(v, 3) + ';' },
+      { id: 'toneIdxB', g: 'vfo', label: 'TONE FREQ (SUB)', type: 'level', min: 0, max: 49, step: 1, face: true, write: (v) => 'CN10' + pad(v, 3) + ';' },
       { id: 'rfB', g: 'rx', label: 'RF gain (VFO B)', type: 'level', min: 0, max: 255, step: 1, pct: true, write: (v) => 'RG1' + pad(v, 3) + ';' }
     ],
     fakeTuning: 'AC002',

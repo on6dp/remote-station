@@ -691,30 +691,52 @@
   L.funcSel = store.get('rs.face.funcsel', 'power');
   const stepNow = () => (L.fine ? 0 : L.fast ? 2 : 1);
   function setStepIdx(i) { L.fine = i === 0; L.fast = i === 2; store.set('rs.face.fine', L.fine ? '1' : '0'); store.set('rs.face.fast', L.fast ? '1' : '0'); }
+  // Menu FUNC : valeurs lues sur le TRX ; RPT / ENC/DEC / TONE FREQ suivent le VFO sélectionné (MAIN ou SUB)
+  const RPTS = ['SIMP', '+', '−'];
+  const ENCDECS = ['OFF', 'ENC/DEC', 'ENC', 'DCS', 'DCS ENC'];
+  const CTCSS = [67.0, 69.3, 71.9, 74.4, 77.0, 79.7, 82.5, 85.4, 88.5, 91.5, 94.8, 97.4, 100.0, 103.5, 107.2, 110.9, 114.8, 118.8, 123.0, 127.3,
+    131.8, 136.5, 141.3, 146.2, 151.4, 156.7, 159.8, 162.2, 165.5, 167.9, 171.3, 173.8, 177.3, 179.9, 183.5, 186.2, 189.9, 192.8, 196.6, 199.5,
+    203.5, 206.5, 210.7, 218.1, 225.7, 229.1, 233.6, 241.8, 250.3, 254.1];
+  const num = (v) => (v != null ? String(v) : '—');
+  const SIDED = { rpt: 1, encDec: 1, toneIdx: 1 };
+  const sideKey = (id) => (SIDED[id] && activeSide() === 'B' ? id + 'B' : id);
+  // Réglage par pas (molette, MULTI, − / +), borné ; « sided » : côté du VFO sélectionné
+  const ctlStep = (id, lo, hi, step) => (s, d) => {
+    const k = sideKey(id);
+    if (!R.CONTROL[k]) return say(FUNC_BY[id][1] + ' : pas disponible sur ce TRX.', 'warn', 3000);
+    const cur = s[k] != null ? s[k] : lo;
+    setCtl(k, Math.max(lo, Math.min(hi, Math.round((cur + d * step) / step) * step)));
+  };
+  // Choix suivant au clic (RPT, ENC/DEC)
+  const ctlCycle = (id, n) => (s, d) => {
+    const k = sideKey(id);
+    if (!R.CONTROL[k]) return say(FUNC_BY[id][1] + ' : pas disponible sur ce TRX.', 'warn', 3000);
+    setCtl(k, (((s[k] || 0) + (d > 0 ? 1 : n - 1)) % n));
+  };
   const FUNC = [
     // [id, libellé, valeur affichée (s), réglage (s, pas) | null, couleur du trait, basculer au clic]
     [['spd', 'SPEED', () => WF_SPEEDS[L.wfSpeed][0], (s, d) => { L.wfSpeed = Math.max(0, Math.min(3, L.wfSpeed + d)); store.set('rs.face.wfspd', L.wfSpeed); }, '#ff8a1f'],
-      ['peak', 'PEAK', () => '—', null, '#ff8a1f'],
-      ['marker', 'MARKER', () => 'ON', null, '#ff8a1f'],
+      ['peak', 'PEAK', () => PEAKS[L.peak], (s, d) => { L.peak = (L.peak + (d > 0 ? 1 : 3)) % 4; store.set('rs.face.peak', L.peak); WF.peak = {}; }, '#ff8a1f'],
+      ['marker', 'MARKER', () => (L.marker ? 'ON' : 'OFF'), () => { L.marker = !L.marker; store.set('rs.face.marker', L.marker ? '1' : '0'); }, '#ff8a1f', true],
       ['color', 'COLOR', () => String(L.wfColor), (s, d) => { L.wfColor = ((L.wfColor - 1 + d + 30) % 3) + 1; store.set('rs.face.wfcol', L.wfColor); }, '#ff8a1f', true],
       ['level', 'LEVEL', () => (L.wfLevel >= 0 ? '+' : '') + L.wfLevel.toFixed(1) + 'dB', (s, d) => { L.wfLevel = Math.max(-20, Math.min(20, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); }, '#ff8a1f']],
     [['power', 'RF POWER', (s) => (s.power != null ? s.power + 'W' : '—'), (s, d) => power(d * 5), '#8a5cff'],
-      ['moni', 'MONI LEVEL', () => '—', null, '#8a5cff'],
+      ['moniLvl', 'MONI LEVEL', (s) => num(s.moniLvl), ctlStep('moniLvl', 0, 100, 1), '#8a5cff'],
       ['nrLvl', 'DNR LEVEL', (s) => (s.nrLvl != null ? String(s.nrLvl) : '—'), (s, d) => setCtl('nrLvl', Math.max(1, Math.min(15, (s.nrLvl || 1) + d))), '#8a5cff'],
       ['nbLvl', 'NB LEVEL', (s) => (s.nbLvl != null ? String(s.nbLvl) : '—'), (s, d) => setCtl('nbLvl', Math.max(0, Math.min(10, (s.nbLvl || 0) + d))), '#8a5cff'],
-      ['voxg', 'VOX GAIN', () => '—', null, '#8a5cff'],
-      ['voxd', 'VOX DELAY', () => '—', null, '#8a5cff'],
-      ['avox', 'ANTI VOX', () => '—', null, '#8a5cff'],
+      ['voxGain', 'VOX GAIN', (s) => num(s.voxGain), ctlStep('voxGain', 0, 100, 1), '#8a5cff'],
+      ['voxDelay', 'VOX DELAY', (s) => (s.voxDelay != null ? s.voxDelay + 'ms' : '—'), ctlStep('voxDelay', 30, 3000, 10), '#8a5cff'],
+      ['antiVox', 'ANTI VOX', (s) => num(s.antiVox), ctlStep('antiVox', 0, 100, 1), '#8a5cff'],
       ['step', 'STEP DIAL', () => STEPS[stepNow()][1], (s, d) => setStepIdx(Math.max(0, Math.min(2, stepNow() + d))), '#8a5cff', true]],
     [['memch', 'MEM CH', () => '', null, '#8a5cff'],
       ['group', 'GROUP', () => '', null, '#8a5cff'],
       ['rfil', 'R.FIL', (s) => cellText('roof', s[activeSide() === 'B' ? 'roofB' : 'roof']), (s, d) => { const id = activeSide() === 'B' ? 'roofB' : 'roof'; setCtl(id, roofNext(s[id], d)); }, '#8a5cff', true],
       ['scan', 'SCAN', () => '', null, '#3ddc5a'],
       ['decode', 'DECODE', () => '', null, '#3ddc5a'],
-      ['rpt', 'RPT', () => '', null, '#ff3b30'],
+      ['rpt', 'RPT', (s) => RPTS[s[sideKey('rpt')]] || '—', ctlCycle('rpt', 3), '#ff3b30', true],
       ['miceq', 'MIC EQ', (s) => (s.micEq ? 'ON' : 'OFF'), (s) => setCtl('micEq', s.micEq ? 0 : 1), '#ff3b30', true],
-      ['encdec', 'ENC/DEC', () => '', null, '#38b6ff']],
-    [['tone', 'TONE FREQ', () => '', null, '#38b6ff'],
+      ['encDec', 'ENC/DEC', (s) => ENCDECS[s[sideKey('encDec')]] || '—', ctlCycle('encDec', 5), '#38b6ff', true]],
+    [['toneIdx', 'TONE FREQ', (s) => (CTCSS[s[sideKey('toneIdx')]] != null ? CTCSS[s[sideKey('toneIdx')]].toFixed(1) : '—'), ctlStep('toneIdx', 0, 49, 1, true), '#38b6ff'],
       ['rec', 'REC/PLAY', () => '', null, '#38b6ff'],
       ['qmb', 'QMB LIST', () => '', null, '#38b6ff'],
       ['radio', 'RADIO SETTING', () => '', null, '#ffb020'],
@@ -728,7 +750,7 @@
   function funcAdjust(id, d) {
     const c = FUNC_BY[id];
     if (!c || !c[3]) return false;
-    const local = ['spd', 'color', 'level', 'step'].indexOf(id) >= 0;
+    const local = ['spd', 'color', 'level', 'step', 'peak', 'marker'].indexOf(id) >= 0;
     if (!local && !needControl()) return true;
     c[3](S(), d);
     render();
