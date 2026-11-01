@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.37** — **Face avant, SPLIT en marche avec SUB sélectionné** : le TX passe sur le VFO A (fréquence du VFO A en rouge), le SUB reste sélectionné ; même vérification qu'à l'arrêt (relecture 1,2 s après ST1, FT seulement si nécessaire). Ctrl+F5 sur /ftdx101.
 - **0.32.36** — **Face avant, SPLIT arrêté** : le TX revient sur le VFO sélectionné (MAIN sélectionné → TX sur A ; SUB sélectionné → TX sur B). Le TRX ne le faisant pas toujours, la page relit l'état 1,2 s après ST0 et envoie FT seulement si le TX n'est pas déjà sur le VFO sélectionné. Ctrl+F5 sur /ftdx101.
 - **0.32.35** — **Face avant, SPLIT** (MAIN ou SUB sélectionné) : la page n'envoie plus que ST1 / ST0, comme la touche SPLIT du TRX : en marche → TX sur le VFO non sélectionné ; à l'arrêt → TX de nouveau sur le VFO sélectionné (MAIN sélectionné, TX sur B : SPLIT arrêté → TX revient sur A). Ctrl+F5 sur /ftdx101.
 - **0.32.34** — **Face avant, SPLIT avec SUB sélectionné** : la page n'envoie plus que ST1 / ST0 et laisse le TRX placer l'émission, comme sa touche SPLIT (le FT envoyé juste après ST0 remettait le TRX en SPLIT au bout d'une seconde). Avec MAIN sélectionné : inchangé. Ctrl+F5 sur /ftdx101.
