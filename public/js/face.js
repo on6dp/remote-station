@@ -1589,20 +1589,26 @@
   }
   // DISP « filtres agrandis » : le filtre de chaque récepteur (largeur, décalage) avec le spectre de sa BF
   function drawFilters(c2, W, H, specs, nb, lvl) {
+    // Comme l'écran du TRX (DISP « filtres agrandis ») : deux grands filtres rouges, sans cadre, séparés par un trait ;
+    // le spectre n'apparaît qu'à l'intérieur de la bande passante
     c2.fillStyle = '#000';
     c2.fillRect(0, 0, W, H);
     const half = Math.floor(W / 2);
-    for (const [i, side, sp, color] of [[0, 'A', specs[0], '#ff2b1c'], [1, 'B', WF.two ? specs[1] : null, '#d8e6ff']]) {
+    c2.strokeStyle = '#3a4352'; c2.lineWidth = 1.5;
+    c2.beginPath(); c2.moveTo(half + 0.5, 8); c2.lineTo(half + 0.5, H - 14); c2.stroke();
+    for (const [i, side, sp, color] of [[0, 'A', specs[0], '#ff2b1c'], [1, 'B', WF.two ? specs[1] : null, '#ff2b1c']]) {
       const x0 = i * half + 6, w = half - 12, y0 = 8, h = H - 26;
-      c2.strokeStyle = '#2a3140'; c2.lineWidth = 1; c2.strokeRect(x0 + 0.5, y0 + 0.5, w - 1, h);
       const f = (LCD.flt && LCD.flt[side]) || { fr: 0.6, off: 0 };
       const cx = x0 + w / 2 + f.off * w, tw = w * f.fr, top = y0 + 14, bot = y0 + h - 4, sl = Math.min(14, tw * 0.12);
-      // Spectre de la BF : barres
+      // Spectre de la BF : barres fines, une par pixel, seulement dans la bande passante (découpe en trapèze)
       if (sp) {
-        // Une barre fine tous les 2 pixels (le plus fort des points FFT qu'elle couvre) : spectre plus détaillé
-        c2.strokeStyle = 'rgba(215,225,240,.85)'; c2.lineWidth = 1.2;
+        const a = Math.max(x0 + 4, cx - tw / 2), b = Math.min(x0 + w - 4, cx + tw / 2);
+        c2.save();
+        c2.beginPath(); c2.moveTo(a + 2, bot); c2.lineTo(a + sl + 2, top + 2); c2.lineTo(b - sl - 2, top + 2); c2.lineTo(b - 2, bot); c2.closePath();
+        c2.clip();
+        c2.strokeStyle = 'rgba(205,215,232,.8)'; c2.lineWidth = 1.4;
         c2.beginPath();
-        const n = Math.floor(w / 2);
+        const n = Math.floor((w - 8) / 1.6);
         for (let k = 0; k < n; k++) {
           const i0 = Math.floor(k / n * nb), i1 = Math.max(i0 + 1, Math.floor((k + 1) / n * nb));
           let m = 0;
@@ -1612,9 +1618,10 @@
           c2.moveTo(x, bot); c2.lineTo(x, bot - v * v * (bot - top - 6));
         }
         c2.stroke();
+        c2.restore();
       } else if (side === 'B') {
         c2.fillStyle = '#8a97ab'; c2.font = '11px system-ui, sans-serif'; c2.textAlign = 'center';
-        c2.fillText('SUB : bouton « 🎧 Stéréo MAIN | SUB »', x0 + w / 2, y0 + h / 2);
+        c2.font = '10px system-ui, sans-serif'; c2.fillText('spectre SUB : 🎧 Stéréo', x0 + w / 2, bot + 17);
       }
       // Bande passante (trapèze), repère central, base bleue
       c2.strokeStyle = color; c2.lineWidth = 2.5; c2.lineJoin = 'round';
@@ -1630,7 +1637,8 @@
         }
       }
       c2.strokeStyle = '#ff9a1f'; c2.lineWidth = 2;
-      c2.beginPath(); c2.moveTo(cx, top - 6); c2.lineTo(cx, bot); c2.stroke();
+      c2.beginPath(); c2.moveTo(cx, top - 4); c2.lineTo(cx, bot); c2.stroke();
+      c2.strokeRect(cx - 4, top - 11, 8, 7); // petit carré orange en haut du repère, comme sur le TRX
       c2.fillStyle = '#3b6dff'; c2.fillRect(cx - tw / 2 + 3, bot + 2, Math.max(4, tw - 6), 3);
       // VC TUNE : barre « − » … « + » et repère rouge, sous le grand filtre
       if (f.vc != null) {
@@ -1642,8 +1650,6 @@
         const tx = va + f.vc / 255 * (vb - va);
         c2.beginPath(); c2.moveTo(tx - 6, vy - 9); c2.lineTo(tx + 6, vy - 9); c2.lineTo(tx + 2, vy + 5); c2.lineTo(tx - 2, vy + 5); c2.closePath(); c2.fill();
       }
-      c2.fillStyle = '#6f86ff'; c2.font = 'bold 10px "Roboto Mono", monospace'; c2.textAlign = 'left';
-      c2.fillText(side === 'A' ? 'MAIN' : 'SUB', x0 + 4, y0 + 11);
     }
   }
   function wfTick() {

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.42** — **Face avant, DISP « filtres agrandis » comme l'écran du TRX** : deux grands filtres rouges (MAIN et SUB) sans cadre, séparés par un trait ; spectre en barres fines **seulement dans la bande passante** ; repère orange avec son petit carré en haut ; base bleue. Ctrl+F5 sur /ftdx101.
 - **0.32.41** — **Face avant, spectre plus fin** : DISP « filtres agrandis » : une barre fine tous les 2 pixels (deux fois plus de détail, la plus forte des raies FFT couvertes) ; petits spectres dans les cadres de filtre : 64 barres fines au lieu de 34. Ctrl+F5 sur /ftdx101.
 - **0.32.40** — **Face avant, FUNC / S.MENU** : plages comme le TRX : COLOR 1 à 5 (4 vert, 5 gris en plus), LEVEL −30 à +30 dB (MONI LEVEL 0–100, DNR 1–15, NB 0–10, VOX GAIN 0–100, VOX DELAY 30–3000 ms, ANTI VOX 0–100 : déjà ainsi). Ctrl+F5 sur /ftdx101.
 - **0.32.39** — **Face avant, menu FUNC** : cases complétées avec les valeurs lues sur le TRX et réglables (clic − / +, molette, MULTI) : MONI LEVEL (ML1), VOX GAIN (VG), VOX DELAY (VD, 30–3000 ms), ANTI VOX (AV), et pour le VFO sélectionné RPT (OS : SIMP / + / −), ENC/DEC (CT : OFF, ENC/DEC, ENC, DCS, DCS ENC), TONE FREQ (CN : 50 tonalités CTCSS) ; PEAK et MARKER comme dans S.MENU. **Recharger la page Station** et Ctrl+F5 sur /ftdx101.
