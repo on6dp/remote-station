@@ -77,6 +77,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .lcd-vfo { fill: #e6e9ef; font-size: 9px; font-weight: 700; font-style: italic; }
 #face .lcd-txb { fill: #ff6b5b; font-size: 9px; font-weight: 700; }
 #face .lcd-txb.on { fill: #ff2b1c; }
+#face .lcd-clart { fill: #ff2b1c; font-size: 8.5px; font-weight: 800; letter-spacing: .3px; }
 #face .lcd-mode { fill: #c63a2a; }
 #face .lcd-modet { fill: #fff; font-size: 10.5px; font-weight: 700; }
 #face .lcd-freq { fill: #f4f6fa; font-size: 30px; font-weight: 700; letter-spacing: -.5px; font-style: italic; }

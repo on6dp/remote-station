@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.27** — **Face avant, CLAR** : « CLAR RX / TX  -90Hz » en rouge au-dessus de la fréquence quand le clarifier est en service, comme sur le TRX ; la **bague extérieure du grand bouton** règle alors le décalage (10 Hz par cran ; aussi la molette sur ce texte) ; la grande touche CLAR met aussi la bague du TRX sur CLAR (SF01) et la remet sur SUB à l'arrêt. Ctrl+F5 sur /ftdx101.
 - **0.32.26** — **Face avant, R.FIL** (bouton MULTI sur « MULTI R.FIL », ou clic sur la case R.FIL) : seulement les filtres de toit de série 12 kHz, 3 kHz, 600 Hz (1,2 kHz et 300 Hz sont en option sur le FTDX101 : le TRX refusait « RF0x »). Ctrl+F5 sur /ftdx101.
 - **0.32.25** — **Face avant, boutons doubles** : au survol, la partie sous la souris s'éclaire bien visiblement — le bouton cranté du centre en **orange** (SHIFT, NOTCH, MIC/SPEED), l'anneau extérieur en **bleu** (WIDTH, CONT/APF, PROC/PITCH) — avec son nom affiché un instant. Ctrl+F5 sur /ftdx101.
 - **0.32.24** — **Face avant, WIDTH** : si NAR (filtre étroit) est en service, la page le coupe d'abord (le TRX refuse WIDTH, « SH… ?; », tant que NAR est en service), en tournant WIDTH comme avec l'appui de 1 s. Ctrl+F5 sur /ftdx101.

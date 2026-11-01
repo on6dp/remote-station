@@ -215,7 +215,14 @@
     if (a.toggleSel) return setCtl('vfoSel', s.vfoSel === 1 ? 0 : 1);
     if (a.clar) {
       if (long) return setCtl('clarClr', null);
-      return setCtl('rit', s.rit ? 0 : 1);
+      // Grande touche CLAR : clarifier RX ; sur le TRX la bague du grand bouton passe sur CLAR (SF01), et revient à SUB à l'arrêt
+      const on = s.rit ? 0 : 1;
+      setCtl('rit', on);
+      if (R.CONTROL.mpvd && s.mpvd != null) {
+        if (on && s.mpvd !== 1) setCtl('mpvd', 1);
+        else if (!on && !s.xit && s.mpvd === 1) setCtl('mpvd', 3);
+      }
+      return;
     }
   }
 
@@ -553,6 +560,19 @@
       v.hit = el('rect', { x: x0 + 58, y: Y(92), width: half - 64, height: 34, class: 'hs lcd-hit' }, g);
       el('title', {}, v.hit, 'Taper une fréquence pour le VFO ' + side);
       v.hit.addEventListener('click', () => askFreq(side));
+      // « CLAR RX   -90Hz » au-dessus de la fréquence (clarifier en service), comme sur le TRX ; molette dessus : décalage ±10 Hz
+      v.clarG = el('g', { class: 'lcd-clar', style: 'display:none' }, g);
+      v.clarT = el('text', { x: x0 + 70, y: Y(93.5), class: 'lcd-clart' }, v.clarG, 'CLAR RX');
+      v.clarV = el('text', { x: v.xr, y: Y(93.5), class: 'lcd-clart', 'text-anchor': 'end' }, v.clarG, '');
+      const ch = el('rect', { x: x0 + 66, y: Y(86), width: half - 70, height: 8, class: 'hs lcd-hit' }, v.clarG);
+      el('title', {}, ch, 'Clarifier : molette = décalage ±10 Hz ; appui long sur la grande touche CLAR : décalage à zéro');
+      ch.addEventListener('wheel', (ev) => {
+        ev.preventDefault();
+        const s = S();
+        const vv = Math.max(-9999, Math.min(9999, (s.clar || 0) + (ev.deltaY < 0 ? 10 : -10)));
+        setCtl('clar', vv);
+        showTip(ev, 'CLAR ' + (vv > 0 ? '+' : '') + vv + ' Hz');
+      }, { passive: false });
     }
     // ANT / ATT / IPO / R.FIL / AGC
     const CELLS = [['ANT', 'ant', 'ant'], ['ATT', 'att', 'attB'], ['IPO', 'preamp', 'preampB'], ['R.FIL', 'roof', 'roofB'], ['AGC', 'agc', 'agcB']];
@@ -820,6 +840,12 @@
     const s = S();
     // Cadre NB LEVEL / DNR LEVEL ouvert (appui long sur NB / DNR) : le bouton MULTI règle ce niveau, comme sur le TRX
     if (k.multi && popTarget && popTarget.ctl && $('lcdPop') && !$('lcdPop').hidden) return popAdjust(notches > 0 ? 1 : -1, ev);
+    // Clarifier en service (CLAR RX / TX) : la bague extérieure du grand bouton règle le décalage (10 Hz par cran), comme sur le TRX
+    if (k.dial && part === 'outer' && (s.rit || s.xit) && !(s.mpvd === 2)) {
+      const v = Math.max(-9999, Math.min(9999, (s.clar || 0) + notches * 10));
+      setCtl('clar', v);
+      return showTip(ev, 'CLAR ' + (s.rit && s.xit ? 'RX/TX' : s.rit ? 'RX' : 'TX') + ' ' + (v > 0 ? '+' : '') + v + ' Hz');
+    }
     // Grande touche VC TUNE : la bague extérieure du grand bouton accorde le présélecteur (un pas par cran)
     const vcSide = activeSide() === 'B' ? 'B' : '';
     if (k.dial && part === 'outer' && (s.mpvd != null ? s.mpvd === 2 : L.ringVc) && R.CONTROL['vcUp' + vcSide]) {
@@ -1154,6 +1180,14 @@
       v.sel.classList.toggle('on', active);
       const txSide = s.split ? 'B' : 'A';
       v.tx.textContent = txSide === side ? (tx ? 'TX ●' : 'TX') : '';
+      // Clarifier (RT / XT, lu dans IF : récepteur MAIN)
+      const clarOn = side === 'A' && (s.rit || s.xit);
+      v.clarG.style.display = clarOn ? '' : 'none';
+      if (clarOn) {
+        v.clarT.textContent = 'CLAR ' + (s.rit && s.xit ? 'RX/TX' : s.rit ? 'RX' : 'TX');
+        const cv = s.clar || 0;
+        v.clarV.textContent = (cv > 0 ? '+' : cv < 0 ? '-' : '') + Math.abs(cv) + 'Hz';
+      }
       v.tx.classList.toggle('on', tx && txSide === side);
       for (const c of LCD['c' + side]) c.t.textContent = cellText(c.id, s[c.id]);
     }
