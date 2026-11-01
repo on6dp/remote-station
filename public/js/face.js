@@ -435,6 +435,24 @@
     f.base = el('rect', { x: x0 + 6, y: y0 + h - 4, width: w - 12, height: 2.5, class: 'flt-base' }, g);
     return f;
   }
+  // VC TUNE : position prévue pendant qu'on tourne (le TRX ne la renvoie qu'au cycle de lecture suivant)
+  const VCP = {};
+  let vcStep = Number(store.get('rs.face.vcstep', '2')) || 2; // unités de position par pas « + » / « − » (apprises)
+  function vcLearn(v, now) {
+    // Le TRX a relu la position : on en déduit la taille d'un pas pour la prochaine fois
+    if (v.base == null || now == null || !v.sent) return;
+    const st = Math.round(Math.abs(now - v.base) / Math.abs(v.sent));
+    if (st >= 1 && st <= 16 && st !== vcStep) { vcStep = st; store.set('rs.face.vcstep', String(st)); }
+  }
+  function vcShown(sfx, s) {
+    const real = s['vcPos' + sfx], v = VCP[sfx || 'A'];
+    if (v && v.base != null) {
+      if (Date.now() <= v.until + 1200) return Math.max(0, Math.min(255, v.base + v.sent * vcStep));
+      vcLearn(v, real);
+      delete VCP[sfx || 'A'];
+    }
+    return real;
+  }
   // Fréquence BF du centre de la bande passante (sans le décalage SHIFT), selon le mode
   const FLT_SPAN = 4200; // largeur (Hz de BF) représentée par le cadre du filtre
   function audioCenter(md, hz) { return /CW/.test(md) ? 700 : /DATA|RTTY|PSK/.test(md) ? 1500 : /AM|FM/.test(md) ? hz / 2 : 300 + hz / 2; }
@@ -743,9 +761,20 @@
     if (k.dial && part === 'outer' && L.ringVc && R.CONTROL['vcUp' + vcSide]) {
       if (!needControl()) return;
       if (!s['vc' + vcSide]) return say('VC TUNE arrêté : mettez-le en marche avec la petite touche VC TUNE.', 'warn', 4000);
-      for (let i = 0; i < Math.min(9, Math.abs(notches)); i++) send({ t: 'set', ctl: (notches > 0 ? 'vcUp' : 'vcDn') + vcSide, value: null });
-      const pos = s['vcPos' + vcSide];
-      return showTip(ev, 'VC TUNE ' + (vcSide ? 'SUB' : 'MAIN') + (notches > 0 ? ' +' : ' −') + (pos != null ? ' · ' + pos : ''));
+      const n = Math.max(-9, Math.min(9, notches));
+      for (let i = 0; i < Math.abs(n); i++) send({ t: 'set', ctl: (n > 0 ? 'vcUp' : 'vcDn') + vcSide, value: null });
+      // Position affichée en continu pendant qu'on tourne (prévue d'après le pas observé), puis celle relue sur le TRX
+      const now = Date.now(), key = vcSide || 'A';
+      let v = VCP[key];
+      if (!v || now > v.until) {
+        if (v) vcLearn(v, s['vcPos' + vcSide]);
+        v = VCP[key] = { base: s['vcPos' + vcSide], sent: 0, until: 0 };
+      }
+      v.sent += n;
+      v.until = now + 1500;
+      const pos = vcShown(vcSide, s);
+      render();
+      return showTip(ev, 'VC TUNE ' + (vcSide ? 'SUB' : 'MAIN') + ' ' + (pos != null ? pos : (n > 0 ? '+' : '−')));
     }
     if (k.multi && !(s.rit || s.xit) && FUNC_BY[L.funcSel] && FUNC_BY[L.funcSel][3]) {
       funcAdjust(L.funcSel, notches);
@@ -943,7 +972,7 @@
       fl.nline.setAttribute('x1', nxc); fl.nline.setAttribute('x2', nxc);
       fl.nline.style.display = nx != null && !inPass ? '' : 'none';
       // VC TUNE en service : repère rouge à la position (000-255) sous le filtre
-      const vcOn = !!s['vc' + sfx], vcPos = s['vcPos' + sfx];
+      const vcOn = !!s['vc' + sfx], vcPos = vcShown(sfx, s);
       fl.vc.style.display = vcOn ? '' : 'none';
       if (vcOn && vcPos != null) {
         const tx = fl.vcA + Math.max(0, Math.min(255, vcPos)) / 255 * (fl.vcB - fl.vcA), ty = fl.vcY;
