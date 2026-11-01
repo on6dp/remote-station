@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.25 | [RemoteStation-Setup-0.32.25.exe](0.32.25/RemoteStation-Setup-0.32.25.exe) | [remote-station-0.32.25.tar.gz](0.32.25/remote-station-0.32.25.tar.gz) | Face avant : boutons doubles — centre orange, anneau bleu au survol — [empreintes SHA-256](0.32.25/SHA256SUMS.txt) |
 | 0.32.24 | [RemoteStation-Setup-0.32.24.exe](0.32.24/RemoteStation-Setup-0.32.24.exe) | [remote-station-0.32.24.tar.gz](0.32.24/remote-station-0.32.24.tar.gz) | Face avant : WIDTH coupe NAR d'abord (sinon refusé par le TRX) — [empreintes SHA-256](0.32.24/SHA256SUMS.txt) |
 | 0.32.23 | [RemoteStation-Setup-0.32.23.exe](0.32.23/RemoteStation-Setup-0.32.23.exe) | [remote-station-0.32.23.tar.gz](0.32.23/remote-station-0.32.23.tar.gz) | Face avant : SHIFT sur le bouton cranté, WIDTH sur l'anneau — [empreintes SHA-256](0.32.23/SHA256SUMS.txt) |
 | 0.32.22 | [RemoteStation-Setup-0.32.22.exe](0.32.22/RemoteStation-Setup-0.32.22.exe) | [remote-station-0.32.22.tar.gz](0.32.22/remote-station-0.32.22.tar.gz) | Face avant : plus de NAR sur le clic du centre SHIFT/WIDTH — [empreintes SHA-256](0.32.22/SHA256SUMS.txt) |

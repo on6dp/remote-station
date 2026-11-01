@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.25** — **Face avant, boutons doubles** : au survol, la partie sous la souris s'éclaire bien visiblement — le bouton cranté du centre en **orange** (SHIFT, NOTCH, MIC/SPEED), l'anneau extérieur en **bleu** (WIDTH, CONT/APF, PROC/PITCH) — avec son nom affiché un instant. Ctrl+F5 sur /ftdx101.
 - **0.32.24** — **Face avant, WIDTH** : si NAR (filtre étroit) est en service, la page le coupe d'abord (le TRX refuse WIDTH, « SH… ?; », tant que NAR est en service), en tournant WIDTH comme avec l'appui de 1 s. Ctrl+F5 sur /ftdx101.
 - **0.32.23** — **Face avant, boutons doubles** (SHIFT ◎ WIDTH, NOTCH ◎ CONT/APF, MIC/SPEED ◎ PROC) : le bouton du centre = tout le bouton cranté (avec son capuchon), la bague extérieure = l'anneau à points ; SHIFT se règle donc sur le bouton cranté, WIDTH sur l'anneau, et le petit filtre au-dessus des fréquences suit le SHIFT. Ctrl+F5 sur /ftdx101.
 - **0.32.22** — **Face avant** : un clic bref sur le centre de SHIFT ◎ WIDTH ne met plus NAR en service (ce n'est pas sa fonction sur le TRX) ; l'appui d'au moins 1 s remet toujours SHIFT et WIDTH par défaut. Ctrl+F5 sur /ftdx101.

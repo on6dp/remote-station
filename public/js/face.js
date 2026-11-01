@@ -251,7 +251,14 @@
       const g = el('g', { class: 'kn' + (k.dial ? ' dial' : ''), 'data-knob': k.id }, svg);
       el('circle', { cx: k.cx, cy: k.cy, r: k.ro, class: 'kn-o' }, g);
       // Bouton du centre : sur la photo, prise de biais, son capuchon est un peu décalé du centre de la bague (k.ix, k.iy)
-      if (k.ri) el('circle', { cx: k.cx + (k.ix || 0), cy: k.cy + (k.iy || 0), r: k.ri, class: 'kn-i' }, g);
+      if (k.ri) {
+        // Survol : la partie sous la souris s'éclaire (centre en orange, bague en bleu) avec son nom
+        const ix = k.cx + (k.ix || 0), iy = k.cy + (k.iy || 0);
+        const ring = 'M' + (k.cx - k.ro) + ' ' + k.cy + 'a' + k.ro + ' ' + k.ro + ' 0 1 0 ' + 2 * k.ro + ' 0a' + k.ro + ' ' + k.ro + ' 0 1 0 ' + -2 * k.ro + ' 0Z'
+          + 'M' + (ix - k.ri) + ' ' + iy + 'a' + k.ri + ' ' + k.ri + ' 0 1 1 ' + 2 * k.ri + ' 0a' + k.ri + ' ' + k.ri + ' 0 1 1 ' + -2 * k.ri + ' 0Z';
+        el('path', { d: ring, class: 'kn-ring', 'fill-rule': 'evenodd' }, g);
+        el('circle', { cx: ix, cy: iy, r: k.ri, class: 'kn-i' }, g);
+      }
       el('title', {}, g, (k.tip || [k.inner && k.inner.label, k.outer && k.outer.label].filter(Boolean).join(' (centre) · ') + ' (bague) — molette ou glisser')
         + (k.longReset ? (k.longReset[0] === 'n' ? ' ; appui d’au moins 1 s sur le centre : NOTCH, CONT et APF par défaut et arrêtés' : ' ; appui d’au moins 1 s sur le centre : SHIFT à 0 et WIDTH par défaut') : ''));
       knobEvents(g, k);
@@ -936,7 +943,16 @@
     const end2 = () => { drag = null; g.classList.remove('grab'); hideTip(600); };
     g.addEventListener('pointerup', end);
     g.addEventListener('pointercancel', end);
-    g.addEventListener('pointerleave', () => { if (!drag) hideTip(400); });
+    g.addEventListener('pointerleave', () => { g.classList.remove('hov-in', 'hov-out'); delete g.dataset.hp; if (!drag) hideTip(400); });
+    if (k.ri) g.addEventListener('pointermove', (ev) => {
+      if (drag) return;
+      const part = knobPart(k, toImg(ev));
+      g.classList.toggle('hov-in', part === 'inner');
+      g.classList.toggle('hov-out', part === 'outer');
+      const spec = k[part];
+      const alt = spec && spec.alt && spec.alt.when(S()) ? spec.alt : spec;
+      if (alt && alt.label && g.dataset.hp !== alt.label) { g.dataset.hp = alt.label; showTip(ev, alt.label); hideTip(1500); }
+    });
   }
   // SHIFT ◎ WIDTH : appui long sur le centre → SHIFT à 0 et WIDTH à la largeur par défaut du mode (voyants éteints)
   function knobReset(k, ev) {

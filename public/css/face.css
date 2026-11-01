@@ -38,6 +38,12 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .kn circle { fill: transparent; stroke: transparent; }
 #face .kn:hover .kn-o { stroke: rgba(140, 200, 255, .45); stroke-width: 1.5; stroke-dasharray: 4 4; }
 #face .kn:hover .kn-i { stroke: rgba(255, 210, 90, .55); stroke-width: 1.2; }
+/* Boutons doubles : la partie sous la souris bien visible (centre orange, bague bleue) */
+#face .kn .kn-ring { fill: transparent; stroke: none; pointer-events: none; }
+#face .kn.hov-in .kn-i { stroke: #ffb020; stroke-width: 3; fill: rgba(255, 176, 32, .22); }
+#face .kn.hov-out .kn-ring { fill: rgba(79, 195, 255, .30); }
+#face .kn.hov-out .kn-o { stroke: #4fc3ff; stroke-width: 3; stroke-dasharray: none; }
+#face .kn.hov-out .kn-i { stroke: #4fc3ff; stroke-width: 1.5; }
 #face.zones .hs { stroke: rgba(0, 255, 120, .8); stroke-width: 1; }
 #face.zones .kn-o { stroke: rgba(255, 230, 0, .8); stroke-width: 1; }
 #face.zones .kn-i { stroke: rgba(255, 0, 220, .8); stroke-width: 1; }
