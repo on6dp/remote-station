@@ -11,8 +11,14 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-msg.error { color: #ff6b6b; font-weight: 700; }
 .fc-wrap { position: relative; max-width: 1900px; margin: 0; min-width: 0; }
 /* Face avant, puis sous elle : PTT + SSB CONFIGURATION (micro, égaliseurs, M'écouter et son volume) sur une ligne */
-.fc-top { display: grid; grid-template-columns: 190px minmax(0, 1900px) 190px; gap: 10px; align-items: stretch; justify-content: center; }
-.fc-top > .fc-tx { grid-column: 1 / -1; }
+.fc-top { display: grid; grid-template-columns: 190px minmax(0, 1900px) 190px; grid-template-rows: auto 1fr; gap: 10px; align-items: stretch; justify-content: center; }
+.fc-top > .fc-wrap { align-self: start; }
+/* PTT + SSB CONFIGURATION juste sous l'image du TRX (colonne du milieu) : les deux cartes de bande descendent sur toute la hauteur */
+#bmvA { grid-column: 1; grid-row: 1 / span 2; }
+.fc-top > .fc-wrap { grid-column: 2; grid-row: 1; }
+#bmvB { grid-column: 3; grid-row: 1 / span 2; }
+.fc-top > .fc-tx { grid-column: 2; grid-row: 2; align-self: start; }
+.fc-top .fc-bmv { min-height: calc(100vh - 66px); }
 /* Cartes de bande de part et d'autre du TRX : bande du VFO A à gauche, du VFO B à droite (spots du cluster) */
 .fc-bmv { position: relative; display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--v2-border-panel, #1d2733); border-radius: 8px; background: #05080d; overflow: hidden; }
 .fc-bmv .bmv-h { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-bottom: 1px solid #1d2733; font: 800 15px/1.1 system-ui, sans-serif; color: #f2cf4a; }
@@ -25,7 +31,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-bmv .bmv-b { position: relative; flex: 1 1 auto; min-height: 200px; cursor: pointer; }
 .fc-bmv canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .fc-bmv .bmv-f { padding: 3px 8px; border-top: 1px solid #1d2733; font: 11px/1.3 system-ui, sans-serif; color: #8fa0b4; }
-@media (max-width: 1300px) { .fc-top { grid-template-columns: minmax(0, 1fr); } .fc-bmv { display: none; } }
+@media (max-width: 1300px) { .fc-top { grid-template-columns: minmax(0, 1fr); } .fc-bmv { display: none; } .fc-top > .fc-wrap, .fc-top > .fc-tx { grid-column: 1; } }
 .fc-panel { position: relative; }
 #face { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; touch-action: none; }
 .fc-scope { position: absolute; border-radius: 3px; pointer-events: none; visibility: hidden; }
