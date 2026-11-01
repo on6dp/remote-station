@@ -32,8 +32,12 @@
     ['20M', 14.0e6, 14.35e6], ['17M', 18.068e6, 18.168e6], ['15M', 21.0e6, 21.45e6], ['12M', 24.89e6, 24.99e6], ['10M', 28.0e6, 29.7e6],
     ['6M', 50e6, 54e6], ['4M', 70e6, 70.5e6]];
   // Largeur par défaut du FTDX101 selon le mode (R.FIL 3 kHz) : voyant WIDTH éteint sur le TRX à cette largeur.
-  // Relevé sur le TRX : SSB 2400, DATA 3000 ; CW, RTTY, PSK : à vérifier.
-  function widthDefHz(md) { return /^DATA/.test(md) ? 3000 : /^(RTTY|PSK)/.test(md) ? 500 : 2400; }
+  // Relevé sur le TRX : 3000 Hz en SSB et en DATA ; CW, RTTY, PSK : à vérifier (3000 par défaut aussi).
+  const WIDTH_DEF_HZ = { SSB: 3000, DATA: 3000, CW: 3000, RTTY: 3000, PSK: 3000 };
+  function widthDefHz(md) {
+    const k = /SB$/.test(md) ? 'SSB' : /^DATA/.test(md) ? 'DATA' : /^CW/.test(md) ? 'CW' : /^RTTY/.test(md) ? 'RTTY' : /^PSK/.test(md) ? 'PSK' : 'SSB';
+    return WIDTH_DEF_HZ[k];
+  }
   const L = {
     fast: store.get('rs.face.fast', '0') === '1',
     fine: store.get('rs.face.fine', '0') === '1',
