@@ -671,7 +671,7 @@
       ['step', 'STEP DIAL', () => STEPS[stepNow()][1], (s, d) => setStepIdx(Math.max(0, Math.min(2, stepNow() + d))), '#8a5cff', true]],
     [['memch', 'MEM CH', () => '', null, '#8a5cff'],
       ['group', 'GROUP', () => '', null, '#8a5cff'],
-      ['rfil', 'R.FIL', (s) => cellText('roof', s[activeSide() === 'B' ? 'roofB' : 'roof']), (s, d) => { const id = activeSide() === 'B' ? 'roofB' : 'roof'; setCtl(id, ((s[id] || 1) - 1 + d + 50) % 5 + 1); }, '#8a5cff', true],
+      ['rfil', 'R.FIL', (s) => cellText('roof', s[activeSide() === 'B' ? 'roofB' : 'roof']), (s, d) => { const id = activeSide() === 'B' ? 'roofB' : 'roof'; setCtl(id, roofNext(s[id], d)); }, '#8a5cff', true],
       ['scan', 'SCAN', () => '', null, '#3ddc5a'],
       ['decode', 'DECODE', () => '', null, '#3ddc5a'],
       ['rpt', 'RPT', () => '', null, '#ff3b30'],
@@ -772,10 +772,18 @@
     if (!(mhz > 0)) return say('Fréquence invalide.', 'warn');
     tuneTo(side, mhz * 1e6);
   }
+  // R.FIL : 12 kHz, 3 kHz, 600 Hz (de série) ; 1,2 kHz et 300 Hz sont en option sur le FTDX101 (le TRX refuse « RF0x » sans elles)
+  const ROOF_STD = [1, 2, 4];
+  function roofNext(cur, d) {
+    const i = ROOF_STD.indexOf(cur);
+    const base = i >= 0 ? i : ROOF_STD.findIndex((x) => x > (cur || 0)) - (d > 0 ? 1 : 0);
+    return ROOF_STD[((base + (d > 0 ? 1 : -1)) % ROOF_STD.length + ROOF_STD.length) % ROOF_STD.length];
+  }
   function cycleCell(id) {
     const c = R.CONTROL[id];
     if (!c) return say('Réglage non disponible.', 'warn');
     const s = S();
+    if (id === 'roof' || id === 'roofB') return setCtl(id, roofNext(s[id], 1));
     if (c.type === 'select') {
       const i = c.options.findIndex((o) => o[0] === s[id]);
       return setCtl(id, c.options[(i + 1) % c.options.length][0]);
