@@ -44,6 +44,8 @@
     listening: false,
     bandOf(hz) { const b = BANDS.find((x) => hz >= x[1] && hz <= x[2]); return b ? b[0] : ''; },
     activeMode(s) { return (s.vfoSel === 1 ? s.modeB : s.mode) || ''; },
+    /** VFO d'émission, lu sur le TRX (FT) : SPLIT envoie l'émission sur l'autre VFO que celui où elle était */
+    txSide(s) { return s.txVfo != null ? (s.txVfo === 1 ? 'B' : 'A') : (s.split ? 'B' : 'A'); },
     /** WIDTH changé (voyant) : ni « 00 » (défaut) ni la largeur par défaut du mode (que le TRX renvoie telle quelle) */
     widthChanged(s, sfx) {
       const w = s['width' + (sfx || '')];
@@ -84,13 +86,13 @@
 
   // ------------------------------------------------------------ commandes vers le TRX
   // Mode d'émission : celui du VFO qui émet (SUB en SPLIT), pas forcément celui du récepteur affiché
-  function txMode(s) { return (s.split ? s.modeB : s.mode) || ''; }
+  function txMode(s) { return (L.txSide(s) === 'B' ? s.modeB : s.mode) || ''; }
   // PROC : le TRX ne l'accepte qu'en phonie SSB / AM sur le VFO d'émission (sinon il répond « ?; »)
   function procRefused(s, id, v) {
     if ((id !== 'proc' && id !== 'procB') || !v) return false;
     const m = txMode(s);
     if (/^(LSB|USB|AM)/.test(m)) return false;
-    say('PROC : seulement en SSB ou AM sur le VFO d’émission (' + (s.split ? 'SUB' : 'MAIN') + ' en ' + (m || '?') + ').', 'warn', 5000);
+    say('PROC : seulement en SSB ou AM sur le VFO d’émission (' + (L.txSide(s) === 'B' ? 'SUB' : 'MAIN') + ' en ' + (m || '?') + ').', 'warn', 5000);
     return true;
   }
   function setCtl(id, v) {
@@ -286,7 +288,8 @@
         ledEls.push({ el: e, on: k.led });
       }
       for (const d of k.leds || []) {
-        const e = el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: d.rx != null ? d.rx : 1.5, class: 'led bar', style: '--c:' + d.color }, leds);
+        const e = d.path ? el('path', { d: d.path, class: 'led bar shape', style: '--c:' + d.color }, leds)
+          : el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: d.rx != null ? d.rx : 1.5, class: 'led bar', style: '--c:' + d.color }, leds);
         ledEls.push({ el: e, on: d.on, bright: d.bright });
       }
     }
@@ -1177,8 +1180,10 @@
       v.freq.setAttribute('d', fq ? seg7(fmtFreq(fq), v.xr, LCD.c0y + 95, 26) : '');
       const active = (s.vfoSel === 1) === (side === 'B');
       v.freq.classList.toggle('dim', side === 'B' && !subOn);
+      // SPLIT : la fréquence du VFO qui va émettre s'affiche en rouge (comme sur le TRX)
+      v.freq.classList.toggle('txv', !!s.split && L.txSide(s) === side);
       v.sel.classList.toggle('on', active);
-      const txSide = s.split ? 'B' : 'A';
+      const txSide = L.txSide(s);
       v.tx.textContent = txSide === side ? (tx ? 'TX ●' : 'TX') : '';
       // Clarifier (RT / XT, lu dans IF : récepteur MAIN)
       const clarOn = side === 'A' && (s.rit || s.xit);

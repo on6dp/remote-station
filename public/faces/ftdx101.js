@@ -23,7 +23,7 @@
     id: 'band' + b, x: 790 + 50.25 * i, y: 140, w: 44, h: 22, tip: 'Bande ' + lab + ' MHz (récepteur actif : MAIN ou SUB)', act: { band: b },
     // Voyants : bleu au-dessus = bande du SUB, blanc en dessous = bande du MAIN
     leds: [{ x: 790 + 50.25 * i + 5, y: 131, w: 37, h: 5, color: '#38b6ff', on: (s, L) => L.bandOf(s.freqB) === b && s.dualRx !== 0 },
-      { x: 790 + 50.25 * i + 5, y: 169, w: 37, h: 5, color: '#d9dcff', on: (s, L) => L.bandOf(s.freq) === b }]
+      { x: 790 + 50.25 * i + 5, y: 169, w: 37, h: 5, color: '#c9c3ff', on: (s, L) => L.bandOf(s.freq) === b }]
   }));
   // Rangées DSP : en haut = SUB (VFO B), en bas = MAIN (VFO A), comme sur le TRX
   const DSP = [['NB', 1310, 30, 'nb'], ['DNR', 1349, 31, 'nr'], ['DNF', 1387, 31, 'dnf'], ['NOTCH', 1439, 30, 'notch'], ['CONT', 1477, 31, 'contour'], ['APF', 1515, 31, 'apf']];
@@ -82,17 +82,22 @@
       { id: 'rxMain', x: 937, y: 192, w: 63, h: 18, tip: 'RX MAIN : le récepteur MAIN est toujours en service', act: info('Le récepteur MAIN reste toujours en service.'),
         leds: [{ x: 955, y: 190, w: 31, h: 4, color: '#3ddc5a', on: (s) => !!s.connected }] },
       { id: 'txMain', x: 1012, y: 192, w: 45, h: 18, tip: 'TX MAIN : émission sur le MAIN (SPLIT coupé)', act: { set: ['split', 0] },
-        leds: [{ x: 1024, y: 190, w: 20, h: 4, color: '#ff3b30', on: (s) => !s.split, bright: (s) => !!s.tx && !s.split }] },
+        leds: [{ x: 1024, y: 190, w: 20, h: 4, color: '#ff3b30', on: (s, L) => L.txSide(s) === 'A', bright: (s, L) => !!s.tx && L.txSide(s) === 'A' }] },
       { id: 'swap', x: 1068, y: 192, w: 95, h: 18, tip: 'MAIN ⇄ SUB : échange les fréquences des deux VFO ; appui d’au moins 1 s : copie MAIN → SUB (A → B)', act: { action: 'swap', long: { action: 'aToB' } } },
       { id: 'txSub', x: 1172, y: 192, w: 50, h: 18, tip: 'TX SUB : émission sur le SUB (SPLIT)', act: { set: ['split', 1] },
-        leds: [{ x: 1190, y: 190, w: 18, h: 4, color: '#ff3b30', on: (s) => !!s.split, bright: (s) => !!s.tx && !!s.split }] },
+        leds: [{ x: 1190, y: 190, w: 18, h: 4, color: '#ff3b30', on: (s, L) => L.txSide(s) === 'B', bright: (s, L) => !!s.tx && L.txSide(s) === 'B' }] },
       { id: 'rxSub', x: 1230, y: 192, w: 65, h: 18, tip: 'RX SUB : double réception (DUAL RX) en marche / arrêt', act: { toggle: 'dualRx' },
         leds: [{ x: 1247, y: 190, w: 31, h: 4, color: '#3ddc5a', on: (s) => !!s.dualRx }] },
       { id: 'main', x: 947, y: 221, w: 88, h: 28, tip: 'MAIN : le grand bouton et les touches agissent sur le MAIN (VFO A)', act: { set: ['vfoSel', 0] }, led: (s) => s.vfoSel !== 1,
-        lit: { d: 'M951 222.5H1031L1019 249H951Q949 249 949 247V224.5Q949 222.5 951 222.5Z', bg: '#f4f6f8', fg: '#000', edge: '#ffffff', label: 'MAIN', tx: 988, ty: 240 } },
+        lit: { d: 'M951 222.5H1031L1019 249H951Q949 249 949 247V224.5Q949 222.5 951 222.5Z', bg: '#d8d3ff', fg: '#1a1838', edge: '#f1eeff', label: 'MAIN', tx: 988, ty: 240 } },
       { id: 'sub', x: 1197, y: 221, w: 85, h: 28, tip: 'SUB : le grand bouton et les touches agissent sur le SUB (VFO B)', act: { set: ['vfoSel', 1] }, led: (s) => s.vfoSel === 1,
         lit: { d: 'M1201 222.5H1281Q1283 222.5 1283 224.5V247Q1283 249 1281 249H1213Z', bg: '#1e6fe0', fg: '#fff', edge: '#7fb6ff', label: 'SUB', tx: 1243, ty: 240 } },
-      { id: 'clar', x: 940, y: 275, w: 70, h: 38, tip: 'CLAR : clarifier de réception (appui long : décalage à zéro) ; MULTI règle le décalage', act: { clar: true }, led: (s) => !!(s.rit || s.xit) },
+      { id: 'clar', x: 940, y: 275, w: 70, h: 38, tip: 'CLAR : clarifier de réception (appui long : décalage à zéro) ; MULTI règle le décalage', act: { clar: true },
+        // Voyant orange en bas à droite de la touche (bague du grand bouton sur CLAR), et triangle au-dessus du grand bouton :
+        // lavande quand le MAIN est choisi, bleu pour le SUB (comme sur le TRX)
+        leds: [{ x: 993, y: 304.5, w: 5, h: 5, rx: 2.5, color: '#ff9a1f', on: (s) => (s.mpvd != null ? s.mpvd === 1 : !!(s.rit || s.xit)), bright: (s) => (s.mpvd != null ? s.mpvd === 1 : !!(s.rit || s.xit)) },
+          { path: 'M1114.5 244.5H1124L1119.25 250Z', color: '#cfc8ff', on: (s) => s.vfoSel !== 1, bright: (s) => s.vfoSel !== 1 },
+          { path: 'M1114.5 244.5H1124L1119.25 250Z', color: '#2f7bff', on: (s) => s.vfoSel === 1, bright: (s) => s.vfoSel === 1 }] },
       { id: 'qmb', x: 932, y: 360, w: 23, h: 50, tip: 'QMB', act: info('QMB (mémoires rapides) : pas disponible à distance.') },
       { id: 'fine', x: 935, y: 450, w: 70, h: 40, tip: 'FINE TUNING : accord fin (pas de 1 Hz)', act: { local: 'fine' }, led: (s, L) => L.fine },
       // VC TUNE (présélecteur, VT) : marche / arrêt sur le récepteur actif ; en marche, le bouton MULTI l'accorde (voyant orange)
@@ -135,7 +140,7 @@
         alt: { when: (s) => /^CW/.test(s.mode || '') && !!s.apf, ctl: 'apfFreq', label: 'APF MAIN', per: 1 } } },
       { id: 'micProc', cx: 1492, cy: 195, ri: 34, ix: 1, iy: 1, ro: 44, inner: { ctl: 'mic', label: 'MIC GAIN', per: 2 }, outer: { ctl: 'procLvl', label: 'PROC', per: 2 },
         // Pousser le bouton : KEYER en CW, PROC en phonie (voyant au-dessus du bouton)
-        push: (s) => (/^CW/.test((s.split ? s.modeB : s.mode) || '') ? 'keyer' : 'proc'), pushLabel: (s) => (/^CW/.test((s.split ? s.modeB : s.mode) || '') ? 'KEYER' : 'PROC') }
+        push: (s) => (/^CW/.test((s.txVfo != null ? (s.txVfo === 1 ? s.modeB : s.mode) : (s.split ? s.modeB : s.mode)) || '') ? 'keyer' : 'proc'), pushLabel: (s) => (/^CW/.test((s.txVfo != null ? (s.txVfo === 1 ? s.modeB : s.mode) : (s.split ? s.modeB : s.mode)) || '') ? 'KEYER' : 'PROC') }
     ]
   };
 })();
