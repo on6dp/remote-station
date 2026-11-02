@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.86 | [RemoteStation-Setup-0.32.86.exe](0.32.86/RemoteStation-Setup-0.32.86.exe) | [remote-station-0.32.86.tar.gz](0.32.86/remote-station-0.32.86.tar.gz) | Face avant : bouton FT8/FT4/FT2 — [empreintes SHA-256](0.32.86/SHA256SUMS.txt) |
 | 0.32.85 | [RemoteStation-Setup-0.32.85.exe](0.32.85/RemoteStation-Setup-0.32.85.exe) | [remote-station-0.32.85.tar.gz](0.32.85/remote-station-0.32.85.tar.gz) | Face avant : DIGI / SSB CONFIGURATION sur une ligne — [empreintes SHA-256](0.32.85/SHA256SUMS.txt) |
 | 0.32.84 | [RemoteStation-Setup-0.32.84.exe](0.32.84/RemoteStation-Setup-0.32.84.exe) | [remote-station-0.32.84.tar.gz](0.32.84/remote-station-0.32.84.tar.gz) | Face avant : ligne DIGI CONFIGURATION — [empreintes SHA-256](0.32.84/SHA256SUMS.txt) |
 | 0.32.83 | [RemoteStation-Setup-0.32.83.exe](0.32.83/RemoteStation-Setup-0.32.83.exe) | [remote-station-0.32.83.tar.gz](0.32.83/remote-station-0.32.83.tar.gz) | /ftdx101/digi.html pour les modes numériques de la face avant — [empreintes SHA-256](0.32.83/SHA256SUMS.txt) |

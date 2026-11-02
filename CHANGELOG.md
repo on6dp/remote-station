@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.86** — **Face avant, DIGI CONFIGURATION** : FT8, FT4 et FT2 rassemblés en un bouton **FT8/FT4/FT2** (onglet FT de la page des modes numériques, le choix FT8 / FT4 / FT2 se fait dans l'onglet). Ctrl+F5 sur /ftdx101.
 - **0.32.85** — **Face avant** : « DIGI CONFIGURATION » et « SSB CONFIGURATION » toujours sur une seule ligne, de même largeur (les boutons s'alignent dessous), quelle que soit la police du navigateur. Ctrl+F5 sur /ftdx101.
 - **0.32.84** — **Face avant, ligne DIGI CONFIGURATION** au-dessus de SSB CONFIGURATION (même titre jaune, alignée dessus) : FT8, FT4, FT2, RTTY, WSPR, JT65, JTTY, CW, SSTV ; un clic ouvre la page des modes numériques (/ftdx101/digi.html) sur ce mode (FT8 / FT4 / FT2 : onglet FT avec ce mode), ou l'y fait passer si elle est déjà ouverte. Ctrl+F5 sur /ftdx101.
 - **0.32.83** — **Modes numériques de la face avant à leur propre adresse** : `remote.op0p.be/ftdx101/digi.html` (même page que `/digi.html`, qui reste celle du dashboard générique) ; le bouton 📟 Numériques de /ftdx101 l'ouvre maintenant à cette adresse. Serveur modifié (adresse ajoutée) : `install.sh` le redémarre ; Ctrl+F5 sur /ftdx101.
