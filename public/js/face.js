@@ -2324,8 +2324,9 @@
       c.fillStyle = '#ffffff'; c.fillText(t, 10, y);
       tw = Math.max(tw, c.measureText(t).width);
     }
-    // Trait vertical juste après la graduation la plus large (« 18097.5 » ne déborde plus dessus)
-    const x0 = Math.max(62, Math.ceil(10 + tw + 12));
+    // Trait vertical après la graduation la plus large possible (« 28097.5 ») : même place pour les indicatifs
+    // dans les deux BAND MAP, quelle que soit la bande
+    const x0 = Math.ceil(10 + Math.max(tw, c.measureText('00000.0').width) + 12);
     c.strokeStyle = '#2b3546'; c.beginPath(); c.moveTo(x0 - 6.5, 0); c.lineTo(x0 - 6.5, H); c.stroke();
     // Spots : du plus récent au plus ancien gardés 30 min ; étiquettes poussées vers le bas si elles se chevauchent
     const now = Date.now();
