@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.48 | [RemoteStation-Setup-0.32.48.exe](0.32.48/RemoteStation-Setup-0.32.48.exe) | [remote-station-0.32.48.tar.gz](0.32.48/remote-station-0.32.48.tar.gz) | Face avant : ligne SSB CONFIGURATION sous le TRX — [empreintes SHA-256](0.32.48/SHA256SUMS.txt) |
 | 0.32.47 | [RemoteStation-Setup-0.32.47.exe](0.32.47/RemoteStation-Setup-0.32.47.exe) | [remote-station-0.32.47.tar.gz](0.32.47/remote-station-0.32.47.tar.gz) | Face avant : cartes de bande en blanc — [empreintes SHA-256](0.32.47/SHA256SUMS.txt) |
 | 0.32.46 | [RemoteStation-Setup-0.32.46.exe](0.32.46/RemoteStation-Setup-0.32.46.exe) | [remote-station-0.32.46.tar.gz](0.32.46/remote-station-0.32.46.tar.gz) | Face avant : cartes de bande sur toute la hauteur — [empreintes SHA-256](0.32.46/SHA256SUMS.txt) |
 | 0.32.45 | [RemoteStation-Setup-0.32.45.exe](0.32.45/RemoteStation-Setup-0.32.45.exe) | [remote-station-0.32.45.tar.gz](0.32.45/remote-station-0.32.45.tar.gz) | Face avant : modes numériques à part, PTT et micro sous le TRX, cartes de bande VFO A / VFO B — [empreintes SHA-256](0.32.45/SHA256SUMS.txt) |

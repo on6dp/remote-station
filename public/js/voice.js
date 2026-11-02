@@ -96,6 +96,14 @@
       '<label class="vx-monvol" title="Volume de « M’écouter » dans votre casque (ne change pas ce qui part vers le TRX)">Volume <input type="range" id="vxMonVol" min="0" max="300" step="5" aria-label="Volume de M’écouter"><output id="vxMonVolV"></output></label>' +
       '</div>';
     anchor.after(box);
+    // Face avant (/ftdx101) : une seule ligne « SSB CONFIGURATION · MICRO · EQUALIZER MICRO · niveau · EQUALIZER TRX »,
+    // le reste (choix du micro, type, état, M'écouter et son volume) sur la ligne suivante
+    if (V.api && V.api.compact) {
+      box.classList.add('vx-compact');
+      const meter = box.querySelector('.vx-meter'), eq = $('vxEqBtn'), row = eq.parentElement;
+      $('vxOn').after(eq, meter, $('vxTrxBtn'));
+      if (row && !row.children.length) row.remove();
+    }
     $('vxOn').addEventListener('click', () => (V.on ? stop(true) : start()));
     $('vxDev').addEventListener('change', () => { const o = $('vxDev').selectedOptions[0]; store.set('dev', o ? o.textContent : ''); start($('vxDev').value); });
     $('vxEqBtn').addEventListener('click', openEq);
@@ -128,9 +136,10 @@
     if (!trxEq && $('vxTrx')) $('vxTrx').remove();
     if ($('vxTrx')) trxDrawState();
     $('vxOn').setAttribute('aria-pressed', String(V.on));
-    $('vxOn').textContent = 'Configuration micro';
+    $('vxOn').textContent = V.api.compact ? 'Micro' : 'Configuration micro';
     $('vxOn').title = V.on ? 'Micro actif : votre voix part vers le TRX pendant l’appui sur PTT. Clic : couper le micro' : 'Activer votre micro : votre voix part vers le TRX pendant l’appui sur PTT (LSB / USB…)';
     $('vxBody').hidden = !V.on;
+    if (V.api.compact) { $('vxEqBtn').hidden = !modes; $('vxEqBtn').classList.toggle('dim', !V.on); box.querySelector('.vx-meter').hidden = !modes; }
     if (!V.on) return;
     const md = txMode(st);
     if (V.tx) note('● Votre voix part vers le TRX — parlez quand « TX » passe au rouge', false);
@@ -285,7 +294,7 @@
     drawType();
   }
   function openEq() {
-    if (!V.on) return;
+    if (!V.on) return V.api.say('Equalizer micro : activez d’abord votre micro (bouton « Micro »).', 'warn', 4000);
     let d = $('vxEq');
     if (d) { d.remove(); return; }
     d = document.createElement('div');

@@ -2114,7 +2114,7 @@
   if (window.RSDIGI) window.RSDIGI.init(digiApi);
   bmPopRestore();
   if (window.RSVOICE) {
-    window.RSVOICE.init({ send, say, iControl, state: () => st, me: () => me, rig: () => R,
+    window.RSVOICE.init({ compact: true, send, say, iControl, state: () => st, me: () => me, rig: () => R,
       sendBin: (buf) => { if (ws && ws.readyState === 1) ws.send(buf); } });
   }
   const sess = store.get('rs.sess', '');
