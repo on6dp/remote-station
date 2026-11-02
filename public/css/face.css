@@ -301,3 +301,10 @@ body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglet
 .fc-colors .fc-sw b { color: #f2f4f6; font-size: .9em; }
 .fc-colors .fm-f { margin: .2em -.5em 0; align-items: center; gap: 1em; background: #3a414c; }
 .fc-colors .fc-col-h { flex: 1; font-size: .8em; color: #d6dde6; }
+/* Tableau SPAN */
+.fc-span { padding-bottom: .5em; }
+.fc-span .fc-span-g { display: grid; grid-template-columns: repeat(4, 1fr); gap: .4em; }
+.fc-span .fc-span-g button { font: inherit; font-size: 1.15em; padding: .45em 0; border-radius: .3em; border: 1px solid #f2f4f6; cursor: pointer;
+  background: linear-gradient(#e7eaee, #a9b0b9); color: #1b1f25; }
+.fc-span .fc-span-g button.on { background: #1f6fe0; color: #fff; border-color: #9cc4ff; }
+.fc-span .fc-span-g button.off { opacity: .45; cursor: not-allowed; }

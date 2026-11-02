@@ -616,7 +616,7 @@
     LCD.span = el('text', { x: X(c.w - 10), y: Y(165.5), class: 'lcd-side', 'text-anchor': 'end' }, g, 'BF | 0–4 kHz');
     el('rect', { x: X(5), y: Y(170), width: c.w - 10, height: 124, class: 'lcd-scope' }, g);
     // Rangée du bas, comme sur l'écran du TRX ; la dernière case montre la fonction réglée par le bouton MULTI
-    const BOT = [['CENTER'], ['SPAN', () => { L.wfSpan = (L.wfSpan + 1) % SPANS.length; store.set('rs.face.span', L.wfSpan); WF.drawn = false; render(); }],
+    const BOT = [['CENTER'], ['SPAN', () => openSpan()],
       ['3DSS'], ['MONO', () => { setColor(L.wfColor === 3 ? 13 : 3); render(); }], ['MULTI', () => { L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'MULTI : scope, OSCILLOSCOPE et AF-FFT du VFO sélectionné' : 'MULTI : affichage normal', '', 2500); render(); }],
       ['EXPAND'], ['HOLD', () => { L.hold = !L.hold; render(); }], ['MULTI']];
     const bw = (c.w - 10) / BOT.length;
@@ -683,16 +683,50 @@
   L.wfColor = Math.max(1, Math.min(18, Number(store.get('rs.face.wfcol18', '13')) || 13));
   L.wfLevel = Math.max(-30, Math.min(30, Number(store.get('rs.face.wflvl', '0')) || 0));
   L.func = false;
-  const SPANS = [2000, 3000, 4000, 6000];
+  // SPAN (comme le tableau du TRX : 1k … 1000k) ; la page montre la BF reçue, donc 1k, 2k et 5k seulement (le scope du TRX ne passe pas par le CAT)
+  const SPANS = [1000, 2000, 5000];
+  const SPAN_TRX = ['1k', '2k', '5k', '10k', '20k', '50k', '100k', '200k', '500k', '1000k'];
   // Touche DISP : présentations de l'écran (comme sur le FTDX101)
   const DISPS = ['cascade du MAIN', 'SUB au-dessus, MAIN en dessous', 'MAIN | SUB côte à côte', 'filtres agrandis (MAIN | SUB)'];
   L.disp = Math.max(0, Math.min(3, Number(store.get('rs.face.disp', '0')) || 0));
   L.multi = store.get('rs.face.multi', '0') === '1';
-  L.wfSpan = Math.max(0, Math.min(3, Number(store.get('rs.face.span', '2')) || 0));
+  L.wfSpan = Math.max(0, Math.min(2, Number(store.get('rs.face.span3', '2')) || 0));
   L.hold = false;
   L.funcSel = store.get('rs.face.funcsel', 'power');
   const stepNow = () => (L.fine ? 0 : L.fast ? 2 : 1);
   function setStepIdx(i) { L.fine = i === 0; L.fast = i === 2; store.set('rs.face.fine', L.fine ? '1' : '0'); store.set('rs.face.fast', L.fast ? '1' : '0'); }
+  // ------------------------------------------------------------ tableau SPAN (touche SPAN de l'écran), comme sur le TRX
+  function openSpan() {
+    let box = $('fcSpan');
+    if (box && !box.hidden) { box.hidden = true; return; }
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'fcSpan';
+      box.className = 'fc-menu fc-colors fc-span';
+      const sc = FACE.lcd;
+      box.style.left = ((sc.x + 40 - V.x) / V.w * 100) + '%';
+      box.style.top = ((sc.y + 160 - V.y) / V.h * 100) + '%';
+      box.style.width = ((sc.w - 80) / V.w * 100) + '%';
+      $('facePanel').appendChild(box);
+      box.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-span]');
+        if (!b) return;
+        const i = SPAN_TRX.indexOf(b.dataset.span), k = SPANS.indexOf([1000, 2000, 5000][i]);
+        if (k < 0) return say('SPAN ' + b.dataset.span + ' : le scope du TRX ne passe pas par la liaison CAT ; la page montre le son reçu (5 kHz au plus).', 'warn', 5000);
+        L.wfSpan = k;
+        store.set('rs.face.span3', String(k));
+        WF.drawn = false;
+        box.hidden = true;
+        render();
+      });
+    }
+    box.style.fontSize = Math.max(9, Math.round($('facePanel').clientWidth / V.w * 11)) + 'px';
+    const cur = SPANS[L.wfSpan] / 1000 + 'k';
+    box.innerHTML = '<div class="fc-col-t">SPAN</div><div class="fc-span-g">' + SPAN_TRX.map((s, i) => '<button type="button" data-span="' + s + '" class="' + (s === cur ? 'on' : '') + (i > 2 ? ' off' : '') + '"' +
+      (i > 2 ? ' title="Pas sur la page : le scope du TRX ne passe pas par le CAT (la page montre le son reçu)"' : '') + '>' + s + '</button>').join('') + '</div>';
+    box.hidden = false;
+  }
+
   // ------------------------------------------------------------ tableau des couleurs (COLOR), comme sur le TRX
   // Clic sur COLOR (FUNC ou S.MENU), ou COLOR choisi puis bouton MULTI : le tableau s'ouvre ; MULTI / molette : couleur suivante ; clic : celle-là ; BACK : fermer
   function setColor(k) {
