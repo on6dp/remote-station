@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.97 | [RemoteStation-Setup-0.32.97.exe](0.32.97/RemoteStation-Setup-0.32.97.exe) | [remote-station-0.32.97.tar.gz](0.32.97/remote-station-0.32.97.tar.gz) | TX call en jaune fluo — [empreintes SHA-256](0.32.97/SHA256SUMS.txt) |
 | 0.32.96 | [RemoteStation-Setup-0.32.96.exe](0.32.96/RemoteStation-Setup-0.32.96.exe) | [remote-station-0.32.96.tar.gz](0.32.96/remote-station-0.32.96.tar.gz) | Carte de bande MAIN à gauche — [empreintes SHA-256](0.32.96/SHA256SUMS.txt) |
 | 0.32.95 | [RemoteStation-Setup-0.32.95.exe](0.32.95/RemoteStation-Setup-0.32.95.exe) | [remote-station-0.32.95.tar.gz](0.32.95/remote-station-0.32.95.tar.gz) | Le VFO d'émission suit le TRX — [empreintes SHA-256](0.32.95/SHA256SUMS.txt) |
 | 0.32.94 | [RemoteStation-Setup-0.32.94.exe](0.32.94/RemoteStation-Setup-0.32.94.exe) | [remote-station-0.32.94.tar.gz](0.32.94/remote-station-0.32.94.tar.gz) | Fréquence du VFO d'émission sur fond rouge, Arrêter lisible — [empreintes SHA-256](0.32.94/SHA256SUMS.txt) |
