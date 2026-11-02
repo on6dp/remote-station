@@ -416,6 +416,8 @@
           this.lastCtl = ['split', 'vfoSel', 'swap', 'aToB', 'bToA'].indexOf(m.id) >= 0 ? { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() } : null;
           this.forceSlow = true;
           this._readBack(m.id);
+          // Changement MAIN / SUB : réglages propres au côté sélectionné relus tout de suite (FAST du FTDX101)
+          if (m.id === 'vfoSel' && FTX1.CONTROL.fastStep) this._readBack('fastStep');
           if (m.id === 'rit' || m.id === 'xit') this._readBack(m.id === 'rit' ? 'xit' : 'rit');
           if (FTX1.CONTROL[m.id].transmits) this._readBack('tuner');
           if (FTX1.CONTROL[m.id].transmits) this.log(FTX1.CONTROL[m.id].label + ' (' + (m.by || '?') + ')');

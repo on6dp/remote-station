@@ -208,15 +208,7 @@
       setCtl(id, S()[id] ? 0 : 1);
       return render();
     }
-    // FAST : commute aussi la touche FAST du TRX quand il la connaît par CAT (FTDX101 : FS) ; le voyant suit le TRX.
-    // FS n'agit que sur le côté MAIN : SUB sélectionné → FAST de la page seulement (pas de commande au TRX)
-    if (a.local === 'fast' && R && R.CONTROL.fastStep && activeSide() === 'B') {
-      L.fastB = !L.fastB;
-      L.fast = L.fastB; if (L.fast) L.fine = false;
-      store.set('rs.face.fast', L.fast ? '1' : '0'); store.set('rs.face.fine', L.fine ? '1' : '0');
-      say(L.fastB ? 'FAST (page) : accord rapide du VFO-B ; le FAST du SUB ne se commute pas par CAT (seulement celui de MAIN).' : 'FAST coupé : accord normal.', '', 4500);
-      return render();
-    }
+    // FAST : commute aussi la touche FAST du TRX (FTDX101 : FS, côté sélectionné, MAIN ou SUB) ; le voyant suit l'état relu sur le TRX
     if (a.local === 'fast' && R && R.CONTROL.fastStep) {
       if (!needControl()) return;
       const on = S().fastStep ? 0 : 1;
@@ -1393,10 +1385,9 @@
     if (!FACE || !st) return;
     try { bmvDraw(); } catch (e) { /* cartes de bande pas encore prêtes */ }
     const s = S();
-    // FAST lu sur le TRX (touche FAST de la face du TRX) : la page suit
-    // (côté MAIN seulement : sur SUB, FAST est celui de la page, L.fastB)
-    if (R && R.CONTROL.fastStep) {
-      const want = activeSide() === 'B' ? !!L.fastB : s.fastStep != null ? !!s.fastStep : L.fast;
+    // FAST lu sur le TRX (touche FAST de la face du TRX, côté sélectionné) : la page suit
+    if (R && R.CONTROL.fastStep && s.fastStep != null) {
+      const want = !!s.fastStep;
       if (want !== L.fast) { L.fast = want; if (L.fast) L.fine = false; store.set('rs.face.fast', L.fast ? '1' : '0'); }
     }
     const live = !!s.connected;

@@ -149,12 +149,9 @@
     FREQ_MAX: 75000000,
     headNames: { D: 'FTDX101D', M: 'FTDX101MP' },
     menu: { groups: MENU, item: menuItem, show: menuShow, step: menuStep, ok: menuOk },
-    // FT (VFO d'émission) est RELATIF au VFO sélectionné (VS) sur le FTDX101 : FT0 = émission sur le VFO sélectionné,
-    // FT1 = sur l'autre. Avec SUB sélectionné, FT1 = TX sur le MAIN. On ramène txVfo en absolu (0 = MAIN / A, 1 = SUB / B).
-    remapRead(p, r) {
-      if (p.txVfo != null) { r.ftRel = p.txVfo; p.txVfo = p.txVfo ^ (r.vfoSel === 1 ? 1 : 0); }
-      if (p.vfoSel != null && r.ftRel != null) p.txVfo = r.ftRel ^ (p.vfoSel === 1 ? 1 : 0);
-    },
+    // FT (VFO d'émission), comme Hamlib pour les FTDX101 D / MP : lecture « FT0 » = émission sur MAIN, « FT1 » = sur SUB
+    // (absolu, quel que soit le VFO sélectionné) ; réglage par FT2 (MAIN) / FT3 (SUB) — FT0 / FT1 servent à basculer
+    // l'émission et ont des effets de bord (SPLIT qui se rallume, VFO d'émission inversé avec SUB sélectionné).
     widthDefault: true, // WIDTH 00 = largeur par défaut (proposée en bas de l'échelle BW)
     widthTable(mode) {
       if (mode === 'LSB' || mode === 'USB') return SSB_23;
@@ -338,7 +335,7 @@
       { id: 'nbLvlB', g: 'flt', label: 'Niveau NB (VFO B)', type: 'level', min: 0, max: 10, step: 1, face: true, write: (v) => 'NL1' + pad(v, 3) + ';' },
       { id: 'nrLvlB', g: 'flt', label: 'Niveau DNR (VFO B)', type: 'level', min: 1, max: 15, step: 1, face: true, write: (v) => 'RL1' + pad(v, 2) + ';' },
       // VFO d'émission (touches TX MAIN / TX SUB de la face avant) : FT0 = MAIN, FT1 = SUB
-      { id: 'txVfo', g: 'vfo', label: 'TX sur le SUB', type: 'toggle', face: true, write: (v, r) => 'FT' + ((v ? 1 : 0) ^ (r && r.vfoSel === 1 ? 1 : 0)) + ';' }, // FT relatif au VFO sélectionné
+      { id: 'txVfo', g: 'vfo', label: 'TX sur le SUB', type: 'toggle', face: true, write: (v) => 'FT' + (v ? 3 : 2) + ';' }, // FT2 = TX sur MAIN, FT3 = TX sur SUB (Hamlib)
       { id: 'mpvd', g: 'vfo', label: 'Bague du grand bouton (MPVD)', type: 'select', face: true, options: [[1, 'CLAR'], [2, 'VC TUNE'], [3, 'SUB'], [4, 'CS']], write: (v) => 'SF0' + v + ';' },
       { id: 'contourFreq', g: 'flt', label: 'Fréquence CONTOUR', type: 'level', min: 10, max: 3200, step: 10, unit: 'Hz', face: true, write: (v) => 'CO01' + pad(v, 4) + ';' },
       { id: 'contourFreqB', g: 'flt', label: 'Fréquence CONTOUR (VFO B)', type: 'level', min: 10, max: 3200, step: 10, unit: 'Hz', face: true, write: (v) => 'CO11' + pad(v, 4) + ';' },
