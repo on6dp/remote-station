@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.33.4 | [RemoteStation-Setup-0.33.4.exe](0.33.4/RemoteStation-Setup-0.33.4.exe) | [remote-station-0.33.4.tar.gz](0.33.4/remote-station-0.33.4.tar.gz) | Drapeau TX inactif en bleu — [empreintes SHA-256](0.33.4/SHA256SUMS.txt) |
 | 0.33.3 | [RemoteStation-Setup-0.33.3.exe](0.33.3/RemoteStation-Setup-0.33.3.exe) | [remote-station-0.33.3.tar.gz](0.33.3/remote-station-0.33.3.tar.gz) | Carte VFO-B : Filtres et Tous — [empreintes SHA-256](0.33.3/SHA256SUMS.txt) |
 | 0.33.2 | [RemoteStation-Setup-0.33.2.exe](0.33.2/RemoteStation-Setup-0.33.2.exe) | [remote-station-0.33.2.tar.gz](0.33.2/remote-station-0.33.2.tar.gz) | Cartes de bande : ascenseur — [empreintes SHA-256](0.33.2/SHA256SUMS.txt) |
 | 0.33.1 | [RemoteStation-Setup-0.33.1.exe](0.33.1/RemoteStation-Setup-0.33.1.exe) | [remote-station-0.33.1.tar.gz](0.33.1/remote-station-0.33.1.tar.gz) | Cartes de bande : fréquences en blanc gras — [empreintes SHA-256](0.33.1/SHA256SUMS.txt) |

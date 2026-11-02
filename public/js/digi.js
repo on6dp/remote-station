@@ -986,7 +986,7 @@
     if (!c) return;
     const w = wf.cw;
     // Repères partagés avec les autres onglets : ce que l'onglet FT a masqué ou pâli (zoom, VFO-B qui émet) est remis
-    if (tab !== 'ftx') for (const id of ['dgMkRx', 'dgMkTx']) if ($(id)) { $(id).style.display = ''; $(id).style.opacity = ''; }
+    if (tab !== 'ftx') for (const id of ['dgMkRx', 'dgMkTx']) if ($(id)) { $(id).style.display = ''; $(id).classList.remove('mk-off'); }
     ticks(c, w);
     if (tab === 'rtty') return drawRttyMarks(c, w);
     if (tab === 'wspr') return drawWsprMarks(c, w);
@@ -1045,13 +1045,14 @@
       c.fillStyle = '#FFFFFF';
       c.fillText(label, Math.min(x0 + 7, w - fw + 7), y + h / 2 + 1);
     };
-    flag(tf, 14, 14, txOn ? 'rgba(190, 28, 28, .92)' : 'rgba(110, 40, 40, .55)', txOn ? '#ff7a6a' : '#8a5a55', 'TX ' + Math.round(tf));
+    // VFO qui n'émet pas : drapeau TX en bleu (comme le bouton VFO-B / SUB) au lieu du rouge
+    flag(tf, 14, 14, txOn ? 'rgba(190, 28, 28, .92)' : 'rgba(36, 86, 184, .92)', txOn ? '#ff7a6a' : '#7fb2ff', 'TX ' + Math.round(tf));
     flag(rf, 29, 15, 'rgba(0, 140, 66, .92)', '#7CF29F', 'RX ' + Math.round(rf));
     // Repères sur la cascade
     const pos = (el, f) => { el.style.left = ((f - VV.lo) / VV.span) * 100 + '%'; el.style.width = (bw / VV.span) * 100 + '%'; el.style.display = f + bw < VV.lo || f > VV.lo + VV.span ? 'none' : ''; };
     pos($(B ? 'ftMkRxB' : 'dgMkRx'), rf);
     pos($(B ? 'ftMkTxB' : 'dgMkTx'), tf);
-    $(B ? 'ftMkTxB' : 'dgMkTx').style.opacity = txOn ? '' : '.35';
+    $(B ? 'ftMkTxB' : 'dgMkTx').classList.toggle('mk-off', !txOn);
     if (B) { $('dgRxFB').textContent = Math.round(rf) + ' Hz'; return; }
     $('dgRxF').textContent = Math.round(rxF) + ' Hz';
     // Barre du haut : fréquences du VFO d'émission choisi

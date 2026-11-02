@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.33.4** — **Double réception FT8 / FT4 / FT2** : drapeau TX (et son trait sur la cascade) en bleu, comme le bouton VFO-B / SUB, sur le VFO qui n'émet pas (au lieu du brun). Ctrl+F5 sur /ftdx101/digi.html.
 - **0.33.3** — **Carte de bande du VFO-B** : boutons Filtres et Tous comme sur celle du VFO-A, avec ses propres filtres (gardés dans le navigateur) ; les deux cartes ont le même en-tête et la même largeur. Ctrl+F5 sur /ftdx101/digi.html.
 - **0.33.2** — **Cartes de bande des modes numériques** : ascenseur à droite de chaque carte pour parcourir toute la bande (même largeur de plage ; la molette sur la carte zoome toujours, sur l'ascenseur elle fait défiler). Ctrl+F5 sur /ftdx101/digi.html et le dashboard.
 - **0.33.1** — **Cartes de bande des modes numériques** : chiffres des fréquences (règle et plage affichée) en blanc gras. Ctrl+F5 sur /ftdx101/digi.html et le dashboard.
