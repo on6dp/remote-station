@@ -235,8 +235,9 @@
       { cmd: 'SF0;', re: /^SF0([1-4])$/, parse: (m) => ({ mpvd: +m[1] }), sim: 'SF03' },
       { cmd: 'CO01;', re: /^CO01(\d{4})$/, parse: (m) => ({ contourFreq: +m[1] }), sim: 'CO011000' },
       { cmd: 'CO11;', re: /^CO11(\d{4})$/, parse: (m) => ({ contourFreqB: +m[1] }), sim: 'CO111000' },
-      { cmd: 'CO03;', re: /^CO03(\d{4})$/, parse: (m) => ({ apfFreq: +m[1] }), sim: 'CO030025' },
-      { cmd: 'CO13;', re: /^CO13(\d{4})$/, parse: (m) => ({ apfFreqB: +m[1] }), sim: 'CO130025' },
+      // Lectures sans objet dans le mode (le TRX y répond « ?; ») : APF hors CW, RPT / ENC/DEC / TONE hors FM — pas lues
+      { cmd: 'CO03;', when: (st) => /^CW/.test(st.mode || ''), re: /^CO03(\d{4})$/, parse: (m) => ({ apfFreq: +m[1] }), sim: 'CO030025' },
+      { cmd: 'CO13;', when: (st) => /^CW/.test(st.modeB || ''), re: /^CO13(\d{4})$/, parse: (m) => ({ apfFreqB: +m[1] }), sim: 'CO130025' },
       { cmd: 'RA1;', re: /^RA1([0-3])$/, parse: (m) => ({ attB: +m[1] }), sim: 'RA10' },
       { cmd: 'PA1;', re: /^PA1([0-2])$/, parse: (m) => ({ preampB: +m[1] }), sim: 'PA10' },
       // Filtre de toit (ROOFING) : réglé par RF P1 1–5, relu en RF P1 6–A (12 kHz, 3 kHz, 1,2 kHz, 600 Hz, 300 Hz)
@@ -258,12 +259,12 @@
       { cmd: 'VG;', re: /^VG(\d{3})$/, parse: (m) => ({ voxGain: +m[1] }), sim: 'VG050' },
       { cmd: 'VD;', re: /^VD(\d{2,4})$/, parse: (m) => ({ voxDelay: +m[1] }), sim: 'VD0500' },
       { cmd: 'AV;', re: /^AV(\d{3})$/, parse: (m) => ({ antiVox: +m[1] }), sim: 'AV050' },
-      { cmd: 'OS0;', re: /^OS0([0-2])$/, parse: (m) => ({ rpt: +m[1] }), sim: 'OS00' },
-      { cmd: 'OS1;', re: /^OS1([0-2])$/, parse: (m) => ({ rptB: +m[1] }), sim: 'OS10' },
-      { cmd: 'CT0;', re: /^CT0([0-2])$/, parse: (m) => ({ encDec: +m[1] }), sim: 'CT00' },
-      { cmd: 'CT1;', re: /^CT1([0-2])$/, parse: (m) => ({ encDecB: +m[1] }), sim: 'CT10' },
-      { cmd: 'CN00;', re: /^CN00(\d{3})$/, parse: (m) => ({ toneIdx: +m[1] }), sim: 'CN00012' },
-      { cmd: 'CN10;', re: /^CN10(\d{3})$/, parse: (m) => ({ toneIdxB: +m[1] }), sim: 'CN10012' }
+      { cmd: 'OS0;', when: (st) => /FM/.test(st.mode || ''), re: /^OS0([0-2])$/, parse: (m) => ({ rpt: +m[1] }), sim: 'OS00' },
+      { cmd: 'OS1;', when: (st) => /FM/.test(st.modeB || ''), re: /^OS1([0-2])$/, parse: (m) => ({ rptB: +m[1] }), sim: 'OS10' },
+      { cmd: 'CT0;', when: (st) => /FM/.test(st.mode || ''), re: /^CT0([0-2])$/, parse: (m) => ({ encDec: +m[1] }), sim: 'CT00' },
+      { cmd: 'CT1;', when: (st) => /FM/.test(st.modeB || ''), re: /^CT1([0-2])$/, parse: (m) => ({ encDecB: +m[1] }), sim: 'CT10' },
+      { cmd: 'CN00;', when: (st) => /FM/.test(st.mode || ''), re: /^CN00(\d{3})$/, parse: (m) => ({ toneIdx: +m[1] }), sim: 'CN00012' },
+      { cmd: 'CN10;', when: (st) => /FM/.test(st.modeB || ''), re: /^CN10(\d{3})$/, parse: (m) => ({ toneIdxB: +m[1] }), sim: 'CN10012' }
     ],
     extraQueries: ['RF0;', 'RF1;', 'ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
     extraStateKeys: ['moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],

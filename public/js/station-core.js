@@ -281,6 +281,7 @@
           const hot = [];
           if (this.hot) for (const [c, until] of this.hot) { if (now > until) this.hot.delete(c); else if (this.prio.indexOf(c) < 0 && slow.indexOf(c) < 0) hot.push(c); }
           this.queue = this.prio.concat(hot, rig.FAST, rig.FAST_SUB || [], this.radio.tx ? rig.TXMETERS : [], slow);
+          if (rig.readOk) this.queue = this.queue.filter((c) => typeof c !== 'string' || rig.readOk(c, this.radio));
           this.prio = [];
           this._drain();
         }

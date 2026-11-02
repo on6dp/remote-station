@@ -172,6 +172,11 @@
     // En émission : mesures COMP, ALC, PO, SWR, et aussi puissance et VOX (contrôles de sécurité plus rapides)
     const TXMETERS = ['RM3;', 'RM4;', 'RM5;', 'RM6;', P.read, 'VX;'];
     const SLOW = READS.map((r) => r.cmd).concat(['RM7;', 'RM8;']); // + IDD, VDD
+    // Lecture permise dans l'état actuel (when : ex. APF seulement en CW) ; un « ?; » répondu à une lecture sans objet
+    // serait pris pour le refus du réglage envoyé juste avant
+    const READ_WHEN = {};
+    for (const r of READS) if (r.when) READ_WHEN[r.cmd] = r.when;
+    const readOk = (cmd, st) => !READ_WHEN[cmd] || !!READ_WHEN[cmd](st || {});
     // Commande de lecture de chaque clé d'état : relue juste après un réglage, sans attendre le tour complet
     const READ_FOR = {};
     function readFor(id, st) {
@@ -447,7 +452,7 @@
       // (FT0/FT1 comme Hamlib ; FT2/FT3 comme les FTDX10 / FT-991). Jamais VS1 avant FT1 : FT0 avec VS1 fait émettre le FTX-1.
       txVfoTries: spec.virtualSplit ? (v) => ['FT' + (v ? 1 : 0) + ';', 'FT' + (v ? 3 : 2) + ';'] : null,
       cmdVfoSel: (v) => 'VS' + (v ? 1 : 0) + ';', // FTX-1 : sortir d'un éventuel ST1 (SUB bloqué en émission)
-      FAST, FAST_SUB, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS,
+      FAST, FAST_SUB, SLOW, TXMETERS, POLL: FAST, READS, STATE_KEYS, readOk,
       FRAME_GAP_MS: 20, SLOW_PER_TICK: 4, POLL_MS: 250, readFor,
       widthTableFn: widthTable,
       derive: spec.derive || null, preampText: spec.preampText || null, SUB_BADGES: !!spec.subBadges, WIDTH_DEF: !!spec.widthDefault, remapRead: spec.remapRead || null,
