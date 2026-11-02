@@ -369,6 +369,7 @@
       const b = e.target.closest('[data-sm]');
       if (!b) return;
       const r = b.getBoundingClientRect();
+      if (b.dataset.sm === 'color') { closeSmenu(); return openColors(); }
       smAdjust(b.dataset.sm, b.dataset.sm === 'level' && e.clientX < r.left + r.width / 2 ? -1 : 1);
     });
     sm.addEventListener('wheel', (e) => {
@@ -385,7 +386,7 @@
   const SMENU = [['spd', 'SPEED', () => WF_SPEEDS[L.wfSpeed][0], 'Vitesse de la cascade (clic : suivante ; molette)'],
     ['peak', 'PEAK', () => PEAKS[L.peak], 'Crêtes du spectre gardées un moment : OFF, LV1 (longtemps) … LV3 (brièvement)'],
     ['marker', 'MARKER', () => (L.marker ? 'ON' : 'OFF'), 'Bande passante du filtre et repère central sur le spectre'],
-    ['color', 'COLOR', () => String(L.wfColor), 'Couleurs de la cascade : 1 rouge (comme le TRX), 2 bleu / violet, 3 arc-en-ciel, 4 vert, 5 gris'],
+    ['color', 'COLOR', () => String(L.wfColor), 'Couleurs de la cascade : 18 couleurs comme le TRX (clic : le tableau des couleurs ; molette ou bouton MULTI : couleur suivante)'],
     ['level', 'LEVEL', () => (L.wfLevel >= 0 ? '+' : '') + L.wfLevel.toFixed(1) + 'dB', 'Niveau de la cascade : clic à gauche −, à droite + (ou molette)']];
   L.peak = Math.max(0, Math.min(3, Number(store.get('rs.face.peak', '0')) || 0));
   L.marker = store.get('rs.face.marker', '1') !== '0';
@@ -393,7 +394,7 @@
     if (id === 'spd') { L.wfSpeed = (L.wfSpeed + (d > 0 ? 1 : 3)) % 4; store.set('rs.face.wfspd', L.wfSpeed); }
     else if (id === 'peak') { L.peak = (L.peak + (d > 0 ? 1 : 3)) % 4; store.set('rs.face.peak', L.peak); WF.peak = {}; }
     else if (id === 'marker') { L.marker = !L.marker; store.set('rs.face.marker', L.marker ? '1' : '0'); }
-    else if (id === 'color') { L.wfColor = ((L.wfColor - 1 + (d > 0 ? 1 : 4)) % 5) + 1; store.set('rs.face.wfcol', L.wfColor); }
+    else if (id === 'color') { setColor(L.wfColor + (d > 0 ? 1 : -1)); }
     else if (id === 'level') { L.wfLevel = Math.max(-30, Math.min(30, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); }
     smDraw();
     render();
@@ -616,7 +617,7 @@
     el('rect', { x: X(5), y: Y(170), width: c.w - 10, height: 124, class: 'lcd-scope' }, g);
     // Rangée du bas, comme sur l'écran du TRX ; la dernière case montre la fonction réglée par le bouton MULTI
     const BOT = [['CENTER'], ['SPAN', () => { L.wfSpan = (L.wfSpan + 1) % SPANS.length; store.set('rs.face.span', L.wfSpan); WF.drawn = false; render(); }],
-      ['3DSS'], ['MONO', () => { L.wfColor = L.wfColor === 1 ? 2 : 1; store.set('rs.face.wfcol', L.wfColor); render(); }], ['MULTI', () => { L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'MULTI : scope, OSCILLOSCOPE et AF-FFT du VFO sélectionné' : 'MULTI : affichage normal', '', 2500); render(); }],
+      ['3DSS'], ['MONO', () => { setColor(L.wfColor === 3 ? 13 : 3); render(); }], ['MULTI', () => { L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'MULTI : scope, OSCILLOSCOPE et AF-FFT du VFO sélectionné' : 'MULTI : affichage normal', '', 2500); render(); }],
       ['EXPAND'], ['HOLD', () => { L.hold = !L.hold; render(); }], ['MULTI']];
     const bw = (c.w - 10) / BOT.length;
     LCD.bot = BOT.map(([lab, fn], j) => {
@@ -679,7 +680,7 @@
   const WF_SPEEDS = [['FAST1', 30], ['FAST2', 50], ['MID', 80], ['SLOW', 140]];
   const STEPS = [[10, '10Hz'], [100, '100Hz'], [1000, '1kHz']];
   L.wfSpeed = Math.max(0, Math.min(3, Number(store.get('rs.face.wfspd', '1')) || 0));
-  L.wfColor = Math.max(1, Math.min(5, Number(store.get('rs.face.wfcol', '1')) || 1));
+  L.wfColor = Math.max(1, Math.min(18, Number(store.get('rs.face.wfcol18', '13')) || 13));
   L.wfLevel = Math.max(-30, Math.min(30, Number(store.get('rs.face.wflvl', '0')) || 0));
   L.func = false;
   const SPANS = [2000, 3000, 4000, 6000];
@@ -692,6 +693,47 @@
   L.funcSel = store.get('rs.face.funcsel', 'power');
   const stepNow = () => (L.fine ? 0 : L.fast ? 2 : 1);
   function setStepIdx(i) { L.fine = i === 0; L.fast = i === 2; store.set('rs.face.fine', L.fine ? '1' : '0'); store.set('rs.face.fast', L.fast ? '1' : '0'); }
+  // ------------------------------------------------------------ tableau des couleurs (COLOR), comme sur le TRX
+  // Clic sur COLOR (FUNC ou S.MENU), ou COLOR choisi puis bouton MULTI : le tableau s'ouvre ; MULTI / molette : couleur suivante ; clic : celle-là ; BACK : fermer
+  function setColor(k) {
+    L.wfColor = ((k - 1 + 18) % 18) + 1;
+    store.set('rs.face.wfcol18', String(L.wfColor));
+    WF.drawn = false;
+    colDraw();
+  }
+  function openColors() {
+    let box = $('fcColors');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'fcColors';
+      box.className = 'fc-menu fc-colors';
+      const sc = FACE.lcd;
+      box.style.left = ((sc.x + 30 - V.x) / V.w * 100) + '%';
+      box.style.top = ((sc.y + 70 - V.y) / V.h * 100) + '%';
+      box.style.width = ((sc.w - 60) / V.w * 100) + '%';
+      $('facePanel').appendChild(box);
+      box.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-col],[data-back]');
+        if (!b) return;
+        if (b.dataset.back) { box.hidden = true; return; }
+        setColor(Number(b.dataset.col));
+      });
+      box.addEventListener('wheel', (e) => { e.preventDefault(); setColor(L.wfColor + (e.deltaY > 0 ? 1 : -1)); }, { passive: false });
+    }
+    box.style.fontSize = Math.max(9, Math.round($('facePanel').clientWidth / V.w * 10)) + 'px';
+    box.hidden = false;
+    colDraw();
+  }
+  function colDraw() {
+    const box = $('fcColors');
+    if (!box || box.hidden) return;
+    const sw = (k) => '<button type="button" class="fc-sw' + (L.wfColor === k ? ' on' : '') + '" data-col="' + k + '" title="COLOR-' + k + '"><i style="background:' + palCss(k) + '">' + (L.wfColor === k ? '✓' : '') + '</i><b>COLOR-' + k + '</b></button>';
+    const row = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => sw(a + i)).join('');
+    box.innerHTML = '<div class="fc-col-t">DIRECT SAMPLING SDR</div><div class="fc-col-r fc-col-r4">' + row(1, 4) + '</div><div class="fc-col-r">' + row(5, 11) + '</div>' +
+      '<div class="fc-col-t">NARROW BAND SDR</div><div class="fc-col-r">' + row(12, 18) + '</div>' +
+      '<div class="fm-f"><span class="fc-col-h">Couleurs de la cascade de cette page (le scope du TRX ne passe pas par le CAT) · molette ou MULTI : couleur suivante</span><button type="button" class="fm-back" data-back="1">BACK</button></div>';
+  }
+
   // ------------------------------------------------------------ menus du TRX : FUNC → RADIO / CW / OPERATION / DISPLAY / EXTENSION SETTING
   // Fenêtre posée sur l'écran : sous-menus à gauche, réglages à droite (valeurs lues sur le TRX à l'ouverture d'un sous-menu) ;
   // clic sur un réglage puis − / +, molette ou bouton MULTI : la valeur part au TRX (main prise), puis elle est relue.
@@ -817,7 +859,7 @@
     [['spd', 'SPEED', () => WF_SPEEDS[L.wfSpeed][0], (s, d) => { L.wfSpeed = Math.max(0, Math.min(3, L.wfSpeed + d)); store.set('rs.face.wfspd', L.wfSpeed); }, '#ff8a1f'],
       ['peak', 'PEAK', () => PEAKS[L.peak], (s, d) => { L.peak = (L.peak + (d > 0 ? 1 : 3)) % 4; store.set('rs.face.peak', L.peak); WF.peak = {}; }, '#ff8a1f'],
       ['marker', 'MARKER', () => (L.marker ? 'ON' : 'OFF'), () => { L.marker = !L.marker; store.set('rs.face.marker', L.marker ? '1' : '0'); }, '#ff8a1f', true],
-      ['color', 'COLOR', () => String(L.wfColor), (s, d) => { L.wfColor = ((L.wfColor - 1 + d + 50) % 5) + 1; store.set('rs.face.wfcol', L.wfColor); }, '#ff8a1f', true],
+      ['color', 'COLOR', () => String(L.wfColor), (s, d) => { setColor(L.wfColor + (d > 0 ? 1 : -1)); openColors(); }, '#ff8a1f'],
       ['level', 'LEVEL', () => (L.wfLevel >= 0 ? '+' : '') + L.wfLevel.toFixed(1) + 'dB', (s, d) => { L.wfLevel = Math.max(-30, Math.min(30, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); }, '#ff8a1f']],
     [['power', 'RF POWER', (s) => (s.power != null ? s.power + 'W' : '—'), (s, d) => power(d * 5), '#8a5cff'],
       ['moniLvl', 'MONI LEVEL', (s) => num(s.moniLvl), ctlStep('moniLvl', 0, 100, 1), '#8a5cff'],
@@ -1590,13 +1632,32 @@
     }
     return out;
   }
-  const PALS = {
-    1: mkPal([[0, [8, 0, 2]], [0.3, [110, 0, 10]], [0.55, [215, 20, 30]], [0.78, [255, 70, 120]], [1, [255, 235, 245]]]),
-    2: mkPal([[0, [2, 4, 25]], [0.35, [30, 40, 170]], [0.6, [150, 60, 230]], [0.82, [255, 90, 210]], [1, [255, 240, 255]]]),
-    3: mkPal([[0, [0, 0, 40]], [0.25, [0, 60, 200]], [0.5, [0, 200, 160]], [0.75, [255, 220, 0]], [1, [255, 40, 0]]]),
-    4: mkPal([[0, [0, 8, 2]], [0.35, [0, 90, 30]], [0.6, [40, 200, 60]], [0.82, [190, 255, 120]], [1, [245, 255, 235]]]),
-    5: mkPal([[0, [0, 0, 0]], [0.4, [70, 70, 80]], [0.7, [170, 170, 185]], [1, [255, 255, 255]]])
+  // 18 couleurs comme le TRX (FUNC / S.MENU → COLOR) : COLOR-1 à 11 « DIRECT SAMPLING SDR », COLOR-12 à 18 « NARROW BAND SDR »
+  const PAL_STOPS = {
+    1: [[0, [0, 0, 8]], [0.45, [20, 50, 200]], [0.8, [60, 110, 255]], [1, [220, 235, 255]]],
+    2: [[0, [0, 4, 12]], [0.45, [40, 110, 220]], [0.8, [110, 170, 255]], [1, [235, 245, 255]]],
+    3: [[0, [0, 0, 0]], [0.45, [90, 95, 100]], [0.8, [200, 200, 195]], [1, [255, 255, 250]]],
+    4: [[0, [10, 2, 0]], [0.45, [170, 70, 0]], [0.8, [255, 130, 20]], [1, [255, 235, 200]]],
+    5: [[0, [2, 4, 25]], [0.35, [40, 70, 220]], [0.6, [140, 90, 235]], [0.82, [240, 110, 220]], [1, [255, 235, 250]]],
+    6: [[0, [4, 2, 20]], [0.35, [60, 70, 220]], [0.6, [170, 60, 160]], [0.82, [240, 30, 60]], [1, [255, 220, 220]]],
+    7: [[0, [6, 0, 18]], [0.35, [90, 30, 190]], [0.65, [190, 60, 230]], [0.85, [255, 90, 230]], [1, [255, 230, 255]]],
+    8: [[0, [6, 0, 20]], [0.35, [110, 50, 200]], [0.65, [200, 90, 230]], [0.85, [240, 140, 240]], [1, [255, 240, 255]]],
+    9: [[0, [0, 6, 20]], [0.35, [30, 110, 210]], [0.65, [110, 190, 245]], [0.85, [200, 235, 255]], [1, [255, 255, 255]]],
+    10: [[0, [0, 0, 30]], [0.25, [20, 90, 220]], [0.5, [20, 200, 220]], [0.75, [70, 220, 70]], [1, [230, 240, 120]]],
+    11: [[0, [10, 0, 0]], [0.3, [170, 10, 10]], [0.6, [240, 70, 10]], [0.85, [255, 150, 20]], [1, [255, 230, 120]]],
+    12: [[0, [8, 0, 2]], [0.3, [110, 0, 10]], [0.55, [215, 20, 30]], [0.78, [255, 70, 120]], [1, [255, 235, 245]]],
+    13: [[0, [2, 4, 25]], [0.35, [30, 40, 170]], [0.6, [150, 60, 230]], [0.82, [255, 90, 210]], [1, [255, 240, 255]]],
+    14: [[0, [6, 0, 18]], [0.35, [100, 20, 180]], [0.65, [210, 50, 220]], [0.85, [255, 100, 240]], [1, [255, 230, 255]]],
+    15: [[0, [6, 0, 20]], [0.35, [120, 40, 190]], [0.65, [210, 80, 220]], [0.85, [250, 130, 235]], [1, [255, 240, 255]]],
+    16: [[0, [0, 8, 22]], [0.35, [40, 120, 210]], [0.65, [130, 200, 245]], [0.85, [210, 240, 255]], [1, [255, 255, 255]]],
+    17: [[0, [0, 0, 40]], [0.25, [0, 60, 200]], [0.5, [0, 200, 160]], [0.75, [120, 230, 60]], [1, [240, 250, 140]]],
+    18: [[0, [10, 0, 0]], [0.3, [180, 20, 0]], [0.6, [250, 90, 0]], [0.85, [255, 170, 40]], [1, [255, 240, 150]]]
   };
+  const PALS = {};
+  for (const k in PAL_STOPS) PALS[k] = mkPal(PAL_STOPS[k]);
+  /** Aperçu d'une couleur (dégradé de haut en bas, comme les cases du TRX) */
+  const palCss = (k) => 'linear-gradient(to bottom, ' + PAL_STOPS[k].slice(1).reverse().map(([v, c]) => 'rgb(' + c.join(',') + ') ' + Math.round((1 - v) * 100) + '%').join(', ') + ')';
+
   // Zones du scope selon DISP : MAIN seul ; SUB au-dessus de MAIN ; MAIN | SUB côte à côte
   function scopeRegions(W, H, specs) {
     const sub = WF.two ? specs[1] : null;

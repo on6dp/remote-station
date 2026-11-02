@@ -289,3 +289,15 @@ body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglet
 .fc-menu .fm-f { display: flex; padding: .3em .4em; border-top: 1px solid #2b3a52; background: #0b1018; }
 .fc-menu .fm-back { font: inherit; font-weight: 800; letter-spacing: .05em; padding: .3em 1.6em; background: #2a313c; color: #e9edf2; border: 1px solid #5a6474; border-radius: .25em; cursor: pointer; }
 .fc-menu .fm-back:hover { border-color: #9cc4ff; }
+/* Tableau des couleurs (COLOR) */
+.fc-colors { padding: .4em .5em 0; background: #4a5260; border-color: #9aa3af; }
+.fc-colors .fc-col-t { text-align: center; font-weight: 800; color: #4f8cff; background: #3a414c; padding: .2em; margin: .2em 0 .35em; letter-spacing: .04em; }
+.fc-colors .fc-col-r { display: grid; grid-template-columns: repeat(7, 1fr); gap: .45em; margin-bottom: .35em; }
+.fc-colors .fc-col-r4 { grid-template-columns: repeat(7, 1fr); }
+.fc-colors .fc-col-r4 .fc-sw:first-child { grid-column: 4; }
+.fc-colors .fc-sw { font: inherit; background: none; border: 0; padding: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: .15em; }
+.fc-colors .fc-sw i { display: grid; place-items: center; width: 100%; height: 2.3em; border-radius: .25em; border: 2px solid #20262e; font-style: normal; font-weight: 900; font-size: 1.4em; color: #111; }
+.fc-colors .fc-sw.on i { outline: 3px solid #ff3b30; outline-offset: 1px; }
+.fc-colors .fc-sw b { color: #f2f4f6; font-size: .9em; }
+.fc-colors .fm-f { margin: .2em -.5em 0; align-items: center; gap: 1em; background: #3a414c; }
+.fc-colors .fc-col-h { flex: 1; font-size: .8em; color: #d6dde6; }
