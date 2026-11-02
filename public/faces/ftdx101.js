@@ -124,7 +124,7 @@
       { id: 'mic', cx: 56, cy: 490, r: 32, tip: 'MIC', act: info('Micro : phonie à distance par le dashboard (Configuration micro).') }
     ]),
     knobs: [
-      { id: 'dial', cx: 1124, cy: 391, ro: 130, ri: 111, ix: 3, iy: 6, dial: true, tip: 'Grand bouton : fréquence du récepteur actif (molette ou glisser en tournant) ; bague extérieure : idem, ou VC TUNE après la grande touche VC TUNE' },
+      { id: 'dial', cx: 1124, cy: 391, ro: 130, ri: 111, ix: 3, iy: 6, dial: true, tip: 'Grand bouton : fréquence du récepteur actif (molette ou glisser en tournant) ; bague extérieure (bleue) : fréquence de l’autre récepteur que celui qui est sélectionné (SUB sélectionné → VFO-A, MAIN → VFO-B) ; CLAR en service : décalage ; grande touche VC TUNE : présélecteur' },
       { id: 'multi', cx: 762, cy: 510, ro: 30, multi: true, tip: 'MULTI : décalage du clarifier (CLAR actif), sinon la fonction de la case MULTI de l’écran (choisie dans FUNC, ex. RF POWER)' },
       { id: 'afSub', cx: 871, cy: 350, ri: 20, ro: 44, inner: { ctl: 'afB', label: 'AF SUB', per: 5 }, outer: { ctl: 'rfB', label: 'RF SUB', per: 5 } },
       { id: 'afMain', cx: 871, cy: 500, ri: 20, ro: 44, inner: { ctl: 'af', label: 'AF MAIN', per: 5 }, outer: { ctl: 'rf', label: 'RF MAIN', per: 5 } },

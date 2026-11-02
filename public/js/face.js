@@ -1275,7 +1275,10 @@
         setCtl('clar', v);
         return showTip(ev, 'CLAR ' + (v > 0 ? '+' : '') + v + ' Hz');
       }
-      const side = activeSide();
+      // Bague extérieure (bleue) du grand bouton, sans CLAR ni VC TUNE : fréquence de l'AUTRE récepteur que celui qui est
+      // sélectionné (SUB sélectionné → VFO-A / MAIN ; MAIN sélectionné → VFO-B / SUB)
+      const ringOther = k.dial && part === 'outer';
+      const side = ringOther ? (activeSide() === 'B' ? 'A' : 'B') : activeSide();
       const cur = side === 'B' ? s.freqB : s.freq;
       if (cur == null) return;
       const step = k.multi ? (L.fast ? 10000 : 1000) : (L.fine ? 10 : L.fast ? 1000 : 100);
