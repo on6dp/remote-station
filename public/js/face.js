@@ -775,7 +775,7 @@
   function closeMenu() { MV.open = false; MV.sel = null; const b = $('fcMenu'); if (b) b.hidden = true; render(); }
   function menuVals(m) {
     for (const k in m.values || {}) MV.vals[k] = m.values[k];
-    for (const id of m.ids || []) if (!(id in (m.values || {})) && MV.vals[id] === undefined) MV.vals[id] = null;
+    for (const id of m.ids || []) if (!(id in (m.values || {}))) MV.vals[id] = null; // pas de réponse du TRX : « — » (jamais la valeur refusée)
     if (m.err) say('Menu du TRX : ' + m.err, 'warn', 5000);
     if (MV.open) menuDraw();
   }
