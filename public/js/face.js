@@ -2317,12 +2317,15 @@
     // Échelle : un trait par pas « rond », graduations au bord gauche
     const step = span <= 5 ? 0.5 : span <= 10 ? 1 : span <= 20 ? 2 : span <= 50 ? 5 : span <= 100 ? 10 : 20;
     c.font = 'bold 12px "Roboto Mono", monospace'; c.textAlign = 'left'; c.textBaseline = 'middle';
+    let tw = 0;
     for (let k = Math.ceil(lo / step) * step; k <= hi; k += step) {
-      const y = Math.round(yOf(k)) + 0.5;
+      const y = Math.round(yOf(k)) + 0.5, t = step < 1 ? k.toFixed(1) : String(Math.round(k));
       c.strokeStyle = '#243042'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, y); c.lineTo(8, y); c.stroke();
-      c.fillStyle = '#ffffff'; c.fillText((step < 1 ? k.toFixed(1) : String(Math.round(k))), 10, y);
+      c.fillStyle = '#ffffff'; c.fillText(t, 10, y);
+      tw = Math.max(tw, c.measureText(t).width);
     }
-    const x0 = 62;
+    // Trait vertical juste après la graduation la plus large (« 18097.5 » ne déborde plus dessus)
+    const x0 = Math.max(62, Math.ceil(10 + tw + 12));
     c.strokeStyle = '#2b3546'; c.beginPath(); c.moveTo(x0 - 6.5, 0); c.lineTo(x0 - 6.5, H); c.stroke();
     // Spots : du plus récent au plus ancien gardés 30 min ; étiquettes poussées vers le bas si elles se chevauchent
     const now = Date.now();

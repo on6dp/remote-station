@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.70** — **Face avant, BAND MAP A et B** : le trait vertical de l'échelle se place juste après la graduation la plus large (« 18097.5 » ne passe plus dessous). Ctrl+F5 sur /ftdx101.
 - **0.32.69** — **Face avant, MONO comme sur le TRX** : la touche MONO (en bas de l'écran) n'inverse plus les couleurs ; elle passe l'écran en **un seul VFO**, celui qui est sélectionné (MAIN / VFO-A ou SUB / VFO-B) : son galvanomètre à gauche, son filtre en grand à droite, sa fréquence sous le galvanomètre, ses cases ANT / ATT / IPO / R.FIL / AGC sur toute la largeur et un seul scope ; il suit le changement MAIN ↔ SUB ; MONO écrit en bleu ; nouveau clic : retour à MAIN et SUB. Ctrl+F5 sur /ftdx101.
 - **0.32.68** — **FTDX101, CLAR RX / TX sur SUB** : le clarifier n'était lu que dans IF (côté MAIN) ; avec SUB sélectionné, CLAR RX s'allumait puis s'éteignait au bout de 2 s sur la page alors qu'il restait allumé sur le TRX. Le clarifier du SUB est maintenant lu par OI (comme Hamlib : IF = VFO A, OI = VFO B), relu juste après chaque réglage ; voyants CLAR RX / TX et décalage = ceux du côté sélectionné ; « CLAR RX … Hz » affiché au-dessus de la fréquence du côté concerné (MAIN et SUB). **Recharger la page Station** et Ctrl+F5 sur /ftdx101.
 - **0.32.67** — **Diagnostic SPLIT / TX** : le journal de la page Station note les réponses brutes du TRX à VS (côté sélectionné), FT (VFO d'émission) et ST (SPLIT) chaque fois qu'elles changent (« Lu sur le TRX : VS1 · FT0 · ST1 »), pour comparer avec les voyants du TRX. **Recharger la page Station**.
