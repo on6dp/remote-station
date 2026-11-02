@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.81** — **Face avant, 👁 Suivre l'opérateur** déplacé sous la face avant, à droite de **Profil de …** (ligne SSB CONFIGURATION). Ctrl+F5 sur /ftdx101.
 - **0.32.80** — **Face avant, 👁 Suivre** toujours visible à droite de l'indicatif (il était caché quand personne n'avait la main) ; grisé chez celui qui a la main. Ctrl+F5 sur /ftdx101.
 - **0.32.79** — **Face avant, 👁 Suivre l'opérateur** (formation à distance) dans la barre du haut, caché chez celui qui a la main : la face avant montre le même écran que l'opérateur (DISP, MONO, EXPAND, MULTI, 3DSS, menu FUNC) ; enclenché tout seul quand un autre membre a la main ; une de ces touches l'arrête, un clic sur 👁 Suivre le relance. Barre du haut gardée sur une ligne (un seul logo, « 🎧 Stéréo »). Serveur modifié (relais de l'affichage) : `install.sh` le redémarre ; Ctrl+F5 sur /ftdx101.
 - **0.32.78** — **Face avant, bague extérieure du grand bouton** : elle accorde maintenant l'**autre récepteur** que celui qui est sélectionné (SUB sélectionné → VFO-A / MAIN ; MAIN sélectionné → VFO-B / SUB), comme sur le TRX ; CLAR en service : décalage du clarifier ; grande touche VC TUNE : présélecteur (inchangés). Ctrl+F5 sur /ftdx101.
