@@ -135,6 +135,7 @@
       </select>
       <label class="dg-chk" title="En appel CQ (Tx6), celui qui vous répond devient le correspondant et la séquence continue toute seule (Call 1st de WSJT-X)"><input type="checkbox" id="dgCall1st"> Répondre au 1er</label>
       <span class="seg ft-txside" id="dgTxSide" title="FTDX101 en double réception : VFO d'émission (MAIN = VFO-A, SUB = VFO-B). Un double-clic sur un message choisit tout seul le VFO de la station appelée."><span class="dg-f">TX</span><button class="btn" type="button" data-side="A" aria-pressed="true">VFO-A</button><button class="btn" type="button" data-side="B" aria-pressed="false">VFO-B</button></span>
+      <label class="dg-txc" id="dgTxcWrap" title="TX call : indicatif sous lequel partent les émissions numériques (FT8 / FT4 / FT2, RTTY, JTTY…) — celui de la station ou le vôtre. Choisi par celui qui a la main."><span class="dg-f">TX call</span> <select id="dgTxCall"></select></label>
       <button class="btn dg-stop" type="button" id="dgStop" disabled title="Arrête l'émission automatique (Halt Tx)">■ Arrêter</button>
       <span class="dg-tl"><span class="dg-status" id="dgStatus"></span><span class="dg-clock" id="dgClock">--:--:--</span></span>
     </div>
@@ -680,6 +681,34 @@
     if (wf.ctx) sizeCanvas();
     redrawAll();
     return true;
+  }
+  // « TX call » dans la barre FT (face avant /ftdx101 et fenêtre séparée) ; le dashboard a déjà le sien (ligne Correspondant)
+  let txcMe = null, txcSentDg = null;
+  function drawTxCallDg() {
+    const sel = $('dgTxCall'), wrap = $('dgTxcWrap');
+    if (!sel || !wrap) return;
+    const dash = !!document.getElementById('txCallSel');
+    wrap.hidden = dash || !txcMe;
+    if (wrap.hidden || !api) return;
+    const club = txcMe.digiCall;
+    const clubs = txcMe.clubs.length ? txcMe.clubs : [club];
+    const mine = txcMe.call;
+    const opts = clubs.concat(txcMe.canTx && !txcMe.rxOnly && mine && clubs.indexOf(mine) < 0 ? [mine] : []);
+    if (sel.dataset.opts !== opts.join(',')) {
+      sel.dataset.opts = opts.join(',');
+      sel.textContent = '';
+      for (const c of opts) sel.add(new Option(clubs.indexOf(c) >= 0 ? c + ' (station)' : c, c));
+    }
+    const st = api.state();
+    const cur = String((st && st.txCall) || club).toUpperCase();
+    if (opts.indexOf(cur) < 0) { sel.add(new Option(cur, cur)); sel.dataset.opts = ''; }
+    if (document.activeElement !== sel) sel.value = cur;
+    sel.disabled = !api.iControl() || opts.length < 2;
+    // Avec la main : le choix gardé dans ce navigateur (le même que sur le dashboard) est rappelé au serveur
+    let want = null;
+    try { want = localStorage.getItem('rs.txcall'); } catch (x) { /* */ }
+    if (api.iControl() && opts.length > 1 && want && opts.indexOf(want) >= 0 && cur !== want && txcSentDg !== want) { txcSentDg = want; api.send({ t: 'txcall', call: want }); }
+    if (!api.iControl()) txcSentDg = null;
   }
   function ftDials() {
     if (!ftDual) return;
@@ -4108,6 +4137,13 @@
       // Choisir une fréquence dans la liste y envoie directement le TRX (QSY)
       $('dgDial').addEventListener('change', () => { store.set('dial.' + mode, $('dgDial').value); qsy(); });
       $('dgClear').addEventListener('click', () => { hist.length = 0; redrawAll(); });
+      $('dgTxCall').addEventListener('change', () => {
+        const v = $('dgTxCall').value;
+        if (!api || !api.iControl()) { drawTxCallDg(); return api && api.say('Prenez d’abord la main pour choisir le TX call.', 'warn'); }
+        try { localStorage.setItem('rs.txcall', v); } catch (x) { /* */ }
+        txcSentDg = v;
+        api.send({ t: 'txcall', call: v });
+      });
       $('dgClearB').addEventListener('click', () => { histB.length = 0; redrawAll(); });
       document.querySelectorAll('#dgTxSide .btn').forEach((b) => b.addEventListener('click', () => setSide(b.dataset.side)));
       // Réglages de la cascade
@@ -4282,6 +4318,8 @@
       if (info && info.qo100If && typeof info.qo100If === 'object') qoIf = Object.assign({}, info.qo100If);
       refillQo();
       if (me && me.call) opCall = me.call;
+      if (me) txcMe = { call: String(me.call || '').toUpperCase(), canTx: me.canTx !== false, rxOnly: !!me.rxOnly, digiCall: String((info && info.digiCall) || 'ON5VL').toUpperCase(), clubs: info && Array.isArray(info.clubCalls) ? info.clubCalls.map((c) => String(c).toUpperCase()) : [] };
+      drawTxCallDg();
       drawMsgs();
       if (info && info.stationCall) { baseCalls = String(info.stationCall).toUpperCase().split(/[\s/,]+/).filter(Boolean).concat(Array.isArray(info.clubCalls) ? info.clubCalls.map((c) => String(c).toUpperCase()) : []); stationCalls = Array.from(new Set(baseCalls.concat(myCall))); }
       announce(); // reprise après reconnexion
@@ -4367,6 +4405,7 @@
       return false;
     },
     onState() {
+      drawTxCallDg();
       // « TX call » : indicatif des émissions numériques (station ou celui qui a la main)
       const stx = api && api.state();
       // Report reçu du correspondant pendant la séquence FT8 / FT4 / FT2 → « RST RX »

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.92** — **Modes numériques de la face avant (/ftdx101/digi.html) : choix « TX call »** dans la barre FT8 / FT4 / FT2 (indicatif sous lequel on émet : ON5VL / OR0L de la station, ou le sien), comme sur le dashboard ; choix gardé dans le navigateur et commun aux deux pages. Ctrl+F5 sur /ftdx101 et /ftdx101/digi.html.
 - **0.32.91** — **Modes numériques** : boutons « Effacer » des listes en blanc gras. Ctrl+F5 sur /ftdx101/digi.html et le dashboard.
 - **0.32.90** — **Double réception FTDX101 (FT8 / FT4 / FT2)** : réglages de cascade (gain, zéro, plat, couleurs, vitesse) aussi au-dessus de la cascade du VFO-B, propres à elle ; trait gris moyen entre le décodage du VFO-A et celui du VFO-B (cascades et colonnes). Ctrl+F5 sur /ftdx101/digi.html.
 - **0.32.89** — **FT8 / FT4 / FT2** : chaque liste de messages a son ascenseur (fenêtre séparée : la page tient dans l'écran, les listes ne la font plus déborder). **Double réception FTDX101** : mode de chaque VFO affiché à côté de sa fréquence au-dessus des cascades (vert en DATA-U / USB, orange sinon). Ctrl+F5 sur /ftdx101/digi.html.

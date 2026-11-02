@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.92 | [RemoteStation-Setup-0.32.92.exe](0.32.92/RemoteStation-Setup-0.32.92.exe) | [remote-station-0.32.92.tar.gz](0.32.92/remote-station-0.32.92.tar.gz) | TX call sur la page des modes numériques de la face avant — [empreintes SHA-256](0.32.92/SHA256SUMS.txt) |
 | 0.32.91 | [RemoteStation-Setup-0.32.91.exe](0.32.91/RemoteStation-Setup-0.32.91.exe) | [remote-station-0.32.91.tar.gz](0.32.91/remote-station-0.32.91.tar.gz) | Effacer en blanc gras — [empreintes SHA-256](0.32.91/SHA256SUMS.txt) |
 | 0.32.90 | [RemoteStation-Setup-0.32.90.exe](0.32.90/RemoteStation-Setup-0.32.90.exe) | [remote-station-0.32.90.tar.gz](0.32.90/remote-station-0.32.90.tar.gz) | Double réception FT : réglages de la cascade B, trait de séparation — [empreintes SHA-256](0.32.90/SHA256SUMS.txt) |
 | 0.32.89 | [RemoteStation-Setup-0.32.89.exe](0.32.89/RemoteStation-Setup-0.32.89.exe) | [remote-station-0.32.89.tar.gz](0.32.89/remote-station-0.32.89.tar.gz) | FT : un ascenseur par liste, mode de chaque VFO — [empreintes SHA-256](0.32.89/SHA256SUMS.txt) |

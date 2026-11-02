@@ -1620,3 +1620,6 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 @media (max-width: 1100px) { .ft-dual .dg-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 6px; } .ft-dual .ft-wfrow { grid-template-columns: minmax(0, 1fr); } }
 .ft-md { display: inline-block; margin-left: 8px; padding: 0 6px; border-radius: 3px; font-style: normal; font-weight: 700; font-size: 10px; letter-spacing: .5px; color: #fff; background: #1f7a3d; }
 .ft-md.bad { background: #c0581a; }
+.dg-txc { display: inline-flex; align-items: center; gap: 4px; }
+.dg-txc[hidden] { display: none; }
+.dg-txc select { font: inherit; font-size: 12px; font-weight: 700; padding: 1px 4px; width: auto; min-width: 0; }
