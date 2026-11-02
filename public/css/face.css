@@ -330,3 +330,9 @@ body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglet
 .fc-tx .vx-prof { background: #7b3fb8; border-color: #9b62d6; color: #fff; font-weight: 800; }
 .fc-tx .vx-prof:hover { background: #8d4fcc; color: #fff; }
 .fc-tx .vx-prof.dim { opacity: .8; }
+
+/* 👁 Suivre l'opérateur (allumé : vert) */
+#followBtn.btn.fc-follow[aria-pressed='true'] { background: #1f6b3a; border-color: #3ddc5a; color: #eaffef; }
+
+/* Barre du haut sur une seule ligne malgré 👥 et « Suivre » : un seul logo dans le titre */
+body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }

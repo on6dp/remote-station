@@ -135,7 +135,7 @@
     if (a.info) return say(a.info, '', 6000);
     if (a.pop) return popCtl(a.pop);
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
-    if (a.local === 'func') { if (MV.open) closeMenu(); L.func = !L.func; return render(); }
+    if (a.local === 'func') { viewTouched(); if (MV.open) closeMenu(); L.func = !L.func; return render(); }
     if (a.local === 'vc') {
       // VC TUNE (présélecteur) du récepteur actif ; en marche, MULTI l'accorde
       const id = activeSide() === 'B' ? 'vcB' : 'vc';
@@ -178,6 +178,7 @@
     if (a.local === 'smenu') return L.smenu ? closeSmenu() : openSmenu();
     if (a.local === 'disp') {
       // Comme la touche DISP du TRX : 4 présentations de l'écran, l'une après l'autre
+      viewTouched();
       L.disp = (L.disp + 1) % DISPS.length;
       store.set('rs.face.disp', String(L.disp));
       WF.drawn = false;
@@ -682,8 +683,8 @@
     }
     // Rangée du bas, comme sur l'écran du TRX ; la dernière case montre la fonction réglée par le bouton MULTI
     const BOT = [['CENTER'], ['SPAN', () => openSpan()],
-      ['3DSS', () => { L.d3 = !L.d3; store.set('rs.face.3dss', L.d3 ? '1' : '0'); WF.h3 = []; WF.drawn = false; say(L.d3 ? '3DSS : spectre en trois dimensions (le son reçu)' : '3DSS coupé', '', 2500); render(); }], ['MONO', () => { L.mono = !L.mono; store.set('rs.face.mono', L.mono ? '1' : '0'); WF.drawn = false; say(L.mono ? 'MONO : un seul VFO à l’écran, celui qui est sélectionné (MAIN ou SUB)' : 'MONO coupé : MAIN et SUB à l’écran', '', 3000); render(); }], ['MULTI', () => { L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'MULTI : scope, OSCILLOSCOPE et AF-FFT du VFO sélectionné' : 'MULTI : affichage normal', '', 2500); render(); }],
-      ['EXPAND', () => { L.expand = !L.expand; store.set('rs.face.expand', L.expand ? '1' : '0'); say(L.expand ? 'EXPAND : galvanomètres réduits, scope agrandi' : 'EXPAND coupé : affichage normal', '', 2500); render(); }], ['HOLD', () => { L.hold = !L.hold; render(); }], ['MULTI']];
+      ['3DSS', () => { viewTouched(); L.d3 = !L.d3; store.set('rs.face.3dss', L.d3 ? '1' : '0'); WF.h3 = []; WF.drawn = false; say(L.d3 ? '3DSS : spectre en trois dimensions (le son reçu)' : '3DSS coupé', '', 2500); render(); }], ['MONO', () => { viewTouched(); L.mono = !L.mono; store.set('rs.face.mono', L.mono ? '1' : '0'); WF.drawn = false; say(L.mono ? 'MONO : un seul VFO à l’écran, celui qui est sélectionné (MAIN ou SUB)' : 'MONO coupé : MAIN et SUB à l’écran', '', 3000); render(); }], ['MULTI', () => { viewTouched(); L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'MULTI : scope, OSCILLOSCOPE et AF-FFT du VFO sélectionné' : 'MULTI : affichage normal', '', 2500); render(); }],
+      ['EXPAND', () => { viewTouched(); L.expand = !L.expand; store.set('rs.face.expand', L.expand ? '1' : '0'); say(L.expand ? 'EXPAND : galvanomètres réduits, scope agrandi' : 'EXPAND coupé : affichage normal', '', 2500); render(); }], ['HOLD', () => { L.hold = !L.hold; render(); }], ['MULTI']];
     const bw = (c.w - 10) / BOT.length;
     LCD.bot = BOT.map(([lab, fn], j) => {
       const x = X(5) + j * bw, last = j === BOT.length - 1;
@@ -693,7 +694,7 @@
       const h = el('rect', { x: x + 0.5, y: Y(297), width: bw - 1, height: 21, class: 'hs lcd-hit' + (fn || last ? '' : ' off') }, g);
       el('title', {}, h, last ? 'MULTI : fonction réglée par le bouton MULTI (choisie dans FUNC)' : lab + (fn ? '' : ' : pas disponible à distance'));
       h.addEventListener('click', () => {
-        if (last) { L.func = true; return render(); }
+        if (last) { viewTouched(); L.func = true; return render(); }
         if (fn) return fn();
         say(lab + ' : réglage du scope du TRX, pas disponible à distance (la cascade est celle de la BF).', '', 3500);
       });
@@ -2214,6 +2215,54 @@
   }
   document.addEventListener('visibilitychange', wantAudio);
 
+  // ------------------------------------------------------------ 👁 suivre l'opérateur (formation à distance)
+  // Celui qui a la main annonce son affichage de la face avant (DISP, MONO, EXPAND, MULTI, 3DSS, menu FUNC) ;
+  // les autres, « Suivre l'opérateur » allumé, voient le même écran. Un clic sur une de ces touches arrête le suivi.
+  const FOL = { on: store.get('rs.face.follow', '0') === '1', sent: '', ctl: undefined, timer: null };
+  function setFollowFace(on, why) {
+    FOL.on = !!on;
+    store.set('rs.face.follow', FOL.on ? '1' : '0');
+    const b = $('followBtn');
+    if (b) b.setAttribute('aria-pressed', String(FOL.on));
+    if (why) say(why, '', 5000);
+    render();
+  }
+  function viewTouched() {
+    if (FOL.on && !iControl()) setFollowFace(false, 'Suivi de l’opérateur arrêté (affichage choisi vous-même).');
+  }
+  function faceView() { return { disp: L.disp, mono: !!L.mono, expand: !!L.expand, multi: !!L.multi, d3: !!L.d3, func: !!L.func }; }
+  function followTick() {
+    const b = $('followBtn');
+    if (!st || !b) return;
+    const mine = iControl();
+    b.hidden = mine || !st.controller;
+    // Enclenché tout seul quand un autre membre a la main (à l'arrivée, puis à chaque nouvel opérateur)
+    const ctl = st.controller || null;
+    if (ctl !== FOL.ctl) {
+      FOL.ctl = ctl;
+      if (ctl && !mine && me && ctl !== me.call && !FOL.on) setFollowFace(true, 'Suivi de l’opérateur enclenché : ' + ctl + ' a la main (une touche d’affichage arrête le suivi).');
+    }
+    if (mine) {
+      const k = JSON.stringify(faceView());
+      if (k !== FOL.sent && !FOL.timer) {
+        FOL.sent = k;
+        send({ t: 'faceview', v: faceView() });
+        FOL.timer = setTimeout(() => { FOL.timer = null; }, 200);
+      }
+      return;
+    }
+    FOL.sent = '';
+    const v = st.faceView;
+    if (!FOL.on || !v) return;
+    let ch = false;
+    for (const k of ['disp', 'mono', 'expand', 'multi', 'd3', 'func']) if (v[k] != null && L[k] !== v[k]) { L[k] = v[k]; ch = true; }
+    if (ch) { WF.drawn = false; render(); }
+  }
+  if ($('followBtn')) {
+    $('followBtn').setAttribute('aria-pressed', String(FOL.on));
+    $('followBtn').addEventListener('click', () => setFollowFace(!FOL.on, FOL.on ? 'Suivi de l’opérateur arrêté.' : 'Suivi de l’opérateur : votre face avant montre le même écran que celui qui a la main.'));
+  }
+
   // ------------------------------------------------------------ membres connectés (👥) et messages, comme le dashboard
   // Liste des indicatifs ; l'adresse IP de chacun n'est envoyée par le serveur qu'aux administrateurs
   const OPS = { chat: [], blink: { call: '', until: 0 }, beep: store.get('rs.chatbeep', '1') !== '0', ctx: null };
@@ -2222,7 +2271,7 @@
     const list = (st && st.users) || [];
     $('usersCount').textContent = String(list.length);
     // À côté de « Prendre / Libérer la main » : son indicatif, et celui qui a la main s'il s'agit d'un autre
-    if (me) $('meCall').textContent = me.call + (st && st.controller && st.controller !== me.call ? ' · main : ' + st.controller : '');
+    if (me) $('meCall').textContent = me.call; // celui qui a la main est écrit sur le bouton (« Main : … »)
     if ($('usersMenu').hidden) return;
     const box = $('usersList');
     box.textContent = '';
@@ -2366,6 +2415,7 @@
         st = m;
         render();
         opsDraw();
+        followTick();
         if (DG()) DG().onState(st);
         if (window.RSVOICE) window.RSVOICE.onState(st);
         if (pttHeld && !iControl()) pttUp();

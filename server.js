@@ -269,6 +269,7 @@ let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: n
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
 let ctlView = null;
+let ctlFace = null; // affichage de la face avant de celui qui a la main (« Suivre l'opérateur »)
 // TXW (écoute de la fréquence d'émission, comme la touche TXW des TRX) : tant que le bouton est maintenu, les VFO sont
 // échangés (A ⇄ B) ; au relâchement, sans nouvelles du bouton (2,5 s), au bout de 15 s ou si la main change : échange inverse
 let txw = null; // { conn, since, beat }
@@ -1603,6 +1604,7 @@ function publicState() {
     txCall: txCall(),
     txw: txw ? txw.conn.user.call : null,
     view: ctlView && controller && ctlView.conn === controller ? { tab: ctlView.tab, mode: ctlView.mode, marks: ctlView.marks || null } : null,
+    faceView: ctlFace && controller && ctlFace.conn === controller ? ctlFace.v : null,
     txOk: inTxRange(txFreq()),
     txFreq: txFreq(),
     swrLock: swrLocked() ? { freq: swrLock.freq, swr: swrLock.swr != null ? Math.round(swrLock.swr * 10) / 10 : null, tune: !!swrLock.tune, band: swrLock.band || null, text: swrLockText() } : null,
@@ -2941,6 +2943,17 @@ function onOperator(conn, m) {
       const before = txCallFor(conn.user);
       if (seq && seq.on && controller === conn && before !== want) return send(conn, { t: 'notice', level: 'warn', msg: 'Arrêtez d’abord l’émission automatique en cours (■ Arrêter) pour changer d’indicatif.' });
       txChoice.set(conn.user.call, want);
+      return broadcast();
+    }
+
+    case 'faceview': {
+      // Affichage de la face avant de celui qui a la main (DISP, MONO, EXPAND, MULTI, 3DSS, FUNC) : suivi par les autres
+      if (controller !== conn || !m.v || typeof m.v !== 'object') return;
+      const v = { disp: [0, 1, 2, 3].indexOf(m.v.disp) >= 0 ? m.v.disp : 0 };
+      for (const k of ['mono', 'expand', 'multi', 'd3', 'func']) v[k] = !!m.v[k];
+      const key = JSON.stringify(v);
+      if (ctlFace && ctlFace.conn === conn && ctlFace.key === key) return;
+      ctlFace = { conn, v, key };
       return broadcast();
     }
 
