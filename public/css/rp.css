@@ -1646,3 +1646,4 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 /* « TX call » en jaune fluo */
 .dg-txc .dg-f { color: #f5ff00; font-weight: 800; text-shadow: 0 0 4px rgba(245, 255, 0, .45); }
 .dg-txc select { color: #f5ff00; border-color: #8a8f00; }
+.bm-r input { color: #fff; font-weight: 700; } /* plage de la carte de bande : blanc gras */

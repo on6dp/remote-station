@@ -1716,7 +1716,7 @@
     const span = hi - lo, pxk = (H - 2 * PAD) / span;
     const step = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500].find((s) => s * pxk >= 34) || 1000;
     const minor = step / (step >= 5 && step !== 20 && step !== 200 ? 5 : 2);
-    c.font = '10px Verdana, "DejaVu Sans", Arial, sans-serif';
+    c.font = 'bold 11px Verdana, "DejaVu Sans", Arial, sans-serif'; // fréquences en blanc gras
     c.textBaseline = 'middle';
     for (let f = Math.ceil(lo / minor) * minor; f <= hi + 1e-9; f += minor) {
       const y = Math.round(yOf(f)) + 0.5;
@@ -1724,7 +1724,7 @@
       c.strokeStyle = major ? '#8fa0b8' : '#46546a';
       c.beginPath(); c.moveTo(major ? RX - 9 : RX - 5, y); c.lineTo(RX, y); c.stroke();
       if (major) {
-        c.fillStyle = '#c8d3e3';
+        c.fillStyle = '#ffffff';
         const t = step < 1 ? f.toFixed(1).replace('.', ',') : String(Math.round(f));
         c.fillText(t.length > 5 ? t.slice(-5) : t, 7, y);
       }
