@@ -1647,3 +1647,7 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 .dg-txc .dg-f { color: #f5ff00; font-weight: 800; text-shadow: 0 0 4px rgba(245, 255, 0, .45); }
 .dg-txc select { color: #f5ff00; border-color: #8a8f00; }
 .bm-r input { color: #fff; font-weight: 700; } /* plage de la carte de bande : blanc gras */
+/* Ascenseur à droite de chaque carte de bande */
+.bm-sb { position: absolute; top: 0; right: 0; bottom: 0; width: 13px; overflow-y: scroll; overflow-x: hidden; z-index: 2; cursor: default; scrollbar-width: thin; scrollbar-color: #7a8494 rgba(0, 0, 0, .35); background: rgba(0, 0, 0, .25); }
+.bm-sb > i { display: block; width: 1px; }
+.bm-body .bm-s { right: 15px; }

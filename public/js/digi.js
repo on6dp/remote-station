@@ -475,7 +475,7 @@
       + (EMBED ? '<button type="button" class="bm-pop" id="bmPop" title="Ouvrir la carte de bande dans une fenêtre séparée (autre écran…) ; dans la fenêtre : la ramener à droite de la face avant">⧉</button>' : '') + '</div>'
       + '<div class="bm-r" title="Plage affichée pour cette bande (kHz), gardée par bande. Molette sur la carte : zoom · glisser : déplacer · double-clic : plage d’origine">'
       + '<input id="bmLo" inputmode="decimal" aria-label="Début de la plage (kHz)"><span>–</span><input id="bmHi" inputmode="decimal" aria-label="Fin de la plage (kHz)"><span>kHz</span></div>'
-      + '<div class="bm-body" id="bmBody"><canvas id="bmCv"></canvas><div class="bm-lbls" id="bmLbls"></div></div>'
+      + '<div class="bm-body" id="bmBody"><canvas id="bmCv"></canvas><div class="bm-lbls" id="bmLbls"></div><div class="bm-sb" id="bmSb" title="Ascenseur : parcourir la bande (même largeur de plage)"><i></i></div></div>'
       + '<div class="bm-f" id="bmFoot"></div>'
       + '<i class="bm-grip" id="bmGrip" title="Glisser à gauche ou à droite : largeur de la carte de bande (double-clic : largeur d’origine)"></i>';
     panel.appendChild(bm);
@@ -488,7 +488,7 @@
     bmB.innerHTML = '<div class="bm-h"><span class="bm-st" id="bmStB"></span><b id="bmBandTB" class="bm-band">—</b><span class="bm-vfo b">VFO-B · SUB</span></div>'
       + '<div class="bm-r" title="Plage affichée pour cette bande (kHz), gardée par bande. Molette sur la carte : zoom · glisser : déplacer · double-clic : plage d’origine">'
       + '<input id="bmLoB" inputmode="decimal" aria-label="Début de la plage (kHz)"><span>–</span><input id="bmHiB" inputmode="decimal" aria-label="Fin de la plage (kHz)"><span>kHz</span></div>'
-      + '<div class="bm-body" id="bmBodyB"><canvas id="bmCvB"></canvas><div class="bm-lbls" id="bmLblsB"></div></div>'
+      + '<div class="bm-body" id="bmBodyB"><canvas id="bmCvB"></canvas><div class="bm-lbls" id="bmLblsB"></div><div class="bm-sb" id="bmSbB" title="Ascenseur : parcourir la bande (même largeur de plage)"><i></i></div></div>'
       + '<div class="bm-f" id="bmFootB"></div>';
     panel.appendChild(bmB);
     add('away', 'dg-soon', '<p>Les modes numériques sont ouverts dans une <b>fenêtre séparée</b>.</p><p><button class="btn" type="button" id="dgBack">Ramener ici</button></p>');
@@ -1638,6 +1638,21 @@
     bmRaf = bw.requestAnimationFrame(() => { bmRaf = 0; bmPaint(); });
     bmRafW = bw;
   }
+  // Ascenseur à droite de la carte : la plage affichée dans toute la bande (glisser = parcourir la bande)
+  function bmSbSync(X, band, lo, hi) {
+    const sb = $('bmSb' + X);
+    if (!sb || !sb.firstElementChild) return;
+    const b = BANDS_M.find((x) => x[2] === band);
+    const e0 = b ? Math.min(lo, b[0] * 1000 - 5) : lo, e1 = b ? Math.max(hi, b[1] * 1000 + 5) : hi;
+    const span = hi - lo, full = Math.max(span, e1 - e0);
+    const ch = sb.clientHeight;
+    if (!ch) return;
+    const ih = Math.max(ch, Math.round(ch * full / span));
+    if (sb.firstElementChild.style.height !== ih + 'px') sb.firstElementChild.style.height = ih + 'px';
+    Object.assign(sb.dataset, { e0: String(e0), full: String(full), span: String(span), band });
+    const top = full > span ? Math.round((lo - e0) / (full - span) * (ih - ch)) : 0;
+    if (Math.abs(sb.scrollTop - top) > 1) { sb.prog = true; sb.scrollTop = top; }
+  }
   function bmPaint() {
     bmPaintOn('');
     if (bmDualOn()) bmPaintOn('B');
@@ -1666,6 +1681,7 @@
     const PAD = 6, RX = 50; // règle : x de 0 à RX (poignée de largeur sur les 6 premiers pixels)
     const yOf = (khz) => PAD + ((khz - lo) / (hi - lo)) * (H - 2 * PAD);
     if (X) bmLayB = [lo, hi, PAD, H]; else bmLay = [lo, hi, PAD, H];
+    bmSbSync(X, bandNow, lo, hi);
     const rf = X ? rxFB : rxF, tf = X ? txFB : txF;
     // fond de la règle
     c.fillStyle = '#0b1018'; c.fillRect(0, 0, RX, H);
@@ -1933,6 +1949,19 @@
       $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
     }
     if (window.ResizeObserver) new ResizeObserver(() => bmDraw()).observe(body);
+    const sb = $('bmSb' + X);
+    if (sb) {
+      // L'ascenseur a sa propre souris et sa propre molette (pas de glisser / zoom de la carte)
+      for (const ev of ['mousedown', 'click', 'dblclick', 'wheel']) sb.addEventListener(ev, (e) => e.stopPropagation());
+      sb.addEventListener('scroll', () => {
+        if (sb.prog) { sb.prog = false; return; }
+        const max = sb.scrollHeight - sb.clientHeight;
+        const e0 = Number(sb.dataset.e0), full = Number(sb.dataset.full), span = Number(sb.dataset.span);
+        if (max <= 0 || !(full > span)) return;
+        const lo = e0 + (sb.scrollTop / max) * (full - span);
+        bmSetRange(sb.dataset.band, lo, lo + span);
+      });
+    }
   }
   function bmInitA() {
     // Filtres (liste des modes de l'onglet) et « Tous »
