@@ -286,3 +286,6 @@ body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglet
 .fc-menu .fm-v { color: #ff4a3c; font-weight: 700; min-width: 6em; text-align: right; }
 .fc-menu .fm-pm { font: inherit; font-weight: 800; color: #ffcf4a; background: #2a313c; border: 1px solid #4a5464; border-radius: .25em; padding: 0 .55em; cursor: pointer; }
 .fc-menu .fm-note { padding: 1em; line-height: 1.6; color: #c7d0dc; }
+.fc-menu .fm-f { display: flex; padding: .3em .4em; border-top: 1px solid #2b3a52; background: #0b1018; }
+.fc-menu .fm-back { font: inherit; font-weight: 800; letter-spacing: .05em; padding: .3em 1.6em; background: #2a313c; color: #e9edf2; border: 1px solid #5a6474; border-radius: .25em; cursor: pointer; }
+.fc-menu .fm-back:hover { border-color: #9cc4ff; }

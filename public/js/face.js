@@ -757,11 +757,13 @@
             (sel && !ro ? '<button type="button" class="fm-pm" data-step="1">+</button>' : '') + '</div>';
         }).join('') + '</div>';
     }
-    box.innerHTML = '<div class="fm-h"><b>' + esc(MV.group) + '</b>' + (g ? '<span>' + esc(g.name) + '</span>' : '') + '<button type="button" class="fm-x" data-close="1" title="Fermer">✕</button></div><div class="fm-b">' + body + '</div>';
+    box.innerHTML = '<div class="fm-h"><b>' + esc(MV.group) + '</b>' + (g ? '<span>' + esc(g.name) + '</span>' : '') + '<button type="button" class="fm-x" data-close="1" title="Fermer">✕</button></div><div class="fm-b">' + body + '</div>' +
+      '<div class="fm-f"><button type="button" class="fm-back" data-back="1" title="Retour au menu FUNC">BACK</button></div>';
   }
   function menuClick(e) {
     const b = e.target.closest('button');
     if (b && b.dataset.close) return closeMenu();
+    if (b && b.dataset.back) { closeMenu(); L.func = true; return render(); } // BACK : retour à l'écran FUNC, comme sur le TRX
     if (b && b.dataset.sub) { MV.sub = b.dataset.sub; MV.sel = null; send({ t: 'menu_read', sub: MV.sub }); return menuDraw(); }
     if (b && b.dataset.step) return menuAdjust(MV.sel, Number(b.dataset.step));
     const r = e.target.closest('[data-it]');
@@ -824,7 +826,7 @@
       ['voxGain', 'VOX GAIN', (s) => num(s.voxGain), ctlStep('voxGain', 0, 100, 1), '#8a5cff'],
       ['voxDelay', 'VOX DELAY', (s) => (s.voxDelay != null ? s.voxDelay + 'ms' : '—'), ctlStep('voxDelay', 30, 3000, 10), '#8a5cff'],
       ['antiVox', 'ANTI VOX', (s) => num(s.antiVox), ctlStep('antiVox', 0, 100, 1), '#8a5cff'],
-      ['step', 'STEP DIAL', () => STEPS[stepNow()][1], (s, d) => setStepIdx(Math.max(0, Math.min(2, stepNow() + d))), '#8a5cff', true]],
+      ['step', 'STEP DIAL', () => '', (s, d) => stepDial(d), '#8a5cff']],
     [['memch', 'MEM CH', () => '', null, '#8a5cff'],
       ['group', 'GROUP', () => '', null, '#8a5cff'],
       ['rfil', 'R.FIL', (s) => cellText('roof', s[activeSide() === 'B' ? 'roofB' : 'roof']), (s, d) => { const id = activeSide() === 'B' ? 'roofB' : 'roof'; setCtl(id, roofNext(s[id], d)); }, '#8a5cff', true],
@@ -842,12 +844,21 @@
       ['disp', 'DISPLAY SETTING', () => '', null, '#ffb020'],
       ['ext', 'EXTENSION SETTING', () => '', null, '#ffb020']]
   ];
+  // STEP DIAL (comme sur le TRX) : le bouton MULTI fait monter / descendre la fréquence du VFO sélectionné par pas de canal
+  // (menu OPERATION SETTING → TUNING → CH STEP : 1 / 2,5 / 5 kHz ; 2,5 kHz si pas encore lu)
+  function stepDial(d) {
+    const s = S(), side = activeSide(), cur = side === 'B' ? s.freqB : s.freq;
+    if (cur == null || !d) return;
+    const ch = [1000, 2500, 5000][parseInt(MV.vals['030503'], 10)] || 2500;
+    const hz = d > 0 ? (Math.floor(cur / ch) + d) * ch : (Math.ceil(cur / ch) + d) * ch;
+    tuneTo(side, hz);
+  }
   const FUNC_BY = {};
   for (const row of FUNC) for (const c of row) FUNC_BY[c[0]] = c;
   function funcAdjust(id, d) {
     const c = FUNC_BY[id];
     if (!c || !c[3]) return false;
-    const local = ['spd', 'color', 'level', 'step', 'peak', 'marker'].indexOf(id) >= 0;
+    const local = ['spd', 'color', 'level', 'peak', 'marker'].indexOf(id) >= 0;
     if (!local && !needControl()) return true;
     c[3](S(), d);
     render();
@@ -1006,6 +1017,7 @@
     if (k.multi && MV.open && MV.sel) { menuAdjust(MV.sel, notches > 0 ? 1 : -1); return; }
     if (k.multi && !(s.rit || s.xit) && FUNC_BY[L.funcSel] && FUNC_BY[L.funcSel][3]) {
       funcAdjust(L.funcSel, notches);
+      if (L.funcSel === 'step') { const sd = activeSide(), f = sd === 'B' ? pendF.B : pendF.A; return showTip(ev, 'STEP DIAL ' + (sd === 'B' ? 'SUB ' : 'MAIN ') + (f ? fmtFreq(f) + ' MHz' : '')); }
       return showTip(ev, FUNC_BY[L.funcSel][1] + ' ' + FUNC_BY[L.funcSel][2](S()));
     }
     if (k.dial || k.multi) {
