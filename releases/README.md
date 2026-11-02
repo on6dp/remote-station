@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.95 | [RemoteStation-Setup-0.32.95.exe](0.32.95/RemoteStation-Setup-0.32.95.exe) | [remote-station-0.32.95.tar.gz](0.32.95/remote-station-0.32.95.tar.gz) | Le VFO d'émission suit le TRX — [empreintes SHA-256](0.32.95/SHA256SUMS.txt) |
 | 0.32.94 | [RemoteStation-Setup-0.32.94.exe](0.32.94/RemoteStation-Setup-0.32.94.exe) | [remote-station-0.32.94.tar.gz](0.32.94/remote-station-0.32.94.tar.gz) | Fréquence du VFO d'émission sur fond rouge, Arrêter lisible — [empreintes SHA-256](0.32.94/SHA256SUMS.txt) |
 | 0.32.93 | [RemoteStation-Setup-0.32.93.exe](0.32.93/RemoteStation-Setup-0.32.93.exe) | [remote-station-0.32.93.tar.gz](0.32.93/remote-station-0.32.93.tar.gz) | Double réception FT : deux cartes de bande, pays en info-bulle — [empreintes SHA-256](0.32.93/SHA256SUMS.txt) |
 | 0.32.92 | [RemoteStation-Setup-0.32.92.exe](0.32.92/RemoteStation-Setup-0.32.92.exe) | [remote-station-0.32.92.tar.gz](0.32.92/remote-station-0.32.92.tar.gz) | TX call sur la page des modes numériques de la face avant — [empreintes SHA-256](0.32.92/SHA256SUMS.txt) |

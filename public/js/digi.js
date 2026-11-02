@@ -745,13 +745,18 @@
     if (pane) pane.classList.toggle('ft-txb', sd() === 'B');
   }
   /** VFO d'émission (double réception) : la séquence en cours suit (le TRX passe TX sur MAIN ou SUB). */
+  let sideSetAt = 0; // dernier choix fait ici : le TRX a 3 s pour le relire avant qu'on suive à nouveau ce qu'il dit
   function setSide(v, quiet) {
     v = v === 'B' && ftDual ? 'B' : 'A';
     if (v === ftSide) return;
     ftSide = v;
     sideBtns();
     drawScale();
-    ftxCfg();
+    sideSetAt = Date.now();
+    // Émission auto en cours : la séquence passe sur ce VFO ; sinon (avec la main) le TRX passe TX sur MAIN / SUB tout de suite
+    const st = api && api.state();
+    if (st && st.seq && st.seq.on && st.seq.by === opCall) ftxCfg();
+    else if (api && api.iControl() && st && st.radio && st.radio.txVfo !== (v === 'B' ? 1 : 0)) api.send({ t: 'set', ctl: 'txVfo', value: v === 'B' ? 1 : 0 });
     if (!quiet && api) api.say('Émission sur le ' + (v === 'B' ? 'VFO-B (SUB)' : 'VFO-A (MAIN)') + '.', '', 2500);
   }
   function sizeCanvas() {
@@ -3505,7 +3510,16 @@
     const mine = !!(sq && sq.by === opCall);
     if ($('dgStop')) $('dgStop').disabled = !(x || (sq && sq.on) || (st && st.ptt && st.ptt.digi));
     // Double réception : le VFO d'émission suit celui de la séquence en cours (ex. choisi dans l'autre fenêtre)
-    if (mine && sq.on && ftDual && (sq.side === 'B' ? 'B' : 'A') !== ftSide) { ftSide = sq.side === 'B' ? 'B' : 'A'; sideBtns(); drawScale(); }
+    const hold = Date.now() - sideSetAt < 3000;
+    if (!hold && mine && sq.on && ftDual && (sq.side === 'B' ? 'B' : 'A') !== ftSide) { ftSide = sq.side === 'B' ? 'B' : 'A'; sideBtns(); drawScale(); }
+    // Sans émission auto : le VFO d'émission affiché suit celui du TRX (TX sur MAIN = VFO-A, sur SUB = VFO-B),
+    // qu'il ait été changé ici, sur la face avant du dashboard ou sur le TRX lui-même
+    const rr = st && st.radio;
+    if (!hold && ftDual && !(sq && sq.on && mine) && rr && (rr.txVfo === 0 || rr.txVfo === 1) && (rr.txVfo === 1 ? 'B' : 'A') !== ftSide) {
+      ftSide = rr.txVfo === 1 ? 'B' : 'A';
+      sideBtns();
+      drawScale();
+    }
     // Séquence automatique : le message choisi et le correspondant suivent ce que décide le serveur
     if (mine) {
       const key = [sq.ntx, sq.dx, sq.grid, sq.rpt, sq.on].join('|');
