@@ -515,7 +515,8 @@
       for (const [f, lab, blue] of ticks) {
         const p = arcPt(cx, cy, r, f), q = arcPt(cx, cy, isS ? r + 4 : r - 3, f);
         el('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1], class: 'mtr-tick' + (blue ? ' blue' : '') }, g);
-        const tp = arcPt(cx, cy, isS ? r + 8 : r - 5, f);
+        // Chiffres écartés des arcs : au-dessus de l'arc S, à mi-chemin entre deux arcs pour les autres échelles
+        const tp = arcPt(cx, cy, isS ? r + 9 : r - 9.5, f);
         el('text', { x: tp[0], y: tp[1], class: 'mtr-num' + (blue ? ' blue' : '') + (isS ? ' big' : ''), 'text-anchor': 'middle' }, g, lab);
       }
       const lp = arcPt(cx, cy, r - (isS ? 0 : 3), -0.04);
