@@ -140,7 +140,7 @@
     </div>
     <div class="ft-wfrow"><div class="dg-wf-slot" data-slot="ftx"><div class="dg-wf">
       <div class="wf-ctl" title="Réglages de la cascade (comme WSJT-X)">
-        <span class="ft-wfa">VFO-A · MAIN <b id="ftDialA"></b></span>
+        <span class="ft-wfa">VFO-A · MAIN <b id="ftDialA"></b><i class="ft-md" id="ftModeA"></i></span>
         <label title="Contraste : plus à droite, les signaux faibles ressortent davantage">Gain <input id="wfGain" type="range" min="-20" max="20" step="1" value="0"></label>
         <label title="Niveau du bruit de fond : plus à droite, le fond est plus clair">Zéro <input id="wfZero" type="range" min="-20" max="20" step="1" value="0"></label>
         <label title="Aplatit le bruit de fond sur toute la largeur (corrige la pente du filtre du TRX)"><input id="wfFlat" type="checkbox" checked> Plat</label>
@@ -155,7 +155,7 @@
       <i class="dg-grip" id="dgGrip" title="Glisser vers le haut ou le bas : hauteur de la cascade et des listes de messages (double-clic : taille d'origine)"></i>
     </div></div>
       <div class="dg-wf ft-wfb" id="ftWfBox" hidden>
-        <div class="ft-wfh">VFO-B · SUB <b id="ftDialB"></b></div>
+        <div class="ft-wfh">VFO-B · SUB <b id="ftDialB"></b><i class="ft-md" id="ftModeB"></i></div>
         <canvas id="ftScaleB" height="44"></canvas>
         <canvas id="ftWfB" height="140" title="Cascade du VFO-B (SUB) : clic gauche = réception, clic droit = émission"></canvas>
         <i class="dg-mk dg-mk-tx" id="ftMkTxB"></i><i class="dg-mk dg-mk-rx" id="ftMkRxB"></i>
@@ -436,7 +436,7 @@
       d.innerHTML = html;
       panel.appendChild(d);
     };
-    add('ftx', 'dg', FTX_PANE);
+    add('ftx', 'dg dg-ftx', FTX_PANE);
     add('rtty', 'dg rt', RTTY_PANE);
     add('wspr', 'dg ws', WSPR_PANE);
     add('jtty', 'dg jt', JTTY_PANE);
@@ -679,6 +679,15 @@
     const f = (hz) => (hz ? (hz / 1e6).toFixed(3) + ' MHz' : '');
     if ($('ftDialA')) $('ftDialA').textContent = f(r && r.freq);
     if ($('ftDialB')) $('ftDialB').textContent = f(r && r.freqB);
+    // Mode de chaque VFO : vert en DATA-U / USB (bon pour FT8 / FT4 / FT2), orange sinon
+    for (const [id, md] of [['ftModeA', r && r.mode], ['ftModeB', r && r.modeB]]) {
+      const e = $(id);
+      if (!e) continue;
+      e.textContent = md || '—';
+      const ok = /^(DATA-U|USB|USB-D|PKT-U|DATA-USB)$/.test(md || '');
+      e.classList.toggle('bad', !ok);
+      e.title = ok ? 'Mode du VFO' : 'Mode du VFO : pour FT8 / FT4 / FT2, mettez ce VFO en DATA-U (↺ de la barre du haut pour le VFO-A)';
+    }
   }
   function sideBtns() {
     document.querySelectorAll('#dgTxSide .btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.side === sd())));
