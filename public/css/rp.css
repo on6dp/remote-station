@@ -763,6 +763,7 @@ input[type='range']:disabled { opacity: .45; }
 .dg-note { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--v2-text-dim); }
 .dg-mini { font: inherit; font-size: 9px; letter-spacing: .8px; text-transform: uppercase; color: var(--v2-text-dim); background: none; border: 1px solid var(--v2-border); border-radius: 4px; padding: 2px 6px; cursor: pointer; }
 .dg-mini:hover { color: var(--v2-text-bright); }
+.dg-h .dg-mini { color: #fff; font-weight: 700; } /* « Effacer » des listes : blanc gras */
 .dg-th, .dg-row { display: grid; grid-template-columns: 62px 34px 36px 44px 1fr; gap: 6px; padding: 2px 8px; font-size: 12.5px; }
 .dg-th { color: var(--v2-text-dim); font-size: 10px; letter-spacing: .8px; text-transform: uppercase; border-bottom: 1px solid var(--v2-border-dark); padding-block: 4px; }
 .dg-th.ft { color: #FFFFFF; font-weight: 700; }
