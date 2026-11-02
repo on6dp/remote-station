@@ -3928,7 +3928,7 @@
         if (POPUP && !EMBED) return window.close();
         // La fenêtre séparée s'ouvre sur le mode affiché
         if (MODE_TABS.indexOf(tab) >= 0) store.set('ptab', tab);
-        const w = window.open('/digi.html', 'rs-digi', 'width=1200,height=860');
+        const w = window.open(/^\/ftdx101/.test(location.pathname) ? '/ftdx101/digi.html' : '/digi.html', 'rs-digi', 'width=1200,height=860');
         if (!w) api.say('Fenêtre bloquée par Chrome : autorisez les fenêtres pop-up pour ce site.', 'warn');
       });
       $('dgBack').addEventListener('click', () => { if (window.RSHOST) window.RSHOST.closePopup(); });

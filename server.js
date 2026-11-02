@@ -166,7 +166,7 @@ const TYPES = {
 function qsyOrigins() {
   return (Array.isArray(cfg.qsyOrigins) ? cfg.qsyOrigins : DEFAULTS.qsyOrigins).map(String).filter((o) => /^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o));
 }
-const ROUTES = { '/': '/index.html', '/ftdx101': '/face.html', '/station': '/station.html', '/digi': '/digi.html', '/aide': '/aide.html', '/help': '/help.html', '/stats': '/stats.html', '/detache': '/detache.html' };
+const ROUTES = { '/': '/index.html', '/ftdx101': '/face.html', '/station': '/station.html', '/digi': '/digi.html', '/ftdx101/digi.html': '/digi.html', '/ftdx101/digi': '/digi.html', '/ftdx101/': '/face.html', '/aide': '/aide.html', '/help': '/help.html', '/stats': '/stats.html', '/detache': '/detache.html' };
 
 function sendJson(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });

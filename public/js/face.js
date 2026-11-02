@@ -2579,7 +2579,7 @@
   $('stereoBtn').addEventListener('click', () => setStereo(!L.stereo));
   // Modes numériques : leur propre page (digi.html), raccrochée à cette page (même connexion, voir RSHOST plus bas)
   $('digiBtn').addEventListener('click', () => {
-    const w = window.open('/digi.html', 'rs-digi', 'width=1200,height=860');
+    const w = window.open('/ftdx101/digi.html', 'rs-digi', 'width=1200,height=860'); // modes numériques de la face avant FTDX101
     if (!w) say('Fenêtre bloquée par le navigateur : autorisez les fenêtres pop-up pour ce site.', 'warn', 6000);
     else try { w.focus(); } catch (e) {}
   });
