@@ -151,7 +151,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .flt-vcend { fill: #e8edf3; }
 #face .flt-vcticks { stroke: #ff2b1c; stroke-width: 1.1; }
 #face .flt-vctri { fill: #ff2b1c; }
-#face .flt-cup { fill: none; stroke: #3b8bff; stroke-width: 1.6; stroke-linecap: round; }
+#face .flt-cup { fill: none; stroke: #3b8bff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 #face .flt-notch { stroke: #ff2b1c; stroke-width: 1.6; stroke-dasharray: 3 2; }
 #face .flt-base { fill: #3b6dff; }
 #face .lcd-seg { fill: #f2f4f8; filter: drop-shadow(0 0 1.2px rgba(255,255,255,.55)); }

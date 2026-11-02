@@ -552,20 +552,21 @@
     const rev = /^LSB$|-L$/.test(md) ? -1 : 1;
     return { f, rel: rev * (f - (audioCenter(md, hz) + (sh || 0))) / FLT_SPAN };
   }
-  // Trapèze du filtre (points), avec les creux du NOTCH et du CONTOUR s'ils tombent dans la bande passante
-  // dips : [[x, demi-largeur], …]
+  // Trapèze du filtre (points), avec le creux du NOTCH (profond, jusqu'en bas) et le petit « V » du CONTOUR
+  // (peu profond, en haut), comme sur l'écran du TRX, s'ils tombent dans la bande passante
+  // dips : [[x, demi-largeur, profondeur en px (absente = jusqu'en bas)], …]
   function trapPts(x0, w, cx, tw, top, bot, sl, dips) {
     const a = Math.max(x0 + 4, cx - tw / 2), b = Math.min(x0 + w - 4, cx + tw / 2);
     const pts = [[x0 + 3, bot], [a, bot], [a + sl, top]];
     let last = a + sl;
-    for (const [nx, nw] of (dips || []).filter((d) => d && d[0] != null).sort((p, q) => p[0] - q[0])) {
-      if (nx - nw > last && nx + nw < b - sl) { pts.push([nx - nw, top], [nx, bot - 1], [nx + nw, top]); last = nx + nw; }
+    for (const [nx, nw, dep] of (dips || []).filter((d) => d && d[0] != null).sort((p, q) => p[0] - q[0])) {
+      if (nx - nw > last && nx + nw < b - sl) { pts.push([nx - nw, top], [nx, dep ? top + dep : bot - 1], [nx + nw, top]); last = nx + nw; }
     }
     pts.push([b - sl, top], [b, bot], [x0 + w - 3, bot]);
     return pts;
   }
-  // Petit demi-cercle bleu (ouvert vers le haut) au-dessus du filtre : repère du CONTOUR, comme sur le TRX
-  const cupD = (x, y, r) => 'M' + (x - r).toFixed(1) + ' ' + y.toFixed(1) + 'A' + r + ' ' + r + ' 0 0 0 ' + (x + r).toFixed(1) + ' ' + y.toFixed(1);
+  // Petit « V » bleu du CONTOUR, dans le haut du filtre (repassé en bleu par-dessus le trait rouge), comme sur le TRX
+  const contV = (x, top, nw, dep) => 'M' + (x - nw).toFixed(1) + ' ' + top.toFixed(1) + 'L' + x.toFixed(1) + ' ' + (top + dep).toFixed(1) + 'L' + (x + nw).toFixed(1) + ' ' + top.toFixed(1);
   function buildLcd() {
     const c = FACE.lcd;
     const X = (v) => c.x + v, Y = (v) => c.y + v;
@@ -1420,12 +1421,13 @@
       // NOTCH en service : creux étroit dans la bande passante, à sa fréquence (comme sur l'écran du TRX)
       const nf = notchOf(s, side, mode || '', hz, sh);
       const nx = nf ? cx + nf.rel * fl.w : null;
-      // CONTOUR en service : creux à sa fréquence et petit demi-cercle bleu au-dessus, qui suit le bouton CONT
+      // CONTOUR en service : petit « V » bleu peu profond dans le haut du filtre, à sa fréquence ; il suit le bouton CONT
+      // (le seul creux profond est celui du NOTCH)
       const cf = contourOf(s, side, mode || '', hz, sh);
       const kx = cf ? Math.max(fl.x0 + 4, Math.min(fl.x0 + fl.w - 4, cx + cf.rel * fl.w)) : null;
       fl.cup.style.display = cf ? '' : 'none';
-      if (cf) fl.cup.setAttribute('d', cupD(kx, top - 4, 3.2));
-      fl.trap.setAttribute('d', 'M' + trapPts(fl.x0, fl.w, cx, tw, top, bot, sl, [[nx, 3], [kx, 4]]).map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
+      if (cf) fl.cup.setAttribute('d', contV(kx, top, 3.5, 7));
+      fl.trap.setAttribute('d', 'M' + trapPts(fl.x0, fl.w, cx, tw, top, bot, sl, [[nx, 3], [kx, 3.5, 7]]).map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
       // NOTCH hors de la bande passante (sur les flancs ou au-delà) : simple trait rouge à sa place (au bord du cadre si plus loin)
       const inPass = nx != null && nx - 3 > cx - tw / 2 + sl && nx + 3 < cx + tw / 2 - sl;
       const nxc = nx == null ? 0 : Math.max(fl.x0 + 2, Math.min(fl.x0 + fl.w - 2, nx));
@@ -1958,7 +1960,8 @@
       c2.strokeStyle = color; c2.lineWidth = 2.5; c2.lineJoin = 'round';
       c2.beginPath();
       const kx = f.cont ? Math.max(x0 + 8, Math.min(x0 + w - 8, cx + f.cont.rel * w)) : null;
-      trapPts(x0, w, cx, tw, top, bot, sl, [[f.notch ? cx + f.notch.rel * w : null, 5], [kx, 9]]).forEach((p, j) => (j ? c2.lineTo(p[0], p[1]) : c2.moveTo(p[0], p[1])));
+      const kd = Math.max(10, (bot - top) * 0.14);
+      trapPts(x0, w, cx, tw, top, bot, sl, [[f.notch ? cx + f.notch.rel * w : null, 5], [kx, 10, kd]]).forEach((p, j) => (j ? c2.lineTo(p[0], p[1]) : c2.moveTo(p[0], p[1])));
       c2.stroke();
       if (f.notch) {
         const nx = cx + f.notch.rel * w;
@@ -1969,8 +1972,8 @@
         }
       }
       if (kx != null) {
-        c2.strokeStyle = '#3b8bff'; c2.lineWidth = 2.5;
-        c2.beginPath(); c2.arc(kx, top - 9, 6, 0, Math.PI); c2.stroke();
+        c2.strokeStyle = '#3b8bff'; c2.lineWidth = 3; c2.lineCap = 'round';
+        c2.beginPath(); c2.moveTo(kx - 10, top); c2.lineTo(kx, top + kd); c2.lineTo(kx + 10, top); c2.stroke(); c2.lineCap = 'butt';
       }
       c2.strokeStyle = '#ff9a1f'; c2.lineWidth = 2;
       c2.beginPath(); c2.moveTo(cx, top - 4); c2.lineTo(cx, bot); c2.stroke();
