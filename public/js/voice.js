@@ -258,6 +258,13 @@
     const t = V.type || micType(V.label);
     const set = V.stream && V.stream.getAudioTracks()[0] ? V.stream.getAudioTracks()[0].getSettings() : {};
     const opts = [set.noiseSuppression ? 'réduction de bruit' : '', set.echoCancellation ? 'anti-écho' : '', set.autoGainControl ? 'gain auto' : ''].filter(Boolean);
+    if (V.api && V.api.compact) {
+      // Face avant : le nom du micro est déjà dans la liste ; ici seulement le type reconnu et le réglage (détails au survol)
+      const reg = V.saved ? (V.fromServer ? 'vos réglages' : 'réglages de ce PC') : 'réglage ' + (V.eq.name || PRESETS[t.preset].name);
+      $('vxType').innerHTML = '<b>' + esc(t.name) + '</b> · ' + esc(reg) + (V.eq.on ? '' : ' · égaliseur coupé') + (t.note ? ' <span class="vx-i" title="' + esc(t.note) + '">ⓘ</span>' : '');
+      $('vxType').title = V.label + (opts.length ? ' · ' + opts.join(', ') : '') + (t.note ? '\n' + t.note : '');
+      return;
+    }
     $('vxType').innerHTML = '<b>' + esc(t.name) + '</b> · ' + esc(V.label) +
       '<br><span>' + (V.saved ? (V.fromServer ? 'vos réglages pour ce micro' : 'réglages gardés sur ce PC') : 'réglage proposé : ' + esc(V.eq.name || PRESETS[t.preset].name)) +
       (V.eq.on ? '' : ' · égaliseur coupé') + (opts.length ? ' · ' + opts.join(', ') : '') + '</span>' +
