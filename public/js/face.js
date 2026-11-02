@@ -237,7 +237,13 @@
       const cur = L.activeMode(s);
       const hz = activeSide() === 'B' ? s.freqB : s.freq;
       if (a.mode === 'ssb') return setMode(cur === 'LSB' ? 'USB' : cur === 'USB' ? 'LSB' : (hz && hz < 10e6 ? 'LSB' : 'USB'));
-      if (a.mode === 'cw') return setMode(cur === 'CW-U' ? 'CW-L' : 'CW-U');
+      if (a.mode === 'cw') {
+        // Passage en CW : BK-IN mis en service d'office (la touche BK-IN reste libre ensuite ; CW-U ⇄ CW-L n'y touche pas)
+        const enter = !/^CW/.test(cur || '');
+        setMode(cur === 'CW-U' ? 'CW-L' : 'CW-U');
+        if (enter && R.CONTROL.bkin) setTimeout(() => { if (!S().bkin) setCtl('bkin', 1); }, 400);
+        return;
+      }
       const i = CYCLE.indexOf(cur);
       return setMode(CYCLE[(i + 1) % CYCLE.length]);
     }
