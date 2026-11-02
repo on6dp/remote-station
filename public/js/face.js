@@ -2948,6 +2948,16 @@
       row.innerHTML = '<div class="vx-h fc-digih"><span class="vx-title">DIGI configuration</span></div>' +
         DIGI_MODES.map(([lab, t, m]) => '<button type="button" class="btn fc-digim" data-tab="' + t + '"' + (m ? ' data-mode="' + m + '"' : '') + ' title="Modes numériques : ' + lab + ' (page séparée)">' + lab + '</button>').join('');
       vxBox.insertBefore(row, vxH);
+      // Les deux titres (DIGI / SSB CONFIGURATION) sur une ligne et de même largeur : les boutons s'alignent dessous
+      const dh = row.querySelector('.fc-digih');
+      const sameW = () => {
+        dh.style.minWidth = vxH.style.minWidth = '';
+        const w = Math.ceil(Math.max(dh.getBoundingClientRect().width, vxH.getBoundingClientRect().width));
+        if (w > 0) dh.style.minWidth = vxH.style.minWidth = w + 'px';
+      };
+      requestAnimationFrame(sameW);
+      window.addEventListener('resize', sameW);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(sameW);
       row.addEventListener('click', (e) => {
         const b = e.target.closest('.fc-digim');
         if (b) digiOpen(b.dataset.tab, b.dataset.mode || '');
