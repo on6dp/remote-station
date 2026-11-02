@@ -834,7 +834,7 @@
 
   // Menu FUNC : valeurs lues sur le TRX ; RPT / ENC/DEC / TONE FREQ suivent le VFO sélectionné (MAIN ou SUB)
   const RPTS = ['SIMP', '+', '−'];
-  const ENCDECS = ['OFF', 'ENC/DEC', 'ENC', 'DCS', 'DCS ENC'];
+  const ENCDECS = ['OFF', 'ENC/DEC', 'ENC'];
   const CTCSS = [67.0, 69.3, 71.9, 74.4, 77.0, 79.7, 82.5, 85.4, 88.5, 91.5, 94.8, 97.4, 100.0, 103.5, 107.2, 110.9, 114.8, 118.8, 123.0, 127.3,
     131.8, 136.5, 141.3, 146.2, 151.4, 156.7, 159.8, 162.2, 165.5, 167.9, 171.3, 173.8, 177.3, 179.9, 183.5, 186.2, 189.9, 192.8, 196.6, 199.5,
     203.5, 206.5, 210.7, 218.1, 225.7, 229.1, 233.6, 241.8, 250.3, 254.1];
@@ -842,9 +842,12 @@
   const SIDED = { rpt: 1, encDec: 1, toneIdx: 1 };
   const sideKey = (id) => (SIDED[id] && activeSide() === 'B' ? id + 'B' : id);
   // Réglage par pas (molette, MULTI, − / +), borné ; « sided » : côté du VFO sélectionné
+  // RPT, ENC/DEC, TONE FREQ : en FM seulement (le TRX refuse OS / CT / CN dans les autres modes)
+  const fmOnly = (id, s) => { if (!SIDED[id] || /FM/.test(L.activeMode(s))) return false; say(FUNC_BY[id][1] + ' : seulement en FM (le TRX est en ' + (L.activeMode(s) || '?') + ').', 'warn', 4000); return true; };
   const ctlStep = (id, lo, hi, step) => (s, d) => {
     const k = sideKey(id);
     if (!R.CONTROL[k]) return say(FUNC_BY[id][1] + ' : pas disponible sur ce TRX.', 'warn', 3000);
+    if (fmOnly(id, s)) return;
     const cur = s[k] != null ? s[k] : lo;
     setCtl(k, Math.max(lo, Math.min(hi, Math.round((cur + d * step) / step) * step)));
   };
@@ -852,6 +855,7 @@
   const ctlCycle = (id, n) => (s, d) => {
     const k = sideKey(id);
     if (!R.CONTROL[k]) return say(FUNC_BY[id][1] + ' : pas disponible sur ce TRX.', 'warn', 3000);
+    if (fmOnly(id, s)) return;
     setCtl(k, (((s[k] || 0) + (d > 0 ? 1 : n - 1)) % n));
   };
   const FUNC = [
@@ -876,7 +880,7 @@
       ['decode', 'DECODE', () => '', null, '#3ddc5a'],
       ['rpt', 'RPT', (s) => RPTS[s[sideKey('rpt')]] || '—', ctlCycle('rpt', 3), '#ff3b30', true],
       ['miceq', 'MIC EQ', (s) => (s.micEq ? 'ON' : 'OFF'), (s) => setCtl('micEq', s.micEq ? 0 : 1), '#ff3b30', true],
-      ['encDec', 'ENC/DEC', (s) => ENCDECS[s[sideKey('encDec')]] || '—', ctlCycle('encDec', 5), '#38b6ff', true]],
+      ['encDec', 'ENC/DEC', (s) => ENCDECS[s[sideKey('encDec')]] || '—', ctlCycle('encDec', 3), '#38b6ff', true]],
     [['toneIdx', 'TONE FREQ', (s) => (CTCSS[s[sideKey('toneIdx')]] != null ? CTCSS[s[sideKey('toneIdx')]].toFixed(1) : '—'), ctlStep('toneIdx', 0, 49, 1, true), '#38b6ff'],
       ['rec', 'REC/PLAY', () => '', null, '#38b6ff'],
       ['qmb', 'QMB LIST', () => '', null, '#38b6ff'],

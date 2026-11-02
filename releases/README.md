@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.57 | [RemoteStation-Setup-0.32.57.exe](0.32.57/RemoteStation-Setup-0.32.57.exe) | [remote-station-0.32.57.tar.gz](0.32.57/remote-station-0.32.57.tar.gz) | Face avant : ENC/DEC en FM seulement, EXT-MONITOR lu seulement — [empreintes SHA-256](0.32.57/SHA256SUMS.txt) |
 | 0.32.56 | [RemoteStation-Setup-0.32.56.exe](0.32.56/RemoteStation-Setup-0.32.56.exe) | [remote-station-0.32.56.tar.gz](0.32.56/remote-station-0.32.56.tar.gz) | Face avant : tableau des 18 couleurs (COLOR) — [empreintes SHA-256](0.32.56/SHA256SUMS.txt) |
 | 0.32.55 | [RemoteStation-Setup-0.32.55.exe](0.32.55/RemoteStation-Setup-0.32.55.exe) | [remote-station-0.32.55.tar.gz](0.32.55/remote-station-0.32.55.tar.gz) | Face avant : BACK, STEP DIAL 2,5 kHz — [empreintes SHA-256](0.32.55/SHA256SUMS.txt) |
 | 0.32.54 | [RemoteStation-Setup-0.32.54.exe](0.32.54/RemoteStation-Setup-0.32.54.exe) | [remote-station-0.32.54.tar.gz](0.32.54/remote-station-0.32.54.tar.gz) | Face avant : menus du TRX (FUNC → SETTING) — [empreintes SHA-256](0.32.54/SHA256SUMS.txt) |

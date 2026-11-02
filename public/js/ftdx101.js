@@ -22,7 +22,7 @@
   // Largeurs du FTDX101 (manuel CAT 1912-D, table 3) : SH P1 0 P3P3 ; 00 = largeur par défaut du TRX (voyant WIDTH éteint).
   // Différentes du FTX-1 au-delà de 2100 Hz en SSB, et 18 pas seulement (50 … 3000 Hz) en CW / RTTY / PSK / DATA.
   const SSB_23 = [300, 400, 600, 850, 1100, 1200, 1500, 1650, 1800, 1950, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000, 3200, 3500, 4000];
-  const ENCDEC = [[0, 'OFF'], [1, 'ENC/DEC'], [2, 'ENC'], [3, 'DCS'], [4, 'DCS ENC']];
+  const ENCDEC = [[0, 'OFF'], [1, 'ENC/DEC'], [2, 'ENC']]; // CT P2 (manuel CAT) : CTCSS seulement
   const NARROW_21 = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 800, 1200, 1400, 1700, 2000, 2400, 3000, 3200, 3500, 4000];
 
   // ------------------------------------------------------------ menus du TRX (touche FUNC → … SETTING de la face avant)
@@ -107,7 +107,7 @@
         [7, 'MOUSE POINTER SPEED', N(0, 20)], [8, 'FREQ STYLE', L(['LIGHT', 'BOLD'])]]),
       G('0402', 'DISPLAY SETTING', 'SCOPE', [[1, 'RBW', L(['HIGH', 'MID', 'LOW'])], [2, 'SCOPE CTR', L(['FILTER', 'CARRIER POINT'])],
         [3, '2D DISP SENSITIVITY', L(['NORMAL', 'HI'])], [4, '3DSS DISP SENSITIVITY', L(['NORMAL', 'HI'])]]),
-      G('0403', 'DISPLAY SETTING', 'EXT-MONITOR', [[1, 'EXT DISPLAY', OFFON], [2, 'PIXEL', L(['800x480', '800x600'])]])
+      G('0403', 'DISPLAY SETTING', 'EXT-MONITOR', [[1, 'EXT DISPLAY', RO(OFFON, 'écran externe du club : au club seulement')], [2, 'PIXEL', RO(L(['800x480', '800x600']), 'écran externe du club : au club seulement')]])
     ];
   })();
   /** Réglage d'un menu par son numéro (« 030201 ») */
@@ -252,16 +252,16 @@
       { cmd: 'VT0;', re: /^VT0([01])(\d{3})?(\d)?/, parse: (m) => ({ vc: +m[1], vcPos: m[2] != null ? +m[2] : null, vcOk: m[3] == null ? null : +m[3] }), sim: 'VT001281' },
       { cmd: 'VT1;', re: /^VT1([01])(\d{3})?(\d)?/, parse: (m) => ({ vcB: +m[1], vcPosB: m[2] != null ? +m[2] : null, vcOkB: m[3] == null ? null : +m[3] }), sim: 'VT101281' },
       // Menu FUNC de la face avant : MONI LEVEL (ML1), VOX GAIN (VG), VOX DELAY (VD, ms), ANTI VOX (AV),
-      // décalage relais FM (OS P1 : 0 simplex, 1 +, 2 −), CTCSS / DCS (CT P1 : 0 OFF, 1 ENC/DEC, 2 ENC, 3 DCS ENC/DEC, 4 DCS ENC),
+      // décalage relais FM (OS P1 : 0 simplex, 1 +, 2 −), CTCSS (CT P1 : 0 OFF, 1 ENC/DEC, 2 ENC) — en FM seulement (le TRX refuse sinon),
       // tonalité CTCSS (CN P1 0 P3P3P3 : numéro 000–049)
       { cmd: 'ML1;', re: /^ML1(\d{3})$/, parse: (m) => ({ moniLvl: +m[1] }), sim: 'ML1050' },
       { cmd: 'VG;', re: /^VG(\d{3})$/, parse: (m) => ({ voxGain: +m[1] }), sim: 'VG050' },
-      { cmd: 'VD;', re: /^VD(\d{4})$/, parse: (m) => ({ voxDelay: +m[1] }), sim: 'VD0500' },
+      { cmd: 'VD;', re: /^VD(\d{2,4})$/, parse: (m) => ({ voxDelay: +m[1] }), sim: 'VD0500' },
       { cmd: 'AV;', re: /^AV(\d{3})$/, parse: (m) => ({ antiVox: +m[1] }), sim: 'AV050' },
       { cmd: 'OS0;', re: /^OS0([0-2])$/, parse: (m) => ({ rpt: +m[1] }), sim: 'OS00' },
       { cmd: 'OS1;', re: /^OS1([0-2])$/, parse: (m) => ({ rptB: +m[1] }), sim: 'OS10' },
-      { cmd: 'CT0;', re: /^CT0([0-4])$/, parse: (m) => ({ encDec: +m[1] }), sim: 'CT00' },
-      { cmd: 'CT1;', re: /^CT1([0-4])$/, parse: (m) => ({ encDecB: +m[1] }), sim: 'CT10' },
+      { cmd: 'CT0;', re: /^CT0([0-2])$/, parse: (m) => ({ encDec: +m[1] }), sim: 'CT00' },
+      { cmd: 'CT1;', re: /^CT1([0-2])$/, parse: (m) => ({ encDecB: +m[1] }), sim: 'CT10' },
       { cmd: 'CN00;', re: /^CN00(\d{3})$/, parse: (m) => ({ toneIdx: +m[1] }), sim: 'CN00012' },
       { cmd: 'CN10;', re: /^CN10(\d{3})$/, parse: (m) => ({ toneIdxB: +m[1] }), sim: 'CN10012' }
     ],

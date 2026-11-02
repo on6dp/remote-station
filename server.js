@@ -1060,7 +1060,7 @@ function menuMsg(conn, m) {
   journal('trx_menu', { by: conn.user.call, id: it.id, label: it.label, v: String(m.v) });
   exCall('exwrite', { cmds: ['EX' + it.id + String(m.v) + ';'] }, (ok, err) => {
     if (!ok) return no(it.label + ' : ' + (err || 'pas écrit'));
-    setTimeout(() => read([it.id]), 150);
+    setTimeout(() => read([it.id]), 500); // relecture : si le TRX a refusé (« ?; »), la page retrouve la vraie valeur
   });
 }
 function trxEqMsg(conn, m) {
