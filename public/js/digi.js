@@ -72,6 +72,14 @@
   let WF_MAX_HZ = 3000;
   let WF_LO = 0;
   let WF_TOP = 3000;
+  // FT8 / FT4 / FT2 : plage de chaque cascade (zoom à la molette), gardée dans ce navigateur ; A = VFO-A, B = VFO-B
+  const ftViewLoad = (k) => {
+    try { const o = JSON.parse(store.get(k, '') || 'null'); if (o && o.span >= 300 && o.span <= 3000 && o.lo >= 0 && o.lo + o.span <= 3000) return { lo: o.lo, span: o.span }; } catch (e) { /* */ }
+    return { lo: 0, span: 3000 };
+  };
+  const ftViewA = ftViewLoad('ftviewa'), ftViewB = ftViewLoad('ftviewb');
+  /** Plage affichée par une cascade : celle du VFO-B (double réception) ou la cascade principale */
+  const ftV = (side) => (side === 'B' ? ftViewB : { lo: WF_LO, span: WF_MAX_HZ });
   const RX_WIDTH = 60; // Hz de part et d'autre de la fréquence RX
 
   const POPUP = document.body.dataset.digiPopup === '1';
@@ -850,7 +858,8 @@
     const df = fine ? ((bytes[1] << 8) | bytes[2]) / 1000 : 6.25;
     const tday = fine ? (((bytes[3] << 24) >>> 0) + (bytes[4] << 16) + (bytes[5] << 8) + bytes[6]) * 100 : null;
     const hdr = fine ? 7 : 1;
-    const n = Math.min(bytes.length - hdr, Math.ceil((WF_LO + WF_MAX_HZ) / df));
+    const VW = ftB ? ftViewB : { lo: WF_LO, span: WF_MAX_HZ }; // plage affichée par cette cascade
+    const n = Math.min(bytes.length - hdr, Math.ceil((VW.lo + VW.span) / df));
     let vals = bytes.subarray(hdr, hdr + n);
     if (tab === 'cw' && !isB) { if (cwDf !== df) cwRows.length = 0; cwDf = df; cwRows.push(Uint8Array.from(vals)); if (cwRows.length > 12) cwRows.shift(); }
     // Vitesse (comme « Spd » de JTDX) : 1, 2 ou 3 lignes reçues fondues en une (moyenne des puissances) ;
@@ -899,8 +908,8 @@
     const range = 2 * (fine ? 16 : 25) / Math.pow(2, C.gain / 10); // en octets (2 par dB)
     const off = C.zero + (fine ? 8 : 3);                             // octets
     const flatLvl = floor + 0; // fond aplati ramené au plancher moyen
-    const nHz = WF_MAX_HZ / df; // cases sur la largeur affichée
-    const k0f = WF_LO / df;     // première case affichée (zoom RTTY)
+    const nHz = VW.span / df; // cases sur la largeur affichée
+    const k0f = VW.lo / df;     // première case affichée (zoom RTTY / FT)
     for (let x = 0; x < T.w; x++) {
       // Interpolation entre deux cases (pas d'escalier quand la cascade est plus large que le nombre de cases)
       const fx = Math.max(0, Math.min(n - 1, k0f + (x + 0.5) / T.w * nHz - 0.5));
@@ -972,16 +981,19 @@
     const c = wf.sctx;
     if (!c) return;
     const w = wf.cw;
+    // Repères partagés avec les autres onglets : ce que l'onglet FT a masqué ou pâli (zoom, VFO-B qui émet) est remis
+    if (tab !== 'ftx') for (const id of ['dgMkRx', 'dgMkTx']) if ($(id)) { $(id).style.display = ''; $(id).style.opacity = ''; }
     ticks(c, w);
     if (tab === 'rtty') return drawRttyMarks(c, w);
     if (tab === 'wspr') return drawWsprMarks(c, w);
     if (tab === 'cw') return drawCwMarks(c, w);
     if (tab === 'sstv') return drawSstvMarks(c, w);
     drawFlags(c, w);
-    if (ftDual && wfFB.sctx) { ticks(wfFB.sctx, wfFB.cw); drawFlags(wfFB.sctx, wfFB.cw, 'B'); }
+    if (ftDual && wfFB.sctx) { ticks(wfFB.sctx, wfFB.cw, ftViewB); drawFlags(wfFB.sctx, wfFB.cw, 'B'); }
   }
   // Échelle de 0 à 3000 Hz (graduations façon JTDX)
-  function ticks(c, w) {
+  function ticks(c, w, V) {
+    const LO = V ? V.lo : WF_LO, SP = V ? V.span : WF_MAX_HZ;
     const H = SCALE_H;
     c.clearRect(0, 0, w, H);
     c.fillStyle = '#0b1018';
@@ -991,9 +1003,9 @@
     // Graduations fines façon JTDX : ligne de base, petit trait tous les 50 Hz, moyen tous les 100 Hz, grand tous les 500 Hz
     c.strokeStyle = '#46546a';
     c.beginPath(); c.moveTo(0, 13.5); c.lineTo(w, 13.5); c.stroke();
-    const step = w / WF_MAX_HZ >= 0.25 ? 50 : 100;
-    for (let f = Math.ceil(WF_LO / step) * step; f <= WF_LO + WF_MAX_HZ; f += step) {
-      const x = Math.round(((f - WF_LO) / WF_MAX_HZ) * (w - 1)) + 0.5;
+    const step = w / SP >= 1 ? 10 : w / SP >= 0.25 ? 50 : 100;
+    for (let f = Math.ceil(LO / step) * step; f <= LO + SP; f += step) {
+      const x = Math.round(((f - LO) / SP) * (w - 1)) + 0.5;
       const big = f % 500 === 0;
       const mid = f % 100 === 0;
       c.strokeStyle = big ? '#8a9bb0' : mid ? '#5d6c80' : '#3c4859';
@@ -1001,7 +1013,7 @@
       c.moveTo(x, big ? 11 : 14);
       c.lineTo(x, big ? H : mid ? 20 : 17);
       c.stroke();
-      if (big && f > WF_LO && f < WF_LO + WF_MAX_HZ) {
+      if ((big || (SP <= 1000 && mid)) && f > LO && f < LO + SP) {
         c.fillStyle = '#F0F5FA';
         c.fillText(String(f), x - c.measureText(String(f)).width / 2, 0);
       }
@@ -1011,14 +1023,15 @@
     const B = side === 'B';
     const tf = B ? txFB : txF, rf = B ? rxFB : rxF;
     const txOn = !ftDual || sd() === (B ? 'B' : 'A'); // double réception : drapeau TX pâle sur le VFO qui n'émet pas
+    const VV = ftV(side); // plage affichée (zoom)
     // Largeur d'un signal FT8 (50 Hz) / FT4 (83 Hz) / JT65 (178 Hz) / JTTY (127 Hz, centré) : TX en rouge, RX en vert
     const bw = tab === 'jtty' ? 127 : mode === 'FT4' ? 83 : mode === 'FT2' ? 167 : mode === 'JT65' ? 178 : 50;
     // Drapeaux TX (rouge) et RX (vert) avec leur fréquence ; hampe à la fréquence exacte, drapeau retourné près du bord droit
     c.font = 'bold 11px Verdana, "DejaVu Sans", Arial, sans-serif';
     c.textBaseline = 'middle';
     const flag = (f, y, h, fill, pole, label) => {
-      const x0 = (f / WF_MAX_HZ) * w;
-      const sw = Math.max(3, ((f + bw) / WF_MAX_HZ) * w - x0);
+      const x0 = ((f - VV.lo) / VV.span) * w;
+      const sw = Math.max(3, (bw / VV.span) * w);
       const fw = Math.max(sw, c.measureText(label).width + 12);
       // Hampe toujours à gauche de l'étiquette, sur la fréquence (comme le trait de la cascade)
       c.fillStyle = fill;
@@ -1031,7 +1044,7 @@
     flag(tf, 14, 14, txOn ? 'rgba(190, 28, 28, .92)' : 'rgba(110, 40, 40, .55)', txOn ? '#ff7a6a' : '#8a5a55', 'TX ' + Math.round(tf));
     flag(rf, 29, 15, 'rgba(0, 140, 66, .92)', '#7CF29F', 'RX ' + Math.round(rf));
     // Repères sur la cascade
-    const pos = (el, f) => { el.style.left = (f / WF_MAX_HZ) * 100 + '%'; el.style.width = (bw / WF_MAX_HZ) * 100 + '%'; };
+    const pos = (el, f) => { el.style.left = ((f - VV.lo) / VV.span) * 100 + '%'; el.style.width = (bw / VV.span) * 100 + '%'; el.style.display = f + bw < VV.lo || f > VV.lo + VV.span ? 'none' : ''; };
     pos($(B ? 'ftMkRxB' : 'dgMkRx'), rf);
     pos($(B ? 'ftMkTxB' : 'dgMkTx'), tf);
     $(B ? 'ftMkTxB' : 'dgMkTx').style.opacity = txOn ? '' : '.35';
@@ -1268,10 +1281,11 @@
       const el = $(id);
       const fOf = (e) => {
         const rc = el.getBoundingClientRect();
-        return WF_LO + Math.max(0, Math.min(1, (e.clientX - rc.left) / (rc.width || 1))) * WF_MAX_HZ;
+        const V = ftV(side);
+        return V.lo + Math.max(0, Math.min(1, (e.clientX - rc.left) / (rc.width || 1))) * V.span;
       };
       const move = (e, final) => {
-        const f = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(fOf(e))));
+        const f = Math.max(100, Math.min(WF_TOP - 100, Math.round(fOf(e))));
         if (final) return mk.tx ? setTx(f, side) : setRx(f, side);
         if (mk.tx) { if (B) txFB = f; else txF = f; } else if (B) rxFB = f; else rxF = f;
         drawScale();
@@ -1669,7 +1683,8 @@
     };
     if (d && tab === 'cw') line(d.hz / 1000, '#F2CF4A', 'VFO', true); // CW : fréquence du VFO (battement nul)
     else if (d) {
-      const a = (d.hz + d.sign * WF_LO) / 1000, b = (d.hz + d.sign * (WF_LO + WF_MAX_HZ)) / 1000;
+      const VB = X ? ftViewB : { lo: WF_LO, span: WF_MAX_HZ };
+      const a = (d.hz + d.sign * VB.lo) / 1000, b = (d.hz + d.sign * (VB.lo + VB.span)) / 1000;
       const y0 = yOf(Math.min(a, b)), y1 = yOf(Math.max(a, b));
       if (y1 >= 0 && y0 <= H) {
         c.fillStyle = 'rgba(0, 212, 255, .16)';
@@ -1799,7 +1814,7 @@
       return api.say(who + 'VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz.', '', 4000);
     }
     const audio = d.sign * (hz - d.hz);
-    if (audio >= 150 && audio <= WF_MAX_HZ - 150) { setRx(audio, side); bmDraw(); return; }
+    if (audio >= 150 && audio <= WF_TOP - 150) { setRx(audio, side); bmDraw(); return; }
     const nd = Math.round((hz - d.sign * 1500) / 100) * 100;
     api.setFreq(nd, d.vfo, true);
     setRx(d.sign * (hz - nd), side);
@@ -2027,11 +2042,51 @@
   const RT_ZOOMS = [1, 1.5, 2, 3, 4, 6, 8];
   let rtZoom = RT_ZOOMS.indexOf(Number(store.get('rtzoom', '1'))) >= 0 ? Number(store.get('rtzoom', '1')) : 1;
   // anchor : { f, x } = garder la fréquence audio f sous la même position x (0–1) de la cascade (zoom à la molette)
+  let ftZoomAt = 0;
+  function ftZoom(side, e) {
+    if (tab !== 'ftx' || detached) return;
+    e.preventDefault();
+    const now = Date.now();
+    if (now - ftZoomAt < 90 || !e.deltaY) return; // pavé tactile : un cran à la fois
+    ftZoomAt = now;
+    const cur = ftV(side);
+    const rc = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (e.clientX - rc.left) / (rc.width || 1)));
+    const f = cur.lo + x * cur.span;
+    let span = Math.round(cur.span * (e.deltaY > 0 ? 0.75 : 1 / 0.75) / 10) * 10;
+    span = Math.max(300, Math.min(3000, span));
+    if (span === cur.span) return;
+    const lo = span >= 3000 ? 0 : Math.max(0, Math.min(3000 - span, Math.round((f - x * span) / 10) * 10));
+    ftSetView(side, lo, span);
+  }
+  function ftSetView(side, lo, span) {
+    const V = side === 'B' ? ftViewB : ftViewA;
+    const oldLo = side === 'B' ? ftViewB.lo : WF_LO, oldSpan = side === 'B' ? ftViewB.span : WF_MAX_HZ;
+    V.lo = lo;
+    V.span = span;
+    store.set(side === 'B' ? 'ftviewb' : 'ftviewa', JSON.stringify(V));
+    if (side !== 'B') applySpan(true);
+    else if (wfFB.ctx) {
+      // Historique de la cascade B recalé sur la nouvelle plage
+      const tmp = document.createElement('canvas'); tmp.width = wfFB.w; tmp.height = wfFB.h;
+      tmp.getContext('2d').drawImage(wfFB.ctx.canvas, 0, 0);
+      wfFB.ctx.fillStyle = '#05080d';
+      wfFB.ctx.fillRect(0, 0, wfFB.w, wfFB.h);
+      const k = oldSpan / span;
+      wfFB.ctx.imageSmoothingEnabled = k < 1;
+      wfFB.ctx.drawImage(tmp, ((oldLo - lo) / span) * wfFB.w, 0, wfFB.w * k, wfFB.h);
+      wfFB.ctx.imageSmoothingEnabled = true;
+      wfFB.acc = null;
+    }
+    drawScale();
+    bmDraw();
+  }
   function applySpan(force, anchor) {
     const rt = tab === 'rtty' && !detached;
+    const ftz = tab === 'ftx' && !detached; // FT8 / FT4 / FT2 : plage choisie à la molette
     const top = rt ? rtSpan : 3000;
-    const span = rt ? top / rtZoom : 3000;
-    let lo = 0;
+    const span = rt ? top / rtZoom : ftz ? ftViewA.span : 3000;
+    let lo = ftz ? ftViewA.lo : 0;
     if (rt && span < top) {
       const f = rts[rtTx].f;
       lo = WF_LO;
@@ -3780,7 +3835,7 @@
   }
 
   function setTx(f, side) {
-    const v = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(f)));
+    const v = Math.max(100, Math.min(WF_TOP - 100, Math.round(f)));
     if (side === 'B') { txFB = v; store.set('txfb', v); } else { txF = v; store.set('txf', v); }
     drawScale();
     ftxCfg();
@@ -3788,7 +3843,7 @@
     sendView();
   }
   function setRx(f, side) {
-    const v = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(f)));
+    const v = Math.max(100, Math.min(WF_TOP - 100, Math.round(f)));
     if (side === 'B') {
       rxFB = v;
       store.set('rxfb', v);
@@ -4311,10 +4366,14 @@
         $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'sstv') return; if (tab === 'rtty') setRttyF(fAt(e), 1); else if (tab === 'cw') setCwF(fAt(e), false); else setTx(fAt(e)); });
       }
       // Cascade du VFO-B (FT8 / FT4 / FT2 en double réception) : clic gauche = réception, clic droit = émission
+      const fAtB = (e) => { const r = e.currentTarget.getBoundingClientRect(); return ftViewB.lo + ((e.clientX - r.left) / r.width) * ftViewB.span; };
       for (const id of ['ftWfB', 'ftScaleB']) {
-        $(id).addEventListener('click', (e) => setRx(fAt(e), 'B'));
-        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(fAt(e), 'B'); });
+        $(id).addEventListener('click', (e) => setRx(fAtB(e), 'B'));
+        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(fAtB(e), 'B'); });
+        $(id).addEventListener('wheel', (e) => ftZoom('B', e), { passive: false });
       }
+      // FT8 / FT4 / FT2 : molette sur la cascade (ou son échelle) = zoom autour de la souris (vers soi : plus étroit)
+      for (const id of ['dgWf', 'dgScale']) $(id).addEventListener('wheel', (e) => { if (tab === 'ftx') ftZoom('A', e); }, { passive: false });
       initRtty();
       initWspr();
       initJtty();
