@@ -87,7 +87,8 @@
       '<button class="btn vx-on" id="vxOn" type="button" aria-pressed="false" title="Activer votre micro : votre voix part vers le TRX pendant l’appui sur PTT (LSB / USB…) ; un nouveau clic le coupe">Configuration micro</button>' +
       '<button class="btn vx-trx" id="vxTrxBtn" type="button" hidden title="Égaliseur paramétrique du TRX (menus PRMTRC) : votre profil, mis au TRX quand vous prenez la main">Equalizer TRX</button>' +
       '<div class="vx-b" id="vxBody" hidden>' +
-      '<select id="vxDev" aria-label="Entrée son (micro)"></select>' +
+      '<label class="vx-io" title="Entrée son : votre micro (ce qui part vers le TRX au PTT)">🎤 Entrée <select id="vxDev" aria-label="Entrée son (micro)"></select></label>' +
+      '<label class="vx-io vx-outl" title="Sortie son : où vous entendez le TRX et « M’écouter » (casque, haut-parleurs…)">🔊 Sortie <select id="vxOut" aria-label="Sortie son (casque, haut-parleurs)"></select></label>' +
       '<div class="vx-type" id="vxType"></div>' +
       '<div class="vx-meter" title="Niveau de votre micro après l’égaliseur : visez le vert, jamais le rouge"><i id="vxLvl"></i><b id="vxClip">SAT</b></div>' +
       '<div class="vx-row"><button class="btn" id="vxEqBtn" type="button" title="Égaliseur de votre micro (dans le navigateur) : réglages gardés pour ce micro">Equalizer micro</button></div>' +
@@ -106,6 +107,7 @@
     }
     $('vxOn').addEventListener('click', () => (V.on ? stop(true) : start()));
     $('vxDev').addEventListener('change', () => { const o = $('vxDev').selectedOptions[0]; store.set('dev', o ? o.textContent : ''); start($('vxDev').value); });
+    $('vxOut').addEventListener('change', () => { const o = $('vxOut').selectedOptions[0]; store.set('out', o ? o.textContent : ''); applySink(); });
     $('vxEqBtn').addEventListener('click', openEq);
     $('vxTrxBtn').addEventListener('click', openTrx);
     $('vxMonBtn').addEventListener('click', () => setMonitor(!V.monOn));
@@ -150,6 +152,31 @@
   const txMode = (st) => (st && st.radio ? (st.radio.txVfo === 1 ? st.radio.modeB : st.radio.mode) : '') || '';
 
   // ------------------------------------------------------------ micro
+  // Sortie son (casque / haut-parleurs) : choisie ici, appliquée à l'écoute du TRX (page) et à « M'écouter » (setSinkId, Chrome / Edge)
+  async function listOutputs() {
+    const sel = $('vxOut');
+    if (!sel || !navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audiooutput');
+    const want = store.get('out', '');
+    sel.textContent = '';
+    for (const d of devs) {
+      const o = document.createElement('option');
+      o.value = d.deviceId;
+      o.textContent = d.label || (d.deviceId === 'default' ? 'Sortie par défaut' : 'Sortie ' + (sel.length + 1));
+      sel.appendChild(o);
+    }
+    const hit = Array.from(sel.options).find((o) => o.textContent === want);
+    if (hit) sel.value = hit.value;
+    sel.closest('.vx-io').hidden = !devs.length;
+    applySink();
+  }
+  function sinkId() { const s = $('vxOut'); return s && s.value ? s.value : ''; }
+  function applySink() {
+    const id = sinkId();
+    if (!id) return;
+    if (V.ctx && V.ctx.setSinkId) V.ctx.setSinkId(id === 'default' ? '' : id).catch(() => {});
+    if (V.api && V.api.setSink) V.api.setSink(id === 'default' ? '' : id);
+  }
   async function listDevices(cur) {
     const sel = $('vxDev');
     const devs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audioinput');
@@ -189,10 +216,12 @@
       const track = V.stream.getAudioTracks()[0];
       const set = track ? track.getSettings() : {};
       await listDevices(set.deviceId);
+      listOutputs().catch(() => {});
       V.devId = set.deviceId || '';
       V.label = (track && track.label) || 'Micro';
       V.type = micType(V.label);
       V.ctx = new AudioContext({ sampleRate: RATE, latencyHint: 'interactive' });
+      applySink();
       const url = URL.createObjectURL(new Blob([WORKLET], { type: 'application/javascript' }));
       await V.ctx.audioWorklet.addModule(url);
       URL.revokeObjectURL(url);
@@ -417,6 +446,7 @@
   }
   // Volume de « M’écouter » (casque) : 0 à 300 %, gardé dans ce navigateur
   function monVol() { const v = Number(store.get('monvol', '100')); return Number.isFinite(v) ? Math.max(0, Math.min(300, v)) : 100; }
+  if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange', () => { if (V.on) listOutputs().catch(() => {}); });
   function setMonitor(on) {
     V.monOn = !!on && !!V.mon;
     if (V.mon) V.mon.gain.value = V.monOn ? monVol() / 100 : 0;

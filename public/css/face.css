@@ -195,7 +195,8 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-tx .vx-meter { flex: 0 0 220px; height: 10px; }
 .fc-tx .vx-meter[hidden], .fc-tx #vxEqBtn[hidden] { display: none; }
 .fc-tx .vx-b { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
-.fc-tx .vx-b select { width: 300px; flex: 0 1 300px; }
+.fc-tx .vx-io { flex: 0 1 auto; }
+.fc-tx .vx-b select { width: 240px; flex: 0 1 240px; }
 .fc-tx .vx-type { flex: 0 1 auto; white-space: nowrap; }
 .fc-tx .vx-type .vx-i { color: #f59e0b; cursor: help; }
 .fc-tx .vx-note { flex: 1 1 100%; order: 9; }

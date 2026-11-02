@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.50** — **SSB CONFIGURATION : entrée et sortie son** : 🎤 **Entrée** (votre micro, vers le TRX au PTT) et 🔊 **Sortie** (casque ou haut-parleurs : où vous entendez le TRX et « M'écouter », gardée dans ce navigateur ; Chrome / Edge récents). Face avant et dashboard. Ctrl+F5.
 - **0.32.49** — **Face avant, ligne micro** : plus de répétition du nom du micro (il est déjà dans la liste) ; deuxième ligne : liste du micro · type reconnu et réglage (détails au survol, ⓘ si avertissement) · M'écouter · Volume ; la ligne d'état en dessous. Ctrl+F5 sur /ftdx101.
 - **0.32.48** — **Face avant, ligne sous le TRX** : PTT plus large et moins haut ; une ligne **SSB CONFIGURATION · MICRO** (ex « Configuration micro ») **· EQUALIZER MICRO · niveau du micro · EQUALIZER TRX** ; micro actif : choix du micro, type, état, M'écouter et son volume sur la ligne suivante. Touche **MOX** : allumée seulement quand on pousse sur MOX (plus pendant un PTT). Cartes de bande : fréquences et indicatifs plus grands, une ligne de 17 px par indicatif (plus facile à cliquer). Le dashboard ne change pas. Ctrl+F5 sur /ftdx101.
 - **0.32.47** — **Face avant, cartes de bande** : fréquences de l'échelle et indicatifs en blanc (plus lisibles). Ctrl+F5 sur /ftdx101.

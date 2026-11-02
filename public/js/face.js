@@ -1365,6 +1365,7 @@
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return say('Ce navigateur ne peut pas jouer le son.', 'warn');
       player.ctx = new AC();
+      if (player.sink && player.ctx.setSinkId) player.ctx.setSinkId(player.sink).catch(() => {});
       player.gain = player.ctx.createGain();
       player.gain.connect(player.ctx.destination);
       volume();
@@ -2115,6 +2116,8 @@
   bmPopRestore();
   if (window.RSVOICE) {
     window.RSVOICE.init({ compact: true, send, say, iControl, state: () => st, me: () => me, rig: () => R,
+      // Sortie son choisie dans SSB CONFIGURATION : aussi pour l'écoute du TRX
+      setSink: (id) => { player.sink = id; if (player.ctx && player.ctx.setSinkId) player.ctx.setSinkId(id).catch(() => say('Sortie son : ce navigateur ne permet pas de la choisir (Chrome ou Edge récents).', 'warn', 5000)); },
       sendBin: (buf) => { if (ws && ws.readyState === 1) ws.send(buf); } });
   }
   const sess = store.get('rs.sess', '');

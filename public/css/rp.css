@@ -1460,6 +1460,9 @@ body.bm-resizing { cursor: ew-resize; user-select: none; }
 .vx-b { display: flex; flex-direction: column; gap: 6px; }
 .vx-b[hidden] { display: none; }
 .vx-b select { width: 100%; font: inherit; font-size: 11px; color: var(--v2-text-bright, #fff); background: #111923; border: 1px solid var(--v2-border, #2a3746); border-radius: 4px; padding: 3px 5px; }
+.vx-io { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--v2-text-secondary, #9fb0c2); white-space: nowrap; }
+.vx-io[hidden] { display: none; }
+.vx-io select { flex: 1 1 auto; min-width: 0; }
 .vx-type { font-size: 10.5px; line-height: 1.4; color: var(--v2-text-secondary, #9fb0c2); overflow-wrap: anywhere; }
 .vx-type b { color: var(--v2-text-bright, #fff); }
 .vx-type i { color: #f59e0b; font-style: normal; }
