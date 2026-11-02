@@ -170,10 +170,22 @@
         }
         // Commande refusée par la radio (« ?; ») juste après un réglage : on le signale dans le journal
         if (p.error && this.lastCmd && Date.now() - this.lastCmd.at < 600) {
-          this.log('La radio a refusé la commande ' + this.lastCmd.s);
-          // Visible aussi sur le dashboard (le texte contient « ? » : le serveur l'affiche à celui qui pilote)
-          if (this.wsUp && !/^(VS|MD)/.test(this.lastCmd.s) && !(/^FT/.test(this.lastCmd.s) && FTX1.txVfoTries)) this.sendWs({ t: 'trx_note', text: 'le TRX a refusé la commande « ' + String(this.lastCmd.s).slice(0, 20) + ' » (réponse ?;)' });
+          const lc = this.lastCmd;
           this.lastCmd = null;
+          const note = () => {
+            this.log('La radio a refusé la commande ' + lc.s);
+            // Visible aussi sur le dashboard (le texte contient « ? » : le serveur l'affiche à celui qui pilote)
+            if (this.wsUp && !/^(VS|MD)/.test(lc.s) && !(/^FT/.test(lc.s) && FTX1.txVfoTries)) this.sendWs({ t: 'trx_note', text: 'le TRX a refusé la commande « ' + String(lc.s).slice(0, 20) + ' » (réponse ?;)' });
+          };
+          // Le « ? » peut venir d'une lecture du relevé partie en même temps (lecture sans objet dans ce mode) :
+          // pour un réglage relu, on attend la relecture ; si le TRX a bien pris la valeur, ce n'était pas un refus
+          if (lc.ctl) {
+            setTimeout(() => {
+              const now = this.radio[lc.ctl.id];
+              if (now != null && String(now) === String(lc.ctl.v)) this.log('« ? » reçu après ' + lc.s + ' mais la valeur relue est bonne : réponse d\u2019une lecture, ignorée');
+              else note();
+            }, 1500);
+          } else note();
         }
         if (p.error || p.ok) continue;
         // Lecture qui dépend du côté actif (FTX-1 : PA0 / RA0 → VFO B quand SUB est actif)
@@ -397,6 +409,8 @@
             });
           }
           this._write(FTX1.CONTROL[m.id].write(v, this.radio));
+          // Réglage avec une valeur relue : un « ? » éventuel sera vérifié par la relecture avant d'être signalé
+          if (this.lastCmd && FTX1.CONTROL[m.id].type !== 'action') this.lastCmd.ctl = { id: m.id, v };
           // Réglages de VFO / SPLIT : une émission qui suivrait de près n'est pas voulue (filet de sécurité, FTX-1)
           this.lastCtl = ['split', 'vfoSel', 'swap', 'aToB', 'bToA'].indexOf(m.id) >= 0 ? { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() } : null;
           this.forceSlow = true;
