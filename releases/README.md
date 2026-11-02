@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.33.0 | [RemoteStation-Setup-0.33.0.exe](0.33.0/RemoteStation-Setup-0.33.0.exe) | [remote-station-0.33.0.tar.gz](0.33.0/remote-station-0.33.0.tar.gz) | RTTY : deux cartes de bande (MAIN à gauche, SUB à droite) — [empreintes SHA-256](0.33.0/SHA256SUMS.txt) |
 | 0.32.99 | [RemoteStation-Setup-0.32.99.exe](0.32.99/RemoteStation-Setup-0.32.99.exe) | [remote-station-0.32.99.tar.gz](0.32.99/remote-station-0.32.99.tar.gz) | RTTY : fréquences en grand, TX sur fond rouge — [empreintes SHA-256](0.32.99/SHA256SUMS.txt) |
 | 0.32.98 | [RemoteStation-Setup-0.32.98.exe](0.32.98/RemoteStation-Setup-0.32.98.exe) | [remote-station-0.32.98.tar.gz](0.32.98/remote-station-0.32.98.tar.gz) | FT : zoom des cascades à la molette — [empreintes SHA-256](0.32.98/SHA256SUMS.txt) |
 | 0.32.97 | [RemoteStation-Setup-0.32.97.exe](0.32.97/RemoteStation-Setup-0.32.97.exe) | [remote-station-0.32.97.tar.gz](0.32.97/remote-station-0.32.97.tar.gz) | TX call en jaune fluo — [empreintes SHA-256](0.32.97/SHA256SUMS.txt) |

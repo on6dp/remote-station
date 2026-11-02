@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.33.0** — **RTTY, FTDX101 en double réception (page /ftdx101/digi.html)** : deux cartes de bande comme en FT8 — celle du VFO-A (MAIN) à gauche, celle du VFO-B (SUB) à droite ; clic sur un spot d'une carte = le décodeur de ce VFO se cale dessus. Ctrl+F5 sur /ftdx101/digi.html.
 - **0.32.99** — **RTTY** : fréquence de chaque décodeur (VFO-A, VFO-B) en grand, comme en FT8, sur fond rouge avec « TX » pour le décodeur d'où part l'émission. Ctrl+F5 sur /ftdx101/digi.html et le dashboard.
 - **0.32.98** — **FT8 / FT4 / FT2** : zoom de la cascade à la molette (vers soi : plage plus étroite autour de la souris, jusqu'à 300 Hz ; vers l'avant : plus large, jusqu'à 0–3000 Hz), séparément pour la cascade du VFO-A et celle du VFO-B en double réception ; plage gardée dans le navigateur ; graduations plus fines quand on zoome. Ctrl+F5 sur /ftdx101/digi.html.
 - **0.32.97** — **Page FT8 / FT4 / FT2** : « TX call » en jaune fluo. Ctrl+F5 sur /ftdx101/digi.html.

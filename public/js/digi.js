@@ -604,6 +604,7 @@
       el.classList.toggle('is-rtty', pane === 'rtty' || pane === 'cw');
       for (const id of ['dgMkBM', 'dgMkBS']) if ($(id)) $(id).hidden = pane !== 'rtty' || dualAudio; // repères du décodeur RTTY B
       applyFtDual();
+      bmShow(); // deux cartes de bande selon la double réception (FT, RTTY)
       applySpan();
       sizeCanvas();
     }
@@ -1482,7 +1483,8 @@
   const bmSpots = new Map();
   let bmState = '', bmHost = '', bmRaf = 0, bmBand = '', bmLay = [];
   let bmBandB = '', bmLayB = []; // carte du VFO-B (double réception)
-  const bmDualOn = () => !!(ftDual && tab === 'ftx' && $('bandMapB'));
+  // Deux cartes de bande (page /ftdx101, double réception) : FT8 / FT4 / FT2, et RTTY avec ses deux cascades
+  const bmDualOn = () => !!($('bandMapB') && ((ftDual && tab === 'ftx') || (tab === 'rtty' && rtDualAudio && !detached && /^\/ftdx101/.test(location.pathname))));
   const bmBandOfSide = (X) => (X ? bmBandB : bmBand);
   const bmLayOf = (X) => (X ? bmLayB : bmLay);
   let bmFilt = store.get('bmfilt', 'rtty') === 'all' ? 'all' : 'mode';
@@ -1651,7 +1653,7 @@
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.clearRect(0, 0, W, H);
-    const d = X ? rtDialOf(1) : (tab === 'rtty' && rtDialOf(rtTx)) || rtDialOf(0);
+    const d = X ? rtDialOf(1) : (tab === 'rtty' && !bmDualOn() && rtDialOf(rtTx)) || rtDialOf(0);
     const md = bmMode();
     const cur = bmBandOfSide(X);
     const band = d ? bmBandOf(d.hz / 1000) : cur || '40m';
@@ -1683,7 +1685,7 @@
     };
     if (d && tab === 'cw') line(d.hz / 1000, '#F2CF4A', 'VFO', true); // CW : fréquence du VFO (battement nul)
     else if (d) {
-      const VB = X ? ftViewB : { lo: WF_LO, span: WF_MAX_HZ };
+      const VB = X && tab === 'ftx' ? ftViewB : { lo: WF_LO, span: WF_MAX_HZ };
       const a = (d.hz + d.sign * VB.lo) / 1000, b = (d.hz + d.sign * (VB.lo + VB.span)) / 1000;
       const y0 = yOf(Math.min(a, b)), y1 = yOf(Math.max(a, b));
       if (y1 >= 0 && y0 <= H) {
@@ -1779,13 +1781,14 @@
     if (st && ((st.ptt && st.ptt.active) || st.ftx)) return api.say('Réglage bloqué pendant l’émission.', 'warn');
     const hz = Math.round(khz * 1000);
     if (tab !== 'rtty') return bmTuneOther(hz, call, X);
-    const d = rtDialOf(rtTx);
+    const ch = X ? 1 : bmDualOn() ? 0 : rtTx; // deux cartes : chacune règle le décodeur de son VFO
+    const d = rtDialOf(ch);
     if (!d) return api.say('Fréquence du TRX pas encore lue.', 'warn');
-    const r = rts[rtTx];
+    const r = rts[ch];
     const audio = d.sign * (hz - d.hz);
     // déjà dans la cascade : seul le décodeur bouge
     if (audio >= WF_LO + 150 && audio <= WF_LO + WF_MAX_HZ - 150 && audio >= 200 + r.shift / 2 && audio <= WF_TOP - 100 - r.shift / 2) {
-      setRttyF(audio, rtTx);
+      setRttyF(audio, ch);
       rtHeads();
       bmDraw();
       return;
@@ -1797,7 +1800,7 @@
     applySpan(true);
     drawScale();
     bmDraw();
-    api.say((call ? call + ' : ' : '') + 'VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz, décodeur ' + (rtTx ? 'B' : 'A') + ' sur le signal.', '', 4000);
+    api.say((call ? call + ' : ' : '') + 'VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz, décodeur ' + (ch ? 'B' : 'A') + ' sur le signal.', '', 4000);
   }
   // CW : le VFO va sur la station (battement nul : elle sort à la tonalité du TRX, où le décodeur est déjà calé).
   // FT8 / FT4 / FT2, JT65, JTTY, WSPR : la fréquence de réception se place sur le signal ; hors de la bande audio,
