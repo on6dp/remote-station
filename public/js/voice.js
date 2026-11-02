@@ -360,7 +360,10 @@
       '<p class="vx-hint">Réglez en écoutant au casque (« 🎧 M’écouter »). La SSB passe 300 à 2700 Hz environ : un peu de coupe vers 300 Hz et de la présence vers 2 à 2,5 kHz font une voix qui porte. Gardez le niveau dans le vert. Le gain, la réduction de bruit et les autres options du micro valent pour ce micro seulement.</p>' +
       '<div class="vx-eq-f"><button class="btn" type="button" data-a="mon" aria-pressed="false">🎧 M’écouter</button><button class="btn accent" type="button" data-a="save">Enregistrer pour ce micro</button><button class="btn" type="button" data-a="close">Fermer</button></div>';
     document.body.appendChild(d);
-    d.querySelector('#vxEqMic').textContent = ' — ' + V.label;
+    // Type du micro reconnu d'après son nom (il choisit le réglage proposé au départ) : affiché ici, dans l'égaliseur
+    const mt = V.type || micType(V.label);
+    d.querySelector('#vxEqMic').textContent = ' — ' + V.label + ' (' + mt.name + (V.saved ? ', vos réglages' : ', réglage proposé : ' + (V.eq.name || PRESETS[mt.preset].name)) + ')';
+    if (mt.note) d.querySelector('#vxEqMic').title = mt.note;
     const fill = () => {
       const e = V.eq;
       const set = (k, v) => { const x = d.querySelector('[data-k="' + k + '"]'); if (x) { if (x.type === 'checkbox') x.checked = !!v; else x.value = v; } };
