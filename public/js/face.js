@@ -617,7 +617,7 @@
     el('rect', { x: X(5), y: Y(170), width: c.w - 10, height: 124, class: 'lcd-scope' }, g);
     // Rangée du bas, comme sur l'écran du TRX ; la dernière case montre la fonction réglée par le bouton MULTI
     const BOT = [['CENTER'], ['SPAN', () => openSpan()],
-      ['3DSS'], ['MONO', () => { setColor(L.wfColor === 3 ? 13 : 3); render(); }], ['MULTI', () => { L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'MULTI : scope, OSCILLOSCOPE et AF-FFT du VFO sélectionné' : 'MULTI : affichage normal', '', 2500); render(); }],
+      ['3DSS', () => { L.d3 = !L.d3; store.set('rs.face.3dss', L.d3 ? '1' : '0'); WF.h3 = []; WF.drawn = false; say(L.d3 ? '3DSS : spectre en trois dimensions (le son reçu)' : '3DSS coupé', '', 2500); render(); }], ['MONO', () => { setColor(L.wfColor === 3 ? 13 : 3); render(); }], ['MULTI', () => { L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'MULTI : scope, OSCILLOSCOPE et AF-FFT du VFO sélectionné' : 'MULTI : affichage normal', '', 2500); render(); }],
       ['EXPAND'], ['HOLD', () => { L.hold = !L.hold; render(); }], ['MULTI']];
     const bw = (c.w - 10) / BOT.length;
     LCD.bot = BOT.map(([lab, fn], j) => {
@@ -690,6 +690,7 @@
   const DISPS = ['cascade du MAIN', 'SUB au-dessus, MAIN en dessous', 'MAIN | SUB côte à côte', 'filtres agrandis (MAIN | SUB)'];
   L.disp = Math.max(0, Math.min(3, Number(store.get('rs.face.disp', '0')) || 0));
   L.multi = store.get('rs.face.multi', '0') === '1';
+  L.d3 = store.get('rs.face.3dss', '0') === '1';
   L.wfSpan = Math.max(0, Math.min(2, Number(store.get('rs.face.span3', '2')) || 0));
   L.hold = false;
   L.funcSel = store.get('rs.face.funcsel', 'power');
@@ -1443,6 +1444,7 @@
       if (b.lab === 'HOLD') b.r.classList.toggle('on', !!L.hold);
       if (b.lab === 'SPAN') b.t.textContent = 'SPAN ' + SPANS[L.wfSpan] / 1000 + 'k';
       if (b.lab === 'MULTI' && !b.t2) b.r.classList.toggle('on', !!L.multi);
+      if (b.lab === '3DSS') b.r.classList.toggle('on', !!L.d3);
       // DISP « filtres agrandis » : comme sur le TRX, seuls MULTI, HOLD et la case MULTI restent
       b.t.style.opacity = L.disp === 3 && !b.t2 && b.lab !== 'MULTI' && b.lab !== 'HOLD' ? '0' : '';
     }
@@ -1836,6 +1838,47 @@
     const fHz = Math.min(4000, WF.rate / 2), nb4 = Math.max(2, Math.floor((NFFT / 2) * fHz / (WF.rate / 2)));
     drawScope(c2, { sp, x0: w1 + 2, y0: y1, w: W - w1 - 2, h: hb, name: 'AF-FFT ' + nm, sep: 'v' }, pal, nb4, lvl, fHz);
   }
+  // 3DSS (comme le TRX) : les derniers spectres en perspective, du plus ancien (au fond, en haut, plus étroit) au plus récent (devant)
+  function draw3d(c2, W, H, sp, pal, nb, lvl, maxHz) {
+    c2.fillStyle = '#000';
+    c2.fillRect(0, 0, W, H);
+    if (!sp) return;
+    const COLS = Math.max(60, Math.min(240, Math.floor(W / 3))), ROWS = 46, lab = 12;
+    const row = new Float32Array(COLS);
+    for (let k = 0; k < COLS; k++) {
+      const i0 = Math.floor(k / COLS * nb), i1 = Math.max(i0 + 1, Math.floor((k + 1) / COLS * nb));
+      let m = 0;
+      for (let j = i0; j < i1 && j < nb; j++) if (sp[j] > m) m = sp[j];
+      row[k] = Math.max(0, Math.min(1, m + lvl));
+    }
+    WF.h3 = WF.h3 || [];
+    if (!L.hold) { WF.h3.push(row); if (WF.h3.length > ROWS) WF.h3.shift(); }
+    const yFront = H - lab - 2, yBack = H * 0.12, amp = (H - lab) * 0.45;
+    // Grille du « sol » (lignes fuyantes)
+    c2.strokeStyle = 'rgba(120,130,145,.35)'; c2.lineWidth = 1;
+    for (let g = 0; g <= 8; g++) {
+      const fx = g / 8;
+      c2.beginPath(); c2.moveTo(W * fx, yFront); c2.lineTo(W / 2 + (W * fx - W / 2) * 0.62, yBack); c2.stroke();
+    }
+    const n = WF.h3.length;
+    for (let r = 0; r < n; r++) {
+      const age = (n - 1 - r) / (ROWS - 1);               // 0 devant … 1 au fond
+      const sc = 1 - 0.38 * age, base = yFront - (yFront - yBack) * age, a = amp * sc;
+      const x0 = W / 2 - W * sc / 2, cw = W * sc / COLS;
+      const rr = WF.h3[r];
+      for (let k = 0; k < COLS; k++) {
+        const v = rr[k], c = pal[Math.min(255, Math.round(v * 255))];
+        c2.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+        const h = Math.max(1, v * a);
+        c2.fillRect(x0 + k * cw, base - h, cw + 0.6, h + (yFront - yBack) / ROWS + 1);
+      }
+    }
+    // Échelle (kHz) au pied
+    c2.fillStyle = '#000'; c2.fillRect(0, H - lab, W, lab);
+    c2.fillStyle = '#c9d3e3'; c2.font = '9px "Roboto Mono", monospace'; c2.textAlign = 'center';
+    const st = maxHz <= 2000 ? 500 : 1000;
+    for (let f = st; f < maxHz; f += st) c2.fillText((f / 1000) + 'k', f / maxHz * W, H - 2);
+  }
   function drawFilters(c2, W, H, specs, nb, lvl) {
     // Comme l'écran du TRX (DISP « filtres agrandis ») : deux grands filtres rouges, sans cadre, séparés par un trait ;
     // le spectre n'apparaît qu'à l'intérieur de la bande passante
@@ -1934,6 +1977,7 @@
         const pal = PALS[L.wfColor] || PALS[1];
         if (L.multi) drawMulti(c2, W, H, specs, pal, nb, lvl, maxHz);
         else if (L.disp === 3) drawFilters(c2, W, H, specs, nb, lvl, maxHz);
+        else if (L.d3) draw3d(c2, W, H, activeSide() === 'B' && WF.two ? specs[1] : specs[0], pal, nb, lvl, maxHz);
         else for (const rg of scopeRegions(W, H, specs)) drawScope(c2, rg, pal, nb, lvl, maxHz);
       }
     } else {
