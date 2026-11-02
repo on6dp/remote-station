@@ -1622,8 +1622,17 @@ function broadcast() {
   bcastPending = true;
   setTimeout(() => {
     bcastPending = false;
-    const msg = JSON.stringify(publicState());
-    for (const c of ops) if (c.open) c.send(msg);
+    const base = publicState();
+    const msg = JSON.stringify(base);
+    // Administrateurs : en plus, l'adresse IP de chaque membre connecté (bouton 👥 de la face avant)
+    let adm = null;
+    for (const c of ops) {
+      if (!c.open) continue;
+      if (c.user && c.user.admin) {
+        if (!adm) adm = JSON.stringify(Object.assign({}, base, { usersIp: Array.from(ops).filter((o) => o.open && o.user).map((o) => ({ call: o.user.call, ip: String(o.ip || '').replace(/^::ffff:/, '') })) }));
+        c.send(adm);
+      } else c.send(msg);
+    }
   }, 40);
 }
 

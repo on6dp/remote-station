@@ -187,7 +187,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .lcd-bot.multi { fill: #10141a; stroke: #c9d3e3; stroke-width: 1.2; }
 #face .lcd-bott { fill: #e9edf2; font-size: 10px; font-weight: 700; pointer-events: none; }
 #face .lcd .lcd-bott.blue { fill: #5fa8ff; }
-#face .lcd.mono .flt .flt-trap, #face .lcd.mono .flt .flt-ctr, #face .lcd.mono .flt .flt-notch, #face .lcd.mono .flt .flt-cup, #face .lcd.mono .flt .flt-bars, #face .lcd.mono .flt .flt-box, #face .lcd.mono .flt .flt-vcticks { vector-effect: non-scaling-stroke; }
+#face .lcd.expand .flt .flt-trap, #face .lcd.expand .flt .flt-ctr, #face .lcd.expand .flt .flt-notch, #face .lcd.expand .flt .flt-cup, #face .lcd.expand .flt .flt-bars, #face .lcd.expand .flt .flt-box, #face .lcd.expand .flt .flt-base, #face .lcd.mono .flt .flt-trap, #face .lcd.mono .flt .flt-ctr, #face .lcd.mono .flt .flt-notch, #face .lcd.mono .flt .flt-cup, #face .lcd.mono .flt .flt-bars, #face .lcd.mono .flt .flt-box, #face .lcd.mono .flt .flt-vcticks { vector-effect: non-scaling-stroke; }
 #face .lcd-bott2 { fill: #ff3b30; font-size: 8.5px; font-weight: 800; pointer-events: none; }
 #face .lcd-hit.off:hover { fill: rgba(160, 170, 185, .06); }
 #face .func-pm { fill: #ffcf4a; font-size: 15px; font-weight: 800; pointer-events: none; }
@@ -315,3 +315,14 @@ body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglet
   background: linear-gradient(#e7eaee, #a9b0b9); color: #1b1f25; }
 .fc-span .fc-span-g button.on { background: #1f6fe0; color: #fff; border-color: #9cc4ff; }
 .fc-span .fc-span-g button.off { opacity: .45; cursor: not-allowed; }
+
+/* 👥 membres connectés et messages (face avant) */
+.fc-ops { right: 0; left: auto; width: 380px; }
+.fc-ops .u { align-items: baseline; }
+.fc-ops .u .u-ip { flex: 1; text-align: left; color: #8fb6e8; font: 11px "Roboto Mono", monospace; }
+.fc-ops .u b.blink { animation: rs-blink 1s ease-in-out infinite; }
+#meCall { margin-right: 10px; white-space: nowrap; }
+/* « Profil de … » : fond mauve, texte blanc gras */
+.fc-tx .vx-prof { background: #7b3fb8; border-color: #9b62d6; color: #fff; font-weight: 800; }
+.fc-tx .vx-prof:hover { background: #8d4fcc; color: #fff; }
+.fc-tx .vx-prof.dim { opacity: .8; }

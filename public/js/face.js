@@ -350,6 +350,16 @@
     cv.style.width = (box.w / V.w * 100) + '%';
     cv.style.height = (box.h / V.h * 100) + '%';
     LCD.scopeBox = box;
+    // EXPAND : le scope monte de « up » unités et s'agrandit d'autant (cascade, S.MENU et cadre de réglage suivent)
+    LCD.placeScope = (up) => {
+      const y = box.y - up, h = box.h + up;
+      cv.style.top = ((y - V.y) / V.h * 100) + '%';
+      cv.style.height = (h / V.h * 100) + '%';
+      const smE = $('smenu'), popE = $('lcdPop');
+      if (smE) smE.style.top = ((y + 4 - V.y) / V.h * 100) + '%';
+      if (popE) popE.style.top = ((y + 6 - V.y) / V.h * 100) + '%';
+      WF.drawn = false;
+    };
     // S.MENU : SCOPE MENU posé sur le haut du scope (en HTML, au-dessus de la cascade, qui reste visible)
     const sm = document.createElement('div');
     sm.className = 'fc-smenu';
@@ -652,15 +662,22 @@
       });
     }
     // Bandeau du scope : récepteur actif, état, échelle
-    el('rect', { x: X(5), y: Y(157), width: c.w - 10, height: 11, class: 'lcd-tbar' }, g);
-    LCD.side = el('text', { x: X(10), y: Y(165.5), class: 'lcd-side' }, g, 'MAIN');
-    LCD.flags = el('text', { x: X(c.w / 2), y: Y(165.5), class: 'lcd-flags', 'text-anchor': 'middle' }, g, '');
-    LCD.span = el('text', { x: X(c.w - 10), y: Y(165.5), class: 'lcd-side', 'text-anchor': 'end' }, g, 'BF | 0–4 kHz');
-    el('rect', { x: X(5), y: Y(170), width: c.w - 10, height: 124, class: 'lcd-scope' }, g);
+    const lowG = LCD.lowG = el('g', {}, g); // bandeau du scope (EXPAND : remonté)
+    el('rect', { x: X(5), y: Y(157), width: c.w - 10, height: 11, class: 'lcd-tbar' }, lowG);
+    LCD.side = el('text', { x: X(10), y: Y(165.5), class: 'lcd-side' }, lowG, 'MAIN');
+    LCD.flags = el('text', { x: X(c.w / 2), y: Y(165.5), class: 'lcd-flags', 'text-anchor': 'middle' }, lowG, '');
+    LCD.span = el('text', { x: X(c.w - 10), y: Y(165.5), class: 'lcd-side', 'text-anchor': 'end' }, lowG, 'BF | 0–4 kHz');
+    LCD.scopeRect = el('rect', { x: X(5), y: Y(170), width: c.w - 10, height: 124, class: 'lcd-scope' }, g);
+    // EXPAND : galvanomètres réduits à leur partie haute (S-mètre et première échelle)
+    const defs = el('defs', {}, g);
+    for (const [sd, x0] of [['A', X(5)], ['B', X(289)]]) {
+      const cp = el('clipPath', { id: 'lcdClip' + sd }, defs);
+      el('rect', { x: x0 - 2, y: Y(2), width: 194, height: 50 }, cp);
+    }
     // Rangée du bas, comme sur l'écran du TRX ; la dernière case montre la fonction réglée par le bouton MULTI
     const BOT = [['CENTER'], ['SPAN', () => openSpan()],
       ['3DSS', () => { L.d3 = !L.d3; store.set('rs.face.3dss', L.d3 ? '1' : '0'); WF.h3 = []; WF.drawn = false; say(L.d3 ? '3DSS : spectre en trois dimensions (le son reçu)' : '3DSS coupé', '', 2500); render(); }], ['MONO', () => { L.mono = !L.mono; store.set('rs.face.mono', L.mono ? '1' : '0'); WF.drawn = false; say(L.mono ? 'MONO : un seul VFO à l’écran, celui qui est sélectionné (MAIN ou SUB)' : 'MONO coupé : MAIN et SUB à l’écran', '', 3000); render(); }], ['MULTI', () => { L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'MULTI : scope, OSCILLOSCOPE et AF-FFT du VFO sélectionné' : 'MULTI : affichage normal', '', 2500); render(); }],
-      ['EXPAND'], ['HOLD', () => { L.hold = !L.hold; render(); }], ['MULTI']];
+      ['EXPAND', () => { L.expand = !L.expand; store.set('rs.face.expand', L.expand ? '1' : '0'); say(L.expand ? 'EXPAND : galvanomètres réduits, scope agrandi' : 'EXPAND coupé : affichage normal', '', 2500); render(); }], ['HOLD', () => { L.hold = !L.hold; render(); }], ['MULTI']];
     const bw = (c.w - 10) / BOT.length;
     LCD.bot = BOT.map(([lab, fn], j) => {
       const x = X(5) + j * bw, last = j === BOT.length - 1;
@@ -735,26 +752,39 @@
   L.multi = store.get('rs.face.multi', '0') === '1';
   L.d3 = store.get('rs.face.3dss', '0') === '1';
   L.mono = store.get('rs.face.mono', '0') === '1';
+  L.expand = store.get('rs.face.expand', '0') === '1';
+  const EXP_UP = 34; // EXPAND : hauteur gagnée par le scope (unités de la photo)
   // MONO (comme le TRX) : un seul VFO à l'écran, le sélectionné — son galvanomètre à gauche, son filtre en grand à droite,
   // sa fréquence sous le galvanomètre, ses cases ANT / ATT / IPO / R.FIL / AGC sur toute la largeur, un seul scope
   function applyMono() {
-    const side = activeSide(), key = (L.mono ? 'M' : 'D') + side + L.disp;
+    const side = activeSide(), key = (L.mono ? 'M' : 'D') + (L.expand ? 'E' : 'N') + side + L.disp;
     if (!LCD.g || LCD.monoKey === key) return;
     LCD.monoKey = key;
     const X = LCD.X, Y = LCD.Y, half = LCD.half, W = LCD.cw0;
     LCD.g.classList.toggle('mono', !!L.mono);
+    LCD.g.classList.toggle('expand', !!L.expand);
+    const up = L.expand ? EXP_UP : 0;
+    LCD.lowG.setAttribute('transform', up ? 'translate(0,' + -up + ')' : '');
+    LCD.scopeRect.setAttribute('y', Y(170) - up); LCD.scopeRect.setAttribute('height', 124 + up);
+    if (LCD.placeScope) LCD.placeScope(up);
     for (const sd of ['A', 'B']) {
       const show = !L.mono || sd === side, dx = L.mono && sd === 'B' ? -half : 0;
       LCD['m' + sd].g.style.display = show ? '' : 'none';
       LCD['m' + sd].g.setAttribute('transform', L.mono && sd === 'B' ? 'translate(' + (X(5) - X(289)) + ',0)' : '');
+      if (L.expand) LCD['m' + sd].g.setAttribute('clip-path', 'url(#lcdClip' + sd + ')'); else LCD['m' + sd].g.removeAttribute('clip-path');
       LCD['v' + sd].g.style.display = show ? '' : 'none';
-      LCD['v' + sd].g.setAttribute('transform', dx ? 'translate(' + dx + ',0)' : '');
+      LCD['v' + sd].g.setAttribute('transform', dx || up ? 'translate(' + dx + ',' + -up + ')' : '');
       LCD['cg' + sd].style.display = show ? '' : 'none';
+      LCD['cg' + sd].setAttribute('transform', up ? 'translate(0,' + -up + ')' : '');
       const f = LCD['f' + sd];
       if (L.mono && sd === side) {
         // Filtre agrandi : de la moitié droite de l'écran jusqu'au bas de la fréquence
-        const tx = X(5) + half + 4, ty = Y(6), tw = X(W - 5) - tx, th = Y(124) - ty;
+        const tx = X(5) + half + 4, ty = Y(6), tw = X(W - 5) - tx, th = Y(124 - up) - ty;
         f.g.setAttribute('transform', 'translate(' + tx + ',' + ty + ') scale(' + (tw / f.w).toFixed(4) + ',' + (th / f.h).toFixed(4) + ') translate(' + -f.x0 + ',' + -f.y0 + ')');
+      } else if (up) {
+        // EXPAND : filtre aplati à la hauteur du galvanomètre réduit
+        const th = 36;
+        f.g.setAttribute('transform', 'translate(0,' + f.y0 + ') scale(1,' + (th / f.h).toFixed(4) + ') translate(0,' + -f.y0 + ')');
       } else f.g.removeAttribute('transform');
       if (L.mono && sd !== side) f.g.style.display = 'none';
       // Cases : sur toute la largeur en MONO, sur sa moitié sinon
@@ -1594,6 +1624,7 @@
       if (b.lab === 'MULTI' && !b.t2) b.r.classList.toggle('on', !!L.multi);
       if (b.lab === '3DSS') b.r.classList.toggle('on', !!L.d3);
       if (b.lab === 'MONO') b.t.classList.toggle('blue', !!L.mono); // comme le TRX : MONO écrit en bleu
+      if (b.lab === 'EXPAND') b.t.classList.toggle('blue', !!L.expand);
       // DISP « filtres agrandis » : comme sur le TRX, seuls MULTI, HOLD et la case MULTI restent
       b.t.style.opacity = L.disp === 3 && !b.t2 && b.lab !== 'MULTI' && b.lab !== 'HOLD' ? '0' : '';
     }
@@ -2174,6 +2205,115 @@
   }
   document.addEventListener('visibilitychange', wantAudio);
 
+  // ------------------------------------------------------------ membres connectés (👥) et messages, comme le dashboard
+  // Liste des indicatifs ; l'adresse IP de chacun n'est envoyée par le serveur qu'aux administrateurs
+  const OPS = { chat: [], blink: { call: '', until: 0 }, beep: store.get('rs.chatbeep', '1') !== '0', ctx: null };
+  function opsDraw() {
+    if (!$('usersCount')) return;
+    const list = (st && st.users) || [];
+    $('usersCount').textContent = String(list.length);
+    // À côté de « Prendre / Libérer la main » : son indicatif, et celui qui a la main s'il s'agit d'un autre
+    if (me) $('meCall').textContent = me.call + (st && st.controller && st.controller !== me.call ? ' · main : ' + st.controller : '');
+    if ($('usersMenu').hidden) return;
+    const box = $('usersList');
+    box.textContent = '';
+    const h = document.createElement('h3');
+    h.textContent = list.length + (list.length > 1 ? ' membres connectés' : ' membre connecté');
+    box.appendChild(h);
+    const ips = {};
+    for (const x of (st && st.usersIp) || []) (ips[x.call] = ips[x.call] || []).indexOf(x.ip) < 0 && ips[x.call].push(x.ip);
+    for (const call of list) {
+      const row = document.createElement('div');
+      const isCtrl = st.controller === call;
+      row.className = 'u' + (me && call === me.call ? ' me' : '') + (isCtrl ? ' ctrl' : '');
+      const b = document.createElement('b');
+      b.textContent = call;
+      if (call === OPS.blink.call && Date.now() < OPS.blink.until) b.classList.add('blink');
+      const ip = document.createElement('code');
+      ip.className = 'u-ip';
+      ip.textContent = ips[call] ? ips[call].join(', ') : '';
+      const note = document.createElement('small');
+      const tx = st.ptt && st.ptt.active && st.ptt.by === call;
+      note.textContent = tx ? 'en émission' : isCtrl ? 'a la main' : me && call === me.call ? 'vous' : /^ONL/.test(call) ? 'écouteur' : '';
+      row.append(b, ip, note);
+      box.appendChild(row);
+    }
+    if (st && st.audio && st.audio.listeners) {
+      const p = document.createElement('p');
+      p.textContent = '🔊 ' + st.audio.listeners + ' à l’écoute de la BF';
+      box.appendChild(p);
+    }
+  }
+  function opsToggle(force) {
+    const open = force != null ? force : $('usersMenu').hidden;
+    $('usersMenu').hidden = !open;
+    $('usersBtn').setAttribute('aria-expanded', String(open));
+    if (open) { $('usersDot').hidden = true; $('usersBtn').classList.remove('chat-new'); opsDraw(); $('chat').scrollTop = $('chat').scrollHeight; }
+  }
+  function opsChatDraw() {
+    const box = $('chat');
+    if (!box) return;
+    box.textContent = '';
+    if (!OPS.chat.length) { box.innerHTML = '<p class="chat-empty">Aucun message.</p>'; return; }
+    for (const m of OPS.chat) {
+      const row = document.createElement('div');
+      row.className = 'cm' + (m.kind && m.kind !== 'msg' ? ' ' + m.kind : '') + (me && m.call === me.call ? ' me' : '');
+      const tm = document.createElement('time');
+      tm.textContent = new Date(m.ts).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' });
+      const who = document.createElement('b');
+      who.textContent = m.call;
+      const txt = document.createElement('span');
+      txt.textContent = m.kind === 'ask' ? 'demande la main à ' + m.to : m.kind === 'give' ? 'passe la main à ' + m.to : m.text;
+      row.append(tm, who, txt);
+      box.appendChild(row);
+    }
+    box.scrollTop = box.scrollHeight;
+  }
+  function opsBeep() {
+    if (!OPS.beep) return;
+    try {
+      OPS.ctx = OPS.ctx || new (window.AudioContext || window.webkitAudioContext)();
+      if (OPS.ctx.state === 'suspended') OPS.ctx.resume();
+      const t0 = OPS.ctx.currentTime + 0.02;
+      for (const dt of [0, 0.18]) {
+        const o = OPS.ctx.createOscillator(), g = OPS.ctx.createGain();
+        o.frequency.value = 1200;
+        g.gain.setValueAtTime(0, t0 + dt); g.gain.linearRampToValueAtTime(0.18, t0 + dt + 0.01);
+        g.gain.setValueAtTime(0.18, t0 + dt + 0.09); g.gain.linearRampToValueAtTime(0, t0 + dt + 0.11);
+        o.connect(g).connect(OPS.ctx.destination); o.start(t0 + dt); o.stop(t0 + dt + 0.12);
+      }
+    } catch (e) { /* pas de son */ }
+  }
+  function opsChatAdd(m, live) {
+    if (!m) return;
+    OPS.chat.push(m);
+    while (OPS.chat.length > 40) OPS.chat.shift();
+    opsChatDraw();
+    if (live && (!me || m.call !== me.call)) {
+      OPS.blink = { call: m.call, until: Date.now() + 20000 };
+      if ($('usersMenu').hidden) { $('usersDot').hidden = false; $('usersBtn').classList.add('chat-new'); say('💬 ' + m.call + ' : ' + String(m.text || '').slice(0, 80), '', 6000); }
+      opsBeep();
+      opsDraw();
+      setTimeout(() => { $('usersBtn').classList.remove('chat-new'); opsDraw(); }, 20100);
+    }
+  }
+  if ($('usersBtn')) {
+    $('usersBtn').addEventListener('click', (ev) => { ev.stopPropagation(); opsToggle(); });
+    $('usersMenu').addEventListener('click', (ev) => ev.stopPropagation());
+    document.addEventListener('click', () => { if (!$('usersMenu').hidden) opsToggle(false); });
+    $('chatForm').addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const v = $('chatInput').value.trim();
+      if (!v) return;
+      send({ t: 'chat', text: v });
+      $('chatInput').value = '';
+    });
+    const bb = $('chatBeep');
+    const showBeep = () => { bb.setAttribute('aria-pressed', String(OPS.beep)); bb.textContent = OPS.beep ? '🔔' : '🔕'; };
+    showBeep();
+    bb.addEventListener('click', (ev) => { ev.stopPropagation(); OPS.beep = !OPS.beep; store.set('rs.chatbeep', OPS.beep ? '1' : '0'); showBeep(); if (OPS.beep) opsBeep(); });
+  }
+
   // ------------------------------------------------------------ liaison avec le serveur
   function connect() {
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
@@ -2187,6 +2327,8 @@
       if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && window.RSVOICE) { window.RSVOICE.onMessage(m); return; }
       if (m.t === 'spots' || m.t === 'spot') bmvOnSpots(m); // cartes de bande A / B autour du TRX
       if (m.t === 'menu_vals') return menuVals(m);
+      if (m.t === 'chatlog') { OPS.chat.length = 0; (m.list || []).forEach((x) => OPS.chat.push(x)); opsChatDraw(); return; }
+      if (m.t === 'chat') { opsChatAdd(m.m, true); return; }
       if (DG() && m.t !== 'hello' && m.t !== 'state' && DG().onMessage(m)) return;
       if (m.t === 'hello') {
         me = m;
@@ -2214,6 +2356,7 @@
       } else if (m.t === 'state') {
         st = m;
         render();
+        opsDraw();
         if (DG()) DG().onState(st);
         if (window.RSVOICE) window.RSVOICE.onState(st);
         if (pttHeld && !iControl()) pttUp();

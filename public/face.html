@@ -20,6 +20,18 @@
   </div>
   <div class="tb-title"><img class="tb-logo" src="/img/on5vl-logo.png" alt="ON5VL UBA Liège" width="110" height="48"><span id="stationCall"></span> <b id="clubName">Remote Station</b><img class="tb-logo" src="/img/on5vl-logo.png" alt="" aria-hidden="true" width="110" height="48"></div>
   <div class="tb-right">
+    <span class="tb-users">
+      <button class="btn users-btn" id="usersBtn" type="button" title="Membres connectés et messages (cliquer pour ouvrir)" aria-haspopup="true" aria-expanded="false">👥 <b id="usersCount">0</b><i class="users-dot" id="usersDot" hidden></i></button>
+      <div class="rig-menu users-menu ops-pop fc-ops" id="usersMenu" hidden>
+        <div id="usersList"></div>
+        <div class="chat" id="chat" aria-live="polite"><p class="chat-empty">Aucun message.</p></div>
+        <form class="chat-form" id="chatForm" autocomplete="off">
+          <input id="chatInput" type="text" maxlength="300" placeholder="Message aux connectés…" aria-label="Message aux connectés">
+          <button class="btn accent" type="submit">Envoyer</button>
+          <button class="btn chat-beep" id="chatBeep" type="button" title="Bip sonore à l'arrivée d'un message (clic : couper / remettre)" aria-pressed="true">🔔</button>
+        </form>
+      </div>
+    </span>
     <span class="tb-call" id="meCall">—</span>
     <button class="btn" id="ctrlBtn" type="button">Prendre la main</button>
     <button class="btn accent fc-listen" id="listenBtn" type="button" aria-pressed="false" title="Entendre la BF du TRX (aussi : clic sur la prise PHONES)">🔊 Écouter le TRX</button>
