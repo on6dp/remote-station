@@ -23,6 +23,20 @@
   // Différentes du FTX-1 au-delà de 2100 Hz en SSB, et 18 pas seulement (50 … 3000 Hz) en CW / RTTY / PSK / DATA.
   const SSB_23 = [300, 400, 600, 850, 1100, 1200, 1500, 1650, 1800, 1950, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000, 3200, 3500, 4000];
   const ENCDEC = [[0, 'OFF'], [1, 'ENC/DEC'], [2, 'ENC']]; // CT P2 (manuel CAT) : CTCSS seulement
+  // Scope du TRX (SS) : P3…P7 (5 caractères) → valeur de la page, et l'inverse
+  //   0 SPEED : 0 SLOW1 … 4 FAST3 ; 1 PEAK : 0 LV1 … 4 LV5 ; 2 MARKER : 0 / 1 ; 3 COLOR : P3 0…A = COLOR-1…11,
+  //   P4 0…6 = COLOR-12…18 avec P5 = 1 (NARROW BAND COLOR) ; 4 LEVEL : « -30.0 »…« +30.0 » ; 5 SPAN : 0 1 kHz … 9 1 MHz
+  function ssParse(p2, t) {
+    if (p2 === 4) { const v = parseFloat(t); return Number.isFinite(v) && Math.abs(v) <= 30 ? v : null; }
+    if (p2 === 3) { if (t[2] === '1' && /[0-6]/.test(t[1])) return 12 + +t[1]; const n = parseInt(t[0], 16); return n >= 0 && n <= 10 ? n + 1 : null; }
+    const n = parseInt(t[0], 10);
+    return Number.isFinite(n) ? n : null;
+  }
+  function ssFmt(p2, v) {
+    if (p2 === 4) { const a = Math.abs(v); return (v < 0 ? '-' : '+') + pad(Math.floor(a), 2) + '.' + (a % 1 ? '5' : '0'); }
+    if (p2 === 3) return v >= 12 ? '0' + (v - 12) + '100' : (v - 1).toString(16).toUpperCase() + '0000';
+    return String(v) + '0000';
+  }
   const NARROW_21 = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 800, 1200, 1400, 1700, 2000, 2400, 3000, 3200, 3500, 4000];
 
   // ------------------------------------------------------------ menus du TRX (touche FUNC → … SETTING de la face avant)
@@ -269,6 +283,11 @@
       // FAST (accord rapide du grand bouton) : FS P1 0 = OFF, 1 = ON
       // FAST (manuel CAT FTDX101) : réglage FS0 / FS1 = MAIN OFF / ON, FS2 / FS3 = SUB OFF / ON ;
       // lecture « FS4 »…« FS7 » : bit 1 = MAIN, bit 2 = SUB → FAST affiché = celui du côté sélectionné (derive)
+      // Scope du TRX (SS P1 P2 P3…P7, manuel CAT) : SPEED, PEAK, MARKER, COLOR, LEVEL, SPAN de MAIN (P1 0) et SUB (P1 1)
+      ...[0, 1].flatMap((p1) => ['Spd', 'Peak', 'Marker', 'Color', 'Level', 'Span'].map((k, p2) => ({
+        cmd: 'SS' + p1 + p2 + ';', re: new RegExp('^SS' + p1 + p2 + '(.{5})$'),
+        parse: (m) => { const v = ssParse(p2, m[1]); return v == null ? {} : { ['ss' + k + (p1 ? 'B' : 'A')]: v }; },
+        sim: 'SS' + p1 + p2 + ['20000', '00000', '10000', 'C0000', '+00.0', '20000'][p2].replace('C', '0') }))),
       { cmd: 'FS;', re: /^FS([0-7])$/, parse: (m) => ({ fastA: +m[1] & 1, fastB: (+m[1] >> 1) & 1 }), sim: 'FS4' },
       { cmd: 'ML1;', re: /^ML1(\d{3})$/, parse: (m) => ({ moniLvl: +m[1] }), sim: 'ML1050' },
       { cmd: 'VG;', re: /^VG(\d{3})$/, parse: (m) => ({ voxGain: +m[1] }), sim: 'VG050' },
@@ -282,7 +301,7 @@
       { cmd: 'CN10;', when: (st) => /FM/.test(st.modeB || ''), re: /^CN10(\d{3})$/, parse: (m) => ({ toneIdxB: +m[1] }), sim: 'CN10012' }
     ],
     extraQueries: ['RF0;', 'RF1;', 'ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
-    extraStateKeys: ['fastA', 'fastB', 'clarA', 'ritA', 'xitA', 'clarB', 'ritB', 'xitB', 'lockB', 'lockRaw', 'fastStep', 'moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
+    extraStateKeys: ['ssSpdA', 'ssPeakA', 'ssMarkerA', 'ssColorA', 'ssLevelA', 'ssSpanA', 'ssSpdB', 'ssPeakB', 'ssMarkerB', 'ssColorB', 'ssLevelB', 'ssSpanB', 'fastA', 'fastB', 'clarA', 'ritA', 'xitA', 'clarB', 'ritB', 'xitB', 'lockB', 'lockRaw', 'fastStep', 'moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
     // CW : mémoire 1 du manipulateur (écrasée), lue par KY6 (« Message Keyer 1 Playback », manuel CAT 1912-D) ;
     // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
@@ -318,6 +337,9 @@
     },
     extraControls: [
       { id: 'lockB', g: 'vfo', label: 'LOCK (SUB)', type: 'toggle', face: true, write: (v) => 'LK' + (v ? 3 : 2) + ';' },
+      ...['Spd', 'Peak', 'Marker', 'Color', 'Level', 'Span'].map((k, p2) => ({ id: 'ss' + k, g: 'scope', label: 'Scope ' + k, face: true,
+        type: p2 === 2 ? 'toggle' : 'level', min: [0, 0, 0, 1, -30, 0][p2], max: [4, 4, 1, 18, 30, 9][p2], step: p2 === 4 ? 0.5 : 1,
+        write: (v, st) => 'SS' + (st && st.vfoSel === 1 ? 1 : 0) + p2 + ssFmt(p2, v) + ';' })),
       { id: 'fastStep', g: 'rx', label: 'FAST', type: 'toggle', face: true, write: (v, st) => 'FS' + ((st && st.vfoSel === 1 ? 2 : 0) + (v ? 1 : 0)) + ';' }, // côté sélectionné
       { id: 'micEq', g: 'tx', sec: 'tx', label: 'MIC EQ', type: 'toggle', write: (v) => 'PR1' + (v ? 2 : 1) + ';' },
       { id: 'nbLvl', g: 'flt', sec: 'dsp', label: 'Niveau NB', type: 'level', min: 0, max: 10, step: 1, write: (v) => 'NL0' + pad(v, 3) + ';' },

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.73 | [RemoteStation-Setup-0.32.73.exe](0.32.73/RemoteStation-Setup-0.32.73.exe) | [remote-station-0.32.73.tar.gz](0.32.73/remote-station-0.32.73.tar.gz) | Face avant : scope du TRX relié (SPEED, PEAK, MARKER, COLOR, LEVEL, SPAN), MULTI en bleu — [empreintes SHA-256](0.32.73/SHA256SUMS.txt) |
 | 0.32.72 | [RemoteStation-Setup-0.32.72.exe](0.32.72/RemoteStation-Setup-0.32.72.exe) | [remote-station-0.32.72.tar.gz](0.32.72/remote-station-0.32.72.tar.gz) | FTDX101 : FAST et LOCK MAIN / SUB d'après le manuel CAT — [empreintes SHA-256](0.32.72/SHA256SUMS.txt) |
 | 0.32.71 | [RemoteStation-Setup-0.32.71.exe](0.32.71/RemoteStation-Setup-0.32.71.exe) | [remote-station-0.32.71.tar.gz](0.32.71/remote-station-0.32.71.tar.gz) | Face avant : BAND MAP A et B, même place pour les indicatifs — [empreintes SHA-256](0.32.71/SHA256SUMS.txt) |
 | 0.32.70 | [RemoteStation-Setup-0.32.70.exe](0.32.70/RemoteStation-Setup-0.32.70.exe) | [remote-station-0.32.70.tar.gz](0.32.70/remote-station-0.32.70.tar.gz) | Face avant : BAND MAP, trait de l'échelle après les fréquences — [empreintes SHA-256](0.32.70/SHA256SUMS.txt) |

@@ -290,7 +290,7 @@
     buildLcd();
     // Boutons rotatifs (sous les touches : une touche posée sur le bord du grand bouton reste cliquable)
     for (const k of FACE.knobs || []) {
-      const g = el('g', { class: 'kn' + (k.dial ? ' dial' : ''), 'data-knob': k.id }, svg);
+      const g = el('g', { class: 'kn' + (k.dial ? ' dial' : '') + (k.ri ? '' : ' single'), 'data-knob': k.id }, svg);
       el('circle', { cx: k.cx, cy: k.cy, r: k.ro, class: 'kn-o' }, g);
       // Bouton du centre : sur la photo, prise de biais, son capuchon est un peu décalé du centre de la bague (k.ix, k.iy)
       if (k.ri) {
@@ -401,20 +401,20 @@
     sm.addEventListener('pointerleave', () => { L.smHover = false; smArm(); });
   }
   // SCOPE MENU (touche S.MENU) : comme sur le TRX, il se ferme seul 3 s après la dernière action
-  const PEAKS = ['OFF', 'LV1', 'LV2', 'LV3'];
+  const PEAKS = ['OFF', 'LV1', 'LV2', 'LV3', 'LV4', 'LV5'];
   const SMENU = [['spd', 'SPEED', () => WF_SPEEDS[L.wfSpeed][0], 'Vitesse de la cascade (clic : suivante ; molette)'],
-    ['peak', 'PEAK', () => PEAKS[L.peak], 'Crêtes du spectre gardées un moment : OFF, LV1 (longtemps) … LV3 (brièvement)'],
+    ['peak', 'PEAK', () => PEAKS[L.peak], 'Crêtes du spectre gardées un moment : OFF, LV1 (longtemps) … LV5 (brièvement)'],
     ['marker', 'MARKER', () => (L.marker ? 'ON' : 'OFF'), 'Bande passante du filtre et repère central sur le spectre'],
     ['color', 'COLOR', () => String(L.wfColor), 'Couleurs de la cascade : 18 couleurs comme le TRX (clic : le tableau des couleurs ; molette ou bouton MULTI : couleur suivante)'],
     ['level', 'LEVEL', () => (L.wfLevel >= 0 ? '+' : '') + L.wfLevel.toFixed(1) + 'dB', 'Niveau de la cascade : clic à gauche −, à droite + (ou molette)']];
-  L.peak = Math.max(0, Math.min(3, Number(store.get('rs.face.peak', '0')) || 0));
+  L.peak = Math.max(0, Math.min(5, Number(store.get('rs.face.peak', '0')) || 0));
   L.marker = store.get('rs.face.marker', '1') !== '0';
   function smAdjust(id, d) {
-    if (id === 'spd') { L.wfSpeed = (L.wfSpeed + (d > 0 ? 1 : 3)) % 4; store.set('rs.face.wfspd', L.wfSpeed); }
-    else if (id === 'peak') { L.peak = (L.peak + (d > 0 ? 1 : 3)) % 4; store.set('rs.face.peak', L.peak); WF.peak = {}; }
-    else if (id === 'marker') { L.marker = !L.marker; store.set('rs.face.marker', L.marker ? '1' : '0'); }
+    if (id === 'spd') { L.wfSpeed = (L.wfSpeed + (d > 0 ? 1 : 4)) % 5; store.set('rs.face.wfspd5', L.wfSpeed); ssSend('Spd'); }
+    else if (id === 'peak') { L.peak = (L.peak + (d > 0 ? 1 : 5)) % 6; store.set('rs.face.peak', L.peak); WF.peak = {}; ssSend('Peak'); }
+    else if (id === 'marker') { L.marker = !L.marker; store.set('rs.face.marker', L.marker ? '1' : '0'); ssSend('Marker'); }
     else if (id === 'color') { setColor(L.wfColor + (d > 0 ? 1 : -1)); }
-    else if (id === 'level') { L.wfLevel = Math.max(-30, Math.min(30, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); }
+    else if (id === 'level') { L.wfLevel = Math.max(-30, Math.min(30, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); ssSend('Level'); }
     smDraw();
     render();
     smArm();
@@ -719,9 +719,10 @@
   function outsideMode(ev) { if (!ev.target.closest || !ev.target.closest('.mode-menu')) closeModeMenu(); }
   // Menu FUNC (comme sur le TRX, mais à la souris) : clic = choisir la case (ou basculer / changer une valeur à choix),
   // molette sur la case ou bouton MULTI = régler la case choisie. Cases grises : pas disponibles à distance.
-  const WF_SPEEDS = [['FAST1', 30], ['FAST2', 50], ['MID', 80], ['SLOW', 140]];
+  // SPEED comme le TRX (SS P2 = 0) : SLOW1, SLOW2, FAST1, FAST2, FAST3 — et intervalle de la cascade de la page
+  const WF_SPEEDS = [['SLOW1', 200], ['SLOW2', 140], ['FAST1', 80], ['FAST2', 50], ['FAST3', 30]];
   const STEPS = [[10, '10Hz'], [100, '100Hz'], [1000, '1kHz']];
-  L.wfSpeed = Math.max(0, Math.min(3, Number(store.get('rs.face.wfspd', '1')) || 0));
+  L.wfSpeed = Math.max(0, Math.min(4, Number(store.get('rs.face.wfspd5', '2')) || 0));
   L.wfColor = Math.max(1, Math.min(18, Number(store.get('rs.face.wfcol18', '13')) || 13));
   L.wfLevel = Math.max(-30, Math.min(30, Number(store.get('rs.face.wflvl', '0')) || 0));
   L.func = false;
@@ -765,7 +766,44 @@
       });
     }
   }
-  L.wfSpan = Math.max(0, Math.min(2, Number(store.get('rs.face.span3', '2')) || 0));
+  // SPAN : celui du TRX (SS P2 = 5 : 1 kHz … 1 MHz), envoyé au scope du TRX ; la page montre le son reçu, 5 kHz au plus
+  L.trxSpan = Math.max(0, Math.min(9, Number(store.get('rs.face.span10', '2')) || 0));
+  L.wfSpan = Math.min(2, L.trxSpan);
+  function setTrxSpan(i, fromTrx) {
+    L.trxSpan = i; L.wfSpan = Math.min(2, i);
+    store.set('rs.face.span10', String(i));
+    WF.drawn = false;
+    if (!fromTrx) ssSend('Span');
+  }
+  // Réglages du scope du TRX (MAIN ou SUB, côté sélectionné) : envoyés avec la main, relus et suivis
+  const SS_VAL = { Spd: () => L.wfSpeed, Peak: () => (L.peak ? L.peak - 1 : null), Marker: () => (L.marker ? 1 : 0), Color: () => L.wfColor, Level: () => L.wfLevel, Span: () => L.trxSpan };
+  L.ssSeen = {};
+  function ssSend(k) {
+    const v = SS_VAL[k]();
+    if (v == null || !R || !R.CONTROL['ss' + k] || !iControl()) return;
+    // L'ancienne valeur encore relue pendant ~3 s ne doit pas ramener la page en arrière
+    (L.ssHold = L.ssHold || {})[k + activeSide()] = { v, until: Date.now() + 3000 };
+    send({ t: 'set', ctl: 'ss' + k, value: v });
+  }
+  function ssFollow(s) {
+    if (!R || !R.CONTROL.ssSpd) return;
+    const side = activeSide();
+    if (L.ssSide !== side) { L.ssSide = side; L.ssSeen = {}; }
+    for (const k of Object.keys(SS_VAL)) {
+      const v = s['ss' + k + side];
+      if (v == null) continue;
+      const h = L.ssHold && L.ssHold[k + side];
+      if (h) { if (v === h.v || Date.now() > h.until) delete L.ssHold[k + side]; else continue; if (v === h.v) { L.ssSeen[k + side] = v; continue; } }
+      if (L.ssSeen[k + side] === v) continue;
+      L.ssSeen[k + side] = v;
+      if (k === 'Spd') { L.wfSpeed = v; store.set('rs.face.wfspd5', v); }
+      else if (k === 'Peak') { if (L.peak) { L.peak = v + 1; store.set('rs.face.peak', L.peak); } }
+      else if (k === 'Marker') { L.marker = !!v; store.set('rs.face.marker', v ? '1' : '0'); }
+      else if (k === 'Color') { if (v !== L.wfColor) setColor(v, true); }
+      else if (k === 'Level') { L.wfLevel = v; store.set('rs.face.wflvl', v); }
+      else if (k === 'Span') { if (v !== L.trxSpan) setTrxSpan(v, true); }
+    }
+  }
   L.hold = false;
   L.funcSel = store.get('rs.face.funcsel', 'power');
   const stepNow = () => (L.fine ? 0 : L.fast ? 2 : 1);
@@ -786,27 +824,27 @@
       box.addEventListener('click', (e) => {
         const b = e.target.closest('[data-span]');
         if (!b) return;
-        const i = SPAN_TRX.indexOf(b.dataset.span), k = SPANS.indexOf([1000, 2000, 5000][i]);
-        if (k < 0) return say('SPAN ' + b.dataset.span + ' : le scope du TRX ne passe pas par la liaison CAT ; la page montre le son reçu (5 kHz au plus).', 'warn', 5000);
-        L.wfSpan = k;
-        store.set('rs.face.span3', String(k));
-        WF.drawn = false;
+        const i = SPAN_TRX.indexOf(b.dataset.span);
+        if (i < 0) return;
+        setTrxSpan(i);
+        if (i > 2) say('SPAN ' + b.dataset.span + ' : réglé sur le scope du TRX ; la page montre le son reçu (5 kHz au plus).', '', 4000);
         box.hidden = true;
         render();
       });
     }
     box.style.fontSize = Math.max(9, Math.round($('facePanel').clientWidth / V.w * 11)) + 'px';
-    const cur = SPANS[L.wfSpan] / 1000 + 'k';
-    box.innerHTML = '<div class="fc-col-t">SPAN</div><div class="fc-span-g">' + SPAN_TRX.map((s, i) => '<button type="button" data-span="' + s + '" class="' + (s === cur ? 'on' : '') + (i > 2 ? ' off' : '') + '"' +
-      (i > 2 ? ' title="Pas sur la page : le scope du TRX ne passe pas par le CAT (la page montre le son reçu)"' : '') + '>' + s + '</button>').join('') + '</div>';
+    const cur = SPAN_TRX[L.trxSpan];
+    box.innerHTML = '<div class="fc-col-t">SPAN</div><div class="fc-span-g">' + SPAN_TRX.map((s, i) => '<button type="button" data-span="' + s + '" class="' + (s === cur ? 'on' : '') + '"' +
+      (i > 2 ? ' title="Réglé sur le scope du TRX ; la page montre le son reçu (5 kHz au plus)"' : '') + '>' + s + '</button>').join('') + '</div>';
     box.hidden = false;
   }
 
   // ------------------------------------------------------------ tableau des couleurs (COLOR), comme sur le TRX
   // Clic sur COLOR (FUNC ou S.MENU), ou COLOR choisi puis bouton MULTI : le tableau s'ouvre ; MULTI / molette : couleur suivante ; clic : celle-là ; BACK : fermer
-  function setColor(k) {
+  function setColor(k, fromTrx) {
     L.wfColor = ((k - 1 + 18) % 18) + 1;
     store.set('rs.face.wfcol18', String(L.wfColor));
+    if (!fromTrx) ssSend('Color');
     WF.drawn = false;
     colDraw();
   }
@@ -983,11 +1021,11 @@
   };
   const FUNC = [
     // [id, libellé, valeur affichée (s), réglage (s, pas) | null, couleur du trait, basculer au clic]
-    [['spd', 'SPEED', () => WF_SPEEDS[L.wfSpeed][0], (s, d) => { L.wfSpeed = Math.max(0, Math.min(3, L.wfSpeed + d)); store.set('rs.face.wfspd', L.wfSpeed); }, '#ff8a1f'],
-      ['peak', 'PEAK', () => PEAKS[L.peak], (s, d) => { L.peak = (L.peak + (d > 0 ? 1 : 3)) % 4; store.set('rs.face.peak', L.peak); WF.peak = {}; }, '#ff8a1f'],
-      ['marker', 'MARKER', () => (L.marker ? 'ON' : 'OFF'), () => { L.marker = !L.marker; store.set('rs.face.marker', L.marker ? '1' : '0'); }, '#ff8a1f', true],
+    [['spd', 'SPEED', () => WF_SPEEDS[L.wfSpeed][0], (s, d) => { L.wfSpeed = Math.max(0, Math.min(4, L.wfSpeed + d)); store.set('rs.face.wfspd5', L.wfSpeed); ssSend('Spd'); }, '#ff8a1f'],
+      ['peak', 'PEAK', () => PEAKS[L.peak], (s, d) => { L.peak = (L.peak + (d > 0 ? 1 : 5)) % 6; store.set('rs.face.peak', L.peak); WF.peak = {}; ssSend('Peak'); }, '#ff8a1f'],
+      ['marker', 'MARKER', () => (L.marker ? 'ON' : 'OFF'), () => { L.marker = !L.marker; store.set('rs.face.marker', L.marker ? '1' : '0'); ssSend('Marker'); }, '#ff8a1f', true],
       ['color', 'COLOR', () => String(L.wfColor), (s, d) => { setColor(L.wfColor + (d > 0 ? 1 : -1)); openColors(); }, '#ff8a1f'],
-      ['level', 'LEVEL', () => (L.wfLevel >= 0 ? '+' : '') + L.wfLevel.toFixed(1) + 'dB', (s, d) => { L.wfLevel = Math.max(-30, Math.min(30, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); }, '#ff8a1f']],
+      ['level', 'LEVEL', () => (L.wfLevel >= 0 ? '+' : '') + L.wfLevel.toFixed(1) + 'dB', (s, d) => { L.wfLevel = Math.max(-30, Math.min(30, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); ssSend('Level'); }, '#ff8a1f']],
     [['power', 'RF POWER', (s) => (s.power != null ? s.power + 'W' : '—'), (s, d) => power(d * 5), '#8a5cff'],
       ['moniLvl', 'MONI LEVEL', (s) => num(s.moniLvl), ctlStep('moniLvl', 0, 100, 1), '#8a5cff'],
       ['nrLvl', 'DNR LEVEL', (s) => (s.nrLvl != null ? String(s.nrLvl) : '—'), (s, d) => setCtl('nrLvl', Math.max(1, Math.min(15, (s.nrLvl || 1) + d))), '#8a5cff'],
@@ -1546,12 +1584,13 @@
     LCD.flags.classList.toggle('tx', tx);
     LCD.span.textContent = ['', 'SUB / MAIN · ', 'MAIN | SUB · ', 'FILTRES · '][L.disp] + spanLabel() + (L.hold ? ' · HOLD' : '');
     applyMono();
+    ssFollow(s);
     for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) ? 'none' : '';
     drawFunc(s);
     for (const b of LCD.bot || []) {
       if (b.t2) b.t2.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
       if (b.lab === 'HOLD') b.r.classList.toggle('on', !!L.hold);
-      if (b.lab === 'SPAN') b.t.textContent = 'SPAN ' + SPANS[L.wfSpan] / 1000 + 'k';
+      if (b.lab === 'SPAN') b.t.textContent = 'SPAN ' + SPAN_TRX[L.trxSpan];
       if (b.lab === 'MULTI' && !b.t2) b.r.classList.toggle('on', !!L.multi);
       if (b.lab === '3DSS') b.r.classList.toggle('on', !!L.d3);
       if (b.lab === 'MONO') b.t.classList.toggle('blue', !!L.mono); // comme le TRX : MONO écrit en bleu
@@ -1909,7 +1948,7 @@
       const key = name || 'M';
       let pk = WF.peak[key];
       if (!pk || pk.length !== w) pk = WF.peak[key] = new Float32Array(w);
-      const dec = [0, 0.003, 0.009, 0.025][L.peak];
+      const dec = [0, 0.002, 0.004, 0.009, 0.016, 0.025][L.peak];
       c2.fillStyle = 'rgba(120,205,255,.95)';
       for (let px = 0; px < w; px++) {
         pk[px] = Math.max(col[px], pk[px] - dec);

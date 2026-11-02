@@ -58,6 +58,8 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .kn.grab { cursor: grabbing; }
 #face .kn circle { fill: transparent; stroke: transparent; }
 #face .kn:hover .kn-o { stroke: rgba(140, 200, 255, .45); stroke-width: 1.5; stroke-dasharray: 4 4; }
+/* Bouton simple (MULTI PUSH ON…) : au survol, cercle bleu plein comme la bague des autres boutons */
+#face .kn.single:hover .kn-o { stroke: #4fc3ff; stroke-width: 3; stroke-dasharray: none; fill: rgba(79, 195, 255, .22); }
 #face .kn:hover .kn-i { stroke: rgba(255, 210, 90, .55); stroke-width: 1.2; }
 /* Boutons doubles : la partie sous la souris bien visible (centre orange, bague bleue) */
 #face .kn .kn-ring { fill: transparent; stroke: none; pointer-events: none; }
