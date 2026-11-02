@@ -346,3 +346,10 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .fc-tx .dxc-btn { padding: 6px 12px; font-size: 11px; }
 .fc-tx .dxc-menu { left: 0; right: auto; }
 .fc-tx .vx { overflow: visible; } /* menu du DX Cluster déroulé hors du cadre */
+
+/* DIGI CONFIGURATION : au-dessus de SSB CONFIGURATION, même titre jaune, aligné à gauche */
+.fc-tx .fc-digirow { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding-bottom: 6px; border-bottom: 1px solid #1d2733; }
+.fc-tx .fc-digih { flex: 0 0 auto; margin-right: 6px; }
+.fc-tx .fc-digim { width: auto; flex: 0 0 auto; padding: 5px 12px; font-size: 11px; font-weight: 800; background: #0f2a3f; border-color: #1f5b86; color: #e8f4ff; }
+.fc-tx .fc-digim:hover { background: #164466; color: #fff; border-color: #5fb3ff; }
+.fc-tx .vx > .vx-h, .fc-tx .fc-digih { flex: 0 0 150px; }

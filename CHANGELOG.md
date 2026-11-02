@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.84** — **Face avant, ligne DIGI CONFIGURATION** au-dessus de SSB CONFIGURATION (même titre jaune, alignée dessus) : FT8, FT4, FT2, RTTY, WSPR, JT65, JTTY, CW, SSTV ; un clic ouvre la page des modes numériques (/ftdx101/digi.html) sur ce mode (FT8 / FT4 / FT2 : onglet FT avec ce mode), ou l'y fait passer si elle est déjà ouverte. Ctrl+F5 sur /ftdx101.
 - **0.32.83** — **Modes numériques de la face avant à leur propre adresse** : `remote.op0p.be/ftdx101/digi.html` (même page que `/digi.html`, qui reste celle du dashboard générique) ; le bouton 📟 Numériques de /ftdx101 l'ouvre maintenant à cette adresse. Serveur modifié (adresse ajoutée) : `install.sh` le redémarre ; Ctrl+F5 sur /ftdx101.
 - **0.32.82** — **Face avant** : bouton **&lt;-&gt; DX Cluster** comme le dashboard, après « Suivre l'opérateur » (dx.op0p.be / cluster.op0p.be dans leur fenêtre, reliée au TRX : clic sur un spot → VFO sélectionné, main prise) avec une case « Ouvrir ce cluster automatiquement à chaque connexion » (au premier clic dans la page : le navigateur refuse d'ouvrir une fenêtre sans clic). **BAND MAP** : plage « toute la bande » (après 200 kHz), choisie au départ : tous les spots de la bande du VFO ; « − » pour revenir à une plage autour du VFO. **Suivre l'opérateur** sur fond brun, texte blanc gras. Ligne SSB CONFIGURATION resserrée pour tenir sur une ligne. Ctrl+F5 sur /ftdx101.
 - **0.32.81** — **Face avant, 👁 Suivre l'opérateur** déplacé sous la face avant, à droite de **Profil de …** (ligne SSB CONFIGURATION). Ctrl+F5 sur /ftdx101.

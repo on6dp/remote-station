@@ -3898,6 +3898,13 @@
   // ------------------------------------------------------------------ interface avec app.js
   window.RSDIGI = {
     spotQsy,
+    /** Ligne DIGI CONFIGURATION de la face avant : afficher cet onglet (et ce mode FT8 / FT4 / FT2) */
+    goTab(t, m) {
+      if (MODE_TABS.indexOf(t) < 0) return false;
+      if (t === 'ftx' && FT_MODES.indexOf(m) >= 0 && m !== mode) setMode(m);
+      if (t !== tab) showTab(t);
+      return true;
+    },
     setDetached,
     isPopup: POPUP,
     /** Mode numérique affiché (pour le carnet de trafic quand le TRX est en DATA) */

@@ -2578,6 +2578,21 @@
   $('listenBtn').addEventListener('click', () => (L.listening ? stopListen() : startListen()));
   $('stereoBtn').addEventListener('click', () => setStereo(!L.stereo));
   // Modes numériques : leur propre page (digi.html), raccrochée à cette page (même connexion, voir RSHOST plus bas)
+  // Page des modes numériques sur un onglet donné : déjà ouverte → elle y passe ; sinon ouverte dessus
+  let digiWin = null;
+  function digiOpen(tab, mode) {
+    try { localStorage.setItem('rs.dg.ptab', tab); if (mode) localStorage.setItem('rs.dg.ftmode', mode); } catch (e) { /* stockage refusé */ }
+    if (digiWin && !digiWin.closed) {
+      try { if (digiWin.RSDIGI && digiWin.RSDIGI.goTab) digiWin.RSDIGI.goTab(tab, mode); digiWin.focus(); return; } catch (e) { /* fenêtre en cours de chargement */ }
+    }
+    digiWin = window.open('/ftdx101/digi.html', 'rs-digi', 'width=1200,height=860');
+    if (!digiWin) return say('Fenêtre bloquée par le navigateur : autorisez les fenêtres pop-up pour ce site.', 'warn', 6000);
+    try {
+      // Fenêtre déjà ouverte (rouverte par son nom, sans rechargement) : elle passe sur l'onglet demandé
+      if (digiWin.RSDIGI && digiWin.RSDIGI.goTab) digiWin.RSDIGI.goTab(tab, mode);
+      digiWin.focus();
+    } catch (e) { /* */ }
+  }
   $('digiBtn').addEventListener('click', () => {
     const w = window.open('/ftdx101/digi.html', 'rs-digi', 'width=1200,height=860'); // modes numériques de la face avant FTDX101
     if (!w) say('Fenêtre bloquée par le navigateur : autorisez les fenêtres pop-up pour ce site.', 'warn', 6000);
@@ -2923,6 +2938,21 @@
     // « 👁 Suivre l'opérateur » sous la face avant, à droite de « Profil de … »
     const fb = $('followBtn'), pf = $('vxProf');
     if (fb && pf) { pf.after(fb); fb.textContent = '👁 Suivre l’opérateur'; }
+    // DIGI CONFIGURATION : ligne au-dessus de SSB CONFIGURATION, un bouton par mode ; clic : la page des modes
+    // numériques (/ftdx101/digi.html) s'ouvre sur ce mode (FT8 / FT4 / FT2, RTTY…), ou y passe si elle est déjà ouverte
+    const vxBox = document.querySelector('.fc-tx .vx'), vxH = vxBox && vxBox.querySelector('.vx-h');
+    if (vxBox && vxH) {
+      const DIGI_MODES = [['FT8', 'ftx', 'FT8'], ['FT4', 'ftx', 'FT4'], ['FT2', 'ftx', 'FT2'], ['RTTY', 'rtty'], ['WSPR', 'wspr'], ['JT65', 'jt65'], ['JTTY', 'jtty'], ['CW', 'cw'], ['SSTV', 'sstv']];
+      const row = document.createElement('div');
+      row.className = 'fc-digirow';
+      row.innerHTML = '<div class="vx-h fc-digih"><span class="vx-title">DIGI configuration</span></div>' +
+        DIGI_MODES.map(([lab, t, m]) => '<button type="button" class="btn fc-digim" data-tab="' + t + '"' + (m ? ' data-mode="' + m + '"' : '') + ' title="Modes numériques : ' + lab + ' (page séparée)">' + lab + '</button>').join('');
+      vxBox.insertBefore(row, vxH);
+      row.addEventListener('click', (e) => {
+        const b = e.target.closest('.fc-digim');
+        if (b) digiOpen(b.dataset.tab, b.dataset.mode || '');
+      });
+    }
     // DX Cluster juste après « Suivre l'opérateur »
     const dw = document.querySelector('.topbar .dxc-wrap');
     if (dw && fb) fb.after(dw);
