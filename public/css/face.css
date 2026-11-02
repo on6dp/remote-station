@@ -184,6 +184,8 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .lcd-bot.on { fill: #1f5f1f; }
 #face .lcd-bot.multi { fill: #10141a; stroke: #c9d3e3; stroke-width: 1.2; }
 #face .lcd-bott { fill: #e9edf2; font-size: 10px; font-weight: 700; pointer-events: none; }
+#face .lcd .lcd-bott.blue { fill: #5fa8ff; }
+#face .lcd.mono .flt .flt-trap, #face .lcd.mono .flt .flt-ctr, #face .lcd.mono .flt .flt-notch, #face .lcd.mono .flt .flt-cup, #face .lcd.mono .flt .flt-bars, #face .lcd.mono .flt .flt-box, #face .lcd.mono .flt .flt-vcticks { vector-effect: non-scaling-stroke; }
 #face .lcd-bott2 { fill: #ff3b30; font-size: 8.5px; font-weight: 800; pointer-events: none; }
 #face .lcd-hit.off:hover { fill: rgba(160, 170, 185, .06); }
 #face .func-pm { fill: #ffcf4a; font-size: 15px; font-weight: 800; pointer-events: none; }

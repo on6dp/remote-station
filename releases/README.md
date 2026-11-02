@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.69 | [RemoteStation-Setup-0.32.69.exe](0.32.69/RemoteStation-Setup-0.32.69.exe) | [remote-station-0.32.69.tar.gz](0.32.69/remote-station-0.32.69.tar.gz) | Face avant : MONO = un seul VFO à l'écran, comme le TRX — [empreintes SHA-256](0.32.69/SHA256SUMS.txt) |
 | 0.32.68 | [RemoteStation-Setup-0.32.68.exe](0.32.68/RemoteStation-Setup-0.32.68.exe) | [remote-station-0.32.68.tar.gz](0.32.68/remote-station-0.32.68.tar.gz) | FTDX101 : CLAR RX / TX du SUB lu (OI) — [empreintes SHA-256](0.32.68/SHA256SUMS.txt) |
 | 0.32.67 | [RemoteStation-Setup-0.32.67.exe](0.32.67/RemoteStation-Setup-0.32.67.exe) | [remote-station-0.32.67.tar.gz](0.32.67/remote-station-0.32.67.tar.gz) | Diagnostic : VS / FT / ST bruts au journal de la Station — [empreintes SHA-256](0.32.67/SHA256SUMS.txt) |
 | 0.32.66 | [RemoteStation-Setup-0.32.66.exe](0.32.66/RemoteStation-Setup-0.32.66.exe) | [remote-station-0.32.66.tar.gz](0.32.66/remote-station-0.32.66.tar.gz) | FTDX101 : voyant SPLIT comme le TRX sur SUB, moins de faux « refusé », FAST — [empreintes SHA-256](0.32.66/SHA256SUMS.txt) |

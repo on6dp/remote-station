@@ -593,15 +593,21 @@
     LCD.c0y = c.y;
     el('rect', { x: c.x, y: c.y, width: c.w, height: c.h, rx: 6, fill: 'url(#lcdbg)' }, g);
     // Galvanomètres et filtres : MAIN | filtre MAIN | SUB | filtre SUB
-    LCD.mA = buildMeter(g, X(5), Y(4), 190, 'A');
+    LCD.g = g;
+    const gmA = el('g', {}, g), gmB = el('g', {}, g);
+    LCD.mA = buildMeter(gmA, X(5), Y(4), 190, 'A'); LCD.mA.g = gmA;
     LCD.fA = buildFilter(g, X(199), Y(14), 82, 72);
-    LCD.mB = buildMeter(g, X(289), Y(4), 190, 'B');
+    LCD.mB = buildMeter(gmB, X(289), Y(4), 190, 'B'); LCD.mB.g = gmB;
     LCD.fB = buildFilter(g, X(483), Y(14), 82, 72);
     // Fréquences
     const half = (c.w - 10) / 2;
+    LCD.half = half; LCD.X = X; LCD.Y = Y; LCD.cw0 = c.w;
     for (const [i, side] of [[0, 'A'], [1, 'B']]) {
       const x0 = X(5 + i * half);
       const v = LCD['v' + side] = {};
+      const g0 = g;
+      { // éléments du VFO groupés (MONO : déplacés / cachés ensemble)
+      const g = v.g = el('g', {}, g0);
       el('text', { x: x0 + 3, y: Y(103), class: 'lcd-vfo' }, g, 'VFO');
       v.tx = el('text', { x: x0 + 38, y: Y(103), class: 'lcd-txb' }, g, '');
       v.badge = el('rect', { x: x0 + 1, y: Y(106), width: 52, height: 15, rx: 1.5, class: 'lcd-mode' }, g);
@@ -625,22 +631,24 @@
         setCtl('clar', vv);
         showTip(ev, 'CLAR ' + (vv > 0 ? '+' : '') + vv + ' Hz');
       }, { passive: false });
+      }
     }
     // ANT / ATT / IPO / R.FIL / AGC
     const CELLS = [['ANT', 'ant', 'ant'], ['ATT', 'att', 'attB'], ['IPO', 'preamp', 'preampB'], ['R.FIL', 'roof', 'roofB'], ['AGC', 'agc', 'agcB']];
     for (const [i, side] of [[0, 'A'], [1, 'B']]) {
       const x0 = X(5 + i * half);
       const cw = (half - 4) / 5;
+      const cg = LCD['cg' + side] = el('g', {}, g);
       LCD['c' + side] = CELLS.map(([lab, ka, kb], j) => {
         const id = side === 'A' ? ka : kb;
         const x = x0 + j * cw;
-        el('rect', { x: x + 0.5, y: Y(130), width: cw - 1, height: 24, class: 'lcd-cell' }, g);
-        el('text', { x: x + cw / 2, y: Y(139), class: 'lcd-clab', 'text-anchor': 'middle' }, g, lab);
-        const t = el('text', { x: x + cw / 2, y: Y(151), class: 'lcd-cval', 'text-anchor': 'middle' }, g, '—');
-        const h = el('rect', { x: x + 0.5, y: Y(130), width: cw - 1, height: 24, class: 'hs lcd-hit' }, g);
+        const r = el('rect', { x: x + 0.5, y: Y(130), width: cw - 1, height: 24, class: 'lcd-cell' }, cg);
+        const tl = el('text', { x: x + cw / 2, y: Y(139), class: 'lcd-clab', 'text-anchor': 'middle' }, cg, lab);
+        const t = el('text', { x: x + cw / 2, y: Y(151), class: 'lcd-cval', 'text-anchor': 'middle' }, cg, '—');
+        const h = el('rect', { x: x + 0.5, y: Y(130), width: cw - 1, height: 24, class: 'hs lcd-hit' }, cg);
         el('title', {}, h, lab + ' ' + (side === 'A' ? 'MAIN' : 'SUB') + ' : clic pour changer');
         h.addEventListener('click', () => cycleCell(id));
-        return { id, t };
+        return { id, t, r, tl, h };
       });
     }
     // Bandeau du scope : récepteur actif, état, échelle
@@ -651,7 +659,7 @@
     el('rect', { x: X(5), y: Y(170), width: c.w - 10, height: 124, class: 'lcd-scope' }, g);
     // Rangée du bas, comme sur l'écran du TRX ; la dernière case montre la fonction réglée par le bouton MULTI
     const BOT = [['CENTER'], ['SPAN', () => openSpan()],
-      ['3DSS', () => { L.d3 = !L.d3; store.set('rs.face.3dss', L.d3 ? '1' : '0'); WF.h3 = []; WF.drawn = false; say(L.d3 ? '3DSS : spectre en trois dimensions (le son reçu)' : '3DSS coupé', '', 2500); render(); }], ['MONO', () => { setColor(L.wfColor === 3 ? 13 : 3); render(); }], ['MULTI', () => { L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'MULTI : scope, OSCILLOSCOPE et AF-FFT du VFO sélectionné' : 'MULTI : affichage normal', '', 2500); render(); }],
+      ['3DSS', () => { L.d3 = !L.d3; store.set('rs.face.3dss', L.d3 ? '1' : '0'); WF.h3 = []; WF.drawn = false; say(L.d3 ? '3DSS : spectre en trois dimensions (le son reçu)' : '3DSS coupé', '', 2500); render(); }], ['MONO', () => { L.mono = !L.mono; store.set('rs.face.mono', L.mono ? '1' : '0'); WF.drawn = false; say(L.mono ? 'MONO : un seul VFO à l’écran, celui qui est sélectionné (MAIN ou SUB)' : 'MONO coupé : MAIN et SUB à l’écran', '', 3000); render(); }], ['MULTI', () => { L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'MULTI : scope, OSCILLOSCOPE et AF-FFT du VFO sélectionné' : 'MULTI : affichage normal', '', 2500); render(); }],
       ['EXPAND'], ['HOLD', () => { L.hold = !L.hold; render(); }], ['MULTI']];
     const bw = (c.w - 10) / BOT.length;
     LCD.bot = BOT.map(([lab, fn], j) => {
@@ -725,6 +733,38 @@
   L.disp = Math.max(0, Math.min(3, Number(store.get('rs.face.disp', '0')) || 0));
   L.multi = store.get('rs.face.multi', '0') === '1';
   L.d3 = store.get('rs.face.3dss', '0') === '1';
+  L.mono = store.get('rs.face.mono', '0') === '1';
+  // MONO (comme le TRX) : un seul VFO à l'écran, le sélectionné — son galvanomètre à gauche, son filtre en grand à droite,
+  // sa fréquence sous le galvanomètre, ses cases ANT / ATT / IPO / R.FIL / AGC sur toute la largeur, un seul scope
+  function applyMono() {
+    const side = activeSide(), key = (L.mono ? 'M' : 'D') + side + L.disp;
+    if (!LCD.g || LCD.monoKey === key) return;
+    LCD.monoKey = key;
+    const X = LCD.X, Y = LCD.Y, half = LCD.half, W = LCD.cw0;
+    LCD.g.classList.toggle('mono', !!L.mono);
+    for (const sd of ['A', 'B']) {
+      const show = !L.mono || sd === side, dx = L.mono && sd === 'B' ? -half : 0;
+      LCD['m' + sd].g.style.display = show ? '' : 'none';
+      LCD['m' + sd].g.setAttribute('transform', L.mono && sd === 'B' ? 'translate(' + (X(5) - X(289)) + ',0)' : '');
+      LCD['v' + sd].g.style.display = show ? '' : 'none';
+      LCD['v' + sd].g.setAttribute('transform', dx ? 'translate(' + dx + ',0)' : '');
+      LCD['cg' + sd].style.display = show ? '' : 'none';
+      const f = LCD['f' + sd];
+      if (L.mono && sd === side) {
+        // Filtre agrandi : de la moitié droite de l'écran jusqu'au bas de la fréquence
+        const tx = X(5) + half + 4, ty = Y(6), tw = X(W - 5) - tx, th = Y(124) - ty;
+        f.g.setAttribute('transform', 'translate(' + tx + ',' + ty + ') scale(' + (tw / f.w).toFixed(4) + ',' + (th / f.h).toFixed(4) + ') translate(' + -f.x0 + ',' + -f.y0 + ')');
+      } else f.g.removeAttribute('transform');
+      if (L.mono && sd !== side) f.g.style.display = 'none';
+      // Cases : sur toute la largeur en MONO, sur sa moitié sinon
+      const cw = L.mono ? (W - 14) / 5 : (half - 4) / 5, x0 = L.mono ? X(5) : X(5 + (sd === 'B' ? half : 0));
+      LCD['c' + sd].forEach((c, j) => {
+        const x = x0 + j * cw;
+        for (const r of [c.r, c.h]) { r.setAttribute('x', x + 0.5); r.setAttribute('width', cw - 1); }
+        for (const t of [c.tl, c.t]) t.setAttribute('x', x + cw / 2);
+      });
+    }
+  }
   L.wfSpan = Math.max(0, Math.min(2, Number(store.get('rs.face.span3', '2')) || 0));
   L.hold = false;
   L.funcSel = store.get('rs.face.funcsel', 'power');
@@ -1505,7 +1545,8 @@
     LCD.flags.textContent = live ? fl.join('  ·  ') : (st.station ? 'TRX muet (éteint ou câble ?)' : 'Station hors ligne');
     LCD.flags.classList.toggle('tx', tx);
     LCD.span.textContent = ['', 'SUB / MAIN · ', 'MAIN | SUB · ', 'FILTRES · '][L.disp] + spanLabel() + (L.hold ? ' · HOLD' : '');
-    for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 ? 'none' : '';
+    applyMono();
+    for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) ? 'none' : '';
     drawFunc(s);
     for (const b of LCD.bot || []) {
       if (b.t2) b.t2.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
@@ -1513,6 +1554,7 @@
       if (b.lab === 'SPAN') b.t.textContent = 'SPAN ' + SPANS[L.wfSpan] / 1000 + 'k';
       if (b.lab === 'MULTI' && !b.t2) b.r.classList.toggle('on', !!L.multi);
       if (b.lab === '3DSS') b.r.classList.toggle('on', !!L.d3);
+      if (b.lab === 'MONO') b.t.classList.toggle('blue', !!L.mono); // comme le TRX : MONO écrit en bleu
       // DISP « filtres agrandis » : comme sur le TRX, seuls MULTI, HOLD et la case MULTI restent
       b.t.style.opacity = L.disp === 3 && !b.t2 && b.lab !== 'MULTI' && b.lab !== 'HOLD' ? '0' : '';
     }
@@ -1787,6 +1829,8 @@
   }
   function scopeRegions(W, H, specs) {
     const sub = WF.two ? specs[1] : null;
+    // MONO : un seul scope, celui du VFO sélectionné
+    if (L.mono) return activeSide() === 'B' ? [{ sp: sub, x0: 0, y0: 0, w: W, h: H, name: 'SUB' }] : [{ sp: specs[0], x0: 0, y0: 0, w: W, h: H, name: 'MAIN' }];
     if (L.disp === 1) {
       const h1 = Math.floor(H / 2) - 1;
       return [{ sp: sub, x0: 0, y0: 0, w: W, h: h1, name: 'SUB' }, { sp: specs[0], x0: 0, y0: h1 + 2, w: W, h: H - h1 - 2, name: 'MAIN', sep: 'h' }];
