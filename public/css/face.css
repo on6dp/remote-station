@@ -193,8 +193,8 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-tx .vx-pttcol .vx-note:empty { display: none; }
 .fc-tx .vx { margin: 0; flex: 1 1 600px; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .fc-tx .vx-h { flex: 0 0 auto; }
-.fc-tx .vx-on, .fc-tx .vx-trx, .fc-tx #vxEqBtn { width: auto; flex: 0 0 auto; padding: 6px 16px; font-size: 11px; }
-.fc-tx #vxEqBtn.dim { opacity: .55; }
+.fc-tx .vx-on, .fc-tx .vx-trx, .fc-tx #vxEqBtn, .fc-tx .vx-prof { width: auto; flex: 0 0 auto; padding: 6px 16px; font-size: 11px; }
+.fc-tx #vxEqBtn.dim, .fc-tx .vx-prof.dim { opacity: .55; }
 .fc-tx .vx-meter { flex: 0 0 220px; height: 10px; }
 .fc-tx .vx-meter[hidden], .fc-tx #vxEqBtn[hidden] { display: none; }
 .fc-tx .vx-b { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
@@ -253,3 +253,9 @@ body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglet
 .fc-lp-v { flex: 1 1 0; min-width: 0; height: 80%; }
 .fc-lp-v path { fill: #f4f6fa; }
 .fc-lp-v text { fill: #f4f6fa; font: italic 800 30px 'Roboto Mono', monospace; }
+
+/* Fenêtre « Profil de … » (bouton à côté d'EQUALIZER TRX) */
+.vx-profdlg h4 { margin: 12px 0 6px; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: #f2cf4a; }
+.vx-profdlg p { margin: 4px 0; font-size: 12.5px; line-height: 1.5; color: #c7d0dc; }
+.vx-proflist { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.8; color: #c7d0dc; }
+.vx-proflist .btn { font-size: 10px; padding: 2px 8px; margin-left: 6px; }

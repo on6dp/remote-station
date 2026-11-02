@@ -102,7 +102,16 @@
     if (V.api && V.api.compact) {
       box.classList.add('vx-compact');
       const meter = box.querySelector('.vx-meter'), eq = $('vxEqBtn'), row = eq.parentElement;
-      $('vxOn').after(eq, meter, $('vxTrxBtn'));
+      const prof = document.createElement('button');
+      prof.className = 'btn vx-prof';
+      prof.id = 'vxProf';
+      prof.type = 'button';
+      prof.title = 'Profil enregistré de l’opérateur qui a la main : ses réglages de micro et son égaliseur du TRX';
+      prof.addEventListener('click', () => {
+        const st = V.api.state();
+        V.api.send({ t: 'profile_get', call: (st && st.controller) || '' });
+      });
+      $('vxOn').after(eq, meter, $('vxTrxBtn'), prof);
       if (row && !row.children.length) row.remove();
       // Ligne d'état (« PTT = micro du club… ») sous le bouton PTT, puisqu'elle le concerne
       const col = document.createElement('div');
@@ -147,6 +156,13 @@
     $('vxOn').title = V.on ? 'Micro actif : votre voix part vers le TRX pendant l’appui sur PTT. Clic : couper le micro' : 'Activer votre micro : votre voix part vers le TRX pendant l’appui sur PTT (LSB / USB…)';
     $('vxBody').hidden = !V.on;
     if (V.api.compact && !V.on) note('');
+    if (V.api.compact && $('vxProf')) {
+      // « Profil de » + indicatif de celui qui a la main, s'il a un profil enregistré ; sinon « Profil de … »
+      const me = V.api.me(), who = (st && st.controller) || (me && me.call) || '';
+      const has = (me && who === me.call && T.info && !!T.info.mine) || (st && st.trxEq && st.trxEq.on === who);
+      $('vxProf').textContent = 'Profil de ' + (has ? who : '…');
+      $('vxProf').classList.toggle('dim', !has);
+    }
     if (V.api.compact) { $('vxEqBtn').hidden = !modes; $('vxEqBtn').classList.toggle('dim', !V.on); box.querySelector('.vx-meter').hidden = !modes; }
     if (!V.on) return;
     const md = txMode(st);
@@ -334,6 +350,36 @@
     V.saved = true;
     V.fromServer = true;
     drawType();
+  }
+  // Fenêtre « Profil de … » : ce qui est gardé sur le serveur pour cet indicatif (micros, égaliseur du TRX)
+  function showProfile(m) {
+    let d = $('vxProfDlg');
+    if (d) d.remove();
+    d = document.createElement('div');
+    d.className = 'vx-eq vx-profdlg';
+    d.id = 'vxProfDlg';
+    d.setAttribute('role', 'dialog');
+    d.setAttribute('aria-label', 'Profil de ' + m.call);
+    const mics = (m.mics || []).map((x) => '<li><b>' + esc(x.label) + '</b> · ' + (x.on ? 'égaliseur ' + esc(x.name || 'personnalisé') : 'égaliseur coupé') +
+      ' · gain ' + x.gain + ' %' + (x.ns ? ' · réduction de bruit' : '') +
+      (m.mine ? ' <button class="btn" type="button" data-del="' + esc(x.label) + '">Supprimer</button>' : '') + '</li>').join('');
+    const other = (m.trx || []).filter((r) => r !== m.rig);
+    const now = !m.eqOn ? '—' : m.eqOn === '#club' ? 'réglage du club' : m.eqOn.charAt(0) === '#' ? 'en cours de mise au TRX' : 'profil de ' + esc(m.eqOn);
+    d.innerHTML = '<div class="vx-eq-h"><b>Profil de ' + esc(m.call) + '</b><span>' + (m.mine ? '' : ' — lecture seule') + '</span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
+      '<h4>Micros (Equalizer micro)</h4>' + (mics ? '<ul class="vx-proflist">' + mics + '</ul>' : '<p class="vx-hint">Aucun réglage de micro enregistré : réglez « Equalizer micro » puis « Enregistrer pour ce micro ».</p>') +
+      '<h4>Égaliseur du TRX' + (m.rigName ? ' (' + esc(m.rigName) + ')' : '') + '</h4>' +
+      '<p>' + (m.trxHere ? 'Profil enregistré : mis au TRX à chaque prise de main.' : 'Pas de profil enregistré pour ce TRX : c’est le réglage du club' + (m.clubHere ? '' : ' (pas encore lu)') + '.') +
+      (other.length ? '<br>Aussi un profil pour : ' + other.map(esc).join(', ') + '.' : '') + '<br>Au TRX maintenant : ' + now + '.</p>' +
+      (m.mine && m.trxHere ? '<p><button class="btn" type="button" data-a="trxdel">Supprimer ce profil (revenir au réglage du club)</button></p>' : '') +
+      '<div class="vx-eq-f"><button class="btn" type="button" data-a="close">Fermer</button></div>';
+    document.body.appendChild(d);
+    d.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      if (b.dataset.a === 'close') return d.remove();
+      if (b.dataset.del && confirm('Supprimer le réglage enregistré pour « ' + b.dataset.del + ' » ?')) { V.api.send({ t: 'mic_del', label: b.dataset.del }); setTimeout(() => V.api.send({ t: 'profile_get' }), 300); }
+      if (b.dataset.a === 'trxdel' && confirm('Supprimer votre profil d’égaliseur du TRX ?')) { V.api.send({ t: 'trxeq_del' }); setTimeout(() => V.api.send({ t: 'profile_get' }), 300); }
+    });
   }
   function openEq() {
     if (!V.on) return V.api.say('Equalizer micro : activez d’abord votre micro (bouton « Micro »).', 'warn', 4000);
@@ -558,7 +604,7 @@
       if (a === 'try') return V.api.send({ t: 'trxeq_try', profile: T.pr });
       if (a === 'save') { T.dirty = false; return V.api.send({ t: 'trxeq_save', profile: T.pr }); }
       if (a === 'club' && confirm('Enregistrer ces valeurs comme réglage du club pour le ' + V.api.rig().NAME + ' ?\nElles seront remises au TRX chaque fois qu’un opérateur rend la main.')) return V.api.send({ t: 'trxeq_club', profile: T.pr });
-      if (a === 'del' && confirm('Supprimer votre profil d’égaliseur du TRX ?')) return V.api.send({ t: 'trxeq_del' });
+      if (a === 'del' && confirm('Supprimer le « Profil de ' + ((V.api.state() && V.api.state().controller) || (V.api.me() && V.api.me().call) || '') + ' » (égaliseur du TRX) ?')) return V.api.send({ t: 'trxeq_del' });
     });
     V.api.send({ t: 'trxeq_get' });
   }
@@ -586,8 +632,12 @@
     const me = V.api.me();
     const i = T.info || {};
     const ctl = V.api.iControl();
-    d.querySelector('#vxTrxState').innerHTML = 'Au TRX maintenant : <b>' + (on && on[0] !== '#' ? 'profil de ' + esc(on) : 'réglage du club') + '</b>' +
-      ' · votre profil : <b>' + (i.mine ? 'enregistré' : 'aucun') + '</b>' + (i.club ? '' : ' · réglage du club : pas encore lu') +
+    // Nom du profil : « Profil de » + l'indicatif de celui qui a la main (c'est lui qui l'enregistre)
+    const who = (st && st.controller) || (me && me.call) || '';
+    d.querySelector('[data-a="save"]').textContent = 'Enregistrer « Profil de ' + who + ' »';
+    d.querySelector('[data-a="del"]').textContent = 'Supprimer « Profil de ' + who + ' »';
+    d.querySelector('#vxTrxState').innerHTML = 'Au TRX maintenant : <b>' + (on && on[0] !== '#' ? 'Profil de ' + esc(on) : 'réglage du club') + '</b>' +
+      ' · Profil de ' + esc(who) + ' : <b>' + (i.mine ? 'enregistré' : 'aucun') + '</b>' + (i.club ? '' : ' · réglage du club : pas encore lu') +
       (T.dirty ? ' · <span class="warn">modifié, pas enregistré</span>' : '') + (ctl ? '' : '<br><span class="warn">Prenez la main pour lire le TRX ou y faire un essai.</span>') +
       (st && st.radio && st.radio.micEq === 0 ? '<br><span class="warn">MIC EQ est coupé au TRX : l’égaliseur n’agit pas. Bouton « MIC EQ » du cadre TX pour le mettre en service.</span>' : '');
     d.querySelector('[data-a="read"]').disabled = !ctl;
@@ -606,6 +656,7 @@
     onHello() {
       build();
       draw();
+      if (V.api.compact) V.api.send({ t: 'trxeq_get' }); // état du profil pour le bouton « Profil de … »
       // Micro remis tout seul s'il était actif avant (le navigateur se souvient de l'autorisation)
       if (store.get('on', '0') === '1' && !V.on) setTimeout(() => { const st = V.api.state(); if (st && st.voice) start().catch(() => {}); }, 800);
     },
@@ -614,6 +665,7 @@
         T.info = m;
         if (!T.pr || !T.dirty) T.pr = JSON.parse(JSON.stringify(m.mine || m.club || trxBlank()));
         trxFill();
+        draw(); // bouton « Profil de … »
         return true;
       }
       if (m.t === 'trxeq_values') {
@@ -623,6 +675,7 @@
         V.api.say('Égaliseur lu sur le TRX.', 'ok', 3000);
         return true;
       }
+      if (m.t === 'profile') { showProfile(m); return true; }
       if (m.t !== 'mic_profile' || m.label !== V.label) return false;
       if (m.eq) {
         V.eq = Object.assign(presetEq('neutre'), m.eq);

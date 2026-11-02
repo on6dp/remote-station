@@ -1744,7 +1744,7 @@
       if (typeof e.data !== 'string') return onAudio(e.data);
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
-      if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values') && window.RSVOICE) { window.RSVOICE.onMessage(m); return; }
+      if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && window.RSVOICE) { window.RSVOICE.onMessage(m); return; }
       if (m.t === 'spots' || m.t === 'spot') bmvOnSpots(m); // cartes de bande A / B autour du TRX
       if (DG() && m.t !== 'hello' && m.t !== 'state' && DG().onMessage(m)) return;
       if (m.t === 'hello') {

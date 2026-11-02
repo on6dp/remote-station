@@ -1053,7 +1053,7 @@ function trxEqMsg(conn, m) {
       if (controller === conn) setEqOn({ call: '#reapply', rig: rig().ID });
     }
     saveProfiles();
-    send(conn, { t: 'notice', level: 'ok', msg: m.t === 'trxeq_club' ? 'Réglage du club enregistré pour le ' + rig().NAME : 'Votre profil d’égaliseur est enregistré : mis au TRX chaque fois que vous prenez la main' });
+    send(conn, { t: 'notice', level: 'ok', msg: m.t === 'trxeq_club' ? 'Réglage du club enregistré pour le ' + rig().NAME : '« Profil de ' + c + ' » enregistré : mis au TRX chaque fois que vous prenez la main' });
     return trxEqInfo(conn);
   }
   if (m.t === 'trxeq_del') {
@@ -2796,6 +2796,20 @@ function onOperator(conn, m) {
     case 'mic_off':
       if (voiceUser === conn && !(ptt.active && ptt.conn === conn)) voiceRelease('micro coupé');
       return;
+    case 'profile_get': {
+      // Profil enregistré (bouton « Profil de … » de la face avant) : le sien, ou celui de l'opérateur qui a la main (lecture seule)
+      const own = conn.user.call;
+      const who = m.call && controller && controller.user && m.call === controller.user.call ? m.call : own;
+      const p = profiles[who] || {};
+      const mics = Object.keys(p.mics || {}).slice(0, 20).map((k) => {
+        const e = p.mics[k] || {};
+        return { label: k, name: e.name || '', on: e.on !== false, gain: e.gain || 100, ns: !!e.ns };
+      });
+      const trx = Object.keys(p.trx || {});
+      const on = eqOn();
+      return send(conn, { t: 'profile', call: who, mine: who === own, mics, trx, rig: station ? rig().ID : null, rigName: station ? rig().NAME : '',
+        trxHere: !!(station && p.trx && p.trx[rig().ID]), clubHere: !!(station && clubEq()), eqOn: on ? on.call : null });
+    }
     case 'mic_get': {
       // Réglages de l'égaliseur gardés pour ce micro (nom de l'entrée son) : repris tout seuls sur n'importe quel PC
       const label = micLabel(m.label);
