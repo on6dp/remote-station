@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.82** — **Face avant** : bouton **&lt;-&gt; DX Cluster** comme le dashboard, après « Suivre l'opérateur » (dx.op0p.be / cluster.op0p.be dans leur fenêtre, reliée au TRX : clic sur un spot → VFO sélectionné, main prise) avec une case « Ouvrir ce cluster automatiquement à chaque connexion » (au premier clic dans la page : le navigateur refuse d'ouvrir une fenêtre sans clic). **BAND MAP** : plage « toute la bande » (après 200 kHz), choisie au départ : tous les spots de la bande du VFO ; « − » pour revenir à une plage autour du VFO. **Suivre l'opérateur** sur fond brun, texte blanc gras. Ligne SSB CONFIGURATION resserrée pour tenir sur une ligne. Ctrl+F5 sur /ftdx101.
 - **0.32.81** — **Face avant, 👁 Suivre l'opérateur** déplacé sous la face avant, à droite de **Profil de …** (ligne SSB CONFIGURATION). Ctrl+F5 sur /ftdx101.
 - **0.32.80** — **Face avant, 👁 Suivre** toujours visible à droite de l'indicatif (il était caché quand personne n'avait la main) ; grisé chez celui qui a la main. Ctrl+F5 sur /ftdx101.
 - **0.32.79** — **Face avant, 👁 Suivre l'opérateur** (formation à distance) dans la barre du haut, caché chez celui qui a la main : la face avant montre le même écran que l'opérateur (DISP, MONO, EXPAND, MULTI, 3DSS, menu FUNC) ; enclenché tout seul quand un autre membre a la main ; une de ces touches l'arrête, un clic sur 👁 Suivre le relance. Barre du haut gardée sur une ligne (un seul logo, « 🎧 Stéréo »). Serveur modifié (relais de l'affichage) : `install.sh` le redémarre ; Ctrl+F5 sur /ftdx101.

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.82 | [RemoteStation-Setup-0.32.82.exe](0.32.82/RemoteStation-Setup-0.32.82.exe) | [remote-station-0.32.82.tar.gz](0.32.82/remote-station-0.32.82.tar.gz) | Face avant : DX Cluster, BAND MAP toute la bande, Suivre en brun — [empreintes SHA-256](0.32.82/SHA256SUMS.txt) |
 | 0.32.81 | [RemoteStation-Setup-0.32.81.exe](0.32.81/RemoteStation-Setup-0.32.81.exe) | [remote-station-0.32.81.tar.gz](0.32.81/remote-station-0.32.81.tar.gz) | Face avant : 👁 Suivre l'opérateur à droite de Profil de — [empreintes SHA-256](0.32.81/SHA256SUMS.txt) |
 | 0.32.80 | [RemoteStation-Setup-0.32.80.exe](0.32.80/RemoteStation-Setup-0.32.80.exe) | [remote-station-0.32.80.tar.gz](0.32.80/remote-station-0.32.80.tar.gz) | Face avant : 👁 Suivre toujours visible — [empreintes SHA-256](0.32.80/SHA256SUMS.txt) |
 | 0.32.79 | [RemoteStation-Setup-0.32.79.exe](0.32.79/RemoteStation-Setup-0.32.79.exe) | [remote-station-0.32.79.tar.gz](0.32.79/remote-station-0.32.79.tar.gz) | Face avant : 👁 Suivre l'opérateur — [empreintes SHA-256](0.32.79/SHA256SUMS.txt) |

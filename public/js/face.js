@@ -2267,6 +2267,119 @@
     $('followBtn').addEventListener('click', () => setFollowFace(!FOL.on, FOL.on ? 'Suivi de l’opérateur arrêté.' : 'Suivi de l’opérateur : votre face avant montre le même écran que celui qui a la main.'));
   }
 
+  // ------------------------------------------------------------ DX Cluster relié au TRX, comme le dashboard
+  // <-> ouvre dx.op0p.be ou cluster.op0p.be dans sa fenêtre ; un clic sur un spot y cale le VFO sélectionné (main prise).
+  // <-> vert : un cluster de ce navigateur est relié et cette page a la main ; orange : ouvert, sans la main.
+  // « Ouvrir automatiquement » : le dernier cluster choisi s'ouvre au premier clic après la connexion (le navigateur
+  // refuse d'ouvrir une fenêtre sans un clic).
+  const DXC = { seen: {}, win: {}, auto: store.get('rs.face.dxcauto', ''), autoDone: false };
+  const dxcName = (o) => String(o || '').replace(/^https?:\/\//, '');
+  function dxcPaint() {
+    if (!$('dxcBtn')) return;
+    const now = Date.now(), open = Object.keys(DXC.seen).filter((o) => now - DXC.seen[o] < 7000), ctl = iControl(), on = open.length > 0 && ctl;
+    $('dxcArrow').classList.toggle('on', on);
+    $('dxcArrow').classList.toggle('half', !on && open.length > 0);
+    $('dxcBtn').title = on ? 'Relié à ' + open.map(dxcName).join(' et ') + ' : un clic sur un spot cale le TRX. Clic : ouvrir / montrer un cluster.'
+      : open.length ? 'Cluster ouvert (' + open.map(dxcName).join(', ') + ') mais sans la main : prenez la main pour que ses spots calent le TRX.'
+        : 'Aucun DX cluster relié : clic pour ouvrir dx.op0p.be ou cluster.op0p.be dans une fenêtre reliée au TRX.';
+    document.querySelectorAll('#dxcMenu [data-dxc]').forEach((a) => {
+      const isOpen = open.indexOf(a.dataset.dxc) >= 0 || open.indexOf(a.dataset.dxc.replace('https:', 'http:')) >= 0;
+      a.classList.toggle('linked', isOpen && ctl);
+      a.classList.toggle('opened', isOpen && !ctl);
+    });
+    $('dxcAuto').checked = !!DXC.auto;
+  }
+  function dxcOpen(url) {
+    const w = DXC.win[url];
+    if (w && !w.closed) { try { w.focus(); } catch (x) { /* autre site */ } return; }
+    const nw = window.open(url, 'rs-dxc-' + dxcName(url).replace(/\W/g, '-'), 'popup=yes,width=' + Math.min(1600, screen.availWidth) + ',height=' + Math.min(1000, screen.availHeight));
+    if (nw) DXC.win[url] = nw; else window.open(url, '_blank');
+  }
+  function dxcSpotMode(m, khz) {
+    const M = String(m || '').toUpperCase();
+    if (/^(FT8|FT4|FT2|JT65|WSPR|JTTY|RTTY|CW)$/.test(M)) return M;
+    if (/^(SSB|LSB|USB|PHONE|PH)$/.test(M)) return khz < 10000 && !(khz >= 5250 && khz <= 5450) ? 'LSB' : 'USB';
+    if (/^(AM|FM)$/.test(M)) return M;
+    if (/^(DIGI|DATA|PSK\d*|FT|DIG)$/.test(M)) return 'DATA';
+    if (M) return '';
+    const CW = [[1810, 1838], [3500, 3570], [7000, 7040], [10100, 10130], [14000, 14070], [18068, 18095], [21000, 21070], [24890, 24915], [28000, 28070], [50000, 50100]];
+    const PH = [[1843, 2000], [3600, 3800], [7060, 7200], [14101, 14350], [18120, 18168], [21151, 21450], [24940, 24990], [28300, 29300], [50100, 50500]];
+    if (CW.some((r) => khz >= r[0] && khz <= r[1])) return 'CW';
+    if (PH.some((r) => khz >= r[0] && khz <= r[1])) return khz < 10000 ? 'LSB' : 'USB';
+    return '';
+  }
+  const bcQsy = 'BroadcastChannel' in window ? new BroadcastChannel('rs-qsy') : null;
+  function dxcSpot(m) {
+    if (!m || m.type !== 'rs-qsy' || !R) return;
+    let khz = Number(m.freq);
+    if (!(khz > 0)) return;
+    if (khz < 1000) khz *= 1000; else if (khz > 1000000) khz /= 1000;
+    khz = Math.round(khz * 10) / 10;
+    if (!(khz * 1000 >= (R.FREQ_MIN || 30000) && khz * 1000 <= R.FREQ_MAX)) return say('Spot ' + khz + ' kHz : hors de la couverture du ' + R.NAME + '.', 'warn');
+    const M = dxcSpotMode(m.mode, khz), call = String(m.call || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
+    if (!iControl()) {
+      if (bcQsy) bcQsy.postMessage({ type: 'rs-qsy-here', control: false });
+      if (document.visibilityState === 'visible') say('Spot ' + (call || '') + ' ' + khz + ' kHz : prenez la main pour que le TRX s’y cale.', 'warn');
+      return;
+    }
+    if (bcQsy) bcQsy.postMessage({ type: 'rs-qsy-here', control: true });
+    if (st.ptt && st.ptt.active) return say('Réglage bloqué pendant l’émission.', 'warn');
+    const dg = DG();
+    if (dg && dg.spotQsy && dg.spotQsy(khz, M, call)) return;
+    const side = activeSide();
+    tuneTo(side, Math.round(khz * 1000));
+    const want = M === 'DATA' ? /^(DATA-U|USB-D)$/ : M ? new RegExp('^' + M + '$') : null;
+    const mk = want && (R.MODE_KEYS || []).find((x) => want.test(x[1]));
+    if (mk) setTimeout(() => send({ t: 'set', mode: mk[0], sub: side === 'B' }), 150);
+    say((call ? call + ' : ' : '') + 'VFO-' + side + ' sur ' + khz.toLocaleString('fr-BE') + ' kHz' + (mk ? ' en ' + mk[1] : '') + '.', '', 4000);
+  }
+  if (bcQsy) bcQsy.onmessage = (e) => {
+    if (e.data && e.data.type === 'rs-qsy-ping') {
+      DXC.seen[String(e.data.from || '?')] = Date.now();
+      dxcPaint();
+      return bcQsy.postMessage({ type: 'rs-qsy-here', control: !!(me && iControl()) });
+    }
+    dxcSpot(e.data);
+  };
+  window.addEventListener('message', (e) => {
+    const ok = (me && Array.isArray(me.qsyOrigins) ? me.qsyOrigins : []).indexOf(e.origin) >= 0;
+    if (ok && e.data && e.data.type === 'rs-qsy') dxcSpot(e.data);
+  });
+  if ($('dxcBtn')) {
+    setInterval(dxcPaint, 2000);
+    const show = (on) => { $('dxcMenu').hidden = !on; $('dxcBtn').setAttribute('aria-expanded', String(on)); if (on) dxcPaint(); };
+    $('dxcBtn').addEventListener('click', (e) => { e.stopPropagation(); show($('dxcMenu').hidden); });
+    $('dxcMenu').addEventListener('click', (e) => {
+      if (e.target.closest('.dxc-auto')) {
+        e.stopPropagation();
+        if (e.target.id === 'dxcAuto') {
+          DXC.auto = e.target.checked ? (DXC.last || 'https://dx.op0p.be') : '';
+          store.set('rs.face.dxcauto', DXC.auto);
+          say(DXC.auto ? dxcName(DXC.auto) + ' s’ouvrira à chaque connexion (au premier clic dans la page).' : 'Ouverture automatique du cluster coupée.', '', 4000);
+        }
+        return;
+      }
+      const a = e.target.closest('[data-dxc]');
+      if (a) {
+        e.preventDefault();
+        DXC.last = a.dataset.dxc;
+        if (DXC.auto) { DXC.auto = a.dataset.dxc; store.set('rs.face.dxcauto', DXC.auto); }
+        dxcOpen(a.dataset.dxc);
+        if (!iControl()) say('Cluster ouvert : prenez la main pour que ses spots calent le TRX.', 'warn', 6000);
+      }
+      show(false);
+    });
+    document.addEventListener('click', (e) => { if (!$('dxcMenu').hidden && !e.target.closest('.dxc-wrap')) show(false); });
+    // Ouverture automatique : au premier clic après la connexion (geste de l'utilisateur exigé par le navigateur)
+    document.addEventListener('pointerdown', (e) => {
+      if (DXC.autoDone || !DXC.auto || !me || e.target.closest('.dxc-wrap')) return;
+      DXC.autoDone = true;
+      const now = Date.now();
+      if (Object.keys(DXC.seen).some((o) => now - DXC.seen[o] < 7000)) return; // déjà ouvert dans ce navigateur
+      dxcOpen(DXC.auto);
+    }, true);
+  }
+
   // ------------------------------------------------------------ membres connectés (👥) et messages, comme le dashboard
   // Liste des indicatifs ; l'adresse IP de chacun n'est envoyée par le serveur qu'aux administrateurs
   const OPS = { chat: [], blink: { call: '', until: 0 }, beep: store.get('rs.chatbeep', '1') !== '0', ctx: null };
@@ -2487,8 +2600,10 @@
   // ------------------------------------------------------------ cartes de bande A (à gauche) et B (à droite) du TRX
   // Spots du cluster (messages « spots » / « spot ») sur la bande de chaque VFO, autour de sa fréquence ;
   // clic sur un indicatif : ce VFO va sur sa fréquence ; molette ou − / + : plage affichée
-  const BMV = { spots: new Map(), state: '', spans: [5, 10, 20, 50, 100, 200], raf: 0, lay: { A: [], B: [] } };
-  BMV.span = { A: Number(store.get('rs.face.bmspanA', '20')) || 20, B: Number(store.get('rs.face.bmspanB', '20')) || 20 };
+  const BMV = { spots: new Map(), state: '', spans: [5, 10, 20, 50, 100, 200, 0], raf: 0, lay: { A: [], B: [] } };
+  // Plage affichée : 5 à 200 kHz autour du VFO, ou 0 = toute la bande du VFO (par défaut : tous les spots de la bande)
+  const bmSp = (k) => { const v = Number(store.get(k, '0')); return BMV.spans.indexOf(v) >= 0 ? v : 0; };
+  BMV.span = { A: bmSp('rs.face.bmspan2A'), B: bmSp('rs.face.bmspan2B') };
   const BMV_KEEP = 30 * 60000;
   const BMV_MODES = /\b(FT8|FT4|FT2|CW|RTTY|PSK\d*|SSB|USB|LSB|JT65|JT9|Q65|WSPR|SSTV|FM|AM|OLIVIA|MSK144)\b/i;
   // Filtre par mode sous le nom de la bande (TOUS, FT8/4/2, SSB, CW, RTTY), propre à chaque carte
@@ -2527,7 +2642,7 @@
     const box = $('bmv' + side);
     if (!box || box.firstChild) return box;
     box.innerHTML = '<div class="bmv-h"><b class="bmv-band">—</b><small>' + (side === 'A' ? 'VFO-A' : 'VFO-B') + '</small>' +
-      '<span class="bmv-span"><button type="button" data-d="-1" title="Plage plus étroite">−</button><button type="button" data-d="1" title="Plage plus large">+</button></span></div>' +
+      '<span class="bmv-span"><button type="button" data-d="-1" title="Plage plus étroite">−</button><button type="button" data-d="1" title="Plage plus large (jusqu’à toute la bande)">+</button></span></div>' +
       '<div class="bmv-m">' + BMV_FILTS.map(([k, t]) => '<button type="button" data-f="' + k + '" title="' + (k ? 'Seulement les spots ' + t : 'Tous les spots') + '">' + t + '</button>').join('') + '</div>' +
       '<div class="bmv-b"><canvas></canvas></div><div class="bmv-f"></div>';
     const filtShow = () => box.querySelectorAll('.bmv-m button').forEach((b) => b.classList.toggle('on', b.dataset.f === (BMV.filt[side] || '')));
@@ -2541,7 +2656,7 @@
     const zoom = (d) => {
       const i = Math.max(0, Math.min(BMV.spans.length - 1, BMV.spans.indexOf(BMV.span[side]) + d));
       BMV.span[side] = BMV.spans[i < 0 ? 2 : i];
-      store.set('rs.face.bmspan' + side, String(BMV.span[side]));
+      store.set('rs.face.bmspan2' + side, String(BMV.span[side]));
       bmvDraw();
     };
     box.querySelectorAll('.bmv-span button').forEach((b) => b.addEventListener('click', () => zoom(Number(b.dataset.d))));
@@ -2581,7 +2696,10 @@
     const band = f ? BANDS.find((x) => f >= x[1] && f <= x[2]) : null;
     box.querySelector('.bmv-band').textContent = band ? band[0].replace('M', ' m') : '—';
     if (!f) return;
-    const span = BMV.span[side], fk = f / 1000, lo = fk - span / 2, hi = fk + span / 2, pad = 10;
+    // Toute la bande (plage 0) : de son début à sa fin ; hors bande : 200 kHz autour du VFO
+    const full = BMV.span[side] === 0 && !!band, fk = f / 1000;
+    const span = full ? (band[2] - band[1]) / 1000 : BMV.span[side] || 200;
+    const lo = full ? band[1] / 1000 : fk - span / 2, hi = full ? band[2] / 1000 : fk + span / 2, pad = 10;
     const yOf = (k) => pad + (k - lo) / (hi - lo) * (H - 2 * pad);
     // Hors bande : grisé
     if (band) {
@@ -2591,7 +2709,7 @@
       if (b1 < hi) { const y = yOf(b1); c.fillRect(0, y, W, H - y); }
     }
     // Échelle : un trait par pas « rond », graduations au bord gauche
-    const step = span <= 5 ? 0.5 : span <= 10 ? 1 : span <= 20 ? 2 : span <= 50 ? 5 : span <= 100 ? 10 : 20;
+    const step = span <= 5 ? 0.5 : span <= 10 ? 1 : span <= 20 ? 2 : span <= 50 ? 5 : span <= 100 ? 10 : span <= 200 ? 20 : span <= 500 ? 50 : span <= 1000 ? 100 : 250;
     c.font = 'bold 12px "Roboto Mono", monospace'; c.textAlign = 'left'; c.textBaseline = 'middle';
     let tw = 0;
     for (let k = Math.ceil(lo / step) * step; k <= hi; k += step) {
@@ -2631,7 +2749,7 @@
     c.strokeStyle = tx ? '#ff3b30' : (side === 'A' ? '#cfc8ff' : '#2f7bff'); c.lineWidth = 1.5;
     c.beginPath(); c.moveTo(0, yv); c.lineTo(W, yv); c.stroke();
     c.fillStyle = c.strokeStyle; c.beginPath(); c.moveTo(W - 1, yv - 5); c.lineTo(W - 9, yv); c.lineTo(W - 1, yv + 5); c.closePath(); c.fill();
-    box.querySelector('.bmv-f').textContent = list.length + ' spot' + (list.length > 1 ? 's' : '') + (fm ? ' ' + BMV_FILTS.find((x) => x[0] === fm)[1] : '') + ' · ' + span + ' kHz' + (BMV.state && BMV.state !== 'connecté' ? ' · cluster : ' + BMV.state : '');
+    box.querySelector('.bmv-f').textContent = list.length + ' spot' + (list.length > 1 ? 's' : '') + (fm ? ' ' + BMV_FILTS.find((x) => x[0] === fm)[1] : '') + ' · ' + (full ? 'toute la bande' : span + ' kHz') + (BMV.state && BMV.state !== 'connecté' ? ' · cluster : ' + BMV.state : '');
   }
   setInterval(bmvDraw, 2000);
   window.addEventListener('resize', bmvDraw);
@@ -2805,6 +2923,9 @@
     // « 👁 Suivre l'opérateur » sous la face avant, à droite de « Profil de … »
     const fb = $('followBtn'), pf = $('vxProf');
     if (fb && pf) { pf.after(fb); fb.textContent = '👁 Suivre l’opérateur'; }
+    // DX Cluster juste après « Suivre l'opérateur »
+    const dw = document.querySelector('.topbar .dxc-wrap');
+    if (dw && fb) fb.after(dw);
   }
   const sess = store.get('rs.sess', '');
   if (sess) creds = { session: sess };

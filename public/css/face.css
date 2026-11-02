@@ -202,11 +202,11 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-tx #ptt { width: 100%; height: 46px; min-height: 0; font-size: 20px; font-weight: 800; }
 .fc-tx .vx-pttcol .vx-note { font-size: 11px; line-height: 1.35; text-align: center; }
 .fc-tx .vx-pttcol .vx-note:empty { display: none; }
-.fc-tx .vx { margin: 0; flex: 1 1 600px; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.fc-tx .vx { margin: 0; flex: 1 1 600px; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
 .fc-tx .vx-h { flex: 0 0 auto; }
-.fc-tx .vx-on, .fc-tx .vx-trx, .fc-tx #vxEqBtn, .fc-tx .vx-prof { width: auto; flex: 0 0 auto; padding: 6px 16px; font-size: 11px; }
+.fc-tx .vx-on, .fc-tx .vx-trx, .fc-tx #vxEqBtn, .fc-tx .vx-prof { width: auto; flex: 0 0 auto; padding: 6px 12px; font-size: 11px; }
 .fc-tx #vxEqBtn.dim, .fc-tx .vx-prof.dim { opacity: .55; }
-.fc-tx .vx-meter { flex: 0 0 220px; height: 10px; }
+.fc-tx .vx-meter { flex: 1 1 80px; min-width: 60px; max-width: 220px; height: 10px; }
 .fc-tx .vx-meter[hidden], .fc-tx #vxEqBtn[hidden] { display: none; }
 .fc-tx .vx-b { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .fc-tx .vx-io { flex: 0 1 auto; }
@@ -332,9 +332,17 @@ body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglet
 .fc-tx .vx-prof.dim { opacity: .8; }
 
 /* 👁 Suivre l'opérateur (allumé : vert) */
-#followBtn.btn.fc-follow[aria-pressed='true'] { background: #1f6b3a; border-color: #3ddc5a; color: #eaffef; }
+#followBtn.btn.fc-follow[aria-pressed='true'] { background: #8a5a2b; border-color: #3ddc5a; color: #fff; box-shadow: 0 0 0 1px #3ddc5a inset; }
 
 /* Barre du haut sur une seule ligne malgré 👥 et « Suivre » : un seul logo dans le titre */
 body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #followBtn.btn.fc-follow:disabled { opacity: .45; cursor: default; }
-.fc-tx #followBtn { width: auto; flex: 0 0 auto; padding: 6px 16px; font-size: 11px; }
+.fc-tx #followBtn { width: auto; flex: 0 0 auto; padding: 6px 12px; font-size: 11px; }
+/* « Suivre l'opérateur » : fond brun, texte blanc gras ; suivi en cours : brun plus clair, cerné de vert */
+#followBtn.btn.fc-follow { background: #6b4423; border-color: #8a5a30; color: #fff; font-weight: 800; }
+#followBtn.btn.fc-follow:hover:not(:disabled) { background: #7d5229; color: #fff; }
+.dxc-menu .dxc-auto { display: flex; gap: 6px; align-items: flex-start; padding: 6px 10px 4px; border-top: 1px solid var(--v2-border, #2c3b50); margin-top: 3px; font-size: 11px; color: var(--v2-text-dim); cursor: pointer; }
+.fc-tx .dxc-wrap { flex: 0 0 auto; }
+.fc-tx .dxc-btn { padding: 6px 12px; font-size: 11px; }
+.fc-tx .dxc-menu { left: 0; right: auto; }
+.fc-tx .vx { overflow: visible; } /* menu du DX Cluster déroulé hors du cadre */
