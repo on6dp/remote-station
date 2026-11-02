@@ -198,8 +198,8 @@
       'RA0;': { re: /^RA0([0-3])$/, parse: (m) => ({ att: +m[1] }), sim: 'RA00' },
       'PR0;': { re: /^PR0([12])$/, parse: (m) => ({ proc: m[1] === '2' ? 1 : 0 }), sim: 'PR01' },
       'AC;': { re: /^AC0([0-2])([0-2])$/, parse: (m) => ({ tuner: m[2] === '0' ? 0 : 1, tuning: m[2] === '2' ? 1 : 0 }), sim: 'AC000' },
-      // LK 0–7 : 1, 5, 7 = MAIN verrouillé
-      'LK;': { re: /^LK([0-7])$/, parse: (m) => ({ lock: ['1', '5', '7'].indexOf(m[1]) >= 0 ? 1 : 0 }), sim: 'LK0' },
+      // LK 0–7 : bits — 1 = grand bouton MAIN verrouillé, 2 = SUB verrouillé (4 : toujours là sur ce TRX ; Hamlib : 4 = rien, 7 = tout)
+      'LK;': { re: /^LK([0-7])$/, parse: (m) => ({ lockRaw: +m[1], lock: +m[1] & 1, lockB: (+m[1] >> 1) & 1 }), sim: 'LK4' },
       // NB et DNR : interrupteur (NB0 / NR0) et niveau (NL0 / RL0) séparés, comme le FTDX10
       'NL0;': { re: /^NL0(\d{3})$/, parse: (m) => ({ nbLvl: +m[1] }), sim: 'NL0005' },
       'RL0;': { re: /^RL0(\d{2})$/, parse: (m) => ({ nrLvl: +m[1] }), sim: 'RL008' }
@@ -269,7 +269,7 @@
       { cmd: 'CN10;', when: (st) => /FM/.test(st.modeB || ''), re: /^CN10(\d{3})$/, parse: (m) => ({ toneIdxB: +m[1] }), sim: 'CN10012' }
     ],
     extraQueries: ['RF0;', 'RF1;', 'ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
-    extraStateKeys: ['fastStep', 'moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
+    extraStateKeys: ['lockB', 'lockRaw', 'fastStep', 'moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
     // CW : mémoire 1 du manipulateur (écrasée), lue par KY6 (« Message Keyer 1 Playback », manuel CAT 1912-D) ;
     // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
@@ -298,11 +298,12 @@
       sql: { max: 100, pct: false, unit: '%', write: (v) => 'SQ0' + pad(v, 3) + ';' },
       nb: { type: 'toggle', off0: false, write: (v) => 'NB0' + v + ';' },
       nr: { type: 'toggle', off0: false, write: (v) => 'NR0' + v + ';' },
-      lock: { write: (v) => 'LK' + (v ? 1 : 0) + ';' },
+      lock: { write: (v, st) => 'LK' + (((st && st.lockRaw != null ? st.lockRaw : 4) & 6) | (v ? 1 : 0)) + ';' },
       tuner: { write: (v) => 'AC00' + v + ';' },
       tune: { write: () => 'AC002;' }
     },
     extraControls: [
+      { id: 'lockB', g: 'vfo', label: 'LOCK (SUB)', type: 'toggle', face: true, write: (v, st) => 'LK' + (((st && st.lockRaw != null ? st.lockRaw : 4) & 5) | (v ? 2 : 0)) + ';' },
       { id: 'fastStep', g: 'rx', label: 'FAST', type: 'toggle', face: true, write: (v) => 'FS' + (v ? 1 : 0) + ';' },
       { id: 'micEq', g: 'tx', sec: 'tx', label: 'MIC EQ', type: 'toggle', write: (v) => 'PR1' + (v ? 2 : 1) + ';' },
       { id: 'nbLvl', g: 'flt', sec: 'dsp', label: 'Niveau NB', type: 'level', min: 0, max: 10, step: 1, write: (v) => 'NL0' + pad(v, 3) + ';' },

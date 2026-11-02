@@ -76,8 +76,8 @@
         leds: [{ x: 889.5, y: 245, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s) => !!s.xit, bright: (s) => !!s.xit }] },
       { id: 'fast', x: 819, y: 415, w: 43, h: 17, tip: 'FAST : accord rapide (×10)', act: { local: 'fast' },
         leds: [{ x: 835, y: 403.5, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s, L) => !!L.fast, bright: (s, L) => !!L.fast }] },
-      { id: 'lock', x: 874, y: 415, w: 44, h: 17, tip: 'LOCK : verrouille le grand bouton du TRX', act: { toggle: 'lock' },
-        leds: [{ x: 889.5, y: 403.5, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s) => !!s.lock, bright: (s) => !!s.lock }] },
+      { id: 'lock', x: 874, y: 415, w: 44, h: 17, tip: 'LOCK : verrouille le grand bouton du TRX (MAIN ou SUB, celui qui est sélectionné)', act: { local: 'lock' },
+        leds: [{ x: 889.5, y: 403.5, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s) => !!(s.vfoSel === 1 ? s.lockB : s.lock), bright: (s) => !!(s.vfoSel === 1 ? s.lockB : s.lock) }] },
       // RX / TX / MAIN⇆SUB au-dessus du grand bouton
       { id: 'rxMain', x: 937, y: 192, w: 63, h: 18, tip: 'RX MAIN : le récepteur MAIN est toujours en service', act: info('Le récepteur MAIN reste toujours en service.'),
         leds: [{ x: 955, y: 190, w: 31, h: 4, color: '#3ddc5a', on: (s) => !!s.connected }] },
@@ -122,7 +122,7 @@
       { id: 'mic', cx: 56, cy: 490, r: 32, tip: 'MIC', act: info('Micro : phonie à distance par le dashboard (Configuration micro).') }
     ]),
     knobs: [
-      { id: 'dial', cx: 1118, cy: 380, ro: 140, ri: 116, dial: true, tip: 'Grand bouton : fréquence du récepteur actif (molette ou glisser en tournant) ; bague extérieure : idem, ou VC TUNE après la grande touche VC TUNE' },
+      { id: 'dial', cx: 1124, cy: 391, ro: 130, ri: 111, ix: 3, iy: 6, dial: true, tip: 'Grand bouton : fréquence du récepteur actif (molette ou glisser en tournant) ; bague extérieure : idem, ou VC TUNE après la grande touche VC TUNE' },
       { id: 'multi', cx: 762, cy: 510, ro: 30, multi: true, tip: 'MULTI : décalage du clarifier (CLAR actif), sinon la fonction de la case MULTI de l’écran (choisie dans FUNC, ex. RF POWER)' },
       { id: 'afSub', cx: 871, cy: 350, ri: 20, ro: 44, inner: { ctl: 'afB', label: 'AF SUB', per: 5 }, outer: { ctl: 'rfB', label: 'RF SUB', per: 5 } },
       { id: 'afMain', cx: 871, cy: 500, ri: 20, ro: 44, inner: { ctl: 'af', label: 'AF MAIN', per: 5 }, outer: { ctl: 'rf', label: 'RF MAIN', per: 5 } },

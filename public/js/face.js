@@ -201,6 +201,13 @@
       say(VX.monitorOn() ? 'MONI : vous entendez votre micro tel qu’il part (au casque).' : 'MONI coupé.', '', 3000);
       return render();
     }
+    // LOCK : verrouille le grand bouton du côté sélectionné (MAIN ou SUB), comme sur le TRX
+    if (a.local === 'lock') {
+      const id = activeSide() === 'B' && R && R.CONTROL.lockB ? 'lockB' : 'lock';
+      if (!R || !R.CONTROL[id]) return say('LOCK : non disponible sur ce TRX.', 'warn');
+      setCtl(id, S()[id] ? 0 : 1);
+      return render();
+    }
     // FAST : commute aussi la touche FAST du TRX quand il la connaît par CAT (FTDX101 : FS) ; le voyant suit le TRX
     if (a.local === 'fast' && R && R.CONTROL.fastStep) {
       if (!needControl()) return;
@@ -1484,7 +1491,7 @@
     if (tx) fl.push('● TX');
     if (s.split) fl.push('SPLIT');
     if (s.rit || s.xit) fl.push((s.rit ? 'RIT' : '') + (s.rit && s.xit ? '/' : '') + (s.xit ? 'XIT' : '') + ' ' + ((s.clar || 0) > 0 ? '+' : '') + ((s.clar || 0) / 1000).toFixed(2) + 'k');
-    if (s.lock) fl.push('LOCK');
+    if (activeSide() === 'B' && R && R.CONTROL.lockB ? s.lockB : s.lock) fl.push('LOCK');
     if (s.proc) fl.push('PROC');
     if (L.fine) fl.push('FINE'); else if (L.fast) fl.push('FAST');
     LCD.flags.textContent = live ? fl.join('  ·  ') : (st.station ? 'TRX muet (éteint ou câble ?)' : 'Station hors ligne');
