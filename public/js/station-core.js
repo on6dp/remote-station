@@ -150,6 +150,14 @@
         if (this.waitRe && typeof t === 'string' && this.waitRe.re.test(t)) { const w = this.waitRe; this.waitRe = null; clearTimeout(w.timer); w.cb(t); }
         if (this.cwRe && typeof t === 'string' && this.cwRe.re.test(t)) this.cwRe.cb(t);
         if (this.cw && this.rig.CW && this.rig.CW.poRe && typeof t === 'string') { const mm = this.rig.CW.poRe.exec(t); if (mm) this.cwPo = +mm[1]; }
+        // Diagnostic : réponses brutes VS (côté sélectionné), FT (VFO d'émission), ST (SPLIT), notées au journal quand elles changent
+        if (typeof t === 'string' && /^(VS|FT|ST)\d$/.test(t)) {
+          this.rawVfs = this.rawVfs || {};
+          if (this.rawVfs[t.slice(0, 2)] !== t) {
+            this.rawVfs[t.slice(0, 2)] = t;
+            this.log('Lu sur le TRX : ' + ['VS', 'FT', 'ST'].map((k) => this.rawVfs[k] || k + '?').join(' · ') + ' (VS = côté sélectionné, FT = émission, ST = SPLIT)');
+          }
+        }
         const p = FTX1.parse(t);
         if (p && p.error && this.cwWatch) this.cwWatch.errs++;
         if (!p) {
