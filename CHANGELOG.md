@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.52** — **Face avant** : la ligne d'état du micro (« PTT = micro du club en … », « Prêt : maintenez PTT… ») passe sous le bouton PTT. Ctrl+F5 sur /ftdx101.
 - **0.32.51** — **Face avant, ligne micro** : Entrée et Sortie bien séparées ; le type du micro reconnu (« Adaptateur son USB »…, qui choisit le réglage proposé au départ) n'est plus sur la ligne mais dans la fenêtre **Equalizer micro**. Ctrl+F5 sur /ftdx101.
 - **0.32.50** — **SSB CONFIGURATION : entrée et sortie son** : 🎤 **Entrée** (votre micro, vers le TRX au PTT) et 🔊 **Sortie** (casque ou haut-parleurs : où vous entendez le TRX et « M'écouter », gardée dans ce navigateur ; Chrome / Edge récents). Face avant et dashboard. Ctrl+F5.
 - **0.32.49** — **Face avant, ligne micro** : plus de répétition du nom du micro (il est déjà dans la liste) ; deuxième ligne : liste du micro · type reconnu et réglage (détails au survol, ⓘ si avertissement) · M'écouter · Volume ; la ligne d'état en dessous. Ctrl+F5 sur /ftdx101.

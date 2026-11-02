@@ -187,7 +187,10 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 /* Phonie à distance sous la face avant : PTT à gauche ; à sa droite, ligne 1 « SSB CONFIGURATION · MICRO · EQUALIZER MICRO · niveau · EQUALIZER TRX »,
    ligne 2 : choix du micro, type, état, M'écouter et son volume (micro actif) */
 .fc-tx { margin: 0; display: flex; flex-direction: row; flex-wrap: wrap; align-items: stretch; gap: 10px; min-width: 0; max-width: 1900px; }
-.fc-tx #ptt { flex: 0 0 340px; width: 340px; height: 46px; min-height: 0; align-self: flex-start; font-size: 20px; font-weight: 800; }
+.fc-tx .vx-pttcol { flex: 0 0 340px; width: 340px; display: flex; flex-direction: column; gap: 6px; }
+.fc-tx #ptt { width: 100%; height: 46px; min-height: 0; font-size: 20px; font-weight: 800; }
+.fc-tx .vx-pttcol .vx-note { font-size: 11px; line-height: 1.35; text-align: center; }
+.fc-tx .vx-pttcol .vx-note:empty { display: none; }
 .fc-tx .vx { margin: 0; flex: 1 1 600px; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .fc-tx .vx-h { flex: 0 0 auto; }
 .fc-tx .vx-on, .fc-tx .vx-trx, .fc-tx #vxEqBtn { width: auto; flex: 0 0 auto; padding: 6px 16px; font-size: 11px; }
@@ -201,7 +204,6 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-tx .vx-outl { margin-left: 36px; padding-left: 14px; border-left: 1px solid #2a3746; }
 .fc-tx .vx-mon { margin-left: 36px; }
 .fc-tx .vx-type .vx-i { color: #f59e0b; cursor: help; }
-.fc-tx .vx-note { flex: 1 1 100%; order: 9; }
 .fc-tx .vx-mon { flex: 0 0 auto; }
 .fc-tx .vx-monvol { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; }
 .fc-tx .vx-monvol input { flex: 0 0 140px; width: 140px; }

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.52 | [RemoteStation-Setup-0.32.52.exe](0.32.52/RemoteStation-Setup-0.32.52.exe) | [remote-station-0.32.52.tar.gz](0.32.52/remote-station-0.32.52.tar.gz) | Face avant : état du micro sous le PTT — [empreintes SHA-256](0.32.52/SHA256SUMS.txt) |
 | 0.32.51 | [RemoteStation-Setup-0.32.51.exe](0.32.51/RemoteStation-Setup-0.32.51.exe) | [remote-station-0.32.51.tar.gz](0.32.51/remote-station-0.32.51.tar.gz) | Face avant : ligne micro plus claire — [empreintes SHA-256](0.32.51/SHA256SUMS.txt) |
 | 0.32.50 | [RemoteStation-Setup-0.32.50.exe](0.32.50/RemoteStation-Setup-0.32.50.exe) | [remote-station-0.32.50.tar.gz](0.32.50/remote-station-0.32.50.tar.gz) | Entrée et sortie son au choix — [empreintes SHA-256](0.32.50/SHA256SUMS.txt) |
 | 0.32.49 | [RemoteStation-Setup-0.32.49.exe](0.32.49/RemoteStation-Setup-0.32.49.exe) | [remote-station-0.32.49.tar.gz](0.32.49/remote-station-0.32.49.tar.gz) | Face avant : ligne micro simplifiée — [empreintes SHA-256](0.32.49/SHA256SUMS.txt) |

@@ -104,6 +104,11 @@
       const meter = box.querySelector('.vx-meter'), eq = $('vxEqBtn'), row = eq.parentElement;
       $('vxOn').after(eq, meter, $('vxTrxBtn'));
       if (row && !row.children.length) row.remove();
+      // Ligne d'état (« PTT = micro du club… ») sous le bouton PTT, puisqu'elle le concerne
+      const col = document.createElement('div');
+      col.className = 'vx-pttcol';
+      anchor.before(col);
+      col.append(anchor, $('vxNote'));
     }
     $('vxOn').addEventListener('click', () => (V.on ? stop(true) : start()));
     $('vxDev').addEventListener('change', () => { const o = $('vxDev').selectedOptions[0]; store.set('dev', o ? o.textContent : ''); start($('vxDev').value); });
@@ -141,6 +146,7 @@
     $('vxOn').textContent = V.api.compact ? 'Micro' : 'Configuration micro';
     $('vxOn').title = V.on ? 'Micro actif : votre voix part vers le TRX pendant l’appui sur PTT. Clic : couper le micro' : 'Activer votre micro : votre voix part vers le TRX pendant l’appui sur PTT (LSB / USB…)';
     $('vxBody').hidden = !V.on;
+    if (V.api.compact && !V.on) note('');
     if (V.api.compact) { $('vxEqBtn').hidden = !modes; $('vxEqBtn').classList.toggle('dim', !V.on); box.querySelector('.vx-meter').hidden = !modes; }
     if (!V.on) return;
     const md = txMode(st);
