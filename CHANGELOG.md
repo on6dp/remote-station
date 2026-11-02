@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.94** — **Double réception FTDX101 (FT8 / FT4 / FT2)** : fréquence de chaque VFO en grand au-dessus de sa cascade, sur fond rouge (« TX ») pour le VFO choisi pour émettre. **« ■ Arrêter »** toujours lisible (blanc gras sur rouge sombre, rouge vif pendant l'émission). Ctrl+F5 sur /ftdx101/digi.html.
 - **0.32.93** — **Double réception FTDX101 (FT8 / FT4 / FT2)** : deux cartes de bande à droite (bande du VFO-A, puis bande du VFO-B avec sa fenêtre RX / TX ; clic sur un spot de la carte B = réception du VFO-B sur ce signal) ; colonnes Pays, km et Az retirées, le pays DXCC, la distance et l'azimut s'affichent en passant la souris sur l'indicatif (partout). Ctrl+F5 sur /ftdx101/digi.html.
 - **0.32.92** — **Modes numériques de la face avant (/ftdx101/digi.html) : choix « TX call »** dans la barre FT8 / FT4 / FT2 (indicatif sous lequel on émet : ON5VL / OR0L de la station, ou le sien), comme sur le dashboard ; choix gardé dans le navigateur et commun aux deux pages. Ctrl+F5 sur /ftdx101 et /ftdx101/digi.html.
 - **0.32.91** — **Modes numériques** : boutons « Effacer » des listes en blanc gras. Ctrl+F5 sur /ftdx101/digi.html et le dashboard.
