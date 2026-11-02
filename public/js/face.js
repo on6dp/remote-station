@@ -1870,15 +1870,15 @@
     body.addEventListener('wheel', (e) => { e.preventDefault(); zoom(e.deltaY > 0 ? 1 : -1); }, { passive: false });
     body.addEventListener('click', (e) => {
       const r = body.getBoundingClientRect(), y = e.clientY - r.top, x = e.clientX - r.left;
-      let best = null, bd = 9;
-      for (const l of BMV.lay[side]) { const d = Math.abs(l.ly - y); if (d < bd && x >= l.x0 - 4) { bd = d; best = l; } }
+      let best = null, bd = 9.5;
+      for (const l of BMV.lay[side]) { const d = Math.abs(l.ly - y); if (d < bd && x >= l.x0 - 8) { bd = d; best = l; } }
       if (!best) return;
       tuneTo(side, Math.round(best.s.f * 1000));
       say((side === 'A' ? 'VFO-A' : 'VFO-B') + ' → ' + best.s.call + ' (' + best.s.f.toFixed(1) + ' kHz)', '', 3000);
     });
     body.addEventListener('mousemove', (e) => {
       const r = body.getBoundingClientRect(), y = e.clientY - r.top;
-      const hit = BMV.lay[side].find((l) => Math.abs(l.ly - y) < 7);
+      const hit = BMV.lay[side].find((l) => Math.abs(l.ly - y) < 9);
       body.title = hit ? hit.s.call + ' ' + hit.s.f.toFixed(1) + ' kHz' + (hit.s.cmt ? ' — ' + hit.s.cmt : '') + ' (clic : y aller)' : 'Molette : plage affichée';
     });
     return box;
@@ -1913,13 +1913,13 @@
     }
     // Échelle : un trait par pas « rond », graduations au bord gauche
     const step = span <= 5 ? 0.5 : span <= 10 ? 1 : span <= 20 ? 2 : span <= 50 ? 5 : span <= 100 ? 10 : 20;
-    c.font = '10px "Roboto Mono", monospace'; c.textAlign = 'left'; c.textBaseline = 'middle';
+    c.font = 'bold 12px "Roboto Mono", monospace'; c.textAlign = 'left'; c.textBaseline = 'middle';
     for (let k = Math.ceil(lo / step) * step; k <= hi; k += step) {
       const y = Math.round(yOf(k)) + 0.5;
       c.strokeStyle = '#243042'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, y); c.lineTo(8, y); c.stroke();
       c.fillStyle = '#ffffff'; c.fillText((step < 1 ? k.toFixed(1) : String(Math.round(k))), 10, y);
     }
-    const x0 = 64;
+    const x0 = 62;
     c.strokeStyle = '#2b3546'; c.beginPath(); c.moveTo(x0 - 6.5, 0); c.lineTo(x0 - 6.5, H); c.stroke();
     // Spots : du plus récent au plus ancien gardés 30 min ; étiquettes poussées vers le bas si elles se chevauchent
     const now = Date.now();
@@ -1927,7 +1927,7 @@
     const lay = [];
     let last = -99;
     for (const p of list) {
-      const y = yOf(p.f), ly = Math.max(y, last + 12);
+      const y = yOf(p.f), ly = Math.max(y, last + 17); // une ligne de 17 px par indicatif : plus de place pour cliquer
       if (ly > H - 4) break;
       last = ly;
       lay.push({ s: p, y, ly, x0 });
@@ -1938,9 +1938,9 @@
       const md = (BMV_MODES.exec(l.s.cmt) || [])[1] || '';
       c.strokeStyle = 'rgba(95,179,255,.55)'; c.beginPath(); c.moveTo(x0 - 6, l.y); c.lineTo(x0 - 1, l.ly); c.stroke();
       c.fillStyle = '#ffffff'; // indicatifs en blanc (plus lisibles)
-      c.font = (l.s.skim ? '' : 'bold ') + '11px system-ui, sans-serif';
+      c.font = (l.s.skim ? '' : 'bold ') + '14px system-ui, sans-serif';
       c.fillText(l.s.call, x0, l.ly);
-      if (md) { c.fillStyle = '#5fb3ff'; c.font = '9px "Roboto Mono", monospace'; c.fillText(md.toUpperCase(), x0 + c.measureText(l.s.call).width + 34, l.ly); }
+      if (md) { const cw = c.measureText(l.s.call).width; c.fillStyle = '#5fb3ff'; c.font = '10px "Roboto Mono", monospace'; c.fillText(md.toUpperCase(), x0 + cw + 5, l.ly); }
     }
     // VFO : trait et triangle (rouge si c'est le VFO d'émission)
     const yv = Math.round(yOf(fk)) + 0.5, tx = L.txSide(s) === side;
