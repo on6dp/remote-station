@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.66 | [RemoteStation-Setup-0.32.66.exe](0.32.66/RemoteStation-Setup-0.32.66.exe) | [remote-station-0.32.66.tar.gz](0.32.66/remote-station-0.32.66.tar.gz) | FTDX101 : voyant SPLIT comme le TRX sur SUB, moins de faux « refusé », FAST — [empreintes SHA-256](0.32.66/SHA256SUMS.txt) |
 | 0.32.65 | [RemoteStation-Setup-0.32.65.exe](0.32.65/RemoteStation-Setup-0.32.65.exe) | [remote-station-0.32.65.tar.gz](0.32.65/remote-station-0.32.65.tar.gz) | FTDX101 : TX MAIN / SUB lu et réglé comme Hamlib (FT2 / FT3), FAST des deux côtés — [empreintes SHA-256](0.32.65/SHA256SUMS.txt) |
 | 0.32.64 | [RemoteStation-Setup-0.32.64.exe](0.32.64/RemoteStation-Setup-0.32.64.exe) | [remote-station-0.32.64.tar.gz](0.32.64/remote-station-0.32.64.tar.gz) | Face avant : voyant FAST sur SUB — [empreintes SHA-256](0.32.64/SHA256SUMS.txt) |
 | 0.32.63 | [RemoteStation-Setup-0.32.63.exe](0.32.63/RemoteStation-Setup-0.32.63.exe) | [remote-station-0.32.63.tar.gz](0.32.63/remote-station-0.32.63.tar.gz) | Face avant : FAST sur SUB = accord rapide de la page (le CAT ne commute que MAIN) — [empreintes SHA-256](0.32.63/SHA256SUMS.txt) |

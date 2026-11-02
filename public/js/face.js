@@ -170,7 +170,8 @@
       setCtl('split', on);
       if (R.CONTROL.txVfo) setTimeout(() => {
         const s2 = S(), sel = s2.vfoSel === 1 ? 'B' : 'A', want = on ? (sel === 'B' ? 'A' : 'B') : sel;
-        if (!!s2.split === !!on && L.txSide(s2) !== want) setCtl('txVfo', want === 'B' ? 1 : 0);
+        const st1 = s2.stSplit != null ? s2.stSplit : s2.split; // SPLIT relu brut (ST), avant correction d'affichage
+        if (!!st1 === !!on && L.txSide(s2) !== want) setCtl('txVfo', want === 'B' ? 1 : 0);
       }, 1200);
       return;
     }
@@ -211,7 +212,8 @@
     // FAST : commute aussi la touche FAST du TRX (FTDX101 : FS, côté sélectionné, MAIN ou SUB) ; le voyant suit l'état relu sur le TRX
     if (a.local === 'fast' && R && R.CONTROL.fastStep) {
       if (!needControl()) return;
-      const on = S().fastStep ? 0 : 1;
+      const fs = S().fastStep;
+      const on = (fs != null ? fs : L.fast) ? 0 : 1; // TRX qui ne répond pas à la lecture : état de la page
       setCtl('fastStep', on);
       L.fast = !!on; if (on) L.fine = false;
       store.set('rs.face.fast', L.fast ? '1' : '0'); store.set('rs.face.fine', L.fine ? '1' : '0');

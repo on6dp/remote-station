@@ -149,6 +149,12 @@
     FREQ_MAX: 75000000,
     headNames: { D: 'FTDX101D', M: 'FTDX101MP' },
     menu: { groups: MENU, item: menuItem, show: menuShow, step: menuStep, ok: menuOk },
+    // SPLIT affiché : « ST1 » relu alors que l'émission est sur le VFO sélectionné (ex. SUB sélectionné, TX sur SUB) n'est pas
+    // un SPLIT pour le TRX (son voyant SPLIT reste éteint) ; la valeur relue brute reste dans stSplit
+    derive(r) {
+      r.stSplit = r.split;
+      if (r.split === 1 && r.txVfo != null && r.vfoSel != null && r.txVfo === (r.vfoSel === 1 ? 1 : 0)) r.split = 0;
+    },
     // FT (VFO d'émission), comme Hamlib pour les FTDX101 D / MP : lecture « FT0 » = émission sur MAIN, « FT1 » = sur SUB
     // (absolu, quel que soit le VFO sélectionné) ; réglage par FT2 (MAIN) / FT3 (SUB) — FT0 / FT1 servent à basculer
     // l'émission et ont des effets de bord (SPLIT qui se rallume, VFO d'émission inversé avec SUB sélectionné).

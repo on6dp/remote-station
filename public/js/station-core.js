@@ -169,6 +169,13 @@
           this.log(FTX1.NAME + ' répond');
         }
         // Commande refusée par la radio (« ?; ») juste après un réglage : on le signale dans le journal
+        // « ? » arrivé juste après une lecture partie APRÈS le dernier réglage : c'est la lecture qui est refusée
+        // (sans objet dans l'état du TRX) — noté une fois au journal de la Station, pas attribué au réglage
+        if (p.error && this.lastPoll && Date.now() - this.lastPoll.at < 300 && (!this.lastCmd || this.lastPoll.at > this.lastCmd.at)) {
+          this.pollRefused = this.pollRefused || {};
+          if (!this.pollRefused[this.lastPoll.s]) { this.pollRefused[this.lastPoll.s] = 1; this.log('Lecture « ' + this.lastPoll.s + ' » : le TRX répond « ? » (sans objet dans cet état)'); }
+          continue;
+        }
         if (p.error && this.lastCmd && Date.now() - this.lastCmd.at < 600) {
           const lc = this.lastCmd;
           this.lastCmd = null;
@@ -182,7 +189,10 @@
           if (lc.ctl) {
             setTimeout(() => {
               const now = this.radio[lc.ctl.id];
-              if (now != null && String(now) === String(lc.ctl.v)) this.log('« ? » reçu après ' + lc.s + ' mais la valeur relue est bonne : réponse d\u2019une lecture, ignorée');
+              const later = this.ctlAt && this.ctlAt[lc.ctl.id] > lc.at; // réglage renvoyé depuis (bouton qu'on tourne encore)
+              // Valeur jamais relue (le TRX ne répond pas à cette lecture) : rien pour la contredire, journal seulement
+              if (now == null) this.log('« ? » reçu après ' + lc.s + ' ; réglage non relu sur ce TRX, refus non confirmé');
+              else if (later || String(now) === String(lc.ctl.v)) this.log('« ? » reçu après ' + lc.s + ' mais la valeur relue est bonne : réponse d\u2019une lecture, ignorée');
               else note();
             }, 1500);
           } else note();
@@ -412,6 +422,7 @@
           this._write(FTX1.CONTROL[m.id].write(v, this.radio));
           // Réglage avec une valeur relue : un « ? » éventuel sera vérifié par la relecture avant d'être signalé
           if (this.lastCmd && FTX1.CONTROL[m.id].type !== 'action') this.lastCmd.ctl = { id: m.id, v };
+          (this.ctlAt = this.ctlAt || {})[m.id] = Date.now();
           // Réglages de VFO / SPLIT : une émission qui suivrait de près n'est pas voulue (filet de sécurité, FTX-1)
           this.lastCtl = ['split', 'vfoSel', 'swap', 'aToB', 'bToA'].indexOf(m.id) >= 0 ? { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() } : null;
           this.forceSlow = true;
@@ -1307,6 +1318,7 @@
     _write(s, poll) {
       if (!this.serialOpen) return;
       if (!poll && typeof s === 'string') this.lastCmd = { s, at: Date.now() }; // pour signaler un refus éventuel
+      else if (poll && typeof s === 'string' && s.length < 12) this.lastPoll = { s, at: Date.now() }; // dernière lecture partie
       try {
         this.writeSerial(s);
       } catch (e) {
