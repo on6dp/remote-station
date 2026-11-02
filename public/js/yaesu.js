@@ -316,6 +316,13 @@
         if (spec.voice) for (const k in spec.voice) for (const [id] of spec.voice[k]) this.ans['EX' + id + ';'] = 'EX' + id + '0';
         // Égaliseur du TRX (simulateur) : bandes coupées, niveau 0, largeur 5
         if (spec.trxEq) for (let i = 0; i < 18; i++) { const id = spec.trxEq.menu + pad(spec.trxEq.first + i, 2); this.ans['EX' + id + ';'] = 'EX' + id + (i % 3 === 0 ? '00' : i % 3 === 1 ? '+00' : '05'); }
+        // Menus du TRX (simulateur) : chaque réglage à sa première valeur, au format du manuel (chiffres, signe)
+        if (spec.menu) for (const g of spec.menu.groups) for (const it of g.items) {
+          const d = it.d, k = 'EX' + it.id + ';';
+          if (this.ans[k] != null || d.k === 't') continue;
+          if (d.k === 'l') { const codes = d.codes || d.labels.map((_, i) => i + d.base); const w = String(Math.max.apply(null, codes)).length; this.ans[k] = 'EX' + it.id + pad(codes[0], w); }
+          else { const w = String(Math.max(Math.abs(d.min), Math.abs(d.max))).length; this.ans[k] = 'EX' + it.id + (d.min < 0 ? '+' : '') + pad(Math.max(d.min, 0), w); }
+        }
         this.onData = null;
         this.sp = new Splitter();
         this.t = 0;
@@ -431,7 +438,7 @@
 
     return {
       ID, NAME, MODES: MODES_ALL, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX,
-      POWER_RANGE: P.range, POWER_STEP: P.step, HEAD_NAMES: spec.headNames || null, BAND_SIDELESS: !!spec.bandSideless, INIT: (spec.splitIsFT ? 'AI0;ST0;' : 'AI0;') + (spec.initExtra || ''), UNKEY_EXTRA: spec.splitIsFT ? 'ST0;' : '',
+      POWER_RANGE: P.range, POWER_STEP: P.step, MENU: spec.menu || null, HEAD_NAMES: spec.headNames || null, BAND_SIDELESS: !!spec.bandSideless, INIT: (spec.splitIsFT ? 'AI0;ST0;' : 'AI0;') + (spec.initExtra || ''), UNKEY_EXTRA: spec.splitIsFT ? 'ST0;' : '',
       // SPLIT « virtuel » (FTX-1) : le VFO d'émission n'est envoyé au TRX qu'au moment d'émettre (FT), puis remis
       // Lectures CAT autorisées depuis la console de diagnostic (administrateurs) : lectures seulement
       CAT_QUERIES: Array.from(new Set(READS.map((r) => r.cmd).concat(FAST, FAST_SUB, TXMETERS, ['IF;', 'OI;', 'FR;', 'ID;', 'VS;', 'FT;', 'ST;', 'FA;', 'FB;'], spec.extraQueries || []))),

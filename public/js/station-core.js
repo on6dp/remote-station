@@ -420,11 +420,11 @@
           this._cwPrep(m);
         } else if (m.op === 'exread') {
           // Lecture de menus (égaliseur du TRX) : réponses une à une, puis { menu: valeur } au serveur
-          this._exRead(m.id, Array.isArray(m.cmds) ? m.cmds.slice(0, 40) : []);
+          this._exRead(m.id, Array.isArray(m.cmds) ? m.cmds.slice(0, 40) : [], !!m.soft);
         } else if (m.op === 'exwrite') {
           // Écriture de menus (égaliseur du TRX), jamais pendant une émission
           const busy = this.catKeyed || this.radio.tx || !this.serialOpen || this.exBusy;
-          if (!busy) this._writeList((Array.isArray(m.cmds) ? m.cmds : []).filter((c) => /^EX\d{6}[+-]?\d{1,3};$/.test(c)).slice(0, 40));
+          if (!busy) this._writeList((Array.isArray(m.cmds) ? m.cmds : []).filter((c) => /^EX\d{6}[+-]?\d{1,4};$/.test(c)).slice(0, 40));
           if (this.wsUp) this.sendWs({ t: 'exwrite_reply', id: m.id, ok: !busy });
         } else if (m.op === 'voiceoff') {
           // Main rendue, micro coupé… : source de modulation remise tout de suite (sauf en pleine émission)
@@ -550,7 +550,7 @@
       next(0);
     }
     /** Lecture des menus EX listés (texte Yaesu) : { 'menu à 6 chiffres': 'valeur' } envoyé au serveur. */
-    _exRead(id, cmds) {
+    _exRead(id, cmds, soft) {
       const vals = {};
       const done = (err) => { this.exBusy = false; if (this.wsUp) this.sendWs({ t: 'exread_reply', id, values: vals, err: err || '' }); };
       if (this.catKeyed || this.radio.tx || !this.serialOpen || this.exBusy) return done('TRX occupé (émission en cours)');
@@ -561,7 +561,7 @@
         if (!mm) return next(i + 1);
         const re = new RegExp('^EX' + mm[1] + '([+-]?\\d+)$');
         this._awaitFn((t) => { const x = typeof t === 'string' ? re.exec(t) : null; return x ? x[1] : null; }, 700, (v) => {
-          if (v == null) return done('le TRX n’a pas répondu à ' + cmds[i]);
+          if (v == null) { if (!soft) return done('le TRX n’a pas répondu à ' + cmds[i]); return next(i + 1); } // menus : réglage refusé ou absent, on continue
           vals[mm[1]] = v;
           next(i + 1);
         });

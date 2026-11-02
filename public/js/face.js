@@ -135,7 +135,7 @@
     if (a.info) return say(a.info, '', 6000);
     if (a.pop) return popCtl(a.pop);
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
-    if (a.local === 'func') { L.func = !L.func; return render(); }
+    if (a.local === 'func') { if (MV.open) closeMenu(); L.func = !L.func; return render(); }
     if (a.local === 'vc') {
       // VC TUNE (présélecteur) du récepteur actif ; en marche, MULTI l'accorde
       const id = activeSide() === 'B' ? 'vcB' : 'vc';
@@ -692,6 +692,102 @@
   L.funcSel = store.get('rs.face.funcsel', 'power');
   const stepNow = () => (L.fine ? 0 : L.fast ? 2 : 1);
   function setStepIdx(i) { L.fine = i === 0; L.fast = i === 2; store.set('rs.face.fine', L.fine ? '1' : '0'); store.set('rs.face.fast', L.fast ? '1' : '0'); }
+  // ------------------------------------------------------------ menus du TRX : FUNC → RADIO / CW / OPERATION / DISPLAY / EXTENSION SETTING
+  // Fenêtre posée sur l'écran : sous-menus à gauche, réglages à droite (valeurs lues sur le TRX à l'ouverture d'un sous-menu) ;
+  // clic sur un réglage puis − / +, molette ou bouton MULTI : la valeur part au TRX (main prise), puis elle est relue.
+  const MENU_CELL = { radio: 'RADIO SETTING', cwset: 'CW SETTING', opset: 'OPERATION SETTING', disp: 'DISPLAY SETTING', ext: 'EXTENSION SETTING' };
+  const MV = { open: false, group: '', sub: '', sel: null, vals: {}, pend: null, t: 0 };
+  const MN = () => (R && R.MENU) || null;
+  function openMenu(group) {
+    const M = MN();
+    MV.open = true; MV.group = group; MV.sel = null;
+    L.func = false;
+    let box = $('fcMenu');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'fcMenu';
+      box.className = 'fc-menu';
+      const sc = FACE.lcd;
+      box.style.left = ((sc.x + 4 - V.x) / V.w * 100) + '%';
+      box.style.top = ((sc.y + 4 - V.y) / V.h * 100) + '%';
+      box.style.width = ((sc.w - 8) / V.w * 100) + '%';
+      box.style.height = ((sc.h - 8) / V.h * 100) + '%';
+      $('facePanel').appendChild(box);
+      box.addEventListener('click', menuClick);
+      box.addEventListener('wheel', (e) => {
+        const r = e.target.closest('[data-it]');
+        if (!r) return;
+        e.preventDefault();
+        MV.sel = r.dataset.it;
+        menuAdjust(MV.sel, e.deltaY > 0 ? -1 : 1);
+      }, { passive: false });
+    }
+    box.style.fontSize = Math.max(9, Math.round($('facePanel').clientWidth / V.w * 10.5)) + 'px';
+    const subs = M ? M.groups.filter((g) => g.group === group) : [];
+    MV.sub = subs.length ? (subs.find((g) => g.id === MV.sub) || subs[0]).id : '';
+    box.hidden = false;
+    if (MV.sub) send({ t: 'menu_read', sub: MV.sub });
+    menuDraw();
+    render();
+  }
+  function closeMenu() { MV.open = false; MV.sel = null; const b = $('fcMenu'); if (b) b.hidden = true; render(); }
+  function menuVals(m) {
+    for (const k in m.values || {}) MV.vals[k] = m.values[k];
+    for (const id of m.ids || []) if (!(id in (m.values || {})) && MV.vals[id] === undefined) MV.vals[id] = null;
+    if (m.err) say('Menu du TRX : ' + m.err, 'warn', 5000);
+    if (MV.open) menuDraw();
+  }
+  function menuDraw() {
+    const box = $('fcMenu'), M = MN();
+    if (!box || !MV.open) return;
+    const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const subs = M ? M.groups.filter((g) => g.group === MV.group) : [];
+    const g = subs.find((x) => x.id === MV.sub);
+    let body;
+    if (!M) body = '<p class="fm-note">Menus pas disponibles pour ce TRX.</p>';
+    else if (!subs.length) body = '<p class="fm-note">' + esc(MV.group) + ' : date et heure, carte SD, version, étalonnage, remise à zéro… : réglages du TRX lui-même, <b>au club seulement</b> (rien à distance, par sécurité).</p>';
+    else {
+      body = '<div class="fm-subs">' + subs.map((x) => '<button type="button" data-sub="' + x.id + '" class="' + (x.id === MV.sub ? 'on' : '') + '">' + esc(x.name) + '</button>').join('') + '</div>' +
+        '<div class="fm-items">' + g.items.map((it) => {
+          const raw = MV.vals[it.id], sel = MV.sel === it.id, ro = it.d.ro;
+          const val = raw === undefined ? '…' : M.show(it.d, raw);
+          return '<div class="fm-row' + (sel ? ' sel' : '') + (ro ? ' ro' : '') + '" data-it="' + it.id + '" title="' + esc(it.label + (ro ? ' — lecture seule : ' + ro : ' — clic puis − / +, molette ou bouton MULTI')) + '">' +
+            '<span class="fm-n">' + String(it.n).padStart(2, '0') + '</span><span class="fm-l">' + esc(it.label) + '</span>' +
+            (sel && !ro ? '<button type="button" class="fm-pm" data-step="-1">−</button>' : '') + '<span class="fm-v">' + esc(val) + '</span>' +
+            (sel && !ro ? '<button type="button" class="fm-pm" data-step="1">+</button>' : '') + '</div>';
+        }).join('') + '</div>';
+    }
+    box.innerHTML = '<div class="fm-h"><b>' + esc(MV.group) + '</b>' + (g ? '<span>' + esc(g.name) + '</span>' : '') + '<button type="button" class="fm-x" data-close="1" title="Fermer">✕</button></div><div class="fm-b">' + body + '</div>';
+  }
+  function menuClick(e) {
+    const b = e.target.closest('button');
+    if (b && b.dataset.close) return closeMenu();
+    if (b && b.dataset.sub) { MV.sub = b.dataset.sub; MV.sel = null; send({ t: 'menu_read', sub: MV.sub }); return menuDraw(); }
+    if (b && b.dataset.step) return menuAdjust(MV.sel, Number(b.dataset.step));
+    const r = e.target.closest('[data-it]');
+    if (!r) return;
+    const M = MN(), it = M && M.item(r.dataset.it);
+    MV.sel = r.dataset.it;
+    if (it && it.d.ro) say(it.label + ' : lecture seule (' + it.d.ro + ').', '', 4000);
+    menuDraw();
+  }
+  function menuAdjust(id, step) {
+    const M = MN(), it = M && id && M.item(id);
+    if (!it) return;
+    if (it.d.ro) return say(it.label + ' : lecture seule (' + it.d.ro + ').', 'warn', 4000);
+    if (!needControl()) return;
+    const raw = MV.pend && MV.pend.id === id ? MV.pend.v : MV.vals[id];
+    if (raw == null) return say(it.label + ' : valeur pas encore lue sur le TRX.', 'warn', 3000);
+    const nv = M.step(it.d, raw, step);
+    if (nv == null || nv === raw) return;
+    MV.vals[id] = nv;
+    MV.pend = { id, v: nv };
+    menuDraw();
+    // Plusieurs crans d'affilée : seule la dernière valeur part au TRX
+    clearTimeout(MV.t);
+    MV.t = setTimeout(() => { const p = MV.pend; MV.pend = null; if (p) send({ t: 'menu_write', id: p.id, v: p.v }); }, 400);
+  }
+
   // Menu FUNC : valeurs lues sur le TRX ; RPT / ENC/DEC / TONE FREQ suivent le VFO sélectionné (MAIN ou SUB)
   const RPTS = ['SIMP', '+', '−'];
   const ENCDECS = ['OFF', 'ENC/DEC', 'ENC', 'DCS', 'DCS ENC'];
@@ -767,7 +863,7 @@
       const y = Y(132 + ri * rh);
       row.forEach(([id, lab, , adj, col, flip], ci) => {
         const x = X(5) + ci * cw;
-        const box = el('rect', { x: x + 1, y, width: cw - 2, height: rh - 7, rx: 2, class: 'func-cell' + (adj ? '' : ' off') }, f);
+        const box = el('rect', { x: x + 1, y, width: cw - 2, height: rh - 7, rx: 2, class: 'func-cell' + (adj || MENU_CELL[id] ? '' : ' off') }, f);
         const two = lab.indexOf(' SETTING') > 0;
         const t1 = el('text', { x: x + cw / 2, y: y + (two ? 14 : 13), class: 'func-lab', 'text-anchor': 'middle' }, f, two ? lab.replace(' SETTING', '') : lab);
         const t2 = el('text', { x: x + cw / 2, y: y + 27, class: two ? 'func-lab' : 'func-val', 'text-anchor': 'middle' }, f, two ? 'SETTING' : '');
@@ -776,8 +872,9 @@
         const minus = adj && !flip ? el('text', { x: x + 9, y: y + 26, class: 'func-pm', 'text-anchor': 'middle' }, f, '−') : null;
         const plus = adj && !flip ? el('text', { x: x + cw - 9, y: y + 26, class: 'func-pm', 'text-anchor': 'middle' }, f, '+') : null;
         const hit = el('rect', { x: x + 1, y, width: cw - 2, height: rh - 7, class: 'hs lcd-hit' }, f);
-        el('title', {}, hit, adj ? lab + (flip ? ' : clic pour changer' : ' : clic pour la choisir, puis clic sur − / +, molette ou bouton MULTI') : lab + ' : pas disponible à distance');
+        el('title', {}, hit, adj ? lab + (flip ? ' : clic pour changer' : ' : clic pour la choisir, puis clic sur − / +, molette ou bouton MULTI') : MENU_CELL[id] ? lab + ' : menus du TRX (clic pour ouvrir)' : lab + ' : pas disponible à distance');
         hit.addEventListener('click', (ev) => {
+          if (!adj && MENU_CELL[id]) return openMenu(MENU_CELL[id]);
           if (!adj) return say(lab + ' : pas disponible à distance (menus du TRX : au club).', '', 3500);
           const wasSel = L.funcSel === id;
           L.funcSel = id;
@@ -906,6 +1003,7 @@
       render();
       return showTip(ev, 'VC TUNE ' + (vcSide ? 'SUB' : 'MAIN') + ' ' + (pos != null ? pos : (n > 0 ? '+' : '−')));
     }
+    if (k.multi && MV.open && MV.sel) { menuAdjust(MV.sel, notches > 0 ? 1 : -1); return; }
     if (k.multi && !(s.rit || s.xit) && FUNC_BY[L.funcSel] && FUNC_BY[L.funcSel][3]) {
       funcAdjust(L.funcSel, notches);
       return showTip(ev, FUNC_BY[L.funcSel][1] + ' ' + FUNC_BY[L.funcSel][2](S()));
@@ -1746,6 +1844,7 @@
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && window.RSVOICE) { window.RSVOICE.onMessage(m); return; }
       if (m.t === 'spots' || m.t === 'spot') bmvOnSpots(m); // cartes de bande A / B autour du TRX
+      if (m.t === 'menu_vals') return menuVals(m);
       if (DG() && m.t !== 'hello' && m.t !== 'state' && DG().onMessage(m)) return;
       if (m.t === 'hello') {
         me = m;

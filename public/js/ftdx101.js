@@ -25,11 +25,130 @@
   const ENCDEC = [[0, 'OFF'], [1, 'ENC/DEC'], [2, 'ENC'], [3, 'DCS'], [4, 'DCS ENC']];
   const NARROW_21 = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 800, 1200, 1400, 1700, 2000, 2400, 3000, 3200, 3500, 4000];
 
+  // ------------------------------------------------------------ menus du TRX (touche FUNC → … SETTING de la face avant)
+  // Manuel CAT FTDX101 (1904-A), commande EX P1P2P3 + valeur. Chaque réglage : [n°, nom, type] ;
+  // type L([libellés], base) = liste (code = base + rang), N(min, max, pas, unité, diviseur) = nombre, T = texte (lecture seule).
+  // ro : lu seulement (liaison CAT, phonie et CW à distance, puissance maximale, étalonnage… : au club).
+  const MENU = (() => {
+    const L = (labels, base) => ({ k: 'l', labels, base: base || 0 });
+    const C = (pairs) => ({ k: 'l', codes: pairs.map((p) => p[0]), labels: pairs.map((p) => p[1]) });
+    const N = (min, max, step, unit, div) => ({ k: 'n', min, max, step: step || 1, unit: unit || '', div: div || 1 });
+    const RO = (d, why) => Object.assign({}, d, { ro: why || 'au club seulement' });
+    const T = { k: 't', ro: 'texte' };
+    const OFFON = L(['OFF', 'ON']), MS = L(['MAIN', 'SUB']), NR = L(['NOR', 'REV']);
+    const AGC = N(20, 4000, 20, 'msec');
+    const LCUT = C([[0, 'OFF']].concat(Array.from({ length: 19 }, (_, i) => [i + 1, (100 + i * 50) + 'Hz'])));
+    const HCUT = C([[0, 'OFF']].concat(Array.from({ length: 67 }, (_, i) => [i + 1, (700 + i * 50) + 'Hz'])));
+    const SLOPE = L(['6dB/oct', '18dB/oct']);
+    const BPF = L(['50-3050', '100-2900', '200-2800', '300-2700', '400-2600']);
+    const LVL = N(0, 100);
+    const MOD = RO(L(['MIC', 'REAR']), 'source de modulation : gérée par la phonie à distance');
+    const REAR = RO(L(['DATA', 'USB']), 'gérée par la phonie à distance');
+    const RPORT = RO(N(0, 100), 'niveau de l’entrée USB : réglé pour la phonie à distance');
+    const RPTT = RO(L(['DAKY', 'RTS', 'DTR']), 'commande d’émission de la liaison');
+    const MICG = C([[1000, 'MCVR']].concat(Array.from({ length: 101 }, (_, i) => [i, String(i)])));
+    const flt = (a) => [[a, 'LCUT FREQ', LCUT], [a + 1, 'LCUT SLOPE', SLOPE], [a + 2, 'HCUT FREQ', HCUT], [a + 3, 'HCUT SLOPE', SLOPE]];
+    const agc = [[1, 'AGC FAST DELAY', AGC], [2, 'AGC MID DELAY', AGC], [3, 'AGC SLOW DELAY', AGC]];
+    const KTYPE = L(['OFF', 'BUG', 'ELEKEY-A', 'ELEKEY-B', 'ELEKEY-Y', 'ACS']);
+    const EQF = [L(['OFF', '100', '200', '300', '400', '500', '600', '700']), L(['OFF', '700', '800', '900', '1000', '1100', '1200', '1300', '1400', '1500']),
+      L(['OFF'].concat(Array.from({ length: 18 }, (_, i) => String(1500 + i * 100))))];
+    const eqRo = (d) => RO(d, 'réglé par EQUALIZER TRX (Profil de …)');
+    const eq = (a, p) => [0, 1, 2].flatMap((b) => [[a + b * 3, p + 'PRMTRC EQ' + (b + 1) + ' FREQ', eqRo(EQF[b])], [a + b * 3 + 1, p + 'PRMTRC EQ' + (b + 1) + ' LEVEL', eqRo(N(-10, 10, 1, 'dB'))], [a + b * 3 + 2, p + 'PRMTRC EQ' + (b + 1) + ' BWTH', eqRo(N(1, 10))]]);
+    const G = (id, group, name, items) => ({ id, group, name, items: items.map(([n, label, d]) => ({ id: id + String(n).padStart(2, '0'), n, label, d })) });
+    return [
+      G('0101', 'RADIO SETTING', 'MODE SSB', agc.concat(flt(4), [[8, 'SSB OUT SELECT', MS], [9, 'SSB OUT LEVEL', LVL], [10, 'TX BPF SEL', BPF],
+        [11, 'SSB MOD SOURCE', MOD], [12, 'REAR SELECT', REAR], [13, 'RPORT GAIN', RPORT], [14, 'RPTT SELECT', RPTT]])),
+      G('0102', 'RADIO SETTING', 'MODE AM', agc.concat(flt(4), [[8, 'AM OUT SELECT', MS], [9, 'AM OUT LEVEL', LVL], [10, 'TX BPF SEL', BPF],
+        [11, 'AM MOD SOURCE', MOD], [12, 'MIC GAIN', MICG], [13, 'REAR SELECT', REAR], [14, 'RPORT GAIN', RPORT], [15, 'RPTT SELECT', RPTT]])),
+      G('0103', 'RADIO SETTING', 'MODE FM', agc.concat(flt(4), [[8, 'FM OUT SELECT', MS], [9, 'FM OUT LEVEL', LVL], [10, 'FM MOD SOURCE', MOD],
+        [11, 'MIC GAIN', MICG], [12, 'REAR SELECT', REAR], [13, 'RPORT GAIN', RPORT], [14, 'RPTT SELECT', RPTT],
+        [15, 'RPT SHIFT(28MHz)', N(0, 1000, 10, 'kHz')], [16, 'RPT SHIFT(50MHz)', N(0, 4000, 10, 'kHz')]])),
+      G('0104', 'RADIO SETTING', 'MODE PSK/DATA', agc.concat([[4, 'DATA MODE', L(['PSK', 'OTHERS'])], [5, 'OTHER SHIFT SSB', N(0, 3000, 10, 'Hz')]], flt(6),
+        [[10, 'DATA OUT SELECT', MS], [11, 'DATA OUT LEVEL', LVL], [12, 'TX BPF SEL', BPF], [13, 'DATA MOD SOURCE', MOD], [14, 'REAR SELECT', REAR],
+          [15, 'RPORT GAIN', RPORT], [16, 'RPTT SELECT', RPTT]])),
+      G('0105', 'RADIO SETTING', 'MODE RTTY', agc.concat([[4, 'POLARITY-RX', NR], [5, 'POLARITY-TX', NR]], flt(6),
+        [[10, 'RTTY OUT SELECT', MS], [11, 'RTTY OUT LEVEL', LVL], [12, 'SHIFT PORT', RO(L(['SHIFT', 'DTR', 'RTS']), 'utilisé par le RTTY à distance')],
+          [13, 'MARK FREQUENCY', C([[1, '1275Hz'], [2, '2125Hz']])], [14, 'SHIFT FREQUENCY', L(['170Hz', '200Hz', '425Hz', '850Hz'])]])),
+      G('0106', 'RADIO SETTING', 'ENCDEC PSK', [[1, 'PSK MODE', L(['BPSK', 'QPSK'])], [2, 'DECODE AFC RANGE', L(['8Hz', '15Hz', '30Hz'])],
+        [3, 'QPSK POLARITY RX', NR], [4, 'QPSK POLARITY TX', NR], [5, 'PSK TX LEVEL', LVL]]),
+      G('0107', 'RADIO SETTING', 'ENCDEC RTTY', [[1, 'RX USOS', OFFON], [2, 'TX USOS', OFFON], [3, 'RX NEW LINE CODE', L(['CR,LF,CR+LF', 'CR+LF'])],
+        [4, 'TX AUTO CR+LF', OFFON], [5, 'TX DIDDLE', L(['OFF', 'BLANK', 'LTRS'])], [6, 'BAUDOT CODE', L(['CCITT', 'US'])]]),
+      G('0201', 'CW SETTING', 'MODE CW', agc.concat(flt(4), [[8, 'CW OUT SELECT', MS], [9, 'CW OUT LEVEL', LVL], [10, 'CW AUTO MODE', L(['OFF', '50MHz', 'ON'])],
+        [11, 'CW BK-IN TYPE', L(['SEMI', 'FULL'])], [12, 'CW BK-IN DELAY', N(30, 3000, 10, 'msec')], [13, 'CW WAVE SHAPE', L(['1msec', '2msec', '4msec', '6msec'])],
+        [14, 'CW FREQ DISPLAY', L(['DIRECT FREQ', 'PITCH OFFSET'])], [15, 'PC KEYING', RO(L(['OFF', 'DAKY', 'RTS', 'DTR']), 'utilisé par la CW à distance')],
+        [16, 'QSK DELAY TIME', L(['15msec', '20msec', '25msec', '30msec'])]])),
+      G('0202', 'CW SETTING', 'KEYER', [[1, 'F KEYER TYPE', KTYPE], [2, 'F KEYER DOT/DASH', NR], [3, 'R KEYER TYPE', KTYPE], [4, 'R KEYER DOT/DASH', NR],
+        [5, 'CW WEIGHT', N(25, 45, 1, '', 10)], [6, 'NUMBER STYLE', L(['1290', 'AUNO', 'AUNT', 'A2NO', 'A2NT', '12NO', '12NT'])], [7, 'CONTEST NUMBER', N(1, 999)],
+        [8, 'CW MEMORY 1', RO(L(['TEXT', 'MESSAGE']), 'utilisée par la CW au clavier')], [9, 'CW MEMORY 2', L(['TEXT', 'MESSAGE'])], [10, 'CW MEMORY 3', L(['TEXT', 'MESSAGE'])],
+        [11, 'CW MEMORY 4', L(['TEXT', 'MESSAGE'])], [12, 'CW MEMORY 5', L(['TEXT', 'MESSAGE'])], [13, 'REPEAT INTERVAL', N(1, 60, 1, 'sec')]]),
+      G('0203', 'CW SETTING', 'DECODE CW', [[1, 'CW DECODE BW', L(['25Hz', '50Hz', '100Hz', '250Hz'])]]),
+      G('0301', 'OPERATION SETTING', 'GENERAL', [[1, 'DECODE RX SELECT', MS], [2, 'HEADPHONE MIX', L(['SEPARATE', 'COMBINE-1', 'COMBINE-2'])],
+        [3, 'ANT3 SELECT', L(['TRX', 'RX ANT'])], [4, 'NB WIDTH', L(['1msec', '3msec', '10msec'])], [5, 'NB REJECTION', L(['10dB', '30dB', '50dB'])],
+        [6, 'BEEP LEVEL', LVL], [7, 'RF/SQL VR', L(['RF', 'SQL'])], [8, 'TUNER/232C SELECT', RO(L(['TUNER', 'RS232C']), 'liaison')],
+        [9, '232C RATE', RO(L(['4800bps', '9600bps', '19200bps', '38400bps']), 'liaison')], [10, '232C TIME OUT TIMER', RO(L(['10msec', '100msec', '1000msec', '3000msec']), 'liaison')],
+        [11, 'CAT RATE', RO(L(['4800bps', '9600bps', '19200bps', '38400bps']), 'liaison CAT : la changer couperait la station')],
+        [12, 'CAT TIME OUT TIMER', RO(L(['10msec', '100msec', '1000msec', '3000msec']), 'liaison CAT')], [13, 'CAT RTS', RO(OFFON, 'liaison CAT')],
+        [14, 'QMB CH', L(['5ch', '10ch'])], [15, 'MEM GROUP', OFFON], [16, 'QUICK SPLIT INPUT', OFFON], [17, 'QUICK SPLIT FREQ', N(-20, 20, 1, 'kHz')],
+        [18, 'TX TIME OUT TIMER', N(0, 30, 1, 'min')], [19, 'MIC SCAN', OFFON], [20, 'MIC SCAN RESUME', L(['PAUSE', 'TIME'])],
+        [21, 'REF FREQ ADJ', RO(N(-25, 25), 'étalonnage : au club')], [22, 'CS DIAL', RO(N(0, 10), 'au club')], [23, 'KEYBOARD LANGUAGE', RO(N(0, 10), 'au club')]]),
+      G('0302', 'OPERATION SETTING', 'RX-DSP', [[1, 'APF WIDTH', L(['NARROW', 'MEDIUM', 'WIDE'])], [2, 'CONTOUR LEVEL', N(-40, 20, 1, 'dB')],
+        [3, 'CONTOUR WIDTH', N(1, 11)], [4, 'DNR LEVEL', N(1, 15)], [5, 'IF NOTCH WIDTH', L(['NARROW', 'WIDE'])]]),
+      G('0303', 'OPERATION SETTING', 'TX AUDIO', [[1, 'PROC TYPE', L(['COMP', 'AMC'])], [2, 'AMC RELEASE TIME', L(['FAST', 'MID', 'SLOW'])]].concat(eq(3, ''), eq(12, 'P '))),
+      G('0304', 'OPERATION SETTING', 'TX GNRL', [[1, 'HF MAX POWER', RO(N(5, 100, 1, 'W'), 'puissance maximale : réglée par le club')],
+        [2, '50M MAX POWER', RO(N(5, 100, 1, 'W'), 'réglée par le club')], [3, '70M MAX POWER', RO(N(5, 50, 1, 'W'), 'réglée par le club')],
+        [4, 'AM MAX POWER', RO(N(5, 25, 1, 'W'), 'réglée par le club')], [5, 'VOX SELECT', RO(L(['MIC', 'DATA']), 'pas de VOX à distance')],
+        [6, 'DATA VOX GAIN', RO(N(0, 100), 'pas de VOX à distance')], [7, 'EMERGENCY FREQ TX', RO(OFFON, 'au club')]]),
+      G('0305', 'OPERATION SETTING', 'TUNING', [[1, 'SSB/CW DIAL STEP', L(['5Hz', '10Hz'])], [2, 'RTTY/PSK DIAL STEP', L(['5Hz', '10Hz'])],
+        [3, 'CH STEP', L(['1kHz', '2.5kHz', '5kHz'])], [4, 'AM CH STEP', L(['2.5kHz', '5kHz', '9kHz', '10kHz', '12.5kHz', '25kHz'])],
+        [5, 'FM CH STEP', L(['5kHz', '6.25kHz', '10kHz', '12.5kHz', '20kHz', '25kHz'])], [6, 'MAIN STEPS PER REV', L(['250', '500', '1000'])],
+        [7, 'MPVD STEPS PER REV', L(['250', '500'])]]),
+      G('0401', 'DISPLAY SETTING', 'DISPLAY', [[1, 'MY CALL', T], [2, 'MY CALL TIME', L(['OFF', '0.5sec', '1sec', '2sec', '3sec', '5sec'])],
+        [3, 'SCREEN SAVER', L(['OFF', '15min', '30min', '60min'])], [4, 'TFT CONTRAST', N(0, 20)], [5, 'DIMMER TFT', N(0, 20)], [6, 'DIMMER LED', N(0, 20)],
+        [7, 'MOUSE POINTER SPEED', N(0, 20)], [8, 'FREQ STYLE', L(['LIGHT', 'BOLD'])]]),
+      G('0402', 'DISPLAY SETTING', 'SCOPE', [[1, 'RBW', L(['HIGH', 'MID', 'LOW'])], [2, 'SCOPE CTR', L(['FILTER', 'CARRIER POINT'])],
+        [3, '2D DISP SENSITIVITY', L(['NORMAL', 'HI'])], [4, '3DSS DISP SENSITIVITY', L(['NORMAL', 'HI'])]]),
+      G('0403', 'DISPLAY SETTING', 'EXT-MONITOR', [[1, 'EXT DISPLAY', OFFON], [2, 'PIXEL', L(['800x480', '800x600'])]])
+    ];
+  })();
+  /** Réglage d'un menu par son numéro (« 030201 ») */
+  const menuItem = (id) => { for (const g of MENU) for (const it of g.items) if (it.id === id) return it; return null; };
+  /** Valeur lue (« 0500 », « +05 ») → code numérique ; texte affiché */
+  function menuShow(d, raw) {
+    if (raw == null || raw === '') return '—';
+    if (d.k === 't') return String(raw);
+    const v = parseInt(raw, 10);
+    if (!Number.isFinite(v)) return String(raw);
+    if (d.k === 'l') { const i = d.codes ? d.codes.indexOf(v) : v - d.base; return d.labels[i] != null ? d.labels[i] : String(v); }
+    return (d.div > 1 ? (v / d.div).toFixed(1) : (d.min < 0 && v > 0 ? '+' : '') + v) + (d.unit ? d.unit : '');
+  }
+  /** Valeur suivante (pas : +1 / −1) dans le format de la valeur lue (même nombre de chiffres, signe si besoin) */
+  function menuStep(d, raw, step) {
+    const v = parseInt(raw, 10);
+    if (!Number.isFinite(v) || d.k === 't') return null;
+    let nv;
+    if (d.k === 'l') {
+      const codes = d.codes || d.labels.map((_, i) => i + d.base);
+      const i = codes.indexOf(v);
+      nv = codes[Math.max(0, Math.min(codes.length - 1, (i < 0 ? 0 : i) + step))];
+    } else nv = Math.max(d.min, Math.min(d.max, Math.round((v + step * d.step) / d.step) * d.step));
+    const s = String(raw), sign = /^[+-]/.test(s), w = s.replace(/^[+-]/, '').length;
+    const body = String(Math.abs(nv)).padStart(w, '0');
+    return sign ? (nv < 0 ? '-' : '+') + body : body;
+  }
+  /** Valeur permise pour ce réglage (contrôle du serveur avant d'écrire au TRX) */
+  function menuOk(d, raw) {
+    if (!d || d.ro || !/^[+-]?\d{1,4}$/.test(String(raw))) return false;
+    const v = parseInt(raw, 10);
+    if (d.k === 'l') return (d.codes || d.labels.map((_, i) => i + d.base)).indexOf(v) >= 0;
+    return v >= d.min && v <= d.max && (v - d.min) % d.step === 0;
+  }
+
   const api = Y.build({
     ID: 'ftdx101',
     NAME: 'Yaesu FTDX101D / MP',
     FREQ_MAX: 75000000,
     headNames: { D: 'FTDX101D', M: 'FTDX101MP' },
+    menu: { groups: MENU, item: menuItem, show: menuShow, step: menuStep, ok: menuOk },
     // FT (VFO d'émission) est RELATIF au VFO sélectionné (VS) sur le FTDX101 : FT0 = émission sur le VFO sélectionné,
     // FT1 = sur l'autre. Avec SUB sélectionné, FT1 = TX sur le MAIN. On ramène txVfo en absolu (0 = MAIN / A, 1 = SUB / B).
     remapRead(p, r) {

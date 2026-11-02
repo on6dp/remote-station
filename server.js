@@ -1030,6 +1030,39 @@ function trxEqInfo(conn) {
   const on = eqOn();
   send(conn, { t: 'trxeq', avail: trxEqAvail(), rig: station ? rig().ID : null, mine: station ? userEq(c) : null, club: station ? clubEq() : null, on: on ? on.call : null, admin: !!conn.user.admin });
 }
+// ---------------------------------------------------------------- menus du TRX (FUNC → … SETTING de la face avant)
+// Lecture d'un sous-menu (EX…; un par un, ceux que le TRX refuse restent vides) ; écriture d'un réglage permis, par
+// l'opérateur qui a la main, jamais pendant une émission, puis relecture. Réglages « ro » (liaison, puissance…) : jamais écrits.
+function menuMsg(conn, m) {
+  const M = station && rig().MENU;
+  const no = (msg) => send(conn, { t: 'notice', level: 'warn', msg: 'Menu du TRX : ' + msg });
+  if (!M) return no('pas disponible pour ce TRX');
+  if (station.caps.indexOf('exrw') < 0 || !radio.connected) return no('page Station du club à recharger, ou TRX non relié');
+  const read = (ids, cb) => {
+    if (eqs.busy) return no('lecture ou écriture déjà en cours, un instant');
+    exCall('exread', { cmds: ids.map((i) => 'EX' + i + ';'), soft: true }, (vals, err) => {
+      send(conn, { t: 'menu_vals', values: vals || {}, ids, err: err || '' });
+      if (cb) cb();
+    });
+  };
+  if (m.t === 'menu_read') {
+    const g = M.groups.find((x) => x.id === String(m.sub || ''));
+    if (!g) return;
+    return read(g.items.filter((it) => it.d.k !== 't').map((it) => it.id));
+  }
+  const it = M.item(String(m.id || ''));
+  if (!it) return;
+  if (controller !== conn) return no('prenez d’abord la main');
+  if (it.d.ro) return no(it.label + ' : ' + it.d.ro);
+  if (!M.ok(it.d, m.v)) return no(it.label + ' : valeur refusée');
+  if (eqTxBusy()) return no('pas pendant une émission');
+  if (eqs.busy) return no('lecture ou écriture déjà en cours, un instant');
+  journal('trx_menu', { by: conn.user.call, id: it.id, label: it.label, v: String(m.v) });
+  exCall('exwrite', { cmds: ['EX' + it.id + String(m.v) + ';'] }, (ok, err) => {
+    if (!ok) return no(it.label + ' : ' + (err || 'pas écrit'));
+    setTimeout(() => read([it.id]), 150);
+  });
+}
 function trxEqMsg(conn, m) {
   const c = conn.user.call;
   const E = station && rig().TRX_EQ;
@@ -2783,6 +2816,9 @@ function onOperator(conn, m) {
       return;
     }
 
+    case 'menu_read':
+    case 'menu_write':
+      return menuMsg(conn, m);
     case 'trxeq_get':
     case 'trxeq_read':
     case 'trxeq_try':

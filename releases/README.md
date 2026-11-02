@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.54 | [RemoteStation-Setup-0.32.54.exe](0.32.54/RemoteStation-Setup-0.32.54.exe) | [remote-station-0.32.54.tar.gz](0.32.54/remote-station-0.32.54.tar.gz) | Face avant : menus du TRX (FUNC → SETTING) — [empreintes SHA-256](0.32.54/SHA256SUMS.txt) |
 | 0.32.53 | [RemoteStation-Setup-0.32.53.exe](0.32.53/RemoteStation-Setup-0.32.53.exe) | [remote-station-0.32.53.tar.gz](0.32.53/remote-station-0.32.53.tar.gz) | Face avant : bouton « Profil de … » — [empreintes SHA-256](0.32.53/SHA256SUMS.txt) |
 | 0.32.52 | [RemoteStation-Setup-0.32.52.exe](0.32.52/RemoteStation-Setup-0.32.52.exe) | [remote-station-0.32.52.tar.gz](0.32.52/remote-station-0.32.52.tar.gz) | Face avant : état du micro sous le PTT — [empreintes SHA-256](0.32.52/SHA256SUMS.txt) |
 | 0.32.51 | [RemoteStation-Setup-0.32.51.exe](0.32.51/RemoteStation-Setup-0.32.51.exe) | [remote-station-0.32.51.tar.gz](0.32.51/remote-station-0.32.51.tar.gz) | Face avant : ligne micro plus claire — [empreintes SHA-256](0.32.51/SHA256SUMS.txt) |

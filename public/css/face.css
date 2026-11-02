@@ -263,3 +263,26 @@ body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglet
 .vx-proft { width: 100%; border-collapse: collapse; font-size: 11.5px; color: #c7d0dc; margin-top: 6px; }
 .vx-proft th, .vx-proft td { border: 1px solid #243042; padding: 4px 6px; text-align: left; }
 .vx-proft th { color: #8fa0b4; font-weight: 700; }
+
+/* Menus du TRX (FUNC → … SETTING) : fenêtre sur l'écran, sous-menus à gauche, réglages à droite */
+.fc-menu { position: absolute; z-index: 4; box-sizing: border-box; display: flex; flex-direction: column; background: #05080d; border: 1px solid #5a6474; border-radius: .4em;
+  font-family: 'Roboto Mono', ui-monospace, monospace; color: #e8edf3; box-shadow: 0 6px 18px rgba(0, 0, 0, .6); overflow: hidden; }
+.fc-menu[hidden] { display: none; }
+.fc-menu .fm-h { display: flex; align-items: center; gap: .8em; padding: .35em .6em; background: #1c2a44; border-bottom: 1px solid #2b3a52; }
+.fc-menu .fm-h b { color: #f2cf4a; letter-spacing: .05em; }
+.fc-menu .fm-h span { color: #9fc7ff; }
+.fc-menu .fm-x { margin-left: auto; font: inherit; background: #2a313c; color: #fff; border: 1px solid #4a5464; border-radius: .25em; padding: .05em .5em; cursor: pointer; }
+.fc-menu .fm-b { flex: 1 1 auto; display: flex; min-height: 0; }
+.fc-menu .fm-subs { flex: 0 0 28%; display: flex; flex-direction: column; gap: .2em; padding: .35em; border-right: 1px solid #2b3a52; overflow-y: auto; }
+.fc-menu .fm-subs button { font: inherit; font-weight: 700; text-align: left; padding: .35em .5em; background: #2a313c; color: #e9edf2; border: 1px solid #3c4554; border-radius: .25em; cursor: pointer; }
+.fc-menu .fm-subs button.on { background: #1f6fe0; border-color: #9cc4ff; color: #fff; }
+.fc-menu .fm-items { flex: 1 1 auto; overflow-y: auto; padding: .25em .35em; }
+.fc-menu .fm-row { display: flex; align-items: center; gap: .6em; padding: .22em .4em; border-bottom: 1px solid #141c28; cursor: pointer; }
+.fc-menu .fm-row:hover { background: #111a28; }
+.fc-menu .fm-row.sel { background: #10233f; outline: 1px solid #ff2b1c; }
+.fc-menu .fm-row.ro .fm-l, .fc-menu .fm-row.ro .fm-v { opacity: .55; }
+.fc-menu .fm-n { color: #6f86ff; min-width: 1.6em; }
+.fc-menu .fm-l { flex: 1 1 auto; }
+.fc-menu .fm-v { color: #ff4a3c; font-weight: 700; min-width: 6em; text-align: right; }
+.fc-menu .fm-pm { font: inherit; font-weight: 800; color: #ffcf4a; background: #2a313c; border: 1px solid #4a5464; border-radius: .25em; padding: 0 .55em; cursor: pointer; }
+.fc-menu .fm-note { padding: 1em; line-height: 1.6; color: #c7d0dc; }
