@@ -151,7 +151,11 @@
     menu: { groups: MENU, item: menuItem, show: menuShow, step: menuStep, ok: menuOk },
     // SPLIT affiché : « ST1 » relu alors que l'émission est sur le VFO sélectionné (ex. SUB sélectionné, TX sur SUB) n'est pas
     // un SPLIT pour le TRX (son voyant SPLIT reste éteint) ; la valeur relue brute reste dans stSplit
+    // Relecture juste après un réglage du clarifier : IF (MAIN) ou OI (SUB) selon le côté sélectionné
+    readForState: (id, st) => (['rit', 'xit', 'clar', 'clarClr'].indexOf(id) >= 0 ? (st.vfoSel === 1 ? 'OI;' : 'IF;') : null),
     derive(r) {
+      const b = r.vfoSel === 1;
+      for (const k of ['clar', 'rit', 'xit']) { const v = b ? r[k + 'B'] : r[k + 'A']; if (v != null) r[k] = v; }
       r.stSplit = r.split;
       if (r.split === 1 && r.txVfo != null && r.vfoSel != null && r.txVfo === (r.vfoSel === 1 ? 1 : 0)) r.split = 0;
     },
@@ -211,7 +215,10 @@
       // Modèle (D ou MP) : plage de puissance
       { cmd: 'ID;', re: /^ID(\d{4})$/, parse: (m) => ({ powerHead: m[1] === '0682' ? 'M' : 'D' }), sim: 'ID0682' },
       // INFORMATION : P3 = décalage du clarifier (±0000–9999 Hz), P4 = RIT, P5 = XIT
-      { cmd: 'IF;', re: /^IF[0-9A-Z]{3}\d{9}([+-])(\d{4})([01])([01])[0-9A-F]/, parse: (m) => ({ clar: Y.sgn(m[1]) * +m[2], rit: +m[3], xit: +m[4] }), sim: 'IF001014250000+00000020000000' },
+      // Clarifier : IF = MAIN (VFO A), OI = SUB (VFO B) (Hamlib : « OI always returns VFOB and IF always VFOA ») ;
+      // RT / XT / RC / RU / RD agissent sur le côté sélectionné → rit / xit / clar affichés = ceux du côté sélectionné (derive)
+      { cmd: 'IF;', re: /^IF[0-9A-Z]{3}\d{9}([+-])(\d{4})([01])([01])[0-9A-F]/, parse: (m) => ({ clarA: Y.sgn(m[1]) * +m[2], ritA: +m[3], xitA: +m[4] }), sim: 'IF001014250000+00000020000000' },
+      { cmd: 'OI;', re: /^OI[0-9A-Z]{3}\d{9}([+-])(\d{4})([01])([01])[0-9A-F]/, parse: (m) => ({ clarB: Y.sgn(m[1]) * +m[2], ritB: +m[3], xitB: +m[4] }), sim: 'OI001007074000+00000020000000' },
       { cmd: 'NB0;', re: /^NB0([01])$/, parse: (m) => ({ nb: +m[1] }), sim: 'NB00' },
       { cmd: 'NR0;', re: /^NR0([01])$/, parse: (m) => ({ nr: +m[1] }), sim: 'NR00' },
       { cmd: 'AN0;', re: /^AN0([1-3])\d?$/, parse: (m) => ({ ant: +m[1] }), sim: 'AN010' },
@@ -272,7 +279,7 @@
       { cmd: 'CN10;', when: (st) => /FM/.test(st.modeB || ''), re: /^CN10(\d{3})$/, parse: (m) => ({ toneIdxB: +m[1] }), sim: 'CN10012' }
     ],
     extraQueries: ['RF0;', 'RF1;', 'ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
-    extraStateKeys: ['lockB', 'lockRaw', 'fastStep', 'moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
+    extraStateKeys: ['clarA', 'ritA', 'xitA', 'clarB', 'ritB', 'xitB', 'lockB', 'lockRaw', 'fastStep', 'moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
     // CW : mémoire 1 du manipulateur (écrasée), lue par KY6 (« Message Keyer 1 Playback », manuel CAT 1912-D) ;
     // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
@@ -369,9 +376,12 @@
     fakeTuning: 'AC002',
     // Simulateur : clarifier (RT / XT / RC / RU / RD) relu dans IF
     fakeCmd(f, c, out) {
-      const k = f.clar101 || (f.clar101 = { off: 0, rit: 0, xit: 0 });
+      // Un clarifier par côté ; les réglages vont au côté sélectionné (VS)
+      const ka = f.clar101 || (f.clar101 = { off: 0, rit: 0, xit: 0 }), kb = f.clar101B || (f.clar101B = { off: 0, rit: 0, xit: 0 });
+      const k = f.ans && f.ans['VS;'] === 'VS1' ? kb : ka;
       let m;
-      if (c === 'IF') { out.push('IF001' + pad(f.freq, 9) + (k.off < 0 ? '-' : '+') + pad(k.off, 4) + k.rit + k.xit + f.mode + '00000;'); return true; }
+      if (c === 'IF') { out.push('IF001' + pad(f.freq, 9) + (ka.off < 0 ? '-' : '+') + pad(ka.off, 4) + ka.rit + ka.xit + f.mode + '00000;'); return true; }
+      if (c === 'OI') { out.push('OI001' + pad(f.freqB || 7074000, 9) + (kb.off < 0 ? '-' : '+') + pad(kb.off, 4) + kb.rit + kb.xit + (f.modeB || '2') + '00000;'); return true; }
       if ((m = /^RT([01])$/.exec(c))) { k.rit = +m[1]; return true; }
       if ((m = /^XT([01])$/.exec(c))) { k.xit = +m[1]; return true; }
       if (c === 'RC') { k.off = 0; return true; }

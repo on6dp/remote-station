@@ -1479,13 +1479,16 @@
       v.sel.classList.toggle('on', active);
       const txSide = L.txSide(s);
       v.tx.textContent = txSide === side ? (tx ? 'TX ●' : 'TX') : '';
-      // Clarifier (RT / XT, lu dans IF : récepteur MAIN)
-      const clarOn = side === 'A' && (s.rit || s.xit);
+      // Clarifier de chaque côté (FTDX101 : IF = MAIN, OI = SUB ; autres TRX : celui lu dans IF, côté MAIN)
+      const own = s['rit' + side] != null || s['xit' + side] != null;
+      const sel = (s.vfoSel === 1 ? 'B' : 'A') === side;
+      const cr = own ? s['rit' + side] : side === 'A' ? s.rit : 0, ct = own ? s['xit' + side] : side === 'A' ? s.xit : 0;
+      const clarOn = !!(cr || ct);
       v.clarG.style.display = clarOn ? '' : 'none';
       if (clarOn) {
         // « CLAR RX -90Hz » : la valeur juste à côté, en gras (CLAR RX, CLAR TX, CLAR TRX comme sur le TRX)
-        const cv = s.clar || 0;
-        v.clarT.textContent = 'CLAR ' + (s.rit && s.xit ? 'TRX' : s.rit ? 'RX' : 'TX') + '  ' + (cv > 0 ? '+' : cv < 0 ? '-' : '') + Math.abs(cv) + 'Hz';
+        const cv = (sel ? s.clar : own ? s['clar' + side] : s.clar) || 0;
+        v.clarT.textContent = 'CLAR ' + (cr && ct ? 'TRX' : cr ? 'RX' : 'TX') + '  ' + (cv > 0 ? '+' : cv < 0 ? '-' : '') + Math.abs(cv) + 'Hz';
         v.clarV.textContent = '';
       }
       v.tx.classList.toggle('on', tx && txSide === side);
