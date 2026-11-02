@@ -259,3 +259,7 @@ body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglet
 .vx-profdlg p { margin: 4px 0; font-size: 12.5px; line-height: 1.5; color: #c7d0dc; }
 .vx-proflist { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.8; color: #c7d0dc; }
 .vx-proflist .btn { font-size: 10px; padding: 2px 8px; margin-left: 6px; }
+.vx-profv { font-size: 11.5px; color: #9fb0c2; line-height: 1.5; margin: 0 0 6px; }
+.vx-proft { width: 100%; border-collapse: collapse; font-size: 11.5px; color: #c7d0dc; margin-top: 6px; }
+.vx-proft th, .vx-proft td { border: 1px solid #243042; padding: 4px 6px; text-align: left; }
+.vx-proft th { color: #8fa0b4; font-weight: 700; }

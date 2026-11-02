@@ -159,7 +159,7 @@
     if (V.api.compact && $('vxProf')) {
       // « Profil de » + indicatif de celui qui a la main, s'il a un profil enregistré ; sinon « Profil de … »
       const me = V.api.me(), who = (st && st.controller) || (me && me.call) || '';
-      const has = (me && who === me.call && T.info && !!T.info.mine) || (st && st.trxEq && st.trxEq.on === who);
+      const has = (me && who === me.call && ((T.info && !!T.info.mine) || V.saved)) || (st && st.trxEq && st.trxEq.on === who);
       $('vxProf').textContent = 'Profil de ' + (has ? who : '…');
       $('vxProf').classList.toggle('dim', !has);
     }
@@ -360,16 +360,28 @@
     d.id = 'vxProfDlg';
     d.setAttribute('role', 'dialog');
     d.setAttribute('aria-label', 'Profil de ' + m.call);
-    const mics = (m.mics || []).map((x) => '<li><b>' + esc(x.label) + '</b> · ' + (x.on ? 'égaliseur ' + esc(x.name || 'personnalisé') : 'égaliseur coupé') +
-      ' · gain ' + x.gain + ' %' + (x.ns ? ' · réduction de bruit' : '') +
-      (m.mine ? ' <button class="btn" type="button" data-del="' + esc(x.label) + '">Supprimer</button>' : '') + '</li>').join('');
+    // Valeurs d'Equalizer micro : coupe-bas, EQ1–EQ3 (fréquence, niveau, largeur), coupe-haut, gain, options
+    const sg = (v) => (v > 0 ? '+' : '') + v;
+    const mics = (m.mics || []).map((x) => '<li><b>' + esc(x.label) + '</b>' +
+      (m.mine ? ' <button class="btn" type="button" data-del="' + esc(x.label) + '">Supprimer</button>' : '') +
+      '<div class="vx-profv">' + (x.on ? (x.name ? esc(x.name) + ' · ' : '') + 'coupe-bas ' + (x.lo > 0 ? x.lo + ' Hz' : 'non') +
+        (x.bands || []).map((b, i) => ' · EQ' + (i + 1) + ' ' + b.f + ' Hz ' + sg(b.g) + ' dB (Q ' + b.q + ')').join('') + ' · coupe-haut ' + x.hi + ' Hz' : 'égaliseur coupé') +
+      ' · gain ' + x.gain + ' %' + (x.ns ? ' · réduction de bruit' : '') + (x.ec ? ' · anti-écho' : '') + (x.agc ? ' · gain auto' : '') + '</div></li>').join('');
+    // Valeurs d'Equalizer TRX (profil de ce TRX) : PROC coupé / en service, 3 bandes (fréquence, niveau, largeur)
+    const E = V.api.rig && V.api.rig() && V.api.rig().TRX_EQ;
+    const trxSet = (a, title) => '<tr><th>' + title + '</th>' + [0, 1, 2].map((b) => {
+      const x = a && a[b];
+      if (!x || !x.f) return '<td>coupée</td>';
+      return '<td>' + (E ? E.FREQS[b][x.f - 1] : '#' + x.f) + ' Hz · ' + sg(x.l) + ' dB · largeur ' + x.w + '</td>';
+    }).join('') + '</tr>';
+    const trxVals = m.trxPr ? '<table class="vx-proft"><tr><th></th><th>Bande 1</th><th>Bande 2</th><th>Bande 3</th></tr>' + trxSet(m.trxPr.n, 'PROC coupé') + trxSet(m.trxPr.p, 'PROC en service') + '</table>' : '';
     const other = (m.trx || []).filter((r) => r !== m.rig);
-    const now = !m.eqOn ? '—' : m.eqOn === '#club' ? 'réglage du club' : m.eqOn.charAt(0) === '#' ? 'en cours de mise au TRX' : 'profil de ' + esc(m.eqOn);
+    const now = !m.eqOn ? '—' : m.eqOn === '#club' ? 'réglage du club' : m.eqOn.charAt(0) === '#' ? 'en cours de mise au TRX' : 'Profil de ' + esc(m.eqOn);
     d.innerHTML = '<div class="vx-eq-h"><b>Profil de ' + esc(m.call) + '</b><span>' + (m.mine ? '' : ' — lecture seule') + '</span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
       '<h4>Micros (Equalizer micro)</h4>' + (mics ? '<ul class="vx-proflist">' + mics + '</ul>' : '<p class="vx-hint">Aucun réglage de micro enregistré : réglez « Equalizer micro » puis « Enregistrer pour ce micro ».</p>') +
       '<h4>Égaliseur du TRX' + (m.rigName ? ' (' + esc(m.rigName) + ')' : '') + '</h4>' +
       '<p>' + (m.trxHere ? 'Profil enregistré : mis au TRX à chaque prise de main.' : 'Pas de profil enregistré pour ce TRX : c’est le réglage du club' + (m.clubHere ? '' : ' (pas encore lu)') + '.') +
-      (other.length ? '<br>Aussi un profil pour : ' + other.map(esc).join(', ') + '.' : '') + '<br>Au TRX maintenant : ' + now + '.</p>' +
+      (other.length ? '<br>Aussi un profil pour : ' + other.map(esc).join(', ') + '.' : '') + '<br>Au TRX maintenant : ' + now + '.</p>' + trxVals +
       (m.mine && m.trxHere ? '<p><button class="btn" type="button" data-a="trxdel">Supprimer ce profil (revenir au réglage du club)</button></p>' : '') +
       '<div class="vx-eq-f"><button class="btn" type="button" data-a="close">Fermer</button></div>';
     document.body.appendChild(d);

@@ -2803,12 +2803,13 @@ function onOperator(conn, m) {
       const p = profiles[who] || {};
       const mics = Object.keys(p.mics || {}).slice(0, 20).map((k) => {
         const e = p.mics[k] || {};
-        return { label: k, name: e.name || '', on: e.on !== false, gain: e.gain || 100, ns: !!e.ns };
+        return { label: k, name: e.name || '', on: e.on !== false, gain: e.gain || 100, ns: !!e.ns, ec: !!e.ec, agc: !!e.agc,
+          lo: e.lo, hi: e.hi, bands: Array.isArray(e.bands) ? e.bands : [] };
       });
       const trx = Object.keys(p.trx || {});
       const on = eqOn();
       return send(conn, { t: 'profile', call: who, mine: who === own, mics, trx, rig: station ? rig().ID : null, rigName: station ? rig().NAME : '',
-        trxHere: !!(station && p.trx && p.trx[rig().ID]), clubHere: !!(station && clubEq()), eqOn: on ? on.call : null });
+        trxHere: !!(station && p.trx && p.trx[rig().ID]), trxPr: station && p.trx ? p.trx[rig().ID] || null : null, clubHere: !!(station && clubEq()), eqOn: on ? on.call : null });
     }
     case 'mic_get': {
       // Réglages de l'égaliseur gardés pour ce micro (nom de l'entrée son) : repris tout seuls sur n'importe quel PC
