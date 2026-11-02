@@ -485,7 +485,10 @@
     bmB.id = 'bandMapB';
     bmB.hidden = true;
     bmB.setAttribute('aria-label', 'Carte de bande du VFO-B');
-    bmB.innerHTML = '<div class="bm-h"><span class="bm-st" id="bmStB"></span><b id="bmBandTB" class="bm-band">—</b><span class="bm-vfo b">VFO-B · SUB</span></div>'
+    bmB.innerHTML = '<div class="bm-h"><span class="bm-st" id="bmStB"></span><b id="bmBandTB" class="bm-band">—</b><span class="bm-vfo b">VFO-B · SUB</span><span class="bm-t">Spots</span>'
+      + '<span class="bm-fw"><button type="button" class="bm-fbtn" id="bmFbtnB" aria-haspopup="true" aria-expanded="false" title="Choisir les modes dont les spots sont affichés sur cette carte">Filtres ▾</button>'
+      + '<button type="button" class="bm-all" id="bmAllB" aria-pressed="false" title="Tous les spots de la plage, quel que soit leur mode (les filtres sont ignorés)">Tous</button>'
+      + '<span class="bm-fmenu" id="bmFmenuB" role="menu" hidden></span></span></div>'
       + '<div class="bm-r" title="Plage affichée pour cette bande (kHz), gardée par bande. Molette sur la carte : zoom · glisser : déplacer · double-clic : plage d’origine">'
       + '<input id="bmLoB" inputmode="decimal" aria-label="Début de la plage (kHz)"><span>–</span><input id="bmHiB" inputmode="decimal" aria-label="Fin de la plage (kHz)"><span>kHz</span></div>'
       + '<div class="bm-body" id="bmBodyB"><canvas id="bmCvB"></canvas><div class="bm-lbls" id="bmLblsB"></div><div class="bm-sb" id="bmSbB" title="Ascenseur : parcourir la bande (même largeur de plage)"><i></i></div></div>'
@@ -1488,6 +1491,10 @@
   const bmBandOfSide = (X) => (X ? bmBandB : bmBand);
   const bmLayOf = (X) => (X ? bmLayB : bmLay);
   let bmFilt = store.get('bmfilt', 'rtty') === 'all' ? 'all' : 'mode';
+  let bmFiltB = store.get('bmfiltb', bmFilt) === 'all' ? 'all' : 'mode'; // carte du VFO-B : ses propres filtres
+  const bmFiltOf = (X) => (X ? bmFiltB : bmFilt);
+  function bmFiltSet(X, v) { if (X) { bmFiltB = v; store.set('bmfiltb', v); } else { bmFilt = v; store.set('bmfilt', v); } }
+  const bmModesKey = (X) => 'bmmodes_' + tab + (X ? '_b' : '');
   function bmAdd(list) {
     for (const s of list || []) {
       if (!s || !Number.isFinite(s.f) || typeof s.call !== 'string') continue;
@@ -1533,28 +1540,29 @@
   };
   const bmModeList = () => (BM_MODES[tab] || BM_MODES.rtty).concat([['sans', null]]);
   // Modes cochés pour cet onglet (par défaut : le mode de l'onglet et les spots sans mode, comme avant)
-  function bmChecked() {
-    const v = store.get('bmmodes_' + tab, '');
+  function bmChecked(X) {
+    const v = store.get(bmModesKey(X), X ? store.get(bmModesKey(''), '') : '');
     if (v) return v.split(',');
     return [bmMode().name, 'sans'];
   }
-  function bmPass(s) {
-    if (bmFilt === 'all') return true;
-    const on = bmChecked();
+  function bmPass(s, X) {
+    if (bmFiltOf(X) === 'all') return true;
+    const on = bmChecked(X);
     const known = BM_ANY.test(s.cmt);
     if (!known) return on.indexOf('sans') >= 0;
     return bmModeList().some(([n, re]) => re && on.indexOf(n) >= 0 && re.test(s.cmt));
   }
-  function bmFiltDraw() {
-    const b = $('bmFbtn'), a = $('bmAll');
+  function bmFiltDraw(X) {
+    if (X === undefined) { bmFiltDraw(''); return bmFiltDraw('B'); }
+    const b = $('bmFbtn' + X), a = $('bmAll' + X);
     if (!b || !a) return;
-    a.setAttribute('aria-pressed', String(bmFilt === 'all'));
-    const on = bmChecked().filter((n) => n !== 'sans');
-    b.classList.toggle('off', bmFilt === 'all');
-    b.title = 'Modes affichés : ' + (on.length ? on.join(', ') : 'aucun') + (bmChecked().indexOf('sans') >= 0 ? ' + spots sans mode' : '') + ' (clic : changer)';
-    const m = $('bmFmenu');
+    a.setAttribute('aria-pressed', String(bmFiltOf(X) === 'all'));
+    const on = bmChecked(X).filter((n) => n !== 'sans');
+    b.classList.toggle('off', bmFiltOf(X) === 'all');
+    b.title = 'Modes affichés : ' + (on.length ? on.join(', ') : 'aucun') + (bmChecked(X).indexOf('sans') >= 0 ? ' + spots sans mode' : '') + ' (clic : changer)';
+    const m = $('bmFmenu' + X);
     if (m && !m.hidden) {
-      const ck = bmChecked();
+      const ck = bmChecked(X);
       m.innerHTML = '<span class="bm-fhd">Modes de cet onglet</span>' + bmModeList().map(([n]) => '<label><input type="checkbox" data-bmm="' + n + '"' + (ck.indexOf(n) >= 0 ? ' checked' : '') + '> ' +
         (n === 'sans' ? 'Spots sans mode indiqué' : n) + '</label>').join('') + '<button type="button" class="bm-fdef" data-bmdef="1">Par défaut</button>';
     }
@@ -1749,7 +1757,7 @@
     const now = Date.now();
     for (const [k, s] of bmSpots) if (now - s.at > BM_KEEP) bmSpots.delete(k);
     const LH = 15, room = Math.max(1, Math.floor((H - 2) / LH));
-    let list = Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi && bmPass(s));
+    let list = Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi && bmPass(s, X));
     if (list.length > room) list = list.sort((a, b) => b.at - a.at).slice(0, room);
     list.sort((a, b) => a.f - b.f);
     const pos = list.map((s) => yOf(s.f) - LH / 2);
@@ -1963,32 +1971,37 @@
       });
     }
   }
-  function bmInitA() {
-    // Filtres (liste des modes de l'onglet) et « Tous »
-    const fm = $('bmFmenu');
-    const fClose = () => { fm.hidden = true; $('bmFbtn').setAttribute('aria-expanded', 'false'); };
-    $('bmFbtn').addEventListener('click', (e) => {
+  // Filtres (liste des modes de l'onglet) et « Tous » d'une carte ('' ou 'B' : chacune les siens)
+  function bmBindFilters(X) {
+    const fm = $('bmFmenu' + X), fb = $('bmFbtn' + X);
+    if (!fm || !fb) return;
+    const fClose = () => { fm.hidden = true; fb.setAttribute('aria-expanded', 'false'); };
+    fb.addEventListener('click', (e) => {
       e.stopPropagation();
       fm.hidden = !fm.hidden;
-      $('bmFbtn').setAttribute('aria-expanded', String(!fm.hidden));
-      if (!fm.hidden && bmFilt === 'all') { bmFilt = 'mode'; store.set('bmfilt', bmFilt); bmDraw(); } // choisir des modes = quitter « Tous »
-      bmFiltDraw();
+      fb.setAttribute('aria-expanded', String(!fm.hidden));
+      if (!fm.hidden && bmFiltOf(X) === 'all') { bmFiltSet(X, 'mode'); bmDraw(); } // choisir des modes = quitter « Tous »
+      bmFiltDraw(X);
     });
     fm.addEventListener('click', (e) => e.stopPropagation());
     fm.addEventListener('change', (e) => {
       const i = e.target.closest('[data-bmm]');
       if (!i) return;
       const on = Array.from(fm.querySelectorAll('[data-bmm]')).filter((x) => x.checked).map((x) => x.dataset.bmm);
-      store.set('bmmodes_' + tab, on.length ? on.join(',') : '-'); // « - » : rien de coché (aucun spot)
-      bmFiltDraw();
+      store.set(bmModesKey(X), on.length ? on.join(',') : '-'); // « - » : rien de coché (aucun spot)
+      bmFiltDraw(X);
       bmDraw();
     });
-    fm.addEventListener('click', (e) => { if (e.target.closest('[data-bmdef]')) { store.set('bmmodes_' + tab, ''); bmFiltDraw(); bmDraw(); } });
+    fm.addEventListener('click', (e) => { if (e.target.closest('[data-bmdef]')) { store.set(bmModesKey(X), ''); bmFiltDraw(X); bmDraw(); } });
     document.addEventListener('click', () => { if (!fm.hidden) fClose(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !fm.hidden) fClose(); });
+    $('bmAll' + X).addEventListener('click', () => { bmFiltSet(X, bmFiltOf(X) === 'all' ? 'mode' : 'all'); fClose(); bmFiltDraw(X); bmDraw(); });
+    bmFiltDraw(X);
+  }
+  function bmInitA() {
+    bmBindFilters('');
+    bmBindFilters('B');
     if ($('bmPop')) $('bmPop').addEventListener('click', (e) => { e.stopPropagation(); document.dispatchEvent(new CustomEvent('rs-bm-pop')); });
-    $('bmAll').addEventListener('click', () => { bmFilt = bmFilt === 'all' ? 'mode' : 'all'; store.set('bmfilt', bmFilt); fClose(); bmFiltDraw(); bmDraw(); });
-    bmFiltDraw();
     // Poignée sur le bord gauche : largeur de la carte de bande, gardée dans ce navigateur
     const root = document.documentElement;
     const setW = (w, save) => {
