@@ -212,6 +212,8 @@
     // FS n'agit que sur le côté MAIN : SUB sélectionné → FAST de la page seulement (pas de commande au TRX)
     if (a.local === 'fast' && R && R.CONTROL.fastStep && activeSide() === 'B') {
       L.fastB = !L.fastB;
+      L.fast = L.fastB; if (L.fast) L.fine = false;
+      store.set('rs.face.fast', L.fast ? '1' : '0'); store.set('rs.face.fine', L.fine ? '1' : '0');
       say(L.fastB ? 'FAST (page) : accord rapide du VFO-B ; le FAST du SUB ne se commute pas par CAT (seulement celui de MAIN).' : 'FAST coupé : accord normal.', '', 4500);
       return render();
     }
@@ -1394,8 +1396,8 @@
     // FAST lu sur le TRX (touche FAST de la face du TRX) : la page suit
     // (côté MAIN seulement : sur SUB, FAST est celui de la page, L.fastB)
     if (R && R.CONTROL.fastStep) {
-      const want = activeSide() === 'B' ? !!L.fastB : !!s.fastStep;
-      if (s.fastStep != null && want !== L.fast) { L.fast = want; if (L.fast) L.fine = false; store.set('rs.face.fast', L.fast ? '1' : '0'); }
+      const want = activeSide() === 'B' ? !!L.fastB : s.fastStep != null ? !!s.fastStep : L.fast;
+      if (want !== L.fast) { L.fast = want; if (L.fast) L.fine = false; store.set('rs.face.fast', L.fast ? '1' : '0'); }
     }
     const live = !!s.connected;
     const tx = !!s.tx;

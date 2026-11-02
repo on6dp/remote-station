@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.64 | [RemoteStation-Setup-0.32.64.exe](0.32.64/RemoteStation-Setup-0.32.64.exe) | [remote-station-0.32.64.tar.gz](0.32.64/remote-station-0.32.64.tar.gz) | Face avant : voyant FAST sur SUB — [empreintes SHA-256](0.32.64/SHA256SUMS.txt) |
 | 0.32.63 | [RemoteStation-Setup-0.32.63.exe](0.32.63/RemoteStation-Setup-0.32.63.exe) | [remote-station-0.32.63.tar.gz](0.32.63/remote-station-0.32.63.tar.gz) | Face avant : FAST sur SUB = accord rapide de la page (le CAT ne commute que MAIN) — [empreintes SHA-256](0.32.63/SHA256SUMS.txt) |
 | 0.32.62 | [RemoteStation-Setup-0.32.62.exe](0.32.62/RemoteStation-Setup-0.32.62.exe) | [remote-station-0.32.62.tar.gz](0.32.62/remote-station-0.32.62.tar.gz) | Face avant : spectre sur toute la largeur de chaque VFO, FAST commute le TRX, LOCK sur SUB, grand bouton recentré — [empreintes SHA-256](0.32.62/SHA256SUMS.txt) |
 | 0.32.61 | [RemoteStation-Setup-0.32.61.exe](0.32.61/RemoteStation-Setup-0.32.61.exe) | [remote-station-0.32.61.tar.gz](0.32.61/remote-station-0.32.61.tar.gz) | Station FTDX101 : plus de lectures sans objet (cause des faux « refusé ») — [empreintes SHA-256](0.32.61/SHA256SUMS.txt) |
