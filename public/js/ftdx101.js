@@ -152,10 +152,11 @@
     // SPLIT affiché : « ST1 » relu alors que l'émission est sur le VFO sélectionné (ex. SUB sélectionné, TX sur SUB) n'est pas
     // un SPLIT pour le TRX (son voyant SPLIT reste éteint) ; la valeur relue brute reste dans stSplit
     // Relecture juste après un réglage du clarifier : IF (MAIN) ou OI (SUB) selon le côté sélectionné
-    readForState: (id, st) => (['rit', 'xit', 'clar', 'clarClr'].indexOf(id) >= 0 ? (st.vfoSel === 1 ? 'OI;' : 'IF;') : null),
+    readForState: (id, st) => (['rit', 'xit', 'clar', 'clarClr'].indexOf(id) >= 0 ? (st.vfoSel === 1 ? 'OI;' : 'IF;') : id === 'fastStep' ? 'FS;' : id === 'lock' || id === 'lockB' ? 'LK;' : null),
     derive(r) {
       const b = r.vfoSel === 1;
       for (const k of ['clar', 'rit', 'xit']) { const v = b ? r[k + 'B'] : r[k + 'A']; if (v != null) r[k] = v; }
+      { const v = b ? r.fastB : r.fastA; if (v != null) r.fastStep = v; }
       r.stSplit = r.split;
       if (r.split === 1 && r.txVfo != null && r.vfoSel != null && r.txVfo === (r.vfoSel === 1 ? 1 : 0)) r.split = 0;
     },
@@ -266,7 +267,9 @@
       // décalage relais FM (OS P1 : 0 simplex, 1 +, 2 −), CTCSS (CT P1 : 0 OFF, 1 ENC/DEC, 2 ENC) — en FM seulement (le TRX refuse sinon),
       // tonalité CTCSS (CN P1 0 P3P3P3 : numéro 000–049)
       // FAST (accord rapide du grand bouton) : FS P1 0 = OFF, 1 = ON
-      { cmd: 'FS;', re: /^FS([01])$/, parse: (m) => ({ fastStep: +m[1] }), sim: 'FS0' },
+      // FAST (manuel CAT FTDX101) : réglage FS0 / FS1 = MAIN OFF / ON, FS2 / FS3 = SUB OFF / ON ;
+      // lecture « FS4 »…« FS7 » : bit 1 = MAIN, bit 2 = SUB → FAST affiché = celui du côté sélectionné (derive)
+      { cmd: 'FS;', re: /^FS([0-7])$/, parse: (m) => ({ fastA: +m[1] & 1, fastB: (+m[1] >> 1) & 1 }), sim: 'FS4' },
       { cmd: 'ML1;', re: /^ML1(\d{3})$/, parse: (m) => ({ moniLvl: +m[1] }), sim: 'ML1050' },
       { cmd: 'VG;', re: /^VG(\d{3})$/, parse: (m) => ({ voxGain: +m[1] }), sim: 'VG050' },
       { cmd: 'VD;', re: /^VD(\d{2,4})$/, parse: (m) => ({ voxDelay: +m[1] }), sim: 'VD0500' },
@@ -279,7 +282,7 @@
       { cmd: 'CN10;', when: (st) => /FM/.test(st.modeB || ''), re: /^CN10(\d{3})$/, parse: (m) => ({ toneIdxB: +m[1] }), sim: 'CN10012' }
     ],
     extraQueries: ['RF0;', 'RF1;', 'ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
-    extraStateKeys: ['clarA', 'ritA', 'xitA', 'clarB', 'ritB', 'xitB', 'lockB', 'lockRaw', 'fastStep', 'moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
+    extraStateKeys: ['fastA', 'fastB', 'clarA', 'ritA', 'xitA', 'clarB', 'ritB', 'xitB', 'lockB', 'lockRaw', 'fastStep', 'moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB'],
     subBadges: true,
     // CW : mémoire 1 du manipulateur (écrasée), lue par KY6 (« Message Keyer 1 Playback », manuel CAT 1912-D) ;
     // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
@@ -308,13 +311,14 @@
       sql: { max: 100, pct: false, unit: '%', write: (v) => 'SQ0' + pad(v, 3) + ';' },
       nb: { type: 'toggle', off0: false, write: (v) => 'NB0' + v + ';' },
       nr: { type: 'toggle', off0: false, write: (v) => 'NR0' + v + ';' },
-      lock: { write: (v, st) => 'LK' + (((st && st.lockRaw != null ? st.lockRaw : 4) & 6) | (v ? 1 : 0)) + ';' },
+      // LOCK (manuel CAT FTDX101) : LK0 / LK1 = MAIN OFF / ON, LK2 / LK3 = SUB OFF / ON ; lecture LK4…LK7 (bits MAIN, SUB)
+      lock: { write: (v) => 'LK' + (v ? 1 : 0) + ';' },
       tuner: { write: (v) => 'AC00' + v + ';' },
       tune: { write: () => 'AC002;' }
     },
     extraControls: [
-      { id: 'lockB', g: 'vfo', label: 'LOCK (SUB)', type: 'toggle', face: true, write: (v, st) => 'LK' + (((st && st.lockRaw != null ? st.lockRaw : 4) & 5) | (v ? 2 : 0)) + ';' },
-      { id: 'fastStep', g: 'rx', label: 'FAST', type: 'toggle', face: true, write: (v) => 'FS' + (v ? 1 : 0) + ';' },
+      { id: 'lockB', g: 'vfo', label: 'LOCK (SUB)', type: 'toggle', face: true, write: (v) => 'LK' + (v ? 3 : 2) + ';' },
+      { id: 'fastStep', g: 'rx', label: 'FAST', type: 'toggle', face: true, write: (v, st) => 'FS' + ((st && st.vfoSel === 1 ? 2 : 0) + (v ? 1 : 0)) + ';' }, // côté sélectionné
       { id: 'micEq', g: 'tx', sec: 'tx', label: 'MIC EQ', type: 'toggle', write: (v) => 'PR1' + (v ? 2 : 1) + ';' },
       { id: 'nbLvl', g: 'flt', sec: 'dsp', label: 'Niveau NB', type: 'level', min: 0, max: 10, step: 1, write: (v) => 'NL0' + pad(v, 3) + ';' },
       { id: 'nrLvl', g: 'flt', sec: 'dsp', label: 'Niveau DNR', type: 'level', min: 1, max: 15, step: 1, write: (v) => 'RL0' + pad(v, 2) + ';' },
@@ -381,6 +385,9 @@
       const k = f.ans && f.ans['VS;'] === 'VS1' ? kb : ka;
       let m;
       if (c === 'IF') { out.push('IF001' + pad(f.freq, 9) + (ka.off < 0 ? '-' : '+') + pad(ka.off, 4) + ka.rit + ka.xit + f.mode + '00000;'); return true; }
+      // FAST et LOCK : un bit par côté (MAIN = 1, SUB = 2), lus « FS4 »…« FS7 » / « LK4 »…« LK7 »
+      if ((m = /^(FS|LK)([0-3])$/.exec(c))) { const k = m[1] === 'FS' ? 'fs101' : 'lk101', bit = +m[2] >> 1 ? 2 : 1; f[k] = ((f[k] || 0) & ~bit) | (+m[2] & 1 ? bit : 0); return true; }
+      if (c === 'FS' || c === 'LK') { out.push(c + (4 + (f[c === 'FS' ? 'fs101' : 'lk101'] || 0)) + ';'); return true; }
       if (c === 'OI') { out.push('OI001' + pad(f.freqB || 7074000, 9) + (kb.off < 0 ? '-' : '+') + pad(kb.off, 4) + kb.rit + kb.xit + (f.modeB || '2') + '00000;'); return true; }
       if ((m = /^RT([01])$/.exec(c))) { k.rit = +m[1]; return true; }
       if ((m = /^XT([01])$/.exec(c))) { k.xit = +m[1]; return true; }
