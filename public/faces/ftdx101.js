@@ -54,7 +54,7 @@
       // Rangée sous l'écran
       { id: 'tune', x: 150, y: 472, w: 67, h: 20, tip: 'TUNE : coupleur d’antenne en service / hors service ; appui d’au moins 1 s : accord (émission courte, avec la main)', act: { toggle: 'tuner', long: { action: 'tune' } }, led: (s) => !!(s.tuner || s.tuning), ledColor: '#ff8a1f' },
       { id: 'vox', x: 230, y: 472, w: 68, h: 20, tip: 'VOX (ne peut être que coupé à distance)', act: { toggle: 'vox' }, led: (s) => !!s.vox },
-      { id: 'mox', x: 311, y: 472, w: 67, h: 20, tip: 'MOX : émission maintenue (clic : émission, clic suivant : réception) ; avec votre micro si « Configuration micro » est actif', act: { local: 'mox' }, led: (s, L) => L.mox || !!s.tx, ledColor: '#ff3b30' },
+      { id: 'mox', x: 311, y: 472, w: 67, h: 20, tip: 'MOX : émission maintenue (clic : émission, clic suivant : réception) ; avec votre micro si « MICRO » est actif', act: { local: 'mox' }, led: (s, L) => !!L.mox, ledColor: '#ff3b30' }, // allumée seulement par MOX (pas par le PTT)
       { id: 'zin', x: 392, y: 472, w: 69, h: 20, tip: 'ZIN/SPOT', act: info('ZIN / SPOT : pas disponible à distance.') },
       { id: 'disp', x: 473, y: 472, w: 69, h: 20, tip: 'DISP : affichage de l’écran, comme sur le TRX — cascade MAIN → SUB au-dessus de MAIN → MAIN | SUB côte à côte → filtres agrandis → retour', act: { local: 'disp' } },
       { id: 'smenu', x: 556, y: 472, w: 69, h: 20, tip: 'S.MENU : SCOPE MENU (SPEED, PEAK, MARKER, COLOR, LEVEL), comme sur le TRX ; se ferme seul après 3 s', act: { local: 'smenu' } },
