@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.96** — **Double réception FTDX101 (FT8 / FT4 / FT2)** : carte de bande du VFO-A (MAIN) à gauche du décodage du VFO-A, celle du VFO-B (SUB) à droite du décodage du VFO-B. Ctrl+F5 sur /ftdx101/digi.html.
 - **0.32.95** — **Double réception FTDX101 (FT8 / FT4 / FT2)** : le VFO d'émission affiché (boutons TX VFO-A / VFO-B, drapeau TX rouge, fréquence sur fond rouge) suit celui du TRX (TX sur MAIN ou SUB changé sur la face avant, le dashboard ou le TRX lui-même) ; avec la main, les boutons TX VFO-A / VFO-B font passer le TRX en TX sur MAIN / SUB. Ctrl+F5 sur /ftdx101/digi.html.
 - **0.32.94** — **Double réception FTDX101 (FT8 / FT4 / FT2)** : fréquence de chaque VFO en grand au-dessus de sa cascade, sur fond rouge (« TX ») pour le VFO choisi pour émettre. **« ■ Arrêter »** toujours lisible (blanc gras sur rouge sombre, rouge vif pendant l'émission). Ctrl+F5 sur /ftdx101/digi.html.
 - **0.32.93** — **Double réception FTDX101 (FT8 / FT4 / FT2)** : deux cartes de bande à droite (bande du VFO-A, puis bande du VFO-B avec sa fenêtre RX / TX ; clic sur un spot de la carte B = réception du VFO-B sur ce signal) ; colonnes Pays, km et Az retirées, le pays DXCC, la distance et l'azimut s'affichent en passant la souris sur l'indicatif (partout). Ctrl+F5 sur /ftdx101/digi.html.
