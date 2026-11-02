@@ -91,6 +91,13 @@
   let mode = ftStored();
   let rxF = Number(store.get('rxf', '1500')) || 1500;
   let txF = Number(store.get('txf', '1500')) || 1500; // fréquence audio d'émission (split : différente de RX)
+  // FTDX101 en double réception (page /ftdx101) : FT8 / FT4 / FT2 décodés aussi sur le récepteur SUB (VFO-B),
+  // avec sa cascade et ses deux colonnes ; l'émission part sur le VFO de la station appelée
+  let rxFB = Number(store.get('rxfb', '1500')) || 1500;
+  let txFB = Number(store.get('txfb', '1500')) || 1500;
+  let ftDual = false; // cascade et colonnes du VFO-B affichées
+  let ftSide = 'A';   // VFO d'émission choisi : A = MAIN, B = SUB
+  const sd = () => (ftDual && ftSide === 'B' ? 'B' : 'A');
   const SCALE_H = 44; // graduations + drapeaux TX / RX avec leur fréquence
   let lastDecode = 0;
   let lastBand = 0;
@@ -127,11 +134,13 @@
         <option value="auto">auto</option><option value="0">1re</option><option value="1">2e</option>
       </select>
       <label class="dg-chk" title="En appel CQ (Tx6), celui qui vous répond devient le correspondant et la séquence continue toute seule (Call 1st de WSJT-X)"><input type="checkbox" id="dgCall1st"> Répondre au 1er</label>
+      <span class="seg ft-txside" id="dgTxSide" title="FTDX101 en double réception : VFO d'émission (MAIN = VFO-A, SUB = VFO-B). Un double-clic sur un message choisit tout seul le VFO de la station appelée."><span class="dg-f">TX</span><button class="btn" type="button" data-side="A" aria-pressed="true">VFO-A</button><button class="btn" type="button" data-side="B" aria-pressed="false">VFO-B</button></span>
       <button class="btn dg-stop" type="button" id="dgStop" disabled title="Arrête l'émission automatique (Halt Tx)">■ Arrêter</button>
       <span class="dg-tl"><span class="dg-status" id="dgStatus"></span><span class="dg-clock" id="dgClock">--:--:--</span></span>
     </div>
-    <div class="dg-wf-slot" data-slot="ftx"><div class="dg-wf">
+    <div class="ft-wfrow"><div class="dg-wf-slot" data-slot="ftx"><div class="dg-wf">
       <div class="wf-ctl" title="Réglages de la cascade (comme WSJT-X)">
+        <span class="ft-wfa">VFO-A · MAIN <b id="ftDialA"></b></span>
         <label title="Contraste : plus à droite, les signaux faibles ressortent davantage">Gain <input id="wfGain" type="range" min="-20" max="20" step="1" value="0"></label>
         <label title="Niveau du bruit de fond : plus à droite, le fond est plus clair">Zéro <input id="wfZero" type="range" min="-20" max="20" step="1" value="0"></label>
         <label title="Aplatit le bruit de fond sur toute la largeur (corrige la pente du filtre du TRX)"><input id="wfFlat" type="checkbox" checked> Plat</label>
@@ -145,17 +154,35 @@
       <i class="dg-mk dg-mk-bm" id="dgMkBM" hidden></i><i class="dg-mk dg-mk-bs" id="dgMkBS" hidden></i>
       <i class="dg-grip" id="dgGrip" title="Glisser vers le haut ou le bas : hauteur de la cascade et des listes de messages (double-clic : taille d'origine)"></i>
     </div></div>
+      <div class="dg-wf ft-wfb" id="ftWfBox" hidden>
+        <div class="ft-wfh">VFO-B · SUB <b id="ftDialB"></b></div>
+        <canvas id="ftScaleB" height="44"></canvas>
+        <canvas id="ftWfB" height="140" title="Cascade du VFO-B (SUB) : clic gauche = réception, clic droit = émission"></canvas>
+        <i class="dg-mk dg-mk-tx" id="ftMkTxB"></i><i class="dg-mk dg-mk-rx" id="ftMkRxB"></i>
+      </div>
+    </div>
     <div class="dg-cols">
       <div class="dg-col">
-        <div class="dg-h"><span>Activité de bande</span><button class="dg-mini" type="button" id="dgClear">Effacer</button></div>
+        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Activité de bande</span><button class="dg-mini" type="button" id="dgClear">Effacer</button></div>
         <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span>Pays</span><span>km</span><span>Az</span></div>
         <div class="dg-list" id="dgBand"></div>
       </div>
       <i class="dg-vsplit" id="dgSplit" title="Glisser à gauche ou à droite : largeur des deux listes (double-clic : moitié-moitié)"></i>
       <div class="dg-col">
-        <div class="dg-h"><span>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span></div>
+        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span></div>
         <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span>Pays</span><span>km</span><span>Az</span></div>
         <div class="dg-list" id="dgRx"></div>
+      </div>
+      <!-- FTDX101 en double réception : les mêmes colonnes pour le récepteur SUB (VFO-B) -->
+      <div class="dg-col ft-colb" hidden>
+        <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Activité de bande</span><button class="dg-mini" type="button" id="dgClearB">Effacer</button></div>
+        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span>Pays</span><span>km</span><span>Az</span></div>
+        <div class="dg-list" id="dgBandB"></div>
+      </div>
+      <div class="dg-col ft-colb" hidden>
+        <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Fréquence RX <b id="dgRxFB">1500 Hz</b></span></div>
+        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span>Pays</span><span>km</span><span>Az</span></div>
+        <div class="dg-list" id="dgRxB"></div>
       </div>
     </div>
     <div class="dg-prog" id="dgProg" title="Période en cours : vert = réception, rouge = émission"><i id="dgProgBar"></i><span id="dgProgTxt"></span></div>
@@ -543,10 +570,11 @@
       const dualAudio = rtDualAudio;
       if ($('rtWfB')) $('rtWfB').closest('.rt-wfb').hidden = !dualAudio;
       const slot = document.querySelector('.dg-wf-slot[data-slot="' + (pane === 'rtty' && dualAudio ? 'rtty-a' : pane) + '"]');
-      const el = document.querySelector('.dg-wf:not(.rt-wfb)'); // cascade principale (pas celle du décodeur RTTY B)
+      const el = document.querySelector('.dg-wf:not(.rt-wfb):not(.ft-wfb)'); // cascade principale (pas celle du décodeur RTTY B ni du VFO-B en FT)
       if (slot && el && el.parentElement !== slot) slot.appendChild(el);
       el.classList.toggle('is-rtty', pane === 'rtty' || pane === 'cw');
       for (const id of ['dgMkBM', 'dgMkBS']) if ($(id)) $(id).hidden = pane !== 'rtty' || dualAudio; // repères du décodeur RTTY B
+      applyFtDual();
       applySpan();
       sizeCanvas();
     }
@@ -571,7 +599,7 @@
     if (watching && tab === 'jtty') { api.send({ t: 'digi', mode: 'JTTY', hist: jtNeedHist }); jtNeedHist = false; return; }
     if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rts[0], rtty2: rts[1] });
     if (watching && tab === 'wspr') { api.send({ t: 'digi', mode: 'WSPR', hist: wsNeedHist }); wsNeedHist = false; return; }
-    api.send({ t: 'digi', mode: watching ? mode : null, hist: watching && needHist });
+    api.send({ t: 'digi', mode: watching ? mode : null, hist: watching && needHist, ftDual: watching && ftDual });
     if (watching) needHist = false;
   }
 
@@ -600,6 +628,73 @@
     wfB.ctx.fillRect(0, 0, w, h);
     if (old) wfB.ctx.drawImage(old, 0, 0, ow, oh, 0, 0, w, oh);
   }
+  // FT8 / FT4 / FT2 en double réception : cascade du VFO-B à droite de celle du VFO-A, même hauteur
+  const wfFB = { ctx: null, sctx: null, w: 0, h: 0, cw: 0, per: null };
+  function sizeFB() {
+    const c = $('ftWfB');
+    if (!ftDual || !c || !c.clientWidth) return;
+    const s = $('ftScaleB');
+    c.style.height = $('dgWf').clientHeight + 'px';
+    const dpr = wf.dpr || 1;
+    const cw = Math.max(120, Math.floor(c.clientWidth));
+    const w = Math.round(cw * dpr);
+    const h = Math.round(Math.max(40, c.clientHeight) * dpr);
+    for (const id of ['ftMkRxB', 'ftMkTxB']) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
+    if (w === wfFB.w && h === wfFB.h && wfFB.ctx) return;
+    let old = null;
+    if (wfFB.ctx) { old = document.createElement('canvas'); old.width = wfFB.w; old.height = wfFB.h; old.getContext('2d').drawImage(c, 0, 0); }
+    const ow = wfFB.w, oh = wfFB.h;
+    c.width = w; c.height = h;
+    s.width = w; s.height = Math.round(SCALE_H * dpr);
+    Object.assign(wfFB, { w, h, cw, ctx: c.getContext('2d'), sctx: s.getContext('2d') });
+    wfFB.sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    wfFB.ctx.fillStyle = '#05080d';
+    wfFB.ctx.fillRect(0, 0, w, h);
+    if (old) wfFB.ctx.drawImage(old, 0, 0, ow, oh, 0, 0, w, oh);
+  }
+  function ftDualWant() {
+    return !!(/^\/ftdx101/.test(location.pathname) && !detached && tab === 'ftx' && FT_MODES.indexOf(mode) >= 0 && dualAudioOn());
+  }
+  /** Affiche ou retire la cascade et les colonnes du VFO-B (FTDX101 en double réception) ; true si changé. */
+  function applyFtDual() {
+    const box = $('ftWfBox');
+    if (!box) return false;
+    const want = ftDualWant();
+    if (want === ftDual) return false;
+    ftDual = want;
+    const pane = box.closest('.ctab-pane') || box.parentElement;
+    pane.classList.toggle('ft-dual', want);
+    box.hidden = !want;
+    document.querySelectorAll('.ft-colb').forEach((e) => { e.hidden = !want; });
+    if (!want) { wfFB.ctx = null; wfFB.w = 0; }
+    needHist = true; // décodages du VFO-B déjà reçus par le serveur
+    sideBtns();
+    if (wf.ctx) sizeCanvas();
+    redrawAll();
+    return true;
+  }
+  function ftDials() {
+    if (!ftDual) return;
+    const r = api && api.state() && api.state().radio;
+    const f = (hz) => (hz ? (hz / 1e6).toFixed(3) + ' MHz' : '');
+    if ($('ftDialA')) $('ftDialA').textContent = f(r && r.freq);
+    if ($('ftDialB')) $('ftDialB').textContent = f(r && r.freqB);
+  }
+  function sideBtns() {
+    document.querySelectorAll('#dgTxSide .btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.side === sd())));
+    const pane = $('ftWfBox') && ($('ftWfBox').closest('.ctab-pane') || $('ftWfBox').parentElement);
+    if (pane) pane.classList.toggle('ft-txb', sd() === 'B');
+  }
+  /** VFO d'émission (double réception) : la séquence en cours suit (le TRX passe TX sur MAIN ou SUB). */
+  function setSide(v, quiet) {
+    v = v === 'B' && ftDual ? 'B' : 'A';
+    if (v === ftSide) return;
+    ftSide = v;
+    sideBtns();
+    drawScale();
+    ftxCfg();
+    if (!quiet && api) api.say('Émission sur le ' + (v === 'B' ? 'VFO-B (SUB)' : 'VFO-A (MAIN)') + '.', '', 2500);
+  }
   function sizeCanvas() {
     const c = $('dgWf');
     const s = $('dgScale');
@@ -612,7 +707,7 @@
     const ch = Math.max(40, Math.round(c.clientHeight || 140));
     const w = Math.round(cw * dpr);
     const h = Math.round(ch * dpr);
-    if (w === wf.w && h === wf.h && wf.ctx) { sizeB(); return drawScale(); }
+    if (w === wf.w && h === wf.h && wf.ctx) { sizeB(); sizeFB(); return drawScale(); }
     let old = null;
     if (wf.ctx) { old = document.createElement('canvas'); old.width = wf.w; old.height = wf.h; old.getContext('2d').drawImage(c, 0, 0); }
     const ow = wf.w, oh = wf.h;
@@ -631,6 +726,7 @@
     wf.ctx.fillRect(0, 0, w, h);
     if (old) wf.ctx.drawImage(old, 0, 0, ow, oh, 0, 0, w, oh); // largeur remise à l'échelle, lignes gardées telles quelles
     sizeB();
+    sizeFB();
     drawScale();
   }
   // Palette : bruit sombre → bleu → cyan → jaune → rouge
@@ -671,9 +767,10 @@
   }
   function onRow(bytes) {
     const isB = bytes[0] === 0x14;
-    if (isB && !(tab === 'rtty' && wfB.ctx && rtDualAudio)) return;
+    const ftB = isB && ftDual && tab === 'ftx' && !!wfFB.ctx; // VFO-B en FT8 / FT4 / FT2 (double réception)
+    if (isB && !ftB && !(tab === 'rtty' && wfB.ctx && rtDualAudio)) return;
     if (WF_TABS.indexOf(tab) < 0 || detached || !wf.ctx) return;
-    const T = isB ? wfB : wf; // cascade dessinée
+    const T = isB ? (ftB ? wfFB : wfB) : wf; // cascade dessinée
     // 0x10 : une case de 6,25 Hz par octet (dB*2+240) depuis 0 Hz (ancien serveur)
     // 0x13 : largeur de case (mHz, 2 octets), heure de capture (dixièmes de s du jour UTC, 4 octets), puis les cases
     const fine = bytes[0] === 0x13 || isB;
@@ -747,6 +844,13 @@
       d[x * 4 + 3] = 255;
     }
     ctx.putImageData(T.img, 0, 0);
+    if (ftB && tday != null) {
+      // Trait de début de période, comme sur la cascade du VFO-A
+      const P = SLOT_MS[mode] || 15000;
+      const per = Math.floor(tday / P);
+      if (wfFB.per != null && per !== wfFB.per) { ctx.fillStyle = 'rgba(255, 255, 255, .55)'; ctx.fillRect(0, 0, wfFB.w, 1); }
+      wfFB.per = per;
+    }
     if (isB) return;
     periodMark(ctx, tday);
     // RTTY : la même ligne descend aussi dans la cascade du décodeur B (sauf si elle a sa propre voie, 0x14)
@@ -800,6 +904,7 @@
     if (tab === 'cw') return drawCwMarks(c, w);
     if (tab === 'sstv') return drawSstvMarks(c, w);
     drawFlags(c, w);
+    if (ftDual && wfFB.sctx) { ticks(wfFB.sctx, wfFB.cw); drawFlags(wfFB.sctx, wfFB.cw, 'B'); }
   }
   // Échelle de 0 à 3000 Hz (graduations façon JTDX)
   function ticks(c, w) {
@@ -828,7 +933,10 @@
       }
     }
   }
-  function drawFlags(c, w) {
+  function drawFlags(c, w, side) {
+    const B = side === 'B';
+    const tf = B ? txFB : txF, rf = B ? rxFB : rxF;
+    const txOn = !ftDual || sd() === (B ? 'B' : 'A'); // double réception : drapeau TX pâle sur le VFO qui n'émet pas
     // Largeur d'un signal FT8 (50 Hz) / FT4 (83 Hz) / JT65 (178 Hz) / JTTY (127 Hz, centré) : TX en rouge, RX en vert
     const bw = tab === 'jtty' ? 127 : mode === 'FT4' ? 83 : mode === 'FT2' ? 167 : mode === 'JT65' ? 178 : 50;
     // Drapeaux TX (rouge) et RX (vert) avec leur fréquence ; hampe à la fréquence exacte, drapeau retourné près du bord droit
@@ -846,15 +954,18 @@
       c.fillStyle = '#FFFFFF';
       c.fillText(label, Math.min(x0 + 7, w - fw + 7), y + h / 2 + 1);
     };
-    flag(txF, 14, 14, 'rgba(190, 28, 28, .92)', '#ff7a6a', 'TX ' + Math.round(txF));
-    flag(rxF, 29, 15, 'rgba(0, 140, 66, .92)', '#7CF29F', 'RX ' + Math.round(rxF));
+    flag(tf, 14, 14, txOn ? 'rgba(190, 28, 28, .92)' : 'rgba(110, 40, 40, .55)', txOn ? '#ff7a6a' : '#8a5a55', 'TX ' + Math.round(tf));
+    flag(rf, 29, 15, 'rgba(0, 140, 66, .92)', '#7CF29F', 'RX ' + Math.round(rf));
     // Repères sur la cascade
     const pos = (el, f) => { el.style.left = (f / WF_MAX_HZ) * 100 + '%'; el.style.width = (bw / WF_MAX_HZ) * 100 + '%'; };
-    pos($('dgMkRx'), rxF);
-    pos($('dgMkTx'), txF);
+    pos($(B ? 'ftMkRxB' : 'dgMkRx'), rf);
+    pos($(B ? 'ftMkTxB' : 'dgMkTx'), tf);
+    $(B ? 'ftMkTxB' : 'dgMkTx').style.opacity = txOn ? '' : '.35';
+    if (B) { $('dgRxFB').textContent = Math.round(rf) + ' Hz'; return; }
     $('dgRxF').textContent = Math.round(rxF) + ' Hz';
-    $('dgRxF2').textContent = Math.round(rxF);
-    $('dgTxF').textContent = Math.round(txF);
+    // Barre du haut : fréquences du VFO d'émission choisi
+    $('dgRxF2').textContent = Math.round(sd() === 'B' ? rxFB : rxF);
+    $('dgTxF').textContent = Math.round(sd() === 'B' ? txFB : txF);
     if ($('jtRxF')) { $('jtRxF').textContent = Math.round(rxF); $('jtTxF').textContent = Math.round(txF); $('jtRxF2').textContent = Math.round(rxF) + ' Hz'; }
   }
   // ------------------------------------------------------------------ RTTY
@@ -1076,7 +1187,8 @@
   // FT8 / FT4 / FT2, WSPR, JT65, JTTY : bouton gauche maintenu = le repère RX (vert) suit la souris en continu,
   // bouton droit maintenu = le repère TX (rouge) ; un simple clic garde son effet. Ceux qui suivent l'opérateur voient bouger.
   const FT_TABS = ['ftx', 'wspr', 'jt65', 'jtty'];
-  function ftDragInit(ids) {
+  function ftDragInit(ids, side) {
+    const B = side === 'B';
     let mk = null;
     for (const id of ids) {
       const el = $(id);
@@ -1086,8 +1198,8 @@
       };
       const move = (e, final) => {
         const f = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(fOf(e))));
-        if (final) return mk.tx ? setTx(f) : setRx(f);
-        if (mk.tx) txF = f; else rxF = f;
+        if (final) return mk.tx ? setTx(f, side) : setRx(f, side);
+        if (mk.tx) { if (B) txFB = f; else txF = f; } else if (B) rxFB = f; else rxF = f;
         drawScale();
         bmDraw();
         const now = Date.now();
@@ -1936,6 +2048,7 @@
     rtDragInit(['dgWf', 'dgScale'], 0);
     cwDragInit(['dgWf', 'dgScale']);
     ftDragInit(['dgWf', 'dgScale']);
+    ftDragInit(['ftWfB', 'ftScaleB'], 'B');
     rtDragInit(['rtWfB', 'rtScaleB'], 1);
     // Décodeur de l'émission : bouton TX de son en-tête, ou clic n'importe où dans sa fenêtre (VFO-A / VFO-B)
     const pickTx = (ch) => {
@@ -2899,7 +3012,8 @@
   // Période du correspondant (parité du créneau de son message) : on émet dans l'autre période
   let dxPar = null;
   const SLOT_MS = { FT8: 15000, FT4: 7500, FT2: 3750 };
-  function pickFromDecode(d, slot) {
+  function pickFromDecode(d, slot, side) {
+    if (ftDual) { ftSide = side === 'B' ? 'B' : 'A'; sideBtns(); } // TX automatique sur le VFO de la station appelée
     if (slot && SLOT_MS[mode]) dxPar = { mode, call: '', parity: Math.round(slot / SLOT_MS[mode]) % 2 };
     const w = d.msg.toUpperCase().split(/\s+/).map((x) => x.replace(/^<|>$/g, ''));
     let call = '';
@@ -2909,7 +3023,7 @@
     const last = w[w.length - 1];
     setDx({ call, grid: GRID_RE.test(last) && last !== 'RR73' ? last : '', rpt: fmtRpt(d.db) });
     if (dxPar) dxPar.call = call;
-    setRx(d.f);
+    setRx(d.f, side);
     // Message suivant comme WSJT-X : réponse à un CQ → Tx1 ; message qui nous est adressé → selon son contenu
     const toMe = stationCalls.indexOf(w[0]) >= 0;
     const p = toMe ? (w[2] || '') : '';
@@ -2980,9 +3094,9 @@
     if (/[{}]/.test(text)) return api.say('Message incomplet : choisissez d’abord le correspondant (double-clic sur son message) ou réglez votre locator.', 'warn');
     const m = FT_MODES.indexOf(mode) >= 0 ? mode : ftStored();
     api.send({ t: 'ftx_tx', mode: m, ntx: i + 1, f0: curTxF(), parity: txParity(i), dx: { call: dx.call, grid: dx.grid }, rpt: dx.rpt,
-      free: String(store.get('ftxfree', '')), call1st: store.get('call1st', '1') === '1', keyNow: !!keyNow, rxf: rxF });
+      free: String(store.get('ftxfree', '')), call1st: store.get('call1st', '1') === '1', keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd() });
   }
-  const curTxF = () => Math.round(Number(store.get('txf', String(txF))) || txF);
+  const curTxF = () => (sd() === 'B' ? Math.round(Number(store.get('txfb', String(txFB))) || txFB) : Math.round(Number(store.get('txf', String(txF))) || txF));
   // Période d'émission : imposée, ou (auto) l'autre que celle du correspondant choisi par double-clic
   function txParity(i) {
     const sel = $('dgPar') ? $('dgPar').value : store.get('ftxpar', 'auto');
@@ -2993,7 +3107,7 @@
   }
   function ftxCfg() {
     const st = api && api.state();
-    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), parity: txParity(ftxSel), call1st: store.get('call1st', '1') === '1' });
+    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), parity: txParity(ftxSel), call1st: store.get('call1st', '1') === '1', side: sd() });
   }
   // Fin de QSO (73 / RR73) : proposition d'enregistrement dans le carnet, comme « Prompt me to log QSO » de WSJT-X
   function qsoPrompt(q) {
@@ -3287,6 +3401,8 @@
     ssTxState(x);
     const mine = !!(sq && sq.by === opCall);
     if ($('dgStop')) $('dgStop').disabled = !(x || (sq && sq.on) || (st && st.ptt && st.ptt.digi));
+    // Double réception : le VFO d'émission suit celui de la séquence en cours (ex. choisi dans l'autre fenêtre)
+    if (mine && sq.on && ftDual && (sq.side === 'B' ? 'B' : 'A') !== ftSide) { ftSide = sq.side === 'B' ? 'B' : 'A'; sideBtns(); drawScale(); }
     // Séquence automatique : le message choisi et le correspondant suivent ce que décide le serveur
     if (mine) {
       const key = [sq.ntx, sq.dx, sq.grid, sq.rpt, sq.on].join('|');
@@ -3312,8 +3428,10 @@
     if (x && x.state === 'tx' && x.at !== lastTxAt && FT_MODES.indexOf(x.mode) >= 0) {
       lastTxAt = x.at;
       const it = { slot: Math.floor((x.at - 500) / 100) * 100, mode: x.mode, tx: true, list: [{ tx: true, db: 0, dt: 0, f: x.f0, msg: x.text }] };
-      hist.push(it);
-      if (x.mode === mode) addSlot(it, false);
+      // Double réception : dans les colonnes du VFO qui émet
+      const onB = ftDual && sq && sq.on && sq.side === 'B';
+      (onB ? histB : hist).push(it);
+      if (x.mode === mode) addSlot(it, false, onB ? 'B' : undefined);
     }
   }
 
@@ -3544,16 +3662,23 @@
     (dx.call ? f.querySelector('[data-a="save"]') : f.call).focus();
   }
 
-  function setTx(f) {
-    txF = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(f)));
-    store.set('txf', txF);
+  function setTx(f, side) {
+    const v = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(f)));
+    if (side === 'B') { txFB = v; store.set('txfb', v); } else { txF = v; store.set('txf', v); }
     drawScale();
     ftxCfg();
     bmDraw();
     sendView();
   }
-  function setRx(f) {
-    rxF = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(f)));
+  function setRx(f, side) {
+    const v = Math.max(100, Math.min(WF_MAX_HZ - 100, Math.round(f)));
+    if (side === 'B') {
+      rxFB = v;
+      store.set('rxfb', v);
+      drawScale();
+      return redrawRx('B');
+    }
+    rxF = v;
     store.set('rxf', rxF);
     drawScale();
     bmDraw();
@@ -3564,6 +3689,7 @@
 
   // ------------------------------------------------------------------ listes de messages
   const hist = []; // { slot, mode, list }
+  const histB = []; // décodages du récepteur SUB (VFO-B), FTDX101 en double réception
   const pad = (n) => String(n).padStart(2, '0');
   // FT2 : périodes de 3,75 s (…:18,75) → dixième de seconde affiché
   const utc = (ms) => { const d = new Date(ms); return pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + (ms % 1000 ? '.' + Math.floor((ms % 1000) / 100) : ''); };
@@ -3583,22 +3709,22 @@
   // Stations déjà contactées sous le TX CALL actuel (envoyées par le serveur) : « INDICATIF|BANDE|MODE »
   let worked = new Set();
   let workedStation = '';
-  function curBand() {
+  function curBand(side) {
     const st = api && api.state && api.state();
-    const f = st && st.radio && (st.radio.vfoSel === 1 ? st.radio.freqB : st.radio.freq);
+    const f = st && st.radio && ((side ? side === 'B' : st.radio.vfoSel === 1) ? st.radio.freqB : st.radio.freq);
     const mhz = f ? f / 1e6 : 0;
     const b = BANDS_M.find((x) => mhz >= x[0] && mhz <= x[1]);
     return b ? b[2] : '';
   }
-  function isWorked(msg) {
+  function isWorked(msg, side) {
     if (!worked.size || FT_MODES.indexOf(mode) < 0) return false;
     const c = senderOf(msg);
-    return !!c && worked.has(c + '|' + curBand() + '|' + mode);
+    return !!c && worked.has(c + '|' + curBand(ftDual ? side || 'A' : '') + '|' + mode);
   }
-  function rowEl(slot, d) {
+  function rowEl(slot, d, side) {
     const r = document.createElement('div');
     const k = d.tx ? 'tx' : cls(d.msg);
-    const wk = !d.tx && k !== 'me' && isWorked(d.msg);
+    const wk = !d.tx && k !== 'me' && isWorked(d.msg, side);
     r.className = 'dg-row ft ' + k + (wk ? ' wkd' : '');
     r.title = d.tx ? 'Message émis' : (wk ? 'Déjà contacté sous ' + workedStation + ' sur cette bande dans ce mode · ' : '') + d.f + ' Hz · clic sur l’indicatif (souligné) ou double-clic : répondre à cette station (émission à la période suivante) · clic ailleurs : réception ici · clic droit : émission ici';
     const cells = d.tx ? [utc(slot), 'TX', '', d.f, d.msg] : [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
@@ -3615,7 +3741,7 @@
         c.className = 'dg-call';
         c.textContent = who;
         c.title = 'Clic : répondre à ' + who + ' (émission à la période suivante, avec la main)';
-        c.addEventListener('click', (e) => { e.stopPropagation(); pickFromDecode(d, slot); });
+        c.addEventListener('click', (e) => { e.stopPropagation(); pickFromDecode(d, slot, side); });
         s.appendChild(c);
         s.appendChild(document.createTextNode(String(v).slice(k + who.length)));
       }
@@ -3634,9 +3760,9 @@
       [d.tx || d.km == null ? '' : (d.kmc ? '≈' : '') + d.km, 'x', d.km == null ? '' : (d.kmc ? 'Distance approximative (centre du pays : pas de locator dans le message)' : 'Distance depuis le locator du club')],
       [d.tx || d.az == null ? '' : d.az + '°', 'x', d.az == null ? '' : 'Azimut (direction de l’antenne) depuis le club']];
     for (const [t, c, ti] of ex) { const e = document.createElement('span'); e.className = c; e.textContent = t; if (ti) e.title = ti; r.appendChild(e); }
-    r.addEventListener('click', () => setRx(d.f));
-    r.addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(d.f); });
-    r.addEventListener('dblclick', () => { if (!d.tx) pickFromDecode(d, slot); });
+    r.addEventListener('click', () => setRx(d.f, side));
+    r.addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(d.f, side); });
+    r.addEventListener('dblclick', () => { if (!d.tx) pickFromDecode(d, slot, side); });
     return r;
   }
   function sepEl(slot, m) {
@@ -3664,8 +3790,10 @@
     for (let c = list.lastElementChild; c && Number(c.dataset.k || 0) > key; c = c.previousElementSibling) ref = c;
     list.insertBefore(el, ref);
   }
-  function addSlot(item, quiet) {
-    const band = $('dgBand');
+  function addSlot(item, quiet, side) {
+    const B = side === 'B';
+    if (B && !ftDual) return;
+    const band = $(B ? 'dgBandB' : 'dgBand');
     // Une seule ligne de séparation par période (passes anticipée, normale et profonde, émission), dans les deux listes
     const sep = (list) => {
       const sk = slotKey(item, 0);
@@ -3676,25 +3804,28 @@
     };
     stickToBottom(band, () => {
       if (item.list.length) sep(band);
-      for (const d of item.list) insertSorted(band, rowEl(item.slot, d), slotKey(item, item.tx ? 1 : 2));
+      for (const d of item.list) insertSorted(band, rowEl(item.slot, d, side), slotKey(item, item.tx ? 1 : 2));
     });
-    const mine = item.list.filter(inRx);
+    const mine = item.list.filter((d) => inRx(d, side));
     if (mine.length) {
-      const rx = $('dgRx');
-      stickToBottom(rx, () => { sep(rx); for (const d of mine) insertSorted(rx, rowEl(item.slot, d), slotKey(item, item.tx ? 1 : 2)); });
+      const rx = $(B ? 'dgRxB' : 'dgRx');
+      stickToBottom(rx, () => { sep(rx); for (const d of mine) insertSorted(rx, rowEl(item.slot, d, side), slotKey(item, item.tx ? 1 : 2)); });
     }
   }
-  function inRx(d) { return d.tx || Math.abs(d.f - rxF) <= RX_WIDTH || cls(d.msg) === 'me'; }
-  function redrawRx() {
-    const rx = $('dgRx');
+  function inRx(d, side) { return d.tx || Math.abs(d.f - (side === 'B' ? rxFB : rxF)) <= RX_WIDTH || cls(d.msg) === 'me'; }
+  function redrawRx(side) {
+    const B = side === 'B';
+    if (B && !ftDual) return;
+    const rx = $(B ? 'dgRxB' : 'dgRx');
+    if (!rx) return;
     rx.textContent = '';
-    for (const it of hist) {
+    for (const it of B ? histB : hist) {
       if (it.mode !== mode) continue;
-      const mine = it.list.filter(inRx);
+      const mine = it.list.filter((d) => inRx(d, side));
       if (!mine.length) continue;
       const sk = slotKey(it, 0);
       if (!rx.querySelector('.dg-sep[data-k="' + sk + '"]')) { const P = SLOT_MS[it.mode] || 15000; insertSorted(rx, sepEl(Math.floor((it.slot + (it.tx ? 600 : 0)) / P) * P, it.mode), sk); }
-      for (const d of mine) insertSorted(rx, rowEl(it.slot, d), slotKey(it, it.tx ? 1 : 2));
+      for (const d of mine) insertSorted(rx, rowEl(it.slot, d, side), slotKey(it, it.tx ? 1 : 2));
     }
     rx.scrollTop = rx.scrollHeight;
   }
@@ -3703,6 +3834,10 @@
     $('dgBand').dataset.sep = '';
     for (const it of hist) if (it.mode === mode) addSlot(it, true);
     redrawRx();
+    if (!ftDual || !$('dgBandB')) return;
+    $('dgBandB').textContent = '';
+    for (const it of histB) if (it.mode === mode) addSlot(it, true, 'B');
+    redrawRx('B');
   }
 
   // ------------------------------------------------------------------ état, horloge, QSY
@@ -3734,6 +3869,7 @@
   }
   function modeChanged() {
     document.querySelectorAll('#dgModes .btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+    applyFtDual();
     lastBand = 0;
     fillDial();
     drawScale();
@@ -3945,6 +4081,8 @@
       // Choisir une fréquence dans la liste y envoie directement le TRX (QSY)
       $('dgDial').addEventListener('change', () => { store.set('dial.' + mode, $('dgDial').value); qsy(); });
       $('dgClear').addEventListener('click', () => { hist.length = 0; redrawAll(); });
+      $('dgClearB').addEventListener('click', () => { histB.length = 0; redrawAll(); });
+      document.querySelectorAll('#dgTxSide .btn').forEach((b) => b.addEventListener('click', () => setSide(b.dataset.side)));
       // Réglages de la cascade
       const wfUi = () => { $('wfGain').value = wfCfg.gain; $('wfZero').value = wfCfg.zero; $('wfFlat').checked = wfCfg.flat; $('wfPal').value = wfCfg.pal; $('wfSpd').value = String(wfCfg.spd); };
       wfUi();
@@ -4037,6 +4175,11 @@
         });
         $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'sstv') return; if (tab === 'rtty') setRttyF(fAt(e), 1); else if (tab === 'cw') setCwF(fAt(e), false); else setTx(fAt(e)); });
       }
+      // Cascade du VFO-B (FT8 / FT4 / FT2 en double réception) : clic gauche = réception, clic droit = émission
+      for (const id of ['ftWfB', 'ftScaleB']) {
+        $(id).addEventListener('click', (e) => setRx(fAt(e), 'B'));
+        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(fAt(e), 'B'); });
+      }
       initRtty();
       initWspr();
       initJtty();
@@ -4062,13 +4205,13 @@
         e.preventDefault();
         useMacro(MODE, m.text, e.shiftKey);
       });
-      $('dgTxRx').addEventListener('click', () => setTx(rxF));
+      $('dgTxRx').addEventListener('click', () => setTx(sd() === 'B' ? rxFB : rxF, sd()));
       $('dgPar').value = store.get('ftxpar', 'auto');
       $('dgPar').addEventListener('change', () => { store.set('ftxpar', $('dgPar').value); ftxCfg(); });
       $('dgCall1st').checked = store.get('call1st', '1') === '1';
       $('dgCall1st').addEventListener('change', () => { store.set('call1st', $('dgCall1st').checked ? '1' : '0'); ftxCfg(); });
       $('dgStop').addEventListener('click', () => api && api.send({ t: 'ftx_stop' }));
-      $('dgRxTx').addEventListener('click', () => setRx(txF));
+      $('dgRxTx').addEventListener('click', () => setRx(sd() === 'B' ? txFB : txF, sd()));
       // Repli du panneau ou onglet du navigateur caché : le serveur arrête de décoder pour ce membre
       new MutationObserver(announce).observe($('centerPanel'), { attributes: true, attributeFilter: ['class'] });
       document.addEventListener('visibilitychange', announce);
@@ -4079,7 +4222,7 @@
       setInterval(() => { if (!detached && tab === 'ftx') progBar(); }, 100);
       setInterval(() => {
         if (detached) return;
-        if (tab === 'ftx' || tab === 'jt65') { clock(); status(); followBand(); }
+        if (tab === 'ftx' || tab === 'jt65') { clock(); status(); followBand(); if (applyFtDual()) announce(); ftDials(); }
         if (tab === 'rtty') { status(); rtHeads(); if (dualAudioOn() !== rtDualAudio) showTab(tab); }
         if (BM_TABS.indexOf(tab) >= 0) { bmPlace(); bmDraw(); }
         if (tab === 'wspr') wsClock();
@@ -4163,19 +4306,22 @@
         return true;
       }
       if (m.t === 'ftx_hist') {
-        // Historique à l'ouverture : on remplace ce qu'on a pour ce mode
-        for (let i = hist.length - 1; i >= 0; i--) if (hist[i].mode === m.mode) hist.splice(i, 1);
-        for (const it of m.items || []) hist.push({ slot: it.slot, mode: m.mode, list: it.list || [] });
-        hist.sort((a, b) => a.slot - b.slot);
+        // Historique à l'ouverture : on remplace ce qu'on a pour ce mode (VFO-B : liste à part)
+        const H = m.side === 'B' ? histB : hist;
+        for (let i = H.length - 1; i >= 0; i--) if (H[i].mode === m.mode) H.splice(i, 1);
+        for (const it of m.items || []) H.push({ slot: it.slot, mode: m.mode, list: it.list || [] });
+        H.sort((a, b) => a.slot - b.slot);
         if (m.mode === mode) redrawAll();
         return true;
       }
       if (m.t === 'ftx') {
-        lastDecode = Date.now();
+        const B = m.side === 'B'; // récepteur SUB (VFO-B) en double réception
+        if (!B) lastDecode = Date.now();
+        const H = B ? histB : hist;
         const it = { slot: m.slot, mode: m.mode, list: m.list || [] };
-        hist.push(it);
-        while (hist.length > 240) hist.shift();
-        if (m.mode === mode) addSlot(it, false);
+        H.push(it);
+        while (H.length > 240) H.shift();
+        if (m.mode === mode) addSlot(it, false, B ? 'B' : undefined);
         return true;
       }
       return false;

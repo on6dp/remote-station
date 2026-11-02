@@ -142,7 +142,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .mtr-arc.thick { stroke-width: 3.2; stroke: #cfd6df; }
 #face .mtr-tick { stroke: #e9edf2; stroke-width: 1; }
 #face .mtr-tick.blue { stroke: #4f7dff; }
-#face .mtr-num { fill: #e9edf2; font-size: 7px; font-weight: 700; font-style: italic; }
+#face .mtr-num { fill: #e9edf2; font-size: 7px; font-weight: 700; font-style: italic; paint-order: stroke; stroke: #0b0f17; stroke-width: 2px; stroke-linejoin: round; } /* liseré sombre : chiffres détachés des arcs */
 #face .mtr-num.big { font-size: 8.5px; }
 #face .mtr-num.blue { fill: #4f7dff; }
 #face .mtr-name { fill: #e9edf2; font-size: 7px; font-weight: 700; font-style: italic; }
@@ -354,3 +354,10 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .fc-tx .fc-digim:hover { background: #164466; color: #fff; border-color: #5fb3ff; }
 .fc-tx .vx > .vx-h, .fc-tx .fc-digih { flex: 0 0 auto; min-width: 150px; white-space: nowrap; flex-wrap: nowrap; }
 .fc-tx .vx-h .vx-title, .fc-tx .fc-digih .vx-title { white-space: nowrap; }
+
+/* CW : indicateur d'accord sous le petit filtre */
+#face .flt-cwend { fill: #e8edf3; font-size: 6px; font-weight: 700; }
+#face .flt-cwticks { stroke: #8b96a8; stroke-width: .7; }
+#face .flt-cwmid { fill: #ff2b1c; }
+#face .flt-cwind { fill: #b9c2cf; }
+#face .flt-cwind.ok { fill: #ffffff; }

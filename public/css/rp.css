@@ -1573,3 +1573,33 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 #ctrlBtn[data-state='busy'] { border-color: #5b6573; color: #aab3bf; }
 @keyframes ctlPulse { 0%, 100% { box-shadow: 0 0 4px rgba(57,255,20,.35); } 50% { box-shadow: 0 0 16px 3px rgba(57,255,20,.75); } }
 @media (prefers-reduced-motion: reduce) { #ctrlBtn[data-state='free'], #ctrlBtn[data-state='here'] { animation: none; box-shadow: 0 0 10px rgba(57,255,20,.6); } }
+
+/* FTDX101 en double réception (page /ftdx101) : FT8 / FT4 / FT2 décodés sur MAIN (VFO-A) et SUB (VFO-B) —
+   deux cascades côte à côte et quatre colonnes (activité de bande et fréquence RX de chaque VFO) */
+.ft-wfrow { display: grid; grid-template-columns: minmax(0, 1fr); }
+.ft-dual .ft-wfrow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: end; }
+.ft-wfa, .ft-sd { display: none; }
+.ft-dual .ft-wfa { display: inline; font-weight: 700; letter-spacing: .6px; color: #ffcf4a; margin-right: 4px; }
+.ft-dual .ft-sd { display: inline; font-style: normal; color: #ffcf4a; }
+.ft-sd.b, .ft-wfh { color: #7fb2ff !important; }
+.ft-wfa b, .ft-wfh b { color: #fff; font-weight: 700; margin-left: 4px; }
+.ft-wfh { padding: 4px 8px; font-size: 10.5px; font-weight: 700; letter-spacing: .6px; background: rgba(0, 0, 0, .35); border-bottom: 1px solid var(--v2-border-dark); }
+#ftWfB { height: 140px; }
+#ftScaleB { height: 44px; }
+.ft-txside { display: none; align-items: center; gap: 2px; }
+.ft-dual .ft-txside { display: inline-flex; }
+.ft-txside .dg-f { margin-right: 4px; }
+.ft-txside .btn[data-side="A"][aria-pressed="true"] { background: #b8860b; border-color: #ffcf4a; color: #fff; }
+.ft-txside .btn[data-side="B"][aria-pressed="true"] { background: #2456b8; border-color: #7fb2ff; color: #fff; }
+.ft-dual .dg-cols { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 6px; }
+.ft-dual .dg-cols > .dg-col:nth-child(3) { margin-right: 6px; } /* l'espace entre les colonnes A et B */
+.ft-dual .dg-vsplit { display: none; }
+.ft-dual .dg-col { border-top: 2px solid #b8860b; }
+.ft-dual .dg-col.ft-colb { border-top-color: #2456b8; }
+/* VFO qui émet : son cadre et ses colonnes en évidence */
+.ft-dual:not(.ft-txb) .dg-col:not(.ft-colb), .ft-dual.ft-txb .dg-col.ft-colb { box-shadow: inset 0 0 0 1px rgba(255, 90, 74, .35); }
+/* Colonnes plus étroites : sans distance ni azimut */
+.ft-dual .dg-th.ft, .ft-dual .dg-row.ft { grid-template-columns: 50px 26px 28px 36px minmax(90px, 3fr) minmax(0, 1.1fr); gap: 3px; padding-inline: 4px; font-size: 12px; }
+.ft-dual .dg-th.ft span:nth-child(n+7), .ft-dual .dg-row.ft span:nth-child(n+7) { display: none; }
+.ft-dual .dg-h .dg-note { display: none; }
+@media (max-width: 1100px) { .ft-dual .dg-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 6px; } .ft-dual .ft-wfrow { grid-template-columns: minmax(0, 1fr); } }

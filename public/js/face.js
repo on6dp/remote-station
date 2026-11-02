@@ -500,13 +500,13 @@
     m.title = el('text', { x: cx, y: y0 + 8, class: 'lcd-ttl', 'text-anchor': 'middle' }, g, side === 'A' ? 'PO METER' : 'ALC METER');
     const scales = side === 'A'
       ? [['S', 244, [[0.05, '1'], [0.17, '3'], [0.29, '5'], [0.41, '7'], [0.55, '9'], [0.7, '+20', 1], [0.84, '+40', 1], [0.97, '+60', 1]], true],
-        ['PO', 231, [[0.03, '0'], [0.2, '10'], [0.38, '50'], [0.52, '100'], [0.64, '150'], [0.76, '200'], [0.88, '250']]],
-        ['COMP', 218, [[0.05, '0'], [0.25, '5'], [0.45, '10'], [0.65, '15'], [0.85, '20']]],
-        ['TEMP', 205, [[0.05, '0'], [0.2, '20'], [0.36, '40'], [0.52, '60'], [0.68, '80'], [0.86, '100']]]]
+        ['PO', 229, [[0.03, '0'], [0.2, '10'], [0.38, '50'], [0.52, '100'], [0.64, '150'], [0.76, '200'], [0.88, '250']]],
+        ['COMP', 214, [[0.05, '0'], [0.25, '5'], [0.45, '10'], [0.65, '15'], [0.85, '20']]],
+        ['TEMP', 199, [[0.05, '0'], [0.2, '20'], [0.36, '40'], [0.52, '60'], [0.68, '80'], [0.86, '100']]]]
       : [['S', 244, [[0.05, '1'], [0.17, '3'], [0.29, '5'], [0.41, '7'], [0.55, '9'], [0.7, '+20', 1], [0.84, '+40', 1], [0.97, '+60', 1]], true],
-        ['ALC', 231, [[0.82, '50']]],
-        ['ID', 218, [[0.05, '0'], [0.3, '5'], [0.55, '10'], [0.8, '15']]],
-        ['SWR', 205, [[0.05, '1.0'], [0.24, '1.5'], [0.36, '2'], [0.5, '3'], [0.66, '5'], [0.95, '∞']]]];
+        ['ALC', 229, [[0.82, '50']]],
+        ['ID', 214, [[0.05, '0'], [0.3, '5'], [0.55, '10'], [0.8, '15']]],
+        ['SWR', 199, [[0.05, '1.0'], [0.24, '1.5'], [0.36, '2'], [0.5, '3'], [0.66, '5'], [0.95, '∞']]]];
     for (const [name, r, ticks, isS] of scales) {
       if (isS) {
         el('path', { d: arcPath(cx, cy, r, 0, 0.55), class: 'mtr-arc' }, g);
@@ -515,8 +515,8 @@
       for (const [f, lab, blue] of ticks) {
         const p = arcPt(cx, cy, r, f), q = arcPt(cx, cy, isS ? r + 4 : r - 3, f);
         el('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1], class: 'mtr-tick' + (blue ? ' blue' : '') }, g);
-        // Chiffres écartés des arcs : au-dessus de l'arc S, à mi-chemin entre deux arcs pour les autres échelles
-        const tp = arcPt(cx, cy, isS ? r + 9 : r - 9.5, f);
+        // Chiffres écartés des arcs (15 unités entre deux arcs) : au-dessus de l'arc S, à mi-chemin entre deux arcs pour les autres
+        const tp = arcPt(cx, cy, isS ? r + 9 : r - 10.5, f);
         el('text', { x: tp[0], y: tp[1], class: 'mtr-num' + (blue ? ' blue' : '') + (isS ? ' big' : ''), 'text-anchor': 'middle' }, g, lab);
       }
       const lp = arcPt(cx, cy, r - (isS ? 0 : 3), -0.04);
@@ -551,6 +551,18 @@
     f.cup = el('path', { d: '', class: 'flt-cup', style: 'display:none' }, g);
     f.nline = el('line', { x1: x0, y1: y0 + 6, x2: x0, y2: y0 + h - 6, class: 'flt-notch', style: 'display:none' }, g);
     f.base = el('rect', { x: x0 + 6, y: y0 + h - 4, width: w - 12, height: 2.5, class: 'flt-base' }, g);
+    // CW : indicateur d'accord sous le filtre, comme sur le TRX : « − » … « + », repère rouge au milieu (= le pitch),
+    // et un petit trait gris à la fréquence du signal reçu ; trait au milieu = signal bien accordé (en RX comme en TX)
+    f.cwt = el('g', { class: 'flt-cwt', style: 'display:none' }, g);
+    const cy = y0 + h + 4, ca = x0 + 9, cb = x0 + w - 9;
+    el('text', { x: ca - 5, y: cy + 2.6, class: 'flt-cwend', 'text-anchor': 'middle' }, f.cwt, '−');
+    el('text', { x: cb + 5, y: cy + 2.6, class: 'flt-cwend', 'text-anchor': 'middle' }, f.cwt, '+');
+    let cd = '';
+    for (let i = 0; i <= 20; i++) { const x = ca + i * (cb - ca) / 20; cd += 'M' + x.toFixed(1) + ' ' + (cy - (i % 5 ? 1 : 2)) + 'V' + (cy + (i % 5 ? 1 : 2)); }
+    el('path', { d: cd, class: 'flt-cwticks' }, f.cwt);
+    el('path', { d: 'M' + ((ca + cb) / 2 - 2.2) + ' ' + (cy - 4.2) + 'H' + ((ca + cb) / 2 + 2.2) + 'L' + ((ca + cb) / 2) + ' ' + (cy - 1.6) + 'Z', class: 'flt-cwmid' }, f.cwt);
+    f.cwInd = el('rect', { x: (ca + cb) / 2 - 1.5, y: cy - 2.6, width: 3, height: 5.2, rx: 0.8, class: 'flt-cwind', style: 'display:none' }, f.cwt);
+    f.cwA = ca; f.cwB = cb; f.cwOff = null;
     return f;
   }
   // VC TUNE : position prévue pendant qu'on tourne (le TRX ne la renvoie qu'au cycle de lecture suivant)
@@ -573,7 +585,8 @@
   }
   // Fréquence BF du centre de la bande passante (sans le décalage SHIFT), selon le mode
   const FLT_SPAN = 4200; // largeur (Hz de BF) représentée par le cadre du filtre
-  function audioCenter(md, hz) { return /CW/.test(md) ? 700 : /DATA|RTTY|PSK/.test(md) ? 1500 : /AM|FM/.test(md) ? hz / 2 : 300 + hz / 2; }
+  // CW : le filtre est centré sur le pitch (KEY PITCH du TRX, 700 Hz par défaut)
+  function audioCenter(md, hz) { return /CW/.test(md) ? (S().cwPitch || 700) : /DATA|RTTY|PSK/.test(md) ? 1500 : /AM|FM/.test(md) ? hz / 2 : 300 + hz / 2; }
   // NOTCH du récepteur (MAIN : notch / notchFreq ; SUB : notchB / notchFreqB) : fréquence BF et place dans le cadre du filtre
   // (cadre = 4 kHz de large ; en bande latérale inférieure, le TRX montre la bande à l'envers)
   function notchOf(s, side, md, hz, sh) {
@@ -680,7 +693,7 @@
     const defs = el('defs', {}, g);
     for (const [sd, x0] of [['A', X(5)], ['B', X(289)]]) {
       const cp = el('clipPath', { id: 'lcdClip' + sd }, defs);
-      el('rect', { x: x0 - 2, y: Y(2), width: 194, height: 50 }, cp);
+      el('rect', { x: x0 - 2, y: Y(2), width: 194, height: 54 }, cp); // S-mètre et 1re échelle avec ses chiffres
     }
     // Rangée du bas, comme sur l'écran du TRX ; la dernière case montre la fonction réglée par le bouton MULTI
     const BOT = [['CENTER'], ['SPAN', () => openSpan()],
@@ -1585,6 +1598,7 @@
       }
       LCD.flt = LCD.flt || {};
       LCD.flt[side] = { vc: vcOn && vcPos != null ? vcPos : null, fr, off: Math.max(-0.4, Math.min(0.4, sh / 2400)), hz, sh, mode: mode || '', notch: nf, cont: cf };
+      fl.cwt.style.display = /^CW/.test(mode || '') ? '' : 'none';
       fl.center.setAttribute('x1', cx); fl.center.setAttribute('x2', cx);
       fl.base.setAttribute('x', cx - tw / 2 + 2); fl.base.setAttribute('width', Math.max(4, tw - 4));
       const v = LCD['v' + side];
@@ -2165,6 +2179,31 @@
       }
     }
   }
+  // CW : signal le plus fort à ± 200 Hz du pitch → trait gris de l'indicateur d'accord (au milieu = bien accordé) ;
+  // en émission sur ce VFO, le trait reste au milieu (on émet sur la fréquence affichée)
+  const CWT_HZ = 200;
+  function cwTune(side, fl, sp, ff) {
+    if (!fl.cwInd) return;
+    const s = S(), md = (side === 'B' ? s.modeB : s.mode) || '';
+    let off = null;
+    if (/^CW/.test(md)) {
+      const txHere = s.tx && (s.txVfo === 1) === (side === 'B');
+      if (txHere) off = 0;
+      else if (sp) {
+        const pitch = s.cwPitch || 700, binHz = (WF.rate / 2) / (NFFT / 2);
+        let best = 0, bf = 0;
+        for (let j = Math.floor((pitch - CWT_HZ) / binHz); j <= Math.ceil((pitch + CWT_HZ) / binHz); j++) if (j > 0 && j < sp.length && sp[j] > best) { best = sp[j]; bf = j * binHz; }
+        if (best > 0.62) off = bf - pitch; // ~ 13 dB au-dessus du bruit
+      }
+    }
+    if (off == null) { fl.cwOff = null; fl.cwInd.style.display = 'none'; return; }
+    fl.cwOff = fl.cwOff == null ? off : fl.cwOff + (off - fl.cwOff) * 0.5;
+    const rev = /^CW-?R|CW-L/.test(md) ? -1 : 1; // CW inversée : signal plus haut = plus bas en fréquence
+    const x = (fl.cwA + fl.cwB) / 2 + rev * Math.max(-1, Math.min(1, fl.cwOff / CWT_HZ)) * (fl.cwB - fl.cwA) / 2;
+    fl.cwInd.setAttribute('x', (x - 1.5).toFixed(1));
+    fl.cwInd.style.display = '';
+    fl.cwInd.classList.toggle('ok', Math.abs(fl.cwOff) < 15);
+  }
   function wfTick() {
     const cv = $('scope');
     const fresh = Date.now() - WF.at < 3000;
@@ -2177,7 +2216,7 @@
       for (const [side, sp] of [['A', specs[0]], ['B', specs[1] || (S().dualRx !== 0 && !WF.two ? null : null)]]) {
         const fl = LCD['f' + side];
         if (!fl) continue;
-        if (!sp) { fl.bars.setAttribute('d', ''); continue; }
+        if (!sp) { fl.bars.setAttribute('d', ''); cwTune(side, fl, null); continue; }
         let d = '';
         const n = 64, bot = fl.y0 + fl.h - 6, hh = fl.h - 16;
         // Même échelle que le trapèze du filtre (cadre = FLT_SPAN Hz de BF, centré sur le milieu de la bande passante,
@@ -2196,6 +2235,7 @@
           d += 'M' + x.toFixed(1) + ' ' + bot + 'V' + (bot - Math.pow(v, 1.4) * hh).toFixed(1);
         }
         fl.bars.setAttribute('d', d);
+        cwTune(side, fl, sp, ff);
       }
       if (cv.style.visibility !== 'hidden' && !L.hold) {
         const c2 = cv.getContext('2d');
@@ -2210,7 +2250,7 @@
         else for (const rg of scopeRegions(W, H, specs)) { const mh = fitHz(rg.name === 'SUB' ? 'B' : 'A'); drawScope(c2, rg, pal, nbFor(mh), lvl, mh); }
       }
     } else {
-      for (const side of ['A', 'B']) if (LCD['f' + side]) LCD['f' + side].bars.setAttribute('d', '');
+      for (const side of ['A', 'B']) if (LCD['f' + side]) { LCD['f' + side].bars.setAttribute('d', ''); cwTune(side, LCD['f' + side], null); }
     }
     setTimeout(wfTick, WF_SPEEDS[L.wfSpeed][1]);
   }

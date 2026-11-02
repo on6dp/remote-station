@@ -375,7 +375,12 @@ function relayAudio(buf) {
 
 // ---------------------------------------------------------------- modes numériques (FT8 / FT4)
 // Le décodage tourne dans un Worker (lib/digi-worker.js) dès qu'un membre ouvre la fenêtre FT8/FT4.
-const digi = { worker: null, hist: { FT8: [], FT4: [], FT2: [], WSPR: [], JT65: [] }, latency: null, ms: 0, last: 0, dial: 0, jtty: new Map() };
+const digi = { worker: null, hist: { FT8: [], FT4: [], FT2: [], WSPR: [], JT65: [] }, histB: { FT8: [], FT4: [], FT2: [] }, latency: null, ms: 0, last: 0, dial: 0, jtty: new Map() };
+const FT_DUAL_MODES = ['FT8', 'FT4', 'FT2'];
+/** Double décodage FT (FTDX101 : récepteur SUB sur la voie droite) possible : TRX à deux voies son, double réception */
+function ftDualOk() { return !!(station && station.rig && station.rig.DUAL_AUDIO && radio.dualRx === 1); }
+/** Ce membre veut aussi les décodages du récepteur SUB (page des modes numériques de la face avant FTDX101) */
+const ftDualConn = (c) => !!(c.ftDual && FT_DUAL_MODES.indexOf(c.digi) >= 0);
 const DIGI_MODES = ['FT8', 'FT4', 'FT2', 'RTTY', 'WSPR', 'JT65', 'JTTY', 'CW', 'SSTV'];
 // Images SSTV reçues (mémoire + dossier sstv/)
 const { SstvStore } = require('./lib/sstv-store.js');
@@ -429,6 +434,8 @@ function startDigi() {
   }
   digi.worker.on('message', onDigi);
   digi.apKey = '';
+  digi.apKeyB = '';
+  digi.ftB = false;
   digi.worker.on('error', (e) => console.error('Décodeur FT8/FT4 : ' + e.message));
   digi.worker.on('exit', () => { digi.worker = null; });
 }
@@ -437,6 +444,12 @@ function updateDigi() {
   if (modes.size) startDigi();
   if (digi.worker) {
     digi.worker.postMessage({ t: 'modes', modes: Array.from(modes) });
+    // Décodage FT du récepteur SUB : quelqu'un l'a demandé (ou l'émission auto est sur le VFO-B) et le TRX le permet
+    let wantB = false;
+    for (const c of ops) if (ftDualConn(c)) wantB = true;
+    if (seq && seq.on && seq.side === 'B') wantB = true;
+    wantB = wantB && ftDualOk();
+    if (wantB !== digi.ftB) { digi.ftB = wantB; digi.worker.postMessage({ t: 'ftb', on: wantB }); }
     digi.worker.postMessage({ t: 'dial', hz: radio.freq || 0 });
     const cfgs = {};
     for (const c of ops) if (c.digi === 'RTTY') for (const r of [c.rtty, rttyB(c)]) if (r) cfgs[r.key] = r;
@@ -457,7 +470,7 @@ function onDigi(m) {
     fr.writeUInt16BE(Math.round((m.df || 6.25) * 1000), 1);
     fr.writeUInt32BE(Math.floor(((m.at || Date.now()) % 86400000) / 100), 3);
     Buffer.from(m.row.buffer, m.row.byteOffset, m.row.length).copy(fr, 7);
-    for (const c of ops) if (c.digi && c.backlog < 65536 && (m.ch !== 1 || c.digi === 'RTTY')) c.send(fr);
+    for (const c of ops) if (c.digi && c.backlog < 65536 && (m.ch !== 1 || c.digi === 'RTTY' || ftDualConn(c))) c.send(fr);
     return;
   }
   if (m.t === 'log') return console.error(m.msg);
@@ -515,10 +528,18 @@ function onDigi(m) {
     // Pays DXCC, distance et azimut de la station qui émet chaque message (comme JTDX)
     if (Array.isArray(m.list) && m.mode !== 'WSPR' && m.mode !== 'JT65') for (const d of m.list) dxInfo(d);
     const item = { slot: m.slot, list: m.list };
-    const h = digi.hist[m.mode];
+    const sideB = m.ch === 1;
+    const h = (sideB ? digi.histB : digi.hist)[m.mode];
     if (!h) return;
     h.push(item);
     while (h.length > (m.mode === 'FT2' ? 120 : 40)) h.shift();
+    if (sideB) {
+      // Récepteur SUB : à ceux qui l'ont demandé ; l'émission auto sur le VFO-B suit ses décodages
+      const msgB = JSON.stringify({ t: 'ftx', mode: m.mode, slot: m.slot, list: m.list, latency: m.latency, side: 'B' });
+      for (const c of ops) if (c.digi === m.mode && ftDualConn(c)) c.send(msgB);
+      seqOnDecodes(m.mode, m.slot, m.list, 'B');
+      return;
+    }
     digi.latency = m.latency;
     digi.ms = m.ms;
     if (m.engine) digi.engine = m.engine;
@@ -527,7 +548,7 @@ function onDigi(m) {
     digi.last = Date.now();
     const msg = JSON.stringify({ t: 'ftx', mode: m.mode, slot: m.slot, list: m.list, latency: m.latency });
     for (const c of ops) if (c.digi === m.mode) c.send(msg);
-    seqOnDecodes(m.mode, m.slot, m.list);
+    seqOnDecodes(m.mode, m.slot, m.list, 'A');
   }
 }
 
@@ -1932,7 +1953,7 @@ function seqText(s) {
 function seqPublic() {
   if (!seq) return null;
   return { on: !!seq.on, mode: seq.mode, ntx: seq.ntx, dx: seq.dx.call, grid: seq.dx.grid, rpt: seq.rptSent, rptRcvd: seq.rptRcvd || '',
-    parity: seq.parity, call1st: !!seq.call1st, by: seq.conn.user.call, text: seqText(seq) };
+    parity: seq.parity, call1st: !!seq.call1st, by: seq.conn.user.call, text: seqText(seq), side: seq.side || 'A' };
 }
 function seqOff(reason, level) {
   if (!seq || !seq.on) return;
@@ -1942,10 +1963,20 @@ function seqOff(reason, level) {
   updateDigi();
   broadcast();
 }
+/** VFO d'émission = côté du QSO (FTDX101 : TX sur MAIN pour les colonnes A, sur SUB pour les colonnes B). */
+function seqTxSide() {
+  if (!seq || !seq.on || ptt.active || !station || !station.rig || !station.rig.DUAL_AUDIO) return;
+  const want = seq.side === 'B' ? 1 : 0;
+  if (radio.txVfo === want) return;
+  if (seq.side !== 'B' && radio.txVfo == null) return;
+  toStation({ t: 'cmd', op: 'ctl', id: 'txVfo', value: want });
+  radio.txVfo = want; // relu ensuite sur le TRX
+}
 /** Prochaine émission de la séquence (message courant, période de l'opérateur). */
 function seqNext() {
   if (!seq || !seq.on || ftxPend || ptt.active) return;
   if (controller !== seq.conn) return seqOff('main perdue');
+  seqTxSide();
   if (seq.ntx >= 1 && seq.ntx <= 5 && !SEQ_CALL_RE.test(baseCall(seq.dx.call))) return seqOff('pas de correspondant (double-clic sur son message)', 'error');
   const text = seqText(seq);
   const now = Date.now();
@@ -2011,8 +2042,9 @@ function seqReact(payload, d) {
   return false;
 }
 /** Décodages d'une période : la séquence avance si le correspondant (ou, en appel CQ, celui qui répond) nous écrit. */
-function seqOnDecodes(mode, slot, list) {
+function seqOnDecodes(mode, slot, list, side) {
   if (!seq || !seq.on || seq.mode !== mode || !Array.isArray(list) || !FTX_SLOT[mode]) return;
+  if ((seq.side || 'A') !== (side || 'A')) return; // QSO sur l'autre récepteur (FTDX101 : MAIN / SUB)
   const me = baseCall(seqMe());
   const theirParity = Math.round(slot / FTX_SLOT[mode]) % 2;
   const words = (d) => String(d.msg || '').toUpperCase().replace(/[<>]/g, '').split(/\s+/).filter(Boolean);
@@ -2126,8 +2158,11 @@ function seqStart(conn, m) {
     rptRcvd: same ? seq.rptRcvd : '', free, call1st: m.call1st !== false,
     watchMsg: '', watchSince: 0, qsoStart: same ? seq.qsoStart : 0, txDial: 0, keyNow: !!m.keyNow,
     // Fréquence audio du correspondant (fréquence RX) : l'aide AP du décodeur pour ce QSO s'y applique (comme WSJT-X)
-    rxf: Number(m.rxf) >= 100 && Number(m.rxf) <= 3000 ? Math.round(Number(m.rxf)) : (same && seq.rxf) || 0
+    rxf: Number(m.rxf) >= 100 && Number(m.rxf) <= 3000 ? Math.round(Number(m.rxf)) : (same && seq.rxf) || 0,
+    // Récepteur du correspondant (FTDX101 en double réception) : l'émission part sur ce VFO (A = MAIN, B = SUB)
+    side: m.side === 'B' && ftDualOk() ? 'B' : 'A'
   };
+  seqTxSide();
   lastCtrlActivity = Date.now();
   // Émission en cours (message précédent) : le nouveau message part à la période suivante
   if (ftxPend && ftxPend.state === 'wait') ftxCancel('remplacée par le nouveau message', true);
@@ -2142,6 +2177,16 @@ function seqCfg(conn, m) {
   if (f0 >= 200 && f0 <= 2900) seq.f0 = f0;
   if (m.parity === 0 || m.parity === 1 || m.parity === null) seq.parity = m.parity;
   if (typeof m.call1st === 'boolean') seq.call1st = m.call1st;
+  // VFO d'émission changé pendant la séquence (FTDX101 en double réception) : pris en compte dès que le TRX est en réception
+  if (m.side === 'A' || m.side === 'B') {
+    const side = m.side === 'B' && ftDualOk() ? 'B' : 'A';
+    if (side !== seq.side) {
+      seq.side = side;
+      if (ftxPend && ftxPend.state === 'wait' && ftxPend.conn === seq.conn) ftxCancel('VFO d’émission changé', true); // repart à la bonne fréquence
+      updateDigi();
+      seqTxSide();
+    }
+  }
   seqChanged();
 }
 
@@ -2586,6 +2631,8 @@ function onOperator(conn, m) {
       if (mode === 'CW' && !cc) mode = null;
       const changed = conn.digi !== mode || (conn.rtty && conn.rtty.key) !== (rc && rc.key) || (conn.rtty2 && conn.rtty2.key) !== (rc2 && rc2.key) ||
         (conn.cw && conn.cw.key) !== (cc && cc.key);
+      const dual = !!m.ftDual && FT_DUAL_MODES.indexOf(mode) >= 0;
+      if (dual !== !!conn.ftDual) { conn.ftDual = dual; if (!changed) updateDigi(); }
       conn.digi = mode;
       conn.rtty = rc;
       conn.rtty2 = rc2;
@@ -2593,6 +2640,7 @@ function onOperator(conn, m) {
       if (changed) updateDigi();
       // Historique : à l'ouverture, ou sur demande (fenêtre séparée qui s'ouvre, retour dans le dashboard)
       if (digi.hist[mode] && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.hist[mode] });
+      if (conn.ftDual && digi.histB[mode] && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.histB[mode], side: 'B' });
       if (mode === 'JTTY' && (changed || m.hist)) send(conn, { t: 'jtty_hist', items: Array.from(digi.jtty.values()) });
       if (mode === 'SSTV' && (changed || m.hist)) send(conn, { t: 'sstv_list', items: sstvStore.list() });
       return;
@@ -3377,8 +3425,14 @@ function onStation(conn, m) {
     const on = !!(seq && seq.on);
     const ap = { t: 'ap', mycall: txCall(), mygrid: String(cfg.stationGrid || ''), hiscall: on ? seq.dx.call : '', hisgrid: on ? seq.dx.grid : '',
       qp: on ? seq.progress || 0 : 0, rx: seq ? seq.rxf || seq.f0 : 1500, tx: seq ? seq.f0 : 1500 };
-    const k = JSON.stringify(ap);
-    if (k !== digi.apKey) { digi.apKey = k; digi.worker.postMessage(ap); }
+    // Le correspondant n'aide le décodeur que du côté de son QSO (MAIN ou SUB) ; l'autre côté garde notre indicatif
+    const onB = on && seq.side === 'B';
+    const apA = onB ? Object.assign({}, ap, { hiscall: '', hisgrid: '', qp: 0, rx: 1500, tx: 1500 }) : ap;
+    const apB = Object.assign({}, onB ? ap : apA, { ch: 1 });
+    const k = JSON.stringify(apA);
+    if (k !== digi.apKey) { digi.apKey = k; digi.worker.postMessage(apA); }
+    const kB = JSON.stringify(apB);
+    if (kB !== digi.apKeyB) { digi.apKeyB = kB; digi.worker.postMessage(apB); }
   }
   // Sécurité : la radio est en CAT TX alors qu'aucun PTT n'est actif côté serveur
   if (radio.tx === 1 && !ptt.active) toStation({ t: 'cmd', op: 'ptt', on: false, reason: 'incohérence serveur' });
