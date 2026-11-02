@@ -2006,6 +2006,8 @@
       $('rtF' + sfx).textContent = Math.round(x.f);
       const own = d && d.vfo === (ch ? 'B' : 'A');
       $('rtRf' + sfx).textContent = d ? (((d.hz + d.sign * x.f) / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kHz' + (own ? '' : ' (VFO ' + d.vfo + ')')) : '';
+      // Comme en FT8 : fréquence en grand, sur fond rouge (« TX ») pour le décodeur d'où part l'émission
+      $('rtRf' + sfx).classList.toggle('tx', ch === rtTx && !!d);
       $('rtRf' + sfx).title = !d ? '' : own ? 'Fréquence du signal suivi : VFO ' + d.vfo + ' ' + (d.sign > 0 ? '+' : '−') + ' ' + Math.round(x.f) + ' Hz'
         : 'Réception simple : ce décodeur lit le même récepteur que l’autre, celui du VFO ' + d.vfo + ' (le VFO ' + (ch ? 'B' : 'A') + ' n’est pas écouté). Fréquence = VFO ' + d.vfo + ' ' + (d.sign > 0 ? '+' : '−') + ' ' + Math.round(x.f) + ' Hz.';
     });
