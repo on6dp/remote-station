@@ -1477,7 +1477,7 @@
     if (L.fine) fl.push('FINE'); else if (L.fast) fl.push('FAST');
     LCD.flags.textContent = live ? fl.join('  ·  ') : (st.station ? 'TRX muet (éteint ou câble ?)' : 'Station hors ligne');
     LCD.flags.classList.toggle('tx', tx);
-    LCD.span.textContent = ['', 'SUB / MAIN · ', 'MAIN | SUB · ', 'FILTRES · '][L.disp] + 'BF 0–' + SPANS[L.wfSpan] / 1000 + ' kHz' + (L.hold ? ' · HOLD' : '');
+    LCD.span.textContent = ['', 'SUB / MAIN · ', 'MAIN | SUB · ', 'FILTRES · '][L.disp] + spanLabel() + (L.hold ? ' · HOLD' : '');
     for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 ? 'none' : '';
     drawFunc(s);
     for (const b of LCD.bot || []) {
@@ -1740,6 +1740,24 @@
   const palCss = (k) => 'linear-gradient(to bottom, ' + PAL_STOPS[k].slice(1).reverse().map(([v, c]) => 'rgb(' + c.join(',') + ') ' + Math.round((1 - v) * 100) + '%').join(', ') + ')';
 
   // Zones du scope selon DISP : MAIN seul ; SUB au-dessus de MAIN ; MAIN | SUB côte à côte
+  // Échelle de la BF de chaque récepteur : de 0 au haut de la bande passante de son filtre (+ petite marge), sans dépasser
+  // le SPAN choisi ; le spectre et la cascade remplissent ainsi toute la largeur de la partie du VFO-A et du VFO-B
+  function fitHz(side) {
+    const span = Math.min(SPANS[L.wfSpan], (WF.rate || 2 * SPANS[L.wfSpan]) / 2), f = LCD.flt && LCD.flt[side];
+    if (!f || !f.hz) return span;
+    const hi = audioCenter(f.mode || '', f.hz) + (f.sh || 0) + f.hz / 2;
+    return Math.max(500, Math.min(span, Math.ceil((hi * 1.05 + 100) / 100) * 100));
+  }
+  const nbFor = (hz) => Math.max(2, Math.floor((NFFT / 2) * hz / ((WF.rate || 2 * hz) / 2)));
+  const kHz = (hz) => (hz / 1000).toFixed(hz % 1000 ? 1 : 0).replace('.', ',');
+  function spanLabel() {
+    if (L.disp === 1 || L.disp === 2) {
+      const a = fitHz('A'), b = fitHz('B');
+      return 'BF 0–' + (a === b ? kHz(a) : (L.disp === 1 ? kHz(b) + ' / 0–' + kHz(a) : kHz(a) + ' | 0–' + kHz(b))) + ' kHz';
+    }
+    if (L.disp === 3) return 'BF 0–' + SPANS[L.wfSpan] / 1000 + ' kHz';
+    return 'BF 0–' + kHz(fitHz(L.d3 ? activeSide() : 'A')) + ' kHz';
+  }
   function scopeRegions(W, H, specs) {
     const sub = WF.two ? specs[1] : null;
     if (L.disp === 1) {
@@ -1941,10 +1959,14 @@
         c2.strokeStyle = 'rgba(205,215,232,.8)'; c2.lineWidth = 1.4;
         c2.beginPath();
         const n = Math.floor((w - 8) / 1.6);
+        // Échelle du filtre (FLT_SPAN Hz de BF sur la largeur, à l'envers en bande latérale inférieure)
+        const binHz = (WF.rate / 2) / (NFFT / 2), fc = audioCenter(f.mode || '', f.hz || 2400) + (f.sh || 0);
+        const rev = /^LSB$|-L$/.test(f.mode || '') ? -1 : 1, stepHz = (w - 8) / n / w * FLT_SPAN;
         for (let k = 0; k < n; k++) {
-          const i0 = Math.floor(k / n * nb), i1 = Math.max(i0 + 1, Math.floor((k + 1) / n * nb));
+          const fq = fc + rev * (x0 + 4 + (k + 0.5) * (w - 8) / n - cx) / w * FLT_SPAN;
+          if (fq < 0 || fq > WF.rate / 2) continue;
           let m = 0;
-          for (let j = i0; j < i1 && j < nb; j++) if (sp[j] > m) m = sp[j];
+          for (let j = Math.floor((fq - stepHz / 2) / binHz), j1 = Math.max(j + 1, Math.ceil((fq + stepHz / 2) / binHz)); j < j1; j++) if (j >= 0 && j < sp.length && sp[j] > m) m = sp[j];
           // Hauteur sur toute la plage (jusqu'à ~45 dB au-dessus du bruit) : plus de plafond à mi-hauteur
           const v = Math.max(0, Math.min(1, (m + lvl) / 1.5));
           const x = x0 + 4 + k * (w - 8) / n;
@@ -2006,11 +2028,19 @@
         if (!sp) { fl.bars.setAttribute('d', ''); continue; }
         let d = '';
         const n = 64, bot = fl.y0 + fl.h - 6, hh = fl.h - 16;
+        // Même échelle que le trapèze du filtre (cadre = FLT_SPAN Hz de BF, centré sur le milieu de la bande passante,
+        // à l'envers en bande latérale inférieure) : le spectre tombe dans le filtre et remplit sa largeur, comme sur le TRX
+        const ff = LCD.flt && LCD.flt[side], binHz = (WF.rate / 2) / (NFFT / 2);
+        const fc = ff ? audioCenter(ff.mode || '', ff.hz) + (ff.sh || 0) : FLT_SPAN / 2;
+        const rev = ff && /^LSB$|-L$/.test(ff.mode || '') ? -1 : 1;
+        const cxf = fl.x0 + fl.w / 2 + (ff ? ff.off : 0) * fl.w, stepHz = (fl.w - 12) / n / fl.w * FLT_SPAN;
         for (let i = 0; i < n; i++) {
+          const x = fl.x0 + 6 + (i + 0.5) * (fl.w - 12) / n;
+          const f = fc + rev * (x - cxf) / fl.w * FLT_SPAN;
+          if (f < 0 || f > WF.rate / 2) continue;
           let m = 0;
-          for (let j = Math.floor(i / n * nb), j1 = Math.max(j + 1, Math.floor((i + 1) / n * nb)); j < j1 && j < nb; j++) if (sp[j] > m) m = sp[j];
+          for (let j = Math.floor((f - stepHz / 2) / binHz), j1 = Math.max(j + 1, Math.ceil((f + stepHz / 2) / binHz)); j < j1; j++) if (j >= 0 && j < sp.length && sp[j] > m) m = sp[j];
           const v = Math.max(0, Math.min(1, (m + lvl) / 1.5));
-          const x = fl.x0 + 6 + i * (fl.w - 12) / n;
           d += 'M' + x.toFixed(1) + ' ' + bot + 'V' + (bot - Math.pow(v, 1.4) * hh).toFixed(1);
         }
         fl.bars.setAttribute('d', d);
@@ -2024,8 +2054,8 @@
         const pal = PALS[L.wfColor] || PALS[1];
         if (L.multi) drawMulti(c2, W, H, specs, pal, nb, lvl, maxHz);
         else if (L.disp === 3) drawFilters(c2, W, H, specs, nb, lvl, maxHz);
-        else if (L.d3) draw3d(c2, W, H, activeSide() === 'B' && WF.two ? specs[1] : specs[0], pal, nb, lvl, maxHz);
-        else for (const rg of scopeRegions(W, H, specs)) drawScope(c2, rg, pal, nb, lvl, maxHz);
+        else if (L.d3) { const mh = fitHz(activeSide()); draw3d(c2, W, H, activeSide() === 'B' && WF.two ? specs[1] : specs[0], pal, nbFor(mh), lvl, mh); }
+        else for (const rg of scopeRegions(W, H, specs)) { const mh = fitHz(rg.name === 'SUB' ? 'B' : 'A'); drawScope(c2, rg, pal, nbFor(mh), lvl, mh); }
       }
     } else {
       for (const side of ['A', 'B']) if (LCD['f' + side]) LCD['f' + side].bars.setAttribute('d', '');
