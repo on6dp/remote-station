@@ -99,7 +99,8 @@
           { path: 'M1114.5 244.5H1124L1119.25 250Z', color: '#cfc8ff', on: (s) => s.vfoSel !== 1, bright: (s) => s.vfoSel !== 1 },
           { path: 'M1114.5 244.5H1124L1119.25 250Z', color: '#2f7bff', on: (s) => s.vfoSel === 1, bright: (s) => s.vfoSel === 1 }] },
       { id: 'qmb', x: 932, y: 360, w: 23, h: 50, tip: 'QMB', act: info('QMB (mémoires rapides) : pas disponible à distance.') },
-      { id: 'fine', x: 935, y: 450, w: 70, h: 40, tip: 'FINE TUNING : accord fin (pas de 1 Hz)', act: { local: 'fine' }, led: (s, L) => L.fine },
+      { id: 'fine', x: 935, y: 450, w: 70, h: 40, tip: 'FINE TUNING : accord fin (pas de 1 Hz)', act: { local: 'fine' },
+        leds: [{ x: 1000.5, y: 466.5, w: 5, h: 5, rx: 2.5, color: '#ff9a1f', on: (s, L) => !!L.fine, bright: (s, L) => !!L.fine }] }, // petit voyant orange, comme CLAR
       // VC TUNE (présélecteur, VT) : marche / arrêt sur le récepteur actif ; en marche, le bouton MULTI l'accorde (voyant orange)
       // Grande touche VC TUNE (autour du grand bouton) : la bague extérieure du grand bouton (MPVD) accorde le VC TUNE (voyant orange à gauche)
       { id: 'vcTune', x: 1225, y: 270, w: 70, h: 55, tip: 'VC TUNE (grande touche) : la bague extérieure du grand bouton accorde le présélecteur ; nouveau clic : la bague revient à la fréquence', act: { local: 'ringVc' },
@@ -108,7 +109,8 @@
       { id: 'vcTune2', x: 1270, y: 340, w: 30, h: 40, tip: 'VC TUNE (petite touche) : présélecteur du récepteur actif en marche / arrêt', act: { local: 'vc' },
         leds: [{ x: 1280.5, y: 348.5, w: 12, h: 3.5, color: '#ff9a1f', on: (s) => !!(s.vfoSel === 1 ? s.vcB : s.vc), bright: (s) => !!(s.vfoSel === 1 ? s.vcB : s.vc) }] },
       { id: 'cs', x: 1272, y: 390, w: 28, h: 40, tip: 'C.S', act: info('C.S (touche personnalisable) : pas disponible à distance.') },
-      { id: 'mainSub', x: 1255, y: 450, w: 45, h: 50, tip: 'MAIN/SUB : passe le grand bouton de MAIN à SUB et inversement', act: { toggleSel: true } },
+      { id: 'mainSub', x: 1255, y: 450, w: 45, h: 50, tip: 'MAIN/SUB : passe le grand bouton de MAIN à SUB et inversement', act: { toggleSel: true },
+        leds: [{ x: 1238.5, y: 466.5, w: 5, h: 5, rx: 2.5, color: '#ff9a1f', on: (s) => s.vfoSel === 1, bright: (s) => s.vfoSel === 1 }] }, // allumé : grand bouton sur SUB
       // Mémoires
       { id: 'vm', x: 1310, y: 220, w: 30, h: 20, tip: 'V/M', act: info('Mémoires : pas encore reliées.') },
       { id: 'mv', x: 1349, y: 220, w: 32, h: 20, tip: 'M▸V', act: info('Mémoires : pas encore reliées.') },
