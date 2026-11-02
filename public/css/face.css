@@ -151,6 +151,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .flt-vcend { fill: #e8edf3; }
 #face .flt-vcticks { stroke: #ff2b1c; stroke-width: 1.1; }
 #face .flt-vctri { fill: #ff2b1c; }
+#face .flt-cup { fill: none; stroke: #3b8bff; stroke-width: 1.6; stroke-linecap: round; }
 #face .flt-notch { stroke: #ff2b1c; stroke-width: 1.6; stroke-dasharray: 3 2; }
 #face .flt-base { fill: #3b6dff; }
 #face .lcd-seg { fill: #f2f4f8; filter: drop-shadow(0 0 1.2px rgba(255,255,255,.55)); }
@@ -162,6 +163,8 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .func-bg { fill: #04060a; }
 #face .func-cell { fill: #2a313c; stroke: #3c4554; stroke-width: .6; }
 #face .func-cell.off { fill: #1b2028; }
+#face .func-cell.inact { fill: #1b2028; stroke: #2a303a; }
+#face .func-lab.dim, #face .func-val.dim { fill: #5c6470; }
 #face .func-cell.sel { stroke: #ff2b1c; stroke-width: 2; }
 #face .func-lab { fill: #e9edf2; font-size: 8.5px; font-weight: 700; pointer-events: none; }
 #face .func-val { fill: #ff4a3c; font-size: 10.5px; font-weight: 700; pointer-events: none; }

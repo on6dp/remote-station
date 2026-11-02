@@ -511,6 +511,7 @@
     el('path', { d, class: 'flt-vcticks' }, f.vc);
     f.vcTri = el('path', { d: '', class: 'flt-vctri' }, f.vc);
     f.vcA = va; f.vcB = vb; f.vcY = vy;
+    f.cup = el('path', { d: '', class: 'flt-cup', style: 'display:none' }, g);
     f.nline = el('line', { x1: x0, y1: y0 + 6, x2: x0, y2: y0 + h - 6, class: 'flt-notch', style: 'display:none' }, g);
     f.base = el('rect', { x: x0 + 6, y: y0 + h - 4, width: w - 12, height: 2.5, class: 'flt-base' }, g);
     return f;
@@ -544,14 +545,27 @@
     const rev = /^LSB$|-L$/.test(md) ? -1 : 1;
     return { f, rel: rev * (f - (audioCenter(md, hz) + (sh || 0))) / FLT_SPAN };
   }
-  // Trapèze du filtre (points), avec le creux du NOTCH s'il tombe dans la bande passante
-  function trapPts(x0, w, cx, tw, top, bot, sl, nx, nw) {
+  // CONTOUR du récepteur (MAIN : contour / contourFreq ; SUB : contourB / contourFreqB) : même repère que le NOTCH
+  function contourOf(s, side, md, hz, sh) {
+    const on = side === 'B' ? s.contourB : s.contour, f = side === 'B' ? s.contourFreqB : s.contourFreq;
+    if (!on || !f || /FM/.test(md)) return null;
+    const rev = /^LSB$|-L$/.test(md) ? -1 : 1;
+    return { f, rel: rev * (f - (audioCenter(md, hz) + (sh || 0))) / FLT_SPAN };
+  }
+  // Trapèze du filtre (points), avec les creux du NOTCH et du CONTOUR s'ils tombent dans la bande passante
+  // dips : [[x, demi-largeur], …]
+  function trapPts(x0, w, cx, tw, top, bot, sl, dips) {
     const a = Math.max(x0 + 4, cx - tw / 2), b = Math.min(x0 + w - 4, cx + tw / 2);
     const pts = [[x0 + 3, bot], [a, bot], [a + sl, top]];
-    if (nx != null && nx - nw > a + sl && nx + nw < b - sl) pts.push([nx - nw, top], [nx, bot - 1], [nx + nw, top]);
+    let last = a + sl;
+    for (const [nx, nw] of (dips || []).filter((d) => d && d[0] != null).sort((p, q) => p[0] - q[0])) {
+      if (nx - nw > last && nx + nw < b - sl) { pts.push([nx - nw, top], [nx, bot - 1], [nx + nw, top]); last = nx + nw; }
+    }
     pts.push([b - sl, top], [b, bot], [x0 + w - 3, bot]);
     return pts;
   }
+  // Petit demi-cercle bleu (ouvert vers le haut) au-dessus du filtre : repère du CONTOUR, comme sur le TRX
+  const cupD = (x, y, r) => 'M' + (x - r).toFixed(1) + ' ' + y.toFixed(1) + 'A' + r + ' ' + r + ' 0 0 0 ' + (x + r).toFixed(1) + ' ' + y.toFixed(1);
   function buildLcd() {
     const c = FACE.lcd;
     const X = (v) => c.x + v, Y = (v) => c.y + v;
@@ -878,7 +892,21 @@
   const sideKey = (id) => (SIDED[id] && activeSide() === 'B' ? id + 'B' : id);
   // Réglage par pas (molette, MULTI, − / +), borné ; « sided » : côté du VFO sélectionné
   // RPT, ENC/DEC, TONE FREQ : en FM seulement (le TRX refuse OS / CT / CN dans les autres modes)
-  const fmOnly = (id, s) => { if (!SIDED[id] || /FM/.test(L.activeMode(s))) return false; say(FUNC_BY[id][1] + ' : seulement en FM (le TRX est en ' + (L.activeMode(s) || '?') + ').', 'warn', 4000); return true; };
+  // Cases grisées selon le mode, comme sur le TRX : RPT / ENC/DEC / TONE FREQ seulement en FM ;
+  // MIC EQ inactif en CW, DATA, RTTY et PSK (actif en SSB, AM, FM) ; DECODE inactif en FM
+  function modeInactive(id, s) {
+    const m = L.activeMode(s);
+    if (!m) return false;
+    if (SIDED[id]) return !/FM/.test(m);
+    if (id === 'miceq') return /CW|DATA|RTTY|PSK/.test(m);
+    if (id === 'decode') return /FM/.test(m);
+    return false;
+  }
+  const fmOnly = (id, s) => {
+    if (!modeInactive(id, s)) return false;
+    say(FUNC_BY[id][1] + (SIDED[id] ? ' : seulement en FM' : ' : inactif dans ce mode') + ' (le TRX est en ' + (L.activeMode(s) || '?') + ', case grisée comme sur le TRX).', 'warn', 4000);
+    return true;
+  };
   const ctlStep = (id, lo, hi, step) => (s, d) => {
     const k = sideKey(id);
     if (!R.CONTROL[k]) return say(FUNC_BY[id][1] + ' : pas disponible sur ce TRX.', 'warn', 3000);
@@ -914,7 +942,7 @@
       ['scan', 'SCAN', () => '', null, '#3ddc5a'],
       ['decode', 'DECODE', () => '', null, '#3ddc5a'],
       ['rpt', 'RPT', (s) => RPTS[s[sideKey('rpt')]] || '—', ctlCycle('rpt', 3), '#ff3b30', true],
-      ['miceq', 'MIC EQ', (s) => (s.micEq ? 'ON' : 'OFF'), (s) => setCtl('micEq', s.micEq ? 0 : 1), '#ff3b30', true],
+      ['miceq', 'MIC EQ', (s) => (s.micEq ? 'ON' : 'OFF'), (s) => { if (!fmOnly('miceq', s)) setCtl('micEq', s.micEq ? 0 : 1); }, '#ff3b30', true],
       ['encDec', 'ENC/DEC', (s) => ENCDECS[s[sideKey('encDec')]] || '—', ctlCycle('encDec', 3), '#38b6ff', true]],
     [['toneIdx', 'TONE FREQ', (s) => (CTCSS[s[sideKey('toneIdx')]] != null ? CTCSS[s[sideKey('toneIdx')]].toFixed(1) : '—'), ctlStep('toneIdx', 0, 49, 1, true), '#38b6ff'],
       ['rec', 'REC/PLAY', () => '', null, '#38b6ff'],
@@ -967,6 +995,7 @@
         el('title', {}, hit, adj ? lab + (flip ? ' : clic pour changer' : ' : clic pour la choisir, puis clic sur − / +, molette ou bouton MULTI') : MENU_CELL[id] ? lab + ' : menus du TRX (clic pour ouvrir)' : lab + ' : pas disponible à distance');
         hit.addEventListener('click', (ev) => {
           if (!adj && MENU_CELL[id]) return openMenu(MENU_CELL[id]);
+          if (modeInactive(id, S())) { fmOnly(id, S()); return; }
           if (!adj) return say(lab + ' : pas disponible à distance (menus du TRX : au club).', '', 3500);
           const wasSel = L.funcSel === id;
           L.funcSel = id;
@@ -982,7 +1011,7 @@
         let wacc = 0;
         hit.addEventListener('wheel', (ev) => {
           ev.preventDefault();
-          if (!adj) return;
+          if (!adj || modeInactive(id, S())) return;
           L.funcSel = id;
           const d = ev.deltaMode === 1 ? ev.deltaY * 33 : ev.deltaY;
           let n;
@@ -1000,9 +1029,14 @@
     if (!L.func) return;
     for (const id in LCD.funcCells) {
       const c = LCD.funcCells[id];
-      c.box.classList.toggle('sel', L.funcSel === id);
-      if (c.minus) { c.minus.style.display = L.funcSel === id ? '' : 'none'; c.plus.style.display = L.funcSel === id ? '' : 'none'; }
+      const ina = modeInactive(id, s);
+      c.box.classList.toggle('sel', L.funcSel === id && !ina);
+      c.box.classList.toggle('inact', ina);
+      c.t1.classList.toggle('dim', ina);
+      c.t2.classList.toggle('dim', ina);
       if (!c.two) c.t2.textContent = FUNC_BY[id][2](s);
+      if (ina && c.minus) { c.minus.style.display = 'none'; c.plus.style.display = 'none'; continue; }
+      if (c.minus) { c.minus.style.display = L.funcSel === id ? '' : 'none'; c.plus.style.display = L.funcSel === id ? '' : 'none'; }
     }
   }
   function power(d) {
@@ -1248,7 +1282,7 @@
     hideTip(2500);
   }
   // Cadre de réglage sur l'écran (comme le TRX) : nom de la fonction et valeur en grands chiffres, 2 s
-  const POP_NAMES = { shift: 'SHIFT', width: 'WIDTH', notchFreq: 'NOTCH', contourFreq: 'CONTOUR', apfFreq: 'APF', nbLvl: 'NB LEVEL', nrLvl: 'DNR LEVEL' };
+  const POP_NAMES = { shift: 'SHIFT', width: 'WIDTH', notchFreq: 'NOTCH', contourFreq: 'CONT', apfFreq: 'APF', nbLvl: 'NB LEVEL', nrLvl: 'DNR LEVEL' };
   const POP_NOUNIT = { nbLvl: 1, nrLvl: 1 };
   // Cadre ouvert par une touche (NB, DNR : appui long) : réglage d'un niveau avec − / + ou la molette
   function popCtl(id) {
@@ -1386,7 +1420,12 @@
       // NOTCH en service : creux étroit dans la bande passante, à sa fréquence (comme sur l'écran du TRX)
       const nf = notchOf(s, side, mode || '', hz, sh);
       const nx = nf ? cx + nf.rel * fl.w : null;
-      fl.trap.setAttribute('d', 'M' + trapPts(fl.x0, fl.w, cx, tw, top, bot, sl, nx, 3).map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
+      // CONTOUR en service : creux à sa fréquence et petit demi-cercle bleu au-dessus, qui suit le bouton CONT
+      const cf = contourOf(s, side, mode || '', hz, sh);
+      const kx = cf ? Math.max(fl.x0 + 4, Math.min(fl.x0 + fl.w - 4, cx + cf.rel * fl.w)) : null;
+      fl.cup.style.display = cf ? '' : 'none';
+      if (cf) fl.cup.setAttribute('d', cupD(kx, top - 4, 3.2));
+      fl.trap.setAttribute('d', 'M' + trapPts(fl.x0, fl.w, cx, tw, top, bot, sl, [[nx, 3], [kx, 4]]).map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
       // NOTCH hors de la bande passante (sur les flancs ou au-delà) : simple trait rouge à sa place (au bord du cadre si plus loin)
       const inPass = nx != null && nx - 3 > cx - tw / 2 + sl && nx + 3 < cx + tw / 2 - sl;
       const nxc = nx == null ? 0 : Math.max(fl.x0 + 2, Math.min(fl.x0 + fl.w - 2, nx));
@@ -1400,7 +1439,7 @@
         fl.vcTri.setAttribute('d', 'M' + (tx - 2.6) + ' ' + (ty - 4.5) + 'H' + (tx + 2.6) + 'L' + (tx + 0.8) + ' ' + (ty + 3) + 'H' + (tx - 0.8) + 'Z');
       }
       LCD.flt = LCD.flt || {};
-      LCD.flt[side] = { vc: vcOn && vcPos != null ? vcPos : null, fr, off: Math.max(-0.4, Math.min(0.4, sh / 2400)), hz, sh, mode: mode || '', notch: nf };
+      LCD.flt[side] = { vc: vcOn && vcPos != null ? vcPos : null, fr, off: Math.max(-0.4, Math.min(0.4, sh / 2400)), hz, sh, mode: mode || '', notch: nf, cont: cf };
       fl.center.setAttribute('x1', cx); fl.center.setAttribute('x2', cx);
       fl.base.setAttribute('x', cx - tw / 2 + 2); fl.base.setAttribute('width', Math.max(4, tw - 4));
       const v = LCD['v' + side];
@@ -1918,7 +1957,8 @@
       // Bande passante (trapèze), repère central, base bleue
       c2.strokeStyle = color; c2.lineWidth = 2.5; c2.lineJoin = 'round';
       c2.beginPath();
-      trapPts(x0, w, cx, tw, top, bot, sl, f.notch ? cx + f.notch.rel * w : null, 5).forEach((p, j) => (j ? c2.lineTo(p[0], p[1]) : c2.moveTo(p[0], p[1])));
+      const kx = f.cont ? Math.max(x0 + 8, Math.min(x0 + w - 8, cx + f.cont.rel * w)) : null;
+      trapPts(x0, w, cx, tw, top, bot, sl, [[f.notch ? cx + f.notch.rel * w : null, 5], [kx, 9]]).forEach((p, j) => (j ? c2.lineTo(p[0], p[1]) : c2.moveTo(p[0], p[1])));
       c2.stroke();
       if (f.notch) {
         const nx = cx + f.notch.rel * w;
@@ -1927,6 +1967,10 @@
           c2.strokeStyle = '#ff2b1c'; c2.lineWidth = 2; c2.setLineDash([4, 3]);
           c2.beginPath(); c2.moveTo(xc, top); c2.lineTo(xc, bot); c2.stroke(); c2.setLineDash([]);
         }
+      }
+      if (kx != null) {
+        c2.strokeStyle = '#3b8bff'; c2.lineWidth = 2.5;
+        c2.beginPath(); c2.arc(kx, top - 9, 6, 0, Math.PI); c2.stroke();
       }
       c2.strokeStyle = '#ff9a1f'; c2.lineWidth = 2;
       c2.beginPath(); c2.moveTo(cx, top - 4); c2.lineTo(cx, bot); c2.stroke();
@@ -2378,5 +2422,5 @@
   if (sess) creds = { session: sess };
   else showLogin('');
   connect();
-  window.RSFACE = { state: () => S(), L, face: FACE, spots: (m) => bmvOnSpots(m) }; // essais
+  window.RSFACE = { state: () => S(), L, face: FACE, spots: (m) => bmvOnSpots(m), send: (m) => send(m) }; // essais
 })();
