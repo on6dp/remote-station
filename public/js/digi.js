@@ -460,7 +460,7 @@
     bm.id = 'bandMap';
     bm.hidden = true;
     bm.setAttribute('aria-label', 'Carte de bande');
-    bm.innerHTML = '<div class="bm-h"><span class="bm-st" id="bmSt"></span><b id="bmBandT" class="bm-band">—</b><span class="bm-t">Spots</span>'
+    bm.innerHTML = '<div class="bm-h"><span class="bm-st" id="bmSt"></span><b id="bmBandT" class="bm-band">—</b><span class="bm-vfo">VFO-A · MAIN</span><span class="bm-t">Spots</span>'
       + '<span class="bm-fw"><button type="button" class="bm-fbtn" id="bmFbtn" aria-haspopup="true" aria-expanded="false" title="Choisir les modes dont les spots sont affichés (liste des modes de cet onglet)">Filtres ▾</button>'
       + '<button type="button" class="bm-all" id="bmAll" aria-pressed="false" title="Tous les spots de la plage, quel que soit leur mode (les filtres sont ignorés)">Tous</button>'
       + '<span class="bm-fmenu" id="bmFmenu" role="menu" hidden></span></span>'
@@ -471,6 +471,18 @@
       + '<div class="bm-f" id="bmFoot"></div>'
       + '<i class="bm-grip" id="bmGrip" title="Glisser à gauche ou à droite : largeur de la carte de bande (double-clic : largeur d’origine)"></i>';
     panel.appendChild(bm);
+    // FTDX101 en double réception (FT8 / FT4 / FT2) : 2e carte de bande, celle de la bande du VFO-B (SUB)
+    const bmB = document.createElement('aside');
+    bmB.className = 'bm bm-b';
+    bmB.id = 'bandMapB';
+    bmB.hidden = true;
+    bmB.setAttribute('aria-label', 'Carte de bande du VFO-B');
+    bmB.innerHTML = '<div class="bm-h"><span class="bm-st" id="bmStB"></span><b id="bmBandTB" class="bm-band">—</b><span class="bm-vfo b">VFO-B · SUB</span></div>'
+      + '<div class="bm-r" title="Plage affichée pour cette bande (kHz), gardée par bande. Molette sur la carte : zoom · glisser : déplacer · double-clic : plage d’origine">'
+      + '<input id="bmLoB" inputmode="decimal" aria-label="Début de la plage (kHz)"><span>–</span><input id="bmHiB" inputmode="decimal" aria-label="Fin de la plage (kHz)"><span>kHz</span></div>'
+      + '<div class="bm-body" id="bmBodyB"><canvas id="bmCvB"></canvas><div class="bm-lbls" id="bmLblsB"></div></div>'
+      + '<div class="bm-f" id="bmFootB"></div>';
+    panel.appendChild(bmB);
     add('away', 'dg-soon', '<p>Les modes numériques sont ouverts dans une <b>fenêtre séparée</b>.</p><p><button class="btn" type="button" id="dgBack">Ramener ici</button></p>');
   }
 
@@ -678,6 +690,7 @@
     if (!want) { wfFB.ctx = null; wfFB.w = 0; }
     needHist = true; // décodages du VFO-B déjà reçus par le serveur
     sideBtns();
+    bmShow(); // 2e carte de bande (bande du VFO-B)
     if (wf.ctx) sizeCanvas();
     redrawAll();
     return true;
@@ -1449,6 +1462,10 @@
   const BM_KEEP = 30 * 60000;
   const bmSpots = new Map();
   let bmState = '', bmHost = '', bmRaf = 0, bmBand = '', bmLay = [];
+  let bmBandB = '', bmLayB = []; // carte du VFO-B (double réception)
+  const bmDualOn = () => !!(ftDual && tab === 'ftx' && $('bandMapB'));
+  const bmBandOfSide = (X) => (X ? bmBandB : bmBand);
+  const bmLayOf = (X) => (X ? bmLayB : bmLay);
   let bmFilt = store.get('bmfilt', 'rtty') === 'all' ? 'all' : 'mode';
   function bmAdd(list) {
     for (const s of list || []) {
@@ -1530,6 +1547,9 @@
     if (!p || !bm) return;
     p.classList.toggle('bm-on', on);
     bm.hidden = !on;
+    const two = on && bmDualOn();
+    p.classList.toggle('bm-dual', two);
+    if ($('bandMapB')) $('bandMapB').hidden = !two;
     if (on) bmFiltDraw();
     bmPlace();
     if (on) bmDraw();
@@ -1566,6 +1586,15 @@
   function bmPlace() {
     const p = $('centerPanel'), bm = $('bandMap');
     if (!p || !bm) return;
+    bmPlaceIn(p, bm);
+    // Carte du VFO-B : toujours juste à côté de celle du VFO-A
+    const b2 = $('bandMapB');
+    if (b2) {
+      if (b2.parentElement !== bm.parentElement || b2.previousElementSibling !== bm) bm.after(b2);
+      b2.style.top = bm.style.top;
+    }
+  }
+  function bmPlaceIn(p, bm) {
     if (bmFar(p, bm)) { document.body.classList.remove('bm-tall'); return; }
     // En haut de la colonne : les écrans VFO (s'ils sont dans la colonne), sinon le cadre Step / Bands
     const tp = ['.center > .vfo-row', '.center > [data-panel="bands"]'].map((q) => document.querySelector(q)).find((x) => x && x.offsetParent);
@@ -1589,7 +1618,12 @@
     bmRafW = bw;
   }
   function bmPaint() {
-    const body = $('bmBody'), cv = $('bmCv'), lbls = $('bmLbls');
+    bmPaintOn('');
+    if (bmDualOn()) bmPaintOn('B');
+  }
+  // Une carte de bande : '' = celle de l'onglet (VFO-A en double réception), 'B' = celle du VFO-B
+  function bmPaintOn(X) {
+    const body = $('bmBody' + X), cv = $('bmCv' + X), lbls = $('bmLbls' + X);
     if (!body || !cv) return;
     const W = body.clientWidth, H = body.clientHeight;
     if (W < 40 || H < 60) return;
@@ -1598,17 +1632,20 @@
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.clearRect(0, 0, W, H);
-    const d = (tab === 'rtty' && rtDialOf(rtTx)) || rtDialOf(0);
+    const d = X ? rtDialOf(1) : (tab === 'rtty' && rtDialOf(rtTx)) || rtDialOf(0);
     const md = bmMode();
-    const band = d ? bmBandOf(d.hz / 1000) : bmBand || '40m';
-    if (band && band !== bmBand) bmBand = band;
-    const [lo, hi] = bmRange(bmBand || '40m');
-    $('bmBandT').textContent = (bmBand || '—').replace('m', ' m').replace('c m', ' cm');
-    if (document.activeElement !== $('bmLo')) $('bmLo').value = String(lo).replace('.', ',');
-    if (document.activeElement !== $('bmHi')) $('bmHi').value = String(hi).replace('.', ',');
+    const cur = bmBandOfSide(X);
+    const band = d ? bmBandOf(d.hz / 1000) : cur || '40m';
+    if (band && band !== cur) { if (X) bmBandB = band; else bmBand = band; }
+    const bandNow = bmBandOfSide(X);
+    const [lo, hi] = bmRange(bandNow || '40m');
+    $('bmBandT' + X).textContent = (bandNow || '—').replace('m', ' m').replace('c m', ' cm');
+    if (document.activeElement !== $('bmLo' + X)) $('bmLo' + X).value = String(lo).replace('.', ',');
+    if (document.activeElement !== $('bmHi' + X)) $('bmHi' + X).value = String(hi).replace('.', ',');
     const PAD = 6, RX = 50; // règle : x de 0 à RX (poignée de largeur sur les 6 premiers pixels)
     const yOf = (khz) => PAD + ((khz - lo) / (hi - lo)) * (H - 2 * PAD);
-    bmLay = [lo, hi, PAD, H];
+    if (X) bmLayB = [lo, hi, PAD, H]; else bmLay = [lo, hi, PAD, H];
+    const rf = X ? rxFB : rxF, tf = X ? txFB : txF;
     // fond de la règle
     c.fillStyle = '#0b1018'; c.fillRect(0, 0, RX, H);
     c.strokeStyle = '#46546a'; c.beginPath(); c.moveTo(RX + 0.5, 0); c.lineTo(RX + 0.5, H); c.stroke();
@@ -1643,8 +1680,8 @@
         });
       } else if (tab !== 'wspr') {
         // FT8 / FT4 / FT2, JT65, JTTY : fréquences de réception (vert) et d'émission (rouge)
-        if (tab !== 'jtty' && Math.abs(txF - rxF) > 20) line((d.hz + d.sign * txF) / 1000, '#ff5a4a', 'TX', false);
-        line((d.hz + d.sign * rxF) / 1000, '#3ee07f', tab === 'jtty' || Math.abs(txF - rxF) <= 20 ? 'RX TX' : 'RX', true);
+        if (tab !== 'jtty' && Math.abs(tf - rf) > 20) line((d.hz + d.sign * tf) / 1000, '#ff5a4a', 'TX', false);
+        line((d.hz + d.sign * rf) / 1000, '#3ee07f', tab === 'jtty' || Math.abs(tf - rf) <= 20 ? 'RX TX' : 'RX', true);
       }
       // VFO hors de la plage : flèche en haut ou en bas
       const vk = d.hz / 1000;
@@ -1688,7 +1725,7 @@
       c.beginPath(); c.moveTo(RX, y); c.lineTo(RX + 6, y); c.lineTo(LX - 2, ly); c.stroke();
     });
     lbls.textContent = '';
-    const bandKey = bmBand;
+    const bandKey = bandNow;
     list.forEach((s, i) => {
       const b = document.createElement('button');
       b.type = 'button';
@@ -1709,19 +1746,19 @@
       lbls.appendChild(b);
     });
     const n = Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi).length;
-    $('bmFoot').textContent = n + ' spot' + (n > 1 ? 's' : '') + (list.length < n ? ' (' + list.length + ' affichés)' : '');
-    const st = $('bmSt');
+    $('bmFoot' + X).textContent = n + ' spot' + (n > 1 ? 's' : '') + (list.length < n ? ' (' + list.length + ' affichés)' : '');
+    const st = $('bmSt' + X);
     st.className = 'bm-st ' + (bmState === 'connecté' ? 'ok' : bmState ? 'ko' : '');
     st.title = 'DX cluster' + (bmHost ? ' ' + bmHost : '') + ' : ' + (bmState || 'pas de nouvelles') + ' · spots gardés 30 min';
   }
   // Calage du TRX sur une fréquence réelle (kHz) : décodeur de l'émission au milieu de la cascade
-  function bmTune(khz, call) {
+  function bmTune(khz, call, X) {
     if (call) setDx({ call });
     if (!api || !api.iControl()) return api && api.say('Prenez la main pour vous caler sur ' + (call || 'cette fréquence') + ' (le TRX change de fréquence).', 'warn');
     const st = api.state();
     if (st && ((st.ptt && st.ptt.active) || st.ftx)) return api.say('Réglage bloqué pendant l’émission.', 'warn');
     const hz = Math.round(khz * 1000);
-    if (tab !== 'rtty') return bmTuneOther(hz, call);
+    if (tab !== 'rtty') return bmTuneOther(hz, call, X);
     const d = rtDialOf(rtTx);
     if (!d) return api.say('Fréquence du TRX pas encore lue.', 'warn');
     const r = rts[rtTx];
@@ -1745,8 +1782,9 @@
   // CW : le VFO va sur la station (battement nul : elle sort à la tonalité du TRX, où le décodeur est déjà calé).
   // FT8 / FT4 / FT2, JT65, JTTY, WSPR : la fréquence de réception se place sur le signal ; hors de la bande audio,
   // le VFO bouge pour le mettre à 1500 Hz.
-  function bmTuneOther(hz, call) {
-    const d = rtDialOf(0);
+  function bmTuneOther(hz, call, X) {
+    const side = X ? 'B' : undefined;
+    const d = rtDialOf(X ? 1 : 0);
     if (!d) return api.say('Fréquence du TRX pas encore lue.', 'warn');
     const who = call ? call + ' : ' : '';
     if (tab === 'cw') {
@@ -1756,10 +1794,10 @@
       return api.say(who + 'VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz.', '', 4000);
     }
     const audio = d.sign * (hz - d.hz);
-    if (audio >= 150 && audio <= WF_MAX_HZ - 150) { setRx(audio); bmDraw(); return; }
+    if (audio >= 150 && audio <= WF_MAX_HZ - 150) { setRx(audio, side); bmDraw(); return; }
     const nd = Math.round((hz - d.sign * 1500) / 100) * 100;
     api.setFreq(nd, d.vfo, true);
-    setRx(d.sign * (hz - nd));
+    setRx(d.sign * (hz - nd), side);
     bmDraw();
     api.say(who + 'VFO ' + d.vfo + ' sur ' + (nd / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 2 }) + ' kHz, réception sur le signal.', '', 4000);
   }
@@ -1803,18 +1841,24 @@
     return true;
   }
   function bmInit() {
-    const body = $('bmBody');
-    if (!body) return;
+    if (!$('bmBody')) return;
+    bmBindBody('');
+    if ($('bmBodyB')) bmBindBody('B');
+    bmInitA();
+  }
+  // Glisser, molette, clic et plage d'une carte de bande ('' ou 'B')
+  function bmBindBody(X) {
+    const body = $('bmBody' + X);
     const kOf = (e) => {
       const r = body.getBoundingClientRect();
-      const [lo, hi, PAD, H] = bmLay;
+      const [lo, hi, PAD, H] = bmLayOf(X);
       const y = ((e.clientY - r.top) / (r.height || 1)) * H; // pixels CSS, même avec le zoom du dashboard
       return lo + ((y - PAD) / (H - 2 * PAD)) * (hi - lo);
     };
     let drag = null;
     body.addEventListener('mousedown', (e) => {
-      if (e.button !== 0 || !bmLay.length) return;
-      drag = { y: e.clientY, r: bmRange(bmBand), moved: false, t: e.target, w: body.ownerDocument.defaultView || window };
+      if (e.button !== 0 || !bmLayOf(X).length) return;
+      drag = { y: e.clientY, r: bmRange(bmBandOfSide(X)), moved: false, t: e.target, w: body.ownerDocument.defaultView || window };
       drag.w.addEventListener('mousemove', bmMove);
       drag.w.addEventListener('mouseup', bmUp);
       e.preventDefault();
@@ -1825,9 +1869,10 @@
       const dy = (e.clientY - drag.y) / ((window.RSZOOM && window.RSZOOM.z()) || 1);
       if (Math.abs(dy) > 4) drag.moved = true;
       if (!drag.moved) return;
-      const H = bmLay[3] - 2 * bmLay[2];
+      const L = bmLayOf(X);
+      const H = L[3] - 2 * L[2];
       const dk = -dy / H * (drag.r[1] - drag.r[0]);
-      bmSetRange(bmBand, drag.r[0] + dk, drag.r[1] + dk);
+      bmSetRange(bmBandOfSide(X), drag.r[0] + dk, drag.r[1] + dk);
     };
     const bmUp = (e) => {
       if (!drag) return;
@@ -1836,34 +1881,37 @@
       g.w.removeEventListener('mouseup', bmUp);
       if (g.moved) return;
       const b = g.t.closest && g.t.closest('.bm-s');
-      if (b) { const s = bmSpots.get(b.dataset.k); if (s) bmTune(s.f, s.call); return; }
-      if (body.contains(e.target)) bmTune(kOf(e));
+      if (b) { const s = bmSpots.get(b.dataset.k); if (s) bmTune(s.f, s.call, X); return; }
+      if (body.contains(e.target)) bmTune(kOf(e), undefined, X);
     };
     body.addEventListener('wheel', (e) => {
-      if (!bmLay.length) return;
+      if (!bmLayOf(X).length) return;
       e.preventDefault();
-      const [lo, hi] = bmRange(bmBand);
+      const [lo, hi] = bmRange(bmBandOfSide(X));
       const k = kOf(e), f = e.deltaY > 0 ? 1.25 : 0.8;
       const nlo = k - (k - lo) * f, nhi = k + (hi - k) * f;
       if (nhi - nlo < 3 && f < 1) return;
-      bmSetRange(bmBand, nlo, nhi);
+      bmSetRange(bmBandOfSide(X), nlo, nhi);
     }, { passive: false });
     body.addEventListener('click', (e) => e.stopPropagation());
     body.addEventListener('dblclick', (e) => {
       e.stopPropagation();
       if (e.target.closest('.bm-s')) return;
-      store.set(bmKey(bmBand), '');
+      store.set(bmKey(bmBandOfSide(X)), '');
       bmDraw();
     });
     const num = (v) => Number(String(v).replace(',', '.').replace(/\s/g, ''));
-    for (const id of ['bmLo', 'bmHi']) {
+    for (const id of ['bmLo' + X, 'bmHi' + X]) {
       $(id).addEventListener('change', () => {
-        const a = num($('bmLo').value), b = num($('bmHi').value);
-        if (Number.isFinite(a) && Number.isFinite(b) && b - a >= 2) bmSetRange(bmBand, a, b);
+        const a = num($('bmLo' + X).value), b = num($('bmHi' + X).value);
+        if (Number.isFinite(a) && Number.isFinite(b) && b - a >= 2) bmSetRange(bmBandOfSide(X), a, b);
         else bmDraw();
       });
       $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
     }
+    if (window.ResizeObserver) new ResizeObserver(() => bmDraw()).observe(body);
+  }
+  function bmInitA() {
     // Filtres (liste des modes de l'onglet) et « Tous »
     const fm = $('bmFmenu');
     const fClose = () => { fm.hidden = true; $('bmFbtn').setAttribute('aria-expanded', 'false'); };
@@ -1889,7 +1937,6 @@
     if ($('bmPop')) $('bmPop').addEventListener('click', (e) => { e.stopPropagation(); document.dispatchEvent(new CustomEvent('rs-bm-pop')); });
     $('bmAll').addEventListener('click', () => { bmFilt = bmFilt === 'all' ? 'mode' : 'all'; store.set('bmfilt', bmFilt); fClose(); bmFiltDraw(); bmDraw(); });
     bmFiltDraw();
-    if (window.ResizeObserver) new ResizeObserver(() => bmDraw()).observe(body);
     // Poignée sur le bord gauche : largeur de la carte de bande, gardée dans ce navigateur
     const root = document.documentElement;
     const setW = (w, save) => {
@@ -3784,6 +3831,9 @@
     r.className = 'dg-row ft ' + k + (wk ? ' wkd' : '');
     r.title = d.tx ? 'Message émis' : (wk ? 'Déjà contacté sous ' + workedStation + ' sur cette bande dans ce mode · ' : '') + d.f + ' Hz · clic sur l’indicatif (souligné) ou double-clic : répondre à cette station (émission à la période suivante) · clic ailleurs : réception ici · clic droit : émission ici';
     const cells = d.tx ? [utc(slot), 'TX', '', d.f, d.msg] : [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
+    // Pays DXCC, distance et azimut (direction de l'antenne) : dans l'info-bulle de l'indicatif (et de la ligne)
+    const geo = d.tx ? '' : [d.cty || '', d.km == null ? '' : (d.kmc ? '≈ ' : '') + d.km + ' km', d.az == null ? '' : 'azimut ' + d.az + '°'].filter(Boolean).join(' · ');
+    if (geo) r.title = senderOf(d.msg) + ' — ' + geo + '\n' + r.title;
     cells.forEach((v, i) => {
       const s = document.createElement('span');
       if (i === 4) s.className = 'msg';
@@ -3796,7 +3846,7 @@
         const c = document.createElement('b');
         c.className = 'dg-call';
         c.textContent = who;
-        c.title = 'Clic : répondre à ' + who + ' (émission à la période suivante, avec la main)';
+        c.title = who + (geo ? ' — ' + geo : '') + '\nClic : répondre à ' + who + ' (émission à la période suivante, avec la main)';
         c.addEventListener('click', (e) => { e.stopPropagation(); pickFromDecode(d, slot, side); });
         s.appendChild(c);
         s.appendChild(document.createTextNode(String(v).slice(k + who.length)));

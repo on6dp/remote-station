@@ -1614,8 +1614,10 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 /* VFO qui émet : son cadre et ses colonnes en évidence */
 .ft-dual:not(.ft-txb) .dg-col:not(.ft-colb), .ft-dual.ft-txb .dg-col.ft-colb { box-shadow: inset 0 0 0 1px rgba(255, 90, 74, .35); }
 /* Colonnes plus étroites : sans distance ni azimut */
-.ft-dual .dg-th.ft, .ft-dual .dg-row.ft { grid-template-columns: 50px 26px 28px 36px minmax(90px, 3fr) minmax(0, 1.1fr); gap: 3px; padding-inline: 4px; font-size: 12px; }
-.ft-dual .dg-th.ft span:nth-child(n+7), .ft-dual .dg-row.ft span:nth-child(n+7) { display: none; }
+/* Double réception : sans les colonnes Pays, km et Az (ils sont dans l'info-bulle de l'indicatif) — place pour les deux cartes de bande */
+.ft-dual .dg-th.ft, .ft-dual .dg-row.ft { grid-template-columns: 50px 26px 28px 36px minmax(0, 1fr); gap: 3px; padding-inline: 4px; font-size: 12px; }
+.ft-dual .dg-th.ft span:nth-child(n+6), .ft-dual .dg-row.ft span:nth-child(n+6) { display: none; }
+.ft-dual .dg-row.ft span.msg { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ft-dual .dg-h .dg-note { display: none; }
 @media (max-width: 1100px) { .ft-dual .dg-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 6px; } .ft-dual .ft-wfrow { grid-template-columns: minmax(0, 1fr); } }
 .ft-md { display: inline-block; margin-left: 8px; padding: 0 6px; border-radius: 3px; font-style: normal; font-weight: 700; font-size: 10px; letter-spacing: .5px; color: #fff; background: #1f7a3d; }
@@ -1623,3 +1625,10 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 .dg-txc { display: inline-flex; align-items: center; gap: 4px; }
 .dg-txc[hidden] { display: none; }
 .dg-txc select { font: inherit; font-size: 12px; font-weight: 700; padding: 1px 4px; width: auto; min-width: 0; }
+/* Deux cartes de bande (double réception, FT8 / FT4 / FT2) : VFO-A puis VFO-B, au bord droit de la fenêtre */
+.bm-vfo { display: none; font-size: 9.5px; font-weight: 700; letter-spacing: .6px; color: #ffcf4a; white-space: nowrap; }
+.bm-vfo.b { display: inline; color: #7fb2ff; }
+#centerPanel.bm-dual .bm-vfo { display: inline; }
+#centerPanel.bm-on.bm-dual > :not(.panel-h):not(.bm) { margin-right: calc(2 * var(--bm-w)); }
+#centerPanel.bm-dual > .bm:not(.bm-b) { right: var(--bm-w); }
+.bm.bm-b { border-left: 3px solid #7a8494; }
