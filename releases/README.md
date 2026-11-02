@@ -2,7 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
-| 0.32.62 | [RemoteStation-Setup-0.32.62.exe](0.32.62/RemoteStation-Setup-0.32.62.exe) | [remote-station-0.32.62.tar.gz](0.32.62/remote-station-0.32.62.tar.gz) | Face avant : spectre et cascade sur toute la largeur de chaque VFO — [empreintes SHA-256](0.32.62/SHA256SUMS.txt) |
+| 0.32.62 | [RemoteStation-Setup-0.32.62.exe](0.32.62/RemoteStation-Setup-0.32.62.exe) | [remote-station-0.32.62.tar.gz](0.32.62/remote-station-0.32.62.tar.gz) | Face avant : spectre sur toute la largeur de chaque VFO, FAST commute le TRX — [empreintes SHA-256](0.32.62/SHA256SUMS.txt) |
 | 0.32.61 | [RemoteStation-Setup-0.32.61.exe](0.32.61/RemoteStation-Setup-0.32.61.exe) | [remote-station-0.32.61.tar.gz](0.32.61/remote-station-0.32.61.tar.gz) | Station FTDX101 : plus de lectures sans objet (cause des faux « refusé ») — [empreintes SHA-256](0.32.61/SHA256SUMS.txt) |
 | 0.32.60 | [RemoteStation-Setup-0.32.60.exe](0.32.60/RemoteStation-Setup-0.32.60.exe) | [remote-station-0.32.60.tar.gz](0.32.60/remote-station-0.32.60.tar.gz) | Station : plus de faux « TRX a refusé » (refus vérifié par la relecture) — [empreintes SHA-256](0.32.60/SHA256SUMS.txt) |
 | 0.32.59 | [RemoteStation-Setup-0.32.59.exe](0.32.59/RemoteStation-Setup-0.32.59.exe) | [remote-station-0.32.59.tar.gz](0.32.59/remote-station-0.32.59.tar.gz) | Face avant : CONT = petit « V » bleu en haut du filtre (plus de second creux) — [empreintes SHA-256](0.32.59/SHA256SUMS.txt) |

@@ -201,6 +201,16 @@
       say(VX.monitorOn() ? 'MONI : vous entendez votre micro tel qu’il part (au casque).' : 'MONI coupé.', '', 3000);
       return render();
     }
+    // FAST : commute aussi la touche FAST du TRX quand il la connaît par CAT (FTDX101 : FS) ; le voyant suit le TRX
+    if (a.local === 'fast' && R && R.CONTROL.fastStep) {
+      if (!needControl()) return;
+      const on = S().fastStep ? 0 : 1;
+      setCtl('fastStep', on);
+      L.fast = !!on; if (on) L.fine = false;
+      store.set('rs.face.fast', L.fast ? '1' : '0'); store.set('rs.face.fine', L.fine ? '1' : '0');
+      say(on ? 'FAST (TRX) : accord rapide.' : 'FAST coupé : accord normal.', '', 2500);
+      return render();
+    }
     if (a.local === 'fast' || a.local === 'fine') {
       L[a.local] = !L[a.local];
       if (a.local === 'fine' && L.fine) L.fast = false;
@@ -1368,6 +1378,8 @@
     if (!FACE || !st) return;
     try { bmvDraw(); } catch (e) { /* cartes de bande pas encore prêtes */ }
     const s = S();
+    // FAST lu sur le TRX (touche FAST de la face du TRX) : la page suit
+    if (R && R.CONTROL.fastStep && s.fastStep != null && !!s.fastStep !== L.fast) { L.fast = !!s.fastStep; if (L.fast) L.fine = false; store.set('rs.face.fast', L.fast ? '1' : '0'); }
     const live = !!s.connected;
     const tx = !!s.tx;
     // Voyants
