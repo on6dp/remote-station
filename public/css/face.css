@@ -336,3 +336,4 @@ body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglet
 
 /* Barre du haut sur une seule ligne malgré 👥 et « Suivre » : un seul logo dans le titre */
 body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
+#followBtn.btn.fc-follow:disabled { opacity: .45; cursor: default; }

@@ -2235,7 +2235,11 @@
     const b = $('followBtn');
     if (!st || !b) return;
     const mine = iControl();
-    b.hidden = mine || !st.controller;
+    // Toujours visible ; grisé chez celui qui a la main (c'est lui que les autres suivent)
+    b.hidden = false;
+    b.disabled = mine;
+    b.title = mine ? 'Vous avez la main : les autres membres peuvent suivre votre écran (👁 Suivre chez eux).'
+      : 'Suivre l’opérateur (formation à distance) : votre face avant montre le même écran que celui qui a la main (DISP, MONO, EXPAND, MULTI, 3DSS, FUNC). Une de ces touches arrête le suivi ; un clic ici le relance.' + (st.controller ? '' : ' Personne n’a la main pour l’instant : le suivi commencera quand quelqu’un la prendra.');
     // Enclenché tout seul quand un autre membre a la main (à l'arrivée, puis à chaque nouvel opérateur)
     const ctl = st.controller || null;
     if (ctl !== FOL.ctl) {

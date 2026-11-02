@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.80** — **Face avant, 👁 Suivre** toujours visible à droite de l'indicatif (il était caché quand personne n'avait la main) ; grisé chez celui qui a la main. Ctrl+F5 sur /ftdx101.
 - **0.32.79** — **Face avant, 👁 Suivre l'opérateur** (formation à distance) dans la barre du haut, caché chez celui qui a la main : la face avant montre le même écran que l'opérateur (DISP, MONO, EXPAND, MULTI, 3DSS, menu FUNC) ; enclenché tout seul quand un autre membre a la main ; une de ces touches l'arrête, un clic sur 👁 Suivre le relance. Barre du haut gardée sur une ligne (un seul logo, « 🎧 Stéréo »). Serveur modifié (relais de l'affichage) : `install.sh` le redémarre ; Ctrl+F5 sur /ftdx101.
 - **0.32.78** — **Face avant, bague extérieure du grand bouton** : elle accorde maintenant l'**autre récepteur** que celui qui est sélectionné (SUB sélectionné → VFO-A / MAIN ; MAIN sélectionné → VFO-B / SUB), comme sur le TRX ; CLAR en service : décalage du clarifier ; grande touche VC TUNE : présélecteur (inchangés). Ctrl+F5 sur /ftdx101.
 - **0.32.77** — **Face avant, BAND MAP A et B : filtre par mode** sous le nom de la bande : **TOUS · FT8/4/2 · SSB · CW · RTTY** ; seuls les spots de ce mode sont affichés (mode écrit dans le spot, sinon skimmer = CW, fréquences d'appel FT8 / FT4, puis plan de bande IARU région 1) ; nouveau clic sur le mode choisi : tous ; chaque carte garde son choix ; le bas de la carte indique le filtre. Ctrl+F5 sur /ftdx101.
