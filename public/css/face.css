@@ -30,6 +30,10 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-bmv .bmv-span button:hover { border-color: #5fb3ff; }
 .fc-bmv .bmv-b { position: relative; flex: 1 1 auto; min-height: 200px; cursor: pointer; }
 .fc-bmv canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fc-bmv .bmv-m { display: flex; gap: 2px; padding: 4px 4px; border-bottom: 1px solid #1d2733; }
+.fc-bmv .bmv-m button { flex: 1 1 auto; min-width: 0; font: 700 9.5px/1 system-ui, sans-serif; padding: 4px 2px; border-radius: 3px; border: 1px solid #2a3746; background: #111923; color: #b9c8da; cursor: pointer; white-space: nowrap; }
+.fc-bmv .bmv-m button:hover { border-color: #5fb3ff; color: #fff; }
+.fc-bmv .bmv-m button.on { background: #f2cf4a; border-color: #f2cf4a; color: #1a1400; }
 .fc-bmv .bmv-f { padding: 3px 8px; border-top: 1px solid #1d2733; font: 11px/1.3 system-ui, sans-serif; color: #8fa0b4; }
 @media (max-width: 1300px) { .fc-top { grid-template-columns: minmax(0, 1fr); } .fc-bmv { display: none; } .fc-top > .fc-wrap, .fc-top > .fc-tx { grid-column: 1; } }
 .fc-panel { position: relative; }

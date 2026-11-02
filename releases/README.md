@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.32.77 | [RemoteStation-Setup-0.32.77.exe](0.32.77/RemoteStation-Setup-0.32.77.exe) | [remote-station-0.32.77.tar.gz](0.32.77/remote-station-0.32.77.tar.gz) | Face avant : BAND MAP, filtre TOUS / FT8/4/2 / SSB / CW / RTTY — [empreintes SHA-256](0.32.77/SHA256SUMS.txt) |
 | 0.32.76 | [RemoteStation-Setup-0.32.76.exe](0.32.76/RemoteStation-Setup-0.32.76.exe) | [remote-station-0.32.76.tar.gz](0.32.76/remote-station-0.32.76.tar.gz) | Face avant : CW met BK-IN en service d'office — [empreintes SHA-256](0.32.76/SHA256SUMS.txt) |
 | 0.32.75 | [RemoteStation-Setup-0.32.75.exe](0.32.75/RemoteStation-Setup-0.32.75.exe) | [remote-station-0.32.75.tar.gz](0.32.75/remote-station-0.32.75.tar.gz) | Face avant : voyants MAIN/SUB et FINE TUNING — [empreintes SHA-256](0.32.75/SHA256SUMS.txt) |
 | 0.32.74 | [RemoteStation-Setup-0.32.74.exe](0.32.74/RemoteStation-Setup-0.32.74.exe) | [remote-station-0.32.74.tar.gz](0.32.74/remote-station-0.32.74.tar.gz) | Face avant : EXPAND, 👥 membres + messages (IP pour les admins), Profil de en mauve — [empreintes SHA-256](0.32.74/SHA256SUMS.txt) |

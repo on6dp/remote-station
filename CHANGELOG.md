@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.32.77** — **Face avant, BAND MAP A et B : filtre par mode** sous le nom de la bande : **TOUS · FT8/4/2 · SSB · CW · RTTY** ; seuls les spots de ce mode sont affichés (mode écrit dans le spot, sinon skimmer = CW, fréquences d'appel FT8 / FT4, puis plan de bande IARU région 1) ; nouveau clic sur le mode choisi : tous ; chaque carte garde son choix ; le bas de la carte indique le filtre. Ctrl+F5 sur /ftdx101.
 - **0.32.76** — **Face avant, touche CW** : en passant en CW depuis un autre mode, **BK-IN** est mis en service d'office ; la touche BK-IN reste libre (couper / remettre sans changer de mode), et CW-U ⇄ CW-L ne la touche pas. Ctrl+F5 sur /ftdx101.
 - **0.32.75** — **Face avant** : petit voyant orange sur **MAIN/SUB** (allumé : grand bouton sur SUB) et sur **FINE TUNING** (accord fin en service), comme CLAR et VC TUNE. Ctrl+F5 sur /ftdx101.
 - **0.32.74** — **Face avant** : **EXPAND** comme le TRX (galvanomètres réduits à leur partie haute, filtres aplatis, fréquences et cases remontées, scope agrandi ; EXPAND en bleu ; aussi avec MONO). **👥 membres connectés** dans la barre du haut, comme le dashboard : nombre, liste des indicatifs (qui a la main, qui émet), **adresse IP de connexion visible des administrateurs seulement**, **messages** entre membres (bip 🔔, pastille rouge). Indicatif à côté de Prendre / Libérer la main (et celui qui a la main si c'est un autre). Bouton **Profil de …** sur fond mauve, texte blanc gras. Serveur modifié (IP pour les administrateurs) : `install.sh` le redémarre ; Ctrl+F5 sur /ftdx101.

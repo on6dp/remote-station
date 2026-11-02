@@ -2434,6 +2434,28 @@
   BMV.span = { A: Number(store.get('rs.face.bmspanA', '20')) || 20, B: Number(store.get('rs.face.bmspanB', '20')) || 20 };
   const BMV_KEEP = 30 * 60000;
   const BMV_MODES = /\b(FT8|FT4|FT2|CW|RTTY|PSK\d*|SSB|USB|LSB|JT65|JT9|Q65|WSPR|SSTV|FM|AM|OLIVIA|MSK144)\b/i;
+  // Filtre par mode sous le nom de la bande (TOUS, FT8/4/2, SSB, CW, RTTY), propre à chaque carte
+  const BMV_FILTS = [['', 'TOUS'], ['FT', 'FT8/4/2'], ['SSB', 'SSB'], ['CW', 'CW'], ['RTTY', 'RTTY']];
+  BMV.filt = { A: store.get('rs.face.bmfA', ''), B: store.get('rs.face.bmfB', '') };
+  // Fréquences d'appel FT8 / FT4 (kHz) : spot à moins de 3 kHz au-dessus = FT8/4/2
+  const BMV_FTF = [1840, 3573, 3575.5, 5357, 7074, 7047.5, 10136, 10140, 14074, 14080, 18100, 18104, 21074, 21140, 24915, 24919, 28074, 28180, 50313, 50318];
+  // Plan de bande IARU région 1 (kHz) : [début, fin CW, fin numériques, fin de bande] ; au-delà : phonie (SSB)
+  const BMV_PLAN = [[1810, 1838, 1843, 2000], [3500, 3570, 3600, 3800], [5351.5, 5354, 5366, 5366.5], [7000, 7040, 7060, 7200], [10100, 10130, 10150, 10150],
+    [14000, 14070, 14099, 14350], [18068, 18095, 18109, 18168], [21000, 21070, 21149, 21450], [24890, 24915, 24929, 24990], [28000, 28070, 28190, 29700], [50000, 50100, 50400, 52000]];
+  // Mode d'un spot : celui écrit dans le commentaire, sinon skimmer = CW, fréquence d'appel FT, puis plan de bande
+  function bmvSpotMode(p) {
+    const m = ((BMV_MODES.exec(p.cmt) || [])[1] || '').toUpperCase();
+    if (/^FT[248]$/.test(m)) return 'FT';
+    if (m === 'CW') return 'CW';
+    if (m === 'RTTY' || /^PSK/.test(m)) return 'RTTY';
+    if (m === 'SSB' || m === 'USB' || m === 'LSB') return 'SSB';
+    if (m) return m;
+    if (p.skim) return 'CW';
+    if (BMV_FTF.some((f) => p.f >= f - 0.2 && p.f <= f + 3.2)) return 'FT';
+    const b = BMV_PLAN.find((x) => p.f >= x[0] && p.f <= x[3]);
+    if (!b) return '';
+    return p.f < b[1] ? 'CW' : p.f < b[2] ? 'RTTY' : 'SSB';
+  }
   function bmvOnSpots(m) {
     if (m.t === 'spots') BMV.spots.clear();
     for (const s of m.list || []) {
@@ -2449,7 +2471,16 @@
     if (!box || box.firstChild) return box;
     box.innerHTML = '<div class="bmv-h"><b class="bmv-band">—</b><small>' + (side === 'A' ? 'VFO-A' : 'VFO-B') + '</small>' +
       '<span class="bmv-span"><button type="button" data-d="-1" title="Plage plus étroite">−</button><button type="button" data-d="1" title="Plage plus large">+</button></span></div>' +
+      '<div class="bmv-m">' + BMV_FILTS.map(([k, t]) => '<button type="button" data-f="' + k + '" title="' + (k ? 'Seulement les spots ' + t : 'Tous les spots') + '">' + t + '</button>').join('') + '</div>' +
       '<div class="bmv-b"><canvas></canvas></div><div class="bmv-f"></div>';
+    const filtShow = () => box.querySelectorAll('.bmv-m button').forEach((b) => b.classList.toggle('on', b.dataset.f === (BMV.filt[side] || '')));
+    box.querySelectorAll('.bmv-m button').forEach((b) => b.addEventListener('click', () => {
+      BMV.filt[side] = b.dataset.f === BMV.filt[side] ? '' : b.dataset.f; // nouveau clic sur le mode choisi : tous
+      store.set('rs.face.bmf' + side, BMV.filt[side]);
+      filtShow();
+      bmvDraw();
+    }));
+    filtShow();
     const zoom = (d) => {
       const i = Math.max(0, Math.min(BMV.spans.length - 1, BMV.spans.indexOf(BMV.span[side]) + d));
       BMV.span[side] = BMV.spans[i < 0 ? 2 : i];
@@ -2518,7 +2549,8 @@
     c.strokeStyle = '#2b3546'; c.beginPath(); c.moveTo(x0 - 6.5, 0); c.lineTo(x0 - 6.5, H); c.stroke();
     // Spots : du plus récent au plus ancien gardés 30 min ; étiquettes poussées vers le bas si elles se chevauchent
     const now = Date.now();
-    const list = Array.from(BMV.spots.values()).filter((p) => p.f >= lo && p.f <= hi && now - p.at < BMV_KEEP).sort((a, b) => a.f - b.f);
+    const fm = BMV.filt[side] || '';
+    const list = Array.from(BMV.spots.values()).filter((p) => p.f >= lo && p.f <= hi && now - p.at < BMV_KEEP && (!fm || bmvSpotMode(p) === fm)).sort((a, b) => a.f - b.f);
     const lay = [];
     let last = -99;
     for (const p of list) {
@@ -2542,7 +2574,7 @@
     c.strokeStyle = tx ? '#ff3b30' : (side === 'A' ? '#cfc8ff' : '#2f7bff'); c.lineWidth = 1.5;
     c.beginPath(); c.moveTo(0, yv); c.lineTo(W, yv); c.stroke();
     c.fillStyle = c.strokeStyle; c.beginPath(); c.moveTo(W - 1, yv - 5); c.lineTo(W - 9, yv); c.lineTo(W - 1, yv + 5); c.closePath(); c.fill();
-    box.querySelector('.bmv-f').textContent = list.length + ' spot' + (list.length > 1 ? 's' : '') + ' · ' + span + ' kHz' + (BMV.state && BMV.state !== 'connecté' ? ' · cluster : ' + BMV.state : '');
+    box.querySelector('.bmv-f').textContent = list.length + ' spot' + (list.length > 1 ? 's' : '') + (fm ? ' ' + BMV_FILTS.find((x) => x[0] === fm)[1] : '') + ' · ' + span + ' kHz' + (BMV.state && BMV.state !== 'connecté' ? ' · cluster : ' + BMV.state : '');
   }
   setInterval(bmvDraw, 2000);
   window.addEventListener('resize', bmvDraw);
