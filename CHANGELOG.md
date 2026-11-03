@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.33.6** — **RTTY** : la règle des fréquences au-dessus de chaque cascade accorde le VFO (le TRX suit) — molette (10 Hz par cran, 50 Hz en tournant vite) ou glisser, sur toute la bande ; les repères des décodeurs ne se règlent plus que dans la cascade (comme FLDIGI et MixW). Poignée de hauteur aussi sous la cascade du VFO-B (RTTY et FT), même hauteur pour les deux. Ctrl+F5 sur /ftdx101/digi.html et le dashboard.
 - **0.33.5** — **RTTY, FTDX101 en double réception** : les deux cascades au même niveau et de même taille (réglages Gain, Zéro, Plat, Couleurs, Vitesse aussi au-dessus de la cascade du VFO-B, les mêmes que ceux de la cascade B en FT ; en-têtes, cascades et texte reçu alignés d'une colonne à l'autre). Ctrl+F5 sur /ftdx101/digi.html.
 - **0.33.4** — **Double réception FT8 / FT4 / FT2** : drapeau TX (et son trait sur la cascade) en bleu, comme le bouton VFO-B / SUB, sur le VFO qui n'émet pas (au lieu du brun). Ctrl+F5 sur /ftdx101/digi.html.
 - **0.33.3** — **Carte de bande du VFO-B** : boutons Filtres et Tous comme sur celle du VFO-A, avec ses propres filtres (gardés dans le navigateur) ; les deux cartes ont le même en-tête et la même largeur. Ctrl+F5 sur /ftdx101/digi.html.

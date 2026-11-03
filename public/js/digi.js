@@ -176,6 +176,7 @@
         <canvas id="ftScaleB" height="44"></canvas>
         <canvas id="ftWfB" height="140" title="Cascade du VFO-B (SUB) : clic gauche = réception, clic droit = émission"></canvas>
         <i class="dg-mk dg-mk-tx" id="ftMkTxB"></i><i class="dg-mk dg-mk-rx" id="ftMkRxB"></i>
+        <i class="dg-grip" id="ftGripB" title="Glisser vers le haut ou le bas : hauteur des cascades (double-clic : taille d'origine)"></i>
       </div>
     </div>
     <div class="dg-cols">
@@ -213,7 +214,7 @@
       <select id="rtSpan" aria-label="Largeur de la cascade" title="Bande audio affichée. 4 kHz : ouvrez aussi le filtre du TRX (BW 4.0K), sinon le bord droit reste noir"><option value="3000">Bande 3 kHz</option><option value="4000">Bande 4 kHz</option></select>
       <select id="rtZoom" aria-label="Zoom de la cascade" title="Zoom (aussi à la molette sur la cascade : vers soi = plus étroit, vers l'avant = plus large) : plage plus étroite et plus détaillée, comme MixW"><option value="1">Zoom ×1</option><option value="1.5">Zoom ×1,5</option><option value="2">Zoom ×2</option><option value="3">Zoom ×3</option><option value="4">Zoom ×4</option><option value="6">Zoom ×6</option><option value="8">Zoom ×8</option></select>
       <button class="btn" type="button" id="rtSplitBtn" aria-pressed="false" title="SPLIT : réception sur le VFO A, émission sur le VFO B (même bouton que SPLIT sur la ligne Step)">SPLIT</button>
-      <span class="dg-note rt-tip" id="rtTip">bouton gauche (clic ou maintenu en glissant) : décodeur A · bouton droit : décodeur B · molette : zoom · Maj+glisser ou Maj+molette : accorder le VFO · double-clic sur un indicatif : le reprendre</span>
+      <span class="dg-note rt-tip" id="rtTip">dans la cascade : bouton gauche (clic ou maintenu en glissant) : décodeur A · bouton droit : décodeur B · molette : zoom · sur la règle des fréquences : molette ou glisser = accorder le VFO · double-clic sur un indicatif : le reprendre</span>
       <span class="dg-status" id="rtStatus"></span>
     </div>
     <!-- Une seule cascade (le TRX n'envoie qu'un son) avec les repères des deux décodeurs -->
@@ -262,9 +263,10 @@
             <select id="wfSpdR" aria-label="Vitesse de la cascade du VFO-B" title="Vitesse de défilement : plus lent = signaux plus ramassés et plus d'historique"><option value="1">Vitesse : rapide</option><option value="2">Vitesse : normale</option><option value="3">Vitesse : lente</option></select>
             <button class="dg-mini" type="button" id="wfResetR" title="Réglages d'origine">↺</button>
           </div>
-          <canvas id="rtScaleB" height="44"></canvas>
+          <canvas id="rtScaleB" height="44" title="Règle des fréquences : molette ou glisser = accorder le VFO-B (le TRX suit), sur toute la bande"></canvas>
           <canvas id="rtWfB" height="140"></canvas>
           <i class="dg-mk dg-mk-rx" id="rtMkMB"></i><i class="dg-mk dg-mk-tx" id="rtMkSB"></i>
+          <i class="dg-grip" id="rtGripB" title="Glisser vers le haut ou le bas : hauteur des cascades (double-clic : taille d'origine)"></i>
         </div>
         <pre class="rt-rx" id="rtRxB"></pre>
       </div>
@@ -601,6 +603,8 @@
       rtTipT = setTimeout(() => { if ($('rtTip')) { $('rtTip').hidden = true; sizeCanvas(); } }, 3000);
     }
     if ($('dgWf')) $('dgWf').title = pane === 'rtty' && $('rtTip') ? $('rtTip').textContent : '';
+    if ($('dgScale')) $('dgScale').style.cursor = pane === 'rtty' ? 'ew-resize' : '';
+    if ($('dgScale')) $('dgScale').title = pane === 'rtty' ? 'Règle des fréquences : molette ou glisser = accorder le VFO-A (le TRX suit), sur toute la bande' : '';
     // Une seule cascade, déplacée dans la fenêtre affichée (FT8/FT4 ou RTTY)
     if (WF_TABS.indexOf(pane) >= 0) {
       // RTTY sur un TRX qui envoie ses deux récepteurs séparément (DUAL_AUDIO, ex. FTDX101D / MP) : une cascade par
@@ -1374,13 +1378,15 @@
   function rtDragInit(ids, ch) {
     let drag = null;
     let swallowClick = false;
-    rtDecDrag(ids, ch);
+    // Repères des décodeurs : seulement dans la cascade ; la règle des fréquences accorde le VFO (comme FLDIGI, MixW)
+    rtDecDrag(ids.filter((id) => !/Scale/.test(id)), ch);
     for (const id of ids) {
       const el = $(id);
+      const onScale = /Scale/.test(id);
       el.addEventListener('mousedown', (e) => { if (tab === 'rtty' && e.button === 1) e.preventDefault(); }); // pas de défilement auto
       el.addEventListener('pointerdown', (e) => {
-        // Accord du VFO : Maj + glisser (bouton gauche) ou bouton du milieu
-        if (tab !== 'rtty' || !((e.button === 0 && e.shiftKey) || e.button === 1)) return;
+        // Accord du VFO : glisser sur la règle des fréquences, Maj + glisser sur la cascade, ou bouton du milieu
+        if (tab !== 'rtty' || !((e.button === 0 && (e.shiftKey || onScale)) || e.button === 1)) return;
         e.preventDefault();
         const d = rtDialOf(ch);
         if (!d) return;
@@ -1420,6 +1426,7 @@
       el.addEventListener('wheel', (e) => {
         if (tab !== 'rtty') return;
         e.preventDefault();
+        if (onScale) return rtWheelTune(e, ch);
         if (!e.shiftKey) {
           const now = Date.now();
           if (now - rtZoomAt < 90 || !e.deltaY) return; // pavé tactile : un cran à la fois
@@ -1447,6 +1454,24 @@
         rtWheelHz = { vfo: d.vfo, hz: nd, t: Date.now() };
       }, { passive: false });
     }
+  }
+  // Molette sur la règle des fréquences : le VFO (le TRX suit) parcourt toute la bande, 10 Hz par cran
+  // (50 Hz quand on tourne vite) ; les signaux défilent dans la cascade, les décodeurs restent sur les leurs
+  let rtWheelAt = 0;
+  function rtWheelTune(e, ch) {
+    if (!e.deltaY || !rtTuneOk()) return;
+    const d = rtDialOf(ch);
+    if (!d) return;
+    const now = Date.now();
+    const step = (now - rtWheelAt < 70 ? 50 : 10) * (e.deltaY < 0 ? 1 : -1);
+    rtWheelAt = now;
+    const base = rtWheelHz && rtWheelHz.vfo === d.vfo && now - rtWheelHz.t < 1500 ? rtWheelHz.hz : d.hz;
+    let nd = Math.round((base + step) / 10) * 10;
+    const b = BANDS_M.find((x) => base / 1e6 >= x[0] && base / 1e6 <= x[1]);
+    if (b) nd = Math.max(Math.round(b[0] * 1e6), Math.min(Math.round(b[1] * 1e6), nd)); // limites de la bande
+    if (nd === base) return;
+    rtSetDial(Object.assign({}, d, { hz: base }), nd);
+    rtWheelHz = { vfo: d.vfo, hz: nd, t: now };
   }
   let rtZoomAt = 0;
   let rtWheelHz = null; // molette rapide : on part de la dernière fréquence envoyée, pas de l'état relu (en retard)
@@ -2294,11 +2319,12 @@
       pickTx(Number(side.dataset.ch));
     }));
     // Cascade du décodeur B : clic (gauche ou droit) = caler le décodeur B
-    for (const id of ['rtWfB', 'rtScaleB']) {
-      const fB = (e) => { const r = e.currentTarget.getBoundingClientRect(); return ((e.clientX - r.left) / r.width) * WF_MAX_HZ; };
+    for (const id of ['rtWfB']) { // la règle (rtScaleB) accorde le VFO-B : pas de repère au clic
+      const fB = (e) => { const r = e.currentTarget.getBoundingClientRect(); return WF_LO + ((e.clientX - r.left) / r.width) * WF_MAX_HZ; };
       $(id).addEventListener('click', (e) => setRttyF(fB(e), 1));
       $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); setRttyF(fB(e), 1); });
     }
+    $('rtScaleB').addEventListener('contextmenu', (e) => e.preventDefault());
     // Largeur des deux décodeurs (gardée dans ce navigateur)
     const dual = $('rtDual');
     const sp = $('rtSplit');
@@ -4356,7 +4382,8 @@
         return v;
       };
       if (Number(store.get('wfh', '0')) > 0) setWfH(Number(store.get('wfh', '0')), false);
-      const grip = $('dgGrip');
+      // Poignée sous chaque cascade (VFO-A, et VFO-B en double réception) : même hauteur pour les deux
+      for (const grip of ['dgGrip', 'rtGripB', 'ftGripB'].map($).filter(Boolean)) {
       grip.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         grip.setPointerCapture(e.pointerId);
@@ -4370,6 +4397,7 @@
         grip.addEventListener('pointercancel', up);
       });
       grip.addEventListener('dblclick', () => { $('dgWf').style.height = ''; const root = $('dgWf').closest('.dg') || document.documentElement; root.style.removeProperty('--dg-list-max'); store.set('wfh', '0'); if (wf.ctx) sizeCanvas(); });
+      }
       // Séparateurs entre les deux listes (FT8 / FT4 / FT2 et JTTY) : largeur réglable, gardée dans ce navigateur
       const splits = Array.from($('dgSplit').ownerDocument.querySelectorAll('.dg-vsplit'));
       const setSplit = (pct, save) => {
@@ -4423,9 +4451,10 @@
       for (const id of ['dgWf', 'dgScale']) {
         $(id).addEventListener('click', (e) => {
           if (tab === 'cw' && cwDragged) { cwDragged = false; return; } // fin d'un glisser : position gardée telle quelle
+          if (tab === 'rtty' && id === 'dgScale') return; // RTTY : la règle accorde le VFO (molette, glisser), les repères se règlent dans la cascade
           return tab === 'sstv' ? null : tab === 'rtty' ? setRttyF(fAt(e), 0) : tab === 'cw' ? setCwF(fAt(e), true) : setRx(fAt(e));
         });
-        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'sstv') return; if (tab === 'rtty') setRttyF(fAt(e), 1); else if (tab === 'cw') setCwF(fAt(e), false); else setTx(fAt(e)); });
+        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'sstv') return; if (tab === 'rtty') { if (id !== 'dgScale') setRttyF(fAt(e), 1); } else if (tab === 'cw') setCwF(fAt(e), false); else setTx(fAt(e)); });
       }
       // Cascade du VFO-B (FT8 / FT4 / FT2 en double réception) : clic gauche = réception, clic droit = émission
       const fAtB = (e) => { const r = e.currentTarget.getBoundingClientRect(); return ftViewB.lo + ((e.clientX - r.left) / r.width) * ftViewB.span; };
