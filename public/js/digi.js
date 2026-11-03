@@ -254,6 +254,14 @@
         </div>
         <!-- Cascade propre au décodeur B : pour un TRX qui envoie ses deux récepteurs séparément (ex. FTDX101) ; cachée sinon -->
         <div class="dg-wf rt-wfb" hidden>
+          <div class="wf-ctl" title="Réglages de la cascade du VFO-B">
+            <label title="Contraste : plus à droite, les signaux faibles ressortent davantage">Gain <input id="wfGainR" type="range" min="-20" max="20" step="1" value="0"></label>
+            <label title="Niveau du bruit de fond : plus à droite, le fond est plus clair">Zéro <input id="wfZeroR" type="range" min="-20" max="20" step="1" value="0"></label>
+            <label title="Aplatit le bruit de fond sur toute la largeur (corrige la pente du filtre du TRX)"><input id="wfFlatR" type="checkbox" checked> Plat</label>
+            <select id="wfPalR" aria-label="Couleurs de la cascade du VFO-B"><option value="jtdx">Couleurs : JTDX</option><option value="classic">Couleurs : bleu</option><option value="wsjtx">Couleurs : arc-en-ciel</option><option value="gray">Couleurs : gris</option></select>
+            <select id="wfSpdR" aria-label="Vitesse de la cascade du VFO-B" title="Vitesse de défilement : plus lent = signaux plus ramassés et plus d'historique"><option value="1">Vitesse : rapide</option><option value="2">Vitesse : normale</option><option value="3">Vitesse : lente</option></select>
+            <button class="dg-mini" type="button" id="wfResetR" title="Réglages d'origine">↺</button>
+          </div>
           <canvas id="rtScaleB" height="44"></canvas>
           <canvas id="rtWfB" height="140"></canvas>
           <i class="dg-mk dg-mk-rx" id="rtMkMB"></i><i class="dg-mk dg-mk-tx" id="rtMkSB"></i>
@@ -868,7 +876,8 @@
     if (tab === 'cw' && !isB) { if (cwDf !== df) cwRows.length = 0; cwDf = df; cwRows.push(Uint8Array.from(vals)); if (cwRows.length > 12) cwRows.shift(); }
     // Vitesse (comme « Spd » de JTDX) : 1, 2 ou 3 lignes reçues fondues en une (moyenne des puissances) ;
     // plus lent = signaux plus ramassés, plus d'historique à l'écran
-    const C = ftB ? wfCfgB : wfCfg, CP = ftB ? PALB : PAL; // réglages de la cascade dessinée
+    const ownB = ftB || (isB && tab === 'rtty' && rtDualAudio); // cascade du VFO-B (voie droite) : ses propres réglages
+    const C = ownB ? wfCfgB : wfCfg, CP = ownB ? PALB : PAL; // réglages de la cascade dessinée
     const spd = C.spd;
     if (spd > 1) {
       if (!T.acc || T.acc.length !== n) { T.acc = new Float32Array(n); T.accN = 0; }
@@ -4321,14 +4330,19 @@
       $('wfFlat').addEventListener('change', () => { wfCfg.flat = $('wfFlat').checked; store.set('wfflat', wfCfg.flat ? '1' : '0'); });
       $('wfPal').addEventListener('change', () => { wfCfg.pal = $('wfPal').value; PAL = mkPal(PALS[wfCfg.pal]); store.set('wfpal2', wfCfg.pal); });
       $('wfSpd').addEventListener('change', () => { wfCfg.spd = Number($('wfSpd').value) || 2; wf.accN = 0; if (wf.acc) wf.acc.fill(0); store.set('wfspd', String(wfCfg.spd)); });
-      const wfUiB = () => { $('wfGainB').value = wfCfgB.gain; $('wfZeroB').value = wfCfgB.zero; $('wfFlatB').checked = wfCfgB.flat; $('wfPalB').value = wfCfgB.pal; $('wfSpdB').value = String(wfCfgB.spd); };
+      // Cascade du VFO-B : mêmes réglages en FT (barre …B) et en RTTY (barre …R)
+      const wfUiB = () => { for (const x of ['B', 'R']) { if (!$('wfGain' + x)) continue; $('wfGain' + x).value = wfCfgB.gain; $('wfZero' + x).value = wfCfgB.zero; $('wfFlat' + x).checked = wfCfgB.flat; $('wfPal' + x).value = wfCfgB.pal; $('wfSpd' + x).value = String(wfCfgB.spd); } };
+      const accReset = () => { for (const T of [wfFB, wfB]) { T.accN = 0; if (T.acc) T.acc.fill(0); } };
+      for (const x of ['B', 'R']) {
+        if (!$('wfGain' + x)) continue;
+        $('wfGain' + x).addEventListener('input', () => { wfCfgB.gain = Number($('wfGain' + x).value); store.set('wfgainb', String(wfCfgB.gain)); wfUiB(); });
+        $('wfZero' + x).addEventListener('input', () => { wfCfgB.zero = Number($('wfZero' + x).value); store.set('wfzerob', String(wfCfgB.zero)); wfUiB(); });
+        $('wfFlat' + x).addEventListener('change', () => { wfCfgB.flat = $('wfFlat' + x).checked; store.set('wfflatb', wfCfgB.flat ? '1' : '0'); wfUiB(); });
+        $('wfPal' + x).addEventListener('change', () => { wfCfgB.pal = $('wfPal' + x).value; PALB = mkPal(PALS[wfCfgB.pal]); store.set('wfpalb', wfCfgB.pal); wfUiB(); });
+        $('wfSpd' + x).addEventListener('change', () => { wfCfgB.spd = Number($('wfSpd' + x).value) || 2; accReset(); store.set('wfspdb', String(wfCfgB.spd)); wfUiB(); });
+        $('wfReset' + x).addEventListener('click', () => { Object.assign(wfCfgB, { gain: 0, zero: 0, flat: true, pal: 'jtdx', spd: 2 }); PALB = mkPal(PALS.jtdx); for (const k of ['wfgainb', 'wfzerob']) store.set(k, '0'); store.set('wfflatb', '1'); store.set('wfpalb', 'jtdx'); store.set('wfspdb', '2'); accReset(); wfUiB(); });
+      }
       wfUiB();
-      $('wfGainB').addEventListener('input', () => { wfCfgB.gain = Number($('wfGainB').value); store.set('wfgainb', String(wfCfgB.gain)); });
-      $('wfZeroB').addEventListener('input', () => { wfCfgB.zero = Number($('wfZeroB').value); store.set('wfzerob', String(wfCfgB.zero)); });
-      $('wfFlatB').addEventListener('change', () => { wfCfgB.flat = $('wfFlatB').checked; store.set('wfflatb', wfCfgB.flat ? '1' : '0'); });
-      $('wfPalB').addEventListener('change', () => { wfCfgB.pal = $('wfPalB').value; PALB = mkPal(PALS[wfCfgB.pal]); store.set('wfpalb', wfCfgB.pal); });
-      $('wfSpdB').addEventListener('change', () => { wfCfgB.spd = Number($('wfSpdB').value) || 2; wfFB.accN = 0; if (wfFB.acc) wfFB.acc.fill(0); store.set('wfspdb', String(wfCfgB.spd)); });
-      $('wfResetB').addEventListener('click', () => { Object.assign(wfCfgB, { gain: 0, zero: 0, flat: true, pal: 'jtdx', spd: 2 }); PALB = mkPal(PALS.jtdx); for (const k of ['wfgainb', 'wfzerob']) store.set(k, '0'); store.set('wfflatb', '1'); store.set('wfpalb', 'jtdx'); store.set('wfspdb', '2'); wfFB.accN = 0; if (wfFB.acc) wfFB.acc.fill(0); wfUiB(); });
       $('wfReset').addEventListener('click', () => { Object.assign(wfCfg, { gain: 0, zero: 0, flat: true, pal: 'jtdx', spd: 2 }); PAL = mkPal(PALS.jtdx); for (const k of ['wfgain', 'wfzero']) store.set(k, '0'); store.set('wfflat', '1'); store.set('wfpal2', 'jtdx'); store.set('wfspd', '2'); wf.accN = 0; if (wf.acc) wf.acc.fill(0); wfUi(); });
       // Poignée sous la cascade : plus petite cascade = listes « Activité de bande » / « Fréquence RX » plus hautes
       const WF_DEF = 140;

@@ -1652,3 +1652,13 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 .bm-sb > i { display: block; width: 1px; }
 .bm-body .bm-s { right: 15px; }
 .dg-mk-tx.mk-off { border-left-color: rgba(127, 178, 255, .95); background: rgba(36, 86, 184, .12); } /* TX du VFO qui n'émet pas : bleu */
+/* RTTY en double réception : les deux colonnes alignées ligne par ligne (en-têtes, cascades, texte reçu) */
+@media (min-width: 901px) {
+  .rt-dual { grid-template-rows: auto auto minmax(0, 1fr); }
+  .rt-dual > .rt-side { grid-row: 1 / span 3; display: grid; grid-template-rows: subgrid; }
+  .rt-dual > .rt-vsplit { grid-row: 1 / span 3; }
+  .rt-dual > .rt-side > .dg-h { grid-row: 1; }
+  .rt-dual > .rt-side > .dg-wf-slot, .rt-dual > .rt-side > .rt-wfb { grid-row: 2; }
+  .rt-dual > .rt-side > .rt-rx { grid-row: 3; }
+  .rt-dual > .rt-side > .dg-h { align-self: stretch; }
+}
