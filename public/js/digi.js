@@ -686,6 +686,13 @@
       applySpan();
       sizeCanvas();
     }
+    // TX call : dans la barre du haut de l'onglet affiché (FT8 / FT4 / FT2, RTTY, JTTY, CW, SSTV, WSPR, JT65)
+    const txc = $('dgTxcWrap'), paneEl = document.querySelector('#centerPanel .ctab-pane[data-pane="' + pane + '"]');
+    const bar = paneEl && paneEl.querySelector('.dg-bar');
+    if (txc && bar && txc.parentElement !== bar) {
+      if (pane === 'ftx') bar.insertBefore(txc, $('dgStop'));
+      else { const stx = bar.querySelector('.dg-note, .dg-status, .dg-tl'); if (stx) bar.insertBefore(txc, stx); else bar.appendChild(txc); }
+    }
     if (pane === 'sync') drawSync();
     sendView();
     if (pane === 'log' && window.RSLOG) window.RSLOG.show();

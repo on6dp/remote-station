@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.33.20** — **Modes numériques de la face avant** : choix « TX call » (jaune fluo) dans la barre du haut de chaque mode — RTTY, JTTY, CW, SSTV, WSPR et JT65 — comme en FT8 / FT4 / FT2 (un seul réglage, le même partout). Ctrl+F5 sur /ftdx101/digi.html.
 - **0.33.19** — **Face avant, DIGI CONFIGURATION** : le bouton du mode affiché dans la page des modes numériques est en bleu clair (rien si la page est fermée) ; « 📟 Numériques » ne recharge plus la page des modes numériques déjà ouverte. Ctrl+F5 sur /ftdx101 et /ftdx101/digi.html.
 - **0.33.18** — **Face avant** : MICRO grisé (comme EQUALIZER MICRO) quand le TRX n'est pas en phonie (DATA-U, CW, RTTY…) ; il redevient normal en LSB / USB / AM / FM. Ctrl+F5 sur /ftdx101.
 - **0.33.17** — **RTTY** : en grand, la fréquence du VFO comme sur l'écran du TRX (ex. 14.078.540, sur fond rouge pour le décodeur qui émet) ; en petit à côté, la fréquence du signal suivi (VFO + centre du décodeur, comme FLDIGI). Ctrl+F5 sur /ftdx101/digi.html et le dashboard.
