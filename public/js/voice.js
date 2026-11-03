@@ -683,6 +683,7 @@
     onMessage(m) {
       if (m.t === 'trxeq') {
         T.info = m;
+        if (!(V.api.rig() && V.api.rig().TRX_EQ)) return true; // TRX sans égaliseur paramétrique (Icom)
         if (!T.pr || !T.dirty) T.pr = JSON.parse(JSON.stringify(m.mine || m.club || trxBlank()));
         trxFill();
         draw(); // bouton « Profil de … »

@@ -22,7 +22,9 @@
   // le filtre à droite, le scope plus haut ; pas de MAIN / SUB, de DISP ni de MONO
   const SINGLE = !!(FACE && FACE.single);
   // Positions verticales dans l'écran (unités de la photo depuis le haut de l'écran) : bandeau du scope, scope, rangée du bas
-  const G = SINGLE ? { lowY: 139, scopeY: 152, scopeH: 163, botY: 320, botH: 40, expUp: 64 } : { lowY: 157, scopeY: 170, scopeH: 124, botY: 297, botH: 21, expUp: 34 };
+  const G = Object.assign(SINGLE ? { lowY: 139, scopeY: 152, scopeH: 163, botY: 320, botH: 40, expUp: 64 } : { lowY: 157, scopeY: 170, scopeH: 124, botY: 297, botH: 21, expUp: 34 }, (FACE && FACE.lay) || {});
+  // TRX Icom (IC-7300) : filtres FIL1 / FIL2 / FIL3 et TWIN PBT au lieu de WIDTH / SHIFT / R.FIL
+  const ICOM = !!(R && R.CONTROL && R.CONTROL.fil);
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* stockage bloqué */ } }
@@ -134,7 +136,7 @@
     if (!code) return say('Mode ' + name + ' non disponible.', 'warn');
     send({ t: 'set', mode: code, sub: activeSide() === 'B' });
   }
-  const CYCLE = ['LSB', 'USB', 'CW-U', 'CW-L', 'AM', 'FM', 'DATA-U', 'DATA-L', 'RTTY-L', 'RTTY-U', 'PSK'];
+  const CYCLE = (FACE && FACE.cycle) || ['LSB', 'USB', 'CW-U', 'CW-L', 'AM', 'FM', 'DATA-U', 'DATA-L', 'RTTY-L', 'RTTY-U', 'PSK'];
   function doAct(k, long) {
     const a = k.act || {};
     const s = S();
@@ -143,6 +145,20 @@
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
     if (a.local === 'func') { viewTouched(); if (MV.open) closeMenu(); L.func = !L.func; return render(); }
     if (a.local === 'bandMenu') return L.bandMenu ? closeBandMenu() : openBandMenu();
+    if (a.local === 'modeMenu') return L.modeMenu ? closeModeMenu() : openModeMenu();
+    if (a.local === 'expand') return toggleExpand();
+    if (a.local === 'exit') { if (L.bandMenu) closeBandMenu(); if (L.modeMenu) closeModeMenu(); if (L.func) { L.func = false; render(); } return; }
+    if (a.local === 'bandUp' || a.local === 'bandDown') {
+      // Bande suivante / précédente (IC-7300 : touches ▲ ▼)
+      const list = BAND_GRID.filter((b) => b[2] * 1000 <= (R.FREQ_MAX || 75e6));
+      const cur = list.findIndex((b) => b[0] === L.bandOf(activeSide() === 'B' ? s.freqB : s.freq));
+      const i = cur < 0 ? 0 : (cur + (a.local === 'bandUp' ? 1 : list.length - 1)) % list.length;
+      return bandTo(list[i][0], list[i][2], list[i][3]);
+    }
+    // TWIN PBT : pousser le bouton (CLR) = PBT intérieur et extérieur au milieu
+    if (a.local === 'pbtClr') { if (!needControl()) return; setCtl('pbtIn', 128); setCtl('pbtOut', 128); return say('TWIN PBT au milieu (CLR).', '', 2500); }
+    // Réglage à choix : valeur suivante (IC-7300 : P.AMP OFF → AMP1 → AMP2)
+    if (a.cycle) { const c = R.CONTROL[a.cycle]; if (!c || !c.options) return; const i = c.options.findIndex((o) => o[0] === s[a.cycle]); return setCtl(a.cycle, c.options[(i + 1) % c.options.length][0]); }
     // CONT/APF (FTDX10) : en CW, l'APF ; sinon le CONTOUR
     if (a.contApf) { const id = /^CW/.test(s.mode || '') && R.CONTROL.apf ? 'apf' : 'contour'; return setCtl(id, s[id] ? 0 : 1); }
     if (a.local === 'vc') {
@@ -600,7 +616,7 @@
   // Fréquence BF du centre de la bande passante (sans le décalage SHIFT), selon le mode
   const FLT_SPAN = 4200; // largeur (Hz de BF) représentée par le cadre du filtre
   // CW : le filtre est centré sur le pitch (KEY PITCH du TRX, 700 Hz par défaut)
-  function audioCenter(md, hz) { return /CW/.test(md) ? (S().cwPitch || 700) : /DATA|RTTY|PSK/.test(md) ? 1500 : /AM|FM/.test(md) ? hz / 2 : 300 + hz / 2; }
+  function audioCenter(md, hz) { return /CW/.test(md) ? (S().cwPitch || 700) : /DATA|RTTY|PSK|-D$/.test(md) ? 1500 : /AM|FM/.test(md) ? hz / 2 : 300 + hz / 2; }
   // NOTCH du récepteur (MAIN : notch / notchFreq ; SUB : notchB / notchFreqB) : fréquence BF et place dans le cadre du filtre
   // (cadre = 4 kHz de large ; en bande latérale inférieure, le TRX montre la bande à l'envers)
   function notchOf(s, side, md, hz, sh) {
@@ -679,7 +695,7 @@
       }
     }
     // ANT / ATT / IPO / R.FIL / AGC
-    const CELLS = [['ANT', 'ant', 'ant'], ['ATT', 'att', 'attB'], ['IPO', 'preamp', 'preampB'], ['R.FIL', 'roof', 'roofB'], ['AGC', 'agc', 'agcB']];
+    const CELLS = FACE.cells ? FACE.cells.map(([lab, id]) => [lab, id, id + 'B']) : [['ANT', 'ant', 'ant'], ['ATT', 'att', 'attB'], ['IPO', 'preamp', 'preampB'], ['R.FIL', 'roof', 'roofB'], ['AGC', 'agc', 'agcB']];
     for (const [i, side] of [[0, 'A'], [1, 'B']]) {
       const x0 = X(5 + i * half);
       const cw = (half - 4) / 5;
@@ -716,8 +732,9 @@
     if (SINGLE) {
       // Rangée du bas du FTDX10 : CENTER, 3DSS, MULTI, EXPAND, SPAN, SPEED (la fonction du bouton FUNC est dans la case près du VFO-B)
       const by = (n) => BOT.find((b) => b[0] === n);
-      BOT.splice(0, BOT.length, ['CENTER'], by('3DSS'), by('MULTI'), ['EXPAND', () => { viewTouched(); L.expand = !L.expand; store.set('rs.face.expand', L.expand ? '1' : '0'); say(L.expand ? 'EXPAND : scope agrandi' : 'EXPAND coupé : affichage normal', '', 2500); render(); }],
-        by('SPAN'), ['SPEED', () => { smAdjust('spd', 1); say('SPEED (vitesse de la cascade) : ' + WF_SPEEDS[L.wfSpeed][0], '', 2500); }]);
+      const extra = { EXPAND: ['EXPAND', () => toggleExpand()], SPEED: ['SPEED', () => { smAdjust('spd', 1); say('SPEED (vitesse de la cascade) : ' + WF_SPEEDS[L.wfSpeed][0], '', 2500); }] };
+      const names = FACE.bot || ['CENTER', '3DSS', 'MULTI', 'EXPAND', 'SPAN', 'SPEED'];
+      BOT.splice(0, BOT.length, ...names.map((n) => extra[n] || by(n) || [n]));
     }
     const bw = (c.w - 10) / BOT.length;
     LCD.bot = BOT.map(([lab, fn], j) => {
@@ -748,6 +765,7 @@
     buildModeMenu(g, c);
     if (SINGLE) buildBandMenu(g, c);
   }
+  function toggleExpand() { viewTouched(); L.expand = !L.expand; store.set('rs.face.expand', L.expand ? '1' : '0'); say(L.expand ? 'EXPAND : scope agrandi' : 'EXPAND coupé : affichage normal', '', 2500); render(); }
   // FTDX10 (un seul récepteur) : disposition de l'écran, refaite à chaque changement (EXPAND)
   function layoutSingle(up) {
     const X = LCD.X, Y = LCD.Y, half = LCD.half;
@@ -769,12 +787,13 @@
     // Cases ATT / IPO / R.FIL / AGC (pas d'ANT) sur la gauche, sous le S-mètre
     LCD.cgA.style.display = '';
     tr(LCD.cgA, '');
-    const cw = 330 / 4;
-    LCD.cA.forEach((c, j) => {
-      const show = c.id !== 'ant';
+    const vis = LCD.cA.filter((c) => c.id !== 'ant');
+    const cw = 330 / vis.length;
+    LCD.cA.forEach((c) => {
+      const j = vis.indexOf(c), show = j >= 0;
       for (const e of [c.r, c.h, c.tl, c.t]) e.style.display = show ? '' : 'none';
       if (!show) return;
-      const x = X(5) + (j - 1) * cw;
+      const x = X(5) + j * cw;
       for (const r of [c.r, c.h]) { r.setAttribute('x', x + 0.5); r.setAttribute('width', cw - 1); r.setAttribute('y', Y(87)); r.setAttribute('height', 48); }
       c.tl.setAttribute('x', x + cw / 2); c.tl.setAttribute('y', Y(104));
       c.t.setAttribute('x', x + cw / 2); c.t.setAttribute('y', Y(127));
@@ -826,7 +845,7 @@
   function closeBandMenu() { L.bandMenu = false; document.removeEventListener('pointerdown', outsideBand, true); render(); }
   function outsideBand(ev) { if (!ev.target.closest || !ev.target.closest('.mode-menu')) closeBandMenu(); }
   // Tableau MODE (appui d'au moins 1 s sur MODE), comme sur le TRX : clic sur un mode pour le récepteur actif
-  const MODE_GRID = [['LSB', 'USB', 'CW-L', 'CW-U'], ['AM', 'AM-N', 'FM', 'FM-N'], ['DATA-L', 'DATA-U', 'DATA-FM', 'DATA-FM-N'], ['RTTY-L', 'RTTY-U', 'PSK', null]];
+  const MODE_GRID = (FACE && FACE.modes) || [['LSB', 'USB', 'CW-L', 'CW-U'], ['AM', 'AM-N', 'FM', 'FM-N'], ['DATA-L', 'DATA-U', 'DATA-FM', 'DATA-FM-N'], ['RTTY-L', 'RTTY-U', 'PSK', null]];
   function buildModeMenu(g, c) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const m = LCD.modeMenu = el('g', { class: 'mode-menu', style: 'display:none' }, g);
@@ -1615,8 +1634,19 @@
   }
   const ROOF_HZ = (FACE && FACE.roof && FACE.roof.hz) || [0, 12000, 3000, 1200, 600, 300]; // R.FIL (filtre de toit) en Hz
   const ATT = ['OFF', '6dB', '12dB', '18dB'], IPO = ['IPO', 'AMP1', 'AMP2'], ROOF = (FACE && FACE.roof && FACE.roof.labels) || ['', '12kHz', '3kHz', '1.2kHz', '600Hz', '300Hz'], AGC = ['OFF', 'FAST', 'MID', 'SLOW', 'AUTO'];
+  // IC-7300 : largeur d'origine des filtres FIL1 / FIL2 / FIL3 selon le mode (Hz)
+  function filHz(md, n) {
+    const t = /^CW/.test(md) ? [1200, 500, 250] : /^RTTY/.test(md) ? [2400, 500, 250] : /^AM/.test(md) ? [9000, 6000, 3000] : /^FM/.test(md) ? [15000, 10000, 7000] : [3000, 2400, 1800];
+    return t[Math.max(0, Math.min(2, (n || 1) - 1))];
+  }
   function cellText(id, v) {
     if (v == null) return '—';
+    if (ICOM) {
+      if (id === 'att') return v ? '20dB' : 'OFF';
+      if (id === 'preamp') return ['OFF', 'AMP1', 'AMP2'][v] || String(v);
+      if (id === 'fil') return 'FIL' + v;
+      if (id === 'agc') return ['', 'FAST', 'MID', 'SLOW'][v] || String(v);
+    }
     if (/^att/.test(id)) return ATT[v] || String(v);
     if (/^preamp/.test(id)) return IPO[v] || String(v);
     if (/^roof/.test(id)) return ROOF[v] || '—';
@@ -1689,6 +1719,13 @@
       // Bande passante réelle : celle du filtre FI (WIDTH, IF SHIFT) limitée par le filtre de toit (R.FIL, centré)
       const roofHz = ROOF_HZ[s['roof' + sfx]] || 0;
       let lo = ifSh - ifHz / 2, hi = ifSh + ifHz / 2;
+      if (ICOM && side === 'A') {
+        // IC-7300 : largeur de FIL1 / FIL2 / FIL3 (réglages d'origine du TRX selon le mode), puis TWIN PBT : chaque PBT
+        // décale une moitié du filtre (0-255, 128 au milieu) ; la bande passante est ce qui reste entre les deux
+        const fw = filHz(mode || '', s.fil), si = ((s.pbtIn != null ? s.pbtIn : 128) - 128) / 128 * fw / 2, so = ((s.pbtOut != null ? s.pbtOut : 128) - 128) / 128 * fw / 2;
+        lo = -fw / 2 + Math.max(si, so); hi = fw / 2 + Math.min(si, so);
+        if (hi - lo < 50) { const m = (lo + hi) / 2; lo = m - 25; hi = m + 25; }
+      }
       if (roofHz) { lo = Math.max(lo, -roofHz / 2); hi = Math.min(hi, roofHz / 2); if (hi - lo < 50) { const m = (lo + hi) / 2; lo = m - 25; hi = m + 25; } }
       const hz = Math.round(hi - lo);
       const sh = Math.round((lo + hi) / 2);

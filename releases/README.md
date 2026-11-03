@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.0 | [RemoteStation-Setup-0.37.0.exe](0.37.0/RemoteStation-Setup-0.37.0.exe) | [remote-station-0.37.0.tar.gz](0.37.0/remote-station-0.37.0.tar.gz) | Face avant IC-7300 (/ic7300) — [empreintes SHA-256](0.37.0/SHA256SUMS.txt) |
 | 0.36.1 | [RemoteStation-Setup-0.36.1.exe](0.36.1/RemoteStation-Setup-0.36.1.exe) | [remote-station-0.36.1.tar.gz](0.36.1/remote-station-0.36.1.tar.gz) | Face avant : aller au bon TRX ou en changer — [empreintes SHA-256](0.36.1/SHA256SUMS.txt) |
 | 0.36.0 | [RemoteStation-Setup-0.36.0.exe](0.36.0/RemoteStation-Setup-0.36.0.exe) | [remote-station-0.36.0.tar.gz](0.36.0/remote-station-0.36.0.tar.gz) | Face avant FTDX10 (/ftdx10) — [empreintes SHA-256](0.36.0/SHA256SUMS.txt) |
 | 0.35.3 | [RemoteStation-Setup-0.35.3.exe](0.35.3/RemoteStation-Setup-0.35.3.exe) | [remote-station-0.35.3.tar.gz](0.35.3/remote-station-0.35.3.tar.gz) | FINE TUNING : 1 Hz par cran — [empreintes SHA-256](0.35.3/SHA256SUMS.txt) |
