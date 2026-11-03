@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.36.1** — Face avant d'un autre TRX que celui en service (ex. /ftdx10 alors que le FTDX101 est branché) : bouton vers la face avant du TRX en service, et pour les administrateurs « Passer la station sur le … » (comme le menu TRX du club du dashboard), avec la raison si ce n'est pas possible (port jamais choisi au club, émission en cours).
 - **0.36.0** — **Face avant du FTDX10** : nouvelle page `/ftdx10` (modes numériques `/ftdx10/digi.html`, carnet `/ftdx10/log.html`). Photo du FTDX10 où chaque touche et bouton agit comme sur le TRX ; un seul récepteur : écran façon FTDX10 (S-mètre, VFO-A en grand, VFO-B en petit, ATT / IPO / R.FIL / AGC, filtre, scope), tableau BAND, A/B, STEP, FINE (FN), CONT/APF, VOX/MOX, bouton FUNC, voyants TX / VFO-A / VFO-B / FINE / STEP. Pilote FTDX10 : R.FIL (12k / 3k / 500 / 300), KEY PITCH, BK-IN, KEYER, fréquences CONTOUR / APF, scope du TRX, FINE, MONI / VOX lus pour la face avant. Le FTDX101 et le FTX-1 ne changent pas.
 - **0.35.3** — Face avant FTDX101 : FINE TUNING = 1 Hz par cran (au lieu de 10 Hz).
 - **0.35.2** — Face avant FTDX101 : le cadre du filtre suit aussi R.FIL (filtre de toit, limites en pointillés violets) et NAR — bande passante réelle = la plus étroite ; spectre plus fin sur une plage étroite (FFT 4096 points, 2,9 Hz, interpolé) ; MARKER centré sur le pitch CW. Barres du filtre TRX en CW : R.FIL pris en compte.

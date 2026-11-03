@@ -1815,7 +1815,28 @@
     const cover = $('cover');
     const wrong = st && st.rigModel && st.rigModel !== MODEL;
     cover.hidden = !wrong;
-    if (wrong) cover.innerHTML = '<p>Le TRX en service est le <b>' + esc(st.rigName || st.rigModel) + '</b>.<br>Cette page est la face avant du <b>' + esc(FACE.name) + '</b>.</p><p><a class="btn accent" href="/">Revenir au dashboard</a></p>';
+    if (wrong) {
+      // Boutons : face avant du TRX en service (s'il en a une) ; administrateur : passer la station sur ce TRX-ci
+      const other = (window.RS_FACES || {})[st.rigModel];
+      const port = !!(st.rigPorts && st.rigPorts[MODEL]);
+      const onAir = !!((st.ptt && st.ptt.active) || (st.radio && st.radio.tx));
+      const admin = !!(me && me.admin);
+      const key = [st.rigModel, !!other, port, onAir, admin, !!st.station].join('|');
+      if (cover.dataset.k !== key) {
+        cover.dataset.k = key;
+        const sw = admin && st.station && port && !onAir;
+        const note = !admin ? 'Changer de TRX : réservé aux administrateurs.' : !st.station ? 'Station hors ligne.' : !port ? 'Le port du ' + esc(FACE.name) + ' n’a jamais été choisi sur le PC du club : à faire une fois sur place.' : onAir ? 'Émission en cours : changement de TRX impossible.' : '';
+        cover.innerHTML = '<p>Le TRX en service est le <b>' + esc(st.rigName || st.rigModel) + '</b>.<br>Cette page est la face avant du <b>' + esc(FACE.name) + '</b>.</p><p class="fc-cover-btns">'
+          + (other ? '<a class="btn accent" href="/' + esc(st.rigModel) + '">Face avant du ' + esc(other.name) + '</a>' : '')
+          + (sw ? '<button class="btn" type="button" id="coverSwitch">Passer la station sur le ' + esc(FACE.name) + '</button>' : '')
+          + '<a class="btn" href="/">Revenir au dashboard</a></p>' + (note ? '<p class="fc-cover-note">' + note + '</p>' : '');
+        const b = $('coverSwitch');
+        if (b) b.addEventListener('click', () => {
+          if (!confirm('Passer la station sur le ' + FACE.name + ' ?\nLa station redémarre quelques secondes.')) return;
+          send({ t: 'switch_rig', model: MODEL });
+        });
+      }
+    } else delete cover.dataset.k;
   }
   const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 

@@ -378,3 +378,5 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .lcd.single .flt .flt-box, #face .lcd.single .flt .flt-roof, #face .lcd.single .flt .flt-vcticks { vector-effect: non-scaling-stroke; }
 #face .lcd-fbox { fill: #0c1018; stroke: #5d6878; stroke-width: 1.2; }
 #face .lcd-fboxt { fill: #6f86ff; font-size: 13px; font-weight: 700; pointer-events: none; }
+.fc-cover-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.fc-cover-note { font-size: 13px; color: #aab5c4; }
