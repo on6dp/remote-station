@@ -43,10 +43,10 @@
       { id: 'phones', cx: 90, cy: 362, r: 25, tip: 'PHONES : écouter le TRX (clic : marche / arrêt)', act: { local: 'listen' }, led: (s, L) => L.listening, ledColor: '#3ddc5a', ring: true },
       { id: 'mic', cx: 95, cy: 490, r: 58, tip: 'MIC', act: info('Micro : phonie à distance par le bouton PTT sous la face avant (Configuration micro).') },
       // Sous l'écran
-      { id: 'menu', x: 420, y: 517, w: 95, h: 43, tip: 'MENU : tableau des modes (comme toucher le mode sur l’écran du TRX)', act: { local: 'modeMenu' } },
+      { id: 'menu', x: 420, y: 517, w: 95, h: 43, tip: 'MENU : écran MENU (KEYER, RTTY, SCOPE, AUDIO, MODE, BAND…) ; le mode se change aussi en cliquant sur le mode à l’écran', act: { local: 'icomMenu' } },
       { id: 'function', x: 542, y: 517, w: 98, h: 43, tip: 'FUNCTION : menu des fonctions sur l’écran', act: { local: 'func' }, led: (s, L) => L.func },
       { id: 'mscope', x: 665, y: 517, w: 97, h: 43, tip: 'M.SCOPE : scope agrandi (EXPAND), nouveau clic : normal', act: { local: 'expand' }, led: (s, L) => !!L.expand },
-      { id: 'quick', x: 790, y: 517, w: 95, h: 43, tip: 'QUICK : tableau des bandes sur l’écran (comme toucher les MHz sur le TRX)', act: { local: 'bandMenu' } },
+      { id: 'quick', x: 790, y: 517, w: 95, h: 43, tip: 'QUICK : QUICK MENU (BAND, SPLIT, A=B, A/B, TUNER, TUNE, LOCK, 3DSS)', act: { local: 'quickMenu' } },
       { id: 'exit', x: 912, y: 517, w: 98, h: 43, tip: 'EXIT : ferme le tableau ou le menu ouvert', act: { local: 'exit' } },
       // À droite de l'écran
       { id: 'xfc', cx: 1112, cy: 245, r: 38, tip: 'XFC', act: info('XFC (écoute de la fréquence d’émission en SPLIT) : pas disponible à distance.') },
@@ -65,7 +65,7 @@
     knobs: [
       { id: 'dial', cx: 1310, cy: 415, ro: 160, ri: 160, dial: true, tip: 'Grand bouton : fréquence du VFO (molette ou glisser en tournant)' },
       // MULTI : la fonction de la case de l'écran (choisie dans le menu FUNCTION) ou le décalage RIT / ΔTX ; le pousser = menu FUNCTION
-      { id: 'multi', cx: 1112, cy: 120, ro: 46, multi: true, pushLocal: 'func', tip: 'MULTI : tourner = la fonction de la case de l’écran (choisie dans FUNCTION, ex. RF POWER) ou le décalage RIT / ΔTX ; clic = menu FUNCTION' },
+      { id: 'multi', cx: 1112, cy: 120, ro: 46, multi: true, pushLocal: 'multiMenu', tip: 'MULTI : clic = menu MULTI (RF POWER, MIC GAIN, COMP, MONITOR ; en CW : KEY SPEED, CW PITCH), tourner = le réglage choisi, ou le décalage RIT / ΔTX' },
       // TWIN PBT : centre = PBT intérieur, bague = PBT extérieur ; le pousser (CLR) = les deux au milieu
       { id: 'pbt', cx: 255, cy: 150, ri: 38, ro: 62, inner: { ctl: 'pbtIn', label: 'PBT intérieur', per: 4 }, outer: { ctl: 'pbtOut', label: 'PBT extérieur', per: 4 }, pushLocal: 'pbtClr' },
       { id: 'afRf', cx: 255, cy: 435, ri: 38, ro: 62, inner: { ctl: 'af', label: 'AF', per: 5 }, outer: { ctl: 'rf', label: 'RF', per: 5 } }

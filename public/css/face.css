@@ -380,3 +380,20 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .lcd-fboxt { fill: #6f86ff; font-size: 13px; font-weight: 700; pointer-events: none; }
 .fc-cover-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .fc-cover-note { font-size: 13px; color: #aab5c4; }
+/* IC-7300 : menu MULTI à droite de l'écran */
+#face .mm-multi .mm-cell { fill: #101722; stroke: #3c4b62; stroke-width: 1; }
+#face .mm-multi .mm-cell.on { fill: #1c3f73; stroke: #6fa8ff; }
+#face .mm-mlab { fill: #cfe0ff; font-size: 12px; font-weight: 700; pointer-events: none; }
+#face .mm-mval { fill: #fff; font-size: 13px; font-weight: 700; pointer-events: none; }
+/* IC-7300 : écrans MENU / QUICK (pages de 5 × 2 touches, ① ②, ↩) */
+#face .ic-menu .mm-bg { fill: #121a33; }
+#face .ic-menu .ic-cell { fill: #2a3140; stroke: #6b7488; stroke-width: 1.2; }
+#face .ic-menu .ic-cell.empty { fill: #262b36; stroke: #4a5262; }
+#face .ic-menu .ic-cell.preset { fill: #262d3a; }
+#face .ic-lab { fill: #fff; font-size: 17px; font-weight: 800; dominant-baseline: middle; pointer-events: none; }
+#face .ic-lab.preset { fill: #c3cad6; }
+#face .mm-ttl.big { font-size: 15px; }
+#face .ic-page { fill: #3a4253; stroke: #cfd6e2; stroke-width: 1.5; }
+#face .ic-page.on { fill: #f2f4f8; }
+#face .ic-paget { fill: #1a2030; font-size: 17px; font-weight: 700; pointer-events: none; }
+#face .ic-back { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }

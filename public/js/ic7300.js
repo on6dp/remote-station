@@ -66,7 +66,9 @@
     q(0x14, 0x01), q(0x14, 0x02), q(0x14, 0x03), q(0x11), q(0x16, 0x02), q(0x16, 0x12),
     q(0x16, 0x22), q(0x14, 0x12), q(0x16, 0x40), q(0x14, 0x06), q(0x16, 0x41), q(0x16, 0x48), q(0x14, 0x0D),
     q(0x14, 0x07), q(0x14, 0x08), q(0x14, 0x0B), q(0x16, 0x44), q(0x14, 0x0E), q(0x16, 0x46), q(0x1C, 0x01),
-    q(0x16, 0x50), q(0x15, 0x15), q(0x15, 0x16)
+    q(0x16, 0x50), q(0x15, 0x15), q(0x15, 0x16),
+    // Face avant (/ic7300) : CW PITCH, KEY SPEED, MONITOR (marche et niveau), BK-IN, IP+, VOX GAIN, ANTI VOX
+    q(0x14, 0x09), q(0x14, 0x0C), q(0x14, 0x15), q(0x16, 0x45), q(0x16, 0x47), q(0x16, 0x65), q(0x14, 0x16), q(0x14, 0x17)
   ];
   const SLOW_PER_TICK = 5;
   const POLL_MS = 250;
@@ -76,7 +78,7 @@
 
   const STATE_KEYS = ['txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'fil', 'filB', 'pbtIn', 'pbtOut', 'nb', 'nbLvl', 'nr', 'nrLvl',
     'dnf', 'notch', 'notchPos', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox', 'tuner', 'tuning',
-    'm3', 'm4', 'm5', 'm6', 'm7', 'm8'];
+    'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'ipPlus', 'voxGain', 'antiVox'];
 
   // Lectures simples : [commande, sous-commande, clé, type] (type : t = 0/1, l = niveau 0–255, b = octet)
   const SIMPLE = [
@@ -87,12 +89,18 @@
     [0x15, 0x14, 'm3', 'l'], [0x15, 0x15, 'm8', 'l'], [0x15, 0x16, 'm7', 'l'],
     [0x16, 0x02, 'preamp', 'b'], [0x16, 0x12, 'agc', 'b'], [0x16, 0x22, 'nb', 't'], [0x16, 0x40, 'nr', 't'],
     [0x16, 0x41, 'dnf', 't'], [0x16, 0x48, 'notch', 't'], [0x16, 0x44, 'proc', 't'], [0x16, 0x46, 'vox', 't'],
-    [0x16, 0x50, 'lock', 't'], [0x21, 0x01, 'rit', 't'], [0x21, 0x02, 'xit', 't']
+    [0x16, 0x50, 'lock', 't'], [0x21, 0x01, 'rit', 't'], [0x21, 0x02, 'xit', 't'],
+    [0x14, 0x09, 'cwPitchRaw', 'l'], [0x14, 0x0C, 'keySpeedRaw', 'l'], [0x14, 0x15, 'moniLvl', 'l'], [0x16, 0x45, 'moni', 't'],
+    [0x16, 0x47, 'bkin', 'b'], [0x16, 0x65, 'ipPlus', 't'], [0x14, 0x16, 'voxGain', 'l'], [0x14, 0x17, 'antiVox', 'l']
   ];
+  // CW PITCH : 0–255 = 300–900 Hz (pas de 5 Hz) ; KEY SPEED : 0–255 = 6–48 mots/min
+  const pitchHz = (raw) => Math.round((300 + raw * 600 / 255) / 5) * 5;
+  const wpmOf = (raw) => Math.round(6 + raw * 42 / 255);
   const SIMPLE_MAP = {};
   for (const s of SIMPLE) SIMPLE_MAP[s[0] * 256 + s[1]] = s;
   // Trame de lecture de chaque clé d'état : relue juste après un réglage
-  const READ_FOR = { power: q(0x14, 0x0A), split: q(0x0F), att: q(0x11), clar: q(0x21, 0x00), clarClr: q(0x21, 0x00), fil: q(0x26, 0x00), tuner: q(0x1C, 0x01) };
+  const READ_FOR = { power: q(0x14, 0x0A), split: q(0x0F), att: q(0x11), clar: q(0x21, 0x00), clarClr: q(0x21, 0x00), fil: q(0x26, 0x00), tuner: q(0x1C, 0x01),
+    cwPitch: q(0x14, 0x09), keySpeed: q(0x14, 0x0C) };
   for (const s of SIMPLE) if (s[2] !== 'powerRaw' && s[0] !== 0x15) READ_FOR[s[2]] = q(s[0], s[1]);
   const readFor = (id) => READ_FOR[id] || null;
 
@@ -146,7 +154,16 @@
     // VOX : on peut le couper à distance, jamais l'activer
     { id: 'vox', g: 'tx', label: 'VOX', type: 'toggle', offOnly: true, write: setOn(0x16, 0x46) },
     { id: 'tuner', g: 'tx', label: 'Tuner', type: 'toggle', write: (v) => q(0x1C, 0x01, v ? 1 : 0) },
-    { id: 'tune', g: 'tx', label: 'TUNE', type: 'action', transmits: true, write: () => q(0x1C, 0x01, 0x02) }
+    { id: 'tune', g: 'tx', label: 'TUNE', type: 'action', transmits: true, write: () => q(0x1C, 0x01, 0x02) },
+    // Écrans FUNCTION / MULTI de la face avant (/ic7300) : hors de la disposition du dashboard
+    { id: 'keySpeed', g: 'tx', label: 'KEY SPEED', type: 'level', min: 6, max: 48, step: 1, unit: 'wpm', face: true, write: (v) => q(0x14, 0x0C, ...lvlBytes(Math.round((v - 6) * 255 / 42))) },
+    { id: 'cwPitch', g: 'tx', label: 'CW PITCH', type: 'level', min: 300, max: 900, step: 5, unit: 'Hz', face: true, write: (v) => q(0x14, 0x09, ...lvlBytes(Math.round((v - 300) * 255 / 600))) },
+    { id: 'moni', g: 'tx', label: 'MONITOR', type: 'toggle', face: true, write: setOn(0x16, 0x45) },
+    { id: 'moniLvl', g: 'tx', label: 'Niveau MONITOR', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x15) },
+    { id: 'bkin', g: 'tx', label: 'BK-IN', type: 'select', face: true, options: [[0, 'OFF'], [1, 'SEMI'], [2, 'FULL']], write: (v) => q(0x16, 0x47, v) },
+    { id: 'ipPlus', g: 'rx', label: 'IP+', type: 'toggle', face: true, write: setOn(0x16, 0x65) },
+    { id: 'voxGain', g: 'tx', label: 'VOX GAIN', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x16) },
+    { id: 'antiVox', g: 'tx', label: 'ANTI VOX', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x17) }
   ];
   const CONTROL = {};
   CONTROLS.forEach((c) => { CONTROL[c.id] = c; });
@@ -260,6 +277,8 @@
         if (s[3] === 'l' && d.length >= 3) {
           const v = lvlValue(d, 1);
           if (s[2] === 'powerRaw') return { powerHead: 'I', power: Math.round((v * 100) / 255) };
+          if (s[2] === 'cwPitchRaw') return { cwPitch: pitchHz(v) };
+          if (s[2] === 'keySpeedRaw') return { keySpeed: wpmOf(v) };
           return { [s[2]]: v };
         }
         if (s[3] === 't' && d.length >= 2) return { [s[2]]: d[1] ? 1 : 0 };
@@ -363,8 +382,11 @@
         } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x00 && d[2] === 0x66) {
           // DATA OFF MOD (simulateur) : 00 MIC au départ
           if (d.length === 3) r(0x05, 0x00, 0x66, this.mod66 || 0); else { this.mod66 = d[3]; (this.exLog = this.exLog || []).push('MOD' + d[3] + (v.tx ? '@TX' : '')); ok(); }
-        } else if (c === 0x14 && d[0] === 0x0C) { this.cwWpm = 6 + lvlValue(d, 1) * 42 / 255; ok(); }
-        else if (c === 0x16 && d[0] === 0x47) { this.bk = d[1]; ok(); }
+        } else if (c === 0x14 && d[0] === 0x0C) {
+          if (d.length === 1) r(0x0C, ...lvlBytes(this.cwRaw != null ? this.cwRaw : 96)); else { this.cwRaw = lvlValue(d, 1); this.cwWpm = 6 + this.cwRaw * 42 / 255; ok(); }
+        } else if (c === 0x16 && d[0] === 0x47) {
+          if (d.length === 1) r(0x47, this.bk || 0); else { this.bk = d[1]; ok(); }
+        }
         else if (c === 0x14 && d[0] === 0x0A) {
           if (d.length === 1) r(0x0A, ...lvlBytes(v.power)); else { v.power = lvlValue(d, 1); ok(); }
         } else if (SIMPLE_MAP[c * 256 + d[0]]) {

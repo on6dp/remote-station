@@ -146,8 +146,10 @@
     if (a.local === 'func') { viewTouched(); if (MV.open) closeMenu(); L.func = !L.func; return render(); }
     if (a.local === 'bandMenu') return L.bandMenu ? closeBandMenu() : openBandMenu();
     if (a.local === 'modeMenu') return L.modeMenu ? closeModeMenu() : openModeMenu();
+    if (a.local === 'icomMenu' || a.local === 'quickMenu') return L[a.local] ? closeGrid(a.local) : openGrid(a.local);
+    if (a.local === 'multiMenu') { L.multiMenu = !L.multiMenu; L.multiAt = Date.now(); if (L.multiMenu && multiItems(s).indexOf(L.funcSel) < 0) L.funcSel = 'power'; return render(); }
     if (a.local === 'expand') return toggleExpand();
-    if (a.local === 'exit') { if (L.bandMenu) closeBandMenu(); if (L.modeMenu) closeModeMenu(); if (L.func) { L.func = false; render(); } return; }
+    if (a.local === 'exit') { if (L.bandMenu) closeBandMenu(); if (L.modeMenu) closeModeMenu(); for (const k of ['icomMenu', 'quickMenu']) if (L[k]) closeGrid(k); L.multiMenu = false; if (L.func) L.func = false; return render(); }
     if (a.local === 'bandUp' || a.local === 'bandDown') {
       // Bande suivante / précédente (IC-7300 : touches ▲ ▼)
       const list = BAND_GRID.filter((b) => b[2] * 1000 <= (R.FREQ_MAX || 75e6));
@@ -764,6 +766,164 @@
     buildFunc(g, c);
     buildModeMenu(g, c);
     if (SINGLE) buildBandMenu(g, c);
+    if (ICOM) {
+      // Écran MENU de l'IC-7300 : 2 pages de 5 × 2 touches, comme sur le TRX ; VOICE devient KEYER en CW et DECODE en RTTY
+      const md = () => L.activeMode(S()) || '';
+      const noR = (t) => t + ' : pas disponible à distance';
+      buildGrid(g, c, 'icomMenu', 'MENU', [[
+        ['SCOPE', 'SCOPE : scope agrandi (EXPAND)', () => toggleExpand()],
+        ['AUDIO', 'AUDIO SCOPE : spectre (AF-FFT) et oscilloscope de la BF', () => { viewTouched(); L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; render(); }],
+        [() => (/^CW/.test(md()) ? 'KEYER' : /^RTTY/.test(md()) ? 'DECODE' : 'VOICE'),
+          () => (/^CW/.test(md()) ? 'KEYER : émission CW (onglet CW des modes numériques)' : /^RTTY/.test(md()) ? 'DECODE : décodeur RTTY (onglet RTTY des modes numériques)' : noR('VOICE (mémoires vocales)')),
+          () => (/^CW/.test(md()) ? digiOpen('cw') : /^RTTY/.test(md()) ? digiOpen('rtty') : say(noR('VOICE (mémoires vocales)') + '.', '', 4000))],
+        ['METER', 'METER : mesures du TRX (Po, SWR, ALC, COMP, Id, Vd)', () => meterSay()],
+        ['SWR', 'SWR : ROS mesuré en émission', () => meterSay(true)],
+        ['MEMORY', noR('MEMORY (mémoires)'), null],
+        ['SCAN', noR('SCAN'), null],
+        ['MPAD', noR('MPAD (mémoires rapides)'), null],
+        ['RECORD', noR('RECORD (enregistreur)'), null],
+        ['SET', 'SET (réglages du TRX) : au club', null]
+      ], [
+        null, null, null, null, null, null, null, null,
+        ['PRESET', noR('PRESET (réglages enregistrés, ex. FT8)'), null],
+        ['SET', 'SET (réglages du TRX) : au club', null]
+      ]]);
+      // Écran QUICK de l'IC-7300 : raccourcis
+      buildGrid(g, c, 'quickMenu', 'QUICK MENU', [[
+        ['BAND', 'Tableau des bandes', () => openBandMenu()],
+        ['SPLIT', 'SPLIT marche / arrêt', () => doAct({ act: { local: 'split' } })],
+        ['A=B', 'Copie le VFO A dans le VFO B', () => setCtl('aToB', null)],
+        ['A/B', 'Échange les VFO A et B', () => setCtl('swap', null)],
+        ['TUNER', 'Coupleur d’antenne marche / arrêt', () => setCtl('tuner', S().tuner ? 0 : 1)],
+        ['TUNE', 'Accord du coupleur (émission courte)', () => doAct({ act: { action: 'tune' } })],
+        ['LOCK', 'LOCK du grand bouton', () => setCtl('lock', S().lock ? 0 : 1)],
+        ['3DSS', 'Spectre en trois dimensions', () => { L.d3 = !L.d3; store.set('rs.face.3dss', L.d3 ? '1' : '0'); WF.h3 = []; WF.drawn = false; render(); }]]]);
+      buildMultiMenu(g, c);
+      // Le mode affiché se touche pour le changer, comme sur l'écran de l'IC-7300
+      const v = LCD.vA, mb = el('rect', { x: Number(v.badge.getAttribute('x')), y: Number(v.badge.getAttribute('y')), width: 52, height: 15, class: 'hs lcd-hit' }, v.g);
+      el('title', {}, mb, 'Mode : clic pour le tableau des modes');
+      mb.addEventListener('click', (ev) => { ev.stopPropagation(); openModeMenu(); });
+    }
+  }
+  // Tableau de touches sur l'écran (IC-7300 : MENU, QUICK) : pages de 5 × 2 touches [libellé, bulle, action | null]
+  // (libellé et bulle peuvent dépendre du mode : fonctions), boutons de page ① ② et retour ↩, comme sur le TRX
+  function buildGrid(g, c, key, title, pages) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const m = LCD[key] = el('g', { class: 'mode-menu ic-menu', style: 'display:none' }, g);
+    const x0 = X(6), y0 = Y(4), w = c.w - 12, h = c.h - 8;
+    el('rect', { x: x0, y: y0, width: w, height: h, rx: 4, class: 'mm-bg' }, m);
+    el('rect', { x: x0 + 4, y: y0 + 4, width: w - 8, height: 24, rx: 3, class: 'mm-title' }, m);
+    el('text', { x: x0 + w / 2, y: y0 + 21, class: 'mm-ttl big', 'text-anchor': 'middle' }, m, title);
+    const cw = (w - 16) / 5, rh = (h - 90) / 2;
+    const cells = [];
+    for (let i = 0; i < 10; i++) {
+      const x = x0 + 8 + (i % 5) * cw, y = y0 + 34 + Math.floor(i / 5) * rh;
+      const box = el('rect', { x: x + 3, y, width: cw - 6, height: rh - 8, rx: 5, class: 'mm-cell ic-cell' }, m);
+      const t = el('text', { x: x + cw / 2, y: y + rh / 2, class: 'mm-lab ic-lab', 'text-anchor': 'middle' }, m, '');
+      const hit = el('rect', { x: x + 3, y, width: cw - 6, height: rh - 8, class: 'hs lcd-hit' }, m);
+      const tt = el('title', {}, hit, '');
+      const cell = { box, t, hit, tt, it: null };
+      hit.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const it = cell.it;
+        if (!it) return;
+        const tip = typeof it[1] === 'function' ? it[1]() : it[1];
+        closeGrid(key);
+        if (it[2]) it[2](); else say(tip + '.', '', 4000);
+      });
+      cells.push(cell);
+    }
+    // Pages ① ② (si plusieurs) et retour ↩
+    const by = y0 + h - 44, pg = [];
+    if (pages.length > 1) pages.forEach((_, p) => {
+      const cx = x0 + w / 2 + (p - (pages.length - 1) / 2) * 70;
+      const ci = el('circle', { cx, cy: by + 20, r: 17, class: 'ic-page' }, m);
+      el('text', { x: cx, y: by + 26, class: 'ic-paget', 'text-anchor': 'middle' }, m, String(p + 1));
+      const hit = el('circle', { cx, cy: by + 20, r: 17, class: 'hs lcd-hit' }, m);
+      el('title', {}, hit, 'Page ' + (p + 1));
+      hit.addEventListener('click', (ev) => { ev.stopPropagation(); L[key + 'P'] = p; render(); });
+      pg.push(ci);
+    });
+    el('rect', { x: x0 + w - 90, y: by + 4, width: 78, height: 32, rx: 4, class: 'mm-cell' }, m);
+    { const ax = x0 + w - 51, ay = by + 20; // flèche de retour ↩, dessinée (pas de caractère : polices différentes)
+      el('path', { d: 'M' + (ax + 12) + ' ' + (ay - 7) + 'H' + (ax - 4) + 'A7 7 0 0 0 ' + (ax - 4) + ' ' + (ay + 7) + 'H' + (ax + 6), class: 'ic-back' }, m);
+      el('path', { d: 'M' + (ax - 1) + ' ' + (ay - 12) + 'L' + (ax - 7) + ' ' + (ay - 7) + 'L' + (ax - 1) + ' ' + (ay - 2), class: 'ic-back' }, m); }
+    const back = el('rect', { x: x0 + w - 90, y: by + 4, width: 78, height: 32, class: 'hs lcd-hit' }, m);
+    el('title', {}, back, 'Retour (comme EXIT)');
+    back.addEventListener('click', (ev) => { ev.stopPropagation(); closeGrid(key); });
+    LCD[key + 'Draw'] = () => {
+      const p = Math.min(pages.length - 1, L[key + 'P'] || 0);
+      pg.forEach((ci, i) => ci.classList.toggle('on', i === p));
+      cells.forEach((cell, i) => {
+        const it = pages[p][i] || null;
+        cell.it = it;
+        const lab = it ? (typeof it[0] === 'function' ? it[0]() : it[0]) : '';
+        cell.t.textContent = lab;
+        cell.tt.textContent = it ? (typeof it[1] === 'function' ? it[1]() : it[1]) : '';
+        cell.box.classList.toggle('preset', !!it && !it[2]);
+        cell.box.classList.toggle('empty', !it);
+        cell.t.classList.toggle('preset', !!it && !it[2]);
+      });
+    };
+  }
+  // METER / SWR de l'écran MENU : les mesures relues sur le TRX (en émission)
+  function meterSay(swrOnly) {
+    const s = S();
+    if (!s.tx) return say((swrOnly ? 'SWR' : 'METER') + ' : les mesures (Po, SWR, ALC, COMP, Id, Vd) se lisent en émission ; le galvanomètre de l’écran passe sur Po.', '', 5000);
+    const f = (v, d) => (v == null ? '—' : v.toFixed(d));
+    const swr = R.swrValue ? R.swrValue(s.m6) : null;
+    if (swrOnly) return say('SWR ' + f(swr, 1), '', 4000);
+    say('Po ' + (s.m5 != null && R.poFrac ? Math.round(R.poFrac(s.m5) * 100) + ' %' : '—') + ' · SWR ' + f(swr, 1) + ' · ALC ' + num(s.m4) + ' · COMP ' + num(s.m3)
+      + ' · Id ' + f(R.idValue ? R.idValue(s.m7) : null, 1) + ' A · Vd ' + f(R.vdValue ? R.vdValue(s.m8) : null, 1) + ' V', '', 6000);
+  }
+  const gridOutside = {};
+  function openGrid(key) {
+    for (const k of ['icomMenu', 'quickMenu']) if (k !== key && L[k]) closeGrid(k);
+    L[key] = true;
+    L[key + 'P'] = 0;
+    render();
+    gridOutside[key] = (ev) => { if (!ev.target.closest || !ev.target.closest('.mode-menu')) closeGrid(key); };
+    setTimeout(() => document.addEventListener('pointerdown', gridOutside[key], true), 0);
+  }
+  function closeGrid(key) { L[key] = false; if (gridOutside[key]) document.removeEventListener('pointerdown', gridOutside[key], true); render(); }
+  // MULTI de l'IC-7300 : petit menu à droite de l'écran (3 ou 4 réglages selon le mode) ; le bouton MULTI règle la ligne choisie
+  function buildMultiMenu(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const m = LCD.multiMenu = el('g', { class: 'mm-multi', style: 'display:none' }, g);
+    const x0 = X(c.w - 205), y0 = Y(88), w = 200, rh = 32;
+    LCD.multiRows = [0, 1, 2, 3].map((i) => {
+      const y = y0 + i * rh;
+      const r = el('rect', { x: x0, y, width: w, height: rh - 3, rx: 4, class: 'mm-cell' }, m);
+      const t = el('text', { x: x0 + 10, y: y + 19, class: 'mm-mlab' }, m, '');
+      const v = el('text', { x: x0 + w - 10, y: y + 19, class: 'mm-mval', 'text-anchor': 'end' }, m, '');
+      const hit = el('rect', { x: x0, y, width: w, height: rh - 3, class: 'hs lcd-hit' }, m);
+      el('title', {}, hit, 'Clic : choisir ce réglage, puis tourner le bouton MULTI (ou la molette ici)');
+      const row = { r, t, v, hit, id: null };
+      hit.addEventListener('click', (ev) => { ev.stopPropagation(); if (!row.id) return; L.funcSel = row.id; store.set('rs.face.funcsel', row.id); L.multiAt = Date.now(); render(); });
+      hit.addEventListener('wheel', (ev) => {
+        ev.preventDefault();
+        if (!row.id || !Math.abs(ev.deltaY)) return;
+        L.funcSel = row.id; L.multiAt = Date.now();
+        funcAdjust(row.id, ev.deltaY < 0 ? 1 : -1);
+      }, { passive: false });
+      return row;
+    });
+  }
+  function drawMultiMenu(s) {
+    if (!LCD.multiMenu) return;
+    if (L.multiMenu && Date.now() - (L.multiAt || 0) > 8000) L.multiMenu = false; // se ferme seul, comme sur le TRX
+    LCD.multiMenu.style.display = L.multiMenu ? '' : 'none';
+    if (!L.multiMenu) return;
+    const ids = multiItems(s);
+    LCD.multiRows.forEach((row, i) => {
+      const id = ids[i];
+      row.id = id || null;
+      for (const e of [row.r, row.t, row.v, row.hit]) e.style.display = id ? '' : 'none';
+      if (!id) return;
+      row.t.textContent = FUNC_BY[id][1];
+      row.v.textContent = FUNC_BY[id][2](s);
+      row.r.classList.toggle('on', L.funcSel === id);
+    });
   }
   function toggleExpand() { viewTouched(); L.expand = !L.expand; store.set('rs.face.expand', L.expand ? '1' : '0'); say(L.expand ? 'EXPAND : scope agrandi' : 'EXPAND coupé : affichage normal', '', 2500); render(); }
   // FTDX10 (un seul récepteur) : disposition de l'écran, refaite à chaque changement (EXPAND)
@@ -1177,6 +1337,12 @@
     if (SIDED[id]) return !/FM/.test(m);
     if (id === 'miceq') return /CW|DATA|RTTY|PSK/.test(m);
     if (id === 'decode') return /FM/.test(m);
+    if (ICOM) {
+      // IC-7300 : réglages CW seulement en CW, micro / COMP / VOX seulement en phonie
+      if (['keySpeed', 'cwPitch', 'bkinI'].indexOf(id) >= 0) return !/^CW/.test(m);
+      if (['mic', 'procLvl', 'compI'].indexOf(id) >= 0) return /^(CW|RTTY)/.test(m);
+      if (['voxI', 'voxGain', 'antiVox'].indexOf(id) >= 0) return /^(CW|RTTY)|-D$/.test(m);
+    }
     return false;
   }
   const fmOnly = (id, s) => {
@@ -1198,7 +1364,7 @@
     if (fmOnly(id, s)) return;
     setCtl(k, (((s[k] || 0) + (d > 0 ? 1 : n - 1)) % n));
   };
-  const FUNC = [
+  const FUNC_YAESU = [
     // [id, libellé, valeur affichée (s), réglage (s, pas) | null, couleur du trait, basculer au clic]
     [['spd', 'SPEED', () => WF_SPEEDS[L.wfSpeed][0], (s, d) => { L.wfSpeed = Math.max(0, Math.min(4, L.wfSpeed + d)); store.set('rs.face.wfspd5', L.wfSpeed); ssSend('Spd'); }, '#ff8a1f'],
       ['peak', 'PEAK', () => PEAKS[L.peak], (s, d) => { L.peak = (L.peak + (d > 0 ? 1 : 5)) % 6; store.set('rs.face.peak', L.peak); WF.peak = {}; ssSend('Peak'); }, '#ff8a1f'],
@@ -1230,6 +1396,58 @@
       ['disp', 'DISPLAY SETTING', () => '', null, '#ffb020'],
       ['ext', 'EXTENSION SETTING', () => '', null, '#ffb020']]
   ];
+  // IC-7300 : écran FUNCTION à la manière Icom — interrupteurs (clic), puis niveaux réglés au bouton MULTI
+  const pct = (v) => (v == null ? '—' : Math.round(v / 2.55) + '%');
+  const onOff = (v) => (v == null ? '—' : v ? 'ON' : 'OFF');
+  const tog = (id) => (s) => {
+    if (!R.CONTROL[id]) return say('Pas disponible sur ce TRX.', 'warn', 3000);
+    if (R.CONTROL[id].offOnly && !s[id]) return say(R.CONTROL[id].label + ' : ne peut être que coupé à distance.', 'warn', 4000);
+    setCtl(id, s[id] ? 0 : 1);
+  };
+  const cyc = (id) => (s) => { const c = R.CONTROL[id]; if (!c || !c.options) return; const i = c.options.findIndex((o) => o[0] === s[id]); setCtl(id, c.options[(i + 1) % c.options.length][0]); };
+  const pickY = (id) => FUNC_YAESU.flat().find((c) => c[0] === id);
+  const IB = '#38b6ff', IO = '#ffb020', IG = '#3ddc5a';
+  const FUNC_ICOM = [
+    [['agcI', 'AGC', (s) => ['', 'FAST', 'MID', 'SLOW'][s.agc] || '—', cyc('agc'), IB, true],
+      ['nbI', 'NB', (s) => onOff(s.nb), tog('nb'), IB, true],
+      ['nrI', 'NR', (s) => onOff(s.nr), tog('nr'), IB, true],
+      // NOTCH comme la touche du TRX : OFF → AN (automatique) → MN (manuel) → OFF
+      ['notchI', 'NOTCH', (s) => (s.dnf ? 'AN' : s.notch ? 'MN' : 'OFF'), (s) => { if (s.dnf) { setCtl('dnf', 0); setCtl('notch', 1); } else if (s.notch) setCtl('notch', 0); else setCtl('dnf', 1); }, IB, true],
+      ['pampI', 'P.AMP', (s) => ['OFF', 'AMP1', 'AMP2'][s.preamp] || '—', cyc('preamp'), IB, true],
+      ['attI', 'ATT', (s) => (s.att == null ? '—' : s.att ? '20dB' : 'OFF'), tog('att'), IB, true],
+      ['ipI', 'IP+', (s) => onOff(s.ipPlus), tog('ipPlus'), IB, true],
+      ['compI', 'COMP', (s) => onOff(s.proc), tog('proc'), IB, true]],
+    [['voxI', 'VOX', (s) => onOff(s.vox), tog('vox'), IB, true],
+      ['bkinI', 'BK-IN', (s) => ['OFF', 'SEMI', 'FULL'][s.bkin] || '—', cyc('bkin'), IB, true],
+      ['moniI', 'MONI', (s) => onOff(s.moni), tog('moni'), IB, true],
+      ['tunerI', 'TUNER', (s) => onOff(s.tuner), tog('tuner'), IB, true],
+      ['lockI', 'LOCK', (s) => onOff(s.lock), tog('lock'), IB, true],
+      ['splitI', 'SPLIT', (s) => onOff(s.split), () => doAct({ act: { local: 'split' } }), IB, true],
+      ['aeqb', 'A=B', () => '', () => setCtl('aToB', null), IB, true],
+      pickY('spd')],
+    [['power', 'RF POWER', (s) => (s.power != null ? s.power + 'W' : '—'), (s, d) => power(d * 5), IO],
+      ['mic', 'MIC GAIN', (s) => pct(s.mic), ctlStep('mic', 0, 255, 5), IO],
+      ['procLvl', 'COMP', (s) => pct(s.procLvl), ctlStep('procLvl', 0, 255, 5), IO],
+      ['moniLvl', 'MONITOR', (s) => pct(s.moniLvl), ctlStep('moniLvl', 0, 255, 5), IO],
+      ['keySpeed', 'KEY SPEED', (s) => (s.keySpeed != null ? s.keySpeed + 'wpm' : '—'), ctlStep('keySpeed', 6, 48, 1), IO],
+      ['cwPitch', 'CW PITCH', (s) => (s.cwPitch != null ? s.cwPitch + 'Hz' : '—'), ctlStep('cwPitch', 300, 900, 5), IO],
+      ['voxGain', 'VOX GAIN', (s) => pct(s.voxGain), ctlStep('voxGain', 0, 255, 5), IO],
+      ['antiVox', 'ANTI VOX', (s) => pct(s.antiVox), ctlStep('antiVox', 0, 255, 5), IO]],
+    [['nbLvl', 'NB LEVEL', (s) => pct(s.nbLvl), ctlStep('nbLvl', 0, 255, 5), IG],
+      ['nrLvl', 'NR LEVEL', (s) => pct(s.nrLvl), ctlStep('nrLvl', 0, 255, 5), IG],
+      ['notchPos', 'NOTCH POS', (s) => num(s.notchPos), ctlStep('notchPos', 0, 255, 2), IG],
+      ['sqlI', 'SQL', (s) => pct(s.sql), ctlStep('sql', 0, 255, 5), IG],
+      pickY('color'), pickY('level'), pickY('peak'), pickY('marker')]
+  ];
+  const FUNC = ICOM ? FUNC_ICOM : FUNC_YAESU;
+  // MULTI de l'IC-7300 (pousser le bouton) : les réglages du mode en cours, comme sur le TRX
+  function multiItems(s) {
+    const m = L.activeMode(s) || '';
+    if (/^CW/.test(m)) return ['power', 'keySpeed', 'cwPitch', 'moniLvl'];
+    if (/^RTTY|-D$/.test(m)) return ['power', 'mic', 'moniLvl'];
+    if (/SB$/.test(m)) return ['power', 'mic', 'procLvl', 'moniLvl'];
+    return ['power', 'mic', 'moniLvl'];
+  }
   // STEP DIAL (comme sur le TRX) : le bouton MULTI fait monter / descendre la fréquence du VFO sélectionné par pas de canal
   // (menu OPERATION SETTING → TUNING → CH STEP : 1 / 2,5 / 5 kHz ; 2,5 kHz si pas encore lu)
   function stepDial(d) {
@@ -1241,6 +1459,7 @@
   }
   const FUNC_BY = {};
   for (const row of FUNC) for (const c of row) FUNC_BY[c[0]] = c;
+  if (!FUNC_BY[L.funcSel]) L.funcSel = 'power'; // choix gardé d'une autre face avant (autre TRX)
   function funcAdjust(id, d) {
     const c = FUNC_BY[id];
     if (!c || !c[3]) return false;
@@ -1820,6 +2039,8 @@
       for (const n in LCD.bandCells) for (const e of LCD.bandCells[n]) e.classList.toggle('on', n === cur);
     }
     if (LCD.fbox) LCD.fbox.t.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
+    for (const k of ['icomMenu', 'quickMenu']) if (LCD[k]) { LCD[k].style.display = L[k] ? '' : 'none'; if (L[k]) LCD[k + 'Draw'](); }
+    drawMultiMenu(s);
     if (LCD.modeMenu) {
       LCD.modeMenu.style.display = L.modeMenu ? '' : 'none';
       const cur = L.activeMode(s);
@@ -1828,7 +2049,7 @@
     const fresh = Date.now() - WF.at < 3000;
     LCD.hint.style.display = fresh ? 'none' : '';
     LCD.hint.textContent = !live ? '' : st.audio && !st.audio.active ? 'Cascade : l’audio n’est pas activé sur la page Station' : 'Cascade : en attente du son de la station…';
-    $('scope').style.visibility = fresh && !L.func && !L.modeMenu && !L.bandMenu ? 'visible' : 'hidden';
+    $('scope').style.visibility = fresh && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !L.multiMenu ? 'visible' : 'hidden';
   }
   function lamp(id, cls) { const e = $(id); e.classList.remove('on', 'warn', 'tx'); if (cls) e.classList.add(cls); }
   function drawTop() {
