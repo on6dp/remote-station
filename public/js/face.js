@@ -144,7 +144,7 @@
     if (a.pop) return popCtl(a.pop);
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
     // IC-7300 : pas de tableau de réglages façon Yaesu ; l'écran FUNCTION de l'Icom viendra (les niveaux se règlent par le menu MULTI, les fonctions par leurs touches)
-    if (a.local === 'func' && ICOM) { L.func = false; return say('FUNCTION : écran Icom en préparation. Niveaux (RF POWER, MIC GAIN, COMP, MONITOR, KEY SPEED…) : bouton MULTI ; NB, NR, NOTCH, P.AMP/ATT, VOX/BK-IN : leurs touches.', '', 6000); }
+    if (a.local === 'func' && ICOM) { L.func = !L.func; if (L.func) { L.icomMenu = L.quickMenu = false; L.icMem = L.icRec = L.icSet = false; } return render(); }
     if (a.local === 'func') { viewTouched(); if (MV.open) closeMenu(); L.func = !L.func; return render(); }
     if (a.local === 'bandMenu') return L.bandMenu ? closeBandMenu() : openBandMenu();
     if (a.local === 'modeMenu') return L.modeMenu ? closeModeMenu() : openModeMenu();
@@ -844,6 +844,7 @@
       buildIcMpad(g, c);
       buildIcRec(g, c);
       buildIcSet(g, c);
+      buildIcFunc(g, c);
       // Le mode affiché se touche pour le changer, comme sur l'écran de l'IC-7300
       const v = LCD.vA, mb = el('rect', { x: Number(v.badge.getAttribute('x')), y: Number(v.badge.getAttribute('y')), width: 52, height: 15, class: 'hs lcd-hit' }, v.g);
       el('title', {}, mb, 'Mode : clic pour le tableau des modes');
@@ -1494,6 +1495,64 @@
       r.tt.textContent = it ? 'SET → ' + it[1] : '';
     });
   }
+  // FUNCTION (touche FUNCTION) : 10 touches comme sur l'IC-7300, l'état dessous, cadre bleu clair quand la fonction est en service
+  const IC_FUNC = [
+    ['P.AMP/ATT', (s) => (s.att ? 'ATT' : s.preamp ? 'P.AMP' + s.preamp : 'OFF'), (s) => !!(s.att || s.preamp),
+      (s) => { if (s.att) setCtl('att', 0); else if ((s.preamp || 0) < 2) setCtl('preamp', (s.preamp || 0) + 1); else { setCtl('preamp', 0); setTimeout(() => setCtl('att', 1), 150); } }, 'P.AMP/ATT : OFF → P.AMP1 → P.AMP2 → ATT → OFF'],
+    ['AGC', (s) => ['', 'FAST', 'MID', 'SLOW'][s.agc] || '—', () => true, (s) => setCtl('agc', (s.agc || 2) % 3 + 1), 'AGC : FAST → MID → SLOW'],
+    ['NOTCH', (s) => notchTxt(s), (s) => !!(s.notch || s.dnf), () => doAct({ act: { local: 'notchCycle' } }), 'NOTCH : OFF → AN → MN (pas d’AN en CW)'],
+    ['NB', (s) => onOff(s.nb), (s) => !!s.nb, (s) => setCtl('nb', s.nb ? 0 : 1), 'NB marche / arrêt'],
+    ['NR', (s) => onOff(s.nr), (s) => !!s.nr, (s) => setCtl('nr', s.nr ? 0 : 1), 'NR marche / arrêt'],
+    ['IP+', (s) => onOff(s.ipPlus), (s) => !!s.ipPlus, (s) => setCtl('ipPlus', s.ipPlus ? 0 : 1), 'IP+ marche / arrêt'],
+    [(s) => (/^CW/.test(L.activeMode(s)) ? 'BKIN' : 'VOX'), (s) => (/^CW/.test(L.activeMode(s)) ? ['OFF', 'SEMI', 'FULL'][s.bkin] || '—' : onOff(s.vox)),
+      (s) => (/^CW/.test(L.activeMode(s)) ? !!s.bkin : !!s.vox), () => doAct({ act: { local: 'voxBk' } }), 'En phonie : VOX (à distance, il ne peut être que coupé) ; en CW : BK-IN OFF → SEMI → FULL'],
+    ['COMP', (s) => onOff(s.proc), (s) => !!s.proc, (s) => setCtl('proc', s.proc ? 0 : 1), 'COMP (compresseur de modulation) marche / arrêt'],
+    ['TBW', (s) => ['WIDE', 'MID', 'NAR'][s.tbw] || '—', () => true, (s) => setCtl('tbw', ((s.tbw || 0) + 1) % 3), 'TBW : largeur de la bande passante d’émission en SSB (WIDE → MID → NAR)'],
+    ['MONI', (s) => onOff(s.moni), (s) => !!s.moni, (s) => setCtl('moni', s.moni ? 0 : 1), 'MONI : écoute de sa propre émission au club']
+  ];
+  function buildIcFunc(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const m = LCD.icFuncG = el('g', { class: 'mode-menu ic-menu', style: 'display:none' }, g);
+    const x0 = X(6), y0 = Y(4), w = c.w - 12, h = c.h - 8;
+    el('rect', { x: x0, y: y0, width: w, height: h, rx: 4, class: 'mm-bg' }, m);
+    el('rect', { x: x0 + 4, y: y0 + 4, width: w - 8, height: 24, rx: 3, class: 'mm-title' }, m);
+    el('text', { x: x0 + w / 2, y: y0 + 21, class: 'mm-ttl big', 'text-anchor': 'middle' }, m, 'FUNCTION');
+    const cw = (w - 16) / 5, rh = 112;
+    LCD.icfBtns = IC_FUNC.map((it, i) => {
+      const x = x0 + 8 + (i % 5) * cw, y = y0 + 36 + Math.floor(i / 5) * (rh + 8);
+      const r = el('rect', { x: x + 3, y, width: cw - 6, height: rh, rx: 5, class: 'icf-btn' }, m);
+      const t1 = el('text', { x: x + cw / 2, y: y + 44, class: 'icf-t1', 'text-anchor': 'middle' }, m, '');
+      const t2 = el('text', { x: x + cw / 2, y: y + 86, class: 'icf-t2', 'text-anchor': 'middle' }, m, '');
+      const hit = el('rect', { x: x + 3, y, width: cw - 6, height: rh, class: 'hs lcd-hit' }, m);
+      el('title', {}, hit, it[4]);
+      hit.addEventListener('click', (ev) => { ev.stopPropagation(); it[3](S()); render(); });
+      return { r, t1, t2, it };
+    });
+    el('rect', { x: x0 + w - 90, y: y0 + h - 40, width: 78, height: 32, rx: 4, class: 'mm-cell' }, m);
+    const ax = x0 + w - 51, ay = y0 + h - 24;
+    el('path', { d: 'M' + (ax + 12) + ' ' + (ay - 7) + 'H' + (ax - 4) + 'A7 7 0 0 0 ' + (ax - 4) + ' ' + (ay + 7) + 'H' + (ax + 6) + 'M' + (ax - 1) + ' ' + (ay - 12) + 'L' + (ax - 7) + ' ' + (ay - 7) + 'L' + (ax - 1) + ' ' + (ay - 2), class: 'ic-back' }, m);
+    const back = el('rect', { x: x0 + w - 90, y: y0 + h - 40, width: 78, height: 32, class: 'hs lcd-hit' }, m);
+    el('title', {}, back, 'Retour (comme EXIT)');
+    back.addEventListener('click', (ev) => { ev.stopPropagation(); L.func = false; render(); });
+  }
+  function drawIcFunc(s) {
+    if (!LCD.icFuncG) return;
+    LCD.icFuncG.style.display = L.func ? '' : 'none';
+    if (!L.func) return;
+    for (const b of LCD.icfBtns) {
+      const [lab, val, on] = b.it;
+      const L1 = typeof lab === 'function' ? lab(s) : lab;
+      // « P.AMP/ATT » sur deux lignes, comme sur le TRX
+      if (b.lab !== L1) {
+        b.lab = L1;
+        b.t1.textContent = '';
+        const parts = L1 === 'P.AMP/ATT' ? ['P.AMP/', 'ATT'] : [L1];
+        parts.forEach((p, i) => { const ts = document.createElementNS('http://www.w3.org/2000/svg', 'tspan'); ts.setAttribute('x', b.t1.getAttribute('x')); ts.setAttribute('dy', i ? '1.05em' : parts.length > 1 ? '-0.45em' : '0'); ts.textContent = p; b.t1.appendChild(ts); });
+      }
+      b.t2.textContent = val(s);
+      b.r.classList.toggle('on', !!on(s)); // AGC et TBW ont toujours une valeur : toujours encadrés, comme sur le TRX
+    }
+  }
   // QSO RECORDER (MENU → RECORD) : enregistrement sur la carte SD du TRX, pas commandable par le CAT
   function buildIcRec(g, c) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
@@ -1641,7 +1700,7 @@
     if (LCD.spo) LCD.spo.g.setAttribute('transform', 'translate(0,' + 32 + ')');
     // Sous les tableaux (MENU, QUICK, FUNCTION, modes…) : juste après le scope dans l'ordre de dessin
     const at = LCD.hint && LCD.hint.nextSibling;
-    if (at) { g.insertBefore(h, at); if (LCD.spo) g.insertBefore(LCD.spo.g, h); }
+    if (at) { g.insertBefore(h, at); if (LCD.spo) g.insertBefore(LCD.spo.g, h); if (LCD.spoBig) g.insertBefore(LCD.spoBig.g, h); }
     // Case du bouton MULTI : en haut à droite
     if (LCD.fbox) {
       for (const e of [LCD.fbox.r]) { e.setAttribute('x', X(500)); e.setAttribute('y', Y(9)); e.setAttribute('width', 94); e.setAttribute('height', 22); }
@@ -1754,7 +1813,9 @@
     // Réception : S (0120 = S9, 0241 = S9 + 60 dB) ; émission : Po (0213 = 100 %)
     const f = !live ? 0 : tx ? (R.poFrac ? R.poFrac(s.m5) || 0 : 0) : sm == null ? 0 : sm <= 120 ? sm / 120 * 0.55 : Math.min(1, 0.55 + (sm - 120) / 121 * 0.45);
     P.f = P.f == null ? f : P.f + (f - P.f) * 0.6;
-    const big = !!L.icBig && !!LCD.spoBig;
+    // Grand S/Po (M.SCOPE) : caché sous les tableaux MENU, QUICK, FUNCTION, modes, bandes, MEMORY, SET…
+    const menus = L.func || L.modeMenu || L.bandMenu || L.icomMenu || L.quickMenu || L.icMem || L.icRec || L.icSet;
+    const big = !!L.icBig && !!LCD.spoBig && !menus;
     P.g.style.display = big ? 'none' : '';
     const B = LCD.spoBig;
     if (B) B.g.style.display = big ? '' : 'none';
@@ -2489,7 +2550,7 @@
   }
   function drawFunc(s) {
     if (!LCD.func) return;
-    LCD.func.style.display = L.func ? '' : 'none';
+    LCD.func.style.display = L.func && !ICOM ? '' : 'none'; // IC-7300 : écran FUNCTION Icom (buildIcFunc)
     if (!L.func) return;
     for (const id in LCD.funcCells) {
       const c = LCD.funcCells[id];
@@ -3030,6 +3091,7 @@
     drawIcMem(s);
     if (LCD.icRecG) LCD.icRecG.style.display = L.icRec ? '' : 'none';
     drawIcSet();
+    drawIcFunc(s);
     swrNote(s);
     if (LCD.modeMenu) {
       LCD.modeMenu.style.display = L.modeMenu ? '' : 'none';
@@ -3039,7 +3101,7 @@
     const fresh = Date.now() - WF.at < 3000;
     LCD.hint.style.display = fresh ? 'none' : '';
     LCD.hint.textContent = !live ? '' : st.audio && !st.audio.active ? 'Cascade : l’audio n’est pas activé sur la page Station' : 'Cascade : en attente du son de la station…';
-    $('scope').style.visibility = fresh && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !L.multiMenu && !L.icBig && !L.icMem && !L.icRec && !L.icSet ? 'visible' : 'hidden';
+    $('scope').style.visibility = fresh && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !L.multiMenu && !L.icBig && !L.icMem && !L.icRec && !L.icSet ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom)
     if (LCD.icm && L.icMeter && LCD.hint.style.display !== 'none') LCD.hint.setAttribute('y', LCD.Y(G.scopeY + 32)); else if (LCD.hint) LCD.hint.setAttribute('y', LCD.Y(G.scopeY + G.scopeH / 2 - 2));
     icPopCheck(s, live);
   }

@@ -68,7 +68,8 @@
     q(0x14, 0x07), q(0x14, 0x08), q(0x14, 0x0B), q(0x16, 0x44), q(0x14, 0x0E), q(0x16, 0x46), q(0x1C, 0x01),
     q(0x16, 0x50), q(0x15, 0x15), q(0x15, 0x16),
     // Face avant (/ic7300) : CW PITCH, KEY SPEED, MONITOR (marche et niveau), BK-IN, IP+, VOX GAIN, ANTI VOX
-    q(0x14, 0x09), q(0x14, 0x0C), q(0x14, 0x15), q(0x16, 0x45), q(0x16, 0x47), q(0x16, 0x65), q(0x14, 0x16), q(0x14, 0x17), q(0x16, 0x57)
+    q(0x14, 0x09), q(0x14, 0x0C), q(0x14, 0x15), q(0x16, 0x45), q(0x16, 0x47), q(0x16, 0x65), q(0x14, 0x16), q(0x14, 0x17), q(0x16, 0x57),
+    q(0x16, 0x58) // TBW (largeur d'émission en SSB : 00 WIDE, 01 MID, 02 NAR)
   ];
   const SLOW_PER_TICK = 5;
   const POLL_MS = 250;
@@ -78,7 +79,7 @@
 
   const STATE_KEYS = ['txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'fil', 'filB', 'pbtIn', 'pbtOut', 'nb', 'nbLvl', 'nr', 'nrLvl',
     'dnf', 'notch', 'notchPos', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox', 'tuner', 'tuning',
-    'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'ipPlus', 'voxGain', 'antiVox', 'notchW'];
+    'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'ipPlus', 'voxGain', 'antiVox', 'notchW', 'tbw'];
   // Textes : mémoires du manipulateur M1 … M8 (écran KEYER)
   // et canaux mémoire mc1 … mc101 (écran MEMORY : « fréquence|mode|nom »)
   const STR_KEYS = ['km1', 'km2', 'km3', 'km4', 'km5', 'km6', 'km7', 'km8'].concat(Array.from({ length: 101 }, (_, i) => 'mc' + (i + 1)));
@@ -94,7 +95,7 @@
     [0x16, 0x41, 'dnf', 't'], [0x16, 0x48, 'notch', 't'], [0x16, 0x44, 'proc', 't'], [0x16, 0x46, 'vox', 't'],
     [0x16, 0x50, 'lock', 't'], [0x21, 0x01, 'rit', 't'], [0x21, 0x02, 'xit', 't'],
     [0x14, 0x09, 'cwPitchRaw', 'l'], [0x14, 0x0C, 'keySpeedRaw', 'l'], [0x14, 0x15, 'moniLvl', 'l'], [0x16, 0x45, 'moni', 't'],
-    [0x16, 0x47, 'bkin', 'b'], [0x16, 0x65, 'ipPlus', 't'], [0x14, 0x16, 'voxGain', 'l'], [0x14, 0x17, 'antiVox', 'l'], [0x16, 0x57, 'notchW', 'b']
+    [0x16, 0x47, 'bkin', 'b'], [0x16, 0x65, 'ipPlus', 't'], [0x14, 0x16, 'voxGain', 'l'], [0x14, 0x17, 'antiVox', 'l'], [0x16, 0x57, 'notchW', 'b'], [0x16, 0x58, 'tbw', 'b']
   ];
   // CW PITCH : 0–255 = 300–900 Hz (pas de 5 Hz) ; KEY SPEED : 0–255 = 6–48 mots/min
   const pitchHz = (raw) => Math.round((300 + raw * 600 / 255) / 5) * 5;
@@ -171,6 +172,8 @@
     { id: 'antiVox', g: 'tx', label: 'ANTI VOX', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x17) },
     // Écran KEYER de la face avant : relit le contenu d'une mémoire du manipulateur (1A 02 : M1 … M8), sans rien changer sur le TRX
     { id: 'kmRead', g: 'tx', label: 'Lecture mémoire KEYER', type: 'level', min: 1, max: 8, step: 1, face: true, write: (v) => q(0x1A, 0x02, v) },
+    // Écran FUNCTION : TBW, largeur de la bande passante d'émission en SSB (16 58 : 00 WIDE, 01 MID, 02 NAR)
+    { id: 'tbw', g: 'tx', label: 'TBW', type: 'select', face: true, options: [[0, 'WIDE'], [1, 'MID'], [2, 'NAR']], write: (v) => q(0x16, 0x58, v) },
     // Écran VOICE TX : émission d'une mémoire vocale du TRX (28 00 01 … 08 = T1 … T8, 28 00 00 = arrêt) ; phonie seulement,
     // mêmes contrôles d'émission que la phonie (main, bandes, puissance, VOX, ROS) côté serveur
     { id: 'voiceTx', g: 'tx', label: 'VOICE TX', type: 'level', min: 1, max: 8, step: 1, face: true, transmits: 'voice',

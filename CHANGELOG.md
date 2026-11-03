@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.12** — IC-7300 : écran FUNCTION Icom (P.AMP/ATT, AGC, NOTCH, NB, NR, IP+, VOX / BKIN, COMP, TBW, MONI ; TBW = CI-V 16 58) ; grand S/Po de M.SCOPE caché sous les tableaux (QUICK, MENU…)
 - **0.37.11** — IC-7300 : VOICE TX — T1 … T8 émettent les mémoires vocales du TRX (CI-V 28 00), contrôles d'émission de la phonie côté serveur (main, bandes, puissance, VOX, ROS), arrêt si la main est perdue ou après 2 min, clic pendant l'émission = arrêt ; voyant RFG sous le mode (gain HF pas au maximum)
 - **0.37.10** — IC-7300 : écrans du MENU comme sur le TRX — SCOPE (SPECTRUM SCOPE, SPAN, HOLD), VOICE TX (T1 … T8, émission pas encore activée), SWR GRAPH (ROS relevé pendant les émissions, STEP, BAR, RECALL), MEMORY (canaux relus par CI-V 1A 00, clic = VFO), SCAN (PROGRAM / ΔF / FINE, CI-V 0E), MEMO PAD (touche MPAD), QSO RECORDER, SET (liste), PRESET ; voyant RFG
 - **0.37.9** — IC-7300 : MENU → AUDIO = AUDIO SCOPE façon Icom (FFT 0–4 kHz avec cascade, oscilloscope vert, touches ATT / HOLD / LEVEL / TIME / EXPD/SET) ; MENU → KEYER (CW) = mémoires M1 … M8 relues sur le TRX (CI-V 1A 02), clic = émission (« * » = numéro de concours, touche −1) ; serveur : textes du pilote (STR_KEYS)
