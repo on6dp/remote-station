@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.35.2 | [RemoteStation-Setup-0.35.2.exe](0.35.2/RemoteStation-Setup-0.35.2.exe) | [remote-station-0.35.2.tar.gz](0.35.2/remote-station-0.35.2.tar.gz) | Écran : R.FIL et NAR dans le filtre, spectre plus fin — [empreintes SHA-256](0.35.2/SHA256SUMS.txt) |
 | 0.35.1 | [RemoteStation-Setup-0.35.1.exe](0.35.1/RemoteStation-Setup-0.35.1.exe) | [remote-station-0.35.1.tar.gz](0.35.1/remote-station-0.35.1.tar.gz) | CW : zoom molette + barres du filtre TRX ; RX MAIN coupable — [empreintes SHA-256](0.35.1/SHA256SUMS.txt) |
 | 0.35.0 | [RemoteStation-Setup-0.35.0.exe](0.35.0/RemoteStation-Setup-0.35.0.exe) | [remote-station-0.35.0.tar.gz](0.35.0/remote-station-0.35.0.tar.gz) | CW : deux récepteurs séparés (MAIN + SUB) — [empreintes SHA-256](0.35.0/SHA256SUMS.txt) |
 | 0.34.1 | [RemoteStation-Setup-0.34.1.exe](0.34.1/RemoteStation-Setup-0.34.1.exe) | [remote-station-0.34.1.tar.gz](0.34.1/remote-station-0.34.1.tar.gz) | JTTY : 4 colonnes (activité + fréquence RX par VFO) — [empreintes SHA-256](0.34.1/SHA256SUMS.txt) |

@@ -2941,7 +2941,9 @@
     const pend = p && Date.now() - p.at < 2500;
     const v = pend ? p.v : Number(r[B ? 'widthB' : 'width']) || 0;
     const nar = !pend && !!r[B ? 'narrowB' : 'narrow'];
-    const hz = nar ? 500 : v >= 1 && t[v - 1] ? t[v - 1] : 3000; // NAR : 500 Hz en CW ; WIDTH 00 (défaut) : 3000 Hz
+    const ifHz = nar ? 500 : v >= 1 && t[v - 1] ? t[v - 1] : 3000; // NAR : 500 Hz en CW ; WIDTH 00 (défaut) : 3000 Hz
+    const roofHz = [0, 12000, 3000, 1200, 600, 300][r[B ? 'roofB' : 'roof']] || 0; // R.FIL (filtre de toit) : limite aussi la bande
+    const hz = roofHz ? Math.min(ifHz, roofHz) : ifHz;
     const sh = (Number(r[B ? 'shiftB' : 'shift']) || 0) * (/-L$/.test(md) ? -1 : 1);
     return { hz, c: (Number(r.cwPitch) || 600) + sh, t, v: nar ? t.indexOf(500) + 1 : v >= 1 ? v : t.indexOf(3000) + 1, nar };
   }

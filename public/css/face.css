@@ -154,6 +154,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .flt-bars { stroke: #c9d3e3; stroke-width: .8; opacity: .85; }
 #face .flt-trap { fill: none; stroke: #ff2b1c; stroke-width: 1.8; stroke-linejoin: round; }
 #face .flt-ctr { stroke: #ff9a1f; stroke-width: 1.4; }
+#face .flt-roof { fill: none; stroke: #b18cff; stroke-width: 1.1; stroke-dasharray: 2.5 2; opacity: .9; }
 #face .flt-vcend { fill: #e8edf3; }
 #face .flt-vcticks { stroke: #ff2b1c; stroke-width: 1.1; }
 #face .flt-vctri { fill: #ff2b1c; }

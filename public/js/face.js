@@ -537,6 +537,7 @@
     g = f.g = el('g', { class: 'flt' }, g); // caché en DISP « filtres agrandis » (ils sont alors dans le grand cadre)
     el('rect', { x: x0, y: y0, width: w, height: h, class: 'flt-box' }, g);
     f.bars = el('path', { d: '', class: 'flt-bars' }, g);
+    f.roof = el('path', { d: '', class: 'flt-roof' }, g); // limites du filtre de toit (R.FIL), en pointillés
     f.trap = el('path', { d: '', class: 'flt-trap' }, g);
     f.center = el('line', { x1: x0 + w / 2, y1: y0 + 6, x2: x0 + w / 2, y2: y0 + h - 4, class: 'flt-ctr' }, g);
     // VC TUNE : barre au-dessus du filtre, comme sur le TRX : « − » … traits rouges … « + », repère rouge à la position du présélecteur
@@ -1503,6 +1504,7 @@
     if (c.pct) return Math.round(v / 255 * 100) + ' %';
     return v + (c.unit ? ' ' + c.unit : '');
   }
+  const ROOF_HZ = [0, 12000, 3000, 1200, 600, 300]; // R.FIL (filtre de toit) en Hz
   const ATT = ['OFF', '6dB', '12dB', '18dB'], IPO = ['IPO', 'AMP1', 'AMP2'], ROOF = ['', '12kHz', '3kHz', '1.2kHz', '600Hz', '300Hz'], AGC = ['OFF', 'FAST', 'MID', 'SLOW', 'AUTO'];
   function cellText(id, v) {
     if (v == null) return '—';
@@ -1570,8 +1572,17 @@
       const mode = side === 'A' ? s.mode : s.modeB;
       const tab = R.widthTable(mode) || null;
       const wi = s['width' + sfx];
-      const hz = tab && wi ? tab[wi - 1] : tab ? widthDefHz(mode || '') : /AM|FM/.test(mode || '') ? 6000 : 2400;
-      const sh = s['shift' + sfx] || 0;
+      const nar = !!s['narrow' + sfx];
+      // NAR (filtre étroit) : CW / DATA / RTTY / PSK 500 Hz, SSB 1,8 kHz (réglages d'origine du TRX)
+      const narHz = nar ? (/^(CW|DATA|RTTY|PSK)/.test(mode || '') ? 500 : /SB$/.test(mode || '') ? 1800 : 0) : 0;
+      const ifHz = narHz || (tab && wi ? tab[wi - 1] : tab ? widthDefHz(mode || '') : /AM|FM/.test(mode || '') ? 6000 : 2400);
+      const ifSh = s['shift' + sfx] || 0;
+      // Bande passante réelle : celle du filtre FI (WIDTH, IF SHIFT) limitée par le filtre de toit (R.FIL, centré)
+      const roofHz = ROOF_HZ[s['roof' + sfx]] || 0;
+      let lo = ifSh - ifHz / 2, hi = ifSh + ifHz / 2;
+      if (roofHz) { lo = Math.max(lo, -roofHz / 2); hi = Math.min(hi, roofHz / 2); if (hi - lo < 50) { const m = (lo + hi) / 2; lo = m - 25; hi = m + 25; } }
+      const hz = Math.round(hi - lo);
+      const sh = Math.round((lo + hi) / 2);
       const fr = Math.max(0.06, Math.min(0.96, hz / FLT_SPAN));
       const cx = fl.x0 + fl.w / 2 + Math.max(-0.4, Math.min(0.4, sh / 2400)) * fl.w;
       const tw = fl.w * fr, top = fl.y0 + 8, bot = fl.y0 + fl.h - 5, sl = Math.min(8, tw * 0.15);
@@ -1584,6 +1595,9 @@
       const kx = cf ? Math.max(fl.x0 + 4, Math.min(fl.x0 + fl.w - 4, cx + cf.rel * fl.w)) : null;
       fl.cup.style.display = cf ? '' : 'none';
       if (cf) fl.cup.setAttribute('d', contV(kx, top, 3.5, 7));
+      // R.FIL plus étroit que le cadre : ses limites en pointillés (centrées sur le signal, sans IF SHIFT)
+      const rw = roofHz ? roofHz / FLT_SPAN * fl.w : 0, rc = fl.x0 + fl.w / 2;
+      fl.roof.setAttribute('d', rw && rw < fl.w - 4 ? 'M' + (rc - rw / 2).toFixed(1) + ' ' + (top - 3) + 'V' + bot + 'M' + (rc + rw / 2).toFixed(1) + ' ' + (top - 3) + 'V' + bot : '');
       fl.trap.setAttribute('d', 'M' + trapPts(fl.x0, fl.w, cx, tw, top, bot, sl, [[nx, 3], [kx, 3.5, 7]]).map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
       // NOTCH hors de la bande passante (sur les flancs ou au-delà) : simple trait rouge à sa place (au bord du cadre si plus loin)
       const inPass = nx != null && nx - 3 > cx - tw / 2 + sl && nx + 3 < cx + tw / 2 - sl;
@@ -1820,9 +1834,10 @@
   }
 
   // Cascade : FFT de 512 points sur la BF reçue (12 kHz → 0 à 4 kHz), une ligne toutes les 50 ms
-  // FFT de 2048 points : à 12 kHz, un point tous les 5,9 Hz (spectre fin)
-  const NFFT = 2048;
-  const WF = { at: 0, rate: 12000, l: new Float32Array(NFFT), r: new Float32Array(NFFT), two: false, pos: 0, drawn: false };
+  // FFT de 2048 points : à 12 kHz, un point tous les 5,9 Hz ; plage étroite (CW, filtre fin : 1,5 kHz ou moins à l'écran) :
+  // 4096 points, un point tous les 2,9 Hz (spectre plus fin). WF.n = taille utilisée pour les spectres de ce tour.
+  const NFFT = 4096;
+  const WF = { at: 0, rate: 12000, l: new Float32Array(NFFT), r: new Float32Array(NFFT), two: false, pos: 0, drawn: false, n: 2048 };
   function feedWf(pcm, rate) {
     WF.at = Date.now();
     WF.rate = rate;
@@ -1832,11 +1847,19 @@
     WF.l.copyWithin(0, n); WF.l.set(pcm, NFFT - n);
     if (pcm.r) { WF.r.copyWithin(0, n); WF.r.set(pcm.r, NFFT - n); }
   }
-  const HANN = new Float32Array(NFFT).map((_, i) => 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (NFFT - 1)));
+  // Fenêtre de Hann et table des cosinus / sinus par taille (calculées une fois)
+  const FFT_T = {};
+  function fftTab(N) {
+    if (FFT_T[N]) return FFT_T[N];
+    const t = { hann: new Float32Array(N), cos: new Float32Array(N / 2), sin: new Float32Array(N / 2) };
+    for (let i = 0; i < N; i++) t.hann[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1));
+    for (let k = 0; k < N / 2; k++) { t.cos[k] = Math.cos(-2 * Math.PI * k / N); t.sin[k] = Math.sin(-2 * Math.PI * k / N); }
+    return (FFT_T[N] = t);
+  }
   function spectrum(x) {
-    // FFT radix 2 en place (re, im), puis amplitude en dB ramenée à 0..1
-    const N = NFFT, re = new Float32Array(N), im = new Float32Array(N);
-    for (let i = 0; i < N; i++) re[i] = x[i] * HANN[i];
+    // FFT radix 2 en place (re, im) sur les WF.n derniers échantillons, puis amplitude en dB ramenée à 0..1
+    const N = WF.n, T = fftTab(N), re = new Float32Array(N), im = new Float32Array(N), o = x.length - N;
+    for (let i = 0; i < N; i++) re[i] = x[o + i] * T.hann[i];
     for (let i = 1, j = 0; i < N; i++) {
       let bit = N >> 1;
       for (; j & bit; bit >>= 1) j ^= bit;
@@ -1844,10 +1867,10 @@
       if (i < j) { const t = re[i]; re[i] = re[j]; re[j] = t; }
     }
     for (let len = 2; len <= N; len <<= 1) {
-      const ang = -2 * Math.PI / len;
+      const st = N / len;
       for (let i = 0; i < N; i += len) {
         for (let k = 0; k < len / 2; k++) {
-          const wr = Math.cos(ang * k), wi = Math.sin(ang * k);
+          const wr = T.cos[k * st], wi = T.sin[k * st];
           const a = i + k, b = a + len / 2;
           const tr = re[b] * wr - im[b] * wi, ti = re[b] * wi + im[b] * wr;
           re[b] = re[a] - tr; im[b] = im[a] - ti;
@@ -1913,7 +1936,7 @@
     const hi = audioCenter(f.mode || '', f.hz) + (f.sh || 0) + f.hz / 2;
     return Math.max(500, Math.min(span, Math.ceil((hi * 1.05 + 100) / 100) * 100));
   }
-  const nbFor = (hz) => Math.max(2, Math.floor((NFFT / 2) * hz / ((WF.rate || 2 * hz) / 2)));
+  const nbFor = (hz) => Math.max(2, Math.floor((WF.n / 2) * hz / ((WF.rate || 2 * hz) / 2)));
   const kHz = (hz) => (hz / 1000).toFixed(hz % 1000 ? 1 : 0).replace('.', ',');
   function spanLabel() {
     if (L.disp === 1 || L.disp === 2) {
@@ -1959,9 +1982,15 @@
     // Un point d'écran = le plus fort des points de la FFT qu'il couvre (les pics fins restent visibles)
     const col = new Float32Array(w);
     for (let px = 0; px < w; px++) {
-      const i0 = Math.floor(px / w * nb), i1 = Math.max(i0 + 1, Math.floor((px + 1) / w * nb));
       let m = 0;
-      for (let i = i0; i < i1 && i < nb; i++) if (sp[i] > m) m = sp[i];
+      if (nb < w) {
+        // Moins de points de FFT que de points d'écran : interpolation entre deux points (pas d'escalier)
+        const fx = Math.max(0, Math.min(nb - 1, (px + 0.5) / w * nb - 0.5)), i = Math.floor(fx), u = fx - i;
+        m = sp[i] * (1 - u) + (sp[Math.min(nb - 1, i + 1)] || 0) * u;
+      } else {
+        const i0 = Math.floor(px / w * nb), i1 = Math.max(i0 + 1, Math.floor((px + 1) / w * nb));
+        for (let i = i0; i < i1 && i < nb; i++) if (sp[i] > m) m = sp[i];
+      }
       col[px] = Math.max(0, Math.min(1, m + lvl));
     }
     // Grille
@@ -1973,7 +2002,7 @@
     const fl = L.marker && LCD.flt && LCD.flt[name === 'SUB' ? 'B' : 'A'];
     if (fl) {
       const md = fl.mode;
-      let c = /CW/.test(md) ? 700 : /DATA|RTTY|PSK/.test(md) ? 1500 : /AM|FM/.test(md) ? fl.hz / 2 : 300 + fl.hz / 2;
+      let c = audioCenter(md || '', fl.hz); // CW : tonalité (pitch) du TRX
       c += fl.sh || 0;
       const lo = Math.max(0, c - fl.hz / 2), hi = Math.min(maxHz, c + fl.hz / 2);
       const xa = x0 + lo / maxHz * w, xb = x0 + hi / maxHz * w;
@@ -2061,7 +2090,7 @@
       c2.fillText('SUB : bouton « 🎧 Stéréo MAIN | SUB »', ox + ow / 2, gy0 + gh / 2 + 4);
     }
     // AF-FFT : spectre de la BF 0–4 kHz avec sa cascade
-    const fHz = Math.min(4000, WF.rate / 2), nb4 = Math.max(2, Math.floor((NFFT / 2) * fHz / (WF.rate / 2)));
+    const fHz = Math.min(4000, WF.rate / 2), nb4 = Math.max(2, Math.floor((WF.n / 2) * fHz / (WF.rate / 2)));
     drawScope(c2, { sp, x0: w1 + 2, y0: y1, w: W - w1 - 2, h: hb, name: 'AF-FFT ' + nm, sep: 'v' }, pal, nb4, lvl, fHz);
   }
   // 3DSS (comme le TRX) : les derniers spectres en perspective, du plus ancien (au fond, en haut, plus étroit) au plus récent (devant)
@@ -2127,7 +2156,7 @@
         c2.beginPath();
         const n = Math.floor((w - 8) / 1.6);
         // Échelle du filtre (FLT_SPAN Hz de BF sur la largeur, à l'envers en bande latérale inférieure)
-        const binHz = (WF.rate / 2) / (NFFT / 2), fc = audioCenter(f.mode || '', f.hz || 2400) + (f.sh || 0);
+        const binHz = (WF.rate / 2) / (WF.n / 2), fc = audioCenter(f.mode || '', f.hz || 2400) + (f.sh || 0);
         const rev = /^LSB$|-L$/.test(f.mode || '') ? -1 : 1, stepHz = (w - 8) / n / w * FLT_SPAN;
         for (let k = 0; k < n; k++) {
           const fq = fc + rev * (x0 + 4 + (k + 0.5) * (w - 8) / n - cx) / w * FLT_SPAN;
@@ -2191,7 +2220,7 @@
       const txHere = s.tx && (s.txVfo === 1) === (side === 'B');
       if (txHere) off = 0;
       else if (sp) {
-        const pitch = s.cwPitch || 700, binHz = (WF.rate / 2) / (NFFT / 2);
+        const pitch = s.cwPitch || 700, binHz = (WF.rate / 2) / (WF.n / 2);
         let best = 0, bf = 0;
         for (let j = Math.floor((pitch - CWT_HZ) / binHz); j <= Math.ceil((pitch + CWT_HZ) / binHz); j++) if (j > 0 && j < sp.length && sp[j] > best) { best = sp[j]; bf = j * binHz; }
         if (best > 0.62) off = bf - pitch; // ~ 13 dB au-dessus du bruit
@@ -2211,8 +2240,9 @@
     if (fresh) {
       const maxHz = Math.min(SPANS[L.wfSpan], WF.rate / 2);
       const lvl = L.wfLevel / 70;
+      WF.n = Math.min(fitHz('A'), WF.two ? fitHz('B') : 1e9) <= 1500 ? 4096 : 2048; // plage étroite : spectre plus fin
       const specs = [spectrum(WF.l), WF.two ? spectrum(WF.r) : null];
-      const nb = Math.max(2, Math.floor((NFFT / 2) * maxHz / (WF.rate / 2)));
+      const nb = Math.max(2, Math.floor((WF.n / 2) * maxHz / (WF.rate / 2)));
       // Petit spectre dans le cadre du filtre (MAIN à gauche, SUB à droite)
       for (const [side, sp] of [['A', specs[0]], ['B', specs[1] || (S().dualRx !== 0 && !WF.two ? null : null)]]) {
         const fl = LCD['f' + side];
@@ -2222,7 +2252,7 @@
         const n = 64, bot = fl.y0 + fl.h - 6, hh = fl.h - 16;
         // Même échelle que le trapèze du filtre (cadre = FLT_SPAN Hz de BF, centré sur le milieu de la bande passante,
         // à l'envers en bande latérale inférieure) : le spectre tombe dans le filtre et remplit sa largeur, comme sur le TRX
-        const ff = LCD.flt && LCD.flt[side], binHz = (WF.rate / 2) / (NFFT / 2);
+        const ff = LCD.flt && LCD.flt[side], binHz = (WF.rate / 2) / (WF.n / 2);
         const fc = ff ? audioCenter(ff.mode || '', ff.hz) + (ff.sh || 0) : FLT_SPAN / 2;
         const rev = ff && /^LSB$|-L$/.test(ff.mode || '') ? -1 : 1;
         const cxf = fl.x0 + fl.w / 2 + (ff ? ff.off : 0) * fl.w, stepHz = (fl.w - 12) / n / fl.w * FLT_SPAN;

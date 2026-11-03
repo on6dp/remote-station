@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.35.2** — Face avant FTDX101 : le cadre du filtre suit aussi R.FIL (filtre de toit, limites en pointillés violets) et NAR — bande passante réelle = la plus étroite ; spectre plus fin sur une plage étroite (FFT 4096 points, 2,9 Hz, interpolé) ; MARKER centré sur le pitch CW. Barres du filtre TRX en CW : R.FIL pris en compte.
 - **0.35.1** — CW : zoom à la molette sur les deux cascades (MAIN et SUB, jusqu'à 200 Hz) ; filtre du TRX affiché par deux barres bleu clair (WIDTH / NAR, centré sur le pitch, IF SHIFT), réglable en glissant une barre ou par Ctrl + molette. Face avant FTDX101 : RX MAIN coupe / remet le récepteur MAIN (FR P1 P2), comme la touche du TRX.
 - **0.35.0** — CW en double réception (FTDX101, MAIN + SUB) : deux récepteurs CW séparés — deux cascades, deux zones de réception, chacune avec son filtre, son silencieux, son niveau, sa tonalité et sa vitesse ; double-clic sur un indicatif : émission sur le VFO où il a été entendu ; le filtre du décodeur B règle la BW du SUB.
 - **0.34.1** — JTTY en double réception : disposition symétrique — activité et fréquence RX pour le VFO-A **et** pour le VFO-B (4 colonnes, comme en FT8) ; repères RX / TX sur la cascade du VFO-B ; double-clic sur un message du VFO-B : émission sur le VFO-B.
