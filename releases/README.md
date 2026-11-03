@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.34.1 | [RemoteStation-Setup-0.34.1.exe](0.34.1/RemoteStation-Setup-0.34.1.exe) | [remote-station-0.34.1.tar.gz](0.34.1/remote-station-0.34.1.tar.gz) | JTTY : 4 colonnes (activité + fréquence RX par VFO) — [empreintes SHA-256](0.34.1/SHA256SUMS.txt) |
 | 0.34.0 | [RemoteStation-Setup-0.34.0.exe](0.34.0/RemoteStation-Setup-0.34.0.exe) | [remote-station-0.34.0.tar.gz](0.34.0/remote-station-0.34.0.tar.gz) | JT65, WSPR, JTTY sur MAIN et SUB — [empreintes SHA-256](0.34.0/SHA256SUMS.txt) |
 | 0.33.22 | [RemoteStation-Setup-0.33.22.exe](0.33.22/RemoteStation-Setup-0.33.22.exe) | [remote-station-0.33.22.tar.gz](0.33.22/remote-station-0.33.22.tar.gz) | FT : retour à 2 colonnes, double réception immédiate ; aide à jour — [empreintes SHA-256](0.33.22/SHA256SUMS.txt) |
 | 0.33.21 | [RemoteStation-Setup-0.33.21.exe](0.33.21/RemoteStation-Setup-0.33.21.exe) | [remote-station-0.33.21.tar.gz](0.33.21/remote-station-0.33.21.tar.gz) | RTTY : TX/RX en F11/F12, décodeur plus sensible ; ALC 30 % — [empreintes SHA-256](0.33.21/SHA256SUMS.txt) |

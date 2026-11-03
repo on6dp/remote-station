@@ -1699,6 +1699,6 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 .ft-dual .ws-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .ft-dual .ws-cols > .ws-col.dual-colb { position: relative; }
 .ft-dual .ws-cols > .ws-col.dual-colb::before { content: ''; position: absolute; top: -2px; bottom: -1px; left: -8px; width: 3px; border-radius: 2px; background: #7a8494; }
-.ft-dual .dg-cols.jt-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ft-dual .dg-cols.jt-cols { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .ft-dual .ws-col.dual-colb, .ft-dual .jt-cols .dual-colb { border-top: 2px solid #2456b8; }
 .dg-col.dual-colb[hidden] { display: none !important; }

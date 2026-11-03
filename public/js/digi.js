@@ -373,10 +373,14 @@
         <div class="dg-list jt-chat" id="jtRx"></div>
       </div>
       <!-- FTDX101 en double réception : messages JTTY reçus par le récepteur SUB (VFO-B) -->
-      <div class="dg-col dual-colb" hidden>
+      <div class="dg-col ft-colb dual-colb" hidden>
         <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Activité JTTY</span><button class="dg-mini" type="button" id="jtClearB">Effacer</button></div>
         <div class="jt-th"><span>UTC</span><span>dB</span><span>Fréq</span><span>Message</span></div>
         <div class="dg-list" id="jtBandB"></div>
+      </div>
+      <div class="dg-col ft-colb dual-colb" hidden>
+        <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Fréquence RX <b id="jtRxFB2">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span></div>
+        <div class="dg-list jt-chat" id="jtRxB"></div>
       </div>
     </div>
     <div class="jt-tx">
@@ -1098,8 +1102,9 @@
     const w = wf.cw;
     // Repères partagés avec les autres onglets : ce que l'onglet FT a masqué ou pâli (zoom, VFO-B qui émet) est remis
     if (tab !== 'ftx') for (const id of ['dgMkRx', 'dgMkTx']) if ($(id)) { $(id).style.display = ''; $(id).classList.remove('mk-off'); }
-    // Cascade du VFO-B (double réception) : son échelle ; repères RX / TX en FT8 / FT4 / FT2 et JT65 seulement
-    if (ftDual && wfFB.sctx && tab !== 'ftx' && tab !== 'jt65') {
+    // Cascade du VFO-B (double réception) : son échelle ; repères RX / TX en FT8 / FT4 / FT2, JT65 et JTTY seulement
+    const flagsB = tab === 'ftx' || tab === 'jt65' || tab === 'jtty';
+    if (ftDual && wfFB.sctx && !flagsB) {
       ticks(wfFB.sctx, wfFB.cw, viewB());
       for (const id of ['ftMkRxB', 'ftMkTxB']) if ($(id)) $(id).style.display = 'none';
     }
@@ -1109,7 +1114,7 @@
     if (tab === 'cw') return drawCwMarks(c, w);
     if (tab === 'sstv') return drawSstvMarks(c, w);
     drawFlags(c, w);
-    if (ftDual && wfFB.sctx && (tab === 'ftx' || tab === 'jt65')) {
+    if (ftDual && wfFB.sctx && flagsB) {
       for (const id of ['ftMkRxB', 'ftMkTxB']) if ($(id)) $(id).style.display = '';
       ticks(wfFB.sctx, wfFB.cw, viewB());
       drawFlags(wfFB.sctx, wfFB.cw, 'B');
@@ -1173,12 +1178,12 @@
     pos($(B ? 'ftMkRxB' : 'dgMkRx'), rf);
     pos($(B ? 'ftMkTxB' : 'dgMkTx'), tf);
     $(B ? 'ftMkTxB' : 'dgMkTx').classList.toggle('mk-off', !txOn);
-    if (B) { $('dgRxFB').textContent = Math.round(rf) + ' Hz'; return; }
+    if (B) { $('dgRxFB').textContent = Math.round(rf) + ' Hz'; if ($('jtRxFB2')) $('jtRxFB2').textContent = Math.round(rf) + ' Hz'; return; }
     $('dgRxF').textContent = Math.round(rxF) + ' Hz';
     // Barre du haut : fréquences du VFO d'émission choisi
     $('dgRxF2').textContent = Math.round(sd() === 'B' ? rxFB : rxF);
     $('dgTxF').textContent = Math.round(sd() === 'B' ? txFB : txF);
-    if ($('jtRxF')) { $('jtRxF').textContent = Math.round(rxF); $('jtTxF').textContent = Math.round(txF); $('jtRxF2').textContent = Math.round(rxF) + ' Hz'; }
+    if ($('jtRxF')) { $('jtRxF').textContent = Math.round(sd() === 'B' ? rxFB : rxF); $('jtTxF').textContent = Math.round(sd() === 'B' ? txFB : txF); $('jtRxF2').textContent = Math.round(rxF) + ' Hz'; }
   }
   // ------------------------------------------------------------------ RTTY
   const RTTY_DIAL = [['80 m', 3590], ['40 m', 7040], ['30 m', 10142], ['20 m', 14085], ['17 m', 18101], ['15 m', 21085], ['12 m', 24910], ['10 m', 28085]];
@@ -1502,7 +1507,7 @@
         drawScale();
         bmDraw();
         const now = Date.now();
-        if (now - mk.t > 150) { mk.t = now; sendView(); if (!mk.tx && tab === 'jtty') jtRedraw(); }
+        if (now - mk.t > 150) { mk.t = now; sendView(); if (!mk.tx && tab === 'jtty') { if (B) jtRedrawB(); else jtRedraw(); } }
       };
       el.addEventListener('pointerdown', (e) => {
         if (FT_TABS.indexOf(tab) < 0 || e.shiftKey || (e.button !== 0 && e.button !== 2)) return;
@@ -2700,7 +2705,7 @@
   const jtMsgs = new Map(); // clé → dernière version du message { key, f, db, done, t, text }
   let jtLast = 0;
   const jtMe = (u) => String(u.text || '').toUpperCase().split(/[^A-Z0-9/]+/).some((x) => stationCalls.indexOf(x) >= 0);
-  function jtRow(u) {
+  function jtRow(u, side) {
     const r = document.createElement('div');
     const up = String(u.text || '').toUpperCase();
     const me = jtMe(u);
@@ -2709,24 +2714,26 @@
     const cells = [utc(u.t).slice(0, 6), (u.db >= 0 ? '+' : '') + u.db, u.f, u.text + (u.done ? '' : ' ▌')];
     for (const v of cells) { const s = document.createElement('span'); s.textContent = String(v); r.appendChild(s); }
     r.title = u.f + ' Hz · ' + (u.done ? 'message terminé' : 'réception en cours') + ' · clic gauche : réception ici · clic droit : émission ici · double-clic : correspondant';
-    r.addEventListener('click', () => setRx(u.f));
-    r.addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(u.f); });
-    r.addEventListener('dblclick', () => jtPick(u));
+    r.addEventListener('click', () => setRx(u.f, side));
+    r.addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(u.f, side); });
+    r.addEventListener('dblclick', () => jtPick(u, side));
     return r;
   }
   const jtInRx = (u) => Math.abs(u.f - rxF) <= JT_RX_WIDTH || jtMe(u);
+  const jtInRxB = (u) => Math.abs(u.f - rxFB) <= JT_RX_WIDTH || jtMe(u);
   // Double-clic : l'indicatif du message (après CQ / DE, sinon le dernier) devient le correspondant
-  function jtPick(u) {
+  function jtPick(u, side) {
+    if (ftDual) setSide(side === 'B' ? 'B' : 'A', true); // émission sur le VFO de la station choisie
     const w = String(u.text || '').toUpperCase().split(/\s+/).filter(Boolean);
     const calls = w.filter((x) => CALL_RE.test(x) && stationCalls.indexOf(x) < 0);
     let call = '';
     const i = w.findIndex((x) => x === 'CQ' || x === 'DE');
     if (i >= 0) call = w.slice(i + 1).find((x) => CALL_RE.test(x) && stationCalls.indexOf(x) < 0) || '';
     if (!call) call = calls[calls.length - 1] || '';
-    if (!call) { setRx(u.f); return api && api.say('Pas d’indicatif à reprendre dans ce message.', 'warn'); }
+    if (!call) { setRx(u.f, side); return api && api.say('Pas d’indicatif à reprendre dans ce message.', 'warn'); }
     const g = w.find((x) => GRID_RE.test(x) && x !== 'RR73');
     setDx({ call, grid: g || '', rpt: fmtRpt(u.db) });
-    setRx(u.f);
+    setRx(u.f, side);
   }
   // Mise à jour d'un message : la ligne existante est remplacée (le texte grandit trame après trame)
   const jtMsgsB = new Map(); // messages JTTY du récepteur SUB (double réception)
@@ -2734,18 +2741,27 @@
     if (!u || !u.key) return;
     jtMsgsB.set(u.key, u);
     if (jtMsgsB.size > 300) jtMsgsB.delete(jtMsgsB.keys().next().value);
-    const box = $('jtBandB');
-    if (!box || !ftDual) return;
-    const old = box.querySelector('[data-key="' + CSS.escape(u.key) + '"]');
-    if (old) old.replaceWith(jtRow(u));
-    else stickToBottom(box, () => box.appendChild(jtRow(u)));
+    if (!ftDual) return;
+    for (const [id, inRx] of [['jtBandB', true], ['jtRxB', jtInRxB(u)]]) {
+      const box = $(id);
+      if (!box) continue;
+      const old = box.querySelector('[data-key="' + CSS.escape(u.key) + '"]');
+      if (old) { old.replaceWith(jtRow(u, 'B')); continue; }
+      if (inRx) stickToBottom(box, () => box.appendChild(jtRow(u, 'B')));
+    }
   }
   function jtRedrawB() {
-    const box = $('jtBandB');
-    if (!box) return;
-    box.textContent = '';
-    for (const u of Array.from(jtMsgsB.values()).sort((a, b) => a.t - b.t)) box.appendChild(jtRow(u));
-    box.scrollTop = box.scrollHeight;
+    const band = $('jtBandB');
+    const rx = $('jtRxB');
+    if (!band) return;
+    band.textContent = '';
+    rx.textContent = '';
+    for (const u of Array.from(jtMsgsB.values()).sort((a, b) => a.t - b.t)) {
+      band.appendChild(jtRow(u, 'B'));
+      if (jtInRxB(u)) rx.appendChild(jtRow(u, 'B'));
+    }
+    band.scrollTop = band.scrollHeight;
+    rx.scrollTop = rx.scrollHeight;
   }
   function jtUpdate(u) {
     if (!u || !u.key) return;
@@ -4269,6 +4285,7 @@
       rxFB = v;
       store.set('rxfb', v);
       drawScale();
+      if (tab === 'jtty') jtRedrawB();
       return redrawRx('B');
     }
     rxF = v;
