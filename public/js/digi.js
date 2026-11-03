@@ -250,7 +250,7 @@
     <div class="rt-dual" id="rtDual">
       <div class="dg-col rt-side" data-ch="0">
         <div class="dg-h rt-hd">
-          <span class="rt-name">VFO-A</span><span class="rt-rf" id="rtRf" title="Fréquence du signal suivi (porteuse + centre Mark / Space)"></span>
+          <span class="rt-name">VFO-A</span><span class="rt-rf" id="rtRf"></span><span class="rt-sig" id="rtSig"></span>
           <select id="rtShift" aria-label="Shift (VFO-A)"><option value="170">170 Hz</option><option value="200">200 Hz</option><option value="425">425 Hz</option><option value="850">850 Hz</option></select>
           <select id="rtBaud" aria-label="Vitesse (VFO-A)"><option value="45.45">45,45 Bd</option><option value="50">50 Bd</option><option value="75">75 Bd</option><option value="100">100 Bd</option></select>
           <button class="dg-mini" type="button" id="rtRev" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>
@@ -268,7 +268,7 @@
       <i class="rt-vsplit" id="rtSplit" title="Glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié)"></i>
       <div class="dg-col rt-side" data-ch="1">
         <div class="dg-h rt-hd">
-          <span class="rt-name">VFO-B</span><span class="rt-rf" id="rtRfB" title="Fréquence du signal suivi (porteuse + centre Mark / Space)"></span>
+          <span class="rt-name">VFO-B</span><span class="rt-rf" id="rtRfB"></span><span class="rt-sig" id="rtSigB"></span>
           <select id="rtShiftB" aria-label="Shift (VFO-B)"><option value="170">170 Hz</option><option value="200">200 Hz</option><option value="425">425 Hz</option><option value="850">850 Hz</option></select>
           <select id="rtBaudB" aria-label="Vitesse (VFO-B)"><option value="45.45">45,45 Bd</option><option value="50">50 Bd</option><option value="75">75 Bd</option><option value="100">100 Bd</option></select>
           <button class="dg-mini" type="button" id="rtRevB" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>
@@ -2230,10 +2230,14 @@
       const d = rtDialOf(ch);
       $('rtF' + sfx).textContent = Math.round(x.f);
       const own = d && d.vfo === (ch ? 'B' : 'A');
-      $('rtRf' + sfx).textContent = d ? (((d.hz + d.sign * x.f) / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kHz' + (own ? '' : ' (VFO ' + d.vfo + ')')) : '';
+      // En grand : la fréquence du VFO, comme sur l'écran du TRX (14.078.540) ; en petit : celle du signal suivi
+      // (porteuse ± centre Mark / Space, comme FLDIGI)
+      const mhz = (hz) => { const t = String(Math.round(hz)).padStart(7, '0'); return t.slice(0, -6) + '.' + t.slice(-6, -3) + '.' + t.slice(-3); };
+      $('rtRf' + sfx).textContent = d ? mhz(d.hz) + (own ? '' : ' (VFO ' + d.vfo + ')') : '';
+      if ($('rtSig' + sfx)) $('rtSig' + sfx).textContent = d ? 'signal ' + ((d.hz + d.sign * x.f) / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kHz' : '';
       // Comme en FT8 : fréquence en grand, sur fond rouge (« TX ») pour le décodeur d'où part l'émission
       $('rtRf' + sfx).classList.toggle('tx', ch === rtTx && !!d);
-      $('rtRf' + sfx).title = !d ? '' : own ? 'Fréquence du signal suivi : VFO ' + d.vfo + ' ' + (d.sign > 0 ? '+' : '−') + ' ' + Math.round(x.f) + ' Hz'
+      $('rtRf' + sfx).title = !d ? '' : own ? 'Fréquence du VFO ' + d.vfo + ' (comme sur le TRX) ; signal suivi = VFO ' + (d.sign > 0 ? '+' : '−') + ' ' + Math.round(x.f) + ' Hz (centre du décodeur)'
         : 'Réception simple : ce décodeur lit le même récepteur que l’autre, celui du VFO ' + d.vfo + ' (le VFO ' + (ch ? 'B' : 'A') + ' n’est pas écouté). Fréquence = VFO ' + d.vfo + ' ' + (d.sign > 0 ? '+' : '−') + ' ' + Math.round(x.f) + ' Hz.';
     });
     // Porteuse changée (molette, bandes…) : échelles en kHz redessinées
