@@ -1177,12 +1177,25 @@
     { name: 'Log', text: '<LOG>' },
     { name: 'RYRY', text: '<TX>RYRYRYRYRYRY\n<RX>' }
   ];
+  // Balises des macros (champs standardisés de FLDIGI, et celles propres à la station), par groupe ; « #… » = titre de groupe
   const TAGS = [
-    ['<TX>', 'émission immédiate au clic (sinon : texte ajouté à la zone d’écriture)'], ['<RX>', 'retour en réception à la fin (toujours fait)'], ['<LOG>', 'ouvre la fiche du QSO pour l’enregistrer dans le carnet'],
-    ['<MYCALL>', 'indicatif émis (TX call)'], ['<CALL>', 'correspondant'], ['<NAME>', 'son prénom'], ['<QTH>', 'son QTH'],
-    ['<RST>', 'report envoyé'], ['<LOC>', 'son locator'], ['<MYLOC>', 'locator de la station'], ['<MYQTH>', 'QTH de la station'],
-    ['<OPCALL>', 'votre indicatif (opérateur)'], ['<CNTR>', 'numéro de série'], ['<INCR>', 'numéro suivant'], ['<ZT>', 'heure UTC'], ['<ZD>', 'date UTC'],
-    ['<EXCH>', 'échange du contest choisi (RTTY)'], ['<CQZ>', 'zone CQ de la station'], ['<ITUZ>', 'zone ITU de la station']
+    ['#Émission', ''],
+    ['<TX>', 'émission immédiate au clic (sinon : texte ajouté à la zone d’écriture)'], ['<RX>', 'retour en réception à la fin (toujours fait)'],
+    ['<LOG>', 'ouvre la fiche du QSO pour l’enregistrer dans le carnet'], ['<CLRLOG>', 'efface le correspondant (nouveau QSO)'],
+    ['#Station', ''],
+    ['<MYCALL>', 'indicatif émis (TX call)'], ['<OPCALL>', 'votre indicatif (opérateur)'], ['<MYLOC>', 'locator de la station'], ['<MYQTH>', 'QTH de la station'],
+    ['<MYRST>', 'report reçu (RST qu’il nous donne)'], ['<VER>', 'nom et version du logiciel'],
+    ['#Correspondant', ''],
+    ['<CALL>', 'son indicatif'], ['<NAME>', 'son prénom'], ['<QTH>', 'son QTH'], ['<LOC>', 'son locator'], ['<RST>', 'report envoyé'],
+    ['#Trafic', ''],
+    ['<FREQ>', 'fréquence du VFO d’émission (MHz)'], ['<BAND>', 'bande'], ['<MODE>', 'mode (RTTY, CW…)'], ['<QSOTIME>', 'heure UTC du début du QSO'],
+    ['#Heure et date', ''],
+    ['<ZT>', 'heure UTC (HHMM)'], ['<ZD>', 'date UTC (AAAAMMJJ)'], ['<ZDT>', 'date et heure UTC'], ['<IZDT>', 'date et heure UTC (ISO)'],
+    ['<LT>', 'heure locale (HHMM)'], ['<LD>', 'date locale'], ['<LDT>', 'date et heure locales'], ['<ILDT>', 'date et heure locales (ISO)'],
+    ['#Contest', ''],
+    ['<CNTR>', 'numéro de série (3 chiffres)'], ['<SERNO>', 'numéro de série (comme <CNTR>)'], ['<LSTNO>', 'numéro précédent'],
+    ['<INCR>', 'passe au numéro suivant (une fois par correspondant)'], ['<DECR>', 'revient au numéro précédent'],
+    ['<EXCH>', 'échange du contest choisi (RTTY)'], ['<XOUT>', 'échange envoyé (comme <EXCH>)'], ['<CQZ>', 'zone CQ de la station'], ['<ITUZ>', 'zone ITU de la station']
   ];
   let macros = (() => { try { return JSON.parse(store.get('macros', '{}')) || {}; } catch (e) { return {}; } })();
   const macroList = (mode) => (macros[mode] && macros[mode].length ? macros[mode] : DEF_MACROS[mode] || []);
@@ -2275,9 +2288,26 @@
     const d = new Date(now());
     const p2 = (n) => String(n).padStart(2, '0');
     let cntr = Number(store.get('cntr', '1')) || 1;
+    if (/<DECR>/.test(t) && apply) { cntr = Math.max(1, cntr - 1); store.set('cntr', cntr); store.set('cntrcall', ''); if ($('rtcNr')) $('rtcNr').value = String(cntr).padStart(3, '0'); }
+    if (/<CLRLOG>/.test(t) && apply) setTimeout(() => setDx({ call: '', name: '', qth: '', grid: '' }), 0);
+    const st0 = api && api.state && api.state();
+    const r0 = (st0 && st0.radio) || {};
+    const fTx = r0.dualRx === 1 && r0.txVfo === 1 ? r0.freqB : r0.vfoSel === 1 && r0.freqB ? r0.freqB : r0.freq;
+    const ymdL = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()), hmL = p2(d.getHours()) + p2(d.getMinutes());
+    const ymdZ = d.getUTCFullYear() + '-' + p2(d.getUTCMonth() + 1) + '-' + p2(d.getUTCDate()), hmZ = p2(d.getUTCHours()) + p2(d.getUTCMinutes());
+    const tz = -d.getTimezoneOffset(), tzs = (tz >= 0 ? '+' : '-') + p2(Math.floor(Math.abs(tz) / 60)) + p2(Math.abs(tz) % 60);
+    const t0 = Number(dx.t0) ? new Date(Number(dx.t0)) : d;
     let out = String(t)
-      .replace(/<EXCH>/g, rtcExch())
-      .replace(/<TX>|<RX>|<LOG>/gi, '')
+      .replace(/<EXCH>|<XOUT>/g, rtcExch())
+      .replace(/<TX>|<RX>|<LOG>|<CLRLOG>|<DECR>/gi, '')
+      .replace(/<MYRST>/g, up(dx.rstRx) || '599')
+      .replace(/<FREQ>/g, fTx ? (fTx / 1e6).toFixed(3) : '')
+      .replace(/<BAND>/g, curBand(r0.dualRx === 1 ? (r0.txVfo === 1 ? 'B' : 'A') : '').toUpperCase())
+      .replace(/<MODE>/g, { rtty: 'RTTY', jtty: 'JTTY', cw: 'CW', sstv: 'SSTV', jt65: 'JT65', wspr: 'WSPR' }[tab] || mode)
+      .replace(/<QSOTIME>/g, p2(t0.getUTCHours()) + p2(t0.getUTCMinutes()))
+      .replace(/<VER>/g, 'REMOTE STATION UBA-LGE')
+      .replace(/<LT>/g, hmL).replace(/<LD>/g, ymdL).replace(/<LDT>/g, ymdL + ' ' + hmL).replace(/<ILDT>/g, ymdL + 'T' + hmL.slice(0, 2) + ':' + hmL.slice(2) + tzs)
+      .replace(/<ZDT>/g, ymdZ + ' ' + hmZ + 'Z').replace(/<IZDT>/g, ymdZ + 'T' + hmZ.slice(0, 2) + ':' + hmZ.slice(2) + 'Z')
       .replace(/<CQZ>/g, String(store.get('rtcqz', '14')).padStart(2, '0'))
       .replace(/<ITUZ>/g, String(store.get('rtitu', '27')).padStart(2, '0'))
       .replace(/<MYCALL>|\{MY\}/g, myCall)
@@ -2292,7 +2322,7 @@
       .replace(/<ZT>/g, p2(d.getUTCHours()) + p2(d.getUTCMinutes()))
       .replace(/<ZD>/g, d.getUTCFullYear() + p2(d.getUTCMonth() + 1) + p2(d.getUTCDate()));
     const pad3 = (n) => String(n).padStart(3, '0');
-    out = out.replace(/<CNTR>/g, pad3(cntr));
+    out = out.replace(/<CNTR>|<SERNO>/g, pad3(cntr)).replace(/<LSTNO>/g, pad3(Math.max(0, cntr - 1)));
     if (/<INCR>/.test(out)) {
       // Numéro suivant (macro TU) : une seule fois par correspondant — renvoyer TU au même ne saute pas de numéro
       const who = up(dx.call) || '?';
@@ -3882,6 +3912,7 @@
       prev();
     };
     for (const [tag, help] of TAGS) {
+      if (tag[0] === '#') { const h = doc.createElement('span'); h.className = 'md-tgh'; h.textContent = tag.slice(1); dlg.querySelector('.md-tags').appendChild(h); continue; }
       const t = doc.createElement('button');
       t.type = 'button';
       t.className = 'md-tag';

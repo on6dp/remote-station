@@ -1685,3 +1685,5 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 .rt-hgrip::after { content: ''; position: absolute; left: 50%; top: 3px; width: 60px; height: 3px; margin-left: -30px; border-radius: 2px; background: var(--v2-border-panel, #3a4658); }
 .rt-hgrip:hover::after { background: var(--v2-accent-cyan, #00d4ff); }
 .rt-contest #rtcNrM, .rt-contest #rtcNrP { font-size: 11px; font-weight: 800; color: #fff; min-width: 30px; }
+.md-tgh { flex-basis: 100%; margin-top: 4px; font-size: 10px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: #f5ff00; }
+.md-tgh:first-child { margin-top: 0; }
