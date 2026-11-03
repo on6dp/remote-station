@@ -163,7 +163,15 @@
       $('vxProf').textContent = 'Profil de ' + (has ? who : '…');
       $('vxProf').classList.toggle('dim', !has);
     }
-    if (V.api.compact) { $('vxEqBtn').hidden = !modes; $('vxEqBtn').classList.toggle('dim', !V.on); box.querySelector('.vx-meter').hidden = !modes; }
+    // Face avant : MICRO et EQUALIZER MICRO grisés hors phonie (DATA-U, CW, RTTY… : le micro ne sert pas)
+    const voiceMd = !!(modes && modes.indexOf(txMode(st)) >= 0);
+    if (V.api.compact) {
+      $('vxEqBtn').hidden = !modes;
+      $('vxEqBtn').classList.toggle('dim', !V.on || !voiceMd);
+      $('vxOn').classList.toggle('dim', !voiceMd);
+      if (!voiceMd && modes) $('vxOn').title = 'Mode ' + (txMode(st) || '?') + ' : pas de phonie (le micro sert en ' + modes.join(' / ') + ').';
+      box.querySelector('.vx-meter').hidden = !modes;
+    }
     if (!V.on) return;
     const md = txMode(st);
     if (V.tx) note('● Votre voix part vers le TRX — parlez quand « TX » passe au rouge', false);
