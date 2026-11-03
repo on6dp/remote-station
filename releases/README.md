@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.33.11 | [RemoteStation-Setup-0.33.11.exe](0.33.11/RemoteStation-Setup-0.33.11.exe) | [remote-station-0.33.11.tar.gz](0.33.11/remote-station-0.33.11.tar.gz) | Contests RTTY : liste de N1MM Logger+ — [empreintes SHA-256](0.33.11/SHA256SUMS.txt) |
 | 0.33.10 | [RemoteStation-Setup-0.33.10.exe](0.33.10/RemoteStation-Setup-0.33.10.exe) | [remote-station-0.33.10.tar.gz](0.33.10/remote-station-0.33.10.tar.gz) | Macros : champs standardisés de FLDIGI — [empreintes SHA-256](0.33.10/SHA256SUMS.txt) |
 | 0.33.9 | [RemoteStation-Setup-0.33.9.exe](0.33.9/RemoteStation-Setup-0.33.9.exe) | [remote-station-0.33.9.tar.gz](0.33.9/remote-station-0.33.9.tar.gz) | Contests RTTY : numéro de série −1 / +1, une incrémentation par QSO — [empreintes SHA-256](0.33.9/SHA256SUMS.txt) |
 | 0.33.8 | [RemoteStation-Setup-0.33.8.exe](0.33.8/RemoteStation-Setup-0.33.8.exe) | [remote-station-0.33.8.tar.gz](0.33.8/remote-station-0.33.8.tar.gz) | Logbooks dans la page FT, contests RTTY — [empreintes SHA-256](0.33.8/SHA256SUMS.txt) |

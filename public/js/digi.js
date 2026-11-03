@@ -286,6 +286,7 @@
             <select id="rtcSel" aria-label="Contest RTTY"></select></label>
           <label class="rtc-l" title="Échange envoyé (balise &lt;EXCH&gt; des macros contest) : 599 suivi de ce que demande le contest. &lt;CNTR&gt; = numéro de série, &lt;CQZ&gt; = zone CQ, &lt;ITUZ&gt; = zone ITU, &lt;ZT&gt; = heure UTC">Échange
             <input id="rtcExch" maxlength="40" spellcheck="false"></label>
+          <label class="rtc-l rtc-n" title="Votre prénom, pour les contests qui le demandent (balise &lt;MYNAME&gt; : NAQP, NA Sprint, TARA…)">Prénom <input id="rtcName" maxlength="12" spellcheck="false"></label>
           <label class="rtc-l rtc-s" title="Zone CQ de la station (Belgique : 14)">Zone CQ <input id="rtcCqz" maxlength="2" inputmode="numeric"></label>
           <label class="rtc-l rtc-s" title="Zone ITU de la station (Belgique : 27)">ITU <input id="rtcItu" maxlength="2" inputmode="numeric"></label>
           <label class="rtc-l rtc-s" title="Numéro de série envoyé (&lt;CNTR&gt;). Il passe tout seul au suivant avec la macro TU (&lt;INCR&gt;), une seule fois par correspondant ; renvoyer l'échange redonne le même numéro. −1 / +1 : corriger à la main">N° <input id="rtcNr" maxlength="4" inputmode="numeric"></label>
@@ -1145,19 +1146,50 @@
       { name: 'AGN?', text: '<TX>AGN? AGN?' }
     ]
   };
-  // Contests RTTY : [identifiant Cabrillo, nom, échange par défaut] ; l'échange reste modifiable (champ « Échange »)
+  // Contests RTTY : la liste de N1MM Logger+ (« Setup Digital, RTTY, and PSK Contests », contests RTTY encore organisés)
+  // [identifiant (Cabrillo, sinon code N1MM), nom, échange envoyé par une station DX] ; l'échange reste modifiable
+  // (NOM, 00, 0000 : à compléter — prénom, âge, année de la 1re licence…)
   const RT_CONTESTS = [
     ['', 'Pas de contest', ''],
-    ['CQ-WW-RTTY', 'CQ WW RTTY DX', '599 <CQZ>'],
-    ['CQ-WPX-RTTY', 'CQ WPX RTTY', '599 <CNTR>'],
+    ['ANATOLRTTY', 'Anatolian RTTY', '599 <CNTR>'],
+    ['RRRTTY', 'ARRL Rookie Roundup RTTY', '<MYNAME> 00 DX'],
     ['ARRL-RTTY', 'ARRL RTTY Roundup', '599 <CNTR>'],
-    ['BARTG-RTTY', 'BARTG HF RTTY', '599 <CNTR> <ZT>'],
-    ['BARTG-SPRINT', 'BARTG Sprint RTTY', '599 <CNTR>'],
-    ['SARTG-RTTY', 'SARTG WW RTTY', '599 <CNTR>'],
-    ['DARC-WAEDC-RTTY', 'WAE DX RTTY (DARC)', '599 <CNTR>'],
+    ['BARTG-RTTY', 'BARTG Spring RTTY (HF)', '599 <CNTR> <ZT>'],
+    ['BARTG-SPRINT', 'BARTG RTTY Sprint', '599 <CNTR>'],
+    ['BAR75RTTYS', 'BARTG Sprint75 RTTY', '599 <CNTR>'],
+    ['CISDXRTTY', 'CIS DX RTTY', '599 <CNTR>'],
+    ['CQ-WW-RTTY', 'CQ WW DX RTTY', '599 <CQZ>'],
+    ['CQ-WPX-RTTY', 'CQ WPX RTTY', '599 <CNTR>'],
+    ['DLDXRTTY', 'DL DX RTTY', '599 <CNTR>'],
+    ['DMCRTTY', 'DMC RTTY', '599 <CNTR>'],
+    ['DRCGWWRTTY', 'DRCG WW Long Distance RTTY', '599 <CQZ>'],
     ['EA-RTTY', 'EA RTTY', '599 <CNTR>'],
+    ['JARLWWRTY', 'JARTS WW RTTY (âge)', '599 00'],
+    ['JTDXRTTY', 'JT DX RTTY', '599 <CQZ>'],
+    ['LOTWRTTY', 'LoTW Contest RTTY / Digital', '599 ON'],
+    ['MAKRORTTY', 'Makrothen RTTY', '<MYLOC4>'],
+    ['SPRINTRTTY', 'NA Sprint RTTY', '<CNTR> <MYNAME> DX'],
+    ['NAQPRTTY', 'NAQP RTTY', '<MYNAME>'],
+    ['OKDXRTTY', 'OK DX RTTY', '599 <CQZ>'],
+    ['RFCDIGI', 'Russian Federation Digital (SRR DIGI CUP)', '599 <CNTR> <MYLOC4>'],
+    ['RUS-WW-DIG', 'Russian WW Digi', '599 <CNTR>'],
+    ['RUS-WW-MM', 'Russian WW MM', '599 <CNTR>'],
+    ['RUSDXRTTY', 'Russian DX RTTY', '599 <CNTR>'],
+    ['SARTGNYRTY', 'SARTG New Year RTTY', '599 <CNTR> <MYNAME>'],
+    ['SARTG-RTTY', 'SARTG WW RTTY', '599 <CNTR>'],
+    ['SCCRTTY', 'SCC RTTY Championship (année 1re licence)', '599 0000'],
     ['SP-DX-RTTY', 'SP DX RTTY', '599 <CNTR>'],
-    ['VOLTA-RTTY', 'Volta WW RTTY', '599 <CNTR> <CQZ>'],
+    ['TARAGRID', 'TARA Grid Dip', '<MYNAME> <MYLOC4>'],
+    ['TARARTTY', 'TARA RTTY Melee', '599 <CNTR>'],
+    ['SKIRMRTTY', 'TARA Skirmish', '<MYNAME> ON'],
+    ['UKRAINDX', 'Ukrainian DX Classic RTTY', '599 <CNTR>'],
+    ['UKRAINDIGI', 'Ukrainian DX DIGI', '599 <CNTR>'],
+    ['UKRRTTYOPEN', 'Ukrainian Open RTTY', '599 <CNTR>'],
+    ['UKRAINRTTY', 'Ukrainian RTTY', '599 <CNTR>'],
+    ['UKDXRTTY', 'UK DX RTTY', '599 <CNTR>'],
+    ['VOLTA-RTTY', 'Volta RTTY', '599 <CNTR> <CQZ>'],
+    ['DARC-WAEDC-RTTY', 'WAEDC RTTY (DARC)', '599 <CNTR>'],
+    ['XERTTY', 'XE RTTY', '599 <CNTR>'],
     ['RTTY-OTHER', 'Autre contest (échange libre)', '599 <CNTR>']
   ];
   const rtcId = () => store.get('rtc', '');
@@ -1183,7 +1215,8 @@
     ['<TX>', 'émission immédiate au clic (sinon : texte ajouté à la zone d’écriture)'], ['<RX>', 'retour en réception à la fin (toujours fait)'],
     ['<LOG>', 'ouvre la fiche du QSO pour l’enregistrer dans le carnet'], ['<CLRLOG>', 'efface le correspondant (nouveau QSO)'],
     ['#Station', ''],
-    ['<MYCALL>', 'indicatif émis (TX call)'], ['<OPCALL>', 'votre indicatif (opérateur)'], ['<MYLOC>', 'locator de la station'], ['<MYQTH>', 'QTH de la station'],
+    ['<MYCALL>', 'indicatif émis (TX call)'], ['<OPCALL>', 'votre indicatif (opérateur)'], ['<MYNAME>', 'votre prénom (champ Prénom de la ligne Contest)'],
+    ['<MYLOC>', 'locator de la station'], ['<MYLOC4>', 'locator de la station, 4 caractères'], ['<MYQTH>', 'QTH de la station'],
     ['<MYRST>', 'report reçu (RST qu’il nous donne)'], ['<VER>', 'nom et version du logiciel'],
     ['#Correspondant', ''],
     ['<CALL>', 'son indicatif'], ['<NAME>', 'son prénom'], ['<QTH>', 'son QTH'], ['<LOC>', 'son locator'], ['<RST>', 'report envoyé'],
@@ -2301,6 +2334,8 @@
       .replace(/<EXCH>|<XOUT>/g, rtcExch())
       .replace(/<TX>|<RX>|<LOG>|<CLRLOG>|<DECR>/gi, '')
       .replace(/<MYRST>/g, up(dx.rstRx) || '599')
+      .replace(/<MYNAME>/g, up(store.get('rtcname', '')) || 'NOM')
+      .replace(/<MYLOC4>/g, String(myGrid || '').slice(0, 4).toUpperCase())
       .replace(/<FREQ>/g, fTx ? (fTx / 1e6).toFixed(3) : '')
       .replace(/<BAND>/g, curBand(r0.dualRx === 1 ? (r0.txVfo === 1 ? 'B' : 'A') : '').toUpperCase())
       .replace(/<MODE>/g, { rtty: 'RTTY', jtty: 'JTTY', cw: 'CW', sstv: 'SSTV', jt65: 'JT65', wspr: 'WSPR' }[tab] || mode)
@@ -3833,6 +3868,7 @@
       $('rtcExch').value = rtcExch();
       $('rtcExch').disabled = !rtcOn();
       $('rtcCqz').value = store.get('rtcqz', '14');
+      $('rtcName').value = store.get('rtcname', '');
       $('rtcItu').value = store.get('rtitu', '27');
       $('rtContest').classList.toggle('on', rtcOn());
       drawRttyMacros();
@@ -3843,6 +3879,7 @@
       if (api && sel.value) api.say('Contest ' + sel.options[sel.selectedIndex].text + ' : touches F1 à F12 = macros contest, échange « ' + macroText('<EXCH>') + ' ».', '', 5000);
     });
     $('rtcExch').addEventListener('change', () => { store.set('rtcx_' + rtcId(), $('rtcExch').value.toUpperCase().trim() || '599 <CNTR>'); ui(); });
+    $('rtcName').addEventListener('change', () => { store.set('rtcname', $('rtcName').value.toUpperCase().trim()); ui(); });
     $('rtcCqz').addEventListener('change', () => { store.set('rtcqz', String(Number($('rtcCqz').value) || 14)); ui(); });
     $('rtcItu').addEventListener('change', () => { store.set('rtitu', String(Number($('rtcItu').value) || 27)); ui(); });
     $('rtcNr').addEventListener('change', () => { store.set('cntr', String(Math.max(1, Number($('rtcNr').value) || 1))); ui(); });
