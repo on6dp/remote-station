@@ -18,6 +18,11 @@
   const ZONES = /[?&]zones=1/.test(location.search);
   // Partie de la photo affichée (face avant seule) : les positions restent celles de la photo d'origine
   const V = FACE ? (FACE.img || { x: 0, y: 0, w: FACE.w, h: FACE.h }) : { x: 0, y: 0, w: 1, h: 1 };
+  // TRX à un seul récepteur (FTDX10) : écran façon FTDX10 — un S-mètre, VFO-A en grand, VFO-B en petit, une rangée de cases,
+  // le filtre à droite, le scope plus haut ; pas de MAIN / SUB, de DISP ni de MONO
+  const SINGLE = !!(FACE && FACE.single);
+  // Positions verticales dans l'écran (unités de la photo depuis le haut de l'écran) : bandeau du scope, scope, rangée du bas
+  const G = SINGLE ? { lowY: 139, scopeY: 152, scopeH: 163, botY: 320, botH: 40, expUp: 64 } : { lowY: 157, scopeY: 170, scopeH: 124, botY: 297, botH: 21, expUp: 34 };
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* stockage bloqué */ } }
@@ -137,6 +142,9 @@
     if (a.pop) return popCtl(a.pop);
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
     if (a.local === 'func') { viewTouched(); if (MV.open) closeMenu(); L.func = !L.func; return render(); }
+    if (a.local === 'bandMenu') return L.bandMenu ? closeBandMenu() : openBandMenu();
+    // CONT/APF (FTDX10) : en CW, l'APF ; sinon le CONTOUR
+    if (a.contApf) { const id = /^CW/.test(s.mode || '') && R.CONTROL.apf ? 'apf' : 'contour'; return setCtl(id, s[id] ? 0 : 1); }
     if (a.local === 'vc') {
       // VC TUNE (présélecteur) du récepteur actif ; en marche, MULTI l'accorde
       const id = activeSide() === 'B' ? 'vcB' : 'vc';
@@ -229,10 +237,13 @@
       store.set('rs.face.fast', L.fast ? '1' : '0');
       store.set('rs.face.fine', L.fine ? '1' : '0');
       say(L.fine ? 'Accord fin : 1 Hz par cran.' : L.fast ? 'Accord rapide : 1 kHz par cran.' : 'Accord normal : 100 Hz par cran.', '', 2500);
+      // FTDX10 : la touche FINE du TRX suit aussi (FN), avec la main
+      if (a.local === 'fine' && R && R.CONTROL.fineTrx && iControl() && !!S().fineTrx !== L.fine) setCtl('fineTrx', L.fine ? 1 : 0);
       return render();
     }
     if (a.band) {
       if (!needControl()) return;
+      if (!R.cmdBand) { const b = BAND_GRID.find((x) => x[0] === a.band); return b ? bandTo(b[0], b[2], b[3]) : null; }
       return send({ t: 'set', band: a.band, sub: activeSide() === 'B' });
     }
     if (a.mode) {
@@ -315,7 +326,8 @@
     }
     // Voyants des touches (sous les zones cliquables)
     const leds = el('g', { class: 'leds' }, svg);
-    for (const k of FACE.keys.concat((FACE.knobs || []).filter((x) => x.leds))) {
+    // FACE.leds : voyants qui ne sont pas sur une touche (bandeau du haut du FTDX10 : TX, VFO-A, VFO-B, FINE, STEP)
+    for (const k of FACE.keys.concat((FACE.knobs || []).filter((x) => x.leds), FACE.leds ? [{ id: 'leds', leds: FACE.leds }] : [])) {
       if (k.led && k.lit) {
         // Touche éclairée comme sur le TRX (MAIN blanc, SUB bleu) : forme de la touche, fond plein et son nom
         const e = el('g', { class: 'lit' }, leds);
@@ -351,7 +363,7 @@
     }
     // Spectre de l'écoute : à la place du scope du TRX
     const sc = FACE.lcd;
-    const box = { x: sc.x + 5, y: sc.y + 170, w: sc.w - 10, h: 124 };
+    const box = { x: sc.x + 5, y: sc.y + G.scopeY, w: sc.w - 10, h: G.scopeH };
     const cv = $('scope');
     cv.style.left = ((box.x - V.x) / V.w * 100) + '%';
     cv.style.top = ((box.y - V.y) / V.h * 100) + '%';
@@ -622,7 +634,7 @@
   function buildLcd() {
     const c = FACE.lcd;
     const X = (v) => c.x + v, Y = (v) => c.y + v;
-    const g = el('g', { class: 'lcd' }, svg);
+    const g = el('g', { class: 'lcd' + (SINGLE ? ' single' : '') }, svg);
     LCD.c0y = c.y;
     el('rect', { x: c.x, y: c.y, width: c.w, height: c.h, rx: 6, fill: 'url(#lcdbg)' }, g);
     // Galvanomètres et filtres : MAIN | filtre MAIN | SUB | filtre SUB
@@ -690,7 +702,7 @@
     LCD.side = el('text', { x: X(10), y: Y(165.5), class: 'lcd-side' }, lowG, 'MAIN');
     LCD.flags = el('text', { x: X(c.w / 2), y: Y(165.5), class: 'lcd-flags', 'text-anchor': 'middle' }, lowG, '');
     LCD.span = el('text', { x: X(c.w - 10), y: Y(165.5), class: 'lcd-side', 'text-anchor': 'end' }, lowG, 'BF | 0–4 kHz');
-    LCD.scopeRect = el('rect', { x: X(5), y: Y(170), width: c.w - 10, height: 124, class: 'lcd-scope' }, g);
+    LCD.scopeRect = el('rect', { x: X(5), y: Y(G.scopeY), width: c.w - 10, height: G.scopeH, class: 'lcd-scope' }, g);
     // EXPAND : galvanomètres réduits à leur partie haute (S-mètre et première échelle)
     const defs = el('defs', {}, g);
     for (const [sd, x0] of [['A', X(5)], ['B', X(289)]]) {
@@ -701,13 +713,19 @@
     const BOT = [['CENTER'], ['SPAN', () => openSpan()],
       ['3DSS', () => { viewTouched(); L.d3 = !L.d3; store.set('rs.face.3dss', L.d3 ? '1' : '0'); WF.h3 = []; WF.drawn = false; say(L.d3 ? '3DSS : spectre en trois dimensions (le son reçu)' : '3DSS coupé', '', 2500); render(); }], ['MONO', () => { viewTouched(); L.mono = !L.mono; store.set('rs.face.mono', L.mono ? '1' : '0'); WF.drawn = false; say(L.mono ? 'MONO : un seul VFO à l’écran, celui qui est sélectionné (MAIN ou SUB)' : 'MONO coupé : MAIN et SUB à l’écran', '', 3000); render(); }], ['MULTI', () => { viewTouched(); L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'MULTI : scope, OSCILLOSCOPE et AF-FFT du VFO sélectionné' : 'MULTI : affichage normal', '', 2500); render(); }],
       ['EXPAND', () => { viewTouched(); L.expand = !L.expand; store.set('rs.face.expand', L.expand ? '1' : '0'); say(L.expand ? 'EXPAND : galvanomètres réduits, scope agrandi' : 'EXPAND coupé : affichage normal', '', 2500); render(); }], ['HOLD', () => { L.hold = !L.hold; render(); }], ['MULTI']];
+    if (SINGLE) {
+      // Rangée du bas du FTDX10 : CENTER, 3DSS, MULTI, EXPAND, SPAN, SPEED (la fonction du bouton FUNC est dans la case près du VFO-B)
+      const by = (n) => BOT.find((b) => b[0] === n);
+      BOT.splice(0, BOT.length, ['CENTER'], by('3DSS'), by('MULTI'), ['EXPAND', () => { viewTouched(); L.expand = !L.expand; store.set('rs.face.expand', L.expand ? '1' : '0'); say(L.expand ? 'EXPAND : scope agrandi' : 'EXPAND coupé : affichage normal', '', 2500); render(); }],
+        by('SPAN'), ['SPEED', () => { smAdjust('spd', 1); say('SPEED (vitesse de la cascade) : ' + WF_SPEEDS[L.wfSpeed][0], '', 2500); }]);
+    }
     const bw = (c.w - 10) / BOT.length;
     LCD.bot = BOT.map(([lab, fn], j) => {
-      const x = X(5) + j * bw, last = j === BOT.length - 1;
-      const r = el('rect', { x: x + 0.5, y: Y(297), width: bw - 1, height: 21, rx: last ? 2 : 0, class: 'lcd-bot' + (last ? ' multi' : '') }, g);
-      const t = el('text', { x: x + bw / 2, y: Y(last ? 305.5 : 311), class: 'lcd-bott', 'text-anchor': 'middle' }, g, lab);
-      const t2 = last ? el('text', { x: x + bw / 2, y: Y(315), class: 'lcd-bott2', 'text-anchor': 'middle' }, g, '') : null;
-      const h = el('rect', { x: x + 0.5, y: Y(297), width: bw - 1, height: 21, class: 'hs lcd-hit' + (fn || last ? '' : ' off') }, g);
+      const x = X(5) + j * bw, last = j === BOT.length - 1 && !SINGLE;
+      const r = el('rect', { x: x + 0.5, y: Y(G.botY), width: bw - 1, height: G.botH, rx: last ? 2 : 0, class: 'lcd-bot' + (last ? ' multi' : '') }, g);
+      const t = el('text', { x: x + bw / 2, y: Y(last ? G.botY + 8.5 : G.botY + G.botH / 2 + 3.5), class: 'lcd-bott', 'text-anchor': 'middle' }, g, lab);
+      const t2 = last ? el('text', { x: x + bw / 2, y: Y(G.botY + 18), class: 'lcd-bott2', 'text-anchor': 'middle' }, g, '') : null;
+      const h = el('rect', { x: x + 0.5, y: Y(G.botY), width: bw - 1, height: G.botH, class: 'hs lcd-hit' + (fn || last ? '' : ' off') }, g);
       el('title', {}, h, last ? 'MULTI : fonction réglée par le bouton MULTI (choisie dans FUNC)' : lab + (fn ? '' : ' : pas disponible à distance'));
       h.addEventListener('click', () => {
         if (last) { viewTouched(); L.func = true; return render(); }
@@ -716,10 +734,97 @@
       });
       return { r, t, t2, lab };
     });
-    LCD.hint = el('text', { x: X(c.w / 2), y: Y(236), class: 'lcd-hint', 'text-anchor': 'middle' }, g, 'Cascade : en attente du son de la station…');
+    LCD.hint = el('text', { x: X(c.w / 2), y: Y(G.scopeY + G.scopeH / 2 - 2), class: 'lcd-hint', 'text-anchor': 'middle' }, g, 'Cascade : en attente du son de la station…');
+    if (SINGLE) {
+      // FTDX10 : case de la fonction du bouton FUNC (ex. LEVEL, RF POWER), à droite du VFO-B ; clic = menu FUNC
+      const fr = el('rect', { x: X(520), y: Y(57), width: 85, height: 23, rx: 3, class: 'lcd-fbox' }, g);
+      const ft = el('text', { x: X(562.5), y: Y(73), class: 'lcd-fboxt', 'text-anchor': 'middle' }, g, '');
+      const fh = el('rect', { x: X(520), y: Y(57), width: 85, height: 23, class: 'hs lcd-hit' }, g);
+      el('title', {}, fh, 'Fonction du bouton FUNC (clic : menu FUNC)');
+      fh.addEventListener('click', () => { viewTouched(); L.func = !L.func; render(); });
+      LCD.fbox = { r: fr, t: ft };
+    }
     buildFunc(g, c);
     buildModeMenu(g, c);
+    if (SINGLE) buildBandMenu(g, c);
   }
+  // FTDX10 (un seul récepteur) : disposition de l'écran, refaite à chaque changement (EXPAND)
+  function layoutSingle(up) {
+    const X = LCD.X, Y = LCD.Y, half = LCD.half;
+    const tr = (e, t) => (t ? e.setAttribute('transform', t) : e.removeAttribute('transform'));
+    for (const e of [LCD.mB.g, LCD.fB.g, LCD.cgB]) e.style.display = 'none';
+    // S-mètre : la partie haute du galvanomètre (S et PO), un peu agrandie, en haut à gauche
+    const m = LCD.mA.g;
+    m.style.display = '';
+    m.setAttribute('clip-path', 'url(#lcdClipA)');
+    tr(m, 'translate(' + X(5) + ',' + Y(6) + ') scale(1.1) translate(' + -X(5) + ',' + -Y(4) + ')');
+    // VFO-A en grand en haut à droite, VFO-B en petit dessous (grisé, comme sur le TRX)
+    tr(LCD.vA.g, 'translate(' + X(300) + ',' + Y(5) + ') scale(1.25) translate(' + -X(63) + ',' + -Y(92) + ')');
+    LCD.vB.g.style.display = '';
+    tr(LCD.vB.g, 'translate(' + X(372) + ',' + Y(56) + ') scale(0.62) translate(' + -X(63 + half) + ',' + -Y(92) + ')');
+    // Filtre : à droite de la rangée de cases
+    const f = LCD.fA;
+    f.g.style.display = '';
+    tr(f.g, 'translate(' + X(337) + ',' + Y(84) + ') scale(' + (268 / f.w).toFixed(4) + ',' + (51 / f.h).toFixed(4) + ') translate(' + -f.x0 + ',' + -f.y0 + ')');
+    // Cases ATT / IPO / R.FIL / AGC (pas d'ANT) sur la gauche, sous le S-mètre
+    LCD.cgA.style.display = '';
+    tr(LCD.cgA, '');
+    const cw = 330 / 4;
+    LCD.cA.forEach((c, j) => {
+      const show = c.id !== 'ant';
+      for (const e of [c.r, c.h, c.tl, c.t]) e.style.display = show ? '' : 'none';
+      if (!show) return;
+      const x = X(5) + (j - 1) * cw;
+      for (const r of [c.r, c.h]) { r.setAttribute('x', x + 0.5); r.setAttribute('width', cw - 1); r.setAttribute('y', Y(87)); r.setAttribute('height', 48); }
+      c.tl.setAttribute('x', x + cw / 2); c.tl.setAttribute('y', Y(104));
+      c.t.setAttribute('x', x + cw / 2); c.t.setAttribute('y', Y(127));
+    });
+    // Bandeau du scope : sous le filtre ; caché en EXPAND (le scope monte par-dessus les cases)
+    LCD.lowG.style.display = up ? 'none' : '';
+    tr(LCD.lowG, 'translate(0,' + (G.lowY - 157) + ')');
+  }
+  // Tableau BAND (touche BAND du FTDX10) : clic sur une bande pour le VFO actif
+  const BAND_GRID = [['160M', '1.8', 1840, 'LSB'], ['80M', '3.5', 3700, 'LSB'], ['60M', '5', 5357, null], ['40M', '7', 7100, 'LSB'],
+    ['30M', '10', 10136, null], ['20M', '14', 14200, 'USB'], ['17M', '18', 18130, 'USB'], ['15M', '21', 21250, 'USB'],
+    ['12M', '24.5', 24950, 'USB'], ['10M', '28', 28500, 'USB'], ['6M', '50', 50150, 'USB'], ['4M', '70', 70200, 'USB']];
+  function buildBandMenu(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const m = LCD.bandMenu = el('g', { class: 'mode-menu', style: 'display:none' }, g);
+    const x0 = X(40), y0 = Y(60), w = c.w - 80, h = 214;
+    el('rect', { x: x0, y: y0, width: w, height: h, rx: 6, class: 'mm-bg' }, m);
+    el('rect', { x: x0 + 4, y: y0 + 4, width: w - 8, height: 18, rx: 3, class: 'mm-title' }, m);
+    el('text', { x: x0 + w / 2, y: y0 + 17, class: 'mm-ttl', 'text-anchor': 'middle' }, m, 'BAND');
+    const cw = (w - 12) / 4, rh = 46;
+    LCD.bandCells = {};
+    BAND_GRID.filter((b) => b[2] * 1000 <= (R.FREQ_MAX || 75e6)).forEach(([name, lab, khz, md], i) => {
+      const ri = Math.floor(i / 4), ci = i % 4;
+      const x = x0 + 6 + ci * cw, y = y0 + 28 + ri * rh;
+      const box = el('rect', { x: x + 2, y, width: cw - 4, height: rh - 7, rx: 3, class: 'mm-cell' }, m);
+      const t = el('text', { x: x + cw / 2, y: y + 24, class: 'mm-lab', 'text-anchor': 'middle' }, m, lab + ' MHz');
+      const hit = el('rect', { x: x + 2, y, width: cw - 4, height: rh - 7, class: 'hs lcd-hit' }, m);
+      el('title', {}, hit, 'Bande ' + lab + ' MHz (' + name.replace('M', ' m') + ')');
+      hit.addEventListener('click', (ev) => { ev.stopPropagation(); closeBandMenu(); bandTo(name, khz, md); });
+      LCD.bandCells[name] = [box, t];
+    });
+    const close = el('rect', { x: x0 + w - 24, y: y0 + 5, width: 18, height: 16, class: 'hs lcd-hit' }, m);
+    el('text', { x: x0 + w - 15, y: y0 + 17, class: 'mm-ttl', 'text-anchor': 'middle' }, m, '✕');
+    close.addEventListener('click', (ev) => { ev.stopPropagation(); closeBandMenu(); });
+  }
+  // Changement de bande : sélection de bande du TRX s'il en a une (BS : dernière fréquence et mode), sinon fréquence habituelle et mode
+  function bandTo(name, khz, md) {
+    if (!needControl()) return;
+    if (R.cmdBand && R.BAND_CODES && R.BAND_CODES[name] && activeSide() === 'A') return send({ t: 'set', band: name, sub: false });
+    tuneTo(activeSide(), khz * 1000);
+    if (md) setTimeout(() => setMode(md), 250);
+  }
+  function openBandMenu() {
+    if (!LCD.bandMenu) return;
+    L.bandMenu = true;
+    render();
+    setTimeout(() => document.addEventListener('pointerdown', outsideBand, true), 0);
+  }
+  function closeBandMenu() { L.bandMenu = false; document.removeEventListener('pointerdown', outsideBand, true); render(); }
+  function outsideBand(ev) { if (!ev.target.closest || !ev.target.closest('.mode-menu')) closeBandMenu(); }
   // Tableau MODE (appui d'au moins 1 s sur MODE), comme sur le TRX : clic sur un mode pour le récepteur actif
   const MODE_GRID = [['LSB', 'USB', 'CW-L', 'CW-U'], ['AM', 'AM-N', 'FM', 'FM-N'], ['DATA-L', 'DATA-U', 'DATA-FM', 'DATA-FM-N'], ['RTTY-L', 'RTTY-U', 'PSK', null]];
   function buildModeMenu(g, c) {
@@ -776,7 +881,8 @@
   L.d3 = store.get('rs.face.3dss', '0') === '1';
   L.mono = store.get('rs.face.mono', '0') === '1';
   L.expand = store.get('rs.face.expand', '0') === '1';
-  const EXP_UP = 34; // EXPAND : hauteur gagnée par le scope (unités de la photo)
+  const EXP_UP = G.expUp; // EXPAND : hauteur gagnée par le scope (unités de la photo)
+  if (SINGLE) { L.mono = false; L.disp = 0; } // un seul récepteur : ni MONO ni DISP
   // MONO (comme le TRX) : un seul VFO à l'écran, le sélectionné — son galvanomètre à gauche, son filtre en grand à droite,
   // sa fréquence sous le galvanomètre, ses cases ANT / ATT / IPO / R.FIL / AGC sur toute la largeur, un seul scope
   function applyMono() {
@@ -788,8 +894,9 @@
     LCD.g.classList.toggle('expand', !!L.expand);
     const up = L.expand ? EXP_UP : 0;
     LCD.lowG.setAttribute('transform', up ? 'translate(0,' + -up + ')' : '');
-    LCD.scopeRect.setAttribute('y', Y(170) - up); LCD.scopeRect.setAttribute('height', 124 + up);
+    LCD.scopeRect.setAttribute('y', Y(G.scopeY) - up); LCD.scopeRect.setAttribute('height', G.scopeH + up);
     if (LCD.placeScope) LCD.placeScope(up);
+    if (SINGLE) return layoutSingle(up);
     for (const sd of ['A', 'B']) {
       const show = !L.mono || sd === side, dx = L.mono && sd === 'B' ? -half : 0;
       LCD['m' + sd].g.style.display = show ? '' : 'none';
@@ -1207,7 +1314,7 @@
     tuneTo(side, mhz * 1e6);
   }
   // R.FIL : 12 kHz, 3 kHz, 600 Hz (de série) ; 1,2 kHz et 300 Hz sont en option sur le FTDX101 (le TRX refuse « RF0x » sans elles)
-  const ROOF_STD = [1, 2, 4];
+  const ROOF_STD = (FACE && FACE.roof && FACE.roof.std) || [1, 2, 4];
   function roofNext(cur, d) {
     const i = ROOF_STD.indexOf(cur);
     const base = i >= 0 ? i : ROOF_STD.findIndex((x) => x > (cur || 0)) - (d > 0 ? 1 : 0);
@@ -1385,6 +1492,8 @@
       // Clic sans tourner sur un bouton qui se pousse (ex. WIDTH : NAR)
       if (drag) clearTimeout(drag.lt);
       if (drag && drag.long) return end2();
+      // Bouton qu'on pousse pour une fonction de la page (FTDX10 : pousser FUNC = menu FUNC)
+      if (drag && k.pushLocal && ev && ev.type === 'pointerup' && Math.abs(drag.acc) < 0.3 && Date.now() - drag.t0 < 500 && !drag.moved) { end2(); return doAct({ act: { local: k.pushLocal } }, false); }
       if (drag && k.push && ev && ev.type === 'pointerup' && Math.abs(drag.acc) < 0.3 && Date.now() - drag.t0 < 500 && !drag.moved) {
         const s0 = S();
         const id = typeof k.push === 'function' ? k.push(s0, L) : k.push;
@@ -1504,8 +1613,8 @@
     if (c.pct) return Math.round(v / 255 * 100) + ' %';
     return v + (c.unit ? ' ' + c.unit : '');
   }
-  const ROOF_HZ = [0, 12000, 3000, 1200, 600, 300]; // R.FIL (filtre de toit) en Hz
-  const ATT = ['OFF', '6dB', '12dB', '18dB'], IPO = ['IPO', 'AMP1', 'AMP2'], ROOF = ['', '12kHz', '3kHz', '1.2kHz', '600Hz', '300Hz'], AGC = ['OFF', 'FAST', 'MID', 'SLOW', 'AUTO'];
+  const ROOF_HZ = (FACE && FACE.roof && FACE.roof.hz) || [0, 12000, 3000, 1200, 600, 300]; // R.FIL (filtre de toit) en Hz
+  const ATT = ['OFF', '6dB', '12dB', '18dB'], IPO = ['IPO', 'AMP1', 'AMP2'], ROOF = (FACE && FACE.roof && FACE.roof.labels) || ['', '12kHz', '3kHz', '1.2kHz', '600Hz', '300Hz'], AGC = ['OFF', 'FAST', 'MID', 'SLOW', 'AUTO'];
   function cellText(id, v) {
     if (v == null) return '—';
     if (/^att/.test(id)) return ATT[v] || String(v);
@@ -1655,7 +1764,7 @@
     LCD.span.textContent = ['', 'SUB / MAIN · ', 'MAIN | SUB · ', 'FILTRES · '][L.disp] + spanLabel() + (L.hold ? ' · HOLD' : '');
     applyMono();
     ssFollow(s);
-    for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) ? 'none' : '';
+    for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) || (SINGLE && sd === 'B') ? 'none' : '';
     drawFunc(s);
     for (const b of LCD.bot || []) {
       if (b.t2) b.t2.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
@@ -1668,6 +1777,12 @@
       // DISP « filtres agrandis » : comme sur le TRX, seuls MULTI, HOLD et la case MULTI restent
       b.t.style.opacity = L.disp === 3 && !b.t2 && b.lab !== 'MULTI' && b.lab !== 'HOLD' ? '0' : '';
     }
+    if (LCD.bandMenu) {
+      LCD.bandMenu.style.display = L.bandMenu ? '' : 'none';
+      const cur = L.bandOf(activeSide() === 'B' ? s.freqB : s.freq);
+      for (const n in LCD.bandCells) for (const e of LCD.bandCells[n]) e.classList.toggle('on', n === cur);
+    }
+    if (LCD.fbox) LCD.fbox.t.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
     if (LCD.modeMenu) {
       LCD.modeMenu.style.display = L.modeMenu ? '' : 'none';
       const cur = L.activeMode(s);
@@ -1676,7 +1791,7 @@
     const fresh = Date.now() - WF.at < 3000;
     LCD.hint.style.display = fresh ? 'none' : '';
     LCD.hint.textContent = !live ? '' : st.audio && !st.audio.active ? 'Cascade : l’audio n’est pas activé sur la page Station' : 'Cascade : en attente du son de la station…';
-    $('scope').style.visibility = fresh && !L.func && !L.modeMenu ? 'visible' : 'hidden';
+    $('scope').style.visibility = fresh && !L.func && !L.modeMenu && !L.bandMenu ? 'visible' : 'hidden';
   }
   function lamp(id, cls) { const e = $(id); e.classList.remove('on', 'warn', 'tx'); if (cls) e.classList.add(cls); }
   function drawTop() {
@@ -2659,7 +2774,7 @@
     if (digiWin && !digiWin.closed) {
       try { if (digiWin.RSDIGI && digiWin.RSDIGI.goTab) digiWin.RSDIGI.goTab(tab, mode); digiWin.focus(); return; } catch (e) { /* fenêtre en cours de chargement */ }
     }
-    digiWin = window.open('/ftdx101/digi.html', 'rs-digi', 'width=1200,height=860');
+    digiWin = window.open('/' + MODEL + '/digi.html', 'rs-digi', 'width=1200,height=860');
     if (!digiWin) return say('Fenêtre bloquée par le navigateur : autorisez les fenêtres pop-up pour ce site.', 'warn', 6000);
     try {
       // Fenêtre déjà ouverte (rouverte par son nom, sans rechargement) : elle passe sur l'onglet demandé
@@ -2669,7 +2784,7 @@
   }
   $('digiBtn').addEventListener('click', () => {
     if (digiWin && !digiWin.closed) { try { digiWin.focus(); } catch (e) {} return; } // déjà ouverte : pas de rechargement
-    const w = window.open('/ftdx101/digi.html', 'rs-digi', 'width=1200,height=860'); // modes numériques de la face avant FTDX101
+    const w = window.open('/' + MODEL + '/digi.html', 'rs-digi', 'width=1200,height=860'); // modes numériques de la face avant FTDX101
     if (!w) say('Fenêtre bloquée par le navigateur : autorisez les fenêtres pop-up pour ce site.', 'warn', 6000);
     else { digiWin = w; try { w.focus(); } catch (e) {} }
   });

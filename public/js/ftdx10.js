@@ -12,6 +12,19 @@
   const pad = Y.pad;
   const RANGE = { D: [5, 100] };
   const NARROW_18 = Y.WIDTH_NARROW.slice(0, 18); // 50 … 3000 Hz
+  // Scope du TRX (SS 0 P2 P3…P7) : SPEED, PEAK, MARKER, COLOR, LEVEL, SPAN — même codage que le FTDX101
+  function ssParse(p2, t) {
+    if (p2 === 4) { const v = parseFloat(t); return Number.isFinite(v) && Math.abs(v) <= 30 ? v : null; }
+    if (p2 === 3) { if (t[2] === '1' && /[0-6]/.test(t[1])) return 12 + +t[1]; const n = parseInt(t[0], 16); return n >= 0 && n <= 10 ? n + 1 : null; }
+    const n = parseInt(t[0], 10);
+    return Number.isFinite(n) ? n : null;
+  }
+  function ssFmt(p2, v) {
+    if (p2 === 4) { const a = Math.abs(v); return (v < 0 ? '-' : '+') + pad(Math.floor(a), 2) + '.' + (a % 1 ? '5' : '0'); }
+    if (p2 === 3) return v >= 12 ? '0' + (v - 12) + '100' : (v - 1).toString(16).toUpperCase() + '0000';
+    return String(v) + '0000';
+  }
+  const apfHz = (v) => (v - 25) * 10 + ' Hz'; // APF : 0000-0050 = −250…+250 Hz
 
   const api = Y.build({
     // CW : comme le FTDX101 (mémoire 1 du manipulateur lue par KY6 ; BI0 coupe le break-in pour arrêter)
@@ -67,6 +80,50 @@
       nr: { type: 'toggle', off0: false, write: (v) => 'NR0' + v + ';' },
       tuner: { write: (v) => 'AC00' + v + ';' },
       tune: { write: () => 'AC002;' }
+    },
+    // Face avant (page /ftdx10) : lectures et réglages en plus (manuel CAT FTDX10)
+    extraReads: [
+      // KEY PITCH (300 à 1050 Hz) : centre du filtre et de l'indicateur d'accord CW de la face avant
+      { cmd: 'KP;', when: (st) => /^CW/.test(st.mode || ''), re: /^KP(\d\d)$/, parse: (m) => ({ cwPitch: 300 + 10 * +m[1] }), sim: 'KP40' },
+      { cmd: 'BI;', re: /^BI([01])$/, parse: (m) => ({ bkin: +m[1] }), sim: 'BI0' },
+      { cmd: 'KR;', re: /^KR([01])$/, parse: (m) => ({ keyer: +m[1] }), sim: 'KR0' },
+      // Filtre de toit (R.FIL) : réglé par RF0 1 / 2 / 4 / 5, relu RF0 6 / 7 / 9 / A (12 kHz, 3 kHz, 500 Hz, 300 Hz en option)
+      { cmd: 'RF0;', re: /^RF0([6-9A])$/, parse: (m) => ({ roof: '6789A'.indexOf(m[1]) + 1 }), sim: 'RF07' },
+      // Fréquence du CONTOUR (10-3200 Hz) et de l'APF (0000-0050 = −250…+250 Hz, en CW)
+      { cmd: 'CO01;', re: /^CO01(\d{4})$/, parse: (m) => ({ contourFreq: +m[1] }), sim: 'CO011000' },
+      { cmd: 'CO03;', when: (st) => /^CW/.test(st.mode || ''), re: /^CO03(\d{4})$/, parse: (m) => ({ apfFreq: +m[1] }), sim: 'CO030025' },
+      // Scope du TRX (P1 = 0)
+      ...['Spd', 'Peak', 'Marker', 'Color', 'Level', 'Span'].map((k, p2) => ({
+        cmd: 'SS0' + p2 + ';', re: new RegExp('^SS0' + p2 + '(.{5})$'),
+        parse: (m) => { const v = ssParse(p2, m[1]); return v == null ? {} : { ['ss' + k + 'A']: v }; },
+        sim: 'SS0' + p2 + ['20000', '00000', '10000', '00000', '+00.0', '20000'][p2] })),
+      // FINE TUNING du TRX (FN) ; menu FUNC : MONI LEVEL, VOX GAIN, ANTI VOX
+      { cmd: 'FN;', re: /^FN([01])$/, parse: (m) => ({ fineTrx: +m[1] }), sim: 'FN0' },
+      { cmd: 'ML1;', re: /^ML1(\d{3})$/, parse: (m) => ({ moniLvl: +m[1] }), sim: 'ML1050' },
+      { cmd: 'VG;', re: /^VG(\d{3})$/, parse: (m) => ({ voxGain: +m[1] }), sim: 'VG050' },
+      { cmd: 'AV;', re: /^AV(\d{3})$/, parse: (m) => ({ antiVox: +m[1] }), sim: 'AV050' }
+    ],
+    extraStateKeys: ['cwPitch', 'bkin', 'keyer', 'roof', 'contourFreq', 'apfFreq', 'ssSpdA', 'ssPeakA', 'ssMarkerA', 'ssColorA', 'ssLevelA', 'ssSpanA',
+      'fineTrx', 'moniLvl', 'voxGain', 'antiVox'],
+    extraControls: [
+      { id: 'roof', g: 'flt', label: 'ROOFING', type: 'select', face: true, options: [[1, '12k'], [2, '3k'], [4, '500'], [5, '300']], write: (v) => 'RF0' + v + ';' },
+      ...['Spd', 'Peak', 'Marker', 'Color', 'Level', 'Span'].map((k, p2) => ({ id: 'ss' + k, g: 'scope', label: 'Scope ' + k, face: true,
+        type: p2 === 2 ? 'toggle' : 'level', min: [0, 0, 0, 1, -30, 0][p2], max: [4, 4, 1, 18, 30, 9][p2], step: p2 === 4 ? 0.5 : 1,
+        write: (v) => 'SS0' + p2 + ssFmt(p2, v) + ';' })),
+      { id: 'bkin', g: 'tx', label: 'BK-IN', type: 'toggle', face: true, write: (v) => 'BI' + v + ';' },
+      { id: 'keyer', g: 'tx', label: 'KEYER', type: 'toggle', face: true, write: (v) => 'KR' + v + ';' },
+      { id: 'fineTrx', g: 'vfo', label: 'FINE', type: 'toggle', face: true, write: (v) => 'FN' + v + ';' },
+      { id: 'contourFreq', g: 'flt', label: 'Fréquence CONTOUR', type: 'level', min: 10, max: 3200, step: 10, unit: 'Hz', face: true, write: (v) => 'CO01' + pad(v, 4) + ';' },
+      { id: 'apfFreq', g: 'flt', label: 'Fréquence APF', type: 'level', min: 0, max: 50, step: 1, face: true, fmt: apfHz, write: (v) => 'CO03' + pad(v, 4) + ';' },
+      { id: 'moniLvl', g: 'tx', label: 'MONI LEVEL', type: 'level', min: 0, max: 100, step: 1, face: true, write: (v) => 'ML1' + pad(v, 3) + ';' },
+      { id: 'voxGain', g: 'tx', label: 'VOX GAIN', type: 'level', min: 0, max: 100, step: 1, face: true, write: (v) => 'VG' + pad(v, 3) + ';' },
+      { id: 'antiVox', g: 'tx', label: 'ANTI VOX', type: 'level', min: 0, max: 100, step: 1, face: true, write: (v) => 'AV' + pad(v, 3) + ';' }
+    ],
+    // Simulateur : filtre de toit réglé 1–5, relu 6–A
+    fakeCmd(f, c) {
+      const m = /^RF0([1-5])$/.exec(c);
+      if (m) { f.ans['RF0;'] = 'RF0' + '6789A'[+m[1] - 1]; return true; }
+      return false;
     },
     fakeTuning: 'AC002',
     serial: { baudRate: 38400, stopBits: 1, portHint: 'Enhanced COM Port' },

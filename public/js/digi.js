@@ -92,7 +92,9 @@
   const EMBED = POPUP && document.body.dataset.digiEmbed === '1';
   // Carnet de trafic dans cette page : dashboard, ou page des modes numériques de la face avant (/ftdx101/digi.html) ;
   // la fenêtre séparée du dashboard n'en a pas (l'onglet Logbooks est dans le dashboard)
-  const LOGP = POPUP && /^\/ftdx101/.test(location.pathname) && !EMBED;
+  // Pages des faces avant (/ftdx101, /ftdx10) : chemin de base (« /ftdx10 »…), '' ailleurs
+  const FACEP = (/^\/(ftdx101|ftdx10)(?=\/|$)/.exec(location.pathname) || [''])[0];
+  const LOGP = POPUP && !!FACEP && !EMBED;
   // Onglet Logbooks dans la page (dashboard) ; page des modes numériques de la face avant : le carnet s'ouvre dans
   // une fenêtre à lui (/ftdx101/log.html), raccrochée à cette page (même connexion, voir RSLOGHOST)
   const logHere = () => !!window.RSLOG && !POPUP;
@@ -114,7 +116,7 @@
   }
   function openLogWin() {
     if (logWin && !logWin.closed) { try { logWin.focus(); } catch (e) { /* */ } return; }
-    logWin = window.open('/ftdx101/log.html', 'rs-log', 'width=1500,height=900');
+    logWin = window.open(FACEP + '/log.html', 'rs-log', 'width=1500,height=900');
     if (!logWin && api) api.say('Le navigateur a bloqué la fenêtre du carnet : autorisez les fenêtres (pop-up) pour ce site.', 'warn', 6000);
   }
   const HOST = !POPUP || EMBED; // page qui peut ouvrir la fenêtre séparée (dashboard ou face avant)
@@ -2926,7 +2928,7 @@
   }
   // Filtre du TRX (WIDTH / NAR, IF SHIFT) sur les cascades CW : deux barres bleu clair, centrées sur la tonalité CW (pitch),
   // qui suivent le TRX ; les glisser (ou Ctrl + molette sur la cascade) règle la largeur BW du TRX
-  const TRXBW_PAGE = /^\/ftdx101/.test(location.pathname);
+  const TRXBW_PAGE = !!FACEP;
   const cwTrxPend = { A: null, B: null }; // largeur choisie ici, le temps que le TRX la relise
   function cwTrxBw(side) {
     if (!TRXBW_PAGE || !api || !api.rig || !api.state) return null;
@@ -4880,7 +4882,7 @@
         if (POPUP && !EMBED) return window.close();
         // La fenêtre séparée s'ouvre sur le mode affiché
         if (MODE_TABS.indexOf(tab) >= 0) store.set('ptab', tab);
-        const w = window.open(/^\/ftdx101/.test(location.pathname) ? '/ftdx101/digi.html' : '/digi.html', 'rs-digi', 'width=1200,height=860');
+        const w = window.open(FACEP ? FACEP + '/digi.html' : '/digi.html', 'rs-digi', 'width=1200,height=860');
         if (!w) api.say('Fenêtre bloquée par Chrome : autorisez les fenêtres pop-up pour ce site.', 'warn');
       });
       $('dgBack').addEventListener('click', () => { if (window.RSHOST) window.RSHOST.closePopup(); });
