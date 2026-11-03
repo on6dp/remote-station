@@ -45,7 +45,7 @@
       { id: 'mic', cx: 95, cy: 490, r: 58, tip: 'MIC', act: info('Micro : phonie à distance par le bouton PTT sous la face avant (Configuration micro).') },
       // Sous l'écran
       { id: 'menu', x: 420, y: 517, w: 95, h: 43, tip: 'MENU : écran MENU (KEYER, RTTY, SCOPE, AUDIO, MODE, BAND…) ; le mode se change aussi en cliquant sur le mode à l’écran', act: { local: 'icomMenu' } },
-      { id: 'function', x: 542, y: 517, w: 98, h: 43, tip: 'FUNCTION : menu des fonctions sur l’écran', act: { local: 'func' }, led: (s, L) => L.func },
+      { id: 'function', x: 542, y: 517, w: 98, h: 43, tip: 'FUNCTION : écran FUNCTION de l’IC-7300 (en préparation) ; niveaux par le bouton MULTI', act: { local: 'func' } },
       { id: 'mscope', x: 665, y: 517, w: 97, h: 43, tip: 'M.SCOPE : grand écran des mesures (grande fréquence, S/Po, ALC, COMP, SWR, Id, Vd, TEMP, sans scope) ; un 2e appui : retour à l’écran par défaut', act: { local: 'scopeMeter' } },
       { id: 'quick', x: 790, y: 517, w: 95, h: 43, tip: 'QUICK : QUICK MENU (BAND, SPLIT, A=B, A/B, TUNER, TUNE, LOCK, 3DSS)', act: { local: 'quickMenu' } },
       { id: 'exit', x: 912, y: 517, w: 98, h: 43, tip: 'EXIT : ferme le tableau ou le menu ouvert', act: { local: 'exit' } },

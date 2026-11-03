@@ -143,6 +143,8 @@
     if (a.info) return say(a.info, '', 6000);
     if (a.pop) return popCtl(a.pop);
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
+    // IC-7300 : pas de tableau de réglages façon Yaesu ; l'écran FUNCTION de l'Icom viendra (les niveaux se règlent par le menu MULTI, les fonctions par leurs touches)
+    if (a.local === 'func' && ICOM) { L.func = false; return say('FUNCTION : écran Icom en préparation. Niveaux (RF POWER, MIC GAIN, COMP, MONITOR, KEY SPEED…) : bouton MULTI ; NB, NR, NOTCH, P.AMP/ATT, VOX/BK-IN : leurs touches.', '', 6000); }
     if (a.local === 'func') { viewTouched(); if (MV.open) closeMenu(); L.func = !L.func; return render(); }
     if (a.local === 'bandMenu') return L.bandMenu ? closeBandMenu() : openBandMenu();
     if (a.local === 'modeMenu') return L.modeMenu ? closeModeMenu() : openModeMenu();
@@ -787,7 +789,7 @@
       const fv = el('text', { x: X(562.5), y: Y(82.5), class: 'lcd-fboxv', 'text-anchor': 'middle' }, g, ''); // IC-7300 : décalage RIT / ΔTX
       const fh = el('rect', { x: X(520), y: Y(57), width: 85, height: 23, class: 'hs lcd-hit' }, g);
       el('title', {}, fh, 'Fonction du bouton FUNC (clic : menu FUNC)');
-      fh.addEventListener('click', () => { viewTouched(); L.func = !L.func; render(); });
+      fh.addEventListener('click', () => { if (ICOM) return; viewTouched(); L.func = !L.func; render(); }); // IC-7300 : la case n'ouvre rien (RIT ΔTX seulement)
       LCD.fbox = { r: fr, t: ft, v: fv };
     }
     buildFunc(g, c);
@@ -1100,8 +1102,8 @@
     LCD.icFreq.classList.toggle('big', big);
     LCD.icVfo.classList.toggle('big', big);
     LCD.icTags.classList.toggle('big', big);
-    // Case du haut à droite : « RIT ΔTX » quand ils sont en service, sinon la fonction du bouton MULTI
-    if (LCD.fbox) { LCD.fbox.t.textContent = ron ? ritL : FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : ''; LCD.fbox.r.classList.toggle('icrit', ron); }
+    // Case du haut à droite : seulement « RIT ΔTX » quand ils sont en service (pas de nom de fonction comme chez Yaesu)
+    if (LCD.fbox) { LCD.fbox.t.textContent = ron ? ritL : ''; LCD.fbox.r.classList.toggle('icrit', ron); LCD.fbox.r.style.display = ron ? '' : 'none'; }
   }
   // IC-7300 : S-mètre en bargraph « S/Po » (1 · 5 · 9 en blanc, + 20 / 40 / 60 en points rouges), comme sur l'écran du TRX
   const SPO_N = 40;
