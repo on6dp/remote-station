@@ -597,8 +597,11 @@
   // ------------------------------------------------------------------ onglets
   let rtTipT = 0;
   let rtDualAudio = false; // RTTY : deux cascades (une par récepteur) — FTDX101 en double réception
+  let rtSeen = false; // fenêtre RTTY déjà ouverte depuis le chargement de la page
+  let rtBAuto = false; // décodeur B mis à 2100 Hz faute de savoir encore si le TRX envoie ses deux récepteurs
   function showTab(t) {
     if (!document.querySelector('#centerPanel .ctab[data-tab="' + t + '"]')) t = POPUP ? 'ftx' : 'events';
+    const rtEnter = t === 'rtty' && (tab !== 'rtty' || !rtSeen) && !detached;
     tab = t;
     // Ligne Correspondant : reports en dB (FT8 / FT4 / FT2, WSPR, JT65) ou RST 599 (RTTY, CW, SSTV, JTTY)
     const mb = document.getElementById('msgs');
@@ -632,6 +635,18 @@
       // (seulement en double réception : en réception simple, la voie droite est muette)
       rtDualAudio = dualAudioOn();
       const dualAudio = rtDualAudio;
+      // Ouverture de la fenêtre RTTY : repères des décodeurs sur 1500 Hz (le milieu de la cascade) ;
+      // une seule cascade pour les deux décodeurs (TRX à un son) : B un peu plus haut, pour qu'on les distingue
+      if (pane === 'rtty' && rtEnter) {
+        rtSeen = true;
+        rts[0].f = 1500;
+        rts[1].f = dualAudio ? 1500 : 2100;
+        rtBAuto = !dualAudio; // double réception reconnue juste après (état du TRX arrivé ensuite) : B passe aussi à 1500
+        saveRtty(false);
+      } else if (pane === 'rtty' && dualAudio && rtBAuto) {
+        rtBAuto = false;
+        if (rts[1].f === 2100) { rts[1].f = 1500; saveRtty(false); }
+      }
       if ($('rtWfB')) $('rtWfB').closest('.rt-wfb').hidden = !dualAudio;
       const slot = document.querySelector('.dg-wf-slot[data-slot="' + (pane === 'rtty' && dualAudio ? 'rtty-a' : pane) + '"]');
       const el = document.querySelector('.dg-wf:not(.rt-wfb):not(.ft-wfb)'); // cascade principale (pas celle du décodeur RTTY B ni du VFO-B en FT)
