@@ -1702,3 +1702,16 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 .ft-dual .dg-cols.jt-cols { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .ft-dual .ws-col.dual-colb, .ft-dual .jt-cols .dual-colb { border-top: 2px solid #2456b8; }
 .dg-col.dual-colb[hidden] { display: none !important; }
+/* CW en double réception (FTDX101 : MAIN + SUB) : deux décodeurs côte à côte, chacun avec ses réglages dans son en-tête */
+.dg-bar > .cw-ctl { display: contents; }
+.dg-h .cw-ctl { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; flex: 1; min-width: 0; text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 11px; }
+.dg-h .cw-ctl select { font-size: 11px; padding: 1px 4px; }
+.dg-h .cw-ctl .cw-bar { width: 60px; }
+.cw-slot { display: contents; }
+.rt-stack .cw-rxrow { flex: 1; display: flex; gap: 12px; min-height: 160px; }
+.cw-rxrow > .rt-rx-col { flex: 1; min-width: 0; }
+.ft-dual .cw-rxrow > .dual-colb { position: relative; }
+.ft-dual .cw-rxrow > .dual-colb::before { content: ''; position: absolute; top: -2px; bottom: -1px; left: -8px; width: 3px; border-radius: 2px; background: #7a8494; }
+.ft-dual.cwp .rt-tx-col { border-top: 1px solid var(--v2-border-dark); box-shadow: none; }
+@media (max-width: 1100px) { .ft-dual .cw-rxrow { flex-direction: column; } .ft-dual .cw-rxrow > .dual-colb::before { display: none; } }
+.cwp .ft-wfb .dg-mk-rx { border-left: 0; background: rgba(224, 168, 0, .22); box-shadow: inset 0 0 0 2px rgba(224, 168, 0, .95); }

@@ -396,19 +396,37 @@
     <div class="dg-bar">
       <select id="cwDial" aria-label="Fréquence CW"></select>
       <button class="btn dg-back" type="button" id="cwQsy" title="Revenir sur cette fréquence (VFO A, en CW)" aria-label="Revenir sur cette fréquence (VFO A, en CW)">↺</button>
+      <span class="cw-ctl" id="cwCtlA">
       <select id="cwBw" aria-label="Filtre du décodeur" title="Largeur du filtre du décodeur, et (avec la main, TRX en CW) de la largeur BW du TRX au plus près : étroit = moins de bruit et de QRM, mais il faut être bien calé"><option value="50">Filtre 50 Hz</option><option value="100">Filtre 100 Hz</option><option value="200">Filtre 200 Hz</option><option value="400">Filtre 400 Hz</option></select>
       <label class="rt-sq" title="Niveau minimal du signal au-dessus du bruit : plus haut = moins de lettres au hasard sur le bruit">Silencieux
         <input type="range" id="cwSq" min="0" max="20" step="1" aria-label="Silencieux"><output id="cwSqV">5</output></label>
       <span class="cw-lvl" title="Niveau du signal au-dessus du bruit (dB) ; le voyant suit la manipulation"><i class="cw-led" id="cwLed"></i><i class="cw-bar"><b id="cwBar"></b></i><span id="cwDb">0 dB</span></span>
       <span class="dg-f rx">Tonalité <b id="cwF">700</b> Hz</span>
       <span class="dg-f">Vitesse <b id="cwWpm">—</b> mots/min</span>
+      </span>
       <span class="dg-status" id="cwStatus"></span>
     </div>
-    <div class="dg-wf-slot" data-slot="cw"></div>
+    <div class="ft-wfrow"><div class="dg-wf-slot" data-slot="cw"></div></div>
     <div class="rt-grid rt-stack">
-      <div class="dg-col rt-rx-col">
-        <div class="dg-h"><span>Réception CW</span><span class="dg-note">clic sur la cascade : se caler sur le signal le plus proche · bouton gauche maintenu : glisser le repère · double-clic sur un indicatif : le reprendre</span><button class="dg-mini" type="button" id="cwClear">Effacer</button></div>
-        <pre class="rt-rx" id="cwRx"></pre>
+      <div class="cw-rxrow">
+        <div class="dg-col rt-rx-col">
+          <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Réception CW</span><span class="cw-slot" id="cwSlotA"></span><span class="dg-note">clic sur la cascade : se caler sur le signal le plus proche · bouton gauche maintenu : glisser le repère · double-clic sur un indicatif : le reprendre</span><button class="dg-mini" type="button" id="cwClear">Effacer</button></div>
+          <pre class="rt-rx" id="cwRx"></pre>
+        </div>
+        <!-- FTDX101 en double réception : 2e décodeur CW sur le récepteur SUB (VFO-B), ses propres réglages -->
+        <div class="dg-col rt-rx-col ft-colb dual-colb" hidden>
+          <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Réception CW</span>
+            <span class="cw-ctl">
+              <select id="cwBwB" aria-label="Filtre du décodeur (VFO-B)" title="Largeur du filtre du décodeur du VFO-B, et (avec la main, SUB en CW) de la largeur BW du SUB au plus près"><option value="50">Filtre 50 Hz</option><option value="100">Filtre 100 Hz</option><option value="200">Filtre 200 Hz</option><option value="400">Filtre 400 Hz</option></select>
+              <label class="rt-sq" title="Niveau minimal du signal au-dessus du bruit : plus haut = moins de lettres au hasard sur le bruit">Silencieux
+                <input type="range" id="cwSqB" min="0" max="20" step="1" aria-label="Silencieux (VFO-B)"><output id="cwSqVB">5</output></label>
+              <span class="cw-lvl" title="Niveau du signal au-dessus du bruit (dB) ; le voyant suit la manipulation"><i class="cw-led" id="cwLedB"></i><i class="cw-bar"><b id="cwBarB"></b></i><span id="cwDbB">0 dB</span></span>
+              <span class="dg-f rx">Tonalité <b id="cwFB">700</b> Hz</span>
+              <span class="dg-f">Vitesse <b id="cwWpmB">—</b> mots/min</span>
+            </span>
+            <button class="dg-mini" type="button" id="cwClearB">Effacer</button></div>
+          <pre class="rt-rx" id="cwRxB"></pre>
+        </div>
       </div>
       <div class="dg-col rt-tx-col">
         <div class="dg-h"><span>Émission</span><button class="btn cw-stop" type="button" id="cwStop" hidden title="Arrête tout de suite l’émission CW en cours (macro lancée par erreur…) — aussi avec la touche Échap">■ ARRÊTER (Échap)</button><label class="rt-call">Vitesse <input id="cwSpeed" type="number" min="5" max="60" step="1" title="Vitesse du manipulateur du TRX (mots/minute) : 5 à 60 sur les Yaesu, 5 à 48 sur l’IC-7300"> mots/min</label></div>
@@ -586,7 +604,7 @@
   let viewTimer = null;
   function viewMarks() {
     const rt = (r) => ({ f: Math.round(r.f), shift: r.shift, baud: r.baud, rev: !!r.rev });
-    return { rtty: [rt(rts[0]), rt(rts[1])], rtTx, cw: { f: Math.round(cwc.f), bw: cwc.bw }, rx: rxF, tx: txF };
+    return { rtty: [rt(rts[0]), rt(rts[1])], rtTx, cw: { f: Math.round(cwc.f), bw: cwc.bw }, cwB: { f: Math.round(cwcB.f), bw: cwcB.bw }, rx: rxF, tx: txF };
   }
   function sendView() {
     if (!api || !api.iControl() || (detached && HOST)) return;
@@ -620,6 +638,11 @@
     if (m.cw && m.cw.f > 0 && (m.cw.f !== Math.round(cwc.f) || m.cw.bw !== cwc.bw)) {
       cwc.f = m.cw.f;
       if ([50, 100, 200, 400].indexOf(m.cw.bw) >= 0) { cwc.bw = m.cw.bw; if ($('cwBw')) $('cwBw').value = String(cwc.bw); }
+      saveCw(true);
+    }
+    if (m.cwB && m.cwB.f > 0 && (m.cwB.f !== Math.round(cwcB.f) || m.cwB.bw !== cwcB.bw)) {
+      cwcB.f = m.cwB.f;
+      if ([50, 100, 200, 400].indexOf(m.cwB.bw) >= 0) { cwcB.bw = m.cwB.bw; if ($('cwBwB')) $('cwBwB').value = String(cwcB.bw); }
       saveCw(true);
     }
     if (m.rx > 0 && m.rx !== rxF) { rxF = m.rx; redrawRx(); if (tab === 'jtty') jtRedraw(); }
@@ -727,7 +750,7 @@
   function announce() {
     if (!api || (detached && HOST)) return; // la fenêtre séparée annonce elle-même
     const watching = WF_TABS.indexOf(tab) >= 0 && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
-    if (watching && tab === 'cw') return api.send({ t: 'digi', mode: 'CW', cw: cwc });
+    if (watching && tab === 'cw') return api.send({ t: 'digi', mode: 'CW', cw: cwc, cw2: ftDual ? cwcB : null, ftDual });
     if (watching && tab === 'sstv') { api.send({ t: 'digi', mode: 'SSTV', hist: ssNeedHist }); ssNeedHist = false; return; }
     if (watching && tab === 'jtty') { api.send({ t: 'digi', mode: 'JTTY', hist: jtNeedHist, ftDual }); jtNeedHist = false; return; }
     if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rts[0], rtty2: rts[1] });
@@ -786,11 +809,11 @@
     if (old) wfFB.ctx.drawImage(old, 0, 0, ow, oh, 0, 0, w, oh);
   }
   // Onglets décodés aussi sur le récepteur SUB (FTDX101 en double réception) ; JT65 utilise la fenêtre FT8
-  const DUAL_TABS = ['ftx', 'jt65', 'wspr', 'jtty'];
+  const DUAL_TABS = ['ftx', 'jt65', 'wspr', 'jtty', 'cw'];
   const dualTab = () => DUAL_TABS.indexOf(tab) >= 0;
   const viewB = () => (tab === 'ftx' ? ftViewB : { lo: WF_LO, span: WF_MAX_HZ }); // plage de la cascade B (zoom : FT seulement)
   function ftDualWant() {
-    return !!(/^\/ftdx101/.test(location.pathname) && !detached && dualAudioOn() && ((tab === 'ftx' && FT_MODES.indexOf(mode) >= 0) || ['jt65', 'wspr', 'jtty'].indexOf(tab) >= 0));
+    return !!(/^\/ftdx101/.test(location.pathname) && !detached && dualAudioOn() && ((tab === 'ftx' && FT_MODES.indexOf(mode) >= 0) || ['jt65', 'wspr', 'jtty', 'cw'].indexOf(tab) >= 0));
   }
   let ftDualPane = '';
   /** Affiche ou retire la cascade et les colonnes du VFO-B (FTDX101 en double réception) ; true si changé. */
@@ -819,6 +842,8 @@
     redrawAll();
     if ($('wsList')) wsRedraw();
     jtRedrawB();
+    cwCtlPlace();
+    cwRowsB.length = 0;
     return true;
   }
   // « TX call » dans la barre FT (face avant /ftdx101 et fenêtre séparée) ; le dashboard a déjà le sien (ligne Correspondant)
@@ -860,9 +885,9 @@
       const e = $(id);
       if (!e) continue;
       e.textContent = md || '—';
-      const ok = /^(DATA-U|USB|USB-D|PKT-U|DATA-USB)$/.test(md || '');
+      const ok = tab === 'cw' ? /^CW/.test(md || '') : /^(DATA-U|USB|USB-D|PKT-U|DATA-USB)$/.test(md || '');
       e.classList.toggle('bad', !ok);
-      e.title = ok ? 'Mode du VFO' : 'Mode du VFO : pour FT8 / FT4 / FT2, mettez ce VFO en DATA-U (↺ de la barre du haut pour le VFO-A)';
+      e.title = ok ? 'Mode du VFO' : tab === 'cw' ? 'Mode du VFO : pour décoder la CW, mettez ce VFO en CW (filtre étroit, tonalité = pitch)' : 'Mode du VFO : pour FT8 / FT4 / FT2, mettez ce VFO en DATA-U (↺ de la barre du haut pour le VFO-A)';
     }
   }
   function sideBtns() {
@@ -980,6 +1005,7 @@
     const n = Math.min(bytes.length - hdr, Math.ceil((VW.lo + VW.span) / df));
     let vals = bytes.subarray(hdr, hdr + n);
     if (tab === 'cw' && !isB) { if (cwDf !== df) cwRows.length = 0; cwDf = df; cwRows.push(Uint8Array.from(vals)); if (cwRows.length > 12) cwRows.shift(); }
+    if (tab === 'cw' && ftB) { if (cwDfB !== df) cwRowsB.length = 0; cwDfB = df; cwRowsB.push(Uint8Array.from(vals)); if (cwRowsB.length > 12) cwRowsB.shift(); }
     // Vitesse (comme « Spd » de JTDX) : 1, 2 ou 3 lignes reçues fondues en une (moyenne des puissances) ;
     // plus lent = signaux plus ramassés, plus d'historique à l'écran
     const ownB = ftB || (isB && tab === 'rtty' && rtDualAudio); // cascade du VFO-B (voie droite) : ses propres réglages
@@ -1048,7 +1074,7 @@
     ctx.putImageData(T.img, 0, 0);
     if (ftB && tday != null) {
       // Trait de début de période, comme sur la cascade du VFO-A
-      const P = tab === 'wspr' ? 120000 : tab === 'jtty' ? 0 : SLOT_MS[mode] || 15000;
+      const P = tab === 'wspr' ? 120000 : tab === 'jtty' || tab === 'cw' ? 0 : SLOT_MS[mode] || 15000;
       const per = P ? Math.floor(tday / P) : 0;
       if (P && wfFB.per != null && per !== wfFB.per) { ctx.fillStyle = 'rgba(255, 255, 255, .55)'; ctx.fillRect(0, 0, wfFB.w, 1); }
       wfFB.per = per;
@@ -1111,7 +1137,7 @@
     ticks(c, w);
     if (tab === 'rtty') return drawRttyMarks(c, w);
     if (tab === 'wspr') return drawWsprMarks(c, w);
-    if (tab === 'cw') return drawCwMarks(c, w);
+    if (tab === 'cw') { drawCwMarks(c, w); if (ftDual && wfFB.sctx) drawCwMarks(wfFB.sctx, wfFB.cw, 'B'); return; }
     if (tab === 'sstv') return drawSstvMarks(c, w);
     drawFlags(c, w);
     if (ftDual && wfFB.sctx && flagsB) {
@@ -1534,7 +1560,8 @@
   // CW : bouton gauche maintenu sur la cascade = le repère du décodeur suit la souris en continu (le décodage suit) ;
   // un simple clic garde son effet (se caler sur le signal le plus proche)
   let cwDragged = false;
-  function cwDragInit(ids) {
+  function cwDragInit(ids, side) {
+    const K = () => (side === 'B' ? cwcB : cwc);
     let mk = null;
     for (const id of ids) {
       const el = $(id);
@@ -1553,7 +1580,7 @@
         if (!mk.moved && Math.abs(e.clientX - mk.x) < 3) return; // petit tremblement : reste un clic
         mk.moved = true;
         el.style.cursor = 'ew-resize';
-        cwc.f = Math.max(200, Math.min(2800, Math.round(fOf(e))));
+        K().f = Math.max(200, Math.min(2800, Math.round(fOf(e))));
         drawScale();
         const now = Date.now();
         if (now - mk.t > 150) { mk.t = now; saveCw(true); } // le décodeur du serveur suit pendant le glisser
@@ -1561,7 +1588,7 @@
       const end = (e) => {
         if (!mk || mk.el !== el) return;
         if (mk.moved) {
-          cwc.f = Math.max(200, Math.min(2800, Math.round(fOf(e))));
+          K().f = Math.max(200, Math.min(2800, Math.round(fOf(e))));
           saveCw(true);
           drawScale();
           cwDragged = true; // le « click » qui suit ne doit pas recaler sur le signal voisin
@@ -2526,6 +2553,7 @@
     // Glisser la bande ou molette sur une cascade RTTY : accord du VFO
     rtDragInit(['dgWf', 'dgScale'], 0);
     cwDragInit(['dgWf', 'dgScale']);
+    cwDragInit(['ftWfB', 'ftScaleB'], 'B');
     ftDragInit(['dgWf', 'dgScale']);
     ftDragInit(['ftWfB', 'ftScaleB'], 'B');
     rtDragInit(['rtWfB', 'rtScaleB'], 1);
@@ -2843,47 +2871,69 @@
     try { o = JSON.parse(store.get('cw', '{}')) || {}; } catch (e) { o = {}; }
     return { f: Number(o.f) || 700, bw: [50, 100, 200, 400].indexOf(o.bw) >= 0 ? o.bw : 100, squelch: Number.isFinite(o.squelch) ? o.squelch : 5 };
   })();
+  // 2e décodeur : récepteur SUB (VFO-B) en double réception, ses propres réglages
+  const cwcB = (() => {
+    let o;
+    try { o = JSON.parse(store.get('cwb', '{}')) || {}; } catch (e) { o = {}; }
+    return { f: Number(o.f) || cwc.f, bw: [50, 100, 200, 400].indexOf(o.bw) >= 0 ? o.bw : cwc.bw, squelch: Number.isFinite(o.squelch) ? o.squelch : cwc.squelch };
+  })();
   const cwRows = []; // dernières lignes de cascade (calage sur le signal)
   let cwDf = 6.25;   // largeur d'une case de ces lignes (Hz)
+  const cwRowsB = []; // idem, cascade du VFO-B
+  let cwDfB = 6.25;
+  // Double réception : les réglages du décodeur A passent de la barre du haut à l'en-tête de sa colonne (comme ceux du B)
+  function cwCtlPlace() {
+    const ctl = $('cwCtlA');
+    if (!ctl) return;
+    if (ftDual && ftDualPane === 'cw') { if (ctl.parentElement !== $('cwSlotA')) $('cwSlotA').appendChild(ctl); }
+    else if (ctl.nextElementSibling !== $('cwStatus')) $('cwStatus').before(ctl);
+  }
   let cwLast = 0;
   function saveCw(reannounce) {
     store.set('cw', JSON.stringify(cwc));
+    store.set('cwb', JSON.stringify(cwcB));
     if (reannounce) announce();
     sendView();
   }
-  function drawCwMarks(c, w) {
-    const x0 = ((cwc.f - cwc.bw / 2) / WF_MAX_HZ) * w;
+  function drawCwMarks(c, w, side) {
+    const B = side === 'B';
+    const k = B ? cwcB : cwc;
+    const x0 = ((k.f - k.bw / 2) / WF_MAX_HZ) * w;
     c.fillStyle = 'rgba(242, 207, 74, .35)';
-    c.fillRect(x0, 14, Math.max(2, (cwc.bw / WF_MAX_HZ) * w), 16);
+    c.fillRect(x0, 14, Math.max(2, (k.bw / WF_MAX_HZ) * w), 16);
     c.fillStyle = '#F2CF4A';
-    c.fillRect((cwc.f / WF_MAX_HZ) * w - 1, 12, 2, 18);
-    const el = $('dgMkRx');
-    el.style.left = ((cwc.f - cwc.bw / 2) / WF_MAX_HZ) * 100 + '%';
-    el.style.width = (cwc.bw / WF_MAX_HZ) * 100 + '%';
-    $('dgMkTx').style.width = '0';
-    $('cwF').textContent = Math.round(cwc.f);
+    c.fillRect((k.f / WF_MAX_HZ) * w - 1, 12, 2, 18);
+    const el = $(B ? 'ftMkRxB' : 'dgMkRx');
+    el.style.display = '';
+    el.style.left = ((k.f - k.bw / 2) / WF_MAX_HZ) * 100 + '%';
+    el.style.width = (k.bw / WF_MAX_HZ) * 100 + '%';
+    if (B) $('ftMkTxB').style.display = 'none';
+    else $('dgMkTx').style.width = '0';
+    $(B ? 'cwFB' : 'cwF').textContent = Math.round(k.f);
   }
   // Clic sur la cascade : calage sur le signal le plus fort à ±60 Hz (sinon, là où l'on a cliqué)
-  function setCwF(f, snap) {
-    if (snap && cwRows.length) {
-      const df = cwDf || 6.25;
+  function setCwF(f, snap, side) {
+    const B = side === 'B';
+    const rows = B ? cwRowsB : cwRows;
+    if (snap && rows.length) {
+      const df = (B ? cwDfB : cwDf) || 6.25;
       const b0 = Math.max(0, Math.floor((f - 60) / df));
       const b1 = Math.ceil((f + 60) / df);
       let best = -1;
       let bv = -1;
-      const sum = (b) => cwRows.reduce((a, r) => a + (r[b] || 0), 0);
+      const sum = (b) => rows.reduce((a, r) => a + (r[b] || 0), 0);
       const all = [];
       for (let b = b0; b <= b1; b++) { const v = sum(b); all.push(v); if (v > bv) { bv = v; best = b; } }
       all.sort((a, b) => a - b);
       // Pic au moins 6 dB (12 octets par ligne) au-dessus de la médiane du voisinage
-      if (best >= 0 && bv - all[all.length >> 1] > 12 * cwRows.length) f = best * df;
+      if (best >= 0 && bv - all[all.length >> 1] > 12 * rows.length) f = best * df;
     }
-    cwc.f = Math.max(200, Math.min(2800, Math.round(f)));
+    (B ? cwcB : cwc).f = Math.max(200, Math.min(2800, Math.round(f)));
     saveCw(true);
     drawScale();
   }
-  function cwAppend(text) {
-    const el = $('cwRx');
+  function cwAppend(text, ch) {
+    const el = $(ch === 1 ? 'cwRxB' : 'cwRx');
     if (!el) return;
     const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
     el.appendChild(document.createTextNode(text));
@@ -2894,12 +2944,13 @@
     cwLast = Date.now();
   }
   function cwLevels(m) {
-    if (!$('cwBar')) return;
-    $('cwBar').style.width = Math.max(0, Math.min(100, (m.s / 30) * 100)) + '%';
-    $('cwDb').textContent = m.s + ' dB';
-    $('cwLed').classList.toggle('on', !!m.on);
-    $('cwBar').classList.toggle('low', m.s < cwc.squelch);
-    if (m.s >= cwc.squelch) $('cwWpm').textContent = String(m.wpm);
+    const x = m.ch === 1 ? 'B' : '', k = m.ch === 1 ? cwcB : cwc;
+    if (!$('cwBar' + x)) return;
+    $('cwBar' + x).style.width = Math.max(0, Math.min(100, (m.s / 30) * 100)) + '%';
+    $('cwDb' + x).textContent = m.s + ' dB';
+    $('cwLed' + x).classList.toggle('on', !!m.on);
+    $('cwBar' + x).classList.toggle('low', m.s < k.squelch);
+    if (m.s >= k.squelch) $('cwWpm' + x).textContent = String(m.wpm);
   }
   function insertCw(t) {
     showTab('cw');
@@ -2915,6 +2966,20 @@
     $('cwBw').addEventListener('change', () => { cwc.bw = Number($('cwBw').value); saveCw(true); drawScale(); cwTrxWidth(cwc.bw); });
     $('cwSq').addEventListener('input', () => { $('cwSqV').textContent = $('cwSq').value; });
     $('cwSq').addEventListener('change', () => { cwc.squelch = Number($('cwSq').value); saveCw(true); });
+    // Décodeur du VFO-B (double réception)
+    $('cwBwB').value = String(cwcB.bw);
+    $('cwSqB').value = String(cwcB.squelch);
+    $('cwSqVB').textContent = String(cwcB.squelch);
+    $('cwBwB').addEventListener('change', () => { cwcB.bw = Number($('cwBwB').value); saveCw(true); drawScale(); cwTrxWidth(cwcB.bw, 'B'); });
+    $('cwSqB').addEventListener('input', () => { $('cwSqVB').textContent = $('cwSqB').value; });
+    $('cwSqB').addEventListener('change', () => { cwcB.squelch = Number($('cwSqB').value); saveCw(true); });
+    $('cwClearB').addEventListener('click', () => { $('cwRxB').textContent = ''; });
+    $('cwRxB').addEventListener('dblclick', () => {
+      const w = String(window.getSelection() || '').trim().toUpperCase();
+      if (!CALL_RE.test(w)) return;
+      if (ftDual) setSide('B'); // émission sur le VFO de la station choisie
+      setDx({ call: w });
+    });
     const sp = $('cwSpeed');
     sp.value = store.get('cwspeed', '22');
     const wmax = () => { const R = api && api.rig && api.rig(); return (R && R.CW && R.CW.wpmMax) || 60; };
@@ -2936,7 +3001,9 @@
     });
     $('cwRx').addEventListener('dblclick', () => {
       const w = String(window.getSelection() || '').trim().toUpperCase();
-      if (CALL_RE.test(w)) setDx({ call: w });
+      if (!CALL_RE.test(w)) return;
+      if (ftDual) setSide('A');
+      setDx({ call: w });
     });
     $('cwSend').title = 'Émet le texte en CW par le manipulateur du TRX (vitesse ci-dessus), puis retour en réception · pendant l’émission : arrêt';
     $('cwSend').addEventListener('click', () => cwClick());
@@ -3811,7 +3878,7 @@
     api.send(m);
   }
   // Filtre CW de l'onglet : règle aussi la largeur (BW) du TRX, au plus près, sur le VFO écouté (pour tous, comme le cadre Filtres)
-  function cwTrxWidth(hz) {
+  function cwTrxWidth(hz, side) {
     if (!api) return;
     if (!api.iControl()) return api.say('Filtre du décodeur réglé à ' + hz + ' Hz ; prenez la main pour régler aussi la largeur (BW) du TRX.', 'warn');
     const st = api.state();
@@ -3820,7 +3887,7 @@
     if ((st.ptt && st.ptt.active) || r.tx) return api.say('Émission en cours : seul le filtre du décodeur change.', 'warn');
     const R = api.rig();
     const C = R.CONTROL || {};
-    const sideB = Number(r.vfoSel) === 1 && !!C.widthB;
+    const sideB = (side ? side === 'B' : Number(r.vfoSel) === 1) && !!C.widthB;
     const mode = sideB ? r.modeB : r.mode;
     if (!/^CW/.test(mode || '')) return api.say('TRX pas en CW (' + (mode || '?') + ') : seul le filtre du décodeur change.', 'warn');
     // IC-7300 : trois filtres (CW : FIL2 ≈ 500 Hz, FIL3 ≈ 250 Hz par défaut)
@@ -4819,8 +4886,12 @@
       // Cascade du VFO-B (FT8 / FT4 / FT2 en double réception) : clic gauche = réception, clic droit = émission
       const fAtB = (e) => { const r = e.currentTarget.getBoundingClientRect(); const V = ftV('B'); return V.lo + ((e.clientX - r.left) / r.width) * V.span; };
       for (const id of ['ftWfB', 'ftScaleB']) {
-        $(id).addEventListener('click', (e) => setRx(fAtB(e), 'B'));
-        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(fAtB(e), 'B'); });
+        $(id).addEventListener('click', (e) => {
+          if (tab !== 'cw') return setRx(fAtB(e), 'B');
+          if (cwDragged) { cwDragged = false; return; }
+          setCwF(fAtB(e), true, 'B');
+        });
+        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'cw') setCwF(fAtB(e), false, 'B'); else setTx(fAtB(e), 'B'); });
         $(id).addEventListener('wheel', (e) => ftZoom('B', e), { passive: false });
       }
       // FT8 / FT4 / FT2 : molette sur la cascade (ou son échelle) = zoom autour de la souris (vers soi : plus étroit)
@@ -4873,7 +4944,7 @@
         if (BM_TABS.indexOf(tab) >= 0) { bmPlace(); bmDraw(); }
         if (tab === 'wspr') { wsClock(); if (applyFtDual()) announce(); ftDials(); }
         if (tab === 'jtty') { jtStatus(); if (applyFtDual()) announce(); ftDials(); }
-        if (tab === 'cw') cwStatus();
+        if (tab === 'cw') { cwStatus(); if (applyFtDual()) announce(); ftDials(); }
         if (tab === 'sstv') sstvStatus();
         if (tab === 'sync') drawSync();
       }, 500);
@@ -4936,7 +5007,7 @@
       if (m.t === 'dtx_text') { dtxInfo = m; return true; }
       if (m.t === 'rtty') { rttyAppend(m.text || '', m.ch === 1 ? 1 : 0); return true; }
       if (m.t === 'jtty') { if (m.side === 'B') jtUpdateB(m.u); else jtUpdate(m.u); return true; }
-      if (m.t === 'cw') { cwAppend(m.text || ''); return true; }
+      if (m.t === 'cw') { cwAppend(m.text || '', m.ch === 1 ? 1 : 0); return true; }
       if (/^sstv_/.test(m.t)) return ssMessage(m);
       if (m.t === 'cw_lvl') { cwLevels(m); return true; }
       if (m.t === 'jtty_hist' && m.side === 'B') { jtMsgsB.clear(); for (const u of m.items || []) jtMsgsB.set(u.key, u); jtRedrawB(); return true; }

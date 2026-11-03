@@ -377,7 +377,7 @@ function relayAudio(buf) {
 // Le décodage tourne dans un Worker (lib/digi-worker.js) dès qu'un membre ouvre la fenêtre FT8/FT4.
 const digi = { worker: null, hist: { FT8: [], FT4: [], FT2: [], WSPR: [], JT65: [] }, histB: { FT8: [], FT4: [], FT2: [], WSPR: [], JT65: [] }, latency: null, ms: 0, last: 0, dial: 0, jtty: new Map(), jttyB: new Map() };
 // Modes décodés aussi sur le récepteur SUB (FTDX101 en double réception, page des modes numériques de la face avant)
-const FT_DUAL_MODES = ['FT8', 'FT4', 'FT2', 'JT65', 'WSPR', 'JTTY'];
+const FT_DUAL_MODES = ['FT8', 'FT4', 'FT2', 'JT65', 'WSPR', 'JTTY', 'CW'];
 /** Double décodage FT (FTDX101 : récepteur SUB sur la voie droite) possible : TRX à deux voies son, double réception */
 function ftDualOk() { return !!(station && station.rig && station.rig.DUAL_AUDIO && radio.dualRx === 1); }
 /** Ce membre veut aussi les décodages du récepteur SUB (page des modes numériques de la face avant FTDX101) */
@@ -418,6 +418,12 @@ function rttyB(c) {
   if (!(station && station.rig && station.rig.DUAL_AUDIO && radio.dualRx === 1)) return r;
   return Object.assign({}, r, { ch: 1, key: r.key + '/R' });
 }
+// Décodeur CW B d'un membre : récepteur SUB (voie droite), seulement en double réception
+function cwB(c) {
+  const r = c.cw2;
+  if (!r || !c.ftDual || !ftDualOk()) return null;
+  return Object.assign({}, r, { ch: 1, key: r.key + '/R' });
+}
 function digiModes() {
   const s = new Set();
   for (const c of ops) if (c.digi) s.add(c.digi);
@@ -456,7 +462,7 @@ function updateDigi() {
     for (const c of ops) if (c.digi === 'RTTY') for (const r of [c.rtty, rttyB(c)]) if (r) cfgs[r.key] = r;
     digi.worker.postMessage({ t: 'rtty', cfgs: Object.values(cfgs) });
     const cwc = {};
-    for (const c of ops) if (c.digi === 'CW' && c.cw) cwc[c.cw.key] = c.cw;
+    for (const c of ops) if (c.digi === 'CW') for (const r of [c.cw, cwB(c)]) if (r) cwc[r.key] = r;
     digi.worker.postMessage({ t: 'cw', cfgs: Object.values(cwc) });
   }
   updateAudioWant();
@@ -514,8 +520,14 @@ function onDigi(m) {
     return;
   }
   if (m.t === 'cw_text' || m.t === 'cw_lvl') {
-    const msg = JSON.stringify(m.t === 'cw_text' ? { t: 'cw', text: m.text } : { t: 'cw_lvl', s: m.s, wpm: m.wpm, on: m.on });
-    for (const c of ops) if (c.digi === 'CW' && c.cw && c.cw.key === m.key) c.send(msg);
+    // Deux décodeurs par membre en double réception (A : MAIN, B : SUB) : ch = 0 ou 1
+    const out = (ch) => JSON.stringify(m.t === 'cw_text' ? { t: 'cw', ch, text: m.text } : { t: 'cw_lvl', ch, s: m.s, wpm: m.wpm, on: m.on });
+    for (const c of ops) {
+      if (c.digi !== 'CW') continue;
+      if (c.cw && c.cw.key === m.key) c.send(out(0));
+      const b = cwB(c);
+      if (b && b.key === m.key) c.send(out(1));
+    }
     return;
   }
   if (m.t === 'decodes') {
@@ -2632,14 +2644,16 @@ function onOperator(conn, m) {
       if (mode === 'RTTY' && !rc) mode = null;
       const cc = mode === 'CW' ? cwCfg(m.cw) : null;
       if (mode === 'CW' && !cc) mode = null;
+      const cc2 = mode === 'CW' && m.ftDual ? cwCfg(m.cw2) : null; // 2e décodeur CW (VFO-B, double réception)
       const changed = conn.digi !== mode || (conn.rtty && conn.rtty.key) !== (rc && rc.key) || (conn.rtty2 && conn.rtty2.key) !== (rc2 && rc2.key) ||
-        (conn.cw && conn.cw.key) !== (cc && cc.key);
+        (conn.cw && conn.cw.key) !== (cc && cc.key) || (conn.cw2 && conn.cw2.key) !== (cc2 && cc2.key);
       const dual = !!m.ftDual && FT_DUAL_MODES.indexOf(mode) >= 0;
       if (dual !== !!conn.ftDual) { conn.ftDual = dual; if (!changed) updateDigi(); }
       conn.digi = mode;
       conn.rtty = rc;
       conn.rtty2 = rc2;
       conn.cw = cc;
+      conn.cw2 = cc2;
       if (changed) updateDigi();
       // Historique : à l'ouverture, ou sur demande (fenêtre séparée qui s'ouvre, retour dans le dashboard)
       if (digi.hist[mode] && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.hist[mode] });
@@ -3023,7 +3037,7 @@ function onOperator(conn, m) {
       if (mk && typeof mk === 'object') {
         const rt = (x) => (x && typeof x === 'object' ? { f: num(x.f, 100, 4000), shift: num(x.shift, 50, 1000), baud: num(x.baud, 10, 300), rev: !!x.rev } : null);
         marks = { rtty: Array.isArray(mk.rtty) ? mk.rtty.slice(0, 2).map(rt) : null, rtTx: mk.rtTx === 1 ? 1 : 0,
-          cw: mk.cw && typeof mk.cw === 'object' ? { f: num(mk.cw.f, 100, 4000), bw: num(mk.cw.bw, 10, 1000) } : null, rx: num(mk.rx, 0, 4000), tx: num(mk.tx, 0, 4000) };
+          cw: mk.cw && typeof mk.cw === 'object' ? { f: num(mk.cw.f, 100, 4000), bw: num(mk.cw.bw, 10, 1000) } : null, cwB: mk.cwB && typeof mk.cwB === 'object' ? { f: num(mk.cwB.f, 100, 4000), bw: num(mk.cwB.bw, 10, 1000) } : null, rx: num(mk.rx, 0, 4000), tx: num(mk.tx, 0, 4000) };
       }
       const mkKey = JSON.stringify(marks);
       if (ctlView && ctlView.conn === conn && ctlView.tab === tab && ctlView.mode === mode && ctlView.mkKey === mkKey) return;
