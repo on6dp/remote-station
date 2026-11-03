@@ -203,6 +203,16 @@
               else if (later || String(now) === String(lc.ctl.v)) this.log('« ? » reçu après ' + lc.s + ' mais la valeur relue est bonne : réponse d\u2019une lecture, ignorée');
               else note();
             }, 1500);
+          } else if (/^F[AB]\d{6,}/.test(lc.s)) {
+            // Fréquence (accord à la molette ou en glissant : plusieurs FA / FB d'affilée) : un « ? » arrivé juste après
+            // vient souvent d'une lecture du relevé ; refus seulement si le TRX n'est pas sur la fréquence demandée
+            // et qu'aucune autre fréquence n'a été envoyée depuis
+            const hz = Number(lc.s.slice(2).replace(/\D/g, '')), key = lc.s[1] === 'B' ? 'freqB' : 'freq';
+            setTimeout(() => {
+              const later = this.lastFreqAt && this.lastFreqAt[key] > lc.at;
+              if (later || this.radio[key] === hz) this.log('« ? » reçu après ' + lc.s + ' : fréquence bien prise (ou déjà changée), ignoré');
+              else note();
+            }, 1500);
           } else note();
         }
         if (p.error || p.ok) continue;
@@ -361,8 +371,10 @@
           return;
         }
         if (m.op === 'freq') {
+          (this.lastFreqAt = this.lastFreqAt || {}).freq = Date.now();
           this._write(FTX1.cmdFreq(m.hz));
         } else if (m.op === 'freqB') {
+          (this.lastFreqAt = this.lastFreqAt || {}).freqB = Date.now();
           this._write(FTX1.cmdFreqB(m.hz));
         } else if (m.op === 'band') {
           this._write(FTX1.cmdBand(m.band, !!m.sub));

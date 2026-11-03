@@ -1522,7 +1522,7 @@
         const nd = Math.round((drag.d.hz - drag.d.sign * (dx / drag.w) * WF_MAX_HZ) / 10) * 10;
         const now = Date.now();
         if (nd !== drag.shown) { drag.shown = nd; rtSetDial(Object.assign({}, drag.d, { hz: drag.cur }), nd, true); } // règle tout de suite
-        if (nd !== drag.cur && now - drag.t > 60) { api.setFreq(nd, drag.d.vfo); drag.cur = nd; drag.t = now; }
+        if (nd !== drag.cur && now - drag.t > 100) { api.setFreq(nd, drag.d.vfo); drag.cur = nd; drag.t = now; } // TRX : une fréquence toutes les 100 ms au plus
         drag.pending = nd;
       });
       const end = () => {
