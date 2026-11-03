@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.33.19 | [RemoteStation-Setup-0.33.19.exe](0.33.19/RemoteStation-Setup-0.33.19.exe) | [remote-station-0.33.19.tar.gz](0.33.19/remote-station-0.33.19.tar.gz) | DIGI CONFIGURATION : mode en cours en bleu clair — [empreintes SHA-256](0.33.19/SHA256SUMS.txt) |
 | 0.33.18 | [RemoteStation-Setup-0.33.18.exe](0.33.18/RemoteStation-Setup-0.33.18.exe) | [remote-station-0.33.18.tar.gz](0.33.18/remote-station-0.33.18.tar.gz) | Face avant : MICRO grisé hors phonie — [empreintes SHA-256](0.33.18/SHA256SUMS.txt) |
 | 0.33.17 | [RemoteStation-Setup-0.33.17.exe](0.33.17/RemoteStation-Setup-0.33.17.exe) | [remote-station-0.33.17.tar.gz](0.33.17/remote-station-0.33.17.tar.gz) | RTTY : fréquence du VFO comme sur le TRX — [empreintes SHA-256](0.33.17/SHA256SUMS.txt) |
 | 0.33.16 | [RemoteStation-Setup-0.33.16.exe](0.33.16/RemoteStation-Setup-0.33.16.exe) | [remote-station-0.33.16.tar.gz](0.33.16/remote-station-0.33.16.tar.gz) | SYNCHRO masqué en RTTY…, Suivre l'opérateur unique — [empreintes SHA-256](0.33.16/SHA256SUMS.txt) |

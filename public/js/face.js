@@ -2638,9 +2638,10 @@
     } catch (e) { /* */ }
   }
   $('digiBtn').addEventListener('click', () => {
+    if (digiWin && !digiWin.closed) { try { digiWin.focus(); } catch (e) {} return; } // déjà ouverte : pas de rechargement
     const w = window.open('/ftdx101/digi.html', 'rs-digi', 'width=1200,height=860'); // modes numériques de la face avant FTDX101
     if (!w) say('Fenêtre bloquée par le navigateur : autorisez les fenêtres pop-up pour ce site.', 'warn', 6000);
-    else try { w.focus(); } catch (e) {}
+    else { digiWin = w; try { w.focus(); } catch (e) {} }
   });
   $('listenVol').value = store.get('rs.vol', '100');
   $('listenVol').addEventListener('input', volume);
@@ -3008,6 +3009,12 @@
         const b = e.target.closest('.fc-digim');
         if (b) digiOpen(b.dataset.tab, b.dataset.mode || '');
       });
+      // Mode affiché dans la page des modes numériques : son bouton en bleu clair (rien si la page est fermée)
+      setInterval(() => {
+        let cur = '';
+        try { const dg = digiHost.inst && digiHost.win && !digiHost.win.closed ? digiHost.inst : null; cur = dg && dg.curTab ? dg.curTab() : ''; } catch (e) { cur = ''; }
+        row.querySelectorAll('.fc-digim').forEach((b) => b.classList.toggle('on', b.dataset.tab === cur));
+      }, 500);
     }
     // DX Cluster juste après « Suivre l'opérateur »
     const dw = document.querySelector('.topbar .dxc-wrap');

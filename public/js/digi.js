@@ -4550,6 +4550,7 @@
     },
     setDetached,
     followSync: (on) => setFollow(on, true), // « Suivre l'opérateur » changé sur la face avant
+    curTab: () => (detached ? '' : tab), // onglet affiché (la face avant éclaire le bouton de ce mode)
     isPopup: POPUP,
     /** Mode numérique affiché (pour le carnet de trafic quand le TRX est en DATA) */
     logMode() {

@@ -367,3 +367,4 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .dg-toast:not(:empty), .fc-msg:not(:empty) { color: #f5ff00; font-weight: 700; font-size: 14px; border: 2px solid #f5ff00 !important; box-shadow: 0 0 12px rgba(245, 255, 0, .45); }
 .dg-toast.error:not(:empty), .fc-msg.error:not(:empty) { border-color: #ff5a4a !important; }
 .dg-toast.blink:not(:empty), .fc-msg.blink:not(:empty) { animation: rsBlink .5s linear 2; }
+.fc-tx .fc-digim.on { background: #7fd3ff; border-color: #bfe9ff; color: #06121c; font-weight: 800; box-shadow: 0 0 8px rgba(127, 211, 255, .55); } /* mode affiché dans la page des modes numériques */
