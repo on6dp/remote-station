@@ -288,7 +288,9 @@
             <input id="rtcExch" maxlength="40" spellcheck="false"></label>
           <label class="rtc-l rtc-s" title="Zone CQ de la station (Belgique : 14)">Zone CQ <input id="rtcCqz" maxlength="2" inputmode="numeric"></label>
           <label class="rtc-l rtc-s" title="Zone ITU de la station (Belgique : 27)">ITU <input id="rtcItu" maxlength="2" inputmode="numeric"></label>
-          <label class="rtc-l rtc-s" title="Numéro de série du prochain QSO (&lt;CNTR&gt;) ; la macro TU passe au suivant (&lt;INCR&gt;)">N° <input id="rtcNr" maxlength="4" inputmode="numeric"></label>
+          <label class="rtc-l rtc-s" title="Numéro de série envoyé (&lt;CNTR&gt;). Il passe tout seul au suivant avec la macro TU (&lt;INCR&gt;), une seule fois par correspondant ; renvoyer l'échange redonne le même numéro. −1 / +1 : corriger à la main">N° <input id="rtcNr" maxlength="4" inputmode="numeric"></label>
+          <button class="dg-mini" type="button" id="rtcNrM" title="Numéro précédent (−1) : renvoyer le même numéro de série">−1</button>
+          <button class="dg-mini" type="button" id="rtcNrP" title="Numéro suivant (+1)">+1</button>
           <button class="dg-mini" type="button" id="rtcNr1" title="Remettre le numéro de série à 001 (début du contest)">↺ 001</button>
         </div>
         <div class="rt-macros rtc-macros" id="rtcMacros"></div>
@@ -2292,7 +2294,14 @@
     const pad3 = (n) => String(n).padStart(3, '0');
     out = out.replace(/<CNTR>/g, pad3(cntr));
     if (/<INCR>/.test(out)) {
-      if (apply) { cntr++; store.set('cntr', cntr); }
+      // Numéro suivant (macro TU) : une seule fois par correspondant — renvoyer TU au même ne saute pas de numéro
+      const who = up(dx.call) || '?';
+      if (apply && store.get('cntrcall', '') !== who + '|' + cntr) {
+        store.set('cntrcall', who + '|' + (cntr + 1));
+        cntr++;
+        store.set('cntr', cntr);
+        if ($('rtcNr') && document.activeElement !== $('rtcNr')) $('rtcNr').value = pad3(cntr);
+      }
       out = out.replace(/<INCR>/g, '');
     }
     return out;
@@ -3807,7 +3816,10 @@
     $('rtcCqz').addEventListener('change', () => { store.set('rtcqz', String(Number($('rtcCqz').value) || 14)); ui(); });
     $('rtcItu').addEventListener('change', () => { store.set('rtitu', String(Number($('rtcItu').value) || 27)); ui(); });
     $('rtcNr').addEventListener('change', () => { store.set('cntr', String(Math.max(1, Number($('rtcNr').value) || 1))); ui(); });
-    $('rtcNr1').addEventListener('click', () => { store.set('cntr', '1'); ui(); });
+    $('rtcNr1').addEventListener('click', () => { store.set('cntr', '1'); store.set('cntrcall', ''); ui(); });
+    const nrAdd = (k) => { store.set('cntr', String(Math.max(1, (Number(store.get('cntr', '1')) || 1) + k))); store.set('cntrcall', ''); ui(); };
+    $('rtcNrM').addEventListener('click', () => nrAdd(-1));
+    $('rtcNrP').addEventListener('click', () => nrAdd(1));
     ui();
     // Hauteur des fenêtres de décodage RTTY (les deux VFO) : poignée sous elles, gardée dans ce navigateur
     const dual = $('rtDual'), grip = $('rtHGrip');
