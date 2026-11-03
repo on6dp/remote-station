@@ -78,8 +78,13 @@
     return { lo: 0, span: 3000 };
   };
   const ftViewA = ftViewLoad('ftviewa'), ftViewB = ftViewLoad('ftviewb');
+  // CW : même zoom à la molette, avec sa propre plage pour chaque cascade
+  const cwViewA = ftViewLoad('cwviewa'), cwViewB = ftViewLoad('cwviewb');
+  const ZOOM_TABS = ['ftx', 'cw'];
+  /** Plage choisie à la molette pour l'onglet affiché (null : pas de zoom dans cet onglet) */
+  const zoomView = (side) => (tab === 'ftx' ? (side === 'B' ? ftViewB : ftViewA) : tab === 'cw' ? (side === 'B' ? cwViewB : cwViewA) : null);
   /** Plage affichée par une cascade : celle du VFO-B (double réception) ou la cascade principale */
-  const ftV = (side) => (side === 'B' ? (tab === 'ftx' ? ftViewB : { lo: WF_LO, span: WF_MAX_HZ }) : { lo: WF_LO, span: WF_MAX_HZ });
+  const ftV = (side) => (side === 'B' ? (zoomView('B') || { lo: WF_LO, span: WF_MAX_HZ }) : { lo: WF_LO, span: WF_MAX_HZ });
   const RX_WIDTH = 60; // Hz de part et d'autre de la fréquence RX
 
   const POPUP = document.body.dataset.digiPopup === '1';
@@ -188,6 +193,7 @@
       <canvas id="dgWf" height="140"></canvas>
       <i class="dg-mk dg-mk-tx" id="dgMkTx"></i><i class="dg-mk dg-mk-rx" id="dgMkRx"></i>
       <i class="dg-mk dg-mk-bm" id="dgMkBM" hidden></i><i class="dg-mk dg-mk-bs" id="dgMkBS" hidden></i>
+      <i class="cw-trx" id="cwTrxA" hidden title="Filtre du TRX (BW) : glisser une barre pour l'élargir ou le rétrécir (Ctrl + molette aussi)"><b></b><b></b><span></span></i>
       <i class="dg-grip" id="dgGrip" title="Glisser vers le haut ou le bas : hauteur de la cascade et des listes de messages (double-clic : taille d'origine)"></i>
     </div></div>
       <div class="dg-wf ft-wfb" id="ftWfBox" hidden>
@@ -203,6 +209,7 @@
         <canvas id="ftScaleB" height="44"></canvas>
         <canvas id="ftWfB" height="140" title="Cascade du VFO-B (SUB) : clic gauche = réception, clic droit = émission"></canvas>
         <i class="dg-mk dg-mk-tx" id="ftMkTxB"></i><i class="dg-mk dg-mk-rx" id="ftMkRxB"></i>
+        <i class="cw-trx" id="cwTrxB" hidden title="Filtre du TRX (BW) : glisser une barre pour l'élargir ou le rétrécir (Ctrl + molette aussi)"><b></b><b></b><span></span></i>
         <i class="dg-grip" id="ftGripB" title="Glisser vers le haut ou le bas : hauteur des cascades (double-clic : taille d'origine)"></i>
       </div>
     </div>
@@ -795,7 +802,7 @@
     const cw = Math.max(120, Math.floor(c.clientWidth));
     const w = Math.round(cw * dpr);
     const h = Math.round(Math.max(40, c.clientHeight) * dpr);
-    for (const id of ['ftMkRxB', 'ftMkTxB']) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
+    for (const id of ['ftMkRxB', 'ftMkTxB', 'cwTrxB']) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
     if (w === wfFB.w && h === wfFB.h && wfFB.ctx) return;
     let old = null;
     if (wfFB.ctx) { old = document.createElement('canvas'); old.width = wfFB.w; old.height = wfFB.h; old.getContext('2d').drawImage(c, 0, 0); }
@@ -811,7 +818,7 @@
   // Onglets décodés aussi sur le récepteur SUB (FTDX101 en double réception) ; JT65 utilise la fenêtre FT8
   const DUAL_TABS = ['ftx', 'jt65', 'wspr', 'jtty', 'cw'];
   const dualTab = () => DUAL_TABS.indexOf(tab) >= 0;
-  const viewB = () => (tab === 'ftx' ? ftViewB : { lo: WF_LO, span: WF_MAX_HZ }); // plage de la cascade B (zoom : FT seulement)
+  const viewB = () => zoomView('B') || { lo: WF_LO, span: WF_MAX_HZ }; // plage de la cascade B (zoom : FT et CW)
   function ftDualWant() {
     return !!(/^\/ftdx101/.test(location.pathname) && !detached && dualAudioOn() && ((tab === 'ftx' && FT_MODES.indexOf(mode) >= 0) || ['jt65', 'wspr', 'jtty', 'cw'].indexOf(tab) >= 0));
   }
@@ -914,7 +921,7 @@
     const c = $('dgWf');
     const s = $('dgScale');
     // Repères RX / TX sous l'échelle (la barre de réglages au-dessus peut tenir sur une ou deux lignes)
-    for (const id of ['dgMkRx', 'dgMkTx', 'dgMkBM', 'dgMkBS']) if ($(id)) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
+    for (const id of ['dgMkRx', 'dgMkTx', 'dgMkBM', 'dgMkBS', 'cwTrxA']) if ($(id)) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
     // Pixels de l'écran (pas les pixels CSS) : sur un écran à 125 / 150 %, la cascade reste aussi fine que l'écran le permet,
     // et une cascade agrandie avec la poignée montre plus d'historique au lieu d'étirer les lignes
     const dpr = Math.min(4, Math.max(1, (window.devicePixelRatio || 1) * (window.RSZOOM ? window.RSZOOM.z() : 1)));
@@ -1137,7 +1144,8 @@
     ticks(c, w);
     if (tab === 'rtty') return drawRttyMarks(c, w);
     if (tab === 'wspr') return drawWsprMarks(c, w);
-    if (tab === 'cw') { drawCwMarks(c, w); if (ftDual && wfFB.sctx) drawCwMarks(wfFB.sctx, wfFB.cw, 'B'); return; }
+    if (tab !== 'cw') for (const id of ['cwTrxA', 'cwTrxB']) if ($(id)) $(id).hidden = true;
+    if (tab === 'cw') { drawCwMarks(c, w); if (ftDual && wfFB.sctx) drawCwMarks(wfFB.sctx, wfFB.cw, 'B'); else if ($('cwTrxB')) $('cwTrxB').hidden = true; return; }
     if (tab === 'sstv') return drawSstvMarks(c, w);
     drawFlags(c, w);
     if (ftDual && wfFB.sctx && flagsB) {
@@ -1567,7 +1575,8 @@
       const el = $(id);
       const fOf = (e) => {
         const rc = el.getBoundingClientRect();
-        return WF_LO + Math.max(0, Math.min(1, (e.clientX - rc.left) / (rc.width || 1))) * WF_MAX_HZ;
+        const V = ftV(side);
+        return V.lo + Math.max(0, Math.min(1, (e.clientX - rc.left) / (rc.width || 1))) * V.span;
       };
       el.addEventListener('pointerdown', (e) => {
         if (tab !== 'cw' || e.button !== 0 || e.shiftKey) return;
@@ -2356,7 +2365,7 @@
   // anchor : { f, x } = garder la fréquence audio f sous la même position x (0–1) de la cascade (zoom à la molette)
   let ftZoomAt = 0;
   function ftZoom(side, e) {
-    if (tab !== 'ftx' || detached) return;
+    if (ZOOM_TABS.indexOf(tab) < 0 || detached) return;
     e.preventDefault();
     const now = Date.now();
     if (now - ftZoomAt < 90 || !e.deltaY) return; // pavé tactile : un cran à la fois
@@ -2366,17 +2375,18 @@
     const x = Math.max(0, Math.min(1, (e.clientX - rc.left) / (rc.width || 1)));
     const f = cur.lo + x * cur.span;
     let span = Math.round(cur.span * (e.deltaY > 0 ? 0.75 : 1 / 0.75) / 10) * 10;
-    span = Math.max(300, Math.min(3000, span));
+    span = Math.max(tab === 'cw' ? 200 : 300, Math.min(3000, span)); // CW : jusqu'à 200 Hz de large
     if (span === cur.span) return;
     const lo = span >= 3000 ? 0 : Math.max(0, Math.min(3000 - span, Math.round((f - x * span) / 10) * 10));
     ftSetView(side, lo, span);
   }
   function ftSetView(side, lo, span) {
-    const V = side === 'B' ? ftViewB : ftViewA;
-    const oldLo = side === 'B' ? ftViewB.lo : WF_LO, oldSpan = side === 'B' ? ftViewB.span : WF_MAX_HZ;
+    const V = zoomView(side);
+    if (!V) return;
+    const oldLo = side === 'B' ? V.lo : WF_LO, oldSpan = side === 'B' ? V.span : WF_MAX_HZ;
     V.lo = lo;
     V.span = span;
-    store.set(side === 'B' ? 'ftviewb' : 'ftviewa', JSON.stringify(V));
+    store.set((tab === 'cw' ? 'cwview' : 'ftview') + (side === 'B' ? 'b' : 'a'), JSON.stringify(V));
     if (side !== 'B') applySpan(true);
     else if (wfFB.ctx) {
       // Historique de la cascade B recalé sur la nouvelle plage
@@ -2395,10 +2405,10 @@
   }
   function applySpan(force, anchor) {
     const rt = tab === 'rtty' && !detached;
-    const ftz = tab === 'ftx' && !detached; // FT8 / FT4 / FT2 : plage choisie à la molette
+    const ftz = ZOOM_TABS.indexOf(tab) >= 0 && !detached ? zoomView('A') : null; // FT8 / FT4 / FT2, CW : plage choisie à la molette
     const top = rt ? rtSpan : 3000;
-    const span = rt ? top / rtZoom : ftz ? ftViewA.span : 3000;
-    let lo = ftz ? ftViewA.lo : 0;
+    const span = rt ? top / rtZoom : ftz ? ftz.span : 3000;
+    let lo = ftz ? ftz.lo : 0;
     if (rt && span < top) {
       const f = rts[rtTx].f;
       lo = WF_LO;
@@ -2898,18 +2908,130 @@
   function drawCwMarks(c, w, side) {
     const B = side === 'B';
     const k = B ? cwcB : cwc;
-    const x0 = ((k.f - k.bw / 2) / WF_MAX_HZ) * w;
+    const V = ftV(side); // plage affichée (zoom à la molette)
+    const X = (f) => (f - V.lo) / V.span;
+    const x0 = X(k.f - k.bw / 2) * w;
     c.fillStyle = 'rgba(242, 207, 74, .35)';
-    c.fillRect(x0, 14, Math.max(2, (k.bw / WF_MAX_HZ) * w), 16);
+    c.fillRect(x0, 14, Math.max(2, (k.bw / V.span) * w), 16);
     c.fillStyle = '#F2CF4A';
-    c.fillRect((k.f / WF_MAX_HZ) * w - 1, 12, 2, 18);
+    c.fillRect(X(k.f) * w - 1, 12, 2, 18);
     const el = $(B ? 'ftMkRxB' : 'dgMkRx');
-    el.style.display = '';
-    el.style.left = ((k.f - k.bw / 2) / WF_MAX_HZ) * 100 + '%';
-    el.style.width = (k.bw / WF_MAX_HZ) * 100 + '%';
+    el.style.display = k.f + k.bw / 2 < V.lo || k.f - k.bw / 2 > V.lo + V.span ? 'none' : '';
+    el.style.left = X(k.f - k.bw / 2) * 100 + '%';
+    el.style.width = (k.bw / V.span) * 100 + '%';
     if (B) $('ftMkTxB').style.display = 'none';
     else $('dgMkTx').style.width = '0';
     $(B ? 'cwFB' : 'cwF').textContent = Math.round(k.f);
+    cwTrxDraw(c, w, side);
+  }
+  // Filtre du TRX (WIDTH / NAR, IF SHIFT) sur les cascades CW : deux barres bleu clair, centrées sur la tonalité CW (pitch),
+  // qui suivent le TRX ; les glisser (ou Ctrl + molette sur la cascade) règle la largeur BW du TRX
+  const TRXBW_PAGE = /^\/ftdx101/.test(location.pathname);
+  const cwTrxPend = { A: null, B: null }; // largeur choisie ici, le temps que le TRX la relise
+  function cwTrxBw(side) {
+    if (!TRXBW_PAGE || !api || !api.rig || !api.state) return null;
+    const st = api.state(), r = st && st.radio, R = api.rig();
+    const B = side === 'B';
+    if (!r || !R || !R.widthTable || (B && !ftDual)) return null;
+    const md = (B ? r.modeB : r.mode) || '';
+    if (!/^CW/.test(md)) return null;
+    const t = R.widthTable(md);
+    if (!t || !t.length) return null;
+    const p = cwTrxPend[B ? 'B' : 'A'];
+    const pend = p && Date.now() - p.at < 2500;
+    const v = pend ? p.v : Number(r[B ? 'widthB' : 'width']) || 0;
+    const nar = !pend && !!r[B ? 'narrowB' : 'narrow'];
+    const hz = nar ? 500 : v >= 1 && t[v - 1] ? t[v - 1] : 3000; // NAR : 500 Hz en CW ; WIDTH 00 (défaut) : 3000 Hz
+    const sh = (Number(r[B ? 'shiftB' : 'shift']) || 0) * (/-L$/.test(md) ? -1 : 1);
+    return { hz, c: (Number(r.cwPitch) || 600) + sh, t, v: nar ? t.indexOf(500) + 1 : v >= 1 ? v : t.indexOf(3000) + 1, nar };
+  }
+  function cwTrxDraw(c, w, side) {
+    const el = $(side === 'B' ? 'cwTrxB' : 'cwTrxA');
+    if (!el) return;
+    const b = cwTrxBw(side);
+    if (!b) { el.hidden = true; return; }
+    const V = ftV(side);
+    const l = (b.c - b.hz / 2 - V.lo) / V.span, r = (b.c + b.hz / 2 - V.lo) / V.span;
+    if (r < 0 || l > 1) { el.hidden = true; return; }
+    el.hidden = false;
+    const L = Math.max(0, l), Rr = Math.min(1, r);
+    el.style.left = L * 100 + '%';
+    el.style.width = (Rr - L) * 100 + '%';
+    el.classList.toggle('nol', l < 0);
+    el.classList.toggle('nor', r > 1);
+    el.classList.toggle('ro', !api.iControl());
+    el.querySelector('span').textContent = (b.nar ? 'NAR ' : 'BW ') + b.hz + ' Hz';
+    c.fillStyle = '#5fd8ff';
+    for (const x of [l, r]) if (x >= 0 && x <= 1) c.fillRect(Math.round(x * w) - 1, 30, 2, SCALE_H - 30);
+  }
+  function cwTrxSet(side, v) {
+    const st = api.state(), r = st && st.radio;
+    if (!r || !api.iControl()) return api.say('Prenez la main pour régler le filtre (BW) du TRX.', 'warn');
+    if ((st.ptt && st.ptt.active) || r.tx) return api.say('Émission en cours : filtre du TRX inchangé.', 'warn');
+    const B = side === 'B';
+    const C = (api.rig().CONTROL) || {};
+    const nar = B ? 'narrowB' : 'narrow';
+    if (r[nar] && C[nar]) api.send({ t: 'set', ctl: nar, value: 0 }); // NAR imposerait sa largeur
+    api.send({ t: 'set', ctl: B ? 'widthB' : 'width', value: v });
+    cwTrxPend[B ? 'B' : 'A'] = { v, at: Date.now() };
+    drawScale();
+  }
+  let cwTrxWheelAt = 0;
+  function cwTrxWheel(side, e) {
+    e.preventDefault();
+    const now = Date.now();
+    if (now - cwTrxWheelAt < 120 || !e.deltaY) return;
+    cwTrxWheelAt = now;
+    const b = cwTrxBw(side);
+    if (!b) return api && api.say('Filtre du TRX : ce VFO n’est pas en CW.', 'warn');
+    const v = Math.max(1, Math.min(b.t.length, b.v + (e.deltaY > 0 ? -1 : 1))); // vers soi : plus étroit
+    if (v !== b.v) cwTrxSet(side, v);
+  }
+  function cwTrxDragInit() {
+    for (const side of ['A', 'B']) {
+      const el = $(side === 'B' ? 'cwTrxB' : 'cwTrxA');
+      if (!el) continue;
+      el.querySelectorAll('b').forEach((h) => {
+        let drag = null;
+        h.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          e.stopPropagation();
+          if (!api || !api.iControl()) return api && api.say('Prenez la main pour régler le filtre (BW) du TRX.', 'warn');
+          const b = cwTrxBw(side);
+          if (!b) return;
+          drag = { b, v: b.v, id: e.pointerId };
+          try { h.setPointerCapture(e.pointerId); } catch (x) { /* */ }
+        });
+        h.addEventListener('pointermove', (e) => {
+          if (!drag || e.pointerId !== drag.id) return;
+          const rc = $(side === 'B' ? 'ftWfB' : 'dgWf').getBoundingClientRect();
+          const V = ftV(side);
+          const f = V.lo + ((e.clientX - rc.left) / (rc.width || 1)) * V.span;
+          const want = 2 * Math.abs(f - drag.b.c);
+          let best = 0;
+          drag.b.t.forEach((x, i) => { if (Math.abs(x - want) < Math.abs(drag.b.t[best] - want)) best = i; });
+          if (best + 1 === drag.v) return;
+          drag.v = best + 1;
+          cwTrxPend[side] = { v: drag.v, at: Date.now() }; // aperçu pendant le glisser
+          drawScale();
+        });
+        const end = () => {
+          if (!drag) return;
+          const d = drag;
+          drag = null;
+          if (d.v !== d.b.v) cwTrxSet(side, d.v);
+          else { cwTrxPend[side] = null; drawScale(); }
+        };
+        h.addEventListener('pointerup', end);
+        h.addEventListener('pointercancel', end);
+      });
+    }
+  }
+  let cwTrxKey = '';
+  function cwTrxTick() {
+    const k = JSON.stringify([cwTrxBw('A'), ftDual && cwTrxBw('B'), api && api.iControl()]);
+    if (k !== cwTrxKey) { cwTrxKey = k; drawScale(); }
   }
   // Clic sur la cascade : calage sur le signal le plus fort à ±60 Hz (sinon, là où l'on a cliqué)
   function setCwF(f, snap, side) {
@@ -4892,15 +5014,16 @@
           setCwF(fAtB(e), true, 'B');
         });
         $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'cw') setCwF(fAtB(e), false, 'B'); else setTx(fAtB(e), 'B'); });
-        $(id).addEventListener('wheel', (e) => ftZoom('B', e), { passive: false });
+        $(id).addEventListener('wheel', (e) => { if (tab === 'cw' && e.ctrlKey) cwTrxWheel('B', e); else ftZoom('B', e); }, { passive: false });
       }
       // FT8 / FT4 / FT2 : molette sur la cascade (ou son échelle) = zoom autour de la souris (vers soi : plus étroit)
-      for (const id of ['dgWf', 'dgScale']) $(id).addEventListener('wheel', (e) => { if (tab === 'ftx') ftZoom('A', e); }, { passive: false });
+      for (const id of ['dgWf', 'dgScale']) $(id).addEventListener('wheel', (e) => { if (tab === 'cw' && e.ctrlKey) cwTrxWheel('A', e); else if (ZOOM_TABS.indexOf(tab) >= 0) ftZoom('A', e); }, { passive: false });
       initRtty();
       initContest();
       initWspr();
       initJtty();
       initCw();
+      cwTrxDragInit();
       initSstv();
       initMsgs();
       // Touches F1 à F12 dans la fenêtre RTTY : macros (comme FLDIGI)
@@ -4944,7 +5067,7 @@
         if (BM_TABS.indexOf(tab) >= 0) { bmPlace(); bmDraw(); }
         if (tab === 'wspr') { wsClock(); if (applyFtDual()) announce(); ftDials(); }
         if (tab === 'jtty') { jtStatus(); if (applyFtDual()) announce(); ftDials(); }
-        if (tab === 'cw') { cwStatus(); if (applyFtDual()) announce(); ftDials(); }
+        if (tab === 'cw') { cwStatus(); if (applyFtDual()) announce(); ftDials(); cwTrxTick(); }
         if (tab === 'sstv') sstvStatus();
         if (tab === 'sync') drawSync();
       }, 500);

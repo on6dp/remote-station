@@ -79,8 +79,8 @@
       { id: 'lock', x: 874, y: 415, w: 44, h: 17, tip: 'LOCK : verrouille le grand bouton du TRX (MAIN ou SUB, celui qui est sélectionné)', act: { local: 'lock' },
         leds: [{ x: 889.5, y: 403.5, w: 12.5, h: 4.5, color: '#ff9a1f', on: (s) => !!(s.vfoSel === 1 ? s.lockB : s.lock), bright: (s) => !!(s.vfoSel === 1 ? s.lockB : s.lock) }] },
       // RX / TX / MAIN⇆SUB au-dessus du grand bouton
-      { id: 'rxMain', x: 937, y: 192, w: 63, h: 18, tip: 'RX MAIN : le récepteur MAIN est toujours en service', act: info('Le récepteur MAIN reste toujours en service.'),
-        leds: [{ x: 955, y: 190, w: 31, h: 4, color: '#3ddc5a', on: (s) => !!s.connected }] },
+      { id: 'rxMain', x: 937, y: 192, w: 63, h: 18, tip: 'RX MAIN : récepteur MAIN en service / coupé (voyant vert = en réception), comme la touche RX du TRX', act: { toggle: 'mainMute' },
+        leds: [{ x: 955, y: 190, w: 31, h: 4, color: '#3ddc5a', on: (s) => !!s.connected && !s.mainMute }] },
       { id: 'txMain', x: 1012, y: 192, w: 45, h: 18, tip: 'TX MAIN : émission sur le MAIN', act: { set: ['txVfo', 0] },
         leds: [{ x: 1024, y: 190, w: 20, h: 4, color: '#ff3b30', on: (s, L) => L.txSide(s) === 'A', bright: (s, L) => !!s.tx && L.txSide(s) === 'A' }] },
       { id: 'swap', x: 1068, y: 192, w: 95, h: 18, tip: 'MAIN ⇄ SUB : échange les fréquences des deux VFO ; appui d’au moins 1 s : copie MAIN → SUB (A → B)', act: { action: 'swap', long: { action: 'aToB' } } },

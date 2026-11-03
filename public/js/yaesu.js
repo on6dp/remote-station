@@ -352,8 +352,8 @@
           else if (c === 'MD1') out.push('MD1' + this.modeB + ';');
           else if ((m = /^MD0([0-9A-Z])$/.exec(c)) && MODES_ALL[m[1]]) this.mode = m[1];
           else if ((m = /^MD1([0-9A-Z])$/.exec(c)) && MODES_ALL[m[1]]) this.modeB = m[1];
-          else if (c === 'FR') out.push('FR' + (this.single ? '01' : '00') + ';');
-          else if (c === 'FR00' || c === 'FR01') this.single = c === 'FR01';
+          else if (c === 'FR') out.push('FR' + (this.mainMute ? '1' : '0') + (this.single ? '1' : '0') + ';');
+          else if ((m = /^FR([01])([01])$/.exec(c))) { this.mainMute = m[1] === '1'; this.single = m[2] === '1'; } // FTDX101 : 1er chiffre = MAIN coupé
           else if (c === 'SM1') { /* FTX-1 réel : pas de réponse à SM1 */ }
           else if (c === 'RM2') out.push('RM2' + pad(this.single || this.tx ? 0 : Math.round(40 + 25 * Math.sin(this.t * 0.7)), 3) + '000;');
           else if (c === 'SM0') {

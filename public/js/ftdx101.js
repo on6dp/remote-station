@@ -237,8 +237,9 @@
       { cmd: 'NB0;', re: /^NB0([01])$/, parse: (m) => ({ nb: +m[1] }), sim: 'NB00' },
       { cmd: 'NR0;', re: /^NR0([01])$/, parse: (m) => ({ nr: +m[1] }), sim: 'NR00' },
       { cmd: 'AN0;', re: /^AN0([1-3])\d?$/, parse: (m) => ({ ant: +m[1] }), sim: 'AN010' },
-      // Double réception : FR00 = MAIN et SUB en réception, FR01 = SUB coupé
-      { cmd: 'FR;', re: /^FR0([01])$/, parse: (m) => ({ dualRx: m[1] === '0' ? 1 : 0 }), sim: 'FR00' },
+      // FUNCTION RX : FR P1 P2 — P1 = récepteur MAIN (0 en réception, 1 coupé), P2 = récepteur SUB (idem)
+      // FR00 = MAIN et SUB en réception (double réception), FR01 = SUB coupé, FR10 = MAIN coupé (SUB seul)
+      { cmd: 'FR;', re: /^FR([01])([01])$/, parse: (m) => ({ dualRx: m[2] === '0' ? 1 : 0, mainMute: m[1] === '1' ? 1 : 0 }), sim: 'FR00' },
       // Côté SUB (VFO B) : P1 = 1, réglé directement
       { cmd: 'NB1;', re: /^NB1([01])$/, parse: (m) => ({ nbB: +m[1] }), sim: 'NB10' },
       { cmd: 'NR1;', re: /^NR1([01])$/, parse: (m) => ({ nrB: +m[1] }), sim: 'NR10' },
@@ -304,7 +305,7 @@
     ],
     fastExtra: ['FR;'], // DUAL RX relu à chaque cycle : la page des modes numériques passe tout de suite en double réception
     extraQueries: ['RF0;', 'RF1;', 'ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
-    extraStateKeys: ['ssSpdA', 'ssPeakA', 'ssMarkerA', 'ssColorA', 'ssLevelA', 'ssSpanA', 'ssSpdB', 'ssPeakB', 'ssMarkerB', 'ssColorB', 'ssLevelB', 'ssSpanB', 'fastA', 'fastB', 'clarA', 'ritA', 'xitA', 'clarB', 'ritB', 'xitB', 'lockB', 'lockRaw', 'fastStep', 'moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'cwPitch'],
+    extraStateKeys: ['ssSpdA', 'ssPeakA', 'ssMarkerA', 'ssColorA', 'ssLevelA', 'ssSpanA', 'ssSpdB', 'ssPeakB', 'ssMarkerB', 'ssColorB', 'ssLevelB', 'ssSpanB', 'fastA', 'fastB', 'clarA', 'ritA', 'xitA', 'clarB', 'ritB', 'xitB', 'lockB', 'lockRaw', 'fastStep', 'moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'cwPitch', 'mainMute'],
     subBadges: true,
     // CW : mémoire 1 du manipulateur (écrasée), lue par KY6 (« Message Keyer 1 Playback », manuel CAT 1912-D) ;
     // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
@@ -347,7 +348,9 @@
       { id: 'micEq', g: 'tx', sec: 'tx', label: 'MIC EQ', type: 'toggle', write: (v) => 'PR1' + (v ? 2 : 1) + ';' },
       { id: 'nbLvl', g: 'flt', sec: 'dsp', label: 'Niveau NB', type: 'level', min: 0, max: 10, step: 1, write: (v) => 'NL0' + pad(v, 3) + ';' },
       { id: 'nrLvl', g: 'flt', sec: 'dsp', label: 'Niveau DNR', type: 'level', min: 1, max: 15, step: 1, write: (v) => 'RL0' + pad(v, 2) + ';' },
-      { id: 'dualRx', g: 'vfo', label: 'DUAL RX', type: 'toggle', write: (v) => 'FR0' + (v ? '0' : '1') + ';' },
+      { id: 'dualRx', g: 'vfo', label: 'DUAL RX', type: 'toggle', write: (v, s) => 'FR' + (s && s.mainMute ? '1' : '0') + (v ? '0' : '1') + ';' },
+      // RX MAIN : récepteur MAIN coupé / en service (le SUB garde son état)
+      { id: 'mainMute', g: 'vfo', label: 'RX MAIN coupé', type: 'toggle', write: (v, s) => 'FR' + (v ? '1' : '0') + (s && s.dualRx === 0 ? '1' : '0') + ';' },
       // Filtre de toit (R.FLT) : 12 kHz (large) … 300 Hz ; 1,2 kHz et 300 Hz en option selon le TRX (refusés s'il ne les a pas)
       { id: 'roof', g: 'flt', label: 'ROOFING (VFO A)', type: 'select', options: [[1, '12k'], [2, '3k'], [3, '1.2k'], [4, '600'], [5, '300']], write: (v) => 'RF0' + v + ';' },
       { id: 'roofB', g: 'flt', label: 'ROOFING (VFO B)', type: 'select', options: [[1, '12k'], [2, '3k'], [3, '1.2k'], [4, '600'], [5, '300']], write: (v) => 'RF1' + v + ';' },
