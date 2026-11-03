@@ -19,7 +19,8 @@
     single: true,
     lcd: { x: 415, y: 92, w: 600, h: 352 },
     // Écran un peu moins haut que celui du FTDX10 : scope et rangée du bas remontés
-    lay: { scopeH: 150, botY: 308, botH: 38 },
+    // Écran Icom : en-tête (mode, FIL, voyants, S/Po, fréquence) en haut, puis le scope et les mesures jusqu'en bas (pas de rangée de touches)
+    lay: { scopeY: 108, scopeH: 238, botY: 400, botH: 0 },
     // Cases de l'écran (pas d'ANT ni de R.FIL sur l'IC-7300)
     cells: [['ATT', 'att'], ['P.AMP', 'preamp'], ['FILTER', 'fil'], ['AGC', 'agc']],
     // Rangée du bas de l'écran
@@ -45,7 +46,7 @@
       // Sous l'écran
       { id: 'menu', x: 420, y: 517, w: 95, h: 43, tip: 'MENU : écran MENU (KEYER, RTTY, SCOPE, AUDIO, MODE, BAND…) ; le mode se change aussi en cliquant sur le mode à l’écran', act: { local: 'icomMenu' } },
       { id: 'function', x: 542, y: 517, w: 98, h: 43, tip: 'FUNCTION : menu des fonctions sur l’écran', act: { local: 'func' }, led: (s, L) => L.func },
-      { id: 'mscope', x: 665, y: 517, w: 97, h: 43, tip: 'M.SCOPE : le scope sous la fréquence ⇄ les mesures (ALC, COMP, SWR, Id, Vd, Po)', act: { local: 'scopeMeter' } },
+      { id: 'mscope', x: 665, y: 517, w: 97, h: 43, tip: 'M.SCOPE : grand écran des mesures (grande fréquence, S/Po, ALC, COMP, SWR, Id, Vd, TEMP, sans scope) ; un 2e appui : retour à l’écran par défaut', act: { local: 'scopeMeter' } },
       { id: 'quick', x: 790, y: 517, w: 95, h: 43, tip: 'QUICK : QUICK MENU (BAND, SPLIT, A=B, A/B, TUNER, TUNE, LOCK, 3DSS)', act: { local: 'quickMenu' } },
       { id: 'exit', x: 912, y: 517, w: 98, h: 43, tip: 'EXIT : ferme le tableau ou le menu ouvert', act: { local: 'exit' } },
       // À droite de l'écran

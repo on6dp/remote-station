@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.7** — IC-7300 : écran à la manière Icom — en-tête TUNE / TX, mode en badge bleu, dessin du filtre, FIL, heure, case MULTI / RIT ΔTX, badge SPLIT, voyants, bargraph S/Po, grande fréquence, RIT / ΔTX ou autre VFO à droite (SPLIT : VFO d'émission en grand pendant l'émission) ; plus de rangée CENTER / HOLD / 3DSS… ni de cases Yaesu ; icônes dans l'écran MENU ; M.SCOPE = grand écran des mesures sans scope (grand S/Po, ALC, COMP, SWR, Id, Vd, TEMP), 2e appui = écran par défaut
 - **0.37.6** — IC-7300 : le décalage RIT / ΔTX s'écrit sous « RIT » dans la case de droite (« RIT » / « 0.21 »), comme sur le TRX ; plus d'inscription au-dessus de la fréquence.
 - **0.37.5** — IC-7300 : RIT / ΔTX comme sur le TRX — « RIT 0.21 », « ΔTX », « RIT ΔTX » (décalage en kHz) au-dessus de la fréquence, et la case en haut à droite s'allume RIT / ΔTX / RIT ΔTX (le bouton MULTI règle alors le décalage).
 - **0.37.4** — IC-7300 : touche VOX/BK-IN — en CW, BK-IN OFF → SEMI → FULL (cadre « BK-IN SEMI »…), en phonie le VOX ne peut qu'être coupé à distance (message s'il est déjà coupé).

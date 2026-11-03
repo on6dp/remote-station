@@ -410,6 +410,46 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
   background: #1b2340; border: 2px solid #e6e9ef; border-radius: 2px; color: #fff; font-family: Verdana, "DejaVu Sans", Arial, sans-serif; pointer-events: none; }
 .fc-icpop[hidden] { display: none; }
 .fc-icpop b { font-weight: 700; }
-#face .lcd-fbox.riton { fill: #e6e9ef; stroke: #fff; } #face .lcd-fbox.riton + .lcd-fboxt { fill: #1a2030; }
+#face .lcd-fbox.riton { fill: none; stroke: none; } #face .lcd-fbox.riton + .lcd-fboxt { fill: #fff; font-size: 13px; }
 #face .lcd-clart.ic { fill: #fff; font-size: 10.5px; }
-#face .lcd-fboxv { fill: #1a2030; font-size: 14px; font-weight: 700; pointer-events: none; }
+#face .lcd-fboxv { fill: #fff; font-size: 17px; font-weight: 700; pointer-events: none; }
+/* IC-7300 : bargraph S/Po */
+#face .spo-lab { fill: #c9d0dc; font-size: 11px; font-weight: 700; }
+#face .spo-num { fill: #e6e9ef; font-size: 10px; font-weight: 700; }
+#face .spo-num.red { fill: #ff3b30; font-size: 13px; }
+#face .spo-red { stroke: #ff3b30; stroke-width: 1.5; }
+#face .spo-frame { fill: #0b1018; stroke: #8a93a6; stroke-width: .8; }
+#face .spo-seg { fill: #232a38; }
+#face .spo-seg.on { fill: #e6e9ef; }
+#face .spo-seg.on.hi { fill: #ff3b30; }
+/* IC-7300 : en-tête de l'écran à la manière Icom */
+#face .ich-tag { fill: none; stroke-width: 1.6; }
+#face .ich-tag.tune { stroke: #c9d0dc; fill: #2a3142; }
+#face .ich-tag.tx { stroke: #ff3b30; }
+#face .ich-tagt { font: 800 12px Arial, sans-serif; pointer-events: none; }
+#face .ich-tagt.tune { fill: #e6e9ef; }
+#face .ich-tagt.tx { fill: #ff3b30; font-size: 14px; }
+#face .ich-mode { fill: #2f6fd6; stroke: #7fb2ff; stroke-width: 1; }
+#face .ich-modet { fill: #fff; font: 700 20px Arial, sans-serif; pointer-events: none; }
+#face .ich-flt { fill: none; stroke: #e6e9ef; stroke-width: 2; }
+#face .ich-fil { fill: #2a3142; stroke: #8a93a6; stroke-width: 1.2; }
+#face .ich-filt { fill: #fff; font: 700 19px Arial, sans-serif; pointer-events: none; }
+#face .ich-clock { fill: #fff; font: 700 21px Arial, sans-serif; }
+#face .ich-tags { fill: #f2cf4a; font: 700 10px Arial, sans-serif; white-space: pre; }
+#face .ich-vfo { fill: #fff; font: 700 17px Arial, sans-serif; }
+#face .ich-freq { fill: #fff; font: 700 46px Arial, sans-serif; letter-spacing: -1px; }
+#face .ich-freq.txv { fill: #ff4a2a; }
+#face .ich-ritl { fill: #fff; font: 700 15px Arial, sans-serif; }
+#face .ich-ritv { fill: #fff; font: 700 26px Arial, sans-serif; }
+#face .ich-tag.split { fill: #f07a1e; stroke: #ffb070; }
+#face .ich-tagt.split { fill: #fff; font-size: 15px; }
+#face .ich-ritv.sub { font-size: 30px; letter-spacing: -0.5px; }
+#face .lcd-fbox.icrit { fill: #6b7486; stroke: #b7bfcc; }
+#face .ich-freq.sm { font-size: 40px; }
+#face .ich-ritv.sub { font-size: 27px; }
+/* IC-7300 : grand écran des mesures (M.SCOPE) */
+#face .ich-freq.big { font-size: 74px; letter-spacing: -2px; }
+#face .ich-vfo.big { font-size: 20px; }
+#face .ich-tags.big { font-size: 15px; fill: #e6e9ef; }
+#face .spo-lab.big { font-size: 14px; }
+#face .spo-num.big { font-size: 12px; font-weight: 700; }
