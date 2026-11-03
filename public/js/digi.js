@@ -1286,13 +1286,16 @@
   }
   // Fréquence porteuse (VFO) de chaque décodeur RTTY : le VFO reçu ; en double réception (FTX-1), B = VFO-B
   // sign : +1 en USB / DATA-U (fréquence = porteuse + audio), −1 en LSB / DATA-L
+  const rtDialPend = { A: null, B: null }; // fréquence du VFO envoyée pendant un accord (en attendant la relecture)
   function rtDialOf(ch) {
     const st = api && api.state && api.state();
     const r = st && st.radio;
     if (!r) return null;
     const dual = r.dualRx === 1 && r.freq && r.freqB;
     const useB = dual ? ch === 1 : r.vfoSel === 1 && !!r.freqB;
-    const hz = Number(useB ? r.freqB : r.freq) || 0;
+    let hz = Number(useB ? r.freqB : r.freq) || 0;
+    const pd = rtDialPend[useB ? 'B' : 'A'];
+    if (pd && Date.now() - pd.t < 1500) hz = pd.hz; // accord en cours : la fréquence envoyée, pas encore relue
     if (!hz) return null;
     const md = String((useB ? r.modeB : r.mode) || '');
     return { hz, vfo: useB ? 'B' : 'A', sign: /LSB|DATA-L|RTTY-L/i.test(md) ? -1 : 1 };
@@ -1331,19 +1334,19 @@
     c.beginPath(); c.moveTo(xc - 5, H - 1); c.lineTo(xc + 5, H - 1); c.lineTo(xc, H - 7); c.closePath(); c.fill();
   }
   // Accord du VFO depuis une cascade RTTY (glisser / molette) : les décodeurs restent sur leurs signaux (même fréquence réelle)
-  function rtSetDial(d, nd) {
-    const delta = -d.sign * (nd - d.hz); // déplacement des signaux dans la cascade (Hz audio)
-    if (!delta) return;
-    api.setFreq(nd, d.vfo);
-    rts.forEach((x, ch) => {
-      const dd = rtDialOf(ch);
-      if (!dd || dd.vfo !== d.vfo) return;
-      const f = x.f + delta;
-      if (f >= 200 + x.shift / 2 && f <= WF_TOP - 100 - x.shift / 2) x.f = f;
-    });
-    saveRtty(true);
-    applySpan();
+  // Accord du VFO (règle des fréquences, Maj + glisser) : les repères des décodeurs restent où ils sont (même fréquence
+  // audio) ; ce sont les signaux qui défilent. On les recale ensuite dans la cascade (comme FLDIGI, MixW).
+  // Fréquence affichée tout de suite (sans attendre la relecture du TRX) : règle fluide pendant qu'on tourne ou glisse
+  function rtDialShow(vfo, hz) {
+    rtDialPend[vfo] = { hz, t: Date.now() };
     drawScale();
+    rtHeads();
+    bmDraw();
+  }
+  function rtSetDial(d, nd, noSend) {
+    if (nd === d.hz && !noSend) return;
+    rtDialShow(d.vfo, nd);
+    if (!noSend) api.setFreq(nd, d.vfo);
   }
   function rtTuneOk() {
     if (!api || !api.iControl()) { api && api.say('Prenez la main pour accorder le TRX.', 'warn'); return false; }
@@ -1503,7 +1506,8 @@
         // On « attrape » la bande : glisser à droite = les signaux suivent la souris (le VFO descend en USB)
         const nd = Math.round((drag.d.hz - drag.d.sign * (dx / drag.w) * WF_MAX_HZ) / 10) * 10;
         const now = Date.now();
-        if (nd !== drag.cur && now - drag.t > 120) { rtSetDial(Object.assign({}, drag.d, { hz: drag.cur }), nd); drag.cur = nd; drag.t = now; }
+        if (nd !== drag.shown) { drag.shown = nd; rtSetDial(Object.assign({}, drag.d, { hz: drag.cur }), nd, true); } // règle tout de suite
+        if (nd !== drag.cur && now - drag.t > 60) { api.setFreq(nd, drag.d.vfo); drag.cur = nd; drag.t = now; }
         drag.pending = nd;
       });
       const end = () => {
