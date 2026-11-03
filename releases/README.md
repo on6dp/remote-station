@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.4 | [RemoteStation-Setup-0.37.4.exe](0.37.4/RemoteStation-Setup-0.37.4.exe) | [remote-station-0.37.4.tar.gz](0.37.4/remote-station-0.37.4.tar.gz) | IC-7300 : VOX/BK-IN — [empreintes SHA-256](0.37.4/SHA256SUMS.txt) |
 | 0.37.3 | [RemoteStation-Setup-0.37.3.exe](0.37.3/RemoteStation-Setup-0.37.3.exe) | [remote-station-0.37.3.tar.gz](0.37.3/remote-station-0.37.3.tar.gz) | IC-7300 : cadres de réglage, NOTCH AN/MN — [empreintes SHA-256](0.37.3/SHA256SUMS.txt) |
 | 0.37.2 | [RemoteStation-Setup-0.37.2.exe](0.37.2/RemoteStation-Setup-0.37.2.exe) | [remote-station-0.37.2.tar.gz](0.37.2/remote-station-0.37.2.tar.gz) | IC-7300 : écran METER, mode VFO-B lisible — [empreintes SHA-256](0.37.2/SHA256SUMS.txt) |
 | 0.37.1 | [RemoteStation-Setup-0.37.1.exe](0.37.1/RemoteStation-Setup-0.37.1.exe) | [remote-station-0.37.1.tar.gz](0.37.1/remote-station-0.37.1.tar.gz) | IC-7300 : MENU, FUNCTION, MULTI façon Icom — [empreintes SHA-256](0.37.1/SHA256SUMS.txt) |

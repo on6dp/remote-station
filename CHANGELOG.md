@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.4** — IC-7300 : touche VOX/BK-IN — en CW, BK-IN OFF → SEMI → FULL (cadre « BK-IN SEMI »…), en phonie le VOX ne peut qu'être coupé à distance (message s'il est déjà coupé).
 - **0.37.3** — IC-7300 : sous la fréquence, bande de scope au-dessus des mesures (comme le TRX) ; cadre « P.AMP 1 », « NOTCH MN(MID) », « NB ON »… au milieu de l'écran quand un réglage change, sur la page ou au TRX ; touche NOTCH OFF → AN → MN → OFF comme le TRX (pas d'AN en CW), largeur du notch manuel (WIDE / MID / NAR) lue.
 - **0.37.2** — IC-7300 : sous la fréquence, écran des mesures par défaut comme le METER du TRX (ALC, COMP, SWR, Id, Vd, Po) ; MENU → SCOPE / METER et M.SCOPE pour passer du scope aux mesures. Mode du VFO-B écrit plus grand (IC-7300 et FTDX10).
 - **0.37.1** — IC-7300, écrans Icom : MENU comme sur le TRX (2 pages de 5 × 2 touches : SCOPE, AUDIO, VOICE / KEYER en CW / DECODE en RTTY, METER, SWR, MEMORY, SCAN, MPAD, RECORD, SET ; PRESET, SET ; ① ② ↩), FUNCTION à la manière Icom (AGC, NB, NR, NOTCH OFF/AN/MN, P.AMP, ATT, IP+, COMP, VOX, BK-IN, MONI, TUNER, LOCK, SPLIT, A=B et les niveaux), MULTI poussé = menu MULTI du mode, mode changé en cliquant sur le mode à l'écran, QUICK MENU. Pilote IC-7300 : CW PITCH, KEY SPEED, MONITOR, BK-IN, IP+, VOX GAIN, ANTI VOX lus et réglables.

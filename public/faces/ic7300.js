@@ -35,7 +35,7 @@
       { id: 'power', x: 43, y: 55, w: 99, h: 42, tip: 'POWER : la mise en marche se fait au club', act: info('Le TRX ne s’allume et ne s’éteint qu’au club.') },
       { id: 'transmit', x: 43, y: 128, w: 102, h: 37, tip: 'TRANSMIT : émission maintenue (clic : émission, clic suivant : réception) ; avec votre micro si « MICRO » est actif', act: { local: 'mox' }, led: (s, L) => !!L.mox, ledColor: '#ff3b30' },
       { id: 'tuner', x: 43, y: 193, w: 102, h: 35, tip: 'TUNER : coupleur d’antenne en service / hors service ; appui d’au moins 1 s : accord (émission courte, avec la main)', act: { toggle: 'tuner', long: { action: 'tune' } }, led: (s) => !!(s.tuner || s.tuning), ledColor: '#ff8a1f' },
-      { id: 'vox', x: 43, y: 255, w: 102, h: 37, tip: 'VOX/BK-IN : VOX (ne peut être que coupé à distance)', act: { toggle: 'vox' }, led: (s) => !!s.vox },
+      { id: 'vox', x: 43, y: 255, w: 102, h: 37, tip: 'VOX/BK-IN : en CW, BK-IN OFF → SEMI → FULL ; en phonie, VOX (à distance, il ne peut être que coupé)', act: { local: 'voxBk' }, led: (s) => (/^CW/.test(s.mode || '') ? !!s.bkin : !!s.vox) },
       { id: 'pamp', x: 172, y: 232, w: 78, h: 36, tip: 'P.AMP/ATT : préampli OFF → P.AMP1 → P.AMP2 ; appui d’au moins 1 s : ATT 20 dB', act: { cycle: 'preamp', long: { toggle: 'att' } }, led: (s) => !!(s.preamp || s.att) },
       { id: 'notch', x: 270, y: 232, w: 75, h: 36, tip: 'NOTCH : OFF → AN (automatique) → MN (manuel) → OFF, comme sur le TRX (pas d’AN en CW)', act: { local: 'notchCycle' }, led: (s) => !!(s.notch || s.dnf) },
       { id: 'nb', x: 172, y: 282, w: 78, h: 36, tip: 'NB — appui d’au moins 1 s : niveau NB', act: { toggle: 'nb', long: { pop: 'nbLvl' } }, led: (s) => !!s.nb },

@@ -151,6 +151,13 @@
     if (a.local === 'expand') return toggleExpand();
     if (a.local === 'scopeMeter') return setIcMeter(!L.icMeter);
     if (a.local === 'notchCycle') return needControl() && notchCycle(s);
+    // VOX/BK-IN de l'IC-7300 : en CW le BK-IN (OFF → SEMI → FULL) reste libre ; le VOX ne peut être que coupé à distance
+    if (a.local === 'voxBk') {
+      if (!needControl()) return;
+      if (/^CW/.test(L.activeMode(s) || '') && R.CONTROL.bkin) return setCtl('bkin', ((s.bkin || 0) + 1) % 3);
+      if (s.vox) return setCtl('vox', 0);
+      return say('VOX : à distance, il ne peut pas être mis en service (seulement coupé) ; le BK-IN se règle en CW.', 'warn', 5000);
+    }
     if (a.local === 'exit') { if (L.bandMenu) closeBandMenu(); if (L.modeMenu) closeModeMenu(); for (const k of ['icomMenu', 'quickMenu']) if (L[k]) closeGrid(k); L.multiMenu = false; if (L.func) L.func = false; return render(); }
     if (a.local === 'bandUp' || a.local === 'bandDown') {
       // Bande suivante / précédente (IC-7300 : touches ▲ ▼)
