@@ -366,4 +366,4 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 @keyframes rsBlink { 0%, 49% { background: #f5ff00; color: #10140a; } 50%, 100% { background: #10140a; color: #f5ff00; } }
 .dg-toast:not(:empty), .fc-msg:not(:empty) { color: #f5ff00; font-weight: 700; font-size: 14px; border: 2px solid #f5ff00 !important; box-shadow: 0 0 12px rgba(245, 255, 0, .45); }
 .dg-toast.error:not(:empty), .fc-msg.error:not(:empty) { border-color: #ff5a4a !important; }
-.dg-toast.blink:not(:empty), .fc-msg.blink:not(:empty) { animation: rsBlink .5s linear 6; }
+.dg-toast.blink:not(:empty), .fc-msg.blink:not(:empty) { animation: rsBlink .5s linear 2; }

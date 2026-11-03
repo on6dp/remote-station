@@ -1668,4 +1668,19 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 @keyframes rsBlink { 0%, 49% { background: #f5ff00; color: #10140a; } 50%, 100% { background: #10140a; color: #f5ff00; } }
 .dg-toast:not(:empty), .fc-msg:not(:empty) { color: #f5ff00; font-weight: 700; font-size: 14px; border: 2px solid #f5ff00 !important; box-shadow: 0 0 12px rgba(245, 255, 0, .45); }
 .dg-toast.error:not(:empty), .fc-msg.error:not(:empty) { border-color: #ff5a4a !important; }
-.dg-toast.blink:not(:empty), .fc-msg.blink:not(:empty) { animation: rsBlink .5s linear 6; }
+.dg-toast.blink:not(:empty), .fc-msg.blink:not(:empty) { animation: rsBlink .5s linear 2; }
+/* RTTY : contest (choix, échange, numéro) et ses macros sous les macros habituelles */
+.rt-contest { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 8px 8px 0; font-size: 11px; color: var(--v2-text-secondary); }
+.rt-contest .rtc-l { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+.rt-contest .rtc-l:first-child { color: #f5ff00; }
+.rt-contest select, .rt-contest input { font: inherit; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #fff; background: var(--v2-bg-input); border: 1px solid var(--v2-border); border-radius: 4px; padding: 3px 6px; }
+.rt-contest #rtcExch { width: 150px; }
+.rt-contest .rtc-s input { width: 42px; text-align: center; }
+.rt-contest:not(.on) .rtc-l:not(:first-child), .rt-contest:not(.on) #rtcNr1 { opacity: .45; }
+.rt-contest.on select { border-color: #f5ff00; color: #f5ff00; }
+.rtc-macros .btn { box-shadow: inset 0 -2px 0 #f5ff00; }
+.rtc-macros[hidden] { display: none; }
+/* Poignée sous les fenêtres de décodage RTTY : leur hauteur */
+.rt-hgrip { display: block; height: 9px; margin: 2px 0; cursor: ns-resize; position: relative; touch-action: none; flex: none; }
+.rt-hgrip::after { content: ''; position: absolute; left: 50%; top: 3px; width: 60px; height: 3px; margin-left: -30px; border-radius: 2px; background: var(--v2-border-panel, #3a4658); }
+.rt-hgrip:hover::after { background: var(--v2-accent-cyan, #00d4ff); }

@@ -18,7 +18,8 @@
   const DIGI = ['FT8', 'FT4', 'FT2', 'JT65', 'JTTY', 'WSPR'];
   const PHONE = ['SSB', 'USB', 'LSB', 'AM', 'FM', 'C4FM'];
   const CONTESTS = ['DX', 'UBA-DX-CW', 'UBA-DX-SSB', 'UBA-SPRING-CW', 'UBA-SPRING-SSB', 'ON-CONTEST', 'IARU-HF', 'CQ-WW-CW', 'CQ-WW-SSB', 'CQ-WPX-CW',
-    'CQ-WPX-SSB', 'ARRL-DX-CW', 'ARRL-DX-SSB', 'WAE-CW', 'WAE-SSB', 'EU-HF', 'IARU-VHF', 'IARU-UHF'];
+    'CQ-WPX-SSB', 'ARRL-DX-CW', 'ARRL-DX-SSB', 'WAE-CW', 'WAE-SSB', 'EU-HF', 'IARU-VHF', 'IARU-UHF',
+    'CQ-WW-RTTY', 'CQ-WPX-RTTY', 'ARRL-RTTY', 'BARTG-RTTY', 'BARTG-SPRINT', 'SARTG-RTTY', 'DARC-WAEDC-RTTY', 'EA-RTTY', 'SP-DX-RTTY', 'VOLTA-RTTY'];
 
   let api = null;
   let root = null;

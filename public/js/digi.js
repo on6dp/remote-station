@@ -85,6 +85,10 @@
   const POPUP = document.body.dataset.digiPopup === '1';
   // Page Face avant (/ftdx101…) : modes numériques intégrés sous l'image du TRX, qui peuvent eux aussi partir en fenêtre séparée
   const EMBED = POPUP && document.body.dataset.digiEmbed === '1';
+  // Carnet de trafic dans cette page : dashboard, ou page des modes numériques de la face avant (/ftdx101/digi.html) ;
+  // la fenêtre séparée du dashboard n'en a pas (l'onglet Logbooks est dans le dashboard)
+  const LOGP = POPUP && /^\/ftdx101/.test(location.pathname) && !EMBED;
+  const logHere = () => !!window.RSLOG && (!POPUP || LOGP);
   const HOST = !POPUP || EMBED; // page qui peut ouvrir la fenêtre séparée (dashboard ou face avant)
   // Fenêtre séparée ouverte depuis la face avant : « Ramener » parle de la face avant
   const FROM_FACE = POPUP && !EMBED && (() => { try { return !!(window.opener && window.opener.document.body.classList.contains('face-page')); } catch (e) { return false; } })();
@@ -271,10 +275,23 @@
         <pre class="rt-rx" id="rtRxB"></pre>
       </div>
     </div>
+    <i class="rt-hgrip" id="rtHGrip" title="Glisser vers le haut ou le bas : hauteur des fenêtres de décodage (VFO-A et VFO-B) — plus de place pour les macros en dessous (double-clic : taille d'origine)"></i>
     <div class="rt-grid rt-stack">
       <!-- Émission sous la réception, sur toute la largeur (comme JTTY et FLDIGI) : macros F1 à F12 sur une ligne -->
       <div class="dg-col rt-tx-col">
         <div class="rt-macros" id="rtMacros"></div>
+        <!-- Contest RTTY : choix du contest, échange envoyé, numéro de série, et ses macros (touches F1 à F12 quand un contest est choisi) -->
+        <div class="rt-contest" id="rtContest">
+          <label class="rtc-l" title="Contest RTTY : l'échange et les macros contest suivent ; touches F1 à F12 = macros contest">Contest
+            <select id="rtcSel" aria-label="Contest RTTY"></select></label>
+          <label class="rtc-l" title="Échange envoyé (balise &lt;EXCH&gt; des macros contest) : 599 suivi de ce que demande le contest. &lt;CNTR&gt; = numéro de série, &lt;CQZ&gt; = zone CQ, &lt;ITUZ&gt; = zone ITU, &lt;ZT&gt; = heure UTC">Échange
+            <input id="rtcExch" maxlength="40" spellcheck="false"></label>
+          <label class="rtc-l rtc-s" title="Zone CQ de la station (Belgique : 14)">Zone CQ <input id="rtcCqz" maxlength="2" inputmode="numeric"></label>
+          <label class="rtc-l rtc-s" title="Zone ITU de la station (Belgique : 27)">ITU <input id="rtcItu" maxlength="2" inputmode="numeric"></label>
+          <label class="rtc-l rtc-s" title="Numéro de série du prochain QSO (&lt;CNTR&gt;) ; la macro TU passe au suivant (&lt;INCR&gt;)">N° <input id="rtcNr" maxlength="4" inputmode="numeric"></label>
+          <button class="dg-mini" type="button" id="rtcNr1" title="Remettre le numéro de série à 001 (début du contest)">↺ 001</button>
+        </div>
+        <div class="rt-macros rtc-macros" id="rtcMacros"></div>
         <div class="rt-tx-row">
           <textarea id="rtTxt" rows="2" placeholder="Message personnalisé, puis « Émettre » (Maj+clic sur une macro : l'ajoute ici)…" spellcheck="false"></textarea>
           <div class="rt-tx-act">
@@ -424,7 +441,7 @@
     bar.textContent = '';
     for (const [id, label] of TABS) {
       if (id === 'events' && POPUP) continue;
-      if (id === 'log' && (POPUP || !window.RSLOG)) continue; // carnet de trafic : dashboard seulement
+      if (id === 'log' && !logHere()) continue; // carnet de trafic (dashboard, et page des modes numériques de la face avant)
       if (id === 'gap') { const g = document.createElement('span'); g.className = 'ctab-gap'; bar.appendChild(g); continue; }
       const b = document.createElement('button');
       b.className = 'ctab';
@@ -471,7 +488,7 @@
     add('sstv', 'dg ss', SSTV_PANE);
     for (const k in SOON) add(k, 'dg-soon', '<p>' + SOON[k] + '</p><p class="dg-note">En préparation.</p>');
     add('sync', 'dg-sync', SYNC_PANE);
-    if (!POPUP && window.RSLOG) { add('log', 'lg', ''); window.RSLOG.mount(panel.lastElementChild); }
+    if (logHere()) { add('log', 'lg', ''); window.RSLOG.mount(panel.lastElementChild); }
     // Carte de bande (DX cluster) : colonne à droite de la fenêtre, onglet RTTY
     const bm = document.createElement('aside');
     bm.className = 'bm';
@@ -1126,11 +1143,44 @@
       { name: 'AGN?', text: '<TX>AGN? AGN?' }
     ]
   };
+  // Contests RTTY : [identifiant Cabrillo, nom, échange par défaut] ; l'échange reste modifiable (champ « Échange »)
+  const RT_CONTESTS = [
+    ['', 'Pas de contest', ''],
+    ['CQ-WW-RTTY', 'CQ WW RTTY DX', '599 <CQZ>'],
+    ['CQ-WPX-RTTY', 'CQ WPX RTTY', '599 <CNTR>'],
+    ['ARRL-RTTY', 'ARRL RTTY Roundup', '599 <CNTR>'],
+    ['BARTG-RTTY', 'BARTG HF RTTY', '599 <CNTR> <ZT>'],
+    ['BARTG-SPRINT', 'BARTG Sprint RTTY', '599 <CNTR>'],
+    ['SARTG-RTTY', 'SARTG WW RTTY', '599 <CNTR>'],
+    ['DARC-WAEDC-RTTY', 'WAE DX RTTY (DARC)', '599 <CNTR>'],
+    ['EA-RTTY', 'EA RTTY', '599 <CNTR>'],
+    ['SP-DX-RTTY', 'SP DX RTTY', '599 <CNTR>'],
+    ['VOLTA-RTTY', 'Volta WW RTTY', '599 <CNTR> <CQZ>'],
+    ['RTTY-OTHER', 'Autre contest (échange libre)', '599 <CNTR>']
+  ];
+  const rtcId = () => store.get('rtc', '');
+  const rtcOn = () => !!rtcId();
+  const rtcExch = () => { const id = rtcId(); const c = RT_CONTESTS.find((x) => x[0] === id); return store.get('rtcx_' + id, c ? c[2] : '599 <CNTR>'); };
+  DEF_MACROS.RTTYC = [
+    { name: 'CQ', text: '<TX>CQ TEST <MYCALL> <MYCALL> CQ\n<RX>' },
+    { name: 'Échange', text: '<TX><CALL> <EXCH> <EXCH> <CALL>\n<RX>' },
+    { name: 'TU', text: '<TX>TU <INCR><MYCALL> TEST\n<RX>' },
+    { name: 'Mon ind.', text: '<TX><MYCALL> <MYCALL>\n<RX>' },
+    { name: 'Réponse', text: '<TX><CALL> TU <EXCH> <EXCH>\n<RX>' },
+    { name: 'Son ind.', text: '<TX><CALL> <CALL>\n<RX>' },
+    { name: 'AGN?', text: '<TX>AGN? AGN?\n<RX>' },
+    { name: 'NR?', text: '<TX>NR? NR?\n<RX>' },
+    { name: 'QRZ?', text: '<TX>QRZ? <MYCALL>\n<RX>' },
+    { name: 'Merci', text: '<TX>TU 73 <MYCALL>\n<RX>' },
+    { name: 'Log', text: '<LOG>' },
+    { name: 'RYRY', text: '<TX>RYRYRYRYRYRY\n<RX>' }
+  ];
   const TAGS = [
     ['<TX>', 'émission immédiate au clic (sinon : texte ajouté à la zone d’écriture)'], ['<RX>', 'retour en réception à la fin (toujours fait)'], ['<LOG>', 'ouvre la fiche du QSO pour l’enregistrer dans le carnet'],
     ['<MYCALL>', 'indicatif émis (TX call)'], ['<CALL>', 'correspondant'], ['<NAME>', 'son prénom'], ['<QTH>', 'son QTH'],
     ['<RST>', 'report envoyé'], ['<LOC>', 'son locator'], ['<MYLOC>', 'locator de la station'], ['<MYQTH>', 'QTH de la station'],
-    ['<OPCALL>', 'votre indicatif (opérateur)'], ['<CNTR>', 'numéro de série'], ['<INCR>', 'numéro suivant'], ['<ZT>', 'heure UTC'], ['<ZD>', 'date UTC']
+    ['<OPCALL>', 'votre indicatif (opérateur)'], ['<CNTR>', 'numéro de série'], ['<INCR>', 'numéro suivant'], ['<ZT>', 'heure UTC'], ['<ZD>', 'date UTC'],
+    ['<EXCH>', 'échange du contest choisi (RTTY)'], ['<CQZ>', 'zone CQ de la station'], ['<ITUZ>', 'zone ITU de la station']
   ];
   let macros = (() => { try { return JSON.parse(store.get('macros', '{}')) || {}; } catch (e) { return {}; } })();
   const macroList = (mode) => (macros[mode] && macros[mode].length ? macros[mode] : DEF_MACROS[mode] || []);
@@ -2217,12 +2267,17 @@
   }
   // Remplace les balises d'une macro ; <INCR> fait avancer le numéro de série (seulement si apply)
   function macroText(t, apply) {
+    // Contest : échange réellement envoyé (avant que « TU » passe au numéro suivant), repris dans la fiche du QSO
+    if (apply && /<EXCH>/.test(t)) store.set('rtclastx', macroText('<EXCH>'));
     const up = (v) => String(v || '').trim().toUpperCase();
     const d = new Date(now());
     const p2 = (n) => String(n).padStart(2, '0');
     let cntr = Number(store.get('cntr', '1')) || 1;
     let out = String(t)
+      .replace(/<EXCH>/g, rtcExch())
       .replace(/<TX>|<RX>|<LOG>/gi, '')
+      .replace(/<CQZ>/g, String(store.get('rtcqz', '14')).padStart(2, '0'))
+      .replace(/<ITUZ>/g, String(store.get('rtitu', '27')).padStart(2, '0'))
       .replace(/<MYCALL>|\{MY\}/g, myCall)
       .replace(/<CALL>|\{CALL\}/g, up(dx.call) || '???')
       .replace(/<NAME>/g, up(dx.name))
@@ -3691,14 +3746,14 @@
   }
 
   // Rangée de macros : clic = utiliser, clic droit = modifier, ✎ = modifier
-  function drawMacroRow(box, mode, use, prep) {
+  function drawMacroRow(box, mode, use, prep, noF) {
     if (!box) return;
     box.textContent = '';
     macroList(mode).forEach((m, i) => {
       const b = box.ownerDocument.createElement('button');
       b.className = 'btn';
       b.type = 'button';
-      if (mode !== 'FT8') { const s = box.ownerDocument.createElement('small'); s.textContent = 'F' + (i + 1); b.appendChild(s); }
+      if (mode !== 'FT8' && !noF) { const s = box.ownerDocument.createElement('small'); s.textContent = 'F' + (i + 1); b.appendChild(s); }
       b.appendChild(box.ownerDocument.createTextNode(m.name || '—'));
       const tip = () => macroText(m.text).replace(/\n/g, ' ⏎ ') + '\n' +
         (/<TX>/i.test(m.text) ? 'clic : émission immédiate · Maj+clic : ajouter au texte · clic droit : modifier' : 'clic : ajouter au texte · clic droit : modifier');
@@ -3723,8 +3778,58 @@
     box.appendChild(ed);
   }
   function drawRttyMacros() {
-    drawMacroRow($('rtMacros'), 'RTTY', (t, ins) => useMacro('RTTY', t, ins));
+    // Contest choisi : les touches F1 à F12 passent aux macros contest (les macros habituelles restent au clic)
+    drawMacroRow($('rtMacros'), 'RTTY', (t, ins) => useMacro('RTTY', t, ins), null, rtcOn());
+    drawMacroRow($('rtcMacros'), 'RTTYC', (t, ins) => useMacro('RTTY', t, ins), null, !rtcOn());
+    if ($('rtcMacros')) $('rtcMacros').hidden = !rtcOn();
+    const nr = $('rtcNr');
+    if (nr && document.activeElement !== nr) nr.value = String(Number(store.get('cntr', '1')) || 1).padStart(3, '0');
   }
+  function initContest() {
+    const sel = $('rtcSel');
+    if (!sel) return;
+    for (const [id, name] of RT_CONTESTS) sel.add(new Option(name, id));
+    const ui = () => {
+      sel.value = rtcId();
+      $('rtcExch').value = rtcExch();
+      $('rtcExch').disabled = !rtcOn();
+      $('rtcCqz').value = store.get('rtcqz', '14');
+      $('rtcItu').value = store.get('rtitu', '27');
+      $('rtContest').classList.toggle('on', rtcOn());
+      drawRttyMacros();
+    };
+    sel.addEventListener('change', () => {
+      store.set('rtc', sel.value);
+      ui();
+      if (api && sel.value) api.say('Contest ' + sel.options[sel.selectedIndex].text + ' : touches F1 à F12 = macros contest, échange « ' + macroText('<EXCH>') + ' ».', '', 5000);
+    });
+    $('rtcExch').addEventListener('change', () => { store.set('rtcx_' + rtcId(), $('rtcExch').value.toUpperCase().trim() || '599 <CNTR>'); ui(); });
+    $('rtcCqz').addEventListener('change', () => { store.set('rtcqz', String(Number($('rtcCqz').value) || 14)); ui(); });
+    $('rtcItu').addEventListener('change', () => { store.set('rtitu', String(Number($('rtcItu').value) || 27)); ui(); });
+    $('rtcNr').addEventListener('change', () => { store.set('cntr', String(Math.max(1, Number($('rtcNr').value) || 1))); ui(); });
+    $('rtcNr1').addEventListener('click', () => { store.set('cntr', '1'); ui(); });
+    ui();
+    // Hauteur des fenêtres de décodage RTTY (les deux VFO) : poignée sous elles, gardée dans ce navigateur
+    const dual = $('rtDual'), grip = $('rtHGrip');
+    const setH = (h, save) => {
+      if (h == null) { dual.style.removeProperty('height'); dual.style.removeProperty('flex'); if (save) store.set('rtdualh', ''); }
+      else { h = Math.max(220, Math.round(h)); dual.style.height = h + 'px'; dual.style.flex = 'none'; if (save) store.set('rtdualh', String(h)); }
+      if (tab === 'rtty') sizeCanvas();
+    };
+    if (Number(store.get('rtdualh', '')) > 0) setH(Number(store.get('rtdualh', '')), false);
+    grip.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      grip.setPointerCapture(e.pointerId);
+      const y0 = e.clientY, zf = (window.RSZOOM && window.RSZOOM.z()) || 1, h0 = dual.getBoundingClientRect().height / zf;
+      const mv = (ev) => setH(h0 + (ev.clientY - y0) / zf, false);
+      const up = (ev) => { grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up); setH(h0 + (ev.clientY - y0) / zf, true); };
+      grip.addEventListener('pointermove', mv);
+      grip.addEventListener('pointerup', up);
+      grip.addEventListener('pointercancel', up);
+    });
+    grip.addEventListener('dblclick', () => setH(null, true));
+  }
+
   // ------------------------------------------------------------------ éditeur de macros (fenêtre de dialogue)
   function editMacro(doc, mode, idx) {
     const list = macroList(mode).map((m) => Object.assign({}, m));
@@ -3736,7 +3841,7 @@
     dlg.id = 'macroDlg';
     dlg.className = 'macro-dlg';
     dlg.innerHTML = '<form method="dialog">' +
-      '<h3>Macros ' + mode + '</h3>' +
+      '<h3>Macros ' + (mode === 'RTTYC' ? 'contest RTTY' : mode) + '</h3>' +
       '<div class="md-keys"></div>' +
       '<label>Nom du bouton <input name="name" maxlength="14" autocomplete="off"></label>' +
       '<label>Texte <textarea name="text" rows="6" spellcheck="false"></textarea></label>' +
@@ -3858,7 +3963,8 @@
     const st = api.state() || {};
     const r = st.radio || {};
     const m = (window.RSDIGI && window.RSDIGI.logMode ? window.RSDIGI.logMode() : '') || 'RTTY';
-    const rxB = r.vfoSel === 1 && r.freqB;
+    // Double réception : le VFO d'émission (TX sur MAIN ou SUB) ; sinon le VFO sélectionné
+    const rxB = r.dualRx === 1 && (r.txVfo === 0 || r.txVfo === 1) ? r.txVfo === 1 && r.freqB : r.vfoSel === 1 && r.freqB;
     let hz = Number(rxB ? r.freqB : r.freq) || 0;
     // RTTY : fréquence du signal (porteuse + milieu mark / space), comme FLDIGI
     // RTTY : fréquence du signal suivi par le décodeur de l'émission (porteuse ± audio, − en LSB)
@@ -3871,6 +3977,8 @@
     const digiRpt = ['FT8', 'FT4', 'FT2', 'JT65', 'WSPR'].indexOf(m) >= 0;
     const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const MODES = ['RTTY', 'JTTY', 'CW', 'SSTV', 'FT8', 'FT4', 'FT2', 'JT65', 'PSK31', 'USB', 'LSB', 'FM', 'AM'];
+    // Contest RTTY choisi : échange envoyé (sans le 599) et reçu, identifiant Cabrillo du contest
+    const ctst = m === 'RTTY' && rtcOn() ? { id: rtcId(), stx: String(store.get('rtclastx', macroText('<EXCH>'))).replace(/^(599|5NN)\s*/, '') } : null;
     const dlg = doc.createElement('dialog');
     dlg.id = 'qsoLogDlg';
     dlg.className = 'macro-dlg qso-log';
@@ -3887,6 +3995,9 @@
       '<label>QTH <input name="qth" maxlength="60" value="' + esc(dx.qth) + '"></label>' +
       '<label>Locator <input name="grid" maxlength="8" value="' + esc(dx.grid) + '"></label>' +
       '<label>Puiss. W <input name="pwr" inputmode="decimal" maxlength="5" value="' + (r.power ? Math.round(r.power) : '') + '"></label>' +
+      (ctst ? '<label>Échange envoyé <input name="stx" maxlength="30" value="' + esc(ctst.stx) + '"></label>' +
+        '<label>Échange reçu <input name="srx" maxlength="30" value=""></label>' +
+        '<label>Contest <input name="contest" maxlength="40" value="' + esc(ctst.id) + '"></label>' : '') +
       '<label class="ql-wide">Remarque <input name="comment" maxlength="200"></label></div>' +
       '<p class="md-prev ql-msg"></p>' +
       '<div class="md-act"><span></span><button class="btn" value="cancel">Annuler</button><button class="btn btn-primary" type="button" data-a="save">Enregistrer dans le carnet</button></div></form>';
@@ -3908,6 +4019,13 @@
       const qso = { call, qso_date: f.date.value.replace(/\D/g, ''), time_on: tt(f.time.value), time_off: tt(f.toff.value), freq: Math.round(fr * 1e6) / 1e6,
         mode: f.mode.value, rst_sent: f.rst_sent.value.trim(), rst_rcvd: f.rst_rcvd.value.trim(), name: f.name.value.trim(), qth: f.qth.value.trim(),
         gridsquare: f.grid.value.trim().toUpperCase(), tx_pwr: f.pwr.value.trim(), comment: f.comment.value.trim(), station: myCall };
+      if (f.contest) {
+        qso.contest_id = f.contest.value.trim().toUpperCase();
+        qso.stx_string = f.stx.value.trim().toUpperCase();
+        qso.srx_string = f.srx.value.trim().toUpperCase();
+        if (/^\d{1,5}$/.test(qso.stx_string)) qso.stx = qso.stx_string;
+        if (/^\d{1,5}$/.test(qso.srx_string)) qso.srx = qso.srx_string;
+      }
       for (const k of Object.keys(qso)) if (qso[k] === '') delete qso[k];
       api.send({ t: 'log_add', qso });
       dlg.close();
@@ -4311,6 +4429,8 @@
     init(a) {
       const again = !!api;
       api = a;
+      // Fenêtre séparée : le carnet de trafic (logbook.js chargé par digi.html) passe par la même connexion
+      if (LOGP && window.RSLOG) window.RSLOG.init(a);
       if (again) { announce(); return; } // fenêtre séparée raccrochée à un dashboard rechargé
       buildDom();
       bmInit();
@@ -4466,6 +4586,7 @@
       // FT8 / FT4 / FT2 : molette sur la cascade (ou son échelle) = zoom autour de la souris (vers soi : plus étroit)
       for (const id of ['dgWf', 'dgScale']) $(id).addEventListener('wheel', (e) => { if (tab === 'ftx') ftZoom('A', e); }, { passive: false });
       initRtty();
+      initContest();
       initWspr();
       initJtty();
       initCw();
@@ -4485,7 +4606,7 @@
         }
         const n = /^F(\d{1,2})$/.exec(e.key);
         if (!n || MODE === 'SSTV') return;
-        const m = macroList(MODE)[Number(n[1]) - 1];
+        const m = macroList(MODE === 'RTTY' && rtcOn() ? 'RTTYC' : MODE)[Number(n[1]) - 1];
         if (!m) return;
         e.preventDefault();
         useMacro(MODE, m.text, e.shiftKey);
@@ -4523,6 +4644,7 @@
     insertJtty,
     insertCw,
     onHello(me, info) {
+      if (LOGP && window.RSLOG && me) window.RSLOG.onHello(me);
       needHist = true;
       wsNeedHist = true;
       jtNeedHist = true;
@@ -4540,6 +4662,7 @@
     },
     onMessage(m) {
       if (m.t === 'qrz_info') { qrzInfo(m); if (window.RSLOG && window.RSLOG.onQrz) window.RSLOG.onQrz(m); return true; }
+      if (LOGP && window.RSLOG && /^log_/.test(m.t)) { window.RSLOG.onMessage(m); return true; } // carnet de trafic de cette fenêtre
       if (m.t === 'ftx_qso' && m.qso) { qsoPrompt(m.qso); return true; }
       if (m.t === 'spots' || m.t === 'spot') {
         if (m.t === 'spots') bmSpots.clear();
@@ -4620,6 +4743,7 @@
     },
     onState() {
       drawTxCallDg();
+      if (LOGP && window.RSLOG && window.RSLOG.onState) window.RSLOG.onState();
       // « TX call » : indicatif des émissions numériques (station ou celui qui a la main)
       const stx = api && api.state();
       // Report reçu du correspondant pendant la séquence FT8 / FT4 / FT2 → « RST RX »

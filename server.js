@@ -1144,7 +1144,7 @@ function saveMacros() {
   fs.writeFile(MACROS_FILE, JSON.stringify(macros), { mode: 0o600 }, (e) => { if (e) console.error('macros.json : ' + e.message); });
 }
 function setMacros(call, mode, list) {
-  if (['RTTY', 'CW', 'FT8', 'JTTY'].indexOf(mode) < 0 || !Array.isArray(list)) return false;
+  if (['RTTY', 'RTTYC', 'CW', 'FT8', 'JTTY'].indexOf(mode) < 0 || !Array.isArray(list)) return false; // RTTYC : macros contest RTTY
   const clean = list.slice(0, 24).map((m) => ({
     name: String((m && m.name) || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 14),
     text: String((m && m.text) || '').replace(/\r/g, '').replace(/[\u0000-\u0009\u000b-\u001f]/g, ' ').slice(0, 600)
