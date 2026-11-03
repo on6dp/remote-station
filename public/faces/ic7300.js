@@ -37,7 +37,7 @@
       { id: 'tuner', x: 43, y: 193, w: 102, h: 35, tip: 'TUNER : coupleur d’antenne en service / hors service ; appui d’au moins 1 s : accord (émission courte, avec la main)', act: { toggle: 'tuner', long: { action: 'tune' } }, led: (s) => !!(s.tuner || s.tuning), ledColor: '#ff8a1f' },
       { id: 'vox', x: 43, y: 255, w: 102, h: 37, tip: 'VOX/BK-IN : VOX (ne peut être que coupé à distance)', act: { toggle: 'vox' }, led: (s) => !!s.vox },
       { id: 'pamp', x: 172, y: 232, w: 78, h: 36, tip: 'P.AMP/ATT : préampli OFF → P.AMP1 → P.AMP2 ; appui d’au moins 1 s : ATT 20 dB', act: { cycle: 'preamp', long: { toggle: 'att' } }, led: (s) => !!(s.preamp || s.att) },
-      { id: 'notch', x: 270, y: 232, w: 75, h: 36, tip: 'NOTCH (manuel)', act: { toggle: 'notch' }, led: (s) => !!s.notch },
+      { id: 'notch', x: 270, y: 232, w: 75, h: 36, tip: 'NOTCH : OFF → AN (automatique) → MN (manuel) → OFF, comme sur le TRX (pas d’AN en CW)', act: { local: 'notchCycle' }, led: (s) => !!(s.notch || s.dnf) },
       { id: 'nb', x: 172, y: 282, w: 78, h: 36, tip: 'NB — appui d’au moins 1 s : niveau NB', act: { toggle: 'nb', long: { pop: 'nbLvl' } }, led: (s) => !!s.nb },
       { id: 'nr', x: 270, y: 282, w: 75, h: 36, tip: 'NR — appui d’au moins 1 s : niveau NR', act: { toggle: 'nr', long: { pop: 'nrLvl' } }, led: (s) => !!s.nr },
       { id: 'phones', cx: 90, cy: 362, r: 25, tip: 'PHONES : écouter le TRX (clic : marche / arrêt)', act: { local: 'listen' }, led: (s, L) => L.listening, ledColor: '#3ddc5a', ring: true },

@@ -68,7 +68,7 @@
     q(0x14, 0x07), q(0x14, 0x08), q(0x14, 0x0B), q(0x16, 0x44), q(0x14, 0x0E), q(0x16, 0x46), q(0x1C, 0x01),
     q(0x16, 0x50), q(0x15, 0x15), q(0x15, 0x16),
     // Face avant (/ic7300) : CW PITCH, KEY SPEED, MONITOR (marche et niveau), BK-IN, IP+, VOX GAIN, ANTI VOX
-    q(0x14, 0x09), q(0x14, 0x0C), q(0x14, 0x15), q(0x16, 0x45), q(0x16, 0x47), q(0x16, 0x65), q(0x14, 0x16), q(0x14, 0x17)
+    q(0x14, 0x09), q(0x14, 0x0C), q(0x14, 0x15), q(0x16, 0x45), q(0x16, 0x47), q(0x16, 0x65), q(0x14, 0x16), q(0x14, 0x17), q(0x16, 0x57)
   ];
   const SLOW_PER_TICK = 5;
   const POLL_MS = 250;
@@ -78,7 +78,7 @@
 
   const STATE_KEYS = ['txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'fil', 'filB', 'pbtIn', 'pbtOut', 'nb', 'nbLvl', 'nr', 'nrLvl',
     'dnf', 'notch', 'notchPos', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox', 'tuner', 'tuning',
-    'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'ipPlus', 'voxGain', 'antiVox'];
+    'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'ipPlus', 'voxGain', 'antiVox', 'notchW'];
 
   // Lectures simples : [commande, sous-commande, clé, type] (type : t = 0/1, l = niveau 0–255, b = octet)
   const SIMPLE = [
@@ -91,7 +91,7 @@
     [0x16, 0x41, 'dnf', 't'], [0x16, 0x48, 'notch', 't'], [0x16, 0x44, 'proc', 't'], [0x16, 0x46, 'vox', 't'],
     [0x16, 0x50, 'lock', 't'], [0x21, 0x01, 'rit', 't'], [0x21, 0x02, 'xit', 't'],
     [0x14, 0x09, 'cwPitchRaw', 'l'], [0x14, 0x0C, 'keySpeedRaw', 'l'], [0x14, 0x15, 'moniLvl', 'l'], [0x16, 0x45, 'moni', 't'],
-    [0x16, 0x47, 'bkin', 'b'], [0x16, 0x65, 'ipPlus', 't'], [0x14, 0x16, 'voxGain', 'l'], [0x14, 0x17, 'antiVox', 'l']
+    [0x16, 0x47, 'bkin', 'b'], [0x16, 0x65, 'ipPlus', 't'], [0x14, 0x16, 'voxGain', 'l'], [0x14, 0x17, 'antiVox', 'l'], [0x16, 0x57, 'notchW', 'b']
   ];
   // CW PITCH : 0–255 = 300–900 Hz (pas de 5 Hz) ; KEY SPEED : 0–255 = 6–48 mots/min
   const pitchHz = (raw) => Math.round((300 + raw * 600 / 255) / 5) * 5;
@@ -163,6 +163,8 @@
     { id: 'bkin', g: 'tx', label: 'BK-IN', type: 'select', face: true, options: [[0, 'OFF'], [1, 'SEMI'], [2, 'FULL']], write: (v) => q(0x16, 0x47, v) },
     { id: 'ipPlus', g: 'rx', label: 'IP+', type: 'toggle', face: true, write: setOn(0x16, 0x65) },
     { id: 'voxGain', g: 'tx', label: 'VOX GAIN', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x16) },
+    // Largeur du NOTCH manuel (16 57 : 00 WIDE, 01 MID, 02 NAR)
+    { id: 'notchW', g: 'flt', label: 'Largeur NOTCH', type: 'select', face: true, options: [[0, 'WIDE'], [1, 'MID'], [2, 'NAR']], write: (v) => q(0x16, 0x57, v) },
     { id: 'antiVox', g: 'tx', label: 'ANTI VOX', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x17) }
   ];
   const CONTROL = {};

@@ -405,3 +405,8 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .icm-track { fill: #2a3142; stroke: #59637a; stroke-width: .6; }
 #face .icm-tick { stroke: #9aa3b5; stroke-width: 1; }
 #face .icm-box { fill: none; stroke: #c9d0dc; stroke-width: 1.4; }
+/* IC-7300 : cadre d'un réglage qui change (« P.AMP 1 »), comme sur l'écran du TRX */
+.fc-icpop { position: absolute; z-index: 3; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  background: #1b2340; border: 2px solid #e6e9ef; border-radius: 2px; color: #fff; font-family: Verdana, "DejaVu Sans", Arial, sans-serif; pointer-events: none; }
+.fc-icpop[hidden] { display: none; }
+.fc-icpop b { font-weight: 700; }
