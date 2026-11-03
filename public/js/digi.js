@@ -79,7 +79,7 @@
   };
   const ftViewA = ftViewLoad('ftviewa'), ftViewB = ftViewLoad('ftviewb');
   /** Plage affichée par une cascade : celle du VFO-B (double réception) ou la cascade principale */
-  const ftV = (side) => (side === 'B' ? ftViewB : { lo: WF_LO, span: WF_MAX_HZ });
+  const ftV = (side) => (side === 'B' ? (tab === 'ftx' ? ftViewB : { lo: WF_LO, span: WF_MAX_HZ }) : { lo: WF_LO, span: WF_MAX_HZ });
   const RX_WIDTH = 60; // Hz de part et d'autre de la fréquence RX
 
   const POPUP = document.body.dataset.digiPopup === '1';
@@ -219,12 +219,12 @@
         <div class="dg-list" id="dgRx"></div>
       </div>
       <!-- FTDX101 en double réception : les mêmes colonnes pour le récepteur SUB (VFO-B) -->
-      <div class="dg-col ft-colb" hidden>
+      <div class="dg-col ft-colb dual-colb" hidden>
         <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Activité de bande</span><button class="dg-mini" type="button" id="dgClearB">Effacer</button></div>
         <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span>Pays</span><span>km</span><span>Az</span></div>
         <div class="dg-list" id="dgBandB"></div>
       </div>
-      <div class="dg-col ft-colb" hidden>
+      <div class="dg-col ft-colb dual-colb" hidden>
         <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Fréquence RX <b id="dgRxFB">1500 Hz</b></span></div>
         <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span>Pays</span><span>km</span><span>Az</span></div>
         <div class="dg-list" id="dgRxB"></div>
@@ -337,11 +337,19 @@
       <span class="dg-clock" id="wsClock">--:--</span>
       <span class="dg-status" id="wsStatus"></span>
     </div>
-    <div class="dg-wf-slot" data-slot="wspr"></div>
+    <div class="ft-wfrow"><div class="dg-wf-slot" data-slot="wspr"></div></div>
+    <div class="ws-cols">
     <div class="dg-col ws-col">
-      <div class="dg-h"><span>Stations WSPR entendues <b id="wsCount"></b></span><span class="dg-note">périodes de 2 minutes · décodage une dizaine de secondes après la minute paire</span><button class="dg-mini" type="button" id="wsClear">Effacer</button></div>
+      <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Stations WSPR entendues <b id="wsCount"></b></span><span class="dg-note">périodes de 2 minutes · décodage une dizaine de secondes après la minute paire</span><button class="dg-mini" type="button" id="wsClear">Effacer</button></div>
       <div class="ws-th"><span>UTC</span><span>dB</span><span>DT</span><span>Fréquence</span><span>Dérive</span><span>Indicatif</span><span>Locator</span><span>Puiss.</span><span>Distance</span></div>
       <div class="dg-list ws-list" id="wsList"></div>
+    </div>
+    <!-- FTDX101 en double réception : les stations entendues par le récepteur SUB (VFO-B) -->
+    <div class="dg-col ws-col dual-colb" hidden>
+      <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Stations WSPR entendues <b id="wsCountB"></b></span><button class="dg-mini" type="button" id="wsClearB">Effacer</button></div>
+      <div class="ws-th"><span>UTC</span><span>dB</span><span>DT</span><span>Fréquence</span><span>Dérive</span><span>Indicatif</span><span>Locator</span><span>Puiss.</span><span>Distance</span></div>
+      <div class="dg-list ws-list" id="wsListB"></div>
+    </div>
     </div>`;
   const JTTY_PANE = `
     <div class="dg-bar">
@@ -352,17 +360,23 @@
       <span class="dg-note">4-GFSK · 31,25 bauds · 127 Hz · trames de 1,9 s, à tout moment</span>
       <span class="dg-status" id="jtStatus"></span>
     </div>
-    <div class="dg-wf-slot" data-slot="jtty"></div>
-    <div class="dg-cols">
+    <div class="ft-wfrow"><div class="dg-wf-slot" data-slot="jtty"></div></div>
+    <div class="dg-cols jt-cols">
       <div class="dg-col">
-        <div class="dg-h"><span>Activité JTTY</span><button class="dg-mini" type="button" id="jtClear">Effacer</button></div>
+        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Activité JTTY</span><button class="dg-mini" type="button" id="jtClear">Effacer</button></div>
         <div class="jt-th"><span>UTC</span><span>dB</span><span>Fréq</span><span>Message</span></div>
         <div class="dg-list" id="jtBand"></div>
       </div>
       <i class="dg-vsplit" title="Glisser à gauche ou à droite : largeur des deux listes (double-clic : moitié-moitié)"></i>
       <div class="dg-col">
-        <div class="dg-h"><span>Fréquence RX <b id="jtRxF2">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span></div>
+        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Fréquence RX <b id="jtRxF2">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span></div>
         <div class="dg-list jt-chat" id="jtRx"></div>
+      </div>
+      <!-- FTDX101 en double réception : messages JTTY reçus par le récepteur SUB (VFO-B) -->
+      <div class="dg-col dual-colb" hidden>
+        <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Activité JTTY</span><button class="dg-mini" type="button" id="jtClearB">Effacer</button></div>
+        <div class="jt-th"><span>UTC</span><span>dB</span><span>Fréq</span><span>Message</span></div>
+        <div class="dg-list" id="jtBandB"></div>
       </div>
     </div>
     <div class="jt-tx">
@@ -711,9 +725,9 @@
     const watching = WF_TABS.indexOf(tab) >= 0 && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
     if (watching && tab === 'cw') return api.send({ t: 'digi', mode: 'CW', cw: cwc });
     if (watching && tab === 'sstv') { api.send({ t: 'digi', mode: 'SSTV', hist: ssNeedHist }); ssNeedHist = false; return; }
-    if (watching && tab === 'jtty') { api.send({ t: 'digi', mode: 'JTTY', hist: jtNeedHist }); jtNeedHist = false; return; }
+    if (watching && tab === 'jtty') { api.send({ t: 'digi', mode: 'JTTY', hist: jtNeedHist, ftDual }); jtNeedHist = false; return; }
     if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rts[0], rtty2: rts[1] });
-    if (watching && tab === 'wspr') { api.send({ t: 'digi', mode: 'WSPR', hist: wsNeedHist }); wsNeedHist = false; return; }
+    if (watching && tab === 'wspr') { api.send({ t: 'digi', mode: 'WSPR', hist: wsNeedHist, ftDual }); wsNeedHist = false; return; }
     api.send({ t: 'digi', mode: watching ? mode : null, hist: watching && needHist, ftDual: watching && ftDual });
     if (watching) needHist = false;
   }
@@ -767,26 +781,40 @@
     wfFB.ctx.fillRect(0, 0, w, h);
     if (old) wfFB.ctx.drawImage(old, 0, 0, ow, oh, 0, 0, w, oh);
   }
+  // Onglets décodés aussi sur le récepteur SUB (FTDX101 en double réception) ; JT65 utilise la fenêtre FT8
+  const DUAL_TABS = ['ftx', 'jt65', 'wspr', 'jtty'];
+  const dualTab = () => DUAL_TABS.indexOf(tab) >= 0;
+  const viewB = () => (tab === 'ftx' ? ftViewB : { lo: WF_LO, span: WF_MAX_HZ }); // plage de la cascade B (zoom : FT seulement)
   function ftDualWant() {
-    return !!(/^\/ftdx101/.test(location.pathname) && !detached && tab === 'ftx' && FT_MODES.indexOf(mode) >= 0 && dualAudioOn());
+    return !!(/^\/ftdx101/.test(location.pathname) && !detached && dualAudioOn() && ((tab === 'ftx' && FT_MODES.indexOf(mode) >= 0) || ['jt65', 'wspr', 'jtty'].indexOf(tab) >= 0));
   }
+  let ftDualPane = '';
   /** Affiche ou retire la cascade et les colonnes du VFO-B (FTDX101 en double réception) ; true si changé. */
   function applyFtDual() {
     const box = $('ftWfBox');
     if (!box) return false;
     const want = ftDualWant();
-    if (want === ftDual) return false;
+    const paneName = tab === 'jt65' ? 'ftx' : tab;
+    if (want === ftDual && (!want || paneName === ftDualPane)) return false;
     ftDual = want;
-    const pane = box.closest('.ctab-pane') || box.parentElement;
-    pane.classList.toggle('ft-dual', want);
+    ftDualPane = want ? paneName : '';
+    document.querySelectorAll('#centerPanel .ctab-pane.ft-dual').forEach((p) => p.classList.remove('ft-dual'));
+    const pane = want && document.querySelector('#centerPanel .ctab-pane[data-pane="' + paneName + '"]');
+    if (pane) {
+      pane.classList.add('ft-dual');
+      const row = pane.querySelector('.ft-wfrow');
+      if (row && box.parentElement !== row) row.appendChild(box); // la cascade B suit l'onglet (FT8, WSPR, JTTY)
+    }
     box.hidden = !want;
-    document.querySelectorAll('.ft-colb').forEach((e) => { e.hidden = !want; });
+    document.querySelectorAll('.dual-colb').forEach((e) => { e.hidden = !want; });
     if (!want) { wfFB.ctx = null; wfFB.w = 0; }
-    needHist = true; // décodages du VFO-B déjà reçus par le serveur
+    needHist = true; wsNeedHist = true; jtNeedHist = true; // décodages du VFO-B déjà reçus par le serveur
     sideBtns();
     bmShow(); // 2e carte de bande (bande du VFO-B)
     if (wf.ctx) sizeCanvas();
     redrawAll();
+    if ($('wsList')) wsRedraw();
+    jtRedrawB();
     return true;
   }
   // « TX call » dans la barre FT (face avant /ftdx101 et fenêtre séparée) ; le dashboard a déjà le sien (ligne Correspondant)
@@ -934,7 +962,7 @@
   }
   function onRow(bytes) {
     const isB = bytes[0] === 0x14;
-    const ftB = isB && ftDual && tab === 'ftx' && !!wfFB.ctx; // VFO-B en FT8 / FT4 / FT2 (double réception)
+    const ftB = isB && ftDual && dualTab() && !!wfFB.ctx; // VFO-B en FT8 / FT4 / FT2, JT65, WSPR, JTTY (double réception)
     if (isB && !ftB && !(tab === 'rtty' && wfB.ctx && rtDualAudio)) return;
     if (WF_TABS.indexOf(tab) < 0 || detached || !wf.ctx) return;
     const T = isB ? (ftB ? wfFB : wfB) : wf; // cascade dessinée
@@ -944,7 +972,7 @@
     const df = fine ? ((bytes[1] << 8) | bytes[2]) / 1000 : 6.25;
     const tday = fine ? (((bytes[3] << 24) >>> 0) + (bytes[4] << 16) + (bytes[5] << 8) + bytes[6]) * 100 : null;
     const hdr = fine ? 7 : 1;
-    const VW = ftB ? ftViewB : { lo: WF_LO, span: WF_MAX_HZ }; // plage affichée par cette cascade
+    const VW = ftB ? viewB() : { lo: WF_LO, span: WF_MAX_HZ }; // plage affichée par cette cascade
     const n = Math.min(bytes.length - hdr, Math.ceil((VW.lo + VW.span) / df));
     let vals = bytes.subarray(hdr, hdr + n);
     if (tab === 'cw' && !isB) { if (cwDf !== df) cwRows.length = 0; cwDf = df; cwRows.push(Uint8Array.from(vals)); if (cwRows.length > 12) cwRows.shift(); }
@@ -1016,9 +1044,9 @@
     ctx.putImageData(T.img, 0, 0);
     if (ftB && tday != null) {
       // Trait de début de période, comme sur la cascade du VFO-A
-      const P = SLOT_MS[mode] || 15000;
-      const per = Math.floor(tday / P);
-      if (wfFB.per != null && per !== wfFB.per) { ctx.fillStyle = 'rgba(255, 255, 255, .55)'; ctx.fillRect(0, 0, wfFB.w, 1); }
+      const P = tab === 'wspr' ? 120000 : tab === 'jtty' ? 0 : SLOT_MS[mode] || 15000;
+      const per = P ? Math.floor(tday / P) : 0;
+      if (P && wfFB.per != null && per !== wfFB.per) { ctx.fillStyle = 'rgba(255, 255, 255, .55)'; ctx.fillRect(0, 0, wfFB.w, 1); }
       wfFB.per = per;
     }
     if (isB) return;
@@ -1070,13 +1098,22 @@
     const w = wf.cw;
     // Repères partagés avec les autres onglets : ce que l'onglet FT a masqué ou pâli (zoom, VFO-B qui émet) est remis
     if (tab !== 'ftx') for (const id of ['dgMkRx', 'dgMkTx']) if ($(id)) { $(id).style.display = ''; $(id).classList.remove('mk-off'); }
+    // Cascade du VFO-B (double réception) : son échelle ; repères RX / TX en FT8 / FT4 / FT2 et JT65 seulement
+    if (ftDual && wfFB.sctx && tab !== 'ftx' && tab !== 'jt65') {
+      ticks(wfFB.sctx, wfFB.cw, viewB());
+      for (const id of ['ftMkRxB', 'ftMkTxB']) if ($(id)) $(id).style.display = 'none';
+    }
     ticks(c, w);
     if (tab === 'rtty') return drawRttyMarks(c, w);
     if (tab === 'wspr') return drawWsprMarks(c, w);
     if (tab === 'cw') return drawCwMarks(c, w);
     if (tab === 'sstv') return drawSstvMarks(c, w);
     drawFlags(c, w);
-    if (ftDual && wfFB.sctx) { ticks(wfFB.sctx, wfFB.cw, ftViewB); drawFlags(wfFB.sctx, wfFB.cw, 'B'); }
+    if (ftDual && wfFB.sctx && (tab === 'ftx' || tab === 'jt65')) {
+      for (const id of ['ftMkRxB', 'ftMkTxB']) if ($(id)) $(id).style.display = '';
+      ticks(wfFB.sctx, wfFB.cw, viewB());
+      drawFlags(wfFB.sctx, wfFB.cw, 'B');
+    }
   }
   // Échelle de 0 à 3000 Hz (graduations façon JTDX)
   function ticks(c, w, V) {
@@ -1679,7 +1716,7 @@
   let bmState = '', bmHost = '', bmRaf = 0, bmBand = '', bmLay = [];
   let bmBandB = '', bmLayB = []; // carte du VFO-B (double réception)
   // Deux cartes de bande (page /ftdx101, double réception) : FT8 / FT4 / FT2, et RTTY avec ses deux cascades
-  const bmDualOn = () => !!($('bandMapB') && ((ftDual && tab === 'ftx') || (tab === 'rtty' && rtDualAudio && !detached && /^\/ftdx101/.test(location.pathname))));
+  const bmDualOn = () => !!($('bandMapB') && ((ftDual && dualTab()) || (tab === 'rtty' && rtDualAudio && !detached && /^\/ftdx101/.test(location.pathname))));
   const bmBandOfSide = (X) => (X ? bmBandB : bmBand);
   const bmLayOf = (X) => (X ? bmLayB : bmLay);
   let bmFilt = store.get('bmfilt', 'rtty') === 'all' ? 'all' : 'mode';
@@ -1901,7 +1938,7 @@
     };
     if (d && tab === 'cw') line(d.hz / 1000, '#F2CF4A', 'VFO', true); // CW : fréquence du VFO (battement nul)
     else if (d) {
-      const VB = X && tab === 'ftx' ? ftViewB : { lo: WF_LO, span: WF_MAX_HZ };
+      const VB = X ? ftV('B') : { lo: WF_LO, span: WF_MAX_HZ };
       const a = (d.hz + d.sign * VB.lo) / 1000, b = (d.hz + d.sign * (VB.lo + VB.span)) / 1000;
       const y0 = yOf(Math.min(a, b)), y1 = yOf(Math.max(a, b));
       if (y1 >= 0 && y0 <= H) {
@@ -2587,7 +2624,18 @@
     r.addEventListener('dblclick', () => setDx({ call: d.call, grid: d.grid || '', rpt: fmtRpt(d.db) }));
     return r;
   }
-  function wsAdd(item) {
+  const wsHistB = []; // stations WSPR du récepteur SUB (double réception)
+  function wsAdd(item, B) {
+    if (B) {
+      const eb = $('wsListB');
+      if (!eb || !ftDual) return;
+      stickToBottom(eb, () => {
+        if (item.list.length) eb.appendChild(sepEl(item.slot, 'WSPR'));
+        for (const d of item.list) eb.appendChild(wsRow(item.slot, d));
+      });
+      $('wsCountB').textContent = '(' + new Set(wsHistB.flatMap((h) => h.list.map((d) => d.call))).size + ' stations)';
+      return;
+    }
     const el = $('wsList');
     stickToBottom(el, () => {
       if (item.list.length) el.appendChild(sepEl(item.slot, 'WSPR'));
@@ -2598,6 +2646,7 @@
   function wsRedraw() {
     $('wsList').textContent = '';
     for (const it of wsHist) wsAdd(it);
+    if ($('wsListB')) { $('wsListB').textContent = ''; for (const it of wsHistB) wsAdd(it, true); }
   }
   function drawWsprMarks(c, w) {
     // Sous-bande WSPR (1400–1600 Hz audio)
@@ -2624,6 +2673,7 @@
     dial.addEventListener('change', () => { store.set('wsdial', dial.value); qsyTo(Number(dial.value)); });
     $('wsQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
     $('wsClear').addEventListener('click', () => { wsHist.length = 0; wsRedraw(); $('wsCount').textContent = ''; });
+    $('wsClearB').addEventListener('click', () => { wsHistB.length = 0; wsRedraw(); $('wsCountB').textContent = ''; });
   }
   function wsClock() {
     const t = now() / 1000;
@@ -2679,6 +2729,24 @@
     setRx(u.f);
   }
   // Mise à jour d'un message : la ligne existante est remplacée (le texte grandit trame après trame)
+  const jtMsgsB = new Map(); // messages JTTY du récepteur SUB (double réception)
+  function jtUpdateB(u) {
+    if (!u || !u.key) return;
+    jtMsgsB.set(u.key, u);
+    if (jtMsgsB.size > 300) jtMsgsB.delete(jtMsgsB.keys().next().value);
+    const box = $('jtBandB');
+    if (!box || !ftDual) return;
+    const old = box.querySelector('[data-key="' + CSS.escape(u.key) + '"]');
+    if (old) old.replaceWith(jtRow(u));
+    else stickToBottom(box, () => box.appendChild(jtRow(u)));
+  }
+  function jtRedrawB() {
+    const box = $('jtBandB');
+    if (!box) return;
+    box.textContent = '';
+    for (const u of Array.from(jtMsgsB.values()).sort((a, b) => a.t - b.t)) box.appendChild(jtRow(u));
+    box.scrollTop = box.scrollHeight;
+  }
   function jtUpdate(u) {
     if (!u || !u.key) return;
     jtMsgs.set(u.key, u);
@@ -2726,6 +2794,7 @@
     dial.addEventListener('change', () => { store.set('jtdial', dial.value); qsyTo(Number(dial.value)); });
     $('jtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
     $('jtClear').addEventListener('click', () => { jtMsgs.clear(); jtRedraw(); });
+    $('jtClearB').addEventListener('click', () => { jtMsgsB.clear(); jtRedrawB(); });
     $('jtTxt').addEventListener('input', (e) => {
       const el = e.target;
       const p = el.selectionStart;
@@ -4731,7 +4800,7 @@
         $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'sstv') return; if (tab === 'rtty') { if (id !== 'dgScale') setRttyF(fAt(e), 1); } else if (tab === 'cw') setCwF(fAt(e), false); else setTx(fAt(e)); });
       }
       // Cascade du VFO-B (FT8 / FT4 / FT2 en double réception) : clic gauche = réception, clic droit = émission
-      const fAtB = (e) => { const r = e.currentTarget.getBoundingClientRect(); return ftViewB.lo + ((e.clientX - r.left) / r.width) * ftViewB.span; };
+      const fAtB = (e) => { const r = e.currentTarget.getBoundingClientRect(); const V = ftV('B'); return V.lo + ((e.clientX - r.left) / r.width) * V.span; };
       for (const id of ['ftWfB', 'ftScaleB']) {
         $(id).addEventListener('click', (e) => setRx(fAtB(e), 'B'));
         $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(fAtB(e), 'B'); });
@@ -4785,8 +4854,8 @@
         if (tab === 'ftx' || tab === 'jt65') { clock(); status(); followBand(); if (applyFtDual()) announce(); ftDials(); }
         if (tab === 'rtty') { status(); rtHeads(); if (dualAudioOn() !== rtDualAudio) showTab(tab); }
         if (BM_TABS.indexOf(tab) >= 0) { bmPlace(); bmDraw(); }
-        if (tab === 'wspr') wsClock();
-        if (tab === 'jtty') jtStatus();
+        if (tab === 'wspr') { wsClock(); if (applyFtDual()) announce(); ftDials(); }
+        if (tab === 'jtty') { jtStatus(); if (applyFtDual()) announce(); ftDials(); }
         if (tab === 'cw') cwStatus();
         if (tab === 'sstv') sstvStatus();
         if (tab === 'sync') drawSync();
@@ -4849,23 +4918,25 @@
       }
       if (m.t === 'dtx_text') { dtxInfo = m; return true; }
       if (m.t === 'rtty') { rttyAppend(m.text || '', m.ch === 1 ? 1 : 0); return true; }
-      if (m.t === 'jtty') { jtUpdate(m.u); return true; }
+      if (m.t === 'jtty') { if (m.side === 'B') jtUpdateB(m.u); else jtUpdate(m.u); return true; }
       if (m.t === 'cw') { cwAppend(m.text || ''); return true; }
       if (/^sstv_/.test(m.t)) return ssMessage(m);
       if (m.t === 'cw_lvl') { cwLevels(m); return true; }
+      if (m.t === 'jtty_hist' && m.side === 'B') { jtMsgsB.clear(); for (const u of m.items || []) jtMsgsB.set(u.key, u); jtRedrawB(); return true; }
       if (m.t === 'jtty_hist') { jtMsgs.clear(); for (const u of m.items || []) jtMsgs.set(u.key, u); jtRedraw(); return true; }
       if (m.t === 'rtty_lvl') { rttyLevels(m); return true; }
       if ((m.t === 'ftx_hist' || m.t === 'ftx') && m.mode === 'WSPR') {
+        const B = m.side === 'B', H = B ? wsHistB : wsHist; // B : récepteur SUB (double réception)
         if (m.t === 'ftx_hist') {
-          wsHist.length = 0;
-          for (const it of m.items || []) wsHist.push({ slot: it.slot, list: it.list || [] });
+          H.length = 0;
+          for (const it of m.items || []) H.push({ slot: it.slot, list: it.list || [] });
           wsRedraw();
         } else {
-          wsLast = m.slot;
+          if (!B) wsLast = m.slot;
           const it = { slot: m.slot, list: m.list || [] };
-          wsHist.push(it);
-          while (wsHist.length > 60) wsHist.shift();
-          wsAdd(it);
+          H.push(it);
+          while (H.length > 60) H.shift();
+          wsAdd(it, B);
         }
         return true;
       }
@@ -4898,7 +4969,7 @@
     onState() {
       drawTxCallDg();
       // Double réception allumée ou coupée : cascades et colonnes du VFO-B tout de suite (sans attendre le tour de 500 ms)
-      if (tab === 'ftx' && applyFtDual()) announce();
+      if (dualTab() && applyFtDual()) announce();
       if (tab === 'rtty' && dualAudioOn() !== rtDualAudio) showTab(tab);
       if (LOGW() && LOGW().onState) LOGW().onState();
       // « TX call » : indicatif des émissions numériques (station ou celui qui a la main)

@@ -375,8 +375,9 @@ function relayAudio(buf) {
 
 // ---------------------------------------------------------------- modes numériques (FT8 / FT4)
 // Le décodage tourne dans un Worker (lib/digi-worker.js) dès qu'un membre ouvre la fenêtre FT8/FT4.
-const digi = { worker: null, hist: { FT8: [], FT4: [], FT2: [], WSPR: [], JT65: [] }, histB: { FT8: [], FT4: [], FT2: [] }, latency: null, ms: 0, last: 0, dial: 0, jtty: new Map() };
-const FT_DUAL_MODES = ['FT8', 'FT4', 'FT2'];
+const digi = { worker: null, hist: { FT8: [], FT4: [], FT2: [], WSPR: [], JT65: [] }, histB: { FT8: [], FT4: [], FT2: [], WSPR: [], JT65: [] }, latency: null, ms: 0, last: 0, dial: 0, jtty: new Map(), jttyB: new Map() };
+// Modes décodés aussi sur le récepteur SUB (FTDX101 en double réception, page des modes numériques de la face avant)
+const FT_DUAL_MODES = ['FT8', 'FT4', 'FT2', 'JT65', 'WSPR', 'JTTY'];
 /** Double décodage FT (FTDX101 : récepteur SUB sur la voie droite) possible : TRX à deux voies son, double réception */
 function ftDualOk() { return !!(station && station.rig && station.rig.DUAL_AUDIO && radio.dualRx === 1); }
 /** Ce membre veut aussi les décodages du récepteur SUB (page des modes numériques de la face avant FTDX101) */
@@ -450,7 +451,7 @@ function updateDigi() {
     if (seq && seq.on && seq.side === 'B') wantB = true;
     wantB = wantB && ftDualOk();
     if (wantB !== digi.ftB) { digi.ftB = wantB; digi.worker.postMessage({ t: 'ftb', on: wantB }); }
-    digi.worker.postMessage({ t: 'dial', hz: radio.freq || 0 });
+    digi.worker.postMessage({ t: 'dial', hz: radio.freq || 0, hzB: radio.freqB || 0 });
     const cfgs = {};
     for (const c of ops) if (c.digi === 'RTTY') for (const r of [c.rtty, rttyB(c)]) if (r) cfgs[r.key] = r;
     digi.worker.postMessage({ t: 'rtty', cfgs: Object.values(cfgs) });
@@ -476,11 +477,13 @@ function onDigi(m) {
   if (m.t === 'log') return console.error(m.msg);
   if ((m.t === 'jtty' || m.t === 'rtty_text') && rxMuted(m.t === 'jtty' ? 3000 : 1500)) return;
   if (m.t === 'jtty') {
-    // Messages JTTY : dernière version de chaque message (le texte grandit trame après trame)
-    digi.jtty.set(m.u.key, m.u);
-    if (digi.jtty.size > 150) digi.jtty.delete(digi.jtty.keys().next().value);
-    const msg = JSON.stringify({ t: 'jtty', u: m.u });
-    for (const c of ops) if (c.digi === 'JTTY') c.send(msg);
+    // Messages JTTY : dernière version de chaque message (le texte grandit trame après trame) ; ch 1 = récepteur SUB
+    const B = m.ch === 1;
+    const map = B ? digi.jttyB : digi.jtty;
+    map.set(m.u.key, m.u);
+    if (map.size > 150) map.delete(map.keys().next().value);
+    const msg = JSON.stringify(B ? { t: 'jtty', u: m.u, side: 'B' } : { t: 'jtty', u: m.u });
+    for (const c of ops) if (c.digi === 'JTTY' && (!B || ftDualConn(c))) c.send(msg);
     return;
   }
   if (m.t === 'rtty_text' || m.t === 'rtty_lvl') {
@@ -537,7 +540,7 @@ function onDigi(m) {
       // Récepteur SUB : à ceux qui l'ont demandé ; l'émission auto sur le VFO-B suit ses décodages
       const msgB = JSON.stringify({ t: 'ftx', mode: m.mode, slot: m.slot, list: m.list, latency: m.latency, side: 'B' });
       for (const c of ops) if (c.digi === m.mode && ftDualConn(c)) c.send(msgB);
-      seqOnDecodes(m.mode, m.slot, m.list, 'B');
+      if (FTX_SLOT[m.mode]) seqOnDecodes(m.mode, m.slot, m.list, 'B');
       return;
     }
     digi.latency = m.latency;
@@ -2642,6 +2645,7 @@ function onOperator(conn, m) {
       if (digi.hist[mode] && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.hist[mode] });
       if (conn.ftDual && digi.histB[mode] && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.histB[mode], side: 'B' });
       if (mode === 'JTTY' && (changed || m.hist)) send(conn, { t: 'jtty_hist', items: Array.from(digi.jtty.values()) });
+      if (mode === 'JTTY' && conn.ftDual && (changed || m.hist)) send(conn, { t: 'jtty_hist', items: Array.from(digi.jttyB.values()), side: 'B' });
       if (mode === 'SSTV' && (changed || m.hist)) send(conn, { t: 'sstv_list', items: sstvStore.list() });
       return;
     }
@@ -3418,7 +3422,11 @@ function onStation(conn, m) {
   }
   if (was !== radio.connected) journal(radio.connected ? 'trx_online' : 'trx_offline', {});
   // Fréquence du VFO pour les fréquences WSPR affichées
-  if (digi.worker && radio.freq && radio.freq !== digi.dial) { digi.dial = radio.freq; digi.worker.postMessage({ t: 'dial', hz: radio.freq }); }
+  if (digi.worker && radio.freq && (radio.freq !== digi.dial || (radio.freqB || 0) !== digi.dialB)) {
+    digi.dial = radio.freq;
+    digi.dialB = radio.freqB || 0;
+    digi.worker.postMessage({ t: 'dial', hz: radio.freq, hzB: radio.freqB || 0 }); // WSPR : fréquences des stations (VFO-A, VFO-B)
+  }
   sendWorked(false);
   // Contexte AP du décodeur WSJT-X (comme WSJT-X / JTDX) : notre indicatif, le correspondant du QSO en cours, l'étape du QSO
   if (digi.worker) {
