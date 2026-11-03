@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.33.16** — **Modes numériques** : onglet SYNCHRO masqué en RTTY, JTTY, CW et SSTV (utile seulement en FT8 / FT4 / FT2, WSPR, JT65). **Face avant** : un seul « Suivre l'opérateur » — cliqué dans la page des modes numériques, le bouton SUIVRE de la face avant s'allume / s'éteint aussi, et inversement. Ctrl+F5 sur /ftdx101 et /ftdx101/digi.html.
 - **0.33.15** — **Page des modes numériques de la face avant** : LOGBOOKS ouvre le carnet de trafic dans sa propre fenêtre (/ftdx101/log.html, raccrochée à la page des modes numériques, même connexion) au lieu de remplacer la page ; les modes numériques restent affichés. Ctrl+F5 sur /ftdx101/digi.html.
 - **0.33.14** — **Station (FTDX101 et autres Yaesu)** : un « ? » du TRX reçu juste après une fréquence (FA / FB, accord à la molette ou en glissant) n'est plus annoncé comme un refus si le TRX est bien sur la fréquence demandée (ou si une autre fréquence est partie depuis) — c'était la réponse d'une lecture du relevé. RTTY : fréquence envoyée au TRX toutes les 100 ms au plus pendant le glisser. Recharger la page Station, Ctrl+F5 sur /ftdx101/digi.html.
 - **0.33.13** — **RTTY** : à l'ouverture de la fenêtre RTTY, les repères des deux décodeurs sont sur 1500 Hz (milieu de la cascade) ; avec une seule cascade pour les deux (TRX à un son), B à 2100 Hz pour qu'on les distingue. Ctrl+F5 sur /ftdx101/digi.html et le dashboard.

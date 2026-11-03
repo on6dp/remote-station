@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.33.16 | [RemoteStation-Setup-0.33.16.exe](0.33.16/RemoteStation-Setup-0.33.16.exe) | [remote-station-0.33.16.tar.gz](0.33.16/remote-station-0.33.16.tar.gz) | SYNCHRO masqué en RTTY…, Suivre l'opérateur unique — [empreintes SHA-256](0.33.16/SHA256SUMS.txt) |
 | 0.33.15 | [RemoteStation-Setup-0.33.15.exe](0.33.15/RemoteStation-Setup-0.33.15.exe) | [remote-station-0.33.15.tar.gz](0.33.15/remote-station-0.33.15.tar.gz) | Logbooks dans une fenêtre à part — [empreintes SHA-256](0.33.15/SHA256SUMS.txt) |
 | 0.33.14 | [RemoteStation-Setup-0.33.14.exe](0.33.14/RemoteStation-Setup-0.33.14.exe) | [remote-station-0.33.14.tar.gz](0.33.14/remote-station-0.33.14.tar.gz) | Fausse alerte « FA refusé » corrigée — [empreintes SHA-256](0.33.14/SHA256SUMS.txt) |
 | 0.33.13 | [RemoteStation-Setup-0.33.13.exe](0.33.13/RemoteStation-Setup-0.33.13.exe) | [remote-station-0.33.13.tar.gz](0.33.13/remote-station-0.33.13.tar.gz) | RTTY : décodeurs à 1500 Hz à l'ouverture — [empreintes SHA-256](0.33.13/SHA256SUMS.txt) |

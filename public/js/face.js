@@ -2261,8 +2261,10 @@
   // Celui qui a la main annonce son affichage de la face avant (DISP, MONO, EXPAND, MULTI, 3DSS, menu FUNC) ;
   // les autres, « Suivre l'opérateur » allumé, voient le même écran. Un clic sur une de ces touches arrête le suivi.
   const FOL = { on: store.get('rs.face.follow', '0') === '1', sent: '', ctl: undefined, timer: null };
-  function setFollowFace(on, why) {
+  function setFollowFace(on, why, fromDigi) {
     FOL.on = !!on;
+    // Un seul « Suivre l'opérateur » : celui de la page des modes numériques suit
+    if (!fromDigi) { try { const dg = DG(); if (dg && dg.followSync) dg.followSync(FOL.on); } catch (e) { /* page pas encore prête */ } }
     store.set('rs.face.follow', FOL.on ? '1' : '0');
     const b = $('followBtn');
     if (b) b.setAttribute('aria-pressed', String(FOL.on));
@@ -2814,7 +2816,8 @@
   // ------------------------------------------------------------ fenêtres séparées (modes numériques, carte de bande)
   // Modes numériques : bouton ⧉ des onglets → /digi.html, qui se raccroche à cette page (window.opener.RSHOST)
   // et utilise sa connexion, comme depuis le dashboard ; sous la face avant : « Ramener ici ».
-  const digiApi = { send, say, iControl, state: () => st, rig: () => R, setFreq: (hz, which) => tuneTo(which === 'B' ? 'B' : 'A', hz) };
+  const digiApi = { send, say, iControl, state: () => st, rig: () => R, setFreq: (hz, which) => tuneTo(which === 'B' ? 'B' : 'A', hz),
+    followFace: (on) => setFollowFace(on, '', true) }; // « Suivre l'opérateur » cliqué dans la page des modes numériques
   const digiHost = { win: null, inst: null };
   function DG() {
     if (digiHost.inst && digiHost.win && !digiHost.win.closed) return digiHost.inst;
@@ -2836,6 +2839,7 @@
       digiHost.inst = inst;
       if (window.RSDIGI) window.RSDIGI.setDetached(true);
       inst.init(popupApi || digiApi);
+      if (inst.followSync) inst.followSync(FOL.on); // même « Suivre l'opérateur » que la face avant
       if (me) inst.onHello(me, me);
       if (st) inst.onState(st);
     },

@@ -555,11 +555,13 @@
   let autoFollowDone = false; // une fois par ouverture de la page
   let followCtl = null; // opérateur qui avait la main au dernier passage (nouvel opérateur : suivi remis)
   let viewSent = '';
-  function setFollow(on) {
+  function setFollow(on, fromHost) {
     follow = !!on;
     store.set(POPUP ? 'pfollow' : 'follow', follow ? '1' : '0');
     const b = $('dgFollow');
     if (b) b.setAttribute('aria-pressed', String(follow));
+    // Face avant : un seul « Suivre l'opérateur » (le bouton de la face avant suit celui-ci, et inversement)
+    if (!fromHost && api && api.followFace) api.followFace(follow);
   }
   // Celui qui a la main annonce l'onglet affiché (la fenêtre séparée s'en charge quand les modes y sont ouverts)
   // … avec ses repères sur la cascade (RTTY A / B, CW, RX / TX des modes FT), pour que ceux qui le suivent les voient bouger
@@ -640,6 +642,9 @@
       if (seg) seg.style.display = t === 'jt65' ? 'none' : ''; // JT65 : pas de choix FT8 / FT4
     }
     document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+    // Synchro (heure du PC, décalage DT) : utile en FT8 / FT4 / FT2, WSPR, JT65 ; pas en RTTY, JTTY, CW, SSTV
+    const syb = document.querySelector('#centerPanel .ctab[data-tab="sync"]');
+    if (syb) syb.hidden = ['rtty', 'jtty', 'cw', 'sstv'].indexOf(t) >= 0;
     document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== pane; });
     bmShow();
     // RTTY : l'aide de la cascade s'affiche 3 secondes à l'arrivée sur l'onglet, puis s'efface (reste au survol de la cascade)
@@ -4540,6 +4545,7 @@
       return true;
     },
     setDetached,
+    followSync: (on) => setFollow(on, true), // « Suivre l'opérateur » changé sur la face avant
     isPopup: POPUP,
     /** Mode numérique affiché (pour le carnet de trafic quand le TRX est en DATA) */
     logMode() {
