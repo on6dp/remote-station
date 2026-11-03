@@ -292,6 +292,22 @@ function txwOff(reason) {
 }    // onglet affiché par celui qui a la main { conn, tab, mode } (« Suivre l'opérateur »)
 let swrLock = null;     // { freq, swr } : ROS trop élevé constaté à cette fréquence ; { tune: true, band } : accord impossible sur cette bande
 let tuneWatch = null;
+// Mémoire vocale du TRX en cours d'émission (VOICE TX) : { conn, at, saw }
+let vtx = null;
+function vtxCheck() {
+  const w = vtx;
+  if (!w) return;
+  if (radio.tx) w.saw = true;
+  const lost = controller !== w.conn || !station || !radio.connected;
+  if (lost || Date.now() - w.at > 120000) {
+    vtx = null;
+    if (rig().CONTROL && rig().CONTROL.voiceStop) toStation({ t: 'cmd', op: 'ctl', id: 'voiceStop', value: null, by: 'serveur' });
+    if (w.conn && !lost) send(w.conn, { t: 'notice', level: 'warn', msg: 'VOICE TX arrêté (2 minutes au plus).' });
+    return;
+  }
+  if ((w.saw && !radio.tx) || (!w.saw && Date.now() - w.at > 8000)) vtx = null; // fin de la lecture (ou jamais partie)
+}
+setInterval(() => { if (vtx) vtxCheck(); }, 1000); // aussi quand la page Station ne répond plus
 let tunerAuto = { band: '', until: 0 }; // bande HF / 6 m sur laquelle le tuner a été remis en service tout seul   // accord en cours de suivi { freq, at, saw, endAt, call }
 let swrHighSince = 0;
 // Audio BF du TRX : la station n'envoie le son que si au moins un membre écoute
@@ -3116,7 +3132,16 @@ function onOperator(conn, m) {
         }
         // Changer d'antenne pendant une émission : jamais (le PA verrait un circuit ouvert)
         if (c.noTx && (ptt.active || radio.tx)) return send(conn, { t: 'notice', level: 'error', msg: c.label + ' : impossible pendant une émission' });
-        if (c.transmits) {
+        if (c.transmits === 'voice') {
+          // Mémoire vocale du TRX (IC-7300 VOICE TX) : contrôles de la phonie ; coupée si l'opérateur perd la main ou au bout de 2 min
+          const why = ptt.active || ftxPend || (seq && seq.on) ? 'émission déjà en cours ou prévue' : txBlockReason(conn, false);
+          if (why) {
+            if (radio.power != null && radio.power > conn.user.maxWatts) limitPower(conn, 'avant ' + c.label);
+            return send(conn, { t: 'notice', level: 'error', msg: c.label + ' refusé : ' + why });
+          }
+          journal('voicetx', { call: conn.user.call, ip: conn.ip, freq: txFreq(), watts: radio.power, mem: v });
+          vtx = { conn, at: Date.now(), saw: false };
+        } else if (c.transmits) {
           const why = txBlockReason(conn, true);
           if (why) {
             if (radio.power != null && radio.power > conn.user.maxWatts) limitPower(conn, 'avant ' + c.label);
@@ -3482,6 +3507,7 @@ function onStation(conn, m) {
   bandPlanTick();
   // Protection du PA : résultat de l'accord. Le TRX signale HI-SWR après le TUNE → émission bloquée sur toute la bande
   if (tuneWatch) checkTune();
+  if (vtx) vtxCheck();
   // Protection du PA : le TRX signale lui-même HI-SWR pendant une émission par le PTT
   if (ptt.active && radio.hiSwr === 1 && !radio.tuning && !radio.tuningRi && !tuneWatch) {
     swrLock = { freq: txFreq(), swr: null };

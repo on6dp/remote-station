@@ -1159,8 +1159,15 @@
       if (col < 4) {
         const n = row * 4 + col + 1;
         b.t1.textContent = 'T' + n;
-        b.tt.textContent = 'T' + n + ' : mémoire vocale du TRX';
-        b.hit.addEventListener('click', (ev) => { ev.stopPropagation(); say('VOICE TX T' + n + ' : l’émission des mémoires vocales du TRX n’est pas encore activée à distance.', '', 5000); });
+        b.tt.textContent = 'T' + n + ' : émet la mémoire vocale T' + n + ' du TRX ; pendant l’émission, un clic l’arrête';
+        b.hit.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          if (!needControl()) return;
+          if (S().tx) { setCtl('voiceStop', null); return say('VOICE TX arrêté.', '', 2500); }
+          setCtl('voiceTx', n);
+          say('VOICE TX : émission de la mémoire T' + n + ' du TRX (clic sur une touche T : arrêt).', '', 4000);
+        });
+        b.n = n;
       } else {
         b.t1.setAttribute('y', Y(y0 + row * bh + bh / 2 - 2));
         b.t1.textContent = row ? 'TX' : 'REC/'; b.t2.textContent = row ? 'LEVEL' : 'SET'; b.t2.classList.add('big');
@@ -1169,6 +1176,7 @@
       }
     }
   }
+  function drawIcVoice(s) { for (const b of LCD.icVoice ? LCD.icVoice.querySelectorAll('.ick-btn') : []) b.classList.toggle('busy', !!s.tx); }
   // SWR GRAPH (MENU → SWR) : ROS relevé pendant les émissions (TUNE, porteuse, phonie…) à chaque fréquence, en barres
   const SWRG = { step: [10000, 50000, 100000, 500000], bar: [5, 7, 9, 11, 13], si: Math.max(0, Math.min(3, parseInt(store.get('rs.face.ic.swrs', '0'), 10) || 0)),
     bi: Math.max(0, Math.min(4, parseInt(store.get('rs.face.ic.swrb', '0'), 10) || 0)), data: {}, center: null };
@@ -1617,6 +1625,8 @@
     LCD.icClock = el('text', { x: X(492), y: Y(30), class: 'ich-clock', 'text-anchor': 'end' }, h, '');
     // Voyants des fonctions en service
     LCD.icTags = el('text', { x: X(62), y: Y(53), class: 'ich-tags' }, h, '');
+    // RFG (orange, sous le mode) : gain HF (RF/SQL) pas au maximum, comme sur le TRX
+    LCD.icRfg = el('text', { x: X(118), y: Y(53), class: 'ich-rfg', 'text-anchor': 'middle' }, h, 'RFG');
     LCD.icVfo = el('text', { x: X(338), y: Y(56), class: 'ich-vfo' }, h, 'VFO A');
     LCD.icSplit = tag(512, 37, 82, 20, 'split', 'SPLIT');
     // Fréquence (police du TRX : MHz.kHz.dizaines de Hz) ; clic = taper une fréquence
@@ -1670,6 +1680,9 @@
     if (s.lock) tags.push('LOCK');
     tags.push('AGC-' + (['', 'F', 'M', 'S'][s.agc] || '?'));
     LCD.icTags.textContent = tags.join('   ');
+    const rfg = s.rf != null && s.rf < 250;
+    LCD.icRfg.style.display = rfg && !L.icBig ? '' : 'none';
+    if (!L.icBig) LCD.icTags.setAttribute('x', X(rfg ? 150 : 62));
     // Grande fréquence : le VFO en service ; en SPLIT, pendant l'émission, le VFO d'émission (comme sur le TRX). L'autre VFO à droite, en plus petit
     const fmt = (f) => (f ? Math.floor(f / 1e6) + '.' + String(Math.floor(f / 1000) % 1000).padStart(3, '0') + '.' + String(Math.floor(f / 10) % 100).padStart(2, '0') : '—');
     const act = s.vfoSel === 1 ? 'B' : 'A', main = s.split && tx ? (act === 'A' ? 'B' : 'A') : act, other = main === 'A' ? 'B' : 'A';
@@ -1691,7 +1704,7 @@
     } else {
       LCD.icFreq.setAttribute('x', X(s.split ? 438 : ron ? 492 : 592)); LCD.icFreq.setAttribute('y', Y(100));
       LCD.icVfo.setAttribute('x', X(338)); LCD.icVfo.setAttribute('y', Y(56)); LCD.icVfo.setAttribute('text-anchor', 'start');
-      LCD.icTags.setAttribute('x', X(62)); LCD.icTags.setAttribute('y', Y(53));
+      LCD.icTags.setAttribute('x', X(LCD.icRfg.style.display === 'none' ? 62 : 150)); LCD.icTags.setAttribute('y', Y(53));
       LCD.icRitL.setAttribute('y', Y(73)); LCD.icRitV.setAttribute('y', Y(98));
     }
     LCD.icFreq.classList.toggle('sm', !!s.split && !big);
@@ -1767,6 +1780,7 @@
     if (view === 'swr') drawIcSwr(s);
     if (view === 'scan') drawIcScan(s);
     if (view === 'mpad') drawIcMpad(s);
+    if (view === 'voice') drawIcVoice(s);
     if (view) {
       // AUDIO : bande, titre, FFT et oscilloscope dans la cascade ; SCOPE : sous son bandeau, au-dessus des touches ; les autres : bande du scope
       const [up, h2] = view === 'audio' ? [0, IC_AUD_H] : view === 'scope' ? [-IC_TB, IC_SCOPE_H] : [0, IC_STRIP];

@@ -171,6 +171,11 @@
     { id: 'antiVox', g: 'tx', label: 'ANTI VOX', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x17) },
     // Écran KEYER de la face avant : relit le contenu d'une mémoire du manipulateur (1A 02 : M1 … M8), sans rien changer sur le TRX
     { id: 'kmRead', g: 'tx', label: 'Lecture mémoire KEYER', type: 'level', min: 1, max: 8, step: 1, face: true, write: (v) => q(0x1A, 0x02, v) },
+    // Écran VOICE TX : émission d'une mémoire vocale du TRX (28 00 01 … 08 = T1 … T8, 28 00 00 = arrêt) ; phonie seulement,
+    // mêmes contrôles d'émission que la phonie (main, bandes, puissance, VOX, ROS) côté serveur
+    { id: 'voiceTx', g: 'tx', label: 'VOICE TX', type: 'level', min: 1, max: 8, step: 1, face: true, transmits: 'voice',
+      when: (st) => /^(LSB|USB|AM|FM)$/.test((st.vfoSel === 1 ? st.modeB : st.mode) || ''), write: (v) => q(0x28, 0x00, v) },
+    { id: 'voiceStop', g: 'tx', label: 'Arrêt VOICE TX', type: 'action', face: true, write: () => q(0x28, 0x00, 0x00) },
     // Écran SCAN de la face avant : balayage (réception seulement) — 0E 00 arrêt, 02 programmé (P1 – P2), 03 ΔF, 12 / 13 les mêmes en FINE
     { id: 'scan', g: 'vfo', label: 'SCAN', type: 'select', face: true, options: [[0, 'STOP'], [1, 'PROG'], [2, 'ΔF'], [3, 'PROG FINE'], [4, 'ΔF FINE']], write: (v) => q(0x0E, [0x00, 0x02, 0x03, 0x12, 0x13][v]) },
     // Plage du balayage ΔF : 0E A1 … A7 = ±5, 10, 20, 50, 100, 500 kHz, ±1 MHz
@@ -405,6 +410,11 @@
             this.cwPlay = setTimeout(() => { v.tx = 0; }, 150 + ms);
             ok();
           }
+        } else if (c === 0x28 && d[0] === 0x00 && d.length === 2) {
+          // VOICE TX (simulateur) : 3 s d'émission, 00 = arrêt
+          clearTimeout(this.vPlay);
+          if (d[1]) { v.tx = 1; this.vPlay = setTimeout(() => { v.tx = 0; }, 3000); } else v.tx = 0;
+          ok();
         } else if (c === 0x0E) {
           ok(); // balayage (simulateur) : accepté, sans effet
         } else if (c === 0x1A && d[0] === 0x00 && d.length === 3) {

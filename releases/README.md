@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.11 | [RemoteStation-Setup-0.37.11.exe](0.37.11/RemoteStation-Setup-0.37.11.exe) | [remote-station-0.37.11.tar.gz](0.37.11/remote-station-0.37.11.tar.gz) | IC-7300 : VOICE TX T1 … T8, voyant RFG — [empreintes SHA-256](0.37.11/SHA256SUMS.txt) |
 | 0.37.10 | [RemoteStation-Setup-0.37.10.exe](0.37.10/RemoteStation-Setup-0.37.10.exe) | [remote-station-0.37.10.tar.gz](0.37.10/remote-station-0.37.10.tar.gz) | IC-7300 : écrans SCOPE, VOICE, SWR, MEMORY, SCAN, MPAD, RECORD, SET — [empreintes SHA-256](0.37.10/SHA256SUMS.txt) |
 | 0.37.9 | [RemoteStation-Setup-0.37.9.exe](0.37.9/RemoteStation-Setup-0.37.9.exe) | [remote-station-0.37.9.tar.gz](0.37.9/remote-station-0.37.9.tar.gz) | IC-7300 : AUDIO SCOPE et KEYER — [empreintes SHA-256](0.37.9/SHA256SUMS.txt) |
 | 0.37.8 | [RemoteStation-Setup-0.37.8.exe](0.37.8/RemoteStation-Setup-0.37.8.exe) | [remote-station-0.37.8.tar.gz](0.37.8/remote-station-0.37.8.tar.gz) | IC-7300 : sans tableau FUNCTION Yaesu — [empreintes SHA-256](0.37.8/SHA256SUMS.txt) |
