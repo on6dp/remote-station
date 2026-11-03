@@ -412,3 +412,4 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .fc-icpop b { font-weight: 700; }
 #face .lcd-fbox.riton { fill: #e6e9ef; stroke: #fff; } #face .lcd-fbox.riton + .lcd-fboxt { fill: #1a2030; }
 #face .lcd-clart.ic { fill: #fff; font-size: 10.5px; }
+#face .lcd-fboxv { fill: #1a2030; font-size: 14px; font-weight: 700; pointer-events: none; }

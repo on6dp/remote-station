@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.6 | [RemoteStation-Setup-0.37.6.exe](0.37.6/RemoteStation-Setup-0.37.6.exe) | [remote-station-0.37.6.tar.gz](0.37.6/remote-station-0.37.6.tar.gz) | IC-7300 : décalage RIT sous RIT — [empreintes SHA-256](0.37.6/SHA256SUMS.txt) |
 | 0.37.5 | [RemoteStation-Setup-0.37.5.exe](0.37.5/RemoteStation-Setup-0.37.5.exe) | [remote-station-0.37.5.tar.gz](0.37.5/remote-station-0.37.5.tar.gz) | IC-7300 : affichage RIT / ΔTX — [empreintes SHA-256](0.37.5/SHA256SUMS.txt) |
 | 0.37.4 | [RemoteStation-Setup-0.37.4.exe](0.37.4/RemoteStation-Setup-0.37.4.exe) | [remote-station-0.37.4.tar.gz](0.37.4/remote-station-0.37.4.tar.gz) | IC-7300 : VOX/BK-IN — [empreintes SHA-256](0.37.4/SHA256SUMS.txt) |
 | 0.37.3 | [RemoteStation-Setup-0.37.3.exe](0.37.3/RemoteStation-Setup-0.37.3.exe) | [remote-station-0.37.3.tar.gz](0.37.3/remote-station-0.37.3.tar.gz) | IC-7300 : cadres de réglage, NOTCH AN/MN — [empreintes SHA-256](0.37.3/SHA256SUMS.txt) |

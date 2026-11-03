@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.6** — IC-7300 : le décalage RIT / ΔTX s'écrit sous « RIT » dans la case de droite (« RIT » / « 0.21 »), comme sur le TRX ; plus d'inscription au-dessus de la fréquence.
 - **0.37.5** — IC-7300 : RIT / ΔTX comme sur le TRX — « RIT 0.21 », « ΔTX », « RIT ΔTX » (décalage en kHz) au-dessus de la fréquence, et la case en haut à droite s'allume RIT / ΔTX / RIT ΔTX (le bouton MULTI règle alors le décalage).
 - **0.37.4** — IC-7300 : touche VOX/BK-IN — en CW, BK-IN OFF → SEMI → FULL (cadre « BK-IN SEMI »…), en phonie le VOX ne peut qu'être coupé à distance (message s'il est déjà coupé).
 - **0.37.3** — IC-7300 : sous la fréquence, bande de scope au-dessus des mesures (comme le TRX) ; cadre « P.AMP 1 », « NOTCH MN(MID) », « NB ON »… au milieu de l'écran quand un réglage change, sur la page ou au TRX ; touche NOTCH OFF → AN → MN → OFF comme le TRX (pas d'AN en CW), largeur du notch manuel (WIDE / MID / NAR) lue.

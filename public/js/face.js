@@ -783,10 +783,11 @@
       // FTDX10 : case de la fonction du bouton FUNC (ex. LEVEL, RF POWER), à droite du VFO-B ; clic = menu FUNC
       const fr = el('rect', { x: X(520), y: Y(57), width: 85, height: 23, rx: 3, class: 'lcd-fbox' }, g);
       const ft = el('text', { x: X(562.5), y: Y(73), class: 'lcd-fboxt', 'text-anchor': 'middle' }, g, '');
+      const fv = el('text', { x: X(562.5), y: Y(86), class: 'lcd-fboxv', 'text-anchor': 'middle' }, g, ''); // IC-7300 : décalage RIT / ΔTX
       const fh = el('rect', { x: X(520), y: Y(57), width: 85, height: 23, class: 'hs lcd-hit' }, g);
       el('title', {}, fh, 'Fonction du bouton FUNC (clic : menu FUNC)');
       fh.addEventListener('click', () => { viewTouched(); L.func = !L.func; render(); });
-      LCD.fbox = { r: fr, t: ft };
+      LCD.fbox = { r: fr, t: ft, v: fv };
     }
     buildFunc(g, c);
     buildModeMenu(g, c);
@@ -2126,7 +2127,7 @@
       const sel = (s.vfoSel === 1 ? 'B' : 'A') === side;
       const cr = own ? s['rit' + side] : side === 'A' ? s.rit : 0, ct = own ? s['xit' + side] : side === 'A' ? s.xit : 0;
       const clarOn = !!(cr || ct);
-      v.clarG.style.display = clarOn ? '' : 'none';
+      v.clarG.style.display = clarOn && !ICOM ? '' : 'none'; // IC-7300 : le décalage s'écrit sous « RIT » dans la case de droite
       if (clarOn) {
         // « CLAR RX -90Hz » : la valeur juste à côté, en gras (CLAR RX, CLAR TX, CLAR TRX comme sur le TRX)
         const cv = (sel ? s.clar : own ? s['clar' + side] : s.clar) || 0;
@@ -2175,6 +2176,11 @@
       const ic = ICOM && (s.rit || s.xit);
       LCD.fbox.t.textContent = ic ? (s.rit && s.xit ? 'RIT ΔTX' : s.rit ? 'RIT' : 'ΔTX') : FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
       LCD.fbox.r.classList.toggle('riton', !!ic);
+      // Sous « RIT » : le décalage en kHz (« 0.21 »), comme sur l'écran de l'IC-7300
+      const cv = s.clar || 0;
+      LCD.fbox.v.textContent = ic ? (cv < 0 ? '-' : '') + (Math.abs(cv) / 1000).toFixed(2) : '';
+      LCD.fbox.r.setAttribute('height', ic ? 33 : 23);
+      LCD.fbox.t.setAttribute('y', LCD.Y(ic ? 70 : 73));
     }
     for (const k of ['icomMenu', 'quickMenu']) if (LCD[k]) { LCD[k].style.display = L[k] ? '' : 'none'; if (L[k]) LCD[k + 'Draw'](); }
     drawMultiMenu(s);
