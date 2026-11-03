@@ -4897,6 +4897,9 @@
     },
     onState() {
       drawTxCallDg();
+      // Double réception allumée ou coupée : cascades et colonnes du VFO-B tout de suite (sans attendre le tour de 500 ms)
+      if (tab === 'ftx' && applyFtDual()) announce();
+      if (tab === 'rtty' && dualAudioOn() !== rtDualAudio) showTab(tab);
       if (LOGW() && LOGW().onState) LOGW().onState();
       // « TX call » : indicatif des émissions numériques (station ou celui qui a la main)
       const stx = api && api.state();

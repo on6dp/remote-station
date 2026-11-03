@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.33.22** — **FT8 / FT4 / FT2** : SUB coupé, la page revient bien à deux colonnes (les colonnes du VFO-B ne restent plus affichées) ; passage en double réception immédiat (DUAL RX relu à chaque cycle sur le FTDX101, page mise à jour dès que l'état arrive). **Aide et Help** mises à jour pour la page des modes numériques de la face avant (double réception FT et RTTY, macros et contests, Logbooks, TX call, cartes de bande). Recharger la page Station, Ctrl+F5 sur /ftdx101 et /ftdx101/digi.html.
 - **0.33.21** — **RTTY** : macros par défaut F11 « TX » (émet le texte tapé) et F12 « RX » (retour en réception) ; décodeur plus sensible : silencieux par défaut 9 dB au lieu de 12 (décode environ 3 dB plus bas, ≈ −6 dB dans 3 kHz ; l'ancien réglage 12 passe à 9 une fois). **Émission numérique** : ALC limité à 30 % par défaut (la page Station baisse le niveau BF tant que l'ALC dépasse 30 % ; réglage digiAlcMax). Recharger la page Station, Ctrl+F5 sur /ftdx101/digi.html.
 - **0.33.20** — **Modes numériques de la face avant** : choix « TX call » (jaune fluo) dans la barre du haut de chaque mode — RTTY, JTTY, CW, SSTV, WSPR et JT65 — comme en FT8 / FT4 / FT2 (un seul réglage, le même partout). Ctrl+F5 sur /ftdx101/digi.html.
 - **0.33.19** — **Face avant, DIGI CONFIGURATION** : le bouton du mode affiché dans la page des modes numériques est en bleu clair (rien si la page est fermée) ; « 📟 Numériques » ne recharge plus la page des modes numériques déjà ouverte. Ctrl+F5 sur /ftdx101 et /ftdx101/digi.html.

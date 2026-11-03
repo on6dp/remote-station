@@ -1691,3 +1691,5 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 .rt-contest #rtcSel { max-width: 260px; }
 .rt-hd .rt-sig { font-size: 10.5px; font-weight: 700; color: #c8d3e3; letter-spacing: .3px; text-transform: none; white-space: nowrap; }
 .rt-hd .rt-sig:empty { display: none; }
+/* Colonnes et cascade du VFO-B cachées quand le 2e récepteur ne décode pas (sinon .dg-col { display: flex } les montre) */
+.dg-col.ft-colb[hidden], .ft-wfb[hidden] { display: none !important; }

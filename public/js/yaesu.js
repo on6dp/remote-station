@@ -165,7 +165,7 @@
     for (const r of spec.extraReads || []) READS.push(r);
     // Les commandes partent une par une, espacées (FRAME_GAP_MS) : une rafale de 30 commandes
     // déborde le tampon CAT de la radio, qui en perd une partie (mode non lu, « plus de réponse »…)
-    const FAST = ['FA;', 'MD0;', 'FB;', 'MD1;', 'SM0;', 'TX;', 'FT;'];
+    const FAST = ['FA;', 'MD0;', 'FB;', 'MD1;', 'SM0;', 'TX;', 'FT;'].concat(spec.fastExtra || []); // fastExtra : lectures rapides propres à un TRX
     // Deux récepteurs (FTX-1) : S-mètre du côté SUB par READ METER « RM2 » (manuel CAT : RM P1 2 = S SUB-side ;
     // le FTX-1 ne répond pas à SM1), lu en double réception (FR00) ; en réception simple, SM0 = côté actif
     const FAST_SUB = spec.subBadges ? ['RM2;'] : [];

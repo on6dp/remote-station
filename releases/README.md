@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.33.22 | [RemoteStation-Setup-0.33.22.exe](0.33.22/RemoteStation-Setup-0.33.22.exe) | [remote-station-0.33.22.tar.gz](0.33.22/remote-station-0.33.22.tar.gz) | FT : retour à 2 colonnes, double réception immédiate ; aide à jour — [empreintes SHA-256](0.33.22/SHA256SUMS.txt) |
 | 0.33.21 | [RemoteStation-Setup-0.33.21.exe](0.33.21/RemoteStation-Setup-0.33.21.exe) | [remote-station-0.33.21.tar.gz](0.33.21/remote-station-0.33.21.tar.gz) | RTTY : TX/RX en F11/F12, décodeur plus sensible ; ALC 30 % — [empreintes SHA-256](0.33.21/SHA256SUMS.txt) |
 | 0.33.20 | [RemoteStation-Setup-0.33.20.exe](0.33.20/RemoteStation-Setup-0.33.20.exe) | [remote-station-0.33.20.tar.gz](0.33.20/remote-station-0.33.20.tar.gz) | TX call dans tous les modes numériques — [empreintes SHA-256](0.33.20/SHA256SUMS.txt) |
 | 0.33.19 | [RemoteStation-Setup-0.33.19.exe](0.33.19/RemoteStation-Setup-0.33.19.exe) | [remote-station-0.33.19.tar.gz](0.33.19/remote-station-0.33.19.tar.gz) | DIGI CONFIGURATION : mode en cours en bleu clair — [empreintes SHA-256](0.33.19/SHA256SUMS.txt) |

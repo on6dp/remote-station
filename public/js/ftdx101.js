@@ -302,6 +302,7 @@
       { cmd: 'CN00;', when: (st) => /FM/.test(st.mode || ''), re: /^CN00(\d{3})$/, parse: (m) => ({ toneIdx: +m[1] }), sim: 'CN00012' },
       { cmd: 'CN10;', when: (st) => /FM/.test(st.modeB || ''), re: /^CN10(\d{3})$/, parse: (m) => ({ toneIdxB: +m[1] }), sim: 'CN10012' }
     ],
+    fastExtra: ['FR;'], // DUAL RX relu à chaque cycle : la page des modes numériques passe tout de suite en double réception
     extraQueries: ['RF0;', 'RF1;', 'ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
     extraStateKeys: ['ssSpdA', 'ssPeakA', 'ssMarkerA', 'ssColorA', 'ssLevelA', 'ssSpanA', 'ssSpdB', 'ssPeakB', 'ssMarkerB', 'ssColorB', 'ssLevelB', 'ssSpanB', 'fastA', 'fastB', 'clarA', 'ritA', 'xitA', 'clarB', 'ritB', 'xitB', 'lockB', 'lockRaw', 'fastStep', 'moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'cwPitch'],
     subBadges: true,
