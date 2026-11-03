@@ -708,7 +708,7 @@
       v.hit.addEventListener('click', () => askFreq(side));
       // « CLAR RX   -90Hz » au-dessus de la fréquence (clarifier en service), comme sur le TRX ; molette dessus : décalage ±10 Hz
       v.clarG = el('g', { class: 'lcd-clar', style: 'display:none' }, g);
-      v.clarT = el('text', { x: x0 + 70, y: Y(93.5), class: 'lcd-clart' }, v.clarG, 'CLAR RX');
+      v.clarT = el('text', { x: x0 + 70, y: Y(93.5), class: 'lcd-clart' + (ICOM ? ' ic' : '') }, v.clarG, 'CLAR RX');
       v.clarV = el('text', { x: v.xr, y: Y(93.5), class: 'lcd-clart', 'text-anchor': 'end' }, v.clarG, '');
       const ch = el('rect', { x: x0 + 66, y: Y(86), width: half - 70, height: 8, class: 'hs lcd-hit' }, v.clarG);
       el('title', {}, ch, 'Clarifier : molette = décalage ±10 Hz ; appui long sur la grande touche CLAR : décalage à zéro');
@@ -2130,7 +2130,10 @@
       if (clarOn) {
         // « CLAR RX -90Hz » : la valeur juste à côté, en gras (CLAR RX, CLAR TX, CLAR TRX comme sur le TRX)
         const cv = (sel ? s.clar : own ? s['clar' + side] : s.clar) || 0;
-        v.clarT.textContent = 'CLAR ' + (cr && ct ? 'TRX' : cr ? 'RX' : 'TX') + '  ' + (cv > 0 ? '+' : cv < 0 ? '-' : '') + Math.abs(cv) + 'Hz';
+        v.clarT.textContent = ICOM
+          // IC-7300 : « RIT 0.21 », « ΔTX -0.05 », « RIT ΔTX 0.21 » (décalage en kHz), comme sur l'écran du TRX
+          ? (cr && ct ? 'RIT ΔTX' : cr ? 'RIT' : 'ΔTX') + '  ' + (cv < 0 ? '-' : '') + (Math.abs(cv) / 1000).toFixed(2)
+          : 'CLAR ' + (cr && ct ? 'TRX' : cr ? 'RX' : 'TX') + '  ' + (cv > 0 ? '+' : cv < 0 ? '-' : '') + Math.abs(cv) + 'Hz';
         v.clarV.textContent = '';
       }
       v.tx.classList.toggle('on', tx && txSide === side);
@@ -2167,7 +2170,12 @@
       const cur = L.bandOf(activeSide() === 'B' ? s.freqB : s.freq);
       for (const n in LCD.bandCells) for (const e of LCD.bandCells[n]) e.classList.toggle('on', n === cur);
     }
-    if (LCD.fbox) LCD.fbox.t.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
+    // Case de la fonction du bouton MULTI / FUNC ; IC-7300 avec RIT / ΔTX en service : « RIT », « ΔTX », « RIT ΔTX » (MULTI règle le décalage)
+    if (LCD.fbox) {
+      const ic = ICOM && (s.rit || s.xit);
+      LCD.fbox.t.textContent = ic ? (s.rit && s.xit ? 'RIT ΔTX' : s.rit ? 'RIT' : 'ΔTX') : FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
+      LCD.fbox.r.classList.toggle('riton', !!ic);
+    }
     for (const k of ['icomMenu', 'quickMenu']) if (LCD[k]) { LCD[k].style.display = L[k] ? '' : 'none'; if (L[k]) LCD[k + 'Draw'](); }
     drawMultiMenu(s);
     drawIcMeter(s);
