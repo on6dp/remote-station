@@ -80,7 +80,8 @@
     'dnf', 'notch', 'notchPos', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox', 'tuner', 'tuning',
     'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'ipPlus', 'voxGain', 'antiVox', 'notchW'];
   // Textes : mémoires du manipulateur M1 … M8 (écran KEYER)
-  const STR_KEYS = ['km1', 'km2', 'km3', 'km4', 'km5', 'km6', 'km7', 'km8'];
+  // et canaux mémoire mc1 … mc101 (écran MEMORY : « fréquence|mode|nom »)
+  const STR_KEYS = ['km1', 'km2', 'km3', 'km4', 'km5', 'km6', 'km7', 'km8'].concat(Array.from({ length: 101 }, (_, i) => 'mc' + (i + 1)));
 
   // Lectures simples : [commande, sous-commande, clé, type] (type : t = 0/1, l = niveau 0–255, b = octet)
   const SIMPLE = [
@@ -169,7 +170,13 @@
     { id: 'notchW', g: 'flt', label: 'Largeur NOTCH', type: 'select', face: true, options: [[0, 'WIDE'], [1, 'MID'], [2, 'NAR']], write: (v) => q(0x16, 0x57, v) },
     { id: 'antiVox', g: 'tx', label: 'ANTI VOX', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x17) },
     // Écran KEYER de la face avant : relit le contenu d'une mémoire du manipulateur (1A 02 : M1 … M8), sans rien changer sur le TRX
-    { id: 'kmRead', g: 'tx', label: 'Lecture mémoire KEYER', type: 'level', min: 1, max: 8, step: 1, face: true, write: (v) => q(0x1A, 0x02, v) }
+    { id: 'kmRead', g: 'tx', label: 'Lecture mémoire KEYER', type: 'level', min: 1, max: 8, step: 1, face: true, write: (v) => q(0x1A, 0x02, v) },
+    // Écran SCAN de la face avant : balayage (réception seulement) — 0E 00 arrêt, 02 programmé (P1 – P2), 03 ΔF, 12 / 13 les mêmes en FINE
+    { id: 'scan', g: 'vfo', label: 'SCAN', type: 'select', face: true, options: [[0, 'STOP'], [1, 'PROG'], [2, 'ΔF'], [3, 'PROG FINE'], [4, 'ΔF FINE']], write: (v) => q(0x0E, [0x00, 0x02, 0x03, 0x12, 0x13][v]) },
+    // Plage du balayage ΔF : 0E A1 … A7 = ±5, 10, 20, 50, 100, 500 kHz, ±1 MHz
+    { id: 'dfSpan', g: 'vfo', label: 'ΔF SPAN', type: 'select', face: true, options: [[1, '±5k'], [2, '±10k'], [3, '±20k'], [4, '±50k'], [5, '±100k'], [6, '±500k'], [7, '±1M']], write: (v) => q(0x0E, 0xA0 + v) },
+    // Écran MEMORY de la face avant : relit un canal mémoire (1A 00 : 0001 … 0099, 0100 = P1, 0101 = P2), sans rien changer sur le TRX
+    { id: 'mcRead', g: 'vfo', label: 'Lecture canal mémoire', type: 'level', min: 1, max: 101, step: 1, face: true, write: (v) => q(0x1A, 0x00, bcd(Math.floor(v / 100)), bcd(v % 100)) }
   ];
   const CONTROL = {};
   CONTROLS.forEach((c) => { CONTROL[c.id] = c; });
@@ -260,6 +267,15 @@
     // Mémoires du manipulateur (1A 02 ch texte) : M1 … M8, texte ASCII (« * » = numéro de concours, « ^ » = signes liés)
     if (c === 0x1A && d[0] === 0x02 && d.length >= 2 && d[1] >= 1 && d[1] <= 8) {
       return { ['km' + d[1]]: String.fromCharCode(...d.slice(2).filter((b) => b >= 0x20 && b < 0x7F)).slice(0, 70) };
+    }
+    // Canal mémoire (1A 00) : « fréquence|mode|nom », vide si le canal est libre (FF)
+    if (c === 0x1A && d[0] === 0x00 && d.length >= 4) {
+      const ch = unbcd(d[1]) * 100 + unbcd(d[2]);
+      if (!(ch >= 1 && ch <= 101)) return { ok: true };
+      if (d[3] === 0xFF || d.length < 12) return { ['mc' + ch]: '' };
+      const f = freqValue(d, 4), m = parseMode([d[9], d[11] >> 4, d[10]], 0);
+      const name = String.fromCharCode(...d.slice(18, 28).filter((b) => b >= 0x20 && b < 0x7F)).trim();
+      return { ['mc' + ch]: f + '|' + (m.name || '') + '|' + name };
     }
     if (c === 0x1A) return { ok: true }; // réglages 1A 05 (source de modulation de la phonie à distance…)
     if (c === 0xFA) return { error: true };
@@ -389,6 +405,15 @@
             this.cwPlay = setTimeout(() => { v.tx = 0; }, 150 + ms);
             ok();
           }
+        } else if (c === 0x0E) {
+          ok(); // balayage (simulateur) : accepté, sans effet
+        } else if (c === 0x1A && d[0] === 0x00 && d.length === 3) {
+          // Canaux mémoire (simulateur) : 1 et 2 remplis, les autres libres
+          const ch = unbcd(d[1]) * 100 + unbcd(d[2]);
+          const MC = { 1: [7074000, 0x01, 1, 'FT8 40M'], 2: [14070000, 0x04, 0, 'PSK'], 100: [500000, 0x01, 0, ''], 101: [29999990, 0x01, 0, ''] };
+          const m = MC[ch];
+          if (!m) r(0x00, d[1], d[2], 0xFF);
+          else r(0x00, d[1], d[2], 0x00, ...freqBytes(m[0]), m[1], 0x01, m[2] << 4, 0, 0x08, 0x85, 0, 0x08, 0x85, ...Array.from(m[3].padEnd(10), (x) => x.charCodeAt(0)));
         } else if (c === 0x1A && d[0] === 0x02 && d.length === 2) {
           // Mémoires du manipulateur (simulateur), comme celles d'un IC-7300 réglé d'usine
           const KM = ['CQ CQ DE ON5VL ON5VL K', 'UR 5NN*', 'CFM TU', 'QRZ?', '', '', '', ''];

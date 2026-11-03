@@ -61,7 +61,7 @@
       { id: 'vm', x: 1397, y: 107, w: 75, h: 33, tip: 'V/M', act: info('Mémoires : pas encore reliées.') },
       { id: 'down', x: 1205, y: 157, w: 75, h: 33, tip: '▼ : bande précédente', act: { local: 'bandDown' } },
       { id: 'up', x: 1302, y: 157, w: 73, h: 33, tip: '▲ : bande suivante', act: { local: 'bandUp' } },
-      { id: 'mpad', cx: 1442, cy: 187, r: 32, tip: 'MPAD', act: info('MPAD (mémoires rapides) : pas disponible à distance.') }
+      { id: 'mpad', cx: 1442, cy: 187, r: 32, tip: 'MPAD : note la fréquence et le mode du VFO dans le MEMO PAD de cette page (MENU → MPAD pour y revenir)', act: { local: 'mpadWrite' } }
     ],
     knobs: [
       { id: 'dial', cx: 1310, cy: 415, ro: 160, ri: 160, dial: true, tip: 'Grand bouton : fréquence du VFO (molette ou glisser en tournant)' },
