@@ -88,7 +88,30 @@
   // Carnet de trafic dans cette page : dashboard, ou page des modes numériques de la face avant (/ftdx101/digi.html) ;
   // la fenêtre séparée du dashboard n'en a pas (l'onglet Logbooks est dans le dashboard)
   const LOGP = POPUP && /^\/ftdx101/.test(location.pathname) && !EMBED;
-  const logHere = () => !!window.RSLOG && (!POPUP || LOGP);
+  // Onglet Logbooks dans la page (dashboard) ; page des modes numériques de la face avant : le carnet s'ouvre dans
+  // une fenêtre à lui (/ftdx101/log.html), raccrochée à cette page (même connexion, voir RSLOGHOST)
+  const logHere = () => !!window.RSLOG && !POPUP;
+  let logWin = null, logInst = null, logMe = null, logSay = null;
+  const logApi = (a) => (logSay && a ? Object.assign({}, a, { say: logSay }) : a); // messages dans la fenêtre du carnet
+  const LOGW = () => (logInst && logWin && !logWin.closed ? logInst : null);
+  if (LOGP) {
+    window.RSLOGHOST = {
+      attach(win, inst, say) {
+        logWin = win;
+        logInst = inst;
+        logSay = say || null;
+        inst.init(logApi(api));
+        if (logMe) inst.onHello(logMe);
+        if (inst.onState) inst.onState();
+      },
+      detach(inst) { if (logInst === inst) { logInst = null; logWin = null; } }
+    };
+  }
+  function openLogWin() {
+    if (logWin && !logWin.closed) { try { logWin.focus(); } catch (e) { /* */ } return; }
+    logWin = window.open('/ftdx101/log.html', 'rs-log', 'width=1500,height=900');
+    if (!logWin && api) api.say('Le navigateur a bloqué la fenêtre du carnet : autorisez les fenêtres (pop-up) pour ce site.', 'warn', 6000);
+  }
   const HOST = !POPUP || EMBED; // page qui peut ouvrir la fenêtre séparée (dashboard ou face avant)
   // Fenêtre séparée ouverte depuis la face avant : « Ramener » parle de la face avant
   const FROM_FACE = POPUP && !EMBED && (() => { try { return !!(window.opener && window.opener.document.body.classList.contains('face-page')); } catch (e) { return false; } })();
@@ -444,7 +467,7 @@
     bar.textContent = '';
     for (const [id, label] of TABS) {
       if (id === 'events' && POPUP) continue;
-      if (id === 'log' && !logHere()) continue; // carnet de trafic (dashboard, et page des modes numériques de la face avant)
+      if (id === 'log' && !logHere() && !LOGP) continue; // carnet : onglet du dashboard, ou fenêtre à part (face avant)
       if (id === 'gap') { const g = document.createElement('span'); g.className = 'ctab-gap'; bar.appendChild(g); continue; }
       const b = document.createElement('button');
       b.className = 'ctab';
@@ -4529,12 +4552,13 @@
       const again = !!api;
       api = a;
       // Fenêtre séparée : le carnet de trafic (logbook.js chargé par digi.html) passe par la même connexion
-      if (LOGP && window.RSLOG) window.RSLOG.init(a);
+      if (LOGW()) LOGW().init(logApi(a));
       if (again) { announce(); return; } // fenêtre séparée raccrochée à un dashboard rechargé
       buildDom();
       bmInit();
       document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (b.dataset.tab === 'log' && LOGP) return openLogWin(); // carnet : dans sa propre fenêtre
         // Choisir soi-même un autre onglet arrête le suivi de l'opérateur
         if (follow && api && !api.iControl()) { setFollow(false); api.say('Suivi de l’opérateur arrêté (onglet choisi).', '', 4000); }
         showTab(b.dataset.tab);
@@ -4743,7 +4767,7 @@
     insertJtty,
     insertCw,
     onHello(me, info) {
-      if (LOGP && window.RSLOG && me) window.RSLOG.onHello(me);
+      if (LOGP && me) { logMe = me; if (LOGW()) LOGW().onHello(me); }
       needHist = true;
       wsNeedHist = true;
       jtNeedHist = true;
@@ -4760,8 +4784,8 @@
       announce(); // reprise après reconnexion
     },
     onMessage(m) {
-      if (m.t === 'qrz_info') { qrzInfo(m); if (window.RSLOG && window.RSLOG.onQrz) window.RSLOG.onQrz(m); return true; }
-      if (LOGP && window.RSLOG && /^log_/.test(m.t)) { window.RSLOG.onMessage(m); return true; } // carnet de trafic de cette fenêtre
+      if (m.t === 'qrz_info') { qrzInfo(m); if (window.RSLOG && window.RSLOG.onQrz) window.RSLOG.onQrz(m); if (LOGW() && LOGW().onQrz) LOGW().onQrz(m); return true; }
+      if (LOGP && /^log_/.test(m.t)) { if (LOGW()) LOGW().onMessage(m); return true; } // carnet de trafic (sa fenêtre)
       if (m.t === 'ftx_qso' && m.qso) { qsoPrompt(m.qso); return true; }
       if (m.t === 'spots' || m.t === 'spot') {
         if (m.t === 'spots') bmSpots.clear();
@@ -4842,7 +4866,7 @@
     },
     onState() {
       drawTxCallDg();
-      if (LOGP && window.RSLOG && window.RSLOG.onState) window.RSLOG.onState();
+      if (LOGW() && LOGW().onState) LOGW().onState();
       // « TX call » : indicatif des émissions numériques (station ou celui qui a la main)
       const stx = api && api.state();
       // Report reçu du correspondant pendant la séquence FT8 / FT4 / FT2 → « RST RX »

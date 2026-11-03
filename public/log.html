@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logbooks — Remote Station</title>
+<meta name="theme-color" content="#0b1018">
+<link rel="stylesheet" href="/css/rp-tokens.css">
+<link rel="stylesheet" href="/css/rp.css">
+</head>
+<body class="digi-popup log-popup">
+  <!-- Carnet de trafic dans sa propre fenêtre : il utilise la connexion de la page des modes numériques qui l'a ouvert -->
+  <p class="dg-orphan" id="lgOrphan" hidden>Cette fenêtre doit être ouverte depuis la page des modes numériques de la face avant (onglet LOGBOOKS). Si cette page a été fermée, rouvrez-la puis cliquez sur LOGBOOKS.</p>
+  <section class="panel activity lg-win" id="centerPanel"><div class="ctab-pane lg" id="lgRoot"></div></section>
+  <p class="dg-toast" id="dgToast" role="status"></p>
+<script src="/js/logbook.js"></script>
+<script src="/js/log-popup.js"></script>
+</body>
+</html>
