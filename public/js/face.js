@@ -149,6 +149,7 @@
     if (a.local === 'icomMenu' || a.local === 'quickMenu') return L[a.local] ? closeGrid(a.local) : openGrid(a.local);
     if (a.local === 'multiMenu') { L.multiMenu = !L.multiMenu; L.multiAt = Date.now(); if (L.multiMenu && multiItems(s).indexOf(L.funcSel) < 0) L.funcSel = 'power'; return render(); }
     if (a.local === 'expand') return toggleExpand();
+    if (a.local === 'scopeMeter') return setIcMeter(!L.icMeter);
     if (a.local === 'exit') { if (L.bandMenu) closeBandMenu(); if (L.modeMenu) closeModeMenu(); for (const k of ['icomMenu', 'quickMenu']) if (L[k]) closeGrid(k); L.multiMenu = false; if (L.func) L.func = false; return render(); }
     if (a.local === 'bandUp' || a.local === 'bandDown') {
       // Bande suivante / précédente (IC-7300 : touches ▲ ▼)
@@ -671,7 +672,7 @@
       const g0 = g;
       { // éléments du VFO groupés (MONO : déplacés / cachés ensemble)
       const g = v.g = el('g', {}, g0);
-      el('text', { x: x0 + 3, y: Y(103), class: 'lcd-vfo' }, g, 'VFO');
+      v.lbl = el('text', { x: x0 + 3, y: Y(103), class: 'lcd-vfo' }, g, 'VFO');
       v.tx = el('text', { x: x0 + 38, y: Y(103), class: 'lcd-txb' }, g, '');
       v.badge = el('rect', { x: x0 + 1, y: Y(106), width: 52, height: 15, rx: 1.5, class: 'lcd-mode' }, g);
       v.mode = el('text', { x: x0 + 27, y: Y(118), class: 'lcd-modet', 'text-anchor': 'middle' }, g, '—');
@@ -771,12 +772,12 @@
       const md = () => L.activeMode(S()) || '';
       const noR = (t) => t + ' : pas disponible à distance';
       buildGrid(g, c, 'icomMenu', 'MENU', [[
-        ['SCOPE', 'SCOPE : scope agrandi (EXPAND)', () => toggleExpand()],
-        ['AUDIO', 'AUDIO SCOPE : spectre (AF-FFT) et oscilloscope de la BF', () => { viewTouched(); L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; render(); }],
+        ['SCOPE', 'SCOPE : le scope sous la fréquence (à la place des mesures) ; une 2e fois : scope agrandi', () => (L.icMeter ? setIcMeter(false) : toggleExpand())],
+        ['AUDIO', 'AUDIO SCOPE : spectre (AF-FFT) et oscilloscope de la BF', () => { viewTouched(); if (L.icMeter) { L.icMeter = false; store.set('rs.face.icmeter', '0'); } L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; render(); }],
         [() => (/^CW/.test(md()) ? 'KEYER' : /^RTTY/.test(md()) ? 'DECODE' : 'VOICE'),
           () => (/^CW/.test(md()) ? 'KEYER : émission CW (onglet CW des modes numériques)' : /^RTTY/.test(md()) ? 'DECODE : décodeur RTTY (onglet RTTY des modes numériques)' : noR('VOICE (mémoires vocales)')),
           () => (/^CW/.test(md()) ? digiOpen('cw') : /^RTTY/.test(md()) ? digiOpen('rtty') : say(noR('VOICE (mémoires vocales)') + '.', '', 4000))],
-        ['METER', 'METER : mesures du TRX (Po, SWR, ALC, COMP, Id, Vd)', () => meterSay()],
+        ['METER', 'METER : les mesures (ALC, COMP, SWR, Id, Vd, Po) sous la fréquence, à la place du scope', () => setIcMeter(true)],
         ['SWR', 'SWR : ROS mesuré en émission', () => meterSay(true)],
         ['MEMORY', noR('MEMORY (mémoires)'), null],
         ['SCAN', noR('SCAN'), null],
@@ -799,6 +800,7 @@
         ['LOCK', 'LOCK du grand bouton', () => setCtl('lock', S().lock ? 0 : 1)],
         ['3DSS', 'Spectre en trois dimensions', () => { L.d3 = !L.d3; store.set('rs.face.3dss', L.d3 ? '1' : '0'); WF.h3 = []; WF.drawn = false; render(); }]]]);
       buildMultiMenu(g, c);
+      buildIcMeter(g, c);
       // Le mode affiché se touche pour le changer, comme sur l'écran de l'IC-7300
       const v = LCD.vA, mb = el('rect', { x: Number(v.badge.getAttribute('x')), y: Number(v.badge.getAttribute('y')), width: 52, height: 15, class: 'hs lcd-hit' }, v.g);
       el('title', {}, mb, 'Mode : clic pour le tableau des modes');
@@ -886,6 +888,68 @@
     setTimeout(() => document.addEventListener('pointerdown', gridOutside[key], true), 0);
   }
   function closeGrid(key) { L[key] = false; if (gridOutside[key]) document.removeEventListener('pointerdown', gridOutside[key], true); render(); }
+  // IC-7300 : écran des mesures sous la fréquence (comme le METER du TRX) : ALC, COMP, SWR, Id à gauche, Vd et Po à droite
+  L.icMeter = store.get('rs.face.icmeter', '1') !== '0';
+  function setIcMeter(on) { L.icMeter = !!on; store.set('rs.face.icmeter', L.icMeter ? '1' : '0'); WF.drawn = false; render(); }
+  function buildIcMeter(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const m = el('g', { class: 'icm', style: 'display:none' }, g);
+    el('rect', { x: X(5), y: Y(141), width: c.w - 10, height: G.scopeY + G.scopeH - 141, class: 'icm-bg' }, m);
+    const bars = {};
+    const bar = (key, y, lab, ticks, x0, x1, color) => {
+      el('text', { x: x0 - 8, y: y + 8, class: 'icm-lab', 'text-anchor': 'end' }, m, lab);
+      el('rect', { x: x0, y, width: x1 - x0, height: 9, class: 'icm-track' }, m);
+      const f = el('rect', { x: x0, y: y + 1.5, width: 0, height: 6, class: 'icm-fill', style: 'fill:' + color }, m);
+      for (const [fr, t] of ticks) {
+        const tx = x0 + fr * (x1 - x0);
+        el('line', { x1: tx, y1: y + 9, x2: tx, y2: y + 12, class: 'icm-tick' }, m);
+        el('text', { x: tx, y: y + 22, class: 'icm-num', 'text-anchor': 'middle' }, m, t);
+      }
+      bars[key] = { f, x0, x1 };
+    };
+    const L0 = X(70), L1 = X(390);
+    bar('alc', Y(150), 'ALC', [], L0, L1, '#ff3b30');
+    bar('comp', Y(186), 'COMP', [[0, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [0.97, 'dB']], L0, L1, '#e6e9ef');
+    bar('swr', Y(222), 'SWR', [[0, '1'], [0.15, '1.5'], [0.25, '2'], [0.35, '2.5'], [0.45, '3'], [0.97, '∞']], L0, L1, '#ffcf4a');
+    bar('id', Y(258), 'Id', [[0, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [0.97, '25A']], L0, L1, '#e6e9ef');
+    // Cadres Vd et Po à droite
+    const box = (key, y, lab, t0, t1, color) => {
+      el('rect', { x: X(425), y, width: 165, height: 48, rx: 2, class: 'icm-box' }, m);
+      el('text', { x: X(430), y: y - 2, class: 'icm-lab' }, m, lab);
+      el('text', { x: X(432), y: y + 18, class: 'icm-num' }, m, t0);
+      el('text', { x: X(582), y: y + 18, class: 'icm-num', 'text-anchor': 'end' }, m, t1);
+      el('rect', { x: X(432), y: y + 25, width: 150, height: 9, class: 'icm-track' }, m);
+      const f = el('rect', { x: X(432), y: y + 26.5, width: 0, height: 6, class: 'icm-fill', style: 'fill:' + color }, m);
+      const v = el('text', { x: X(582), y: y + 45, class: 'icm-val', 'text-anchor': 'end' }, m, '');
+      bars[key] = { f, x0: X(432), x1: X(582), v };
+    };
+    box('vd', Y(170), 'Vd', '10', '16V', '#38b6ff');
+    box('po', Y(240), 'Po', '0', '100%', '#ff8a1f');
+    LCD.icm = { g: m, bars };
+  }
+  function drawIcMeter(s) {
+    const M = LCD.icm;
+    if (!M) return;
+    const on = !!L.icMeter && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu;
+    M.g.style.display = on ? '' : 'none';
+    LCD.lowG.style.display = on || L.expand ? 'none' : '';
+    if (!on) return;
+    const tx = !!s.tx;
+    const lin = (t, v) => { if (v == null) return 0; for (let i = 1; i < t.length; i++) if (v <= t[i][0]) return t[i - 1][1] + (v - t[i - 1][0]) / (t[i][0] - t[i - 1][0]) * (t[i][1] - t[i - 1][1]); return t[t.length - 1][1]; };
+    const swr = R.swrValue ? R.swrValue(s.m6) : null;
+    const comp = s.m3 == null ? null : s.m3 <= 130 ? s.m3 / 130 * 15 : 15 + (s.m3 - 130) / 111 * 15; // 0130 = 15 dB, 0241 = 30 dB
+    const fr = {
+      alc: tx ? Math.min(1, (s.m4 || 0) / 255) : 0,
+      comp: tx && comp != null ? Math.min(1, comp / 25) : 0,
+      swr: tx && swr != null ? lin([[1, 0], [1.5, 0.15], [2, 0.25], [2.5, 0.35], [3, 0.45], [5, 0.8], [10, 1]], swr) : 0,
+      id: tx && R.idValue ? Math.min(1, R.idValue(s.m7) / 25) : 0,
+      vd: R.vdValue && s.m8 != null ? Math.max(0, Math.min(1, (R.vdValue(s.m8) - 10) / 6)) : 0,
+      po: tx && R.poFrac ? R.poFrac(s.m5) || 0 : 0
+    };
+    for (const k in M.bars) { const b = M.bars[k]; b.f.setAttribute('width', Math.max(0, fr[k] || 0) * (b.x1 - b.x0)); }
+    if (M.bars.vd.v) M.bars.vd.v.textContent = R.vdValue && s.m8 != null ? R.vdValue(s.m8).toFixed(1) + ' V' : '—';
+    if (M.bars.po.v) M.bars.po.v.textContent = tx && s.power != null ? Math.round((fr.po || 0) * 100) + ' %' : (s.power != null ? 'réglée ' + s.power + ' W' : '—');
+  }
   // MULTI de l'IC-7300 : petit menu à droite de l'écran (3 ou 4 réglages selon le mode) ; le bouton MULTI règle la ligne choisie
   function buildMultiMenu(g, c) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
@@ -940,6 +1004,10 @@
     tr(LCD.vA.g, 'translate(' + X(300) + ',' + Y(5) + ') scale(1.25) translate(' + -X(63) + ',' + -Y(92) + ')');
     LCD.vB.g.style.display = '';
     tr(LCD.vB.g, 'translate(' + X(372) + ',' + Y(56) + ') scale(0.62) translate(' + -X(63 + half) + ',' + -Y(92) + ')');
+    // Mode du VFO-B lisible malgré la petite fréquence : badge agrandi (vers la gauche et le haut), « VFO » et « TX » au-dessus
+    { const vb = LCD.vB, bx = X(5 + half) + 53, by = Y(121);
+      for (const e of [vb.badge, vb.mode]) tr(e, 'translate(' + bx + ',' + by + ') scale(1.7) translate(' + -bx + ',' + -by + ')');
+      for (const e of [vb.lbl, vb.tx]) tr(e, 'translate(-36,-12) scale(1)'); }
     // Filtre : à droite de la rangée de cases
     const f = LCD.fA;
     f.g.style.display = '';
@@ -2041,6 +2109,7 @@
     if (LCD.fbox) LCD.fbox.t.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
     for (const k of ['icomMenu', 'quickMenu']) if (LCD[k]) { LCD[k].style.display = L[k] ? '' : 'none'; if (L[k]) LCD[k + 'Draw'](); }
     drawMultiMenu(s);
+    drawIcMeter(s);
     if (LCD.modeMenu) {
       LCD.modeMenu.style.display = L.modeMenu ? '' : 'none';
       const cur = L.activeMode(s);
@@ -2049,7 +2118,8 @@
     const fresh = Date.now() - WF.at < 3000;
     LCD.hint.style.display = fresh ? 'none' : '';
     LCD.hint.textContent = !live ? '' : st.audio && !st.audio.active ? 'Cascade : l’audio n’est pas activé sur la page Station' : 'Cascade : en attente du son de la station…';
-    $('scope').style.visibility = fresh && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !L.multiMenu ? 'visible' : 'hidden';
+    $('scope').style.visibility = fresh && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !L.multiMenu && !(LCD.icm && L.icMeter) ? 'visible' : 'hidden';
+    if (LCD.icm && L.icMeter) LCD.hint.style.display = 'none';
   }
   function lamp(id, cls) { const e = $(id); e.classList.remove('on', 'warn', 'tx'); if (cls) e.classList.add(cls); }
   function drawTop() {

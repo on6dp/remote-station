@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.2 | [RemoteStation-Setup-0.37.2.exe](0.37.2/RemoteStation-Setup-0.37.2.exe) | [remote-station-0.37.2.tar.gz](0.37.2/remote-station-0.37.2.tar.gz) | IC-7300 : écran METER, mode VFO-B lisible — [empreintes SHA-256](0.37.2/SHA256SUMS.txt) |
 | 0.37.1 | [RemoteStation-Setup-0.37.1.exe](0.37.1/RemoteStation-Setup-0.37.1.exe) | [remote-station-0.37.1.tar.gz](0.37.1/remote-station-0.37.1.tar.gz) | IC-7300 : MENU, FUNCTION, MULTI façon Icom — [empreintes SHA-256](0.37.1/SHA256SUMS.txt) |
 | 0.37.0 | [RemoteStation-Setup-0.37.0.exe](0.37.0/RemoteStation-Setup-0.37.0.exe) | [remote-station-0.37.0.tar.gz](0.37.0/remote-station-0.37.0.tar.gz) | Face avant IC-7300 (/ic7300) — [empreintes SHA-256](0.37.0/SHA256SUMS.txt) |
 | 0.36.1 | [RemoteStation-Setup-0.36.1.exe](0.36.1/RemoteStation-Setup-0.36.1.exe) | [remote-station-0.36.1.tar.gz](0.36.1/remote-station-0.36.1.tar.gz) | Face avant : aller au bon TRX ou en changer — [empreintes SHA-256](0.36.1/SHA256SUMS.txt) |
