@@ -72,6 +72,7 @@
     const m = $('msg');
     m.textContent = t || '';
     m.className = 'fc-msg' + (cls ? ' ' + cls : '');
+    if (t) { void m.offsetWidth; m.classList.add('blink'); } // jaune fluo clignotant 3 s
     clearTimeout(msgTimer);
     if (t && ms !== 0) msgTimer = setTimeout(() => { m.textContent = ''; m.className = 'fc-msg'; }, ms || 5000);
   }

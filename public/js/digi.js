@@ -4675,12 +4675,14 @@
   // Page Face avant (/ftdx101…) : les modes numériques y sont sous l'image du TRX, branchés par face.js (data-digi-embed)
   if (POPUP && document.body.dataset.digiEmbed !== '1') {
     let host = null;
-    const toast = (msg, level) => {
+    // Annonces : en jaune fluo, clignotantes pendant 3 s pour attirer l'attention, puis fixes jusqu'à leur fin
+    const toast = (msg, level, ms) => {
       const el = $('dgToast');
       el.textContent = msg || '';
       el.className = 'dg-toast ' + (level || '');
+      if (msg) { void el.offsetWidth; el.classList.add('blink'); }
       clearTimeout(toast.t);
-      if (msg) toast.t = setTimeout(() => { el.textContent = ''; }, 6000);
+      if (msg) toast.t = setTimeout(() => { el.textContent = ''; }, Math.max(6000, Number(ms) || 0));
     };
     const link = () => {
       const op = window.opener;
