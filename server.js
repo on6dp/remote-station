@@ -57,7 +57,7 @@ const DEFAULTS = {
   clusterPort: 8000,
   clusterCall: '',
   clusterCmds: ['set/skimmer'],
-  digiAlcMax: 0, // émission numérique : ALC maximal (%) au-delà duquel la page Station baisse le niveau BF ; 0 = pas de limite
+  digiAlcMax: 30, // émission numérique : ALC maximal (%) au-delà duquel la page Station baisse le niveau BF ; 0 = pas de limite
   ftxWatchdogMinutes: 6, // émission auto FT8 / FT4 / FT2 : arrêt si le même message part depuis ce temps (WSJT-X : 6 min)
   pttHeartbeatMs: 1500,
   controlIdleMinutes: 15,
@@ -404,7 +404,7 @@ function rttyCfg(r) {
   const f = Math.round(Number(r.f));
   const shift = [170, 200, 425, 850].indexOf(Number(r.shift)) >= 0 ? Number(r.shift) : 170;
   const baud = [45.45, 50, 75, 100].indexOf(Number(r.baud)) >= 0 ? Number(r.baud) : 45.45;
-  const squelch = Math.max(4, Math.min(25, Math.round(Number(r.squelch) || 12)));
+  const squelch = Math.max(4, Math.min(25, Math.round(Number(r.squelch) || 9)));
   if (!(f >= 200 && f <= 3900)) return null;
   const c = { f, shift, baud, rev: !!r.rev, squelch };
   c.key = [f, shift, baud, c.rev ? 1 : 0, squelch].join('/');

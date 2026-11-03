@@ -1150,9 +1150,13 @@
     let o = {};
     try { o = JSON.parse(store.get(key, '{}')) || {}; } catch (e) { o = {}; }
     return { f: Number(o.f) || f0, shift: [170, 200, 425, 850].indexOf(o.shift) >= 0 ? o.shift : 170,
-      baud: [45.45, 50, 75, 100].indexOf(o.baud) >= 0 ? o.baud : 45.45, rev: !!o.rev, squelch: Number(o.squelch) || 12 };
+      baud: [45.45, 50, 75, 100].indexOf(o.baud) >= 0 ? o.baud : 45.45, rev: !!o.rev,
+      // Silencieux 9 dB : signaux plus faibles décodés (≈ −6 dB dans 3 kHz) au prix de quelques caractères sur le bruit ;
+      // l'ancien réglage par défaut (12) passe à 9 une fois
+      squelch: !o.squelch || (Number(o.squelch) === 12 && store.get('rtsq9', '') !== '1') ? 9 : Number(o.squelch) };
   };
   const rts = [rtLoad('rtty', 1500), rtLoad('rttyb', 2100)];
+  store.set('rtsq9', '1');
   const rt = rts[0];
   const RT_SFX = ['', 'B'];
   let rtTx = store.get('rttx', '0') === '1' ? 1 : 0; // décodeur dont les réglages servent à l'émission
@@ -1172,8 +1176,9 @@
       { name: 'Contest', text: '<TX><CALL> 599 <CNTR> <CNTR>\n<RX>' },
       { name: 'TU', text: '<TX>TU <INCR><MYCALL> TEST\n<RX>' },
       { name: 'AGN?', text: '<TX>AGN? AGN? PSE\n<RX>' },
-      { name: 'RYRY', text: '<TX>RYRYRYRYRYRYRYRYRYRYRYRY\n<RX>' },
-      { name: 'Heure', text: '<TX>UTC <ZT> <ZD>\n<RX>' }
+      // F11 / F12 : passer en émission avec le texte tapé dans la zone d'écriture, puis repasser en réception (comme FLDIGI)
+      { name: 'TX', text: '<TX>' },
+      { name: 'RX', text: '<RX>' }
     ],
     // JTTY : les 8 touches de fonction de WSJT-X (forme compacte : 1 ou 2 trames par message)
     JTTY: [
@@ -4065,6 +4070,14 @@
       return cwSend(macroText(t, true), false);
     }
     if (/<LOG>/i.test(t) && !ins) setTimeout(() => logQso(), 0);
+    // Macro « TX » seule (sans texte) : émission du texte tapé ; « RX » seule : retour en réception (arrêt de l'émission)
+    const bare = String(t).replace(/<TX>|<RX>/gi, '').trim();
+    if (!ins && !bare && /<RX>/i.test(t) && !/<TX>/i.test(t)) {
+      const x = api && api.state() && api.state().ftx;
+      if (x && x.mode === mode) return api.send({ t: 'ftx_stop' });
+      return api && api.say('Déjà en réception.', '', 2000);
+    }
+    if (!ins && !bare && /<TX>/i.test(t)) return dtxClick(mode);
     if (ins || !/<TX>/i.test(t)) return mode === 'JTTY' ? insertJtty(t) : insertRtty(t);
     showTab(mode === 'JTTY' ? 'jtty' : 'rtty');
     if (/<CALL>|\{CALL\}/.test(t) && !String(dx.call || '').trim()) {
