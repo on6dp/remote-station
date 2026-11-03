@@ -228,7 +228,7 @@
       if (a.local === 'fast' && L.fast) L.fine = false;
       store.set('rs.face.fast', L.fast ? '1' : '0');
       store.set('rs.face.fine', L.fine ? '1' : '0');
-      say(L.fine ? 'Accord fin : 10 Hz par cran.' : L.fast ? 'Accord rapide : 1 kHz par cran.' : 'Accord normal : 100 Hz par cran.', '', 2500);
+      say(L.fine ? 'Accord fin : 1 Hz par cran.' : L.fast ? 'Accord rapide : 1 kHz par cran.' : 'Accord normal : 100 Hz par cran.', '', 2500);
       return render();
     }
     if (a.band) {
@@ -761,7 +761,7 @@
   // molette sur la case ou bouton MULTI = régler la case choisie. Cases grises : pas disponibles à distance.
   // SPEED comme le TRX (SS P2 = 0) : SLOW1, SLOW2, FAST1, FAST2, FAST3 — et intervalle de la cascade de la page
   const WF_SPEEDS = [['SLOW1', 200], ['SLOW2', 140], ['FAST1', 80], ['FAST2', 50], ['FAST3', 30]];
-  const STEPS = [[10, '10Hz'], [100, '100Hz'], [1000, '1kHz']];
+  const STEPS = [[1, '1Hz'], [100, '100Hz'], [1000, '1kHz']];
   L.wfSpeed = Math.max(0, Math.min(4, Number(store.get('rs.face.wfspd5', '2')) || 0));
   L.wfColor = Math.max(1, Math.min(18, Number(store.get('rs.face.wfcol18', '13')) || 13));
   L.wfLevel = Math.max(-30, Math.min(30, Number(store.get('rs.face.wflvl', '0')) || 0));
@@ -1298,7 +1298,7 @@
       const side = ringOther ? (activeSide() === 'B' ? 'A' : 'B') : activeSide();
       const cur = side === 'B' ? s.freqB : s.freq;
       if (cur == null) return;
-      const step = k.multi ? (L.fast ? 10000 : 1000) : (L.fine ? 10 : L.fast ? 1000 : 100);
+      const step = k.multi ? (L.fast ? 10000 : 1000) : (L.fine ? 1 : L.fast ? 1000 : 100);
       const hz = Math.round((cur + notches * step) / step) * step;
       tuneTo(side, hz);
       if (L.sync && !k.multi) tuneTo(side === 'B' ? 'A' : 'B', hz); // SYNC : les deux VFO ensemble
