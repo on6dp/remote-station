@@ -3403,6 +3403,7 @@ function onStation(conn, m) {
   const r = m.radio;
   const was = radio.connected;
   const wasDual = radio.dualRx;
+  const prevStr = radio || {};
   radio = {
     connected: !!r.connected,
     freq: Number.isFinite(r.freq) ? r.freq : null,
@@ -3419,6 +3420,8 @@ function onStation(conn, m) {
   };
   // Réglages propres au pilote (SPLIT, filtres, mesures…) : nombres uniquement
   for (const k of rig().STATE_KEYS || []) radio[k] = Number.isFinite(r[k]) ? r[k] : null;
+  // Textes propres au pilote (mémoires du manipulateur de l'IC-7300…) : ASCII affichable, 70 caractères au plus ; gardés d'une lecture à l'autre
+  for (const k of rig().STR_KEYS || []) radio[k] = typeof r[k] === 'string' ? r[k].replace(/[^\x20-\x7E]/g, '').slice(0, 70) : (prevStr[k] != null ? prevStr[k] : null);
   if (rig().derive) rig().derive(radio);
   if (rig().VIRTUAL_SPLIT) {
     // SPLIT mis ou retiré sur la face avant du TRX : suivi par le dashboard

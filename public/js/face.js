@@ -160,6 +160,7 @@
       if (s.vox) return setCtl('vox', 0);
       return say('VOX : à distance, il ne peut pas être mis en service (seulement coupé) ; le BK-IN se règle en CW.', 'warn', 5000);
     }
+    if (a.local === 'exit' && L.icView && !L.icomMenu && !L.quickMenu && !L.modeMenu && !L.bandMenu && !L.multiMenu) { L.icView = null; WF.drawn = false; return render(); }
     if (a.local === 'exit') { if (L.bandMenu) closeBandMenu(); if (L.modeMenu) closeModeMenu(); for (const k of ['icomMenu', 'quickMenu']) if (L[k]) closeGrid(k); L.multiMenu = false; if (L.func) L.func = false; return render(); }
     if (a.local === 'bandUp' || a.local === 'bandDown') {
       // Bande suivante / précédente (IC-7300 : touches ▲ ▼)
@@ -801,10 +802,10 @@
       const noR = (t) => t + ' : pas disponible à distance';
       buildGrid(g, c, 'icomMenu', 'MENU', [[
         ['SCOPE', 'SCOPE : le scope sous la fréquence (à la place des mesures) ; une 2e fois : scope agrandi', () => (L.icMeter ? setIcMeter(false) : toggleExpand())],
-        ['AUDIO', 'AUDIO SCOPE : spectre (AF-FFT) et oscilloscope de la BF', () => { viewTouched(); if (L.icMeter) { L.icMeter = false; store.set('rs.face.icmeter', '0'); } L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; render(); }],
+        ['AUDIO', 'AUDIO SCOPE : spectre (FFT) et oscilloscope de la BF reçue, sous la bande du scope (EXIT : retour)', () => { viewTouched(); setIcView('audio'); }],
         [() => (/^CW/.test(md()) ? 'KEYER' : /^RTTY/.test(md()) ? 'DECODE' : 'VOICE'),
-          () => (/^CW/.test(md()) ? 'KEYER : émission CW (onglet CW des modes numériques)' : /^RTTY/.test(md()) ? 'DECODE : décodeur RTTY (onglet RTTY des modes numériques)' : noR('VOICE (mémoires vocales)')),
-          () => (/^CW/.test(md()) ? digiOpen('cw') : /^RTTY/.test(md()) ? digiOpen('rtty') : say(noR('VOICE (mémoires vocales)') + '.', '', 4000))],
+          () => (/^CW/.test(md()) ? 'KEYER : mémoires M1 … M8 du manipulateur du TRX (clic = émission)' : /^RTTY/.test(md()) ? 'DECODE : décodeur RTTY (onglet RTTY des modes numériques)' : noR('VOICE (mémoires vocales)')),
+          () => (/^CW/.test(md()) ? setIcView('keyer') : /^RTTY/.test(md()) ? digiOpen('rtty') : say(noR('VOICE (mémoires vocales)') + '.', '', 4000))],
         ['METER', 'METER : les mesures (ALC, COMP, SWR, Id, Vd, Po) sous la fréquence, à la place du scope', () => setIcMeter(true)],
         ['SWR', 'SWR : ROS mesuré en émission', () => meterSay(true)],
         ['MEMORY', noR('MEMORY (mémoires)'), null],
@@ -831,6 +832,8 @@
       buildIcMeter(g, c);
       buildSpoBar(g, c);
       buildIcomHead(g, c);
+      buildIcKeyer(g, c);
+      buildIcAudio(g, c);
       // Le mode affiché se touche pour le changer, comme sur l'écran de l'IC-7300
       const v = LCD.vA, mb = el('rect', { x: Number(v.badge.getAttribute('x')), y: Number(v.badge.getAttribute('y')), width: 52, height: 15, class: 'hs lcd-hit' }, v.g);
       el('title', {}, mb, 'Mode : clic pour le tableau des modes');
@@ -954,10 +957,18 @@
   function closeGrid(key) { L[key] = false; if (gridOutside[key]) document.removeEventListener('pointerdown', gridOutside[key], true); render(); }
   // IC-7300 : écran des mesures sous la fréquence (comme le METER du TRX) : ALC, COMP, SWR, Id à gauche, Vd et Po à droite
   L.icMeter = store.get('rs.face.icmeter', '1') !== '0';
-  function setIcMeter(on) { L.icMeter = !!on; L.icBig = false; store.set('rs.face.icmeter', L.icMeter ? '1' : '0'); WF.drawn = false; render(); }
+  // Écrans du MENU de l'IC-7300 sous la bande du scope : 'audio' (AUDIO SCOPE) ou 'keyer' (KEYER, en CW) ; null = écran par défaut
+  L.icView = null;
+  function setIcView(v) {
+    L.icView = L.icView === v ? null : v;
+    L.icBig = false;
+    if (L.icView === 'keyer') kmRefresh();
+    WF.drawn = false; render();
+  }
+  function setIcMeter(on) { L.icView = null; L.icMeter = !!on; L.icBig = false; store.set('rs.face.icmeter', L.icMeter ? '1' : '0'); WF.drawn = false; render(); }
   // M.SCOPE : grand écran des mesures, sans scope (grande fréquence, grand S/Po, ALC / COMP / SWR / Id, Vd / TEMP) ; un 2e appui : retour à l'écran par défaut
   L.icBig = false;
-  function setIcBig(on) { L.icBig = !!on; if (on) { L.icMeter = true; store.set('rs.face.icmeter', '1'); } WF.drawn = false; render(); }
+  function setIcBig(on) { L.icView = null; L.icBig = !!on; if (on) { L.icMeter = true; store.set('rs.face.icmeter', '1'); } WF.drawn = false; render(); }
   function buildIcMeter(g, c) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const m = el('g', { class: 'icm', style: 'display:none' }, g);
@@ -996,6 +1007,164 @@
     LCD.icm = { g: m, bars, bg };
   }
   const IC_STRIP = 84; // IC-7300, écran des mesures : hauteur de la bande du scope au-dessus
+  const IC_AUD_H = 198; // AUDIO SCOPE : bande du scope, titre, FFT et oscilloscope (dessinés dans la cascade) ; les touches dessous
+  // ---- Écran KEYER (MENU → KEYER en CW) : mémoires M1 … M8 du manipulateur du TRX, comme sur l'IC-7300
+  const KM = { cnt: Math.max(1, parseInt(store.get('rs.face.ic.cnt', '1'), 10) || 1), readAt: 0 };
+  function kmRefresh() {
+    // Contenu des mémoires relu sur le TRX (1A 02), une par une ; seulement pour celui qui a la main
+    if (!iControl() || Date.now() - KM.readAt < 3000) return;
+    KM.readAt = Date.now();
+    for (let ch = 1; ch <= 8; ch++) setTimeout(() => send({ t: 'set', ctl: 'kmRead', value: ch }), ch * 140);
+  }
+  function kmText(ch) { const t = S()['km' + ch]; return typeof t === 'string' ? t : null; }
+  const cntTxt = () => String(KM.cnt).padStart(3, '0');
+  function kmSend(ch) {
+    if (!needControl()) return;
+    const t = kmText(ch);
+    if (t == null) { kmRefresh(); return say('M' + ch + ' : contenu pas encore relu sur le TRX, réessayez dans un instant.', 'warn', 3500); }
+    if (!t.trim()) return say('M' + ch + ' : mémoire vide (elle se remplit sur le TRX : KEYER → EDIT/SET).', '', 4000);
+    // « * » : numéro de concours (compté après l'envoi, comme sur le TRX)
+    const txt = t.replace(/\*/g, cntTxt());
+    send({ t: 'cw', text: txt, wpm: Number(S().keySpeed) || Number(store.get('cwspeed', '22')) || 22 });
+    if (t.indexOf('*') >= 0) { KM.cnt = Math.min(9999, KM.cnt + 1); store.set('rs.face.ic.cnt', String(KM.cnt)); }
+    say('KEYER M' + ch + ' : « ' + txt + ' »', '', 3000);
+  }
+  function lcdBtn(m, X, Y, x, y, w, h, cls) {
+    const r = el('rect', { x: X(x), y: Y(y), width: w, height: h, rx: 4, class: 'ick-btn ' + (cls || '') }, m);
+    const t1 = el('text', { x: X(x + w / 2), y: Y(y + h / 2 - 2), class: 'ick-t1', 'text-anchor': 'middle' }, m, '');
+    const t2 = el('text', { x: X(x + w / 2), y: Y(y + h - 9), class: 'ick-t2', 'text-anchor': 'middle' }, m, '');
+    const hit = el('rect', { x: X(x), y: Y(y), width: w, height: h, class: 'hs lcd-hit' }, m);
+    const tt = el('title', {}, hit, '');
+    return { r, t1, t2, hit, tt };
+  }
+  function lcdOverlay(g, cls) {
+    const m = el('g', { class: cls, style: 'display:none' }, g);
+    // Sous les tableaux (MENU, QUICK…) : juste après le scope dans l'ordre de dessin
+    const at = LCD.hint && LCD.hint.nextSibling;
+    if (at) g.insertBefore(m, at);
+    return m;
+  }
+  function buildIcKeyer(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const m = LCD.icKeyer = lcdOverlay(g, 'ick');
+    const y0 = G.scopeY + IC_STRIP;
+    el('rect', { x: X(5), y: Y(y0), width: c.w - 10, height: c.h - y0 - 4, class: 'icm-bg' }, m);
+    el('text', { x: X(c.w / 2), y: Y(y0 + 15), class: 'ick-title', 'text-anchor': 'middle' }, m, 'KEYER');
+    const bw = (c.w - 20) / 5, by = y0 + 21, bh = (c.h - by - 8) / 2;
+    const btns = [];
+    for (let i = 0; i < 10; i++) {
+      const col = i % 5, row = Math.floor(i / 5);
+      const b = lcdBtn(m, X, Y, 10 + col * bw + 2, by + row * bh + 2, bw - 4, bh - 4, col === 4 ? 'dark' : '');
+      if (col < 4) {
+        const ch = row * 4 + col + 1;
+        b.t1.textContent = 'M' + ch;
+        b.tt.textContent = 'M' + ch + ' : émet le contenu de la mémoire du manipulateur du TRX (« * » = numéro de concours)';
+        b.hit.addEventListener('click', (ev) => { ev.stopPropagation(); kmSend(ch); });
+        b.ch = ch;
+      } else if (row === 0) {
+        b.t1.textContent = 'EDIT/'; b.t2.textContent = 'SET'; b.t2.classList.add('big');
+        b.tt.textContent = 'EDIT/SET : les mémoires se modifient sur le TRX';
+        b.hit.addEventListener('click', (ev) => { ev.stopPropagation(); say('EDIT/SET : les mémoires M1 … M8 se modifient sur le TRX, au club (KEYER → EDIT/SET). Pour un texte libre : onglet CW des modes numériques.', '', 6000); });
+      } else {
+        b.t1.textContent = '-1'; b.cnt = true;
+        b.tt.textContent = 'Numéro de concours (« * » dans une mémoire) : clic = −1';
+        b.hit.addEventListener('click', (ev) => { ev.stopPropagation(); KM.cnt = Math.max(1, KM.cnt - 1); store.set('rs.face.ic.cnt', String(KM.cnt)); render(); });
+      }
+      btns.push(b);
+    }
+    LCD.ickBtns = btns;
+  }
+  function drawIcKeyer(s) {
+    for (const b of LCD.ickBtns || []) {
+      if (b.ch) {
+        const t = kmText(b.ch);
+        // Texte de la mémoire sous M1… (le début, comme sur le TRX), « * » montré tel quel
+        b.t2.textContent = t == null ? '…' : t.length > 11 ? t.slice(0, 10) + '…' : t;
+        b.r.classList.toggle('empty', t != null && !t.trim());
+        b.r.classList.toggle('busy', !!(s.cw || S().cw));
+      } else if (b.cnt) b.t2.textContent = cntTxt();
+    }
+  }
+  // ---- AUDIO SCOPE (MENU → AUDIO) : FFT (avec sa cascade) et oscilloscope de la BF reçue ; touches ATT, HOLD, LEVEL, TIME, EXPD/SET
+  const AUD = { att: 0, lvl: 0, time: 2, env: new Float32Array(800), envN: 0 }; // env : crêtes par tranche de 5 ms (4 s)
+  const AUD_ATT = [0, 10, 20, 30], AUD_LVL = [0, 10, 20, -10], AUD_TIME = [['1ms', 0.001], ['10ms', 0.01], ['100ms', 0.1]];
+  function buildIcAudio(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const m = LCD.icAudio = lcdOverlay(g, 'ica');
+    const y0 = G.scopeY + IC_AUD_H + 2, bw = (c.w - 12) / 5, h = c.h - y0 - 5;
+    el('rect', { x: X(5), y: Y(y0 - 2), width: c.w - 10, height: h + 4, class: 'icm-bg' }, m);
+    const keys = [
+      ['ATT', 'ATT : affaiblissement de la FFT (OFF, −10, −20, −30 dB) — pas celui du récepteur', () => { AUD.att = (AUD.att + 1) % AUD_ATT.length; }],
+      ['HOLD', 'HOLD : fige l’AUDIO SCOPE', () => { L.hold = !L.hold; }],
+      ['LEVEL', 'LEVEL : gain de l’oscilloscope (0, +10, +20, −10 dB)', () => { AUD.lvl = (AUD.lvl + 1) % AUD_LVL.length; }],
+      ['TIME', 'TIME : base de temps de l’oscilloscope (1, 10, 100 ms par division)', () => { AUD.time = (AUD.time + 1) % AUD_TIME.length; }],
+      ['EXPD/SET', 'EXPD/SET', () => say('EXPD/SET (AUDIO SCOPE agrandi, réglages) : pas disponible à distance.', '', 3500)]
+    ];
+    LCD.icaBtns = keys.map(([lab, tip, fn], i) => {
+      const b = lcdBtn(m, X, Y, 6 + i * bw + 2, y0, bw - 4, h, 'key');
+      b.t1.textContent = lab; b.t1.setAttribute('y', Y(y0 + h / 2 + 6)); b.t1.classList.add('key');
+      b.tt.textContent = tip;
+      b.hit.addEventListener('click', (ev) => { ev.stopPropagation(); fn(); WF.drawn = false; render(); });
+      return b;
+    });
+  }
+  function drawIcAudioKeys() {
+    const b = LCD.icaBtns;
+    if (b) b[1].r.classList.toggle('on', !!L.hold);
+  }
+  // Crêtes de la BF par tranches de 5 ms (oscilloscope à 100 ms par division)
+  function audEnv(pcm, rate) {
+    const blk = Math.max(1, Math.round(rate * 0.005));
+    for (let i = 0; i + blk <= pcm.length; i += blk) {
+      let pk = 0;
+      for (let j = i; j < i + blk; j++) { const v = Math.abs(pcm[j]); if (v > pk) pk = v; }
+      AUD.env.copyWithin(0, 1); AUD.env[AUD.env.length - 1] = pk; AUD.envN = Math.min(AUD.env.length, AUD.envN + 1);
+    }
+  }
+  function drawIcAudio(c2, W, H, specs, pal, nb, lvl, maxHz) {
+    const sp = specs[0], buf = WF.l;
+    const hs = Math.round(H * IC_STRIP / IC_AUD_H), ht = Math.round(H * 18 / IC_AUD_H), yb = hs + ht, hb = H - yb;
+    drawScope(c2, { sp, x0: 0, y0: 0, w: W, h: hs, name: '' }, pal, nb, lvl, maxHz);
+    // Bandeau « AUDIO SCOPE », avec ATT et HOLD de l'AUDIO SCOPE à gauche
+    c2.fillStyle = '#1d2433'; c2.fillRect(0, hs, W, ht);
+    c2.font = 'bold ' + Math.round(ht * 0.72) + 'px Arial, sans-serif'; c2.textAlign = 'center'; c2.fillStyle = '#e6e9ef';
+    c2.fillText('AUDIO SCOPE', W / 2, hs + ht * 0.78);
+    const pill = (x, w, t, on) => { c2.fillStyle = on ? '#4a5368' : '#2a3142'; c2.beginPath(); c2.roundRect(x, hs + 2, w, ht - 4, (ht - 4) / 2); c2.fill(); c2.fillStyle = on ? '#fff' : '#7d8596'; c2.font = 'bold ' + Math.round(ht * 0.55) + 'px Arial, sans-serif'; c2.fillText(t, x + w / 2, hs + ht * 0.72); };
+    pill(W * 0.02, W * 0.14, AUD_ATT[AUD.att] ? 'ATT -' + AUD_ATT[AUD.att] + 'dB' : 'ATT OFF', true);
+    pill(W * 0.19, W * 0.1, 'HOLD', !!L.hold);
+    // FFT 0 – 4 kHz avec sa cascade (à gauche)
+    const fHz = Math.min(4000, WF.rate / 2), nb4 = Math.max(2, Math.floor((WF.n / 2) * fHz / (WF.rate / 2)));
+    const wl = Math.floor(W * 0.585);
+    drawScope(c2, { sp, x0: 0, y0: yb, w: wl, h: hb, name: '' }, pal, nb4, lvl - AUD_ATT[AUD.att] / 70, fHz);
+    // Oscilloscope (à droite) : forme d'onde verte ; à 100 ms par division, les crêtes de la dernière seconde
+    const ox = wl + 4, ow = W - ox, lab = Math.max(10, Math.round(hb * 0.12)), gh = hb - lab - 2, mid = yb + gh / 2;
+    c2.fillStyle = '#000'; c2.fillRect(ox - 2, yb, ow + 2, hb);
+    c2.strokeStyle = 'rgba(120,130,145,.35)'; c2.lineWidth = 1;
+    for (let k = 1; k < 10; k++) { const gx = Math.round(ox + ow * k / 10) + 0.5; c2.beginPath(); c2.moveTo(gx, yb); c2.lineTo(gx, yb + gh); c2.stroke(); }
+    for (let k = 1; k < 4; k++) { const gy = Math.round(yb + gh * k / 4) + 0.5; c2.beginPath(); c2.moveTo(ox, gy); c2.lineTo(ox + ow, gy); c2.stroke(); }
+    const gain = Math.pow(10, AUD_LVL[AUD.lvl] / 20), k = (gh / 2 - 2) / 0.6 * gain;
+    const tdiv = AUD_TIME[AUD.time][1];
+    c2.strokeStyle = '#7ee02a'; c2.fillStyle = '#7ee02a'; c2.lineWidth = 1.2;
+    if (tdiv >= 0.1) {
+      const n = Math.min(AUD.envN, Math.round(10 * tdiv / 0.005)), e = AUD.env, e0 = e.length - n;
+      const cols = Math.min(ow, Math.round(10 * tdiv / 0.005));
+      for (let px = 0; px < cols && n; px++) {
+        const i0 = e0 + Math.floor(px / cols * n), i1 = Math.max(i0 + 1, e0 + Math.floor((px + 1) / cols * n));
+        let pk = 0;
+        for (let i = i0; i < i1; i++) if (e[i] > pk) pk = e[i];
+        const a = Math.min(gh / 2, pk * k);
+        c2.fillRect(ox + px * ow / cols, mid - a, Math.max(1, ow / cols - 0.3), 2 * a);
+      }
+    } else {
+      const n = Math.min(buf.length, Math.round(10 * tdiv * WF.rate)), s0 = buf.length - n;
+      c2.beginPath();
+      for (let i = 0; i < n; i++) { const x = ox + i * ow / (n - 1), y = mid - Math.max(-gh / 2, Math.min(gh / 2, buf[s0 + i] * k)); i ? c2.lineTo(x, y) : c2.moveTo(x, y); }
+      c2.stroke();
+    }
+    c2.fillStyle = '#e6e9ef'; c2.font = 'bold ' + Math.round(lab * 0.85) + 'px Arial, sans-serif';
+    c2.textAlign = 'left'; c2.fillText('LEVEL: ' + (AUD_LVL[AUD.lvl] > 0 ? '+' : '') + AUD_LVL[AUD.lvl] + 'dB', ox + 4, yb + hb - 2);
+    c2.textAlign = 'right'; c2.fillText(AUD_TIME[AUD.time][0] + '/Div', ox + ow - 3, yb + hb - 2);
+  }
   // IC-7300 : en-tête de l'écran comme sur le TRX — TUNE / TX, mode (badge bleu, clic = tableau des modes), dessin du filtre, FIL (clic = suivant),
   // heure, case de la fonction du bouton MULTI (RIT / ΔTX en service), voyants P.AMP / ATT / NB / NR / AN / MN / COMP…, VFO A, fréquence, RIT / ΔTX et son décalage
   function buildIcomHead(g, c) {
@@ -1158,8 +1327,20 @@
   function drawIcMeter(s) {
     const M = LCD.icm;
     if (!M) return;
-    const on = !!L.icMeter && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu;
+    const menus = L.func || L.modeMenu || L.bandMenu || L.icomMenu || L.quickMenu;
+    if (L.icView === 'keyer' && !/^CW/.test(L.activeMode(s) || '')) L.icView = null; // KEYER : CW seulement
+    const view = !menus && L.icView;
+    const on = !!L.icMeter && !menus && !view;
     M.g.style.display = on ? '' : 'none';
+    if (LCD.icKeyer) LCD.icKeyer.style.display = view === 'keyer' ? '' : 'none';
+    if (LCD.icAudio) LCD.icAudio.style.display = view === 'audio' ? '' : 'none';
+    if (view === 'keyer') drawIcKeyer(s);
+    if (view === 'audio') drawIcAudioKeys(s);
+    if (view) {
+      const h2 = view === 'audio' ? IC_AUD_H : IC_STRIP;
+      if (LCD.placeScope && LCD.scopeMode !== 'S' + h2) LCD.placeScope(0, h2);
+      return;
+    }
     // Grand écran (M.SCOPE) : les barres un peu plus bas, sans le fond (pas de scope au-dessus)
     const big = on && !!L.icBig;
     if (M.big !== big) { M.big = big; M.g.setAttribute('transform', big ? 'translate(0,14)' : ''); M.bg.style.display = big ? 'none' : ''; if (LCD.scopeRect) LCD.scopeRect.style.visibility = big ? 'hidden' : ''; }
@@ -2594,6 +2775,7 @@
   const NFFT = 4096;
   const WF = { at: 0, rate: 12000, l: new Float32Array(NFFT), r: new Float32Array(NFFT), two: false, pos: 0, drawn: false, n: 2048 };
   function feedWf(pcm, rate) {
+    if (ICOM) audEnv(pcm, rate);
     WF.at = Date.now();
     WF.rate = rate;
     WF.two = !!pcm.r;
@@ -3030,7 +3212,8 @@
         if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; WF.drawn = false; }
         if (!WF.drawn) { c2.fillStyle = '#000'; c2.fillRect(0, 0, W, H); WF.drawn = true; }
         const pal = PALS[L.wfColor] || PALS[1];
-        if (L.multi) drawMulti(c2, W, H, specs, pal, nb, lvl, maxHz);
+        if (ICOM && L.icView === 'audio' && LCD.icAudio && LCD.icAudio.style.display !== 'none') drawIcAudio(c2, W, H, specs, pal, nb, lvl, maxHz);
+        else if (L.multi && !ICOM) drawMulti(c2, W, H, specs, pal, nb, lvl, maxHz);
         else if (L.disp === 3) drawFilters(c2, W, H, specs, nb, lvl, maxHz);
         else if (L.d3) { const mh = fitHz(activeSide()); draw3d(c2, W, H, activeSide() === 'B' && WF.two ? specs[1] : specs[0], pal, nbFor(mh), lvl, mh); }
         else for (const rg of scopeRegions(W, H, specs)) { const mh = fitHz(rg.name === 'SUB' ? 'B' : 'A'); drawScope(c2, rg, pal, nbFor(mh), lvl, mh); }

@@ -453,3 +453,15 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .ich-tags.big { font-size: 15px; fill: #e6e9ef; }
 #face .spo-lab.big { font-size: 14px; }
 #face .spo-num.big { font-size: 12px; font-weight: 700; }
+/* IC-7300 : écrans KEYER et AUDIO SCOPE (touches grises de l'écran Icom) */
+#face .ick-title { fill: #e6e9ef; font: 800 15px Arial, sans-serif; }
+#face .ick-btn { fill: #aeb4bf; stroke: #d8dce4; stroke-width: 1; }
+#face .ick-btn.dark { fill: #3a404c; stroke: #8a93a6; }
+#face .ick-btn.key { fill: #4a5060; stroke: #9aa3b5; }
+#face .ick-btn.key.on { fill: #6b7486; stroke: #fff; }
+#face .ick-btn.empty { fill: #8e949f; }
+#face .ick-t1 { fill: #f4f6fa; font: 800 21px Arial, sans-serif; pointer-events: none; paint-order: stroke; stroke: #5b616e; stroke-width: 1.4px; }
+#face .ick-btn.dark ~ .ick-t1 { stroke: none; }
+#face .ick-t1.key { font-size: 17px; stroke: none; }
+#face .ick-t2 { fill: #f4f6fa; font: 700 12.5px Arial, sans-serif; pointer-events: none; paint-order: stroke; stroke: #5b616e; stroke-width: 1px; }
+#face .ick-t2.big { font-size: 21px; font-weight: 800; stroke: none; }

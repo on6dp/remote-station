@@ -79,6 +79,8 @@
   const STATE_KEYS = ['txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'fil', 'filB', 'pbtIn', 'pbtOut', 'nb', 'nbLvl', 'nr', 'nrLvl',
     'dnf', 'notch', 'notchPos', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox', 'tuner', 'tuning',
     'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'ipPlus', 'voxGain', 'antiVox', 'notchW'];
+  // Textes : mémoires du manipulateur M1 … M8 (écran KEYER)
+  const STR_KEYS = ['km1', 'km2', 'km3', 'km4', 'km5', 'km6', 'km7', 'km8'];
 
   // Lectures simples : [commande, sous-commande, clé, type] (type : t = 0/1, l = niveau 0–255, b = octet)
   const SIMPLE = [
@@ -165,7 +167,9 @@
     { id: 'voxGain', g: 'tx', label: 'VOX GAIN', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x16) },
     // Largeur du NOTCH manuel (16 57 : 00 WIDE, 01 MID, 02 NAR)
     { id: 'notchW', g: 'flt', label: 'Largeur NOTCH', type: 'select', face: true, options: [[0, 'WIDE'], [1, 'MID'], [2, 'NAR']], write: (v) => q(0x16, 0x57, v) },
-    { id: 'antiVox', g: 'tx', label: 'ANTI VOX', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x17) }
+    { id: 'antiVox', g: 'tx', label: 'ANTI VOX', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x17) },
+    // Écran KEYER de la face avant : relit le contenu d'une mémoire du manipulateur (1A 02 : M1 … M8), sans rien changer sur le TRX
+    { id: 'kmRead', g: 'tx', label: 'Lecture mémoire KEYER', type: 'level', min: 1, max: 8, step: 1, face: true, write: (v) => q(0x1A, 0x02, v) }
   ];
   const CONTROL = {};
   CONTROLS.forEach((c) => { CONTROL[c.id] = c; });
@@ -253,6 +257,10 @@
     if (from !== ADDR || (to !== CTRL && to !== 0x00)) return null; // écho de nos propres trames, autre appareil…
     const d = f.slice(3);
     if (c === 0xFB) return { ok: true };
+    // Mémoires du manipulateur (1A 02 ch texte) : M1 … M8, texte ASCII (« * » = numéro de concours, « ^ » = signes liés)
+    if (c === 0x1A && d[0] === 0x02 && d.length >= 2 && d[1] >= 1 && d[1] <= 8) {
+      return { ['km' + d[1]]: String.fromCharCode(...d.slice(2).filter((b) => b >= 0x20 && b < 0x7F)).slice(0, 70) };
+    }
     if (c === 0x1A) return { ok: true }; // réglages 1A 05 (source de modulation de la phonie à distance…)
     if (c === 0xFA) return { error: true };
     if (c === 0x00 && d.length >= 5) return { freq: freqValue(d, 0) }; // transceive : VFO choisi
@@ -381,6 +389,10 @@
             this.cwPlay = setTimeout(() => { v.tx = 0; }, 150 + ms);
             ok();
           }
+        } else if (c === 0x1A && d[0] === 0x02 && d.length === 2) {
+          // Mémoires du manipulateur (simulateur), comme celles d'un IC-7300 réglé d'usine
+          const KM = ['CQ CQ DE ON5VL ON5VL K', 'UR 5NN*', 'CFM TU', 'QRZ?', '', '', '', ''];
+          r(0x02, d[1], ...Array.from(KM[d[1] - 1] || '', (ch) => ch.charCodeAt(0)));
         } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x00 && d[2] === 0x66) {
           // DATA OFF MOD (simulateur) : 00 MIC au départ
           if (d.length === 3) r(0x05, 0x00, 0x66, this.mod66 || 0); else { this.mod66 = d[3]; (this.exLog = this.exLog || []).push('MOD' + d[3] + (v.tx ? '@TX' : '')); ok(); }
@@ -409,7 +421,7 @@
 
   const api = {
     ID, NAME, MODES, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX, POWER_RANGE, POWER_STEP, INIT,
-    FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS,
+    FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS, STR_KEYS,
     GROUPS, CONTROLS, CONTROL, validate, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
     smeterLabel, swrValue, vdValue, idValue, poFrac,
     bwText: (r) => (r.fil ? 'FIL' + r.fil : '—'),

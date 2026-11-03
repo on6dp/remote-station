@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.9** — IC-7300 : MENU → AUDIO = AUDIO SCOPE façon Icom (FFT 0–4 kHz avec cascade, oscilloscope vert, touches ATT / HOLD / LEVEL / TIME / EXPD/SET) ; MENU → KEYER (CW) = mémoires M1 … M8 relues sur le TRX (CI-V 1A 02), clic = émission (« * » = numéro de concours, touche −1) ; serveur : textes du pilote (STR_KEYS)
 - **0.37.8** — IC-7300 : plus de tableau de réglages façon Yaesu (touche FUNCTION : écran Icom en préparation, niveaux par le bouton MULTI) ; case du haut à droite seulement pour RIT / ΔTX (plus de MONITOR / RF POWER)
 - **0.37.7** — IC-7300 : écran à la manière Icom — en-tête TUNE / TX, mode en badge bleu, dessin du filtre, FIL, heure, case MULTI / RIT ΔTX, badge SPLIT, voyants, bargraph S/Po, grande fréquence, RIT / ΔTX ou autre VFO à droite (SPLIT : VFO d'émission en grand pendant l'émission) ; plus de rangée CENTER / HOLD / 3DSS… ni de cases Yaesu ; icônes dans l'écran MENU ; M.SCOPE = grand écran des mesures sans scope (grand S/Po, ALC, COMP, SWR, Id, Vd, TEMP), 2e appui = écran par défaut
 - **0.37.6** — IC-7300 : le décalage RIT / ΔTX s'écrit sous « RIT » dans la case de droite (« RIT » / « 0.21 »), comme sur le TRX ; plus d'inscription au-dessus de la fréquence.
