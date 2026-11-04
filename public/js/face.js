@@ -175,7 +175,7 @@
       return bandTo(list[i][0], list[i][2], list[i][3]);
     }
     // TWIN PBT : pousser le bouton (CLR) = PBT intérieur et extérieur au milieu
-    if (a.local === 'pbtClr') { if (!needControl()) return; setCtl('pbtIn', 128); setCtl('pbtOut', 128); return say('TWIN PBT au milieu (CLR).', '', 2500); }
+    if (a.local === 'pbtClr') { if (!needControl()) return; setCtl('pbtIn', 128); setCtl('pbtOut', 128); if (ICOM) { L.pbtPopAt = Date.now(); L.pbtClrAt = Date.now(); render(); } return; }
     // Réglage à choix : valeur suivante (IC-7300 : P.AMP OFF → AMP1 → AMP2)
     if (a.cycle) { const c = R.CONTROL[a.cycle]; if (!c || !c.options) return; const i = c.options.findIndex((o) => o[0] === s[a.cycle]); return setCtl(a.cycle, c.options[(i + 1) % c.options.length][0]); }
     // CONT/APF (FTDX10) : en CW, l'APF ; sinon le CONTOUR
@@ -453,6 +453,22 @@
       ip.style.height = (ph / V.h * 100) + '%';
       ip.innerHTML = '<b></b><span></span>';
       $('facePanel').appendChild(ip);
+      // Cadre de la bande passante (TWIN PBT tourné ou poussé, comme sur le TRX) : BW, SFT et le dessin du filtre
+      const bp = document.createElement('div');
+      bp.className = 'fc-icpbt';
+      bp.id = 'icPbt';
+      bp.hidden = true;
+      const bw = 250, bh = 90, bx = box.x + box.w / 2 - bw / 2, by = box.y + 2; // sur le haut du scope, comme sur le TRX
+      bp.style.left = ((bx - V.x) / V.w * 100) + '%';
+      bp.style.top = ((by - V.y) / V.h * 100) + '%';
+      bp.style.width = (bw / V.w * 100) + '%';
+      bp.style.height = (bh / V.h * 100) + '%';
+      bp.innerHTML = '<svg viewBox="0 0 250 90" preserveAspectRatio="none"><rect x="1" y="1" width="248" height="88" class="pb-bg"/>' +
+        '<rect x="10" y="7" width="96" height="21" class="pb-box"/><text x="16" y="23" class="pb-t" data-k="bw"></text>' +
+        '<rect x="114" y="7" width="126" height="21" class="pb-box"/><text x="120" y="23" class="pb-t">SFT</text><text x="232" y="23" class="pb-t" text-anchor="end" data-k="sft"></text>' +
+        '<path class="pb-f1" data-k="f1"/><path class="pb-f2" data-k="f2"/><path class="pb-flt" data-k="flt"/><line x1="12" y1="70" x2="238" y2="70" class="pb-base"/><line class="pb-c" data-k="cl"/>' +
+        '<text y="85" class="pb-l lo" text-anchor="middle" data-k="lo"></text><text y="85" class="pb-l" text-anchor="middle" data-k="c"></text><text y="85" class="pb-l lo" text-anchor="middle" data-k="hi"></text></svg>';
+      $('facePanel').appendChild(bp);
     }
     // Le cadre se règle aussi à la souris : − / +, molette ; il reste affiché tant que la souris est dessus
     pop.addEventListener('click', (e) => {
@@ -2627,6 +2643,45 @@
     ['bkin', 'BK-IN', (s) => ['OFF', 'SEMI', 'FULL'][s.bkin]], ['scSpan', 'SPAN', (s) => (R.SC_SPANS ? '±' + (R.SC_SPANS[s.scSpan] / 1000).toString().replace('.', ',') + 'k' : null), 1000],
     ['scSpeed', 'SPEED', (s) => ['FAST', 'MID', 'SLOW'][s.scSpeed], 500],
     ['scMode', 'SCOPE', (s) => ['CENTER', 'FIX', 'SCROLL-C', 'SCROLL-F'][s.scMode || 0]], ['scEdge', '', (s) => 'No.' + s.scEdge, 1000], ['moni', 'MONI', (s) => onOff(s.moni)], ['split', 'SPLIT', (s) => onOff(s.split)]];
+  // TWIN PBT (IC-7300) : cadre BW / SFT et dessin du filtre quand on tourne ou pousse le TWIN PBT (ici ou sur le TRX), 2 s
+  let pbtPrev = null;
+  function pbtPopDraw(s, live) {
+    const e = $('icPbt');
+    if (!e) return;
+    const k = live ? (s.pbtIn != null ? s.pbtIn : 128) + '/' + (s.pbtOut != null ? s.pbtOut : 128) + '/' + s.fil : null;
+    if (k && pbtPrev && k.split('/').slice(0, 2).join('/') !== pbtPrev.split('/').slice(0, 2).join('/')) L.pbtPopAt = Date.now();
+    pbtPrev = k;
+    const on = Date.now() - (L.pbtPopAt || 0) < 2000 && !!LCD.flt && !!LCD.flt.A;
+    e.hidden = !on;
+    clearTimeout(L.pbtPopT);
+    if (!on) return;
+    L.pbtPopT = setTimeout(render, 2050);
+    const f = LCD.flt.A, md = f.mode || '', fw = filHz(md, s.fil) || f.hz;
+    // CLR : les deux PBT au milieu tout de suite, sans attendre la relecture du TRX
+    const clr = Date.now() - (L.pbtClrAt || 0) < 1500;
+    const hz = clr ? fw : Math.round(f.hz / 50) * 50, sh = clr ? 0 : Math.round(f.sh / 25) * 25, // pas du TRX : 50 Hz (BW), 25 Hz (SFT)
+      c = audioCenter(md, fw), lo = c + sh - hz / 2, hi = c + sh + hz / 2;
+    const q = (n) => e.querySelector('[data-k="' + n + '"]');
+    q('bw').textContent = 'BW ' + (hz >= 1000 ? (Math.round(hz / 10) / 100).toFixed(2) + 'k' : Math.round(hz) + '');
+    q('sft').textContent = (sh > 0 ? '+' : '') + Math.round(sh);
+    // Échelle comme sur le TRX : filtres larges, trait de base sur toute la largeur (≈ 7 kHz, AM / FM plus) ;
+    // filtres étroits (< 1 kHz), trait de base court au milieu ; bord haut du dessin plus étroit (trapèze)
+    const narrow = fw < 1000, span = narrow ? fw / 0.38 : /^AM/.test(md) ? 20000 : /^FM/.test(md) ? 30000 : 7000, half = narrow ? 56 : 113;
+    const x = (v) => 125 + (v - c) / span * half * 2, xl = x(lo), xh = x(hi), sl = Math.min(8, (xh - xl) / 4);
+    const base = e.querySelector('.pb-base'); base.setAttribute('x1', 125 - half); base.setAttribute('x2', 125 + half);
+    const trap = (a, b) => { const k2 = Math.min(8, (b - a) / 4); return 'M' + a + ' 70L' + (a + k2) + ' 38H' + (b - k2) + 'L' + b + ' 70Z'; };
+    q('flt').setAttribute('d', trap(xl, xh));
+    // Les deux PBT, comme sur le TRX : le filtre décalé par chacun (rouge : PBT intérieur, bleu : PBT extérieur), la bande passante qui reste en orange
+    const p1 = clr ? 0 : ((s.pbtIn != null ? s.pbtIn : 128) - 128) / 128 * fw / 2, p2 = clr ? 0 : ((s.pbtOut != null ? s.pbtOut : 128) - 128) / 128 * fw / 2;
+    const both = Math.abs(p1 - p2) >= 25;
+    q('f1').setAttribute('d', both ? trap(x(c - fw / 2 + p1), x(c + fw / 2 + p1)) : '');
+    q('f2').setAttribute('d', both ? trap(x(c - fw / 2 + p2), x(c + fw / 2 + p2)) : '');
+    const cl = q('cl'); cl.setAttribute('x1', x(c)); cl.setAttribute('x2', x(c)); cl.setAttribute('y1', 52); cl.setAttribute('y2', 70);
+    const lab = (n, xx, v) => { const t = q(n); t.setAttribute('x', Math.max(14, Math.min(236, xx))); t.textContent = String(Math.round(v)); };
+    // Bords de la bande passante en orange, centre du filtre (fréquence BF du milieu) en blanc
+    lab('lo', Math.min(xl, x(c) - 34), lo); lab('c', x(c), c); lab('hi', Math.max(xh, x(c) + 34), hi);
+    e.style.fontSize = Math.max(8, Math.round($('facePanel').clientWidth / V.w * 13)) + 'px';
+  }
   let icPrev = null, icPopT = 0;
   function icPopCheck(s, live) {
     const e = $('icPop');
@@ -3673,6 +3728,10 @@
   const ATT = ['OFF', '6dB', '12dB', '18dB'], IPO = ['IPO', 'AMP1', 'AMP2'], ROOF = (FACE && FACE.roof && FACE.roof.labels) || ['', '12kHz', '3kHz', '1.2kHz', '600Hz', '300Hz'], AGC = ['OFF', 'FAST', 'MID', 'SLOW', 'AUTO'];
   // IC-7300 : largeur d'origine des filtres FIL1 / FIL2 / FIL3 selon le mode (Hz)
   function filHz(md, n) {
+    // Largeur lue sur le TRX (1A 03) pour le filtre en service : 50 Hz … 500 Hz par 50, puis 600 Hz … 3600 Hz par 100 ; AM : 200 Hz … 10 kHz par 200
+    const s0 = S();
+    if (ICOM && s0.filWi != null && (n || 1) === (s0.fil || 1)) { const i = s0.filWi; return /^AM/.test(md) ? 200 + i * 200 : i <= 9 ? 50 + i * 50 : 600 + (i - 10) * 100; }
+    if (/^(USB|LSB)-D/.test(md)) return [3000, 1200, 500][Math.max(0, Math.min(2, (n || 1) - 1))]; // SSB-D : réglages d'origine du TRX
     const t = /^CW/.test(md) ? [1200, 500, 250] : /^RTTY/.test(md) ? [2400, 500, 250] : /^AM/.test(md) ? [9000, 6000, 3000] : /^FM/.test(md) ? [15000, 10000, 7000] : [3000, 2400, 1800];
     return t[Math.max(0, Math.min(2, (n || 1) - 1))];
   }
@@ -3900,6 +3959,7 @@
     $('scope').style.visibility = (fresh || rfFresh()) && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !L.multiMenu && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom)
     if (LCD.icm && L.icMeter && LCD.hint.style.display !== 'none') LCD.hint.setAttribute('y', LCD.Y(G.scopeY + 32)); else if (LCD.hint) LCD.hint.setAttribute('y', LCD.Y(G.scopeY + G.scopeH / 2 - 2));
     icPopCheck(s, live);
+    if (ICOM) pbtPopDraw(s, live);
   }
   function lamp(id, cls) { const e = $(id); e.classList.remove('on', 'warn', 'tx'); if (cls) e.classList.add(cls); }
   function drawTop() {

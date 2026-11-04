@@ -66,7 +66,7 @@
     q(0x14, 0x01), q(0x14, 0x02), q(0x14, 0x03), q(0x11), q(0x16, 0x02), q(0x16, 0x12),
     q(0x16, 0x22), q(0x14, 0x12), q(0x16, 0x40), q(0x14, 0x06), q(0x16, 0x41), q(0x16, 0x48), q(0x14, 0x0D),
     q(0x14, 0x07), q(0x14, 0x08), q(0x14, 0x0B), q(0x16, 0x44), q(0x14, 0x0E), q(0x16, 0x46), q(0x1C, 0x01),
-    q(0x16, 0x50), q(0x15, 0x15), q(0x15, 0x16),
+    q(0x16, 0x50), q(0x15, 0x15), q(0x15, 0x16), q(0x1A, 0x03), // 1A 03 : largeur du filtre en service (cadre BW du TWIN PBT)
     // Face avant (/ic7300) : CW PITCH, KEY SPEED, MONITOR (marche et niveau), BK-IN, IP+, VOX GAIN, ANTI VOX
     q(0x14, 0x09), q(0x14, 0x0C), q(0x14, 0x15), q(0x16, 0x45), q(0x16, 0x47), q(0x16, 0x65), q(0x14, 0x16), q(0x14, 0x17), q(0x16, 0x57),
     q(0x27, 0x15, 0x00), q(0x27, 0x17, 0x00), q(0x27, 0x14, 0x00), q(0x27, 0x16, 0x00), q(0x27, 0x19, 0x00), q(0x27, 0x1A, 0x00), q(0x27, 0x1D, 0x00), // scope du TRX : SPAN, HOLD, CENTER / FIX, EDGE, REF, SPEED
@@ -84,7 +84,7 @@
     if (p.freq == null || !st.freq || !st.freqB || st.freq === st.freqB || Date.now() - abAt < 3000) return;
     if (p.freq === st.freqB) { st.vfoAB = st.vfoAB === 1 ? 0 : 1; p.freqB = st.freq; abAt = Date.now(); }
   }
-  const STATE_KEYS = ['vfoAB', 'txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'fil', 'filB', 'pbtIn', 'pbtOut', 'nb', 'nbLvl', 'nr', 'nrLvl',
+  const STATE_KEYS = ['filWi', 'vfoAB', 'txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'fil', 'filB', 'pbtIn', 'pbtOut', 'nb', 'nbLvl', 'nr', 'nrLvl',
     'dnf', 'notch', 'notchPos', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox', 'tuner', 'tuning',
     'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'ipPlus', 'voxGain', 'antiVox', 'notchW', 'tbw', 'scSpan', 'scHold', 'scMode', 'scEdge', 'scRef', 'scSpeed', 'scVbw'];
   // SPAN du scope du TRX en mode CENTER (27 15 00 + demi-largeur en BCD) : ±2,5 kHz … ±500 kHz
@@ -470,6 +470,8 @@
       return { ['mc' + ch]: f + '|' + (m.name || '') + '|' + name };
     }
     // Réglages de l'écran SET (1A 05 n° valeur) : valeur brute en texte (exN)
+    // Largeur du filtre en service (1A 03) : n° 0 – 49 ; converti en Hz par la page selon le mode (AM : pas de 200 Hz)
+    if (c === 0x1A && d[0] === 0x03 && d.length >= 2) return { filWi: unbcd(d[1]) };
     if (c === 0x1A && d[0] === 0x05 && d.length >= 4) {
       const n = unbcd(d[1]) * 100 + unbcd(d[2]), it = EX[n];
       if (it) {
@@ -644,6 +646,8 @@
           else if (d.length === 2) r(0x17, 0x00, this.scHold || 0); else { this.scHold = d[2]; ok(); }
         } else if (c === 0x0E) {
           ok(); // balayage (simulateur) : accepté, sans effet
+        } else if (c === 0x1A && d[0] === 0x03) {
+          if (d.length === 1) r(0x03, bcd([34, 22, 9][((v.mode && v.mode[2]) || 1) - 1] || 34)); else ok(); // largeur du filtre (simulateur) : 3000 / 1200 / 500 Hz
         } else if (c === 0x1A && d[0] === 0x05 && d.length >= 3 && EX[unbcd(d[1]) * 100 + unbcd(d[2])] && !(d[1] === 0x00 && d[2] === 0x66)) {
           // Réglages SET (simulateur) : valeurs d'usine approximatives, gardées si on les change
           const n = unbcd(d[1]) * 100 + unbcd(d[2]), it = EX[n];
