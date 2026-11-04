@@ -148,6 +148,7 @@
     const trxEq = !!(st && st.trxEq && R && R.TRX_EQ);
     box.hidden = (!modes && !trxEq) || !V.api.me() || !V.api.me().canTx || V.api.me().rxOnly;
     $('vxTrxBtn').hidden = !trxEq;
+    if (trxEq && R.TRX_EQ.icom) $('vxTrxBtn').title = 'Votre profil d’émission de l’IC-7300 (SET → Tone Control/TBW : Bass, Treble, TBW), mis au TRX quand vous prenez la main ; réglage du club remis quand vous la rendez';
     $('vxOn').hidden = !modes;
     if (!trxEq && $('vxTrx')) $('vxTrx').remove();
     if ($('vxTrx')) trxDrawState();
@@ -580,8 +581,12 @@
   // ------------------------------------------------------------ égaliseur paramétrique du TRX (Yaesu, menus PRMTRC)
   const T = { info: null, pr: null };
   const BAND_NAMES = ['EQ1 (grave)', 'EQ2 (médium)', 'EQ3 (aigu)'];
+  // IC-7300 : profil d'émission (SET → Tone Control/TBW) — Bass / Treble −5 … +5, TBW bas / haut ; réglages d'origine du TRX
+  const TBW_LO = [100, 200, 300, 500], TBW_HI = [2500, 2700, 2800, 2900];
+  const IC_DEF = { e12: 5, e13: 5, e14: 3, e15: 21, e16: 30, e17: 5, e18: 5, e19: 5, e20: 5 };
   function trxBlank() {
     const E = V.api.rig().TRX_EQ;
+    if (E.icom) return Object.assign({}, IC_DEF);
     const one = () => ({ f: 0, l: 0, w: Math.max(E.BW[0], 5) });
     return { n: [one(), one(), one()], p: [one(), one(), one()] };
   }
@@ -601,10 +606,19 @@
       '<label>Fréquence <select data-t="' + k + b + 'f"><option value="0">coupée</option>' + E.FREQS[b].map((hz, i) => '<option value="' + (i + 1) + '">' + hz + ' Hz</option>').join('') + '</select></label>' +
       '<label>Niveau <output data-o="' + k + b + 'l"></output><input type="range" data-t="' + k + b + 'l" min="' + E.LVL[0] + '" max="' + E.LVL[1] + '" step="1"></label>' +
       '<label>Largeur <output data-o="' + k + b + 'w"></output><input type="range" data-t="' + k + b + 'w" min="' + E.BW[0] + '" max="' + E.BW[1] + '" step="1"></label></fieldset>').join('') + '</div></fieldset>';
+    // IC-7300 : un réglage par ligne (Bass / Treble : −5 … +5 ; TBW : bord bas et bord haut)
+    const icRow = (f) => f.type === 'tbw'
+      ? '<label class="vx-icrow">' + esc(f.label) + ' <select data-ic="' + f.n + '" data-p="lo">' + TBW_LO.map((v, i) => '<option value="' + i + '">' + v + ' Hz</option>').join('') + '</select> – ' +
+        '<select data-ic="' + f.n + '" data-p="hi">' + TBW_HI.map((v, i) => '<option value="' + i + '">' + v + ' Hz</option>').join('') + '</select></label>'
+      : '<label class="vx-icrow">' + esc(f.label) + ' <select data-ic="' + f.n + '">' + Array.from({ length: 11 }, (_, i) => '<option value="' + i + '">' + (i > 5 ? '+' : '') + (i - 5) + '</option>').join('') + '</select></label>';
+    const body = E.icom
+      ? '<fieldset class="vx-set"><legend>SSB</legend>' + E.FIELDS.filter((f) => f.n >= 12 && f.n <= 16).map(icRow).join('') + '</fieldset>' +
+        '<fieldset class="vx-set"><legend>AM et FM</legend>' + E.FIELDS.filter((f) => f.n >= 17).map(icRow).join('') + '</fieldset>'
+      : set('n', 'PROC coupé (menus PRMTRC EQ)') + set('p', 'PROC en service (menus P PRMTRC EQ)');
     d.innerHTML =
-      '<div class="vx-eq-h"><b>Equalizer TRX</b><span>— ' + esc(R.NAME) + '</span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
+      '<div class="vx-eq-h"><b>Equalizer TRX</b><span>— ' + esc(R.NAME) + (E.icom ? ' · SET → Tone Control/TBW (émission)' : '') + '</span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
       '<p class="vx-hint" id="vxTrxState"></p>' +
-      set('n', 'PROC coupé (menus PRMTRC EQ)') + set('p', 'PROC en service (menus P PRMTRC EQ)') +
+      body +
       '<p class="vx-hint">Ce sont les menus du TRX lui-même : votre profil y est mis quand vous prenez la main, et le réglage du club est remis quand vous la rendez. Il agit sur la modulation du TRX (micro du club et, si le TRX l’applique aussi à l’entrée USB, votre phonie à distance : à vérifier à l’écoute). Un essai part tout de suite au TRX ; « Enregistrer » le garde pour vos prochaines prises de main.</p>' +
       '<div class="vx-eq-f"><button class="btn" type="button" data-a="read">Lire le TRX</button><button class="btn" type="button" data-a="try">Essayer sur le TRX</button>' +
       '<button class="btn accent" type="button" data-a="save">Enregistrer mon profil</button><button class="btn" type="button" data-a="del">Supprimer mon profil</button>' +
@@ -612,6 +626,14 @@
     document.body.appendChild(d);
     T.pr = null;
     trxFill();
+    d.addEventListener('change', (ev) => {
+      const n = ev.target.dataset.ic;
+      if (!n || !T.pr) return;
+      const v = Number(ev.target.value), cur = Number(T.pr['e' + n]) || 0;
+      T.pr['e' + n] = ev.target.dataset.p === 'lo' ? v * 10 + (cur % 10) : ev.target.dataset.p === 'hi' ? Math.floor(cur / 10) * 10 + v : v;
+      T.dirty = true;
+      trxFill();
+    });
     d.addEventListener('input', (ev) => {
       const k = ev.target.dataset.t;
       if (!k || !T.pr) return;
@@ -636,6 +658,13 @@
     const d = $('vxTrx');
     if (!d) return;
     if (!T.pr) T.pr = trxBlank();
+    if (V.api.rig().TRX_EQ.icom) {
+      d.querySelectorAll('[data-ic]').forEach((el) => {
+        const v = Number(T.pr['e' + el.dataset.ic]) || 0;
+        if (document.activeElement !== el) el.value = String(el.dataset.p === 'lo' ? Math.floor(v / 10) : el.dataset.p === 'hi' ? v % 10 : v);
+      });
+      return trxDrawState();
+    }
     for (const k of ['n', 'p']) T.pr[k].forEach((x, b) => {
       for (const f of ['f', 'l', 'w']) {
         const el = d.querySelector('[data-t="' + k + b + f + '"]');

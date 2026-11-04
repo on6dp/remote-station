@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.50 | [RemoteStation-Setup-0.37.50.exe](0.37.50/RemoteStation-Setup-0.37.50.exe) | [remote-station-0.37.50.tar.gz](0.37.50/remote-station-0.37.50.tar.gz) | Equalizer TRX de l'IC-7300 (profil par opérateur) — [empreintes SHA-256](0.37.50/SHA256SUMS.txt) |
 | 0.37.49 | [RemoteStation-Setup-0.37.49.exe](0.37.49/RemoteStation-Setup-0.37.49.exe) | [remote-station-0.37.49.tar.gz](0.37.49/remote-station-0.37.49.tar.gz) | SPLIT : plus d'aller-retour au relâchement — [empreintes SHA-256](0.37.49/SHA256SUMS.txt) |
 | 0.37.48 | [RemoteStation-Setup-0.37.48.exe](0.37.48/RemoteStation-Setup-0.37.48.exe) | [remote-station-0.37.48.tar.gz](0.37.48/remote-station-0.37.48.tar.gz) | SPLIT : plus d'aller-retour en émission — [empreintes SHA-256](0.37.48/SHA256SUMS.txt) |
 | 0.37.47 | [RemoteStation-Setup-0.37.47.exe](0.37.47/RemoteStation-Setup-0.37.47.exe) | [remote-station-0.37.47.tar.gz](0.37.47/remote-station-0.37.47.tar.gz) | Émission affichée tout de suite — [empreintes SHA-256](0.37.47/SHA256SUMS.txt) |

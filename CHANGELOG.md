@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.50** — IC-7300 : Equalizer TRX = profil d'émission de chaque opérateur (SET → Tone Control/TBW : SSB TX Bass / Treble, TBW WIDE / MID / NAR, AM et FM TX Bass / Treble), mis au TRX à la prise de main, réglage du club remis au retour ; page Station : lecture et écriture CI-V de ces réglages
 - **0.37.49** — IC-7300 SPLIT : après l'émission, fréquences d'avant gardées jusqu'à la relecture du TRX (plus d'aller-retour au relâchement) ; page Station : l'autre VFO relu aussitôt après le PTT
 - **0.37.48** — IC-7300 SPLIT : en émission, fréquence d'émission (en grand, rouge) et de réception notées à l'appui et gardées jusqu'à la fin (le TRX échange ses réponses 25 00 / 25 01 pendant l'émission : plus d'aller-retour) ; A/B du TRX pas détecté en SPLIT
 - **0.37.47** — Faces avant : émission demandée (PTT, barre d'espace, MOX) montrée tout de suite (SPLIT : fréquence d'émission en grand et en rouge dès l'appui) ; page Station : état émission / réception relu aussitôt après le PTT (IC-7300)

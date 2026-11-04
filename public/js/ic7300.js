@@ -237,6 +237,32 @@
   for (const s of SIMPLE) if (s[2] !== 'powerRaw' && s[0] !== 0x15) READ_FOR[s[2]] = q(s[0], s[1]);
   const readFor = (id) => READ_FOR[id] || null;
 
+  // ------------------------------------------------------------ profil d'émission de chaque opérateur (« Equalizer TRX »)
+  // SET → Tone Control/TBW, partie émission : SSB TX Bass / Treble, TBW WIDE / MID / NAR, AM et FM TX Bass / Treble (1A 05 0012 … 0020).
+  // Profil de l'opérateur mis au TRX quand il prend la main, réglage du club remis quand il la rend (même mécanisme que l'égaliseur des Yaesu).
+  // Commandes échangées avec la page Station : « IX0012; » (lecture), « IX0012=5; » (écriture, valeur brute du réglage).
+  const EQ_N = [12, 13, 14, 15, 16, 17, 18, 19, 20];
+  const pad4 = (n) => String(n).padStart(4, '0');
+  const eqClean = (pr) => {
+    if (!pr || typeof pr !== 'object') return null;
+    const out = {};
+    for (const n of EQ_N) { const v = Math.round(Number(pr['e' + n])); if (!Number.isFinite(v) || !exOk(EX[n], v)) return null; out['e' + n] = v; }
+    return out;
+  };
+  const TRX_EQ = {
+    icom: true,
+    FIELDS: EQ_N.map((n) => ({ n, label: EX[n].label, type: EX[n].type })),
+    ids: EQ_N.map(pad4),
+    read: EQ_N.map((n) => 'IX' + pad4(n) + ';'),
+    fromValues(vals) { const pr = {}; for (const n of EQ_N) { const v = vals[pad4(n)]; if (v == null) return null; pr['e' + n] = Number(v); } return eqClean(pr); },
+    clean: eqClean,
+    write(pr) { const c = eqClean(pr); return c ? EQ_N.map((n) => 'IX' + pad4(n) + '=' + c['e' + n] + ';') : null; },
+    okWrite(cmd) { const m = /^IX(\d{4})=(\d+);$/.exec(String(cmd)); return !!m && EQ_N.indexOf(Number(m[1])) >= 0 && exOk(EX[Number(m[1])], Number(m[2])); },
+    // Commandes vers trames CI-V (page Station)
+    readFrame(cmd) { const m = /^IX(\d{4});$/.exec(String(cmd)); return m && EQ_N.indexOf(Number(m[1])) >= 0 ? { n: Number(m[1]), frame: q(0x1A, 0x05, bcd(Math.floor(Number(m[1]) / 100)), bcd(Number(m[1]) % 100)) } : null; },
+    writeFrame(cmd) { if (!TRX_EQ.okWrite(cmd)) return null; const m = /^IX(\d{4})=(\d+);$/.exec(cmd), it = EX[Number(m[1])]; return q(0x1A, 0x05, bcd(Math.floor(it.n / 100)), bcd(it.n % 100), ...exBytes(it, Number(m[2]))); }
+  };
+
   // ------------------------------------------------------------ réglages
   const setLvl = (c, s) => (v) => q(c, s, ...lvlBytes(v));
   const setOn = (c, s) => (v) => q(c, s, v ? 1 : 0);
@@ -723,7 +749,7 @@
 
   const api = {
     ID, NAME, MODES, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX, POWER_RANGE, POWER_STEP, INIT,
-    FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS, STR_KEYS, observe,
+    FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS, STR_KEYS, observe, TRX_EQ,
     GROUPS, CONTROLS, CONTROL, validate, SC_SPANS, EX, EX_MENUS, exFmt, exOk, exCode, EDGE_BANDS, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
     smeterLabel, swrValue, vdValue, idValue, poFrac,
     bwText: (r) => (r.fil ? 'FIL' + r.fil : '—'),

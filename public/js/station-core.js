@@ -499,7 +499,9 @@
         } else if (m.op === 'exwrite') {
           // Écriture de menus (égaliseur du TRX), jamais pendant une émission
           const busy = this.catKeyed || this.radio.tx || !this.serialOpen || this.exBusy;
-          if (!busy) this._writeList((Array.isArray(m.cmds) ? m.cmds : []).filter((c) => /^EX\d{6}[+-]?\d{1,4};$/.test(c)).slice(0, 40));
+          const W = this.rig.TRX_EQ && this.rig.TRX_EQ.writeFrame;
+          if (!busy) this._writeList(W ? (Array.isArray(m.cmds) ? m.cmds : []).map((c) => W(c)).filter(Boolean).slice(0, 40) // Icom : trames CI-V
+            : (Array.isArray(m.cmds) ? m.cmds : []).filter((c) => /^EX\d{6}[+-]?\d{1,4};$/.test(c)).slice(0, 40));
           if (this.wsUp) this.sendWs({ t: 'exwrite_reply', id: m.id, ok: !busy });
         } else if (m.op === 'voiceoff') {
           // Main rendue, micro coupé… : source de modulation remise tout de suite (sauf en pleine émission)
@@ -634,6 +636,16 @@
       this.exBusy = true;
       const next = (i) => {
         if (i >= cmds.length) return done('');
+        // Icom (IC-7300) : « IX0012; » → trame CI-V 1A 05, valeur brute relue par le pilote (exNNN)
+        const ic = this.rig.TRX_EQ && this.rig.TRX_EQ.readFrame ? this.rig.TRX_EQ.readFrame(cmds[i]) : null;
+        if (ic) {
+          this._awaitFn((t) => { if (typeof t === 'string') return null; const p = this.rig.parse(t); return p && p['ex' + ic.n] != null ? String(p['ex' + ic.n]) : null; }, 700, (v) => {
+            if (v == null) { if (!soft) return done('le TRX n’a pas répondu au réglage ' + ic.n); return next(i + 1); }
+            vals[String(ic.n).padStart(4, '0')] = v;
+            next(i + 1);
+          });
+          return this._write(ic.frame, true);
+        }
         const mm = /^EX(\d{6});$/.exec(String(cmds[i]));
         if (!mm) return next(i + 1);
         const re = new RegExp('^EX' + mm[1] + '([+-]?\\d+)$');
