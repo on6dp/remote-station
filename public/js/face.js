@@ -3935,7 +3935,7 @@
     drawMultiMenu(s);
     drawIcMeter(s);
     drawSpoBar(s, live);
-    drawIcomHead(s, !!s.tx);
+    drawIcomHead(s, !!s.tx || !!L.pttOn || !!L.mox); // émission demandée ici (PTT, barre d'espace, MOX) : montrée tout de suite (SPLIT : VFO d'émission en rouge), sans attendre la relecture du TRX
     // Bouton PTT entièrement rouge pendant toute émission (phonie, CW, modes numériques, TUNE, VOICE TX…)
     { const pb = $('ptt'); if (pb) pb.classList.toggle('on-air', !!s.tx); }
     drawIcMem(s);
@@ -4029,7 +4029,7 @@
     if (pttHeld) return true;
     const why = pttReason();
     if (why) { say(why, 'warn'); return false; }
-    pttHeld = true;
+    pttHeld = true; L.pttOn = true;
     const voice = !!(window.RSVOICE && window.RSVOICE.txStart());
     send({ t: 'ptt', on: true, voice });
     hbTimer = setInterval(() => send({ t: 'ptt', on: true, voice }), 400);
@@ -4040,7 +4040,7 @@
   function pttUp() {
     L.mox = false;
     if (!pttHeld) return render();
-    pttHeld = false;
+    pttHeld = false; L.pttOn = false;
     clearInterval(hbTimer);
     if (window.RSVOICE) window.RSVOICE.txEnd();
     send({ t: 'ptt', on: false });

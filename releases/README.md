@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.47 | [RemoteStation-Setup-0.37.47.exe](0.37.47/RemoteStation-Setup-0.37.47.exe) | [remote-station-0.37.47.tar.gz](0.37.47/remote-station-0.37.47.tar.gz) | Émission affichée tout de suite — [empreintes SHA-256](0.37.47/SHA256SUMS.txt) |
 | 0.37.46 | [RemoteStation-Setup-0.37.46.exe](0.37.46/RemoteStation-Setup-0.37.46.exe) | [remote-station-0.37.46.tar.gz](0.37.46/remote-station-0.37.46.tar.gz) | Cadre BW / SFT du TWIN PBT — [empreintes SHA-256](0.37.46/SHA256SUMS.txt) |
 | 0.37.45 | [RemoteStation-Setup-0.37.45.exe](0.37.45/RemoteStation-Setup-0.37.45.exe) | [remote-station-0.37.45.tar.gz](0.37.45/remote-station-0.37.45.tar.gz) | RECALL, VFO-A/B en grand, XFC rapide — [empreintes SHA-256](0.37.45/SHA256SUMS.txt) |
 | 0.37.44 | [RemoteStation-Setup-0.37.44.exe](0.37.44/RemoteStation-Setup-0.37.44.exe) | [remote-station-0.37.44.tar.gz](0.37.44/remote-station-0.37.44.tar.gz) | XFC plus rapide — [empreintes SHA-256](0.37.44/SHA256SUMS.txt) |
