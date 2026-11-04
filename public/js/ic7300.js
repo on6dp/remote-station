@@ -278,7 +278,7 @@
     { id: 'scRef', g: 'rx', label: 'REF du scope', type: 'level', min: -20, max: 20, step: 0.5, unit: 'dB', face: true,
       write: (v) => { const a = Math.round(Math.abs(v) * 10); return q(0x27, 0x19, 0x00, bcd(Math.floor(a / 10)), bcd((a % 10) * 10), v < 0 ? 1 : 0); } },
     { id: 'scSpeed', g: 'rx', label: 'SPEED du scope', type: 'select', face: true, options: [[0, 'FAST'], [1, 'MID'], [2, 'SLOW']], write: (v) => q(0x27, 0x1A, 0x00, v) },
-    { id: 'scEdge', g: 'rx', label: 'EDGE du scope (FIX)', type: 'select', face: true, options: [[1, 'EDGE1'], [2, 'EDGE2'], [3, 'EDGE3'], [4, 'EDGE4']], write: (v) => q(0x27, 0x16, 0x00, v) },
+    { id: 'scEdge', g: 'rx', label: 'EDGE du scope (FIX)', type: 'select', face: true, options: [[1, 'EDGE1'], [2, 'EDGE2'], [3, 'EDGE3']], write: (v) => q(0x27, 0x16, 0x00, v) },
     // Écran FUNCTION : TBW, largeur de la bande passante d'émission en SSB (16 58 : 00 WIDE, 01 MID, 02 NAR)
     { id: 'tbw', g: 'tx', label: 'TBW', type: 'select', face: true, options: [[0, 'WIDE'], [1, 'MID'], [2, 'NAR']], write: (v) => q(0x16, 0x58, v) },
     // Écran VOICE TX : émission d'une mémoire vocale du TRX (28 00 01 … 08 = T1 … T8, 28 00 00 = arrêt) ; phonie seulement,
@@ -408,7 +408,7 @@
     if (c === 0x27 && d[0] === 0x14 && d.length >= 3) return { scMode: d[2] <= 3 ? d[2] : 0 };
     if (c === 0x27 && d[0] === 0x19 && d.length >= 5) { const v = unbcd(d[2]) + unbcd(d[3]) / 100; return { scRef: Math.round((d[4] ? -v : v) * 2) / 2 }; }
     if (c === 0x27 && d[0] === 0x1A && d.length >= 3 && d[2] <= 2) return { scSpeed: d[2] };
-    if (c === 0x27 && d[0] === 0x16 && d.length >= 3 && d[2] >= 1 && d[2] <= 4) return { scEdge: d[2] };
+    if (c === 0x27 && d[0] === 0x16 && d.length >= 3 && d[2] >= 1 && d[2] <= 3) return { scEdge: d[2] };
     if (c === 0x1A && d[0] === 0x02 && d.length >= 2 && d[1] >= 1 && d[1] <= 8) {
       return { ['km' + d[1]]: String.fromCharCode(...d.slice(2).filter((b) => b >= 0x20 && b < 0x7F)).slice(0, 70) };
     }
