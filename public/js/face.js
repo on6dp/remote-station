@@ -1673,7 +1673,7 @@
       ['ΔF', 'ΔF : balayage autour de la fréquence (± ΔF SPAN) ; nouveau clic : arrêt', () => scanStart('df')],
       ['FINE', 'FINE : balayage lent, il s’arrête plus finement sur les signaux', () => { SCAN.fine = !SCAN.fine; }],
       ['ΔF SPAN', 'ΔF SPAN : ±5, 10, 20, 50, 100, 500 kHz, ±1 MHz', () => { SCAN.span = SCAN.span % 7 + 1; store.set('rs.face.ic.dfspan', SCAN.span); }],
-      ['SET', 'SET', () => say('SET (réglages du balayage) : sur le TRX, au club.', '', 3500)]]);
+      ['SET', 'SET : SCAN SET (SCAN Speed Slow / Fast, SCAN Resume OFF / ON), relus sur le TRX', () => { L.icSet = true; L.icSub = 'scanset'; L.icSubP = 0; subRead(); }]]);
     // P1 / P2 relus sur le TRX pour afficher la plage du balayage programmé
     LCD.iscnRead = () => { if (iControl()) for (const ch of [100, 101]) setTimeout(() => send({ t: 'set', ctl: 'mcRead', value: ch }), (ch - 99) * 150); };
   }
@@ -1792,35 +1792,52 @@
     if (e.md && e.md !== L.activeMode(S())) setTimeout(() => setMode(e.md), 200);
   }
   function buildIcMpad(g, c) {
-    const { m, X, Y, y0 } = icPanel(g, c, 'icMpad', 'MEMO PAD');
-    el('rect', { x: X(10), y: Y(y0), width: c.w - 20, height: c.h - y0 - 50, class: 'im-row' }, m);
-    LCD.impRows = Array.from({ length: 5 }, (_, i) => {
-      const y = y0 + 4 + i * 18;
-      const bg = el('rect', { x: X(14), y: Y(y), width: 330, height: 17, class: 'imp-sel' }, m);
-      const t = el('text', { x: X(20), y: Y(y + 14), class: 'imp-t', 'xml:space': 'preserve' }, m, '');
-      const hit = el('rect', { x: X(14), y: Y(y), width: c.w - 28, height: 17, class: 'hs lcd-hit' }, m);
-      el('title', {}, hit, 'Clic : retour sur cette fréquence');
-      hit.addEventListener('click', (ev) => { ev.stopPropagation(); mpadGo(MPAD.top + i); render(); });
-      return { bg, t };
-    });
-    MPAD.top = 0;
-    LCD.impBtns = keyRow(m, X, Y, c, c.h - 46, [
-      ['▲', 'Ligne précédente (et retour sur sa fréquence)', () => { if (MPAD.list.length) mpadGo(Math.max(0, MPAD.sel - 1)); }],
-      ['▼', 'Ligne suivante (et retour sur sa fréquence)', () => { if (MPAD.list.length) mpadGo(Math.min(MPAD.list.length - 1, MPAD.sel + 1)); }],
-      ['DEL', 'DEL : efface la ligne choisie', () => { MPAD.list.splice(MPAD.sel, 1); MPAD.sel = Math.max(0, Math.min(MPAD.sel, MPAD.list.length - 1)); mpadSave(); }],
-      ['DEL ALL', 'DEL ALL : efface tout le MEMO PAD de cette page', () => { MPAD.list = []; MPAD.sel = 0; mpadSave(); }],
-      ['EXPAND', 'EXPAND', () => say('EXPAND : le MEMO PAD tient sur cet écran (10 lignes au plus).', '', 3000)]]);
+    // Deux écrans : normal (5 lignes, sous la bande du scope) et EXPAND (10 lignes, sans le scope), comme sur le TRX
+    const mk = (key, exp) => {
+      const X = (v) => c.x + v, Y = (v) => c.y + v;
+      const m = LCD[key] = lcdOverlay(g, 'icp');
+      const top = exp ? G.scopeY : G.scopeY + IC_STRIP;
+      el('rect', { x: X(5), y: Y(top), width: c.w - 10, height: c.h - top - 4, class: 'icm-bg' }, m);
+      el('rect', { x: X(5), y: Y(top + 1), width: c.w - 10, height: 18, class: 'icp-tb' }, m);
+      el('text', { x: X(c.w / 2), y: Y(top + 15), class: 'ick-title', 'text-anchor': 'middle' }, m, 'MEMO PAD');
+      const y0 = top + 21, nr = exp ? 10 : 5, rh = exp ? (c.h - 50 - y0 - 8) / 10 : 18;
+      el('rect', { x: X(10), y: Y(y0), width: c.w - 20, height: c.h - y0 - 50, class: 'im-row' }, m);
+      const rows = Array.from({ length: nr }, (_, i) => {
+        const y = y0 + 4 + i * rh;
+        const bg = el('rect', { x: X(14), y: Y(y), width: 330, height: rh - 1, class: 'imp-sel' }, m);
+        const t = el('text', { x: X(20), y: Y(y + rh / 2 + 5), class: 'imp-t', 'xml:space': 'preserve' }, m, '');
+        const hit = el('rect', { x: X(14), y: Y(y), width: c.w - 28, height: rh - 1, class: 'hs lcd-hit' }, m);
+        el('title', {}, hit, 'Clic : retour sur cette fréquence');
+        hit.addEventListener('click', (ev) => { ev.stopPropagation(); mpadGo((exp ? MPAD.topX : MPAD.top) + i); render(); });
+        return { bg, t };
+      });
+      const btns = keyRow(m, X, Y, c, c.h - 46, [
+        ['▲', 'Ligne précédente (et retour sur sa fréquence)', () => { if (MPAD.list.length) mpadGo(Math.max(0, MPAD.sel - 1)); }],
+        ['▼', 'Ligne suivante (et retour sur sa fréquence)', () => { if (MPAD.list.length) mpadGo(Math.min(MPAD.list.length - 1, MPAD.sel + 1)); }],
+        ['DEL', 'DEL : efface la ligne choisie', () => { MPAD.list.splice(MPAD.sel, 1); MPAD.sel = Math.max(0, Math.min(MPAD.sel, MPAD.list.length - 1)); mpadSave(); }],
+        ['DEL ALL', 'DEL ALL : efface tout le MEMO PAD de cette page', () => { MPAD.list = []; MPAD.sel = 0; mpadSave(); }],
+        ['EXPAND', 'EXPAND : MEMO PAD agrandi (10 lignes, sans le scope) ; nouveau clic : normal', () => { L.mpadExp = !L.mpadExp; WF.drawn = false; }]]);
+      return { rows, btns };
+    };
+    const a = mk('icMpad', false), b = mk('icMpadX', true);
+    LCD.impRows = a.rows; LCD.impRowsX = b.rows; LCD.impBtns = a.btns;
+    b.btns[4].r.classList.add('on');
+    MPAD.top = 0; MPAD.topX = 0;
   }
   function drawIcMpad() {
     if (!LCD.impRows) return;
-    if (MPAD.sel < MPAD.top) MPAD.top = MPAD.sel;
-    if (MPAD.sel > MPAD.top + 4) MPAD.top = MPAD.sel - 4;
-    LCD.impRows.forEach((r, i) => {
-      const k = MPAD.top + i, e = MPAD.list[k];
-      const f = e ? (e.f / 1e6).toFixed(6).replace(/(\d)(\d{3})$/, '$1.$2').replace(/\.(\d{3})\./, '.$1.') : '--.---.---';
-      r.t.textContent = String(k + 1).padStart(2, ' ') + '  ' + f.padStart(11, ' ') + '  ' + (e ? (e.md || '').padEnd(7, ' ') : '------ ') + '  ' + (e && e.fil ? 'FIL' + e.fil : '----');
-      r.bg.classList.toggle('on', !!e && k === MPAD.sel);
-    });
+    const fill = (rows, topKey, n) => {
+      if (MPAD.sel < MPAD[topKey]) MPAD[topKey] = MPAD.sel;
+      if (MPAD.sel > MPAD[topKey] + n - 1) MPAD[topKey] = MPAD.sel - n + 1;
+      rows.forEach((r, i) => {
+        const k = MPAD[topKey] + i, e = MPAD.list[k];
+        const f = e ? (e.f / 1e6).toFixed(6).replace(/(\d)(\d{3})$/, '$1.$2').replace(/\.(\d{3})\./, '.$1.') : '--.---.---';
+        r.t.textContent = String(k + 1).padStart(2, ' ') + '  ' + f.padStart(11, ' ') + '  ' + (e ? (e.md || '').padEnd(7, ' ') : '------ ') + '  ' + (e && e.fil ? 'FIL' + e.fil : '----');
+        r.bg.classList.toggle('on', !!e && k === MPAD.sel);
+      });
+    };
+    fill(LCD.impRows, 'top', 5);
+    if (LCD.impRowsX) fill(LCD.impRowsX, 'topX', 10);
   }
   // SET (MENU → SET) : liste des réglages du TRX, 2 pages, comme sur l'IC-7300 (icônes : dessins originaux)
   const SET_ICONS = {
@@ -1881,7 +1898,7 @@
   // Retour : Fixed Edges → SCOPE SET → écran SCOPE ; autres sous-menus → liste SET
   function subBack() {
     if (L.icSub === 'edges') { L.icSub = 'scope'; L.icSubP = 3; return; }
-    if (L.icSub === 'scope' || L.icSub === 'audio' || L.icSub === 'vrec') { L.icSub = null; L.icSet = false; return; }
+    if (L.icSub === 'scope' || L.icSub === 'audio' || L.icSub === 'vrec' || L.icSub === 'scanset') { L.icSub = null; L.icSet = false; return; }
     if (L.icSub === 'voice' || L.icSub === 'vtx') { L.icSub = 'vrec'; L.icSubP = 0; return; }
     L.icSub = null;
   }
@@ -2539,7 +2556,8 @@
     const on = !!L.icMeter && !menus && !view;
     M.g.style.display = on ? '' : 'none';
     if (L.icView === 'voice' && /^(CW|RTTY)/.test(L.activeMode(s) || '')) L.icView = null; // VOICE TX : phonie seulement
-    for (const [k, v] of [['icMpad', 'mpad'], ['icKeyer', 'keyer'], ['icAudio', 'audio'], ['icScope', 'scope'], ['icVoice', 'voice'], ['icSwr', 'swr'], ['icScan', 'scan']]) if (LCD[k]) LCD[k].style.display = view === v ? '' : 'none';
+    if (LCD.icMpadX) LCD.icMpadX.style.display = view === 'mpad' && L.mpadExp ? '' : 'none';
+    for (const [k, v] of [['icMpad', 'mpad'], ['icKeyer', 'keyer'], ['icAudio', 'audio'], ['icScope', 'scope'], ['icVoice', 'voice'], ['icSwr', 'swr'], ['icScan', 'scan']]) if (LCD[k]) LCD[k].style.display = view === v && !(k === 'icMpad' && L.mpadExp) ? '' : 'none';
     if (view === 'keyer') drawIcKeyer(s);
     if (view === 'audio') drawIcAudioKeys(s);
     if (view === 'scope') drawIcScope(s);
@@ -2547,6 +2565,7 @@
     if (view === 'scan') drawIcScan(s);
     if (view === 'mpad') drawIcMpad(s);
     if (view === 'voice') drawIcVoice(s);
+    { const cv = $('scope'); if (cv) cv.classList.toggle('fc-hide', view === 'mpad' && !!L.mpadExp); } // MEMO PAD EXPAND : sans le scope
     if (view) {
       // AUDIO : bande, titre, FFT et oscilloscope dans la cascade ; SCOPE : sous son bandeau, au-dessus des touches ; les autres : bande du scope
       const bigSc = view === 'scope' && !!L.icBig, expSc = view === 'scope' && !!L.iscExp && !bigSc;

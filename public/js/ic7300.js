@@ -143,6 +143,8 @@
     // AUDIO SCOPE SET (appui long sur EXPD/SET de l'écran AUDIO) : appliqué au dessin de la page ; couleurs en lecture seule
     audio: ['AUDIO SCOPE SET', [[151, 'FFT Scope Waveform Type', ['Fill', 'Line']], [152, 'FFT Scope Waveform Color', 'rgb', 'ro'],
       [153, 'FFT Scope Waterfall Display', OF], [154, 'Oscilloscope Waveform Color', 'rgb', 'ro']]],
+    // SCAN SET (MENU → SCAN → SET) : vitesse et reprise du balayage (1A 05 0178 : 00 = Slow, 01 = Fast ; 0179 : OFF / ON)
+    scanset: ['SCAN SET', [[178, 'SCAN Speed', ['Slow', 'Fast']], [179, 'SCAN Resume', OF]]],
     // Fixed Edges : 3 bords par tranche de fréquences (1A 05 0112 … 0150 : bord bas puis bord haut, au kHz)
     edges: ['Fixed Edges', []]
   };

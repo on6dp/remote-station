@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.39** — IC-7300 : MENU → SCAN → SET (SCAN Speed Slow / Fast, SCAN Resume OFF / ON, relus et réglés sur le TRX) ; MEMO PAD → EXPAND (10 lignes sur tout l'écran, sans le scope)
 - **0.37.38** — IC-7300 SWR GRAPH comme le TRX : fréquence au kHz au milieu, petits traits sous chaque barre, valeurs STEP / BAR en grand ; correction de la 0.37.37 (SWR GRAPH sans fréquences ni pas)
 - **0.37.37** — IC-7300 : écran des mesures (METER) comme le TRX — barres ALC / COMP / SWR / Id en segments, zone ALC rouge, chiffres du COMP sur la barre, échelles SWR et Id sous un trait blanc (points pour Id) ; SWR GRAPH : choix de 3 barres
 - **0.37.36** — IC-7300 VOICE TX sans carte SD : T1 … T8 = mémoires vocales de chaque membre, enregistrées au micro de la page (REC/SET → REC : VOICE TX RECORD, REC / STOP, écoute, NAME, CLEAR), gardées sur le serveur (voicemem/) et émises par lui en phonie avec les contrôles du PTT ; appui d'1 s = répétition (Repeat Time, 2 min au plus) ; TX LEVEL et VOICE TX SET (Auto Monitor, Repeat Time) ; SPLIT : fréquence d'émission en rouge pendant l'émission

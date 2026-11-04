@@ -43,6 +43,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-panel { position: relative; }
 #face { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; touch-action: none; }
 .fc-scope { position: absolute; border-radius: 3px; pointer-events: none; visibility: hidden; }
+.fc-scope.fc-hide { visibility: hidden !important; pointer-events: none !important; }
 .fc-tip { position: absolute; z-index: 3; pointer-events: none; padding: 4px 9px; border-radius: 5px; background: rgba(10, 16, 26, .92);
   border: 1px solid #3a7bd5; color: #fff; font: 700 13px/1.2 'Roboto Mono', monospace; white-space: nowrap; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
 .fc-cover[hidden] { display: none; }
