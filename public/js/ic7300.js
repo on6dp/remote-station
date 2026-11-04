@@ -69,7 +69,7 @@
     q(0x16, 0x50), q(0x15, 0x15), q(0x15, 0x16),
     // Face avant (/ic7300) : CW PITCH, KEY SPEED, MONITOR (marche et niveau), BK-IN, IP+, VOX GAIN, ANTI VOX
     q(0x14, 0x09), q(0x14, 0x0C), q(0x14, 0x15), q(0x16, 0x45), q(0x16, 0x47), q(0x16, 0x65), q(0x14, 0x16), q(0x14, 0x17), q(0x16, 0x57),
-    q(0x27, 0x15, 0x00), q(0x27, 0x17, 0x00), q(0x27, 0x14, 0x00), q(0x27, 0x16, 0x00), q(0x27, 0x19, 0x00), q(0x27, 0x1A, 0x00), // scope du TRX : SPAN, HOLD, CENTER / FIX, EDGE, REF, SPEED
+    q(0x27, 0x15, 0x00), q(0x27, 0x17, 0x00), q(0x27, 0x14, 0x00), q(0x27, 0x16, 0x00), q(0x27, 0x19, 0x00), q(0x27, 0x1A, 0x00), q(0x27, 0x1D, 0x00), // scope du TRX : SPAN, HOLD, CENTER / FIX, EDGE, REF, SPEED
     q(0x16, 0x58) // TBW (largeur d'émission en SSB : 00 WIDE, 01 MID, 02 NAR)
   ];
   const SLOW_PER_TICK = 5;
@@ -80,7 +80,7 @@
 
   const STATE_KEYS = ['txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'fil', 'filB', 'pbtIn', 'pbtOut', 'nb', 'nbLvl', 'nr', 'nrLvl',
     'dnf', 'notch', 'notchPos', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox', 'tuner', 'tuning',
-    'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'ipPlus', 'voxGain', 'antiVox', 'notchW', 'tbw', 'scSpan', 'scHold', 'scMode', 'scEdge', 'scRef', 'scSpeed'];
+    'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'ipPlus', 'voxGain', 'antiVox', 'notchW', 'tbw', 'scSpan', 'scHold', 'scMode', 'scEdge', 'scRef', 'scSpeed', 'scVbw'];
   // SPAN du scope du TRX en mode CENTER (27 15 00 + demi-largeur en BCD) : ±2,5 kHz … ±500 kHz
   const SC_SPANS = [2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000];
   // Textes : mémoires du manipulateur M1 … M8 (écran KEYER)
@@ -126,10 +126,23 @@
       [85, 'Memory Name', OF], [86, 'MN-Q Popup (MN Width)', OF], [87, 'Bandwidth Popup (PBT)', OF], [88, 'Bandwidth Popup (FIL)', OF],
       [89, 'Screen Saver', ['OFF', '15 min', '30 min', '60 min']], [90, 'Opening Message', OF], [92, 'Power ON Check', OF],
       [93, 'Display Language', ['English', 'Japanese'], 'ro']]],
-    time: ['Time Set', [[94, 'Date', 'date'], [95, 'Time', 'time'], [96, 'UTC Offset', 'utc']]]
+    time: ['Time Set', [[94, 'Date', 'date'], [95, 'Time', 'time'], [96, 'UTC Offset', 'utc']]],
+    // SCOPE SET (appui long sur EXPD/SET de l'écran SCOPE) ; couleurs en lecture seule ; bords FIX : sous-menu Fixed Edges
+    scope: ['SCOPE SET', [
+      [97, 'Scope during Tx (CENTER Type)', OF], [98, 'Max Hold', ['OFF', '10s Hold', 'ON']], [99, 'CENTER Type Display', ['Filter Center', 'Carrier Point Center', 'Carrier Point Center (Abs. Freq.)']],
+      [100, 'Marker Position (FIX Type/SCROLL Type)', ['Filter Center', 'Carrier Point']], [102, 'Averaging', ['OFF', '2', '3', '4']], [103, 'Waveform Type', ['Fill', 'Fill+Line']],
+      [104, 'Waveform Color (Current)', 'rgb', 'ro'], [105, 'Waveform Color (Line)', 'rgb', 'ro'], [106, 'Waveform Color (Max Hold)', 'rgb', 'ro'],
+      [107, 'Waterfall Display', OF], [108, 'Waterfall Speed', ['Slow', 'Mid', 'Fast']], [109, 'Waterfall Size (Expand Screen)', ['Small', 'Mid', 'Large']],
+      [110, 'Waterfall Peak Color Level', ['Grid 1', 'Grid 2', 'Grid 3', 'Grid 4', 'Grid 5', 'Grid 6', 'Grid 7', 'Grid 8']], [111, 'Waterfall Marker Auto-hide', OF]]],
+    // Fixed Edges : 3 bords par tranche de fréquences (1A 05 0112 … 0150 : bord bas puis bord haut, au kHz)
+    edges: ['Fixed Edges', []]
   };
+  const EDGE_BANDS = [[30, 1600], [1600, 2000], [2000, 6000], [6000, 8000], [8000, 11000], [11000, 15000], [15000, 20000], [20000, 22000], [22000, 26000], [26000, 30000], [30000, 45000], [45000, 60000], [60000, 74800]];
+  EDGE_BANDS.forEach(([lo, hi], i) => { for (let e = 0; e < 3; e++) EX_MENUS.edges[1].push([112 + i * 3 + e, (lo / 1000).toFixed(2) + '–' + (hi / 1000).toFixed(2) + ' MHz · No.' + (e + 1), 'edge']); });
   const EX = {};
   for (const k in EX_MENUS) for (const it of EX_MENUS[k][1]) EX[it[0]] = { n: it[0], label: it[1], type: Array.isArray(it[2]) ? 'list' : it[2], opts: Array.isArray(it[2]) ? it[2] : null, rw: it[3] !== 'ro' && k !== 'conn', menu: k };
+  // Bords FIX : plage de la tranche de chaque n°
+  for (const n in EX) if (EX[n].type === 'edge') { const b = EDGE_BANDS[Math.floor((n - 112) / 3)]; EX[n].lo = b[0]; EX[n].hi = b[1]; }
   const exFmt = (it, raw) => {
     if (raw == null || raw === '') return '—';
     const v = Number(raw), t = it.type;
@@ -144,6 +157,8 @@
     if (t === 'tbw') { const lo = Math.floor(v / 10), hi = v % 10; return [100, 200, 300, 500][lo] + ' – ' + [2500, 2700, 2800, 2900][hi] + ' Hz'; }
     if (t === 'date') return String(raw).replace(/^(\d{4})(\d\d)(\d\d)$/, '$1/$2/$3');
     if (t === 'time') return String(raw).padStart(4, '0').replace(/^(\d\d)(\d\d)$/, '$1:$2');
+    if (t === 'edge') { const [a, b] = String(raw).split('-').map(Number); return (a / 1000).toFixed(3) + ' – ' + (b / 1000).toFixed(3) + ' MHz'; }
+    if (t === 'rgb') { const [r2, g2, b2] = String(raw).split(','); return 'R:' + r2 + '  G:' + g2 + '  B:' + b2; }
     if (t === 'utc') { const m = Number(raw); return (m < 0 ? '−' : '+') + String(Math.floor(Math.abs(m) / 60)).padStart(2, '0') + ':' + String(Math.abs(m) % 60).padStart(2, '0'); }
     return String(raw);
   };
@@ -156,8 +171,13 @@
     if (t === 'date') { const d = String(raw); return [bcd(+d.slice(0, 2)), bcd(+d.slice(2, 4)), bcd(+d.slice(4, 6)), bcd(+d.slice(6, 8))]; }
     if (t === 'time') { const d = String(raw).padStart(4, '0'); return [bcd(+d.slice(0, 2)), bcd(+d.slice(2, 4))]; }
     if (t === 'utc') { const a = Math.abs(v); return [bcd(Math.floor(a / 60)), bcd(a % 60), v < 0 ? 1 : 0]; }
+    if (t === 'edge') { const [a, b] = String(raw).split('-').map(Number); return edgeBytes(a).concat(edgeBytes(b)); }
+    if (t === 'rgb') return String(raw).split(',').map(Number).reduce((o, x) => o.concat(lvlBytes(x)), []); // R, G, B : 0000–0255 chacun
     return [bcd(v)];
   }
+  // Bord du scope FIX : 3 octets BCD [1 kHz|100 Hz=0] [100 kHz|10 kHz] [10 MHz|1 MHz] → kHz
+  const edgeKHz = (b, o) => (b[o] >> 4) + unbcd(b[o + 1]) * 10 + unbcd(b[o + 2]) * 1000;
+  const edgeBytes = (k) => [((k % 10) << 4), bcd(Math.floor(k / 10) % 100), bcd(Math.floor(k / 1000) % 100)];
   // exSet : n° × 100000 + valeur brute (UTC Offset : minutes + 1000, pour rester positif)
   const exRaw = (it, v) => (it.type === 'utc' ? (v % 100000) - 1000 : v % 100000);
   const exCode = (it, raw) => it.n * 100000 + (it.type === 'utc' ? Number(raw) + 1000 : Number(raw));
@@ -302,6 +322,16 @@
         if (it.type !== 'date' && !exOk(it, raw)) throw new Error(it.label + ' : valeur hors plage');
       },
       write: (v) => { const it = EX[Math.floor(v / 100000)]; return q(0x1A, 0x05, bcd(Math.floor(it.n / 100)), bcd(it.n % 100), ...exBytes(it, exRaw(it, v))); } },
+    // Bord FIX : n° × 10¹⁰ + bord bas (kHz) × 10⁵ + bord haut (kHz), dans la tranche du n°, bas < haut
+    { id: 'exEdge', g: 'rx', label: 'Bord du scope FIX', type: 'level', min: 112e10, max: 150e10 + 9999999999, step: 1, face: true,
+      check: (v) => {
+        const it = EX[Math.floor(v / 1e10)], a = Math.floor(v / 1e5) % 1e5, b = v % 1e5;
+        if (!it || it.type !== 'edge') throw new Error('bord inconnu');
+        if (!(a >= it.lo && b <= it.hi && a < b)) throw new Error('bords : ' + it.lo / 1000 + ' à ' + it.hi / 1000 + ' MHz, bas < haut');
+      },
+      write: (v) => { const it = EX[Math.floor(v / 1e10)]; return q(0x1A, 0x05, 0x01, bcd(it.n % 100), ...edgeBytes(Math.floor(v / 1e5) % 1e5), ...edgeBytes(v % 1e5)); } },
+    // VBW du scope (27 1D 00 : 00 Narrow, 01 Wide)
+    { id: 'scVbw', g: 'rx', label: 'VBW du scope', type: 'select', face: true, options: [[0, 'Narrow'], [1, 'Wide']], write: (v) => q(0x27, 0x1D, 0x00, v) },
     // Date (AAAAMMJJ, trop grande pour exSet) : réglage à part
     { id: 'exDate', g: 'vfo', label: 'Date du TRX', type: 'level', min: 20000101, max: 20991231, step: 1, face: true,
       check: (v) => { if (!exOk(EX[94], v)) throw new Error('date invalide'); }, write: (v) => q(0x1A, 0x05, 0x00, 0x94, ...exBytes(EX[94], v)) },
@@ -406,6 +436,7 @@
     if (c === 0x27 && d[0] === 0x15 && d.length >= 7) { const i = SC_SPANS.indexOf(freqValue(d, 2)); return i >= 0 ? { scSpan: i } : { ok: true }; }
     if (c === 0x27 && d[0] === 0x17 && d.length >= 3) return { scHold: d[2] ? 1 : 0 };
     if (c === 0x27 && d[0] === 0x14 && d.length >= 3) return { scMode: d[2] <= 3 ? d[2] : 0 };
+    if (c === 0x27 && d[0] === 0x1D && d.length >= 3) return { scVbw: d[2] ? 1 : 0 };
     if (c === 0x27 && d[0] === 0x19 && d.length >= 5) { const v = unbcd(d[2]) + unbcd(d[3]) / 100; return { scRef: Math.round((d[4] ? -v : v) * 2) / 2 }; }
     if (c === 0x27 && d[0] === 0x1A && d.length >= 3 && d[2] <= 2) return { scSpeed: d[2] };
     if (c === 0x27 && d[0] === 0x16 && d.length >= 3 && d[2] >= 1 && d[2] <= 4) return { scEdge: d[2] };
@@ -433,6 +464,8 @@
         else if (t === 'date') raw = b.length >= 4 ? b.slice(0, 4).map((x) => String(unbcd(x)).padStart(2, '0')).join('') : null;
         else if (t === 'time') raw = b.length >= 2 ? String(unbcd(b[0])).padStart(2, '0') + String(unbcd(b[1])).padStart(2, '0') : null;
         else if (t === 'utc') raw = b.length >= 3 ? (unbcd(b[0]) * 60 + unbcd(b[1])) * (b[2] ? -1 : 1) : null;
+        else if (t === 'edge') raw = b.length >= 6 ? edgeKHz(b, 0) + '-' + edgeKHz(b, 3) : null;
+        else if (t === 'rgb') raw = b.length >= 6 ? [lvlValue(b, 0), lvlValue(b, 2), lvlValue(b, 4)].join(',') : null;
         else raw = unbcd(b[0]);
         return raw == null ? { ok: true } : { ['ex' + n]: String(raw) };
       }
@@ -582,6 +615,8 @@
           else { this.scRef = (unbcd(d[2]) + unbcd(d[3]) / 100) * (d[4] ? -1 : 1); ok(); }
         } else if (c === 0x27 && d[0] === 0x1A) {
           if (d.length === 2) r(0x1A, 0x00, this.scSpeed != null ? this.scSpeed : 1); else { this.scSpeed = d[2]; ok(); }
+        } else if (c === 0x27 && d[0] === 0x1D) {
+          if (d.length === 2) r(0x1D, 0x00, this.scVbw || 0); else { this.scVbw = d[2]; ok(); }
         } else if (c === 0x27 && (d[0] === 0x14 || d[0] === 0x16)) {
           const k = d[0] === 0x14 ? 'scMode' : 'scEdge';
           if (d.length === 2) r(d[0], 0x00, this[k] != null ? this[k] : (k === 'scEdge' ? 1 : 0)); else { this[k] = d[2]; ok(); }
@@ -595,15 +630,15 @@
           // Réglages SET (simulateur) : valeurs d'usine approximatives, gardées si on les change
           const n = unbcd(d[1]) * 100 + unbcd(d[2]), it = EX[n];
           this.ex = this.ex || {};
-          const def = { pct: 128, nbw: 128, hex: 0, hl: 525, tbw: 13, tone: 5, nbd: 4, voxd: 2, date: '20261104', time: '1430', utc: 60 };
+          const def = { pct: 128, nbw: 128, hex: 0, hl: 525, tbw: 13, tone: 5, nbd: 4, voxd: 2, date: '20261104', time: '1430', utc: 60, rgb: '172,191,191', edge: it.lo + '-' + Math.min(it.hi, it.lo + 350) };
           if (d.length === 3) {
             const raw = this.ex[n] != null ? this.ex[n] : n === 74 ? 1 : n === 75 ? 1 : n === 66 ? 0 : n === 67 ? 3 : def[it.type] != null ? def[it.type] : 0;
             r(0x05, d[1], d[2], ...exBytes(it, raw));
           } else {
             const b = d.slice(3);
-            this.ex[n] = it.type === 'pct' || it.type === 'nbw' || it.type === 'hex' ? lvlValue(b, 0) : it.type === 'hl' ? unbcd(b[0]) * 100 + unbcd(b[1]) : it.type === 'tbw' ? (b[0] >> 4) * 10 + (b[0] & 15)
+            this.ex[n] = it.type === 'edge' ? edgeKHz(b, 0) + '-' + edgeKHz(b, 3) : it.type === 'pct' || it.type === 'nbw' || it.type === 'hex' ? lvlValue(b, 0) : it.type === 'hl' ? unbcd(b[0]) * 100 + unbcd(b[1]) : it.type === 'tbw' ? (b[0] >> 4) * 10 + (b[0] & 15)
               : it.type === 'date' ? b.map((x) => String(unbcd(x)).padStart(2, '0')).join('') : it.type === 'time' ? String(unbcd(b[0])).padStart(2, '0') + String(unbcd(b[1])).padStart(2, '0')
-              : it.type === 'utc' ? (unbcd(b[0]) * 60 + unbcd(b[1])) * (b[2] ? -1 : 1) : unbcd(b[0]);
+              : it.type === 'utc' ? (unbcd(b[0]) * 60 + unbcd(b[1])) * (b[2] ? -1 : 1) : it.type === 'rgb' ? [lvlValue(b, 0), lvlValue(b, 2), lvlValue(b, 4)].join(',') : unbcd(b[0]);
             ok();
           }
         } else if (c === 0x1A && d[0] === 0x00 && d.length === 3) {
@@ -666,7 +701,7 @@
   const api = {
     ID, NAME, MODES, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX, POWER_RANGE, POWER_STEP, INIT,
     FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS, STR_KEYS,
-    GROUPS, CONTROLS, CONTROL, validate, SC_SPANS, EX, EX_MENUS, exFmt, exOk, exCode, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
+    GROUPS, CONTROLS, CONTROL, validate, SC_SPANS, EX, EX_MENUS, exFmt, exOk, exCode, EDGE_BANDS, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
     smeterLabel, swrValue, vdValue, idValue, poFrac,
     bwText: (r) => (r.fil ? 'FIL' + r.fil : '—'),
     // Scope du TRX vers la page Station : scope en service et sortie de la courbe par le CI-V (27 10 01, 27 11 01) ; arrêt : 27 11 00

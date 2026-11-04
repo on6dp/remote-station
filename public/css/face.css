@@ -517,3 +517,6 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .isub-v { fill: #8fd0f0; font: 700 16px Arial, sans-serif; pointer-events: none; }
 #face .im-row.ro { fill: #2a2f3a; }
 #face .im-row.ro ~ .isub-v { fill: #9aa1ae; }
+#face .isub-sw { stroke: #c9ced8; stroke-width: 1; pointer-events: none; }
+/* Flèches ▲ ▼ et ↩ dessinées par-dessus les touches : le clic passe à la touche dessous */
+#face .im-arrow, #face .ic-back, #face .im-lines { pointer-events: none; }

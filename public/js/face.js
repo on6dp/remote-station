@@ -160,7 +160,7 @@
       if (s.vox) return setCtl('vox', 0);
       return say('VOX : à distance, il ne peut pas être mis en service (seulement coupé) ; le BK-IN se règle en CW.', 'warn', 5000);
     }
-    if (a.local === 'exit' && L.icSet && L.icSub) { L.icSub = null; return render(); } // EXIT : du sous-menu à la liste SET
+    if (a.local === 'exit' && L.icSet && L.icSub) { subBack(); return render(); } // EXIT : un niveau plus haut
     if (a.local === 'exit' && (L.icMem || L.icRec || L.icSet)) { L.icMem = false; L.icRec = false; L.icSet = false; return render(); }
     if (a.local === 'mpadWrite') return mpadWrite();
     if (a.local === 'exit' && L.icView && !L.icomMenu && !L.quickMenu && !L.modeMenu && !L.bandMenu && !L.multiMenu) { L.icView = null; WF.drawn = false; return render(); }
@@ -1175,7 +1175,11 @@
     L.iscPage = 0;
     // Appui long sur CENT/FIX (page 1) : CENTER ⇄ SCROLL-C, FIX ⇄ SCROLL-F
     LCD.iscBtns = keyRow(m, X, Y, c, ky, [0, 1, 2, 3, 4].map((i) => ['', '', () => LCD.iscPages[L.iscPage][i][2](),
-      (j) => { if (L.iscPage || j !== 3) return false; setCtl('scMode', (S().scMode || 0) ^ 2); return true; }]));
+      (j) => {
+        // Appui long sur EXPD/SET (lignes <1> et <2>) : SCOPE SET, comme sur le TRX
+        if (j === 4 && L.iscPage !== 2) { L.icSet = true; L.icSub = 'scope'; L.icSubP = 0; subRead(); return true; }
+        if (L.iscPage || j !== 3) return false; setCtl('scMode', (S().scMode || 0) ^ 2); return true;
+      }]));
   }
   // ---- Vrai scope du TRX (IC-7300, CI-V 27 00 relayé par la page Station et le serveur) : 475 points de 0 à 160 par image
   const RFS = { at: 0, d: null, m: 0, f0: 0, f1: 0, last: null };
@@ -1653,22 +1657,55 @@
   const OTHERS = [['info', 'Information', 'Modèle IC-7300, adresse CI-V 94h ; la version du firmware ne se lit pas par le CAT (MENU → SET → Others → Information au club)'],
     ['tsc', 'Touch Screen Calibration', 'Touch Screen Calibration : pas à distance'], ['clone', 'Clone', 'Clone : pas à distance'],
     ['reset', 'Reset', 'Reset : jamais à distance'], ['emg', 'Emergency', 'Emergency : jamais à distance']];
+  const SUBN = 4; // 4 réglages par page, comme sur le TRX
   function subItems() {
     if (L.icSub === 'etc') return OTHERS.map((o) => ({ other: o }));
+    if (L.icSub === 'scope') {
+      // SCOPE SET : ordre du TRX, VBW (27 1D) après Marker Position, Fixed Edges à la fin
+      const its = R.EX_MENUS.scope[1].map((x) => R.EX[x[0]]);
+      its.splice(4, 0, { pseudo: 'vbw', label: 'VBW' });
+      its.push({ other: ['edges', 'Fixed Edges', 'Bords du mode FIX pour la bande en cours'], go: 'edges' });
+      return its;
+    }
+    if (L.icSub === 'edges') {
+      // Fixed Edges : les 3 bords de la tranche de la fréquence en cours (bord bas – bord haut)
+      const f = (activeSide() === 'B' ? S().freqB : S().freq) / 1000 || 14000;
+      return R.EX_MENUS.edges[1].map((x) => R.EX[x[0]]).filter((it) => f >= it.lo && f < it.hi);
+    }
     const m = R.EX_MENUS && R.EX_MENUS[L.icSub];
     return m ? m[1].map((x) => R.EX[x[0]]) : [];
   }
   function subRead() {
     if (!iControl() || L.icSub === 'etc') return;
-    const its = subItems().slice((L.icSubP || 0) * 5, (L.icSubP || 0) * 5 + 5);
+    const its = subItems().slice((L.icSubP || 0) * SUBN, (L.icSubP || 0) * SUBN + SUBN);
     its.forEach((it, i) => {
       if (!it || Date.now() - (SUB.readAt[it.n] || 0) < 5000) return;
       SUB.readAt[it.n] = Date.now();
       setTimeout(() => send({ t: 'set', ctl: 'exRead', value: it.n }), i * 130);
     });
   }
+  // Retour : Fixed Edges → SCOPE SET → écran SCOPE ; autres sous-menus → liste SET
+  function subBack() {
+    if (L.icSub === 'edges') { L.icSub = 'scope'; L.icSubP = 3; return; }
+    if (L.icSub === 'scope') { L.icSub = null; L.icSet = false; return; }
+    L.icSub = null;
+  }
   function subRaw(it) { const p = SUB.pend[it.n]; if (p && Date.now() - p.at < 3000) return p.v; const v = S()['ex' + it.n]; return v == null ? null : v; }
   function subClick(it, right) {
+    if (it.go) { L.icSub = it.go; L.icSubP = 0; subRead(); return render(); }
+    if (it.pseudo === 'vbw') { if (!needControl()) return; return setCtl('scVbw', S().scVbw ? 0 : 1); }
+    if (it.type === 'edge') {
+      if (!it.rw || !needControl()) return;
+      const cur = subRaw(it), [a0, b0] = cur ? String(cur).split('-') : [it.lo, it.hi];
+      const ans = window.prompt(it.label + '\nBord bas – bord haut en kHz (entre ' + it.lo + ' et ' + it.hi + ') :', a0 + '-' + b0);
+      if (!ans) return;
+      const mm = /^\s*(\d+)\s*[-–]\s*(\d+)\s*$/.exec(ans);
+      if (!mm) return say('Format : bas-haut en kHz, par exemple 14000-14350.', 'warn', 4000);
+      SUB.pend[it.n] = { v: mm[1] + '-' + mm[2], at: Date.now() };
+      setCtl('exEdge', it.n * 1e10 + Number(mm[1]) * 1e5 + Number(mm[2]));
+      setTimeout(() => { if (iControl()) send({ t: 'set', ctl: 'exRead', value: it.n }); }, 400);
+      return render();
+    }
     if (it.other) return say(it.other[2] + '.', '', 5000);
     if (!it.rw) return say(it.label + ' : lecture seule à distance' + (it.menu === 'conn' ? ' (réglages de liaison avec le club)' : '') + '.', '', 4000);
     if (!needControl()) return;
@@ -1710,15 +1747,16 @@
     el('rect', { x: x0 + 4, y: y0 + 4, width: w - 8, height: 24, rx: 3, class: 'mm-title' }, m);
     LCD.isubTitle = el('text', { x: x0 + w / 2, y: y0 + 21, class: 'mm-ttl big', 'text-anchor': 'middle' }, m, '');
     LCD.isubPage = el('text', { x: x0 + w - 12, y: y0 + 22, class: 'mm-ttl big', 'text-anchor': 'end' }, m, '');
-    const rx = x0 + 6, rw = w - 96, ry = y0 + 32, rh = (h - 38) / 5;
-    LCD.isubRows = [0, 1, 2, 3, 4].map((i) => {
+    const rx = x0 + 6, rw = w - 96, ry = y0 + 32, rh = (h - 38) / SUBN;
+    LCD.isubRows = Array.from({ length: SUBN }, (_, i) => i).map((i) => {
       const y = ry + i * rh;
       const bg = el('rect', { x: rx, y, width: rw, height: rh - 3, class: 'im-row' }, m);
       const t = el('text', { x: rx + 12, y: y + 22, class: 'isub-l' }, m, '');
       const v = el('text', { x: rx + rw - 12, y: y + rh - 12, class: 'isub-v', 'text-anchor': 'end' }, m, '');
+      const sw = el('rect', { x: rx + rw - 262, y: y + rh - 30, width: 34, height: 20, class: 'isub-sw', style: 'display:none' }, m); // couleur (R:G:B)
       const hit = el('rect', { x: rx, y, width: rw, height: rh - 3, class: 'hs lcd-hit' }, m);
       const tt = el('title', {}, hit, '');
-      const row = { bg, t, v, tt, it: null };
+      const row = { bg, t, v, tt, sw, it: null };
       hit.addEventListener('click', (ev) => {
         ev.stopPropagation();
         if (!row.it) return;
@@ -1733,12 +1771,12 @@
       el('title', {}, hit, tip);
       hit.addEventListener('click', (ev) => { ev.stopPropagation(); fn(); render(); });
     };
-    const ax = x0 + w - 46, pages = () => Math.max(1, Math.ceil(subItems().length / 5));
+    const ax = x0 + w - 46, pages = () => Math.max(1, Math.ceil(subItems().length / SUBN));
     nav(ry, 100, () => { L.icSubP = ((L.icSubP || 0) + pages() - 1) % pages(); subRead(); }, 'Page précédente');
     el('path', { d: 'M' + (ax - 12) + ' ' + (ry + 58) + 'L' + ax + ' ' + (ry + 40) + 'L' + (ax + 12) + ' ' + (ry + 58) + 'Z', class: 'im-arrow' }, m);
     nav(ry + 106, 100, () => { L.icSubP = ((L.icSubP || 0) + 1) % pages(); subRead(); }, 'Page suivante');
     el('path', { d: 'M' + (ax - 12) + ' ' + (ry + 148) + 'L' + ax + ' ' + (ry + 166) + 'L' + (ax + 12) + ' ' + (ry + 148) + 'Z', class: 'im-arrow' }, m);
-    nav(y0 + h - 58, 52, () => { L.icSub = null; }, 'Retour à SET');
+    nav(y0 + h - 58, 52, () => subBack(), 'Retour');
     const by = y0 + h - 32;
     el('path', { d: 'M' + (ax + 12) + ' ' + (by - 7) + 'H' + (ax - 4) + 'A7 7 0 0 0 ' + (ax - 4) + ' ' + (by + 7) + 'H' + (ax + 6) + 'M' + (ax - 1) + ' ' + (by - 12) + 'L' + (ax - 7) + ' ' + (by - 7) + 'L' + (ax - 1) + ' ' + (by - 2), class: 'ic-back' }, m);
     LCD.isubPages = pages;
@@ -1749,19 +1787,23 @@
     LCD.icSubG.style.display = on ? '' : 'none';
     if (!on) return;
     const all = subItems(), p = Math.min(L.icSubP || 0, LCD.isubPages() - 1);
+    // Retour de SCOPE SET : à l'écran SCOPE (ouvert par EXPD/SET)
     LCD.isubTitle.textContent = L.icSub === 'etc' ? 'Others' : R.EX_MENUS[L.icSub][0];
     LCD.isubPage.textContent = (p + 1) + '/' + LCD.isubPages();
     LCD.isubRows.forEach((r, i) => {
-      const it = all[p * 5 + i] || null;
+      const it = all[p * SUBN + i] || null;
       r.it = it;
       r.bg.style.display = it ? '' : 'none';
+      r.sw.style.display = 'none';
       if (!it) { r.t.textContent = r.v.textContent = ''; return; }
       if (it.other) {
-        r.t.textContent = it.other[1]; r.v.textContent = it.other[0] === 'info' ? 'IC-7300 · CI-V 94h' : 'pas à distance';
-        r.bg.classList.toggle('ro', it.other[0] !== 'info'); r.tt.textContent = it.other[2];
+        r.t.textContent = it.other[1]; r.v.textContent = it.go ? '›' : it.other[0] === 'info' ? 'IC-7300 · CI-V 94h' : 'pas à distance';
+        r.bg.classList.toggle('ro', !it.go && it.other[0] !== 'info'); r.tt.textContent = it.other[2];
         return;
       }
+      if (it.pseudo === 'vbw') { const v2 = S().scVbw; r.t.textContent = 'VBW'; r.v.textContent = v2 == null ? '…' : v2 ? 'Wide' : 'Narrow'; r.bg.classList.remove('ro'); r.tt.textContent = 'Clic : Narrow ⇄ Wide'; return; }
       const raw = subRaw(it);
+      if (it.type === 'rgb' && raw) { const c3 = String(raw).split(','); r.sw.style.display = ''; r.sw.style.fill = 'rgb(' + c3.join(',') + ')'; }
       r.t.textContent = it.label;
       r.v.textContent = raw == null ? (iControl() ? '…' : '— (prenez la main)') : R.exFmt(it, raw) + (it.rw ? '' : '  🔒');
       r.bg.classList.toggle('ro', !it.rw);
