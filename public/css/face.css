@@ -508,6 +508,7 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .icp-tx { fill: #fff; font: 700 12px Arial, sans-serif; }
 #face .isw-box { fill: #141a2a; stroke: #c9ced8; stroke-width: 1.2; }
 #face .isw-grid { stroke: #c9ced8; stroke-width: 1; }
+#face .isw-tick { stroke: #e6e9ef; stroke-width: 1.5; }
 #face .isw-red { stroke: #ff3b30; stroke-width: 2; }
 #face .isw-num { fill: #e6e9ef; font: 700 11px Arial, sans-serif; }
 #face .isw-no { fill: #e6e9ef; font: 15px Arial, sans-serif; }

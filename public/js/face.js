@@ -1565,7 +1565,7 @@
     LCD.ivLvlT.textContent = v == null ? '…' : Math.round(v * 100 / 255) + '%';
   }
   // SWR GRAPH (MENU → SWR) : ROS relevé pendant les émissions (TUNE, porteuse, phonie…) à chaque fréquence, en barres
-  const SWRG = { step: [10000, 50000, 100000, 500000], bar: [3, 5, 7, 9, 11, 13], // comme le TRX : 10 / 50 / 100 / 500 kHz, 3 à 13 barres si: Math.max(0, Math.min(3, parseInt(store.get('rs.face.ic.swrs', '0'), 10) || 0)),
+  const SWRG = { step: [10000, 50000, 100000, 500000], bar: [3, 5, 7, 9, 11, 13], /* comme le TRX : 10 / 50 / 100 / 500 kHz, 3 à 13 barres */ si: Math.max(0, Math.min(3, parseInt(store.get('rs.face.ic.swrs', '0'), 10) || 0)),
     bi: Math.max(0, Math.min(5, parseInt(store.get('rs.face.ic.swrb2', '1'), 10) || 0)), data: {}, center: null };
   try { SWRG.data = JSON.parse(store.get('rs.face.ic.swr', '{}')) || {}; } catch (e) { SWRG.data = {}; }
   function swrNote(s) {
@@ -1582,7 +1582,7 @@
     const bh = (c.h - y0 - 10) / 2;
     const side = (x, row, t1, t2, tip, fn) => {
       const b = lcdBtn(m, X, Y, x, y0 + 2 + row * (bh + 4), 106, bh, '');
-      b.t1.textContent = t1; b.t2.textContent = t2; b.tt.textContent = tip;
+      b.t1.textContent = t1; b.t2.textContent = t2; b.tt.textContent = tip; b.t2.classList.add('big'); // valeur (10k, 5…) en grand, comme sur le TRX
       b.hit.addEventListener('click', (ev) => { ev.stopPropagation(); fn(); render(); });
       return b;
     };
@@ -1591,6 +1591,7 @@
       if (!ks.length) return say('SWR GRAPH : pas encore de mesure (le ROS se relève pendant vos émissions).', '', 4000);
       SWRG.center = null; SWRG.recall = Number(ks.sort((a, b) => a - b)[Math.floor(ks.length / 2)]) * 1000;
     });
+    LCD.iswRecall.t2.classList.remove('big');
     const pp = side(12, 1, '▷ ■', '', 'Mesure automatique', () => say('Mesure automatique du ROS (émission pas à pas) : pas disponible à distance. Le graphe se remplit avec le ROS relevé pendant vos émissions (TUNE, porteuse…).', '', 6000));
     pp.t1.setAttribute('y', Y(y0 + 2 + bh + 4 + bh / 2 + 6));
     LCD.iswStep = side(482, 0, 'STEP', '', 'STEP : écart entre deux barres', () => { SWRG.si = (SWRG.si + 1) % SWRG.step.length; store.set('rs.face.ic.swrs', SWRG.si); });
@@ -1606,6 +1607,7 @@
     el('line', { x1: X((gx0 + gx1) / 2), y1: Y(gy0), x2: X((gx0 + gx1) / 2), y2: Y(gy1), class: 'isw-grid' }, m);
     LCD.iswBars = el('g', {}, m);
     LCD.iswNo = el('text', { x: X((gx0 + gx1) / 2), y: Y((gy0 + gy1) / 2 + 2), class: 'isw-no', 'text-anchor': 'middle' }, m, 'No data');
+    LCD.iswTk = el('g', {}, m); // petits traits sous le graphe : une barre par trait
     LCD.iswF = [0, 1, 2].map((i) => el('text', { x: X(gx0 + 22 + i * (gx1 - gx0 - 44) / 2), y: Y(gy1 + 16), class: 'isw-num', 'text-anchor': 'middle' }, m, ''));
     LCD.iswG = { gx0, gx1, gy0, gy1, yv, X, Y };
   }
@@ -1613,7 +1615,7 @@
     const G2 = LCD.iswG;
     if (!G2) return;
     const step = SWRG.step[SWRG.si], nb = SWRG.bar[SWRG.bi], f0 = SWRG.recall || (activeSide() === 'B' ? s.freqB : s.freq) || 0;
-    const center = Math.round(f0 / step) * step;
+    const center = SWRG.recall ? Math.round(f0 / step) * step : Math.floor(f0 / 1000) * 1000; // comme le TRX : fréquence au kHz au milieu (14.073 pour 14.073.70)
     LCD.iswStep.t2.textContent = step >= 1000 ? step / 1000 + 'k' : step; LCD.iswBar.t2.textContent = String(nb);
     const ks = Object.keys(SWRG.data);
     LCD.iswRecall.t2.textContent = ks.length ? fmtF3(Number(ks[ks.length - 1]) * 1000) : '--.---.--';
@@ -1629,6 +1631,10 @@
       html += '<rect x="' + (x - Math.min(10, w * 0.3)) + '" y="' + y + '" width="' + Math.min(20, w * 0.6) + '" height="' + (Y(gy1) - y) + '" class="isw-bar' + (v > 1.5 ? ' hi' : '') + '"/>';
     }
     if (LCD.iswBars.dataset.h !== html) { LCD.iswBars.innerHTML = html; LCD.iswBars.dataset.h = html; }
+    if (LCD.iswTk.dataset.n !== String(nb)) {
+      LCD.iswTk.dataset.n = String(nb);
+      LCD.iswTk.innerHTML = Array.from({ length: nb }, (_, i) => '<line x1="' + X(gx0 + 22 + i * w) + '" y1="' + Y(gy1) + '" x2="' + X(gx0 + 22 + i * w) + '" y2="' + Y(gy1 + 5) + '" class="isw-tick"/>').join('');
+    }
     LCD.iswNo.style.display = any ? 'none' : '';
     const half = (nb - 1) / 2 * step;
     [center - half, center, center + half].forEach((f, i) => { LCD.iswF[i].textContent = (f / 1e6).toFixed(3); });
