@@ -412,6 +412,7 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .icm-lab.big { font: 700 15px Arial, sans-serif; }
 #face .icm-num.big { font: 700 13px Arial, sans-serif; fill: #e6e9ef; }
 #face .icm-wline { fill: #e6e9ef; }
+#face .icm-dot { fill: #e6e9ef; }
 /* VOICE TX → TX LEVEL : fenêtre comme sur le TRX */
 #face .ivl-bg { fill: #0d1428; stroke: #e6e9ef; stroke-width: 2; }
 #face .ivl-ttl { fill: #fff; font: 700 17px Arial, sans-serif; pointer-events: none; }

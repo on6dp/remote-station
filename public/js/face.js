@@ -991,29 +991,45 @@
     const m = el('g', { class: 'icm', style: 'display:none' }, g);
     const bg = el('rect', { x: X(5), y: Y(G.scopeY + IC_STRIP), width: c.w - 10, height: G.scopeH - IC_STRIP, class: 'icm-bg' }, m);
     const bars = {};
-    const bar = (key, y, lab, ticks, x0, x1, color) => {
-      el('text', { x: x0 - 8, y: y + 7, class: 'icm-lab', 'text-anchor': 'end' }, m, lab);
-      el('rect', { x: x0, y, width: x1 - x0, height: 8, class: 'icm-track' }, m);
-      const f = el('rect', { x: x0, y: y + 1.5, width: 0, height: 5, class: 'icm-fill', style: 'fill:' + color }, m);
-      for (const [fr, t] of ticks) {
-        const tx = x0 + fr * (x1 - x0);
-        el('line', { x1: tx, y1: y + 8, x2: tx, y2: y + 10, class: 'icm-tick' }, m);
-        el('text', { x: tx, y: y + 18, class: 'icm-num', 'text-anchor': 'middle' }, m, t);
+    // Barres comme sur le TRX : segments gris, segments allumés en couleur ; échelle posée sur la barre (COMP) ou sous un trait blanc (SWR, Id) ;
+    // ALC : trait rouge de la zone ALC sous la barre
+    const pid = 'icmSeg' + Math.random().toString(36).slice(2, 7);
+    const pat = (id, col) => { const p = el('pattern', { id, width: 3, height: 10, patternUnits: 'userSpaceOnUse' }, m); el('rect', { x: 0, y: 0, width: 2, height: 10, style: 'fill:' + col }, p); };
+    pat(pid + 'o', '#2f3a4c'); pat(pid + 'b', '#38b6ff'); pat(pid + 'r', '#ff3b30'); pat(pid + 'w', '#e6e9ef');
+    LCD.icmPid = pid;
+    const bar = (key, y, lab, ticks, x0, x1, kind, col) => {
+      el('text', { x: x0 - 8, y: y + 9, class: 'icm-lab big', 'text-anchor': 'end' }, m, lab);
+      el('rect', { x: x0, y, width: x1 - x0, height: 10, style: 'fill:url(#' + pid + 'o)' }, m);
+      const f = el('rect', { x: x0, y, width: 0, height: 10, style: 'fill:url(#' + pid + col + ')' }, m);
+      if (kind === 'alc') el('rect', { x: x0, y: y + 12, width: (x1 - x0) * 0.52, height: 2.5, class: 'icm-rline' }, m);
+      if (kind === 'on') {
+        // COMP : chiffres sur la barre, comme sur le TRX
+        for (const [fr, t] of ticks) {
+          const tx = x0 + fr * (x1 - x0), w = t.length * 8 + 6, cx = Math.min(x1 - w / 2, Math.max(x0 + w / 2, tx));
+          el('rect', { x: cx - w / 2, y: y - 2, width: w, height: 14, class: 'icm-bg' }, m);
+          el('text', { x: cx, y: y + 10, class: 'icm-num big', 'text-anchor': 'middle' }, m, t);
+        }
+      }
+      if (kind === 'line' || kind === 'dots') {
+        el('rect', { x: x0, y: y + 12, width: x1 - x0, height: 1.6, class: 'icm-wline' }, m);
+        el('rect', { x: x0, y: y + 8, width: 1.6, height: 8, class: 'icm-wline' }, m);
+        if (kind === 'dots') for (let i = 1; i < 25; i++) if (i % 5) el('circle', { cx: x0 + i / 25 * (x1 - x0) * 0.97, cy: y + 19, r: 1.3, class: 'icm-dot' }, m);
+        for (const [fr, t] of ticks) {
+          const tx = x0 + fr * (x1 - x0);
+          if (t) el('text', { x: tx, y: y + 24, class: 'icm-num big', 'text-anchor': fr > 0.9 ? 'end' : 'middle' }, m, t);
+        }
       }
       bars[key] = { f, x0, x1 };
     };
     const L0 = X(70), L1 = X(390);
-    const r0 = G.scopeY + IC_STRIP + 14; // sous la bande du scope
-    bar('alc', Y(r0), 'ALC', [], L0, L1, '#ff3b30');
-    bar('comp', Y(r0 + 30), 'COMP', [[0, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [0.97, 'dB']], L0, L1, '#e6e9ef');
-    bar('swr', Y(r0 + 62), 'SWR', [[0, '1'], [0.15, '1.5'], [0.25, '2'], [0.35, '2.5'], [0.45, '3'], [0.97, '∞']], L0, L1, '#ffcf4a');
-    bar('id', Y(r0 + 94), 'Id', [[0, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [0.97, '25A']], L0, L1, '#e6e9ef');
+    const r0 = G.scopeY + IC_STRIP + 12; // sous la bande du scope
+    bar('alc', Y(r0), 'ALC', [], L0, L1, 'alc', 'b');
+    bar('comp', Y(r0 + 30), 'COMP', [[0.02, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [0.97, 'dB']], L0, L1, 'on', 'b');
+    bar('swr', Y(r0 + 56), 'SWR', [[0.15, '1.5'], [0.25, '2'], [0.35, '2.5'], [0.45, '3'], [1, '∞']], L0, L1, 'line', 'b');
+    bar('id', Y(r0 + 90), 'Id', [[0.01, '0'], [0.194, '5'], [0.388, '10'], [0.582, '15'], [0.776, '20'], [1, '25A']], L0, L1, 'dots', 'b');
     // Cadres Vd et TEMP à droite (comme sur le TRX)
     // Comme sur le TRX : titre posé sur le coin haut gauche du cadre, échelle, barre en segments, trait blanc dessous avec la zone rouge
     // (Vd : tension basse à gauche ; TEMP : chaud à droite)
-    const pid = 'icmSeg' + Math.random().toString(36).slice(2, 7);
-    const pat = (id, col) => { const p = el('pattern', { id, width: 3, height: 10, patternUnits: 'userSpaceOnUse' }, m); el('rect', { x: 0, y: 0, width: 2, height: 10, style: 'fill:' + col }, p); };
-    pat(pid + 'o', '#2f3a4c'); pat(pid + 'b', '#38b6ff');
     const box = (key, y, lab, t0, t1, red, tip) => {
       const x0 = X(427), w = 163, h = 50, tw = lab.length * 9 + 8;
       el('path', { d: 'M' + (x0 + tw) + ' ' + y + 'H' + (x0 + w) + 'V' + (y + h) + 'H' + (x0 + 6) + 'V' + (y + 14), class: 'icm-box' }, m);
@@ -1549,8 +1565,8 @@
     LCD.ivLvlT.textContent = v == null ? '…' : Math.round(v * 100 / 255) + '%';
   }
   // SWR GRAPH (MENU → SWR) : ROS relevé pendant les émissions (TUNE, porteuse, phonie…) à chaque fréquence, en barres
-  const SWRG = { step: [10000, 50000, 100000, 500000], bar: [5, 7, 9, 11, 13], si: Math.max(0, Math.min(3, parseInt(store.get('rs.face.ic.swrs', '0'), 10) || 0)),
-    bi: Math.max(0, Math.min(4, parseInt(store.get('rs.face.ic.swrb', '0'), 10) || 0)), data: {}, center: null };
+  const SWRG = { step: [10000, 50000, 100000, 500000], bar: [3, 5, 7, 9, 11, 13], // comme le TRX : 10 / 50 / 100 / 500 kHz, 3 à 13 barres si: Math.max(0, Math.min(3, parseInt(store.get('rs.face.ic.swrs', '0'), 10) || 0)),
+    bi: Math.max(0, Math.min(5, parseInt(store.get('rs.face.ic.swrb2', '1'), 10) || 0)), data: {}, center: null };
   try { SWRG.data = JSON.parse(store.get('rs.face.ic.swr', '{}')) || {}; } catch (e) { SWRG.data = {}; }
   function swrNote(s) {
     // En émission : ROS relu (15 12), gardé par tranche de 1 kHz (la plus forte valeur), pour le graphe SWR
@@ -1578,7 +1594,7 @@
     const pp = side(12, 1, '▷ ■', '', 'Mesure automatique', () => say('Mesure automatique du ROS (émission pas à pas) : pas disponible à distance. Le graphe se remplit avec le ROS relevé pendant vos émissions (TUNE, porteuse…).', '', 6000));
     pp.t1.setAttribute('y', Y(y0 + 2 + bh + 4 + bh / 2 + 6));
     LCD.iswStep = side(482, 0, 'STEP', '', 'STEP : écart entre deux barres', () => { SWRG.si = (SWRG.si + 1) % SWRG.step.length; store.set('rs.face.ic.swrs', SWRG.si); });
-    LCD.iswBar = side(482, 1, 'BAR', '', 'BAR : nombre de barres', () => { SWRG.bi = (SWRG.bi + 1) % SWRG.bar.length; store.set('rs.face.ic.swrb', SWRG.bi); });
+    LCD.iswBar = side(482, 1, 'BAR', '', 'BAR : nombre de barres', () => { SWRG.bi = (SWRG.bi + 1) % SWRG.bar.length; store.set('rs.face.ic.swrb2', SWRG.bi); });
     // Graphe : 1.0 / 1.5 / 2.0 / 3.0 (comme le TRX), ligne rouge à 1.5
     const gx0 = 160, gx1 = 462, gy0 = y0 + 8, gy1 = c.h - 30;
     el('rect', { x: X(gx0), y: Y(gy0), width: gx1 - gx0, height: gy1 - gy0, class: 'isw-box' }, m);

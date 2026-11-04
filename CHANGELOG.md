@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.37** — IC-7300 : écran des mesures (METER) comme le TRX — barres ALC / COMP / SWR / Id en segments, zone ALC rouge, chiffres du COMP sur la barre, échelles SWR et Id sous un trait blanc (points pour Id) ; SWR GRAPH : choix de 3 barres
 - **0.37.36** — IC-7300 VOICE TX sans carte SD : T1 … T8 = mémoires vocales de chaque membre, enregistrées au micro de la page (REC/SET → REC : VOICE TX RECORD, REC / STOP, écoute, NAME, CLEAR), gardées sur le serveur (voicemem/) et émises par lui en phonie avec les contrôles du PTT ; appui d'1 s = répétition (Repeat Time, 2 min au plus) ; TX LEVEL et VOICE TX SET (Auto Monitor, Repeat Time) ; SPLIT : fréquence d'émission en rouge pendant l'émission
 - **0.37.35** — IC-7300 : cadres Vd et TEMP de l'écran des mesures comme sur le TRX (titre sur le coin du cadre, barre en segments, trait blanc avec zone rouge) ; TEMP : barre vide, l'IC-7300 ne transmet pas la température par le CI-V
 - **0.37.34** — IC-7300 : case RIT / ΔTX du bouton MULTI en haut à droite comme sur le TRX (fond blanc, inscription noire, petit ergot)
