@@ -1209,7 +1209,9 @@
   // Pas de la grille en FIX : largeur / 14, arrondi à 1 – 2 – 2,5 – 5 × 10ⁿ
   function rfGrid(span) { const raw = span / 14, p10 = Math.pow(10, Math.floor(Math.log10(raw))); return [1, 2, 2.5, 5, 10].map((m) => m * p10).find((v) => v >= raw * 0.999) || 10 * p10; }
   // Bornes affichées : CENTER = fréquence centrale ± SPAN ; FIX = bords bas et haut
-  const rfEdges = (f) => (f.m === 1 ? [f.f0, f.f1] : [f.f0 - f.f1, f.f0 + f.f1]);
+  // Mode de l'image : 0 CENTER, 1 FIX, 2 SCROLL-C, 3 SCROLL-F ; FIX et SCROLL-F = bords bas / haut, sinon centre ± SPAN
+  const rfFix = (f) => (f.m & 1) === 1;
+  const rfEdges = (f) => (rfFix(f) ? [f.f0, f.f1] : [f.f0 - f.f1, f.f0 + f.f1]);
   function drawRf(c2, x0, y0, w, h, f) {
     const d = f.d, n = d.length, lab = 15, sh = Math.round((h - lab) * (h < 120 ? 0.5 : 0.42)), wh = h - lab - sh;
     const pal = PALS[L.wfColor] || PALS[1];
@@ -1234,7 +1236,7 @@
     c2.fillStyle = '#0b1020'; c2.fillRect(x0, y0, w, sh);
     c2.strokeStyle = 'rgba(150,160,175,.45)'; c2.lineWidth = 1;
     const [glo, ghi] = rfEdges(f);
-    if (f.m === 1) {
+    if (rfFix(f)) {
       // FIX : grille tous les « pas » du TRX (largeur du bord / 14 arrondie : 14,000–14,350 → 25 kHz, comme « 25k/10dB »)
       const st = rfGrid(ghi - glo);
       for (let hz = Math.ceil(glo / st) * st; hz < ghi; hz += st) { const gx = Math.round(x0 + (hz - glo) / (ghi - glo) * w) + 0.5; c2.beginPath(); c2.moveTo(gx, y0); c2.lineTo(gx, y0 + sh); c2.stroke(); }
@@ -1249,7 +1251,7 @@
     const s = S(), [lo, hi] = rfEdges(f), xf = (hz) => x0 + (hz - lo) / (hi - lo) * w;
     const rx = activeSide() === 'B' ? s.freqB : s.freq, tx = s.split ? (activeSide() === 'B' ? s.freq : s.freqB) : rx;
     const vline = (x, color, wd) => { if (x < x0 || x > x0 + w) return; c2.strokeStyle = color; c2.lineWidth = wd; c2.beginPath(); c2.moveTo(Math.round(x) + 0.5, y0); c2.lineTo(Math.round(x) + 0.5, y0 + sh); c2.stroke(); c2.lineWidth = 1; };
-    if (f.m === 1) { if (rx) vline(xf(rx), '#3ddc5a', 2); } else vline(x0 + w / 2, '#ffffff', 1.5);
+    if (rfFix(f)) { if (rx) vline(xf(rx), '#3ddc5a', 2); } else vline(x0 + w / 2, '#ffffff', 1.5);
     if (L.marker && tx) { vline(xf(tx), '#ff8a1f', 1.5); c2.fillStyle = '#ff8a1f'; const xt = xf(tx); if (xt >= x0 && xt <= x0 + w) { c2.beginPath(); c2.moveTo(xt - 4, y0); c2.lineTo(xt + 4, y0); c2.lineTo(xt, y0 + 6); c2.fill(); } }
     // Échelle : en CENTER, écart en kHz (−2.0 … 0 … +2.0, −200 … +200) ; en FIX, fréquences en MHz ; bornes en haut des coins
     c2.fillStyle = '#000'; c2.fillRect(x0, y0 + h - lab, w, lab);
@@ -1257,7 +1259,7 @@
     // Décimales selon le SPAN (comme le TRX) : ±2,5k → −2.0 … +2.0 ; ±5k et plus → nombres entiers (−4 … +4, −20 … +20, −200 … +200)
     const dec = f.f1 < 5000 ? 1 : 0;
     const kfmt = (hz, d2) => { const k = hz / 1000, a = Math.abs(k); return (k > 0 ? '+' : k < 0 ? '-' : '') + (a === 0 ? '0' : a.toFixed(d2 == null ? dec : d2)); };
-    if (f.m !== 1) {
+    if (!rfFix(f)) {
       for (let k = 1; k < 10; k++) c2.fillText(kfmt(-f.f1 + k * 2 * f.f1 / 10), x0 + w * k / 10, y0 + h - 3);
     } else {
       const span = hi - lo, raw = span / 7, p10 = Math.pow(10, Math.floor(Math.log10(raw))), st = [1, 2, 5, 10].map((m) => m * p10).find((v) => v >= raw) || 10 * p10;
@@ -1266,12 +1268,14 @@
     if (sh > 30) {
       c2.font = 'bold 12px Arial, sans-serif';
       const ek = f.f1 % 1000 ? 1 : 0; // bornes : −2.5k, −25k, −250k
-      c2.textAlign = 'left'; c2.fillText(f.m === 1 ? (lo / 1e6).toFixed(3) : kfmt(-f.f1, ek) + 'k', x0 + 3, y0 + 13);
-      c2.textAlign = 'right'; c2.fillText(f.m === 1 ? (hi / 1e6).toFixed(3) : kfmt(f.f1, ek) + 'k', x0 + w - 3, y0 + 13);
+      // FIX : 14.000 ; SCROLL-F : 14.050.0 (avec les centaines de Hz, comme sur le TRX)
+      const edf = (hz) => (f.m === 3 ? (Math.floor(hz / 1000) / 1000).toFixed(3) + '.' + Math.floor(hz % 1000 / 100) : (hz / 1e6).toFixed(3));
+      c2.textAlign = 'left'; c2.fillText(rfFix(f) ? edf(lo) : kfmt(-f.f1, ek) + 'k', x0 + 3, y0 + 13);
+      c2.textAlign = 'right'; c2.fillText(rfFix(f) ? edf(hi) : kfmt(f.f1, ek) + 'k', x0 + w - 3, y0 + 13);
     }
     if (f.oor) { c2.fillStyle = '#ff8a1f'; c2.textAlign = 'center'; c2.fillText('OUT OF RANGE', x0 + w / 2, y0 + sh / 2); }
     // FIX : « << » / « >> » quand la fréquence de réception sort des bords (comme sur le TRX)
-    if (f.m === 1 && rx && (rx < lo || rx > hi)) {
+    if (rfFix(f) && rx && (rx < lo || rx > hi)) {
       c2.fillStyle = '#3ddc5a'; c2.font = 'bold 12px Arial, sans-serif'; // petit « >> » vert, comme sur le TRX
       c2.textAlign = rx < lo ? 'left' : 'right';
       c2.fillText(rx < lo ? '<<' : '>>', rx < lo ? x0 + 3 : x0 + w - 3, y0 + (sh > 30 ? 30 : 14));
@@ -1342,7 +1346,7 @@
     holdMarker();
     if (fix) {
       // FIX : pas de la grille du scope du TRX (largeur du bord / 14), sinon le n° du bord
-      const lf = rfFresh() && RFS.m === 1 ? RFS : null, g2 = lf ? rfGrid(lf.f1 - lf.f0) : 0;
+      const lf = rfFresh() && rfFix(RFS) ? RFS : null, g2 = lf ? rfGrid(lf.f1 - lf.f0) : 0;
       LCD.iscScale.textContent = lf ? (g2 < 10000 ? (g2 / 1000).toFixed(1) : g2 / 1000) + 'k/10dB' : 'EDGE' + (S().scEdge || 1); // 5.0k, 10k, 25k (comme le TRX)
     }
     LCD.iscBtns.forEach((b, i) => {
@@ -2187,7 +2191,7 @@
   }
   const SPO_NB = 64;
   // Mesure du bargraph en émission : Po, SWR, ALC ou COMP (échelles du bas du grand S/Po, comme sur le TRX)
-  const SPO_MT = [['Po', [[0.02, '0'], [0.25, '25'], [0.5, '50'], [0.97, '100%']]], ['SWR', [[0.02, '1'], [0.15, '1.5'], [0.25, '2'], [0.45, '3'], [0.97, '∞']]],
+  const SPO_MT = [['Po', [[0.02, '0'], [0.25, '25'], [0.5, '50'], [0.97, '100%']]], ['SWR', [[0.02, '1'], [0.15, '1.5'], [0.26, '2'], [0.4, '2.5'], [0.53, '3'], [0.97, '∞']]],
     ['ALC', [[0.02, '0'], [0.5, 'ALC ZONE'], [0.97, 'MAX']]], ['COMP', [[0.02, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [0.97, 'dB']]],
     ['Vd', [[0.02, '10'], [0.33, '12'], [0.67, '14'], [0.97, '16V']]], ['Id', [[0.02, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [0.97, '25A']]]];
   L.icMt = Math.max(0, Math.min(5, parseInt(store.get('rs.face.ic.mt', '0'), 10) || 0));
@@ -2195,7 +2199,7 @@
   function spoTx(s) {
     // Fraction du bargraph en émission selon la mesure choisie (mêmes échelles que l'écran des mesures)
     const lin = (t, v) => { if (v == null) return 0; for (let i = 1; i < t.length; i++) if (v <= t[i][0]) return t[i - 1][1] + (v - t[i - 1][0]) / (t[i][0] - t[i - 1][0]) * (t[i][1] - t[i - 1][1]); return t[t.length - 1][1]; };
-    if (L.icMt === 1) { const v = R.swrValue ? R.swrValue(s.m6) : null; return v == null ? 0 : lin([[1, 0], [1.5, 0.15], [2, 0.25], [2.5, 0.35], [3, 0.45], [5, 0.8], [10, 1]], v); }
+    if (L.icMt === 1) { const v = R.swrValue ? R.swrValue(s.m6) : null; return v == null ? 0 : lin([[1, 0], [1.5, 0.15], [2, 0.26], [2.5, 0.4], [3, 0.53], [5, 0.8], [10, 1]], v); }
     if (L.icMt === 2) return Math.min(1, (s.m4 || 0) / 255);
     if (L.icMt === 4) return R.vdValue && s.m8 != null ? Math.max(0, Math.min(1, (R.vdValue(s.m8) - 10) / 6)) : 0; // Vd : 10 – 16 V
     if (L.icMt === 5) return R.idValue && s.m7 != null ? Math.min(1, R.idValue(s.m7) / 25) : 0; // Id : 0 – 25 A

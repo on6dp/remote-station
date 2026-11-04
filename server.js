@@ -3353,7 +3353,7 @@ function onStation(conn, m) {
     // Image du scope du TRX : relayée telle quelle aux pages abonnées (un client trop lent saute des images)
     if (typeof m.d !== 'string' || m.d.length > 1200 || !Number.isFinite(m.f0) || !Number.isFinite(m.f1)) return;
     const now = Date.now();
-    const out = JSON.stringify({ t: 'scope', m: m.m === 1 ? 1 : 0, f0: m.f0, f1: m.f1, oor: m.oor ? 1 : 0, d: m.d });
+    const out = JSON.stringify({ t: 'scope', m: [0, 1, 2, 3].indexOf(m.m) >= 0 ? m.m : 0, f0: m.f0, f1: m.f1, oor: m.oor ? 1 : 0, d: m.d });
     for (const c of ops) if (c.scopeSub && now - c.scopeSub < 45000 && (c.backlog || 0) < 65536) c.send(out);
     return;
   }

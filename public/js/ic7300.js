@@ -675,7 +675,7 @@
     scopeOut() {
       const v = this.v, out = [], span = this.scSpan || 25000, fix = (this.scMode || 0) & 1;
       const f0 = fix ? Math.floor(v.freq / 1e6) * 1e6 : v.freq, f1 = fix ? f0 + 350000 : span;
-      out.push([CTRL, ADDR, 0x27, 0x00, 0x00, 0x01, 0x11, fix, ...freqBytes(f0), ...freqBytes(f1), 0x00]);
+      out.push([CTRL, ADDR, 0x27, 0x00, 0x00, 0x01, 0x11, this.scMode || 0, ...freqBytes(f0), ...freqBytes(f1), 0x00]); // mode 0 – 3 comme le TRX
       this.t2 = (this.t2 || 0) + 1;
       const lo = fix ? f0 : v.freq - span, hi = fix ? f1 : v.freq + span;
       const pts = [];
