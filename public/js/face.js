@@ -828,8 +828,7 @@
         ['A/B', 'Échange les VFO A et B', () => setCtl('swap', null)],
         ['TUNER', 'Coupleur d’antenne marche / arrêt', () => setCtl('tuner', S().tuner ? 0 : 1)],
         ['TUNE', 'Accord du coupleur (émission courte)', () => doAct({ act: { action: 'tune' } })],
-        ['LOCK', 'LOCK du grand bouton', () => setCtl('lock', S().lock ? 0 : 1)],
-        ['3DSS', 'Spectre en trois dimensions', () => { L.d3 = !L.d3; store.set('rs.face.3dss', L.d3 ? '1' : '0'); WF.h3 = []; WF.drawn = false; render(); }]]]);
+        ['LOCK', 'LOCK du grand bouton', () => setCtl('lock', S().lock ? 0 : 1)]]]); // pas de 3DSS sur l'IC-7300
       buildMultiMenu(g, c);
       buildIcMeter(g, c);
       buildSpoBar(g, c);
@@ -972,6 +971,7 @@
   L.icView = null;
   function setIcView(v) {
     L.icView = L.icView === v ? null : v;
+    if (L.icView !== 'scope') { L.iscRef = false; L.iscExp = false; if (L.iscPage === 2) L.iscPage = 1; }
     if (L.icView !== 'scope') L.icBig = false; // grande fréquence (M.SCOPE) gardée avec le SPECTRUM SCOPE, comme sur le TRX
     if (L.icView === 'keyer') kmRefresh();
     if (L.icView === 'scan' && LCD.iscnRead) LCD.iscnRead();
@@ -1100,7 +1100,9 @@
   // ---- Écrans sous la bande du scope : bandeau de titre + contenu (VOICE TX, SWR GRAPH, SCAN), comme sur l'IC-7300
   const IC_TB = 18, IC_SCOPE_H = 180;
   // Grande fréquence (M.SCOPE) avec le SPECTRUM SCOPE : bandeau à 188, scope de 80, touches à 288 (comme sur le TRX)
-  const IC_BIG_TB = 188, IC_BIG_SC = 80; // SCOPE : bandeau « SPECTRUM SCOPE », puis le scope ; ses touches dessous
+  const IC_BIG_TB = 188, IC_BIG_SC = 80;
+  // EXPD/SET : bandeau remonté sous la fréquence (à 84), scope jusqu'aux touches
+  const IC_EXP_TB = 84; // SCOPE : bandeau « SPECTRUM SCOPE », puis le scope ; ses touches dessous
   function icPanel(g, c, key, title) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const m = LCD[key] = lcdOverlay(g, 'icp');
@@ -1129,7 +1131,7 @@
     const y0 = G.scopeY;
     el('rect', { x: X(5), y: Y(y0), width: c.w - 10, height: IC_TB, class: 'icp-tb' }, m);
     const pill = (x, w, t, cls) => { const r = el('rect', { x: X(x), y: Y(y0 + 3), width: w, height: IC_TB - 6, rx: 6, class: 'icp-pill ' + (cls || '') }, m); const tt = el('text', { x: X(x + w / 2), y: Y(y0 + 13), class: 'icp-pillt ' + (cls || ''), 'text-anchor': 'middle' }, m, t); return { r, t: tt }; };
-    pill(10, 16, 'R'); pill(28, 16, 'T');
+    pill(10, 16, 'R'); LCD.iscT = pill(28, 16, 'T');
     LCD.iscHold = pill(48, 44, 'HOLD');
     LCD.iscSpd = el('text', { x: X(98), y: Y(y0 + 14), class: 'icp-spd' }, m, '▸▸▸');
     el('text', { x: X(250), y: Y(y0 + 15), class: 'ick-title', 'text-anchor': 'middle' }, m, 'SPECTRUM SCOPE');
@@ -1140,31 +1142,57 @@
     m = LCD.iscKG = el('g', {}, m0);
     el('rect', { x: X(5), y: Y(ky - 2), width: c.w - 10, height: c.h - ky - 2, class: 'icm-bg' }, m);
     // Deux pages de touches, comme sur le TRX : <1> SPAN HOLD CENT/FIX EXPD/SET, puis <2> REF SPEED MARKER EXPD/SET
-    const REFS = [-10, -5, 0, 5, 10];
     LCD.iscPages = [[
       ['<1>', '<1> : touches suivantes (REF, SPEED, MARKER)', () => { L.iscPage = 1; }],
       ['SPAN', 'SPAN du scope du TRX : ±2,5k → 5k → 10k → 25k → 50k → 100k → 250k → 500k (la cascade de la page reste celle de la BF reçue) ; en FIX : EDGE 1 → 4',
         () => { const s2 = S(); if (s2.scMode === 1) return setCtl('scEdge', (s2.scEdge || 1) % 4 + 1); const sp = s2.scSpan; setCtl('scSpan', sp == null ? 3 : (sp + 1) % 8); }],
       ['HOLD', 'HOLD : fige le scope (celui du TRX et celui de la page)', () => { L.hold = !L.hold; L.holdAt = Date.now(); if (R.CONTROL.scHold) setCtl('scHold', L.hold ? 1 : 0); }],
       ['CENT/FIX', 'CENT/FIX : scope du TRX centré sur la fréquence (CENTER) ou bords fixes de la bande (FIX)', () => setCtl('scMode', S().scMode === 1 ? 0 : 1)],
-      ['EXPD/SET', 'EXPD/SET', () => say('EXPD/SET (scope agrandi, réglages du scope du TRX) : pas disponible à distance.', '', 3500)]
+      ['EXPD/SET', 'EXPD/SET : scope agrandi (la fréquence remonte à côté du S/Po) ; nouveau clic : normal', () => iscExpand()]
     ], [
       ['<2>', '<2> : retour aux premières touches (SPAN, HOLD, CENT/FIX)', () => { L.iscPage = 0; }],
-      ['REF', 'REF : niveau de référence du scope (−10, −5, 0, +5, +10 dB)', () => {
-        const i = REFS.indexOf(L.wfLevel); L.wfLevel = REFS[(i + 1) % REFS.length]; store.set('rs.face.wflvl', L.wfLevel); ssSend('Level');
-        say('REF ' + (L.wfLevel > 0 ? '+' : '') + L.wfLevel + ' dB', '', 1500);
+      ['REF', 'REF : niveau de référence du scope du TRX (−20 … +20 dB, au grand bouton ou à la molette) ; nouveau clic : fin', () => { L.iscRef = true; L.iscPage = 2; }],
+      ['SPEED', 'SPEED du scope du TRX : SLOW → MID → FAST', () => {
+        const sp = S().scSpeed != null ? S().scSpeed : 1, nx = sp === 2 ? 1 : sp === 1 ? 0 : 2; // 02 SLOW, 01 MID, 00 FAST
+        setCtl('scSpeed', nx); L.wfSpeed = [4, 2, 0][nx]; store.set('rs.face.wfspd5', L.wfSpeed); ssSend('Spd');
       }],
-      ['SPEED', 'SPEED : vitesse de la cascade (▸ lent … ▸▸▸ rapide)', () => { L.wfSpeed = (L.wfSpeed + 2) % 5; store.set('rs.face.wfspd5', L.wfSpeed); ssSend('Spd'); }],
-      ['MARKER', 'MARKER : bande passante du filtre et repère sur le scope', () => { L.marker = !L.marker; store.set('rs.face.marker', L.marker ? '1' : '0'); ssSend('Marker'); }],
-      ['EXPD/SET', 'EXPD/SET', () => say('EXPD/SET (scope agrandi, réglages du scope du TRX) : pas disponible à distance.', '', 3500)]
+      ['MARKER', 'MARKER : repère d’émission (T) et bande passante du filtre sur le scope', () => { L.marker = !L.marker; store.set('rs.face.marker', L.marker ? '1' : '0'); ssSend('Marker'); }],
+      ['EXPD/SET', 'EXPD/SET : scope agrandi ; nouveau clic : normal', () => iscExpand()]
+    ], [
+      // REF Level : le grand bouton (ou la molette) règle le niveau ; REF : fin, DEF : 0 dB
+      ['', '', () => {}],
+      ['REF', 'REF : fin du réglage (retour aux touches <2>)', () => { L.iscRef = false; L.iscPage = 1; }],
+      ['DEF', 'DEF : REF à 0 dB', () => refSet(0)],
+      ['', '', () => {}],
+      ['', '', () => {}]
     ]];
     L.iscPage = 0;
     LCD.iscBtns = keyRow(m, X, Y, c, ky, [0, 1, 2, 3, 4].map((i) => ['', '', () => LCD.iscPages[L.iscPage][i][2]()]));
   }
+  function iscExpand() { L.iscExp = !L.iscExp; if (L.iscExp) { L.iscBigWas = !!L.icBig; L.icBig = false; } else L.icBig = !!L.iscBigWas; WF.drawn = false; }
+  function refSet(v) {
+    v = Math.max(-20, Math.min(20, Math.round(v * 2) / 2));
+    if (R.CONTROL.scRef) setCtl('scRef', v);
+    L.refV = v; L.refAt = Date.now();
+    L.wfLevel = v; store.set('rs.face.wflvl', v); ssSend('Level'); // la cascade de la page suit
+    render();
+  }
+  // Grand bouton ou molette pendant REF Level : ±0,5 dB par cran
+  function refTurn(notches) { const cur = Date.now() - (L.refAt || 0) < 3000 ? L.refV : S().scRef != null ? S().scRef : L.refV || 0; refSet(cur + notches * 0.5); }
   function drawIcScope() {
     if (!LCD.iscHold) return;
+    // Cadre « REF Level » au milieu du scope tant que REF est ouvert
+    const pe = $('icPop');
+    if (pe && L.iscRef && L.icView === 'scope') {
+      const v = Date.now() - (L.refAt || 0) < 3000 ? L.refV : S().scRef != null ? S().scRef : L.refV || 0;
+      pe.querySelector('b').textContent = 'REF Level';
+      pe.querySelector('span').textContent = (v > 0 ? '+' : v < 0 ? '−' : '±') + ' ' + Math.abs(v).toFixed(1) + 'dB';
+      pe.style.fontSize = Math.max(9, Math.round($('facePanel').clientWidth / V.w * 15)) + 'px';
+      pe.hidden = false; L.refPop = true; clearTimeout(icPopT);
+    } else if (pe && L.refPop) { L.refPop = false; pe.hidden = true; }
+    if (LCD.iscT) { LCD.iscT.r.classList.toggle('mk', !!L.marker); LCD.iscT.t.classList.toggle('on', !!L.marker); }
     LCD.iscHold.r.classList.toggle('on', !!L.hold); LCD.iscHold.t.classList.toggle('on', !!L.hold);
-    LCD.iscSpd.textContent = '▸'.repeat(Math.max(1, Math.min(3, Math.ceil((L.wfSpeed + 1) * 3 / 5))));
+    LCD.iscSpd.textContent = S().scSpeed != null ? '▸'.repeat(3 - S().scSpeed) : '▸'.repeat(Math.max(1, Math.min(3, Math.ceil((L.wfSpeed + 1) * 3 / 5))));
     // Échelle du scope du TRX : 10 divisions sur ±SPAN (±25k → 5k/10dB, comme sur le TRX)
     const sp = S().scSpan, half = R.SC_SPANS && sp != null ? R.SC_SPANS[sp] : null;
     const div = half ? half / 5 : SPANS[L.wfSpan] / 8;
@@ -1177,7 +1205,8 @@
       const k = LCD.iscPages[L.iscPage || 0][i].slice();
       if (!L.iscPage && i === 1 && fix) k[0] = 'EDGE';
       if (b.t1.textContent !== k[0]) { b.t1.textContent = k[0]; b.tt.textContent = k[1]; }
-      b.r.classList.toggle('on', L.iscPage ? i === 3 && !!L.marker : i === 2 && !!L.hold);
+      b.r.classList.toggle('on', L.iscPage === 1 ? i === 3 && !!L.marker : L.iscPage === 2 ? i === 1 : i === 2 && !!L.hold);
+      b.r.classList.toggle('blank', !k[0]);
     });
   }
   // VOICE TX (MENU → VOICE, en phonie) : T1 … T8, REC/SET, TX LEVEL
@@ -1792,13 +1821,20 @@
       LCD.icTags.setAttribute('x', X(110)); LCD.icTags.setAttribute('y', Y(L.icView === 'scope' ? 141 : 150));
       const sc = L.icView === 'scope'; // SPECTRUM SCOPE dessous : RIT / ΔTX et l'autre VFO un peu plus haut
       LCD.icRitL.setAttribute('y', Y(sc ? 146 : 160)); LCD.icRitV.setAttribute('y', Y(sc ? 172 : 190));
+    } else if (L.icView === 'scope' && L.iscExp) {
+      // EXPD/SET : fréquence remontée à côté du S/Po (le scope monte jusque sous elle)
+      LCD.icFreq.setAttribute('x', X(s.split ? 438 : ron ? 492 : 560)); LCD.icFreq.setAttribute('y', Y(80));
+      LCD.icVfo.setAttribute('x', X(338)); LCD.icVfo.setAttribute('y', Y(44)); LCD.icVfo.setAttribute('text-anchor', 'start');
+      LCD.icTags.setAttribute('x', X(LCD.icRfg.style.display === 'none' ? 62 : 150)); LCD.icTags.setAttribute('y', Y(53));
+      LCD.icRitL.setAttribute('y', Y(56)); LCD.icRitV.setAttribute('y', Y(80));
     } else {
       LCD.icFreq.setAttribute('x', X(s.split ? 438 : ron ? 492 : 592)); LCD.icFreq.setAttribute('y', Y(100));
       LCD.icVfo.setAttribute('x', X(338)); LCD.icVfo.setAttribute('y', Y(56)); LCD.icVfo.setAttribute('text-anchor', 'start');
       LCD.icTags.setAttribute('x', X(LCD.icRfg.style.display === 'none' ? 62 : 150)); LCD.icTags.setAttribute('y', Y(53));
       LCD.icRitL.setAttribute('y', Y(73)); LCD.icRitV.setAttribute('y', Y(98));
     }
-    LCD.icFreq.classList.toggle('sm', !!s.split && !big);
+    LCD.icFreq.classList.toggle('sm', (!!s.split || (L.icView === 'scope' && !!L.iscExp)) && !big);
+    if (LCD.spo) { const t = L.icView === 'scope' && L.iscExp ? 'translate(0,20)' : 'translate(0,32)'; if (LCD.spo.tr !== t) { LCD.spo.tr = t; LCD.spo.g.setAttribute('transform', t); } }
     LCD.icFreq.classList.toggle('big', big);
     LCD.icVfo.classList.toggle('big', big);
     LCD.icTags.classList.toggle('big', big);
@@ -1811,7 +1847,11 @@
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const m = el('g', { class: 'spo' }, g);
     const x0 = X(52), x1 = X(212), y = Y(46);
-    el('text', { x: X(48), y: y + 9, class: 'spo-lab', 'text-anchor': 'end' }, m, 'S/Po');
+    const lab = el('text', { x: X(48), y: y + 9, class: 'spo-lab', 'text-anchor': 'end' }, m, 'S/Po');
+    // Clic sur S/Po : S/Po → S/SWR → S/ALC → S/COMP (S en réception ; en émission : Po, ROS, ALC ou compression), comme sur le TRX
+    const lh = el('rect', { x: X(2), y: y - 12, width: 48, height: 24, class: 'hs lcd-hit' }, m);
+    el('title', {}, lh, 'Clic : S/Po → S/SWR → S/ALC → S/COMP (mesure montrée en émission)');
+    lh.addEventListener('click', (ev) => { ev.stopPropagation(); spoCycle(); });
     // Échelle : S1 … S9 sur 55 % de la largeur, puis + 20 / + 40 / + 60 en rouge
     const sx = (f) => x0 + f * (x1 - x0);
     for (const [f, t] of [[0.06, '1'], [0.18, '·'], [0.3, '5'], [0.42, '·'], [0.55, '9']]) el('text', { x: sx(f), y: y - 4, class: 'spo-num', 'text-anchor': 'middle' }, m, t);
@@ -1821,29 +1861,53 @@
     const segs = [];
     const sw = (x1 - x0) / SPO_N;
     for (let i = 0; i < SPO_N; i++) segs.push(el('rect', { x: x0 + i * sw + 0.4, y: y + 1, width: sw - 0.8, height: 8, class: 'spo-seg' }, m));
-    LCD.spo = { g: m, segs };
+    LCD.spo = { g: m, segs, lab };
     // Grand S/Po du grand écran des mesures (M.SCOPE) : S 1 … 9, + 20 / + 40 / + 60 dB en rouge au-dessus ; Po 0 / 25 / 50 / 100 % dessous
     const b = el('g', { class: 'spo big', style: 'display:none' }, g);
     const bx0 = X(62), bx1 = X(398), by = Y(178), bs = (f) => bx0 + f * (bx1 - bx0);
     el('text', { x: X(52), y: by - 5, class: 'spo-lab big', 'text-anchor': 'end' }, b, 'S');
-    el('text', { x: X(52), y: by + 25, class: 'spo-lab big', 'text-anchor': 'end' }, b, 'Po');
+    const blab = el('text', { x: X(52), y: by + 25, class: 'spo-lab big', 'text-anchor': 'end' }, b, 'Po');
+    const bh = el('rect', { x: X(4), y: by - 18, width: 52, height: 48, class: 'hs lcd-hit' }, b);
+    el('title', {}, bh, 'Clic : Po → SWR → ALC → COMP (mesure montrée en émission)');
+    bh.addEventListener('click', (ev) => { ev.stopPropagation(); spoCycle(); });
     for (const [f, t] of [[0.02, '1'], [0.14, '3'], [0.26, '5'], [0.38, '7'], [0.5, '9']]) el('text', { x: bs(f), y: by - 5, class: 'spo-num big', 'text-anchor': 'middle' }, b, t);
     for (const [f, t] of [[0.66, '+20'], [0.82, '+40'], [0.98, '+60dB']]) el('text', { x: bs(f), y: by - 5, class: 'spo-num big red', 'text-anchor': 'middle' }, b, t);
-    for (const [f, t] of [[0.02, '0'], [0.25, '25'], [0.5, '50'], [0.97, '100%']]) el('text', { x: bs(f), y: by + 25, class: 'spo-num big', 'text-anchor': 'middle' }, b, t);
+    // Échelle du bas : selon la mesure choisie (Po, SWR, ALC, COMP) ; 6 emplacements remplis par drawSpoBar
+    const bnums = [0, 1, 2, 3, 4, 5].map(() => el('text', { x: bs(0), y: by + 25, class: 'spo-num big', 'text-anchor': 'middle' }, b, ''));
     el('line', { x1: bs(0.5), y1: by - 1, x2: bx1, y2: by - 1, class: 'spo-red' }, b);
     el('rect', { x: bx0 - 1, y: by - 0.5, width: bx1 - bx0 + 2, height: 13, class: 'spo-frame' }, b);
     const bsegs = [], bw = (bx1 - bx0) / SPO_NB;
     for (let i = 0; i < SPO_NB; i++) bsegs.push(el('rect', { x: bx0 + i * bw + 0.5, y: by + 1, width: bw - 1, height: 10, class: 'spo-seg' }, b));
-    LCD.spoBig = { g: b, segs: bsegs };
+    LCD.spoBig = { g: b, segs: bsegs, lab: blab, nums: bnums, bs };
   }
   const SPO_NB = 64;
+  // Mesure du bargraph en émission : Po, SWR, ALC ou COMP (échelles du bas du grand S/Po, comme sur le TRX)
+  const SPO_MT = [['Po', [[0.02, '0'], [0.25, '25'], [0.5, '50'], [0.97, '100%']]], ['SWR', [[0.02, '1'], [0.15, '1.5'], [0.25, '2'], [0.45, '3'], [0.97, '∞']]],
+    ['ALC', [[0.02, '0'], [0.5, 'ALC ZONE'], [0.97, 'MAX']]], ['COMP', [[0.02, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [0.97, 'dB']]]];
+  L.icMt = Math.max(0, Math.min(3, parseInt(store.get('rs.face.ic.mt', '0'), 10) || 0));
+  function spoCycle() { L.icMt = (L.icMt + 1) % 4; store.set('rs.face.ic.mt', L.icMt); LCD.spoMt = -1; render(); }
+  function spoTx(s) {
+    // Fraction du bargraph en émission selon la mesure choisie (mêmes échelles que l'écran des mesures)
+    const lin = (t, v) => { if (v == null) return 0; for (let i = 1; i < t.length; i++) if (v <= t[i][0]) return t[i - 1][1] + (v - t[i - 1][0]) / (t[i][0] - t[i - 1][0]) * (t[i][1] - t[i - 1][1]); return t[t.length - 1][1]; };
+    if (L.icMt === 1) { const v = R.swrValue ? R.swrValue(s.m6) : null; return v == null ? 0 : lin([[1, 0], [1.5, 0.15], [2, 0.25], [2.5, 0.35], [3, 0.45], [5, 0.8], [10, 1]], v); }
+    if (L.icMt === 2) return Math.min(1, (s.m4 || 0) / 255);
+    if (L.icMt === 3) { const c = s.m3 == null ? null : s.m3 <= 130 ? s.m3 / 130 * 15 : 15 + (s.m3 - 130) / 111 * 15; return c == null ? 0 : Math.min(1, c / 25); }
+    return R.poFrac ? R.poFrac(s.m5) || 0 : 0;
+  }
   function drawSpoBar(s, live) {
     const P = LCD.spo;
     if (!P) return;
     const tx = !!s.tx;
     const sm = s.smeter;
     // Réception : S (0120 = S9, 0241 = S9 + 60 dB) ; émission : Po (0213 = 100 %)
-    const f = !live ? 0 : tx ? (R.poFrac ? R.poFrac(s.m5) || 0 : 0) : sm == null ? 0 : sm <= 120 ? sm / 120 * 0.55 : Math.min(1, 0.55 + (sm - 120) / 121 * 0.45);
+    const f = !live ? 0 : tx ? spoTx(s) : sm == null ? 0 : sm <= 120 ? sm / 120 * 0.55 : Math.min(1, 0.55 + (sm - 120) / 121 * 0.45);
+    if (LCD.spoMt !== L.icMt) {
+      LCD.spoMt = L.icMt;
+      const [nm, sc] = SPO_MT[L.icMt];
+      if (P.lab) P.lab.textContent = 'S/' + nm;
+      const B2 = LCD.spoBig;
+      if (B2) { B2.lab.textContent = nm; B2.nums.forEach((e, i) => { const t = sc[i]; e.textContent = t ? t[1] : ''; if (t) e.setAttribute('x', B2.bs(t[0])); }); }
+    }
     P.f = P.f == null ? f : P.f + (f - P.f) * 0.6;
     // Grand S/Po (M.SCOPE) : caché sous les tableaux MENU, QUICK, FUNCTION, modes, bandes, MEMORY, SET…
     const menus = L.func || L.modeMenu || L.bandMenu || L.icomMenu || L.quickMenu || L.icMem || L.icRec || L.icSet;
@@ -1880,11 +1944,12 @@
     if (view === 'voice') drawIcVoice(s);
     if (view) {
       // AUDIO : bande, titre, FFT et oscilloscope dans la cascade ; SCOPE : sous son bandeau, au-dessus des touches ; les autres : bande du scope
-      const bigSc = view === 'scope' && !!L.icBig;
-      const [up, h2] = view === 'audio' ? [0, IC_AUD_H] : bigSc ? [G.scopeY - IC_BIG_TB - IC_TB, IC_BIG_SC] : view === 'scope' ? [-IC_TB, IC_SCOPE_H] : [0, IC_STRIP];
-      if (LCD.iscTbG && LCD.iscBig !== bigSc) {
-        LCD.iscBig = bigSc;
-        LCD.iscTbG.setAttribute('transform', bigSc ? 'translate(0,' + (IC_BIG_TB - G.scopeY) + ')' : '');
+      const bigSc = view === 'scope' && !!L.icBig, expSc = view === 'scope' && !!L.iscExp && !bigSc;
+      const [up, h2] = view === 'audio' ? [0, IC_AUD_H] : bigSc ? [G.scopeY - IC_BIG_TB - IC_TB, IC_BIG_SC] : expSc ? [G.scopeY - IC_EXP_TB - IC_TB, IC_SCOPE_H + G.scopeY - IC_EXP_TB] : view === 'scope' ? [-IC_TB, IC_SCOPE_H] : [0, IC_STRIP];
+      const lay = bigSc ? 'B' : expSc ? 'E' : 'N';
+      if (LCD.iscTbG && LCD.iscBig !== lay) {
+        LCD.iscBig = lay;
+        LCD.iscTbG.setAttribute('transform', bigSc ? 'translate(0,' + (IC_BIG_TB - G.scopeY) + ')' : expSc ? 'translate(0,' + (IC_EXP_TB - G.scopeY) + ')' : '');
         if (LCD.scopeRect) LCD.scopeRect.style.visibility = bigSc ? 'hidden' : '';
         LCD.iscKG.setAttribute('transform', bigSc ? 'translate(0,' + (IC_BIG_TB + IC_TB + IC_BIG_SC + 2 - (G.scopeY + IC_TB + IC_SCOPE_H + 2)) + ')' : '');
       }
@@ -1918,7 +1983,8 @@
   const IC_POP = [['preamp', 'P.AMP', (s) => ['OFF', '1', '2'][s.preamp]], ['att', 'ATT', (s) => (s.att ? '20dB' : 'OFF')], ['agc', 'AGC', (s) => ['', 'FAST', 'MID', 'SLOW'][s.agc]],
     ['nb', 'NB', (s) => onOff(s.nb)], ['nr', 'NR', (s) => onOff(s.nr)], ['notchI', 'NOTCH', (s) => notchTxt(s)], ['notchW', 'NOTCH', (s) => (s.notch ? notchTxt(s) : null)], ['fil', 'FILTER', (s) => 'FIL' + s.fil],
     ['proc', 'COMP', (s) => onOff(s.proc)], ['vox', 'VOX', (s) => onOff(s.vox)], ['tuner', 'TUNER', (s) => onOff(s.tuner)], ['ipPlus', 'IP+', (s) => onOff(s.ipPlus)],
-    ['bkin', 'BK-IN', (s) => ['OFF', 'SEMI', 'FULL'][s.bkin]], ['scSpan', 'SPAN', (s) => (R.SC_SPANS ? '±' + (R.SC_SPANS[s.scSpan] / 1000).toString().replace('.', ',') + 'k' : null)],
+    ['bkin', 'BK-IN', (s) => ['OFF', 'SEMI', 'FULL'][s.bkin]], ['scSpan', 'SPAN', (s) => (R.SC_SPANS ? '±' + (R.SC_SPANS[s.scSpan] / 1000).toString().replace('.', ',') + 'k' : null), 1000],
+    ['scSpeed', 'SPEED', (s) => ['FAST', 'MID', 'SLOW'][s.scSpeed], 500],
     ['scMode', 'SCOPE', (s) => (s.scMode ? 'FIX' : 'CENTER')], ['scEdge', 'EDGE', (s) => String(s.scEdge)], ['moni', 'MONI', (s) => onOff(s.moni)], ['split', 'SPLIT', (s) => onOff(s.split)]];
   let icPrev = null, icPopT = 0;
   function icPopCheck(s, live) {
@@ -1934,7 +2000,8 @@
         e.style.fontSize = Math.max(9, Math.round($('facePanel').clientWidth / V.w * 15)) + 'px';
         e.hidden = false;
         clearTimeout(icPopT);
-        icPopT = setTimeout(() => { e.hidden = true; }, 1500);
+        const ent = IC_POP.find((p2) => p2[0] === k);
+        icPopT = setTimeout(() => { e.hidden = true; }, (ent && ent[3]) || 1500);
       }
     }
     icPrev = cur;
@@ -2670,6 +2737,8 @@
   function turn(k, part, notches, ev) {
     if (!notches) return;
     const s = S();
+    // IC-7300, SCOPE → REF ouvert : le grand bouton règle le REF Level du scope, comme sur le TRX
+    if (ICOM && k.dial && L.iscRef && L.icView === 'scope') return refTurn(notches);
     // Cadre NB LEVEL / DNR LEVEL ouvert (appui long sur NB / DNR) : le bouton MULTI règle ce niveau, comme sur le TRX
     if (k.multi && popTarget && popTarget.ctl && $('lcdPop') && !$('lcdPop').hidden) return popAdjust(notches > 0 ? 1 : -1, ev);
     // Clarifier en service (CLAR RX / TX) : la bague extérieure du grand bouton règle le décalage (10 Hz par cran), comme sur le TRX

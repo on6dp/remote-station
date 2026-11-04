@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.14** — IC-7300 SCOPE : EXPD/SET (scope agrandi), REF Level au grand bouton (−20 … +20 dB, DEF = 0, CI-V 27 19), SPEED SLOW / MID / FAST (27 1A) avec cadre 0,5 s, MARKER (repère T), cadre SPAN 1 s ; bargraph S/Po → S/SWR → S/ALC → S/COMP au clic ; QUICK sans 3DSS
 - **0.37.13** — IC-7300 : SCOPE avec la grande fréquence (M.SCOPE) ; touches <1> / <2> (SPAN HOLD CENT/FIX, puis REF SPEED MARKER) ; SPAN (±2,5k … ±500k), HOLD, CENTER / FIX et EDGE réglés sur le scope du TRX (CI-V 27 14 / 15 / 16 / 17) et affichés dans un cadre au milieu de l'écran
 - **0.37.12** — IC-7300 : écran FUNCTION Icom (P.AMP/ATT, AGC, NOTCH, NB, NR, IP+, VOX / BKIN, COMP, TBW, MONI ; TBW = CI-V 16 58) ; grand S/Po de M.SCOPE caché sous les tableaux (QUICK, MENU…)
 - **0.37.11** — IC-7300 : VOICE TX — T1 … T8 émettent les mémoires vocales du TRX (CI-V 28 00), contrôles d'émission de la phonie côté serveur (main, bandes, puissance, VOX, ROS), arrêt si la main est perdue ou après 2 min, clic pendant l'émission = arrêt ; voyant RFG sous le mode (gain HF pas au maximum)

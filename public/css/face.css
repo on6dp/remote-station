@@ -505,3 +505,5 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .icf-btn.on { stroke: #4fd2f0; stroke-width: 3; }
 #face .icf-t1 { fill: #f4f6fa; font: 800 21px Arial, sans-serif; pointer-events: none; }
 #face .icf-t2 { fill: #f4f6fa; font: 700 18px Arial, sans-serif; pointer-events: none; }
+#face .icp-pill.mk { fill: #f07a1e; }
+#face .ick-btn.blank { fill: #3a404c; }
