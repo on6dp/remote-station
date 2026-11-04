@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.34 | [RemoteStation-Setup-0.37.34.exe](0.37.34/RemoteStation-Setup-0.37.34.exe) | [remote-station-0.37.34.tar.gz](0.37.34/remote-station-0.37.34.tar.gz) | Case RIT comme le TRX — [empreintes SHA-256](0.37.34/SHA256SUMS.txt) |
 | 0.37.33 | [RemoteStation-Setup-0.37.33.exe](0.37.33/RemoteStation-Setup-0.37.33.exe) | [remote-station-0.37.33.tar.gz](0.37.33/remote-station-0.37.33.tar.gz) | VFO A / VFO B affiché — [empreintes SHA-256](0.37.33/SHA256SUMS.txt) |
 | 0.37.32 | [RemoteStation-Setup-0.37.32.exe](0.37.32/RemoteStation-Setup-0.37.32.exe) | [remote-station-0.37.32.tar.gz](0.37.32/remote-station-0.37.32.tar.gz) | Indicateur TX de l'IC-7300 — [empreintes SHA-256](0.37.32/SHA256SUMS.txt) |
 | 0.37.31 | [RemoteStation-Setup-0.37.31.exe](0.37.31/RemoteStation-Setup-0.37.31.exe) | [remote-station-0.37.31.tar.gz](0.37.31/remote-station-0.37.31.tar.gz) | AUDIO SCOPE : FFT comme le TRX — [empreintes SHA-256](0.37.31/SHA256SUMS.txt) |

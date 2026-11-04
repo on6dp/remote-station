@@ -2123,8 +2123,9 @@
     if (at) { g.insertBefore(h, at); if (LCD.spo) g.insertBefore(LCD.spo.g, h); if (LCD.spoBig) g.insertBefore(LCD.spoBig.g, h); }
     // Case du bouton MULTI : en haut à droite
     if (LCD.fbox) {
-      for (const e of [LCD.fbox.r]) { e.setAttribute('x', X(500)); e.setAttribute('y', Y(9)); e.setAttribute('width', 94); e.setAttribute('height', 22); }
-      LCD.fbox.t.setAttribute('x', X(547)); LCD.fbox.t.setAttribute('y', Y(25)); LCD.fbox.v.style.display = 'none';
+      for (const e of [LCD.fbox.r]) { e.setAttribute('x', X(500)); e.setAttribute('y', Y(9)); e.setAttribute('width', 90); e.setAttribute('height', 22); e.setAttribute('rx', 5); }
+      LCD.fbox.tab = el('rect', { x: X(590), y: Y(15), width: 4, height: 10, rx: 1, class: 'ich-fbtab', style: 'display:none' }, LCD.fbox.r.parentNode);
+      LCD.fbox.t.setAttribute('x', X(545)); LCD.fbox.t.setAttribute('y', Y(25.5)); LCD.fbox.v.style.display = 'none';
       const hit = LCD.fbox.r.parentNode.querySelector('.hs.lcd-hit[y="' + Y(57) + '"][x="' + X(520) + '"]');
       if (hit) { hit.setAttribute('x', X(500)); hit.setAttribute('y', Y(9)); hit.setAttribute('width', 94); hit.setAttribute('height', 22); }
     }
@@ -2204,7 +2205,7 @@
     LCD.icVfo.classList.toggle('big', big);
     LCD.icTags.classList.toggle('big', big);
     // Case du haut à droite : seulement « RIT ΔTX » quand ils sont en service (pas de nom de fonction comme chez Yaesu)
-    if (LCD.fbox) { LCD.fbox.t.textContent = ron ? ritL : ''; LCD.fbox.r.classList.toggle('icrit', ron); LCD.fbox.r.style.display = ron ? '' : 'none'; }
+    if (LCD.fbox) { LCD.fbox.t.textContent = ron ? ritL : ''; LCD.fbox.r.classList.toggle('icrit', ron); LCD.fbox.r.style.display = ron ? '' : 'none'; if (LCD.fbox.tab) LCD.fbox.tab.style.display = ron ? '' : 'none'; }
   }
   // IC-7300 : S-mètre en bargraph « S/Po » (1 · 5 · 9 en blanc, + 20 / 40 / 60 en points rouges), comme sur l'écran du TRX
   const SPO_N = 40;

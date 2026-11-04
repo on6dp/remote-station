@@ -451,7 +451,10 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .ich-tag.split { fill: #f07a1e; stroke: #ffb070; }
 #face .ich-tagt.split { fill: #fff; font-size: 15px; }
 #face .ich-ritv.sub { font-size: 30px; letter-spacing: -0.5px; }
-#face .lcd-fbox.icrit { fill: #6b7486; stroke: #b7bfcc; }
+/* IC-7300 : case du bouton MULTI comme sur le TRX — fond blanc, « RIT » / « ΔTX » en noir, petit ergot à droite */
+#face .lcd-fbox.icrit { fill: #e9edf3; stroke: #c9d0dc; }
+#face .lcd-fbox.icrit + .lcd-fboxt { fill: #0b0e14; font: 700 15px Arial, sans-serif; }
+#face .ich-fbtab { fill: #e9edf3; pointer-events: none; }
 #face .ich-freq.sm { font-size: 40px; }
 #face .ich-ritv.sub { font-size: 27px; }
 /* IC-7300 : grand écran des mesures (M.SCOPE) */
