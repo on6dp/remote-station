@@ -1150,7 +1150,7 @@
       ['<1>', '<1> : touches suivantes (REF, SPEED, MARKER)', () => { L.iscPage = 1; }],
       ['SPAN', 'SPAN du scope du TRX : ±2,5k → 5k → 10k → 25k → 50k → 100k → 250k → 500k (la cascade de la page reste celle de la BF reçue) ; en FIX : EDGE 1 → 4',
         () => { const s2 = S(); if (s2.scMode === 1) return setCtl('scEdge', (s2.scEdge || 1) % 4 + 1); const sp = s2.scSpan; setCtl('scSpan', sp == null ? 3 : (sp + 1) % 8); }],
-      ['HOLD', 'HOLD : fige le scope (celui du TRX et celui de la page)', () => { L.hold = !L.hold; L.holdAt = Date.now(); if (R.CONTROL.scHold) setCtl('scHold', L.hold ? 1 : 0); }],
+      ['HOLD', 'HOLD : fige le scope (celui du TRX et celui de la page) ; le grand bouton déplace alors le trait vert de la fréquence de réception', () => { L.hold = !L.hold; L.holdAt = Date.now(); if (R.CONTROL.scHold) setCtl('scHold', L.hold ? 1 : 0); }],
       ['CENT/FIX', 'CENT/FIX : scope du TRX centré sur la fréquence (CENTER) ou bords fixes (FIX) ; appui long : défilement (SCROLL-C / SCROLL-F)', () => setCtl('scMode', (S().scMode || 0) ^ 1)],
       ['EXPD/SET', 'EXPD/SET : scope agrandi (la fréquence remonte à côté du S/Po) ; nouveau clic : normal', () => iscExpand()]
     ], [
@@ -1174,6 +1174,27 @@
     // Appui long sur CENT/FIX (page 1) : CENTER ⇄ SCROLL-C, FIX ⇄ SCROLL-F
     LCD.iscBtns = keyRow(m, X, Y, c, ky, [0, 1, 2, 3, 4].map((i) => ['', '', () => LCD.iscPages[L.iscPage][i][2](),
       (j) => { if (L.iscPage || j !== 3) return false; setCtl('scMode', (S().scMode || 0) ^ 2); return true; }]));
+  }
+  // HOLD : trait vert de la fréquence de réception sur le spectre figé ; le grand bouton le déplace (la fréquence du TRX suit),
+  // HOLD relâché : le spectre repart et le trait disparaît (comme sur l'IC-7300)
+  function holdMarker() {
+    const cv = $('scope');
+    if (!cv) return;
+    let mk = $('holdMk');
+    if (!mk) { mk = document.createElement('div'); mk.id = 'holdMk'; mk.className = 'fc-holdmk'; cv.parentNode.appendChild(mk); }
+    const s = S(), on = ICOM && L.hold && L.icView === 'scope' && cv.style.visibility !== 'hidden';
+    const f = activeSide() === 'B' ? s.freqB : s.freq;
+    if (!on || !f) { mk.hidden = true; L.holdF = null; return; }
+    if (L.holdF == null) L.holdF = f; // fréquence au moment du HOLD : le trait part du centre du filtre
+    const ff = LCD.flt && LCD.flt.A, md = (ff && ff.mode) || L.activeMode(s) || '';
+    const fc = ff ? audioCenter(md, ff.hz) + (ff.sh || 0) : 1500;
+    const lsb = /^LSB$|-R$|LSB-D/.test(md) ? -1 : 1;
+    const frac = (fc + lsb * (f - L.holdF)) / fitHz('A');
+    if (!(frac >= 0 && frac <= 1)) { mk.hidden = true; return; } // hors de l'image figée
+    const pct = (v) => parseFloat(v) || 0;
+    mk.style.left = (pct(cv.style.left) + frac * pct(cv.style.width)) + '%';
+    mk.style.top = cv.style.top; mk.style.height = cv.style.height;
+    mk.hidden = false;
   }
   function iscExpand() { L.iscExp = !L.iscExp; if (L.iscExp) { L.iscBigWas = !!L.icBig; L.icBig = false; } else L.icBig = !!L.iscBigWas; WF.drawn = false; }
   function refSet(v) {
@@ -1208,7 +1229,8 @@
     const md = S().scMode || 0, fix = md === 1 || md === 3;
     LCD.iscMode.t.textContent = ['CENTER', 'FIX', 'SCROLL-C', 'SCROLL-F'][md];
     LCD.iscMode.r.classList.toggle('scroll', md >= 2); LCD.iscMode.t.classList.toggle('scroll', md >= 2);
-    LCD.iscR.r.classList.toggle('rx', md !== 0); LCD.iscR.t.classList.toggle('on', md !== 0);
+    LCD.iscR.r.classList.toggle('rx', md !== 0 || !!L.hold); LCD.iscR.t.classList.toggle('on', md !== 0 || !!L.hold);
+    holdMarker();
     if (fix) LCD.iscScale.textContent = 'EDGE' + (S().scEdge || 1);
     LCD.iscBtns.forEach((b, i) => {
       const k = LCD.iscPages[L.iscPage || 0][i].slice();
@@ -3537,7 +3559,7 @@
   // Un scope : spectre en haut, cascade en dessous (elle descend d'une ligne à chaque tour), échelle en bas
   function drawScope(c2, rg, pal, nb, lvl, maxHz) {
     const { sp, x0, y0, w, h, name } = rg;
-    const lab = 11, sh = Math.round((h - lab) * (h < 90 ? 0.5 : 0.6));
+    const lab = ICOM ? 15 : 11, sh = Math.round((h - lab) * (h < 90 ? 0.5 : 0.6)); // IC-7300 : chiffres de l'échelle plus grands
     if (rg.sep === 'h') { c2.fillStyle = '#2b3546'; c2.fillRect(x0, y0 - 2, w, 2); }
     if (rg.sep === 'v') { c2.fillStyle = '#2b3546'; c2.fillRect(x0 - 2, y0, 2, h); }
     if (!sp) {
@@ -3625,9 +3647,13 @@
     c2.beginPath(); c2.moveTo(x0, y0 + sh - 0.5); c2.lineTo(x0 + w, y0 + sh - 0.5); c2.stroke();
     // Échelle : 0 à 4 kHz de BF
     c2.fillStyle = 'rgba(200,210,225,.85)';
-    c2.font = '9px "Roboto Mono", monospace';
+    c2.font = ICOM ? 'bold 12px Arial, sans-serif' : '9px "Roboto Mono", monospace';
     c2.textAlign = 'center';
-    for (let k = 1; k < maxHz / 1000; k++) c2.fillText(k + 'k', x0 + w * k * 1000 / maxHz, y0 + h - 2);
+    if (ICOM) {
+      // IC-7300 : tous les 0,5 kHz (comme l'échelle du TRX : 0.5, 1.0, 1.5…), en kHz de BF
+      const st = maxHz <= 2000 ? 250 : 500;
+      for (let f = st; f < maxHz - st / 3; f += st) c2.fillText((f / 1000).toFixed(st < 500 ? 2 : 1), x0 + w * f / maxHz, y0 + h - 3);
+    } else for (let k = 1; k < maxHz / 1000; k++) c2.fillText(k + 'k', x0 + w * k * 1000 / maxHz, y0 + h - 2);
     if (name) { c2.textAlign = 'left'; c2.fillStyle = '#6f86ff'; c2.font = 'bold 10px "Roboto Mono", monospace'; c2.fillText(name, x0 + 4, y0 + 11); }
   }
   // DISP « filtres agrandis » : le filtre de chaque récepteur (largeur, décalage) avec le spectre de sa BF

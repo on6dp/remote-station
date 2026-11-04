@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.18** — IC-7300 SCOPE : HOLD — R vert, trait vert de la fréquence de réception déplacé par le grand bouton sur le spectre figé, disparaît au relâchement ; chiffres de l'échelle plus grands (tous les 0,5 kHz)
 - **0.37.17** — IC-7300 SCOPE : R vert hors CENTER ; appui long sur CENT/FIX = SCROLL-C / SCROLL-F (badge jaune, CI-V 27 14 02 / 03) ; appui long sur les touches de l'écran
 - **0.37.16** — IC-7300 : bargraph S/Po → S/SWR → S/ALC → S/COMP → S/Vd → S/Id (tension et courant en émission)
 - **0.37.15** — IC-7300 : jamais de 3DSS (réglage resté dans le navigateur ignoré) : spectre et cascade dans tous les écrans (SCOPE, VOICE TX, KEYER…)

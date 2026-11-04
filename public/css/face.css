@@ -509,3 +509,6 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .ick-btn.blank { fill: #3a404c; }
 #face .icp-pill.blue.scroll { fill: #c8b21e; }
 #face .icp-pill.rx { fill: #3aa83a; }
+/* IC-7300, SCOPE + HOLD : trait vert de la fréquence de réception sur le spectre figé */
+.fc-holdmk { position: absolute; width: 2px; margin-left: -1px; background: #3ddc5a; box-shadow: 0 0 3px #3ddc5a; pointer-events: none; z-index: 3; }
+.fc-holdmk[hidden] { display: none; }
