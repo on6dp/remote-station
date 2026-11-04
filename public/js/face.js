@@ -2461,8 +2461,13 @@
     LCD.icVfo.textContent = 'VFO ' + abName(main);
     // SPLIT en émission : fréquences d'émission et de réception notées au début de l'émission et gardées jusqu'à la fin
     // (l'IC-7300 échange ce qu'il répond pour le VFO en service et l'autre pendant l'émission : sans cela, l'affichage ferait l'aller-retour)
-    if (s.split && tx) { if (!L.txSnap) L.txSnap = { tx: fq(main), rx: fq(other) }; } else L.txSnap = null;
-    const fqm = L.txSnap ? L.txSnap.tx : fq(main), fqo = L.txSnap ? L.txSnap.rx : fq(other);
+    if (s.split && tx) { if (!L.txSnap) L.txSnap = { tx: fq(main), rx: fq(other) }; L.txPost = null; }
+    else if (L.txSnap) { L.txPost = { rx: L.txSnap.rx, tx: L.txSnap.tx, at: Date.now() }; L.txSnap = null; }
+    // Juste après l'émission : tant que le TRX n'a pas été relu (≤ 2 s), on garde les fréquences d'avant l'émission
+    const post = L.txPost && !tx && s.split && Date.now() - L.txPost.at < 2000 && fq(main) !== L.txPost.rx ? L.txPost : null;
+    if (L.txPost && !post) L.txPost = null;
+    const fqm = L.txSnap ? L.txSnap.tx : post ? post.rx : fq(main), fqo = L.txSnap ? L.txSnap.rx : post ? post.tx : fq(other);
+    if (post) setTimeout(render, 300);
     LCD.icFreq.textContent = fmt(fqm);
     LCD.icFreq.classList.toggle('txsplit', !!s.split && !!tx); // SPLIT : la fréquence d'émission (en grand pendant l'émission) en rouge
     const ron = !!(s.rit || s.xit), cv = s.clar || 0, ritL = s.rit && s.xit ? 'RIT ΔTX' : s.rit ? 'RIT' : 'ΔTX';

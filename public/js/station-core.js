@@ -522,7 +522,7 @@
             this.unkey(m.reason || 'fin d’émission');
           }
           // État émission / réception relu tout de suite (pilotes qui le prévoient : IC-7300), pour que les pages le montrent sans attendre le relevé
-          for (const d of [150, 450, 900]) setTimeout(() => this._readBack('tx'), d);
+          for (const d of [150, 450, 900]) setTimeout(() => { this._readBack('tx'); this._readBack('xfc'); }, d); // et l'autre VFO (SPLIT)
         }
       } catch (e) {
         this.log('Commande refusée : ' + e.message);
