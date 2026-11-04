@@ -1848,9 +1848,9 @@
     const m = el('g', { class: 'spo' }, g);
     const x0 = X(52), x1 = X(212), y = Y(46);
     const lab = el('text', { x: X(48), y: y + 9, class: 'spo-lab', 'text-anchor': 'end' }, m, 'S/Po');
-    // Clic sur S/Po : S/Po → S/SWR → S/ALC → S/COMP (S en réception ; en émission : Po, ROS, ALC ou compression), comme sur le TRX
+    // Clic sur S/Po : S/Po → S/SWR → S/ALC → S/COMP → S/Vd → S/Id (S en réception ; en émission : Po, ROS, ALC, compression, tension ou courant), comme sur le TRX
     const lh = el('rect', { x: X(2), y: y - 12, width: 48, height: 24, class: 'hs lcd-hit' }, m);
-    el('title', {}, lh, 'Clic : S/Po → S/SWR → S/ALC → S/COMP (mesure montrée en émission)');
+    el('title', {}, lh, 'Clic : S/Po → S/SWR → S/ALC → S/COMP → S/Vd → S/Id (mesure montrée en émission)');
     lh.addEventListener('click', (ev) => { ev.stopPropagation(); spoCycle(); });
     // Échelle : S1 … S9 sur 55 % de la largeur, puis + 20 / + 40 / + 60 en rouge
     const sx = (f) => x0 + f * (x1 - x0);
@@ -1868,7 +1868,7 @@
     el('text', { x: X(52), y: by - 5, class: 'spo-lab big', 'text-anchor': 'end' }, b, 'S');
     const blab = el('text', { x: X(52), y: by + 25, class: 'spo-lab big', 'text-anchor': 'end' }, b, 'Po');
     const bh = el('rect', { x: X(4), y: by - 18, width: 52, height: 48, class: 'hs lcd-hit' }, b);
-    el('title', {}, bh, 'Clic : Po → SWR → ALC → COMP (mesure montrée en émission)');
+    el('title', {}, bh, 'Clic : Po → SWR → ALC → COMP → Vd → Id (mesure montrée en émission)');
     bh.addEventListener('click', (ev) => { ev.stopPropagation(); spoCycle(); });
     for (const [f, t] of [[0.02, '1'], [0.14, '3'], [0.26, '5'], [0.38, '7'], [0.5, '9']]) el('text', { x: bs(f), y: by - 5, class: 'spo-num big', 'text-anchor': 'middle' }, b, t);
     for (const [f, t] of [[0.66, '+20'], [0.82, '+40'], [0.98, '+60dB']]) el('text', { x: bs(f), y: by - 5, class: 'spo-num big red', 'text-anchor': 'middle' }, b, t);
@@ -1883,14 +1883,17 @@
   const SPO_NB = 64;
   // Mesure du bargraph en émission : Po, SWR, ALC ou COMP (échelles du bas du grand S/Po, comme sur le TRX)
   const SPO_MT = [['Po', [[0.02, '0'], [0.25, '25'], [0.5, '50'], [0.97, '100%']]], ['SWR', [[0.02, '1'], [0.15, '1.5'], [0.25, '2'], [0.45, '3'], [0.97, '∞']]],
-    ['ALC', [[0.02, '0'], [0.5, 'ALC ZONE'], [0.97, 'MAX']]], ['COMP', [[0.02, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [0.97, 'dB']]]];
-  L.icMt = Math.max(0, Math.min(3, parseInt(store.get('rs.face.ic.mt', '0'), 10) || 0));
-  function spoCycle() { L.icMt = (L.icMt + 1) % 4; store.set('rs.face.ic.mt', L.icMt); LCD.spoMt = -1; render(); }
+    ['ALC', [[0.02, '0'], [0.5, 'ALC ZONE'], [0.97, 'MAX']]], ['COMP', [[0.02, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [0.97, 'dB']]],
+    ['Vd', [[0.02, '10'], [0.33, '12'], [0.67, '14'], [0.97, '16V']]], ['Id', [[0.02, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [0.97, '25A']]]];
+  L.icMt = Math.max(0, Math.min(5, parseInt(store.get('rs.face.ic.mt', '0'), 10) || 0));
+  function spoCycle() { L.icMt = (L.icMt + 1) % SPO_MT.length; store.set('rs.face.ic.mt', L.icMt); LCD.spoMt = -1; render(); }
   function spoTx(s) {
     // Fraction du bargraph en émission selon la mesure choisie (mêmes échelles que l'écran des mesures)
     const lin = (t, v) => { if (v == null) return 0; for (let i = 1; i < t.length; i++) if (v <= t[i][0]) return t[i - 1][1] + (v - t[i - 1][0]) / (t[i][0] - t[i - 1][0]) * (t[i][1] - t[i - 1][1]); return t[t.length - 1][1]; };
     if (L.icMt === 1) { const v = R.swrValue ? R.swrValue(s.m6) : null; return v == null ? 0 : lin([[1, 0], [1.5, 0.15], [2, 0.25], [2.5, 0.35], [3, 0.45], [5, 0.8], [10, 1]], v); }
     if (L.icMt === 2) return Math.min(1, (s.m4 || 0) / 255);
+    if (L.icMt === 4) return R.vdValue && s.m8 != null ? Math.max(0, Math.min(1, (R.vdValue(s.m8) - 10) / 6)) : 0; // Vd : 10 – 16 V
+    if (L.icMt === 5) return R.idValue && s.m7 != null ? Math.min(1, R.idValue(s.m7) / 25) : 0; // Id : 0 – 25 A
     if (L.icMt === 3) { const c = s.m3 == null ? null : s.m3 <= 130 ? s.m3 / 130 * 15 : 15 + (s.m3 - 130) / 111 * 15; return c == null ? 0 : Math.min(1, c / 25); }
     return R.poFrac ? R.poFrac(s.m5) || 0 : 0;
   }
