@@ -1202,6 +1202,8 @@
     drawRf(c2, 0, 0, W, h, RFS);
     RFS.last = { m: RFS.m, f0: RFS.f0, f1: RFS.f1 };
   }
+  // Pas de la grille en FIX : largeur / 14, arrondi à 1 – 2 – 2,5 – 5 × 10ⁿ
+  function rfGrid(span) { const raw = span / 14, p10 = Math.pow(10, Math.floor(Math.log10(raw))); return [1, 2, 2.5, 5, 10].map((m) => m * p10).find((v) => v >= raw * 0.999) || 10 * p10; }
   // Bornes affichées : CENTER = fréquence centrale ± SPAN ; FIX = bords bas et haut
   const rfEdges = (f) => (f.m === 1 ? [f.f0, f.f1] : [f.f0 - f.f1, f.f0 + f.f1]);
   function drawRf(c2, x0, y0, w, h, f) {
@@ -1227,7 +1229,12 @@
     // Spectre : fond, grille de 10 divisions, courbe remplie (bleu clair, comme sur le TRX)
     c2.fillStyle = '#0b1020'; c2.fillRect(x0, y0, w, sh);
     c2.strokeStyle = 'rgba(150,160,175,.45)'; c2.lineWidth = 1;
-    for (let k = 1; k < 10; k++) { const gx = Math.round(x0 + w * k / 10) + 0.5; c2.beginPath(); c2.moveTo(gx, y0); c2.lineTo(gx, y0 + sh); c2.stroke(); }
+    const [glo, ghi] = rfEdges(f);
+    if (f.m === 1) {
+      // FIX : grille tous les « pas » du TRX (largeur du bord / 14 arrondie : 14,000–14,350 → 25 kHz, comme « 25k/10dB »)
+      const st = rfGrid(ghi - glo);
+      for (let hz = Math.ceil(glo / st) * st; hz < ghi; hz += st) { const gx = Math.round(x0 + (hz - glo) / (ghi - glo) * w) + 0.5; c2.beginPath(); c2.moveTo(gx, y0); c2.lineTo(gx, y0 + sh); c2.stroke(); }
+    } else for (let k = 1; k < 10; k++) { const gx = Math.round(x0 + w * k / 10) + 0.5; c2.beginPath(); c2.moveTo(gx, y0); c2.lineTo(gx, y0 + sh); c2.stroke(); }
     for (let k = 1; k < 5; k++) { const gy = Math.round(y0 + sh * k / 5) + 0.5; c2.beginPath(); c2.moveTo(x0, gy); c2.lineTo(x0 + w, gy); c2.stroke(); }
     c2.beginPath(); c2.moveTo(x0, y0 + sh);
     for (let px = 0; px < w; px++) c2.lineTo(x0 + px + 0.5, y0 + sh - Math.min(1, col[px]) * (sh - 2));
@@ -1259,6 +1266,12 @@
       c2.textAlign = 'right'; c2.fillText(f.m === 1 ? (hi / 1e6).toFixed(3) : kfmt(f.f1, ek) + 'k', x0 + w - 3, y0 + 13);
     }
     if (f.oor) { c2.fillStyle = '#ff8a1f'; c2.textAlign = 'center'; c2.fillText('OUT OF RANGE', x0 + w / 2, y0 + sh / 2); }
+    // FIX : « << » / « >> » quand la fréquence de réception sort des bords (comme sur le TRX)
+    if (f.m === 1 && rx && (rx < lo || rx > hi)) {
+      c2.fillStyle = '#ffffff'; c2.font = 'bold 15px Arial, sans-serif';
+      c2.textAlign = rx < lo ? 'left' : 'right';
+      c2.fillText(rx < lo ? '<<' : '>>', rx < lo ? x0 + 3 : x0 + w - 3, y0 + (sh > 30 ? 30 : 14));
+    }
   }
   // HOLD : trait vert de la fréquence de réception sur le spectre figé ; le grand bouton le déplace (la fréquence du TRX suit),
   // HOLD relâché : le spectre repart et le trait disparaît (comme sur l'IC-7300)
@@ -1323,7 +1336,11 @@
     LCD.iscMode.r.classList.toggle('scroll', md >= 2); LCD.iscMode.t.classList.toggle('scroll', md >= 2);
     LCD.iscR.r.classList.toggle('rx', md !== 0 || !!L.hold); LCD.iscR.t.classList.toggle('on', md !== 0 || !!L.hold);
     holdMarker();
-    if (fix) LCD.iscScale.textContent = 'EDGE' + (S().scEdge || 1);
+    if (fix) {
+      // FIX : pas de la grille du scope du TRX (largeur du bord / 14), sinon le n° du bord
+      const lf = rfFresh() && RFS.m === 1 ? RFS : null, g2 = lf ? rfGrid(lf.f1 - lf.f0) : 0;
+      LCD.iscScale.textContent = lf ? (g2 / 1000 >= 1 ? g2 / 1000 : (g2 / 1000).toFixed(1)) + 'k/10dB' : 'EDGE' + (S().scEdge || 1);
+    }
     LCD.iscBtns.forEach((b, i) => {
       const k = LCD.iscPages[L.iscPage || 0][i].slice();
       if (!L.iscPage && i === 1 && fix) k[0] = 'EDGE';
