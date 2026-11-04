@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.23** — IC-7300 SCOPE en FIX : cadre « No.2 » au changement d'EDGE (1 s), échelle « 5.0k/10dB » sous 10 kHz, petit « >> » vert
 - **0.37.22** — IC-7300 SCOPE en FIX : EDGE 1 à 4, grille et « …k/10dB » selon la largeur du bord envoyée par le TRX, repères « << » / « >> » quand la fréquence sort des bords
 - **0.37.21** — IC-7300 : sous-menus de SET relus par le CI-V (1A 05) — Tone Control/TBW, Function, Display, Time Set modifiables ; Connectors en lecture seule ; SD Card non ; Others : Information seulement (pas Touch Screen, Reset, Emergency) ; réglages sensibles en lecture seule, liste blanche vérifiée aussi par le serveur
 - **0.37.20** — Fenêtre des modes numériques (tous les TRX) : zoom propre Ctrl + / Ctrl − / Ctrl 0 et Ctrl + molette, sans toucher à la face avant ni au dashboard

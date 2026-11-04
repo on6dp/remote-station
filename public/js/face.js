@@ -1268,7 +1268,7 @@
     if (f.oor) { c2.fillStyle = '#ff8a1f'; c2.textAlign = 'center'; c2.fillText('OUT OF RANGE', x0 + w / 2, y0 + sh / 2); }
     // FIX : « << » / « >> » quand la fréquence de réception sort des bords (comme sur le TRX)
     if (f.m === 1 && rx && (rx < lo || rx > hi)) {
-      c2.fillStyle = '#ffffff'; c2.font = 'bold 15px Arial, sans-serif';
+      c2.fillStyle = '#3ddc5a'; c2.font = 'bold 12px Arial, sans-serif'; // petit « >> » vert, comme sur le TRX
       c2.textAlign = rx < lo ? 'left' : 'right';
       c2.fillText(rx < lo ? '<<' : '>>', rx < lo ? x0 + 3 : x0 + w - 3, y0 + (sh > 30 ? 30 : 14));
     }
@@ -1339,7 +1339,7 @@
     if (fix) {
       // FIX : pas de la grille du scope du TRX (largeur du bord / 14), sinon le n° du bord
       const lf = rfFresh() && RFS.m === 1 ? RFS : null, g2 = lf ? rfGrid(lf.f1 - lf.f0) : 0;
-      LCD.iscScale.textContent = lf ? (g2 / 1000 >= 1 ? g2 / 1000 : (g2 / 1000).toFixed(1)) + 'k/10dB' : 'EDGE' + (S().scEdge || 1);
+      LCD.iscScale.textContent = lf ? (g2 < 10000 ? (g2 / 1000).toFixed(1) : g2 / 1000) + 'k/10dB' : 'EDGE' + (S().scEdge || 1); // 5.0k, 10k, 25k (comme le TRX)
     }
     LCD.iscBtns.forEach((b, i) => {
       const k = LCD.iscPages[L.iscPage || 0][i].slice();
@@ -2251,7 +2251,7 @@
     ['proc', 'COMP', (s) => onOff(s.proc)], ['vox', 'VOX', (s) => onOff(s.vox)], ['tuner', 'TUNER', (s) => onOff(s.tuner)], ['ipPlus', 'IP+', (s) => onOff(s.ipPlus)],
     ['bkin', 'BK-IN', (s) => ['OFF', 'SEMI', 'FULL'][s.bkin]], ['scSpan', 'SPAN', (s) => (R.SC_SPANS ? '±' + (R.SC_SPANS[s.scSpan] / 1000).toString().replace('.', ',') + 'k' : null), 1000],
     ['scSpeed', 'SPEED', (s) => ['FAST', 'MID', 'SLOW'][s.scSpeed], 500],
-    ['scMode', 'SCOPE', (s) => ['CENTER', 'FIX', 'SCROLL-C', 'SCROLL-F'][s.scMode || 0]], ['scEdge', 'EDGE', (s) => String(s.scEdge)], ['moni', 'MONI', (s) => onOff(s.moni)], ['split', 'SPLIT', (s) => onOff(s.split)]];
+    ['scMode', 'SCOPE', (s) => ['CENTER', 'FIX', 'SCROLL-C', 'SCROLL-F'][s.scMode || 0]], ['scEdge', '', (s) => 'No.' + s.scEdge, 1000], ['moni', 'MONI', (s) => onOff(s.moni)], ['split', 'SPLIT', (s) => onOff(s.split)]];
   let icPrev = null, icPopT = 0;
   function icPopCheck(s, live) {
     const e = $('icPop');
