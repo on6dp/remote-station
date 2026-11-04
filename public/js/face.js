@@ -1578,6 +1578,7 @@
     if (v == null || !f || !(s.m5 > 10)) return; // assez de puissance pour que la mesure ait un sens
     const k = String(Math.round(f / 1000));
     if (!(SWRG.data[k] >= v - 0.05)) { SWRG.data[k] = Math.round(v * 100) / 100; SWRG.at = Date.now(); }
+    SWRG.lastF = Number(k) * 1000; store.set('rs.face.ic.swrlast', String(SWRG.lastF));
     if (!SWRG.saveT) SWRG.saveT = setTimeout(() => { SWRG.saveT = null; store.set('rs.face.ic.swr', JSON.stringify(SWRG.data)); }, 3000);
   }
   function buildIcSwr(g, c) {
@@ -1589,10 +1590,11 @@
       b.hit.addEventListener('click', (ev) => { ev.stopPropagation(); fn(); render(); });
       return b;
     };
-    LCD.iswRecall = side(12, 0, 'RECALL', '', 'RECALL : revient sur la fréquence du dernier ROS relevé', () => {
+    LCD.iswRecall = side(12, 0, 'RECALL', '', 'RECALL : graphe centré sur la fréquence du dernier ROS relevé (le VFO ne bouge pas) ; nouveau clic : le graphe suit de nouveau le VFO', () => {
+      if (SWRG.recall) { SWRG.recall = null; return; }
       const ks = Object.keys(SWRG.data);
       if (!ks.length) return say('SWR GRAPH : pas encore de mesure (le ROS se relève pendant vos émissions).', '', 4000);
-      SWRG.center = null; SWRG.recall = Number(ks.sort((a, b) => a - b)[Math.floor(ks.length / 2)]) * 1000;
+      SWRG.center = null; SWRG.recall = SWRG.lastF || Number(ks[ks.length - 1]) * 1000;
     });
     LCD.iswRecall.t2.classList.remove('big');
     const pp = side(12, 1, '▷ ■', '', 'Mesure automatique', () => say('Mesure automatique du ROS (émission pas à pas) : pas disponible à distance. Le graphe se remplit avec le ROS relevé pendant vos émissions (TUNE, porteuse…).', '', 6000));
@@ -1621,7 +1623,10 @@
     const center = SWRG.recall ? Math.round(f0 / step) * step : Math.floor(f0 / 1000) * 1000; // comme le TRX : fréquence au kHz au milieu (14.073 pour 14.073.70)
     LCD.iswStep.t2.textContent = step >= 1000 ? step / 1000 + 'k' : step; LCD.iswBar.t2.textContent = String(nb);
     const ks = Object.keys(SWRG.data);
-    LCD.iswRecall.t2.textContent = ks.length ? fmtF3(Number(ks[ks.length - 1]) * 1000) : '--.---.--';
+    const lf = SWRG.lastF || Number(store.get('rs.face.ic.swrlast', '0')) || (ks.length ? Number(ks[ks.length - 1]) * 1000 : 0);
+    SWRG.lastF = lf;
+    LCD.iswRecall.t2.textContent = ks.length && lf ? fmtF3(lf) : '--.---.--';
+    LCD.iswRecall.r.classList.toggle('on', !!SWRG.recall); // RECALL en service : le graphe ne suit plus le VFO
     const { gx0, gx1, gy1, yv, X, Y } = G2, w = (gx1 - gx0 - 44) / Math.max(1, nb - 1);
     let html = '', any = false;
     for (let i = 0; i < nb; i++) {
@@ -5083,6 +5088,8 @@
     c.clearRect(0, 0, W, H);
     const band = f ? BANDS.find((x) => f >= x[1] && f <= x[2]) : null;
     box.querySelector('.bmv-band').textContent = band ? band[0].replace('M', ' m') : '—';
+    // IC-7300 : la carte de gauche suit le VFO en service (VFO A ou VFO B après A/B), celle de droite l'autre
+    if (ICOM) { const sm = box.querySelector('.bmv-h small'), b = (side === 'A') === (s.vfoAB === 1); if (sm) sm.textContent = b ? 'VFO-B' : 'VFO-A'; }
     if (!f) return;
     // Toute la bande (plage 0) : de son début à sa fin ; hors bande : 200 kHz autour du VFO
     const full = BMV.span[side] === 0 && !!band, fk = f / 1000;

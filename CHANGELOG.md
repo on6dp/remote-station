@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.45** — IC-7300 : SWR GRAPH → RECALL (graphe centré sur le dernier ROS relevé, touche en surbrillance, nouveau clic : suit le VFO) ; cartes de bande : VFO-A / VFO-B en grand (et suivant A/B sur l'IC-7300) ; XFC et A/B affichés tout de suite
 - **0.37.44** — IC-7300 : XFC et A/B affichés tout de suite (fréquences inversées sans attendre la relecture, autre VFO relu aussitôt)
 - **0.37.43** — IC-7300 : le menu MULTI passe par-dessus les cadres Vd / TEMP (4e réglage, MONITOR, visible)
 - **0.37.42** — IC-7300 : pendant XFC (SPLIT), « VFO A » / « VFO B » suit l'inversion, comme sur le TRX

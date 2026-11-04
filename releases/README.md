@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.45 | [RemoteStation-Setup-0.37.45.exe](0.37.45/RemoteStation-Setup-0.37.45.exe) | [remote-station-0.37.45.tar.gz](0.37.45/remote-station-0.37.45.tar.gz) | RECALL, VFO-A/B en grand, XFC rapide — [empreintes SHA-256](0.37.45/SHA256SUMS.txt) |
 | 0.37.44 | [RemoteStation-Setup-0.37.44.exe](0.37.44/RemoteStation-Setup-0.37.44.exe) | [remote-station-0.37.44.tar.gz](0.37.44/remote-station-0.37.44.tar.gz) | XFC plus rapide — [empreintes SHA-256](0.37.44/SHA256SUMS.txt) |
 | 0.37.43 | [RemoteStation-Setup-0.37.43.exe](0.37.43/RemoteStation-Setup-0.37.43.exe) | [remote-station-0.37.43.tar.gz](0.37.43/remote-station-0.37.43.tar.gz) | Menu MULTI au premier plan — [empreintes SHA-256](0.37.43/SHA256SUMS.txt) |
 | 0.37.42 | [RemoteStation-Setup-0.37.42.exe](0.37.42/RemoteStation-Setup-0.37.42.exe) | [remote-station-0.37.42.tar.gz](0.37.42/remote-station-0.37.42.tar.gz) | XFC : VFO A / B suit — [empreintes SHA-256](0.37.42/SHA256SUMS.txt) |

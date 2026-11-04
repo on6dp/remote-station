@@ -22,7 +22,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 /* Cartes de bande de part et d'autre du TRX : bande du VFO A à gauche, du VFO B à droite (spots du cluster) */
 .fc-bmv { position: relative; display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--v2-border-panel, #1d2733); border-radius: 8px; background: #05080d; overflow: hidden; }
 .fc-bmv .bmv-h { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-bottom: 1px solid #1d2733; font: 800 15px/1.1 system-ui, sans-serif; color: #f2cf4a; }
-.fc-bmv .bmv-h small { font: 700 10px/1 'Roboto Mono', monospace; letter-spacing: .04em; padding: 2px 5px; border-radius: 3px; }
+.fc-bmv .bmv-h small { font: 800 15px/1 'Roboto Mono', monospace; letter-spacing: .04em; padding: 3px 7px; border-radius: 3px; } /* VFO-A / VFO-B en grand */
 .fc-bmv[data-side='A'] .bmv-h small { background: #d8d3ff; color: #1a1838; }
 .fc-bmv[data-side='B'] .bmv-h small { background: #2f7bff; color: #fff; }
 .fc-bmv .bmv-span { margin-left: auto; display: flex; gap: 2px; }
