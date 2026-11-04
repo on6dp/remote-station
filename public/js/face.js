@@ -849,6 +849,7 @@
       buildIcSetSub(g, c);
       buildIcVrec(g, c);
       buildIcFunc(g, c);
+      if (LCD.multiMenu) g.appendChild(LCD.multiMenu); // menu MULTI par-dessus les cadres Vd / TEMP et les autres écrans
       // Le mode affiché se touche pour le changer, comme sur l'écran de l'IC-7300
       const v = LCD.vA, mb = el('rect', { x: Number(v.badge.getAttribute('x')), y: Number(v.badge.getAttribute('y')), width: 52, height: 15, class: 'hs lcd-hit' }, v.g);
       el('title', {}, mb, 'Mode : clic pour le tableau des modes');
