@@ -1098,7 +1098,7 @@
     }
   }
   // ---- Écrans sous la bande du scope : bandeau de titre + contenu (VOICE TX, SWR GRAPH, SCAN), comme sur l'IC-7300
-  const IC_TB = 18, IC_SCOPE_H = 180;
+  const IC_TB = 18, IC_SCOPE_H = 192; // touches <1> / <2> tout en bas de l'écran, le scope prend la place
   // Grande fréquence (M.SCOPE) avec le SPECTRUM SCOPE : bandeau à 188, scope de 80, touches à 288 (comme sur le TRX)
   const IC_BIG_TB = 188, IC_BIG_SC = 80;
   // EXPD/SET : bandeau remonté sous la fréquence (à 84), scope jusqu'aux touches
@@ -1175,6 +1175,89 @@
     LCD.iscBtns = keyRow(m, X, Y, c, ky, [0, 1, 2, 3, 4].map((i) => ['', '', () => LCD.iscPages[L.iscPage][i][2](),
       (j) => { if (L.iscPage || j !== 3) return false; setCtl('scMode', (S().scMode || 0) ^ 2); return true; }]));
   }
+  // ---- Vrai scope du TRX (IC-7300, CI-V 27 00 relayé par la page Station et le serveur) : 475 points de 0 à 160 par image
+  const RFS = { at: 0, d: null, m: 0, f0: 0, f1: 0, last: null };
+  const rfFresh = () => ICOM && Date.now() - RFS.at < 2500;
+  function scopeSub(on) { if (me) send({ t: 'scope_sub', on: !!on }); }
+  if (ICOM) {
+    setInterval(() => { if (document.visibilityState === 'visible') scopeSub(true); }, 20000);
+    document.addEventListener('visibilitychange', () => scopeSub(document.visibilityState === 'visible'));
+  }
+  function rfsOn(m) {
+    let bin;
+    try { bin = atob(m.d || ''); } catch (e) { return; }
+    const d = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) d[i] = bin.charCodeAt(i);
+    RFS.at = Date.now(); RFS.d = d; RFS.m = m.m; RFS.f0 = m.f0; RFS.f1 = m.f1; RFS.oor = m.oor;
+    const cv = $('scope');
+    if (!cv || cv.style.visibility === 'hidden' || L.hold) return;
+    const c2 = cv.getContext('2d'), r = cv.getBoundingClientRect();
+    const W = Math.max(50, Math.round(r.width)), H = Math.max(40, Math.round(r.height));
+    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; WF.drawn = false; }
+    if (!WF.drawn) { c2.fillStyle = '#000'; c2.fillRect(0, 0, W, H); WF.drawn = true; }
+    // AUDIO SCOPE : le scope du TRX dans la bande du haut ; ailleurs : toute la hauteur de la cascade
+    const h = L.icView === 'audio' ? Math.round(H * IC_STRIP / IC_AUD_H) : H;
+    drawRf(c2, 0, 0, W, h, RFS);
+    RFS.last = { m: RFS.m, f0: RFS.f0, f1: RFS.f1 };
+  }
+  // Bornes affichées : CENTER = fréquence centrale ± SPAN ; FIX = bords bas et haut
+  const rfEdges = (f) => (f.m === 1 ? [f.f0, f.f1] : [f.f0 - f.f1, f.f0 + f.f1]);
+  function drawRf(c2, x0, y0, w, h, f) {
+    const d = f.d, n = d.length, lab = 15, sh = Math.round((h - lab) * (h < 120 ? 0.5 : 0.42)), wh = h - lab - sh;
+    const pal = PALS[L.wfColor] || PALS[1];
+    // Cascade : descend d'une ligne, nouvelle ligne en haut (couleurs de la palette choisie)
+    if (wh > 2) c2.drawImage(c2.canvas, x0, y0 + sh, w, wh - 1, x0, y0 + sh + 1, w, wh - 1);
+    const col = new Float32Array(w);
+    for (let px = 0; px < w; px++) {
+      const i0 = Math.floor(px / w * n), i1 = Math.max(i0 + 1, Math.floor((px + 1) / w * n));
+      let m = 0;
+      for (let i = i0; i < i1 && i < n; i++) if (d[i] > m) m = d[i];
+      col[px] = m / 160;
+    }
+    if (wh > 1) {
+      const img = c2.createImageData(w, 1);
+      for (let px = 0; px < w; px++) {
+        const v = Math.max(0, Math.min(1, (col[px] - 0.12) * 1.6)), c = pal[Math.min(255, Math.round(v * 255))];
+        img.data[px * 4] = c[0]; img.data[px * 4 + 1] = c[1]; img.data[px * 4 + 2] = c[2]; img.data[px * 4 + 3] = 255;
+      }
+      c2.putImageData(img, x0, y0 + sh);
+    }
+    // Spectre : fond, grille de 10 divisions, courbe remplie (bleu clair, comme sur le TRX)
+    c2.fillStyle = '#0b1020'; c2.fillRect(x0, y0, w, sh);
+    c2.strokeStyle = 'rgba(150,160,175,.45)'; c2.lineWidth = 1;
+    for (let k = 1; k < 10; k++) { const gx = Math.round(x0 + w * k / 10) + 0.5; c2.beginPath(); c2.moveTo(gx, y0); c2.lineTo(gx, y0 + sh); c2.stroke(); }
+    for (let k = 1; k < 5; k++) { const gy = Math.round(y0 + sh * k / 5) + 0.5; c2.beginPath(); c2.moveTo(x0, gy); c2.lineTo(x0 + w, gy); c2.stroke(); }
+    c2.beginPath(); c2.moveTo(x0, y0 + sh);
+    for (let px = 0; px < w; px++) c2.lineTo(x0 + px + 0.5, y0 + sh - Math.min(1, col[px]) * (sh - 2));
+    c2.lineTo(x0 + w, y0 + sh); c2.closePath();
+    c2.fillStyle = 'rgba(190,215,255,.85)'; c2.fill();
+    c2.strokeStyle = '#4f9cff'; c2.stroke();
+    // Repères : CENTER → trait blanc au milieu ; FIX → trait vert (R) à la fréquence de réception ; MARKER → trait orange (T) à la fréquence d'émission
+    const s = S(), [lo, hi] = rfEdges(f), xf = (hz) => x0 + (hz - lo) / (hi - lo) * w;
+    const rx = activeSide() === 'B' ? s.freqB : s.freq, tx = s.split ? (activeSide() === 'B' ? s.freq : s.freqB) : rx;
+    const vline = (x, color, wd) => { if (x < x0 || x > x0 + w) return; c2.strokeStyle = color; c2.lineWidth = wd; c2.beginPath(); c2.moveTo(Math.round(x) + 0.5, y0); c2.lineTo(Math.round(x) + 0.5, y0 + sh); c2.stroke(); c2.lineWidth = 1; };
+    if (f.m === 1) { if (rx) vline(xf(rx), '#3ddc5a', 2); } else vline(x0 + w / 2, '#ffffff', 1.5);
+    if (L.marker && tx) { vline(xf(tx), '#ff8a1f', 1.5); c2.fillStyle = '#ff8a1f'; const xt = xf(tx); if (xt >= x0 && xt <= x0 + w) { c2.beginPath(); c2.moveTo(xt - 4, y0); c2.lineTo(xt + 4, y0); c2.lineTo(xt, y0 + 6); c2.fill(); } }
+    // Échelle : en CENTER, écart en kHz (−2.0 … 0 … +2.0, −200 … +200) ; en FIX, fréquences en MHz ; bornes en haut des coins
+    c2.fillStyle = '#000'; c2.fillRect(x0, y0 + h - lab, w, lab);
+    c2.fillStyle = '#ffffff'; c2.font = 'bold 13px Arial, sans-serif'; c2.textAlign = 'center';
+    // Décimales selon le SPAN (comme le TRX) : ±2,5k → −2.0 … +2.0 ; ±5k et plus → nombres entiers (−4 … +4, −20 … +20, −200 … +200)
+    const dec = f.f1 < 5000 ? 1 : 0;
+    const kfmt = (hz, d2) => { const k = hz / 1000, a = Math.abs(k); return (k > 0 ? '+' : k < 0 ? '-' : '') + (a === 0 ? '0' : a.toFixed(d2 == null ? dec : d2)); };
+    if (f.m !== 1) {
+      for (let k = 1; k < 10; k++) c2.fillText(kfmt(-f.f1 + k * 2 * f.f1 / 10), x0 + w * k / 10, y0 + h - 3);
+    } else {
+      const span = hi - lo, raw = span / 7, p10 = Math.pow(10, Math.floor(Math.log10(raw))), st = [1, 2, 5, 10].map((m) => m * p10).find((v) => v >= raw) || 10 * p10;
+      for (let hz = Math.ceil(lo / st) * st; hz < hi; hz += st) if (hz > lo + st * 0.3) c2.fillText((hz / 1e6).toFixed(st >= 10000 ? 2 : 3), xf(hz), y0 + h - 3);
+    }
+    if (sh > 30) {
+      c2.font = 'bold 12px Arial, sans-serif';
+      const ek = f.f1 % 1000 ? 1 : 0; // bornes : −2.5k, −25k, −250k
+      c2.textAlign = 'left'; c2.fillText(f.m === 1 ? (lo / 1e6).toFixed(3) : kfmt(-f.f1, ek) + 'k', x0 + 3, y0 + 13);
+      c2.textAlign = 'right'; c2.fillText(f.m === 1 ? (hi / 1e6).toFixed(3) : kfmt(f.f1, ek) + 'k', x0 + w - 3, y0 + 13);
+    }
+    if (f.oor) { c2.fillStyle = '#ff8a1f'; c2.textAlign = 'center'; c2.fillText('OUT OF RANGE', x0 + w / 2, y0 + sh / 2); }
+  }
   // HOLD : trait vert de la fréquence de réception sur le spectre figé ; le grand bouton le déplace (la fréquence du TRX suit),
   // HOLD relâché : le spectre repart et le trait disparaît (comme sur l'IC-7300)
   function holdMarker() {
@@ -1186,10 +1269,17 @@
     const f = activeSide() === 'B' ? s.freqB : s.freq;
     if (!on || !f) { mk.hidden = true; L.holdF = null; return; }
     if (L.holdF == null) L.holdF = f; // fréquence au moment du HOLD : le trait part du centre du filtre
-    const ff = LCD.flt && LCD.flt.A, md = (ff && ff.mode) || L.activeMode(s) || '';
-    const fc = ff ? audioCenter(md, ff.hz) + (ff.sh || 0) : 1500;
-    const lsb = /^LSB$|-R$|LSB-D/.test(md) ? -1 : 1;
-    const frac = (fc + lsb * (f - L.holdF)) / fitHz('A');
+    let frac;
+    if (rfFresh() && RFS.last) {
+      // Vrai scope du TRX : position sur l'image figée (bornes de la dernière image dessinée)
+      const [lo, hi] = rfEdges(RFS.last);
+      frac = (f - lo) / (hi - lo);
+    } else {
+      const ff = LCD.flt && LCD.flt.A, md = (ff && ff.mode) || L.activeMode(s) || '';
+      const fc = ff ? audioCenter(md, ff.hz) + (ff.sh || 0) : 1500;
+      const lsb = /^LSB$|-R$|LSB-D/.test(md) ? -1 : 1;
+      frac = (fc + lsb * (f - L.holdF)) / fitHz('A');
+    }
     if (!(frac >= 0 && frac <= 1)) { mk.hidden = true; return; } // hors de l'image figée
     const pct = (v) => parseFloat(v) || 0;
     mk.style.left = (pct(cv.style.left) + frac * pct(cv.style.width)) + '%';
@@ -1223,7 +1313,7 @@
     // Échelle du scope du TRX : 10 divisions sur ±SPAN (±25k → 5k/10dB, comme sur le TRX)
     const sp = S().scSpan, half = R.SC_SPANS && sp != null ? R.SC_SPANS[sp] : null;
     const div = half ? half / 5 : SPANS[L.wfSpan] / 8;
-    LCD.iscScale.textContent = (div >= 1000 ? div / 1000 + 'k' : Math.round(div)) + '/10dB';
+    LCD.iscScale.textContent = (half ? div / 1000 + 'k' : div >= 1000 ? div / 1000 + 'k' : Math.round(div)) + '/10dB'; // ±2,5k → 0.5k/10dB
     if (S().scHold != null && !!S().scHold !== !!L.hold && Date.now() - (L.holdAt || 0) > 3000) L.hold = !!S().scHold; // HOLD mis sur le TRX
     // CENTER (bleu), FIX (bleu), SCROLL-C / SCROLL-F (jaune) ; R vert hors CENTER, comme sur le TRX
     const md = S().scMode || 0, fix = md === 1 || md === 3;
@@ -1709,7 +1799,7 @@
   function drawIcAudio(c2, W, H, specs, pal, nb, lvl, maxHz) {
     const sp = specs[0], buf = WF.l;
     const hs = Math.round(H * IC_STRIP / IC_AUD_H), ht = Math.round(H * 18 / IC_AUD_H), yb = hs + ht, hb = H - yb;
-    drawScope(c2, { sp, x0: 0, y0: 0, w: W, h: hs, name: '' }, pal, nb, lvl, maxHz);
+    if (!rfFresh()) drawScope(c2, { sp, x0: 0, y0: 0, w: W, h: hs, name: '' }, pal, nb, lvl, maxHz); // sinon : scope du TRX (rfsOn)
     // Bandeau « AUDIO SCOPE », avec ATT et HOLD de l'AUDIO SCOPE à gauche
     c2.fillStyle = '#1d2433'; c2.fillRect(0, hs, W, ht);
     c2.font = 'bold ' + Math.round(ht * 0.72) + 'px Arial, sans-serif'; c2.textAlign = 'center'; c2.fillStyle = '#e6e9ef';
@@ -3235,6 +3325,8 @@
     drawIcMeter(s);
     drawSpoBar(s, live);
     drawIcomHead(s, !!s.tx);
+    // Bouton PTT entièrement rouge pendant toute émission (phonie, CW, modes numériques, TUNE, VOICE TX…)
+    { const pb = $('ptt'); if (pb) pb.classList.toggle('on-air', !!s.tx); }
     drawIcMem(s);
     if (LCD.icRecG) LCD.icRecG.style.display = L.icRec ? '' : 'none';
     drawIcSet();
@@ -3246,9 +3338,9 @@
       for (const n in LCD.modeCells) for (const e of LCD.modeCells[n]) e.classList.toggle('on', n === cur);
     }
     const fresh = Date.now() - WF.at < 3000;
-    LCD.hint.style.display = fresh ? 'none' : '';
+    LCD.hint.style.display = fresh || rfFresh() ? 'none' : '';
     LCD.hint.textContent = !live ? '' : st.audio && !st.audio.active ? 'Cascade : l’audio n’est pas activé sur la page Station' : 'Cascade : en attente du son de la station…';
-    $('scope').style.visibility = fresh && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !L.multiMenu && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom)
+    $('scope').style.visibility = (fresh || rfFresh()) && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !L.multiMenu && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom)
     if (LCD.icm && L.icMeter && LCD.hint.style.display !== 'none') LCD.hint.setAttribute('y', LCD.Y(G.scopeY + 32)); else if (LCD.hint) LCD.hint.setAttribute('y', LCD.Y(G.scopeY + G.scopeH / 2 - 2));
     icPopCheck(s, live);
   }
@@ -3876,6 +3968,7 @@
         if (!WF.drawn) { c2.fillStyle = '#000'; c2.fillRect(0, 0, W, H); WF.drawn = true; }
         const pal = PALS[L.wfColor] || PALS[1];
         if (ICOM && L.icView === 'audio' && LCD.icAudio && LCD.icAudio.style.display !== 'none') drawIcAudio(c2, W, H, specs, pal, nb, lvl, maxHz);
+        else if (rfFresh()) { /* IC-7300 : le scope du TRX est dessiné à chaque image reçue (rfsOn) */ }
         else if (L.multi && !ICOM) drawMulti(c2, W, H, specs, pal, nb, lvl, maxHz);
         else if (L.disp === 3) drawFilters(c2, W, H, specs, nb, lvl, maxHz);
         else if (L.d3 && !ICOM) { /* pas de 3DSS sur l'IC-7300 (réglage resté en mémoire du navigateur : ignoré) */ const mh = fitHz(activeSide()); draw3d(c2, W, H, activeSide() === 'B' && WF.two ? specs[1] : specs[0], pal, nbFor(mh), lvl, mh); }
@@ -4175,6 +4268,7 @@
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && window.RSVOICE) { window.RSVOICE.onMessage(m); return; }
+      if (m.t === 'scope') { if (ICOM) rfsOn(m); return; } // scope du TRX (IC-7300)
       if (m.t === 'spots' || m.t === 'spot') bmvOnSpots(m); // cartes de bande A / B autour du TRX
       if (m.t === 'menu_vals') return menuVals(m);
       if (m.t === 'chatlog') { OPS.chat.length = 0; (m.list || []).forEach((x) => OPS.chat.push(x)); opsChatDraw(); return; }
@@ -4188,6 +4282,7 @@
         if (m.clubName) $('clubName').textContent = m.clubName;
         if (m.session) { creds = { session: m.session }; store.set('rs.sess', m.session); }
         wantAudio();
+        if (ICOM) scopeSub(true);
         if (DG()) DG().onHello(m, m);
         if (window.RSVOICE) window.RSVOICE.onHello(m);
         send({ t: 'plan_pref', on: store.get('rs.planauto', '1') !== '0' }); // MODE AUTO : même choix que dans le dashboard

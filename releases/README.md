@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.19 | [RemoteStation-Setup-0.37.19.exe](0.37.19/RemoteStation-Setup-0.37.19.exe) | [remote-station-0.37.19.tar.gz](0.37.19/remote-station-0.37.19.tar.gz) | IC-7300 : vrai scope du TRX, USB-D, PTT rouge — [empreintes SHA-256](0.37.19/SHA256SUMS.txt) |
 | 0.37.18 | [RemoteStation-Setup-0.37.18.exe](0.37.18/RemoteStation-Setup-0.37.18.exe) | [remote-station-0.37.18.tar.gz](0.37.18/remote-station-0.37.18.tar.gz) | IC-7300 : HOLD avec trait vert — [empreintes SHA-256](0.37.18/SHA256SUMS.txt) |
 | 0.37.17 | [RemoteStation-Setup-0.37.17.exe](0.37.17/RemoteStation-Setup-0.37.17.exe) | [remote-station-0.37.17.tar.gz](0.37.17/remote-station-0.37.17.tar.gz) | IC-7300 : R vert, SCROLL-C / SCROLL-F — [empreintes SHA-256](0.37.17/SHA256SUMS.txt) |
 | 0.37.16 | [RemoteStation-Setup-0.37.16.exe](0.37.16/RemoteStation-Setup-0.37.16.exe) | [remote-station-0.37.16.tar.gz](0.37.16/remote-station-0.37.16.tar.gz) | IC-7300 : S/Vd et S/Id — [empreintes SHA-256](0.37.16/SHA256SUMS.txt) |

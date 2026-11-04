@@ -894,7 +894,8 @@
       const e = $(id);
       if (!e) continue;
       e.textContent = md || '—';
-      const ok = tab === 'cw' ? /^CW/.test(md || '') : /^(DATA-U|USB|USB-D|PKT-U|DATA-USB)$/.test(md || '');
+      // IC-7300 : modes numériques toujours en USB-D (en USB simple, la modulation vient du micro)
+      const ok = tab === 'cw' ? /^CW/.test(md || '') : /^ic/.test(((api.rig && api.rig()) || {}).ID || '') ? /-D$/.test(md || '') : /^(DATA-U|USB|USB-D|PKT-U|DATA-USB)$/.test(md || '');
       e.classList.toggle('bad', !ok);
       e.title = ok ? 'Mode du VFO' : tab === 'cw' ? 'Mode du VFO : pour décoder la CW, mettez ce VFO en CW (filtre étroit, tonalité = pitch)' : 'Mode du VFO : pour FT8 / FT4 / FT2, mettez ce VFO en DATA-U (↺ de la barre du haut pour le VFO-A)';
     }

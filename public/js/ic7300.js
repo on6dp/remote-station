@@ -288,6 +288,13 @@
     const d = f.slice(3);
     if (c === 0xFB) return { ok: true };
     // Mémoires du manipulateur (1A 02 ch texte) : M1 … M8, texte ASCII (« * » = numéro de concours, « ^ » = signes liés)
+    // Scope du TRX (27 00) : division 1 = mode (00 CENTER, 01 FIX) + 2 fréquences (centre et ±SPAN, ou bords) + hors plage ;
+    // divisions 2 … 11 = morceaux de la courbe (475 points, 0 à 160 ; USB, « CI-V USB Port » = Unlink from [REMOTE])
+    if (c === 0x27 && d[0] === 0x00 && d.length >= 4) {
+      const div = unbcd(d[2]), max = unbcd(d[3]);
+      if (div === 1) return d.length >= 16 ? { _scope: { div, max, mode: d[4], f0: freqValue(d, 5), f1: freqValue(d, 10), oor: d[15] ? 1 : 0 } } : { ok: true };
+      return { _scope: { div, max, data: d.slice(4) } };
+    }
     if (c === 0x27 && d[0] === 0x15 && d.length >= 7) { const i = SC_SPANS.indexOf(freqValue(d, 2)); return i >= 0 ? { scSpan: i } : { ok: true }; }
     if (c === 0x27 && d[0] === 0x17 && d.length >= 3) return { scHold: d[2] ? 1 : 0 };
     if (c === 0x27 && d[0] === 0x14 && d.length >= 3) return { scMode: d[2] <= 3 ? d[2] : 0 };
@@ -439,6 +446,13 @@
           clearTimeout(this.vPlay);
           if (d[1]) { v.tx = 1; this.vPlay = setTimeout(() => { v.tx = 0; }, 3000); } else v.tx = 0;
           ok();
+        } else if (c === 0x27 && (d[0] === 0x10 || d[0] === 0x11)) {
+          // Scope (simulateur) : 27 11 01 = sortie de la courbe, 10 images par seconde
+          if (d.length >= 2 && d[0] === 0x11) {
+            clearInterval(this.scT);
+            if (d[1]) this.scT = setInterval(() => this.scopeOut(), 100);
+          }
+          ok();
         } else if (c === 0x27 && d[0] === 0x19) {
           if (d.length === 2) { const a = Math.round(Math.abs(this.scRef || 0) * 10); r(0x19, 0x00, bcd(Math.floor(a / 10)), bcd((a % 10) * 10), (this.scRef || 0) < 0 ? 1 : 0); }
           else { this.scRef = (unbcd(d[2]) + unbcd(d[3]) / 100) * (d[4] ? -1 : 1); ok(); }
@@ -481,6 +495,26 @@
           else { this.lv[k] = s[3] === 'l' ? lvlValue(d, 1) : d[1]; ok(); }
         } else ng();
       }
+      this.flush(out);
+    }
+    // Simulateur : une image du scope (11 trames), courbe de bruit avec quelques signaux autour du VFO
+    scopeOut() {
+      const v = this.v, out = [], span = this.scSpan || 25000, fix = (this.scMode || 0) & 1;
+      const f0 = fix ? Math.floor(v.freq / 1e6) * 1e6 : v.freq, f1 = fix ? f0 + 350000 : span;
+      out.push([CTRL, ADDR, 0x27, 0x00, 0x00, 0x01, 0x11, fix, ...freqBytes(f0), ...freqBytes(f1), 0x00]);
+      this.t2 = (this.t2 || 0) + 1;
+      const lo = fix ? f0 : v.freq - span, hi = fix ? f1 : v.freq + span;
+      const pts = [];
+      for (let i = 0; i < 475; i++) {
+        const f = lo + (hi - lo) * i / 474;
+        let a = 18 + Math.random() * 14;
+        for (const [sf, w, p] of [[14074000, 1500, 70], [14070500, 300, 55], [14255000, 2800, 60], [7074000, 1500, 70], [14080000 + 1000 * Math.sin(this.t2 / 20), 200, 50]]) a = Math.max(a, p * Math.exp(-(((f - sf) / w) ** 2)) + Math.random() * 6);
+        pts.push(Math.max(0, Math.min(160, Math.round(a))));
+      }
+      for (let k = 0; k < 10; k++) out.push([CTRL, ADDR, 0x27, 0x00, 0x00, bcd(k + 2), 0x11, ...pts.slice(k * 48, k === 9 ? 475 : (k + 1) * 48)]);
+      this.flush(out);
+    }
+    flush(out) {
       if (out.length && this.onData) {
         const bytes = [];
         for (const o of out) bytes.push(0xFE, 0xFE, ...o, 0xFD);
@@ -496,6 +530,8 @@
     GROUPS, CONTROLS, CONTROL, validate, SC_SPANS, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
     smeterLabel, swrValue, vdValue, idValue, poFrac,
     bwText: (r) => (r.fil ? 'FIL' + r.fil : '—'),
+    // Scope du TRX vers la page Station : scope en service et sortie de la courbe par le CI-V (27 10 01, 27 11 01) ; arrêt : 27 11 00
+    SCOPE: { on: [q(0x27, 0x10, 0x01), q(0x27, 0x11, 0x01)], off: [q(0x27, 0x11, 0x00)], points: 475, max: 160 },
     // Émission CW par le manipulateur interne (CI-V 17 : 30 caractères au plus par trame, FF = arrêt) ;
     // vitesse 14 0C (0–255 = 6–48 mots/min), break-in semi (16 47 01) pour que le TRX émette tout seul
     CW: {

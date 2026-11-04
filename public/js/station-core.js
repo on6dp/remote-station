@@ -159,6 +159,7 @@
           }
         }
         const p = FTX1.parse(t);
+        if (p && p._scope) { this._scopeFrame(p._scope); continue; } // courbe du scope du TRX : à part, vers le serveur
         if (p && p.error && this.cwWatch) this.cwWatch.errs++;
         if (!p) {
           // Diagnostic : réponse inconnue du pilote (affichée une fois par type, 20 au plus)
@@ -337,8 +338,33 @@
       if (this.catKeyed) this.unkey('liaison VPS perdue');
     }
 
+    // Scope du TRX (IC-7300, 27 00) : une image = 11 trames ; assemblée puis envoyée au serveur (10 images par seconde au plus)
+    _scopeFrame(s) {
+      if (s.div === 1) { this.sc = { mode: s.mode, f0: s.f0, f1: s.f1, oor: s.oor, parts: [], max: s.max }; return; }
+      const c = this.sc;
+      if (!c || !s.data) return;
+      c.parts[s.div] = s.data;
+      if (s.div !== c.max) return;
+      this.sc = null;
+      const now = Date.now();
+      if (!this.wsUp || !this.scopeOn || now - (this.scAt || 0) < 90) return;
+      this.scAt = now;
+      let bin = '';
+      for (let k = 2; k <= c.max; k++) for (const b of c.parts[k] || []) bin += String.fromCharCode(Math.min(255, b));
+      this.sendWs({ t: 'scope', m: c.mode, f0: c.f0, f1: c.f1, oor: c.oor, d: btoa(bin) });
+    }
+    /** Le serveur demande (ou plus) le scope du TRX : sortie de la courbe par le CI-V en service ou coupée. */
+    scopeWant(on) {
+      const S = this.rig && this.rig.SCOPE;
+      this.scopeOn = !!on && !!S;
+      if (!S || !this.serialOpen) return;
+      this._writeList(on ? S.on : S.off, true);
+      this.log('Scope du TRX vers le dashboard : ' + (on ? 'en service' : 'coupé'));
+    }
+
     onWsMessage(m) {
       if (!m || typeof m !== 'object') return;
+      if (m.t === 'scope_want') return this.scopeWant(m.on);
       if (m.t === 'txka') {
         this.lastKa = Date.now();
         return;

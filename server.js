@@ -323,6 +323,20 @@ function listeners(heard) {
   return n;
 }
 function audioWanted() { return listeners() > 0 || digiModes().size > 0; }
+// Scope du TRX (IC-7300) : demandé par les pages Face avant ouvertes (abonnement renouvelé toutes les 20 s) ;
+// la page Station ne fait sortir la courbe du CI-V que s'il y a quelqu'un pour la voir
+let scopeWant = false;
+function scopeWanted() {
+  if (!station || station.caps.indexOf('rfscope') < 0 || !rig().SCOPE) return false;
+  const now = Date.now();
+  for (const c of ops) if (c.scopeSub && now - c.scopeSub < 45000) return true;
+  return false;
+}
+function updateScopeWant(force) {
+  const want = scopeWanted();
+  if (want !== scopeWant || force) { scopeWant = want; if (station) toStation({ t: 'scope_want', on: want }); }
+}
+setInterval(() => updateScopeWant(), 5000);
 function updateAudioWant() {
   // La station envoie la BF s'il y a un membre à l'écoute ou une fenêtre de décodage ouverte
   const want = audioWanted();
@@ -1615,6 +1629,11 @@ function licenceBandWhy(call, hz) {
   const band = Object.keys(LIC_BANDS).find((b) => hz >= LIC_BANDS[b][0] && hz <= LIC_BANDS[b][1]);
   return (band ? 'bande ' + band : 'cette fréquence') + ' interdite en émission à la licence ' + pre.toUpperCase() + ' (permises : ' + rules[pre].join(', ') + ')';
 }
+// Mode du VFO d'émission pour les modes numériques : DATA-U / USB (Yaesu) ; sur l'IC-7300, seulement les modes DATA (USB-D…),
+// car en USB simple la modulation vient du micro (DATA OFF MOD) et non de la carte son
+const digiIcom = () => /^ic/.test(rig().ID || '');
+function digiModeOk(md) { return digiIcom() ? /-D$/.test(md || '') : /DATA|USB|PKT|DIG/i.test(md || ''); }
+function digiModeName() { return digiIcom() ? 'USB-D' : 'DATA-U'; }
 function txBlockReason(conn, forTune) {
   return txw ? 'TXW enfoncé (écoute de la fréquence d’émission) : relâchez-le d’abord' :
     cwJob ? 'émission CW en cours : attendez la fin (ou « ■ Arrêter »)' :
@@ -1926,7 +1945,7 @@ function ftxRequest(conn, m) {
   if (why && radio.power != null && radio.power > conn.user.maxWatts) limitPower(conn, 'avant émission');
   if (why) return err('Émission refusée : ' + why);
   const md = (radio.txVfo === 1 ? radio.modeB : radio.mode) || '';
-  if (!/DATA|USB|PKT|DIG/i.test(md)) return err('Mettez d’abord le VFO d’émission en DATA-U (mode actuel : ' + (md || '?') + ')');
+  if (!digiModeOk(md)) return err('Mettez d’abord le VFO d’émission en ' + digiModeName() + ' (mode actuel : ' + (md || '?') + ')');
   const now = Date.now();
   // Réponse cliquée : on peut partir en retard dans notre période (le message est coupé à la fin de la période)
   const lateMax = m.keyNow ? FTX_SLOT[mode] - FTX_T0 - 700 - FTX_CLICK_MIN[mode] : null;
@@ -2270,7 +2289,7 @@ async function audioRequest(conn, m) {
   if (why && radio.power != null && radio.power > conn.user.maxWatts) limitPower(conn, 'avant émission');
   if (why) return err('Émission refusée : ' + why);
   const md = (radio.txVfo === 1 ? radio.modeB : radio.mode) || '';
-  if (!/DATA|USB|PKT|DIG/i.test(md)) return err('Mettez d’abord le VFO d’émission en DATA-U (mode actuel : ' + (md || '?') + ') : le signal ' + mode + ' passe par la carte son');
+  if (!digiModeOk(md)) return err('Mettez d’abord le VFO d’émission en ' + digiModeName() + ' (mode actuel : ' + (md || '?') + ') : le signal ' + mode + ' passe par la carte son');
   const f0 = sstv ? 1900 : Math.round(Number(m.f0));
   if (!(f0 >= 300 && f0 <= 2800)) return err('Fréquence d’émission audio hors plage (300 à 2800 Hz)');
   let text = sstv ? 'image ' + sstv.M.name : String(m.text || '').toUpperCase().replace(/\r/g, '').replace(/[^\n -~]/g, '').replace(/[ \t]+/g, ' ');
@@ -2574,6 +2593,10 @@ function loggedIn(conn, call, rec, sessionTok) {
 function onOperator(conn, m) {
   const now = Date.now();
   switch (m.t) {
+    case 'scope_sub':
+      // Page Face avant (IC-7300) : veut le scope du TRX ; renouvelé toutes les 20 s, false à la fermeture de l'onglet
+      conn.scopeSub = m.on ? now : 0;
+      return updateScopeWant();
     case 'take':
       if (controller && controller !== conn && controller.user.call === conn.user.call) {
         // même indicatif dans un autre onglet ou sur un autre appareil : la main passe ici, sans forcer
@@ -3316,6 +3339,8 @@ function onStationAuth(conn, m) {
   // BF voulue s'il y a un écouteur ou une fenêtre FT8/FT4 ouverte (même règle que updateAudioWant)
   audio.want = audioWanted();
   send(conn, { t: 'audio_want', on: audio.want });
+  scopeWant = false;
+  updateScopeWant(true);
   broadcast();
 }
 
@@ -3324,6 +3349,14 @@ function onStation(conn, m) {
   if (!station || station.conn !== conn) return;
   station.lastMsg = Date.now();
   if (m.t === 'ping') return send(conn, { t: 'pong', ts: m.ts, now: Date.now() }); // contrôle de vie de la liaison (+ horloge du VPS)
+  if (m.t === 'scope') {
+    // Image du scope du TRX : relayée telle quelle aux pages abonnées (un client trop lent saute des images)
+    if (typeof m.d !== 'string' || m.d.length > 1200 || !Number.isFinite(m.f0) || !Number.isFinite(m.f1)) return;
+    const now = Date.now();
+    const out = JSON.stringify({ t: 'scope', m: m.m === 1 ? 1 : 0, f0: m.f0, f1: m.f1, oor: m.oor ? 1 : 0, d: m.d });
+    for (const c of ops) if (c.scopeSub && now - c.scopeSub < 45000 && (c.backlog || 0) < 65536) c.send(out);
+    return;
+  }
   if (m.t === 'diag') {
     // Rapport de la page Station après une reconnexion : cause de la coupure vue côté club
     journal('station_diag', {
