@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.35** — IC-7300 : cadres Vd et TEMP de l'écran des mesures comme sur le TRX (titre sur le coin du cadre, barre en segments, trait blanc avec zone rouge) ; TEMP : barre vide, l'IC-7300 ne transmet pas la température par le CI-V
 - **0.37.34** — IC-7300 : case RIT / ΔTX du bouton MULTI en haut à droite comme sur le TRX (fond blanc, inscription noire, petit ergot)
 - **0.37.33** — IC-7300 : touche A/B comme sur le TRX (passe sur l'autre VFO, 07 00 / 07 01) et « VFO A » / « VFO B » affiché, suivi aussi quand on appuie sur A/B au TRX
 - **0.37.32** — IC-7300 : indicateur TX de l'écran comme le TRX — rouge sur fond noir en réception dans une bande amateur, blanc sur fond rouge en émission, barré hors bande

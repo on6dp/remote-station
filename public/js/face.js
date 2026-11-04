@@ -1007,18 +1007,29 @@
     bar('swr', Y(r0 + 62), 'SWR', [[0, '1'], [0.15, '1.5'], [0.25, '2'], [0.35, '2.5'], [0.45, '3'], [0.97, '∞']], L0, L1, '#ffcf4a');
     bar('id', Y(r0 + 94), 'Id', [[0, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [0.97, '25A']], L0, L1, '#e6e9ef');
     // Cadres Vd et TEMP à droite (comme sur le TRX)
-    const box = (key, y, lab, t0, t1, color) => {
-      el('rect', { x: X(425), y, width: 165, height: 36, rx: 2, class: 'icm-box' }, m);
-      el('text', { x: X(430), y: y + 11, class: 'icm-lab' }, m, lab);
-      el('text', { x: X(lab.length > 2 ? 470 : 455), y: y + 11, class: 'icm-num' }, m, t0);
-      el('text', { x: X(582), y: y + 11, class: 'icm-num', 'text-anchor': 'end' }, m, t1);
-      el('rect', { x: X(432), y: y + 15, width: 150, height: 8, class: 'icm-track' }, m);
-      const f = el('rect', { x: X(432), y: y + 16.5, width: 0, height: 5, class: 'icm-fill', style: 'fill:' + color }, m);
-      const v = el('text', { x: X(582), y: y + 33, class: 'icm-val', 'text-anchor': 'end' }, m, '');
-      bars[key] = { f, x0: X(432), x1: X(582), v };
+    // Comme sur le TRX : titre posé sur le coin haut gauche du cadre, échelle, barre en segments, trait blanc dessous avec la zone rouge
+    // (Vd : tension basse à gauche ; TEMP : chaud à droite)
+    const pid = 'icmSeg' + Math.random().toString(36).slice(2, 7);
+    const pat = (id, col) => { const p = el('pattern', { id, width: 3, height: 10, patternUnits: 'userSpaceOnUse' }, m); el('rect', { x: 0, y: 0, width: 2, height: 10, style: 'fill:' + col }, p); };
+    pat(pid + 'o', '#2f3a4c'); pat(pid + 'b', '#38b6ff');
+    const box = (key, y, lab, t0, t1, red, tip) => {
+      const x0 = X(427), w = 163, h = 50, tw = lab.length * 9 + 8;
+      el('path', { d: 'M' + (x0 + tw) + ' ' + y + 'H' + (x0 + w) + 'V' + (y + h) + 'H' + (x0 + 6) + 'V' + (y + 14), class: 'icm-box' }, m);
+      el('text', { x: x0 - 3, y: y + 6, class: 'icm-lab big' }, m, lab);
+      el('text', { x: x0 + 12, y: y + 24, class: 'icm-num big' }, m, t0);
+      el('text', { x: x0 + w - 8, y: y + 24, class: 'icm-num big', 'text-anchor': 'end' }, m, t1);
+      const bx = x0 + 14, bw = w - 28;
+      el('rect', { x: bx, y: y + 28, width: bw, height: 10, style: 'fill:url(#' + pid + 'o)' }, m);
+      const f = el('rect', { x: bx, y: y + 28, width: 0, height: 10, style: 'fill:url(#' + pid + 'b)' }, m);
+      el('rect', { x: bx, y: y + 39.5, width: bw, height: 2, class: 'icm-wline' }, m);
+      el('rect', { x: bx + bw * red[0], y: y + 39, width: bw * (red[1] - red[0]), height: 3, class: 'icm-rline' }, m);
+      const hit = el('rect', { x: x0, y, width: w, height: h, class: 'hs' }, m);
+      const t = el('title', {}, hit, tip);
+      bars[key] = { f, x0: bx, x1: bx + bw, v: null, tt: t };
     };
-    box('vd', Y(r0 + 4), 'Vd', '10', '16V', '#38b6ff');
-    box('temp', Y(r0 + 62), 'TEMP', 'COOL', 'HOT', '#38b6ff'); // température de l'ampli : pas relue par le CAT de l'IC-7300
+    box('vd', Y(r0 - 2), 'Vd', '10', '16V', [0, 0.32], 'Vd : tension d’alimentation du TRX');
+    // Température de l'ampli : l'IC-7300 ne l'envoie pas par le CI-V (section 19 du manuel : pas de commande de lecture) : barre vide
+    box('temp', Y(r0 + 58), 'TEMP', 'COOL', 'HOT', [0.78, 1], 'TEMP : température de l’ampli — l’IC-7300 ne la transmet pas par le CAT (aucune commande CI-V), elle ne se voit que sur le TRX');
     LCD.icm = { g: m, bars, bg };
   }
   const IC_STRIP = 84; // IC-7300, écran des mesures : hauteur de la bande du scope au-dessus
@@ -2345,8 +2356,7 @@
       temp: 0
     };
     for (const k in M.bars) { const b = M.bars[k]; b.f.setAttribute('width', Math.max(0, fr[k] || 0) * (b.x1 - b.x0)); }
-    if (M.bars.vd.v) M.bars.vd.v.textContent = R.vdValue && s.m8 != null ? R.vdValue(s.m8).toFixed(1) + ' V' : '—';
-    if (M.bars.temp.v) M.bars.temp.v.textContent = 'non relue à distance';
+    if (M.bars.vd.tt) M.bars.vd.tt.textContent = 'Vd : tension d’alimentation du TRX' + (R.vdValue && s.m8 != null ? ' — ' + R.vdValue(s.m8).toFixed(1) + ' V' : '');
   }
   // Cadre « P.AMP 1 »… : un réglage a changé (sur la page ou au TRX) → affiché 1,5 s au milieu de l'écran
   const IC_POP = [['preamp', 'P.AMP', (s) => ['OFF', '1', '2'][s.preamp]], ['att', 'ATT', (s) => (s.att ? '20dB' : 'OFF')], ['agc', 'AGC', (s) => ['', 'FAST', 'MID', 'SLOW'][s.agc]],
