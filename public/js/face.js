@@ -1150,8 +1150,8 @@
     // Deux pages de touches, comme sur le TRX : <1> SPAN HOLD CENT/FIX EXPD/SET, puis <2> REF SPEED MARKER EXPD/SET
     LCD.iscPages = [[
       ['<1>', '<1> : touches suivantes (REF, SPEED, MARKER)', () => { L.iscPage = 1; }],
-      ['SPAN', 'SPAN du scope du TRX : ±2,5k → 5k → 10k → 25k → 50k → 100k → 250k → 500k ; en FIX : EDGE 1 → 2 → 3',
-        () => { const s2 = S(); if (s2.scMode === 1 || s2.scMode === 3) return setCtl('scEdge', (s2.scEdge || 1) % 3 + 1); const sp = s2.scSpan; setCtl('scSpan', sp == null ? 3 : (sp + 1) % 8); }],
+      ['SPAN', 'SPAN du scope du TRX : ±2,5k → 5k → 10k → 25k → 50k → 100k → 250k → 500k ; en FIX : EDGE 1 → 2 → 3 → 4',
+        () => { const s2 = S(); if (s2.scMode === 1 || s2.scMode === 3) return setCtl('scEdge', (s2.scEdge || 1) % 4 + 1); const sp = s2.scSpan; setCtl('scSpan', sp == null ? 3 : (sp + 1) % 8); }],
       ['HOLD', 'HOLD : fige le scope (celui du TRX et celui de la page) ; le grand bouton déplace alors le trait vert de la fréquence de réception', () => { L.hold = !L.hold; L.holdAt = Date.now(); if (R.CONTROL.scHold) setCtl('scHold', L.hold ? 1 : 0); }],
       ['CENT/FIX', 'CENT/FIX : scope du TRX centré sur la fréquence (CENTER) ou bords fixes (FIX) ; appui long : défilement (SCROLL-C / SCROLL-F)', () => setCtl('scMode', (S().scMode || 0) ^ 1)],
       ['EXPD/SET', 'EXPD/SET : scope agrandi (la fréquence remonte à côté du S/Po) ; nouveau clic : normal', () => iscExpand()]
