@@ -160,6 +160,7 @@
       if (s.vox) return setCtl('vox', 0);
       return say('VOX : à distance, il ne peut pas être mis en service (seulement coupé) ; le BK-IN se règle en CW.', 'warn', 5000);
     }
+    if (a.local === 'exit' && L.icSet && L.icSub) { L.icSub = null; return render(); } // EXIT : du sous-menu à la liste SET
     if (a.local === 'exit' && (L.icMem || L.icRec || L.icSet)) { L.icMem = false; L.icRec = false; L.icSet = false; return render(); }
     if (a.local === 'mpadWrite') return mpadWrite();
     if (a.local === 'exit' && L.icView && !L.icomMenu && !L.quickMenu && !L.modeMenu && !L.bandMenu && !L.multiMenu) { L.icView = null; WF.drawn = false; return render(); }
@@ -843,6 +844,7 @@
       buildIcMpad(g, c);
       buildIcRec(g, c);
       buildIcSet(g, c);
+      buildIcSetSub(g, c);
       buildIcFunc(g, c);
       // Le mode affiché se touche pour le changer, comme sur l'écran de l'IC-7300
       const v = LCD.vA, mb = el('rect', { x: Number(v.badge.getAttribute('x')), y: Number(v.badge.getAttribute('y')), width: 52, height: 15, class: 'hs lcd-hit' }, v.g);
@@ -1623,8 +1625,131 @@
   };
   const SET_ITEMS = [[['tone', 'Tone Control/TBW'], ['func', 'Function'], ['conn', 'Connectors'], ['disp', 'Display']], [['time', 'Time Set'], ['sd', 'SD Card'], ['etc', 'Others']]];
   function setInfo(id, lab) {
-    if (id === 'conn') return say('SET → Connectors (CI-V, USB, modulation…) : jamais modifié à distance, par sécurité (la liaison avec le club en dépend).', '', 6000);
-    say('SET → ' + lab + ' : pas encore disponible à distance (réglages faits au club).', '', 4500);
+    // Sous-menus relus sur le TRX (1A 05) : Tone Control/TBW, Function, Display, Time Set modifiables, Connectors en lecture seule ;
+    // SD Card : rien à distance ; Others : Information seulement (pas Touch Screen, Reset, Emergency)
+    if (id === 'sd') return say('SET → SD Card : pas disponible à distance (carte SD du TRX).', '', 4500);
+    if (R.EX_MENUS && (R.EX_MENUS[id] || id === 'etc')) { L.icSub = id; L.icSubP = 0; subRead(); return render(); }
+    say('SET → ' + lab + ' : pas disponible à distance.', '', 4500);
+  }
+  // ---- Sous-menus de SET : 5 réglages par page, valeur relue sur le TRX à droite ; clic = valeur suivante (ou − à gauche, + à droite)
+  const SUB = { pend: {}, readAt: {} };
+  const OTHERS = [['info', 'Information', 'Modèle IC-7300, adresse CI-V 94h ; la version du firmware ne se lit pas par le CAT (MENU → SET → Others → Information au club)'],
+    ['tsc', 'Touch Screen Calibration', 'Touch Screen Calibration : pas à distance'], ['clone', 'Clone', 'Clone : pas à distance'],
+    ['reset', 'Reset', 'Reset : jamais à distance'], ['emg', 'Emergency', 'Emergency : jamais à distance']];
+  function subItems() {
+    if (L.icSub === 'etc') return OTHERS.map((o) => ({ other: o }));
+    const m = R.EX_MENUS && R.EX_MENUS[L.icSub];
+    return m ? m[1].map((x) => R.EX[x[0]]) : [];
+  }
+  function subRead() {
+    if (!iControl() || L.icSub === 'etc') return;
+    const its = subItems().slice((L.icSubP || 0) * 5, (L.icSubP || 0) * 5 + 5);
+    its.forEach((it, i) => {
+      if (!it || Date.now() - (SUB.readAt[it.n] || 0) < 5000) return;
+      SUB.readAt[it.n] = Date.now();
+      setTimeout(() => send({ t: 'set', ctl: 'exRead', value: it.n }), i * 130);
+    });
+  }
+  function subRaw(it) { const p = SUB.pend[it.n]; if (p && Date.now() - p.at < 3000) return p.v; const v = S()['ex' + it.n]; return v == null ? null : v; }
+  function subClick(it, right) {
+    if (it.other) return say(it.other[2] + '.', '', 5000);
+    if (!it.rw) return say(it.label + ' : lecture seule à distance' + (it.menu === 'conn' ? ' (réglages de liaison avec le club)' : '') + '.', '', 4000);
+    if (!needControl()) return;
+    const cur = subRaw(it);
+    if (cur == null && !/^(date|time)$/.test(it.type)) { subRead(); return say(it.label + ' : valeur pas encore relue sur le TRX.', 'warn', 2500); }
+    const v = Number(cur), t = it.type, d = right ? 1 : -1;
+    let nv = null;
+    const next = (list, x) => list[(list.indexOf(x) + 1) % list.length];
+    if (t === 'list') nv = (v + 1) % it.opts.length;
+    else if (t === 'tone') nv = Math.max(0, Math.min(10, v + d));
+    else if (t === 'pct' || t === 'nbw') nv = Math.max(0, Math.min(255, v + d * 13));
+    else if (t === 'nbd') nv = Math.max(0, Math.min(9, v + d));
+    else if (t === 'voxd') nv = Math.max(0, Math.min(20, v + d));
+    else if (t === 'utc') nv = Math.max(-840, Math.min(840, v + d * 15));
+    else if (t === 'tbw') { const lo = Math.floor(v / 10), hi = v % 10; nv = right ? lo * 10 + (hi + 1) % 4 : ((lo + 1) % 4) * 10 + hi; }
+    else if (t === 'hl') {
+      // à gauche : HPF suivant, à droite : LPF suivant (en restant HPF < LPF)
+      let h = Math.floor(v / 100), l = v % 100;
+      for (let k = 0; k < 30; k++) { if (right) l = l >= 25 ? 5 : l + 1; else h = h >= 20 ? 0 : h + 1; if (R.exOk(it, h * 100 + l)) break; }
+      nv = h * 100 + l;
+    } else if (t === 'date' || t === 'time') {
+      // Date / Time : réglées sur l'horloge de ce PC (heure locale)
+      const n = new Date(), p2 = (x) => String(x).padStart(2, '0');
+      nv = t === 'date' ? n.getFullYear() + p2(n.getMonth() + 1) + p2(n.getDate()) : p2(n.getHours()) + p2(n.getMinutes());
+    }
+    if (nv == null) return;
+    SUB.pend[it.n] = { v: String(nv), at: Date.now() };
+    if (t === 'date') setCtl('exDate', Number(nv)); else setCtl('exSet', R.exCode(it, nv));
+    SUB.readAt[it.n] = 0;
+    setTimeout(() => { if (iControl()) send({ t: 'set', ctl: 'exRead', value: it.n }); }, 400);
+    if (t === 'date' || t === 'time') say(it.label + ' du TRX réglé sur l’horloge de ce PC : ' + R.exFmt(it, nv), '', 3500);
+    render();
+  }
+  function buildIcSetSub(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const m = LCD.icSubG = el('g', { class: 'mode-menu ic-menu', style: 'display:none' }, g);
+    const x0 = X(6), y0 = Y(4), w = c.w - 12, h = c.h - 8;
+    el('rect', { x: x0, y: y0, width: w, height: h, rx: 4, class: 'mm-bg' }, m);
+    el('rect', { x: x0 + 4, y: y0 + 4, width: w - 8, height: 24, rx: 3, class: 'mm-title' }, m);
+    LCD.isubTitle = el('text', { x: x0 + w / 2, y: y0 + 21, class: 'mm-ttl big', 'text-anchor': 'middle' }, m, '');
+    LCD.isubPage = el('text', { x: x0 + w - 12, y: y0 + 22, class: 'mm-ttl big', 'text-anchor': 'end' }, m, '');
+    const rx = x0 + 6, rw = w - 96, ry = y0 + 32, rh = (h - 38) / 5;
+    LCD.isubRows = [0, 1, 2, 3, 4].map((i) => {
+      const y = ry + i * rh;
+      const bg = el('rect', { x: rx, y, width: rw, height: rh - 3, class: 'im-row' }, m);
+      const t = el('text', { x: rx + 12, y: y + 22, class: 'isub-l' }, m, '');
+      const v = el('text', { x: rx + rw - 12, y: y + rh - 12, class: 'isub-v', 'text-anchor': 'end' }, m, '');
+      const hit = el('rect', { x: rx, y, width: rw, height: rh - 3, class: 'hs lcd-hit' }, m);
+      const tt = el('title', {}, hit, '');
+      const row = { bg, t, v, tt, it: null };
+      hit.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        if (!row.it) return;
+        const r = hit.getBoundingClientRect();
+        subClick(row.it, ev.clientX > r.left + r.width * 0.5);
+      });
+      return row;
+    });
+    const nav = (y, hh, fn, tip) => {
+      el('rect', { x: x0 + w - 84, y, width: 76, height: hh, rx: 4, class: 'mm-cell' }, m);
+      const hit = el('rect', { x: x0 + w - 84, y, width: 76, height: hh, class: 'hs lcd-hit' }, m);
+      el('title', {}, hit, tip);
+      hit.addEventListener('click', (ev) => { ev.stopPropagation(); fn(); render(); });
+    };
+    const ax = x0 + w - 46, pages = () => Math.max(1, Math.ceil(subItems().length / 5));
+    nav(ry, 100, () => { L.icSubP = ((L.icSubP || 0) + pages() - 1) % pages(); subRead(); }, 'Page précédente');
+    el('path', { d: 'M' + (ax - 12) + ' ' + (ry + 58) + 'L' + ax + ' ' + (ry + 40) + 'L' + (ax + 12) + ' ' + (ry + 58) + 'Z', class: 'im-arrow' }, m);
+    nav(ry + 106, 100, () => { L.icSubP = ((L.icSubP || 0) + 1) % pages(); subRead(); }, 'Page suivante');
+    el('path', { d: 'M' + (ax - 12) + ' ' + (ry + 148) + 'L' + ax + ' ' + (ry + 166) + 'L' + (ax + 12) + ' ' + (ry + 148) + 'Z', class: 'im-arrow' }, m);
+    nav(y0 + h - 58, 52, () => { L.icSub = null; }, 'Retour à SET');
+    const by = y0 + h - 32;
+    el('path', { d: 'M' + (ax + 12) + ' ' + (by - 7) + 'H' + (ax - 4) + 'A7 7 0 0 0 ' + (ax - 4) + ' ' + (by + 7) + 'H' + (ax + 6) + 'M' + (ax - 1) + ' ' + (by - 12) + 'L' + (ax - 7) + ' ' + (by - 7) + 'L' + (ax - 1) + ' ' + (by - 2), class: 'ic-back' }, m);
+    LCD.isubPages = pages;
+  }
+  function drawIcSetSub() {
+    if (!LCD.icSubG) return;
+    const on = !!L.icSet && !!L.icSub;
+    LCD.icSubG.style.display = on ? '' : 'none';
+    if (!on) return;
+    const all = subItems(), p = Math.min(L.icSubP || 0, LCD.isubPages() - 1);
+    LCD.isubTitle.textContent = L.icSub === 'etc' ? 'Others' : R.EX_MENUS[L.icSub][0];
+    LCD.isubPage.textContent = (p + 1) + '/' + LCD.isubPages();
+    LCD.isubRows.forEach((r, i) => {
+      const it = all[p * 5 + i] || null;
+      r.it = it;
+      r.bg.style.display = it ? '' : 'none';
+      if (!it) { r.t.textContent = r.v.textContent = ''; return; }
+      if (it.other) {
+        r.t.textContent = it.other[1]; r.v.textContent = it.other[0] === 'info' ? 'IC-7300 · CI-V 94h' : 'pas à distance';
+        r.bg.classList.toggle('ro', it.other[0] !== 'info'); r.tt.textContent = it.other[2];
+        return;
+      }
+      const raw = subRaw(it);
+      r.t.textContent = it.label;
+      r.v.textContent = raw == null ? (iControl() ? '…' : '— (prenez la main)') : R.exFmt(it, raw) + (it.rw ? '' : '  🔒');
+      r.bg.classList.toggle('ro', !it.rw);
+      r.tt.textContent = it.rw ? (/^(list)$/.test(it.type) ? 'Clic : valeur suivante' : /^(date|time)$/.test(it.type) ? 'Clic : régler sur l’horloge de ce PC' : 'Clic à gauche : − · à droite : +') : 'Lecture seule à distance';
+    });
   }
   function buildIcSet(g, c) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
@@ -3330,6 +3455,7 @@
     drawIcMem(s);
     if (LCD.icRecG) LCD.icRecG.style.display = L.icRec ? '' : 'none';
     drawIcSet();
+    drawIcSetSub();
     drawIcFunc(s);
     swrNote(s);
     if (LCD.modeMenu) {

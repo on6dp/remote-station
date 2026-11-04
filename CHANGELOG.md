@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.21** — IC-7300 : sous-menus de SET relus par le CI-V (1A 05) — Tone Control/TBW, Function, Display, Time Set modifiables ; Connectors en lecture seule ; SD Card non ; Others : Information seulement (pas Touch Screen, Reset, Emergency) ; réglages sensibles en lecture seule, liste blanche vérifiée aussi par le serveur
 - **0.37.20** — Fenêtre des modes numériques (tous les TRX) : zoom propre Ctrl + / Ctrl − / Ctrl 0 et Ctrl + molette, sans toucher à la face avant ni au dashboard
 - **0.37.19** — IC-7300 : vrai SPECTRUM SCOPE du TRX (CI-V 27 00 relayé par la page Station, seulement quand une page IC-7300 est ouverte) — 0 au milieu, échelle qui suit le SPAN, bornes en FIX, repères R (vert) et T (orange), HOLD sur toute la largeur ; touches du scope tout en bas ; modes numériques en USB-D exigés sur l'IC-7300 ; bouton PTT tout rouge pendant toute émission
 - **0.37.18** — IC-7300 SCOPE : HOLD — R vert, trait vert de la fréquence de réception déplacé par le grand bouton sur le spectre figé, disparaît au relâchement ; chiffres de l'échelle plus grands (tous les 0,5 kHz)

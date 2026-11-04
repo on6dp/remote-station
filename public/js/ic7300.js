@@ -84,8 +84,100 @@
   // SPAN du scope du TRX en mode CENTER (27 15 00 + demi-largeur en BCD) : ±2,5 kHz … ±500 kHz
   const SC_SPANS = [2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000];
   // Textes : mémoires du manipulateur M1 … M8 (écran KEYER)
+  // ---- Écran SET de la face avant : réglages 1A 05 (manuel §19), par sous-menu comme sur le TRX.
+  // [n°, libellé, type, valeurs, accès] ; accès : 'rw' modifiable à distance, 'ro' lecture seule (Connectors, étalonnage, langue…)
+  // Types : liste (octet = n° de la valeur), on (OFF/ON), tone (−5 … +5), pct (0–255 → %), hl (HPF/LPF du RX), tbw (bords de la bande d'émission),
+  // nbd (1–10), nbw (1–100), voxd (0,0–2,0 s), hex (adresse), date, time, utc
+  const OF = ['OFF', 'ON'];
+  const EX_MENUS = {
+    tone: ['Tone Control/TBW', [
+      [1, 'SSB RX HPF/LPF', 'hl'], [2, 'SSB RX Bass', 'tone'], [3, 'SSB RX Treble', 'tone'],
+      [4, 'AM RX HPF/LPF', 'hl'], [5, 'AM RX Bass', 'tone'], [6, 'AM RX Treble', 'tone'],
+      [7, 'FM RX HPF/LPF', 'hl'], [8, 'FM RX Bass', 'tone'], [9, 'FM RX Treble', 'tone'],
+      [10, 'CW RX HPF/LPF', 'hl'], [11, 'RTTY RX HPF/LPF', 'hl'],
+      [12, 'SSB TX Bass', 'tone'], [13, 'SSB TX Treble', 'tone'],
+      [14, 'SSB TBW (WIDE)', 'tbw'], [15, 'SSB TBW (MID)', 'tbw'], [16, 'SSB TBW (NAR)', 'tbw'], [196, 'SSB-D TBW', 'tbw'],
+      [17, 'AM TX Bass', 'tone'], [18, 'AM TX Treble', 'tone'], [19, 'FM TX Bass', 'tone'], [20, 'FM TX Treble', 'tone']]],
+    func: ['Function', [
+      [21, 'Beep Level', 'pct'], [22, 'Beep Level Limit', OF], [23, 'Beep (Confirmation)', OF],
+      [24, 'Band Edge Beep', ['OFF', 'ON (Default)', 'ON (User)', 'ON (User) & TX Limit']], [25, 'RF/SQL Control', ['AUTO', 'SQL', 'RF+SQL']],
+      [193, 'MF Band ATT', OF], [33, 'SPLIT LOCK', OF], [34, '[TUNER] Switch', ['Manual', 'Auto']], [35, 'PTT Start (Tuner)', OF],
+      [36, 'RTTY Mark Frequency', ['1275 Hz', '1615 Hz', '2125 Hz']], [37, 'RTTY Shift Width', ['170 Hz', '200 Hz', '425 Hz']], [38, 'RTTY Keying Polarity', ['Normal', 'Reverse']],
+      [39, 'Speech Language', ['English', 'Japanese'], 'ro'], [40, 'Speech Speed', ['Slow', 'Fast']], [41, 'S-Level Speech', OF], [42, 'MODE Speech', OF], [43, 'Speech Level', 'pct'],
+      [44, '[SPEECH/LOCK] Switch', ['SPEECH/LOCK', 'LOCK/SPEECH']], [45, 'Lock Function', ['MAIN DIAL', 'PANEL']], [46, 'Memo Pad Quantity', ['5', '10']],
+      [47, 'MAIN DIAL Auto TS', ['OFF', 'Low', 'High']], [48, 'MIC Up/Down Speed', ['Slow', 'Fast']], [49, 'Quick RIT/ΔTX Clear', OF],
+      [50, '[NOTCH] Switch (SSB)', ['Auto', 'Manual', 'Auto/Manual']], [51, '[NOTCH] Switch (AM)', ['Auto', 'Manual', 'Auto/Manual']],
+      [52, 'SSB/CW Synchronous Tuning', OF], [53, 'CW Normal Side', ['LSB', 'USB']],
+      [54, 'Screen Capture [POWER] Switch', OF], [55, 'Screen Capture File Type', ['PNG', 'BMP']], [56, 'Keyboard Type', ['Ten-key', 'Full Keyboard']],
+      [194, 'Keyboard Layout', ['English', 'German', 'French']], [57, 'Calibration Marker', OF, 'ro'], [58, 'REF Adjust', 'pct', 'ro'],
+      [189, 'NB Depth', 'nbd'], [190, 'NB Width', 'nbw'], [191, 'VOX Delay', 'voxd'], [192, 'VOX Voice Delay', ['OFF', 'Short', 'Mid', 'Long']],
+      [197, 'Inhibit Timer at USB', OF, 'ro']]],
+    conn: ['Connectors', [
+      [59, 'ACC/USB Output Select', ['AF', 'IF'], 'ro'], [60, 'ACC/USB AF Output Level', 'pct', 'ro'], [61, 'ACC/USB AF SQL', ['OFF (OPEN)', 'ON'], 'ro'],
+      [62, 'ACC/USB AF Beep/Speech Output', OF, 'ro'], [63, 'ACC/USB IF Output Level', 'pct', 'ro'], [64, 'ACC MOD Level', 'pct', 'ro'], [65, 'USB MOD Level', 'pct', 'ro'],
+      [66, 'DATA OFF MOD', ['MIC', 'ACC', 'MIC,ACC', 'USB', 'MIC,USB'], 'ro'], [67, 'DATA MOD', ['MIC', 'ACC', 'MIC,ACC', 'USB', 'MIC,USB'], 'ro'],
+      [68, 'External Keypad VOICE', OF, 'ro'], [69, 'External Keypad KEYER', OF, 'ro'], [70, 'External Keypad RTTY', OF, 'ro'],
+      [71, 'CI-V Transceive', OF, 'ro'], [72, 'CI-V USB→REMOTE Transceive Address', 'hex', 'ro'], [73, 'CI-V Output (for ANT)', OF, 'ro'],
+      [74, 'CI-V USB Port', ['Link to [REMOTE]', 'Unlink from [REMOTE]'], 'ro'], [75, 'CI-V USB Echo Back', ['ON', 'OFF'], 'ro'],
+      [76, 'USB Serial Function', ['CI-V', 'RTTY Decode'], 'ro'], [77, 'RTTY Decode Baudrate', ['4800', '9600', '19200', '38400'], 'ro'],
+      [78, 'USB SEND', ['OFF', 'DTR', 'RTS'], 'ro'], [79, 'USB Keying (CW)', ['OFF', 'DTR', 'RTS'], 'ro'], [80, 'USB Keying (RTTY)', ['OFF', 'DTR', 'RTS'], 'ro']]],
+    disp: ['Display', [
+      [81, 'LCD Backlight', 'pct'], [82, 'Display Type', ['A', 'B']], [83, 'Display Font', ['Basic', 'Round']], [84, 'Meter Peak Hold', OF],
+      [85, 'Memory Name', OF], [86, 'MN-Q Popup (MN Width)', OF], [87, 'Bandwidth Popup (PBT)', OF], [88, 'Bandwidth Popup (FIL)', OF],
+      [89, 'Screen Saver', ['OFF', '15 min', '30 min', '60 min']], [90, 'Opening Message', OF], [92, 'Power ON Check', OF],
+      [93, 'Display Language', ['English', 'Japanese'], 'ro']]],
+    time: ['Time Set', [[94, 'Date', 'date'], [95, 'Time', 'time'], [96, 'UTC Offset', 'utc']]]
+  };
+  const EX = {};
+  for (const k in EX_MENUS) for (const it of EX_MENUS[k][1]) EX[it[0]] = { n: it[0], label: it[1], type: Array.isArray(it[2]) ? 'list' : it[2], opts: Array.isArray(it[2]) ? it[2] : null, rw: it[3] !== 'ro' && k !== 'conn', menu: k };
+  const exFmt = (it, raw) => {
+    if (raw == null || raw === '') return '—';
+    const v = Number(raw), t = it.type;
+    if (t === 'list') return it.opts[v] != null ? it.opts[v] : String(v);
+    if (t === 'tone') return (v > 5 ? '+' : '') + (v - 5);
+    if (t === 'pct') return Math.round(v * 100 / 255) + '%';
+    if (t === 'nbd') return String(v + 1);
+    if (t === 'nbw') return String(Math.round(1 + v * 99 / 255));
+    if (t === 'voxd') return (v / 10).toFixed(1) + ' s';
+    if (t === 'hex') return v.toString(16).toUpperCase().padStart(2, '0') + 'h';
+    if (t === 'hl') { const h = Math.floor(v / 100), l = v % 100; return 'HPF ' + (h ? h * 100 : 'Through') + ' · LPF ' + (l >= 25 ? 'Through' : l * 100); }
+    if (t === 'tbw') { const lo = Math.floor(v / 10), hi = v % 10; return [100, 200, 300, 500][lo] + ' – ' + [2500, 2700, 2800, 2900][hi] + ' Hz'; }
+    if (t === 'date') return String(raw).replace(/^(\d{4})(\d\d)(\d\d)$/, '$1/$2/$3');
+    if (t === 'time') return String(raw).padStart(4, '0').replace(/^(\d\d)(\d\d)$/, '$1:$2');
+    if (t === 'utc') { const m = Number(raw); return (m < 0 ? '−' : '+') + String(Math.floor(Math.abs(m) / 60)).padStart(2, '0') + ':' + String(Math.abs(m) % 60).padStart(2, '0'); }
+    return String(raw);
+  };
+  // Valeur brute (comme lue) → octets du CI-V
+  function exBytes(it, raw) {
+    const v = Number(raw), t = it.type;
+    if (t === 'pct' || t === 'nbw' || t === 'hex') return lvlBytes(v);
+    if (t === 'hl') return [bcd(Math.floor(v / 100)), bcd(v % 100)];
+    if (t === 'tbw') return [(Math.floor(v / 10) << 4) | (v % 10)];
+    if (t === 'date') { const d = String(raw); return [bcd(+d.slice(0, 2)), bcd(+d.slice(2, 4)), bcd(+d.slice(4, 6)), bcd(+d.slice(6, 8))]; }
+    if (t === 'time') { const d = String(raw).padStart(4, '0'); return [bcd(+d.slice(0, 2)), bcd(+d.slice(2, 4))]; }
+    if (t === 'utc') { const a = Math.abs(v); return [bcd(Math.floor(a / 60)), bcd(a % 60), v < 0 ? 1 : 0]; }
+    return [bcd(v)];
+  }
+  // exSet : n° × 100000 + valeur brute (UTC Offset : minutes + 1000, pour rester positif)
+  const exRaw = (it, v) => (it.type === 'utc' ? (v % 100000) - 1000 : v % 100000);
+  const exCode = (it, raw) => it.n * 100000 + (it.type === 'utc' ? Number(raw) + 1000 : Number(raw));
+  // Plage de chaque type (valeur brute)
+  function exOk(it, raw) {
+    const v = Number(raw), t = it.type;
+    if (t === 'list') return Number.isInteger(v) && v >= 0 && v < it.opts.length;
+    if (t === 'tone') return v >= 0 && v <= 10;
+    if (t === 'pct' || t === 'nbw') return v >= 0 && v <= 255;
+    if (t === 'nbd') return v >= 0 && v <= 9;
+    if (t === 'voxd') return v >= 0 && v <= 20;
+    if (t === 'hl') { const h = Math.floor(v / 100), l = v % 100; return h >= 0 && h <= 20 && l >= 5 && l <= 25 && (h === 0 || l === 25 || h * 100 < l * 100); }
+    if (t === 'tbw') return Math.floor(v / 10) <= 3 && v % 10 <= 3;
+    if (t === 'date') return /^20\d\d(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])$/.test(String(raw));
+    if (t === 'time') { const d = String(raw).padStart(4, '0'); return /^\d{4}$/.test(d) && +d.slice(0, 2) < 24 && +d.slice(2) < 60; }
+    if (t === 'utc') return Number.isInteger(v) && v >= -840 && v <= 840 && v % 15 === 0;
+    return false;
+  }
   // et canaux mémoire mc1 … mc101 (écran MEMORY : « fréquence|mode|nom »)
-  const STR_KEYS = ['km1', 'km2', 'km3', 'km4', 'km5', 'km6', 'km7', 'km8'].concat(Array.from({ length: 101 }, (_, i) => 'mc' + (i + 1)));
+  const STR_KEYS = ['km1', 'km2', 'km3', 'km4', 'km5', 'km6', 'km7', 'km8'].concat(Array.from({ length: 101 }, (_, i) => 'mc' + (i + 1)), Object.keys(EX).map((n) => 'ex' + n));
 
   // Lectures simples : [commande, sous-commande, clé, type] (type : t = 0/1, l = niveau 0–255, b = octet)
   const SIMPLE = [
@@ -198,6 +290,21 @@
     { id: 'scan', g: 'vfo', label: 'SCAN', type: 'select', face: true, options: [[0, 'STOP'], [1, 'PROG'], [2, 'ΔF'], [3, 'PROG FINE'], [4, 'ΔF FINE']], write: (v) => q(0x0E, [0x00, 0x02, 0x03, 0x12, 0x13][v]) },
     // Plage du balayage ΔF : 0E A1 … A7 = ±5, 10, 20, 50, 100, 500 kHz, ±1 MHz
     { id: 'dfSpan', g: 'vfo', label: 'ΔF SPAN', type: 'select', face: true, options: [[1, '±5k'], [2, '±10k'], [3, '±20k'], [4, '±50k'], [5, '±100k'], [6, '±500k'], [7, '±1M']], write: (v) => q(0x0E, 0xA0 + v) },
+    // Écran SET : relit un réglage 1A 05 (sans rien changer) ; exSet : n° × 100000 + valeur brute, refusé hors des réglages 'rw' du tableau EX
+    { id: 'exRead', g: 'vfo', label: 'Lecture réglage SET', type: 'level', min: 1, max: 199, step: 1, face: true,
+      check: (v) => { if (!EX[v]) throw new Error('réglage inconnu'); }, write: (v) => q(0x1A, 0x05, bcd(Math.floor(v / 100)), bcd(v % 100)) },
+    { id: 'exSet', g: 'vfo', label: 'Réglage SET', type: 'level', min: 100000, max: 19999999999, step: 1, face: true,
+      check: (v) => {
+        const it = EX[Math.floor(v / 100000)];
+        if (!it) throw new Error('réglage inconnu');
+        const raw = exRaw(it, v);
+        if (!it.rw) throw new Error(it.label + ' : lecture seule à distance');
+        if (it.type !== 'date' && !exOk(it, raw)) throw new Error(it.label + ' : valeur hors plage');
+      },
+      write: (v) => { const it = EX[Math.floor(v / 100000)]; return q(0x1A, 0x05, bcd(Math.floor(it.n / 100)), bcd(it.n % 100), ...exBytes(it, exRaw(it, v))); } },
+    // Date (AAAAMMJJ, trop grande pour exSet) : réglage à part
+    { id: 'exDate', g: 'vfo', label: 'Date du TRX', type: 'level', min: 20000101, max: 20991231, step: 1, face: true,
+      check: (v) => { if (!exOk(EX[94], v)) throw new Error('date invalide'); }, write: (v) => q(0x1A, 0x05, 0x00, 0x94, ...exBytes(EX[94], v)) },
     // Écran MEMORY de la face avant : relit un canal mémoire (1A 00 : 0001 … 0099, 0100 = P1, 0101 = P2), sans rien changer sur le TRX
     { id: 'mcRead', g: 'vfo', label: 'Lecture canal mémoire', type: 'level', min: 1, max: 101, step: 1, face: true, write: (v) => q(0x1A, 0x00, bcd(Math.floor(v / 100)), bcd(v % 100)) }
   ];
@@ -222,6 +329,7 @@
     }
     if (c.type === 'level') {
       if (!(v >= c.min && v <= c.max)) throw new Error(c.label + ' : ' + c.min + ' à ' + c.max);
+      if (c.check) c.check(v);
       return Math.round(v / c.step) * c.step;
     }
     throw new Error('type inconnu');
@@ -312,6 +420,22 @@
       const f = freqValue(d, 4), m = parseMode([d[9], d[11] >> 4, d[10]], 0);
       const name = String.fromCharCode(...d.slice(18, 28).filter((b) => b >= 0x20 && b < 0x7F)).trim();
       return { ['mc' + ch]: f + '|' + (m.name || '') + '|' + name };
+    }
+    // Réglages de l'écran SET (1A 05 n° valeur) : valeur brute en texte (exN)
+    if (c === 0x1A && d[0] === 0x05 && d.length >= 4) {
+      const n = unbcd(d[1]) * 100 + unbcd(d[2]), it = EX[n];
+      if (it) {
+        const b = d.slice(3), t = it.type;
+        let raw;
+        if (t === 'pct' || t === 'nbw' || t === 'hex') raw = b.length >= 2 ? lvlValue(b, 0) : null;
+        else if (t === 'hl') raw = b.length >= 2 ? unbcd(b[0]) * 100 + unbcd(b[1]) : null;
+        else if (t === 'tbw') raw = (b[0] >> 4) * 10 + (b[0] & 0x0F);
+        else if (t === 'date') raw = b.length >= 4 ? b.slice(0, 4).map((x) => String(unbcd(x)).padStart(2, '0')).join('') : null;
+        else if (t === 'time') raw = b.length >= 2 ? String(unbcd(b[0])).padStart(2, '0') + String(unbcd(b[1])).padStart(2, '0') : null;
+        else if (t === 'utc') raw = b.length >= 3 ? (unbcd(b[0]) * 60 + unbcd(b[1])) * (b[2] ? -1 : 1) : null;
+        else raw = unbcd(b[0]);
+        return raw == null ? { ok: true } : { ['ex' + n]: String(raw) };
+      }
     }
     if (c === 0x1A) return { ok: true }; // réglages 1A 05 (source de modulation de la phonie à distance…)
     if (c === 0xFA) return { error: true };
@@ -467,6 +591,21 @@
           else if (d.length === 2) r(0x17, 0x00, this.scHold || 0); else { this.scHold = d[2]; ok(); }
         } else if (c === 0x0E) {
           ok(); // balayage (simulateur) : accepté, sans effet
+        } else if (c === 0x1A && d[0] === 0x05 && d.length >= 3 && EX[unbcd(d[1]) * 100 + unbcd(d[2])] && !(d[1] === 0x00 && d[2] === 0x66)) {
+          // Réglages SET (simulateur) : valeurs d'usine approximatives, gardées si on les change
+          const n = unbcd(d[1]) * 100 + unbcd(d[2]), it = EX[n];
+          this.ex = this.ex || {};
+          const def = { pct: 128, nbw: 128, hex: 0, hl: 525, tbw: 13, tone: 5, nbd: 4, voxd: 2, date: '20261104', time: '1430', utc: 60 };
+          if (d.length === 3) {
+            const raw = this.ex[n] != null ? this.ex[n] : n === 74 ? 1 : n === 75 ? 1 : n === 66 ? 0 : n === 67 ? 3 : def[it.type] != null ? def[it.type] : 0;
+            r(0x05, d[1], d[2], ...exBytes(it, raw));
+          } else {
+            const b = d.slice(3);
+            this.ex[n] = it.type === 'pct' || it.type === 'nbw' || it.type === 'hex' ? lvlValue(b, 0) : it.type === 'hl' ? unbcd(b[0]) * 100 + unbcd(b[1]) : it.type === 'tbw' ? (b[0] >> 4) * 10 + (b[0] & 15)
+              : it.type === 'date' ? b.map((x) => String(unbcd(x)).padStart(2, '0')).join('') : it.type === 'time' ? String(unbcd(b[0])).padStart(2, '0') + String(unbcd(b[1])).padStart(2, '0')
+              : it.type === 'utc' ? (unbcd(b[0]) * 60 + unbcd(b[1])) * (b[2] ? -1 : 1) : unbcd(b[0]);
+            ok();
+          }
         } else if (c === 0x1A && d[0] === 0x00 && d.length === 3) {
           // Canaux mémoire (simulateur) : 1 et 2 remplis, les autres libres
           const ch = unbcd(d[1]) * 100 + unbcd(d[2]);
@@ -527,7 +666,7 @@
   const api = {
     ID, NAME, MODES, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX, POWER_RANGE, POWER_STEP, INIT,
     FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS, STR_KEYS,
-    GROUPS, CONTROLS, CONTROL, validate, SC_SPANS, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
+    GROUPS, CONTROLS, CONTROL, validate, SC_SPANS, EX, EX_MENUS, exFmt, exOk, exCode, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
     smeterLabel, swrValue, vdValue, idValue, poFrac,
     bwText: (r) => (r.fil ? 'FIL' + r.fil : '—'),
     // Scope du TRX vers la page Station : scope en service et sortie de la courbe par le CI-V (27 10 01, 27 11 01) ; arrêt : 27 11 00
