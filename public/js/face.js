@@ -1208,6 +1208,28 @@
   }
   // Pas de la grille en FIX : largeur / 14, arrondi à 1 – 2 – 2,5 – 5 × 10ⁿ
   function rfGrid(span) { const raw = span / 14, p10 = Math.pow(10, Math.floor(Math.log10(raw))); return [1, 2, 2.5, 5, 10].map((m) => m * p10).find((v) => v >= raw * 0.999) || 10 * p10; }
+  // Clic sur le vrai scope : le VFO va sur la fréquence cliquée (comme en touchant l'écran du TRX) ; au survol, la fréquence sous la souris
+  function rfFreqAt(ev) {
+    const cv = $('scope'), r = cv.getBoundingClientRect(), f = RFS.last;
+    if (!f || !r.width) return null;
+    const hRf = L.icView === 'audio' ? r.height * IC_STRIP / IC_AUD_H : r.height; // AUDIO SCOPE : seulement la bande du haut
+    if (ev.clientY - r.top > hRf - 15) return null; // pas sur la ligne des chiffres
+    const [lo, hi] = rfEdges(f), x = (ev.clientX - r.left) / r.width;
+    if (!(x >= 0 && x <= 1)) return null;
+    const st = /^CW/.test(L.activeMode(S()) || '') ? 10 : 100;
+    return Math.round((lo + x * (hi - lo)) / st) * st;
+  }
+  if (ICOM) {
+    const cv0 = $('scope');
+    cv0.addEventListener('click', (ev) => {
+      if (!rfFresh()) return;
+      const hz = rfFreqAt(ev);
+      if (hz == null || !needControl()) return;
+      tuneTo(activeSide(), hz);
+      showTip(ev, (hz / 1e6).toFixed(hz % 1000 ? 4 : 3) + ' MHz');
+    });
+    cv0.addEventListener('mousemove', (ev) => { if (!rfFresh()) return; const hz = rfFreqAt(ev); cv0.title = hz == null ? '' : 'Clic : ' + (hz / 1e6).toFixed(4) + ' MHz'; });
+  }
   // Bornes affichées : CENTER = fréquence centrale ± SPAN ; FIX = bords bas et haut
   // Mode de l'image : 0 CENTER, 1 FIX, 2 SCROLL-C, 3 SCROLL-F ; FIX et SCROLL-F = bords bas / haut, sinon centre ± SPAN
   const rfFix = (f) => (f.m & 1) === 1;
@@ -3528,6 +3550,9 @@
     }
     const fresh = Date.now() - WF.at < 3000;
     LCD.hint.style.display = fresh || rfFresh() ? 'none' : '';
+    // IC-7300 : le vrai scope se clique (aller sur un signal) ; la cascade du son reçu, non
+    $('scope').style.pointerEvents = ICOM && rfFresh() ? 'auto' : '';
+    $('scope').style.cursor = ICOM && rfFresh() ? 'crosshair' : '';
     LCD.hint.textContent = !live ? '' : st.audio && !st.audio.active ? 'Cascade : l’audio n’est pas activé sur la page Station' : 'Cascade : en attente du son de la station…';
     $('scope').style.visibility = (fresh || rfFresh()) && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !L.multiMenu && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom)
     if (LCD.icm && L.icMeter && LCD.hint.style.display !== 'none') LCD.hint.setAttribute('y', LCD.Y(G.scopeY + 32)); else if (LCD.hint) LCD.hint.setAttribute('y', LCD.Y(G.scopeY + G.scopeH / 2 - 2));
