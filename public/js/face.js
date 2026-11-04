@@ -1032,10 +1032,10 @@
       if (kind === 'line' || kind === 'dots') {
         el('rect', { x: x0, y: y + 12, width: x1 - x0, height: 1.6, class: 'icm-wline' }, m);
         el('rect', { x: x0, y: y + 8, width: 1.6, height: 8, class: 'icm-wline' }, m);
-        if (kind === 'dots') for (let i = 1; i < 25; i++) if (i % 5) el('circle', { cx: x0 + i / 25 * (x1 - x0) * 0.97, cy: y + 19, r: 1.3, class: 'icm-dot' }, m);
+        if (kind === 'dots') for (let i = 1; i < 25; i++) if (i % 5) el('circle', { cx: x0 + i / 25 * (x1 - x0) * 0.97, cy: y + 22, r: 1.3, class: 'icm-dot' }, m);
         for (const [fr, t] of ticks) {
           const tx = x0 + fr * (x1 - x0);
-          if (t) el('text', { x: tx, y: y + 24, class: 'icm-num big', 'text-anchor': fr > 0.9 ? 'end' : 'middle' }, m, t);
+          if (t) el('text', { x: tx, y: y + 27, class: 'icm-num big', 'text-anchor': fr > 0.9 ? 'end' : 'middle' }, m, t); // un peu plus bas que le trait blanc
         }
       }
       bars[key] = { f, x0, x1 };
@@ -2496,7 +2496,12 @@
       LCD.icRitL.setAttribute('y', Y(73)); LCD.icRitV.setAttribute('y', Y(98));
     }
     LCD.icFreq.classList.toggle('sm', (!!s.split || (L.icView === 'scope' && !!L.iscExp)) && !big);
-    if (LCD.spo) { const t = L.icView === 'scope' && L.iscExp ? 'translate(0,20)' : 'translate(0,32)'; if (LCD.spo.tr !== t) { LCD.spo.tr = t; LCD.spo.g.setAttribute('transform', t); } }
+    if (LCD.spo) {
+      // En SPLIT (fréquence plus à gauche) : S/Po resserré pour ne pas passer sous la fréquence
+      const dy = L.icView === 'scope' && L.iscExp ? 20 : 32, k = s.split ? 0.78 : 1, x0 = X(52);
+      const t = 'translate(' + (x0 * (1 - k)).toFixed(1) + ',' + dy + ') scale(' + k + ',1)';
+      if (LCD.spo.tr !== t) { LCD.spo.tr = t; LCD.spo.g.setAttribute('transform', t); }
+    }
     LCD.icFreq.classList.toggle('big', big);
     LCD.icVfo.classList.toggle('big', big);
     LCD.icTags.classList.toggle('big', big);
@@ -2508,7 +2513,7 @@
   function buildSpoBar(g, c) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const m = el('g', { class: 'spo' }, g);
-    const x0 = X(52), x1 = X(212), y = Y(46);
+    const x0 = X(52), x1 = X(262), y = Y(46); // assez large pour 1 3 5 7 9 +20 +40 +60dB, comme sur le TRX
     const lab = el('text', { x: X(48), y: y + 9, class: 'spo-lab', 'text-anchor': 'end' }, m, 'S/Po');
     // Clic sur S/Po : S/Po → S/SWR → S/ALC → S/COMP → S/Vd → S/Id (S en réception ; en émission : Po, ROS, ALC, compression, tension ou courant), comme sur le TRX
     const lh = el('rect', { x: X(2), y: y - 12, width: 48, height: 24, class: 'hs lcd-hit' }, m);
@@ -2516,8 +2521,8 @@
     lh.addEventListener('click', (ev) => { ev.stopPropagation(); spoCycle(); });
     // Échelle : S1 … S9 sur 55 % de la largeur, puis + 20 / + 40 / + 60 en rouge
     const sx = (f) => x0 + f * (x1 - x0);
-    for (const [f, t] of [[0.06, '1'], [0.18, '·'], [0.3, '5'], [0.42, '·'], [0.55, '9']]) el('text', { x: sx(f), y: y - 4, class: 'spo-num', 'text-anchor': 'middle' }, m, t);
-    for (const f of [0.7, 0.85, 1]) el('text', { x: sx(f) - 2, y: y - 4, class: 'spo-num red', 'text-anchor': 'middle' }, m, '·');
+    for (const [f, t] of [[0.04, '1'], [0.17, '3'], [0.3, '5'], [0.42, '7'], [0.55, '9']]) el('text', { x: sx(f), y: y - 4, class: 'spo-num', 'text-anchor': 'middle' }, m, t);
+    for (const [f, t] of [[0.66, '+20'], [0.79, '+40'], [0.9, '+60dB']]) el('text', { x: sx(f), y: y - 4, class: 'spo-num red', 'text-anchor': f > 0.85 ? 'start' : 'middle' }, m, t);
     el('line', { x1: sx(0.55), y1: y - 1, x2: x1, y2: y - 1, class: 'spo-red' }, m);
     el('rect', { x: x0 - 1, y: y - 0.5, width: x1 - x0 + 2, height: 11, class: 'spo-frame' }, m);
     const segs = [];
