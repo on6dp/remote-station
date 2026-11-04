@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.30** — IC-7300 AUDIO SCOPE : niveaux calés sur le TRX (bruit de la bande passante vers le milieu de la FFT, hors bande noir ; oscilloscope rempli par le bruit à −20 dB), 100 ms/Div au départ comme le TRX, ATT / LEVEL / TIME retenus dans le navigateur
 - **0.37.29** — IC-7300 AUDIO SCOPE comme le TRX : ATT 0/10/20/30 dB en orange (appui long OFF), LEVEL 0/−10/−20/−30 dB, TIME 1/3/10/30/100/300 ms/Div, EXPD (agrandi), appui long EXPD/SET = AUDIO SCOPE SET (1A 05 0151–0154) appliqué au dessin, cascade bleue, échelle 0…4.0kHz
 - **0.37.28** — Faces avant : BAND MAP plus larges (270 px) et largeur réglable par une poignée sur leur bord côté TRX (double-clic : origine, retenue dans le navigateur)
 - **0.37.27** — IC-7300 : clic sur le spectre ou la cascade du vrai scope = VFO sur la fréquence cliquée (pas 100 Hz, 10 Hz en CW)

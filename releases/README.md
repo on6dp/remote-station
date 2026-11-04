@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.30 | [RemoteStation-Setup-0.37.30.exe](0.37.30/RemoteStation-Setup-0.37.30.exe) | [remote-station-0.37.30.tar.gz](0.37.30/remote-station-0.37.30.tar.gz) | AUDIO SCOPE : niveaux comme le TRX — [empreintes SHA-256](0.37.30/SHA256SUMS.txt) |
 | 0.37.29 | [RemoteStation-Setup-0.37.29.exe](0.37.29/RemoteStation-Setup-0.37.29.exe) | [remote-station-0.37.29.tar.gz](0.37.29/remote-station-0.37.29.tar.gz) | AUDIO SCOPE comme le TRX — [empreintes SHA-256](0.37.29/SHA256SUMS.txt) |
 | 0.37.28 | [RemoteStation-Setup-0.37.28.exe](0.37.28/RemoteStation-Setup-0.37.28.exe) | [remote-station-0.37.28.tar.gz](0.37.28/remote-station-0.37.28.tar.gz) | BAND MAP plus larges — [empreintes SHA-256](0.37.28/SHA256SUMS.txt) |
 | 0.37.27 | [RemoteStation-Setup-0.37.27.exe](0.37.27/RemoteStation-Setup-0.37.27.exe) | [remote-station-0.37.27.tar.gz](0.37.27/remote-station-0.37.27.tar.gz) | Clic sur le scope du TRX pour accorder — [empreintes SHA-256](0.37.27/SHA256SUMS.txt) |

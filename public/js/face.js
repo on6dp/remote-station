@@ -1974,10 +1974,13 @@
     void back;
   }
   // ---- AUDIO SCOPE (MENU → AUDIO) : FFT (avec sa cascade) et oscilloscope de la BF reçue ; touches ATT, HOLD, LEVEL, TIME, EXPD/SET
-  const AUD = { att: 0, lvl: 0, time: 2, exp: false, env: new Float32Array(4000), envN: 0 }; // env : crêtes par tranche de 1 ms (4 s)
+  // ATT, LEVEL et TIME : pas de commande CAT (réglés sur la page, gardés dans ce navigateur) ; au départ 100 ms/Div comme le TRX
+  const AUD = { att: 0, lvl: 0, time: 4, exp: false, env: new Float32Array(4000), envN: 0 }; // env : crêtes par tranche de 1 ms (4 s)
   // Comme le TRX (manuel 5-9) : ATT 0 / 10 / 20 / 30 dB, LEVEL 0 / −10 / −20 / −30 dB, TIME 1 / 3 / 10 / 30 / 100 / 300 ms par division
   const AUD_ATT = [0, 10, 20, 30], AUD_LVL = [0, -10, -20, -30], AUD_TIME = [['1ms', 0.001], ['3ms', 0.003], ['10ms', 0.01], ['30ms', 0.03], ['100ms', 0.1], ['300ms', 0.3]];
   // AUDIO SCOPE SET du TRX (1A 05 0151 – 0154), relu à l'ouverture de l'écran AUDIO et appliqué au dessin de la page
+  try { const a = JSON.parse(store.get('rs.face.aud', '') || 'null'); if (a) { AUD.att = a.att % 4 || 0; AUD.lvl = a.lvl % 4 || 0; AUD.time = a.time % 6; if (!(AUD.time >= 0)) AUD.time = 4; } } catch (e) {}
+  const audSave = () => store.set('rs.face.aud', JSON.stringify({ att: AUD.att, lvl: AUD.lvl, time: AUD.time }));
   function audRead() { if (!iControl() || !R.EX || !R.EX[151]) return; [151, 152, 153, 154].forEach((n, i) => setTimeout(() => send({ t: 'set', ctl: 'exRead', value: n }), i * 130)); }
   function audSet() {
     const s = S(), rgb = (v, d) => { const a = String(v == null ? '' : v).split(',').map(Number); return a.length === 3 && a.every((x) => x >= 0 && x <= 255) ? a : d; };
@@ -1990,10 +1993,10 @@
     el('rect', { x: X(5), y: Y(y0 - 2), width: c.w - 10, height: h + 4, class: 'icm-bg' }, m);
     void bw;
     LCD.icaBtns = keyRow(m, X, Y, c, y0, [
-      ['ATT', 'ATT : affaiblissement de la FFT (0, 10, 20, 30 dB) — pas celui du récepteur ; appui long : OFF', () => { AUD.att = (AUD.att + 1) % AUD_ATT.length; }, () => { AUD.att = 0; return true; }],
+      ['ATT', 'ATT : affaiblissement de la FFT (0, 10, 20, 30 dB) — pas celui du récepteur ; appui long : OFF', () => { AUD.att = (AUD.att + 1) % AUD_ATT.length; audSave(); }, () => { AUD.att = 0; audSave(); return true; }],
       ['HOLD', 'HOLD : fige l’AUDIO SCOPE', () => { L.hold = !L.hold; }],
-      ['LEVEL', 'LEVEL : niveau de l’oscilloscope (0, −10, −20, −30 dB)', () => { AUD.lvl = (AUD.lvl + 1) % AUD_LVL.length; }],
-      ['TIME', 'TIME : base de temps de l’oscilloscope (1, 3, 10, 30, 100, 300 ms par division)', () => { AUD.time = (AUD.time + 1) % AUD_TIME.length; }],
+      ['LEVEL', 'LEVEL : niveau de l’oscilloscope (0, −10, −20, −30 dB)', () => { AUD.lvl = (AUD.lvl + 1) % AUD_LVL.length; audSave(); }],
+      ['TIME', 'TIME : base de temps de l’oscilloscope (1, 3, 10, 30, 100, 300 ms par division)', () => { AUD.time = (AUD.time + 1) % AUD_TIME.length; audSave(); }],
       ['EXPD/SET', 'EXPD/SET : AUDIO SCOPE agrandi (sans la bande du scope) ; nouveau clic : normal ; appui long : AUDIO SCOPE SET',
         () => { AUD.exp = !AUD.exp; }, () => { L.icSet = true; L.icSub = 'audio'; L.icSubP = 0; subRead(); return true; }]
     ]);
@@ -2026,15 +2029,26 @@
     // FFT 0 – 4 kHz avec sa cascade (à gauche)
     const fHz = Math.min(4000, WF.rate / 2), nb4 = Math.max(2, Math.floor((WF.n / 2) * fHz / (WF.rate / 2)));
     const wl = Math.floor(W * 0.585);
+    // Niveaux comme le TRX : le bruit dans la bande passante du filtre vers 45 % de la hauteur de la FFT (hors bande : noir),
+    // et à l'oscilloscope le bruit remplit l'écran à LEVEL −20 dB (références suivies lentement : ATT et LEVEL gardent leur effet)
+    if (sp && !L.hold) {
+      const a = Array.from(sp.subarray(1, nb4)).sort((x, y) => x - y), p90 = a[Math.floor(a.length * 0.9)] || 0;
+      AUD.p90 = AUD.p90 == null ? p90 : AUD.p90 + (p90 - AUD.p90) * 0.03;
+      const n = Math.min(buf.length, Math.round(WF.rate * 0.25)), b2 = new Float32Array(n);
+      for (let i = 0; i < n; i++) b2[i] = Math.abs(buf[buf.length - n + i]);
+      b2.sort(); const md = Math.max(1e-5, b2[n >> 1] || 0);
+      AUD.md = AUD.md == null ? md : AUD.md + (md - AUD.md) * 0.03;
+    }
     // Comme le TRX : cascade bleue, pas de repère du filtre, échelle 0 … 4.0kHz
-    drawScope(c2, { sp, x0: 0, y0: yb, w: wl, h: hb, name: '', color: as.fft, line: as.line, wf: as.wf, noMarker: true, audScale: true }, AUD.pal || (AUD.pal = mkPal([[0, [0, 12, 70]], [0.4, [0, 55, 200]], [0.72, [70, 160, 255]], [1, [225, 242, 255]]])), nb4, lvl - AUD_ATT[AUD.att] / 70, fHz);
+    drawScope(c2, { sp, x0: 0, y0: yb, w: wl, h: hb, name: '', color: as.fft, line: as.line, wf: as.wf, noMarker: true, audScale: true }, AUD.pal || (AUD.pal = mkPal([[0, [0, 12, 70]], [0.4, [0, 55, 200]], [0.72, [70, 160, 255]], [1, [225, 242, 255]]])), nb4, 0.67 - (AUD.p90 == null ? 0.67 : AUD.p90) - AUD_ATT[AUD.att] / 40, fHz);
     // Oscilloscope (à droite) : forme d'onde verte ; à 100 ms par division, les crêtes de la dernière seconde
     const ox = wl + 4, ow = W - ox, lab = Math.max(10, Math.min(15, Math.round(hb * 0.12))), gh = hb - lab - 2, mid = yb + gh / 2;
     c2.fillStyle = '#000'; c2.fillRect(ox - 2, yb, ow + 2, hb);
     c2.strokeStyle = 'rgba(120,130,145,.35)'; c2.lineWidth = 1;
     for (let k = 1; k < 10; k++) { const gx = Math.round(ox + ow * k / 10) + 0.5; c2.beginPath(); c2.moveTo(gx, yb); c2.lineTo(gx, yb + gh); c2.stroke(); }
     for (let k = 1; k < 4; k++) { const gy = Math.round(yb + gh * k / 4) + 0.5; c2.beginPath(); c2.moveTo(ox, gy); c2.lineTo(ox + ow, gy); c2.stroke(); }
-    const gain = Math.pow(10, AUD_LVL[AUD.lvl] / 20), k = (gh / 2 - 2) / 0.6 * gain;
+    // Pleine échelle à 0 dB = 0,4 × la médiane de |BF| : à −20 dB, les crêtes du bruit (2 à 4 × la médiane) remplissent l'écran, comme sur le TRX
+    const gain = Math.pow(10, AUD_LVL[AUD.lvl] / 20), k = (gh / 2 - 2) / ((AUD.md || 0.02) * 0.4) * gain;
     const tdiv = AUD_TIME[AUD.time][1];
     const oc = 'rgb(' + as.osc.join(',') + ')';
     c2.strokeStyle = oc; c2.fillStyle = oc; c2.lineWidth = 1.2;
