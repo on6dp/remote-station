@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.13 | [RemoteStation-Setup-0.37.13.exe](0.37.13/RemoteStation-Setup-0.37.13.exe) | [remote-station-0.37.13.tar.gz](0.37.13/remote-station-0.37.13.tar.gz) | IC-7300 : SCOPE (SPAN, HOLD, CENT/FIX, <2>) — [empreintes SHA-256](0.37.13/SHA256SUMS.txt) |
 | 0.37.12 | [RemoteStation-Setup-0.37.12.exe](0.37.12/RemoteStation-Setup-0.37.12.exe) | [remote-station-0.37.12.tar.gz](0.37.12/remote-station-0.37.12.tar.gz) | IC-7300 : écran FUNCTION, correction QUICK — [empreintes SHA-256](0.37.12/SHA256SUMS.txt) |
 | 0.37.11 | [RemoteStation-Setup-0.37.11.exe](0.37.11/RemoteStation-Setup-0.37.11.exe) | [remote-station-0.37.11.tar.gz](0.37.11/remote-station-0.37.11.tar.gz) | IC-7300 : VOICE TX T1 … T8, voyant RFG — [empreintes SHA-256](0.37.11/SHA256SUMS.txt) |
 | 0.37.10 | [RemoteStation-Setup-0.37.10.exe](0.37.10/RemoteStation-Setup-0.37.10.exe) | [remote-station-0.37.10.tar.gz](0.37.10/remote-station-0.37.10.tar.gz) | IC-7300 : écrans SCOPE, VOICE, SWR, MEMORY, SCAN, MPAD, RECORD, SET — [empreintes SHA-256](0.37.10/SHA256SUMS.txt) |

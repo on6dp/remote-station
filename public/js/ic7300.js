@@ -69,6 +69,7 @@
     q(0x16, 0x50), q(0x15, 0x15), q(0x15, 0x16),
     // Face avant (/ic7300) : CW PITCH, KEY SPEED, MONITOR (marche et niveau), BK-IN, IP+, VOX GAIN, ANTI VOX
     q(0x14, 0x09), q(0x14, 0x0C), q(0x14, 0x15), q(0x16, 0x45), q(0x16, 0x47), q(0x16, 0x65), q(0x14, 0x16), q(0x14, 0x17), q(0x16, 0x57),
+    q(0x27, 0x15, 0x00), q(0x27, 0x17, 0x00), q(0x27, 0x14, 0x00), q(0x27, 0x16, 0x00), // scope du TRX : SPAN, HOLD, CENTER / FIX, EDGE
     q(0x16, 0x58) // TBW (largeur d'émission en SSB : 00 WIDE, 01 MID, 02 NAR)
   ];
   const SLOW_PER_TICK = 5;
@@ -79,7 +80,9 @@
 
   const STATE_KEYS = ['txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'fil', 'filB', 'pbtIn', 'pbtOut', 'nb', 'nbLvl', 'nr', 'nrLvl',
     'dnf', 'notch', 'notchPos', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox', 'tuner', 'tuning',
-    'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'ipPlus', 'voxGain', 'antiVox', 'notchW', 'tbw'];
+    'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'ipPlus', 'voxGain', 'antiVox', 'notchW', 'tbw', 'scSpan', 'scHold', 'scMode', 'scEdge'];
+  // SPAN du scope du TRX en mode CENTER (27 15 00 + demi-largeur en BCD) : ±2,5 kHz … ±500 kHz
+  const SC_SPANS = [2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000];
   // Textes : mémoires du manipulateur M1 … M8 (écran KEYER)
   // et canaux mémoire mc1 … mc101 (écran MEMORY : « fréquence|mode|nom »)
   const STR_KEYS = ['km1', 'km2', 'km3', 'km4', 'km5', 'km6', 'km7', 'km8'].concat(Array.from({ length: 101 }, (_, i) => 'mc' + (i + 1)));
@@ -172,6 +175,13 @@
     { id: 'antiVox', g: 'tx', label: 'ANTI VOX', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x17) },
     // Écran KEYER de la face avant : relit le contenu d'une mémoire du manipulateur (1A 02 : M1 … M8), sans rien changer sur le TRX
     { id: 'kmRead', g: 'tx', label: 'Lecture mémoire KEYER', type: 'level', min: 1, max: 8, step: 1, face: true, write: (v) => q(0x1A, 0x02, v) },
+    // Écran SCOPE : SPAN (±2,5k … ±500k) et HOLD du scope du TRX
+    { id: 'scSpan', g: 'rx', label: 'SPAN du scope', type: 'select', face: true, options: SC_SPANS.map((h, i) => [i, '±' + (h >= 1000 ? h / 1000 + 'k' : h)]),
+      write: (v) => q(0x27, 0x15, 0x00, ...freqBytes(SC_SPANS[v])) },
+    { id: 'scHold', g: 'rx', label: 'HOLD du scope', type: 'toggle', face: true, write: (v) => q(0x27, 0x17, 0x00, v ? 1 : 0) },
+    // CENT/FIX (27 14 : 00 CENTER, 01 FIX) et EDGE en mode FIX (27 16 : bords 1 à 4 de la bande)
+    { id: 'scMode', g: 'rx', label: 'CENTER / FIX du scope', type: 'select', face: true, options: [[0, 'CENTER'], [1, 'FIX']], write: (v) => q(0x27, 0x14, 0x00, v) },
+    { id: 'scEdge', g: 'rx', label: 'EDGE du scope (FIX)', type: 'select', face: true, options: [[1, 'EDGE1'], [2, 'EDGE2'], [3, 'EDGE3'], [4, 'EDGE4']], write: (v) => q(0x27, 0x16, 0x00, v) },
     // Écran FUNCTION : TBW, largeur de la bande passante d'émission en SSB (16 58 : 00 WIDE, 01 MID, 02 NAR)
     { id: 'tbw', g: 'tx', label: 'TBW', type: 'select', face: true, options: [[0, 'WIDE'], [1, 'MID'], [2, 'NAR']], write: (v) => q(0x16, 0x58, v) },
     // Écran VOICE TX : émission d'une mémoire vocale du TRX (28 00 01 … 08 = T1 … T8, 28 00 00 = arrêt) ; phonie seulement,
@@ -273,6 +283,10 @@
     const d = f.slice(3);
     if (c === 0xFB) return { ok: true };
     // Mémoires du manipulateur (1A 02 ch texte) : M1 … M8, texte ASCII (« * » = numéro de concours, « ^ » = signes liés)
+    if (c === 0x27 && d[0] === 0x15 && d.length >= 7) { const i = SC_SPANS.indexOf(freqValue(d, 2)); return i >= 0 ? { scSpan: i } : { ok: true }; }
+    if (c === 0x27 && d[0] === 0x17 && d.length >= 3) return { scHold: d[2] ? 1 : 0 };
+    if (c === 0x27 && d[0] === 0x14 && d.length >= 3) return { scMode: d[2] ? 1 : 0 };
+    if (c === 0x27 && d[0] === 0x16 && d.length >= 3 && d[2] >= 1 && d[2] <= 4) return { scEdge: d[2] };
     if (c === 0x1A && d[0] === 0x02 && d.length >= 2 && d[1] >= 1 && d[1] <= 8) {
       return { ['km' + d[1]]: String.fromCharCode(...d.slice(2).filter((b) => b >= 0x20 && b < 0x7F)).slice(0, 70) };
     }
@@ -418,6 +432,13 @@
           clearTimeout(this.vPlay);
           if (d[1]) { v.tx = 1; this.vPlay = setTimeout(() => { v.tx = 0; }, 3000); } else v.tx = 0;
           ok();
+        } else if (c === 0x27 && (d[0] === 0x14 || d[0] === 0x16)) {
+          const k = d[0] === 0x14 ? 'scMode' : 'scEdge';
+          if (d.length === 2) r(d[0], 0x00, this[k] != null ? this[k] : (k === 'scEdge' ? 1 : 0)); else { this[k] = d[2]; ok(); }
+        } else if (c === 0x27 && (d[0] === 0x15 || d[0] === 0x17)) {
+          // Scope (simulateur) : SPAN et HOLD
+          if (d[0] === 0x15) { if (d.length === 2) r(0x15, 0x00, ...freqBytes(this.scSpan || 25000)); else { this.scSpan = freqValue(d, 2); ok(); } }
+          else if (d.length === 2) r(0x17, 0x00, this.scHold || 0); else { this.scHold = d[2]; ok(); }
         } else if (c === 0x0E) {
           ok(); // balayage (simulateur) : accepté, sans effet
         } else if (c === 0x1A && d[0] === 0x00 && d.length === 3) {
@@ -460,7 +481,7 @@
   const api = {
     ID, NAME, MODES, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX, POWER_RANGE, POWER_STEP, INIT,
     FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS, STR_KEYS,
-    GROUPS, CONTROLS, CONTROL, validate, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
+    GROUPS, CONTROLS, CONTROL, validate, SC_SPANS, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
     smeterLabel, swrValue, vdValue, idValue, poFrac,
     bwText: (r) => (r.fil ? 'FIL' + r.fil : '—'),
     // Émission CW par le manipulateur interne (CI-V 17 : 30 caractères au plus par trame, FF = arrêt) ;
