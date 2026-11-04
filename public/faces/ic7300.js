@@ -57,7 +57,7 @@
       { id: 'dtx', x: 1302, y: 55, w: 73, h: 33, tip: 'ΔTX (XIT) ; le bouton MULTI règle le décalage', act: { toggle: 'xit' }, led: (s) => !!s.xit },
       { id: 'clear', x: 1397, y: 55, w: 75, h: 33, tip: 'CLEAR : décalage RIT / ΔTX à zéro', act: { action: 'clarClr' } },
       { id: 'split', x: 1202, y: 107, w: 78, h: 33, tip: 'SPLIT : émission sur le VFO B (fréquence d’émission en rouge)', act: { local: 'split' }, led: (s) => !!s.split },
-      { id: 'ab', x: 1302, y: 107, w: 73, h: 33, tip: 'A/B : échange les VFO A et B ; appui d’au moins 1 s : A = B', act: { action: 'swap', long: { action: 'aToB' } } },
+      { id: 'ab', x: 1302, y: 107, w: 73, h: 33, tip: 'A/B : passe sur l’autre VFO (VFO A ⇄ VFO B), comme sur le TRX ; appui d’au moins 1 s : A = B', act: { action: 'swap', long: { action: 'aToB' } } },
       { id: 'vm', x: 1397, y: 107, w: 75, h: 33, tip: 'V/M', act: info('Mémoires : pas encore reliées.') },
       { id: 'down', x: 1205, y: 157, w: 75, h: 33, tip: '▼ : bande précédente', act: { local: 'bandDown' } },
       { id: 'up', x: 1302, y: 157, w: 73, h: 33, tip: '▲ : bande suivante', act: { local: 'bandUp' } },

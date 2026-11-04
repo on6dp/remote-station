@@ -826,7 +826,7 @@
         ['BAND', 'Tableau des bandes', () => openBandMenu()],
         ['SPLIT', 'SPLIT marche / arrêt', () => doAct({ act: { local: 'split' } })],
         ['A=B', 'Copie le VFO A dans le VFO B', () => setCtl('aToB', null)],
-        ['A/B', 'Échange les VFO A et B', () => setCtl('swap', null)],
+        ['A/B', 'A/B : passe sur l’autre VFO (A ⇄ B)', () => setCtl('swap', null)],
         ['TUNER', 'Coupleur d’antenne marche / arrêt', () => setCtl('tuner', S().tuner ? 0 : 1)],
         ['TUNE', 'Accord du coupleur (émission courte)', () => doAct({ act: { action: 'tune' } })],
         ['LOCK', 'LOCK du grand bouton', () => setCtl('lock', S().lock ? 0 : 1)]]]); // pas de 3DSS sur l'IC-7300
@@ -2169,7 +2169,9 @@
     const fmt = (f) => (f ? Math.floor(f / 1e6) + '.' + String(Math.floor(f / 1000) % 1000).padStart(3, '0') + '.' + String(Math.floor(f / 10) % 100).padStart(2, '0') : '—');
     const act = s.vfoSel === 1 ? 'B' : 'A', main = s.split && tx ? (act === 'A' ? 'B' : 'A') : act, other = main === 'A' ? 'B' : 'A';
     const fq = (sd) => (sd === 'A' ? s.freq : s.freqB);
-    LCD.icVfo.textContent = 'VFO ' + main;
+    // Nom affiché : VFO A ou B en service sur le TRX (vfoAB) ; s.freq est toujours celle du VFO en service
+    const abName = (sd) => ((sd === 'A') === (s.vfoAB !== 1) ? 'A' : 'B');
+    LCD.icVfo.textContent = 'VFO ' + abName(main);
     LCD.icFreq.textContent = fmt(fq(main));
     const ron = !!(s.rit || s.xit), cv = s.clar || 0, ritL = s.rit && s.xit ? 'RIT ΔTX' : s.rit ? 'RIT' : 'ΔTX';
     LCD.icRitL.textContent = ron ? ritL : '';

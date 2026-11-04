@@ -78,7 +78,13 @@
   // À l'ouverture du port : TX OFF (au cas où la radio serait restée en émission par CAT)
   const INIT = [q(0x1C, 0x00, 0x00)];
 
-  const STATE_KEYS = ['txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'fil', 'filB', 'pbtIn', 'pbtOut', 'nb', 'nbLvl', 'nr', 'nrLvl',
+  let abAt = 0;
+  // Touche A/B appuyée au TRX : la fréquence en service (25 00) devient celle de l'autre VFO (25 01), qui reprend l'ancienne
+  function observe(p, st) {
+    if (p.freq == null || !st.freq || !st.freqB || st.freq === st.freqB || Date.now() - abAt < 3000) return;
+    if (p.freq === st.freqB) { st.vfoAB = st.vfoAB === 1 ? 0 : 1; p.freqB = st.freq; abAt = Date.now(); }
+  }
+  const STATE_KEYS = ['vfoAB', 'txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'fil', 'filB', 'pbtIn', 'pbtOut', 'nb', 'nbLvl', 'nr', 'nrLvl',
     'dnf', 'notch', 'notchPos', 'af', 'rf', 'sql', 'agc', 'preamp', 'att', 'mic', 'proc', 'procLvl', 'vox', 'tuner', 'tuning',
     'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'ipPlus', 'voxGain', 'antiVox', 'notchW', 'tbw', 'scSpan', 'scHold', 'scMode', 'scEdge', 'scRef', 'scSpeed', 'scVbw'];
   // SPAN du scope du TRX en mode CENTER (27 15 00 + demi-largeur en BCD) : ±2,5 kHz … ±500 kHz
@@ -238,7 +244,9 @@
   const GROUPS = [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']];
   const CONTROLS = [
     { id: 'split', g: 'vfo', label: 'SPLIT', type: 'toggle', write: (v) => q(0x0F, v ? 1 : 0) },
-    { id: 'swap', g: 'vfo', label: 'A ⇄ B', type: 'action', write: () => q(0x07, 0xB0) },
+    // A/B comme la touche du TRX : passe sur l'autre VFO (07 00 / 07 01). Le CI-V de l'IC-7300 ne dit pas quel VFO est en service :
+    // vfoAB (0 = A, 1 = B) est tenu ici, et suivi quand on appuie sur A/B au TRX (fréquence en service = celle de l'autre VFO, voir observe)
+    { id: 'swap', g: 'vfo', label: 'A ⇄ B', type: 'action', write: (v, st) => { const b = !(st && st.vfoAB === 1); if (st) st.vfoAB = b ? 1 : 0; abAt = Date.now(); return q(0x07, b ? 0x01 : 0x00); } },
     { id: 'aToB', g: 'vfo', label: 'A → B', type: 'action', write: () => q(0x07, 0xA0) },
     { id: 'rit', g: 'vfo', label: 'RIT', type: 'toggle', write: setOn(0x21, 0x01) },
     { id: 'xit', g: 'vfo', label: 'XIT', type: 'toggle', write: setOn(0x21, 0x02) },
@@ -571,6 +579,7 @@
           if (!d.length) r(v.att); else { v.att = d[0]; ok(); }
         } else if (c === 0x07) {
           if (d[0] === 0xB0) [v.freq, v.freqB, v.mode, v.modeB] = [v.freqB, v.freq, v.modeB, v.mode];
+          else if ((d[0] === 0x00 || d[0] === 0x01) && (v.sel || 0) !== d[0]) { v.sel = d[0]; [v.freq, v.freqB, v.mode, v.modeB] = [v.freqB, v.freq, v.modeB, v.mode]; } // VFO A / B : 25 00 = celui en service
           else if (d[0] === 0xA0) { v.freqB = v.freq; v.modeB = v.mode.slice(); }
           ok();
         } else if (c === 0x1C && d[0] === 0x00) {
@@ -703,7 +712,7 @@
 
   const api = {
     ID, NAME, MODES, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX, POWER_RANGE, POWER_STEP, INIT,
-    FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS, STR_KEYS,
+    FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS, STR_KEYS, observe,
     GROUPS, CONTROLS, CONTROL, validate, SC_SPANS, EX, EX_MENUS, exFmt, exOk, exCode, EDGE_BANDS, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
     smeterLabel, swrValue, vdValue, idValue, poFrac,
     bwText: (r) => (r.fil ? 'FIL' + r.fil : '—'),

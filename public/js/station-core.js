@@ -222,6 +222,7 @@
         // Radio qui ne dit pas d'où vient l'émission (Icom) : émission demandée par nous = CAT (1), sinon radio (2)
         if (FTX1.TX_SOURCE_UNKNOWN && p.tx === 1 && !this.catKeyed) p.tx = 2;
         if (p.tx != null) this.txReadAt = Date.now(); // dernière lecture de l'état émission / réception
+        if (FTX1.observe) FTX1.observe(p, this.radio); // pilote : déductions sur l'état (IC-7300 : VFO A ou B en service)
         for (const k in p) {
           // Mesure d'émission arrivée après le retour en réception (lecture déjà en file) : ignorée
           if (TX_METER_KEYS.indexOf(k) >= 0 && !this.radio.tx && p.tx == null) continue;
