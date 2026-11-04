@@ -536,6 +536,8 @@
     V.peak = Math.max(p, V.peak * 0.9);
     if (p > 0.97) V.clipAt = Date.now();
     if (V.tx && V.api) { V.api.sendBin(ULAW.encodeFrame(buf, RATE, 0x05)); V.sent++; }
+    // Enregistrement d'une mémoire vocale (VOICE TX de la face avant) : le micro après l'égaliseur, comme il partirait en phonie
+    if (V.rec && V.rec.n < V.rec.max) { V.rec.chunks.push(buf); V.rec.n += buf.length; }
   }
   function meterLoop() {
     cancelAnimationFrame(V.raf);
@@ -713,6 +715,20 @@
     txStart,
     txEnd,
     talking: () => V.tx,
+    // Mémoires vocales : enregistrement au micro (12 kHz), max échantillons au plus
+    recStart(max) { if (!V.on) return false; if (V.ctx && V.ctx.state !== 'running') V.ctx.resume().catch(() => {}); V.rec = { chunks: [], n: 0, max: max || RATE * 30 }; return true; },
+    recLen: () => (V.rec ? V.rec.n : 0),
+    recOn: () => !!V.rec,
+    recStop() {
+      const r = V.rec;
+      V.rec = null;
+      if (!r) return null;
+      const out = new Float32Array(Math.min(r.n, r.max));
+      let o = 0;
+      for (const c of r.chunks) { const k = Math.min(c.length, out.length - o); if (k <= 0) break; out.set(c.subarray(0, k), o); o += k; }
+      return out;
+    },
+    level: () => V.peak || 0,
     // Page Face avant : touche MONI = « M'écouter »
     micOn: () => !!V.on,
     monitor(on) { setMonitor(on); return V.monOn; },

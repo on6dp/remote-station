@@ -845,6 +845,7 @@
       buildIcRec(g, c);
       buildIcSet(g, c);
       buildIcSetSub(g, c);
+      buildIcVrec(g, c);
       buildIcFunc(g, c);
       // Le mode affiché se touche pour le changer, comme sur l'écran de l'IC-7300
       const v = LCD.vA, mb = el('rect', { x: Number(v.badge.getAttribute('x')), y: Number(v.badge.getAttribute('y')), width: 52, height: 15, class: 'hs lcd-hit' }, v.g);
@@ -977,6 +978,7 @@
     if (L.icView !== 'scope') L.icBig = false; // grande fréquence (M.SCOPE) gardée avec le SPECTRUM SCOPE, comme sur le TRX
     if (L.icView === 'keyer') kmRefresh();
     if (L.icView === 'audio') audRead();
+    if (L.icView !== 'voice') L.ivLvl = false;
     if (L.icView === 'scan' && LCD.iscnRead) LCD.iscnRead();
     WF.drawn = false; render();
   }
@@ -1402,26 +1404,150 @@
       const b = lcdBtn(m, X, Y, 10 + col * bw + 2, y0 + row * bh + 2, bw - 4, bh - 4, col === 4 ? 'dark' : '');
       b.t1.setAttribute('y', Y(y0 + row * bh + bh / 2 + 6));
       if (col < 4) {
+        // Mémoires vocales de la page (l'IC-7300 garde les siennes sur une carte SD) : enregistrées au micro de l'opérateur,
+        // gardées sur le serveur et émises en phonie par lui. Clic : une fois ; appui d'1 s : répétée (Repeat Time) ; clic pendant l'émission : arrêt
         const n = row * 4 + col + 1;
         b.t1.textContent = 'T' + n;
-        b.tt.textContent = 'T' + n + ' : émet la mémoire vocale T' + n + ' du TRX ; pendant l’émission, un clic l’arrête';
-        b.hit.addEventListener('click', (ev) => {
-          ev.stopPropagation();
+        b.t2.classList.add('vm-name');
+        b.tt.textContent = 'T' + n + ' : émet votre mémoire vocale T' + n + ' ; appui d’1 s : répétée ; pendant l’émission, un clic l’arrête (REC/SET → REC pour l’enregistrer)';
+        let lt = null, longDone = false;
+        const play = (rep) => {
+          if (VM.playing) { send({ t: 'vm_stop' }); return; }
           if (!needControl()) return;
-          if (S().tx) { setCtl('voiceStop', null); return say('VOICE TX arrêté.', '', 2500); }
-          setCtl('voiceTx', n);
-          say('VOICE TX : émission de la mémoire T' + n + ' du TRX (clic sur une touche T : arrêt).', '', 4000);
-        });
+          const t = VM.meta && VM.meta.t[n - 1];
+          if (t && !t.ms) return say('T' + n + ' : mémoire vide — MENU → VOICE → REC/SET → REC pour l’enregistrer.', 'warn', 5000);
+          send({ t: 'vm_play', n, rep: !!rep });
+          if (rep) say('VOICE TX : T' + n + ' répétée toutes les ' + ((VM.meta && VM.meta.rep) || 5) + ' s (2 minutes au plus ; clic sur une touche T : arrêt).', '', 5000);
+        };
+        b.hit.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); longDone = false; clearTimeout(lt); lt = setTimeout(() => { longDone = true; if (!VM.playing) play(true); }, 1000); });
+        for (const t of ['pointerup', 'pointerleave', 'pointercancel']) b.hit.addEventListener(t, () => clearTimeout(lt));
+        b.hit.addEventListener('click', (ev) => { ev.stopPropagation(); if (longDone) { longDone = false; return; } play(false); });
         b.n = n;
+        (LCD.ivKeys = LCD.ivKeys || [])[n] = b;
       } else {
         b.t1.setAttribute('y', Y(y0 + row * bh + bh / 2 - 2));
         b.t1.textContent = row ? 'TX' : 'REC/'; b.t2.textContent = row ? 'LEVEL' : 'SET'; b.t2.classList.add('big');
-        b.tt.textContent = row ? 'TX LEVEL : niveau d’émission des mémoires vocales' : 'REC/SET : enregistrement des mémoires vocales';
-        b.hit.addEventListener('click', (ev) => { ev.stopPropagation(); say((row ? 'TX LEVEL' : 'REC/SET (enregistrement)') + ' : se règle sur le TRX, au club.', '', 4000); });
+        b.tt.textContent = row ? 'TX LEVEL : niveau d’émission des mémoires vocales (grand bouton ou molette)' : 'REC/SET : REC (pas à distance) et SET (VOICE TX SET)';
+        b.hit.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          if (row) { L.ivLvl = true; send({ t: 'vm_list' }); }
+          else { L.icSet = true; L.icSub = 'vrec'; L.icSubP = 0; }
+          render();
+        });
       }
     }
+    // Fenêtre TX LEVEL (sur T4 / T8 et les touches de droite, comme sur le TRX) : barre, %, DEF (50 %) et retour ; réglage au grand bouton ou à la molette
+    const lx = 10 + 3 * bw + 2, lw = c.w - 10 - lx - 2, ly = y0 + 2, lh = 2 * bh - 4;
+    const lg = LCD.ivLvlG = el('g', { style: 'display:none' }, m);
+    el('rect', { x: X(lx), y: Y(ly), width: lw, height: lh, rx: 3, class: 'ivl-bg' }, lg);
+    const bx = lx + 14, bwid = lw - 110;
+    el('text', { x: X(bx + bwid / 2), y: Y(ly + lh * 0.36), class: 'ivl-ttl', 'text-anchor': 'middle' }, lg, 'TX LEVEL');
+    el('rect', { x: X(bx), y: Y(ly + lh * 0.45), width: bwid, height: 12, rx: 2, class: 'ivl-track' }, lg);
+    LCD.ivLvlF = el('rect', { x: X(bx + 1.5), y: Y(ly + lh * 0.45 + 1.5), width: 0, height: 9, class: 'ivl-fill' }, lg);
+    LCD.ivLvlW = bwid - 3;
+    LCD.ivLvlT = el('text', { x: X(bx + bwid / 2), y: Y(ly + lh * 0.8), class: 'ivl-pct', 'text-anchor': 'middle' }, lg, '');
+    const wh = el('rect', { x: X(lx), y: Y(ly), width: lw - 90, height: lh, class: 'hs lcd-hit' }, lg);
+    el('title', {}, wh, 'TX LEVEL : molette (ou grand bouton) pour régler');
+    wh.addEventListener('wheel', (ev) => { ev.preventDefault(); ev.stopPropagation(); vlvlTurn(ev.deltaY < 0 ? 1 : -1); }, { passive: false });
+    wh.addEventListener('click', (ev) => ev.stopPropagation());
+    const kb = (yy, t, tip, fn) => {
+      const b = lcdBtn(lg, X, Y, lx + lw - 84, yy, 78, lh / 2 - 6, 'dark');
+      b.t1.textContent = t; b.t1.setAttribute('y', Y(yy + lh / 4 + 3)); b.tt.textContent = tip;
+      b.hit.addEventListener('click', (ev) => { ev.stopPropagation(); fn(); render(); });
+      return b;
+    };
+    kb(ly + 4, 'DEF', 'DEF : TX LEVEL à 50 %', () => vlvlSet(128));
+    const bk = kb(ly + lh / 2 + 2, '', 'Retour', () => { L.ivLvl = false; });
+    const ax = X(lx + lw - 45), by = Y(ly + lh * 3 / 4 + 2);
+    el('path', { d: 'M' + (ax + 12) + ' ' + (by - 7) + 'H' + (ax - 4) + 'A7 7 0 0 0 ' + (ax - 4) + ' ' + (by + 7) + 'H' + (ax + 6) + 'M' + (ax - 1) + ' ' + (by - 12) + 'L' + (ax - 7) + ' ' + (by - 7) + 'L' + (ax - 1) + ' ' + (by - 2), class: 'ic-back' }, lg);
+    void bk;
   }
-  function drawIcVoice(s) { for (const b of LCD.icVoice ? LCD.icVoice.querySelectorAll('.ick-btn') : []) b.classList.toggle('busy', !!s.tx); }
+  // ---- Mémoires vocales de la page (VOICE TX) : état envoyé par le serveur (noms, durées, TX LEVEL, Auto Monitor, Repeat Time)
+  const VM = { meta: null, playing: null, rec: null, last: {}, dl: null, src: null, ac: null };
+  // TX LEVEL des mémoires vocales (0 – 255 = 0 – 100 %, 50 % = niveau de l'enregistrement) : 1 % par cran
+  function vlvlRaw() { const p = L.vlvP; if (p && Date.now() - p.at < 3000) return p.v; return VM.meta ? VM.meta.level : null; }
+  function vlvlSet(raw) {
+    raw = Math.max(0, Math.min(255, Math.round(raw)));
+    L.vlvP = { v: raw, at: Date.now() };
+    clearTimeout(L.vlvT); L.vlvT = setTimeout(() => send({ t: 'vm_set', level: raw }), 150);
+    render();
+  }
+  function vlvlTurn(n) { const v = vlvlRaw(); if (v == null) return; const p = Math.round(v * 100 / 255) + (n > 0 ? 1 : -1); vlvlSet(Math.round(Math.max(0, Math.min(100, p)) * 255 / 100)); }
+  // Écoute d'une mémoire dans la page (▶ du VOICE TX RECORD)
+  function vmListen(pcm) {
+    vmListenStop();
+    try {
+      const ac = VM.ac = VM.ac || new AudioContext();
+      const b = ac.createBuffer(1, pcm.length, 12000);
+      b.copyToChannel(pcm, 0);
+      const src = VM.src = ac.createBufferSource();
+      src.buffer = b; src.connect(ac.destination);
+      src.onended = () => { if (VM.src === src) { VM.src = null; render(); } };
+      if (ac.state !== 'running') ac.resume().catch(() => {});
+      src.start();
+    } catch (e) { say('Écoute impossible dans ce navigateur : ' + e.message, 'warn', 4000); }
+    render();
+  }
+  function vmListenStop() { if (VM.src) { try { VM.src.stop(); } catch (e) { /* */ } VM.src = null; } }
+  function vmOnData(m) {
+    if (!VM.dl || VM.dl.n !== m.n) VM.dl = { n: m.n, parts: [] };
+    VM.dl.parts[m.i] = m.d;
+    if (VM.dl.parts.filter(Boolean).length < m.total) return;
+    const bin = atob(VM.dl.parts.join('')), u = new Uint8Array(bin.length + 1);
+    u[0] = 0x03;
+    for (let i = 0; i < bin.length; i++) u[i + 1] = bin.charCodeAt(i);
+    VM.dl = null;
+    if (!bin.length) return say('T' + m.n + ' : mémoire vide.', 'warn', 3000);
+    const pcm = ULAW.decodeFrame(u);
+    VM.last[m.n] = pcm;
+    vmListen(pcm);
+  }
+  // Enregistrement : micro de la page (MICRO sous la face avant), 30 s au plus ; envoyé au serveur en morceaux de 36 ko
+  const VM_MAXS = 30;
+  function vmRecStart(n) {
+    const V = window.RSVOICE;
+    if (!V || !V.micOn()) return say('REC : mettez d’abord votre micro en service (bouton MICRO sous la face avant).', 'warn', 6000);
+    if (S().tx || pttHeld) return say('REC : pas pendant une émission.', 'warn', 3000);
+    vmListenStop();
+    if (!V.recStart(12000 * VM_MAXS)) return;
+    VM.rec = { n, t0: Date.now() };
+    clearInterval(VM.recT);
+    VM.recT = setInterval(() => { if (!VM.rec) return clearInterval(VM.recT); if (window.RSVOICE.recLen() >= 12000 * VM_MAXS) vmRecStop(); else render(); }, 100);
+    render();
+  }
+  function vmRecStop() {
+    const r = VM.rec;
+    VM.rec = null; clearInterval(VM.recT);
+    const pcm = window.RSVOICE && window.RSVOICE.recStop();
+    if (!r || !pcm) return render();
+    if (pcm.length < 6000) { render(); return say('REC : enregistrement trop court (0,5 s au moins).', 'warn', 3000); }
+    VM.last[r.n] = pcm;
+    const u = ULAW.encodeFrame(pcm, 12000, 0x05).subarray(1), CH = 36000, total = Math.ceil(u.length / CH);
+    for (let i = 0; i < total; i++) {
+      let s2 = '';
+      const part = u.subarray(i * CH, (i + 1) * CH);
+      for (let j = 0; j < part.length; j += 8192) s2 += String.fromCharCode.apply(null, part.subarray(j, j + 8192));
+      send({ t: 'vm_put', n: r.n, i, total, d: btoa(s2) });
+    }
+    render();
+  }
+  function drawIcVoice(s) {
+    for (const b of LCD.icVoice ? LCD.icVoice.querySelectorAll('.ick-btn') : []) b.classList.toggle('busy', !!s.tx && !VM.playing);
+    for (let n = 1; n <= 8; n++) {
+      const b = LCD.ivKeys && LCD.ivKeys[n];
+      if (!b) continue;
+      const t = VM.meta && VM.meta.t[n - 1];
+      b.t2.textContent = t ? (t.name || (t.ms ? (t.ms / 1000).toFixed(1) + ' s' : '')) : '';
+      b.t1.setAttribute('y', Number(b.r.getAttribute('y')) + Number(b.r.getAttribute('height')) / 2 + (b.t2.textContent ? 0 : 6));
+      b.r.classList.toggle('on', !!VM.playing && VM.playing.n === n);
+      b.r.classList.toggle('empty', !!t && !t.ms);
+    }
+    if (!LCD.ivLvlG) return;
+    LCD.ivLvlG.style.display = L.ivLvl ? '' : 'none';
+    const v = vlvlRaw();
+    LCD.ivLvlF.setAttribute('width', v == null ? 0 : LCD.ivLvlW * v / 255);
+    LCD.ivLvlT.textContent = v == null ? '…' : Math.round(v * 100 / 255) + '%';
+  }
   // SWR GRAPH (MENU → SWR) : ROS relevé pendant les émissions (TUNE, porteuse, phonie…) à chaque fréquence, en barres
   const SWRG = { step: [10000, 50000, 100000, 500000], bar: [5, 7, 9, 11, 13], si: Math.max(0, Math.min(3, parseInt(store.get('rs.face.ic.swrs', '0'), 10) || 0)),
     bi: Math.max(0, Math.min(4, parseInt(store.get('rs.face.ic.swrb', '0'), 10) || 0)), data: {}, center: null };
@@ -1700,6 +1826,12 @@
   const SUBN = 4; // 4 réglages par page, comme sur le TRX
   function subItems() {
     if (L.icSub === 'etc') return OTHERS.map((o) => ({ other: o }));
+    // VOICE → REC/SET : REC (enregistrement au micro du TRX : pas à distance), SET → VOICE TX SET
+    if (L.icSub === 'vrec') return [{ other: ['rec', 'REC', 'REC : VOICE TX RECORD — enregistrer T1 … T8 avec votre micro'], go: 'vtx' }, { other: ['set', 'SET', 'VOICE TX SET : Auto Monitor, Repeat Time'], go: 'voice' }];
+    // VOICE TX RECORD : les 8 mémoires (nom, durée) ; clic : écran de la mémoire (REC, ▶, NAME, CLEAR)
+    if (L.icSub === 'vtx') return [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({ pseudo: 'vmem', n }));
+    // VOICE TX SET des mémoires de la page
+    if (L.icSub === 'voice') return [{ pseudo: 'vmon', label: 'Auto Monitor' }, { pseudo: 'vrep', label: 'Repeat Time' }];
     if (L.icSub === 'scope') {
       // SCOPE SET : ordre du TRX, VBW (27 1D) après Marker Position, Fixed Edges à la fin
       const its = R.EX_MENUS.scope[1].map((x) => R.EX[x[0]]);
@@ -1719,7 +1851,7 @@
     if (!iControl() || L.icSub === 'etc') return;
     const its = subItems().slice((L.icSubP || 0) * SUBN, (L.icSubP || 0) * SUBN + SUBN);
     its.forEach((it, i) => {
-      if (!it || Date.now() - (SUB.readAt[it.n] || 0) < 5000) return;
+      if (!it || !it.n || Date.now() - (SUB.readAt[it.n] || 0) < 5000) return;
       SUB.readAt[it.n] = Date.now();
       setTimeout(() => send({ t: 'set', ctl: 'exRead', value: it.n }), i * 130);
     });
@@ -1727,13 +1859,17 @@
   // Retour : Fixed Edges → SCOPE SET → écran SCOPE ; autres sous-menus → liste SET
   function subBack() {
     if (L.icSub === 'edges') { L.icSub = 'scope'; L.icSubP = 3; return; }
-    if (L.icSub === 'scope' || L.icSub === 'audio') { L.icSub = null; L.icSet = false; return; }
+    if (L.icSub === 'scope' || L.icSub === 'audio' || L.icSub === 'vrec') { L.icSub = null; L.icSet = false; return; }
+    if (L.icSub === 'voice' || L.icSub === 'vtx') { L.icSub = 'vrec'; L.icSubP = 0; return; }
     L.icSub = null;
   }
   function subRaw(it) { const p = SUB.pend[it.n]; if (p && Date.now() - p.at < 3000) return p.v; const v = S()['ex' + it.n]; return v == null ? null : v; }
   function subClick(it, right) {
     if (it.go) { L.icSub = it.go; L.icSubP = 0; subRead(); return render(); }
     if (it.pseudo === 'vbw') { if (!needControl()) return; return setCtl('scVbw', S().scVbw ? 0 : 1); }
+    if (it.pseudo === 'vmem') { L.vrN = it.n; vmListenStop(); return render(); }
+    if (it.pseudo === 'vmon') { send({ t: 'vm_set', mon: !(VM.meta && VM.meta.mon) }); return; }
+    if (it.pseudo === 'vrep') { const v = (VM.meta && VM.meta.rep) || 5; send({ t: 'vm_set', rep: Math.max(1, Math.min(15, v + (right ? 1 : -1))) }); return; }
     if (it.type === 'edge') {
       if (!it.rw || !needControl()) return;
       const cur = subRaw(it), [a0, b0] = cur ? String(cur).split('-') : [it.lo, it.hi];
@@ -1758,6 +1894,7 @@
     else if (t === 'tone') nv = Math.max(0, Math.min(10, v + d));
     else if (t === 'pct' || t === 'nbw') nv = Math.max(0, Math.min(255, v + d * 13));
     else if (t === 'nbd') nv = Math.max(0, Math.min(9, v + d));
+    else if (t === 'rsec') nv = Math.max(1, Math.min(15, v + d));
     else if (t === 'voxd') nv = Math.max(0, Math.min(20, v + d));
     else if (t === 'utc') nv = Math.max(-840, Math.min(840, v + d * 15));
     else if (t === 'tbw') { const lo = Math.floor(v / 10), hi = v % 10; nv = right ? lo * 10 + (hi + 1) % 4 : ((lo + 1) % 4) * 10 + hi; }
@@ -1821,6 +1958,68 @@
     el('path', { d: 'M' + (ax + 12) + ' ' + (by - 7) + 'H' + (ax - 4) + 'A7 7 0 0 0 ' + (ax - 4) + ' ' + (by + 7) + 'H' + (ax + 6) + 'M' + (ax - 1) + ' ' + (by - 12) + 'L' + (ax - 7) + ' ' + (by - 7) + 'L' + (ax - 1) + ' ' + (by - 2), class: 'ic-back' }, m);
     LCD.isubPages = pages;
   }
+  // VOICE TX RECORD → une mémoire : REC (micro de la page) / STOP, ▶ écoute, NAME, CLEAR, retour
+  function buildIcVrec(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const m = LCD.ivrG = el('g', { class: 'mode-menu ic-menu', style: 'display:none' }, g);
+    const x0 = 6, y0 = 4, w = c.w - 12, h = c.h - 8;
+    el('rect', { x: X(x0), y: Y(y0), width: w, height: h, rx: 4, class: 'mm-bg' }, m);
+    el('rect', { x: X(x0 + 4), y: Y(y0 + 4), width: w - 8, height: 24, rx: 3, class: 'mm-title' }, m);
+    el('text', { x: X(x0 + w / 2), y: Y(y0 + 21), class: 'mm-ttl big', 'text-anchor': 'middle' }, m, 'VOICE TX RECORD');
+    LCD.ivrN = el('text', { x: X(x0 + w - 12), y: Y(y0 + 22), class: 'mm-ttl big', 'text-anchor': 'end' }, m, '');
+    LCD.ivrName = el('text', { x: X(24), y: Y(66), class: 'ivr-name' }, m, '');
+    LCD.ivrDur = el('text', { x: X(c.w - 24), y: Y(66), class: 'ivr-dur', 'text-anchor': 'end' }, m, '');
+    el('text', { x: X(24), y: Y(112), class: 'ivr-lab' }, m, 'REC Level');
+    el('rect', { x: X(130), y: Y(100), width: c.w - 260, height: 14, rx: 2, class: 'ivl-track' }, m);
+    LCD.ivrLvl = el('rect', { x: X(131.5), y: Y(101.5), width: 0, height: 11, class: 'ivr-lvl' }, m);
+    LCD.ivrLvlW = c.w - 263;
+    LCD.ivrTime = el('text', { x: X(c.w - 24), y: Y(112), class: 'ivr-lab', 'text-anchor': 'end' }, m, '');
+    LCD.ivrSt = el('text', { x: X(c.w / 2), y: Y(160), class: 'ivr-st', 'text-anchor': 'middle' }, m, '');
+    LCD.ivrHelp = el('text', { x: X(c.w / 2), y: Y(200), class: 'ivr-help', 'text-anchor': 'middle' }, m, '');
+    LCD.ivrHelp2 = el('text', { x: X(c.w / 2), y: Y(220), class: 'ivr-help', 'text-anchor': 'middle' }, m, '');
+    LCD.ivrBtns = keyRow(m, X, Y, c, c.h - 64, [
+      ['● REC', 'REC : enregistre avec votre micro (30 s au plus) ; nouveau clic : STOP (la mémoire est gardée sur le serveur, pour vous seul)', () => (VM.rec ? vmRecStop() : vmRecStart(L.vrN))],
+      ['▶', 'Écouter la mémoire dans la page (rien n’est émis) ; nouveau clic : arrêt', () => {
+        if (VM.src) return vmListenStop();
+        if (VM.last[L.vrN]) return vmListen(VM.last[L.vrN]);
+        const t = VM.meta && VM.meta.t[L.vrN - 1];
+        if (t && !t.ms) return say('T' + L.vrN + ' : mémoire vide.', 'warn', 3000);
+        send({ t: 'vm_get', n: L.vrN });
+      }],
+      ['NAME', 'NAME : nom de la mémoire (16 caractères)', () => {
+        const t = VM.meta && VM.meta.t[L.vrN - 1];
+        const v = window.prompt('Nom de la mémoire T' + L.vrN + ' (16 caractères au plus) :', (t && t.name) || '');
+        if (v != null) send({ t: 'vm_name', n: L.vrN, name: v.slice(0, 16) });
+      }],
+      ['CLEAR', 'CLEAR : efface la mémoire', () => { if (window.confirm('Effacer la mémoire T' + L.vrN + ' ?')) { delete VM.last[L.vrN]; send({ t: 'vm_del', n: L.vrN }); } }],
+      ['', 'Retour à la liste', () => { if (VM.rec) vmRecStop(); vmListenStop(); L.vrN = 0; }]
+    ]);
+    const bb = LCD.ivrBtns[4].r, ax = Number(bb.getAttribute('x')) + Number(bb.getAttribute('width')) / 2, by = Number(bb.getAttribute('y')) + Number(bb.getAttribute('height')) / 2;
+    el('path', { d: 'M' + (ax + 12) + ' ' + (by - 7) + 'H' + (ax - 4) + 'A7 7 0 0 0 ' + (ax - 4) + ' ' + (by + 7) + 'H' + (ax + 6) + 'M' + (ax - 1) + ' ' + (by - 12) + 'L' + (ax - 7) + ' ' + (by - 7) + 'L' + (ax - 1) + ' ' + (by - 2), class: 'ic-back' }, m);
+  }
+  function drawIcVrec() {
+    if (!LCD.ivrG) return;
+    const on = !!L.icSet && L.icSub === 'vtx' && !!L.vrN;
+    LCD.ivrG.style.display = on ? '' : 'none';
+    if (!on) return;
+    const n = L.vrN, t = VM.meta && VM.meta.t[n - 1], V = window.RSVOICE;
+    LCD.ivrN.textContent = 'T' + n;
+    LCD.ivrName.textContent = t && t.name ? t.name : '(sans nom)';
+    LCD.ivrDur.textContent = !t ? '' : t.ms ? (t.ms / 1000).toFixed(1) + ' s' : 'vide';
+    const recS = VM.rec ? V.recLen() / 12000 : 0;
+    const lv = VM.rec && V ? Math.max(0, Math.min(1, (20 * Math.log10(Math.max(1e-4, V.level())) + 48) / 48)) : 0;
+    LCD.ivrLvl.setAttribute('width', LCD.ivrLvlW * lv);
+    LCD.ivrLvl.classList.toggle('hot', lv > 0.88);
+    LCD.ivrTime.textContent = recS.toFixed(1) + ' / ' + VM_MAXS + ' s';
+    LCD.ivrSt.textContent = VM.rec ? '● Enregistrement…' : VM.src ? '▶ Écoute dans la page' : '';
+    LCD.ivrSt.classList.toggle('rec', !!VM.rec);
+    const mic = !!(V && V.micOn());
+    LCD.ivrHelp.textContent = mic ? 'Parlez normalement dans votre micro, sans appuyer sur le PTT.' : 'Pour enregistrer : mettez d’abord votre micro en service (MICRO sous la face avant).';
+    LCD.ivrHelp2.textContent = 'Gardées sur le serveur : vous les retrouvez sur tout PC.';
+    LCD.ivrBtns[0].t1.textContent = VM.rec ? '■ STOP' : '● REC';
+    LCD.ivrBtns[0].r.classList.toggle('on', !!VM.rec);
+    LCD.ivrBtns[1].t1.textContent = VM.src ? '■' : '▶';
+  }
   function drawIcSetSub() {
     if (!LCD.icSubG) return;
     const on = !!L.icSet && !!L.icSub;
@@ -1828,7 +2027,7 @@
     if (!on) return;
     const all = subItems(), p = Math.min(L.icSubP || 0, LCD.isubPages() - 1);
     // Retour de SCOPE SET : à l'écran SCOPE (ouvert par EXPD/SET)
-    LCD.isubTitle.textContent = L.icSub === 'etc' ? 'Others' : R.EX_MENUS[L.icSub][0];
+    LCD.isubTitle.textContent = { etc: 'Others', vrec: 'REC/SET', vtx: 'VOICE TX RECORD', voice: 'VOICE TX SET' }[L.icSub] || R.EX_MENUS[L.icSub][0];
     LCD.isubPage.textContent = (p + 1) + '/' + LCD.isubPages();
     LCD.isubRows.forEach((r, i) => {
       const it = all[p * SUBN + i] || null;
@@ -1841,6 +2040,9 @@
         r.bg.classList.toggle('ro', !it.go && it.other[0] !== 'info'); r.tt.textContent = it.other[2];
         return;
       }
+      if (it.pseudo === 'vmem') { const t = VM.meta && VM.meta.t[it.n - 1]; r.t.textContent = 'T' + it.n + (t && t.name ? '   ' + t.name : ''); r.v.textContent = !t ? '…' : t.ms ? (t.ms / 1000).toFixed(1) + ' s' : 'vide'; r.bg.classList.remove('ro'); r.tt.textContent = 'Clic : enregistrer, écouter, nommer ou effacer T' + it.n; return; }
+      if (it.pseudo === 'vmon') { r.t.textContent = 'Auto Monitor'; r.v.textContent = !VM.meta ? '…' : VM.meta.mon ? 'ON' : 'OFF'; r.bg.classList.remove('ro'); r.tt.textContent = 'ON : vous entendez la mémoire pendant qu’elle est émise · clic : ON ⇄ OFF'; return; }
+      if (it.pseudo === 'vrep') { r.t.textContent = 'Repeat Time'; r.v.textContent = !VM.meta ? '…' : VM.meta.rep + 'sec'; r.bg.classList.remove('ro'); r.tt.textContent = 'Intervalle de la répétition (appui d’1 s sur T1 … T8), 1 à 15 s · clic à gauche : − · à droite : +'; return; }
       if (it.pseudo === 'vbw') { const v2 = S().scVbw; r.t.textContent = 'VBW'; r.v.textContent = v2 == null ? '…' : v2 ? 'Wide' : 'Narrow'; r.bg.classList.remove('ro'); r.tt.textContent = 'Clic : Narrow ⇄ Wide'; return; }
       const raw = subRaw(it);
       if (it.type === 'rgb' && raw) { const c3 = String(raw).split(','); r.sw.style.display = ''; r.sw.style.fill = 'rgb(' + c3.join(',') + ')'; }
@@ -2185,6 +2387,7 @@
     const abName = (sd) => ((sd === 'A') === (s.vfoAB !== 1) ? 'A' : 'B');
     LCD.icVfo.textContent = 'VFO ' + abName(main);
     LCD.icFreq.textContent = fmt(fq(main));
+    LCD.icFreq.classList.toggle('txsplit', !!s.split && !!tx); // SPLIT : la fréquence d'émission (en grand pendant l'émission) en rouge
     const ron = !!(s.rit || s.xit), cv = s.clar || 0, ritL = s.rit && s.xit ? 'RIT ΔTX' : s.rit ? 'RIT' : 'ΔTX';
     LCD.icRitL.textContent = ron ? ritL : '';
     LCD.icRitV.textContent = s.split ? fmt(fq(other)) : ron ? (cv < 0 ? '-' : '') + (Math.abs(cv) / 1000).toFixed(2) : '';
@@ -3118,6 +3321,8 @@
     const s = S();
     // IC-7300, SCOPE → REF ouvert : le grand bouton règle le REF Level du scope, comme sur le TRX
     if (ICOM && k.dial && L.iscRef && L.icView === 'scope') return refTurn(notches);
+    // VOICE → TX LEVEL ouvert : le grand bouton règle le niveau d'émission des mémoires vocales
+    if (ICOM && k.dial && L.ivLvl && L.icView === 'voice') return vlvlTurn(notches);
     // Cadre NB LEVEL / DNR LEVEL ouvert (appui long sur NB / DNR) : le bouton MULTI règle ce niveau, comme sur le TRX
     if (k.multi && popTarget && popTarget.ctl && $('lcdPop') && !$('lcdPop').hidden) return popAdjust(notches > 0 ? 1 : -1, ev);
     // Clarifier en service (CLAR RX / TX) : la bague extérieure du grand bouton règle le décalage (10 Hz par cran), comme sur le TRX
@@ -3586,6 +3791,7 @@
     if (LCD.icRecG) LCD.icRecG.style.display = L.icRec ? '' : 'none';
     drawIcSet();
     drawIcSetSub();
+    drawIcVrec();
     drawIcFunc(s);
     swrNote(s);
     if (LCD.modeMenu) {
@@ -4542,6 +4748,8 @@
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && window.RSVOICE) { window.RSVOICE.onMessage(m); return; }
+      if (m.t === 'vm') { VM.meta = m.meta; VM.playing = m.playing; L.vlvP = null; render(); return; } // mémoires vocales (VOICE TX)
+      if (m.t === 'vm_data') { vmOnData(m); return; }
       if (m.t === 'scope') { if (ICOM) rfsOn(m); return; } // scope du TRX (IC-7300)
       if (m.t === 'spots' || m.t === 'spot') bmvOnSpots(m); // cartes de bande A / B autour du TRX
       if (m.t === 'menu_vals') return menuVals(m);
@@ -4556,7 +4764,7 @@
         if (m.clubName) $('clubName').textContent = m.clubName;
         if (m.session) { creds = { session: m.session }; store.set('rs.sess', m.session); }
         wantAudio();
-        if (ICOM) scopeSub(true);
+        if (ICOM) { scopeSub(true); send({ t: 'vm_list' }); }
         if (DG()) DG().onHello(m, m);
         if (window.RSVOICE) window.RSVOICE.onHello(m);
         send({ t: 'plan_pref', on: store.get('rs.planauto', '1') !== '0' }); // MODE AUTO : même choix que dans le dashboard

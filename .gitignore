@@ -17,3 +17,4 @@ comptes-*.csv
 station-sessions.json
 logs/*.jsonl
 refdata/
+voicemem/

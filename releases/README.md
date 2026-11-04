@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.36 | [RemoteStation-Setup-0.37.36.exe](0.37.36/RemoteStation-Setup-0.37.36.exe) | [remote-station-0.37.36.tar.gz](0.37.36/remote-station-0.37.36.tar.gz) | VOICE TX sans carte SD — [empreintes SHA-256](0.37.36/SHA256SUMS.txt) |
 | 0.37.35 | [RemoteStation-Setup-0.37.35.exe](0.37.35/RemoteStation-Setup-0.37.35.exe) | [remote-station-0.37.35.tar.gz](0.37.35/remote-station-0.37.35.tar.gz) | Vd / TEMP comme le TRX — [empreintes SHA-256](0.37.35/SHA256SUMS.txt) |
 | 0.37.34 | [RemoteStation-Setup-0.37.34.exe](0.37.34/RemoteStation-Setup-0.37.34.exe) | [remote-station-0.37.34.tar.gz](0.37.34/remote-station-0.37.34.tar.gz) | Case RIT comme le TRX — [empreintes SHA-256](0.37.34/SHA256SUMS.txt) |
 | 0.37.33 | [RemoteStation-Setup-0.37.33.exe](0.37.33/RemoteStation-Setup-0.37.33.exe) | [remote-station-0.37.33.tar.gz](0.37.33/remote-station-0.37.33.tar.gz) | VFO A / VFO B affiché — [empreintes SHA-256](0.37.33/SHA256SUMS.txt) |

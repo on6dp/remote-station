@@ -159,6 +159,7 @@
     if (t === 'tone') return (v > 5 ? '+' : '') + (v - 5);
     if (t === 'pct') return Math.round(v * 100 / 255) + '%';
     if (t === 'nbd') return String(v + 1);
+    if (t === 'rsec') return v + 'sec';
     if (t === 'nbw') return String(Math.round(1 + v * 99 / 255));
     if (t === 'voxd') return (v / 10).toFixed(1) + ' s';
     if (t === 'hex') return v.toString(16).toUpperCase().padStart(2, '0') + 'h';
@@ -197,6 +198,7 @@
     if (t === 'tone') return v >= 0 && v <= 10;
     if (t === 'pct' || t === 'nbw') return v >= 0 && v <= 255;
     if (t === 'nbd') return v >= 0 && v <= 9;
+    if (t === 'rsec') return v >= 1 && v <= 15;
     if (t === 'voxd') return v >= 0 && v <= 20;
     if (t === 'hl') { const h = Math.floor(v / 100), l = v % 100; return h >= 0 && h <= 20 && l >= 5 && l <= 25 && (h === 0 || l === 25 || h * 100 < l * 100); }
     if (t === 'tbw') return Math.floor(v / 10) <= 3 && v % 10 <= 3;
@@ -642,7 +644,7 @@
           // Réglages SET (simulateur) : valeurs d'usine approximatives, gardées si on les change
           const n = unbcd(d[1]) * 100 + unbcd(d[2]), it = EX[n];
           this.ex = this.ex || {};
-          const def = { pct: 128, nbw: 128, hex: 0, hl: 525, tbw: 13, tone: 5, nbd: 4, voxd: 2, date: '20261104', time: '1430', utc: 60, rgb: '172,191,191', edge: it.lo + '-' + Math.min(it.hi, it.lo + 350) };
+          const def = { pct: 128, nbw: 128, hex: 0, hl: 525, tbw: 13, tone: 5, nbd: 4, rsec: 5, voxd: 2, date: '20261104', time: '1430', utc: 60, rgb: '172,191,191', edge: it.lo + '-' + Math.min(it.hi, it.lo + 350) };
           if (d.length === 3) {
             const raw = this.ex[n] != null ? this.ex[n] : n === 74 ? 1 : n === 75 ? 1 : n === 153 ? 1 : n === 152 ? '51,153,255' : n === 154 ? '0,255,0' : n === 66 ? 0 : n === 67 ? 3 : def[it.type] != null ? def[it.type] : 0;
             r(0x05, d[1], d[2], ...exBytes(it, raw));

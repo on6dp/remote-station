@@ -412,6 +412,21 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .icm-lab.big { font: 700 15px Arial, sans-serif; }
 #face .icm-num.big { font: 700 13px Arial, sans-serif; fill: #e6e9ef; }
 #face .icm-wline { fill: #e6e9ef; }
+/* VOICE TX → TX LEVEL : fenêtre comme sur le TRX */
+#face .ivl-bg { fill: #0d1428; stroke: #e6e9ef; stroke-width: 2; }
+#face .ivl-ttl { fill: #fff; font: 700 17px Arial, sans-serif; pointer-events: none; }
+#face .ivl-track { fill: #0b0e14; stroke: #e6e9ef; stroke-width: 1.4; pointer-events: none; }
+#face .ivl-fill { fill: #8fd0f5; pointer-events: none; }
+/* VOICE TX : nom sous T1 … T8, mémoire vide en gris, mémoire en cours d'émission en rouge ; VOICE TX RECORD */
+#face .ick-t2.vm-name { font-size: 11px; fill: #2a3142; }
+#face .ick-btn.on { fill: #ff3b30; }
+#face .ivr-name { fill: #fff; font: 700 20px Arial, sans-serif; }
+#face .ivr-dur { fill: #8fd0f5; font: 700 18px Arial, sans-serif; }
+#face .ivr-lab { fill: #e6e9ef; font: 700 14px Arial, sans-serif; }
+#face .ivr-lvl { fill: #38b6ff; } #face .ivr-lvl.hot { fill: #ff3b30; }
+#face .ivr-st { fill: #8fd0f5; font: 700 17px Arial, sans-serif; } #face .ivr-st.rec { fill: #ff3b30; }
+#face .ivr-help { fill: #aeb6c4; font: 13px Arial, sans-serif; }
+#face .ivl-pct { fill: #fff; font: 700 17px Arial, sans-serif; pointer-events: none; }
 #face .icm-rline { fill: #ff3b30; }
 /* IC-7300 : cadre d'un réglage qui change (« P.AMP 1 »), comme sur l'écran du TRX */
 .fc-icpop { position: absolute; z-index: 3; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
@@ -460,6 +475,8 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .lcd-fbox.icrit + .lcd-fboxt { fill: #0b0e14; font: 700 15px Arial, sans-serif; }
 #face .ich-fbtab { fill: #e9edf3; pointer-events: none; }
 #face .ich-freq.sm { font-size: 40px; }
+/* SPLIT en émission : la fréquence d'émission en rouge (pas sur le TRX, ajout de la page) */
+#face .ich-freq.txsplit { fill: #ff3b30; }
 #face .ich-ritv.sub { font-size: 27px; }
 /* IC-7300 : grand écran des mesures (M.SCOPE) */
 #face .ich-freq.big { font-size: 74px; letter-spacing: -2px; }

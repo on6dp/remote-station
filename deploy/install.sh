@@ -95,6 +95,7 @@ chown -R "$RUSER:$RUSER" "$APP"
 for f in config.json users.json sessions.json macros.json profiles.json logs/logbook.json logs/logbook-config.json logs/station-sessions.json; do
   [ -f "$APP/$f" ] && chmod 600 "$APP/$f"
 done
+[ -d "$APP/voicemem" ] && chmod 700 "$APP/voicemem" # mémoires vocales des membres
 
 # ------------------------------------------------------------------ 3. config.json (nouveau serveur) : jeton neuf, port
 if [ "$NEUF" = 1 ]; then

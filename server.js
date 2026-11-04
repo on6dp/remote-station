@@ -1185,6 +1185,145 @@ function trxEqMsg(conn, m) {
     });
   }
 }
+// ---------------------------------------------------------------- mémoires vocales T1 … T8 de chaque membre (VOICE TX de la face avant)
+// L'IC-7300 garde les siennes sur une carte SD : à distance, elles sont enregistrées au micro de l'opérateur (page Face avant)
+// et gardées ici, dossier voicemem/ (µ-law 12 kHz, 30 s au plus) ; le serveur les émet lui-même en phonie, au rythme réel.
+const VM_DIR = path.join(ROOT, 'voicemem');
+const VM_MAX = 30 * 12000; // 30 s
+const VM_FRAME = 240;      // 20 ms à 12 kHz
+const vmSafe = (call) => String(call || '').toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 20);
+function vmMeta(call) {
+  let m = null;
+  try { m = JSON.parse(fs.readFileSync(path.join(VM_DIR, vmSafe(call) + '.json'), 'utf8')); } catch (e) { m = null; }
+  m = m && typeof m === 'object' ? m : {};
+  const t = Array.isArray(m.t) ? m.t : [];
+  return { t: Array.from({ length: 8 }, (_, i) => ({ name: String((t[i] && t[i].name) || '').slice(0, 16), ms: Math.max(0, Number(t[i] && t[i].ms) || 0) })),
+    level: Number.isFinite(m.level) ? Math.max(0, Math.min(255, m.level)) : 128, mon: m.mon === 0 ? 0 : 1, rep: Number.isFinite(m.rep) ? Math.max(1, Math.min(15, m.rep)) : 5 };
+}
+function vmSave(call, m) {
+  try { fs.mkdirSync(VM_DIR, { recursive: true, mode: 0o700 }); } catch (e) { /* */ }
+  fs.writeFile(path.join(VM_DIR, vmSafe(call) + '.json'), JSON.stringify(m), { mode: 0o600 }, (e) => { if (e) console.error('voicemem : ' + e.message); });
+}
+const vmFile = (call, n) => path.join(VM_DIR, vmSafe(call) + '-T' + n + '.ul');
+function vmSend(conn) { send(conn, { t: 'vm', meta: vmMeta(conn.user.call), playing: vmPlay && vmPlay.conn === conn ? { n: vmPlay.n, rep: !!vmPlay.rep } : null }); }
+// Lecture en cours : { conn, n, buf, tab (gain TX LEVEL), pos, t0, rep, since, wait }
+let vmPlay = null;
+function vmTable(level) {
+  // TX LEVEL 0 – 255 : 128 = niveau de l'enregistrement ; table µ-law → µ-law
+  const g = level / 128, tab = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) { const one = new Uint8Array([0x03, i]), v = ULAW.decodeFrame(one); tab[i] = ULAW.encodeFrame([Math.max(-1, Math.min(1, v[0] * g))], 12000, 0x05)[1]; }
+  return tab;
+}
+function vmStop(reason, quiet) {
+  const p = vmPlay;
+  if (!p) return;
+  vmPlay = null;
+  clearInterval(p.timer); clearTimeout(p.wait);
+  if (ptt.active && ptt.conn === p.conn && ptt.vm) { stopPtt(reason || 'relâché'); p.conn.needRelease = false; }
+  if (!quiet && p.conn.open !== false) send(p.conn, { t: 'notice', level: 'info', msg: 'VOICE TX T' + p.n + ' : ' + (reason || 'fin') });
+  if (p.conn.open !== false) vmSend(p.conn);
+}
+function vmStart(conn, n, rep) {
+  const call = conn.user.call, meta = vmMeta(call);
+  let buf;
+  try { buf = fs.readFileSync(vmFile(call, n)); } catch (e) { buf = null; }
+  if (!buf || !buf.length) return send(conn, { t: 'notice', level: 'warn', msg: 'T' + n + ' : mémoire vide (MENU → VOICE → REC/SET → REC pour l’enregistrer)' });
+  if (controller !== conn) return send(conn, { t: 'notice', level: 'error', msg: 'Prenez la main pour émettre' });
+  if (ptt.active || ftxPend || (seq && seq.on) || vmPlay) return send(conn, { t: 'notice', level: 'error', msg: 'VOICE TX refusé : émission déjà en cours ou prévue' });
+  vmPlay = { conn, n, buf, tab: vmTable(meta.level), rep: !!rep, repS: meta.rep, mon: !!meta.mon, since: Date.now() };
+  vmGo();
+}
+function vmGo() {
+  const p = vmPlay;
+  if (!p) return;
+  // Mêmes contrôles que la phonie (main, bandes, puissance, VOX, ROS…) : startPtt les fait
+  startPtt(p.conn, true);
+  if (!ptt.active || ptt.conn !== p.conn || !ptt.voice) { vmPlay = null; return vmSend(p.conn); }
+  ptt.vm = true;
+  journal('voicetx', { call: p.conn.user.call, ip: p.conn.ip, freq: txFreq(), watts: radio.power, mem: p.n, local: 1 });
+  p.pos = 0; p.t0 = Date.now() + 250; // un peu d'avance : la page Station met la modulation sur USB
+  vmSend(p.conn);
+  p.timer = setInterval(() => {
+    if (vmPlay !== p) return clearInterval(p.timer);
+    if (!ptt.active || ptt.conn !== p.conn) { vmPlay = null; clearInterval(p.timer); return vmSend(p.conn); } // émission coupée (ROS, durée, main…)
+    const now = Date.now();
+    ptt.lastBeat = now; lastCtrlActivity = now;
+    const due = Math.floor((now - p.t0) / 20);
+    while (p.pos < p.buf.length && p.pos / VM_FRAME < due + 3) {
+      const len = Math.min(VM_FRAME, p.buf.length - p.pos), fr = Buffer.alloc(len + 1);
+      fr[0] = 0x05;
+      for (let i = 0; i < len; i++) fr[i + 1] = p.tab[p.buf[p.pos + i]];
+      p.pos += len;
+      if (station && station.conn.backlog < 262144) { station.conn.send(fr); ptt.voiceFrames = (ptt.voiceFrames || 0) + 1; }
+      if (p.mon && p.conn.open) { const mf = Buffer.from(fr); mf[0] = 0x03; p.conn.send(mf); } // Auto Monitor : l'opérateur s'entend
+    }
+    if (p.pos >= p.buf.length && now - p.t0 > p.buf.length / 12 + 300) {
+      clearInterval(p.timer);
+      // Fin de la mémoire : retour en réception ; en répétition, nouvel envoi après Repeat Time, 2 minutes au plus
+      stopPtt('mémoire vocale terminée'); p.conn.needRelease = false;
+      if (p.rep && Date.now() - p.since + p.repS * 1000 + p.buf.length / 12 < 120000) { p.wait = setTimeout(() => { if (vmPlay === p) vmGo(); }, p.repS * 1000); vmSend(p.conn); }
+      else vmStop(p.rep ? 'répétition arrêtée (2 minutes au plus)' : 'fin', !p.rep);
+    }
+  }, 20);
+}
+function onVm(conn, m) {
+  const call = conn.user.call, n = Math.round(Number(m.n));
+  const okN = n >= 1 && n <= 8;
+  switch (m.t) {
+    case 'vm_list': return vmSend(conn);
+    case 'vm_put': {
+      // Enregistrement envoyé en morceaux (36 ko, 48 ko en base64 : sous la limite de 64 ko d'un message) : { n, i, total, d (base64) }
+      if (!okN || !conn.user.tx) return send(conn, { t: 'notice', level: 'warn', msg: 'Votre compte est en écoute seule : pas de mémoire vocale' });
+      const i = Number(m.i), total = Number(m.total);
+      if (!(total >= 1 && total <= 12 && i >= 0 && i < total)) return;
+      if (i === 0 || !conn.vmUp || conn.vmUp.n !== n) conn.vmUp = { n, parts: [] };
+      const part = Buffer.from(String(m.d || ''), 'base64');
+      if (part.length > 49152) { conn.vmUp = null; return; }
+      conn.vmUp.parts[i] = part;
+      if (i !== total - 1) return;
+      const all = Buffer.concat(conn.vmUp.parts.filter(Boolean)).subarray(0, VM_MAX);
+      conn.vmUp = null;
+      if (vmPlay && vmPlay.conn.user.call === call && vmPlay.n === n) vmStop('enregistrement remplacé', true);
+      try { fs.mkdirSync(VM_DIR, { recursive: true, mode: 0o700 }); fs.writeFileSync(vmFile(call, n), all, { mode: 0o600 }); } catch (e) { return send(conn, { t: 'notice', level: 'error', msg: 'T' + n + ' : enregistrement impossible sur le serveur' }); }
+      const meta = vmMeta(call); meta.t[n - 1].ms = Math.round(all.length / 12); vmSave(call, meta);
+      send(conn, { t: 'notice', level: 'ok', msg: 'T' + n + ' enregistrée (' + (all.length / 12000).toFixed(1) + ' s)' });
+      return vmSend(conn);
+    }
+    case 'vm_get': {
+      // Écoute de la mémoire dans la page (▶ du VOICE TX RECORD)
+      if (!okN) return;
+      let buf;
+      try { buf = fs.readFileSync(vmFile(call, n)); } catch (e) { buf = Buffer.alloc(0); }
+      const total = Math.max(1, Math.ceil(buf.length / 45000));
+      for (let i = 0; i < total; i++) send(conn, { t: 'vm_data', n, i, total, d: buf.subarray(i * 45000, (i + 1) * 45000).toString('base64') });
+      return;
+    }
+    case 'vm_del': {
+      if (!okN) return;
+      try { fs.unlinkSync(vmFile(call, n)); } catch (e) { /* */ }
+      const meta = vmMeta(call); meta.t[n - 1].ms = 0; vmSave(call, meta);
+      return vmSend(conn);
+    }
+    case 'vm_name': {
+      if (!okN) return;
+      const meta = vmMeta(call); meta.t[n - 1].name = String(m.name || '').replace(/[^\x20-\x7E]/g, '').slice(0, 16); vmSave(call, meta);
+      return vmSend(conn);
+    }
+    case 'vm_set': {
+      const meta = vmMeta(call);
+      if (m.level != null && Number.isFinite(Number(m.level))) meta.level = Math.max(0, Math.min(255, Math.round(Number(m.level))));
+      if (m.mon != null) meta.mon = m.mon ? 1 : 0;
+      if (m.rep != null && Number.isFinite(Number(m.rep))) meta.rep = Math.max(1, Math.min(15, Math.round(Number(m.rep))));
+      vmSave(call, meta);
+      if (vmPlay && vmPlay.conn === conn) { vmPlay.tab = vmTable(meta.level); vmPlay.mon = !!meta.mon; vmPlay.repS = meta.rep; } // TX LEVEL réglé pendant l'émission
+      return vmSend(conn);
+    }
+    case 'vm_play': return okN ? vmStart(conn, n, !!m.rep) : undefined;
+    case 'vm_stop': if (vmPlay && vmPlay.conn === conn) vmStop('arrêtée'); return;
+  }
+}
+// Main perdue, station ou TRX hors ligne : la lecture s'arrête
+setInterval(() => { if (vmPlay && (controller !== vmPlay.conn || !station || !radio.connected || vmPlay.conn.open === false)) vmStop('main perdue ou station hors ligne'); }, 500);
 function saveMacros() {
   fs.writeFile(MACROS_FILE, JSON.stringify(macros), { mode: 0o600 }, (e) => { if (e) console.error('macros.json : ' + e.message); });
 }
@@ -3214,7 +3353,11 @@ function onOperator(conn, m) {
       return;
     }
 
+    case 'vm_list': case 'vm_put': case 'vm_get': case 'vm_del': case 'vm_name': case 'vm_set': case 'vm_play': case 'vm_stop':
+      return onVm(conn, m);
     case 'ptt':
+      if (vmPlay && vmPlay.conn === conn && !m.on) return vmStop('arrêtée'); // PTT relâché : arrête la mémoire vocale
+      if (m.on && vmPlay && vmPlay.conn === conn) return; // la mémoire vocale émet déjà
       if (m.on) {
         if (conn.needRelease) return; // relâcher d'abord après une coupure forcée
         if (ptt.active && ptt.conn === conn) {
