@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.40 | [RemoteStation-Setup-0.37.40.exe](0.37.40/RemoteStation-Setup-0.37.40.exe) | [remote-station-0.37.40.tar.gz](0.37.40/remote-station-0.37.40.tar.gz) | XFC, AUTO TUNE, PTT rouge à la souris — [empreintes SHA-256](0.37.40/SHA256SUMS.txt) |
 | 0.37.39 | [RemoteStation-Setup-0.37.39.exe](0.37.39/RemoteStation-Setup-0.37.39.exe) | [remote-station-0.37.39.tar.gz](0.37.39/remote-station-0.37.39.tar.gz) | SCAN SET, MEMO PAD EXPAND — [empreintes SHA-256](0.37.39/SHA256SUMS.txt) |
 | 0.37.38 | [RemoteStation-Setup-0.37.38.exe](0.37.38/RemoteStation-Setup-0.37.38.exe) | [remote-station-0.37.38.tar.gz](0.37.38/remote-station-0.37.38.tar.gz) | SWR GRAPH comme le TRX — [empreintes SHA-256](0.37.38/SHA256SUMS.txt) |
 | 0.37.37 | [RemoteStation-Setup-0.37.37.exe](0.37.37/RemoteStation-Setup-0.37.37.exe) | [remote-station-0.37.37.tar.gz](0.37.37/remote-station-0.37.37.tar.gz) | METER comme le TRX — [empreintes SHA-256](0.37.37/SHA256SUMS.txt) |

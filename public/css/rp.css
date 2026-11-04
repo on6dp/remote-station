@@ -426,7 +426,8 @@ input[type='range']:disabled { opacity: .45; }
   box-shadow: 0 0 14px -4px rgba(255, 32, 32, .45), inset 0 1px 0 rgba(255,255,255,.05);
 }
 .ptt small { font-size: 9px; letter-spacing: .02em; font-weight: 400; color: rgba(255, 214, 207, .7); text-align: center; }
-.ptt.held, .ptt.on-air { background: linear-gradient(180deg, #d61f17, #8e140d); color: #fff; box-shadow: 0 0 26px rgba(255, 32, 32, .6); }
+/* aussi sous la souris : le survol des boutons (.btn:hover) ne doit pas effacer le rouge de l'émission */
+.ptt.held, .ptt.on-air, .ptt.held:hover:not(:disabled), .ptt.on-air:hover:not(:disabled) { font-weight: 800; background: linear-gradient(180deg, #d61f17, #8e140d); color: #fff; box-shadow: 0 0 26px rgba(255, 32, 32, .6); }
 .ptt:disabled { border-color: var(--v2-border); background: var(--v2-bg-darker); color: var(--v2-text-dim); box-shadow: none; cursor: not-allowed; }
 .ptt:disabled small { color: var(--v2-text-dim); }
 

@@ -141,6 +141,8 @@
     const a = k.act || {};
     const s = S();
     if (a.info) return say(a.info, '', 6000);
+    if (a.hold) return; // touche à tenir (XFC) : appui et relâchement dans keyEvents
+    if (a.local === 'autotune') return autoTune();
     if (a.pop) return popCtl(a.pop);
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
     // IC-7300 : pas de tableau de réglages façon Yaesu ; l'écran FUNCTION de l'Icom viendra (les niveaux se règlent par le menu MULTI, les fonctions par leurs touches)
@@ -2360,6 +2362,8 @@
     LCD.icRfg = el('text', { x: X(118), y: Y(53), class: 'ich-rfg', 'text-anchor': 'middle' }, h, 'RFG');
     LCD.icVfo = el('text', { x: X(338), y: Y(56), class: 'ich-vfo' }, h, 'VFO A');
     LCD.icSplit = tag(512, 37, 82, 20, 'split', 'SPLIT');
+    // AUTO TUNE en cours : « AUTOTUNE » blanc gras sur fond rouge, cadre blanc, au-dessus des deux derniers chiffres de la fréquence
+    LCD.icAt = tag(518, 37, 76, 20, 'autotune', 'AUTOTUNE');
     // Fréquence (police du TRX : MHz.kHz.dizaines de Hz) ; clic = taper une fréquence
     LCD.icFreq = el('text', { x: X(492), y: Y(100), class: 'ich-freq', 'text-anchor': 'end' }, h, '');
     const qh = el('rect', { x: X(215), y: Y(60), width: 280, height: 44, class: 'hs lcd-hit' }, h);
@@ -2387,13 +2391,14 @@
     const X = LCD.X, Y = LCD.Y;
     const show = (o, on) => { o.r.style.display = on ? '' : 'none'; o.t.style.display = on ? '' : 'none'; };
     show(LCD.icTune, !!(s.tuner || s.tuning));
+    show(LCD.icAt, Date.now() - (L.atAt || 0) < 1500);
     const fA = s.freq || 0, inBand = BANDS.some((b) => fA >= b[1] && fA <= b[2]);
     show(LCD.icTx, !!fA || !!tx);
     LCD.icTx.r.classList.toggle('on', !!tx); LCD.icTx.t.classList.toggle('on', !!tx);
     LCD.icTxBar.style.display = fA && !tx && !inBand ? '' : 'none';
     const md = s.mode || '—';
     LCD.icMode.textContent = md;
-    show(LCD.icSplit, !!s.split);
+    show(LCD.icSplit, !!s.split && !(Date.now() - (L.atAt || 0) < 1500));
     LCD.icFil.textContent = s.fil ? 'FIL' + s.fil : 'FIL';
     // Petit trapèze du filtre (largeur selon FIL et PBT), comme le dessin à côté du mode
     const fl = LCD.flt && LCD.flt.A;
@@ -3334,6 +3339,36 @@
   }
 
   // ------------------------------------------------------------ touches : clic, appui long
+  // XFC (IC-7300) : en SPLIT, les deux VFO échangés tant qu'on tient la touche (écoute de la fréquence d'émission), remis au relâchement ;
+  // hors SPLIT : rien, comme sur le TRX
+  function xfc(down) {
+    if (down) {
+      if (L.xfcOn || !S().split || !R.CONTROL.xfc) return;
+      if (!needControl()) return;
+      if (S().tx) return say('XFC : pas pendant une émission.', 'warn', 2500);
+      L.xfcOn = true; setCtl('xfc', null);
+    } else if (L.xfcOn) { L.xfcOn = false; setCtl('xfc', null); }
+  }
+  // AUTO TUNE (IC-7300, CW) : pas de commande CI-V ; la page cherche le signal CW le plus fort à ± 400 Hz de la tonalité (pitch) dans la BF
+  // reçue et décale le VFO (ou le RIT en service) pour qu'il tombe sur la tonalité ; « AUTOTUNE » s'affiche au-dessus de la fréquence
+  function autoTune() {
+    const s = S(), md = L.activeMode(s);
+    if (!/^CW/.test(md)) return say('AUTO TUNE : en CW seulement.', '', 3000);
+    if (!needControl()) return;
+    const sp = WF.lastSp;
+    if (!sp || Date.now() - WF.at > 2000) return say('AUTO TUNE : il faut écouter le TRX (la BF reçue sert à trouver le signal).', 'warn', 4500);
+    const pitch = s.cwPitch || 600, binHz = (WF.rate / 2) / (WF.lastN / 2);
+    let best = 0, bf = 0;
+    for (let j = Math.floor((pitch - 400) / binHz); j <= Math.ceil((pitch + 400) / binHz); j++) if (j > 0 && j < sp.length && sp[j] > best) { best = sp[j]; bf = j * binHz; }
+    if (best < 0.62) { beep(); return say('AUTO TUNE : pas de signal CW assez fort près de la tonalité.', 'warn', 3500); }
+    const off = Math.round((bf - pitch) / 10) * 10, rev = /^CW-?R/.test(md) ? -1 : 1; // CW : BFO côté bas, signal plus aigu = plus haut en fréquence
+    L.atAt = Date.now(); render(); setTimeout(render, 1600);
+    if (Math.abs(off) < 10) return;
+    if (s.rit && R.CONTROL.clar) return setCtl('clar', Math.max(-9990, Math.min(9990, (s.clar || 0) + rev * off)));
+    const side = activeSide(), f = side === 'B' ? s.freqB : s.freq;
+    if (f) tuneTo(side, f + rev * off);
+  }
+  function beep() { try { const ac = new AudioContext(), o2 = ac.createOscillator(), g2 = ac.createGain(); o2.frequency.value = 1000; g2.gain.value = 0.08; o2.connect(g2).connect(ac.destination); o2.start(); o2.stop(ac.currentTime + 0.15); o2.onended = () => ac.close(); } catch (e) { /* */ } }
   function keyEvents(e, k) {
     let t = 0, long = false;
     e.addEventListener('pointerdown', (ev) => {
@@ -3343,9 +3378,10 @@
       if (k.act && k.act.clar) t = setTimeout(() => { long = true; doAct(k, true); }, 700);
       if (k.act && k.act.longMenu) t = setTimeout(() => { long = true; openModeMenu(); }, 900);
       if (k.act && k.act.long) t = setTimeout(() => { long = true; doAct({ act: k.act.long }, true); }, 900);
+      if (k.act && k.act.hold === 'xfc') xfc(true);
       e.classList.add('down');
     });
-    const up = () => { clearTimeout(t); e.classList.remove('down'); };
+    const up = () => { clearTimeout(t); e.classList.remove('down'); if (k.act && k.act.hold === 'xfc') xfc(false); };
     e.addEventListener('pointerup', up);
     e.addEventListener('pointerleave', up);
     e.addEventListener('click', (ev) => { ev.preventDefault(); if (!long) doAct(k, false); });
@@ -4455,6 +4491,7 @@
       const lvl = L.wfLevel / 70;
       WF.n = Math.min(fitHz('A'), WF.two ? fitHz('B') : 1e9) <= 1500 ? 4096 : 2048; // plage étroite : spectre plus fin
       const specs = [spectrum(WF.l), WF.two ? spectrum(WF.r) : null];
+      WF.lastSp = specs[0]; WF.lastN = WF.n; // AUTO TUNE (IC-7300)
       const nb = Math.max(2, Math.floor((WF.n / 2) * maxHz / (WF.rate / 2)));
       // Petit spectre dans le cadre du filtre (MAIN à gauche, SUB à droite)
       for (const [side, sp] of [['A', specs[0]], ['B', specs[1] || (S().dualRx !== 0 && !WF.two ? null : null)]]) {

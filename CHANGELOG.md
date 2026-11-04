@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.40** — IC-7300 : XFC (en SPLIT, VFO inversés tant qu'on le tient), AUTO TUNE en CW (accord sur le signal CW le plus fort près du pitch, RIT si en service, « AUTOTUNE » blanc sur rouge au-dessus de la fréquence) ; faces avant : bouton PTT rouge aussi quand on le tient à la souris
 - **0.37.39** — IC-7300 : MENU → SCAN → SET (SCAN Speed Slow / Fast, SCAN Resume OFF / ON, relus et réglés sur le TRX) ; MEMO PAD → EXPAND (10 lignes sur tout l'écran, sans le scope)
 - **0.37.38** — IC-7300 SWR GRAPH comme le TRX : fréquence au kHz au milieu, petits traits sous chaque barre, valeurs STEP / BAR en grand ; correction de la 0.37.37 (SWR GRAPH sans fréquences ni pas)
 - **0.37.37** — IC-7300 : écran des mesures (METER) comme le TRX — barres ALC / COMP / SWR / Id en segments, zone ALC rouge, chiffres du COMP sur la barre, échelles SWR et Id sous un trait blanc (points pour Id) ; SWR GRAPH : choix de 3 barres

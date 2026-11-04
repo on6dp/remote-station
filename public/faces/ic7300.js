@@ -50,8 +50,8 @@
       { id: 'quick', x: 790, y: 517, w: 95, h: 43, tip: 'QUICK : QUICK MENU (BAND, SPLIT, A=B, A/B, TUNER, TUNE, LOCK, 3DSS)', act: { local: 'quickMenu' } },
       { id: 'exit', x: 912, y: 517, w: 98, h: 43, tip: 'EXIT : ferme le tableau ou le menu ouvert', act: { local: 'exit' } },
       // À droite de l'écran
-      { id: 'xfc', cx: 1112, cy: 245, r: 38, tip: 'XFC', act: info('XFC (écoute de la fréquence d’émission en SPLIT) : pas disponible à distance.') },
-      { id: 'autotune', x: 1067, y: 440, w: 50, h: 33, tip: 'AUTO TUNE', act: info('AUTO TUNE (accord CW automatique) : pas disponible à distance ; cliquez sur le signal dans la cascade CW.') },
+      { id: 'xfc', cx: 1112, cy: 245, r: 38, tip: 'XFC : en SPLIT, tant qu’on le tient, on écoute sur la fréquence d’émission (les deux VFO sont inversés, puis remis au relâchement)', act: { hold: 'xfc' } },
+      { id: 'autotune', x: 1067, y: 440, w: 50, h: 33, tip: 'AUTO TUNE (CW) : accorde le TRX sur le signal CW reçu, pour qu’il tombe sur votre tonalité (pitch) ; RIT en service : c’est le RIT qui est corrigé', act: { local: 'autotune' } },
       { id: 'speech', x: 1065, y: 530, w: 70, h: 38, tip: 'SPEECH', act: info('SPEECH (annonce vocale) : pas disponible à distance.') },
       { id: 'rit', x: 1202, y: 55, w: 78, h: 33, tip: 'RIT ; le bouton MULTI règle le décalage', act: { toggle: 'rit' }, led: (s) => !!s.rit },
       { id: 'dtx', x: 1302, y: 55, w: 73, h: 33, tip: 'ΔTX (XIT) ; le bouton MULTI règle le décalage', act: { toggle: 'xit' }, led: (s) => !!s.xit },

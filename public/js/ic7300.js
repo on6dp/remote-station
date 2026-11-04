@@ -252,6 +252,8 @@
     // vfoAB (0 = A, 1 = B) est tenu ici, et suivi quand on appuie sur A/B au TRX (fréquence en service = celle de l'autre VFO, voir observe)
     { id: 'swap', g: 'vfo', label: 'A ⇄ B', type: 'action', write: (v, st) => { const b = !(st && st.vfoAB === 1); if (st) st.vfoAB = b ? 1 : 0; abAt = Date.now(); return q(0x07, b ? 0x01 : 0x00); } },
     { id: 'aToB', g: 'vfo', label: 'A → B', type: 'action', write: () => q(0x07, 0xA0) },
+    // XFC de la face avant : échange des deux VFO tant qu'on le tient (07 B0 à l'appui, 07 B0 au relâchement) ; pas un changement de VFO A / B
+    { id: 'xfc', g: 'vfo', label: 'XFC', type: 'action', face: true, write: () => { abAt = Date.now(); return q(0x07, 0xB0); } },
     { id: 'rit', g: 'vfo', label: 'RIT', type: 'toggle', write: setOn(0x21, 0x01) },
     { id: 'xit', g: 'vfo', label: 'XIT', type: 'toggle', write: setOn(0x21, 0x02) },
     {
