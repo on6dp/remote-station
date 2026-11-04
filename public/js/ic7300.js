@@ -81,7 +81,8 @@
   let abAt = 0;
   // Touche A/B appuyée au TRX : la fréquence en service (25 00) devient celle de l'autre VFO (25 01), qui reprend l'ancienne
   function observe(p, st) {
-    if (p.freq == null || !st.freq || !st.freqB || st.freq === st.freqB || Date.now() - abAt < 3000) return;
+    // Pas en SPLIT : pendant une émission en SPLIT, l'IC-7300 répond la fréquence d'émission pour le VFO en service (ce n'est pas un A/B)
+    if (p.freq == null || st.split || st.tx || p.tx || !st.freq || !st.freqB || st.freq === st.freqB || Date.now() - abAt < 3000) return;
     if (p.freq === st.freqB) { st.vfoAB = st.vfoAB === 1 ? 0 : 1; p.freqB = st.freq; abAt = Date.now(); }
   }
   const STATE_KEYS = ['filWi', 'vfoAB', 'txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'fil', 'filB', 'pbtIn', 'pbtOut', 'nb', 'nbLvl', 'nr', 'nrLvl',

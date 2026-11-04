@@ -2459,11 +2459,15 @@
     // XFC tenu (SPLIT) : les VFO sont inversés, le nom suit (VFO B pendant l'appui si on était sur A), comme sur le TRX
     const abName = (sd) => ((sd === 'A') === ((s.vfoAB !== 1) !== !!L.xfcOn) ? 'A' : 'B');
     LCD.icVfo.textContent = 'VFO ' + abName(main);
-    LCD.icFreq.textContent = fmt(fq(main));
+    // SPLIT en émission : fréquences d'émission et de réception notées au début de l'émission et gardées jusqu'à la fin
+    // (l'IC-7300 échange ce qu'il répond pour le VFO en service et l'autre pendant l'émission : sans cela, l'affichage ferait l'aller-retour)
+    if (s.split && tx) { if (!L.txSnap) L.txSnap = { tx: fq(main), rx: fq(other) }; } else L.txSnap = null;
+    const fqm = L.txSnap ? L.txSnap.tx : fq(main), fqo = L.txSnap ? L.txSnap.rx : fq(other);
+    LCD.icFreq.textContent = fmt(fqm);
     LCD.icFreq.classList.toggle('txsplit', !!s.split && !!tx); // SPLIT : la fréquence d'émission (en grand pendant l'émission) en rouge
     const ron = !!(s.rit || s.xit), cv = s.clar || 0, ritL = s.rit && s.xit ? 'RIT ΔTX' : s.rit ? 'RIT' : 'ΔTX';
     LCD.icRitL.textContent = ron ? ritL : '';
-    LCD.icRitV.textContent = s.split ? fmt(fq(other)) : ron ? (cv < 0 ? '-' : '') + (Math.abs(cv) / 1000).toFixed(2) : '';
+    LCD.icRitV.textContent = s.split ? fmt(fqo) : ron ? (cv < 0 ? '-' : '') + (Math.abs(cv) / 1000).toFixed(2) : '';
     LCD.icRitV.classList.toggle('sub', !!s.split);
     // Fréquence plus à gauche quand le RIT / ΔTX ou l'autre VFO (SPLIT) est affiché à droite
     const big = !!L.icBig;

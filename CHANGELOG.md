@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.48** — IC-7300 SPLIT : en émission, fréquence d'émission (en grand, rouge) et de réception notées à l'appui et gardées jusqu'à la fin (le TRX échange ses réponses 25 00 / 25 01 pendant l'émission : plus d'aller-retour) ; A/B du TRX pas détecté en SPLIT
 - **0.37.47** — Faces avant : émission demandée (PTT, barre d'espace, MOX) montrée tout de suite (SPLIT : fréquence d'émission en grand et en rouge dès l'appui) ; page Station : état émission / réception relu aussitôt après le PTT (IC-7300)
 - **0.37.46** — IC-7300 TWIN PBT : cadre BW / SFT du TRX (tourné ou poussé, ici ou sur le TRX) avec le dessin des deux PBT (rouge, bleu) et la bande passante en orange, bords en Hz ; largeur du filtre en service relue sur le TRX (1A 03) ; SSB-D : FIL2 1,2 kHz, FIL3 500 Hz
 - **0.37.45** — IC-7300 : SWR GRAPH → RECALL (graphe centré sur le dernier ROS relevé, touche en surbrillance, nouveau clic : suit le VFO) ; cartes de bande : VFO-A / VFO-B en grand (et suivant A/B sur l'IC-7300) ; XFC et A/B affichés tout de suite
