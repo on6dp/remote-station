@@ -134,6 +134,9 @@
       [104, 'Waveform Color (Current)', 'rgb', 'ro'], [105, 'Waveform Color (Line)', 'rgb', 'ro'], [106, 'Waveform Color (Max Hold)', 'rgb', 'ro'],
       [107, 'Waterfall Display', OF], [108, 'Waterfall Speed', ['Slow', 'Mid', 'Fast']], [109, 'Waterfall Size (Expand Screen)', ['Small', 'Mid', 'Large']],
       [110, 'Waterfall Peak Color Level', ['Grid 1', 'Grid 2', 'Grid 3', 'Grid 4', 'Grid 5', 'Grid 6', 'Grid 7', 'Grid 8']], [111, 'Waterfall Marker Auto-hide', OF]]],
+    // AUDIO SCOPE SET (appui long sur EXPD/SET de l'écran AUDIO) : appliqué au dessin de la page ; couleurs en lecture seule
+    audio: ['AUDIO SCOPE SET', [[151, 'FFT Scope Waveform Type', ['Fill', 'Line']], [152, 'FFT Scope Waveform Color', 'rgb', 'ro'],
+      [153, 'FFT Scope Waterfall Display', OF], [154, 'Oscilloscope Waveform Color', 'rgb', 'ro']]],
     // Fixed Edges : 3 bords par tranche de fréquences (1A 05 0112 … 0150 : bord bas puis bord haut, au kHz)
     edges: ['Fixed Edges', []]
   };
@@ -632,7 +635,7 @@
           this.ex = this.ex || {};
           const def = { pct: 128, nbw: 128, hex: 0, hl: 525, tbw: 13, tone: 5, nbd: 4, voxd: 2, date: '20261104', time: '1430', utc: 60, rgb: '172,191,191', edge: it.lo + '-' + Math.min(it.hi, it.lo + 350) };
           if (d.length === 3) {
-            const raw = this.ex[n] != null ? this.ex[n] : n === 74 ? 1 : n === 75 ? 1 : n === 66 ? 0 : n === 67 ? 3 : def[it.type] != null ? def[it.type] : 0;
+            const raw = this.ex[n] != null ? this.ex[n] : n === 74 ? 1 : n === 75 ? 1 : n === 153 ? 1 : n === 152 ? '51,153,255' : n === 154 ? '0,255,0' : n === 66 ? 0 : n === 67 ? 3 : def[it.type] != null ? def[it.type] : 0;
             r(0x05, d[1], d[2], ...exBytes(it, raw));
           } else {
             const b = d.slice(3);

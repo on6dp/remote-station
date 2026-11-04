@@ -976,6 +976,7 @@
     if (L.icView !== 'scope') { L.iscRef = false; L.iscExp = false; if (L.iscPage === 2) L.iscPage = 1; }
     if (L.icView !== 'scope') L.icBig = false; // grande fréquence (M.SCOPE) gardée avec le SPECTRUM SCOPE, comme sur le TRX
     if (L.icView === 'keyer') kmRefresh();
+    if (L.icView === 'audio') audRead();
     if (L.icView === 'scan' && LCD.iscnRead) LCD.iscnRead();
     WF.drawn = false; render();
   }
@@ -1202,6 +1203,7 @@
     if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; WF.drawn = false; }
     if (!WF.drawn) { c2.fillStyle = '#000'; c2.fillRect(0, 0, W, H); WF.drawn = true; }
     // AUDIO SCOPE : le scope du TRX dans la bande du haut ; ailleurs : toute la hauteur de la cascade
+    if (L.icView === 'audio' && AUD.exp) { RFS.last = { m: RFS.m, f0: RFS.f0, f1: RFS.f1 }; return; } // AUDIO SCOPE agrandi : pas de bande du scope
     const h = L.icView === 'audio' ? Math.round(H * IC_STRIP / IC_AUD_H) : H;
     drawRf(c2, 0, 0, W, h, RFS);
     RFS.last = { m: RFS.m, f0: RFS.f0, f1: RFS.f1 };
@@ -1212,6 +1214,7 @@
   function rfFreqAt(ev) {
     const cv = $('scope'), r = cv.getBoundingClientRect(), f = RFS.last;
     if (!f || !r.width) return null;
+    if (L.icView === 'audio' && AUD.exp) return null;
     const hRf = L.icView === 'audio' ? r.height * IC_STRIP / IC_AUD_H : r.height; // AUDIO SCOPE : seulement la bande du haut
     if (ev.clientY - r.top > hRf - 15) return null; // pas sur la ligne des chiffres
     const [lo, hi] = rfEdges(f), x = (ev.clientX - r.left) / r.width;
@@ -1713,7 +1716,7 @@
   // Retour : Fixed Edges → SCOPE SET → écran SCOPE ; autres sous-menus → liste SET
   function subBack() {
     if (L.icSub === 'edges') { L.icSub = 'scope'; L.icSubP = 3; return; }
-    if (L.icSub === 'scope') { L.icSub = null; L.icSet = false; return; }
+    if (L.icSub === 'scope' || L.icSub === 'audio') { L.icSub = null; L.icSet = false; return; }
     L.icSub = null;
   }
   function subRaw(it) { const p = SUB.pend[it.n]; if (p && Date.now() - p.at < 3000) return p.v; const v = S()['ex' + it.n]; return v == null ? null : v; }
@@ -1971,35 +1974,37 @@
     void back;
   }
   // ---- AUDIO SCOPE (MENU → AUDIO) : FFT (avec sa cascade) et oscilloscope de la BF reçue ; touches ATT, HOLD, LEVEL, TIME, EXPD/SET
-  const AUD = { att: 0, lvl: 0, time: 2, env: new Float32Array(800), envN: 0 }; // env : crêtes par tranche de 5 ms (4 s)
-  const AUD_ATT = [0, 10, 20, 30], AUD_LVL = [0, 10, 20, -10], AUD_TIME = [['1ms', 0.001], ['10ms', 0.01], ['100ms', 0.1]];
+  const AUD = { att: 0, lvl: 0, time: 2, exp: false, env: new Float32Array(4000), envN: 0 }; // env : crêtes par tranche de 1 ms (4 s)
+  // Comme le TRX (manuel 5-9) : ATT 0 / 10 / 20 / 30 dB, LEVEL 0 / −10 / −20 / −30 dB, TIME 1 / 3 / 10 / 30 / 100 / 300 ms par division
+  const AUD_ATT = [0, 10, 20, 30], AUD_LVL = [0, -10, -20, -30], AUD_TIME = [['1ms', 0.001], ['3ms', 0.003], ['10ms', 0.01], ['30ms', 0.03], ['100ms', 0.1], ['300ms', 0.3]];
+  // AUDIO SCOPE SET du TRX (1A 05 0151 – 0154), relu à l'ouverture de l'écran AUDIO et appliqué au dessin de la page
+  function audRead() { if (!iControl() || !R.EX || !R.EX[151]) return; [151, 152, 153, 154].forEach((n, i) => setTimeout(() => send({ t: 'set', ctl: 'exRead', value: n }), i * 130)); }
+  function audSet() {
+    const s = S(), rgb = (v, d) => { const a = String(v == null ? '' : v).split(',').map(Number); return a.length === 3 && a.every((x) => x >= 0 && x <= 255) ? a : d; };
+    return { line: Number(s.ex151) === 1, fft: rgb(s.ex152, [51, 153, 255]), wf: s.ex153 == null ? true : Number(s.ex153) === 1, osc: rgb(s.ex154, [0, 255, 0]) };
+  }
   function buildIcAudio(g, c) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const m = LCD.icAudio = lcdOverlay(g, 'ica');
     const y0 = G.scopeY + IC_AUD_H + 2, bw = (c.w - 12) / 5, h = c.h - y0 - 5;
     el('rect', { x: X(5), y: Y(y0 - 2), width: c.w - 10, height: h + 4, class: 'icm-bg' }, m);
-    const keys = [
-      ['ATT', 'ATT : affaiblissement de la FFT (OFF, −10, −20, −30 dB) — pas celui du récepteur', () => { AUD.att = (AUD.att + 1) % AUD_ATT.length; }],
+    void bw;
+    LCD.icaBtns = keyRow(m, X, Y, c, y0, [
+      ['ATT', 'ATT : affaiblissement de la FFT (0, 10, 20, 30 dB) — pas celui du récepteur ; appui long : OFF', () => { AUD.att = (AUD.att + 1) % AUD_ATT.length; }, () => { AUD.att = 0; return true; }],
       ['HOLD', 'HOLD : fige l’AUDIO SCOPE', () => { L.hold = !L.hold; }],
-      ['LEVEL', 'LEVEL : gain de l’oscilloscope (0, +10, +20, −10 dB)', () => { AUD.lvl = (AUD.lvl + 1) % AUD_LVL.length; }],
-      ['TIME', 'TIME : base de temps de l’oscilloscope (1, 10, 100 ms par division)', () => { AUD.time = (AUD.time + 1) % AUD_TIME.length; }],
-      ['EXPD/SET', 'EXPD/SET', () => say('EXPD/SET (AUDIO SCOPE agrandi, réglages) : pas disponible à distance.', '', 3500)]
-    ];
-    LCD.icaBtns = keys.map(([lab, tip, fn], i) => {
-      const b = lcdBtn(m, X, Y, 6 + i * bw + 2, y0, bw - 4, h, 'key');
-      b.t1.textContent = lab; b.t1.setAttribute('y', Y(y0 + h / 2 + 6)); b.t1.classList.add('key');
-      b.tt.textContent = tip;
-      b.hit.addEventListener('click', (ev) => { ev.stopPropagation(); fn(); WF.drawn = false; render(); });
-      return b;
-    });
+      ['LEVEL', 'LEVEL : niveau de l’oscilloscope (0, −10, −20, −30 dB)', () => { AUD.lvl = (AUD.lvl + 1) % AUD_LVL.length; }],
+      ['TIME', 'TIME : base de temps de l’oscilloscope (1, 3, 10, 30, 100, 300 ms par division)', () => { AUD.time = (AUD.time + 1) % AUD_TIME.length; }],
+      ['EXPD/SET', 'EXPD/SET : AUDIO SCOPE agrandi (sans la bande du scope) ; nouveau clic : normal ; appui long : AUDIO SCOPE SET',
+        () => { AUD.exp = !AUD.exp; }, () => { L.icSet = true; L.icSub = 'audio'; L.icSubP = 0; subRead(); return true; }]
+    ]);
   }
   function drawIcAudioKeys() {
     const b = LCD.icaBtns;
-    if (b) b[1].r.classList.toggle('on', !!L.hold);
+    if (b) { b[1].r.classList.toggle('on', !!L.hold); b[4].r.classList.toggle('on', !!AUD.exp); }
   }
-  // Crêtes de la BF par tranches de 5 ms (oscilloscope à 100 ms par division)
+  // Crêtes de la BF par tranches de 1 ms (oscilloscope lent : 30 à 300 ms par division)
   function audEnv(pcm, rate) {
-    const blk = Math.max(1, Math.round(rate * 0.005));
+    const blk = Math.max(1, Math.round(rate * 0.001));
     for (let i = 0; i + blk <= pcm.length; i += blk) {
       let pk = 0;
       for (let j = i; j < i + blk; j++) { const v = Math.abs(pcm[j]); if (v > pk) pk = v; }
@@ -2008,31 +2013,34 @@
   }
   function drawIcAudio(c2, W, H, specs, pal, nb, lvl, maxHz) {
     const sp = specs[0], buf = WF.l;
-    const hs = Math.round(H * IC_STRIP / IC_AUD_H), ht = Math.round(H * 18 / IC_AUD_H), yb = hs + ht, hb = H - yb;
-    if (!rfFresh()) drawScope(c2, { sp, x0: 0, y0: 0, w: W, h: hs, name: '' }, pal, nb, lvl, maxHz); // sinon : scope du TRX (rfsOn)
+    const as = audSet();
+    const hs = AUD.exp ? 0 : Math.round(H * IC_STRIP / IC_AUD_H), ht = Math.round(H * 18 / IC_AUD_H), yb = hs + ht, hb = H - yb;
+    if (!AUD.exp && !rfFresh()) drawScope(c2, { sp, x0: 0, y0: 0, w: W, h: hs, name: '' }, pal, nb, lvl, maxHz); // sinon : scope du TRX (rfsOn)
     // Bandeau « AUDIO SCOPE », avec ATT et HOLD de l'AUDIO SCOPE à gauche
     c2.fillStyle = '#1d2433'; c2.fillRect(0, hs, W, ht);
     c2.font = 'bold ' + Math.round(ht * 0.72) + 'px Arial, sans-serif'; c2.textAlign = 'center'; c2.fillStyle = '#e6e9ef';
     c2.fillText('AUDIO SCOPE', W / 2, hs + ht * 0.78);
-    const pill = (x, w, t, on) => { c2.fillStyle = on ? '#4a5368' : '#2a3142'; c2.beginPath(); c2.roundRect(x, hs + 2, w, ht - 4, (ht - 4) / 2); c2.fill(); c2.fillStyle = on ? '#fff' : '#7d8596'; c2.font = 'bold ' + Math.round(ht * 0.55) + 'px Arial, sans-serif'; c2.fillText(t, x + w / 2, hs + ht * 0.72); };
-    pill(W * 0.02, W * 0.14, AUD_ATT[AUD.att] ? 'ATT -' + AUD_ATT[AUD.att] + 'dB' : 'ATT OFF', true);
+    const pill = (x, w, t, on, fg) => { c2.fillStyle = on ? '#4a5368' : '#2a3142'; c2.beginPath(); c2.roundRect(x, hs + 2, w, ht - 4, (ht - 4) / 2); c2.fill(); c2.fillStyle = fg || (on ? '#fff' : '#7d8596'); c2.font = 'bold ' + Math.round(ht * 0.55) + 'px Arial, sans-serif'; c2.fillText(t, x + w / 2, hs + ht * 0.72); };
+    pill(W * 0.02, W * 0.14, AUD_ATT[AUD.att] ? 'ATT ' + AUD_ATT[AUD.att] + 'dB' : 'ATT OFF', true, '#ff9a1f'); // valeur en orange, comme sur le TRX
     pill(W * 0.19, W * 0.1, 'HOLD', !!L.hold);
     // FFT 0 – 4 kHz avec sa cascade (à gauche)
     const fHz = Math.min(4000, WF.rate / 2), nb4 = Math.max(2, Math.floor((WF.n / 2) * fHz / (WF.rate / 2)));
     const wl = Math.floor(W * 0.585);
-    drawScope(c2, { sp, x0: 0, y0: yb, w: wl, h: hb, name: '' }, pal, nb4, lvl - AUD_ATT[AUD.att] / 70, fHz);
+    // Comme le TRX : cascade bleue, pas de repère du filtre, échelle 0 … 4.0kHz
+    drawScope(c2, { sp, x0: 0, y0: yb, w: wl, h: hb, name: '', color: as.fft, line: as.line, wf: as.wf, noMarker: true, audScale: true }, AUD.pal || (AUD.pal = mkPal([[0, [0, 12, 70]], [0.4, [0, 55, 200]], [0.72, [70, 160, 255]], [1, [225, 242, 255]]])), nb4, lvl - AUD_ATT[AUD.att] / 70, fHz);
     // Oscilloscope (à droite) : forme d'onde verte ; à 100 ms par division, les crêtes de la dernière seconde
-    const ox = wl + 4, ow = W - ox, lab = Math.max(10, Math.round(hb * 0.12)), gh = hb - lab - 2, mid = yb + gh / 2;
+    const ox = wl + 4, ow = W - ox, lab = Math.max(10, Math.min(15, Math.round(hb * 0.12))), gh = hb - lab - 2, mid = yb + gh / 2;
     c2.fillStyle = '#000'; c2.fillRect(ox - 2, yb, ow + 2, hb);
     c2.strokeStyle = 'rgba(120,130,145,.35)'; c2.lineWidth = 1;
     for (let k = 1; k < 10; k++) { const gx = Math.round(ox + ow * k / 10) + 0.5; c2.beginPath(); c2.moveTo(gx, yb); c2.lineTo(gx, yb + gh); c2.stroke(); }
     for (let k = 1; k < 4; k++) { const gy = Math.round(yb + gh * k / 4) + 0.5; c2.beginPath(); c2.moveTo(ox, gy); c2.lineTo(ox + ow, gy); c2.stroke(); }
     const gain = Math.pow(10, AUD_LVL[AUD.lvl] / 20), k = (gh / 2 - 2) / 0.6 * gain;
     const tdiv = AUD_TIME[AUD.time][1];
-    c2.strokeStyle = '#7ee02a'; c2.fillStyle = '#7ee02a'; c2.lineWidth = 1.2;
-    if (tdiv >= 0.1) {
-      const n = Math.min(AUD.envN, Math.round(10 * tdiv / 0.005)), e = AUD.env, e0 = e.length - n;
-      const cols = Math.min(ow, Math.round(10 * tdiv / 0.005));
+    const oc = 'rgb(' + as.osc.join(',') + ')';
+    c2.strokeStyle = oc; c2.fillStyle = oc; c2.lineWidth = 1.2;
+    if (10 * tdiv * WF.rate > buf.length) {
+      const n = Math.min(AUD.envN, Math.round(10 * tdiv / 0.001)), e = AUD.env, e0 = e.length - n;
+      const cols = Math.min(ow, Math.round(10 * tdiv / 0.001));
       for (let px = 0; px < cols && n; px++) {
         const i0 = e0 + Math.floor(px / cols * n), i1 = Math.max(i0 + 1, e0 + Math.floor((px + 1) / cols * n));
         let pk = 0;
@@ -2047,7 +2055,7 @@
       c2.stroke();
     }
     c2.fillStyle = '#e6e9ef'; c2.font = 'bold ' + Math.round(lab * 0.85) + 'px Arial, sans-serif';
-    c2.textAlign = 'left'; c2.fillText('LEVEL: ' + (AUD_LVL[AUD.lvl] > 0 ? '+' : '') + AUD_LVL[AUD.lvl] + 'dB', ox + 4, yb + hb - 2);
+    c2.textAlign = 'left'; c2.fillText('LEVEL: ' + AUD_LVL[AUD.lvl] + 'dB', ox + 4, yb + hb - 2);
     c2.textAlign = 'right'; c2.fillText(AUD_TIME[AUD.time][0] + '/Div', ox + ow - 3, yb + hb - 2);
   }
   // IC-7300 : en-tête de l'écran comme sur le TRX — TUNE / TX, mode (badge bleu, clic = tableau des modes), dessin du filtre, FIL (clic = suivant),
@@ -3865,7 +3873,7 @@
   // Un scope : spectre en haut, cascade en dessous (elle descend d'une ligne à chaque tour), échelle en bas
   function drawScope(c2, rg, pal, nb, lvl, maxHz) {
     const { sp, x0, y0, w, h, name } = rg;
-    const lab = ICOM ? 15 : 11, sh = Math.round((h - lab) * (h < 90 ? 0.5 : 0.6)); // IC-7300 : chiffres de l'échelle plus grands
+    const lab = ICOM ? 15 : 11, sh = rg.wf === false ? h - lab : Math.round((h - lab) * (h < 90 ? 0.5 : 0.6)); // IC-7300 : chiffres de l'échelle plus grands ; sans cascade : spectre sur toute la hauteur
     if (rg.sep === 'h') { c2.fillStyle = '#2b3546'; c2.fillRect(x0, y0 - 2, w, 2); }
     if (rg.sep === 'v') { c2.fillStyle = '#2b3546'; c2.fillRect(x0 - 2, y0, 2, h); }
     if (!sp) {
@@ -3901,7 +3909,7 @@
     for (let k = 1; k < 8; k++) { const gx = Math.round(x0 + w * k / 8) + 0.5; c2.beginPath(); c2.moveTo(gx, y0); c2.lineTo(gx, y0 + sh); c2.stroke(); }
     for (let k = 1; k < 5; k++) { const gy = Math.round(y0 + sh * k / 5) + 0.5; c2.beginPath(); c2.moveTo(x0, gy); c2.lineTo(x0 + w, gy); c2.stroke(); }
     // MARKER (S.MENU) : bande passante du filtre de ce récepteur et repère central, sur l'échelle de la BF
-    const fl = L.marker && LCD.flt && LCD.flt[name === 'SUB' ? 'B' : 'A'];
+    const fl = !rg.noMarker && L.marker && LCD.flt && LCD.flt[name === 'SUB' ? 'B' : 'A'];
     if (fl) {
       const md = fl.mode;
       let c = audioCenter(md || '', fl.hz); // CW : tonalité (pitch) du TRX
@@ -3921,15 +3929,19 @@
         c2.fillStyle = '#ff5a3c'; c2.font = 'bold 9px "Roboto Mono", monospace'; c2.textAlign = 'left'; c2.fillText('N', xn + 3, y0 + 20);
       }
     }
-    // Spectre : traits blancs bleutés depuis la ligne de base
-    c2.strokeStyle = 'rgba(205,220,255,.9)';
+    // Spectre : traits blancs bleutés depuis la ligne de base (AUDIO SCOPE de l'IC-7300 : couleur et type Fill / Line du TRX)
+    c2.strokeStyle = rg.color ? 'rgb(' + rg.color.join(',') + ')' : 'rgba(205,220,255,.9)';
     c2.beginPath();
-    for (let px = 0; px < w; px++) {
+    if (rg.line) {
+      for (let px = 0; px < w; px++) { const v = col[px], y = y0 + sh - 1 - v * v * (sh - 5); px ? c2.lineTo(x0 + px + 0.5, y) : c2.moveTo(x0 + 0.5, y); }
+      c2.lineWidth = 1.3;
+    } else for (let px = 0; px < w; px++) {
       const v = col[px];
       c2.moveTo(x0 + px + 0.5, y0 + sh - 1);
       c2.lineTo(x0 + px + 0.5, y0 + sh - 1 - v * v * (sh - 5));
     }
     c2.stroke();
+    c2.lineWidth = 1;
     // PEAK (S.MENU) : crêtes gardées, qui redescendent lentement (LV1) … vite (LV3)
     if (L.peak) {
       WF.peak = WF.peak || {};
@@ -3943,19 +3955,30 @@
         if (pk[px] > 0.02) c2.fillRect(x0 + px, y0 + sh - 1 - pk[px] * pk[px] * (sh - 5) - 1, 1, 1.5);
       }
     }
-    const line = c2.createImageData(w, 1);
-    for (let px = 0; px < w; px++) {
-      const cc = pal[Math.round(col[px] * 255)];
-      line.data[px * 4] = cc[0]; line.data[px * 4 + 1] = cc[1]; line.data[px * 4 + 2] = cc[2]; line.data[px * 4 + 3] = 255;
+    if (rg.wf !== false) {
+      const line = c2.createImageData(w, 1);
+      for (let px = 0; px < w; px++) {
+        const cc = pal[Math.round(col[px] * 255)];
+        line.data[px * 4] = cc[0]; line.data[px * 4 + 1] = cc[1]; line.data[px * 4 + 2] = cc[2]; line.data[px * 4 + 3] = 255;
+      }
+      c2.putImageData(line, x0, y0 + sh);
     }
-    c2.putImageData(line, x0, y0 + sh);
     c2.strokeStyle = 'rgba(160,170,185,.7)';
     c2.beginPath(); c2.moveTo(x0, y0 + sh - 0.5); c2.lineTo(x0 + w, y0 + sh - 0.5); c2.stroke();
     // Échelle : 0 à 4 kHz de BF
     c2.fillStyle = 'rgba(200,210,225,.85)';
     c2.font = ICOM ? 'bold 12px Arial, sans-serif' : '9px "Roboto Mono", monospace';
     c2.textAlign = 'center';
-    if (ICOM) {
+    if (rg.audScale) {
+      // AUDIO SCOPE de l'IC-7300 : 0, 1.0, 2.0, 3.0, 4.0kHz, petits traits aux demi-kHz
+      c2.textAlign = 'left'; c2.fillText('0', x0 + 2, y0 + h - 3);
+      for (let f = 500; f < maxHz; f += 500) {
+        const x = Math.round(x0 + w * f / maxHz) + 0.5;
+        if (f % 1000) { c2.fillRect(x - 0.5, y0 + h - lab + 3, 1, 4); continue; }
+        c2.textAlign = 'center'; c2.fillText((f / 1000).toFixed(1), x, y0 + h - 3);
+      }
+      c2.textAlign = 'right'; c2.fillText((maxHz / 1000).toFixed(1) + 'kHz', x0 + w - 2, y0 + h - 3);
+    } else if (ICOM) {
       // IC-7300 : tous les 0,5 kHz (comme l'échelle du TRX : 0.5, 1.0, 1.5…), en kHz de BF
       const st = maxHz <= 2000 ? 250 : 500;
       for (let f = st; f < maxHz - st / 3; f += st) c2.fillText((f / 1000).toFixed(st < 500 ? 2 : 1), x0 + w * f / maxHz, y0 + h - 3);
