@@ -290,6 +290,8 @@ Sous les écrans VFO.
 
 La ligne grise sous les bandes rappelle les gestes utiles ; la ligne de messages juste en dessous affiche les confirmations et les refus.
 
+**Zoom de la fenêtre des modes numériques** : Ctrl + / Ctrl − / Ctrl 0 (ou Ctrl + molette) agrandissent ou réduisent cette fenêtre seule, sans toucher à la face avant ni au dashboard (réglage gardé pour la fenêtre).
+
 <a id="gauche"></a>
 ### 7.3 Colonne de gauche
 

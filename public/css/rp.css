@@ -1725,3 +1725,6 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 .cw-trx.ro > b { cursor: not-allowed; }
 .cw-trx > b:hover { background: rgba(95, 216, 255, .25); }
 .cw-trx > span { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); padding: 0 5px; border-radius: 3px; background: rgba(5, 8, 13, .8); color: #5fd8ff; font: 700 10px Verdana, "DejaVu Sans", Arial, sans-serif; white-space: nowrap; }
+/* Fenêtre des modes numériques : indication du zoom propre à la fenêtre */
+.dg-zoomtip { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 9999; padding: 6px 14px; border-radius: 6px; background: rgba(20, 26, 38, .92); color: #fff; font: 600 13px system-ui, sans-serif; box-shadow: 0 4px 16px rgba(0, 0, 0, .5); pointer-events: none; }
+.dg-zoomtip[hidden] { display: none; }

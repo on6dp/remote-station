@@ -122,6 +122,35 @@
   const HOST = !POPUP || EMBED; // page qui peut ouvrir la fenêtre séparée (dashboard ou face avant)
   // Fenêtre séparée ouverte depuis la face avant : « Ramener » parle de la face avant
   const FROM_FACE = POPUP && !EMBED && (() => { try { return !!(window.opener && window.opener.document.body.classList.contains('face-page')); } catch (e) { return false; } })();
+  // Fenêtre séparée des modes numériques : zoom propre (Ctrl + / Ctrl − / Ctrl 0, Ctrl + molette), gardé à part.
+  // Le zoom du navigateur vaut pour tout le site (il agrandirait aussi la face avant) : il est remplacé ici par un zoom CSS de cette page seule.
+  if (POPUP && !EMBED) {
+    const ZST = [0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2];
+    let zi = ZST.indexOf(Number(store.get('pzoom', '1')));
+    if (zi < 0) zi = ZST.indexOf(1);
+    let ztip = null, zt = 0;
+    const zset = (i, show) => {
+      zi = Math.max(0, Math.min(ZST.length - 1, i));
+      document.documentElement.style.zoom = ZST[zi] === 1 ? '' : String(ZST[zi]);
+      store.set('pzoom', String(ZST[zi]));
+      window.dispatchEvent(new Event('resize')); // cascades et canevas : nouvelles dimensions
+      if (!show) return;
+      if (!ztip) { ztip = document.createElement('div'); ztip.className = 'dg-zoomtip'; document.body.appendChild(ztip); }
+      ztip.textContent = 'Zoom de cette fenêtre : ' + Math.round(ZST[zi] * 100) + ' %  (Ctrl 0 : 100 %)';
+      ztip.hidden = false; clearTimeout(zt); zt = setTimeout(() => { ztip.hidden = true; }, 1500);
+    };
+    zset(zi, false);
+    window.addEventListener('keydown', (e) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd') zset(zi + 1, true);
+      else if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract') zset(zi - 1, true);
+      else if (e.key === '0' || e.code === 'Numpad0') zset(ZST.indexOf(1), true);
+      else return;
+      e.preventDefault();
+    }, true);
+    // Ctrl + molette : zoom de la page, sauf là où elle sert déjà (barres du filtre CW, zoom des cascades)
+    window.addEventListener('wheel', (e) => { if (!e.ctrlKey || e.defaultPrevented) return; e.preventDefault(); zset(zi + (e.deltaY < 0 ? 1 : -1), true); }, { passive: false });
+  }
   let api = null;
   let detached = false;  // dashboard : les modes numériques sont dans la fenêtre séparée
   let needHist = true;   // demander l'historique des décodages à la prochaine annonce
