@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.26 | [RemoteStation-Setup-0.37.26.exe](0.37.26/RemoteStation-Setup-0.37.26.exe) | [remote-station-0.37.26.tar.gz](0.37.26/remote-station-0.37.26.tar.gz) | IC-7300 : voyants en gras — [empreintes SHA-256](0.37.26/SHA256SUMS.txt) |
 | 0.37.25 | [RemoteStation-Setup-0.37.25.exe](0.37.25/RemoteStation-Setup-0.37.25.exe) | [remote-station-0.37.25.tar.gz](0.37.25/remote-station-0.37.25.tar.gz) | IC-7300 : SCROLL-F, traits R et T — [empreintes SHA-256](0.37.25/SHA256SUMS.txt) |
 | 0.37.24 | [RemoteStation-Setup-0.37.24.exe](0.37.24/RemoteStation-Setup-0.37.24.exe) | [remote-station-0.37.24.tar.gz](0.37.24/remote-station-0.37.24.tar.gz) | IC-7300 : SCOPE SET — [empreintes SHA-256](0.37.24/SHA256SUMS.txt) |
 | 0.37.23 | [RemoteStation-Setup-0.37.23.exe](0.37.23/RemoteStation-Setup-0.37.23.exe) | [remote-station-0.37.23.tar.gz](0.37.23/remote-station-0.37.23.tar.gz) | IC-7300 : FIX comme le TRX (No.n, 5.0k) — [empreintes SHA-256](0.37.23/SHA256SUMS.txt) |
