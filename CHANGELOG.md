@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.17** — IC-7300 SCOPE : R vert hors CENTER ; appui long sur CENT/FIX = SCROLL-C / SCROLL-F (badge jaune, CI-V 27 14 02 / 03) ; appui long sur les touches de l'écran
 - **0.37.16** — IC-7300 : bargraph S/Po → S/SWR → S/ALC → S/COMP → S/Vd → S/Id (tension et courant en émission)
 - **0.37.15** — IC-7300 : jamais de 3DSS (réglage resté dans le navigateur ignoré) : spectre et cascade dans tous les écrans (SCOPE, VOICE TX, KEYER…)
 - **0.37.14** — IC-7300 SCOPE : EXPD/SET (scope agrandi), REF Level au grand bouton (−20 … +20 dB, DEF = 0, CI-V 27 19), SPEED SLOW / MID / FAST (27 1A) avec cadre 0,5 s, MARKER (repère T), cadre SPAN 1 s ; bargraph S/Po → S/SWR → S/ALC → S/COMP au clic ; QUICK sans 3DSS

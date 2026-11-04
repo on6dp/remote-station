@@ -1114,11 +1114,15 @@
   }
   function keyRow(m, X, Y, c, y0, keys) {
     const bw = (c.w - 12) / keys.length, h = c.h - y0 - 5;
-    return keys.map(([lab, tip, fn], i) => {
+    return keys.map(([lab, tip, fn, longFn], i) => {
       const b = lcdBtn(m, X, Y, 6 + i * bw + 2, y0, bw - 4, h, 'key');
       b.t1.textContent = lab; b.t1.setAttribute('y', Y(y0 + h / 2 + 6)); b.t1.classList.add('key');
       b.tt.textContent = tip;
-      b.hit.addEventListener('click', (ev) => { ev.stopPropagation(); fn(); WF.drawn = false; render(); });
+      // Appui long (0,8 s), comme le toucher prolongé de l'écran du TRX : action longFn(i) si elle existe pour cette touche
+      let lt = null, longDone = false;
+      b.hit.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); longDone = false; clearTimeout(lt); lt = setTimeout(() => { if (longFn && longFn(i)) { longDone = true; WF.drawn = false; render(); } }, 800); });
+      for (const t of ['pointerup', 'pointerleave', 'pointercancel']) b.hit.addEventListener(t, () => clearTimeout(lt));
+      b.hit.addEventListener('click', (ev) => { ev.stopPropagation(); if (longDone) { longDone = false; return; } fn(); WF.drawn = false; render(); });
       return b;
     });
   }
@@ -1131,7 +1135,7 @@
     const y0 = G.scopeY;
     el('rect', { x: X(5), y: Y(y0), width: c.w - 10, height: IC_TB, class: 'icp-tb' }, m);
     const pill = (x, w, t, cls) => { const r = el('rect', { x: X(x), y: Y(y0 + 3), width: w, height: IC_TB - 6, rx: 6, class: 'icp-pill ' + (cls || '') }, m); const tt = el('text', { x: X(x + w / 2), y: Y(y0 + 13), class: 'icp-pillt ' + (cls || ''), 'text-anchor': 'middle' }, m, t); return { r, t: tt }; };
-    pill(10, 16, 'R'); LCD.iscT = pill(28, 16, 'T');
+    LCD.iscR = pill(10, 16, 'R'); LCD.iscT = pill(28, 16, 'T');
     LCD.iscHold = pill(48, 44, 'HOLD');
     LCD.iscSpd = el('text', { x: X(98), y: Y(y0 + 14), class: 'icp-spd' }, m, '▸▸▸');
     el('text', { x: X(250), y: Y(y0 + 15), class: 'ick-title', 'text-anchor': 'middle' }, m, 'SPECTRUM SCOPE');
@@ -1147,7 +1151,7 @@
       ['SPAN', 'SPAN du scope du TRX : ±2,5k → 5k → 10k → 25k → 50k → 100k → 250k → 500k (la cascade de la page reste celle de la BF reçue) ; en FIX : EDGE 1 → 4',
         () => { const s2 = S(); if (s2.scMode === 1) return setCtl('scEdge', (s2.scEdge || 1) % 4 + 1); const sp = s2.scSpan; setCtl('scSpan', sp == null ? 3 : (sp + 1) % 8); }],
       ['HOLD', 'HOLD : fige le scope (celui du TRX et celui de la page)', () => { L.hold = !L.hold; L.holdAt = Date.now(); if (R.CONTROL.scHold) setCtl('scHold', L.hold ? 1 : 0); }],
-      ['CENT/FIX', 'CENT/FIX : scope du TRX centré sur la fréquence (CENTER) ou bords fixes de la bande (FIX)', () => setCtl('scMode', S().scMode === 1 ? 0 : 1)],
+      ['CENT/FIX', 'CENT/FIX : scope du TRX centré sur la fréquence (CENTER) ou bords fixes (FIX) ; appui long : défilement (SCROLL-C / SCROLL-F)', () => setCtl('scMode', (S().scMode || 0) ^ 1)],
       ['EXPD/SET', 'EXPD/SET : scope agrandi (la fréquence remonte à côté du S/Po) ; nouveau clic : normal', () => iscExpand()]
     ], [
       ['<2>', '<2> : retour aux premières touches (SPAN, HOLD, CENT/FIX)', () => { L.iscPage = 0; }],
@@ -1167,7 +1171,9 @@
       ['', '', () => {}]
     ]];
     L.iscPage = 0;
-    LCD.iscBtns = keyRow(m, X, Y, c, ky, [0, 1, 2, 3, 4].map((i) => ['', '', () => LCD.iscPages[L.iscPage][i][2]()]));
+    // Appui long sur CENT/FIX (page 1) : CENTER ⇄ SCROLL-C, FIX ⇄ SCROLL-F
+    LCD.iscBtns = keyRow(m, X, Y, c, ky, [0, 1, 2, 3, 4].map((i) => ['', '', () => LCD.iscPages[L.iscPage][i][2](),
+      (j) => { if (L.iscPage || j !== 3) return false; setCtl('scMode', (S().scMode || 0) ^ 2); return true; }]));
   }
   function iscExpand() { L.iscExp = !L.iscExp; if (L.iscExp) { L.iscBigWas = !!L.icBig; L.icBig = false; } else L.icBig = !!L.iscBigWas; WF.drawn = false; }
   function refSet(v) {
@@ -1198,8 +1204,11 @@
     const div = half ? half / 5 : SPANS[L.wfSpan] / 8;
     LCD.iscScale.textContent = (div >= 1000 ? div / 1000 + 'k' : Math.round(div)) + '/10dB';
     if (S().scHold != null && !!S().scHold !== !!L.hold && Date.now() - (L.holdAt || 0) > 3000) L.hold = !!S().scHold; // HOLD mis sur le TRX
-    const fix = S().scMode === 1;
-    LCD.iscMode.t.textContent = fix ? 'FIX' : 'CENTER';
+    // CENTER (bleu), FIX (bleu), SCROLL-C / SCROLL-F (jaune) ; R vert hors CENTER, comme sur le TRX
+    const md = S().scMode || 0, fix = md === 1 || md === 3;
+    LCD.iscMode.t.textContent = ['CENTER', 'FIX', 'SCROLL-C', 'SCROLL-F'][md];
+    LCD.iscMode.r.classList.toggle('scroll', md >= 2); LCD.iscMode.t.classList.toggle('scroll', md >= 2);
+    LCD.iscR.r.classList.toggle('rx', md !== 0); LCD.iscR.t.classList.toggle('on', md !== 0);
     if (fix) LCD.iscScale.textContent = 'EDGE' + (S().scEdge || 1);
     LCD.iscBtns.forEach((b, i) => {
       const k = LCD.iscPages[L.iscPage || 0][i].slice();
@@ -1988,7 +1997,7 @@
     ['proc', 'COMP', (s) => onOff(s.proc)], ['vox', 'VOX', (s) => onOff(s.vox)], ['tuner', 'TUNER', (s) => onOff(s.tuner)], ['ipPlus', 'IP+', (s) => onOff(s.ipPlus)],
     ['bkin', 'BK-IN', (s) => ['OFF', 'SEMI', 'FULL'][s.bkin]], ['scSpan', 'SPAN', (s) => (R.SC_SPANS ? '±' + (R.SC_SPANS[s.scSpan] / 1000).toString().replace('.', ',') + 'k' : null), 1000],
     ['scSpeed', 'SPEED', (s) => ['FAST', 'MID', 'SLOW'][s.scSpeed], 500],
-    ['scMode', 'SCOPE', (s) => (s.scMode ? 'FIX' : 'CENTER')], ['scEdge', 'EDGE', (s) => String(s.scEdge)], ['moni', 'MONI', (s) => onOff(s.moni)], ['split', 'SPLIT', (s) => onOff(s.split)]];
+    ['scMode', 'SCOPE', (s) => ['CENTER', 'FIX', 'SCROLL-C', 'SCROLL-F'][s.scMode || 0]], ['scEdge', 'EDGE', (s) => String(s.scEdge)], ['moni', 'MONI', (s) => onOff(s.moni)], ['split', 'SPLIT', (s) => onOff(s.split)]];
   let icPrev = null, icPopT = 0;
   function icPopCheck(s, live) {
     const e = $('icPop');

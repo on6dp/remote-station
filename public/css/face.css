@@ -507,3 +507,5 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .icf-t2 { fill: #f4f6fa; font: 700 18px Arial, sans-serif; pointer-events: none; }
 #face .icp-pill.mk { fill: #f07a1e; }
 #face .ick-btn.blank { fill: #3a404c; }
+#face .icp-pill.blue.scroll { fill: #c8b21e; }
+#face .icp-pill.rx { fill: #3aa83a; }

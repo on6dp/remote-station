@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.17 | [RemoteStation-Setup-0.37.17.exe](0.37.17/RemoteStation-Setup-0.37.17.exe) | [remote-station-0.37.17.tar.gz](0.37.17/remote-station-0.37.17.tar.gz) | IC-7300 : R vert, SCROLL-C / SCROLL-F — [empreintes SHA-256](0.37.17/SHA256SUMS.txt) |
 | 0.37.16 | [RemoteStation-Setup-0.37.16.exe](0.37.16/RemoteStation-Setup-0.37.16.exe) | [remote-station-0.37.16.tar.gz](0.37.16/remote-station-0.37.16.tar.gz) | IC-7300 : S/Vd et S/Id — [empreintes SHA-256](0.37.16/SHA256SUMS.txt) |
 | 0.37.15 | [RemoteStation-Setup-0.37.15.exe](0.37.15/RemoteStation-Setup-0.37.15.exe) | [remote-station-0.37.15.tar.gz](0.37.15/remote-station-0.37.15.tar.gz) | IC-7300 : sans 3DSS — [empreintes SHA-256](0.37.15/SHA256SUMS.txt) |
 | 0.37.14 | [RemoteStation-Setup-0.37.14.exe](0.37.14/RemoteStation-Setup-0.37.14.exe) | [remote-station-0.37.14.tar.gz](0.37.14/remote-station-0.37.14.tar.gz) | IC-7300 : SCOPE REF / SPEED / EXPD, S/SWR S/ALC S/COMP — [empreintes SHA-256](0.37.14/SHA256SUMS.txt) |

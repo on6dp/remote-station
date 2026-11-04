@@ -180,7 +180,8 @@
       write: (v) => q(0x27, 0x15, 0x00, ...freqBytes(SC_SPANS[v])) },
     { id: 'scHold', g: 'rx', label: 'HOLD du scope', type: 'toggle', face: true, write: (v) => q(0x27, 0x17, 0x00, v ? 1 : 0) },
     // CENT/FIX (27 14 : 00 CENTER, 01 FIX) et EDGE en mode FIX (27 16 : bords 1 à 4 de la bande)
-    { id: 'scMode', g: 'rx', label: 'CENTER / FIX du scope', type: 'select', face: true, options: [[0, 'CENTER'], [1, 'FIX']], write: (v) => q(0x27, 0x14, 0x00, v) },
+    // 02 SCROLL-C et 03 SCROLL-F (appui long sur CENT/FIX) : valeurs des firmwares récents, pas dans la section 19 du manuel fourni
+    { id: 'scMode', g: 'rx', label: 'CENTER / FIX du scope', type: 'select', face: true, options: [[0, 'CENTER'], [1, 'FIX'], [2, 'SCROLL-C'], [3, 'SCROLL-F']], write: (v) => q(0x27, 0x14, 0x00, v) },
     // REF (27 19 00 + dB en BCD XX XX + signe : −20,0 … +20,0 dB par 0,5 dB) et SPEED (27 1A 00 : 00 FAST, 01 MID, 02 SLOW) du scope du TRX
     { id: 'scRef', g: 'rx', label: 'REF du scope', type: 'level', min: -20, max: 20, step: 0.5, unit: 'dB', face: true,
       write: (v) => { const a = Math.round(Math.abs(v) * 10); return q(0x27, 0x19, 0x00, bcd(Math.floor(a / 10)), bcd((a % 10) * 10), v < 0 ? 1 : 0); } },
@@ -289,7 +290,7 @@
     // Mémoires du manipulateur (1A 02 ch texte) : M1 … M8, texte ASCII (« * » = numéro de concours, « ^ » = signes liés)
     if (c === 0x27 && d[0] === 0x15 && d.length >= 7) { const i = SC_SPANS.indexOf(freqValue(d, 2)); return i >= 0 ? { scSpan: i } : { ok: true }; }
     if (c === 0x27 && d[0] === 0x17 && d.length >= 3) return { scHold: d[2] ? 1 : 0 };
-    if (c === 0x27 && d[0] === 0x14 && d.length >= 3) return { scMode: d[2] ? 1 : 0 };
+    if (c === 0x27 && d[0] === 0x14 && d.length >= 3) return { scMode: d[2] <= 3 ? d[2] : 0 };
     if (c === 0x27 && d[0] === 0x19 && d.length >= 5) { const v = unbcd(d[2]) + unbcd(d[3]) / 100; return { scRef: Math.round((d[4] ? -v : v) * 2) / 2 }; }
     if (c === 0x27 && d[0] === 0x1A && d.length >= 3 && d[2] <= 2) return { scSpeed: d[2] };
     if (c === 0x27 && d[0] === 0x16 && d.length >= 3 && d[2] >= 1 && d[2] <= 4) return { scEdge: d[2] };
