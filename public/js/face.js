@@ -2427,7 +2427,13 @@
     // Grande fréquence : le VFO en service ; en SPLIT, pendant l'émission, le VFO d'émission (comme sur le TRX). L'autre VFO à droite, en plus petit
     const fmt = (f) => (f ? Math.floor(f / 1e6) + '.' + String(Math.floor(f / 1000) % 1000).padStart(3, '0') + '.' + String(Math.floor(f / 10) % 100).padStart(2, '0') : '—');
     const act = s.vfoSel === 1 ? 'B' : 'A', main = s.split && tx ? (act === 'A' ? 'B' : 'A') : act, other = main === 'A' ? 'B' : 'A';
-    const fq = (sd) => (sd === 'A' ? s.freq : s.freqB);
+    // XFC : tant que le TRX n'a pas encore relu l'échange (≤ 1,5 s), on montre déjà les fréquences inversées (puis remises au relâchement)
+    const xs = L.xfcSnap, xfcF = (v, k) => {
+      if (!xs || Date.now() - xs.at > 1500) return v;
+      const mine = k === 'a' ? xs.a : xs.b, other = k === 'a' ? xs.b : xs.a;
+      return !xs.back ? (v === mine ? other : v) : (v === other ? mine : v);
+    };
+    const fq = (sd) => (sd === 'A' ? xfcF(s.freq, 'a') : xfcF(s.freqB, 'b'));
     // Nom affiché : VFO A ou B en service sur le TRX (vfoAB) ; s.freq est toujours celle du VFO en service
     // XFC tenu (SPLIT) : les VFO sont inversés, le nom suit (VFO B pendant l'appui si on était sur A), comme sur le TRX
     const abName = (sd) => ((sd === 'A') === ((s.vfoAB !== 1) !== !!L.xfcOn) ? 'A' : 'B');
@@ -3348,8 +3354,10 @@
       if (L.xfcOn || !S().split || !R.CONTROL.xfc) return;
       if (!needControl()) return;
       if (S().tx) return say('XFC : pas pendant une émission.', 'warn', 2500);
-      L.xfcOn = true; setCtl('xfc', null);
-    } else if (L.xfcOn) { L.xfcOn = false; setCtl('xfc', null); }
+      // Affichage tout de suite inversé, sans attendre la relecture du TRX (voir xfcF)
+      L.xfcSnap = { a: S().freq, b: S().freqB, at: Date.now(), back: false };
+      L.xfcOn = true; setCtl('xfc', null); render();
+    } else if (L.xfcOn) { L.xfcOn = false; if (L.xfcSnap) { L.xfcSnap.back = true; L.xfcSnap.at = Date.now(); } setCtl('xfc', null); render(); }
   }
   // AUTO TUNE (IC-7300, CW) : pas de commande CI-V ; la page cherche le signal CW le plus fort à ± 400 Hz de la tonalité (pitch) dans la BF
   // reçue et décale le VFO (ou le RIT en service) pour qu'il tombe sur la tonalité ; « AUTOTUNE » s'affiche au-dessus de la fréquence

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.44** — IC-7300 : XFC et A/B affichés tout de suite (fréquences inversées sans attendre la relecture, autre VFO relu aussitôt)
 - **0.37.43** — IC-7300 : le menu MULTI passe par-dessus les cadres Vd / TEMP (4e réglage, MONITOR, visible)
 - **0.37.42** — IC-7300 : pendant XFC (SPLIT), « VFO A » / « VFO B » suit l'inversion, comme sur le TRX
 - **0.37.41** — Faces avant : avertissement quand le son du TRX part vers une carte son de TRX (« USB Audio CODEC ») au lieu des haut-parleurs (PHONES / Écouter le TRX sans son sur le PC du club)

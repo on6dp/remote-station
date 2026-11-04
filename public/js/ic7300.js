@@ -232,7 +232,7 @@
   for (const s of SIMPLE) SIMPLE_MAP[s[0] * 256 + s[1]] = s;
   // Trame de lecture de chaque clé d'état : relue juste après un réglage
   const READ_FOR = { power: q(0x14, 0x0A), split: q(0x0F), att: q(0x11), clar: q(0x21, 0x00), clarClr: q(0x21, 0x00), fil: q(0x26, 0x00), tuner: q(0x1C, 0x01),
-    cwPitch: q(0x14, 0x09), keySpeed: q(0x14, 0x0C) };
+    cwPitch: q(0x14, 0x09), keySpeed: q(0x14, 0x0C), xfc: q(0x25, 0x01), swap: q(0x25, 0x01) }; // XFC, A/B : l'autre VFO relu tout de suite
   for (const s of SIMPLE) if (s[2] !== 'powerRaw' && s[0] !== 0x15) READ_FOR[s[2]] = q(s[0], s[1]);
   const readFor = (id) => READ_FOR[id] || null;
 
