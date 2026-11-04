@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.32** — IC-7300 : indicateur TX de l'écran comme le TRX — rouge sur fond noir en réception dans une bande amateur, blanc sur fond rouge en émission, barré hors bande
 - **0.37.31** — IC-7300 AUDIO SCOPE : FFT en dB linéaire (40 dB sur la hauteur) calée sur le bruit de la bande passante du filtre, cascade noire hors signal, ATT 20 dB efface le bruit comme sur le TRX ; oscilloscope un peu plus haut
 - **0.37.30** — IC-7300 AUDIO SCOPE : niveaux calés sur le TRX (bruit de la bande passante vers le milieu de la FFT, hors bande noir ; oscilloscope rempli par le bruit à −20 dB), 100 ms/Div au départ comme le TRX, ATT / LEVEL / TIME retenus dans le navigateur
 - **0.37.29** — IC-7300 AUDIO SCOPE comme le TRX : ATT 0/10/20/30 dB en orange (appui long OFF), LEVEL 0/−10/−20/−30 dB, TIME 1/3/10/30/100/300 ms/Div, EXPD (agrandi), appui long EXPD/SET = AUDIO SCOPE SET (1A 05 0151–0154) appliqué au dessin, cascade bleue, échelle 0…4.0kHz

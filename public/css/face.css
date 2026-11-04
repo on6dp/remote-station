@@ -433,6 +433,9 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .ich-tagt { font: 800 12px Arial, sans-serif; pointer-events: none; }
 #face .ich-tagt.tune { fill: #e6e9ef; }
 #face .ich-tagt.tx { fill: #ff3b30; font-size: 14px; }
+#face .ich-tag.tx.on { fill: #ff3b30; }
+#face .ich-tagt.tx.on { fill: #fff; }
+#face .ich-txbar { stroke: #ff3b30; stroke-width: 2; pointer-events: none; }
 #face .ich-mode { fill: #2f6fd6; stroke: #7fb2ff; stroke-width: 1; }
 #face .ich-modet { fill: #fff; font: 700 20px Arial, sans-serif; pointer-events: none; }
 #face .ich-flt { fill: none; stroke: #e6e9ef; stroke-width: 2; }

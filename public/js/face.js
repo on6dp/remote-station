@@ -2083,7 +2083,10 @@
     const h = LCD.ich = el('g', { class: 'ich' }, g);
     const tag = (x, y, w, hh, cls, t) => { const r = el('rect', { x: X(x), y: Y(y), width: w, height: hh, rx: 2, class: 'ich-tag ' + cls }, h); const tt = el('text', { x: X(x + w / 2), y: Y(y + hh / 2 + 4.5), class: 'ich-tagt ' + cls, 'text-anchor': 'middle' }, h, t); return { r, t: tt }; };
     LCD.icTune = tag(6, 4, 50, 17, 'tune', 'TUNE');
+    // Indicateur d'émission du TRX : « TX » rouge sur noir en réception (fréquence dans une bande amateur), blanc sur rouge en émission,
+    // barré hors des bandes amateur
     LCD.icTx = tag(6, 24, 50, 17, 'tx', 'TX');
+    LCD.icTxBar = el('line', { x1: X(10), y1: Y(39), x2: X(52), y2: Y(26), class: 'ich-txbar' }, h);
     // Mode : badge bleu
     el('rect', { x: X(62), y: Y(5), width: 112, height: 32, rx: 4, class: 'ich-mode' }, h);
     LCD.icMode = el('text', { x: X(118), y: Y(29), class: 'ich-modet', 'text-anchor': 'middle' }, h, '—');
@@ -2131,7 +2134,10 @@
     const X = LCD.X, Y = LCD.Y;
     const show = (o, on) => { o.r.style.display = on ? '' : 'none'; o.t.style.display = on ? '' : 'none'; };
     show(LCD.icTune, !!(s.tuner || s.tuning));
-    show(LCD.icTx, !!tx);
+    const fA = s.freq || 0, inBand = BANDS.some((b) => fA >= b[1] && fA <= b[2]);
+    show(LCD.icTx, !!fA || !!tx);
+    LCD.icTx.r.classList.toggle('on', !!tx); LCD.icTx.t.classList.toggle('on', !!tx);
+    LCD.icTxBar.style.display = fA && !tx && !inBand ? '' : 'none';
     const md = s.mode || '—';
     LCD.icMode.textContent = md;
     show(LCD.icSplit, !!s.split);
