@@ -2029,10 +2029,14 @@
     // FFT 0 – 4 kHz avec sa cascade (à gauche)
     const fHz = Math.min(4000, WF.rate / 2), nb4 = Math.max(2, Math.floor((WF.n / 2) * fHz / (WF.rate / 2)));
     const wl = Math.floor(W * 0.585);
-    // Niveaux comme le TRX : le bruit dans la bande passante du filtre vers 45 % de la hauteur de la FFT (hors bande : noir),
-    // et à l'oscilloscope le bruit remplit l'écran à LEVEL −20 dB (références suivies lentement : ATT et LEVEL gardent leur effet)
+    // Niveaux comme le TRX : FFT en dB linéaire (40 dB sur la hauteur), le bruit dans la bande passante du filtre (médiane) vers 45 %,
+    // hors bande : noir ; ATT 20 dB : le bruit disparaît, les signaux restent ; à l'oscilloscope, le bruit remplit l'écran à LEVEL −20 dB
+    // (références suivies lentement : ATT et LEVEL gardent leur effet)
     if (sp && !L.hold) {
-      const a = Array.from(sp.subarray(1, nb4)).sort((x, y) => x - y), p90 = a[Math.floor(a.length * 0.9)] || 0;
+      const fl = LCD.flt && LCD.flt.A, bw = fHz / nb4;
+      let i0 = 1, i1 = nb4;
+      if (fl && fl.hz) { const c0 = audioCenter(fl.mode || '', fl.hz) + (fl.sh || 0); i0 = Math.max(1, Math.round((c0 - fl.hz * 0.4) / bw)); i1 = Math.min(nb4, Math.max(i0 + 2, Math.round((c0 + fl.hz * 0.4) / bw))); }
+      const a = Array.from(sp.subarray(i0, i1)).sort((x, y) => x - y), p90 = a[a.length >> 1] || 0;
       AUD.p90 = AUD.p90 == null ? p90 : AUD.p90 + (p90 - AUD.p90) * 0.03;
       const n = Math.min(buf.length, Math.round(WF.rate * 0.25)), b2 = new Float32Array(n);
       for (let i = 0; i < n; i++) b2[i] = Math.abs(buf[buf.length - n + i]);
@@ -2040,15 +2044,15 @@
       AUD.md = AUD.md == null ? md : AUD.md + (md - AUD.md) * 0.03;
     }
     // Comme le TRX : cascade bleue, pas de repère du filtre, échelle 0 … 4.0kHz
-    drawScope(c2, { sp, x0: 0, y0: yb, w: wl, h: hb, name: '', color: as.fft, line: as.line, wf: as.wf, noMarker: true, audScale: true }, AUD.pal || (AUD.pal = mkPal([[0, [0, 12, 70]], [0.4, [0, 55, 200]], [0.72, [70, 160, 255]], [1, [225, 242, 255]]])), nb4, 0.67 - (AUD.p90 == null ? 0.67 : AUD.p90) - AUD_ATT[AUD.att] / 40, fHz);
+    drawScope(c2, { sp, x0: 0, y0: yb, w: wl, h: hb, name: '', color: as.fft, line: as.line, wf: as.wf, noMarker: true, audScale: true, lin: true }, AUD.pal || (AUD.pal = mkPal([[0, [0, 0, 0]], [0.22, [0, 30, 140]], [0.45, [0, 90, 225]], [0.72, [90, 180, 255]], [1, [230, 245, 255]]])), nb4, 0.45 - (AUD.p90 == null ? 0.45 : AUD.p90) - AUD_ATT[AUD.att] / 40, fHz);
     // Oscilloscope (à droite) : forme d'onde verte ; à 100 ms par division, les crêtes de la dernière seconde
     const ox = wl + 4, ow = W - ox, lab = Math.max(10, Math.min(15, Math.round(hb * 0.12))), gh = hb - lab - 2, mid = yb + gh / 2;
     c2.fillStyle = '#000'; c2.fillRect(ox - 2, yb, ow + 2, hb);
     c2.strokeStyle = 'rgba(120,130,145,.35)'; c2.lineWidth = 1;
     for (let k = 1; k < 10; k++) { const gx = Math.round(ox + ow * k / 10) + 0.5; c2.beginPath(); c2.moveTo(gx, yb); c2.lineTo(gx, yb + gh); c2.stroke(); }
     for (let k = 1; k < 4; k++) { const gy = Math.round(yb + gh * k / 4) + 0.5; c2.beginPath(); c2.moveTo(ox, gy); c2.lineTo(ox + ow, gy); c2.stroke(); }
-    // Pleine échelle à 0 dB = 0,4 × la médiane de |BF| : à −20 dB, les crêtes du bruit (2 à 4 × la médiane) remplissent l'écran, comme sur le TRX
-    const gain = Math.pow(10, AUD_LVL[AUD.lvl] / 20), k = (gh / 2 - 2) / ((AUD.md || 0.02) * 0.4) * gain;
+    // Pleine échelle à 0 dB = 0,3 × la médiane de |BF| : à −20 dB, les crêtes du bruit (2 à 4 × la médiane) remplissent l'écran, comme sur le TRX
+    const gain = Math.pow(10, AUD_LVL[AUD.lvl] / 20), k = (gh / 2 - 2) / ((AUD.md || 0.02) * 0.3) * gain;
     const tdiv = AUD_TIME[AUD.time][1];
     const oc = 'rgb(' + as.osc.join(',') + ')';
     c2.strokeStyle = oc; c2.fillStyle = oc; c2.lineWidth = 1.2;
@@ -3947,12 +3951,12 @@
     c2.strokeStyle = rg.color ? 'rgb(' + rg.color.join(',') + ')' : 'rgba(205,220,255,.9)';
     c2.beginPath();
     if (rg.line) {
-      for (let px = 0; px < w; px++) { const v = col[px], y = y0 + sh - 1 - v * v * (sh - 5); px ? c2.lineTo(x0 + px + 0.5, y) : c2.moveTo(x0 + 0.5, y); }
+      for (let px = 0; px < w; px++) { const v = col[px], y = y0 + sh - 1 - (rg.lin ? v : v * v) * (sh - 5); px ? c2.lineTo(x0 + px + 0.5, y) : c2.moveTo(x0 + 0.5, y); }
       c2.lineWidth = 1.3;
     } else for (let px = 0; px < w; px++) {
       const v = col[px];
       c2.moveTo(x0 + px + 0.5, y0 + sh - 1);
-      c2.lineTo(x0 + px + 0.5, y0 + sh - 1 - v * v * (sh - 5));
+      if (v > 0.005) c2.lineTo(x0 + px + 0.5, y0 + sh - 1 - (rg.lin ? v : v * v) * (sh - 5));
     }
     c2.stroke();
     c2.lineWidth = 1;
