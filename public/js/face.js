@@ -2428,7 +2428,8 @@
     const act = s.vfoSel === 1 ? 'B' : 'A', main = s.split && tx ? (act === 'A' ? 'B' : 'A') : act, other = main === 'A' ? 'B' : 'A';
     const fq = (sd) => (sd === 'A' ? s.freq : s.freqB);
     // Nom affiché : VFO A ou B en service sur le TRX (vfoAB) ; s.freq est toujours celle du VFO en service
-    const abName = (sd) => ((sd === 'A') === (s.vfoAB !== 1) ? 'A' : 'B');
+    // XFC tenu (SPLIT) : les VFO sont inversés, le nom suit (VFO B pendant l'appui si on était sur A), comme sur le TRX
+    const abName = (sd) => ((sd === 'A') === ((s.vfoAB !== 1) !== !!L.xfcOn) ? 'A' : 'B');
     LCD.icVfo.textContent = 'VFO ' + abName(main);
     LCD.icFreq.textContent = fmt(fq(main));
     LCD.icFreq.classList.toggle('txsplit', !!s.split && !!tx); // SPLIT : la fréquence d'émission (en grand pendant l'émission) en rouge

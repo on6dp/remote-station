@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.42 | [RemoteStation-Setup-0.37.42.exe](0.37.42/RemoteStation-Setup-0.37.42.exe) | [remote-station-0.37.42.tar.gz](0.37.42/remote-station-0.37.42.tar.gz) | XFC : VFO A / B suit — [empreintes SHA-256](0.37.42/SHA256SUMS.txt) |
 | 0.37.41 | [RemoteStation-Setup-0.37.41.exe](0.37.41/RemoteStation-Setup-0.37.41.exe) | [remote-station-0.37.41.tar.gz](0.37.41/remote-station-0.37.41.tar.gz) | Avertissement sortie son — [empreintes SHA-256](0.37.41/SHA256SUMS.txt) |
 | 0.37.40 | [RemoteStation-Setup-0.37.40.exe](0.37.40/RemoteStation-Setup-0.37.40.exe) | [remote-station-0.37.40.tar.gz](0.37.40/remote-station-0.37.40.tar.gz) | XFC, AUTO TUNE, PTT rouge à la souris — [empreintes SHA-256](0.37.40/SHA256SUMS.txt) |
 | 0.37.39 | [RemoteStation-Setup-0.37.39.exe](0.37.39/RemoteStation-Setup-0.37.39.exe) | [remote-station-0.37.39.tar.gz](0.37.39/remote-station-0.37.39.tar.gz) | SCAN SET, MEMO PAD EXPAND — [empreintes SHA-256](0.37.39/SHA256SUMS.txt) |
