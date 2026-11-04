@@ -3840,7 +3840,7 @@
         if (ICOM && L.icView === 'audio' && LCD.icAudio && LCD.icAudio.style.display !== 'none') drawIcAudio(c2, W, H, specs, pal, nb, lvl, maxHz);
         else if (L.multi && !ICOM) drawMulti(c2, W, H, specs, pal, nb, lvl, maxHz);
         else if (L.disp === 3) drawFilters(c2, W, H, specs, nb, lvl, maxHz);
-        else if (L.d3) { const mh = fitHz(activeSide()); draw3d(c2, W, H, activeSide() === 'B' && WF.two ? specs[1] : specs[0], pal, nbFor(mh), lvl, mh); }
+        else if (L.d3 && !ICOM) { /* pas de 3DSS sur l'IC-7300 (réglage resté en mémoire du navigateur : ignoré) */ const mh = fitHz(activeSide()); draw3d(c2, W, H, activeSide() === 'B' && WF.two ? specs[1] : specs[0], pal, nbFor(mh), lvl, mh); }
         else for (const rg of scopeRegions(W, H, specs)) { const mh = fitHz(rg.name === 'SUB' ? 'B' : 'A'); drawScope(c2, rg, pal, nbFor(mh), lvl, mh); }
       }
     } else {
