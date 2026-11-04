@@ -4016,7 +4016,20 @@
     player.next = 0;
     wantAudio();
     if (st && st.audio && !st.audio.active) say('La station n’envoie pas encore de son (audio pas activé sur la page Station).', 'warn');
+    else sinkCheck();
     render();
+  }
+  // Sortie son de ce PC = carte son d'un TRX (« USB Audio CODEC » de l'IC-7300, par exemple sur le PC du club) : rien dans les haut-parleurs,
+  // et le son reçu partirait vers l'entrée du TRX. On le signale (la sortie se choisit dans « Sortie », ligne SSB CONFIGURATION)
+  function sinkCheck() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+    navigator.mediaDevices.enumerateDevices().then((devs) => {
+      const outs = devs.filter((d) => d.kind === 'audiooutput');
+      const cur = outs.find((d) => d.deviceId === (player.sink || 'default')) || outs.find((d) => d.deviceId === 'default');
+      if (cur && /USB Audio CODEC|CODEC USB/i.test(cur.label || '')) {
+        say('Son du TRX envoyé vers « ' + cur.label + ' » : c’est la carte son d’un TRX, pas vos haut-parleurs — vous n’entendrez rien. Choisissez votre casque ou vos haut-parleurs dans « Sortie » (ligne SSB CONFIGURATION, micro en service) ou comme sortie par défaut de Windows.', 'warn', 12000);
+      }
+    }).catch(() => {});
   }
   function stopListen() {
     L.listening = false;

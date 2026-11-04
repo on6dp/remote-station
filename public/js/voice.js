@@ -206,6 +206,8 @@
     if (!id) return;
     if (V.ctx && V.ctx.setSinkId) V.ctx.setSinkId(id === 'default' ? '' : id).catch(() => {});
     if (V.api && V.api.setSink) V.api.setSink(id === 'default' ? '' : id);
+    const o = $('vxOut').selectedOptions && $('vxOut').selectedOptions[0];
+    if (o && /USB Audio CODEC|CODEC USB/i.test(o.textContent) && V.api) V.api.say('Sortie « ' + o.textContent + ' » : c’est la carte son d’un TRX, pas vos haut-parleurs (vous n’entendriez rien). Choisissez votre casque ou vos haut-parleurs.', 'warn', 9000);
   }
   async function listDevices(cur) {
     const sel = $('vxDev');
