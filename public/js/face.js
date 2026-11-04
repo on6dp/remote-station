@@ -4644,7 +4644,18 @@
     box.innerHTML = '<div class="bmv-h"><b class="bmv-band">—</b><small>' + (side === 'A' ? 'VFO-A' : 'VFO-B') + '</small>' +
       '<span class="bmv-span"><button type="button" data-d="-1" title="Plage plus étroite">−</button><button type="button" data-d="1" title="Plage plus large (jusqu’à toute la bande)">+</button></span></div>' +
       '<div class="bmv-m">' + BMV_FILTS.map(([k, t]) => '<button type="button" data-f="' + k + '" title="' + (k ? 'Seulement les spots ' + t : 'Tous les spots') + '">' + t + '</button>').join('') + '</div>' +
-      '<div class="bmv-b"><canvas></canvas></div><div class="bmv-f"></div>';
+      '<div class="bmv-b"><canvas></canvas></div><div class="bmv-f"></div><div class="bmv-grip" title="Glisser : largeur des deux BAND MAP · double-clic : largeur d’origine"></div>';
+    // Poignée sur le bord côté TRX : même largeur pour les deux cartes, gardée dans ce navigateur
+    const grip = box.querySelector('.bmv-grip');
+    grip.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      const x0 = e.clientX, w0 = box.getBoundingClientRect().width, sg = side === 'A' ? 1 : -1;
+      grip.classList.add('drag');
+      const mv = (ev) => bmvWidth(w0 + sg * (ev.clientX - x0));
+      const up = () => { grip.classList.remove('drag'); window.removeEventListener('mousemove', mv); window.removeEventListener('mouseup', up); store.set('rs.face.bmw', String(Math.round(box.getBoundingClientRect().width))); };
+      window.addEventListener('mousemove', mv); window.addEventListener('mouseup', up);
+    });
+    grip.addEventListener('dblclick', () => { bmvWidth(0); store.set('rs.face.bmw', ''); });
     const filtShow = () => box.querySelectorAll('.bmv-m button').forEach((b) => b.classList.toggle('on', b.dataset.f === (BMV.filt[side] || '')));
     box.querySelectorAll('.bmv-m button').forEach((b) => b.addEventListener('click', () => {
       BMV.filt[side] = b.dataset.f === BMV.filt[side] ? '' : b.dataset.f; // nouveau clic sur le mode choisi : tous
@@ -4677,6 +4688,14 @@
     });
     return box;
   }
+  // Largeur des BAND MAP (0 = largeur d'origine de la feuille de style)
+  function bmvWidth(w) {
+    const top = document.querySelector('.fc-top');
+    if (!top) return;
+    if (w) top.style.setProperty('--bmw', Math.round(Math.max(160, Math.min(520, w))) + 'px'); else top.style.removeProperty('--bmw');
+    bmvDraw();
+  }
+  { const w = Number(store.get('rs.face.bmw')); if (w) setTimeout(() => bmvWidth(w), 0); }
   function bmvDraw() {
     if (BMV.raf) return;
     BMV.raf = requestAnimationFrame(() => { BMV.raf = 0; bmvPaint('A'); bmvPaint('B'); });

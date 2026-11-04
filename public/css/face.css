@@ -11,7 +11,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-msg.error { color: #ff6b6b; font-weight: 700; }
 .fc-wrap { position: relative; max-width: 1900px; margin: 0; min-width: 0; }
 /* Face avant, puis sous elle : PTT + SSB CONFIGURATION (micro, égaliseurs, M'écouter et son volume) sur une ligne */
-.fc-top { display: grid; grid-template-columns: 190px minmax(0, 1900px) 190px; grid-template-rows: auto 1fr; gap: 10px; align-items: stretch; justify-content: center; }
+.fc-top { --bmw: 270px; display: grid; grid-template-columns: var(--bmw) minmax(0, 1900px) var(--bmw); grid-template-rows: auto 1fr; gap: 10px; align-items: stretch; justify-content: center; }
 .fc-top > .fc-wrap { align-self: start; }
 /* PTT + SSB CONFIGURATION juste sous l'image du TRX (colonne du milieu) : les deux cartes de bande descendent sur toute la hauteur */
 #bmvA { grid-column: 1; grid-row: 1 / span 2; }
@@ -31,9 +31,13 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-bmv .bmv-b { position: relative; flex: 1 1 auto; min-height: 200px; cursor: pointer; }
 .fc-bmv canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .fc-bmv .bmv-m { display: flex; gap: 2px; padding: 4px 4px; border-bottom: 1px solid #1d2733; }
-.fc-bmv .bmv-m button { flex: 1 1 auto; min-width: 0; font: 700 9.5px/1 system-ui, sans-serif; padding: 4px 2px; border-radius: 3px; border: 1px solid #2a3746; background: #111923; color: #b9c8da; cursor: pointer; white-space: nowrap; }
+.fc-bmv .bmv-m button { flex: 1 1 auto; min-width: 0; font: 700 11px/1 system-ui, sans-serif; padding: 4px 2px; border-radius: 3px; border: 1px solid #2a3746; background: #111923; color: #b9c8da; cursor: pointer; white-space: nowrap; }
 .fc-bmv .bmv-m button:hover { border-color: #5fb3ff; color: #fff; }
 .fc-bmv .bmv-m button.on { background: #f2cf4a; border-color: #f2cf4a; color: #1a1400; }
+.fc-bmv .bmv-grip { position: absolute; top: 0; bottom: 0; width: 7px; cursor: col-resize; z-index: 3; }
+.fc-bmv[data-side='A'] .bmv-grip { right: 0; }
+.fc-bmv[data-side='B'] .bmv-grip { left: 0; }
+.fc-bmv .bmv-grip:hover, .fc-bmv .bmv-grip.drag { background: rgba(95,179,255,.35); }
 .fc-bmv .bmv-f { padding: 3px 8px; border-top: 1px solid #1d2733; font: 11px/1.3 system-ui, sans-serif; color: #8fa0b4; }
 @media (max-width: 1300px) { .fc-top { grid-template-columns: minmax(0, 1fr); } .fc-bmv { display: none; } .fc-top > .fc-wrap, .fc-top > .fc-tx { grid-column: 1; } }
 .fc-panel { position: relative; }

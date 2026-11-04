@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.28** — Faces avant : BAND MAP plus larges (270 px) et largeur réglable par une poignée sur leur bord côté TRX (double-clic : origine, retenue dans le navigateur)
 - **0.37.27** — IC-7300 : clic sur le spectre ou la cascade du vrai scope = VFO sur la fréquence cliquée (pas 100 Hz, 10 Hz en CW)
 - **0.37.26** — IC-7300 : voyants P.AMP1, AGC-M, ATT, NB, NR, COMP… en blanc gras et plus grands (écran normal et M.SCOPE)
 - **0.37.25** — IC-7300 scope : modes SCROLL-C / SCROLL-F transmis tels quels (le serveur les ramenait à CENTER) — en FIX et SCROLL-F, bords (14.050.0 en SCROLL), trait vert R et trait orange T ; échelle SWR du bargraph comme le TRX
