@@ -410,6 +410,8 @@ const digi = { worker: null, hist: { FT8: [], FT4: [], FT2: [], WSPR: [], JT65: 
 const FT_DUAL_MODES = ['FT8', 'FT4', 'FT2', 'JT65', 'WSPR', 'JTTY', 'CW'];
 /** Double décodage FT (FTDX101 : récepteur SUB sur la voie droite) possible : TRX à deux voies son, double réception */
 function ftDualOk() { return !!(station && station.rig && station.rig.DUAL_AUDIO && radio.dualRx === 1); }
+/** Émission auto possible sur le VFO-B (FTDX101 : TX MAIN / TX SUB). Pas sur le FTX-1 : il émet toujours de son VFO principal */
+function ftTxBOk() { return ftDualOk() && !!station.rig.DUAL_TX; }
 /** Ce membre veut aussi les décodages du récepteur SUB (page des modes numériques de la face avant FTDX101) */
 const ftDualConn = (c) => !!(c.ftDual && FT_DUAL_MODES.indexOf(c.digi) >= 0);
 const DIGI_MODES = ['FT8', 'FT4', 'FT2', 'RTTY', 'WSPR', 'JT65', 'JTTY', 'CW', 'SSTV'];
@@ -445,7 +447,7 @@ function rttyCfg(r) {
 function rttyB(c) {
   const r = c.rtty2;
   if (!r) return null;
-  if (!(station && station.rig && station.rig.DUAL_AUDIO && radio.dualRx === 1)) return r;
+  if (!c.rtDual || !(station && station.rig && station.rig.DUAL_AUDIO && radio.dualRx === 1)) return r;
   return Object.assign({}, r, { ch: 1, key: r.key + '/R' });
 }
 // Décodeur CW B d'un membre : récepteur SUB (voie droite), seulement en double réception
@@ -2154,7 +2156,7 @@ function seqOff(reason, level) {
 }
 /** VFO d'émission = côté du QSO (FTDX101 : TX sur MAIN pour les colonnes A, sur SUB pour les colonnes B). */
 function seqTxSide() {
-  if (!seq || !seq.on || ptt.active || !station || !station.rig || !station.rig.DUAL_AUDIO) return;
+  if (!seq || !seq.on || ptt.active || !station || !station.rig || !station.rig.DUAL_TX) return;
   const want = seq.side === 'B' ? 1 : 0;
   if (radio.txVfo === want) return;
   if (seq.side !== 'B' && radio.txVfo == null) return;
@@ -2349,7 +2351,7 @@ function seqStart(conn, m) {
     // Fréquence audio du correspondant (fréquence RX) : l'aide AP du décodeur pour ce QSO s'y applique (comme WSJT-X)
     rxf: Number(m.rxf) >= 100 && Number(m.rxf) <= 3000 ? Math.round(Number(m.rxf)) : (same && seq.rxf) || 0,
     // Récepteur du correspondant (FTDX101 en double réception) : l'émission part sur ce VFO (A = MAIN, B = SUB)
-    side: m.side === 'B' && ftDualOk() ? 'B' : 'A'
+    side: m.side === 'B' && ftTxBOk() ? 'B' : 'A'
   };
   seqTxSide();
   lastCtrlActivity = Date.now();
@@ -2368,7 +2370,7 @@ function seqCfg(conn, m) {
   if (typeof m.call1st === 'boolean') seq.call1st = m.call1st;
   // VFO d'émission changé pendant la séquence (FTDX101 en double réception) : pris en compte dès que le TRX est en réception
   if (m.side === 'A' || m.side === 'B') {
-    const side = m.side === 'B' && ftDualOk() ? 'B' : 'A';
+    const side = m.side === 'B' && ftTxBOk() ? 'B' : 'A';
     if (side !== seq.side) {
       seq.side = side;
       if (ftxPend && ftxPend.state === 'wait' && ftxPend.conn === seq.conn) ftxCancel('VFO d’émission changé', true); // repart à la bonne fréquence
@@ -2823,13 +2825,16 @@ function onOperator(conn, m) {
       const cc = mode === 'CW' ? cwCfg(m.cw) : null;
       if (mode === 'CW' && !cc) mode = null;
       const cc2 = mode === 'CW' && m.ftDual ? cwCfg(m.cw2) : null; // 2e décodeur CW (VFO-B, double réception)
-      const changed = conn.digi !== mode || (conn.rtty && conn.rtty.key) !== (rc && rc.key) || (conn.rtty2 && conn.rtty2.key) !== (rc2 && rc2.key) ||
+      // 2e décodeur RTTY sur la voie droite (récepteur SUB) : la page l'affiche avec sa propre cascade (double réception)
+      const rtDual = mode === 'RTTY' && !!m.rtDual;
+      const changed = conn.digi !== mode || !!conn.rtDual !== rtDual || (conn.rtty && conn.rtty.key) !== (rc && rc.key) || (conn.rtty2 && conn.rtty2.key) !== (rc2 && rc2.key) ||
         (conn.cw && conn.cw.key) !== (cc && cc.key) || (conn.cw2 && conn.cw2.key) !== (cc2 && cc2.key);
       const dual = !!m.ftDual && FT_DUAL_MODES.indexOf(mode) >= 0;
       if (dual !== !!conn.ftDual) { conn.ftDual = dual; if (!changed) updateDigi(); }
       conn.digi = mode;
       conn.rtty = rc;
       conn.rtty2 = rc2;
+      conn.rtDual = rtDual;
       conn.cw = cc;
       conn.cw2 = cc2;
       if (changed) updateDigi();

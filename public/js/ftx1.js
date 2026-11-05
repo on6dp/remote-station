@@ -187,6 +187,11 @@
     hint: 'FTX-1 : menu Operation setting → General, « CAT-1 RATE » et « CAT-1 CAT-3 STOP BIT » doivent correspondre à ces valeurs. Choisissez le port Enhanced COM Port (CAT-1).'
   });
 
+  // Son USB en stéréo : récepteur MAIN à gauche, SUB à droite (comme le FTDX101). En double réception, l'écoute
+  // en stéréo, le décodage RTTY / FT du SUB lisent la voie droite. L'émission reste celle du FTX-1 (pas de DUAL_TX :
+  // l'émission auto FT8 part toujours du VFO principal, le SPLIT virtuel du FTX-1 ne change pas)
+  api.DUAL_AUDIO = true;
+
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else {
     root.FTX1 = api;

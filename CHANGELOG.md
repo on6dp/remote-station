@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.53** — BAND MAP de la face avant : en SPLIT, les deux cartes passent à ±10 kHz autour de leur VFO (hors SPLIT : plage habituelle) ; FTX-1 : son USB en stéréo (MAIN à gauche, SUB à droite) avec le bouton Stéréo MAIN | SUB de /ftx1 et le 2e décodeur RTTY sur le SUB dans /ftx1/digi.html ; émission FT8 auto toujours sur le VFO principal du FTX-1
 - **0.37.52** — Nouvelle page face avant FTX-1 Optima (/ftx1) : écran double réception comme le FTDX101 avec le SUB à gauche et le MAIN à droite, SUB DIAL, FUNC, AF/RF MAIN et SUB, BAND, MODE, SPLIT, CLAR, DISP, BACK, FINE/FAST, voyants BUSY/TX ; FTX-1 : lecture/réglage du volume AF du VFO B (AG1)
 - **0.37.51** — IC-7300 : S-mètre plus large avec 1 3 5 7 9 +20 +40 +60dB (resserré en SPLIT) ; METER : chiffres de SWR et Id un peu plus bas que le trait blanc
 - **0.37.50** — IC-7300 : Equalizer TRX = profil d'émission de chaque opérateur (SET → Tone Control/TBW : SSB TX Bass / Treble, TBW WIDE / MID / NAR, AM et FM TX Bass / Treble), mis au TRX à la prise de main, réglage du club remis au retour ; page Station : lecture et écriture CI-V de ces réglages

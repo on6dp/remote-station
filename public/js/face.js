@@ -5068,6 +5068,11 @@
   // Plage affichée : 5 à 200 kHz autour du VFO, ou 0 = toute la bande du VFO (par défaut : tous les spots de la bande)
   const bmSp = (k) => { const v = Number(store.get(k, '0')); return BMV.spans.indexOf(v) >= 0 ? v : 0; };
   BMV.span = { A: bmSp('rs.face.bmspan2A'), B: bmSp('rs.face.bmspan2B') };
+  // En SPLIT : les deux cartes passent à ±10 kHz autour de leur VFO (− / + et molette restent possibles) ;
+  // hors SPLIT, chaque carte reprend sa plage habituelle
+  BMV.ssp = { A: 20, B: 20 }; BMV.wasSplit = false;
+  const bmvSplit = () => !!S().split;
+  const bmvSpan = (side) => (bmvSplit() ? BMV.ssp[side] : BMV.span[side]);
   const BMV_KEEP = 30 * 60000;
   const BMV_MODES = /\b(FT8|FT4|FT2|CW|RTTY|PSK\d*|SSB|USB|LSB|JT65|JT9|Q65|WSPR|SSTV|FM|AM|OLIVIA|MSK144)\b/i;
   // Filtre par mode sous le nom de la bande (TOUS, FT8/4/2, SSB, CW, RTTY), propre à chaque carte
@@ -5129,9 +5134,9 @@
     }));
     filtShow();
     const zoom = (d) => {
-      const i = Math.max(0, Math.min(BMV.spans.length - 1, BMV.spans.indexOf(BMV.span[side]) + d));
-      BMV.span[side] = BMV.spans[i < 0 ? 2 : i];
-      store.set('rs.face.bmspan2' + side, String(BMV.span[side]));
+      const i = Math.max(0, Math.min(BMV.spans.length - 1, BMV.spans.indexOf(bmvSpan(side)) + d));
+      if (bmvSplit()) BMV.ssp[side] = BMV.spans[i < 0 ? 2 : i];
+      else { BMV.span[side] = BMV.spans[i < 0 ? 2 : i]; store.set('rs.face.bmspan2' + side, String(BMV.span[side])); }
       bmvDraw();
     };
     box.querySelectorAll('.bmv-span button').forEach((b) => b.addEventListener('click', () => zoom(Number(b.dataset.d))));
@@ -5162,7 +5167,13 @@
   { const w = Number(store.get('rs.face.bmw')); if (w) setTimeout(() => bmvWidth(w), 0); }
   function bmvDraw() {
     if (BMV.raf) return;
-    BMV.raf = requestAnimationFrame(() => { BMV.raf = 0; bmvPaint('A'); bmvPaint('B'); });
+    BMV.raf = requestAnimationFrame(() => {
+      BMV.raf = 0;
+      const sp = bmvSplit();
+      if (sp && !BMV.wasSplit) BMV.ssp = { A: 20, B: 20 }; // chaque passage en SPLIT : ±10 kHz
+      BMV.wasSplit = sp;
+      bmvPaint('A'); bmvPaint('B');
+    });
   }
   function bmvPaint(side) {
     const box = bmvBuild(side);
@@ -5182,8 +5193,8 @@
     if (ICOM) { const sm = box.querySelector('.bmv-h small'), b = (side === 'A') === (s.vfoAB === 1); if (sm) sm.textContent = b ? 'VFO-B' : 'VFO-A'; }
     if (!f) return;
     // Toute la bande (plage 0) : de son début à sa fin ; hors bande : 200 kHz autour du VFO
-    const full = BMV.span[side] === 0 && !!band, fk = f / 1000;
-    const span = full ? (band[2] - band[1]) / 1000 : BMV.span[side] || 200;
+    const sps = bmvSpan(side), full = sps === 0 && !!band, fk = f / 1000;
+    const span = full ? (band[2] - band[1]) / 1000 : sps || 200;
     const lo = full ? band[1] / 1000 : fk - span / 2, hi = full ? band[2] / 1000 : fk + span / 2, pad = 10;
     const yOf = (k) => pad + (k - lo) / (hi - lo) * (H - 2 * pad);
     // Hors bande : grisé

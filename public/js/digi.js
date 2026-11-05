@@ -791,7 +791,7 @@
     if (watching && tab === 'cw') return api.send({ t: 'digi', mode: 'CW', cw: cwc, cw2: ftDual ? cwcB : null, ftDual });
     if (watching && tab === 'sstv') { api.send({ t: 'digi', mode: 'SSTV', hist: ssNeedHist }); ssNeedHist = false; return; }
     if (watching && tab === 'jtty') { api.send({ t: 'digi', mode: 'JTTY', hist: jtNeedHist, ftDual }); jtNeedHist = false; return; }
-    if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rts[0], rtty2: rts[1] });
+    if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rts[0], rtty2: rts[1], rtDual: rtDualAudio });
     if (watching && tab === 'wspr') { api.send({ t: 'digi', mode: 'WSPR', hist: wsNeedHist, ftDual }); wsNeedHist = false; return; }
     api.send({ t: 'digi', mode: watching ? mode : null, hist: watching && needHist, ftDual: watching && ftDual });
     if (watching) needHist = false;
@@ -1026,7 +1026,8 @@
   // Voie droite (0x14) : seulement en RTTY, avec un TRX qui envoie ses deux récepteurs (FTDX101 en double réception)
   function dualAudioOn() {
     const st = api && api.state && api.state();
-    return !!(api && api.rig && api.rig() && api.rig().DUAL_AUDIO && st && st.radio && st.radio.dualRx === 1);
+    // FTX-1 : seulement dans sa page de face avant (/ftx1) ; le dashboard garde une seule cascade
+    return !!(api && api.rig && api.rig() && api.rig().DUAL_AUDIO && (api.rig().ID !== 'ftx1' || FACEP === '/ftx1') && st && st.radio && st.radio.dualRx === 1);
   }
   function onRow(bytes) {
     const isB = bytes[0] === 0x14;

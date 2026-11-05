@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.53 | [RemoteStation-Setup-0.37.53.exe](0.37.53/RemoteStation-Setup-0.37.53.exe) | [remote-station-0.37.53.tar.gz](0.37.53/remote-station-0.37.53.tar.gz) | BAND MAP SPLIT, FTX-1 stéréo — [empreintes SHA-256](0.37.53/SHA256SUMS.txt) |
 | 0.37.52 | [RemoteStation-Setup-0.37.52.exe](0.37.52/RemoteStation-Setup-0.37.52.exe) | [remote-station-0.37.52.tar.gz](0.37.52/remote-station-0.37.52.tar.gz) | Face avant FTX-1 — [empreintes SHA-256](0.37.52/SHA256SUMS.txt) |
 | 0.37.51 | [RemoteStation-Setup-0.37.51.exe](0.37.51/RemoteStation-Setup-0.37.51.exe) | [remote-station-0.37.51.tar.gz](0.37.51/remote-station-0.37.51.tar.gz) | S-mètre 1…+60dB — [empreintes SHA-256](0.37.51/SHA256SUMS.txt) |
 | 0.37.50 | [RemoteStation-Setup-0.37.50.exe](0.37.50/RemoteStation-Setup-0.37.50.exe) | [remote-station-0.37.50.tar.gz](0.37.50/remote-station-0.37.50.tar.gz) | Equalizer TRX de l'IC-7300 (profil par opérateur) — [empreintes SHA-256](0.37.50/SHA256SUMS.txt) |

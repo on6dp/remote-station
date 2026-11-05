@@ -431,6 +431,8 @@
   // Son USB en stéréo : récepteur MAIN à gauche, SUB à droite. En double réception (FR00), la page Station envoie
   // les deux voies : le décodeur RTTY B lit le récepteur SUB, avec sa propre cascade.
   api.DUAL_AUDIO = true;
+  // Émission sur le VFO du correspondant (MAIN ou SUB, touches TX MAIN / TX SUB : FT2 / FT3) pour l'émission auto FT8
+  api.DUAL_TX = true;
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else {
