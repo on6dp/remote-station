@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.90** — Face avant FTX-1 : comme sur le TRX, l'autre VFO reste en blanc avec [RX] (même en réception simple), plus de « SUB OFF »
 - **0.37.89** — Face avant FTX-1 : clic sur SUB DIAL = VFO actif MAIN ⇄ SUB, comme sur le TRX (en double réception seulement, par sécurité ; en HF, message vers A ⇄ B)
 - **0.37.88** — Face avant FTX-1 : écran DSP (appui d'1 s sur MAIN ou SUB AF/RF/SQL) — grand filtre, SHIFT / WIDTH / NOTCH / CONTOUR (APF en CW), réglage au bouton, à la molette ou − / + ; BK-IN mis en service tout seul à chaque passage en CW-L / CW-U ; tableau SPEED
 - **0.37.87** — Face avant FTX-1 : SPEED ouvre le tableau du TRX (SLOW1, SLOW2, FAST1, FAST2, FAST3, STOP), envoyé au scope du TRX ; le tableau reste ouvert, un nouvel appui sur SPEED le ferme

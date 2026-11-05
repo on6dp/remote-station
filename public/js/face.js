@@ -4323,7 +4323,7 @@
       } else {
         const show = live && (side === 'A' || subOn);
         f = show ? S_POS(sm) : 0;
-        val = show ? R.smeterLabel(sm) : side === 'B' && !subOn ? 'SUB OFF' : '';
+        val = show ? R.smeterLabel(sm) : side === 'B' && !subOn && !FACE.vfoBadges ? 'SUB OFF' : ''; // FTX-1 : pas de « SUB OFF » sur le TRX
         m.title.textContent = side === 'A' ? 'PO METER' : 'ALC METER';
       }
       m.f = m.f == null ? f : m.f + (f - m.f) * 0.6; // aiguille amortie
@@ -4398,7 +4398,7 @@
       v.mode.textContent = mode || '—';
       v.freq.setAttribute('d', fq ? seg7(fmtFreq(fq), v.xr, LCD.c0y + 95, 26) : '');
       const active = (s.vfoSel === 1) === (side === 'B');
-      v.freq.classList.toggle('dim', side === 'B' && !subOn);
+      v.freq.classList.toggle('dim', side === 'B' && !subOn && !FACE.vfoBadges); // FTX-1 : l'autre VFO reste en blanc, comme sur le TRX
       // SPLIT : la fréquence du VFO qui va émettre s'affiche en rouge (comme sur le TRX)
       v.freq.classList.toggle('txv', !!s.split && L.txSide(s) === side);
       v.sel.classList.toggle('on', active);
@@ -4423,7 +4423,7 @@
       }
       v.tx.classList.toggle('on', tx && txSide === side);
       if (v.stR) { // FTX-1 : RX (vert), TXRX / TX (rouge) sous [MAIN|SUB][VFO]
-        const isTx = txSide === side, isRx = side === 'A' || subOn;
+        const isTx = txSide === side, isRx = true; // FTX-1 : [RX] sur l'autre VFO, comme sur le TRX (même en réception simple)
         const t = isTx && isRx ? 'TXRX' : isTx ? 'TX' : isRx ? 'RX' : '';
         v.stT.textContent = t;
         v.stR.style.display = t ? '' : 'none';
