@@ -4154,7 +4154,15 @@
     if (t === 'SHIFT') { const v = s[dspK(sd, 'shift')] || 0; return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + 'Hz'; }
     if (t === 'WIDTH') { const w = dspWidthHz(s, sd); return w != null ? w + 'Hz' : '—'; }
     if (t === 'NOTCH') return s[dspK(sd, 'notch')] ? (s[dspK(sd, 'notchFreq')] || 0) + 'Hz' : 'OFF';
-    return onOff(s[dspK(sd, t === 'APF' ? 'apf' : 'contour')]);
+    if (t === 'CONTOUR') return s[dspK(sd, 'contour')] ? (s[dspK(sd, 'contourFreq')] != null ? s[dspK(sd, 'contourFreq')] + 'Hz' : 'ON') : 'OFF';
+    if (!s[dspK(sd, 'apf')]) return 'OFF';
+    const a = s[dspK(sd, 'apfFreq')]; return a != null ? ((a - 25) * 10 > 0 ? '+' : (a - 25) * 10 < 0 ? '−' : '') + Math.abs((a - 25) * 10) + 'Hz' : 'ON';
+  }
+  // Fonction de l'onglet en service (nom et valeur en orange, comme sur le TRX)
+  function dspOn(s, sd, t) {
+    if (t === 'SHIFT') return !!s[dspK(sd, 'shift')];
+    if (t === 'WIDTH') { const md = (sd === 'B' ? s.modeB : s.mode) || ''; return dspWidthHz(s, sd) !== widthDefHz(md); }
+    return !!s[dspK(sd, t === 'NOTCH' ? 'notch' : t === 'APF' ? 'apf' : 'contour')];
   }
   function dspToggle(sd) {
     viewTouched();
@@ -4178,7 +4186,15 @@
       const kn = dspK(sd, 'notch'), kf = dspK(sd, 'notchFreq'), c = R.CONTROL[kf];
       if (!s[kn]) { if (n > 0 && R.CONTROL[kn]) setCtl(kn, 1); return render(); }
       if (c) { const v = (s[kf] || 1000) + n * (c.step || 10); if (v < c.min) { setCtl(kn, 0); return render(); } later(kf, Math.min(c.max, v)); }
-    } else { const k = dspK(sd, t === 'APF' ? 'apf' : 'contour'); if (R.CONTROL[k]) setCtl(k, n > 0 ? 1 : 0); render(); }
+    } else {
+      // CONTOUR / APF : comme NOTCH — en marche au premier cran, puis la fréquence (sous le minimum : arrêt)
+      const ko = dspK(sd, t === 'APF' ? 'apf' : 'contour'), kf = dspK(sd, t === 'APF' ? 'apfFreq' : 'contourFreq'), c = R.CONTROL[kf];
+      if (!s[ko]) { if (n > 0 && R.CONTROL[ko]) setCtl(ko, 1); return render(); }
+      if (!c) { if (n < 0) setCtl(ko, 0); return render(); }
+      const v = (s[kf] != null ? s[kf] : t === 'APF' ? 25 : 1000) + n * (c.step || 10);
+      if (v < c.min) { setCtl(ko, 0); return render(); }
+      later(kf, Math.min(c.max, v));
+    }
   }
   function dspDraw(s) {
     let box = $('fcDsp');
@@ -4187,7 +4203,7 @@
     if (!box) {
       box = document.createElement('div');
       box.id = 'fcDsp'; box.className = 'fc-dsp';
-      box.innerHTML = '<svg class="fc-dsp-f" viewBox="0 0 280 80" preserveAspectRatio="none"><path class="ax" d=""/><path class="tr" d=""/><line class="ctr" x1="140" y1="6" x2="140" y2="58"/><line class="nt" x1="0" y1="6" x2="0" y2="58"/><g class="lb"></g></svg>' +
+      box.innerHTML = '<svg class="fc-dsp-f" viewBox="0 0 280 80" preserveAspectRatio="none"><path class="ax" d=""/><path class="tr" d=""/><line class="ctr" x1="140" y1="6" x2="140" y2="58"/><path class="nt" d=""/><path class="ct" d=""/><g class="lb"></g></svg>' +
         '<div class="fc-dsp-v"><span class="l"></span><span class="v"></span></div><div class="fc-dsp-t"></div>';
       $('facePanel').appendChild(box);
       const lb = box.querySelector('.lb'); let ax = 'M4 60H276';
@@ -4207,12 +4223,17 @@
     const w = dspWidthHz(s, sd) || 2400, sh = s[dspK(sd, 'shift')] || 0, k = 52 / 1000;
     const xl = 140 + (sh - w / 2) * k, xh = 140 + (sh + w / 2) * k, sl = Math.min(14, (xh - xl) / 4);
     box.querySelector('.tr').setAttribute('d', 'M4 58H' + Math.max(4, xl - sl).toFixed(1) + 'L' + xl.toFixed(1) + ' 10H' + xh.toFixed(1) + 'L' + Math.min(276, xh + sl).toFixed(1) + ' 58H276');
+    // NOTCH : pic vers le bas (V étroit) ; CONTOUR : demi-lune ; en orange dans la bande passante, comme sur le TRX
     const nt = box.querySelector('.nt'), non = !!s[dspK(sd, 'notch')];
     nt.style.display = non ? '' : 'none';
-    if (non) { const xn = 140 + ((s[dspK(sd, 'notchFreq')] || 0) - 1500) * k; nt.setAttribute('x1', xn); nt.setAttribute('x2', xn); }
+    if (non) { const xn = 140 + ((s[dspK(sd, 'notchFreq')] || 0) - 1500) * k; nt.setAttribute('d', 'M' + (xn - 5).toFixed(1) + ' 10L' + xn.toFixed(1) + ' 56L' + (xn + 5).toFixed(1) + ' 10'); }
+    const ct = box.querySelector('.ct'), con = !!s[dspK(sd, 'contour')];
+    ct.style.display = con ? '' : 'none';
+    if (con) { const xc = 140 + ((s[dspK(sd, 'contourFreq')] != null ? s[dspK(sd, 'contourFreq')] : 1000) - 1500) * k; ct.setAttribute('d', 'M' + (xc - 13).toFixed(1) + ' 10Q' + xc.toFixed(1) + ' 46 ' + (xc + 13).toFixed(1) + ' 10'); }
+    box.querySelector('.fc-dsp-v').classList.toggle('on', dspOn(s, sd, t));
     box.querySelector('.fc-dsp-v .l').innerHTML = (sd === 'B' ? '<small>SUB</small>' : '') + t; // sur une ligne
     box.querySelector('.fc-dsp-v .v').innerHTML = '<button type="button" data-pm="-1">−</button>' + dspVal(s, sd, t) + '<button type="button" data-pm="1">+</button>';
-    box.querySelector('.fc-dsp-t').innerHTML = tabs.map((n, i) => '<button type="button" data-tab="' + i + '" class="' + (i === L.dspTab ? 'on' : '') + '">' + n + '</button>').join('');
+    box.querySelector('.fc-dsp-t').innerHTML = tabs.map((n, i) => '<button type="button" data-tab="' + i + '" class="' + (i === L.dspTab ? 'on' : '') + (dspOn(s, sd, n) ? ' act' : '') + '">' + n + '</button>').join('');
     box.hidden = false;
   }
   // FTX-1 : cadre « RF POWER   83W » sur le scope quand on tourne FUNC, écran FUNC fermé (nom en orange, valeur en grand)

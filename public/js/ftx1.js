@@ -98,6 +98,11 @@
       { cmd: 'SD;', re: /^SD(\d\d)$/, parse: (m) => ({ bkDelay: +m[1] }), sim: 'SD06' },
       { cmd: 'CS;', re: /^CS([01])$/, parse: (m) => ({ cwSpot: +m[1] }), sim: 'CS0' },
       // FINE / FAST du TRX (FN : 0 normal, 1 FINE, 2 FAST) : la touche FINE/FAST de la page /ftx1 le suit
+      // Fréquences CONTOUR et APF (écran DSP de /ftx1) : CO P1 (0 MAIN, 1 SUB) P2 (1 CONTOUR FREQ 10–3200 Hz, 3 APF FREQ 0–50 = −250…+250 Hz)
+      { cmd: 'CO01;', re: /^CO01(\d{4})$/, parse: (m) => ({ contourFreq: +m[1] }), sim: 'CO011000' },
+      { cmd: 'CO11;', re: /^CO11(\d{4})$/, parse: (m) => ({ contourFreqB: +m[1] }), sim: 'CO111000' },
+      { cmd: 'CO03;', when: (st) => /^CW/.test(st.mode || ''), re: /^CO03(\d{4})$/, parse: (m) => ({ apfFreq: +m[1] }), sim: 'CO030025' },
+      { cmd: 'CO13;', when: (st) => /^CW/.test(st.modeB || ''), re: /^CO13(\d{4})$/, parse: (m) => ({ apfFreqB: +m[1] }), sim: 'CO130025' },
       // D-MODE du scope (SS06 : 0/4 CENTER, 1/7 CURSOR, 2/A FIX ; 0-2 avec 3DSS, 4/7/A cascade normale)
       { cmd: 'SS06;', re: /^SS06([0-9A-B])0000$/, parse: (m) => { const c = parseInt(m[1], 16); return { dMode: c === 1 || c === 7 ? 1 : c === 2 || c === 10 ? 2 : 0 }; }, sim: 'SS0640000' },
       { cmd: 'FN;', re: /^FN([0-2])$/, parse: (m) => ({ tuneStep: +m[1] }), sim: 'FN0' },
@@ -114,7 +119,7 @@
     // TUNER TYPE SEL ANT1 / ANT2 (EX030701 / EX030702) — numéros du manuel CAT FTX-1 (Table 3)
     extraQueries: ['RA1;', 'PA0;', 'PA1;', 'PA2;', 'AC;', 'RI0;', 'EX030103;', 'EX030104;', 'EX030701;', 'EX030702;'],
     extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'afB', 'hiSwr', 'tuningRi',
-      'dContrast', 'dimmer', 'dimLed', 'micEq', 'txw', 'amc', 'voxGain', 'voxDelay', 'moniLvl', 'keyer', 'bkin', 'keySpeed', 'cwPitch', 'bkDelay', 'cwSpot', 'tuneStep', 'dMode',
+      'dContrast', 'dimmer', 'dimLed', 'micEq', 'txw', 'amc', 'voxGain', 'voxDelay', 'moniLvl', 'keyer', 'bkin', 'keySpeed', 'cwPitch', 'bkDelay', 'cwSpot', 'tuneStep', 'dMode', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB',
       'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB'],
     subBadges: true,
     // CW : mémoire TEXTE 5 du manipulateur (écrasée), lue par KY05 ; KY00 = arrêt (manuel CAT FTX-1, Hamlib ftx1_cw.c)
@@ -207,6 +212,10 @@
       { id: 'cwPitch', g: 'tx', label: 'CW PITCH', type: 'level', min: 300, max: 1050, step: 10, face: true, write: (v) => 'KP' + pad(Math.round((v - 300) / 10), 2) + ';' },
       { id: 'bkDelay', g: 'tx', label: 'BK-DELAY', type: 'level', min: 0, max: 33, step: 1, face: true, write: (v) => 'SD' + pad(v, 2) + ';' },
       { id: 'cwSpot', g: 'tx', label: 'CW SPOT', type: 'toggle', face: true, write: (v) => 'CS' + v + ';' },
+      { id: 'contourFreq', g: 'flt', label: 'CONTOUR FREQ', type: 'level', min: 10, max: 3200, step: 10, face: true, write: (v) => 'CO01' + pad(v, 4) + ';' },
+      { id: 'contourFreqB', g: 'flt', label: 'CONTOUR FREQ (SUB)', type: 'level', min: 10, max: 3200, step: 10, face: true, write: (v) => 'CO11' + pad(v, 4) + ';' },
+      { id: 'apfFreq', g: 'flt', label: 'APF FREQ', type: 'level', min: 0, max: 50, step: 1, face: true, write: (v) => 'CO03' + pad(v, 4) + ';' },
+      { id: 'apfFreqB', g: 'flt', label: 'APF FREQ (SUB)', type: 'level', min: 0, max: 50, step: 1, face: true, write: (v) => 'CO13' + pad(v, 4) + ';' },
       { id: 'ssSpd', g: 'disp', label: 'SCOPE SPEED', type: 'level', min: 0, max: 5, step: 1, face: true, write: (v) => 'SS00' + v + '0000;' }, // 0 SLOW1 … 4 FAST3, 5 STOP
       { id: 'dMode', g: 'disp', label: 'D-MODE (code SS06)', type: 'level', min: 0, max: 10, step: 1, face: true, write: (v) => 'SS06' + Number(v).toString(16).toUpperCase() + '0000;' },
       { id: 'tuneStep', g: 'vfo', label: 'FINE / FAST', type: 'select', face: true, options: [[0, 'NORMAL'], [1, 'FINE'], [2, 'FAST']], write: (v) => 'FN' + v + ';' },

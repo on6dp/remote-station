@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.98** — Face avant FTX-1 : écran DSP comme sur le TRX — NOTCH en pic et CONTOUR en demi-lune (orange) dans le filtre, fréquence CONTOUR et APF réglables (CO), nom, valeur et onglets en orange quand la fonction est en service
 - **0.37.97** — Face avant FTX-1 : écran DSP — « SUB SHIFT » sur une ligne (nom un peu plus petit)
 - **0.37.96** — Face avant FTX-1 : clic sur le cadre du filtre MAIN ou SUB = écran DSP de ce récepteur, comme sur le TRX
 - **0.37.95** — Face avant FTX-1 : échelle du scope en blanc gras, plus grande ; bandeau du scope un peu plus grand

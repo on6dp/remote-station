@@ -634,7 +634,10 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .fc-dsp-f .ax { fill: none; stroke: #e9edf2; stroke-width: 1.2; }
 .fc-dsp-f .tr { fill: rgba(150, 160, 155, .55); stroke: #f1f3f5; stroke-width: 2; stroke-linejoin: round; }
 .fc-dsp-f .ctr { stroke: #ffa600; stroke-width: 1.6; }
-.fc-dsp-f .nt { stroke: #ff3b1c; stroke-width: 1.6; stroke-dasharray: 3 2; }
+.fc-dsp-f .nt, .fc-dsp-f .ct { fill: none; stroke: #ffa600; stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; }
+.fc-dsp-v.on .l, .fc-dsp-v.on .v { color: #ffa600; }
+.fc-dsp-t button.act { color: #ffa600; }
+.fc-dsp-t button.on.act { color: #3a2a00; }
 .fc-dsp-f .lb text { fill: #e9edf2; font: italic 800 8px 'Roboto Mono', monospace; }
 .fc-dsp-v { display: flex; justify-content: space-between; align-items: center; padding: 0 .5em; }
 .fc-dsp-v .l { font: 800 1.6em Verdana, 'DejaVu Sans', Arial, sans-serif; white-space: nowrap; }
