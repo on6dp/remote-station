@@ -4450,7 +4450,9 @@
     if (L.fine) fl.push('FINE'); else if (L.fast) fl.push('FAST');
     LCD.flags.textContent = live ? fl.join('  ·  ') : (st.station ? 'TRX muet (éteint ou câble ?)' : 'Station hors ligne');
     LCD.flags.classList.toggle('tx', tx);
-    LCD.span.textContent = ['', 'SUB / MAIN · ', 'MAIN | SUB · ', 'FILTRES · '][L.disp] + spanLabel() + (L.hold ? ' · HOLD' : '');
+    // FTX-1 : bandeau du scope comme sur le TRX — « CENTER  FAST1  SPAN  200kHz » (D-MODE, SPEED, SPAN du TRX)
+    if (FACE.meterFtx) LCD.span.textContent = ['CENTER', 'CURSOR', 'FIX'][s.dMode || 0] + '  ' + (L.hold ? 'STOP' : WF_SPEEDS[L.wfSpeed][0]) + '  SPAN  ' + SPAN_TRX[L.trxSpan] + 'Hz';
+    else LCD.span.textContent = ['', 'SUB / MAIN · ', 'MAIN | SUB · ', 'FILTRES · '][L.disp] + spanLabel() + (L.hold ? ' · HOLD' : '');
     applyMono();
     ssFollow(s);
     for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) || (SINGLE && sd === 'B') || !!LCD.ich || (FACE.meterDy && L.expand) ? 'none' : ''; // FTX-1 : EXPAND couvre les filtres
@@ -4963,8 +4965,16 @@
       const st0 = S(), sd = name === 'SUB' ? 'B' : 'A', f0 = sd === 'B' ? st0.freqB : st0.freq;
       const md = (sd === 'B' ? st0.modeB : st0.mode) || '', sg = /LSB|-L$|^CW-L|^RTTY-L/.test(md) ? -1 : 1;
       const fmtRf = (hz) => { const t = String(Math.round(hz)).padStart(7, '0'); return t.slice(0, -6) + '.' + t.slice(-6, -3) + '.' + t.slice(-3); };
-      for (let k = 1; k < maxHz / 1000; k++) c2.fillText(f0 ? fmtRf(f0 + sg * k * 1000) : k + 'k', x0 + w * k * 1000 / maxHz, y0 + h - 2);
-      if (f0 && w * 1000 / maxHz > 110) { c2.textAlign = 'left'; c2.fillText(fmtRf(f0), x0 + 2, y0 + h - 2); } // bord gauche = fréquence affichée
+      if ((st0.dMode || 0) === 0 && f0) {
+        // D-MODE CENTER : fréquence au milieu, écarts de part et d'autre (−1.0k … +1.0k), comme sur le TRX
+        const fc = maxHz / 2, stp = maxHz > 3000 ? 1000 : 500;
+        c2.fillText(fmtRf(f0 + sg * fc), x0 + w / 2, y0 + h - 2);
+        for (let d = stp; d < fc - stp / 3; d += stp) for (const sgn of [-1, 1]) c2.fillText((sgn < 0 ? '−' : '+') + (d / 1000).toFixed(1) + 'k', x0 + w * (fc + sgn * d) / maxHz, y0 + h - 2);
+      } else {
+        // CURSOR / FIX : fréquences (7.075.000…), bord gauche = fréquence affichée
+        for (let k = 1; k < maxHz / 1000; k++) c2.fillText(f0 ? fmtRf(f0 + sg * k * 1000) : k + 'k', x0 + w * k * 1000 / maxHz, y0 + h - 2);
+        if (f0 && w * 1000 / maxHz > 110) { c2.textAlign = 'left'; c2.fillText(fmtRf(f0), x0 + 2, y0 + h - 2); }
+      }
     } else for (let k = 1; k < maxHz / 1000; k++) c2.fillText(k + 'k', x0 + w * k * 1000 / maxHz, y0 + h - 2);
     if (name) { c2.textAlign = 'left'; c2.fillStyle = '#6f86ff'; c2.font = 'bold 10px "Roboto Mono", monospace'; c2.fillText(name, x0 + 4, y0 + 11); }
   }

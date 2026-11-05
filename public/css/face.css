@@ -643,3 +643,5 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .fc-dsp-t { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 2px solid #ffa600; }
 .fc-dsp-t button { font: 800 1.15em Verdana, 'DejaVu Sans', Arial, sans-serif; background: #15181c; color: #e9edf2; border: 0; border-right: 1px solid #3a4048; padding: .45em 0; cursor: pointer; }
 .fc-dsp-t button.on { background: #f2a516; color: #3a2a00; }
+/* FTX-1 : bandeau du scope (CENTER  FAST1  SPAN  200kHz) en bleu, comme sur le TRX */
+#face[data-model='ftx1'] .lcd .lcd-side { fill: #5aa0ff; font-weight: 800; }

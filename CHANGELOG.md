@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.94** — Face avant FTX-1 : échelle du scope selon D-MODE comme sur le TRX — CENTER : fréquence au milieu et écarts −1.0k … +1.0k ; CURSOR / FIX : fréquences ; bandeau bleu « CENTER  FAST1  SPAN  200kHz »
 - **0.37.93** — Face avant FTX-1 : échelle sous le scope en fréquences comme sur le TRX (14.250.000, 14.251.000…), d'après la fréquence et la bande latérale du VFO
 - **0.37.92** — Face avant FTX-1 : étiquettes en SPLIT comme sur le TRX — VFO d'émission : [TX] seul (fréquence en rouge), VFO de réception : [MAIN|SUB][RX] en vert
 - **0.37.91** — Face avant FTX-1 : clic sur SUB DIAL en réception simple autorisé quand l'administrateur a mis ftx1SubSingle (comme le bouton MAIN / SUB du dashboard)
