@@ -741,7 +741,8 @@
       v.hit.addEventListener('click', () => askFreq(side));
       // « CLAR RX   -90Hz » au-dessus de la fréquence (clarifier en service), comme sur le TRX ; molette dessus : décalage ±10 Hz
       v.clarG = el('g', { class: 'lcd-clar', style: 'display:none' }, g);
-      v.clarT = el('text', { x: x0 + 70, y: Y(93.5), class: 'lcd-clart' + (ICOM ? ' ic' : '') }, v.clarG, 'CLAR RX');
+      // FTX-1 : « CLAR RXTX » à droite, juste avant le décalage (comme sur le TRX)
+      v.clarT = el('text', FACE && FACE.clarRight ? { x: v.xr - 42, y: Y(93.5), class: 'lcd-clart', 'text-anchor': 'end' } : { x: x0 + 70, y: Y(93.5), class: 'lcd-clart' + (ICOM ? ' ic' : '') }, v.clarG, 'CLAR RX');
       v.clarV = el('text', { x: v.xr, y: Y(93.5), class: 'lcd-clart', 'text-anchor': 'end' }, v.clarG, '');
       const ch = el('rect', { x: x0 + 66, y: Y(86), width: half - 70, height: 8, class: 'hs lcd-hit' }, v.clarG);
       el('title', {}, ch, 'Clarifier : molette = décalage ±10 Hz ; appui long sur la grande touche CLAR : décalage à zéro');

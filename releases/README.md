@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.61 | [RemoteStation-Setup-0.37.61.exe](0.37.61/RemoteStation-Setup-0.37.61.exe) | [remote-station-0.37.61.tar.gz](0.37.61/remote-station-0.37.61.tar.gz) | FTX-1 : CLAR à droite — [empreintes SHA-256](0.37.61/SHA256SUMS.txt) |
 | 0.37.60 | [RemoteStation-Setup-0.37.60.exe](0.37.60/RemoteStation-Setup-0.37.60.exe) | [remote-station-0.37.60.tar.gz](0.37.60/remote-station-0.37.60.tar.gz) | LOCK : administrateurs seulement — [empreintes SHA-256](0.37.60/SHA256SUMS.txt) |
 | 0.37.59 | [RemoteStation-Setup-0.37.59.exe](0.37.59/RemoteStation-Setup-0.37.59.exe) | [remote-station-0.37.59.tar.gz](0.37.59/remote-station-0.37.59.tar.gz) | FTX-1 : écran sans cases, fréquences plus bas — [empreintes SHA-256](0.37.59/SHA256SUMS.txt) |
 | 0.37.58 | [RemoteStation-Setup-0.37.58.exe](0.37.58/RemoteStation-Setup-0.37.58.exe) | [remote-station-0.37.58.tar.gz](0.37.58/remote-station-0.37.58.tar.gz) | FTX-1 : écran FUNC — [empreintes SHA-256](0.37.58/SHA256SUMS.txt) |

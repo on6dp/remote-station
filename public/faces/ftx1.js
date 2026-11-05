@@ -24,6 +24,7 @@
     // Pas de cases ANT / ATT / IPO / NAR / AGC sous les fréquences sur l'écran du FTX-1 : le scope monte à leur place
     cells: [],
     lay: { lowY: 141, scopeY: 154, scopeH: 140 },
+    clarRight: true, // « CLAR RXTX » à droite, juste avant le décalage
     vfoDy: 10, // fréquences 10 px plus bas : « CLAR RXTX  0Hz » juste au-dessus, comme sur le TRX
     // Rangée du bas de l'écran du FTX-1
     bot: ['CENTER', '3DSS', 'MULTI', 'SCOPE', 'SPAN', 'SPEED'],

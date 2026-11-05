@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.61** — Face avant FTX-1 : CLAR RX / TX / RXTX à droite, juste avant le décalage, comme sur le TRX
 - **0.37.60** — LOCK du TRX (face avant et dashboard, tous les TRX) : réservé aux administrateurs, refusé par le serveur pour les autres membres
 - **0.37.59** — Face avant FTX-1 : plus de cases ANT / ATT / IPO / NAR / AGC sous les fréquences (absentes sur le TRX), scope agrandi ; fréquences un peu plus bas pour laisser CLAR RX / RXTX au-dessus
 - **0.37.58** — Face avant FTX-1 : écran FUNC du TRX (appui de 2 s sur FUNC, 3 pages SSB / CW / FM-C4FM) — tourner FUNC déplace le cadre orange, pousser FUNC règle la case, appui de 2 s : sortie ; nouveaux réglages FTX-1 (MIC EQ, TXW, AMC, VOX GAIN / DELAY, MONI LEVEL, KEYER, BK-IN, CW SPEED / PITCH, BK-DELAY, ZIN, CW SPOT, D-CONTRAST, DIMMER, RPT SHIFT, SQL TYPE, TONE FREQ) ; SPAN en blanc gras sur touches foncées
