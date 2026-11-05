@@ -5071,6 +5071,8 @@
   // En SPLIT : les deux cartes passent à ±10 kHz autour de leur VFO (− / + et molette restent possibles) ;
   // hors SPLIT, chaque carte reprend sa plage habituelle
   BMV.ssp = { A: 20, B: 20 }; BMV.wasSplit = false;
+  // VFO montré par chaque carte : A à gauche, B à droite ; FTX-1 (SUB à gauche sur l'écran) : B à gauche, A à droite
+  const bmVfo = (box) => (SUBL ? (box === 'A' ? 'B' : 'A') : box);
   const bmvSplit = () => !!S().split;
   const bmvSpan = (side) => (bmvSplit() ? BMV.ssp[side] : BMV.span[side]);
   const BMV_KEEP = 30 * 60000;
@@ -5110,7 +5112,9 @@
   function bmvBuild(side) {
     const box = $('bmv' + side);
     if (!box || box.firstChild) return box;
-    box.innerHTML = '<div class="bmv-h"><b class="bmv-band">—</b><small>' + (side === 'A' ? 'VFO-A' : 'VFO-B') + '</small>' +
+    box.dataset.vfo = bmVfo(side); // couleur de l'étiquette VFO-A / VFO-B
+    box.setAttribute('aria-label', 'Carte de bande du VFO ' + bmVfo(side));
+    box.innerHTML = '<div class="bmv-h"><b class="bmv-band">—</b><small>' + (bmVfo(side) === 'A' ? 'VFO-A' : 'VFO-B') + '</small>' +
       '<span class="bmv-span"><button type="button" data-d="-1" title="Plage plus étroite">−</button><button type="button" data-d="1" title="Plage plus large (jusqu’à toute la bande)">+</button></span></div>' +
       '<div class="bmv-m">' + BMV_FILTS.map(([k, t]) => '<button type="button" data-f="' + k + '" title="' + (k ? 'Seulement les spots ' + t : 'Tous les spots') + '">' + t + '</button>').join('') + '</div>' +
       '<div class="bmv-b"><canvas></canvas></div><div class="bmv-f"></div><div class="bmv-grip" title="Glisser : largeur des deux BAND MAP · double-clic : largeur d’origine"></div>';
@@ -5147,8 +5151,8 @@
       let best = null, bd = 9.5;
       for (const l of BMV.lay[side]) { const d = Math.abs(l.ly - y); if (d < bd && x >= l.x0 - 8) { bd = d; best = l; } }
       if (!best) return;
-      tuneTo(side, Math.round(best.s.f * 1000));
-      say((side === 'A' ? 'VFO-A' : 'VFO-B') + ' → ' + best.s.call + ' (' + best.s.f.toFixed(1) + ' kHz)', '', 3000);
+      tuneTo(bmVfo(side), Math.round(best.s.f * 1000));
+      say((bmVfo(side) === 'A' ? 'VFO-A' : 'VFO-B') + ' → ' + best.s.call + ' (' + best.s.f.toFixed(1) + ' kHz)', '', 3000);
     });
     body.addEventListener('mousemove', (e) => {
       const r = body.getBoundingClientRect(), y = e.clientY - r.top;
@@ -5178,7 +5182,7 @@
   function bmvPaint(side) {
     const box = bmvBuild(side);
     if (!box || !box.offsetParent) return;
-    const s = S(), f = side === 'B' ? s.freqB : s.freq;
+    const s = S(), vs = bmVfo(side), f = vs === 'B' ? s.freqB : s.freq;
     const body = box.querySelector('.bmv-b'), cv = box.querySelector('canvas');
     const W = body.clientWidth, H = body.clientHeight;
     if (W < 40 || H < 60) return;
@@ -5241,8 +5245,8 @@
       if (md) { const cw = c.measureText(l.s.call).width; c.fillStyle = '#5fb3ff'; c.font = '10px "Roboto Mono", monospace'; c.fillText(md.toUpperCase(), x0 + cw + 5, l.ly); }
     }
     // VFO : trait et triangle (rouge si c'est le VFO d'émission)
-    const yv = Math.round(yOf(fk)) + 0.5, tx = L.txSide(s) === side;
-    c.strokeStyle = tx ? '#ff3b30' : (side === 'A' ? '#cfc8ff' : '#2f7bff'); c.lineWidth = 1.5;
+    const yv = Math.round(yOf(fk)) + 0.5, tx = L.txSide(s) === vs;
+    c.strokeStyle = tx ? '#ff3b30' : (vs === 'A' ? '#cfc8ff' : '#2f7bff'); c.lineWidth = 1.5;
     c.beginPath(); c.moveTo(0, yv); c.lineTo(W, yv); c.stroke();
     c.fillStyle = c.strokeStyle; c.beginPath(); c.moveTo(W - 1, yv - 5); c.lineTo(W - 9, yv); c.lineTo(W - 1, yv + 5); c.closePath(); c.fill();
     box.querySelector('.bmv-f').textContent = list.length + ' spot' + (list.length > 1 ? 's' : '') + (fm ? ' ' + BMV_FILTS.find((x) => x[0] === fm)[1] : '') + ' · ' + (full ? 'toute la bande' : span + ' kHz') + (BMV.state && BMV.state !== 'connecté' ? ' · cluster : ' + BMV.state : '');
