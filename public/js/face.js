@@ -3772,8 +3772,10 @@
       return showTip(ev, ftxCursor(notches > 0 ? 1 : -1));
     }
     if (k.multi && MV.open && MV.sel) { menuAdjust(MV.sel, notches > 0 ? 1 : -1); return; }
-    if (k.multi && !(s.rit || s.xit) && FUNC_BY[L.funcSel] && FUNC_BY[L.funcSel][3] && !(FTX1F && FUNC_BY[L.funcSel][5])) {
+    if (k.multi && (!(s.rit || s.xit) || FACE.clarCycle) && FUNC_BY[L.funcSel] && FUNC_BY[L.funcSel][3] && !(FTX1F && FUNC_BY[L.funcSel][5])) {
       funcAdjust(L.funcSel, notches);
+      // FTX-1 : grand cadre « RF POWER   83W » au milieu de l'écran pendant qu'on tourne FUNC (écran FUNC fermé)
+      if (FTX1F) { render(); setTimeout(() => funcPop(L.funcSel), 250); clearTimeout(L.fpopT); L.fpopT = setTimeout(() => { if (!$('lcdPop').hidden) funcPop(L.funcSel); }, 1100); return; } // valeur relue sur le TRX
       if (L.funcSel === 'step') { const sd = activeSide(), f = sd === 'B' ? pendF.B : pendF.A; return showTip(ev, 'STEP DIAL ' + (sd === 'B' ? 'SUB ' : 'MAIN ') + (f ? fmtFreq(f) + ' MHz' : '')); }
       return showTip(ev, FUNC_BY[L.funcSel][1] + ' ' + FUNC_BY[L.funcSel][2](S()));
     }
@@ -3995,6 +3997,23 @@
     pop.hidden = false;
     clearTimeout(popT);
     if (!popHover) popT = setTimeout(() => { pop.hidden = true; }, popTarget && popTarget.ctl ? 5000 : 2500);
+  }
+  // FTX-1 : cadre « RF POWER   83W » sur le scope quand on tourne FUNC, écran FUNC fermé (nom en orange, valeur en grand)
+  function funcPop(id) {
+    const f = FUNC_BY[id], pop = $('lcdPop');
+    if (!f || !pop) return;
+    pop.classList.add('ftx');
+    pop.querySelector('.fc-lp-l').textContent = f[1];
+    const txt = String(f[2](S()));
+    const svgEl = pop.querySelector('svg'), w = Math.max(60, txt.length * 20);
+    svgEl.setAttribute('viewBox', '0 0 ' + w + ' 34');
+    pop.querySelector('path').setAttribute('d', '');
+    const t = pop.querySelector('text');
+    t.setAttribute('x', w - 2); t.setAttribute('y', 30); t.setAttribute('text-anchor', 'end'); t.textContent = txt;
+    pop.hidden = false;
+    popTarget = null;
+    clearTimeout(popT);
+    popT = setTimeout(() => { pop.hidden = true; pop.classList.remove('ftx'); t.removeAttribute('text-anchor'); }, 2500);
   }
   let tipT = 0;
   function showTip(ev, text) {

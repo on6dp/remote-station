@@ -270,6 +270,9 @@ body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglet
 .fc-lp-v { flex: 1 1 0; min-width: 0; height: 80%; }
 .fc-lp-v path { fill: #f4f6fa; }
 .fc-lp-v text { fill: #f4f6fa; font: italic 800 30px 'Roboto Mono', monospace; }
+/* FTX-1 : cadre de la fonction du bouton FUNC (« RF POWER   83W ») : nom en orange, pas de − / + */
+.fc-lcdpop.ftx .fc-lp-l { color: #ffa600; font-family: Verdana, 'DejaVu Sans', Arial, sans-serif; font-size: clamp(11px, 1.5vw, 26px); }
+.fc-lcdpop.ftx .fc-lp-b { visibility: hidden; }
 
 /* Fenêtre « Profil de … » (bouton à côté d'EQUALIZER TRX) */
 .vx-profdlg h4 { margin: 12px 0 6px; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: #f2cf4a; }
