@@ -909,7 +909,7 @@
       // Rangée du bas du FTDX10 : CENTER, 3DSS, MULTI, EXPAND, SPAN, SPEED (la fonction du bouton FUNC est dans la case près du VFO-B) ;
       // FTX-1 : CENTER, 3DSS, MULTI, SCOPE (réglages du scope : SCOPE MENU), SPAN, SPEED
       const by = (n) => BOT.find((b) => b[0] === n);
-      const extra = { EXPAND: ['EXPAND', () => toggleExpand()], SPEED: ['SPEED', () => { smAdjust('spd', 1); say('SPEED (vitesse de la cascade) : ' + WF_SPEEDS[L.wfSpeed][0], '', 2500); }],
+      const extra = { EXPAND: ['EXPAND', () => toggleExpand()], SPEED: ['SPEED', FACE.meterFtx ? () => openSpeed() : () => { smAdjust('spd', 1); say('SPEED (vitesse de la cascade) : ' + WF_SPEEDS[L.wfSpeed][0], '', 2500); }],
         // FTX-1 : SCOPE montre seulement de quel VFO est le scope (MAIN ou SUB, celui qui est sélectionné), pas de menu
         SCOPE: ['SCOPE', FACE.meterFtx ? () => say('SCOPE : scope du VFO sélectionné (' + (activeSide() === 'B' ? 'SUB' : 'MAIN') + ') ; les réglages du scope sont dans l’écran FUNC (D-LEVEL, D-PEAK, D-COLOR…).', '', 4000) : () => (L.smenu ? closeSmenu() : openSmenu())],
         // FTX-1 : D-MODE = mode du scope du TRX, CENTER → CURSOR → FIX (SS06), comme sur le TRX
@@ -3167,6 +3167,41 @@
     const cur = SPAN_TRX[L.trxSpan];
     box.innerHTML = '<div class="fc-col-t">SPAN</div><div class="fc-span-g">' + SPAN_TRX.map((s, i) => '<button type="button" data-span="' + s + '" class="' + (s === cur ? 'on' : '') + '"' +
       (i > 2 ? ' title="Réglé sur le scope du TRX ; la page montre le son reçu (5 kHz au plus)"' : '') + '>' + s + '</button>').join('') + '</div>';
+    box.hidden = false;
+  }
+
+  // FTX-1 : tableau SPEED du TRX (SLOW1 SLOW2 FAST1 FAST2 / FAST3 … STOP) ; il reste ouvert, un nouvel appui sur SPEED le ferme
+  function openSpeed() {
+    let box = $('fcSpeed');
+    if (box && !box.hidden) { box.hidden = true; return; }
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'fcSpeed';
+      box.className = 'fc-menu fc-colors fc-span';
+      const sc = FACE.lcd;
+      box.style.left = ((sc.x + 70 - V.x) / V.w * 100) + '%';
+      box.style.top = ((sc.y + 165 - V.y) / V.h * 100) + '%';
+      box.style.width = ((sc.w - 140) / V.w * 100) + '%';
+      $('facePanel').appendChild(box);
+      box.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-spd]');
+        if (!b) return;
+        viewTouched();
+        const i = +b.dataset.spd;
+        if (i === 5) { L.hold = true; if (R.CONTROL.ssSpd && iControl()) setCtl('ssSpd', 5); }
+        else { L.hold = false; L.wfSpeed = i; store.set('rs.face.wfspd5', i); ssSend('Spd'); }
+        openSpeed.draw();
+        render();
+      });
+    }
+    box.style.fontSize = Math.max(9, Math.round($('facePanel').clientWidth / V.w * 11)) + 'px';
+    openSpeed.draw = () => {
+      const cur = L.hold ? 5 : L.wfSpeed;
+      const cell = (i, lab) => '<button type="button" data-spd="' + i + '" class="' + (i === cur ? 'on' : '') + '">' + lab + '</button>';
+      box.innerHTML = '<div class="fc-col-t">SPEED</div><div class="fc-span-g">' + WF_SPEEDS.slice(0, 4).map((w, i) => cell(i, w[0])).join('') +
+        cell(4, WF_SPEEDS[4][0]) + '<span></span><span></span>' + cell(5, 'STOP') + '</div>';
+    };
+    openSpeed.draw();
     box.hidden = false;
   }
 

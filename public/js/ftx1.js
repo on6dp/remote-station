@@ -207,6 +207,7 @@
       { id: 'cwPitch', g: 'tx', label: 'CW PITCH', type: 'level', min: 300, max: 1050, step: 10, face: true, write: (v) => 'KP' + pad(Math.round((v - 300) / 10), 2) + ';' },
       { id: 'bkDelay', g: 'tx', label: 'BK-DELAY', type: 'level', min: 0, max: 33, step: 1, face: true, write: (v) => 'SD' + pad(v, 2) + ';' },
       { id: 'cwSpot', g: 'tx', label: 'CW SPOT', type: 'toggle', face: true, write: (v) => 'CS' + v + ';' },
+      { id: 'ssSpd', g: 'disp', label: 'SCOPE SPEED', type: 'level', min: 0, max: 5, step: 1, face: true, write: (v) => 'SS00' + v + '0000;' }, // 0 SLOW1 … 4 FAST3, 5 STOP
       { id: 'dMode', g: 'disp', label: 'D-MODE (code SS06)', type: 'level', min: 0, max: 10, step: 1, face: true, write: (v) => 'SS06' + Number(v).toString(16).toUpperCase() + '0000;' },
       { id: 'tuneStep', g: 'vfo', label: 'FINE / FAST', type: 'select', face: true, options: [[0, 'NORMAL'], [1, 'FINE'], [2, 'FAST']], write: (v) => 'FN' + v + ';' },
       // ZIN (CW AUTO ZERO IN) : le récepteur sélectionné se cale sur le signal CW

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.87** — Face avant FTX-1 : SPEED ouvre le tableau du TRX (SLOW1, SLOW2, FAST1, FAST2, FAST3, STOP), envoyé au scope du TRX ; le tableau reste ouvert, un nouvel appui sur SPEED le ferme
 - **0.37.86** — Face avant FTX-1 : SCOPE montre seulement le VFO du scope (MAIN ou SUB, celui qui est sélectionné), plus de menu — les réglages du scope sont dans l'écran FUNC
 - **0.37.85** — Face avant FTX-1 : échelle SWR et barre VOL sur le galvanomètre du VFO actif (MAIN ou SUB), comme sur le TRX ; MULTI et 3DSS en service : nom en bleu
 - **0.37.84** — Face avant FTX-1 : la double réception (bouton Stéréo MAIN | SUB) n'est demandée que si l'un des VFO est au-delà de 118 MHz ; avec deux fréquences HF, message au lieu d'une commande refusée
