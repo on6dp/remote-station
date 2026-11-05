@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.74 | [RemoteStation-Setup-0.37.74.exe](0.37.74/RemoteStation-Setup-0.37.74.exe) | [remote-station-0.37.74.tar.gz](0.37.74/remote-station-0.37.74.tar.gz) | FTX-1 : FINE / FAST dans la barre d'état — [empreintes SHA-256](0.37.74/SHA256SUMS.txt) |
 | 0.37.73 | [RemoteStation-Setup-0.37.73.exe](0.37.73/RemoteStation-Setup-0.37.73.exe) | [remote-station-0.37.73.tar.gz](0.37.73/remote-station-0.37.73.tar.gz) | FTX-1 : bouton FUNC plus fluide — [empreintes SHA-256](0.37.73/SHA256SUMS.txt) |
 | 0.37.72 | [RemoteStation-Setup-0.37.72.exe](0.37.72/RemoteStation-Setup-0.37.72.exe) | [remote-station-0.37.72.tar.gz](0.37.72/remote-station-0.37.72.tar.gz) | FTX-1 : TUNE sur fond rouge — [empreintes SHA-256](0.37.72/SHA256SUMS.txt) |
 | 0.37.71 | [RemoteStation-Setup-0.37.71.exe](0.37.71/RemoteStation-Setup-0.37.71.exe) | [remote-station-0.37.71.tar.gz](0.37.71/remote-station-0.37.71.tar.gz) | FTX-1 : RF POWER par 1 W, commandes regroupées — [empreintes SHA-256](0.37.71/SHA256SUMS.txt) |

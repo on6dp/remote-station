@@ -300,6 +300,8 @@
       say(L.fine ? 'Accord fin : 1 Hz par cran.' : L.fast ? 'Accord rapide : 1 kHz par cran.' : 'Accord normal : 100 Hz par cran.', '', 2500);
       // FTDX10 : la touche FINE du TRX suit aussi (FN), avec la main
       if (a.local === 'fine' && R && R.CONTROL.fineTrx && iControl() && !!S().fineTrx !== L.fine) setCtl('fineTrx', L.fine ? 1 : 0);
+      // FTX-1 : FINE / FAST du TRX (FN 0 / 1 / 2), avec la main
+      if (R && R.CONTROL.tuneStep && iControl()) { const v = L.fine ? 1 : L.fast ? 2 : 0; if (S().tuneStep !== v) setCtl('tuneStep', v); L.tsSeen = v; }
       return render();
     }
     if (a.band) {
@@ -763,8 +765,15 @@
   function drawStatus(s) {
     const sb = LCD.sb;
     if (!sb) return;
-    const fast = !!L.fast;
-    sb.fastR.style.display = fast ? '' : 'none'; sb.fast.style.display = fast ? '' : 'none';
+    // FINE / FAST changé sur le TRX (au club) : la page suit
+    if (s.tuneStep != null && s.tuneStep !== L.tsSeen) {
+      if (L.tsSeen !== undefined) { L.fine = s.tuneStep === 1; L.fast = s.tuneStep === 2; }
+      L.tsSeen = s.tuneStep;
+    }
+    const fast = !!L.fast, fine = !fast && !!L.fine;
+    sb.fastR.style.display = fast || fine ? '' : 'none'; sb.fast.style.display = fast || fine ? '' : 'none';
+    sb.fast.textContent = fine ? 'FINE' : 'FAST';
+    sb.fastR.classList.toggle('fine', fine); sb.fast.classList.toggle('fine', fine);
     sb.vox.style.display = s.vox ? '' : 'none';
     sb.tune.classList.toggle('on', !!s.tuner);
     sb.tuneR.style.display = s.tuner ? '' : 'none';

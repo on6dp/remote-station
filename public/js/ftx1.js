@@ -97,6 +97,8 @@
       { cmd: 'KP;', re: /^KP(\d\d)$/, parse: (m) => ({ cwPitch: 300 + 10 * +m[1] }), sim: 'KP45' },
       { cmd: 'SD;', re: /^SD(\d\d)$/, parse: (m) => ({ bkDelay: +m[1] }), sim: 'SD06' },
       { cmd: 'CS;', re: /^CS([01])$/, parse: (m) => ({ cwSpot: +m[1] }), sim: 'CS0' },
+      // FINE / FAST du TRX (FN : 0 normal, 1 FINE, 2 FAST) : la touche FINE/FAST de la page /ftx1 le suit
+      { cmd: 'FN;', re: /^FN([0-2])$/, parse: (m) => ({ tuneStep: +m[1] }), sim: 'FN0' },
       // FM : décalage relais, type de squelch, tonalité CTCSS (le TRX ne répond qu'en FM)
       { cmd: 'OS0;', when: (st) => /FM/.test(st.mode || ''), re: /^OS0([0-3])$/, parse: (m) => ({ rpt: +m[1] }), sim: 'OS00' },
       { cmd: 'OS1;', when: (st) => /FM/.test(st.modeB || ''), re: /^OS1([0-3])$/, parse: (m) => ({ rptB: +m[1] }), sim: 'OS10' },
@@ -110,7 +112,7 @@
     // TUNER TYPE SEL ANT1 / ANT2 (EX030701 / EX030702) — numéros du manuel CAT FTX-1 (Table 3)
     extraQueries: ['RA1;', 'PA0;', 'PA1;', 'PA2;', 'AC;', 'RI0;', 'EX030103;', 'EX030104;', 'EX030701;', 'EX030702;'],
     extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'afB', 'hiSwr', 'tuningRi',
-      'dContrast', 'dimmer', 'dimLed', 'micEq', 'txw', 'amc', 'voxGain', 'voxDelay', 'moniLvl', 'keyer', 'bkin', 'keySpeed', 'cwPitch', 'bkDelay', 'cwSpot',
+      'dContrast', 'dimmer', 'dimLed', 'micEq', 'txw', 'amc', 'voxGain', 'voxDelay', 'moniLvl', 'keyer', 'bkin', 'keySpeed', 'cwPitch', 'bkDelay', 'cwSpot', 'tuneStep',
       'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB'],
     subBadges: true,
     // CW : mémoire TEXTE 5 du manipulateur (écrasée), lue par KY05 ; KY00 = arrêt (manuel CAT FTX-1, Hamlib ftx1_cw.c)
@@ -203,6 +205,7 @@
       { id: 'cwPitch', g: 'tx', label: 'CW PITCH', type: 'level', min: 300, max: 1050, step: 10, face: true, write: (v) => 'KP' + pad(Math.round((v - 300) / 10), 2) + ';' },
       { id: 'bkDelay', g: 'tx', label: 'BK-DELAY', type: 'level', min: 0, max: 33, step: 1, face: true, write: (v) => 'SD' + pad(v, 2) + ';' },
       { id: 'cwSpot', g: 'tx', label: 'CW SPOT', type: 'toggle', face: true, write: (v) => 'CS' + v + ';' },
+      { id: 'tuneStep', g: 'vfo', label: 'FINE / FAST', type: 'select', face: true, options: [[0, 'NORMAL'], [1, 'FINE'], [2, 'FAST']], write: (v) => 'FN' + v + ';' },
       // ZIN (CW AUTO ZERO IN) : le récepteur sélectionné se cale sur le signal CW
       { id: 'zin', g: 'tx', label: 'ZIN', type: 'action', face: true, write: (v, s) => 'ZI' + (s && s.vfoSel === 1 ? 1 : 0) + ';' },
       { id: 'rpt', g: 'vfo', label: 'RPT SHIFT (MAIN)', type: 'select', face: true, options: [[0, 'SIMP'], [1, '+'], [2, '−'], [3, 'ARS']], write: (v) => 'OS0' + v + ';' },
