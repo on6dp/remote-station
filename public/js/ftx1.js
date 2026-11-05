@@ -14,6 +14,8 @@
   // Puissance : la réponse PC indique la tête. P1 = 1 tête Field (0,5–10 W, dixièmes sous 10 W : "PC10.5;"),
   // P1 = 2 ampli SPA-1 (5–100 W : "PC2025;").
   const RANGE = { '1': [0.5, 10], '2': [5, 100] };
+  // SQL TYPE (CT) : manuel CAT FTX-1
+  const SQLT = [[0, 'OFF'], [1, 'ENC'], [2, 'TSQ'], [3, 'DCS'], [4, 'PR FREQ'], [5, 'REV TONE']];
 
   const api = Y.build({
     ID: 'ftx1',
@@ -80,13 +82,36 @@
       // FUNCTION RX : FR00 double réception (S-mètre SUB lisible par SM1), FR01 réception simple
       { cmd: 'FR;', re: /^FR0([01])$/, parse: (m) => ({ dualRx: m[1] === '0' ? 1 : 0 }), sim: 'FR00' },
       // RADIO INFORMATION (manuel CAT) : RI0 P2 … P8 — P2 1 = Hi-SWR, P6 1 = tuner en cours d'accord
-      { cmd: 'RI0;', re: /^RI0(\d)(\d)(\d)(\d)(\d)(\d)(\d)$/, parse: (m) => ({ hiSwr: m[1] === '1' ? 1 : 0, tuningRi: m[5] === '1' ? 1 : 0 }), sim: 'RI00000000' }
+      { cmd: 'RI0;', re: /^RI0(\d)(\d)(\d)(\d)(\d)(\d)(\d)$/, parse: (m) => ({ hiSwr: m[1] === '1' ? 1 : 0, tuningRi: m[5] === '1' ? 1 : 0 }), sim: 'RI00000000' },
+      // Écran FUNC de la face avant /ftx1 (appui long sur FUNC) — manuel CAT FTX-1 : lus en tournante lente
+      { cmd: 'DA;', re: /^DA00(\d\d)(\d\d)(\d\d)$/, parse: (m) => ({ dContrast: +m[1], dimmer: +m[2], dimLed: +m[3] }), sim: 'DA00151515' },
+      { cmd: 'PR1;', re: /^PR1([12])$/, parse: (m) => ({ micEq: m[1] === '2' ? 1 : 0 }), sim: 'PR11' },
+      { cmd: 'TS;', re: /^TS([01])$/, parse: (m) => ({ txw: +m[1] }), sim: 'TS0' },
+      { cmd: 'AO;', re: /^AO(\d{3})$/, parse: (m) => ({ amc: +m[1] }), sim: 'AO038' },
+      { cmd: 'VG;', re: /^VG(\d{3})$/, parse: (m) => ({ voxGain: +m[1] }), sim: 'VG050' },
+      { cmd: 'VD;', re: /^VD(\d\d)$/, parse: (m) => ({ voxDelay: +m[1] }), sim: 'VD06' },
+      { cmd: 'ML1;', re: /^ML1(\d{3})$/, parse: (m) => ({ moniLvl: +m[1] }), sim: 'ML1005' },
+      { cmd: 'KR;', re: /^KR([01])$/, parse: (m) => ({ keyer: +m[1] }), sim: 'KR0' },
+      { cmd: 'BI;', re: /^BI([01])$/, parse: (m) => ({ bkin: +m[1] }), sim: 'BI0' },
+      { cmd: 'KS;', re: /^KS(\d{3})$/, parse: (m) => ({ keySpeed: +m[1] }), sim: 'KS022' },
+      { cmd: 'KP;', re: /^KP(\d\d)$/, parse: (m) => ({ cwPitch: 300 + 10 * +m[1] }), sim: 'KP45' },
+      { cmd: 'SD;', re: /^SD(\d\d)$/, parse: (m) => ({ bkDelay: +m[1] }), sim: 'SD06' },
+      { cmd: 'CS;', re: /^CS([01])$/, parse: (m) => ({ cwSpot: +m[1] }), sim: 'CS0' },
+      // FM : décalage relais, type de squelch, tonalité CTCSS (le TRX ne répond qu'en FM)
+      { cmd: 'OS0;', when: (st) => /FM/.test(st.mode || ''), re: /^OS0([0-3])$/, parse: (m) => ({ rpt: +m[1] }), sim: 'OS00' },
+      { cmd: 'OS1;', when: (st) => /FM/.test(st.modeB || ''), re: /^OS1([0-3])$/, parse: (m) => ({ rptB: +m[1] }), sim: 'OS10' },
+      { cmd: 'CT0;', when: (st) => /FM/.test(st.mode || ''), re: /^CT0([0-5])$/, parse: (m) => ({ encDec: +m[1] }), sim: 'CT00' },
+      { cmd: 'CT1;', when: (st) => /FM/.test(st.modeB || ''), re: /^CT1([0-5])$/, parse: (m) => ({ encDecB: +m[1] }), sim: 'CT10' },
+      { cmd: 'CN00;', when: (st) => /FM/.test(st.mode || ''), re: /^CN00(\d{3})$/, parse: (m) => ({ toneIdx: +m[1] }), sim: 'CN00012' },
+      { cmd: 'CN10;', when: (st) => /FM/.test(st.modeB || ''), re: /^CN10(\d{3})$/, parse: (m) => ({ toneIdxB: +m[1] }), sim: 'CN10012' }
     ],
     // Console CAT : lectures supplémentaires pour le diagnostic (ATT / préampli par côté)
     // + tuner : AC (état), RI0 (accord en cours), menus TUN/LIN PORT SELECT (EX030103), TUNER SELECT (EX030104),
     // TUNER TYPE SEL ANT1 / ANT2 (EX030701 / EX030702) — numéros du manuel CAT FTX-1 (Table 3)
     extraQueries: ['RA1;', 'PA0;', 'PA1;', 'PA2;', 'AC;', 'RI0;', 'EX030103;', 'EX030104;', 'EX030701;', 'EX030702;'],
-    extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'afB', 'hiSwr', 'tuningRi'],
+    extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'afB', 'hiSwr', 'tuningRi',
+      'dContrast', 'dimmer', 'dimLed', 'micEq', 'txw', 'amc', 'voxGain', 'voxDelay', 'moniLvl', 'keyer', 'bkin', 'keySpeed', 'cwPitch', 'bkDelay', 'cwSpot',
+      'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB'],
     subBadges: true,
     // CW : mémoire TEXTE 5 du manipulateur (écrasée), lue par KY05 ; KY00 = arrêt (manuel CAT FTX-1, Hamlib ftx1_cw.c)
     // EX020210 = menu CW MEMORY 5 (0 : TEXT, 1 : MESSAGE) : en MESSAGE (mémoire enregistrée au manipulateur), le texte
@@ -156,7 +181,33 @@
       { id: 'afB', g: 'rx', label: 'AF (VFO B)', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: (v) => 'AG1' + pad(v, 3) + ';' },
       // 144 / 430 MHz : un seul préampli, AMP ON / OFF (AMP1 / AMP2 n'existent qu'en HF et 50 MHz)
       { id: 'preampVU', g: 'rx', label: 'AMP (144 / 430 MHz)', type: 'toggle', write: (v, s) => 'PA' + (s.freq >= 420000000 ? 2 : 1) + v + ';',
-        when: (s) => s.freq != null && s.freq >= 144000000, hideUnavail: true }
+        when: (s) => s.freq != null && s.freq >= 144000000, hideUnavail: true },
+      // Écran FUNC de la face avant /ftx1 (face : pas dans la disposition du dashboard). MOX n'existe pas à distance (PTT de la page),
+      // le VOX ne peut qu'être coupé (contrôle « vox » commun)
+      { id: 'dContrast', g: 'disp', label: 'D-CONTRAST', type: 'level', min: 0, max: 20, step: 1, face: true,
+        write: (v, s) => 'DA00' + pad(v, 2) + pad(s.dimmer != null ? s.dimmer : 15, 2) + pad(s.dimLed != null ? s.dimLed : 15, 2) + ';' },
+      { id: 'dimmer', g: 'disp', label: 'DIMMER', type: 'level', min: 0, max: 20, step: 1, face: true,
+        write: (v, s) => 'DA00' + pad(s.dContrast != null ? s.dContrast : 15, 2) + pad(v, 2) + pad(s.dimLed != null ? s.dimLed : 15, 2) + ';' },
+      { id: 'micEq', g: 'tx', label: 'MIC EQ', type: 'toggle', face: true, write: (v) => 'PR1' + (v ? 2 : 1) + ';' },
+      { id: 'txw', g: 'tx', label: 'TXW', type: 'toggle', face: true, write: (v) => 'TS' + v + ';' },
+      { id: 'amc', g: 'tx', label: 'AMC LEVEL', type: 'level', min: 1, max: 100, step: 1, face: true, write: (v) => 'AO' + pad(v, 3) + ';' },
+      { id: 'voxGain', g: 'tx', label: 'VOX GAIN', type: 'level', min: 0, max: 100, step: 1, face: true, write: (v) => 'VG' + pad(v, 3) + ';' },
+      { id: 'voxDelay', g: 'tx', label: 'VOX DELAY', type: 'level', min: 0, max: 33, step: 1, face: true, write: (v) => 'VD' + pad(v, 2) + ';' },
+      { id: 'moniLvl', g: 'tx', label: 'MONI LEVEL', type: 'level', min: 0, max: 100, step: 1, face: true, write: (v) => 'ML1' + pad(v, 3) + ';' },
+      { id: 'keyer', g: 'tx', label: 'KEYER', type: 'toggle', face: true, write: (v) => 'KR' + v + ';' },
+      { id: 'bkin', g: 'tx', label: 'BK-IN', type: 'toggle', face: true, write: (v) => 'BI' + v + ';' },
+      { id: 'keySpeed', g: 'tx', label: 'CW SPEED', type: 'level', min: 4, max: 60, step: 1, face: true, write: (v) => 'KS' + pad(v, 3) + ';' },
+      { id: 'cwPitch', g: 'tx', label: 'CW PITCH', type: 'level', min: 300, max: 1050, step: 10, face: true, write: (v) => 'KP' + pad(Math.round((v - 300) / 10), 2) + ';' },
+      { id: 'bkDelay', g: 'tx', label: 'BK-DELAY', type: 'level', min: 0, max: 33, step: 1, face: true, write: (v) => 'SD' + pad(v, 2) + ';' },
+      { id: 'cwSpot', g: 'tx', label: 'CW SPOT', type: 'toggle', face: true, write: (v) => 'CS' + v + ';' },
+      // ZIN (CW AUTO ZERO IN) : le récepteur sélectionné se cale sur le signal CW
+      { id: 'zin', g: 'tx', label: 'ZIN', type: 'action', face: true, write: (v, s) => 'ZI' + (s && s.vfoSel === 1 ? 1 : 0) + ';' },
+      { id: 'rpt', g: 'vfo', label: 'RPT SHIFT (MAIN)', type: 'select', face: true, options: [[0, 'SIMP'], [1, '+'], [2, '−'], [3, 'ARS']], write: (v) => 'OS0' + v + ';' },
+      { id: 'rptB', g: 'vfo', label: 'RPT SHIFT (SUB)', type: 'select', face: true, options: [[0, 'SIMP'], [1, '+'], [2, '−'], [3, 'ARS']], write: (v) => 'OS1' + v + ';' },
+      { id: 'encDec', g: 'vfo', label: 'SQL TYPE (MAIN)', type: 'select', face: true, options: SQLT, write: (v) => 'CT0' + v + ';' },
+      { id: 'encDecB', g: 'vfo', label: 'SQL TYPE (SUB)', type: 'select', face: true, options: SQLT, write: (v) => 'CT1' + v + ';' },
+      { id: 'toneIdx', g: 'vfo', label: 'TONE FREQ (MAIN)', type: 'level', min: 0, max: 49, step: 1, face: true, write: (v) => 'CN00' + pad(v, 3) + ';' },
+      { id: 'toneIdxB', g: 'vfo', label: 'TONE FREQ (SUB)', type: 'level', min: 0, max: 49, step: 1, face: true, write: (v) => 'CN10' + pad(v, 3) + ';' }
     ],
     // SPLIT : sur le FTX-1, ST1 met le côté SUB en émission (PTT) — défaut connu du firmware, signalé par Hamlib
     // (rigs/yaesu/ftx1/ftx1_vfo.c). Le choix du VFO d'émission passe donc par FT0 (TX MAIN) / FT1 (TX SUB) ; ST n'est ni lu ni envoyé.

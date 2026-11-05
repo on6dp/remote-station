@@ -54,7 +54,7 @@
       { id: 'dial', cx: 983, cy: 280, ro: 160, ri: 160, dial: true, tip: 'Grand bouton : fréquence du récepteur actif (molette ou glisser en tournant) ; CLAR en service : décalage' },
       { id: 'subDial', cx: 63, cy: 163, ro: 50, subDial: true, pushAct: { action: 'swap' }, pushTip: 'A ⇄ B', tip: 'SUB DIAL : tourner = fréquence du VFO B (SUB) ; clic = échange les deux VFO (A ⇄ B)' },
       // FUNC : comme le bouton MULTI du FTDX101 (fonction choisie dans le menu FUNC, décalage du clarifier) ; le pousser = menu FUNC
-      { id: 'func', cx: 1215, cy: 170, ro: 50, multi: true, pushLocal: 'func', tip: 'FUNC : tourner = la fonction de la case de l’écran (choisie dans le menu FUNC, ex. RF POWER) ou le décalage du clarifier ; clic = menu FUNC' },
+      { id: 'func', cx: 1215, cy: 170, ro: 50, multi: true, pushLocal: 'func', longLocal: 'funcLong', longMs: 1500, tip: 'FUNC : appui de 2 s = écran FUNC (et sortie) ; dans l’écran : tourner = choisir la case, pousser = la régler (tourner), pousser = fini. Écran fermé : tourner = la fonction choisie (ex. RF POWER) ou le clarifier' },
       { id: 'afSub', cx: 63, cy: 410, ri: 28, ro: 50, inner: { ctl: 'afB', label: 'AF SUB', per: 5 }, outer: { ctl: 'rfB', label: 'RF SUB', per: 5 } },
       { id: 'afMain', cx: 1220, cy: 410, ri: 28, ro: 50, inner: { ctl: 'af', label: 'AF MAIN', per: 5 }, outer: { ctl: 'rf', label: 'RF MAIN', per: 5 } }
     ]

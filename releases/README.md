@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.58 | [RemoteStation-Setup-0.37.58.exe](0.37.58/RemoteStation-Setup-0.37.58.exe) | [remote-station-0.37.58.tar.gz](0.37.58/remote-station-0.37.58.tar.gz) | FTX-1 : écran FUNC — [empreintes SHA-256](0.37.58/SHA256SUMS.txt) |
 | 0.37.57 | [RemoteStation-Setup-0.37.57.exe](0.37.57/RemoteStation-Setup-0.37.57.exe) | [remote-station-0.37.57.tar.gz](0.37.57/remote-station-0.37.57.tar.gz) | FTX-1 : SUB DIAL poussé = A ⇄ B — [empreintes SHA-256](0.37.57/SHA256SUMS.txt) |
 | 0.37.56 | [RemoteStation-Setup-0.37.56.exe](0.37.56/RemoteStation-Setup-0.37.56.exe) | [remote-station-0.37.56.tar.gz](0.37.56/remote-station-0.37.56.tar.gz) | FTX-1 : tableau MODE en blanc gras — [empreintes SHA-256](0.37.56/SHA256SUMS.txt) |
 | 0.37.55 | [RemoteStation-Setup-0.37.55.exe](0.37.55/RemoteStation-Setup-0.37.55.exe) | [remote-station-0.37.55.tar.gz](0.37.55/remote-station-0.37.55.tar.gz) | FTX-1 : modes et touches en blanc gras — [empreintes SHA-256](0.37.55/SHA256SUMS.txt) |

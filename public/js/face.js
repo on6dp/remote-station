@@ -150,6 +150,8 @@
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
     // IC-7300 : pas de tableau de réglages façon Yaesu ; l'écran FUNCTION de l'Icom viendra (les niveaux se règlent par le menu MULTI, les fonctions par leurs touches)
     if (a.local === 'func' && ICOM) { L.func = !L.func; if (L.func) { L.icomMenu = L.quickMenu = false; L.icMem = L.icRec = L.icSet = false; } return render(); }
+    if (a.local === 'func' && FTX1F) return ftxFuncPush();
+    if (a.local === 'funcLong') return ftxFuncToggle(); // FTX-1 : appui de 2 s sur FUNC = écran FUNC / sortie
     if (a.local === 'func') { viewTouched(); if (MV.open) closeMenu(); L.func = !L.func; return render(); }
     if (a.local === 'bandMenu') return L.bandMenu ? closeBandMenu() : openBandMenu();
     if (a.local === 'modeMenu') return L.modeMenu ? closeModeMenu() : openModeMenu();
@@ -320,7 +322,7 @@
 
   // ------------------------------------------------------------ dessin (SVG)
   const svg = $('face');
-  if (FACE && FACE.model) svg.dataset.model = FACE.model; // réglages d'affichage propres à un TRX (face.css)
+  if (FACE && FACE.model) { svg.dataset.model = FACE.model; document.documentElement.dataset.face = FACE.model; } // + menus HTML (SPAN…) // réglages d'affichage propres à un TRX (face.css)
   function el(tag, attrs, parent, text) {
     const e = document.createElementNS(NS, tag);
     for (const k in attrs || {}) e.setAttribute(k, attrs[k]);
@@ -3298,7 +3300,63 @@
       ['sqlI', 'SQL', (s) => pct(s.sql), ctlStep('sql', 0, 255, 5), IG],
       pickY('color'), pickY('level'), pickY('peak'), pickY('marker')]
   ];
-  const FUNC = ICOM ? FUNC_ICOM : FUNC_YAESU;
+  // FTX-1 : écran FUNC du TRX (appui de 2 s sur FUNC), 3 pages de 4 rangées de 7 cases, comme sur le TRX :
+  // tourner FUNC = déplacer le cadre orange, pousser FUNC = régler la case (tourner FUNC change la valeur, pousser à nouveau : fini)
+  const FTX1F = !!(FACE && FACE.model === 'ftx1');
+  const sdk = (id) => (activeSide() === 'B' && R.CONTROL[id + 'B'] ? id + 'B' : id); // côté du récepteur sélectionné
+  const msCode = (c) => (c == null ? '—' : (c <= 5 ? [30, 50, 100, 150, 200, 250][c] : 300 + (c - 6) * 100) + 'ms');
+  const stepK = (kf, lo, hi, st) => (s, d) => { const k = kf(); if (!R.CONTROL[k]) return say('Pas disponible sur ce TRX.', 'warn', 3000); const cur = s[k] != null ? s[k] : lo; setCtl(k, Math.max(lo, Math.min(hi, Math.round((cur + d * st) / st) * st))); };
+  const cycK = (kf) => (s, d) => { const k = kf(), c = R.CONTROL[k]; if (!c || !c.options) return; const i = c.options.findIndex((o) => o[0] === s[k]); setCtl(k, c.options[((i < 0 ? 0 : i) + (d < 0 ? c.options.length - 1 : 1)) % c.options.length][0]); };
+  const togK = (kf) => (s) => tog(kf())(s);
+  const offLvl = (v) => (v == null ? '—' : v ? String(v) : 'OFF');
+  const optTxt = (id, v) => { const c = R.CONTROL[id]; const o = c && c.options && c.options.find((x) => x[0] === v); return o ? o[1] : '—'; };
+  function ftxPower(s, d) {
+    const head = s.powerHead === '1' ? '1' : '2', st = head === '1' ? 0.5 : 5, lo = head === '1' ? 0.5 : 5;
+    const hi = Math.min((me && me.maxWatts) || 100, head === '1' ? 10 : 100);
+    const w = Math.max(lo, Math.min(hi, Math.round(((s.power || lo) + d * st) / st) * st));
+    send({ t: 'set', power: w });
+  }
+  const FO = '#ffb020';
+  const info = (id, lab) => [id, lab, () => '', null, FO];
+  const FUNC_FTX1 = [
+    { name: 'SSB', rows: [
+      [null, pickY('level') && ['level', 'D-LEVEL', pickY('level')[2], pickY('level')[3], FO], ['peak', 'D-PEAK', () => 'LV' + (L.peak + 1), pickY('peak')[3], FO],
+        ['marker', 'D-MARKER', pickY('marker')[2], pickY('marker')[3], FO, true], ['color', 'D-COLOR', pickY('color')[2], pickY('color')[3], FO],
+        ['dContrast', 'D-CONTRAST', (s) => num(s.dContrast), stepK(() => 'dContrast', 0, 20, 1), FO], ['dimmer', 'DIMMER', (s) => num(s.dimmer), stepK(() => 'dimmer', 0, 20, 1), FO]],
+      [['mox', 'MOX', (s) => (s.tx ? 'ON' : 'OFF'), null, FO], ['attF', 'ATT', (s) => onOff(s[sdk('att')]), togK(() => sdk('att')), FO, true],
+        ['ipoF', 'IPO', (s) => { const t = R.preampText && R.preampText(s, activeSide()); return t ? t[0] : '—'; },
+          (s, d) => { const f = activeSide() === 'B' ? s.freqB : s.freq; if (f >= 144000000 && activeSide() === 'A') return tog('preampVU')(s); cycK(() => sdk('preamp'))(s, d); }, FO, true],
+        ['dnfF', 'DNF', (s) => onOff(s[sdk('dnf')]), togK(() => sdk('dnf')), FO, true],
+        ['agcF', 'AGC', (s) => optTxt(sdk('agc'), s[sdk('agc')]), cycK(() => sdk('agc')), FO, true],
+        ['miceq', 'MIC EQ', (s) => onOff(s.micEq), tog('micEq'), FO, true],
+        ['procLvl', 'PROC LEVEL', (s) => offLvl(s.procLvl), stepK(() => 'procLvl', 0, 100, 1), FO]],
+      [['tuneF', 'ANT TUNE', () => '', () => doAct({ act: { action: 'tune' } }), FO, true], ['tunerF', 'TUNER', (s) => onOff(s.tuner), tog('tuner'), FO, true], null,
+        ['nbF', 'NB', (s) => offLvl(s[sdk('nb')]), stepK(() => sdk('nb'), 0, 10, 1), FO], ['nrF', 'DNR', (s) => offLvl(s[sdk('nr')]), stepK(() => sdk('nr'), 0, 10, 1), FO],
+        ['antF', 'ANT', (s) => num(s.ant), cycK(() => 'ant'), FO, true], ['txwF', 'TXW', (s) => onOff(s.txw), tog('txw'), FO, true]],
+      [['power', 'RF POWER', (s) => (s.power != null ? s.power + 'W' : '—'), ftxPower, FO], ['mic', 'MIC GAIN', (s) => num(s.mic), stepK(() => 'mic', 0, 100, 1), FO],
+        ['amc', 'AMC LEVEL', (s) => num(s.amc), stepK(() => 'amc', 1, 100, 1), FO], ['voxF', 'VOX', (s) => onOff(s.vox), tog('vox'), FO, true],
+        ['voxGain', 'VOX GAIN', (s) => num(s.voxGain), stepK(() => 'voxGain', 0, 100, 1), FO], ['voxDelay', 'VOX DELAY', (s) => msCode(s.voxDelay), stepK(() => 'voxDelay', 0, 33, 1), FO],
+        ['fwd1', 'FWD', () => '', null, FO, false, 'fwd']]] },
+    { name: 'CW', rows: [
+      [null, ['moniLvl', 'MONI LEVEL', (s) => num(s.moniLvl), stepK(() => 'moniLvl', 0, 100, 1), FO], null, null, null, null, null],
+      [['keyerF', 'KEYER', (s) => onOff(s.keyer), tog('keyer'), FO, true], ['bkinF', 'BK-IN', (s) => onOff(s.bkin), tog('bkin'), FO, true],
+        ['keySpeed', 'CW SPEED', (s) => (s.keySpeed != null ? s.keySpeed + 'wpm' : '—'), stepK(() => 'keySpeed', 4, 60, 1), FO],
+        ['cwPitch', 'CW PITCH', (s) => (s.cwPitch != null ? s.cwPitch + 'Hz' : '—'), stepK(() => 'cwPitch', 300, 1050, 10), FO],
+        ['bkDelay', 'BK-DELAY', (s) => msCode(s.bkDelay), stepK(() => 'bkDelay', 0, 33, 1), FO],
+        ['zinF', 'ZIN', () => '', (s) => (/^CW/.test(L.activeMode(s) || '') ? setCtl('zin', null) : say('ZIN : en CW seulement.', '', 3000)), FO, true],
+        ['cwSpotF', 'CW SPOT', (s) => onOff(s.cwSpot), tog('cwSpot'), FO, true]],
+      [null, null, null, null, info('cwMsg', 'MESSAGE'), info('cwPlay', 'PLAY'), info('cwRec', 'RECORD')],
+      [['back2', 'BACK', () => '', null, FO, false, 'back'], null, null, null, null, null, ['fwd2', 'FWD', () => '', null, FO, false, 'fwd']]] },
+    { name: 'FM/C4FM', rows: [
+      [null, info('dtmf', 'DTMF'), info('tcall', 'T-CALL'), null, null, ['rpt', 'RPT SHIFT', (s) => optTxt(sideKey('rpt'), s[sideKey('rpt')]), ctlCycle('rpt', 4), FO, true], info('rev', 'REV')],
+      [info('dgTx', 'DG-ID TX'), info('dgRx', 'DG-ID RX'), null, info('aprsS', 'APRS S.LIST'), info('aprsM', 'APRS M.LIST'), info('aprsB', 'APRS BEACON'), info('aprsT', 'APRS BCN-TX')],
+      [info('chStep', 'CH STEP'), null, null, ['encDec', 'SQL TYPE', (s) => optTxt(sideKey('encDec'), s[sideKey('encDec')]), ctlCycle('encDec', 6), FO, true],
+        ['toneIdx', 'TONE FREQ', (s) => (CTCSS[s[sideKey('toneIdx')]] != null ? CTCSS[s[sideKey('toneIdx')]].toFixed(1) + 'Hz' : '—'), ctlStep('toneIdx', 0, 49, 1), FO],
+        info('dcs', 'DCS'), info('home', 'HOME')],
+      [['back3', 'BACK', () => '', null, FO, false, 'back'], info('radioS', 'RADIO SETTING'), info('cwS', 'CW SETTING'), info('opS', 'OPERATION SETTING'),
+        info('dispS', 'DISPLAY SETTING'), info('extS', 'EXTENSION SETTING'), info('aprsSet', 'APRS SETTING')]] }
+  ];
+  const FUNC = ICOM ? FUNC_ICOM : FTX1F ? FUNC_FTX1.flatMap((p) => p.rows) : FUNC_YAESU;
   // MULTI de l'IC-7300 (pousser le bouton) : les réglages du mode en cours, comme sur le TRX
   function multiItems(s) {
     const m = L.activeMode(s) || '';
@@ -3317,7 +3375,7 @@
     tuneTo(side, hz);
   }
   const FUNC_BY = {};
-  for (const row of FUNC) for (const c of row) FUNC_BY[c[0]] = c;
+  for (const row of FUNC) for (const c of row) if (c) FUNC_BY[c[0]] = c;
   if (!FUNC_BY[L.funcSel]) L.funcSel = 'power'; // choix gardé d'une autre face avant (autre TRX)
   function funcAdjust(id, d) {
     const c = FUNC_BY[id];
@@ -3329,6 +3387,7 @@
     return true;
   }
   function buildFunc(g, c) {
+    if (FTX1F) return buildFuncFtx1(g, c);
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const f = LCD.func = el('g', { class: 'func', style: 'display:none' }, g);
     el('rect', { x: X(3), y: Y(130), width: c.w - 6, height: 166, class: 'func-bg' }, f);
@@ -3380,6 +3439,7 @@
   }
   function drawFunc(s) {
     if (!LCD.func) return;
+    if (FTX1F) return drawFuncFtx1(s);
     LCD.func.style.display = L.func && !ICOM ? '' : 'none'; // IC-7300 : écran FUNCTION Icom (buildIcFunc)
     if (!L.func) return;
     for (const id in LCD.funcCells) {
@@ -3392,6 +3452,122 @@
       if (!c.two) c.t2.textContent = FUNC_BY[id][2](s);
       if (ina && c.minus) { c.minus.style.display = 'none'; c.plus.style.display = 'none'; continue; }
       if (c.minus) { c.minus.style.display = L.funcSel === id ? '' : 'none'; c.plus.style.display = L.funcSel === id ? '' : 'none'; }
+    }
+  }
+  // ---- FTX-1 : écran FUNC (pages, cadre déplacé par FUNC, réglage après un appui sur FUNC)
+  L.funcPage = 0; L.fEdit = false;
+  const ftxPageOf = (id) => FUNC_FTX1.findIndex((p) => p.rows.some((r) => r.some((c) => c && c[0] === id)));
+  const ftxIds = (pg) => FUNC_FTX1[pg].rows.flat().filter(Boolean).map((c) => c[0]);
+  const ftxModePage = (s) => { const m = L.activeMode(s) || ''; return /^CW/.test(m) ? 1 : /FM|C4FM/.test(m) ? 2 : 0; };
+  function ftxFuncToggle() {
+    viewTouched();
+    if (MV.open) closeMenu();
+    L.func = !L.func; L.fEdit = false;
+    if (L.func) {
+      L.funcPage = ftxModePage(S());
+      if (ftxPageOf(L.funcSel) !== L.funcPage) L.funcSel = ftxIds(L.funcPage)[0];
+      say('FUNC : tourner FUNC = choisir la case, pousser FUNC = la régler (tourner), pousser à nouveau = fini ; appui de 2 s sur FUNC : sortie.', '', 5000);
+    }
+    return render();
+  }
+  function ftxPage(pg) {
+    L.funcPage = (pg + FUNC_FTX1.length) % FUNC_FTX1.length; L.fEdit = false;
+    L.funcSel = ftxIds(L.funcPage)[0];
+    render();
+  }
+  function ftxFuncPush() {
+    if (!L.func) return ftxFuncToggle();
+    const c = FUNC_BY[L.funcSel];
+    if (!c || ftxPageOf(c[0]) !== L.funcPage) return;
+    if (c[6] === 'fwd') return ftxPage(L.funcPage + 1);
+    if (c[6] === 'back') return ftxPage(L.funcPage - 1);
+    if (!c[3]) return say(c[1] + ' : pas disponible à distance (au club, sur le TRX).', '', 3500);
+    if (c[5]) { funcAdjust(c[0], 1); return; }
+    L.fEdit = !L.fEdit;
+    if (L.fEdit) say(c[1] + ' : tournez FUNC (ou molette, − / +) ; poussez FUNC pour finir.', '', 3500);
+    render();
+  }
+  function ftxCursor(n) {
+    const ids = ftxIds(L.funcPage);
+    let i = ids.indexOf(L.funcSel);
+    i = i < 0 ? 0 : Math.max(0, Math.min(ids.length - 1, i + n));
+    L.funcSel = ids[i]; L.fEdit = false;
+    render();
+    return FUNC_BY[L.funcSel][1];
+  }
+  function buildFuncFtx1(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const f = LCD.func = el('g', { class: 'func ftxf', style: 'display:none' }, g);
+    const top = 130, rh = (c.h - top - 2) / 4, cw = (c.w - 10) / 7;
+    el('rect', { x: X(3), y: Y(top - 2), width: c.w - 6, height: c.h - top + 2, class: 'func-bg' }, f);
+    LCD.funcCells = {}; LCD.funcPages = [];
+    FUNC_FTX1.forEach((pg, pi) => {
+      const pgG = el('g', { style: 'display:none' }, f);
+      LCD.funcPages.push(pgG);
+      pg.rows.forEach((row, ri) => row.forEach((cell, ci) => {
+        const x = X(5) + ci * cw, y = Y(top + ri * rh), h = rh - 5;
+        if (!cell && !(ri === 0 && ci === 0)) return;
+        if (!cell) { // case PAGE n/3 + nom de la page
+          el('rect', { x: x + 1, y, width: cw - 2, height: h, rx: 3, class: 'ftx-pg' }, pgG);
+          el('text', { x: x + cw / 2, y: y + h / 2 - 2, class: 'ftx-pgt', 'text-anchor': 'middle' }, pgG, 'PAGE ' + (pi + 1) + '/' + FUNC_FTX1.length);
+          el('text', { x: x + cw / 2, y: y + h / 2 + 11, class: 'ftx-pgt', 'text-anchor': 'middle' }, pgG, pg.name);
+          return;
+        }
+        const [id, lab, , adj, , flip, kind] = cell;
+        const box = el('rect', { x: x + 1, y, width: cw - 2, height: h, rx: 3, class: 'func-cell' + (adj || kind ? '' : ' off') }, pgG);
+        const noVal = !!kind || id === 'tuneF' || id === 'zinF' || (!adj && id !== 'mox'); // case sans valeur : nom au milieu
+        const two = noVal && !kind && lab.indexOf(' ') > 0 && lab.length > 9;
+        const words = two ? [lab.slice(0, lab.indexOf(' ')), lab.slice(lab.indexOf(' ') + 1)] : [lab];
+        const t1 = el('text', { x: x + cw / 2, y: y + (noVal ? h / 2 - (two ? 2 : kind ? 0 : -4) : h / 2 - 3), class: 'func-lab' + (kind ? ' nav' : ''), 'text-anchor': 'middle' }, pgG, words[0]);
+        const t2 = el('text', { x: x + cw / 2, y: y + h / 2 + (two ? 11 : 13), class: two ? 'func-lab' : 'func-val', 'text-anchor': 'middle' }, pgG, two ? words[1] : '');
+        if (kind) el('path', { d: kind === 'fwd' ? 'M' + (x + 12) + ' ' + (y + h - 8) + 'h' + (cw - 26) + 'l-8 -5' : 'M' + (x + cw - 12) + ' ' + (y + h - 8) + 'h-' + (cw - 26) + 'l8 -5', class: 'ftx-arrow' }, pgG);
+        const minus = adj && !flip ? el('text', { x: x + 9, y: y + h / 2 + 13, class: 'func-pm', 'text-anchor': 'middle' }, pgG, '−') : null;
+        const plus = adj && !flip ? el('text', { x: x + cw - 9, y: y + h / 2 + 13, class: 'func-pm', 'text-anchor': 'middle' }, pgG, '+') : null;
+        const hit = el('rect', { x: x + 1, y, width: cw - 2, height: h, class: 'hs lcd-hit' }, pgG);
+        el('title', {}, hit, kind ? (kind === 'fwd' ? 'Page suivante' : 'Page précédente') : adj ? lab + (flip ? ' : clic pour changer' : ' : clic pour la régler, puis − / +, molette ou bouton FUNC') : lab + ' : pas disponible à distance');
+        hit.addEventListener('click', (ev) => {
+          if (kind) return ftxPage(L.funcPage + (kind === 'fwd' ? 1 : -1));
+          if (modeInactive(id, S())) { fmOnly(id, S()); return; }
+          if (!adj) return say(lab + ' : pas disponible à distance (au club, sur le TRX).', '', 3500);
+          const wasEdit = L.funcSel === id && L.fEdit;
+          L.funcSel = id;
+          if (flip) { L.fEdit = false; funcAdjust(id, 1); return render(); }
+          if (wasEdit) {
+            const px = toImg(ev).x - x;
+            if (px < cw * 0.38) funcAdjust(id, -1);
+            else if (px > cw * 0.62) funcAdjust(id, 1);
+          } else { L.fEdit = true; say(lab + ' : cliquez sur − ou +, tournez la molette sur la case ou le bouton FUNC.', '', 4000); }
+          render();
+        });
+        let wacc = 0;
+        hit.addEventListener('wheel', (ev) => {
+          ev.preventDefault();
+          if (!adj || flip || modeInactive(id, S())) return;
+          L.funcSel = id; L.fEdit = true;
+          const d = ev.deltaMode === 1 ? ev.deltaY * 33 : ev.deltaY;
+          let n;
+          if (Math.abs(d) >= 50) { wacc = 0; n = Math.sign(d); } else { wacc += d; n = Math.trunc(wacc / 100); if (!n) return; wacc -= n * 100; }
+          funcAdjust(id, -n);
+          showTip(ev, lab + ' ' + FUNC_BY[id][2](S()));
+        }, { passive: false });
+        LCD.funcCells[id] = { box, t1, t2, two, minus, plus };
+      }));
+    });
+  }
+  function drawFuncFtx1(s) {
+    LCD.func.style.display = L.func ? '' : 'none';
+    if (!L.func) { L.fEdit = false; return; }
+    LCD.funcPages.forEach((p, i) => { p.style.display = i === L.funcPage ? '' : 'none'; });
+    for (const id of ftxIds(L.funcPage)) {
+      const c = LCD.funcCells[id], def = FUNC_BY[id];
+      const ina = modeInactive(id, s), sel = L.funcSel === id, ed = sel && L.fEdit && !ina;
+      c.box.classList.toggle('sel', sel);
+      c.box.classList.toggle('edit', ed);
+      c.box.classList.toggle('inact', ina);
+      c.t1.classList.toggle('dim', ina);
+      c.t2.classList.toggle('dim', ina);
+      if (!c.two) c.t2.textContent = def[2](s);
+      if (c.minus) { c.minus.style.display = ed ? '' : 'none'; c.plus.style.display = ed ? '' : 'none'; }
     }
   }
   function power(d) {
@@ -3521,8 +3697,13 @@
       render();
       return showTip(ev, 'VC TUNE ' + (vcSide ? 'SUB' : 'MAIN') + ' ' + (pos != null ? pos : (n > 0 ? '+' : '−')));
     }
+    if (k.multi && FTX1F && L.func) {
+      const c = FUNC_BY[L.funcSel];
+      if (L.fEdit && c && c[3] && !c[5]) { funcAdjust(L.funcSel, notches); return showTip(ev, c[1] + ' ' + c[2](S())); }
+      return showTip(ev, ftxCursor(notches > 0 ? 1 : -1));
+    }
     if (k.multi && MV.open && MV.sel) { menuAdjust(MV.sel, notches > 0 ? 1 : -1); return; }
-    if (k.multi && !(s.rit || s.xit) && FUNC_BY[L.funcSel] && FUNC_BY[L.funcSel][3]) {
+    if (k.multi && !(s.rit || s.xit) && FUNC_BY[L.funcSel] && FUNC_BY[L.funcSel][3] && !(FTX1F && FUNC_BY[L.funcSel][5])) {
       funcAdjust(L.funcSel, notches);
       if (L.funcSel === 'step') { const sd = activeSide(), f = sd === 'B' ? pendF.B : pendF.A; return showTip(ev, 'STEP DIAL ' + (sd === 'B' ? 'SUB ' : 'MAIN ') + (f ? fmtFreq(f) + ' MHz' : '')); }
       return showTip(ev, FUNC_BY[L.funcSel][1] + ' ' + FUNC_BY[L.funcSel][2](S()));
@@ -3605,6 +3786,10 @@
       const p = toImg(ev);
       drag = { part: knobPart(k, p), y: ev.clientY, a: Math.atan2(p.y - k.cy, p.x - k.cx), acc: 0, t0: Date.now(), moved: false };
       // Appui d'au moins 1 s sur le centre sans tourner (ex. SHIFT ◎ WIDTH : retour aux valeurs par défaut)
+      if (k.longLocal) { // appui de 2 s (FTX-1 : FUNC = écran FUNC / sortie)
+        const d0 = drag;
+        d0.lt = setTimeout(() => { if (drag === d0 && !d0.moved && Math.abs(d0.acc) < 0.5) { d0.long = true; doAct({ act: { local: k.longLocal } }, false); } }, k.longMs || 1500);
+      }
       if (k.longReset && drag.part === 'inner') {
         const d0 = drag;
         d0.lt = setTimeout(() => { if (drag === d0 && !d0.moved && Math.abs(d0.acc) < 0.5) { d0.long = true; knobReset(k, ev); } }, 1000);

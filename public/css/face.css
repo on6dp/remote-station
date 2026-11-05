@@ -325,6 +325,9 @@ body.face-page.bm-popup .fc-bm:empty::before { content: 'Carte de bande : onglet
   background: linear-gradient(#e7eaee, #a9b0b9); color: #1b1f25; }
 .fc-span .fc-span-g button.on { background: #1f6fe0; color: #fff; border-color: #9cc4ff; }
 .fc-span .fc-span-g button.off { opacity: .45; cursor: not-allowed; }
+/* FTX-1 : valeurs de SPAN comme le tableau MODE (blanc gras sur touches foncées) */
+[data-face='ftx1'] .fc-span .fc-span-g button { background: #4a5361; border-color: #9aa4b2; color: #fff; font-weight: 800; font-size: 1.3em; }
+[data-face='ftx1'] .fc-span .fc-span-g button.on { background: #1f6fe0; border-color: #9cc4ff; }
 
 /* 👥 membres connectés et messages (face avant) */
 .fc-ops { right: 0; left: auto; width: 380px; }
@@ -381,6 +384,17 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 /* FTX-1 : noms des modes et touches sous l'écran (CENTER, 3DSS, MULTI…) en blanc gras, un peu plus grands */
 #face[data-model='ftx1'] .lcd-modet { fill: #fff; font-size: 13px; font-weight: 800; }
 #face[data-model='ftx1'] .lcd-bott { fill: #fff; font-size: 13px; font-weight: 800; }
+/* FTX-1 : écran FUNC (3 pages) — cases grises, nom en blanc, valeur en orange, cadre orange sur la case choisie */
+#face .ftxf .func-cell { fill: #4b5552; stroke: #6d7a76; stroke-width: .8; }
+#face .ftxf .func-cell.off { fill: #3a423f; }
+#face .ftxf .func-cell.sel { stroke: #ffa600; stroke-width: 2.4; }
+#face .ftxf .func-cell.edit { fill: #6a4a12; stroke: #ffc233; stroke-width: 2.4; }
+#face .ftxf .func-lab { fill: #fff; font-size: 11px; font-weight: 800; }
+#face .ftxf .func-lab.nav { fill: #ffa600; }
+#face .ftxf .func-val { fill: #ffa600; font-size: 13px; font-weight: 800; }
+#face .ftxf .ftx-pg { fill: #d9dcdf; }
+#face .ftxf .ftx-pgt { fill: #5a6068; font-size: 11px; font-weight: 700; pointer-events: none; }
+#face .ftxf .ftx-arrow { fill: none; stroke: #fff; stroke-width: 2.5; pointer-events: none; }
 /* FTX-1 : tableau MODE avec les noms en blanc gras, plus grands, sur des touches foncées */
 #face[data-model='ftx1'] .mm-cell { fill: #4a5361; stroke: #9aa4b2; }
 #face[data-model='ftx1'] .mm-cell.on { fill: #1f6fe0; stroke: #9cc4ff; }
