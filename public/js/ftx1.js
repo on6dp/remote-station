@@ -156,6 +156,9 @@
       { id: 'xitB', g: 'vfo', label: 'XIT (VFO B)', type: 'toggle', write: (v, s) => 'CF100' + (s.ritB || 0) + v + '000;' },
       { id: 'clarB', g: 'vfo', label: 'Décalage RIT/XIT (VFO B)', type: 'level', min: -9999, max: 9999, step: 10, unit: 'Hz',
         write: (v) => 'CF101' + (v < 0 ? '-' : '+') + pad(Math.abs(v), 4) + ';' },
+      // CLAR de la face avant /ftx1 : 0 arrêt, 1 RX, 2 TX, 3 RXTX — RIT et XIT dans la même commande CF (pas d'état intermédiaire)
+      { id: 'clarMode', g: 'vfo', label: 'CLAR (RX / TX / RXTX)', type: 'select', face: true, options: [[0, 'OFF'], [1, 'RX'], [2, 'TX'], [3, 'RXTX']], write: (v) => 'CF000' + (v & 1) + ((v >> 1) & 1) + '000;' },
+      { id: 'clarModeB', g: 'vfo', label: 'CLAR VFO B (RX / TX / RXTX)', type: 'select', face: true, options: [[0, 'OFF'], [1, 'RX'], [2, 'TX'], [3, 'RXTX']], write: (v) => 'CF100' + (v & 1) + ((v >> 1) & 1) + '000;' },
       { id: 'clarClrB', g: 'vfo', label: 'CLEAR (décalage VFO B à zéro)', type: 'action', write: () => 'CF101+0000;' },
       // Largeur de filtre du côté SUB (VFO B) : SH1 0 nn (Hamlib ftx1_audio.c) — molette sur « BW » de l'écran du VFO B
       { id: 'widthB', g: 'flt', label: 'WIDTH (VFO B)', type: 'width', modeKey: 'modeB', write: (v) => 'SH1' + pad(v, 3) + ';',

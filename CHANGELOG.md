@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.65** — Face avant FTX-1 : CLAR comme sur le TRX (RX → TX → RXTX → arrêt) avec les bandes de part et d'autre du grand bouton en rouge ; MAG BAND ouvre le tableau des bandes du FTX-1 (1.8 à 430)
 - **0.37.64** — Face avant FTX-1 : barre d'état du TRX en haut de l'écran — FAST, VOX, TUNE (rouge quand le tuner est en service) ANT1 / ANT2, fonction du bouton FUNC dans un cadre orange (clic : écran FUNC)
 - **0.37.63** — Face avant FTX-1 : appui de plus d'1 s sur SPLIT = SPLIT inversé (VFO A ⇄ B échangés, SPLIT en service)
 - **0.37.62** — Face avant FTX-1 : fréquences encore un peu plus bas, CLAR RX / TX / RXTX bien dégagé au-dessus, décalage (0Hz) tout à droite

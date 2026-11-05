@@ -317,6 +317,18 @@
       return setCtl(a.action, null);
     }
     if (a.toggleSel) return setCtl('vfoSel', s.vfoSel === 1 ? 0 : 1);
+    if (a.clar && FACE.clarCycle) {
+      // FTX-1 : CLAR RX → CLAR TX → CLAR RXTX → arrêt, sur le récepteur sélectionné ; appui long : décalage à zéro
+      const B = activeSide() === 'B';
+      if (long) return setCtl(B ? 'clarClrB' : 'clarClr', null);
+      const read = (B ? s.ritB : s.rit) ? (B ? s.xitB : s.xit) ? 3 : 1 : (B ? s.xitB : s.xit) ? 2 : 0;
+      // Appuis rapprochés : on part du dernier choix envoyé tant que le TRX ne l'a pas encore relu
+      const pd = L.clarPend, cur = pd && pd.B === B && Date.now() - pd.at < 3000 && pd.v !== read ? pd.v : read;
+      const nx = (cur + 1) % 4;
+      L.clarPend = { B, v: nx, at: Date.now() };
+      setCtl(B ? 'clarModeB' : 'clarMode', nx);
+      return say(nx ? 'CLAR ' + ['', 'RX', 'TX', 'RXTX'][nx] : 'CLAR arrêté', '', 2000);
+    }
     if (a.clar) {
       if (long) return setCtl('clarClr', null);
       // Grande touche CLAR : clarifier RX ; sur le TRX la bague du grand bouton passe sur CLAR (SF01), et revient à SUB à l'arrêt
@@ -870,7 +882,7 @@
     }
     buildFunc(g, c);
     buildModeMenu(g, c);
-    if (SINGLE) buildBandMenu(g, c);
+    if (SINGLE || FACE.bandGrid) buildBandMenu(g, c); // FTX-1 : tableau BAND du TRX (MAG BAND)
     if (ICOM) {
       // Écran MENU de l'IC-7300 : 2 pages de 5 × 2 touches, comme sur le TRX ; VOICE devient KEYER en CW et DECODE en RTTY
       const md = () => L.activeMode(S()) || '';
@@ -2869,15 +2881,17 @@
     el('text', { x: x0 + w / 2, y: y0 + 17, class: 'mm-ttl', 'text-anchor': 'middle' }, m, 'BAND');
     const cw = (w - 12) / 4, rh = 46;
     LCD.bandCells = {};
-    BAND_GRID.filter((b) => b[2] * 1000 <= (R.FREQ_MAX || 75e6)).forEach(([name, lab, khz, md], i) => {
+    // FTX-1 : tableau du TRX (FACE.bandGrid, libellés sans « MHz », AIR / 70/GEN pas à distance)
+    const grid = (FACE && FACE.bandGrid) || BAND_GRID.filter((b) => b[2] * 1000 <= (R.FREQ_MAX || 75e6));
+    grid.forEach(([name, lab, khz, md], i) => {
       const ri = Math.floor(i / 4), ci = i % 4;
       const x = x0 + 6 + ci * cw, y = y0 + 28 + ri * rh;
-      const box = el('rect', { x: x + 2, y, width: cw - 4, height: rh - 7, rx: 3, class: 'mm-cell' }, m);
-      const t = el('text', { x: x + cw / 2, y: y + 24, class: 'mm-lab', 'text-anchor': 'middle' }, m, lab + ' MHz');
+      const box = el('rect', { x: x + 2, y, width: cw - 4, height: rh - 7, rx: 3, class: 'mm-cell' + (name ? '' : ' preset') }, m);
+      const t = el('text', { x: x + cw / 2, y: y + 24, class: 'mm-lab' + (name ? '' : ' preset'), 'text-anchor': 'middle' }, m, FACE && FACE.bandGrid ? lab : lab + ' MHz');
       const hit = el('rect', { x: x + 2, y, width: cw - 4, height: rh - 7, class: 'hs lcd-hit' }, m);
-      el('title', {}, hit, 'Bande ' + lab + ' MHz (' + name.replace('M', ' m') + ')');
-      hit.addEventListener('click', (ev) => { ev.stopPropagation(); closeBandMenu(); bandTo(name, khz, md); });
-      LCD.bandCells[name] = [box, t];
+      el('title', {}, hit, name ? 'Bande ' + lab + ' MHz (' + name.replace('M', ' m') + ')' : lab + ' : pas à distance');
+      hit.addEventListener('click', (ev) => { ev.stopPropagation(); if (!name) return say(lab + ' : pas disponible à distance.', '', 3000); closeBandMenu(); bandTo(name, khz, md); });
+      if (name) LCD.bandCells[name] = [box, t];
     });
     const close = el('rect', { x: x0 + w - 24, y: y0 + 5, width: 18, height: 16, class: 'hs lcd-hit' }, m);
     el('text', { x: x0 + w - 15, y: y0 + 17, class: 'mm-ttl', 'text-anchor': 'middle' }, m, '✕');
