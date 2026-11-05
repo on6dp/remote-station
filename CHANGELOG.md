@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.75** — Face avant FTX-1 : voyants BUSY/TX SUB / MAIN — le vert s'éteint et le rouge s'allume sur le VFO qui émet, SPLIT compris
 - **0.37.74** — Face avant FTX-1 : FINE/FAST — appui bref FINE (« FINE » noir gras sur fond blanc dans la barre d'état), appui d'1 s FAST (« FAST » sur fond bleu) ; le TRX suit (FN) et la page suit le TRX
 - **0.37.73** — Face avant FTX-1 : réglages au bouton FUNC plus fluides — la valeur suit chaque cran tout de suite (cadre et écran FUNC), une seule commande part au TRX 250 ms après le dernier cran
 - **0.37.72** — Face avant FTX-1 : TUNE de la barre d'état en blanc gras sur fond rouge quand le tuner est en service
