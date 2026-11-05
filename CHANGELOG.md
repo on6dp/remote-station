@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.71** — Face avant FTX-1 : RF POWER au bouton FUNC par pas de 1 W (5 à 100 W avec le SPA-1, 0,5 W avec la tête seule) ; les crans rapprochés sont regroupés en une seule commande au TRX (une rafale faisait répondre « ?; »)
 - **0.37.70** — Face avant FTX-1 : RF POWER au bouton FUNC de nouveau par pas de 5 W avec le SPA-1 (le TRX refuse par CAT les valeurs comme 66 W)
 - **0.37.69** — Face avant FTX-1 : bandes rouges du CLAR redessinées sur la forme exacte des bandes bleues de part et d'autre du grand bouton
 - **0.37.68** — Face avant FTX-1 : RF POWER au bouton FUNC par pas de 1 W (0,5 W avec la tête seule) ; CLAR RX / TX / RXTX affiché tout de suite à chaque appui (bandes rouges comprises), sans attendre la relecture du TRX

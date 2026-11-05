@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.71 | [RemoteStation-Setup-0.37.71.exe](0.37.71/RemoteStation-Setup-0.37.71.exe) | [remote-station-0.37.71.tar.gz](0.37.71/remote-station-0.37.71.tar.gz) | FTX-1 : RF POWER par 1 W, commandes regroupées — [empreintes SHA-256](0.37.71/SHA256SUMS.txt) |
 | 0.37.70 | [RemoteStation-Setup-0.37.70.exe](0.37.70/RemoteStation-Setup-0.37.70.exe) | [remote-station-0.37.70.tar.gz](0.37.70/remote-station-0.37.70.tar.gz) | FTX-1 : RF POWER par 5 W — [empreintes SHA-256](0.37.70/SHA256SUMS.txt) |
 | 0.37.69 | [RemoteStation-Setup-0.37.69.exe](0.37.69/RemoteStation-Setup-0.37.69.exe) | [remote-station-0.37.69.tar.gz](0.37.69/remote-station-0.37.69.tar.gz) | FTX-1 : bandes rouges du CLAR à la bonne forme — [empreintes SHA-256](0.37.69/SHA256SUMS.txt) |
 | 0.37.68 | [RemoteStation-Setup-0.37.68.exe](0.37.68/RemoteStation-Setup-0.37.68.exe) | [remote-station-0.37.68.tar.gz](0.37.68/remote-station-0.37.68.tar.gz) | FTX-1 : RF POWER 1 W, CLAR plus rapide — [empreintes SHA-256](0.37.68/SHA256SUMS.txt) |

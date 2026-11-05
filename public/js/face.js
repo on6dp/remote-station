@@ -3383,13 +3383,17 @@
   const togK = (kf) => (s) => tog(kf())(s);
   const offLvl = (v) => (v == null ? '—' : v ? String(v) : 'OFF');
   const optTxt = (id, v) => { const c = R.CONTROL[id]; const o = c && c.options && c.options.find((x) => x[0] === v); return o ? o[1] : '—'; };
+  // RF POWER au bouton FUNC : 1 W par cran avec le SPA-1 (5 à 100 W), 0,5 W avec la tête seule. Les crans rapprochés sont
+  // regroupés : une seule commande PC 300 ms après le dernier cran (une rafale de PC faisait répondre « ?; » au FTX-1)
   function ftxPower(s, d) {
-    // SPA-1 : par CAT, le FTX-1 refuse les puissances qui ne sont pas des multiples de 5 W (« PC2066; » → « ?; », constaté au club) ;
-    // tête seule : 0,5 W
-    const head = s.powerHead === '1' ? '1' : '2', st = head === '1' ? 0.5 : 5, lo = head === '1' ? 0.5 : 5;
+    const head = s.powerHead === '1' ? '1' : '2', st = head === '1' ? 0.5 : 1, lo = head === '1' ? 0.5 : 5;
     const hi = Math.min((me && me.maxWatts) || 100, head === '1' ? 10 : 100);
-    const w = Math.max(lo, Math.min(hi, Math.round(((s.power || lo) + d * st) / st) * st));
-    send({ t: 'set', power: w });
+    const base = L.pwrPend && Date.now() - L.pwrPend.at < 2500 ? L.pwrPend.w : (s.power || lo);
+    const w = Math.max(lo, Math.min(hi, Math.round((base + d * st) / st) * st));
+    L.pwrPend = { w, at: Date.now() };
+    pend.power = { v: w, at: Date.now() };
+    clearTimeout(L.pwrT);
+    L.pwrT = setTimeout(() => { send({ t: 'set', power: w }); pend.power = { v: w, at: Date.now() }; }, 300);
   }
   const FO = '#ffb020';
   const info = (id, lab) => [id, lab, () => '', null, FO];
