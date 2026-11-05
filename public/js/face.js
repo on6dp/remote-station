@@ -829,6 +829,13 @@
     LCD.mB = buildMeter(gmB, X(5 + dB), Y(4), 190, 'B'); LCD.mB.g = gmB;
     LCD.fB = buildFilter(gw, X(199 + dB), Y(14), 82, 72);
     if (FACE.statusBar) buildStatus(g, c);
+    // FTX-1 : toucher le cadre du filtre (MAIN ou SUB) ouvre l'écran DSP de ce récepteur, comme sur le TRX
+    if (FACE.meterFtx) for (const sd of ['A', 'B']) {
+      const fg = LCD['f' + sd].g;
+      fg.style.cursor = 'pointer';
+      el('title', {}, fg, 'Filtre ' + (sd === 'B' ? 'SUB' : 'MAIN') + ' : clic = écran DSP (SHIFT, WIDTH, NOTCH, CONTOUR / APF)');
+      fg.addEventListener('click', (ev) => { ev.stopPropagation(); dspToggle(sd); });
+    }
     // Fréquences
     const half = (c.w - 10) / 2;
     LCD.half = half; LCD.X = X; LCD.Y = Y; LCD.cw0 = c.w;
