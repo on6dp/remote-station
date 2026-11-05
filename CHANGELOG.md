@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.56** — Face avant FTX-1 : tableau MODE (et BAND) avec les noms en blanc gras, plus grands, sur des touches foncées
 - **0.37.55** — Face avant FTX-1 : noms des modes et touches sous l'écran (CENTER, 3DSS, MULTI, SCOPE, SPAN, SPEED) en blanc gras, plus grands
 - **0.37.54** — Face avant FTX-1 : cartes de bande dans le même ordre que l'écran du TRX (VFO-B / SUB à gauche, VFO-A / MAIN à droite), trait rouge sur le VFO d'émission en SPLIT
 - **0.37.53** — BAND MAP de la face avant : en SPLIT, les deux cartes passent à ±10 kHz autour de leur VFO (hors SPLIT : plage habituelle) ; FTX-1 : son USB en stéréo (MAIN à gauche, SUB à droite) avec le bouton Stéréo MAIN | SUB de /ftx1 et le 2e décodeur RTTY sur le SUB dans /ftx1/digi.html ; émission FT8 auto toujours sur le VFO principal du FTX-1

@@ -381,6 +381,12 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 /* FTX-1 : noms des modes et touches sous l'écran (CENTER, 3DSS, MULTI…) en blanc gras, un peu plus grands */
 #face[data-model='ftx1'] .lcd-modet { fill: #fff; font-size: 13px; font-weight: 800; }
 #face[data-model='ftx1'] .lcd-bott { fill: #fff; font-size: 13px; font-weight: 800; }
+/* FTX-1 : tableau MODE avec les noms en blanc gras, plus grands, sur des touches foncées */
+#face[data-model='ftx1'] .mm-cell { fill: #4a5361; stroke: #9aa4b2; }
+#face[data-model='ftx1'] .mm-cell.on { fill: #1f6fe0; stroke: #9cc4ff; }
+#face[data-model='ftx1'] .mm-cell.preset { fill: #2b313a; }
+#face[data-model='ftx1'] .mm-lab { fill: #fff; font-size: 15px; font-weight: 800; }
+#face[data-model='ftx1'] .mm-ttl { font-size: 14px; }
 #face .lcd.single .lcd-cell { fill: #161b24; }
 #face .lcd.single .flt .flt-trap, #face .lcd.single .flt .flt-ctr, #face .lcd.single .flt .flt-notch, #face .lcd.single .flt .flt-cup, #face .lcd.single .flt .flt-bars,
 #face .lcd.single .flt .flt-box, #face .lcd.single .flt .flt-roof, #face .lcd.single .flt .flt-vcticks { vector-effect: non-scaling-stroke; }
