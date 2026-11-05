@@ -157,7 +157,7 @@
     // seulement en double réception ; le serveur garde ses propres refus
     if (a.local === 'sideToggle') {
       if (!needControl()) return;
-      if (S().dualRx !== 1) return say('MAIN ⇄ SUB : seulement en double réception (un VFO au-delà de 118 MHz). En HF, le FTX-1 n’écoute qu’un côté : pour écouter la fréquence du VFO B, utilisez A ⇄ B (appui long sur SPLIT ou A ⇄ B du dashboard).', 'warn', 7000);
+      if (S().dualRx !== 1 && !(me && me.subSingle)) return say('MAIN ⇄ SUB : seulement en double réception (un VFO au-delà de 118 MHz). En HF, le FTX-1 n’écoute qu’un côté : pour écouter la fréquence du VFO B, utilisez A ⇄ B (appui long sur SPLIT ou A ⇄ B du dashboard). Un administrateur peut l’autoriser (réglage ftx1SubSingle), après un essai sur charge fictive.', 'warn', 9000);
       return setCtl('vfoSel', activeSide() === 'B' ? 0 : 1);
     }
     if (a.local === 'funcLong') return ftxFuncToggle(); // FTX-1 : appui de 2 s sur FUNC = écran FUNC / sortie
