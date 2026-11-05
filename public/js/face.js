@@ -631,7 +631,7 @@
     const S_SC = ['S', 244, [[0.05, '1'], [0.17, '3'], [0.29, '5'], [0.41, '7'], [0.55, '9'], [0.7, '+20', 1], [0.84, '+40', 1], [0.97, '+60', 1]], true];
     const SWR_SC = ['SWR', FACE && FACE.meterFtx ? 226 : 229, [[0.05, '1.0'], [0.24, '1.5'], [0.36, '2'], [0.5, '3'], [0.66, '5'], [0.95, '∞']]];
     // FTX-1 : comme sur le TRX — MAIN : S, SWR et la barre VOL ; SUB : S seul
-    const scales = FACE && FACE.meterFtx ? (side === 'A' ? [S_SC, SWR_SC] : [S_SC]) : side === 'A'
+    const scales = FACE && FACE.meterFtx ? [S_SC, SWR_SC] : side === 'A'
       ? [['S', 244, [[0.05, '1'], [0.17, '3'], [0.29, '5'], [0.41, '7'], [0.55, '9'], [0.7, '+20', 1], [0.84, '+40', 1], [0.97, '+60', 1]], true],
         ['PO', 229, [[0.03, '0'], [0.2, '10'], [0.38, '50'], [0.52, '100'], [0.64, '150'], [0.76, '200'], [0.88, '250']]],
         ['COMP', 214, [[0.05, '0'], [0.25, '5'], [0.45, '10'], [0.65, '15'], [0.85, '20']]],
@@ -644,6 +644,9 @@
       // FTX-1 : l'arc SWR va aussi loin que l'arc S, chiffres au-dessus de l'arc (entre les deux arcs), comme sur le TRX
       const ftxSwr = FACE && FACE.meterFtx && name === 'SWR', sp = ftxSwr ? ftxSwrSpan(r) : undefined;
       if (ftxSwr) m.swrSpan = sp;
+      // FTX-1 : arc SWR et barre VOL dans un groupe, montrés seulement sur le VFO actif (comme sur le TRX)
+      const g0 = g;
+      g = ftxSwr ? (m.extra = m.extra || el('g', {}, g0)) : g0;
       if (isS) {
         el('path', { d: arcPath(cx, cy, r, 0, 0.55), class: 'mtr-arc' }, g);
         el('path', { d: arcPath(cx, cy, r, 0.55, 1), class: 'mtr-arc blue' }, g);
@@ -657,11 +660,13 @@
       }
       const lp = arcPt(cx, cy, r - (isS ? 0 : 3), -0.04, sp);
       el('text', { x: lp[0] - 2, y: lp[1] + 3, class: 'mtr-name' + (isS ? ' big' : ''), 'text-anchor': 'end' }, g, name);
+      g = g0;
     }
-    if (FACE && FACE.meterFtx && side === 'A') { // barre VOL (volume AF du MAIN), sous l'arc SWR
-      el('text', { x: x0 + 18, y: y0 + 79, class: 'mtr-name big', 'text-anchor': 'start' }, g, 'VOL');
-      el('line', { x1: x0 + 42, y1: y0 + 76, x2: x0 + w - 10, y2: y0 + 76, class: 'mtr-vol0' }, g);
-      m.vol = el('line', { x1: x0 + 42, y1: y0 + 76, x2: x0 + 42, y2: y0 + 76, class: 'mtr-vol' }, g);
+    if (FACE && FACE.meterFtx) { // barre VOL (volume AF de ce récepteur), sous l'arc SWR
+      const ge = m.extra || g;
+      el('text', { x: x0 + 18, y: y0 + 79, class: 'mtr-name big', 'text-anchor': 'start' }, ge, 'VOL');
+      el('line', { x1: x0 + 42, y1: y0 + 76, x2: x0 + w - 10, y2: y0 + 76, class: 'mtr-vol0' }, ge);
+      m.vol = el('line', { x1: x0 + 42, y1: y0 + 76, x2: x0 + 42, y2: y0 + 76, class: 'mtr-vol' }, ge);
       m.volW = w - 52;
     }
     m.needle = el('line', { x1: cx, y1: cy, x2: cx, y2: cy - 250, class: 'mtr-needle' }, g);
@@ -4178,8 +4183,9 @@
       if (FACE.meterFtx && tx) {
         // FTX-1 : en émission, l'aiguille du MAIN passe sur l'échelle SWR (puissance écrite à côté) ; SUB au repos
         const swr = R.swrValue ? R.swrValue(s.m6) : null, w = s.m5 != null ? s.m5 / 255 * maxW : null;
-        f = side === 'A' && swr ? swrNeedle(m, Math.min(0.95, swr <= 1.5 ? 0.05 + (swr - 1) / 0.5 * 0.19 : swr <= 2 ? 0.24 + (swr - 1.5) / 0.5 * 0.12 : swr <= 3 ? 0.36 + (swr - 2) * 0.14 : 0.5 + (swr - 3) / 2 * 0.16)) : side === 'A' ? swrNeedle(m, 0.05) : 0;
-        val = side === 'A' ? [swr ? 'SWR ' + swr.toFixed(1) : '', w != null ? Math.round(w) + ' W' : ''].filter(Boolean).join('  ') : '';
+        const txs = L.txSide(s) === side;
+        f = txs && swr ? swrNeedle(m, Math.min(0.95, swr <= 1.5 ? 0.05 + (swr - 1) / 0.5 * 0.19 : swr <= 2 ? 0.24 + (swr - 1.5) / 0.5 * 0.12 : swr <= 3 ? 0.36 + (swr - 2) * 0.14 : 0.5 + (swr - 3) / 2 * 0.16)) : txs ? swrNeedle(m, 0.05) : 0;
+        val = txs ? [swr ? 'SWR ' + swr.toFixed(1) : '', w != null ? Math.round(w) + ' W' : ''].filter(Boolean).join('  ') : '';
       } else if (tx && side === 'A') {
         // PO : 0–250 W sur l'échelle du TRX (0,03 … 0,88)
         const w = s.m5 != null ? s.m5 / 255 * maxW : 0;
@@ -4203,7 +4209,8 @@
       m.needle.setAttribute('y2', p[1].toFixed(1));
       m.val.textContent = val;
       m.val.classList.toggle('tx', tx);
-      if (m.vol) m.vol.setAttribute('x2', (+m.vol.getAttribute('x1') + Math.max(0, Math.min(1, (s.af || 0) / 255)) * m.volW).toFixed(1));
+      if (m.extra) m.extra.style.display = (tx ? L.txSide(s) === side : activeSide() === side) ? '' : 'none'; // FTX-1 : SWR et VOL sur le VFO actif
+      if (m.vol) m.vol.setAttribute('x2', (+m.vol.getAttribute('x1') + Math.max(0, Math.min(1, ((side === 'B' ? s.afB : s.af) || 0) / 255)) * m.volW).toFixed(1));
       // Filtre : largeur et décalage du récepteur
       const fl = LCD['f' + side];
       const sfx = side === 'B' ? 'B' : '';
@@ -4324,8 +4331,13 @@
       if (b.t2) b.t2.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
       if (b.lab === 'HOLD') b.r.classList.toggle('on', !!L.hold);
       if (b.lab === 'SPAN') b.t.textContent = 'SPAN ' + SPAN_TRX[L.trxSpan];
-      if (b.lab === 'MULTI' && !b.t2) b.r.classList.toggle('on', !!L.multi);
-      if (b.lab === '3DSS') b.r.classList.toggle('on', !!L.d3);
+      if (FACE.meterFtx) { // FTX-1 : comme sur le TRX, MULTI / 3DSS en service = nom en bleu
+        if (b.lab === 'MULTI') b.t.classList.toggle('blue', !!L.multi);
+        if (b.lab === '3DSS') b.t.classList.toggle('blue', !!L.d3);
+      } else {
+        if (b.lab === 'MULTI' && !b.t2) b.r.classList.toggle('on', !!L.multi);
+        if (b.lab === '3DSS') b.r.classList.toggle('on', !!L.d3);
+      }
       if (b.lab === 'MONO') b.t.classList.toggle('blue', !!L.mono); // comme le TRX : MONO écrit en bleu
       if (b.lab === 'EXPAND') b.t.classList.toggle('blue', !!L.expand);
       if (b.lab === 'D-MODE' && b.t2) b.t2.textContent = ['CENTER', 'CURSOR', 'FIX'][s.dMode || 0];
