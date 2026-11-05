@@ -152,6 +152,8 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .mtr-num.blue { fill: #4f7dff; }
 #face .mtr-name { fill: #e9edf2; font-size: 7px; font-weight: 700; font-style: italic; }
 #face .mtr-name.big { font-size: 11px; }
+#face .mtr-vol0 { stroke: #e0301c; stroke-width: 1.2; }
+#face .mtr-vol { stroke: #ff5a1f; stroke-width: 3.2; }
 #face .mtr-needle { stroke: #ff2b1c; stroke-width: 1.8; stroke-linecap: round; }
 #face .mtr-val { fill: #ffcf4a; font-size: 8.5px; font-weight: 700; }
 #face .mtr-val.tx { fill: #ff5a3c; }

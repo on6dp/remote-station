@@ -625,7 +625,10 @@
       el('rect', { x: x0, y: y0, width: w, height: 10, class: 'lcd-tbar' }, g);
       m.title = el('text', { x: cx, y: y0 + 8, class: 'lcd-ttl', 'text-anchor': 'middle' }, g, side === 'A' ? 'PO METER' : 'ALC METER');
     } else m.title = el('text', { x: cx, y: y0 + 8, style: 'display:none' }, g, '');
-    const scales = side === 'A'
+    const S_SC = ['S', 244, [[0.05, '1'], [0.17, '3'], [0.29, '5'], [0.41, '7'], [0.55, '9'], [0.7, '+20', 1], [0.84, '+40', 1], [0.97, '+60', 1]], true];
+    const SWR_SC = ['SWR', 229, [[0.05, '1.0'], [0.24, '1.5'], [0.36, '2'], [0.5, '3'], [0.66, '5'], [0.95, '∞']]];
+    // FTX-1 : comme sur le TRX — MAIN : S, SWR et la barre VOL ; SUB : S seul
+    const scales = FACE && FACE.meterFtx ? (side === 'A' ? [S_SC, SWR_SC] : [S_SC]) : side === 'A'
       ? [['S', 244, [[0.05, '1'], [0.17, '3'], [0.29, '5'], [0.41, '7'], [0.55, '9'], [0.7, '+20', 1], [0.84, '+40', 1], [0.97, '+60', 1]], true],
         ['PO', 229, [[0.03, '0'], [0.2, '10'], [0.38, '50'], [0.52, '100'], [0.64, '150'], [0.76, '200'], [0.88, '250']]],
         ['COMP', 214, [[0.05, '0'], [0.25, '5'], [0.45, '10'], [0.65, '15'], [0.85, '20']]],
@@ -648,6 +651,12 @@
       }
       const lp = arcPt(cx, cy, r - (isS ? 0 : 3), -0.04);
       el('text', { x: lp[0] - 2, y: lp[1] + 3, class: 'mtr-name' + (isS ? ' big' : ''), 'text-anchor': 'end' }, g, name);
+    }
+    if (FACE && FACE.meterFtx && side === 'A') { // barre VOL (volume AF du MAIN), sous l'arc SWR
+      el('text', { x: x0 + 18, y: y0 + 70, class: 'mtr-name big', 'text-anchor': 'start' }, g, 'VOL');
+      el('line', { x1: x0 + 42, y1: y0 + 67, x2: x0 + w - 10, y2: y0 + 67, class: 'mtr-vol0' }, g);
+      m.vol = el('line', { x1: x0 + 42, y1: y0 + 67, x2: x0 + 42, y2: y0 + 67, class: 'mtr-vol' }, g);
+      m.volW = w - 52;
     }
     m.needle = el('line', { x1: cx, y1: cy, x2: cx, y2: cy - 250, class: 'mtr-needle' }, g);
     m.val = el('text', { x: x0 + w - 4, y: y0 + 82, class: 'mtr-val', 'text-anchor': 'end' }, g, '');
@@ -4124,7 +4133,12 @@
       const m = LCD['m' + side];
       const sm = side === 'A' ? s.smeter : s.smeterB;
       let f = 0, val = '';
-      if (tx && side === 'A') {
+      if (FACE.meterFtx && tx) {
+        // FTX-1 : en émission, l'aiguille du MAIN passe sur l'échelle SWR (puissance écrite à côté) ; SUB au repos
+        const swr = R.swrValue ? R.swrValue(s.m6) : null, w = s.m5 != null ? s.m5 / 255 * maxW : null;
+        f = side === 'A' && swr ? Math.min(0.95, swr <= 1.5 ? 0.05 + (swr - 1) / 0.5 * 0.19 : swr <= 2 ? 0.24 + (swr - 1.5) / 0.5 * 0.12 : swr <= 3 ? 0.36 + (swr - 2) * 0.14 : 0.5 + (swr - 3) / 2 * 0.16) : side === 'A' ? 0.05 : 0;
+        val = side === 'A' ? [swr ? 'SWR ' + swr.toFixed(1) : '', w != null ? Math.round(w) + ' W' : ''].filter(Boolean).join('  ') : '';
+      } else if (tx && side === 'A') {
         // PO : 0–250 W sur l'échelle du TRX (0,03 … 0,88)
         const w = s.m5 != null ? s.m5 / 255 * maxW : 0;
         f = w <= 10 ? 0.03 + w / 10 * 0.17 : w <= 50 ? 0.2 + (w - 10) / 40 * 0.18 : w <= 100 ? 0.38 + (w - 50) / 50 * 0.14 : Math.min(0.88, 0.52 + (w - 100) / 150 * 0.36);
@@ -4147,6 +4161,7 @@
       m.needle.setAttribute('y2', p[1].toFixed(1));
       m.val.textContent = val;
       m.val.classList.toggle('tx', tx);
+      if (m.vol) m.vol.setAttribute('x2', (+m.vol.getAttribute('x1') + Math.max(0, Math.min(1, (s.af || 0) / 255)) * m.volW).toFixed(1));
       // Filtre : largeur et décalage du récepteur
       const fl = LCD['f' + side];
       const sfx = side === 'B' ? 'B' : '';
