@@ -3022,8 +3022,12 @@
   L.disp = Math.max(0, Math.min(3, Number(store.get('rs.face.disp', '0')) || 0));
   L.multi = store.get('rs.face.multi', '0') === '1';
   L.d3 = store.get('rs.face.3dss', '0') === '1';
-  L.mono = store.get('rs.face.mono', '0') === '1';
-  L.expand = store.get('rs.face.expand', '0') === '1';
+  // FTX-1 : pas de MONO sur le TRX (le réglage enregistré vient d'une autre face, ex. FTDX101)
+  const NO_MONO = !!(FACE && FACE.noMono);
+  L.mono = !NO_MONO && store.get('rs.face.mono', '0') === '1';
+  // Pas de touche EXPAND sur cette face (FTX-1) : jamais d'EXPAND (le réglage enregistré vient d'une autre face, ex. FTDX101)
+  const NO_EXPAND = !!(FACE && FACE.bot && !FACE.bot.includes('EXPAND'));
+  L.expand = !NO_EXPAND && store.get('rs.face.expand', '0') === '1';
   const EXP_UP = G.expUp; // EXPAND : hauteur gagnée par le scope (unités de la photo)
   if (SINGLE) { L.mono = false; L.disp = 0; } // un seul récepteur : ni MONO ni DISP
   // MONO (comme le TRX) : un seul VFO à l'écran, le sélectionné — son galvanomètre à gauche, son filtre en grand à droite,
@@ -5075,7 +5079,7 @@
     const v = st.faceView;
     if (!FOL.on || !v) return;
     let ch = false;
-    for (const k of ['disp', 'mono', 'expand', 'multi', 'd3', 'func']) if (v[k] != null && L[k] !== v[k]) { L[k] = v[k]; ch = true; }
+    for (const k of ['disp', 'mono', 'expand', 'multi', 'd3', 'func']) if (v[k] != null && L[k] !== v[k] && !(k === 'expand' && NO_EXPAND) && !(k === 'mono' && NO_MONO)) { L[k] = v[k]; ch = true; }
     if (ch) { WF.drawn = false; render(); }
   }
   if ($('followBtn')) {
