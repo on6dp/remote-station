@@ -3042,18 +3042,22 @@
     if (SINGLE) return layoutSingle(up);
     for (const sd of ['A', 'B']) {
       const show = !L.mono || sd === side, dx = L.mono && rightSide(sd) ? -half : 0;
-      LCD['m' + sd].g.style.display = show ? '' : 'none';
+      // FTX-1 (fréquences en haut) : EXPAND agrandit le scope par-dessus les galvanomètres, les fréquences restent en place
+      const ftxUp = !!(FACE && FACE.meterDy) && !!up;
+      LCD['m' + sd].g.style.display = show && !ftxUp ? '' : 'none';
       LCD['m' + sd].g.setAttribute('transform', L.mono && rightSide(sd) ? 'translate(' + (X(5) - X(289)) + ',0)' : '');
       if (L.expand) LCD['m' + sd].g.setAttribute('clip-path', 'url(#lcdClip' + sd + ')'); else LCD['m' + sd].g.removeAttribute('clip-path');
       LCD['v' + sd].g.style.display = show ? '' : 'none';
       const vdy = (FACE && FACE.vfoDy) || 0; // FTX-1 : fréquences un peu plus bas (place pour « CLAR RXTX » au-dessus)
-      LCD['v' + sd].g.setAttribute('transform', dx || up || vdy ? 'translate(' + dx + ',' + (vdy - up) + ')' : '');
+      const vup = ftxUp ? 0 : up;
+      LCD['v' + sd].g.setAttribute('transform', dx || vup || vdy ? 'translate(' + dx + ',' + (vdy - vup) + ')' : '');
       LCD['cg' + sd].style.display = show ? '' : 'none';
       LCD['cg' + sd].setAttribute('transform', up ? 'translate(0,' + -up + ')' : '');
       const f = LCD['f' + sd];
       if (L.mono && sd === side) {
         // Filtre agrandi : de la moitié droite de l'écran jusqu'au bas de la fréquence
-        const tx = X(5) + half + 4, ty = Y(6), tw = X(W - 5) - tx, th = Y(124 - up) - ty;
+        const md = (FACE && FACE.meterDy) || 0; // FTX-1 : filtre dans le groupe décalé de meterDy, sous la barre d'état jusqu'au bandeau du scope
+        const tx = X(5) + half + 4, ty = md ? Y(16 - md) : Y(6), tw = X(W - 5) - tx, th = md ? Y(G.lowY - 3 - md) - ty : Y(124 - up) - ty;
         f.g.setAttribute('transform', 'translate(' + tx + ',' + ty + ') scale(' + (tw / f.w).toFixed(4) + ',' + (th / f.h).toFixed(4) + ') translate(' + -f.x0 + ',' + -f.y0 + ')');
       } else if (up) {
         // EXPAND : filtre aplati à la hauteur du galvanomètre réduit
@@ -3061,6 +3065,7 @@
         f.g.setAttribute('transform', 'translate(0,' + f.y0 + ') scale(1,' + (th / f.h).toFixed(4) + ') translate(0,' + -f.y0 + ')');
       } else f.g.removeAttribute('transform');
       if (L.mono && sd !== side) f.g.style.display = 'none';
+      else f.g.style.display = ftxUp ? 'none' : '';
       // Cases : sur toute la largeur en MONO, sur sa moitié sinon
       const cw = L.mono ? (W - 14) / 5 : (half - 4) / 5, x0 = L.mono ? X(5) : X(5 + (rightSide(sd) ? half : 0));
       LCD['c' + sd].forEach((c, j) => {
@@ -4296,7 +4301,7 @@
     LCD.span.textContent = ['', 'SUB / MAIN · ', 'MAIN | SUB · ', 'FILTRES · '][L.disp] + spanLabel() + (L.hold ? ' · HOLD' : '');
     applyMono();
     ssFollow(s);
-    for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) || (SINGLE && sd === 'B') || !!LCD.ich ? 'none' : '';
+    for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) || (SINGLE && sd === 'B') || !!LCD.ich || (FACE.meterDy && L.expand) ? 'none' : ''; // FTX-1 : EXPAND couvre les filtres
     drawFunc(s);
     drawStatus(s);
     for (const b of LCD.bot || []) {

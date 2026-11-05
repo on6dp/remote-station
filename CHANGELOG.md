@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.81** — Face avant FTX-1 : EXPAND et MONO corrigés avec les fréquences en haut — EXPAND agrandit le scope par-dessus les galvanomètres sans déplacer les fréquences (elles passaient sur la barre d'état), MONO met le grand filtre sous la barre d'état
 - **0.37.80** — Face avant FTX-1 : plus de trait blanc sous la fréquence du VFO actif (comme sur le TRX)
 - **0.37.79** — Face avant FTX-1 : disposition de l'écran du TRX — fréquences en haut (VFO actif en orange), galvanomètres et filtres dessous, écran FUNC sous les galvanomètres
 - **0.37.78** — Face avant FTX-1 : étiquettes des VFO comme sur le TRX — [MAIN|SUB][VFO], dessous [RX] en vert ou [TXRX] / [TX] en rouge (VFO d'émission), mode encadré en blanc

@@ -23,7 +23,7 @@
     // Cases sous les fréquences : pas de R.FIL sur le FTX-1
     // Pas de cases ANT / ATT / IPO / NAR / AGC sous les fréquences sur l'écran du FTX-1 : le scope monte à leur place
     cells: [],
-    lay: { lowY: 141, scopeY: 154, scopeH: 140 },
+    lay: { lowY: 141, scopeY: 154, scopeH: 140, expUp: 70 }, // EXPAND : le scope monte jusque sous les fréquences
     meterFtx: true, // galvanomètres du FTX-1 : MAIN = S, SWR et barre VOL ; SUB = S seul
     vfoBadges: true, // [MAIN|SUB][VFO], [RX] / [TXRX], mode encadré, comme sur le TRX
     statusBar: true, // barre d'état du TRX en haut de l'écran (FAST, VOX, TUNE ANT1, fonction du bouton FUNC)
