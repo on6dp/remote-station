@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.80** — Face avant FTX-1 : plus de trait blanc sous la fréquence du VFO actif (comme sur le TRX)
 - **0.37.79** — Face avant FTX-1 : disposition de l'écran du TRX — fréquences en haut (VFO actif en orange), galvanomètres et filtres dessous, écran FUNC sous les galvanomètres
 - **0.37.78** — Face avant FTX-1 : étiquettes des VFO comme sur le TRX — [MAIN|SUB][VFO], dessous [RX] en vert ou [TXRX] / [TX] en rouge (VFO d'émission), mode encadré en blanc
 - **0.37.77** — Face avant FTX-1 : arc SWR aussi large que l'arc S (chiffres entre les deux arcs, comme sur le TRX), barre VOL un peu plus bas ; fréquences encore un peu plus bas

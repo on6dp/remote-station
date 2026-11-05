@@ -622,3 +622,5 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 /* IC-7300 : P.AMP1, AGC-M, ATT, NB… plus gras et plus grands (comme sur le TRX) */
 #face .ich-tags { fill: #f4f6fa; font: 800 12px Arial, sans-serif; }
 #face .ich-tags.big { font: 800 18px Arial, sans-serif; fill: #ffffff; }
+/* FTX-1 : pas de trait blanc sous la fréquence du VFO actif (elle est en orange) */
+#face[data-model='ftx1'] .lcd-sel { display: none; }
