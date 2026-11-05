@@ -209,6 +209,15 @@
       say(L.ringVc ? 'Bague du grand bouton : VC TUNE' + (s[activeSide() === 'B' ? 'vcB' : 'vc'] ? '.' : ' (mettez d’abord le VC TUNE en marche : petite touche VC TUNE).') : 'Bague du grand bouton : fréquence.', '', 4000);
       return render();
     }
+    // FTX-1 : appui de plus d'1 s sur SPLIT = SPLIT inversé (écoute sur la fréquence d'émission, émission sur celle d'écoute) :
+    // les deux VFO sont échangés (A ⇄ B) et le SPLIT reste en service
+    if (a.local === 'splitRev') {
+      if (!needControl()) return;
+      if (S().tx) return say('SPLIT inversé : pas pendant une émission.', 'warn', 2500);
+      if (!S().split) doAct({ act: { local: 'split' } });
+      setCtl('swap', null);
+      return say('SPLIT inversé : VFO échangés (A ⇄ B).', '', 3000);
+    }
     if (a.local === 'split') {
       // SPLIT en marche (ST1) : l'émission doit passer sur le VFO NON sélectionné (MAIN sélectionné → TX B ; SUB sélectionné → TX A).
       // SPLIT arrêté (ST0) : l'émission doit revenir sur le VFO sélectionné.

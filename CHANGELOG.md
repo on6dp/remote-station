@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.63** — Face avant FTX-1 : appui de plus d'1 s sur SPLIT = SPLIT inversé (VFO A ⇄ B échangés, SPLIT en service)
 - **0.37.62** — Face avant FTX-1 : fréquences encore un peu plus bas, CLAR RX / TX / RXTX bien dégagé au-dessus, décalage (0Hz) tout à droite
 - **0.37.61** — Face avant FTX-1 : CLAR RX / TX / RXTX à droite, juste avant le décalage, comme sur le TRX
 - **0.37.60** — LOCK du TRX (face avant et dashboard, tous les TRX) : réservé aux administrateurs, refusé par le serveur pour les autres membres
