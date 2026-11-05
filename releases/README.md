@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.68 | [RemoteStation-Setup-0.37.68.exe](0.37.68/RemoteStation-Setup-0.37.68.exe) | [remote-station-0.37.68.tar.gz](0.37.68/remote-station-0.37.68.tar.gz) | FTX-1 : RF POWER 1 W, CLAR plus rapide — [empreintes SHA-256](0.37.68/SHA256SUMS.txt) |
 | 0.37.67 | [RemoteStation-Setup-0.37.67.exe](0.37.67/RemoteStation-Setup-0.37.67.exe) | [remote-station-0.37.67.tar.gz](0.37.67/remote-station-0.37.67.tar.gz) | FTX-1 : cadre de la fonction FUNC — [empreintes SHA-256](0.37.67/SHA256SUMS.txt) |
 | 0.37.66 | [RemoteStation-Setup-0.37.66.exe](0.37.66/RemoteStation-Setup-0.37.66.exe) | [remote-station-0.37.66.tar.gz](0.37.66/remote-station-0.37.66.tar.gz) | FTX-1 : MAG BAND, CLAR au grand bouton — [empreintes SHA-256](0.37.66/SHA256SUMS.txt) |
 | 0.37.65 | [RemoteStation-Setup-0.37.65.exe](0.37.65/RemoteStation-Setup-0.37.65.exe) | [remote-station-0.37.65.tar.gz](0.37.65/remote-station-0.37.65.tar.gz) | FTX-1 : CLAR RX/TX/RXTX, tableau BAND — [empreintes SHA-256](0.37.65/SHA256SUMS.txt) |

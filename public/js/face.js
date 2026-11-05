@@ -338,6 +338,10 @@
       const nx = (cur + 1) % 4;
       L.clarPend = { B, v: nx, at: Date.now() };
       setCtl(B ? 'clarModeB' : 'clarMode', nx);
+      // Affichage tout de suite (CLAR RX / TX / RXTX, bandes rouges), sans attendre la relecture du TRX
+      const now = Date.now();
+      pend[B ? 'ritB' : 'rit'] = { v: nx & 1, at: now }; pend[B ? 'xitB' : 'xit'] = { v: (nx >> 1) & 1, at: now };
+      render();
       return say(nx ? 'CLAR ' + ['', 'RX', 'TX', 'RXTX'][nx] : 'CLAR arrêté', '', 2000);
     }
     if (a.clar) {
@@ -3380,7 +3384,7 @@
   const offLvl = (v) => (v == null ? '—' : v ? String(v) : 'OFF');
   const optTxt = (id, v) => { const c = R.CONTROL[id]; const o = c && c.options && c.options.find((x) => x[0] === v); return o ? o[1] : '—'; };
   function ftxPower(s, d) {
-    const head = s.powerHead === '1' ? '1' : '2', st = head === '1' ? 0.5 : 5, lo = head === '1' ? 0.5 : 5;
+    const head = s.powerHead === '1' ? '1' : '2', st = head === '1' ? 0.5 : 1, lo = head === '1' ? 0.5 : 5; // 1 W par cran (SPA-1), 0,5 W (tête seule)
     const hi = Math.min((me && me.maxWatts) || 100, head === '1' ? 10 : 100);
     const w = Math.max(lo, Math.min(hi, Math.round(((s.power || lo) + d * st) / st) * st));
     send({ t: 'set', power: w });

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.68** — Face avant FTX-1 : RF POWER au bouton FUNC par pas de 1 W (0,5 W avec la tête seule) ; CLAR RX / TX / RXTX affiché tout de suite à chaque appui (bandes rouges comprises), sans attendre la relecture du TRX
 - **0.37.67** — Face avant FTX-1 : écran FUNC fermé, tourner FUNC règle la dernière case choisie (nom en haut à droite) avec le cadre « RF POWER  83W » sur le scope, comme sur le TRX ; aussi quand le CLAR est en service (le CLAR se règle au grand bouton)
 - **0.37.66** — Face avant FTX-1 : MAG BAND appui bref = bande suivante, appui d'1 s = tableau des bandes ; CLAR en service : le grand bouton règle le décalage (10 Hz, 1 Hz en FINE) et la fréquence affichée le suit
 - **0.37.65** — Face avant FTX-1 : CLAR comme sur le TRX (RX → TX → RXTX → arrêt) avec les bandes de part et d'autre du grand bouton en rouge ; MAG BAND ouvre le tableau des bandes du FTX-1 (1.8 à 430)
