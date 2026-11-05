@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.93** — Face avant FTX-1 : échelle sous le scope en fréquences comme sur le TRX (14.250.000, 14.251.000…), d'après la fréquence et la bande latérale du VFO
 - **0.37.92** — Face avant FTX-1 : étiquettes en SPLIT comme sur le TRX — VFO d'émission : [TX] seul (fréquence en rouge), VFO de réception : [MAIN|SUB][RX] en vert
 - **0.37.91** — Face avant FTX-1 : clic sur SUB DIAL en réception simple autorisé quand l'administrateur a mis ftx1SubSingle (comme le bouton MAIN / SUB du dashboard)
 - **0.37.90** — Face avant FTX-1 : comme sur le TRX, l'autre VFO reste en blanc avec [RX] (même en réception simple), plus de « SUB OFF »

@@ -4958,6 +4958,13 @@
       // IC-7300 : tous les 0,5 kHz (comme l'échelle du TRX : 0.5, 1.0, 1.5…), en kHz de BF
       const st = maxHz <= 2000 ? 250 : 500;
       for (let f = st; f < maxHz - st / 3; f += st) c2.fillText((f / 1000).toFixed(st < 500 ? 2 : 1), x0 + w * f / maxHz, y0 + h - 3);
+    } else if (FACE.meterFtx) {
+      // FTX-1 : échelle en fréquences d'émission/réception (comme le TRX : 7.075.000), tous les 1 kHz de BF (−1 kHz en LSB)
+      const st0 = S(), sd = name === 'SUB' ? 'B' : 'A', f0 = sd === 'B' ? st0.freqB : st0.freq;
+      const md = (sd === 'B' ? st0.modeB : st0.mode) || '', sg = /LSB|-L$|^CW-L|^RTTY-L/.test(md) ? -1 : 1;
+      const fmtRf = (hz) => { const t = String(Math.round(hz)).padStart(7, '0'); return t.slice(0, -6) + '.' + t.slice(-6, -3) + '.' + t.slice(-3); };
+      for (let k = 1; k < maxHz / 1000; k++) c2.fillText(f0 ? fmtRf(f0 + sg * k * 1000) : k + 'k', x0 + w * k * 1000 / maxHz, y0 + h - 2);
+      if (f0 && w * 1000 / maxHz > 110) { c2.textAlign = 'left'; c2.fillText(fmtRf(f0), x0 + 2, y0 + h - 2); } // bord gauche = fréquence affichée
     } else for (let k = 1; k < maxHz / 1000; k++) c2.fillText(k + 'k', x0 + w * k * 1000 / maxHz, y0 + h - 2);
     if (name) { c2.textAlign = 'left'; c2.fillStyle = '#6f86ff'; c2.font = 'bold 10px "Roboto Mono", monospace'; c2.fillText(name, x0 + 4, y0 + 11); }
   }

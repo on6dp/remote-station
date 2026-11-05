@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.93 | [RemoteStation-Setup-0.37.93.exe](0.37.93/RemoteStation-Setup-0.37.93.exe) | [remote-station-0.37.93.tar.gz](0.37.93/remote-station-0.37.93.tar.gz) | FTX-1 : échelle du scope en fréquences — [empreintes SHA-256](0.37.93/SHA256SUMS.txt) |
 | 0.37.92 | [RemoteStation-Setup-0.37.92.exe](0.37.92/RemoteStation-Setup-0.37.92.exe) | [remote-station-0.37.92.tar.gz](0.37.92/remote-station-0.37.92.tar.gz) | FTX-1 : étiquettes SPLIT — [empreintes SHA-256](0.37.92/SHA256SUMS.txt) |
 | 0.37.91 | [RemoteStation-Setup-0.37.91.exe](0.37.91/RemoteStation-Setup-0.37.91.exe) | [remote-station-0.37.91.tar.gz](0.37.91/remote-station-0.37.91.tar.gz) | FTX-1 : SUB DIAL suit ftx1SubSingle — [empreintes SHA-256](0.37.91/SHA256SUMS.txt) |
 | 0.37.90 | [RemoteStation-Setup-0.37.90.exe](0.37.90/RemoteStation-Setup-0.37.90.exe) | [remote-station-0.37.90.tar.gz](0.37.90/remote-station-0.37.90.tar.gz) | FTX-1 : autre VFO en blanc avec RX — [empreintes SHA-256](0.37.90/SHA256SUMS.txt) |
