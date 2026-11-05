@@ -3671,6 +3671,7 @@
     viewTouched();
     if (MV.open) closeMenu();
     L.func = !L.func; L.fEdit = false;
+    if (L.func) L.dsp = null; // l'écran FUNC remplace l'écran DSP
     if (L.func) {
       L.funcPage = ftxModePage(S());
       if (ftxPageOf(L.funcSel) !== L.funcPage) L.funcSel = ftxIds(L.funcPage)[0];
@@ -3741,11 +3742,17 @@
           L.funcSel = id;
           if (flip) { L.fEdit = false; funcAdjust(id, 1); return render(); }
           if (wasEdit) {
-            const px = toImg(ev).x - x;
-            if (px < cw * 0.38) funcAdjust(id, -1);
-            else if (px > cw * 0.62) funcAdjust(id, 1);
+            /* − / + : réglés au pointerdown (et répétés tant qu'on tient le bouton de la souris) */
           } else { L.fEdit = true; say(lab + ' : cliquez sur − ou +, tournez la molette sur la case ou le bouton FUNC.', '', 4000); }
           render();
+        });
+        // − / + de la case en réglage : tenir le bouton de la souris = la valeur continue de changer
+        hit.addEventListener('pointerdown', (ev) => {
+          if (!adj || flip || kind || !(L.funcSel === id && L.fEdit) || modeInactive(id, S())) return;
+          const px = toImg(ev).x - x, d = px < cw * 0.38 ? -1 : px > cw * 0.62 ? 1 : 0;
+          if (!d) return;
+          ev.preventDefault();
+          holdRepeat(() => { funcAdjust(id, d); render(); });
         });
         let wacc = 0;
         hit.addEventListener('wheel', (ev) => {
@@ -4139,6 +4146,14 @@
     clearTimeout(popT);
     if (!popHover) popT = setTimeout(() => { pop.hidden = true; }, popTarget && popTarget.ctl ? 5000 : 2500);
   }
+  // Bouton − / + tenu enfoncé : la valeur continue de changer (un pas tout de suite, puis 9 par seconde après 0,4 s)
+  function holdRepeat(fn) {
+    fn();
+    let iv = 0;
+    const t0 = setTimeout(() => { iv = setInterval(fn, 110); }, 400);
+    const stop = () => { clearTimeout(t0); clearInterval(iv); window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); window.removeEventListener('blur', stop); };
+    window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop); window.addEventListener('blur', stop);
+  }
   // ---- FTX-1 : écran DSP du récepteur (appui d'1 s sur MAIN ou SUB AF/RF/SQL), comme sur le TRX :
   // grand filtre avec l'échelle −2 … +2 kHz, nom et valeur en grand, onglets SHIFT · WIDTH · NOTCH · CONTOUR (APF en CW).
   // Tourner le bouton (ou la molette sur l'écran, − / +) règle l'onglet choisi ; pousser le bouton : onglet suivant ; appui d'1 s : fermé
@@ -4167,6 +4182,7 @@
   function dspToggle(sd) {
     viewTouched();
     L.dsp = L.dsp === sd ? null : sd; L.dspTab = 0;
+    if (L.dsp) { L.func = false; L.fEdit = false; } // l'écran DSP remplace l'écran FUNC (l'un ou l'autre, comme sur le TRX)
     if (L.dsp) say((sd === 'B' ? 'SUB' : 'MAIN') + ' DSP : tournez le bouton AF/RF/SQL (ou la molette) pour régler, poussez-le pour l’onglet suivant ; appui d’1 s : fermé.', '', 5000);
     render();
   }
@@ -4209,7 +4225,8 @@
       const lb = box.querySelector('.lb'); let ax = 'M4 60H276';
       for (let k = -2.5; k <= 2.51; k += 0.5) { const x = 140 + k * 52; ax += 'M' + x + ' 60v' + (Number.isInteger(k) ? 5 : 3); if (Number.isInteger(k)) { const t = document.createElementNS('http://www.w3.org/2000/svg', 'text'); t.setAttribute('x', x); t.setAttribute('y', 75); t.setAttribute('text-anchor', 'middle'); t.textContent = k ? Math.abs(k).toFixed(1) : '0'; lb.appendChild(t); } }
       box.querySelector('.ax').setAttribute('d', ax);
-      box.addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) { L.dspTab = +b.dataset.tab; render(); } else if (e.target.closest('[data-pm]')) dspAdjust(+e.target.closest('[data-pm]').dataset.pm); });
+      box.addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) { L.dspTab = +b.dataset.tab; render(); } });
+      box.addEventListener('pointerdown', (e) => { const b = e.target.closest('[data-pm]'); if (!b) return; e.preventDefault(); const d = +b.dataset.pm; holdRepeat(() => dspAdjust(d)); });
       let wacc = 0;
       box.addEventListener('wheel', (ev) => { ev.preventDefault(); const d = ev.deltaMode === 1 ? ev.deltaY * 33 : ev.deltaY; let n; if (Math.abs(d) >= 50) n = Math.sign(d); else { wacc += d; n = Math.trunc(wacc / 100); if (!n) return; wacc -= n * 100; } dspAdjust(-n); }, { passive: false });
     }
