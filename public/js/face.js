@@ -3384,7 +3384,9 @@
   const offLvl = (v) => (v == null ? '—' : v ? String(v) : 'OFF');
   const optTxt = (id, v) => { const c = R.CONTROL[id]; const o = c && c.options && c.options.find((x) => x[0] === v); return o ? o[1] : '—'; };
   function ftxPower(s, d) {
-    const head = s.powerHead === '1' ? '1' : '2', st = head === '1' ? 0.5 : 1, lo = head === '1' ? 0.5 : 5; // 1 W par cran (SPA-1), 0,5 W (tête seule)
+    // SPA-1 : par CAT, le FTX-1 refuse les puissances qui ne sont pas des multiples de 5 W (« PC2066; » → « ?; », constaté au club) ;
+    // tête seule : 0,5 W
+    const head = s.powerHead === '1' ? '1' : '2', st = head === '1' ? 0.5 : 5, lo = head === '1' ? 0.5 : 5;
     const hi = Math.min((me && me.maxWatts) || 100, head === '1' ? 10 : 100);
     const w = Math.max(lo, Math.min(hi, Math.round(((s.power || lo) + d * st) / st) * st));
     send({ t: 'set', power: w });
