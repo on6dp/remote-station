@@ -3380,7 +3380,16 @@
   const FTX1F = !!(FACE && FACE.model === 'ftx1');
   const sdk = (id) => (activeSide() === 'B' && R.CONTROL[id + 'B'] ? id + 'B' : id); // côté du récepteur sélectionné
   const msCode = (c) => (c == null ? '—' : (c <= 5 ? [30, 50, 100, 150, 200, 250][c] : 300 + (c - 6) * 100) + 'ms');
-  const stepK = (kf, lo, hi, st) => (s, d) => { const k = kf(); if (!R.CONTROL[k]) return say('Pas disponible sur ce TRX.', 'warn', 3000); const cur = s[k] != null ? s[k] : lo; setCtl(k, Math.max(lo, Math.min(hi, Math.round((cur + d * st) / st) * st))); };
+  // Réglage par crans, fluide : la valeur affichée suit chaque cran, une seule commande part au TRX 250 ms après le dernier cran
+  L.stepT = {};
+  const stepK = (kf, lo, hi, st) => (s, d) => {
+    const k = kf();
+    if (!R.CONTROL[k]) return say('Pas disponible sur ce TRX.', 'warn', 3000);
+    const cur = s[k] != null ? s[k] : lo, v = Math.max(lo, Math.min(hi, Math.round((cur + d * st) / st) * st));
+    pend[k] = { v, at: Date.now() };
+    clearTimeout(L.stepT[k]);
+    L.stepT[k] = setTimeout(() => setCtl(k, v), 250);
+  };
   const cycK = (kf) => (s, d) => { const k = kf(), c = R.CONTROL[k]; if (!c || !c.options) return; const i = c.options.findIndex((o) => o[0] === s[k]); setCtl(k, c.options[((i < 0 ? 0 : i) + (d < 0 ? c.options.length - 1 : 1)) % c.options.length][0]); };
   const togK = (kf) => (s) => tog(kf())(s);
   const offLvl = (v) => (v == null ? '—' : v ? String(v) : 'OFF');
@@ -3395,7 +3404,7 @@
     L.pwrPend = { w, at: Date.now() };
     pend.power = { v: w, at: Date.now() };
     clearTimeout(L.pwrT);
-    L.pwrT = setTimeout(() => { send({ t: 'set', power: w }); pend.power = { v: w, at: Date.now() }; }, 300);
+    L.pwrT = setTimeout(() => { send({ t: 'set', power: w }); pend.power = { v: w, at: Date.now() }; }, 250);
   }
   const FO = '#ffb020';
   const info = (id, lab) => [id, lab, () => '', null, FO];
@@ -3787,7 +3796,7 @@
     if (k.multi && (!(s.rit || s.xit) || FACE.clarCycle) && FUNC_BY[L.funcSel] && FUNC_BY[L.funcSel][3] && !(FTX1F && FUNC_BY[L.funcSel][5])) {
       funcAdjust(L.funcSel, notches);
       // FTX-1 : grand cadre « RF POWER   83W » au milieu de l'écran pendant qu'on tourne FUNC (écran FUNC fermé)
-      if (FTX1F) { render(); setTimeout(() => funcPop(L.funcSel), 250); clearTimeout(L.fpopT); L.fpopT = setTimeout(() => { if (!$('lcdPop').hidden) funcPop(L.funcSel); }, 1100); return; } // valeur relue sur le TRX
+      if (FTX1F) { render(); funcPop(L.funcSel); clearTimeout(L.fpopT); L.fpopT = setTimeout(() => { if (!$('lcdPop').hidden) funcPop(L.funcSel); }, 1100); return; } // valeur relue sur le TRX
       if (L.funcSel === 'step') { const sd = activeSide(), f = sd === 'B' ? pendF.B : pendF.A; return showTip(ev, 'STEP DIAL ' + (sd === 'B' ? 'SUB ' : 'MAIN ') + (f ? fmtFreq(f) + ' MHz' : '')); }
       return showTip(ev, FUNC_BY[L.funcSel][1] + ' ' + FUNC_BY[L.funcSel][2](S()));
     }
