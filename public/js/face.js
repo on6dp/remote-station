@@ -910,7 +910,8 @@
       // FTX-1 : CENTER, 3DSS, MULTI, SCOPE (réglages du scope : SCOPE MENU), SPAN, SPEED
       const by = (n) => BOT.find((b) => b[0] === n);
       const extra = { EXPAND: ['EXPAND', () => toggleExpand()], SPEED: ['SPEED', () => { smAdjust('spd', 1); say('SPEED (vitesse de la cascade) : ' + WF_SPEEDS[L.wfSpeed][0], '', 2500); }],
-        SCOPE: ['SCOPE', () => (L.smenu ? closeSmenu() : openSmenu())],
+        // FTX-1 : SCOPE montre seulement de quel VFO est le scope (MAIN ou SUB, celui qui est sélectionné), pas de menu
+        SCOPE: ['SCOPE', FACE.meterFtx ? () => say('SCOPE : scope du VFO sélectionné (' + (activeSide() === 'B' ? 'SUB' : 'MAIN') + ') ; les réglages du scope sont dans l’écran FUNC (D-LEVEL, D-PEAK, D-COLOR…).', '', 4000) : () => (L.smenu ? closeSmenu() : openSmenu())],
         // FTX-1 : D-MODE = mode du scope du TRX, CENTER → CURSOR → FIX (SS06), comme sur le TRX
         'D-MODE': ['D-MODE', () => {
           if (!needControl()) return;
