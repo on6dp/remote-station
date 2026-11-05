@@ -320,6 +320,7 @@
 
   // ------------------------------------------------------------ dessin (SVG)
   const svg = $('face');
+  if (FACE && FACE.model) svg.dataset.model = FACE.model; // réglages d'affichage propres à un TRX (face.css)
   function el(tag, attrs, parent, text) {
     const e = document.createElementNS(NS, tag);
     for (const k in attrs || {}) e.setAttribute(k, attrs[k]);

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.55 | [RemoteStation-Setup-0.37.55.exe](0.37.55/RemoteStation-Setup-0.37.55.exe) | [remote-station-0.37.55.tar.gz](0.37.55/remote-station-0.37.55.tar.gz) | FTX-1 : modes et touches en blanc gras — [empreintes SHA-256](0.37.55/SHA256SUMS.txt) |
 | 0.37.54 | [RemoteStation-Setup-0.37.54.exe](0.37.54/RemoteStation-Setup-0.37.54.exe) | [remote-station-0.37.54.tar.gz](0.37.54/remote-station-0.37.54.tar.gz) | BAND MAP FTX-1 dans l'ordre de l'écran — [empreintes SHA-256](0.37.54/SHA256SUMS.txt) |
 | 0.37.53 | [RemoteStation-Setup-0.37.53.exe](0.37.53/RemoteStation-Setup-0.37.53.exe) | [remote-station-0.37.53.tar.gz](0.37.53/remote-station-0.37.53.tar.gz) | BAND MAP SPLIT, FTX-1 stéréo — [empreintes SHA-256](0.37.53/SHA256SUMS.txt) |
 | 0.37.52 | [RemoteStation-Setup-0.37.52.exe](0.37.52/RemoteStation-Setup-0.37.52.exe) | [remote-station-0.37.52.tar.gz](0.37.52/remote-station-0.37.52.tar.gz) | Face avant FTX-1 — [empreintes SHA-256](0.37.52/SHA256SUMS.txt) |
