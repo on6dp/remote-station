@@ -178,6 +178,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .flt-base { fill: #3b6dff; }
 #face .lcd-seg { fill: #f2f4f8; filter: drop-shadow(0 0 1.2px rgba(255,255,255,.55)); }
 #face .lcd-seg.dim { fill: #5f6876; filter: none; }
+#face .lcd-seg.act { fill: #ffb21a; filter: drop-shadow(0 0 1.2px rgba(255, 178, 26, .6)); }
 #face .lcd-seg.txv { fill: #ff4a2a; filter: drop-shadow(0 0 1.5px rgba(255, 74, 42, .7)); }
 #face .lcd-cell { fill: #232a35; }
 #face .lcd-sel.on { fill: #c9d3e3; }

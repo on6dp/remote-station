@@ -669,7 +669,7 @@
     // Le cadran est découpé à la taille du cadre
     const cid = 'clipm' + side;
     const cp = el('clipPath', { id: cid }, g);
-    el('rect', { x: x0, y: y0 + 10, width: w, height: 76 }, cp);
+    el('rect', { x: x0, y: y0 + 10, width: w, height: FACE && FACE.meterFtx ? 72 : 76 }, cp);
     m.needle.setAttribute('clip-path', 'url(#' + cid + ')');
     return m;
   }
@@ -806,12 +806,14 @@
     el('rect', { x: c.x, y: c.y, width: c.w, height: c.h, rx: 6, fill: 'url(#lcdbg)' }, g);
     // Galvanomètres et filtres : MAIN | filtre MAIN | SUB | filtre SUB
     LCD.g = g;
-    const gmA = el('g', {}, g), gmB = el('g', {}, g);
+    // FTX-1 : fréquences en haut, galvanomètres et filtres dessous (FACE.meterDy), comme sur le TRX
+    const gw = FACE.meterDy ? el('g', { transform: 'translate(0,' + FACE.meterDy + ')' }, g) : g;
+    const gmA = el('g', {}, gw), gmB = el('g', {}, gw);
     const dA = rightSide('A') ? 284 : 0, dB = rightSide('B') ? 284 : 0;
     LCD.mA = buildMeter(gmA, X(5 + dA), Y(4), 190, 'A'); LCD.mA.g = gmA;
-    LCD.fA = buildFilter(g, X(199 + dA), Y(14), 82, 72);
+    LCD.fA = buildFilter(gw, X(199 + dA), Y(14), 82, 72);
     LCD.mB = buildMeter(gmB, X(5 + dB), Y(4), 190, 'B'); LCD.mB.g = gmB;
-    LCD.fB = buildFilter(g, X(199 + dB), Y(14), 82, 72);
+    LCD.fB = buildFilter(gw, X(199 + dB), Y(14), 82, 72);
     if (FACE.statusBar) buildStatus(g, c);
     // Fréquences
     const half = (c.w - 10) / 2;
@@ -3625,7 +3627,7 @@
   function buildFuncFtx1(g, c) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const f = LCD.func = el('g', { class: 'func ftxf', style: 'display:none' }, g);
-    const top = 130, rh = (c.h - top - 2) / 4, cw = (c.w - 10) / 7;
+    const top = FACE.meterDy ? G.lowY + 1 : 130, rh = (c.h - top - 2) / 4, cw = (c.w - 10) / 7; // FTX-1 : sous les galvanomètres
     el('rect', { x: X(3), y: Y(top - 2), width: c.w - 6, height: c.h - top + 2, class: 'func-bg' }, f);
     LCD.funcCells = {}; LCD.funcPages = [];
     FUNC_FTX1.forEach((pg, pi) => {
@@ -4249,6 +4251,7 @@
       // SPLIT : la fréquence du VFO qui va émettre s'affiche en rouge (comme sur le TRX)
       v.freq.classList.toggle('txv', !!s.split && L.txSide(s) === side);
       v.sel.classList.toggle('on', active);
+      if (FACE.actOrange) v.freq.classList.toggle('act', active && !(!!s.split && L.txSide(s) === side)); // FTX-1 : VFO actif en orange
       const txSide = L.txSide(s);
       v.tx.textContent = txSide === side ? (tx ? 'TX ●' : 'TX') : '';
       // Clarifier de chaque côté (FTDX101 : IF = MAIN, OI = SUB ; autres TRX : celui lu dans IF, côté MAIN)

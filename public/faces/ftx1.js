@@ -23,7 +23,7 @@
     // Cases sous les fréquences : pas de R.FIL sur le FTX-1
     // Pas de cases ANT / ATT / IPO / NAR / AGC sous les fréquences sur l'écran du FTX-1 : le scope monte à leur place
     cells: [],
-    lay: { lowY: 154, scopeY: 167, scopeH: 127 },
+    lay: { lowY: 141, scopeY: 154, scopeH: 140 },
     meterFtx: true, // galvanomètres du FTX-1 : MAIN = S, SWR et barre VOL ; SUB = S seul
     vfoBadges: true, // [MAIN|SUB][VFO], [RX] / [TXRX], mode encadré, comme sur le TRX
     statusBar: true, // barre d'état du TRX en haut de l'écran (FAST, VOX, TUNE ANT1, fonction du bouton FUNC)
@@ -34,7 +34,8 @@
       ['12M', '24.5', 24950, 'USB'], ['10M', '28/29', 28500, 'USB'], ['6M', '50', 50150, 'USB'], [null, '70/GEN'],
       [null, 'AIR'], ['2M', '144', 144300, null], ['70CM', '430', 432200, null]],
     clarCycle: true, // CLAR : RX → TX → RXTX → arrêt, comme sur le TRX // « CLAR RXTX » à droite, juste avant le décalage
-    vfoDy: 24, clarUp: 6, // fréquences 16 px plus bas, « CLAR RXTX  0Hz » 6 px au-dessus : bien dégagé des chiffres
+    vfoDy: -62, clarUp: 4, meterDy: 52, actOrange: true, // fréquences en haut (VFO actif en orange), galvanomètres dessous
+    // fréquences 16 px plus bas, « CLAR RXTX  0Hz » 6 px au-dessus : bien dégagé des chiffres
     // Rangée du bas de l'écran du FTX-1
     bot: ['CENTER', '3DSS', 'MULTI', 'SCOPE', 'SPAN', 'SPEED'],
     // Voyants BUSY/TX au-dessus du grand bouton : SUB à gauche, MAIN à droite (vert = réception, rouge = émission)

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.79 | [RemoteStation-Setup-0.37.79.exe](0.37.79/RemoteStation-Setup-0.37.79.exe) | [remote-station-0.37.79.tar.gz](0.37.79/remote-station-0.37.79.tar.gz) | FTX-1 : fréquences au-dessus des S-mètres — [empreintes SHA-256](0.37.79/SHA256SUMS.txt) |
 | 0.37.78 | [RemoteStation-Setup-0.37.78.exe](0.37.78/RemoteStation-Setup-0.37.78.exe) | [remote-station-0.37.78.tar.gz](0.37.78/remote-station-0.37.78.tar.gz) | FTX-1 : étiquettes MAIN/SUB VFO, RX/TXRX — [empreintes SHA-256](0.37.78/SHA256SUMS.txt) |
 | 0.37.77 | [RemoteStation-Setup-0.37.77.exe](0.37.77/RemoteStation-Setup-0.37.77.exe) | [remote-station-0.37.77.tar.gz](0.37.77/remote-station-0.37.77.tar.gz) | FTX-1 : arc SWR complet, fréquences plus bas — [empreintes SHA-256](0.37.77/SHA256SUMS.txt) |
 | 0.37.76 | [RemoteStation-Setup-0.37.76.exe](0.37.76/RemoteStation-Setup-0.37.76.exe) | [remote-station-0.37.76.tar.gz](0.37.76/remote-station-0.37.76.tar.gz) | FTX-1 : S-mètres du TRX — [empreintes SHA-256](0.37.76/SHA256SUMS.txt) |
