@@ -774,10 +774,10 @@
     }
     // Bandeau du scope : récepteur actif, état, échelle
     const lowG = LCD.lowG = el('g', {}, g); // bandeau du scope (EXPAND : remonté)
-    el('rect', { x: X(5), y: Y(157), width: c.w - 10, height: 11, class: 'lcd-tbar' }, lowG);
-    LCD.side = el('text', { x: X(10), y: Y(165.5), class: 'lcd-side' }, lowG, 'MAIN');
-    LCD.flags = el('text', { x: X(c.w / 2), y: Y(165.5), class: 'lcd-flags', 'text-anchor': 'middle' }, lowG, '');
-    LCD.span = el('text', { x: X(c.w - 10), y: Y(165.5), class: 'lcd-side', 'text-anchor': 'end' }, lowG, 'BF | 0–4 kHz');
+    el('rect', { x: X(5), y: Y(G.lowY), width: c.w - 10, height: 11, class: 'lcd-tbar' }, lowG);
+    LCD.side = el('text', { x: X(10), y: Y(G.lowY + 8.5), class: 'lcd-side' }, lowG, 'MAIN');
+    LCD.flags = el('text', { x: X(c.w / 2), y: Y(G.lowY + 8.5), class: 'lcd-flags', 'text-anchor': 'middle' }, lowG, '');
+    LCD.span = el('text', { x: X(c.w - 10), y: Y(G.lowY + 8.5), class: 'lcd-side', 'text-anchor': 'end' }, lowG, 'BF | 0–4 kHz');
     LCD.scopeRect = el('rect', { x: X(5), y: Y(G.scopeY), width: c.w - 10, height: G.scopeH, class: 'lcd-scope' }, g);
     // EXPAND : galvanomètres réduits à leur partie haute (S-mètre et première échelle)
     const defs = el('defs', {}, g);
@@ -2811,7 +2811,7 @@
     });
     // Bandeau du scope : sous le filtre ; caché en EXPAND (le scope monte par-dessus les cases)
     LCD.lowG.style.display = up ? 'none' : '';
-    tr(LCD.lowG, 'translate(0,' + (G.lowY - 157) + ')');
+    tr(LCD.lowG, ''); // bandeau construit à G.lowY
   }
   // Tableau BAND (touche BAND du FTDX10) : clic sur une bande pour le VFO actif
   const BAND_GRID = [['160M', '1.8', 1840, 'LSB'], ['80M', '3.5', 3700, 'LSB'], ['60M', '5', 5357, null], ['40M', '7', 7100, 'LSB'],
@@ -2933,7 +2933,8 @@
       LCD['m' + sd].g.setAttribute('transform', L.mono && rightSide(sd) ? 'translate(' + (X(5) - X(289)) + ',0)' : '');
       if (L.expand) LCD['m' + sd].g.setAttribute('clip-path', 'url(#lcdClip' + sd + ')'); else LCD['m' + sd].g.removeAttribute('clip-path');
       LCD['v' + sd].g.style.display = show ? '' : 'none';
-      LCD['v' + sd].g.setAttribute('transform', dx || up ? 'translate(' + dx + ',' + -up + ')' : '');
+      const vdy = (FACE && FACE.vfoDy) || 0; // FTX-1 : fréquences un peu plus bas (place pour « CLAR RXTX » au-dessus)
+      LCD['v' + sd].g.setAttribute('transform', dx || up || vdy ? 'translate(' + dx + ',' + (vdy - up) + ')' : '');
       LCD['cg' + sd].style.display = show ? '' : 'none';
       LCD['cg' + sd].setAttribute('transform', up ? 'translate(0,' + -up + ')' : '');
       const f = LCD['f' + sd];

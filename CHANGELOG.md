@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.59** — Face avant FTX-1 : plus de cases ANT / ATT / IPO / NAR / AGC sous les fréquences (absentes sur le TRX), scope agrandi ; fréquences un peu plus bas pour laisser CLAR RX / RXTX au-dessus
 - **0.37.58** — Face avant FTX-1 : écran FUNC du TRX (appui de 2 s sur FUNC, 3 pages SSB / CW / FM-C4FM) — tourner FUNC déplace le cadre orange, pousser FUNC règle la case, appui de 2 s : sortie ; nouveaux réglages FTX-1 (MIC EQ, TXW, AMC, VOX GAIN / DELAY, MONI LEVEL, KEYER, BK-IN, CW SPEED / PITCH, BK-DELAY, ZIN, CW SPOT, D-CONTRAST, DIMMER, RPT SHIFT, SQL TYPE, TONE FREQ) ; SPAN en blanc gras sur touches foncées
 - **0.37.57** — Face avant FTX-1 : clic sur SUB DIAL = échange des deux VFO (A ⇄ B), comme sur le TRX ; tourner = fréquence du VFO B
 - **0.37.56** — Face avant FTX-1 : tableau MODE (et BAND) avec les noms en blanc gras, plus grands, sur des touches foncées
