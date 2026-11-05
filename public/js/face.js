@@ -742,9 +742,9 @@
       // « CLAR RX   -90Hz » au-dessus de la fréquence (clarifier en service), comme sur le TRX ; molette dessus : décalage ±10 Hz
       v.clarG = el('g', { class: 'lcd-clar', style: 'display:none' }, g);
       // FTX-1 : « CLAR RXTX » à droite, juste avant le décalage (comme sur le TRX)
-      v.clarT = el('text', FACE && FACE.clarRight ? { x: v.xr - 42, y: Y(93.5), class: 'lcd-clart', 'text-anchor': 'end' } : { x: x0 + 70, y: Y(93.5), class: 'lcd-clart' + (ICOM ? ' ic' : '') }, v.clarG, 'CLAR RX');
-      v.clarV = el('text', { x: v.xr, y: Y(93.5), class: 'lcd-clart', 'text-anchor': 'end' }, v.clarG, '');
-      const ch = el('rect', { x: x0 + 66, y: Y(86), width: half - 70, height: 8, class: 'hs lcd-hit' }, v.clarG);
+      v.clarT = el('text', FACE && FACE.clarRight ? { x: v.xr - 50, y: Y(93.5 - (FACE.clarUp || 0)), class: 'lcd-clart', 'text-anchor': 'end' } : { x: x0 + 70, y: Y(93.5), class: 'lcd-clart' + (ICOM ? ' ic' : '') }, v.clarG, 'CLAR RX');
+      v.clarV = el('text', { x: v.xr, y: Y(93.5 - ((FACE && FACE.clarUp) || 0)), class: 'lcd-clart', 'text-anchor': 'end' }, v.clarG, '');
+      const ch = el('rect', { x: x0 + 66, y: Y(86 - ((FACE && FACE.clarUp) || 0)), width: half - 70, height: 8, class: 'hs lcd-hit' }, v.clarG);
       el('title', {}, ch, 'Clarifier : molette = décalage ±10 Hz ; appui long sur la grande touche CLAR : décalage à zéro');
       ch.addEventListener('wheel', (ev) => {
         ev.preventDefault();
@@ -4102,8 +4102,9 @@
         v.clarT.textContent = ICOM
           // IC-7300 : « RIT 0.21 », « ΔTX -0.05 », « RIT ΔTX 0.21 » (décalage en kHz), comme sur l'écran du TRX
           ? (cr && ct ? 'RIT ΔTX' : cr ? 'RIT' : 'ΔTX') + '  ' + (cv < 0 ? '-' : '') + (Math.abs(cv) / 1000).toFixed(2)
+          : FACE.clarRight ? 'CLAR ' + (cr && ct ? 'RXTX' : cr ? 'RX' : 'TX') // FTX-1 : le décalage tout à droite (clarV)
           : 'CLAR ' + (cr && ct ? 'TRX' : cr ? 'RX' : 'TX') + '  ' + (cv > 0 ? '+' : cv < 0 ? '-' : '') + Math.abs(cv) + 'Hz';
-        v.clarV.textContent = '';
+        v.clarV.textContent = FACE.clarRight && !ICOM ? (cv > 0 ? '+' : cv < 0 ? '-' : '') + Math.abs(cv) + 'Hz' : '';
       }
       v.tx.classList.toggle('on', tx && txSide === side);
       for (const c of LCD['c' + side]) c.t.textContent = cellText(c.id, s[c.id]);
