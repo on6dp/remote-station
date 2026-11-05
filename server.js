@@ -1713,6 +1713,23 @@ function autoTuner() {
   }
 }
 
+// FTX-1 : à chaque passage en CW (CW-L / CW-U) sur le VFO sélectionné, BK-IN mis en service (BI1), une seule fois par passage
+let bkinAuto = { cw: null, until: 0 };
+function autoBkin() {
+  const R = station && rig();
+  if (!radio.connected || !R || R.ID !== 'ftx1' || !R.CONTROL || !R.CONTROL.bkin || cfg.bkinAuto === false) { bkinAuto = { cw: null, until: 0 }; return; }
+  const cw = /^CW/.test((radio.vfoSel === 1 ? radio.modeB : radio.mode) || '');
+  if (bkinAuto.cw === false && cw) bkinAuto.until = Date.now() + 5000;
+  bkinAuto.cw = cw;
+  if (!cw) bkinAuto.until = 0;
+  if (bkinAuto.until && Date.now() < bkinAuto.until && radio.bkin !== 1 && !radio.tx && !ptt.active && controller) {
+    bkinAuto.until = 0;
+    toStation({ t: 'cmd', op: 'ctl', id: 'bkin', value: 1, by: 'auto' });
+    radio.bkin = 1; // affichage optimiste, relu ensuite
+    send(controller, { t: 'notice', level: 'info', msg: 'CW : BK-IN mis en service.' });
+  }
+}
+
 // Suivi d'un accord lancé par TUNE : accord vu en cours (AC / RI / émission), puis fini → verdict d'après le HI-SWR du TRX
 function checkTune() {
   const w = tuneWatch;
@@ -3684,6 +3701,8 @@ function onStation(conn, m) {
   if (station && station.rig && station.rig.DUAL_AUDIO && radio.dualRx !== wasDual) updateDigi();
   // Tuner remis en service tout seul : à la connexion du TRX et à chaque nouvelle bande HF / 6 m (une seule fois par bande)
   autoTuner();
+  // FTX-1 : BK-IN mis en service à chaque passage en CW-L / CW-U
+  autoBkin();
   // Phonie : LSB sous 10 MHz, USB au-dessus, remis tout seul à chaque changement de bande
   autoSideband();
   // MODE AUTO : mode de la portion du plan de bande IARU Région 1

@@ -626,3 +626,19 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .ich-tags.big { font: 800 18px Arial, sans-serif; fill: #ffffff; }
 /* FTX-1 : pas de trait blanc sous la fréquence du VFO actif (elle est en orange) */
 #face[data-model='ftx1'] .lcd-sel { display: none; }
+/* FTX-1 : écran DSP (appui d'1 s sur MAIN / SUB AF/RF/SQL) */
+.fc-dsp { position: absolute; z-index: 6; box-sizing: border-box; background: #08090b; border: 1px solid #5c636b; display: flex; flex-direction: column; color: #fff; }
+.fc-dsp[hidden] { display: none; }
+.fc-dsp-f { width: 100%; flex: 1 1 auto; min-height: 0; }
+.fc-dsp-f .ax { fill: none; stroke: #e9edf2; stroke-width: 1.2; }
+.fc-dsp-f .tr { fill: rgba(150, 160, 155, .55); stroke: #f1f3f5; stroke-width: 2; stroke-linejoin: round; }
+.fc-dsp-f .ctr { stroke: #ffa600; stroke-width: 1.6; }
+.fc-dsp-f .nt { stroke: #ff3b1c; stroke-width: 1.6; stroke-dasharray: 3 2; }
+.fc-dsp-f .lb text { fill: #e9edf2; font: italic 800 8px 'Roboto Mono', monospace; }
+.fc-dsp-v { display: flex; justify-content: space-between; align-items: center; padding: 0 .5em; }
+.fc-dsp-v .l { font: 800 2.1em Verdana, 'DejaVu Sans', Arial, sans-serif; }
+.fc-dsp-v .v { font: italic 800 2.3em 'Roboto Mono', monospace; display: flex; align-items: center; gap: .3em; }
+.fc-dsp-v .v button { font: 800 .55em 'Roboto Mono', monospace; background: #20242a; color: #fff; border: 1px solid #5c636b; border-radius: .3em; width: 1.8em; cursor: pointer; }
+.fc-dsp-t { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 2px solid #ffa600; }
+.fc-dsp-t button { font: 800 1.15em Verdana, 'DejaVu Sans', Arial, sans-serif; background: #15181c; color: #e9edf2; border: 0; border-right: 1px solid #3a4048; padding: .45em 0; cursor: pointer; }
+.fc-dsp-t button.on { background: #f2a516; color: #3a2a00; }

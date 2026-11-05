@@ -151,6 +151,8 @@
     // IC-7300 : pas de tableau de réglages façon Yaesu ; l'écran FUNCTION de l'Icom viendra (les niveaux se règlent par le menu MULTI, les fonctions par leurs touches)
     if (a.local === 'func' && ICOM) { L.func = !L.func; if (L.func) { L.icomMenu = L.quickMenu = false; L.icMem = L.icRec = L.icSet = false; } return render(); }
     if (a.local === 'func' && FTX1F) return ftxFuncPush();
+    if (a.local === 'dspA' || a.local === 'dspB') return dspToggle(a.local.slice(3)); // FTX-1 : appui d'1 s sur MAIN / SUB AF/RF/SQL
+    if (a.local === 'dspTab') return dspTab(1);
     if (a.local === 'funcLong') return ftxFuncToggle(); // FTX-1 : appui de 2 s sur FUNC = écran FUNC / sortie
     if (a.local === 'func') { viewTouched(); if (MV.open) closeMenu(); L.func = !L.func; return render(); }
     if (a.local === 'bandMenu') return L.bandMenu ? closeBandMenu() : openBandMenu();
@@ -3888,6 +3890,8 @@
       render();
       return showTip(ev, 'VC TUNE ' + (vcSide ? 'SUB' : 'MAIN') + ' ' + (pos != null ? pos : (n > 0 ? '+' : '−')));
     }
+    // FTX-1 : écran DSP ouvert (appui d'1 s sur AF/RF/SQL) — ce bouton règle la case choisie (SHIFT, WIDTH, NOTCH, CONTOUR / APF)
+    if (L.dsp && k.dspSide === L.dsp) { dspAdjust(notches); return; }
     if (k.multi && FTX1F && L.func) {
       const c = FUNC_BY[L.funcSel];
       if (L.fEdit && c && c[3] && !c[5]) { funcAdjust(L.funcSel, notches); return showTip(ev, c[1] + ' ' + c[2](S())); }
@@ -4119,6 +4123,82 @@
     pop.hidden = false;
     clearTimeout(popT);
     if (!popHover) popT = setTimeout(() => { pop.hidden = true; }, popTarget && popTarget.ctl ? 5000 : 2500);
+  }
+  // ---- FTX-1 : écran DSP du récepteur (appui d'1 s sur MAIN ou SUB AF/RF/SQL), comme sur le TRX :
+  // grand filtre avec l'échelle −2 … +2 kHz, nom et valeur en grand, onglets SHIFT · WIDTH · NOTCH · CONTOUR (APF en CW).
+  // Tourner le bouton (ou la molette sur l'écran, − / +) règle l'onglet choisi ; pousser le bouton : onglet suivant ; appui d'1 s : fermé
+  L.dsp = null; L.dspTab = 0;
+  const dspTabs = (sd) => ['SHIFT', 'WIDTH', 'NOTCH', /^CW/.test((sd === 'B' ? S().modeB : S().mode) || '') ? 'APF' : 'CONTOUR'];
+  const dspK = (sd, id) => id + (sd === 'B' ? 'B' : '');
+  function dspWidthHz(s, sd) {
+    const md = (sd === 'B' ? s.modeB : s.mode) || '', v = s[dspK(sd, 'width')];
+    const tab = (R.widthTable && R.widthTable(md)) || [];
+    return v ? tab[v - 1] : widthDefHz(md);
+  }
+  function dspVal(s, sd, t) {
+    if (t === 'SHIFT') { const v = s[dspK(sd, 'shift')] || 0; return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + 'Hz'; }
+    if (t === 'WIDTH') { const w = dspWidthHz(s, sd); return w != null ? w + 'Hz' : '—'; }
+    if (t === 'NOTCH') return s[dspK(sd, 'notch')] ? (s[dspK(sd, 'notchFreq')] || 0) + 'Hz' : 'OFF';
+    return onOff(s[dspK(sd, t === 'APF' ? 'apf' : 'contour')]);
+  }
+  function dspToggle(sd) {
+    viewTouched();
+    L.dsp = L.dsp === sd ? null : sd; L.dspTab = 0;
+    if (L.dsp) say((sd === 'B' ? 'SUB' : 'MAIN') + ' DSP : tournez le bouton AF/RF/SQL (ou la molette) pour régler, poussez-le pour l’onglet suivant ; appui d’1 s : fermé.', '', 5000);
+    render();
+  }
+  function dspTab(d) { if (!L.dsp) return; L.dspTab = (L.dspTab + d + 4) % 4; render(); }
+  L.dspT = {};
+  function dspAdjust(n) {
+    const sd = L.dsp; if (!sd || !needControl()) return;
+    const s = S(), t = dspTabs(sd)[L.dspTab];
+    const later = (k, v) => { pend[k] = { v, at: Date.now() }; clearTimeout(L.dspT[k]); L.dspT[k] = setTimeout(() => setCtl(k, v), 200); render(); };
+    if (t === 'SHIFT') { const k = dspK(sd, 'shift'), c = R.CONTROL[k]; if (c) later(k, Math.max(c.min, Math.min(c.max, (s[k] || 0) + n * (c.step || 20)))); }
+    else if (t === 'WIDTH') {
+      const k = dspK(sd, 'width'), md = (sd === 'B' ? s.modeB : s.mode) || '', tab = (R.widthTable && R.widthTable(md)) || [];
+      if (!R.CONTROL[k] || !tab.length) return;
+      const cur = s[k] || Math.max(1, tab.indexOf(widthDefHz(md)) + 1);
+      later(k, Math.max(1, Math.min(tab.length, cur + n)));
+    } else if (t === 'NOTCH') {
+      const kn = dspK(sd, 'notch'), kf = dspK(sd, 'notchFreq'), c = R.CONTROL[kf];
+      if (!s[kn]) { if (n > 0 && R.CONTROL[kn]) setCtl(kn, 1); return render(); }
+      if (c) { const v = (s[kf] || 1000) + n * (c.step || 10); if (v < c.min) { setCtl(kn, 0); return render(); } later(kf, Math.min(c.max, v)); }
+    } else { const k = dspK(sd, t === 'APF' ? 'apf' : 'contour'); if (R.CONTROL[k]) setCtl(k, n > 0 ? 1 : 0); render(); }
+  }
+  function dspDraw(s) {
+    let box = $('fcDsp');
+    if (!L.dsp) { if (box) box.hidden = true; return; }
+    const sd = L.dsp, sc = FACE.lcd, x0 = sc.x + (rightSide(sd) ? 289 : 5);
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'fcDsp'; box.className = 'fc-dsp';
+      box.innerHTML = '<svg class="fc-dsp-f" viewBox="0 0 280 80" preserveAspectRatio="none"><path class="ax" d=""/><path class="tr" d=""/><line class="ctr" x1="140" y1="6" x2="140" y2="58"/><line class="nt" x1="0" y1="6" x2="0" y2="58"/><g class="lb"></g></svg>' +
+        '<div class="fc-dsp-v"><span class="l"></span><span class="v"></span></div><div class="fc-dsp-t"></div>';
+      $('facePanel').appendChild(box);
+      const lb = box.querySelector('.lb'); let ax = 'M4 60H276';
+      for (let k = -2.5; k <= 2.51; k += 0.5) { const x = 140 + k * 52; ax += 'M' + x + ' 60v' + (Number.isInteger(k) ? 5 : 3); if (Number.isInteger(k)) { const t = document.createElementNS('http://www.w3.org/2000/svg', 'text'); t.setAttribute('x', x); t.setAttribute('y', 75); t.setAttribute('text-anchor', 'middle'); t.textContent = k ? Math.abs(k).toFixed(1) : '0'; lb.appendChild(t); } }
+      box.querySelector('.ax').setAttribute('d', ax);
+      box.addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) { L.dspTab = +b.dataset.tab; render(); } else if (e.target.closest('[data-pm]')) dspAdjust(+e.target.closest('[data-pm]').dataset.pm); });
+      let wacc = 0;
+      box.addEventListener('wheel', (ev) => { ev.preventDefault(); const d = ev.deltaMode === 1 ? ev.deltaY * 33 : ev.deltaY; let n; if (Math.abs(d) >= 50) n = Math.sign(d); else { wacc += d; n = Math.trunc(wacc / 100); if (!n) return; wacc -= n * 100; } dspAdjust(-n); }, { passive: false });
+    }
+    box.style.left = ((x0 - V.x) / V.w * 100) + '%';
+    box.style.top = ((sc.y + 69 - V.y) / V.h * 100) + '%'; // sous les fréquences et le mode
+    box.style.width = (282 / V.w * 100) + '%';
+    box.style.height = ((G.botY - 71) / V.h * 100) + '%';
+    box.style.fontSize = Math.max(8, Math.round($('facePanel').clientWidth / V.w * 11)) + 'px';
+    const tabs = dspTabs(sd), t = tabs[L.dspTab];
+    // Filtre : largeur et décalage (Hz) sur l'échelle −2,5 … +2,5 kHz
+    const w = dspWidthHz(s, sd) || 2400, sh = s[dspK(sd, 'shift')] || 0, k = 52 / 1000;
+    const xl = 140 + (sh - w / 2) * k, xh = 140 + (sh + w / 2) * k, sl = Math.min(14, (xh - xl) / 4);
+    box.querySelector('.tr').setAttribute('d', 'M4 58H' + Math.max(4, xl - sl).toFixed(1) + 'L' + xl.toFixed(1) + ' 10H' + xh.toFixed(1) + 'L' + Math.min(276, xh + sl).toFixed(1) + ' 58H276');
+    const nt = box.querySelector('.nt'), non = !!s[dspK(sd, 'notch')];
+    nt.style.display = non ? '' : 'none';
+    if (non) { const xn = 140 + ((s[dspK(sd, 'notchFreq')] || 0) - 1500) * k; nt.setAttribute('x1', xn); nt.setAttribute('x2', xn); }
+    box.querySelector('.fc-dsp-v .l').textContent = (sd === 'B' ? 'SUB ' : '') + t;
+    box.querySelector('.fc-dsp-v .v').innerHTML = '<button type="button" data-pm="-1">−</button>' + dspVal(s, sd, t) + '<button type="button" data-pm="1">+</button>';
+    box.querySelector('.fc-dsp-t').innerHTML = tabs.map((n, i) => '<button type="button" data-tab="' + i + '" class="' + (i === L.dspTab ? 'on' : '') + '">' + n + '</button>').join('');
+    box.hidden = false;
   }
   // FTX-1 : cadre « RF POWER   83W » sur le scope quand on tourne FUNC, écran FUNC fermé (nom en orange, valeur en grand)
   function funcPop(id) {
@@ -4363,6 +4443,7 @@
     for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) || (SINGLE && sd === 'B') || !!LCD.ich || (FACE.meterDy && L.expand) ? 'none' : ''; // FTX-1 : EXPAND couvre les filtres
     drawFunc(s);
     drawStatus(s);
+    if (FACE.meterFtx) dspDraw(s);
     for (const b of LCD.bot || []) {
       if (b.t2) b.t2.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
       if (b.lab === 'HOLD') b.r.classList.toggle('on', !!L.hold);

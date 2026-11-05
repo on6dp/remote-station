@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.88 | [RemoteStation-Setup-0.37.88.exe](0.37.88/RemoteStation-Setup-0.37.88.exe) | [remote-station-0.37.88.tar.gz](0.37.88/remote-station-0.37.88.tar.gz) | FTX-1 : écran DSP, BK-IN en CW — [empreintes SHA-256](0.37.88/SHA256SUMS.txt) |
 | 0.37.87 | [RemoteStation-Setup-0.37.87.exe](0.37.87/RemoteStation-Setup-0.37.87.exe) | [remote-station-0.37.87.tar.gz](0.37.87/remote-station-0.37.87.tar.gz) | FTX-1 : tableau SPEED — [empreintes SHA-256](0.37.87/SHA256SUMS.txt) |
 | 0.37.86 | [RemoteStation-Setup-0.37.86.exe](0.37.86/RemoteStation-Setup-0.37.86.exe) | [remote-station-0.37.86.tar.gz](0.37.86/remote-station-0.37.86.tar.gz) | FTX-1 : SCOPE sans menu — [empreintes SHA-256](0.37.86/SHA256SUMS.txt) |
 | 0.37.85 | [RemoteStation-Setup-0.37.85.exe](0.37.85/RemoteStation-Setup-0.37.85.exe) | [remote-station-0.37.85.tar.gz](0.37.85/remote-station-0.37.85.tar.gz) | FTX-1 : SWR/VOL sur le VFO actif — [empreintes SHA-256](0.37.85/SHA256SUMS.txt) |
