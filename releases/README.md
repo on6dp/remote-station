@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.66 | [RemoteStation-Setup-0.37.66.exe](0.37.66/RemoteStation-Setup-0.37.66.exe) | [remote-station-0.37.66.tar.gz](0.37.66/remote-station-0.37.66.tar.gz) | FTX-1 : MAG BAND, CLAR au grand bouton — [empreintes SHA-256](0.37.66/SHA256SUMS.txt) |
 | 0.37.65 | [RemoteStation-Setup-0.37.65.exe](0.37.65/RemoteStation-Setup-0.37.65.exe) | [remote-station-0.37.65.tar.gz](0.37.65/remote-station-0.37.65.tar.gz) | FTX-1 : CLAR RX/TX/RXTX, tableau BAND — [empreintes SHA-256](0.37.65/SHA256SUMS.txt) |
 | 0.37.64 | [RemoteStation-Setup-0.37.64.exe](0.37.64/RemoteStation-Setup-0.37.64.exe) | [remote-station-0.37.64.tar.gz](0.37.64/remote-station-0.37.64.tar.gz) | FTX-1 : barre d'état TUNE ANT1 — [empreintes SHA-256](0.37.64/SHA256SUMS.txt) |
 | 0.37.63 | [RemoteStation-Setup-0.37.63.exe](0.37.63/RemoteStation-Setup-0.37.63.exe) | [remote-station-0.37.63.tar.gz](0.37.63/remote-station-0.37.63.tar.gz) | FTX-1 : SPLIT inversé (appui long) — [empreintes SHA-256](0.37.63/SHA256SUMS.txt) |

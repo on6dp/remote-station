@@ -154,6 +154,17 @@
     if (a.local === 'funcLong') return ftxFuncToggle(); // FTX-1 : appui de 2 s sur FUNC = écran FUNC / sortie
     if (a.local === 'func') { viewTouched(); if (MV.open) closeMenu(); L.func = !L.func; return render(); }
     if (a.local === 'bandMenu') return L.bandMenu ? closeBandMenu() : openBandMenu();
+    // FTX-1 : appui bref sur MAG BAND = bande suivante (1.8 → 3.5 → 7 → 10 → 14 → 18 … → 430 → 1.8), comme sur le TRX
+    if (a.local === 'bandUp') {
+      const seq = ((FACE && FACE.bandGrid) || []).filter((b) => b[0] && b[0] !== '60M');
+      if (!seq.length) return;
+      const f = activeSide() === 'B' ? s.freqB : s.freq;
+      const cur = f ? BANDS.concat([['2M', 144e6, 146e6], ['70CM', 430e6, 440e6]]).find((x) => f >= x[1] && f <= x[2]) : null;
+      const i = cur ? seq.findIndex((b) => b[0] === cur[0]) : -1;
+      const nb = seq[(i + 1) % seq.length];
+      say('BAND : ' + nb[1] + ' MHz (appui d’1 s : tableau des bandes)', '', 2500);
+      return bandTo(nb[0], nb[2], nb[3]);
+    }
     if (a.local === 'modeMenu') return L.modeMenu ? closeModeMenu() : openModeMenu();
     if (a.local === 'icomMenu' || a.local === 'quickMenu') return L[a.local] ? closeGrid(a.local) : openGrid(a.local);
     if (a.local === 'multiMenu') { L.multiMenu = !L.multiMenu; L.multiAt = Date.now(); if (L.multiMenu && multiItems(s).indexOf(L.funcSel) < 0) L.funcSel = 'power'; return render(); }
@@ -3774,6 +3785,16 @@
       tuneTo('B', hz);
       return showTip(ev, 'SUB ' + fmtFreq(hz) + ' MHz');
     }
+    // FTX-1 : CLAR en service sur le récepteur sélectionné → le grand bouton règle le décalage (10 Hz par cran, 1 Hz en FINE)
+    if (k.dial && FACE.clarCycle && part !== 'outer') {
+      const B = activeSide() === 'B';
+      if (B ? s.ritB || s.xitB : s.rit || s.xit) {
+        const id = B ? 'clarB' : 'clar', st = L.fine ? 1 : 10;
+        const v = Math.max(-9999, Math.min(9999, Math.round(((s[id] || 0) + notches * st) / st) * st));
+        setCtl(id, v);
+        return showTip(ev, 'CLAR ' + (v > 0 ? '+' : '') + v + ' Hz');
+      }
+    }
     if (k.dial || k.multi) {
       if (k.multi && (s.rit || s.xit)) {
         const v = Math.max(-9999, Math.min(9999, (s.clar || 0) + notches * 10));
@@ -4135,7 +4156,9 @@
       fl.center.setAttribute('x1', cx); fl.center.setAttribute('x2', cx);
       fl.base.setAttribute('x', cx - tw / 2 + 2); fl.base.setAttribute('width', Math.max(4, tw - 4));
       const v = LCD['v' + side];
-      const fq = side === 'A' ? s.freq : s.freqB;
+      // FTX-1 : CLAR RX en service → la fréquence affichée suit le décalage (comme sur le TRX)
+      const fq0 = side === 'A' ? s.freq : s.freqB, cRx = FACE.clarCycle && (side === 'A' ? s.rit : s.ritB);
+      const fq = fq0 && cRx ? fq0 + ((side === 'A' ? s.clar : s.clarB) || 0) : fq0;
       v.mode.textContent = mode || '—';
       v.freq.setAttribute('d', fq ? seg7(fmtFreq(fq), v.xr, LCD.c0y + 95, 26) : '');
       const active = (s.vfoSel === 1) === (side === 'B');
