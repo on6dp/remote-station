@@ -112,6 +112,14 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .lcd-txb.on { fill: #ff2b1c; }
 #face .lcd-clart { fill: #ff2b1c; font-size: 10px; font-weight: 900; letter-spacing: .3px; white-space: pre; }
 #face .lcd-mode { fill: #c63a2a; }
+/* FTX-1 : étiquettes des VFO comme sur le TRX */
+#face .lcd-mode.ftx { fill: #000; stroke: #e9edf2; stroke-width: 1.3; }
+#face .lcd-vb-n { fill: #6d9be8; }
+#face .lcd-vb-v { fill: #2f8cf0; }
+#face .lcd-vb-st { fill: #3aa83a; }
+#face .lcd-vb-st.tx { fill: #d8261c; }
+#face .lcd-vb-st.on { fill: #ff2a1a; filter: url(#glow); }
+#face .lcd .lcd-vb-t { fill: #fff; font-size: 9px; font-weight: 800; pointer-events: none; }
 #face .lcd-modet { fill: #fff; font-size: 10.5px; font-weight: 700; }
 #face .lcd-freq { fill: #f4f6fa; font-size: 30px; font-weight: 700; letter-spacing: -.5px; font-style: italic; }
 #face .lcd-freq.dim { fill: #66707f; }

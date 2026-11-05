@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.78** — Face avant FTX-1 : étiquettes des VFO comme sur le TRX — [MAIN|SUB][VFO], dessous [RX] en vert ou [TXRX] / [TX] en rouge (VFO d'émission), mode encadré en blanc
 - **0.37.77** — Face avant FTX-1 : arc SWR aussi large que l'arc S (chiffres entre les deux arcs, comme sur le TRX), barre VOL un peu plus bas ; fréquences encore un peu plus bas
 - **0.37.76** — Face avant FTX-1 : galvanomètres comme sur le TRX — MAIN : échelles S et SWR avec la barre VOL (volume AF) ; SUB : échelle S seule ; en émission, l'aiguille du MAIN passe sur l'échelle SWR (puissance écrite à côté)
 - **0.37.75** — Face avant FTX-1 : voyants BUSY/TX SUB / MAIN — le vert s'éteint et le rouge s'allume sur le VFO qui émet, SPLIT compris

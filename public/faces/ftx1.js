@@ -25,6 +25,7 @@
     cells: [],
     lay: { lowY: 154, scopeY: 167, scopeH: 127 },
     meterFtx: true, // galvanomètres du FTX-1 : MAIN = S, SWR et barre VOL ; SUB = S seul
+    vfoBadges: true, // [MAIN|SUB][VFO], [RX] / [TXRX], mode encadré, comme sur le TRX
     statusBar: true, // barre d'état du TRX en haut de l'écran (FAST, VOX, TUNE ANT1, fonction du bouton FUNC)
     clarRight: true,
     // Tableau BAND du FTX-1 (appui sur MAG BAND) : [bande, libellé, kHz, mode] ; sans bande = pas à distance

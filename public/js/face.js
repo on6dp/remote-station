@@ -827,6 +827,19 @@
       v.tx = el('text', { x: x0 + 38, y: Y(103), class: 'lcd-txb' }, g, '');
       v.badge = el('rect', { x: x0 + 1, y: Y(106), width: 52, height: 15, rx: 1.5, class: 'lcd-mode' }, g);
       v.mode = el('text', { x: x0 + 27, y: Y(118), class: 'lcd-modet', 'text-anchor': 'middle' }, g, '—');
+      if (FACE.vfoBadges) {
+        // FTX-1 : étiquettes comme sur le TRX — [MAIN|SUB][VFO], dessous [RX] vert ou [TXRX] / [TX] rouge, puis le mode encadré
+        const nm = side === 'A' ? 'MAIN' : 'SUB', nw = side === 'A' ? 27 : 21;
+        el('rect', { x: x0 + 1, y: Y(87), width: nw, height: 11, rx: 1.2, class: 'lcd-vb-n' }, g);
+        el('text', { x: x0 + 1 + nw / 2, y: Y(95.6), class: 'lcd-vb-t', 'text-anchor': 'middle' }, g, nm);
+        el('rect', { x: x0 + 2 + nw, y: Y(87), width: 22, height: 11, rx: 1.2, class: 'lcd-vb-v' }, g);
+        el('text', { x: x0 + 13 + nw, y: Y(95.6), class: 'lcd-vb-t', 'text-anchor': 'middle' }, g, 'VFO');
+        v.stR = el('rect', { x: x0 + 1, y: Y(100), width: 30, height: 11, rx: 1.2, class: 'lcd-vb-st' }, g);
+        v.stT = el('text', { x: x0 + 16, y: Y(108.6), class: 'lcd-vb-t', 'text-anchor': 'middle' }, g, '');
+        v.badge.setAttribute('y', Y(113)); v.badge.setAttribute('class', 'lcd-mode ftx');
+        v.mode.setAttribute('y', Y(125));
+        v.lbl.style.display = 'none'; v.tx.style.display = 'none';
+      }
       v.freq = el('path', { d: '', class: 'lcd-seg' }, g);
       v.xr = x0 + half - 6;
       v.sel = el('rect', { x: x0 + 58, y: Y(126), width: half - 64, height: 1.6, class: 'lcd-sel' }, g);
@@ -4255,6 +4268,16 @@
         v.clarV.textContent = FACE.clarRight && !ICOM ? (cv > 0 ? '+' : cv < 0 ? '-' : '') + Math.abs(cv) + 'Hz' : '';
       }
       v.tx.classList.toggle('on', tx && txSide === side);
+      if (v.stR) { // FTX-1 : RX (vert), TXRX / TX (rouge) sous [MAIN|SUB][VFO]
+        const isTx = txSide === side, isRx = side === 'A' || subOn;
+        const t = isTx && isRx ? 'TXRX' : isTx ? 'TX' : isRx ? 'RX' : '';
+        v.stT.textContent = t;
+        v.stR.style.display = t ? '' : 'none';
+        v.stR.setAttribute('width', t.length > 2 ? 30 : 18);
+        v.stT.setAttribute('x', +v.stR.getAttribute('x') + (t.length > 2 ? 15 : 9));
+        v.stR.classList.toggle('tx', isTx);
+        v.stR.classList.toggle('on', isTx && tx);
+      }
       for (const c of LCD['c' + side]) c.t.textContent = cellText(c.id, s[c.id]);
     }
     LCD.side.textContent = s.vfoSel === 1 ? 'SUB' : 'MAIN';
