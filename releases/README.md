@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.95 | [RemoteStation-Setup-0.37.95.exe](0.37.95/RemoteStation-Setup-0.37.95.exe) | [remote-station-0.37.95.tar.gz](0.37.95/remote-station-0.37.95.tar.gz) | FTX-1 : échelle du scope lisible — [empreintes SHA-256](0.37.95/SHA256SUMS.txt) |
 | 0.37.94 | [RemoteStation-Setup-0.37.94.exe](0.37.94/RemoteStation-Setup-0.37.94.exe) | [remote-station-0.37.94.tar.gz](0.37.94/remote-station-0.37.94.tar.gz) | FTX-1 : échelle selon D-MODE — [empreintes SHA-256](0.37.94/SHA256SUMS.txt) |
 | 0.37.93 | [RemoteStation-Setup-0.37.93.exe](0.37.93/RemoteStation-Setup-0.37.93.exe) | [remote-station-0.37.93.tar.gz](0.37.93/remote-station-0.37.93.tar.gz) | FTX-1 : échelle du scope en fréquences — [empreintes SHA-256](0.37.93/SHA256SUMS.txt) |
 | 0.37.92 | [RemoteStation-Setup-0.37.92.exe](0.37.92/RemoteStation-Setup-0.37.92.exe) | [remote-station-0.37.92.tar.gz](0.37.92/remote-station-0.37.92.tar.gz) | FTX-1 : étiquettes SPLIT — [empreintes SHA-256](0.37.92/SHA256SUMS.txt) |

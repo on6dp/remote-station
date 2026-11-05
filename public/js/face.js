@@ -4851,7 +4851,7 @@
   // Un scope : spectre en haut, cascade en dessous (elle descend d'une ligne à chaque tour), échelle en bas
   function drawScope(c2, rg, pal, nb, lvl, maxHz) {
     const { sp, x0, y0, w, h, name } = rg;
-    const lab = ICOM ? 15 : 11, sh = rg.wf === false ? h - lab : Math.round((h - lab) * (h < 90 ? 0.5 : 0.6)); // IC-7300 : chiffres de l'échelle plus grands ; sans cascade : spectre sur toute la hauteur
+    const lab = ICOM ? 15 : FACE.meterFtx ? 19 : 11, sh = rg.wf === false ? h - lab : Math.round((h - lab) * (h < 90 ? 0.5 : 0.6)); // IC-7300 : chiffres de l'échelle plus grands ; sans cascade : spectre sur toute la hauteur
     if (rg.sep === 'h') { c2.fillStyle = '#2b3546'; c2.fillRect(x0, y0 - 2, w, 2); }
     if (rg.sep === 'v') { c2.fillStyle = '#2b3546'; c2.fillRect(x0 - 2, y0, 2, h); }
     if (!sp) {
@@ -4944,8 +4944,8 @@
     c2.strokeStyle = 'rgba(160,170,185,.7)';
     c2.beginPath(); c2.moveTo(x0, y0 + sh - 0.5); c2.lineTo(x0 + w, y0 + sh - 0.5); c2.stroke();
     // Échelle : 0 à 4 kHz de BF
-    c2.fillStyle = 'rgba(200,210,225,.85)';
-    c2.font = ICOM ? 'bold 12px Arial, sans-serif' : '9px "Roboto Mono", monospace';
+    c2.fillStyle = FACE.meterFtx ? '#fff' : 'rgba(200,210,225,.85)';
+    c2.font = ICOM ? 'bold 12px Arial, sans-serif' : FACE.meterFtx ? 'bold 14px "Roboto Mono", monospace' : '9px "Roboto Mono", monospace'; // FTX-1 : échelle en blanc gras, lisible
     c2.textAlign = 'center';
     if (rg.audScale) {
       // AUDIO SCOPE de l'IC-7300 : 0, 1.0, 2.0, 3.0, 4.0kHz, petits traits aux demi-kHz
