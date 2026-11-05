@@ -153,6 +153,13 @@
     if (a.local === 'func' && FTX1F) return ftxFuncPush();
     if (a.local === 'dspA' || a.local === 'dspB') return dspToggle(a.local.slice(3)); // FTX-1 : appui d'1 s sur MAIN / SUB AF/RF/SQL
     if (a.local === 'dspTab') return dspTab(1);
+    // FTX-1 : pousser SUB DIAL = VFO actif MAIN ⇄ SUB, comme sur le TRX. Par sécurité (VS1 a mis le FTX-1 en émission le 25/10),
+    // seulement en double réception ; le serveur garde ses propres refus
+    if (a.local === 'sideToggle') {
+      if (!needControl()) return;
+      if (S().dualRx !== 1) return say('MAIN ⇄ SUB : seulement en double réception (un VFO au-delà de 118 MHz). En HF, le FTX-1 n’écoute qu’un côté : pour écouter la fréquence du VFO B, utilisez A ⇄ B (appui long sur SPLIT ou A ⇄ B du dashboard).', 'warn', 7000);
+      return setCtl('vfoSel', activeSide() === 'B' ? 0 : 1);
+    }
     if (a.local === 'funcLong') return ftxFuncToggle(); // FTX-1 : appui de 2 s sur FUNC = écran FUNC / sortie
     if (a.local === 'func') { viewTouched(); if (MV.open) closeMenu(); L.func = !L.func; return render(); }
     if (a.local === 'bandMenu') return L.bandMenu ? closeBandMenu() : openBandMenu();
