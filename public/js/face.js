@@ -254,6 +254,7 @@
     }
     // LOCK : verrouille le grand bouton du côté sélectionné (MAIN ou SUB), comme sur le TRX
     if (a.local === 'lock') {
+      if (!(me && me.admin)) return say('LOCK : réservé aux administrateurs.', 'warn', 4000);
       const id = activeSide() === 'B' && R && R.CONTROL.lockB ? 'lockB' : 'lock';
       if (!R || !R.CONTROL[id]) return say('LOCK : non disponible sur ce TRX.', 'warn');
       setCtl(id, S()[id] ? 0 : 1);
@@ -3283,7 +3284,7 @@
       ['bkinI', 'BK-IN', (s) => ['OFF', 'SEMI', 'FULL'][s.bkin] || '—', cyc('bkin'), IB, true],
       ['moniI', 'MONI', (s) => onOff(s.moni), tog('moni'), IB, true],
       ['tunerI', 'TUNER', (s) => onOff(s.tuner), tog('tuner'), IB, true],
-      ['lockI', 'LOCK', (s) => onOff(s.lock), tog('lock'), IB, true],
+      ['lockI', 'LOCK', (s) => onOff(s.lock), (s) => (me && me.admin ? tog('lock')(s) : say('LOCK : réservé aux administrateurs.', 'warn', 4000)), IB, true],
       ['splitI', 'SPLIT', (s) => onOff(s.split), () => doAct({ act: { local: 'split' } }), IB, true],
       ['aeqb', 'A=B', () => '', () => setCtl('aToB', null), IB, true],
       pickY('spd')],

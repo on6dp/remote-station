@@ -3266,6 +3266,8 @@ function onOperator(conn, m) {
       if (m.ctl != null) {
         const R = rig();
         const c = R.CONTROL[m.ctl];
+        // LOCK de la face avant du TRX : réservé aux administrateurs (un membre qui verrouille le TRX bloque le club)
+        if ((m.ctl === 'lock' || m.ctl === 'lockB') && !conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'LOCK : réservé aux administrateurs' });
         // FTX-1 : aucun passage sur SUB par CAT (VS1) tant que ftx1SubCat n'est pas activé
         if (R.ID === 'ftx1' && !cfg.ftx1SubCat && ((m.ctl === 'vfoSel' && Number(m.value) === 1) || (c && c.viaSub && radio.vfoSel !== 1) || (c && c.viaMain && radio.vfoSel === 1))) {
           return send(conn, { t: 'notice', level: 'error', msg: 'Passage MAIN ↔ SUB par le dashboard désactivé : il mettait le FTX-1 en émission. Choisissez MAIN / SUB sur la face avant du TRX ; le dashboard suit.' });
