@@ -4210,7 +4210,7 @@
     const nt = box.querySelector('.nt'), non = !!s[dspK(sd, 'notch')];
     nt.style.display = non ? '' : 'none';
     if (non) { const xn = 140 + ((s[dspK(sd, 'notchFreq')] || 0) - 1500) * k; nt.setAttribute('x1', xn); nt.setAttribute('x2', xn); }
-    box.querySelector('.fc-dsp-v .l').textContent = (sd === 'B' ? 'SUB ' : '') + t;
+    box.querySelector('.fc-dsp-v .l').innerHTML = (sd === 'B' ? '<small>SUB</small>' : '') + t; // sur une ligne
     box.querySelector('.fc-dsp-v .v').innerHTML = '<button type="button" data-pm="-1">−</button>' + dspVal(s, sd, t) + '<button type="button" data-pm="1">+</button>';
     box.querySelector('.fc-dsp-t').innerHTML = tabs.map((n, i) => '<button type="button" data-tab="' + i + '" class="' + (i === L.dspTab ? 'on' : '') + '">' + n + '</button>').join('');
     box.hidden = false;

@@ -637,8 +637,9 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .fc-dsp-f .nt { stroke: #ff3b1c; stroke-width: 1.6; stroke-dasharray: 3 2; }
 .fc-dsp-f .lb text { fill: #e9edf2; font: italic 800 8px 'Roboto Mono', monospace; }
 .fc-dsp-v { display: flex; justify-content: space-between; align-items: center; padding: 0 .5em; }
-.fc-dsp-v .l { font: 800 2.1em Verdana, 'DejaVu Sans', Arial, sans-serif; }
-.fc-dsp-v .v { font: italic 800 2.3em 'Roboto Mono', monospace; display: flex; align-items: center; gap: .3em; }
+.fc-dsp-v .l { font: 800 1.6em Verdana, 'DejaVu Sans', Arial, sans-serif; white-space: nowrap; }
+.fc-dsp-v .l small { font-size: .7em; color: #8fb6ff; margin-right: .3em; }
+.fc-dsp-v .v { font: italic 800 2.1em 'Roboto Mono', monospace; white-space: nowrap; display: flex; align-items: center; gap: .3em; }
 .fc-dsp-v .v button { font: 800 .55em 'Roboto Mono', monospace; background: #20242a; color: #fff; border: 1px solid #5c636b; border-radius: .3em; width: 1.8em; cursor: pointer; }
 .fc-dsp-t { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 2px solid #ffa600; }
 .fc-dsp-t button { font: 800 1.15em Verdana, 'DejaVu Sans', Arial, sans-serif; background: #15181c; color: #e9edf2; border: 0; border-right: 1px solid #3a4048; padding: .45em 0; cursor: pointer; }

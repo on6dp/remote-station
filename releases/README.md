@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.97 | [RemoteStation-Setup-0.37.97.exe](0.37.97/RemoteStation-Setup-0.37.97.exe) | [remote-station-0.37.97.tar.gz](0.37.97/remote-station-0.37.97.tar.gz) | FTX-1 : SUB SHIFT sur une ligne — [empreintes SHA-256](0.37.97/SHA256SUMS.txt) |
 | 0.37.96 | [RemoteStation-Setup-0.37.96.exe](0.37.96/RemoteStation-Setup-0.37.96.exe) | [remote-station-0.37.96.tar.gz](0.37.96/remote-station-0.37.96.tar.gz) | FTX-1 : clic sur le filtre = écran DSP — [empreintes SHA-256](0.37.96/SHA256SUMS.txt) |
 | 0.37.95 | [RemoteStation-Setup-0.37.95.exe](0.37.95/RemoteStation-Setup-0.37.95.exe) | [remote-station-0.37.95.tar.gz](0.37.95/remote-station-0.37.95.tar.gz) | FTX-1 : échelle du scope lisible — [empreintes SHA-256](0.37.95/SHA256SUMS.txt) |
 | 0.37.94 | [RemoteStation-Setup-0.37.94.exe](0.37.94/RemoteStation-Setup-0.37.94.exe) | [remote-station-0.37.94.tar.gz](0.37.94/remote-station-0.37.94.tar.gz) | FTX-1 : échelle selon D-MODE — [empreintes SHA-256](0.37.94/SHA256SUMS.txt) |
