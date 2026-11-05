@@ -251,6 +251,8 @@
   // en stéréo, le décodage RTTY / FT du SUB lisent la voie droite. L'émission reste celle du FTX-1 (pas de DUAL_TX :
   // l'émission auto FT8 part toujours du VFO principal, le SPLIT virtuel du FTX-1 ne change pas)
   api.DUAL_AUDIO = true;
+  // Double réception (MAIN + SUB) : seulement si l'un des VFO est au-delà de 118 MHz ; deux fréquences HF = un seul récepteur
+  api.dualRxOk = (s) => (s.freq || 0) >= 118e6 || (s.freqB || 0) >= 118e6;
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else {

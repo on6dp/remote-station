@@ -4537,6 +4537,12 @@
     store.set('rs.face.stereo', L.stereo ? '1' : '0');
     wantAudio();
     const s = S();
+    // FTX-1 : double réception seulement si l'un des deux VFO est au-delà de 118 MHz (pas avec deux fréquences HF)
+    if (L.stereo && s.dualRx === 0 && R && R.dualRxOk && !R.dualRxOk(s)) {
+      L.stereo = false; store.set('rs.face.stereo', '0');
+      say('Double réception impossible sur le FTX-1 avec deux fréquences HF : mettez l’un des VFO au-delà de 118 MHz (AIR, 144, 430).', 'warn', 7000);
+      return render();
+    }
     if (L.stereo && s.dualRx === 0) {
       // Les deux récepteurs en service (double réception) pour entendre MAIN à gauche et SUB à droite
       if (iControl()) { setCtl('dualRx', 1); say('Stéréo : double réception en marche ; MAIN dans l’oreille gauche, SUB dans l’oreille droite.', '', 5000); }
