@@ -38,7 +38,7 @@
     vfoDy: -62, clarUp: 4, meterDy: 52, actOrange: true, // fréquences en haut (VFO actif en orange), galvanomètres dessous
     // fréquences 16 px plus bas, « CLAR RXTX  0Hz » 6 px au-dessus : bien dégagé des chiffres
     // Rangée du bas de l'écran du FTX-1
-    bot: ['CENTER', '3DSS', 'MULTI', 'SCOPE', 'SPAN', 'SPEED'],
+    bot: ['D-MODE', '3DSS', 'MULTI', 'SCOPE', 'SPAN', 'SPEED'], botSub: ['D-MODE', 'SCOPE'], // D-MODE : CENTER / CURSOR / FIX
     // Voyants BUSY/TX au-dessus du grand bouton : SUB à gauche, MAIN à droite (vert = réception, rouge = émission)
     // BUSY/TX SUB | MAIN : vert en réception, rouge pour le VFO qui émet (SPLIT compris)
     leds: [

@@ -210,6 +210,8 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .lcd .lcd-bott.blue { fill: #5fa8ff; }
 #face .lcd.expand .flt .flt-trap, #face .lcd.expand .flt .flt-ctr, #face .lcd.expand .flt .flt-notch, #face .lcd.expand .flt .flt-cup, #face .lcd.expand .flt .flt-bars, #face .lcd.expand .flt .flt-box, #face .lcd.expand .flt .flt-base, #face .lcd.mono .flt .flt-trap, #face .lcd.mono .flt .flt-ctr, #face .lcd.mono .flt .flt-notch, #face .lcd.mono .flt .flt-cup, #face .lcd.mono .flt .flt-bars, #face .lcd.mono .flt .flt-box, #face .lcd.mono .flt .flt-vcticks { vector-effect: non-scaling-stroke; }
 #face .lcd-bott2 { fill: #ff3b30; font-size: 8.5px; font-weight: 800; pointer-events: none; }
+#face[data-model='ftx1'] .lcd-bott.two { font-size: 10.5px; }
+#face .lcd-bott2.sub { fill: #ffa600; font-size: 9px; }
 #face .lcd-hit.off:hover { fill: rgba(160, 170, 185, .06); }
 #face .func-pm { fill: #ffcf4a; font-size: 15px; font-weight: 800; pointer-events: none; }
 /* Phonie à distance sous la face avant : PTT à gauche ; à sa droite, ligne 1 « SSB CONFIGURATION · MICRO · EQUALIZER MICRO · niveau · EQUALIZER TRX »,

@@ -98,6 +98,8 @@
       { cmd: 'SD;', re: /^SD(\d\d)$/, parse: (m) => ({ bkDelay: +m[1] }), sim: 'SD06' },
       { cmd: 'CS;', re: /^CS([01])$/, parse: (m) => ({ cwSpot: +m[1] }), sim: 'CS0' },
       // FINE / FAST du TRX (FN : 0 normal, 1 FINE, 2 FAST) : la touche FINE/FAST de la page /ftx1 le suit
+      // D-MODE du scope (SS06 : 0/4 CENTER, 1/7 CURSOR, 2/A FIX ; 0-2 avec 3DSS, 4/7/A cascade normale)
+      { cmd: 'SS06;', re: /^SS06([0-9A-B])0000$/, parse: (m) => { const c = parseInt(m[1], 16); return { dMode: c === 1 || c === 7 ? 1 : c === 2 || c === 10 ? 2 : 0 }; }, sim: 'SS0640000' },
       { cmd: 'FN;', re: /^FN([0-2])$/, parse: (m) => ({ tuneStep: +m[1] }), sim: 'FN0' },
       // FM : décalage relais, type de squelch, tonalité CTCSS (le TRX ne répond qu'en FM)
       { cmd: 'OS0;', when: (st) => /FM/.test(st.mode || ''), re: /^OS0([0-3])$/, parse: (m) => ({ rpt: +m[1] }), sim: 'OS00' },
@@ -112,7 +114,7 @@
     // TUNER TYPE SEL ANT1 / ANT2 (EX030701 / EX030702) — numéros du manuel CAT FTX-1 (Table 3)
     extraQueries: ['RA1;', 'PA0;', 'PA1;', 'PA2;', 'AC;', 'RI0;', 'EX030103;', 'EX030104;', 'EX030701;', 'EX030702;'],
     extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'afB', 'hiSwr', 'tuningRi',
-      'dContrast', 'dimmer', 'dimLed', 'micEq', 'txw', 'amc', 'voxGain', 'voxDelay', 'moniLvl', 'keyer', 'bkin', 'keySpeed', 'cwPitch', 'bkDelay', 'cwSpot', 'tuneStep',
+      'dContrast', 'dimmer', 'dimLed', 'micEq', 'txw', 'amc', 'voxGain', 'voxDelay', 'moniLvl', 'keyer', 'bkin', 'keySpeed', 'cwPitch', 'bkDelay', 'cwSpot', 'tuneStep', 'dMode',
       'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB'],
     subBadges: true,
     // CW : mémoire TEXTE 5 du manipulateur (écrasée), lue par KY05 ; KY00 = arrêt (manuel CAT FTX-1, Hamlib ftx1_cw.c)
@@ -205,6 +207,7 @@
       { id: 'cwPitch', g: 'tx', label: 'CW PITCH', type: 'level', min: 300, max: 1050, step: 10, face: true, write: (v) => 'KP' + pad(Math.round((v - 300) / 10), 2) + ';' },
       { id: 'bkDelay', g: 'tx', label: 'BK-DELAY', type: 'level', min: 0, max: 33, step: 1, face: true, write: (v) => 'SD' + pad(v, 2) + ';' },
       { id: 'cwSpot', g: 'tx', label: 'CW SPOT', type: 'toggle', face: true, write: (v) => 'CS' + v + ';' },
+      { id: 'dMode', g: 'disp', label: 'D-MODE (code SS06)', type: 'level', min: 0, max: 10, step: 1, face: true, write: (v) => 'SS06' + Number(v).toString(16).toUpperCase() + '0000;' },
       { id: 'tuneStep', g: 'vfo', label: 'FINE / FAST', type: 'select', face: true, options: [[0, 'NORMAL'], [1, 'FINE'], [2, 'FAST']], write: (v) => 'FN' + v + ';' },
       // ZIN (CW AUTO ZERO IN) : le récepteur sélectionné se cale sur le signal CW
       { id: 'zin', g: 'tx', label: 'ZIN', type: 'action', face: true, write: (v, s) => 'ZI' + (s && s.vfoSel === 1 ? 1 : 0) + ';' },

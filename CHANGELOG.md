@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.83** — Face avant FTX-1 : D-MODE à la place de CENTER — CENTER → CURSOR → FIX (mode du scope du TRX, SS06), valeur en orange dessous ; SCOPE avec MAIN / SUB dessous
 - **0.37.82** — Face avant FTX-1 : jamais de MONO ni d'EXPAND (absents du TRX) — le réglage enregistré sur une autre face (FTDX101) cachait les S-mètres du FTX-1
 - **0.37.81** — Face avant FTX-1 : EXPAND et MONO corrigés avec les fréquences en haut — EXPAND agrandit le scope par-dessus les galvanomètres sans déplacer les fréquences (elles passaient sur la barre d'état), MONO met le grand filtre sous la barre d'état
 - **0.37.80** — Face avant FTX-1 : plus de trait blanc sous la fréquence du VFO actif (comme sur le TRX)

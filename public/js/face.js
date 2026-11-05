@@ -905,7 +905,16 @@
       // FTX-1 : CENTER, 3DSS, MULTI, SCOPE (réglages du scope : SCOPE MENU), SPAN, SPEED
       const by = (n) => BOT.find((b) => b[0] === n);
       const extra = { EXPAND: ['EXPAND', () => toggleExpand()], SPEED: ['SPEED', () => { smAdjust('spd', 1); say('SPEED (vitesse de la cascade) : ' + WF_SPEEDS[L.wfSpeed][0], '', 2500); }],
-        SCOPE: ['SCOPE', () => (L.smenu ? closeSmenu() : openSmenu())] };
+        SCOPE: ['SCOPE', () => (L.smenu ? closeSmenu() : openSmenu())],
+        // FTX-1 : D-MODE = mode du scope du TRX, CENTER → CURSOR → FIX (SS06), comme sur le TRX
+        'D-MODE': ['D-MODE', () => {
+          if (!needControl()) return;
+          const v = ((S().dMode != null ? S().dMode : 0) + 1) % 3;
+          setCtl('dMode', L.d3 ? v : [4, 7, 10][v]);
+          pend.dMode = { v, at: Date.now() };
+          say('D-MODE : ' + ['CENTER', 'CURSOR', 'FIX'][v] + ' (scope du TRX)', '', 2500);
+          render();
+        }] };
       const names = FACE.bot || ['CENTER', '3DSS', 'MULTI', 'EXPAND', 'SPAN', 'SPEED'];
       BOT.splice(0, BOT.length, ...names.map((n) => extra[n] || by(n) || [n]));
     }
@@ -914,7 +923,10 @@
       const x = X(5) + j * bw, last = j === BOT.length - 1 && !SINGLE && !FACE.bot;
       const r = el('rect', { x: x + 0.5, y: Y(G.botY), width: bw - 1, height: G.botH, rx: last ? 2 : 0, class: 'lcd-bot' + (last ? ' multi' : '') }, g);
       const t = el('text', { x: x + bw / 2, y: Y(last ? G.botY + 8.5 : G.botY + G.botH / 2 + 3.5), class: 'lcd-bott', 'text-anchor': 'middle' }, g, lab);
-      const t2 = last ? el('text', { x: x + bw / 2, y: Y(G.botY + 18), class: 'lcd-bott2', 'text-anchor': 'middle' }, g, '') : null;
+      // FTX-1 : D-MODE et SCOPE sur deux lignes (valeur en orange dessous : CENTER / CURSOR / FIX, MAIN / SUB)
+      const sub = !!(FACE.botSub && FACE.botSub.includes(lab));
+      if (sub) { t.setAttribute('y', Y(G.botY + 9)); t.classList.add('two'); }
+      const t2 = last || sub ? el('text', { x: x + bw / 2, y: Y(G.botY + 18), class: 'lcd-bott2' + (sub ? ' sub' : ''), 'text-anchor': 'middle' }, g, '') : null;
       const h = el('rect', { x: x + 0.5, y: Y(G.botY), width: bw - 1, height: G.botH, class: 'hs lcd-hit' + (fn || last ? '' : ' off') }, g);
       el('title', {}, h, last ? 'MULTI : fonction réglée par le bouton MULTI (choisie dans FUNC)' : lab + (fn ? '' : ' : pas disponible à distance'));
       h.addEventListener('click', () => {
@@ -4316,6 +4328,8 @@
       if (b.lab === '3DSS') b.r.classList.toggle('on', !!L.d3);
       if (b.lab === 'MONO') b.t.classList.toggle('blue', !!L.mono); // comme le TRX : MONO écrit en bleu
       if (b.lab === 'EXPAND') b.t.classList.toggle('blue', !!L.expand);
+      if (b.lab === 'D-MODE' && b.t2) b.t2.textContent = ['CENTER', 'CURSOR', 'FIX'][s.dMode || 0];
+      if (b.lab === 'SCOPE' && b.t2) b.t2.textContent = activeSide() === 'B' ? 'SUB' : 'MAIN';
       // DISP « filtres agrandis » : comme sur le TRX, seuls MULTI, HOLD et la case MULTI restent
       b.t.style.opacity = L.disp === 3 && !b.t2 && b.lab !== 'MULTI' && b.lab !== 'HOLD' ? '0' : '';
     }
