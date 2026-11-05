@@ -751,7 +751,8 @@
     sb.fastR = el('rect', { x: X(146), y: Y(1.8), width: 36, height: 10.9, rx: 1.5, class: 'lcd-sfast' }, g);
     sb.fast = el('text', { x: X(164), y: Y(10.9), class: 'lcd-sfastt', 'text-anchor': 'middle' }, g, 'FAST');
     sb.vox = el('text', { x: X(222), y: Y(10.9), class: 'lcd-stxt', 'text-anchor': 'middle' }, g, 'VOX');
-    sb.tune = el('text', { x: X(298), y: Y(10.9), class: 'lcd-stune', 'text-anchor': 'end' }, g, 'TUNE');
+    sb.tuneR = el('rect', { x: X(262), y: Y(1.8), width: 38, height: 10.9, rx: 1.5, class: 'lcd-stuner' }, g); // fond rouge : tuner en service
+    sb.tune = el('text', { x: X(296), y: Y(10.9), class: 'lcd-stune', 'text-anchor': 'end' }, g, 'TUNE');
     sb.ant = el('text', { x: X(302), y: Y(10.9), class: 'lcd-stxt' }, g, 'ANT1');
     sb.fnR = el('rect', { x: X(c.w - 108), y: Y(1.6), width: 102, height: 11.3, rx: 1.5, class: 'lcd-sfn' }, g);
     sb.fn = el('text', { x: X(c.w - 57), y: Y(10.9), class: 'lcd-sfnt', 'text-anchor': 'middle' }, g, '');
@@ -766,6 +767,7 @@
     sb.fastR.style.display = fast ? '' : 'none'; sb.fast.style.display = fast ? '' : 'none';
     sb.vox.style.display = s.vox ? '' : 'none';
     sb.tune.classList.toggle('on', !!s.tuner);
+    sb.tuneR.style.display = s.tuner ? '' : 'none';
     sb.tune.style.display = s.tuner == null ? 'none' : '';
     sb.ant.textContent = 'ANT' + (s.ant || 1);
     const f = FUNC_BY[L.funcSel];

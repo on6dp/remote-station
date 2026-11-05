@@ -393,7 +393,8 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .lcd .lcd-sfastt { fill: #fff; font-size: 10.5px; font-weight: 800; }
 #face .lcd .lcd-stxt { fill: #fff; font-size: 11px; font-weight: 800; paint-order: stroke; stroke: #3a3f45; stroke-width: 1.4px; }
 #face .lcd .lcd-stune { fill: #5f646a; font-size: 11px; font-weight: 800; }
-#face .lcd .lcd-stune.on { fill: #ff3b1c; }
+#face .lcd .lcd-stune.on { fill: #fff; font-weight: 900; }
+#face .lcd-stuner { fill: #e0201a; }
 #face .lcd-sfn { fill: #2a2d31; stroke: #ffa600; stroke-width: 1.2; }
 #face .lcd .lcd-sfnt { fill: #ffa600; font-size: 10.5px; font-weight: 800; }
 /* FTX-1 : écran FUNC (3 pages) — cases grises, nom en blanc, valeur en orange, cadre orange sur la case choisie */
