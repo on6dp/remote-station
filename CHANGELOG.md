@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.57** — Face avant FTX-1 : clic sur SUB DIAL = échange des deux VFO (A ⇄ B), comme sur le TRX ; tourner = fréquence du VFO B
 - **0.37.56** — Face avant FTX-1 : tableau MODE (et BAND) avec les noms en blanc gras, plus grands, sur des touches foncées
 - **0.37.55** — Face avant FTX-1 : noms des modes et touches sous l'écran (CENTER, 3DSS, MULTI, SCOPE, SPAN, SPEED) en blanc gras, plus grands
 - **0.37.54** — Face avant FTX-1 : cartes de bande dans le même ordre que l'écran du TRX (VFO-B / SUB à gauche, VFO-A / MAIN à droite), trait rouge sur le VFO d'émission en SPLIT

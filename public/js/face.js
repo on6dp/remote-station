@@ -3635,6 +3635,8 @@
       if (drag) clearTimeout(drag.lt);
       if (drag && drag.long) return end2();
       // Bouton qu'on pousse pour une fonction de la page (FTDX10 : pousser FUNC = menu FUNC)
+      // Bouton qu'on pousse pour une touche du TRX (FTX-1 : pousser SUB DIAL = A ⇄ B)
+      if (drag && k.pushAct && ev && ev.type === 'pointerup' && Math.abs(drag.acc) < 0.3 && Date.now() - drag.t0 < 500 && !drag.moved) { end2(); if (k.pushTip) showTip(ev, k.pushTip); return doAct({ act: k.pushAct }, false); }
       if (drag && k.pushLocal && ev && ev.type === 'pointerup' && Math.abs(drag.acc) < 0.3 && Date.now() - drag.t0 < 500 && !drag.moved) { end2(); return doAct({ act: { local: k.pushLocal } }, false); }
       if (drag && k.push && ev && ev.type === 'pointerup' && Math.abs(drag.acc) < 0.3 && Date.now() - drag.t0 < 500 && !drag.moved) {
         const s0 = S();
