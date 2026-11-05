@@ -93,7 +93,7 @@
   // Carnet de trafic dans cette page : dashboard, ou page des modes numériques de la face avant (/ftdx101/digi.html) ;
   // la fenêtre séparée du dashboard n'en a pas (l'onglet Logbooks est dans le dashboard)
   // Pages des faces avant (/ftdx101, /ftdx10) : chemin de base (« /ftdx10 »…), '' ailleurs
-  const FACEP = (/^\/(ftdx101|ftdx10|ic7300)(?=\/|$)/.exec(location.pathname) || [''])[0];
+  const FACEP = (/^\/(ftdx101|ftdx10|ic7300|ftx1)(?=\/|$)/.exec(location.pathname) || [''])[0];
   const LOGP = POPUP && !!FACEP && !EMBED;
   // Onglet Logbooks dans la page (dashboard) ; page des modes numériques de la face avant : le carnet s'ouvre dans
   // une fenêtre à lui (/ftdx101/log.html), raccrochée à cette page (même connexion, voir RSLOGHOST)

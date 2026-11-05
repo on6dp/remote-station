@@ -21,6 +21,9 @@
   // TRX à un seul récepteur (FTDX10) : écran façon FTDX10 — un S-mètre, VFO-A en grand, VFO-B en petit, une rangée de cases,
   // le filtre à droite, le scope plus haut ; pas de MAIN / SUB, de DISP ni de MONO
   const SINGLE = !!(FACE && FACE.single);
+  // FTX-1 : écran du TRX avec le SUB à gauche et le MAIN à droite (l'inverse du FTDX101)
+  const SUBL = !!(FACE && FACE.subLeft);
+  const rightSide = (sd) => (sd === 'B') !== SUBL; // ce côté (A = MAIN, B = SUB) est-il dans la moitié droite de l'écran ?
   // Positions verticales dans l'écran (unités de la photo depuis le haut de l'écran) : bandeau du scope, scope, rangée du bas
   const G = Object.assign(SINGLE ? { lowY: 139, scopeY: 152, scopeH: 163, botY: 320, botH: 40, expUp: 64 } : { lowY: 157, scopeY: 170, scopeH: 124, botY: 297, botH: 21, expUp: 34 }, (FACE && FACE.lay) || {});
   // TRX Icom (IC-7300) : filtres FIL1 / FIL2 / FIL3 et TWIN PBT au lieu de WIDTH / SHIFT / R.FIL
@@ -707,14 +710,16 @@
     // Galvanomètres et filtres : MAIN | filtre MAIN | SUB | filtre SUB
     LCD.g = g;
     const gmA = el('g', {}, g), gmB = el('g', {}, g);
-    LCD.mA = buildMeter(gmA, X(5), Y(4), 190, 'A'); LCD.mA.g = gmA;
-    LCD.fA = buildFilter(g, X(199), Y(14), 82, 72);
-    LCD.mB = buildMeter(gmB, X(289), Y(4), 190, 'B'); LCD.mB.g = gmB;
-    LCD.fB = buildFilter(g, X(483), Y(14), 82, 72);
+    const dA = rightSide('A') ? 284 : 0, dB = rightSide('B') ? 284 : 0;
+    LCD.mA = buildMeter(gmA, X(5 + dA), Y(4), 190, 'A'); LCD.mA.g = gmA;
+    LCD.fA = buildFilter(g, X(199 + dA), Y(14), 82, 72);
+    LCD.mB = buildMeter(gmB, X(5 + dB), Y(4), 190, 'B'); LCD.mB.g = gmB;
+    LCD.fB = buildFilter(g, X(199 + dB), Y(14), 82, 72);
     // Fréquences
     const half = (c.w - 10) / 2;
     LCD.half = half; LCD.X = X; LCD.Y = Y; LCD.cw0 = c.w;
-    for (const [i, side] of [[0, 'A'], [1, 'B']]) {
+    for (const side of ['A', 'B']) {
+      const i = rightSide(side) ? 1 : 0;
       const x0 = X(5 + i * half);
       const v = LCD['v' + side] = {};
       const g0 = g;
@@ -747,7 +752,8 @@
     }
     // ANT / ATT / IPO / R.FIL / AGC
     const CELLS = FACE.cells ? FACE.cells.map(([lab, id]) => [lab, id, id + 'B']) : [['ANT', 'ant', 'ant'], ['ATT', 'att', 'attB'], ['IPO', 'preamp', 'preampB'], ['R.FIL', 'roof', 'roofB'], ['AGC', 'agc', 'agcB']];
-    for (const [i, side] of [[0, 'A'], [1, 'B']]) {
+    for (const side of ['A', 'B']) {
+      const i = rightSide(side) ? 1 : 0;
       const x0 = X(5 + i * half);
       const cw = (half - 4) / 5;
       const cg = LCD['cg' + side] = el('g', {}, g);
@@ -772,7 +778,7 @@
     LCD.scopeRect = el('rect', { x: X(5), y: Y(G.scopeY), width: c.w - 10, height: G.scopeH, class: 'lcd-scope' }, g);
     // EXPAND : galvanomètres réduits à leur partie haute (S-mètre et première échelle)
     const defs = el('defs', {}, g);
-    for (const [sd, x0] of [['A', X(5)], ['B', X(289)]]) {
+    for (const [sd, x0] of [['A', X(rightSide('A') ? 289 : 5)], ['B', X(rightSide('B') ? 289 : 5)]]) {
       const cp = el('clipPath', { id: 'lcdClip' + sd }, defs);
       el('rect', { x: x0 - 2, y: Y(2), width: 194, height: 54 }, cp); // S-mètre et 1re échelle avec ses chiffres
     }
@@ -780,16 +786,18 @@
     const BOT = [['CENTER'], ['SPAN', () => openSpan()],
       ['3DSS', () => { viewTouched(); L.d3 = !L.d3; store.set('rs.face.3dss', L.d3 ? '1' : '0'); WF.h3 = []; WF.drawn = false; say(L.d3 ? '3DSS : spectre en trois dimensions (le son reçu)' : '3DSS coupé', '', 2500); render(); }], ['MONO', () => { viewTouched(); L.mono = !L.mono; store.set('rs.face.mono', L.mono ? '1' : '0'); WF.drawn = false; say(L.mono ? 'MONO : un seul VFO à l’écran, celui qui est sélectionné (MAIN ou SUB)' : 'MONO coupé : MAIN et SUB à l’écran', '', 3000); render(); }], ['MULTI', () => { viewTouched(); L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'MULTI : scope, OSCILLOSCOPE et AF-FFT du VFO sélectionné' : 'MULTI : affichage normal', '', 2500); render(); }],
       ['EXPAND', () => { viewTouched(); L.expand = !L.expand; store.set('rs.face.expand', L.expand ? '1' : '0'); say(L.expand ? 'EXPAND : galvanomètres réduits, scope agrandi' : 'EXPAND coupé : affichage normal', '', 2500); render(); }], ['HOLD', () => { L.hold = !L.hold; render(); }], ['MULTI']];
-    if (SINGLE) {
-      // Rangée du bas du FTDX10 : CENTER, 3DSS, MULTI, EXPAND, SPAN, SPEED (la fonction du bouton FUNC est dans la case près du VFO-B)
+    if (SINGLE || FACE.bot) {
+      // Rangée du bas du FTDX10 : CENTER, 3DSS, MULTI, EXPAND, SPAN, SPEED (la fonction du bouton FUNC est dans la case près du VFO-B) ;
+      // FTX-1 : CENTER, 3DSS, MULTI, SCOPE (réglages du scope : SCOPE MENU), SPAN, SPEED
       const by = (n) => BOT.find((b) => b[0] === n);
-      const extra = { EXPAND: ['EXPAND', () => toggleExpand()], SPEED: ['SPEED', () => { smAdjust('spd', 1); say('SPEED (vitesse de la cascade) : ' + WF_SPEEDS[L.wfSpeed][0], '', 2500); }] };
+      const extra = { EXPAND: ['EXPAND', () => toggleExpand()], SPEED: ['SPEED', () => { smAdjust('spd', 1); say('SPEED (vitesse de la cascade) : ' + WF_SPEEDS[L.wfSpeed][0], '', 2500); }],
+        SCOPE: ['SCOPE', () => (L.smenu ? closeSmenu() : openSmenu())] };
       const names = FACE.bot || ['CENTER', '3DSS', 'MULTI', 'EXPAND', 'SPAN', 'SPEED'];
       BOT.splice(0, BOT.length, ...names.map((n) => extra[n] || by(n) || [n]));
     }
     const bw = (c.w - 10) / BOT.length;
     LCD.bot = BOT.map(([lab, fn], j) => {
-      const x = X(5) + j * bw, last = j === BOT.length - 1 && !SINGLE;
+      const x = X(5) + j * bw, last = j === BOT.length - 1 && !SINGLE && !FACE.bot;
       const r = el('rect', { x: x + 0.5, y: Y(G.botY), width: bw - 1, height: G.botH, rx: last ? 2 : 0, class: 'lcd-bot' + (last ? ' multi' : '') }, g);
       const t = el('text', { x: x + bw / 2, y: Y(last ? G.botY + 8.5 : G.botY + G.botH / 2 + 3.5), class: 'lcd-bott', 'text-anchor': 'middle' }, g, lab);
       const t2 = last ? el('text', { x: x + bw / 2, y: Y(G.botY + 18), class: 'lcd-bott2', 'text-anchor': 'middle' }, g, '') : null;
@@ -2917,9 +2925,9 @@
     if (LCD.placeScope) LCD.placeScope(up);
     if (SINGLE) return layoutSingle(up);
     for (const sd of ['A', 'B']) {
-      const show = !L.mono || sd === side, dx = L.mono && sd === 'B' ? -half : 0;
+      const show = !L.mono || sd === side, dx = L.mono && rightSide(sd) ? -half : 0;
       LCD['m' + sd].g.style.display = show ? '' : 'none';
-      LCD['m' + sd].g.setAttribute('transform', L.mono && sd === 'B' ? 'translate(' + (X(5) - X(289)) + ',0)' : '');
+      LCD['m' + sd].g.setAttribute('transform', L.mono && rightSide(sd) ? 'translate(' + (X(5) - X(289)) + ',0)' : '');
       if (L.expand) LCD['m' + sd].g.setAttribute('clip-path', 'url(#lcdClip' + sd + ')'); else LCD['m' + sd].g.removeAttribute('clip-path');
       LCD['v' + sd].g.style.display = show ? '' : 'none';
       LCD['v' + sd].g.setAttribute('transform', dx || up ? 'translate(' + dx + ',' + -up + ')' : '');
@@ -2937,7 +2945,7 @@
       } else f.g.removeAttribute('transform');
       if (L.mono && sd !== side) f.g.style.display = 'none';
       // Cases : sur toute la largeur en MONO, sur sa moitié sinon
-      const cw = L.mono ? (W - 14) / 5 : (half - 4) / 5, x0 = L.mono ? X(5) : X(5 + (sd === 'B' ? half : 0));
+      const cw = L.mono ? (W - 14) / 5 : (half - 4) / 5, x0 = L.mono ? X(5) : X(5 + (rightSide(sd) ? half : 0));
       LCD['c' + sd].forEach((c, j) => {
         const x = x0 + j * cw;
         for (const r of [c.r, c.h]) { r.setAttribute('x', x + 0.5); r.setAttribute('width', cw - 1); }
@@ -3517,6 +3525,14 @@
       funcAdjust(L.funcSel, notches);
       if (L.funcSel === 'step') { const sd = activeSide(), f = sd === 'B' ? pendF.B : pendF.A; return showTip(ev, 'STEP DIAL ' + (sd === 'B' ? 'SUB ' : 'MAIN ') + (f ? fmtFreq(f) + ' MHz' : '')); }
       return showTip(ev, FUNC_BY[L.funcSel][1] + ' ' + FUNC_BY[L.funcSel][2](S()));
+    }
+    // SUB DIAL (FTX-1) : fréquence du SUB (VFO B), quel que soit le récepteur sélectionné
+    if (k.subDial) {
+      const cur = s.freqB;
+      if (cur == null) return;
+      const step = L.fine ? 1 : L.fast ? 1000 : 100, hz = Math.round((cur + notches * step) / step) * step;
+      tuneTo('B', hz);
+      return showTip(ev, 'SUB ' + fmtFreq(hz) + ' MHz');
     }
     if (k.dial || k.multi) {
       if (k.multi && (s.rit || s.xit)) {
