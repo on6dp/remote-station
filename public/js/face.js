@@ -613,9 +613,12 @@
   }
   // Galvanomètre : arcs concentriques autour d'un pivot sous le cadran, aiguille rouge
   const ARC_SPAN = 19 * Math.PI / 180;
-  function arcPt(cx, cy, r, f) { const a = -ARC_SPAN + 2 * ARC_SPAN * f; return [cx + r * Math.sin(a), cy - r * Math.cos(a)]; }
-  function arcPath(cx, cy, r, f0, f1) {
-    const p0 = arcPt(cx, cy, r, f0), p1 = arcPt(cx, cy, r, f1);
+  function arcPt(cx, cy, r, f, sp) { const sa = sp || ARC_SPAN, a = -sa + 2 * sa * f; return [cx + r * Math.sin(a), cy - r * Math.cos(a)]; }
+  // FTX-1 : arc SWR aussi large que l'arc S (angle un peu plus ouvert sur un rayon plus petit)
+  const ftxSwrSpan = (r) => Math.asin(244 * Math.sin(ARC_SPAN) / r);
+  const swrNeedle = (m, f) => (m.swrSpan ? 0.5 + (f - 0.5) * m.swrSpan / ARC_SPAN : f); // fraction de l'aiguille pour un point de l'échelle SWR
+  function arcPath(cx, cy, r, f0, f1, sp) {
+    const p0 = arcPt(cx, cy, r, f0, sp), p1 = arcPt(cx, cy, r, f1, sp);
     return 'M' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + 'A' + r + ' ' + r + ' 0 0 1 ' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1);
   }
   const S_POS = (raw) => (raw == null ? 0 : raw <= 130 ? raw / 130 * 0.55 : Math.min(1, 0.55 + (raw - 130) / 125 * 0.45));
@@ -626,7 +629,7 @@
       m.title = el('text', { x: cx, y: y0 + 8, class: 'lcd-ttl', 'text-anchor': 'middle' }, g, side === 'A' ? 'PO METER' : 'ALC METER');
     } else m.title = el('text', { x: cx, y: y0 + 8, style: 'display:none' }, g, '');
     const S_SC = ['S', 244, [[0.05, '1'], [0.17, '3'], [0.29, '5'], [0.41, '7'], [0.55, '9'], [0.7, '+20', 1], [0.84, '+40', 1], [0.97, '+60', 1]], true];
-    const SWR_SC = ['SWR', 229, [[0.05, '1.0'], [0.24, '1.5'], [0.36, '2'], [0.5, '3'], [0.66, '5'], [0.95, '∞']]];
+    const SWR_SC = ['SWR', FACE && FACE.meterFtx ? 226 : 229, [[0.05, '1.0'], [0.24, '1.5'], [0.36, '2'], [0.5, '3'], [0.66, '5'], [0.95, '∞']]];
     // FTX-1 : comme sur le TRX — MAIN : S, SWR et la barre VOL ; SUB : S seul
     const scales = FACE && FACE.meterFtx ? (side === 'A' ? [S_SC, SWR_SC] : [S_SC]) : side === 'A'
       ? [['S', 244, [[0.05, '1'], [0.17, '3'], [0.29, '5'], [0.41, '7'], [0.55, '9'], [0.7, '+20', 1], [0.84, '+40', 1], [0.97, '+60', 1]], true],
@@ -638,24 +641,27 @@
         ['ID', 214, [[0.05, '0'], [0.3, '5'], [0.55, '10'], [0.8, '15']]],
         ['SWR', 199, [[0.05, '1.0'], [0.24, '1.5'], [0.36, '2'], [0.5, '3'], [0.66, '5'], [0.95, '∞']]]];
     for (const [name, r, ticks, isS] of scales) {
+      // FTX-1 : l'arc SWR va aussi loin que l'arc S, chiffres au-dessus de l'arc (entre les deux arcs), comme sur le TRX
+      const ftxSwr = FACE && FACE.meterFtx && name === 'SWR', sp = ftxSwr ? ftxSwrSpan(r) : undefined;
+      if (ftxSwr) m.swrSpan = sp;
       if (isS) {
         el('path', { d: arcPath(cx, cy, r, 0, 0.55), class: 'mtr-arc' }, g);
         el('path', { d: arcPath(cx, cy, r, 0.55, 1), class: 'mtr-arc blue' }, g);
-      } else el('path', { d: arcPath(cx, cy, r, 0, name === 'ALC' ? 0.5 : 0.92), class: 'mtr-arc' + (name === 'ALC' ? ' thick' : '') }, g);
+      } else el('path', { d: arcPath(cx, cy, r, 0, name === 'ALC' ? 0.5 : 0.92, sp), class: 'mtr-arc' + (name === 'ALC' ? ' thick' : '') }, g);
       for (const [f, lab, blue] of ticks) {
-        const p = arcPt(cx, cy, r, f), q = arcPt(cx, cy, isS ? r + 4 : r - 3, f);
+        const p = arcPt(cx, cy, r, f, sp), q = arcPt(cx, cy, isS || ftxSwr ? r + 4 : r - 3, f, sp);
         el('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1], class: 'mtr-tick' + (blue ? ' blue' : '') }, g);
         // Chiffres écartés des arcs (15 unités entre deux arcs) : au-dessus de l'arc S, à mi-chemin entre deux arcs pour les autres
-        const tp = arcPt(cx, cy, isS ? r + 9 : r - 10.5, f);
+        const tp = arcPt(cx, cy, isS ? r + 9 : ftxSwr ? r + 6.5 : r - 10.5, f, sp);
         el('text', { x: tp[0], y: tp[1], class: 'mtr-num' + (blue ? ' blue' : '') + (isS ? ' big' : ''), 'text-anchor': 'middle' }, g, lab);
       }
-      const lp = arcPt(cx, cy, r - (isS ? 0 : 3), -0.04);
+      const lp = arcPt(cx, cy, r - (isS ? 0 : 3), -0.04, sp);
       el('text', { x: lp[0] - 2, y: lp[1] + 3, class: 'mtr-name' + (isS ? ' big' : ''), 'text-anchor': 'end' }, g, name);
     }
     if (FACE && FACE.meterFtx && side === 'A') { // barre VOL (volume AF du MAIN), sous l'arc SWR
-      el('text', { x: x0 + 18, y: y0 + 70, class: 'mtr-name big', 'text-anchor': 'start' }, g, 'VOL');
-      el('line', { x1: x0 + 42, y1: y0 + 67, x2: x0 + w - 10, y2: y0 + 67, class: 'mtr-vol0' }, g);
-      m.vol = el('line', { x1: x0 + 42, y1: y0 + 67, x2: x0 + 42, y2: y0 + 67, class: 'mtr-vol' }, g);
+      el('text', { x: x0 + 18, y: y0 + 79, class: 'mtr-name big', 'text-anchor': 'start' }, g, 'VOL');
+      el('line', { x1: x0 + 42, y1: y0 + 76, x2: x0 + w - 10, y2: y0 + 76, class: 'mtr-vol0' }, g);
+      m.vol = el('line', { x1: x0 + 42, y1: y0 + 76, x2: x0 + 42, y2: y0 + 76, class: 'mtr-vol' }, g);
       m.volW = w - 52;
     }
     m.needle = el('line', { x1: cx, y1: cy, x2: cx, y2: cy - 250, class: 'mtr-needle' }, g);
@@ -4136,7 +4142,7 @@
       if (FACE.meterFtx && tx) {
         // FTX-1 : en émission, l'aiguille du MAIN passe sur l'échelle SWR (puissance écrite à côté) ; SUB au repos
         const swr = R.swrValue ? R.swrValue(s.m6) : null, w = s.m5 != null ? s.m5 / 255 * maxW : null;
-        f = side === 'A' && swr ? Math.min(0.95, swr <= 1.5 ? 0.05 + (swr - 1) / 0.5 * 0.19 : swr <= 2 ? 0.24 + (swr - 1.5) / 0.5 * 0.12 : swr <= 3 ? 0.36 + (swr - 2) * 0.14 : 0.5 + (swr - 3) / 2 * 0.16) : side === 'A' ? 0.05 : 0;
+        f = side === 'A' && swr ? swrNeedle(m, Math.min(0.95, swr <= 1.5 ? 0.05 + (swr - 1) / 0.5 * 0.19 : swr <= 2 ? 0.24 + (swr - 1.5) / 0.5 * 0.12 : swr <= 3 ? 0.36 + (swr - 2) * 0.14 : 0.5 + (swr - 3) / 2 * 0.16)) : side === 'A' ? swrNeedle(m, 0.05) : 0;
         val = side === 'A' ? [swr ? 'SWR ' + swr.toFixed(1) : '', w != null ? Math.round(w) + ' W' : ''].filter(Boolean).join('  ') : '';
       } else if (tx && side === 'A') {
         // PO : 0–250 W sur l'échelle du TRX (0,03 … 0,88)
