@@ -846,10 +846,11 @@
       if (FACE.vfoBadges) {
         // FTX-1 : étiquettes comme sur le TRX — [MAIN|SUB][VFO], dessous [RX] vert ou [TXRX] / [TX] rouge, puis le mode encadré
         const nm = side === 'A' ? 'MAIN' : 'SUB', nw = side === 'A' ? 27 : 21;
-        el('rect', { x: x0 + 1, y: Y(87), width: nw, height: 11, rx: 1.2, class: 'lcd-vb-n' }, g);
-        el('text', { x: x0 + 1 + nw / 2, y: Y(95.6), class: 'lcd-vb-t', 'text-anchor': 'middle' }, g, nm);
-        el('rect', { x: x0 + 2 + nw, y: Y(87), width: 22, height: 11, rx: 1.2, class: 'lcd-vb-v' }, g);
-        el('text', { x: x0 + 13 + nw, y: Y(95.6), class: 'lcd-vb-t', 'text-anchor': 'middle' }, g, 'VFO');
+        v.nmR = el('rect', { x: x0 + 1, y: Y(87), width: nw, height: 11, rx: 1.2, class: 'lcd-vb-n' }, g);
+        v.nmT = el('text', { x: x0 + 1 + nw / 2, y: Y(95.6), class: 'lcd-vb-t', 'text-anchor': 'middle' }, g, nm);
+        v.vbR = el('rect', { x: x0 + 2 + nw, y: Y(87), width: 22, height: 11, rx: 1.2, class: 'lcd-vb-v' }, g);
+        v.vbT = el('text', { x: x0 + 13 + nw, y: Y(95.6), class: 'lcd-vb-t', 'text-anchor': 'middle' }, g, 'VFO');
+        v.stY = [Y(100), Y(108.6), Y(87), Y(95.6)];
         v.stR = el('rect', { x: x0 + 1, y: Y(100), width: 30, height: 11, rx: 1.2, class: 'lcd-vb-st' }, g);
         v.stT = el('text', { x: x0 + 16, y: Y(108.6), class: 'lcd-vb-t', 'text-anchor': 'middle' }, g, '');
         v.badge.setAttribute('y', Y(113)); v.badge.setAttribute('class', 'lcd-mode ftx');
@@ -4423,8 +4424,13 @@
       }
       v.tx.classList.toggle('on', tx && txSide === side);
       if (v.stR) { // FTX-1 : RX (vert), TXRX / TX (rouge) sous [MAIN|SUB][VFO]
-        const isTx = txSide === side, isRx = true; // FTX-1 : [RX] sur l'autre VFO, comme sur le TRX (même en réception simple)
-        const t = isTx && isRx ? 'TXRX' : isTx ? 'TX' : isRx ? 'RX' : '';
+        // FTX-1 en SPLIT, comme sur le TRX : VFO d'émission = [TX] seul en haut ; VFO de réception = [MAIN|SUB][RX]
+        const spl = !!s.split, isTx = txSide === side, isRx = !spl || !isTx;
+        for (const e of [v.nmR, v.nmT]) e.style.display = spl && isTx ? 'none' : '';
+        for (const e of [v.vbR, v.vbT]) e.style.display = spl && isTx ? 'none' : '';
+        v.vbT.textContent = spl ? 'RX' : 'VFO'; v.vbR.classList.toggle('rx', spl);
+        v.stR.setAttribute('y', spl ? v.stY[2] : v.stY[0]); v.stT.setAttribute('y', spl ? v.stY[3] : v.stY[1]);
+        const t = spl ? (isTx ? 'TX' : '') : isTx ? 'TXRX' : 'RX';
         v.stT.textContent = t;
         v.stR.style.display = t ? '' : 'none';
         v.stR.setAttribute('width', t.length > 2 ? 30 : 18);

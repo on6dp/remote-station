@@ -116,6 +116,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .lcd-mode.ftx { fill: #000; stroke: #e9edf2; stroke-width: 1.3; }
 #face .lcd-vb-n { fill: #6d9be8; }
 #face .lcd-vb-v { fill: #2f8cf0; }
+#face .lcd-vb-v.rx { fill: #3aa83a; }
 #face .lcd-vb-st { fill: #3aa83a; }
 #face .lcd-vb-st.tx { fill: #d8261c; }
 #face .lcd-vb-st.on { fill: #ff2a1a; filter: url(#glow); }
