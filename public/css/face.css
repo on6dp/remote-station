@@ -384,6 +384,15 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 /* FTX-1 : noms des modes et touches sous l'écran (CENTER, 3DSS, MULTI…) en blanc gras, un peu plus grands */
 #face[data-model='ftx1'] .lcd-modet { fill: #fff; font-size: 13px; font-weight: 800; }
 #face[data-model='ftx1'] .lcd-bott { fill: #fff; font-size: 13px; font-weight: 800; }
+/* FTX-1 : barre d'état en haut de l'écran (FAST, VOX, TUNE ANT1, fonction du bouton FUNC) */
+#face .lcd-sbar { fill: #9ba1a6; }
+#face .lcd-sfast { fill: #3f7fe0; }
+#face .lcd .lcd-sfastt { fill: #fff; font-size: 10.5px; font-weight: 800; }
+#face .lcd .lcd-stxt { fill: #fff; font-size: 11px; font-weight: 800; paint-order: stroke; stroke: #3a3f45; stroke-width: 1.4px; }
+#face .lcd .lcd-stune { fill: #5f646a; font-size: 11px; font-weight: 800; }
+#face .lcd .lcd-stune.on { fill: #ff3b1c; }
+#face .lcd-sfn { fill: #2a2d31; stroke: #ffa600; stroke-width: 1.2; }
+#face .lcd .lcd-sfnt { fill: #ffa600; font-size: 10.5px; font-weight: 800; }
 /* FTX-1 : écran FUNC (3 pages) — cases grises, nom en blanc, valeur en orange, cadre orange sur la case choisie */
 #face .ftxf .func-cell { fill: #4b5552; stroke: #6d7a76; stroke-width: .8; }
 #face .ftxf .func-cell.off { fill: #3a423f; }

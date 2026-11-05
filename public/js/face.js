@@ -592,8 +592,10 @@
   const S_POS = (raw) => (raw == null ? 0 : raw <= 130 ? raw / 130 * 0.55 : Math.min(1, 0.55 + (raw - 130) / 125 * 0.45));
   function buildMeter(g, x0, y0, w, side) {
     const cx = x0 + w / 2 + 4, cy = y0 + 268, m = { cx, cy };
-    el('rect', { x: x0, y: y0, width: w, height: 10, class: 'lcd-tbar' }, g);
-    m.title = el('text', { x: cx, y: y0 + 8, class: 'lcd-ttl', 'text-anchor': 'middle' }, g, side === 'A' ? 'PO METER' : 'ALC METER');
+    if (!(FACE && FACE.statusBar)) { // FTX-1 : pas de titre « PO METER » ; la barre d'état du TRX est au-dessus (buildStatus)
+      el('rect', { x: x0, y: y0, width: w, height: 10, class: 'lcd-tbar' }, g);
+      m.title = el('text', { x: cx, y: y0 + 8, class: 'lcd-ttl', 'text-anchor': 'middle' }, g, side === 'A' ? 'PO METER' : 'ALC METER');
+    } else m.title = el('text', { x: cx, y: y0 + 8, style: 'display:none' }, g, '');
     const scales = side === 'A'
       ? [['S', 244, [[0.05, '1'], [0.17, '3'], [0.29, '5'], [0.41, '7'], [0.55, '9'], [0.7, '+20', 1], [0.84, '+40', 1], [0.97, '+60', 1]], true],
         ['PO', 229, [[0.03, '0'], [0.2, '10'], [0.38, '50'], [0.52, '100'], [0.64, '150'], [0.76, '200'], [0.88, '250']]],
@@ -714,6 +716,35 @@
   }
   // Petit « V » bleu du CONTOUR, dans le haut du filtre (repassé en bleu par-dessus le trait rouge), comme sur le TRX
   const contV = (x, top, nw, dep) => 'M' + (x - nw).toFixed(1) + ' ' + top.toFixed(1) + 'L' + x.toFixed(1) + ' ' + (top + dep).toFixed(1) + 'L' + (x + nw).toFixed(1) + ' ' + top.toFixed(1);
+  // FTX-1 : barre d'état en haut de l'écran, comme sur le TRX : FAST, VOX, TUNE (rouge : tuner en service) ANT1 / ANT2,
+  // et à droite la fonction du bouton FUNC dans un cadre orange (ex. RF POWER, TUNER)
+  function buildStatus(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v, sb = LCD.sb = {};
+    el('rect', { x: X(5), y: Y(1), width: c.w - 10, height: 12.5, rx: 1.5, class: 'lcd-sbar' }, g);
+    sb.fastR = el('rect', { x: X(146), y: Y(1.8), width: 36, height: 10.9, rx: 1.5, class: 'lcd-sfast' }, g);
+    sb.fast = el('text', { x: X(164), y: Y(10.9), class: 'lcd-sfastt', 'text-anchor': 'middle' }, g, 'FAST');
+    sb.vox = el('text', { x: X(222), y: Y(10.9), class: 'lcd-stxt', 'text-anchor': 'middle' }, g, 'VOX');
+    sb.tune = el('text', { x: X(298), y: Y(10.9), class: 'lcd-stune', 'text-anchor': 'end' }, g, 'TUNE');
+    sb.ant = el('text', { x: X(302), y: Y(10.9), class: 'lcd-stxt' }, g, 'ANT1');
+    sb.fnR = el('rect', { x: X(c.w - 108), y: Y(1.6), width: 102, height: 11.3, rx: 1.5, class: 'lcd-sfn' }, g);
+    sb.fn = el('text', { x: X(c.w - 57), y: Y(10.9), class: 'lcd-sfnt', 'text-anchor': 'middle' }, g, '');
+    const h = el('rect', { x: X(c.w - 108), y: Y(1), width: 102, height: 12.5, class: 'hs lcd-hit' }, g);
+    el('title', {}, h, 'Fonction du bouton FUNC (appui de 2 s sur FUNC : écran FUNC)');
+    h.addEventListener('click', () => doAct({ act: { local: 'funcLong' } }));
+  }
+  function drawStatus(s) {
+    const sb = LCD.sb;
+    if (!sb) return;
+    const fast = !!L.fast;
+    sb.fastR.style.display = fast ? '' : 'none'; sb.fast.style.display = fast ? '' : 'none';
+    sb.vox.style.display = s.vox ? '' : 'none';
+    sb.tune.classList.toggle('on', !!s.tuner);
+    sb.tune.style.display = s.tuner == null ? 'none' : '';
+    sb.ant.textContent = 'ANT' + (s.ant || 1);
+    const f = FUNC_BY[L.funcSel];
+    sb.fn.textContent = f ? f[1] : '';
+    sb.fnR.style.display = f ? '' : 'none';
+  }
   function buildLcd() {
     const c = FACE.lcd;
     const X = (v) => c.x + v, Y = (v) => c.y + v;
@@ -728,6 +759,7 @@
     LCD.fA = buildFilter(g, X(199 + dA), Y(14), 82, 72);
     LCD.mB = buildMeter(gmB, X(5 + dB), Y(4), 190, 'B'); LCD.mB.g = gmB;
     LCD.fB = buildFilter(g, X(199 + dB), Y(14), 82, 72);
+    if (FACE.statusBar) buildStatus(g, c);
     // Fréquences
     const half = (c.w - 10) / 2;
     LCD.half = half; LCD.X = X; LCD.Y = Y; LCD.cw0 = c.w;
@@ -4133,6 +4165,7 @@
     ssFollow(s);
     for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) || (SINGLE && sd === 'B') || !!LCD.ich ? 'none' : '';
     drawFunc(s);
+    drawStatus(s);
     for (const b of LCD.bot || []) {
       if (b.t2) b.t2.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
       if (b.lab === 'HOLD') b.r.classList.toggle('on', !!L.hold);
