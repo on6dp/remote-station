@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.122** — FTX-1 : DISP, cases ATT / IPO de l'autre côté : explication (CAT seulement sur le côté actif ; passage par CAT bloqué en réception simple)
 - **0.37.121** — FTX-1 : DISP 2 et 3 refaits avec les vrais éléments de l'écran (les copies s'affichaient en noir dans certains navigateurs)
 - **0.37.120** — FTX-1 : touche DISP comme sur le TRX (écran normal → un VFO + scope → MAIN et SUB l'un sur l'autre sans scope, avec ATT / IPO / DNF / AGC → filtres agrandis) ; dashboard : DÉCONNEXION à côté de PRENDRE / LIBÉRER LA MAIN, en rouge
 - **0.37.119** — Faces avant : PRENDRE / LIBÉRER LA MAIN et DÉCONNEXION de même taille ; DÉCONNEXION sur fond rouge, en blanc gras

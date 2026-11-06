@@ -4247,6 +4247,11 @@
     if (!needControl()) return;
     const s = S(), b = sd === 'B' ? 'B' : '', id = ['att', 'preamp', 'dnf', 'agc'][i] + b;
     if (!R.CONTROL[id]) return say('Pas disponible à distance pour ce VFO.', 'warn', 3000);
+    // ATT / IPO : le CAT du FTX-1 (RA0 / PA0) n'agit que sur le côté actif ; pour l'autre côté il faudrait passer dessus
+    // par CAT (VS), ce qui est bloqué en réception simple (le 25/10, VS1 a mis le FTX-1 en émission)
+    const act = activeSide();
+    if ((i === 0 || i === 1) && sd !== act && s.dualRx !== 1 && !(me && me.subSingle))
+      return say('ATT / IPO du ' + (sd === 'B' ? 'SUB' : 'MAIN') + ' : le FTX-1 ne les lit et ne les règle par CAT que sur le côté actif. Passer sur l’autre côté par CAT est bloqué en réception simple (le 25/10, cela a mis le TRX en émission). Un administrateur peut l’autoriser (réglage ftx1SubSingle) après un essai sur charge fictive.', 'warn', 9000);
     const v = s[id] || 0;
     if (i === 0 || i === 2) setCtl(id, v ? 0 : 1);
     else if (i === 1) setCtl(id, (v + 1) % 3);
