@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.100 | [RemoteStation-Setup-0.37.100.exe](0.37.100/RemoteStation-Setup-0.37.100.exe) | [remote-station-0.37.100.tar.gz](0.37.100/remote-station-0.37.100.tar.gz) | FTX-1 : le TRX suit la progression — [empreintes SHA-256](0.37.100/SHA256SUMS.txt) |
 | 0.37.99 | [RemoteStation-Setup-0.37.99.exe](0.37.99/RemoteStation-Setup-0.37.99.exe) | [remote-station-0.37.99.tar.gz](0.37.99/remote-station-0.37.99.tar.gz) | FTX-1 : − / + en continu, DSP ou FUNC — [empreintes SHA-256](0.37.99/SHA256SUMS.txt) |
 | 0.37.98 | [RemoteStation-Setup-0.37.98.exe](0.37.98/RemoteStation-Setup-0.37.98.exe) | [remote-station-0.37.98.tar.gz](0.37.98/remote-station-0.37.98.tar.gz) | FTX-1 : NOTCH / CONTOUR dessinés — [empreintes SHA-256](0.37.98/SHA256SUMS.txt) |
 | 0.37.97 | [RemoteStation-Setup-0.37.97.exe](0.37.97/RemoteStation-Setup-0.37.97.exe) | [remote-station-0.37.97.tar.gz](0.37.97/remote-station-0.37.97.tar.gz) | FTX-1 : SUB SHIFT sur une ligne — [empreintes SHA-256](0.37.97/SHA256SUMS.txt) |

@@ -3498,22 +3498,32 @@
   const FTX1F = !!(FACE && FACE.model === 'ftx1');
   const sdk = (id) => (activeSide() === 'B' && R.CONTROL[id + 'B'] ? id + 'B' : id); // côté du récepteur sélectionné
   const msCode = (c) => (c == null ? '—' : (c <= 5 ? [30, 50, 100, 150, 200, 250][c] : 300 + (c - 6) * 100) + 'ms');
-  // Réglage par crans, fluide : la valeur affichée suit chaque cran, une seule commande part au TRX 250 ms après le dernier cran
+  // Envoi au TRX pendant qu'on tourne / tient − +, au plus une commande toutes les 250 ms (le TRX suit la progression,
+  // sans rafale de commandes qui le ferait répondre « ?; ») ; la dernière valeur part toujours
+  const THR = {};
+  function throttleSet(k, v, fn) {
+    const t = THR[k] || (THR[k] = { timer: 0 });
+    t.v = v;
+    if (t.timer) return;
+    fn(v); t.sent = v;
+    const tick = () => { if (t.v !== t.sent) { fn(t.v); t.sent = t.v; t.timer = setTimeout(tick, 250); } else t.timer = 0; };
+    t.timer = setTimeout(tick, 250);
+  }
+  // Réglage par crans, fluide : la valeur affichée suit chaque cran, le TRX suit toutes les 250 ms
   L.stepT = {};
   const stepK = (kf, lo, hi, st) => (s, d) => {
     const k = kf();
     if (!R.CONTROL[k]) return say('Pas disponible sur ce TRX.', 'warn', 3000);
     const cur = s[k] != null ? s[k] : lo, v = Math.max(lo, Math.min(hi, Math.round((cur + d * st) / st) * st));
     pend[k] = { v, at: Date.now() };
-    clearTimeout(L.stepT[k]);
-    L.stepT[k] = setTimeout(() => setCtl(k, v), 250);
+    throttleSet(k, v, (x) => setCtl(k, x));
   };
   const cycK = (kf) => (s, d) => { const k = kf(), c = R.CONTROL[k]; if (!c || !c.options) return; const i = c.options.findIndex((o) => o[0] === s[k]); setCtl(k, c.options[((i < 0 ? 0 : i) + (d < 0 ? c.options.length - 1 : 1)) % c.options.length][0]); };
   const togK = (kf) => (s) => tog(kf())(s);
   const offLvl = (v) => (v == null ? '—' : v ? String(v) : 'OFF');
   const optTxt = (id, v) => { const c = R.CONTROL[id]; const o = c && c.options && c.options.find((x) => x[0] === v); return o ? o[1] : '—'; };
   // RF POWER au bouton FUNC : 1 W par cran avec le SPA-1 (5 à 100 W), 0,5 W avec la tête seule. Les crans rapprochés sont
-  // regroupés : une seule commande PC 300 ms après le dernier cran (une rafale de PC faisait répondre « ?; » au FTX-1)
+  // envoyés au plus toutes les 250 ms pendant qu'on tourne (une rafale de PC faisait répondre « ?; » au FTX-1)
   function ftxPower(s, d) {
     const head = s.powerHead === '1' ? '1' : '2', st = head === '1' ? 0.5 : 1, lo = head === '1' ? 0.5 : 5;
     const hi = Math.min((me && me.maxWatts) || 100, head === '1' ? 10 : 100);
@@ -3521,8 +3531,7 @@
     const w = Math.max(lo, Math.min(hi, Math.round((base + d * st) / st) * st));
     L.pwrPend = { w, at: Date.now() };
     pend.power = { v: w, at: Date.now() };
-    clearTimeout(L.pwrT);
-    L.pwrT = setTimeout(() => { send({ t: 'set', power: w }); pend.power = { v: w, at: Date.now() }; }, 250);
+    throttleSet('power', w, (x) => { send({ t: 'set', power: x }); pend.power = { v: x, at: Date.now() }; });
   }
   const FO = '#ffb020';
   const info = (id, lab) => [id, lab, () => '', null, FO];
@@ -4191,7 +4200,7 @@
   function dspAdjust(n) {
     const sd = L.dsp; if (!sd || !needControl()) return;
     const s = S(), t = dspTabs(sd)[L.dspTab];
-    const later = (k, v) => { pend[k] = { v, at: Date.now() }; clearTimeout(L.dspT[k]); L.dspT[k] = setTimeout(() => setCtl(k, v), 200); render(); };
+    const later = (k, v) => { pend[k] = { v, at: Date.now() }; throttleSet(k, v, (x) => setCtl(k, x)); render(); };
     if (t === 'SHIFT') { const k = dspK(sd, 'shift'), c = R.CONTROL[k]; if (c) later(k, Math.max(c.min, Math.min(c.max, (s[k] || 0) + n * (c.step || 20)))); }
     else if (t === 'WIDTH') {
       const k = dspK(sd, 'width'), md = (sd === 'B' ? s.modeB : s.mode) || '', tab = (R.widthTable && R.widthTable(md)) || [];
