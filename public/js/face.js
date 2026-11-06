@@ -5228,6 +5228,7 @@
     // Un point d'écran = le plus fort des points de la FFT qu'il couvre (les pics fins restent visibles)
     const win = FACE.meterFtx && !/^AF-FFT/.test(name || '') ? ftxWin(name) : null; // FTX-1 : fenêtre en fréquences (D-MODE, SPAN)
     const col = win ? ftxCols(sp, nb, maxHz, win, w) : new Float32Array(w);
+    const noData = !!win && col.every((v) => v < 0); // FTX-1 : le son reçu tombe hors de la fenêtre (FIX, ou CURSOR décalé)
     if (!win) for (let px = 0; px < w; px++) {
       let m = 0;
       if (nb < w) {
@@ -5318,6 +5319,13 @@
     c2.fillStyle = FACE.meterFtx ? '#fff' : 'rgba(200,210,225,.85)';
     c2.font = ICOM ? 'bold 12px Arial, sans-serif' : FACE.meterFtx ? 'bold 14px "Roboto Mono", monospace' : '9px "Roboto Mono", monospace'; // FTX-1 : échelle en blanc gras, lisible
     c2.textAlign = 'center';
+    if (noData) {
+      // Rien à montrer : le dire plutôt qu'un écran vide (le scope du TRX, lui, voit toute la bande ; il ne passe pas par le CAT)
+      c2.save(); c2.fillStyle = 'rgba(210,220,235,.85)'; c2.font = 'bold ' + Math.max(9, Math.min(13, Math.floor(w / 48))) + 'px Verdana, Arial, sans-serif'; c2.textAlign = 'center';
+      c2.fillText('La fréquence écoutée est hors de cette fenêtre : la page ne reçoit que le son du TRX,', x0 + w / 2, y0 + sh / 2 - 4);
+      c2.fillText('pas son scope. CENTER ou CURSOR (D-MODE) montrent le spectre autour de la fréquence.', x0 + w / 2, y0 + sh / 2 + 14);
+      c2.restore();
+    }
     if (rg.audScale) {
       // AUDIO SCOPE de l'IC-7300 : 0, 1.0, 2.0, 3.0, 4.0kHz, petits traits aux demi-kHz
       c2.textAlign = 'left'; c2.fillText('0', x0 + 2, y0 + h - 3);
