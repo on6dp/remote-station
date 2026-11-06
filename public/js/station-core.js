@@ -439,14 +439,38 @@
             this.forceSlow = true;
             if (this.radio.vfoSel === 1) { this._write(cmd); done(); return; }
             if (this.pollHold && Date.now() < this.pollHold) return this.log('Changement de côté en cours : ' + (FTX1.CONTROL[m.id].label || m.id) + ' ignoré');
+            // Valeur du MAIN avant (ATT / préampli) : vérifiée au retour — le réglage ne doit toucher que le SUB
+            const base = m.id.replace(/B$/, ''), mainBefore = this.radio[base];
+            const rd = base === 'att' ? { cmd: 'RA0;', re: /^RA0([01])$/, set: (x) => 'RA0' + x + ';' } : base === 'preamp' ? { cmd: 'PA0;', re: /^PA0([0-2])$/, set: (x) => 'PA0' + x + ';' } : null;
             return this._toSub(m.by, 0, () => {
-              this._write(cmd);
-              done();
+              // Un temps pour que le TRX ait fini de passer sur SUB avant la commande (sinon elle peut tomber sur le MAIN)
               setTimeout(() => {
                 if (this.catKeyed) return;
-                this.lastCtl = { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() };
-                this._toMain(m.by, () => this.log(FTX1.CONTROL[m.id].label + ' : envoyé côté SUB, retour sur MAIN'));
-              }, 200);
+                this._write(cmd);
+                done();
+                setTimeout(() => {
+                  if (this.catKeyed) return;
+                  this.lastCtl = { id: FTX1.CONTROL[m.id].label || m.id, at: Date.now() };
+                  this._toMain(m.by, () => {
+                    this.log(FTX1.CONTROL[m.id].label + ' : envoyé côté SUB, retour sur MAIN');
+                    if (!rd || mainBefore == null) return;
+                    setTimeout(() => {
+                      if (this.catKeyed) return;
+                      this._write(rd.cmd);
+                      this._await(rd.re, 1500, (t) => {
+                        const mm = t && rd.re.exec(t);
+                        if (!mm || +mm[1] === mainBefore) return;
+                        // Le TRX a changé le MAIN au lieu du SUB : valeur du MAIN remise, signalé
+                        this._write(rd.set(mainBefore));
+                        this.radio[base] = mainBefore; this.dirty = true; this._push(true);
+                        const why = (FTX1.CONTROL[m.id].label || m.id) + ' : le TRX a changé le réglage du MAIN au lieu du SUB — MAIN remis comme avant';
+                        this.log(why, 'st-bad');
+                        if (this.wsUp) this.sendWs({ t: 'trx_note', text: why });
+                      });
+                    }, 300);
+                  });
+                }, 500);
+              }, 500);
             });
           }
           // Réglage du côté MAIN que le CAT n'adresse qu'au côté actif (ATT / préampli du VFO A, FTX-1) avec SUB actif :
