@@ -4908,6 +4908,8 @@
   }
   // Un scope : spectre en haut, cascade en dessous (elle descend d'une ligne à chaque tour), échelle en bas
   function drawScope(c2, rg, pal, nb, lvl, maxHz) {
+    // FTX-1 : spectre et cascade moins « généreux » (comme sur le TRX, le spectre reste dans le bas de sa zone) ; D-LEVEL règle en plus
+    const ftxDim = FACE.meterFtx ? 0.12 : 0, ftxH = FACE.meterFtx ? 0.7 : 1;
     const { sp, x0, y0, w, h, name } = rg;
     const lab = ICOM ? 15 : FACE.meterFtx ? 19 : 11, sh = rg.wf === false ? h - lab : Math.round((h - lab) * (h < 90 ? 0.5 : 0.6)); // IC-7300 : chiffres de l'échelle plus grands ; sans cascade : spectre sur toute la hauteur
     if (rg.sep === 'h') { c2.fillStyle = '#2b3546'; c2.fillRect(x0, y0 - 2, w, 2); }
@@ -4937,7 +4939,7 @@
         const i0 = Math.floor(px / w * nb), i1 = Math.max(i0 + 1, Math.floor((px + 1) / w * nb));
         for (let i = i0; i < i1 && i < nb; i++) if (sp[i] > m) m = sp[i];
       }
-      col[px] = Math.max(0, Math.min(1, m + lvl));
+      col[px] = Math.max(0, Math.min(1, m + lvl - ftxDim));
     }
     // Grille
     c2.strokeStyle = 'rgba(120,130,145,.45)';
@@ -4969,12 +4971,12 @@
     c2.strokeStyle = rg.color ? 'rgb(' + rg.color.join(',') + ')' : 'rgba(205,220,255,.9)';
     c2.beginPath();
     if (rg.line) {
-      for (let px = 0; px < w; px++) { const v = col[px], y = y0 + sh - 1 - (rg.lin ? v : v * v) * (sh - 5); px ? c2.lineTo(x0 + px + 0.5, y) : c2.moveTo(x0 + 0.5, y); }
+      for (let px = 0; px < w; px++) { const v = col[px], y = y0 + sh - 1 - (rg.lin ? v : v * v) * (sh - 5) * ftxH; px ? c2.lineTo(x0 + px + 0.5, y) : c2.moveTo(x0 + 0.5, y); }
       c2.lineWidth = 1.3;
     } else for (let px = 0; px < w; px++) {
       const v = col[px];
       c2.moveTo(x0 + px + 0.5, y0 + sh - 1);
-      if (v > 0.005) c2.lineTo(x0 + px + 0.5, y0 + sh - 1 - (rg.lin ? v : v * v) * (sh - 5));
+      if (v > 0.005) c2.lineTo(x0 + px + 0.5, y0 + sh - 1 - (rg.lin ? v : v * v) * (sh - 5) * ftxH);
     }
     c2.stroke();
     c2.lineWidth = 1;
@@ -4988,7 +4990,7 @@
       c2.fillStyle = 'rgba(120,205,255,.95)';
       for (let px = 0; px < w; px++) {
         pk[px] = Math.max(col[px], pk[px] - dec);
-        if (pk[px] > 0.02) c2.fillRect(x0 + px, y0 + sh - 1 - pk[px] * pk[px] * (sh - 5) - 1, 1, 1.5);
+        if (pk[px] > 0.02) c2.fillRect(x0 + px, y0 + sh - 1 - pk[px] * pk[px] * (sh - 5) * ftxH - 1, 1, 1.5);
       }
     }
     if (rg.wf !== false) {

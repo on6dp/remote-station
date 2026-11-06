@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.103** — Face avant FTX-1 : spectre et cascade moins forts (le spectre reste dans le bas de sa zone, comme sur le TRX) ; D-LEVEL règle en plus
 - **0.37.102** — Correctif : face avant FTX-1 qui ne s'affichait plus en 0.37.101 (erreur dans face.js) ; écran DSP : changement d'onglet (SHIFT, WIDTH…) tout de suite, à l'appui ; CONTOUR doré peu profond ; le TRX suit la progression
 - **0.37.101** — Face avant FTX-1 : le TRX suit la progression des réglages (une commande au plus toutes les 250 ms) ; CONTOUR en demi-lune peu profonde, jaune doré, comme sur le TRX
 - **0.37.100** — Face avant FTX-1 : le TRX suit la progression quand on tourne un bouton ou qu'on tient − / + (une commande au plus toutes les 250 ms, la dernière valeur toujours envoyée) — écran DSP, écran FUNC, RF POWER
