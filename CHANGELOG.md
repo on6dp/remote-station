@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.114** — FTX-1 : fréquences de l'échelle du scope (CURSOR / FIX) en police plus petite si nécessaire : elles ne se chevauchent plus
 - **0.37.113** — FTX-1 : flèches R ▶ / T ▶ du scope à la même hauteur que sur le TRX
 - **0.37.112** — FTX-1 : photo de la face avant plus nette (refaite depuis l'original, accentuation, meilleure qualité)
 - **0.37.111** — FTX-1 : D-MODE CENTER comme le TRX : seulement la barre rouge (au milieu sans SPLIT ; en SPLIT à la fréquence d'émission, elle se déplace quand on tourne le grand bouton)

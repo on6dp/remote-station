@@ -4991,8 +4991,13 @@
       for (const k of [1, 2]) for (const sgn of [-1, 1]) c2.fillText((sgn < 0 ? '−' : '+') + fo(k * stp), x0 + w / 2 + sgn * k * w / 5, ly);
     } else {
       // CURSOR / FIX : fréquences de la fenêtre, bords compris (14.000.000 14.020.000 … 14.100.000)
-      c2.font = 'bold 12px "Roboto Mono", monospace';
-      const lw = c2.measureText(fmtRf(win.start + win.span)).width, every = lw + 16 > w / 5 ? 2 : 1; // trop serré : une sur deux
+      // Taille de police réduite jusqu'à ce que les fréquences ne se touchent plus (les bords sont alignés à gauche / à droite :
+      // il faut 1,5 largeur de texte entre deux traits) ; si c'est encore trop serré, une sur deux
+      const txt = fmtRf(win.start + win.span);
+      let fs = 12, lw = 0;
+      for (; fs >= 8; fs--) { c2.font = 'bold ' + fs + 'px "Roboto Mono", monospace'; lw = c2.measureText(txt).width; if (lw * 1.5 + 10 <= w / 5) break; }
+      if (fs < 8) fs = 8;
+      const every = lw * 1.5 + 10 > w / 5 ? 2 : 1;
       for (let i = 0; i <= 5; i += every) {
         c2.textAlign = i === 0 ? 'left' : i === 5 ? 'right' : 'center';
         c2.fillText(fmtRf(win.start + i * stp), x0 + w * i / 5 + (i === 0 ? 2 : i === 5 ? -2 : 0), ly);
