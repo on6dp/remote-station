@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.108 | [RemoteStation-Setup-0.37.108.exe](0.37.108/RemoteStation-Setup-0.37.108.exe) | [remote-station-0.37.108.tar.gz](0.37.108/remote-station-0.37.108.tar.gz) | Ctrl+F5 sur la page /ftx1 — [empreintes SHA-256](0.37.108/SHA256SUMS.txt) |
 | 0.37.107 | [RemoteStation-Setup-0.37.107.exe](0.37.107/RemoteStation-Setup-0.37.107.exe) | [remote-station-0.37.107.tar.gz](0.37.107/remote-station-0.37.107.tar.gz) | Ctrl+F5 sur la page /ftx1 — [empreintes SHA-256](0.37.107/SHA256SUMS.txt) |
 | 0.37.106 | [RemoteStation-Setup-0.37.106.exe](0.37.106/RemoteStation-Setup-0.37.106.exe) | [remote-station-0.37.106.tar.gz](0.37.106/remote-station-0.37.106.tar.gz) | Ctrl+F5 sur la page /ftx1 — [empreintes SHA-256](0.37.106/SHA256SUMS.txt) |
 | 0.37.105 | [RemoteStation-Setup-0.37.105.exe](0.37.105/RemoteStation-Setup-0.37.105.exe) | [remote-station-0.37.105.tar.gz](0.37.105/remote-station-0.37.105.tar.gz) | FTX-1 : crêtes du spectre visibles — [empreintes SHA-256](0.37.105/SHA256SUMS.txt) |

@@ -4524,7 +4524,7 @@
     LCD.flags.textContent = live ? fl.join('  ·  ') : (st.station ? 'TRX muet (éteint ou câble ?)' : 'Station hors ligne');
     LCD.flags.classList.toggle('tx', tx);
     // FTX-1 : bandeau du scope comme sur le TRX — « CENTER  FAST1  SPAN  200kHz » (D-MODE, SPEED, SPAN du TRX)
-    if (FACE.meterFtx) LCD.span.textContent = ['CENTER', 'CURSOR', 'FIX'][s.dMode || 0] + '  ' + (L.hold ? 'STOP' : WF_SPEEDS[L.wfSpeed][0]) + '  SPAN  ' + SPAN_TRX[L.trxSpan] + 'Hz';
+    if (FACE.meterFtx) LCD.span.textContent = ['CENTER', 'CURSOR', 'FIX\u00a0\u00a0\u00a0\u00a0\u00a0'][s.dMode || 0] + '\u00a0\u00a0' + (L.hold ? 'STOP' : WF_SPEEDS[L.wfSpeed][0]) + '  SPAN  ' + SPAN_TRX[L.trxSpan] + 'Hz';
     else LCD.span.textContent = ['', 'SUB / MAIN · ', 'MAIN | SUB · ', 'FILTRES · '][L.disp] + spanLabel() + (L.hold ? ' · HOLD' : '');
     applyMono();
     ssFollow(s);
@@ -4922,6 +4922,55 @@
     return [{ sp: specs[0], x0: 0, y0: 0, w: W, h: H, name: '' }];
   }
   // Un scope : spectre en haut, cascade en dessous (elle descend d'une ligne à chaque tour), échelle en bas
+  // FTX-1 : échelle sous le scope (fréquences, comme le TRX) et repères R / T selon D-MODE ; aussi pour le 3DSS.
+  // x0, y0, w, h : la zone ; sh : hauteur de la zone du spectre (les repères y restent)
+  function ftxScale(c2, x0, y0, w, h, sh, name, maxHz) {
+    c2.fillStyle = '#fff'; c2.font = 'bold 14px "Roboto Mono", monospace'; c2.textAlign = 'center';
+    // FTX-1 : échelle en fréquences d'émission/réception (comme le TRX : 7.075.000), tous les 1 kHz de BF (−1 kHz en LSB)
+    const st0 = S(), sd = name === 'SUB' ? 'B' : 'A', f00 = sd === 'B' ? st0.freqB : st0.freq;
+    const md = (sd === 'B' ? st0.modeB : st0.mode) || '', sg = /LSB|-L$|^CW-L|^RTTY-L/.test(md) ? -1 : 1;
+    // Fréquence reçue (CLAR RX compris) ; en CW elle tombe sur la tonalité (PITCH) de la BF, en SSB / DATA au bord (0 Hz de BF)
+    const rit = sd === 'B' ? st0.ritB : st0.rit, clr = (sd === 'B' ? st0.clarB : st0.clar) || 0;
+    const f0 = f00 && FACE.clarCycle && rit ? f00 + clr : f00, off = /^CW/.test(md) ? (st0.cwPitch || 0) : 0;
+    const fAt = (a) => f0 + sg * (a - off), xAt = (f) => x0 + w * (sg * (f - f0) + off) / maxHz;
+    const fmtRf = (hz) => { const t = String(Math.round(hz)).padStart(7, '0'); return t.slice(0, -6) + '.' + t.slice(-6, -3) + '.' + t.slice(-3); };
+    const dm = st0.dMode || 0;
+    if (dm === 0 && f0) {
+      // D-MODE CENTER : fréquence au milieu, écarts de part et d'autre (−1.0k … +1.0k), comme sur le TRX
+      const fc = maxHz / 2, stp = maxHz > 3000 ? 1000 : 500;
+      c2.fillText(fmtRf(fAt(fc)), x0 + w / 2, y0 + h - 2);
+      for (let d = stp; d < fc - stp / 3; d += stp) for (const sgn of [-1, 1]) c2.fillText((sgn < 0 ? '−' : '+') + (d / 1000).toFixed(1) + 'k', x0 + w * (fc + sgn * d) / maxHz, y0 + h - 2);
+    } else {
+      // CURSOR / FIX : fréquences (7.075.000…) à chaque trait de la grille, bord gauche compris
+      for (let k = 1; k < maxHz / 1000; k++) c2.fillText(f0 ? fmtRf(fAt(k * 1000)) : k + 'k', x0 + w * k * 1000 / maxHz, y0 + h - 2);
+      if (f0 && w * 1000 / maxHz > 110) { c2.textAlign = 'left'; c2.fillText(fmtRf(fAt(0)), x0 + 2, y0 + h - 2); }
+    }
+    // Repères du TRX : CENTER ▼ rouge + trait ; CURSOR ▼ vert (réception) sur ▼ rouge (émission) + trait ;
+    // FIX : pareil dans la fenêtre, et hors fenêtre « R ▶ » vert / « T ▶ » rouge sur le bord (comme sur le TRX)
+    if (f0 && !/^AF-FFT/.test(name || '')) {
+      const fT = st0.split ? (sd === 'B' ? st0.freq : st0.freqB) : f0;
+      const RED = '#ff2a1a', GRN = '#3ad23a', tri = (x, y, col) => { c2.fillStyle = col; c2.beginPath(); c2.moveTo(x - 6, y); c2.lineTo(x + 6, y); c2.lineTo(x, y + 9); c2.closePath(); c2.fill(); };
+      const arrow = (right, y, col, t) => {
+        const xe = right ? x0 + w - 3 : x0 + 3, d = right ? -1 : 1;
+        c2.fillStyle = col; c2.beginPath(); c2.moveTo(xe, y); c2.lineTo(xe + d * 9, y - 7); c2.lineTo(xe + d * 22, y - 7); c2.lineTo(xe + d * 22, y + 7); c2.lineTo(xe + d * 9, y + 7); c2.closePath(); c2.fill();
+        c2.fillStyle = '#0b0f17'; c2.font = 'bold 11px Arial, sans-serif'; c2.textAlign = 'center'; c2.fillText(t, xe + d * 15, y + 4);
+      };
+      const inWin = (x) => x >= x0 - 1 && x <= x0 + w + 1, clampX = (x) => Math.max(x0 + 6, Math.min(x0 + w - 6, x));
+      const xr = xAt(f0), xt = xAt(fT);
+      c2.save(); c2.beginPath(); c2.rect(x0, y0, w, sh); c2.clip(); // repères dans la zone du spectre (pas dans la cascade qui défile)
+      if (dm === 0) {
+        if (inWin(xt)) { c2.fillStyle = RED; c2.fillRect(Math.round(clampX(xt)) - 1, y0 + 9, 2, sh - 9); tri(clampX(xt), y0, RED); }
+        else arrow(xt > x0 + w, y0 + Math.round(sh * 0.3), RED, 'T');
+      } else {
+        if (inWin(xt)) { if (dm === 1) { c2.fillStyle = RED; c2.fillRect(Math.round(clampX(xt)) - 1, y0 + 19, 2, sh - 19); } tri(clampX(xt), y0 + 10, RED); }
+        else arrow(xt > x0 + w, y0 + Math.round(sh * 0.48), RED, 'T');
+        if (inWin(xr)) tri(clampX(xr), y0, GRN);
+        else arrow(xr > x0 + w, y0 + Math.round(sh * 0.22), GRN, 'R');
+      }
+      c2.restore();
+      c2.font = ICOM ? 'bold 12px Arial, sans-serif' : 'bold 14px "Roboto Mono", monospace'; c2.textAlign = 'center';
+    }
+  }
   function drawScope(c2, rg, pal, nb, lvl, maxHz) {
     // FTX-1 : spectre et cascade moins « généreux » (comme sur le TRX, le spectre reste dans le bas de sa zone) ; D-LEVEL règle en plus
     const ftxDim = 0, ftxH = 1;
@@ -5043,21 +5092,7 @@
       // IC-7300 : tous les 0,5 kHz (comme l'échelle du TRX : 0.5, 1.0, 1.5…), en kHz de BF
       const st = maxHz <= 2000 ? 250 : 500;
       for (let f = st; f < maxHz - st / 3; f += st) c2.fillText((f / 1000).toFixed(st < 500 ? 2 : 1), x0 + w * f / maxHz, y0 + h - 3);
-    } else if (FACE.meterFtx) {
-      // FTX-1 : échelle en fréquences d'émission/réception (comme le TRX : 7.075.000), tous les 1 kHz de BF (−1 kHz en LSB)
-      const st0 = S(), sd = name === 'SUB' ? 'B' : 'A', f0 = sd === 'B' ? st0.freqB : st0.freq;
-      const md = (sd === 'B' ? st0.modeB : st0.mode) || '', sg = /LSB|-L$|^CW-L|^RTTY-L/.test(md) ? -1 : 1;
-      const fmtRf = (hz) => { const t = String(Math.round(hz)).padStart(7, '0'); return t.slice(0, -6) + '.' + t.slice(-6, -3) + '.' + t.slice(-3); };
-      if ((st0.dMode || 0) === 0 && f0) {
-        // D-MODE CENTER : fréquence au milieu, écarts de part et d'autre (−1.0k … +1.0k), comme sur le TRX
-        const fc = maxHz / 2, stp = maxHz > 3000 ? 1000 : 500;
-        c2.fillText(fmtRf(f0 + sg * fc), x0 + w / 2, y0 + h - 2);
-        for (let d = stp; d < fc - stp / 3; d += stp) for (const sgn of [-1, 1]) c2.fillText((sgn < 0 ? '−' : '+') + (d / 1000).toFixed(1) + 'k', x0 + w * (fc + sgn * d) / maxHz, y0 + h - 2);
-      } else {
-        // CURSOR / FIX : fréquences (7.075.000…), bord gauche = fréquence affichée
-        for (let k = 1; k < maxHz / 1000; k++) c2.fillText(f0 ? fmtRf(f0 + sg * k * 1000) : k + 'k', x0 + w * k * 1000 / maxHz, y0 + h - 2);
-        if (f0 && w * 1000 / maxHz > 110) { c2.textAlign = 'left'; c2.fillText(fmtRf(f0), x0 + 2, y0 + h - 2); }
-      }
+    } else if (FACE.meterFtx) { ftxScale(c2, x0, y0, w, h, sh, name, maxHz);
     } else for (let k = 1; k < maxHz / 1000; k++) c2.fillText(k + 'k', x0 + w * k * 1000 / maxHz, y0 + h - 2);
     if (name) { c2.textAlign = 'left'; c2.fillStyle = '#6f86ff'; c2.font = 'bold 10px "Roboto Mono", monospace'; c2.fillText(name, x0 + 4, y0 + 11); }
   }
@@ -5103,7 +5138,8 @@
     c2.fillStyle = '#000';
     c2.fillRect(0, 0, W, H);
     if (!sp) return;
-    const COLS = Math.max(60, Math.min(240, Math.floor(W / 3))), ROWS = 46, lab = 12;
+    const FTX3 = !!FACE.meterFtx; // FTX-1 : comme le 3DSS du TRX (jaune, crêtes rouges, mur de grille au fond, échelle en fréquences, repères R / T)
+    const COLS = Math.max(60, Math.min(240, Math.floor(W / 3))), ROWS = 46, lab = FTX3 ? 19 : 12;
     const row = new Float32Array(COLS);
     for (let k = 0; k < COLS; k++) {
       const i0 = Math.floor(k / COLS * nb), i1 = Math.max(i0 + 1, Math.floor((k + 1) / COLS * nb));
@@ -5115,10 +5151,16 @@
     if (!L.hold) { WF.h3.push(row); if (WF.h3.length > ROWS) WF.h3.shift(); }
     const yFront = H - lab - 2, yBack = H * 0.12, amp = (H - lab) * 0.45;
     // Grille du « sol » (lignes fuyantes)
-    c2.strokeStyle = 'rgba(120,130,145,.35)'; c2.lineWidth = 1;
-    for (let g = 0; g <= 8; g++) {
-      const fx = g / 8;
+    c2.strokeStyle = FTX3 ? 'rgba(170,175,185,.55)' : 'rgba(120,130,145,.35)'; c2.lineWidth = 1;
+    for (let g = 0; g <= (FTX3 ? 10 : 8); g++) {
+      const fx = g / (FTX3 ? 10 : 8);
       c2.beginPath(); c2.moveTo(W * fx, yFront); c2.lineTo(W / 2 + (W * fx - W / 2) * 0.62, yBack); c2.stroke();
+    }
+    if (FTX3) {
+      // Mur du fond : grille verticale au-dessus de la dernière ligne (comme sur le TRX)
+      const bx0 = W / 2 - W * 0.31, bx1 = W / 2 + W * 0.31, top = 2;
+      for (let g = 0; g <= 10; g++) { const x = Math.round(bx0 + (bx1 - bx0) * g / 10) + 0.5; c2.beginPath(); c2.moveTo(x, top); c2.lineTo(x, yBack); c2.stroke(); }
+      for (let k = 0; k <= 3; k++) { const y = Math.round(top + (yBack - top) * k / 3) + 0.5; c2.beginPath(); c2.moveTo(bx0, y); c2.lineTo(bx1, y); c2.stroke(); }
     }
     const n = WF.h3.length;
     for (let r = 0; r < n; r++) {
@@ -5127,14 +5169,19 @@
       const x0 = W / 2 - W * sc / 2, cw = W * sc / COLS;
       const rr = WF.h3[r];
       for (let k = 0; k < COLS; k++) {
-        const v = rr[k], c = pal[Math.min(255, Math.round(v * 255))];
-        c2.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+        const v = rr[k];
+        if (FTX3) {
+          // Jaune → orange → rouge avec la hauteur, un peu plus sombre au fond
+          const t = Math.max(0, Math.min(1, (v - 0.25) / 0.55)), dk = 1 - 0.3 * age;
+          c2.fillStyle = 'rgb(' + Math.round(255 * dk) + ',' + Math.round((215 - 175 * t) * dk) + ',' + Math.round(20 * (1 - t) * dk) + ')';
+        } else { const c = pal[Math.min(255, Math.round(v * 255))]; c2.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; }
         const h = Math.max(1, v * a);
         c2.fillRect(x0 + k * cw, base - h, cw + 0.6, h + (yFront - yBack) / ROWS + 1);
       }
     }
     // Échelle (kHz) au pied
     c2.fillStyle = '#000'; c2.fillRect(0, H - lab, W, lab);
+    if (FTX3) { ftxScale(c2, 0, 0, W, H, yFront, activeSide() === 'B' ? 'SUB' : 'MAIN', maxHz); return; }
     c2.fillStyle = '#c9d3e3'; c2.font = '9px "Roboto Mono", monospace'; c2.textAlign = 'center';
     const st = maxHz <= 2000 ? 500 : 1000;
     for (let f = st; f < maxHz; f += st) c2.fillText((f / 1000) + 'k', f / maxHz * W, H - 2);
