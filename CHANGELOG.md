@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.111** — FTX-1 : D-MODE CENTER comme le TRX : seulement la barre rouge (au milieu sans SPLIT ; en SPLIT à la fréquence d'émission, elle se déplace quand on tourne le grand bouton)
 - **0.37.110** — FTX-1 : appui d'1 s sur SPLIT comme le TRX (l'autre VFO prend la même fréquence, SPLIT en service : émission là, le grand bouton déplace l'écoute) ; scope : ▼ vert de l'écoute avec son trait vert
 - **0.37.109** — FTX-1 : scope en fenêtre de fréquences comme le TRX selon D-MODE et SPAN : CENTER (fréquence au milieu, ▼ rouge au centre), CURSOR (fenêtre fixe, ▼ vert/rouge qui s'y déplace), FIX (fenêtre au début de la bande, R ▶ / T ▶ au bord quand on est en dehors) ; le son reçu est placé à sa vraie fréquence ; 3DSS pareil
 - **0.37.108** — FTX-1 : repères du scope selon D-MODE (CENTER ▼ rouge, CURSOR ▼ vert/rouge, FIX R ▶ / T ▶ au bord), échelle en fréquences qui tient compte du PITCH CW et du CLAR ; 3DSS comme sur le TRX (jaune, crêtes rouges, grille du fond, échelle en fréquences)

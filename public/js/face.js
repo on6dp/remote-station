@@ -4998,7 +4998,8 @@
         c2.fillText(fmtRf(win.start + i * stp), x0 + w * i / 5 + (i === 0 ? 2 : i === 5 ? -2 : 0), ly);
       }
     }
-    // Repères : ▼ rouge = émission (avec son trait), ▼ vert = réception (au-dessus) ; CENTER sans SPLIT : un seul ▼ rouge au milieu.
+    // Repères : ▼ rouge = émission (avec son trait), ▼ vert = réception (au-dessus) ; CENTER : un seul ▼ rouge (au milieu sans SPLIT ;
+    // en SPLIT il est à la fréquence d'émission et se déplace quand on tourne le grand bouton, l'écoute restant au milieu).
     // En dehors de la fenêtre : « R ▶ » vert et « T ▶ » rouge sur le bord, du côté de la fréquence
     const RED = '#ff2a1a', GRN = '#3ad23a';
     const tri = (x, y, col) => { c2.fillStyle = col; c2.beginPath(); c2.moveTo(x - 6, y); c2.lineTo(x + 6, y); c2.lineTo(x, y + 9); c2.closePath(); c2.fill(); };
@@ -5008,7 +5009,7 @@
       c2.fillStyle = '#0b0f17'; c2.font = 'bold 11px Arial, sans-serif'; c2.textAlign = 'center'; c2.fillText(t, xe + d * 15, y + 4);
     };
     const inW = (f) => f >= win.start && f <= win.start + win.span;
-    const one = win.dm === 0 && win.fT === win.fR;
+    const one = win.dm === 0; // CENTER (comme le TRX) : seulement la barre rouge d'émission ; l'écoute est le milieu de l'écran
     c2.save(); c2.beginPath(); c2.rect(x0, y0, w, sh); c2.clip(); // dans la zone du spectre (pas dans la cascade qui défile)
     const yT = one ? y0 : y0 + 10;
     if (inW(win.fT)) { const x = Math.round(X(win.fT)); c2.fillStyle = RED; c2.fillRect(x - 1, yT + 9, 2, sh - yT - 9 + y0); tri(x, yT, RED); }
