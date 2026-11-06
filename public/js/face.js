@@ -112,6 +112,7 @@
     if (!c) return say('Commande non disponible sur ce TRX.', 'warn');
     let val = v;
     try { val = R.validate(id, v, S()); } catch (e) { return say(e.message, 'warn'); }
+    if ((c.viaSub && activeSide() === 'A') || (c.viaMain && activeSide() === 'B')) L.hop = { side: activeSide(), until: Date.now() + 6000 };
     if (c.type !== 'action') pend[id] = { v: val, at: Date.now() };
     clearTimeout(sendTimers[id]);
     sendTimers[id] = setTimeout(() => send({ t: 'set', ctl: id, value: val }), c.type === 'level' || c.type === 'width' ? 90 : 0);
@@ -132,7 +133,18 @@
     }
     render();
   }
-  const activeSide = () => (S().vfoSel === 1 ? 'B' : 'A');
+  // FTX-1 : ATT / IPO de l'autre côté (viaSub / viaMain) — la page Station passe un instant sur l'autre côté puis revient :
+  // pendant ce va-et-vient (L.hop), la page garde le côté actif d'avant (pas d'échange visible des VFO à l'écran)
+  const activeSide = () => {
+    const real = S().vfoSel === 1 ? 'B' : 'A', h = L.hop;
+    if (h) {
+      if (real !== h.side) h.seen = true; // parti sur l'autre côté…
+      else if (h.seen) { L.hop = null; return real; } // … et revenu : fini
+      if (Date.now() < h.until) return h.side;
+      L.hop = null;
+    }
+    return real;
+  };
   function setMode(name) {
     if (!needControl()) return;
     const code = Object.keys(R.MODES).find((k) => R.MODES[k] === name);
