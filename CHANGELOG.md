@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.102** — Correctif : face avant FTX-1 qui ne s'affichait plus en 0.37.101 (erreur dans face.js) ; écran DSP : changement d'onglet (SHIFT, WIDTH…) tout de suite, à l'appui ; CONTOUR doré peu profond ; le TRX suit la progression
 - **0.37.101** — Face avant FTX-1 : le TRX suit la progression des réglages (une commande au plus toutes les 250 ms) ; CONTOUR en demi-lune peu profonde, jaune doré, comme sur le TRX
 - **0.37.100** — Face avant FTX-1 : le TRX suit la progression quand on tourne un bouton ou qu'on tient − / + (une commande au plus toutes les 250 ms, la dernière valeur toujours envoyée) — écran DSP, écran FUNC, RF POWER
 - **0.37.99** — Face avant FTX-1 : écran DSP et écran FUNC l'un ou l'autre (ouvrir l'un ferme l'autre) ; − / + tenus enfoncés à la souris : la valeur continue de changer (écran DSP et cases de l'écran FUNC)

@@ -4234,7 +4234,7 @@
       const lb = box.querySelector('.lb'); let ax = 'M4 60H276';
       for (let k = -2.5; k <= 2.51; k += 0.5) { const x = 140 + k * 52; ax += 'M' + x + ' 60v' + (Number.isInteger(k) ? 5 : 3); if (Number.isInteger(k)) { const t = document.createElementNS('http://www.w3.org/2000/svg', 'text'); t.setAttribute('x', x); t.setAttribute('y', 75); t.setAttribute('text-anchor', 'middle'); t.textContent = k ? Math.abs(k).toFixed(1) : '0'; lb.appendChild(t); } }
       box.querySelector('.ax').setAttribute('d', ax);
-      box.addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) { L.dspTab = +b.dataset.tab; render(); } });
+      box.addEventListener('pointerdown', (e) => { const b = e.target.closest('[data-tab]'); if (b) { e.preventDefault(); L.dspTab = +b.dataset.tab; render(); } }); // onglet tout de suite (à l'appui)
       box.addEventListener('pointerdown', (e) => { const b = e.target.closest('[data-pm]'); if (!b) return; e.preventDefault(); const d = +b.dataset.pm; holdRepeat(() => dspAdjust(d)); });
       let wacc = 0;
       box.addEventListener('wheel', (ev) => { ev.preventDefault(); const d = ev.deltaMode === 1 ? ev.deltaY * 33 : ev.deltaY; let n; if (Math.abs(d) >= 50) n = Math.sign(d); else { wacc += d; n = Math.trunc(wacc / 100); if (!n) return; wacc -= n * 100; } dspAdjust(-n); }, { passive: false });
@@ -4255,11 +4255,15 @@
     if (non) { const xn = 140 + ((s[dspK(sd, 'notchFreq')] || 0) - 1500) * k; nt.setAttribute('d', 'M' + (xn - 5).toFixed(1) + ' 10L' + xn.toFixed(1) + ' 56L' + (xn + 5).toFixed(1) + ' 10'); }
     const ct = box.querySelector('.ct'), con = !!s[dspK(sd, 'contour')];
     ct.style.display = con ? '' : 'none';
-    if (con) { const xc = 140 + ((s[dspK(sd, 'contourFreq')] != null ? s[dspK(sd, 'contourFreq')] : 1000) - 1500) * k; ct.setAttribute('d', 'M' + (xc - 12).toFixed(1) + ' 10Q' + xc.toFixed(1) + ' 30 ' + (xc + 12).toFixed(1) + ' 10'); // demi-lune peu profonde }
+    if (con) { const xc = 140 + ((s[dspK(sd, 'contourFreq')] != null ? s[dspK(sd, 'contourFreq')] : 1000) - 1500) * k; ct.setAttribute('d', 'M' + (xc - 12).toFixed(1) + ' 10Q' + xc.toFixed(1) + ' 30 ' + (xc + 12).toFixed(1) + ' 10'); } // demi-lune peu profonde
     box.querySelector('.fc-dsp-v').classList.toggle('on', dspOn(s, sd, t));
-    box.querySelector('.fc-dsp-v .l').innerHTML = (sd === 'B' ? '<small>SUB</small>' : '') + t; // sur une ligne
-    box.querySelector('.fc-dsp-v .v').innerHTML = '<button type="button" data-pm="-1">−</button>' + dspVal(s, sd, t) + '<button type="button" data-pm="1">+</button>';
-    box.querySelector('.fc-dsp-t').innerHTML = tabs.map((n, i) => '<button type="button" data-tab="' + i + '" class="' + (i === L.dspTab ? 'on' : '') + (dspOn(s, sd, n) ? ' act' : '') + '">' + n + '</button>').join('');
+    // Contenu refait seulement s'il change (sinon un clic sur un onglet ou − / + tombe sur un bouton remplacé entre-temps et se perd)
+    const setH = (q, h) => { const e = box.querySelector(q); if (e._h !== h) { e._h = h; e.innerHTML = h; } };
+    setH('.fc-dsp-v .l', (sd === 'B' ? '<small>SUB</small>' : '') + t);
+    const vv = box.querySelector('.fc-dsp-v .v');
+    if (!vv._b) { vv._b = 1; vv.innerHTML = '<button type="button" data-pm="-1">−</button><span class="n"></span><button type="button" data-pm="1">+</button>'; }
+    vv.querySelector('.n').textContent = dspVal(s, sd, t);
+    setH('.fc-dsp-t', tabs.map((n, i) => '<button type="button" data-tab="' + i + '" class="' + (i === L.dspTab ? 'on' : '') + (dspOn(s, sd, n) ? ' act' : '') + '">' + n + '</button>').join(''));
     box.hidden = false;
   }
   // FTX-1 : cadre « RF POWER   83W » sur le scope quand on tourne FUNC, écran FUNC fermé (nom en orange, valeur en grand)
