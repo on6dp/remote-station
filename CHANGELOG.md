@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.107** — FTX-1 : chiffres des S-mètres en gras (Arial Black)
 - **0.37.106** — FTX-1 : fréquences en Arial Black penché (police du TRX) ; DIGI / SSB CONFIGURATION toujours affichés sous la face avant (même si la phonie à distance n'est pas encore annoncée par la page Station) ; démarrage de la page plus robuste
 - **0.37.105** — Face avant FTX-1 : spectre et cascade rapportés au bruit de fond et à la crête la plus forte — bruit en bas, crêtes bien visibles, plus d'écrêtage en haut
 - **0.37.104** — Face avant FTX-1 : bandes bleues de part et d'autre du grand bouton allumées quand le MAIN est actif, éteintes quand le SUB est actif (rouges en CLAR), comme sur le TRX
