@@ -725,7 +725,8 @@
       m.volW = w - 52;
     }
     m.needle = el('line', { x1: cx, y1: cy, x2: cx, y2: cy - 250, class: 'mtr-needle' }, g);
-    m.val = el('text', { x: x0 + w - 4, y: y0 + 82, class: 'mtr-val', 'text-anchor': 'end' }, g, '');
+    // FTX-1 : valeur (S, SWR / W…) au-dessus de la barre VOL, à droite, bien séparée d'elle (et du bandeau du scope dessous)
+    m.val = el('text', { x: x0 + w - 4, y: y0 + (FACE && FACE.meterFtx ? 69 : 82), class: 'mtr-val', 'text-anchor': 'end' }, g, '');
     // Le cadran est découpé à la taille du cadre
     const cid = 'clipm' + side;
     const cp = el('clipPath', { id: cid }, g);

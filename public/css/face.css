@@ -172,7 +172,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face[data-model='ftx1'] .mtr-num, #face[data-model='ftx1'] .mtr-name, #face[data-model='ftx1'] .mtr-val { font-family: 'Arial Black', 'Arial', 'Liberation Sans', sans-serif; font-weight: 900; }
 #face[data-model='ftx1'] .mtr-num { font-size: 7.8px; stroke-width: 2.4px; }
 #face[data-model='ftx1'] .mtr-num.big { font-size: 9.5px; }
-#face[data-model='ftx1'] .mtr-val { font-size: 9px; }
+#face[data-model='ftx1'] .mtr-val { font-size: 10.5px; font-weight: 900; }
 #face .flt-box { fill: #000; stroke: #2a3140; stroke-width: .8; }
 #face .flt-bars { stroke: #c9d3e3; stroke-width: .8; opacity: .85; }
 #face .flt-trap { fill: none; stroke: #ff2b1c; stroke-width: 1.8; stroke-linejoin: round; }

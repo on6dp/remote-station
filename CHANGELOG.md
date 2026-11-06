@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.131** — FTX-1 : valeur de l'S-mètre (S, SWR, W…) au-dessus de la barre VOL, plus grande et en gras
 - **0.37.130** — FTX-1 : en émission, la fréquence d'émission passe en rouge (comme sur le TRX)
 - **0.37.129** — FTX-1 : scope — quand la fréquence écoutée est hors de la fenêtre (FIX, CURSOR), un message l'explique au lieu d'un écran vide
 - **0.37.128** — FTX-1 : scope unique — échelle, repères et filtre du VFO sélectionné (SUB actif : plus les fréquences du MAIN sous le scope)
