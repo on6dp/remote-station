@@ -671,3 +671,9 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #ctrlBtn, #logoutBtn { font-size: 12px; font-weight: 800; letter-spacing: .05em; padding: 5px 14px; min-height: 34px; border-width: 2px; border-radius: 6px; }
 #logoutBtn { background: linear-gradient(180deg, #e8352a, #a8170f); border-color: #ff8a80; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
 #logoutBtn:hover:not(:disabled) { background: linear-gradient(180deg, #ff4a3d, #c21d14); color: #fff; }
+/* FTX-1 : DISP 1 / 2 (un VFO + scope ; MAIN et SUB l'un sur l'autre) — rangée ATT / IPO / DNF / AGC comme sur le TRX */
+#face .fd-cbar { fill: #4a4f57; stroke: #6b717a; stroke-width: .6; }
+#face .fd-csep { stroke: #2e3238; stroke-width: 1; }
+#face .fd-clab { fill: #ffa600; font: 800 9px Verdana, 'DejaVu Sans', Arial, sans-serif; }
+#face .fd-cval { fill: #fff; font: 800 11px Verdana, 'DejaVu Sans', Arial, sans-serif; }
+#face .fd-sep { stroke: #c9ced6; stroke-width: 1.2; }

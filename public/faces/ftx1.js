@@ -67,7 +67,7 @@
       // Autour du grand bouton
       { id: 'qmb', x: 807, y: 83, w: 127, h: 70, tip: 'QMB', act: info('QMB (mémoires rapides) : pas disponible à distance.') },
       { id: 'clar', x: 1020, y: 83, w: 127, h: 70, tip: 'CLAR : 1er appui CLAR RX, 2e CLAR TX, 3e CLAR RXTX, 4e arrêt (appui long : décalage à zéro) ; le bouton FUNC règle le décalage', act: { clar: true }, led: (s) => !!(s.rit || s.xit) },
-      { id: 'disp', x: 1163, y: 247, w: 57, h: 60, tip: 'DISP : affichage de l’écran — cascade MAIN → SUB au-dessus de MAIN → MAIN | SUB côte à côte → filtres agrandis → retour', act: { local: 'disp' } },
+      { id: 'disp', x: 1163, y: 247, w: 57, h: 60, tip: 'DISP : comme sur le TRX — écran normal → un VFO et le scope → MAIN et SUB l’un sur l’autre (sans scope) → filtres agrandis → retour', act: { local: 'disp' } },
       { id: 'back', x: 810, y: 400, w: 120, h: 67, tip: 'BACK : ferme le tableau ou le menu ouvert', act: { local: 'exit' } },
       { id: 'fine', x: 1027, y: 400, w: 120, h: 67, tip: 'FINE/FAST : accord fin (pas de 1 Hz) ; appui d’au moins 1 s : accord rapide', act: { local: 'fine', long: { local: 'fast' } } },
       // À gauche de l'écran

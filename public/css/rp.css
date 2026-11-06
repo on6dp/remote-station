@@ -1733,3 +1733,8 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 /* IC-7300 : Equalizer TRX = profil Tone Control/TBW, un réglage par ligne */
 .vx-eq.vx-trxeq label.vx-icrow { display: grid; grid-template-columns: 150px auto auto auto; align-items: center; justify-content: start; gap: 8px; margin: 4px 0; }
 .vx-trxeq .vx-icrow select { min-width: 84px; }
+
+/* Dashboard : DÉCONNEXION à côté de PRENDRE / LIBÉRER LA MAIN, même taille, fond rouge et blanc gras (comme les faces avant) */
+#logout { font-size: 14px; font-weight: 800; letter-spacing: .05em; padding: 5px 14px; min-height: 34px; border-width: 2px; border-radius: 6px;
+  background: linear-gradient(180deg, #e8352a, #a8170f); border-color: #ff8a80; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+#logout:hover:not(:disabled) { background: linear-gradient(180deg, #ff4a3d, #c21d14); color: #fff; }

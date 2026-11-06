@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.120** — FTX-1 : touche DISP comme sur le TRX (écran normal → un VFO + scope → MAIN et SUB l'un sur l'autre sans scope, avec ATT / IPO / DNF / AGC → filtres agrandis) ; dashboard : DÉCONNEXION à côté de PRENDRE / LIBÉRER LA MAIN, en rouge
 - **0.37.119** — Faces avant : PRENDRE / LIBÉRER LA MAIN et DÉCONNEXION de même taille ; DÉCONNEXION sur fond rouge, en blanc gras
 - **0.37.118** — FTX-1 : échelle ALC sous l'S-mètre comme sur le TRX (blanche puis bleue, sans chiffres)
 - **0.37.117** — Faces avant (FTDX101, FTDX10, IC-7300, FTX-1) : bouton Déconnexion à côté de Prendre / Libérer la main (main libérée, session oubliée ; pas pendant une émission)

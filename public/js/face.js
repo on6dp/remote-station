@@ -266,6 +266,17 @@
       return;
     }
     if (a.local === 'smenu') return L.smenu ? closeSmenu() : openSmenu();
+    if (a.local === 'disp' && FACE.meterFtx) {
+      // FTX-1 : comme la touche DISP du TRX — écran normal → un VFO + scope → MAIN et SUB l'un sur l'autre (sans scope) →
+      // filtres agrandis (au lieu de l'écran éteint du TRX) → retour
+      viewTouched();
+      L.fdisp = ((L.fdisp || 0) + 1) % 4;
+      store.set('rs.face.fdisp', String(L.fdisp));
+      L.disp = L.fdisp === 3 ? 3 : 0;
+      WF.drawn = false;
+      say('DISP : ' + ['écran normal', 'un VFO (celui qui est sélectionné) et le scope', 'MAIN et SUB l’un sur l’autre, sans scope', 'filtres agrandis (MAIN | SUB)'][L.fdisp], '', 3000);
+      return render();
+    }
     if (a.local === 'disp') {
       // Comme la touche DISP du TRX : 4 présentations de l'écran, l'une après l'autre
       viewTouched();
@@ -3088,6 +3099,9 @@
   // Touche DISP : présentations de l'écran (comme sur le FTDX101)
   const DISPS = ['cascade du MAIN', 'SUB au-dessus, MAIN en dessous', 'MAIN | SUB côte à côte', 'filtres agrandis (MAIN | SUB)'];
   L.disp = Math.max(0, Math.min(3, Number(store.get('rs.face.disp', '0')) || 0));
+  // FTX-1 : sa propre suite DISP (0 normal, 1 un VFO + scope, 2 MAIN / SUB sans scope, 3 filtres agrandis)
+  L.fdisp = FACE && FACE.meterFtx ? Math.max(0, Math.min(3, Number(store.get('rs.face.fdisp', '0')) || 0)) : 0;
+  if (FACE && FACE.meterFtx) L.disp = L.fdisp === 3 ? 3 : 0;
   L.multi = store.get('rs.face.multi', '0') === '1';
   L.d3 = store.get('rs.face.3dss', '0') === '1';
   // FTX-1 : pas de MONO sur le TRX (le réglage enregistré vient d'une autre face, ex. FTDX101)
@@ -4221,6 +4235,89 @@
     if (t === 'WIDTH') { const md = (sd === 'B' ? s.modeB : s.mode) || ''; return dspWidthHz(s, sd) !== widthDefHz(md); }
     return !!s[dspK(sd, t === 'NOTCH' ? 'notch' : t === 'APF' ? 'apf' : 'contour')];
   }
+  // ---- FTX-1 : présentations DISP 1 et 2 du TRX, posées par-dessus l'écran normal : copies vivantes (<use>) du galvanomètre,
+  // de la fréquence (avec ses étiquettes) et du filtre de chaque VFO, plus la rangée ATT / IPO / DNF / AGC de ce VFO
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  function useOf(g, id, cls) { const u = document.createElementNS(SVGNS, 'use'); u.setAttribute('href', '#' + id); if (cls) u.setAttribute('class', cls); g.appendChild(u); return u; }
+  function ftxCellsTxt(s, sd) {
+    const b = sd === 'B' ? 'B' : '', att = s['att' + b], pre = s['preamp' + b], dnf = s['dnf' + b], agc = s['agc' + b];
+    return [att == null ? '—' : att ? 'ON' : 'OFF', pre == null ? '—' : IPO[pre] || String(pre), dnf == null ? '—' : dnf ? 'ON' : 'OFF', agc == null ? '—' : AGC[agc] || String(agc)];
+  }
+  function ftxCellClick(sd, i) {
+    if (!needControl()) return;
+    const s = S(), b = sd === 'B' ? 'B' : '', id = ['att', 'preamp', 'dnf', 'agc'][i] + b;
+    if (!R.CONTROL[id]) return say('Pas disponible à distance pour ce VFO.', 'warn', 3000);
+    const v = s[id] || 0;
+    if (i === 0 || i === 2) setCtl(id, v ? 0 : 1);
+    else if (i === 1) setCtl(id, (v + 1) % 3);
+    else setCtl(id, v >= 4 ? 1 : v + 1);
+    render();
+  }
+  // Un bloc VFO dans la zone [y0, y0 + h] : galvanomètre en haut à gauche, fréquence en haut à droite, cases + filtre dessous
+  function ftxBlock(g, y0, h) {
+    const c = FACE.lcd, B = { y0, h };
+    B.g = el('g', {}, g);
+    B.mU = useOf(B.g, 'ftxMA'); B.vU = useOf(B.g, 'ftxVA'); B.fU = useOf(B.g, 'ftxFA');
+    const cy = y0 + h - 31, cw = 279 / 4;
+    B.cells = [];
+    el('rect', { x: c.x + 5, y: cy, width: 279, height: 28, rx: 1.5, class: 'fd-cbar' }, B.g);
+    ['ATT', 'IPO', 'DNF', 'AGC'].forEach((lab, i) => {
+      const x = c.x + 5 + i * cw;
+      if (i) el('line', { x1: x, y1: cy + 2, x2: x, y2: cy + 26, class: 'fd-csep' }, B.g);
+      el('text', { x: x + cw / 2, y: cy + 11, class: 'fd-clab', 'text-anchor': 'middle' }, B.g, lab);
+      const t = el('text', { x: x + cw / 2, y: cy + 24, class: 'fd-cval', 'text-anchor': 'middle' }, B.g, '—');
+      const hit = el('rect', { x, y: cy, width: cw, height: 28, class: 'hs lcd-hit' }, B.g);
+      el('title', {}, hit, lab + ' : clic pour changer');
+      hit.addEventListener('click', (ev) => { ev.stopPropagation(); ftxCellClick(B.side, i); });
+      B.cells.push(t);
+    });
+    for (const [u, fn] of [[B.mU, (sd) => meterOpen(sd)], [B.fU, (sd) => dspToggle(sd)], [B.vU, (sd) => askFreq(sd)]]) {
+      u.style.cursor = 'pointer';
+      u.addEventListener('click', (ev) => { ev.stopPropagation(); fn(B.side); });
+    }
+    return B;
+  }
+  function ftxBlockPlace(B, sd) {
+    if (B.side === sd) return;
+    B.side = sd;
+    const c = FACE.lcd, d = rightSide(sd) ? 284 : 0, y0 = B.y0, h = B.h;
+    B.mU.setAttribute('href', '#ftxM' + sd); B.vU.setAttribute('href', '#ftxV' + sd); B.fU.setAttribute('href', '#ftxF' + sd);
+    // Galvanomètre : son cadre (x0, Y(4) + 10, 190 × 72) en haut à gauche du bloc
+    B.mU.setAttribute('transform', 'translate(' + (c.x + 4 - (c.x + 5 + d)) + ',' + (y0 + 1 - (c.y + 14)) + ')');
+    // Fréquence et étiquettes (groupe du VFO, déjà décalé de vfoDy) : agrandies, calées à droite en haut
+    const v = LCD['v' + sd], k = 1.22, top = c.y + 87 + ((FACE && FACE.vfoDy) || 0);
+    B.vU.setAttribute('transform', 'translate(' + (c.x + c.w - 6 - v.xr * k).toFixed(1) + ',' + (y0 + 3 - top * k).toFixed(1) + ') scale(' + k + ')');
+    // Filtre : agrandi sur la moitié droite, sous la fréquence
+    const f = LCD['f' + sd], tx = c.x + 288, ty = y0 + h - 44, tw = c.w - 293, th = 40;
+    B.fU.setAttribute('transform', 'translate(' + tx + ',' + ty + ') scale(' + (tw / f.w).toFixed(4) + ',' + (th / f.h).toFixed(4) + ') translate(' + -f.x0 + ',' + -f.y0 + ')'); // coordonnées propres du groupe (sans le décalage meterDy du parent)
+  }
+  function ftxDispDraw(s) {
+    const fd = L.fdisp || 0;
+    if (!LCD.fd && (fd === 1 || fd === 2)) {
+      const c = FACE.lcd;
+      for (const sd of ['A', 'B']) { LCD['m' + sd].g.id = 'ftxM' + sd; LCD['v' + sd].g.id = 'ftxV' + sd; LCD['f' + sd].g.id = 'ftxF' + sd; }
+      const top = c.y + 15, lowTop = c.y + G.lowY - 2, bot = c.y + G.botY - 2;
+      const D = LCD.fd = { g: el('g', { class: 'fd' }, LCD.g) };
+      // DISP 1 : un VFO, de la barre d'état jusqu'au bandeau du scope
+      D.one = el('g', {}, D.g);
+      el('rect', { x: c.x + 2, y: top, width: c.w - 4, height: lowTop - top, fill: 'url(#lcdbg)' }, D.one);
+      D.b1 = ftxBlock(D.one, top, lowTop - top);
+      // DISP 2 : MAIN en haut, SUB en bas, séparés par un trait, pas de scope
+      D.two = el('g', {}, D.g);
+      el('rect', { x: c.x + 2, y: top, width: c.w - 4, height: bot - top, fill: 'url(#lcdbg)' }, D.two);
+      const hh = (bot - top) / 2;
+      D.bA = ftxBlock(D.two, top, hh - 2);
+      el('line', { x1: c.x + 5, y1: top + hh, x2: c.x + c.w - 5, y2: top + hh, class: 'fd-sep' }, D.two);
+      D.bB = ftxBlock(D.two, top + hh + 2, hh - 2);
+    }
+    const D = LCD.fd;
+    if (!D) return;
+    D.one.style.display = fd === 1 ? '' : 'none';
+    D.two.style.display = fd === 2 ? '' : 'none';
+    const fill = (B, sd) => { ftxBlockPlace(B, sd); const t = ftxCellsTxt(s, sd); B.cells.forEach((e, i) => { if (e.textContent !== t[i]) e.textContent = t[i]; }); };
+    if (fd === 1) fill(D.b1, activeSide());
+    if (fd === 2) { fill(D.bA, 'A'); fill(D.bB, 'B'); }
+  }
   // ---- FTX-1 : METER (toucher l'S-mètre, comme sur le TRX) : PO, COMP, ALC, VDD, ID, SWR (TEMP : pas de commande CAT)
   const METER_NAMES = ['PO', 'COMP', 'ALC', 'VDD', 'ID', 'SWR'];
   function meterSel(s, side) { const v = side === 'B' ? s.meterSwB : s.meterSw; return v >= 0 && v <= 5 ? v : 5; }
@@ -4613,7 +4710,7 @@
     for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) || (SINGLE && sd === 'B') || !!LCD.ich || (FACE.meterDy && L.expand) ? 'none' : ''; // FTX-1 : EXPAND couvre les filtres
     drawFunc(s);
     drawStatus(s);
-    if (FACE.meterFtx) { dspDraw(s); meterDraw(s); }
+    if (FACE.meterFtx) { ftxDispDraw(s); dspDraw(s); meterDraw(s); }
     for (const b of LCD.bot || []) {
       if (b.t2) b.t2.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
       if (b.lab === 'HOLD') b.r.classList.toggle('on', !!L.hold);
@@ -4675,7 +4772,7 @@
     $('scope').style.pointerEvents = ICOM && rfFresh() ? 'auto' : '';
     $('scope').style.cursor = ICOM && rfFresh() ? 'crosshair' : '';
     LCD.hint.textContent = !live ? '' : st.audio && !st.audio.active ? 'Cascade : l’audio n’est pas activé sur la page Station' : 'Cascade : en attente du son de la station…';
-    $('scope').style.visibility = (fresh || rfFresh()) && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !L.multiMenu && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom)
+    $('scope').style.visibility = (fresh || rfFresh()) && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !L.multiMenu && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet && L.fdisp !== 2 ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom ; FTX-1 DISP 2 : pas de scope)
     if (LCD.icm && L.icMeter && LCD.hint.style.display !== 'none') LCD.hint.setAttribute('y', LCD.Y(G.scopeY + 32)); else if (LCD.hint) LCD.hint.setAttribute('y', LCD.Y(G.scopeY + G.scopeH / 2 - 2));
     icPopCheck(s, live);
     if (ICOM) pbtPopDraw(s, live);
@@ -6300,5 +6397,5 @@
   if (sess) creds = { session: sess };
   else showLogin('');
   connect();
-  window.RSFACE = { state: () => S(), L, face: FACE, spots: (m) => bmvOnSpots(m), send: (m) => send(m) }; // essais
+  window.RSFACE = { state: () => S(), L, LCD, face: FACE, spots: (m) => bmvOnSpots(m), send: (m) => send(m) }; // essais
 })();
