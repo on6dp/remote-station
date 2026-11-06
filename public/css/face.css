@@ -635,6 +635,7 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .fc-dsp-f .tr { fill: rgba(150, 160, 155, .55); stroke: #f1f3f5; stroke-width: 2; stroke-linejoin: round; }
 .fc-dsp-f .ctr { stroke: #ffa600; stroke-width: 1.6; }
 .fc-dsp-f .nt, .fc-dsp-f .ct { fill: none; stroke: #ffa600; stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; }
+.fc-dsp-f .ct { stroke: #f5c542; stroke-width: 2.2; } /* CONTOUR : jaune doré, comme sur le TRX */
 .fc-dsp-v.on .l, .fc-dsp-v.on .v { color: #ffa600; }
 .fc-dsp-t button.act { color: #ffa600; }
 .fc-dsp-t button.on.act { color: #3a2a00; }

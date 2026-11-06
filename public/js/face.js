@@ -4255,7 +4255,7 @@
     if (non) { const xn = 140 + ((s[dspK(sd, 'notchFreq')] || 0) - 1500) * k; nt.setAttribute('d', 'M' + (xn - 5).toFixed(1) + ' 10L' + xn.toFixed(1) + ' 56L' + (xn + 5).toFixed(1) + ' 10'); }
     const ct = box.querySelector('.ct'), con = !!s[dspK(sd, 'contour')];
     ct.style.display = con ? '' : 'none';
-    if (con) { const xc = 140 + ((s[dspK(sd, 'contourFreq')] != null ? s[dspK(sd, 'contourFreq')] : 1000) - 1500) * k; ct.setAttribute('d', 'M' + (xc - 13).toFixed(1) + ' 10Q' + xc.toFixed(1) + ' 46 ' + (xc + 13).toFixed(1) + ' 10'); }
+    if (con) { const xc = 140 + ((s[dspK(sd, 'contourFreq')] != null ? s[dspK(sd, 'contourFreq')] : 1000) - 1500) * k; ct.setAttribute('d', 'M' + (xc - 12).toFixed(1) + ' 10Q' + xc.toFixed(1) + ' 30 ' + (xc + 12).toFixed(1) + ' 10'); // demi-lune peu profonde }
     box.querySelector('.fc-dsp-v').classList.toggle('on', dspOn(s, sd, t));
     box.querySelector('.fc-dsp-v .l').innerHTML = (sd === 'B' ? '<small>SUB</small>' : '') + t; // sur une ligne
     box.querySelector('.fc-dsp-v .v').innerHTML = '<button type="button" data-pm="-1">−</button>' + dspVal(s, sd, t) + '<button type="button" data-pm="1">+</button>';
