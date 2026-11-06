@@ -106,6 +106,8 @@
       // D-MODE du scope (SS06 : 0/4 CENTER, 1/7 CURSOR, 2/A FIX ; 0-2 avec 3DSS, 4/7/A cascade normale)
       { cmd: 'SS06;', re: /^SS06([0-9A-B])0000$/, parse: (m) => { const c = parseInt(m[1], 16); return { dMode: c === 1 || c === 7 ? 1 : c === 2 || c === 10 ? 2 : 0 }; }, sim: 'SS0640000' },
       { cmd: 'FN;', re: /^FN([0-2])$/, parse: (m) => ({ tuneStep: +m[1] }), sim: 'FN0' },
+      // METER (MS) : mesure de l'échelle sous l'S-mètre, MAIN puis SUB (0 PO, 1 COMP, 2 ALC, 3 VDD, 4 ID, 5 SWR)
+      { cmd: 'MS;', re: /^MS([0-5])([0-5])$/, parse: (m) => ({ meterSw: +m[1], meterSwB: +m[2] }), sim: 'MS55' },
       // FM : décalage relais, type de squelch, tonalité CTCSS (le TRX ne répond qu'en FM)
       { cmd: 'OS0;', when: (st) => /FM/.test(st.mode || ''), re: /^OS0([0-3])$/, parse: (m) => ({ rpt: +m[1] }), sim: 'OS00' },
       { cmd: 'OS1;', when: (st) => /FM/.test(st.modeB || ''), re: /^OS1([0-3])$/, parse: (m) => ({ rptB: +m[1] }), sim: 'OS10' },
@@ -119,7 +121,7 @@
     // TUNER TYPE SEL ANT1 / ANT2 (EX030701 / EX030702) — numéros du manuel CAT FTX-1 (Table 3)
     extraQueries: ['RA1;', 'PA0;', 'PA1;', 'PA2;', 'AC;', 'RI0;', 'EX030103;', 'EX030104;', 'EX030701;', 'EX030702;'],
     extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'afB', 'hiSwr', 'tuningRi',
-      'dContrast', 'dimmer', 'dimLed', 'micEq', 'txw', 'amc', 'voxGain', 'voxDelay', 'moniLvl', 'keyer', 'bkin', 'keySpeed', 'cwPitch', 'bkDelay', 'cwSpot', 'tuneStep', 'dMode', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB',
+      'dContrast', 'dimmer', 'dimLed', 'micEq', 'txw', 'amc', 'voxGain', 'voxDelay', 'moniLvl', 'keyer', 'bkin', 'keySpeed', 'cwPitch', 'bkDelay', 'cwSpot', 'tuneStep', 'dMode', 'meterSw', 'meterSwB', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB',
       'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB'],
     subBadges: true,
     // CW : mémoire TEXTE 5 du manipulateur (écrasée), lue par KY05 ; KY00 = arrêt (manuel CAT FTX-1, Hamlib ftx1_cw.c)
@@ -218,6 +220,9 @@
       { id: 'apfFreqB', g: 'flt', label: 'APF FREQ (SUB)', type: 'level', min: 0, max: 50, step: 1, face: true, write: (v) => 'CO13' + pad(v, 4) + ';' },
       { id: 'ssSpd', g: 'disp', label: 'SCOPE SPEED', type: 'level', min: 0, max: 5, step: 1, face: true, write: (v) => 'SS00' + v + '0000;' }, // 0 SLOW1 … 4 FAST3, 5 STOP
       { id: 'dMode', g: 'disp', label: 'D-MODE (code SS06)', type: 'level', min: 0, max: 10, step: 1, face: true, write: (v) => 'SS06' + Number(v).toString(16).toUpperCase() + '0000;' },
+      // METER : toucher l'S-mètre sur /ftx1 → tableau PO / COMP / ALC / VDD / ID / SWR, comme sur le TRX (MS P1 MAIN, P2 SUB)
+      { id: 'meterSw', g: 'disp', label: 'METER (MAIN)', type: 'select', face: true, options: [[0, 'PO'], [1, 'COMP'], [2, 'ALC'], [3, 'VDD'], [4, 'ID'], [5, 'SWR']], write: (v, st) => 'MS' + v + (st && st.meterSwB != null ? st.meterSwB : 5) + ';' },
+      { id: 'meterSwB', g: 'disp', label: 'METER (SUB)', type: 'select', face: true, options: [[0, 'PO'], [1, 'COMP'], [2, 'ALC'], [3, 'VDD'], [4, 'ID'], [5, 'SWR']], write: (v, st) => 'MS' + (st && st.meterSw != null ? st.meterSw : 5) + v + ';' },
       { id: 'tuneStep', g: 'vfo', label: 'FINE / FAST', type: 'select', face: true, options: [[0, 'NORMAL'], [1, 'FINE'], [2, 'FAST']], write: (v) => 'FN' + v + ';' },
       // ZIN (CW AUTO ZERO IN) : le récepteur sélectionné se cale sur le signal CW
       { id: 'zin', g: 'tx', label: 'ZIN', type: 'action', face: true, write: (v, s) => 'ZI' + (s && s.vfoSel === 1 ? 1 : 0) + ';' },

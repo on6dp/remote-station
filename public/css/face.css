@@ -639,6 +639,14 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 /* FTX-1 : écran DSP (appui d'1 s sur MAIN / SUB AF/RF/SQL) */
 .fc-dsp { position: absolute; z-index: 6; box-sizing: border-box; background: #08090b; border: 1px solid #5c636b; display: flex; flex-direction: column; color: #fff; }
 .fc-dsp[hidden] { display: none; }
+/* FTX-1 : tableau METER (toucher l'S-mètre), comme sur le TRX : cadre gris, boutons clairs, choix en bleu */
+.fc-msel { position: absolute; z-index: 7; box-sizing: border-box; background: #8b8f94; border: 2px solid #5c636b; padding: .3em .45em .5em; }
+.fc-msel[hidden] { display: none; }
+.fc-msel-h { background: #6c7076; color: #f2f4f6; text-align: center; font: 800 1.5em Verdana, 'DejaVu Sans', Arial, sans-serif; margin-bottom: .35em; }
+.fc-msel-g { display: grid; grid-template-columns: repeat(4, 1fr); gap: .4em; }
+.fc-msel-g button { font: 700 1.35em Verdana, 'DejaVu Sans', Arial, sans-serif; color: #1d2126; background: linear-gradient(#f4f5f6, #c9ccd0); border: 1px solid #6c7076; border-radius: .2em; padding: .45em 0; cursor: pointer; }
+.fc-msel-g button.on { background: #2f86e8; color: #fff; }
+.fc-msel-g button.na { opacity: .55; cursor: not-allowed; }
 .fc-dsp-f { width: 100%; flex: 1 1 auto; min-height: 0; }
 .fc-dsp-f .ax { fill: none; stroke: #e9edf2; stroke-width: 1.2; }
 .fc-dsp-f .tr { fill: rgba(150, 160, 155, .55); stroke: #f1f3f5; stroke-width: 2; stroke-linejoin: round; }

@@ -191,6 +191,7 @@
     if (a.local === 'exit' && (L.icMem || L.icRec || L.icSet)) { L.icMem = false; L.icRec = false; L.icSet = false; return render(); }
     if (a.local === 'mpadWrite') return mpadWrite();
     if (a.local === 'exit' && L.icView && !L.icomMenu && !L.quickMenu && !L.modeMenu && !L.bandMenu && !L.multiMenu) { L.icView = null; WF.drawn = false; return render(); }
+    if (a.local === 'exit' && L.mSel) { L.mSel = null; return render(); } // BACK : ferme le tableau METER
     if (a.local === 'exit') { if (L.bandMenu) closeBandMenu(); if (L.modeMenu) closeModeMenu(); for (const k of ['icomMenu', 'quickMenu']) if (L[k]) closeGrid(k); L.multiMenu = false; if (L.func) L.func = false; return render(); }
     if (a.local === 'bandUp' || a.local === 'bandDown') {
       // Bande suivante / précédente (IC-7300 : touches ▲ ▼)
@@ -644,6 +645,7 @@
   const S_POS = (raw) => (raw == null ? 0 : raw <= 130 ? raw / 130 * 0.55 : Math.min(1, 0.55 + (raw - 130) / 125 * 0.45));
   function buildMeter(g, x0, y0, w, side) {
     const cx = x0 + w / 2 + 4, cy = y0 + 268, m = { cx, cy };
+    if (FACE && FACE.meterFtx) m.hit = el('rect', { x: x0, y: y0 + 10, width: w, height: 72, fill: 'transparent', 'pointer-events': 'all' }, g); // FTX-1 : zone à toucher (METER)
     if (!(FACE && FACE.statusBar)) { // FTX-1 : pas de titre « PO METER » ; la barre d'état du TRX est au-dessus (buildStatus)
       el('rect', { x: x0, y: y0, width: w, height: 10, class: 'lcd-tbar' }, g);
       m.title = el('text', { x: cx, y: y0 + 8, class: 'lcd-ttl', 'text-anchor': 'middle' }, g, side === 'A' ? 'PO METER' : 'ALC METER');
@@ -651,7 +653,14 @@
     const S_SC = ['S', 244, [[0.05, '1'], [0.17, '3'], [0.29, '5'], [0.41, '7'], [0.55, '9'], [0.7, '+20', 1], [0.84, '+40', 1], [0.97, '+60', 1]], true];
     const SWR_SC = ['SWR', FACE && FACE.meterFtx ? 226 : 229, [[0.05, '1.0'], [0.24, '1.5'], [0.36, '2'], [0.5, '3'], [0.66, '5'], [0.95, '∞']]];
     // FTX-1 : comme sur le TRX — MAIN : S, SWR et la barre VOL ; SUB : S seul
-    const scales = FACE && FACE.meterFtx ? [S_SC, SWR_SC] : side === 'A'
+    // FTX-1 : échelle sous l'S-mètre selon METER (toucher l'S-mètre : PO, COMP, ALC, VDD, ID, SWR), une seule visible à la fois
+    const R2 = FACE && FACE.meterFtx ? 226 : 229;
+    const FTX_SEC = [['PO', R2, [[0.05, '0'], [0.24, '25'], [0.43, '50'], [0.62, '75'], [0.81, '100']]],
+      ['COMP', R2, [[0.05, '0'], [0.27, '5'], [0.49, '10'], [0.71, '15'], [0.93, '20']]],
+      ['ALC', R2, []],
+      ['VDD', R2, [[0.05, '0'], [0.35, '5'], [0.65, '10'], [0.95, '15']]],
+      ['ID', R2, [[0.05, '0'], [0.27, '5'], [0.49, '10'], [0.71, '15'], [0.93, '20']]], SWR_SC];
+    const scales = FACE && FACE.meterFtx ? [S_SC].concat(FTX_SEC) : side === 'A'
       ? [['S', 244, [[0.05, '1'], [0.17, '3'], [0.29, '5'], [0.41, '7'], [0.55, '9'], [0.7, '+20', 1], [0.84, '+40', 1], [0.97, '+60', 1]], true],
         ['PO', 229, [[0.03, '0'], [0.2, '10'], [0.38, '50'], [0.52, '100'], [0.64, '150'], [0.76, '200'], [0.88, '250']]],
         ['COMP', 214, [[0.05, '0'], [0.25, '5'], [0.45, '10'], [0.65, '15'], [0.85, '20']]],
@@ -662,14 +671,17 @@
         ['SWR', 199, [[0.05, '1.0'], [0.24, '1.5'], [0.36, '2'], [0.5, '3'], [0.66, '5'], [0.95, '∞']]]];
     for (const [name, r, ticks, isS] of scales) {
       // FTX-1 : l'arc SWR va aussi loin que l'arc S, chiffres au-dessus de l'arc (entre les deux arcs), comme sur le TRX
-      const ftxSwr = FACE && FACE.meterFtx && name === 'SWR', sp = ftxSwr ? ftxSwrSpan(r) : undefined;
+      const ftxSwr = FACE && FACE.meterFtx && !isS, sp = ftxSwr ? ftxSwrSpan(r) : undefined; // FTX-1 : toutes les 2es échelles (pas seulement SWR)
       if (ftxSwr) m.swrSpan = sp;
-      // FTX-1 : arc SWR et barre VOL dans un groupe, montrés seulement sur le VFO actif (comme sur le TRX)
+      // FTX-1 : 2e échelle et barre VOL dans un groupe, montrés seulement sur le VFO actif (comme sur le TRX) ; une sous-groupe par mesure
       const g0 = g;
-      g = ftxSwr ? (m.extra = m.extra || el('g', {}, g0)) : g0;
+      if (ftxSwr) { m.extra = m.extra || el('g', {}, g0); m.sec = m.sec || {}; g = m.sec[name] = el('g', {}, m.extra); } else g = g0;
       if (isS) {
         el('path', { d: arcPath(cx, cy, r, 0, 0.55), class: 'mtr-arc' }, g);
         el('path', { d: arcPath(cx, cy, r, 0.55, 1), class: 'mtr-arc blue' }, g);
+      } else if (ftxSwr && name === 'ALC') { // ALC : zone de fonctionnement (trait épais) sur la première moitié
+        el('path', { d: arcPath(cx, cy, r, 0, 0.92, sp), class: 'mtr-arc' }, g);
+        el('path', { d: arcPath(cx, cy, r, 0.05, 0.5, sp), class: 'mtr-arc thick' }, g);
       } else el('path', { d: arcPath(cx, cy, r, 0, name === 'ALC' ? 0.5 : 0.92, sp), class: 'mtr-arc' + (name === 'ALC' ? ' thick' : '') }, g);
       for (const [f, lab, blue] of ticks) {
         const p = arcPt(cx, cy, r, f, sp), q = arcPt(cx, cy, isS || ftxSwr ? r + 4 : r - 3, f, sp);
@@ -841,6 +853,13 @@
     LCD.fB = buildFilter(gw, X(199 + dB), Y(14), 82, 72);
     if (FACE.statusBar) buildStatus(g, c);
     // FTX-1 : toucher le cadre du filtre (MAIN ou SUB) ouvre l'écran DSP de ce récepteur, comme sur le TRX
+    // FTX-1 : toucher l'S-mètre ouvre le tableau METER (mesure de l'aiguille en émission), comme sur le TRX
+    if (FACE.meterFtx) for (const sd of ['A', 'B']) {
+      const mg = LCD['m' + sd].g;
+      mg.style.cursor = 'pointer';
+      el('title', {}, mg, 'S-mètre ' + (sd === 'B' ? 'SUB' : 'MAIN') + ' : clic = METER (PO, COMP, ALC, VDD, ID, SWR)');
+      mg.addEventListener('click', (ev) => { ev.stopPropagation(); meterOpen(sd); });
+    }
     if (FACE.meterFtx) for (const sd of ['A', 'B']) {
       const fg = LCD['f' + sd].g;
       fg.style.cursor = 'pointer';
@@ -4202,6 +4221,46 @@
     if (t === 'WIDTH') { const md = (sd === 'B' ? s.modeB : s.mode) || ''; return dspWidthHz(s, sd) !== widthDefHz(md); }
     return !!s[dspK(sd, t === 'NOTCH' ? 'notch' : t === 'APF' ? 'apf' : 'contour')];
   }
+  // ---- FTX-1 : METER (toucher l'S-mètre, comme sur le TRX) : PO, COMP, ALC, VDD, ID, SWR (TEMP : pas de commande CAT)
+  const METER_NAMES = ['PO', 'COMP', 'ALC', 'VDD', 'ID', 'SWR'];
+  function meterSel(s, side) { const v = side === 'B' ? s.meterSwB : s.meterSw; return v >= 0 && v <= 5 ? v : 5; }
+  function meterOpen(side) {
+    viewTouched();
+    L.mSel = L.mSel === side ? null : side;
+    render();
+  }
+  function meterPick(i) {
+    const sd = L.mSel;
+    if (!sd) return;
+    if (i === 6) return say('TEMP : pas de commande CAT pour cette mesure sur le FTX-1 (seulement au club).', 'warn', 4000);
+    if (!needControl()) return;
+    const k = sd === 'B' ? 'meterSwB' : 'meterSw';
+    setCtl(k, i); pend[k] = { v: i, at: Date.now() };
+    L.mSel = null;
+    say('METER ' + (sd === 'B' ? 'SUB' : 'MAIN') + ' : ' + METER_NAMES[i] + ' (aiguille de l’S-mètre en émission)', '', 3000);
+    render();
+  }
+  function meterDraw(s) {
+    let box = $('fcMeter');
+    if (!L.mSel) { if (box) box.hidden = true; return; }
+    const sc = FACE.lcd;
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'fcMeter'; box.className = 'fc-msel';
+      box.innerHTML = '<div class="fc-msel-h">METER</div><div class="fc-msel-g">' +
+        METER_NAMES.concat(['TEMP']).map((n, i) => '<button type="button" data-mi="' + i + '"' + (i === 6 ? ' class="na" title="TEMP : pas de commande CAT (seulement au club)"' : '') + '>' + n + '</button>').join('') + '</div>';
+      $('facePanel').appendChild(box);
+      box.addEventListener('click', (e) => { const b = e.target.closest('[data-mi]'); if (b) { e.stopPropagation(); meterPick(+b.dataset.mi); } });
+    }
+    // Ordre du TRX : PO COMP ALC VDD / ID SWR TEMP
+    box.style.left = ((sc.x + 95 - V.x) / V.w * 100) + '%';
+    box.style.top = ((sc.y + 132 - V.y) / V.h * 100) + '%';
+    box.style.width = (380 / V.w * 100) + '%';
+    box.style.fontSize = Math.max(8, Math.round($('facePanel').clientWidth / V.w * 12)) + 'px';
+    const cur = meterSel(s, L.mSel);
+    box.querySelectorAll('[data-mi]').forEach((b) => b.classList.toggle('on', +b.dataset.mi === cur));
+    box.hidden = false;
+  }
   function dspToggle(sd) {
     viewTouched();
     L.dsp = L.dsp === sd ? null : sd; L.dspTab = 0;
@@ -4379,9 +4438,19 @@
       if (FACE.meterFtx && tx) {
         // FTX-1 : en émission, l'aiguille du MAIN passe sur l'échelle SWR (puissance écrite à côté) ; SUB au repos
         const swr = R.swrValue ? R.swrValue(s.m6) : null, w = s.m5 != null ? s.m5 / 255 * maxW : null;
-        const txs = L.txSide(s) === side;
-        f = txs && swr ? swrNeedle(m, Math.min(0.95, swr <= 1.5 ? 0.05 + (swr - 1) / 0.5 * 0.19 : swr <= 2 ? 0.24 + (swr - 1.5) / 0.5 * 0.12 : swr <= 3 ? 0.36 + (swr - 2) * 0.14 : 0.5 + (swr - 3) / 2 * 0.16)) : txs ? swrNeedle(m, 0.05) : 0;
-        val = txs ? [swr ? 'SWR ' + swr.toFixed(1) : '', w != null ? Math.round(w) + ' W' : ''].filter(Boolean).join('  ') : '';
+        const txs = L.txSide(s) === side, ms = meterSel(s, side);
+        // Aiguille sur l'échelle choisie par METER (SWR par défaut) ; puissance écrite à côté
+        const comp = s.m3 == null ? null : s.m3 <= 130 ? s.m3 / 130 * 15 : 15 + (s.m3 - 130) / 111 * 15;
+        const raw = (v) => (v == null ? null : Math.max(0, Math.min(1, v / 255)));
+        let fr = null, txt = '';
+        if (ms === 0) { fr = w != null ? 0.05 + Math.min(1.25, w / 100) * 0.76 : null; }
+        else if (ms === 1) { fr = comp != null ? 0.05 + Math.min(1, comp / 20) * 0.88 : null; txt = comp != null ? 'COMP ' + Math.round(comp) + 'dB' : ''; }
+        else if (ms === 2) { fr = raw(s.m4) != null ? 0.05 + raw(s.m4) * 0.87 : null; txt = s.m4 != null ? 'ALC ' + Math.round(raw(s.m4) * 100) + '%' : ''; }
+        else if (ms === 3) { fr = raw(s.m8) != null ? 0.05 + raw(s.m8) * 0.9 : null; txt = R.vdValue && s.m8 != null ? 'VDD ' + R.vdValue(s.m8).toFixed(1) + 'V' : ''; }
+        else if (ms === 4) { fr = raw(s.m7) != null ? 0.05 + raw(s.m7) * 0.88 : null; txt = R.idValue && s.m7 != null ? 'ID ' + R.idValue(s.m7).toFixed(1) + 'A' : ''; }
+        else { fr = swr ? Math.min(0.95, swr <= 1.5 ? 0.05 + (swr - 1) / 0.5 * 0.19 : swr <= 2 ? 0.24 + (swr - 1.5) / 0.5 * 0.12 : swr <= 3 ? 0.36 + (swr - 2) * 0.14 : 0.5 + (swr - 3) / 2 * 0.16) : null; txt = swr ? 'SWR ' + swr.toFixed(1) : ''; }
+        f = txs ? swrNeedle(m, fr != null ? Math.min(0.97, fr) : 0.05) : 0;
+        val = txs ? [txt, w != null ? Math.round(w) + ' W' : ''].filter(Boolean).join('  ') : '';
       } else if (tx && side === 'A') {
         // PO : 0–250 W sur l'échelle du TRX (0,03 … 0,88)
         const w = s.m5 != null ? s.m5 / 255 * maxW : 0;
@@ -4406,6 +4475,7 @@
       m.val.textContent = val;
       m.val.classList.toggle('tx', tx);
       if (m.extra) m.extra.style.display = (tx ? L.txSide(s) === side : activeSide() === side) ? '' : 'none'; // FTX-1 : SWR et VOL sur le VFO actif
+      if (m.sec) { const nm = METER_NAMES[meterSel(s, side)]; for (const k in m.sec) m.sec[k].style.display = k === nm ? '' : 'none'; }
       if (m.vol) m.vol.setAttribute('x2', (+m.vol.getAttribute('x1') + Math.max(0, Math.min(1, ((side === 'B' ? s.afB : s.af) || 0) / 255)) * m.volW).toFixed(1));
       // Filtre : largeur et décalage du récepteur
       const fl = LCD['f' + side];
@@ -4543,7 +4613,7 @@
     for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) || (SINGLE && sd === 'B') || !!LCD.ich || (FACE.meterDy && L.expand) ? 'none' : ''; // FTX-1 : EXPAND couvre les filtres
     drawFunc(s);
     drawStatus(s);
-    if (FACE.meterFtx) dspDraw(s);
+    if (FACE.meterFtx) { dspDraw(s); meterDraw(s); }
     for (const b of LCD.bot || []) {
       if (b.t2) b.t2.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
       if (b.lab === 'HOLD') b.r.classList.toggle('on', !!L.hold);

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.116** — FTX-1 : toucher un S-mètre ouvre le tableau METER du TRX (PO, COMP, ALC, VDD, ID, SWR — commande MS) ; la 2e échelle et l'aiguille en émission suivent ce choix
 - **0.37.115** — FTX-1 : touche S-DX expliquée (Super DX, renfort des signaux faibles ; pas de commande CAT : seulement au club)
 - **0.37.114** — FTX-1 : fréquences de l'échelle du scope (CURSOR / FIX) en police plus petite si nécessaire : elles ne se chevauchent plus
 - **0.37.113** — FTX-1 : flèches R ▶ / T ▶ du scope à la même hauteur que sur le TRX
