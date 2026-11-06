@@ -165,6 +165,7 @@ sudo systemctl restart remote-station
 | `powerRules`, `defaultMaxWatts` | ON2 100 W, ON3 25 W, sinon 1500 W | Puissance maximale selon l'indicatif |
 | `rxOnlyPrefixes` | ONL | Indicatifs en écoute seule |
 | `allowedPrefixes` | ON, OO, OP, OQ, OR, OS, OT | Préfixes autorisés à se connecter |
+| `allowedCalls` | (vide) | Exceptions : indicatifs étrangers admis nommément (`node adduser.js F4ABC --exception`, puis redémarrer le service) |
 | `maxSwr`, `swrHoldMs` | 2,5, 700 ms | Coupure de l'émission sur ROS élevé (0 = pas de protection) |
 | `tunerAuto` | `true` | Tuner remis en service à chaque changement de bande HF / 6 m |
 | `txSilenceSeconds`, `txHardMaxSeconds` | 120, 300 | Chien de garde de la page Station (TRX en émission sans modulation / en continu) |

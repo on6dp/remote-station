@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.127** — FTX-1 : voyants BUSY/TX rouges seulement sur le VFO qui émet (pas de vert) ; exceptions de connexion : indicatifs étrangers admis nommément (allowedCalls, node adduser.js F4ABC --exception)
 - **0.37.126** — FTX-1 : voyants BUSY/TX SUB | MAIN comme sur le TRX — plus de vert en réception, rouge seulement sur le VFO qui émet
 - **0.37.125** — FTX-1 : ATT et IPO du SUB plus réglables à distance (par CAT, le TRX changeait ceux du MAIN) — refusés par le serveur et par la page Station, explication à l'écran
 - **0.37.124** — FTX-1 : ATT / IPO du SUB — la page Station attend que le TRX soit bien passé sur SUB avant la commande, puis vérifie au retour que le MAIN n'a pas changé (sinon il est remis et c'est signalé)

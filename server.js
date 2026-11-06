@@ -101,6 +101,7 @@ const DEFAULTS = {
   txRanges: [],
   // Seuls ces préfixes peuvent se connecter
   allowedPrefixes: ['ON', 'OO', 'OP', 'OQ', 'OR', 'OS', 'OT'],
+  allowedCalls: [], // exceptions : indicatifs étrangers admis nommément (node adduser.js F4ABC --exception)
   // Puissance maximale par début d'indicatif (première règle qui correspond), sinon defaultMaxWatts
   powerRules: [{ prefix: 'ON2', maxWatts: 100 }, { prefix: 'ON3', maxWatts: 25 }],
   // Bandes permises en émission par début d'indicatif (licence de base ON3) ; les autres préfixes : toutes les bandes de txRanges
@@ -1455,7 +1456,7 @@ async function stationLoginPost(req, res) {
   const fl = fails.get(ip);
   if (fl && fl.until > now) return sendStationLogin(res, 'Trop d’essais, réessayez dans quelques minutes.', 429);
   const call = auth.normCall(f.get('call'));
-  const rec = auth.validCall(call, cfg.allowedPrefixes) ? auth.loadUsers(USERS_FILE)[call] : null;
+  const rec = auth.validCall(call, cfg.allowedPrefixes, cfg.allowedCalls) ? auth.loadUsers(USERS_FILE)[call] : null;
   const ok = rec && !auth.userOff(rec) && (await auth.verifyPassword(String(f.get('pass') || ''), rec));
   if (!ok) {
     const n = (fl && !(fl.until && fl.until <= now) ? fl.n : 0) + 1;
@@ -2626,7 +2627,7 @@ async function onLogin(conn, m) {
     const h = sessHash(m.session);
     const s = sessions[h];
     const rec = s && s.exp > now ? auth.loadUsers(USERS_FILE)[s.call] : null;
-    if (!rec || auth.userOff(rec) || !auth.validCall(s.call, cfg.allowedPrefixes)) {
+    if (!rec || auth.userOff(rec) || !auth.validCall(s.call, cfg.allowedPrefixes, cfg.allowedCalls)) {
       if (s) { delete sessions[h]; saveSessions(); }
       return send(conn, { t: 'login_fail', session: true, msg: '' });
     }
@@ -2641,7 +2642,7 @@ async function onLogin(conn, m) {
   }
   const call = auth.normCall(m.call);
   const users = auth.loadUsers(USERS_FILE);
-  if (!auth.validCall(call, cfg.allowedPrefixes)) {
+  if (!auth.validCall(call, cfg.allowedPrefixes, cfg.allowedCalls)) {
     journal('login_refused_prefix', { call, ip: conn.ip });
     return setTimeout(() => send(conn, { t: 'login_fail', msg: 'Accès réservé aux indicatifs belges (' + cfg.allowedPrefixes.join(', ') + ')' }), 600);
   }

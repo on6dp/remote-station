@@ -10,6 +10,8 @@
  *   node adduser.js --until ON4ABC 2027-03-31   accès jusqu'à cette date incluse (fin d'affiliation) ; sans date : sans limite
  *   node adduser.js --until-all 2027-03-31        même date pour tous les membres sauf les administrateurs (sans date : sans limite)
  *   node adduser.js --list            liste les membres
+ *   node adduser.js F4ABC --exception indicatif étranger admis par exception (ajouté à « allowedCalls » de config.json ;
+ *                                     redémarrer le service ensuite)
  */
 const path = require('path');
 const fs = require('fs');
@@ -85,8 +87,20 @@ function askHidden(q) {
 
   const call = auth.normCall(args[0]);
   const prefixes = cfg.allowedPrefixes || auth.BE_PREFIXES;
-  if (!auth.validCall(call, prefixes)) {
-    console.error('Indicatif refusé : ' + call + ' (préfixes autorisés : ' + prefixes.join(', ') + ')');
+  // --exception : indicatif hors des préfixes belges, admis nommément (liste « allowedCalls » de config.json)
+  if (args.includes('--exception')) {
+    if (!/^[A-Z0-9]{1,3}[0-9][A-Z0-9]{1,4}(\/[A-Z0-9]{1,4})?$/.test(call)) { console.error('Indicatif invalide : ' + call); process.exit(1); }
+    const raw = fs.existsSync(cfgPath) ? JSON.parse(fs.readFileSync(cfgPath, 'utf8')) : {};
+    raw.allowedCalls = Array.isArray(raw.allowedCalls) ? raw.allowedCalls : [];
+    if (!raw.allowedCalls.map(auth.normCall).includes(call)) {
+      raw.allowedCalls.push(call);
+      fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2) + '\n');
+      console.log(call + ' ajouté aux exceptions (allowedCalls de ' + cfgPath + ') — redémarrez le service pour l’appliquer.');
+    }
+    cfg.allowedCalls = raw.allowedCalls;
+  }
+  if (!auth.validCall(call, prefixes, cfg.allowedCalls)) {
+    console.error('Indicatif refusé : ' + call + ' (préfixes autorisés : ' + prefixes.join(', ') + ' ; indicatif étranger : ajoutez --exception)');
     process.exit(1);
   }
   const p1 = await askHidden('Mot de passe pour ' + call + ' : ');
