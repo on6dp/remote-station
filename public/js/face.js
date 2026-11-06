@@ -5118,7 +5118,8 @@
   // Le spectre affiché reste celui du son reçu (BF), placé à sa vraie fréquence dans la fenêtre (en dehors : rien).
   const FTXWIN = {};
   function ftxWin(name) {
-    const st0 = S(), sd = name === 'SUB' ? 'B' : 'A', f00 = sd === 'B' ? st0.freqB : st0.freq;
+    // Scope unique (nom vide) : celui du VFO sélectionné (le son reçu est le sien)
+    const st0 = S(), sd = name === 'SUB' ? 'B' : name === 'MAIN' ? 'A' : activeSide(), f00 = sd === 'B' ? st0.freqB : st0.freq;
     if (!f00) return null;
     const md = (sd === 'B' ? st0.modeB : st0.mode) || '', sg = /LSB|-L$|^CW-L|^RTTY-L/.test(md) ? -1 : 1;
     const rit = sd === 'B' ? st0.ritB : st0.rit, clr = (sd === 'B' ? st0.clarB : st0.clar) || 0;
@@ -5255,7 +5256,7 @@
     for (let k = 1; k < ng; k++) { const gx = Math.round(x0 + w * k / ng) + 0.5; c2.beginPath(); c2.moveTo(gx, y0); c2.lineTo(gx, y0 + sh); c2.stroke(); }
     for (let k = 1; k < 5; k++) { const gy = Math.round(y0 + sh * k / 5) + 0.5; c2.beginPath(); c2.moveTo(x0, gy); c2.lineTo(x0 + w, gy); c2.stroke(); }
     // MARKER (S.MENU) : bande passante du filtre de ce récepteur et repère central, sur l'échelle de la BF
-    const fl = !rg.noMarker && L.marker && LCD.flt && LCD.flt[name === 'SUB' ? 'B' : 'A'];
+    const fl = !rg.noMarker && L.marker && LCD.flt && LCD.flt[name === 'SUB' ? 'B' : name === 'MAIN' || !FACE.meterFtx ? 'A' : activeSide()]; // FTX-1 : scope unique = VFO sélectionné
     if (fl) {
       const md = fl.mode;
       let c = audioCenter(md || '', fl.hz); // CW : tonalité (pitch) du TRX
@@ -5573,7 +5574,7 @@
         else if (L.multi && !ICOM) drawMulti(c2, W, H, specs, pal, nb, lvl, maxHz);
         else if (L.disp === 3) drawFilters(c2, W, H, specs, nb, lvl, maxHz);
         else if (L.d3 && !ICOM) { /* pas de 3DSS sur l'IC-7300 (réglage resté en mémoire du navigateur : ignoré) */ const mh = fitHz(activeSide()); draw3d(c2, W, H, activeSide() === 'B' && WF.two ? specs[1] : specs[0], pal, nbFor(mh), lvl, mh); }
-        else for (const rg of scopeRegions(W, H, specs)) { const mh = fitHz(rg.name === 'SUB' ? 'B' : 'A'); drawScope(c2, rg, pal, nbFor(mh), lvl, mh); }
+        else for (const rg of scopeRegions(W, H, specs)) { const mh = fitHz(rg.name === 'SUB' ? 'B' : rg.name === 'MAIN' || !FACE.meterFtx ? 'A' : activeSide()); drawScope(c2, rg, pal, nbFor(mh), lvl, mh); }
       }
     } else {
       for (const side of ['A', 'B']) if (LCD['f' + side]) { LCD['f' + side].bars.setAttribute('d', ''); cwTune(side, LCD['f' + side], null); }

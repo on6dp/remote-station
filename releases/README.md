@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.128 | [RemoteStation-Setup-0.37.128.exe](0.37.128/RemoteStation-Setup-0.37.128.exe) | [remote-station-0.37.128.tar.gz](0.37.128/remote-station-0.37.128.tar.gz) | Ctrl+F5 sur la page /ftx1 — [empreintes SHA-256](0.37.128/SHA256SUMS.txt) |
 | 0.37.127 | [RemoteStation-Setup-0.37.127.exe](0.37.127/RemoteStation-Setup-0.37.127.exe) | [remote-station-0.37.127.tar.gz](0.37.127/remote-station-0.37.127.tar.gz) | Ctrl+F5 sur la page /ftx1 ; pour un indicatif étranger : sudo node adduser.js INDICATIF --exception puis redémarrer le service — [empreintes SHA-256](0.37.127/SHA256SUMS.txt) |
 | 0.37.126 | [RemoteStation-Setup-0.37.126.exe](0.37.126/RemoteStation-Setup-0.37.126.exe) | [remote-station-0.37.126.tar.gz](0.37.126/remote-station-0.37.126.tar.gz) | Ctrl+F5 sur la page /ftx1 — [empreintes SHA-256](0.37.126/SHA256SUMS.txt) |
 | 0.37.125 | [RemoteStation-Setup-0.37.125.exe](0.37.125/RemoteStation-Setup-0.37.125.exe) | [remote-station-0.37.125.tar.gz](0.37.125/remote-station-0.37.125.tar.gz) | Ctrl+F5 sur la page Station du club, le dashboard et /ftx1 — [empreintes SHA-256](0.37.125/SHA256SUMS.txt) |
