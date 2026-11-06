@@ -61,7 +61,7 @@
       { id: 'pmg', x: 393, y: 10, w: 113, h: 31, tip: 'PMG', act: info('PMG (mémoires) : pas disponible à distance.') },
       { id: 'band', x: 527, y: 10, w: 113, h: 31, tip: 'MAG BAND : appui bref = bande suivante (1.8 → 3.5 → 7 → 10 → 14 …) ; appui d’1 s = tableau des bandes (clic sur une bande, pour redescendre)', act: { local: 'bandUp', long: { local: 'bandMenu' } } },
       { id: 'mode', x: 657, y: 10, w: 80, h: 31, tip: 'MODE : mode suivant (récepteur actif) ; appui d’au moins 1 s : tableau de tous les modes', act: { mode: 'cycle', longMenu: true } },
-      { id: 'split', x: 803, y: 20, w: 93, h: 28, tip: 'SPLIT : émission sur l’autre VFO ; appui de plus d’1 s : SPLIT inversé (VFO échangés) (SPLIT virtuel du FTX-1 : rien n’est envoyé au TRX avant l’émission)', act: { local: 'split', long: { local: 'splitRev' } }, led: (s) => !!s.split },
+      { id: 'split', x: 803, y: 20, w: 93, h: 28, tip: 'SPLIT : émission sur l’autre VFO ; appui de plus d’1 s : l’autre VFO prend la même fréquence et SPLIT (émission là, ▼ rouge) ; le grand bouton déplace ensuite l’écoute (▼ vert) (SPLIT virtuel du FTX-1 : rien n’est envoyé au TRX avant l’émission)', act: { local: 'split', long: { local: 'splitQuick' } }, led: (s) => !!s.split },
       { id: 'vm', x: 920, y: 20, w: 107, h: 28, tip: 'V/M', act: info('Mémoires : pas encore reliées.') },
       { id: 'mv', x: 1053, y: 20, w: 93, h: 28, tip: 'M▸V', act: info('Mémoires : pas encore reliées.') },
       // Autour du grand bouton

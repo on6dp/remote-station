@@ -238,6 +238,17 @@
       setCtl('swap', null);
       return say('SPLIT inversé : VFO échangés (A ⇄ B).', '', 3000);
     }
+    // FTX-1 : appui de plus d'1 s sur SPLIT = comme sur le TRX : l'autre VFO reçoit la fréquence (et le mode) du VFO actif
+    // (A → B ou B → A), puis SPLIT : on émet sur l'autre VFO (▼ rouge, il ne bouge plus) et le grand bouton déplace
+    // l'écoute (▼ vert, fréquence en orange) pour aller chercher la station
+    if (a.local === 'splitQuick') {
+      if (!needControl()) return;
+      if (S().tx) return say('SPLIT : pas pendant une émission.', 'warn', 2500);
+      const sd = activeSide();
+      setCtl(sd === 'B' ? 'bToA' : 'aToB', null);
+      if (!S().split) doAct({ act: { local: 'split' } });
+      return say('SPLIT : émission sur ' + (sd === 'B' ? 'VFO-A (MAIN)' : 'VFO-B (SUB)') + ' à la même fréquence ; le grand bouton déplace l’écoute (▼ vert).', '', 4500);
+    }
     if (a.local === 'split') {
       // SPLIT en marche (ST1) : l'émission doit passer sur le VFO NON sélectionné (MAIN sélectionné → TX B ; SUB sélectionné → TX A).
       // SPLIT arrêté (ST0) : l'émission doit revenir sur le VFO sélectionné.
@@ -5003,7 +5014,7 @@
     if (inW(win.fT)) { const x = Math.round(X(win.fT)); c2.fillStyle = RED; c2.fillRect(x - 1, yT + 9, 2, sh - yT - 9 + y0); tri(x, yT, RED); }
     else arrow(win.fT > win.start, y0 + Math.round(sh * 0.36), RED, 'T');
     if (!one) {
-      if (inW(win.fR)) tri(Math.round(X(win.fR)), y0, GRN);
+      if (inW(win.fR)) { const x = Math.round(X(win.fR)); c2.fillStyle = GRN; c2.fillRect(x - 1, y0 + 9, 2, sh - 9); tri(x, y0, GRN); } // écoute : ▼ vert et son trait
       else arrow(win.fR > win.start, y0 + Math.round(sh * 0.16), GRN, 'R');
     }
     c2.restore();
