@@ -864,7 +864,9 @@
         v.mode.setAttribute('y', Y(125));
         v.lbl.style.display = 'none'; v.tx.style.display = 'none';
       }
-      v.freq = el('path', { d: '', class: 'lcd-seg' }, g);
+      // FTX-1 : fréquence en texte (Arial Black penché, comme la police de l'écran du TRX) ; les autres TRX : 7 segments
+      v.freq = FACE && FACE.freqFont ? el('text', { x: 0, y: 0, class: 'lcd-seg ftxt', 'text-anchor': 'end', 'font-size': FACE.freqFont }, g, '')
+        : el('path', { d: '', class: 'lcd-seg' }, g);
       v.xr = x0 + half - 6;
       v.sel = el('rect', { x: x0 + 58, y: Y(126), width: half - 64, height: 1.6, class: 'lcd-sel' }, g);
       v.hit = el('rect', { x: x0 + 58, y: Y(92), width: half - 64, height: 34, class: 'hs lcd-hit' }, g);
@@ -4455,7 +4457,20 @@
       const fq0 = side === 'A' ? s.freq : s.freqB, cRx = FACE.clarCycle && (side === 'A' ? s.rit : s.ritB);
       const fq = fq0 && cRx ? fq0 + ((side === 'A' ? s.clar : s.clarB) || 0) : fq0;
       v.mode.textContent = mode || '—';
-      v.freq.setAttribute('d', fq ? seg7(fmtFreq(fq), v.xr, LCD.c0y + 95, 26) : '');
+      if (FACE.freqFont) { // FTX-1 : police de l'écran du TRX
+        const txt = fq ? fmtFreq(fq) : '';
+        if (v.freq.textContent !== txt || !v.fqOk) { // fqOk : largeur déjà mesurée (0 tant que la face est cachée)
+          v.freq.textContent = txt;
+          v.freq.setAttribute('x', v.xr); v.freq.setAttribute('y', LCD.c0y + 121);
+          v.freq.removeAttribute('textLength');
+          // Trop large (ex. 145.500.000, ou police de remplacement plus large) : on resserre pour ne pas mordre sur les badges
+          const maxW = LCD.half - 60;
+          let tw = 0;
+          try { tw = txt ? v.freq.getComputedTextLength() : 1; } catch (e) { /* pas de mise en page */ }
+          v.fqOk = tw > 0;
+          if (tw > maxW) { v.freq.setAttribute('textLength', maxW); v.freq.setAttribute('lengthAdjust', 'spacingAndGlyphs'); }
+        }
+      } else v.freq.setAttribute('d', fq ? seg7(fmtFreq(fq), v.xr, LCD.c0y + 95, 26) : '');
       const active = (s.vfoSel === 1) === (side === 'B');
       v.freq.classList.toggle('dim', side === 'B' && !subOn && !FACE.vfoBadges); // FTX-1 : l'autre VFO reste en blanc, comme sur le TRX
       // SPLIT : la fréquence du VFO qui va émettre s'affiche en rouge (comme sur le TRX)
@@ -6035,12 +6050,20 @@
     return;
   }
   document.title = FACE.name + ' · Remote Station';
-  build();
-  wfTick();
+  // Chaque étape du démarrage à part : une erreur dans l'une (réglage gardé dans le navigateur, état du TRX inattendu…)
+  // n'empêche plus les suivantes (PTT, DIGI / SSB CONFIGURATION sous la face avant) ; l'erreur est affichée pour qu'on puisse la corriger
+  const boot = (name, fn) => {
+    try { fn(); } catch (e) {
+      console.error('Démarrage (' + name + ') :', e);
+      say('Erreur au démarrage de la page (' + name + ') : ' + (e && e.message ? e.message : e) + ' — merci de la signaler (copie d’écran).', 'error', 0);
+    }
+  };
+  boot('face avant', build);
+  boot('cascade', wfTick);
   // Modes numériques (FT8, RTTY, CW…) sous l'image du TRX : le même module que le dashboard, sur la connexion de cette page
-  if (window.RSDIGI) window.RSDIGI.init(digiApi);
-  bmPopRestore();
-  if (window.RSVOICE) {
+  boot('modes numériques', () => { if (window.RSDIGI) window.RSDIGI.init(digiApi); });
+  boot('carte de bande', bmPopRestore);
+  if (window.RSVOICE) boot('phonie', () => {
     window.RSVOICE.init({ compact: true, send, say, iControl, state: () => st, me: () => me, rig: () => R,
       // Sortie son choisie dans SSB CONFIGURATION : aussi pour l'écoute du TRX
       setSink: (id) => { player.sink = id; if (player.ctx && player.ctx.setSinkId) player.ctx.setSinkId(id).catch(() => say('Sortie son : ce navigateur ne permet pas de la choisir (Chrome ou Edge récents).', 'warn', 5000)); },
@@ -6082,7 +6105,7 @@
     // DX Cluster juste après « Suivre l'opérateur »
     const dw = document.querySelector('.topbar .dxc-wrap');
     if (dw && fb) fb.after(dw);
-  }
+  });
   const sess = store.get('rs.sess', '');
   if (sess) creds = { session: sess };
   else showLogin('');

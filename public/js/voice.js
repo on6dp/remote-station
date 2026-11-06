@@ -146,10 +146,12 @@
     const modes = st && st.voice;
     const R = V.api.rig && V.api.rig();
     const trxEq = !!(st && st.trxEq && R && R.TRX_EQ);
-    box.hidden = (!modes && !trxEq) || !V.api.me() || !V.api.me().canTx || V.api.me().rxOnly;
+    // Face avant (compact) : la ligne reste toujours là (DIGI / SSB CONFIGURATION), même quand la phonie à distance n'est pas
+    // annoncée par la page Station (hors ligne, à recharger) et que le TRX n'a pas d'EQUALIZER TRX (FTX-1) : boutons grisés
+    box.hidden = (!V.api.compact && !modes && !trxEq) || !V.api.me() || !V.api.me().canTx || V.api.me().rxOnly;
     $('vxTrxBtn').hidden = !trxEq;
     if (trxEq && R.TRX_EQ.icom) $('vxTrxBtn').title = 'Votre profil d’émission de l’IC-7300 (SET → Tone Control/TBW : Bass, Treble, TBW), mis au TRX quand vous prenez la main ; réglage du club remis quand vous la rendez';
-    $('vxOn').hidden = !modes;
+    $('vxOn').hidden = !modes && !V.api.compact;
     if (!trxEq && $('vxTrx')) $('vxTrx').remove();
     if ($('vxTrx')) trxDrawState();
     $('vxOn').setAttribute('aria-pressed', String(V.on));
@@ -167,11 +169,12 @@
     // Face avant : MICRO et EQUALIZER MICRO grisés hors phonie (DATA-U, CW, RTTY… : le micro ne sert pas)
     const voiceMd = !!(modes && modes.indexOf(txMode(st)) >= 0);
     if (V.api.compact) {
-      $('vxEqBtn').hidden = !modes;
+      $('vxEqBtn').hidden = false;
       $('vxEqBtn').classList.toggle('dim', !V.on || !voiceMd);
       $('vxOn').classList.toggle('dim', !voiceMd);
       if (!voiceMd && modes) $('vxOn').title = 'Mode ' + (txMode(st) || '?') + ' : pas de phonie (le micro sert en ' + modes.join(' / ') + ').';
-      box.querySelector('.vx-meter').hidden = !modes;
+      else if (!modes && !V.on) $('vxOn').title = 'Phonie à distance pas disponible pour le moment (page Station du club hors ligne ou à recharger) : vous pouvez déjà préparer votre micro et son égaliseur.';
+      box.querySelector('.vx-meter').hidden = false;
     }
     if (!V.on) return;
     const md = txMode(st);
