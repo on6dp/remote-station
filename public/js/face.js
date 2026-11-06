@@ -4909,7 +4909,7 @@
   // Un scope : spectre en haut, cascade en dessous (elle descend d'une ligne à chaque tour), échelle en bas
   function drawScope(c2, rg, pal, nb, lvl, maxHz) {
     // FTX-1 : spectre et cascade moins « généreux » (comme sur le TRX, le spectre reste dans le bas de sa zone) ; D-LEVEL règle en plus
-    const ftxDim = FACE.meterFtx ? 0.12 : 0, ftxH = FACE.meterFtx ? 0.7 : 1;
+    const ftxDim = 0, ftxH = 1;
     const { sp, x0, y0, w, h, name } = rg;
     const lab = ICOM ? 15 : FACE.meterFtx ? 19 : 11, sh = rg.wf === false ? h - lab : Math.round((h - lab) * (h < 90 ? 0.5 : 0.6)); // IC-7300 : chiffres de l'échelle plus grands ; sans cascade : spectre sur toute la hauteur
     if (rg.sep === 'h') { c2.fillStyle = '#2b3546'; c2.fillRect(x0, y0 - 2, w, 2); }
@@ -4939,7 +4939,15 @@
         const i0 = Math.floor(px / w * nb), i1 = Math.max(i0 + 1, Math.floor((px + 1) / w * nb));
         for (let i = i0; i < i1 && i < nb; i++) if (sp[i] > m) m = sp[i];
       }
-      col[px] = Math.max(0, Math.min(1, m + lvl - ftxDim));
+      col[px] = FACE.meterFtx ? m + lvl : Math.max(0, Math.min(1, m + lvl - ftxDim));
+    }
+    if (FACE.meterFtx) {
+      // FTX-1 : comme sur le TRX, bruit de fond en bas et crêtes bien visibles — niveau rapporté au fond (2e décile)
+      // et à la crête la plus forte (gardée et lentement relâchée) au lieu d'être écrêté en haut
+      const srt = Array.from(col).sort((a, b) => a - b), floor = srt[Math.floor(srt.length * 0.2)] || 0;
+      const key = 'ftxTop' + (name || 'M'), top = Math.max(srt[srt.length - 1] || 0, floor + 0.35, (WF[key] || 0) * 0.985);
+      WF[key] = top;
+      for (let px = 0; px < w; px++) col[px] = Math.max(0, Math.min(1, 0.1 + 0.9 * (col[px] - floor) / (top - floor)));
     }
     // Grille
     c2.strokeStyle = 'rgba(120,130,145,.45)';

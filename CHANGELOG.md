@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.105** — Face avant FTX-1 : spectre et cascade rapportés au bruit de fond et à la crête la plus forte — bruit en bas, crêtes bien visibles, plus d'écrêtage en haut
 - **0.37.104** — Face avant FTX-1 : bandes bleues de part et d'autre du grand bouton allumées quand le MAIN est actif, éteintes quand le SUB est actif (rouges en CLAR), comme sur le TRX
 - **0.37.103** — Face avant FTX-1 : spectre et cascade moins forts (le spectre reste dans le bas de sa zone, comme sur le TRX) ; D-LEVEL règle en plus
 - **0.37.102** — Correctif : face avant FTX-1 qui ne s'affichait plus en 0.37.101 (erreur dans face.js) ; écran DSP : changement d'onglet (SHIFT, WIDTH…) tout de suite, à l'appui ; CONTOUR doré peu profond ; le TRX suit la progression
