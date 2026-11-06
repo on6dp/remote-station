@@ -411,6 +411,8 @@
         } else if (m.op === 'ctl') {
           const v = FTX1.validate(m.id, m.value, this.radio, { skipWhen: true });
           if (FTX1.CONTROL[m.id].transmits && (!this.serialOpen || !this.radio.connected)) return this.log('Refusé : radio non connectée');
+          // FTX-1 : ATT / IPO du SUB jamais envoyés (par CAT ils changeaient ceux du MAIN, constaté au club le 06/11)
+          if (FTX1.ID === 'ftx1' && (m.id === 'attB' || m.id === 'preampB')) return this.log('Refusé : ' + (FTX1.CONTROL[m.id].label || m.id) + ' (le FTX-1 l’appliquait au MAIN) — face avant du TRX', 'st-warn');
           // FTX-1 : passage sur SUB. VS1 avec FT0 met le TRX en émission : FT (VFO d'émission) d'abord, relu, et VS1
           // seulement si le TRX confirme FT1 / FT3 ; sinon pas de VS1 (le TRX reste sur MAIN, en réception)
           // FTX-1 : passage sur SUB par CAT seulement si le serveur l'autorise explicitement (m.subOk)

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.125** — FTX-1 : ATT et IPO du SUB plus réglables à distance (par CAT, le TRX changeait ceux du MAIN) — refusés par le serveur et par la page Station, explication à l'écran
 - **0.37.124** — FTX-1 : ATT / IPO du SUB — la page Station attend que le TRX soit bien passé sur SUB avant la commande, puis vérifie au retour que le MAIN n'a pas changé (sinon il est remis et c'est signalé)
 - **0.37.123** — FTX-1 : ATT / IPO de l'autre VFO — pendant le court passage de la page Station sur l'autre côté (obligatoire pour le CAT), la page garde l'affichage du côté actif : plus d'échange visible des fréquences
 - **0.37.122** — FTX-1 : DISP, cases ATT / IPO de l'autre côté : explication (CAT seulement sur le côté actif ; passage par CAT bloqué en réception simple)

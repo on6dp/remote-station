@@ -4262,6 +4262,8 @@
     // ATT / IPO : le CAT du FTX-1 (RA0 / PA0) n'agit que sur le côté actif ; pour l'autre côté il faudrait passer dessus
     // par CAT (VS), ce qui est bloqué en réception simple (le 25/10, VS1 a mis le FTX-1 en émission)
     const act = activeSide();
+    if ((i === 0 || i === 1) && sd === 'B')
+      return say((i ? 'IPO' : 'ATT') + ' du SUB : pas réglable à distance — par CAT, le FTX-1 change celui du MAIN. Réglez-le sur la face avant du TRX ; la valeur s’affiche quand le SUB est le côté actif.', 'warn', 8000);
     if ((i === 0 || i === 1) && sd !== act && s.dualRx !== 1 && !(me && me.subSingle))
       return say('ATT / IPO du ' + (sd === 'B' ? 'SUB' : 'MAIN') + ' : le FTX-1 ne les lit et ne les règle par CAT que sur le côté actif. Passer sur l’autre côté par CAT est bloqué en réception simple (le 25/10, cela a mis le TRX en émission). Un administrateur peut l’autoriser (réglage ftx1SubSingle) après un essai sur charge fictive.', 'warn', 9000);
     const v = s[id] || 0;
