@@ -5013,10 +5013,10 @@
     c2.save(); c2.beginPath(); c2.rect(x0, y0, w, sh); c2.clip(); // dans la zone du spectre (pas dans la cascade qui défile)
     const yT = one ? y0 : y0 + 10;
     if (inW(win.fT)) { const x = Math.round(X(win.fT)); c2.fillStyle = RED; c2.fillRect(x - 1, yT + 9, 2, sh - yT - 9 + y0); tri(x, yT, RED); }
-    else arrow(win.fT > win.start, y0 + Math.round(sh * 0.36), RED, 'T');
+    else arrow(win.fT > win.start, y0 + Math.round(sh * 0.54), RED, 'T'); // hauteurs comme sur le TRX (R au-dessus, T au milieu)
     if (!one) {
       if (inW(win.fR)) { const x = Math.round(X(win.fR)); c2.fillStyle = GRN; c2.fillRect(x - 1, y0 + 9, 2, sh - 9); tri(x, y0, GRN); } // écoute : ▼ vert et son trait
-      else arrow(win.fR > win.start, y0 + Math.round(sh * 0.16), GRN, 'R');
+      else arrow(win.fR > win.start, y0 + Math.round(sh * 0.28), GRN, 'R');
     }
     c2.restore();
     c2.font = 'bold 14px "Roboto Mono", monospace'; c2.textAlign = 'center';
