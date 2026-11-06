@@ -3115,7 +3115,7 @@
   // MONO (comme le TRX) : un seul VFO à l'écran, le sélectionné — son galvanomètre à gauche, son filtre en grand à droite,
   // sa fréquence sous le galvanomètre, ses cases ANT / ATT / IPO / R.FIL / AGC sur toute la largeur, un seul scope
   function applyMono() {
-    const side = activeSide(), key = (L.mono ? 'M' : 'D') + (L.expand ? 'E' : 'N') + side + L.disp;
+    const side = activeSide(), key = (L.mono ? 'M' : 'D') + (L.expand ? 'E' : 'N') + side + L.disp + 'F' + (L.fdisp || 0);
     if (!LCD.g || LCD.monoKey === key) return;
     LCD.monoKey = key;
     const X = LCD.X, Y = LCD.Y, half = LCD.half, W = LCD.cw0;
@@ -3123,6 +3123,7 @@
     LCD.g.classList.toggle('expand', !!L.expand);
     const up = L.expand ? EXP_UP : 0;
     LCD.lowG.setAttribute('transform', up ? 'translate(0,' + -up + ')' : '');
+    LCD.lowG.style.display = ''; LCD.scopeRect.style.display = '';
     LCD.scopeRect.setAttribute('y', Y(G.scopeY) - up); LCD.scopeRect.setAttribute('height', G.scopeH + up);
     if (LCD.placeScope) LCD.placeScope(up);
     if (SINGLE) return layoutSingle(up);
@@ -3160,6 +3161,7 @@
         for (const t of [c.tl, c.t]) t.setAttribute('x', x + cw / 2);
       });
     }
+    if (FACE && FACE.meterFtx && (L.fdisp === 1 || L.fdisp === 2)) ftxLayout(L.fdisp); // FTX-1 : DISP 1 / 2
   }
   // SPAN : celui du TRX (SS P2 = 5 : 1 kHz … 1 MHz), envoyé au scope du TRX ; la page montre le son reçu, 5 kHz au plus
   L.trxSpan = Math.max(0, Math.min(9, Number(store.get('rs.face.span10', '2')) || 0));
@@ -4235,10 +4237,8 @@
     if (t === 'WIDTH') { const md = (sd === 'B' ? s.modeB : s.mode) || ''; return dspWidthHz(s, sd) !== widthDefHz(md); }
     return !!s[dspK(sd, t === 'NOTCH' ? 'notch' : t === 'APF' ? 'apf' : 'contour')];
   }
-  // ---- FTX-1 : présentations DISP 1 et 2 du TRX, posées par-dessus l'écran normal : copies vivantes (<use>) du galvanomètre,
-  // de la fréquence (avec ses étiquettes) et du filtre de chaque VFO, plus la rangée ATT / IPO / DNF / AGC de ce VFO
-  const SVGNS = 'http://www.w3.org/2000/svg';
-  function useOf(g, id, cls) { const u = document.createElementNS(SVGNS, 'use'); u.setAttribute('href', '#' + id); if (cls) u.setAttribute('class', cls); g.appendChild(u); return u; }
+  // ---- FTX-1 : présentations DISP 1 et 2 du TRX : les vrais groupes (galvanomètre, fréquence avec ses étiquettes, filtre)
+  // de chaque VFO sont déplacés (applyMono → ftxLayout), plus une rangée ATT / IPO / DNF / AGC par VFO
   function ftxCellsTxt(s, sd) {
     const b = sd === 'B' ? 'B' : '', att = s['att' + b], pre = s['preamp' + b], dnf = s['dnf' + b], agc = s['agc' + b];
     return [att == null ? '—' : att ? 'ON' : 'OFF', pre == null ? '—' : IPO[pre] || String(pre), dnf == null ? '—' : dnf ? 'ON' : 'OFF', agc == null ? '—' : AGC[agc] || String(agc)];
@@ -4253,70 +4253,62 @@
     else setCtl(id, v >= 4 ? 1 : v + 1);
     render();
   }
-  // Un bloc VFO dans la zone [y0, y0 + h] : galvanomètre en haut à gauche, fréquence en haut à droite, cases + filtre dessous
-  function ftxBlock(g, y0, h) {
-    const c = FACE.lcd, B = { y0, h };
-    B.g = el('g', {}, g);
-    B.mU = useOf(B.g, 'ftxMA'); B.vU = useOf(B.g, 'ftxVA'); B.fU = useOf(B.g, 'ftxFA');
-    const cy = y0 + h - 31, cw = 279 / 4;
-    B.cells = [];
-    el('rect', { x: c.x + 5, y: cy, width: 279, height: 28, rx: 1.5, class: 'fd-cbar' }, B.g);
+  // Blocs des présentations : [côté, haut, hauteur]
+  function ftxBlocks(fd) {
+    const c = FACE.lcd, top = c.y + 15, lowTop = c.y + G.lowY - 2, bot = c.y + G.botY - 2, hh = (bot - top) / 2;
+    return fd === 1 ? [[activeSide(), top, lowTop - top]] : fd === 2 ? [['A', top, hh - 2], ['B', top + hh + 2, hh - 2]] : [];
+  }
+  function ftxCellRow(g, y0, h) {
+    const c = FACE.lcd, cy = y0 + h - 31, cw = 279 / 4, row = { g: el('g', {}, g), cells: [] };
+    el('rect', { x: c.x + 5, y: cy, width: 279, height: 28, rx: 1.5, class: 'fd-cbar' }, row.g);
     ['ATT', 'IPO', 'DNF', 'AGC'].forEach((lab, i) => {
       const x = c.x + 5 + i * cw;
-      if (i) el('line', { x1: x, y1: cy + 2, x2: x, y2: cy + 26, class: 'fd-csep' }, B.g);
-      el('text', { x: x + cw / 2, y: cy + 11, class: 'fd-clab', 'text-anchor': 'middle' }, B.g, lab);
-      const t = el('text', { x: x + cw / 2, y: cy + 24, class: 'fd-cval', 'text-anchor': 'middle' }, B.g, '—');
-      const hit = el('rect', { x, y: cy, width: cw, height: 28, class: 'hs lcd-hit' }, B.g);
+      if (i) el('line', { x1: x, y1: cy + 2, x2: x, y2: cy + 26, class: 'fd-csep' }, row.g);
+      el('text', { x: x + cw / 2, y: cy + 11, class: 'fd-clab', 'text-anchor': 'middle' }, row.g, lab);
+      row.cells.push(el('text', { x: x + cw / 2, y: cy + 24, class: 'fd-cval', 'text-anchor': 'middle' }, row.g, '—'));
+      const hit = el('rect', { x, y: cy, width: cw, height: 28, class: 'hs lcd-hit' }, row.g);
       el('title', {}, hit, lab + ' : clic pour changer');
-      hit.addEventListener('click', (ev) => { ev.stopPropagation(); ftxCellClick(B.side, i); });
-      B.cells.push(t);
+      hit.addEventListener('click', (ev) => { ev.stopPropagation(); ftxCellClick(row.side, i); });
     });
-    for (const [u, fn] of [[B.mU, (sd) => meterOpen(sd)], [B.fU, (sd) => dspToggle(sd)], [B.vU, (sd) => askFreq(sd)]]) {
-      u.style.cursor = 'pointer';
-      u.addEventListener('click', (ev) => { ev.stopPropagation(); fn(B.side); });
-    }
-    return B;
+    return row;
   }
-  function ftxBlockPlace(B, sd) {
-    if (B.side === sd) return;
-    B.side = sd;
-    const c = FACE.lcd, d = rightSide(sd) ? 284 : 0, y0 = B.y0, h = B.h;
-    B.mU.setAttribute('href', '#ftxM' + sd); B.vU.setAttribute('href', '#ftxV' + sd); B.fU.setAttribute('href', '#ftxF' + sd);
-    // Galvanomètre : son cadre (x0, Y(4) + 10, 190 × 72) en haut à gauche du bloc
-    B.mU.setAttribute('transform', 'translate(' + (c.x + 4 - (c.x + 5 + d)) + ',' + (y0 + 1 - (c.y + 14)) + ')');
-    // Fréquence et étiquettes (groupe du VFO, déjà décalé de vfoDy) : agrandies, calées à droite en haut
-    const v = LCD['v' + sd], k = 1.22, top = c.y + 87 + ((FACE && FACE.vfoDy) || 0);
-    B.vU.setAttribute('transform', 'translate(' + (c.x + c.w - 6 - v.xr * k).toFixed(1) + ',' + (y0 + 3 - top * k).toFixed(1) + ') scale(' + k + ')');
-    // Filtre : agrandi sur la moitié droite, sous la fréquence
-    const f = LCD['f' + sd], tx = c.x + 288, ty = y0 + h - 44, tw = c.w - 293, th = 40;
-    B.fU.setAttribute('transform', 'translate(' + tx + ',' + ty + ') scale(' + (tw / f.w).toFixed(4) + ',' + (th / f.h).toFixed(4) + ') translate(' + -f.x0 + ',' + -f.y0 + ')'); // coordonnées propres du groupe (sans le décalage meterDy du parent)
+  // Appelé par applyMono (nouvelle présentation ou autre VFO sélectionné)
+  function ftxLayout(fd) {
+    const c = FACE.lcd, md = FACE.meterDy || 0, bl = ftxBlocks(fd);
+    LCD.lowG.style.display = fd === 2 ? 'none' : '';
+    LCD.scopeRect.style.display = fd === 2 ? 'none' : '';
+    for (const sd of ['A', 'B']) {
+      const b = bl.find((x) => x[0] === sd), show = !!b;
+      LCD['m' + sd].g.style.display = show ? '' : 'none';
+      LCD['v' + sd].g.style.display = show ? '' : 'none';
+      if (!show) continue;
+      const [, y0, h] = b, d = rightSide(sd) ? 284 : 0, v = LCD['v' + sd], f = LCD['f' + sd], k = 1.22;
+      // Galvanomètre (cadre x0, Y(4) + 10 dans le groupe décalé de meterDy) : en haut à gauche du bloc
+      LCD['m' + sd].g.setAttribute('transform', 'translate(' + (c.x + 4 - (c.x + 5 + d)) + ',' + (y0 + 1 - (c.y + 14) - md) + ')');
+      // Fréquence et étiquettes : agrandies, calées en haut à droite
+      v.g.setAttribute('transform', 'translate(' + (c.x + c.w - 6 - v.xr * k).toFixed(1) + ',' + (y0 + 3 - (c.y + 87) * k).toFixed(1) + ') scale(' + k + ')');
+      // Filtre : sur la moitié droite, sous la fréquence
+      const tx = c.x + 288, ty = y0 + h - 44, tw = c.w - 293, th = 40;
+      f.g.setAttribute('transform', 'translate(' + tx + ',' + (ty - md) + ') scale(' + (tw / f.w).toFixed(4) + ',' + (th / f.h).toFixed(4) + ') translate(' + -f.x0 + ',' + -f.y0 + ')');
+    }
   }
   function ftxDispDraw(s) {
     const fd = L.fdisp || 0;
     if (!LCD.fd && (fd === 1 || fd === 2)) {
-      const c = FACE.lcd;
-      for (const sd of ['A', 'B']) { LCD['m' + sd].g.id = 'ftxM' + sd; LCD['v' + sd].g.id = 'ftxV' + sd; LCD['f' + sd].g.id = 'ftxF' + sd; }
-      const top = c.y + 15, lowTop = c.y + G.lowY - 2, bot = c.y + G.botY - 2;
-      const D = LCD.fd = { g: el('g', { class: 'fd' }, LCD.g) };
-      // DISP 1 : un VFO, de la barre d'état jusqu'au bandeau du scope
-      D.one = el('g', {}, D.g);
-      el('rect', { x: c.x + 2, y: top, width: c.w - 4, height: lowTop - top, fill: 'url(#lcdbg)' }, D.one);
-      D.b1 = ftxBlock(D.one, top, lowTop - top);
-      // DISP 2 : MAIN en haut, SUB en bas, séparés par un trait, pas de scope
-      D.two = el('g', {}, D.g);
-      el('rect', { x: c.x + 2, y: top, width: c.w - 4, height: bot - top, fill: 'url(#lcdbg)' }, D.two);
-      const hh = (bot - top) / 2;
-      D.bA = ftxBlock(D.two, top, hh - 2);
-      el('line', { x1: c.x + 5, y1: top + hh, x2: c.x + c.w - 5, y2: top + hh, class: 'fd-sep' }, D.two);
-      D.bB = ftxBlock(D.two, top + hh + 2, hh - 2);
+      const D = LCD.fd = { g: el('g', { class: 'fd' }, LCD.g) }, c = FACE.lcd;
+      const [one] = ftxBlocks(1), two = ftxBlocks(2);
+      D.r1 = ftxCellRow(D.g, one[1], one[2]);
+      D.rA = ftxCellRow(D.g, two[0][1], two[0][2]);
+      D.rB = ftxCellRow(D.g, two[1][1], two[1][2]);
+      D.sep = el('line', { x1: c.x + 5, y1: (two[0][1] + two[0][2] + two[1][1]) / 2, x2: c.x + c.w - 5, y2: (two[0][1] + two[0][2] + two[1][1]) / 2, class: 'fd-sep' }, D.g);
     }
     const D = LCD.fd;
     if (!D) return;
-    D.one.style.display = fd === 1 ? '' : 'none';
-    D.two.style.display = fd === 2 ? '' : 'none';
-    const fill = (B, sd) => { ftxBlockPlace(B, sd); const t = ftxCellsTxt(s, sd); B.cells.forEach((e, i) => { if (e.textContent !== t[i]) e.textContent = t[i]; }); };
-    if (fd === 1) fill(D.b1, activeSide());
-    if (fd === 2) { fill(D.bA, 'A'); fill(D.bB, 'B'); }
+    D.r1.g.style.display = fd === 1 ? '' : 'none';
+    D.rA.g.style.display = D.rB.g.style.display = D.sep.style.display = fd === 2 ? '' : 'none';
+    const fill = (row, sd) => { row.side = sd; const t = ftxCellsTxt(s, sd); row.cells.forEach((e, i) => { if (e.textContent !== t[i]) e.textContent = t[i]; }); };
+    if (fd === 1) fill(D.r1, activeSide());
+    if (fd === 2) { fill(D.rA, 'A'); fill(D.rB, 'B'); }
   }
   // ---- FTX-1 : METER (toucher l'S-mètre, comme sur le TRX) : PO, COMP, ALC, VDD, ID, SWR (TEMP : pas de commande CAT)
   const METER_NAMES = ['PO', 'COMP', 'ALC', 'VDD', 'ID', 'SWR'];
@@ -4707,7 +4699,7 @@
     else LCD.span.textContent = ['', 'SUB / MAIN · ', 'MAIN | SUB · ', 'FILTRES · '][L.disp] + spanLabel() + (L.hold ? ' · HOLD' : '');
     applyMono();
     ssFollow(s);
-    for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) || (SINGLE && sd === 'B') || !!LCD.ich || (FACE.meterDy && L.expand) ? 'none' : ''; // FTX-1 : EXPAND couvre les filtres
+    for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) || (L.fdisp === 1 && sd !== activeSide()) || (SINGLE && sd === 'B') || !!LCD.ich || (FACE.meterDy && L.expand) ? 'none' : ''; // FTX-1 : EXPAND couvre les filtres
     drawFunc(s);
     drawStatus(s);
     if (FACE.meterFtx) { ftxDispDraw(s); dspDraw(s); meterDraw(s); }
