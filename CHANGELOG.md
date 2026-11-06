@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.119** — Faces avant : PRENDRE / LIBÉRER LA MAIN et DÉCONNEXION de même taille ; DÉCONNEXION sur fond rouge, en blanc gras
 - **0.37.118** — FTX-1 : échelle ALC sous l'S-mètre comme sur le TRX (blanche puis bleue, sans chiffres)
 - **0.37.117** — Faces avant (FTDX101, FTDX10, IC-7300, FTX-1) : bouton Déconnexion à côté de Prendre / Libérer la main (main libérée, session oubliée ; pas pendant une émission)
 - **0.37.116** — FTX-1 : toucher un S-mètre ouvre le tableau METER du TRX (PO, COMP, ALC, VDD, ID, SWR — commande MS) ; la 2e échelle et l'aiguille en émission suivent ce choix

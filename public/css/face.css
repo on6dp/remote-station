@@ -667,3 +667,7 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .fc-dsp-t button.on { background: #f2a516; color: #3a2a00; }
 /* FTX-1 : bandeau du scope (CENTER  FAST1  SPAN  200kHz) en bleu, comme sur le TRX */
 #face[data-model='ftx1'] .lcd .lcd-side { fill: #5aa0ff; font-weight: 800; font-size: 11px; }
+/* Faces avant : PRENDRE / LIBÉRER LA MAIN et DÉCONNEXION de même taille ; DÉCONNEXION sur fond rouge, en blanc gras */
+#ctrlBtn, #logoutBtn { font-size: 12px; font-weight: 800; letter-spacing: .05em; padding: 5px 14px; min-height: 34px; border-width: 2px; border-radius: 6px; }
+#logoutBtn { background: linear-gradient(180deg, #e8352a, #a8170f); border-color: #ff8a80; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+#logoutBtn:hover:not(:disabled) { background: linear-gradient(180deg, #ff4a3d, #c21d14); color: #fff; }
