@@ -86,6 +86,8 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 /* PROC, KEYER : voyant orange franc, allumé tant que la fonction est en marche */
 #face .led.strong { mix-blend-mode: normal; }
 #face .led.shape { mix-blend-mode: normal; }
+/* FTX-1 : bandes bleues du grand bouton éteintes (SUB actif) : cache gris foncé */
+#face .led.dark.on { opacity: .93; filter: none; }
 /* MAIN (blanc, texte noir) et SUB (bleu) éclairés quand ils sont choisis, comme sur le TRX */
 #face .lit { opacity: 0; transition: opacity .15s; pointer-events: none; }
 #face .lit.on { opacity: 1; filter: drop-shadow(0 0 3px rgba(160, 200, 255, .7)); }

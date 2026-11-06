@@ -430,7 +430,7 @@
         ledEls.push({ el: e, on: k.led });
       }
       for (const d of k.leds || []) {
-        const e = d.path ? el('path', { d: d.path, class: 'led bar shape', style: '--c:' + d.color }, leds)
+        const e = d.path ? el('path', { d: d.path, class: 'led bar shape' + (d.cls ? ' ' + d.cls : ''), style: '--c:' + d.color }, leds)
           : el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: d.rx != null ? d.rx : 1.5, class: 'led bar', style: '--c:' + d.color }, leds);
         ledEls.push({ el: e, on: d.on, bright: d.bright });
       }

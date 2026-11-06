@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.104 | [RemoteStation-Setup-0.37.104.exe](0.37.104/RemoteStation-Setup-0.37.104.exe) | [remote-station-0.37.104.tar.gz](0.37.104/remote-station-0.37.104.tar.gz) | FTX-1 : bandes bleues MAIN / SUB — [empreintes SHA-256](0.37.104/SHA256SUMS.txt) |
 | 0.37.103 | [RemoteStation-Setup-0.37.103.exe](0.37.103/RemoteStation-Setup-0.37.103.exe) | [remote-station-0.37.103.tar.gz](0.37.103/remote-station-0.37.103.tar.gz) | FTX-1 : spectre moins fort — [empreintes SHA-256](0.37.103/SHA256SUMS.txt) |
 | 0.37.102 | [RemoteStation-Setup-0.37.102.exe](0.37.102/RemoteStation-Setup-0.37.102.exe) | [remote-station-0.37.102.tar.gz](0.37.102/remote-station-0.37.102.tar.gz) | Correctif 0.37.101, onglets DSP rapides — [empreintes SHA-256](0.37.102/SHA256SUMS.txt) |
 | 0.37.101 | [RemoteStation-Setup-0.37.101.exe](0.37.101/RemoteStation-Setup-0.37.101.exe) | [remote-station-0.37.101.tar.gz](0.37.101/remote-station-0.37.101.tar.gz) | FTX-1 : progression suivie, CONTOUR — [empreintes SHA-256](0.37.101/SHA256SUMS.txt) |
