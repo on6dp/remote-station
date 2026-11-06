@@ -679,9 +679,9 @@
       if (isS) {
         el('path', { d: arcPath(cx, cy, r, 0, 0.55), class: 'mtr-arc' }, g);
         el('path', { d: arcPath(cx, cy, r, 0.55, 1), class: 'mtr-arc blue' }, g);
-      } else if (ftxSwr && name === 'ALC') { // ALC : zone de fonctionnement (trait épais) sur la première moitié
-        el('path', { d: arcPath(cx, cy, r, 0, 0.92, sp), class: 'mtr-arc' }, g);
-        el('path', { d: arcPath(cx, cy, r, 0.05, 0.5, sp), class: 'mtr-arc thick' }, g);
+      } else if (ftxSwr && name === 'ALC') { // ALC (comme le TRX) : arc blanc sur la première moitié, bleu au-delà, sans chiffres
+        el('path', { d: arcPath(cx, cy, r, 0, 0.5, sp), class: 'mtr-arc' }, g);
+        el('path', { d: arcPath(cx, cy, r, 0.5, 0.92, sp), class: 'mtr-arc blue' }, g);
       } else el('path', { d: arcPath(cx, cy, r, 0, name === 'ALC' ? 0.5 : 0.92, sp), class: 'mtr-arc' + (name === 'ALC' ? ' thick' : '') }, g);
       for (const [f, lab, blue] of ticks) {
         const p = arcPt(cx, cy, r, f, sp), q = arcPt(cx, cy, isS || ftxSwr ? r + 4 : r - 3, f, sp);
