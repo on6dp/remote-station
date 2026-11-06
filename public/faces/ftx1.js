@@ -57,7 +57,7 @@
     keys: [
       // Touches au-dessus de l'écran
       { id: 'top1', x: 170, y: 10, w: 80, h: 31, tip: 'Touche du FTX-1', act: info('Cette touche du FTX-1 n’est pas disponible à distance.') },
-      { id: 'sdx', x: 270, y: 10, w: 103, h: 31, tip: 'S-DX', act: info('S-DX : pas disponible à distance.') },
+      { id: 'sdx', x: 270, y: 10, w: 103, h: 31, tip: 'S-DX (Super DX) : renforce les signaux faibles en réception ; « S-DX » à côté de FAST / FINE quand il est en service. Pas de commande CAT : seulement au club', act: info('S-DX (Super DX, renfort des signaux faibles) : le FTX-1 n’a pas de commande CAT pour lui, il ne se règle donc qu’au club (appui bref : en service / hors service ; appui long : copie d’écran sur la carte microSD).') },
       { id: 'pmg', x: 393, y: 10, w: 113, h: 31, tip: 'PMG', act: info('PMG (mémoires) : pas disponible à distance.') },
       { id: 'band', x: 527, y: 10, w: 113, h: 31, tip: 'MAG BAND : appui bref = bande suivante (1.8 → 3.5 → 7 → 10 → 14 …) ; appui d’1 s = tableau des bandes (clic sur une bande, pour redescendre)', act: { local: 'bandUp', long: { local: 'bandMenu' } } },
       { id: 'mode', x: 657, y: 10, w: 80, h: 31, tip: 'MODE : mode suivant (récepteur actif) ; appui d’au moins 1 s : tableau de tous les modes', act: { mode: 'cycle', longMenu: true } },

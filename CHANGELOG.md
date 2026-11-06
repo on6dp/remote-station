@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.115** — FTX-1 : touche S-DX expliquée (Super DX, renfort des signaux faibles ; pas de commande CAT : seulement au club)
 - **0.37.114** — FTX-1 : fréquences de l'échelle du scope (CURSOR / FIX) en police plus petite si nécessaire : elles ne se chevauchent plus
 - **0.37.113** — FTX-1 : flèches R ▶ / T ▶ du scope à la même hauteur que sur le TRX
 - **0.37.112** — FTX-1 : photo de la face avant plus nette (refaite depuis l'original, accentuation, meilleure qualité)
