@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.109** — FTX-1 : scope en fenêtre de fréquences comme le TRX selon D-MODE et SPAN : CENTER (fréquence au milieu, ▼ rouge au centre), CURSOR (fenêtre fixe, ▼ vert/rouge qui s'y déplace), FIX (fenêtre au début de la bande, R ▶ / T ▶ au bord quand on est en dehors) ; le son reçu est placé à sa vraie fréquence ; 3DSS pareil
 - **0.37.108** — FTX-1 : repères du scope selon D-MODE (CENTER ▼ rouge, CURSOR ▼ vert/rouge, FIX R ▶ / T ▶ au bord), échelle en fréquences qui tient compte du PITCH CW et du CLAR ; 3DSS comme sur le TRX (jaune, crêtes rouges, grille du fond, échelle en fréquences)
 - **0.37.107** — FTX-1 : chiffres des S-mètres en gras (Arial Black)
 - **0.37.106** — FTX-1 : fréquences en Arial Black penché (police du TRX) ; DIGI / SSB CONFIGURATION toujours affichés sous la face avant (même si la phonie à distance n'est pas encore annoncée par la page Station) ; démarrage de la page plus robuste
