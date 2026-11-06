@@ -4664,9 +4664,11 @@
       const active = (s.vfoSel === 1) === (side === 'B');
       v.freq.classList.toggle('dim', side === 'B' && !subOn && !FACE.vfoBadges); // FTX-1 : l'autre VFO reste en blanc, comme sur le TRX
       // SPLIT : la fréquence du VFO qui va émettre s'affiche en rouge (comme sur le TRX)
-      v.freq.classList.toggle('txv', !!s.split && L.txSide(s) === side);
+      // FTX-1 : en émission, la fréquence d'émission passe aussi en rouge (comme sur le TRX)
+      const txRed = L.txSide(s) === side && (!!s.split || (!!FACE.actOrange && !!s.tx));
+      v.freq.classList.toggle('txv', txRed);
       v.sel.classList.toggle('on', active);
-      if (FACE.actOrange) v.freq.classList.toggle('act', active && !(!!s.split && L.txSide(s) === side)); // FTX-1 : VFO actif en orange
+      if (FACE.actOrange) v.freq.classList.toggle('act', active && !txRed); // FTX-1 : VFO actif en orange
       const txSide = L.txSide(s);
       v.tx.textContent = txSide === side ? (tx ? 'TX ●' : 'TX') : '';
       // Clarifier de chaque côté (FTDX101 : IF = MAIN, OI = SUB ; autres TRX : celui lu dans IF, côté MAIN)
