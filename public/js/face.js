@@ -5840,6 +5840,17 @@
     else if (!st.controller || otherTab()) send({ t: 'take' });
     else if (me && me.admin && confirm('Reprendre la main à ' + st.controller + ' ?')) send({ t: 'take', force: true });
   });
+  // Déconnexion (comme le dashboard) : la main est libérée par le serveur, la session mémorisée oubliée ; jamais pendant une émission
+  $('logoutBtn').addEventListener('click', () => {
+    if (st && st.tx && iControl()) return say('Déconnexion : pas pendant une émission.', 'warn', 3000);
+    if (ws && ws.readyState === 1) send({ t: 'logout' }); // le serveur oublie la session mémorisée et libère la main
+    store.set('rs.sess', '');
+    creds = null;
+    if (L.listening) stopListen();
+    if (pttHeld) pttUp();
+    try { if (ws) ws.close(); } catch (e) { /* déjà fermée */ }
+    showLogin('');
+  });
   $('listenBtn').addEventListener('click', () => (L.listening ? stopListen() : startListen()));
   $('stereoBtn').addEventListener('click', () => setStereo(!L.stereo));
   // Modes numériques : leur propre page (digi.html), raccrochée à cette page (même connexion, voir RSHOST plus bas)
