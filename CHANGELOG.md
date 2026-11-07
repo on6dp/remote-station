@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.171** — FTX-1 : CURSOR / FIX — toujours la vraie fenêtre du SPAN, ▼ vert de l'écoute n'importe où et qui suit la souris (glisser) ; CENTER — son reçu sur toute la largeur
 - **0.37.170** — FTX-1 : en SPLIT (CURSOR / FIX), vraie fenêtre du SPAN avec ▼ vert et ▼ rouge sur toute la largeur ; glisser sur le scope (CURSOR / FIX) : la fréquence d'écoute suit la souris
 - **0.37.169** — FTX-1 : SPLIT comme sur le TRX selon D-MODE — CURSOR / FIX : fenêtre fixe, ▼ vert de l'écoute déplacé par le grand bouton ; CENTER : seul le trait rouge de l'émission se déplace
 - **0.37.168** — FTX-1 : « SPLIT » noir sur blanc dans la barre d'état (clignote 2 fois à la mise en service) ; en SPLIT, fenêtre du son reçu fixe — ▼ rouge à l'émission, ▼ vert de l'écoute déplacé par le grand bouton

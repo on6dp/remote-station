@@ -5430,9 +5430,9 @@
     const trxSpan = (parseFloat(SPAN_TRX[L.trxSpan]) || 5) * 1000, dm = st0.dMode || 0;
     // Choix du club : quand le SPAN du TRX dépasse le son reçu (~3 kHz), la cascade montre ce son sur toute sa largeur,
     // avec sa propre échelle en fréquences (le scope du TRX, lui, ne passe pas par le CAT)
-    // SPLIT en CURSOR / FIX : vraie fenêtre du SPAN, comme sur le TRX — ▼ vert (écoute) et ▼ rouge (émission) sur toute la largeur,
-    // le vert se déplace avec le grand bouton (le son reçu, 3 kHz, se déplace avec lui)
-    if (trxSpan > FTX_AUD && !(st0.split && dm !== 0)) {
+    // CURSOR / FIX : vraie fenêtre du SPAN, comme sur le TRX — ▼ vert (écoute) et ▼ rouge (émission) sur toute la largeur,
+    // le vert se déplace avec le grand bouton ou la souris (le son reçu, 3 kHz, se déplace avec lui) ; CENTER : son reçu en grand
+    if (trxSpan > FTX_AUD && dm === 0) { // CURSOR / FIX : toujours la vraie fenêtre du SPAN (▼ vert n'importe où, il suit la souris)
       // Un peu de place avant le 0 Hz du son : la fréquence du VFO (▼ vert / ▼ rouge) reste visible près du bord
       const sp = FTX_AUD + FTX_PRE, a = fR + sg * (-FTX_PRE - off), b = fR + sg * (FTX_AUD - off);
       let st = Math.min(a, b);
