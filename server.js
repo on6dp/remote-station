@@ -1110,10 +1110,11 @@ function menuMsg(conn, m) {
   // FTX-1 : menus … SETTING réservés aux administrateurs (ON6DP, ON4LUC) — paramètres essentiels du TRX
   if (M.admin && !conn.user.admin) return no('réservé aux administrateurs (ON6DP, ON4LUC)');
   if (station.caps.indexOf('exrw') < 0 || !radio.connected) return no('page Station du club à recharger, ou TRX non relié');
+  const quiet = !!m.quiet; // relecture automatique de la page (FTX-1) : ni message, ni lecture si occupé ou en émission
   const read = (ids, cb) => {
-    if (eqs.busy) return no('lecture ou écriture déjà en cours, un instant');
+    if (eqs.busy || (quiet && eqTxBusy())) return quiet ? send(conn, { t: 'menu_vals', values: {}, ids: [], quiet: true }) : no('lecture ou écriture déjà en cours, un instant');
     exCall('exread', { cmds: ids.map((i) => 'EX' + i + ';'), soft: true }, (vals, err) => {
-      send(conn, { t: 'menu_vals', values: vals || {}, ids, err: err || '' });
+      send(conn, { t: 'menu_vals', values: vals || {}, ids, err: quiet ? '' : err || '', quiet });
       if (cb) cb();
     });
   };

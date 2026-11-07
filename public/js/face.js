@@ -3376,17 +3376,29 @@
     menuDraw();
     render();
   }
-  function closeMenu() { MV.open = false; MV.sel = null; const b = $('fcMenu'); if (b) b.hidden = true; render(); }
+  function closeMenu() { MV.open = false; MV.sel = null; clearInterval(MV.auto); MV.auto = 0; const b = $('fcMenu'); if (b) b.hidden = true; render(); }
   // Lecture d'un sous-menu sur le TRX : état affiché (« lecture sur le TRX… », puis « pas de réponse » au bout de 20 s)
-  function menuReq() {
+  function menuReq(quiet) {
     const M = MN(), g = M && M.groups.find((x) => x.id === MV.sub);
     if (!g || !g.items.some((it) => it.d.k !== 't' || it.d.read)) { MV.st = ''; return; } // rien à lire sur le TRX (SD CARD, RESET…)
+    // FTX-1 : relecture discrète toutes les 8 s tant que l'écran est ouvert (réglage changé au TRX lui-même → visible ici)
+    if (FTX1F && !MV.auto) MV.auto = setInterval(() => {
+      if (MV.open && !MV.pend && (!MV.waiting || Date.now() - MV.waitSince > 30000) && Date.now() - (MV.lastAdj || 0) > 4000) menuReq(true);
+    }, 8000);
+    MV.waiting = true; MV.waitSince = Date.now();
+    if (quiet) return send({ t: 'menu_read', sub: MV.sub, quiet: true });
     MV.st = 'lecture sur le TRX…';
     clearTimeout(MV.stT);
     MV.stT = setTimeout(() => { MV.st = 'pas de réponse du TRX (page Station, liaison CAT ?)'; if (MV.open) menuDraw(); }, 20000);
     send({ t: 'menu_read', sub: MV.sub });
   }
   function menuVals(m) {
+    MV.waiting = false;
+    if (m.quiet) { // relecture discrète : valeurs mises à jour, sans message ni état
+      if (!MV.pend && Date.now() - (MV.lastAdj || 0) > 1500) for (const k in m.values || {}) MV.vals[k] = m.values[k];
+      if (MV.open) menuDraw();
+      return;
+    }
     clearTimeout(MV.stT);
     const miss = (m.ids || []).filter((id) => !(id in (m.values || {}))).length;
     MV.st = m.err ? m.err : miss && m.ids.length > 1 ? miss + ' réglage(s) sans réponse du TRX : recliquez sur le sous-menu' : '';
@@ -3475,6 +3487,7 @@
   function menuAdjust(id, step) {
     const M = MN(), it = M && id && M.item(id);
     if (!it) return;
+    MV.lastAdj = Date.now();
     if (it.d.ro) return say(it.label + ' : lecture seule (' + it.d.ro + ').', 'warn', 4000);
     if (!needControl()) return;
     const raw = MV.pend && MV.pend.id === id ? MV.pend.v : MV.vals[id];
