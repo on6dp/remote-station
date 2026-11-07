@@ -1531,7 +1531,7 @@
     const side = rg.name === 'SUB' ? 'B' : rg.name === 'MAIN' ? 'A' : activeSide();
     const md = (side === 'B' ? S().modeB : S().mode) || '';
     const st = /^CW/.test(md) ? 10 : 100;
-    return { side, md, aud: !!win.aud, hz: Math.round((win.start + (x - rg.x0) / rg.w * win.span) / st) * st };
+    return { side, md, aud: !!win.aud, fixed: !win.aud && win.dm !== 0, hz: Math.round((win.start + (x - rg.x0) / rg.w * win.span) / st) * st };
   }
   if (FACE.meterFtx) {
     const cvF = $('scope');
@@ -1542,7 +1542,17 @@
       tuneTo(q.side, q.hz);
       showTip(ev, (q.side === 'B' ? 'SUB ' : 'MAIN ') + fmtFreq(q.hz) + ' MHz');
     });
-    cvF.addEventListener('mousemove', (ev) => { const q = ftxFreqAt(ev); cvF.title = q ? 'Clic : ' + (q.side === 'B' ? 'SUB' : 'MAIN') + ' → ' + fmtFreq(q.hz) + ' MHz' : ''; });
+    // Glisser (bouton de la souris enfoncé) : la fréquence d'écoute suit la souris, comme le doigt sur l'écran du TRX
+    let drag = false;
+    cvF.addEventListener('pointerdown', (ev) => { if (ev.button === 0 && ftxFreqAt(ev)) { drag = true; try { cvF.setPointerCapture(ev.pointerId); } catch (e) { /* */ } } });
+    const end = () => { drag = false; };
+    cvF.addEventListener('pointerup', end); cvF.addEventListener('pointercancel', end);
+    cvF.addEventListener('mousemove', (ev) => {
+      const q = ftxFreqAt(ev);
+      cvF.title = q ? 'Clic ou glisser : ' + (q.side === 'B' ? 'SUB' : 'MAIN') + ' → ' + fmtFreq(q.hz) + ' MHz' : '';
+      // Seulement quand la fenêtre est fixe (CURSOR / FIX) : en CENTER ou « son reçu », la fenêtre suit le VFO (elle s'enfuirait)
+      if (drag && q && q.fixed && (ev.buttons & 1) && iControl()) { tuneTo(q.side, q.hz); showTip(ev, (q.side === 'B' ? 'SUB ' : 'MAIN ') + fmtFreq(q.hz) + ' MHz'); }
+    });
   }
   if (ICOM) {
     const cv0 = $('scope');
@@ -5420,7 +5430,9 @@
     const trxSpan = (parseFloat(SPAN_TRX[L.trxSpan]) || 5) * 1000, dm = st0.dMode || 0;
     // Choix du club : quand le SPAN du TRX dépasse le son reçu (~3 kHz), la cascade montre ce son sur toute sa largeur,
     // avec sa propre échelle en fréquences (le scope du TRX, lui, ne passe pas par le CAT)
-    if (trxSpan > FTX_AUD) {
+    // SPLIT en CURSOR / FIX : vraie fenêtre du SPAN, comme sur le TRX — ▼ vert (écoute) et ▼ rouge (émission) sur toute la largeur,
+    // le vert se déplace avec le grand bouton (le son reçu, 3 kHz, se déplace avec lui)
+    if (trxSpan > FTX_AUD && !(st0.split && dm !== 0)) {
       // Un peu de place avant le 0 Hz du son : la fréquence du VFO (▼ vert / ▼ rouge) reste visible près du bord
       const sp = FTX_AUD + FTX_PRE, a = fR + sg * (-FTX_PRE - off), b = fR + sg * (FTX_AUD - off);
       let st = Math.min(a, b);
