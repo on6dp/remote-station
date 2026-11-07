@@ -63,7 +63,9 @@
     // Début commun des modes (réception) : tonalité, AGC, filtres
     const rx = [[1, 'AF TREBLE GAIN', TONE], [2, 'AF MIDDLE TONE GAIN', TONE], [3, 'AF BASS GAIN', TONE], [4, 'AGC FAST DELAY', AGC], [5, 'AGC MID DELAY', AGC],
       [6, 'AGC SLOW DELAY', AGC], [7, 'LCUT FREQ', LCUT], [8, 'LCUT SLOPE', SLOPE], [9, 'HCUT FREQ', HCUT], [10, 'HCUT SLOPE', SLOPE], [11, 'USB OUT LEVEL', LVL]];
-    const G = (id, group, name, items) => ({ id, group, name, items: items.map(([n, label, d]) => ({ id: id + String(n).padStart(2, '0'), n, label, d })) });
+    const G = (id, group, name, items, pfx) => ({ id, group, name, items: items.map(([n, label, d]) => ({ id: (pfx || id) + String(n).padStart(2, '0'), n, label, d })) });
+    const EXT = 'EXTENSION SETTING : au club seulement';
+    const NOCAT = { k: 't', ro: 'pas de commande CAT : au TRX' };
     return [
       G('0101', 'RADIO SETTING', 'MODE SSB', rx.concat([[12, 'TX BPF SEL', BPF], [13, 'MOD SOURCE', MOD], [14, 'USB MOD GAIN', MODG], [15, 'RPTT SELECT', RPTT],
         [16, 'NAR WIDTH', NARS], [17, 'CW AUTO MODE', L(['OFF', '50MHz', 'ON'])]])),
@@ -128,8 +130,12 @@
         [4, '3DSS DISP SENSITIVITY', L(['NORMAL', 'HI'])], [5, 'AVERAGE', L(['OFF', '2', '4', '8'])]]),
       G('0404', 'DISPLAY SETTING', 'VFO IND COLOR', [[1, 'VMI COLOR VFO', L(['BLUE', 'GREEN', 'WHITE', 'NONE'])], [2, 'VMI COLOR MEMORY', L(['BLUE', 'GREEN', 'WHITE', 'NONE'])],
         [3, 'VMI COLOR CLAR', L(['RED', 'NONE'])]]),
-      G('0501', 'EXTENSION SETTING', 'DATE&TIME', [[1, 'TIME ZONE', RO(N(-120, 140, 5, 'h', 10, true), 'EXTENSION SETTING : au club')],
-        [7, 'GPS TIME SET', RO(L(['AUTO', 'MANUAL']), 'EXTENSION SETTING : au club')], [8, 'MY POSITION', RO(L(['GPS', 'MANUAL']), 'EXTENSION SETTING : au club')]]),
+      // EXTENSION SETTING : tout en lecture seule ou au club (date, position, carte SD, version, étalonnage, remise à zéro)
+      G('0501', 'EXTENSION SETTING', 'DATE&TIME', [[1, 'TIME ZONE', RO(Object.assign(N(-120, 140, 5), { fmt: (v) => (v / 10).toFixed(1) }), EXT)],
+        [2, 'DAY', NOCAT], [3, 'MONTH', NOCAT], [4, 'YEAR', NOCAT], [5, 'HOUR', NOCAT], [6, 'MINUTE', NOCAT], [7, 'GPS TIME SET', RO(L(['AUTO', 'MANUAL']), EXT)]]),
+      G('0501P', 'EXTENSION SETTING', 'MY POSITION', [[8, 'MY POSITION', RO(L(['GPS', 'MANUAL']), EXT)], [9, 'MY POSITION LATITUDE', NOCAT], [10, 'MY POSITION LONGITUDE', NOCAT]], '0501'),
+      G('0502', 'EXTENSION SETTING', 'SD CARD', []), G('0503', 'EXTENSION SETTING', 'SOFT VERSION', []),
+      G('0504', 'EXTENSION SETTING', 'CALIBRATION', []), G('0505', 'EXTENSION SETTING', 'RESET', []),
       G('0601', 'APRS SETTING', 'GENERAL', [[1, 'MODEM SELECT', L(['OFF', 'AUTO', 'MAIN', 'SUB'])], [2, 'MODEM TYPE', L(['1200bps', '9600bps'])], [3, 'APRS AF MUTE', OFFON],
         [4, 'APRS TX DELAY', L(['100ms', '200ms', '300ms', '400ms', '500ms', '750ms', '1000ms'])], [5, 'CALLSIGN(APRS)', T]]),
       G('0604', 'APRS SETTING', 'DIGI PATH', [[1, 'PATH SELECT', L(['OFF', 'WIDE1-1', 'WIDE1-1.WIDE2-1'])]]),

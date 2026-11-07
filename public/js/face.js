@@ -3372,12 +3372,24 @@
     const subs = M ? M.groups.filter((g) => g.group === group) : [];
     MV.sub = subs.length ? (subs.find((g) => g.id === MV.sub) || subs[0]).id : '';
     box.hidden = false;
-    if (MV.sub) send({ t: 'menu_read', sub: MV.sub });
+    if (MV.sub) menuReq();
     menuDraw();
     render();
   }
   function closeMenu() { MV.open = false; MV.sel = null; const b = $('fcMenu'); if (b) b.hidden = true; render(); }
+  // Lecture d'un sous-menu sur le TRX : état affiché (« lecture sur le TRX… », puis « pas de réponse » au bout de 20 s)
+  function menuReq() {
+    const M = MN(), g = M && M.groups.find((x) => x.id === MV.sub);
+    if (!g || !g.items.some((it) => it.d.k !== 't' || it.d.read)) { MV.st = ''; return; } // rien à lire sur le TRX (SD CARD, RESET…)
+    MV.st = 'lecture sur le TRX…';
+    clearTimeout(MV.stT);
+    MV.stT = setTimeout(() => { MV.st = 'pas de réponse du TRX (page Station, liaison CAT ?)'; if (MV.open) menuDraw(); }, 20000);
+    send({ t: 'menu_read', sub: MV.sub });
+  }
   function menuVals(m) {
+    clearTimeout(MV.stT);
+    const miss = (m.ids || []).filter((id) => !(id in (m.values || {}))).length;
+    MV.st = m.err ? m.err : miss && m.ids.length > 1 ? miss + ' réglage(s) sans réponse du TRX : recliquez sur le sous-menu' : '';
     for (const k in m.values || {}) MV.vals[k] = m.values[k];
     for (const id of m.ids || []) if (!(id in (m.values || {}))) MV.vals[id] = null; // pas de réponse du TRX : « — » (jamais la valeur refusée)
     if (m.err) say('Menu du TRX : ' + m.err, 'warn', 5000);
@@ -3427,11 +3439,12 @@
       return '<div class="fx-row' + (sel ? ' sel' : '') + (ro ? ' ro' : '') + '" data-it="' + it.id + '" title="' + esc(it.label + (ro ? ' — lecture seule : ' + ro : ' — clic puis − / +, molette ou bouton FUNC')) + '">' +
         '<div class="fx-l">' + esc(it.label) + '</div><div class="fx-v">' + (sel && !ro ? '<button type="button" class="fx-pm" data-step="-1">−</button>' : '') +
         '<span>' + esc(val) + '</span>' + (sel && !ro ? '<button type="button" class="fx-pm" data-step="1">+</button>' : '') + '</div></div>';
-    }).join('') : '<p class="fx-note">' + esc(MV.group) + ' : pas à distance (au club).</p>';
+    }).join('') : '';
+    const note = !g || !n ? '<p class="fx-note">' + esc(g ? g.name : MV.group) + ' : au club seulement (carte SD, version, étalonnage, remise à zéro… : rien à distance, par sécurité).</p>' : '';
     const th = n > FX_ROWS ? FX_ROWS / n * 100 : 100, tp = n > FX_ROWS ? top / n * 100 : 0;
-    box.innerHTML = '<div class="fx-h">' + esc(MV.group) + '</div><div class="fx-b"><div class="fx-subs">' +
+    box.innerHTML = '<div class="fx-h">' + esc(MV.group) + (MV.st ? '<span class="fx-st">' + esc(MV.st) + '</span>' : '') + '</div><div class="fx-b"><div class="fx-subs">' +
       subs.map((x) => '<button type="button" data-sub="' + x.id + '" class="' + (x.id === MV.sub ? 'on' : '') + '">' + esc(x.name) + '</button>').join('') +
-      '</div><div class="fx-items">' + rows + '</div><div class="fx-s"><button type="button" data-scr="-1" title="Réglages précédents">︿</button>' +
+      '</div><div class="fx-items">' + (rows || note) + '</div><div class="fx-s"><button type="button" data-scr="-1" title="Réglages précédents">︿</button>' +
       '<div class="fx-tr"><i style="top:' + tp + '%;height:' + th + '%"></i></div><button type="button" data-scr="1" title="Réglages suivants">﹀</button></div></div>' +
       '<button type="button" class="fx-back" data-back="1" title="Retour à l’écran FUNC (touche BACK du TRX)">BACK</button>';
   }
@@ -3440,7 +3453,7 @@
     if (b && b.dataset.scr) return menuScroll(Number(b.dataset.scr));
     if (b && b.dataset.close) return closeMenu();
     if (b && b.dataset.back) { closeMenu(); L.func = true; return render(); } // BACK : retour à l'écran FUNC, comme sur le TRX
-    if (b && b.dataset.sub) { MV.sub = b.dataset.sub; MV.sel = null; MV.top = 0; send({ t: 'menu_read', sub: MV.sub }); return menuDraw(); }
+    if (b && b.dataset.sub) { MV.sub = b.dataset.sub; MV.sel = null; MV.top = 0; menuReq(); return menuDraw(); }
     if (b && b.dataset.step) return menuAdjust(MV.sel, Number(b.dataset.step));
     const r = e.target.closest('[data-it]');
     if (!r) return;

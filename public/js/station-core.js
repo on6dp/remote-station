@@ -294,6 +294,8 @@
       this._txWatchdog(now);
       // Changement de côté MAIN / SUB en cours : pas de lectures en rafale (le TRX perdrait des commandes)
       if (now < (this.pollHold || 0) || now < (this.cwHold || 0)) return;
+      // Lecture de menus (EX…) en cours : pas de lectures en rafale, sinon la réponse attendue arrive trop tard (FTX-1)
+      if (this.exBusy) return;
       if (this.radio.connected && this.lastRx && now - this.lastRx > this.radioTimeoutMs) {
         this.radio.connected = false;
         this.dirty = true;
@@ -676,7 +678,7 @@
         if (!mm) return next(i + 1);
         // FTX-1 : mémoires DTMF (EX010328 à EX010337) = texte (0-9, A-D, *, #, -), éventuellement vide
         const re = /^0103(2[89]|3[0-7])$/.test(mm[1]) ? new RegExp('^EX' + mm[1] + '([0-9A-D*#\\- ]*)$') : new RegExp('^EX' + mm[1] + '([+-]?\\d+)$');
-        this._awaitFn((t) => { const x = typeof t === 'string' ? re.exec(t) : null; return x ? x[1] : null; }, 700, (v) => {
+        this._awaitFn((t) => { const x = typeof t === 'string' ? re.exec(t) : null; return x ? x[1] : null; }, 1200, (v) => {
           if (v == null) { if (!soft) return done('le TRX n’a pas répondu à ' + cmds[i]); return next(i + 1); } // menus : réglage refusé ou absent, on continue
           vals[mm[1]] = v;
           next(i + 1);

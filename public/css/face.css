@@ -732,3 +732,5 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .fc-menu.ftxm .fx-tr { flex: 1 1 auto; position: relative; background: #15171a; }
 .fc-menu.ftxm .fx-tr i { position: absolute; left: 0; right: 0; background: #a9b3a9; }
 .fc-menu.ftxm .fx-back { font: inherit; padding: .3em 0; background: #a9b3a9; color: #ffa600; border: 0; border-top: 1px solid #8e978e; cursor: pointer; letter-spacing: .06em; text-shadow: 0 1px 1px rgba(0, 0, 0, .4); }
+.fc-menu.ftxm .fx-h { position: relative; }
+.fc-menu.ftxm .fx-st { position: absolute; right: .6em; top: 50%; transform: translateY(-50%); font-size: .62em; color: #3a1d00; background: #ffd27a; padding: .1em .5em; border-radius: .3em; text-shadow: none; }
