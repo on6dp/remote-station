@@ -1133,6 +1133,31 @@ function menuMsg(conn, m) {
     setTimeout(() => read([it.id]), 500); // relecture : si le TRX a refusé (« ?; »), la page retrouve la vraie valeur
   });
 }
+// FTX-1 : mémoires DTMF 1 à 10 (FUNC → DTMF, écran DTMF CODE) = menus EX010328 à EX010337 (RADIO SETTING → MODE FM,
+// manuel CAT FTX-1, Table 3) : 0-9, A-D, *, #, « - » (espace), 16 caractères au plus. Lecture pour tous ; écriture par
+// l'opérateur qui a la main, jamais pendant une émission. Les tonalités DTMF elles-mêmes ne passent pas par le CAT (rien n'est émis).
+const DTMF_IDS = Array.from({ length: 10 }, (_, i) => '0103' + (28 + i));
+function dtmfMsg(conn, m) {
+  const no = (msg) => send(conn, { t: 'notice', level: 'warn', msg: 'DTMF : ' + msg });
+  if (!station || rig().ID !== 'ftx1') return no('pas disponible pour ce TRX');
+  if (station.caps.indexOf('exrw') < 0 || !radio.connected) return no('page Station du club à recharger, ou TRX non relié');
+  if (eqs.busy) return no('lecture ou écriture déjà en cours, un instant');
+  const read = () => exCall('exread', { cmds: DTMF_IDS.map((i) => 'EX' + i + ';'), soft: true }, (vals, err) => {
+    const mem = DTMF_IDS.map((i) => (vals && vals[i] != null ? String(vals[i]) : null));
+    send(conn, { t: 'dtmf_vals', mem, err: err || '' });
+  });
+  if (m.t === 'dtmf_read') return read();
+  const n = Number(m.n), v = String(m.v || '').toUpperCase();
+  if (!(n >= 1 && n <= 10)) return;
+  if (controller !== conn) return no('prenez d’abord la main');
+  if (!/^[0-9A-D*#-]{1,16}$/.test(v)) return no('code refusé (0-9, A-D, *, #, espace ; 16 caractères au plus ; une mémoire vide s’efface au TRX)');
+  if (eqTxBusy()) return no('pas pendant une émission');
+  journal('trx_menu', { by: conn.user.call, id: DTMF_IDS[n - 1], label: 'DTMF MEMORY' + n, v });
+  exCall('exwrite', { cmds: ['EX' + DTMF_IDS[n - 1] + v + ';'] }, (ok, err) => {
+    if (!ok) return no('mémoire ' + n + ' : ' + (err || 'pas écrite'));
+    setTimeout(() => { if (!eqs.busy) read(); }, 500); // relecture : la page retrouve ce que le TRX a vraiment gardé
+  });
+}
 function trxEqMsg(conn, m) {
   const c = conn.user.call;
   const E = station && rig().TRX_EQ;
@@ -3097,6 +3122,9 @@ function onOperator(conn, m) {
     case 'menu_read':
     case 'menu_write':
       return menuMsg(conn, m);
+    case 'dtmf_read':
+    case 'dtmf_write':
+      return dtmfMsg(conn, m);
     case 'trxeq_get':
     case 'trxeq_read':
     case 'trxeq_try':

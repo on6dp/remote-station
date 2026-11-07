@@ -433,6 +433,12 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 /* FTX-1 : écran FUNC en Verdana gras (lisible, zéro non barré, comme sur le TRX) */
 #face .ftxf .func-lab, #face .ftxf .func-val, #face .ftxf .ftx-pgt { font-family: Verdana, 'DejaVu Sans', Arial, sans-serif; font-weight: 700; }
 #face .ftxf .func-lab { font-size: 10.6px; font-weight: 800; fill: #fff; }
+/* RADIO / CW / OPERATION / DISPLAY / EXTENSION / APRS SETTING et touches APRS : texte bleu clair, comme sur le TRX */
+#face .ftxf .func-lab.setting { fill: #7fd3ff; }
+#face .ftxf .func-lab.setting.dim { fill: #7d8582; }
+#face .ftxf .func-cell.inact { fill: #3a423f; stroke: #4f5955; }
+#face .ftxf .func-lab.dim, #face .ftxf .func-val.dim { fill: #7d8582; } /* case grisée selon le mode (FM seulement…), comme sur le TRX */
+
 #face .ftxf .func-val { font-size: 12px; }
 #face .ftxf .ftx-pg { fill: #d9dcdf; }
 #face .ftxf .ftx-pgt { fill: #5a6068; font-size: 11px; font-weight: 700; pointer-events: none; }
@@ -681,3 +687,26 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .fd-clab { fill: #ffa600; font: 800 9px Verdana, 'DejaVu Sans', Arial, sans-serif; }
 #face .fd-cval { fill: #fff; font: 800 11px Verdana, 'DejaVu Sans', Arial, sans-serif; }
 #face .fd-sep { stroke: #c9ced6; stroke-width: 1.2; }
+
+/* FTX-1 : FUNC → DTMF, écran DTMF CODE du TRX (fond gris-vert, clavier noir, mémoires 1 à 10) */
+.fc-dtmf { position: absolute; z-index: 4; box-sizing: border-box; display: flex; flex-direction: column; background: #c3cdc3; border-radius: .3em;
+  font-family: Verdana, Arial, sans-serif; font-weight: 700; color: #fff; overflow: hidden; box-shadow: 0 6px 18px rgba(0, 0, 0, .6); }
+.fc-dtmf[hidden] { display: none; }
+.fc-dtmf .dt-h { text-align: center; padding: .25em 0 .2em; letter-spacing: .04em; color: #fff; background: #9aa69a; text-shadow: 0 1px 1px rgba(0, 0, 0, .5); }
+.fc-dtmf .dt-b { flex: 1 1 auto; display: flex; gap: .35em; padding: .35em; min-height: 0; }
+.fc-dtmf .dt-l { flex: 0 0 41%; display: flex; flex-direction: column; gap: .3em; }
+.fc-dtmf .dt-f { background: #1b1e20; color: #fff; padding: .35em .4em; min-height: 1.3em; font-family: 'Roboto Mono', ui-monospace, monospace; letter-spacing: .08em; overflow: hidden; white-space: pre; }
+.fc-dtmf .dt-keys { flex: 1 1 auto; display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: .25em; }
+.fc-dtmf button { font: inherit; font-weight: 800; color: #fff; background: #15181a; border: 1px solid #000; border-radius: .2em; cursor: pointer; padding: 0; }
+.fc-dtmf .dt-keys button { font-size: 1.45em; }
+.fc-dtmf .dt-keys button:hover, .fc-dtmf .dt-s button:hover { background: #2c3236; }
+.fc-dtmf .dt-keys .dt-sp { grid-column: span 2; font-size: 1.1em; }
+.fc-dtmf .dt-m { flex: 1 1 auto; display: flex; flex-direction: column; }
+.fc-dtmf .dt-row { flex: 1 1 0; display: flex; align-items: center; gap: .5em; padding: 0 .4em; border-bottom: 1px solid #5d665d; cursor: pointer; text-shadow: 0 1px 1px rgba(0, 0, 0, .45); }
+.fc-dtmf .dt-row.sel { outline: .15em solid #f2b51c; outline-offset: -.15em; }
+.fc-dtmf .dt-row span { font-size: 1.15em; font-family: 'Roboto Mono', ui-monospace, monospace; letter-spacing: .08em; white-space: pre; color: #fff; }
+.fc-dtmf .dt-s { flex: 0 0 9%; display: flex; flex-direction: column; gap: .2em; }
+.fc-dtmf .dt-s button { flex: 0 0 18%; font-size: 1.2em; }
+.fc-dtmf .dt-tr { flex: 1 1 auto; position: relative; background: #9aa69a; }
+.fc-dtmf .dt-tr i { position: absolute; left: 0; right: 0; height: 50%; background: #15181a; }
+.fc-dtmf .dt-back { position: absolute; right: .4em; top: .2em; font-size: .8em; padding: .1em .6em; color: #ffb020; }

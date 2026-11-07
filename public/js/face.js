@@ -212,6 +212,7 @@
       clearTimeout(L.fpopT);
       for (const id of ['lcdPop', 'fcSpeed']) { const e = $(id); if (e) e.hidden = true; }
       if (typeof MV !== 'undefined' && MV.open) closeMenu();
+      if (typeof DT !== 'undefined' && DT.open) dtmfClose();
       return render();
     }
     if (a.local === 'bandUp' || a.local === 'bandDown') {
@@ -3433,6 +3434,102 @@
     MV.t = setTimeout(() => { const p = MV.pend; MV.pend = null; if (p) send({ t: 'menu_write', id: p.id, v: p.v }); }, 400);
   }
 
+  // ------------------------------------------------------------ FTX-1 : FUNC → DTMF (écran DTMF CODE du TRX)
+  // Clavier 0-9 A-D * # Space ⌫ à gauche, mémoires 1 à 10 à droite (menus EX010328 à EX010337, lus à l'ouverture).
+  // Les touches écrivent dans la mémoire choisie (cadre jaune), envoyée au TRX une fois la frappe finie (main prise).
+  // Les tonalités DTMF ne passent pas par le CAT : rien n'est émis depuis cet écran.
+  const DT = { open: false, mem: Array(10).fill(undefined), sel: 0, top: 0, t: 0, dirty: -1 };
+  const DT_ROWS = 6;
+  function dtmfOpen() {
+    if (MV.open) closeMenu();
+    DT.open = true; L.func = false; L.fEdit = false;
+    let box = $('fcDtmf');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'fcDtmf';
+      box.className = 'fc-dtmf';
+      const sc = FACE.lcd;
+      box.style.left = ((sc.x + 4 - V.x) / V.w * 100) + '%';
+      box.style.top = ((sc.y + 4 - V.y) / V.h * 100) + '%';
+      box.style.width = ((sc.w - 8) / V.w * 100) + '%';
+      box.style.height = ((sc.h - 8) / V.h * 100) + '%';
+      $('facePanel').appendChild(box);
+      box.addEventListener('click', dtmfClick);
+      box.addEventListener('wheel', (e) => { e.preventDefault(); dtmfScroll(e.deltaY > 0 ? 1 : -1); }, { passive: false });
+    }
+    box.style.fontSize = Math.max(9, Math.round($('facePanel').clientWidth / V.w * 12)) + 'px';
+    box.hidden = false;
+    send({ t: 'dtmf_read' });
+    dtmfDraw();
+    render();
+  }
+  function dtmfClose(back) {
+    if (DT.dirty >= 0) dtmfFlush();
+    DT.open = false;
+    const b = $('fcDtmf'); if (b) b.hidden = true;
+    if (back) L.func = true; // BACK de l'écran : retour à l'écran FUNC, comme sur le TRX
+    render();
+  }
+  function dtmfVals(m) {
+    (m.mem || []).forEach((v, i) => { if (i !== DT.dirty) DT.mem[i] = v; });
+    if (m.err) say('DTMF : ' + m.err, 'warn', 5000);
+    if (DT.open) dtmfDraw();
+  }
+  function dtmfScroll(d) {
+    DT.top = Math.max(0, Math.min(10 - DT_ROWS, DT.top + d));
+    dtmfDraw();
+  }
+  function dtmfFlush() {
+    clearTimeout(DT.t);
+    const i = DT.dirty;
+    DT.dirty = -1;
+    if (i < 0) return;
+    const v = DT.mem[i] || '';
+    if (!v) return say('DTMF : mémoire ' + (i + 1) + ' vide — une mémoire ne s’efface pas par le CAT (au TRX seulement) ; l’ancien code reste.', 'warn', 6000);
+    send({ t: 'dtmf_write', n: i + 1, v });
+  }
+  function dtmfKey(k) {
+    if (!needControl()) return;
+    const i = DT.sel, cur = DT.mem[i];
+    if (cur === undefined || cur === null) { if (k !== 'bs') return say('DTMF : mémoire ' + (i + 1) + ' pas encore lue sur le TRX, un instant.', 'warn', 3000); return; }
+    let v = cur;
+    if (k === 'bs') v = v.slice(0, -1);
+    else if (v.length >= 16) return say('DTMF : 16 caractères au plus par mémoire.', 'warn', 3000);
+    else v += k === 'sp' ? '-' : k; // espace = « - » dans le CAT du FTX-1
+    DT.mem[i] = v; DT.dirty = i;
+    dtmfDraw();
+    clearTimeout(DT.t);
+    DT.t = setTimeout(dtmfFlush, 1200); // envoyée au TRX une fois la frappe finie
+  }
+  function dtmfClick(e) {
+    const b = e.target.closest('[data-k],[data-row],[data-up],[data-dn],[data-back]');
+    if (!b) return;
+    if (b.dataset.back) return dtmfClose(true);
+    if (b.dataset.up) return dtmfScroll(-1);
+    if (b.dataset.dn) return dtmfScroll(1);
+    if (b.dataset.row) { if (DT.dirty >= 0 && DT.dirty !== +b.dataset.row) dtmfFlush(); DT.sel = +b.dataset.row; return dtmfDraw(); }
+    if (b.dataset.k) dtmfKey(b.dataset.k);
+  }
+  function dtmfDraw() {
+    const box = $('fcDtmf');
+    if (!box || !DT.open) return;
+    const show = (v) => (v === undefined ? '…' : v === null ? '—' : v.replace(/-/g, ' '));
+    const keys = ['1', '2', '3', 'A', '4', '5', '6', 'B', '7', '8', '9', 'C', '*', '0', '#', 'D'];
+    let rows = '';
+    for (let i = DT.top; i < DT.top + DT_ROWS; i++) {
+      rows += '<div class="dt-row' + (i === DT.sel ? ' sel' : '') + '" data-row="' + i + '" title="Mémoire DTMF ' + (i + 1) + ' : clic pour la choisir, puis le clavier">' +
+        '<b>' + (i + 1) + ':</b><span>' + show(DT.mem[i]) + '</span></div>';
+    }
+    const pct = DT.top / (10 - DT_ROWS);
+    box.innerHTML = '<div class="dt-h">DTMF CODE</div><div class="dt-b">' +
+      '<div class="dt-l"><div class="dt-f">' + show(DT.mem[DT.sel]) + '</div><div class="dt-keys">' +
+      keys.map((k) => '<button type="button" data-k="' + k + '">' + k + '</button>').join('') +
+      '<button type="button" class="dt-sp" data-k="sp">Space</button><span></span><button type="button" class="dt-bs" data-k="bs" title="Effacer le dernier caractère">⌫</button></div></div>' +
+      '<div class="dt-m">' + rows + '</div>' +
+      '<div class="dt-s"><button type="button" data-up="1" title="Mémoires précédentes">︿</button><div class="dt-tr"><i style="top:' + (pct * 50) + '%"></i></div><button type="button" data-dn="1" title="Mémoires suivantes">﹀</button></div>' +
+      '</div><button type="button" class="dt-back" data-back="1" title="Retour à l’écran FUNC (touche BACK du TRX)">BACK</button>';
+  }
+
   // Menu FUNC : valeurs lues sur le TRX ; RPT / ENC/DEC / TONE FREQ suivent le VFO sélectionné (MAIN ou SUB)
   const RPTS = ['SIMP', '+', '−'];
   const ENCDECS = ['OFF', 'ENC/DEC', 'ENC'];
@@ -3440,7 +3537,11 @@
     131.8, 136.5, 141.3, 146.2, 151.4, 156.7, 159.8, 162.2, 165.5, 167.9, 171.3, 173.8, 177.3, 179.9, 183.5, 186.2, 189.9, 192.8, 196.6, 199.5,
     203.5, 206.5, 210.7, 218.1, 225.7, 229.1, 233.6, 241.8, 250.3, 254.1];
   const num = (v) => (v != null ? String(v) : '—');
-  const SIDED = { rpt: 1, encDec: 1, toneIdx: 1 };
+  // Codes DCS du FTX-1 (CN P1 1 : 000 à 103, manuel CAT Table 2)
+  const DCS = ('023 025 026 031 032 036 043 047 051 053 054 065 071 072 073 074 114 115 116 122 125 131 132 134 143 145 152 155 156 162 165 172 174 ' +
+    '205 212 223 225 226 243 244 245 246 251 252 255 261 263 265 266 271 274 306 311 315 325 331 332 343 346 351 356 364 365 371 411 412 413 423 431 432 ' +
+    '445 446 452 454 455 462 464 465 466 503 506 516 523 526 532 546 565 606 612 624 627 631 632 654 662 664 703 712 723 731 732 734 743 754').split(' ');
+  const SIDED = { rpt: 1, encDec: 1, toneIdx: 1, dcsIdx: 1 };
   const sideKey = (id) => (SIDED[id] && activeSide() === 'B' ? id + 'B' : id);
   // Réglage par pas (molette, MULTI, − / +), borné ; « sided » : côté du VFO sélectionné
   // RPT, ENC/DEC, TONE FREQ : en FM seulement (le TRX refuse OS / CT / CN dans les autres modes)
@@ -3449,9 +3550,11 @@
   function modeInactive(id, s) {
     const m = L.activeMode(s);
     if (!m) return false;
-    if (SIDED[id]) return !/FM/.test(m);
+    // FTX-1 : SQL TYPE se règle dans tous les modes (TONE FREQ, DCS, RPT : FM seulement, valeur affichée quand même)
+    if (SIDED[id]) return !(FTX1F && id === 'encDec') && !/FM/.test(m);
     if (id === 'miceq') return /CW|DATA|RTTY|PSK/.test(m);
     if (id === 'decode') return /FM/.test(m);
+    if (FTX1F && (id === 'aprsB' || id === 'aprsT')) return !/FM/.test(m); // APRS BEACON / BCN-TX : FM seulement (S.LIST, M.LIST : tous modes)
     if (ICOM) {
       // IC-7300 : réglages CW seulement en CW, micro / COMP / VOX seulement en phonie
       if (['keySpeed', 'cwPitch', 'bkinI'].indexOf(id) >= 0) return !/^CW/.test(m);
@@ -3606,6 +3709,18 @@
   }
   const FO = '#ffb020';
   const info = (id, lab) => [id, lab, () => '', null, FO];
+  // Touches FM / C4FM sans commande CAT sur le FTX-1 (manuel CAT 2507-B) : ce qu'elles font au TRX
+  const FTX_NOTE = {
+    dgTx: 'DG-ID TX : numéro DG-ID d’émission en C4FM, 00 à 99 au TRX. Le FTX-1 n’a pas de commande CAT pour DG-ID : à régler au club, sur le TRX.',
+    dgRx: 'DG-ID RX : numéro DG-ID de réception en C4FM, 00 à 99 au TRX. Le FTX-1 n’a pas de commande CAT pour DG-ID : à régler au club, sur le TRX.',
+    home: 'HOME : retour sur la dernière fréquence FM choisie. Pas de commande CAT HOME sur le FTX-1 : touche du TRX seulement.',
+    rev: 'REV : écoute sur la fréquence d’émission du relais. Pas de commande CAT REV sur le FTX-1 : touche du TRX seulement.',
+    aprsS: 'APRS S.LIST : liste des stations APRS reçues. Les listes et balises APRS du FTX-1 n’ont pas de commande CAT : au TRX seulement.',
+    aprsM: 'APRS M.LIST : liste des messages APRS. Les listes et balises APRS du FTX-1 n’ont pas de commande CAT : au TRX seulement.',
+    aprsB: 'APRS BEACON : mode de balise APRS (FM). Pas de commande CAT : au TRX seulement.',
+    aprsT: 'APRS BCN-TX : envoi d’une balise APRS (émission, FM). Pas à distance.',
+    tcall: 'T-CALL : tonalité 1750 Hz d’ouverture de relais (émission). Pas à distance.'
+  };
   const FUNC_FTX1 = [
     { name: 'SSB', rows: [
       [null, pickY('level') && ['level', 'D-LEVEL', pickY('level')[2], pickY('level')[3], FO], ['peak', 'D-PEAK', () => 'LV' + (L.peak + 1), pickY('peak')[3], FO],
@@ -3636,11 +3751,11 @@
       [null, null, null, null, info('cwMsg', 'MESSAGE'), info('cwPlay', 'PLAY'), info('cwRec', 'RECORD')],
       [['back2', 'BACK', () => '', null, FO, false, 'back'], null, null, null, null, null, ['fwd2', 'FWD', () => '', null, FO, false, 'fwd']]] },
     { name: 'FM/C4FM', rows: [
-      [null, info('dtmf', 'DTMF'), info('tcall', 'T-CALL'), null, null, ['rpt', 'RPT SHIFT', (s) => optTxt(sideKey('rpt'), s[sideKey('rpt')]), ctlCycle('rpt', 4), FO, true], info('rev', 'REV')],
+      [null, ['dtmf', 'DTMF', () => '', () => dtmfOpen(), FO, true], info('tcall', 'T-CALL'), null, null, ['rpt', 'RPT SHIFT', (s) => optTxt(sideKey('rpt'), s[sideKey('rpt')]), ctlCycle('rpt', 4), FO, true], info('rev', 'REV')],
       [info('dgTx', 'DG-ID TX'), info('dgRx', 'DG-ID RX'), null, info('aprsS', 'APRS S.LIST'), info('aprsM', 'APRS M.LIST'), info('aprsB', 'APRS BEACON'), info('aprsT', 'APRS BCN-TX')],
       [info('chStep', 'CH STEP'), null, null, ['encDec', 'SQL TYPE', (s) => optTxt(sideKey('encDec'), s[sideKey('encDec')]), ctlCycle('encDec', 6), FO, true],
         ['toneIdx', 'TONE FREQ', (s) => (CTCSS[s[sideKey('toneIdx')]] != null ? CTCSS[s[sideKey('toneIdx')]].toFixed(1) + 'Hz' : '—'), ctlStep('toneIdx', 0, 49, 1), FO],
-        info('dcs', 'DCS'), info('home', 'HOME')],
+        ['dcsIdx', 'DCS', (s) => DCS[s[sideKey('dcsIdx')]] || '—', ctlStep('dcsIdx', 0, 103, 1), FO], info('home', 'HOME')],
       [['back3', 'BACK', () => '', null, FO, false, 'back'], info('radioS', 'RADIO SETTING'), info('cwS', 'CW SETTING'), info('opS', 'OPERATION SETTING'),
         info('dispS', 'DISPLAY SETTING'), info('extS', 'EXTENSION SETTING'), info('aprsSet', 'APRS SETTING')]] }
   ];
@@ -3750,6 +3865,7 @@
   function ftxFuncToggle() {
     viewTouched();
     if (MV.open) closeMenu();
+    if (DT.open) { dtmfClose(); L.func = false; }
     L.func = !L.func; L.fEdit = false;
     if (L.func) L.dsp = null; // l'écran FUNC remplace l'écran DSP
     if (L.func) {
@@ -3803,12 +3919,13 @@
           return;
         }
         const [id, lab, , adj, , flip, kind] = cell;
-        const box = el('rect', { x: x + 1, y, width: cw - 2, height: h, rx: 3, class: 'func-cell' + (adj || kind ? '' : ' off') }, pgG);
+        const setting = / SETTING$|^APRS /.test(lab); // … SETTING et touches APRS : texte bleu clair, comme sur le TRX
+        const box = el('rect', { x: x + 1, y, width: cw - 2, height: h, rx: 3, class: 'func-cell' + (setting ? ' setting' : adj || kind ? '' : ' off') }, pgG);
         const noVal = !!kind || id === 'tuneF' || id === 'zinF' || (!adj && id !== 'mox'); // case sans valeur : nom au milieu
         const two = noVal && !kind && lab.indexOf(' ') > 0 && lab.length > 9;
         const words = two ? [lab.slice(0, lab.indexOf(' ')), lab.slice(lab.indexOf(' ') + 1)] : [lab];
-        const t1 = el('text', { x: x + cw / 2, y: y + (noVal ? h / 2 - (two ? 2 : kind ? 0 : -4) : h / 2 - 3), class: 'func-lab' + (kind ? ' nav' : ''), 'text-anchor': 'middle' }, pgG, words[0]);
-        const t2 = el('text', { x: x + cw / 2, y: y + h / 2 + (two ? 11 : 13), class: two ? 'func-lab' : 'func-val', 'text-anchor': 'middle' }, pgG, two ? words[1] : '');
+        const t1 = el('text', { x: x + cw / 2, y: y + (noVal ? h / 2 - (two ? 2 : kind ? 0 : -4) : h / 2 - 3), class: 'func-lab' + (kind ? ' nav' : '') + (setting ? ' setting' : ''), 'text-anchor': 'middle' }, pgG, words[0]);
+        const t2 = el('text', { x: x + cw / 2, y: y + h / 2 + (two ? 11 : 13), class: (two ? 'func-lab' : 'func-val') + (setting ? ' setting' : ''), 'text-anchor': 'middle' }, pgG, two ? words[1] : '');
         if (kind) el('path', { d: kind === 'fwd' ? 'M' + (x + 12) + ' ' + (y + h - 8) + 'h' + (cw - 26) + 'l-8 -5' : 'M' + (x + cw - 12) + ' ' + (y + h - 8) + 'h-' + (cw - 26) + 'l8 -5', class: 'ftx-arrow' }, pgG);
         const minus = adj && !flip ? el('text', { x: x + 9, y: y + h / 2 + 13, class: 'func-pm', 'text-anchor': 'middle' }, pgG, '−') : null;
         const plus = adj && !flip ? el('text', { x: x + cw - 9, y: y + h / 2 + 13, class: 'func-pm', 'text-anchor': 'middle' }, pgG, '+') : null;
@@ -3817,7 +3934,9 @@
         hit.addEventListener('click', (ev) => {
           if (kind) return ftxPage(L.funcPage + (kind === 'fwd' ? 1 : -1));
           if (modeInactive(id, S())) { fmOnly(id, S()); return; }
-          if (!adj) return say(lab + ' : pas disponible à distance (au club, sur le TRX).', '', 3500);
+          // Menus … SETTING : paramètres essentiels du TRX, réservés aux administrateurs (ON6DP, ON4LUC)
+          if (setting && !/^APRS [SM]|^APRS B/.test(lab)) return say(me && me.admin ? lab + ' : les menus du FTX-1 et leurs sous-menus ne sont pas encore à distance (réservés aux administrateurs quand ils le seront).' : lab + ' : réservé aux administrateurs (ON6DP, ON4LUC) — paramètres essentiels du TRX.', 'warn', 6000);
+          if (!adj) return say(FTX_NOTE[id] || lab + ' : pas disponible à distance (au club, sur le TRX).', '', FTX_NOTE[id] ? 7000 : 3500);
           const wasEdit = L.funcSel === id && L.fEdit;
           L.funcSel = id;
           if (flip) { L.fEdit = false; funcAdjust(id, 1); return render(); }
@@ -4334,7 +4453,7 @@
     const D = LCD.fd;
     if (!D) return;
     // Sous l'écran FUNC, l'écran DSP et les tableaux (MODE, BAND, MULTI…) : les rangées ATT / IPO / DNF / AGC disparaissent
-    const over = !!(L.func || L.dsp || L.modeMenu || L.bandMenu || L.multiMenu || L.icomMenu || L.quickMenu || L.mSel || (typeof MV !== 'undefined' && MV.open));
+    const over = !!(L.func || L.dsp || L.modeMenu || L.bandMenu || L.multiMenu || L.icomMenu || L.quickMenu || L.mSel || (typeof MV !== 'undefined' && MV.open) || (typeof DT !== 'undefined' && DT.open));
     D.g.style.display = over ? 'none' : '';
     D.r1.g.style.display = fd === 1 ? '' : 'none';
     D.rA.g.style.display = D.rB.g.style.display = D.sep.style.display = fd === 2 ? '' : 'none';
@@ -5898,6 +6017,7 @@
       if (m.t === 'scope') { if (ICOM) rfsOn(m); return; } // scope du TRX (IC-7300)
       if (m.t === 'spots' || m.t === 'spot') bmvOnSpots(m); // cartes de bande A / B autour du TRX
       if (m.t === 'menu_vals') return menuVals(m);
+      if (m.t === 'dtmf_vals') return dtmfVals(m);
       if (m.t === 'chatlog') { OPS.chat.length = 0; (m.list || []).forEach((x) => OPS.chat.push(x)); opsChatDraw(); return; }
       if (m.t === 'chat') { opsChatAdd(m.m, true); return; }
       if (DG() && m.t !== 'hello' && m.t !== 'state' && DG().onMessage(m)) return;
@@ -6432,5 +6552,5 @@
   if (sess) creds = { session: sess };
   else showLogin('');
   connect();
-  window.RSFACE = { state: () => S(), L, LCD, face: FACE, spots: (m) => bmvOnSpots(m), send: (m) => send(m) }; // essais
+  window.RSFACE = { state: () => S(), L, LCD, face: FACE, spots: (m) => bmvOnSpots(m), send: (m) => send(m), dtmf: (m) => dtmfVals(m) }; // essais
 })();

@@ -108,13 +108,16 @@
       { cmd: 'FN;', re: /^FN([0-2])$/, parse: (m) => ({ tuneStep: +m[1] }), sim: 'FN0' },
       // METER (MS) : mesure de l'échelle sous l'S-mètre, MAIN puis SUB (0 PO, 1 COMP, 2 ALC, 3 VDD, 4 ID, 5 SWR)
       { cmd: 'MS;', re: /^MS([0-5])([0-5])$/, parse: (m) => ({ meterSw: +m[1], meterSwB: +m[2] }), sim: 'MS55' },
-      // FM : décalage relais, type de squelch, tonalité CTCSS (le TRX ne répond qu'en FM)
+      // FM : décalage relais (lu en FM seulement) ; SQL TYPE, tonalité CTCSS et code DCS lus dans tous les modes
+      // (le TRX les affiche aussi hors FM, cases grisées ; un « ? » éventuel n'est noté qu'une fois au journal)
       { cmd: 'OS0;', when: (st) => /FM/.test(st.mode || ''), re: /^OS0([0-3])$/, parse: (m) => ({ rpt: +m[1] }), sim: 'OS00' },
       { cmd: 'OS1;', when: (st) => /FM/.test(st.modeB || ''), re: /^OS1([0-3])$/, parse: (m) => ({ rptB: +m[1] }), sim: 'OS10' },
-      { cmd: 'CT0;', when: (st) => /FM/.test(st.mode || ''), re: /^CT0([0-5])$/, parse: (m) => ({ encDec: +m[1] }), sim: 'CT00' },
-      { cmd: 'CT1;', when: (st) => /FM/.test(st.modeB || ''), re: /^CT1([0-5])$/, parse: (m) => ({ encDecB: +m[1] }), sim: 'CT10' },
-      { cmd: 'CN00;', when: (st) => /FM/.test(st.mode || ''), re: /^CN00(\d{3})$/, parse: (m) => ({ toneIdx: +m[1] }), sim: 'CN00012' },
-      { cmd: 'CN10;', when: (st) => /FM/.test(st.modeB || ''), re: /^CN10(\d{3})$/, parse: (m) => ({ toneIdxB: +m[1] }), sim: 'CN10012' }
+      { cmd: 'CT0;', re: /^CT0([0-5])$/, parse: (m) => ({ encDec: +m[1] }), sim: 'CT00' },
+      { cmd: 'CT1;', re: /^CT1([0-5])$/, parse: (m) => ({ encDecB: +m[1] }), sim: 'CT10' },
+      { cmd: 'CN00;', re: /^CN00(\d{3})$/, parse: (m) => ({ toneIdx: +m[1] }), sim: 'CN00012' },
+      { cmd: 'CN10;', re: /^CN10(\d{3})$/, parse: (m) => ({ toneIdxB: +m[1] }), sim: 'CN10012' },
+      { cmd: 'CN01;', re: /^CN01(\d{3})$/, parse: (m) => ({ dcsIdx: +m[1] }), sim: 'CN01000' },
+      { cmd: 'CN11;', re: /^CN11(\d{3})$/, parse: (m) => ({ dcsIdxB: +m[1] }), sim: 'CN11000' }
     ],
     // Console CAT : lectures supplémentaires pour le diagnostic (ATT / préampli par côté)
     // + tuner : AC (état), RI0 (accord en cours), menus TUN/LIN PORT SELECT (EX030103), TUNER SELECT (EX030104),
@@ -122,7 +125,7 @@
     extraQueries: ['RA1;', 'PA0;', 'PA1;', 'PA2;', 'AC;', 'RI0;', 'EX030103;', 'EX030104;', 'EX030701;', 'EX030702;'],
     extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'afB', 'hiSwr', 'tuningRi',
       'dContrast', 'dimmer', 'dimLed', 'micEq', 'txw', 'amc', 'voxGain', 'voxDelay', 'moniLvl', 'keyer', 'bkin', 'keySpeed', 'cwPitch', 'bkDelay', 'cwSpot', 'tuneStep', 'dMode', 'meterSw', 'meterSwB', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB',
-      'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB'],
+      'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'dcsIdx', 'dcsIdxB'],
     subBadges: true,
     // CW : mémoire TEXTE 5 du manipulateur (écrasée), lue par KY05 ; KY00 = arrêt (manuel CAT FTX-1, Hamlib ftx1_cw.c)
     // EX020210 = menu CW MEMORY 5 (0 : TEXT, 1 : MESSAGE) : en MESSAGE (mémoire enregistrée au manipulateur), le texte
@@ -231,7 +234,9 @@
       { id: 'encDec', g: 'vfo', label: 'SQL TYPE (MAIN)', type: 'select', face: true, options: SQLT, write: (v) => 'CT0' + v + ';' },
       { id: 'encDecB', g: 'vfo', label: 'SQL TYPE (SUB)', type: 'select', face: true, options: SQLT, write: (v) => 'CT1' + v + ';' },
       { id: 'toneIdx', g: 'vfo', label: 'TONE FREQ (MAIN)', type: 'level', min: 0, max: 49, step: 1, face: true, write: (v) => 'CN00' + pad(v, 3) + ';' },
-      { id: 'toneIdxB', g: 'vfo', label: 'TONE FREQ (SUB)', type: 'level', min: 0, max: 49, step: 1, face: true, write: (v) => 'CN10' + pad(v, 3) + ';' }
+      { id: 'toneIdxB', g: 'vfo', label: 'TONE FREQ (SUB)', type: 'level', min: 0, max: 49, step: 1, face: true, write: (v) => 'CN10' + pad(v, 3) + ';' },
+      { id: 'dcsIdx', g: 'vfo', label: 'DCS (MAIN)', type: 'level', min: 0, max: 103, step: 1, face: true, write: (v) => 'CN01' + pad(v, 3) + ';' },
+      { id: 'dcsIdxB', g: 'vfo', label: 'DCS (SUB)', type: 'level', min: 0, max: 103, step: 1, face: true, write: (v) => 'CN11' + pad(v, 3) + ';' }
     ],
     // SPLIT : sur le FTX-1, ST1 met le côté SUB en émission (PTT) — défaut connu du firmware, signalé par Hamlib
     // (rigs/yaesu/ftx1/ftx1_vfo.c). Le choix du VFO d'émission passe donc par FT0 (TX MAIN) / FT1 (TX SUB) ; ST n'est ni lu ni envoyé.
