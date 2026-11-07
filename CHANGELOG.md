@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.158** — FTX-1 : touche N/W MODE comme sur le TRX — appui bref = NARROW ⇄ WIDE du récepteur actif, appui d'1 s = tableau des modes
 - **0.37.157** — Aide (FR / EN) et guide de l'administrateur mis à jour : menus du FTX-1 (administrateurs), DATE&TIME, DTMF, SPAN, filtres, ATT / IPO du SUB, ascenseur des BAND MAP
 - **0.37.156** — FTX-1 : SPAN du scope lu sur le TRX (SS05) et envoyé au TRX depuis la page (5 kHz à 1 MHz) : l'échelle de la page suit celle du TRX
 - **0.37.155** — FTX-1 : fréquences MAIN et SUB avec les 3 derniers chiffres (Hz) en plus petit, comme sur le TRX

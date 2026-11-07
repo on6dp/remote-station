@@ -378,6 +378,14 @@
       return setMode(CYCLE[(i + 1) % CYCLE.length]);
     }
     if (a.toggle) { const v = s[a.toggle] ? 0 : 1; if (procRefused(s, a.toggle, v)) return; return setCtl(a.toggle, v); }
+    // FTX-1 : touche N/W (MODE) : appui bref = NARROW ⇄ WIDE sur le récepteur actif (appui d'1 s : tableau des modes)
+    if (a.toggleSide) {
+      const k = a.toggleSide + (activeSide() === 'B' ? 'B' : '');
+      if (!R.CONTROL[k]) return say('NARROW : pas disponible sur ce récepteur.', 'warn', 3000);
+      const v = s[k] ? 0 : 1;
+      say((activeSide() === 'B' ? 'SUB' : 'MAIN') + ' : ' + (v ? 'NARROW' : 'WIDE'), '', 2000);
+      return setCtl(k, v);
+    }
     if (a.set) return setCtl(a.set[0], a.set[1]);
     if (a.action) {
       if (a.action === 'tune' && !confirm('TUNE : le TRX émet quelques secondes pour accorder l’antenne. Continuer ?')) return;
