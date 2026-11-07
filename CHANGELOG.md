@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.166** — FTX-1 : clic sur le spectre ou la cascade = le VFO va sur la fréquence cliquée (fréquence sous la souris au survol), comme en touchant l'écran du TRX
 - **0.37.165** — FTX-1 : quand le SPAN du TRX dépasse le son reçu, la cascade montre ce son (3 kHz) sur toute sa largeur avec sa propre échelle en fréquences
 - **0.37.164** — Chien de garde d'émission : en modes numériques (DATA, RTTY, PSK), retour en réception après 20 s sans modulation (2 min en phonie et CW)
 - **0.37.163** — Assistant carte son version 2 : messages de Windows lisibles (accents), « redémarrer le PC du club » quand Windows attend un redémarrage

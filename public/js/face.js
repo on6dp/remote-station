@@ -1508,6 +1508,31 @@
     const st = /^CW/.test(L.activeMode(S()) || '') ? 10 : 100;
     return Math.round((lo + x * (hi - lo)) / st) * st;
   }
+  // FTX-1 : clic sur le spectre ou la cascade → le VFO de ce scope va sur la fréquence cliquée (comme en touchant l'écran du TRX)
+  function ftxFreqAt(ev) {
+    const cv = $('scope'), r = cv.getBoundingClientRect();
+    if (!r.width || cv.style.visibility === 'hidden') return null;
+    const W = Math.round(r.width), H = Math.round(r.height), x = (ev.clientX - r.left) / r.width * W, y = (ev.clientY - r.top) / r.height * H;
+    const rg = scopeRegions(W, H, [null, null]).find((q) => x >= q.x0 && x <= q.x0 + q.w && y >= q.y0 && y <= q.y0 + q.h);
+    if (!rg || y > rg.y0 + rg.h - 19) return null; // pas sur la ligne des chiffres
+    const win = ftxWin(rg.name);
+    if (!win) return null;
+    const side = rg.name === 'SUB' ? 'B' : rg.name === 'MAIN' ? 'A' : activeSide();
+    const md = (side === 'B' ? S().modeB : S().mode) || '';
+    const st = /^CW/.test(md) ? 10 : 100;
+    return { side, md, aud: !!win.aud, hz: Math.round((win.start + (x - rg.x0) / rg.w * win.span) / st) * st };
+  }
+  if (FACE.meterFtx) {
+    const cvF = $('scope');
+    cvF.addEventListener('click', (ev) => {
+      const q = ftxFreqAt(ev);
+      if (!q) return;
+      if (!needControl()) return;
+      tuneTo(q.side, q.hz);
+      showTip(ev, (q.side === 'B' ? 'SUB ' : 'MAIN ') + fmtFreq(q.hz) + ' MHz');
+    });
+    cvF.addEventListener('mousemove', (ev) => { const q = ftxFreqAt(ev); cvF.title = q ? 'Clic : ' + (q.side === 'B' ? 'SUB' : 'MAIN') + ' → ' + fmtFreq(q.hz) + ' MHz' : ''; });
+  }
   if (ICOM) {
     const cv0 = $('scope');
     cv0.addEventListener('click', (ev) => {
@@ -5036,7 +5061,7 @@
     const fresh = Date.now() - WF.at < 3000;
     LCD.hint.style.display = fresh || rfFresh() ? 'none' : '';
     // IC-7300 : le vrai scope se clique (aller sur un signal) ; la cascade du son reçu, non
-    $('scope').style.pointerEvents = ICOM && rfFresh() ? 'auto' : '';
+    $('scope').style.pointerEvents = (ICOM && rfFresh()) || (FACE.meterFtx && $('scope').style.visibility === 'visible') ? 'auto' : ''; // FTX-1 : clic sur le spectre / la cascade = aller sur cette fréquence
     $('scope').style.cursor = ICOM && rfFresh() ? 'crosshair' : '';
     LCD.hint.textContent = !live ? '' : st.audio && !st.audio.active ? 'Cascade : l’audio n’est pas activé sur la page Station' : 'Cascade : en attente du son de la station…';
     $('scope').style.visibility = (fresh || rfFresh()) && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !L.multiMenu && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet && L.fdisp !== 2 ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom ; FTX-1 DISP 2 : pas de scope)
