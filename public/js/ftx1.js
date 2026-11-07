@@ -43,6 +43,7 @@
     const TOT = RO(L(['10msec', '100msec', '1000msec', '3000msec']), 'liaison CAT');
     const STOPB = RO(L(['1bit', '2bit']), 'liaison CAT');
     const MAXP = (a, b) => RO(N(a, b, 1, 'W'), 'puissance maximale : réglée par le club');
+    const MAXP10 = (a, b) => RO(N(a, b, 1, 'W', 10), 'puissance maximale : réglée par le club');
     const TUNT = L(['INT', 'INT(FAST)', 'EXT', 'ATAS']);
     const DSTEP = L(['5Hz', '10Hz', '20Hz']);
     const EQF = [C([[0, 'OFF']].concat(Array.from({ length: 7 }, (_, i) => [i + 1, (100 + i * 100) + 'Hz']))),
@@ -110,9 +111,10 @@
       G('0303', 'OPERATION SETTING', 'RX-DSP', [[1, 'IF NOTCH WIDTH', L(['NARROW', 'WIDE'])], [2, 'NB REJECTION', L(['LOW', 'MID', 'HIGH'])],
         [3, 'NB WIDTH', L(['NARROW', 'MEDIUM', 'WIDE'])], [4, 'APF WIDTH', L(['NARROW', 'MEDIUM', 'WIDE'])], [5, 'CONTOUR LEVEL', N(-40, 20, 1, 'dB')], [6, 'CONTOUR WIDTH', N(1, 11)]]),
       G('0304', 'OPERATION SETTING', 'TX AUDIO', [[1, 'AMC RELEASE TIME', L(['FAST', 'MID', 'SLOW'])]].concat(eq(2, ''), eq(11, 'P '))),
-      G('0305', 'OPERATION SETTING', 'TX GENERAL', [[1, 'MAX POWER (BAT)', MAXP(5, 60)], [2, 'QRP MODE', RO(OFFON, 'puissance : réglée par le club')],
-        [3, 'HF MAX POWER', MAXP(5, 10)], [4, '50M MAX POWER', MAXP(5, 10)], [5, '70M MAX POWER', MAXP(5, 60)], [6, '144M MAX POWER', MAXP(5, 100)],
-        [7, '430M MAX POWER', MAXP(5, 100)], [8, 'AM HF/50 MAX POWER', MAXP(5, 25)], [9, 'AM V/U MAX POWER', MAXP(5, 25)],
+      // TX GENERAL = tête Field seule (0,5 à 10 W) : valeurs en dixièmes de watt (« 060 » = 6.0W sur batterie, vérifié au club)
+      G('0305', 'OPERATION SETTING', 'TX GENERAL', [[1, 'MAX POWER (BAT)', MAXP10(5, 60)], [2, 'QRP MODE', RO(OFFON, 'puissance : réglée par le club')],
+        [3, 'HF MAX POWER', MAXP(5, 10)], [4, '50M MAX POWER', MAXP(5, 10)], [5, '70M MAX POWER', MAXP10(5, 60)], [6, '144M MAX POWER', MAXP10(5, 100)],
+        [7, '430M MAX POWER', MAXP10(5, 100)], [8, 'AM HF/50 MAX POWER', MAXP10(5, 25)], [9, 'AM V/U MAX POWER', MAXP10(5, 25)],
         [10, 'VOX SELECT', RO(L(['MIC', 'USB', 'Bluetooth']), 'pas de VOX à distance')], [11, 'EMERGENCY FREQ TX', RO(OFFON, 'au club')],
         [12, 'TX INHIBIT', RO(OFFON, 'émission : au club')], [13, 'METER DETECTOR', L(['AVERAGE', 'PEAK'])]]),
       G('0306', 'OPERATION SETTING', 'KEY/DIAL', [[1, 'SSB/CW DIAL STEP', DSTEP], [2, 'RTTY/PSK DIAL STEP', DSTEP],

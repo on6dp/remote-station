@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.147** — FTX-1 : TX GENERAL — puissances maximales de la tête Field en dixièmes de watt (MAX POWER (BAT) 6.0W, 70M / 144M / 430M, AM)
 - **0.37.146** — FTX-1 : menus SETTING relus toutes les 8 s tant que l'écran est ouvert (réglage changé au TRX visible sur le dashboard)
 - **0.37.145** — FTX-1 : CAT-2 RATE et CAT-2 TIME OUT TIMER réglables (administrateurs) ; CAT-1 et CAT-3 restent en lecture seule
 - **0.37.144** — FTX-1 : menus SETTING — le réglage choisi montre toutes ses valeurs possibles (valeur actuelle en surbrillance), aussi en lecture seule
