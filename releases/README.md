@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.168 | [RemoteStation-Setup-0.37.168.exe](0.37.168/RemoteStation-Setup-0.37.168.exe) | [remote-station-0.37.168.tar.gz](0.37.168/remote-station-0.37.168.tar.gz) | Ctrl+F5 sur /ftx1 — [empreintes SHA-256](0.37.168/SHA256SUMS.txt) |
 | 0.37.167 | [RemoteStation-Setup-0.37.167.exe](0.37.167/RemoteStation-Setup-0.37.167.exe) | [remote-station-0.37.167.tar.gz](0.37.167/remote-station-0.37.167.tar.gz) | Ctrl+F5 sur /ftx1 — [empreintes SHA-256](0.37.167/SHA256SUMS.txt) |
 | 0.37.166 | [RemoteStation-Setup-0.37.166.exe](0.37.166/RemoteStation-Setup-0.37.166.exe) | [remote-station-0.37.166.tar.gz](0.37.166/remote-station-0.37.166.tar.gz) | Ctrl+F5 sur /ftx1 — [empreintes SHA-256](0.37.166/SHA256SUMS.txt) |
 | 0.37.165 | [RemoteStation-Setup-0.37.165.exe](0.37.165/RemoteStation-Setup-0.37.165.exe) | [remote-station-0.37.165.tar.gz](0.37.165/remote-station-0.37.165.tar.gz) | Ctrl+F5 sur /ftx1 — [empreintes SHA-256](0.37.165/SHA256SUMS.txt) |

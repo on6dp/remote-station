@@ -852,7 +852,10 @@
     el('rect', { x: X(5), y: Y(1), width: c.w - 10, height: 12.5, rx: 1.5, class: 'lcd-sbar' }, g);
     sb.fastR = el('rect', { x: X(146), y: Y(1.8), width: 36, height: 10.9, rx: 1.5, class: 'lcd-sfast' }, g);
     sb.fast = el('text', { x: X(164), y: Y(10.9), class: 'lcd-sfastt', 'text-anchor': 'middle' }, g, 'FAST');
-    sb.vox = el('text', { x: X(222), y: Y(10.9), class: 'lcd-stxt', 'text-anchor': 'middle' }, g, 'VOX');
+    // SPLIT en service : « SPLIT » noir sur blanc à droite de FAST / FINE (pas sur le TRX : pour attirer l'attention), clignote 2 fois
+    sb.splitR = el('rect', { x: X(186), y: Y(1.8), width: 40, height: 10.9, rx: 1.5, class: 'lcd-ssplit', style: 'display:none' }, g);
+    sb.split = el('text', { x: X(206), y: Y(10.9), class: 'lcd-ssplitt', 'text-anchor': 'middle', style: 'display:none' }, g, 'SPLIT');
+    sb.vox = el('text', { x: X(244), y: Y(10.9), class: 'lcd-stxt', 'text-anchor': 'middle' }, g, 'VOX');
     sb.tuneR = el('rect', { x: X(262), y: Y(1.8), width: 38, height: 10.9, rx: 1.5, class: 'lcd-stuner' }, g); // fond rouge : tuner en service
     sb.tune = el('text', { x: X(296), y: Y(10.9), class: 'lcd-stune', 'text-anchor': 'end' }, g, 'TUNE');
     sb.ant = el('text', { x: X(302), y: Y(10.9), class: 'lcd-stxt' }, g, 'ANT1');
@@ -875,6 +878,14 @@
     sb.fast.textContent = fine ? 'FINE' : 'FAST';
     sb.fastR.classList.toggle('fine', fine); sb.fast.classList.toggle('fine', fine);
     sb.vox.style.display = s.vox ? '' : 'none';
+    const sp = !!s.split;
+    sb.splitR.style.display = sb.split.style.display = sp ? '' : 'none';
+    if (sp && !L.splitSeen) {
+      for (const e of [sb.splitR, sb.split]) { e.classList.remove('blink2'); void e.getBBox(); e.classList.add('blink2'); }
+      clearTimeout(L.splitBlinkT);
+      L.splitBlinkT = setTimeout(() => { sb.splitR.classList.remove('blink2'); sb.split.classList.remove('blink2'); }, 1700);
+    }
+    L.splitSeen = sp;
     sb.tune.classList.toggle('on', !!s.tuner);
     sb.tuneR.style.display = s.tuner ? '' : 'none';
     sb.tune.style.display = s.tuner == null ? 'none' : '';
@@ -5411,7 +5422,12 @@
     // avec sa propre échelle en fréquences (le scope du TRX, lui, ne passe pas par le CAT)
     if (trxSpan > FTX_AUD) {
       // Un peu de place avant le 0 Hz du son : la fréquence du VFO (▼ vert / ▼ rouge) reste visible près du bord
-      const sp = FTX_AUD + FTX_PRE, a = fR + sg * (-FTX_PRE - off), b = fR + sg * (FTX_AUD - off), st = Math.min(a, b);
+      const sp = FTX_AUD + FTX_PRE, a = fR + sg * (-FTX_PRE - off), b = fR + sg * (FTX_AUD - off);
+      let st = Math.min(a, b);
+      // SPLIT : fenêtre fixe (comme CURSOR) — le ▼ vert de l'écoute se déplace avec le grand bouton, le ▼ rouge reste ;
+      // la fenêtre ne se recale que si l'écoute en sort
+      const kA = sd + 'aud';
+      if (st0.split) { let s0 = FTXWIN[kA]; if (s0 == null || fR < s0 || fR > s0 + sp) s0 = st; FTXWIN[kA] = s0; st = s0; } else FTXWIN[kA] = null;
       const fT = st0.split ? (sd === 'B' ? st0.freq : st0.freqB) || fR : fR;
       return { start: st, span: sp, fR, fT, dm, aud: true, x: (f) => (f - st) / sp, a: (f) => sg * (f - fR) + off, f: (au) => fR + sg * (au - off) };
     }
