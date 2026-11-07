@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.169** — FTX-1 : SPLIT comme sur le TRX selon D-MODE — CURSOR / FIX : fenêtre fixe, ▼ vert de l'écoute déplacé par le grand bouton ; CENTER : seul le trait rouge de l'émission se déplace
 - **0.37.168** — FTX-1 : « SPLIT » noir sur blanc dans la barre d'état (clignote 2 fois à la mise en service) ; en SPLIT, fenêtre du son reçu fixe — ▼ rouge à l'émission, ▼ vert de l'écoute déplacé par le grand bouton
 - **0.37.167** — FTX-1 : son reçu sur toute la largeur — ▼ vert (écoute) et ▼ rouge (émission) de retour, à la fréquence du VFO près du bord
 - **0.37.166** — FTX-1 : clic sur le spectre ou la cascade = le VFO va sur la fréquence cliquée (fréquence sous la souris au survol), comme en touchant l'écran du TRX

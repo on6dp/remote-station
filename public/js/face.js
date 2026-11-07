@@ -5424,10 +5424,11 @@
       // Un peu de place avant le 0 Hz du son : la fréquence du VFO (▼ vert / ▼ rouge) reste visible près du bord
       const sp = FTX_AUD + FTX_PRE, a = fR + sg * (-FTX_PRE - off), b = fR + sg * (FTX_AUD - off);
       let st = Math.min(a, b);
-      // SPLIT : fenêtre fixe (comme CURSOR) — le ▼ vert de l'écoute se déplace avec le grand bouton, le ▼ rouge reste ;
-      // la fenêtre ne se recale que si l'écoute en sort
+      // SPLIT en CURSOR / FIX : fenêtre fixe — le ▼ vert de l'écoute se déplace avec le grand bouton, le ▼ rouge reste ;
+      // la fenêtre ne se recale que si l'écoute en sort. En CENTER : la fenêtre suit l'écoute, seul le trait rouge (émission)
+      // se déplace, comme sur le TRX
       const kA = sd + 'aud';
-      if (st0.split) { let s0 = FTXWIN[kA]; if (s0 == null || fR < s0 || fR > s0 + sp) s0 = st; FTXWIN[kA] = s0; st = s0; } else FTXWIN[kA] = null;
+      if (st0.split && dm !== 0) { let s0 = FTXWIN[kA]; if (s0 == null || fR < s0 || fR > s0 + sp) s0 = st; FTXWIN[kA] = s0; st = s0; } else FTXWIN[kA] = null;
       const fT = st0.split ? (sd === 'B' ? st0.freq : st0.freqB) || fR : fR;
       return { start: st, span: sp, fR, fT, dm, aud: true, x: (f) => (f - st) / sp, a: (f) => sg * (f - fR) + off, f: (au) => fR + sg * (au - off) };
     }
@@ -5500,7 +5501,7 @@
       c2.fillStyle = '#0b0f17'; c2.font = 'bold 11px Arial, sans-serif'; c2.textAlign = 'center'; c2.fillText(t, xe + d * 15, y + 4);
     };
     const inW = (f) => f >= win.start && f <= win.start + win.span;
-    const one = win.dm === 0 && !win.aud; // CENTER (comme le TRX) : seulement la barre rouge d'émission ; l'écoute est le milieu de l'écran
+    const one = win.dm === 0; // CENTER (comme le TRX) : seulement la barre rouge d'émission ; l'écoute est le milieu de l'écran
     c2.save(); c2.beginPath(); c2.rect(x0, y0, w, sh); c2.clip(); // dans la zone du spectre (pas dans la cascade qui défile)
     const yT = one ? y0 : y0 + 10;
     if (inW(win.fT)) { const x = Math.round(X(win.fT)); c2.fillStyle = RED; c2.fillRect(x - 1, yT + 9, 2, sh - yT - 9 + y0); tri(x, yT, RED); }
