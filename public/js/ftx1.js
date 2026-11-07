@@ -72,11 +72,10 @@
       G('0102', 'RADIO SETTING', 'MODE AM', rx.concat([[12, 'TX BPF SEL', BPF], [13, 'MOD SOURCE', MOD], [14, 'USB MOD GAIN', MODG], [15, 'RPTT SELECT', RPTT]])),
       G('0103', 'RADIO SETTING', 'MODE FM', rx.concat([[12, 'MOD SOURCE', MOD], [13, 'USB MOD GAIN', MODG], [14, 'RPTT SELECT', RPTT],
         [15, 'RPT SHIFT', L(['-', 'SIMPLEX', '+', 'ARS'])], [16, 'RPT SFT FREQ(28MHz)', N(0, 1000, 10, 'kHz')], [17, 'RPT SFT FREQ(50MHz)', N(0, 4000, 10, 'kHz')],
-        // 144 / 430 MHz : P4 = 0000 à 0100, pas de 50 kHz (0 à 5.00MHz) — vérifié au club : 0.60MHz lu « 0012 ». Au-delà de 5.00MHz
-        // (7.60MHz au 430 sur le TRX du club), le CAT répond « 0100 » : 430 MHz en lecture seule, l'écrire effacerait le vrai décalage
-        [18, 'RPT SFT FREQ(144MHz)', Object.assign(N(0, 100), { fmt: (v) => (v * 0.05).toFixed(2) + 'MHz' })],
-        [19, 'RPT SFT FREQ(430MHz)', RO(Object.assign(N(0, 100), { fmt: (v) => (v >= 100 ? '≥ ' : '') + (v * 0.05).toFixed(2) + 'MHz' }),
-          'le CAT ne lit pas au-delà de 5.00MHz (7.60MHz sur le TRX) : à régler au club')],
+        // 144 / 430 MHz : pas de 50 kHz (« 0012 » = 0.60MHz, « 0152 » = 7.60MHz, vérifié au club). Le manuel écrit « 0 - 100MHz
+        // (P4 = 0000 - 0100) » : 0100 est faux, la valeur va au-delà ; 0 à 2000 (100 MHz) permis, le TRX refuse le reste (valeur relue)
+        [18, 'RPT SFT FREQ(144MHz)', Object.assign(N(0, 2000), { fmt: (v) => (v * 0.05).toFixed(2) + 'MHz' })],
+        [19, 'RPT SFT FREQ(430MHz)', Object.assign(N(0, 2000), { fmt: (v) => (v * 0.05).toFixed(2) + 'MHz' })],
         [20, 'SQL TYPE', L(['OFF', 'ENC', 'TSQ', 'DCS', 'PR FREQ', 'REV TONE'])], [21, 'TONE FREQ', L(CTCSS.map((x) => x.toFixed(1) + 'Hz'))],
         [22, 'DCS CODE', L(DCS)], [23, 'DCS RX REVERS', L(['NORMAL', 'REVERS', 'BOTH'])],
         [24, 'DCS TX REVERS', L(['NORMAL', 'REVERS'])], [25, 'PR FREQ', N(300, 3000, 100, 'Hz')], [26, 'DTMF DELAY', L(['50ms', '250ms', '450ms', '750ms', '1000ms'])],

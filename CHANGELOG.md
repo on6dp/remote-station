@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.139** — FTX-1 : RPT SFT FREQ(144MHz) et (430MHz) réglables depuis le menu MODE FM (pas de 50 kHz, échelle vérifiée au club : 0.60MHz et 7.60MHz)
 - **0.37.138** — FTX-1 : lecture des menus SETTING plus rapide et complète (lectures en rafale suspendues pendant la lecture, attente 1,2 s par réglage), état « lecture sur le TRX… » ; EXTENSION SETTING : DATE&TIME, MY POSITION, SD CARD, SOFT VERSION, CALIBRATION, RESET (lecture seule / au club)
 - **0.37.137** — FTX-1 : menus RADIO / CW / OPERATION / DISPLAY / EXTENSION / APRS SETTING comme sur le TRX (sous-menus, valeurs relues, réglage − / +), réservés aux administrateurs ; réglages sensibles en lecture seule
 - **0.37.136** — FTX-1 : FUNC page 3 — SQL TYPE réglable dans tous les modes, TONE FREQ et DCS (023-754) affichés et grisés hors FM, écran DTMF CODE (mémoires 1-10 relues et modifiables), touches APRS et SETTING en bleu clair, APRS BEACON / BCN-TX grisés hors FM, SETTING réservés aux administrateurs
