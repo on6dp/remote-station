@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.160** — FTX-1 : petit spectre (et filtres agrandis) dans le filtre du côté actif en réception simple — il suit la commutation MAIN / SUB
 - **0.37.159** — FTX-1 : fonction du bouton FUNC suivie avec le TRX (SF : D-COLOR, RF POWER…), échelle PO 0-10-50-100-150 W comme sur le TRX ; niveau du micro gradué en dB avec « NIVEAU MICRO » ; DX Cluster à droite de DIGI CONFIGURATION au-dessus de « Suivre l'opérateur »
 - **0.37.158** — FTX-1 : touche N/W MODE comme sur le TRX — appui bref = NARROW ⇄ WIDE du récepteur actif, appui d'1 s = tableau des modes
 - **0.37.157** — Aide (FR / EN) et guide de l'administrateur mis à jour : menus du FTX-1 (administrateurs), DATE&TIME, DTMF, SPAN, filtres, ATT / IPO du SUB, ascenseur des BAND MAP

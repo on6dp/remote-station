@@ -5698,7 +5698,8 @@
     c2.strokeStyle = '#3a4352'; c2.lineWidth = 1.5;
     c2.beginPath(); c2.moveTo(half + 0.5, 8); c2.lineTo(half + 0.5, H - 14); c2.stroke();
     const FX = !!FACE.meterFtx; // FTX-1 : filtre blanc, intérieur gris, sans repère orange ni base bleue (comme le TRX)
-    for (const [i, side, sp, color] of [[0, 'A', specs[0], FX ? '#e9eef0' : '#ff2b1c'], [1, 'B', WF.two ? specs[1] : null, FX ? '#e9eef0' : '#ff2b1c']]) {
+    const one = FX && !WF.two, as = activeSide();
+    for (const [i, side, sp, color] of [[0, 'A', one ? (as === 'A' ? specs[0] : null) : specs[0], FX ? '#e9eef0' : '#ff2b1c'], [1, 'B', one ? (as === 'B' ? specs[0] : null) : WF.two ? specs[1] : null, FX ? '#e9eef0' : '#ff2b1c']]) {
       const x0 = i * half + 6, w = half - 12, y0 = 8, h = H - 26;
       const f = (LCD.flt && LCD.flt[side]) || { fr: 0.6, off: 0 };
       const cx = x0 + w / 2 + f.off * w, tw = w * f.fr, top = y0 + 14, bot = y0 + h - 4, sl = Math.min(14, tw * 0.12);
@@ -5809,7 +5810,9 @@
       WF.lastSp = specs[0]; WF.lastN = WF.n; // AUTO TUNE (IC-7300)
       const nb = Math.max(2, Math.floor((WF.n / 2) * maxHz / (WF.rate / 2)));
       // Petit spectre dans le cadre du filtre (MAIN à gauche, SUB à droite)
-      for (const [side, sp] of [['A', specs[0]], ['B', specs[1] || (S().dualRx !== 0 && !WF.two ? null : null)]]) {
+      // FTX-1 en réception simple : le son reçu est celui du côté actif → son petit spectre dans le filtre de ce côté
+      const one = !WF.two && FACE.meterFtx, as = activeSide();
+      for (const [side, sp] of [['A', one ? (as === 'A' ? specs[0] : null) : specs[0]], ['B', one ? (as === 'B' ? specs[0] : null) : specs[1]]]) {
         const fl = LCD['f' + side];
         if (!fl) continue;
         if (!sp) { fl.bars.setAttribute('d', ''); cwTune(side, fl, null); continue; }
