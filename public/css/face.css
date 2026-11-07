@@ -734,3 +734,7 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .fc-menu.ftxm .fx-back { font: inherit; padding: .3em 0; background: #a9b3a9; color: #ffa600; border: 0; border-top: 1px solid #8e978e; cursor: pointer; letter-spacing: .06em; text-shadow: 0 1px 1px rgba(0, 0, 0, .4); }
 .fc-menu.ftxm .fx-h { position: relative; }
 .fc-menu.ftxm .fx-st { position: absolute; right: .6em; top: 50%; transform: translateY(-50%); font-size: .62em; color: #3a1d00; background: #ffd27a; padding: .1em .5em; border-radius: .3em; text-shadow: none; }
+.fc-menu.ftxm .fx-row.sel { flex: 1.6 1 0; }
+.fc-menu.ftxm .fx-opts { display: flex; flex-wrap: wrap; gap: .15em .5em; margin-top: .2em; font-size: .72em; color: #1c1a1d; text-shadow: none; }
+.fc-menu.ftxm .fx-opts i { font-style: normal; padding: 0 .3em; border-radius: .2em; }
+.fc-menu.ftxm .fx-opts i.on { background: #15171a; color: #ffe94a; }

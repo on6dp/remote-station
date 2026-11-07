@@ -3428,6 +3428,15 @@
     MV.top = Math.max(0, Math.min(Math.max(0, g.items.length - FX_ROWS), (MV.top || 0) + d));
     menuDraw();
   }
+  // Réglage choisi : toutes les valeurs possibles sous la barre (la valeur actuelle en surbrillance), même en lecture seule
+  function menuChoices(M, it, raw, esc) {
+    const d = it.d;
+    if (d.k === 't') return '';
+    if (d.k === 'n') return '<div class="fx-opts">' + esc(M.show(d, String(d.min)) + ' … ' + M.show(d, String(d.max)) + (d.step > 1 || d.fmt ? '' : '')) + '</div>';
+    const codes = d.codes || d.labels.map((_, i) => i + d.base), cur = raw == null ? NaN : parseInt(raw, 10);
+    if (codes.length > 24) return '<div class="fx-opts">' + esc(d.labels[0] + ' … ' + d.labels[d.labels.length - 1]) + '</div>';
+    return '<div class="fx-opts">' + codes.map((c, i) => '<i' + (c === cur ? ' class="on"' : '') + '>' + esc(d.labels[i]) + '</i>').join('') + '</div>';
+  }
   function menuDrawFtx(box, M, esc) {
     const subs = M ? M.groups.filter((g) => g.group === MV.group) : [];
     const g = subs.find((x) => x.id === MV.sub);
@@ -3438,7 +3447,8 @@
       const val = it.d.k === 't' && !it.d.read ? 'au TRX' : raw === undefined ? '…' : M.show(it.d, raw);
       return '<div class="fx-row' + (sel ? ' sel' : '') + (ro ? ' ro' : '') + '" data-it="' + it.id + '" title="' + esc(it.label + (ro ? ' — lecture seule : ' + ro : ' — clic puis − / +, molette ou bouton FUNC')) + '">' +
         '<div class="fx-l">' + esc(it.label) + '</div><div class="fx-v">' + (sel && !ro ? '<button type="button" class="fx-pm" data-step="-1">−</button>' : '') +
-        '<span>' + esc(val) + '</span>' + (sel && !ro ? '<button type="button" class="fx-pm" data-step="1">+</button>' : '') + '</div></div>';
+        '<span>' + esc(val) + '</span>' + (sel && !ro ? '<button type="button" class="fx-pm" data-step="1">+</button>' : '') + '</div>' +
+        (sel ? menuChoices(M, it, raw, esc) : '') + '</div>';
     }).join('') : '';
     const note = !g || !n ? '<p class="fx-note">' + esc(g ? g.name : MV.group) + ' : au club seulement (carte SD, version, étalonnage, remise à zéro… : rien à distance, par sécurité).</p>' : '';
     const th = n > FX_ROWS ? FX_ROWS / n * 100 : 100, tp = n > FX_ROWS ? top / n * 100 : 0;

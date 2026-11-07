@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.144** — FTX-1 : menus SETTING — le réglage choisi montre toutes ses valeurs possibles (valeur actuelle en surbrillance), aussi en lecture seule
 - **0.37.143** — FTX-1 : TUNER SELECT — libellés du TRX (OPTION, ATAS)
 - **0.37.142** — FTX-1 : TUN/LIN PORT SELECT — libellés du TRX (OPTION, BAND DATA, CAT-3, GPO)
 - **0.37.141** — FTX-1 : RF/SQL VR — valeur 2 affichée AUTO, comme sur le TRX
