@@ -5373,6 +5373,7 @@
   //   FIX : fenêtre fixe au début de la bande (14.000 → 14.000 + SPAN), repères « R ▶ / T ▶ » au bord quand on est en dehors.
   // Le spectre affiché reste celui du son reçu (BF), placé à sa vraie fréquence dans la fenêtre (en dehors : rien).
   const FTXWIN = {};
+  const FTX_AUD = 3000; // largeur du son reçu montré (Hz de BF)
   function ftxWin(name) {
     // Scope unique (nom vide) : celui du VFO sélectionné (le son reçu est le sien)
     const st0 = S(), sd = name === 'SUB' ? 'B' : name === 'MAIN' ? 'A' : activeSide(), f00 = sd === 'B' ? st0.freqB : st0.freq;
@@ -5380,7 +5381,15 @@
     const md = (sd === 'B' ? st0.modeB : st0.mode) || '', sg = /LSB|-L$|^CW-L|^RTTY-L/.test(md) ? -1 : 1;
     const rit = sd === 'B' ? st0.ritB : st0.rit, clr = (sd === 'B' ? st0.clarB : st0.clar) || 0;
     const fR = FACE.clarCycle && rit ? f00 + clr : f00, off = /^CW/.test(md) ? (st0.cwPitch || 0) : 0;
-    const span = (parseFloat(SPAN_TRX[L.trxSpan]) || 5) * 1000, dm = st0.dMode || 0;
+    const trxSpan = (parseFloat(SPAN_TRX[L.trxSpan]) || 5) * 1000, dm = st0.dMode || 0;
+    // Choix du club : quand le SPAN du TRX dépasse le son reçu (~3 kHz), la cascade montre ce son sur toute sa largeur,
+    // avec sa propre échelle en fréquences (le scope du TRX, lui, ne passe pas par le CAT)
+    if (trxSpan > FTX_AUD) {
+      const a = fR + sg * (0 - off), b = fR + sg * (FTX_AUD - off), st = Math.min(a, b);
+      const fT = st0.split ? (sd === 'B' ? st0.freq : st0.freqB) || fR : fR;
+      return { start: st, span: FTX_AUD, fR, fT, dm, aud: true, x: (f) => (f - st) / FTX_AUD, a: (f) => sg * (f - fR) + off, f: (au) => fR + sg * (au - off) };
+    }
+    const span = trxSpan;
     let start;
     if (dm === 0) start = fR - span / 2;
     else if (dm === 1) {
@@ -5419,7 +5428,7 @@
     if (!win) return;
     const fmtRf = (hz) => { const t = String(Math.round(hz)).padStart(7, '0'); return t.slice(0, -6) + '.' + t.slice(-6, -3) + '.' + t.slice(-3); };
     const X = (f) => x0 + w * win.x(f), ly = y0 + h - 2, stp = win.span / 5;
-    if (win.dm === 0) {
+    if (win.dm === 0 && !win.aud) {
       // CENTER : la fréquence au milieu, écarts de part et d'autre (−200k −100k 14.448.500 +100k +200k), comme sur le TRX
       const fo = (d) => (d >= 10000 ? Math.round(d / 1000) : (d / 1000).toFixed(1)) + 'k';
       c2.fillText(fmtRf(win.fR), x0 + w / 2, ly);
@@ -5441,6 +5450,8 @@
     // Repères : ▼ rouge = émission (avec son trait), ▼ vert = réception (au-dessus) ; CENTER : un seul ▼ rouge (au milieu sans SPLIT ;
     // en SPLIT il est à la fréquence d'émission et se déplace quand on tourne le grand bouton, l'écoute restant au milieu).
     // En dehors de la fenêtre : « R ▶ » vert et « T ▶ » rouge sur le bord, du côté de la fréquence
+    // Son reçu sur toute la largeur : pas de repères ▼ (la fréquence du VFO est au bord, celle du signal se lit sur l'échelle)
+    if (win.aud) { c2.font = 'bold 14px Verdana, "DejaVu Sans", sans-serif'; c2.textAlign = 'center'; return; }
     const RED = '#ff2a1a', GRN = '#3ad23a';
     const tri = (x, y, col) => { c2.fillStyle = col; c2.beginPath(); c2.moveTo(x - 6, y); c2.lineTo(x + 6, y); c2.lineTo(x, y + 9); c2.closePath(); c2.fill(); };
     const arrow = (right, y, col, t) => {
@@ -5575,6 +5586,13 @@
     c2.fillStyle = FACE.meterFtx ? '#fff' : 'rgba(200,210,225,.85)';
     c2.font = ICOM ? 'bold 12px Arial, sans-serif' : FACE.meterFtx ? 'bold 14px "Roboto Mono", monospace' : '9px "Roboto Mono", monospace'; // FTX-1 : échelle en blanc gras, lisible
     c2.textAlign = 'center';
+    if (win && win.aud) {
+      // Bandeau : ce qui est montré n'est pas le SPAN du TRX, mais le son reçu sur toute la largeur
+      c2.save(); c2.font = 'bold 11px Verdana, Arial, sans-serif'; c2.textAlign = 'right';
+      const t = 'son reçu : 3 kHz (SPAN ' + SPAN_TRX[L.trxSpan] + 'Hz sur le TRX)', tw = c2.measureText(t).width + 10;
+      c2.fillStyle = 'rgba(0,0,0,.6)'; c2.fillRect(x0 + w - tw - 4, y0 + 3, tw, 15);
+      c2.fillStyle = '#9fd4ff'; c2.fillText(t, x0 + w - 9, y0 + 14); c2.restore();
+    }
     if (noData) {
       // Rien à montrer : le dire plutôt qu'un écran vide (le scope du TRX, lui, voit toute la bande ; il ne passe pas par le CAT)
       c2.save(); c2.fillStyle = 'rgba(210,220,235,.85)'; c2.font = 'bold ' + Math.max(9, Math.min(13, Math.floor(w / 48))) + 'px Verdana, Arial, sans-serif'; c2.textAlign = 'center';

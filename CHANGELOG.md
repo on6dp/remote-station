@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.165** — FTX-1 : quand le SPAN du TRX dépasse le son reçu, la cascade montre ce son (3 kHz) sur toute sa largeur avec sa propre échelle en fréquences
 - **0.37.164** — Chien de garde d'émission : en modes numériques (DATA, RTTY, PSK), retour en réception après 20 s sans modulation (2 min en phonie et CW)
 - **0.37.163** — Assistant carte son version 2 : messages de Windows lisibles (accents), « redémarrer le PC du club » quand Windows attend un redémarrage
 - **0.37.162** — Carte son du TRX : relance automatique par la page Station après 45 s de silence (assistant installé, une fois / 10 min, jamais en émission) ; assistant carte son version 2 : coupe la mise en veille USB de Windows à chaque démarrage
