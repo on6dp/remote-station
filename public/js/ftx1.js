@@ -64,6 +64,10 @@
       '205 212 223 225 226 243 244 245 246 251 252 255 261 263 265 266 271 274 306 311 315 325 331 332 343 346 351 356 364 365 371 411 412 413 423 431 432 ' +
       '445 446 452 454 455 462 464 465 466 503 506 516 523 526 532 546 565 606 612 624 627 631 632 654 662 664 703 712 723 731 732 734 743 754').split(' ');
     const DTM = { k: 't', read: true, ro: 'se règle dans l’écran DTMF (FUNC → DTMF)' };
+    const TXT = { k: 't', read: true, ro: 'texte : à changer au TRX' }; // texte relu sur le TRX (indicatif APRS, messages…)
+    // Symboles APRS (manuel CAT, Table 4) : P4 = les 2 caractères du symbole (« /> » = Car)
+    const SYMS = [["/#", "DIGI"], ["/&", "HF Gateway"], ["/'", "Small Aircraft"], ["/-", "House QTH (VHF)"], ["/.", "X"], ["/0", "Circle"], ["/:", "Fire"], ["/;", "Campground"], ["/<", "Motorcycle"], ["/=", "Railroad Engine"], ["/>", "Car"], ["/C", "Canoe"], ["/E", "Eyeball"], ["/I", "TCP/IP"], ["/K", "School"], ["/O", "Balloon"], ["/P", "Police"], ["/R", "REC.Vehicle"], ["/T", "SSTV"], ["/U", "Bus"], ["/V", "ATV"], ["/W", "NWS Site"], ["/X", "Helicopter"], ["/Y", "Yacht(sailboat)"], ["/[", "Human/Person"], ["/\\", "Triangle(DF)"], ["/^", "Large Aircraft"], ["/_", "Weather Station"], ["/a", "Ambulance"], ["/b", "Bycycle"], ["/f", "Fire Truck"], ["/g", "Glider"], ["/j", "Jeep"], ["/k", "School"], ["/m", "Mic-E Repeater"], ["/r", "REC.Vehicle"], ["/s", "Ship(powerboat)"], ["/u", "Bus"], ["/v", "ATV"], ["/y", "Yacht(sailboat)"], ["\\#", "Overlay DIGI"], ["\\&", "Overlay Gate"], ["\\-", "House (HF)"], ["\\.", "Ambiguous"], ["\\0", "Circle"], ["\\;", "Park/Picnic Area"], ["\\=", "APRStt"], ["\\>", "Overlayed Car"], ["\\A", "APRStt"], ["\\K", "Kenwood HT"], ["\\W", "NWS Site"], ["\\Y", "Radios & Devices"], ["\\^", "Aircraft"], ["\\_", "WX Site"], ["\\m", "Value Signpost"], ["\\n", "Overlay Triangle"], ["\\s", "Overlayed Ship"], ["\\u", "Overlayed Truck"], ["\\v", "Overlayed Van"], ["\\x", "Obstruction"]];
+    const SYM = { k: 's', codes: SYMS.map((x) => x[0]), labels: SYMS.map((x) => x[0] + ' (' + x[1] + ')') };
     const SAVER = L(['OFF', '1min', '2min', '5min', '15min', '30min', '60min']);
     // Début commun des modes (réception) : tonalité, AGC, filtres
     const rx = [[1, 'AF TREBLE GAIN', TONE], [2, 'AF MIDDLE TONE GAIN', TONE], [3, 'AF BASS GAIN', TONE], [4, 'AGC FAST DELAY', AGC], [5, 'AGC MID DELAY', AGC],
@@ -150,26 +154,36 @@
       G('0501P', 'EXTENSION SETTING', 'MY POSITION', [[8, 'MY POSITION', RO(L(['GPS', 'MANUAL']), EXT)], [9, 'MY POSITION LATITUDE', NOCAT], [10, 'MY POSITION LONGITUDE', NOCAT]], '0501'),
       G('0502', 'EXTENSION SETTING', 'SD CARD', []), G('0503', 'EXTENSION SETTING', 'SOFT VERSION', []),
       G('0504', 'EXTENSION SETTING', 'CALIBRATION', []), G('0505', 'EXTENSION SETTING', 'RESET', []),
+      // APRS SETTING : comme sur le TRX — GENERAL, MSG TEMPLATE, MY SYMBOL, DIGI PATH (textes relus, pas modifiés à distance)
       G('0601', 'APRS SETTING', 'GENERAL', [[1, 'MODEM SELECT', L(['OFF', 'AUTO', 'MAIN', 'SUB'])], [2, 'MODEM TYPE', L(['1200bps', '9600bps'])], [3, 'APRS AF MUTE', OFFON],
-        [4, 'APRS TX DELAY', L(['100ms', '200ms', '300ms', '400ms', '500ms', '750ms', '1000ms'])], [5, 'CALLSIGN(APRS)', T]]),
+        [4, 'APRS TX DELAY', L(['100ms', '200ms', '300ms', '400ms', '500ms', '750ms', '1000ms'])], [5, 'CALLSIGN (APRS)', TXT], [9, 'APRS DESTINATION', TXT]]),
+      G('0602', 'APRS SETTING', 'MSG TEMPLATE', Array.from({ length: 8 }, (_, i) => [i + 1, 'MESSAGE TEXT' + (i + 1), TXT])),
+      G('0603', 'APRS SETTING', 'MY SYMBOL', [[1, 'MY SYMBOL', L(['ICON1', 'ICON2', 'ICON3', 'USER'])], [2, 'ICON1', SYM], [3, 'ICON2', SYM], [4, 'ICON3', SYM], [5, 'USER', TXT]]),
       G('0604', 'APRS SETTING', 'DIGI PATH', [[1, 'PATH SELECT', L(['OFF', 'WIDE1-1', 'WIDE1-1.WIDE2-1'])]]),
-      G('0701', 'APRS SETTING', 'BEACON SET.', [[1, 'BEACON TYPE', RO(L(['OFF', 'AUTO', 'SMART']), 'balise automatique (émission) : au club')],
+      G('0701', 'APRS BEACON', 'BEACON SET.', [[1, 'BEACON TYPE', RO(L(['OFF', 'AUTO', 'SMART']), 'balise automatique (émission) : au club')],
         [2, 'INFO AMBIGUITY', L(['OFF', '1dig', '2dig', '3dig', '4dig'])], [3, 'INFO SPEED/COURSE', OFFON], [4, 'INFO ALTITUDE', OFFON],
         [5, 'POSITION COMMENT', L(['Off duty', 'En Route', 'In Service', 'Returning', 'Committed', 'Special', 'Priority', 'Custom 0', 'Custom 1', 'Custom 2', 'Custom 3', 'Custom 4', 'Custom 5', 'Custom 6', 'EMERGENCY!'])],
         [6, 'EMERGENCY BEACON', RO(OFFON, 'balise d’urgence (émission) : au club')]]),
-      G('0702', 'APRS SETTING', 'AUTO BEACON', [[1, 'INTERVAL TIME', L(['30sec', '1min', '2min', '3min', '5min', '10min', '15min', '20min', '30min', '60min'])],
-        [2, 'PROPORTIONAL', OFFON], [3, 'DECAY', OFFON], [4, 'AUTO LOW SPEED', N(1, 99)], [5, 'BEACON DELAY', N(5, 180, 1, 'sec')]]),
-      G('0801', 'APRS SETTING', 'LIST SETTING', [[1, 'STATION LIST SORT', L(['TIME', 'CALLSIGN', 'DISTANCE'])]]),
-      G('0802', 'APRS SETTING', 'STATION LIST', [[1, 'Mic-E', OFFON], [2, 'POSITION', OFFON], [3, 'WEATHER', OFFON], [4, 'OBJECT', OFFON], [5, 'ITEM', OFFON],
+      G('0702', 'APRS BEACON', 'AUTO BEACON', [[1, 'INTERVAL TIME', L(['30sec', '1min', '2min', '3min', '5min', '10min', '15min', '20min', '30min', '60min'])],
+        [2, 'PROPORTIONAL', OFFON], [3, 'DECAY', OFFON], [4, 'AUTO LOW SPEED', N(1, 99, 1, 'km/h')], [5, 'BEACON DELAY', N(5, 180, 1, 'sec')]]),
+      G('0703', 'APRS BEACON', 'SmartBeac.', [[1, 'SMART LOW SPEED', N(2, 30, 1, 'km/h')], [2, 'SMART HIGH SPEED', N(3, 90, 1, 'km/h')],
+        [3, 'SMART SLOW RATE', N(1, 100, 1, 'min')], [4, 'SMART FAST RATE', N(10, 180, 1, 'sec')], [5, 'SMART TURN ANGLE', N(5, 90, 1, 'degree')],
+        [6, 'SMART TURN SLOPE', N(1, 255)], [7, 'SMART TURN TIME', N(5, 180, 1, 'sec')]]),
+      G('0704', 'APRS BEACON', 'BEACON TEXT', [[1, 'STATUS TEXT SELECT', L(['OFF', 'TEXT1', 'TEXT2', 'TEXT3', 'TEXT4', 'TEXT5'])],
+        [2, 'TX RATE', L(['1/1', '1/2', '1/3', '1/4', '1/5', '1/6', '1/7', '1/8'])], [3, 'BEACON FREQUENCY', L(['None', 'FREQUENCY', 'FREQ & SQL & SHIFT'])]]
+        .concat(Array.from({ length: 5 }, (_, i) => [4 + i, 'STATUS TEXT' + (i + 1), TXT]))),
+      G('0801', 'APRS FILTER', 'LIST SETTING', [[1, 'STATION LIST SORT', L(['TIME', 'CALLSIGN', 'DISTANCE'])]]),
+      G('0802', 'APRS FILTER', 'STATION LIST', [[1, 'Mic-E', OFFON], [2, 'POSITION', OFFON], [3, 'WEATHER', OFFON], [4, 'OBJECT', OFFON], [5, 'ITEM', OFFON],
         [6, 'STATUS', OFFON], [7, 'OTHER', OFFON], [8, 'ALTNET', OFFON]]),
-      G('0803', 'APRS SETTING', 'POPUP', [[1, 'BEACON', L(['OFF', '3sec', '5sec', '10sec', 'HOLD'])], [2, 'MESSAGE', L(['OFF', '3sec', '5sec', '10sec', 'HOLD'])], [3, 'MY PACKET', OFFON]]),
-      G('0804', 'APRS SETTING', 'RINGER', [[1, 'TX BEACON', OFFON], [2, 'RX BEACON', OFFON], [3, 'TX MESSAGE', OFFON], [4, 'RX MESSAGE', OFFON], [7, 'MY PACKET', OFFON]])
+      G('0803', 'APRS FILTER', 'POPUP', [[1, 'BEACON', L(['OFF', '3sec', '5sec', '10sec', 'HOLD'])], [2, 'MESSAGE', L(['OFF', '3sec', '5sec', '10sec', 'HOLD'])], [3, 'MY PACKET', OFFON]]),
+      G('0804', 'APRS FILTER', 'RINGER', [[1, 'TX BEACON', OFFON], [2, 'RX BEACON', OFFON], [3, 'TX MESSAGE', OFFON], [4, 'RX MESSAGE', OFFON], [7, 'MY PACKET', OFFON]])
     ];
   })();
   const menuItem = (id) => { for (const g of MENU) for (const it of g.items) if (it.id === id) return it; return null; };
   /** Valeur lue (« 0300 », « +08 ») → texte affiché, comme sur l'écran du TRX (« 300msec », « 8 », « 6dB/oct ») */
   function menuShow(d, raw) {
     if (raw == null || raw === '') return '—';
+    if (d.k === 's') { const i = d.codes.indexOf(String(raw)); return i >= 0 ? d.labels[i] : String(raw); }
     if (d.k === 't') return String(raw).replace(/-/g, ' ');
     if (d.k === 'dt') { const p = String(raw).slice(d.a, d.b); return d.names ? d.names[parseInt(p, 10) - 1] || p : p; }
     const v = parseInt(raw, 10);
@@ -180,6 +194,7 @@
   }
   /** Valeur suivante (pas : +1 / −1) dans le format de la valeur lue (même nombre de chiffres, signe si besoin) */
   function menuStep(d, raw, step) {
+    if (d.k === 's') { const i = d.codes.indexOf(String(raw)); return d.codes[Math.max(0, Math.min(d.codes.length - 1, (i < 0 ? 0 : i) + step))]; }
     const v = parseInt(raw, 10);
     if (!Number.isFinite(v) || d.k === 't') return null;
     let nv;
@@ -194,6 +209,7 @@
   }
   /** Valeur permise pour ce réglage (contrôle du serveur avant d'écrire au TRX) */
   function menuOk(d, raw) {
+    if (d && !d.ro && d.k === 's') return d.codes.indexOf(String(raw)) >= 0;
     if (!d || d.ro || !/^[+-]?\d{1,4}$/.test(String(raw))) return false;
     const v = parseInt(raw, 10);
     if (d.k === 'l') return (d.codes || d.labels.map((_, i) => i + d.base)).indexOf(v) >= 0;

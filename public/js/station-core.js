@@ -529,7 +529,7 @@
           const busy = this.catKeyed || this.radio.tx || !this.serialOpen || this.exBusy;
           const W = this.rig.TRX_EQ && this.rig.TRX_EQ.writeFrame;
           if (!busy) this._writeList(W ? (Array.isArray(m.cmds) ? m.cmds : []).map((c) => W(c)).filter(Boolean).slice(0, 40) // Icom : trames CI-V
-            : (Array.isArray(m.cmds) ? m.cmds : []).filter((c) => /^EX\d{6}[+-]?\d{1,4};$/.test(c) || /^EX0103(2[89]|3[0-7])[0-9A-D*#-]{1,16};$/.test(c) || /^DT0\d{8};$|^DT1\d{6};$/.test(c)).slice(0, 40));
+            : (Array.isArray(m.cmds) ? m.cmds : []).filter((c) => /^EX\d{6}[+-]?\d{1,4};$/.test(c) || /^EX0103(2[89]|3[0-7])[0-9A-D*#-]{1,16};$/.test(c) || /^DT0\d{8};$|^DT1\d{6};$/.test(c) || /^EX0603(0[2-4])[\/\\][!-:<-~];$/.test(c)).slice(0, 40));
           if (this.wsUp) this.sendWs({ t: 'exwrite_reply', id: m.id, ok: !busy });
         } else if (m.op === 'voiceoff') {
           // Main rendue, micro coupé… : source de modulation remise tout de suite (sauf en pleine émission)
@@ -687,7 +687,9 @@
         const mm = /^EX(\d{6});$/.exec(String(cmds[i]));
         if (!mm) return next(i + 1);
         // FTX-1 : mémoires DTMF (EX010328 à EX010337) = texte (0-9, A-D, *, #, -), éventuellement vide
-        const re = /^0103(2[89]|3[0-7])$/.test(mm[1]) ? new RegExp('^EX' + mm[1] + '([0-9A-D*#\\- ]*)$') : new RegExp('^EX' + mm[1] + '([+-]?\\d+)$');
+        // FTX-1 : textes APRS (indicatif, destination, messages, symboles) relus tels quels
+        const re = /^0103(2[89]|3[0-7])$/.test(mm[1]) ? new RegExp('^EX' + mm[1] + '([0-9A-D*#\\- ]*)$')
+          : /^0601(05|09)$|^0602(0[1-8])$|^0603(0[2-5])$|^0704(0[4-8])$/.test(mm[1]) ? new RegExp('^EX' + mm[1] + '([^;]*)$') : new RegExp('^EX' + mm[1] + '([+-]?\\d+)$');
         this._awaitFn((t) => { const x = typeof t === 'string' ? re.exec(t) : null; return x ? x[1] : null; }, 1200, (v) => {
           if (v == null) { if (!soft) return done('le TRX n’a pas répondu à ' + cmds[i]); return next(i + 1); } // menus : réglage refusé ou absent, on continue
           vals[mm[1]] = v;

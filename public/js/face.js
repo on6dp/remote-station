@@ -4020,7 +4020,9 @@
           if (kind) return ftxPage(L.funcPage + (kind === 'fwd' ? 1 : -1));
           if (modeInactive(id, S())) { fmOnly(id, S()); return; }
           // Menus … SETTING : paramètres essentiels du TRX, réservés aux administrateurs (ON6DP, ON4LUC)
-          if (/ SETTING$/.test(lab)) return me && me.admin ? openMenu(lab) : say(lab + ' : réservé aux administrateurs (ON6DP, ON4LUC) — paramètres essentiels du TRX.', 'warn', 6000);
+          // APRS BEACON : ouvre le menu APRS BEACON (BEACON SET., AUTO BEACON, SmartBeac., BEACON TEXT), comme sur le TRX
+          const mg = / SETTING$/.test(lab) ? lab : id === 'aprsB' ? 'APRS BEACON' : '';
+          if (mg) return me && me.admin ? openMenu(mg) : say(mg + ' : réservé aux administrateurs (ON6DP, ON4LUC) — paramètres essentiels du TRX.', 'warn', 6000);
           if (!adj) return say(FTX_NOTE[id] || lab + ' : pas disponible à distance (au club, sur le TRX).', '', FTX_NOTE[id] ? 7000 : 3500);
           const wasEdit = L.funcSel === id && L.fEdit;
           L.funcSel = id;
