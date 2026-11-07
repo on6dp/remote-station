@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.153** — FTX-1 : APRS FILTER complété (MSG FIL. : MESSAGE GROUP1-6, BULLETIN 1-3, relus) ; SMART TURN ANGLE en degree
 - **0.37.152** — FTX-1 : APRS SETTING comme sur le TRX (GENERAL, MSG TEMPLATE, MY SYMBOL avec les symboles du tableau 4, DIGI PATH ; textes relus) ; menu APRS BEACON (BEACON SET., AUTO BEACON, SmartBeac., BEACON TEXT) ouvert par la case APRS BEACON
 - **0.37.151** — Faces avant (FTX-1, FTDX101, FTDX10, IC-7300) : BAND MAP avec ascenseur quand les spots ne tiennent pas dans la hauteur (molette = défilement, Maj + molette = plage ; le VFO reste en vue sauf 15 s après un défilement à la main)
 - **0.37.150** — FTX-1 : EXTENSION SETTING → DATE&TIME — jour, mois, année, heure, minute lus sur le TRX (commande DT) et bouton « Mettre à l'heure de votre PC » (administrateurs)

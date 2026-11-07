@@ -689,7 +689,7 @@
         // FTX-1 : mémoires DTMF (EX010328 à EX010337) = texte (0-9, A-D, *, #, -), éventuellement vide
         // FTX-1 : textes APRS (indicatif, destination, messages, symboles) relus tels quels
         const re = /^0103(2[89]|3[0-7])$/.test(mm[1]) ? new RegExp('^EX' + mm[1] + '([0-9A-D*#\\- ]*)$')
-          : /^0601(05|09)$|^0602(0[1-8])$|^0603(0[2-5])$|^0704(0[4-8])$/.test(mm[1]) ? new RegExp('^EX' + mm[1] + '([^;]*)$') : new RegExp('^EX' + mm[1] + '([+-]?\\d+)$');
+          : /^0601(05|09)$|^0602(0[1-8])$|^0603(0[2-5])$|^0704(0[4-8])$|^0806(0[1-9])$/.test(mm[1]) ? new RegExp('^EX' + mm[1] + '([^;]*)$') : new RegExp('^EX' + mm[1] + '([+-]?\\d+)$');
         this._awaitFn((t) => { const x = typeof t === 'string' ? re.exec(t) : null; return x ? x[1] : null; }, 1200, (v) => {
           if (v == null) { if (!soft) return done('le TRX n’a pas répondu à ' + cmds[i]); return next(i + 1); } // menus : réglage refusé ou absent, on continue
           vals[mm[1]] = v;

@@ -176,7 +176,9 @@
       G('0802', 'APRS FILTER', 'STATION LIST', [[1, 'Mic-E', OFFON], [2, 'POSITION', OFFON], [3, 'WEATHER', OFFON], [4, 'OBJECT', OFFON], [5, 'ITEM', OFFON],
         [6, 'STATUS', OFFON], [7, 'OTHER', OFFON], [8, 'ALTNET', OFFON]]),
       G('0803', 'APRS FILTER', 'POPUP', [[1, 'BEACON', L(['OFF', '3sec', '5sec', '10sec', 'HOLD'])], [2, 'MESSAGE', L(['OFF', '3sec', '5sec', '10sec', 'HOLD'])], [3, 'MY PACKET', OFFON]]),
-      G('0804', 'APRS FILTER', 'RINGER', [[1, 'TX BEACON', OFFON], [2, 'RX BEACON', OFFON], [3, 'TX MESSAGE', OFFON], [4, 'RX MESSAGE', OFFON], [7, 'MY PACKET', OFFON]])
+      G('0804', 'APRS FILTER', 'RINGER', [[1, 'TX BEACON', OFFON], [2, 'RX BEACON', OFFON], [3, 'TX MESSAGE', OFFON], [4, 'RX MESSAGE', OFFON], [7, 'MY PACKET', OFFON]]),
+      G('0806', 'APRS FILTER', 'MSG FIL.', Array.from({ length: 6 }, (_, i) => [i + 1, 'MESSAGE GROUP' + (i + 1), TXT])
+        .concat([[7, 'BULLETIN 1', TXT], [8, 'BULLETIN 2', TXT], [9, 'BULLETIN 3', TXT]]))
     ];
   })();
   const menuItem = (id) => { for (const g of MENU) for (const it of g.items) if (it.id === id) return it; return null; };
