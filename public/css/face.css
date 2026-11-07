@@ -744,3 +744,8 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .fc-menu.ftxm .fx-opts i.on { background: #15171a; color: #ffe94a; }
 .fc-menu.ftxm .fx-eqt { font-style: normal; font-size: .7em; margin-left: .6em; padding: 0 .35em; border-radius: .2em; background: #2a313c; color: #9fd4ff; letter-spacing: .02em; vertical-align: .1em; }
 .fc-menu.ftxm .fx-eqb { font: inherit; font-weight: 800; margin-left: .4em; padding: .1em .6em; background: #15171a; color: #ffcf4a; border: 1px solid #000; border-radius: .2em; cursor: pointer; }
+/* FTX-1 : petit filtre comme sur l'écran du TRX — trait blanc, intérieur gris, spectre gris clair dedans, sans repère orange ni base bleue */
+#face .ftxflt .flt-trap { stroke: #e9eef0; stroke-width: 1.5; fill: url(#ftxFlt); }
+#face .ftxflt .flt-bars { stroke: #d9dede; opacity: .95; }
+#face .ftxflt .flt-ctr, #face .ftxflt .flt-base { display: none; }
+#face .ftxflt .flt-box { fill: #000; stroke: #3a4048; }

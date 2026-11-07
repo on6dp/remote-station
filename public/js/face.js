@@ -436,6 +436,10 @@
     const mg = el('feMerge', {}, glow);
     el('feMergeNode', { in: 'b' }, mg);
     el('feMergeNode', { in: 'SourceGraphic' }, mg);
+    // FTX-1 : intérieur gris du filtre (bande passante), comme sur l'écran du TRX
+    const fg = el('linearGradient', { id: 'ftxFlt', x1: '0', y1: '0', x2: '0', y2: '1' }, defs);
+    el('stop', { offset: '0', 'stop-color': '#5d6564' }, fg);
+    el('stop', { offset: '1', 'stop-color': '#262b2c' }, fg);
     const lg = el('linearGradient', { id: 'lcdbg', x1: '0', y1: '0', x2: '0', y2: '1' }, defs);
     el('stop', { offset: '0', 'stop-color': '#0c1220' }, lg);
     el('stop', { offset: '1', 'stop-color': '#04060b' }, lg);
@@ -746,11 +750,12 @@
   }
   function buildFilter(g, x0, y0, w, h) {
     const f = { x0, y0, w, h };
-    g = f.g = el('g', { class: 'flt' }, g); // caché en DISP « filtres agrandis » (ils sont alors dans le grand cadre)
+    g = f.g = el('g', { class: 'flt' + (FACE.meterFtx ? ' ftxflt' : '') }, g); // caché en DISP « filtres agrandis » (ils sont alors dans le grand cadre)
     el('rect', { x: x0, y: y0, width: w, height: h, class: 'flt-box' }, g);
     f.bars = el('path', { d: '', class: 'flt-bars' }, g);
     f.roof = el('path', { d: '', class: 'flt-roof' }, g); // limites du filtre de toit (R.FIL), en pointillés
     f.trap = el('path', { d: '', class: 'flt-trap' }, g);
+    if (FACE.meterFtx) g.appendChild(f.bars); // FTX-1 : spectre par-dessus l'intérieur gris du filtre
     f.center = el('line', { x1: x0 + w / 2, y1: y0 + 6, x2: x0 + w / 2, y2: y0 + h - 4, class: 'flt-ctr' }, g);
     // VC TUNE : barre au-dessus du filtre, comme sur le TRX : « − » … traits rouges … « + », repère rouge à la position du présélecteur
     f.vc = el('g', { class: 'flt-vc', style: 'display:none' }, g);
@@ -5666,10 +5671,17 @@
     const half = Math.floor(W / 2);
     c2.strokeStyle = '#3a4352'; c2.lineWidth = 1.5;
     c2.beginPath(); c2.moveTo(half + 0.5, 8); c2.lineTo(half + 0.5, H - 14); c2.stroke();
-    for (const [i, side, sp, color] of [[0, 'A', specs[0], '#ff2b1c'], [1, 'B', WF.two ? specs[1] : null, '#ff2b1c']]) {
+    const FX = !!FACE.meterFtx; // FTX-1 : filtre blanc, intérieur gris, sans repère orange ni base bleue (comme le TRX)
+    for (const [i, side, sp, color] of [[0, 'A', specs[0], FX ? '#e9eef0' : '#ff2b1c'], [1, 'B', WF.two ? specs[1] : null, FX ? '#e9eef0' : '#ff2b1c']]) {
       const x0 = i * half + 6, w = half - 12, y0 = 8, h = H - 26;
       const f = (LCD.flt && LCD.flt[side]) || { fr: 0.6, off: 0 };
       const cx = x0 + w / 2 + f.off * w, tw = w * f.fr, top = y0 + 14, bot = y0 + h - 4, sl = Math.min(14, tw * 0.12);
+      if (FX) {
+        const a = Math.max(x0 + 4, cx - tw / 2), b = Math.min(x0 + w - 4, cx + tw / 2), gr = c2.createLinearGradient(0, top, 0, bot);
+        gr.addColorStop(0, '#5d6564'); gr.addColorStop(1, '#262b2c');
+        c2.fillStyle = gr;
+        c2.beginPath(); c2.moveTo(a, bot); c2.lineTo(a + sl, top); c2.lineTo(b - sl, top); c2.lineTo(b, bot); c2.closePath(); c2.fill();
+      }
       // Spectre de la BF : barres fines, une par pixel, seulement dans la bande passante (découpe en trapèze)
       if (sp) {
         const a = Math.max(x0 + 4, cx - tw / 2), b = Math.min(x0 + w - 4, cx + tw / 2);
@@ -5717,10 +5729,12 @@
         c2.strokeStyle = '#3b8bff'; c2.lineWidth = 3; c2.lineCap = 'round';
         c2.beginPath(); c2.moveTo(kx - 10, top); c2.lineTo(kx, top + kd); c2.lineTo(kx + 10, top); c2.stroke(); c2.lineCap = 'butt';
       }
-      c2.strokeStyle = '#ff9a1f'; c2.lineWidth = 2;
-      c2.beginPath(); c2.moveTo(cx, top - 4); c2.lineTo(cx, bot); c2.stroke();
-      c2.strokeRect(cx - 4, top - 11, 8, 7); // petit carré orange en haut du repère, comme sur le TRX
-      c2.fillStyle = '#3b6dff'; c2.fillRect(cx - tw / 2 + 3, bot + 2, Math.max(4, tw - 6), 3);
+      if (!FX) {
+        c2.strokeStyle = '#ff9a1f'; c2.lineWidth = 2;
+        c2.beginPath(); c2.moveTo(cx, top - 4); c2.lineTo(cx, bot); c2.stroke();
+        c2.strokeRect(cx - 4, top - 11, 8, 7); // petit carré orange en haut du repère, comme sur le TRX
+        c2.fillStyle = '#3b6dff'; c2.fillRect(cx - tw / 2 + 3, bot + 2, Math.max(4, tw - 6), 3);
+      }
       // VC TUNE : barre « − » … « + » et repère rouge, sous le grand filtre
       if (f.vc != null) {
         const vy = y0 + h + 10, va = x0 + 16, vb = x0 + w - 16;
@@ -5781,8 +5795,11 @@
         const fc = ff ? audioCenter(ff.mode || '', ff.hz) + (ff.sh || 0) : FLT_SPAN / 2;
         const rev = ff && /^LSB$|-L$/.test(ff.mode || '') ? -1 : 1;
         const cxf = fl.x0 + fl.w / 2 + (ff ? ff.off : 0) * fl.w, stepHz = (fl.w - 12) / n / fl.w * FLT_SPAN;
+        // FTX-1 : spectre seulement dans la bande passante, comme sur le TRX
+        const pa = FACE.meterFtx && ff ? cxf - ff.fr * fl.w / 2 + 4 : -1e9, pb = FACE.meterFtx && ff ? cxf + ff.fr * fl.w / 2 - 4 : 1e9;
         for (let i = 0; i < n; i++) {
           const x = fl.x0 + 6 + (i + 0.5) * (fl.w - 12) / n;
+          if (x < pa || x > pb) continue;
           const f = fc + rev * (x - cxf) / fl.w * FLT_SPAN;
           if (f < 0 || f > WF.rate / 2) continue;
           let m = 0;
