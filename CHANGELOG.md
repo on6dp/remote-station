@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.142** — FTX-1 : TUN/LIN PORT SELECT — libellés du TRX (OPTION, BAND DATA, CAT-3, GPO)
 - **0.37.141** — FTX-1 : RF/SQL VR — valeur 2 affichée AUTO, comme sur le TRX
 - **0.37.140** — FTX-1 : sous-menu WIRES-X dans RADIO SETTING (PRESET SEARCH, VHF / UHF PRESET FREQ, WIRES-X DG-ID, SEARCH SETUP, Node Mode) — pas de commande CAT : au TRX
 - **0.37.139** — FTX-1 : RPT SFT FREQ(144MHz) et (430MHz) réglables depuis le menu MODE FM (pas de 50 kHz, échelle vérifiée au club : 0.60MHz et 7.60MHz)
