@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.173** — FTX-1 : passage MAIN ↔ SUB refusé pendant une émission (page Station et SUB DIAL de /ftx1) — le TRX refuse VS en émission et l'émission était coupée par sécurité ; contient la ligne rouge au bouton droit (0.37.172)
 - **0.37.172** — FTX-1 : bouton DROIT de la souris sur le scope (clic ou glisser) = ligne rouge, fréquence d'émission sur l'autre VFO (SPLIT mis en service s'il ne l'est pas) ; bouton gauche = ligne verte (écoute)
 - **0.37.171** — FTX-1 : CURSOR / FIX — toujours la vraie fenêtre du SPAN, ▼ vert de l'écoute n'importe où et qui suit la souris (glisser) ; CENTER — son reçu sur toute la largeur
 - **0.37.170** — FTX-1 : en SPLIT (CURSOR / FIX), vraie fenêtre du SPAN avec ▼ vert et ▼ rouge sur toute la largeur ; glisser sur le scope (CURSOR / FIX) : la fréquence d'écoute suit la souris

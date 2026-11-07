@@ -927,6 +927,13 @@
       this.sideTrace = [];
       const seq = this.sideSeq;
       const name = v ? 'Passage sur SUB' : 'Retour sur MAIN';
+      // Jamais pendant une émission : le FTX-1 refuse VS (« ? ») et l'émission serait coupée par sécurité
+      if (this.catKeyed || this.radio.tx) {
+        const why = name + ' refusé : le TRX est en émission (attendre la fin de l’émission)';
+        this.log(why, 'st-warn');
+        if (this.wsUp) this.sendWs({ t: 'trx_note', text: why });
+        return;
+      }
       this.log(name + ' (' + (by || '?') + ')');
       if (this.radio.vfoSel === v && this.radio.txVfo === v) { this.log((v ? 'Déjà sur SUB' : 'Déjà sur MAIN')); if (then) then(); return; }
       this.pollHold = Date.now() + 9000;
