@@ -15,6 +15,18 @@
   // P1 = 2 ampli SPA-1 (5–100 W : "PC2025;").
   const RANGE = { '1': [0.5, 10], '2': [5, 100] };
   // SQL TYPE (CT) : manuel CAT FTX-1
+  // Scope (SS P1 P2 P3-P7) : D-LEVEL −30.0 à +30.0 dB, D-COLOR 0-A (COLOR-1 à 11 = 1 à 11 dans la page), le reste un chiffre
+  function ssParse(p2, t) {
+    if (p2 === 4) { const v = parseFloat(t); return Number.isFinite(v) && Math.abs(v) <= 30 ? v : null; }
+    if (p2 === 3) { const n = parseInt(t[0], 36); return n >= 0 && n <= 17 ? n + 1 : null; } // le TRX va au-delà de COLOR-11 (D-COLOR 12 vu au club)
+    const n = parseInt(t[0], 10);
+    return Number.isFinite(n) ? n : null;
+  }
+  function ssFmt(p2, v) {
+    if (p2 === 4) { const a = Math.abs(v); return (v < 0 ? '-' : '+') + pad(Math.floor(a), 2) + '.' + (a % 1 ? '5' : '0'); }
+    if (p2 === 3) return (Math.max(1, Math.min(11, v)) - 1).toString(16).toUpperCase() + '0000';
+    return String(v) + '0000';
+  }
   const SQLT = [[0, 'OFF'], [1, 'ENC'], [2, 'TSQ'], [3, 'DCS'], [4, 'PR FREQ'], [5, 'REV TONE']];
 
   // ------------------------------------------------------------ menus du TRX (FUNC → … SETTING de la face avant)
@@ -287,7 +299,7 @@
       { cmd: 'RI0;', re: /^RI0(\d)(\d)(\d)(\d)(\d)(\d)(\d)$/, parse: (m) => ({ hiSwr: m[1] === '1' ? 1 : 0, tuningRi: m[5] === '1' ? 1 : 0 }), sim: 'RI00000000' },
       // Écran FUNC de la face avant /ftx1 (appui long sur FUNC) — manuel CAT FTX-1 : lus en tournante lente
       { cmd: 'DA;', re: /^DA00(\d\d)(\d\d)(\d\d)$/, parse: (m) => ({ dContrast: +m[1], dimmer: +m[2], dimLed: +m[3] }), sim: 'DA00151515' },
-      { cmd: 'PR1;', re: /^PR1([12])$/, parse: (m) => ({ micEq: m[1] === '2' ? 1 : 0 }), sim: 'PR11' },
+      { cmd: 'PR1;', re: /^PR1([0-2])$/, parse: (m) => ({ micEq: m[1] === '2' ? 1 : 0 }), sim: 'PR11' }, // « 0 » accepté aussi (OFF)
       { cmd: 'TS;', re: /^TS([01])$/, parse: (m) => ({ txw: +m[1] }), sim: 'TS0' },
       { cmd: 'AO;', re: /^AO(\d{3})$/, parse: (m) => ({ amc: +m[1] }), sim: 'AO038' },
       { cmd: 'VG;', re: /^VG(\d{3})$/, parse: (m) => ({ voxGain: +m[1] }), sim: 'VG050' },
@@ -308,6 +320,11 @@
       // D-MODE du scope (SS06 : 0/4 CENTER, 1/7 CURSOR, 2/A FIX ; 0-2 avec 3DSS, 4/7/A cascade normale)
       // SPAN du scope du TRX (SS05 : 2 = 5 kHz … 9 = 1 MHz, mêmes rangs que la page) : un seul scope (P1 fixe), valeur des deux côtés
       { cmd: 'SS05;', re: /^SS05([2-9])0000$/, parse: (m) => ({ ssSpanA: +m[1], ssSpanB: +m[1] }), sim: 'SS0560000' },
+      // Réglages du scope (écran FUNC : D-LEVEL, D-PEAK, D-MARKER, D-COLOR, SPEED) : SS00 à SS04, un seul scope (valeur des deux côtés)
+      ...['Spd', 'Peak', 'Marker', 'Color', 'Level'].map((k, p2) => ({
+        cmd: 'SS0' + p2 + ';', re: new RegExp('^SS0' + p2 + '(.{5})$'),
+        parse: (m) => { const v = ssParse(p2, m[1]); return v == null ? {} : { ['ss' + k + 'A']: v, ['ss' + k + 'B']: v }; },
+        sim: 'SS0' + p2 + ['20000', '00000', '10000', '00000', '+00.0'][p2] })),
       { cmd: 'SS06;', re: /^SS06([0-9A-B])0000$/, parse: (m) => { const c = parseInt(m[1], 16); return { dMode: c === 1 || c === 7 ? 1 : c === 2 || c === 10 ? 2 : 0 }; }, sim: 'SS0640000' },
       // Fonction du bouton FUNC (SF0 : 1 SCOPE LEVEL … D RF POWER … H BK-DELAY) : suivie par la page /ftx1
       { cmd: 'SF0;', re: /^SF0([0-9A-H])$/, parse: (m) => ({ funcKnob: parseInt(m[1], 18) }), sim: 'SF0D' },
@@ -329,7 +346,7 @@
     // + tuner : AC (état), RI0 (accord en cours), menus TUN/LIN PORT SELECT (EX030103), TUNER SELECT (EX030104),
     // TUNER TYPE SEL ANT1 / ANT2 (EX030701 / EX030702) — numéros du manuel CAT FTX-1 (Table 3)
     extraQueries: ['RA1;', 'PA0;', 'PA1;', 'PA2;', 'AC;', 'RI0;', 'EX030103;', 'EX030104;', 'EX030701;', 'EX030702;'],
-    extraStateKeys: ['funcKnob', 'ssSpanA', 'ssSpanB', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'afB', 'hiSwr', 'tuningRi',
+    extraStateKeys: ['funcKnob', 'ssSpanA', 'ssSpanB', 'ssSpdA', 'ssSpdB', 'ssPeakA', 'ssPeakB', 'ssMarkerA', 'ssMarkerB', 'ssColorA', 'ssColorB', 'ssLevelA', 'ssLevelB', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'afB', 'hiSwr', 'tuningRi',
       'dContrast', 'dimmer', 'dimLed', 'micEq', 'txw', 'amc', 'voxGain', 'voxDelay', 'moniLvl', 'keyer', 'bkin', 'keySpeed', 'cwPitch', 'bkDelay', 'cwSpot', 'tuneStep', 'dMode', 'meterSw', 'meterSwB', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB',
       'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'dcsIdx', 'dcsIdxB'],
     subBadges: true,
@@ -428,6 +445,9 @@
       { id: 'apfFreq', g: 'flt', label: 'APF FREQ', type: 'level', min: 0, max: 50, step: 1, face: true, write: (v) => 'CO03' + pad(v, 4) + ';' },
       { id: 'apfFreqB', g: 'flt', label: 'APF FREQ (SUB)', type: 'level', min: 0, max: 50, step: 1, face: true, write: (v) => 'CO13' + pad(v, 4) + ';' },
       { id: 'ssSpd', g: 'disp', label: 'SCOPE SPEED', type: 'level', min: 0, max: 5, step: 1, face: true, write: (v) => 'SS00' + v + '0000;' }, // 0 SLOW1 … 4 FAST3, 5 STOP
+      ...['Peak', 'Marker', 'Color', 'Level'].map((k, i) => ({ id: 'ss' + k, g: 'disp', label: 'SCOPE ' + k.toUpperCase(), face: true,
+        type: i === 1 ? 'toggle' : 'level', min: [0, 0, 1, -30][i], max: [4, 1, 11, 30][i], step: i === 3 ? 0.5 : 1,
+        write: (v) => 'SS0' + (i + 1) + ssFmt(i + 1, v) + ';' })),
       { id: 'funcKnob', g: 'disp', label: 'FUNC KNOB (code SF)', type: 'level', min: 1, max: 17, step: 1, face: true, write: (v) => 'SF0' + Number(v).toString(18).toUpperCase() + ';' },
       { id: 'ssSpan', g: 'disp', label: 'SCOPE SPAN', type: 'level', min: 2, max: 9, step: 1, face: true, write: (v) => 'SS05' + v + '0000;' },
       { id: 'dMode', g: 'disp', label: 'D-MODE (code SS06)', type: 'level', min: 0, max: 10, step: 1, face: true, write: (v) => 'SS06' + Number(v).toString(16).toUpperCase() + '0000;' },

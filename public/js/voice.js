@@ -93,7 +93,7 @@
       '<label class="vx-io" title="Entrée son : votre micro (ce qui part vers le TRX au PTT)">🎤 Entrée <select id="vxDev" aria-label="Entrée son (micro)"></select></label>' +
       '<label class="vx-io vx-outl" title="Sortie son : où vous entendez le TRX et « M’écouter » (casque, haut-parleurs…)">🔊 Sortie <select id="vxOut" aria-label="Sortie son (casque, haut-parleurs)"></select></label>' +
       '<div class="vx-type" id="vxType"></div>' +
-      '<div class="vx-meter" title="Niveau de votre micro après l’égaliseur, en dB sous la saturation : visez le vert (−20 à −12 dB en parlant), jaune = fort, rouge = trop fort"><span class="vx-mt">NIVEAU MICRO</span><i id="vxLvl"></i>' + VX_SCALE + '<b id="vxClip">SAT</b></div>' +
+      '<div class="vx-meter" title="Niveau de votre micro après l’égaliseur, en dB sous la saturation : visez le vert (−20 à −12 dB en parlant), jaune = fort, rouge = trop fort"><span class="vx-mt">Niveau micro</span><i id="vxLvl"></i>' + VX_SCALE + '<b id="vxClip">SAT</b></div>' +
       '<div class="vx-row"><button class="btn" id="vxEqBtn" type="button" title="Égaliseur de votre micro (dans le navigateur) : réglages gardés pour ce micro">Equalizer micro</button></div>' +
       '<div class="vx-note" id="vxNote"></div>' +
       '<div class="vx-mon"><button class="btn" id="vxMonBtn" type="button" aria-pressed="false" title="Entendre votre micro tel qu’il partira (au casque seulement : effet Larsen avec des haut-parleurs)">🎧 M’écouter</button></div>' +
@@ -429,7 +429,7 @@
     d.innerHTML =
       '<div class="vx-eq-h"><b>Equalizer micro</b><span id="vxEqMic"></span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
       '<canvas id="vxCurve" width="560" height="150" aria-label="Courbe de l’égaliseur"></canvas>' +
-      '<div class="vx-eq-meter"><span class="vx-mt">NIVEAU MICRO</span><i id="vxLvl2"></i>' + VX_SCALE + '</div>' +
+      '<div class="vx-eq-meter"><span class="vx-mt">Niveau micro</span><i id="vxLvl2"></i>' + VX_SCALE + '</div>' +
       '<div class="vx-eq-top"><label><input type="checkbox" data-k="on"> Égaliseur en service</label>' +
       '<label>Réglages proposés <select data-k="preset"><option value="">—</option>' + Object.keys(PRESETS).map((k) => '<option value="' + k + '">' + esc(PRESETS[k].name) + '</option>').join('') + '</select></label></div>' +
       '<div class="vx-cuts">' +

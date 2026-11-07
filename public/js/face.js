@@ -619,7 +619,7 @@
   L.marker = store.get('rs.face.marker', '1') !== '0';
   function smAdjust(id, d) {
     if (id === 'spd') { L.wfSpeed = (L.wfSpeed + (d > 0 ? 1 : 4)) % 5; store.set('rs.face.wfspd5', L.wfSpeed); ssSend('Spd'); }
-    else if (id === 'peak') { L.peak = (L.peak + (d > 0 ? 1 : 5)) % 6; store.set('rs.face.peak', L.peak); WF.peak = {}; ssSend('Peak'); }
+    else if (id === 'peak') { L.peak = (L.peak + (d > 0 ? 1 : 5)) % 6; if (FACE && FACE.model === 'ftx1' && !L.peak) L.peak = d > 0 ? 1 : 5; /* FTX-1 : LV1 à LV5, pas d'OFF */ store.set('rs.face.peak', L.peak); WF.peak = {}; ssSend('Peak'); }
     else if (id === 'marker') { L.marker = !L.marker; store.set('rs.face.marker', L.marker ? '1' : '0'); ssSend('Marker'); }
     else if (id === 'color') { setColor(L.wfColor + (d > 0 ? 1 : -1)); }
     else if (id === 'level') { L.wfLevel = Math.max(-30, Math.min(30, L.wfLevel + d * 0.5)); store.set('rs.face.wflvl', L.wfLevel); ssSend('Level'); }
@@ -3215,6 +3215,8 @@
   function ssSend(k) {
     const v = SS_VAL[k]();
     if (v == null || !R || !R.CONTROL['ss' + k] || !iControl()) return;
+    // FTX-1 : le CAT ne documente que COLOR-1 à 11 ; au-delà (12 à 18 du TRX), rien n'est envoyé
+    if (k === 'Color' && FACE && FACE.model === 'ftx1' && v > 11) return say('D-COLOR ' + v + ' : seulement sur le TRX (le CAT ne règle que les couleurs 1 à 11).', '', 4000);
     // L'ancienne valeur encore relue pendant ~3 s ne doit pas ramener la page en arrière
     (L.ssHold = L.ssHold || {})[k + activeSide()] = { v, until: Date.now() + 3000 };
     send({ t: 'set', ctl: 'ss' + k, value: v });
@@ -3231,7 +3233,7 @@
       if (L.ssSeen[k + side] === v) continue;
       L.ssSeen[k + side] = v;
       if (k === 'Spd') { L.wfSpeed = v; store.set('rs.face.wfspd5', v); }
-      else if (k === 'Peak') { if (L.peak) { L.peak = v + 1; store.set('rs.face.peak', L.peak); } }
+      else if (k === 'Peak') { if (L.peak || (FACE && FACE.model === 'ftx1')) { L.peak = v + 1; store.set('rs.face.peak', L.peak); } }
       else if (k === 'Marker') { L.marker = !!v; store.set('rs.face.marker', v ? '1' : '0'); }
       else if (k === 'Color') { if (v !== L.wfColor) setColor(v, true); }
       else if (k === 'Level') { L.wfLevel = v; store.set('rs.face.wflvl', v); }
@@ -3824,7 +3826,7 @@
   const SF_IDS = ['', 'level', 'peak', 'color', 'dContrast', 'dimmer', '', 'mic', 'procLvl', 'amc', 'voxGain', 'voxDelay', '', 'power', 'moniLvl', 'keySpeed', 'cwPitch', 'bkDelay'];
   const FUNC_FTX1 = [
     { name: 'SSB', rows: [
-      [null, pickY('level') && ['level', 'D-LEVEL', pickY('level')[2], pickY('level')[3], FO], ['peak', 'D-PEAK', () => 'LV' + (L.peak + 1), pickY('peak')[3], FO],
+      [null, pickY('level') && ['level', 'D-LEVEL', pickY('level')[2], pickY('level')[3], FO], ['peak', 'D-PEAK', () => 'LV' + Math.max(1, L.peak), pickY('peak')[3], FO],
         ['marker', 'D-MARKER', pickY('marker')[2], pickY('marker')[3], FO, true], ['color', 'D-COLOR', pickY('color')[2], pickY('color')[3], FO],
         ['dContrast', 'D-CONTRAST', (s) => num(s.dContrast), stepK(() => 'dContrast', 0, 20, 1), FO], ['dimmer', 'DIMMER', (s) => num(s.dimmer), stepK(() => 'dimmer', 0, 20, 1), FO]],
       [['mox', 'MOX', (s) => (s.tx ? 'ON' : 'OFF'), null, FO], ['attF', 'ATT', (s) => onOff(s[sdk('att')]), togK(() => sdk('att')), FO, true],
