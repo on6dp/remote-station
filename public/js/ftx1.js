@@ -26,7 +26,11 @@
     const L = (labels, base) => ({ k: 'l', labels, base: base || 0 });
     const C = (pairs) => ({ k: 'l', codes: pairs.map((p) => p[0]), labels: pairs.map((p) => p[1]) });
     const N = (min, max, step, unit, div, sign) => ({ k: 'n', min, max, step: step || 1, unit: unit || '', div: div || 1, sign: !!sign });
-    const RO = (d, why) => Object.assign({}, d, { ro: why || 'au club seulement' });
+    // Menus réservés aux administrateurs (ON6DP, ON4LUC) : ils peuvent tout régler, sauf ce qui casserait la station à distance
+    // (LOCK : liaison CAT-1 / CAT-3, phonie et CW à distance, égaliseur des profils, extinction automatique du TRX).
+    // RO garde l'ancienne marque « réglage du club » mais reste réglable par un administrateur.
+    const LOCK = (d, why) => Object.assign({}, d, { ro: why || 'au club seulement' });
+    const RO = (d) => d;
     const T = { k: 't', ro: 'texte : au club' };
     const OFFON = L(['OFF', 'ON']), NR = L(['NOR', 'REV']);
     const TONE = N(-20, 10), AGC = N(20, 4000, 20, 'msec'), LVL = N(0, 100);
@@ -34,14 +38,14 @@
     const HCUT = C([[0, 'OFF']].concat(Array.from({ length: 67 }, (_, i) => [i + 1, (700 + i * 50) + 'Hz'])));
     const SLOPE = L(['6dB/oct', '18dB/oct']);
     const BPF = L(['50-3050Hz', '100-2900Hz', '200-2800Hz', '300-2700Hz', '400-2600Hz']);
-    const MOD = RO(L(['MIC', 'USB', 'Bluetooth', 'AUTO']), 'source de modulation : gérée par la phonie à distance');
-    const MODG = RO(LVL, 'niveau de l’entrée USB : réglé pour la phonie à distance');
-    const RPTT = RO(L(['OFF', 'RTS', 'DTR']), 'commande d’émission de la liaison (CW à distance)');
+    const MOD = LOCK(L(['MIC', 'USB', 'Bluetooth', 'AUTO']), 'source de modulation : gérée par la phonie à distance');
+    const MODG = LOCK(LVL, 'niveau de l’entrée USB : réglé pour la phonie à distance');
+    const RPTT = LOCK(L(['OFF', 'RTS', 'DTR']), 'commande d’émission de la liaison (CW à distance)');
     const NARS = L([300, 400, 600, 850, 1100, 1200, 1500, 1650, 1800, 1950, 2100, 2250, 2400, 2450, 2500, 2600, 2700, 2800, 2900, 3000, 3200, 3500, 4000].map((x) => x + 'Hz'));
     const NARD = L([50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 800, 1200, 1400, 1700, 2000, 2400, 3000, 3200, 3500, 4000].map((x) => x + 'Hz'));
-    const RATE = RO(L(['4800bps', '9600bps', '19200bps', '38400bps', '115200bps']), 'liaison CAT : la changer couperait la station');
-    const TOT = RO(L(['10msec', '100msec', '1000msec', '3000msec']), 'liaison CAT');
-    const STOPB = RO(L(['1bit', '2bit']), 'liaison CAT');
+    const RATE = LOCK(L(['4800bps', '9600bps', '19200bps', '38400bps', '115200bps']), 'liaison CAT : la changer couperait la station');
+    const TOT = LOCK(L(['10msec', '100msec', '1000msec', '3000msec']), 'liaison CAT');
+    const STOPB = LOCK(L(['1bit', '2bit']), 'liaison CAT');
     const MAXP = (a, b) => RO(N(a, b, 1, 'W'), 'puissance maximale : réglée par le club');
     const MAXP10 = (a, b) => RO(N(a, b, 1, 'W', 10), 'puissance maximale : réglée par le club');
     const TUNT = L(['INT', 'INT(FAST)', 'EXT', 'ATAS']);
@@ -49,7 +53,7 @@
     const EQF = [C([[0, 'OFF']].concat(Array.from({ length: 7 }, (_, i) => [i + 1, (100 + i * 100) + 'Hz']))),
       C([[0, 'OFF']].concat(Array.from({ length: 9 }, (_, i) => [i + 1, (700 + i * 100) + 'Hz']))),
       C([[0, 'OFF']].concat(Array.from({ length: 18 }, (_, i) => [i + 1, (1500 + i * 100) + 'Hz'])))];
-    const eqRo = (d) => RO(d, 'réglé par EQUALIZER TRX (Profil de …)');
+    const eqRo = (d) => LOCK(d, 'réglé par EQUALIZER TRX (Profil de …)');
     const eq = (a, p) => [0, 1, 2].flatMap((b) => [[a + b * 3, p + 'PRMTRC EQ' + (b + 1) + ' FREQ', eqRo(EQF[b])], [a + b * 3 + 1, p + 'PRMTRC EQ' + (b + 1) + ' LEVEL', eqRo(TONE)], [a + b * 3 + 2, p + 'PRMTRC EQ' + (b + 1) + ' BWTH', eqRo(N(0, 10))]]);
     const MICK = L(['LOCK', 'QMB', '>/<', 'V/M', 'TUNER', 'VOX/MOX', 'MODE', 'ZIN/SPOT', 'SPLIT', 'FINE', 'NAR', 'NB', 'DNR', 'FREQ UP', 'FREQ DOWN', 'BAND UP', 'BAND DOWN', 'ATT', 'IPO', 'DNF', 'AGC']);
     // CTCSS (Table 1) et DCS (Table 2) du manuel CAT ; mémoires DTMF : texte, relu, modifié par l'écran DTMF (FUNC → DTMF)
@@ -91,13 +95,13 @@
       // WIRES-X (firmware récent) : absent du manuel CAT 2508-C → aucune commande envoyée, valeurs à lire au TRX
       G('WX', 'RADIO SETTING', 'WIRES-X', [[1, 'PRESET SEARCH', NOCAT], [2, 'VHF PRESET FREQ', NOCAT], [3, 'UHF PRESET FREQ', NOCAT],
         [4, 'WIRES-X DG-ID', NOCAT], [5, 'SEARCH SETUP', NOCAT], [6, 'Node Mode', NOCAT]]),
-      G('0201', 'CW SETTING', 'MODE CW', rx.concat([[12, 'RPTT SELECT', RPTT], [13, 'NAR WIDTH', NARD], [14, 'PC KEYING', RO(L(['OFF', 'RTS', 'DTR']), 'utilisé par la CW à distance')],
+      G('0201', 'CW SETTING', 'MODE CW', rx.concat([[12, 'RPTT SELECT', RPTT], [13, 'NAR WIDTH', NARD], [14, 'PC KEYING', LOCK(L(['OFF', 'RTS', 'DTR']), 'utilisé par la CW à distance')],
         [15, 'CW BK-IN TYPE', L(['SEMI', 'FULL'])], [16, 'CW FREQ DISPLAY', L(['DIRECT FREQ', 'PITCH OFFSET'])], [17, 'QSK DELAY TIME', L(['15msec', '20msec', '25msec', '30msec'])],
         [18, 'CW INDICATOR', OFFON]])),
       G('0202', 'CW SETTING', 'KEYER', [[1, 'KEYER TYPE', L(['OFF', 'BUG', 'ELEKEY-A', 'ELEKEY-B', 'ELEKEY-Y', 'ACS'])], [2, 'KEYER DOT/DASH', NR],
         [3, 'CW WEIGHT', N(25, 45, 1, '', 10)], [4, 'NUMBER STYLE', L(['1290', 'AUNO', 'AUNT', 'A2NO', 'A2NT', '12NO', '12NT'])], [5, 'CONTEST NUMBER', N(1, 9999)],
         [6, 'CW MEMORY 1', L(['TEXT', 'MESSAGE'])], [7, 'CW MEMORY 2', L(['TEXT', 'MESSAGE'])], [8, 'CW MEMORY 3', L(['TEXT', 'MESSAGE'])], [9, 'CW MEMORY 4', L(['TEXT', 'MESSAGE'])],
-        [10, 'CW MEMORY 5', RO(L(['TEXT', 'MESSAGE']), 'utilisée par la CW au clavier du dashboard')], [11, 'REPEAT INTERVAL', N(1, 60, 1, 'sec')]]),
+        [10, 'CW MEMORY 5', LOCK(L(['TEXT', 'MESSAGE']), 'utilisée par la CW au clavier du dashboard')], [11, 'REPEAT INTERVAL', N(1, 60, 1, 'sec')]]),
       G('0301', 'OPERATION SETTING', 'GENERAL', [[1, 'BEEP LEVEL', LVL], [2, 'RF/SQL VR', L(['RF', 'SQL', 'AUTO'])] /* 2 : « SQL (FM MODE only) » dans le manuel, AUTO sur l'écran du TRX */,
         [3, 'TUN/LIN PORT SELECT', RO(L(['OPTION', 'BAND DATA', 'CAT-3', 'GPO']) /* libellés de l'écran du TRX (manuel : EXT-TUNER, LINEAR…) */, 'câblage de la station (ampli SPA-1, tuner)')],
         [4, 'TUNER SELECT', RO(L(['OPTION', 'ATAS']), 'câblage de la station (ampli SPA-1, tuner)')] /* écran du TRX : OPTION, ATAS (manuel : INT, INT(FAST), EXT, ATAS) */, [5, 'CAT-1 RATE', RATE], [6, 'CAT-1 TIME OUT TIMER', TOT], [7, 'CAT-1 CAT-3 STOP BIT', STOPB],
@@ -111,9 +115,9 @@
       G('0303', 'OPERATION SETTING', 'RX-DSP', [[1, 'IF NOTCH WIDTH', L(['NARROW', 'WIDE'])], [2, 'NB REJECTION', L(['LOW', 'MID', 'HIGH'])],
         [3, 'NB WIDTH', L(['NARROW', 'MEDIUM', 'WIDE'])], [4, 'APF WIDTH', L(['NARROW', 'MEDIUM', 'WIDE'])], [5, 'CONTOUR LEVEL', N(-40, 20, 1, 'dB')], [6, 'CONTOUR WIDTH', N(1, 11)]]),
       G('0304', 'OPERATION SETTING', 'TX AUDIO', [[1, 'AMC RELEASE TIME', L(['FAST', 'MID', 'SLOW'])]].concat(eq(2, ''), eq(11, 'P '))),
-      // TX GENERAL = tête Field seule (0,5 à 10 W) : valeurs en dixièmes de watt (« 060 » = 6.0W sur batterie, vérifié au club)
+      // TX GENERAL = tête Field seule (0,5 à 10 W) : valeurs en dixièmes de watt (« 060 » = 6.0W sur batterie, « 100 » = 10.0W en HF, vérifié au club)
       G('0305', 'OPERATION SETTING', 'TX GENERAL', [[1, 'MAX POWER (BAT)', MAXP10(5, 60)], [2, 'QRP MODE', RO(OFFON, 'puissance : réglée par le club')],
-        [3, 'HF MAX POWER', MAXP(5, 10)], [4, '50M MAX POWER', MAXP(5, 10)], [5, '70M MAX POWER', MAXP10(5, 60)], [6, '144M MAX POWER', MAXP10(5, 100)],
+        [3, 'HF MAX POWER', MAXP10(5, 100)], [4, '50M MAX POWER', MAXP10(5, 100)], [5, '70M MAX POWER', MAXP10(5, 60)], [6, '144M MAX POWER', MAXP10(5, 100)],
         [7, '430M MAX POWER', MAXP10(5, 100)], [8, 'AM HF/50 MAX POWER', MAXP10(5, 25)], [9, 'AM V/U MAX POWER', MAXP10(5, 25)],
         [10, 'VOX SELECT', RO(L(['MIC', 'USB', 'Bluetooth']), 'pas de VOX à distance')], [11, 'EMERGENCY FREQ TX', RO(OFFON, 'au club')],
         [12, 'TX INHIBIT', RO(OFFON, 'émission : au club')], [13, 'METER DETECTOR', L(['AVERAGE', 'PEAK'])]]),
@@ -129,7 +133,7 @@
         [14, 'GPS BAUDRATE', RO(L(['4800bps', '9600bps', '19200bps', '38400bps', '115200bps']), 'liaison du GPS : au club')]]),
       G('0401', 'DISPLAY SETTING', 'DISPLAY', [[1, 'MY CALL', T], [2, 'MY CALL TIME', L(['OFF', '1sec', '2sec', '3sec', '4sec', '5sec'])], [3, 'POP-UP TIME', L(['FAST', 'MID', 'SLOW'])],
         [4, 'SCREEN SAVER', SAVER], [5, 'SCREEN SAVER(BAT)', SAVER], [6, 'SAVER TYPE', L(['Logo', 'DIMMER', 'DISP OFF'])],
-        [7, 'AUTO POWER OFF', RO(C([[0, 'OFF']].concat(Array.from({ length: 24 }, (_, i) => [i + 1, ((i + 1) / 2) + 'h']))), 'éteindrait le TRX : au club')], [8, 'LED DIMMER', N(0, 20)]]),
+        [7, 'AUTO POWER OFF', LOCK(C([[0, 'OFF']].concat(Array.from({ length: 24 }, (_, i) => [i + 1, ((i + 1) / 2) + 'h']))), 'éteindrait le TRX : au club')], [8, 'LED DIMMER', N(0, 20)]]),
       G('0402', 'DISPLAY SETTING', 'UNIT', [[1, 'POSITION UNIT', L(['dd°MM.mm\'', 'dd°mm\'ss"'])], [2, 'DISTANCE UNIT', L(['km', 'mile'])],
         [3, 'SPEED UNIT', C([[0, 'km/h'], [1, 'knot'], [3, 'mph']])], [4, 'ALTITUDE UNIT', L(['m', 'ft'])], [5, 'TEMP UNIT', L(['°C', '°F'])], [6, 'RAIN UNIT', L(['mm', 'INCH'])],
         [7, 'WIND UNIT', C([[0, 'm/s'], [2, 'mph']])]]),
