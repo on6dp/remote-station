@@ -87,6 +87,9 @@
       G('0106', 'RADIO SETTING', 'DIGITAL', [[1, 'DIGITAL POPUP', C([[0, 'OFF']].concat(Array.from({ length: 59 }, (_, i) => [i + 1, (i + 2) + 'sec']), [[60, 'CONTINUE']]))],
         [2, 'LOCATION SERVICE', OFFON], [3, 'STANDBY BEEP', OFFON], [4, 'DP-ID LIST', { k: 't', ro: 'pas de commande CAT : au TRX' }],
         [5, 'RADIO ID', { k: 't', ro: 'pas de commande CAT : au TRX' }]]),
+      // WIRES-X (firmware récent) : absent du manuel CAT 2508-C → aucune commande envoyée, valeurs à lire au TRX
+      G('WX', 'RADIO SETTING', 'WIRES-X', [[1, 'PRESET SEARCH', NOCAT], [2, 'VHF PRESET FREQ', NOCAT], [3, 'UHF PRESET FREQ', NOCAT],
+        [4, 'WIRES-X DG-ID', NOCAT], [5, 'SEARCH SETUP', NOCAT], [6, 'Node Mode', NOCAT]]),
       G('0201', 'CW SETTING', 'MODE CW', rx.concat([[12, 'RPTT SELECT', RPTT], [13, 'NAR WIDTH', NARD], [14, 'PC KEYING', RO(L(['OFF', 'RTS', 'DTR']), 'utilisé par la CW à distance')],
         [15, 'CW BK-IN TYPE', L(['SEMI', 'FULL'])], [16, 'CW FREQ DISPLAY', L(['DIRECT FREQ', 'PITCH OFFSET'])], [17, 'QSK DELAY TIME', L(['15msec', '20msec', '25msec', '30msec'])],
         [18, 'CW INDICATOR', OFFON]])),
