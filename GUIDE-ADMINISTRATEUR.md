@@ -54,7 +54,7 @@ Les membres, eux, ont le **manuel d'utilisation** ([MANUEL.md](MANUEL.md), aussi
 | **Membre** | tout indicatif belge (ON, OO, OP, OQ, OR, OS, OT) avec un compte | Piloter quand il a la main, écouter, émettre selon sa licence, carnet (ses QSO) |
 | **Membre sans émission** | compte créé avec `--no-tx` | Écoute et réglages seulement |
 | **Écouteur** | indicatif ONL… | Jamais d'émission, ni TUNE, ni réglage de puissance |
-| **Administrateur** | compte créé avec `--admin` | Page Station (PC du club), reprise de la main, changement de TRX à distance, rechargement de la page Station, lecture CAT, synchronisation des carnets en ligne, réglage du club de l'égaliseur du TRX, statistiques (/stats) |
+| **Administrateur** | compte créé avec `--admin` | Page Station (PC du club), reprise de la main, changement de TRX à distance, rechargement de la page Station, lecture CAT, synchronisation des carnets en ligne, réglage du club de l'égaliseur du TRX, menus du FTX-1 (RADIO / CW / OPERATION / DISPLAY / EXTENSION / APRS SETTING, APRS BEACON), mise à l'heure du FTX-1, statistiques (/stats) |
 | **Responsable de la station** | `stationEditors` (ON6DP, ON4LUC) | Modifier le jeton, la vitesse et les bits de stop de la page Station ; relancer la carte son du TRX à distance |
 
 **Limites de licence** (automatiques) : ON2 100 W, ON3 25 W et bandes de la licence de base (80, 40, 30, 20, 15, 10 m, 2 m, 70 cm), ONL jamais en émission.
@@ -236,6 +236,19 @@ raccourci « Remote Station - Page Station » (Chrome avec les bons réglages, s
 - Le FTDX101 a trois réglages en plus pour cette page : AF du récepteur SUB (`AG1`), BREAK-IN (`BI`) KEYER (`KR`), fonction de la bague MPVD (`SF0;` : grande touche VC TUNE = 2, arrêt = 3 SUB), fréquences CONTOUR / APF (`CO01;` `CO11;` `CO03;` `CO13;`) et VC TUNE (`VT0;` / `VT1;` : marche, position 000-255, installé ou non ; réglage `VT01+1;` / `VT01-1;` par la bague du grand bouton après la grande touche VC TUNE, à vérifier sur le vrai TRX), lus avec les autres ; ils n'apparaissent pas dans le dashboard. SYNC est géré par la page (les deux VFO accordés ensemble), pas par le TRX.
 - Lectures « chaudes » (page Station, `station-core.js`) : une lecture lente dont la valeur vient de changer (bouton tourné sur le TRX) est relue à chaque cycle pendant 4 s (3 au plus à la fois) ; pas pour les mesures (S-mètre, PO, SWR…).
 - Fenêtres séparées : ⧉ des onglets des modes numériques (→ `digi.html`, raccrochée à la face avant par `window.opener.RSHOST`, comme pour le dashboard) et ⧉ de la carte de bande (la colonne `#fcBm` est déplacée telle quelle dans une fenêtre ; mémorisée dans le navigateur sous `rs.face.bmwin`).
+
+### Face avant du FTX-1 (page /ftx1) : menus du TRX
+
+- Les menus **RADIO / CW / OPERATION / DISPLAY / EXTENSION / APRS SETTING** (écran FUNC, page 3, rangée du bas) et **APRS BEACON** (case APRS BEACON, en FM) sont réservés aux **administrateurs** (ON6DP, ON4LUC). Le serveur refuse `menu_read` / `menu_write` / `menu_dt` aux autres (`MENU.admin` dans `public/js/ftx1.js`).
+- Table des menus : `MENU` dans `public/js/ftx1.js`, d'après le manuel CAT du FTX-1 (2508-C, Table 3 : commande `EX P1P2P3` + valeur), avec les libellés de l'écran du TRX quand ils diffèrent du manuel (RF/SQL VR : AUTO ; TUN/LIN PORT SELECT : OPTION, BAND DATA, CAT-3, GPO ; TUNER SELECT : OPTION, ATAS). Vérifié au club : puissances de la tête Field en dixièmes de watt (`060` = 6.0W, `100` = 10.0W), RPT SFT FREQ 144 / 430 MHz par pas de 50 kHz (`0152` = 7.60MHz ; le « 0100 » maximum du manuel est faux).
+- Lecture : à l'ouverture d'un sous-menu puis toutes les 8 s tant que l'écran est ouvert ; pendant une lecture de menus, la page Station suspend ses lectures en rafale (sinon les réponses arrivent trop tard), 1,2 s d'attente par réglage.
+- **Bloqués même pour les administrateurs** (`LOCK`) : CAT-1 / CAT-3 (vitesse, délai, bits d'arrêt : couperait la station), MOD SOURCE, USB MOD GAIN et RPTT SELECT (phonie à distance), PC KEYING et CW MEMORY 5 (CW à distance), PRMTRC EQ (profils EQUALIZER TRX, bouton « Ouvrir EQUALIZER TRX »), AUTO POWER OFF (le TRX ne se rallumerait pas). CAT-2 est réglable (la station n'utilise que CAT-1).
+- Réglables par un administrateur : puissances maximales, QRP MODE, VOX SELECT, TX INHIBIT, EMERGENCY FREQ TX, REF FREQ ADJ, tuner / antennes, GPS, APRS (dont BEACON TYPE : en AUTO ou SMART, le TRX émet tout seul !), TIME ZONE…
+- **DATE&TIME** : commande `DT0` (date aaaammjj) / `DT1` (heure locale hhmmss) ; bouton « Mettre à l'heure de votre PC » (main prise).
+- Textes (MY CALL, CALLSIGN APRS, messages, statuts, groupes, symbole USER) : relus seulement. WIRES-X, DAY… : absents du manuel CAT, rien n'est envoyé (« au TRX »).
+- **DTMF** (FUNC page 3) : mémoires 1 à 10 = `EX010328` à `EX010337` (0-9, A-D, *, #, « - » pour l'espace), lues par tous, écrites par l'opérateur qui a la main ; aucune tonalité n'est émise.
+- **SPAN** du scope : `SS05` lu et écrit (2 = 5 kHz … 9 = 1 MHz). Le spectre de la page reste celui du son reçu.
+- **ATT / IPO du SUB** : `RA0` / `PA` n'agissent que sur le côté en service ; la page les lit quand le SUB est actif et les garde, et refuse de les régler (ils changeaient le MAIN). Pas de commutation MAIN / SUB automatique (VS1 avait mis le TRX en émission).
 
 ### Commandes à distance (menu du voyant STATION, administrateurs)
 
