@@ -203,8 +203,17 @@
     if (a.local === 'exit' && (L.icMem || L.icRec || L.icSet)) { L.icMem = false; L.icRec = false; L.icSet = false; return render(); }
     if (a.local === 'mpadWrite') return mpadWrite();
     if (a.local === 'exit' && L.icView && !L.icomMenu && !L.quickMenu && !L.modeMenu && !L.bandMenu && !L.multiMenu) { L.icView = null; WF.drawn = false; return render(); }
-    if (a.local === 'exit' && L.mSel) { L.mSel = null; return render(); } // BACK : ferme le tableau METER
-    if (a.local === 'exit') { if (L.bandMenu) closeBandMenu(); if (L.modeMenu) closeModeMenu(); for (const k of ['icomMenu', 'quickMenu']) if (L[k]) closeGrid(k); L.multiMenu = false; if (L.func) L.func = false; return render(); }
+    if (a.local === 'exit') {
+      // BACK (comme sur le TRX) : ferme tout ce qui est affiché par-dessus l'écran normal — écran FUNC, écran DSP, tableaux
+      // METER / BAND / MODE / SPEED, MULTI, menus, et la petite fenêtre de réglage (RF POWER…)
+      if (L.bandMenu) closeBandMenu(); if (L.modeMenu) closeModeMenu();
+      for (const k of ['icomMenu', 'quickMenu']) if (L[k]) closeGrid(k);
+      L.multiMenu = false; L.func = false; L.fEdit = false; L.dsp = null; L.mSel = null;
+      clearTimeout(L.fpopT);
+      for (const id of ['lcdPop', 'fcSpeed']) { const e = $(id); if (e) e.hidden = true; }
+      if (typeof MV !== 'undefined' && MV.open) closeMenu();
+      return render();
+    }
     if (a.local === 'bandUp' || a.local === 'bandDown') {
       // Bande suivante / précédente (IC-7300 : touches ▲ ▼)
       const list = BAND_GRID.filter((b) => b[2] * 1000 <= (R.FREQ_MAX || 75e6));

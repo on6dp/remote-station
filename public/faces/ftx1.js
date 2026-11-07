@@ -67,7 +67,7 @@
       { id: 'qmb', x: 807, y: 90, w: 127, h: 68, tip: 'QMB', act: info('QMB (mémoires rapides) : pas disponible à distance.') },
       { id: 'clar', x: 1022, y: 90, w: 137, h: 68, tip: 'CLAR : 1er appui CLAR RX, 2e CLAR TX, 3e CLAR RXTX, 4e arrêt (appui long : décalage à zéro) ; le bouton FUNC règle le décalage', act: { clar: true }, led: (s) => !!(s.rit || s.xit) },
       { id: 'disp', x: 1163, y: 244, w: 59, h: 68, tip: 'DISP : comme sur le TRX — écran normal → un VFO et le scope → MAIN et SUB l’un sur l’autre (sans scope) → filtres agrandis → retour', act: { local: 'disp' } },
-      { id: 'back', x: 802, y: 411, w: 132, h: 64, tip: 'BACK : ferme le tableau ou le menu ouvert', act: { local: 'exit' } },
+      { id: 'back', x: 802, y: 411, w: 132, h: 64, tip: 'BACK : ferme ce qui est affiché par-dessus l’écran (écran FUNC, DSP, tableaux METER / BAND / MODE / SPEED, petite fenêtre de réglage)', act: { local: 'exit' } },
       { id: 'fine', x: 1036, y: 411, w: 122, h: 64, tip: 'FINE/FAST : accord fin (pas de 1 Hz) ; appui d’au moins 1 s : accord rapide', act: { local: 'fine', long: { local: 'fast' } } },
       // À gauche de l'écran
       { id: 'lock', x: 22, y: 251, w: 84, h: 52, tip: 'LOCK : verrouille le grand bouton du TRX (la mise en marche se fait au club)', act: { local: 'lock' }, led: (s) => !!s.lock }
