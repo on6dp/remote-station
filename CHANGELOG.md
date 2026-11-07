@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.133** — FTX-1 : écran FUNC en Verdana gras (zéro non barré) ; échelle du scope aussi
 - **0.37.132** — FTX-1 : nouvelle photo de la face avant (photo Yaesu fournie par ON6DP, coins blancs transparents, définition doublée) ; touches, boutons, écran, voyants et bandes du grand bouton replacés
 - **0.37.131** — FTX-1 : valeur de l'S-mètre (S, SWR, W…) au-dessus de la barre VOL, plus grande et en gras
 - **0.37.130** — FTX-1 : en émission, la fréquence d'émission passe en rouge (comme sur le TRX)

@@ -5160,7 +5160,7 @@
   }
   // FTX-1 : échelle sous le scope et repères R / T (aussi pour le 3DSS). x0, y0, w, h : la zone ; sh : hauteur de la zone du spectre
   function ftxScale(c2, x0, y0, w, h, sh, name) {
-    c2.fillStyle = '#fff'; c2.font = 'bold 14px "Roboto Mono", monospace'; c2.textAlign = 'center';
+    c2.fillStyle = '#fff'; c2.font = 'bold 14px Verdana, "DejaVu Sans", sans-serif'; c2.textAlign = 'center';
     if (/^AF-FFT/.test(name || '')) return;
     const win = ftxWin(name);
     if (!win) return;
@@ -5177,7 +5177,7 @@
       // il faut 1,5 largeur de texte entre deux traits) ; si c'est encore trop serré, une sur deux
       const txt = fmtRf(win.start + win.span);
       let fs = 12, lw = 0;
-      for (; fs >= 8; fs--) { c2.font = 'bold ' + fs + 'px "Roboto Mono", monospace'; lw = c2.measureText(txt).width; if (lw * 1.5 + 10 <= w / 5) break; }
+      for (; fs >= 8; fs--) { c2.font = 'bold ' + fs + 'px Verdana, "DejaVu Sans", sans-serif'; lw = c2.measureText(txt).width; if (lw * 1.5 + 10 <= w / 5) break; }
       if (fs < 8) fs = 8;
       const every = lw * 1.5 + 10 > w / 5 ? 2 : 1;
       for (let i = 0; i <= 5; i += every) {
@@ -5206,7 +5206,7 @@
       else arrow(win.fR > win.start, y0 + Math.round(sh * 0.28), GRN, 'R');
     }
     c2.restore();
-    c2.font = 'bold 14px "Roboto Mono", monospace'; c2.textAlign = 'center';
+    c2.font = 'bold 14px Verdana, "DejaVu Sans", sans-serif'; c2.textAlign = 'center';
   }
   function drawScope(c2, rg, pal, nb, lvl, maxHz) {
     // FTX-1 : spectre et cascade moins « généreux » (comme sur le TRX, le spectre reste dans le bas de sa zone) ; D-LEVEL règle en plus

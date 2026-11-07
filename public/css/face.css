@@ -430,6 +430,10 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .ftxf .func-lab { fill: #fff; font-size: 11px; font-weight: 800; }
 #face .ftxf .func-lab.nav { fill: #ffa600; }
 #face .ftxf .func-val { fill: #ffa600; font-size: 13px; font-weight: 800; }
+/* FTX-1 : écran FUNC en Verdana gras (lisible, zéro non barré, comme sur le TRX) */
+#face .ftxf .func-lab, #face .ftxf .func-val, #face .ftxf .ftx-pgt { font-family: Verdana, 'DejaVu Sans', Arial, sans-serif; font-weight: 700; }
+#face .ftxf .func-lab { font-size: 9.6px; }
+#face .ftxf .func-val { font-size: 12px; }
 #face .ftxf .ftx-pg { fill: #d9dcdf; }
 #face .ftxf .ftx-pgt { fill: #5a6068; font-size: 11px; font-weight: 700; pointer-events: none; }
 #face .ftxf .ftx-arrow { fill: none; stroke: #fff; stroke-width: 2.5; pointer-events: none; }
