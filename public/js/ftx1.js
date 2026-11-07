@@ -99,7 +99,7 @@
         [10, 'CW MEMORY 5', RO(L(['TEXT', 'MESSAGE']), 'utilisée par la CW au clavier du dashboard')], [11, 'REPEAT INTERVAL', N(1, 60, 1, 'sec')]]),
       G('0301', 'OPERATION SETTING', 'GENERAL', [[1, 'BEEP LEVEL', LVL], [2, 'RF/SQL VR', L(['RF', 'SQL', 'AUTO'])] /* 2 : « SQL (FM MODE only) » dans le manuel, AUTO sur l'écran du TRX */,
         [3, 'TUN/LIN PORT SELECT', RO(L(['OPTION', 'BAND DATA', 'CAT-3', 'GPO']) /* libellés de l'écran du TRX (manuel : EXT-TUNER, LINEAR…) */, 'câblage de la station (ampli SPA-1, tuner)')],
-        [4, 'TUNER SELECT', RO(TUNT, 'câblage de la station (ampli SPA-1, tuner)')], [5, 'CAT-1 RATE', RATE], [6, 'CAT-1 TIME OUT TIMER', TOT], [7, 'CAT-1 CAT-3 STOP BIT', STOPB],
+        [4, 'TUNER SELECT', RO(L(['OPTION', 'ATAS']), 'câblage de la station (ampli SPA-1, tuner)')] /* écran du TRX : OPTION, ATAS (manuel : INT, INT(FAST), EXT, ATAS) */, [5, 'CAT-1 RATE', RATE], [6, 'CAT-1 TIME OUT TIMER', TOT], [7, 'CAT-1 CAT-3 STOP BIT', STOPB],
         [8, 'CAT-2 RATE', RATE], [9, 'CAT-2 TIME OUT TIMER', TOT], [10, 'CAT-3 RATE', RATE], [11, 'CAT-3 TIME OUT TIMER', TOT],
         [12, 'TX TIME OUT TIMER', C([[0, 'OFF']].concat(Array.from({ length: 30 }, (_, i) => [i + 1, (i + 1) + 'min'])))],
         [13, 'REF FREQ ADJ', RO(N(-25, 25, 1, '', 1, true), 'étalonnage : au club')], [14, 'CHARGE CONTROL', RO(OFFON, 'alimentation : au club')],
