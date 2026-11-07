@@ -5398,7 +5398,7 @@
   //   FIX : fenêtre fixe au début de la bande (14.000 → 14.000 + SPAN), repères « R ▶ / T ▶ » au bord quand on est en dehors.
   // Le spectre affiché reste celui du son reçu (BF), placé à sa vraie fréquence dans la fenêtre (en dehors : rien).
   const FTXWIN = {};
-  const FTX_AUD = 3000; // largeur du son reçu montré (Hz de BF)
+  const FTX_AUD = 3000, FTX_PRE = 300; // largeur du son reçu montré (Hz de BF), et place avant son 0 Hz (repères du VFO)
   function ftxWin(name) {
     // Scope unique (nom vide) : celui du VFO sélectionné (le son reçu est le sien)
     const st0 = S(), sd = name === 'SUB' ? 'B' : name === 'MAIN' ? 'A' : activeSide(), f00 = sd === 'B' ? st0.freqB : st0.freq;
@@ -5410,9 +5410,10 @@
     // Choix du club : quand le SPAN du TRX dépasse le son reçu (~3 kHz), la cascade montre ce son sur toute sa largeur,
     // avec sa propre échelle en fréquences (le scope du TRX, lui, ne passe pas par le CAT)
     if (trxSpan > FTX_AUD) {
-      const a = fR + sg * (0 - off), b = fR + sg * (FTX_AUD - off), st = Math.min(a, b);
+      // Un peu de place avant le 0 Hz du son : la fréquence du VFO (▼ vert / ▼ rouge) reste visible près du bord
+      const sp = FTX_AUD + FTX_PRE, a = fR + sg * (-FTX_PRE - off), b = fR + sg * (FTX_AUD - off), st = Math.min(a, b);
       const fT = st0.split ? (sd === 'B' ? st0.freq : st0.freqB) || fR : fR;
-      return { start: st, span: FTX_AUD, fR, fT, dm, aud: true, x: (f) => (f - st) / FTX_AUD, a: (f) => sg * (f - fR) + off, f: (au) => fR + sg * (au - off) };
+      return { start: st, span: sp, fR, fT, dm, aud: true, x: (f) => (f - st) / sp, a: (f) => sg * (f - fR) + off, f: (au) => fR + sg * (au - off) };
     }
     const span = trxSpan;
     let start;
@@ -5475,8 +5476,6 @@
     // Repères : ▼ rouge = émission (avec son trait), ▼ vert = réception (au-dessus) ; CENTER : un seul ▼ rouge (au milieu sans SPLIT ;
     // en SPLIT il est à la fréquence d'émission et se déplace quand on tourne le grand bouton, l'écoute restant au milieu).
     // En dehors de la fenêtre : « R ▶ » vert et « T ▶ » rouge sur le bord, du côté de la fréquence
-    // Son reçu sur toute la largeur : pas de repères ▼ (la fréquence du VFO est au bord, celle du signal se lit sur l'échelle)
-    if (win.aud) { c2.font = 'bold 14px Verdana, "DejaVu Sans", sans-serif'; c2.textAlign = 'center'; return; }
     const RED = '#ff2a1a', GRN = '#3ad23a';
     const tri = (x, y, col) => { c2.fillStyle = col; c2.beginPath(); c2.moveTo(x - 6, y); c2.lineTo(x + 6, y); c2.lineTo(x, y + 9); c2.closePath(); c2.fill(); };
     const arrow = (right, y, col, t) => {
@@ -5485,7 +5484,7 @@
       c2.fillStyle = '#0b0f17'; c2.font = 'bold 11px Arial, sans-serif'; c2.textAlign = 'center'; c2.fillText(t, xe + d * 15, y + 4);
     };
     const inW = (f) => f >= win.start && f <= win.start + win.span;
-    const one = win.dm === 0; // CENTER (comme le TRX) : seulement la barre rouge d'émission ; l'écoute est le milieu de l'écran
+    const one = win.dm === 0 && !win.aud; // CENTER (comme le TRX) : seulement la barre rouge d'émission ; l'écoute est le milieu de l'écran
     c2.save(); c2.beginPath(); c2.rect(x0, y0, w, sh); c2.clip(); // dans la zone du spectre (pas dans la cascade qui défile)
     const yT = one ? y0 : y0 + 10;
     if (inW(win.fT)) { const x = Math.round(X(win.fT)); c2.fillStyle = RED; c2.fillRect(x - 1, yT + 9, 2, sh - yT - 9 + y0); tri(x, yT, RED); }
