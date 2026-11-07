@@ -194,6 +194,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face .lcd-seg.txv { fill: #ff4a2a; filter: drop-shadow(0 0 1.5px rgba(255, 74, 42, .7)); }
 /* FTX-1 : fréquences en Arial Black penché (police du PC ; à défaut une police grasse proche) */
 #face text.lcd-seg.ftxt { font-family: 'Arial Black', 'Arial', 'Liberation Sans', 'Helvetica Neue', sans-serif; font-weight: 900; font-style: italic; letter-spacing: -0.5px; }
+#face text.lcd-seg.ftxt .fqhz { font-size: 62%; letter-spacing: -0.3px; } /* FTX-1 : 3 derniers chiffres (Hz) plus petits, comme sur le TRX */
 #face .lcd-cell { fill: #232a35; }
 #face .lcd-sel.on { fill: #c9d3e3; }
 /* Menu FUNC */

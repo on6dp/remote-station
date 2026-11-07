@@ -4876,7 +4876,11 @@
       if (FACE.freqFont) { // FTX-1 : police de l'écran du TRX
         const txt = fq ? fmtFreq(fq) : '';
         if (v.freq.textContent !== txt || !v.fqOk) { // fqOk : largeur déjà mesurée (0 tant que la face est cachée)
-          v.freq.textContent = txt;
+          // Comme sur le TRX : les 3 derniers chiffres (Hz) en plus petit (« 144.000.000 » → « 144.000 » + « .000 »)
+          v.freq.textContent = '';
+          const cut = txt.length > 4 ? txt.length - 4 : txt.length;
+          v.freq.appendChild(document.createTextNode(txt.slice(0, cut)));
+          if (cut < txt.length) el('tspan', { class: 'fqhz' }, v.freq, txt.slice(cut));
           v.freq.setAttribute('x', v.xr); v.freq.setAttribute('y', LCD.c0y + 121);
           v.freq.removeAttribute('textLength');
           // Trop large (ex. 145.500.000, ou police de remplacement plus large) : on resserre pour ne pas mordre sur les badges
