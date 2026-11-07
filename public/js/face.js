@@ -1543,14 +1543,30 @@
       showTip(ev, (q.side === 'B' ? 'SUB ' : 'MAIN ') + fmtFreq(q.hz) + ' MHz');
     });
     // Glisser (bouton de la souris enfoncé) : la fréquence d'écoute suit la souris, comme le doigt sur l'écran du TRX
-    let drag = false;
-    cvF.addEventListener('pointerdown', (ev) => { if (ev.button === 0 && ftxFreqAt(ev)) { drag = true; try { cvF.setPointerCapture(ev.pointerId); } catch (e) { /* */ } } });
-    const end = () => { drag = false; };
-    cvF.addEventListener('pointerup', end); cvF.addEventListener('pointercancel', end);
-    cvF.addEventListener('mousemove', (ev) => {
+    // Bouton DROIT : la ligne rouge (fréquence d'émission, l'autre VFO) — SPLIT mis en service s'il ne l'est pas
+    let drag = false, dragR = false;
+    const txTune = (ev, q) => {
+      const s0 = S(), tx = q.side === 'B' ? 'A' : 'B';
+      if (!s0.split) { if (!needControl()) return; doAct({ act: { local: 'split' } }); }
+      tuneTo(tx, q.hz);
+      showTip(ev, 'TX ' + (tx === 'B' ? 'SUB ' : 'MAIN ') + fmtFreq(q.hz) + ' MHz');
+    };
+    cvF.addEventListener('contextmenu', (ev) => { if (ftxFreqAt(ev)) ev.preventDefault(); });
+    cvF.addEventListener('pointerdown', (ev) => {
       const q = ftxFreqAt(ev);
-      cvF.title = q ? 'Clic ou glisser : ' + (q.side === 'B' ? 'SUB' : 'MAIN') + ' → ' + fmtFreq(q.hz) + ' MHz' : '';
+      if (!q) return;
+      if (ev.button === 0) drag = true;
+      else if (ev.button === 2) { ev.preventDefault(); if (!needControl()) return; dragR = true; txTune(ev, q); }
+      else return;
+      try { cvF.setPointerCapture(ev.pointerId); } catch (e) { /* */ }
+    });
+    const end = () => { drag = false; dragR = false; };
+    cvF.addEventListener('pointerup', end); cvF.addEventListener('pointercancel', end);
+    cvF.addEventListener('pointermove', (ev) => {
+      const q = ftxFreqAt(ev);
+      cvF.title = q ? fmtFreq(q.hz) + ' MHz — bouton gauche (clic ou glisser) : écoute ' + (q.side === 'B' ? 'SUB' : 'MAIN') + ' · bouton droit : émission (SPLIT)' : '';
       // Seulement quand la fenêtre est fixe (CURSOR / FIX) : en CENTER ou « son reçu », la fenêtre suit le VFO (elle s'enfuirait)
+      if (dragR && q && q.fixed && (ev.buttons & 2) && iControl()) { const tx = q.side === 'B' ? 'A' : 'B'; tuneTo(tx, q.hz); showTip(ev, 'TX ' + (tx === 'B' ? 'SUB ' : 'MAIN ') + fmtFreq(q.hz) + ' MHz'); }
       if (drag && q && q.fixed && (ev.buttons & 1) && iControl()) { tuneTo(q.side, q.hz); showTip(ev, (q.side === 'B' ? 'SUB ' : 'MAIN ') + fmtFreq(q.hz) + ' MHz'); }
     });
   }
