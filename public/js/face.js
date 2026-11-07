@@ -3380,7 +3380,7 @@
   // Lecture d'un sous-menu sur le TRX : état affiché (« lecture sur le TRX… », puis « pas de réponse » au bout de 20 s)
   function menuReq(quiet) {
     const M = MN(), g = M && M.groups.find((x) => x.id === MV.sub);
-    if (!g || !g.items.some((it) => it.d.k !== 't' || it.d.read)) { MV.st = ''; return; } // rien à lire sur le TRX (SD CARD, RESET…)
+    if (!g || !g.items.some((it) => it.d.k !== 't' || it.d.read || it.d.src)) { MV.st = ''; return; } // rien à lire sur le TRX (SD CARD, RESET…)
     // FTX-1 : relecture discrète toutes les 8 s tant que l'écran est ouvert (réglage changé au TRX lui-même → visible ici)
     if (FTX1F && !MV.auto) MV.auto = setInterval(() => {
       if (MV.open && !MV.pend && (!MV.waiting || Date.now() - MV.waitSince > 30000) && Date.now() - (MV.lastAdj || 0) > 4000) menuReq(true);
@@ -3420,7 +3420,7 @@
     else {
       body = '<div class="fm-subs">' + subs.map((x) => '<button type="button" data-sub="' + x.id + '" class="' + (x.id === MV.sub ? 'on' : '') + '">' + esc(x.name) + '</button>').join('') + '</div>' +
         '<div class="fm-items">' + g.items.map((it) => {
-          const raw = MV.vals[it.id], sel = MV.sel === it.id, ro = it.d.ro;
+          const raw = it.d.src ? MV.vals[it.d.src] : MV.vals[it.id], sel = MV.sel === it.id, ro = it.d.ro;
           const val = raw === undefined ? '…' : M.show(it.d, raw);
           return '<div class="fm-row' + (sel ? ' sel' : '') + (ro ? ' ro' : '') + '" data-it="' + it.id + '" title="' + esc(it.label + (ro ? ' — lecture seule : ' + ro : ' — clic puis − / +, molette ou bouton MULTI')) + '">' +
             '<span class="fm-n">' + String(it.n).padStart(2, '0') + '</span><span class="fm-l">' + esc(it.label) + '</span>' +
@@ -3468,7 +3468,8 @@
       return '<div class="fx-row' + (sel ? ' sel' : '') + (ro ? ' ro' : '') + '" data-it="' + it.id + '" title="' + esc(it.label + (ro ? ' — lecture seule : ' + ro : ' — clic puis − / +, molette ou bouton FUNC')) + '">' +
         '<div class="fx-l">' + esc(it.label) + (eqTrx(it) ? '<em class="fx-eqt">EQUALIZER TRX</em>' : '') + '</div><div class="fx-v">' + (sel && !ro ? '<button type="button" class="fx-pm" data-step="-1">−</button>' : '') +
         '<span>' + esc(val) + '</span>' + (sel && !ro ? '<button type="button" class="fx-pm" data-step="1">+</button>' : '') + '</div>' +
-        (sel ? (eqTrx(it) ? '<div class="fx-opts">Se règle dans EQUALIZER TRX (votre profil, ou celui du club pour un administrateur) ' +
+        (sel ? (it.d.k === 'dt' ? '<div class="fx-opts">Date et heure lues sur le TRX ' +
+          '<button type="button" class="fx-eqb" data-dtsync="1" title="Envoie au TRX la date et l’heure locales de votre PC">Mettre à l’heure de votre PC</button></div>' : eqTrx(it) ? '<div class="fx-opts">Se règle dans EQUALIZER TRX (votre profil, ou celui du club pour un administrateur) ' +
           '<button type="button" class="fx-eqb" data-eqtrx="1">Ouvrir EQUALIZER TRX</button></div>' : menuChoices(M, it, raw, esc)) : '') + '</div>';
     }).join('') : '';
     const note = !g || !n ? '<p class="fx-note">' + esc(g ? g.name : MV.group) + ' : au club seulement (carte SD, version, étalonnage, remise à zéro… : rien à distance, par sécurité).</p>' : '';
@@ -3487,6 +3488,12 @@
     if (b && b.dataset.sub) { MV.sub = b.dataset.sub; MV.sel = null; MV.top = 0; menuReq(); return menuDraw(); }
     if (b && b.dataset.step) return menuAdjust(MV.sel, Number(b.dataset.step));
     if (b && b.dataset.eqtrx) return openTrxEq();
+    if (b && b.dataset.dtsync) {
+      if (!needControl()) return;
+      const n = new Date(), p2 = (x) => String(x).padStart(2, '0');
+      send({ t: 'menu_dt', date: n.getFullYear() + p2(n.getMonth() + 1) + p2(n.getDate()), time: p2(n.getHours()) + p2(n.getMinutes()) + p2(n.getSeconds()) });
+      return say('DATE&TIME : date et heure de votre PC envoyées au TRX (' + n.toLocaleString('fr-BE') + ').', '', 4000);
+    }
     const r = e.target.closest('[data-it]');
     if (!r) return;
     const M = MN(), it = M && M.item(r.dataset.it);

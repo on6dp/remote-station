@@ -1113,7 +1113,7 @@ function menuMsg(conn, m) {
   const quiet = !!m.quiet; // relecture automatique de la page (FTX-1) : ni message, ni lecture si occupé ou en émission
   const read = (ids, cb) => {
     if (eqs.busy || (quiet && eqTxBusy())) return quiet ? send(conn, { t: 'menu_vals', values: {}, ids: [], quiet: true }) : no('lecture ou écriture déjà en cours, un instant');
-    exCall('exread', { cmds: ids.map((i) => 'EX' + i + ';'), soft: true }, (vals, err) => {
+    exCall('exread', { cmds: ids.map((i) => (/^DT[01]$/.test(i) ? i : 'EX' + i) + ';'), soft: true }, (vals, err) => {
       send(conn, { t: 'menu_vals', values: vals || {}, ids, err: quiet ? '' : err || '', quiet });
       if (cb) cb();
     });
@@ -1121,7 +1121,26 @@ function menuMsg(conn, m) {
   if (m.t === 'menu_read') {
     const g = M.groups.find((x) => x.id === String(m.sub || ''));
     if (!g) return;
-    return read(g.items.filter((it) => it.d.k !== 't' || it.d.read).map((it) => it.id));
+    const ids = [];
+    for (const it of g.items) {
+      if (it.d.src) { if (ids.indexOf(it.d.src) < 0) ids.push(it.d.src); } // date / heure du TRX (DT0 / DT1)
+      else if (it.d.k !== 't' || it.d.read) ids.push(it.id);
+    }
+    return read(ids);
+  }
+  // FTX-1 : date et heure du TRX mises à celles du PC de l'administrateur (DT0 aaaammjj, DT1 hhmmss, heure locale)
+  if (m.t === 'menu_dt') {
+    if (!M.admin || rig().ID !== 'ftx1') return;
+    if (controller !== conn) return no('prenez d’abord la main');
+    const d = String(m.date || ''), h = String(m.time || '');
+    if (!/^20\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])$/.test(d) || !/^([01]\d|2[0-3])[0-5]\d[0-5]\d$/.test(h)) return no('date ou heure refusée');
+    if (eqTxBusy()) return no('pas pendant une émission');
+    if (eqs.busy) return no('lecture ou écriture déjà en cours, un instant');
+    journal('trx_menu', { by: conn.user.call, id: 'DT', label: 'DATE&TIME', v: d + ' ' + h });
+    return exCall('exwrite', { cmds: ['DT0' + d + ';', 'DT1' + h + ';'] }, (ok, err) => {
+      if (!ok) return no('date / heure : ' + (err || 'pas écrites'));
+      setTimeout(() => read(['DT0', 'DT1']), 600);
+    });
   }
   const it = M.item(String(m.id || ''));
   if (!it) return;
@@ -3124,6 +3143,7 @@ function onOperator(conn, m) {
 
     case 'menu_read':
     case 'menu_write':
+    case 'menu_dt':
       return menuMsg(conn, m);
     case 'dtmf_read':
     case 'dtmf_write':

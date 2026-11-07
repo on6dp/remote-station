@@ -529,7 +529,7 @@
           const busy = this.catKeyed || this.radio.tx || !this.serialOpen || this.exBusy;
           const W = this.rig.TRX_EQ && this.rig.TRX_EQ.writeFrame;
           if (!busy) this._writeList(W ? (Array.isArray(m.cmds) ? m.cmds : []).map((c) => W(c)).filter(Boolean).slice(0, 40) // Icom : trames CI-V
-            : (Array.isArray(m.cmds) ? m.cmds : []).filter((c) => /^EX\d{6}[+-]?\d{1,4};$/.test(c) || /^EX0103(2[89]|3[0-7])[0-9A-D*#-]{1,16};$/.test(c)).slice(0, 40));
+            : (Array.isArray(m.cmds) ? m.cmds : []).filter((c) => /^EX\d{6}[+-]?\d{1,4};$/.test(c) || /^EX0103(2[89]|3[0-7])[0-9A-D*#-]{1,16};$/.test(c) || /^DT0\d{8};$|^DT1\d{6};$/.test(c)).slice(0, 40));
           if (this.wsUp) this.sendWs({ t: 'exwrite_reply', id: m.id, ok: !busy });
         } else if (m.op === 'voiceoff') {
           // Main rendue, micro coupé… : source de modulation remise tout de suite (sauf en pleine émission)
@@ -673,6 +673,16 @@
             next(i + 1);
           });
           return this._write(ic.frame, true);
+        }
+        // FTX-1 : date (DT0 : aaaammjj) et heure locale (DT1 : hhmmss) du TRX, pour EXTENSION SETTING → DATE&TIME
+        const dt = /^DT([01]);$/.exec(String(cmds[i]));
+        if (dt) {
+          const rd = new RegExp('^DT' + dt[1] + '(\\d{6,8})$');
+          this._awaitFn((t) => { const x = typeof t === 'string' ? rd.exec(t) : null; return x ? x[1] : null; }, 1200, (v) => {
+            if (v != null) vals['DT' + dt[1]] = v;
+            next(i + 1);
+          });
+          return this._write(cmds[i], true);
         }
         const mm = /^EX(\d{6});$/.exec(String(cmds[i]));
         if (!mm) return next(i + 1);

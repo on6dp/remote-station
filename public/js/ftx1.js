@@ -71,6 +71,8 @@
     const G = (id, group, name, items, pfx) => ({ id, group, name, items: items.map(([n, label, d]) => ({ id: (pfx || id) + String(n).padStart(2, '0'), n, label, d })) });
     const EXT = 'EXTENSION SETTING : au club seulement';
     const NOCAT = { k: 't', ro: 'pas de commande CAT : au TRX' };
+    const MON = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const DTP = (src, a, b, names) => ({ k: 'dt', src, a, b, names, ro: 'avec le bouton « Mettre à l’heure de votre PC »' });
     return [
       G('0101', 'RADIO SETTING', 'MODE SSB', rx.concat([[12, 'TX BPF SEL', BPF], [13, 'MOD SOURCE', MOD], [14, 'USB MOD GAIN', MODG], [15, 'RPTT SELECT', RPTT],
         [16, 'NAR WIDTH', NARS], [17, 'CW AUTO MODE', L(['OFF', '50MHz', 'ON'])]])),
@@ -143,7 +145,8 @@
         [3, 'VMI COLOR CLAR', L(['RED', 'NONE'])]]),
       // EXTENSION SETTING : tout en lecture seule ou au club (date, position, carte SD, version, étalonnage, remise à zéro)
       G('0501', 'EXTENSION SETTING', 'DATE&TIME', [[1, 'TIME ZONE', RO(Object.assign(N(-120, 140, 5), { fmt: (v) => (v / 10).toFixed(1) }), EXT)],
-        [2, 'DAY', NOCAT], [3, 'MONTH', NOCAT], [4, 'YEAR', NOCAT], [5, 'HOUR', NOCAT], [6, 'MINUTE', NOCAT], [7, 'GPS TIME SET', RO(L(['AUTO', 'MANUAL']), EXT)]]),
+        // DAY à MINUTE : pas de menu EX, mais la commande DT (DT0 date, DT1 heure locale) — lus, et mis à l'heure du PC par un bouton
+        [2, 'DAY', DTP('DT0', 6, 8)], [3, 'MONTH', DTP('DT0', 4, 6, MON)], [4, 'YEAR', DTP('DT0', 0, 4)], [5, 'HOUR', DTP('DT1', 0, 2)], [6, 'MINUTE', DTP('DT1', 2, 4)], [7, 'GPS TIME SET', RO(L(['AUTO', 'MANUAL']), EXT)]]),
       G('0501P', 'EXTENSION SETTING', 'MY POSITION', [[8, 'MY POSITION', RO(L(['GPS', 'MANUAL']), EXT)], [9, 'MY POSITION LATITUDE', NOCAT], [10, 'MY POSITION LONGITUDE', NOCAT]], '0501'),
       G('0502', 'EXTENSION SETTING', 'SD CARD', []), G('0503', 'EXTENSION SETTING', 'SOFT VERSION', []),
       G('0504', 'EXTENSION SETTING', 'CALIBRATION', []), G('0505', 'EXTENSION SETTING', 'RESET', []),
@@ -168,6 +171,7 @@
   function menuShow(d, raw) {
     if (raw == null || raw === '') return '—';
     if (d.k === 't') return String(raw).replace(/-/g, ' ');
+    if (d.k === 'dt') { const p = String(raw).slice(d.a, d.b); return d.names ? d.names[parseInt(p, 10) - 1] || p : p; }
     const v = parseInt(raw, 10);
     if (!Number.isFinite(v)) return String(raw);
     if (d.k === 'l') { const i = d.codes ? d.codes.indexOf(v) : v - d.base; return d.labels[i] != null ? d.labels[i] : String(v); }
