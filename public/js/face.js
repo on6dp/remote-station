@@ -3344,13 +3344,13 @@
   const MN = () => (R && R.MENU) || null;
   function openMenu(group) {
     const M = MN();
-    MV.open = true; MV.group = group; MV.sel = null;
+    MV.open = true; MV.group = group; MV.sel = null; MV.top = 0;
     L.func = false;
     let box = $('fcMenu');
     if (!box) {
       box = document.createElement('div');
       box.id = 'fcMenu';
-      box.className = 'fc-menu';
+      box.className = 'fc-menu' + (FTX1F ? ' ftxm' : '');
       const sc = FACE.lcd;
       box.style.left = ((sc.x + 4 - V.x) / V.w * 100) + '%';
       box.style.top = ((sc.y + 4 - V.y) / V.h * 100) + '%';
@@ -3360,13 +3360,15 @@
       box.addEventListener('click', menuClick);
       box.addEventListener('wheel', (e) => {
         const r = e.target.closest('[data-it]');
+        // FTX-1 : molette sur la liste = défiler (▲ ▼), sur le réglage choisi = changer sa valeur
+        if (FTX1F && e.target.closest('.fx-items') && !(r && r.dataset.it === MV.sel)) { e.preventDefault(); return menuScroll(e.deltaY > 0 ? 1 : -1); }
         if (!r) return;
         e.preventDefault();
         MV.sel = r.dataset.it;
         menuAdjust(MV.sel, e.deltaY > 0 ? -1 : 1);
       }, { passive: false });
     }
-    box.style.fontSize = Math.max(9, Math.round($('facePanel').clientWidth / V.w * 10.5)) + 'px';
+    box.style.fontSize = Math.max(9, Math.round($('facePanel').clientWidth / V.w * (FTX1F ? 12.5 : 10.5))) + 'px';
     const subs = M ? M.groups.filter((g) => g.group === group) : [];
     MV.sub = subs.length ? (subs.find((g) => g.id === MV.sub) || subs[0]).id : '';
     box.hidden = false;
@@ -3385,6 +3387,7 @@
     const box = $('fcMenu'), M = MN();
     if (!box || !MV.open) return;
     const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    if (FTX1F) return menuDrawFtx(box, M, esc);
     const subs = M ? M.groups.filter((g) => g.group === MV.group) : [];
     const g = subs.find((x) => x.id === MV.sub);
     let body;
@@ -3404,11 +3407,40 @@
     box.innerHTML = '<div class="fm-h"><b>' + esc(MV.group) + '</b>' + (g ? '<span>' + esc(g.name) + '</span>' : '') + '<button type="button" class="fm-x" data-close="1" title="Fermer">✕</button></div><div class="fm-b">' + body + '</div>' +
       '<div class="fm-f"><button type="button" class="fm-back" data-back="1" title="Retour au menu FUNC">BACK</button></div>';
   }
+  // FTX-1 : écran … SETTING comme sur le TRX — titre, sous-menus à gauche (cadre orange), 5 réglages à droite (nom, valeur
+  // jaune dans sa barre noire), ▲ ▼ et ascenseur, BACK en bas. Clic sur un réglage (cadre jaune) puis − / +, molette ou FUNC.
+  const FX_ROWS = 5;
+  function menuScroll(d) {
+    const M = MN(), g = M && M.groups.find((x) => x.id === MV.sub);
+    if (!g) return;
+    MV.top = Math.max(0, Math.min(Math.max(0, g.items.length - FX_ROWS), (MV.top || 0) + d));
+    menuDraw();
+  }
+  function menuDrawFtx(box, M, esc) {
+    const subs = M ? M.groups.filter((g) => g.group === MV.group) : [];
+    const g = subs.find((x) => x.id === MV.sub);
+    const n = g ? g.items.length : 0, top = Math.max(0, Math.min(Math.max(0, n - FX_ROWS), MV.top || 0));
+    MV.top = top;
+    const rows = g ? g.items.slice(top, top + FX_ROWS).map((it) => {
+      const raw = MV.vals[it.id], sel = MV.sel === it.id, ro = it.d.ro;
+      const val = it.d.k === 't' && !it.d.read ? 'au TRX' : raw === undefined ? '…' : M.show(it.d, raw);
+      return '<div class="fx-row' + (sel ? ' sel' : '') + (ro ? ' ro' : '') + '" data-it="' + it.id + '" title="' + esc(it.label + (ro ? ' — lecture seule : ' + ro : ' — clic puis − / +, molette ou bouton FUNC')) + '">' +
+        '<div class="fx-l">' + esc(it.label) + '</div><div class="fx-v">' + (sel && !ro ? '<button type="button" class="fx-pm" data-step="-1">−</button>' : '') +
+        '<span>' + esc(val) + '</span>' + (sel && !ro ? '<button type="button" class="fx-pm" data-step="1">+</button>' : '') + '</div></div>';
+    }).join('') : '<p class="fx-note">' + esc(MV.group) + ' : pas à distance (au club).</p>';
+    const th = n > FX_ROWS ? FX_ROWS / n * 100 : 100, tp = n > FX_ROWS ? top / n * 100 : 0;
+    box.innerHTML = '<div class="fx-h">' + esc(MV.group) + '</div><div class="fx-b"><div class="fx-subs">' +
+      subs.map((x) => '<button type="button" data-sub="' + x.id + '" class="' + (x.id === MV.sub ? 'on' : '') + '">' + esc(x.name) + '</button>').join('') +
+      '</div><div class="fx-items">' + rows + '</div><div class="fx-s"><button type="button" data-scr="-1" title="Réglages précédents">︿</button>' +
+      '<div class="fx-tr"><i style="top:' + tp + '%;height:' + th + '%"></i></div><button type="button" data-scr="1" title="Réglages suivants">﹀</button></div></div>' +
+      '<button type="button" class="fx-back" data-back="1" title="Retour à l’écran FUNC (touche BACK du TRX)">BACK</button>';
+  }
   function menuClick(e) {
     const b = e.target.closest('button');
+    if (b && b.dataset.scr) return menuScroll(Number(b.dataset.scr));
     if (b && b.dataset.close) return closeMenu();
     if (b && b.dataset.back) { closeMenu(); L.func = true; return render(); } // BACK : retour à l'écran FUNC, comme sur le TRX
-    if (b && b.dataset.sub) { MV.sub = b.dataset.sub; MV.sel = null; send({ t: 'menu_read', sub: MV.sub }); return menuDraw(); }
+    if (b && b.dataset.sub) { MV.sub = b.dataset.sub; MV.sel = null; MV.top = 0; send({ t: 'menu_read', sub: MV.sub }); return menuDraw(); }
     if (b && b.dataset.step) return menuAdjust(MV.sel, Number(b.dataset.step));
     const r = e.target.closest('[data-it]');
     if (!r) return;
@@ -3935,7 +3967,7 @@
           if (kind) return ftxPage(L.funcPage + (kind === 'fwd' ? 1 : -1));
           if (modeInactive(id, S())) { fmOnly(id, S()); return; }
           // Menus … SETTING : paramètres essentiels du TRX, réservés aux administrateurs (ON6DP, ON4LUC)
-          if (setting && !/^APRS [SM]|^APRS B/.test(lab)) return say(me && me.admin ? lab + ' : les menus du FTX-1 et leurs sous-menus ne sont pas encore à distance (réservés aux administrateurs quand ils le seront).' : lab + ' : réservé aux administrateurs (ON6DP, ON4LUC) — paramètres essentiels du TRX.', 'warn', 6000);
+          if (/ SETTING$/.test(lab)) return me && me.admin ? openMenu(lab) : say(lab + ' : réservé aux administrateurs (ON6DP, ON4LUC) — paramètres essentiels du TRX.', 'warn', 6000);
           if (!adj) return say(FTX_NOTE[id] || lab + ' : pas disponible à distance (au club, sur le TRX).', '', FTX_NOTE[id] ? 7000 : 3500);
           const wasEdit = L.funcSel === id && L.fEdit;
           L.funcSel = id;
@@ -4119,6 +4151,8 @@
       return showTip(ev, ftxCursor(notches > 0 ? 1 : -1));
     }
     if (k.multi && MV.open && MV.sel) { menuAdjust(MV.sel, notches > 0 ? 1 : -1); return; }
+    // Écran de menu ou DTMF ouvert sans réglage choisi : FUNC fait défiler la liste, sans toucher aux réglages de l'écran FUNC
+    if (k.multi && FTX1F && (MV.open || DT.open)) { if (MV.open) menuScroll(notches > 0 ? 1 : -1); return; }
     if (k.multi && (!(s.rit || s.xit) || FACE.clarCycle) && FUNC_BY[L.funcSel] && FUNC_BY[L.funcSel][3] && !(FTX1F && FUNC_BY[L.funcSel][5])) {
       funcAdjust(L.funcSel, notches);
       // FTX-1 : grand cadre « RF POWER   83W » au milieu de l'écran pendant qu'on tourne FUNC (écran FUNC fermé)
@@ -6552,5 +6586,5 @@
   if (sess) creds = { session: sess };
   else showLogin('');
   connect();
-  window.RSFACE = { state: () => S(), L, LCD, face: FACE, spots: (m) => bmvOnSpots(m), send: (m) => send(m), dtmf: (m) => dtmfVals(m) }; // essais
+  window.RSFACE = { state: () => S(), L, LCD, face: FACE, spots: (m) => bmvOnSpots(m), send: (m) => send(m), dtmf: (m) => dtmfVals(m), menu: (m) => menuVals(m) }; // essais
 })();

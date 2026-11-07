@@ -1107,6 +1107,8 @@ function menuMsg(conn, m) {
   const M = station && rig().MENU;
   const no = (msg) => send(conn, { t: 'notice', level: 'warn', msg: 'Menu du TRX : ' + msg });
   if (!M) return no('pas disponible pour ce TRX');
+  // FTX-1 : menus … SETTING réservés aux administrateurs (ON6DP, ON4LUC) — paramètres essentiels du TRX
+  if (M.admin && !conn.user.admin) return no('réservé aux administrateurs (ON6DP, ON4LUC)');
   if (station.caps.indexOf('exrw') < 0 || !radio.connected) return no('page Station du club à recharger, ou TRX non relié');
   const read = (ids, cb) => {
     if (eqs.busy) return no('lecture ou écriture déjà en cours, un instant');
@@ -1118,7 +1120,7 @@ function menuMsg(conn, m) {
   if (m.t === 'menu_read') {
     const g = M.groups.find((x) => x.id === String(m.sub || ''));
     if (!g) return;
-    return read(g.items.filter((it) => it.d.k !== 't').map((it) => it.id));
+    return read(g.items.filter((it) => it.d.k !== 't' || it.d.read).map((it) => it.id));
   }
   const it = M.item(String(m.id || ''));
   if (!it) return;

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.137** — FTX-1 : menus RADIO / CW / OPERATION / DISPLAY / EXTENSION / APRS SETTING comme sur le TRX (sous-menus, valeurs relues, réglage − / +), réservés aux administrateurs ; réglages sensibles en lecture seule
 - **0.37.136** — FTX-1 : FUNC page 3 — SQL TYPE réglable dans tous les modes, TONE FREQ et DCS (023-754) affichés et grisés hors FM, écran DTMF CODE (mémoires 1-10 relues et modifiables), touches APRS et SETTING en bleu clair, APRS BEACON / BCN-TX grisés hors FM, SETTING réservés aux administrateurs
 - **0.37.135** — FTX-1 : rangées ATT / IPO / DNF / AGC (DISP) cachées sous l'écran FUNC, l'écran DSP et les tableaux ; noms de l'écran FUNC en blanc gras, un peu plus grands
 - **0.37.134** — Faces avant : BACK ferme tout ce qui est affiché par-dessus l'écran (écran FUNC, DSP, tableaux METER / BAND / MODE / SPEED, MULTI, menus, petite fenêtre de réglage)

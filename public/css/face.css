@@ -710,3 +710,25 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .fc-dtmf .dt-tr { flex: 1 1 auto; position: relative; background: #9aa69a; }
 .fc-dtmf .dt-tr i { position: absolute; left: 0; right: 0; height: 50%; background: #15181a; }
 .fc-dtmf .dt-back { position: absolute; right: .4em; top: .2em; font-size: .8em; padding: .1em .6em; color: #ffb020; }
+
+/* FTX-1 : écrans RADIO / CW / OPERATION / DISPLAY / EXTENSION / APRS SETTING, comme sur le TRX */
+.fc-menu.ftxm { background: #1c1a1d; border: 0; border-radius: .3em; font-family: Verdana, Arial, sans-serif; font-weight: 700; color: #fff; }
+.fc-menu.ftxm .fx-h { text-align: center; font-size: 1.1em; padding: .15em 0 .1em; background: #a9b3a9; color: #fff; letter-spacing: .04em; text-shadow: 0 1px 1px rgba(0, 0, 0, .55); }
+.fc-menu.ftxm .fx-b { flex: 1 1 auto; display: flex; min-height: 0; }
+.fc-menu.ftxm .fx-subs { flex: 0 0 31%; display: flex; flex-direction: column; padding-top: .25em; background: #1c1a1d; }
+.fc-menu.ftxm .fx-subs button { font: inherit; font-size: 1.1em; text-align: left; padding: .5em .9em; background: transparent; color: #fff; border: 0; cursor: pointer; text-shadow: 0 1px 1px #000; }
+.fc-menu.ftxm .fx-subs button.on { background: #a9b3a9; box-shadow: inset 0 -.14em 0 #f2a51c, inset .14em 0 0 #f2a51c; }
+.fc-menu.ftxm .fx-items { flex: 1 1 auto; display: flex; flex-direction: column; background: #b8c1b8; padding: .15em .25em; }
+.fc-menu.ftxm .fx-row { flex: 1 1 0; display: flex; flex-direction: column; justify-content: center; padding: .05em .35em .15em; border-bottom: 1px solid #8e978e; cursor: pointer; }
+.fc-menu.ftxm .fx-row.sel { outline: .14em solid #f2b51c; outline-offset: -.14em; }
+.fc-menu.ftxm .fx-row.ro .fx-v span { color: #9aa29a; }
+.fc-menu.ftxm .fx-l { color: #fff; font-size: 1em; letter-spacing: .05em; text-shadow: 0 1px 1px rgba(0, 0, 0, .5); white-space: nowrap; overflow: hidden; }
+.fc-menu.ftxm .fx-v { display: flex; align-items: center; background: #15171a; border: 1px solid #dfe6df; border-radius: .12em; min-height: 1.35em; }
+.fc-menu.ftxm .fx-v span { flex: 1 1 auto; text-align: center; color: #ffe94a; font-size: 1.15em; line-height: 1.3; white-space: pre; }
+.fc-menu.ftxm .fx-pm { font: inherit; font-weight: 800; color: #ffcf4a; background: #2a313c; border: 0; padding: 0 .7em; cursor: pointer; align-self: stretch; }
+.fc-menu.ftxm .fx-note { margin: 1em; color: #1c1a1d; }
+.fc-menu.ftxm .fx-s { flex: 0 0 10%; display: flex; flex-direction: column; gap: .15em; background: #b8c1b8; padding: .15em .15em .15em 0; }
+.fc-menu.ftxm .fx-s button { flex: 0 0 18%; font: inherit; font-size: 1.2em; color: #fff; background: #15171a; border: 1px solid #000; cursor: pointer; }
+.fc-menu.ftxm .fx-tr { flex: 1 1 auto; position: relative; background: #15171a; }
+.fc-menu.ftxm .fx-tr i { position: absolute; left: 0; right: 0; background: #a9b3a9; }
+.fc-menu.ftxm .fx-back { font: inherit; padding: .3em 0; background: #a9b3a9; color: #ffa600; border: 0; border-top: 1px solid #8e978e; cursor: pointer; letter-spacing: .06em; text-shadow: 0 1px 1px rgba(0, 0, 0, .4); }
