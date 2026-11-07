@@ -16,6 +16,8 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $Version = '2'
+# Messages de pnputil / powercfg lus dans la page de codes de la console (sinon « redÚmarrage » au lieu de « redémarrage »)
+try { [Console]::OutputEncoding = [Text.Encoding]::GetEncoding([Globalization.CultureInfo]::CurrentCulture.TextInfo.OEMCodePage) } catch { }
 $Journal = Join-Path $PSScriptRoot 'rs-carte-son.log'
 
 function Ecrire([string]$t) {
@@ -73,7 +75,10 @@ function Relancer([string]$vid, [string]$prod) {
         Enable-PnpDevice -InstanceId $d.InstanceId -Confirm:$false
         $faits += "$nom : désactivé puis réactivé"
       } catch {
-        $faits += "$nom : échec ($sortie / $($_.Exception.Message))"
+        # Windows attend un redémarrage du PC (opération précédente sur ce périphérique pas terminée) : seule issue
+        if ($sortie -match 'attente de red|pending.*restart|reboot' -or $code -eq 3010) {
+          $faits += "$nom : Windows attend un redémarrage du PC du club (une opération précédente sur la carte son n'est pas terminée) — redémarrer le PC"
+        } else { $faits += "$nom : échec ($sortie / $($_.Exception.Message))" }
         Ecrire "échec $($d.InstanceId) : $sortie / $($_.Exception.Message)"
         return @{ ok = $false; msg = ($faits -join ' ; ') }
       }
