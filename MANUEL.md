@@ -435,7 +435,7 @@ Le SPLIT sert surtout pour une **expédition DX** qui écoute ailleurs que sur s
 > - Coupure immédiate si vous perdez la liaison, si le PC du club perd internet ou si la page Station se ferme.
 > - **ROS** supérieur à 2,5:1, ou **HI-SWR** signalé par le TRX : émission coupée et PTT refusé sur cette fréquence (± 25 kHz) jusqu'à un TUNE réussi.
 > - **TUNE sans accord** : si le FTX-1 signale HI-SWR à la fin d'un TUNE, l'émission est **bloquée sur toute la bande** (sauf TUNE) pour protéger l'ampli. Un message rouge s'affiche à droite des bandes. Le blocage tombe dès qu'un TUNE réussit ; sinon, essayez l'autre antenne ou prévenez un responsable.
-> - Au club, le TRX repasse en réception s'il émet 2 min sans modulation ou 5 min sans interruption.
+> - Au club, le TRX repasse en réception s'il émet sans modulation pendant 2 min (**20 s en modes numériques** : DATA, RTTY, PSK — carte son figée pendant une série FT8…) ou 5 min sans interruption.
 > - Puissance ramenée à la limite de votre licence ; indicatifs d'écouteurs : aucune émission.
 
 L'émission n'est possible que si les administrateurs l'ont autorisée sur le serveur.

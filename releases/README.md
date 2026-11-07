@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.164 | [RemoteStation-Setup-0.37.164.exe](0.37.164/RemoteStation-Setup-0.37.164.exe) | [remote-station-0.37.164.tar.gz](0.37.164/remote-station-0.37.164.tar.gz) | Ctrl+F5 sur la page Station du club — [empreintes SHA-256](0.37.164/SHA256SUMS.txt) |
 | 0.37.163 | [RemoteStation-Setup-0.37.163.exe](0.37.163/RemoteStation-Setup-0.37.163.exe) | [remote-station-0.37.163.tar.gz](0.37.163/remote-station-0.37.163.tar.gz) | Retélécharger l'assistant carte son sur la page Station et refaire installer-carte-son.cmd — [empreintes SHA-256](0.37.163/SHA256SUMS.txt) |
 | 0.37.162 | [RemoteStation-Setup-0.37.162.exe](0.37.162/RemoteStation-Setup-0.37.162.exe) | [remote-station-0.37.162.tar.gz](0.37.162/remote-station-0.37.162.tar.gz) | Ctrl+F5 sur la page Station du club ; au club : retélécharger l'assistant carte son et refaire installer-carte-son.cmd — [empreintes SHA-256](0.37.162/SHA256SUMS.txt) |
 | 0.37.161 | [RemoteStation-Setup-0.37.161.exe](0.37.161/RemoteStation-Setup-0.37.161.exe) | [remote-station-0.37.161.tar.gz](0.37.161/remote-station-0.37.161.tar.gz) | Ctrl+F5 sur la page Station du club puis sur /ftx1 — [empreintes SHA-256](0.37.161/SHA256SUMS.txt) |

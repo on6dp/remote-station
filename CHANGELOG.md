@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.164** — Chien de garde d'émission : en modes numériques (DATA, RTTY, PSK), retour en réception après 20 s sans modulation (2 min en phonie et CW)
 - **0.37.163** — Assistant carte son version 2 : messages de Windows lisibles (accents), « redémarrer le PC du club » quand Windows attend un redémarrage
 - **0.37.162** — Carte son du TRX : relance automatique par la page Station après 45 s de silence (assistant installé, une fois / 10 min, jamais en émission) ; assistant carte son version 2 : coupe la mise en veille USB de Windows à chaque démarrage
 - **0.37.161** — FTX-1 : réglages du scope de l'écran FUNC synchronisés avec le TRX (D-LEVEL, D-PEAK LV1-5, D-MARKER, D-COLOR, SPEED : SS00 à SS04) ; MIC EQ relu ; niveau du micro : « Niveau micro » plus lisible, barre plus haute, chiffres espacés

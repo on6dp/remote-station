@@ -433,7 +433,7 @@ SPLIT is mainly used for a **DX expedition** listening away from its own frequen
 > - Immediate cut if you lose the link, if the club PC loses internet, or if the Station page closes.
 > - **SWR** above 2.5:1, or **HI-SWR** reported by the TRX: transmission cut and PTT refused on that frequency (± 25 kHz) until a successful TUNE.
 > - **TUNE without a match**: if the FTX-1 reports HI-SWR at the end of a TUNE, transmitting is **blocked on the whole band** (except TUNE) to protect the amplifier. A red message appears to the right of the bands. The block is lifted as soon as a TUNE succeeds; otherwise, try the other antenna or tell a station manager.
-> - At the club, the TRX goes back to receive if it transmits for 2 min without modulation or 5 min without a break.
+> - At the club, the TRX goes back to receive if it transmits without modulation for 2 min (**20 s in digital modes**: DATA, RTTY, PSK — e.g. a frozen sound card during an FT8 series) or for 5 min without a break.
 > - Power limited to your licence class; listener callsigns: no transmission at all.
 
 Transmitting is only possible if the administrators have enabled it on the server.

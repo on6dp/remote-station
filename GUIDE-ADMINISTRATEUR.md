@@ -168,7 +168,7 @@ sudo systemctl restart remote-station
 | `allowedCalls` | (vide) | Exceptions : indicatifs étrangers admis nommément (`node adduser.js F4ABC --exception`, puis redémarrer le service) |
 | `maxSwr`, `swrHoldMs` | 2,5, 700 ms | Coupure de l'émission sur ROS élevé (0 = pas de protection) |
 | `tunerAuto` | `true` | Tuner remis en service à chaque changement de bande HF / 6 m |
-| `txSilenceSeconds`, `txHardMaxSeconds` | 120, 300 | Chien de garde de la page Station (TRX en émission sans modulation / en continu) |
+| `txSilenceSeconds`, `txHardMaxSeconds` | 120, 300 | Chien de garde de la page Station (TRX en émission sans modulation / en continu) ; en modes numériques (DATA, RTTY, PSK), 20 s sans modulation au plus (`txSilenceDigiMs`) |
 | `digiAlcMax` | 0 | Limiteur d'ALC en émission numérique (%) ; 0 = sans |
 | `ftxWatchdogMinutes` | 6 | Arrêt d'une séquence FT8 / FT4 / FT2 sans réponse |
 | `stationEditors` | ON6DP, ON4LUC | Responsables de la station (section 2) |
@@ -304,7 +304,7 @@ Pour tout couper : même commande avec `true` et `false` inversés.
 | Le membre ne maintient plus le PTT (réseau coupé, onglet fermé) | Retour en réception après 1,5 s |
 | Émission trop longue | Coupure après `maxTxSeconds` ; il faut relâcher puis réappuyer |
 | Le PC du club perd le VPS pendant l'émission | Retour en réception après 2 s (côté club) |
-| TRX en émission sans modulation 2 min, ou en continu 5 min (PTT ou micro bloqué au club…) | Retour en réception par la page Station, même sans liaison avec le VPS |
+| TRX en émission sans modulation 2 min (20 s en DATA / RTTY / PSK), ou en continu 5 min (PTT ou micro bloqué au club…) | Retour en réception par la page Station, même sans liaison avec le VPS |
 | Fréquence d'émission hors des plages ou de la licence | PTT refusé, ou coupé si on sort de bande (fréquence réellement émise : VFO B en SPLIT, XIT compris) |
 | Puissance au-delà de la licence | PTT refusé ou coupé, puissance ramenée à la limite |
 | ROS au-delà de 2,5:1 pendant 0,7 s | Coupure ; PTT refusé sur ±25 kHz jusqu'à un TUNE réussi |

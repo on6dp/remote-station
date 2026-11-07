@@ -60,6 +60,7 @@
       // ou en émission continue pendant txHardMaxMs, quelle qu'en soit la cause (PTT ou micro bloqué au club…) → TX0
       this.txSilenceMs = o.txSilenceMs || 120000;
       this.txHardMaxMs = o.txHardMaxMs || 300000;
+      this.txSilenceDigiMs = o.txSilenceDigiMs || 20000; // modes numériques
       this.txSince = 0;
       this.lastMod = 0;
       this.radioTimeoutMs = o.radioTimeoutMs || 3000;
@@ -270,11 +271,15 @@
       // Modulation présente si la puissance de sortie dépasse ~4 % de la pleine échelle (SSB : rien sans voix)
       const po = this.radio.m5;
       if (po != null && po > (this.rig.PO_MOD_MIN || 8)) this.lastMod = now;
-      const silent = now - this.lastMod > this.txSilenceMs;
+      // Modes numériques (DATA, RTTY, PSK) : 20 s sans modulation suffisent (carte son figée pendant une série FT8…) ;
+      // phonie et CW : délai normal (pauses de la voix et du manipulateur)
+      const md = String((this.radio.vfoSel === 1 ? this.radio.modeB : this.radio.mode) || '');
+      const silMs = /^(DATA|RTTY|PSK)/.test(md) ? Math.min(this.txSilenceMs, this.txSilenceDigiMs) : this.txSilenceMs;
+      const silent = now - this.lastMod > silMs;
       const tooLong = now - this.txSince > this.txHardMaxMs;
       if (!silent && !tooLong) return;
       const dur = (ms) => (ms >= 120000 ? Math.round(ms / 60000) + ' min' : Math.round(ms / 1000) + ' s');
-      const why = silent ? 'en émission depuis ' + dur(this.txSilenceMs) + ' sans modulation' : 'en émission continue depuis ' + dur(this.txHardMaxMs);
+      const why = silent ? 'en émission depuis ' + dur(silMs) + ' sans modulation' + (silMs < this.txSilenceMs ? ' (' + md + ' : carte son du TRX figée ?)' : '') : 'en émission continue depuis ' + dur(this.txHardMaxMs);
       this._write(this.rig.cmdPtt(false));
       this._txAudioStop();
       // Manipulateur du TRX (CW) : fin de lecture et break-in coupé, que l'émission vienne de nous ou non
@@ -284,7 +289,7 @@
       if (this.wsUp) this.sendWs({ t: 'safety', reason: 'TRX ' + why + ' : retour en réception forcé' });
       // Si la radio reste bloquée (PTT physique enfoncé…), nouvel essai toutes les 10 s
       this.txSince = now - this.txHardMaxMs + 10000;
-      this.lastMod = now - this.txSilenceMs + 10000;
+      this.lastMod = now - silMs + 10000;
     }
 
     tick() {
