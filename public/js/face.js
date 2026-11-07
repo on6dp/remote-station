@@ -6237,7 +6237,7 @@
   BMV.span = { A: bmSp('rs.face.bmspan2A'), B: bmSp('rs.face.bmspan2B') };
   // En SPLIT : les deux cartes passent à ±10 kHz autour de leur VFO (− / + et molette restent possibles) ;
   // hors SPLIT, chaque carte reprend sa plage habituelle
-  BMV.ssp = { A: 20, B: 20 }; BMV.wasSplit = false;
+  BMV.ssp = { A: 20, B: 20 }; BMV.wasSplit = false; BMV.us = { A: 0, B: 0 }; BMV.auto = { A: false, B: false };
   // VFO montré par chaque carte : A à gauche, B à droite ; FTX-1 (SUB à gauche sur l'écran) : B à gauche, A à droite
   const bmVfo = (box) => (SUBL ? (box === 'A' ? 'B' : 'A') : box);
   const bmvSplit = () => !!S().split;
@@ -6312,9 +6312,14 @@
     };
     box.querySelectorAll('.bmv-span button').forEach((b) => b.addEventListener('click', () => zoom(Number(b.dataset.d))));
     const body = box.querySelector('.bmv-b');
-    body.addEventListener('wheel', (e) => { e.preventDefault(); zoom(e.deltaY > 0 ? 1 : -1); }, { passive: false });
+    // Molette : fait défiler la liste quand elle dépasse (ascenseur à droite), sinon change la plage ; Maj + molette : toujours la plage
+    body.addEventListener('wheel', (e) => {
+      if (!e.shiftKey && body.scrollHeight > body.clientHeight + 2) { BMV.us[side] = Date.now(); return; } // défilement normal du navigateur
+      e.preventDefault(); zoom((e.deltaY || e.deltaX) > 0 ? 1 : -1);
+    }, { passive: false });
+    body.addEventListener('scroll', () => { if (!BMV.auto[side]) BMV.us[side] = Date.now(); BMV.auto[side] = false; });
     body.addEventListener('click', (e) => {
-      const r = body.getBoundingClientRect(), y = e.clientY - r.top, x = e.clientX - r.left;
+      const r = body.getBoundingClientRect(), y = e.clientY - r.top + body.scrollTop, x = e.clientX - r.left;
       let best = null, bd = 9.5;
       for (const l of BMV.lay[side]) { const d = Math.abs(l.ly - y); if (d < bd && x >= l.x0 - 8) { bd = d; best = l; } }
       if (!best) return;
@@ -6322,9 +6327,10 @@
       say((bmVfo(side) === 'A' ? 'VFO-A' : 'VFO-B') + ' → ' + best.s.call + ' (' + best.s.f.toFixed(1) + ' kHz)', '', 3000);
     });
     body.addEventListener('mousemove', (e) => {
-      const r = body.getBoundingClientRect(), y = e.clientY - r.top;
+      const r = body.getBoundingClientRect(), y = e.clientY - r.top + body.scrollTop;
       const hit = BMV.lay[side].find((l) => Math.abs(l.ly - y) < 9);
-      body.title = hit ? hit.s.call + ' ' + hit.s.f.toFixed(1) + ' kHz' + (hit.s.cmt ? ' — ' + hit.s.cmt : '') + ' (clic : y aller)' : 'Molette : plage affichée';
+      body.title = hit ? hit.s.call + ' ' + hit.s.f.toFixed(1) + ' kHz' + (hit.s.cmt ? ' — ' + hit.s.cmt : '') + ' (clic : y aller)'
+        : body.scrollHeight > body.clientHeight + 2 ? 'Molette ou ascenseur : faire défiler les spots · Maj + molette : plage affichée' : 'Molette : plage affichée';
     });
     return box;
   }
@@ -6351,22 +6357,28 @@
     if (!box || !box.offsetParent) return;
     const s = S(), vs = bmVfo(side), f = vs === 'B' ? s.freqB : s.freq;
     const body = box.querySelector('.bmv-b'), cv = box.querySelector('canvas');
-    const W = body.clientWidth, H = body.clientHeight;
-    if (W < 40 || H < 60) return;
-    const dpr = window.devicePixelRatio || 1;
-    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
-    const c = cv.getContext('2d');
-    c.setTransform(dpr, 0, 0, dpr, 0, 0);
-    c.clearRect(0, 0, W, H);
+    const W = body.clientWidth, HV = body.clientHeight;
+    if (W < 40 || HV < 60) return;
     const band = f ? BANDS.find((x) => f >= x[1] && f <= x[2]) : null;
     box.querySelector('.bmv-band').textContent = band ? band[0].replace('M', ' m') : '—';
     // IC-7300 : la carte de gauche suit le VFO en service (VFO A ou VFO B après A/B), celle de droite l'autre
     if (ICOM) { const sm = box.querySelector('.bmv-h small'), b = (side === 'A') === (s.vfoAB === 1); if (sm) sm.textContent = b ? 'VFO-B' : 'VFO-A'; }
-    if (!f) return;
+    const dpr = window.devicePixelRatio || 1;
+    if (!f) { const c0 = cv.getContext('2d'); c0.setTransform(1, 0, 0, 1, 0, 0); c0.clearRect(0, 0, cv.width, cv.height); return; }
     // Toute la bande (plage 0) : de son début à sa fin ; hors bande : 200 kHz autour du VFO
     const sps = bmvSpan(side), full = sps === 0 && !!band, fk = f / 1000;
     const span = full ? (band[2] - band[1]) / 1000 : sps || 200;
     const lo = full ? band[1] / 1000 : fk - span / 2, hi = full ? band[2] / 1000 : fk + span / 2, pad = 10;
+    const now = Date.now();
+    const fm = BMV.filt[side] || '';
+    const list = Array.from(BMV.spots.values()).filter((p) => p.f >= lo && p.f <= hi && now - p.at < BMV_KEEP && (!fm || bmvSpotMode(p) === fm)).sort((a, b) => a.f - b.f);
+    // Hauteur dessinée : celle de la carte, ou plus s'il y a trop d'indicatifs (17 px chacun) → ascenseur pour les voir tous
+    const H = Math.round(Math.max(HV, Math.min(list.length * 17 + 2 * pad + 8, 7000)));
+    cv.style.height = H + 'px';
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    const c = cv.getContext('2d');
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, W, H);
     const yOf = (k) => pad + (k - lo) / (hi - lo) * (H - 2 * pad);
     // Hors bande : grisé
     if (band) {
@@ -6390,9 +6402,6 @@
     const x0 = Math.ceil(10 + Math.max(tw, c.measureText('00000.0').width) + 12);
     c.strokeStyle = '#2b3546'; c.beginPath(); c.moveTo(x0 - 6.5, 0); c.lineTo(x0 - 6.5, H); c.stroke();
     // Spots : du plus récent au plus ancien gardés 30 min ; étiquettes poussées vers le bas si elles se chevauchent
-    const now = Date.now();
-    const fm = BMV.filt[side] || '';
-    const list = Array.from(BMV.spots.values()).filter((p) => p.f >= lo && p.f <= hi && now - p.at < BMV_KEEP && (!fm || bmvSpotMode(p) === fm)).sort((a, b) => a.f - b.f);
     const lay = [];
     let last = -99;
     for (const p of list) {
@@ -6416,6 +6425,11 @@
     c.strokeStyle = tx ? '#ff3b30' : (vs === 'A' ? '#cfc8ff' : '#2f7bff'); c.lineWidth = 1.5;
     c.beginPath(); c.moveTo(0, yv); c.lineTo(W, yv); c.stroke();
     c.fillStyle = c.strokeStyle; c.beginPath(); c.moveTo(W - 1, yv - 5); c.lineTo(W - 9, yv); c.lineTo(W - 1, yv + 5); c.closePath(); c.fill();
+    // Ascenseur : le VFO reste en vue, sauf pendant 15 s après un défilement à la main
+    if (H > HV && now - (BMV.us[side] || 0) > 15000) {
+      const st = Math.max(0, Math.min(H - HV, Math.round(yv - HV / 2)));
+      if (Math.abs(body.scrollTop - st) > 2) { BMV.auto[side] = true; body.scrollTop = st; }
+    } else if (H <= HV && body.scrollTop) body.scrollTop = 0;
     box.querySelector('.bmv-f').textContent = list.length + ' spot' + (list.length > 1 ? 's' : '') + (fm ? ' ' + BMV_FILTS.find((x) => x[0] === fm)[1] : '') + ' · ' + (full ? 'toute la bande' : span + ' kHz') + (BMV.state && BMV.state !== 'connecté' ? ' · cluster : ' + BMV.state : '');
   }
   setInterval(bmvDraw, 2000);
@@ -6639,5 +6653,5 @@
   if (sess) creds = { session: sess };
   else showLogin('');
   connect();
-  window.RSFACE = { state: () => S(), L, LCD, face: FACE, spots: (m) => bmvOnSpots(m), send: (m) => send(m), dtmf: (m) => dtmfVals(m), menu: (m) => menuVals(m) }; // essais
+  window.RSFACE = { state: () => S(), L, LCD, face: FACE, spots: (m) => bmvOnSpots(m), send: (m) => send(m), dtmf: (m) => dtmfVals(m), menu: (m) => menuVals(m), spots: (m) => bmvOnSpots(m) }; // essais
 })();
