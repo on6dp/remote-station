@@ -700,7 +700,8 @@
     // FTX-1 : comme sur le TRX — MAIN : S, SWR et la barre VOL ; SUB : S seul
     // FTX-1 : échelle sous l'S-mètre selon METER (toucher l'S-mètre : PO, COMP, ALC, VDD, ID, SWR), une seule visible à la fois
     const R2 = FACE && FACE.meterFtx ? 226 : 229;
-    const FTX_SEC = [['PO', R2, [[0.05, '0'], [0.24, '25'], [0.43, '50'], [0.62, '75'], [0.81, '100']]],
+    // PO comme sur le FTX-1 avec l'ampli SPA-1 : 0, 10, 50, 100, 150 W (échelle resserrée vers le haut)
+    const FTX_SEC = [['PO', R2, [[0.05, '0'], [0.27, '10'], [0.47, '50'], [0.66, '100'], [0.84, '150'], [0.95, 'W']]],
       ['COMP', R2, [[0.05, '0'], [0.27, '5'], [0.49, '10'], [0.71, '15'], [0.93, '20']]],
       ['ALC', R2, []],
       ['VDD', R2, [[0.05, '0'], [0.35, '5'], [0.65, '10'], [0.95, '15']]],
@@ -3819,6 +3820,8 @@
     aprsT: 'APRS BCN-TX : envoi d’une balise APRS (émission, FM). Pas à distance.',
     tcall: 'T-CALL : tonalité 1750 Hz d’ouverture de relais (émission). Pas à distance.'
   };
+  // SF (manuel CAT FTX-1) : code 1 à 17 (1-9, A-H) → case FUNC
+  const SF_IDS = ['', 'level', 'peak', 'color', 'dContrast', 'dimmer', '', 'mic', 'procLvl', 'amc', 'voxGain', 'voxDelay', '', 'power', 'moniLvl', 'keySpeed', 'cwPitch', 'bkDelay'];
   const FUNC_FTX1 = [
     { name: 'SSB', rows: [
       [null, pickY('level') && ['level', 'D-LEVEL', pickY('level')[2], pickY('level')[3], FO], ['peak', 'D-PEAK', () => 'LV' + (L.peak + 1), pickY('peak')[3], FO],
@@ -4785,7 +4788,7 @@
         const comp = s.m3 == null ? null : s.m3 <= 130 ? s.m3 / 130 * 15 : 15 + (s.m3 - 130) / 111 * 15;
         const raw = (v) => (v == null ? null : Math.max(0, Math.min(1, v / 255)));
         let fr = null, txt = '';
-        if (ms === 0) { fr = w != null ? 0.05 + Math.min(1.25, w / 100) * 0.76 : null; }
+        if (ms === 0) { fr = w == null ? null : w <= 10 ? 0.05 + w / 10 * 0.22 : w <= 50 ? 0.27 + (w - 10) / 40 * 0.2 : w <= 100 ? 0.47 + (w - 50) / 50 * 0.19 : Math.min(0.9, 0.66 + (w - 100) / 50 * 0.18); }
         else if (ms === 1) { fr = comp != null ? 0.05 + Math.min(1, comp / 20) * 0.88 : null; txt = comp != null ? 'COMP ' + Math.round(comp) + 'dB' : ''; }
         else if (ms === 2) { fr = raw(s.m4) != null ? 0.05 + raw(s.m4) * 0.87 : null; txt = s.m4 != null ? 'ALC ' + Math.round(raw(s.m4) * 100) + '%' : ''; }
         else if (ms === 3) { fr = raw(s.m8) != null ? 0.05 + raw(s.m8) * 0.9 : null; txt = R.vdValue && s.m8 != null ? 'VDD ' + R.vdValue(s.m8).toFixed(1) + 'V' : ''; }
@@ -4954,6 +4957,17 @@
     LCD.flags.textContent = live ? fl.join('  ·  ') : (st.station ? 'TRX muet (éteint ou câble ?)' : 'Station hors ligne');
     LCD.flags.classList.toggle('tx', tx);
     // FTX-1 : bandeau du scope comme sur le TRX — « CENTER  FAST1  SPAN  200kHz » (D-MODE, SPEED, SPAN du TRX)
+    // FTX-1 : fonction du bouton FUNC (SF) suivie dans les deux sens : celle choisie au TRX s'affiche ici (ex. D-COLOR),
+    // une case choisie ici est donnée au bouton FUNC du TRX
+    if (FTX1F && R.CONTROL.funcKnob) {
+      if (s.funcKnob != null && s.funcKnob !== L.sfSeen) {
+        L.sfSeen = s.funcKnob;
+        const id = SF_IDS[s.funcKnob];
+        if (id && FUNC_BY[id]) { L.funcSel = id; L.sfLast = id; }
+      }
+      const code = SF_IDS.indexOf(L.funcSel);
+      if (L.sfSeen != null && L.funcSel !== L.sfLast && code > 0 && iControl()) { L.sfLast = L.funcSel; L.sfSeen = code; setCtl('funcKnob', code); }
+    }
     if (FACE.meterFtx) LCD.span.textContent = ['CENTER', 'CURSOR', 'FIX\u00a0\u00a0\u00a0\u00a0\u00a0'][s.dMode || 0] + '\u00a0\u00a0' + (L.hold ? 'STOP' : WF_SPEEDS[L.wfSpeed][0]) + '  SPAN  ' + SPAN_TRX[L.trxSpan] + 'Hz';
     else LCD.span.textContent = ['', 'SUB / MAIN · ', 'MAIN | SUB · ', 'FILTRES · '][L.disp] + spanLabel() + (L.hold ? ' · HOLD' : '');
     applyMono();
@@ -6676,9 +6690,20 @@
         row.querySelectorAll('.fc-digim').forEach((b) => b.classList.toggle('on', b.dataset.tab === cur));
       }, 500);
     }
-    // DX Cluster juste après « Suivre l'opérateur »
-    const dw = document.querySelector('.topbar .dxc-wrap');
-    if (dw && fb) fb.after(dw);
+    // DX Cluster à droite de la ligne DIGI CONFIGURATION, au-dessus de « Suivre l'opérateur » (à droite de la ligne
+    // SSB CONFIGURATION) : une ligne de gagnée ; les deux boutons ont la même largeur
+    const dw = document.querySelector('.topbar .dxc-wrap'), drow = document.querySelector('.fc-tx .fc-digirow');
+    if (dw && drow) { drow.appendChild(dw); dw.classList.add('fc-dxright'); } else if (dw && fb) fb.after(dw);
+    if (fb) fb.classList.add('fc-followright');
+    const sameR = () => {
+      const db = $('dxcBtn');
+      if (!db || !fb) return;
+      db.style.minWidth = fb.style.minWidth = '';
+      const w = Math.ceil(Math.max(db.getBoundingClientRect().width, fb.getBoundingClientRect().width));
+      if (w > 0) db.style.minWidth = fb.style.minWidth = w + 'px';
+    };
+    requestAnimationFrame(sameR);
+    window.addEventListener('resize', sameR);
   });
   const sess = store.get('rs.sess', '');
   if (sess) creds = { session: sess };

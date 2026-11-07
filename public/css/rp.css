@@ -1738,3 +1738,16 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 #logout { font-size: 14px; font-weight: 800; letter-spacing: .05em; padding: 5px 14px; min-height: 34px; border-width: 2px; border-radius: 6px;
   background: linear-gradient(180deg, #e8352a, #a8170f); border-color: #ff8a80; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
 #logout:hover:not(:disabled) { background: linear-gradient(180deg, #ff4a3d, #c21d14); color: #fff; }
+/* Niveau du micro gradué : « NIVEAU MICRO » en haut, barre, graduations en dB dessous (vert jusqu'à −12, jaune −12 à −6, rouge au-delà) */
+.vx-meter, .vx-eq-meter { height: 30px !important; overflow: visible; border: 0; border-radius: 0; background: linear-gradient(90deg, #0b1118 0, #0b1118 75%, #2a2610 75%, #2a2610 87.5%, #3a1414 87.5%) 0 10px / 100% 8px no-repeat, transparent; }
+.vx-meter i, .vx-eq-meter i { position: absolute; left: 0; top: 10px; height: 8px; border-radius: 0; background: #2fd16b; transition: width .06s linear; }
+.vx-meter i.warm, .vx-eq-meter i.warm { background: #f2cf4a; }
+.vx-meter i.hot, .vx-eq-meter i.hot { background: #ff4a3d; }
+.vx-mt { position: absolute; left: 0; top: 0; font: 800 8.5px/1 system-ui, sans-serif; letter-spacing: .08em; color: #9fb2c8; }
+.vx-scale { position: absolute; left: 0; right: 0; top: 18px; bottom: 0; pointer-events: none; }
+.vx-scale em { position: absolute; top: -8px; height: 11px; width: 0; border-left: 1px solid rgba(111,130,153,.8); font-style: normal; }
+.vx-scale em u { position: absolute; top: 9px; left: 0; transform: translateX(-50%); text-decoration: none; font: 700 8px/1 'Roboto Mono', ui-monospace, monospace; color: #9fb2c8; white-space: nowrap; }
+.vx-scale em.y { border-color: #f2cf4a; } .vx-scale em.y u { color: #f2cf4a; }
+.vx-scale em.r { border-color: #ff4a3d; } .vx-scale em.r u { color: #ff4a3d; }
+.vx-scale em:last-child u { transform: translateX(-100%); }
+.vx-meter b { top: 0 !important; right: 0 !important; font-size: 8px; background: #3a1414; padding: 0 3px; border-radius: 2px; }

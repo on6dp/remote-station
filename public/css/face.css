@@ -240,7 +240,7 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 .fc-tx .vx-h { flex: 0 0 auto; }
 .fc-tx .vx-on, .fc-tx .vx-trx, .fc-tx #vxEqBtn, .fc-tx .vx-prof { width: auto; flex: 0 0 auto; padding: 6px 12px; font-size: 11px; }
 .fc-tx #vxEqBtn.dim, .fc-tx #vxOn.dim, .fc-tx .vx-prof.dim { opacity: .55; }
-.fc-tx .vx-meter { flex: 1 1 80px; min-width: 60px; max-width: 220px; height: 10px; }
+.fc-tx .vx-meter { flex: 1 1 96px; min-width: 96px; max-width: 240px; height: 30px; }
 .fc-tx .vx-meter[hidden], .fc-tx #vxEqBtn[hidden] { display: none; }
 .fc-tx .vx-b { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .fc-tx .vx-io { flex: 0 1 auto; }
@@ -750,3 +750,6 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .ftxflt .flt-bars { stroke: #d9dede; opacity: .95; }
 #face .ftxflt .flt-ctr, #face .ftxflt .flt-base { display: none; }
 #face .ftxflt .flt-box { fill: #000; stroke: #3a4048; }
+/* DX Cluster à droite de DIGI CONFIGURATION, « Suivre l'opérateur » à droite de SSB CONFIGURATION, l'un au-dessus de l'autre */
+.fc-tx .fc-digirow .dxc-wrap.fc-dxright { margin-left: auto; }
+.fc-tx #followBtn.fc-followright { margin-left: auto; }

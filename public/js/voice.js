@@ -8,6 +8,9 @@
  */
 (function () {
   'use strict';
+  // Graduations de l'indicateur de niveau du micro (−48 à 0 dB sous la saturation) : zones vert / jaune / rouge
+  const VX_SCALE = '<span class="vx-scale">' + [-40, -30, -20, -12, -6, -3, 0].map((d) => '<em style="left:' + ((d + 48) / 48 * 100).toFixed(1) + '%"' +
+    (d >= -6 ? ' class="' + (d >= -3 ? 'r' : 'y') + '"' : '') + '>' + (d === -3 || d === -30 || d === -12 ? '' : '<u>' + (d ? d : '0') + '</u>') + '</em>').join('') + '</span>';
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const RATE = 12000;
@@ -90,7 +93,7 @@
       '<label class="vx-io" title="Entrée son : votre micro (ce qui part vers le TRX au PTT)">🎤 Entrée <select id="vxDev" aria-label="Entrée son (micro)"></select></label>' +
       '<label class="vx-io vx-outl" title="Sortie son : où vous entendez le TRX et « M’écouter » (casque, haut-parleurs…)">🔊 Sortie <select id="vxOut" aria-label="Sortie son (casque, haut-parleurs)"></select></label>' +
       '<div class="vx-type" id="vxType"></div>' +
-      '<div class="vx-meter" title="Niveau de votre micro après l’égaliseur : visez le vert, jamais le rouge"><i id="vxLvl"></i><b id="vxClip">SAT</b></div>' +
+      '<div class="vx-meter" title="Niveau de votre micro après l’égaliseur, en dB sous la saturation : visez le vert (−20 à −12 dB en parlant), jaune = fort, rouge = trop fort"><span class="vx-mt">NIVEAU MICRO</span><i id="vxLvl"></i>' + VX_SCALE + '<b id="vxClip">SAT</b></div>' +
       '<div class="vx-row"><button class="btn" id="vxEqBtn" type="button" title="Égaliseur de votre micro (dans le navigateur) : réglages gardés pour ce micro">Equalizer micro</button></div>' +
       '<div class="vx-note" id="vxNote"></div>' +
       '<div class="vx-mon"><button class="btn" id="vxMonBtn" type="button" aria-pressed="false" title="Entendre votre micro tel qu’il partira (au casque seulement : effet Larsen avec des haut-parleurs)">🎧 M’écouter</button></div>' +
@@ -426,7 +429,7 @@
     d.innerHTML =
       '<div class="vx-eq-h"><b>Equalizer micro</b><span id="vxEqMic"></span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
       '<canvas id="vxCurve" width="560" height="150" aria-label="Courbe de l’égaliseur"></canvas>' +
-      '<div class="vx-eq-meter"><i id="vxLvl2"></i></div>' +
+      '<div class="vx-eq-meter"><span class="vx-mt">NIVEAU MICRO</span><i id="vxLvl2"></i>' + VX_SCALE + '</div>' +
       '<div class="vx-eq-top"><label><input type="checkbox" data-k="on"> Égaliseur en service</label>' +
       '<label>Réglages proposés <select data-k="preset"><option value="">—</option>' + Object.keys(PRESETS).map((k) => '<option value="' + k + '">' + esc(PRESETS[k].name) + '</option>').join('') + '</select></label></div>' +
       '<div class="vx-cuts">' +
@@ -552,7 +555,7 @@
       const db = V.peak > 0 ? 20 * Math.log10(V.peak) : -60;
       const w = Math.max(0, Math.min(100, (db + 48) / 48 * 100));
       const clip = Date.now() - V.clipAt < 1200;
-      for (const id of ['vxLvl', 'vxLvl2']) { const l = $(id); if (l) { l.style.width = w + '%'; l.classList.toggle('hot', db > -6); } }
+      for (const id of ['vxLvl', 'vxLvl2']) { const l = $(id); if (l) { l.style.width = w + '%'; l.classList.toggle('hot', db > -6); l.classList.toggle('warm', db > -12 && db <= -6); } }
       const c = $('vxClip');
       if (c) c.classList.toggle('on', clip);
       V.raf = requestAnimationFrame(step);
