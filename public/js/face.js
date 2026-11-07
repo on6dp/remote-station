@@ -3441,6 +3441,14 @@
     menuDraw();
   }
   // Réglage choisi : toutes les valeurs possibles sous la barre (la valeur actuelle en surbrillance), même en lecture seule
+  // Égaliseur d'émission (PRMTRC EQ…) : géré par les profils EQUALIZER TRX, pas par le menu
+  const eqTrx = (it) => !!(it.d.ro && /EQUALIZER TRX/.test(it.d.ro));
+  function openTrxEq() {
+    const b = $('vxTrxBtn');
+    if (!b || b.hidden || b.disabled) return say('EQUALIZER TRX : pas disponible pour l’instant (prenez la main ; page Station du club en ligne).', 'warn', 5000);
+    closeMenu();
+    b.click();
+  }
   function menuChoices(M, it, raw, esc) {
     const d = it.d;
     if (d.k === 't') return '';
@@ -3458,9 +3466,10 @@
       const raw = MV.vals[it.id], sel = MV.sel === it.id, ro = it.d.ro;
       const val = it.d.k === 't' && !it.d.read ? 'au TRX' : raw === undefined ? '…' : M.show(it.d, raw);
       return '<div class="fx-row' + (sel ? ' sel' : '') + (ro ? ' ro' : '') + '" data-it="' + it.id + '" title="' + esc(it.label + (ro ? ' — lecture seule : ' + ro : ' — clic puis − / +, molette ou bouton FUNC')) + '">' +
-        '<div class="fx-l">' + esc(it.label) + '</div><div class="fx-v">' + (sel && !ro ? '<button type="button" class="fx-pm" data-step="-1">−</button>' : '') +
+        '<div class="fx-l">' + esc(it.label) + (eqTrx(it) ? '<em class="fx-eqt">EQUALIZER TRX</em>' : '') + '</div><div class="fx-v">' + (sel && !ro ? '<button type="button" class="fx-pm" data-step="-1">−</button>' : '') +
         '<span>' + esc(val) + '</span>' + (sel && !ro ? '<button type="button" class="fx-pm" data-step="1">+</button>' : '') + '</div>' +
-        (sel ? menuChoices(M, it, raw, esc) : '') + '</div>';
+        (sel ? (eqTrx(it) ? '<div class="fx-opts">Se règle dans EQUALIZER TRX (votre profil, ou celui du club pour un administrateur) ' +
+          '<button type="button" class="fx-eqb" data-eqtrx="1">Ouvrir EQUALIZER TRX</button></div>' : menuChoices(M, it, raw, esc)) : '') + '</div>';
     }).join('') : '';
     const note = !g || !n ? '<p class="fx-note">' + esc(g ? g.name : MV.group) + ' : au club seulement (carte SD, version, étalonnage, remise à zéro… : rien à distance, par sécurité).</p>' : '';
     const th = n > FX_ROWS ? FX_ROWS / n * 100 : 100, tp = n > FX_ROWS ? top / n * 100 : 0;
@@ -3477,6 +3486,7 @@
     if (b && b.dataset.back) { closeMenu(); L.func = true; return render(); } // BACK : retour à l'écran FUNC, comme sur le TRX
     if (b && b.dataset.sub) { MV.sub = b.dataset.sub; MV.sel = null; MV.top = 0; menuReq(); return menuDraw(); }
     if (b && b.dataset.step) return menuAdjust(MV.sel, Number(b.dataset.step));
+    if (b && b.dataset.eqtrx) return openTrxEq();
     const r = e.target.closest('[data-it]');
     if (!r) return;
     const M = MN(), it = M && M.item(r.dataset.it);

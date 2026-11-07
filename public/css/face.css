@@ -738,3 +738,5 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 .fc-menu.ftxm .fx-opts { display: flex; flex-wrap: wrap; gap: .15em .5em; margin-top: .2em; font-size: .72em; color: #1c1a1d; text-shadow: none; }
 .fc-menu.ftxm .fx-opts i { font-style: normal; padding: 0 .3em; border-radius: .2em; }
 .fc-menu.ftxm .fx-opts i.on { background: #15171a; color: #ffe94a; }
+.fc-menu.ftxm .fx-eqt { font-style: normal; font-size: .7em; margin-left: .6em; padding: 0 .35em; border-radius: .2em; background: #2a313c; color: #9fd4ff; letter-spacing: .02em; vertical-align: .1em; }
+.fc-menu.ftxm .fx-eqb { font: inherit; font-weight: 800; margin-left: .4em; padding: .1em .6em; background: #15171a; color: #ffcf4a; border: 1px solid #000; border-radius: .2em; cursor: pointer; }

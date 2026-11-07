@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.149** — FTX-1 : TX AUDIO — cases PRMTRC EQ marquées EQUALIZER TRX, bouton « Ouvrir EQUALIZER TRX » sur la case choisie
 - **0.37.148** — FTX-1 : menus SETTING réglables par les administrateurs (puissances max, QRP, tuner / antennes, VOX SELECT, TX INHIBIT, REF FREQ ADJ, APRS, EXTENSION…) ; restent bloqués : liaison CAT-1 / CAT-3, MOD SOURCE, USB MOD GAIN, RPTT, PC KEYING, CW MEMORY 5, égaliseur des profils, AUTO POWER OFF ; HF / 50M MAX POWER en dixièmes de watt
 - **0.37.147** — FTX-1 : TX GENERAL — puissances maximales de la tête Field en dixièmes de watt (MAX POWER (BAT) 6.0W, 70M / 144M / 430M, AM)
 - **0.37.146** — FTX-1 : menus SETTING relus toutes les 8 s tant que l'écran est ouvert (réglage changé au TRX visible sur le dashboard)
