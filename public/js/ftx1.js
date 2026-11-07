@@ -306,6 +306,8 @@
       { cmd: 'CO03;', when: (st) => /^CW/.test(st.mode || ''), re: /^CO03(\d{4})$/, parse: (m) => ({ apfFreq: +m[1] }), sim: 'CO030025' },
       { cmd: 'CO13;', when: (st) => /^CW/.test(st.modeB || ''), re: /^CO13(\d{4})$/, parse: (m) => ({ apfFreqB: +m[1] }), sim: 'CO130025' },
       // D-MODE du scope (SS06 : 0/4 CENTER, 1/7 CURSOR, 2/A FIX ; 0-2 avec 3DSS, 4/7/A cascade normale)
+      // SPAN du scope du TRX (SS05 : 2 = 5 kHz … 9 = 1 MHz, mêmes rangs que la page) : un seul scope (P1 fixe), valeur des deux côtés
+      { cmd: 'SS05;', re: /^SS05([2-9])0000$/, parse: (m) => ({ ssSpanA: +m[1], ssSpanB: +m[1] }), sim: 'SS0560000' },
       { cmd: 'SS06;', re: /^SS06([0-9A-B])0000$/, parse: (m) => { const c = parseInt(m[1], 16); return { dMode: c === 1 || c === 7 ? 1 : c === 2 || c === 10 ? 2 : 0 }; }, sim: 'SS0640000' },
       { cmd: 'FN;', re: /^FN([0-2])$/, parse: (m) => ({ tuneStep: +m[1] }), sim: 'FN0' },
       // METER (MS) : mesure de l'échelle sous l'S-mètre, MAIN puis SUB (0 PO, 1 COMP, 2 ALC, 3 VDD, 4 ID, 5 SWR)
@@ -325,7 +327,7 @@
     // + tuner : AC (état), RI0 (accord en cours), menus TUN/LIN PORT SELECT (EX030103), TUNER SELECT (EX030104),
     // TUNER TYPE SEL ANT1 / ANT2 (EX030701 / EX030702) — numéros du manuel CAT FTX-1 (Table 3)
     extraQueries: ['RA1;', 'PA0;', 'PA1;', 'PA2;', 'AC;', 'RI0;', 'EX030103;', 'EX030104;', 'EX030701;', 'EX030702;'],
-    extraStateKeys: ['attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'afB', 'hiSwr', 'tuningRi',
+    extraStateKeys: ['ssSpanA', 'ssSpanB', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'preampV', 'preampU', 'preampVU', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'afB', 'hiSwr', 'tuningRi',
       'dContrast', 'dimmer', 'dimLed', 'micEq', 'txw', 'amc', 'voxGain', 'voxDelay', 'moniLvl', 'keyer', 'bkin', 'keySpeed', 'cwPitch', 'bkDelay', 'cwSpot', 'tuneStep', 'dMode', 'meterSw', 'meterSwB', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB',
       'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'dcsIdx', 'dcsIdxB'],
     subBadges: true,
@@ -424,6 +426,7 @@
       { id: 'apfFreq', g: 'flt', label: 'APF FREQ', type: 'level', min: 0, max: 50, step: 1, face: true, write: (v) => 'CO03' + pad(v, 4) + ';' },
       { id: 'apfFreqB', g: 'flt', label: 'APF FREQ (SUB)', type: 'level', min: 0, max: 50, step: 1, face: true, write: (v) => 'CO13' + pad(v, 4) + ';' },
       { id: 'ssSpd', g: 'disp', label: 'SCOPE SPEED', type: 'level', min: 0, max: 5, step: 1, face: true, write: (v) => 'SS00' + v + '0000;' }, // 0 SLOW1 … 4 FAST3, 5 STOP
+      { id: 'ssSpan', g: 'disp', label: 'SCOPE SPAN', type: 'level', min: 2, max: 9, step: 1, face: true, write: (v) => 'SS05' + v + '0000;' },
       { id: 'dMode', g: 'disp', label: 'D-MODE (code SS06)', type: 'level', min: 0, max: 10, step: 1, face: true, write: (v) => 'SS06' + Number(v).toString(16).toUpperCase() + '0000;' },
       // METER : toucher l'S-mètre sur /ftx1 → tableau PO / COMP / ALC / VDD / ID / SWR, comme sur le TRX (MS P1 MAIN, P2 SUB)
       { id: 'meterSw', g: 'disp', label: 'METER (MAIN)', type: 'select', face: true, options: [[0, 'PO'], [1, 'COMP'], [2, 'ALC'], [3, 'VDD'], [4, 'ID'], [5, 'SWR']], write: (v, st) => 'MS' + v + (st && st.meterSwB != null ? st.meterSwB : 5) + ';' },

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.156** — FTX-1 : SPAN du scope lu sur le TRX (SS05) et envoyé au TRX depuis la page (5 kHz à 1 MHz) : l'échelle de la page suit celle du TRX
 - **0.37.155** — FTX-1 : fréquences MAIN et SUB avec les 3 derniers chiffres (Hz) en plus petit, comme sur le TRX
 - **0.37.154** — FTX-1 : filtres comme sur l'écran du TRX — trait blanc, intérieur gris, spectre seulement dans la bande passante, sans repère orange ni base bleue (petits filtres et DISP filtres agrandis)
 - **0.37.153** — FTX-1 : APRS FILTER complété (MSG FIL. : MESSAGE GROUP1-6, BULLETIN 1-3, relus) ; SMART TURN ANGLE en degree
