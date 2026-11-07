@@ -4333,6 +4333,9 @@
     }
     const D = LCD.fd;
     if (!D) return;
+    // Sous l'écran FUNC, l'écran DSP et les tableaux (MODE, BAND, MULTI…) : les rangées ATT / IPO / DNF / AGC disparaissent
+    const over = !!(L.func || L.dsp || L.modeMenu || L.bandMenu || L.multiMenu || L.icomMenu || L.quickMenu || L.mSel || (typeof MV !== 'undefined' && MV.open));
+    D.g.style.display = over ? 'none' : '';
     D.r1.g.style.display = fd === 1 ? '' : 'none';
     D.rA.g.style.display = D.rB.g.style.display = D.sep.style.display = fd === 2 ? '' : 'none';
     const fill = (row, sd) => { row.side = sd; const t = ftxCellsTxt(s, sd); row.cells.forEach((e, i) => { if (e.textContent !== t[i]) e.textContent = t[i]; }); };

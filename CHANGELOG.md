@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.135** — FTX-1 : rangées ATT / IPO / DNF / AGC (DISP) cachées sous l'écran FUNC, l'écran DSP et les tableaux ; noms de l'écran FUNC en blanc gras, un peu plus grands
 - **0.37.134** — Faces avant : BACK ferme tout ce qui est affiché par-dessus l'écran (écran FUNC, DSP, tableaux METER / BAND / MODE / SPEED, MULTI, menus, petite fenêtre de réglage)
 - **0.37.133** — FTX-1 : écran FUNC en Verdana gras (zéro non barré) ; échelle du scope aussi
 - **0.37.132** — FTX-1 : nouvelle photo de la face avant (photo Yaesu fournie par ON6DP, coins blancs transparents, définition doublée) ; touches, boutons, écran, voyants et bandes du grand bouton replacés
