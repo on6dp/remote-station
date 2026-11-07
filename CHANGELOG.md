@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.162** — Carte son du TRX : relance automatique par la page Station après 45 s de silence (assistant installé, une fois / 10 min, jamais en émission) ; assistant carte son version 2 : coupe la mise en veille USB de Windows à chaque démarrage
 - **0.37.161** — FTX-1 : réglages du scope de l'écran FUNC synchronisés avec le TRX (D-LEVEL, D-PEAK LV1-5, D-MARKER, D-COLOR, SPEED : SS00 à SS04) ; MIC EQ relu ; niveau du micro : « Niveau micro » plus lisible, barre plus haute, chiffres espacés
 - **0.37.160** — FTX-1 : petit spectre (et filtres agrandis) dans le filtre du côté actif en réception simple — il suit la commutation MAIN / SUB
 - **0.37.159** — FTX-1 : fonction du bouton FUNC suivie avec le TRX (SF : D-COLOR, RF POWER…), échelle PO 0-10-50-100-150 W comme sur le TRX ; niveau du micro gradué en dB avec « NIVEAU MICRO » ; DX Cluster à droite de DIGI CONFIGURATION au-dessus de « Suivre l'opérateur »

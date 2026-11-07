@@ -565,6 +565,11 @@
     if (silent !== aud.silent) {
       aud.silent = silent;
       if (silent) log('Entrée son muette depuis ' + SILENT_S + ' s (TRX connecté) : carte son du TRX figée ? « Relancer la carte son du TRX », sinon éteindre et rallumer le TRX', 'st-warn');
+      // Relance automatique par l'assistant (s'il est là), jamais en émission, une fois toutes les 10 min au plus
+      if (silent && !core.catKeyed && !(core.radio && core.radio.tx) && Date.now() - (aud.autoAt || 0) > 600000) {
+        aud.autoAt = Date.now();
+        helperCheck().then((ok) => { if (ok && aud.silent && !aud.resetting) audioReset('relance automatique (entrée son muette ' + SILENT_S + ' s)'); });
+      }
       if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'audio_silent', on: silent }));
     }
     const t = $('tSilent');
@@ -585,11 +590,14 @@
     } finally { clearTimeout(tm); }
   }
   async function helperCheck() {
-    try { const r = await helperFetch('/etat'); helperOk = !!(r && r.ok); } catch (e) { helperOk = false; }
-    $('tHelper').textContent = helperOk ? 'Assistant carte son : en marche (la carte son du TRX peut être relancée d’ici ou depuis le dashboard)'
+    let r = null;
+    try { r = await helperFetch('/etat'); helperOk = !!(r && r.ok); } catch (e) { helperOk = false; }
+    const v2 = helperOk && Number(r.version) >= 2;
+    $('tHelper').textContent = helperOk ? 'Assistant carte son : en marche (version ' + r.version + ' ; la carte son du TRX peut être relancée d’ici ou depuis le dashboard, et seule après 45 s de silence)' +
+      (v2 ? ' — veille USB : ' + (r.veille || '?') : ' — version 2 disponible (coupe la mise en veille USB de Windows) : retélécharger l’assistant et refaire installer-carte-son.cmd')
       : 'Assistant carte son : non installé sur ce PC (fichier installer-carte-son.cmd, voir l’aide) — pour relancer la carte son, éteindre et rallumer le TRX';
     $('btnAudReset').disabled = !helperOk || aud.resetting;
-    $('helperDl').hidden = helperOk;
+    $('helperDl').hidden = helperOk && v2;
     return helperOk;
   }
   setTimeout(helperCheck, 1500);

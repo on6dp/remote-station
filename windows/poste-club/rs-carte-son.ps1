@@ -15,7 +15,7 @@ param(
   [string[]]$Origines = @('https://remote.op0p.be')
 )
 $ErrorActionPreference = 'Stop'
-$Version = '1'
+$Version = '2'
 $Journal = Join-Path $PSScriptRoot 'rs-carte-son.log'
 
 function Ecrire([string]$t) {
@@ -82,6 +82,37 @@ function Relancer([string]$vid, [string]$prod) {
   return @{ ok = $true; msg = ($faits -join ' ; ') }
 }
 
+# Mise en veille USB coupée (cause fréquente d'une carte son figée en silence) : au démarrage, à chaque fois
+#  - « Suspension sélective USB » désactivée dans le mode d'alimentation actif (secteur et batterie) ;
+#  - « Autoriser l'ordinateur à éteindre ce périphérique » décoché pour les concentrateurs USB et les cartes son USB.
+$Veille = 'non vérifiée'
+function CouperVeilleUsb {
+  $faits = @()
+  try {
+    $usb = '2a737441-1930-4402-8d77-b2bebba308a3'; $sel = '48e6b7a6-50f5-4782-a5d4-53bb8f07e226'
+    & powercfg.exe /SETACVALUEINDEX SCHEME_CURRENT $usb $sel 0 | Out-Null
+    & powercfg.exe /SETDCVALUEINDEX SCHEME_CURRENT $usb $sel 0 | Out-Null
+    & powercfg.exe /SETACTIVE SCHEME_CURRENT | Out-Null
+    $faits += 'suspension sélective USB désactivée'
+  } catch { Ecrire "powercfg : $($_.Exception.Message)" }
+  try {
+    $cibles = @(Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -like 'USB\ROOT_HUB*' -or $_.InstanceId -like 'USB\VID_*' -and ($_.Class -eq 'USB' -or $_.Class -eq 'MEDIA') })
+    $n = 0
+    foreach ($p in @(Get-CimInstance -Namespace root\wmi -ClassName MSPower_DeviceEnable -ErrorAction Stop)) {
+      foreach ($d in $cibles) {
+        if ($p.InstanceName -like ($d.InstanceId + '*') -and $p.Enable) {
+          Set-CimInstance -InputObject $p -Property @{ Enable = $false } -ErrorAction SilentlyContinue
+          $n++
+        }
+      }
+    }
+    $faits += "économie d'énergie coupée sur $n périphérique(s) USB"
+  } catch { Ecrire "économie d'énergie USB : $($_.Exception.Message)" }
+  $script:Veille = if ($faits.Count) { $faits -join ', ' } else { 'échec (voir le journal)' }
+  Ecrire "veille USB : $script:Veille"
+}
+CouperVeilleUsb
+
 $ecoute = New-Object System.Net.HttpListener
 $ecoute.Prefixes.Add("http://127.0.0.1:$Port/")
 try { $ecoute.Start() } catch { Ecrire "impossible d'écouter sur le port $Port : $($_.Exception.Message)"; exit 1 }
@@ -99,7 +130,7 @@ while ($ecoute.IsListening) {
       Ecrire "refusé : $($req.HttpMethod) $chemin depuis $o"
       Repondre $ctx 403 @{ ok = $false; msg = 'site non autorisé' }
     } elseif ($chemin -eq '/etat') {
-      Repondre $ctx 200 @{ ok = $true; version = $Version }
+      Repondre $ctx 200 @{ ok = $true; version = $Version; veille = $Veille }
     } elseif ($chemin -eq '/relancer' -and $req.HttpMethod -eq 'POST' -and $o) {
       $lu = New-Object System.IO.StreamReader($req.InputStream, [Text.Encoding]::UTF8)
       $corps = $lu.ReadToEnd()

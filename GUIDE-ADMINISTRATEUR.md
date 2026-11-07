@@ -514,7 +514,7 @@ Les mots de passe SSH, les clés et le jeton ne s'envoient jamais par e-mail ni 
 | « Station hors ligne (page Station fermée ou quittée) » | L'onglet de la page Station a servi à autre chose : la garder **seule dans sa fenêtre** |
 | Page Station « mise en pause » ou « déchargée par Chrome » | Chrome → Performances → garder `remote.op0p.be` actif ; économiseur d'énergie coupé ; Windows : veille Jamais |
 | « Remplacée par une autre page Station » | Une autre page Station est ouverte ailleurs : la fermer, puis « Enregistrer et reconnecter » |
-| Plus de son du TRX (alerte orange sur le dashboard) | Carte son USB figée : menu STATION → « Relancer la carte son du TRX » (responsables) |
+| Plus de son du TRX (alerte orange sur le dashboard) | Carte son USB figée : relancée seule par la page Station après 45 s de silence (assistant installé, une fois / 10 min) ; sinon menu STATION → « Relancer la carte son du TRX » (responsables). Assistant **version 2** (refaire `installer-carte-son.cmd` une fois) : coupe aussi la mise en veille USB de Windows à chaque démarrage (`powercfg` suspension sélective USB, `MSPower_DeviceEnable` des concentrateurs et cartes son USB) |
 | Phonie : « le TRX n'a pas répondu à la lecture du menu… » | Liaison CAT perturbée ou TRX occupé : réessayer ; vérifier le modèle choisi sur la page Station |
 | Phonie : pas de modulation | Page Station : sortie son vers le TRX choisie ? « Niveau phonie à distance » assez haut ? Le membre a-t-il activé son micro (point vert) ? |
 | Equalizer TRX sans effet | FTDX10 / FTDX101 : bouton **MIC EQ** en service |

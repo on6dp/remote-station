@@ -15,6 +15,13 @@ Installation (une fois, sur le PC du club)
      La premiere fois que la page l'appelle, Chrome peut demander l'autorisation d'acceder aux
      appareils du reseau local : repondre "Autoriser".
 
+Version 2 : a chaque demarrage, l'assistant coupe aussi la mise en veille USB de Windows (suspension
+selective USB et "Autoriser l'ordinateur a eteindre ce peripherique" sur les concentrateurs USB et les
+cartes son USB), cause frequente d'une carte son figee. Pour passer de la version 1 a la version 2 :
+refaire un double-clic sur installer-carte-son.cmd.
+Si la page Station constate 45 s d'entree son muette (TRX en reception), elle relance seule la carte son
+(une fois toutes les 10 minutes au plus) et previent sur le dashboard.
+
 L'assistant demarre avec Windows (tache planifiee "RemoteStation carte son", compte SYSTEM).
 Il n'ecoute que sur le PC lui-meme (http://127.0.0.1:18099) et n'obeit qu'a la page https://remote.op0p.be.
 Journal : C:\ProgramData\RemoteStation\rs-carte-son.log

@@ -962,6 +962,8 @@ The TRX's built-in USB sound card sometimes freezes silent: empty level bar on t
 
 - **Relancer la carte son du TRX** (restart the TRX sound card): button on the Station page, or, for ON6DP and ON4LUC, the « Relancer la carte son » button of the dashboard alert and the TRX menu (click the station lamp). The USB sound card is restarted on the club PC, like « Disable / Enable » in Device Manager; audio stops for about ten seconds, the TRX stays on, the CAT port is not touched. Refused while transmitting.
 - Once, install the **sound card helper** on the club PC: « Télécharger l'assistant carte son » link on the Station page (while it is not installed), unzip, double-click `installer-carte-son.cmd` and accept the administrator prompt. It starts with Windows, listens only on the PC itself (127.0.0.1:18099) and only obeys the remote.op0p.be Station page. The first time, Chrome may ask for access to « local network devices »: Allow. The Station page shows « Assistant carte son : en marche ».
+- **Automatic restart**: with the assistant installed, the Station page restarts the sound card by itself after 45 s of silence (receive only, never while transmitting), at most once every 10 minutes.
+- **Assistant version 2**: at every Windows start it also turns off **USB power saving** (USB selective suspend, and "Allow the computer to turn off this device" on USB hubs and USB sound cards), a frequent cause of a frozen sound card. Run `installer-carte-son.cmd` once more to upgrade from version 1.
 - If the restart is not enough: switch the TRX off and on (the FTX-1 cannot be switched on by CAT).
 
 Server installation and settings: see the Administrator guide, `GUIDE-ADMINISTRATEUR.md` (project repository).
