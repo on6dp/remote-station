@@ -699,8 +699,22 @@ Choose the band in the list; about ten seconds after each even minute, the list 
           <li><b>USB adapter (left / right Ctrl)</b>: paddle → USB adapters that appear as a keyboard (VBand / Vail type): left Ctrl = dot, right Ctrl = dash.</li>
           <li><b>Keyboard keys</b>: two keys of your choice (click the box, then press the key).</li>
           <li><b>MIDI adapter</b>: click the Dot box then touch the dot paddle, same for the dash (MIDI notes or controllers).</li>
-          <li><b>USB-serial cable (DSR / CTS)</b>: the classic contest-software wiring: dot contact on <b>DSR</b>, dash on <b>CTS</b>, common on <b>DTR</b> (set high by the page). <span class="k">Choisir le port…</span>; Chrome or Edge.</li>
+          <li><b>USB-serial cable (DSR / CTS)</b>: the classic contest-software wiring: dot contact on <b>DSR</b>, dash on <b>CTS</b>, common on <b>DTR</b> (set high by the page). <span class="k">Choisir le port…</span>; Chrome or Edge. Detailed wiring below.</li>
           <li><b>On-screen paddles</b>: the <span class="k">•</span> and <span class="k">—</span> buttons (mouse or touch screen), always available.</li>
+        </ul></li>
+      <li id="cwkeywire"><b>Connecting dual paddles (or a straight key) to your PC</b>. A key is only a switch: neither the sound card nor a USB socket can read it as is, a small USB interface is needed. <b>Nothing goes to the sound card</b>, and there is nothing to install (no server at the club, no software at home): the path is key → USB interface → your PC (CW station page) → Internet → server → club Station page → FTX-1.
+        <ul>
+          <li><b>USB → RS-232 adapter with a male DB9 plug</b> (CH340, PL2303 or FTDI chip; the common clear-blue model is fine). In Device Manager (Ports COM & LPT) it must show <b>without an exclamation mark</b> (Prolific "PL2303HXA phased out" / code 10: counterfeit chip refused by the recent driver → another cable or an old driver). On a <b>female DB9 screw-terminal plug</b> ("DB9 breakout"), screw the key's <b>3 wires</b>:
+            <ul>
+              <li>Key <b>common</b> (often called "GND") → <b>pin 4</b> (DTR: voltage switched on by the page)</li>
+              <li><b>Dot</b> → <b>pin 6</b> (DSR: input read as "dot")</li>
+              <li><b>Dash</b> → <b>pin 8</b> (CTS: input read as "dash")</li>
+            </ul>
+            <b>The common goes to pin 4 (DTR), not pin 5 (GND)</b>: on ground no voltage would reach the inputs. The other pins are not used. Pin layout, adapter's male plug seen from the front: top 1 2 3 4 5 (left to right), bottom 6 7 8 9.</li>
+          <li><b>Identifying the wires</b>: 3.5 mm stereo jack: <b>tip = dot</b>, <b>ring = dash</b>, <b>sleeve = common</b>; bare wires: multimeter on "continuity", one probe on the common, press a paddle and find the wire that beeps. If in doubt, connect at random and tick <b>Swap dot / dash</b> if needed (no risk).</li>
+          <li><b>Test without the key</b> (CLÉ → TRX <b>OFF</b>): CW station → <b>USB-serial cable (DSR / CTS)</b> → <span class="k">Choisir le port…</span> → the CH340 → "port open"; a paper clip between pins <b>4 and 6</b> gives dots, between <b>4 and 8</b> dashes (local sidetone + Key light).</li>
+          <li><b>Not suitable</b> for dual paddles: 4-wire USB "TTL" cables (red +5 V, black GND, green TX, white RX), USB → 3.5 mm "console" jack cables (tip RX, ring TX), and the 6-wire FTDI TTL cable (one CTS input only: straight key only, key between CTS and GND). "USB CW cables with jack" sold to let software key a TRX do the opposite (output to the TRX).</li>
+          <li><b>Other options</b>: a ready-made paddle → USB adapter of the <b>VBand</b> or <b>Vail</b> type (seen as a keyboard: "USB adapter (left / right Ctrl)"); or an <b>Arduino Pro Micro</b> (ATmega32U4) with a jack: ground → GND, dot → A2, dash → A3 (same setting).</li>
         </ul></li>
       <li><b>Macros and key</b>: during a macro (F1…), <b>touching the key stops the macro</b> and your key takes over the TRX. So you can call CQ with F1 and answer with the key.</li>
       <li>What you key is shown in the <b>CW receive</b> window, in transmit colour like macros (text rebuilt from your dots and dashes, without going through audio decoding).</li>

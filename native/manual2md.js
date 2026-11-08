@@ -73,7 +73,20 @@ function convert(src, title, other) {
   const re = /<(h2|h3|p|ul|ol|table|div)\b([^>]*)>([\s\S]*?)<\/\1>/g;
   let m;
   while ((m = re.exec(body))) {
-    const [, tag, attrs, inner] = m;
+    const [, tag, attrs] = m;
+    let inner = m[3];
+    // Listes imbriquées : la liste va jusqu'à sa balise de fin correspondante (pas la première </ul> venue)
+    if (tag === 'ul' || tag === 'ol') {
+      const t = new RegExp('<(/?)' + tag + '\\b[^>]*>', 'g');
+      t.lastIndex = m.index + 1;
+      let d = 1;
+      let e;
+      while (d > 0 && (e = t.exec(body))) d += e[1] ? -1 : 1;
+      if (e) {
+        inner = body.slice(m.index + m[0].indexOf('>') + 1, e.index);
+        re.lastIndex = t.lastIndex;
+      }
+    }
     const id = /id="([^"]+)"/.exec(attrs);
     if (tag === 'h2' || tag === 'h3') {
       out.push((id ? '<a id="' + id[1] + '"></a>\n' : '') + (tag === 'h2' ? '## ' : '### ') + inline(inner), '');

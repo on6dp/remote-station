@@ -708,8 +708,22 @@ Choisissez la bande dans la liste ; une dizaine de secondes après chaque minute
           <li><b>Adaptateur USB (Ctrl gauche / droit)</b> : les adaptateurs palettes → USB qui se présentent comme un clavier (type VBand / Vail) : Ctrl gauche = point, Ctrl droit = trait.</li>
           <li><b>Touches du clavier</b> : deux touches de votre choix (cliquez sur la case puis appuyez sur la touche).</li>
           <li><b>Adaptateur MIDI</b> : cliquez sur la case Point puis touchez la palette point, idem pour le trait (notes ou contrôleurs MIDI).</li>
-          <li><b>Câble USB-série (DSR / CTS)</b> : le montage classique des logiciels de contest : contact point sur <b>DSR</b>, contact trait sur <b>CTS</b>, commun sur <b>DTR</b> (mis à 1 par la page). <span class="k">Choisir le port…</span> ; Chrome ou Edge.</li>
+          <li><b>Câble USB-série (DSR / CTS)</b> : le montage classique des logiciels de contest : contact point sur <b>DSR</b>, contact trait sur <b>CTS</b>, commun sur <b>DTR</b> (mis à 1 par la page). <span class="k">Choisir le port…</span> ; Chrome ou Edge. Câblage détaillé ci-dessous.</li>
           <li><b>Palettes à l'écran</b> : les boutons <span class="k">•</span> et <span class="k">—</span> (souris ou écran tactile), toujours disponibles.</li>
+        </ul></li>
+      <li id="cwkeywire"><b>Brancher une double palette (ou une pioche) sur votre PC</b>. Une clé n'est qu'un interrupteur : ni la carte son ni une prise USB ne savent la lire telle quelle, il faut une petite interface USB. <b>Rien ne se branche sur la carte son</b>, et il n'y a rien à installer (ni serveur au club, ni logiciel chez vous) : le chemin est clé → interface USB → votre PC (page Poste CW) → Internet → serveur → page Station du club → FTX-1.
+        <ul>
+          <li><b>Adaptateur USB → RS-232 avec prise DB9 mâle</b> (puce CH340, PL2303 ou FTDI ; le modèle bleu transparent courant convient). Dans le Gestionnaire de périphériques (Ports COM et LPT), il doit apparaître <b>sans point d'exclamation</b> (Prolific « PL2303HXA phased out » / code 10 : puce copiée refusée par le pilote récent → autre câble ou ancien pilote). Sur une <b>prise DB9 femelle à bornier à vis</b> (« DB9 breakout »), on visse les <b>3 fils</b> de la clé :
+            <ul>
+              <li><b>Commun</b> de la clé (souvent appelé « GND ») → <b>broche 4</b> (DTR : tension mise en marche par la page)</li>
+              <li><b>Point</b> → <b>broche 6</b> (DSR : entrée lue « point »)</li>
+              <li><b>Trait</b> → <b>broche 8</b> (CTS : entrée lue « trait »)</li>
+            </ul>
+            <b>Le commun va sur la broche 4 (DTR), pas sur la broche 5 (GND)</b> : sur la masse, aucune tension n'arriverait aux entrées. Les autres broches ne servent pas. Repère, prise mâle de l'adaptateur vue de face : en haut 1 2 3 4 5 (de gauche à droite), en bas 6 7 8 9.</li>
+          <li><b>Reconnaître les fils</b> : jack 3,5 mm stéréo : <b>pointe = point</b>, <b>bague = trait</b>, <b>corps = commun</b> ; fils nus : multimètre en « continuité », une pointe sur le commun, appuyer sur une palette et chercher le fil qui bipe. En cas de doute, branchez au hasard et cochez <b>Inverser point / trait</b> si besoin (aucun risque).</li>
+          <li><b>Essai sans la clé</b> (CLÉ → TRX sur <b>OFF</b>) : Poste CW → <b>Câble USB-série (DSR / CTS)</b> → <span class="k">Choisir le port…</span> → le CH340 → « port ouvert » ; un trombone entre les broches <b>4 et 6</b> donne des points, entre <b>4 et 8</b> des traits (écoute locale + voyant Clé).</li>
+          <li><b>Ne conviennent pas</b> pour une double palette : les câbles USB « TTL » à 4 fils (rouge +5 V, noir GND, vert TX, blanc RX), les câbles USB → jack 3,5 mm « console » (pointe RX, bague TX), et le câble FTDI TTL 6 fils (une seule entrée CTS : pioche seulement, clé entre CTS et GND). Les câbles « USB CW avec jack » vendus pour faire manipuler un TRX par un logiciel servent à l'inverse (sortie vers le TRX).</li>
+          <li><b>Autres solutions</b> : un adaptateur palette → USB tout fait de type <b>VBand</b> ou <b>Vail</b> (vu comme un clavier : « Adaptateur USB (Ctrl gauche / droit) ») ; ou une <b>Arduino Pro Micro</b> (ATmega32U4) avec un jack : masse → GND, point → A2, trait → A3 (même réglage).</li>
         </ul></li>
       <li><b>Macros et clé</b> : pendant une macro (F1…), <b>toucher la clé arrête la macro</b> : c'est votre clé qui prend la main sur le TRX. Vous pouvez donc lancer CQ par F1 et répondre à la clé.</li>
       <li>Ce que vous manipulez s'affiche dans la fenêtre <b>Réception CW</b>, en couleur d'émission comme les macros (texte reconstitué à partir de vos points et traits, sans passer par le décodage du son).</li>

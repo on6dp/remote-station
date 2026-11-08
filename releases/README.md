@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.181 | [RemoteStation-Setup-0.37.181.exe](0.37.181/RemoteStation-Setup-0.37.181.exe) | [remote-station-0.37.181.tar.gz](0.37.181/remote-station-0.37.181.tar.gz) | Aide : brancher sa clé double palette — [empreintes SHA-256](0.37.181/SHA256SUMS.txt) |
 | 0.37.180 | [RemoteStation-Setup-0.37.180.exe](0.37.180/RemoteStation-Setup-0.37.180.exe) | [remote-station-0.37.180.tar.gz](0.37.180/remote-station-0.37.180.tar.gz) | Fréquence rouge stable aussi avec la clé du TRX — [empreintes SHA-256](0.37.180/SHA256SUMS.txt) |
 | 0.37.179 | [RemoteStation-Setup-0.37.179.exe](0.37.179/RemoteStation-Setup-0.37.179.exe) | [remote-station-0.37.179.tar.gz](0.37.179/remote-station-0.37.179.tar.gz) | Poste CW (page entière) ; fréquence rouge stable en CW — [empreintes SHA-256](0.37.179/SHA256SUMS.txt) |
 | 0.37.178 | [RemoteStation-Setup-0.37.178.exe](0.37.178/RemoteStation-Setup-0.37.178.exe) | [remote-station-0.37.178.tar.gz](0.37.178/remote-station-0.37.178.tar.gz) | Texte de la clé affiché aussi en entraînement — [empreintes SHA-256](0.37.178/SHA256SUMS.txt) |
