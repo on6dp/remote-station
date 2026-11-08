@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.180** — CW : la fréquence ne clignote plus entre rouge et bleu pendant une émission CW manipulée sur le TRX lui-même (break-in) : l'affichage reste en émission 1,5 s après le dernier signe
 - **0.37.179** — **Poste CW** : page entière dans l'esprit du W1VE Keyer Suite (bouton 🎛 POSTE CW de l'onglet CW) — vitesse en grand et curseurs, clé et branchement, grandes palettes, CLÉ → TRX, macros F1–F12, correspondant, texte à émettre, réception CW, voyant RX/TX, aller-retour de la liaison ; raccrochée au dashboard (même connexion, même main) ; la clé du dashboard se met en veille tant que la page est ouverte — Fréquence rouge sans clignoter pendant toute une émission CW (break-in)
 - **0.37.178** — Clé CW : le texte manipulé s'affiche aussi en entraînement (ou sans la main), en gris « (entraînement) » dans la fenêtre Réception CW ; en rouge quand il est réellement émis
 - **0.37.177** — Clé CW : bouton **⚙ Réglages** bien visible (fond blanc, texte noir gras ; jaune quand ouvert)

@@ -1859,6 +1859,8 @@ function txBlockReason(conn, forTune) {
     null;
 }
 
+let cwTxSeenAt = 0; // dernière lecture « en émission » du TRX (affichage CW sans clignotement)
+let cwTxHoldTimer = null;
 function publicState() {
   const calls = [];
   for (const c of ops) if (calls.indexOf(c.user.call) < 0) calls.push(c.user.call);
@@ -1867,7 +1869,9 @@ function publicState() {
     station: !!station,
     // CW (macro ou clé) en cours : le break-in du TRX repasse en réception entre les lettres et les mots ; pour
     // l'affichage, l'émission dure jusqu'à la fin du message (fréquence rouge sans clignoter)
-    radio: cwJob && cwJob.state === 'tx' && !radio.tx ? Object.assign({}, radio, { tx: 1, txHeld: 1 }) : radio,
+    radio: !radio.tx && ((cwJob && cwJob.state === 'tx') ||
+      (radio.connected && Date.now() - cwTxSeenAt < 1500 && /^CW/.test((radio.vfoSel === 1 ? radio.modeB : radio.mode) || '')))
+      ? Object.assign({}, radio, { tx: radio.tx || 2, txHeld: 1 }) : radio,
     controller: controller ? controller.user.call : null,
     controllerCid: controller ? controller.cid : null,
     users: calls.sort(),
@@ -3769,6 +3773,13 @@ function onStation(conn, m) {
   };
   // Réglages propres au pilote (SPLIT, filtres, mesures…) : nombres uniquement
   for (const k of rig().STATE_KEYS || []) radio[k] = Number.isFinite(r[k]) ? r[k] : null;
+  // CW manipulée sur le TRX lui-même (ou break-in rapide) : la réception entre les lettres ne fait pas clignoter
+  // l'affichage ; il reste « émission » 1,5 s après la dernière lecture en émission
+  if (radio.tx) cwTxSeenAt = Date.now();
+  else if (prevStr.tx && /^CW/.test((radio.vfoSel === 1 ? radio.modeB : radio.mode) || '')) {
+    clearTimeout(cwTxHoldTimer);
+    cwTxHoldTimer = setTimeout(broadcast, 1600);
+  }
   // Textes propres au pilote (mémoires du manipulateur de l'IC-7300…) : ASCII affichable, 70 caractères au plus ; gardés d'une lecture à l'autre
   for (const k of rig().STR_KEYS || []) radio[k] = typeof r[k] === 'string' ? r[k].replace(/[^\x20-\x7E]/g, '').slice(0, 70) : (prevStr[k] != null ? prevStr[k] : null);
   if (rig().derive) rig().derive(radio);
