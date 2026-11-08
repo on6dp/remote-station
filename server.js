@@ -2058,7 +2058,67 @@ function cwCharMs(t, wpm) {
 }
 function cwPublic() {
   return cwJob ? { id: cwJob.id, by: cwJob.conn.user.call, text: cwJob.text, state: cwJob.state, seconds: cwJob.seconds, wpm: cwJob.wpm,
-    ms: cwJob.ms, pos: cwJob.pos || null } : null;
+    ms: cwJob.ms, pos: cwJob.pos || null, live: !!cwJob.live } : null;
+}
+/**
+ * Clé de l'opérateur (palettes ou pioche branchées chez lui) : fronts horodatés { t:'cwk', b, e:[[ms, 1|0]…], h, end }.
+ * b : numéro de rafale (nouvelle rafale après une pause de l'opérateur). Mêmes contrôles qu'une macro CW ; une macro
+ * de l'opérateur en cours est arrêtée (la clé prend la main). Les fronts partent vers la page Station qui les rejoue.
+ */
+function cwkFeed(conn, m) {
+  const b = Math.round(Number(m.b)) || 0;
+  if (conn.cwkDead === b) return; // rafale refusée ou arrêtée : ignorée jusqu'à la pause suivante de l'opérateur
+  const now = Date.now();
+  // Débit : 80 messages par seconde au plus
+  if (!conn.cwkRate || now - conn.cwkRate.at > 1000) conn.cwkRate = { at: now, n: 0 };
+  if (++conn.cwkRate.n > 80) return;
+  const ev = [];
+  for (const e of Array.isArray(m.e) ? m.e.slice(0, 64) : []) {
+    const t = Math.round(Number(e && e[0]) * 10) / 10;
+    if (Number.isFinite(t) && t >= 0) ev.push([t, e[1] ? 1 : 0]);
+  }
+  const h = Number.isFinite(Number(m.h)) ? Math.max(0, Number(m.h)) : null;
+  const end = !!m.end;
+  let j = cwJob;
+  const fail = (msg) => { conn.cwkDead = b; send(conn, { t: 'notice', level: 'error', msg: 'Clé CW : ' + msg }); };
+  if (!(j && j.live && j.conn === conn && j.b === b)) {
+    if (!ev.some((x) => x[1])) return; // rafale qui commence sans top : rien à faire
+    if (controller !== conn) return fail('prenez d’abord la main');
+    if (!station || station.caps.indexOf('cwkey') < 0) {
+      return fail('la page Station du club ne connaît pas encore la clé à distance : ' +
+        (conn.user.admin ? 'rechargez-la (voyant STATION → « Recharger la page Station »).' : 'un administrateur doit la recharger.'));
+    }
+    if (!rig().CW || !rig().CW.dtr) return fail('manipulation à la clé pas prévue sur le ' + rig().NAME);
+    if (j && j.conn === conn) cwEnd('', true); // macro (ou rafale précédente) de l'opérateur : la clé prend la main
+    else if (j) return fail('émission CW déjà en cours');
+    if (ptt.active || ftxPend) return fail('émission déjà en cours ou prévue : attendez la fin');
+    if (seq && seq.on) return fail('émission automatique FT8 / FT4 / FT2 en cours : arrêtez-la d’abord');
+    const why = txBlockReason(conn);
+    if (why && radio.power != null && radio.power > conn.user.maxWatts) limitPower(conn, 'avant émission');
+    if (why) return fail('émission refusée : ' + why);
+    if (radio.split || radio.txVfo === 1) return fail('coupez d’abord le SPLIT');
+    const md = (radio.vfoSel === 1 ? radio.modeB : radio.mode) || '';
+    if (!/^CW/.test(md)) return fail('mettez d’abord le TRX en CW (mode actuel : ' + (md || '?') + ')');
+    const wpm = Math.max(5, Math.min(60, Math.round(Number(m.wpm) || 0))) || null;
+    const id = ++ftxSeq;
+    j = cwJob = { id, conn, live: true, b, text: '', wpm, seconds: 0, state: 'wait', at: now, timer: null, ms: null, pos: null, lastT: -1, edges: 0 };
+    journal('tx_start', { call: conn.user.call, ip: conn.ip, freq: txFreq(), mode: 'CW', text: '(clé)', wpm, watts: radio.power });
+    broadcast();
+  }
+  const fresh = ev.filter((x) => x[0] > j.lastT);
+  if (fresh.length) j.lastT = fresh[fresh.length - 1][0];
+  j.edges += fresh.length;
+  // Durée maximale d'une rafale (limite d'émission du serveur)
+  if (j.lastT > cfg.maxTxSeconds * 1000 || (h != null && h > cfg.maxTxSeconds * 1000)) {
+    conn.cwkDead = b;
+    return cwEnd('durée maximale atteinte (' + cfg.maxTxSeconds + ' s sans pause)', false);
+  }
+  if (j.edges > 120 * (1 + (now - j.at) / 1000)) { conn.cwkDead = b; return cwEnd('trop de signes par seconde', false); }
+  lastCtrlActivity = now;
+  clearTimeout(j.timer);
+  // Filet : plus de nouvelles de la clé (4 s) ou fin non confirmée par la page Station
+  j.timer = setTimeout(() => { if (cwJob === j) { conn.cwkDead = b; cwEnd(end ? 'fin de manipulation non confirmée par la page Station' : 'plus de nouvelles de la clé de l’opérateur', false); } }, end ? 8000 : 4000);
+  toStation({ t: 'cmd', op: 'cwk', id: j.id, e: fresh, h, end, by: conn.user.call });
 }
 function cwRequest(conn, m) {
   const err = (msg) => send(conn, { t: 'notice', level: 'error', msg });
@@ -2101,10 +2161,11 @@ function cwEnd(reason, fromStation) {
   const j = cwJob;
   if (!j) return;
   cwJob = null;
+  if (j.live && reason) j.conn.cwkDead = j.b; // rafale de la clé arrêtée : la suite est ignorée jusqu'à la pause
   clearTimeout(j.timer);
   if (!fromStation) toStation({ t: 'cmd', op: 'cwstop', reason });
   journal('tx_end', { call: j.conn.user.call, mode: 'CW', reason, s: Math.round((Date.now() - j.at) / 1000) });
-  if (reason && reason !== 'fin du message') send(j.conn, { t: 'notice', level: /arrêt demandé/.test(reason) ? 'info' : 'warn', msg: 'Émission CW arrêtée : ' + reason });
+  if (reason && reason !== 'fin du message' && !(j.live && reason === 'fin de manipulation')) send(j.conn, { t: 'notice', level: /arrêt demandé/.test(reason) ? 'info' : 'warn', msg: 'Émission CW arrêtée : ' + reason });
   lastCtrlActivity = Date.now();
   broadcast();
 }
@@ -3476,6 +3537,9 @@ function onOperator(conn, m) {
       return toStation({ t: 'cmd', op: 'cwprep', text, wpm: Math.max(5, Math.min(cwWpmMax(), Math.round(Number(m.wpm) || 22))) });
     }
 
+    case 'cwk':
+      return cwkFeed(conn, m);
+
     case 'cw_stop':
       if (cwJob && (cwJob.conn === conn || controller === conn || conn.user.admin)) cwEnd('arrêt demandé par ' + conn.user.call, false);
       return;
@@ -3654,6 +3718,7 @@ function onStation(conn, m) {
       journal('cw_step', { msg });
       return send(cwJob.conn, { t: 'notice', level: /refusé|pas de réponse/.test(msg) ? 'warn' : 'info', msg: 'CW : ' + msg });
     }
+    if (cwJob.live && m.state === 'done') return cwEnd(m.msg ? String(m.msg).slice(0, 200) : 'fin de manipulation', true);
     return cwEnd(m.state === 'done' ? 'fin du message' : String(m.msg || 'arrêtée par la page Station').slice(0, 200), true);
   }
   if (m.t === 'audio_silent') {

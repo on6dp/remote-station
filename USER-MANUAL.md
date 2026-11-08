@@ -694,6 +694,9 @@ WSPR is used to study propagation: low-power beacons transmit their callsign, lo
 - Double-click a received callsign = correspondent; `Log QSO` opens the logbook form.
 - **The decoder** (since 0.23.1) works like the ear: it retunes by itself to the exact tone of the signal (up to ± 60 Hz from the marker with the 100 Hz filter), filters as narrowly as the speed allows (about 1 / dot), and runs three decoders in parallel (fast, medium, slow), keeping the one whose dots and dashes have the most consistent lengths. It copies much weaker signals than before; it needs a few letters to find the speed of a new station.
 
+- `Clé → TRX OFF` (when the page loads): **practice**, local sidetone only, nothing is transmitted. `ON` with control: your key keys the TRX. The yellow light follows your key; the **TX** badge lights when the club TRX transmits your keying.
+- `Réglages` (settings): **key** (iambic B paddles, iambic A, or straight key), **speed** (5 to 50 wpm, the page keyer's own speed, independent of the macro speed), **weight** (50 % = normal), **swap dot / dash**, **sidetone** pitch, volume and audio output (e.g. headphones, separate from the TRX audio).
+
 <a id="sstv"></a>
 ### 12.7 SSTV
 

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.174** — CW : **clé de l'opérateur à distance** (palettes iambique A / B ou pioche branchées chez lui : adaptateur USB Ctrl G/D, touches, MIDI, câble USB-série DSR/CTS, palettes à l'écran) — keyer et écoute locale dans le navigateur, fronts horodatés rejoués par la page Station sur la ligne DTR du 2e port USB du TRX (réserve de 130 ms) ; toucher la clé arrête une macro en cours ; sécurités : clé relâchée si les données n'arrivent plus, clé bloquée 5 s, durée maximale
 - **0.37.173** — FTX-1 : passage MAIN ↔ SUB refusé pendant une émission (page Station et SUB DIAL de /ftx1) — le TRX refuse VS en émission et l'émission était coupée par sécurité ; contient la ligne rouge au bouton droit (0.37.172)
 - **0.37.172** — FTX-1 : bouton DROIT de la souris sur le scope (clic ou glisser) = ligne rouge, fréquence d'émission sur l'autre VFO (SPLIT mis en service s'il ne l'est pas) ; bouton gauche = ligne verte (écoute)
 - **0.37.171** — FTX-1 : CURSOR / FIX — toujours la vraie fenêtre du SPAN, ▼ vert de l'écoute n'importe où et qui suit la souris (glisser) ; CENTER — son reçu sur toute la largeur

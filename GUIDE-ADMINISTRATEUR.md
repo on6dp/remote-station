@@ -219,6 +219,7 @@ raccourci « Remote Station - Page Station » (Chrome avec les bons réglages, s
 - **FTDX10 / FTDX101 : CAT RTS doit être sur OFF**, sinon la liaison CAT tombe toutes les 2 secondes (voyant vert puis orange).
 - Aucun autre logiciel (WSJT-X, logbook…) ne doit utiliser le port CAT en même temps.
 - **CW par DTR** (facultatif, plus réactif) : page Station → « Port de manipulation CW (DTR)… » → le 2ᵉ port USB du TRX (Standard COM Port). Le menu PC KEYING du TRX est mis sur DTR tout seul pendant l'émission.
+- **Clé CW à distance** (palettes ou pioche des opérateurs, depuis la 0.37.174) : elle passe **obligatoirement** par ce port DTR. Sans lui, la page Station refuse (« 2e port USB du TRX (manipulation DTR) non ouvert »). Après la mise à jour, **recharger la page Station** (Ctrl+F5) : une ancienne page refuse la clé à distance. Premiers essais **sur charge fictive**, en présence d'un membre au club.
 
 ### Changer de TRX
 
@@ -310,6 +311,9 @@ Pour tout couper : même commande avec `true` et `false` inversés.
 | ROS au-delà de 2,5:1 pendant 0,7 s | Coupure ; PTT refusé sur ±25 kHz jusqu'à un TUNE réussi |
 | TRX en émission sans demande (ex. après un réglage) | Retour en réception immédiat |
 | VOX | Peut être coupé à distance, jamais activé ; PTT refusé tant qu'il est actif |
+| Clé CW à distance : les données de l'opérateur n'arrivent plus | Clé relâchée par la page Station après 0,3 s ; émission terminée après 3 à 4 s |
+| Clé CW à distance enfoncée plus de 5 s (clé bloquée, adaptateur en panne) | Clé relâchée, émission coupée |
+| Clé CW à distance : manipulation sans pause plus de `maxTxSeconds` | Coupure ; reprise possible après une pause |
 
 Conseil : régler aussi le **temporisateur d'émission (TOT)** dans le menu du TRX, dernière sécurité si le PC du club plante.
 

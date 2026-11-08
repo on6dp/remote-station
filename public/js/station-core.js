@@ -526,6 +526,8 @@
           this._cwStart(m);
         } else if (m.op === 'cwprep') {
           this._cwPrep(m);
+        } else if (m.op === 'cwk') {
+          this._cwkFeed(m);
         } else if (m.op === 'exread') {
           // Lecture de menus (égaliseur du TRX) : réponses une à une, puis { menu: valeur } au serveur
           this._exRead(m.id, Array.isArray(m.cmds) ? m.cmds.slice(0, 40) : [], !!m.soft);
@@ -1414,6 +1416,98 @@
       this.log('CW : fin du message');
       this._cwSay(job.id, 'done');
     }
+    // ------------------------------------------------------------------ clé de l'opérateur (palettes / pioche chez lui)
+    // Le navigateur de l'opérateur fait le keyer (ou suit sa pioche) et envoie les fronts horodatés (ms depuis le début
+    // de la rafale). Ici, on les rejoue sur la ligne DTR du 2e port USB du TRX avec une petite réserve (CWK_BUF) qui
+    // absorbe les irrégularités d'Internet. Sécurités : clé relâchée si les données n'arrivent plus, clé bloquée,
+    // fin de rafale, Échap / arrêt (via _cwStop).
+    _cwkFeed(m) {
+      const CW = this.rig.CW;
+      const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      let job = this.cw;
+      if (!job || job.id !== m.id) {
+        const bad = (why) => { this._cwSay(m.id, 'error', why); if (this.wsUp) this.sendWs({ t: 'trx_note', text: 'Clé CW : ' + why }); };
+        if (!CW || !CW.dtr) return bad('manipulation à la clé non prévue sur ce TRX');
+        if (!this.keyer || !this.keyer.available()) return bad('2e port USB du TRX (manipulation DTR) non ouvert sur la page Station');
+        if (!this.serialOpen || !this.radio.connected) return bad('TRX non connecté');
+        if (this.catKeyed || (this.radio.tx && !this.cw)) return bad('le TRX est déjà en émission');
+        const prev = this.cw;
+        // Rafale précédente de la clé encore en fin de lecture : on garde le TRX prêt (pas de nouvel armement)
+        const keep = !!(prev && prev.live && prev.ready);
+        if (prev && keep) { clearTimeout(prev.timer); this.cw = null; }
+        else if (prev) this._cwStop('clé de l’opérateur', false); // macro en cours : la clé prend la main
+        job = { id: m.id, live: true, dtr: true, timer: null, t0: Date.now(), q: [], lastT: -1, known: 0, base: 0, ready: false,
+          key: false, downAt: 0, ended: false, lastRx: Date.now(), txSaid: false, by: m.by || '?' };
+        this.cw = job;
+        this.lastCtl = null; // émission voulue
+        this.log('Clé CW de ' + job.by + ' : manipulation à distance', 'st-ok');
+        if (keep) { job.ready = true; job.base = now() + this.CWK_BUF; }
+        else this._cwkArm(job).catch((e) => this._cwFail(job, e.message));
+      }
+      job.lastRx = Date.now();
+      for (const e of Array.isArray(m.e) ? m.e : []) {
+        const t = Number(e && e[0]);
+        if (!Number.isFinite(t) || t <= job.lastT) continue;
+        job.lastT = t;
+        job.q.push([t, e[1] ? 1 : 0]);
+      }
+      const h = Number(m.h);
+      if (Number.isFinite(h)) job.known = Math.max(job.known, h);
+      job.known = Math.max(job.known, job.lastT);
+      if (m.end) job.ended = true;
+      if (job.ready) this._cwkPump(job);
+    }
+    get CWK_BUF() { return 130; } // réserve de lecture (ms)
+    async _cwkArm(job) {
+      const CW = this.rig.CW;
+      for (const c of CW.dtr.on) { this._write(c, true); await this._cwSleep(job, 35); if (this.cw !== job) return; }
+      await this.keyer.set(false);
+      if (this.cw !== job) return;
+      job.ready = true;
+      job.base = (typeof performance !== 'undefined' ? performance.now() : Date.now()) + this.CWK_BUF - (job.q.length ? job.q[0][0] : 0);
+      this._cwkPump(job);
+    }
+    _cwkPump(job) {
+      if (this.cw !== job) return;
+      clearTimeout(job.timer);
+      const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      const K = this.keyer;
+      // Fronts arrivés trop tard (Internet en retard) : la lecture glisse d'autant, sans raccourcir les signes
+      if (job.q.length && job.base + job.q[0][0] < now - 4) job.base = now - job.q[0][0] + 25;
+      while (job.q.length && job.base + job.q[0][0] <= now + 1) {
+        const [, v] = job.q.shift();
+        if (!!v === job.key) continue;
+        job.key = !!v;
+        K.set(job.key);
+        if (job.key) {
+          job.downAt = now;
+          if (!job.txSaid) { job.txSaid = true; this._cwSay(job.id, 'tx'); }
+        }
+      }
+      // Clé enfoncée sans nouvelles de l'opérateur (liaison coupée, pioche) : relâchée
+      if (job.key && now > job.base + job.known + 300) {
+        job.key = false; K.set(false);
+        this.log('Clé CW : données en retard, clé relâchée par sécurité', 'st-warn');
+      }
+      // Clé enfoncée plus de 5 s : clé bloquée → arrêt
+      if (job.key && now - job.downAt > 5000) return this._cwFail(job, 'clé enfoncée plus de 5 s (clé bloquée ?) : émission coupée');
+      const quiet = Date.now() - job.lastRx;
+      if (!job.q.length && !job.key && (job.ended || quiet > 3000)) return this._cwkEnd(job, job.ended ? '' : 'plus de nouvelles de la clé');
+      const next = job.q.length ? job.base + job.q[0][0] - now : 50;
+      job.timer = setTimeout(() => this._cwkPump(job), Math.max(1, Math.min(50, next)));
+    }
+    async _cwkEnd(job, why) {
+      if (this.cw !== job) return;
+      await this.keyer.set(false);
+      // Retour en réception (délai du break-in) avant de remettre PC KEYING sur OFF
+      let k = 0;
+      while (this.radio.tx && k++ < 20) { await this._cwSleep(job, 150); if (this.cw !== job) return; }
+      if (this.cw !== job) return;
+      this.cw = null;
+      for (const c of this.rig.CW.dtr.off) this._write(c, true);
+      if (why) this.log('Clé CW : fin (' + why + ')', 'st-warn');
+      this._cwSay(job.id, 'done', why);
+    }
     _cwStop(reason, fromServer) {
       const job = this.cw;
       if (reason !== 'nouveau message') this.cwCache = null; // remplacement : réglages et mémoire gardés
@@ -1422,7 +1516,7 @@
       // Manipulation DTR : clé relâchée tout de suite, PC KEYING remis sur OFF
       if (this.keyer && this.keyer.available()) { try { this.keyer.set(false); } catch (e) { /* port fermé */ } }
       if (this.rig.CW && this.rig.CW.dtr && job && job.dtr) for (const c of this.rig.CW.dtr.off) this._write(c, true);
-      if (this.rig.CW && (job || fromServer)) this._writeList(this.rig.CW.stop(), true); // « ? » si rien ne jouait : sans importance
+      if (this.rig.CW && (job || fromServer) && !(job && job.live)) this._writeList(this.rig.CW.stop(), true); // « ? » si rien ne jouait : sans importance
       if (job) {
         this.log('CW arrêté : ' + reason);
         if (!fromServer) this._cwSay(job.id, 'stopped', reason);

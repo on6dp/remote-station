@@ -478,6 +478,7 @@
           </div>
         </div>
         <p class="dg-tx rt-tx-note" id="cwTxState">Émission CW sous <b class="dg-txcall">ON5VL</b> par le manipulateur du TRX : macro (émission directe) ou texte ci-dessus puis « Émettre » (Ctrl+Entrée).</p>
+        <div id="cwKey"></div>
       </div>
     </div>`;
   const SSTV_PANE = `
@@ -3117,6 +3118,18 @@
     ta.focus();
   }
   function initCw() {
+    // Clé de l'opérateur (palettes / pioche branchées chez lui) : public/js/paddle.js
+    if (window.RSPADDLE && $('cwKey')) {
+      window.RSPADDLE.mount($('cwKey'), {
+        store,
+        api: {
+          send: (m) => api && api.send(m),
+          iControl: () => !!(api && api.iControl()),
+          state: () => api && api.state(),
+          say: (t, l, ms) => api && api.say(t, l, ms)
+        }
+      });
+    }
     $('cwBw').value = String(cwc.bw);
     $('cwSq').value = String(cwc.squelch);
     $('cwSqV').textContent = String(cwc.squelch);
@@ -4003,7 +4016,9 @@
     b.textContent = x ? '■ Arrêter' : 'Émettre';
     b.classList.toggle('on-air', !!(x && x.state === 'tx'));
     note.classList.toggle('air', !!(x && x.state === 'tx'));
-    if (x) {
+    if (x && x.live) {
+      note.textContent = (x.state === 'tx' ? '● En émission CW à la clé (' : 'Préparation de la clé CW (') + x.by + ')';
+    } else if (x) {
       note.textContent = (x.state === 'tx' ? '● En émission CW (' + x.by + ', ' + x.wpm + ' mots/min, ~' + Math.round(x.seconds) + ' s) : « ' : 'Préparation de l’émission CW : « ') +
         String(x.text).slice(0, 60) + (x.text.length > 60 ? '…' : '') + ' »';
       // Texte de la zone d'écriture parti : on la vide (une fois par émission)
