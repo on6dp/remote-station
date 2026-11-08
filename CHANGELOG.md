@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.188** — Assistant carte son v4 : démarrage immédiat (mise à l'heure de Windows au 1er tour, plus avant l'écoute) ; l'installateur attend l'assistant jusqu'à 40 s
 - **0.37.187** — Onglet **Synchro** : état NTP du serveur (chrony / timesyncd, écart en ms), écart du PC du club, bouton « Mettre à l'heure » — assistant carte son **version 4** : horloge de Windows du PC du club réglée à la milliseconde comme NetTime (serveurs NTP publics interrogés souvent), au démarrage, toutes les heures et à la demande
 - **0.37.186** — Poste CW : l'indicatif d'un spot CW cliqué dans une BAND MAP arrive aussi dans la case Indicatif du log du contest (doublon vérifié, prêt pour Entrée)
 - **0.37.185** — FT8 / FT4 / FT2 : choix **Log** dans la barre d'émission — fiche à confirmer, ou enregistrement automatique dans le carnet à l'envoi du RR73 / 73, à sa réception, ou au premier des deux

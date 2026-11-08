@@ -27,10 +27,11 @@ $regl = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -Res
 Register-ScheduledTask -TaskName $Nom -Action $action -Trigger $quand -Principal $qui -Settings $regl `
   -Description 'Remote Station : redémarre la carte son USB du TRX à la demande de la page Station (http://127.0.0.1:18099)' | Out-Null
 Start-ScheduledTask -TaskName $Nom
-Start-Sleep -Seconds 3
-try {
-  $r = Invoke-RestMethod -Uri 'http://127.0.0.1:18099/etat' -TimeoutSec 5
-  if ($r.ok) { Write-Host "Assistant carte son installé et en marche (version $($r.version))." }
-} catch {
-  Write-Host "Installé, mais l'assistant ne répond pas encore. Voir le journal : $Dest\rs-carte-son.log"
+# L'assistant met quelques secondes à démarrer (réglages de veille USB) : on l'attend jusqu'à 40 s
+$r = $null
+for ($i = 0; $i -lt 20 -and -not $r; $i++) {
+  Start-Sleep -Seconds 2
+  try { $r = Invoke-RestMethod -Uri 'http://127.0.0.1:18099/etat' -TimeoutSec 3 } catch { $r = $null }
 }
+if ($r -and $r.ok) { Write-Host "Assistant carte son installé et en marche (version $($r.version))." }
+else { Write-Host "Installé, mais l'assistant ne répond pas encore. Voir le journal : $Dest\rs-carte-son.log" }

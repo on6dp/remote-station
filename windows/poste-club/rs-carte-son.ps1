@@ -249,7 +249,7 @@ function ReglerHeure([bool]$config) {
     return @{ ok = $false; msg = 'mise à l''heure impossible : ' + $_.Exception.Message }
   }
 }
-try { ReglerHeure $true | Out-Null } catch { }
+$HeureReglee = $false # réglage complet du service de temps au 1er tour de surveillance (l'assistant répond déjà)
 
 $ecoute = New-Object System.Net.HttpListener
 $ecoute.Prefixes.Add("http://127.0.0.1:$Port/")
@@ -261,7 +261,7 @@ while ($ecoute.IsListening) {
   $att = $ecoute.BeginGetContext($null, $null)
   while (-not $att.AsyncWaitHandle.WaitOne(20000)) {
     try { Surveiller } catch { Ecrire "surveillance : $($_.Exception.Message)" }
-    if (((Get-Date) - $DerniereHeure).TotalMinutes -ge 60) { try { ReglerHeure $false | Out-Null } catch { } }
+    if (((Get-Date) - $DerniereHeure).TotalMinutes -ge 60) { try { ReglerHeure (-not $HeureReglee) | Out-Null; $HeureReglee = $true } catch { } }
   }
   $ctx = $ecoute.EndGetContext($att)
   try {
