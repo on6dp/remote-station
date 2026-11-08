@@ -573,6 +573,7 @@
       if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'audio_silent', on: silent }));
     }
     const t = $('tSilent');
+    if (aud.waitTrx) return;
     t.hidden = !silent;
     t.textContent = silent ? '⚠ Entrée son muette alors que le TRX est connecté : la carte son du TRX s’est sans doute figée. Cliquez sur « Relancer la carte son du TRX » (sinon : éteindre et rallumer le TRX).' : '';
   }
@@ -592,9 +593,20 @@
   async function helperCheck() {
     let r = null;
     try { r = await helperFetch('/etat'); helperOk = !!(r && r.ok); } catch (e) { helperOk = false; }
-    const v2 = helperOk && Number(r.version) >= 2;
-    $('tHelper').textContent = helperOk ? 'Assistant carte son : en marche (version ' + r.version + ' ; la carte son du TRX peut être relancée d’ici ou depuis le dashboard, et seule après 45 s de silence)' +
-      (v2 ? ' — veille USB : ' + (r.veille || '?') : ' — version 2 disponible (coupe la mise en veille USB de Windows) : retélécharger l’assistant et refaire installer-carte-son.cmd')
+    const v2 = helperOk && Number(r.version) >= 3;
+    if (helperOk && v2) {
+      // L'assistant surveille lui-même la carte son du TRX (même page fermée) : on lui donne son identifiant USB
+      audioUsbId().then((id) => {
+        if (id && r.surveille !== id.vid + ':' + id.pid) {
+          helperFetch('/surveiller', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vid: id.vid, pid: id.pid }) }).catch(() => {});
+        }
+      }).catch(() => {});
+    }
+    const carte = { ok: 'en bon état', erreur: 'EN ERREUR', 'son absent': 'partie son absente', absente: 'débranchée ou TRX éteint' }[r && r.carte] || '';
+    $('tHelper').textContent = helperOk ? 'Assistant carte son : en marche (version ' + r.version + ' ; relance d’ici ou depuis le dashboard, seule après 45 s de silence' +
+      (v2 ? ' ; surveille la carte son et la répare seule si Windows la met en erreur)' : ')') +
+      (v2 ? ' — veille USB : ' + (r.veille || '?') + (carte ? ' — carte son du TRX : ' + carte : '') + (r.reparation ? ' — dernière réparation : ' + r.reparation : '')
+        : ' — version 3 disponible (répare seule la carte son mise en erreur par Windows, coupe la veille USB) : retélécharger l’assistant et refaire installer-carte-son.cmd')
       : 'Assistant carte son : non installé sur ce PC (fichier installer-carte-son.cmd, voir l’aide) — pour relancer la carte son, éteindre et rallumer le TRX';
     $('btnAudReset').disabled = !helperOk || aud.resetting;
     $('helperDl').hidden = helperOk && v2;
@@ -681,9 +693,48 @@
     return devs;
   }
 
-  async function startAudio() {
+  // Carte son du TRX mémorisée mais absente de Windows (figée, en erreur, câble débranché) : on ne prend JAMAIS une
+  // autre carte à sa place (son du PC, « Mixage stéréo »…) ; on attend qu'elle revienne (l'assistant la répare)
+  const PC_CARD = /realtek|intel|nvidia|amd high|hdmi|display|mixage|stereo mix|webcam|camera/i;
+  function trxCardMissing(devs) {
+    const saved = unAlias(store.get('audio.label', ''));
+    // Noms des entrées inconnus (autorisation du micro pas encore donnée) : pas de conclusion
+    return !!saved && devs.length > 0 && !devs.some((d) => !isAlias(d) && d.label === saved) ? saved : '';
+  }
+  function waitTrxCard(saved) {
+    if (!aud.waitTrx) {
+      log('Carte son du TRX « ' + saved + ' » absente de Windows : audio en attente (aucune autre carte son n’est prise à sa place). ' +
+        (helperOk ? 'L’assistant carte son la répare ; ' : '') + 'sinon : éteindre le TRX, débrancher et rebrancher son câble USB.', 'st-bad');
+      if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'audio_silent', on: true }));
+      // Réparation par l'assistant tout de suite (au plus une fois toutes les 10 min)
+      if (Date.now() - (aud.autoAt || 0) > 600000) {
+        aud.autoAt = Date.now();
+        helperCheck().then((ok) => { if (ok && !aud.resetting) audioReset('relance automatique (carte son du TRX absente)'); });
+      }
+    }
+    aud.waitTrx = saved;
+    const t = $('tSilent');
+    t.hidden = false;
+    t.textContent = '⚠ Carte son du TRX « ' + saved + ' » absente de Windows : audio en attente de son retour (réparation par l’assistant carte son ; sinon éteindre le TRX et rebrancher son câble USB).';
+    clearTimeout(aud.waitTm);
+    aud.waitTm = setTimeout(() => { if (aud.waitTrx && !aud.ctx) startAudio(); }, 15000);
+  }
+  async function startAudio(manual) {
     if (!navigator.mediaDevices || !window.AudioWorkletNode) return log('Audio impossible : navigateur trop ancien', 'st-bad');
+    if (aud.ctx) return;
     try {
+      if (!manual) {
+        const miss = trxCardMissing((await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audioinput' && d.label));
+        if (miss) return waitTrxCard(miss);
+        await listInputs(); // la carte son mémorisée du TRX, pas la sélection du moment
+      }
+      if (aud.waitTrx) {
+        log('Carte son du TRX revenue : audio relancé', 'st-ok');
+        aud.waitTrx = '';
+        clearTimeout(aud.waitTm);
+        $('tSilent').hidden = true;
+        if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'audio_silent', on: false }));
+      }
       // Première fois : demander l'autorisation pour connaître le nom des entrées, puis choisir celle du TRX
       if (!$('audDev').value || !$('audDev').selectedOptions[0] || !$('audDev').selectedOptions[0].textContent.trim()) {
         const tmp = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -706,6 +757,7 @@
       const track = aud.stream.getAudioTracks()[0];
       await listInputs(track && track.getSettings().deviceId);
       if (track) store.set('audio.label', unAlias(track.label));
+      if (track && PC_CARD.test(track.label)) log('Attention : « ' + track.label + ' » est une carte son du PC, pas celle du TRX (« USB Audio CODEC » / « USB Audio Device »)', 'st-warn');
       if (!tx.ctx) listOutputs().then(() => startTxOut()).catch(() => {});
       // 12 kHz, PCM 16 bits : qualité nécessaire au décodage FT8 / FT4 / RTTY sur le serveur (trames de 40 ms)
       aud.ctx = new AudioContext({ sampleRate: ULAW.RATE_HQ });
@@ -739,6 +791,8 @@
       aud.ctx.onstatechange = drawAudio;
       store.set('audio.on', '1');
       log('Audio activé : ' + (track ? track.label : 'entrée par défaut'));
+      // Identifiant USB retenu : il sert à réparer la carte son même quand elle a disparu de Windows
+      audioUsbId().then((id) => { if (id && !PC_CARD.test(track ? track.label : '')) store.set('audio.usb', id.vid + ':' + id.pid); }).catch(() => {});
       if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'audio_state', active: true }));
     } catch (e) {
       log('Audio : ' + (e.name === 'NotAllowedError' ? 'accès au son refusé (autorisez le micro pour ce site)' : e.message), 'st-bad');
@@ -761,19 +815,24 @@
     drawAudio();
   }
 
-  $('btnAudio').addEventListener('click', () => (aud.ctx ? stopAudio(true) : startAudio()));
+  $('btnAudio').addEventListener('click', () => (aud.ctx ? stopAudio(true) : startAudio(true)));
   $('audDev').addEventListener('change', () => {
     const o = $('audDev').selectedOptions[0];
     if (o) store.set('audio.label', unAlias(o.textContent));
-    if (aud.ctx) { stopAudio(false); startAudio(); }
+    if (aud.ctx) { stopAudio(false); startAudio(true); }
   });
   // Chrome peut suspendre l'audio d'une page sans clic : le premier clic le relance
   document.addEventListener('click', () => { if (aud.ctx && aud.ctx.state === 'suspended') aud.ctx.resume().then(drawAudio); });
   setInterval(() => { $('audLvl').style.width = Math.min(100, Math.round(aud.peak * 100)) + '%'; aud.peak *= 0.9; }, 100);
   if (navigator.mediaDevices) {
-    navigator.mediaDevices.addEventListener('devicechange', () => listInputs($('audDev').value).catch(() => {}));
+    navigator.mediaDevices.addEventListener('devicechange', () => {
+      listInputs($('audDev').value).catch(() => {}).then(() => {
+        // Carte son du TRX revenue (réparée par l'assistant, câble rebranché) : l'audio repart seul
+        if (aud.waitTrx && !aud.ctx && !aud.resetting) setTimeout(() => { if (aud.waitTrx && !aud.ctx) startAudio(); }, 1500);
+      });
+    });
     // Réactivation automatique si l'audio était en marche (l'autorisation du site est mémorisée par Chrome)
-    if (store.get('audio.on', '0') === '1') listInputs().catch(() => {}).then(startAudio);
+    if (store.get('audio.on', '0') === '1') listInputs().catch(() => {}).then(() => startAudio());
   }
   drawAudio();
 
@@ -835,8 +894,8 @@
     const inDev = all.find((d) => d.kind === 'audioinput' && d.deviceId === $('audDev').value);
     // Choix mémorisé, sinon la même carte son que l'entrée du TRX, sinon un nom de carte son de TRX (jamais les haut-parleurs du PC)
     const pick = (saved != null ? real.find((d) => d.label === saved) : null)
-      || (saved == null && inDev && inDev.groupId ? real.find((d) => d.groupId === inDev.groupId) : null)
-      || (saved == null ? real.find((d) => /usb audio|codec|yaesu|ftx|ftdx|ic-?7300|icom/i.test(d.label)) : null);
+      || (saved == null && inDev && inDev.groupId && !PC_CARD.test(inDev.label) ? real.find((d) => d.groupId === inDev.groupId) : null)
+      || (saved == null ? real.find((d) => /usb audio|codec|yaesu|ftx|ftdx|ic-?7300|icom/i.test(d.label) && !PC_CARD.test(d.label)) : null);
     sel.value = pick ? pick.deviceId : (saved === '' ? '' : cur && outs.find((d) => d.deviceId === cur) ? cur : '');
     return outs;
   }
@@ -862,6 +921,7 @@
       tx.label = o.textContent;
       ctx.onstatechange = drawTxOut;
       log('Sortie son vers le TRX : ' + o.textContent);
+      if (PC_CARD.test(o.textContent)) log('Attention : « ' + o.textContent + ' » est une carte son du PC : la modulation numérique n’ira pas dans le TRX', 'st-warn');
     } catch (e) {
       log('Sortie son vers le TRX : ' + e.message, 'st-bad');
     }
@@ -1023,7 +1083,20 @@
     drawTxOut();
   });
   document.addEventListener('click', () => { if (tx.ctx && tx.ctx.state === 'suspended') tx.ctx.resume().then(drawTxOut); });
-  if (navigator.mediaDevices) navigator.mediaDevices.addEventListener('devicechange', () => { if (!tx.src) listOutputs().catch(() => {}); });
+  if (navigator.mediaDevices) navigator.mediaDevices.addEventListener('devicechange', () => {
+    if (tx.src) return;
+    listOutputs().then((outs) => {
+      if (tx.ctx && tx.label && !outs.some((d) => d.label === tx.label)) {
+        // Sortie du TRX disparue : Chrome jouerait sur les haut-parleurs du PC → sortie fermée (émission numérique refusée)
+        stopTxOut();
+        log('Sortie son vers le TRX « ' + tx.label + ' » disparue : émission numérique impossible jusqu’à son retour', 'st-bad');
+        drawTxOut();
+      } else if (!tx.ctx) {
+        const o = $('audOut').selectedOptions[0];
+        if (o && o.value) startTxOut();
+      }
+    }).catch(() => {});
+  });
   drawTxOut();
 
   // ------------------------------------------------------------ réglages

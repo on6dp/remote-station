@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.175 | [RemoteStation-Setup-0.37.175.exe](0.37.175/RemoteStation-Setup-0.37.175.exe) | [remote-station-0.37.175.tar.gz](0.37.175/remote-station-0.37.175.tar.gz) | Assistant carte son v3, plus de bascule sur la carte son du PC ; texte de la clé affiché — [empreintes SHA-256](0.37.175/SHA256SUMS.txt) |
 | 0.37.174 | [RemoteStation-Setup-0.37.174.exe](0.37.174/RemoteStation-Setup-0.37.174.exe) | [remote-station-0.37.174.tar.gz](0.37.174/remote-station-0.37.174.tar.gz) | Clé CW à distance (palettes / pioche) — [empreintes SHA-256](0.37.174/SHA256SUMS.txt) |
 | 0.37.173 | [RemoteStation-Setup-0.37.173.exe](0.37.173/RemoteStation-Setup-0.37.173.exe) | [remote-station-0.37.173.tar.gz](0.37.173/remote-station-0.37.173.tar.gz) | Ctrl+F5 sur la page Station du club puis sur /ftx1 — [empreintes SHA-256](0.37.173/SHA256SUMS.txt) |
 | 0.37.172 | [RemoteStation-Setup-0.37.172.exe](0.37.172/RemoteStation-Setup-0.37.172.exe) | [remote-station-0.37.172.tar.gz](0.37.172/remote-station-0.37.172.tar.gz) | Ctrl+F5 sur /ftx1 — [empreintes SHA-256](0.37.172/SHA256SUMS.txt) |

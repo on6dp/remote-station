@@ -10,7 +10,7 @@ A quoi ca sert
 Installation (une fois, sur le PC du club)
   1. Copier les fichiers de ce dossier dans un dossier du PC (ex. Bureau\assistant-carte-son).
   2. Double-clic sur installer-carte-son.cmd, accepter la demande d'administrateur.
-     Message attendu : "Assistant carte son installe et en marche (version 1)."
+     Message attendu : "Assistant carte son installe et en marche (version 3)."
   3. Recharger la page Station (Ctrl+F5) : la ligne "Assistant carte son" doit dire "en marche".
      La premiere fois que la page l'appelle, Chrome peut demander l'autorisation d'acceder aux
      appareils du reseau local : repondre "Autoriser".
@@ -19,6 +19,13 @@ Version 2 : a chaque demarrage, l'assistant coupe aussi la mise en veille USB de
 selective USB et "Autoriser l'ordinateur a eteindre ce peripherique" sur les concentrateurs USB et les
 cartes son USB), cause frequente d'une carte son figee. Pour passer de la version 1 a la version 2 :
 refaire un double-clic sur installer-carte-son.cmd.
+Version 3 : quand Windows met la carte son du TRX en erreur ("Peripherique USB composite" en erreur,
+"USB Audio CODEC" disparu du Gestionnaire de peripheriques), un simple redemarrage ne suffit pas.
+L'assistant la retire et la fait redetecter (comme "Desinstaller" puis "Rechercher les modifications
+sur le materiel"). Il surveille lui-meme cette carte son toutes les 20 s, meme page Station fermee, et la
+repare seul (au plus une fois toutes les 5 minutes). La page Station, elle, ne prend plus jamais une autre
+carte son (son du PC, "Mixage stereo") a la place de celle du TRX : elle attend son retour et repart seule.
+Pour passer a la version 3 : refaire un double-clic sur installer-carte-son.cmd.
 Si la page Station constate 45 s d'entree son muette (TRX en reception), elle relance seule la carte son
 (une fois toutes les 10 minutes au plus) et previent sur le dashboard.
 

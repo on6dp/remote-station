@@ -3117,6 +3117,7 @@
     ta.scrollTop = ta.scrollHeight;
     ta.focus();
   }
+  let cwKeyLine = null; // ligne d'émission en cours pour la clé de l'opérateur
   function initCw() {
     // Clé de l'opérateur (palettes / pioche branchées chez lui) : public/js/paddle.js
     if (window.RSPADDLE && $('cwKey')) {
@@ -3127,7 +3128,24 @@
           iControl: () => !!(api && api.iControl()),
           state: () => api && api.state(),
           say: (t, l, ms) => api && api.say(t, l, ms)
-        }
+        },
+        // Texte manipulé à la clé : affiché dans la fenêtre de réception CW, en couleur d'émission (comme les macros)
+        echo: (t) => {
+          const rx = $('cwRx');
+          if (!rx) return;
+          if (!cwKeyLine || !cwKeyLine.isConnected) {
+            const d = rx.ownerDocument;
+            const sp = d.createElement('span');
+            sp.className = 'rt-txline';
+            cwKeyLine = d.createElement('span');
+            cwKeyLine.className = 'rt-done';
+            sp.append('\n', cwKeyLine, '\n');
+            rx.appendChild(sp);
+          }
+          cwKeyLine.textContent += t;
+          rx.scrollTop = rx.scrollHeight;
+        },
+        echoEnd: () => { cwKeyLine = null; }
       });
     }
     $('cwBw').value = String(cwc.bw);

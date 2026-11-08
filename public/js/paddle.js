@@ -132,8 +132,46 @@
       api.send({ t: 'cwk', b: TX.b, e: TX.pend, h: r1(perf() - TX.start), wpm: S.wpm });
       TX.pend = [];
     }
+    // ------------------------------------------------------------------ texte manipulé, affiché dans la fenêtre CW
+    // (comme les macros) : on connaît chaque signe envoyé, le texte est reconstitué ici sans décodage audio
+    const MORSE = { '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E', '..-.': 'F', '--.': 'G', '....': 'H', '..': 'I',
+      '.---': 'J', '-.-': 'K', '.-..': 'L', '--': 'M', '-.': 'N', '---': 'O', '.--.': 'P', '--.-': 'Q', '.-.': 'R', '...': 'S',
+      '-': 'T', '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X', '-.--': 'Y', '--..': 'Z', '-----': '0', '.----': '1',
+      '..---': '2', '...--': '3', '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8', '----.': '9',
+      '.-.-.-': '.', '--..--': ',', '..--..': '?', '-..-.': '/', '-...-': '=', '.-.-.': '+', '-....-': '-', '.--.-.': '@',
+      '-.--.': '(', '-.--.-': ')', '---...': ':', '.----.': "'", '...-.-': '<SK>', '.-...': '<AS>', '-.-.-': '<KA>', '...-.': '<SN>',
+      '........': '<HH>' };
+    const DEC = { code: '', tc: null, tw: null, u: 0, word: false };
+    const echoOn = () => S.armed && TX.on && typeof opt.echo === 'function';
+    function decChar() {
+      win.clearTimeout(DEC.tc);
+      DEC.tc = null;
+      if (!DEC.code) return;
+      const c = MORSE[DEC.code] || '*';
+      DEC.code = '';
+      DEC.word = false;
+      if (echoOn()) opt.echo(c);
+    }
+    function decWord() {
+      DEC.tw = null;
+      decChar();
+      if (!DEC.word && echoOn()) { DEC.word = true; opt.echo(' '); }
+    }
+    // Un signe (point ou trait) se termine à T : fin de lettre après 2 unités de silence, espace entre mots après 5
+    function decSign(sign, Tend, u) {
+      win.clearTimeout(DEC.tc);
+      win.clearTimeout(DEC.tw);
+      DEC.code += sign;
+      if (DEC.code.length > 8) DEC.code = '........';
+      const w = Math.max(0, Tend - perf());
+      DEC.tc = win.setTimeout(decChar, w + 2 * u);
+      DEC.tw = win.setTimeout(decWord, w + 5 * u);
+    }
+    function decStop() { win.clearTimeout(DEC.tw); DEC.tw = null; decChar(); }
     function burstEnd() {
       if (!TX.on) return;
+      decStop();
+      if (typeof opt.echoEnd === 'function') opt.echoEnd();
       flush();
       api.send({ t: 'cwk', b: TX.b, e: [], h: r1(perf() - TX.start), end: true });
       TX.on = false;
@@ -192,6 +230,7 @@
       const len = next === 'dit' ? tm.dit : tm.dah;
       K.busy = true;
       K.cur = K.last = next;
+      decSign(next === 'dit' ? '.' : '-', T + len, 1200 / S.wpm);
       edge(T, 1);
       edge(T + len, 0);
       K.tNext = T + len + tm.sp;
@@ -208,7 +247,17 @@
         const d = K.dit || K.dah;
         if (d === K.down) return;
         K.down = d;
-        edge(perf(), d ? 1 : 0);
+        const now = perf();
+        edge(now, d ? 1 : 0);
+        // Pioche : point ou trait selon la durée, unité suivie en continu (vitesse de l'opérateur)
+        if (!DEC.u) DEC.u = 1200 / S.wpm;
+        if (d) { DEC.downAt = now; win.clearTimeout(DEC.tc); win.clearTimeout(DEC.tw); }
+        else if (DEC.downAt) {
+          const len = now - DEC.downAt;
+          const dah = len > 2 * DEC.u;
+          DEC.u = Math.max(20, Math.min(240, 0.75 * DEC.u + 0.25 * (dah ? len / 3 : len)));
+          decSign(dah ? '-' : '.', now, DEC.u * 1.2);
+        }
         return;
       }
       if (K[which] === down) return;

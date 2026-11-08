@@ -8,6 +8,10 @@
 # - N'obéit qu'aux pages des sites listés dans $Origines (Chrome envoie toujours l'adresse du site appelant).
 # - Ne sait faire qu'une chose : redémarrer le périphérique USB dont la page donne l'identifiant (VID:PID, ex. 0d8c:0016),
 #   comme « Désactiver / Activer » dans le Gestionnaire de périphériques. Le port série (CAT) du TRX n'est pas touché.
+# - Version 3 : si Windows a mis la carte son en erreur (« Périphérique USB composite » en Error, partie son absente),
+#   un simple redémarrage ne suffit pas : l'assistant la retire et la fait redétecter (pnputil /remove-device puis
+#   /scan-devices), comme « Désinstaller » + « Rechercher les modifications sur le matériel ». Il surveille aussi
+#   lui-même cette carte son toutes les 20 s, même page Station fermée, et la répare seul (au plus une fois / 5 min).
 # - Lancé au démarrage de Windows par la tâche planifiée « RemoteStation carte son » (voir installer-carte-son.cmd).
 # - Journal : rs-carte-son.log, à côté de ce fichier.
 param(
@@ -15,10 +19,18 @@ param(
   [string[]]$Origines = @('https://remote.op0p.be')
 )
 $ErrorActionPreference = 'Stop'
-$Version = '2'
+$Version = '3'
 # Messages de pnputil / powercfg lus dans la page de codes de la console (sinon « redÚmarrage » au lieu de « redémarrage »)
 try { [Console]::OutputEncoding = [Text.Encoding]::GetEncoding([Globalization.CultureInfo]::CurrentCulture.TextInfo.OEMCodePage) } catch { }
 $Journal = Join-Path $PSScriptRoot 'rs-carte-son.log'
+$FichierId = Join-Path $PSScriptRoot 'rs-carte-son.id'   # VID:PID de la carte son du TRX, donné par la page Station
+$Surveille = ''
+try { if (Test-Path $FichierId) { $Surveille = (Get-Content $FichierId -TotalCount 1).Trim().ToLower() } } catch { }
+if ($Surveille -notmatch '^[0-9a-f]{4}:[0-9a-f]{4}$') { $Surveille = '' }
+$Carte = ''
+$Reparation = ''
+$Mauvais = 0
+$DerniereReparation = [datetime]::MinValue
 
 function Ecrire([string]$t) {
   try {
@@ -47,14 +59,57 @@ function Repondre($ctx, [int]$code, $obj) {
   $res.Close()
 }
 
+function Motif([string]$vid, [string]$prod) { 'USB\VID_' + $vid.ToUpper() + '&PID_' + $prod.ToUpper() + '*' }
+
+# État de la carte son du TRX : ok, erreur (périphérique USB en erreur), son absent (partie son pas démarrée), absente
+function EtatCarte([string]$vid, [string]$prod) {
+  $motif = Motif $vid $prod
+  $tous = @(Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue | Where-Object { $_.InstanceId -like $motif })
+  if ($tous.Count -eq 0) { return 'absente' }
+  if (@($tous | Where-Object { $_.Status -eq 'Error' -and $_.InstanceId -notmatch '&MI_' }).Count -gt 0) { return 'erreur' }
+  $son = @($tous | Where-Object { $_.Class -eq 'MEDIA' })
+  if ($son.Count -eq 0 -or @($son | Where-Object { $_.Status -ne 'OK' }).Count -gt 0) { return 'son absent' }
+  return 'ok'
+}
+
+# Réparation : retirer le périphérique USB et ses fonctions (même les traces laissées par Windows), puis redétection
+function Reparer([string]$vid, [string]$prod) {
+  $motif = Motif $vid $prod
+  $tous = @(Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object { $_.InstanceId -like $motif })
+  if ($tous.Count -eq 0) { return @{ ok = $false; msg = 'carte son introuvable dans Windows (TRX éteint ou câble USB débranché ?)' } }
+  # Fonctions (&MI_) d'abord, le périphérique « parent » ensuite
+  $ordre = @($tous | Where-Object { $_.InstanceId -match '&MI_' }) + @($tous | Where-Object { $_.InstanceId -notmatch '&MI_' })
+  foreach ($d in $ordre) {
+    $o = (& pnputil.exe /remove-device "$($d.InstanceId)" 2>&1 | Out-String).Trim()
+    Ecrire "retrait $($d.InstanceId) ($($d.Status)) : $LASTEXITCODE $o"
+  }
+  Start-Sleep -Seconds 2
+  $o = (& pnputil.exe /scan-devices 2>&1 | Out-String).Trim()
+  Ecrire "redétection : $LASTEXITCODE $o"
+  for ($i = 0; $i -lt 10; $i++) {
+    Start-Sleep -Seconds 2
+    if ((EtatCarte $vid $prod) -eq 'ok') { return @{ ok = $true; msg = 'carte son réparée (retirée puis redétectée par Windows)' } }
+  }
+  $e = EtatCarte $vid $prod
+  return @{ ok = $false; msg = "carte son toujours $e après réparation : éteindre le TRX, débrancher son câble USB 15 s, rallumer et rebrancher (sinon autre câble ou autre prise USB du PC)" }
+}
+
 function Relancer([string]$vid, [string]$prod) {
   if ($vid -notmatch '^[0-9a-fA-F]{4}$' -or $prod -notmatch '^[0-9a-fA-F]{4}$') {
     return @{ ok = $false; msg = 'identifiant USB invalide' }
   }
   $id = "${vid}:${prod}".ToLower()
-  $motif = 'USB\VID_' + $vid.ToUpper() + '&PID_' + $prod.ToUpper() + '*'
+  $motif = Motif $vid $prod
   $tous = @(Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -like $motif })
   if ($tous.Count -eq 0) { return @{ ok = $false; msg = "aucun périphérique USB $id branché (TRX éteint ou câble USB débranché ?)" } }
+  # Carte son mise en erreur par Windows : un redémarrage ne suffit pas, réparation directe
+  $avant = EtatCarte $vid $prod
+  if ($avant -eq 'erreur' -or $avant -eq 'son absent') {
+    $r = Reparer $vid $prod
+    $r.msg = "carte son $avant ; " + $r.msg
+    $script:Reparation = (Get-Date -Format 'dd/MM HH:mm') + ' ' + $r.msg
+    return $r
+  }
   # Périphérique USB « parent » (sans &MI_) : le redémarrer relance toutes ses fonctions (son en entrée et en sortie)
   $parents = @($tous | Where-Object { $_.InstanceId -notmatch '&MI_' })
   $cibles = if ($parents.Count -gt 0) { $parents } else { $tous }
@@ -84,7 +139,41 @@ function Relancer([string]$vid, [string]$prod) {
       }
     }
   }
-  return @{ ok = $true; msg = ($faits -join ' ; ') }
+  # Redémarrage fait : la partie son doit revenir ; sinon (Windows l'a mise en erreur) réparation
+  for ($i = 0; $i -lt 5; $i++) {
+    Start-Sleep -Seconds 2
+    if ((EtatCarte $vid $prod) -eq 'ok') { return @{ ok = $true; msg = ($faits -join ' ; ') } }
+  }
+  $r = Reparer $vid $prod
+  $r.msg = ($faits -join ' ; ') + ' ; carte son pas revenue : ' + $r.msg
+  $script:Reparation = (Get-Date -Format 'dd/MM HH:mm') + ' ' + $r.msg
+  return $r
+}
+
+# Surveillance (toutes les 20 s) de la carte son du TRX : en erreur deux fois de suite → réparation, au plus une fois / 5 min.
+# Carte son « absente » (TRX éteint, câble débranché) : rien à faire.
+function Surveiller {
+  if (-not $script:Surveille) { return }
+  $v = $script:Surveille.Substring(0, 4); $p = $script:Surveille.Substring(5, 4)
+  $e = EtatCarte $v $p
+  $script:Carte = $e
+  if ($e -eq 'erreur' -or $e -eq 'son absent') { $script:Mauvais++ } else { $script:Mauvais = 0 }
+  if ($script:Mauvais -ge 2 -and ((Get-Date) - $script:DerniereReparation).TotalMinutes -ge 5) {
+    $script:DerniereReparation = Get-Date
+    $r = Reparer $v $p
+    $script:Reparation = (Get-Date -Format 'dd/MM HH:mm') + " carte son $e ; " + $r.msg
+    Ecrire "surveillance : carte son $($script:Surveille) $e → $($r.msg)"
+    $script:Carte = EtatCarte $v $p
+    $script:Mauvais = 0
+  }
+}
+function Retenir([string]$vid, [string]$prod) {
+  $id = "${vid}:${prod}".ToLower()
+  if ($id -notmatch '^[0-9a-f]{4}:[0-9a-f]{4}$' -or $id -eq $script:Surveille) { return }
+  $script:Surveille = $id
+  $script:Mauvais = 0
+  try { Set-Content -Path $FichierId -Value $id -Encoding ASCII } catch { }
+  Ecrire "carte son du TRX surveillée : $id"
 }
 
 # Mise en veille USB coupée (cause fréquente d'une carte son figée en silence) : au démarrage, à chaque fois
@@ -124,7 +213,12 @@ try { $ecoute.Start() } catch { Ecrire "impossible d'écouter sur le port $Port 
 Ecrire "démarré (version $Version, port $Port, sites autorisés : $($Origines -join ', '))"
 
 while ($ecoute.IsListening) {
-  $ctx = $ecoute.GetContext()
+  # Attente d'une demande de la page Station, avec un tour de surveillance de la carte son toutes les 20 s
+  $att = $ecoute.BeginGetContext($null, $null)
+  while (-not $att.AsyncWaitHandle.WaitOne(20000)) {
+    try { Surveiller } catch { Ecrire "surveillance : $($_.Exception.Message)" }
+  }
+  $ctx = $ecoute.EndGetContext($att)
   try {
     $req = $ctx.Request
     $o = $req.Headers['Origin']
@@ -135,7 +229,17 @@ while ($ecoute.IsListening) {
       Ecrire "refusé : $($req.HttpMethod) $chemin depuis $o"
       Repondre $ctx 403 @{ ok = $false; msg = 'site non autorisé' }
     } elseif ($chemin -eq '/etat') {
-      Repondre $ctx 200 @{ ok = $true; version = $Version; veille = $Veille }
+      if ($Surveille) { try { $script:Carte = EtatCarte $Surveille.Substring(0, 4) $Surveille.Substring(5, 4) } catch { } }
+      Repondre $ctx 200 @{ ok = $true; version = $Version; veille = $Veille; surveille = $Surveille; carte = $Carte; reparation = $Reparation }
+    } elseif ($chemin -eq '/surveiller' -and $req.HttpMethod -eq 'POST' -and $o) {
+      $lu = New-Object System.IO.StreamReader($req.InputStream, [Text.Encoding]::UTF8)
+      $q = $null
+      try { $q = $lu.ReadToEnd() | ConvertFrom-Json } catch { }
+      $lu.Close()
+      if ($q -and ([string]$q.vid) -match '^[0-9a-fA-F]{4}$' -and ([string]$q.pid) -match '^[0-9a-fA-F]{4}$') {
+        Retenir ([string]$q.vid) ([string]$q.pid)
+        Repondre $ctx 200 @{ ok = $true; surveille = $Surveille }
+      } else { Repondre $ctx 400 @{ ok = $false; msg = 'identifiant USB invalide' } }
     } elseif ($chemin -eq '/relancer' -and $req.HttpMethod -eq 'POST' -and $o) {
       $lu = New-Object System.IO.StreamReader($req.InputStream, [Text.Encoding]::UTF8)
       $corps = $lu.ReadToEnd()
@@ -144,6 +248,7 @@ while ($ecoute.IsListening) {
       try { $q = $corps | ConvertFrom-Json } catch { }
       if (-not $q) { Repondre $ctx 400 @{ ok = $false; msg = 'demande illisible' } }
       else {
+        if (([string]$q.vid) -match '^[0-9a-fA-F]{4}$' -and ([string]$q.pid) -match '^[0-9a-fA-F]{4}$') { Retenir ([string]$q.vid) ([string]$q.pid) }
         $r = Relancer ([string]$q.vid) ([string]$q.pid)
         Ecrire ("relance demandée par " + ([string]$q.by) + " (" + ([string]$q.vid) + ":" + ([string]$q.pid) + ") : " + $r.msg)
         Repondre $ctx 200 $r
