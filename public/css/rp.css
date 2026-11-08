@@ -1904,3 +1904,5 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .cwp-crow2 button { background: #fff; color: #000; font-weight: 800; border: 0; border-radius: 4px; padding: 4px 10px; cursor: pointer; }
 .cwp-call[hidden] { display: none; }
 @media (max-width: 1050px) { .cwp-cgrid { grid-template-columns: 1fr; } }
+.dg-alog select { font-size: 11px; padding: 1px 3px; background: #07090d; border: 1px solid var(--v2-border); border-radius: 4px; color: var(--v2-text-bright); max-width: 190px; }
+.qso-note { color: #ffb84d; margin: 0 0 6px; }

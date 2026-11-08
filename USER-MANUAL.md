@@ -825,7 +825,7 @@ The form at the top of the tab:
 | **RST envoyé** (sent), **RST reçu** (received), **Puiss. W** (power), **Remarque** (remark) | Reports from the Correspondant row, TRX power, free text. |
 | `Enregistrer dans le carnet` (save) / `Annuler` (cancel) | Adds the QSO (duplicate check as in the Logbooks tab) or closes without logging anything. |
 
-In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé** » (QSO finished) window summarises the QSO (callsign, locator, mode, frequency, reports, times): `Enregistrer dans le carnet` saves it, `Ne pas enregistrer` (don't save) closes it.
+In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé** » (QSO finished) window summarises the QSO (callsign, locator, mode, frequency, reports, times): `Enregistrer dans le carnet` saves it, `Ne pas enregistrer` (don't save) closes it. The **Log** choice in the FT8 transmit bar (right of "Répondre au 1er") avoids this window: **auto when sending RR73 / 73** (like WSJT-X "Log automatically"), **auto when receiving RR73 / 73** (if the QSO ends with your sending and no RR73 / 73 received, the form still asks), or **auto at the first RR73 / 73** (sent or received); the QSO then goes into the logbook on its own (other station's name and QTH included when known) and a message confirms it. Without the automatic sequence, or for a forgotten QSO: **Logbooks** tab, type the call, `⇩ TRX` (TRX frequency and mode), the reports, then save.
 
 <a id="l-liste"></a>
 ### 14.2 The QSO list

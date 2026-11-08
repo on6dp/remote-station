@@ -835,7 +835,7 @@ La fiche en haut de l'onglet :
 | **RST envoyé**, **RST reçu**, **Puiss. W**, **Remarque** | Reports de la ligne Correspondant, puissance du TRX, texte libre. |
 | `Enregistrer dans le carnet` / `Annuler` | Ajoute le QSO (contrôle des doublons comme dans l'onglet Logbooks) ou ferme sans rien noter. |
 
-En **FT8 · FT4 · FT2**, à la fin de la séquence, une petite fenêtre « **QSO terminé** » résume le QSO (indicatif, locator, mode, fréquence, reports, heures) : `Enregistrer dans le carnet` l'enregistre, `Ne pas enregistrer` la ferme.
+En **FT8 · FT4 · FT2**, à la fin de la séquence, une petite fenêtre « **QSO terminé** » résume le QSO (indicatif, locator, mode, fréquence, reports, heures) : `Enregistrer dans le carnet` l'enregistre, `Ne pas enregistrer` la ferme. Le choix **Log** de la barre d'émission FT8 (à droite de « Répondre au 1er ») évite cette fenêtre : **auto à l'envoi du RR73 / 73** (comme « Log automatically » de WSJT-X), **auto à la réception du RR73 / 73** (si la fin arrive par votre envoi sans RR73 / 73 reçu, la fiche reste à confirmer), ou **auto au 1er RR73 / 73** (envoyé ou reçu) ; le QSO va alors tout seul dans le carnet (nom et QTH du correspondant repris s'ils sont connus) et un message le confirme. Sans la séquence automatique, ou pour un QSO oublié : onglet **Logbooks**, tapez l'indicatif, `⇩ TRX` (fréquence et mode du TRX), les reports, puis enregistrez.
 
 <a id="l-liste"></a>
 ### 14.2 La liste des QSO

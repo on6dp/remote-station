@@ -2416,16 +2416,16 @@ function seqOnDecodes(mode, slot, list, side) {
   }
 }
 /** Proposition d'enregistrement du QSO dans le carnet (une seule fois par QSO). */
-function seqLogPrompt(s, why) {
+function seqLogPrompt(s, why, again) {
   const call = s.dx.call;
-  if (!SEQ_CALL_RE.test(baseCall(call)) || !s.qsoStart || s.prompted === s.qsoStart) return;
+  if (!SEQ_CALL_RE.test(baseCall(call)) || !s.qsoStart || (s.prompted === s.qsoStart && !again)) return;
   s.prompted = s.qsoStart;
   const start = new Date(s.qsoStart);
   const end = new Date();
   const d8 = (x) => x.toISOString().slice(0, 10).replace(/-/g, '');
   const t6 = (x) => x.toISOString().slice(11, 19).replace(/:/g, '');
   const dial = s.txDial || txFreq() || 0;
-  send(s.conn, { t: 'ftx_qso', why, qso: { call, gridsquare: s.dx.grid || '', mode: s.mode, station: seqMe(),
+  send(s.conn, { t: 'ftx_qso', why, again: !!again, qso: { call, gridsquare: s.dx.grid || '', mode: s.mode, station: seqMe(),
     freq: ((dial + s.f0) / 1e6).toFixed(6), rst_sent: s.rptSent || '', rst_rcvd: s.rptRcvd || '',
     qso_date: d8(start), time_on: t6(start), qso_date_off: d8(end), time_off: t6(end), tx_pwr: radio.power || '' } });
 }
@@ -2437,7 +2437,8 @@ function seqQsoDone(why) {
   if (ftxPend && ftxPend.state === 'wait' && ftxPend.conn === s.conn) ftxCancel('QSO terminé', true);
   s.on = false;
   seqSetNtx(6);
-  if (s.prompted !== s.qsoStart) seqLogPrompt(s, why);
+  // Fiche déjà proposée (RR73 reçu) : la fin du QSO est signalée aussi (log automatique « à l'envoi du 73 »)
+  seqLogPrompt(s, why, s.prompted === s.qsoStart);
   s.qsoStart = 0;
   s.rptRcvd = '';
   updateDigi();

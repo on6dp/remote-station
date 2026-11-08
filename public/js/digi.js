@@ -205,6 +205,12 @@
         <option value="auto">auto</option><option value="0">1re</option><option value="1">2e</option>
       </select>
       <label class="dg-chk" title="En appel CQ (Tx6), celui qui vous répond devient le correspondant et la séquence continue toute seule (Call 1st de WSJT-X)"><input type="checkbox" id="dgCall1st"> Répondre au 1er</label>
+      <label class="dg-chk dg-alog" title="Fin du QSO (RR73 / 73) : fiche « QSO terminé » à confirmer, ou QSO enregistré tout seul dans le carnet (Log automatically de WSJT-X)">Log <select id="dgAutoLog">
+        <option value="">fiche à confirmer</option>
+        <option value="sent">auto à l’envoi du RR73 / 73</option>
+        <option value="rcvd">auto à la réception du RR73 / 73</option>
+        <option value="any">auto au 1er RR73 / 73 (envoyé ou reçu)</option>
+      </select></label>
       <span class="seg ft-txside" id="dgTxSide" title="FTDX101 en double réception : VFO d'émission (MAIN = VFO-A, SUB = VFO-B). Un double-clic sur un message choisit tout seul le VFO de la station appelée."><span class="dg-f">TX</span><button class="btn" type="button" data-side="A" aria-pressed="true">VFO-A</button><button class="btn" type="button" data-side="B" aria-pressed="false">VFO-B</button></span>
       <label class="dg-txc" id="dgTxcWrap" title="TX call : indicatif sous lequel partent les émissions numériques (FT8 / FT4 / FT2, RTTY, JTTY…) — celui de la station ou le vôtre. Choisi par celui qui a la main."><span class="dg-f">TX call</span> <select id="dgTxCall"></select></label>
       <button class="btn dg-stop" type="button" id="dgStop" disabled title="Arrête l'émission automatique (Halt Tx)">■ Arrêter</button>
@@ -3962,7 +3968,38 @@
     if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), parity: txParity(ftxSel), call1st: store.get('call1st', '1') === '1', side: sd() });
   }
   // Fin de QSO (73 / RR73) : proposition d'enregistrement dans le carnet, comme « Prompt me to log QSO » de WSJT-X
-  function qsoPrompt(q) {
+  // Fin d'un QSO FT8 / FT4 / FT2 : fiche à confirmer, ou enregistrement automatique selon le choix « Log »
+  const ftxLogged = new Set();
+  function ftxQsoEnd(m) {
+    const q = m.qso;
+    const key = q.call + '|' + q.qso_date + '|' + q.time_on;
+    if (ftxLogged.has(key)) return;
+    const al = store.get('ftautolog', '');
+    const sent = /envoy/.test(m.why || '');
+    const rcvd = /re[çc]u/.test(m.why || '');
+    if (al === 'any' || (al === 'sent' && sent) || (al === 'rcvd' && rcvd)) {
+      ftxLogged.add(key);
+      return ftxLogAdd(q, true);
+    }
+    if (al === 'sent' && rcvd) return;              // l'envoi du 73 suit : enregistrement à ce moment-là
+    if (m.again) return;                             // fiche déjà proposée pour ce QSO
+    if (al === 'rcvd' && sent) { ftxLogged.add(key); return qsoPrompt(q, '73 envoyé sans RR73 / 73 reçu : enregistrer ?'); }
+    ftxLogged.add(key);
+    qsoPrompt(q);
+  }
+  function ftxLogAdd(q, auto) {
+    const qso = Object.assign({}, q);
+    // Nom et QTH du correspondant (fiche QRZ.com ou saisis dans la barre du correspondant)
+    if (dx && String(dx.call || '').toUpperCase() === String(q.call || '').toUpperCase()) {
+      if (dx.name && !qso.name) qso.name = dx.name;
+      if (dx.qth && !qso.qth) qso.qth = dx.qth;
+    }
+    if (!qso.gridsquare) delete qso.gridsquare;
+    if (!qso.tx_pwr) delete qso.tx_pwr;
+    api.send({ t: 'log_add', qso });
+    if (auto && api) api.say('Log automatique : QSO avec ' + q.call + ' enregistré dans le carnet.', '', 4000);
+  }
+  function qsoPrompt(q, note) {
     const doc = ($('msgFtx') && $('msgFtx').ownerDocument) || document;
     const old = doc.getElementById('qsoDlg');
     if (old) old.remove();
@@ -3970,7 +4007,7 @@
     dlg.id = 'qsoDlg';
     dlg.className = 'macro-dlg qso-dlg';
     const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    dlg.innerHTML = '<div class="qso-b"><h3>QSO terminé</h3><p><b>' + esc(q.call) + '</b>' + (q.gridsquare ? ' · ' + esc(q.gridsquare) : '') + ' · ' + esc(q.mode) + ' · ' +
+    dlg.innerHTML = '<div class="qso-b"><h3>QSO terminé</h3>' + (note ? '<p class="qso-note">' + esc(note) + '</p>' : '') + '<p><b>' + esc(q.call) + '</b>' + (q.gridsquare ? ' · ' + esc(q.gridsquare) : '') + ' · ' + esc(q.mode) + ' · ' +
       esc(Number(q.freq).toFixed(6)) + ' MHz<br>Report envoyé ' + esc(q.rst_sent || '—') + ' · reçu ' + esc(q.rst_rcvd || '—') + ' · ' +
       esc(q.time_on.slice(0, 2) + ':' + q.time_on.slice(2, 4)) + '–' + esc(q.time_off.slice(0, 2) + ':' + q.time_off.slice(2, 4)) + ' UTC</p>' +
       '<div class="md-act"><button class="btn" type="button" data-a="log">Enregistrer dans le carnet</button><button class="btn" type="button" data-a="no">Ne pas enregistrer</button></div></div>';
@@ -3978,15 +4015,7 @@
     try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
     dlg.addEventListener('close', () => dlg.remove());
     dlg.querySelector('[data-a="log"]').addEventListener('click', () => {
-      const qso = Object.assign({}, q);
-      // Nom et QTH du correspondant (fiche QRZ.com ou saisis dans la barre du correspondant)
-      if (dx && String(dx.call || '').toUpperCase() === String(q.call || '').toUpperCase()) {
-        if (dx.name && !qso.name) qso.name = dx.name;
-        if (dx.qth && !qso.qth) qso.qth = dx.qth;
-      }
-      if (!qso.gridsquare) delete qso.gridsquare;
-      if (!qso.tx_pwr) delete qso.tx_pwr;
-      api.send({ t: 'log_add', qso });
+      ftxLogAdd(q, false);
       dlg.remove();
     });
     dlg.querySelector('[data-a="no"]').addEventListener('click', () => dlg.remove());
@@ -5252,6 +5281,13 @@
       $('dgPar').addEventListener('change', () => { store.set('ftxpar', $('dgPar').value); ftxCfg(); });
       $('dgCall1st').checked = store.get('call1st', '1') === '1';
       $('dgCall1st').addEventListener('change', () => { store.set('call1st', $('dgCall1st').checked ? '1' : '0'); ftxCfg(); });
+      if ($('dgAutoLog')) {
+        $('dgAutoLog').value = store.get('ftautolog', '');
+        $('dgAutoLog').addEventListener('change', () => {
+          store.set('ftautolog', $('dgAutoLog').value);
+          if (api && $('dgAutoLog').value) api.say('Log automatique : les QSO FT8 / FT4 / FT2 terminés vont tout seuls dans le carnet (' + $('dgAutoLog').selectedOptions[0].textContent + ').', '', 5000);
+        });
+      }
       $('dgStop').addEventListener('click', () => api && api.send({ t: 'ftx_stop' }));
       $('dgRxTx').addEventListener('click', () => setRx(sd() === 'B' ? txFB : txF, sd()));
       // Repli du panneau ou onglet du navigateur caché : le serveur arrête de décoder pour ce membre
@@ -5299,7 +5335,7 @@
     onMessage(m) {
       if (m.t === 'qrz_info') { qrzInfo(m); if (window.RSLOG && window.RSLOG.onQrz) window.RSLOG.onQrz(m); if (LOGW() && LOGW().onQrz) LOGW().onQrz(m); return true; }
       if (LOGP && /^log_/.test(m.t)) { if (LOGW()) LOGW().onMessage(m); return true; } // carnet de trafic (sa fenêtre)
-      if (m.t === 'ftx_qso' && m.qso) { qsoPrompt(m.qso); return true; }
+      if (m.t === 'ftx_qso' && m.qso) { ftxQsoEnd(m); return true; }
       if (m.t === 'spots' || m.t === 'spot') {
         if (m.t === 'spots') bmSpots.clear();
         bmAdd(m.list);
