@@ -5001,7 +5001,7 @@
     /** Page « Poste CW » (cw.html) : macros CW, envoi de texte, correspondant, vitesse des macros */
     cwKit: {
       // set : 'CW' (macros habituelles) ou 'CWC' (macros contest CW)
-      macros: (set) => macroList(set || 'CW').map((m, i) => ({ i, name: m.name || '—', tx: /<TX>/i.test(m.text), log: /<LOG>/i.test(m.text), preview: cwText(m.text).replace(/\n/g, ' ') })),
+      macros: (set) => macroList(set || 'CW').map((m, i) => ({ i, name: m.name || '—', tx: /<TX>/i.test(m.text), log: /<LOG>/i.test(m.text), exch: /<EXCH>|<XOUT>|<CNTR>|<SERNO>/i.test(m.text), preview: cwText(m.text).replace(/\n/g, ' ') })),
       use(i, set, doc) {
         const m = macroList(set || 'CW')[i];
         if (!m) return '';
@@ -5026,6 +5026,17 @@
         store.set('cntrcall', '');
         if ($('rtcNr') && document.activeElement !== $('rtcNr')) $('rtcNr').value = String(n).padStart(3, '0');
       },
+      // QSO enregistré dans le log du contest : n° de série suivant (sauf si la macro TU l'a déjà fait pour ce correspondant)
+      afterLog(call) {
+        const who = String(call || '').toUpperCase().trim() || '?';
+        let n = Number(store.get('cntr', '1')) || 1;
+        if (store.get('cntrcall', '') === who + '|' + n) return;
+        n++;
+        store.set('cntr', n);
+        store.set('cntrcall', who + '|' + n);
+        if ($('rtcNr') && document.activeElement !== $('rtcNr')) $('rtcNr').value = String(n).padStart(3, '0');
+      },
+      utcNow: () => now(),
       zones: () => ({ cqz: store.get('rtcqz', '14'), itu: store.get('rtitu', '27'), name: store.get('rtcname', '') }),
       setZones(z) {
         if (z.cqz != null) store.set('rtcqz', String(z.cqz).replace(/\D/g, '').slice(0, 2) || '14');

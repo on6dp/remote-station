@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.184 | [RemoteStation-Setup-0.37.184.exe](0.37.184/RemoteStation-Setup-0.37.184.exe) | [remote-station-0.37.184.tar.gz](0.37.184/remote-station-0.37.184.tar.gz) | Log du contest CW (style N1MM) — [empreintes SHA-256](0.37.184/SHA256SUMS.txt) |
 | 0.37.183 | [RemoteStation-Setup-0.37.183.exe](0.37.183/RemoteStation-Setup-0.37.183.exe) | [remote-station-0.37.183.tar.gz](0.37.183/remote-station-0.37.183.tar.gz) | Poste CW compact + contests CW — [empreintes SHA-256](0.37.183/SHA256SUMS.txt) |
 | 0.37.182 | [RemoteStation-Setup-0.37.182.exe](0.37.182/RemoteStation-Setup-0.37.182.exe) | [remote-station-0.37.182.tar.gz](0.37.182/remote-station-0.37.182.tar.gz) | Spot CW : passage en CW et indicatif dans Correspondant — [empreintes SHA-256](0.37.182/SHA256SUMS.txt) |
 | 0.37.181 | [RemoteStation-Setup-0.37.181.exe](0.37.181/RemoteStation-Setup-0.37.181.exe) | [remote-station-0.37.181.tar.gz](0.37.181/remote-station-0.37.181.tar.gz) | Aide : brancher sa clé double palette — [empreintes SHA-256](0.37.181/SHA256SUMS.txt) |

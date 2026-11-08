@@ -30,7 +30,27 @@
         <label>ITU <input id="cwpItu" maxlength="2" inputmode="numeric" class="cwp-z"></label>
         <label>Prénom <input id="cwpName" maxlength="12" spellcheck="false" class="cwp-nm"></label>
       </div>
-      <div class="cwp-macros" id="cwpCMacros" hidden></div>
+      <div class="cwp-cgrid" id="cwpCtBody" hidden>
+        <div class="cwp-cleft">
+          <div class="cwp-entry" title="Entrée : émet le bon message et enregistre (comme l’ESM de N1MM) · Espace : champ suivant · Alt+W : effacer">
+            <span class="cwp-esm"><button type="button" id="cwpRun" title="Vous appelez CQ : Entrée = CQ, puis échange, puis TU + log">RUN</button><button type="button" id="cwpSp" title="Vous répondez aux CQ : Entrée = votre indicatif, puis TU + échange + log">S&amp;P</button></span>
+            <label>Indicatif <input id="cwpECall" maxlength="15" autocomplete="off" spellcheck="false"></label>
+            <label>RST <input id="cwpERs" maxlength="3" class="cwp-rst" title="RST envoyé"></label>
+            <label>Envoyé <input id="cwpEStx" maxlength="30" spellcheck="false" title="Échange envoyé (rempli à l’envoi de l’échange)"></label>
+            <label>RST <input id="cwpERr" maxlength="3" class="cwp-rst" title="RST reçu"></label>
+            <label>Reçu <input id="cwpESrx" maxlength="30" autocomplete="off" spellcheck="false" title="Échange reçu (n° de série, zone…)"></label>
+            <button type="button" class="cwp-elog" id="cwpELog">LOG ↵</button>
+            <button type="button" class="cwp-ewipe" id="cwpEWipe" title="Effacer la ligne (Alt+W)">EFFACER</button>
+            <span class="cwp-dupe" id="cwpDupe"></span>
+          </div>
+          <div class="cwp-macros" id="cwpCMacros"></div>
+        </div>
+        <div class="cwp-cright">
+          <div class="cwp-cstats" id="cwpCStats">—</div>
+          <div class="cwp-clogw"><table class="cwp-clog"><thead><tr><th>UTC</th><th>Bande</th><th>Indicatif</th><th>Env.</th><th>Reçu</th></tr></thead><tbody id="cwpCLog"></tbody></table></div>
+          <div class="cwp-crow2"><label title="QSO de ce contest comptés depuis cette date (doublons, compteurs, Cabrillo)">Depuis <input type="date" id="cwpFrom"></label><button type="button" id="cwpCab" title="Fichier Cabrillo de ce contest (QSO enregistrés depuis la date choisie)">CABRILLO</button></div>
+        </div>
+      </div>
     </section>
     <section class="cwp-box cwp-mac">
       <h2>Macros <small id="cwpMacHint">F1 à F12 · clic droit ou ✎ : modifier</small></h2>

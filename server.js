@@ -3108,6 +3108,16 @@ function onOperator(conn, m) {
       sendWorked(false);
       return;
     }
+    case 'ctst_list': {
+      // Log d'un contest (page Poste CW) : QSO du carnet avec cet identifiant, depuis la date donnée, pour les doublons,
+      // les compteurs et la liste ; le carnet général reste la seule base
+      const id = String(m.contest || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 40);
+      const from = String(m.from || '').replace(/\D/g, '').slice(0, 8);
+      const items = id ? book.qsos.filter((q) => q.contest_id === id && (!from || q.qso_date >= from)).slice(-5000).map((q) => ({
+        id: q.id, call: q.call, band: q.band, mode: q.mode, d: q.qso_date, t: q.time_on, freq: q.freq, stx: q.stx_string || q.stx || '', srx: q.srx_string || q.srx || '',
+        rs: q.rst_sent || '', rr: q.rst_rcvd || '', op: q.operator || '', st: q.station_callsign || '' })) : [];
+      return send(conn, { t: 'ctst_list', contest: id, from, items });
+    }
     case 'log_export': {
       // Chaque opérateur récupère ses QSO : son indicatif personnel (TX call), ou ses QSO faits sous l'indicatif du club
       // (« mine ») ; les administrateurs exportent tout, par TX call ou en entier
@@ -3119,10 +3129,12 @@ function onOperator(conn, m) {
       }
       let list = book.query({ from: m.from, to: m.to }).filter((q) => (!m.callsign || q.station_callsign === m.callsign) && (!m.mine || q.operator === me || q.by === me));
       if (m.pending && LOG_SERVICES.indexOf(m.pending) >= 0) list = sync.pending(m.pending, { from: m.from, to: m.to, callsign: m.callsign });
+      // Log d'un contest (Poste CW) : seulement les QSO de ce contest
+      if (m.contestOnly && m.contest) { const cid = String(m.contest).toUpperCase(); list = list.filter((q) => q.contest_id === cid); }
       const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       const who = (String(m.callsign || 'TOUS').toUpperCase().replace(/[^A-Z0-9]/g, '')) + (m.mine ? '-' + me.replace(/[^A-Z0-9]/g, '') : '');
       if (m.fmt === 'cabrillo') {
-        return send(conn, { t: 'log_export', name: who + '-' + stamp + '.log', mime: 'text/plain', data: LB.toCabrillo(list, { callsign: m.callsign || cfg.digiCall, contest: m.contest, grid: cfg.stationGrid, club: cfg.clubName && /UBA/.test(cfg.clubName) ? 'UBA-LGE' : '', version: VERSION }), count: list.length });
+        return send(conn, { t: 'log_export', name: (m.contestOnly && m.contest ? String(m.contest).toUpperCase().replace(/[^A-Z0-9-]/g, '') + '-' : '') + who + '-' + stamp + '.log', mime: 'text/plain', data: LB.toCabrillo(list, { callsign: m.callsign || cfg.digiCall, contest: m.contest, grid: cfg.stationGrid, club: cfg.clubName && /UBA/.test(cfg.clubName) ? 'UBA-LGE' : '', version: VERSION }), count: list.length, tag: m.tag === 'cwpage' ? 'cwpage' : undefined });
       }
       return send(conn, { t: 'log_export', name: who + '-' + stamp + (m.pending ? '-' + m.pending : '') + '.adi', mime: 'text/plain', data: LB.toAdif(list, 'RemoteStation', VERSION), count: list.length,
         pending: m.pending || '', ids: m.pending ? list.map((q) => q.id) : undefined });

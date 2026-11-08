@@ -1093,6 +1093,7 @@
       } else if (root && !root.hidden && root.offsetParent) fmsg('QSO non enregistré (doublon).', 'warn'); else say('QSO non enregistré (doublon).', 'warn');
       pendingDupe = null;
     } else if (m.t === 'log_export') {
+      if (m.tag === 'cwpage') return; // export demandé par la page Poste CW : c'est elle qui l'enregistre
       download(m);
     } else if (m.t === 'log_job') {
       onJob(m);
