@@ -1859,6 +1859,36 @@ function txBlockReason(conn, forTune) {
     null;
 }
 
+// Synchronisation NTP de ce serveur (référence de tous les décodages) : chrony, sinon systemd-timesyncd ; relue toutes les 5 min
+const ntpState = { at: 0, synced: null, offsetMs: null, src: '', server: '' };
+function ntpCheck() {
+  const cp = require('child_process');
+  const done = () => { ntpState.at = Date.now(); };
+  cp.execFile('chronyc', ['-c', 'tracking'], { timeout: 3000 }, (e, out) => {
+    const f = !e && out ? String(out).trim().split(',') : [];
+    if (f.length >= 14) {
+      ntpState.src = 'chrony';
+      ntpState.server = f[1] || '';
+      ntpState.offsetMs = Math.round(parseFloat(f[4]) * 1e5) / 100; // « System time » : avance (+) ou retard de l'horloge
+      ntpState.synced = !/not/i.test(f[13] || '') && f[2] !== '0';
+      return done();
+    }
+    cp.execFile('timedatectl', ['show', '-p', 'NTPSynchronized', '--value'], { timeout: 3000 }, (e2, o2) => {
+      ntpState.synced = !e2 ? /yes/i.test(String(o2)) : null;
+      cp.execFile('timedatectl', ['timesync-status'], { timeout: 3000 }, (e3, o3) => {
+        const t = String(o3 || '');
+        const mo = /Offset:\s*([+-]?[\d.]+)(us|ms|s)\b/.exec(t);
+        ntpState.offsetMs = mo ? Math.round(parseFloat(mo[1]) * (mo[2] === 'us' ? 0.001 : mo[2] === 'ms' ? 1 : 1000) * 100) / 100 : null;
+        const ms = /Server:\s*(\S+)\s*(\(([^)]+)\))?/.exec(t);
+        ntpState.server = ms ? (ms[3] || ms[1]) : '';
+        ntpState.src = !e3 ? 'systemd-timesyncd' : (ntpState.synced != null ? 'timedatectl' : '');
+        done();
+      });
+    });
+  });
+}
+setTimeout(ntpCheck, 2000);
+setInterval(ntpCheck, 300000);
 let cwTxSeenAt = 0; // dernière lecture « en émission » du TRX (affichage CW sans clignotement)
 let cwTxHoldTimer = null;
 function publicState() {
@@ -1893,7 +1923,8 @@ function publicState() {
     swrLock: swrLocked() ? { freq: swrLock.freq, swr: swrLock.swr != null ? Math.round(swrLock.swr * 10) / 10 : null, tune: !!swrLock.tune, band: swrLock.band || null, text: swrLockText() } : null,
     maxSwr: cfg.maxSwr,
     audio: { active: !!(station && audio.active), listeners: listeners(true), silent: !!(station && audio.silent) },
-    digi: { modes: Array.from(digiModes()), latency: digi.latency, engine: digi.engine || '', ms: digi.ms || 0, timing: digi.timing || null },
+    digi: { modes: Array.from(digiModes()), latency: digi.latency, engine: digi.engine || '', ms: digi.ms || 0, timing: digi.timing || null,
+      ntp: ntpState.at ? ntpState : null, club: station && station.clock ? station.clock : null },
     rigName: station ? rig().NAME : null,
     rigModel: station ? rig().ID : null,
     // TRX dont le port série est mémorisé sur le PC du club (changement à distance possible)
@@ -2924,6 +2955,15 @@ function onOperator(conn, m) {
       return send(conn, { t: 'notice', level: 'warn', msg: 'Rechargement de la page Station demandé : la station revient dans une dizaine de secondes' });
     }
 
+    case 'time_sync': {
+      // Mettre à l'heure Windows sur le PC du club (assistant version 4, comme NetTime)
+      if (!isEditor(conn.user.call)) return send(conn, { t: 'notice', level: 'error', msg: 'Réservé aux responsables de la station' });
+      if (!station) return send(conn, { t: 'notice', level: 'error', msg: 'Station hors ligne' });
+      if (station.caps.indexOf('timesync') < 0) return send(conn, { t: 'notice', level: 'error', msg: 'Page Station trop ancienne : rechargez-la d’abord' });
+      journal('time_sync', { call: conn.user.call });
+      send(station.conn, { t: 'time_sync', by: conn.user.call });
+      return send(conn, { t: 'notice', level: 'info', msg: 'Mise à l’heure du PC du club demandée (une dizaine de secondes)…' });
+    }
     case 'audio_reset': {
       // Relancer à distance la carte son USB du TRX (figée en silence), par l'assistant Windows du PC du club
       if (!isEditor(conn.user.call)) return send(conn, { t: 'notice', level: 'error', msg: 'Réservé aux responsables de la station' });
@@ -3748,6 +3788,19 @@ function onStation(conn, m) {
     }
     audio.silent = on;
     return broadcast();
+  }
+  if (m.t === 'clock' && station && station.conn === conn) {
+    // Écart de l'horloge du PC du club avec ce serveur (mesuré par la page Station) : onglet Synchro
+    const off = Number(m.off), rtt = Number(m.rtt);
+    if (Number.isFinite(off) && Math.abs(off) < 86400000) station.clock = { off: Math.round(off), rtt: Number.isFinite(rtt) ? Math.round(rtt) : null, at: Date.now() };
+    return;
+  }
+  if (m.t === 'time_sync_result') {
+    const ok = !!m.ok;
+    const msg = String(m.msg || '').replace(/[\x00-\x1f]/g, ' ').slice(0, 300);
+    journal('time_sync_result', { ok, msg });
+    for (const c of ops) if (isEditor(c.user.call) || c === controller) send(c, { t: 'notice', level: ok ? 'info' : 'error', msg: 'Heure du PC du club : ' + msg });
+    return;
   }
   if (m.t === 'audio_reset_result') {
     const ok = !!m.ok;

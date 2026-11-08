@@ -150,7 +150,7 @@
     setTimeout(closePrev, 10000);
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
     // caps : ce que sait faire cette version de la page (ftsplit : SPLIT du FTX-1 par FT0 / FT1, sans ST1)
-    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq', 'ftxtx', 'audiotx', 'audioreset', 'cwtx', 'cwprep', 'cwkey', 'voicetx', 'exrw', 'rfscope'] }));
+    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq', 'ftxtx', 'audiotx', 'audioreset', 'cwtx', 'cwprep', 'cwkey', 'voicetx', 'exrw', 'rfscope', 'timesync'] }));
     ws.binaryType = 'arraybuffer';
     lastServerMsg = Date.now();
     ws.onmessage = (e) => {
@@ -195,6 +195,8 @@
         switchModel(m.model, m.by);
       } else if (m.t === 'audio_reset') {
         audioReset(m.by || '?');
+      } else if (m.t === 'time_sync') {
+        timeSync(m.by || '?');
       } else if (m.t === 'reload') {
         if (core.catKeyed) return;
         log('Rechargement de la page demandé par ' + (m.by || '?'), 'st-warn');
@@ -594,6 +596,7 @@
     let r = null;
     try { r = await helperFetch('/etat'); helperOk = !!(r && r.ok); } catch (e) { helperOk = false; }
     const v2 = helperOk && Number(r.version) >= 3;
+    const hr = helperOk && r.heure && r.heure.ecart != null ? ' — heure du PC (NTP) : écart ' + r.heure.ecart + ' ms (' + r.heure.quand + ')' : '';
     if (helperOk && v2) {
       // L'assistant surveille lui-même la carte son du TRX (même page fermée) : on lui donne son identifiant USB
       audioUsbId().then((id) => {
@@ -605,11 +608,12 @@
     const carte = { ok: 'en bon état', erreur: 'EN ERREUR', 'son absent': 'partie son absente', absente: 'débranchée ou TRX éteint' }[r && r.carte] || '';
     $('tHelper').textContent = helperOk ? 'Assistant carte son : en marche (version ' + r.version + ' ; relance d’ici ou depuis le dashboard, seule après 45 s de silence' +
       (v2 ? ' ; surveille la carte son et la répare seule si Windows la met en erreur)' : ')') +
-      (v2 ? ' — veille USB : ' + (r.veille || '?') + (carte ? ' — carte son du TRX : ' + carte : '') + (r.reparation ? ' — dernière réparation : ' + r.reparation : '')
+      (v2 ? ' — veille USB : ' + (r.veille || '?') + (carte ? ' — carte son du TRX : ' + carte : '') + (r.reparation ? ' — dernière réparation : ' + r.reparation : '') + hr +
+        (Number(r.version) < 4 ? ' — version 4 disponible (met aussi l’heure de Windows à la milliseconde, comme NetTime) : retélécharger l’assistant et refaire installer-carte-son.cmd' : '')
         : ' — version 3 disponible (répare seule la carte son mise en erreur par Windows, coupe la veille USB) : retélécharger l’assistant et refaire installer-carte-son.cmd')
       : 'Assistant carte son : non installé sur ce PC (fichier installer-carte-son.cmd, voir l’aide) — pour relancer la carte son, éteindre et rallumer le TRX';
     $('btnAudReset').disabled = !helperOk || aud.resetting;
-    $('helperDl').hidden = helperOk && v2;
+    $('helperDl').hidden = helperOk && Number(r.version) >= 4;
     return helperOk;
   }
   setTimeout(helperCheck, 1500);
@@ -624,6 +628,24 @@
     for (const d of cands) { const m = d && re.exec(d.label); if (m) return { vid: m[1].toLowerCase(), pid: m[2].toLowerCase() }; }
     const saved = store.get('audio.usb', '');
     return /^[0-9a-f]{4}:[0-9a-f]{4}$/.test(saved) ? { vid: saved.slice(0, 4), pid: saved.slice(5) } : null;
+  }
+  // Mise à l'heure de Windows par l'assistant (version 4, comme NetTime), demandée depuis l'onglet Synchro
+  async function timeSync(by) {
+    const done = (ok, msg) => {
+      log('Heure du PC : ' + msg, ok ? '' : 'st-bad');
+      if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'time_sync_result', ok, msg: String(msg).slice(0, 300) }));
+    };
+    log('Mise à l’heure du PC demandée par ' + by);
+    try {
+      const ok = await helperCheck();
+      if (!ok) return done(false, 'assistant carte son non installé sur le PC du club (il fait aussi la mise à l’heure, version 4)');
+      const r = await helperFetch('/heure', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }, 40000);
+      if (!r || r.ok == null) return done(false, 'assistant trop ancien : installer la version 4 (installer-carte-son.cmd)');
+      done(!!r.ok, r.msg || '?');
+      // Nouvelle mesure de l'écart avec le VPS tout de suite
+      clk.best = Infinity;
+      try { ws.send(JSON.stringify({ t: 'ping', ts: Date.now() })); } catch (e) {}
+    } catch (e) { done(false, e.message); }
   }
   function resetResult(ok, msg) {
     log('Carte son du TRX : ' + msg, ok ? '' : 'st-bad');
@@ -864,6 +886,12 @@
     }
     clk.off = off;
     core.setClock(off);
+    // Écart de l'horloge de ce PC avec le VPS : affiché dans l'onglet Synchro du dashboard
+    if (ws && ws.readyState === 1 && (clk.sent == null || Math.abs(off - clk.sent) >= 3 || t - clk.sentAt > 60000)) {
+      clk.sent = off;
+      clk.sentAt = t;
+      ws.send(JSON.stringify({ t: 'clock', off, rtt }));
+    }
   }
 
   // ------------------------------------------------------------ audio vers le TRX (émission numérique)

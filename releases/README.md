@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.187 | [RemoteStation-Setup-0.37.187.exe](0.37.187/RemoteStation-Setup-0.37.187.exe) | [remote-station-0.37.187.tar.gz](0.37.187/remote-station-0.37.187.tar.gz) | Synchro : NTP du serveur, heure du PC du club (assistant v4) — [empreintes SHA-256](0.37.187/SHA256SUMS.txt) |
 | 0.37.186 | [RemoteStation-Setup-0.37.186.exe](0.37.186/RemoteStation-Setup-0.37.186.exe) | [remote-station-0.37.186.tar.gz](0.37.186/remote-station-0.37.186.tar.gz) | Spot CW vers la case Indicatif du log — [empreintes SHA-256](0.37.186/SHA256SUMS.txt) |
 | 0.37.185 | [RemoteStation-Setup-0.37.185.exe](0.37.185/RemoteStation-Setup-0.37.185.exe) | [remote-station-0.37.185.tar.gz](0.37.185/remote-station-0.37.185.tar.gz) | Log automatique FT8 / FT4 / FT2 — [empreintes SHA-256](0.37.185/SHA256SUMS.txt) |
 | 0.37.184 | [RemoteStation-Setup-0.37.184.exe](0.37.184/RemoteStation-Setup-0.37.184.exe) | [remote-station-0.37.184.tar.gz](0.37.184/remote-station-0.37.184.tar.gz) | Log du contest CW (style N1MM) — [empreintes SHA-256](0.37.184/SHA256SUMS.txt) |

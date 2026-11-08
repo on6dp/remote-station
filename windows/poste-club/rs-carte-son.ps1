@@ -12,6 +12,9 @@
 #   un simple redémarrage ne suffit pas : l'assistant la retire et la fait redétecter (pnputil /remove-device puis
 #   /scan-devices), comme « Désinstaller » + « Rechercher les modifications sur le matériel ». Il surveille aussi
 #   lui-même cette carte son toutes les 20 s, même page Station fermée, et la répare seul (au plus une fois / 5 min).
+# - Version 4 : met l'horloge de Windows à l'heure à la milliseconde près, comme NetTime (service Windows Time réglé
+#   sur des serveurs NTP publics, interrogés souvent), au démarrage puis toutes les heures, ou à la demande ; écart
+#   mesuré avec w32tm.
 # - Lancé au démarrage de Windows par la tâche planifiée « RemoteStation carte son » (voir installer-carte-son.cmd).
 # - Journal : rs-carte-son.log, à côté de ce fichier.
 param(
@@ -19,7 +22,7 @@ param(
   [string[]]$Origines = @('https://remote.op0p.be')
 )
 $ErrorActionPreference = 'Stop'
-$Version = '3'
+$Version = '4'
 # Messages de pnputil / powercfg lus dans la page de codes de la console (sinon « redÚmarrage » au lieu de « redémarrage »)
 try { [Console]::OutputEncoding = [Text.Encoding]::GetEncoding([Globalization.CultureInfo]::CurrentCulture.TextInfo.OEMCodePage) } catch { }
 $Journal = Join-Path $PSScriptRoot 'rs-carte-son.log'
@@ -207,6 +210,47 @@ function CouperVeilleUsb {
 }
 CouperVeilleUsb
 
+# ------------------------------------------------------------------ heure de Windows (comme NetTime)
+$NtpServeurs = 'be.pool.ntp.org,0x8 0.europe.pool.ntp.org,0x8 time.cloudflare.com,0x8'
+$Heure = @{ ecart = $null; quand = ''; msg = 'pas encore mesurée' }
+$DerniereHeure = [datetime]::MinValue
+# Écart de l'horloge de ce PC avec un serveur NTP (ms ; positif : ce PC est en retard), médiane de 3 mesures
+function MesurerHeure {
+  $o = (& w32tm.exe /stripchart /computer:be.pool.ntp.org /dataonly /samples:3 2>&1 | Out-String)
+  $v = @()
+  # Windows en français : virgule décimale possible
+  foreach ($m in [regex]::Matches($o, '([+-]\d+[.,]\d+)s')) { $v += [double]($m.Groups[1].Value -replace ',', '.') }
+  if ($v.Count -eq 0) { return $null }
+  $v = @($v | Sort-Object)
+  return [math]::Round($v[[int][math]::Floor($v.Count / 2)] * 1000, 1)
+}
+function ReglerHeure([bool]$config) {
+  try {
+    if ($config) {
+      Set-Service -Name w32time -StartupType Automatic -ErrorAction SilentlyContinue
+      if ((Get-Service w32time).Status -ne 'Running') { Start-Service w32time }
+      # Interrogation fréquente (64 s à 256 s) au lieu d'une fois par semaine par défaut
+      $cfg = 'HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Config'
+      Set-ItemProperty -Path $cfg -Name MinPollInterval -Value 6 -Type DWord -ErrorAction SilentlyContinue
+      Set-ItemProperty -Path $cfg -Name MaxPollInterval -Value 8 -Type DWord -ErrorAction SilentlyContinue
+      Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\NtpClient' -Name SpecialPollInterval -Value 256 -Type DWord -ErrorAction SilentlyContinue
+      & w32tm.exe /config /manualpeerlist:"$NtpServeurs" /syncfromflags:manual /update 2>&1 | Out-Null
+    }
+    $avant = MesurerHeure
+    & w32tm.exe /resync /force 2>&1 | Out-Null
+    Start-Sleep -Seconds 2
+    $apres = MesurerHeure
+    $script:DerniereHeure = Get-Date
+    $script:Heure = @{ ecart = $apres; quand = (Get-Date -Format 'dd/MM HH:mm'); msg = 'avant ' + $(if ($avant -ne $null) { "$avant ms" } else { '?' }) + ', après ' + $(if ($apres -ne $null) { "$apres ms" } else { '?' }) }
+    Ecrire "heure : $($script:Heure.msg)"
+    return @{ ok = ($apres -ne $null); avant = $avant; apres = $apres; msg = 'horloge du PC du club : écart ' + $script:Heure.msg + ' (serveurs ' + ($NtpServeurs -replace ',0x8', '') + ')' }
+  } catch {
+    Ecrire "heure : $($_.Exception.Message)"
+    return @{ ok = $false; msg = 'mise à l''heure impossible : ' + $_.Exception.Message }
+  }
+}
+try { ReglerHeure $true | Out-Null } catch { }
+
 $ecoute = New-Object System.Net.HttpListener
 $ecoute.Prefixes.Add("http://127.0.0.1:$Port/")
 try { $ecoute.Start() } catch { Ecrire "impossible d'écouter sur le port $Port : $($_.Exception.Message)"; exit 1 }
@@ -217,6 +261,7 @@ while ($ecoute.IsListening) {
   $att = $ecoute.BeginGetContext($null, $null)
   while (-not $att.AsyncWaitHandle.WaitOne(20000)) {
     try { Surveiller } catch { Ecrire "surveillance : $($_.Exception.Message)" }
+    if (((Get-Date) - $DerniereHeure).TotalMinutes -ge 60) { try { ReglerHeure $false | Out-Null } catch { } }
   }
   $ctx = $ecoute.EndGetContext($att)
   try {
@@ -230,7 +275,9 @@ while ($ecoute.IsListening) {
       Repondre $ctx 403 @{ ok = $false; msg = 'site non autorisé' }
     } elseif ($chemin -eq '/etat') {
       if ($Surveille) { try { $script:Carte = EtatCarte $Surveille.Substring(0, 4) $Surveille.Substring(5, 4) } catch { } }
-      Repondre $ctx 200 @{ ok = $true; version = $Version; veille = $Veille; surveille = $Surveille; carte = $Carte; reparation = $Reparation }
+      Repondre $ctx 200 @{ ok = $true; version = $Version; veille = $Veille; surveille = $Surveille; carte = $Carte; reparation = $Reparation; heure = $Heure }
+    } elseif ($chemin -eq '/heure' -and $req.HttpMethod -eq 'POST' -and $o) {
+      Repondre $ctx 200 (ReglerHeure $true)
     } elseif ($chemin -eq '/surveiller' -and $req.HttpMethod -eq 'POST' -and $o) {
       $lu = New-Object System.IO.StreamReader($req.InputStream, [Text.Encoding]::UTF8)
       $q = $null

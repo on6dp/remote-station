@@ -1906,3 +1906,4 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 @media (max-width: 1050px) { .cwp-cgrid { grid-template-columns: 1fr; } }
 .dg-alog select { font-size: 11px; padding: 1px 3px; background: #07090d; border: 1px solid var(--v2-border); border-radius: 4px; color: var(--v2-text-bright); max-width: 190px; }
 .qso-note { color: #ffb84d; margin: 0 0 6px; }
+.sy-btn { justify-self: start; margin-top: 4px; font-size: 11px; padding: 3px 10px; }

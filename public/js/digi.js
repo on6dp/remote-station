@@ -535,13 +535,18 @@
   const SYNC_PANE = `
     <div class="sy-grid">
       <div class="sy-box"><span>Heure du serveur (UTC)</span><b id="syVps">--:--:--</b><small>référence de tous les décodages</small></div>
+      <div class="sy-box"><span>Serveur : NTP</span><b id="syNtp">—</b><small id="syNtpNote">synchronisation du serveur sur l’heure mondiale</small></div>
+      <div class="sy-box"><span>PC du club</span><b id="syClub">—</b><small id="syClubNote">écart avec le serveur</small>
+        <button class="btn sy-btn" type="button" id="syClubSync" title="Met l’horloge de Windows du PC du club à l’heure (serveurs NTP publics, comme NetTime) par l’assistant carte son version 4 — responsables de la station">⟳ Mettre à l’heure</button></div>
       <div class="sy-box"><span>Votre PC</span><b id="syPc">—</b><small id="syPcNote">écart avec le serveur</small></div>
       <div class="sy-box"><span>Liaison station → serveur</span><b id="syLat">—</b><small>délai mesuré et corrigé automatiquement</small></div>
       <div class="sy-box"><span>DT médian</span><b id="syDt">—</b><small id="syDtNote">derniers décodages FT8 / FT4</small></div>
       <div class="sy-box"><span>Décodages (dernière période)</span><b id="syDec">—</b><small id="syDecNote">arrivée de chaque passe après le début de la période</small></div>
     </div>
-    <p class="sy-note">Le décodage se cale sur l'horloge du serveur (synchronisée par NTP) : l'heure du PC du club et celle de votre PC
-      n'interviennent pas. Le délai de la liaison est mesuré d'après les stations décodées ; un DT médian proche de 0,0 s montre que tout est calé.</p>`;
+    <p class="sy-note">Le décodage et l'instant d'émission se calent sur l'horloge du serveur (synchronisée par NTP) : l'écart du PC du club
+      est mesuré et corrigé tout seul, celui de votre PC n'intervient pas. Le délai de la liaison est mesuré d'après les stations décodées ;
+      un DT médian proche de 0,0 s montre que tout est calé. Le PC du club peut quand même être mis à l'heure à la milliseconde
+      (bouton ci-dessus, et tout seul toutes les heures) par l'assistant carte son version 4 : NetTime n'est alors plus nécessaire.</p>`;
 
   function buildDom() {
     const bar = $('ctabs');
@@ -4974,6 +4979,10 @@
     v.sort((a, b) => a - b);
     return { med: v[v.length >> 1], n: v.length };
   }
+  document.addEventListener('click', (e) => {
+    const b = e.target && e.target.closest && e.target.closest('#syClubSync');
+    if (b && api) api.send({ t: 'time_sync' });
+  });
   function drawSync() {
     if (tab !== 'sync' || detached) return;
     const d = new Date(now());
@@ -4988,6 +4997,22 @@
       $('syPcNote').textContent = (Math.abs(ms) <= Math.max(prec, 20) ? 'à l’heure' : (s > 0 ? 'en avance' : 'en retard') + ' sur le serveur') + ' · précision ± ' + prec + ' ms (aucune incidence sur le décodage)';
     }
     const st = api && api.state();
+    const fmtMs = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + (Math.abs(v) < 10 ? Math.abs(v).toFixed(1).replace('.', ',') : Math.round(Math.abs(v))) + ' ms';
+    const ntp = st && st.digi && st.digi.ntp;
+    if (ntp) {
+      $('syNtp').textContent = ntp.synced === false ? 'NON SYNCHRONISÉ' : ntp.offsetMs != null ? fmtMs(ntp.offsetMs) : ntp.synced ? 'synchronisé' : '?';
+      $('syNtp').className = ntp.synced === false || (ntp.offsetMs != null && Math.abs(ntp.offsetMs) > 50) ? 'warn' : 'ok';
+      $('syNtpNote').textContent = !ntp.src && ntp.synced == null ? 'état inconnu : ni chrony ni timedatectl sur le serveur' :
+        (ntp.src || 'NTP') + (ntp.server ? ' · ' + ntp.server : '') + (ntp.synced === false ? ' — à vérifier sur le VPS (chrony / timedatectl)' : ' · écart avec l’heure mondiale');
+    }
+    const club = st && st.digi && st.digi.club;
+    if (club) {
+      const prec = club.rtt != null ? Math.max(1, Math.round(club.rtt / 2)) : null;
+      $('syClub').textContent = fmtMs(-club.off); // off = heure du serveur − heure du PC
+      $('syClub').className = Math.abs(club.off) <= 1000 ? 'ok' : 'warn';
+      $('syClubNote').textContent = (Math.abs(club.off) <= Math.max(prec || 0, 20) ? 'à l’heure' : (club.off < 0 ? 'en avance' : 'en retard') + ' sur le serveur') +
+        (prec != null ? ' · précision ± ' + prec + ' ms' : '') + ' · corrigé pour l’émission';
+    }
     const lat = st && st.digi && st.digi.latency;
     $('syLat').textContent = lat != null ? lat + ' ms' : '—';
     const m = medianDt();
