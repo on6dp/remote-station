@@ -142,7 +142,13 @@
       '-.--.': '(', '-.--.-': ')', '---...': ':', '.----.': "'", '...-.-': '<SK>', '.-...': '<AS>', '-.-.-': '<KA>', '...-.': '<SN>',
       '........': '<HH>' };
     const DEC = { code: '', tc: null, tw: null, u: 0, word: false };
-    const echoOn = () => S.armed && TX.on && typeof opt.echo === 'function';
+    // Affiché aussi en entraînement (ou sans la main), en gris : on voit ce que la clé envoie avant d'émettre
+    const echoOn = () => typeof opt.echo === 'function';
+    const echoTx = () => !!(S.armed && TX.on);
+    function echoLineEnd() {
+      DEC.te = null;
+      if (typeof opt.echoEnd === 'function') opt.echoEnd();
+    }
     function decChar() {
       win.clearTimeout(DEC.tc);
       DEC.tc = null;
@@ -150,12 +156,12 @@
       const c = MORSE[DEC.code] || '*';
       DEC.code = '';
       DEC.word = false;
-      if (echoOn()) opt.echo(c);
+      if (echoOn()) opt.echo(c, !echoTx());
     }
     function decWord() {
       DEC.tw = null;
       decChar();
-      if (!DEC.word && echoOn()) { DEC.word = true; opt.echo(' '); }
+      if (!DEC.word && echoOn()) { DEC.word = true; opt.echo(' ', !echoTx()); }
     }
     // Un signe (point ou trait) se termine à T : fin de lettre après 2 unités de silence, espace entre mots après 5
     function decSign(sign, Tend, u) {
@@ -166,12 +172,16 @@
       const w = Math.max(0, Tend - perf());
       DEC.tc = win.setTimeout(decChar, w + 2 * u);
       DEC.tw = win.setTimeout(decWord, w + 5 * u);
+      // Ligne terminée après une pause de 3 s
+      win.clearTimeout(DEC.te);
+      DEC.te = win.setTimeout(echoLineEnd, w + Math.max(3000, 14 * u));
     }
     function decStop() { win.clearTimeout(DEC.tw); DEC.tw = null; decChar(); }
     function burstEnd() {
       if (!TX.on) return;
       decStop();
-      if (typeof opt.echoEnd === 'function') opt.echoEnd();
+      win.clearTimeout(DEC.te);
+      echoLineEnd();
       flush();
       api.send({ t: 'cwk', b: TX.b, e: [], h: r1(perf() - TX.start), end: true });
       TX.on = false;

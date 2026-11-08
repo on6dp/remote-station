@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.178** — Clé CW : le texte manipulé s'affiche aussi en entraînement (ou sans la main), en gris « (entraînement) » dans la fenêtre Réception CW ; en rouge quand il est réellement émis
 - **0.37.177** — Clé CW : bouton **⚙ Réglages** bien visible (fond blanc, texte noir gras ; jaune quand ouvert)
 - **0.37.176** — Page Station : **une seule capture du son à la fois** (deux démarrages simultanés envoyaient deux flux mélangés → raies verticales tous les 25 Hz sur la cascade) — Réception CW : ascenseur toujours visible, suit toujours le décodage le plus récent (reprise 10 s après une relecture), historique limité
 - **0.37.175** — Carte son du TRX : **assistant version 3** — quand Windows met la carte son en erreur (périphérique USB composite en Error), il la retire et la fait redétecter, et la surveille lui-même toutes les 20 s (réparation seule, au plus une fois / 5 min) ; la page Station ne prend plus jamais une autre carte son (Mixage stéréo, Realtek) à la place de celle du TRX : alerte, réparation demandée, reprise automatique au retour ; sortie son du TRX disparue fermée (pas de modulation dans les haut-parleurs du PC) — CW : le texte manipulé à la clé s'affiche dans la fenêtre Réception CW

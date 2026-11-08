@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.178 | [RemoteStation-Setup-0.37.178.exe](0.37.178/RemoteStation-Setup-0.37.178.exe) | [remote-station-0.37.178.tar.gz](0.37.178/remote-station-0.37.178.tar.gz) | Texte de la clé affiché aussi en entraînement — [empreintes SHA-256](0.37.178/SHA256SUMS.txt) |
 | 0.37.177 | [RemoteStation-Setup-0.37.177.exe](0.37.177/RemoteStation-Setup-0.37.177.exe) | [remote-station-0.37.177.tar.gz](0.37.177/remote-station-0.37.177.tar.gz) | Bouton Réglages de la clé bien visible — [empreintes SHA-256](0.37.177/SHA256SUMS.txt) |
 | 0.37.176 | [RemoteStation-Setup-0.37.176.exe](0.37.176/RemoteStation-Setup-0.37.176.exe) | [remote-station-0.37.176.tar.gz](0.37.176/remote-station-0.37.176.tar.gz) | Raies de la cascade corrigées ; ascenseur Réception CW — [empreintes SHA-256](0.37.176/SHA256SUMS.txt) |
 | 0.37.175 | [RemoteStation-Setup-0.37.175.exe](0.37.175/RemoteStation-Setup-0.37.175.exe) | [remote-station-0.37.175.tar.gz](0.37.175/remote-station-0.37.175.tar.gz) | Assistant carte son v3, plus de bascule sur la carte son du PC ; texte de la clé affiché — [empreintes SHA-256](0.37.175/SHA256SUMS.txt) |

@@ -3132,15 +3132,19 @@
           say: (t, l, ms) => api && api.say(t, l, ms)
         },
         // Texte manipulé à la clé : affiché dans la fenêtre de réception CW, en couleur d'émission (comme les macros)
-        echo: (t) => {
+        echo: (t, practice) => {
           const rx = $('cwRx');
           if (!rx) return;
+          if (cwKeyLine && cwKeyLine.isConnected && cwKeyLine.dataset.practice !== (practice ? '1' : '')) cwKeyLine = null;
           if (!cwKeyLine || !cwKeyLine.isConnected) {
             const d = rx.ownerDocument;
             const sp = d.createElement('span');
-            sp.className = 'rt-txline';
+            sp.className = practice ? 'rt-txline cwk-practice' : 'rt-txline';
+            if (practice) sp.title = 'Clé en entraînement (ou sans la main) : rien n’est émis';
             cwKeyLine = d.createElement('span');
             cwKeyLine.className = 'rt-done';
+            cwKeyLine.dataset.practice = practice ? '1' : '';
+            if (practice) cwKeyLine.textContent = '(entraînement) ';
             sp.append('\n', cwKeyLine, '\n');
             rx.appendChild(sp);
           }
