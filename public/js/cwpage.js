@@ -432,6 +432,20 @@
     if (k) {
       const c = $('cwpCall');
       if (document.activeElement !== c && c.value !== k.call()) c.value = k.call();
+      // Indicatif choisi ailleurs (spot CW cliqué dans une BAND MAP, double-clic dans la réception…) : aussi dans la
+      // ligne de saisie du log du contest, prête pour Entrée
+      const kc = String(k.call() || '').toUpperCase();
+      if (kc !== drawState.kc) {
+        const was = drawState.kc;
+        drawState.kc = kc;
+        if (was !== undefined && kc && E.call.value.trim().toUpperCase() !== kc) {
+          E.call.value = kc;
+          E.srx.value = '';
+          CL.sentFor = '';
+          checkDupe();
+          if (k.contest()) { try { window.focus(); } catch (e) {} E.call.focus(); }
+        }
+      }
       $('cwpNote').textContent = 'Macros émises par le manipulateur du TRX sous ' + k.myCall() + ' à ' + k.speed() + ' mots/min. Toucher la clé arrête une macro en cours.';
     }
     drawMacros();

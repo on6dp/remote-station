@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.186** — Poste CW : l'indicatif d'un spot CW cliqué dans une BAND MAP arrive aussi dans la case Indicatif du log du contest (doublon vérifié, prêt pour Entrée)
 - **0.37.185** — FT8 / FT4 / FT2 : choix **Log** dans la barre d'émission — fiche à confirmer, ou enregistrement automatique dans le carnet à l'envoi du RR73 / 73, à sa réception, ou au premier des deux
 - **0.37.184** — Poste CW : **log du contest** à la manière de N1MM — ligne de saisie (indicatif, RST, échanges), Entrée = ESM (RUN / S&P), doublons et « déjà sur », QSO dans le carnet général (contest, échanges), liste, compteurs par bande, cadence, n° de série suivant à chaque QSO, export Cabrillo du contest
 - **0.37.183** — Poste CW : partie haute compacte ; **contests CW** (liste, échange modifiable, n° de série +1 automatique avec TU, zones CQ / ITU, prénom), 12 macros contest (F1–F12 en contest), fiche du QSO avec le contest ; port série déjà pris : message clair, et la clé des autres onglets se met en veille quand le Poste CW est ouvert
