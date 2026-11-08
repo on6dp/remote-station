@@ -5052,7 +5052,7 @@
       // + temps passé dans le décodeur (attente + calcul) : petit = passe lancée en retard ; grand = décodeur lent ou occupé
       const f = (x) => (x ? '+' + (x.at / 1000).toFixed(1).replace('.', ',') + ' s' + (Number.isFinite(x.ms) ? ' (décodeur ' + (x.ms / 1000).toFixed(1).replace('.', ',') + ' s)' : '') : '—');
       const P = SLOT_MS[(tm.normal || tm.early || {}).mode] || 15000;
-      $('syDec').textContent = f(tm.normal);
+      $('syDec').textContent = tm.normal ? '+' + (tm.normal.at / 1000).toFixed(1).replace('.', ',') + ' s' : '—';
       $('syDec').className = tm.normal && tm.normal.at > P + 2000 ? 'warn' : 'ok';
       $('syDecNote').textContent = 'anticipée ' + f(tm.early) + ' · normale ' + f(tm.normal) + ' · profonde ' + f(tm.deep) +
         (tm.normal && tm.normal.at > P + 2000 ? ' — serveur lent : réponses parfois une période plus tard' : '');
