@@ -806,6 +806,9 @@
     if (watching && tab === 'jtty') { api.send({ t: 'digi', mode: 'JTTY', hist: jtNeedHist, ftDual }); jtNeedHist = false; return; }
     if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rts[0], rtty2: rts[1], rtDual: rtDualAudio });
     if (watching && tab === 'wspr') { api.send({ t: 'digi', mode: 'WSPR', hist: wsNeedHist, ftDual }); wsNeedHist = false; return; }
+    // Onglet Synchro : le décodage FT8 / FT4 continue (mesures de la case Décodages et du DT médian en direct)
+    const syncTab = tab === 'sync' && !$('centerPanel').classList.contains('collapsed') && !document.hidden && /^FT[48]$/.test(mode);
+    if (!watching && syncTab) return api.send({ t: 'digi', mode, hist: false, ftDual: false });
     api.send({ t: 'digi', mode: watching ? mode : null, hist: watching && needHist, ftDual: watching && ftDual });
     if (watching) needHist = false;
   }
@@ -5046,7 +5049,7 @@
       tm = null;
       $('syDec').textContent = '—';
       $('syDec').className = '';
-      $('syDecNote').textContent = 'pas de décodage FT8 / FT4 en cours (ouvrez l’onglet FT8 sur une fréquence active)';
+      $('syDecNote').textContent = 'pas de décodage FT8 / FT4 depuis 1 min (service redémarré, ou mode FT2 / autre choisi dans l’onglet FT8)';
     }
     if (tm && $('syDec')) {
       // + temps passé dans le décodeur (attente + calcul) : petit = passe lancée en retard ; grand = décodeur lent ou occupé

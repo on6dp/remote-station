@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.193** — Synchro : le décodage FT8 / FT4 continue pendant qu'on regarde l'onglet Synchro (Décodages et DT médian en direct)
 - **0.37.192** — Synchro : case Décodages lisible (temps du décodeur seulement dans le détail)
 - **0.37.191** — Synchro : temps passé dans le décodeur affiché pour chaque passe (diagnostic des décodages tardifs)
 - **0.37.190** — Synchro : le bouton « Mettre à l'heure » montre ce qu'il fait (en cours, à l'heure, échec) et le résultat s'affiche sous la case PC du club
