@@ -5019,7 +5019,15 @@
     $('syDt').textContent = m ? (m.med >= 0 ? '+' : '−') + Math.abs(m.med).toFixed(1).replace('.', ',') + ' s' : '—';
     $('syDt').className = m ? (Math.abs(m.med) <= 0.3 ? 'ok' : 'warn') : '';
     // Passes du décodeur : heure d'arrivée après le début de la période (la réponse doit pouvoir partir à la suivante)
-    const tm = st && st.digi && st.digi.timing;
+    let tm = st && st.digi && st.digi.timing;
+    // Mesure ancienne (plus de décodage FT8 / FT4 depuis 1 min : onglet d'un autre mode, autre bande…) : pas affichée
+    const tmT = tm && (tm.normal || tm.early || tm.deep) && (tm.normal || tm.early || tm.deep).t;
+    if (tm && tmT && now() - tmT > 60000) {
+      tm = null;
+      $('syDec').textContent = '—';
+      $('syDec').className = '';
+      $('syDecNote').textContent = 'pas de décodage FT8 / FT4 en cours (ouvrez l’onglet FT8 sur une fréquence active)';
+    }
     if (tm && $('syDec')) {
       const f = (x) => (x ? '+' + (x.at / 1000).toFixed(1).replace('.', ',') + ' s' : '—');
       const P = SLOT_MS[(tm.normal || tm.early || {}).mode] || 15000;

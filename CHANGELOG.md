@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.189** — Synchro : la case Décodages n'affiche plus une mesure ancienne (plus de décodage FT8 / FT4 depuis 1 min)
 - **0.37.188** — Assistant carte son v4 : démarrage immédiat (mise à l'heure de Windows au 1er tour, plus avant l'écoute) ; l'installateur attend l'assistant jusqu'à 40 s
 - **0.37.187** — Onglet **Synchro** : état NTP du serveur (chrony / timesyncd, écart en ms), écart du PC du club, bouton « Mettre à l'heure » — assistant carte son **version 4** : horloge de Windows du PC du club réglée à la milliseconde comme NetTime (serveurs NTP publics interrogés souvent), au démarrage, toutes les heures et à la demande
 - **0.37.186** — Poste CW : l'indicatif d'un spot CW cliqué dans une BAND MAP arrive aussi dans la case Indicatif du log du contest (doublon vérifié, prêt pour Entrée)

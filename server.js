@@ -592,7 +592,7 @@ function onDigi(m) {
     digi.ms = m.ms;
     if (m.engine) digi.engine = m.engine;
     // Heure d'arrivée de chaque passe FT8 / FT4 (après le début de la période) : affichée dans l'onglet Synchro
-    if (m.phase && FTX_SLOT[m.mode]) { digi.timing = digi.timing || {}; digi.timing[m.phase] = { at: Date.now() - m.slot, ms: m.ms, mode: m.mode }; }
+    if (m.phase && FTX_SLOT[m.mode]) { digi.timing = digi.timing || {}; digi.timing[m.phase] = { at: Date.now() - m.slot, ms: m.ms, mode: m.mode, t: Date.now() }; }
     digi.last = Date.now();
     const msg = JSON.stringify({ t: 'ftx', mode: m.mode, slot: m.slot, list: m.list, latency: m.latency });
     for (const c of ops) if (c.digi === m.mode) c.send(msg);
