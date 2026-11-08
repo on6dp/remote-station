@@ -719,7 +719,14 @@
     clearTimeout(aud.waitTm);
     aud.waitTm = setTimeout(() => { if (aud.waitTrx && !aud.ctx) startAudio(); }, 15000);
   }
-  async function startAudio(manual) {
+  // Une seule capture à la fois : deux démarrages en même temps (relance, retour de la carte son, rechargement)
+  // donnaient deux captures qui envoyaient leurs trames mélangées → raies verticales tous les 25 Hz sur la cascade
+  function startAudio(manual) {
+    if (aud.starting) return aud.starting;
+    aud.starting = startAudioOnce(manual).finally(() => { aud.starting = null; });
+    return aud.starting;
+  }
+  async function startAudioOnce(manual) {
     if (!navigator.mediaDevices || !window.AudioWorkletNode) return log('Audio impossible : navigateur trop ancien', 'st-bad');
     if (aud.ctx) return;
     try {
@@ -770,7 +777,10 @@
       mute.gain.value = 0; // rien n'est joué sur le PC du club
       src.connect(node);
       node.connect(mute).connect(aud.ctx.destination);
+      const myCtx = aud.ctx;
       node.port.onmessage = (e) => {
+        // Capture qui n'est plus la capture en service : arrêtée, rien n'est envoyé
+        if (aud.ctx !== myCtx) { node.port.onmessage = null; myCtx.close().catch(() => {}); return; }
         const buf = e.data.l;
         const bufR = RIG.DUAL_AUDIO ? e.data.r : null;
         let p = 0;

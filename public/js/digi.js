@@ -3095,10 +3095,12 @@
     if (!el) return;
     const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
     el.appendChild(document.createTextNode(text));
-    // Trop long : les plus anciens morceaux sont retirés (sans toucher aux lignes d'émission en couleur)
+    // Historique limité : les plus anciens morceaux sont retirés
     let len = el.textContent.length;
-    while (len > 20000 && el.firstChild) { len -= el.firstChild.textContent.length; el.removeChild(el.firstChild); }
-    if (atEnd) el.scrollTop = el.scrollHeight;
+    while (len > 8000 && el.firstChild) { len -= el.firstChild.textContent.length; el.removeChild(el.firstChild); }
+    // Le décodage reste toujours visible ; on ne suit pas seulement pendant 10 s après que l'opérateur a remonté
+    // la fenêtre pour relire (molette, ascenseur)
+    if (atEnd || Date.now() - (Number(el.dataset.hold) || 0) > 10000) el.scrollTop = el.scrollHeight;
     cwLast = Date.now();
   }
   function cwLevels(m) {
@@ -3178,6 +3180,13 @@
     dial.addEventListener('change', () => { store.set('cwdial', dial.value); qsyTo(Number(dial.value), 'CW'); });
     $('cwQsy').addEventListener('click', () => qsyTo(Number(dial.value), 'CW'));
     $('cwClear').addEventListener('click', () => { $('cwRx').textContent = ''; });
+    ['cwRx', 'cwRxB'].forEach((id) => {
+      const el = $(id);
+      if (!el) return;
+      const hold = () => { el.dataset.hold = String(Date.now()); };
+      el.addEventListener('wheel', hold, { passive: true });
+      el.addEventListener('pointerdown', (e) => { if (e.offsetX > el.clientWidth) hold(); }); // clic sur l'ascenseur
+    });
     $('cwTxClear').addEventListener('click', () => { $('cwTxt').value = ''; });
     $('cwTxt').addEventListener('input', (e) => {
       const el = e.target;

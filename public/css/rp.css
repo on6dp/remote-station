@@ -874,7 +874,7 @@ body.digi-popup .dg-ftx .dg-col { min-height: 0; }
 #rtM { background: #F2CF4A; }
 #rtS { background: #00D4FF; }
 .rt-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 10px; flex: 1; min-height: 280px; }
-.rt-rx { flex: 1; margin: 0; padding: 8px 10px; overflow: auto; white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 13px; line-height: 1.5; color: #e9f7ff; min-height: 220px; max-height: 380px; }
+.rt-rx { flex: 1; margin: 0; padding: 8px 10px; overflow-x: hidden; overflow-y: scroll; scrollbar-width: thin; scrollbar-color: #7a8494 rgba(0, 0, 0, .35); white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 13px; line-height: 1.5; color: #e9f7ff; min-height: 220px; max-height: 380px; }
 .rt-call { display: inline-flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; font-weight: 400; }
 .rt-call input { width: 110px; font: inherit; font-size: 12px; font-weight: 700; color: var(--v2-accent-cyan-bright); background: var(--v2-bg-input); border: 1px solid var(--v2-border); border-radius: 4px; padding: 3px 6px; text-transform: uppercase; }
 .rt-macros { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 8px 0; }
