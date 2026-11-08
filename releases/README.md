@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.191 | [RemoteStation-Setup-0.37.191.exe](0.37.191/RemoteStation-Setup-0.37.191.exe) | [remote-station-0.37.191.tar.gz](0.37.191/remote-station-0.37.191.tar.gz) | Synchro : diagnostic des passes — [empreintes SHA-256](0.37.191/SHA256SUMS.txt) |
 | 0.37.190 | [RemoteStation-Setup-0.37.190.exe](0.37.190/RemoteStation-Setup-0.37.190.exe) | [remote-station-0.37.190.tar.gz](0.37.190/remote-station-0.37.190.tar.gz) | Synchro : retour visible du bouton Mettre à l'heure — [empreintes SHA-256](0.37.190/SHA256SUMS.txt) |
 | 0.37.189 | [RemoteStation-Setup-0.37.189.exe](0.37.189/RemoteStation-Setup-0.37.189.exe) | [remote-station-0.37.189.tar.gz](0.37.189/remote-station-0.37.189.tar.gz) | Synchro : plus de mesure périmée — [empreintes SHA-256](0.37.189/SHA256SUMS.txt) |
 | 0.37.188 | [RemoteStation-Setup-0.37.188.exe](0.37.188/RemoteStation-Setup-0.37.188.exe) | [remote-station-0.37.188.tar.gz](0.37.188/remote-station-0.37.188.tar.gz) | Assistant v4 : démarrage plus rapide — [empreintes SHA-256](0.37.188/SHA256SUMS.txt) |

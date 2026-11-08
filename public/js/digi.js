@@ -5049,7 +5049,8 @@
       $('syDecNote').textContent = 'pas de décodage FT8 / FT4 en cours (ouvrez l’onglet FT8 sur une fréquence active)';
     }
     if (tm && $('syDec')) {
-      const f = (x) => (x ? '+' + (x.at / 1000).toFixed(1).replace('.', ',') + ' s' : '—');
+      // + temps passé dans le décodeur (attente + calcul) : petit = passe lancée en retard ; grand = décodeur lent ou occupé
+      const f = (x) => (x ? '+' + (x.at / 1000).toFixed(1).replace('.', ',') + ' s' + (Number.isFinite(x.ms) ? ' (décodeur ' + (x.ms / 1000).toFixed(1).replace('.', ',') + ' s)' : '') : '—');
       const P = SLOT_MS[(tm.normal || tm.early || {}).mode] || 15000;
       $('syDec').textContent = f(tm.normal);
       $('syDec').className = tm.normal && tm.normal.at > P + 2000 ? 'warn' : 'ok';
