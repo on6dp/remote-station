@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.182** — Spot **CW** cliqué dans une carte de bande (BAND MAP de la face avant ou carte des modes numériques) : TRX en CW, onglet CW affiché, indicatif dans Correspondant (repris par la page Poste CW, ramenée au premier plan si ouverte)
 - **0.37.181** — Aide, guide et mode d'emploi : **brancher sa clé double palette sur son PC** (adaptateur USB → RS-232 DB9, commun → broche 4 DTR, point → 6 DSR, trait → 8 CTS ; reconnaître les fils ; essai au trombone ; câbles qui ne conviennent pas ; VBand / Vail / Arduino Pro Micro) — manuels Markdown : listes imbriquées converties en entier
 - **0.37.180** — CW : la fréquence ne clignote plus entre rouge et bleu pendant une émission CW manipulée sur le TRX lui-même (break-in) : l'affichage reste en émission 1,5 s après le dernier signe
 - **0.37.179** — **Poste CW** : page entière dans l'esprit du W1VE Keyer Suite (bouton 🎛 POSTE CW de l'onglet CW) — vitesse en grand et curseurs, clé et branchement, grandes palettes, CLÉ → TRX, macros F1–F12, correspondant, texte à émettre, réception CW, voyant RX/TX, aller-retour de la liaison ; raccrochée au dashboard (même connexion, même main) ; la clé du dashboard se met en veille tant que la page est ouverte — Fréquence rouge sans clignoter pendant toute une émission CW (break-in)

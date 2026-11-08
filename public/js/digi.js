@@ -2102,6 +2102,12 @@
     st.title = 'DX cluster' + (bmHost ? ' ' + bmHost : '') + ' : ' + (bmState || 'pas de nouvelles') + ' · spots gardés 30 min';
   }
   // Calage du TRX sur une fréquence réelle (kHz) : décodeur de l'émission au milieu de la cascade
+  // Page Poste CW ouverte (la clé du dashboard est alors en veille) : au premier plan après un spot CW
+  function cwPageFocus() {
+    let w = window;
+    try { while (w && !(w.RSPADDLE && w.RSPADDLE.suspended) && w.opener && w.opener !== w) w = w.opener; } catch (e) { return; }
+    try { if (w && w.RSPADDLE && w.RSPADDLE.suspended) { const p = window.open('', 'rs-cwpage'); if (p) p.focus(); } } catch (e) {}
+  }
   function bmTune(khz, call, X) {
     if (call) setDx({ call });
     if (!api || !api.iControl()) return api && api.say('Prenez la main pour vous caler sur ' + (call || 'cette fréquence') + ' (le TRX change de fréquence).', 'warn');
@@ -2232,7 +2238,15 @@
       g.w.removeEventListener('mouseup', bmUp);
       if (g.moved) return;
       const b = g.t.closest && g.t.closest('.bm-s');
-      if (b) { const s = bmSpots.get(b.dataset.k); if (s) bmTune(s.f, s.call, X); return; }
+      if (b) {
+        const s = bmSpots.get(b.dataset.k);
+        if (!s) return;
+        // Spot CW (commentaire « CW », vitesse en WPM, ou skimmer) hors de l'onglet CW : TRX en CW, onglet CW, indicatif
+        if (tab !== 'cw' && (s.skim || /\bCW\b|WPM/i.test(s.cmt))) { spotQsy(s.f, 'CW', s.call); cwPageFocus(); return; }
+        bmTune(s.f, s.call, X);
+        if (tab === 'cw') cwPageFocus();
+        return;
+      }
       if (body.contains(e.target)) bmTune(kOf(e), undefined, X);
     };
     body.addEventListener('wheel', (e) => {

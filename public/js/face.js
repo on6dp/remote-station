@@ -6405,6 +6405,15 @@
     if (!b) return '';
     return p.f < b[1] ? 'CW' : p.f < b[2] ? 'RTTY' : 'SSB';
   }
+  // Indicatif d'un spot CW : « Correspondant » des modes numériques (onglet CW affiché) ; page Poste CW au premier plan si ouverte
+  function cwSpotPick(call) {
+    const dg = DG();
+    try {
+      if (dg && dg.cwKit) dg.cwKit.setCall(call);
+      if (dg && dg.goTab) dg.goTab('cw');
+    } catch (e) { /* modes numériques pas encore prêts */ }
+    if (window.RSPADDLE && window.RSPADDLE.suspended) { try { const w = window.open('', 'rs-cwpage'); if (w) w.focus(); } catch (e) {} }
+  }
   function bmvOnSpots(m) {
     if (m.t === 'spots') BMV.spots.clear();
     for (const s of m.list || []) {
@@ -6463,6 +6472,15 @@
       for (const l of BMV.lay[side]) { const d = Math.abs(l.ly - y); if (d < bd && x >= l.x0 - 8) { bd = d; best = l; } }
       if (!best) return;
       tuneTo(bmVfo(side), Math.round(best.s.f * 1000));
+      // Spot CW : TRX en CW, onglet CW des modes numériques, indicatif dans « Correspondant » (et dans le Poste CW)
+      if (bmvSpotMode(best.s) === 'CW' && iControl()) {
+        const v = bmVfo(side);
+        const cur = (v === 'B' ? S().modeB : S().mode) || '';
+        const mk = (R.MODE_KEYS || []).find((x) => /^CW-U$/.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^CW/.test(x[1]));
+        if (mk && !/^CW/.test(cur)) setTimeout(() => send({ t: 'set', mode: mk[0], sub: v === 'B' }), 150);
+        cwSpotPick(best.s.call);
+        return say((v === 'A' ? 'VFO-A' : 'VFO-B') + ' → ' + best.s.call + ' en CW (' + best.s.f.toFixed(1) + ' kHz) : indicatif dans Correspondant', '', 4000);
+      }
       say((bmVfo(side) === 'A' ? 'VFO-A' : 'VFO-B') + ' → ' + best.s.call + ' (' + best.s.f.toFixed(1) + ' kHz)', '', 3000);
     });
     body.addEventListener('mousemove', (e) => {
