@@ -537,6 +537,7 @@
       <div class="sy-box"><span>Heure du serveur (UTC)</span><b id="syVps">--:--:--</b><small>référence de tous les décodages</small></div>
       <div class="sy-box"><span>Serveur : NTP</span><b id="syNtp">—</b><small id="syNtpNote">synchronisation du serveur sur l’heure mondiale</small></div>
       <div class="sy-box"><span>PC du club</span><b id="syClub">—</b><small id="syClubNote">écart avec le serveur</small>
+        <small class="sy-res" id="syClubRes"></small>
         <button class="btn sy-btn" type="button" id="syClubSync" title="Met l’horloge de Windows du PC du club à l’heure (serveurs NTP publics, comme NetTime) par l’assistant carte son version 4 — responsables de la station">⟳ Mettre à l’heure</button></div>
       <div class="sy-box"><span>Votre PC</span><b id="syPc">—</b><small id="syPcNote">écart avec le serveur</small></div>
       <div class="sy-box"><span>Liaison station → serveur</span><b id="syLat">—</b><small>délai mesuré et corrigé automatiquement</small></div>
@@ -4979,9 +4980,28 @@
     v.sort((a, b) => a - b);
     return { med: v[v.length >> 1], n: v.length };
   }
+  // « Mettre à l'heure » le PC du club : bouton occupé pendant l'opération (≈ 10 s), résultat affiché sous la case
+  let syBusy = 0;
+  function sySync(state, msg) {
+    const b = $('syClubSync');
+    if (!b) return;
+    clearTimeout(sySync.t);
+    b.disabled = state === 'busy';
+    b.classList.toggle('busy', state === 'busy');
+    b.classList.toggle('done', state === 'ok');
+    b.classList.toggle('fail', state === 'err');
+    b.textContent = state === 'busy' ? '⏳ Mise à l’heure…' : state === 'ok' ? '✓ À l’heure' : state === 'err' ? '✗ Échec' : '⟳ Mettre à l’heure';
+    const r = $('syClubRes');
+    if (r && msg) r.textContent = msg;
+    if (state === 'busy') sySync.t = setTimeout(() => sySync('err', 'pas de réponse de la page Station (rechargée ? assistant installé ?)'), 45000);
+    else if (state !== 'idle') sySync.t = setTimeout(() => sySync('idle'), 8000);
+  }
   document.addEventListener('click', (e) => {
     const b = e.target && e.target.closest && e.target.closest('#syClubSync');
-    if (b && api) api.send({ t: 'time_sync' });
+    if (!b || !api) return;
+    syBusy = Date.now();
+    sySync('busy', 'demande envoyée au PC du club…');
+    api.send({ t: 'time_sync' });
   });
   function drawSync() {
     if (tab !== 'sync' || detached) return;
@@ -5366,6 +5386,13 @@
       announce(); // reprise après reconnexion
     },
     onMessage(m) {
+      // Réponse à « Mettre à l'heure » (onglet Synchro) : aussi affichée dans la case PC du club
+      if (m.t === 'notice' && syBusy && /^Heure du PC du club|^Réservé aux responsables|^Station hors ligne|^Page Station trop ancienne/.test(m.msg || '')) {
+        if (!/^Heure du PC du club/.test(m.msg) || Date.now() - syBusy < 60000) {
+          syBusy = 0;
+          sySync(m.level === 'error' ? 'err' : 'ok', String(m.msg).replace(/^Heure du PC du club : /, ''));
+        }
+      }
       if (m.t === 'qrz_info') { qrzInfo(m); if (window.RSLOG && window.RSLOG.onQrz) window.RSLOG.onQrz(m); if (LOGW() && LOGW().onQrz) LOGW().onQrz(m); return true; }
       if (LOGP && /^log_/.test(m.t)) { if (LOGW()) LOGW().onMessage(m); return true; } // carnet de trafic (sa fenêtre)
       if (m.t === 'ftx_qso' && m.qso) { ftxQsoEnd(m); return true; }

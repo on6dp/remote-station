@@ -1907,3 +1907,8 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .dg-alog select { font-size: 11px; padding: 1px 3px; background: #07090d; border: 1px solid var(--v2-border); border-radius: 4px; color: var(--v2-text-bright); max-width: 190px; }
 .qso-note { color: #ffb84d; margin: 0 0 6px; }
 .sy-btn { justify-self: start; margin-top: 4px; font-size: 11px; padding: 3px 10px; }
+.sy-btn.busy { background: #1f6feb; border-color: #58a6ff; color: #fff; opacity: 1; }
+.sy-btn.done { background: #1f7a3f; border-color: #3fd07f; color: #fff; }
+.sy-btn.fail { background: #8a1c14; border-color: #ff5a4a; color: #fff; }
+.sy-res { color: #ffd400; }
+.sy-res:empty { display: none; }

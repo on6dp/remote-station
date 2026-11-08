@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.190 | [RemoteStation-Setup-0.37.190.exe](0.37.190/RemoteStation-Setup-0.37.190.exe) | [remote-station-0.37.190.tar.gz](0.37.190/remote-station-0.37.190.tar.gz) | Synchro : retour visible du bouton Mettre à l'heure — [empreintes SHA-256](0.37.190/SHA256SUMS.txt) |
 | 0.37.189 | [RemoteStation-Setup-0.37.189.exe](0.37.189/RemoteStation-Setup-0.37.189.exe) | [remote-station-0.37.189.tar.gz](0.37.189/remote-station-0.37.189.tar.gz) | Synchro : plus de mesure périmée — [empreintes SHA-256](0.37.189/SHA256SUMS.txt) |
 | 0.37.188 | [RemoteStation-Setup-0.37.188.exe](0.37.188/RemoteStation-Setup-0.37.188.exe) | [remote-station-0.37.188.tar.gz](0.37.188/remote-station-0.37.188.tar.gz) | Assistant v4 : démarrage plus rapide — [empreintes SHA-256](0.37.188/SHA256SUMS.txt) |
 | 0.37.187 | [RemoteStation-Setup-0.37.187.exe](0.37.187/RemoteStation-Setup-0.37.187.exe) | [remote-station-0.37.187.tar.gz](0.37.187/remote-station-0.37.187.tar.gz) | Synchro : NTP du serveur, heure du PC du club (assistant v4) — [empreintes SHA-256](0.37.187/SHA256SUMS.txt) |
