@@ -39,14 +39,50 @@
     if (!Number.isFinite(S.vol)) S.vol = 40;
     const save = (k, v) => store.set('pd.' + k, v);
 
-    root.className = 'cwk';
-    root.innerHTML = `
+    const PAGE = opt.layout === 'page'; // page « Poste CW » (cw.html) : tous les réglages visibles, en grand
+    const SRC_OPTS = `
+          <option value="ctrl">Adaptateur USB (Ctrl gauche / droit)</option>
+          <option value="keys">Touches du clavier</option>
+          <option value="midi">Adaptateur MIDI</option>
+          <option value="serial">Câble USB-série (DSR / CTS)</option>
+          <option value="screen">Palettes à l’écran seulement</option>`;
+    const SRC_ROWS = `
+        <div class="cwk-src" data-s="keys">Point : <button class="dg-mini" type="button" data-learn="kDit"></button> Trait : <button class="dg-mini" type="button" data-learn="kDah"></button> <span class="cwk-hint">(cliquez puis appuyez sur la touche)</span></div>
+        <div class="cwk-src" data-s="midi">Point : <button class="dg-mini" type="button" data-learn="mDit"></button> Trait : <button class="dg-mini" type="button" data-learn="mDah"></button> <span class="cwk-midi"></span></div>
+        <div class="cwk-src" data-s="serial"><button class="dg-mini" type="button" data-a="serial">Choisir le port…</button> <span class="cwk-ser">aucun port</span></div>`;
+    if (PAGE) root.classList.add('cwk', 'cwk-page'); else root.className = 'cwk';
+    if (PAGE) root.innerHTML = `
+      <section class="cwp-box cwp-keyer"><h2>Manipulateur</h2>
+        <div class="cwp-wpmrow"><div class="cwp-wpm"><b data-show="wpm"></b><small>mots/min</small></div>
+          <input class="cwp-slider" data-k="wpm" type="range" min="5" max="50" step="1" aria-label="Vitesse"></div>
+        <label class="cwp-row">Poids <b data-show="weight"></b><input class="cwp-slider" data-k="weight" type="range" min="30" max="70" step="1"></label>
+        <label class="cwp-row">Clé <select data-k="mode"><option value="B">Palettes, iambique B</option><option value="A">Palettes, iambique A</option><option value="S">Pioche (clé droite)</option></select></label>
+        <label class="cwp-row cwk-c"><input data-k="swap" type="checkbox"> Inverser point / trait</label>
+        <p class="cwk-hint">La vitesse vaut pour la clé <b>et</b> pour les macros.</p>
+      </section>
+      <section class="cwp-box cwp-side"><h2>Écoute locale</h2>
+        <label class="cwp-row cwk-out">Sortie <select data-k="sink"><option value="">Haut-parleurs par défaut</option></select></label>
+        <div class="cwp-big"><b data-show="tone"></b> Hz</div>
+        <input class="cwp-slider" data-k="tone" type="range" min="300" max="1200" step="10" aria-label="Tonalité">
+        <div class="cwp-big"><b data-show="vol"></b> %</div>
+        <input class="cwp-slider" data-k="vol" type="range" min="0" max="100" step="1" aria-label="Volume">
+      </section>
+      <section class="cwp-box cwp-in"><h2>Entrées</h2>
+        <label class="cwp-row">Clé branchée par <select data-k="src">${SRC_OPTS}</select></label>
+        ${SRC_ROWS}
+        <div class="cwp-pads"><button class="cwk-pd" type="button" data-p="dit" title="Palette point (souris / écran tactile)">•</button><button class="cwk-pd" type="button" data-p="dah" title="Palette trait (souris / écran tactile)">—</button></div>
+        <button class="cwk-arm cwp-arm" type="button" title="Allumé : votre clé manipule le TRX du club (avec la main). Éteint : entraînement, écoute locale seule.">CLÉ → TRX <b>OFF</b></button>
+        <div class="cwp-lamps"><span><i class="cwk-led"></i> Clé</span><span class="cwk-tx" title="Le TRX du club émet votre manipulation">TX</span></div>
+        <span class="cwk-sum" hidden></span>
+      </section>`;
+    else root.innerHTML = `
       <div class="cwk-bar">
         <button class="btn cwk-arm" type="button" title="Allumé : votre clé manipule le TRX du club (avec la main). Éteint : entraînement, écoute locale seule.">Clé → TRX <b>OFF</b></button>
         <i class="cwk-led" title="Votre clé (écoute locale)"></i><span class="cwk-tx" title="Le TRX du club émet votre manipulation">TX</span>
         <span class="cwk-sum"></span>
         <button class="cwk-pd" type="button" data-p="dit" title="Palette point (souris / écran tactile)">•</button><button class="cwk-pd" type="button" data-p="dah" title="Palette trait (souris / écran tactile)">—</button>
         <button class="cwk-cfg" type="button" aria-expanded="false" title="Réglages de la clé : type de clé, branchement, vitesse, poids, écoute">⚙ Réglages</button>
+        <button class="cwk-open" type="button" title="Ouvrir le Poste CW : clé, macros et réception CW sur une page entière (même connexion que ce dashboard)">🎛 POSTE CW</button>
       </div>
       <div class="cwk-set" hidden>
         <label>Clé <select data-k="mode"><option value="B">Palettes, iambique B</option><option value="A">Palettes, iambique A</option><option value="S">Pioche (clé droite)</option></select></label>
@@ -71,7 +107,7 @@
     const armBtn = q('.cwk-arm');
     const led = q('.cwk-led');
     const txLed = q('.cwk-tx');
-    const set = q('.cwk-set');
+    const set = PAGE ? root : q('.cwk-set');
 
     // ------------------------------------------------------------------ écoute locale (sidetone)
     let ac = null;
@@ -248,7 +284,11 @@
       if (S.mode === 'B' && K.dit && K.dah) { if (next === 'dit') K.memDah = true; else K.memDit = true; }
       K.timer = win.setTimeout(decide, Math.max(0, K.tNext - perf()));
     }
+    // Page « Poste CW » ouverte : la clé du dashboard qui l'a ouverte se met en veille (une seule clé à la fois ;
+    // un port série ne peut être ouvert que par une fenêtre)
+    const suspended = () => !!(win.RSPADDLE && win.RSPADDLE.suspended);
     function paddle(which, down) {
+      if (down && suspended()) return;
       if (S.swap && S.mode !== 'S') which = which === 'dit' ? 'dah' : 'dit';
       audio();
       if (S.mode === 'S') {
@@ -316,6 +356,7 @@
         api.send({ t: 'cw_stop' });
         return;
       }
+      if (suspended()) return;
       const w = keyMap(e.code);
       // Touches prises seulement quand la clé est affichée (onglet CW visible) : Ctrl ailleurs reste un Ctrl ordinaire
       if (!w || (down && !root.offsetParent)) return; // relâchement toujours pris (pas de palette bloquée)
@@ -399,6 +440,7 @@
 
     // ------------------------------------------------------------------ réglages
     function paint() {
+      root.querySelectorAll('[data-show]').forEach((el) => { el.textContent = String(S[el.dataset.show]); });
       armBtn.querySelector('b').textContent = S.armed ? 'ON' : 'OFF';
       armBtn.classList.toggle('on', S.armed);
       const srcTxt = { ctrl: 'Ctrl G / D', keys: 'touches ' + keyName(S.kDit) + ' / ' + keyName(S.kDah), midi: 'MIDI', serial: 'port série', screen: 'écran' }[S.src] || '';
@@ -419,10 +461,11 @@
       }
       if (S.src === 'serial' && !navigator.serial) q('.cwk-ser').textContent = 'port série non disponible dans ce navigateur (Chrome ou Edge)';
     }
-    set.addEventListener('change', (e) => {
+    function onSet(e) {
       const el = e.target;
       const k = el.dataset && el.dataset.k;
       if (!k) return;
+      if (e.type === 'input' && el.type !== 'range') return;
       if (el.type === 'checkbox') S[k] = el.checked;
       else if (el.tagName === 'SELECT') S[k] = el.value;
       else S[k] = Number(el.value);
@@ -435,8 +478,10 @@
       releaseAll();
       if (k === 'src') { serGen++; if (S.src === 'midi') midiOn(); if (S.src === 'serial') serialAuto(); }
       paint();
-    });
-    set.querySelector('[data-k="vol"]').addEventListener('input', (e) => { S.vol = Number(e.target.value); save('vol', S.vol); });
+      if (typeof opt.onChange === 'function') opt.onChange(k, S[k]);
+    }
+    set.addEventListener('change', onSet);
+    set.addEventListener('input', onSet); // curseurs : suivis en direct
     set.addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
@@ -446,7 +491,11 @@
         navigator.serial.requestPort().then(serialUse).catch(() => {});
       }
     });
-    q('.cwk-cfg').addEventListener('click', () => {
+    if (q('.cwk-open')) q('.cwk-open').addEventListener('click', () => {
+      const w = win.open('/cw.html', 'rs-cwpage', 'width=1240,height=860');
+      if (w) try { w.focus(); } catch (e) {}
+    });
+    if (q('.cwk-cfg')) q('.cwk-cfg').addEventListener('click', () => {
       set.hidden = !set.hidden;
       q('.cwk-cfg').setAttribute('aria-expanded', String(!set.hidden));
       if (!set.hidden) sinkList();
@@ -460,16 +509,35 @@
       paint();
     });
     // Voyant TX : le TRX du club émet la manipulation de la clé
+    let wasSusp = false;
     win.setInterval(() => {
+      const sp = suspended();
+      if (sp !== wasSusp) {
+        wasSusp = sp;
+        root.classList.toggle('cwk-off', sp);
+        if (sp) {
+          releaseAll(); burstEnd(); S.armed = false;
+          serGen++;
+          if (port) { const p0 = port; port = null; p0.close().catch(() => {}); }
+          q('.cwk-sum').textContent = 'Clé dans la page « Poste CW »';
+        } else { if (S.src === 'serial') serialAuto(); paint(); }
+        if (!sp) paint();
+      }
       const st = api.state && api.state();
       const x = st && st.cw;
       txLed.classList.toggle('on', !!(x && x.live && x.state === 'tx'));
     }, 250);
 
     if (S.src === 'midi') midiOn();
-    if (S.src === 'serial') serialAuto();
+    if (S.src === 'serial') win.setTimeout(serialAuto, PAGE ? 800 : 0); // page Poste CW : le dashboard libère d'abord le port
     paint();
-    return { release: releaseAll, stop: burstEnd };
+    if (PAGE) sinkList();
+    return {
+      release: releaseAll,
+      stop: burstEnd,
+      get: () => Object.assign({}, S, { txOn: TX.on, key: led.classList.contains('on') }),
+      setWpm(v) { v = Math.max(5, Math.min(50, Math.round(Number(v)) || S.wpm)); if (v !== S.wpm) { S.wpm = v; save('wpm', v); paint(); } }
+    };
   }
 
   window.RSPADDLE = { mount };

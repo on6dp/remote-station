@@ -6236,6 +6236,7 @@
       if (typeof e.data !== 'string') return onAudio(e.data);
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (hostTaps.size) runTaps(m);
       if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && window.RSVOICE) { window.RSVOICE.onMessage(m); return; }
       if (m.t === 'vm') { VM.meta = m.meta; VM.playing = m.playing; L.vlvP = null; render(); return; } // mémoires vocales (VOICE TX)
       if (m.t === 'vm_data') { vmOnData(m); return; }
@@ -6590,8 +6591,14 @@
     digiHost.win = null;
     if (window.RSDIGI) { window.RSDIGI.setDetached(false); if (me) window.RSDIGI.onHello(me, me); if (st) window.RSDIGI.onState(st); }
   }
+  // Écoutes des messages du serveur par d'autres fenêtres (page « Poste CW ») : RSHOST.tap(fn)
+  const hostTaps = new Set();
+  function runTaps(m) {
+    for (const f of hostTaps) { try { f(m); } catch (e) { hostTaps.delete(f); } } // fenêtre fermée : écoute retirée
+  }
   window.RSHOST = {
     api: digiApi,
+    tap(fn) { hostTaps.add(fn); return () => hostTaps.delete(fn); },
     attach(win, inst, popupApi) {
       if (digiHost.win && digiHost.win !== win && !digiHost.win.closed) { try { digiHost.win.close(); } catch (e) {} }
       bmPopClose(); // la carte de bande part avec les modes numériques (dans leur fenêtre)

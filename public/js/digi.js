@@ -4935,6 +4935,30 @@
       return { jt65: 'JT65', rtty: 'RTTY', jtty: 'JTTY', cw: 'CW', sstv: 'SSTV', wspr: 'WSPR' }[t] || store.get('ftmode', 'FT8');
     },
     qo100If: () => Object.assign({}, qoIf),
+    /** Page « Poste CW » (cw.html) : macros CW, envoi de texte, correspondant, vitesse des macros */
+    cwKit: {
+      macros: () => macroList('CW').map((m, i) => ({ i, name: m.name || '—', tx: /<TX>/i.test(m.text), preview: macroText(m.text).replace(/\n/g, ' ') })),
+      use(i) {
+        const m = macroList('CW')[i];
+        if (!m) return '';
+        if (!/<TX>/i.test(m.text)) return macroText(m.text, true).toUpperCase(); // macro sans <TX> : texte à ajouter
+        useMacro('CW', m.text, false);
+        return null;
+      },
+      prep(i) { const m = macroList('CW')[i]; if (m && /<TX>/i.test(m.text)) cwPrepMacro(m.text); },
+      send: (text) => cwSend(String(text || '').toUpperCase(), false),
+      edit: (doc, i) => editMacro(doc, 'CW', i || 0),
+      call: () => String(dx.call || ''),
+      setCall: (c) => setDx({ call: String(c || '').toUpperCase().trim() }),
+      myCall: () => myCall,
+      speed: () => Number(store.get('cwspeed', '22')) || 22,
+      setSpeed(v) {
+        v = Math.max(5, Math.min(60, Math.round(Number(v)) || 22));
+        store.set('cwspeed', v);
+        const sp = $('cwSpeed');
+        if (sp && sp.ownerDocument.activeElement !== sp) sp.value = v;
+      }
+    },
     init(a) {
       const again = !!api;
       api = a;

@@ -167,7 +167,7 @@ const TYPES = {
 function qsyOrigins() {
   return (Array.isArray(cfg.qsyOrigins) ? cfg.qsyOrigins : DEFAULTS.qsyOrigins).map(String).filter((o) => /^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o));
 }
-const ROUTES = { '/': '/index.html', '/ftdx101': '/face.html', '/station': '/station.html', '/digi': '/digi.html', '/ftdx101/digi.html': '/digi.html', '/ftdx101/log.html': '/log.html', '/ftdx101/digi': '/digi.html', '/ftdx101/': '/face.html', '/ftdx10': '/face.html', '/ftdx10/': '/face.html', '/ftdx10/digi.html': '/digi.html', '/ftdx10/digi': '/digi.html', '/ftdx10/log.html': '/log.html', '/ic7300': '/face.html', '/ic7300/': '/face.html', '/ic7300/digi.html': '/digi.html', '/ic7300/digi': '/digi.html', '/ic7300/log.html': '/log.html', '/ftx1': '/face.html', '/ftx1/': '/face.html', '/ftx1/digi.html': '/digi.html', '/ftx1/digi': '/digi.html', '/ftx1/log.html': '/log.html', '/aide': '/aide.html', '/help': '/help.html', '/stats': '/stats.html', '/detache': '/detache.html' };
+const ROUTES = { '/': '/index.html', '/ftdx101': '/face.html', '/station': '/station.html', '/digi': '/digi.html', '/ftdx101/digi.html': '/digi.html', '/ftdx101/log.html': '/log.html', '/ftdx101/digi': '/digi.html', '/ftdx101/': '/face.html', '/ftdx10': '/face.html', '/ftdx10/': '/face.html', '/ftdx10/digi.html': '/digi.html', '/ftdx10/digi': '/digi.html', '/ftdx10/log.html': '/log.html', '/ic7300': '/face.html', '/ic7300/': '/face.html', '/ic7300/digi.html': '/digi.html', '/ic7300/digi': '/digi.html', '/ic7300/log.html': '/log.html', '/ftx1': '/face.html', '/ftx1/': '/face.html', '/ftx1/digi.html': '/digi.html', '/ftx1/digi': '/digi.html', '/ftx1/log.html': '/log.html', '/aide': '/aide.html', '/help': '/help.html', '/stats': '/stats.html', '/detache': '/detache.html', '/cw': '/cw.html' };
 
 function sendJson(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -1865,7 +1865,9 @@ function publicState() {
   return {
     t: 'state',
     station: !!station,
-    radio,
+    // CW (macro ou clé) en cours : le break-in du TRX repasse en réception entre les lettres et les mots ; pour
+    // l'affichage, l'émission dure jusqu'à la fin du message (fréquence rouge sans clignoter)
+    radio: cwJob && cwJob.state === 'tx' && !radio.tx ? Object.assign({}, radio, { tx: 1, txHeld: 1 }) : radio,
     controller: controller ? controller.user.call : null,
     controllerCid: controller ? controller.cid : null,
     users: calls.sort(),

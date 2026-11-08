@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poste CW — Remote Station</title>
+<meta name="theme-color" content="#0b1018">
+<link rel="stylesheet" href="/css/rp-tokens.css">
+<link rel="stylesheet" href="/css/rp.css">
+</head>
+<body class="cwp-body">
+  <!-- Poste CW : clé de l'opérateur (palettes / pioche), macros et réception CW sur une page entière.
+       Elle utilise la connexion du dashboard qui l'a ouverte (bouton « Poste CW » de l'onglet CW). -->
+  <header class="cwp-head">
+    <h1>Poste CW <small>Remote Station</small></h1>
+    <div class="cwp-trx"><span id="cwpFreq">—</span> <span id="cwpMode" class="cwp-mode">—</span></div>
+    <div class="cwp-ctl"><span id="cwpCtl">—</span> <button class="cwp-take" type="button" id="cwpTake" hidden>PRENDRE LA MAIN</button></div>
+    <div class="cwp-txbig" id="cwpTx">RX</div>
+  </header>
+  <p class="cwp-orphan" id="cwpOrphan" hidden>Cette page doit être ouverte depuis le dashboard (onglet CW → bouton « Poste CW »). Si le dashboard a été fermé, rouvrez-le : cette page s’y raccrochera.</p>
+  <main class="cwp-main">
+    <div id="cwpKey" class="cwp-grid3"></div>
+    <section class="cwp-box cwp-mac">
+      <h2>Macros <small>F1 à F12 · clic droit ou ✎ : modifier</small></h2>
+      <div class="cwp-macros" id="cwpMacros"></div>
+      <div class="cwp-sendrow">
+        <label class="cwp-call">Correspondant <input id="cwpCall" type="text" maxlength="16" autocomplete="off" spellcheck="false"></label>
+        <input id="cwpTxt" type="text" placeholder="Tapez le texte CW, Entrée = émission (manipulateur du TRX)" autocomplete="off" spellcheck="false">
+        <button class="cwp-send" type="button" id="cwpSend">ÉMETTRE</button>
+        <button class="cwp-stop" type="button" id="cwpStop" title="Arrête tout de suite l’émission (aussi avec Échap)">■ ARRÊTER</button>
+      </div>
+      <p class="cwp-note" id="cwpNote"></p>
+    </section>
+    <section class="cwp-box cwp-rx">
+      <h2>Réception CW <button class="cwp-clear" type="button" id="cwpClear">EFFACER</button></h2>
+      <pre class="rt-rx cwp-rxtxt" id="cwpRx"></pre>
+    </section>
+  </main>
+  <footer class="cwp-foot">
+    <span id="cwpLink">Liaison : —</span>
+    <span id="cwpRtt">Aller-retour : —</span>
+    <span>Réserve de lecture au club : 130 ms</span>
+    <span id="cwpKeySt">Clé : levée</span>
+    <span id="cwpTxSt">Émission : —</span>
+  </footer>
+  <p class="dg-toast" id="cwpToast" role="status"></p>
+<script src="/js/paddle.js"></script>
+<script src="/js/cwpage.js"></script>
+</body>
+</html>

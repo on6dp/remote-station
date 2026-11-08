@@ -1623,6 +1623,7 @@
       if (typeof e.data !== 'string') return onAudio(e.data);
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (hostTaps.size) runTaps(m);
       if (window.RSLOG && /^log_/.test(m.t)) { window.RSLOG.onMessage(m); return; }
       if (m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values') { if (VX()) VX().onMessage(m); return; }
       if (DG() && DG().onMessage(m)) return;
@@ -1738,8 +1739,14 @@
     digiHost.win = null;
     if (window.RSDIGI) { window.RSDIGI.setDetached(false); if (me) window.RSDIGI.onHello(me, me); }
   }
+  // Écoutes des messages du serveur par d'autres fenêtres (page « Poste CW ») : RSHOST.tap(fn)
+  const hostTaps = new Set();
+  function runTaps(m) {
+    for (const f of hostTaps) { try { f(m); } catch (e) { hostTaps.delete(f); } } // fenêtre fermée : écoute retirée
+  }
   window.RSHOST = {
     api: digiApi,
+    tap(fn) { hostTaps.add(fn); return () => hostTaps.delete(fn); },
     attach(win, inst, popupApi) {
       if (digiHost.win && digiHost.win !== win && !digiHost.win.closed) { try { digiHost.win.close(); } catch (e) {} }
       digiHost.win = win;
