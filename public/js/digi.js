@@ -1385,7 +1385,7 @@
     ['ARRL-10', 'ARRL 10 m (CW)', '5NN <CNTR>'],
     ['IARU-HF', 'IARU HF World Championship', '5NN <ITUZ>'],
     ['DARC-WAEDC-CW', 'WAE DX CW (DARC)', '5NN <CNTR>'],
-    ['UBA-DX-CW', 'UBA DX Contest CW', '5NN <CNTR> LG'],
+    ['UBA-DX-CW', 'UBA DX Contest CW', '5NN <CNTR> LGE'],
     ['ON-CONTEST', 'UBA ON Contest CW (80 m)', '5NN <CNTR> LGE'],
     ['EU-HF', 'EU HF Championship', '5NN 00'],
     ['OK-OM-DX', 'OK/OM DX Contest CW', '5NN <CNTR>'],

@@ -86,7 +86,7 @@
     box.id = 'vxBox';
     box.hidden = true;
     box.innerHTML =
-      '<div class="vx-h"><span class="vx-title">SSB configuration</span></div>' +
+      '<div class="vx-h"><span class="vx-title">SSB configuration</span><button class="btn vx-ssbp" id="vxSsbPage" type="button" title="Poste SSB : contests en phonie (échange, catégorie, n° de série, log à la manière de N1MM, mémoires vocales, Cabrillo) dans une fenêtre séparée">🏆 POSTE SSB</button></div>' +
       '<button class="btn vx-on" id="vxOn" type="button" aria-pressed="false" title="Activer votre micro : votre voix part vers le TRX pendant l’appui sur PTT (LSB / USB…) ; un nouveau clic le coupe">Configuration micro</button>' +
       '<button class="btn vx-trx" id="vxTrxBtn" type="button" hidden title="Égaliseur paramétrique du TRX (menus PRMTRC) : votre profil, mis au TRX quand vous prenez la main">Equalizer TRX</button>' +
       '<div class="vx-b" id="vxBody" hidden>' +
@@ -114,7 +114,7 @@
         const st = V.api.state();
         V.api.send({ t: 'profile_get', call: (st && st.controller) || '' });
       });
-      $('vxOn').after(eq, meter, $('vxTrxBtn'), prof);
+      $('vxOn').after(eq, meter, $('vxTrxBtn'), prof, $('vxSsbPage'));
       if (row && !row.children.length) row.remove();
       // Ligne d'état (« PTT = micro du club… ») sous le bouton PTT, puisqu'elle le concerne
       const col = document.createElement('div');
@@ -122,6 +122,11 @@
       anchor.before(col);
       col.append(anchor, $('vxNote'));
     }
+    $('vxSsbPage').addEventListener('click', () => {
+      // Page « Poste SSB » (ssb.html), raccrochée à cette page (window.opener.RSHOST), comme le Poste CW
+      const w = window.open('/ssb.html', 'rs-ssbpage', 'width=1240,height=820');
+      if (w) try { w.focus(); } catch (e) {}
+    });
     $('vxOn').addEventListener('click', () => (V.on ? stop(true) : start()));
     $('vxDev').addEventListener('change', () => { const o = $('vxDev').selectedOptions[0]; store.set('dev', o ? o.textContent : ''); start($('vxDev').value); });
     $('vxOut').addEventListener('change', () => { const o = $('vxOut').selectedOptions[0]; store.set('out', o ? o.textContent : ''); applySink(); });

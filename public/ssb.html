@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poste SSB — Remote Station</title>
+<meta name="theme-color" content="#0b1018">
+<link rel="stylesheet" href="/css/rp-tokens.css">
+<link rel="stylesheet" href="/css/rp.css">
+</head>
+<body class="cwp-body ssb-body">
+  <!-- Poste SSB : contests en phonie (choix du contest et de la catégorie, échange, n° de série, log à la manière de
+       N1MM, mémoires vocales T1 à T8, Cabrillo). Même connexion que le dashboard qui l'a ouvert. -->
+  <header class="cwp-head">
+    <h1>Poste SSB <small>Remote Station · contests en phonie</small></h1>
+    <div class="cwp-trx"><span id="cwpFreq">—</span> <span id="cwpMode" class="cwp-mode">—</span></div>
+    <div class="cwp-ctl"><span id="cwpCtl">—</span> <button class="cwp-take" type="button" id="cwpTake" hidden>PRENDRE LA MAIN</button></div>
+    <div class="cwp-txbig" id="cwpTx">RX</div>
+  </header>
+  <p class="cwp-orphan" id="cwpOrphan" hidden>Cette page doit être ouverte depuis le dashboard (bouton « Poste SSB »). Si le dashboard a été fermé, rouvrez-le : cette page s’y raccrochera.</p>
+  <main class="cwp-main ssb-main">
+    <section class="cwp-box cwp-ctst">
+      <div class="cwp-ctrow">
+        <label class="cwp-ctl1">Contest <select id="ssCtst"><option value="">— pas de contest —</option></select></label>
+        <label>Catégorie <select id="ssCat"></select></label>
+        <label id="ssPwrW">Puissance <select id="ssPwr"><option value="HIGH">forte (HIGH)</option><option value="LOW">faible (LOW)</option><option value="QRP">QRP</option></select></label>
+        <label id="ssBandW">Bande <select id="ssBand"></select></label>
+        <label id="ssAssW" class="cwp-chk" title="Aide de spots (DX cluster, skimmer…) utilisée"><input type="checkbox" id="ssAss"> Assisté</label>
+        <label id="ssOvW">Overlay <select id="ssOv"><option value="">—</option></select></label>
+        <a id="ssRules" class="ssb-rules" target="_blank" rel="noopener" hidden>Règlement ↗</a>
+      </div>
+      <div class="cwp-ctrow">
+        <label title="Échange envoyé : &lt;CNTR&gt; = n° de série, &lt;CQZ&gt; = zone CQ, &lt;ITUZ&gt; = zone ITU, &lt;MYNAME&gt; = prénom">Échange <input id="ssExch" maxlength="30" spellcheck="false"></label>
+        <span class="cwp-exsh" id="ssExchSh" title="À annoncer"></span>
+        <span class="cwp-nr" title="Numéro de série à annoncer : il passe au suivant à chaque QSO enregistré">N° <button type="button" id="ssNrM">−1</button><input id="ssNr" maxlength="4" inputmode="numeric"><button type="button" id="ssNrP">+1</button></span>
+        <label>Zone CQ <input id="ssCqz" maxlength="2" inputmode="numeric" class="cwp-z"></label>
+        <label>ITU <input id="ssItu" maxlength="2" inputmode="numeric" class="cwp-z"></label>
+        <label>Prénom <input id="ssName" maxlength="12" spellcheck="false" class="cwp-nm"></label>
+      </div>
+      <p class="cwp-note" id="ssNote"></p>
+      <div class="cwp-cgrid" id="cwpCtBody" hidden>
+        <div class="cwp-cleft">
+          <div class="cwp-entry" title="Entrée : comme l’ESM de N1MM (voir l’aide) · Espace : champ suivant · Alt+W : effacer">
+            <span class="cwp-esm"><button type="button" id="cwpRun" title="Vous appelez CQ : Entrée = CQ (T1), puis échange reçu, puis log + TU (T3)">RUN</button><button type="button" id="cwpSp" title="Vous répondez : Entrée = votre indicatif (T4), puis log">S&amp;P</button></span>
+            <label>Indicatif <input id="cwpECall" maxlength="15" autocomplete="off" spellcheck="false"></label>
+            <label>RS <input id="cwpERs" maxlength="3" class="cwp-rst" title="Report envoyé"></label>
+            <label>Envoyé <input id="cwpEStx" maxlength="30" spellcheck="false" title="Échange annoncé (rempli tout seul)"></label>
+            <label>RS <input id="cwpERr" maxlength="3" class="cwp-rst" title="Report reçu"></label>
+            <label>Reçu <input id="cwpESrx" maxlength="30" autocomplete="off" spellcheck="false" title="Échange reçu (n° de série, zone…)"></label>
+            <button type="button" class="cwp-elog" id="cwpELog">LOG ↵</button>
+            <button type="button" class="cwp-ewipe" id="cwpEWipe" title="Effacer la ligne (Alt+W)">EFFACER</button>
+            <span class="cwp-dupe" id="cwpDupe"></span>
+          </div>
+          <div class="ssb-vk">
+            <span class="ssb-vkh">Mémoires vocales <small>F1 à F8 · Échap : arrêt</small></span>
+            <div class="cwp-macros" id="ssVk"></div>
+            <p class="cwp-note">T1 = CQ, T3 = TU / QRZ, T4 = votre indicatif pour la touche Entrée. Enregistrement : face avant, MENU → VOICE → REC. L’échange (n° de série) se dit au micro : phonie par le bouton PTT du dashboard.</p>
+          </div>
+        </div>
+        <div class="cwp-cright">
+          <div class="cwp-cstats" id="cwpCStats">—</div>
+          <div class="cwp-clogw"><table class="cwp-clog"><thead><tr><th>UTC</th><th>Bande</th><th>Indicatif</th><th>Env.</th><th>Reçu</th></tr></thead><tbody id="cwpCLog"></tbody></table></div>
+          <div class="cwp-crow2"><label title="QSO de ce contest comptés depuis cette date (doublons, compteurs, Cabrillo)">Depuis <input type="date" id="cwpFrom"></label><button type="button" id="cwpCab" title="Fichier Cabrillo de ce contest, avec la catégorie choisie">CABRILLO</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="cwp-foot">
+    <span id="cwpLink">Liaison : —</span>
+    <span id="cwpTxSt">Émission : —</span>
+  </footer>
+  <p class="dg-toast" id="cwpToast" role="status"></p>
+<script src="/js/contests.js"></script>
+<script src="/js/ssbpage.js"></script>
+</body>
+</html>

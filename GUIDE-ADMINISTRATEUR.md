@@ -355,6 +355,13 @@ FTX-1 EX030402 à 19, FTDX10 EX030302 à 19, FTDX101 EX030303 à 20.
 - FTDX10 / FTDX101 : l'égaliseur n'agit que si **MIC EQ** est en service (bouton du cadre TX ; la fenêtre prévient s'il est coupé).
 - À vérifier à l'écoute : l'égaliseur PRMTRC agit sûrement sur le micro du club ; sur la voix arrivant par l'USB, cela dépend du TRX.
 
+### Contests en phonie (Poste SSB)
+
+- Bouton **🏆 POSTE SSB** de la ligne SSB CONFIGURATION (dashboard et face avant) : page **/ssb** raccrochée à la page qui l'ouvre, comme le Poste CW. Rien à régler sur le serveur.
+- Liste des contests SSB (`public/js/contests.js`) avec l'échange d'une station belge et les catégories d'inscription ; pour la station du club, UBA DX et ON Contest donnent la section **LGE**. Les contests marqués « * » ont des catégories génériques : à vérifier dans le règlement de l'année, et à corriger dans `contests.js` si besoin.
+- Les QSO vont dans le carnet général avec le contest et les échanges ; le bouton CABRILLO écrit l'en-tête avec la catégorie choisie (CATEGORY-OPERATOR, -POWER, -BAND, -ASSISTED, -MODE, -TRANSMITTER, -OVERLAY, -TIME).
+- Touches F1 à F8 : mémoires vocales T1 à T8 de l'opérateur (VOICE TX, gardées sur le serveur dans `voicemem/`), mêmes contrôles que le PTT.
+
 ---
 
 ## 10. MODE AUTO et bande latérale

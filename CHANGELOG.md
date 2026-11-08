@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.194** — Poste SSB : contests en phonie (28 contests avec échange et catégories, log N1MM, mémoires vocales F1-F8, Cabrillo avec catégorie) ; UBA DX CW : section LGE
 - **0.37.193** — Synchro : le décodage FT8 / FT4 continue pendant qu'on regarde l'onglet Synchro (Décodages et DT médian en direct)
 - **0.37.192** — Synchro : case Décodages lisible (temps du décodeur seulement dans le détail)
 - **0.37.191** — Synchro : temps passé dans le décodeur affiché pour chaque passe (diagnostic des décodages tardifs)

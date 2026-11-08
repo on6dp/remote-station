@@ -1912,3 +1912,22 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .sy-btn.fail { background: #8a1c14; border-color: #ff5a4a; color: #fff; }
 .sy-res { color: #ffd400; }
 .sy-res:empty { display: none; }
+/* Poste SSB (ssb.html) : contests en phonie */
+.ssb-main { grid-template-rows: auto; align-content: start; }
+.ssb-main .cwp-ctst { gap: 8px; }
+.ssb-rules { color: #58a6ff; font-weight: 700; text-decoration: none; border: 1px solid #2c4a6e; border-radius: 4px; padding: 3px 8px; }
+.ssb-rules:hover { background: #142236; }
+.ssb-rules[hidden], .cwp-ctrow label[hidden] { display: none; }
+.cwp-chk { cursor: pointer; }
+.cwp-chk input { accent-color: #1f6feb; width: 15px; height: 15px; }
+.ssb-vk { display: flex; flex-direction: column; gap: 6px; padding: 6px 8px; border: 1px solid var(--v2-border); border-radius: 6px; background: #0b121c; }
+.ssb-vkh { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: #ffd400; font-weight: 800; }
+.ssb-vkh small { color: var(--v2-text-dim); letter-spacing: 0; text-transform: none; font-weight: 400; margin-left: 8px; }
+.cwp-macro.ssb-vm.empty { opacity: .55; }
+.cwp-macro.ssb-vm.play { background: #c8170d; border-color: #ff5a4a; color: #fff; }
+.ssb-body .cwp-clogw { max-height: 52vh; }
+.vx-h .vx-ssbp { background: #1f6feb; color: #fff; font-weight: 800; border-color: #58a6ff; letter-spacing: .4px; }
+.vx-h .vx-ssbp:hover { background: #388bfd; }
+.vx-compact .vx-ssbp { background: #1f6feb; color: #fff; font-weight: 800; border-color: #58a6ff; }
+.ssb-vk .cwp-macros { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+@media (max-width: 900px) { .ssb-vk .cwp-macros { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
