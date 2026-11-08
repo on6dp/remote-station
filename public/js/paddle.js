@@ -46,7 +46,7 @@
         <i class="cwk-led" title="Votre clé (écoute locale)"></i><span class="cwk-tx" title="Le TRX du club émet votre manipulation">TX</span>
         <span class="cwk-sum"></span>
         <button class="cwk-pd" type="button" data-p="dit" title="Palette point (souris / écran tactile)">•</button><button class="cwk-pd" type="button" data-p="dah" title="Palette trait (souris / écran tactile)">—</button>
-        <button class="dg-mini cwk-cfg" type="button" aria-expanded="false">Réglages</button>
+        <button class="cwk-cfg" type="button" aria-expanded="false" title="Réglages de la clé : type de clé, branchement, vitesse, poids, écoute">⚙ Réglages</button>
       </div>
       <div class="cwk-set" hidden>
         <label>Clé <select data-k="mode"><option value="B">Palettes, iambique B</option><option value="A">Palettes, iambique A</option><option value="S">Pioche (clé droite)</option></select></label>
