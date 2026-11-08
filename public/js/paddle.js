@@ -54,25 +54,26 @@
     if (PAGE) root.innerHTML = `
       <section class="cwp-box cwp-keyer"><h2>Manipulateur</h2>
         <div class="cwp-wpmrow"><div class="cwp-wpm"><b data-show="wpm"></b><small>mots/min</small></div>
-          <input class="cwp-slider" data-k="wpm" type="range" min="5" max="50" step="1" aria-label="Vitesse"></div>
-        <label class="cwp-row">Poids <b data-show="weight"></b><input class="cwp-slider" data-k="weight" type="range" min="30" max="70" step="1"></label>
-        <label class="cwp-row">Clé <select data-k="mode"><option value="B">Palettes, iambique B</option><option value="A">Palettes, iambique A</option><option value="S">Pioche (clé droite)</option></select></label>
-        <label class="cwp-row cwk-c"><input data-k="swap" type="checkbox"> Inverser point / trait</label>
-        <p class="cwk-hint">La vitesse vaut pour la clé <b>et</b> pour les macros.</p>
+          <div class="cwp-col">
+            <input class="cwp-slider" data-k="wpm" type="range" min="5" max="50" step="1" aria-label="Vitesse (clé et macros)" title="Vitesse : clé et macros">
+            <label class="cwp-row">Poids <b data-show="weight"></b><input class="cwp-slider" data-k="weight" type="range" min="30" max="70" step="1"></label>
+          </div></div>
+        <div class="cwp-row"><select data-k="mode" aria-label="Type de clé"><option value="B">Iambique B</option><option value="A">Iambique A</option><option value="S">Pioche</option></select>
+          <label class="cwk-c"><input data-k="swap" type="checkbox"> Inverser · / —</label></div>
       </section>
       <section class="cwp-box cwp-side"><h2>Écoute locale</h2>
+        <label class="cwp-row">Ton <b><span data-show="tone"></span> Hz</b><input class="cwp-slider" data-k="tone" type="range" min="300" max="1200" step="10" aria-label="Tonalité"></label>
+        <label class="cwp-row">Vol. <b><span data-show="vol"></span> %</b><input class="cwp-slider" data-k="vol" type="range" min="0" max="100" step="1" aria-label="Volume"></label>
         <label class="cwp-row cwk-out">Sortie <select data-k="sink"><option value="">Haut-parleurs par défaut</option></select></label>
-        <div class="cwp-big"><b data-show="tone"></b> Hz</div>
-        <input class="cwp-slider" data-k="tone" type="range" min="300" max="1200" step="10" aria-label="Tonalité">
-        <div class="cwp-big"><b data-show="vol"></b> %</div>
-        <input class="cwp-slider" data-k="vol" type="range" min="0" max="100" step="1" aria-label="Volume">
       </section>
       <section class="cwp-box cwp-in"><h2>Entrées</h2>
-        <label class="cwp-row">Clé branchée par <select data-k="src">${SRC_OPTS}</select></label>
+        <label class="cwp-row">Clé par <select data-k="src">${SRC_OPTS}</select></label>
         ${SRC_ROWS}
-        <div class="cwp-pads"><button class="cwk-pd" type="button" data-p="dit" title="Palette point (souris / écran tactile)">•</button><button class="cwk-pd" type="button" data-p="dah" title="Palette trait (souris / écran tactile)">—</button></div>
-        <button class="cwk-arm cwp-arm" type="button" title="Allumé : votre clé manipule le TRX du club (avec la main). Éteint : entraînement, écoute locale seule.">CLÉ → TRX <b>OFF</b></button>
-        <div class="cwp-lamps"><span><i class="cwk-led"></i> Clé</span><span class="cwk-tx" title="Le TRX du club émet votre manipulation">TX</span></div>
+        <div class="cwp-armrow">
+          <button class="cwk-pd" type="button" data-p="dit" title="Palette point (souris / écran tactile)">•</button><button class="cwk-pd" type="button" data-p="dah" title="Palette trait (souris / écran tactile)">—</button>
+          <button class="cwk-arm cwp-arm" type="button" title="Allumé : votre clé manipule le TRX du club (avec la main). Éteint : entraînement, écoute locale seule.">CLÉ → TRX <b>OFF</b></button>
+          <span class="cwp-lamps"><i class="cwk-led" title="Votre clé"></i><span class="cwk-tx" title="Le TRX du club émet votre manipulation">TX</span></span>
+        </div>
         <span class="cwk-sum" hidden></span>
       </section>`;
     else root.innerHTML = `
@@ -286,7 +287,15 @@
     }
     // Page « Poste CW » ouverte : la clé du dashboard qui l'a ouverte se met en veille (une seule clé à la fois ;
     // un port série ne peut être ouvert que par une fenêtre)
-    const suspended = () => !!(win.RSPADDLE && win.RSPADDLE.suspended);
+    // … y compris dans les autres onglets du navigateur (le Poste CW s'annonce toutes les 2 s)
+    let pageSeen = 0;
+    let bc = null;
+    try { bc = new win.BroadcastChannel('rs-cwkey'); } catch (e) { bc = null; }
+    if (bc) {
+      if (PAGE) { const hi = () => { try { bc.postMessage({ t: 'page' }); } catch (e) {} }; hi(); win.setInterval(hi, 2000); }
+      else bc.onmessage = (e) => { if (e.data && e.data.t === 'page') pageSeen = Date.now(); };
+    }
+    const suspended = () => !PAGE && (!!(win.RSPADDLE && win.RSPADDLE.suspended) || Date.now() - pageSeen < 5000);
     function paddle(which, down) {
       if (down && suspended()) return;
       if (S.swap && S.mode !== 'S') which = which === 'dit' ? 'dah' : 'dit';
@@ -429,12 +438,15 @@
           await new Promise((res) => win.setTimeout(res, 1));
         }
       } catch (e) {
-        q('.cwk-ser').textContent = 'port série : ' + e.message;
+        q('.cwk-ser').textContent = /open/i.test(e.message)
+          ? 'port déjà ouvert ailleurs (autre onglet du dashboard, logiciel de log, ou c’est le port d’un TRX) : fermez-le ou choisissez le bon port'
+          : 'port série : ' + e.message;
+        port = null;
         releaseAll();
       }
     }
     function serialAuto() {
-      if (!navigator.serial || port) return;
+      if (!navigator.serial || port || suspended()) return;
       navigator.serial.getPorts().then((ps) => { if (ps.length && S.src === 'serial') serialUse(ps[0]); }).catch(() => {});
     }
 
@@ -529,7 +541,7 @@
     }, 250);
 
     if (S.src === 'midi') midiOn();
-    if (S.src === 'serial') win.setTimeout(serialAuto, PAGE ? 800 : 0); // page Poste CW : le dashboard libère d'abord le port
+    if (S.src === 'serial') win.setTimeout(serialAuto, PAGE ? 800 : 2500); // page Poste CW : le dashboard libère d'abord le port
     paint();
     if (PAGE) sinkList();
     return {

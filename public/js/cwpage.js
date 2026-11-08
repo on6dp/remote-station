@@ -90,42 +90,93 @@
     }
   }
 
-  // ------------------------------------------------------------------ macros
-  let macSig = '';
-  function drawMacros() {
+  // ------------------------------------------------------------------ macros (habituelles et contest)
+  const macSig = {};
+  function drawMacroBox(boxId, set) {
     const k = kit();
-    const box = $('cwpMacros');
-    const list = k ? k.macros() : [];
-    const sig = JSON.stringify(list);
-    if (sig === macSig) return;
-    macSig = sig;
+    const box = $(boxId);
+    const list = k ? k.macros(set) : [];
+    const fkeys = (set === 'CWC') === !!(k && k.contest()); // les touches F1–F12 vont à ce jeu de macros
+    const sig = JSON.stringify(list) + fkeys;
+    if (sig === macSig[boxId]) return;
+    macSig[boxId] = sig;
     box.textContent = '';
     list.forEach((m) => {
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'cwp-macro' + (m.tx ? ' tx' : '');
+      b.className = 'cwp-macro' + (m.tx ? ' tx' : '') + (set === 'CWC' ? ' ctst' : '');
       b.innerHTML = '<small></small><span></span>';
-      b.querySelector('small').textContent = 'F' + (m.i + 1);
+      b.querySelector('small').textContent = fkeys ? 'F' + (m.i + 1) : '';
       b.querySelector('span').textContent = m.name;
-      b.title = m.preview + '\n' + (m.tx ? 'clic : émission immédiate' : 'clic : ajouter au texte') + ' · clic droit : modifier';
-      b.addEventListener('click', () => useMacro(m.i));
-      b.addEventListener('mouseenter', () => { clearTimeout(b._p); b._p = setTimeout(() => { const kk = kit(); if (kk) kk.prep(m.i); }, 120); });
+      b.title = m.preview + '\n' + (m.tx ? 'clic : émission immédiate' : m.log ? 'clic : fiche du QSO' : 'clic : ajouter au texte') + ' · clic droit : modifier';
+      b.addEventListener('click', () => useMacro(m.i, set));
+      b.addEventListener('mouseenter', () => { clearTimeout(b._p); b._p = setTimeout(() => { const kk = kit(); if (kk) kk.prep(m.i, set); }, 120); });
       b.addEventListener('mouseleave', () => clearTimeout(b._p));
-      b.addEventListener('contextmenu', (e) => { e.preventDefault(); const kk = kit(); if (kk) kk.edit(document, m.i); });
+      b.addEventListener('contextmenu', (e) => { e.preventDefault(); const kk = kit(); if (kk) kk.editSet(document, set, m.i); });
       box.appendChild(b);
     });
     const ed = document.createElement('button');
     ed.type = 'button';
     ed.className = 'cwp-macro cwp-edit';
     ed.textContent = '✎ Éditer';
-    ed.addEventListener('click', () => { const kk = kit(); if (kk) kk.edit(document, 0); });
+    ed.addEventListener('click', () => { const kk = kit(); if (kk) kk.editSet(document, set, 0); });
     box.appendChild(ed);
   }
-  function useMacro(i) {
+  function drawMacros() {
+    const k = kit();
+    const on = !!(k && k.contest());
+    $('cwpCMacros').hidden = !on;
+    $('cwpMacHint').textContent = on ? 'au clic (F1 à F12 : macros contest) · clic droit ou ✎ : modifier' : 'F1 à F12 · clic droit ou ✎ : modifier';
+    drawMacroBox('cwpMacros', 'CW');
+    if (on) drawMacroBox('cwpCMacros', 'CWC');
+  }
+  function useMacro(i, set) {
     const k = kit();
     if (!k) return toast('Dashboard non raccroché : rouvrez cette page depuis l’onglet CW.', 'warn');
-    const r = k.use(i);
+    const r = k.use(i, set, document);
     if (typeof r === 'string' && r) { const t = $('cwpTxt'); t.value += r; t.focus(); }
+  }
+
+  // ------------------------------------------------------------------ contest CW
+  function ctstInit() {
+    const k = kit();
+    const sel = $('cwpCtst');
+    if (!k || sel.options.length > 1) return;
+    for (const c of k.contests()) sel.add(new Option(c.name, c.id));
+  }
+  function ctstDraw() {
+    const k = kit();
+    if (!k) return;
+    ctstInit();
+    const id = k.contest();
+    const sel = $('cwpCtst');
+    if (document.activeElement !== sel) sel.value = id;
+    const set = (el, v) => { if (document.activeElement !== el && el.value !== v) el.value = v; };
+    set($('cwpExch'), id ? k.exch() : '');
+    $('cwpExch').disabled = !id;
+    $('cwpExchSh').textContent = id ? '→ ' + k.exchShown() : '';
+    set($('cwpNr'), String(k.serial()).padStart(3, '0'));
+    const z = k.zones();
+    set($('cwpCqz'), z.cqz);
+    set($('cwpItu'), z.itu);
+    set($('cwpName'), z.name);
+    document.body.classList.toggle('cwp-inctst', !!id);
+  }
+  $('cwpCtst').addEventListener('change', () => {
+    const k = kit();
+    if (!k) return;
+    k.setContest($('cwpCtst').value);
+    macSig.cwpMacros = macSig.cwpCMacros = '';
+    ctstDraw();
+    drawMacros();
+    if ($('cwpCtst').value) toast('Contest ' + $('cwpCtst').selectedOptions[0].text + ' : touches F1 à F12 = macros contest, échange « ' + k.exchShown() + ' ».', '', 5000);
+  });
+  $('cwpExch').addEventListener('change', () => { const k = kit(); if (k) { k.setExch($('cwpExch').value); macSig.cwpCMacros = ''; ctstDraw(); } });
+  $('cwpNr').addEventListener('change', () => { const k = kit(); if (k) { k.setSerial($('cwpNr').value); ctstDraw(); } });
+  $('cwpNrM').addEventListener('click', () => { const k = kit(); if (k) { k.setSerial(k.serial() - 1); ctstDraw(); } });
+  $('cwpNrP').addEventListener('click', () => { const k = kit(); if (k) { k.setSerial(k.serial() + 1); ctstDraw(); } });
+  for (const [id, key] of [['cwpCqz', 'cqz'], ['cwpItu', 'itu'], ['cwpName', 'name']]) {
+    $(id).addEventListener('change', () => { const k = kit(); if (k) { k.setZones({ [key]: $(id).value }); macSig.cwpCMacros = ''; ctstDraw(); } });
   }
   function sendText() {
     const t = $('cwpTxt');
@@ -142,7 +193,12 @@
   $('cwpCall').addEventListener('input', () => { const k = kit(); if (k) k.setCall($('cwpCall').value); });
   document.addEventListener('keydown', (e) => {
     const f = /^F([1-9]|1[0-2])$/.exec(e.key);
-    if (f && !e.ctrlKey && !e.altKey && !e.metaKey) { e.preventDefault(); useMacro(Number(f[1]) - 1); return; }
+    if (f && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      const k = kit();
+      useMacro(Number(f[1]) - 1, k && k.contest() ? 'CWC' : 'CW');
+      return;
+    }
     if (e.key === 'Escape') { const s = api.state(); if (s && s.cw) api.send({ t: 'cw_stop' }); }
   });
   $('cwpTake').addEventListener('click', () => api.send({ t: 'take' }));
@@ -193,6 +249,7 @@
       $('cwpNote').textContent = 'Macros émises par le manipulateur du TRX sous ' + k.myCall() + ' à ' + k.speed() + ' mots/min. Toucher la clé arrête une macro en cours.';
     }
     drawMacros();
+    ctstDraw();
   }
 
   // ------------------------------------------------------------------ raccrochage au dashboard

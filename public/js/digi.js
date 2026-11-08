@@ -1360,6 +1360,53 @@
   const rtcId = () => store.get('rtc', '');
   const rtcOn = () => !!rtcId();
   const rtcExch = () => { const id = rtcId(); const c = RT_CONTESTS.find((x) => x[0] === id); return store.get('rtcx_' + id, c ? c[2] : '599 <CNTR>'); };
+  // Contests CW (page Poste CW) : [identifiant Cabrillo, nom, échange envoyé par une station belge] ; l'échange reste
+  // modifiable (00 = à compléter : âge, année de licence… ; LG = province pour l'UBA DX, LGE = section pour l'ON Contest)
+  const CW_CONTESTS = [
+    ['CQ-WW-CW', 'CQ World Wide DX CW', '5NN <CQZ>'],
+    ['CQ-WPX-CW', 'CQ WPX CW', '5NN <CNTR>'],
+    ['CQ-160-CW', 'CQ WW 160 m CW', '5NN <CQZ>'],
+    ['ARRL-DX-CW', 'ARRL International DX CW', '5NN 100'],
+    ['ARRL-10', 'ARRL 10 m (CW)', '5NN <CNTR>'],
+    ['IARU-HF', 'IARU HF World Championship', '5NN <ITUZ>'],
+    ['DARC-WAEDC-CW', 'WAE DX CW (DARC)', '5NN <CNTR>'],
+    ['UBA-DX-CW', 'UBA DX Contest CW', '5NN <CNTR> LG'],
+    ['ON-CONTEST', 'UBA ON Contest CW (80 m)', '5NN <CNTR> LGE'],
+    ['EU-HF', 'EU HF Championship', '5NN 00'],
+    ['OK-OM-DX', 'OK/OM DX Contest CW', '5NN <CNTR>'],
+    ['RDXC', 'Russian DX Contest', '5NN <CNTR>'],
+    ['SPDX', 'SP DX Contest', '5NN <CNTR>'],
+    ['HA-DX', 'HA DX Contest', '5NN <CNTR>'],
+    ['YODX', 'YO DX HF Contest', '5NN <CNTR>'],
+    ['LZ-DX', 'LZ DX Contest', '5NN <ITUZ>'],
+    ['EA-CW', 'S.M. El Rey de España CW', '5NN <CNTR>'],
+    ['HELVETIA', 'Helvetia Contest', '5NN <CNTR>'],
+    ['PACC', 'PACC (Pays-Bas)', '5NN <CNTR>'],
+    ['WAG', 'Worked All Germany', '5NN <CNTR>'],
+    ['AADX-CW', 'All Asian DX CW', '5NN 00'],
+    ['JIDX-CW', 'JIDX CW', '5NN <CQZ>'],
+    ['CWOPS-CWT', 'CWops CWT (non-membre)', '<MYNAME> ON'],
+    ['CW-OTHER', 'Autre contest (échange libre)', '5NN <CNTR>']
+  ];
+  const cwcId = () => store.get('cwc', '');
+  const cwcOn = () => !!cwcId();
+  const cwcExch = () => { const id = cwcId(); const c = CW_CONTESTS.find((x) => x[0] === id); return store.get('cwcx_' + id, c ? c[2] : '5NN <CNTR>'); };
+  let macroCtx = ''; // macro en cours de préparation : 'CW' → échange du contest CW (sinon celui du contest RTTY)
+  const cwText = (t, apply) => { macroCtx = 'CW'; try { return macroText(t, apply); } finally { macroCtx = ''; } };
+  DEF_MACROS.CWC = [
+    { name: 'CQ', text: '<TX>CQ TEST <MYCALL> <MYCALL> TEST' },
+    { name: 'Échange', text: '<TX><CALL> <EXCH>' },
+    { name: 'TU', text: '<TX>TU <INCR><MYCALL>' },
+    { name: 'Mon ind.', text: '<TX><MYCALL>' },
+    { name: 'Son ind.', text: '<TX><CALL>' },
+    { name: 'Réponse', text: '<TX>TU <EXCH>' },
+    { name: 'AGN?', text: '<TX>AGN?' },
+    { name: 'NR?', text: '<TX>NR?' },
+    { name: '?', text: '<TX>?' },
+    { name: 'QRZ?', text: '<TX>QRZ? <MYCALL>' },
+    { name: 'R', text: '<TX>R' },
+    { name: 'Log', text: '<LOG>' }
+  ];
   DEF_MACROS.RTTYC = [
     { name: 'CQ', text: '<TX>CQ TEST <MYCALL> <MYCALL> CQ\n<RX>' },
     { name: 'Échange', text: '<TX><CALL> <EXCH> <EXCH> <CALL>\n<RX>' },
@@ -2506,7 +2553,7 @@
   // Remplace les balises d'une macro ; <INCR> fait avancer le numéro de série (seulement si apply)
   function macroText(t, apply) {
     // Contest : échange réellement envoyé (avant que « TU » passe au numéro suivant), repris dans la fiche du QSO
-    if (apply && /<EXCH>/.test(t)) store.set('rtclastx', macroText('<EXCH>'));
+    if (apply && /<EXCH>/.test(t)) store.set('rtclastx', macroText('<EXCH>').replace(/\b5NN\b/g, '599'));
     const up = (v) => String(v || '').trim().toUpperCase();
     const d = new Date(now());
     const p2 = (n) => String(n).padStart(2, '0');
@@ -2521,7 +2568,7 @@
     const tz = -d.getTimezoneOffset(), tzs = (tz >= 0 ? '+' : '-') + p2(Math.floor(Math.abs(tz) / 60)) + p2(Math.abs(tz) % 60);
     const t0 = Number(dx.t0) ? new Date(Number(dx.t0)) : d;
     let out = String(t)
-      .replace(/<EXCH>|<XOUT>/g, rtcExch())
+      .replace(/<EXCH>|<XOUT>/g, macroCtx === 'CW' ? cwcExch() : rtcExch())
       .replace(/<TX>|<RX>|<LOG>|<CLRLOG>|<DECR>/gi, '')
       .replace(/<MYRST>/g, up(dx.rstRx) || '599')
       .replace(/<MYNAME>/g, up(store.get('rtcname', '')) || 'NOM')
@@ -3129,7 +3176,7 @@
   function insertCw(t) {
     showTab('cw');
     const ta = $('cwTxt');
-    ta.value += macroText(t, true).toUpperCase();
+    ta.value += cwText(t, true).toUpperCase();
     ta.scrollTop = ta.scrollHeight;
     ta.focus();
   }
@@ -3986,7 +4033,7 @@
   }
   function cwPrepMacro(t, auto) {
     if (/<CALL>|\{CALL\}/.test(t) && !String(dx.call || '').trim()) return;
-    cwPrep(macroText(t, false), !auto);
+    cwPrep(cwText(t, false), !auto);
   }
   function cwPrepF1() {
     const m = macroList('CW').find((x) => /<TX>/i.test(x.text));
@@ -4261,7 +4308,7 @@
       b.type = 'button';
       if (mode !== 'FT8' && !noF) { const s = box.ownerDocument.createElement('small'); s.textContent = 'F' + (i + 1); b.appendChild(s); }
       b.appendChild(box.ownerDocument.createTextNode(m.name || '—'));
-      const tip = () => macroText(m.text).replace(/\n/g, ' ⏎ ') + '\n' +
+      const tip = () => (mode === 'CW' || mode === 'CWC' ? cwText(m.text) : macroText(m.text)).replace(/\n/g, ' ⏎ ') + '\n' +
         (/<TX>/i.test(m.text) ? 'clic : émission immédiate · Maj+clic : ajouter au texte · clic droit : modifier' : 'clic : ajouter au texte · clic droit : modifier');
       if (/<TX>/i.test(m.text)) b.classList.add('mac-tx');
       b.title = tip();
@@ -4352,7 +4399,7 @@
     dlg.id = 'macroDlg';
     dlg.className = 'macro-dlg';
     dlg.innerHTML = '<form method="dialog">' +
-      '<h3>Macros ' + (mode === 'RTTYC' ? 'contest RTTY' : mode) + '</h3>' +
+      '<h3>Macros ' + (mode === 'RTTYC' ? 'contest RTTY' : mode === 'CWC' ? 'contest CW' : mode) + '</h3>' +
       '<div class="md-keys"></div>' +
       '<label>Nom du bouton <input name="name" maxlength="14" autocomplete="off"></label>' +
       '<label>Texte <textarea name="text" rows="6" spellcheck="false"></textarea></label>' +
@@ -4364,7 +4411,7 @@
     doc.body.appendChild(dlg);
     const f = dlg.querySelector('form');
     const keys = dlg.querySelector('.md-keys');
-    const prev = () => { dlg.querySelector('.md-prev').textContent = 'Aperçu : ' + macroText(f.text.value).replace(/\n/g, ' ⏎ '); };
+    const prev = () => { dlg.querySelector('.md-prev').textContent = 'Aperçu : ' + (mode === 'CW' || mode === 'CWC' ? cwText(f.text.value) : macroText(f.text.value)).replace(/\n/g, ' ⏎ '); };
     const keep = () => { list[cur] = { name: f.name.value.trim(), text: f.text.value }; };
     const show = () => {
       keys.textContent = '';
@@ -4436,7 +4483,7 @@
       if (/<CALL>|\{CALL\}/.test(t) && !String(dx.call || '').trim()) {
         return api && api.say('Pas de correspondant : double-cliquez d’abord sur son indicatif (ou tapez-le dans « Correspondant »).', 'warn');
       }
-      return cwSend(macroText(t, true), false);
+      return cwSend(cwText(t, true), false);
     }
     if (/<LOG>/i.test(t) && !ins) setTimeout(() => logQso(), 0);
     // Macro « TX » seule (sans texte) : émission du texte tapé ; « RX » seule : retour en réception (arrêt de l'émission)
@@ -4474,15 +4521,16 @@
   }
   // ------------------------------------------------------------------ fiche du QSO → carnet de la station (RTTY, JTTY, CW…)
   // Comme « Save QSO » / <LOG> de FLDIGI : correspondant, nom, QTH, locator, RST de la ligne Correspondant ; fréquence et mode du TRX.
-  function logQso() {
+  function logQso(docIn, modeIn) {
     if (!api) return;
     if (!window.RSLOG) return api.say('Carnet de trafic non disponible dans cette version du dashboard.', 'warn');
-    const doc = ($('msgs') && $('msgs').ownerDocument) || document;
+    // Page Poste CW : la fiche s'ouvre dans sa fenêtre, en CW
+    const doc = (docIn && docIn.createElement ? docIn : null) || ($('msgs') && $('msgs').ownerDocument) || document;
     const old = doc.getElementById('qsoLogDlg');
     if (old) old.remove();
     const st = api.state() || {};
     const r = st.radio || {};
-    const m = (window.RSDIGI && window.RSDIGI.logMode ? window.RSDIGI.logMode() : '') || 'RTTY';
+    const m = (typeof modeIn === 'string' && modeIn) || (window.RSDIGI && window.RSDIGI.logMode ? window.RSDIGI.logMode() : '') || 'RTTY';
     // Double réception : le VFO d'émission (TX sur MAIN ou SUB) ; sinon le VFO sélectionné
     const rxB = r.dualRx === 1 && (r.txVfo === 0 || r.txVfo === 1) ? r.txVfo === 1 && r.freqB : r.vfoSel === 1 && r.freqB;
     let hz = Number(rxB ? r.freqB : r.freq) || 0;
@@ -4498,7 +4546,8 @@
     const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const MODES = ['RTTY', 'JTTY', 'CW', 'SSTV', 'FT8', 'FT4', 'FT2', 'JT65', 'PSK31', 'USB', 'LSB', 'FM', 'AM'];
     // Contest RTTY choisi : échange envoyé (sans le 599) et reçu, identifiant Cabrillo du contest
-    const ctst = m === 'RTTY' && rtcOn() ? { id: rtcId(), stx: String(store.get('rtclastx', macroText('<EXCH>'))).replace(/^(599|5NN)\s*/, '') } : null;
+    const ctst = m === 'RTTY' && rtcOn() ? { id: rtcId(), stx: String(store.get('rtclastx', macroText('<EXCH>'))).replace(/^(599|5NN)\s*/, '') }
+      : m === 'CW' && cwcOn() ? { id: cwcId(), stx: String(store.get('rtclastx', cwText('<EXCH>'))).replace(/^(599|5NN)\s*/, '') } : null;
     const dlg = doc.createElement('dialog');
     dlg.id = 'qsoLogDlg';
     dlg.className = 'macro-dlg qso-log';
@@ -4951,15 +5000,38 @@
     qo100If: () => Object.assign({}, qoIf),
     /** Page « Poste CW » (cw.html) : macros CW, envoi de texte, correspondant, vitesse des macros */
     cwKit: {
-      macros: () => macroList('CW').map((m, i) => ({ i, name: m.name || '—', tx: /<TX>/i.test(m.text), preview: macroText(m.text).replace(/\n/g, ' ') })),
-      use(i) {
-        const m = macroList('CW')[i];
+      // set : 'CW' (macros habituelles) ou 'CWC' (macros contest CW)
+      macros: (set) => macroList(set || 'CW').map((m, i) => ({ i, name: m.name || '—', tx: /<TX>/i.test(m.text), log: /<LOG>/i.test(m.text), preview: cwText(m.text).replace(/\n/g, ' ') })),
+      use(i, set, doc) {
+        const m = macroList(set || 'CW')[i];
         if (!m) return '';
-        if (!/<TX>/i.test(m.text)) return macroText(m.text, true).toUpperCase(); // macro sans <TX> : texte à ajouter
+        if (/<LOG>/i.test(m.text) && !/<TX>/i.test(m.text)) { logQso(doc, 'CW'); return null; }
+        if (!/<TX>/i.test(m.text)) return cwText(m.text, true).toUpperCase(); // macro sans <TX> : texte à ajouter
+        if (/<LOG>/i.test(m.text)) { useMacro('CW', m.text.replace(/<LOG>/gi, ''), false); setTimeout(() => logQso(doc, 'CW'), 0); return null; }
         useMacro('CW', m.text, false);
         return null;
       },
-      prep(i) { const m = macroList('CW')[i]; if (m && /<TX>/i.test(m.text)) cwPrepMacro(m.text); },
+      prep(i, set) { const m = macroList(set || 'CW')[i]; if (m && /<TX>/i.test(m.text)) cwPrepMacro(m.text); },
+      editSet: (doc, set, i) => editMacro(doc, set || 'CW', i || 0),
+      contests: () => CW_CONTESTS.map((c) => ({ id: c[0], name: c[1] })),
+      contest: () => cwcId(),
+      setContest(id) { store.set('cwc', CW_CONTESTS.some((c) => c[0] === id) ? id : ''); },
+      exch: () => cwcExch(),
+      setExch(v) { const id = cwcId(); if (id) store.set('cwcx_' + id, String(v || '').toUpperCase().trim() || '5NN <CNTR>'); },
+      exchShown: () => cwText('<EXCH>'),
+      serial: () => Number(store.get('cntr', '1')) || 1,
+      setSerial(n) {
+        n = Math.max(1, Math.min(9999, Math.round(Number(n)) || 1));
+        store.set('cntr', n);
+        store.set('cntrcall', '');
+        if ($('rtcNr') && document.activeElement !== $('rtcNr')) $('rtcNr').value = String(n).padStart(3, '0');
+      },
+      zones: () => ({ cqz: store.get('rtcqz', '14'), itu: store.get('rtitu', '27'), name: store.get('rtcname', '') }),
+      setZones(z) {
+        if (z.cqz != null) store.set('rtcqz', String(z.cqz).replace(/\D/g, '').slice(0, 2) || '14');
+        if (z.itu != null) store.set('rtitu', String(z.itu).replace(/\D/g, '').slice(0, 2) || '27');
+        if (z.name != null) store.set('rtcname', String(z.name).toUpperCase().trim().slice(0, 12));
+      },
       send: (text) => cwSend(String(text || '').toUpperCase(), false),
       edit: (doc, i) => editMacro(doc, 'CW', i || 0),
       call: () => String(dx.call || ''),
