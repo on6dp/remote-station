@@ -180,7 +180,7 @@
   function ttsLoad() {
     let o = null;
     try { o = JSON.parse(LS.get('ssbtts', 'null')); } catch (e) { o = null; }
-    if (!o || !Array.isArray(o.items) || o.items.length !== 8) o = { items: TTS_DEF.map((x) => Object.assign({ on: true }, x)), voice: 'en-us+f2', speed: 140 };
+    if (!o || !Array.isArray(o.items) || o.items.length !== 8) o = { items: TTS_DEF.map((x) => Object.assign({ on: true }, x)), voice: 'en-us+f2', speed: 175 };
     return o;
   }
   const TT = ttsLoad();

@@ -1306,7 +1306,7 @@ function ttsMake(conn, items, quiet) {
         fs.writeFileSync(vmFile(call, n), data, { mode: 0o600 });
         meta.t[n - 1].ms = Math.round(data.length / 12);
         if (it.name != null) meta.t[n - 1].name = String(it.name || '').replace(/[^\x20-\x7E]/g, '').slice(0, 16);
-        store[n] = { text: String(it.text).slice(0, 300), voice: it.voice || 'en-us', speed: Number(it.speed) || 140, call: tc };
+        store[n] = { text: String(it.text).slice(0, 300), voice: it.voice || 'en-us', speed: Number(it.speed) || 160, call: tc };
         ok++;
       } catch (e) {
         send(conn, { t: 'notice', level: 'error', msg: 'T' + n + ' : ' + e.message });
