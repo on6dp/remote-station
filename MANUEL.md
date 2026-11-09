@@ -139,7 +139,7 @@ Quatre « recettes » pour démarrer. Le détail de chaque bouton se trouve plus
 Votre micro (celui de votre PC, un micro-casque, un micro USB…) part vers le TRX pendant l'appui sur PTT : c'est la **phonie à distance**. Elle marche en **LSB / USB** (et en AM / FM sur le FTX-1 et l'IC-7300). Un micro-casque donne le meilleur résultat (pas d'effet Larsen, voix proche).
 
 1. Prenez la main, choisissez la bande et le mode LSB ou USB. Ensuite, à chaque changement de bande, le dashboard remet tout seul **LSB sous 10 MHz** et **USB au-dessus** (USB sur 60 m) ; les modes DATA, CW, AM et FM ne sont pas touchés.
-2. Cadre **TX**, sous le PTT, partie **SSB configuration** : cliquez `Configuration micro`. La première fois, Chrome demande l'accès au micro : **Autoriser**. Choisissez votre micro dans la liste s'il y en a plusieurs.
+2. Ouvrez la page **TRX SSB** (onglet `SSB` du dashboard, ou bouton bleu `🎙 Phonie : page TRX SSB` du cadre **TX**, ou bouton SSB de la face avant) ; ligne **SSB configuration** : cliquez `Configuration micro` (MICRO). La première fois, Chrome demande l'accès au micro : **Autoriser**. Choisissez votre micro dans la liste s'il y en a plusieurs.
 3. Le dashboard **reconnaît le type de micro** d'après son nom (micro-casque, micro USB de studio, webcam, Bluetooth, micro du PC…) et propose un réglage d'égaliseur adapté. Parlez : la barre de niveau doit rester dans le **vert**, jamais dans le rouge (**SAT**).
 4. `Equalizer micro` : coupe-bas, trois bandes réglables (fréquence, niveau, largeur), coupe-haut, gain du micro, réduction de bruit. Écoutez-vous **au casque** avec `🎧 M’écouter` (curseur **Volume** juste dessous), puis `Enregistrer pour ce micro` : ces réglages reviennent tout seuls chaque fois que vous utilisez ce micro, sur n'importe quel PC.
 5. Cadre **Accord** : `TUNE`, puis vérifiez le **SWR** et la **puissance**.
@@ -840,7 +840,7 @@ La fiche en haut de l'onglet :
 
 | Champ / bouton | Ce qu'il fait |
 |---|---|
-| **Indicatif** | L'indicatif du correspondant. La date et l'heure UTC se remplissent dès la première lettre tapée (début du QSO). Le nom, le QTH et le locator sont cherchés sur QRZ.com. |
+| **Indicatif** | L'indicatif du correspondant. La date et l'heure UTC se remplissent dès la première lettre tapée (début du QSO). Le **prénom et le nom**, le QTH et le locator sont cherchés sur QRZ.com (après une petite pause dans la frappe, cases vides seulement ; aussi à l'ouverture d'un QSO enregistré où ils manquent). Bouton `⇩ QRZ` (à côté du locator) : les reprend de QRZ.com en remplaçant ce qui est écrit. Le locator n'est donné par QRZ.com qu'avec un abonnement XML. |
 | **Date UTC**, **Heure UTC** | Début du QSO, en heure UTC (pas l'heure belge). |
 | `⟳ Maintenant` | Remet la date et l'heure à l'instant présent. |
 | **Fréquence MHz**, **Mode** | Suivent tout seuls le VFO actif du TRX. Une valeur tapée à la main reste jusqu'au QSO suivant. |

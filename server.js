@@ -3226,7 +3226,7 @@ function onOperator(conn, m) {
       const call = String(m.call || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
       if (!/^[A-Z0-9/]{3,15}$/.test(call)) return;
       const now = Date.now();
-      if (now - (conn.qrzAt || 0) < 1000) return;
+      if (now - (conn.qrzAt || 0) < 400) return;
       conn.qrzAt = now;
       if (!qrzx.configured()) return send(conn, { t: 'qrz_info', call, ok: false, off: true });
       qrzx.lookup(call).then((v) => send(conn, { t: 'qrz_info', call, ok: !!v, info: v, msg: v ? '' : call + ' : inconnu sur QRZ.com' }))

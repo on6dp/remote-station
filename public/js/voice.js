@@ -100,6 +100,17 @@
       '<label class="vx-monvol" title="Volume de « M’écouter » dans votre casque (ne change pas ce qui part vers le TRX)">Volume <input type="range" id="vxMonVol" min="0" max="300" step="5" aria-label="Volume de M’écouter"><output id="vxMonVolV"></output></label>' +
       '</div>';
     anchor.after(box);
+    // Dashboard : la phonie (micro, égaliseurs, entrée / sortie son) est dans la page TRX SSB ; ici, un bouton pour l'ouvrir
+    if (V.api && V.api.away) {
+      box.classList.add('vx-away');
+      const go = document.createElement('button');
+      go.type = 'button';
+      go.className = 'btn vx-goto';
+      go.textContent = '🎙 Phonie : page TRX SSB';
+      go.title = 'Micro, égaliseur micro, égaliseur TRX, entrée et sortie son, M’écouter et PTT : dans la page TRX SSB (onglet SSB)';
+      go.addEventListener('click', () => { try { if (window.RSDIGI && window.RSDIGI.openModePage) window.RSDIGI.openModePage('ssb'); else window.open('/ssb.html', 'rs-ssbpage', 'width=1240,height=900'); } catch (e) {} });
+      box.after(go);
+    }
     // Face avant (/ftdx101) : une seule ligne « SSB CONFIGURATION · MICRO · EQUALIZER MICRO · niveau · EQUALIZER TRX »,
     // le reste (choix du micro, type, état, M'écouter et son volume) sur la ligne suivante
     if (V.api && V.api.compact) {
@@ -717,7 +728,7 @@
       draw();
       if (V.api.compact) V.api.send({ t: 'trxeq_get' }); // état du profil pour le bouton « Profil de … »
       // Micro remis tout seul s'il était actif avant (le navigateur se souvient de l'autorisation)
-      if (store.get('on', '0') === '1' && !V.on) setTimeout(() => { const st = V.api.state(); if (st && st.voice) start().catch(() => {}); }, 800);
+      if (store.get('on', '0') === '1' && !V.on && !V.api.away) setTimeout(() => { const st = V.api.state(); if (st && st.voice) start().catch(() => {}); }, 800);
     },
     onMessage(m) {
       if (m.t === 'trxeq') {

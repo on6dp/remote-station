@@ -86,9 +86,10 @@
         <button class="btn lg-myref-btn" type="button" data-a="myrefs" aria-pressed="false" title="Afficher les références de la station (le club active un parc, une île…) ; elles restent remplies d'un QSO à l'autre">＋ Ma référence (activation)</button>
       </div>
       <div class="lg-row">
-        <label>Nom <input name="name" maxlength="40"></label>
+        <label>Nom <input name="name" maxlength="40" title="Prénom et nom (QRZ.com)"></label>
         <label>QTH <input name="qth" maxlength="60"></label>
         <label class="lg-w6">Locator <input name="gridsquare" maxlength="8"></label>
+        <button class="btn lg-qrz" type="button" data-a="qrz" title="Nom et prénom, QTH et locator du correspondant repris de QRZ.com (remplace ce qui est écrit)">⇩ QRZ</button>
         <label class="lg-w5">Puiss. W <input name="tx_pwr" inputmode="decimal" maxlength="5"></label>
         <label class="lg-rem">Remarque <input name="comment" maxlength="200"></label>
         <span class="lg-gap"></span>
@@ -171,7 +172,10 @@
     });
     f.time.addEventListener('input', () => { f.time.dataset.manual = '1'; });
     // Indicatif tapé : nom, QTH et locator cherchés sur QRZ.com (si un compte QRZ est réglé), cases vides seulement
-    f.call.addEventListener('change', () => { const c = f.call.value.trim(); if (/^[A-Z0-9/]{3,15}$/.test(c) && api) api.send({ t: 'qrz', call: c }); });
+    // (aussi après une pause dans la frappe, et à l'ouverture d'un QSO sans nom ou sans locator)
+    f.call.addEventListener('change', () => qrzAsk(false));
+    f.call.addEventListener('input', () => { clearTimeout(qrzT); qrzT = setTimeout(() => qrzAsk(false), 900); });
+    f.querySelector('[data-a="qrz"]').addEventListener('click', () => qrzAsk(true));
     // TX call du carnet = TX call de la ligne Correspondant : avec la main, le choix fait ici change aussi l'indicatif d'émission
     f.station.addEventListener('change', () => {
       if (editing) return;
@@ -277,6 +281,21 @@
       });
     });
   }
+  // QRZ.com : nom et prénom, QTH, locator du correspondant (cases vides ; bouton ⇩ QRZ : remplace)
+  let qrzT = null;
+  let qrzForce = '';
+  let qrzAsked = '';
+  function qrzAsk(force) {
+    const f = root && q$('#lgForm');
+    if (!f || !api || viewOnly) return;
+    const c = f.call.value.trim().toUpperCase();
+    if (!/^(?=.*\d)[A-Z0-9/]{3,15}$/.test(c)) { if (force) fmsg('Tapez d’abord l’indicatif du correspondant.', 'warn'); return; }
+    if (!force && (c === qrzAsked || (f.name.value && f.qth.value && f.gridsquare.value))) return;
+    qrzAsked = c;
+    qrzForce = force ? c : '';
+    api.send({ t: 'qrz', call: c });
+  }
+  const titleCase = (x) => String(x || '').toLowerCase().replace(/(^|[\s'-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase()).trim();
   function fmsg(t, cls) {
     const el = q$('#lgFmsg');
     if (!el) return;
@@ -327,6 +346,8 @@
         f.name.value = dx.name || '';
         f.qth.value = dx.qth || '';
         f.gridsquare.value = dx.grid || '';
+        qrzAsked = '';
+        setTimeout(() => qrzAsk(false), 0);
       }
     }
     if (!f.date.value || withDx) { const n = utcNow(); f.date.value = n.date; f.time.value = n.time; delete f.time.dataset.manual; }
@@ -542,13 +563,14 @@
     if (REF_KEYS.some(([k]) => q['my_' + k])) showMyRefs(true);
     if (calls.indexOf(q.station_callsign) >= 0) f.station.value = q.station_callsign;
     f.qo100.checked = q.sat_name === 'QO-100';
+    qrzAsked = '';
     f.querySelector('[data-a="save"]').textContent = 'Modifier le QSO';
     f.querySelector('[data-a="save"]').hidden = viewOnly;
     f.querySelector('[data-a="del"]').hidden = viewOnly;
     f.querySelector('[data-a="cancel"]').hidden = false;
     f.querySelector('[data-a="cancel"]').textContent = viewOnly ? 'Fermer' : 'Annuler';
     for (const el of f.querySelectorAll('input, select, textarea')) el.disabled = viewOnly;
-    for (const el of f.querySelectorAll('button[data-a="now"], button[data-a="trx"]')) el.disabled = viewOnly;
+    for (const el of f.querySelectorAll('button[data-a="now"], button[data-a="trx"], button[data-a="qrz"]')) el.disabled = viewOnly;
     f.classList.add('editing');
     f.classList.toggle('viewonly', viewOnly);
     const info = ' — opérateur ' + (q.operator || '?') + ', enregistré par ' + (q.by || '?') + (q.country ? ', ' + q.country : '') + '.';
@@ -557,6 +579,7 @@
       fmsg('Consultation du QSO avec ' + q.call + info + ' Lecture seule (' + why + ').', 'warn');
     } else {
       fmsg('Modification du QSO avec ' + q.call + info + ' Les carnets en ligne déjà servis ne sont pas modifiés : renvoyez-le si nécessaire.', 'warn');
+      qrzAsk(false); // nom, QTH ou locator manquants : repris de QRZ.com (à enregistrer avec « Modifier le QSO »)
     }
     drawList();
   }
@@ -1076,6 +1099,7 @@
       if (editing) { say(okMsg, 'ok'); return; }
       const f = q$('#lgForm');
       for (const k of ['call', 'name', 'qth', 'gridsquare', 'comment', 'rst_rcvd']) f[k].value = '';
+      qrzAsked = '';
       for (const [k] of REF_KEYS) f[k].value = ''; // références du correspondant ; « ma référence » reste (activation)
       delete f.time.dataset.manual;
       delete f.freq.dataset.manual;
@@ -1191,12 +1215,22 @@
     },
     onQrz(m) {
       const f = root && q$('#lgForm');
-      if (!f || !m.ok || !m.info || String(f.call.value).toUpperCase() !== String(m.call).toUpperCase()) return;
-      const v = m.info;
-      const first = (v.nick || v.fname || '').split(/\s+/)[0];
-      if (!f.name.value && first) f.name.value = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
-      if (!f.qth.value && v.qth) f.qth.value = v.qth;
-      if (!f.gridsquare.value && v.grid) f.gridsquare.value = v.grid;
+      if (!f || String(f.call.value).trim().toUpperCase() !== String(m.call).toUpperCase()) return;
+      const force = qrzForce === String(m.call).toUpperCase();
+      qrzForce = '';
+      if (!m.ok) {
+        if (m.off) { if (force) fmsg('QRZ.com non réglé : Logbooks → Synchronisation → ⚙ Configuration → QRZ.com (identifiant et mot de passe).', 'warn'); return; }
+        fmsg('QRZ.com : ' + String(m.msg || 'pas de réponse').replace(/^QRZ\.com : /, ''), 'warn');
+        return;
+      }
+      const v = m.info || {};
+      const full = titleCase([v.fname || v.nick, v.name].filter(Boolean).join(' '));
+      const set = (k, val) => { if (val && (force || !f[k].value)) f[k].value = val; };
+      set('name', full.slice(0, 40));
+      set('qth', v.qth);
+      set('gridsquare', String(v.grid || '').toUpperCase().slice(0, 6));
+      if (!editing || force) fmsg('QRZ.com : ' + m.call + ' — ' + [full, v.qth, v.country].filter(Boolean).join(', ') +
+        (v.grid ? ', ' + String(v.grid).toUpperCase() : v.sub ? ' (pas de locator sur sa fiche)' : ' (locator : abonnement XML QRZ.com nécessaire)') + '.', 'ok');
     },
     mount,
     onHello(h) {

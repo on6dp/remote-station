@@ -1771,7 +1771,8 @@
     drawPlan();
     say(planAuto() ? 'MODE AUTO : le mode suit le plan de bande IARU Région 1 (CW, numérique, phonie, FM).' : 'MODE AUTO coupé : le mode ne change plus tout seul.', '', 4000);
   });
-  if (window.RSVOICE) window.RSVOICE.init({ send, sendBin, say, state: () => st, me: () => me, iControl: () => iControl(), rig: () => RIG() });
+  // Phonie : réglages dans la page TRX SSB (away) ; le module reste chargé pour le PTT de ce dashboard (micro activé dans la page SSB)
+  if (window.RSVOICE) window.RSVOICE.init({ away: true, send, sendBin, say, state: () => st, me: () => me, iControl: () => iControl(), rig: () => RIG() });
   // TXW : maintenir le bouton (ou la touche W) pour écouter la fréquence d'émission ; nouvelles toutes les 0,7 s au serveur
   let txwHold = null;
   const txwDown = (e) => {
