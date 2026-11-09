@@ -1970,3 +1970,4 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .ssb-qlog tr:first-child td { color: #ffd400; }
 /* Dashboard : pas de titre « Activités » ; la ligne des onglets (Activité, modes, Logbooks…) monte en tête du cadre */
 #centerPanel > .panel-h { display: none; }
+#msgs.qso-off { display: none !important; }

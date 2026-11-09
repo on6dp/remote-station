@@ -199,7 +199,7 @@ Le FT8 est le mode le plus simple à distance : tout se fait à la souris et le 
 2. **Centre, en haut** : les deux écrans VFO (A / MAIN et B / SUB), la ligne **Step** (pas d'accord, choix du VFO, SPLIT…) et la ligne des **bandes**.
 3. **Centre, en bas** : la ligne des onglets (sans titre au-dessus) : Modes (journal de la station), FT8 · FT4 · FT2, SSB, RTTY, WSPR, JT65, JTTY, CW, SSTV (un clic sur un mode ouvre sa page : **TRX SSB**, **TRX CW**, ou **TRX DIGI** sur ce mode ; avec la main, le TRX passe dans le mode), puis Logbooks (le dashboard s'ouvre sur le **carnet de trafic**, qui reste affiché pendant que les modes sont dans leurs pages), le bouton `Log QSO` et Synchro, puis `👁 Suivre l'opérateur`. À droite, la **carte de bande** (spots du DX cluster), dans tous les onglets de modes sauf SSTV.
 4. **Colonne de droite** : RX audio (écoute), DSP (antiparasites), Accord (tuner), TX (PTT et puissance).
-5. Sous les onglets : la ligne **QSO** (la station contactée, ses reports et le TX call).
+5. Sous les onglets : la ligne **QSO** (la station contactée, ses reports et le TX call), dans les onglets des modes et Synchro ; elle est masquée dans les onglets **Modes** et **Logbooks**, où la fiche du carnet donne déjà l'indicatif, les reports et le TX call (choisi là, avec la main, il change aussi l'indicatif d'émission).
 
 - **Replier un cadre** : cliquez sur son titre (par exemple « DSP ») ; un deuxième clic le rouvre. Votre choix est retenu.
 - **Fenêtre séparée** : le bouton `⧉` d'un cadre l'ouvre dans sa propre fenêtre (section 11).

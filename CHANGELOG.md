@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.203** — Dashboard : onglet Modes, plus de titre Activités, ligne QSO (ex-Correspondant) masquée dans Modes et Logbooks ; TRX SSB : liste des QSO en phonie hors contest
 - **0.37.202** — Dashboard : onglet Modes (au lieu d'Activité), plus de titre Activités, Correspondant devient QSO ; TRX SSB : liste des QSO en phonie hors contest
 - **0.37.201** — Dashboard : plus de titre Activités (onglets en tête du cadre), Correspondant devient QSO ; TRX SSB : liste des QSO en phonie hors contest
 - **0.37.200** — TRX SSB : sans contest, liste des QSO en phonie (carnet général) sous la fiche ; en contest, seulement les QSO du contest

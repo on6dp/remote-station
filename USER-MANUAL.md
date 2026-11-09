@@ -199,7 +199,7 @@ FT8 is the easiest mode to use remotely: everything is done with the mouse and t
 2. **Centre, top**: the two VFO displays (A / MAIN and B / SUB), the **Step** row (tuning step, VFO choice, SPLIT…) and the **band** row.
 3. **Centre, bottom**: the tab row (no title above it): Modes (station activity log), FT8 · FT4 · FT2, SSB, RTTY, WSPR, JT65, JTTY, CW, SSTV (a mode tab opens that mode's page: TRX SSB, TRX CW, or TRX DIGI on that mode), then Logbooks (the dashboard opens on the **logbook**, which stays shown while the modes are in their own pages), the `Log QSO` button and Synchro.
 4. **Right column**: RX audio (listening), DSP (noise reduction), Accord (tuner), TX (PTT and power).
-5. Under the tabs: the **QSO** line (the station worked, its reports and the TX call). `Log QSO` is on the tab row, right of Logbooks, followed by `👁 Suivre` (follow the operator). On the right, the **band map** (DX cluster spots), in every mode tab except SSTV.
+5. Under the tabs: the **QSO** line (the station worked, its reports and the TX call), in the mode tabs and Synchro; it is hidden in the **Modes** and **Logbooks** tabs, where the logbook form already has the call, reports and TX call (chosen there, with control, it also changes the transmit callsign). `Log QSO` is on the tab row, right of Logbooks, followed by `👁 Suivre` (follow the operator). On the right, the **band map** (DX cluster spots), in every mode tab except SSTV.
 
 - **Fold a panel**: click its title (for example "DSP"); a second click opens it again. Your choice is remembered.
 - **Separate window**: the `⧉` button of a panel opens it in its own window (section 11).

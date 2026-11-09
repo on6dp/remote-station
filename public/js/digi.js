@@ -723,6 +723,8 @@
     tab = t;
     // Ligne Correspondant : reports en dB (FT8 / FT4 / FT2, WSPR, JT65) ou RST 599 (RTTY, CW, SSTV, JTTY)
     const mb = document.getElementById('msgs');
+    // Dashboard, onglets Modes et Logbooks : pas de ligne QSO (la fiche du carnet a déjà indicatif, reports et TX call)
+    if (mb && !POPUP) mb.classList.toggle('qso-off', t === 'log' || t === 'events');
     if (mb && ['ftx', 'wspr', 'jt65'].indexOf(t) >= 0) mb.dataset.rk = 'db';
     else if (mb && ['rtty', 'cw', 'sstv', 'jtty'].indexOf(t) >= 0) mb.dataset.rk = 'rst';
     store.set(POPUP ? 'ptab' : 'tab', t);
