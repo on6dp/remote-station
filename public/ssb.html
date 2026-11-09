@@ -13,7 +13,7 @@
   <!-- Page SSB : phonie (micro, égaliseurs, PTT) et contests (choix du contest et de la catégorie, échange, n° de série,
        log à la manière de N1MM, mémoires vocales T1 à T8, Cabrillo). Même connexion que la page qui l'a ouverte. -->
   <header class="cwp-head">
-    <h1>TRX SSB <small>Remote Station · phonie et contests</small></h1>
+    <h1><span class="ssb-txc" id="ssTxc" title="TX call : indicatif sous lequel on émet"></span>TRX SSB <small>Remote Station · phonie et contests</small></h1>
     <div class="cwp-trx"><span id="cwpFreq">—</span> <span id="cwpMode" class="cwp-mode">—</span></div>
     <div class="cwp-ctl"><span id="cwpCtl">—</span> <button class="cwp-take" type="button" id="cwpTake" hidden>PRENDRE LA MAIN</button></div>
     <div class="cwp-txbig" id="cwpTx">RX</div>
@@ -68,6 +68,11 @@
         </div>
       </div>
     </section>
+    <!-- Sans contest : fiche de QSO du carnet (comme l'onglet Logbooks), les QSO vont dans le carnet général -->
+    <section class="cwp-box ssb-qso" id="ssQso" hidden>
+      <h2 class="ssb-qh">Log du QSO <small>sans contest : fiche du carnet de trafic (Logbooks), fréquence et mode repris du TRX</small></h2>
+      <div class="lg ssb-lg" id="ssLog"></div>
+    </section>
   </main>
   <footer class="cwp-foot">
     <span id="cwpLink">Liaison : —</span>
@@ -75,6 +80,7 @@
   </footer>
   <p class="dg-toast" id="cwpToast" role="status"></p>
 <script src="/js/voice.js"></script>
+<script src="/js/logbook.js"></script>
 <script src="/js/contests.js"></script>
 <script src="/js/ssbpage.js"></script>
 </body>

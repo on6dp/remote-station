@@ -358,6 +358,7 @@ FTX-1 EX030402 à 19, FTDX10 EX030302 à 19, FTDX101 EX030303 à 20.
 ### Phonie et contests (TRX SSB)
 
 - Onglet **SSB** de la ligne Activités du dashboard, ou bouton **SSB** de la ligne MODES de la face avant : page **/ssb** (TRX SSB) raccrochée à la page qui l'ouvre, comme le TRX CW, avec le PTT et la ligne SSB CONFIGURATION (micro, égaliseurs, entrée / sortie son). Rien à régler sur le serveur.
+- Sans contest, le TRX SSB montre la fiche du carnet (même saisie que Logbooks) ; ses QSO portent le repère « ssbpage » : seule cette page reçoit la réponse (enregistré, doublon).
 - Dans le dashboard, chaque onglet de mode ouvre sa page : TRX SSB, TRX CW (/cw), ou TRX DIGI (/digi, page des modes numériques) sur ce mode. Page TRX CW ouverte : le décodage CW est demandé tout seul pour sa fenêtre de réception.
 - Liste des contests SSB (`public/js/contests.js`) avec l'échange d'une station belge et les catégories d'inscription ; pour la station du club, UBA DX et ON Contest donnent la section **LGE**. Les contests marqués « * » ont des catégories génériques : à vérifier dans le règlement de l'année, et à corriger dans `contests.js` si besoin.
 - Les QSO vont dans le carnet général avec le contest et les échanges ; le bouton CABRILLO écrit l'en-tête avec la catégorie choisie (CATEGORY-OPERATOR, -POWER, -BAND, -ASSISTED, -MODE, -TRANSMITTER, -OVERLAY, -TIME).

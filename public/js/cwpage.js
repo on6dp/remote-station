@@ -400,6 +400,7 @@
     const r = (st && st.radio) || {};
     const B = r.vfoSel === 1;
     $('cwpFreq').textContent = fmtF(B ? r.freqB : r.freq);
+    $('cwpTxc').textContent = st && st.txCall ? String(st.txCall).toUpperCase() + ' ' : '';
     const md = (B ? r.modeB : r.mode) || '—';
     $('cwpMode').textContent = md;
     $('cwpMode').classList.toggle('bad', !!st && !/^CW/.test(md));

@@ -1928,3 +1928,10 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .ssb-body .cwp-clogw { max-height: 52vh; }
 .ssb-vk .cwp-macros { grid-template-columns: repeat(8, minmax(0, 1fr)); }
 @media (max-width: 900px) { .ssb-vk .cwp-macros { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* TRX SSB : TX call devant le titre, fiche du carnet sans contest */
+.ssb-txc { white-space: nowrap; }
+.ssb-qso { display: flex; flex-direction: column; gap: 6px; }
+.ssb-qso[hidden] { display: none; }
+.ssb-qh { margin: 0; font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; color: #ffd400; font-weight: 800; }
+.ssb-qh small { color: var(--v2-text-dim); letter-spacing: 0; text-transform: none; font-weight: 400; margin-left: 8px; }
+.ssb-lg { min-height: 0; padding: 0; flex: 0 0 auto; position: relative; }

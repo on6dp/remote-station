@@ -28,6 +28,9 @@
   let root = null;
   let me = { call: '', admin: false, rxOnly: false };
   let calls = [];
+  // Fiche seule (page TRX SSB) : tag des QSO envoyés, pour que chaque page ne traite que ses réponses (doublon, enregistré)
+  let TAG = '';
+  let FORM = false;
   let items = [];
   let total = 0;
   // Colonnes du carnet : largeur par défaut (px), réglable à la souris (bord droit de l'en-tête), gardée dans ce navigateur
@@ -141,6 +144,7 @@
   function mount(el) {
     root = el;
     root.innerHTML = PANE;
+    if (FORM) root.querySelectorAll('.lg-bar, .lg-tw, .lg-job').forEach((x) => { x.hidden = true; x.style.display = 'none'; });
     if (getComputedStyle(root).position === 'static') root.style.position = 'relative'; // menus des filtres de colonne
     initCols();
     document.addEventListener('click', () => closeFlt());
@@ -514,8 +518,8 @@
     const qso = formQso();
     if (!qso.call) return fmsg('Indicatif du correspondant ?', 'err');
     if (!(qso.freq > 0)) return fmsg('Fréquence en MHz ? (ex. 14.074)', 'err');
-    if (editing) api.send({ t: 'log_edit', id: editing.id, qso });
-    else api.send({ t: 'log_add', qso, force: !!force });
+    if (editing) api.send({ t: 'log_edit', id: editing.id, qso, tag: TAG || undefined });
+    else api.send({ t: 'log_add', qso, force: !!force, tag: TAG || undefined });
     fmsg('Enregistrement…', '');
   }
   let viewOnly = false; // fiche ouverte en consultation (pas le droit de modifier ce QSO)
@@ -584,6 +588,7 @@
   function reload() {
     if (!api || !root) return;
     stale = false;
+    if (FORM) return api.send({ t: 'log_cfg_get', quiet: true }); // fiche seule : juste la liste des TX call
     api.send({ t: 'log_list', q: q$('#lgSearch').value.trim(), limit: 300, f: filt });
     drawFilt();
   }
@@ -1043,6 +1048,9 @@
       if (fltMenu && fltMenu.col === m.col) { fltMenu.values = m.values || []; fillFlt(); }
       return;
     }
+    // QSO envoyé par une autre page (tag différent : page TRX SSB / dashboard) : sa réponse ne concerne pas cette fiche
+    if ((m.t === 'log_saved' || m.t === 'log_dupe') && (m.tag || '') !== TAG) return;
+    if (FORM && m.t === 'log_list') return;
     if (m.t === 'log_list') {
       items = m.items || [];
       total = m.total || 0;
@@ -1084,12 +1092,12 @@
       for (const [k, pr] of REF_KEYS) { LBL[k] = pr; LBL['my_' + k] = 'ma réf. ' + pr; }
       if (p.id && extra.length && window.confirm(p.call + ' est déjà dans le carnet (' + p.band + ' ' + modeName(p) + ', ' + fmtDate(p.qso_date) + ' à ' + fmtTime(p.time_on) + ' UTC).\n' +
           'Compléter ce QSO avec : ' + extra.map((k) => LBL[k] + ' « ' + q[k] + ' »').join(', ') + ' ?')) {
-        api.send({ t: 'log_merge', id: p.id, qso: q });
+        api.send({ t: 'log_merge', id: p.id, qso: q, tag: TAG || undefined });
         pendingDupe = null;
         return;
       }
       if (window.confirm('Doublon possible : ' + p.call + ' déjà dans le carnet sur ' + p.band + ' ' + modeName(p) + ' le ' + fmtDate(p.qso_date) + ' à ' + fmtTime(p.time_on) + ' UTC.\nEnregistrer quand même ?')) {
-        api.send({ t: 'log_add', qso: pendingDupe, force: true });
+        api.send({ t: 'log_add', qso: pendingDupe, force: true, tag: TAG || undefined });
       } else if (root && !root.hidden && root.offsetParent) fmsg('QSO non enregistré (doublon).', 'warn'); else say('QSO non enregistré (doublon).', 'warn');
       pendingDupe = null;
     } else if (m.t === 'log_export') {
@@ -1156,7 +1164,7 @@
   }
 
   window.RSLOG = {
-    init(a) { api = a; },
+    init(a) { api = a; TAG = (a && a.tag) || ''; FORM = !!(a && a.formOnly); },
     // Fiche du carnet : fréquence et mode suivent tout seuls le VFO actif du TRX (sauf saisie à la main ou modification d'un QSO)
     onState() {
       if (!root || editing) return;

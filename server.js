@@ -773,6 +773,8 @@ function logCtx(conn, m) {
   return { operator: conn.user.call, stationCallsign: calls.indexOf(st) >= 0 ? st : calls[0], myGrid: cfg.stationGrid || '' };
 }
 // Indicatifs de station proposés dans le carnet : ceux du club, plus le sien (QSO faits sous son indicatif)
+// Page qui a envoyé le QSO (page TRX SSB…) : renvoyée avec la réponse, chaque page ne traite que les siennes
+const logTag = (m) => (typeof m.tag === 'string' && /^[a-z]{1,16}$/.test(m.tag) ? m.tag : undefined);
 function logCalls(conn) { return Array.from(new Set(stationCalls().concat(ownCallOk(conn.user) ? [String(conn.user.call).toUpperCase()] : []))); }
 // Stations déjà contactées sous l'indicatif d'émission actuel (TX CALL) : « INDICATIF|BANDE|MODE », pour les marquer
 // dans les listes des modes numériques (vert barré). Renvoyé quand le carnet ou le TX CALL change.
@@ -3094,10 +3096,10 @@ function onOperator(conn, m) {
         if (!q.country) { const e = DXCC.lookup(q.call); if (e) q.country = e.name; }
         q = book.update(m.id, q);
         journal('log_edit', { call: conn.user.call, qso: q.call });
-        send(conn, { t: 'log_saved', qso: qsoForClient(q), edited: true });
+        send(conn, { t: 'log_saved', qso: qsoForClient(q), edited: true, tag: logTag(m) });
       } else {
         const d = !m.force && book.dupe(q);
-        if (d) return send(conn, { t: 'log_dupe', qso: m.qso, prev: qsoForClient(d) });
+        if (d) return send(conn, { t: 'log_dupe', qso: m.qso, prev: qsoForClient(d), tag: logTag(m) });
         if (!q.country) { const e = DXCC.lookup(q.call); if (e) q.country = e.name; }
         q = book.add(q, conn.user.call);
         if (book.error) send(conn, { t: 'notice', level: 'error', msg: 'ATTENTION : carnet non écrit sur le disque du serveur (' + book.error + ')' });
@@ -3108,7 +3110,7 @@ function onOperator(conn, m) {
         const auto = Object.fromEntries(LOG_SERVICES.map((s) => [s, autoFor(s, q.station_callsign) && !sync.isStopped(s, q.station_callsign)]));
         sync.auto(q, { udp: club, by: club ? '' : String(q.station_callsign || '') });
         if (!club && !LOG_SERVICES.some((s) => auto[s])) send(conn, { t: 'notice', level: 'info', msg: 'QSO enregistré sous ' + q.station_callsign + ' : pas d’envoi vers les logs en ligne du club. Vos propres logs en ligne : Synchronisation ▾ (vos identifiants, envoi automatique possible).' });
-        send(conn, { t: 'log_saved', qso: qsoForClient(q), auto });
+        send(conn, { t: 'log_saved', qso: qsoForClient(q), auto, tag: logTag(m) });
       }
       for (const c of ops) send(c, { t: 'log_changed' });
       sendWorked(false);

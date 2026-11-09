@@ -81,6 +81,9 @@
     const k = kit();
     document.body.classList.toggle('cwp-inctst', !!d);
     $('cwpCtBody').hidden = !d;
+    // Pas de contest : la fiche du carnet pour noter les QSO à la main
+    const qb = $('ssQso');
+    if (qb.hidden !== !!d) { qb.hidden = !!d; if (!d && LOG && LOG.mounted) LOG.show(); }
     const cs = $('ssCat');
     cs.textContent = '';
     const st = catState();
@@ -248,7 +251,7 @@
       rst_sent: E.rs.value.trim() || '59', rst_rcvd: E.rr.value.trim() || '59', contest_id: CL.id, stx_string: stx, srx_string: srx, station: k.myCall() };
     if (/^\d{1,5}$/.test(stx)) qso.stx = stx;
     if (/^\d{1,5}$/.test(srx)) qso.srx = srx;
-    api.send({ t: 'log_add', qso, force: true });
+    api.send({ t: 'log_add', qso, force: true, tag: 'ssbpage' });
     CL.items.push({ call, band: bandOf(mhz), d: qso.qso_date, t: hms, stx, srx });
     if (/<CNTR>|<SERNO>/.test(exchTpl())) k.afterLog(call); // n° de série suivant (seulement s'il fait partie de l'échange)
     drawLog();
@@ -384,17 +387,31 @@
     window.addEventListener('blur', pttUp); // sécurité : fenêtre quittée pendant l'émission
   }
 
+  // ------------------------------------------------------------------ fiche de QSO du carnet (sans contest)
+  const LOG = window.RSLOG || null;
+  function logInit() {
+    if (!LOG || !host) return;
+    LOG.init({ send: api.send, state: api.state, iControl: api.iControl, tag: 'ssbpage', formOnly: true,
+      say: (msg, lvl, ms) => toast(msg, lvl === 'warn' || lvl === 'error' ? 'warn' : '', ms) });
+    if (!LOG.mounted) { LOG.mount($('ssLog')); LOG.mounted = true; }
+    try { const me = host.me ? host.me() : null; if (me) LOG.onHello(me); } catch (e) {}
+    if (!$('ssQso').hidden) LOG.show();
+  }
+
   // ------------------------------------------------------------------ messages du serveur, état
   function onMsg(m) {
     if (!m || typeof m !== 'object') return;
     if (m.t === 'vm') { S.vm = m.meta || null; S.playing = m.playing || null; drawVk(); }
     else if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && VX) VX.onMessage(m);
-    else if (m.t === 'hello' && VX) VX.onHello(m);
-    else if (m.t === 'state' && VX) { VX.onState(); if (P.held && !api.iControl()) pttUp(); }
+    else if (m.t === 'hello') { if (VX) VX.onHello(m); if (LOG && LOG.mounted) LOG.onHello(m); }
+    else if (m.t === 'state') { if (VX) VX.onState(); if (LOG && LOG.mounted) LOG.onState(); if (P.held && !api.iControl()) pttUp(); }
+    else if (m.t === 'qrz_info' && LOG && LOG.mounted && LOG.onQrz) LOG.onQrz(m);
     else if (m.t === 'notice' && m.msg) toast(m.msg, m.level === 'error' ? 'warn' : '', 6000);
     else if (m.t === 'ctst_list' && m.contest === CL.id) { CL.items = m.items || []; drawLog(); checkDupe(); }
     else if ((m.t === 'log_saved' || m.t === 'log_changed') && CL.id) { clearTimeout(onMsg.lt); onMsg.lt = setTimeout(askList, 400); }
     else if (m.t === 'log_export' && m.tag === 'cwpage') saveFile(m);
+    // Fiche du carnet (sans contest) : réponses à ses QSO, liste des TX call, références
+    if (LOG && LOG.mounted && /^(log_saved|log_dupe|log_cfg|log_refs)$/.test(m.t)) LOG.onMessage(m);
   }
   const fmtF = (hz) => { if (!hz) return '—'; const s = String(Math.round(hz)).padStart(7, '0'); return s.slice(0, -6) + '.' + s.slice(-6, -3) + '.' + s.slice(-3); };
   function drawState() {
@@ -414,6 +431,7 @@
     $('cwpTx').classList.toggle('on', tx);
     $('cwpTxSt').textContent = 'Émission : ' + (st && st.ptt && st.ptt.active ? (st.ptt.voice ? 'phonie / mémoire vocale de ' : 'PTT de ') + (st.ptt.by || '?') : 'aucune');
     $('cwpLink').textContent = 'Liaison : ' + (host ? 'par la page d’origine' : 'aucune');
+    $('ssTxc').textContent = st && st.txCall ? String(st.txCall).toUpperCase() + ' ' : '';
     const k = kit();
     if (k) {
       // Indicatif choisi ailleurs (spot cliqué dans une BAND MAP…) : dans la case Indicatif
@@ -438,6 +456,7 @@
       untap = h.tap ? h.tap(onMsg) : null;
       $('cwpOrphan').hidden = true;
       voiceInit();
+      logInit();
       api.send({ t: 'vm_list' });
       drawContest();
     } else if (!h) { host = null; hostWin = null; $('cwpOrphan').hidden = false; }

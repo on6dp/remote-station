@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.197** — TRX SSB : TX call devant le titre (aussi TRX CW) ; sans contest, fiche du carnet (Log du QSO) pour noter les QSO à la main ; réponses du carnet par page (repère)
 - **0.37.196** — Dashboard : s'ouvre sur le carnet (Logbooks), qui reste affiché quand les modes sont dans leurs pages ; ligne Activités : SSB, chaque mode ouvre sa page (TRX SSB, TRX CW, TRX DIGI) ; TRX SSB avec PTT et SSB CONFIGURATION
 - **0.37.195** — Ligne Activités : chaque mode ouvre sa page (TRX SSB, TRX CW, TRX DIGI) ; onglet SSB ; TRX SSB avec PTT et SSB CONFIGURATION ; décodage CW pour la page TRX CW ; noms TRX SSB / TRX CW / TRX DIGI
 - **0.37.194** — Poste SSB : contests en phonie (28 contests avec échange et catégories, log N1MM, mémoires vocales F1-F8, Cabrillo avec catégorie) ; UBA DX CW : section LGE
