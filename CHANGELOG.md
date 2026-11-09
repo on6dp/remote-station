@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.219** — Page Station : voix vers le TRX rééchantillonnée en continu (plus de clics à 50 Hz : phonie et mémoires vocales nettes sur l'air)
 - **0.37.218** — Messages vocaux : niveau d'une voix au micro (plus de saturation ALC / PROC), vrai filtre anti-repliement au rééchantillonnage
 - **0.37.217** — Voix naturelles : nouvelles voix françaises et anglaises (Tom, Pierre, Jessica, Siwis, Kristin, Amy, Jenny, Ryan, Joe), voix à plusieurs locuteurs, retrait d'une voix ; prononciations (Roméo, cu ère zède, cu esse o…) et cadre Prononciations
 - **0.37.216** — Messages vocaux : voix naturelles Piper (deploy/install-voix.sh), en tête de la liste Voix

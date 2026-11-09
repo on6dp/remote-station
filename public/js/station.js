@@ -1059,6 +1059,7 @@
     voice.gain.gain.value = voiceLevel() / 100;
     voice.on = true;
     voice.next = 0;
+    voice.last = null;
     voice.frames = 0;
     voice.late = 0;
     voice.under = 0;
@@ -1076,16 +1077,29 @@
     const s = ULAW.decodeFrame(u8);
     if (!s || !s.length) return;
     const ctx = tx.ctx;
-    const buf = ctx.createBuffer(1, s.length, 12000);
-    buf.copyToChannel(s, 0);
+    const now = ctx.currentTime;
+    if (voice.next < now + 0.02) { if (voice.frames) voice.under++; voice.next = now + 0.15; voice.last = null; }
+    else if (voice.next - now > 0.6) { voice.late++; voice.next = now + 0.15; voice.last = null; }
+    // Rééchantillonnage 12 kHz → fréquence de la carte son ICI, en continu d'une trame à l'autre (dernier échantillon
+    // gardé) : laissé au navigateur trame par trame (20 ms), chaque raccord fait un petit clic, 50 fois par seconde,
+    // et la voix sort « robotique » sur l'air
+    const R = ctx.sampleRate, ratio = R / 12000;
+    const n = Math.max(1, Math.round(s.length * ratio));
+    const out = new Float32Array(n);
+    const prev = voice.last == null ? s[0] : voice.last;
+    for (let i = 0; i < n; i++) {
+      const p = i / ratio, j = Math.floor(p), f = p - j;
+      const a0 = j === 0 ? prev : s[j - 1], a1 = s[Math.min(j, s.length - 1)];
+      out[i] = a0 + (a1 - a0) * f;
+    }
+    voice.last = s[s.length - 1];
+    const buf = ctx.createBuffer(1, n, R);
+    buf.copyToChannel(out, 0);
     const src = ctx.createBufferSource();
     src.buffer = buf;
     src.connect(voice.gain);
-    const now = ctx.currentTime;
-    if (voice.next < now + 0.02) { if (voice.frames) voice.under++; voice.next = now + 0.15; }
-    else if (voice.next - now > 0.6) { voice.late++; voice.next = now + 0.15; }
     src.start(voice.next);
-    voice.next += s.length / 12000;
+    voice.next += n / R;
     voice.frames++;
   }
   function txStop() {
