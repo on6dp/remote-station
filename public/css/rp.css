@@ -2035,3 +2035,6 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 /* TRX CW : colonne (le cadre des VFO peut être caché) ; la réception CW prend le reste de la hauteur */
 body.cwp-body:not(.ssb-body) .cwp-main { display: flex; flex-direction: column; }
 body.cwp-body:not(.ssb-body) .cwp-main > .cwp-rx { flex: 1 1 220px; min-height: 220px; }
+.vfb.single { grid-template-columns: minmax(0, 1fr) auto; }
+.vfb-col[hidden] { display: none; }
+.vfb.single .vfb-mid { order: 1; }

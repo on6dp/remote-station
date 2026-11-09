@@ -70,8 +70,12 @@
       const split = !!r.split;
       const txv = r.txVfo === 0 || r.txVfo === 1 ? r.txVfo : (split ? 1 - rxv : rxv);
       const onAir = !!((st.ptt && st.ptt.active) || r.tx);
+      // Sans SPLIT : seulement le VFO actif (celui de réception et d'émission)
+      el.classList.toggle('single', !split);
       cols.forEach((c, v) => {
         const isRx = v === rxv, isTx = v === txv;
+        c.hidden = !split && v !== rxv;
+        c.style.order = !split ? '0' : '';
         c.classList.toggle('rx', isRx);
         c.classList.toggle('tx', isTx);
         c.classList.toggle('air', isTx && onAir);

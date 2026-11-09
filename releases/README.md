@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.221 | [RemoteStation-Setup-0.37.221.exe](0.37.221/RemoteStation-Setup-0.37.221.exe) | [remote-station-0.37.221.tar.gz](0.37.221/remote-station-0.37.221.tar.gz) | Deux VFO / SPLIT — [empreintes SHA-256](0.37.221/SHA256SUMS.txt) |
 | 0.37.220 | [RemoteStation-Setup-0.37.220.exe](0.37.220/RemoteStation-Setup-0.37.220.exe) | [remote-station-0.37.220.tar.gz](0.37.220/remote-station-0.37.220.tar.gz) | Deux VFO / SPLIT — [empreintes SHA-256](0.37.220/SHA256SUMS.txt) |
 | 0.37.219 | [RemoteStation-Setup-0.37.219.exe](0.37.219/RemoteStation-Setup-0.37.219.exe) | [remote-station-0.37.219.tar.gz](0.37.219/remote-station-0.37.219.tar.gz) | Voix nette sur l'air — [empreintes SHA-256](0.37.219/SHA256SUMS.txt) |
 | 0.37.218 | [RemoteStation-Setup-0.37.218.exe](0.37.218/RemoteStation-Setup-0.37.218.exe) | [remote-station-0.37.218.tar.gz](0.37.218/remote-station-0.37.218.tar.gz) | Voix plus naturelle sur l'air — [empreintes SHA-256](0.37.218/SHA256SUMS.txt) |

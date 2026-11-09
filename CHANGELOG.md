@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.221** — TRX CW et TRX SSB : les deux VFO (SPLIT, A⇄B, A→B, B = A ±kHz) ; sans SPLIT, seulement le VFO actif
 - **0.37.220** — TRX CW et TRX SSB : les deux VFO côte à côte (SPLIT, A⇄B, A→B, écart B = A ±kHz, fréquence par VFO)
 - **0.37.219** — Page Station : voix vers le TRX rééchantillonnée en continu (plus de clics à 50 Hz : phonie et mémoires vocales nettes sur l'air)
 - **0.37.218** — Messages vocaux : niveau d'une voix au micro (plus de saturation ALC / PROC), vrai filtre anti-repliement au rééchantillonnage
