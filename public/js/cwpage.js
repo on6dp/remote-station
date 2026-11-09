@@ -346,7 +346,8 @@
     api.send({ t: 'log_add', qso, force: true }); // doublons du contest : signalés ici (N1MM les garde aussi, à 0 point)
     // Affiché tout de suite ; la liste est relue quand le serveur confirme
     CL.items.push({ call, band: bandOf(mhz), mode: 'CW', d: qso.qso_date, t: hms, stx, srx });
-    k.afterLog(call);
+    // N° de série suivant dès que le QSO est enregistré (une fois par correspondant), si l'échange en contient un
+    if (/<CNTR>|<SERNO>/i.test(String(k.exch() || ''))) k.afterLog(call);
     drawLog();
     for (const x of ['call', 'stx', 'srx']) E[x].value = '';
     CL.sentFor = '';
