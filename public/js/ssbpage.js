@@ -38,7 +38,7 @@
   }
 
   // ------------------------------------------------------------------ contest, catégorie, échange
-  const S = { id: LS.get('ssbc', ''), vm: null, playing: null };
+  const S = { id: LS.get('ssbc', ''), vm: null, playing: null, pv: [] };
   const def = () => C.SSB.find((c) => c.id === S.id) || null;
   const catKey = () => 'ssbcat_' + S.id;
   function catState() {
@@ -160,8 +160,8 @@
       b.querySelector('small').textContent = 'F' + n + ' · T' + n + (t && t.ms ? ' · ' + (t.ms / 1000).toFixed(1).replace('.', ',') + ' s' : '');
       b.querySelector('span').textContent = (t && t.name) || (t && t.ms ? 'T' + n : 'vide');
       const tt = S.tts && S.tts[n];
-      if (tt) { b.classList.add('tts'); b.querySelector('small').textContent += ' · ' + (/^fr/.test(tt.voice || '') ? 'FR' : 'EN'); }
-      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message de synthèse ' + (/^fr/.test(tt.voice || '') ? 'en français' : 'en anglais') + ', ' + tt.call + ')' : '') : 'Mémoire T' + n + ' vide : l’enregistrer sur la face avant (MENU → VOICE → REC) ou « Messages vocaux »';
+      if (tt) { b.classList.add('tts'); b.querySelector('small').textContent += ' · ' + (/^(piper:)?fr/.test(tt.voice || '') ? 'FR' : 'EN'); }
+      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message de synthèse ' + (/^(piper:)?fr/.test(tt.voice || '') ? 'en français' : 'en anglais') + ', ' + tt.call + ')' : '') : 'Mémoire T' + n + ' vide : l’enregistrer sur la face avant (MENU → VOICE → REC) ou « Messages vocaux »';
       b.addEventListener('click', () => playVm(n));
       box.appendChild(b);
     }
@@ -223,6 +223,15 @@
   function ttsVoices() {
     const sel = $('ssTtsV');
     sel.textContent = '';
+    // Voix naturelles (Piper, installées sur le serveur par deploy/install-voix.sh) : en premier, choisies d'office une fois
+    const nat = (S.pv || []).filter((v) => v.lang === TT.lang);
+    const og = document.createElement('optgroup');
+    og.label = 'Voix naturelles (Piper)';
+    if (nat.length) for (const v of nat) og.appendChild(new Option(v.name, v.id));
+    else { const o = new Option('à installer sur le serveur (deploy/install-voix.sh)', ''); o.disabled = true; og.appendChild(o); }
+    sel.appendChild(og);
+    TT.natAuto = TT.natAuto || {};
+    if (nat.length && !TT.natAuto[TT.lang] && !/^piper:/.test(TT.voice || '')) { TT.voice = nat[0].id; TT.natAuto[TT.lang] = 1; ttsSave(); }
     for (const [g, list] of TTS_VOICES[TT.lang]) {
       const og = document.createElement('optgroup');
       og.label = g;
@@ -230,6 +239,7 @@
       sel.appendChild(og);
     }
     sel.value = TT.voice;
+    if (sel.value !== TT.voice && sel.options.length) { const f = Array.from(sel.options).find((o) => !o.disabled); if (f) { sel.value = f.value; TT.voice = f.value; } }
   }
   const ttsSave = () => LS.set('ssbtts', JSON.stringify(TT));
   const PHON = { A: 'Alfa', B: 'Bravo', C: 'Charlie', D: 'Delta', E: 'Echo', F: 'Foxtrot', G: 'Golf', H: 'Hotel', I: 'India', J: 'Juliett', K: 'Kilo', L: 'Lima', M: 'Mike',
@@ -804,7 +814,12 @@
   // ------------------------------------------------------------------ messages du serveur, état
   function onMsg(m) {
     if (!m || typeof m !== 'object') return;
-    if (m.t === 'vm') { S.vm = m.meta || null; S.tts = m.tts || {}; S.playing = m.playing || null; drawVk(); }
+    if (m.t === 'vm') {
+      S.vm = m.meta || null; S.tts = m.tts || {}; S.playing = m.playing || null;
+      const pv = Array.isArray(m.ttsVoices) ? m.ttsVoices : [];
+      if (JSON.stringify(pv) !== JSON.stringify(S.pv || [])) { S.pv = pv; if (!$('ssTts').hidden) ttsVoices(); }
+      drawVk();
+    }
     else if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && VX) VX.onMessage(m);
     else if (m.t === 'hello') { if (VX) VX.onHello(m); if (LOG && LOG.mounted) LOG.onHello(m); }
     else if (m.t === 'state') { if (VX) VX.onState(); if (LOG && LOG.mounted) LOG.onState(); if (P.held && !api.iControl()) pttUp(); }

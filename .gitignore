@@ -18,3 +18,4 @@ station-sessions.json
 logs/*.jsonl
 refdata/
 voicemem/
+tts/
