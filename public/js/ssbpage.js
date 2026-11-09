@@ -604,7 +604,7 @@
   const LOG = window.RSLOG || null;
   function logInit() {
     if (!LOG || !host) return;
-    LOG.init({ send: api.send, state: api.state, iControl: api.iControl, tag: 'ssbpage', formOnly: true,
+    LOG.init({ send: api.send, state: api.state, iControl: api.iControl, tag: 'ssbpage', formOnly: true, phone: true,
       say: (msg, lvl, ms) => toast(msg, lvl === 'warn' || lvl === 'error' ? 'warn' : '', ms) });
     if (!LOG.mounted) { LOG.mount($('ssLog')); LOG.mounted = true; }
     try { const me = host.me ? host.me() : null; if (me) LOG.onHello(me); } catch (e) {}

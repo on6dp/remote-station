@@ -31,6 +31,7 @@
   // Fiche seule (page TRX SSB) : tag des QSO envoyés, pour que chaque page ne traite que ses réponses (doublon, enregistré)
   let TAG = '';
   let FORM = false;
+  let SSBP = false; // page TRX SSB : mode USB ou LSB seulement
   let items = [];
   let total = 0;
   // Colonnes du carnet : largeur par défaut (px), réglable à la souris (bord droit de l'en-tête), gardée dans ce navigateur
@@ -152,7 +153,7 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeFlt(); });
     q$('#lgFclr').addEventListener('click', () => { filt = {}; reload(); });
     const f = q$('#lgForm');
-    for (const m of MODES) f.mode.add(new Option(m, m));
+    for (const m of SSBP ? ['USB', 'LSB'] : MODES) f.mode.add(new Option(m, m));
     f.addEventListener('submit', (e) => { e.preventDefault(); save(false); });
     f.querySelector('[data-a="now"]').addEventListener('click', () => { const n = utcNow(); f.date.value = n.date; f.time.value = n.time; });
     f.querySelector('[data-a="trx"]').addEventListener('click', () => fromTrx(true));
@@ -306,6 +307,15 @@
   // ------------------------------------------------------------------ pré-remplissage (TRX + correspondant)
   function trxMode(rm) {
     const m = String(rm || '').toUpperCase();
+    if (SSBP) {
+      // Page TRX SSB : LSB / USB du TRX, sinon d'après la fréquence (LSB sous 10 MHz, sauf 60 m)
+      if (/^LSB/.test(m)) return 'LSB';
+      if (/^USB/.test(m)) return 'USB';
+      const st = api && api.state && api.state();
+      const r = st && st.radio;
+      const hz = r && (r.vfoSel === 1 && r.freqB ? r.freqB : r.freq);
+      return hz && hz < 10e6 && !(hz >= 5.3e6 && hz <= 5.5e6) ? 'LSB' : 'USB';
+    }
     if (/^CW/.test(m)) return 'CW';
     if (/^RTTY/.test(m)) return 'RTTY';
     if (m === 'PSK') return 'PSK31';
@@ -1189,7 +1199,7 @@
   }
 
   window.RSLOG = {
-    init(a) { api = a; TAG = (a && a.tag) || ''; FORM = !!(a && a.formOnly); },
+    init(a) { api = a; TAG = (a && a.tag) || ''; FORM = !!(a && a.formOnly); SSBP = !!(a && a.phone); },
     // Fiche du carnet : fréquence et mode suivent tout seuls le VFO actif du TRX (sauf saisie à la main ou modification d'un QSO)
     onState() {
       if (!root || editing) return;
