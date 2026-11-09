@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.212 | [RemoteStation-Setup-0.37.212.exe](0.37.212/RemoteStation-Setup-0.37.212.exe) | [remote-station-0.37.212.tar.gz](0.37.212/remote-station-0.37.212.tar.gz) | Messages en anglais : fermer — [empreintes SHA-256](0.37.212/SHA256SUMS.txt) |
 | 0.37.211 | [RemoteStation-Setup-0.37.211.exe](0.37.211/RemoteStation-Setup-0.37.211.exe) | [remote-station-0.37.211.tar.gz](0.37.211/remote-station-0.37.211.tar.gz) | Voix féminines, son régulier — [empreintes SHA-256](0.37.211/SHA256SUMS.txt) |
 | 0.37.210 | [RemoteStation-Setup-0.37.210.exe](0.37.210/RemoteStation-Setup-0.37.210.exe) | [remote-station-0.37.210.tar.gz](0.37.210/remote-station-0.37.210.tar.gz) | Messages vocaux en anglais — [empreintes SHA-256](0.37.210/SHA256SUMS.txt) |
 | 0.37.209 | [RemoteStation-Setup-0.37.209.exe](0.37.209/RemoteStation-Setup-0.37.209.exe) | [remote-station-0.37.209.tar.gz](0.37.209/remote-station-0.37.209.tar.gz) | TX CALL dans les pages — [empreintes SHA-256](0.37.209/SHA256SUMS.txt) |

@@ -215,6 +215,7 @@
     $('ssTtsEx').textContent = c ? c + ' → ' + c.split('').map((x) => (/\d/.test(x) ? DIGW[+x] : PHON[x] || x)).join(' ') : 'TX call inconnu';
     $('ssTtsGo').textContent = 'GÉNÉRER' + (c ? ' POUR ' + c : '');
   }
+  $('ssTtsX').addEventListener('click', () => { $('ssTts').hidden = true; });
   $('ssTtsBtn').addEventListener('click', () => { const p = $('ssTts'); p.hidden = !p.hidden; if (!p.hidden) ttsDraw(); });
   $('ssTtsV').addEventListener('change', () => { TT.voice = $('ssTtsV').value; ttsSave(); });
   $('ssTtsS').addEventListener('input', () => { TT.speed = Number($('ssTtsS').value); $('ssTtsSo').textContent = TT.speed + ' mots/min'; ttsSave(); });
@@ -226,6 +227,7 @@
     const busy = items.filter((x) => vmFilled(x.n) && !(S.tts && S.tts[x.n])).map((x) => 'T' + x.n);
     if (busy.length && !window.confirm('Remplacer ' + busy.join(', ') + ' (enregistrées au micro) par les messages en anglais ?')) return;
     api.send({ t: 'vm_tts', items: items.map(({ on, ...x }) => x) });
+    $('ssTts').hidden = true; // réglages gardés : le cadre se referme
     toast('Fabrication des messages pour ' + txNow() + '…', '', 4000);
   });
   setInterval(() => { if (!$('ssTts').hidden) ttsCall(); }, 1000);
