@@ -1245,10 +1245,9 @@
       const CW = this.rig.CW;
       const K = this.keyer;
       job.dtr = true;
-      // Commandes une à une, 50 ms d'écart (« ? » = déjà réglé : sans importance, pas d'attente de réponse)
-      for (const c of CW.dtr.on) { this._write(c, true); await this._cwSleep(job, 50); if (this.cw !== job) return; }
-      await this._cwSleep(job, 60);
-      if (this.cw !== job) return;
+      // Commandes une à une, 50 ms d'écart (« ? » = déjà réglé : sans importance, pas d'attente de réponse) ;
+      // déjà envoyées pour le message précédent (moins de 90 s) : rien à refaire, l'émission part tout de suite
+      if (await this._dtrArm(job, 50) === false) return;
       await K.set(false);
       // Suite des états : [manipulé, durée en points]
       const seq = [];
@@ -1303,7 +1302,7 @@
       while (this.radio.tx && k++ < 20) { await this._cwSleep(job, 150); if (this.cw !== job) return; }
       if (this.cw !== job) return;
       this.cw = null;
-      for (const c of CW.dtr.off) this._write(c, true);
+      this._dtrDisarm(false);
       this.log('CW : fin du message');
       this._cwSay(job.id, 'done');
     }
@@ -1458,9 +1457,27 @@
       if (job.ready) this._cwkPump(job);
     }
     get CWK_BUF() { return 130; } // réserve de lecture (ms)
+    // PC KEYING sur DTR (+ BK-IN) : envoyé une fois, gardé 90 s après le dernier message ou la dernière manipulation
+    // (enchaîner les macros sans les ~0,25 s de réglages à chaque départ), puis remis sur OFF
+    async _dtrArm(job, gap) {
+      clearTimeout(this.dtrOffTimer);
+      if (this.dtrArmed) return true;
+      for (const c of this.rig.CW.dtr.on) { this._write(c, true); await this._cwSleep(job, gap); if (this.cw !== job) return false; }
+      // Le TRX applique PC KEYING / BK-IN avec un temps de retard : sans cette attente, les premiers signes (~0,5 s)
+      // partaient avant que l'émission ne démarre (constaté au club le 10/11) ; ensuite, plus d'attente pendant 90 s
+      await this._cwSleep(job, 500);
+      if (this.cw !== job) return false;
+      this.dtrArmed = true;
+      return true;
+    }
+    _dtrDisarm(now) {
+      clearTimeout(this.dtrOffTimer);
+      const off = () => { this.dtrOffTimer = null; if (this.cw) return; this.dtrArmed = false; for (const c of this.rig.CW.dtr.off) this._write(c, true); };
+      if (now) off(); else this.dtrOffTimer = setTimeout(off, 90000);
+    }
     async _cwkArm(job) {
       const CW = this.rig.CW;
-      for (const c of CW.dtr.on) { this._write(c, true); await this._cwSleep(job, 35); if (this.cw !== job) return; }
+      if (await this._dtrArm(job, 35) === false) return;
       await this.keyer.set(false);
       if (this.cw !== job) return;
       job.ready = true;
@@ -1504,7 +1521,7 @@
       while (this.radio.tx && k++ < 20) { await this._cwSleep(job, 150); if (this.cw !== job) return; }
       if (this.cw !== job) return;
       this.cw = null;
-      for (const c of this.rig.CW.dtr.off) this._write(c, true);
+      this._dtrDisarm(false);
       if (why) this.log('Clé CW : fin (' + why + ')', 'st-warn');
       this._cwSay(job.id, 'done', why);
     }
@@ -1515,7 +1532,8 @@
       if (job) clearTimeout(job.timer);
       // Manipulation DTR : clé relâchée tout de suite, PC KEYING remis sur OFF
       if (this.keyer && this.keyer.available()) { try { this.keyer.set(false); } catch (e) { /* port fermé */ } }
-      if (this.rig.CW && this.rig.CW.dtr && job && job.dtr) for (const c of this.rig.CW.dtr.off) this._write(c, true);
+      // Arrêt demandé (ou nouveau message) : PC KEYING gardé 90 s ; arrêt de sécurité : remis sur OFF tout de suite
+      if (this.rig.CW && this.rig.CW.dtr && job && job.dtr) this._dtrDisarm(!/^(nouveau message|clé de l’opérateur|arrêt demandé)/.test(String(reason || '')));
       if (this.rig.CW && (job || fromServer) && !(job && job.live)) this._writeList(this.rig.CW.stop(), true); // « ? » si rien ne jouait : sans importance
       if (job) {
         this.log('CW arrêté : ' + reason);
