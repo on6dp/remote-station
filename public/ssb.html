@@ -79,7 +79,7 @@
         <div class="cwp-cright">
           <div class="cwp-cstats" id="cwpCStats">—</div>
           <div class="cwp-clogw"><table class="cwp-clog"><thead><tr><th>UTC</th><th>Bande</th><th>Indicatif</th><th>Env.</th><th>Reçu</th></tr></thead><tbody id="cwpCLog"></tbody></table></div>
-          <div class="cwp-crow2"><label title="QSO de ce contest comptés depuis cette date (doublons, compteurs, Cabrillo)">Depuis <input type="date" id="cwpFrom"></label><button type="button" id="cwpCab" title="Fichier Cabrillo de ce contest, avec la catégorie choisie">CABRILLO</button></div>
+          <div class="cwp-crow2"><label title="QSO de ce contest comptés depuis cette date (doublons, compteurs, Cabrillo)">Depuis <input type="date" id="cwpFrom"></label><button type="button" id="ssAdi" class="ssb-adi" title="Fichier ADIF (.adi) des QSO de ce contest (depuis la date choisie), pour un autre logiciel ou un carnet en ligne">ADIF</button><button type="button" id="cwpCab" title="Fichier Cabrillo de ce contest, avec la catégorie choisie">CABRILLO</button></div>
         </div>
       </div>
     </section>
@@ -87,7 +87,7 @@
     <section class="cwp-box ssb-qso" id="ssQso" hidden>
       <h2 class="ssb-qh">Log du QSO <small>sans contest : fiche du carnet de trafic (Logbooks), fréquence et mode repris du TRX</small></h2>
       <div class="lg ssb-lg" id="ssLog"></div>
-      <div class="cwp-cstats" id="ssQStats">—</div>
+      <div class="ssb-qbar"><div class="cwp-cstats" id="ssQStats">—</div><label title="QSO en phonie hors contest exportés depuis cette date">Depuis <input type="date" id="ssQFrom"></label><button type="button" id="ssQAdi" class="ssb-adi" title="Fichier ADIF (.adi) de vos QSO en phonie hors contest depuis la date choisie">ADIF</button></div>
       <div class="cwp-clogw ssb-qlogw"><table class="cwp-clog ssb-qlog"><thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th>MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th>Nom</th><th>QTH</th><th>Pays</th><th>TX call</th><th>OP</th></tr></thead><tbody id="ssQLog"></tbody></table></div>
     </section>
   </main>

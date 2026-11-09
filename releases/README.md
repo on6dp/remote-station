@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.206 | [RemoteStation-Setup-0.37.206.exe](0.37.206/RemoteStation-Setup-0.37.206.exe) | [remote-station-0.37.206.tar.gz](0.37.206/remote-station-0.37.206.tar.gz) | ADIF, PTT rouge — [empreintes SHA-256](0.37.206/SHA256SUMS.txt) |
 | 0.37.205 | [RemoteStation-Setup-0.37.205.exe](0.37.205/RemoteStation-Setup-0.37.205.exe) | [remote-station-0.37.205.tar.gz](0.37.205/remote-station-0.37.205.tar.gz) | SSB : USB / LSB, QRZ — [empreintes SHA-256](0.37.205/SHA256SUMS.txt) |
 | 0.37.204 | [RemoteStation-Setup-0.37.204.exe](0.37.204/RemoteStation-Setup-0.37.204.exe) | [remote-station-0.37.204.tar.gz](0.37.204/remote-station-0.37.204.tar.gz) | QRZ et phonie — [empreintes SHA-256](0.37.204/SHA256SUMS.txt) |
 | 0.37.203 | [RemoteStation-Setup-0.37.203.exe](0.37.203/RemoteStation-Setup-0.37.203.exe) | [remote-station-0.37.203.tar.gz](0.37.203/remote-station-0.37.203.tar.gz) | Dashboard : Modes et QSO — [empreintes SHA-256](0.37.203/SHA256SUMS.txt) |

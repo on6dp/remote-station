@@ -527,8 +527,29 @@
     if (!k || !d) return;
     const f = fromDate();
     api.send({ t: 'log_export', fmt: 'cabrillo', callsign: k.myCall(), mine: true, contest: d.id, contestOnly: true, cat: cabCat(), location: d.location || '',
-      from: f.slice(0, 4) + '-' + f.slice(4, 6) + '-' + f.slice(6, 8), tag: 'cwpage' });
+      from: f.slice(0, 4) + '-' + f.slice(4, 6) + '-' + f.slice(6, 8), tag: 'ssbpage' });
   });
+  // ADIF (.adi) : QSO du contest (même choix que le Cabrillo) ; sans contest : QSO en phonie hors contest
+  $('ssAdi').addEventListener('click', () => {
+    const k = kit();
+    const d = def();
+    if (!k || !d) return;
+    const f = fromDate();
+    api.send({ t: 'log_export', fmt: 'adif', callsign: k.myCall(), mine: true, contest: d.id, contestOnly: true,
+      from: f.slice(0, 4) + '-' + f.slice(4, 6) + '-' + f.slice(6, 8), tag: 'ssbpage' });
+  });
+  {
+    const qf = $('ssQFrom');
+    let v = LS.get('ssbqfrom', '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) { const d0 = new Date(Date.now() - 30 * 86400000); v = d0.toISOString().slice(0, 10); }
+    qf.value = v;
+    qf.addEventListener('change', () => LS.set('ssbqfrom', qf.value));
+    $('ssQAdi').addEventListener('click', () => {
+      const k = kit();
+      if (!k) return;
+      api.send({ t: 'log_export', fmt: 'adif', callsign: k.myCall(), mine: true, phoneOnly: true, from: qf.value || '', tag: 'ssbpage' });
+    });
+  }
   function saveFile(m) {
     const blob = new Blob([m.data], { type: (m.mime || 'text/plain') + ';charset=utf-8' });
     const a = document.createElement('a');
@@ -537,7 +558,7 @@
     document.body.appendChild(a);
     a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-    toast(m.count + ' QSO dans ' + m.name + ' (Cabrillo).', '', 5000);
+    toast(m.count + ' QSO dans ' + m.name + (/\.adi$/.test(m.name) ? ' (ADIF).' : ' (Cabrillo).'), '', 5000);
   }
 
   // ------------------------------------------------------------------ phonie : micro, égaliseurs (SSB CONFIGURATION) et PTT
@@ -645,7 +666,7 @@
     else if (m.t === 'ctst_list' && m.contest === CL.id) { CL.items = m.items || []; drawLog(); checkDupe(); }
     else if ((m.t === 'log_saved' || m.t === 'log_changed') && CL.id) { clearTimeout(onMsg.lt); onMsg.lt = setTimeout(askList, 400); }
     else if ((m.t === 'log_saved' || m.t === 'log_changed') && !def()) { clearTimeout(onMsg.st); onMsg.st = setTimeout(askSsb, 400); }
-    else if (m.t === 'log_export' && m.tag === 'cwpage') saveFile(m);
+    else if (m.t === 'log_export' && m.tag === 'ssbpage') saveFile(m);
     // Fiche du carnet (sans contest) : réponses à ses QSO, liste des TX call, références
     if (LOG && LOG.mounted && /^(log_saved|log_dupe|log_cfg|log_refs)$/.test(m.t)) LOG.onMessage(m);
   }
@@ -664,6 +685,9 @@
     $('cwpTake').hidden = !host || me || !!(st && st.controller);
     const tx = !!(st && st.ptt && st.ptt.active) || !!r.tx;
     $('cwpTx').textContent = tx ? 'TX' : 'RX';
+    // Grand PTT en rouge dès que le TRX émet (PTT de cette page, mémoire vocale, PTT d'une autre page)
+    $('ptt').classList.toggle('on-air', tx);
+    $('ptt').textContent = tx ? 'PTT · ÉMISSION' : 'PTT';
     $('cwpTx').classList.toggle('on', tx);
     $('cwpTxSt').textContent = 'Émission : ' + (st && st.ptt && st.ptt.active ? (st.ptt.voice ? 'phonie / mémoire vocale de ' : 'PTT de ') + (st.ptt.by || '?') : 'aucune');
     $('cwpLink').textContent = 'Liaison : ' + (host ? 'par la page d’origine' : 'aucune');

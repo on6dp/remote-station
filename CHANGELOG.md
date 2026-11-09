@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.206** — TRX SSB et TRX CW : export ADIF (.adi) du contest ; TRX SSB : ADIF des QSO en phonie hors contest, grand PTT rouge à l'émission
 - **0.37.205** — TRX SSB : fiche en USB / LSB seulement ; carnet : prénom et nom, QTH, locator repris de QRZ.com (bouton ⇩ QRZ) ; dashboard : phonie dans la page TRX SSB
 - **0.37.204** — Carnet : prénom et nom, QTH et locator repris de QRZ.com (après la frappe, à l'ouverture d'un QSO, bouton ⇩ QRZ) ; dashboard : SSB CONFIGURATION déplacée dans la page TRX SSB (bouton Phonie)
 - **0.37.203** — Dashboard : onglet Modes, plus de titre Activités, ligne QSO (ex-Correspondant) masquée dans Modes et Logbooks ; TRX SSB : liste des QSO en phonie hors contest

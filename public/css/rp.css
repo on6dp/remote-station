@@ -1976,3 +1976,9 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .vx.vx-away { display: none !important; }
 .vx-goto { width: 100%; margin: 6px 0; background: #1f6feb; border-color: #58a6ff; color: #fff; font-weight: 800; letter-spacing: .4px; }
 .vx-goto:hover { background: #388bfd; color: #fff; }
+/* TRX SSB : boutons ADIF à côté de CABRILLO / sous la fiche */
+.cwp-crow2 .ssb-adi { margin-left: auto; margin-right: 6px; }
+.ssb-adi { background: #fff; color: #000; font-weight: 800; border: 1px solid #fff; border-radius: 4px; padding: 3px 10px; cursor: pointer; letter-spacing: .4px; }
+.ssb-qbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ssb-qbar .cwp-cstats { flex: 1 1 auto; }
+.ssb-qbar label { color: #fff; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
