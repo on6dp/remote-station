@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.218** — Messages vocaux : niveau d'une voix au micro (plus de saturation ALC / PROC), vrai filtre anti-repliement au rééchantillonnage
 - **0.37.217** — Voix naturelles : nouvelles voix françaises et anglaises (Tom, Pierre, Jessica, Siwis, Kristin, Amy, Jenny, Ryan, Joe), voix à plusieurs locuteurs, retrait d'une voix ; prononciations (Roméo, cu ère zède, cu esse o…) et cadre Prononciations
 - **0.37.216** — Messages vocaux : voix naturelles Piper (deploy/install-voix.sh), en tête de la liste Voix
 - **0.37.215** — Messages vocaux : français (Coupe du REF) en plus de l'anglais, voix françaises, espacement des lettres épelées, réglages en haut du cadre
