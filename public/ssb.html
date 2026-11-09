@@ -56,15 +56,13 @@
             <span class="cwp-dupe" id="cwpDupe"></span>
           </div>
           <div class="ssb-vk">
-            <span class="ssb-vkh">Mémoires vocales <small>F1 à F8 · Échap : arrêt</small><button type="button" class="ssb-ttsb" id="ssTtsBtn" title="Messages standard en anglais fabriqués par le serveur, avec votre TX call épelé en alphabet phonétique">🗣 Messages en anglais…</button></span>
+            <span class="ssb-vkh">Mémoires vocales <small>F1 à F8 · Échap : arrêt</small><button type="button" class="ssb-ttsb" id="ssTtsBtn" title="Messages standard en anglais ou en français fabriqués par le serveur, avec votre TX call épelé en alphabet phonétique">🗣 Messages vocaux…</button></span>
             <div class="cwp-macros" id="ssVk"></div>
             <div class="ssb-tts" id="ssTts" hidden>
-              <p class="cwp-note">Messages dits par la voix de synthèse du serveur (espeak-ng), en anglais. <b>{CALL}</b> = votre TX call, épelé en alphabet phonétique (<span id="ssTtsEx"></span>) ; quand le TX call change, les messages sont refaits tout seuls. Cochez les mémoires à remplacer.</p>
+              <p class="cwp-note">Messages dits par la voix de synthèse du serveur (espeak-ng), en anglais ou en français (un jeu de messages par langue). <b>{CALL}</b> = votre TX call, épelé en alphabet phonétique (<span id="ssTtsEx"></span>) ; quand le TX call change, les messages sont refaits tout seuls. Cochez les mémoires à remplacer.</p>
               <div class="ssb-ttsr ssb-ttsv">
-                <label>Voix <select id="ssTtsV">
-                  <optgroup label="Voix féminines"><option value="en-us+f2">Femme 1 · US</option><option value="en-us+f3">Femme 2 · US</option><option value="en-us+f4">Femme 3 · US</option><option value="en-us+f5">Femme 4 · US</option><option value="en-us+Annie">Annie · US</option><option value="en-us+linda">Linda · US</option><option value="en-us+belinda">Belinda · US</option><option value="en-us+steph">Steph · US</option><option value="en-us+victoria">Victoria · US</option><option value="en-gb+f2">Femme 1 · GB</option><option value="en-gb+f3">Femme 2 · GB</option><option value="en-gb+linda">Linda · GB</option><option value="en-gb+victoria">Victoria · GB</option></optgroup>
-                  <optgroup label="Voix masculines"><option value="en-us">Homme · US</option><option value="en-us+m3">Homme grave · US</option><option value="en-gb">Homme · GB</option><option value="en-gb+m3">Homme grave · GB</option></optgroup>
-                </select></label>
+                <label>Langue <select id="ssTtsLang"><option value="en">Anglais</option><option value="fr">Français (Coupe du REF…)</option></select></label>
+                <label>Voix <select id="ssTtsV"></select></label>
                 <button type="button" id="ssTtsTry" title="Écouter la voix choisie sur le message T1, dans ce PC (rien n'est émis)">▶ Écouter</button>
                 <label>Vitesse <input type="range" id="ssTtsS" min="100" max="320" step="5"><output id="ssTtsSo"></output></label>
                 <label title="Petite pause entre les mots épelés de l’indicatif (alphabet phonétique)">Espacement des lettres <input type="range" id="ssTtsG" min="0" max="300" step="10"><output id="ssTtsGo2"></output></label>
@@ -73,7 +71,7 @@
               <div class="ssb-ttsr">
                 <button type="button" id="ssTtsDef" title="Remettre les messages proposés">Messages par défaut</button>
                 <button type="button" class="ssb-ttsgo" id="ssTtsGo" title="Fabrique les mémoires cochées puis ferme ce cadre (réglages gardés)">GÉNÉRER</button>
-                <button type="button" id="ssTtsX" title="Fermer ce cadre (réglages gardés ; « Messages en anglais… » pour le rouvrir)">✕ Fermer</button>
+                <button type="button" id="ssTtsX" title="Fermer ce cadre (réglages gardés ; « Messages vocaux… » pour le rouvrir)">✕ Fermer</button>
               </div>
             </div>
             <p class="cwp-note">T1 = CQ, T3 = TU / QRZ, T4 = votre indicatif pour la touche Entrée. Enregistrement : face avant, MENU → VOICE → REC. L’échange (n° de série) se dit au micro avec le PTT ci-dessus.</p>

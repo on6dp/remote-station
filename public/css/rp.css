@@ -2000,6 +2000,6 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .ssb-ttsr select { background: #07090d; color: #fff; border: 1px solid var(--v2-border); border-radius: 4px; padding: 2px 6px; color-scheme: dark; }
 .ssb-ttsr button { background: #121d2c; color: #fff; border: 1px solid var(--v2-border); border-radius: 4px; padding: 3px 10px; cursor: pointer; font-weight: 700; }
 .ssb-ttsr .ssb-ttsgo { margin-left: auto; background: #3fd07f; color: #04120a; border-color: #3fd07f; font-weight: 800; }
-.cwp-macro.ssb-vm.tts small::after { content: ' · EN'; color: #58a6ff; }
+.cwp-macro.ssb-vm.tts small { color: #8ab8ff; }
 .ssb-ttsv { padding-bottom: 4px; border-bottom: 1px solid #1d2a3a; }
 .ssb-ttsr label, .ssb-ttsr output { white-space: nowrap; }

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.215** — Messages vocaux : français (Coupe du REF) en plus de l'anglais, voix françaises, espacement des lettres épelées, réglages en haut du cadre
 - **0.37.214** — Messages en anglais : espacement des lettres épelées (SSML), réglages Voix / Vitesse / Espacement en haut du cadre
 - **0.37.213** — Messages en anglais : vitesse de 100 à 320 mots par minute
 - **0.37.212** — TRX SSB : le cadre Messages en anglais se referme après GÉNÉRER, bouton Fermer

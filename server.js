@@ -1316,7 +1316,7 @@ function ttsMake(conn, items, quiet) {
     ttsPut(call, store);
     // Noms et durées : écrits d'un coup (vmSave écrit en différé, vmSend relit le fichier)
     if (ok) { try { fs.writeFileSync(path.join(VM_DIR, vmSafe(call) + '.json'), JSON.stringify(meta), { mode: 0o600 }); } catch (e) { console.error('voicemem : ' + e.message); } }
-    if (ok && !quiet) send(conn, { t: 'notice', level: 'ok', msg: ok + ' mémoire(s) vocale(s) en anglais pour ' + tc + '.' });
+    if (ok && !quiet) send(conn, { t: 'notice', level: 'ok', msg: ok + ' mémoire(s) vocale(s) de synthèse pour ' + tc + '.' });
     else if (ok) send(conn, { t: 'notice', level: 'info', msg: 'Mémoires vocales refaites pour le TX call ' + tc + '.' });
     vmSend(conn);
   };

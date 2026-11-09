@@ -160,30 +160,77 @@
       b.querySelector('small').textContent = 'F' + n + ' · T' + n + (t && t.ms ? ' · ' + (t.ms / 1000).toFixed(1).replace('.', ',') + ' s' : '');
       b.querySelector('span').textContent = (t && t.name) || (t && t.ms ? 'T' + n : 'vide');
       const tt = S.tts && S.tts[n];
-      if (tt) b.classList.add('tts');
-      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message en anglais, ' + tt.call + ')' : '') : 'Mémoire T' + n + ' vide : l’enregistrer sur la face avant (MENU → VOICE → REC) ou « Messages en anglais »';
+      if (tt) { b.classList.add('tts'); b.querySelector('small').textContent += ' · ' + (/^fr/.test(tt.voice || '') ? 'FR' : 'EN'); }
+      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message de synthèse ' + (/^fr/.test(tt.voice || '') ? 'en français' : 'en anglais') + ', ' + tt.call + ')' : '') : 'Mémoire T' + n + ' vide : l’enregistrer sur la face avant (MENU → VOICE → REC) ou « Messages vocaux »';
       b.addEventListener('click', () => playVm(n));
       box.appendChild(b);
     }
   }
-  // Messages standard en anglais (fabriqués sur le serveur par espeak-ng, TX call épelé)
-  const TTS_DEF = [
-    { name: 'CQ TEST', text: 'CQ contest, CQ contest, this is {CALL}, {CALL}, contest.' },
-    { name: 'CQ', text: 'CQ, CQ, CQ, this is {CALL}, {CALL}, {CALL}, calling CQ and standing by.' },
-    { name: 'TU QRZ', text: 'Thank you, {CALL}, QRZ?' },
-    { name: 'MY CALL', text: '{CALL}' },
-    { name: 'AGN', text: 'Again please?' },
-    { name: 'NR AGN', text: 'Your number again please?' },
-    { name: 'QRL?', text: 'Is this frequency in use? This is {CALL}.' },
-    { name: '73', text: 'Thank you for the QSO, 73, {CALL} clear.' }
-  ];
+  // Messages standard en anglais ou en français (fabriqués sur le serveur par espeak-ng, TX call épelé)
+  const TTS_DEFS = {
+    en: [
+      { name: 'CQ TEST', text: 'CQ contest, CQ contest, this is {CALL}, {CALL}, contest.' },
+      { name: 'CQ', text: 'CQ, CQ, CQ, this is {CALL}, {CALL}, {CALL}, calling CQ and standing by.' },
+      { name: 'TU QRZ', text: 'Thank you, {CALL}, QRZ?' },
+      { name: 'MY CALL', text: '{CALL}' },
+      { name: 'AGN', text: 'Again please?' },
+      { name: 'NR AGN', text: 'Your number again please?' },
+      { name: 'QRL?', text: 'Is this frequency in use? This is {CALL}.' },
+      { name: '73', text: 'Thank you for the QSO, 73, {CALL} clear.' }
+    ],
+    // Coupe du REF et QSO en français
+    fr: [
+      { name: 'CQ COUPE', text: 'CQ Coupe du REF, CQ Coupe du REF, ici {CALL}, {CALL}, contest.' },
+      { name: 'APPEL', text: 'Appel général, CQ, CQ, ici {CALL}, {CALL}, {CALL}, à l’écoute.' },
+      { name: 'MERCI QRZ', text: 'Merci, {CALL}, QRZ ?' },
+      { name: 'INDICATIF', text: '{CALL}' },
+      { name: 'REPETEZ', text: 'Pouvez-vous répéter, s’il vous plaît ?' },
+      { name: 'NUMERO?', text: 'Votre numéro, s’il vous plaît ?' },
+      { name: 'QRL?', text: 'La fréquence est-elle occupée ? Ici {CALL}.' },
+      { name: '73', text: 'Merci pour le QSO, 73, {CALL}.' }
+    ]
+  };
+  const TTS_VOICES = {
+    en: [['Voix féminines', [['en-us+f2', 'Femme 1 · US'], ['en-us+f3', 'Femme 2 · US'], ['en-us+f4', 'Femme 3 · US'], ['en-us+f5', 'Femme 4 · US'], ['en-us+Annie', 'Annie · US'],
+      ['en-us+linda', 'Linda · US'], ['en-us+belinda', 'Belinda · US'], ['en-us+steph', 'Steph · US'], ['en-us+victoria', 'Victoria · US'], ['en-gb+f2', 'Femme 1 · GB'],
+      ['en-gb+f3', 'Femme 2 · GB'], ['en-gb+linda', 'Linda · GB'], ['en-gb+victoria', 'Victoria · GB']]],
+    ['Voix masculines', [['en-us', 'Homme · US'], ['en-us+m3', 'Homme grave · US'], ['en-gb', 'Homme · GB'], ['en-gb+m3', 'Homme grave · GB']]]],
+    fr: [['Voix féminines', [['fr+f2', 'Femme 1'], ['fr+f3', 'Femme 2'], ['fr+f4', 'Femme 3'], ['fr+Annie', 'Annie'], ['fr+linda', 'Linda'], ['fr+victoria', 'Victoria']]],
+      ['Voix masculines', [['fr', 'Homme'], ['fr+m3', 'Homme grave']]]]
+  };
+  const defItems = (lang) => TTS_DEFS[lang].map((x) => Object.assign({ on: true }, x));
   function ttsLoad() {
     let o = null;
     try { o = JSON.parse(LS.get('ssbtts', 'null')); } catch (e) { o = null; }
-    if (!o || !Array.isArray(o.items) || o.items.length !== 8) o = { items: TTS_DEF.map((x) => Object.assign({ on: true }, x)), voice: 'en-us+f2', speed: 175 };
+    o = o && typeof o === 'object' ? o : {};
+    // Ancien format (anglais seul) : repris comme jeu anglais
+    if (Array.isArray(o.items) && o.items.length === 8 && !o.sets) { o.sets = { en: o.items }; o.voices = { en: o.voice || 'en-us+f2' }; }
+    delete o.items; delete o.voice;
+    o.sets = o.sets || {};
+    o.voices = o.voices || {};
+    for (const l of ['en', 'fr']) {
+      if (!Array.isArray(o.sets[l]) || o.sets[l].length !== 8) o.sets[l] = defItems(l);
+      if (!o.voices[l]) o.voices[l] = l === 'fr' ? 'fr+f2' : 'en-us+f2';
+    }
+    o.lang = o.lang === 'fr' ? 'fr' : 'en';
+    o.speed = Number(o.speed) || 175;
     return o;
   }
   const TT = ttsLoad();
+  // Messages et voix de la langue choisie
+  Object.defineProperty(TT, 'items', { get() { return TT.sets[TT.lang]; }, set(v) { TT.sets[TT.lang] = v; }, enumerable: false });
+  Object.defineProperty(TT, 'voice', { get() { return TT.voices[TT.lang]; }, set(v) { TT.voices[TT.lang] = v; }, enumerable: false });
+  function ttsVoices() {
+    const sel = $('ssTtsV');
+    sel.textContent = '';
+    for (const [g, list] of TTS_VOICES[TT.lang]) {
+      const og = document.createElement('optgroup');
+      og.label = g;
+      for (const [v, l] of list) og.appendChild(new Option(l, v));
+      sel.appendChild(og);
+    }
+    sel.value = TT.voice;
+  }
   const ttsSave = () => LS.set('ssbtts', JSON.stringify(TT));
   const PHON = { A: 'Alfa', B: 'Bravo', C: 'Charlie', D: 'Delta', E: 'Echo', F: 'Foxtrot', G: 'Golf', H: 'Hotel', I: 'India', J: 'Juliett', K: 'Kilo', L: 'Lima', M: 'Mike',
     N: 'November', O: 'Oscar', P: 'Papa', Q: 'Quebec', R: 'Romeo', S: 'Sierra', T: 'Tango', U: 'Uniform', V: 'Victor', W: 'Whiskey', X: 'X-ray', Y: 'Yankee', Z: 'Zulu' };
@@ -205,7 +252,8 @@
       tx.addEventListener('input', () => { it.text = tx.value; ttsSave(); });
       L.appendChild(row);
     });
-    $('ssTtsV').value = TT.voice;
+    $('ssTtsLang').value = TT.lang;
+    ttsVoices();
     $('ssTtsS').value = TT.speed;
     $('ssTtsSo').textContent = TT.speed + ' mots/min';
     if (TT.gap == null) TT.gap = 70;
@@ -215,7 +263,8 @@
   }
   function ttsCall() {
     const c = txNow();
-    $('ssTtsEx').textContent = c ? c + ' → ' + c.split('').map((x) => (/\d/.test(x) ? DIGW[+x] : PHON[x] || x)).join(' ') : 'TX call inconnu';
+    const dg = TT.lang === 'fr' ? ['Zéro', 'Un', 'Deux', 'Trois', 'Quatre', 'Cinq', 'Six', 'Sept', 'Huit', 'Neuf'] : DIGW;
+    $('ssTtsEx').textContent = c ? c + ' → ' + c.split('').map((x) => (/\d/.test(x) ? dg[+x] : PHON[x] || x)).join(' ') : 'TX call inconnu';
     $('ssTtsGo').textContent = 'GÉNÉRER' + (c ? ' POUR ' + c : '');
   }
   $('ssTtsX').addEventListener('click', () => { $('ssTts').hidden = true; });
@@ -223,7 +272,8 @@
   $('ssTtsV').addEventListener('change', () => { TT.voice = $('ssTtsV').value; ttsSave(); });
   $('ssTtsS').addEventListener('input', () => { TT.speed = Number($('ssTtsS').value); $('ssTtsSo').textContent = TT.speed + ' mots/min'; ttsSave(); });
   $('ssTtsG').addEventListener('input', () => { TT.gap = Number($('ssTtsG').value); $('ssTtsGo2').textContent = TT.gap + ' ms'; ttsSave(); });
-  $('ssTtsDef').addEventListener('click', () => { TT.items = TTS_DEF.map((x) => Object.assign({ on: true }, x)); ttsSave(); ttsDraw(); });
+  $('ssTtsDef').addEventListener('click', () => { TT.items = defItems(TT.lang); ttsSave(); ttsDraw(); });
+  $('ssTtsLang').addEventListener('change', () => { TT.lang = $('ssTtsLang').value === 'fr' ? 'fr' : 'en'; ttsSave(); ttsDraw(); });
   $('ssTtsGo').addEventListener('click', () => {
     if (!host) return toast('Page d’origine fermée.', 'warn');
     const items = TT.items.map((it, i) => ({ n: i + 1, name: it.name, text: it.text, voice: TT.voice, speed: TT.speed, gap: TT.gap == null ? 70 : TT.gap, on: it.on })).filter((x) => x.on !== false && x.text.trim());
