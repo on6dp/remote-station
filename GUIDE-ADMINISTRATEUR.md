@@ -357,7 +357,7 @@ FTX-1 EX030402 à 19, FTDX10 EX030302 à 19, FTDX101 EX030303 à 20.
 
 ### Phonie et contests (TRX SSB)
 
-- Onglet **SSB** de la ligne Activités du dashboard, ou bouton **SSB** de la ligne MODES de la face avant : page **/ssb** (TRX SSB) raccrochée à la page qui l'ouvre, comme le TRX CW, avec le PTT et la ligne SSB CONFIGURATION (micro, égaliseurs, entrée / sortie son). Rien à régler sur le serveur.
+- Onglet **SSB** de la ligne des onglets du dashboard, ou bouton **SSB** de la ligne MODES de la face avant : page **/ssb** (TRX SSB) raccrochée à la page qui l'ouvre, comme le TRX CW, avec le PTT et la ligne SSB CONFIGURATION (micro, égaliseurs, entrée / sortie son). Rien à régler sur le serveur.
 - Indicatifs probables : le serveur télécharge **MASTER.SCP** (supercheckpartial.com) au démarrage s'il manque, puis chaque semaine, dans `refdata/` (jamais sur GitHub). Sans accès à ce site, seuls les indicatifs du log du contest et les spots sont proposés.
 - Score : estimation d'après le règlement de chaque contest (fonctions RULES de `public/js/ssbpage.js`) ; le score officiel reste celui du comité après contrôle des logs.
 - Sans contest, le TRX SSB montre la fiche du carnet (même saisie que Logbooks) ; ses QSO portent le repère « ssbpage » : seule cette page reçoit la réponse (enregistré, doublon).

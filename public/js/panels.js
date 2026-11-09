@@ -14,7 +14,7 @@
   'use strict';
   const NAMES = {
     ant: 'Antenne', rf: 'RF front end', mode: 'Mode', filter: 'Filtre', meters: 'Station meters', vfo: 'VFO', bands: 'Step et bandes',
-    audio: 'RX audio', dsp: 'DSP', tune: 'Accord (tuner)', tx: 'TX', ops: 'Opérateurs', msgs: 'Correspondant'
+    audio: 'RX audio', dsp: 'DSP', tune: 'Accord (tuner)', tx: 'TX', ops: 'Opérateurs', msgs: 'QSO'
   };
   const store = {
     get() { try { return JSON.parse(localStorage.getItem('rs.detached') || '{}') || {}; } catch (e) { return {}; } },

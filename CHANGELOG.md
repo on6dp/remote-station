@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.201** — Dashboard : plus de titre Activités (onglets en tête du cadre), Correspondant devient QSO ; TRX SSB : liste des QSO en phonie hors contest
 - **0.37.200** — TRX SSB : sans contest, liste des QSO en phonie (carnet général) sous la fiche ; en contest, seulement les QSO du contest
 - **0.37.199** — TRX SSB : score estimé par contest et par bande, évolution heure par heure, indicatifs probables (Super Check Partial + spots SSB de la bande), log du contest sur toute la hauteur ; carnet : colonne Contest
 - **0.37.198** — TRX SSB : case Envoyé remplie toute seule (zone, puissance ou n° de série du QSO) ; libellés en blanc gras ; indicatif effacé après le log

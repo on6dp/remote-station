@@ -155,7 +155,7 @@ Your microphone (PC microphone, headset, USB microphone…) is sent to the TRX w
 
 FT8 is the easiest mode to use remotely: everything is done with the mouse and the dashboard handles the sequence just like WSJT-X.
 
-1. Take control. In the **Correspondant** (correspondent) line at the bottom, choose the **TX call**: the club callsign (ON5VL) or your own.
+1. Take control. In the **QSO** line at the bottom, choose the **TX call**: the club callsign (ON5VL) or your own.
 2. `FT8 · FT4 · FT2` tab in the centre, `FT8` button, then choose a band in the frequency list (e.g. "14.074 · 20m"). The TRX goes there by itself, in DATA-U.
 3. Do a `TUNE` (Accord panel), then set a reasonable power (20 to 40 W is plenty for FT8).
 4. Wait one or two 15 s periods: the stations heard appear in **Activité de bande** (band activity). **CQ** calls are in green.
@@ -197,9 +197,9 @@ FT8 is the easiest mode to use remotely: everything is done with the mouse and t
 
 1. **Left column**: Antenne (antenna), RF front end (receive), Mode, Filtres (filters), Station meters (measurements).
 2. **Centre, top**: the two VFO displays (A / MAIN and B / SUB), the **Step** row (tuning step, VFO choice, SPLIT…) and the **band** row.
-3. **Centre, bottom**: « Activités » (activities): tabs Activité, FT8 · FT4 · FT2, SSB, RTTY, WSPR, JT65, JTTY, CW, SSTV (a mode tab opens that mode's page: TRX SSB, TRX CW, or TRX DIGI on that mode), then Logbooks (the dashboard opens on the **logbook**, which stays shown while the modes are in their own pages), the `Log QSO` button and Synchro.
+3. **Centre, bottom**: the tab row (no title above it): Activité, FT8 · FT4 · FT2, SSB, RTTY, WSPR, JT65, JTTY, CW, SSTV (a mode tab opens that mode's page: TRX SSB, TRX CW, or TRX DIGI on that mode), then Logbooks (the dashboard opens on the **logbook**, which stays shown while the modes are in their own pages), the `Log QSO` button and Synchro.
 4. **Right column**: RX audio (listening), DSP (noise reduction), Accord (tuner), TX (PTT and power).
-5. Under the tabs: the **Correspondant** line (the station worked, its reports and the TX call). `Log QSO` is on the tab row, right of Logbooks, followed by `👁 Suivre` (follow the operator). On the right, the **band map** (DX cluster spots), in every mode tab except SSTV.
+5. Under the tabs: the **QSO** line (the station worked, its reports and the TX call). `Log QSO` is on the tab row, right of Logbooks, followed by `👁 Suivre` (follow the operator). On the right, the **band map** (DX cluster spots), in every mode tab except SSTV.
 
 - **Fold a panel**: click its title (for example "DSP"); a second click opens it again. Your choice is remembered.
 - **Separate window**: the `⧉` button of a panel opens it in its own window (section 11).
@@ -442,7 +442,7 @@ Transmitting is only possible if the administrators have enabled it on the serve
 <a id="ssbcontest"></a>
 ### 9.1 Phone and contests: the TRX SSB page
 
-`SSB` tab of the dashboard **Activités** line, or `SSB` button of the front-panel **MODES** line: a separate page (address **/ssb**), attached to the page that opened it (same connection, same control), like TRX CW; with control, the TRX goes to LSB (below 10 MHz) or USB if it was not already in SSB. At the top: TRX frequency and mode (orange outside LSB / USB), who has control (`PRENDRE LA MAIN`), large **RX / TX** lamp. Just below, **phone** as under the front panel: the large `PTT` button (hold, or the space bar when the cursor is not in a box) and the **SSB CONFIGURATION** line (`MICRO`, `EQUALIZER MICRO`, mic level, `EQUALIZER TRX`, `Profil de …`, sound **input** and **output**, `M'ÉCOUTER` and its volume). Switch `MICRO` on in this page to talk from it; the voice goes through the opening page's connection, same safety as the front-panel PTT. The title starts with the **TX call** (callsign used on the air, e.g. "ON5VL TRX SSB"), as in TRX CW.
+`SSB` tab of the dashboard tab row, or `SSB` button of the front-panel **MODES** line: a separate page (address **/ssb**), attached to the page that opened it (same connection, same control), like TRX CW; with control, the TRX goes to LSB (below 10 MHz) or USB if it was not already in SSB. At the top: TRX frequency and mode (orange outside LSB / USB), who has control (`PRENDRE LA MAIN`), large **RX / TX** lamp. Just below, **phone** as under the front panel: the large `PTT` button (hold, or the space bar when the cursor is not in a box) and the **SSB CONFIGURATION** line (`MICRO`, `EQUALIZER MICRO`, mic level, `EQUALIZER TRX`, `Profil de …`, sound **input** and **output**, `M'ÉCOUTER` and its volume). Switch `MICRO` on in this page to talk from it; the voice goes through the opening page's connection, same safety as the front-panel PTT. The title starts with the **TX call** (callsign used on the air, e.g. "ON5VL TRX SSB"), as in TRX CW.
 
 **Without a contest** ("— pas de contest —"): **LOG DU QSO** box, the logbook entry form as in the Logbooks tab (call, UTC date and time, ⟳ Maintenant, frequency and mode from the TRX, ⇩ TRX, RST, TX call, QO-100, name, QTH, locator, power, remark, IOTA / WWFF / POTA / BOTA / LLOTA references, ＋ Ma référence) and `ENREGISTRER LE QSO`: the QSO goes to the general logbook. Dupe questions appear in this page only; the dashboard form is left alone. Below the form, down to the bottom of the page: the **latest phone QSOs outside contests** (SSB, LSB, USB) from the general logbook, newest at the top (date, time, call, band, frequency, reports, name, QTH, country, TX call, operator). In a contest, the page only shows the chosen contest's QSOs (log on the right); they are also in the general logbook, with the contest name in the **Contest** column.
 
@@ -751,7 +751,7 @@ WSPR is used to study propagation: low-power beacons transmit their callsign, lo
       - **Test without the key** (CLÉ → TRX **OFF**): CW station → **USB-serial cable (DSR / CTS)** → `Choisir le port…` → the CH340 → "port open"; a paper clip between pins **4 and 6** gives dots, between **4 and 8** dashes (local sidetone + Key light).
       - **Not suitable** for dual paddles: 4-wire USB "TTL" cables (red +5 V, black GND, green TX, white RX), USB → 3.5 mm "console" jack cables (tip RX, ring TX), and the 6-wire FTDI TTL cable (one CTS input only: straight key only, key between CTS and GND). "USB CW cables with jack" sold to let software key a TRX do the opposite (output to the TRX).
       - **Other options**: a ready-made paddle → USB adapter of the **VBand** or **Vail** type (seen as a keyboard: "USB adapter (left / right Ctrl)"); or an **Arduino Pro Micro** (ATmega32U4) with a jack: ground → GND, dot → A2, dash → A3 (same setting).
-   - **CW spot clicked** in a band map (front-panel BAND MAP, where the mode is written next to the spot, or the digital-modes band map): the TRX tunes to it **in CW**, the **CW** tab is shown and the call goes into **Correspondant** (other station), also in the **CW station** page (in a contest: in the log's **Indicatif** box, dupe checked, ready for Enter), which comes to the front if it is open. `<CALL>` macros use it at once.
+   - **CW spot clicked** in a band map (front-panel BAND MAP, where the mode is written next to the spot, or the digital-modes band map): the TRX tunes to it **in CW**, the **CW** tab is shown and the call goes into the **QSO** box (other station), also in the **CW station** page (in a contest: in the log's **Indicatif** box, dupe checked, ready for Enter), which comes to the front if it is open. `<CALL>` macros use it at once.
    - **Macros and key**: during a macro (F1…), **touching the key stops the macro** and your key takes over the TRX. So you can call CQ with F1 and answer with the key.
    - What you key is shown in the **CW receive** window, in transmit colour like macros (text rebuilt from your dots and dashes, without going through audio decoding).
    - `Esc` stops the transmission; keying resumes at the next press after a short pause.
@@ -793,7 +793,7 @@ QO-100 is a geostationary satellite reached on 2.4 GHz with an up-converter. The
 
 | Field | What it contains |
 |---|---|
-| **Correspondant** (correspondent) | The callsign of the station worked. It fills in by itself when you click a callsign in a tab; you can also type it. |
+| **QSO** (correspondent) | The callsign of the station worked. It fills in by itself when you click a callsign in a tab; you can also type it. |
 | **Nom** (name), **QTH**, **Locator** | First name, town and locator of the correspondent. They are looked up on **QRZ.com** as soon as a new correspondent is chosen (if a QRZ account has been set up by the administrators); only empty boxes are filled. |
 | **RST TX** / **RST RX** | RST TX = report **sent** by the club station; RST RX = report **received** from the correspondent. In FT8 / FT4 / FT2, WSPR and JT65 they are dB (RST RX fills itself in during the sequence); in RTTY, CW, SSTV and JTTY, RST 599. |
 | **TX call** | Callsign for digital transmissions and the logbook: one of the station's (**ON5VL** or **OR0L**, setting `clubCalls`) or yours. Chosen by the operator in control and remembered for next time. Messages Tx1 to Tx6, `<MYCALL>` macros and the logbook form follow it. A QSO logged under your callsign stays in the club logbook, but is not uploaded to the club's online accounts (get it with Exporter → Mes QSO). |
