@@ -56,8 +56,18 @@
             <span class="cwp-dupe" id="cwpDupe"></span>
           </div>
           <div class="ssb-vk">
-            <span class="ssb-vkh">Mémoires vocales <small>F1 à F8 · Échap : arrêt</small></span>
+            <span class="ssb-vkh">Mémoires vocales <small>F1 à F8 · Échap : arrêt</small><button type="button" class="ssb-ttsb" id="ssTtsBtn" title="Messages standard en anglais fabriqués par le serveur, avec votre TX call épelé en alphabet phonétique">🗣 Messages en anglais…</button></span>
             <div class="cwp-macros" id="ssVk"></div>
+            <div class="ssb-tts" id="ssTts" hidden>
+              <p class="cwp-note">Messages dits par la voix de synthèse du serveur (espeak-ng), en anglais. <b>{CALL}</b> = votre TX call, épelé en alphabet phonétique (<span id="ssTtsEx"></span>) ; quand le TX call change, les messages sont refaits tout seuls. Cochez les mémoires à remplacer.</p>
+              <div class="ssb-ttsl" id="ssTtsL"></div>
+              <div class="ssb-ttsr">
+                <label>Voix <select id="ssTtsV"><option value="en-us">anglais US (homme)</option><option value="en-us+f2">anglais US (femme)</option><option value="en-gb">anglais GB (homme)</option><option value="en-gb+f2">anglais GB (femme)</option></select></label>
+                <label>Vitesse <input type="range" id="ssTtsS" min="110" max="180" step="5"><output id="ssTtsSo"></output></label>
+                <button type="button" id="ssTtsDef" title="Remettre les messages proposés">Messages par défaut</button>
+                <button type="button" class="ssb-ttsgo" id="ssTtsGo">GÉNÉRER</button>
+              </div>
+            </div>
             <p class="cwp-note">T1 = CQ, T3 = TU / QRZ, T4 = votre indicatif pour la touche Entrée. Enregistrement : face avant, MENU → VOICE → REC. L’échange (n° de série) se dit au micro avec le PTT ci-dessus.</p>
           </div>
           <div class="ssb-panels">

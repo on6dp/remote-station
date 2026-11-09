@@ -1278,7 +1278,57 @@ function vmSave(call, m) {
   fs.writeFile(path.join(VM_DIR, vmSafe(call) + '.json'), JSON.stringify(m), { mode: 0o600 }, (e) => { if (e) console.error('voicemem : ' + e.message); });
 }
 const vmFile = (call, n) => path.join(VM_DIR, vmSafe(call) + '-T' + n + '.ul');
-function vmSend(conn) { send(conn, { t: 'vm', meta: vmMeta(conn.user.call), playing: vmPlay && vmPlay.conn === conn ? { n: vmPlay.n, rep: !!vmPlay.rep } : null }); }
+function vmSend(conn) { send(conn, { t: 'vm', meta: vmMeta(conn.user.call), tts: ttsGet(conn.user.call), playing: vmPlay && vmPlay.conn === conn ? { n: vmPlay.n, rep: !!vmPlay.rep } : null }); }
+// Messages vocaux en anglais fabriqués par espeak-ng (lib/tts.js) : texte, voix et vitesse gardés pour chaque mémoire
+// (voicemem/<INDICATIF>-tts.json) ; l'indicatif dit est toujours le TX call de l'opérateur : refaits quand il change
+const TTS = require('./lib/tts');
+const ttsFile = (call) => path.join(VM_DIR, vmSafe(call) + '-tts.json');
+function ttsGet(call) { try { const o = JSON.parse(fs.readFileSync(ttsFile(call), 'utf8')); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
+function ttsPut(call, o) { try { fs.mkdirSync(VM_DIR, { recursive: true, mode: 0o700 }); fs.writeFileSync(ttsFile(call), JSON.stringify(o), { mode: 0o600 }); } catch (e) { console.error('tts : ' + e.message); } }
+const ttsBusy = new Map(); // indicatif → Promise en cours (une fabrication à la fois par opérateur)
+function ttsMake(conn, items, quiet) {
+  const call = conn.user.call;
+  const run = async () => {
+    const tc = txCallFor(conn.user);
+    const store = ttsGet(call);
+    const meta = vmMeta(call);
+    let ok = 0;
+    for (const it of items) {
+      const n = Math.round(Number(it.n));
+      if (!(n >= 1 && n <= 8)) continue;
+      if (vmPlay && vmPlay.conn.user.call === call && vmPlay.n === n) continue; // en cours d'émission : au prochain changement
+      try {
+        const r = await TTS.synth(it.text, tc, { voice: it.voice, speed: it.speed });
+        const data = r.data.subarray(0, VM_MAX);
+        fs.mkdirSync(VM_DIR, { recursive: true, mode: 0o700 });
+        fs.writeFileSync(vmFile(call, n), data, { mode: 0o600 });
+        meta.t[n - 1].ms = Math.round(data.length / 12);
+        if (it.name != null) meta.t[n - 1].name = String(it.name || '').replace(/[^\x20-\x7E]/g, '').slice(0, 16);
+        store[n] = { text: String(it.text).slice(0, 300), voice: it.voice || 'en-us', speed: Number(it.speed) || 140, call: tc };
+        ok++;
+      } catch (e) {
+        send(conn, { t: 'notice', level: 'error', msg: 'T' + n + ' : ' + e.message });
+        break;
+      }
+    }
+    ttsPut(call, store);
+    // Noms et durées : écrits d'un coup (vmSave écrit en différé, vmSend relit le fichier)
+    if (ok) { try { fs.writeFileSync(path.join(VM_DIR, vmSafe(call) + '.json'), JSON.stringify(meta), { mode: 0o600 }); } catch (e) { console.error('voicemem : ' + e.message); } }
+    if (ok && !quiet) send(conn, { t: 'notice', level: 'ok', msg: ok + ' mémoire(s) vocale(s) en anglais pour ' + tc + '.' });
+    else if (ok) send(conn, { t: 'notice', level: 'info', msg: 'Mémoires vocales refaites pour le TX call ' + tc + '.' });
+    vmSend(conn);
+  };
+  const prev = ttsBusy.get(call) || Promise.resolve();
+  const p = prev.then(run, run).finally(() => { if (ttsBusy.get(call) === p) ttsBusy.delete(call); });
+  ttsBusy.set(call, p);
+  return p;
+}
+// TX call changé : les messages fabriqués avec l'ancien indicatif sont refaits
+function ttsRefresh(conn) {
+  const store = ttsGet(conn.user.call), tc = txCallFor(conn.user);
+  const items = Object.keys(store).filter((n) => store[n] && store[n].call !== tc).map((n) => Object.assign({ n: Number(n) }, store[n]));
+  return items.length ? ttsMake(conn, items, true) : Promise.resolve();
+}
 // Lecture en cours : { conn, n, buf, tab (gain TX LEVEL), pos, t0, rep, since, wait }
 let vmPlay = null;
 function vmTable(level) {
@@ -1359,6 +1409,7 @@ function onVm(conn, m) {
       if (vmPlay && vmPlay.conn.user.call === call && vmPlay.n === n) vmStop('enregistrement remplacé', true);
       try { fs.mkdirSync(VM_DIR, { recursive: true, mode: 0o700 }); fs.writeFileSync(vmFile(call, n), all, { mode: 0o600 }); } catch (e) { return send(conn, { t: 'notice', level: 'error', msg: 'T' + n + ' : enregistrement impossible sur le serveur' }); }
       const meta = vmMeta(call); meta.t[n - 1].ms = Math.round(all.length / 12); vmSave(call, meta);
+      { const st = ttsGet(call); if (st[n]) { delete st[n]; ttsPut(call, st); } } // enregistrée au micro : plus un message fabriqué
       send(conn, { t: 'notice', level: 'ok', msg: 'T' + n + ' enregistrée (' + (all.length / 12000).toFixed(1) + ' s)' });
       return vmSend(conn);
     }
@@ -1375,6 +1426,7 @@ function onVm(conn, m) {
       if (!okN) return;
       try { fs.unlinkSync(vmFile(call, n)); } catch (e) { /* */ }
       const meta = vmMeta(call); meta.t[n - 1].ms = 0; vmSave(call, meta);
+      { const st = ttsGet(call); if (st[n]) { delete st[n]; ttsPut(call, st); } }
       return vmSend(conn);
     }
     case 'vm_name': {
@@ -1391,7 +1443,27 @@ function onVm(conn, m) {
       if (vmPlay && vmPlay.conn === conn) { vmPlay.tab = vmTable(meta.level); vmPlay.mon = !!meta.mon; vmPlay.repS = meta.rep; } // TX LEVEL réglé pendant l'émission
       return vmSend(conn);
     }
-    case 'vm_play': return okN ? vmStart(conn, n, !!m.rep) : undefined;
+    case 'vm_tts': {
+      // Messages vocaux en anglais (page TRX SSB) : [{ n, text, name, voice, speed }] ; l'indicatif est le TX call
+      if (!conn.user.tx) return send(conn, { t: 'notice', level: 'warn', msg: 'Votre compte est en écoute seule : pas de mémoire vocale' });
+      const items = (Array.isArray(m.items) ? m.items : []).slice(0, 8).filter((it) => it && typeof it.text === 'string' && it.text.trim());
+      if (!items.length) return;
+      ttsMake(conn, items, false);
+      return;
+    }
+    case 'vm_tts_del': {
+      // Mémoire redevenue « enregistrée au micro » ou effacée : plus refaite au changement de TX call
+      if (!okN) return;
+      const st = ttsGet(call); delete st[n]; ttsPut(call, st);
+      return vmSend(conn);
+    }
+    case 'vm_play': {
+      if (!okN) return;
+      // Message fabriqué avec un autre indicatif que le TX call actuel : refait d'abord
+      const st = ttsGet(call)[n];
+      if (st && st.call !== txCallFor(conn.user)) return ttsMake(conn, [Object.assign({ n }, st)], true).then(() => vmStart(conn, n, !!m.rep));
+      return vmStart(conn, n, !!m.rep);
+    }
     case 'vm_stop': if (vmPlay && vmPlay.conn === conn) vmStop('arrêtée'); return;
   }
 }
@@ -3424,6 +3496,7 @@ function onOperator(conn, m) {
       const before = txCallFor(conn.user);
       if (seq && seq.on && controller === conn && before !== want) return send(conn, { t: 'notice', level: 'warn', msg: 'Arrêtez d’abord l’émission automatique en cours (■ Arrêter) pour changer d’indicatif.' });
       txChoice.set(conn.user.call, want);
+      if (before !== want) ttsRefresh(conn); // messages vocaux en anglais : dits avec le nouveau TX call
       return broadcast();
     }
 
@@ -3597,7 +3670,7 @@ function onOperator(conn, m) {
       return;
     }
 
-    case 'vm_list': case 'vm_put': case 'vm_get': case 'vm_del': case 'vm_name': case 'vm_set': case 'vm_play': case 'vm_stop':
+    case 'vm_list': case 'vm_put': case 'vm_get': case 'vm_del': case 'vm_name': case 'vm_set': case 'vm_play': case 'vm_stop': case 'vm_tts': case 'vm_tts_del':
       return onVm(conn, m);
     case 'ptt':
       if (vmPlay && vmPlay.conn === conn && !m.on) return vmStop('arrêtée'); // PTT relâché : arrête la mémoire vocale

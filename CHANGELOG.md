@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.210** — TRX SSB : messages vocaux en anglais (espeak-ng sur le serveur) avec le TX call épelé, refaits quand le TX call change
 - **0.37.209** — TRX SSB et TRX CW : choix du TX CALL dans l'en-tête (émission et carnet, exports) ; titre qui suit le TX call
 - **0.37.208** — TRX SSB : le titre suit le TX call choisi dans la fiche (ON6DP TRX SSB)
 - **0.37.207** — TRX SSB / CW : export ADIF ; PTT rouge à l'émission ; case Prénom retirée de la page SSB ; nouveaux QSO complétés avec QRZ.com (nom, QTH, locator)

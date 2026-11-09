@@ -147,7 +147,7 @@
     const box = $('ssVk');
     const meta = S.vm;
     const pl = S.playing ? S.playing.n : 0;
-    const sig = JSON.stringify(meta) + '|' + pl;
+    const sig = JSON.stringify(meta) + '|' + pl + '|' + JSON.stringify(S.tts || {});
     if (sig === box.dataset.sig) return;
     box.dataset.sig = sig;
     box.textContent = '';
@@ -159,11 +159,76 @@
       b.innerHTML = '<small></small><span></span>';
       b.querySelector('small').textContent = 'F' + n + ' · T' + n + (t && t.ms ? ' · ' + (t.ms / 1000).toFixed(1).replace('.', ',') + ' s' : '');
       b.querySelector('span').textContent = (t && t.name) || (t && t.ms ? 'T' + n : 'vide');
-      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n : 'Mémoire T' + n + ' vide : l’enregistrer sur la face avant (MENU → VOICE → REC)';
+      const tt = S.tts && S.tts[n];
+      if (tt) b.classList.add('tts');
+      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message en anglais, ' + tt.call + ')' : '') : 'Mémoire T' + n + ' vide : l’enregistrer sur la face avant (MENU → VOICE → REC) ou « Messages en anglais »';
       b.addEventListener('click', () => playVm(n));
       box.appendChild(b);
     }
   }
+  // Messages standard en anglais (fabriqués sur le serveur par espeak-ng, TX call épelé)
+  const TTS_DEF = [
+    { name: 'CQ TEST', text: 'CQ contest, CQ contest, this is {CALL}, {CALL}, contest.' },
+    { name: 'CQ', text: 'CQ, CQ, CQ, this is {CALL}, {CALL}, {CALL}, calling CQ and standing by.' },
+    { name: 'TU QRZ', text: 'Thank you, {CALL}, QRZ?' },
+    { name: 'MY CALL', text: '{CALL}' },
+    { name: 'AGN', text: 'Again please?' },
+    { name: 'NR AGN', text: 'Your number again please?' },
+    { name: 'QRL?', text: 'Is this frequency in use? This is {CALL}.' },
+    { name: '73', text: 'Thank you for the QSO, 73, {CALL} clear.' }
+  ];
+  function ttsLoad() {
+    let o = null;
+    try { o = JSON.parse(LS.get('ssbtts', 'null')); } catch (e) { o = null; }
+    if (!o || !Array.isArray(o.items) || o.items.length !== 8) o = { items: TTS_DEF.map((x) => Object.assign({ on: true }, x)), voice: 'en-us', speed: 140 };
+    return o;
+  }
+  const TT = ttsLoad();
+  const ttsSave = () => LS.set('ssbtts', JSON.stringify(TT));
+  const PHON = { A: 'Alfa', B: 'Bravo', C: 'Charlie', D: 'Delta', E: 'Echo', F: 'Foxtrot', G: 'Golf', H: 'Hotel', I: 'India', J: 'Juliett', K: 'Kilo', L: 'Lima', M: 'Mike',
+    N: 'November', O: 'Oscar', P: 'Papa', Q: 'Quebec', R: 'Romeo', S: 'Sierra', T: 'Tango', U: 'Uniform', V: 'Victor', W: 'Whiskey', X: 'X-ray', Y: 'Yankee', Z: 'Zulu' };
+  const DIGW = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+  const txNow = () => { const st = api.state(); return String((st && st.txCall) || '').toUpperCase(); };
+  function ttsDraw() {
+    const L = $('ssTtsL');
+    L.textContent = '';
+    TT.items.forEach((it, i) => {
+      const row = document.createElement('div');
+      row.className = 'ssb-ttsi';
+      row.innerHTML = '<label><input type="checkbox"> T' + (i + 1) + '</label><input class="nm" maxlength="16" spellcheck="false"><input class="tx" maxlength="200" spellcheck="false">';
+      const [cb, nm, tx] = row.querySelectorAll('input');
+      cb.checked = it.on !== false;
+      nm.value = it.name;
+      tx.value = it.text;
+      cb.addEventListener('change', () => { it.on = cb.checked; ttsSave(); });
+      nm.addEventListener('input', () => { it.name = nm.value.toUpperCase(); ttsSave(); });
+      tx.addEventListener('input', () => { it.text = tx.value; ttsSave(); });
+      L.appendChild(row);
+    });
+    $('ssTtsV').value = TT.voice;
+    $('ssTtsS').value = TT.speed;
+    $('ssTtsSo').textContent = TT.speed + ' mots/min';
+    ttsCall();
+  }
+  function ttsCall() {
+    const c = txNow();
+    $('ssTtsEx').textContent = c ? c + ' → ' + c.split('').map((x) => (/\d/.test(x) ? DIGW[+x] : PHON[x] || x)).join(' ') : 'TX call inconnu';
+    $('ssTtsGo').textContent = 'GÉNÉRER' + (c ? ' POUR ' + c : '');
+  }
+  $('ssTtsBtn').addEventListener('click', () => { const p = $('ssTts'); p.hidden = !p.hidden; if (!p.hidden) ttsDraw(); });
+  $('ssTtsV').addEventListener('change', () => { TT.voice = $('ssTtsV').value; ttsSave(); });
+  $('ssTtsS').addEventListener('input', () => { TT.speed = Number($('ssTtsS').value); $('ssTtsSo').textContent = TT.speed + ' mots/min'; ttsSave(); });
+  $('ssTtsDef').addEventListener('click', () => { TT.items = TTS_DEF.map((x) => Object.assign({ on: true }, x)); ttsSave(); ttsDraw(); });
+  $('ssTtsGo').addEventListener('click', () => {
+    if (!host) return toast('Page d’origine fermée.', 'warn');
+    const items = TT.items.map((it, i) => ({ n: i + 1, name: it.name, text: it.text, voice: TT.voice, speed: TT.speed, on: it.on })).filter((x) => x.on !== false && x.text.trim());
+    if (!items.length) return toast('Cochez au moins une mémoire.', 'warn');
+    const busy = items.filter((x) => vmFilled(x.n) && !(S.tts && S.tts[x.n])).map((x) => 'T' + x.n);
+    if (busy.length && !window.confirm('Remplacer ' + busy.join(', ') + ' (enregistrées au micro) par les messages en anglais ?')) return;
+    api.send({ t: 'vm_tts', items: items.map(({ on, ...x }) => x) });
+    toast('Fabrication des messages pour ' + txNow() + '…', '', 4000);
+  });
+  setInterval(() => { if (!$('ssTts').hidden) ttsCall(); }, 1000);
   function vmFilled(n) { const t = S.vm && S.vm.t && S.vm.t[n - 1]; return !!(t && t.ms); }
   function playVm(n) {
     if (!host) return toast('Dashboard non raccroché.', 'warn');
@@ -656,7 +721,7 @@
   // ------------------------------------------------------------------ messages du serveur, état
   function onMsg(m) {
     if (!m || typeof m !== 'object') return;
-    if (m.t === 'vm') { S.vm = m.meta || null; S.playing = m.playing || null; drawVk(); }
+    if (m.t === 'vm') { S.vm = m.meta || null; S.tts = m.tts || {}; S.playing = m.playing || null; drawVk(); }
     else if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && VX) VX.onMessage(m);
     else if (m.t === 'hello') { if (VX) VX.onHello(m); if (LOG && LOG.mounted) LOG.onHello(m); }
     else if (m.t === 'state') { if (VX) VX.onState(); if (LOG && LOG.mounted) LOG.onState(); if (P.held && !api.iControl()) pttUp(); }
