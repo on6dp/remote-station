@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.223** — Cartes de bande à gauche : TRX CW (spots CW), TRX SSB (spots phonie), TRX DIGI ; clic = indicatif + QSY ; CW DTR sans début perdu
 - **0.37.222** — CW par DTR : plus de premiers signes perdus (0,5 s de mise en place du TRX au premier message), PC KEYING gardé 90 s entre les messages (départ immédiat)
 - **0.37.221** — TRX CW et TRX SSB : les deux VFO (SPLIT, A⇄B, A→B, B = A ±kHz) ; sans SPLIT, seulement le VFO actif
 - **0.37.220** — TRX CW et TRX SSB : les deux VFO côte à côte (SPLIT, A⇄B, A→B, écart B = A ±kHz, fréquence par VFO)

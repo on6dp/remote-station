@@ -2417,11 +2417,13 @@
       const zf = (window.RSZOOM && window.RSZOOM.z()) || 1;
       const x0 = e.clientX, w0 = $('bandMap').getBoundingClientRect().width / zf;
       document.body.classList.add('bm-resizing');
-      const mv = (ev) => setW(w0 - (ev.clientX - x0) / zf, false);
+      // Page TRX DIGI : carte à gauche, poignée sur son bord droit (sens inversé)
+      const sg = document.body.classList.contains('digi-popup') && !$('centerPanel').classList.contains('bm-dual') ? -1 : 1;
+      const mv = (ev) => setW(w0 - sg * (ev.clientX - x0) / zf, false);
       const up = (ev) => {
         grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up);
         document.body.classList.remove('bm-resizing');
-        setW(w0 - (ev.clientX - x0) / zf, true);
+        setW(w0 - sg * (ev.clientX - x0) / zf, true);
       };
       grip.addEventListener('pointermove', mv);
       grip.addEventListener('pointerup', up);

@@ -19,6 +19,9 @@
     <div class="cwp-txbig" id="cwpTx">RX</div>
   </header>
   <p class="cwp-orphan" id="cwpOrphan" hidden>Cette page doit être ouverte depuis le dashboard (onglet CW → bouton « TRX CW »). Si le dashboard a été fermé, rouvrez-le : cette page s’y raccrochera.</p>
+  <div class="cwp-wrap">
+  <!-- Carte de bande (spots du DX cluster) de la bande du TRX, à gauche -->
+  <aside class="cwp-box xbm-box" id="xBm" aria-label="Carte de bande"></aside>
   <main class="cwp-main">
     <div id="cwpKey" class="cwp-grid3"></div>
     <!-- Les deux VFO (TRX à deux VFO) : SPLIT, réception sur l'un, émission sur l'autre -->
@@ -71,6 +74,7 @@
       <pre class="rt-rx cwp-rxtxt" id="cwpRx"></pre>
     </section>
   </main>
+  </div>
   <footer class="cwp-foot">
     <span id="cwpLink">Liaison : —</span>
     <span id="cwpRtt">Aller-retour : —</span>
@@ -81,6 +85,7 @@
   <p class="dg-toast" id="cwpToast" role="status"></p>
 <script src="/js/paddle.js"></script>
 <script src="/js/vfobox.js"></script>
+<script src="/js/bandmap-lite.js"></script>
 <script src="/js/cwpage.js"></script>
 </body>
 </html>

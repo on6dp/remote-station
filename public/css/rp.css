@@ -2038,3 +2038,36 @@ body.cwp-body:not(.ssb-body) .cwp-main > .cwp-rx { flex: 1 1 220px; min-height: 
 .vfb.single { grid-template-columns: minmax(0, 1fr) auto; }
 .vfb-col[hidden] { display: none; }
 .vfb.single .vfb-mid { order: 1; }
+/* Pages TRX CW / TRX SSB : carte de bande à gauche */
+.cwp-wrap { flex: 1 1 auto; display: flex; min-height: 0; gap: 0; }
+.cwp-wrap > .cwp-main { flex: 1 1 auto; min-width: 0; }
+.xbm-box { width: 200px; flex: 0 0 200px; margin: 8px 0 8px 12px; padding: 6px 6px 4px; gap: 4px; }
+.xbm-h { display: flex; align-items: baseline; gap: 8px; }
+.xbm-band { font-size: 20px; font-weight: 800; color: #ffd400; }
+.xbm-t { color: #fff; font-weight: 800; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+.xbm-t small { color: #3fd07f; margin-left: 4px; }
+.xbm-r { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #c9d4e0; }
+.xbm-r span { flex: 1; text-align: center; font-family: 'Roboto Mono', ui-monospace, monospace; }
+.xbm-r button { background: #121d2c; color: #fff; border: 1px solid var(--v2-border); border-radius: 4px; width: 24px; padding: 1px 0; cursor: pointer; font-weight: 800; }
+.xbm-b { position: relative; flex: 1 1 auto; min-height: 260px; border: 1px solid var(--v2-border-dark); border-radius: 4px; background: #070b11; overflow: hidden; }
+.xbm-sc { position: absolute; left: 0; top: 0; bottom: 0; width: 46px; border-right: 1px solid #1d2a3a; }
+.xbm-sc span { position: absolute; left: 2px; transform: translateY(-50%); font: 10px 'Roboto Mono', ui-monospace, monospace; color: #7d8b9c; }
+.xbm-sc span::after { content: ''; position: absolute; left: 40px; top: 50%; width: 6px; border-top: 1px solid #3a4658; }
+.xbm-l { position: absolute; left: 46px; right: 0; top: 0; bottom: 0; }
+.xbm-s { position: absolute; left: 10px; right: 2px; height: 16px; display: flex; align-items: center; gap: 4px; padding: 0 4px; background: transparent; border: 0; color: #fff; cursor: pointer; text-align: left; font: 12px 'Roboto Mono', ui-monospace, monospace; }
+.xbm-s em { position: absolute; left: -10px; width: 9px; height: 0; border-top: 1px solid #3fd07f; }
+.xbm-s b { font-weight: 800; color: #3fd07f; }
+.xbm-s small { color: #7d8b9c; font-size: 10px; margin-left: auto; }
+.xbm-s:hover { background: #142236; }
+.xbm-s.dup b { color: #ff7b72; text-decoration: line-through; }
+.xbm-s.dup em { border-color: #ff7b72; }
+.xbm-s.old { opacity: .6; }
+.xbm-trx { position: absolute; left: 0; right: 0; height: 0; border-top: 2px solid #ff4d3f; pointer-events: none; }
+.xbm-trx::before { content: 'TRX'; position: absolute; right: 2px; top: -13px; font: 800 9px/1 sans-serif; color: #ff4d3f; }
+.xbm-trx[hidden] { display: none; }
+.xbm-f { font-size: 10.5px; color: #7d8b9c; text-align: center; }
+@media (max-width: 900px) { .xbm-box { display: none; } }
+/* Page TRX DIGI : carte de bande à gauche (une seule carte) */
+body.digi-popup #centerPanel.bm-on:not(.bm-dual) > :not(.panel-h):not(.bm) { margin-right: 0; margin-left: var(--bm-w); }
+body.digi-popup #centerPanel:not(.bm-dual) > .bm:not(.bm-b) { right: auto; left: 0; border-left: 0; border-right: 1px solid var(--v2-border-dark); border-radius: var(--v2-panel-radius) 0 0 var(--v2-panel-radius); }
+body.digi-popup #centerPanel:not(.bm-dual) > .bm .bm-grip { left: auto; right: 0; }

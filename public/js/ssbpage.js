@@ -888,6 +888,16 @@
   $('cwpTake').addEventListener('click', () => api.send({ t: 'take' }));
   // Les deux VFO (SPLIT) : même main et mêmes commandes que le dashboard
   if (window.RSVFOBOX) window.RSVFOBOX.mount($('cwpVfo'), { api, toast });
+  // Carte de bande à gauche : spots SSB de la bande du TRX ; clic = indicatif + TRX sur la fréquence du spot (avec la main)
+  if (window.RSBMAP) window.RSBMAP.mount($('xBm'), { api, kit, mode: 'SSB',
+    worked: (call, band) => (CL.id && CL.items.some((q) => q.call === call && q.band === band) ? 'dup' : ''),
+    onPick: (call, s) => {
+      const k = kit();
+      if (k) k.setCall(call);
+      if (api.iControl() && host && host.api.setFreq) {
+        try { host.api.setFreq(Math.round(s.f * 1000)); setTimeout(() => { try { if (hostWin.RSDIGI) hostWin.RSDIGI.modeFor('ssb'); } catch (e) {} }, 500); } catch (e) {}
+      } else if (!api.iControl()) toast('Indicatif repris ; prenez la main pour aller sur sa fréquence.', 'warn', 4000);
+    } });
   // TX CALL : indicatif d'émission (et des QSO enregistrés), comme dans la page TRX DIGI ; avec la main
   function drawTxCall() {
     const sel = $('cwpTxCall');
