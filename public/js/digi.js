@@ -116,7 +116,7 @@
   }
   function openLogWin() {
     if (logWin && !logWin.closed) { try { logWin.focus(); } catch (e) { /* */ } return; }
-    logWin = window.open(FACEP + '/log.html', 'rs-log', 'width=1500,height=900');
+    logWin = window.open(FACEP + '/log.html', 'rs-log', (window.RSWINPOS ? RSWINPOS.feat('rs-log', 1500, 900) : 'width=1500,height=900'));
     if (!logWin && api) api.say('Le navigateur a bloqué la fenêtre du carnet : autorisez les fenêtres (pop-up) pour ce site.', 'warn', 6000);
   }
   const HOST = !POPUP || EMBED; // page qui peut ouvrir la fenêtre séparée (dashboard ou face avant)
@@ -4934,7 +4934,7 @@
   // Pages des modes (onglets du dashboard, ligne MODES de la face avant)
   const PAGE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'cw', 'sstv'];
   function popWin(url, name, w, h) {
-    const x = window.open(url, name, 'width=' + w + ',height=' + h);
+    const x = window.open(url, name, window.RSWINPOS ? RSWINPOS.feat(name, w, h) : 'width=' + w + ',height=' + h);
     if (!x) { if (api) api.say('Fenêtre bloquée par le navigateur : autorisez les fenêtres pop-up pour ce site.', 'warn', 6000); return null; }
     try { x.focus(); } catch (e) {}
     return x;
@@ -5252,7 +5252,7 @@
         if (POPUP && !EMBED) return window.close();
         // La fenêtre séparée s'ouvre sur le mode affiché
         if (MODE_TABS.indexOf(tab) >= 0) store.set('ptab', tab);
-        const w = window.open(FACEP ? FACEP + '/digi.html' : '/digi.html', 'rs-digi', 'width=1200,height=860');
+        const w = window.open(FACEP ? FACEP + '/digi.html' : '/digi.html', 'rs-digi', (window.RSWINPOS ? RSWINPOS.feat('rs-digi', 1200, 860) : 'width=1200,height=860'));
         if (!w) api.say('Fenêtre bloquée par Chrome : autorisez les fenêtres pop-up pour ce site.', 'warn');
       });
       $('dgBack').addEventListener('click', () => { if (window.RSHOST) window.RSHOST.closePopup(); });

@@ -1214,7 +1214,7 @@
     return e.returnValue;
   });
   window.addEventListener('pagehide', () => core.stop());
-  $('btnDash').addEventListener('click', () => window.open('/', 'rs-dashboard', 'width=1400,height=900'));
+  $('btnDash').addEventListener('click', () => window.open('/', 'rs-dashboard', (window.RSWINPOS ? RSWINPOS.feat('rs-dashboard', 1400, 900) : 'width=1400,height=900')));
 
   // ------------------------------------------------------------ démarrage
   // Une seule page Station par navigateur : un 2e onglet /station ne se connecte pas (il volerait la place du premier)

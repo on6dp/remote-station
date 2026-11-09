@@ -2087,3 +2087,5 @@ label.spotlog { display: inline-flex !important; flex-direction: row !important;
 .dg-chk.spotlog { font-weight: inherit; font-size: inherit; color: inherit; }
 .dg-chk.spotlog.on { color: #6cc0ff; }
 .lg-row label.spotlog input { width: auto; padding: 0; }
+/* Fenêtre TRX DIGI : toujours défilable (le grand écran du dashboard bloque le défilement de la page) */
+html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-body { overflow-y: auto !important; }

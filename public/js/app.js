@@ -1902,7 +1902,7 @@
       // Fenêtre déjà ouverte depuis ce dashboard : on la remet devant ; sinon nouvelle fenêtre (pas un onglet)
       if (w && !w.closed) { try { w.focus(); } catch (x) { /* fenêtre d'un autre site */ } }
       else {
-        const nw = window.open(url, 'rs-dxc-' + dxcName(url).replace(/\W/g, '-'), 'popup=yes,width=' + Math.min(1600, screen.availWidth) + ',height=' + Math.min(1000, screen.availHeight));
+        const nw = window.open(url, 'rs-dxc-' + dxcName(url).replace(/\W/g, '-'), 'popup=yes,' + (window.RSWINPOS ? RSWINPOS.feat('rs-dxc-' + dxcName(url).replace(/\W/g, '-'), Math.min(1600, screen.availWidth), Math.min(1000, screen.availHeight)) : 'width=' + Math.min(1600, screen.availWidth) + ',height=' + Math.min(1000, screen.availHeight)));
         if (nw) dxcWin[url] = nw; else window.open(url, '_blank'); // fenêtres surgissantes bloquées : onglet
       }
       if (!iControl()) say('Cluster ouvert : prenez la main pour que ses spots calent le TRX.', 'warn', 6000);

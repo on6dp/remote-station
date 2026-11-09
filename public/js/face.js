@@ -6029,7 +6029,7 @@
   function dxcOpen(url) {
     const w = DXC.win[url];
     if (w && !w.closed) { try { w.focus(); } catch (x) { /* autre site */ } return; }
-    const nw = window.open(url, 'rs-dxc-' + dxcName(url).replace(/\W/g, '-'), 'popup=yes,width=' + Math.min(1600, screen.availWidth) + ',height=' + Math.min(1000, screen.availHeight));
+    const nw = window.open(url, 'rs-dxc-' + dxcName(url).replace(/\W/g, '-'), 'popup=yes,' + (window.RSWINPOS ? RSWINPOS.feat('rs-dxc-' + dxcName(url).replace(/\W/g, '-'), Math.min(1600, screen.availWidth), Math.min(1000, screen.availHeight)) : 'width=' + Math.min(1600, screen.availWidth) + ',height=' + Math.min(1000, screen.availHeight)));
     if (nw) DXC.win[url] = nw; else window.open(url, '_blank');
   }
   function dxcSpotMode(m, khz) {
@@ -6339,7 +6339,7 @@
     if (digiWin && !digiWin.closed) {
       try { if (digiWin.RSDIGI && digiWin.RSDIGI.goTab) digiWin.RSDIGI.goTab(tab, mode); digiWin.focus(); return; } catch (e) { /* fenêtre en cours de chargement */ }
     }
-    digiWin = window.open('/' + MODEL + '/digi.html', 'rs-digi', 'width=1200,height=860');
+    digiWin = window.open('/' + MODEL + '/digi.html', 'rs-digi', (window.RSWINPOS ? RSWINPOS.feat('rs-digi', 1200, 860) : 'width=1200,height=860'));
     if (!digiWin) return say('Fenêtre bloquée par le navigateur : autorisez les fenêtres pop-up pour ce site.', 'warn', 6000);
     try {
       // Fenêtre déjà ouverte (rouverte par son nom, sans rechargement) : elle passe sur l'onglet demandé
@@ -6349,7 +6349,7 @@
   }
   $('digiBtn').addEventListener('click', () => {
     if (digiWin && !digiWin.closed) { try { digiWin.focus(); } catch (e) {} return; } // déjà ouverte : pas de rechargement
-    const w = window.open('/' + MODEL + '/digi.html', 'rs-digi', 'width=1200,height=860'); // modes numériques de la face avant FTDX101
+    const w = window.open('/' + MODEL + '/digi.html', 'rs-digi', (window.RSWINPOS ? RSWINPOS.feat('rs-digi', 1200, 860) : 'width=1200,height=860')); // modes numériques de la face avant FTDX101
     if (!w) say('Fenêtre bloquée par le navigateur : autorisez les fenêtres pop-up pour ce site.', 'warn', 6000);
     else { digiWin = w; try { w.focus(); } catch (e) {} }
   });

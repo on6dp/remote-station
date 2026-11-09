@@ -504,7 +504,7 @@
       }
     });
     if (q('.cwk-open')) q('.cwk-open').addEventListener('click', () => {
-      const w = win.open('/cw.html', 'rs-cwpage', 'width=1240,height=860');
+      const w = win.open('/cw.html', 'rs-cwpage', (win.RSWINPOS || window.RSWINPOS) ? (win.RSWINPOS || window.RSWINPOS).feat('rs-cwpage', 1240, 860) : 'width=1240,height=860');
       if (w) try { w.focus(); } catch (e) {}
     });
     if (q('.cwk-cfg')) q('.cwk-cfg').addEventListener('click', () => {

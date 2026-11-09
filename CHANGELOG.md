@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.228** — Fenêtres TRX DIGI / CW / SSB / carnet : place et taille gardées d'une ouverture à l'autre ; fenêtre TRX DIGI (et CW / SSB) toujours défilable sur grand écran
 - **0.37.227** — Page TRX CW en contest : « Envoyé » rempli tout seul (report / échange fixe ou n° de série du QSO, +1 à chaque QSO enregistré) ; RTTY : fiche de log avec l'échange envoyé et n° de série +1 à l'enregistrement
 - **0.37.226** — Spot au DX cluster au moment de loguer le QSO (case « Spot cluster » des pages TRX SSB, TRX CW, TRX DIGI et du carnet), sous l'indicatif de l'opérateur ; stations FT8/FT4/FT2 décodées envoyées à PSK Reporter ; page CW : indicatifs probables ; DUPE clignotant à la place de « nouveau / DOUBLON »
 - **0.37.225** — TRX CW : n° de série suivant à l'enregistrement du QSO seulement si l'échange contient un n° de série
