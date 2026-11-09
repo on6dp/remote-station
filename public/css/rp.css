@@ -2003,3 +2003,5 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .cwp-macro.ssb-vm.tts small { color: #8ab8ff; }
 .ssb-ttsv { padding-bottom: 4px; border-bottom: 1px solid #1d2a3a; }
 .ssb-ttsr label, .ssb-ttsr output { white-space: nowrap; }
+.ssb-pron summary { color: #fff; font-weight: 800; font-size: 12px; cursor: pointer; }
+.ssb-pron textarea { width: 100%; box-sizing: border-box; background: #07090d; color: #fff; border: 1px solid var(--v2-border); border-radius: 4px; padding: 4px 6px; font-family: 'Roboto Mono', ui-monospace, monospace; font-size: 12px; }

@@ -67,6 +67,10 @@
                 <label>Vitesse <input type="range" id="ssTtsS" min="100" max="320" step="5"><output id="ssTtsSo"></output></label>
                 <label title="Petite pause entre les mots épelés de l’indicatif (alphabet phonétique)">Espacement des lettres <input type="range" id="ssTtsG" min="0" max="300" step="10"><output id="ssTtsGo2"></output></label>
               </div>
+              <details class="ssb-pron"><summary>Prononciations</summary>
+                <p class="cwp-note">Un mot par ligne, « mot=dit comme » : par exemple <code>Romeo=Roméo</code> ou <code>Mike=Maïk</code>. Gardées pour chaque langue ; en français, l'alphabet international est déjà adapté (Roméo, Zoulou, Québec…). <b>▶ Écouter</b> pour vérifier.</p>
+                <textarea id="ssTtsP" rows="3" spellcheck="false"></textarea>
+              </details>
               <div class="ssb-ttsl" id="ssTtsL"></div>
               <div class="ssb-ttsr">
                 <button type="button" id="ssTtsDef" title="Remettre les messages proposés">Messages par défaut</button>

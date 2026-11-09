@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.217 | [RemoteStation-Setup-0.37.217.exe](0.37.217/RemoteStation-Setup-0.37.217.exe) | [remote-station-0.37.217.tar.gz](0.37.217/remote-station-0.37.217.tar.gz) | Nouvelles voix, prononciations — [empreintes SHA-256](0.37.217/SHA256SUMS.txt) |
 | 0.37.216 | [RemoteStation-Setup-0.37.216.exe](0.37.216/RemoteStation-Setup-0.37.216.exe) | [remote-station-0.37.216.tar.gz](0.37.216/remote-station-0.37.216.tar.gz) | Voix naturelles Piper — [empreintes SHA-256](0.37.216/SHA256SUMS.txt) |
 | 0.37.215 | [RemoteStation-Setup-0.37.215.exe](0.37.215/RemoteStation-Setup-0.37.215.exe) | [remote-station-0.37.215.tar.gz](0.37.215/remote-station-0.37.215.tar.gz) | Messages vocaux en français — [empreintes SHA-256](0.37.215/SHA256SUMS.txt) |
 | 0.37.214 | [RemoteStation-Setup-0.37.214.exe](0.37.214/RemoteStation-Setup-0.37.214.exe) | [remote-station-0.37.214.tar.gz](0.37.214/remote-station-0.37.214.tar.gz) | Espacement des lettres — [empreintes SHA-256](0.37.214/SHA256SUMS.txt) |

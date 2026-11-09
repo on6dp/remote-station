@@ -1287,6 +1287,8 @@ const TTS = require('./lib/tts');
 const ttsFile = (call) => path.join(VM_DIR, vmSafe(call) + '-tts.json');
 function ttsGet(call) { try { const o = JSON.parse(fs.readFileSync(ttsFile(call), 'utf8')); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
 function ttsPut(call, o) { try { fs.mkdirSync(VM_DIR, { recursive: true, mode: 0o700 }); fs.writeFileSync(ttsFile(call), JSON.stringify(o), { mode: 0o600 }); } catch (e) { console.error('tts : ' + e.message); } }
+// Prononciations de l'opérateur { mot: dit comme } : 60 au plus, gardées avec le message
+const ttsPron = (o) => (o && typeof o === 'object' && !Array.isArray(o) ? Object.fromEntries(Object.entries(o).slice(0, 60).map(([k, v]) => [String(k).slice(0, 40), String(v).slice(0, 60)])) : undefined);
 const ttsBusy = new Map(); // indicatif → Promise en cours (une fabrication à la fois par opérateur)
 function ttsMake(conn, items, quiet) {
   const call = conn.user.call;
@@ -1300,13 +1302,13 @@ function ttsMake(conn, items, quiet) {
       if (!(n >= 1 && n <= 8)) continue;
       if (vmPlay && vmPlay.conn.user.call === call && vmPlay.n === n) continue; // en cours d'émission : au prochain changement
       try {
-        const r = await TTS.synth(it.text, tc, { voice: it.voice, speed: it.speed, gap: it.gap });
+        const r = await TTS.synth(it.text, tc, { voice: it.voice, speed: it.speed, gap: it.gap, pron: it.pron });
         const data = r.data.subarray(0, VM_MAX);
         fs.mkdirSync(VM_DIR, { recursive: true, mode: 0o700 });
         fs.writeFileSync(vmFile(call, n), data, { mode: 0o600 });
         meta.t[n - 1].ms = Math.round(data.length / 12);
         if (it.name != null) meta.t[n - 1].name = String(it.name || '').replace(/[^\x20-\x7E]/g, '').slice(0, 16);
-        store[n] = { text: String(it.text).slice(0, 300), voice: it.voice || 'en-us', speed: Number(it.speed) || 160, gap: Number.isFinite(Number(it.gap)) ? Number(it.gap) : 70, call: tc };
+        store[n] = { text: String(it.text).slice(0, 300), voice: it.voice || 'en-us', speed: Number(it.speed) || 160, gap: Number.isFinite(Number(it.gap)) ? Number(it.gap) : 70, pron: ttsPron(it.pron), call: tc };
         ok++;
       } catch (e) {
         send(conn, { t: 'notice', level: 'error', msg: 'T' + n + ' : ' + e.message });
@@ -1459,7 +1461,7 @@ function onVm(conn, m) {
       if (typeof m.text !== 'string' || !m.text.trim()) return;
       if (conn.ttsTryAt && Date.now() - conn.ttsTryAt < 1500) return;
       conn.ttsTryAt = Date.now();
-      TTS.synth(m.text, txCallFor(conn.user), { voice: m.voice, speed: m.speed, gap: m.gap })
+      TTS.synth(m.text, txCallFor(conn.user), { voice: m.voice, speed: m.speed, gap: m.gap, pron: ttsPron(m.pron) })
         .then((r) => send(conn, { t: 'tts_audio', d: r.data.subarray(0, 12000 * 15).toString('base64'), words: r.words }))
         .catch((e) => send(conn, { t: 'notice', level: 'error', msg: 'Voix : ' + e.message }));
       return;

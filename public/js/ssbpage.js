@@ -160,8 +160,8 @@
       b.querySelector('small').textContent = 'F' + n + ' · T' + n + (t && t.ms ? ' · ' + (t.ms / 1000).toFixed(1).replace('.', ',') + ' s' : '');
       b.querySelector('span').textContent = (t && t.name) || (t && t.ms ? 'T' + n : 'vide');
       const tt = S.tts && S.tts[n];
-      if (tt) { b.classList.add('tts'); b.querySelector('small').textContent += ' · ' + (/^(piper:)?fr/.test(tt.voice || '') ? 'FR' : 'EN'); }
-      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message de synthèse ' + (/^(piper:)?fr/.test(tt.voice || '') ? 'en français' : 'en anglais') + ', ' + tt.call + ')' : '') : 'Mémoire T' + n + ' vide : l’enregistrer sur la face avant (MENU → VOICE → REC) ou « Messages vocaux »';
+      if (tt) { b.classList.add('tts'); b.querySelector('small').textContent += ' · ' + (/^(piper:)?fr/i.test(tt.voice || '') ? 'FR' : 'EN'); }
+      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message de synthèse ' + (/^(piper:)?fr/i.test(tt.voice || '') ? 'en français' : 'en anglais') + ', ' + tt.call + ')' : '') : 'Mémoire T' + n + ' vide : l’enregistrer sur la face avant (MENU → VOICE → REC) ou « Messages vocaux »';
       b.addEventListener('click', () => playVm(n));
       box.appendChild(b);
     }
@@ -263,6 +263,8 @@
       L.appendChild(row);
     });
     $('ssTtsLang').value = TT.lang;
+    TT.pron = TT.pron || {};
+    $('ssTtsP').value = TT.pron[TT.lang] || '';
     ttsVoices();
     $('ssTtsS').value = TT.speed;
     $('ssTtsSo').textContent = TT.speed + ' mots/min';
@@ -282,11 +284,21 @@
   $('ssTtsV').addEventListener('change', () => { TT.voice = $('ssTtsV').value; ttsSave(); });
   $('ssTtsS').addEventListener('input', () => { TT.speed = Number($('ssTtsS').value); $('ssTtsSo').textContent = TT.speed + ' mots/min'; ttsSave(); });
   $('ssTtsG').addEventListener('input', () => { TT.gap = Number($('ssTtsG').value); $('ssTtsGo2').textContent = TT.gap + ' ms'; ttsSave(); });
+  $('ssTtsP').addEventListener('input', () => { TT.pron = TT.pron || {}; TT.pron[TT.lang] = $('ssTtsP').value; ttsSave(); });
+  // « mot=dit comme », une ligne par mot
+  function pronObj() {
+    const o = {};
+    for (const line of String((TT.pron && TT.pron[TT.lang]) || '').split(/\n/)) {
+      const m = /^\s*([^=]{1,40}?)\s*=\s*(.{1,60}?)\s*$/.exec(line);
+      if (m) o[m[1]] = m[2];
+    }
+    return o;
+  }
   $('ssTtsDef').addEventListener('click', () => { TT.items = defItems(TT.lang); ttsSave(); ttsDraw(); });
   $('ssTtsLang').addEventListener('change', () => { TT.lang = $('ssTtsLang').value === 'fr' ? 'fr' : 'en'; ttsSave(); ttsDraw(); });
   $('ssTtsGo').addEventListener('click', () => {
     if (!host) return toast('Page d’origine fermée.', 'warn');
-    const items = TT.items.map((it, i) => ({ n: i + 1, name: it.name, text: it.text, voice: TT.voice, speed: TT.speed, gap: TT.gap == null ? 70 : TT.gap, on: it.on })).filter((x) => x.on !== false && x.text.trim());
+    const items = TT.items.map((it, i) => ({ n: i + 1, name: it.name, text: it.text, voice: TT.voice, speed: TT.speed, gap: TT.gap == null ? 70 : TT.gap, pron: pronObj(), on: it.on })).filter((x) => x.on !== false && x.text.trim());
     if (!items.length) return toast('Cochez au moins une mémoire.', 'warn');
     const busy = items.filter((x) => vmFilled(x.n) && !(S.tts && S.tts[x.n])).map((x) => 'T' + x.n);
     if (busy.length && !window.confirm('Remplacer ' + busy.join(', ') + ' (enregistrées au micro) par les messages en anglais ?')) return;
@@ -299,7 +311,7 @@
   $('ssTtsTry').addEventListener('click', () => {
     if (!host) return toast('Page d’origine fermée.', 'warn');
     const it = TT.items.find((x) => x.on !== false && x.text.trim()) || TT.items[0];
-    api.send({ t: 'vm_tts_try', text: it.text, voice: TT.voice, speed: TT.speed, gap: TT.gap == null ? 70 : TT.gap });
+    api.send({ t: 'vm_tts_try', text: it.text, voice: TT.voice, speed: TT.speed, gap: TT.gap == null ? 70 : TT.gap, pron: pronObj() });
     toast('Voix « ' + $('ssTtsV').selectedOptions[0].textContent + ' » : préparation…', '', 2500);
   });
   let ttsCtx = null;
