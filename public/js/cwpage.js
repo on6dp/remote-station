@@ -207,6 +207,31 @@
     if (e.key === 'Escape') { const s = api.state(); if (s && s.cw) api.send({ t: 'cw_stop' }); }
   });
   $('cwpTake').addEventListener('click', () => api.send({ t: 'take' }));
+  // TX CALL : indicatif d'émission (et des QSO enregistrés), comme dans la page TRX DIGI ; avec la main
+  function drawTxCall() {
+    const sel = $('cwpTxCall');
+    const k = kit();
+    const st = api.state();
+    const opts = k && k.txCalls ? k.txCalls() : [];
+    const cur = String((st && st.txCall) || opts[0] || '').toUpperCase();
+    const all = opts.indexOf(cur) < 0 && cur ? opts.concat(cur) : opts;
+    if (sel.dataset.opts !== all.join(',')) {
+      sel.dataset.opts = all.join(',');
+      sel.textContent = '';
+      for (const c of all) sel.add(new Option(k && k.isClubCall && k.isClubCall(c) ? c + ' (station)' : c, c));
+    }
+    if (document.activeElement !== sel && sel.value !== cur) sel.value = cur;
+    const me = api.iControl();
+    sel.disabled = !me || all.length < 2;
+    sel.parentElement.title = me ? 'TX CALL : indicatif sous lequel on émet et sous lequel les QSO vont dans le carnet (exports ADIF / Cabrillo)' : 'TX CALL : prenez la main pour le changer';
+  }
+  $('cwpTxCall').addEventListener('change', () => {
+    const k = kit();
+    const v = $('cwpTxCall').value;
+    if (!k || !k.setTxCall || !k.setTxCall(v)) { toast('Prenez d’abord la main pour choisir le TX call.', 'warn'); drawTxCall(); return; }
+    toast('TX call : ' + v + ' (émission et QSO enregistrés).', '', 4000);
+  });
+  setInterval(drawTxCall, 500);
 
   // ------------------------------------------------------------------ log du contest (à la manière de N1MM)
   // Les QSO vont dans le carnet général (identifiant du contest, échanges envoyé / reçu) ; la page relit ceux du

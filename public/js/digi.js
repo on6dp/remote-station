@@ -5144,6 +5144,20 @@
     cwKit: {
       // Spots du DX cluster reçus (page TRX SSB : stations spotées sur la bande)
       spots: () => Array.from(bmSpots.values()),
+      // TX CALL (pages TRX SSB / TRX CW) : indicatifs proposés et choix (avec la main : émission et carnet)
+      txCalls() {
+        if (!txcMe) return [];
+        const clubs = txcMe.clubs.length ? txcMe.clubs : [txcMe.digiCall];
+        return clubs.concat(txcMe.canTx && !txcMe.rxOnly && txcMe.call && clubs.indexOf(txcMe.call) < 0 ? [txcMe.call] : []).filter(Boolean);
+      },
+      isClubCall: (c) => !!txcMe && (txcMe.clubs.length ? txcMe.clubs : [txcMe.digiCall]).indexOf(c) >= 0,
+      setTxCall(v) {
+        if (!api || !api.iControl()) return false;
+        try { localStorage.setItem('rs.txcall', v); } catch (x) { /* */ }
+        txcSentDg = v;
+        api.send({ t: 'txcall', call: v });
+        return true;
+      },
       // set : 'CW' (macros habituelles) ou 'CWC' (macros contest CW)
       macros: (set) => macroList(set || 'CW').map((m, i) => ({ i, name: m.name || '—', tx: /<TX>/i.test(m.text), log: /<LOG>/i.test(m.text), exch: /<EXCH>|<XOUT>|<CNTR>|<SERNO>/i.test(m.text), preview: cwText(m.text).replace(/\n/g, ' ') })),
       use(i, set, doc) {

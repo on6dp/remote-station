@@ -694,7 +694,7 @@
     $('cwpLink').textContent = 'Liaison : ' + (host ? 'par la page d’origine' : 'aucune');
     // Indicatif du titre : le TX call choisi dans la fiche (sans contest), sinon celui d'émission de la station
     const fsel = !$('ssQso').hidden ? document.querySelector('#ssLog select[name="station"]') : null;
-    const tcall = (fsel && fsel.value) || (st && st.txCall) || '';
+    const tcall = (fsel && fsel.dataset.manual && fsel.value) || (st && st.txCall) || '';
     $('ssTxc').textContent = tcall ? String(tcall).toUpperCase() + ' ' : '';
     const k = kit();
     if (k) {
@@ -710,6 +710,34 @@
     }
   }
   $('cwpTake').addEventListener('click', () => api.send({ t: 'take' }));
+  // TX CALL : indicatif d'émission (et des QSO enregistrés), comme dans la page TRX DIGI ; avec la main
+  function drawTxCall() {
+    const sel = $('cwpTxCall');
+    const k = kit();
+    const st = api.state();
+    const opts = k && k.txCalls ? k.txCalls() : [];
+    const cur = String((st && st.txCall) || opts[0] || '').toUpperCase();
+    const all = opts.indexOf(cur) < 0 && cur ? opts.concat(cur) : opts;
+    if (sel.dataset.opts !== all.join(',')) {
+      sel.dataset.opts = all.join(',');
+      sel.textContent = '';
+      for (const c of all) sel.add(new Option(k && k.isClubCall && k.isClubCall(c) ? c + ' (station)' : c, c));
+    }
+    if (document.activeElement !== sel && sel.value !== cur) sel.value = cur;
+    const me = api.iControl();
+    sel.disabled = !me || all.length < 2;
+    sel.parentElement.title = me ? 'TX CALL : indicatif sous lequel on émet et sous lequel les QSO vont dans le carnet (exports ADIF / Cabrillo)' : 'TX CALL : prenez la main pour le changer';
+  }
+  $('cwpTxCall').addEventListener('change', () => {
+    const k = kit();
+    const v = $('cwpTxCall').value;
+    if (!k || !k.setTxCall || !k.setTxCall(v)) { toast('Prenez d’abord la main pour choisir le TX call.', 'warn'); drawTxCall(); return; }
+    // La fiche du carnet (sans contest) prend le même indicatif
+    const fs = document.querySelector('#ssLog select[name="station"]');
+    if (fs) { delete fs.dataset.manual; if ([...fs.options].some((o) => o.value === v)) fs.value = v; }
+    toast('TX call : ' + v + ' (émission et QSO enregistrés).', '', 4000);
+  });
+  setInterval(drawTxCall, 500);
   function link() {
     const w = chain().find((x) => { try { return !!x.RSHOST; } catch (e) { return false; } }) || null;
     const h = w ? w.RSHOST : null;

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.209 | [RemoteStation-Setup-0.37.209.exe](0.37.209/RemoteStation-Setup-0.37.209.exe) | [remote-station-0.37.209.tar.gz](0.37.209/remote-station-0.37.209.tar.gz) | TX CALL dans les pages — [empreintes SHA-256](0.37.209/SHA256SUMS.txt) |
 | 0.37.208 | [RemoteStation-Setup-0.37.208.exe](0.37.208/RemoteStation-Setup-0.37.208.exe) | [remote-station-0.37.208.tar.gz](0.37.208/remote-station-0.37.208.tar.gz) | TRX SSB : TX call du titre — [empreintes SHA-256](0.37.208/SHA256SUMS.txt) |
 | 0.37.207 | [RemoteStation-Setup-0.37.207.exe](0.37.207/RemoteStation-Setup-0.37.207.exe) | [remote-station-0.37.207.tar.gz](0.37.207/remote-station-0.37.207.tar.gz) | ADIF, PTT, QRZ — [empreintes SHA-256](0.37.207/SHA256SUMS.txt) |
 | 0.37.206 | [RemoteStation-Setup-0.37.206.exe](0.37.206/RemoteStation-Setup-0.37.206.exe) | [remote-station-0.37.206.tar.gz](0.37.206/remote-station-0.37.206.tar.gz) | ADIF, PTT rouge — [empreintes SHA-256](0.37.206/SHA256SUMS.txt) |

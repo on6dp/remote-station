@@ -1982,3 +1982,7 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .ssb-qbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .ssb-qbar .cwp-cstats { flex: 1 1 auto; }
 .ssb-qbar label { color: #fff; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+/* Pages TRX SSB / TRX CW : choix du TX CALL dans l'en-tête */
+.cwp-txcl { display: inline-flex; align-items: center; gap: 6px; color: #ffd400; font-weight: 800; font-size: 12px; letter-spacing: .8px; }
+.cwp-txcl select { background: #07090d; color: #fff; border: 1px solid #6b5a1a; border-radius: 4px; padding: 3px 6px; font-weight: 800; font-size: 13px; color-scheme: dark; }
+.cwp-txcl select:disabled { opacity: .7; }
