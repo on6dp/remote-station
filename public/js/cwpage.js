@@ -163,7 +163,7 @@
     const z = k.zones();
     set($('cwpCqz'), z.cqz);
     set($('cwpItu'), z.itu);
-    set($('cwpName'), z.name);
+    if ($('cwpName')) set($('cwpName'), z.name);
     document.body.classList.toggle('cwp-inctst', !!id);
     ctstLogSync(id);
   }
@@ -181,6 +181,7 @@
   $('cwpNrM').addEventListener('click', () => { const k = kit(); if (k) { k.setSerial(k.serial() - 1); ctstDraw(); } });
   $('cwpNrP').addEventListener('click', () => { const k = kit(); if (k) { k.setSerial(k.serial() + 1); ctstDraw(); } });
   for (const [id, key] of [['cwpCqz', 'cqz'], ['cwpItu', 'itu'], ['cwpName', 'name']]) {
+    if (!$(id)) continue;
     $(id).addEventListener('change', () => { const k = kit(); if (k) { k.setZones({ [key]: $(id).value }); macSig.cwpCMacros = ''; ctstDraw(); } });
   }
   function sendText() {

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.224 | [RemoteStation-Setup-0.37.224.exe](0.37.224/RemoteStation-Setup-0.37.224.exe) | [remote-station-0.37.224.tar.gz](0.37.224/remote-station-0.37.224.tar.gz) | TRX CW : sans Prénom — [empreintes SHA-256](0.37.224/SHA256SUMS.txt) |
 | 0.37.223 | [RemoteStation-Setup-0.37.223.exe](0.37.223/RemoteStation-Setup-0.37.223.exe) | [remote-station-0.37.223.tar.gz](0.37.223/remote-station-0.37.223.tar.gz) | Cartes de bande à gauche — [empreintes SHA-256](0.37.223/SHA256SUMS.txt) |
 | 0.37.222 | [RemoteStation-Setup-0.37.222.exe](0.37.222/RemoteStation-Setup-0.37.222.exe) | [remote-station-0.37.222.tar.gz](0.37.222/remote-station-0.37.222.tar.gz) | CW : départ propre — [empreintes SHA-256](0.37.222/SHA256SUMS.txt) |
 | 0.37.221 | [RemoteStation-Setup-0.37.221.exe](0.37.221/RemoteStation-Setup-0.37.221.exe) | [remote-station-0.37.221.tar.gz](0.37.221/remote-station-0.37.221.tar.gz) | Deux VFO / SPLIT — [empreintes SHA-256](0.37.221/SHA256SUMS.txt) |
