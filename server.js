@@ -356,6 +356,8 @@ function sendListen(pcm, l, r) {
   let out = null, st2 = null;
   for (const c of ops) {
     if (!c.listen || c.backlog >= 32768) continue;
+    // Mémoire vocale avec Auto Monitor : l'opérateur entend sa mémoire seule (pas mélangée au retour du TRX : son haché)
+    if (vmPlay && vmPlay.mon && vmPlay.conn === c && ptt.active) continue;
     // Écoute en stéréo (page Face avant, double réception) : MAIN à gauche, SUB à droite, dans une seule trame 0x07
     if (c.listenStereo && l && r) {
       if (!st2) {
@@ -1372,7 +1374,8 @@ function vmGo() {
     const now = Date.now();
     ptt.lastBeat = now; lastCtrlActivity = now;
     const due = Math.floor((now - p.t0) / 20);
-    while (p.pos < p.buf.length && p.pos / VM_FRAME < due + 3) {
+    // 8 trames (160 ms) d'avance : la page Station a de quoi absorber les à-coups du réseau sans trou dans la modulation
+    while (p.pos < p.buf.length && p.pos / VM_FRAME < due + 8) {
       const len = Math.min(VM_FRAME, p.buf.length - p.pos), fr = Buffer.alloc(len + 1);
       fr[0] = 0x05;
       for (let i = 0; i < len; i++) fr[i + 1] = p.tab[p.buf[p.pos + i]];
@@ -1449,6 +1452,16 @@ function onVm(conn, m) {
       const items = (Array.isArray(m.items) ? m.items : []).slice(0, 8).filter((it) => it && typeof it.text === 'string' && it.text.trim());
       if (!items.length) return;
       ttsMake(conn, items, false);
+      return;
+    }
+    case 'vm_tts_try': {
+      // Essai d'une voix (rien n'est émis ni gardé) : le son revient à la page qui l'a demandé
+      if (typeof m.text !== 'string' || !m.text.trim()) return;
+      if (conn.ttsTryAt && Date.now() - conn.ttsTryAt < 1500) return;
+      conn.ttsTryAt = Date.now();
+      TTS.synth(m.text, txCallFor(conn.user), { voice: m.voice, speed: m.speed })
+        .then((r) => send(conn, { t: 'tts_audio', d: r.data.subarray(0, 12000 * 15).toString('base64'), words: r.words }))
+        .catch((e) => send(conn, { t: 'notice', level: 'error', msg: 'Voix : ' + e.message }));
       return;
     }
     case 'vm_tts_del': {
@@ -3670,7 +3683,7 @@ function onOperator(conn, m) {
       return;
     }
 
-    case 'vm_list': case 'vm_put': case 'vm_get': case 'vm_del': case 'vm_name': case 'vm_set': case 'vm_play': case 'vm_stop': case 'vm_tts': case 'vm_tts_del':
+    case 'vm_list': case 'vm_put': case 'vm_get': case 'vm_del': case 'vm_name': case 'vm_set': case 'vm_play': case 'vm_stop': case 'vm_tts': case 'vm_tts_del': case 'vm_tts_try':
       return onVm(conn, m);
     case 'ptt':
       if (vmPlay && vmPlay.conn === conn && !m.on) return vmStop('arrêtée'); // PTT relâché : arrête la mémoire vocale

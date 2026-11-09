@@ -180,7 +180,7 @@
   function ttsLoad() {
     let o = null;
     try { o = JSON.parse(LS.get('ssbtts', 'null')); } catch (e) { o = null; }
-    if (!o || !Array.isArray(o.items) || o.items.length !== 8) o = { items: TTS_DEF.map((x) => Object.assign({ on: true }, x)), voice: 'en-us', speed: 140 };
+    if (!o || !Array.isArray(o.items) || o.items.length !== 8) o = { items: TTS_DEF.map((x) => Object.assign({ on: true }, x)), voice: 'en-us+f2', speed: 140 };
     return o;
   }
   const TT = ttsLoad();
@@ -229,6 +229,33 @@
     toast('Fabrication des messages pour ' + txNow() + '…', '', 4000);
   });
   setInterval(() => { if (!$('ssTts').hidden) ttsCall(); }, 1000);
+  // ▶ Écouter : la voix choisie sur le message T1 (ou le premier coché), joué dans ce PC
+  $('ssTtsTry').addEventListener('click', () => {
+    if (!host) return toast('Page d’origine fermée.', 'warn');
+    const it = TT.items.find((x) => x.on !== false && x.text.trim()) || TT.items[0];
+    api.send({ t: 'vm_tts_try', text: it.text, voice: TT.voice, speed: TT.speed });
+    toast('Voix « ' + $('ssTtsV').selectedOptions[0].textContent + ' » : préparation…', '', 2500);
+  });
+  let ttsCtx = null;
+  function ttsPlay(b64) {
+    try {
+      const raw = atob(b64);
+      const pcm = new Float32Array(raw.length);
+      for (let i = 0; i < raw.length; i++) pcm[i] = ULAW_DEC[raw.charCodeAt(i)];
+      ttsCtx = ttsCtx || new AudioContext();
+      const buf = ttsCtx.createBuffer(1, pcm.length, 12000);
+      buf.copyToChannel(pcm, 0);
+      const src = ttsCtx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ttsCtx.destination);
+      src.start();
+    } catch (e) { toast('Lecture impossible dans ce navigateur.', 'warn'); }
+  }
+  const ULAW_DEC = (() => {
+    const t = new Float32Array(256);
+    for (let i = 0; i < 256; i++) { const u = ~i & 0xff; const e = (u >> 4) & 7; let s2 = (((u & 0x0f) << 3) + 0x84) << e; s2 -= 0x84; t[i] = ((u & 0x80) ? -s2 : s2) / 32768; }
+    return t;
+  })();
   function vmFilled(n) { const t = S.vm && S.vm.t && S.vm.t[n - 1]; return !!(t && t.ms); }
   function playVm(n) {
     if (!host) return toast('Dashboard non raccroché.', 'warn');
@@ -728,6 +755,7 @@
     else if (m.t === 'qrz_info' && LOG && LOG.mounted && LOG.onQrz) LOG.onQrz(m);
     else if (m.t === 'notice' && m.msg) toast(m.msg, m.level === 'error' ? 'warn' : '', 6000);
     else if (m.t === 'ssb_list') drawSsb(m.items || []);
+    else if (m.t === 'tts_audio' && m.d) ttsPlay(m.d);
     else if (m.t === 'scp') { PR.q = m.q; PR.list = m.list || []; PR.n = m.n || 0; drawProb(); }
     else if (m.t === 'ctst_list' && m.contest === CL.id) { CL.items = m.items || []; drawLog(); checkDupe(); }
     else if ((m.t === 'log_saved' || m.t === 'log_changed') && CL.id) { clearTimeout(onMsg.lt); onMsg.lt = setTimeout(askList, 400); }
