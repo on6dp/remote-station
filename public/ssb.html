@@ -60,6 +60,21 @@
             <div class="cwp-macros" id="ssVk"></div>
             <p class="cwp-note">T1 = CQ, T3 = TU / QRZ, T4 = votre indicatif pour la touche Entrée. Enregistrement : face avant, MENU → VOICE → REC. L’échange (n° de série) se dit au micro avec le PTT ci-dessus.</p>
           </div>
+          <div class="ssb-panels">
+            <div class="ssb-pan ssb-score">
+              <h3>Score <small id="ssScNote"></small></h3>
+              <table class="cwp-clog ssb-tab"><thead><tr><th>Bande</th><th>QSO</th><th>Points</th><th>Mult.</th></tr></thead><tbody id="ssScB"></tbody>
+                <tfoot><tr><td>Total</td><td id="ssScQ">0</td><td id="ssScP">0</td><td id="ssScM">0</td></tr></tfoot></table>
+              <p class="ssb-total">Score estimé <b id="ssScT">0</b></p>
+              <h3>Évolution <small>par heure UTC</small></h3>
+              <table class="cwp-clog ssb-tab"><thead><tr><th>Heure</th><th>QSO</th><th>Cumul</th><th>Score</th></tr></thead><tbody id="ssEvo"></tbody></table>
+            </div>
+            <div class="ssb-pan ssb-prob">
+              <h3 id="ssPrH">Indicatifs probables</h3>
+              <div class="ssb-prl" id="ssPr"></div>
+              <p class="cwp-note" id="ssPrNote"></p>
+            </div>
+          </div>
         </div>
         <div class="cwp-cright">
           <div class="cwp-cstats" id="cwpCStats">—</div>

@@ -5140,6 +5140,8 @@
     qo100If: () => Object.assign({}, qoIf),
     /** Page « TRX CW » (cw.html) : macros CW, envoi de texte, correspondant, vitesse des macros */
     cwKit: {
+      // Spots du DX cluster reçus (page TRX SSB : stations spotées sur la bande)
+      spots: () => Array.from(bmSpots.values()),
       // set : 'CW' (macros habituelles) ou 'CWC' (macros contest CW)
       macros: (set) => macroList(set || 'CW').map((m, i) => ({ i, name: m.name || '—', tx: /<TX>/i.test(m.text), log: /<LOG>/i.test(m.text), exch: /<EXCH>|<XOUT>|<CNTR>|<SERNO>/i.test(m.text), preview: cwText(m.text).replace(/\n/g, ' ') })),
       use(i, set, doc) {

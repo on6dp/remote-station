@@ -217,7 +217,7 @@
   function drawLog() {
     const tb = $('cwpCLog');
     tb.textContent = '';
-    for (const q of CL.items.slice(-60).reverse()) {
+    for (const q of CL.items.slice(-1500).reverse()) {
       const tr = document.createElement('tr');
       for (const v of [q.t.slice(0, 2) + ':' + q.t.slice(2, 4), q.band, q.call, q.stx, q.srx]) { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); }
       tb.appendChild(tr);
@@ -232,10 +232,205 @@
     const r60 = CL.items.filter((q) => now - t(q) < 3600000).length;
     $('cwpCStats').innerHTML = '<b>' + CL.items.length + '</b> QSO' + (dup ? ' · <span class="dup">' + dup + ' doublon(s)</span>' : '') +
       ' · ' + (Object.keys(per).map((b) => b + ' ' + per[b]).join(' · ') || '—') + ' · cadence <b>' + (r10 * 6) + '</b>/h (10 min), <b>' + r60 + '</b>/h';
+    drawScore();
+    drawProb();
   }
+
+  // ------------------------------------------------------------------ score estimé (règlement de chaque contest)
+  // Chaque QSO du log du contest porte le pays DXCC et le continent du correspondant (dx, ct) et de la station (mp, mc).
+  const LOWB = { '160m': 1, '80m': 1, '40m': 1 };
+  const BAND_ORDER = ['160m', '80m', '40m', '20m', '15m', '10m', '60m', '30m', '17m', '12m', '6m', '2m', '70cm'];
+  // Pays de l'Union européenne (UBA DX : 2 points pour une station belge)
+  const EU_UNION = new Set(['DL', 'F', 'I', 'IS', 'EA', 'EA6', 'EA8', 'EA9', 'CT', 'CT3', 'CU', 'PA', 'LX', 'OE', 'OK', 'OM', 'SP', 'HA', 'YO', 'LZ', 'SV', 'SV5', 'SV9',
+    '5B', '9H', 'OH', 'OH0', 'SM', 'OZ', 'EI', 'ES', 'YL', 'LY', 'S5', '9A', 'TK', 'ON']);
+  const num = (x) => { const m = /(\d+)/.exec(String(x || '')); return m ? Number(m[1]) : NaN; };
+  const section = (x) => { const m = /([A-Z]{2,4})\s*$/.exec(String(x || '').toUpperCase()); return m && m[1] !== 'XXX' ? m[1] : ''; };
+  // Préfixe WPX : « ON6DP » → ON6, « W1AW/3 » → W3, « PA/ON6DP » → PA0, sans chiffre : + 0
+  function wpxPfx(call) {
+    let c = String(call || '').toUpperCase().replace(/\/(P|M|MM|AM|QRP|A|B)$/, '');
+    const parts = c.split('/');
+    if (parts.length > 1) {
+      const a = parts[0], b = parts[1];
+      if (/^\d$/.test(b)) { const m = /^([A-Z0-9]*?[A-Z])\d*[A-Z]*$/.exec(a.replace(/\d+[A-Z]*$/, '')); return (m ? m[1] : a.replace(/\d.*$/, '')) + b; }
+      c = a.length <= b.length ? a : b;
+      if (!/\d/.test(c)) return c.slice(0, 2) + '0';
+      return c; // indicatif de préfixe (« VP2E/W1XX », « N8BJQ/KH9 ») : il devient le préfixe
+    }
+    if (!/\d/.test(c)) return c.slice(0, 2) + '0'; // sans chiffre : 2 premières lettres + 0
+    const m = /^(.*\d)[A-Z]+$/.exec(c);
+    return m ? m[1] : c;
+  }
+  // Règles : points d'un QSO et multiplicateurs (par bande ou sur tout le contest)
+  const RULES = {
+    'CQ-WW-SSB': { note: '0 / 1 / 3 points (même pays / même continent / autre continent) × (zones CQ + pays DXCC) par bande',
+      pts: (q) => (q.dx && q.dx === q.mp ? 0 : q.ct === q.mc ? 1 : 3), mul: (q) => { const z = num(q.srx); return [z >= 1 && z <= 40 ? 'Z' + z : '', q.dx ? 'C' + q.dx : '']; } },
+    'CQ-WPX-SSB': { note: 'même pays 1 point ; même continent 1 (2 sur 40-160 m) ; autre continent 3 (6 sur 40-160 m) × préfixes WPX (une fois)', all: true,
+      pts: (q) => (q.dx && q.dx === q.mp ? 1 : q.ct === q.mc ? (LOWB[q.band] ? 2 : 1) : (LOWB[q.band] ? 6 : 3)), mul: (q) => ['P' + wpxPfx(q.call)] },
+    'ARRL-DX-SSB': { note: '3 points par QSO avec W / VE × États et provinces par bande',
+      pts: (q) => (q.dx === 'K' || q.dx === 'VE' ? 3 : 0), mul: (q) => { const x = String(q.srx || '').toUpperCase().replace(/[^A-Z]/g, ''); return (q.dx === 'K' || q.dx === 'VE') && x ? ['S' + x] : []; } },
+    'IARU-HF': { note: 'même zone ITU 1 point, même continent 3, autre continent 5, sièges IARU 1 × (zones ITU + sièges) par bande',
+      pts: (q, my) => { if (/^[A-Z]/.test(String(q.srx || '').trim())) return 1; const z = num(q.srx); return z === my.itu ? 1 : q.ct === q.mc ? 3 : 5; },
+      mul: (q) => { const x = String(q.srx || '').toUpperCase().trim(); return [/^[A-Z]/.test(x) ? 'H' + x.replace(/[^A-Z0-9]/g, '') : Number.isFinite(num(x)) ? 'Z' + num(x) : '']; } },
+    'DARC-WAEDC-SSB': { note: 'station européenne : 1 point par QSO hors Europe (QTC non comptés) × pays par bande (×4 sur 80 m, ×3 sur 40 m, ×2 au-dessus)',
+      pts: (q) => (q.ct && q.ct !== 'EU' ? 1 : 0), mul: (q) => (q.ct && q.ct !== 'EU' ? ['C' + q.dx] : []), w: (b) => ({ '80m': 4, '40m': 3, '160m': 4 }[b] || 2) },
+    'UBA-DX-SSB': { note: 'station belge : ON 1 point, Union européenne 2, autres 3 × (pays DXCC + sections UBA) par bande',
+      pts: (q) => (q.dx === 'ON' ? 1 : EU_UNION.has(q.dx) ? 2 : 3), mul: (q) => [q.dx ? 'C' + q.dx : '', q.dx === 'ON' && section(q.srx) ? 'S' + section(q.srx) : ''] },
+    'ON-CONTEST-SSB': { note: '3 points par QSO (au plus 10 avec votre section par bande) × (sections UBA + pays DXCC hors ON) par bande',
+      pts: () => 3, mul: (q) => [section(q.srx) ? 'S' + section(q.srx) : '', q.dx && q.dx !== 'ON' ? 'C' + q.dx : ''] },
+    'EU-HF': { note: '1 point par QSO avec l’Europe × années de première licence différentes par bande',
+      pts: (q) => (q.ct === 'EU' ? 1 : 0), mul: (q) => { const y = num(q.srx); return q.ct === 'EU' && Number.isFinite(y) ? ['Y' + String(y % 100).padStart(2, '0')] : []; } }
+  };
+  const GENERIC = { generic: true, note: 'règle générique (1 point par QSO × pays DXCC par bande) : indication seulement, voir le règlement',
+    pts: () => 1, mul: (q) => [q.dx ? 'C' + q.dx : ''] };
+  const tOf = (q) => q.d + (q.t || '').slice(0, 4);
+  function scoreOf(list, R, my) {
+    const seen = new Set();
+    const bands = {};
+    const glob = new Set();
+    let Q = 0, P = 0;
+    for (const q of list) {
+      const k = q.call + '|' + q.band;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      const b = bands[q.band] || (bands[q.band] = { q: 0, p: 0, m: new Set() });
+      const p = R.pts(q, my) || 0;
+      b.q++; b.p += p; Q++; P += p;
+      for (const x of R.mul(q, my) || []) if (x) { if (R.all) { if (!glob.has(x)) { glob.add(x); b.m.add(x); } } else b.m.add(x); }
+    }
+    let M = 0;
+    for (const bn in bands) M += R.all ? 0 : bands[bn].m.size * (R.w ? R.w(bn) : 1);
+    if (R.all) M = glob.size;
+    return { bands, Q, P, M, S: P * M };
+  }
+  const fmtN = (n) => Number(n || 0).toLocaleString('fr-BE');
+  function drawScore() {
+    const d = def();
+    if (!d) return;
+    const R = RULES[d.id] || GENERIC;
+    const k = kit();
+    const my = { itu: k ? Number(k.zones().itu) : 27, cqz: k ? Number(k.zones().cqz) : 14 };
+    const list = CL.items.slice().sort((a, b) => (tOf(a) < tOf(b) ? -1 : tOf(a) > tOf(b) ? 1 : 0));
+    const sc = scoreOf(list, R, my);
+    $('ssScNote').textContent = R.generic ? '(estimation)' : '';
+    $('ssScNote').title = R.note;
+    const tb = $('ssScB');
+    tb.textContent = '';
+    for (const bn of BAND_ORDER) {
+      const b = sc.bands[bn];
+      if (!b) continue;
+      const tr = document.createElement('tr');
+      for (const v of [bn, fmtN(b.q), fmtN(b.p), R.all ? '+' + b.m.size : fmtN(b.m.size * (R.w ? R.w(bn) : 1))]) { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); }
+      tb.appendChild(tr);
+    }
+    if (!tb.children.length) tb.innerHTML = '<tr><td colspan="4">Aucun QSO</td></tr>';
+    $('ssScQ').textContent = fmtN(sc.Q);
+    $('ssScP').textContent = fmtN(sc.P);
+    $('ssScM').textContent = fmtN(sc.M);
+    $('ssScT').textContent = fmtN(sc.S);
+    $('ssScT').parentElement.title = R.note;
+    // Évolution heure par heure (UTC) : QSO de l'heure, cumul et score à la fin de l'heure
+    const hours = [];
+    for (const q of list) { const h = q.d + (q.t || '').slice(0, 2); if (!hours.length || hours[hours.length - 1] !== h) hours.push(h); }
+    const ev = $('ssEvo');
+    ev.textContent = '';
+    let cum = 0;
+    const rows = [];
+    for (const h of Array.from(new Set(hours))) {
+      const inH = list.filter((q) => q.d + (q.t || '').slice(0, 2) === h).length;
+      cum += inH;
+      const upTo = list.filter((q) => q.d + (q.t || '').slice(0, 2) <= h);
+      rows.push([h.slice(6, 8) + '/' + h.slice(4, 6) + ' ' + h.slice(8, 10) + ' h', fmtN(inH), fmtN(cum), fmtN(scoreOf(upTo, R, my).S)]);
+    }
+    for (const r of rows.slice(-24).reverse()) {
+      const tr = document.createElement('tr');
+      for (const v of r) { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); }
+      ev.appendChild(tr);
+    }
+    if (!rows.length) ev.innerHTML = '<tr><td colspan="4">—</td></tr>';
+  }
+
+  // ------------------------------------------------------------------ indicatifs probables (Super Check Partial + spots)
+  const PR = { q: '', list: [], n: 0, asked: '' };
+  // Plages SSB des bandes (kHz) : spots du DX cluster à afficher
+  const SSB_SEG = { '160m': [1840, 2000], '80m': [3600, 3800], '40m': [7060, 7200], '20m': [14100, 14350], '17m': [18111, 18168], '15m': [21151, 21450],
+    '12m': [24931, 24990], '10m': [28300, 29000], '6m': [50100, 50500] };
+  function askScp() {
+    const q = E.call.value.trim().toUpperCase();
+    if (q.length < 2) { PR.q = ''; PR.list = []; PR.asked = ''; return drawProb(); }
+    if (q === PR.asked) return;
+    PR.asked = q;
+    clearTimeout(askScp.t);
+    askScp.t = setTimeout(() => api.send({ t: 'scp', q, n: 40 }), 120);
+  }
+  function pickCall(call, spot) {
+    E.call.value = call;
+    const k = kit();
+    if (k) k.setCall(call);
+    drawState.kc = call;
+    checkDupe();
+    askScp();
+    // Spot cliqué : le TRX va sur sa fréquence (en LSB / USB) si vous avez la main
+    if (spot && api.iControl()) {
+      try { host.api.setFreq(Math.round(spot.f * 1000)); setTimeout(() => { try { if (hostWin.RSDIGI) hostWin.RSDIGI.modeFor('ssb'); } catch (e) {} }, 500); } catch (e) {}
+    }
+    drawProb();
+    if (CL.esm === 'sp' && vmFilled(4)) toast('Entrée : votre indicatif (T4).', '', 2500);
+    E.srx.focus();
+  }
+  function chip(call, cls, sub, title, onClick) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ssb-pc ' + cls;
+    b.textContent = call;
+    if (sub) { const s = document.createElement('small'); s.textContent = sub; b.appendChild(s); }
+    b.title = title || '';
+    b.addEventListener('click', onClick);
+    return b;
+  }
+  function drawProb() {
+    const box = $('ssPr');
+    if (!box || !def()) return;
+    const band = bandOf(trxMhz());
+    const worked = new Set(CL.items.filter((q) => q.band === band).map((q) => q.call));
+    const any = new Set(CL.items.map((q) => q.call));
+    box.textContent = '';
+    const typed = E.call.value.trim().toUpperCase();
+    if (typed.length >= 2) {
+      $('ssPrH').textContent = 'Indicatifs probables · « ' + typed + ' »';
+      // Déjà dans le log du contest d'abord, puis la liste Super Check Partial
+      const mine = Array.from(any).filter((c) => c.indexOf(typed) >= 0);
+      const scp = PR.q === typed ? PR.list : [];
+      const all = Array.from(new Set(mine.concat(scp))).slice(0, 40);
+      for (const c of all) {
+        const dup = worked.has(c);
+        box.appendChild(chip(c, dup ? 'dup' : any.has(c) ? '' : 'new', dup ? band : any.has(c) ? 'autre bande' : '', dup ? 'Déjà contacté sur ' + band : 'Cliquer : dans la case Indicatif', () => pickCall(c)));
+      }
+      $('ssPrNote').textContent = all.length ? 'Vert : pas encore contacté · barré : doublon sur ' + (band || 'cette bande') + '.' : (PR.n ? 'Aucun indicatif connu ne contient « ' + typed + ' ».' : 'Liste Super Check Partial pas encore téléchargée par le serveur.');
+      return;
+    }
+    // Rien de tapé : stations spotées en SSB sur la bande du TRX (DX cluster), les plus récentes d'abord
+    const seg = SSB_SEG[band];
+    $('ssPrH').textContent = 'Stations spotées ' + (band ? 'sur ' + band : '') + ' (SSB)';
+    const k = kit();
+    let spots = [];
+    try { spots = k && k.spots ? k.spots() : []; } catch (e) { spots = []; }
+    spots = spots.filter((s) => seg && s.f >= seg[0] && s.f <= seg[1] && !s.skim && !/\b(CW|FT[48]|RTTY|PSK|WPM|DIGI|JT65|SSTV)\b/i.test(s.cmt))
+      .sort((a, b) => b.at - a.at);
+    const seen = new Set();
+    for (const s of spots) {
+      if (seen.has(s.call)) continue;
+      seen.add(s.call);
+      const dup = worked.has(s.call);
+      box.appendChild(chip(s.call, dup ? 'dup' : 'new', (s.f / 1000).toFixed(3).replace('.', ','), (dup ? 'Déjà contacté sur ' + band + ' · ' : 'Cliquer : indicatif + TRX sur ') + s.f.toFixed(1) + ' kHz' + (s.cmt ? ' · ' + s.cmt : ''), () => pickCall(s.call, s)));
+      if (seen.size >= 60) break;
+    }
+    $('ssPrNote').textContent = seen.size ? 'Vert : à contacter · barré : déjà dans le log sur ' + band + '. Tapez le début d’un indicatif : liste Super Check Partial.' : 'Aucun spot SSB sur cette bande pour l’instant. Tapez le début d’un indicatif : liste Super Check Partial (indicatifs actifs en contest).';
+  }
+  setInterval(() => { if (def() && E.call.value.trim().length < 2) drawProb(); }, 5000);
   function wipe() {
     for (const k of ['call', 'stx', 'srx']) E[k].value = '';
     fillStx(true);
+    askScp();
     const k = kit();
     if (k) k.setCall('');
     drawState.kc = '';
@@ -304,6 +499,8 @@
   }
   E.call.addEventListener('input', () => {
     E.call.value = E.call.value.toUpperCase().replace(/[^A-Z0-9/?]/g, '');
+    askScp();
+    drawProb();
     const k = kit();
     if (k) k.setCall(E.call.value);
     drawState.kc = E.call.value.trim().toUpperCase(); // tapé ici : pas à recopier depuis le dashboard
@@ -423,6 +620,7 @@
     else if (m.t === 'state') { if (VX) VX.onState(); if (LOG && LOG.mounted) LOG.onState(); if (P.held && !api.iControl()) pttUp(); }
     else if (m.t === 'qrz_info' && LOG && LOG.mounted && LOG.onQrz) LOG.onQrz(m);
     else if (m.t === 'notice' && m.msg) toast(m.msg, m.level === 'error' ? 'warn' : '', 6000);
+    else if (m.t === 'scp') { PR.q = m.q; PR.list = m.list || []; PR.n = m.n || 0; drawProb(); }
     else if (m.t === 'ctst_list' && m.contest === CL.id) { CL.items = m.items || []; drawLog(); checkDupe(); }
     else if ((m.t === 'log_saved' || m.t === 'log_changed') && CL.id) { clearTimeout(onMsg.lt); onMsg.lt = setTimeout(askList, 400); }
     else if (m.t === 'log_export' && m.tag === 'cwpage') saveFile(m);

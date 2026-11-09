@@ -608,6 +608,9 @@ const VERSION = (() => { try { return require('./package.json').version; } catch
 // Dans le dossier des journaux par défaut : le seul où le service systemd du VPS peut écrire (ReadWritePaths)
 const book = new LB.Logbook(cfg.logbookFile ? path.resolve(ROOT, cfg.logbookFile) : path.join(LOG_DIR, 'logbook.json'));
 const refs = new REFDATA.RefData(path.join(ROOT, 'refdata'), (msg) => console.error(msg));
+// Super Check Partial (indicatifs actifs en contest) : page TRX SSB, indicatifs probables
+const SCP = new (require('./lib/scp').Scp)(path.join(ROOT, 'refdata'), (msg) => console.log(msg));
+if (!process.env.RS_NO_SCP) SCP.start();
 if (cfg.refData !== false) {
   setTimeout(() => refs.refresh().catch(() => {}), 20000);
   setInterval(() => refs.refresh().catch(() => {}), 6 * 3600000).unref();
@@ -852,7 +855,7 @@ const LG_COL = {
   date: (q) => q.qso_date || '', utc: (q) => String(q.time_on || '').slice(0, 2), call: (q) => q.call || '', band: (q) => q.band || '',
   mhz: (q) => String(q.freq || ''), mode: (q) => LB.modeName(q), env: (q) => q.rst_sent || '', recu: (q) => q.rst_rcvd || '',
   nom: (q) => q.name || '', qth: (q) => q.qth || '', loc: (q) => q.gridsquare || '', dxcc: (q) => q.country || ((DXCC.lookup(q.call) || {}).name || ''),
-  pfx: (q) => (DXCC.lookup(q.call) || {}).pfx || '',
+  pfx: (q) => (DXCC.lookup(q.call) || {}).pfx || '', ctst: (q) => q.contest_id || '',
   txc: (q) => q.station_callsign || '', op: (q) => q.operator || q.by || '',
   refs: (q) => { const a = refsOf(q), b = refsOf(q, 'my_'); return a.concat(b.map((x) => 'ma ' + x)).join(' + '); },
   lotw: (q) => lgUp(q, 'lotw'), eqsl: (q) => lgUp(q, 'eqsl'), cl: (q) => lgUp(q, 'clublog'), qrz: (q) => lgUp(q, 'qrz')
@@ -877,6 +880,12 @@ function logEditWhy(conn, q) {
   return 'Prenez la main pour modifier ou supprimer vos QSO (sans la main : consultation seulement)';
 }
 // Pays DXCC du correspondant : enregistré avec le QSO (champ ADIF COUNTRY), ou calculé pour les anciens QSO
+// Log d'un contest : pays DXCC et continent du correspondant et de la station (calcul du score dans la page)
+function ctstCty(q) {
+  const e = DXCC.lookup(q.call) || {};
+  const me = DXCC.lookup(q.station_callsign || cfg.callsign || '') || {};
+  return { dx: e.pfx || '', ct: e.cont || '', mp: me.pfx || '', mc: me.cont || '' };
+}
 function qsoForClient(q) {
   const o = Object.assign({}, q);
   const e = DXCC.lookup(o.call);
@@ -3151,6 +3160,11 @@ function onOperator(conn, m) {
       sendWorked(false);
       return;
     }
+    case 'scp': {
+      // Indicatifs probables (Super Check Partial) pour le morceau tapé
+      const q = String(m.q || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
+      return send(conn, { t: 'scp', q, list: SCP.search(q, Number(m.n) || 30), n: SCP.calls.length });
+    }
     case 'ctst_list': {
       // Log d'un contest (page TRX CW) : QSO du carnet avec cet identifiant, depuis la date donnée, pour les doublons,
       // les compteurs et la liste ; le carnet général reste la seule base
@@ -3158,7 +3172,7 @@ function onOperator(conn, m) {
       const from = String(m.from || '').replace(/\D/g, '').slice(0, 8);
       const items = id ? book.qsos.filter((q) => q.contest_id === id && (!from || q.qso_date >= from)).slice(-5000).map((q) => ({
         id: q.id, call: q.call, band: q.band, mode: q.mode, d: q.qso_date, t: q.time_on, freq: q.freq, stx: q.stx_string || q.stx || '', srx: q.srx_string || q.srx || '',
-        rs: q.rst_sent || '', rr: q.rst_rcvd || '', op: q.operator || '', st: q.station_callsign || '' })) : [];
+        rs: q.rst_sent || '', rr: q.rst_rcvd || '', op: q.operator || '', st: q.station_callsign || '', ...ctstCty(q) })) : [];
       return send(conn, { t: 'ctst_list', contest: id, from, items });
     }
     case 'log_export': {
