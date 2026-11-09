@@ -277,6 +277,7 @@
     CL.sentFor = '';
     const k = kit();
     if (k) k.setCall('');
+    drawState.kc = '';
     checkDupe();
     E.call.focus();
   }
@@ -360,6 +361,7 @@
     E.call.value = E.call.value.toUpperCase().replace(/[^A-Z0-9/?]/g, '');
     const k = kit();
     if (k) k.setCall(E.call.value);
+    drawState.kc = E.call.value.trim().toUpperCase(); // tapé ici : pas à recopier depuis le dashboard
     checkDupe();
   });
   E.srx.addEventListener('input', () => { E.srx.value = E.srx.value.toUpperCase(); });

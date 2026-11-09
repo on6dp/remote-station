@@ -109,6 +109,7 @@
     if (document.activeElement !== ex) ex.value = d ? exchTpl() : '';
     ex.disabled = !d;
     $('ssExchSh').textContent = d ? '→ ' + exchShown() : '';
+    fillStx(false);
     $('ssNote').textContent = d ? (d.when ? d.when + ' · ' : '') + (d.note || '') + (d.verif ? '' : ' * Catégories habituelles : à vérifier dans le règlement de l’année.') : 'Choisissez un contest.';
     if (k) {
       const set = (el, v) => { if (document.activeElement !== el && el.value !== v) el.value = v; };
@@ -177,6 +178,15 @@
   const bandOf = (mhz) => { const b = BANDS.find((x) => mhz >= x[0] && mhz <= x[1]); return b ? b[2] : ''; };
   const ymd = (d) => d.getUTCFullYear() + String(d.getUTCMonth() + 1).padStart(2, '0') + String(d.getUTCDate()).padStart(2, '0');
   const stripRs = (x) => String(x || '').toUpperCase().replace(/^5[1-9]\s+/, '').trim();
+  // Case « Envoyé » : toujours l'échange à annoncer (zone, puissance… ou le n° de série de ce QSO), sauf si vous l'avez changé
+  function fillStx(force) {
+    if (!def()) return;
+    if (force) delete E.stx.dataset.manual;
+    if (E.stx.dataset.manual || document.activeElement === E.stx) return;
+    const v = stripRs(exchShown());
+    if (E.stx.value !== v) E.stx.value = v;
+  }
+  E.stx.addEventListener('input', () => { E.stx.value = E.stx.value.toUpperCase(); E.stx.dataset.manual = '1'; });
   function trxMhz() { const st = api.state(); const r = (st && st.radio) || {}; return (Number(r.vfoSel === 1 ? r.freqB : r.freq) || 0) / 1e6; }
   function fromDate() {
     let v = LS.get('ssbfrom_' + CL.id, '');
@@ -225,8 +235,10 @@
   }
   function wipe() {
     for (const k of ['call', 'stx', 'srx']) E[k].value = '';
+    fillStx(true);
     const k = kit();
     if (k) k.setCall('');
+    drawState.kc = '';
     checkDupe();
     E.call.focus();
   }
@@ -256,6 +268,9 @@
     if (/<CNTR>|<SERNO>/.test(exchTpl())) k.afterLog(call); // n° de série suivant (seulement s'il fait partie de l'échange)
     drawLog();
     for (const x of ['call', 'stx', 'srx']) E[x].value = '';
+    delete E.stx.dataset.manual;
+    k.setCall('');
+    drawState.kc = '';
     checkDupe();
     drawContest();
     return true;
@@ -291,6 +306,7 @@
     E.call.value = E.call.value.toUpperCase().replace(/[^A-Z0-9/?]/g, '');
     const k = kit();
     if (k) k.setCall(E.call.value);
+    drawState.kc = E.call.value.trim().toUpperCase(); // tapé ici : pas à recopier depuis le dashboard
     checkDupe();
   });
   E.srx.addEventListener('input', () => { E.srx.value = E.srx.value.toUpperCase(); });
@@ -442,7 +458,7 @@
         if (was !== undefined && kc && E.call.value.trim().toUpperCase() !== kc) { E.call.value = kc; E.srx.value = ''; checkDupe(); }
       }
       const n = String(k.serial()).padStart(3, '0');
-      if (document.activeElement !== $('ssNr') && $('ssNr').value !== n) { $('ssNr').value = n; $('ssExchSh').textContent = def() ? '→ ' + exchShown() : ''; }
+      if (document.activeElement !== $('ssNr') && $('ssNr').value !== n) { $('ssNr').value = n; $('ssExchSh').textContent = def() ? '→ ' + exchShown() : ''; fillStx(false); }
     }
   }
   $('cwpTake').addEventListener('click', () => api.send({ t: 'take' }));
