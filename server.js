@@ -3165,6 +3165,18 @@ function onOperator(conn, m) {
       const q = String(m.q || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
       return send(conn, { t: 'scp', q, list: SCP.search(q, Number(m.n) || 30), n: SCP.calls.length });
     }
+    case 'ssb_list': {
+      // Page TRX SSB sans contest : les derniers QSO en phonie BLU (SSB, LSB, USB) hors contest, ceux du carnet général
+      const n = Math.max(10, Math.min(1000, Number(m.n) || 300));
+      const items = [];
+      for (let i = book.qsos.length - 1; i >= 0 && items.length < n; i--) {
+        const q = book.qsos[i];
+        if (q.contest_id || !/^(SSB|LSB|USB)$/.test(String(q.mode || '')) && !/^(LSB|USB)$/.test(String(q.submode || ''))) continue;
+        items.push({ id: q.id, call: q.call, band: q.band, mode: LB.modeName(q), d: q.qso_date, t: q.time_on, freq: q.freq, rs: q.rst_sent || '', rr: q.rst_rcvd || '',
+          name: q.name || '', qth: q.qth || '', grid: q.gridsquare || '', country: (DXCC.lookup(q.call) || {}).name || q.country || '', op: q.operator || q.by || '', st: q.station_callsign || '' });
+      }
+      return send(conn, { t: 'ssb_list', items });
+    }
     case 'ctst_list': {
       // Log d'un contest (page TRX CW) : QSO du carnet avec cet identifiant, depuis la date donnée, pour les doublons,
       // les compteurs et la liste ; le carnet général reste la seule base

@@ -83,7 +83,7 @@
     $('cwpCtBody').hidden = !d;
     // Pas de contest : la fiche du carnet pour noter les QSO à la main
     const qb = $('ssQso');
-    if (qb.hidden !== !!d) { qb.hidden = !!d; if (!d && LOG && LOG.mounted) LOG.show(); }
+    if (qb.hidden !== !!d) { qb.hidden = !!d; if (!d && LOG && LOG.mounted) LOG.show(); if (!d) askSsb(); }
     const cs = $('ssCat');
     cs.textContent = '';
     const st = catState();
@@ -611,6 +611,26 @@
     if (!$('ssQso').hidden) LOG.show();
   }
 
+  // QSO en phonie hors contest (ceux du carnet général) : liste sous la fiche
+  function askSsb() { if (host && !def()) api.send({ t: 'ssb_list', n: 300 }); }
+  function drawSsb(items) {
+    const tb = $('ssQLog');
+    tb.textContent = '';
+    const fd = (d) => d.slice(6, 8) + '/' + d.slice(4, 6) + '/' + d.slice(0, 4);
+    for (const q of items) {
+      const tr = document.createElement('tr');
+      for (const v of [fd(q.d), q.t.slice(0, 2) + ':' + q.t.slice(2, 4), q.call, q.band, q.freq, q.mode, q.rs, q.rr, q.name, q.qth, q.country, q.st, q.op]) {
+        const td = document.createElement('td');
+        td.textContent = v == null ? '' : String(v);
+        tr.appendChild(td);
+      }
+      tb.appendChild(tr);
+    }
+    if (!items.length) tb.innerHTML = '<tr><td colspan="13">Aucun QSO en phonie hors contest dans le carnet.</td></tr>';
+    const today = ymd(new Date());
+    $('ssQStats').innerHTML = '<b>' + items.length + '</b> derniers QSO en phonie (hors contest) · aujourd’hui <b>' + items.filter((q) => q.d === today).length + '</b> · aussi dans le carnet général (Logbooks)';
+  }
+
   // ------------------------------------------------------------------ messages du serveur, état
   function onMsg(m) {
     if (!m || typeof m !== 'object') return;
@@ -620,9 +640,11 @@
     else if (m.t === 'state') { if (VX) VX.onState(); if (LOG && LOG.mounted) LOG.onState(); if (P.held && !api.iControl()) pttUp(); }
     else if (m.t === 'qrz_info' && LOG && LOG.mounted && LOG.onQrz) LOG.onQrz(m);
     else if (m.t === 'notice' && m.msg) toast(m.msg, m.level === 'error' ? 'warn' : '', 6000);
+    else if (m.t === 'ssb_list') drawSsb(m.items || []);
     else if (m.t === 'scp') { PR.q = m.q; PR.list = m.list || []; PR.n = m.n || 0; drawProb(); }
     else if (m.t === 'ctst_list' && m.contest === CL.id) { CL.items = m.items || []; drawLog(); checkDupe(); }
     else if ((m.t === 'log_saved' || m.t === 'log_changed') && CL.id) { clearTimeout(onMsg.lt); onMsg.lt = setTimeout(askList, 400); }
+    else if ((m.t === 'log_saved' || m.t === 'log_changed') && !def()) { clearTimeout(onMsg.st); onMsg.st = setTimeout(askSsb, 400); }
     else if (m.t === 'log_export' && m.tag === 'cwpage') saveFile(m);
     // Fiche du carnet (sans contest) : réponses à ses QSO, liste des TX call, références
     if (LOG && LOG.mounted && /^(log_saved|log_dupe|log_cfg|log_refs)$/.test(m.t)) LOG.onMessage(m);
@@ -671,6 +693,7 @@
       $('cwpOrphan').hidden = true;
       voiceInit();
       logInit();
+      askSsb();
       api.send({ t: 'vm_list' });
       drawContest();
     } else if (!h) { host = null; hostWin = null; $('cwpOrphan').hidden = false; }
