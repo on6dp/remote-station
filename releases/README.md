@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.202 | [RemoteStation-Setup-0.37.202.exe](0.37.202/RemoteStation-Setup-0.37.202.exe) | [remote-station-0.37.202.tar.gz](0.37.202/remote-station-0.37.202.tar.gz) | Dashboard : Modes et QSO — [empreintes SHA-256](0.37.202/SHA256SUMS.txt) |
 | 0.37.201 | [RemoteStation-Setup-0.37.201.exe](0.37.201/RemoteStation-Setup-0.37.201.exe) | [remote-station-0.37.201.tar.gz](0.37.201/remote-station-0.37.201.tar.gz) | Dashboard : QSO — [empreintes SHA-256](0.37.201/SHA256SUMS.txt) |
 | 0.37.200 | [RemoteStation-Setup-0.37.200.exe](0.37.200/RemoteStation-Setup-0.37.200.exe) | [remote-station-0.37.200.tar.gz](0.37.200/remote-station-0.37.200.tar.gz) | TRX SSB : liste des QSO — [empreintes SHA-256](0.37.200/SHA256SUMS.txt) |
 | 0.37.199 | [RemoteStation-Setup-0.37.199.exe](0.37.199/RemoteStation-Setup-0.37.199.exe) | [remote-station-0.37.199.tar.gz](0.37.199/remote-station-0.37.199.tar.gz) | TRX SSB : score et indicatifs probables — [empreintes SHA-256](0.37.199/SHA256SUMS.txt) |

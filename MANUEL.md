@@ -197,7 +197,7 @@ Le FT8 est le mode le plus simple à distance : tout se fait à la souris et le 
 
 1. **Colonne de gauche** : Antenne, RF front end (réception), Mode, Filtres, Station meters (mesures).
 2. **Centre, en haut** : les deux écrans VFO (A / MAIN et B / SUB), la ligne **Step** (pas d'accord, choix du VFO, SPLIT…) et la ligne des **bandes**.
-3. **Centre, en bas** : la ligne des onglets (sans titre au-dessus) : Activité, FT8 · FT4 · FT2, SSB, RTTY, WSPR, JT65, JTTY, CW, SSTV (un clic sur un mode ouvre sa page : **TRX SSB**, **TRX CW**, ou **TRX DIGI** sur ce mode ; avec la main, le TRX passe dans le mode), puis Logbooks (le dashboard s'ouvre sur le **carnet de trafic**, qui reste affiché pendant que les modes sont dans leurs pages), le bouton `Log QSO` et Synchro, puis `👁 Suivre l'opérateur`. À droite, la **carte de bande** (spots du DX cluster), dans tous les onglets de modes sauf SSTV.
+3. **Centre, en bas** : la ligne des onglets (sans titre au-dessus) : Modes (journal de la station), FT8 · FT4 · FT2, SSB, RTTY, WSPR, JT65, JTTY, CW, SSTV (un clic sur un mode ouvre sa page : **TRX SSB**, **TRX CW**, ou **TRX DIGI** sur ce mode ; avec la main, le TRX passe dans le mode), puis Logbooks (le dashboard s'ouvre sur le **carnet de trafic**, qui reste affiché pendant que les modes sont dans leurs pages), le bouton `Log QSO` et Synchro, puis `👁 Suivre l'opérateur`. À droite, la **carte de bande** (spots du DX cluster), dans tous les onglets de modes sauf SSTV.
 4. **Colonne de droite** : RX audio (écoute), DSP (antiparasites), Accord (tuner), TX (PTT et puissance).
 5. Sous les onglets : la ligne **QSO** (la station contactée, ses reports et le TX call).
 
@@ -475,7 +475,7 @@ Onglet `SSB` de la ligne des onglets du dashboard, ou bouton `SSB` de la ligne *
 - Il montre les membres connectés et qui a la main.
 - **Discussion** : tapez un message dans « Message aux connectés… » puis `Envoyer` (ou `Entrée`). Tous les connectés le voient. Les messages ne sont pas gardés après un redémarrage du serveur.
 - Les boutons `Demander la main à …` et `Passer la main à …` y apparaissent quand c'est utile (section 6).
-- L'onglet **Activité** (au centre) est le journal de la station : connexions, prises et passages de main, émissions (fréquence, mode, puissance, durée), accords, coupures de sécurité, station en ligne, TRX connecté…
+- L'onglet **Modes** (au centre, premier onglet) est le journal de la station : connexions, prises et passages de main, émissions (fréquence, mode, puissance, durée), accords, coupures de sécurité, station en ligne, TRX connecté…
 
 <a id="disposition"></a>
 ## 11. Disposition et fenêtres séparées
@@ -542,7 +542,7 @@ Adresse : **https://remote.op0p.be/ftdx101**. La face avant du FTDX101MP, où **
 <a id="numeriques"></a>
 ## 12. Modes numériques
 
-Les onglets du centre : **Activité**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV**, puis **Logbooks**, le bouton `Log QSO` et **Synchro**. Avec la main, un clic sur l'onglet d'un mode numérique (FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, SSTV) met le TRX en **DATA-U** (USB-D sur l'IC-7300) sur le VFO écouté, même sous 10 MHz ; l'onglet **CW** le met en CW (CW-L sous 10 MHz, CW-U au-dessus ; CW-R / CW sur l'IC-7300), sauf s'il y est déjà. À droite des onglets FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY et CW, la **carte de bande** montre les spots du DX cluster (voir 12.3, « Carte de bande »). Vous n'avez **aucun logiciel à installer** (pas de WSJT-X, FLDIGI…) : tout se fait dans la page.
+Les onglets du centre : **Modes**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV**, puis **Logbooks**, le bouton `Log QSO` et **Synchro**. Avec la main, un clic sur l'onglet d'un mode numérique (FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, SSTV) met le TRX en **DATA-U** (USB-D sur l'IC-7300) sur le VFO écouté, même sous 10 MHz ; l'onglet **CW** le met en CW (CW-L sous 10 MHz, CW-U au-dessus ; CW-R / CW sur l'IC-7300), sauf s'il y est déjà. À droite des onglets FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY et CW, la **carte de bande** montre les spots du DX cluster (voir 12.3, « Carte de bande »). Vous n'avez **aucun logiciel à installer** (pas de WSJT-X, FLDIGI…) : tout se fait dans la page.
 
 - Le **décodage se fait sur le serveur**, à l'heure du serveur (synchronisée) : l'heure de votre PC et de celui du club n'a pas d'importance.
 - Le son du TRX n'est envoyé que si quelqu'un écoute ou regarde un onglet de mode numérique : les décodages commencent quelques secondes après l'ouverture de l'onglet.

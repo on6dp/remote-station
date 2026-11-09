@@ -197,7 +197,7 @@ FT8 is the easiest mode to use remotely: everything is done with the mouse and t
 
 1. **Left column**: Antenne (antenna), RF front end (receive), Mode, Filtres (filters), Station meters (measurements).
 2. **Centre, top**: the two VFO displays (A / MAIN and B / SUB), the **Step** row (tuning step, VFO choice, SPLIT…) and the **band** row.
-3. **Centre, bottom**: the tab row (no title above it): Activité, FT8 · FT4 · FT2, SSB, RTTY, WSPR, JT65, JTTY, CW, SSTV (a mode tab opens that mode's page: TRX SSB, TRX CW, or TRX DIGI on that mode), then Logbooks (the dashboard opens on the **logbook**, which stays shown while the modes are in their own pages), the `Log QSO` button and Synchro.
+3. **Centre, bottom**: the tab row (no title above it): Modes (station activity log), FT8 · FT4 · FT2, SSB, RTTY, WSPR, JT65, JTTY, CW, SSTV (a mode tab opens that mode's page: TRX SSB, TRX CW, or TRX DIGI on that mode), then Logbooks (the dashboard opens on the **logbook**, which stays shown while the modes are in their own pages), the `Log QSO` button and Synchro.
 4. **Right column**: RX audio (listening), DSP (noise reduction), Accord (tuner), TX (PTT and power).
 5. Under the tabs: the **QSO** line (the station worked, its reports and the TX call). `Log QSO` is on the tab row, right of Logbooks, followed by `👁 Suivre` (follow the operator). On the right, the **band map** (DX cluster spots), in every mode tab except SSTV.
 
@@ -473,7 +473,7 @@ Transmitting is only possible if the administrators have enabled it on the serve
 - It shows the connected members and who has control.
 - **Chat**: type a message in « Message aux connectés… » (message to connected members) then `Envoyer` (send) (or `Enter`). All connected members see it. Messages are not kept after a server restart.
 - The `Demander la main à …` and `Passer la main à …` buttons appear there when relevant (section 6).
-- The **Activité** (activity) tab in the centre is the station log: logins, control taken and handed over, transmissions (frequency, mode, power, duration), tuning, safety cuts, station online, TRX connected…
+- The **Modes** tab (first tab in the centre) is the station log: logins, control taken and handed over, transmissions (frequency, mode, power, duration), tuning, safety cuts, station online, TRX connected…
 
 <a id="disposition"></a>
 ## 11. Layout and separate windows
@@ -532,7 +532,7 @@ Address: **https://remote.op0p.be/ftdx101**. The FTDX101MP front panel, where **
 <a id="numeriques"></a>
 ## 12. Digital modes
 
-The centre tabs: **Activité**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV**, then **Logbooks**, the `Log QSO` button and **Synchro**. With control, clicking the tab of a digital mode (FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, SSTV) puts the TRX in **DATA-U** (USB-D on the IC-7300) on the VFO being received, even below 10 MHz; the **CW** tab puts it in CW (CW-L below 10 MHz, CW-U above; CW-R / CW on the IC-7300), unless it already is. On the right of the FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY and CW tabs, the **band map** shows the DX cluster spots (see 12.3, « Band map »). You have **no software to install** (no WSJT-X, FLDIGI…): everything happens in the page.
+The centre tabs: **Modes**, **FT8 · FT4 · FT2**, **RTTY**, **WSPR**, **JT65**, **JTTY**, **CW**, **SSTV**, then **Logbooks**, the `Log QSO` button and **Synchro**. With control, clicking the tab of a digital mode (FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY, SSTV) puts the TRX in **DATA-U** (USB-D on the IC-7300) on the VFO being received, even below 10 MHz; the **CW** tab puts it in CW (CW-L below 10 MHz, CW-U above; CW-R / CW on the IC-7300), unless it already is. On the right of the FT8 · FT4 · FT2, RTTY, WSPR, JT65, JTTY and CW tabs, the **band map** shows the DX cluster spots (see 12.3, « Band map »). You have **no software to install** (no WSJT-X, FLDIGI…): everything happens in the page.
 
 - **Decoding runs on the server**, on the server's (synchronised) clock: the time on your PC and on the club PC does not matter.
 - The TRX audio is only sent while someone is listening or watching a digital-mode tab: decodes start a few seconds after the tab is opened.
