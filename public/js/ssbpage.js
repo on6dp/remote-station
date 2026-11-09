@@ -208,6 +208,9 @@
     $('ssTtsV').value = TT.voice;
     $('ssTtsS').value = TT.speed;
     $('ssTtsSo').textContent = TT.speed + ' mots/min';
+    if (TT.gap == null) TT.gap = 70;
+    $('ssTtsG').value = TT.gap;
+    $('ssTtsGo2').textContent = TT.gap + ' ms';
     ttsCall();
   }
   function ttsCall() {
@@ -219,10 +222,11 @@
   $('ssTtsBtn').addEventListener('click', () => { const p = $('ssTts'); p.hidden = !p.hidden; if (!p.hidden) ttsDraw(); });
   $('ssTtsV').addEventListener('change', () => { TT.voice = $('ssTtsV').value; ttsSave(); });
   $('ssTtsS').addEventListener('input', () => { TT.speed = Number($('ssTtsS').value); $('ssTtsSo').textContent = TT.speed + ' mots/min'; ttsSave(); });
+  $('ssTtsG').addEventListener('input', () => { TT.gap = Number($('ssTtsG').value); $('ssTtsGo2').textContent = TT.gap + ' ms'; ttsSave(); });
   $('ssTtsDef').addEventListener('click', () => { TT.items = TTS_DEF.map((x) => Object.assign({ on: true }, x)); ttsSave(); ttsDraw(); });
   $('ssTtsGo').addEventListener('click', () => {
     if (!host) return toast('Page d’origine fermée.', 'warn');
-    const items = TT.items.map((it, i) => ({ n: i + 1, name: it.name, text: it.text, voice: TT.voice, speed: TT.speed, on: it.on })).filter((x) => x.on !== false && x.text.trim());
+    const items = TT.items.map((it, i) => ({ n: i + 1, name: it.name, text: it.text, voice: TT.voice, speed: TT.speed, gap: TT.gap == null ? 70 : TT.gap, on: it.on })).filter((x) => x.on !== false && x.text.trim());
     if (!items.length) return toast('Cochez au moins une mémoire.', 'warn');
     const busy = items.filter((x) => vmFilled(x.n) && !(S.tts && S.tts[x.n])).map((x) => 'T' + x.n);
     if (busy.length && !window.confirm('Remplacer ' + busy.join(', ') + ' (enregistrées au micro) par les messages en anglais ?')) return;
@@ -235,7 +239,7 @@
   $('ssTtsTry').addEventListener('click', () => {
     if (!host) return toast('Page d’origine fermée.', 'warn');
     const it = TT.items.find((x) => x.on !== false && x.text.trim()) || TT.items[0];
-    api.send({ t: 'vm_tts_try', text: it.text, voice: TT.voice, speed: TT.speed });
+    api.send({ t: 'vm_tts_try', text: it.text, voice: TT.voice, speed: TT.speed, gap: TT.gap == null ? 70 : TT.gap });
     toast('Voix « ' + $('ssTtsV').selectedOptions[0].textContent + ' » : préparation…', '', 2500);
   });
   let ttsCtx = null;

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.214** — Messages en anglais : espacement des lettres épelées (SSML), réglages Voix / Vitesse / Espacement en haut du cadre
 - **0.37.213** — Messages en anglais : vitesse de 100 à 320 mots par minute
 - **0.37.212** — TRX SSB : le cadre Messages en anglais se referme après GÉNÉRER, bouton Fermer
 - **0.37.211** — Mémoires vocales : émission plus régulière (avance 160 ms, Auto Monitor sans mélange avec le retour du TRX) ; messages en anglais : voix féminines, écoute d'essai, indicatif épelé sans coupures ; TRX SSB : correction du micro (ulaw.js manquant)
