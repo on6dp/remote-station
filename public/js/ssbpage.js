@@ -692,7 +692,10 @@
     $('cwpTx').classList.toggle('on', tx);
     $('cwpTxSt').textContent = 'Émission : ' + (st && st.ptt && st.ptt.active ? (st.ptt.voice ? 'phonie / mémoire vocale de ' : 'PTT de ') + (st.ptt.by || '?') : 'aucune');
     $('cwpLink').textContent = 'Liaison : ' + (host ? 'par la page d’origine' : 'aucune');
-    $('ssTxc').textContent = st && st.txCall ? String(st.txCall).toUpperCase() + ' ' : '';
+    // Indicatif du titre : le TX call choisi dans la fiche (sans contest), sinon celui d'émission de la station
+    const fsel = !$('ssQso').hidden ? document.querySelector('#ssLog select[name="station"]') : null;
+    const tcall = (fsel && fsel.value) || (st && st.txCall) || '';
+    $('ssTxc').textContent = tcall ? String(tcall).toUpperCase() + ' ' : '';
     const k = kit();
     if (k) {
       // Indicatif choisi ailleurs (spot cliqué dans une BAND MAP…) : dans la case Indicatif

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.208** — TRX SSB : le titre suit le TX call choisi dans la fiche (ON6DP TRX SSB)
 - **0.37.207** — TRX SSB / CW : export ADIF ; PTT rouge à l'émission ; case Prénom retirée de la page SSB ; nouveaux QSO complétés avec QRZ.com (nom, QTH, locator)
 - **0.37.206** — TRX SSB et TRX CW : export ADIF (.adi) du contest ; TRX SSB : ADIF des QSO en phonie hors contest, grand PTT rouge à l'émission
 - **0.37.205** — TRX SSB : fiche en USB / LSB seulement ; carnet : prénom et nom, QTH, locator repris de QRZ.com (bouton ⇩ QRZ) ; dashboard : phonie dans la page TRX SSB
