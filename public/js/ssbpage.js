@@ -117,7 +117,7 @@
       const z = k.zones();
       set($('ssCqz'), z.cqz);
       set($('ssItu'), z.itu);
-      set($('ssName'), z.name);
+      if ($('ssName')) set($('ssName'), z.name);
     }
     logSync(S.id);
   }
@@ -138,6 +138,7 @@
   $('ssNrM').addEventListener('click', () => { const k = kit(); if (k) { k.setSerial(k.serial() - 1); drawContest(); } });
   $('ssNrP').addEventListener('click', () => { const k = kit(); if (k) { k.setSerial(k.serial() + 1); drawContest(); } });
   for (const [id, key] of [['ssCqz', 'cqz'], ['ssItu', 'itu'], ['ssName', 'name']]) {
+    if (!$(id)) continue;
     $(id).addEventListener('change', () => { const k = kit(); if (k) { k.setZones({ [key]: $(id).value }); drawContest(); } });
   }
 

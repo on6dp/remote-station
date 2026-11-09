@@ -880,6 +880,18 @@ function logEditWhy(conn, q) {
   return 'Prenez la main pour modifier ou supprimer vos QSO (sans la main : consultation seulement)';
 }
 // Pays DXCC du correspondant : enregistré avec le QSO (champ ADIF COUNTRY), ou calculé pour les anciens QSO
+// Nouveau QSO sans nom, QTH ou locator (contest, FT8 automatique…) : complété avec la fiche QRZ.com du correspondant
+// (prénom et nom, ville, locator), cases vides seulement, si un compte QRZ.com est réglé
+const titleCase = (x) => String(x || '').toLowerCase().replace(/(^|[\s'-])(\p{L})/gu, (m0, a, b) => a + b.toUpperCase()).trim();
+function qrzFill(q) {
+  if (!q || !q.id || (q.name && q.qth && q.gridsquare) || !qrzx.configured()) return;
+  qrzx.lookup(q.call).then((v) => {
+    if (!v) return;
+    const add = { name: titleCase([v.fname || v.nick, v.name].filter(Boolean).join(' ')).slice(0, 40), qth: String(v.qth || '').slice(0, 60), gridsquare: String(v.grid || '').toUpperCase().slice(0, 6) };
+    const done = book.merge(q.id, add);
+    if (done && done.length) for (const c of ops) send(c, { t: 'log_changed' });
+  }).catch(() => {});
+}
 // Log d'un contest : pays DXCC et continent du correspondant et de la station (calcul du score dans la page)
 function ctstCty(q) {
   const e = DXCC.lookup(q.call) || {};
@@ -3120,6 +3132,7 @@ function onOperator(conn, m) {
         sync.auto(q, { udp: club, by: club ? '' : String(q.station_callsign || '') });
         if (!club && !LOG_SERVICES.some((s) => auto[s])) send(conn, { t: 'notice', level: 'info', msg: 'QSO enregistré sous ' + q.station_callsign + ' : pas d’envoi vers les logs en ligne du club. Vos propres logs en ligne : Synchronisation ▾ (vos identifiants, envoi automatique possible).' });
         send(conn, { t: 'log_saved', qso: qsoForClient(q), auto, tag: logTag(m) });
+        qrzFill(q);
       }
       for (const c of ops) send(c, { t: 'log_changed' });
       sendWorked(false);
