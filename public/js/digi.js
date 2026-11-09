@@ -156,7 +156,8 @@
   let needHist = true;   // demander l'historique des décodages à la prochaine annonce
   let clockOff = 0;      // écart horloge du serveur − horloge de ce PC (ms)
   let bestRtt = Infinity;
-  let tab = store.get(POPUP ? 'ptab' : 'tab', POPUP ? 'ftx' : 'events');
+  // Dashboard : il s'ouvre sur le carnet (Logbooks) ; les modes ont chacun leur page (TRX SSB, TRX CW, TRX DIGI)
+  let tab = POPUP ? store.get('ptab', 'ftx') : (window.RSLOG ? 'log' : 'events');
   const FT_MODES = ['FT8', 'FT4', 'FT2'];
   const ftStored = () => { const v = store.get('ftmode', store.get('mode', 'FT8')); return FT_MODES.indexOf(v) >= 0 ? v : 'FT8'; };
   let mode = ftStored();
@@ -795,7 +796,7 @@
     detached = !!on;
     if (!on) { needHist = true; wsNeedHist = true; jtNeedHist = true; ssNeedHist = true; } // retour de la fenêtre séparée : on récupère ce qui a été décodé entre-temps
     // Fenêtre séparée ouverte : le centre du dashboard revient sur l'activité de la station
-    showTab(on && !POPUP && MODE_TABS.indexOf(tab) >= 0 ? 'events' : tab);
+    showTab(on && !POPUP && MODE_TABS.indexOf(tab) >= 0 ? (logHere() ? 'log' : 'events') : tab);
   }
   // Le serveur ne décode (et la station n'envoie la BF) que si au moins un membre regarde la fenêtre
   function announce() {

@@ -197,7 +197,7 @@ Le FT8 est le mode le plus simple à distance : tout se fait à la souris et le 
 
 1. **Colonne de gauche** : Antenne, RF front end (réception), Mode, Filtres, Station meters (mesures).
 2. **Centre, en haut** : les deux écrans VFO (A / MAIN et B / SUB), la ligne **Step** (pas d'accord, choix du VFO, SPLIT…) et la ligne des **bandes**.
-3. **Centre, en bas** : « Activités » : onglets Activité, FT8 · FT4 · FT2, SSB, RTTY, WSPR, JT65, JTTY, CW, SSTV (un clic sur un mode ouvre sa page : **TRX SSB**, **TRX CW**, ou **TRX DIGI** sur ce mode ; avec la main, le TRX passe dans le mode), puis Logbooks, le bouton `Log QSO` et Synchro, puis `👁 Suivre l'opérateur`. À droite, la **carte de bande** (spots du DX cluster), dans tous les onglets de modes sauf SSTV.
+3. **Centre, en bas** : « Activités » : onglets Activité, FT8 · FT4 · FT2, SSB, RTTY, WSPR, JT65, JTTY, CW, SSTV (un clic sur un mode ouvre sa page : **TRX SSB**, **TRX CW**, ou **TRX DIGI** sur ce mode ; avec la main, le TRX passe dans le mode), puis Logbooks (le dashboard s'ouvre sur le **carnet de trafic**, qui reste affiché pendant que les modes sont dans leurs pages), le bouton `Log QSO` et Synchro, puis `👁 Suivre l'opérateur`. À droite, la **carte de bande** (spots du DX cluster), dans tous les onglets de modes sauf SSTV.
 4. **Colonne de droite** : RX audio (écoute), DSP (antiparasites), Accord (tuner), TX (PTT et puissance).
 5. Sous les onglets : la ligne **Correspondant** (la station contactée, ses reports et le TX call).
 
