@@ -173,7 +173,8 @@ sudo systemctl restart remote-station
 | `ftxWatchdogMinutes` | 6 | Arrêt d'une séquence FT8 / FT4 / FT2 sans réponse |
 | `stationEditors` | ON6DP, ON4LUC | Responsables de la station (section 2) |
 | `stationTz` | Europe/Brussels | Fuseau des statistiques |
-| `clusterHost`, `clusterPort`, `clusterCall`, `clusterCmds` | op0p.be, 8000 | DX cluster de la carte de bande ; `clusterHost` vide = sans cluster |
+| `clusterHost`, `clusterPort`, `clusterCall`, `clusterCmds` | op0p.be, 8000 | DX cluster de la carte de bande ; `clusterHost` vide = sans cluster. Les spots des opérateurs (case « Spot cluster » au log) passent par une courte liaison au même cluster sous l'indicatif de leur compte (pas `clusterCall` ni le TX call) ; journal `spot` |
+| `pskReporter`, `pskAntenna` | `true`, vide | Stations FT8 / FT4 / FT2 décodées envoyées à PSK Reporter (pskreporter.info) toutes les 5 min sous `digiCall` et `stationGrid`, comme WSJT-X (UDP vers report.pskreporter.info:4739) ; `false` = arrêt ; `pskAntenna` : texte d'antenne affiché sur la carte |
 | `qsyOrigins` | dx.op0p.be, cluster.op0p.be | Sites de DX cluster autorisés à caler le TRX sur un spot |
 | `ftx1SubCat`, `ftx1SubSingle` | `true`, `false` | FTX-1 : MAIN / SUB par le dashboard (en réception simple : refusé, sauf essais) |
 | `qo100If` | 144,5 / 432,5 / 1296,5 | FI des convertisseurs QO-100 |

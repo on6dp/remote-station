@@ -104,6 +104,7 @@
         <button class="btn btn-primary" type="submit" data-a="save">Enregistrer le QSO</button>
         <button class="btn" type="button" data-a="cancel" hidden>Annuler</button>
         <button class="btn" type="button" data-a="del" hidden>Supprimer</button>
+        <label class="spotlog" title="Cochée : le QSO enregistré est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label>
         <span class="lg-fmsg" id="lgFmsg"></span>
       </div>
     </form>
@@ -550,7 +551,7 @@
     if (!qso.call) return fmsg('Indicatif du correspondant ?', 'err');
     if (!(qso.freq > 0)) return fmsg('Fréquence en MHz ? (ex. 14.074)', 'err');
     if (editing) api.send({ t: 'log_edit', id: editing.id, qso, tag: TAG || undefined });
-    else api.send({ t: 'log_add', qso, force: !!force, tag: TAG || undefined });
+    else api.send({ t: 'log_add', qso, force: !!force, tag: TAG || undefined, spot: !!(window.RSSPOT && RSSPOT.on()) });
     fmsg('Enregistrement…', '');
   }
   let viewOnly = false; // fiche ouverte en consultation (pas le droit de modifier ce QSO)
@@ -1132,7 +1133,7 @@
         return;
       }
       if (window.confirm('Doublon possible : ' + p.call + ' déjà dans le carnet sur ' + p.band + ' ' + modeName(p) + ' le ' + fmtDate(p.qso_date) + ' à ' + fmtTime(p.time_on) + ' UTC.\nEnregistrer quand même ?')) {
-        api.send({ t: 'log_add', qso: pendingDupe, force: true, tag: TAG || undefined });
+        api.send({ t: 'log_add', qso: pendingDupe, force: true, tag: TAG || undefined, spot: !!(window.RSSPOT && RSSPOT.on()) });
       } else if (root && !root.hidden && root.offsetParent) fmsg('QSO non enregistré (doublon).', 'warn'); else say('QSO non enregistré (doublon).', 'warn');
       pendingDupe = null;
     } else if (m.t === 'log_export') {

@@ -1889,7 +1889,10 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .cwp-elog { background: #3fd07f; color: #000; font-weight: 900; border: 0; border-radius: 5px; padding: 8px 12px; cursor: pointer; align-self: flex-end; }
 .cwp-ewipe { background: #2a3240; color: #fff; font-weight: 700; border: 1px solid var(--v2-border); border-radius: 5px; padding: 7px 10px; cursor: pointer; align-self: flex-end; }
 .cwp-dupe { align-self: flex-end; font-weight: 900; font-size: 13px; padding: 6px 8px; border-radius: 4px; }
-.cwp-dupe.dup { background: #c8170d; color: #fff; }
+.cwp-dupe:empty { display: none; }
+.cwp-dupe.dup { background: #e01b0f; color: #fff; font-weight: 900; letter-spacing: 1px; padding: 6px 12px; animation: cwpDupeBlink 0.8s steps(1, end) infinite; }
+@keyframes cwpDupeBlink { 50% { background: #5a0904; color: #ffd0cc; } }
+@media (prefers-reduced-motion: reduce) { .cwp-dupe.dup { animation: none; } }
 .cwp-dupe.new { color: #3fd07f; }
 .cwp-cstats { font-size: 11.5px; color: var(--v2-text-dim); }
 .cwp-cstats b { color: var(--v2-text-bright); }
@@ -2071,3 +2074,16 @@ body.cwp-body:not(.ssb-body) .cwp-main > .cwp-rx { flex: 1 1 220px; min-height: 
 body.digi-popup #centerPanel.bm-on:not(.bm-dual) > :not(.panel-h):not(.bm) { margin-right: 0; margin-left: var(--bm-w); }
 body.digi-popup #centerPanel:not(.bm-dual) > .bm:not(.bm-b) { right: auto; left: 0; border-left: 0; border-right: 1px solid var(--v2-border-dark); border-radius: var(--v2-panel-radius) 0 0 var(--v2-panel-radius); }
 body.digi-popup #centerPanel:not(.bm-dual) > .bm .bm-grip { left: auto; right: 0; }
+/* Case « Spot cluster » (spotlog.js) : QSO enregistré → spot au DX cluster sous l'indicatif de l'opérateur */
+.spotlog { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--v2-text-secondary, #b8c2d0); cursor: pointer; white-space: nowrap; user-select: none; }
+.spotlog input { margin: 0; accent-color: #2f9bff; cursor: pointer; }
+.spotlog.on { color: #6cc0ff; }
+.cwp-entry label.spotlog { flex-direction: row; align-self: flex-end; padding: 7px 4px; font-size: 12px; text-transform: none; letter-spacing: 0; }
+.md-act .spotlog { margin-right: auto; }
+.cwp-prob { max-height: 240px; min-height: 84px; }
+.cwp-entry label.spotlog.on { color: #6cc0ff; }
+label.spotlog { display: inline-flex !important; flex-direction: row !important; text-transform: none !important; letter-spacing: 0 !important; }
+.lg-act label.spotlog { font-size: 12px; align-self: center; }
+.dg-chk.spotlog { font-weight: inherit; font-size: inherit; color: inherit; }
+.dg-chk.spotlog.on { color: #6cc0ff; }
+.lg-row label.spotlog input { width: auto; padding: 0; }

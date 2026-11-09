@@ -46,9 +46,15 @@
             <label>Reçu <input id="cwpESrx" maxlength="30" autocomplete="off" spellcheck="false" title="Échange reçu (n° de série, zone…)"></label>
             <button type="button" class="cwp-elog" id="cwpELog">LOG ↵</button>
             <button type="button" class="cwp-ewipe" id="cwpEWipe" title="Effacer la ligne (Alt+W)">EFFACER</button>
+            <label class="spotlog" title="Cochée : chaque QSO enregistré (LOG) est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label>
             <span class="cwp-dupe" id="cwpDupe"></span>
           </div>
           <div class="cwp-macros" id="cwpCMacros"></div>
+          <div class="ssb-pan ssb-prob cwp-prob">
+            <h3 id="cwpPrH">Indicatifs probables</h3>
+            <div class="ssb-prl" id="cwpPr"></div>
+            <p class="cwp-note" id="cwpPrNote"></p>
+          </div>
         </div>
         <div class="cwp-cright">
           <div class="cwp-cstats" id="cwpCStats">—</div>
@@ -82,7 +88,8 @@
     <span id="cwpTxSt">Émission : —</span>
   </footer>
   <p class="dg-toast" id="cwpToast" role="status"></p>
-<script src="/js/paddle.js"></script>
+<script src="/js/spotlog.js"></script>
+  <script src="/js/paddle.js"></script>
 <script src="/js/vfobox.js"></script>
 <script src="/js/bandmap-lite.js"></script>
 <script src="/js/cwpage.js"></script>

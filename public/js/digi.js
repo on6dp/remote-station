@@ -212,6 +212,7 @@
         <option value="rcvd">auto à la réception du RR73 / 73</option>
         <option value="any">auto au 1er RR73 / 73 (envoyé ou reçu)</option>
       </select></label>
+      <label class="dg-chk spotlog" title="Cochée : chaque QSO FT8 / FT4 / FT2 enregistré dans le carnet (fiche ou log automatique) est aussi spoté sur le DX cluster, sous votre indicatif d’opérateur — pas le TX CALL. Les stations décodées partent de toute façon vers PSK Reporter."><input type="checkbox" data-spotlog> Spot cluster</label>
       <span class="seg ft-txside" id="dgTxSide" title="FTDX101 en double réception : VFO d'émission (MAIN = VFO-A, SUB = VFO-B). Un double-clic sur un message choisit tout seul le VFO de la station appelée."><span class="dg-f">TX</span><button class="btn" type="button" data-side="A" aria-pressed="true">VFO-A</button><button class="btn" type="button" data-side="B" aria-pressed="false">VFO-B</button></span>
       <label class="dg-txc" id="dgTxcWrap" title="TX call : indicatif sous lequel partent les émissions numériques (FT8 / FT4 / FT2, RTTY, JTTY…) — celui de la station ou le vôtre. Choisi par celui qui a la main."><span class="dg-f">TX call</span> <select id="dgTxCall"></select></label>
       <button class="btn dg-stop" type="button" id="dgStop" disabled title="Arrête l'émission automatique (Halt Tx)">■ Arrêter</button>
@@ -4019,7 +4020,7 @@
     }
     if (!qso.gridsquare) delete qso.gridsquare;
     if (!qso.tx_pwr) delete qso.tx_pwr;
-    api.send({ t: 'log_add', qso });
+    api.send({ t: 'log_add', qso, spot: !!(window.RSSPOT && RSSPOT.on()) });
     if (auto && api) api.say('Log automatique : QSO avec ' + q.call + ' enregistré dans le carnet.', '', 4000);
   }
   function qsoPrompt(q, note) {
@@ -4033,7 +4034,7 @@
     dlg.innerHTML = '<div class="qso-b"><h3>QSO terminé</h3>' + (note ? '<p class="qso-note">' + esc(note) + '</p>' : '') + '<p><b>' + esc(q.call) + '</b>' + (q.gridsquare ? ' · ' + esc(q.gridsquare) : '') + ' · ' + esc(q.mode) + ' · ' +
       esc(Number(q.freq).toFixed(6)) + ' MHz<br>Report envoyé ' + esc(q.rst_sent || '—') + ' · reçu ' + esc(q.rst_rcvd || '—') + ' · ' +
       esc(q.time_on.slice(0, 2) + ':' + q.time_on.slice(2, 4)) + '–' + esc(q.time_off.slice(0, 2) + ':' + q.time_off.slice(2, 4)) + ' UTC</p>' +
-      '<div class="md-act"><button class="btn" type="button" data-a="log">Enregistrer dans le carnet</button><button class="btn" type="button" data-a="no">Ne pas enregistrer</button></div></div>';
+      '<div class="md-act">' + (window.RSSPOT ? RSSPOT.html() : '') + '<button class="btn" type="button" data-a="log">Enregistrer dans le carnet</button><button class="btn" type="button" data-a="no">Ne pas enregistrer</button></div></div>';
     doc.body.appendChild(dlg);
     try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
     dlg.addEventListener('close', () => dlg.remove());
@@ -4621,7 +4622,7 @@
         '<label>Contest <input name="contest" maxlength="40" value="' + esc(ctst.id) + '"></label>' : '') +
       '<label class="ql-wide">Remarque <input name="comment" maxlength="200"></label></div>' +
       '<p class="md-prev ql-msg"></p>' +
-      '<div class="md-act"><span></span><button class="btn" value="cancel">Annuler</button><button class="btn btn-primary" type="button" data-a="save">Enregistrer dans le carnet</button></div></form>';
+      '<div class="md-act">' + (window.RSSPOT ? RSSPOT.html() : '<span></span>') + '<button class="btn" value="cancel">Annuler</button><button class="btn btn-primary" type="button" data-a="save">Enregistrer dans le carnet</button></div></form>';
     doc.body.appendChild(dlg);
     const f = dlg.querySelector('form');
     const msg = dlg.querySelector('.ql-msg');
@@ -4648,7 +4649,7 @@
         if (/^\d{1,5}$/.test(qso.srx_string)) qso.srx = qso.srx_string;
       }
       for (const k of Object.keys(qso)) if (qso[k] === '') delete qso[k];
-      api.send({ t: 'log_add', qso });
+      api.send({ t: 'log_add', qso, spot: !!(window.RSSPOT && RSSPOT.on()) });
       dlg.close();
     });
     dlg.addEventListener('close', () => dlg.remove());
@@ -5475,6 +5476,8 @@
       announce(); // reprise après reconnexion
     },
     onMessage(m) {
+      // Spot au DX cluster (case « Spot cluster ») : aussi affiché dans la fenêtre TRX DIGI
+      if (m.t === 'notice' && /^Spot\b/.test(m.msg || '') && api && api.say && document.body.classList.contains('digi-popup')) api.say(m.msg, m.level === 'error' ? 'warn' : '', 5000);
       // Réponse à « Mettre à l'heure » (onglet Synchro) : aussi affichée dans la case PC du club
       if (m.t === 'notice' && syBusy && /^Heure du PC du club|^Réservé aux responsables|^Station hors ligne|^Page Station trop ancienne/.test(m.msg || '')) {
         if (!/^Heure du PC du club/.test(m.msg) || Date.now() - syBusy < 60000) {

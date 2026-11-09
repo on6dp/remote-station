@@ -381,8 +381,10 @@
     const band = bandOf(trxMhz());
     const d = CL.items.filter((q) => q.call === call && q.band === band);
     const other = CL.items.filter((q) => q.call === call && q.band !== band).map((q) => q.band);
-    el.textContent = d.length ? 'DOUBLON ' + band + ' (' + d[d.length - 1].t.slice(0, 2) + ':' + d[d.length - 1].t.slice(2, 4) + ')' : other.length ? 'déjà sur ' + Array.from(new Set(other)).join(', ') : 'nouveau';
-    el.className = 'cwp-dupe ' + (d.length ? 'dup' : 'new');
+    // Seulement les doublons : « DUPE » clignotant (rien d'affiché = QSO valable)
+    el.textContent = d.length ? 'DUPE' : '';
+    el.title = d.length ? call + ' déjà contacté sur ' + band + ' à ' + d[d.length - 1].t.slice(0, 2) + ':' + d[d.length - 1].t.slice(2, 4) + ' UTC' + (other.length ? ' (aussi sur ' + Array.from(new Set(other)).join(', ') + ')' : '') : '';
+    el.className = 'cwp-dupe' + (d.length ? ' dup' : '');
     return d.length > 0;
   }
   function drawLog() {
@@ -629,7 +631,7 @@
       rst_sent: E.rs.value.trim() || '59', rst_rcvd: E.rr.value.trim() || '59', contest_id: CL.id, stx_string: stx, srx_string: srx, station: k.myCall() };
     if (/^\d{1,5}$/.test(stx)) qso.stx = stx;
     if (/^\d{1,5}$/.test(srx)) qso.srx = srx;
-    api.send({ t: 'log_add', qso, force: true, tag: 'ssbpage' });
+    api.send({ t: 'log_add', qso, force: true, tag: 'ssbpage', spot: !!(window.RSSPOT && RSSPOT.on()) });
     CL.items.push({ call, band: bandOf(mhz), d: qso.qso_date, t: hms, stx, srx });
     if (/<CNTR>|<SERNO>/.test(exchTpl())) k.afterLog(call); // n° de série suivant (seulement s'il fait partie de l'échange)
     drawLog();

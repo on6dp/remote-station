@@ -84,7 +84,8 @@
     if (!m || typeof m !== 'object') return;
     if (m.t === 'cw' && m.ch !== 1) rxAppend(m.text || '');
     else if (m.t === 'notice' && m.msg) toast(m.msg, m.level === 'error' ? 'warn' : '', 6000); // refus, fin d'émission…
-    else if (m.t === 'ctst_list' && m.contest === CL.id) { CL.items = m.items || []; drawLog(); checkDupe(); }
+    else if (m.t === 'ctst_list' && m.contest === CL.id) { CL.items = m.items || []; drawLog(); checkDupe(); drawProb(); }
+    else if (m.t === 'scp') { PR.q = m.q; PR.list = m.list || []; PR.n = m.n || 0; drawProb(); }
     else if ((m.t === 'log_saved' || m.t === 'log_changed') && CL.id) { clearTimeout(onMsg.lt); onMsg.lt = setTimeout(askList, 400); }
     else if (m.t === 'log_export' && m.tag === 'cwpage') saveFile(m);
     else if (m.t === 'pong' && Number.isFinite(m.ts)) {
@@ -286,8 +287,10 @@
     const band = bandOf(trxMhz());
     const d = dupeOf(call, band);
     const other = CL.items.filter((q) => q.call === call && q.band !== band).map((q) => q.band);
-    el.textContent = d.length ? 'DOUBLON ' + band + ' (' + d[d.length - 1].t.slice(0, 2) + ':' + d[d.length - 1].t.slice(2, 4) + ')' : other.length ? 'déjà sur ' + Array.from(new Set(other)).join(', ') : 'nouveau';
-    el.className = 'cwp-dupe ' + (d.length ? 'dup' : 'new');
+    // Seulement les doublons : « DUPE » clignotant (rien d'affiché = QSO valable)
+    el.textContent = d.length ? 'DUPE' : '';
+    el.title = d.length ? call + ' déjà contacté sur ' + band + ' à ' + d[d.length - 1].t.slice(0, 2) + ':' + d[d.length - 1].t.slice(2, 4) + ' UTC' + (other.length ? ' (aussi sur ' + Array.from(new Set(other)).join(', ') + ')' : '') : '';
+    el.className = 'cwp-dupe' + (d.length ? ' dup' : '');
     return d.length > 0;
   }
   function drawLog() {
@@ -317,8 +320,85 @@
     if (k) k.setCall('');
     drawState.kc = '';
     checkDupe();
+    askScp();
     E.call.focus();
   }
+  // ------------------------------------------------------------------ indicatifs probables (Super Check Partial + spots CW), comme la page TRX SSB
+  const PR = { q: '', list: [], n: 0, asked: '' };
+  const CW_SEG = { '160m': [1810, 1850], '80m': [3500, 3600], '40m': [7000, 7040], '30m': [10100, 10140], '20m': [14000, 14070], '17m': [18068, 18095],
+    '15m': [21000, 21070], '12m': [24890, 24915], '10m': [28000, 28070], '6m': [50000, 50100] };
+  function askScp() {
+    const q = E.call.value.trim().toUpperCase();
+    if (q.length < 2) { PR.q = ''; PR.list = []; PR.asked = ''; return drawProb(); }
+    if (q === PR.asked) return;
+    PR.asked = q;
+    clearTimeout(askScp.t);
+    askScp.t = setTimeout(() => api.send({ t: 'scp', q, n: 40 }), 120);
+  }
+  function pickCall(call, spot) {
+    E.call.value = call;
+    const k = kit();
+    if (k) k.setCall(call);
+    drawState.kc = call;
+    checkDupe();
+    askScp();
+    // Spot cliqué : le TRX va sur sa fréquence (en CW) si vous avez la main
+    if (spot && api.iControl() && host && host.api.setFreq) {
+      try { host.api.setFreq(Math.round(spot.f * 1000)); setTimeout(() => { try { if (hostWin.RSDIGI) hostWin.RSDIGI.modeFor('cw'); } catch (e) {} }, 500); } catch (e) {}
+    }
+    drawProb();
+    E.srx.focus();
+  }
+  function chip(call, cls, sub, title, onClick) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ssb-pc ' + cls;
+    b.textContent = call;
+    if (sub) { const s = document.createElement('small'); s.textContent = sub; b.appendChild(s); }
+    b.title = title || '';
+    b.addEventListener('click', onClick);
+    return b;
+  }
+  function drawProb() {
+    const box = $('cwpPr');
+    if (!box || !CL.id) return;
+    const band = bandOf(trxMhz());
+    const worked = new Set(CL.items.filter((q) => q.band === band).map((q) => q.call));
+    const any = new Set(CL.items.map((q) => q.call));
+    box.textContent = '';
+    const typed = E.call.value.trim().toUpperCase();
+    if (typed.length >= 2) {
+      $('cwpPrH').textContent = 'Indicatifs probables · « ' + typed + ' »';
+      // Déjà dans le log du contest d'abord, puis la liste Super Check Partial
+      const mine = Array.from(any).filter((c) => c.indexOf(typed) >= 0);
+      const scp = PR.q === typed ? PR.list : [];
+      const all = Array.from(new Set(mine.concat(scp))).slice(0, 40);
+      for (const c of all) {
+        const dup = worked.has(c);
+        box.appendChild(chip(c, dup ? 'dup' : any.has(c) ? '' : 'new', dup ? band : any.has(c) ? 'autre bande' : '', dup ? 'Déjà contacté sur ' + band : 'Cliquer : dans la case Indicatif', () => pickCall(c)));
+      }
+      $('cwpPrNote').textContent = all.length ? 'Vert : pas encore contacté · barré : doublon sur ' + (band || 'cette bande') + '.' : (PR.n ? 'Aucun indicatif connu ne contient « ' + typed + ' ».' : 'Liste Super Check Partial pas encore téléchargée par le serveur.');
+      return;
+    }
+    // Rien de tapé : stations spotées en CW sur la bande du TRX (DX cluster et Reverse Beacon Network), les plus récentes d'abord
+    const seg = CW_SEG[band];
+    $('cwpPrH').textContent = 'Stations spotées ' + (band ? 'sur ' + band : '') + ' (CW)';
+    const k = kit();
+    let spots = [];
+    try { spots = k && k.spots ? k.spots() : []; } catch (e) { spots = []; }
+    spots = spots.filter((s) => seg && s.f >= seg[0] && s.f <= seg[1] && !/\b(FT[248]|RTTY|PSK|JT65|JS8|SSTV|USB|LSB|SSB)\b/i.test(s.cmt || ''))
+      .sort((a, b) => b.at - a.at);
+    const seen = new Set();
+    for (const s of spots) {
+      if (seen.has(s.call)) continue;
+      seen.add(s.call);
+      const dup = worked.has(s.call);
+      box.appendChild(chip(s.call, dup ? 'dup' : 'new', s.f.toFixed(1), (dup ? 'Déjà contacté sur ' + band + ' · ' : 'Cliquer : indicatif + TRX sur ') + s.f.toFixed(1) + ' kHz' + (s.cmt ? ' · ' + s.cmt : ''), () => pickCall(s.call, s)));
+      if (seen.size >= 60) break;
+    }
+    $('cwpPrNote').textContent = seen.size ? 'Vert : à contacter · barré : déjà dans le log sur ' + band + '. Tapez le début d’un indicatif : liste Super Check Partial.' : 'Aucun spot CW sur cette bande pour l’instant. Tapez le début d’un indicatif : liste Super Check Partial (indicatifs actifs en contest).';
+  }
+  setInterval(() => { if (CL.id && E.call.value.trim().length < 2) drawProb(); }, 5000);
   function snapshotSent() {
     const k = kit();
     if (!k) return;
@@ -343,7 +423,7 @@
       contest_id: CL.id, stx_string: stx, srx_string: srx, station: k.myCall() };
     if (/^\d{1,5}$/.test(stx)) qso.stx = stx;
     if (/^\d{1,5}$/.test(srx)) qso.srx = srx;
-    api.send({ t: 'log_add', qso, force: true }); // doublons du contest : signalés ici (N1MM les garde aussi, à 0 point)
+    api.send({ t: 'log_add', qso, force: true, spot: !!(window.RSSPOT && RSSPOT.on()) }); // doublons du contest : signalés ici (N1MM les garde aussi, à 0 point)
     // Affiché tout de suite ; la liste est relue quand le serveur confirme
     CL.items.push({ call, band: bandOf(mhz), mode: 'CW', d: qso.qso_date, t: hms, stx, srx });
     // N° de série suivant dès que le QSO est enregistré (une fois par correspondant), si l'échange en contient un
@@ -402,6 +482,7 @@
     if (k) k.setCall(E.call.value);
     drawState.kc = E.call.value.trim().toUpperCase(); // tapé ici : pas à recopier depuis le dashboard
     checkDupe();
+    askScp();
   });
   E.srx.addEventListener('input', () => { E.srx.value = E.srx.value.toUpperCase(); });
   E.rs.value = E.rr.value = '599';

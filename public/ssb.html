@@ -58,6 +58,7 @@
             <label>Reçu <input id="cwpESrx" maxlength="30" autocomplete="off" spellcheck="false" title="Échange reçu (n° de série, zone…)"></label>
             <button type="button" class="cwp-elog" id="cwpELog">LOG ↵</button>
             <button type="button" class="cwp-ewipe" id="cwpEWipe" title="Effacer la ligne (Alt+W)">EFFACER</button>
+            <label class="spotlog" title="Cochée : chaque QSO enregistré (LOG) est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label>
             <span class="cwp-dupe" id="cwpDupe"></span>
           </div>
           <div class="ssb-vk">
@@ -122,7 +123,8 @@
     <span id="cwpTxSt">Émission : —</span>
   </footer>
   <p class="dg-toast" id="cwpToast" role="status"></p>
-<script src="/js/ulaw.js"></script>
+<script src="/js/spotlog.js"></script>
+  <script src="/js/ulaw.js"></script>
 <script src="/js/voice.js"></script>
 <script src="/js/logbook.js"></script>
 <script src="/js/vfobox.js"></script>

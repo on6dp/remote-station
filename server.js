@@ -577,6 +577,17 @@ function onDigi(m) {
     }
     // Pays DXCC, distance et azimut de la station qui émet chaque message (comme JTDX)
     if (Array.isArray(m.list) && m.mode !== 'WSPR' && m.mode !== 'JT65') for (const d of m.list) dxInfo(d);
+    // PSK Reporter : stations FT8 / FT4 / FT2 entendues (indicatif, locator, fréquence, SNR), comme WSJT-X
+    if (PSKR && Array.isArray(m.list) && FTX_SLOT[m.mode]) {
+      const dial = Number(m.ch === 1 ? radio.freqB : radio.freq) || 0;
+      if (dial > 1e6) for (const d of m.list) {
+        const w = String(d && d.msg || '').toUpperCase().split(/\s+/).map((x) => x.replace(/^<|>$/g, ''));
+        const call = w[0] === 'CQ' ? (DX_CALL_RE.test(w[1] || '') ? w[1] : w[2]) : w[1];
+        if (!call || !DX_CALL_RE.test(call)) continue;
+        const last = w[w.length - 1];
+        PSKR.add({ call, grid: /^[A-R]{2}\d{2}$/.test(last) && last !== 'RR73' ? last : '', hz: dial + (Number(d.f) || 0), snr: d.db, mode: m.mode, t: m.slot || Date.now() });
+      }
+    }
     const item = { slot: m.slot, list: m.list };
     const sideB = m.ch === 1;
     const h = (sideB ? digi.histB : digi.hist)[m.mode];
@@ -797,8 +808,48 @@ function sendWorked(force, only) {
 }
 const DXCC = require('./lib/dxcc.js');
 
+// Spot vers le DX cluster (case « Spot au log » cochée à l'enregistrement du QSO, ou bouton SPOT) : envoyé sous
+// l'INDICATIF DE L'OPÉRATEUR (son compte, ex. ON6DP), pas sous le TX CALL ni l'indicatif de connexion de la carte de
+// bande : une courte liaison telnet au même cluster est ouverte avec cet indicatif, le spot est envoyé, puis « bye ».
+// Réservé aux comptes qui émettent ; au plus 1 spot / 20 s et 30 / heure par opérateur.
+function clusterSpot(conn, callIn, khzIn, cmtIn) {
+  if (!conn.user.tx || conn.user.rxOnly) return send(conn, { t: 'notice', level: 'error', msg: 'Spot : réservé aux comptes autorisés à émettre' });
+  const host = String(cfg.clusterHost || '').trim();
+  if (!host) return send(conn, { t: 'notice', level: 'error', msg: 'Spot impossible : DX cluster non configuré' });
+  const op = String(conn.user.call || '').toUpperCase();
+  if (!/^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}(\/[A-Z0-9]{1,4})?$/.test(op)) return send(conn, { t: 'notice', level: 'error', msg: 'Spot : le compte ' + op + ' n’est pas un indicatif radioamateur' });
+  const call = String(callIn || '').toUpperCase().trim();
+  const khz = Math.round(Number(khzIn) * 10) / 10;
+  if (!/^(?=.*\d)[A-Z0-9/]{3,15}$/.test(call)) return send(conn, { t: 'notice', level: 'error', msg: 'Spot : indicatif du correspondant ?' });
+  if (!(khz >= 1800 && khz <= 450000)) return send(conn, { t: 'notice', level: 'error', msg: 'Spot : fréquence ?' });
+  const nowS = Date.now();
+  conn.user.spots = (conn.user.spots || []).filter((t) => nowS - t < 3600000);
+  if (conn.user.spots.length && nowS - conn.user.spots[conn.user.spots.length - 1] < 20000) return send(conn, { t: 'notice', level: 'warn', msg: 'Spot de ' + call + ' non envoyé : un seul toutes les 20 secondes' });
+  if (conn.user.spots.length >= 30) return send(conn, { t: 'notice', level: 'warn', msg: 'Spot de ' + call + ' non envoyé : 30 par heure au plus' });
+  const cmt = String(cmtIn || '').replace(/[^A-Za-z0-9 +\-./:#?!]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 30);
+  conn.user.spots.push(nowS);
+  const line = 'DX ' + khz.toFixed(1) + ' ' + call + (cmt ? ' ' + cmt : '');
+  send(conn, { t: 'notice', level: 'info', msg: 'Spot de ' + call + ' ' + khz.toFixed(1) + ' kHz en cours (de ' + op + ')…' });
+  spotOnce({ host, port: Number(cfg.clusterPort) || 8000, call: op, line }).then((r) => {
+    journal('spot', { call: op, ip: conn.ip, dx: call, khz, cmt, ok: r.ok, why: r.why || undefined });
+    if (r.ok) send(conn, { t: 'notice', level: 'ok', msg: 'Spot envoyé au cluster de ' + op + ' : ' + call + ' ' + khz.toFixed(1) + ' kHz' + (cmt ? ' « ' + cmt + ' »' : '') });
+    else send(conn, { t: 'notice', level: 'error', msg: 'Spot de ' + call + ' non envoyé : ' + (r.why || 'refus du cluster') });
+  });
+}
+// QSO enregistré avec « Spot au log » : commentaire = mode (+ contest)
+function spotOfQso(conn, q) {
+  const mode = String(LB.modeName(q) || q.mode || '').toUpperCase();
+  clusterSpot(conn, q.call, Number(q.freq) * 1000, (mode + (q.contest_id ? ' ' + q.contest_id : ' TNX QSO')).slice(0, 30));
+}
+// ---------------------------------------------------------------- PSK Reporter (rapports de réception FT8 / FT4 / FT2)
+// Activé par défaut (pskReporter: false dans config.json pour le couper) ; sous digiCall et stationGrid
+const PSKR = cfg.pskReporter === false ? null : new (require('./lib/pskreporter').PskReporter)({
+  call: () => cfg.digiCall || cfg.stationCall || '', grid: () => cfg.stationGrid || '', software: 'RemoteStation ' + VERSION,
+  antenna: () => String(cfg.pskAntenna || ''), log: (msg) => console.error(msg)
+});
+if (PSKR && !process.env.RS_NO_PSKR) PSKR.start();
 // ---------------------------------------------------------------- DX cluster (carte de bande)
-const { Cluster } = require('./lib/cluster.js');
+const { Cluster, spotOnce } = require('./lib/cluster.js');
 let cluster = null;
 let spotBatch = [];
 let spotTimer = null;
@@ -3220,6 +3271,7 @@ function onOperator(conn, m) {
         if (!club && !LOG_SERVICES.some((s) => auto[s])) send(conn, { t: 'notice', level: 'info', msg: 'QSO enregistré sous ' + q.station_callsign + ' : pas d’envoi vers les logs en ligne du club. Vos propres logs en ligne : Synchronisation ▾ (vos identifiants, envoi automatique possible).' });
         send(conn, { t: 'log_saved', qso: qsoForClient(q), auto, tag: logTag(m) });
         qrzFill(q);
+        if (m.spot === true) spotOfQso(conn, q); // « Spot au log » coché dans la page qui enregistre
       }
       for (const c of ops) send(c, { t: 'log_changed' });
       sendWorked(false);
@@ -3277,6 +3329,7 @@ function onOperator(conn, m) {
       }
       return send(conn, { t: 'ssb_list', items });
     }
+    case 'cluster_spot': return clusterSpot(conn, m.call, m.khz, m.cmt);
     case 'ctst_list': {
       // Log d'un contest (page TRX CW) : QSO du carnet avec cet identifiant, depuis la date donnée, pour les doublons,
       // les compteurs et la liste ; le carnet général reste la seule base

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.226** — Spot au DX cluster au moment de loguer le QSO (case « Spot cluster » des pages TRX SSB, TRX CW, TRX DIGI et du carnet), sous l'indicatif de l'opérateur ; stations FT8/FT4/FT2 décodées envoyées à PSK Reporter ; page CW : indicatifs probables ; DUPE clignotant à la place de « nouveau / DOUBLON »
 - **0.37.225** — TRX CW : n° de série suivant à l'enregistrement du QSO seulement si l'échange contient un n° de série
 - **0.37.224** — TRX CW : case Prénom retirée (comme TRX SSB)
 - **0.37.223** — Cartes de bande à gauche : TRX CW (spots CW), TRX SSB (spots phonie), TRX DIGI ; clic = indicatif + QSY ; CW DTR sans début perdu
