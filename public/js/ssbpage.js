@@ -886,6 +886,8 @@
     }
   }
   $('cwpTake').addEventListener('click', () => api.send({ t: 'take' }));
+  // Les deux VFO (SPLIT) : même main et mêmes commandes que le dashboard
+  if (window.RSVFOBOX) window.RSVFOBOX.mount($('cwpVfo'), { api, toast });
   // TX CALL : indicatif d'émission (et des QSO enregistrés), comme dans la page TRX DIGI ; avec la main
   function drawTxCall() {
     const sel = $('cwpTxCall');

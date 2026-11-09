@@ -21,6 +21,8 @@
   <p class="cwp-orphan" id="cwpOrphan" hidden>Cette page doit être ouverte depuis le dashboard (onglet CW → bouton « TRX CW »). Si le dashboard a été fermé, rouvrez-le : cette page s’y raccrochera.</p>
   <main class="cwp-main">
     <div id="cwpKey" class="cwp-grid3"></div>
+    <!-- Les deux VFO (TRX à deux VFO) : SPLIT, réception sur l'un, émission sur l'autre -->
+    <section class="cwp-box" id="cwpVfo" hidden></section>
     <section class="cwp-box cwp-ctst">
       <div class="cwp-ctrow">
         <label class="cwp-ctl1">Contest <select id="cwpCtst"><option value="">— pas de contest —</option></select></label>
@@ -78,6 +80,7 @@
   </footer>
   <p class="dg-toast" id="cwpToast" role="status"></p>
 <script src="/js/paddle.js"></script>
+<script src="/js/vfobox.js"></script>
 <script src="/js/cwpage.js"></script>
 </body>
 </html>
