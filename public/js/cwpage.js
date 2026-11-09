@@ -161,6 +161,7 @@
     $('cwpExch').disabled = !id;
     $('cwpExchSh').textContent = id ? '→ ' + k.exchShown() : '';
     set($('cwpNr'), String(k.serial()).padStart(3, '0'));
+    fillStx(false);
     const z = k.zones();
     set($('cwpCqz'), z.cqz);
     set($('cwpItu'), z.itu);
@@ -316,6 +317,7 @@
   function wipe() {
     for (const k of ['call', 'stx', 'srx']) E[k].value = '';
     CL.sentFor = '';
+    fillStx(true);
     const k = kit();
     if (k) k.setCall('');
     drawState.kc = '';
@@ -399,6 +401,17 @@
     $('cwpPrNote').textContent = seen.size ? 'Vert : à contacter · barré : déjà dans le log sur ' + band + '. Tapez le début d’un indicatif : liste Super Check Partial.' : 'Aucun spot CW sur cette bande pour l’instant. Tapez le début d’un indicatif : liste Super Check Partial (indicatifs actifs en contest).';
   }
   setInterval(() => { if (CL.id && E.call.value.trim().length < 2) drawProb(); }, 5000);
+  // « Envoyé » rempli tout seul avec l'échange à donner (zone, puissance… ou n° de série de ce QSO), comme la page
+  // TRX SSB ; tapé à la main : gardé jusqu'au QSO suivant
+  function fillStx(force) {
+    const k = kit();
+    if (!k || !k.contest()) return;
+    if (force) delete E.stx.dataset.manual;
+    if (E.stx.dataset.manual || document.activeElement === E.stx) return;
+    const v = stripRst(k.exchShown());
+    if (E.stx.value !== v) E.stx.value = v;
+  }
+  E.stx.addEventListener('input', () => { E.stx.value = E.stx.value.toUpperCase(); E.stx.dataset.manual = '1'; });
   function snapshotSent() {
     const k = kit();
     if (!k) return;
@@ -413,7 +426,7 @@
     if (!E.srx.value.trim()) { toast('Échange reçu ?', 'warn'); E.srx.focus(); return false; }
     const mhz = trxMhz();
     if (!(mhz > 0)) { toast('Fréquence du TRX inconnue : QSO non enregistré.', 'warn'); return false; }
-    if (!E.stx.value.trim() || CL.sentFor !== call) snapshotSent();
+    if (!E.stx.value.trim() || (CL.sentFor !== call && !E.stx.dataset.manual)) snapshotSent();
     const d = new Date(k.utcNow());
     const hms = String(d.getUTCHours()).padStart(2, '0') + String(d.getUTCMinutes()).padStart(2, '0') + String(d.getUTCSeconds()).padStart(2, '0');
     const stx = stripRst(E.stx.value);
@@ -431,6 +444,7 @@
     drawLog();
     for (const x of ['call', 'stx', 'srx']) E[x].value = '';
     CL.sentFor = '';
+    fillStx(true); // échange du QSO suivant (n° de série + 1)
     checkDupe();
     return true;
   }

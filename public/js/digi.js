@@ -2583,7 +2583,7 @@
   // Remplace les balises d'une macro ; <INCR> fait avancer le numéro de série (seulement si apply)
   function macroText(t, apply) {
     // Contest : échange réellement envoyé (avant que « TU » passe au numéro suivant), repris dans la fiche du QSO
-    if (apply && /<EXCH>/.test(t)) store.set('rtclastx', macroText('<EXCH>').replace(/\b5NN\b/g, '599'));
+    if (apply && /<EXCH>/.test(t)) { store.set('rtclastx', macroText('<EXCH>').replace(/\b5NN\b/g, '599')); store.set('rtclastxc', String(dx.call || '').trim().toUpperCase()); }
     const up = (v) => String(v || '').trim().toUpperCase();
     const d = new Date(now());
     const p2 = (n) => String(n).padStart(2, '0');
@@ -4599,8 +4599,12 @@
     const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const MODES = ['RTTY', 'JTTY', 'CW', 'SSTV', 'FT8', 'FT4', 'FT2', 'JT65', 'PSK31', 'USB', 'LSB', 'FM', 'AM'];
     // Contest RTTY choisi : échange envoyé (sans le 599) et reçu, identifiant Cabrillo du contest
-    const ctst = m === 'RTTY' && rtcOn() ? { id: rtcId(), stx: String(store.get('rtclastx', macroText('<EXCH>'))).replace(/^(599|5NN)\s*/, '') }
-      : m === 'CW' && cwcOn() ? { id: cwcId(), stx: String(store.get('rtclastx', cwText('<EXCH>'))).replace(/^(599|5NN)\s*/, '') } : null;
+    // Échange envoyé : celui émis à ce correspondant (macro avec <EXCH>), sinon l'échange à lui donner (report fixe, zone…
+    // ou n° de série de ce QSO) ; le n° de série passe au suivant quand le QSO est enregistré
+    const dxc = String(dx.call || '').trim().toUpperCase();
+    const sentTo = (fn) => String(dxc && store.get('rtclastxc', '') === dxc ? store.get('rtclastx', fn('<EXCH>')) : fn('<EXCH>')).replace(/\b5NN\b/g, '599').replace(/^(599|5NN)\s*/, '');
+    const ctst = m === 'RTTY' && rtcOn() ? { id: rtcId(), stx: sentTo(macroText), nr: /<CNTR>|<SERNO>/i.test(rtcExch()) }
+      : m === 'CW' && cwcOn() ? { id: cwcId(), stx: sentTo(cwText), nr: /<CNTR>|<SERNO>/i.test(cwcExch()) } : null;
     const dlg = doc.createElement('dialog');
     dlg.id = 'qsoLogDlg';
     dlg.className = 'macro-dlg qso-log';
@@ -4650,6 +4654,7 @@
       }
       for (const k of Object.keys(qso)) if (qso[k] === '') delete qso[k];
       api.send({ t: 'log_add', qso, spot: !!(window.RSSPOT && RSSPOT.on()) });
+      if (ctst && ctst.nr && qso.contest_id) cntrAfterLog(call); // n° de série suivant (une fois par correspondant)
       dlg.close();
     });
     dlg.addEventListener('close', () => dlg.remove());
@@ -4657,6 +4662,16 @@
     (dx.call ? f.querySelector('[data-a="save"]') : f.call).focus();
   }
 
+  // QSO de contest enregistré : n° de série suivant, une fois par correspondant (pas si la macro TU <INCR> l'a déjà fait)
+  function cntrAfterLog(call) {
+    const who = String(call || '').toUpperCase().trim() || '?';
+    let n = Number(store.get('cntr', '1')) || 1;
+    if (store.get('cntrcall', '') === who + '|' + n) return;
+    n++;
+    store.set('cntr', n);
+    store.set('cntrcall', who + '|' + n);
+    if ($('rtcNr') && document.activeElement !== $('rtcNr')) $('rtcNr').value = String(n).padStart(3, '0');
+  }
   function setTx(f, side) {
     const v = Math.max(100, Math.min(WF_TOP - 100, Math.round(f)));
     if (side === 'B') { txFB = v; store.set('txfb', v); } else { txF = v; store.set('txf', v); }
@@ -5188,15 +5203,7 @@
         if ($('rtcNr') && document.activeElement !== $('rtcNr')) $('rtcNr').value = String(n).padStart(3, '0');
       },
       // QSO enregistré dans le log du contest : n° de série suivant (sauf si la macro TU l'a déjà fait pour ce correspondant)
-      afterLog(call) {
-        const who = String(call || '').toUpperCase().trim() || '?';
-        let n = Number(store.get('cntr', '1')) || 1;
-        if (store.get('cntrcall', '') === who + '|' + n) return;
-        n++;
-        store.set('cntr', n);
-        store.set('cntrcall', who + '|' + n);
-        if ($('rtcNr') && document.activeElement !== $('rtcNr')) $('rtcNr').value = String(n).padStart(3, '0');
-      },
+      afterLog: (call) => cntrAfterLog(call),
       utcNow: () => now(),
       zones: () => ({ cqz: store.get('rtcqz', '14'), itu: store.get('rtitu', '27'), name: store.get('rtcname', '') }),
       setZones(z) {
