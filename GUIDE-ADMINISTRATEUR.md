@@ -220,7 +220,7 @@ raccourci « Remote Station - Page Station » (Chrome avec les bons réglages, s
 - Aucun autre logiciel (WSJT-X, logbook…) ne doit utiliser le port CAT en même temps.
 - **CW par DTR** (facultatif, plus réactif) : page Station → « Port de manipulation CW (DTR)… » → le 2ᵉ port USB du TRX (Standard COM Port). Le menu PC KEYING du TRX est mis sur DTR tout seul pendant l'émission.
 - **Clé CW à distance** (palettes ou pioche des opérateurs, depuis la 0.37.174) : elle passe **obligatoirement** par ce port DTR. Sans lui, la page Station refuse (« 2e port USB du TRX (manipulation DTR) non ouvert »). Après la mise à jour, **recharger la page Station** (Ctrl+F5) : une ancienne page refuse la clé à distance. Premiers essais **sur charge fictive**, en présence d'un membre au club.
-- **Clé des opérateurs chez eux** : rien à installer au club ni chez eux. Chaque opérateur relie sa clé à **son** PC par une interface USB, jamais par la carte son : adaptateur **USB → RS-232 DB9 mâle** (CH340 / PL2303 / FTDI) avec une prise **DB9 femelle à bornier** : commun de la clé → **broche 4 (DTR)**, point → **6 (DSR)**, trait → **8 (CTS)** (le commun ne va **pas** sur la broche 5 GND), puis « Câble USB-série (DSR / CTS) » dans la page **Poste CW** (onglet CW → 🎛 POSTE CW). Autres solutions : adaptateur VBand / Vail, ou Arduino Pro Micro (masse → GND, point → A2, trait → A3). Les câbles USB « TTL » (4 ou 6 fils) et les câbles console USB → jack ne conviennent pas pour une double palette. Détails, essai au trombone et liste du matériel : aide, section 12.6 « Brancher une double palette ».
+- **Clé des opérateurs chez eux** : rien à installer au club ni chez eux. Chaque opérateur relie sa clé à **son** PC par une interface USB, jamais par la carte son : adaptateur **USB → RS-232 DB9 mâle** (CH340 / PL2303 / FTDI) avec une prise **DB9 femelle à bornier** : commun de la clé → **broche 4 (DTR)**, point → **6 (DSR)**, trait → **8 (CTS)** (le commun ne va **pas** sur la broche 5 GND), puis « Câble USB-série (DSR / CTS) » dans la page **TRX CW** (onglet CW → 🎛 TRX CW). Autres solutions : adaptateur VBand / Vail, ou Arduino Pro Micro (masse → GND, point → A2, trait → A3). Les câbles USB « TTL » (4 ou 6 fils) et les câbles console USB → jack ne conviennent pas pour une double palette. Détails, essai au trombone et liste du matériel : aide, section 12.6 « Brancher une double palette ».
 
 ### Changer de TRX
 
@@ -355,9 +355,10 @@ FTX-1 EX030402 à 19, FTDX10 EX030302 à 19, FTDX101 EX030303 à 20.
 - FTDX10 / FTDX101 : l'égaliseur n'agit que si **MIC EQ** est en service (bouton du cadre TX ; la fenêtre prévient s'il est coupé).
 - À vérifier à l'écoute : l'égaliseur PRMTRC agit sûrement sur le micro du club ; sur la voix arrivant par l'USB, cela dépend du TRX.
 
-### Contests en phonie (Poste SSB)
+### Phonie et contests (TRX SSB)
 
-- Bouton **🏆 POSTE SSB** de la ligne SSB CONFIGURATION (dashboard et face avant) : page **/ssb** raccrochée à la page qui l'ouvre, comme le Poste CW. Rien à régler sur le serveur.
+- Onglet **SSB** de la ligne Activités du dashboard, ou bouton **SSB** de la ligne MODES de la face avant : page **/ssb** (TRX SSB) raccrochée à la page qui l'ouvre, comme le TRX CW, avec le PTT et la ligne SSB CONFIGURATION (micro, égaliseurs, entrée / sortie son). Rien à régler sur le serveur.
+- Dans le dashboard, chaque onglet de mode ouvre sa page : TRX SSB, TRX CW (/cw), ou TRX DIGI (/digi, page des modes numériques) sur ce mode. Page TRX CW ouverte : le décodage CW est demandé tout seul pour sa fenêtre de réception.
 - Liste des contests SSB (`public/js/contests.js`) avec l'échange d'une station belge et les catégories d'inscription ; pour la station du club, UBA DX et ON Contest donnent la section **LGE**. Les contests marqués « * » ont des catégories génériques : à vérifier dans le règlement de l'année, et à corriger dans `contests.js` si besoin.
 - Les QSO vont dans le carnet général avec le contest et les échanges ; le bouton CABRILLO écrit l'en-tête avec la catégorie choisie (CATEGORY-OPERATOR, -POWER, -BAND, -ASSISTED, -MODE, -TRANSMITTER, -OVERLAY, -TIME).
 - Touches F1 à F8 : mémoires vocales T1 à T8 de l'opérateur (VOICE TX, gardées sur le serveur dans `voicemem/`), mêmes contrôles que le PTT.

@@ -179,7 +179,7 @@
   // ------------------------------------------------------------------ construction des onglets et des fenêtres
   // Même code pour le centre du dashboard et pour la fenêtre séparée (digi.html, sans l'onglet Activité).
   const TABS = [
-    ['events', 'Activité'], ['ftx', 'FT8 · FT4 · FT2'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['log', 'Logbooks'], ['sync', 'Synchro']
+    ['events', 'Activité'], ['ftx', 'FT8 · FT4 · FT2'], ['ssb', 'SSB'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['log', 'Logbooks'], ['sync', 'Synchro']
   ];
   const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'cw', 'sstv', 'sync'];
   const WF_TABS = ['ftx', 'jt65', 'rtty', 'wspr', 'jtty', 'cw', 'sstv']; // onglets avec cascade
@@ -802,6 +802,15 @@
     if (!api || (detached && HOST)) return; // la fenêtre séparée annonce elle-même
     const watching = WF_TABS.indexOf(tab) >= 0 && !$('centerPanel').classList.contains('collapsed') && !document.hidden;
     if (watching && tab === 'cw') return api.send({ t: 'digi', mode: 'CW', cw: cwc, cw2: ftDual ? cwcB : null, ftDual });
+    // Page CW ouverte (elle se signale chaque seconde) : décodage CW pour sa fenêtre de réception, sauf si un autre
+    // mode est affiché ici alors que le TRX n'est pas en CW
+    let cwPage = false;
+    try { cwPage = Date.now() - Number(localStorage.getItem('rs.dg.cwpageAt') || 0) < 3500; } catch (e) { cwPage = false; }
+    if (cwPage) {
+      const st = api.state();
+      const r = (st && st.radio) || {};
+      if (!watching || /^CW/i.test(String((r.vfoSel === 1 ? r.modeB : r.mode) || ''))) return api.send({ t: 'digi', mode: 'CW', cw: cwc, cw2: null, ftDual: false });
+    }
     if (watching && tab === 'sstv') { api.send({ t: 'digi', mode: 'SSTV', hist: ssNeedHist }); ssNeedHist = false; return; }
     if (watching && tab === 'jtty') { api.send({ t: 'digi', mode: 'JTTY', hist: jtNeedHist, ftDual }); jtNeedHist = false; return; }
     if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rts[0], rtty2: rts[1], rtDual: rtDualAudio });
@@ -1375,7 +1384,7 @@
   const rtcId = () => store.get('rtc', '');
   const rtcOn = () => !!rtcId();
   const rtcExch = () => { const id = rtcId(); const c = RT_CONTESTS.find((x) => x[0] === id); return store.get('rtcx_' + id, c ? c[2] : '599 <CNTR>'); };
-  // Contests CW (page Poste CW) : [identifiant Cabrillo, nom, échange envoyé par une station belge] ; l'échange reste
+  // Contests CW (page TRX CW) : [identifiant Cabrillo, nom, échange envoyé par une station belge] ; l'échange reste
   // modifiable (00 = à compléter : âge, année de licence… ; LG = province pour l'UBA DX, LGE = section pour l'ON Contest)
   const CW_CONTESTS = [
     ['CQ-WW-CW', 'CQ World Wide DX CW', '5NN <CQZ>'],
@@ -2164,7 +2173,7 @@
     st.title = 'DX cluster' + (bmHost ? ' ' + bmHost : '') + ' : ' + (bmState || 'pas de nouvelles') + ' · spots gardés 30 min';
   }
   // Calage du TRX sur une fréquence réelle (kHz) : décodeur de l'émission au milieu de la cascade
-  // Page Poste CW ouverte (la clé du dashboard est alors en veille) : au premier plan après un spot CW
+  // Page TRX CW ouverte (la clé du dashboard est alors en veille) : au premier plan après un spot CW
   function cwPageFocus() {
     let w = window;
     try { while (w && !(w.RSPADDLE && w.RSPADDLE.suspended) && w.opener && w.opener !== w) w = w.opener; } catch (e) { return; }
@@ -4562,7 +4571,7 @@
   function logQso(docIn, modeIn) {
     if (!api) return;
     if (!window.RSLOG) return api.say('Carnet de trafic non disponible dans cette version du dashboard.', 'warn');
-    // Page Poste CW : la fiche s'ouvre dans sa fenêtre, en CW
+    // Page TRX CW : la fiche s'ouvre dans sa fenêtre, en CW
     const doc = (docIn && docIn.createElement ? docIn : null) || ($('msgs') && $('msgs').ownerDocument) || document;
     const old = doc.getElementById('qsoLogDlg');
     if (old) old.remove();
@@ -4901,6 +4910,48 @@
   // Clic sur un onglet de mode numérique (avec la main) : TRX mis en DATA-U (USB-D sur l'IC-7300) sur le VFO écouté,
   // même sous 10 MHz (les modes numériques se font toujours en bande latérale supérieure)
   const DATA_TABS = { ftx: 'FT8 / FT4 / FT2', rtty: 'RTTY', wspr: 'WSPR', jt65: 'JT65', jtty: 'JTTY', sstv: 'SSTV' };
+  // Pages des modes (onglets du dashboard, ligne MODES de la face avant)
+  const PAGE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'cw', 'sstv'];
+  function popWin(url, name, w, h) {
+    const x = window.open(url, name, 'width=' + w + ',height=' + h);
+    if (!x) { if (api) api.say('Fenêtre bloquée par le navigateur : autorisez les fenêtres pop-up pour ce site.', 'warn', 6000); return null; }
+    try { x.focus(); } catch (e) {}
+    return x;
+  }
+  function modeFor(t) {
+    if (DATA_TABS[t]) dataU(DATA_TABS[t]);
+    else if (t === 'cw') cwModeAuto();
+    else if (t === 'ssb') ssbModeAuto();
+  }
+  function openModePage(t) {
+    modeFor(t);
+    if (t === 'cw') return popWin('/cw.html', 'rs-cwpage', 1240, 860);
+    if (t === 'ssb') return popWin('/ssb.html', 'rs-ssbpage', 1240, 900);
+    // Page des modes numériques (fenêtre séparée) sur ce mode ; déjà ouverte : elle y passe
+    store.set('ptab', t);
+    try {
+      const d = window.DG && window.DG();
+      if (d && d !== window.RSDIGI && d.goTab) { d.goTab(t); const w = window.open('', 'rs-digi'); if (w) w.focus(); return w; }
+    } catch (e) {}
+    return popWin(FACEP ? FACEP + '/digi.html' : '/digi.html', 'rs-digi', 1200, 860);
+  }
+  // Onglet SSB (avec la main) : LSB sous 10 MHz, USB au-dessus (60 m : USB), si le TRX n'est pas déjà en phonie BLU
+  function ssbModeAuto() {
+    if (!api || !api.iControl()) return;
+    const st = api.state();
+    const r = st && st.radio;
+    if (!r || !r.connected || r.tx || (st.ptt && st.ptt.active) || st.ftx || st.cw) return;
+    const side = r.vfoSel === 1;
+    const cur = (side ? r.modeB : r.mode) || '';
+    if (/^(LSB|USB)$/i.test(cur)) return;
+    const hz = side ? r.freqB : r.freq;
+    const K = api.rig().MODE_KEYS || [];
+    const lsb = hz && hz < 10e6 && !(hz >= 5.3e6 && hz <= 5.5e6);
+    const mk = K.find((x) => (lsb ? /^LSB$/i : /^USB$/i).test(x[1]));
+    if (!mk) return;
+    api.send({ t: 'set', mode: mk[0], sub: side });
+    api.say('TRX mis en ' + mk[1] + ' pour la phonie.', '', 3000);
+  }
   function dataU(label) {
     if (!api || !api.iControl()) return;
     const st = api.state();
@@ -5067,6 +5118,8 @@
   window.RSDIGI = {
     spotQsy,
     /** Ligne DIGI CONFIGURATION de la face avant : afficher cet onglet (et ce mode FT8 / FT4 / FT2) */
+    openModePage,
+    modeFor,
     goTab(t, m) {
       if (MODE_TABS.indexOf(t) < 0) return false;
       if (t === 'ftx' && FT_MODES.indexOf(m) >= 0 && m !== mode) setMode(m);
@@ -5084,7 +5137,7 @@
       return { jt65: 'JT65', rtty: 'RTTY', jtty: 'JTTY', cw: 'CW', sstv: 'SSTV', wspr: 'WSPR' }[t] || store.get('ftmode', 'FT8');
     },
     qo100If: () => Object.assign({}, qoIf),
-    /** Page « Poste CW » (cw.html) : macros CW, envoi de texte, correspondant, vitesse des macros */
+    /** Page « TRX CW » (cw.html) : macros CW, envoi de texte, correspondant, vitesse des macros */
     cwKit: {
       // set : 'CW' (macros habituelles) ou 'CWC' (macros contest CW)
       macros: (set) => macroList(set || 'CW').map((m, i) => ({ i, name: m.name || '—', tx: /<TX>/i.test(m.text), log: /<LOG>/i.test(m.text), exch: /<EXCH>|<XOUT>|<CNTR>|<SERNO>/i.test(m.text), preview: cwText(m.text).replace(/\n/g, ' ') })),
@@ -5153,6 +5206,10 @@
       document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.addEventListener('click', (e) => {
         e.stopPropagation();
         if (b.dataset.tab === 'log' && LOGP) return openLogWin(); // carnet : dans sa propre fenêtre
+        // SSB : page SSB (contests en phonie, micro, PTT) ; dashboard : chaque mode ouvre sa page (CW : page CW,
+        // FT8 / RTTY / WSPR… : page des modes numériques sur ce mode)
+        if (b.dataset.tab === 'ssb') return openModePage('ssb');
+        if (!POPUP && PAGE_TABS.indexOf(b.dataset.tab) >= 0) return openModePage(b.dataset.tab);
         // Choisir soi-même un autre onglet arrête le suivi de l'opérateur
         if (follow && api && !api.iControl()) { setFollow(false); api.say('Suivi de l’opérateur arrêté (onglet choisi).', '', 4000); }
         showTab(b.dataset.tab);
@@ -5355,6 +5412,13 @@
       setMode(mode);
       showTab(tab);
       setInterval(() => { if (!detached && tab === 'ftx') progBar(); }, 100);
+      // Page CW ouverte ou fermée : décodage CW demandé ou rendu (voir announce)
+      let cwPageWas = false;
+      setInterval(() => {
+        let on = false;
+        try { on = Date.now() - Number(localStorage.getItem('rs.dg.cwpageAt') || 0) < 3500; } catch (e) { on = false; }
+        if (on !== cwPageWas) { cwPageWas = on; announce(); }
+      }, 1000);
       setInterval(() => {
         if (detached) return;
         if (tab === 'ftx' || tab === 'jt65') { clock(); status(); followBand(); if (applyFtDual()) announce(); ftDials(); }

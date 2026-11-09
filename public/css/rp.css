@@ -1791,7 +1791,7 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 .cwk.cwk-off { opacity: .45; pointer-events: none; }
 .cwk.cwk-off .cwk-open { pointer-events: auto; }
 
-/* ------------------------------------------------------------------ Page « Poste CW » (cw.html) */
+/* ------------------------------------------------------------------ Page « TRX CW » (cw.html) */
 .cwp-body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
 .cwp-head { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 6px 14px; background: #0f1622; border-bottom: 1px solid var(--v2-border); }
 .cwp-head h1 { margin: 0; font-size: 20px; letter-spacing: 1px; color: #fff; text-transform: uppercase; }
@@ -1871,7 +1871,7 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .cwp-foot .ok { color: #3fd07f; } .cwp-foot .warn { color: #ffb84d; } .cwp-foot .bad { color: #ff6b5e; }
 @media (max-width: 1050px) { .cwp-grid3 { grid-template-columns: 1fr 1fr; } .cwp-grid3 > .cwp-in { grid-column: 1 / -1; } }
 @media (max-width: 700px) { .cwp-grid3 { grid-template-columns: 1fr; } .cwp-txbig { margin-left: 0; } }
-/* Poste CW : log du contest (ligne de saisie à la N1MM, liste, compteurs) */
+/* TRX CW : log du contest (ligne de saisie à la N1MM, liste, compteurs) */
 .cwp-cgrid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 10px; }
 .cwp-cgrid[hidden] { display: none; }
 .cwp-cleft { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -1912,7 +1912,7 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .sy-btn.fail { background: #8a1c14; border-color: #ff5a4a; color: #fff; }
 .sy-res { color: #ffd400; }
 .sy-res:empty { display: none; }
-/* Poste SSB (ssb.html) : contests en phonie */
+/* TRX SSB (ssb.html) : contests en phonie */
 .ssb-main { grid-template-rows: auto; align-content: start; }
 .ssb-main .cwp-ctst { gap: 8px; }
 .ssb-rules { color: #58a6ff; font-weight: 700; text-decoration: none; border: 1px solid #2c4a6e; border-radius: 4px; padding: 3px 8px; }
@@ -1926,8 +1926,5 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .cwp-macro.ssb-vm.empty { opacity: .55; }
 .cwp-macro.ssb-vm.play { background: #c8170d; border-color: #ff5a4a; color: #fff; }
 .ssb-body .cwp-clogw { max-height: 52vh; }
-.vx-h .vx-ssbp { background: #1f6feb; color: #fff; font-weight: 800; border-color: #58a6ff; letter-spacing: .4px; }
-.vx-h .vx-ssbp:hover { background: #388bfd; }
-.vx-compact .vx-ssbp { background: #1f6feb; color: #fff; font-weight: 800; border-color: #58a6ff; }
 .ssb-vk .cwp-macros { grid-template-columns: repeat(8, minmax(0, 1fr)); }
 @media (max-width: 900px) { .ssb-vk .cwp-macros { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

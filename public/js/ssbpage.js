@@ -1,8 +1,8 @@
 /*
- * Page « Poste SSB » (ssb.html) : contests en phonie. Choix du contest (public/js/contests.js) et de la catégorie
+ * Page « TRX SSB » (ssb.html) : contests en phonie. Choix du contest (public/js/contests.js) et de la catégorie
  * (en-tête Cabrillo), échange à annoncer avec le n° de série, log du contest à la manière de N1MM (doublons,
  * compteurs, cadence), mémoires vocales T1 à T8 (VOICE TX), fichier Cabrillo. Les QSO vont dans le carnet général.
- * Même connexion que le dashboard qui l'a ouverte (window.opener.RSHOST), comme le Poste CW.
+ * Même connexion que le dashboard qui l'a ouverte (window.opener.RSHOST), comme le TRX CW.
  */
 (function () {
   'use strict';
@@ -166,7 +166,7 @@
     api.send({ t: 'vm_play', n });
   }
 
-  // ------------------------------------------------------------------ log du contest (comme le Poste CW)
+  // ------------------------------------------------------------------ log du contest (comme le TRX CW)
   const CL = { id: '', items: [], esm: LS.get('ssesm', 'run') === 'sp' ? 'sp' : 'run' };
   const E = { call: $('cwpECall'), rs: $('cwpERs'), stx: $('cwpEStx'), rr: $('cwpERr'), srx: $('cwpESrx') };
   const BANDS = [[1.8, 2, '160m'], [3.5, 4, '80m'], [5.3, 5.5, '60m'], [7, 7.3, '40m'], [10.1, 10.15, '30m'], [14, 14.35, '20m'], [18.068, 18.168, '17m'],
@@ -324,10 +324,73 @@
     toast(m.count + ' QSO dans ' + m.name + ' (Cabrillo).', '', 5000);
   }
 
+  // ------------------------------------------------------------------ phonie : micro, égaliseurs (SSB CONFIGURATION) et PTT
+  // Même module que la face avant (voice.js), ici dans cette page : la voix part par la connexion de la page d'origine.
+  const VX = window.RSVOICE || null;
+  const P = { held: false, hb: null, voiceOn: false };
+  function voiceInit() {
+    if (!VX || !host) return;
+    VX.init({ compact: true, send: api.send, say: (msg, lvl, ms) => toast(msg, lvl === 'warn' || lvl === 'error' ? 'warn' : '', ms),
+      iControl: api.iControl, state: api.state, me: () => { try { return host.me ? host.me() : null; } catch (e) { return null; } },
+      rig: () => { try { return host.api.rig(); } catch (e) { return {}; } },
+      setSink: (id) => { try { if (host.setSink) host.setSink(id); } catch (e) {} },
+      sendBin: (buf) => { try { if (host.sendBin) host.sendBin(buf); } catch (e) {} } });
+    try { VX.onHello(host.me ? host.me() : {}); } catch (e) {}
+  }
+  function pttReason() {
+    const st = api.state();
+    const me = host && host.me ? host.me() : null;
+    if (!host) return 'Page d’origine fermée';
+    if (!st || !st.station) return 'Station hors ligne';
+    if (!st.radio || !st.radio.connected) return 'TRX non connecté';
+    if (!api.iControl()) return 'Prenez la main pour émettre';
+    if (st.radio.vox) return 'VOX actif au club : coupez-le d’abord';
+    if (!st.txOk) return st.radio.txVfo === 1 ? 'VFO B (SPLIT) hors des bandes autorisées' : 'Hors des bandes autorisées';
+    if (me && st.radio.power != null && st.radio.power > me.maxWatts) return 'Puissance au-delà de votre limite (' + me.maxWatts + ' W)';
+    if (st.swrLock) return st.swrLock.text || 'ROS trop élevé ici';
+    return null;
+  }
+  function pttDown() {
+    if (P.held) return;
+    const why = pttReason();
+    if (why) return toast(why, 'warn');
+    P.held = true;
+    P.voiceOn = !!(VX && VX.txStart());
+    if (host) host.extTalk = P.voiceOn;
+    api.send({ t: 'ptt', on: true, voice: P.voiceOn });
+    P.hb = setInterval(() => api.send({ t: 'ptt', on: true, voice: P.voiceOn }), 400);
+    $('ptt').classList.add('held');
+    if (!P.voiceOn) toast('PTT sans votre micro : activez « MICRO » (SSB CONFIGURATION) pour parler depuis ce PC.', 'warn', 5000);
+  }
+  function pttUp() {
+    if (!P.held) return;
+    P.held = false;
+    clearInterval(P.hb);
+    if (VX) VX.txEnd();
+    try { if (host) host.extTalk = false; } catch (e) {}
+    api.send({ t: 'ptt', on: false });
+    $('ptt').classList.remove('held');
+  }
+  {
+    const b = $('ptt');
+    b.addEventListener('pointerdown', (ev) => { ev.preventDefault(); try { b.setPointerCapture(ev.pointerId); } catch (e) {} pttDown(); });
+    b.addEventListener('pointerup', pttUp);
+    b.addEventListener('pointercancel', pttUp);
+    b.addEventListener('lostpointercapture', pttUp);
+    // Barre d'espace = PTT, hors des cases de saisie (où elle passe au champ suivant)
+    const typing = (e) => e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
+    document.addEventListener('keydown', (e) => { if (e.key === ' ' && !typing(e)) { e.preventDefault(); if (!e.repeat) pttDown(); } });
+    document.addEventListener('keyup', (e) => { if (e.key === ' ' && P.held) { e.preventDefault(); pttUp(); } });
+    window.addEventListener('blur', pttUp); // sécurité : fenêtre quittée pendant l'émission
+  }
+
   // ------------------------------------------------------------------ messages du serveur, état
   function onMsg(m) {
     if (!m || typeof m !== 'object') return;
     if (m.t === 'vm') { S.vm = m.meta || null; S.playing = m.playing || null; drawVk(); }
+    else if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && VX) VX.onMessage(m);
+    else if (m.t === 'hello' && VX) VX.onHello(m);
+    else if (m.t === 'state' && VX) { VX.onState(); if (P.held && !api.iControl()) pttUp(); }
     else if (m.t === 'notice' && m.msg) toast(m.msg, m.level === 'error' ? 'warn' : '', 6000);
     else if (m.t === 'ctst_list' && m.contest === CL.id) { CL.items = m.items || []; drawLog(); checkDupe(); }
     else if ((m.t === 'log_saved' || m.t === 'log_changed') && CL.id) { clearTimeout(onMsg.lt); onMsg.lt = setTimeout(askList, 400); }
@@ -350,7 +413,7 @@
     $('cwpTx').textContent = tx ? 'TX' : 'RX';
     $('cwpTx').classList.toggle('on', tx);
     $('cwpTxSt').textContent = 'Émission : ' + (st && st.ptt && st.ptt.active ? (st.ptt.voice ? 'phonie / mémoire vocale de ' : 'PTT de ') + (st.ptt.by || '?') : 'aucune');
-    $('cwpLink').textContent = 'Liaison : ' + (host ? 'par le dashboard' : 'aucune');
+    $('cwpLink').textContent = 'Liaison : ' + (host ? 'par la page d’origine' : 'aucune');
     const k = kit();
     if (k) {
       // Indicatif choisi ailleurs (spot cliqué dans une BAND MAP…) : dans la case Indicatif
@@ -374,11 +437,12 @@
       host = h;
       untap = h.tap ? h.tap(onMsg) : null;
       $('cwpOrphan').hidden = true;
+      voiceInit();
       api.send({ t: 'vm_list' });
       drawContest();
     } else if (!h) { host = null; hostWin = null; $('cwpOrphan').hidden = false; }
   }
-  window.addEventListener('pagehide', () => { if (untap) try { untap(); } catch (e) {} });
+  window.addEventListener('pagehide', () => { pttUp(); if (untap) try { untap(); } catch (e) {} });
   fillContests();
   link();
   drawVk();

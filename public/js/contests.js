@@ -1,5 +1,5 @@
 /*
- * contests.js — contests SSB (page Poste SSB) : identifiant Cabrillo, période habituelle, échange envoyé par une
+ * contests.js — contests SSB (page TRX SSB) : identifiant Cabrillo, période habituelle, échange envoyé par une
  * station belge (ON5VL / OR0L), catégories d'inscription et valeurs Cabrillo correspondantes.
  *
  * Balises de l'échange : <CNTR> n° de série, <CQZ> zone CQ (14), <ITUZ> zone ITU (27), <MYNAME> prénom.

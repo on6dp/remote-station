@@ -1440,7 +1440,7 @@
     if (DG() && DG().onBinary(bytes)) return; // ligne de cascade FT8/FT4
     if (!player.on || !player.ctx) return;
     // Pendant que vous parlez (phonie à distance) : écoute coupée (pas d'écho de votre propre émission)
-    if (VX() && VX().talking()) { player.next = 0; return; }
+    if ((VX() && VX().talking()) || (window.RSHOST && window.RSHOST.extTalk)) { player.next = 0; return; }
     const pcm = ULAW.decodeFrame(bytes);
     if (!pcm) return;
     player.got++;
@@ -1739,13 +1739,17 @@
     digiHost.win = null;
     if (window.RSDIGI) { window.RSDIGI.setDetached(false); if (me) window.RSDIGI.onHello(me, me); }
   }
-  // Écoutes des messages du serveur par d'autres fenêtres (page « Poste CW ») : RSHOST.tap(fn)
+  // Écoutes des messages du serveur par d'autres fenêtres (page « TRX CW ») : RSHOST.tap(fn)
   const hostTaps = new Set();
   function runTaps(m) {
     for (const f of hostTaps) { try { f(m); } catch (e) { hostTaps.delete(f); } } // fenêtre fermée : écoute retirée
   }
   window.RSHOST = {
     api: digiApi,
+    // Page SSB : micro, PTT et sortie son par cette connexion
+    me: () => me,
+    sendBin,
+    extTalk: false, // la page SSB émet sa voix : pas d'écho dans l'écoute du TRX
     tap(fn) { hostTaps.add(fn); return () => hostTaps.delete(fn); },
     attach(win, inst, popupApi) {
       if (digiHost.win && digiHost.win !== win && !digiHost.win.closed) { try { digiHost.win.close(); } catch (e) {} }

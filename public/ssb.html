@@ -3,22 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Poste SSB — Remote Station</title>
+<title>TRX SSB — Remote Station</title>
 <meta name="theme-color" content="#0b1018">
 <link rel="stylesheet" href="/css/rp-tokens.css">
 <link rel="stylesheet" href="/css/rp.css">
+<link rel="stylesheet" href="/css/face.css">
 </head>
 <body class="cwp-body ssb-body">
-  <!-- Poste SSB : contests en phonie (choix du contest et de la catégorie, échange, n° de série, log à la manière de
-       N1MM, mémoires vocales T1 à T8, Cabrillo). Même connexion que le dashboard qui l'a ouvert. -->
+  <!-- Page SSB : phonie (micro, égaliseurs, PTT) et contests (choix du contest et de la catégorie, échange, n° de série,
+       log à la manière de N1MM, mémoires vocales T1 à T8, Cabrillo). Même connexion que la page qui l'a ouverte. -->
   <header class="cwp-head">
-    <h1>Poste SSB <small>Remote Station · contests en phonie</small></h1>
+    <h1>TRX SSB <small>Remote Station · phonie et contests</small></h1>
     <div class="cwp-trx"><span id="cwpFreq">—</span> <span id="cwpMode" class="cwp-mode">—</span></div>
     <div class="cwp-ctl"><span id="cwpCtl">—</span> <button class="cwp-take" type="button" id="cwpTake" hidden>PRENDRE LA MAIN</button></div>
     <div class="cwp-txbig" id="cwpTx">RX</div>
   </header>
-  <p class="cwp-orphan" id="cwpOrphan" hidden>Cette page doit être ouverte depuis le dashboard (bouton « Poste SSB »). Si le dashboard a été fermé, rouvrez-le : cette page s’y raccrochera.</p>
+  <p class="cwp-orphan" id="cwpOrphan" hidden>Cette page doit être ouverte depuis le dashboard (onglet SSB) ou la face avant (bouton SSB de la ligne MODES). Si le dashboard a été fermé, rouvrez-le : cette page s’y raccrochera.</p>
   <main class="cwp-main ssb-main">
+    <section class="cwp-box fc-tx ssb-tx" id="fcTx">
+      <button class="btn ptt" id="ptt" type="button" title="Maintenir pour émettre (ou la barre d’espace hors des cases de saisie)">PTT</button>
+    </section>
     <section class="cwp-box cwp-ctst">
       <div class="cwp-ctrow">
         <label class="cwp-ctl1">Contest <select id="ssCtst"><option value="">— pas de contest —</option></select></label>
@@ -54,7 +58,7 @@
           <div class="ssb-vk">
             <span class="ssb-vkh">Mémoires vocales <small>F1 à F8 · Échap : arrêt</small></span>
             <div class="cwp-macros" id="ssVk"></div>
-            <p class="cwp-note">T1 = CQ, T3 = TU / QRZ, T4 = votre indicatif pour la touche Entrée. Enregistrement : face avant, MENU → VOICE → REC. L’échange (n° de série) se dit au micro : phonie par le bouton PTT du dashboard.</p>
+            <p class="cwp-note">T1 = CQ, T3 = TU / QRZ, T4 = votre indicatif pour la touche Entrée. Enregistrement : face avant, MENU → VOICE → REC. L’échange (n° de série) se dit au micro avec le PTT ci-dessus.</p>
           </div>
         </div>
         <div class="cwp-cright">
@@ -70,6 +74,7 @@
     <span id="cwpTxSt">Émission : —</span>
   </footer>
   <p class="dg-toast" id="cwpToast" role="status"></p>
+<script src="/js/voice.js"></script>
 <script src="/js/contests.js"></script>
 <script src="/js/ssbpage.js"></script>
 </body>

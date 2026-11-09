@@ -39,7 +39,7 @@
     if (!Number.isFinite(S.vol)) S.vol = 40;
     const save = (k, v) => store.set('pd.' + k, v);
 
-    const PAGE = opt.layout === 'page'; // page « Poste CW » (cw.html) : tous les réglages visibles, en grand
+    const PAGE = opt.layout === 'page'; // page « TRX CW » (cw.html) : tous les réglages visibles, en grand
     const SRC_OPTS = `
           <option value="ctrl">Adaptateur USB (Ctrl gauche / droit)</option>
           <option value="keys">Touches du clavier</option>
@@ -83,7 +83,7 @@
         <span class="cwk-sum"></span>
         <button class="cwk-pd" type="button" data-p="dit" title="Palette point (souris / écran tactile)">•</button><button class="cwk-pd" type="button" data-p="dah" title="Palette trait (souris / écran tactile)">—</button>
         <button class="cwk-cfg" type="button" aria-expanded="false" title="Réglages de la clé : type de clé, branchement, vitesse, poids, écoute">⚙ Réglages</button>
-        <button class="cwk-open" type="button" title="Ouvrir le Poste CW : clé, macros et réception CW sur une page entière (même connexion que ce dashboard)">🎛 POSTE CW</button>
+        <button class="cwk-open" type="button" title="Ouvrir le TRX CW : clé, macros et réception CW sur une page entière (même connexion que ce dashboard)">🎛 TRX CW</button>
       </div>
       <div class="cwk-set" hidden>
         <label>Clé <select data-k="mode"><option value="B">Palettes, iambique B</option><option value="A">Palettes, iambique A</option><option value="S">Pioche (clé droite)</option></select></label>
@@ -285,9 +285,9 @@
       if (S.mode === 'B' && K.dit && K.dah) { if (next === 'dit') K.memDah = true; else K.memDit = true; }
       K.timer = win.setTimeout(decide, Math.max(0, K.tNext - perf()));
     }
-    // Page « Poste CW » ouverte : la clé du dashboard qui l'a ouverte se met en veille (une seule clé à la fois ;
+    // Page « TRX CW » ouverte : la clé du dashboard qui l'a ouverte se met en veille (une seule clé à la fois ;
     // un port série ne peut être ouvert que par une fenêtre)
-    // … y compris dans les autres onglets du navigateur (le Poste CW s'annonce toutes les 2 s)
+    // … y compris dans les autres onglets du navigateur (le TRX CW s'annonce toutes les 2 s)
     let pageSeen = 0;
     let bc = null;
     try { bc = new win.BroadcastChannel('rs-cwkey'); } catch (e) { bc = null; }
@@ -531,7 +531,7 @@
           releaseAll(); burstEnd(); S.armed = false;
           serGen++;
           if (port) { const p0 = port; port = null; p0.close().catch(() => {}); }
-          q('.cwk-sum').textContent = 'Clé dans la page « Poste CW »';
+          q('.cwk-sum').textContent = 'Clé dans la page « TRX CW »';
         } else { if (S.src === 'serial') serialAuto(); paint(); }
         if (!sp) paint();
       }
@@ -541,7 +541,7 @@
     }, 250);
 
     if (S.src === 'midi') midiOn();
-    if (S.src === 'serial') win.setTimeout(serialAuto, PAGE ? 800 : 2500); // page Poste CW : le dashboard libère d'abord le port
+    if (S.src === 'serial') win.setTimeout(serialAuto, PAGE ? 800 : 2500); // page TRX CW : le dashboard libère d'abord le port
     paint();
     if (PAGE) sinkList();
     return {

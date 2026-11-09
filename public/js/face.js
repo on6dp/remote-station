@@ -5278,7 +5278,7 @@
   }
   function play(pcm) {
     if (!L.listening || !player.ctx) return;
-    if (window.RSVOICE && window.RSVOICE.talking()) { player.next = 0; return; } // pas d'écho de sa propre émission
+    if ((window.RSVOICE && window.RSVOICE.talking()) || window.RSHOST.extTalk) { player.next = 0; return; } // pas d'écho de sa propre émission
     const ctx = player.ctx;
     const now = ctx.currentTime;
     if (player.next < now + 0.05) player.next = now + 0.2;
@@ -6405,7 +6405,7 @@
     if (!b) return '';
     return p.f < b[1] ? 'CW' : p.f < b[2] ? 'RTTY' : 'SSB';
   }
-  // Indicatif d'un spot CW : « Correspondant » des modes numériques (onglet CW affiché) ; page Poste CW au premier plan si ouverte
+  // Indicatif d'un spot CW : « Correspondant » des modes numériques (onglet CW affiché) ; page TRX CW au premier plan si ouverte
   function cwSpotPick(call) {
     const dg = DG();
     try {
@@ -6472,7 +6472,7 @@
       for (const l of BMV.lay[side]) { const d = Math.abs(l.ly - y); if (d < bd && x >= l.x0 - 8) { bd = d; best = l; } }
       if (!best) return;
       tuneTo(bmVfo(side), Math.round(best.s.f * 1000));
-      // Spot CW : TRX en CW, onglet CW des modes numériques, indicatif dans « Correspondant » (et dans le Poste CW)
+      // Spot CW : TRX en CW, onglet CW des modes numériques, indicatif dans « Correspondant » (et dans le TRX CW)
       if (bmvSpotMode(best.s) === 'CW' && iControl()) {
         const v = bmVfo(side);
         const cur = (v === 'B' ? S().modeB : S().mode) || '';
@@ -6609,13 +6609,18 @@
     digiHost.win = null;
     if (window.RSDIGI) { window.RSDIGI.setDetached(false); if (me) window.RSDIGI.onHello(me, me); if (st) window.RSDIGI.onState(st); }
   }
-  // Écoutes des messages du serveur par d'autres fenêtres (page « Poste CW ») : RSHOST.tap(fn)
+  // Écoutes des messages du serveur par d'autres fenêtres (page « TRX CW ») : RSHOST.tap(fn)
   const hostTaps = new Set();
   function runTaps(m) {
     for (const f of hostTaps) { try { f(m); } catch (e) { hostTaps.delete(f); } } // fenêtre fermée : écoute retirée
   }
   window.RSHOST = {
     api: digiApi,
+    // Page SSB : micro, PTT et sortie son par cette connexion
+    me: () => me,
+    sendBin: (buf) => { if (ws && ws.readyState === 1) ws.send(buf); },
+    setSink: (id) => { player.sink = id; if (player.ctx && player.ctx.setSinkId) player.ctx.setSinkId(id).catch(() => {}); },
+    extTalk: false, // la page SSB émet sa voix : pas d'écho dans l'écoute du TRX
     tap(fn) { hostTaps.add(fn); return () => hostTaps.delete(fn); },
     attach(win, inst, popupApi) {
       if (digiHost.win && digiHost.win !== win && !digiHost.win.closed) { try { digiHost.win.close(); } catch (e) {} }
@@ -6781,11 +6786,12 @@
     // numériques (/ftdx101/digi.html) s'ouvre sur ce mode (FT8 / FT4 / FT2, RTTY…), ou y passe si elle est déjà ouverte
     const vxBox = document.querySelector('.fc-tx .vx'), vxH = vxBox && vxBox.querySelector('.vx-h');
     if (vxBox && vxH) {
-      const DIGI_MODES = [['FT8/FT4/FT2', 'ftx'], ['RTTY', 'rtty'], ['WSPR', 'wspr'], ['JT65', 'jt65'], ['JTTY', 'jtty'], ['CW', 'cw'], ['SSTV', 'sstv']];
+      const DIGI_MODES = [['FT8/FT4/FT2', 'ftx'], ['SSB', 'ssb'], ['RTTY', 'rtty'], ['WSPR', 'wspr'], ['JT65', 'jt65'], ['JTTY', 'jtty'], ['CW', 'cw'], ['SSTV', 'sstv']];
       const row = document.createElement('div');
       row.className = 'fc-digirow';
-      row.innerHTML = '<div class="vx-h fc-digih"><span class="vx-title">DIGI configuration</span></div>' +
-        DIGI_MODES.map(([lab, t, m]) => '<button type="button" class="btn fc-digim" data-tab="' + t + '"' + (m ? ' data-mode="' + m + '"' : '') + ' title="Modes numériques : ' + lab + ' (page séparée)">' + lab + '</button>').join('');
+      row.innerHTML = '<div class="vx-h fc-digih"><span class="vx-title">Modes</span></div>' +
+        DIGI_MODES.map(([lab, t, m]) => '<button type="button" class="btn fc-digim" data-tab="' + t + '"' + (m ? ' data-mode="' + m + '"' : '') + ' title="' +
+          (t === 'ssb' ? 'Page SSB : phonie et contests (micro, PTT, échange, log, mémoires vocales)' : t === 'cw' ? 'Page CW : clé, macros, contests, réception CW' : 'Modes numériques : ' + lab + ' (page séparée)') + '">' + lab + '</button>').join('');
       vxBox.insertBefore(row, vxH);
       // Les deux titres (DIGI / SSB CONFIGURATION) sur une ligne et de même largeur : les boutons s'alignent dessous
       const dh = row.querySelector('.fc-digih');
@@ -6799,7 +6805,10 @@
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(sameW);
       row.addEventListener('click', (e) => {
         const b = e.target.closest('.fc-digim');
-        if (b) digiOpen(b.dataset.tab, b.dataset.mode || '');
+        if (!b) return;
+        // SSB et CW : leur page à elles (TRX mis en LSB / USB ou en CW si vous avez la main)
+        if ((b.dataset.tab === 'ssb' || b.dataset.tab === 'cw') && window.RSDIGI && window.RSDIGI.openModePage) { window.RSDIGI.openModePage(b.dataset.tab); return; }
+        digiOpen(b.dataset.tab, b.dataset.mode || '');
       });
       // Mode affiché dans la page des modes numériques : son bouton en bleu clair (rien si la page est fermée)
       setInterval(() => {

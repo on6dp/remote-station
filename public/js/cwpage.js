@@ -1,5 +1,5 @@
 /*
- * Page « Poste CW » (cw.html), dans l'esprit du W1VE Keyer Suite : clé de l'opérateur (public/js/paddle.js) en grand,
+ * Page « TRX CW » (cw.html), dans l'esprit du W1VE Keyer Suite : clé de l'opérateur (public/js/paddle.js) en grand,
  * macros CW, texte à émettre, réception CW décodée, état de la liaison. Elle utilise la connexion du dashboard qui
  * l'a ouverte (window.opener.RSHOST, comme la fenêtre des modes numériques) : mêmes sécurités, même main.
  */
@@ -471,7 +471,12 @@
       $('cwpOrphan').hidden = false;
     } else suspendOthers(true);
   }
+  // Signal « page CW ouverte » (localStorage) : le dashboard / la page des modes numériques demandent alors le décodage CW
+  const alive = () => { try { localStorage.setItem('rs.dg.cwpageAt', String(Date.now())); } catch (e) {} };
+  alive();
+  setInterval(alive, 1000);
   window.addEventListener('pagehide', () => {
+    try { localStorage.removeItem('rs.dg.cwpageAt'); } catch (e) {}
     suspendOthers(false);
     if (untap) try { untap(); } catch (e) {}
     if (pad) pad.stop();

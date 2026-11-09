@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.195** — Ligne Activités : chaque mode ouvre sa page (TRX SSB, TRX CW, TRX DIGI) ; onglet SSB ; TRX SSB avec PTT et SSB CONFIGURATION ; décodage CW pour la page TRX CW ; noms TRX SSB / TRX CW / TRX DIGI
 - **0.37.194** — Poste SSB : contests en phonie (28 contests avec échange et catégories, log N1MM, mémoires vocales F1-F8, Cabrillo avec catégorie) ; UBA DX CW : section LGE
 - **0.37.193** — Synchro : le décodage FT8 / FT4 continue pendant qu'on regarde l'onglet Synchro (Décodages et DT médian en direct)
 - **0.37.192** — Synchro : case Décodages lisible (temps du décodeur seulement dans le détail)

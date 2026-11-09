@@ -3150,7 +3150,7 @@ function onOperator(conn, m) {
       return;
     }
     case 'ctst_list': {
-      // Log d'un contest (page Poste CW) : QSO du carnet avec cet identifiant, depuis la date donnée, pour les doublons,
+      // Log d'un contest (page TRX CW) : QSO du carnet avec cet identifiant, depuis la date donnée, pour les doublons,
       // les compteurs et la liste ; le carnet général reste la seule base
       const id = String(m.contest || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 40);
       const from = String(m.from || '').replace(/\D/g, '').slice(0, 8);
@@ -3170,7 +3170,7 @@ function onOperator(conn, m) {
       }
       let list = book.query({ from: m.from, to: m.to }).filter((q) => (!m.callsign || q.station_callsign === m.callsign) && (!m.mine || q.operator === me || q.by === me));
       if (m.pending && LOG_SERVICES.indexOf(m.pending) >= 0) list = sync.pending(m.pending, { from: m.from, to: m.to, callsign: m.callsign });
-      // Log d'un contest (Poste CW) : seulement les QSO de ce contest
+      // Log d'un contest (TRX CW) : seulement les QSO de ce contest
       if (m.contestOnly && m.contest) { const cid = String(m.contest).toUpperCase(); list = list.filter((q) => q.contest_id === cid); }
       const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       const who = (String(m.callsign || 'TOUS').toUpperCase().replace(/[^A-Z0-9]/g, '')) + (m.mine ? '-' + me.replace(/[^A-Z0-9]/g, '') : '');
