@@ -41,7 +41,7 @@ echo "$WINSW_SHA  $CACHE/WinSW-x64.exe" | sha256sum -c -
 STAGE=$(mktemp -d)
 trap 'rm -rf "$STAGE"' EXIT
 mkdir -p "$STAGE/serveur" "$STAGE/outils"
-(cd "$ROOT" && git ls-files -z --cached --others --exclude-standard | tar --null -T - -cf -) | tar -xf - -C "$STAGE/serveur"
+(cd "$ROOT" && git ls-files -z --cached --others --exclude-standard | grep -zv "^releases/" | tar --null -T - -cf -) | tar -xf - -C "$STAGE/serveur"
 rm -rf "$STAGE/serveur/native" "$STAGE/serveur/windows" "$STAGE/serveur/deploy" "$STAGE/serveur/releases" "$STAGE/serveur/lib/bin/jt65" "$STAGE/serveur/lib/bin/jttyd" "$STAGE/serveur/lib/bin/jttygen" "$STAGE/serveur/lib/bin/wsjtxd" \
        "$STAGE/serveur/.gitignore" "$STAGE/serveur/.gitattributes"
 cp "$ROOT/windows/setup.js" "$STAGE/serveur/windows-setup.js"

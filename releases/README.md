@@ -3,6 +3,7 @@
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
 | 0.37.230 | [RemoteStation-Setup-0.37.230.exe](0.37.230/RemoteStation-Setup-0.37.230.exe) | [remote-station-0.37.230.tar.gz](0.37.230/remote-station-0.37.230.tar.gz) | Ctrl+F5 sur le dashboard et la page Station — [empreintes SHA-256](0.37.230/SHA256SUMS.txt) |
+| 0.37.230 | [RemoteStation-Setup-0.37.230.exe](0.37.230/RemoteStation-Setup-0.37.230.exe) | [remote-station-0.37.230.tar.gz](0.37.230/remote-station-0.37.230.tar.gz) | Ctrl+F5 sur le dashboard et la page Station — [empreintes SHA-256](0.37.230/SHA256SUMS.txt) |
 | 0.37.229 | [RemoteStation-Setup-0.37.229.exe](0.37.229/RemoteStation-Setup-0.37.229.exe) | [remote-station-0.37.229.tar.gz](0.37.229/remote-station-0.37.229.tar.gz) | Ctrl+F5 sur le dashboard et la page TRX DIGI — [empreintes SHA-256](0.37.229/SHA256SUMS.txt) |
 | 0.37.228 | [RemoteStation-Setup-0.37.228.exe](0.37.228/RemoteStation-Setup-0.37.228.exe) | [remote-station-0.37.228.tar.gz](0.37.228/remote-station-0.37.228.tar.gz) | Ctrl+F5 sur le dashboard, la face avant et les pages TRX — [empreintes SHA-256](0.37.228/SHA256SUMS.txt) |
 | 0.37.227 | [RemoteStation-Setup-0.37.227.exe](0.37.227/RemoteStation-Setup-0.37.227.exe) | [remote-station-0.37.227.tar.gz](0.37.227/remote-station-0.37.227.tar.gz) | Ctrl+F5 sur les pages TRX CW et TRX DIGI — [empreintes SHA-256](0.37.227/SHA256SUMS.txt) |
