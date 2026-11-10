@@ -795,3 +795,14 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .i76-freq.dim { fill: #9aa2b0; }
 #face .i76-sst { fill: #e6e9ef; font: 700 7.6px Arial, sans-serif; pointer-events: none; }
 #face .lcd-modet.i76 { font-size: 8.5px; }
+/* IC-7760 : colonne MULTI à droite de l'écran */
+#face .i76mm-bg { fill: #05070b; }
+#face .i76mm-c { fill: #23272f; stroke: #59606c; stroke-width: 0.7; }
+#face .i76mm-c.on { fill: #bfeff5; stroke: #4fd2f0; }
+#face .i76mm-c.empty { fill: #15181e; }
+#face .i76mm-t { fill: #fff; font: 700 8.6px Arial, sans-serif; pointer-events: none; }
+#face .i76mm-v { fill: #e6e9ef; font: 700 7.6px Arial, sans-serif; pointer-events: none; }
+#face .i76mm-tr { fill: #3a4252; }
+#face .i76mm-bar { fill: #2ec4c0; }
+#face .i76mm-t.on, #face .i76mm-v.on { fill: #0b2a33; }
+#face .i76mm-back { fill: #1f5fbf; stroke: #9cc4ff; stroke-width: 0.8; }

@@ -348,18 +348,22 @@
 
     // Scope du TRX (IC-7300, 27 00) : une image = 11 trames ; assemblée puis envoyée au serveur (10 images par seconde au plus)
     _scopeFrame(s) {
-      if (s.div === 1) { this.sc = { mode: s.mode, f0: s.f0, f1: s.f1, oor: s.oor, parts: [], max: s.max }; return; }
-      const c = this.sc;
+      // IC-7760 en DUAL : images du MAIN (s = 0) et du SUB (s = 1) l'une après l'autre, assemblées à part
+      const sd = s.s ? 1 : 0, scs = this.scs = this.scs || [null, null], ats = this.scAts = this.scAts || [0, 0];
+      if (s.div === 1) { scs[sd] = { mode: s.mode, f0: s.f0, f1: s.f1, oor: s.oor, parts: [], max: s.max }; return; }
+      const c = scs[sd];
       if (!c || !s.data) return;
       c.parts[s.div] = s.data;
       if (s.div !== c.max) return;
-      this.sc = null;
+      scs[sd] = null;
       const now = Date.now();
-      if (!this.wsUp || !this.scopeOn || now - (this.scAt || 0) < 90) return;
-      this.scAt = now;
+      if (!this.wsUp || !this.scopeOn || now - ats[sd] < 90) return;
+      ats[sd] = now;
       let bin = '';
       for (let k = 2; k <= c.max; k++) for (const b of c.parts[k] || []) bin += String.fromCharCode(Math.min(255, b));
-      this.sendWs({ t: 'scope', m: c.mode, f0: c.f0, f1: c.f1, oor: c.oor, d: btoa(bin) });
+      const o = { t: 'scope', m: c.mode, f0: c.f0, f1: c.f1, oor: c.oor, d: btoa(bin) };
+      if (sd) o.s = 1;
+      this.sendWs(o);
     }
     /** Le serveur demande (ou plus) le scope du TRX : sortie de la courbe par le CI-V en service ou coupée. */
     scopeWant(on) {

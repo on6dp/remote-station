@@ -1058,9 +1058,14 @@
       const by = (n) => BOT.find((b) => b[0] === n);
       const extra = { REF: ['REF', () => openSmenu()], '<MENU1>': ['<MENU1>', () => openSmenu()],
         // IC-7760 : le scope de la page montre le son reçu (fixe autour du VFO) ; MAIN/SUB et DUAL comme les touches du TRX
-        'CENT/FIX': ['CENT/FIX', () => say('CENT/FIX : le scope de la page montre le son reçu (0 à 3 kHz autour du VFO), toujours centré.', '', 3500)],
-        'MAIN/SUB': ['MAIN/SUB', () => { if (needControl()) setCtl('vfoSel', S().vfoSel === 1 ? 0 : 1); }],
-        DUAL: ['DUAL', () => { if (needControl()) setCtl('dualRx', S().dualRx ? 0 : 1); }],
+        'CENT/FIX': ['CENT/FIX', () => {
+          if (!(DICOM && rfFresh())) return say('CENT/FIX : sans le scope du TRX, la page montre le son reçu (0 à 3 kHz autour du VFO), toujours centré.', '', 3500);
+          if (!needControl()) return;
+          const k = 'scMode' + (activeSide() === 'B' ? 'B' : ''), v = (S()[k] || 0) & 1 ? 0 : 1;
+          setCtl(k, v); say((v ? 'FIX' : 'CENTER') + ' (scope du ' + (activeSide() === 'B' ? 'SUB' : 'MAIN') + ')', '', 2000);
+        }],
+        'MAIN/SUB': ['MAIN/SUB', () => { if (!needControl()) return; const v = S().vfoSel === 1 ? 0 : 1; setCtl('vfoSel', v); if (R.CONTROL.scSel) setCtl('scSel', v); }],
+        DUAL: ['DUAL', () => { if (!needControl()) return; if (R.CONTROL.scDual) { const v = S().scDual ? 0 : 1; setCtl('scDual', v); say(v ? 'DUAL : scopes du MAIN et du SUB' : 'Un seul scope (MAIN/SUB pour choisir)', '', 2500); } else setCtl('dualRx', S().dualRx ? 0 : 1); }],
         'EXPD/SET': ['EXPD/SET', () => doAct({ act: { local: 'multiView' } })], MARKER: ['MARKER', () => { smAdjust('marker', 1); say('MARKER : ' + (L.marker ? 'ON' : 'OFF'), '', 2000); }],
         EXPAND: ['EXPAND', () => toggleExpand()], SPEED: ['SPEED', FACE.meterFtx ? () => openSpeed() : () => { smAdjust('spd', 1); say('SPEED (vitesse de la cascade) : ' + WF_SPEEDS[L.wfSpeed][0], '', 2500); }],
         // FTX-1 : SCOPE montre seulement de quel VFO est le scope (MAIN ou SUB, celui qui est sélectionné), pas de menu
@@ -1075,6 +1080,23 @@
           say('D-MODE : ' + ['CENTER', 'CURSOR', 'FIX'][v] + ' (scope du TRX)', '', 2500);
           render();
         }] };
+      // IC-7760 avec le scope du TRX : SPAN (CENTER) ou EDGE (FIX) et HOLD du scope du récepteur sélectionné, comme sur le TRX
+      if (DICOM) {
+        const sp0 = by('SPAN'), ho0 = by('HOLD');
+        extra.SPAN = ['SPAN', () => {
+          if (!rfFresh()) return sp0 && sp0[1] && sp0[1]();
+          if (!needControl()) return;
+          const b = activeSide() === 'B' ? 'B' : '', s0 = S();
+          if ((s0['scMode' + b] || 0) & 1) { const v = ((s0['scEdge' + b] || 1) % 4) + 1; setCtl('scEdge' + b, v); say('EDGE' + v, '', 1500); }
+          else { const v = ((s0['scSpan' + b] != null ? s0['scSpan' + b] : 3) + 1) % 8; setCtl('scSpan' + b, v); say('SPAN ' + R.CONTROL['scSpan' + b].options[v][1], '', 1500); }
+        }];
+        extra.HOLD = ['HOLD', () => {
+          if (!rfFresh()) return ho0 && ho0[1] && ho0[1]();
+          if (!needControl()) return;
+          const k = 'scHold' + (activeSide() === 'B' ? 'B' : '');
+          setCtl(k, S()[k] ? 0 : 1);
+        }];
+      }
       const names = FACE.bot || ['CENTER', '3DSS', 'MULTI', 'EXPAND', 'SPAN', 'SPEED'];
       BOT.splice(0, BOT.length, ...names.map((n) => extra[n] || by(n) || [n]));
     }
@@ -1112,7 +1134,7 @@
     buildModeMenu(g, c);
     if (SINGLE || FACE.bandGrid) buildBandMenu(g, c); // FTX-1 : tableau BAND du TRX (MAG BAND)
     // IC-7760 : colonne de touches Icom, écran FUNCTION Icom (15 touches, récepteur sélectionné) et menu MULTI (bouton MULTI poussé)
-    if (DICOM) { buildI76(g, c); buildIcFunc(g, c, I76_FUNC); buildMultiMenu(g, c); }
+    if (DICOM) { buildI76(g, c); buildIcFunc(g, c, I76_FUNC); buildI76Multi(g, c); }
     if (ICOM) {
       // Écran MENU de l'IC-7300 : 2 pages de 5 × 2 touches, comme sur le TRX ; VOICE devient KEYER en CW et DECODE en RTTY
       const md = () => L.activeMode(S()) || '';
@@ -1528,9 +1550,11 @@
   }
   // ---- Vrai scope du TRX (IC-7300, CI-V 27 00 relayé par la page Station et le serveur) : 475 points de 0 à 160 par image
   const RFS = { at: 0, d: null, m: 0, f0: 0, f1: 0, last: null };
-  const rfFresh = () => ICOM && Date.now() - RFS.at < 2500;
+  // IC-7760 : scope du MAIN (RFSS[0]) et du SUB (RFSS[1]) ; en DUAL, l'un au-dessus de l'autre, comme sur le TRX
+  const RFSS = [{ at: 0, d: null, side: 0 }, { at: 0, d: null, side: 1 }];
+  const rfFresh = () => (ICOM && Date.now() - RFS.at < 2500) || (DICOM && Date.now() - Math.max(RFSS[0].at, RFSS[1].at) < 2500);
   function scopeSub(on) { if (me) send({ t: 'scope_sub', on: !!on }); }
-  if (ICOM) {
+  if (ICOM || DICOM) {
     setInterval(() => { if (document.visibilityState === 'visible') scopeSub(true); }, 20000);
     document.addEventListener('visibilitychange', () => scopeSub(document.visibilityState === 'visible'));
   }
@@ -1551,6 +1575,64 @@
     const h = L.icView === 'audio' ? Math.round(H * IC_STRIP / IC_AUD_H) : H;
     drawRf(c2, 0, 0, W, h, RFS);
     RFS.last = { m: RFS.m, f0: RFS.f0, f1: RFS.f1 };
+  }
+  // IC-7760 : régions du canevas — DUAL (les deux scopes reçus récemment) : MAIN en haut, SUB en bas ; sinon le scope reçu en entier
+  function rf76Regions(W, H) {
+    const now = Date.now(), a = now - RFSS[0].at < 1500, b = now - RFSS[1].at < 1500;
+    if (a && b) { const h1 = Math.floor(H / 2) - 1; return [{ sd: 0, y0: 0, h: h1 }, { sd: 1, y0: h1 + 2, h: H - h1 - 2 }]; }
+    return [{ sd: a || !b ? 0 : 1, y0: 0, h: H }];
+  }
+  function rfsOn76(m) {
+    let bin;
+    try { bin = atob(m.d || ''); } catch (e) { return; }
+    const d = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) d[i] = bin.charCodeAt(i);
+    const F = RFSS[m.s ? 1 : 0];
+    Object.assign(F, { at: Date.now(), d, m: m.m, f0: m.f0, f1: m.f1, oor: m.oor, max: (R.SCOPE && R.SCOPE.max) || 200 });
+    const cv = $('scope');
+    if (!cv || cv.style.visibility === 'hidden' || L.multi) return; // M.SCOPE : écran multi-fonctions (son reçu)
+    const c2 = cv.getContext('2d'), r = cv.getBoundingClientRect();
+    const W = Math.max(50, Math.round(r.width)), H = Math.max(40, Math.round(r.height));
+    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; WF.drawn = false; }
+    const regs = rf76Regions(W, H), key = regs.map((q) => q.sd + ':' + q.y0).join(',') + '|' + W + 'x' + H;
+    if (!WF.drawn || WF.rf76 !== key) { c2.fillStyle = '#000'; c2.fillRect(0, 0, W, H); WF.drawn = true; WF.rf76 = key; }
+    const q = regs.find((x) => x.sd === F.side);
+    if (!q || (S()['scHold' + (F.side ? 'B' : '')])) return;
+    drawRf(c2, 0, q.y0, W, q.h, F);
+    F.last = { m: F.m, f0: F.f0, f1: F.f1 };
+    // En-tête : « FIX · MAIN » / « CENTER · SUB », cadre orange autour du scope du récepteur sélectionné (comme sur le TRX)
+    const sel = (activeSide() === 'B' ? 1 : 0) === F.side;
+    c2.font = 'bold 11px Arial, sans-serif'; c2.textAlign = 'center';
+    const tag = (['CENTER', 'FIX', 'SCROLL-C', 'SCROLL-F'][F.m] || '') + '  ' + (F.side ? 'SUB' : 'MAIN');
+    const tw = c2.measureText(tag).width + 10;
+    c2.fillStyle = F.side ? 'rgba(20,120,60,.9)' : 'rgba(170,30,30,.9)'; c2.fillRect(W / 2 - tw / 2, q.y0 + 2, tw, 13);
+    c2.fillStyle = '#fff'; c2.fillText(tag, W / 2, q.y0 + 12);
+    c2.strokeStyle = sel ? '#ff9a1f' : 'rgba(0,0,0,0)'; c2.lineWidth = 2;
+    if (sel) c2.strokeRect(1, q.y0 + 1, W - 2, q.h - 2);
+  }
+  // IC-7760 : clic sur un scope → le VFO de ce scope va sur la fréquence cliquée
+  function rf76FreqAt(ev) {
+    const cv = $('scope'), r = cv.getBoundingClientRect();
+    if (!r.width) return null;
+    const regs = rf76Regions(Math.round(r.width), Math.round(r.height)), y = ev.clientY - r.top;
+    const q = regs.find((x) => y >= x.y0 && y <= x.y0 + x.h);
+    const F = q && RFSS[q.sd];
+    if (!F || !F.last || y > q.y0 + q.h - 15) return null;
+    const [lo, hi] = rfEdges(F.last), x = (ev.clientX - r.left) / r.width;
+    if (!(x >= 0 && x <= 1)) return null;
+    const side = q.sd ? 'B' : 'A', md = (q.sd ? S().modeB : S().mode) || '', st = /^CW/.test(md) ? 10 : 100;
+    return { side, hz: Math.round((lo + x * (hi - lo)) / st) * st };
+  }
+  if (DICOM) {
+    const cv0 = $('scope');
+    cv0.addEventListener('click', (ev) => {
+      if (!rfFresh() || L.multi) return;
+      const p = rf76FreqAt(ev);
+      if (!p || !needControl()) return;
+      tuneTo(p.side, p.hz);
+      showTip(ev, (p.side === 'B' ? 'SUB ' : 'MAIN ') + (p.hz / 1e6).toFixed(p.hz % 1000 ? 4 : 3) + ' MHz');
+    });
+    cv0.addEventListener('mousemove', (ev) => { if (!rfFresh()) return; const p = rf76FreqAt(ev); cv0.title = p ? 'Clic : ' + (p.side === 'B' ? 'SUB ' : 'MAIN ') + (p.hz / 1e6).toFixed(4) + ' MHz' : ''; });
   }
   // Pas de la grille en FIX : largeur / 14, arrondi à 1 – 2 – 2,5 – 5 × 10ⁿ
   function rfGrid(span) { const raw = span / 14, p10 = Math.pow(10, Math.floor(Math.log10(raw))); return [1, 2, 2.5, 5, 10].map((m) => m * p10).find((v) => v >= raw * 0.999) || 10 * p10; }
@@ -1642,7 +1724,7 @@
       const i0 = Math.floor(px / w * n), i1 = Math.max(i0 + 1, Math.floor((px + 1) / w * n));
       let m = 0;
       for (let i = i0; i < i1 && i < n; i++) if (d[i] > m) m = d[i];
-      col[px] = m / 160;
+      col[px] = m / (f.max || 160);
     }
     if (wh > 1) {
       const img = c2.createImageData(w, 1);
@@ -1669,7 +1751,8 @@
     c2.strokeStyle = '#4f9cff'; c2.stroke();
     // Repères : CENTER → trait blanc au milieu ; FIX → trait vert (R) à la fréquence de réception ; MARKER → trait orange (T) à la fréquence d'émission
     const s = S(), [lo, hi] = rfEdges(f), xf = (hz) => x0 + (hz - lo) / (hi - lo) * w;
-    const rx = activeSide() === 'B' ? s.freqB : s.freq, tx = s.split ? (activeSide() === 'B' ? s.freq : s.freqB) : rx;
+    const sB = f.side != null ? f.side === 1 : activeSide() === 'B'; // IC-7760 : scope du SUB → fréquence du SUB
+    const rx = sB ? s.freqB : s.freq, tx = s.split ? (sB ? s.freq : s.freqB) : rx;
     const vline = (x, color, wd) => { if (x < x0 || x > x0 + w) return; c2.strokeStyle = color; c2.lineWidth = wd; c2.beginPath(); c2.moveTo(Math.round(x) + 0.5, y0); c2.lineTo(Math.round(x) + 0.5, y0 + sh); c2.stroke(); c2.lineWidth = 1; };
     if (rfFix(f)) { if (rx) vline(xf(rx), '#3ddc5a', 2); } else vline(x0 + w / 2, '#ffffff', 1.5);
     if (L.marker && tx) { vline(xf(tx), '#ff8a1f', 1.5); c2.fillStyle = '#ff8a1f'; const xt = xf(tx); if (xt >= x0 && xt <= x0 + w) { c2.beginPath(); c2.moveTo(xt - 4, y0); c2.lineTo(xt + 4, y0); c2.lineTo(xt, y0 + 6); c2.fill(); } }
@@ -2805,8 +2888,92 @@
     el('text', { x: X(250), y: Y(G.lowY + 8.5), class: 'i76-sst', 'text-anchor': 'middle' }, LCD.lowG, 'SPECTRUM SCOPE');
     for (const cg of [LCD.cgA, LCD.cgB]) cg.style.display = 'none';
   }
+  // IC-7760 : bouton MULTI poussé = colonne à droite de l'écran, comme sur le TRX : RF POWER, MIC GAIN, COMP, DIGI-SEL, MONITOR
+  // (en CW : RF POWER, KEY SPEED, CW PITCH, DIGI-SEL, MONITOR) ; clic = choisir, puis tourner le bouton MULTI (ou la molette ici) ;
+  // le scope reste visible à gauche de la colonne
+  const pctOf = (v) => (v == null ? 0 : v / 255);
+  function i76MultiItems(s) {
+    const cw = /^CW/.test(L.activeMode(s) || '');
+    const pw = ['power', 'RF POWER', (s0) => ['HF', s0.power != null ? s0.power + 'W' : '—'], (s0) => (s0.power != null ? (s0.power - 5) / 195 : 0)];
+    const ds = ['dsI', 'DIGI-SEL', (s0) => [onOff(s0[sdk('digiSel')]), ''], (s0) => (s0[sdk('digiSel')] ? 0.5 : 0)];
+    const mo = ['moniLvl', 'MONITOR', (s0) => [onOff(s0.moni), pct(s0.moniLvl)], (s0) => pctOf(s0.moniLvl)];
+    if (cw) return [pw, ['keySpeed', 'KEY SPEED', (s0) => ['', s0.keySpeed != null ? s0.keySpeed + 'wpm' : '—'], (s0) => (s0.keySpeed != null ? (s0.keySpeed - 6) / 42 : 0)],
+      ['cwPitch', 'CW PITCH', (s0) => ['', s0.cwPitch != null ? s0.cwPitch + 'Hz' : '—'], (s0) => (s0.cwPitch != null ? (s0.cwPitch - 300) / 600 : 0)], ds, null, mo];
+    return [pw, ['mic', 'MIC GAIN', (s0) => ['', pct(s0.mic)], (s0) => pctOf(s0.mic)],
+      ['procLvl', 'COMP', (s0) => [onOff(s0.proc), pct(s0.procLvl)], (s0) => pctOf(s0.procLvl)], ds, null, mo];
+  }
+  function buildI76Multi(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const m = LCD.i76mm = el('g', { class: 'i76mm', style: 'display:none' }, g);
+    const x0 = X(c.w - 86), w = 83, n = 6, rh = (G.botY - 3) / n;
+    el('rect', { x: x0 - 2, y: Y(1), width: w + 4, height: G.botY + G.botH - 1, class: 'i76mm-bg' }, m);
+    LCD.i76mmRows = Array.from({ length: n }, (_, i) => {
+      const y = Y(2 + i * rh);
+      const r = el('rect', { x: x0, y, width: w, height: rh - 2, rx: 2, class: 'i76mm-c' }, m);
+      const t = el('text', { x: x0 + w / 2, y: y + 12, class: 'i76mm-t', 'text-anchor': 'middle' }, m, '');
+      el('rect', { x: x0 + 10, y: y + 17, width: w - 20, height: 4, rx: 1, class: 'i76mm-tr' }, m);
+      const bar = el('rect', { x: x0 + 10, y: y + 17, width: 0, height: 4, rx: 1, class: 'i76mm-bar' }, m);
+      const v1 = el('text', { x: x0 + 4, y: y + rh - 7, class: 'i76mm-v' }, m, '');
+      const v2 = el('text', { x: x0 + w - 4, y: y + rh - 7, class: 'i76mm-v', 'text-anchor': 'end' }, m, '');
+      const hit = el('rect', { x: x0, y, width: w, height: rh - 2, class: 'hs lcd-hit' }, m);
+      const row = { r, t, bar, v1, v2, hit, id: null, bw: w - 20 };
+      el('title', {}, hit, 'Clic : choisir ce réglage, puis tourner le bouton MULTI (ou la molette ici)');
+      hit.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        if (!row.id) return;
+        if (row.id === 'dsI') { if (needControl()) setCtl(sdk('digiSel'), S()[sdk('digiSel')] ? 0 : 1); return; }
+        L.funcSel = row.id; store.set('rs.face.funcsel', row.id); render();
+      });
+      hit.addEventListener('wheel', (ev) => {
+        ev.preventDefault();
+        if (!row.id || row.id === 'dsI' || !Math.abs(ev.deltaY)) return;
+        L.funcSel = row.id;
+        funcAdjust(row.id, ev.deltaY < 0 ? 1 : -1);
+      }, { passive: false });
+      return row;
+    });
+    // Retour (comme EXIT), dans la rangée du bas
+    el('rect', { x: x0 + 10, y: Y(G.botY + 2), width: w - 20, height: G.botH - 5, rx: 3, class: 'i76mm-back' }, m);
+    el('text', { x: x0 + w / 2, y: Y(G.botY + G.botH / 2 + 3.5), class: 'i76mm-t', 'text-anchor': 'middle' }, m, '↩');
+    const back = el('rect', { x: x0, y: Y(G.botY), width: w, height: G.botH - 1, class: 'hs lcd-hit' }, m);
+    el('title', {}, back, 'Retour (comme EXIT ou MULTI)');
+    back.addEventListener('click', (ev) => { ev.stopPropagation(); L.multiMenu = false; render(); });
+  }
+  function drawI76Multi(s) {
+    const m = LCD.i76mm;
+    if (!m) return;
+    const on = !!L.multiMenu;
+    m.style.display = on ? '' : 'none';
+    // Le scope (canevas au-dessus de l'écran) s'arrête à gauche de la colonne
+    if (LCD.i76mmOn !== on) {
+      LCD.i76mmOn = on;
+      const cv = $('scope'), box = LCD.scopeBox;
+      if (cv && box) { const w = on ? box.w - 88 : box.w; cv.style.width = (w / V.w * 100) + '%'; WF.drawn = false; }
+      if (LCD.scopeRect && box) LCD.scopeRect.setAttribute('width', on ? box.w - 88 : box.w);
+    }
+    if (!on) return;
+    const items = i76MultiItems(s);
+    if (!items.some((it) => it && it[0] === L.funcSel)) L.funcSel = 'power';
+    LCD.i76mmRows.forEach((row, i) => {
+      const it = items[i];
+      row.id = it ? it[0] : null;
+      row.t.textContent = it ? it[1] : '';
+      const [a, b] = it ? it[2](s) : ['', ''];
+      row.v1.textContent = a; row.v2.textContent = b;
+      row.bar.setAttribute('width', it ? Math.max(0, Math.min(1, it[3](s))) * row.bw : 0);
+      row.r.classList.toggle('on', !!it && L.funcSel === it[0]);
+      for (const e of [row.t, row.v1, row.v2]) e.classList.toggle('on', !!it && L.funcSel === it[0]);
+      row.r.classList.toggle('empty', !it);
+    });
+  }
   function drawI76(s, tx) {
     if (!LCD.i76) return;
+    drawI76Multi(s);
+    // Bandeau du scope : avec le scope du TRX, « Grid » du scope sélectionné (pas de la grille / 10 dB), comme sur le TRX
+    if (rfFresh() && !L.multi) {
+      const F = RFSS[activeSide() === 'B' ? 1 : 0].last || RFSS[0].last || RFSS[1].last;
+      LCD.span.textContent = F ? (rfFix(F) ? 'Grid ' + (rfGrid(F.f1 - F.f0) / 1000) + 'k/10dB' : 'SPAN ±' + (F.f1 / 1000) + 'k') + (s.scDual ? ' · DUAL' : '') : '';
+    }
     const b = activeSide() === 'B' ? 'B' : '';
     for (const k of LCD.i76k) {
       const v = k.id === 'proc' ? s.proc : s[k.id + b];
@@ -5330,7 +5497,14 @@
     for (const b of LCD.bot || []) {
       if (b.t2) b.t2.textContent = FUNC_BY[L.funcSel] ? FUNC_BY[L.funcSel][1] : '';
       if (b.lab === 'HOLD') b.r.classList.toggle('on', !!L.hold);
-      if (b.lab === 'SPAN') b.t.textContent = 'SPAN ' + SPAN_TRX[L.trxSpan];
+      if (b.lab === 'SPAN') {
+        // IC-7760 avec le scope du TRX : « SPAN ±25k » en CENTER, « EDGE1 » en FIX (scope du récepteur sélectionné)
+        const sb = activeSide() === 'B' ? 'B' : '';
+        if (DICOM && rfFresh()) b.t.textContent = (s['scMode' + sb] || 0) & 1 ? 'EDGE' + (s['scEdge' + sb] || 1) : 'SPAN ' + (R.CONTROL['scSpan' + sb].options[s['scSpan' + sb] != null ? s['scSpan' + sb] : 3] || ['', ''])[1];
+        else b.t.textContent = 'SPAN ' + SPAN_TRX[L.trxSpan];
+      }
+      if (DICOM && b.lab === 'HOLD' && rfFresh()) b.r.classList.toggle('on', !!s['scHold' + (activeSide() === 'B' ? 'B' : '')]);
+      if (DICOM && b.lab === 'DUAL') b.r.classList.toggle('on', !!s.scDual);
       if (FACE.meterFtx) { // FTX-1 : comme sur le TRX, MULTI / 3DSS en service = nom en bleu
         if (b.lab === 'MULTI') b.t.classList.toggle('blue', !!L.multi);
         if (b.lab === '3DSS') b.t.classList.toggle('blue', !!L.d3);
@@ -5386,10 +5560,10 @@
     const fresh = Date.now() - WF.at < 3000;
     LCD.hint.style.display = fresh || rfFresh() ? 'none' : '';
     // IC-7300 : le vrai scope se clique (aller sur un signal) ; la cascade du son reçu, non
-    $('scope').style.pointerEvents = (ICOM && rfFresh()) || (FACE.meterFtx && $('scope').style.visibility === 'visible') ? 'auto' : ''; // FTX-1 : clic sur le spectre / la cascade = aller sur cette fréquence
-    $('scope').style.cursor = ICOM && rfFresh() ? 'crosshair' : '';
+    $('scope').style.pointerEvents = ((ICOM || DICOM) && rfFresh()) || (FACE.meterFtx && $('scope').style.visibility === 'visible') ? 'auto' : ''; // FTX-1 : clic sur le spectre / la cascade = aller sur cette fréquence
+    $('scope').style.cursor = (ICOM || DICOM) && rfFresh() ? 'crosshair' : '';
     LCD.hint.textContent = !live ? '' : st.audio && !st.audio.active ? 'Cascade : l’audio n’est pas activé sur la page Station' : 'Cascade : en attente du son de la station…';
-    $('scope').style.visibility = (fresh || rfFresh()) && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !L.multiMenu && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet && L.fdisp !== 2 ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom ; FTX-1 DISP 2 : pas de scope)
+    $('scope').style.visibility = (fresh || rfFresh()) && !L.func && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !(L.multiMenu && !DICOM) && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet && L.fdisp !== 2 ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom ; FTX-1 DISP 2 : pas de scope)
     if (LCD.icm && L.icMeter && LCD.hint.style.display !== 'none') LCD.hint.setAttribute('y', LCD.Y(G.scopeY + 32)); else if (LCD.hint) LCD.hint.setAttribute('y', LCD.Y(G.scopeY + G.scopeH / 2 - 2));
     icPopCheck(s, live);
     if (ICOM) pbtPopDraw(s, live);
@@ -6224,7 +6398,7 @@
         if (!WF.drawn) { c2.fillStyle = '#000'; c2.fillRect(0, 0, W, H); WF.drawn = true; }
         const pal = PALS[L.wfColor] || PALS[1];
         if (ICOM && L.icView === 'audio' && LCD.icAudio && LCD.icAudio.style.display !== 'none') drawIcAudio(c2, W, H, specs, pal, nb, lvl, maxHz);
-        else if (rfFresh()) { /* IC-7300 : le scope du TRX est dessiné à chaque image reçue (rfsOn) */ }
+        else if (rfFresh() && !(DICOM && L.multi)) { /* IC-7300 / IC-7760 : le scope du TRX est dessiné à chaque image reçue (rfsOn / rfsOn76) */ }
         else if (L.multi && !ICOM) drawMulti(c2, W, H, specs, pal, nb, lvl, maxHz);
         else if (L.disp === 3) drawFilters(c2, W, H, specs, nb, lvl, maxHz);
         else if (L.d3 && !ICOM) { /* pas de 3DSS sur l'IC-7300 (réglage resté en mémoire du navigateur : ignoré) */ const mh = fitHz(activeSide()); draw3d(c2, W, H, activeSide() === 'B' && WF.two ? specs[1] : specs[0], pal, nbFor(mh), lvl, mh); }
@@ -6527,7 +6701,7 @@
       if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && window.RSVOICE) { window.RSVOICE.onMessage(m); return; }
       if (m.t === 'vm') { VM.meta = m.meta; VM.playing = m.playing; L.vlvP = null; render(); return; } // mémoires vocales (VOICE TX)
       if (m.t === 'vm_data') { vmOnData(m); return; }
-      if (m.t === 'scope') { if (ICOM) rfsOn(m); return; } // scope du TRX (IC-7300)
+      if (m.t === 'scope') { if (ICOM) rfsOn(m); else if (DICOM) rfsOn76(m); return; } // scope du TRX (IC-7300 ; IC-7760 : MAIN et SUB)
       if (m.t === 'spots' || m.t === 'spot') bmvOnSpots(m); // cartes de bande A / B autour du TRX
       if (m.t === 'menu_vals') return menuVals(m);
       if (m.t === 'dtmf_vals') return dtmfVals(m);
@@ -6543,6 +6717,7 @@
         if (m.session) { creds = { session: m.session }; store.set('rs.sess', m.session); }
         wantAudio();
         if (ICOM) { scopeSub(true); send({ t: 'vm_list' }); }
+        else if (DICOM) scopeSub(true); // IC-7760 : scopes du TRX (MAIN et SUB)
         if (DG()) DG().onHello(m, m);
         if (window.RSVOICE) window.RSVOICE.onHello(m);
         send({ t: 'plan_pref', on: store.get('rs.planauto', '1') !== '0' }); // MODE AUTO : même choix que dans le dashboard

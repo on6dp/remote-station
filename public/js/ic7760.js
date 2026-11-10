@@ -89,6 +89,8 @@
   // FAST : à chaque cycle. SLOW : une tranche par cycle. TXMETERS : en émission.
   const FAST = [q(0x25, 0x00), q(0x25, 0x01), qs(0, 0x15, 0x02), qs(1, 0x15, 0x02), q(0x1C, 0x00), q(0x07, 0xD2)];
   const TXMETERS = [q(0x15, 0x11), q(0x15, 0x12), q(0x15, 0x13), q(0x15, 0x14), q(0x14, 0x0A), q(0x16, 0x46)];
+  // SPAN du scope en CENTER : ±2,5 kHz à ±500 kHz (27 15)
+  const SC_SPANS = [2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000];
   const SLOW = [q(0x26, 0x00), q(0x26, 0x01), q(0x07, 0xC2), q(0x0F), q(0x14, 0x0A), q(0x21, 0x00), q(0x1C, 0x01)];
   for (const side of [0, 1]) {
     SLOW.push(qs(side, 0x11), qs(side, 0x12), qs(side, 0x1A, 0x03));
@@ -96,6 +98,9 @@
   }
   for (const s of COMMON) if (s[0] !== 0x15 && !(s[0] === 0x14 && s[1] === 0x0A)) SLOW.push(q(s[0], s[1]));
   SLOW.push(q(0x15, 0x15), q(0x15, 0x16));
+  // Scope du TRX : MAIN/SUB, SINGLE/DUAL, et pour chaque côté CENTER/FIX, SPAN, EDGE, HOLD
+  SLOW.push(q(0x27, 0x12), q(0x27, 0x13));
+  for (const sd of [0, 1]) SLOW.push(q(0x27, 0x14, sd), q(0x27, 0x15, sd), q(0x27, 0x16, sd), q(0x27, 0x17, sd));
   const SLOW_PER_TICK = 6;
   const POLL_MS = 250;
   const FRAME_GAP_MS = 15;
@@ -106,7 +111,8 @@
     'mic', 'proc', 'procLvl', 'vox', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'voxGain', 'antiVox', 'tbw',
     'fil', 'filB', 'filWi', 'filWiB', 'att', 'attB', 'ant', 'antB', 'rxAnt', 'rxAntB'];
   for (const s of SIDE) if (s[2] !== 'smeter') STATE_KEYS.push(s[2], s[2] + 'B');
-  STATE_KEYS.push('smeterB');
+  STATE_KEYS.push('smeterB', 'scSel', 'scDual');
+  for (const k of ['scMode', 'scSpan', 'scEdge', 'scHold']) STATE_KEYS.push(k, k + 'B');
 
   // CW PITCH : 0–255 = 300–900 Hz (pas de 5 Hz) ; KEY SPEED : 0–255 = 6–48 mots/min
   const pitchHz = (raw) => Math.round((300 + raw * 600 / 255) / 5) * 5;
@@ -208,6 +214,20 @@
       CONTROLS.push(c);
     }
   }
+  // Scope du TRX (touches de l'écran) : MAIN/SUB et DUAL, puis CENTER/FIX, SPAN, EDGE, HOLD de chaque scope
+  CONTROLS.push(
+    { id: 'scSel', g: 'rx', label: 'Scope MAIN / SUB', type: 'select', face: true, options: [[0, 'MAIN'], [1, 'SUB']], write: (v) => q(0x27, 0x12, v) },
+    { id: 'scDual', g: 'rx', label: 'Scope SINGLE / DUAL', type: 'toggle', face: true, write: (v) => q(0x27, 0x13, v ? 1 : 0) });
+  for (const b of [0, 1]) {
+    const x = b ? 'B' : '', n = b ? ' (SUB)' : '';
+    CONTROLS.push(
+      { id: 'scMode' + x, g: 'rx', label: 'CENTER / FIX du scope' + n, type: 'select', face: true, options: [[0, 'CENTER'], [1, 'FIX'], [2, 'SCROLL-C'], [3, 'SCROLL-F']], write: (v) => q(0x27, 0x14, b, v) },
+      { id: 'scSpan' + x, g: 'rx', label: 'SPAN du scope' + n, type: 'select', face: true, options: SC_SPANS.map((h, i) => [i, '±' + (h >= 1000 ? h / 1000 + 'k' : h)]), write: (v) => q(0x27, 0x15, b, ...freqBytes(SC_SPANS[v])) },
+      { id: 'scEdge' + x, g: 'rx', label: 'EDGE du scope' + n, type: 'select', face: true, options: [[1, 'EDGE1'], [2, 'EDGE2'], [3, 'EDGE3'], [4, 'EDGE4']], write: (v) => q(0x27, 0x16, b, v) },
+      { id: 'scHold' + x, g: 'rx', label: 'HOLD du scope' + n, type: 'toggle', face: true, write: (v) => q(0x27, 0x17, b, v ? 1 : 0) });
+    READ_FOR['scMode' + x] = q(0x27, 0x14, b); READ_FOR['scSpan' + x] = q(0x27, 0x15, b); READ_FOR['scEdge' + x] = q(0x27, 0x16, b); READ_FOR['scHold' + x] = q(0x27, 0x17, b);
+  }
+  READ_FOR.scSel = q(0x27, 0x12); READ_FOR.scDual = q(0x27, 0x13);
   const CONTROL = {};
   CONTROLS.forEach((c) => { CONTROL[c.id] = c; });
 
@@ -293,10 +313,20 @@
     if (c === 0xFA) return { error: true };
     // Scope du TRX (27 00) : MAIN seulement (d[1] = 00) ; division 1 = mode + 2 fréquences + hors plage, puis morceaux de la courbe
     if (c === 0x27 && d[0] === 0x00 && d.length >= 4) {
-      if (d[1] !== 0x00) return { ok: true };
-      const div = unbcd(d[2]), max = unbcd(d[3]);
-      if (div === 1) return d.length >= 15 ? { _scope: { div, max, mode: d[4], f0: freqValue(d, 5), f1: freqValue(d, 10), oor: d[15] ? 1 : 0 } } : { ok: true };
-      return { _scope: { div, max, data: d.slice(4) } };
+      // d[1] : 00 = scope du MAIN, 01 = scope du SUB (en DUAL, le TRX envoie les deux, l'un après l'autre)
+      const sd = d[1] ? 1 : 0, div = unbcd(d[2]), max = unbcd(d[3]);
+      if (div === 1) return d.length >= 15 ? { _scope: { s: sd, div, max, mode: d[4], f0: freqValue(d, 5), f1: freqValue(d, 10), oor: d[15] ? 1 : 0 } } : { ok: true };
+      return { _scope: { s: sd, div, max, data: d.slice(4) } };
+    }
+    // Réglages du scope du TRX (27 12 MAIN/SUB, 27 13 SINGLE/DUAL, 27 14 CENTER/FIX, 27 15 SPAN, 27 16 EDGE, 27 17 HOLD)
+    if (c === 0x27 && d[0] === 0x12 && d.length >= 2) return { scSel: d[1] ? 1 : 0 };
+    if (c === 0x27 && d[0] === 0x13 && d.length >= 2) return { scDual: d[1] ? 1 : 0 };
+    if (c === 0x27 && d[0] >= 0x14 && d[0] <= 0x17 && d.length >= 3) {
+      const b = d[1] ? 'B' : '';
+      if (d[0] === 0x14) return { ['scMode' + b]: d[2] <= 3 ? d[2] : 0 };
+      if (d[0] === 0x15) { const i = SC_SPANS.indexOf(freqValue(d, 2)); return i >= 0 ? { ['scSpan' + b]: i } : { ok: true }; }
+      if (d[0] === 0x16) return d[2] >= 1 && d[2] <= 4 ? { ['scEdge' + b]: d[2] } : { ok: true };
+      return { ['scHold' + b]: d[2] ? 1 : 0 };
     }
     if (c === 0x1A && d[0] === 0x03 && d.length >= 2) return { filWi: unbcd(d[1]) };
     if (c === 0x1A) return { ok: true };
@@ -472,6 +502,15 @@
       } else if (c === 0x27 && (d[0] === 0x10 || d[0] === 0x11)) {
         if (d.length >= 2 && d[0] === 0x11) { clearInterval(this.scT); if (d[1]) this.scT = setInterval(() => this.scopeOut(), 100); }
         ok();
+      } else if (c === 0x27 && (d[0] === 0x12 || d[0] === 0x13)) {
+        const k = d[0] === 0x12 ? 'scSel' : 'scDual';
+        if (this[k] == null) this[k] = d[0] === 0x13 ? 1 : 0;
+        if (d.length === 1) r(d[0], this[k]); else { this[k] = d[1] ? 1 : 0; ok(); }
+      } else if (c === 0x27 && d[0] >= 0x14 && d[0] <= 0x17 && d.length >= 2) {
+        const sc = (this.sc = this.sc || [{ m: 0, sp: 25000, e: 1, h: 0 }, { m: 1, sp: 25000, e: 1, h: 0 }])[d[1] ? 1 : 0];
+        const k = { 0x14: 'm', 0x15: 'sp', 0x16: 'e', 0x17: 'h' }[d[0]];
+        if (d.length === 2) r(d[0], d[1], ...(k === 'sp' ? freqBytes(sc.sp) : [sc[k]]));
+        else { sc[k] = k === 'sp' ? freqValue(d, 2) : d[2]; ok(); }
       } else if (c === 0x1A && d[0] === 0x03) {
         const m = b ? v.modeB : v.mode;
         if (d.length === 1) r(0x03, bcd([34, 28, 9][((m && m[2]) || 1) - 1] || 34)); else ok(); // 3,0 kHz / 2,4 kHz / 500 Hz
@@ -492,17 +531,26 @@
     }
     // Simulateur : une image du scope du MAIN (1 trame d'en-tête + 14 morceaux, 689 points de 0 à 200)
     scopeOut() {
-      const v = this.v, out = [], span = 25000;
-      out.push([CTRL, ADDR, 0x27, 0x00, 0x00, 0x01, 0x15, 0x00, ...freqBytes(v.freq), ...freqBytes(span), 0x00]);
+      const v = this.v, out = [];
+      this.sc = this.sc || [{ m: 0, sp: 25000, e: 1, h: 0 }, { m: 1, sp: 25000, e: 1, h: 0 }];
+      const dual = this.scDual == null ? 1 : this.scDual, sides = dual ? [0, 1] : [this.scSel || 0];
       this.t2 = (this.t2 || 0) + 1;
+      for (const sd of sides) {
+      const sc = this.sc[sd], fq = sd ? v.freqB : v.freq;
+      if (sc.h) continue;
+      // CENTER : centre ± SPAN ; FIX : bords de la bande (EDGE)
+      const band = [[1800000, 2000000], [3500000, 3800000], [7000000, 7300000], [10100000, 10150000], [14000000, 14350000], [18068000, 18168000], [21000000, 21450000], [24890000, 24990000], [28000000, 29700000], [50000000, 52000000]].find((b) => fq >= b[0] && fq <= b[1]) || [fq - 100000, fq + 100000];
+      const lo = sc.m & 1 ? band[0] : fq - sc.sp, hi = sc.m & 1 ? band[1] : fq + sc.sp;
+      out.push([CTRL, ADDR, 0x27, 0x00, sd, 0x01, 0x15, sc.m, ...freqBytes(sc.m & 1 ? lo : fq), ...freqBytes(sc.m & 1 ? hi : sc.sp), 0x00]);
       const pts = [];
       for (let i = 0; i < 689; i++) {
-        const f = v.freq - span + 2 * span * i / 688;
+        const f = lo + (hi - lo) * i / 688;
         let a = 25 + Math.random() * 18;
-        for (const [sf, w, p] of [[14074000, 1500, 90], [14255000, 2800, 80], [7074000, 1500, 90], [14240000 + 1000 * Math.sin(this.t2 / 20), 300, 70]]) a = Math.max(a, p * Math.exp(-(((f - sf) / w) ** 2)) + Math.random() * 8);
+        for (const [sf, w, p] of [[14074000, 1500, 90], [14255000, 2800, 80], [14100000, 2400, 70], [14195000, 2600, 75], [14300000, 2600, 72], [7074000, 1500, 90], [7030000, 300, 75], [7155000, 2500, 70], [7200000, 2500, 85], [14240000 + 1000 * Math.sin(this.t2 / 20), 300, 70]]) a = Math.max(a, p * Math.exp(-(((f - sf) / w) ** 2)) + Math.random() * 8);
         pts.push(Math.max(0, Math.min(200, Math.round(a))));
       }
-      for (let k = 0; k < 14; k++) out.push([CTRL, ADDR, 0x27, 0x00, 0x00, bcd(k + 2), 0x15, ...pts.slice(k * 53, k === 13 ? 689 : (k + 1) * 53)]);
+      for (let k = 0; k < 14; k++) out.push([CTRL, ADDR, 0x27, 0x00, sd, bcd(k + 2), 0x15, ...pts.slice(k * 53, k === 13 ? 689 : (k + 1) * 53)]);
+      }
       this.flush(out);
     }
     flush(out) {

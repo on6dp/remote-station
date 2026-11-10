@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.242 | [RemoteStation-Setup-0.37.242.exe](0.37.242/RemoteStation-Setup-0.37.242.exe) | [remote-station-0.37.242.tar.gz](0.37.242/remote-station-0.37.242.tar.gz) | Ctrl+F5 sur /ic7760 ; page Station : recharger (scope MAIN / SUB). — [empreintes SHA-256](0.37.242/SHA256SUMS.txt) |
 | 0.37.241 | [RemoteStation-Setup-0.37.241.exe](0.37.241/RemoteStation-Setup-0.37.241.exe) | [remote-station-0.37.241.tar.gz](0.37.241/remote-station-0.37.241.tar.gz) | Ctrl+F5 sur /ic7760 et la page SSB. — [empreintes SHA-256](0.37.241/SHA256SUMS.txt) |
 | 0.37.240 | [RemoteStation-Setup-0.37.240.exe](0.37.240/RemoteStation-Setup-0.37.240.exe) | [remote-station-0.37.240.tar.gz](0.37.240/remote-station-0.37.240.tar.gz) | Ctrl+F5 sur /ic7760. — [empreintes SHA-256](0.37.240/SHA256SUMS.txt) |
 | 0.37.239 | [RemoteStation-Setup-0.37.239.exe](0.37.239/RemoteStation-Setup-0.37.239.exe) | [remote-station-0.37.239.tar.gz](0.37.239/remote-station-0.37.239.tar.gz) | Page Station : choisir Icom IC-7760 (ou Tester sans radio). — [empreintes SHA-256](0.37.239/SHA256SUMS.txt) |
