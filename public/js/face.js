@@ -2885,7 +2885,7 @@
     el('rect', { x: X(260), y: Y(85), width: 32, height: 10, rx: 1.5, class: 'i76-sp' }, LCD.i76sp);
     el('text', { x: X(276), y: Y(92.6), class: 'i76-dwt', 'text-anchor': 'middle' }, LCD.i76sp, 'SPLIT');
     // Bandeau du scope : « SPECTRUM SCOPE » au milieu, comme sur le TRX
-    el('text', { x: X(250), y: Y(G.lowY + 8.5), class: 'i76-sst', 'text-anchor': 'middle' }, LCD.lowG, 'SPECTRUM SCOPE');
+    LCD.i76sst = el('text', { x: X(250), y: Y(G.lowY + 8.5), class: 'i76-sst', 'text-anchor': 'middle' }, LCD.lowG, 'SPECTRUM SCOPE');
     for (const cg of [LCD.cgA, LCD.cgB]) cg.style.display = 'none';
   }
   // IC-7760 : bouton MULTI poussé = colonne à droite de l'écran, comme sur le TRX : RF POWER, MIC GAIN, COMP, DIGI-SEL, MONITOR
@@ -2969,6 +2969,8 @@
   function drawI76(s, tx) {
     if (!LCD.i76) return;
     drawI76Multi(s);
+    // « SPECTRUM SCOPE » caché quand le bandeau affiche un message au milieu (ex. « TRX éteint ou câble ? »)
+    if (LCD.i76sst) LCD.i76sst.style.display = LCD.flags && LCD.flags.textContent ? 'none' : '';
     // Bandeau du scope : avec le scope du TRX, « Grid » du scope sélectionné (pas de la grille / 10 dB), comme sur le TRX
     if (rfFresh() && !L.multi) {
       const F = RFSS[activeSide() === 'B' ? 1 : 0].last || RFSS[0].last || RFSS[1].last;
