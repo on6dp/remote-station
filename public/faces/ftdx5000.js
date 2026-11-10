@@ -48,6 +48,26 @@
       { id: 'dnf' + sd, cx: x + (sd === 'B' ? 94 : 96), cy: y, r: 7, tip: 'DNF ' + (sd === 'B' ? 'VFO-B' : 'VFO-A') + ' (notch automatique)', act: { toggle: 'dnf' + b }, led: (s) => !!s['dnf' + b], ledColor: '#ff3b30' }
     ];
   };
+  // Réplique de l'afficheur principal du FTDX5000, en bas à gauche (cadre, étiquettes et voyants éteints dessinés dans
+  // l'image) : MAIN et SUB (ANT, ATT, IPO, AGC, NB, DNR), fréquences, modes, voyants TX / DUAL / SPLIT / NAR / LOCK / FAST / CLAR
+  const VAL = { color: '#c8f05a', size: 12, anchor: 'middle', font: '700 12px DejaVu Sans,Arial,sans-serif' };
+  const ATTS = ['OFF', '6dB', '12dB', '18dB'], IPOS = ['IPO1', 'AMP1', 'AMP2', 'IPO2'], AGCS = ['OFF', 'FAST', 'MID', 'SLOW', 'AUTO'];
+  const onOff = (v) => (v == null ? '' : v ? 'ON' : 'OFF');
+  const cellsOf = (b) => [(s) => (s.ant != null ? String(s.ant) : ''), (s) => ATTS[s['att' + b]] || '', (s) => IPOS[s['preamp' + b]] || '',
+    (s) => AGCS[s['agc' + b]] || '', (s) => onOff(s['nb' + b]), (s) => onOff(s['nr' + b])];
+  const VFD = [];
+  [['', 410], ['B', 478]].forEach(([b, y]) => cellsOf(b).forEach((fn, i) => VFD.push(Object.assign({}, VAL, { x: 78 + i * 37, y, text: (s) => (b && s.dualRx === 0 ? '—' : fn(s)) }))));
+  const ind = (lab, x, on, color) => ({ x, y: 520, anchor: 'middle', color: color || '#ffb347', font: '700 11px DejaVu Sans,Arial,sans-serif', text: (s, L) => (on(s, L) ? lab : '') });
+  VFD.push(
+    { seg: true, x: 496, y: 380, size: 29, color: '#a9bcff', text: (s) => (s.freq ? fmtF(s.freq) : '') },
+    { seg: true, x: 496, y: 446, size: 20, color: '#7f96e0', text: (s) => (s.freqB ? fmtF(s.freqB) : '') },
+    { x: 310, y: 432, anchor: 'start', color: '#8fd0ff', font: '700 12px DejaVu Sans,Arial,sans-serif', text: (s) => s.mode || '' },
+    { x: 310, y: 470, anchor: 'start', color: '#6f9ad0', font: '700 11px DejaVu Sans,Arial,sans-serif', text: (s) => s.modeB || '' },
+    { x: 496, y: 432, anchor: 'end', color: '#ff7a6a', font: '700 11px DejaVu Sans,Arial,sans-serif', text: (s, L) => (s.vfoSel === 1 ? '◀ B' : '') },
+    ind('TX', 34, (s) => !!s.tx, '#ff4a3a'), ind('DUAL', 80, (s) => !!s.dualRx), ind('SPLIT', 133, (s) => !!s.split), ind('NAR', 184, (s) => !!(s.vfoSel === 1 ? s.narrowB : s.narrow)),
+    ind('LOCK', 230, (s) => !!(s.vfoSel === 1 ? s.lockB : s.lock)), ind('FAST', 277, (s, L) => !!L.fast), ind('RX CLAR', 338, (s) => !!s.rit), ind('TX CLAR', 405, (s) => !!s.xit),
+    { x: 492, y: 520, anchor: 'end', color: '#d8f06a', font: '700 12px DejaVu Sans,Arial,sans-serif', text: (s) => ((s.clar || 0) >= 0 ? '+' : '−') + (Math.abs(s.clar || 0) / 1000).toFixed(3) },
+  );
   F.ftdx5000 = {
     model: 'ftdx5000',
     name: 'Yaesu FTDX5000',
@@ -58,7 +78,7 @@
     // les positions ci-dessous restent celles de la photo entière
     img: { x: 0, y: 36, w: 1100, h: 648 },
     // Écran de la page : dans le cadre dessiné sous la face avant
-    lcd: { x: 265, y: 356, w: 570, h: 321 },
+    lcd: { x: 522, y: 356, w: 570, h: 321 },
     // Cases de l'écran (pas de R.FLT par CAT) ; préampli IPO1 / AMP1 / AMP2 / IPO2
     cells: [['ANT', 'ant'], ['ATT', 'att'], ['IPO', 'preamp'], ['AGC', 'agc']],
     ipo: ['IPO1', 'AMP1', 'AMP2', 'IPO2'],
@@ -69,7 +89,7 @@
       { seg: true, x: 687, y: 87, size: 26, color: '#a9bcff', text: (s) => (s.freq ? fmtF(s.freq) : '') },
       { x: 683, y: 138, size: 12, color: '#d8f06a', text: (s) => ((s.clar || 0) / 1000).toFixed(3) },
       { x: 817, y: 188, size: 12, font: '500 12px ui-monospace,Consolas,monospace', color: '#a9bcff', text: (s) => (s.freqB ? fmtF(s.freqB) : '') }
-    ],
+    ].concat(VFD),
     // Voyants RX (vert) et TX (rouge) au-dessus du grand bouton ; RX / TX du VFO-B sous son afficheur
     leds: [
       { x: 515, y: 174, w: 17, h: 6, color: '#3ddc5a', on: (s) => !!s.connected && !s.tx && !s.mainMute, bright: (s) => !!s.connected && !s.tx && !s.mainMute },
