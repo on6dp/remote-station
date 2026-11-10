@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.244** — Page Station : le scope du TRX demandé avant l'ouverture du port (ou avant « Tester sans radio ») est remis en service dès que le port s'ouvre (IC-7760 : les deux scopes ; IC-7300 aussi).
 - **0.37.243** — IC-7760 : « SPECTRUM SCOPE » ne chevauche plus le message du bandeau du scope (TRX muet, station hors ligne).
 - **0.37.242** — IC-7760 : scope du TRX sur la face avant (CI-V 27 00 du MAIN et du SUB) — en DUAL, MAIN en haut et SUB en bas avec leurs cascades, cadre orange autour du scope du VFO actif, clic = ce VFO sur la fréquence ; touches SPAN / EDGE, HOLD, CENT/FIX, MAIN/SUB, DUAL reliées au scope du TRX (27 12 – 27 17) ; bouton MULTI poussé : colonne MULTI à droite de l'écran comme sur le TRX (RF POWER, MIC GAIN, COMP, DIGI-SEL, MONITOR ; CW : KEY SPEED, CW PITCH), valeur au bouton MULTI, touche retour.
 - **0.37.241** — IC-7760 : écran de la face avant refait comme celui du TRX (colonne ANT / P.AMP / ATT / DIGI-SEL / IP+ / AGC / COMP du récepteur sélectionné, en-têtes ANT · BW · SFT · AN/MN, MET Po, galvanomètres, TX + puissance, DUAL-W / SPLIT, « VFO [mode] [FIL] », fréquence en police Icom, SPECTRUM SCOPE, rangée <MENU1> SPAN HOLD CENT/FIX MAIN/SUB DUAL EXPD/SET), écran FUNCTION Icom (15 touches) et menu MULTI Icom ; filtre du récepteur sélectionné dans le petit écran ; M.SCOPE = écran multi-fonctions. Page SSB : 2e carte de bande (VFO-B) à droite pour les TRX à deux récepteurs (IC-7760, FTDX101, FTDX5000…).

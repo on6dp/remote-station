@@ -118,6 +118,8 @@
       for (const c of [].concat(this.rig.INIT || [])) this._write(c);
       if (!this.timer) this.timer = setInterval(() => this.tick(), this.pollMs);
       this.log('Port CAT ouvert');
+      // Scope du TRX déjà demandé par une page (avant l'ouverture du port ou le début de la simulation) : remis en service
+      if (this.scopeOn && this.rig.SCOPE) setTimeout(() => { if (this.serialOpen && this.scopeOn) this._writeList(this.rig.SCOPE.on, true); }, 800);
       if (this.voiceSaved) setTimeout(() => this._voiceRestoreNow('port CAT rouvert'), 1500);
     }
 
