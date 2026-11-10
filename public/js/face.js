@@ -27,7 +27,9 @@
   // Positions verticales dans l'écran (unités de la photo depuis le haut de l'écran) : bandeau du scope, scope, rangée du bas
   const G = Object.assign(SINGLE ? { lowY: 139, scopeY: 152, scopeH: 163, botY: 320, botH: 40, expUp: 64 } : { lowY: 157, scopeY: 170, scopeH: 124, botY: 297, botH: 21, expUp: 34 }, (FACE && FACE.lay) || {});
   // TRX Icom (IC-7300) : filtres FIL1 / FIL2 / FIL3 et TWIN PBT au lieu de WIDTH / SHIFT / R.FIL
-  const ICOM = !!(R && R.CONTROL && R.CONTROL.fil);
+  const ICOM = !!(R && R.CONTROL && R.CONTROL.fil) && !(FACE && FACE.dualIcom);
+  // Icom à deux récepteurs (IC-7760) : écran à deux côtés (MAIN | SUB) comme le FTDX101, avec les filtres FIL1/2/3 et le TWIN PBT de chaque côté
+  const DICOM = !!(FACE && FACE.dualIcom);
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* stockage bloqué */ } }
@@ -152,8 +154,19 @@
     send({ t: 'set', mode: code, sub: activeSide() === 'B' });
   }
   const CYCLE = (FACE && FACE.cycle) || ['LSB', 'USB', 'CW-U', 'CW-L', 'AM', 'FM', 'DATA-U', 'DATA-L', 'RTTY-L', 'RTTY-U', 'PSK'];
+  // Touche « sided » (IC-7760) : la commande du récepteur sélectionné (NB → NB du SUB quand SUB est sélectionné)
+  function sidedAct(a) {
+    if (!a || !a.sided || activeSide() !== 'B') return a;
+    const b = (id) => (R.CONTROL[id + 'B'] ? id + 'B' : id);
+    const o = Object.assign({}, a);
+    if (o.toggle) o.toggle = b(o.toggle);
+    if (o.cycle) o.cycle = b(o.cycle);
+    if (o.pop) o.pop = b(o.pop);
+    if (o.long) o.long = sidedAct(Object.assign({ sided: true }, o.long));
+    return o;
+  }
   function doAct(k, long) {
-    const a = k.act || {};
+    const a = sidedAct(k.act || {});
     const s = S();
     if (a.info) return say(a.info, '', 6000);
     if (a.hold) return; // touche à tenir (XFC) : appui et relâchement dans keyEvents
@@ -224,7 +237,7 @@
       return bandTo(list[i][0], list[i][2], list[i][3]);
     }
     // TWIN PBT : pousser le bouton (CLR) = PBT intérieur et extérieur au milieu
-    if (a.local === 'pbtClr') { if (!needControl()) return; setCtl('pbtIn', 128); setCtl('pbtOut', 128); if (ICOM) { L.pbtPopAt = Date.now(); L.pbtClrAt = Date.now(); render(); } return; }
+    if (a.local === 'pbtClr') { if (!needControl()) return; setCtl(sdk('pbtIn'), 128); setCtl(sdk('pbtOut'), 128); if (ICOM) { L.pbtPopAt = Date.now(); L.pbtClrAt = Date.now(); render(); } return; }
     // Réglage à choix : valeur suivante (IC-7300 : P.AMP OFF → AMP1 → AMP2)
     if (a.cycle) { const c = R.CONTROL[a.cycle]; if (!c || !c.options) return; const i = c.options.findIndex((o) => o[0] === s[a.cycle]); return setCtl(a.cycle, c.options[(i + 1) % c.options.length][0]); }
     // CONT/APF (FTDX10) : en CW, l'APF ; sinon le CONTOUR
@@ -3834,13 +3847,14 @@
   const pickY = (id) => FUNC_YAESU.flat().find((c) => c[0] === id);
   // NOTCH de l'IC-7300, comme la touche du TRX : OFF → AN (automatique) → MN (manuel, avec sa largeur) → OFF ; pas d'AN en CW
   const NOTCH_W = ['WIDE', 'MID', 'NAR'];
-  const notchTxt = (s) => (s.dnf ? 'AN' : s.notch ? 'MN' + (NOTCH_W[s.notchW] ? '(' + NOTCH_W[s.notchW] + ')' : '') : 'OFF');
+  const notchTxt = (s) => { const b = DICOM && activeSide() === 'B' ? 'B' : ''; return s['dnf' + b] ? 'AN' : s['notch' + b] ? 'MN' + (NOTCH_W[s['notchW' + b]] ? '(' + NOTCH_W[s['notchW' + b]] + ')' : '') : 'OFF'; };
   function notchCycle(s) {
     const cw = /^CW/.test(L.activeMode(s) || '');
-    if (s.dnf) { setCtl('dnf', 0); setCtl('notch', 1); }
-    else if (s.notch) setCtl('notch', 0);
-    else if (cw) setCtl('notch', 1);
-    else setCtl('dnf', 1);
+    const dn = sdk('dnf'), mn = sdk('notch'); // IC-7760 : NOTCH du récepteur sélectionné
+    if (s[dn]) { setCtl(dn, 0); setCtl(mn, 1); }
+    else if (s[mn]) setCtl(mn, 0);
+    else if (cw) setCtl(mn, 1);
+    else setCtl(dn, 1);
   }
   const IB = '#38b6ff', IO = '#ffb020', IG = '#3ddc5a';
   const FUNC_ICOM = [
@@ -3969,7 +3983,40 @@
       [['back3', 'BACK', () => '', null, FO, false, 'back'], info('radioS', 'RADIO SETTING'), info('cwS', 'CW SETTING'), info('opS', 'OPERATION SETTING'),
         info('dispS', 'DISPLAY SETTING'), info('extS', 'EXTENSION SETTING'), info('aprsSet', 'APRS SETTING')]] }
   ];
-  const FUNC = ICOM ? FUNC_ICOM : FTX1F ? FUNC_FTX1.flatMap((p) => p.rows) : F5K ? FUNC_FTDX5000 : FUNC_YAESU;
+  // IC-7760 : écran FUNCTION à la manière Icom, pour le récepteur sélectionné (MAIN ou SUB) — interrupteurs, puis niveaux
+  const sv = (id) => (s) => s[sdk(id)];
+  const FUNC_IC7760 = DICOM ? [
+    [['agcI', 'AGC', (s) => ['', 'FAST', 'MID', 'SLOW'][sv('agc')(s)] || '—', cycK(() => sdk('agc')), IB, true],
+      ['nbI', 'NB', (s) => onOff(sv('nb')(s)), togK(() => sdk('nb')), IB, true],
+      ['nrI', 'NR', (s) => onOff(sv('nr')(s)), togK(() => sdk('nr')), IB, true],
+      ['notchI', 'NOTCH', (s) => notchTxt(s), (s) => notchCycle(s), IB, true],
+      ['pampI', 'P.AMP', (s) => ['OFF', 'AMP1', 'AMP2'][sv('preamp')(s)] || '—', cycK(() => sdk('preamp')), IB, true],
+      ['attI', 'ATT', (s) => { const v = sv('att')(s); return v == null ? '—' : v ? v + 'dB' : 'OFF'; }, cycK(() => sdk('att')), IB, true],
+      ['dsI', 'DIGI-SEL', (s) => onOff(sv('digiSel')(s)), togK(() => sdk('digiSel')), IB, true],
+      ['ipI', 'IP+', (s) => onOff(sv('ipPlus')(s)), togK(() => sdk('ipPlus')), IB, true]],
+    [['compI', 'COMP', (s) => onOff(s.proc), tog('proc'), IB, true],
+      ['voxI', 'VOX', (s) => onOff(s.vox), tog('vox'), IB, true],
+      ['bkinI', 'BK-IN', (s) => ['OFF', 'SEMI', 'FULL'][s.bkin] || '—', cyc('bkin'), IB, true],
+      ['moniI', 'MONI', (s) => onOff(s.moni), tog('moni'), IB, true],
+      ['tunerI', 'TUNER', (s) => onOff(s.tuner), tog('tuner'), IB, true],
+      ['apfI', 'APF', (s) => ['OFF', 'WIDE', 'MID', 'NAR'][sv('apf')(s)] || '—', cycK(() => sdk('apf')), IB, true],
+      ['trkI', 'TRACKING', (s) => onOff(s.tracking), tog('tracking'), IB, true],
+      ['lockI', 'LOCK', (s) => onOff(s.lock), (s) => (me && me.admin ? tog('lock')(s) : say('LOCK : réservé aux administrateurs.', 'warn', 4000)), IB, true]],
+    [['power', 'RF POWER', (s) => (s.power != null ? s.power + 'W' : '—'), (s, d) => power(d * 5), IO],
+      ['mic', 'MIC GAIN', (s) => pct(s.mic), ctlStep('mic', 0, 255, 5), IO],
+      ['procLvl', 'COMP', (s) => pct(s.procLvl), ctlStep('procLvl', 0, 255, 5), IO],
+      ['moniLvl', 'MONITOR', (s) => pct(s.moniLvl), ctlStep('moniLvl', 0, 255, 5), IO],
+      ['keySpeed', 'KEY SPEED', (s) => (s.keySpeed != null ? s.keySpeed + 'wpm' : '—'), ctlStep('keySpeed', 6, 48, 1), IO],
+      ['cwPitch', 'CW PITCH', (s) => (s.cwPitch != null ? s.cwPitch + 'Hz' : '—'), ctlStep('cwPitch', 300, 900, 5), IO],
+      ['voxGain', 'VOX GAIN', (s) => pct(s.voxGain), ctlStep('voxGain', 0, 255, 5), IO],
+      ['antiVox', 'ANTI VOX', (s) => pct(s.antiVox), ctlStep('antiVox', 0, 255, 5), IO]],
+    [['nbLvl', 'NB LEVEL', (s) => pct(sv('nbLvl')(s)), stepK(() => sdk('nbLvl'), 0, 255, 5), IG],
+      ['nrLvl', 'NR LEVEL', (s) => pct(sv('nrLvl')(s)), stepK(() => sdk('nrLvl'), 0, 255, 5), IG],
+      ['notchPos', 'NOTCH POS', (s) => num(sv('notchPos')(s)), stepK(() => sdk('notchPos'), 0, 255, 2), IG],
+      ['sqlI', 'SQL', (s) => pct(sv('sql')(s)), stepK(() => sdk('sql'), 0, 255, 5), IG],
+      pickY('color'), pickY('level'), pickY('peak'), pickY('marker')]
+  ] : null;
+  const FUNC = ICOM ? FUNC_ICOM : DICOM ? FUNC_IC7760 : FTX1F ? FUNC_FTX1.flatMap((p) => p.rows) : F5K ? FUNC_FTDX5000 : FUNC_YAESU;
   // MULTI de l'IC-7300 (pousser le bouton) : les réglages du mode en cours, comme sur le TRX
   function multiItems(s) {
     const m = L.activeMode(s) || '';
@@ -4385,6 +4432,8 @@
     let spec = k[part];
     if (!spec) return;
     if (spec.alt && spec.alt.when(s)) spec = spec.alt; // ex. bague CONT/APF : APF en CW quand l'APF est en service
+    // IC-7760 : TWIN PBT du récepteur sélectionné
+    if (spec.sided && activeSide() === 'B' && R.CONTROL[spec.ctl + 'B']) spec = Object.assign({}, spec, { ctl: spec.ctl + 'B', label: spec.label + ' (SUB)' });
     if (spec.info) return say(spec.info, '', 4000);
     // Réglage d'une case FUNC (FTDX5000 : bague RF PWR = RF POWER)
     if (spec.fn && FUNC_BY[spec.fn]) { if (funcAdjust(spec.fn, notches)) showTip(ev, FUNC_BY[spec.fn][1] + ' ' + FUNC_BY[spec.fn][2](S())); return; }
@@ -4856,6 +4905,7 @@
   }
   function cellText(id, v) {
     if (v == null) return '—';
+    if (FACE && FACE.cellText) { const t = FACE.cellText(id, v); if (t != null) return t; }
     if (ICOM) {
       if (id === 'att') return v ? '20dB' : 'OFF';
       if (id === 'preamp') return ['OFF', 'AMP1', 'AMP2'][v] || String(v);
@@ -4965,10 +5015,13 @@
       // Bande passante réelle : celle du filtre FI (WIDTH, IF SHIFT) limitée par le filtre de toit (R.FIL, centré)
       const roofHz = ROOF_HZ[s['roof' + sfx]] || 0;
       let lo = ifSh - ifHz / 2, hi = ifSh + ifHz / 2;
-      if (ICOM && side === 'A') {
+      if ((ICOM && side === 'A') || DICOM) {
         // IC-7300 : largeur de FIL1 / FIL2 / FIL3 (réglages d'origine du TRX selon le mode), puis TWIN PBT : chaque PBT
         // décale une moitié du filtre (0-255, 128 au milieu) ; la bande passante est ce qui reste entre les deux
-        const fw = filHz(mode || '', s.fil), si = ((s.pbtIn != null ? s.pbtIn : 128) - 128) / 128 * fw / 2, so = ((s.pbtOut != null ? s.pbtOut : 128) - 128) / 128 * fw / 2;
+        // IC-7760 : largeur lue sur le TRX (1A 03) pour chaque récepteur, et son TWIN PBT
+        const fw = DICOM ? ((R.filHz && R.filHz(mode || '', s['filWi' + sfx])) || 2400) : filHz(mode || '', s.fil);
+        const pIn = s['pbtIn' + (DICOM ? sfx : '')], pOut = s['pbtOut' + (DICOM ? sfx : '')];
+        const si = ((pIn != null ? pIn : 128) - 128) / 128 * fw / 2, so = ((pOut != null ? pOut : 128) - 128) / 128 * fw / 2;
         lo = -fw / 2 + Math.max(si, so); hi = fw / 2 + Math.min(si, so);
         if (hi - lo < 50) { const m = (lo + hi) / 2; lo = m - 25; hi = m + 25; }
       }

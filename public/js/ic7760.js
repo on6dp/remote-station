@@ -142,6 +142,8 @@
     { id: 'dualRx', g: 'vfo', label: 'DUAL WATCH', type: 'toggle', write: (v) => q(0x07, v ? 0xC1 : 0xC0) },
     { id: 'swap', g: 'vfo', label: 'A ⇄ B', type: 'action', write: () => q(0x07, 0xB0) },
     { id: 'aToB', g: 'vfo', label: 'A = B', type: 'action', write: () => q(0x07, 0xB1) }, // « Equalize Main and Sub bands »
+    // XFC de la face avant : en SPLIT, MAIN et SUB échangés tant qu'on tient la touche (07 B0 à l'appui, 07 B0 au relâchement)
+    { id: 'xfc', g: 'vfo', label: 'XFC', type: 'action', face: true, write: () => q(0x07, 0xB0) },
     { id: 'rit', g: 'vfo', label: 'RIT', type: 'toggle', write: setOn(0x21, 0x01) },
     { id: 'xit', g: 'vfo', label: 'XIT', type: 'toggle', write: setOn(0x21, 0x02) },
     {

@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.240 | [RemoteStation-Setup-0.37.240.exe](0.37.240/RemoteStation-Setup-0.37.240.exe) | [remote-station-0.37.240.tar.gz](0.37.240/remote-station-0.37.240.tar.gz) | Ctrl+F5 sur /ic7760. — [empreintes SHA-256](0.37.240/SHA256SUMS.txt) |
 | 0.37.239 | [RemoteStation-Setup-0.37.239.exe](0.37.239/RemoteStation-Setup-0.37.239.exe) | [remote-station-0.37.239.tar.gz](0.37.239/remote-station-0.37.239.tar.gz) | Page Station : choisir Icom IC-7760 (ou Tester sans radio). — [empreintes SHA-256](0.37.239/SHA256SUMS.txt) |
 | 0.37.238 | [RemoteStation-Setup-0.37.238.exe](0.37.238/RemoteStation-Setup-0.37.238.exe) | [remote-station-0.37.238.tar.gz](0.37.238/remote-station-0.37.238.tar.gz) | Ctrl+F5 sur /ftdx5000. — [empreintes SHA-256](0.37.238/SHA256SUMS.txt) |
 | 0.37.237 | [RemoteStation-Setup-0.37.237.exe](0.37.237/RemoteStation-Setup-0.37.237.exe) | [remote-station-0.37.237.tar.gz](0.37.237/remote-station-0.37.237.tar.gz) | Ctrl+F5 sur /ftdx5000 et les autres faces avant. — [empreintes SHA-256](0.37.237/SHA256SUMS.txt) |
