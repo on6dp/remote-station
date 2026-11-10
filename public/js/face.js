@@ -2898,7 +2898,7 @@
       const cells = AGC_COLS.map((col, j) => {
         const x = x0 + 4 + lw + j * cw;
         const r = el('rect', { x: x + 1, y, width: cw - 2, height: rh - 3, rx: 1.5, class: 'i76agc-c' }, m);
-        const t = el('text', { x: x + cw / 2, y: y + rh / 2 + 3.5, class: 'i76agc-v', 'text-anchor': 'middle' }, m, '');
+        const t = el('text', { x: x + cw / 2, y: y + rh / 2 + 4.2, class: 'i76agc-v', 'text-anchor': 'middle' }, m, '');
         const hit = el('rect', { x: x + 1, y, width: cw - 2, height: rh - 3, class: 'hs lcd-hit' }, m);
         el('title', {}, hit, 'Clic sur la colonne du mode en cours : ' + ['FAST', 'MID', 'SLOW'][i] + ' ; puis grand bouton (ou molette ici) pour changer la valeur');
         hit.addEventListener('click', (ev) => {

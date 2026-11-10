@@ -829,18 +829,16 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 /* IC-7760 : tableau AGC (appui d'1 s sur AGC) */
 #face .i76agc-bg { fill: #05070b; stroke: #59606c; stroke-width: 0.8; }
 #face .i76agc-tb { fill: #2a3142; }
-#face .i76agc-ttl { fill: #fff; font: 700 9px Arial, sans-serif; pointer-events: none; }
-#face .i76agc-h { fill: #e6e9ef; font: 700 8.6px Arial, sans-serif; pointer-events: none; }
-#face .i76agc-h.cur { fill: #fff; font-weight: 900; }
+#face .lcd text.i76agc-ttl { fill: #fff; font: 900 10px Arial, 'Liberation Sans', sans-serif; pointer-events: none; }
+#face .lcd text.i76agc-h { fill: #fff; font: 900 10px Arial, 'Liberation Sans', sans-serif; pointer-events: none; }
 #face .i76agc-l { fill: #1a1f28; stroke: #9aa2b0; stroke-width: 0.8; }
 #face .i76agc-l.on { fill: #3a4a66; stroke: #e4f4ff; stroke-width: 1.2; }
-#face .i76agc-lt { fill: #fff; font: 800 9px Arial, sans-serif; pointer-events: none; }
+#face .lcd text.i76agc-lt { fill: #fff; font: 900 10.5px Arial, 'Liberation Sans', sans-serif; pointer-events: none; }
 #face .i76agc-c { fill: #11151c; stroke: #3a4252; stroke-width: 0.6; }
 #face .i76agc-c.on { fill: #bfeff5; stroke: #4fd2f0; }
-#face .i76agc-v { fill: #c9ced8; font: 600 9.5px Arial, sans-serif; pointer-events: none; }
-#face .i76agc-v.cur { fill: #fff; font-weight: 900; }
-#face .i76agc-v.on { fill: #0b2a33; font-weight: 900; }
-#face .i76agc-v.dim { fill: #7d8594; }
+/* Valeurs en blanc gras, plus grandes, comme sur le TRX ; case en cours : texte foncé sur fond clair */
+#face .lcd text.i76agc-v { fill: #fff; font: 900 12px Arial, 'Liberation Sans', sans-serif; pointer-events: none; }
+#face .lcd text.i76agc-v.on { fill: #0b2a33; }
 /* IC-7760 : rangée du bas en touches bleues arrondies, comme sur l'écran du TRX */
 #face .lcd-bot.i76b { fill: url(#i76btn); stroke: #a9d2f0; stroke-width: 0.8; }
 #face .lcd-bot.i76b.on { fill: url(#i76btnOn); stroke: #e4f4ff; }
