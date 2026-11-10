@@ -6843,9 +6843,12 @@
       // Sortie son choisie dans SSB CONFIGURATION : aussi pour l'écoute du TRX
       setSink: (id) => { player.sink = id; if (player.ctx && player.ctx.setSinkId) player.ctx.setSinkId(id).catch(() => say('Sortie son : ce navigateur ne permet pas de la choisir (Chrome ou Edge récents).', 'warn', 5000)); },
       sendBin: (buf) => { if (ws && ws.readyState === 1) ws.send(buf); } });
-    // « 👁 Suivre l'opérateur » sous la face avant, à droite de « Profil de … »
-    const fb = $('followBtn'), pf = document.querySelector('.fc-tx .vx-goto') || $('vxProf');
-    if (fb && pf) { pf.after(fb); fb.textContent = '👁 Suivre l’opérateur'; }
+    // Pas de bouton « Phonie : page TRX SSB » ici : le bouton SSB de la ligne MODES ouvre la même page
+    const goSsb = document.querySelector('.fc-tx .vx-goto');
+    if (goSsb) goSsb.remove();
+    // « 👁 Suivre l'opérateur » sous la face avant, sur la ligne du PTT
+    const fb = $('followBtn'), pf = $('fcTx');
+    if (fb && pf) { pf.appendChild(fb); fb.textContent = '👁 Suivre l’opérateur'; }
     // DIGI CONFIGURATION : ligne au-dessus de SSB CONFIGURATION, un bouton par mode ; clic : la page des modes
     // numériques (/ftdx101/digi.html) s'ouvre sur ce mode (FT8 / FT4 / FT2, RTTY…), ou y passe si elle est déjà ouverte
     const vxBox = document.querySelector('.fc-tx .vx'), vxH = vxBox && vxBox.querySelector('.vx-h');

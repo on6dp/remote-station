@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.236** — FTDX5000 : réplique de l'afficheur refaite comme celui du TRX (VFO-A en haut, S-mètre du SUB au milieu, VFO-B en bas ; toutes les valeurs ANT/ATT/FLT/IPO/R.FLT/AGC listées, celle du TRX allumée ; grille d'état TX/modes/BUSY/NAR/FAST/LOCK/NB ; fréquences VFO-A et VFO-B, clarifier, VFO actif). RX ANT lu (AN0). Faces avant : plus de bouton « Phonie : page TRX SSB » (bouton SSB de la ligne MODES).
 - **0.37.235** — Page /ftdx5000 : image de la face avant Yaesu PCC-5000 (nette, de face) avec afficheur vivant (valeurs MAIN / SUB, cases, TUNER, fréquences, filtres) ; réplique agrandie de l'afficheur du TRX à gauche de l'écran ; MENU = réglages du FTDX5000
 - **0.37.234** — Page /ftdx5000 : réplique de l'afficheur principal du FTDX5000 (MAIN / SUB, fréquences, modes, voyants) à gauche de l'écran de la page
 - **0.37.233** — Faces avant : toute la face à l'écran (largeur selon la hauteur de la fenêtre) ; phonie (SSB CONFIGURATION) dans la page TRX SSB, bouton « Phonie : page TRX SSB » à côté du PTT

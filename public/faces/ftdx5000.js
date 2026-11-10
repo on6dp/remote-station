@@ -98,44 +98,53 @@
     glow(538, 562, 25, 33, GB, (s) => !!s.bkin), glow(563, 587, 25, 33, GB, (s) => !!s.proc), glow(590, 615, 25, 33, GR, (s) => !!(s.tuner || s.tuning)),
     glow(616, 640, 25, 33, GR, (s) => !!s.tx && s.m6 != null && s.m6 >= 160)
   );
-  // Réplique de l'afficheur principal du FTDX5000, en bas à gauche, sur le modèle de l'afficheur du TRX (cadre, étiquettes,
-  // cases éteintes et échelles dessinés dans l'image) : valeurs MAIN / SUB (ANT, ATT, FLT, IPO, R.FLT, AGC), BUSY, mode, NAR,
-  // PROC, S-mètre du SUB, FAST, LOCK, NB, fréquence du VFO-A, clarifier ; voyants TX / DUAL / SPLIT / NAR / LOCK / FAST / CLAR
+  // Réplique de l'afficheur principal du FTDX5000, en bas à gauche, disposée comme l'afficheur du TRX : en haut le VFO-A
+  // (MAIN), au milieu la barre du S-mètre du VFO-B, en bas le VFO-B (SUB). Toutes les valeurs (ANT 1-4, ATT, FLT, IPO,
+  // R.FLT, AGC) et les cases d'état (TX, modes, BUSY, NAR, FAST, LOCK, NB) sont dessinées éteintes dans l'image ; la page
+  // allume celles du TRX (VR : zones relevées par le script qui dessine l'image). FLT (VRF / μ-T) et R.FLT n'ont pas de
+  // commande CAT : restent éteints. Fréquences VFO-A / VFO-B et clarifier écrits dans la bande du haut.
   const FONT = (px) => '700 ' + px + 'px DejaVu Sans,Arial,sans-serif';
   const YEL = '#e8f040';
-  const ATTS = ['OFF', '-6dB', '-12dB', '-18dB'], IPOS = ['IPO1', 'AMP1', 'AMP2', 'IPO2'], AGCS = ['OFF', 'FAST', 'MID', 'SLOW', 'AUTO'];
-  const MODE_TXT = { 'CW-U': 'CW', 'CW-L': 'CW-R', 'RTTY-L': 'RTTY', 'RTTY-U': 'RTTY-R', 'DATA-U': 'PKT-U', 'DATA-L': 'PKT-L', 'DATA-FM': 'PKT-FM' };
-  const modeTxt = (m) => MODE_TXT[m] || m || '';
+  const IPOS = ['IPO1', 'AMP1', 'AMP2', 'IPO2'], AGCS = ['OFF', 'FAST', 'MID', 'SLOW', 'AUTO'];
   const subOn = (s) => s.dualRx !== 0;
-  const XS = [35, 69, 105, 143, 183, 223];
-  const cellsOf = (b) => [(s) => (s.ant != null ? String(s.ant) : ''), (s) => ATTS[s['att' + b]] || '', () => '', (s) => IPOS[s['preamp' + b]] || '', () => '', (s) => AGCS[s['agc' + b]] || ''];
-  const VFD = [];
-  [['', 398], ['B', 456]].forEach(([b, y]) => cellsOf(b).forEach((fn, i) => VFD.push({ x: XS[i], y, anchor: 'middle', color: YEL, font: FONT(11), text: (s) => (b && !subOn(s) ? '' : fn(s)) })));
-  const lit = (lab, x, y, on, color, px) => ({ x, y, anchor: 'middle', color: color || '#f2f4f8', font: FONT(px || 8), text: (s, L) => (on(s, L) ? lab : '') });
-  const bars = (v) => (v == null ? '' : '▮'.repeat(Math.max(0, Math.min(30, Math.round(v / 255 * 30)))));
-  const ind = (lab, x, on, color) => ({ x, y: 522, anchor: 'middle', color: color || '#ffb347', font: FONT(11), text: (s, L) => (on(s, L) ? lab : '') });
-  VFD.push(
-    // MAIN : BUSY, mode, NAR, PROC
-    lit('BUSY', 263, 396.6, (s) => s.smeter != null && s.smeter >= 26 && !s.tx),
-    { x: 307, y: 380, anchor: 'middle', color: '#f2f4f8', font: FONT(8), text: (s) => modeTxt(s.mode) },
-    lit('NAR', 338, 380, (s) => !!s.narrow), lit('PROC', 437, 380, (s) => !!s.proc, '#ff5040'),
-    // Fréquence du VFO-A (grands 7 segments), et le VFO actif
-    { seg: true, x: 496, y: 389, size: 32, color: '#9fb2ff', text: (s) => (s.freq ? fmtF(s.freq) : '') },
-    { x: 496, y: 381, anchor: 'end', color: '#ff7a6a', font: FONT(9), text: (s) => (s.vfoSel === 1 ? 'VFO-B ◀' : '') },
-    // SUB : S-mètre, mode, BUSY / FAST / LOCK, NB
-    { x: 22, y: 431, anchor: 'start', color: '#7fb0ff', font: FONT(9), text: (s) => (subOn(s) ? bars(s.smeterB) : '') },
-    { x: 265, y: 418, anchor: 'middle', color: '#f2f4f8', font: FONT(8), text: (s) => (subOn(s) ? modeTxt(s.modeB) : '') },
-    lit('BUSY', 263, 444.6, (s) => subOn(s) && s.smeterB != null && s.smeterB >= 26), lit('FAST', 263, 456.6, (s, L) => !!L.fast),
-    lit('LOCK', 263, 468.6, (s) => !!(s.lock || s.lockB)), lit('NB', 232, 468.6, (s) => subOn(s) && !!s.nbB),
-    { x: 280, y: 400, anchor: 'end', color: '#7fb0ff', font: FONT(9), text: (s) => (subOn(s) ? '' : 'SUB OFF') },
-    // Clarifier : RX / TX et décalage
-    { x: 450, y: 456, anchor: 'start', color: '#9fd88a', font: FONT(9), text: (s) => (s.rit && s.xit ? 'RX TX' : s.rit ? 'RX' : s.xit ? 'TX' : '') },
-    { x: 496, y: 474, anchor: 'end', color: YEL, font: FONT(14), text: (s) => ((s.clar || 0) < 0 ? '−' : '') + (Math.abs(s.clar || 0) / 1000).toFixed(3) },
-    { x: 352, y: 452, anchor: 'middle', color: '#ff4a3a', font: FONT(10), text: (s) => '▼' },
+  const VR = {"VA":[20.5,372.5,41.5,11.0],"VB":[310.5,372.5,41.5,11.0],"A.rx":[22.5,488.5,15.5,10.0],"A.ant.0":[47.0,440.0,10.0,11.5],"A.ant.1":[47.0,456.0,10.0,11.5],"A.ant.2":[47.0,472.0,10.0,12.0],"A.ant.3":[47.0,488.0,10.0,11.5],"A.att.0":[87.5,440.0,25.0,12.0],"A.att.1":[85.5,456.0,28.5,12.0],"A.att.2":[82.0,472.0,35.5,12.0],"A.att.3":[82.0,488.0,35.5,12.0],"A.ipo.AMP1":[200.0,440.0,34.5,11.5],"A.ipo.AMP2":[200.0,456.0,34.5,11.5],"A.ipo.IPO1":[203.0,472.0,29.0,12.0],"A.ipo.IPO2":[203.0,488.0,29.0,12.0],"A.agc.AUTO":[309.0,440.0,33.5,12.0],"A.agc.FAST":[311.0,456.0,30.5,12.0],"A.agc.MID":[313.5,472.0,25.0,11.5],"A.agc.SLOW":[308.5,488.0,35.5,12.0],"A.st.TX":[358,439.5,32,13.0],"A.st.LSB":[393,439.5,32,13.0],"A.st.USB":[428,439.5,32,13.0],"A.st.CW":[463,439.5,32,13.0],"A.st.BUSY":[358,455.5,32,13.0],"A.st.AM":[393,455.5,32,13.0],"A.st.FM":[428,455.5,32,13.0],"A.st.NAR":[463,455.5,32,13.0],"A.st.FAST":[358,471.5,32,13.0],"A.st.RTTY":[393,471.5,32,13.0],"A.st.PKT":[428,471.5,32,13.0],"A.st.LOCK":[358,487.5,32,13.0],"A.st.NB":[393,487.5,32,13.0],"S.bar.0":[24.8,521,8.5,6],"S.bar.1":[35.3,521,8.5,6],"S.bar.2":[45.7,521,8.5,6],"S.bar.3":[56.2,521,8.5,6],"S.bar.4":[66.7,521,8.5,6],"S.bar.5":[77.1,521,8.5,6],"S.bar.6":[87.6,521,8.5,6],"S.bar.7":[98.1,521,8.5,6],"S.bar.8":[108.5,521,8.5,6],"S.bar.9":[119.0,521,8.5,6],"S.bar.10":[129.5,521,8.5,6],"S.bar.11":[139.9,521,8.5,6],"S.bar.12":[150.4,521,8.5,6],"S.bar.13":[160.9,521,8.5,6],"S.bar.14":[171.3,521,8.5,6],"S.bar.15":[181.8,521,8.5,6],"S.bar.16":[192.3,521,8.5,6],"S.bar.17":[202.7,521,8.5,6],"S.bar.18":[213.2,521,8.5,6],"S.bar.19":[223.7,521,8.5,6],"S.bar.20":[234.1,521,8.5,6],"S.bar.21":[244.6,521,8.5,6],"S.bar.22":[255.1,521,8.5,6],"S.bar.23":[265.5,521,8.5,6],"S.bar.24":[276.0,521,8.5,6],"S.bar.25":[286.5,521,8.5,6],"S.bar.26":[296.9,521,8.5,6],"S.bar.27":[307.4,521,8.5,6],"S.bar.28":[317.9,521,8.5,6],"S.bar.29":[328.3,521,8.5,6],"B.rx":[22.5,587.5,15.5,10.0],"B.ant.0":[47.0,539.0,10.0,11.5],"B.ant.1":[47.0,555.0,10.0,11.5],"B.ant.2":[47.0,571.0,10.0,12.0],"B.ant.3":[47.0,587.0,10.0,11.5],"B.att.0":[87.5,539.0,25.0,12.0],"B.att.1":[85.5,555.0,28.5,12.0],"B.att.2":[82.0,571.0,35.5,12.0],"B.att.3":[82.0,587.0,35.5,12.0],"B.ipo.AMP1":[200.0,539.0,34.5,11.5],"B.ipo.AMP2":[200.0,555.0,34.5,11.5],"B.ipo.IPO1":[203.0,571.0,29.0,12.0],"B.agc.AUTO":[309.0,539.0,33.5,12.0],"B.agc.FAST":[311.0,555.0,30.5,12.0],"B.agc.MID":[313.5,571.0,25.0,11.5],"B.agc.SLOW":[308.5,587.0,35.5,12.0],"B.st.TX":[358,538.5,32,13.0],"B.st.LSB":[393,538.5,32,13.0],"B.st.USB":[428,538.5,32,13.0],"B.st.CW":[463,538.5,32,13.0],"B.st.BUSY":[358,554.5,32,13.0],"B.st.AM":[393,554.5,32,13.0],"B.st.FM":[428,554.5,32,13.0],"B.st.NAR":[463,554.5,32,13.0],"B.st.FAST":[358,570.5,32,13.0],"B.st.RTTY":[393,570.5,32,13.0],"B.st.PKT":[428,570.5,32,13.0],"B.st.LOCK":[358,586.5,32,13.0],"B.st.NB":[393,586.5,32,13.0]};
+  const VG = [];
+  const vg = (k, color, on) => { const r = VR[k]; if (r) VG.push({ x: r[0], y: r[1], w: r[2], h: r[3], color, on }); };
+  ['A', 'B'].forEach((sd) => {
+    const b = sd === 'B' ? 'B' : '';
+    const live = (s) => !b || subOn(s);
+    const m = (re) => (s) => live(s) && re.test(sideMode(s, b));
+    if (!b) {
+      for (let i = 0; i < 4; i++) vg('A.ant.' + i, GT, (s) => s.ant === i + 1);
+      vg('A.rx', GT, (s) => !!s.rxAnt);
+    }
+    for (let i = 0; i < 4; i++) vg(sd + '.att.' + i, GT, (s) => live(s) && s['att' + b] === i);
+    IPOS.forEach((t, i) => vg(sd + '.ipo.' + t, GT, (s) => live(s) && s['preamp' + b] === i));
+    AGCS.forEach((t, i) => vg(sd + '.agc.' + t, GT, (s) => live(s) && s['agc' + b] === i));
+    vg(sd + '.st.TX', GR, (s) => !!s.tx && (s.txVfo === 1) === !!b);
+    vg(sd + '.st.LSB', GB, m(/^(LSB|DATA-L|RTTY-L)$/)); vg(sd + '.st.USB', GB, m(/^(USB|DATA-U|RTTY-U)$/)); vg(sd + '.st.CW', GB, m(/^CW/));
+    vg(sd + '.st.BUSY', GB, (s) => live(s) && (b ? s.smeterB : s.smeter) >= 26 && !(s.tx && (s.txVfo === 1) === !!b));
+    vg(sd + '.st.AM', GB, m(/^AM/)); vg(sd + '.st.FM', GB, m(/^(FM|FM-N|DATA-FM)$/)); vg(sd + '.st.NAR', GB, (s) => live(s) && !!s['narrow' + b]);
+    vg(sd + '.st.FAST', GB, (s, L) => !!L.fast); vg(sd + '.st.RTTY', GB, m(/^RTTY/)); vg(sd + '.st.PKT', GB, m(/^DATA/));
+    vg(sd + '.st.LOCK', GB, (s) => !!s['lock' + b]); vg(sd + '.st.NB', GB, (s) => live(s) && !!s['nb' + b]);
+  });
+  // VFO actif (grand bouton) : son nom s'allume dans la bande du haut
+  vg('VA', GB, (s) => s.vfoSel !== 1); vg('VB', GB, (s) => s.vfoSel === 1);
+  // Barre du S-mètre (VFO-B) : 30 cases, blanches jusqu'à S9, rouges au-delà
+  for (let i = 0; i < 30; i++) vg('S.bar.' + i, (i + 1) / 30 > 130 / 255 + 0.001 ? GR : GB, (s) => subOn(s) && s.smeterB != null && s.smeterB >= (i + 1) / 30 * 255);
+  const ind = (lab, x, on, color) => ({ x, y: 636, anchor: 'middle', color: color || '#ffb347', font: FONT(11), text: (s, L) => (on(s, L) ? lab : '') });
+  const VFD = [
+    // Bande du haut : VFO-A en grands 7 segments, VFO-B, clarifier (RX / TX et décalage)
+    { seg: true, x: 292, y: 372, size: 34, color: '#9fb2ff', text: (s) => (s.freq ? fmtF(s.freq) : '') },
+    { seg: true, x: 492, y: 371, size: 17, color: '#d8e0ff', text: (s) => (s.freqB ? fmtF(s.freqB) : '') },
+    { x: 346, y: 404, anchor: 'start', color: '#9fd88a', font: FONT(9), text: (s) => (s.rit && s.xit ? 'RX TX' : s.rit ? 'RX' : s.xit ? 'TX' : '') },
+    { x: 492, y: 410, anchor: 'end', color: YEL, font: FONT(14), text: (s) => ((s.clar || 0) < 0 ? '−' : '') + (Math.abs(s.clar || 0) / 1000).toFixed(3) },
+    { x: 424, y: 519, anchor: 'middle', color: '#7fb0ff', font: FONT(10), text: (s) => (subOn(s) ? '' : 'SUB OFF') },
     // Voyants sous l'afficheur
-    ind('TX', 34, (s) => !!s.tx, '#ff4a3a'), ind('DUAL', 80, (s) => !!s.dualRx), ind('SPLIT', 133, (s) => !!s.split), ind('NAR', 184, (s) => !!(s.vfoSel === 1 ? s.narrowB : s.narrow)),
-    ind('LOCK', 230, (s) => !!(s.vfoSel === 1 ? s.lockB : s.lock)), ind('FAST', 277, (s, L) => !!L.fast), ind('RX CLAR', 338, (s) => !!s.rit), ind('TX CLAR', 405, (s) => !!s.xit)
-  );
+    ind('TX', 34, (s) => !!s.tx, '#ff4a3a'), ind('DUAL', 78, (s) => !!s.dualRx), ind('SPLIT', 128, (s) => !!s.split), ind('NAR', 177, (s) => !!(s.vfoSel === 1 ? s.narrowB : s.narrow)),
+    ind('LOCK', 222, (s) => !!(s.vfoSel === 1 ? s.lockB : s.lock)), ind('FAST', 268, (s, L) => !!L.fast), ind('RX CLAR', 327, (s) => !!s.rit), ind('TX CLAR', 392, (s) => !!s.xit),
+    ind('PROC', 458, (s) => !!s.proc, '#ff5040')
+  ];
   F.ftdx5000 = {
     model: 'ftdx5000',
     name: 'Yaesu FTDX5000',
@@ -149,7 +158,7 @@
     ipo: ['IPO1', 'AMP1', 'AMP2', 'IPO2'],
     modes: [['LSB', 'USB', 'CW-L', 'CW-U'], ['AM', 'FM', 'FM-N', null], ['DATA-L', 'DATA-U', 'DATA-FM', null], ['RTTY-L', 'RTTY-U', null, null]],
     cycle: ['LSB', 'USB', 'CW-U', 'CW-L', 'AM', 'FM', 'DATA-U', 'DATA-L', 'RTTY-L', 'RTTY-U'],
-    glows: GLOWS.map(SC),
+    glows: GLOWS.map(SC).concat(VG),
     // Afficheurs de la photo remplis en direct (VFO-A en 7 segments, clarifier, VFO-B, filtres A / B), puis la réplique
     texts: [
       { seg: true, x: 641, y: 41, size: 28, color: '#93a6ff', text: (s) => (s.freq ? fmtF(s.freq) : '') },

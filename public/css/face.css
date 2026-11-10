@@ -761,6 +761,6 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 /* Face avant entière à l'écran : hauteur de l'image ≤ hauteur de la fenêtre moins l'en-tête, le PTT et la ligne MODES */
 #facePanel { max-width: calc((100vh - var(--fc-reserve, 215px)) * var(--ar, 3.2)); margin: 0 auto; }
 .fc-tx .vx-goto { width: auto; margin: 0; order: 1; align-self: center; }
-/* Une ligne : PTT · Phonie : page TRX SSB · Suivre l'opérateur ; dessous, la ligne MODES */
+/* Une ligne : PTT · Suivre l'opérateur ; dessous, la ligne MODES (SSB = page TRX SSB) */
 .fc-tx #followBtn { order: 2; align-self: center; }
 .fc-tx .fc-digirow { order: 3; flex: 1 1 100%; }

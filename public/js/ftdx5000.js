@@ -114,7 +114,7 @@
       { cmd: 'NB0;', re: /^NB0([0-2])$/, parse: (m) => ({ nb: m[1] === '0' ? 0 : 1 }), sim: 'NB00' },
       { cmd: 'NR0;', re: /^NR0([01])$/, parse: (m) => ({ nr: +m[1] }), sim: 'NR00' },
       // Antenne : AN P1 → AN P1 P3 P4 (P3 = ANT 1-4, P4 = RX ANT)
-      { cmd: 'AN0;', re: /^AN0([1-4])([01])?$/, parse: (m) => ({ ant: +m[1] }), sim: 'AN010' },
+      { cmd: 'AN0;', re: /^AN0([1-4])([01])?$/, parse: (m) => (m[2] != null ? { ant: +m[1], rxAnt: +m[2] } : { ant: +m[1] }), sim: 'AN010' },
       { cmd: 'FR;', re: /^FR([0-3])$/, parse: (m) => ({ dualRx: +m[1] >= 2 ? 1 : 0, mainMute: +m[1] & 1 }), sim: 'FR2' },
       // Côté SUB (VFO B) : P1 = 1
       { cmd: 'SH1;', re: /^SH1(\d{2})$/, parse: (m) => ({ widthCodeB: +m[1] }), sim: 'SH113' },
