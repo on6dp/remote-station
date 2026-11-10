@@ -3,6 +3,8 @@
  * la partie CW ou phonie, le TRX (trait rouge), les spots (indicatif + fréquence), du bas (fréquences basses) vers le haut.
  * RSBMAP.mount(el, { api, kit, mode: 'CW' | 'SSB', worked(call, band) → 'dup' | '' , onPick(call, spot) })
  * Spots : ceux que la page d'origine reçoit déjà (kit.spots()), aucune requête de plus au serveur.
+ * opt.side() → 'A' | 'B' | null : carte d'un VFO donné (TRX à deux récepteurs : VFO-A à gauche, VFO-B à droite) ; null = le VFO sélectionné.
+ * opt.label() → texte à côté de la bande (ex. « VFO-B »).
  */
 (function () {
   'use strict';
@@ -22,7 +24,7 @@
   function mount(el, opt) {
     const api = opt.api;
     el.classList.add('xbm');
-    el.innerHTML = '<div class="xbm-h"><b class="xbm-band">—</b><span class="xbm-t">Spots <small></small></span></div>' +
+    el.innerHTML = '<div class="xbm-h"><b class="xbm-band">—</b><i class="xbm-lb"></i><span class="xbm-t">Spots <small></small></span></div>' +
       '<div class="xbm-r"><button type="button" data-z="-1" title="Plage plus étroite">−</button><span class="xbm-rg"></span><button type="button" data-z="1" title="Plage plus large">+</button></div>' +
       '<div class="xbm-b"><div class="xbm-sc"></div><div class="xbm-l"></div><i class="xbm-trx"></i></div>' +
       '<div class="xbm-f"></div>';
@@ -48,10 +50,13 @@
     function draw() {
       const st = api.state();
       const r = (st && st.radio) || {};
-      const hz = r.vfoSel === 1 ? r.freqB : r.freq;
+      const sd = opt.side ? opt.side(r) : null;
+      const hz = sd === 'B' ? r.freqB : sd === 'A' ? r.freq : r.vfoSel === 1 ? r.freqB : r.freq;
       const k = hz ? hz / 1000 : 0;
       const band = bandOf(k);
+      const lb = opt.label ? opt.label(r) : '';
       el.querySelector('.xbm-band').textContent = band || '—';
+      el.querySelector('.xbm-lb').textContent = lb;
       let spots = [];
       try { const kt = opt.kit(); spots = kt && kt.spots ? kt.spots() : []; } catch (e) { spots = []; }
       const [lo, hi] = band ? range(k, band) : [0, 0];
@@ -63,7 +68,7 @@
       const by = new Map();
       for (const s of list) { const p = by.get(s.call); if (!p || s.at > p.at) by.set(s.call, s); }
       const pts = Array.from(by.values()).sort((a, b) => b.f - a.f);
-      const sig = [band, lo.toFixed(1), hi.toFixed(1), H, pts.map((s) => s.call + s.f + (opt.worked ? opt.worked(s.call, band) : '')).join(',')].join('|');
+      const sig = [band, lb, lo.toFixed(1), hi.toFixed(1), H, pts.map((s) => s.call + s.f + (opt.worked ? opt.worked(s.call, band) : '')).join(',')].join('|');
       // Trait du TRX : à chaque appel (il bouge avec le VFO)
       if (band && k >= lo && k <= hi) { trx.hidden = false; trx.style.top = y(k) + 'px'; trx.title = 'TRX : ' + k.toFixed(2) + ' kHz'; } else trx.hidden = true;
       if (sig === last) return;

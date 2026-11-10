@@ -2091,3 +2091,8 @@ label.spotlog { display: inline-flex !important; flex-direction: row !important;
 html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-body { overflow-y: auto !important; }
 .dg-spot { font-size: 11px; font-weight: 600; }
 .rt-tx-act2 { flex-wrap: wrap; }
+/* Carte de bande du VFO-B (TRX à deux récepteurs), à droite de la page SSB */
+.xbm-box.xbm-right { margin: 8px 12px 8px 0; }
+.xbm-box[hidden] { display: none; }
+.xbm-lb { font-style: normal; font-size: 11px; font-weight: 700; color: #7fd0ff; margin: 0 auto 0 6px; white-space: nowrap; }
+.xbm-lb:empty { display: none; }

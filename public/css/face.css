@@ -764,3 +764,34 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 /* Une ligne : PTT · Suivre l'opérateur ; dessous, la ligne MODES (SSB = page TRX SSB) */
 .fc-tx #followBtn { order: 2; align-self: center; }
 .fc-tx .fc-digirow { order: 3; flex: 1 1 100%; }
+
+/* IC-7760 : écran à la manière Icom (colonne de touches à gauche, en-têtes ANT / BW / SFT, badge TX, DUAL-W / SPLIT) */
+#face .i76-k { fill: #23272f; stroke: #59606c; stroke-width: 0.7; }
+#face .i76-kon { fill: #2ec4c0; }
+#face .i76-kl { fill: #e6e9ef; font: 700 7.4px Arial, sans-serif; pointer-events: none; }
+#face .i76-kv { fill: #ffffff; font: 700 9.5px Arial, sans-serif; pointer-events: none; }
+#face .i76-hdr { fill: #e6e9ef; font: 700 7.6px Arial, sans-serif; pointer-events: none; }
+#face .i76-box { fill: none; stroke: #9aa2b0; stroke-width: 0.6; }
+#face .i76-side { fill: #8b93a3; font: 700 7.6px Arial, sans-serif; pointer-events: none; }
+#face .i76-side.sel { fill: #ff5a4a; }
+#face .i76-tx { fill: none; stroke: #ff3b30; stroke-width: 1.1; }
+#face .i76-tx.on { fill: #ff3b30; }
+#face .i76-txt { fill: #ff3b30; font: 700 8px Arial, sans-serif; pointer-events: none; }
+#face .i76-txt.on { fill: #ffffff; }
+#face .i76-pw { fill: #e6e9ef; font: 700 8px Arial, sans-serif; pointer-events: none; }
+#face .i76-tags { fill: #f2cf4a; font: 700 7px Arial, sans-serif; white-space: pre; pointer-events: none; }
+#face .i76-fil { fill: #2a3142; stroke: #8a93a6; stroke-width: 0.8; }
+#face .i76-filt { fill: #fff; font: 700 7.6px Arial, sans-serif; pointer-events: none; }
+#face .i76-dw { fill: #1f9a45; }
+#face .i76-sp { fill: #f07a1e; }
+#face .i76-dwt { fill: #fff; font: 700 6.6px Arial, sans-serif; pointer-events: none; }
+#face .i76-div { stroke: #2a3040; stroke-width: 0.8; }
+#face .lcd-mode.i76 { fill: #2f6fd6; stroke: #7fb2ff; stroke-width: 0.8; }
+#face .i76-nb { fill: #1f6fd0; }
+#face .i76-nbt { fill: #fff; font: 700 7px Arial, sans-serif; pointer-events: none; }
+#face .i76-met { fill: #3a4252; }
+#face .i76-mett { fill: #e6e9ef; font: 700 6px Arial, sans-serif; pointer-events: none; }
+#face .i76-freq { fill: #ffffff; font: 700 27px Arial, 'Liberation Sans', Helvetica, sans-serif; letter-spacing: 0.3px; pointer-events: none; }
+#face .i76-freq.dim { fill: #9aa2b0; }
+#face .i76-sst { fill: #e6e9ef; font: 700 7.6px Arial, sans-serif; pointer-events: none; }
+#face .lcd-modet.i76 { font-size: 8.5px; }

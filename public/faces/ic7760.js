@@ -35,6 +35,14 @@
     w: +(1634 * K).toFixed(2),
     h: +(581 * K).toFixed(2),
     dualIcom: true,
+    // Écran : colonne de touches Icom à gauche (55 unités), scope à sa droite ; pas de MONO ni d'EXPAND (pas de ces touches sur le TRX)
+    lay: { lowY: 147, scopeY: 159, scopeH: 133, botY: 295, botH: 21, expUp: 0, scopeX: 58 },
+    noMono: true,
+    // Rangée du bas comme sous le scope du TRX à l'allumage : <MENU1> (réglages du scope : vitesse, crêtes, repère, couleurs, niveau),
+    // SPAN, HOLD, CENT/FIX, MAIN/SUB (récepteur sélectionné), DUAL (DUAL-W), EXPD/SET (écran multi-fonctions, comme M.SCOPE)
+    bot: ['<MENU1>', 'SPAN', 'HOLD', 'CENT/FIX', 'MAIN/SUB', 'DUAL', 'EXPD/SET'],
+    // Petit écran de la photo : le dessin du filtre du récepteur sélectionné (largeur, TWIN PBT, NOTCH), comme sur le TRX
+    subLcd: { x: +(1160 * K).toFixed(2), y: +(86 * K).toFixed(2), w: +(222 * K).toFixed(2), h: +(88 * K).toFixed(2) },
     lcd: { x: +(322 * K).toFixed(2), y: +(57 * K).toFixed(2), w: 570, h: 318 },
     // Cases de l'écran, pour chaque récepteur
     cells: [['ANT', 'ant'], ['ATT', 'att'], ['P.AMP', 'preamp'], ['FILTER', 'fil'], ['AGC', 'agc']],
@@ -57,8 +65,6 @@
     texts: [
       { x: 1160, y: 76, anchor: 'start', color: '#ff5a4a', font: FONT(13), text: (s) => (s.vfoSel === 1 ? 'SUB' : 'MAIN') },
       { x: 1384, y: 76, anchor: 'end', color: '#e8eef8', font: FONT(13), text: (s) => 'BW ' + kHz(bwOf(s)) },
-      { x: 1270, y: 132, anchor: 'middle', color: '#7fd0ff', font: FONT(26), text: (s) => (sb(s) ? s.modeB : s.mode) || '' },
-      { x: 1270, y: 170, anchor: 'middle', color: '#c8d4e8', font: FONT(14), text: (s) => { const b = sb(s), p = s['pbtIn' + b], q = s['pbtOut' + b]; return (p != null && q != null && (p !== 128 || q !== 128)) ? 'PBT ' + (p - 128) + ' / ' + (q - 128) : ''; } },
       { x: 1193, y: 222, anchor: 'middle', color: '#f2f4f8', font: FONT(15), text: (s) => { const v = side('fil')(s); return v ? 'FIL' + v : ''; } },
       { x: 1271, y: 222, anchor: 'middle', color: '#f2f4f8', font: FONT(15), text: (s) => ['', 'APF-W', 'APF-M', 'APF-N'][side('apf')(s)] || '' },
       { x: 1349, y: 222, anchor: 'middle', color: '#f2f4f8', font: FONT(15), text: (s) => { const b = sb(s); return s['dnf' + b] ? 'AN' : s['notch' + b] ? 'MN' : ''; } }
@@ -85,8 +91,8 @@
       { id: 'mic', cx: 75, cy: 510, r: 50, tip: 'MIC', act: info('Micro : phonie à distance par le bouton PTT sous la face avant (page TRX SSB).') },
       // Sous l'écran
       { id: 'menu', x: 320, y: 536, w: 90, h: 20, tip: 'MENU : tableau des modes (le mode se change aussi en cliquant sur le mode à l’écran)', act: { local: 'modeMenu' } },
-      { id: 'function', x: 437, y: 536, w: 90, h: 20, tip: 'FUNCTION : écran des fonctions (AGC, NB, NR, NOTCH, P.AMP, ATT, DIGI-SEL, IP+… du récepteur sélectionné ; niveaux au bouton MULTI)', act: { local: 'func' }, led: (s, L) => L.func },
-      { id: 'mscope', x: 555, y: 536, w: 90, h: 20, tip: 'M.SCOPE : scope agrandi (EXPAND), un 2e appui : retour', act: { local: 'expand' } },
+      { id: 'function', x: 437, y: 536, w: 90, h: 20, tip: 'FUNCTION : écran des fonctions du TRX (P.AMP, ATT, AGC, NOTCH, NB, NR, DIGI-SEL, IP+, APF… du récepteur sélectionné ; VOX/BK-IN, COMP, TBW, MONI, TRACKING, DUAL-W)', act: { local: 'func' }, led: (s, L) => L.func },
+      { id: 'mscope', x: 555, y: 536, w: 90, h: 20, tip: 'M.SCOPE : écran multi-fonctions (scope, OSCILLOSCOPE, AF-FFT du son reçu) ; 2e appui : retour', act: { local: 'multiView' }, led: (s, L) => !!L.multi },
       { id: 'quick', x: 675, y: 536, w: 90, h: 20, tip: 'QUICK : tableau des bandes', act: { local: 'bandMenu' } },
       { id: 'exit', x: 792, y: 536, w: 90, h: 20, tip: 'EXIT : ferme le tableau ou le menu ouvert', act: { local: 'exit' } },
       { id: 'rec', x: 920, y: 536, w: 53, h: 20, tip: 'REC', act: info('REC (enregistreur du TRX) : pas disponible à distance.') },
@@ -113,7 +119,7 @@
     ].map(SC),
     knobs: [
       { id: 'dial', cx: 1282, cy: 452, ro: 135, ri: 135, dial: true, tip: 'Grand bouton : fréquence du récepteur sélectionné (touches MAIN / SUB) ; molette ou glisser en tournant' },
-      { id: 'multi', cx: 1537, cy: 117, ro: 55, multi: true, pushLocal: 'func', tip: 'MULTI : tourner = la fonction de la case de l’écran (choisie dans FUNCTION, ex. RF POWER) ; clic = écran FUNCTION' },
+      { id: 'multi', cx: 1537, cy: 117, ro: 55, multi: true, pushLocal: 'multiMenu', tip: 'MULTI : clic = menu MULTI (RF POWER, MIC GAIN, COMP, MONITOR ; en CW KEY SPEED, CW PITCH), tourner = le réglage choisi' },
       // TWIN PBT : centre = PBT intérieur, bague = PBT extérieur, du récepteur sélectionné ; le pousser (CLR) = les deux au milieu
       { id: 'pbt', cx: 1537, cy: 307, ri: 33, ro: 55, inner: { ctl: 'pbtIn', label: 'PBT intérieur', per: 4, sided: true }, outer: { ctl: 'pbtOut', label: 'PBT extérieur', per: 4, sided: true }, pushLocal: 'pbtClr' },
       { id: 'ritKnob', cx: 1537, cy: 497, ro: 55, inner: { ctl: 'clar', label: 'RIT/ΔTX', per: 10 } },

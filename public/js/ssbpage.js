@@ -891,13 +891,27 @@
   // Les deux VFO (SPLIT) : même main et mêmes commandes que le dashboard
   if (window.RSVFOBOX) window.RSVFOBOX.mount($('cwpVfo'), { api, toast });
   // Carte de bande à gauche : spots SSB de la bande du TRX ; clic = indicatif + TRX sur la fréquence du spot (avec la main)
+  // TRX à deux vrais récepteurs (état « dualRx » : IC-7760, FTDX101, FTDX5000…) : carte du VFO-A à gauche, du VFO-B à droite
+  const twoRx = (r) => r && r.dualRx != null && r.freqB != null;
+  if (window.RSBMAP) window.RSBMAP.mount($('xBmB'), { api, kit, mode: 'SSB', side: () => 'B',
+    label: (r) => 'VFO-B' + (r.dualRx === 0 && r.vfoSel !== 1 ? ' (SUB coupé)' : ''),
+    worked: (call, band) => (CL.id && CL.items.some((q) => q.call === call && q.band === band) ? 'dup' : ''),
+    onPick: (call, s) => {
+      const k = kit();
+      if (k) k.setCall(call);
+      if (api.iControl() && host && host.api.setFreq) { try { host.api.setFreq(Math.round(s.f * 1000), 'B'); } catch (e) {} }
+      else if (!api.iControl()) toast('Indicatif repris ; prenez la main pour mettre le VFO-B sur sa fréquence.', 'warn', 4000);
+    } });
+  setInterval(() => { const st = api.state(), e = $('xBmB'); const on = twoRx(st && st.radio); if (e.hidden === on) e.hidden = !on; }, 1000);
   if (window.RSBMAP) window.RSBMAP.mount($('xBm'), { api, kit, mode: 'SSB',
+    side: (r) => (twoRx(r) ? 'A' : null), label: (r) => (twoRx(r) ? 'VFO-A' : ''),
     worked: (call, band) => (CL.id && CL.items.some((q) => q.call === call && q.band === band) ? 'dup' : ''),
     onPick: (call, s) => {
       const k = kit();
       if (k) k.setCall(call);
       if (api.iControl() && host && host.api.setFreq) {
-        try { host.api.setFreq(Math.round(s.f * 1000)); setTimeout(() => { try { if (hostWin.RSDIGI) hostWin.RSDIGI.modeFor('ssb'); } catch (e) {} }, 500); } catch (e) {}
+        // Deux récepteurs : cette carte est celle du VFO-A
+        try { const st = api.state(); host.api.setFreq(Math.round(s.f * 1000), twoRx(st && st.radio) ? 'A' : undefined); setTimeout(() => { try { if (hostWin.RSDIGI) hostWin.RSDIGI.modeFor('ssb'); } catch (e) {} }, 500); } catch (e) {}
       } else if (!api.iControl()) toast('Indicatif repris ; prenez la main pour aller sur sa fréquence.', 'warn', 4000);
     } });
   // TX CALL : indicatif d'émission (et des QSO enregistrés), comme dans la page TRX DIGI ; avec la main
