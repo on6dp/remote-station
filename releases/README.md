@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.231 | [RemoteStation-Setup-0.37.231.exe](0.37.231/RemoteStation-Setup-0.37.231.exe) | [remote-station-0.37.231.tar.gz](0.37.231/remote-station-0.37.231.tar.gz) | Ctrl+F5 sur la page /ftdx5000 — [empreintes SHA-256](0.37.231/SHA256SUMS.txt) |
 | 0.37.230 | [RemoteStation-Setup-0.37.230.exe](0.37.230/RemoteStation-Setup-0.37.230.exe) | [remote-station-0.37.230.tar.gz](0.37.230/remote-station-0.37.230.tar.gz) | Ctrl+F5 sur le dashboard et la page Station — [empreintes SHA-256](0.37.230/SHA256SUMS.txt) |
 | 0.37.230 | [RemoteStation-Setup-0.37.230.exe](0.37.230/RemoteStation-Setup-0.37.230.exe) | [remote-station-0.37.230.tar.gz](0.37.230/remote-station-0.37.230.tar.gz) | Ctrl+F5 sur le dashboard et la page Station — [empreintes SHA-256](0.37.230/SHA256SUMS.txt) |
 | 0.37.229 | [RemoteStation-Setup-0.37.229.exe](0.37.229/RemoteStation-Setup-0.37.229.exe) | [remote-station-0.37.229.tar.gz](0.37.229/remote-station-0.37.229.tar.gz) | Ctrl+F5 sur le dashboard et la page TRX DIGI — [empreintes SHA-256](0.37.229/SHA256SUMS.txt) |

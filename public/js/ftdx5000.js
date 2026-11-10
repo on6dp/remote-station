@@ -132,12 +132,20 @@
       // Face avant : manipulateur, break-in, tonalité CW
       { cmd: 'BI;', re: /^BI([01])$/, parse: (m) => ({ bkin: +m[1] }), sim: 'BI0' },
       { cmd: 'KR;', re: /^KR([01])$/, parse: (m) => ({ keyer: +m[1] }), sim: 'KR0' },
-      { cmd: 'KP;', when: (st) => /^CW/.test(st.mode || '') || /^CW/.test(st.modeB || ''), re: /^KP(\d\d)$/, parse: (m) => ({ cwPitch: 300 + 10 * +m[1] }), sim: 'KP40' }
+      { cmd: 'KP;', when: (st) => /^CW/.test(st.mode || '') || /^CW/.test(st.modeB || ''), re: /^KP(\d\d)$/, parse: (m) => ({ cwPitch: 300 + 10 * +m[1] }), sim: 'KP40' },
+      // Face avant : SQL et niveau NB du SUB, MONI, vitesse du manipulateur, VOX GAIN / DELAY
+      { cmd: 'SQ1;', re: /^SQ1(\d{3})$/, parse: (m) => ({ sqlB: +m[1] }), sim: 'SQ1000' },
+      { cmd: 'NL1;', re: /^NL1(\d{3})$/, parse: (m) => ({ nbLvlB: +m[1] }), sim: 'NL1050' },
+      { cmd: 'ML1;', re: /^ML1(\d{3})$/, parse: (m) => ({ moniLvl: +m[1] }), sim: 'ML1050' },
+      { cmd: 'KS;', re: /^KS(\d{3})$/, parse: (m) => ({ keySpeed: +m[1] }), sim: 'KS022' },
+      { cmd: 'VG;', re: /^VG(\d{3})$/, parse: (m) => ({ voxGain: +m[1] }), sim: 'VG050' },
+      { cmd: 'VD;', re: /^VD(\d{4})$/, parse: (m) => ({ voxDelay: +m[1] }), sim: 'VD0500' }
     ],
     fastExtra: ['FR;'],
     extraQueries: ['ID;', 'IF;', 'OI;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RI0;', 'BY;'],
     extraStateKeys: ['clarA', 'ritA', 'xitA', 'clarB', 'ritB', 'xitB', 'lockB', 'widthCode', 'widthCodeB', 'widthB', 'narrowB', 'nbB', 'nrB', 'dnfB', 'notchB',
-      'agcB', 'rfB', 'afB', 'shiftB', 'attB', 'preampB', 'nbLvl', 'nrLvl', 'mainMute', 'bkin', 'keyer', 'cwPitch'],
+      'agcB', 'rfB', 'afB', 'shiftB', 'attB', 'preampB', 'nbLvl', 'nrLvl', 'mainMute', 'bkin', 'keyer', 'cwPitch',
+      'sqlB', 'nbLvlB', 'moniLvl', 'keySpeed', 'voxGain', 'voxDelay'],
     subBadges: true,
     // Phonie à distance : « SSB MIC SELECT » (menu 103) sur DATA (prise de l'interface son) le temps de l'émission,
     // puis remis comme avant (FRONT = micro de la face avant)
@@ -191,7 +199,15 @@
       { id: 'rfB', g: 'rx', label: 'RF gain (VFO B)', type: 'level', min: 0, max: 255, step: 1, pct: true, write: (v) => 'RG1' + pad(v, 3) + ';' },
       { id: 'afB', g: 'rx', label: 'AF (VFO B)', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: (v) => 'AG1' + pad(v, 3) + ';' },
       { id: 'bkin', g: 'tx', label: 'BK-IN', type: 'toggle', face: true, write: (v) => 'BI' + v + ';' },
-      { id: 'keyer', g: 'tx', label: 'KEYER', type: 'toggle', face: true, write: (v) => 'KR' + v + ';' }
+      { id: 'keyer', g: 'tx', label: 'KEYER', type: 'toggle', face: true, write: (v) => 'KR' + v + ';' },
+      // Boutons de la face avant (page /ftdx5000)
+      { id: 'sqlB', g: 'rx', label: 'SQL (VFO B)', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: (v) => 'SQ1' + pad(v, 3) + ';' },
+      { id: 'nbLvlB', g: 'flt', label: 'Niveau NB (VFO B)', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: (v) => 'NL1' + pad(v, 3) + ';' },
+      { id: 'moniLvl', g: 'tx', label: 'MONI LEVEL', type: 'level', min: 1, max: 255, step: 1, pct: true, face: true, write: (v) => 'ML1' + pad(v, 3) + ';' },
+      { id: 'keySpeed', g: 'tx', label: 'KEY SPEED', type: 'level', min: 4, max: 60, step: 1, unit: 'wpm', face: true, write: (v) => 'KS' + pad(v, 3) + ';' },
+      { id: 'cwPitch', g: 'tx', label: 'CW PITCH', type: 'level', min: 300, max: 1050, step: 10, unit: 'Hz', face: true, write: (v) => 'KP' + pad((v - 300) / 10, 2) + ';' },
+      { id: 'voxGain', g: 'tx', label: 'VOX GAIN', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: (v) => 'VG' + pad(v, 3) + ';' },
+      { id: 'voxDelay', g: 'tx', label: 'VOX DELAY', type: 'level', min: 20, max: 5000, step: 20, unit: 'ms', face: true, write: (v) => 'VD' + pad(v, 4) + ';' }
     ],
     fakeTuning: 'AC002',
     fakeFirst: true,

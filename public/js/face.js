@@ -367,6 +367,8 @@
     if (a.mode) {
       const cur = L.activeMode(s);
       const hz = activeSide() === 'B' ? s.freqB : s.freq;
+      // Touche à plusieurs modes (FTDX5000 : AM/FM, RTTY, PKT) : mode suivant de la liste ; un seul : ce mode
+      if (Array.isArray(a.mode)) { const i = a.mode.indexOf(cur); return setMode(a.mode[(i + 1) % a.mode.length]); }
       if (a.mode === 'ssb') return setMode(cur === 'LSB' ? 'USB' : cur === 'USB' ? 'LSB' : (hz && hz < 10e6 ? 'LSB' : 'USB'));
       if (a.mode === 'cw') {
         // Passage en CW : BK-IN mis en service d'office (la touche BK-IN reste libre ensuite ; CW-U ⇄ CW-L n'y touche pas)
@@ -434,6 +436,7 @@
   }
   const LCD = {};
   const ledEls = [];   // { el, on(s,L), bright? }
+  const textEls = [];  // { el, t } : FACE.texts
   const keyEls = {};
   function build() {
     svg.setAttribute('viewBox', V.x + ' ' + V.y + ' ' + V.w + ' ' + V.h);
@@ -492,6 +495,13 @@
           : el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: d.rx != null ? d.rx : 1.5, class: 'led bar', style: '--c:' + d.color }, leds);
         ledEls.push({ el: e, on: d.on, bright: d.bright });
       }
+    }
+    // FACE.texts : afficheurs de la photo remplis par la page (FTDX5000 : fréquence du VFO-A en 7 segments, VFO-B, clarifier)
+    const txts = el('g', { class: 'ftexts', 'pointer-events': 'none' }, svg);
+    for (const t of FACE.texts || []) {
+      const e = t.seg ? el('path', { d: 'M0 0', fill: t.color }, txts)
+        : el('text', { x: t.x, y: t.y, 'text-anchor': t.anchor || 'end', fill: t.color, style: 'font:' + (t.font || '600 ' + t.size + 'px ui-monospace,Consolas,monospace') }, txts);
+      textEls.push({ el: e, t });
     }
     // Zones cliquables
     const hs = el('g', { class: 'hss' }, svg);
@@ -4296,6 +4306,12 @@
       if (L.funcSel === 'step') { const sd = activeSide(), f = sd === 'B' ? pendF.B : pendF.A; return showTip(ev, 'STEP DIAL ' + (sd === 'B' ? 'SUB ' : 'MAIN ') + (f ? fmtFreq(f) + ' MHz' : '')); }
       return showTip(ev, FUNC_BY[L.funcSel][1] + ' ' + FUNC_BY[L.funcSel][2](S()));
     }
+    // FTDX5000 : bouton CLAR/VFO-B — décalage du clarifier quand RX CLAR ou TX CLAR est en service
+    if (k.subDial && k.clar && (s.rit || s.xit)) {
+      const v = Math.max(-9999, Math.min(9999, (s.clar || 0) + notches * 10));
+      setCtl('clar', v);
+      return showTip(ev, 'CLAR ' + (v > 0 ? '+' : '') + v + ' Hz');
+    }
     // SUB DIAL (FTX-1) : fréquence du SUB (VFO B), quel que soit le récepteur sélectionné
     if (k.subDial) {
       const cur = s.freqB;
@@ -4336,6 +4352,8 @@
     if (!spec) return;
     if (spec.alt && spec.alt.when(s)) spec = spec.alt; // ex. bague CONT/APF : APF en CW quand l'APF est en service
     if (spec.info) return say(spec.info, '', 4000);
+    // Réglage d'une case FUNC (FTDX5000 : bague RF PWR = RF POWER)
+    if (spec.fn && FUNC_BY[spec.fn]) { if (funcAdjust(spec.fn, notches)) showTip(ev, FUNC_BY[spec.fn][1] + ' ' + FUNC_BY[spec.fn][2](S())); return; }
     const c = R.CONTROL[spec.ctl];
     if (!c) return say(spec.label + ' : non disponible sur ce TRX.', 'warn');
     let v;
@@ -4792,7 +4810,7 @@
     return v + (c.unit ? ' ' + c.unit : '');
   }
   const ROOF_HZ = (FACE && FACE.roof && FACE.roof.hz) || [0, 12000, 3000, 1200, 600, 300]; // R.FIL (filtre de toit) en Hz
-  const ATT = ['OFF', '6dB', '12dB', '18dB'], IPO = ['IPO', 'AMP1', 'AMP2'], ROOF = (FACE && FACE.roof && FACE.roof.labels) || ['', '12kHz', '3kHz', '1.2kHz', '600Hz', '300Hz'], AGC = ['OFF', 'FAST', 'MID', 'SLOW', 'AUTO'];
+  const ATT = ['OFF', '6dB', '12dB', '18dB'], IPO = (FACE && FACE.ipo) || ['IPO', 'AMP1', 'AMP2'], ROOF = (FACE && FACE.roof && FACE.roof.labels) || ['', '12kHz', '3kHz', '1.2kHz', '600Hz', '300Hz'], AGC = ['OFF', 'FAST', 'MID', 'SLOW', 'AUTO'];
   // IC-7300 : largeur d'origine des filtres FIL1 / FIL2 / FIL3 selon le mode (Hz)
   function filHz(md, n) {
     // Largeur lue sur le TRX (1A 03) pour le filtre en service : 50 Hz … 500 Hz par 50, puis 600 Hz … 3600 Hz par 100 ; AM : 200 Hz … 10 kHz par 200
@@ -4837,6 +4855,12 @@
       try { on = live && !!d.on(s, L); } catch (e) { on = false; }
       d.el.classList.toggle('on', on || (d.on === undefined));
       if (d.bright) { let b = false; try { b = live && !!d.bright(s, L); } catch (e) { b = false; } d.el.classList.toggle('bright', b); }
+    }
+    for (const d of textEls) {
+      let v = '';
+      try { v = live ? String(d.t.text(s, L) || '') : ''; } catch (e) { v = ''; }
+      if (d.t.seg) d.el.setAttribute('d', v ? seg7(v, d.t.x, d.t.y, d.t.size) : 'M0 0');
+      else if (d.el.textContent !== v) d.el.textContent = v;
     }
     // Écran
     const subOn = s.dualRx !== 0;
