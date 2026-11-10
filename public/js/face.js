@@ -437,6 +437,7 @@
   const LCD = {};
   const ledEls = [];   // { el, on(s,L), bright? }
   const textEls = [];  // { el, t } : FACE.texts
+  const glowEls = [];  // { el, on } : FACE.glows
   const keyEls = {};
   function build() {
     svg.setAttribute('viewBox', V.x + ' ' + V.y + ' ' + V.w + ' ' + V.h);
@@ -495,6 +496,12 @@
           : el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: d.rx != null ? d.rx : 1.5, class: 'led bar', style: '--c:' + d.color }, leds);
         ledEls.push({ el: e, on: d.on, bright: d.bright });
       }
+    }
+    // FACE.glows : voyants de l'afficheur de la photo allumés en éclaircissant (color-dodge) ce qui est déjà dessiné éteint
+    // dessous (mots, valeurs, cases) : les lettres restent exactement celles de l'image
+    for (const gl of FACE.glows || []) {
+      const e = el('rect', { x: gl.x, y: gl.y, width: gl.w, height: gl.h, fill: gl.color, style: 'mix-blend-mode:color-dodge;display:none', 'pointer-events': 'none' }, svg);
+      glowEls.push({ el: e, on: gl.on });
     }
     // FACE.texts : afficheurs de la photo remplis par la page (FTDX5000 : fréquence du VFO-A en 7 segments, VFO-B, clarifier)
     const txts = el('g', { class: 'ftexts', 'pointer-events': 'none' }, svg);
@@ -3788,6 +3795,29 @@
       ['disp', 'DISPLAY SETTING', () => '', null, '#ffb020'],
       ['ext', 'EXTENSION SETTING', () => '', null, '#ffb020']]
   ];
+  // FTDX5000 (touche MENU de sa face avant) : les réglages que ses boutons et le CAT permettent, pas le menu FUNC du FTDX101
+  // (son menu numéroté 001-176 reste au club)
+  const F5K = !!(FACE && FACE.model === 'ftdx5000');
+  const P5 = '#8a5cff', G5 = '#3ddc5a';
+  const off5 = (id, lab, col) => [id, lab, () => '', null, col || '#555b66'];
+  const FUNC_FTDX5000 = F5K ? [
+    FUNC_YAESU[0],
+    [['power', 'RF POWER', (s) => (s.power != null ? s.power + 'W' : '—'), (s, d) => power(d * 5), P5],
+      ['mic', 'MIC GAIN', (s) => num(s.mic), ctlStep('mic', 0, 255, 5), P5],
+      ['procLvl', 'PROC LEVEL', (s) => num(s.procLvl), ctlStep('procLvl', 0, 255, 5), P5],
+      ['moniLvl', 'MONI LEVEL', (s) => num(s.moniLvl), ctlStep('moniLvl', 1, 255, 5), P5],
+      ['voxGain', 'VOX GAIN', (s) => num(s.voxGain), ctlStep('voxGain', 0, 255, 5), P5],
+      ['voxDelay', 'VOX DELAY', (s) => (s.voxDelay != null ? s.voxDelay + 'ms' : '—'), ctlStep('voxDelay', 20, 5000, 20), P5],
+      ['keySpeed', 'KEY SPEED', (s) => (s.keySpeed != null ? s.keySpeed + 'wpm' : '—'), ctlStep('keySpeed', 4, 60, 1), P5],
+      ['cwPitch', 'CW PITCH', (s) => (s.cwPitch != null ? s.cwPitch + 'Hz' : '—'), ctlStep('cwPitch', 300, 1050, 10), P5]],
+    [['nbLvl', 'NB LEVEL', (s) => num(s[sideKey('nbLvl')]), ctlStep('nbLvl', 0, 255, 5), G5],
+      ['nrLvl', 'DNR LEVEL', (s) => num(s[sideKey('nrLvl')]), ctlStep('nrLvl', 1, 15, 1), G5],
+      ['sql', 'SQL', (s) => num(s[sideKey('sql')]), ctlStep('sql', 0, 255, 5), G5],
+      ['step', 'STEP DIAL', () => '', (s, d) => stepDial(d), G5],
+      off5('rflt5', 'R.FLT'), off5('contour5', 'CONTOUR'), off5('vrf5', 'VRF / μ-T'), off5('txw5', 'TXW')],
+    [off5('memch5', 'MEM CH'), off5('qmb5', 'QMB'), off5('rec5', 'REC/PLAY'), off5('classA5', 'CLASS-A'), off5('miceq5', 'MIC EQ'),
+      off5('dim5', 'DIM'), off5('menu5', 'MENU 001-176'), off5('cs5', 'C.S')]
+  ] : null;
   // IC-7300 : écran FUNCTION à la manière Icom — interrupteurs (clic), puis niveaux réglés au bouton MULTI
   const pct = (v) => (v == null ? '—' : Math.round(v / 2.55) + '%');
   const onOff = (v) => (v == null ? '—' : v ? 'ON' : 'OFF');
@@ -3935,7 +3965,7 @@
       [['back3', 'BACK', () => '', null, FO, false, 'back'], info('radioS', 'RADIO SETTING'), info('cwS', 'CW SETTING'), info('opS', 'OPERATION SETTING'),
         info('dispS', 'DISPLAY SETTING'), info('extS', 'EXTENSION SETTING'), info('aprsSet', 'APRS SETTING')]] }
   ];
-  const FUNC = ICOM ? FUNC_ICOM : FTX1F ? FUNC_FTX1.flatMap((p) => p.rows) : FUNC_YAESU;
+  const FUNC = ICOM ? FUNC_ICOM : FTX1F ? FUNC_FTX1.flatMap((p) => p.rows) : F5K ? FUNC_FTDX5000 : FUNC_YAESU;
   // MULTI de l'IC-7300 (pousser le bouton) : les réglages du mode en cours, comme sur le TRX
   function multiItems(s) {
     const m = L.activeMode(s) || '';
@@ -4855,6 +4885,12 @@
       try { on = live && !!d.on(s, L); } catch (e) { on = false; }
       d.el.classList.toggle('on', on || (d.on === undefined));
       if (d.bright) { let b = false; try { b = live && !!d.bright(s, L); } catch (e) { b = false; } d.el.classList.toggle('bright', b); }
+    }
+    for (const d of glowEls) {
+      let on = false;
+      try { on = live && !!d.on(s, L); } catch (e) { on = false; }
+      const want = on ? '' : 'none';
+      if (d.el.style.display !== want) d.el.style.display = want;
     }
     for (const d of textEls) {
       let v = '';
