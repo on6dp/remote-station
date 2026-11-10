@@ -2891,11 +2891,11 @@
       fh.addEventListener('click', (ev) => { ev.stopPropagation(); if (needControl()) cycleCell(sd === 'B' ? 'filB' : 'fil'); });
       // Fréquence en police Icom (la fréquence en 7 segments de l'écran Yaesu est cachée)
       v.freq.style.display = 'none'; v.tx.style.display = 'none'; v.clarG.style.display = 'none';
-      o.freq = el('text', { x: X(x0 + 248), y: Y(134), class: 'i76-freq', 'text-anchor': 'end' }, v.g, '');
-      for (const [k2, val] of [['x', X(x0 + 60)], ['y', Y(110)], ['width', 190], ['height', 26]]) v.hit.setAttribute(k2, val);
-      for (const [k2, val] of [['x', X(x0 + 90)], ['y', Y(136)], ['width', 160]]) v.sel.setAttribute(k2, val);
+      o.freq = el('text', { x: X(x0 + 248), y: Y(129), class: 'i76-freq', 'text-anchor': 'end' }, v.g, '');
+      for (const [k2, val] of [['x', X(x0 + 60)], ['y', Y(108)], ['width', 190], ['height', 24]]) v.hit.setAttribute(k2, val);
+      for (const [k2, val] of [['x', X(x0 + 90)], ['y', Y(131)], ['width', 160]]) v.sel.setAttribute(k2, val);
       // Voyants du récepteur (et RIT / ΔTX) sous la fréquence
-      o.tags = el('text', { x: X(x0 + 3), y: Y(143.5), class: 'i76-tags' }, h, '');
+      o.tags = el('text', { x: X(x0 + 3), y: Y(140), class: 'i76-tags' }, h, '');
     }
     // DUAL-W (vert) et SPLIT (orange) entre les deux récepteurs, comme sur le TRX
     LCD.i76dw = el('g', { style: 'display:none' }, h);
