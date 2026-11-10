@@ -180,6 +180,8 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 #face[data-model='ic7760'] .mtr-num, #face[data-model='ic7760'] .mtr-name { font-family: Arial, 'Liberation Sans', Helvetica, sans-serif; font-weight: 900; font-style: normal; }
 #face[data-model='ic7760'] .mtr-num { font-size: 8px; stroke-width: 2.2px; }
 #face[data-model='ic7760'] .mtr-num.big { font-size: 10px; }
+#face[data-model='ic7760'] .mtr-arc.blue, #face[data-model='ic7760'] .mtr-tick.blue { stroke: #ff3b30; }
+#face[data-model='ic7760'] .mtr-num.blue { fill: #ff3b30; }
 #face[data-model='ftx1'] .mtr-val { font-size: 10.5px; font-weight: 900; }
 #face .flt-box { fill: #000; stroke: #2a3140; stroke-width: .8; }
 #face .flt-bars { stroke: #c9d3e3; stroke-width: .8; opacity: .85; }
@@ -812,6 +814,33 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .i76mm-t.on, #face .i76mm-v.on { fill: #0b2a33; }
 #face .i76mm-back { fill: url(#i76btn); stroke: #a9d2f0; stroke-width: 0.8; }
 #face .i76mm-t.i76bk { font-size: 12px; }
+/* IC-7760 : S-mètre / Po et SWR en barres sur le grand écran */
+#face .i76-bsl { fill: #fff; font: 900 10px Arial, sans-serif; pointer-events: none; }
+#face .i76-bs { fill: #f2f4f7; font: 800 7.4px Arial, sans-serif; pointer-events: none; }
+#face .i76-bs.red { fill: #ff3b30; }
+#face .i76-bsd { fill: #f2f4f7; }
+#face .i76-bu { stroke: #f2f4f7; stroke-width: 0.9; }
+#face .i76-bu.red { stroke: #ff3b30; }
+#face .i76-btr { stroke: #1b2130; stroke-width: 3.6; stroke-dasharray: 2.2 0.8; }
+#face .i76-bar { stroke: #ffffff; stroke-width: 3.6; stroke-dasharray: 2.2 0.8; }
+#face .i76-bar.red { stroke: #ff3b30; }
+#face .i76-bar.thin { stroke-width: 2.6; }
+#face .i76-date { fill: #e6e9ef; font: 700 8px Arial, sans-serif; pointer-events: none; }
+/* IC-7760 : tableau AGC (appui d'1 s sur AGC) */
+#face .i76agc-bg { fill: #05070b; stroke: #59606c; stroke-width: 0.8; }
+#face .i76agc-tb { fill: #2a3142; }
+#face .i76agc-ttl { fill: #fff; font: 700 9px Arial, sans-serif; pointer-events: none; }
+#face .i76agc-h { fill: #e6e9ef; font: 700 8.6px Arial, sans-serif; pointer-events: none; }
+#face .i76agc-h.cur { fill: #fff; font-weight: 900; }
+#face .i76agc-l { fill: #1a1f28; stroke: #9aa2b0; stroke-width: 0.8; }
+#face .i76agc-l.on { fill: #3a4a66; stroke: #e4f4ff; stroke-width: 1.2; }
+#face .i76agc-lt { fill: #fff; font: 800 9px Arial, sans-serif; pointer-events: none; }
+#face .i76agc-c { fill: #11151c; stroke: #3a4252; stroke-width: 0.6; }
+#face .i76agc-c.on { fill: #bfeff5; stroke: #4fd2f0; }
+#face .i76agc-v { fill: #c9ced8; font: 600 9.5px Arial, sans-serif; pointer-events: none; }
+#face .i76agc-v.cur { fill: #fff; font-weight: 900; }
+#face .i76agc-v.on { fill: #0b2a33; font-weight: 900; }
+#face .i76agc-v.dim { fill: #7d8594; }
 /* IC-7760 : rangée du bas en touches bleues arrondies, comme sur l'écran du TRX */
 #face .lcd-bot.i76b { fill: url(#i76btn); stroke: #a9d2f0; stroke-width: 0.8; }
 #face .lcd-bot.i76b.on { fill: url(#i76btnOn); stroke: #e4f4ff; }

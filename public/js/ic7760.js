@@ -93,11 +93,14 @@
   const SC_SPANS = [2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000];
   const SLOW = [q(0x26, 0x00), q(0x26, 0x01), q(0x07, 0xC2), q(0x0F), q(0x14, 0x0A), q(0x21, 0x00), q(0x1C, 0x01)];
   for (const side of [0, 1]) {
-    SLOW.push(qs(side, 0x11), qs(side, 0x12), qs(side, 0x1A, 0x03));
+    SLOW.push(qs(side, 0x11), qs(side, 0x12), qs(side, 0x1A, 0x03), qs(side, 0x1A, 0x04));
     for (const s of SIDE) if (s[0] !== 0x15) SLOW.push(qs(side, s[0], s[1]));
   }
   for (const s of COMMON) if (s[0] !== 0x15 && !(s[0] === 0x14 && s[1] === 0x0A)) SLOW.push(q(s[0], s[1]));
   SLOW.push(q(0x15, 0x15), q(0x15, 0x16));
+  // Niveau de la tonalité locale CW (SET > CW-KEY Set > Side Tone Level : 1A 05 02 86, 0000 – 0255)
+  const SIDETONE = [0x1A, 0x05, 0x02, 0x86];
+  SLOW.push(q(...SIDETONE));
   // Scope du TRX : MAIN/SUB, SINGLE/DUAL, et pour chaque côté CENTER/FIX, SPAN, EDGE, HOLD
   SLOW.push(q(0x27, 0x12), q(0x27, 0x13));
   for (const sd of [0, 1]) SLOW.push(q(0x27, 0x14, sd), q(0x27, 0x15, sd), q(0x27, 0x16, sd), q(0x27, 0x17, sd));
@@ -109,7 +112,7 @@
 
   const STATE_KEYS = ['vfoSel', 'dualRx', 'txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'tracking', 'tuner', 'tuning',
     'mic', 'proc', 'procLvl', 'vox', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'voxGain', 'antiVox', 'tbw',
-    'fil', 'filB', 'filWi', 'filWiB', 'att', 'attB', 'ant', 'antB', 'rxAnt', 'rxAntB'];
+    'fil', 'filB', 'filWi', 'filWiB', 'agcT', 'agcTB', 'sideTone', 'att', 'attB', 'ant', 'antB', 'rxAnt', 'rxAntB'];
   for (const s of SIDE) if (s[2] !== 'smeter') STATE_KEYS.push(s[2], s[2] + 'B');
   STATE_KEYS.push('smeterB', 'scSel', 'scDual');
   for (const k of ['scMode', 'scSpan', 'scEdge', 'scHold']) STATE_KEYS.push(k, k + 'B');
@@ -169,6 +172,7 @@
     { id: 'keySpeed', g: 'tx', label: 'KEY SPEED', type: 'level', min: 6, max: 48, step: 1, unit: 'wpm', face: true, write: (v) => q(0x14, 0x0C, ...lvlBytes(Math.round((v - 6) * 255 / 42))) },
     { id: 'cwPitch', g: 'tx', label: 'CW PITCH', type: 'level', min: 300, max: 900, step: 5, unit: 'Hz', face: true, write: (v) => q(0x14, 0x09, ...lvlBytes(Math.round((v - 300) * 255 / 600))) },
     { id: 'moni', g: 'tx', label: 'MONITOR', type: 'toggle', face: true, write: setOn(0x16, 0x45) },
+    { id: 'sideTone', g: 'tx', label: 'Niveau SIDETONE (CW)', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: (v) => q(...SIDETONE, ...lvlBytes(v)) },
     { id: 'moniLvl', g: 'tx', label: 'Niveau MONITOR', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x15) },
     { id: 'bkin', g: 'tx', label: 'BK-IN', type: 'select', face: true, options: [[0, 'OFF'], [1, 'SEMI'], [2, 'FULL']], write: (v) => q(0x16, 0x47, v) },
     { id: 'voxGain', g: 'tx', label: 'VOX GAIN', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x16) },
@@ -200,6 +204,9 @@
     { id: 'ant', g: 'rx', label: 'Antenne', type: 'select', noTx: true, options: [[1, 'ANT 1'], [2, 'ANT 2'], [3, 'ANT 3'], [4, 'ANT 4']],
       write: (v, s, b) => qs(b, 0x12, v - 1, (s && s['rxAnt' + (b ? 'B' : '')]) ? 1 : 0) },
     { id: 'digiSel', g: 'rx', label: 'DIGI-SEL', type: 'toggle', face: true, cmd: [0x16, 0x4E] },
+    // Constante de temps de l'AGC (1A 04) : celle du mode et du FAST / MID / SLOW en cours (appui long sur AGC) ; pas en FM (fixe)
+    { id: 'agcT', g: 'rx', label: 'Constante de temps AGC', type: 'select', face: true, options: Array.from({ length: 14 }, (_, i) => [i, i ? String(i) : 'OFF']),
+      write: (v, s, b) => qs(b, 0x1A, 0x04, bcd(v)), when: (s, b) => !/^FM/.test((s && s['mode' + (b ? 'B' : '')]) || '') },
     { id: 'ipPlus', g: 'rx', label: 'IP+', type: 'toggle', face: true, cmd: [0x16, 0x65] }
   ];
   for (const sc of SIDE_CONTROLS) {
@@ -227,6 +234,7 @@
       { id: 'scHold' + x, g: 'rx', label: 'HOLD du scope' + n, type: 'toggle', face: true, write: (v) => q(0x27, 0x17, b, v ? 1 : 0) });
     READ_FOR['scMode' + x] = q(0x27, 0x14, b); READ_FOR['scSpan' + x] = q(0x27, 0x15, b); READ_FOR['scEdge' + x] = q(0x27, 0x16, b); READ_FOR['scHold' + x] = q(0x27, 0x17, b);
   }
+  READ_FOR.sideTone = q(...SIDETONE); READ_FOR.agcT = qs(0, 0x1A, 0x04); READ_FOR.agcTB = qs(1, 0x1A, 0x04);
   READ_FOR.scSel = q(0x27, 0x12); READ_FOR.scDual = q(0x27, 0x13);
   const CONTROL = {};
   CONTROLS.forEach((c) => { CONTROL[c.id] = c; });
@@ -329,6 +337,9 @@
       return { ['scHold' + b]: d[2] ? 1 : 0 };
     }
     if (c === 0x1A && d[0] === 0x03 && d.length >= 2) return { filWi: unbcd(d[1]) };
+    // 1A 04 : constante de temps de l'AGC choisie (mode et FAST/MID/SLOW en cours) : 00 OFF, 01 – 13 (tableau p. 19 du guide CI-V)
+    if (c === 0x1A && d[0] === 0x04 && d.length >= 2) return { agcT: unbcd(d[1]) };
+    if (c === 0x1A && d[0] === 0x05 && d[1] === 0x02 && d[2] === 0x86 && d.length >= 5) return { sideTone: lvlValue(d, 3) };
     if (c === 0x1A) return { ok: true };
     if (c === 0x00 && d.length >= 5) return { ok: true }; // transceive : relu par 25 00 / 25 01
     if (c === 0x01) return { ok: true };
@@ -514,6 +525,18 @@
       } else if (c === 0x1A && d[0] === 0x03) {
         const m = b ? v.modeB : v.mode;
         if (d.length === 1) r(0x03, bcd([34, 28, 9][((m && m[2]) || 1) - 1] || 34)); else ok(); // 3,0 kHz / 2,4 kHz / 500 Hz
+      } else if (c === 0x1A && d[0] === 0x04) {
+        // Constante de temps AGC du simulateur : une valeur par groupe de mode et par FAST / MID / SLOW (valeurs d'usine au départ)
+        const m = b ? v.modeB : v.mode, gp = !m ? 0 : m[0] === 0x02 ? 2 : m[0] === 0x05 ? 3 : m[0] === 0x00 || m[0] === 0x01 ? 0 : 1;
+        const ag = S[0x1612] || 2, key = gp + '-' + ag;
+        if (gp === 3) ng();
+        else {
+          const t = (this.agcT = this.agcT || [{}, {}])[b ? 1 : 0];
+          if (t[key] == null) t[key] = [[3, 8, 13], [1, 4, 6], [8, 10, 12]][gp][ag - 1];
+          if (d.length === 1) r(0x04, bcd(t[key])); else { t[key] = unbcd(d[1]); ok(); }
+        }
+      } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x02 && d[2] === 0x86) {
+        if (d.length === 3) r(0x05, 0x02, 0x86, ...lvlBytes(this.st != null ? this.st : 128)); else { this.st = lvlValue(d, 3); ok(); }
       } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x01 && d[2] === 0x29) {
         // DATA OFF MOD (simulateur) : 00 MIC au départ
         if (d.length === 3) r(0x05, 0x01, 0x29, this.mod || 0); else { this.mod = d[3]; ok(); }
