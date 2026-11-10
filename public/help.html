@@ -187,7 +187,7 @@ The TRX (a Yaesu FTX-1 with its SPA-1 amplifier, or depending on the setup an FT
   <tr><th>Item</th><th>What it is</th><th>What it does</th></tr>
   <tr><td><span class="k">● Serveur</span></td><td>Link lamp between your browser and the server.</td><td>Green = connected. Red or grey: check your internet connection; the page reconnects by itself.</td></tr>
   <tr><td><span class="k">● Station</span></td><td>Lamp of the Station page on the club PC.</td><td>Green = the club PC is online. For administrators, a click opens the TRX menu (section 17).</td></tr>
-  <tr><td><span class="k">● FTX-1 FTDX10 FTDX101D / MP IC-7300</span></td><td>The club transceivers; the one in use is highlighted.</td><td>Green = the TRX answers over CAT; red = the TRX is transmitting.</td></tr>
+  <tr><td><span class="k">● FTDX5000</span></td><td>The transceiver in use (FTX-1, FTDX10, FTDX101D / MP, FTDX5000 or IC-7300). The list of transceivers is in the <b>Station</b> menu (administrators).</td><td>Green = the TRX answers over CAT; red = the TRX is transmitting.</td></tr>
   <tr><td>Title in the centre</td><td>Callsign and name of the station.</td><td>—</td></tr>
   <tr><td><span class="k">👥 n</span></td><td>Number of members online.</td><td>Opens the <b>Opérateurs</b> (operators) panel: who is there, who has control, chat (section 10). A red dot means a new message.</td></tr>
   <tr><td>Your callsign</td><td>The account you are logged in with.</td><td>—</td></tr>
@@ -271,6 +271,7 @@ Some exist on only one TRX: they are greyed out or absent on the others. When a 
   <li>ATT and preamp belong to each side, but the TRX only reports them for the active side: a click on those of the other VFO switches the TRX to that side for 2 to 3 s, without transmitting, then back. As long as they have never been read, they show "?".</li>
   <li>The RF front end, Filtres and DSP panels set the <b>active side</b>: their title shows « A · MAIN » or « B · SUB ».</li>
   <li><b>FTDX101D / MP</b> (true dual receiver): the VFO B display sets the SUB side directly (ATT, IPO / AMP, NB, DNR, NOTCH, DNF, NAR, BW), without changing side or TRX state.</li>
+  <li><b>FTDX5000</b> (also a true dual receiver): same as the FTDX101 for VFO B; <span class="k">DUAL RX</span> listens to MAIN and SUB together. SPLIT means transmitting on the other VFO (the TRX has no separate SPLIT command). Preamp IPO1 / AMP1 / AMP2 / IPO2, power 5 to 200 W. Not yet: CONTOUR / APF, keyboard CW macros, dual decoding of digital modes (audio comes from one receiver only).</li>
 </ul></div>
 
 <h3 id="step">7.2 Step row and band row</h3>

@@ -148,7 +148,13 @@
     const NAME = spec.NAME;
     const FREQ_MIN = 30000;
     const FREQ_MAX = spec.FREQ_MAX;
-    const MODES_ALL = Object.assign({}, MODES, spec.extraModes || {});
+    // spec.modes : table des modes propre au TRX (FTDX5000 : pas de AM-N / PSK / DATA-FM-N) ; spec.freqDigits : FA / FB sur
+    // 8 chiffres (FTDX5000) au lieu de 9
+    const MODES_ALL = spec.modes ? Object.assign({}, spec.modes) : Object.assign({}, MODES, spec.extraModes || {});
+    const MSET = spec.settable || SETTABLE;
+    const MKEYS = spec.modeKeys || MODE_KEYS;
+    const FD = spec.freqDigits || 9;
+    const FA_RE = new RegExp('^FA(\\d{' + FD + '})$'), FB_RE = new RegExp('^FB(\\d{' + FD + '})$');
     const widthTable = spec.widthTable || function (mode) {
       if (mode === 'LSB' || mode === 'USB') return WIDTH_SSB;
       if (NARROW_MODES.indexOf(mode) >= 0) return WIDTH_NARROW;
@@ -244,16 +250,16 @@
     function cmdFreq(hz) {
       hz = Math.round(Number(hz));
       if (!(hz >= FREQ_MIN && hz <= FREQ_MAX)) throw new Error('fréquence hors limites');
-      return 'FA' + pad(hz, 9) + ';';
+      return 'FA' + pad(hz, FD) + ';';
     }
     function cmdFreqB(hz) {
       hz = Math.round(Number(hz));
       if (!(hz >= FREQ_MIN && hz <= FREQ_MAX)) throw new Error('fréquence hors limites');
-      return 'FB' + pad(hz, 9) + ';';
+      return 'FB' + pad(hz, FD) + ';';
     }
     function cmdMode(code, sub) {
       code = String(code).toUpperCase();
-      if (SETTABLE.indexOf(code) < 0) throw new Error('mode non autorisé');
+      if (MSET.indexOf(code) < 0) throw new Error('mode non autorisé');
       return (sub ? 'MD1' : 'MD0') + code + ';';
     }
     const cmdPower = P.cmd;
@@ -270,20 +276,20 @@
 
     function parse(tok) {
       let m;
-      if ((m = /^FA(\d{9})$/.exec(tok))) return { freq: parseInt(m[1], 10) };
-      if ((m = /^FB(\d{9})$/.exec(tok))) return { freqB: parseInt(m[1], 10) };
+      if ((m = FA_RE.exec(tok))) return { freq: parseInt(m[1], 10) };
+      if ((m = FB_RE.exec(tok))) return { freqB: parseInt(m[1], 10) };
       if ((m = /^MD0([0-9A-Z])$/.exec(tok))) return { modeCode: m[1], mode: MODES_ALL[m[1]] || ('?' + m[1]) };
       if ((m = /^MD1([0-9A-Z])$/.exec(tok))) return { modeCodeB: m[1], modeB: MODES_ALL[m[1]] || ('?' + m[1]) };
       if ((m = /^SM0(\d{3})$/.exec(tok))) return { smeter: parseInt(m[1], 10) };
       if ((m = /^SM1(\d{3})$/.exec(tok))) return { smeterB: parseInt(m[1], 10) };
-      if ((m = /^RM2(\d{3})(\d{3})$/.exec(tok))) return { smeterB: parseInt(m[1], 10) };
+      if ((m = /^RM2(\d{3})(\d{3})?$/.exec(tok))) return { smeterB: parseInt(m[1], 10) }; // FTDX5000 : 3 chiffres seulement
       if ((m = /^TX([0-2])$/.exec(tok))) return { tx: parseInt(m[1], 10) }; // 0 RX, 1 TX par CAT, 2 TX par la radio
       // FT : VFO d'émission. Modèles « splitIsFT » (FTX-1) : le SPLIT, c'est FT1 (TX sur SUB), jamais ST1
       if ((m = /^FT([01])$/.exec(tok))) return spec.splitIsFT ? { txVfo: +m[1], split: +m[1] } : { txVfo: +m[1] };
-      if ((m = /^RM([3-8])(\d{3})(\d{3})$/.exec(tok))) return { ['m' + m[1]]: +m[2] };
+      if ((m = /^RM([3-8])(\d{3})(\d{3})?$/.exec(tok))) return { ['m' + m[1]]: +m[2] };
       if (tok === '?') return { error: true };
       for (const r of READS) if ((m = r.re.exec(tok))) return r.parse(m);
-      if (/^EX\d{6}/.test(tok)) return { ok: true }; // réponse à une lecture de menu (phonie à distance…)
+      if (/^EX\d{4}/.test(tok)) return { ok: true }; // réponse à une lecture de menu (phonie à distance…) ; FTDX5000 : menu sur 3 chiffres
       return null;
     }
 
@@ -344,10 +350,11 @@
         for (const c of this.sp.push(str)) {
           ftvs();
           let m;
-          if (c === 'FA') out.push('FA' + pad(this.freq, 9) + ';');
-          else if ((m = /^FA(\d{9})$/.exec(c))) this.freq = parseInt(m[1], 10);
-          else if (c === 'FB') out.push('FB' + pad(this.freqB, 9) + ';');
-          else if ((m = /^FB(\d{9})$/.exec(c))) this.freqB = parseInt(m[1], 10);
+          if (spec.fakeFirst && spec.fakeCmd && spec.fakeCmd(this, c, out)) continue; // simulateur : commandes propres au modèle d'abord
+          if (c === 'FA') out.push('FA' + pad(this.freq, FD) + ';');
+          else if ((m = FA_RE.exec(c))) this.freq = parseInt(m[1], 10);
+          else if (c === 'FB') out.push('FB' + pad(this.freqB, FD) + ';');
+          else if ((m = FB_RE.exec(c))) this.freqB = parseInt(m[1], 10);
           else if (c === 'MD0') out.push('MD0' + this.mode + ';');
           else if (c === 'MD1') out.push('MD1' + this.modeB + ';');
           else if ((m = /^MD0([0-9A-Z])$/.exec(c)) && MODES_ALL[m[1]]) this.mode = m[1];
@@ -355,7 +362,7 @@
           else if (c === 'FR') out.push('FR' + (this.mainMute ? '1' : '0') + (this.single ? '1' : '0') + ';');
           else if ((m = /^FR([01])([01])$/.exec(c))) { this.mainMute = m[1] === '1'; this.single = m[2] === '1'; } // FTDX101 : 1er chiffre = MAIN coupé
           else if (c === 'SM1') { /* FTX-1 réel : pas de réponse à SM1 */ }
-          else if (c === 'RM2') out.push('RM2' + pad(this.single || this.tx ? 0 : Math.round(40 + 25 * Math.sin(this.t * 0.7)), 3) + '000;');
+          else if (c === 'RM2') out.push('RM2' + pad(this.single || this.tx ? 0 : Math.round(40 + 25 * Math.sin(this.t * 0.7)), 3) + (spec.rm3 ? '' : '000') + ';');
           else if (c === 'SM0') {
             this.t += 0.15;
             const v = this.tx ? 0 : Math.round(70 + 45 * Math.sin(this.t) + 20 * Math.random());
@@ -376,7 +383,7 @@
           else if ((m = /^RM([3-8])$/.exec(c))) {
             const raw = m[1] === '8' ? (this.tx ? 205 : 212) : m[1] === '7' ? (this.tx ? Math.round(this.power * 0.6) : 0)
               : !this.tx ? 0 : { 3: 20, 4: 60, 5: this.silent ? 0 : Math.round(this.power * 2.4), 6: this.swrRaw }[m[1]];
-            out.push('RM' + m[1] + pad(raw, 3) + '000;');
+            out.push('RM' + m[1] + pad(raw, 3) + (spec.rm3 ? '' : '000') + ';');
           } else if (c + ';' === P.read) out.push(P.fakeRead(this) + ';');
           else if (P.re.test(c)) { if (!P.fakeWrite(this, c)) out.push('?;'); }
           else if (c === 'SV') {
@@ -444,11 +451,11 @@
     }
 
     return {
-      ID, NAME, MODES: MODES_ALL, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX,
+      ID, NAME, MODES: MODES_ALL, SETTABLE: MSET, MODE_KEYS: MKEYS, FREQ_MIN, FREQ_MAX, FREQ_DIGITS: FD,
       POWER_RANGE: P.range, POWER_STEP: P.step, MENU: spec.menu || null, HEAD_NAMES: spec.headNames || null, BAND_SIDELESS: !!spec.bandSideless, INIT: (spec.splitIsFT ? 'AI0;ST0;' : 'AI0;') + (spec.initExtra || ''), UNKEY_EXTRA: spec.splitIsFT ? 'ST0;' : '',
       // SPLIT « virtuel » (FTX-1) : le VFO d'émission n'est envoyé au TRX qu'au moment d'émettre (FT), puis remis
       // Lectures CAT autorisées depuis la console de diagnostic (administrateurs) : lectures seulement
-      CAT_QUERIES: Array.from(new Set(READS.map((r) => r.cmd).concat(FAST, FAST_SUB, TXMETERS, ['IF;', 'OI;', 'FR;', 'ID;', 'VS;', 'FT;', 'ST;', 'FA;', 'FB;'], spec.extraQueries || []))),
+      CAT_QUERIES: Array.from(new Set(READS.map((r) => r.cmd).concat(FAST, FAST_SUB, TXMETERS, ['IF;', 'OI;', 'FR;', 'ID;', 'VS;', 'FT;', 'ST;', 'FA;', 'FB;'], spec.extraQueries || []))).filter((c) => !(spec.readOverrides && spec.readOverrides[c] === null && c === 'ST;')),
       VIRTUAL_SPLIT: !!spec.virtualSplit, SPLIT_SWAP: !!spec.splitSwap, cmdTxVfo: spec.virtualSplit ? (v) => 'FT' + (v ? 1 : 0) + ';' : null,
       // Façons de désigner le VFO d'émission, essayées dans l'ordre jusqu'à ce que « FT; » relu le confirme
       // (FT0/FT1 comme Hamlib ; FT2/FT3 comme les FTDX10 / FT-991). Jamais VS1 avant FT1 : FT0 avec VS1 fait émettre le FTX-1.

@@ -867,13 +867,13 @@
     const el = $('rigLabel');
     const list = rigList();
     el.textContent = '';
-    if (!list.length) { el.textContent = st && st.rigName ? st.rigName : 'TRX'; return; }
-    for (const r of list) {
-      const s = document.createElement('span');
-      s.className = 'rig' + (st && st.rigModel === r.id ? ' cur' : '');
-      s.textContent = shortName(r.name);
-      el.appendChild(s);
-    }
+    // Seulement le TRX en service ; la liste des TRX du club est dans le menu « Station » (administrateurs)
+    const cur = list.find((r) => st && st.rigModel === r.id);
+    const s = document.createElement('span');
+    s.className = 'rig' + (cur ? ' cur' : '');
+    s.textContent = cur ? shortName(cur.name) : st && st.rigName ? st.rigName : 'TRX';
+    el.appendChild(s);
+    $('lampTrx').title = 'TRX en service' + (cur ? ' : ' + cur.name : '') + (me && me.admin ? ' — liste des TRX du club : cliquez sur « Station »' : '');
   }
   function drawRigMenu() {
     const box = $('rigMenu');

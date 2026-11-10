@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.230** — Nouveau TRX : Yaesu FTDX5000 (pilote CAT RS-232, double récepteur, SPLIT par FT, phonie à distance par la prise DATA) ; barre du haut : seulement le TRX en service, liste dans le menu Station
 - **0.37.229** — TUNE plus jamais bloqué par un ROS trop élevé (bouton TUNE du dashboard) ; page RTTY / JTTY / CW numérique : case « Spot cluster » à côté de Log QSO
 - **0.37.228** — Fenêtres TRX DIGI / CW / SSB / carnet : place et taille gardées d'une ouverture à l'autre ; fenêtre TRX DIGI (et CW / SSB) toujours défilable sur grand écran
 - **0.37.227** — Page TRX CW en contest : « Envoyé » rempli tout seul (report / échange fixe ou n° de série du QSO, +1 à chaque QSO enregistré) ; RTTY : fiche de log avec l'échange envoyé et n° de série +1 à l'enregistrement

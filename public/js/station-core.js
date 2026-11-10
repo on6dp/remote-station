@@ -770,7 +770,7 @@
         this._swapLocal();
         w.swapped = true; // vue du dashboard : VFO à leur place dès maintenant
         this._push(true);
-        this._await(/^FA\d{9}$/, 900, (t) => this._swapSeen(w, t, by, cancel, 0));
+        this._await(/^FA\d{8,9}$/, 900, (t) => this._swapSeen(w, t, by, cancel, 0));
       }, 70);
     }
     /** Échange A ⇄ B reporté tout de suite dans l'état gardé (sans attendre les lectures) : pas de clignotement des VFO. */
@@ -786,7 +786,7 @@
       if (a !== b && fa !== b) {
         // Pas encore vu échangé : une relecture (le TRX peut répondre avant d'avoir traité SV)
         if (n < 4) {
-          setTimeout(() => { if (this.swapTx !== w) return; this._write('FA;'); this._await(/^FA\d{9}$/, 900, (t2) => this._swapSeen(w, t2, by, cancel, n + 1)); }, 100);
+          setTimeout(() => { if (this.swapTx !== w) return; this._write('FA;'); this._await(/^FA\d{8,9}$/, 900, (t2) => this._swapSeen(w, t2, by, cancel, n + 1)); }, 100);
           return;
         }
         if (fa === a) { this._swapLocal(); this.swapTx = null; this.pollHold = 0; this._push(true); return cancel('SPLIT : le TRX n’a pas échangé les VFO (A ⇄ B), émission annulée'); }
@@ -832,7 +832,7 @@
           this._swapLocal();
           this.swapTx = null; // vue = état gardé, déjà remis en place
           this._push(true);
-          this._await(/^FA\d{9}$/, 900, (t2) => {
+          this._await(/^FA\d{8,9}$/, 900, (t2) => {
             const fa = t2 ? Number(t2.slice(2)) : null;
             this.pollHold = 0;
             this.dirty = true;

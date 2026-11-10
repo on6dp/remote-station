@@ -182,7 +182,7 @@ FT8 is the easiest mode to use remotely: everything is done with the mouse and t
 |---|---|---|
 | `● Serveur` | Link lamp between your browser and the server. | Green = connected. Red or grey: check your internet connection; the page reconnects by itself. |
 | `● Station` | Lamp of the Station page on the club PC. | Green = the club PC is online. For administrators, a click opens the TRX menu (section 17). |
-| `● FTX-1 FTDX10 FTDX101D / MP IC-7300` | The club transceivers; the one in use is highlighted. | Green = the TRX answers over CAT; red = the TRX is transmitting. |
+| `● FTDX5000` | The transceiver in use (FTX-1, FTDX10, FTDX101D / MP, FTDX5000 or IC-7300). The list of transceivers is in the **Station** menu (administrators). | Green = the TRX answers over CAT; red = the TRX is transmitting. |
 | Title in the centre | Callsign and name of the station. | — |
 | `👥 n` | Number of members online. | Opens the **Opérateurs** (operators) panel: who is there, who has control, chat (section 10). A red dot means a new message. |
 | Your callsign | The account you are logged in with. | — |
@@ -268,6 +268,7 @@ At the top centre, two displays: **VFO A (MAIN)** on the left and **VFO B (SUB)*
 > - ATT and preamp belong to each side, but the TRX only reports them for the active side: a click on those of the other VFO switches the TRX to that side for 2 to 3 s, without transmitting, then back. As long as they have never been read, they show "?".
 > - The RF front end, Filtres and DSP panels set the **active side**: their title shows « A · MAIN » or « B · SUB ».
 > - **FTDX101D / MP** (true dual receiver): the VFO B display sets the SUB side directly (ATT, IPO / AMP, NB, DNR, NOTCH, DNF, NAR, BW), without changing side or TRX state.
+> - **FTDX5000** (also a true dual receiver): same as the FTDX101 for VFO B; `DUAL RX` listens to MAIN and SUB together. SPLIT means transmitting on the other VFO (the TRX has no separate SPLIT command). Preamp IPO1 / AMP1 / AMP2 / IPO2, power 5 to 200 W. Not yet: CONTOUR / APF, keyboard CW macros, dual decoding of digital modes (audio comes from one receiver only).
 
 <a id="step"></a>
 ### 7.2 Step row and band row
