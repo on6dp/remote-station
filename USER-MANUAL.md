@@ -432,7 +432,7 @@ SPLIT is mainly used for a **DX expedition** listening away from its own frequen
 > - Transmission only in the authorised bands, checked on the frequency actually transmitted (SPLIT and XIT included).
 > - Maximum length of one transmission: **120 s**, then it is cut; release the PTT before transmitting again.
 > - Immediate cut if you lose the link, if the club PC loses internet, or if the Station page closes.
-> - **SWR** above 2.5:1, or **HI-SWR** reported by the TRX: transmission cut and PTT refused on that frequency (± 25 kHz) until a successful TUNE.
+> - **SWR** above 2.5:1, or **HI-SWR** reported by the TRX: transmission cut and PTT refused on that frequency (± 25 kHz) until a successful TUNE. The `TUNE` button itself is always allowed (it is the cure).
 > - **TUNE without a match**: if the FTX-1 reports HI-SWR at the end of a TUNE, transmitting is **blocked on the whole band** (except TUNE) to protect the amplifier. A red message appears to the right of the bands. The block is lifted as soon as a TUNE succeeds; otherwise, try the other antenna or tell a station manager.
 > - At the club, the TRX goes back to receive if it transmits without modulation for 2 min (**20 s in digital modes**: DATA, RTTY, PSK — e.g. a frozen sound card during an FT8 series) or for 5 min without a break.
 > - Power limited to your licence class; listener callsigns: no transmission at all.
@@ -667,7 +667,7 @@ Above the waterfall, the help line (« clic gauche : décodeur A… ») is shown
 2. **Find a station**: click a green callsign on the **band map**. The TRX tunes to it, the transmit decoder decodes it and its callsign goes into Correspondant. Or: left click on a trace in the waterfall (decoder A), right click (decoder B).
 3. **Choose the transmit window**: one click in the VFO-A or VFO-B window (« ▶ TX ici »). Double-clicking a received callsign puts it in Correspondant and selects its window at the same time.
 4. **Reply**: `F2` key (or the reply macro), then the report macro. For custom text: type it in the bottom box, then `▶ TX ici` (or `Ctrl`+`Enter`). `Esc` stops the current transmission.
-5. **Log the QSO**: a macro containing `<LOG>` (form opens by itself) or the `Log QSO` button. In contest, **Sent exchange** is filled in by itself: the exchange sent to this station by a macro, otherwise the one to give (fixed report, zone… or this QSO's serial number). When the QSO is logged, the **serial number moves to the next one** (once per station, not again if the TU macro already did it).
+5. **Log the QSO**: a macro containing `<LOG>` (form opens by itself) or the `Log QSO` button. In contest, **Sent exchange** is filled in by itself: the exchange sent to this station by a macro, otherwise the one to give (fixed report, zone… or this QSO's serial number). When the QSO is logged, the **serial number moves to the next one** (once per station, not again if the TU macro already did it). **Spot cluster** box next to Log QSO (and in the form): the logged QSO is also spotted on the DX cluster, under your operator call.
 6. **Call yourself** (CQ): choose the transmit window, then `F1`. With two decoders you can call CQ on A while watching another station on B.
 7. **Station outside the waterfall and not spotted**: click the band map at that frequency (the TRX goes there), or wheel / drag on the **frequency scale** above the waterfall (also Shift + drag, `Shift` + wheel in the waterfall).
 

@@ -434,7 +434,7 @@ Le SPLIT sert surtout pour une **expédition DX** qui écoute ailleurs que sur s
 > - Émission seulement dans les bandes autorisées, vérifiée sur la fréquence réellement émise (SPLIT et XIT compris).
 > - Durée maximale d'une émission : **120 s**, puis coupure ; relâchez le PTT avant de réémettre.
 > - Coupure immédiate si vous perdez la liaison, si le PC du club perd internet ou si la page Station se ferme.
-> - **ROS** supérieur à 2,5:1, ou **HI-SWR** signalé par le TRX : émission coupée et PTT refusé sur cette fréquence (± 25 kHz) jusqu'à un TUNE réussi.
+> - **ROS** supérieur à 2,5:1, ou **HI-SWR** signalé par le TRX : émission coupée et PTT refusé sur cette fréquence (± 25 kHz) jusqu'à un TUNE réussi. Le bouton `TUNE` reste, lui, toujours permis (c'est le remède).
 > - **TUNE sans accord** : si le FTX-1 signale HI-SWR à la fin d'un TUNE, l'émission est **bloquée sur toute la bande** (sauf TUNE) pour protéger l'ampli. Un message rouge s'affiche à droite des bandes. Le blocage tombe dès qu'un TUNE réussit ; sinon, essayez l'autre antenne ou prévenez un responsable.
 > - Au club, le TRX repasse en réception s'il émet sans modulation pendant 2 min (**20 s en modes numériques** : DATA, RTTY, PSK — carte son figée pendant une série FT8…) ou 5 min sans interruption.
 > - Puissance ramenée à la limite de votre licence ; indicatifs d'écouteurs : aucune émission.
@@ -677,7 +677,7 @@ Au-dessus de la cascade, la ligne d'aide (« clic gauche : décodeur A… ») s'
 2. **Chercher une station** : clic sur un indicatif vert de la **carte de bande**. Le TRX se cale dessus, le décodeur de l'émission la décode et son indicatif passe dans Correspondant. Ou bien : clic gauche sur une trace de la cascade (décodeur A), clic droit (décodeur B).
 3. **Choisir la fenêtre d'émission** : un clic dans la fenêtre VFO-A ou VFO-B (« ▶ TX ici »). Un double-clic sur un indicatif reçu le met dans Correspondant et choisit en même temps sa fenêtre.
 4. **Répondre** : touche `F2` (ou la macro de réponse), puis échange avec la macro du report. Pour un texte personnalisé : le taper dans le cadre du bas, puis `▶ TX ici` (ou `Ctrl`+`Entrée`). `Échap` arrête l'émission en cours.
-5. **Noter le QSO** : macro qui contient `<LOG>` (fiche ouverte toute seule) ou bouton `Log QSO`. En contest, **Échange envoyé** est rempli tout seul : l'échange envoyé à cette station par une macro, sinon celui à lui donner (report fixe, zone… ou n° de série de ce QSO). À l'enregistrement du QSO, le **n° de série passe au suivant** (une fois par correspondant, pas une 2e fois si la macro TU l'a déjà fait).
+5. **Noter le QSO** : macro qui contient `<LOG>` (fiche ouverte toute seule) ou bouton `Log QSO`. En contest, **Échange envoyé** est rempli tout seul : l'échange envoyé à cette station par une macro, sinon celui à lui donner (report fixe, zone… ou n° de série de ce QSO). À l'enregistrement du QSO, le **n° de série passe au suivant** (une fois par correspondant, pas une 2e fois si la macro TU l'a déjà fait). Case **Spot cluster** à côté de Log QSO (et dans la fiche) : le QSO enregistré est aussi spoté sur le DX cluster, sous votre indicatif d'opérateur.
 6. **Appeler soi-même** (CQ) : choisir la fenêtre d'émission, puis `F1`. Avec deux décodeurs, on peut lancer CQ sur A tout en surveillant une autre station sur B.
 7. **Station hors de la cascade mais pas spottée** : clic sur la carte de bande à la bonne fréquence (le TRX y va), ou molette / glisser sur la **règle des fréquences** au-dessus de la cascade (aussi Maj + glisser, `Maj` + molette dans la cascade).
 

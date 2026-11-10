@@ -369,7 +369,7 @@
           <div class="rt-tx-act">
             <button class="btn btn-tx" type="button" id="rtSend" title="Émet le texte en RTTY avec les réglages du décodeur marqué TX (A ou B), puis retour en réception">Émettre</button>
             <div class="rt-tx-act2"><button class="btn" type="button" id="rtTxClear">Effacer</button>
-            <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station (correspondant, RST, heure…)">Log QSO</button></div>
+            <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station (correspondant, RST, heure…)">Log QSO</button><label class="spotlog dg-spot" title="Cochée : le QSO enregistré (Log QSO) est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label></div>
           </div>
         </div>
         <p class="dg-tx rt-tx-note" id="rtTxState">Émission RTTY sous <b>ON5VL</b> : texte ci-dessus, puis « Émettre » (Ctrl+Entrée).</p>
@@ -434,7 +434,7 @@
       <div class="jt-tx-row">
         <input id="jtTxt" maxlength="160" placeholder="Message personnalisé, puis « Émettre » (macros F1 à F8 : émission directe)…" autocomplete="off" spellcheck="false">
         <button class="btn btn-tx" type="button" id="jtSend" title="Émet le message en JTTY sur la fréquence TX (repère rouge), puis retour en réception">Émettre</button>
-        <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station">Log QSO</button>
+        <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station">Log QSO</button><label class="spotlog dg-spot" title="Cochée : le QSO enregistré (Log QSO) est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label>
       </div>
       <p class="dg-tx" id="jtTxState">Émission JTTY sous <b>ON5VL</b> : message ci-dessus, puis « Émettre » (Entrée).</p>
     </div>`;
@@ -482,7 +482,7 @@
           <div class="rt-tx-act">
             <button class="btn btn-tx" type="button" id="cwSend">Émettre</button>
             <div class="rt-tx-act2"><button class="btn" type="button" id="cwTxClear">Effacer</button>
-            <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station">Log QSO</button></div>
+            <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station">Log QSO</button><label class="spotlog dg-spot" title="Cochée : le QSO enregistré (Log QSO) est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label></div>
           </div>
         </div>
         <p class="dg-tx rt-tx-note" id="cwTxState">Émission CW sous <b class="dg-txcall">ON5VL</b> par le manipulateur du TRX : macro (émission directe) ou texte ci-dessus puis « Émettre » (Ctrl+Entrée).</p>

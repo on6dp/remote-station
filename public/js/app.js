@@ -768,9 +768,9 @@
           cell.title = btn.title; // un bouton grisé n'affiche pas toujours son aide au survol
         } else if (c.id === 'dualRx') cell.title = '';
         if (c.transmits) {
-          const why = pttReason();
+          const why = pttReason(c.transmits !== 'voice'); // TUNE : pas bloqué par le ROS ; mémoire vocale : comme le PTT
           btn.disabled = btn.disabled || !!why;
-          btn.title = why || 'Lance l’accord (émission de quelques secondes)';
+          btn.title = why || (c.transmits === 'voice' ? c.label : st.swrLock ? 'ROS trop élevé ici : lancez l’accord (émission de quelques secondes)' : 'Lance l’accord (émission de quelques secondes)');
           btn.classList.toggle('busy', !!r.tuning);
         }
       }
@@ -796,7 +796,8 @@
   }
 
   // ------------------------------------------------------------ PTT
-  function pttReason() {
+  // forTune : bouton TUNE — un ROS trop élevé ne le bloque pas (l'accord est justement le remède ; le serveur fait de même)
+  function pttReason(forTune) {
     if (!me) return 'Connectez-vous';
     if (!me.allowTx) return 'Émission désactivée sur ce serveur';
     if (me.rxOnly) return 'Indicatif d’écouteur : émission interdite';
@@ -807,6 +808,7 @@
     if (st.radio.vox) return 'VOX actif au club : coupez-le d’abord';
     if (!st.txOk) return st.radio.txVfo === 1 ? 'VFO B (SPLIT) hors des bandes autorisées' : 'Hors des bandes autorisées';
     if (st.radio.power != null && st.radio.power > me.maxWatts) return 'Puissance au-delà de votre limite (' + me.maxWatts + ' W)';
+    if (forTune) return st.radio.tuner == null ? 'Pas de boîte d’accord sur ce TRX' : null;
     if (st.swrLock) return st.swrLock.text || 'ROS trop élevé ici : ' + (st.radio.tuner == null ? 'changez de fréquence ou vérifiez l’antenne' : 'faites TUNE d’abord');
     return null;
   }
