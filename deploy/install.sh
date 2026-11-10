@@ -177,4 +177,8 @@ fi
 [ -z "$DOMAINE" ] || vert "  Dashboard : https://$DOMAINE   ·   Page Station (PC du club) : https://$DOMAINE/station"
 echo "  Journal : sudo journalctl -u $SVC -f"
 [ "$NEUF" = 0 ] && echo "  Pensez à Ctrl+F5 sur le dashboard et sur la page Station."
+# Instance de test (deploy/install-test.sh) : mise à la même version, ses données gardées
+if [ "$APP" = /opt/remote-station ] && [ -f /opt/remote-station-test/config.json ]; then
+  bash "$APP/deploy/install-test.sh" --quiet || warn "instance de test non mise à jour : sudo bash $APP/deploy/install-test.sh"
+fi
 exit 0

@@ -57,6 +57,8 @@ const DEFAULTS = {
   clusterHost: 'op0p.be',
   clusterPort: 8000,
   clusterCall: '',
+  // clusterSpot : false = aucun spot envoyé au cluster (instance de test, deploy/install-test.sh)
+  clusterSpot: true,
   clusterCmds: ['set/skimmer'],
   digiAlcMax: 30, // émission numérique : ALC maximal (%) au-delà duquel la page Station baisse le niveau BF ; 0 = pas de limite
   ftxWatchdogMinutes: 6, // émission auto FT8 / FT4 / FT2 : arrêt si le même message part depuis ce temps (WSJT-X : 6 min)
@@ -815,6 +817,7 @@ const DXCC = require('./lib/dxcc.js');
 // Réservé aux comptes qui émettent ; au plus 1 spot / 20 s et 30 / heure par opérateur.
 function clusterSpot(conn, callIn, khzIn, cmtIn) {
   if (!conn.user.tx || conn.user.rxOnly) return send(conn, { t: 'notice', level: 'error', msg: 'Spot : réservé aux comptes autorisés à émettre' });
+  if (cfg.clusterSpot === false) return send(conn, { t: 'notice', level: 'warn', msg: 'Spot non envoyé : les spots au DX cluster sont coupés sur ce serveur (instance de test)' });
   const host = String(cfg.clusterHost || '').trim();
   if (!host) return send(conn, { t: 'notice', level: 'error', msg: 'Spot impossible : DX cluster non configuré' });
   const op = String(conn.user.call || '').toUpperCase();

@@ -1,7 +1,7 @@
 /*
  * faces/ftdx5000.js — face avant du Yaesu FTDX5000 pour la page https://remote.op0p.be/ftdx5000
  *
- * Image : faces/ftdx5000.webp (1100 × 684) = photo de la face avant (www.rigpix.com, fond rendu transparent, pieds coupés)
+ * Image : faces/ftdx5000.webp (1100 × 648, à partir de y = 36 : dessus du TRX coupé) = photo de la face avant (www.rigpix.com, fond rendu transparent, pieds coupés)
  * en haut (1100 × 346), et dessous le cadre de l'écran de la page (le FTDX5000 n'a qu'un petit afficheur : l'écran de la
  * page — fréquences, mètres, scope de la BF reçue — est posé sous la face, comme un moniteur de station).
  * Positions en pixels de cette image (x, y = coin haut gauche ; cx, cy = centre). ?zones=1 : contours visibles.
@@ -54,6 +54,9 @@
     image: '/faces/ftdx5000.webp',
     w: 1100,
     h: 684,
+    // Le dessus du TRX (perspective) n'est pas gardé : l'image commence au bord de la face avant (y = 36) ;
+    // les positions ci-dessous restent celles de la photo entière
+    img: { x: 0, y: 36, w: 1100, h: 648 },
     // Écran de la page : dans le cadre dessiné sous la face avant
     lcd: { x: 265, y: 356, w: 570, h: 321 },
     // Cases de l'écran (pas de R.FLT par CAT) ; préampli IPO1 / AMP1 / AMP2 / IPO2

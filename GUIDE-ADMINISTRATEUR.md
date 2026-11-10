@@ -96,6 +96,23 @@ sudo bash /opt/remote-station/deploy/install.sh
 
 ---
 
+### Instance de test (test.op0p.be)
+
+Un 2ᵉ serveur sur le même VPS, indépendant de celui du club : dossier `/opt/remote-station-test`, service `remote-station-test`, port 9001, son propre site. On y essaie un TRX (bouton « Tester sans radio (simulation) » de sa page Station, ou le vrai TRX d'un beta-testeur branché chez lui) **sans toucher à la station du club**.
+
+1. Chez l'hébergeur du domaine (op0p.be) : enregistrement **A** `test` → adresse IP du VPS (la même que `remote`).
+2. Sur le VPS, une fois le DNS en place :
+   ```
+   sudo bash /opt/remote-station/deploy/install-test.sh --domaine test.op0p.be --email votre@adresse
+   ```
+3. Ensuite, chaque mise à jour du serveur du club (`install.sh`) met aussi l'instance de test à la même version (ses données gardées).
+
+- Repris du serveur du club **une seule fois**, à la création : `config.json` (nom « TEST · … », port 9001, **jeton de station neuf**) et `users.json` (mêmes comptes et mots de passe). Rien ne repart vers le serveur du club.
+- Sur l'instance de test : carnet de test séparé, pas de logs en ligne, **pas de PSK Reporter**, **pas de spot envoyé au DX cluster** (`clusterSpot: false` ; les spots sont lus sous ON5VL-8 pour ne pas gêner la liaison ON5VL-7 du club).
+- Essai sans TRX : `https://test.op0p.be/station` → choisir le TRX (ex. Yaesu FTDX5000) → **Tester sans radio (simulation)** ; puis `https://test.op0p.be/ftdx5000` ou le dashboard dans un autre onglet.
+- Beta-testeur avec son TRX : il ouvre `https://test.op0p.be/station` chez lui (compte administrateur nécessaire pour la page Station), choisit son TRX et son port.
+- Journal : `sudo journalctl -u remote-station-test -f` · arrêt et retrait du service : `sudo bash /opt/remote-station/deploy/install-test.sh --retirer` (le dossier reste).
+
 ## 4. Gérer les membres
 
 Les commandes se lancent dans PuTTY avec `sudo`. Le chemin complet permet de les taper depuis n'importe quel dossier.

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.232** — Instance de test (deploy/install-test.sh : test.op0p.be, port 9001, sans spot cluster ni PSK Reporter ni logs en ligne, mise à jour avec le serveur du club) ; page /ftdx5000 : dessus du TRX coupé (place gagnée en hauteur)
 - **0.37.231** — Page face avant /ftdx5000 (photo, touches, boutons, afficheurs en direct, écran de la page sous la face) ; pilote FTDX5000 : SQL / NB du SUB, MONI, KEY SPEED, PITCH, VOX GAIN / DELAY
 - **0.37.230** — Nouveau TRX : Yaesu FTDX5000 (pilote CAT RS-232, double récepteur, SPLIT par FT, phonie à distance par la prise DATA) ; barre du haut : seulement le TRX en service, liste dans le menu Station
 - **0.37.230** — Nouveau TRX : Yaesu FTDX5000 (pilote CAT RS-232, double récepteur, SPLIT par FT, phonie à distance par la prise DATA) ; barre du haut : seulement le TRX en service, liste dans le menu Station
