@@ -3028,20 +3028,20 @@
       el('line', { x1: bx, y1: Y(39), x2: bx + bw, y2: Y(39), class: 'i76-bu' }, h);
       sb.swr = el('line', { x1: bx, y1: Y(41.5), x2: bx, y2: Y(41.5), class: 'i76-bar thin' }, h);
       // TX (rouge) et puissance dessous, à gauche de « VFO [mode] [FIL] », comme sur le TRX
-      o.txR = el('rect', { x: X(x0 + 3), y: Y(46), width: 18, height: 10, rx: 1.5, class: 'i76-tx' }, h);
-      o.txT = el('text', { x: X(x0 + 12), y: Y(53.8), class: 'i76-txt', 'text-anchor': 'middle' }, h, 'TX');
-      o.pw = el('text', { x: X(x0 + 2), y: Y(65), class: 'i76-pw' }, h, '');
+      o.txR = el('rect', { x: X(x0 + 2), y: Y(45), width: 22, height: 13, rx: 1.5, class: 'i76-tx' }, h);
+      o.txT = el('text', { x: X(x0 + 13), y: Y(55.3), class: 'i76-txt', 'text-anchor': 'middle' }, h, 'TX');
+      o.pw = el('text', { x: X(x0 + 2), y: Y(67), class: 'i76-pw' }, h, '');
       const v = LCD['v' + sd];
-      v.lbl.setAttribute('x', X(x0 + 25)); v.lbl.setAttribute('y', Y(55));
-      for (const [k2, val] of [['x', X(x0 + 45)], ['y', Y(46)], ['width', 34], ['height', 11]]) v.badge.setAttribute(k2, val);
+      v.lbl.setAttribute('x', X(x0 + 26)); v.lbl.setAttribute('y', Y(55));
+      for (const [k2, val] of [['x', X(x0 + 48)], ['y', Y(46)], ['width', 34], ['height', 11]]) v.badge.setAttribute(k2, val);
       v.badge.setAttribute('class', 'lcd-mode i76');
-      v.mode.setAttribute('x', X(x0 + 62)); v.mode.setAttribute('y', Y(54.6)); v.mode.setAttribute('class', 'lcd-modet i76');
-      const mh = el('rect', { x: X(x0 + 45), y: Y(46), width: 34, height: 11, class: 'hs lcd-hit' }, v.g);
+      v.mode.setAttribute('x', X(x0 + 65)); v.mode.setAttribute('y', Y(54.6)); v.mode.setAttribute('class', 'lcd-modet i76');
+      const mh = el('rect', { x: X(x0 + 48), y: Y(46), width: 34, height: 11, class: 'hs lcd-hit' }, v.g);
       el('title', {}, mh, 'Mode : clic pour le tableau des modes (récepteur sélectionné)');
       mh.addEventListener('click', (ev) => { ev.stopPropagation(); if (activeSide() !== sd && needControl()) setCtl('vfoSel', sd === 'B' ? 1 : 0); openModeMenu(); });
-      o.filR = el('rect', { x: X(x0 + 82), y: Y(46), width: 26, height: 11, rx: 1.5, class: 'i76-fil' }, v.g);
-      o.filT = el('text', { x: X(x0 + 95), y: Y(54.2), class: 'i76-filt', 'text-anchor': 'middle' }, v.g, 'FIL');
-      const fh = el('rect', { x: X(x0 + 82), y: Y(46), width: 26, height: 11, class: 'hs lcd-hit' }, v.g);
+      o.filR = el('rect', { x: X(x0 + 85), y: Y(46), width: 26, height: 11, rx: 1.5, class: 'i76-fil' }, v.g);
+      o.filT = el('text', { x: X(x0 + 98), y: Y(54.2), class: 'i76-filt', 'text-anchor': 'middle' }, v.g, 'FIL');
+      const fh = el('rect', { x: X(x0 + 85), y: Y(46), width: 26, height: 11, class: 'hs lcd-hit' }, v.g);
       el('title', {}, fh, 'FIL : filtre suivant (FIL1 → FIL2 → FIL3) de ce récepteur');
       fh.addEventListener('click', (ev) => { ev.stopPropagation(); if (needControl()) cycleCell(sd === 'B' ? 'filB' : 'fil'); });
       // Fréquence en police Icom (la fréquence en 7 segments de l'écran Yaesu est cachée)
