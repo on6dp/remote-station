@@ -3229,6 +3229,10 @@
   L.expand = !NO_EXPAND && store.get('rs.face.expand', '0') === '1';
   const EXP_UP = G.expUp; // EXPAND : hauteur gagnée par le scope (unités de la photo)
   if (SINGLE) { L.mono = false; L.disp = 0; } // un seul récepteur : ni MONO ni DISP
+  // Pas de touche DISP sur cette face (FTDX5000) : écran normal (le réglage DISP enregistré vient d'une autre face, ex. les
+  // « filtres agrandis » du FTDX101, qui ne laissaient que MULTI et HOLD en bas de l'écran)
+  const NO_DISP = !!(FACE && !(FACE.keys || []).some((k) => k.act && k.act.local === 'disp'));
+  if (NO_DISP) L.disp = 0;
   // MONO (comme le TRX) : un seul VFO à l'écran, le sélectionné — son galvanomètre à gauche, son filtre en grand à droite,
   // sa fréquence sous le galvanomètre, ses cases ANT / ATT / IPO / R.FIL / AGC sur toute la largeur, un seul scope
   function applyMono() {
@@ -6056,7 +6060,7 @@
     const v = st.faceView;
     if (!FOL.on || !v) return;
     let ch = false;
-    for (const k of ['disp', 'mono', 'expand', 'multi', 'd3', 'func']) if (v[k] != null && L[k] !== v[k] && !(k === 'expand' && NO_EXPAND) && !(k === 'mono' && NO_MONO)) { L[k] = v[k]; ch = true; }
+    for (const k of ['disp', 'mono', 'expand', 'multi', 'd3', 'func']) if (v[k] != null && L[k] !== v[k] && !(k === 'expand' && NO_EXPAND) && !(k === 'mono' && NO_MONO) && !(k === 'disp' && NO_DISP)) { L[k] = v[k]; ch = true; }
     if (ch) { WF.drawn = false; render(); }
   }
   if ($('followBtn')) {
