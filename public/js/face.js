@@ -6794,17 +6794,21 @@
     }
   };
   boot('face avant', build);
+  // Toute la face avant visible sans défiler : largeur limitée selon la hauteur de la fenêtre (proportions de l'image)
+  boot('taille', () => { const p = $('facePanel'); if (p) p.style.setProperty('--ar', (V.w / V.h).toFixed(4)); });
   boot('cascade', wfTick);
   // Modes numériques (FT8, RTTY, CW…) sous l'image du TRX : le même module que le dashboard, sur la connexion de cette page
   boot('modes numériques', () => { if (window.RSDIGI) window.RSDIGI.init(digiApi); });
   boot('carte de bande', bmPopRestore);
   if (window.RSVOICE) boot('phonie', () => {
-    window.RSVOICE.init({ compact: true, send, say, iControl, state: () => st, me: () => me, rig: () => R,
+    // Phonie (micro, égaliseurs, entrée / sortie son, M'écouter) : dans la page TRX SSB, comme pour le dashboard ;
+    // ici, le bouton « Phonie : page TRX SSB » (place gagnée en hauteur sous la face avant)
+    window.RSVOICE.init({ compact: true, away: true, send, say, iControl, state: () => st, me: () => me, rig: () => R,
       // Sortie son choisie dans SSB CONFIGURATION : aussi pour l'écoute du TRX
       setSink: (id) => { player.sink = id; if (player.ctx && player.ctx.setSinkId) player.ctx.setSinkId(id).catch(() => say('Sortie son : ce navigateur ne permet pas de la choisir (Chrome ou Edge récents).', 'warn', 5000)); },
       sendBin: (buf) => { if (ws && ws.readyState === 1) ws.send(buf); } });
     // « 👁 Suivre l'opérateur » sous la face avant, à droite de « Profil de … »
-    const fb = $('followBtn'), pf = $('vxProf');
+    const fb = $('followBtn'), pf = document.querySelector('.fc-tx .vx-goto') || $('vxProf');
     if (fb && pf) { pf.after(fb); fb.textContent = '👁 Suivre l’opérateur'; }
     // DIGI CONFIGURATION : ligne au-dessus de SSB CONFIGURATION, un bouton par mode ; clic : la page des modes
     // numériques (/ftdx101/digi.html) s'ouvre sur ce mode (FT8 / FT4 / FT2, RTTY…), ou y passe si elle est déjà ouverte
@@ -6816,7 +6820,8 @@
       row.innerHTML = '<div class="vx-h fc-digih"><span class="vx-title">Modes</span></div>' +
         DIGI_MODES.map(([lab, t, m]) => '<button type="button" class="btn fc-digim" data-tab="' + t + '"' + (m ? ' data-mode="' + m + '"' : '') + ' title="' +
           (t === 'ssb' ? 'Page SSB : phonie et contests (micro, PTT, échange, log, mémoires vocales)' : t === 'cw' ? 'Page CW : clé, macros, contests, réception CW' : 'Modes numériques : ' + lab + ' (page séparée)') + '">' + lab + '</button>').join('');
-      vxBox.insertBefore(row, vxH);
+      // Phonie dans la page TRX SSB (cadre SSB CONFIGURATION caché) : la ligne MODES avant ce cadre, toujours visible
+      if (vxBox.classList.contains('vx-away')) vxBox.before(row); else vxBox.insertBefore(row, vxH);
       // Les deux titres (DIGI / SSB CONFIGURATION) sur une ligne et de même largeur : les boutons s'alignent dessous
       const dh = row.querySelector('.fc-digih');
       const sameW = () => {

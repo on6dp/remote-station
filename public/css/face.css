@@ -758,3 +758,9 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .lcd .lcd-ssplitt { fill: #000; font-size: 10.5px; font-weight: 900; }
 @keyframes rsBlink2 { 0%, 49% { opacity: 1; } 50%, 74% { opacity: 0; } 75%, 100% { opacity: 1; } }
 #face .lcd-ssplit.blink2, #face .lcd .lcd-ssplitt.blink2 { animation: rsBlink2 .8s steps(1) 2; }
+/* Face avant entière à l'écran : hauteur de l'image ≤ hauteur de la fenêtre moins l'en-tête, le PTT et la ligne MODES */
+#facePanel { max-width: calc((100vh - var(--fc-reserve, 215px)) * var(--ar, 3.2)); margin: 0 auto; }
+.fc-tx .vx-goto { width: auto; margin: 0; order: 1; align-self: center; }
+/* Une ligne : PTT · Phonie : page TRX SSB · Suivre l'opérateur ; dessous, la ligne MODES */
+.fc-tx #followBtn { order: 2; align-self: center; }
+.fc-tx .fc-digirow { order: 3; flex: 1 1 100%; }

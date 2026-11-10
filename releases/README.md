@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.233 | [RemoteStation-Setup-0.37.233.exe](0.37.233/RemoteStation-Setup-0.37.233.exe) | [remote-station-0.37.233.tar.gz](0.37.233/remote-station-0.37.233.tar.gz) | Ctrl+F5 sur les pages faces avant (/ftdx5000, /ftdx101, /ftdx10, /ic7300, /ftx1) — [empreintes SHA-256](0.37.233/SHA256SUMS.txt) |
 | 0.37.232 | [RemoteStation-Setup-0.37.232.exe](0.37.232/RemoteStation-Setup-0.37.232.exe) | [remote-station-0.37.232.tar.gz](0.37.232/remote-station-0.37.232.tar.gz) | Ctrl+F5 sur la page /ftdx5000 — [empreintes SHA-256](0.37.232/SHA256SUMS.txt) |
 | 0.37.231 | [RemoteStation-Setup-0.37.231.exe](0.37.231/RemoteStation-Setup-0.37.231.exe) | [remote-station-0.37.231.tar.gz](0.37.231/remote-station-0.37.231.tar.gz) | Ctrl+F5 sur la page /ftdx5000 — [empreintes SHA-256](0.37.231/SHA256SUMS.txt) |
 | 0.37.230 | [RemoteStation-Setup-0.37.230.exe](0.37.230/RemoteStation-Setup-0.37.230.exe) | [remote-station-0.37.230.tar.gz](0.37.230/remote-station-0.37.230.tar.gz) | Ctrl+F5 sur le dashboard et la page Station — [empreintes SHA-256](0.37.230/SHA256SUMS.txt) |
