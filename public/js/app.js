@@ -1160,7 +1160,9 @@
     if (RIG().SUB_BADGES) {
       const wtB = RIG().widthTable && RIG().widthTable(r.modeB);
       const wB = ctlValue('widthB') != null ? Number(ctlValue('widthB')) : r.widthB;
-      $('widthB').textContent = 'BW ' + (live && r.narrowB ? 'NAR' : live && wtB && RIG().WIDTH_DEF && Number(wB) === 0 ? 'DEF' : live && wtB && wB && wtB[wB - 1] ? bwK(wtB[wB - 1]) : live && r.modeB && /AM|FM/.test(r.modeB) ? 'FIX' : '—');
+      // Icom à deux récepteurs (IC-7760) : filtre FIL1/2/3 et largeur du SUB
+      if (RIG().bwText) $('widthB').textContent = live ? RIG().bwText({ fil: ctlValue('filB') != null ? ctlValue('filB') : r.filB, filWi: r.filWiB, mode: r.modeB }) : '—';
+      else $('widthB').textContent = 'BW ' + (live && r.narrowB ? 'NAR' : live && wtB && RIG().WIDTH_DEF && Number(wB) === 0 ? 'DEF' : live && wtB && wB && wtB[wB - 1] ? bwK(wtB[wB - 1]) : live && r.modeB && /AM|FM/.test(r.modeB) ? 'FIX' : '—');
     }
     // S-mètre en réception, puissance relative en émission (sur le VFO qui émet) ; VFO B : S-mètre du côté SUB (FTX-1)
     const txB = txing && r.txVfo === 1;
@@ -1231,7 +1233,9 @@
       const optLabel = (id, v) => { const o = C[id] && C[id].options && C[id].options.find((x) => x[0] === v); return o ? o[1] : null; };
       // ATT et préampli du côté SUB (essai) : le CAT ne les lit pas ; affichés d'après le dernier réglage envoyé (« ? » si aucun)
       if (C.attB) add(rr.attB == null ? 'ATT ?' : 'ATT', rr.attB ? 'green' : '', 'attB');
-      if (C.preampB && rr.freqB < 144000000) add(rr.preampB == null ? 'IPO ?' : ['IPO', 'AMP1', 'AMP2'][rr.preampB] || 'IPO', rr.preampB ? 'green' : '', 'preampB');
+      const pb = RIG().preampText && RIG().preampText(rr, 'B');
+      if (C.preampB && pb && rr.freqB < 144000000) add(pb[0], pb[1] ? 'green' : '', 'preampB');
+      else if (C.preampB && rr.freqB < 144000000) add(rr.preampB == null ? 'IPO ?' : ['IPO', 'AMP1', 'AMP2'][rr.preampB] || 'IPO', rr.preampB ? 'green' : '', 'preampB');
       if (rr.nbB != null) add(rr.nbB ? 'NB ' + rr.nbB : 'NB', rr.nbB ? 'amber' : '', 'nbB');
       if (rr.nrB != null) add(rr.nrB ? 'DNR ' + rr.nrB : 'DNR', rr.nrB ? 'amber' : '', 'nrB');
       if (rr.notchB != null) add('NOTCH', rr.notchB ? 'amber' : '', 'notchB');

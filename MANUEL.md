@@ -182,7 +182,7 @@ Le FT8 est le mode le plus simple à distance : tout se fait à la souris et le 
 |---|---|---|
 | `● Serveur` | Voyant de liaison entre votre navigateur et le serveur. | Vert = connecté. Rouge ou gris : vérifiez votre internet, la page se reconnecte toute seule. |
 | `● Station` | Voyant de la page Station du PC du club. | Vert = le PC du club est en ligne. Pour les administrateurs, un clic ouvre le menu du TRX (section 17). |
-| `● FTDX5000` | Le TRX en service (FTX-1, FTDX10, FTDX101D / MP, FTDX5000 ou IC-7300). La liste des TRX est dans le menu **Station** (administrateurs). | Vert = le TRX répond par le CAT ; rouge = le TRX émet. |
+| `● FTDX5000` | Le TRX en service (FTX-1, FTDX10, FTDX101D / MP, FTDX5000, IC-7300 ou IC-7760). La liste des TRX est dans le menu **Station** (administrateurs). | Vert = le TRX répond par le CAT ; rouge = le TRX émet. |
 | Titre au centre | Indicatif et nom de la station. | — |
 | `👥 n` | Nombre de membres connectés. | Ouvre le volet **Opérateurs** : qui est là, qui a la main, discussion (section 10). Un point rouge signale un nouveau message. |
 | Votre indicatif | Le compte avec lequel vous êtes connecté. | — |
@@ -269,6 +269,7 @@ En haut au centre, deux écrans : **VFO A (MAIN)** à gauche et **VFO B (SUB)** 
 > - Les cadres RF front end, Filtres et DSP règlent le **côté actif** : leur titre indique « A · MAIN » ou « B · SUB ».
 > - **FTDX101D / MP** (vrai double récepteur) : l'écran du VFO B règle directement le côté SUB (ATT, IPO / AMP, NB, DNR, NOTCH, DNF, NAR, BW), sans changer de côté ni d'état du TRX.
 > - **FTDX5000** (vrai double récepteur aussi) : même principe que le FTDX101 pour le VFO B ; `DUAL RX` écoute MAIN et SUB ensemble. Le SPLIT est l'émission sur l'autre VFO (le TRX n'a pas de commande SPLIT à part). Préampli IPO1 / AMP1 / AMP2 / IPO2, puissance 5 à 200 W. Pas encore : CONTOUR / APF, macros CW au clavier, double décodage des modes numériques (le son ne vient que d'un récepteur).
+> - **IC-7760** (en essai, deux vrais récepteurs) : MAIN = VFO A, SUB = VFO B, comme le FTDX101. `DUAL WATCH` écoute MAIN et SUB ensemble, `MAIN` / `SUB` choisit le récepteur du grand bouton, `A ⇄ B` échange MAIN et SUB, `A = B` les égalise ; le SPLIT émet sur le SUB. Chaque récepteur a ses réglages (badges sous chaque VFO) : FIL1 / FIL2 / FIL3 et largeur, PBT, ATT (3 à 45 dB), P.AMP1 / P.AMP2, AGC, NB, NR, NOTCH, AUTO NOTCH, antenne ANT 1-4 ; S-mètre de chaque côté ; puissance 5 à 200 W. Le scope du TRX (MAIN) va vers la page, la CW passe par le manipulateur du TRX. À vérifier au premier essai : puissance en watts, son USB (une voie ou MAIN | SUB en stéréo). La page face avant de l'IC-7760 viendra ensuite.
 
 <a id="step"></a>
 ### 7.2 Ligne Step et ligne des bandes

@@ -43,7 +43,7 @@ Les membres, eux, ont le **manuel d'utilisation** ([MANUEL.md](MANUEL.md), aussi
 
 - Le PC du club **se connecte vers** le VPS : aucun port à ouvrir au club (le CGNAT de Starlink ne gêne pas).
 - Le serveur n'utilise **aucun paquet npm** : seulement Node.js.
-- TRX pris en charge : **Yaesu FTX-1**, **FTDX10**, **FTDX101D / MP**, **FTDX5000** (en essai), **Icom IC-7300**. Un seul est en service à la fois, mais plusieurs peuvent rester branchés au PC du club.
+- TRX pris en charge : **Yaesu FTX-1**, **FTDX10**, **FTDX101D / MP**, **FTDX5000** (en essai), **Icom IC-7300**, **Icom IC-7760** (en essai). Un seul est en service à la fois, mais plusieurs peuvent rester branchés au PC du club.
 
 ---
 
@@ -215,7 +215,7 @@ raccourci « Remote Station - Page Station » (Chrome avec les bons réglages, s
 
 ### Première mise en route
 
-1. Brancher le TRX en USB (pilote « Virtual COM Port » de Yaesu ; pilote Silicon Labs CP210x pour l'IC-7300).
+1. Brancher le TRX en USB (pilote « Virtual COM Port » de Yaesu ; pilote Silicon Labs CP210x pour l'IC-7300 ; pilote USB Icom pour l'IC-7760).
 2. Ouvrir la page Station et se connecter avec l'indicatif et le mot de passe d'un **administrateur** (le PC reste autorisé un an).
 3. Le **jeton de la station** est repris tout seul du serveur : rien à recopier (section 7).
 4. **Réglages** : choisir le **modèle du TRX** (la page se recharge avec son pilote), puis « **Choisir le port du TRX** ». Le journal doit afficher « … répond ».
@@ -234,10 +234,12 @@ raccourci « Remote Station - Page Station » (Chrome avec les bons réglages, s
 | **FTDX101D / MP** | OPERATION SETTING → GENERAL : CAT RATE 38400, **CAT RTS OFF**, CAT TOT 100 ms, RPTT SELECT OFF | Enhanced COM Port (le Standard sert à la manipulation DTR) | 38400 |
 | **IC-7300** | MENU → SET → Connectors → CI-V : USB Baud Rate 115200, Address 94h, USB Echo Back OFF ; USB SEND et USB Keying OFF | port USB de l'IC-7300 | 115200 |
 | **FTDX5000** (pas de port USB) | Menu 032 CAT RATE 38400, 033 CAT TIME OUT TIMER 100 ms, **034 CAT RTS DISABLE** ; son : interface USB (RigExpert TI-5000, SignaLink…) sur la prise DATA, 069 DATA IN SELECT = DATA | adaptateur USB ↔ RS-232 (FTDI) sur la prise CAT | 38400, **2 bits de stop** (1 si le TRX ne répond pas) |
+| **IC-7760** | Câble USB sur le port **[USB B] de la tête de commande** (pas le bloc RF) ; MENU → SET → Connectors → CI-V : adresse B2h, « CI-V USB (A) Echo Back » OFF ; USB SEND / USB Keying OFF ; USB AF/IF Output → Output Select = AF ; MOD Input → DATA1 MOD = USB | 1er des deux ports COM du port [USB B] (USB (A)) | 115200 (port USB virtuel) |
 
 - **FTDX10 / FTDX101 : CAT RTS doit être sur OFF**, sinon la liaison CAT tombe toutes les 2 secondes (voyant vert puis orange).
 - Aucun autre logiciel (WSJT-X, logbook…) ne doit utiliser le port CAT en même temps.
 - **FTDX5000 (en essai)** : pilote écrit d'après le manuel CAT (FA / FB sur 8 chiffres, SPLIT par FT2 / FT3, FR 0–3, menus EX sur 3 chiffres). À vérifier au premier essai : puissance lue / réglée en watts (PC005–PC200), TUNE (`AC002;`), largeurs SH, double réception (FR2). Pas encore : CONTOUR / APF, macros CW (mémoire KM du TRX), double décodage (une seule voie son).
+- **IC-7760 (en essai)** : pilote écrit d'après le guide CI-V Icom (octobre 2024) : MAIN = VFO A, SUB = VFO B ; réglages de chaque récepteur par la commande 29 (29 00 MAIN, 29 01 SUB) ; 25 / 26 fréquence et mode de chaque côté ; 07 D0 / D1 côté sélectionné, 07 C0 / C1 DUAL WATCH, 07 B0 échange, 07 B1 égalise ; phonie à distance : DATA OFF MOD (1A 05 01 29) mis sur USB le temps de l'émission. À vérifier au premier essai : puissance 14 0A en watts (0–255 ↔ 0–200 W supposé), son USB (une voie, ou MAIN | SUB en stéréo), port COM (USB (A)). Simulation : page Station → Icom IC-7760 → Tester sans radio.
 - **CW par DTR** (facultatif, plus réactif) : page Station → « Port de manipulation CW (DTR)… » → le 2ᵉ port USB du TRX (Standard COM Port). Le menu PC KEYING du TRX est mis sur DTR tout seul pendant l'émission.
 - **Clé CW à distance** (palettes ou pioche des opérateurs, depuis la 0.37.174) : elle passe **obligatoirement** par ce port DTR. Sans lui, la page Station refuse (« 2e port USB du TRX (manipulation DTR) non ouvert »). Après la mise à jour, **recharger la page Station** (Ctrl+F5) : une ancienne page refuse la clé à distance. Premiers essais **sur charge fictive**, en présence d'un membre au club.
 - **Clé des opérateurs chez eux** : rien à installer au club ni chez eux. Chaque opérateur relie sa clé à **son** PC par une interface USB, jamais par la carte son : adaptateur **USB → RS-232 DB9 mâle** (CH340 / PL2303 / FTDI) avec une prise **DB9 femelle à bornier** : commun de la clé → **broche 4 (DTR)**, point → **6 (DSR)**, trait → **8 (CTS)** (le commun ne va **pas** sur la broche 5 GND), puis « Câble USB-série (DSR / CTS) » dans la page **TRX CW** (onglet CW → 🎛 TRX CW). Autres solutions : adaptateur VBand / Vail, ou Arduino Pro Micro (masse → GND, point → A2, trait → A3). Les câbles USB « TTL » (4 ou 6 fils) et les câbles console USB → jack ne conviennent pas pour une double palette. Détails, essai au trombone et liste du matériel : aide, section 12.6 « Brancher une double palette ».
@@ -356,6 +358,7 @@ Le membre active son micro dans le cadre TX (**SSB CONFIGURATION → Configurati
 | FTDX101D / MP | SSB MOD SOURCE EX010111 → REAR, REAR SELECT EX010112 → USB |
 | FTDX5000 | SSB MIC SELECT EX103 → DATA (prise de l'interface son) |
 | IC-7300 | DATA OFF MOD (CI-V 1A 05 00 66) → USB |
+| IC-7760 | DATA OFF MOD (CI-V 1A 05 01 29) → USB |
 
 - La valeur d'origine est **remise** 20 s après la dernière émission en phonie, ou dès que l'opérateur rend la main ou coupe son micro : **le micro du club refonctionne**.
 - Aucun menu n'est changé pendant une émission. Si le menu ne peut pas être relu, **rien n'est émis** et l'opérateur est prévenu.

@@ -182,7 +182,7 @@ FT8 is the easiest mode to use remotely: everything is done with the mouse and t
 |---|---|---|
 | `● Serveur` | Link lamp between your browser and the server. | Green = connected. Red or grey: check your internet connection; the page reconnects by itself. |
 | `● Station` | Lamp of the Station page on the club PC. | Green = the club PC is online. For administrators, a click opens the TRX menu (section 17). |
-| `● FTDX5000` | The transceiver in use (FTX-1, FTDX10, FTDX101D / MP, FTDX5000 or IC-7300). The list of transceivers is in the **Station** menu (administrators). | Green = the TRX answers over CAT; red = the TRX is transmitting. |
+| `● FTDX5000` | The transceiver in use (FTX-1, FTDX10, FTDX101D / MP, FTDX5000, IC-7300 or IC-7760). The list of transceivers is in the **Station** menu (administrators). | Green = the TRX answers over CAT; red = the TRX is transmitting. |
 | Title in the centre | Callsign and name of the station. | — |
 | `👥 n` | Number of members online. | Opens the **Opérateurs** (operators) panel: who is there, who has control, chat (section 10). A red dot means a new message. |
 | Your callsign | The account you are logged in with. | — |
@@ -269,6 +269,7 @@ At the top centre, two displays: **VFO A (MAIN)** on the left and **VFO B (SUB)*
 > - The RF front end, Filtres and DSP panels set the **active side**: their title shows « A · MAIN » or « B · SUB ».
 > - **FTDX101D / MP** (true dual receiver): the VFO B display sets the SUB side directly (ATT, IPO / AMP, NB, DNR, NOTCH, DNF, NAR, BW), without changing side or TRX state.
 > - **FTDX5000** (also a true dual receiver): same as the FTDX101 for VFO B; `DUAL RX` listens to MAIN and SUB together. SPLIT means transmitting on the other VFO (the TRX has no separate SPLIT command). Preamp IPO1 / AMP1 / AMP2 / IPO2, power 5 to 200 W. Not yet: CONTOUR / APF, keyboard CW macros, dual decoding of digital modes (audio comes from one receiver only).
+> - **IC-7760** (trial, two true receivers): MAIN = VFO A, SUB = VFO B, as on the FTDX101. `DUAL WATCH` listens to MAIN and SUB together, `MAIN` / `SUB` picks the receiver of the main dial, `A ⇄ B` swaps MAIN and SUB, `A = B` equalises them; SPLIT transmits on SUB. Each receiver has its own settings (badges under each VFO): FIL1 / FIL2 / FIL3 and width, PBT, ATT (3 to 45 dB), P.AMP1 / P.AMP2, AGC, NB, NR, NOTCH, AUTO NOTCH, antenna ANT 1-4; S-meter on each side; power 5 to 200 W. The radio's scope (MAIN) goes to the page, CW uses the radio's keyer. To check on the first trial: power in watts, USB audio (one channel or MAIN | SUB in stereo). The IC-7760 front-panel page comes next.
 
 <a id="step"></a>
 ### 7.2 Step row and band row

@@ -17,7 +17,8 @@ const DRIVERS = {
   ftdx10: require('./public/js/ftdx10.js'),
   ftdx101: require('./public/js/ftdx101.js'),
   ftdx5000: require('./public/js/ftdx5000.js'),
-  ic7300: require('./public/js/ic7300.js')
+  ic7300: require('./public/js/ic7300.js'),
+  ic7760: require('./public/js/ic7760.js')
 };
 const DEFAULT_RIG = DRIVERS.ftx1;
 const rig = () => (station && station.rig) || DEFAULT_RIG;
@@ -1587,7 +1588,7 @@ let catAsk = null; // dernière lecture CAT demandée par un administrateur (ré
 let stationBounce = null; // rechargement à distance d'une ancienne page Station en cours
 const STATION_CODE = (() => {
   const h = crypto.createHash('sha256');
-  for (const f of ['station.html', 'js/station.js', 'js/station-core.js', 'js/yaesu.js', 'js/ftx1.js', 'js/ftdx10.js', 'js/ftdx101.js', 'js/ftdx5000.js', 'js/ic7300.js', 'js/rigs-catalog.js', 'js/ulaw.js', 'js/ftxenc.js', 'js/ftx-enc.wasm']) {
+  for (const f of ['station.html', 'js/station.js', 'js/station-core.js', 'js/yaesu.js', 'js/ftx1.js', 'js/ftdx10.js', 'js/ftdx101.js', 'js/ftdx5000.js', 'js/ic7300.js', 'js/ic7760.js', 'js/rigs-catalog.js', 'js/ulaw.js', 'js/ftxenc.js', 'js/ftx-enc.wasm']) {
     try { h.update(fs.readFileSync(path.join(PUB, f))); } catch (e) { h.update(f); }
   }
   return h.digest('hex').slice(0, 16);
