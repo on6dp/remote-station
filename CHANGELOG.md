@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.246** — IC-7760 : rangée du bas en touches bleues comme sur le TRX (SPAN/EDGE, HOLD, CENT/FIX, MAIN/SUB, DUAL ; EXPD/SET masquée avec la colonne MULTI ; appui long CENT/FIX = SCROLL-C/F) ; colonne de gauche : barrette cyan (en service, AGC compris) ou grise (OFF)
 - **0.37.245** — IC-7760 : rangée du bas en touches bleues comme sur le TRX (SPAN/EDGE, HOLD, CENT/FIX, MAIN/SUB, DUAL), EXPD/SET masquée quand la colonne MULTI est ouverte, appui long CENT/FIX = SCROLL-C/F
 - **0.37.244** — Page Station : le scope du TRX demandé avant l'ouverture du port (ou avant « Tester sans radio ») est remis en service dès que le port s'ouvre (IC-7760 : les deux scopes ; IC-7300 aussi).
 - **0.37.243** — IC-7760 : « SPECTRUM SCOPE » ne chevauche plus le message du bandeau du scope (TRX muet, station hors ligne).

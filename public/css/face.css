@@ -768,6 +768,7 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 /* IC-7760 : écran à la manière Icom (colonne de touches à gauche, en-têtes ANT / BW / SFT, badge TX, DUAL-W / SPLIT) */
 #face .i76-k { fill: #23272f; stroke: #59606c; stroke-width: 0.7; }
 #face .i76-kon { fill: #2ec4c0; }
+#face .i76-kon.off { fill: #59606c; }
 #face .i76-kl { fill: #e6e9ef; font: 700 7.4px Arial, sans-serif; pointer-events: none; }
 #face .i76-kv { fill: #ffffff; font: 700 9.5px Arial, sans-serif; pointer-events: none; }
 #face .i76-hdr { fill: #e6e9ef; font: 700 7.6px Arial, sans-serif; pointer-events: none; }

@@ -3012,8 +3012,9 @@
     for (const k of LCD.i76k) {
       const v = k.id === 'proc' ? s.proc : s[k.id + b];
       k.t.textContent = k.fmt(v);
-      const on = k.id === 'ant' ? false : k.id === 'agc' ? false : !!v;
-      k.on.style.display = on ? '' : 'none';
+      // Comme sur le TRX : barrette à droite de la touche, cyan si en service (AGC FAST/MID/SLOW aussi), grise si OFF ; pas pour ANT
+      k.on.style.display = k.id === 'ant' || v == null ? 'none' : '';
+      k.on.classList.toggle('off', !v);
     }
     const txSd = L.txSide ? L.txSide(s) : (s.split ? 'B' : 'A');
     const fmt = (f) => (f ? Math.floor(f / 1e6) + '.' + String(Math.floor(f / 1000) % 1000).padStart(3, '0') + '.' + String(Math.floor(f / 10) % 100).padStart(2, '0') : '—');
