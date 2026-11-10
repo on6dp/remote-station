@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.254 | [RemoteStation-Setup-0.37.254.exe](0.37.254/RemoteStation-Setup-0.37.254.exe) | [remote-station-0.37.254.tar.gz](0.37.254/remote-station-0.37.254.tar.gz) | Ctrl+F5 sur /ic7760 — [empreintes SHA-256](0.37.254/SHA256SUMS.txt) |
 | 0.37.253 | [RemoteStation-Setup-0.37.253.exe](0.37.253/RemoteStation-Setup-0.37.253.exe) | [remote-station-0.37.253.tar.gz](0.37.253/remote-station-0.37.253.tar.gz) | Ctrl+F5 sur /ic7760 — [empreintes SHA-256](0.37.253/SHA256SUMS.txt) |
 | 0.37.252 | [RemoteStation-Setup-0.37.252.exe](0.37.252/RemoteStation-Setup-0.37.252.exe) | [remote-station-0.37.252.tar.gz](0.37.252/remote-station-0.37.252.tar.gz) | Ctrl+F5 sur /ic7760 — [empreintes SHA-256](0.37.252/SHA256SUMS.txt) |
 | 0.37.251 | [RemoteStation-Setup-0.37.251.exe](0.37.251/RemoteStation-Setup-0.37.251.exe) | [remote-station-0.37.251.tar.gz](0.37.251/remote-station-0.37.251.tar.gz) | Ctrl+F5 sur /ic7760 — [empreintes SHA-256](0.37.251/SHA256SUMS.txt) |

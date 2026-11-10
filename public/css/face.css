@@ -843,6 +843,7 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .lcd text.i76agc-v { fill: #fff; font: 900 12px Arial, 'Liberation Sans', sans-serif; pointer-events: none; }
 #face .lcd text.i76agc-v.on { fill: #0b2a33; }
 /* IC-7760 : rangée du bas en touches bleues arrondies, comme sur l'écran du TRX */
-#face .lcd-bot.i76b { fill: url(#i76btn); stroke: #a9d2f0; stroke-width: 0.8; }
-#face .lcd-bot.i76b.on { fill: url(#i76btnOn); stroke: #e4f4ff; }
-#face .lcd-bott.i76bt { fill: #fff; font: 700 9.6px Arial, sans-serif; letter-spacing: .2px; }
+#face .lcd-bot.i76b { fill: url(#i76btn); stroke: #cfe8fb; stroke-width: 1.1; }
+/* comme sur le TRX : DUAL / HOLD en service ne changent pas la couleur de la touche (l'état se lit sur le scope) */
+#face .lcd-bot.i76b.on { fill: url(#i76btn); }
+#face .lcd text.lcd-bott.i76bt { fill: #fff; font: 900 11px Arial, 'Liberation Sans', sans-serif; letter-spacing: .2px; paint-order: stroke; stroke: #163d63; stroke-width: 1.2px; }

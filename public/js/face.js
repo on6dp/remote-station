@@ -475,7 +475,7 @@
     el('stop', { offset: '0', 'stop-color': '#0c1220' }, lg);
     el('stop', { offset: '1', 'stop-color': '#04060b' }, lg);
     // IC-7760 : touches bleues de l'écran (rangée du bas, retour ↩), comme sur le TRX
-    for (const [id, a, b] of [['i76btn', '#5b93bf', '#1c4c7c'], ['i76btnOn', '#8cc6ee', '#2f6fa8']]) {
+    for (const [id, a, b] of [['i76btn', '#7fb4dc', '#24598c'], ['i76btnOn', '#a9dbf7', '#3a7fbc']]) {
       const bg = el('linearGradient', { id, x1: '0', y1: '0', x2: '0', y2: '1' }, defs);
       el('stop', { offset: '0', 'stop-color': a }, bg);
       el('stop', { offset: '1', 'stop-color': b }, bg);
