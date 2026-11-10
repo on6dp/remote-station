@@ -2963,8 +2963,8 @@
     if (id === 'ant') return setCtl(k, ((v || 1) % 4) + 1);
     return cycleCell(k);
   }
-  // Position sur la barre SWR (1 → 0, 3 → 0,37, ∞ → 0,62), comme l'échelle du TRX
-  const i76SwrF = (w) => (w <= 1 ? 0 : w <= 1.5 ? (w - 1) / 0.5 * 0.12 : w <= 2 ? 0.12 + (w - 1.5) / 0.5 * 0.1 : w <= 3 ? 0.22 + (w - 2) * 0.15 : 0.37 + Math.min(1, (w - 3) / 2) * 0.25);
+  // Position sur la barre SWR, aussi large que celle du S-mètre (1 → 0, 1,5 → 0,2, 2 → 0,36, 3 → 0,6, ∞ → 1)
+  const i76SwrF = (w) => (w <= 1 ? 0 : w <= 1.5 ? (w - 1) / 0.5 * 0.2 : w <= 2 ? 0.2 + (w - 1.5) / 0.5 * 0.16 : w <= 3 ? 0.36 + (w - 2) * 0.24 : 0.6 + Math.min(1, (w - 3) / 2) * 0.4);
   function buildI76(g, c) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const h = LCD.i76 = el('g', { class: 'i76' }, g);
@@ -3023,10 +3023,10 @@
       el('line', { x1: bx, y1: Y(27), x2: bx + bw, y2: Y(27), class: 'i76-btr' }, h);
       sb.w = el('line', { x1: bx, y1: Y(27), x2: bx, y2: Y(27), class: 'i76-bar' }, h);
       sb.r = el('line', { x1: bx + bw * 0.55, y1: Y(27), x2: bx + bw * 0.55, y2: Y(27), class: 'i76-bar red' }, h);
-      el('text', { x: X(x0 + 3), y: Y(37), class: 'i76-bs' }, h, 'SWR');
-      for (const [sw, t] of [[1, '1'], [1.5, '1.5'], [2, '2'], [2.5, '2.5'], [3, '3'], [99, '∞']]) el('text', { x: bx + 8 + bw * i76SwrF(sw), y: Y(37), class: 'i76-bs', 'text-anchor': 'middle' }, h, t);
-      el('line', { x1: bx + 8, y1: Y(39), x2: bx + 8 + bw * i76SwrF(99), y2: Y(39), class: 'i76-bu' }, h);
-      sb.swr = el('line', { x1: bx + 8, y1: Y(41.5), x2: bx + 8, y2: Y(41.5), class: 'i76-bar thin' }, h);
+      el('text', { x: X(x0 + 1), y: Y(37), class: 'i76-bs' }, h, 'SWR');
+      for (const [sw, t] of [[1, '1'], [1.5, '1.5'], [2, '2'], [2.5, '2.5'], [3, '3'], [99, '∞']]) el('text', { x: bx + bw * i76SwrF(sw) - (sw > 50 ? 3 : 0) + (sw === 1 ? 4 : 0), y: Y(37), class: 'i76-bs' + (sw > 50 ? ' inf' : ''), 'text-anchor': 'middle' }, h, t);
+      el('line', { x1: bx, y1: Y(39), x2: bx + bw, y2: Y(39), class: 'i76-bu' }, h);
+      sb.swr = el('line', { x1: bx, y1: Y(41.5), x2: bx, y2: Y(41.5), class: 'i76-bar thin' }, h);
       // TX (rouge) et puissance dessous, à gauche de « VFO [mode] [FIL] », comme sur le TRX
       o.txR = el('rect', { x: X(x0 + 3), y: Y(46), width: 18, height: 10, rx: 1.5, class: 'i76-tx' }, h);
       o.txT = el('text', { x: X(x0 + 12), y: Y(53.8), class: 'i76-txt', 'text-anchor': 'middle' }, h, 'TX');
@@ -3046,9 +3046,9 @@
       fh.addEventListener('click', (ev) => { ev.stopPropagation(); if (needControl()) cycleCell(sd === 'B' ? 'filB' : 'fil'); });
       // Fréquence en police Icom (la fréquence en 7 segments de l'écran Yaesu est cachée)
       v.freq.style.display = 'none'; v.tx.style.display = 'none'; v.clarG.style.display = 'none';
-      o.freq = el('text', { x: X(x0 + 248), y: Y(83), class: 'i76-freq', 'text-anchor': 'end' }, v.g, '');
-      for (const [k2, val] of [['x', X(x0 + 60)], ['y', Y(61)], ['width', 190], ['height', 24]]) v.hit.setAttribute(k2, val);
-      for (const [k2, val] of [['x', X(x0 + 90)], ['y', Y(85)], ['width', 160]]) v.sel.setAttribute(k2, val);
+      o.freq = el('text', { x: X(x0 + 248), y: Y(80), class: 'i76-freq', 'text-anchor': 'end' }, v.g, '');
+      for (const [k2, val] of [['x', X(x0 + 60)], ['y', Y(59)], ['width', 190], ['height', 23]]) v.hit.setAttribute(k2, val);
+      for (const [k2, val] of [['x', X(x0 + 90)], ['y', Y(82)], ['width', 160]]) v.sel.setAttribute(k2, val);
       // Voyants du récepteur (et RIT / ΔTX) sous la fréquence
       o.tags = el('text', { x: X(x0 + 3), y: Y(93), class: 'i76-tags' }, h, '');
     }
@@ -3221,7 +3221,7 @@
       sb.sNums.style.display = txNow ? 'none' : ''; sb.pNums.style.display = txNow ? '' : 'none';
       sb.redU.style.display = txNow ? 'none' : '';
       const swr = txNow && R.swrValue ? R.swrValue(s.m6) : null;
-      sb.swr.setAttribute('x2', (sb.bx + 8 + (swr ? sb.bw * i76SwrF(swr) : 0)).toFixed(1));
+      sb.swr.setAttribute('x2', (sb.bx + (swr ? sb.bw * i76SwrF(swr) : 0)).toFixed(1));
       o.freq.textContent = fmt(x ? s.freqB : s.freq);
       o.freq.classList.toggle('dim', !live);
       const tg = [];

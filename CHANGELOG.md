@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.250** — IC-7760 : police Icom sans zéro barré, fréquence remontée, barres SWR aussi larges que le S-mètre, tableau AGC en blanc gras
 - **0.37.249** — IC-7760 : tableau AGC en blanc gras, chiffres plus grands
 - **0.37.248** — IC-7760 : S-mètre et SWR en barres sur le grand écran (fréquences remontées, scopes plus hauts), galvanomètre à aiguille Icom dans le petit écran (SUB DISP = filtre), tableau AGC par appui d'1 s (grand bouton, DEF), 1/4 en CW/RTTY/PSK, SIDETONE dans la colonne MULTI en CW ; rangée du bas en touches bleues ; barrettes cyan/grises ; chiffres des galvanomètres en gras
 - **0.37.247** — IC-7760 : rangée du bas en touches bleues comme sur le TRX (EXPD/SET masquée avec la colonne MULTI ; appui long CENT/FIX = SCROLL-C/F) ; colonne de gauche : barrette cyan/grise ; fréquences remontées ; chiffres des galvanomètres en gras

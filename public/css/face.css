@@ -104,6 +104,8 @@ body.face-page { background: var(--v2-bg, #070b12); min-height: 100vh; margin: 0
 
 /* Écran du TRX */
 #face .lcd text { font-family: 'Roboto Mono', ui-monospace, monospace; }
+/* IC-7760 : police de l'écran Icom (pas de zéro barré) */
+#face[data-model='ic7760'] .lcd text { font-family: Arial, 'Liberation Sans', Helvetica, sans-serif; }
 #face .lcd-tbar { fill: #1d2433; }
 #face .lcd-ttl { fill: #6f86c9; font-size: 8.5px; font-weight: 700; letter-spacing: .6px; }
 #face .lcd-track { fill: #121a28; stroke: #2b3546; stroke-width: .6; }
@@ -818,6 +820,7 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .i76-bsl { fill: #fff; font: 900 10px Arial, sans-serif; pointer-events: none; }
 #face .i76-bs { fill: #f2f4f7; font: 800 7.4px Arial, sans-serif; pointer-events: none; }
 #face .i76-bs.red { fill: #ff3b30; }
+#face .lcd text.i76-bs.inf { font-size: 11px; }
 #face .i76-bsd { fill: #f2f4f7; }
 #face .i76-bu { stroke: #f2f4f7; stroke-width: 0.9; }
 #face .i76-bu.red { stroke: #ff3b30; }
