@@ -3076,7 +3076,7 @@
     for (const cg of [LCD.cgA, LCD.cgB]) cg.style.display = 'none';
   }
   // IC-7760 : bouton MULTI poussé = colonne à droite de l'écran, comme sur le TRX : RF POWER, MIC GAIN, COMP, DIGI-SEL, MONITOR
-  // (en CW : RF POWER, KEY SPEED, CW PITCH, DIGI-SEL, MONITOR) ; clic = choisir, puis tourner le bouton MULTI (ou la molette ici) ;
+  // (en CW : RF POWER, KEY SPEED, CW PITCH, DIGI-SEL, SIDETONE ; en RTTY / PSK : RF POWER, DIGI-SEL, MONITOR) ; clic = choisir, puis tourner le bouton MULTI (ou la molette ici) ;
   // le scope reste visible à gauche de la colonne
   const pctOf = (v) => (v == null ? 0 : v / 255);
   function i76MultiItems(s) {
@@ -3087,6 +3087,8 @@
     if (cw) return [pw, ['keySpeed', 'KEY SPEED', (s0) => ['', s0.keySpeed != null ? s0.keySpeed + 'wpm' : '—'], (s0) => (s0.keySpeed != null ? (s0.keySpeed - 6) / 42 : 0)],
       ['cwPitch', 'CW PITCH', (s0) => ['', s0.cwPitch != null ? s0.cwPitch + 'Hz' : '—'], (s0) => (s0.cwPitch != null ? (s0.cwPitch - 300) / 600 : 0)], ds, null,
       ['sideTone', 'SIDETONE', (s0) => ['', pct(s0.sideTone)], (s0) => pctOf(s0.sideTone)]]; // en CW : SIDETONE à la place de MONITOR, comme sur le TRX
+    // RTTY / PSK : RF POWER, DIGI-SEL et MONITOR seulement (cases vides entre), comme sur le TRX
+    if (/^(RTTY|PSK)/.test(L.activeMode(s) || '')) return [pw, null, null, ds, null, mo];
     return [pw, ['mic', 'MIC GAIN', (s0) => ['', pct(s0.mic)], (s0) => pctOf(s0.mic)],
       ['procLvl', 'COMP', (s0) => [onOff(s0.proc), pct(s0.procLvl)], (s0) => pctOf(s0.procLvl)], ds, null, mo];
   }
@@ -3099,12 +3101,12 @@
       const y = Y(2 + i * rh);
       const r = el('rect', { x: x0, y, width: w, height: rh - 2, rx: 2, class: 'i76mm-c' }, m);
       const t = el('text', { x: x0 + w / 2, y: y + 12, class: 'i76mm-t', 'text-anchor': 'middle' }, m, '');
-      el('rect', { x: x0 + 10, y: y + 17, width: w - 20, height: 4, rx: 1, class: 'i76mm-tr' }, m);
+      const tr = el('rect', { x: x0 + 10, y: y + 17, width: w - 20, height: 4, rx: 1, class: 'i76mm-tr' }, m);
       const bar = el('rect', { x: x0 + 10, y: y + 17, width: 0, height: 4, rx: 1, class: 'i76mm-bar' }, m);
       const v1 = el('text', { x: x0 + 4, y: y + rh - 7, class: 'i76mm-v' }, m, '');
       const v2 = el('text', { x: x0 + w - 4, y: y + rh - 7, class: 'i76mm-v', 'text-anchor': 'end' }, m, '');
       const hit = el('rect', { x: x0, y, width: w, height: rh - 2, class: 'hs lcd-hit' }, m);
-      const row = { r, t, bar, v1, v2, hit, id: null, bw: w - 20 };
+      const row = { r, t, tr, bar, v1, v2, hit, id: null, bw: w - 20 };
       el('title', {}, hit, 'Clic : choisir ce réglage, puis tourner le bouton MULTI (ou la molette ici)');
       hit.addEventListener('click', (ev) => {
         ev.stopPropagation();
@@ -3164,6 +3166,7 @@
       row.r.classList.toggle('on', !!it && L.funcSel === it[0]);
       for (const e of [row.t, row.v1, row.v2]) e.classList.toggle('on', !!it && L.funcSel === it[0]);
       row.r.classList.toggle('empty', !it);
+      row.tr.style.display = it ? '' : 'none'; // case vide : sans réglette, comme sur le TRX
     });
   }
   function drawI76(s, tx) {
