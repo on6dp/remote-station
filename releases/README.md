@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.245 | [RemoteStation-Setup-0.37.245.exe](0.37.245/RemoteStation-Setup-0.37.245.exe) | [remote-station-0.37.245.tar.gz](0.37.245/remote-station-0.37.245.tar.gz) | Ctrl+F5 sur /ic7760 — [empreintes SHA-256](0.37.245/SHA256SUMS.txt) |
 | 0.37.244 | [RemoteStation-Setup-0.37.244.exe](0.37.244/RemoteStation-Setup-0.37.244.exe) | [remote-station-0.37.244.tar.gz](0.37.244/remote-station-0.37.244.tar.gz) | Page Station : Ctrl+F5, puis relancer la simulation ou le port. — [empreintes SHA-256](0.37.244/SHA256SUMS.txt) |
 | 0.37.243 | [RemoteStation-Setup-0.37.243.exe](0.37.243/RemoteStation-Setup-0.37.243.exe) | [remote-station-0.37.243.tar.gz](0.37.243/remote-station-0.37.243.tar.gz) | Ctrl+F5 sur /ic7760. — [empreintes SHA-256](0.37.243/SHA256SUMS.txt) |
 | 0.37.242 | [RemoteStation-Setup-0.37.242.exe](0.37.242/RemoteStation-Setup-0.37.242.exe) | [remote-station-0.37.242.tar.gz](0.37.242/remote-station-0.37.242.tar.gz) | Ctrl+F5 sur /ic7760 ; page Station : recharger (scope MAIN / SUB). — [empreintes SHA-256](0.37.242/SHA256SUMS.txt) |

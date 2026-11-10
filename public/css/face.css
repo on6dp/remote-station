@@ -805,4 +805,9 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .i76mm-tr { fill: #3a4252; }
 #face .i76mm-bar { fill: #2ec4c0; }
 #face .i76mm-t.on, #face .i76mm-v.on { fill: #0b2a33; }
-#face .i76mm-back { fill: #1f5fbf; stroke: #9cc4ff; stroke-width: 0.8; }
+#face .i76mm-back { fill: url(#i76btn); stroke: #a9d2f0; stroke-width: 0.8; }
+#face .i76mm-t.i76bk { font-size: 12px; }
+/* IC-7760 : rangée du bas en touches bleues arrondies, comme sur l'écran du TRX */
+#face .lcd-bot.i76b { fill: url(#i76btn); stroke: #a9d2f0; stroke-width: 0.8; }
+#face .lcd-bot.i76b.on { fill: url(#i76btnOn); stroke: #e4f4ff; }
+#face .lcd-bott.i76bt { fill: #fff; font: 700 9.6px Arial, sans-serif; letter-spacing: .2px; }

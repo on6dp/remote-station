@@ -470,6 +470,12 @@
     const lg = el('linearGradient', { id: 'lcdbg', x1: '0', y1: '0', x2: '0', y2: '1' }, defs);
     el('stop', { offset: '0', 'stop-color': '#0c1220' }, lg);
     el('stop', { offset: '1', 'stop-color': '#04060b' }, lg);
+    // IC-7760 : touches bleues de l'écran (rangée du bas, retour ↩), comme sur le TRX
+    for (const [id, a, b] of [['i76btn', '#5b93bf', '#1c4c7c'], ['i76btnOn', '#8cc6ee', '#2f6fa8']]) {
+      const bg = el('linearGradient', { id, x1: '0', y1: '0', x2: '0', y2: '1' }, defs);
+      el('stop', { offset: '0', 'stop-color': a }, bg);
+      el('stop', { offset: '1', 'stop-color': b }, bg);
+    }
     el('image', { href: FACE.image, x: V.x, y: V.y, width: V.w, height: V.h }, svg);
     buildLcd();
     // Boutons rotatifs (sous les touches : une touche posée sur le bord du grand bouton reste cliquable)
@@ -1058,12 +1064,17 @@
       const by = (n) => BOT.find((b) => b[0] === n);
       const extra = { REF: ['REF', () => openSmenu()], '<MENU1>': ['<MENU1>', () => openSmenu()],
         // IC-7760 : le scope de la page montre le son reçu (fixe autour du VFO) ; MAIN/SUB et DUAL comme les touches du TRX
+        // Comme sur l'IC-7300 : CENTER ⇄ FIX ; appui long : CENTER ⇄ SCROLL-C, FIX ⇄ SCROLL-F
         'CENT/FIX': ['CENT/FIX', () => {
           if (!(DICOM && rfFresh())) return say('CENT/FIX : sans le scope du TRX, la page montre le son reçu (0 à 3 kHz autour du VFO), toujours centré.', '', 3500);
           if (!needControl()) return;
           const k = 'scMode' + (activeSide() === 'B' ? 'B' : ''), v = (S()[k] || 0) & 1 ? 0 : 1;
           setCtl(k, v); say((v ? 'FIX' : 'CENTER') + ' (scope du ' + (activeSide() === 'B' ? 'SUB' : 'MAIN') + ')', '', 2000);
-        }],
+        }, DICOM ? () => {
+          if (!rfFresh() || !needControl()) return;
+          const k = 'scMode' + (activeSide() === 'B' ? 'B' : ''), v = (S()[k] || 0) ^ 2;
+          setCtl(k, v); say(['CENTER', 'FIX', 'SCROLL-C', 'SCROLL-F'][v] + ' (scope du ' + (activeSide() === 'B' ? 'SUB' : 'MAIN') + ')', '', 2000);
+        } : null],
         'MAIN/SUB': ['MAIN/SUB', () => { if (!needControl()) return; const v = S().vfoSel === 1 ? 0 : 1; setCtl('vfoSel', v); if (R.CONTROL.scSel) setCtl('scSel', v); }],
         DUAL: ['DUAL', () => { if (!needControl()) return; if (R.CONTROL.scDual) { const v = S().scDual ? 0 : 1; setCtl('scDual', v); say(v ? 'DUAL : scopes du MAIN et du SUB' : 'Un seul scope (MAIN/SUB pour choisir)', '', 2500); } else setCtl('dualRx', S().dualRx ? 0 : 1); }],
         'EXPD/SET': ['EXPD/SET', () => doAct({ act: { local: 'multiView' } })], MARKER: ['MARKER', () => { smAdjust('marker', 1); say('MARKER : ' + (L.marker ? 'ON' : 'OFF'), '', 2000); }],
@@ -1101,23 +1112,32 @@
       BOT.splice(0, BOT.length, ...names.map((n) => extra[n] || by(n) || [n]));
     }
     const bw = (c.w - 10) / BOT.length;
-    LCD.bot = BOT.map(([lab, fn], j) => {
+    LCD.botBox = { x: X(5), w: c.w - 10 };
+    LCD.bot = BOT.map(([lab, fn, lp], j) => {
       const x = X(5) + j * bw, last = j === BOT.length - 1 && !SINGLE && !FACE.bot;
-      const r = el('rect', { x: x + 0.5, y: Y(G.botY), width: bw - 1, height: G.botH, rx: last ? 2 : 0, class: 'lcd-bot' + (last ? ' multi' : '') }, g);
-      const t = el('text', { x: x + bw / 2, y: Y(last ? G.botY + 8.5 : G.botY + G.botH / 2 + 3.5), class: 'lcd-bott', 'text-anchor': 'middle' }, g, lab);
+      // IC-7760 : touches bleues arrondies, séparées, comme sur l'écran du TRX
+      const r = DICOM ? el('rect', { x: x + 1.5, y: Y(G.botY + 1), width: bw - 3, height: G.botH - 2, rx: 3, class: 'lcd-bot i76b' }, g)
+        : el('rect', { x: x + 0.5, y: Y(G.botY), width: bw - 1, height: G.botH, rx: last ? 2 : 0, class: 'lcd-bot' + (last ? ' multi' : '') }, g);
+      const t = el('text', { x: x + bw / 2, y: Y(last ? G.botY + 8.5 : G.botY + G.botH / 2 + 3.5), class: 'lcd-bott' + (DICOM ? ' i76bt' : ''), 'text-anchor': 'middle' }, g, lab);
       // FTX-1 : D-MODE et SCOPE sur deux lignes (valeur en orange dessous : CENTER / CURSOR / FIX, MAIN / SUB)
       const sub = !!(FACE.botSub && FACE.botSub.includes(lab));
       if (sub) { t.setAttribute('y', Y(G.botY + 9)); t.classList.add('two'); }
       const t2 = last || sub ? el('text', { x: x + bw / 2, y: Y(G.botY + 18), class: 'lcd-bott2' + (sub ? ' sub' : ''), 'text-anchor': 'middle' }, g, '') : null;
       const h = el('rect', { x: x + 0.5, y: Y(G.botY), width: bw - 1, height: G.botH, class: 'hs lcd-hit' + (fn || last ? '' : ' off') }, g);
-      el('title', {}, h, last ? 'MULTI : fonction réglée par le bouton MULTI (choisie dans FUNC)' : lab + (fn ? '' : ' : pas disponible à distance'));
+      el('title', {}, h, last ? 'MULTI : fonction réglée par le bouton MULTI (choisie dans FUNC)' : lab + (fn ? '' : ' : pas disponible à distance') + (lp ? ' ; appui long : SCROLL-C / SCROLL-F' : ''));
+      let lpT = null, lpDone = false;
+      if (lp) {
+        h.addEventListener('pointerdown', () => { lpDone = false; clearTimeout(lpT); lpT = setTimeout(() => { lpDone = true; lp(); }, 700); });
+        for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) h.addEventListener(ev, () => clearTimeout(lpT));
+      }
       h.addEventListener('click', () => {
+        if (lpDone) { lpDone = false; return; }
         if (last) { viewTouched(); L.func = true; return render(); }
         if (fn) return fn();
         say(lab + ' : réglage du scope du TRX, pas disponible à distance (la cascade est celle de la BF).', '', 3500);
       });
       if (ICOM) for (const e of [r, t, t2, h]) if (e) e.style.display = 'none'; // IC-7300 : pas de rangée de touches CENTER / HOLD / 3DSS… (Yaesu)
-      return { r, t, t2, h, lab };
+      return { r, t, t2, h, lab, x, w: bw };
     });
     LCD.hint = el('text', { x: X(c.w / 2), y: Y(G.scopeY + G.scopeH / 2 - 2), class: 'lcd-hint', 'text-anchor': 'middle' }, g, 'Cascade : en attente du son de la station…');
     if (SINGLE) {
@@ -2933,8 +2953,8 @@
       return row;
     });
     // Retour (comme EXIT), dans la rangée du bas
-    el('rect', { x: x0 + 10, y: Y(G.botY + 2), width: w - 20, height: G.botH - 5, rx: 3, class: 'i76mm-back' }, m);
-    el('text', { x: x0 + w / 2, y: Y(G.botY + G.botH / 2 + 3.5), class: 'i76mm-t', 'text-anchor': 'middle' }, m, '↩');
+    el('rect', { x: x0 + 14, y: Y(G.botY + 1), width: w - 16, height: G.botH - 2, rx: 3, class: 'i76mm-back' }, m);
+    el('text', { x: x0 + 6 + w / 2, y: Y(G.botY + G.botH / 2 + 4.5), class: 'i76mm-t i76bk', 'text-anchor': 'middle' }, m, '↩');
     const back = el('rect', { x: x0, y: Y(G.botY), width: w, height: G.botH - 1, class: 'hs lcd-hit' }, m);
     el('title', {}, back, 'Retour (comme EXIT ou MULTI)');
     back.addEventListener('click', (ev) => { ev.stopPropagation(); L.multiMenu = false; render(); });
@@ -2950,6 +2970,18 @@
       const cv = $('scope'), box = LCD.scopeBox;
       if (cv && box) { const w = on ? box.w - 88 : box.w; cv.style.width = (w / V.w * 100) + '%'; WF.drawn = false; }
       if (LCD.scopeRect && box) LCD.scopeRect.setAttribute('width', on ? box.w - 88 : box.w);
+      // Rangée du bas : avec la colonne MULTI, EXPD/SET disparaît et les six touches tiennent sous le scope (↩ dans la colonne), comme sur le TRX
+      const bb = LCD.botBox, vis = (LCD.bot || []).filter((b) => !(on && b.lab === 'EXPD/SET'));
+      if (bb && vis.length) {
+        const bw = (bb.w - (on ? 88 : 0)) / vis.length;
+        for (const b of LCD.bot) { const hide = !vis.includes(b); for (const e of [b.r, b.t, b.h]) e.style.display = hide ? 'none' : ''; }
+        vis.forEach((b, j) => {
+          const x = bb.x + j * bw;
+          b.r.setAttribute('x', x + 1.5); b.r.setAttribute('width', bw - 3);
+          b.t.setAttribute('x', x + bw / 2);
+          b.h.setAttribute('x', x + 0.5); b.h.setAttribute('width', bw - 1);
+        });
+      }
     }
     if (!on) return;
     const items = i76MultiItems(s);
@@ -5502,7 +5534,8 @@
       if (b.lab === 'SPAN') {
         // IC-7760 avec le scope du TRX : « SPAN ±25k » en CENTER, « EDGE1 » en FIX (scope du récepteur sélectionné)
         const sb = activeSide() === 'B' ? 'B' : '';
-        if (DICOM && rfFresh()) b.t.textContent = (s['scMode' + sb] || 0) & 1 ? 'EDGE' + (s['scEdge' + sb] || 1) : 'SPAN ' + (R.CONTROL['scSpan' + sb].options[s['scSpan' + sb] != null ? s['scSpan' + sb] : 3] || ['', ''])[1];
+        // IC-7760 : la touche dit SPAN (CENTER) ou EDGE (FIX), comme sur le TRX ; la valeur est en haut du scope
+        if (DICOM) b.t.textContent = rfFresh() && (s['scMode' + sb] || 0) & 1 ? 'EDGE' : 'SPAN';
         else b.t.textContent = 'SPAN ' + SPAN_TRX[L.trxSpan];
       }
       if (DICOM && b.lab === 'HOLD' && rfFresh()) b.r.classList.toggle('on', !!s['scHold' + (activeSide() === 'B' ? 'B' : '')]);
