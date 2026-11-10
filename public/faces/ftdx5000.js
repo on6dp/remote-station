@@ -132,7 +132,7 @@
   vg('VA', GB, (s) => s.vfoSel !== 1); vg('VB', GB, (s) => s.vfoSel === 1);
   // Barre du S-mètre (VFO-B) : 30 cases, blanches jusqu'à S9, rouges au-delà
   for (let i = 0; i < 30; i++) vg('S.bar.' + i, (i + 1) / 30 > 130 / 255 + 0.001 ? GR : GB, (s) => subOn(s) && s.smeterB != null && s.smeterB >= (i + 1) / 30 * 255);
-  const ind = (lab, x, on, color) => ({ x, y: 636, anchor: 'middle', color: color || '#ffb347', font: FONT(11), text: (s, L) => (on(s, L) ? lab : '') });
+  const ind = (lab, x, on, color) => ({ x, y: 644, anchor: 'middle', color: color || '#ffb347', font: FONT(11), text: (s, L) => (on(s, L) ? lab : '') });
   const VFD = [
     // Bande du haut : VFO-A en grands 7 segments, VFO-B, clarifier (RX / TX et décalage)
     { seg: true, x: 292, y: 372, size: 34, color: '#9fb2ff', text: (s) => (s.freq ? fmtF(s.freq) : '') },
