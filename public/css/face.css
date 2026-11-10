@@ -793,7 +793,7 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .i76-filt { fill: #fff; font: 700 7.6px Arial, sans-serif; pointer-events: none; }
 #face .i76-dw { fill: #1f9a45; }
 #face .i76-sp { fill: #f07a1e; }
-#face .i76-dwt { fill: #fff; font: 700 6.6px Arial, sans-serif; pointer-events: none; }
+#face .lcd text.i76-dwt { fill: #fff; font: 900 8px Arial, sans-serif; pointer-events: none; }
 #face .i76-div { stroke: #2a3040; stroke-width: 0.8; }
 #face .lcd-mode.i76 { fill: #2f6fd6; stroke: #7fb2ff; stroke-width: 0.8; }
 #face .i76-nb { fill: #1f6fd0; }

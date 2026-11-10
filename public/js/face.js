@@ -3066,11 +3066,12 @@
     }
     // DUAL-W (vert) et SPLIT (orange) entre les deux récepteurs, comme sur le TRX
     LCD.i76dw = el('g', { style: 'display:none' }, h);
-    el('rect', { x: X(282), y: Y(47), width: 32, height: 10, rx: 1.5, class: 'i76-dw' }, LCD.i76dw);
-    el('text', { x: X(298), y: Y(54.6), class: 'i76-dwt', 'text-anchor': 'middle' }, LCD.i76dw, 'DUAL-W');
+    // l'un au-dessus de l'autre, à droite du S-mètre du MAIN, comme sur le TRX
+    el('rect', { x: X(271), y: Y(30), width: 38, height: 11, rx: 1.5, class: 'i76-dw' }, LCD.i76dw);
+    el('text', { x: X(290), y: Y(38.6), class: 'i76-dwt', 'text-anchor': 'middle' }, LCD.i76dw, 'DUAL-W');
     LCD.i76sp = el('g', { style: 'display:none' }, h);
-    el('rect', { x: X(246), y: Y(47), width: 32, height: 10, rx: 1.5, class: 'i76-sp' }, LCD.i76sp);
-    el('text', { x: X(262), y: Y(54.6), class: 'i76-dwt', 'text-anchor': 'middle' }, LCD.i76sp, 'SPLIT');
+    el('rect', { x: X(271), y: Y(43), width: 38, height: 11, rx: 1.5, class: 'i76-sp' }, LCD.i76sp);
+    el('text', { x: X(290), y: Y(51.6), class: 'i76-dwt', 'text-anchor': 'middle' }, LCD.i76sp, 'SPLIT');
     // Bandeau du scope : « SPECTRUM SCOPE » au milieu, comme sur le TRX
     LCD.i76sst = el('text', { x: X(250), y: Y(G.lowY + 8.5), class: 'i76-sst', 'text-anchor': 'middle' }, LCD.lowG, 'SPECTRUM SCOPE');
     for (const cg of [LCD.cgA, LCD.cgB]) cg.style.display = 'none';

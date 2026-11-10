@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.253** — IC-7760 : case TX plus grande et en gras ; DUAL-W au-dessus de SPLIT, en gras, comme sur le TRX
 - **0.37.252** — IC-7760 : case TX plus grande, en gras, sur les deux VFO
 - **0.37.251** — IC-7760 : colonne MULTI en RTTY/PSK comme sur le TRX (RF POWER, DIGI-SEL, MONITOR ; cases vides sans réglette)
 - **0.37.250** — IC-7760 : police Icom sans zéro barré, fréquence remontée, barres SWR aussi larges que le S-mètre, tableau AGC en blanc gras
