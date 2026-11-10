@@ -779,8 +779,8 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .i76-kon.off { fill: #59606c; }
 #face .i76-kl { fill: #e6e9ef; font: 700 7.4px Arial, sans-serif; pointer-events: none; }
 #face .i76-kv { fill: #ffffff; font: 700 9.5px Arial, sans-serif; pointer-events: none; }
-#face .i76-hdr { fill: #e6e9ef; font: 700 7.6px Arial, sans-serif; pointer-events: none; }
-#face .i76-box { fill: none; stroke: #9aa2b0; stroke-width: 0.6; }
+#face .lcd text.i76-hdr { fill: #fff; font: 900 9px Arial, 'Liberation Sans', sans-serif; pointer-events: none; }
+#face .i76-box { fill: none; stroke: #c9d0dc; stroke-width: 0.8; }
 #face .i76-side { fill: #8b93a3; font: 700 7.6px Arial, sans-serif; pointer-events: none; }
 #face .i76-side.sel { fill: #ff5a4a; }
 #face .i76-tx { fill: none; stroke: #ff3b30; stroke-width: 1.4; }
@@ -793,11 +793,11 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .i76-filt { fill: #fff; font: 700 7.6px Arial, sans-serif; pointer-events: none; }
 #face .i76-dw { fill: #1f9a45; }
 #face .i76-sp { fill: #f07a1e; }
-#face .lcd text.i76-dwt { fill: #fff; font: 900 8px Arial, sans-serif; pointer-events: none; }
+#face .lcd text.i76-dwt { fill: #fff; font: 900 11px Arial, 'Liberation Sans', sans-serif; pointer-events: none; }
 #face .i76-div { stroke: #2a3040; stroke-width: 0.8; }
 #face .lcd-mode.i76 { fill: #2f6fd6; stroke: #7fb2ff; stroke-width: 0.8; }
 #face .i76-nb { fill: #1f6fd0; }
-#face .i76-nbt { fill: #fff; font: 700 7px Arial, sans-serif; pointer-events: none; }
+#face .lcd text.i76-nbt { fill: #fff; font: 900 8.4px Arial, sans-serif; pointer-events: none; }
 #face .i76-met { fill: #3a4252; }
 #face .i76-mett { fill: #e6e9ef; font: 700 6px Arial, sans-serif; pointer-events: none; }
 #face .i76-freq { fill: #ffffff; font: 700 27px Arial, 'Liberation Sans', Helvetica, sans-serif; letter-spacing: 0.3px; pointer-events: none; }

@@ -2996,59 +2996,63 @@
     // ligne TX + puissance (et DUAL-W au milieu), « VFO [mode] [FIL] », grande fréquence (MHz.kHz.dizaines de Hz), voyants
     for (const [sd, x0] of [['A', 58], ['B', 314]]) {
       const o = LCD['i76' + sd] = {};
-      o.ant = el('text', { x: X(x0 + 3), y: Y(11), class: 'i76-hdr' }, h, '');
-      el('rect', { x: X(x0 + 36), y: Y(3.5), width: 50, height: 10, rx: 1, class: 'i76-box' }, h);
-      o.bw = el('text', { x: X(x0 + 61), y: Y(11), class: 'i76-hdr', 'text-anchor': 'middle' }, h, 'BW');
-      el('rect', { x: X(x0 + 90), y: Y(3.5), width: 46, height: 10, rx: 1, class: 'i76-box' }, h);
-      o.sft = el('text', { x: X(x0 + 113), y: Y(11), class: 'i76-hdr', 'text-anchor': 'middle' }, h, 'SFT');
-      o.nR = el('rect', { x: X(x0 + 140), y: Y(3.5), width: 18, height: 10, rx: 1, class: 'i76-nb', style: 'display:none' }, h);
-      o.nT = el('text', { x: X(x0 + 149), y: Y(11), class: 'i76-nbt', 'text-anchor': 'middle', style: 'display:none' }, h, 'AN');
-      o.side = el('text', { x: X(x0 + 250), y: Y(11), class: 'i76-side', 'text-anchor': 'end', style: 'display:none' }, h, sd === 'A' ? 'MAIN' : 'SUB');
+      // VFO-B : en-tête, barres et ligne « VFO » calés à droite, alignés sur la fin de sa fréquence (place libre entre les deux VFO)
+      const xb = x0 + (sd === 'B' ? 56 : 0);
+      o.ant = el('text', { x: X(xb + 2), y: Y(11.6), class: 'i76-hdr' }, h, '');
+      // En-tête ANT · BW · SFT en blanc gras (cases plus grandes : leurs réglages viendront comme sur l'IC-7300)
+      o.hdrBw = el('rect', { x: X(xb + 38), y: Y(2.5), width: 56, height: 12, rx: 1.5, class: 'i76-box' }, h);
+      o.bw = el('text', { x: X(xb + 66), y: Y(11.6), class: 'i76-hdr', 'text-anchor': 'middle' }, h, 'BW');
+      o.hdrSft = el('rect', { x: X(xb + 98), y: Y(2.5), width: 50, height: 12, rx: 1.5, class: 'i76-box' }, h);
+      o.sft = el('text', { x: X(xb + 123), y: Y(11.6), class: 'i76-hdr', 'text-anchor': 'middle' }, h, 'SFT');
+      o.nR = el('rect', { x: X(xb + 152), y: Y(2.5), width: 20, height: 12, rx: 1.5, class: 'i76-nb', style: 'display:none' }, h);
+      o.nT = el('text', { x: X(xb + 162), y: Y(11.6), class: 'i76-nbt', 'text-anchor': 'middle', style: 'display:none' }, h, 'AN');
+      o.side = el('text', { x: X(xb + 250), y: Y(11), class: 'i76-side', 'text-anchor': 'end', style: 'display:none' }, h, sd === 'A' ? 'MAIN' : 'SUB');
       // S-mètre en barre (S · 1 · 3 · 5 · 7 · 9 · +20 +40 +60dB) et SWR dessous, comme sur le grand écran du TRX ;
       // en émission, l'échelle du haut devient Po (0 – 200 W) pour le récepteur qui émet. Galvanomètre à aiguille : dans le petit écran.
-      const bx = X(x0 + 20), bw = 172;
+      const bx = X(xb + 20), bw = 172;
       const sb = o.sb = { bx, bw };
-      sb.sLab = el('text', { x: X(x0 + 4), y: Y(22), class: 'i76-bsl' }, h, 'S');
+      sb.sLab = el('text', { x: X(xb + 4), y: Y(22), class: 'i76-bsl' }, h, 'S');
       sb.sNums = el('g', {}, h); sb.pNums = el('g', { style: 'display:none' }, h);
       for (let n = 0; n <= 9; n++) {
         const fx = bx + bw * n / 9 * 0.55;
         if (n % 2) el('text', { x: fx, y: Y(21), class: 'i76-bs', 'text-anchor': 'middle' }, sb.sNums, String(n));
         else el('circle', { cx: fx, cy: Y(18.5), r: 0.8, class: 'i76-bsd' }, sb.sNums);
       }
-      el('circle', { cx: bx + bw * 0.625, cy: Y(18.5), r: 0.8, class: 'i76-bsd' }, sb.sNums);
-      for (const [f, t] of [[0.7, '+20'], [0.85, '+40'], [0.985, '+60dB']]) el('text', { x: bx + bw * f, y: Y(21), class: 'i76-bs red', 'text-anchor': 'middle' }, sb.sNums, t);
+      for (const [f, t] of [[0.67, '+20'], [0.8, '+40'], [1, '+60dB']]) el('text', { x: bx + bw * f + (f === 1 ? 2 : 0), y: Y(21), class: 'i76-bs red', 'text-anchor': f === 1 ? 'end' : 'middle' }, sb.sNums, t);
       for (const [w, t] of [[0, '0'], [50, '50'], [100, '100'], [150, '150'], [200, '200W']]) el('text', { x: bx + bw * w / 200, y: Y(21), class: 'i76-bs', 'text-anchor': 'middle' }, sb.pNums, t);
       el('line', { x1: bx, y1: Y(23.5), x2: bx + bw * 0.55, y2: Y(23.5), class: 'i76-bu' }, h);
       sb.redU = el('line', { x1: bx + bw * 0.55, y1: Y(23.5), x2: bx + bw, y2: Y(23.5), class: 'i76-bu red' }, h);
       el('line', { x1: bx, y1: Y(27), x2: bx + bw, y2: Y(27), class: 'i76-btr' }, h);
       sb.w = el('line', { x1: bx, y1: Y(27), x2: bx, y2: Y(27), class: 'i76-bar' }, h);
       sb.r = el('line', { x1: bx + bw * 0.55, y1: Y(27), x2: bx + bw * 0.55, y2: Y(27), class: 'i76-bar red' }, h);
-      el('text', { x: X(x0 + 1), y: Y(37), class: 'i76-bs' }, h, 'SWR');
+      el('text', { x: X(xb + 1), y: Y(37), class: 'i76-bs' }, h, 'SWR');
       for (const [sw, t] of [[1, '1'], [1.5, '1.5'], [2, '2'], [2.5, '2.5'], [3, '3'], [99, '∞']]) el('text', { x: bx + bw * i76SwrF(sw) - (sw > 50 ? 3 : 0) + (sw === 1 ? 4 : 0), y: Y(37), class: 'i76-bs' + (sw > 50 ? ' inf' : ''), 'text-anchor': 'middle' }, h, t);
       el('line', { x1: bx, y1: Y(39), x2: bx + bw, y2: Y(39), class: 'i76-bu' }, h);
       sb.swr = el('line', { x1: bx, y1: Y(41.5), x2: bx, y2: Y(41.5), class: 'i76-bar thin' }, h);
       // TX (rouge) et puissance dessous, à gauche de « VFO [mode] [FIL] », comme sur le TRX
-      o.txR = el('rect', { x: X(x0 + 2), y: Y(45), width: 22, height: 13, rx: 1.5, class: 'i76-tx' }, h);
-      o.txT = el('text', { x: X(x0 + 13), y: Y(55.3), class: 'i76-txt', 'text-anchor': 'middle' }, h, 'TX');
-      o.pw = el('text', { x: X(x0 + 2), y: Y(67), class: 'i76-pw' }, h, '');
+      o.txR = el('rect', { x: X(xb + 2), y: Y(45), width: 22, height: 13, rx: 1.5, class: 'i76-tx' }, h);
+      o.txT = el('text', { x: X(xb + 13), y: Y(55.3), class: 'i76-txt', 'text-anchor': 'middle' }, h, 'TX');
+      o.pw = el('text', { x: X(xb + 2), y: Y(67), class: 'i76-pw' }, h, '');
       const v = LCD['v' + sd];
-      v.lbl.setAttribute('x', X(x0 + 26)); v.lbl.setAttribute('y', Y(55));
-      for (const [k2, val] of [['x', X(x0 + 48)], ['y', Y(46)], ['width', 34], ['height', 11]]) v.badge.setAttribute(k2, val);
+      v.lbl.setAttribute('x', X(xb + 26)); v.lbl.setAttribute('y', Y(55));
+      for (const [k2, val] of [['x', X(xb + 48)], ['y', Y(46)], ['width', 34], ['height', 11]]) v.badge.setAttribute(k2, val);
       v.badge.setAttribute('class', 'lcd-mode i76');
-      v.mode.setAttribute('x', X(x0 + 65)); v.mode.setAttribute('y', Y(54.6)); v.mode.setAttribute('class', 'lcd-modet i76');
-      const mh = el('rect', { x: X(x0 + 48), y: Y(46), width: 34, height: 11, class: 'hs lcd-hit' }, v.g);
+      v.mode.setAttribute('x', X(xb + 65)); v.mode.setAttribute('y', Y(54.6)); v.mode.setAttribute('class', 'lcd-modet i76');
+      const mh = el('rect', { x: X(xb + 48), y: Y(46), width: 34, height: 11, class: 'hs lcd-hit' }, v.g);
       el('title', {}, mh, 'Mode : clic pour le tableau des modes (récepteur sélectionné)');
       mh.addEventListener('click', (ev) => { ev.stopPropagation(); if (activeSide() !== sd && needControl()) setCtl('vfoSel', sd === 'B' ? 1 : 0); openModeMenu(); });
-      o.filR = el('rect', { x: X(x0 + 85), y: Y(46), width: 26, height: 11, rx: 1.5, class: 'i76-fil' }, v.g);
-      o.filT = el('text', { x: X(x0 + 98), y: Y(54.2), class: 'i76-filt', 'text-anchor': 'middle' }, v.g, 'FIL');
-      const fh = el('rect', { x: X(x0 + 85), y: Y(46), width: 26, height: 11, class: 'hs lcd-hit' }, v.g);
+      o.filR = el('rect', { x: X(xb + 85), y: Y(46), width: 26, height: 11, rx: 1.5, class: 'i76-fil' }, v.g);
+      o.filT = el('text', { x: X(xb + 98), y: Y(54.2), class: 'i76-filt', 'text-anchor': 'middle' }, v.g, 'FIL');
+      const fh = el('rect', { x: X(xb + 85), y: Y(46), width: 26, height: 11, class: 'hs lcd-hit' }, v.g);
       el('title', {}, fh, 'FIL : filtre suivant (FIL1 → FIL2 → FIL3) de ce récepteur');
       fh.addEventListener('click', (ev) => { ev.stopPropagation(); if (needControl()) cycleCell(sd === 'B' ? 'filB' : 'fil'); });
       // Fréquence en police Icom (la fréquence en 7 segments de l'écran Yaesu est cachée)
       v.freq.style.display = 'none'; v.tx.style.display = 'none'; v.clarG.style.display = 'none';
-      o.freq = el('text', { x: X(x0 + 248), y: Y(80), class: 'i76-freq', 'text-anchor': 'end' }, v.g, '');
-      for (const [k2, val] of [['x', X(x0 + 60)], ['y', Y(59)], ['width', 190], ['height', 23]]) v.hit.setAttribute(k2, val);
-      for (const [k2, val] of [['x', X(x0 + 90)], ['y', Y(82)], ['width', 160]]) v.sel.setAttribute(k2, val);
+      // Fin de la fréquence : MAIN alignée sur la fin de ses barres S / SWR, SUB au bord droit (ses barres y sont calées aussi)
+      const fe = sd === 'B' ? x0 + 248 : x0 + 194;
+      o.freq = el('text', { x: X(fe), y: Y(80), class: 'i76-freq', 'text-anchor': 'end' }, v.g, '');
+      for (const [k2, val] of [['x', X(fe - 188)], ['y', Y(59)], ['width', 190], ['height', 23]]) v.hit.setAttribute(k2, val);
+      for (const [k2, val] of [['x', X(fe - 158)], ['y', Y(82)], ['width', 160]]) v.sel.setAttribute(k2, val);
       // Voyants du récepteur (et RIT / ΔTX) sous la fréquence
       o.tags = el('text', { x: X(x0 + 3), y: Y(93), class: 'i76-tags' }, h, '');
     }
@@ -3067,11 +3071,11 @@
     // DUAL-W (vert) et SPLIT (orange) entre les deux récepteurs, comme sur le TRX
     LCD.i76dw = el('g', { style: 'display:none' }, h);
     // l'un au-dessus de l'autre, à droite du S-mètre du MAIN, comme sur le TRX
-    el('rect', { x: X(271), y: Y(30), width: 38, height: 11, rx: 1.5, class: 'i76-dw' }, LCD.i76dw);
-    el('text', { x: X(290), y: Y(38.6), class: 'i76-dwt', 'text-anchor': 'middle' }, LCD.i76dw, 'DUAL-W');
+    el('rect', { x: X(285), y: Y(24), width: 54, height: 15, rx: 2, class: 'i76-dw' }, LCD.i76dw);
+    el('text', { x: X(312), y: Y(35.2), class: 'i76-dwt', 'text-anchor': 'middle' }, LCD.i76dw, 'DUAL-W');
     LCD.i76sp = el('g', { style: 'display:none' }, h);
-    el('rect', { x: X(271), y: Y(43), width: 38, height: 11, rx: 1.5, class: 'i76-sp' }, LCD.i76sp);
-    el('text', { x: X(290), y: Y(51.6), class: 'i76-dwt', 'text-anchor': 'middle' }, LCD.i76sp, 'SPLIT');
+    el('rect', { x: X(285), y: Y(43), width: 54, height: 15, rx: 2, class: 'i76-sp' }, LCD.i76sp);
+    el('text', { x: X(312), y: Y(54.2), class: 'i76-dwt', 'text-anchor': 'middle' }, LCD.i76sp, 'SPLIT');
     // Bandeau du scope : « SPECTRUM SCOPE » au milieu, comme sur le TRX
     LCD.i76sst = el('text', { x: X(250), y: Y(G.lowY + 8.5), class: 'i76-sst', 'text-anchor': 'middle' }, LCD.lowG, 'SPECTRUM SCOPE');
     for (const cg of [LCD.cgA, LCD.cgB]) cg.style.display = 'none';
