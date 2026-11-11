@@ -3515,8 +3515,10 @@
       hit.addEventListener('click', (ev) => {
         ev.stopPropagation();
         if (!row.id) return;
-        // DIGI-SEL : 1er clic = le choisir (bouton MULTI : accord) ; clic quand il est choisi = ON / OFF
-        if (row.id === 'dsShift' && L.funcSel === 'dsShift') { if (needControl()) setCtl(sdk('digiSel'), S()[sdk('digiSel')] ? 0 : 1); return; }
+        // 1er clic = choisir la case (bouton MULTI pour la valeur) ; clic bref sur la case déjà choisie = sa fonction ON / OFF
+        // (DIGI-SEL, COMP, MONITOR), comme sur le TRX ; RF POWER, MIC GAIN, KEY SPEED… n'ont pas d'ON / OFF
+        const tog = { dsShift: sdk('digiSel'), procLvl: 'proc', moniLvl: 'moni' }[row.id];
+        if (tog && L.funcSel === row.id) { if (needControl()) { const v = S()[tog] ? 0 : 1; setCtl(tog, v); say(row.t.textContent + ' ' + (v ? 'ON' : 'OFF'), '', 1800); } return; }
         L.funcSel = row.id; store.set('rs.face.funcsel', row.id); render();
       });
       hit.addEventListener('wheel', (ev) => {

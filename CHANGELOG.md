@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.260** — IC-7760 : colonne MULTI — clic bref sur la case déjà choisie = ON/OFF (DIGI-SEL, COMP, MONITOR)
 - **0.37.259** — IC-7760 : appui d'1 s sur DIGI-SEL = colonne MULTI avec l'accord du DIGI-SEL (14 13) ; COMP dans la colonne seulement quand il est en service
 - **0.37.258** — IC-7760 : fenêtres ANT/BW/SFT, MODE (SSB LSB/USB selon 10 MHz, DATA = USB-D1), BAND STACKING et F-INP ; SUB DISP galvanomètre/filtre/bandes ; DUAL-W = un ou deux scopes, écran en un seul scope (galvanomètres en haut) ; loupe sur le scope, accord en glissant
 - **0.37.257** — IC-7760 : fenêtres ANT/BW/SFT, MODE, BAND STACKING et F-INP ; SUB DISP galvanomètre/filtre/bandes ; DUAL-W = un ou deux scopes, écran du TRX en un seul scope (galvanomètres en haut) ; loupe sur le scope et accord en glissant la souris
