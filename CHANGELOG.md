@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.322** — Dashboard : DUAL RX sur fond mauve foncé quand il est en service (liseré mauve quand le TRX le permet mais qu'il est coupé)
 - **0.37.321** — Dashboard : MAIN en vert comme A, SUB en rose comme B
 - **0.37.320** — Dashboard : dégradé bleu plus foncé sur le mode actif
 - **0.37.319** — Dashboard : petit filtre à la manière Icom (largeur = BW, position = SFT, bords rouge / bleu, deux filtres du TWIN PBT), badge BW au lieu de FIL sur les Icom ; mode actif en dégradé bleu, « Mode appliqué à » plus grand en blanc gras. Logbook : références SOTA (liste des sommets téléchargée, ADIF SOTA_REF / MY_SOTA_REF), Remarque plus courte, « Ma référence (activation) » juste à droite de QO-100
