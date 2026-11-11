@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.300** — Faces Yaesu : la case MULTI ouvre et ferme l'écran des fonctions, touche Échap = EXIT
 - **0.37.299** — FTDX5000 : ATT, IPO, R.FLT et AGC agissent sur le VFO choisi par A / B
 - **0.37.298** — FTDX5000 : R.FLT (filtre de toit, commande RF du manuel CAT) affiché et réglable, MAIN et SUB
 - **0.37.297** — IC-7760 : touche retour sur l'écran ANTENNA

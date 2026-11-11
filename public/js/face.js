@@ -1248,7 +1248,7 @@
       if (sub) { t.setAttribute('y', Y(G.botY + 9)); t.classList.add('two'); }
       const t2 = last || sub ? el('text', { x: x + bw / 2, y: Y(G.botY + 18), class: 'lcd-bott2' + (sub ? ' sub' : ''), 'text-anchor': 'middle' }, g, '') : null;
       const h = el('rect', { x: x + 0.5, y: Y(G.botY), width: bw - 1, height: G.botH, class: 'hs lcd-hit' + (fn || last ? '' : ' off') }, g);
-      el('title', {}, h, last ? 'MULTI : fonction réglée par le bouton MULTI (choisie dans FUNC)' : lab + (fn ? '' : ' : pas disponible à distance') + (lp ? (lab === 'EXPD/SET' ? ' ; appui d’1 s : SCOPE SET' : lab === '<MENU1>' ? ' ; appui d’1 s : <MENU2> / <MENU1>' : lab === 'CENT/FIX' ? ' ; appui long : SCROLL-C / SCROLL-F' : '') : ''));
+      el('title', {}, h, last ? 'MULTI : fonction réglée par le bouton MULTI (choisie dans FUNC) ; clic : ouvre / ferme l’écran des fonctions' : lab + (fn ? '' : ' : pas disponible à distance') + (lp ? (lab === 'EXPD/SET' ? ' ; appui d’1 s : SCOPE SET' : lab === '<MENU1>' ? ' ; appui d’1 s : <MENU2> / <MENU1>' : lab === 'CENT/FIX' ? ' ; appui long : SCROLL-C / SCROLL-F' : '') : ''));
       let lpT = null, lpDone = false;
       if (lp) {
         h.addEventListener('pointerdown', () => { lpDone = false; clearTimeout(lpT); lpT = setTimeout(() => { lpDone = true; lp(); }, lab === 'EXPD/SET' || lab === '<MENU1>' ? 1000 : 700); });
@@ -1256,7 +1256,7 @@
       }
       h.addEventListener('click', () => {
         if (lpDone) { lpDone = false; return; }
-        if (last) { viewTouched(); L.func = true; return render(); }
+        if (last) { viewTouched(); L.func = !L.func; return render(); } // MULTI : ouvre l'écran des fonctions, un 2e clic le ferme
         if (fn) return fn();
         say(lab + ' : réglage du scope du TRX, pas disponible à distance (la cascade est celle de la BF).', '', 3500);
       });
@@ -8419,6 +8419,8 @@
   // Flèches du clavier : accord du récepteur actif (comme le grand bouton)
   document.addEventListener('keydown', (e) => {
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    // Échap : comme EXIT / BACK — ferme l'écran des fonctions, les menus et tableaux ouverts
+    if (e.key === 'Escape') { doAct({ act: { local: 'exit' } }); return; }
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
     const dial = (FACE.knobs || []).find((k) => k.dial);
     if (!dial) return;
