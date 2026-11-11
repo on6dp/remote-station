@@ -246,6 +246,46 @@
   window.addEventListener('resize', () => { fitKey.A = ''; fitKey.B = ''; });
   // Largeur du filtre sur l'écran VFO : « 2.4K », « 500 », « 50 » (sous 1 kHz en Hz : 50 et 100 Hz ne se confondent plus)
   const bwK = (hz) => (hz >= 1000 ? (hz / 1000).toFixed(1) + 'K' : String(hz));
+  // ------------------------------------------------------------ petit filtre dans l'écran de chaque VFO (comme sur l'IC-7760) :
+  // [BW 2.80k] [SFT −100], bande passante orange autour de 1500 Hz décalée du SHIFT, échelle bas · 1500 · haut
+  const MF_DEF = (md) => (/^CW/.test(md) ? 500 : /RTTY|PSK/.test(md) ? 500 : /DATA|PKT|-D/.test(md) ? 3000 : /AM/.test(md) ? 6000 : 2400);
+  function miniFltData(w, r) {
+    const B = w === 'B' ? 'B' : '', md = (B ? r.modeB : r.mode) || '';
+    if (!md || /FM/.test(md)) return null;
+    const R2 = RIG();
+    let hz = null, sft = 0;
+    if (R2.filHz) hz = R2.filHz(md, r['filWi' + B]); // Icom : largeur lue (1A 03)
+    if (!hz && R2.widthTable) { const wt = R2.widthTable(md), wv = ctlValue('width' + B) != null ? Number(ctlValue('width' + B)) : r['width' + B]; if (wt && wv && wt[wv - 1]) hz = wt[wv - 1]; }
+    if (!hz) hz = MF_DEF(md);
+    if (r['shift' + B] != null) sft = Number(ctlValue('shift' + B) != null ? ctlValue('shift' + B) : r['shift' + B]) || 0; // Yaesu : IF SHIFT
+    const pi = r['pbtIn' + B], po = r['pbtOut' + B]; // Icom : TWIN PBT (bande passante rétrécie et décalée)
+    if (pi != null && po != null) { const a = (pi - 128) / 128 * hz / 2, b = (po - 128) / 128 * hz / 2; sft = (a + b) / 2; hz = Math.max(50, hz - Math.abs(a - b)); }
+    return { hz: Math.round(hz / 10) * 10, sft: Math.round(sft / 10) * 10, cw: /^CW/.test(md) };
+  }
+  function drawMiniFlt(w, r, live) {
+    const sv = $('flt' + w);
+    if (!sv) return;
+    const d = live ? miniFltData(w, r) : null;
+    const key = d ? d.hz + '/' + d.sft + '/' + d.cw : '';
+    if (sv.dataset.k === key) return;
+    sv.dataset.k = key;
+    sv.style.visibility = d ? '' : 'hidden';
+    if (!d) { sv.innerHTML = ''; return; }
+    const c0 = d.cw ? 700 : 1500, span = Math.max(4000, d.hz + 1200), x0 = 6, ww = 138, X = (f) => x0 + (f - (c0 - span / 2)) / span * ww;
+    const lo = c0 + d.sft - d.hz / 2, hi = c0 + d.sft + d.hz / 2, xl = X(lo), xh = X(hi), sl = Math.min(6, (xh - xl) / 4);
+    const k = (v) => (v >= 1000 ? (v / 1000).toFixed(2) + 'k' : String(v));
+    const fmt = (v) => String(Math.max(0, Math.round(v / 10) * 10));
+    sv.innerHTML =
+      '<rect class="mf-box" x="1" y="1" width="64" height="12" rx="2"/><text class="mf-t" x="33" y="10" text-anchor="middle">BW ' + k(d.hz) + '</text>' +
+      '<rect class="mf-box" x="70" y="1" width="64" height="12" rx="2"/><text class="mf-t" x="102" y="10" text-anchor="middle">SFT ' + (d.sft > 0 ? '+' : d.sft < 0 ? '−' : '') + Math.abs(d.sft) + '</text>' +
+      '<line class="mf-base" x1="' + x0 + '" y1="37" x2="' + (x0 + ww) + '" y2="37"/>' +
+      '<path class="mf-pb" d="M' + xl.toFixed(1) + ' 37L' + (xl + sl).toFixed(1) + ' 18L' + (xh - sl).toFixed(1) + ' 18L' + xh.toFixed(1) + ' 37Z"/>' +
+      '<line class="mf-c" x1="' + X(c0).toFixed(1) + '" y1="16" x2="' + X(c0).toFixed(1) + '" y2="38"/>' +
+      '<text class="mf-s edge" x="' + Math.max(8, xl).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(lo) + '</text>' +
+      '<text class="mf-s" x="' + X(c0).toFixed(1) + '" y="48" text-anchor="middle">' + c0 + '</text>' +
+      '<text class="mf-s edge" x="' + Math.min(142, xh).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(hi) + '</text>';
+    sv.querySelector('title') || sv.insertAdjacentHTML('afterbegin', '<title>Filtre du VFO ' + w + ' : largeur ' + d.hz + ' Hz, décalage ' + d.sft + ' Hz (BW / IF SHIFT, colonne de gauche)</title>');
+  }
   function drawFreq(which, hz) {
     const s = hz == null ? '---------' : String(hz).padStart(9, '0');
     let lead = true;
@@ -1165,6 +1205,7 @@
       if (RIG().bwText) $('widthB').textContent = live ? RIG().bwText({ fil: ctlValue('filB') != null ? ctlValue('filB') : r.filB, filWi: r.filWiB, mode: r.modeB }) : '—';
       else $('widthB').textContent = 'BW ' + (live && r.narrowB ? 'NAR' : live && wtB && RIG().WIDTH_DEF && Number(wB) === 0 ? 'DEF' : live && wtB && wB && wtB[wB - 1] ? bwK(wtB[wB - 1]) : live && r.modeB && /AM|FM/.test(r.modeB) ? 'FIX' : '—');
     }
+    drawMiniFlt('A', r, live); drawMiniFlt('B', r, live);
     // S-mètre en réception, puissance relative en émission (sur le VFO qui émet) ; VFO B : S-mètre du côté SUB (FTX-1)
     const txB = txing && r.txVfo === 1;
     const hasSmB = r.smeterB != null;

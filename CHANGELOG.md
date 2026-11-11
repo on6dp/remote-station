@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.314** — Dashboard : petit filtre BW / SFT dans l'écran de chaque VFO ; mode choisi en bleu azur
 - **0.37.313** — Dashboard : mode choisi sur fond bleu azur dans la ligne MODES
 - **0.37.312** — SPLIT orange plus foncé ; fiche QSO : noms des champs en blanc gras, champs arrondis
 - **0.37.311** — Dashboard : bouton SPLIT enclenché sur fond orange, SPLIT en blanc gras

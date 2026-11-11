@@ -2143,3 +2143,13 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
   background: linear-gradient(180deg, #2b95ff, #0a6fe0); border-color: #7cc0ff; color: #fff; font-weight: 800;
   box-shadow: 0 0 10px rgba(0, 127, 255, .5); text-shadow: 0 1px 1px rgba(0, 0, 0, .35);
 }
+/* Petit filtre dans l'écran de chaque VFO : dans l'espace libre à gauche de la fréquence, seulement s'il y a la place */
+.freq-wrap .vfo-flt { width: 176px; height: 58px; margin-right: auto; align-self: center; flex: none; }
+@container (max-width: 560px) { .freq-wrap .vfo-flt { display: none; } }
+.vfo-flt .mf-box { fill: #0b0f14; stroke: #c8d0dc; stroke-width: .8; }
+.vfo-flt .mf-t { fill: #f4f7fb; font: 700 8px Arial, sans-serif; }
+.vfo-flt .mf-base { stroke: #59606b; stroke-width: 1; }
+.vfo-flt .mf-pb { fill: #e0602a; stroke: #ff3a2a; stroke-width: 1; opacity: .95; }
+.vfo-flt .mf-c { stroke: #ffffff; stroke-width: .8; opacity: .8; }
+.vfo-flt .mf-s { fill: #f4f7fb; font: 700 7.5px Arial, sans-serif; }
+.vfo-flt .mf-s.edge { fill: #ff8a3c; }
