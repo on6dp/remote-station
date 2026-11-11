@@ -950,3 +950,5 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .i76h-sd { fill: #d8343a; }
 #face .i76h-sd.sub { fill: #2f7dff; }
 #face text.i76h-sdt { fill: #fff; font: 700 6.4px Arial, sans-serif; pointer-events: none; }
+/* IC-7760 : libellés de l'écran MENU moins gras, comme sur le TRX */
+#face[data-model='ic7760'] .ic-lab { font-weight: 600; font-family: Arial, 'Liberation Sans', sans-serif; letter-spacing: .2px; }

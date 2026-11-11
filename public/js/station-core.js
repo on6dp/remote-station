@@ -421,6 +421,8 @@
           this.forceSlow = true;
         } else if (m.op === 'mode') {
           this._write(FTX1.cmdMode(m.code, !!m.sub, this.radio));
+          // IC-7760 (pilote à trames) : mode relu au prochain cycle (26 00 / 26 01), pas au prochain tour lent
+          if (FTX1.ID === 'ic7760') this._readBack(m.sub ? 'filB' : 'fil');
         } else if (m.op === 'ctl') {
           const v = FTX1.validate(m.id, m.value, this.radio, { skipWhen: true });
           if (FTX1.CONTROL[m.id].transmits && (!this.serialOpen || !this.radio.connected)) return this.log('Refusé : radio non connectée');

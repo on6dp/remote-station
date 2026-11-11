@@ -6875,7 +6875,9 @@
       // Filtre : largeur et décalage du récepteur
       const fl = LCD['f' + side];
       const sfx = side === 'B' ? 'B' : '';
-      const mode = side === 'A' ? s.mode : s.modeB;
+      // IC-7760 : mode choisi dans la fenêtre MODE montré tout de suite (le TRX le confirme au cycle suivant)
+      const pmd = DICOM && L.popModeAt && Date.now() - L.popModeAt.at < 2500 && L.popModeAt.sd === side ? R.MODES[L.popModeAt.code] : null;
+      const mode = pmd || (side === 'A' ? s.mode : s.modeB);
       const tab = R.widthTable(mode) || null;
       const wi = s['width' + sfx];
       const nar = !!s['narrow' + sfx];
