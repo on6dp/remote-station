@@ -1550,6 +1550,7 @@ body.bm-resizing { cursor: ew-resize; user-select: none; }
 .lg-row.lg-refs { align-items: flex-end; gap: 8px; }
 .lg-refs-t { font-size: 12px; font-weight: 700; color: #ffd400; padding-bottom: 6px; min-width: 128px; }
 .lg-myrefs .lg-refs-t { color: #6fe36f; }
+.lg-myrefs[hidden], .lg-row[hidden] { display: none !important; } /* « Ma référence (activation) » cachée : le display: flex de .lg-row ne doit pas l’emporter */
 .lg-ref input { width: 96px; text-transform: uppercase; font-family: ui-monospace, Consolas, monospace; }
 .lg-row .lg-ref { color: #ffd400; font-weight: 700; }
 .lg-row .lg-gap { width: 18px; flex: 0 0 18px; }
