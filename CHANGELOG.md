@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.268** — IC-7760 : touche MENU = écran MENU du TRX (3 rangées : SCOPE, AUDIO, VOICE, METER, SWR, MEMORY, SCAN, MPAD, RECORD, ANTENNA, PRESET, SET)
 - **0.37.267** — IC-7760 : <MENU1> n'ouvre plus le SCOPE MENU des Yaesu
 - **0.37.266** — IC-7760 : DUAL coupé = un seul scope tout de suite (plus d'attente de 1,5 s)
 - **0.37.265** — IC-7760 : voyants TX/RX — rouge pour le VFO qui émet, l'autre vert s'il reçoit (SPLIT ou DUAL-W)

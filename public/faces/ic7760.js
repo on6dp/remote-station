@@ -100,7 +100,7 @@
       { id: 'phones', cx: 68, cy: 400, r: 22, tip: 'PHONES : écouter le TRX (clic : marche / arrêt)', act: { local: 'listen' }, led: (s, L) => L.listening, ledColor: '#3ddc5a', ring: true },
       { id: 'mic', cx: 75, cy: 510, r: 50, tip: 'MIC', act: info('Micro : phonie à distance par le bouton PTT sous la face avant (page TRX SSB).') },
       // Sous l'écran
-      { id: 'menu', x: 320, y: 536, w: 90, h: 20, tip: 'MENU : tableau des modes (le mode se change aussi en cliquant sur le mode à l’écran)', act: { local: 'modeMenu' } },
+      { id: 'menu', x: 320, y: 536, w: 90, h: 20, tip: 'MENU : écran MENU du TRX (SCOPE, AUDIO, VOICE, METER, SWR, MEMORY, SCAN, MPAD, RECORD, ANTENNA, PRESET, SET)', act: { local: 'icomMenu' } },
       { id: 'function', x: 437, y: 536, w: 90, h: 20, tip: 'FUNCTION : écran des fonctions du TRX (P.AMP, ATT, AGC, NOTCH, NB, NR, DIGI-SEL, IP+, APF… du récepteur sélectionné ; VOX/BK-IN, COMP, TBW, MONI, TRACKING, DUAL-W)', act: { local: 'func' }, led: (s, L) => L.func },
       { id: 'mscope', x: 555, y: 536, w: 90, h: 20, tip: 'M.SCOPE : écran multi-fonctions (scope, OSCILLOSCOPE, AF-FFT du son reçu) ; 2e appui : retour', act: { local: 'multiView' }, led: (s, L) => !!L.multi },
       { id: 'quick', x: 675, y: 536, w: 90, h: 20, tip: 'QUICK : tableau des bandes', act: { local: 'bandMenu' } },

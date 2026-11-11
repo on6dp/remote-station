@@ -1200,7 +1200,25 @@
     buildModeMenu(g, c);
     if (SINGLE || FACE.bandGrid) buildBandMenu(g, c); // FTX-1 : tableau BAND du TRX (MAG BAND)
     // IC-7760 : colonne de touches Icom, écran FUNCTION Icom (15 touches, récepteur sélectionné) et menu MULTI (bouton MULTI poussé)
-    if (DICOM) { buildI76(g, c); buildIcFunc(g, c, I76_FUNC); buildI76Multi(g, c); buildI76Agc(g, c); buildI76Pop(g, c); }
+    if (DICOM) {
+      buildI76(g, c); buildIcFunc(g, c, I76_FUNC); buildI76Multi(g, c); buildI76Agc(g, c); buildI76Pop(g, c);
+      // Écran MENU de l'IC-7760 (touche MENU) : 3 rangées de 5 touches, comme sur le TRX ; VOICE devient KEYER en CW et DECODE en RTTY
+      const md = () => L.activeMode(S()) || '';
+      const soon = (t) => [t, t + ' : cet écran du TRX n’est pas encore sur la page (envoie une photo de l’écran pour qu’il soit fait)', null];
+      buildGrid(g, c, 'icomMenu', 'MENU', [[
+        ['SCOPE', 'SCOPE : le scope est déjà sous les fréquences (DUAL : un ou deux scopes ; clic sur le scope : loupe)', () => say('SCOPE : le scope du TRX est affiché sous les fréquences (DUAL pour un ou deux scopes).', '', 3500)],
+        ['AUDIO', 'AUDIO : écran M.SCOPE (scope, oscilloscope et AF-FFT du son reçu)', () => doAct({ act: { local: 'multiView' } })],
+        [() => (/^CW/.test(md()) ? 'KEYER' : /^RTTY/.test(md()) ? 'DECODE' : 'VOICE'), () => (/^CW/.test(md()) ? 'KEYER : mémoires du manipulateur' : /^RTTY/.test(md()) ? 'DECODE : décodeur RTTY (onglet RTTY des modes numériques)' : 'VOICE : mémoires vocales du TRX') + ' — pas encore sur la page de l’IC-7760',
+          () => (/^RTTY/.test(md()) ? digiOpen('rtty') : say((/^CW/.test(md()) ? 'KEYER' : 'VOICE') + ' : pas encore sur la page de l’IC-7760 (envoie une photo de l’écran).', '', 4000))],
+        ['METER', 'METER : Po, SWR, ALC, COMP, Id, Vd relus sur le TRX (en émission)', () => meterSay(false)],
+        ['SWR', 'SWR : ROS relu sur le TRX (en émission)', () => meterSay(true)],
+        soon('MEMORY'), soon('SCAN'), soon('MPAD'), soon('RECORD'),
+        ['ANTENNA', 'ANTENNA : ANT 1 – 4 et RX ANT du récepteur sélectionné', () => { L.i76pop = { k: 'ant', sd: activeSide() }; render(); }],
+        null, null, null,
+        ['PRESET', 'PRESET (Normal, FT8… enregistrés sur le TRX) : pas de commande CI-V, pas à distance', null],
+        soon('SET')
+      ]], 3);
+    }
     if (ICOM) {
       // Écran MENU de l'IC-7300 : 2 pages de 5 × 2 touches, comme sur le TRX ; VOICE devient KEYER en CW et DECODE en RTTY
       const md = () => L.activeMode(S()) || '';
@@ -1284,18 +1302,20 @@
       + '<circle cx="34" cy="35" r="14" fill="#c9ced8"/><circle cx="66" cy="35" r="11" fill="#c9ced8"/><circle cx="34" cy="35" r="4" fill="#3a3f4a"/><circle cx="66" cy="35" r="4" fill="#3a3f4a"/><path d="M34 21v6M22 42l5-3M46 42l-5-3M66 24v5M57 41l4-2M75 41l-4-2" stroke="#3a3f4a" stroke-width="3"/>',
     SET: '<path d="M22 60L68 14" stroke="#c9ced8" stroke-width="8" stroke-linecap="round"/><circle cx="72" cy="12" r="11" fill="#c9ced8"/><rect x="68" y="0" width="8" height="12" fill="#1b1f27" transform="rotate(45 72 12)"/>'
       + '<path d="M30 14L60 46" stroke="#aeb4bf" stroke-width="5"/><path d="M58 44L76 62" stroke="#e5482b" stroke-width="11" stroke-linecap="round"/><path d="M26 10l6 2 2 6" stroke="#aeb4bf" stroke-width="3" fill="none"/>',
+    ANTENNA: '<path d="M50 20V68M50 20L22 6M50 20L78 6M50 34L28 24M50 34L72 24M50 48L34 40M50 48L66 40" stroke="#c9ced8" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M14 8h16M70 8h16" stroke="#9aa1ae" stroke-width="3"/>',
     PRESET: scr(8, 4, 84, 62) + [[24, 20], [42, 44], [60, 28], [78, 38]].map(([x, y]) => '<path d="M' + x + ' 12v48" stroke="#6b7280" stroke-width="3"/><rect x="' + (x - 7) + '" y="' + (y - 4) + '" width="14" height="8" rx="2" fill="#38a0ff"/>').join('')
   };
-  function buildGrid(g, c, key, title, pages) {
+  function buildGrid(g, c, key, title, pages, rows) {
+    rows = rows || 2; // IC-7760 : 3 rangées de 5 touches sur une page
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const m = LCD[key] = el('g', { class: 'mode-menu ic-menu', style: 'display:none' }, g);
     const x0 = X(6), y0 = Y(4), w = c.w - 12, h = c.h - 8;
     el('rect', { x: x0, y: y0, width: w, height: h, rx: 4, class: 'mm-bg' }, m);
     el('rect', { x: x0 + 4, y: y0 + 4, width: w - 8, height: 24, rx: 3, class: 'mm-title' }, m);
     el('text', { x: x0 + w / 2, y: y0 + 21, class: 'mm-ttl big', 'text-anchor': 'middle' }, m, title);
-    const cw = (w - 16) / 5, rh = (h - 90) / 2;
+    const cw = (w - 16) / 5, rh = (h - 90 + (rows > 2 ? 22 : 0)) / rows;
     const cells = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < rows * 5; i++) {
       const x = x0 + 8 + (i % 5) * cw, y = y0 + 34 + Math.floor(i / 5) * rh;
       const box = el('rect', { x: x + 3, y, width: cw - 6, height: rh - 8, rx: 5, class: 'mm-cell ic-cell' }, m);
       const t = el('text', { x: x + cw / 2, y: y + rh / 2, class: 'mm-lab ic-lab', 'text-anchor': 'middle' }, m, '');
