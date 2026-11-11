@@ -16,6 +16,8 @@
   const K = 570 / 740;
   // Petit voyant rond (coordonnées de la photo) en chemin SVG à l'échelle de la page
   const circ = (cx, cy, r) => { cx *= K; cy *= K; r *= K; return 'M' + (cx - r).toFixed(2) + ' ' + cy.toFixed(2) + 'a' + r.toFixed(2) + ' ' + r.toFixed(2) + ' 0 1 0 ' + (2 * r).toFixed(2) + ' 0a' + r.toFixed(2) + ' ' + r.toFixed(2) + ' 0 1 0 ' + (-2 * r).toFixed(2) + ' 0Z'; };
+  const pill = (x, y, w, h) => { const r = h / 2 * K, a = x * K + r, b = (x + w) * K - r, t = y * K; return 'M' + a.toFixed(2) + ' ' + t.toFixed(2) + 'H' + b.toFixed(2) + 'a' + r.toFixed(2) + ' ' + r.toFixed(2) + ' 0 0 1 0 ' + (2 * r).toFixed(2) + 'H' + a.toFixed(2) + 'a' + r.toFixed(2) + ' ' + r.toFixed(2) + ' 0 0 1 0 ' + (-2 * r).toFixed(2) + 'Z'; };
+  const pbtOn = (s) => { const x = s.vfoSel === 1 ? 'B' : ''; return [s['pbtIn' + x], s['pbtOut' + x]].some((v) => v != null && v !== 128); };
   const voxOn = (s) => (/^CW/.test((s.vfoSel === 1 ? s.modeB : s.mode) || '') ? !!s.bkin : !!s.vox);
   const SC = (o) => {
     for (const k of ['x', 'y', 'w', 'h', 'cx', 'cy', 'r', 'ro', 'ri', 'size']) if (typeof o[k] === 'number') o[k] = +(o[k] * K).toFixed(2);
@@ -78,6 +80,8 @@
       ...[[140, 339, (s) => !!side('nb')(s)], [217.5, 339, (s) => !!side('nr')(s)], [139, 137.5, (s) => !!side('apf')(s)], [217.5, 137.5, (s) => !!(side('notch')(s) || side('dnf')(s))]]
         .map(([x, y, f]) => ({ path: circ(x, y, 4.4), color: '#ffffff', on: f, bright: f })),
       { path: circ(46.3, 339.5, 4.4), color: '#3fa9ff', on: voxOn, bright: voxOn },
+      // TWIN-PBT : voyant blanc à droite du bouton dès que la bande passante est décalée ou rétrécie (PBT du récepteur sélectionné pas au milieu)
+      { path: pill(1592.5, 266, 21, 6.6), color: '#ffffff', on: pbtOn, bright: pbtOn },
       // TX/RX de chaque récepteur : vert en réception, rouge en émission
       // (en émission : rouge pour le VFO qui émet, vert pour l'autre s'il reçoit — SPLIT ou DUAL-W — ; vice versa)
       { x: 255, y: 198, w: 21, h: 7, rx: 3.5, color: '#3ddc5a', on: (s, L) => !!s.connected && (!s.tx || L.txSide(s) !== 'A'), bright: (s, L) => !!s.connected && (!s.tx ? (s.smeter || 0) > 0 : L.txSide(s) !== 'A') },
