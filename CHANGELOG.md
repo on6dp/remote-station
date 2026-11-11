@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.281** — IC-7760 : en sortant des menus, retour à l'écran choisi par M.SCOPE (EXIT ne le change plus)
 - **0.37.280** — IC-7760 : SET → Others → Information (Version, MAC, numéros de série)
 - **0.37.279** — IC-7760 : M.SCOPE (scope + METER → METER seul → scope), petit écran filtre avec waterfall et touches au toucher, MENU → ANTENNA (ANTENNA MEMORY), SET → Display, DPD Adjustment, Network (Different Segment, grisé si DHCP), fenêtre de liste
 - **0.37.278** — IC-7760 : SET → Network en lecture seule (administrateurs), DHCP, IP, masque, passerelle, DNS, Audio Buffer, Different Segment, Network Name

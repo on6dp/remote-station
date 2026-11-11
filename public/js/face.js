@@ -217,7 +217,7 @@
     if (a.local === 'exit' && L.agcTbl) { L.agcTbl = false; return render(); }
     if (a.local === 'exit' && L.i76pop) { L.i76pop = null; return render(); } // IC-7760 : EXIT ferme la fenêtre ANT / BW / SFT // IC-7760 : EXIT ferme le tableau AGC
     if (a.local === 'exit' && L.i76ant) { L.i76ant = false; return render(); } // IC-7760 : écran ANTENNA
-    if (a.local === 'exit' && (L.i76meter || L.i76mtOnly)) { L.i76meter = false; L.i76mtOnly = false; return render(); }
+    // (IC-7760 : EXIT ne change pas l'écran choisi par M.SCOPE — on y revient en sortant des menus, comme sur le TRX)
     // IC-7760 M.SCOPE : scope + MULTI-FUNCTION METER → METER seul → scope seul → …, comme sur le TRX
     if (a.local === 'i76ms') {
       if (L.i76mtOnly) { L.i76mtOnly = false; L.i76meter = false; } else if (L.i76meter) { L.i76meter = false; L.i76mtOnly = true; } else L.i76meter = true;
@@ -1243,7 +1243,7 @@
         ['METER', 'METER : MULTI-FUNCTION METER sous le scope (S, Po, ALC, COMP, SWR, Id ; S du SUB, Vd, TEMP), comme sur le TRX', () => { L.i76meter = true; L.i76mtOnly = false; L.func = false; render(); }],
         ['SWR', 'SWR : ROS relu sur le TRX (en émission)', () => meterSay(true)],
         soon('MEMORY'), soon('SCAN'), soon('MPAD'), soon('RECORD'),
-        ['ANTENNA', 'ANTENNA : ANTENNA MEMORY (antenne de chaque tranche de fréquences), [ANT] Switch, TEMP-M, TYPE — comme sur le TRX', () => { L.i76ant = true; L.i76meter = false; L.i76mtOnly = false; L.func = false; antRead(); render(); }],
+        ['ANTENNA', 'ANTENNA : ANTENNA MEMORY (antenne de chaque tranche de fréquences), [ANT] Switch, TEMP-M, TYPE — comme sur le TRX', () => { L.i76ant = true; L.func = false; antRead(); render(); }],
         null, null, null,
         ['PRESET', 'PRESET (Normal, FT8… enregistrés sur le TRX) : pas de commande CI-V, pas à distance', null],
         ['SET', 'SET : réglages du TRX (Tone Control/TBW pour l’instant)', () => { L.icSet = true; L.icSub = null; L.exList = null; render(); }]
@@ -3887,7 +3887,8 @@
     }
   }
   function drawI76Meter(s, tx) {
-    for (const M of LCD.i76mt || []) { const on = M.only ? !!L.i76mtOnly && M.only === (s.scDual ? 'D' : 'S') : !!L.i76meter; M.g.style.display = on ? '' : 'none'; if (on) drawI76Mt(M, s, tx); }
+    const over = !!(L.i76ant || L.func); // ANTENNA / FUNCTION par-dessus : l'écran M.SCOPE revient quand ils se ferment
+    for (const M of LCD.i76mt || []) { const on = !over && (M.only ? !!L.i76mtOnly && M.only === (s.scDual ? 'D' : 'S') : !!L.i76meter); M.g.style.display = on ? '' : 'none'; if (on) drawI76Mt(M, s, tx); }
   }
   function drawI76Mt(M, s, tx) {
     M.mtPh.style.display = L.pHold ? '' : 'none';
@@ -6866,7 +6867,7 @@
     $('scope').style.pointerEvents = ((ICOM || DICOM) && rfFresh()) || (FACE.meterFtx && $('scope').style.visibility === 'visible') ? 'auto' : ''; // FTX-1 : clic sur le spectre / la cascade = aller sur cette fréquence
     $('scope').style.cursor = (ICOM || DICOM) && rfFresh() ? 'crosshair' : '';
     LCD.hint.textContent = !live ? '' : st.audio && !st.audio.active ? 'Cascade : l’audio n’est pas activé sur la page Station' : 'Cascade : en attente du son de la station…';
-    $('scope').style.visibility = (fresh || rfFresh()) && !(L.func && !DICOM) && !L.agcTbl && !L.i76pop && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !(L.multiMenu && !DICOM) && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet && !L.i76mtOnly && L.fdisp !== 2 ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom ; FTX-1 DISP 2 : pas de scope)
+    $('scope').style.visibility = (fresh || rfFresh()) && !(L.func && !DICOM) && !L.agcTbl && !L.i76pop && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !(L.multiMenu && !DICOM) && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet && !(L.i76mtOnly && !L.i76ant && !L.func) && L.fdisp !== 2 ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom ; FTX-1 DISP 2 : pas de scope)
     if (LCD.icm && L.icMeter && LCD.hint.style.display !== 'none') LCD.hint.setAttribute('y', LCD.Y(G.scopeY + 32)); else if (LCD.hint) LCD.hint.setAttribute('y', LCD.Y(G.scopeY + G.scopeH / 2 - 2));
     icPopCheck(s, live);
     if (ICOM) pbtPopDraw(s, live);
