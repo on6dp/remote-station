@@ -79,9 +79,11 @@
         .map(([x, y, f]) => ({ path: circ(x, y, 4.4), color: '#ffffff', on: f, bright: f })),
       { path: circ(46.3, 339.5, 4.4), color: '#3fa9ff', on: voxOn, bright: voxOn },
       // TX/RX de chaque récepteur : vert en réception, rouge en émission
-      { x: 255, y: 198, w: 21, h: 7, rx: 3.5, color: '#3ddc5a', on: (s) => !!s.connected && !s.tx, bright: (s) => !!s.connected && !s.tx && (s.smeter || 0) > 0 },
+      // (en émission : rouge pour le VFO qui émet, vert pour l'autre s'il reçoit — SPLIT ou DUAL-W — ; vice versa)
+      { x: 255, y: 198, w: 21, h: 7, rx: 3.5, color: '#3ddc5a', on: (s, L) => !!s.connected && (!s.tx || L.txSide(s) !== 'A'), bright: (s, L) => !!s.connected && (!s.tx ? (s.smeter || 0) > 0 : L.txSide(s) !== 'A') },
       { x: 255, y: 198, w: 21, h: 7, rx: 3.5, color: '#ff3b30', on: (s, L) => !!s.tx && L.txSide(s) === 'A', bright: (s, L) => !!s.tx && L.txSide(s) === 'A' },
-      { x: 257, y: 410, w: 21, h: 7, rx: 3.5, color: '#3ddc5a', on: (s) => !!s.connected && !s.tx && s.dualRx !== 0, bright: (s) => !!s.connected && !s.tx && s.dualRx !== 0 && (s.smeterB || 0) > 0 },
+      { x: 257, y: 410, w: 21, h: 7, rx: 3.5, color: '#3ddc5a', on: (s, L) => !!s.connected && (!s.tx ? s.dualRx !== 0 : L.txSide(s) !== 'B' && (!!s.split || s.dualRx !== 0)),
+        bright: (s, L) => !!s.connected && (!s.tx ? s.dualRx !== 0 && (s.smeterB || 0) > 0 : L.txSide(s) !== 'B' && (!!s.split || s.dualRx !== 0)) },
       { x: 257, y: 410, w: 21, h: 7, rx: 3.5, color: '#ff3b30', on: (s, L) => !!s.tx && L.txSide(s) === 'B', bright: (s, L) => !!s.tx && L.txSide(s) === 'B' }
     ].map(SC),
     keys: [
