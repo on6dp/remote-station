@@ -80,7 +80,7 @@
     [0x14, 0x0C, 'keySpeedRaw', 'l'], [0x14, 0x15, 'moniLvl', 'l'], [0x14, 0x16, 'voxGain', 'l'], [0x14, 0x17, 'antiVox', 'l'],
     [0x15, 0x11, 'm5', 'l'], [0x15, 0x12, 'm6', 'l'], [0x15, 0x13, 'm4', 'l'], [0x15, 0x14, 'm3', 'l'], [0x15, 0x15, 'm8', 'l'], [0x15, 0x16, 'm7', 'l'],
     [0x16, 0x44, 'proc', 't'], [0x16, 0x45, 'moni', 't'], [0x16, 0x46, 'vox', 't'], [0x16, 0x47, 'bkin', 'b'], [0x16, 0x50, 'lock', 't'],
-    [0x16, 0x58, 'tbw', 'b'], [0x16, 0x5E, 'tracking', 't'], [0x21, 0x01, 'rit', 't'], [0x21, 0x02, 'xit', 't']
+    [0x16, 0x58, 'tbw', 'b'], [0x16, 0x5E, 'tracking', 't'], [0x16, 0x67, 'dpd', 't'], [0x21, 0x01, 'rit', 't'], [0x21, 0x02, 'xit', 't']
   ];
   const SIDE_MAP = {}, COMMON_MAP = {};
   for (const s of SIDE) SIDE_MAP[s[0] * 256 + s[1]] = s;
@@ -110,7 +110,7 @@
   // À l'ouverture du port : TX OFF (au cas où la radio serait restée en émission par CAT)
   const INIT = [q(0x1C, 0x00, 0x00)];
 
-  const STATE_KEYS = ['vfoSel', 'dualRx', 'txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'tracking', 'tuner', 'tuning',
+  const STATE_KEYS = ['vfoSel', 'dualRx', 'txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'tracking', 'dpd', 'tuner', 'tuning',
     'mic', 'proc', 'procLvl', 'vox', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'voxGain', 'antiVox', 'tbw',
     'fil', 'filB', 'filWi', 'filWiB', 'filShape', 'filShapeB', 'agcT', 'agcTB', 'sideTone', 'att', 'attB', 'ant', 'antB', 'rxAnt', 'rxAntB'];
   for (const s of SIDE) if (s[2] !== 'smeter') STATE_KEYS.push(s[2], s[2] + 'B');
@@ -224,6 +224,8 @@
     { id: 'clarClr', g: 'vfo', label: 'CLEAR (décalage RIT/XIT à zéro)', type: 'action', write: () => q(0x21, 0x00, 0, 0, 0) },
     { id: 'lock', g: 'vfo', label: 'LOCK (face avant du club)', type: 'toggle', write: setOn(0x16, 0x50) },
     { id: 'tracking', g: 'vfo', label: 'TRACKING MAIN/SUB', type: 'toggle', face: true, write: setOn(0x16, 0x5E) },
+    // DPD (prédistorsion numérique de l'émetteur, 16 67) : touche DPD de l'écran FUNCTION
+    { id: 'dpd', g: 'tx', label: 'DPD', type: 'toggle', face: true, write: setOn(0x16, 0x67) },
     { id: 'tuner', g: 'tx', label: 'Tuner', type: 'toggle', write: (v) => q(0x1C, 0x01, v ? 1 : 0) },
     { id: 'tune', g: 'tx', label: 'TUNE', type: 'action', transmits: true, write: () => q(0x1C, 0x01, 0x02) },
     { id: 'mic', g: 'tx', label: 'Gain micro', type: 'level', min: 0, max: 255, step: 1, pct: true, write: setLvl(0x14, 0x0B) },

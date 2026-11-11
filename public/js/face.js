@@ -2949,44 +2949,47 @@
   // IC-7760 : écran FUNCTION (récepteur sélectionné pour les réglages de réception)
   const sdv = (id) => (s) => s[sdk(id)];
   const sdTog = (id) => (s) => setCtl(sdk(id), s[sdk(id)] ? 0 : 1);
+  // IC-7760 : écran FUNCTION du TRX — sous le scope (raccourci), 2 rangées : APF NOTCH NB NR TRACKING / VOX TBW MONI DPD
+  // (P.AMP, ATT, AGC, DIGI-SEL, IP+, COMP sont dans la colonne de gauche) ; APF grisé hors CW ; cadre bleu = en service
+  const isCw = (s) => /^CW/.test(L.activeMode(s) || '');
   const I76_FUNC = [
-    ['P.AMP', (s) => ['OFF', 'AMP1', 'AMP2'][sdv('preamp')(s)] || '—', (s) => !!sdv('preamp')(s), (s) => setCtl(sdk('preamp'), ((sdv('preamp')(s) || 0) + 1) % 3), 'P.AMP : OFF → AMP1 → AMP2 (récepteur sélectionné)'],
-    ['ATT', (s) => { const v = sdv('att')(s); return v == null ? '—' : v ? v + 'dB' : 'OFF'; }, (s) => !!sdv('att')(s), (s) => { const v = sdv('att')(s) || 0; setCtl(sdk('att'), v >= 45 ? 0 : v + 3); }, 'ATT : OFF → 3 → 6 … → 45 dB (récepteur sélectionné)'],
-    ['AGC', (s) => ['', 'FAST', 'MID', 'SLOW'][sdv('agc')(s)] || '—', () => true, (s) => setCtl(sdk('agc'), (sdv('agc')(s) || 2) % 3 + 1), 'AGC : FAST → MID → SLOW (récepteur sélectionné)'],
+    ['APF', (s) => (isCw(s) ? ['OFF', 'WIDE', 'MID', 'NAR'][sdv('apf')(s)] || '—' : ''), (s) => isCw(s) && !!sdv('apf')(s), (s) => { if (!isCw(s)) return say('APF : seulement en CW.', '', 2500); setCtl(sdk('apf'), ((sdv('apf')(s) || 0) + 1) % 4); }, 'APF (CW) : OFF → WIDE → MID → NAR', (s) => !isCw(s)],
     ['NOTCH', (s) => notchTxt(s), (s) => !!(sdv('notch')(s) || sdv('dnf')(s)), () => doAct({ act: { local: 'notchCycle' } }), 'NOTCH : OFF → AN → MN (pas d’AN en CW)'],
     ['NB', (s) => onOff(sdv('nb')(s)), (s) => !!sdv('nb')(s), sdTog('nb'), 'NB marche / arrêt (récepteur sélectionné)'],
     ['NR', (s) => onOff(sdv('nr')(s)), (s) => !!sdv('nr')(s), sdTog('nr'), 'NR marche / arrêt (récepteur sélectionné)'],
-    ['DIGI-SEL', (s) => onOff(sdv('digiSel')(s)), (s) => !!sdv('digiSel')(s), sdTog('digiSel'), 'DIGI-SEL (présélecteur) marche / arrêt'],
-    ['IP+', (s) => onOff(sdv('ipPlus')(s)), (s) => !!sdv('ipPlus')(s), sdTog('ipPlus'), 'IP+ marche / arrêt'],
-    ['APF', (s) => ['OFF', 'WIDE', 'MID', 'NAR'][sdv('apf')(s)] || '—', (s) => !!sdv('apf')(s), (s) => setCtl(sdk('apf'), ((sdv('apf')(s) || 0) + 1) % 4), 'APF (CW) : OFF → WIDE → MID → NAR'],
-    [(s) => (/^CW/.test(L.activeMode(s)) ? 'BKIN' : 'VOX'), (s) => (/^CW/.test(L.activeMode(s)) ? ['OFF', 'SEMI', 'FULL'][s.bkin] || '—' : onOff(s.vox)),
-      (s) => (/^CW/.test(L.activeMode(s)) ? !!s.bkin : !!s.vox), () => doAct({ act: { local: 'voxBk' } }), 'En phonie : VOX (à distance, il ne peut être que coupé) ; en CW : BK-IN OFF → SEMI → FULL'],
-    ['COMP', (s) => onOff(s.proc), (s) => !!s.proc, (s) => setCtl('proc', s.proc ? 0 : 1), 'COMP (compresseur de modulation) marche / arrêt'],
+    ['TRACKING', (s) => onOff(s.tracking), (s) => !!s.tracking, (s) => setCtl('tracking', s.tracking ? 0 : 1), 'TRACKING : MAIN et SUB accordés ensemble'],
+    [(s) => (isCw(s) ? 'BK-IN' : 'VOX'), (s) => (isCw(s) ? ['OFF', 'SEMI', 'FULL'][s.bkin] || '—' : onOff(s.vox)),
+      (s) => (isCw(s) ? !!s.bkin : !!s.vox), () => doAct({ act: { local: 'voxBk' } }), 'En phonie : VOX (à distance, il ne peut être que coupé) ; en CW : BK-IN OFF → SEMI → FULL'],
     ['TBW', (s) => ['WIDE', 'MID', 'NAR'][s.tbw] || '—', () => true, (s) => setCtl('tbw', ((s.tbw || 0) + 1) % 3), 'TBW : largeur de la bande passante d’émission en SSB (WIDE → MID → NAR)'],
     ['MONI', (s) => onOff(s.moni), (s) => !!s.moni, (s) => setCtl('moni', s.moni ? 0 : 1), 'MONI : écoute de sa propre émission au club'],
-    ['TRACKING', (s) => onOff(s.tracking), (s) => !!s.tracking, (s) => setCtl('tracking', s.tracking ? 0 : 1), 'TRACKING : MAIN et SUB accordés ensemble'],
-    ['DUAL-W', (s) => onOff(s.dualRx), (s) => !!s.dualRx, (s) => setCtl('dualRx', s.dualRx ? 0 : 1), 'DUAL WATCH : MAIN et SUB ensemble']
+    ['DPD', (s) => onOff(s.dpd), (s) => !!s.dpd, (s) => setCtl('dpd', s.dpd ? 0 : 1), 'DPD : prédistorsion numérique de l’émetteur (meilleure linéarité) ON / OFF']
   ];
   function buildIcFunc(g, c, list) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const IC_FUNC_L = list || IC_FUNC;
     const m = LCD.icFuncG = el('g', { class: 'mode-menu ic-menu', style: 'display:none' }, g);
-    const x0 = X(6), y0 = Y(4), w = c.w - 12, h = c.h - 8;
-    el('rect', { x: x0, y: y0, width: w, height: h, rx: 4, class: 'mm-bg' }, m);
-    el('rect', { x: x0 + 4, y: y0 + 4, width: w - 8, height: 24, rx: 3, class: 'mm-title' }, m);
-    el('text', { x: x0 + w / 2, y: y0 + 21, class: 'mm-ttl big', 'text-anchor': 'middle' }, m, 'FUNCTION');
-    // IC-7760 : 15 touches sur 3 rangées (moins hautes)
-    const rows = Math.ceil(IC_FUNC_L.length / 5), cw = (w - 16) / 5, rh = rows > 2 ? Math.floor((h - 36 - 48 - (rows - 1) * 6) / rows) : 112, gap = rows > 2 ? 6 : 8;
+    // IC-7760 : panneau sous le scope (qui reste visible, raccourci), à droite de la colonne de touches, comme sur le TRX
+    const x0 = DICOM ? X(57) : X(6), y0 = DICOM ? Y(I76_FTOP) : Y(4), w = DICOM ? c.w - 59 : c.w - 12, h = DICOM ? c.h - I76_FTOP - 2 : c.h - 8;
+    el('rect', { x: x0, y: y0, width: w, height: h, rx: DICOM ? 0 : 4, class: 'mm-bg' }, m);
+    if (DICOM) {
+      el('rect', { x: x0, y: y0, width: w, height: 13, class: 'i76agc-tb' }, m);
+      el('text', { x: x0 + w / 2, y: y0 + 10, class: 'i76agc-ttl', 'text-anchor': 'middle' }, m, 'FUNCTION');
+    } else {
+      el('rect', { x: x0 + 4, y: y0 + 4, width: w - 8, height: 24, rx: 3, class: 'mm-title' }, m);
+      el('text', { x: x0 + w / 2, y: y0 + 21, class: 'mm-ttl big', 'text-anchor': 'middle' }, m, 'FUNCTION');
+    }
+    const rows = Math.ceil(IC_FUNC_L.length / 5), cw = (w - 16) / 5, rh = DICOM ? Math.floor((h - 13 - 12) / 2) : rows > 2 ? Math.floor((h - 36 - 48 - (rows - 1) * 6) / rows) : 112, gap = DICOM ? 4 : rows > 2 ? 6 : 8;
     LCD.icfBtns = IC_FUNC_L.map((it, i) => {
-      const x = x0 + 8 + (i % 5) * cw, y = y0 + 36 + Math.floor(i / 5) * (rh + gap);
+      const x = x0 + 8 + (i % 5) * cw, y = y0 + (DICOM ? 17 : 36) + Math.floor(i / 5) * (rh + gap);
       const r = el('rect', { x: x + 3, y, width: cw - 6, height: rh, rx: 5, class: 'icf-btn' }, m);
-      const t1 = el('text', { x: x + cw / 2, y: y + rh * 0.4, class: 'icf-t1', 'text-anchor': 'middle' }, m, '');
-      const t2 = el('text', { x: x + cw / 2, y: y + rh * 0.78, class: 'icf-t2', 'text-anchor': 'middle' }, m, '');
+      const t1 = el('text', { x: x + cw / 2, y: y + rh * 0.42, class: 'icf-t1' + (DICOM ? ' i76f' : ''), 'text-anchor': 'middle' }, m, '');
+      const t2 = el('text', { x: x + cw / 2, y: y + rh * 0.8, class: 'icf-t2' + (DICOM ? ' i76f' : ''), 'text-anchor': 'middle' }, m, '');
       const hit = el('rect', { x: x + 3, y, width: cw - 6, height: rh, class: 'hs lcd-hit' }, m);
       el('title', {}, hit, it[4]);
       hit.addEventListener('click', (ev) => { ev.stopPropagation(); it[3](S()); render(); });
       return { r, t1, t2, it };
     });
+    if (DICOM) { LCD.icfI76 = true; return; } // IC-7760 : pas de touche retour dans le panneau (FUNCTION ou EXIT pour le fermer)
     el('rect', { x: x0 + w - 90, y: y0 + h - 40, width: 78, height: 32, rx: 4, class: 'mm-cell' }, m);
     const ax = x0 + w - 51, ay = y0 + h - 24;
     el('path', { d: 'M' + (ax + 12) + ' ' + (ay - 7) + 'H' + (ax - 4) + 'A7 7 0 0 0 ' + (ax - 4) + ' ' + (ay + 7) + 'H' + (ax + 6) + 'M' + (ax - 1) + ' ' + (ay - 12) + 'L' + (ax - 7) + ' ' + (ay - 7) + 'L' + (ax - 1) + ' ' + (ay - 2), class: 'ic-back' }, m);
@@ -3010,6 +3013,7 @@
       }
       b.t2.textContent = val(s);
       b.r.classList.toggle('on', !!on(s)); // AGC et TBW ont toujours une valeur : toujours encadrés, comme sur le TRX
+      if (b.it[5]) { const off = !!b.it[5](s); b.r.classList.toggle('dis', off); b.t1.classList.toggle('dis', off); } // IC-7760 : APF grisé hors CW
     }
   }
   // QSO RECORDER (MENU → RECORD) : enregistrement sur la carte SD du TRX, pas commandable par le CAT
@@ -3815,15 +3819,18 @@
   // IC-7760 : un seul scope → galvanomètres à aiguille en haut, fréquences plus grandes et plus bas, scope plus petit ;
   // deux scopes (DUAL) → S-mètres en barres, fréquences en haut, deux scopes. Comme sur le TRX.
   const I76_SINGLE = { tx: 50, vfo: 65, freq: 71, tags: 69, sc: 72 };
+  const I76_FTOP = 186; // haut du panneau FUNCTION de l'IC-7760 (le scope s'arrête au-dessus)
   function i76Layout(single) {
-    const key = (single ? 'S' : 'D') + (LCD.monoKey || '') + (LCD.i76mmOn ? 'm' : '');
+    const key = (single ? 'S' : 'D') + (LCD.monoKey || '') + (LCD.i76mmOn ? 'm' : '') + (L.func ? 'f' : '');
     if (LCD.i76lay === key) return;
     LCD.i76lay = key;
     const d = single ? I76_SINGLE : { tx: 0, vfo: 0, freq: 0, tags: 0, sc: 0 }, tr = (e, dy) => e && e.setAttribute('transform', dy ? 'translate(0,' + dy + ')' : '');
     tr(LCD.lowG, d.sc);
     const box = LCD.scopeBox;
     if (LCD.scopeRect && box) { LCD.scopeRect.setAttribute('y', box.y + d.sc); LCD.scopeRect.setAttribute('height', box.h - d.sc); }
-    if (LCD.placeScope) LCD.placeScope(-d.sc);
+    // FUNCTION ouvert : le scope s'arrête au-dessus du panneau (raccourci), comme sur le TRX
+    const fh = L.func ? Math.max(1, I76_FTOP - 2 - (G.scopeY + d.sc)) : 0;
+    if (LCD.placeScope) LCD.placeScope(-d.sc, fh || undefined);
     const cv = $('scope');
     if (cv && box && LCD.i76mmOn) cv.style.width = ((box.w - 88) / V.w * 100) + '%';
     for (const sd of ['A', 'B']) {
@@ -6529,7 +6536,7 @@
     $('scope').style.pointerEvents = ((ICOM || DICOM) && rfFresh()) || (FACE.meterFtx && $('scope').style.visibility === 'visible') ? 'auto' : ''; // FTX-1 : clic sur le spectre / la cascade = aller sur cette fréquence
     $('scope').style.cursor = (ICOM || DICOM) && rfFresh() ? 'crosshair' : '';
     LCD.hint.textContent = !live ? '' : st.audio && !st.audio.active ? 'Cascade : l’audio n’est pas activé sur la page Station' : 'Cascade : en attente du son de la station…';
-    $('scope').style.visibility = (fresh || rfFresh()) && !L.func && !L.agcTbl && !L.i76pop && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !(L.multiMenu && !DICOM) && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet && L.fdisp !== 2 ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom ; FTX-1 DISP 2 : pas de scope)
+    $('scope').style.visibility = (fresh || rfFresh()) && !(L.func && !DICOM) && !L.agcTbl && !L.i76pop && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !(L.multiMenu && !DICOM) && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet && L.fdisp !== 2 ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom ; FTX-1 DISP 2 : pas de scope)
     if (LCD.icm && L.icMeter && LCD.hint.style.display !== 'none') LCD.hint.setAttribute('y', LCD.Y(G.scopeY + 32)); else if (LCD.hint) LCD.hint.setAttribute('y', LCD.Y(G.scopeY + G.scopeH / 2 - 2));
     icPopCheck(s, live);
     if (ICOM) pbtPopDraw(s, live);
