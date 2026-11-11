@@ -2531,8 +2531,18 @@
   const OTHERS = [['info', 'Information', 'Modèle IC-7300, adresse CI-V 94h ; la version du firmware ne se lit pas par le CAT (MENU → SET → Others → Information au club)'],
     ['tsc', 'Touch Screen Calibration', 'Touch Screen Calibration : pas à distance'], ['clone', 'Clone', 'Clone : pas à distance'],
     ['reset', 'Reset', 'Reset : jamais à distance'], ['emg', 'Emergency', 'Emergency : jamais à distance']];
+  const I76_VER = [['Main CPU', '1.01'], ['Sub CPU', '1.01'], ['Front CPU', '1.00'], ['Main DSP Program', '1.00'], ['Main DSP Data', '1.00'], ['RF CPU', '1.01'], ['RF DSP Program', '1.00'], ['RF DSP Data', '1.00'], ['RF FPGA', '1.01']];
   const SUBN = DICOM ? 6 : 4; // réglages par page, comme sur le TRX (IC-7300 : 4, IC-7760 : 6)
   function subItems() {
+    // IC-7760 : Others → Information (dossier) ; MAC et numéros de série : aucune commande CI-V pour les lire
+    if (DICOM && L.icSub === 'etc') return OTHERS.map((o) => (o[0] === 'info' ? { other: ['info76', 'Information', 'INFORMATION : version, adresses MAC et numéros de série'], go: 'info76' } : { other: o }));
+    if (DICOM && L.icSub === 'info76') {
+      const nc = 'ne se lit pas par le CI-V (voir l’écran INFORMATION au club)';
+      return [{ other: ['ver76', 'Version', 'VERSION : firmware et logiciels du TRX'], go: 'ver76' }].concat(['MAC Address (LAN)', 'MAC Address (Controller)', 'MAC Address (RF Deck)', 'SERIAL NO. (Controller)', 'SERIAL NO. (RF Deck)']
+        .map((lab) => ({ other: ['info', lab, lab + ' : ' + nc, 'pas lisible (CI-V)'] })));
+    }
+    // VERSION : relevée sur l'écran du TRX du club (11/11/2026) — pas lisible par le CI-V, à mettre à jour après une mise à jour du firmware
+    if (DICOM && L.icSub === 'ver76') return I76_VER.map(([lab, v]) => ({ other: ['info', lab + ':', lab + ' ' + v + ' : relevé sur l’écran VERSION du TRX du club le 11/11/2026 (pas lisible par le CI-V)', v] }));
     if (L.icSub === 'etc') return OTHERS.map((o) => ({ other: o }));
     // VOICE → REC/SET : REC (enregistrement au micro du TRX : pas à distance), SET → VOICE TX SET
     if (L.icSub === 'vrec') return [{ other: ['rec', 'REC', 'REC : VOICE TX RECORD — enregistrer T1 … T8 avec votre micro'], go: 'vtx' }, { other: ['set', 'SET', 'VOICE TX SET : Auto Monitor, Repeat Time'], go: 'voice' }];
@@ -2572,7 +2582,7 @@
     return m ? m[1].map((x) => R.EX[x[0]]) : [];
   }
   function subRead() {
-    if (!iControl() || L.icSub === 'etc') return;
+    if (!iControl() || L.icSub === 'etc' || L.icSub === 'info76' || L.icSub === 'ver76') return;
     const its = subItems().slice((L.icSubP || 0) * SUBN, (L.icSubP || 0) * SUBN + SUBN);
     its.forEach((it, i) => {
       if (!it || !it.n || Date.now() - (SUB.readAt[it.n] || 0) < 5000) return;
@@ -2587,6 +2597,8 @@
     if (L.icSub === 'edges') { L.icSub = 'scope'; L.icSubP = 3; return; }
     if (L.icSub === 'scope' || L.icSub === 'audio' || L.icSub === 'vrec' || L.icSub === 'scanset') { L.icSub = null; L.icSet = false; return; }
     if (L.icSub === 'voice' || L.icSub === 'vtx') { L.icSub = 'vrec'; L.icSubP = 0; return; }
+    if (L.icSub === 'ver76') { L.icSub = 'info76'; L.icSubP = 0; return; } // VERSION → INFORMATION
+    if (L.icSub === 'info76') { L.icSub = 'etc'; L.icSubP = 0; return; } // INFORMATION → OTHERS
     L.icSub = null;
   }
   function subRaw(it) { const p = SUB.pend[it.n]; if (p && Date.now() - p.at < 3000) return p.v; const v = S()['ex' + it.n]; return v == null ? null : v; }
@@ -2777,7 +2789,7 @@
     if (!on) return;
     const all = subItems(), p = Math.min(L.icSubP || 0, LCD.isubPages() - 1);
     // Retour de SCOPE SET : à l'écran SCOPE (ouvert par EXPD/SET)
-    LCD.isubTitle.textContent = L.exList ? L.exList.it.label.replace(/ \*$/, '') : { etc: 'Others', dpd: 'DPD ADJUSTMENT', vrec: 'REC/SET', vtx: 'VOICE TX RECORD', voice: 'VOICE TX SET' }[L.icSub] || (R.EX_MENUS[L.icSub] || (R.EX_TREE && R.EX_TREE[L.icSub]) || ['SET'])[0];
+    LCD.isubTitle.textContent = L.exList ? L.exList.it.label.replace(/ \*$/, '') : { etc: DICOM ? 'OTHERS' : 'Others', info76: 'INFORMATION', ver76: 'VERSION', dpd: 'DPD ADJUSTMENT', vrec: 'REC/SET', vtx: 'VOICE TX RECORD', voice: 'VOICE TX SET' }[L.icSub] || (R.EX_MENUS[L.icSub] || (R.EX_TREE && R.EX_TREE[L.icSub]) || ['SET'])[0];
     drawHlDlg();
     LCD.isubPage.textContent = (p + 1) + '/' + LCD.isubPages();
     LCD.isubRows.forEach((r, i) => {
@@ -2795,7 +2807,7 @@
       }
       r.bg.classList.remove('sel'); r.t.classList.remove('dk');
       if (it.other) {
-        r.t.textContent = it.other[1]; r.v.textContent = it.go ? '›' : it.other[0] === 'info' ? 'IC-7300 · CI-V 94h' : 'pas à distance';
+        r.t.textContent = it.other[1]; r.v.textContent = it.go ? '›' : it.other[3] != null ? it.other[3] : it.other[0] === 'info' ? 'IC-7300 · CI-V 94h' : 'pas à distance';
         r.bg.classList.toggle('ro', !it.go && it.other[0] !== 'info'); r.tt.textContent = it.other[2];
         return;
       }
@@ -2841,7 +2853,7 @@
         if (I76_SET_NO[it[0]]) return say(I76_SET_NO[it[0]] + '.', '', 4000);
         // Network : lecture seule, administrateurs seulement (adresses du réseau du club)
         if (it[0] === 'net' && !(me && me.admin)) return say('Network : réservé aux administrateurs (lecture seule).', 'warn', 4000);
-        if (it[0] === 'dpd' || R.EX_TREE[it[0]] || R.EX_MENUS[it[0]]) { L.icSub = it[0]; L.icSubP = 0; subRead(); return render(); }
+        if (it[0] === 'dpd' || it[0] === 'etc' || R.EX_TREE[it[0]] || R.EX_MENUS[it[0]]) { L.icSub = it[0]; L.icSubP = 0; subRead(); return render(); }
         say('SET → ' + it[1] + ' : pas encore sur la page de l’IC-7760 (envoie une photo de l’écran).', '', 4500);
       });
     });
