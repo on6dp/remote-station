@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.290** — IC-7760 : cadre du TWIN-PBT à gauche pour le MAIN, à droite pour le SUB
 - **0.37.289** — IC-7760 : BW et SFT identiques dans l'en-tête, le petit écran et le cadre du TWIN-PBT
 - **0.37.288** — IC-7760 : voyant blanc du TWIN-PBT (bande passante décalée ou rétrécie)
 - **0.37.287** — IC-7760 : TWIN-PBT bague = BW, bouton = SFT, cadre BW / SFT sur le grand écran

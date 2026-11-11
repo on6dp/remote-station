@@ -640,6 +640,7 @@
       bp.hidden = true;
       const bw = 250, bh = 90, bx = box.x + box.w / 2 - bw / 2, by = box.y + 2; // sur le haut du scope, comme sur le TRX
       bp.style.left = ((bx - V.x) / V.w * 100) + '%';
+      LCD.pbtPos = { x0: box.x, w0: box.w, bw }; // IC-7760 : à gauche pour le MAIN, à droite pour le SUB
       bp.style.top = ((by - V.y) / V.h * 100) + '%';
       bp.style.width = (bw / V.w * 100) + '%';
       bp.style.height = (bh / V.h * 100) + '%';
@@ -4800,6 +4801,8 @@
     clearTimeout(L.pbtPopT);
     if (!on) return;
     L.pbtPopT = setTimeout(render, 2050);
+    // IC-7760 : cadre à gauche (MAIN) ou à droite (SUB), les deux récepteurs pouvant être affichés ensemble, comme sur le TRX
+    if (DICOM && LCD.pbtPos) { const q0 = LCD.pbtPos, cx0 = q0.x0 + q0.w0 * (px ? 0.75 : 0.25); e.style.left = ((Math.max(q0.x0, Math.min(q0.x0 + q0.w0 - q0.bw, cx0 - q0.bw / 2)) - V.x) / V.w * 100) + '%'; }
     const f = LCD.flt[fs], md = f.mode || '', fw = DICOM ? ((R.filHz && R.filHz(md, s['filWi' + px])) || f.hz) : filHz(md, s.fil) || f.hz;
     // CLR : les deux PBT au milieu tout de suite, sans attendre la relecture du TRX
     const clr = Date.now() - (L.pbtClrAt || 0) < 1500;
