@@ -151,6 +151,14 @@
       [194, 'Screen Saver', ['OFF', '15min', '30min', '60min']], [195, 'External Display', ['OFF', 'ON']], [196, 'External Display Resolution', ['800x480', '800x600']],
       [197, 'Opening Message', ['OFF', 'ON']], [198, 'My Call', 'name'], [199, 'Display Language', ['English', 'Japanese']]]],
     dispFx: ['FILTER EFFECT SCREEN', [[192, 'Waveform Type', ['Line', 'Fill']], [193, 'Waveform Color', 'rgb']]],
+    // SCOPE SET (appui d'1 s sur EXPD/SET : 1A 05 02 08 … 02 23), dans l'ordre du TRX ; Fixed Edges (02 24 … 02 71) en sous-dossier
+    scope: ['SCOPE SET', [[208, 'Scope during Tx (CENTER Type)', ['OFF', 'ON']], [209, 'Max Hold', ['OFF', '10s Hold', 'ON']],
+      [210, 'CENTER Type Display', ['Filter center', 'Carrier point center', 'Carrier point center (Abs. Freq.)']], [211, 'Marker Position (Fix Type/SCROLL Type)', ['Filter center', 'Carrier point']],
+      [212, 'Averaging', ['OFF', '2', '3', '4']], [213, 'Waveform Type', ['Fill', 'Fill+Line']], [214, 'Waveform Color (Current)', 'rgb'], [215, 'Waveform Color (Line)', 'rgb'], [216, 'Waveform Color (Max Hold)', 'rgb'],
+      [217, 'Waterfall Display', ['OFF', 'ON']], [218, 'Waterfall Speed', ['Slow', 'Mid', 'Fast']], [219, 'Waterfall Size (Expand Screen)', ['Small', 'Mid', 'Large']],
+      [220, 'Waterfall Peak Color Level', ['Grid 1', 'Grid 2', 'Grid 3', 'Grid 4', 'Grid 5', 'Grid 6', 'Grid 7', 'Grid 8', 'Grid 9', 'Grid 10']], [221, 'Waterfall Marker Auto-hide', ['OFF', 'ON']],
+      [222, 'Dual Scope Type', ['Over/Under', 'Side by Side']], [223, 'Dual Scope Auto Select', ['OFF', 'ON']]]],
+    edges: ['Fixed Edges', []],
     // MENU → ANTENNA (1A 05 03 44 … 03 62) : TYPE (connecteurs, lecture seule), ANTENNA MEMORY (antenne de chaque tranche de fréquences :
     // ANT 1 – 4 et RX-ANT), Temporary Memory (TEMP-M) et [ANT] Switch (Manual / Auto) ; écriture réservée aux administrateurs
     ant: ['ANTENNA', [[344, 'ANT2', ['OFF', 'ON']], [345, 'ANT3', ['OFF', 'ON']], [346, 'ANT4', ['OFF', 'ON']], [347, 'RX-ANT Connectors', ['RX-ANT', 'RX-I/O']],
@@ -159,13 +167,19 @@
       [355, '15.00 - 20.00', 'antm'], [356, '20.00 - 22.00', 'antm'], [357, '22.00 - 26.00', 'antm'], [358, '26.00 - 30.00', 'antm'], [359, '30.00 - 45.00', 'antm'], [360, '45.00 - 60.00', 'antm'],
       [361, 'Temporary Memory', ['OFF', 'ON']], [362, '[ANT] Switch', ['Manual', 'Auto']]]]
   };
+  // Fixed Edges : 12 tranches × 4 bords (No.1 – No.4), 1A 05 02 24 + tranche × 4 + bord ; valeur « bas-haut » en kHz
+  const EDGE_BANDS = [[30, 1600], [1600, 2000], [2000, 6000], [6000, 8000], [8000, 11000], [11000, 15000], [15000, 20000], [20000, 22000], [22000, 26000], [26000, 30000], [30000, 45000], [45000, 60000]];
+  EDGE_BANDS.forEach(([lo, hi], i) => { for (let e = 0; e < 4; e++) EX_MENUS.edges[1].push([224 + i * 4 + e, (lo / 1000).toFixed(2) + '–' + (hi / 1000).toFixed(2) + ' MHz · No.' + (e + 1), 'edge']); });
   // Tranches de l'ANTENNA MEMORY (MHz) : 1A 05 03 49 + i
   const ANT_SEG = EX_MENUS.ant[1].filter((x) => x[2] === 'antm').map((x) => [x[0], ...x[1].split(' - ').map(Number)]);
   delete EX_TREE.net;
   const EX_PARENT = { tone: null, toneRx: 'tone', toneTx: 'tone', net: null, netSeg: 'net', ant: null, disp: null, dispFx: 'disp' };
-  for (const k in EX_MENUS) if (EX_PARENT[k] === undefined) EX_PARENT[k] = k.startsWith('rx') ? 'toneRx' : 'toneTx';
+  for (const k in EX_MENUS) if (EX_PARENT[k] === undefined && k !== 'scope' && k !== 'edges') EX_PARENT[k] = k.startsWith('rx') ? 'toneRx' : 'toneTx';
   const EX = {};
-  for (const k in EX_MENUS) for (const it of EX_MENUS[k][1]) EX[it[0]] = { n: it[0], label: it[1], title: it[3] || (EX_MENUS[k][0] + ' ' + it[1]), type: Array.isArray(it[2]) ? 'list' : it[2], opts: Array.isArray(it[2]) ? it[2] : null, rw: !/^net/.test(k) && !(k === 'ant' && it[0] < 349) && ![193, 198, 199].includes(it[0]), admin: /^net/.test(k), wAdmin: k === 'ant', menu: k };
+  for (const k in EX_MENUS) for (const it of EX_MENUS[k][1]) EX[it[0]] = { n: it[0], label: it[1], title: it[3] || (EX_MENUS[k][0] + ' ' + it[1]), type: Array.isArray(it[2]) ? 'list' : it[2], opts: Array.isArray(it[2]) ? it[2] : null, rw: !/^net/.test(k) && !(k === 'ant' && it[0] < 349) && ![193, 198, 199, 214, 215, 216].includes(it[0]), admin: /^net/.test(k), wAdmin: k === 'ant', menu: k };
+  for (const n in EX) if (EX[n].type === 'edge') { const b = EDGE_BANDS[Math.floor((n - 224) / 4)]; EX[n].lo = b[0]; EX[n].hi = b[1]; }
+  const edgeKHz = (b, o) => (b[o] >> 4) + unbcd(b[o + 1]) * 10 + unbcd(b[o + 2]) * 1000;
+  const edgeBytes = (k) => [((k % 10) << 4), bcd(Math.floor(k / 10) % 100), bcd(Math.floor(k / 1000) % 100)];
   const TBW_LO = [100, 120, 150, 200, 300, 500], TBW_HI = [2500, 2700, 2800, 2900];
   const exFmt = (it, raw) => {
     if (raw == null || raw === '') return '—';
@@ -174,6 +188,7 @@
     if (t === 'hl') { const h = Math.floor(v / 100), l = v % 100; return (h ? h * 100 : '----') + ' - ' + (l >= 25 ? '----' : l * 100); }
     if (t === 'tbw6') { const lo = Math.floor(v / 10), hi = v % 10; return TBW_LO[lo] + ' - ' + TBW_HI[hi]; }
     if (t === 'pct') return Math.round(v / 255 * 100) + '%';
+    if (t === 'edge') { const [a, b] = String(raw).split('-').map(Number); return (a / 1000).toFixed(3) + ' – ' + (b / 1000).toFixed(3) + ' MHz'; }
     if (t === 'rgb') { const [r2, g2, b2] = String(raw).split(','); return 'R:' + r2 + '  G:' + g2 + '  B:' + b2; }
     if (t === 'antm') return String(Math.floor(v / 10) + 1) + (v % 10 ? ' + RX' : ''); // ANT 1 – 4 (+ RX-ANT)
     if (t === 'list') return it.n === 161 && v ? 'ON (   .   .   .   )' : it.opts[v] != null ? it.opts[v] : String(raw);
@@ -197,13 +212,14 @@
     if (t === 'tbw6') return [(Math.floor(v / 10) << 4) | (v % 10)];
     if (t === 'antm') return [bcd(Math.floor(v / 10)), bcd(v % 10)];
     if (t === 'pct') return lvlBytes(v);
+    if (t === 'edge') { const [a, b] = String(raw).split('-').map(Number); return edgeBytes(a).concat(edgeBytes(b)); }
     if (t === 'rgb') return String(raw).split(',').map(Number).reduce((o, x) => o.concat(lvlBytes(x)), []);
     return [bcd(v)];
   }
   const exRaw = (it, v) => v % 100000;
   const exCode = (it, raw) => it.n * 100000 + Number(raw);
   const STR_KEYS = Object.keys(EX).map((n) => 'ex' + n);
-  for (const k of ['scMode', 'scSpan', 'scEdge', 'scHold']) STATE_KEYS.push(k, k + 'B');
+  for (const k of ['scMode', 'scSpan', 'scEdge', 'scHold', 'scRef', 'scSpeed', 'scRbw', 'scVbw']) STATE_KEYS.push(k, k + 'B');
 
   // CW PITCH : 0–255 = 300–900 Hz (pas de 5 Hz) ; KEY SPEED : 0–255 = 6–48 mots/min
   const pitchHz = (raw) => Math.round((300 + raw * 600 / 255) / 5) * 5;
@@ -252,6 +268,14 @@
         if (!exOk(it, exRaw(it, v))) throw new Error(it.label + ' : valeur hors plage');
       },
       write: (v) => { const it = EX[Math.floor(v / 100000)]; return q(0x1A, 0x05, bcd(Math.floor(it.n / 100)), bcd(it.n % 100), ...exBytes(it, exRaw(it, v))); } },
+    // SCOPE SET → Fixed Edges : n° × 1e10 + bas (kHz) × 1e5 + haut (kHz)
+    { id: 'exEdge', g: 'vfo', label: 'Bord du scope FIX', type: 'level', min: 224e10, max: 271e10 + 9999999999, step: 1, face: true,
+      check: (v) => {
+        const it = EX[Math.floor(v / 1e10)], a = Math.floor(v / 1e5) % 1e5, b = v % 1e5;
+        if (!it || it.type !== 'edge') throw new Error('bord inconnu');
+        if (!(a >= it.lo && b <= it.hi && a < b)) throw new Error('bords : ' + it.lo / 1000 + ' à ' + it.hi / 1000 + ' MHz, bas < haut');
+      },
+      write: (v) => { const it = EX[Math.floor(v / 1e10)]; return q(0x1A, 0x05, bcd(Math.floor(it.n / 100)), bcd(it.n % 100), ...edgeBytes(Math.floor(v / 1e5) % 1e5), ...edgeBytes(v % 1e5)); } },
     { id: 'rit', g: 'vfo', label: 'RIT', type: 'toggle', write: setOn(0x21, 0x01) },
     { id: 'xit', g: 'vfo', label: 'XIT', type: 'toggle', write: setOn(0x21, 0x02) },
     {
@@ -344,7 +368,14 @@
       { id: 'scMode' + x, g: 'rx', label: 'CENTER / FIX du scope' + n, type: 'select', face: true, options: [[0, 'CENTER'], [1, 'FIX'], [2, 'SCROLL-C'], [3, 'SCROLL-F']], write: (v) => q(0x27, 0x14, b, v) },
       { id: 'scSpan' + x, g: 'rx', label: 'SPAN du scope' + n, type: 'select', face: true, options: SC_SPANS.map((h, i) => [i, '±' + (h >= 1000 ? h / 1000 + 'k' : h)]), write: (v) => q(0x27, 0x15, b, ...freqBytes(SC_SPANS[v])) },
       { id: 'scEdge' + x, g: 'rx', label: 'EDGE du scope' + n, type: 'select', face: true, options: [[1, 'EDGE1'], [2, 'EDGE2'], [3, 'EDGE3'], [4, 'EDGE4']], write: (v) => q(0x27, 0x16, b, v) },
-      { id: 'scHold' + x, g: 'rx', label: 'HOLD du scope' + n, type: 'toggle', face: true, write: (v) => q(0x27, 0x17, b, v ? 1 : 0) });
+      { id: 'scHold' + x, g: 'rx', label: 'HOLD du scope' + n, type: 'toggle', face: true, write: (v) => q(0x27, 0x17, b, v ? 1 : 0) },
+      // <MENU2> : REF (27 19 : −30 … +10 dB par 0,5 dB ; valeur × 10), SPEED (27 1A), RBW (27 1F), VBW (27 1D)
+      { id: 'scRef' + x, g: 'rx', label: 'REF du scope' + n, type: 'level', min: -300, max: 100, step: 5, face: true,
+        write: (v) => { const a = Math.abs(v); return q(0x27, 0x19, b, bcd(Math.floor(a / 10)), bcd((a % 10) * 10), v < 0 ? 1 : 0); } },
+      { id: 'scSpeed' + x, g: 'rx', label: 'SPEED du scope' + n, type: 'select', face: true, options: [[0, 'FAST'], [1, 'MID'], [2, 'SLOW']], write: (v) => q(0x27, 0x1A, b, v) },
+      { id: 'scRbw' + x, g: 'rx', label: 'RBW du scope' + n, type: 'select', face: true, options: [[0, 'WIDE'], [1, 'MID'], [2, 'NAR']], write: (v) => q(0x27, 0x1F, b, v) },
+      { id: 'scVbw' + x, g: 'rx', label: 'VBW du scope' + n, type: 'select', face: true, options: [[0, 'NARROW'], [1, 'WIDE']], write: (v) => q(0x27, 0x1D, b, v) });
+    READ_FOR['scRef' + x] = q(0x27, 0x19, b); READ_FOR['scSpeed' + x] = q(0x27, 0x1A, b); READ_FOR['scRbw' + x] = q(0x27, 0x1F, b); READ_FOR['scVbw' + x] = q(0x27, 0x1D, b);
     READ_FOR['scMode' + x] = q(0x27, 0x14, b); READ_FOR['scSpan' + x] = q(0x27, 0x15, b); READ_FOR['scEdge' + x] = q(0x27, 0x16, b); READ_FOR['scHold' + x] = q(0x27, 0x17, b);
   }
   for (const n in EX) READ_FOR['ex' + n] = q(0x1A, 0x05, bcd(Math.floor(n / 100)), bcd(n % 100));
@@ -443,6 +474,8 @@
     // Réglages du scope du TRX (27 12 MAIN/SUB, 27 13 SINGLE/DUAL, 27 14 CENTER/FIX, 27 15 SPAN, 27 16 EDGE, 27 17 HOLD)
     if (c === 0x27 && d[0] === 0x12 && d.length >= 2) return { scSel: d[1] ? 1 : 0 };
     if (c === 0x27 && d[0] === 0x13 && d.length >= 2) return { scDual: d[1] ? 1 : 0 };
+    if (c === 0x27 && d[0] === 0x19 && d.length >= 5) return { ['scRef' + (d[1] ? 'B' : '')]: (unbcd(d[2]) * 10 + Math.floor(unbcd(d[3]) / 10)) * (d[4] ? -1 : 1) };
+    if (c === 0x27 && (d[0] === 0x1A || d[0] === 0x1F || d[0] === 0x1D) && d.length >= 3) return { [{ 0x1A: 'scSpeed', 0x1F: 'scRbw', 0x1D: 'scVbw' }[d[0]] + (d[1] ? 'B' : '')]: d[2] };
     if (c === 0x27 && d[0] >= 0x14 && d[0] <= 0x17 && d.length >= 3) {
       const b = d[1] ? 'B' : '';
       if (d[0] === 0x14) return { ['scMode' + b]: d[2] <= 3 ? d[2] : 0 };
@@ -462,6 +495,7 @@
       const raw = it.type === 'hl' || it.type === 'antm' ? (b.length >= 2 ? unbcd(b[0]) * (it.type === 'antm' ? 10 : 100) + unbcd(b[1]) : null) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F)
         : it.type === 'ip' ? (b.length >= 8 ? [0, 2, 4, 6].map((o) => unbcd(b[o]) * 100 + unbcd(b[o + 1])).join('.') : null)
         : it.type === 'name' ? String.fromCharCode(...b.filter((x) => x >= 0x20 && x < 0x7F)).trim()
+        : it.type === 'edge' ? (b.length >= 6 ? edgeKHz(b, 0) + '-' + edgeKHz(b, 3) : null)
         : it.type === 'pct' ? (b.length >= 2 ? lvlValue(b, 0) : null) : it.type === 'rgb' ? (b.length >= 6 ? [lvlValue(b, 0), lvlValue(b, 2), lvlValue(b, 4)].join(',') : null) : unbcd(b[0]);
       return raw == null ? { ok: true } : { ['ex' + n]: String(raw) };
     }
@@ -642,6 +676,11 @@
         const k = d[0] === 0x12 ? 'scSel' : 'scDual';
         if (this[k] == null) this[k] = d[0] === 0x13 ? 1 : 0;
         if (d.length === 1) r(d[0], this[k]); else { this[k] = d[1] ? 1 : 0; ok(); }
+      } else if (c === 0x27 && (d[0] === 0x19 || d[0] === 0x1A || d[0] === 0x1F || d[0] === 0x1D) && d.length >= 2) {
+        // Simulateur : REF, SPEED, RBW, VBW de chaque scope
+        const t = (this.sc2 = this.sc2 || [{}, {}])[d[1] ? 1 : 0], k = d[0];
+        if (d.length === 2) r(k, d[1], ...(k === 0x19 ? [bcd(Math.floor(Math.abs(t[k] || 0) / 10)), bcd((Math.abs(t[k] || 0) % 10) * 10), (t[k] || 0) < 0 ? 1 : 0] : [t[k] != null ? t[k] : k === 0x1A ? 1 : k === 0x1F ? 1 : 0]));
+        else { t[k] = k === 0x19 ? (unbcd(d[2]) * 10 + Math.floor(unbcd(d[3]) / 10)) * (d[4] ? -1 : 1) : d[2]; ok(); }
       } else if (c === 0x27 && d[0] >= 0x14 && d[0] <= 0x17 && d.length >= 2) {
         const sc = (this.sc = this.sc || [{ m: 0, sp: 25000, e: 1, h: 0 }, { m: 1, sp: 25000, e: 1, h: 0 }])[d[1] ? 1 : 0];
         const k = { 0x14: 'm', 0x15: 'sp', 0x16: 'e', 0x17: 'h' }[d[0]];
@@ -670,10 +709,11 @@
           const ipb = (s4) => s4.split('.').map(Number).reduce((o, x) => o.concat([bcd(Math.floor(x / 100)), bcd(x % 100)]), []);
           if (it.type === 'ip') return r(0x05, d[1], d[2], ...ipb({ 162: '192.168.0.10', 164: '192.168.0.11', 165: '192.168.0.12', 167: '192.168.0.1', 168: '192.168.0.1', 169: '0.0.0.0', 172: '192.168.100.10', 174: '192.168.100.1' }[n] || '0.0.0.0'));
           if (it.type === 'name') return r(0x05, d[1], d[2], ...Array.from(n === 198 ? 'ON5VL' : 'IC-7760 HEAD').map((ch) => ch.charCodeAt(0)));
-          const raw = ex[n] != null ? ex[n] : { hl: 525, tone: 5, tbw6: n === 15 ? 1 : n === 16 ? 21 : n === 17 ? 30 : 1, mask: 24, antm: 0, pct: n === 184 ? 128 : 191, rgb: '96,192,255', list: n === 188 ? 0 : n === 190 || n === 191 || n === 197 || n === 170 || n === 175 || n === 161 || (n >= 344 && n <= 346) || n === 362 ? 1 : 0 }[it.type];
+          const raw = ex[n] != null ? ex[n] : { hl: 525, tone: 5, tbw6: n === 15 ? 1 : n === 16 ? 21 : n === 17 ? 30 : 1, mask: 24, antm: 0, pct: n === 184 ? 128 : 191, rgb: n === 215 ? '0,255,0' : n === 216 ? '255,0,0' : n === 214 ? '0,0,0' : '51,153,255', edge: it.lo + '-' + Math.min(it.hi, it.lo + 350),
+            list: n === 220 ? 2 : n === 188 ? 0 : n === 192 || n === 217 || n === 221 || n === 223 || n === 218 || n === 190 || n === 191 || n === 197 || n === 170 || n === 175 || n === 161 || (n >= 344 && n <= 346) || n === 362 ? 1 : 0 }[it.type];
           r(0x05, d[1], d[2], ...exBytes(it, raw));
         }
-        else { const b = d.slice(3); ex[n] = it.type === 'pct' ? lvlValue(b, 0) : it.type === 'hl' || it.type === 'antm' ? unbcd(b[0]) * (it.type === 'antm' ? 10 : 100) + unbcd(b[1]) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F) : unbcd(b[0]); ok(); }
+        else { const b = d.slice(3); ex[n] = it.type === 'edge' ? edgeKHz(b, 0) + '-' + edgeKHz(b, 3) : it.type === 'pct' ? lvlValue(b, 0) : it.type === 'hl' || it.type === 'antm' ? unbcd(b[0]) * (it.type === 'antm' ? 10 : 100) + unbcd(b[1]) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F) : unbcd(b[0]); ok(); }
       } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x03 && (d[2] === 0x63 || d[2] === 0x64)) {
         const dep = d[2] === 0x63;
         if (d.length === 3) r(0x05, 0x03, d[2], ...(dep ? [bcd(this.nbd != null ? this.nbd : 4)] : lvlBytes(this.nbw != null ? this.nbw : 128)));

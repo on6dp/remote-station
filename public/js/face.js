@@ -1156,7 +1156,8 @@
       // Rangée du bas du FTDX10 : CENTER, 3DSS, MULTI, EXPAND, SPAN, SPEED (la fonction du bouton FUNC est dans la case près du VFO-B) ;
       // FTX-1 : CENTER, 3DSS, MULTI, SCOPE (réglages du scope : SCOPE MENU), SPAN, SPEED
       const by = (n) => BOT.find((b) => b[0] === n);
-      const extra = { REF: ['REF', () => openSmenu()], '<MENU1>': ['<MENU1>', () => say('<MENU1> : cette rangée de touches est le MENU 1 du scope (la rangée MENU 2 n’est pas encore sur la page).', '', 3500)], // IC-7760 : pas le SCOPE MENU des Yaesu
+      const extra = { REF: ['REF', () => openSmenu()], '<MENU1>': ['<MENU1>', () => say(L.i76menu2 ? '<MENU2> : REF, SPEED, RBW, VBW, MARKER ; appui d’1 s : <MENU1>' : '<MENU1> : SPAN, HOLD, CENT/FIX, MAIN/SUB, DUAL ; appui d’1 s : <MENU2>', '', 3000),
+        () => { L.i76menu2 = !L.i76menu2; render(); }], // IC-7760 : pas le SCOPE MENU des Yaesu
         // IC-7760 : le scope de la page montre le son reçu (fixe autour du VFO) ; MAIN/SUB et DUAL comme les touches du TRX
         // Comme sur l'IC-7300 : CENTER ⇄ FIX ; appui long : CENTER ⇄ SCROLL-C, FIX ⇄ SCROLL-F
         'CENT/FIX': ['CENT/FIX', () => {
@@ -1195,6 +1196,9 @@
           if ((s0['scMode' + b] || 0) & 1) { const v = ((s0['scEdge' + b] || 1) % 4) + 1; setCtl('scEdge' + b, v); say('EDGE' + v, '', 1500); }
           else { const v = ((s0['scSpan' + b] != null ? s0['scSpan' + b] : 3) + 1) % 8; setCtl('scSpan' + b, v); say('SPAN ' + R.CONTROL['scSpan' + b].options[v][1], '', 1500); }
         }];
+        // EXPD/SET : appui d'1 s = SCOPE SET (réglages du scope du TRX), comme sur le TRX ; appui bref : écran agrandi (pas encore sur la page)
+        extra['EXPD/SET'] = ['EXPD/SET', () => say('EXPD : écran agrandi du TRX, pas encore sur la page (envoie une photo) ; appui d’1 s : SCOPE SET.', '', 4000),
+          () => { L.icSet = true; L.icSub = 'scope'; L.icSubP = 0; L.exList = null; subRead(); render(); }];
         extra.HOLD = ['HOLD', () => {
           if (!rfFresh()) return ho0 && ho0[1] && ho0[1]();
           if (!needControl()) return;
@@ -1204,6 +1208,22 @@
       }
       const names = FACE.bot || ['CENTER', '3DSS', 'MULTI', 'EXPAND', 'SPAN', 'SPEED'];
       BOT.splice(0, BOT.length, ...names.map((n) => extra[n] || by(n) || [n]));
+      if (DICOM) {
+        // IC-7760 <MENU2> (appui d'1 s sur <MENU1>) : REF, SPEED, RBW, VBW, MARKER à la place de SPAN, HOLD, CENT/FIX, MAIN/SUB, DUAL, comme sur le TRX
+        const sx = () => (activeSide() === 'B' ? 'B' : ''), sdn = () => (activeSide() === 'B' ? 'SUB' : 'MAIN');
+        const cyc = (k, lab, opts) => () => { if (!rfFresh() || !needControl()) return say(lab + ' : réglage du scope du TRX (scope du TRX pas reçu).', '', 2500); const id = k + sx(), v = ((S()[id] != null ? S()[id] : 0) + 1) % opts.length; setCtl(id, v); say(lab + ' : ' + opts[v] + ' (scope du ' + sdn() + ')', '', 2000); };
+        const M2 = [null,
+          ['REF', () => { const v = S()['scRef' + sx()]; say('REF ' + (v == null ? '…' : (v > 0 ? '+' : '') + (v / 10).toFixed(1) + ' dB') + ' — molette sur la touche : ± 0,5 dB ; appui d’1 s : 0 dB', '', 3500); },
+            () => { if (needControl()) { setCtl('scRef' + sx(), 0); say('REF 0.0 dB', '', 1500); } }],
+          ['SPEED', cyc('scSpeed', 'SPEED', ['FAST', 'MID', 'SLOW'])],
+          ['RBW', cyc('scRbw', 'RBW', ['WIDE', 'MID', 'NAR'])],
+          ['VBW', cyc('scVbw', 'VBW', ['NARROW', 'WIDE'])],
+          ['MARKER', () => { smAdjust('marker', 1); say('MARKER : ' + (L.marker ? 'ON' : 'OFF'), '', 2000); }]];
+        for (let j = 1; j <= 5; j++) {
+          const o = BOT[j], m = M2[j];
+          BOT[j] = [o[0], () => (L.i76menu2 ? m[1]() : o[1] && o[1]()), o[2] || m[2] ? () => (L.i76menu2 ? m[2] && m[2]() : o[2] && o[2]()) : null, m[0]];
+        }
+      }
     }
     const bw = (c.w - 10) / BOT.length;
     LCD.botBox = { x: X(5), w: c.w - 10 };
@@ -1218,10 +1238,10 @@
       if (sub) { t.setAttribute('y', Y(G.botY + 9)); t.classList.add('two'); }
       const t2 = last || sub ? el('text', { x: x + bw / 2, y: Y(G.botY + 18), class: 'lcd-bott2' + (sub ? ' sub' : ''), 'text-anchor': 'middle' }, g, '') : null;
       const h = el('rect', { x: x + 0.5, y: Y(G.botY), width: bw - 1, height: G.botH, class: 'hs lcd-hit' + (fn || last ? '' : ' off') }, g);
-      el('title', {}, h, last ? 'MULTI : fonction réglée par le bouton MULTI (choisie dans FUNC)' : lab + (fn ? '' : ' : pas disponible à distance') + (lp ? ' ; appui long : SCROLL-C / SCROLL-F' : ''));
+      el('title', {}, h, last ? 'MULTI : fonction réglée par le bouton MULTI (choisie dans FUNC)' : lab + (fn ? '' : ' : pas disponible à distance') + (lp ? (lab === 'EXPD/SET' ? ' ; appui d’1 s : SCOPE SET' : lab === '<MENU1>' ? ' ; appui d’1 s : <MENU2> / <MENU1>' : lab === 'CENT/FIX' ? ' ; appui long : SCROLL-C / SCROLL-F' : '') : ''));
       let lpT = null, lpDone = false;
       if (lp) {
-        h.addEventListener('pointerdown', () => { lpDone = false; clearTimeout(lpT); lpT = setTimeout(() => { lpDone = true; lp(); }, 700); });
+        h.addEventListener('pointerdown', () => { lpDone = false; clearTimeout(lpT); lpT = setTimeout(() => { lpDone = true; lp(); }, lab === 'EXPD/SET' || lab === '<MENU1>' ? 1000 : 700); });
         for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) h.addEventListener(ev, () => clearTimeout(lpT));
       }
       h.addEventListener('click', () => {
@@ -1231,7 +1251,9 @@
         say(lab + ' : réglage du scope du TRX, pas disponible à distance (la cascade est celle de la BF).', '', 3500);
       });
       if (ICOM) for (const e of [r, t, t2, h]) if (e) e.style.display = 'none'; // IC-7300 : pas de rangée de touches CENTER / HOLD / 3DSS… (Yaesu)
-      return { r, t, t2, h, lab, x, w: bw };
+      // IC-7760 : REF — molette sur la touche (<MENU2>) : ± 0,5 dB
+      if (DICOM && j === 1) h.addEventListener('wheel', (ev) => { if (!L.i76menu2) return; ev.preventDefault(); ev.stopPropagation(); if (!needControl()) return; const id = 'scRef' + (activeSide() === 'B' ? 'B' : ''), v = Math.max(-300, Math.min(100, (S()[id] || 0) + (ev.deltaY < 0 ? 5 : -5))); setCtl(id, v); say('REF ' + (v > 0 ? '+' : '') + (v / 10).toFixed(1) + ' dB', '', 1500); }, { passive: false });
+      return { r, t, t2, h, lab, x, w: bw, lab2: BOT[j][3] || null };
     });
     LCD.hint = el('text', { x: X(c.w / 2), y: Y(G.scopeY + G.scopeH / 2 - 2), class: 'lcd-hint', 'text-anchor': 'middle' }, g, 'Cascade : en attente du son de la station…');
     if (SINGLE) {
@@ -2571,6 +2593,7 @@
     if (L.icSub === 'vtx') return [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({ pseudo: 'vmem', n }));
     // VOICE TX SET des mémoires de la page
     if (L.icSub === 'voice') return [{ pseudo: 'vmon', label: 'Auto Monitor' }, { pseudo: 'vrep', label: 'Repeat Time' }];
+    if (DICOM && L.icSub === 'scope') return R.EX_MENUS.scope[1].map((x) => R.EX[x[0]]).concat([{ other: ['edges', 'Fixed Edges', 'Bords du mode FIX pour la tranche de la fréquence en cours'], go: 'edges' }]);
     if (L.icSub === 'scope') {
       // SCOPE SET : ordre du TRX, VBW (27 1D) après Marker Position, Fixed Edges à la fin
       const its = R.EX_MENUS.scope[1].map((x) => R.EX[x[0]]);
@@ -2615,7 +2638,7 @@
   function subBack() {
     if (L.exList) { L.icSubP = L.exList.p || 0; L.exList = null; return; } // IC-7760 : fenêtre de liste → réglages
     if (R.EX_PARENT && L.icSub in R.EX_PARENT) { L.icSub = R.EX_PARENT[L.icSub]; L.icSubP = 0; subRead(); return; } // IC-7760 : dossier du dessus, puis liste SET
-    if (L.icSub === 'edges') { L.icSub = 'scope'; L.icSubP = 3; return; }
+    if (L.icSub === 'edges') { L.icSub = 'scope'; L.icSubP = DICOM ? 2 : 3; return; }
     if (L.icSub === 'scope' || L.icSub === 'audio' || L.icSub === 'vrec' || L.icSub === 'scanset') { L.icSub = null; L.icSet = false; return; }
     if (L.icSub === 'voice' || L.icSub === 'vtx') { L.icSub = 'vrec'; L.icSubP = 0; return; }
     if (L.icSub === 'ver76') { L.icSub = 'info76'; L.icSubP = 0; return; } // VERSION → INFORMATION
@@ -6939,6 +6962,10 @@
       }
       if (DICOM && b.lab === 'HOLD' && rfFresh()) b.r.classList.toggle('on', !!s['scHold' + (activeSide() === 'B' ? 'B' : '')]);
       if (DICOM && b.lab === 'DUAL') b.r.classList.toggle('on', !!s.scDual);
+      if (DICOM && L.i76menu2) { // <MENU2> : REF, SPEED, RBW, VBW, MARKER
+        if (b.lab2) { b.t.textContent = b.lab2; b.r.classList.toggle('on', b.lab2 === 'MARKER' && !!L.marker); }
+        if (b.lab === '<MENU1>') b.t.textContent = '<MENU2>';
+      } else if (DICOM && (b.lab === '<MENU1>' || (b.lab2 && b.lab !== 'SPAN'))) b.t.textContent = b.lab;
       if (FACE.meterFtx) { // FTX-1 : comme sur le TRX, MULTI / 3DSS en service = nom en bleu
         if (b.lab === 'MULTI') b.t.classList.toggle('blue', !!L.multi);
         if (b.lab === '3DSS') b.t.classList.toggle('blue', !!L.d3);
