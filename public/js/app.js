@@ -237,7 +237,11 @@
     fitKey[w] = key;
     el.style.fontSize = '';
     const unit = wrap.querySelector('.unit');
-    const need = () => el.offsetWidth + (unit ? unit.offsetWidth + 6 : 0);
+    // petit filtre à gauche de la fréquence : il garde sa taille, ce sont les chiffres de la fréquence qui se réduisent
+    const fl = wrap.querySelector('.vfo-flt'), flOn = fl && getComputedStyle(fl).display !== 'none';
+    if (fl) fl.style.width = '';
+    const flW = () => (flOn ? fl.getBoundingClientRect().width + 18 : 0);
+    const need = () => el.offsetWidth + (unit ? unit.offsetWidth + 6 : 0) + flW();
     for (let i = 0; i < 6 && need() > wrap.clientWidth; i++) {
       const fs = parseFloat(getComputedStyle(el).fontSize);
       el.style.fontSize = Math.max(14, Math.floor(fs * (wrap.clientWidth / need()) * 0.98)) + 'px';
@@ -266,25 +270,28 @@
     const sv = $('flt' + w);
     if (!sv) return;
     const d = live ? miniFltData(w, r) : null;
+    // BW et SFT dans la ligne des badges (RX · TX · BW · SFT) au-dessus du S-mètre : le graphique garde toute la hauteur
+    const sb = $('sft' + w);
+    if (sb) { sb.hidden = !d; if (d) sb.textContent = 'SFT ' + (d.sft > 0 ? '+' : d.sft < 0 ? '−' : '') + Math.abs(d.sft); }
+    if (w === 'B' && !RIG().SUB_BADGES) { const wb = $('widthB'); wb.hidden = !d; if (d) wb.textContent = 'BW ' + bwK(d.hz); }
     const key = d ? d.hz + '/' + d.sft + '/' + d.cw : '';
     if (sv.dataset.k === key) return;
     sv.dataset.k = key;
     sv.style.visibility = d ? '' : 'hidden';
     if (!d) { sv.innerHTML = ''; return; }
     const c0 = d.cw ? 700 : 1500, span = Math.max(4000, d.hz + 1200), x0 = 6, ww = 138, X = (f) => x0 + (f - (c0 - span / 2)) / span * ww;
-    const lo = c0 + d.sft - d.hz / 2, hi = c0 + d.sft + d.hz / 2, xl = X(lo), xh = X(hi), sl = Math.min(6, (xh - xl) / 4);
-    const k = (v) => (v >= 1000 ? (v / 1000).toFixed(2) + 'k' : String(v));
+    const lo = c0 + d.sft - d.hz / 2, hi = c0 + d.sft + d.hz / 2, xl = X(lo), xh = X(hi), sl = Math.min(8, (xh - xl) / 4);
     const fmt = (v) => String(Math.max(0, Math.round(v / 10) * 10));
+    sv.setAttribute('viewBox', '-4 -4 158 58');
     sv.innerHTML =
-      '<rect class="mf-box" x="1" y="1" width="64" height="12" rx="2"/><text class="mf-t" x="33" y="10" text-anchor="middle">BW ' + k(d.hz) + '</text>' +
-      '<rect class="mf-box" x="70" y="1" width="64" height="12" rx="2"/><text class="mf-t" x="102" y="10" text-anchor="middle">SFT ' + (d.sft > 0 ? '+' : d.sft < 0 ? '−' : '') + Math.abs(d.sft) + '</text>' +
+      '<rect class="mf-frame" x="-3" y="-3" width="156" height="56" rx="4"/>' +
       '<line class="mf-base" x1="' + x0 + '" y1="37" x2="' + (x0 + ww) + '" y2="37"/>' +
-      '<path class="mf-pb" d="M' + xl.toFixed(1) + ' 37L' + (xl + sl).toFixed(1) + ' 18L' + (xh - sl).toFixed(1) + ' 18L' + xh.toFixed(1) + ' 37Z"/>' +
-      '<line class="mf-c" x1="' + X(c0).toFixed(1) + '" y1="16" x2="' + X(c0).toFixed(1) + '" y2="38"/>' +
+      '<path class="mf-pb" d="M' + xl.toFixed(1) + ' 37L' + (xl + sl).toFixed(1) + ' 3L' + (xh - sl).toFixed(1) + ' 3L' + xh.toFixed(1) + ' 37Z"/>' +
+      '<line class="mf-c" x1="' + X(c0).toFixed(1) + '" y1="0" x2="' + X(c0).toFixed(1) + '" y2="38"/>' +
       '<text class="mf-s edge" x="' + Math.max(8, xl).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(lo) + '</text>' +
       '<text class="mf-s" x="' + X(c0).toFixed(1) + '" y="48" text-anchor="middle">' + c0 + '</text>' +
-      '<text class="mf-s edge" x="' + Math.min(142, xh).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(hi) + '</text>';
-    sv.querySelector('title') || sv.insertAdjacentHTML('afterbegin', '<title>Filtre du VFO ' + w + ' : largeur ' + d.hz + ' Hz, décalage ' + d.sft + ' Hz (BW / IF SHIFT, colonne de gauche)</title>');
+      '<text class="mf-s edge" x="' + Math.min(142, xh).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(hi) + '</text>' +
+      '<title>Filtre du VFO ' + w + ' : largeur ' + d.hz + ' Hz, décalage ' + d.sft + ' Hz (BW / IF SHIFT, colonne de gauche)</title>';
   }
   function drawFreq(which, hz) {
     const s = hz == null ? '---------' : String(hz).padStart(9, '0');

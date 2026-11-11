@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.317** — Dashboard : SFT à côté de BW au-dessus du S-mètre, petit filtre encadré de blanc et plus haut, chiffres de fréquence réduits pour lui laisser la place
 - **0.37.316** — Dashboard : « BANDES » au lieu de « BANDS », STEP et BANDES un peu plus grands
 - **0.37.315** — Dashboard : VFO A sur fond vert foncé, VFO B sur fond rose foncé (ligne STEP)
 - **0.37.314** — Dashboard : petit filtre BW / SFT dans l'écran de chaque VFO ; mode choisi en bleu azur
