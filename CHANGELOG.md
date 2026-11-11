@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.259** — IC-7760 : appui d'1 s sur DIGI-SEL = colonne MULTI avec l'accord du DIGI-SEL (14 13) ; COMP dans la colonne seulement quand il est en service
 - **0.37.258** — IC-7760 : fenêtres ANT/BW/SFT, MODE (SSB LSB/USB selon 10 MHz, DATA = USB-D1), BAND STACKING et F-INP ; SUB DISP galvanomètre/filtre/bandes ; DUAL-W = un ou deux scopes, écran en un seul scope (galvanomètres en haut) ; loupe sur le scope, accord en glissant
 - **0.37.257** — IC-7760 : fenêtres ANT/BW/SFT, MODE, BAND STACKING et F-INP ; SUB DISP galvanomètre/filtre/bandes ; DUAL-W = un ou deux scopes, écran du TRX en un seul scope (galvanomètres en haut) ; loupe sur le scope et accord en glissant la souris
 - **0.37.256** — IC-7760 : fenêtres ANT (1-4, RX ANT), BW (FIL, largeur), SFT (PBT, CLR) par clic sur l'en-tête ; clic sur la fréquence = BAND STACKING REGISTER et F-INP (clavier du TRX) ; SUB DISP : galvanomètre / filtre (FIL, SHARP/SOFT, MN) / bandes

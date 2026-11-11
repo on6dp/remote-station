@@ -69,7 +69,7 @@
   // La clé du SUB est la même suivie de « B » (smeterB, attB, preampB…)
   const SIDE = [
     [0x14, 0x01, 'af', 'l'], [0x14, 0x02, 'rf', 'l'], [0x14, 0x03, 'sql', 'l'], [0x14, 0x06, 'nrLvl', 'l'],
-    [0x14, 0x07, 'pbtIn', 'l'], [0x14, 0x08, 'pbtOut', 'l'], [0x14, 0x0D, 'notchPos', 'l'], [0x14, 0x12, 'nbLvl', 'l'],
+    [0x14, 0x07, 'pbtIn', 'l'], [0x14, 0x08, 'pbtOut', 'l'], [0x14, 0x0D, 'notchPos', 'l'], [0x14, 0x12, 'nbLvl', 'l'], [0x14, 0x13, 'dsShift', 'l'],
     [0x15, 0x02, 'smeter', 'l'],
     [0x16, 0x02, 'preamp', 'b'], [0x16, 0x12, 'agc', 'b'], [0x16, 0x22, 'nb', 't'], [0x16, 0x32, 'apf', 'b'], [0x16, 0x40, 'nr', 't'],
     [0x16, 0x41, 'dnf', 't'], [0x16, 0x48, 'notch', 't'], [0x16, 0x56, 'filShape', 'b'], [0x16, 0x4E, 'digiSel', 't'], [0x16, 0x57, 'notchW', 'b'], [0x16, 0x65, 'ipPlus', 't']
@@ -212,6 +212,8 @@
     { id: 'filWi', g: 'flt', label: 'Largeur du filtre', type: 'select', face: true, options: Array.from({ length: 50 }, (_, i) => [i, String(i)]),
       write: (v, s, b) => qs(b, 0x1A, 0x03, bcd(v)), when: (s, b) => !/^FM/.test((s && s['mode' + (b ? 'B' : '')]) || '') },
     { id: 'digiSel', g: 'rx', label: 'DIGI-SEL', type: 'toggle', face: true, cmd: [0x16, 0x4E] },
+    // Accord du DIGI-SEL (14 13 : 0000 – 0255), réglé au bouton MULTI dans la colonne MULTI
+    { id: 'dsShift', g: 'rx', label: 'DIGI-SEL (accord)', type: 'level', min: 0, max: 255, step: 1, face: true, cmd: [0x14, 0x13] },
     // Constante de temps de l'AGC (1A 04) : celle du mode et du FAST / MID / SLOW en cours (appui long sur AGC) ; pas en FM (fixe)
     { id: 'agcT', g: 'rx', label: 'Constante de temps AGC', type: 'select', face: true, options: Array.from({ length: 14 }, (_, i) => [i, i ? String(i) : 'OFF']),
       write: (v, s, b) => qs(b, 0x1A, 0x04, bcd(v)), when: (s, b) => !/^FM/.test((s && s['mode' + (b ? 'B' : '')]) || '') },

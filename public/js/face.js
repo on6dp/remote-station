@@ -3319,11 +3319,14 @@
       const t = el('text', { x: X(27), y: y + kh * 0.78, class: 'i76-kv', 'text-anchor': 'middle' }, h, '—');
       const hit = el('rect', { x: X(2), y, width: 52, height: kh - 2, class: 'hs lcd-hit' }, h);
       el('title', {}, hit, id === 'agc' ? 'AGC du récepteur sélectionné : clic = FAST / MID / SLOW ; appui d’1 s = tableau des constantes de temps (grand bouton pour changer)'
+        : id === 'digiSel' ? 'DIGI-SEL du récepteur sélectionné : clic = ON / OFF ; appui d’1 s = colonne MULTI, accord du DIGI-SEL au bouton MULTI'
         : id === 'proc' ? 'COMP (en CW / RTTY / PSK : 1/4, grand bouton 4 fois plus lent sur cette page)' : lab + ' du récepteur sélectionné (MAIN ou SUB) : clic pour changer');
       // Appui d'1 s sur AGC : tableau AGC (constantes de temps), comme sur le TRX
       let lpT = null, lpDone = false;
-      if (id === 'agc') {
-        hit.addEventListener('pointerdown', () => { lpDone = false; clearTimeout(lpT); lpT = setTimeout(() => { lpDone = true; L.agcTbl = true; L.multiMenu = false; L.i76pop = null; render(); }, 700); });
+      if (id === 'agc' || id === 'digiSel') {
+        // AGC : tableau AGC ; DIGI-SEL : colonne MULTI avec DIGI-SEL choisi (accord au bouton MULTI)
+        const lpOpen = () => { if (id === 'agc') { L.agcTbl = true; L.multiMenu = false; } else { L.multiMenu = true; L.multiAt = Date.now(); L.funcSel = 'dsShift'; L.agcTbl = false; } L.i76pop = null; render(); };
+        hit.addEventListener('pointerdown', () => { lpDone = false; clearTimeout(lpT); lpT = setTimeout(() => { lpDone = true; lpOpen(); }, 700); });
         for (const e2 of ['pointerup', 'pointerleave', 'pointercancel']) hit.addEventListener(e2, () => clearTimeout(lpT));
       }
       hit.addEventListener('click', (ev) => {
@@ -3481,15 +3484,17 @@
   function i76MultiItems(s) {
     const cw = /^CW/.test(L.activeMode(s) || '');
     const pw = ['power', 'RF POWER', (s0) => ['HF', s0.power != null ? s0.power + 'W' : '—'], (s0) => (s0.power != null ? (s0.power - 5) / 195 : 0)];
-    const ds = ['dsI', 'DIGI-SEL', (s0) => [onOff(s0[sdk('digiSel')]), ''], (s0) => (s0[sdk('digiSel')] ? 0.5 : 0)];
+    // DIGI-SEL : ON / OFF et repère de l'accord (14 13) sur une réglette, comme sur le TRX
+    const ds = ['dsShift', 'DIGI-SEL', (s0) => [onOff(s0[sdk('digiSel')]), ''], (s0) => (s0[sdk('dsShift')] != null ? s0[sdk('dsShift')] / 255 : 0.5), 'mark'];
     const mo = ['moniLvl', 'MONITOR', (s0) => [onOff(s0.moni), pct(s0.moniLvl)], (s0) => pctOf(s0.moniLvl)];
     if (cw) return [pw, ['keySpeed', 'KEY SPEED', (s0) => ['', s0.keySpeed != null ? s0.keySpeed + 'wpm' : '—'], (s0) => (s0.keySpeed != null ? (s0.keySpeed - 6) / 42 : 0)],
       ['cwPitch', 'CW PITCH', (s0) => ['', s0.cwPitch != null ? s0.cwPitch + 'Hz' : '—'], (s0) => (s0.cwPitch != null ? (s0.cwPitch - 300) / 600 : 0)], ds, null,
       ['sideTone', 'SIDETONE', (s0) => ['', pct(s0.sideTone)], (s0) => pctOf(s0.sideTone)]]; // en CW : SIDETONE à la place de MONITOR, comme sur le TRX
     // RTTY / PSK : RF POWER, DIGI-SEL et MONITOR seulement (cases vides entre), comme sur le TRX
     if (/^(RTTY|PSK)/.test(L.activeMode(s) || '')) return [pw, null, null, ds, null, mo];
+    // SSB : COMP seulement quand il est en service (sinon case vide), comme sur le TRX
     return [pw, ['mic', 'MIC GAIN', (s0) => ['', pct(s0.mic)], (s0) => pctOf(s0.mic)],
-      ['procLvl', 'COMP', (s0) => [onOff(s0.proc), pct(s0.procLvl)], (s0) => pctOf(s0.procLvl)], ds, null, mo];
+      s.proc ? ['procLvl', 'COMP', (s0) => [onOff(s0.proc), pct(s0.procLvl)], (s0) => pctOf(s0.procLvl)] : null, ds, null, mo];
   }
   function buildI76Multi(g, c) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
@@ -3505,17 +3510,18 @@
       const v1 = el('text', { x: x0 + 4, y: y + rh - 7, class: 'i76mm-v' }, m, '');
       const v2 = el('text', { x: x0 + w - 4, y: y + rh - 7, class: 'i76mm-v', 'text-anchor': 'end' }, m, '');
       const hit = el('rect', { x: x0, y, width: w, height: rh - 2, class: 'hs lcd-hit' }, m);
-      const row = { r, t, tr, bar, v1, v2, hit, id: null, bw: w - 20 };
+      const row = { r, t, tr, bar, v1, v2, hit, id: null, bw: w - 20, bx: x0 + 10 };
       el('title', {}, hit, 'Clic : choisir ce réglage, puis tourner le bouton MULTI (ou la molette ici)');
       hit.addEventListener('click', (ev) => {
         ev.stopPropagation();
         if (!row.id) return;
-        if (row.id === 'dsI') { if (needControl()) setCtl(sdk('digiSel'), S()[sdk('digiSel')] ? 0 : 1); return; }
+        // DIGI-SEL : 1er clic = le choisir (bouton MULTI : accord) ; clic quand il est choisi = ON / OFF
+        if (row.id === 'dsShift' && L.funcSel === 'dsShift') { if (needControl()) setCtl(sdk('digiSel'), S()[sdk('digiSel')] ? 0 : 1); return; }
         L.funcSel = row.id; store.set('rs.face.funcsel', row.id); render();
       });
       hit.addEventListener('wheel', (ev) => {
         ev.preventDefault();
-        if (!row.id || row.id === 'dsI' || !Math.abs(ev.deltaY)) return;
+        if (!row.id || !Math.abs(ev.deltaY)) return;
         L.funcSel = row.id;
         funcAdjust(row.id, ev.deltaY < 0 ? 1 : -1);
       }, { passive: false });
@@ -3561,7 +3567,9 @@
       row.t.textContent = it ? it[1] : '';
       const [a, b] = it ? it[2](s) : ['', ''];
       row.v1.textContent = a; row.v2.textContent = b;
-      row.bar.setAttribute('width', it ? Math.max(0, Math.min(1, it[3](s))) * row.bw : 0);
+      const fr = it ? Math.max(0, Math.min(1, it[3](s))) : 0;
+      if (it && it[4] === 'mark') { row.bar.setAttribute('x', row.bx + fr * (row.bw - 8)); row.bar.setAttribute('width', 8); } // repère (accord DIGI-SEL)
+      else { row.bar.setAttribute('x', row.bx); row.bar.setAttribute('width', fr * row.bw); }
       row.r.classList.toggle('on', !!it && L.funcSel === it[0]);
       for (const e of [row.t, row.v1, row.v2]) e.classList.toggle('on', !!it && L.funcSel === it[0]);
       row.r.classList.toggle('empty', !it);
@@ -5063,6 +5071,7 @@
   for (const row of FUNC) for (const c of row) if (c) FUNC_BY[c[0]] = c;
   // IC-7760 : SIDETONE (colonne MULTI en CW, niveau de la tonalité locale, 1A 05 02 86)
   if (DICOM) FUNC_BY.sideTone = ['sideTone', 'SIDETONE', (s) => pct(s.sideTone), ctlStep('sideTone', 0, 255, 5), IO];
+  if (DICOM) FUNC_BY.dsShift = ['dsShift', 'DIGI-SEL', (s) => String(s[sideKey('dsShift')]), ctlStep('dsShift', 0, 255, 3), IO];
   if (!FUNC_BY[L.funcSel]) L.funcSel = 'power'; // choix gardé d'une autre face avant (autre TRX)
   function funcAdjust(id, d) {
     const c = FUNC_BY[id];
