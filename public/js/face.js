@@ -3405,6 +3405,10 @@
         el('title', {}, hh, tip + (sd === 'B' ? ' — SUB' : ' — MAIN'));
         hh.addEventListener('click', (ev) => { ev.stopPropagation(); L.i76pop = L.i76pop && L.i76pop.k === k2 && L.i76pop.sd === sd ? null : { k: k2, sd }; L.agcTbl = false; L.multiMenu = false; L.popPend = null; render(); });
       }
+      // « RFG » (orange) quand le gain HF n'est pas au maximum : bague extérieure de AF-RF/SQL à régler jusqu'à ce qu'il disparaisse
+      o.rfg = el('text', { x: X(xb + 176), y: Y(11.6), class: 'i76-rfg', style: 'display:none' }, h, 'RFG');
+      o.rfgXY = [[X(xb + 176), Y(11.6)], [X(xb + 3), Y(36)]];
+      el('title', {}, o.rfg, 'RFG : gain HF réduit — tourner la bague extérieure de AF-RF/SQL (' + (sd === 'B' ? 'SUB' : 'MAIN') + ') jusqu’à ce que RFG disparaisse');
       o.side = el('text', { x: X(xb + 250), y: Y(11), class: 'i76-side', 'text-anchor': 'end', style: 'display:none' }, h, sd === 'A' ? 'MAIN' : 'SUB');
       // S-mètre en barre (S · 1 · 3 · 5 · 7 · 9 · +20 +40 +60dB) et SWR dessous, comme sur le grand écran du TRX ;
       // en émission, l'échelle du haut devient Po (0 – 200 W) pour le récepteur qui émet. Galvanomètre à aiguille : dans le petit écran.
@@ -3656,6 +3660,7 @@
       tr(o.tags, d.tags);
       LCD['m' + sd].g.setAttribute('transform', LCD.i76mT[sd][single ? 1 : 0]);
       LCD['i76met' + sd].style.display = single ? '' : 'none';
+      const rp = o.rfgXY[single ? 1 : 0]; o.rfg.setAttribute('x', rp[0]); o.rfg.setAttribute('y', rp[1]);
     }
     WF.drawn = false;
   }
@@ -3675,6 +3680,8 @@
         try { const e = o.freq.getExtentOfChar(idx), cx = e.x + e.width / 2, ty = e.y + e.height * 0.2; dd = 'M' + (cx - 3.2) + ' ' + (ty - 4) + 'H' + (cx + 3.2) + 'L' + cx + ' ' + ty + 'Z'; } catch (er) { dd = ''; }
       }
       o.dig.setAttribute('d', dd); o.dig.style.display = dd ? '' : 'none';
+      const rfv = s['rf' + (sd === 'B' ? 'B' : '')];
+      o.rfg.style.display = rfv != null && rfv < 250 ? '' : 'none'; // gain HF pas au maximum
       o.fiR.style.display = fi ? '' : 'none'; o.fiT.style.display = fi ? '' : 'none';
     }
     drawI76Multi(s);
