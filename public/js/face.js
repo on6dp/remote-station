@@ -267,7 +267,7 @@
     }
     if (a.local === 'subDisp') { L.subDisp = ((L.subDisp || 0) + 1) % 3; store.set('rs.face.subdisp', String(L.subDisp)); say('SUB DISP : ' + ['galvanomètre', 'filtre du récepteur sélectionné', 'touches de bandes'][L.subDisp] + ' dans le petit écran', '', 2500); return render(); }
     if (a.local === 'multiView') { viewTouched(); L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'M.SCOPE : scope, OSCILLOSCOPE et AF-FFT du récepteur sélectionné' : 'M.SCOPE : affichage normal', '', 2500); return render(); }
-    if (a.local === 'pbtClr') { if (!needControl()) return; setCtl(sdk('pbtIn'), 128); setCtl(sdk('pbtOut'), 128); if (ICOM) { L.pbtPopAt = Date.now(); L.pbtClrAt = Date.now(); render(); } return; }
+    if (a.local === 'pbtClr') { if (!needControl()) return; setCtl(sdk('pbtIn'), 128); setCtl(sdk('pbtOut'), 128); L.pbt76 = null; if (ICOM || DICOM) { L.pbtPopAt = Date.now(); L.pbtClrAt = Date.now(); render(); } return; }
     // Réglage à choix : valeur suivante (IC-7300 : P.AMP OFF → AMP1 → AMP2)
     if (a.cycle) { const c = R.CONTROL[a.cycle]; if (!c || !c.options) return; const i = c.options.findIndex((o) => o[0] === s[a.cycle]); return setCtl(a.cycle, c.options[(i + 1) % c.options.length][0]); }
     // CONT/APF (FTDX10) : en CW, l'APF ; sinon le CONTOUR
@@ -631,6 +631,8 @@
       ip.style.height = (ph / V.h * 100) + '%';
       ip.innerHTML = '<b></b><span></span>';
       $('facePanel').appendChild(ip);
+    }
+    if (ICOM || DICOM) {
       // Cadre de la bande passante (TWIN PBT tourné ou poussé, comme sur le TRX) : BW, SFT et le dessin du filtre
       const bp = document.createElement('div');
       bp.className = 'fc-icpbt';
@@ -3419,7 +3421,7 @@
     const wi = pp && pp.wi != null ? pp.wi : s['filWi' + x];
     const pi = pp && pp.pi != null ? pp.pi : s['pbtIn' + x], po = pp && pp.po != null ? pp.po : s['pbtOut' + x];
     const hz = /FM/.test(md) ? null : R.filHz ? R.filHz(md, wi) : null;
-    const sft = pi != null && po != null ? Math.round((((pi - 128) + (po - 128)) / 2) / 128 * (hz || 2400) / 2 / 10) * 10 : 0;
+    const sft = pi != null && po != null ? Math.round((((pi - 128) + (po - 128)) / 2) / 128 * (hz || 2400) / 2 / 25) * 25 : 0;
     return { x, md, wi, pi, po, hz, sft };
   }
   function popTurn(n, ev) {
@@ -4463,7 +4465,7 @@
         const hz = /FM/.test(md) ? null : R.filHz ? R.filHz(md, s['filWi' + x]) : null;
         LCD.sfBw.textContent = 'BW ' + (hz ? (hz >= 1000 ? (hz / 1000).toFixed(2) + 'k' : hz) : '—');
         const pi = s['pbtIn' + x], po = s['pbtOut' + x];
-        const sft = pi != null && po != null ? Math.round((((pi - 128) + (po - 128)) / 2) / 128 * (hz || 2400) / 2 / 10) * 10 : 0;
+        const sft = pi != null && po != null ? Math.round((((pi - 128) + (po - 128)) / 2) / 128 * (hz || 2400) / 2 / 25) * 25 : 0;
         LCD.sfSft.textContent = 'SFT ' + sft;
         if (L.sfKeys && Date.now() - (L.sfKeysAt || 0) > 10000) L.sfKeys = false; // se cachent seules après 10 s
         LCD.sfKeysG.style.display = L.sfKeys ? '' : 'none';
@@ -4789,15 +4791,20 @@
   function pbtPopDraw(s, live) {
     const e = $('icPbt');
     if (!e) return;
-    const k = live ? (s.pbtIn != null ? s.pbtIn : 128) + '/' + (s.pbtOut != null ? s.pbtOut : 128) + '/' + s.fil : null;
+    // IC-7760 : TWIN PBT du récepteur sélectionné (MAIN ou SUB), largeur lue sur le TRX (1A 03)
+    const px = DICOM && activeSide() === 'B' ? 'B' : '', pIn0 = s['pbtIn' + px], pOut0 = s['pbtOut' + px];
+    const pc = DICOM && L.pbt76 && Date.now() - L.pbt76.at < 1500 && L.pbt76.x === px ? L.pbt76 : null; // valeurs envoyées, avant la relecture
+    const pIn = pc ? pc.pi : pIn0, pOut = pc ? pc.po : pOut0;
+    const k = live ? (pIn != null ? pIn : 128) + '/' + (pOut != null ? pOut : 128) + '/' + (DICOM ? px : s.fil) : null;
     if (k && pbtPrev && k.split('/').slice(0, 2).join('/') !== pbtPrev.split('/').slice(0, 2).join('/')) L.pbtPopAt = Date.now();
     pbtPrev = k;
-    const on = Date.now() - (L.pbtPopAt || 0) < 2000 && !!LCD.flt && !!LCD.flt.A;
+    const fs = DICOM && px ? 'B' : 'A';
+    const on = Date.now() - (L.pbtPopAt || 0) < 2000 && !!LCD.flt && !!LCD.flt[fs];
     e.hidden = !on;
     clearTimeout(L.pbtPopT);
     if (!on) return;
     L.pbtPopT = setTimeout(render, 2050);
-    const f = LCD.flt.A, md = f.mode || '', fw = filHz(md, s.fil) || f.hz;
+    const f = LCD.flt[fs], md = f.mode || '', fw = DICOM ? ((R.filHz && R.filHz(md, s['filWi' + px])) || f.hz) : filHz(md, s.fil) || f.hz;
     // CLR : les deux PBT au milieu tout de suite, sans attendre la relecture du TRX
     const clr = Date.now() - (L.pbtClrAt || 0) < 1500;
     const hz = clr ? fw : Math.round(f.hz / 50) * 50, sh = clr ? 0 : Math.round(f.sh / 25) * 25, // pas du TRX : 50 Hz (BW), 25 Hz (SFT)
@@ -4813,7 +4820,7 @@
     const trap = (a, b) => { const k2 = Math.min(8, (b - a) / 4); return 'M' + a + ' 70L' + (a + k2) + ' 38H' + (b - k2) + 'L' + b + ' 70Z'; };
     q('flt').setAttribute('d', trap(xl, xh));
     // Les deux PBT, comme sur le TRX : le filtre décalé par chacun (rouge : PBT intérieur, bleu : PBT extérieur), la bande passante qui reste en orange
-    const p1 = clr ? 0 : ((s.pbtIn != null ? s.pbtIn : 128) - 128) / 128 * fw / 2, p2 = clr ? 0 : ((s.pbtOut != null ? s.pbtOut : 128) - 128) / 128 * fw / 2;
+    const p1 = clr ? 0 : ((pIn != null ? pIn : 128) - 128) / 128 * fw / 2, p2 = clr ? 0 : ((pOut != null ? pOut : 128) - 128) / 128 * fw / 2;
     const both = Math.abs(p1 - p2) >= 25;
     q('f1').setAttribute('d', both ? trap(x(c - fw / 2 + p1), x(c + fw / 2 + p1)) : '');
     q('f2').setAttribute('d', both ? trap(x(c - fw / 2 + p2), x(c + fw / 2 + p2)) : '');
@@ -6133,6 +6140,18 @@
   }
 
   // ------------------------------------------------------------ boutons rotatifs : molette, glisser
+  function pbtTurn76(part, notches) {
+    if (!needControl()) return;
+    const s = S(), x = activeSide() === 'B' ? 'B' : '', c0 = L.pbt76 && Date.now() - L.pbt76.at < 1500 && L.pbt76.x === x ? L.pbt76 : null;
+    let pi = c0 ? c0.pi : s['pbtIn' + x] != null ? s['pbtIn' + x] : 128, po = c0 ? c0.po : s['pbtOut' + x] != null ? s['pbtOut' + x] : 128;
+    let ctr = (pi + po) / 2, nar = Math.abs(pi - po) / 2;
+    const d = Math.max(-8, Math.min(8, notches)) * 2;
+    if (part === 'outer') nar = Math.max(0, Math.min(127, nar - d)); // vers la droite : plus large
+    else ctr = Math.max(nar, Math.min(255 - nar, ctr + d)); // vers la droite : vers le haut
+    pi = Math.round(Math.max(0, Math.min(255, ctr + nar))); po = Math.round(Math.max(0, Math.min(255, ctr - nar)));
+    L.pbt76 = { x, pi, po, at: Date.now() }; L.pbtPopAt = Date.now();
+    setCtl('pbtIn' + x, pi); setCtl('pbtOut' + x, po);
+  }
   function knobPart(k, p) {
     if (!k.ri) return k.inner ? 'inner' : 'outer';
     const d = Math.hypot(p.x - k.cx - (k.ix || 0), p.y - k.cy - (k.iy || 0));
@@ -6145,6 +6164,8 @@
     if (ICOM && k.dial && L.iscRef && L.icView === 'scope') return refTurn(notches);
     // IC-7760, tableau AGC ouvert : le grand bouton règle la constante de temps de la case en cours, comme sur le TRX
     if (DICOM && k.dial && L.agcTbl) return agcTurn(notches, ev);
+    // IC-7760 TWIN PBT : bague extérieure = largeur (BW, les deux PBT en sens contraire), bouton intérieur = décalage (SFT, les deux ensemble), comme sur le TRX
+    if (DICOM && k.id === 'pbt') return pbtTurn76(part, notches);
     if (DICOM && k.dial && L.hlDlg) return dlgStep(L.hlDlg.sel || 0, notches > 0 ? 1 : -1); // fenêtre de SET : le grand bouton règle la case choisie
     if (DICOM && k.dial && L.i76pop && (L.i76pop.k === 'bw' || L.i76pop.k === 'sft')) return popTurn(notches, ev); // fenêtre BW / SFT : le grand bouton la règle
     // VOICE → TX LEVEL ouvert : le grand bouton règle le niveau d'émission des mémoires vocales
@@ -7061,7 +7082,7 @@
     $('scope').style.visibility = (fresh || rfFresh()) && !(L.func && !DICOM) && !L.agcTbl && !L.i76pop && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !(L.multiMenu && !DICOM) && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet && !(L.i76mtOnly && !L.i76ant && !L.func) && L.fdisp !== 2 ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom ; FTX-1 DISP 2 : pas de scope)
     if (LCD.icm && L.icMeter && LCD.hint.style.display !== 'none') LCD.hint.setAttribute('y', LCD.Y(G.scopeY + 32)); else if (LCD.hint) LCD.hint.setAttribute('y', LCD.Y(G.scopeY + G.scopeH / 2 - 2));
     icPopCheck(s, live);
-    if (ICOM) pbtPopDraw(s, live);
+    if (ICOM || DICOM) pbtPopDraw(s, live);
   }
   function lamp(id, cls) { const e = $(id); e.classList.remove('on', 'warn', 'tx'); if (cls) e.classList.add(cls); }
   function drawTop() {

@@ -130,8 +130,9 @@
     knobs: [
       { id: 'dial', cx: 1282, cy: 452, ro: 135, ri: 135, dial: true, tip: 'Grand bouton : fréquence du récepteur sélectionné (touches MAIN / SUB) ; molette ou glisser en tournant' },
       { id: 'multi', cx: 1537, cy: 117, ro: 55, multi: true, pushLocal: 'multiMenu', tip: 'MULTI : clic = menu MULTI (RF POWER, MIC GAIN, COMP, MONITOR ; en CW KEY SPEED, CW PITCH), tourner = le réglage choisi' },
-      // TWIN PBT : centre = PBT intérieur, bague = PBT extérieur, du récepteur sélectionné ; le pousser (CLR) = les deux au milieu
-      { id: 'pbt', cx: 1537, cy: 307, ri: 33, ro: 55, inner: { ctl: 'pbtIn', label: 'PBT intérieur', per: 4, sided: true }, outer: { ctl: 'pbtOut', label: 'PBT extérieur', per: 4, sided: true }, pushLocal: 'pbtClr' },
+      // TWIN PBT du récepteur sélectionné, comme sur le TRX : bague extérieure = largeur (BW), bouton intérieur = décalage (SFT) ;
+      // cadre BW / SFT et dessin du filtre sur le grand écran pendant 2 s ; le pousser (CLR) = les deux PBT au milieu
+      { id: 'pbt', cx: 1537, cy: 307, ri: 33, ro: 55, inner: { ctl: 'pbtIn', label: 'SFT (décalage de la bande passante)', per: 4, sided: true }, outer: { ctl: 'pbtOut', label: 'BW (largeur de la bande passante)', per: 4, sided: true }, pushLocal: 'pbtClr' },
       { id: 'ritKnob', cx: 1537, cy: 497, ro: 55, inner: { ctl: 'clar', label: 'RIT/ΔTX', per: 10 } },
       { id: 'afMain', cx: 200, cy: 240, ri: 37, ro: 58, inner: { ctl: 'af', label: 'AF MAIN', per: 5 }, outer: { ctl: 'rf', label: 'RF MAIN', per: 5 } },
       { id: 'afSub', cx: 200, cy: 450, ri: 37, ro: 58, inner: { ctl: 'afB', label: 'AF SUB', per: 5 }, outer: { ctl: 'rfB', label: 'RF SUB', per: 5 } }
