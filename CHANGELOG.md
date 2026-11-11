@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.306** — Dashboard : boutons arrondis à bord clair, STEP et onglets MODES en blanc gras encadrés
 - **0.37.305** — Dashboard : boutons avec encadré arrondi et bord clair
 - **0.37.304** — FTDX5000 : touche A ⇄ B échange les deux VFO (SV)
 - **0.37.303** — FTDX5000 : indicateur TX en case rouge vif, texte blanc gras, en émission

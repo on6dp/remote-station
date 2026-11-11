@@ -2097,3 +2097,15 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 .xbm-box[hidden] { display: none; }
 .xbm-lb { font-style: normal; font-size: 11px; font-weight: 700; color: #7fd0ff; margin: 0 auto 0 6px; white-space: nowrap; }
 .xbm-lb:empty { display: none; }
+
+/* Ligne STEP : pas d'accord en blanc gras ; ligne MODES (onglets) : blanc gras dans un encadré arrondi, comme les boutons */
+#stepKeys .btn { color: #f4f7fb; font-weight: 800; }
+#stepKeys .btn[aria-pressed='true'], #stepKeys .btn.on { color: var(--v2-accent-cyan-bright); }
+.ctabs { gap: 4px; padding-bottom: 5px; border-bottom: 1px solid var(--v2-border-dark); }
+.ctab {
+  color: #f4f7fb; font-weight: 800; border: 1px solid color-mix(in srgb, #c8d0dc 42%, var(--v2-border-dark));
+  border-radius: 7px; margin-bottom: 0; padding: 5px 12px;
+  background: linear-gradient(180deg, var(--v2-control-button-gradient-top), var(--v2-control-button-gradient-bottom));
+}
+.ctab:hover { color: #fff; border-color: color-mix(in srgb, #fff 60%, var(--v2-border-dark)); }
+.ctab[aria-selected='true'] { color: var(--v2-accent-cyan-bright); background: var(--v2-bg-darker); border-color: color-mix(in srgb, var(--v2-accent-cyan-bright) 60%, transparent); }
