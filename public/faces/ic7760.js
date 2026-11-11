@@ -16,6 +16,7 @@
   const K = 570 / 740;
   // Petit voyant rond (coordonnées de la photo) en chemin SVG à l'échelle de la page
   const circ = (cx, cy, r) => { cx *= K; cy *= K; r *= K; return 'M' + (cx - r).toFixed(2) + ' ' + cy.toFixed(2) + 'a' + r.toFixed(2) + ' ' + r.toFixed(2) + ' 0 1 0 ' + (2 * r).toFixed(2) + ' 0a' + r.toFixed(2) + ' ' + r.toFixed(2) + ' 0 1 0 ' + (-2 * r).toFixed(2) + ' 0Z'; };
+  const voxOn = (s) => (/^CW/.test((s.vfoSel === 1 ? s.modeB : s.mode) || '') ? !!s.bkin : !!s.vox);
   const SC = (o) => {
     for (const k of ['x', 'y', 'w', 'h', 'cx', 'cy', 'r', 'ro', 'ri', 'size']) if (typeof o[k] === 'number') o[k] = +(o[k] * K).toFixed(2);
     if (o.leds) o.leds.forEach(SC);
@@ -73,6 +74,10 @@
       { path: circ(46, 137.5, 4.6), color: '#3fa9ff', on: (s) => !!s.connected, bright: (s) => !!s.connected },
       // TUNER : petit voyant blanc dans la touche quand le coupleur est en service
       { path: circ(46, 271, 4.4), color: '#ffffff', on: (s) => !!(s.tuner || s.tuning), bright: (s) => !!(s.tuner || s.tuning) },
+      // Petits voyants à gauche dans la touche, comme sur le TRX : NB, NR, APF/TPF, NOTCH en blanc ; VOX/BK-IN en bleu
+      ...[[140, 339, (s) => !!side('nb')(s)], [217.5, 339, (s) => !!side('nr')(s)], [139, 137.5, (s) => !!side('apf')(s)], [217.5, 137.5, (s) => !!(side('notch')(s) || side('dnf')(s))]]
+        .map(([x, y, f]) => ({ path: circ(x, y, 4.4), color: '#ffffff', on: f, bright: f })),
+      { path: circ(46.3, 339.5, 4.4), color: '#3fa9ff', on: voxOn, bright: voxOn },
       // TX/RX de chaque récepteur : vert en réception, rouge en émission
       { x: 255, y: 198, w: 21, h: 7, rx: 3.5, color: '#3ddc5a', on: (s) => !!s.connected && !s.tx, bright: (s) => !!s.connected && !s.tx && (s.smeter || 0) > 0 },
       { x: 255, y: 198, w: 21, h: 7, rx: 3.5, color: '#ff3b30', on: (s, L) => !!s.tx && L.txSide(s) === 'A', bright: (s, L) => !!s.tx && L.txSide(s) === 'A' },
@@ -83,13 +88,13 @@
       // Colonne de gauche
       { id: 'power', x: 30, y: 118, w: 75, h: 34, tip: 'POWER : la mise en marche se fait au club', act: info('Le TRX ne s’allume et ne s’éteint qu’au club.') },
       { id: 'timer', x: 198, y: 68, w: 77, h: 30, tip: 'TIMER', act: info('TIMER (minuterie de mise en marche / arrêt) : pas disponible à distance.') },
-      { id: 'apf', x: 122, y: 120, w: 73, h: 32, tip: 'APF/TPF : filtre audio de crête (CW) OFF → WIDE → MID → NAR, récepteur sélectionné', act: { cycle: 'apf', sided: true }, led: (s) => !!side('apf')(s) },
-      { id: 'notch', x: 203, y: 120, w: 74, h: 32, tip: 'NOTCH : OFF → AN (automatique) → MN (manuel) → OFF, comme sur le TRX (pas d’AN en CW), récepteur sélectionné', act: { local: 'notchCycle' }, led: (s) => !!(side('notch')(s) || side('dnf')(s)) },
+      { id: 'apf', x: 122, y: 120, w: 73, h: 32, tip: 'APF/TPF : filtre audio de crête (CW) OFF → WIDE → MID → NAR, récepteur sélectionné', act: { cycle: 'apf', sided: true }, },
+      { id: 'notch', x: 203, y: 120, w: 74, h: 32, tip: 'NOTCH : OFF → AN (automatique) → MN (manuel) → OFF, comme sur le TRX (pas d’AN en CW), récepteur sélectionné', act: { local: 'notchCycle' }, },
       { id: 'transmit', x: 30, y: 186, w: 75, h: 32, tip: 'TRANSMIT : émission maintenue (clic : émission, clic suivant : réception) ; avec votre micro si « MICRO » est actif', act: { local: 'mox' }, led: (s, L) => !!L.mox, ledColor: '#ff3b30' },
       { id: 'tuner', x: 30, y: 254, w: 75, h: 32, tip: 'TUNER : coupleur d’antenne en service / hors service ; appui d’au moins 1 s : accord (émission courte, avec la main)', act: { toggle: 'tuner', long: { action: 'tune' } } },
-      { id: 'vox', x: 30, y: 320, w: 75, h: 33, tip: 'VOX/BK-IN : en CW, BK-IN OFF → SEMI → FULL ; en phonie, VOX (à distance, il ne peut être que coupé)', act: { local: 'voxBk' }, led: (s) => (/^CW/.test((s.vfoSel === 1 ? s.modeB : s.mode) || '') ? !!s.bkin : !!s.vox) },
-      { id: 'nb', x: 122, y: 320, w: 73, h: 33, tip: 'NB (récepteur sélectionné) — appui d’au moins 1 s : niveau NB', act: { toggle: 'nb', sided: true, long: { pop: 'nbLvl' } }, led: (s) => !!side('nb')(s) },
-      { id: 'nr', x: 205, y: 320, w: 72, h: 33, tip: 'NR (récepteur sélectionné) — appui d’au moins 1 s : niveau NR', act: { toggle: 'nr', sided: true, long: { pop: 'nrLvl' } }, led: (s) => !!side('nr')(s) },
+      { id: 'vox', x: 30, y: 320, w: 75, h: 33, tip: 'VOX/BK-IN : en CW, BK-IN OFF → SEMI → FULL ; en phonie, VOX (à distance, il ne peut être que coupé)', act: { local: 'voxBk' }, },
+      { id: 'nb', x: 122, y: 320, w: 73, h: 33, tip: 'NB (récepteur sélectionné) — appui d’au moins 1 s : niveau NB', act: { toggle: 'nb', sided: true, long: { pop: 'nbLvl' } }, },
+      { id: 'nr', x: 205, y: 320, w: 72, h: 33, tip: 'NR (récepteur sélectionné) — appui d’au moins 1 s : niveau NR', act: { toggle: 'nr', sided: true, long: { pop: 'nrLvl' } }, },
       { id: 'phones', cx: 68, cy: 400, r: 22, tip: 'PHONES : écouter le TRX (clic : marche / arrêt)', act: { local: 'listen' }, led: (s, L) => L.listening, ledColor: '#3ddc5a', ring: true },
       { id: 'mic', cx: 75, cy: 510, r: 50, tip: 'MIC', act: info('Micro : phonie à distance par le bouton PTT sous la face avant (page TRX SSB).') },
       // Sous l'écran

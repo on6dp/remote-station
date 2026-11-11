@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.264** — IC-7760 : RFG ; petits voyants comme sur le TRX (POWER bleu, TUNER/NB/NR/APF/NOTCH blancs, VOX/BK-IN bleu)
 - **0.37.263** — IC-7760 : RFG quand le gain HF n'est pas au maximum ; voyant POWER bleu et voyant blanc de TUNER comme sur le TRX
 - **0.37.262** — IC-7760 : ▼ sur un chiffre de la fréquence (clic sur kHz/Hz, appui long sur MHz) : grand bouton et molette changent ce chiffre, MAIN et SUB
 - **0.37.261** — IC-7760 : « F-INP » orange à côté de FIL pendant la saisie de fréquence (MAIN et SUB)
