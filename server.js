@@ -3646,6 +3646,8 @@ function onOperator(conn, m) {
         const c = R.CONTROL[m.ctl];
         // LOCK de la face avant du TRX : réservé aux administrateurs (un membre qui verrouille le TRX bloque le club)
         if ((m.ctl === 'lock' || m.ctl === 'lockB') && !conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'LOCK : réservé aux administrateurs' });
+        // IC-7760 : SET → Network (adresses du réseau du club) : lecture réservée aux administrateurs, jamais d'écriture
+        if (m.ctl === 'exRead' && R.EX && R.EX[Number(m.value)] && R.EX[Number(m.value)].admin && !conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Network : réservé aux administrateurs' });
         // FTX-1 : ATT / IPO du SUB pas réglables à distance — envoyés après passage sur SUB, ils changeaient quand même ceux du MAIN
         // (constaté au club le 06/11 : clic sur ATT du SUB → ATT du MAIN changé sur le TRX)
         if (R.ID === 'ftx1' && (m.ctl === 'attB' || m.ctl === 'preampB')) {

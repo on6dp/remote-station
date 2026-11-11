@@ -124,6 +124,8 @@
   // EX_PARENT = dossier du dessus (null : liste SET). Types : hl (HPF/LPF du RX), tone (−5 … +5), tbw6 (bords de la bande d'émission SSB)
   const EX_TREE = {
     tone: ['Tone Control/TBW', [['toneRx', 'RX'], ['toneTx', 'TX']]],
+    // SET → Network : lecture seule, administrateurs seulement (réseau du club) ; Remote Settings pas à distance
+    net: ['NETWORK (* Valid after Restart)', null],
     toneRx: ['RX', [['rxSsb', 'SSB'], ['rxAm', 'AM'], ['rxFm', 'FM'], ['rxCw', 'CW'], ['rxRtty', 'RTTY'], ['rxPsk', 'PSK']]],
     toneTx: ['TX', [['txSsb', 'SSB'], ['txSsbD', 'SSB-D'], ['txAm', 'AM'], ['txFm', 'FM']]]
   };
@@ -137,12 +139,16 @@
     txSsb: ['SSB', [[13, 'TX Bass', 'tone'], [14, 'TX Treble', 'tone'], [15, 'TBW (WIDE)', 'tbw6'], [16, 'TBW (MID)', 'tbw6'], [17, 'TBW (NAR)', 'tbw6']]],
     txSsbD: ['SSB-D', [[18, 'TBW', 'tbw6']]],
     txAm: ['AM', [[19, 'TX Bass', 'tone'], [20, 'TX Treble', 'tone']]],
-    txFm: ['FM', [[21, 'TX Bass', 'tone'], [22, 'TX Treble', 'tone']]]
+    txFm: ['FM', [[21, 'TX Bass', 'tone'], [22, 'TX Treble', 'tone']]],
+    net: ['NETWORK (* Valid after Restart)', [[161, 'DHCP *', ['OFF', 'ON']], [162, 'IP Address (LAN) *', 'ip'], [164, 'IP Address (Controller) *', 'ip'], [165, 'IP Address (RF Deck) *', 'ip'],
+      [166, 'Subnet Mask *', 'mask'], [167, 'Default Gateway *', 'ip'], [168, 'Primary DNS Server *', 'ip'], [169, 'Secondary DNS Server *', 'ip'],
+      [170, 'Audio Buffer Size (via LAN) *', ['Small', 'Mid', 'Large']], [171, 'Connection from Different Segment *', ['OFF', 'ON']], [183, 'Network Name', 'name']]]
   };
-  const EX_PARENT = { tone: null, toneRx: 'tone', toneTx: 'tone' };
-  for (const k in EX_MENUS) EX_PARENT[k] = k.startsWith('rx') ? 'toneRx' : 'toneTx';
+  delete EX_TREE.net;
+  const EX_PARENT = { tone: null, toneRx: 'tone', toneTx: 'tone', net: null };
+  for (const k in EX_MENUS) if (k !== 'net') EX_PARENT[k] = k.startsWith('rx') ? 'toneRx' : 'toneTx';
   const EX = {};
-  for (const k in EX_MENUS) for (const it of EX_MENUS[k][1]) EX[it[0]] = { n: it[0], label: it[1], title: it[3] || (EX_MENUS[k][0] + ' ' + it[1]), type: it[2], opts: null, rw: true, menu: k };
+  for (const k in EX_MENUS) for (const it of EX_MENUS[k][1]) EX[it[0]] = { n: it[0], label: it[1], title: it[3] || (EX_MENUS[k][0] + ' ' + it[1]), type: Array.isArray(it[2]) ? 'list' : it[2], opts: Array.isArray(it[2]) ? it[2] : null, rw: k !== 'net', admin: k === 'net', menu: k };
   const TBW_LO = [100, 120, 150, 200, 300, 500], TBW_HI = [2500, 2700, 2800, 2900];
   const exFmt = (it, raw) => {
     if (raw == null || raw === '') return '—';
@@ -150,7 +156,9 @@
     if (t === 'tone') return (v > 5 ? '+' : '') + (v - 5);
     if (t === 'hl') { const h = Math.floor(v / 100), l = v % 100; return (h ? h * 100 : '----') + ' - ' + (l >= 25 ? '----' : l * 100); }
     if (t === 'tbw6') { const lo = Math.floor(v / 10), hi = v % 10; return TBW_LO[lo] + ' - ' + TBW_HI[hi]; }
-    return String(raw);
+    if (t === 'list') return it.opts[v] != null ? it.opts[v] : String(raw);
+    if (t === 'mask') { const b = []; for (let i = 0; i < 4; i++) b.push(256 - Math.pow(2, 8 - Math.max(0, Math.min(8, v - i * 8)))); return b.map((x) => x % 256).join('.'); }
+    return String(raw); // ip, name : déjà en texte
   };
   function exOk(it, raw) {
     const v = Number(raw), t = it.type;
@@ -424,7 +432,10 @@
     if (c === 0x1A && d[0] === 0x05 && d[1] === 0x03 && d[2] === 0x64 && d.length >= 5) return { nbWidth: lvlValue(d, 3) };
     if (c === 0x1A && d[0] === 0x05 && d.length >= 4 && EX[unbcd(d[1]) * 100 + unbcd(d[2])]) {
       const n = unbcd(d[1]) * 100 + unbcd(d[2]), it = EX[n], b = d.slice(3);
-      const raw = it.type === 'hl' ? (b.length >= 2 ? unbcd(b[0]) * 100 + unbcd(b[1]) : null) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F) : unbcd(b[0]);
+      // IP : 4 octets de 2 octets BCD (centaines, dizaines-unités) ; nom : texte (16 caractères au plus)
+      const raw = it.type === 'hl' ? (b.length >= 2 ? unbcd(b[0]) * 100 + unbcd(b[1]) : null) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F)
+        : it.type === 'ip' ? (b.length >= 8 ? [0, 2, 4, 6].map((o) => unbcd(b[o]) * 100 + unbcd(b[o + 1])).join('.') : null)
+        : it.type === 'name' ? String.fromCharCode(...b.filter((x) => x >= 0x20 && x < 0x7F)).trim() : unbcd(b[0]);
       return raw == null ? { ok: true } : { ['ex' + n]: String(raw) };
     }
     if (c === 0x1A) return { ok: true };
@@ -627,7 +638,14 @@
       } else if (c === 0x1A && d[0] === 0x05 && d.length >= 3 && EX[unbcd(d[1]) * 100 + unbcd(d[2])]) {
         // Réglages SET du simulateur : valeurs d'usine, gardées si on les change
         const n = unbcd(d[1]) * 100 + unbcd(d[2]), it = EX[n], ex = (this.ex = this.ex || {});
-        if (d.length === 3) { const raw = ex[n] != null ? ex[n] : { hl: n === 10 || n === 11 || n === 12 ? 525 : 525, tone: 5, tbw6: n === 15 ? 1 : n === 16 ? 21 : n === 17 ? 30 : 1 }[it.type]; r(0x05, d[1], d[2], ...exBytes(it, raw)); }
+        if (d.length === 3) {
+          // Network (simulateur) : adresses d'exemple, rien de réel
+          const ipb = (s4) => s4.split('.').map(Number).reduce((o, x) => o.concat([bcd(Math.floor(x / 100)), bcd(x % 100)]), []);
+          if (it.type === 'ip') return r(0x05, d[1], d[2], ...ipb({ 162: '192.168.0.10', 164: '192.168.0.11', 165: '192.168.0.12', 167: '192.168.0.1', 168: '192.168.0.1', 169: '0.0.0.0' }[n] || '0.0.0.0'));
+          if (it.type === 'name') return r(0x05, d[1], d[2], ...Array.from('IC-7760 HEAD').map((ch) => ch.charCodeAt(0)));
+          const raw = ex[n] != null ? ex[n] : { hl: 525, tone: 5, tbw6: n === 15 ? 1 : n === 16 ? 21 : n === 17 ? 30 : 1, mask: 24, list: n === 170 ? 1 : n === 161 ? 1 : 0 }[it.type];
+          r(0x05, d[1], d[2], ...exBytes(it, raw));
+        }
         else { const b = d.slice(3); ex[n] = it.type === 'hl' ? unbcd(b[0]) * 100 + unbcd(b[1]) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F) : unbcd(b[0]); ok(); }
       } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x03 && (d[2] === 0x63 || d[2] === 0x64)) {
         const dep = d[2] === 0x63;

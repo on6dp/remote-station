@@ -2540,6 +2540,7 @@
     // IC-7760 : dossiers (Tone Control/TBW → RX → SSB…)
     if (R.EX_TREE && R.EX_TREE[L.icSub]) return R.EX_TREE[L.icSub][1].map(([k, lab]) => ({ other: [k, lab, lab], go: k }));
     const m = R.EX_MENUS && R.EX_MENUS[L.icSub];
+    if (DICOM && L.icSub === 'net' && m) return m[1].map((x) => R.EX[x[0]]).concat([{ other: ['remote', 'Remote Settings', 'Remote Settings : jamais à distance'] }]);
     return m ? m[1].map((x) => R.EX[x[0]]) : [];
   }
   function subRead() {
@@ -2766,7 +2767,7 @@
   // ---- IC-7760 : liste SET (2 colonnes de 6, comme sur le TRX)
   const I76_SET = [['tone', 'Tone Control/TBW'], ['disp', 'Display'], ['cwkey', 'CW-KEY Set'], ['time', 'Time Set'], ['func', 'Function'], ['sd', 'SD Card'],
     ['dpd', 'DPD Adjustment'], ['usb', 'USB Flash Drive'], ['conn', 'Connectors'], ['etc', 'Others'], ['net', 'Network'], null];
-  const I76_SET_NO = { sd: 'SD Card : pas disponible à distance (carte SD du TRX)', usb: 'USB Flash Drive : pas disponible à distance', dpd: 'DPD Adjustment : réglage de l’amplificateur, jamais à distance', net: 'Network : réglages réseau du TRX, jamais à distance' };
+  const I76_SET_NO = { sd: 'SD Card : pas disponible à distance (carte SD du TRX)', usb: 'USB Flash Drive : pas disponible à distance', dpd: 'DPD Adjustment : réglage de l’amplificateur, jamais à distance' };
   function buildI76Set(g, c) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const m = LCD.i76SetG = el('g', { class: 'mode-menu ic-menu', style: 'display:none' }, g);
@@ -2787,6 +2788,8 @@
       hit.addEventListener('click', (ev) => {
         ev.stopPropagation();
         if (I76_SET_NO[it[0]]) return say(I76_SET_NO[it[0]] + '.', '', 4000);
+        // Network : lecture seule, administrateurs seulement (adresses du réseau du club)
+        if (it[0] === 'net' && !(me && me.admin)) return say('Network : réservé aux administrateurs (lecture seule).', 'warn', 4000);
         if (R.EX_TREE[it[0]] || R.EX_MENUS[it[0]]) { L.icSub = it[0]; L.icSubP = 0; subRead(); return render(); }
         say('SET → ' + it[1] + ' : pas encore sur la page de l’IC-7760 (envoie une photo de l’écran).', '', 4500);
       });
