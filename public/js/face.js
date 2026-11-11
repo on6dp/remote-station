@@ -3954,6 +3954,16 @@
     el('text', { x: X(312), y: Y(54.2), class: 'i76-dwt', 'text-anchor': 'middle' }, LCD.i76sp, 'SPLIT');
     // Bandeau du scope : « SPECTRUM SCOPE » au milieu, comme sur le TRX
     LCD.i76sst = el('text', { x: X(250), y: Y(G.lowY + 8.5), class: 'i76-sst', 'text-anchor': 'middle' }, LCD.lowG, 'SPECTRUM SCOPE');
+    // Bandeau du scope du TRX, comme sur l'écran : M S T, HOLD, vitesse (▸▸▸), RBW, VBW … CENTER / FIX, MAIN / SUB, Grid
+    { const hg = LCD.i76hdr = el('g', { style: 'display:none' }, LCD.lowG), yb = Y(G.lowY + 1.8), yt = Y(G.lowY + 8.3);
+      LCD.i76hMst = ['M', 'S', 'T'].map((t, i) => { const r = el('rect', { x: X(62 + i * 9), y: yb, width: 7.6, height: 7.6, class: 'i76h-box' }, hg); const tt = el('text', { x: X(65.8 + i * 9), y: yt, class: 'i76h-t dim', 'text-anchor': 'middle' }, hg, t); return { r, t: tt }; });
+      LCD.i76hHold = el('text', { x: X(91), y: yt, class: 'i76h-t dim' }, hg, 'HOLD');
+      LCD.i76hSpd = el('text', { x: X(113), y: yt, class: 'i76h-spd' }, hg, '▸▸▸');
+      LCD.i76hBw = ['RBW', 'VBW'].map((t, i) => { const r = el('rect', { x: X(132 + i * 23), y: yb, width: 20, height: 7.6, class: 'i76h-box bw' }, hg); const tt = el('text', { x: X(142 + i * 23), y: yt, class: 'i76h-t bw', 'text-anchor': 'middle' }, hg, t); return { r, t: tt }; });
+      LCD.i76hMode = el('text', { x: X(c.w - 120), y: yt, class: 'i76h-mode', 'text-anchor': 'end' }, hg, 'CENTER');
+      LCD.i76hSdR = el('rect', { x: X(c.w - 116), y: yb, width: 26, height: 7.6, class: 'i76h-sd' }, hg);
+      LCD.i76hSd = el('text', { x: X(c.w - 103), y: yt, class: 'i76h-sdt', 'text-anchor': 'middle' }, hg, 'MAIN');
+      LCD.i76hGrid = el('text', { x: X(c.w - 8), y: yt, class: 'i76h-t', 'text-anchor': 'end' }, hg, ''); }
     for (const cg of [LCD.cgA, LCD.cgB]) cg.style.display = 'none';
     // Appui d'1 s sur l'échelle de mesure du grand écran (barres ou aiguilles) : MULTI-FUNCTION METER seul, comme sur le TRX ; un 2e appui d'1 s : retour
     const lpMeter = (gr, hitBox) => {
@@ -4312,7 +4322,7 @@
   function drawI76(s, tx) {
     if (!LCD.i76) return;
     // Filter Effect Screen (forme et couleur du spectre du petit écran) : lu une fois sur le TRX
-    if (iControl() && s.ex192 == null && Date.now() - (L.fxAskAt || 0) > 30000) { L.fxAskAt = Date.now(); send({ t: 'set', ctl: 'exRead', value: 192 }); setTimeout(() => send({ t: 'set', ctl: 'exRead', value: 193 }), 150); }
+    if (iControl() && s.ex192 == null && Date.now() - (L.fxAskAt || 0) > 30000) { L.fxAskAt = Date.now(); send({ t: 'set', ctl: 'exRead', value: 192 }); setTimeout(() => send({ t: 'set', ctl: 'exRead', value: 193 }), 150); setTimeout(() => send({ t: 'set', ctl: 'exRead', value: 208 }), 300); setTimeout(() => send({ t: 'set', ctl: 'exRead', value: 209 }), 450); } // + Scope during Tx, Max Hold (bandeau du scope)
     const single = !s.scDual;
     i76Layout(single);
     for (const sd of ['A', 'B']) {
@@ -4348,9 +4358,25 @@
     // « SPECTRUM SCOPE » caché quand le bandeau affiche un message au milieu (ex. « TRX éteint ou câble ? »)
     if (LCD.i76sst) LCD.i76sst.style.display = LCD.flags && LCD.flags.textContent ? 'none' : '';
     // Bandeau du scope : avec le scope du TRX, « Grid » du scope sélectionné (pas de la grille / 10 dB), comme sur le TRX
+    const hdr = !!LCD.i76hdr && rfFresh() && !L.multi;
+    if (LCD.i76hdr) { LCD.i76hdr.style.display = hdr ? '' : 'none'; LCD.side.style.display = hdr ? 'none' : ''; LCD.span.style.display = hdr ? 'none' : ''; }
     if (rfFresh() && !L.multi) {
       const F = RFSS[activeSide() === 'B' ? 1 : 0].last || RFSS[0].last || RFSS[1].last;
       LCD.span.textContent = F ? (rfFix(F) ? 'Grid ' + (rfGrid(F.f1 - F.f0) / 1000) + 'k/10dB' : 'SPAN ±' + (F.f1 / 1000) + 'k') + (s.scDual ? ' · DUAL' : '') : '';
+      if (hdr) {
+        // Valeurs du scope du récepteur sélectionné (relues sur le TRX)
+        const x = activeSide() === 'B' ? 'B' : '', gk = (v) => (v >= 1000 ? (v % 1000 ? (v / 1000).toFixed(1) : v / 1000) + 'k' : Math.round(v));
+        LCD.i76hHold.classList.toggle('dim', !s['scHold' + x]);
+        LCD.i76hSpd.textContent = ['▸▸▸', '▸▸', '▸'][s['scSpeed' + x] != null ? s['scSpeed' + x] : 1] || '▸▸';
+        // M : Max Hold (SCOPE SET), T : scope pendant l'émission (Scope during Tx) ; S : pas de commande CI-V connue → gris
+        const mh = S().ex209, sdt = S().ex208;
+        LCD.i76hMst[0].t.classList.toggle('dim', !(mh != null && Number(mh) > 0)); LCD.i76hMst[2].t.classList.toggle('dim', !(sdt != null && Number(sdt) > 0));
+        LCD.i76hBw[0].t.textContent = 'RBW'; LCD.i76hBw[0].r.classList.toggle('on', (s['scRbw' + x] || 0) > 0); LCD.i76hBw[0].t.classList.toggle('on', (s['scRbw' + x] || 0) > 0);
+        LCD.i76hBw[1].r.classList.toggle('on', !!s['scVbw' + x]); LCD.i76hBw[1].t.classList.toggle('on', !!s['scVbw' + x]);
+        LCD.i76hMode.textContent = ['CENTER', 'FIX', 'SCROLL-C', 'SCROLL-F'][s['scMode' + x] || 0];
+        LCD.i76hSd.textContent = x ? 'SUB' : 'MAIN'; LCD.i76hSdR.classList.toggle('sub', !!x);
+        LCD.i76hGrid.textContent = F ? 'Grid ' + (rfFix(F) ? gk(rfGrid(F.f1 - F.f0)) : gk(F.f1 / 5)) + '/10dB' + (s.scDual ? ' · DUAL' : '') : '';
+      }
     }
     const b = activeSide() === 'B' ? 'B' : '';
     const q14 = i76Quarter(s);

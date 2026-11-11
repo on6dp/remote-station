@@ -107,6 +107,8 @@
   // Scope du TRX : MAIN/SUB, SINGLE/DUAL, et pour chaque côté CENTER/FIX, SPAN, EDGE, HOLD
   SLOW.push(q(0x27, 0x12), q(0x27, 0x13));
   for (const sd of [0, 1]) SLOW.push(q(0x27, 0x14, sd), q(0x27, 0x15, sd), q(0x27, 0x16, sd), q(0x27, 0x17, sd));
+  // Bandeau du scope (vitesse, RBW, VBW) et REF de chaque scope
+  for (const sd of [0, 1]) SLOW.push(q(0x27, 0x19, sd), q(0x27, 0x1A, sd), q(0x27, 0x1F, sd), q(0x27, 0x1D, sd));
   const SLOW_PER_TICK = 6;
   const POLL_MS = 250;
   const FRAME_GAP_MS = 15;

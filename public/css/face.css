@@ -937,3 +937,16 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .hl-bar.rgb0 { fill: #ff3a2a; }
 #face .hl-bar.rgb1 { fill: #3ad04a; }
 #face .hl-bar.rgb2 { fill: #2f7dff; }
+/* IC-7760 : bandeau du scope (M S T, HOLD, vitesse, RBW, VBW, CENTER, MAIN / SUB, Grid) */
+#face .i76h-box { fill: #2a3040; stroke: #6c7486; stroke-width: .5; }
+#face .i76h-box.bw { fill: #1c2a55; stroke: #4f6fd0; }
+#face .i76h-box.bw.on { fill: #2f55c8; }
+#face text.i76h-t { fill: #e9edf2; font: 700 6.4px Arial, sans-serif; pointer-events: none; }
+#face text.i76h-t.dim { fill: #6d7380; }
+#face text.i76h-t.bw { fill: #9fb4ff; font-size: 5.6px; }
+#face text.i76h-t.bw.on { fill: #ffffff; }
+#face text.i76h-spd { fill: #4f8dff; font: 700 8.5px Arial, sans-serif; letter-spacing: -1px; pointer-events: none; }
+#face text.i76h-mode { fill: #5aa0ff; font: 700 6.6px Arial, sans-serif; pointer-events: none; }
+#face .i76h-sd { fill: #d8343a; }
+#face .i76h-sd.sub { fill: #2f7dff; }
+#face text.i76h-sdt { fill: #fff; font: 700 6.4px Arial, sans-serif; pointer-events: none; }
