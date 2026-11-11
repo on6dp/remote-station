@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.298** — FTDX5000 : R.FLT (filtre de toit, commande RF du manuel CAT) affiché et réglable, MAIN et SUB
 - **0.37.297** — IC-7760 : touche retour sur l'écran ANTENNA
 - **0.37.296** — IC-7760 : bande courbe MAIN / SUB au-dessus du grand bouton, écran ANTENNA plus lisible et relu
 - **0.37.295** — IC-7760 : case rouge NOTCH dans l'en-tête du VFO

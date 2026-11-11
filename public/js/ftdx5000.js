@@ -33,6 +33,12 @@
   const wRank = (mode, code) => (isSsb(mode) && code > 14 ? code - 1 : code);
   const PREAMP = [[0, 'IPO1'], [1, 'AMP1'], [2, 'AMP2'], [3, 'IPO2']];
   const ATT = [[0, 'OFF'], [1, '6 dB'], [2, '12 dB'], [3, '18 dB']];
+  // ROOFING FILTER (RF P1 P2 ; manuel CAT) — réglage P2 : 0 AUTO, 1 15 kHz, 2 6 kHz, 3 3 kHz, 4 600 Hz (MAIN), 5 300 Hz (MAIN) ;
+  // réponse P3 : 1 15k, 2 6k, 3 3k, 4 AUTO-15k, 5 AUTO-6k, 6 AUTO-3k, 7 600, 8 300, 9 AUTO-600, A AUTO-300
+  // État : roof = filtre en service (1 15k, 2 6k, 3 3k, 4 600, 5 300), roofAuto = 1 en AUTO
+  const ROOF_ANS = { 1: [1, 0], 2: [2, 0], 3: [3, 0], 4: [1, 1], 5: [2, 1], 6: [3, 1], 7: [4, 0], 8: [5, 0], 9: [4, 1], A: [5, 1] };
+  const ROOF_SET = [[0, 'AUTO'], [1, '15 kHz'], [2, '6 kHz'], [3, '3 kHz'], [4, '600 Hz'], [5, '300 Hz']];
+  const roofParse = (b) => (m) => { const r = ROOF_ANS[m[1]]; return r ? { ['roof' + b]: r[0], ['roofAuto' + b]: r[1] } : {}; };
   const AGC = [[0, 'OFF'], [1, 'FAST'], [2, 'MID'], [3, 'SLOW'], [4, 'AUTO']];
   // FR (FUNCTION RX) : 0 = MAIN seul, 1 = MAIN coupé (SUB coupé), 2 = MAIN + SUB, 3 = SUB seul (MAIN coupé)
   const frCode = (dual, mute) => (dual ? 2 : 0) + (mute ? 1 : 0);
@@ -55,7 +61,7 @@
       if (r.widthCodeB != null) r.widthB = wRank(r.modeB, r.widthCodeB);
     },
     readForState: (id, st) => (['rit', 'xit', 'clar', 'clarClr'].indexOf(id) >= 0 ? (st.vfoSel === 1 ? 'OI;' : 'IF;')
-      : id === 'split' || id === 'txVfo' ? 'FT;' : id === 'width' ? 'SH0;' : id === 'widthB' ? 'SH1;' : id === 'lock' || id === 'lockB' ? 'LK;' : null),
+      : id === 'split' || id === 'txVfo' ? 'FT;' : id === 'width' ? 'SH0;' : id === 'widthB' ? 'SH1;' : id === 'roof' ? 'RF0;' : id === 'roofB' ? 'RF1;' : id === 'lock' || id === 'lockB' ? 'LK;' : null),
     widthTable(mode) {
       if (isSsb(mode)) return SSB_24;
       if (Y.NARROW_MODES.indexOf(mode) >= 0) return NAR_16;
@@ -123,6 +129,8 @@
       { cmd: 'NR1;', re: /^NR1([01])$/, parse: (m) => ({ nrB: +m[1] }), sim: 'NR10' },
       { cmd: 'BC1;', re: /^BC1([01])$/, parse: (m) => ({ dnfB: +m[1] }), sim: 'BC10' },
       { cmd: 'BP10;', re: /^BP10(\d{3})$/, parse: (m) => ({ notchB: +m[1] ? 1 : 0 }), sim: 'BP10000' },
+      { cmd: 'RF0;', re: /^RF0([1-9A])$/, parse: roofParse(''), sim: 'RF04' },
+      { cmd: 'RF1;', re: /^RF1([1-9A])$/, parse: roofParse('B'), sim: 'RF16' },
       { cmd: 'GT1;', re: /^GT1(\d)$/, parse: (m) => ({ agcB: Math.min(4, +m[1]) }), sim: 'GT14' },
       { cmd: 'RG1;', re: /^RG1(\d{3})$/, parse: (m) => ({ rfB: +m[1] }), sim: 'RG1255' },
       { cmd: 'AG1;', re: /^AG1(\d{3})$/, parse: (m) => ({ afB: +m[1] }), sim: 'AG1128' },
@@ -145,7 +153,7 @@
     extraQueries: ['ID;', 'IF;', 'OI;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RI0;', 'BY;'],
     extraStateKeys: ['clarA', 'ritA', 'xitA', 'clarB', 'ritB', 'xitB', 'lockB', 'widthCode', 'widthCodeB', 'widthB', 'narrowB', 'nbB', 'nrB', 'dnfB', 'notchB',
       'agcB', 'rfB', 'afB', 'shiftB', 'attB', 'preampB', 'nbLvl', 'nrLvl', 'mainMute', 'bkin', 'keyer', 'cwPitch',
-      'sqlB', 'nbLvlB', 'moniLvl', 'keySpeed', 'voxGain', 'voxDelay'],
+      'sqlB', 'nbLvlB', 'moniLvl', 'keySpeed', 'voxGain', 'voxDelay', 'roof', 'roofB', 'roofAuto', 'roofAutoB'],
     subBadges: true,
     // Phonie à distance : « SSB MIC SELECT » (menu 103) sur DATA (prise de l'interface son) le temps de l'émission,
     // puis remis comme avant (FRONT = micro de la face avant)
@@ -183,6 +191,9 @@
       { id: 'txVfo', g: 'vfo', label: 'TX sur le SUB', type: 'toggle', face: true, write: (v) => 'FT' + (v ? 3 : 2) + ';' },
       { id: 'nbLvl', g: 'flt', sec: 'dsp', label: 'Niveau NB', type: 'level', min: 0, max: 255, step: 1, pct: true, write: (v) => 'NL0' + pad(v, 3) + ';' },
       { id: 'nrLvl', g: 'flt', sec: 'dsp', label: 'Niveau DNR', type: 'level', min: 1, max: 15, step: 1, write: (v) => 'RL0' + pad(v, 2) + ';' },
+      // R.FLT : 0 AUTO, 1 15k, 2 6k, 3 3k, 4 600, 5 300 (600 / 300 Hz : MAIN seulement, filtres en option)
+      { id: 'roof', g: 'flt', label: 'R.FLT (VFO A)', type: 'select', options: ROOF_SET, write: (v) => 'RF0' + v + ';' },
+      { id: 'roofB', g: 'flt', label: 'R.FLT (VFO B)', type: 'select', options: ROOF_SET.slice(0, 4), write: (v) => 'RF1' + v + ';' },
       { id: 'ant', g: 'rx', label: 'Antenne', type: 'select', noTx: true, options: [[1, 'ANT 1'], [2, 'ANT 2'], [3, 'ANT 3'], [4, 'ANT 4']], write: (v) => 'AN0' + v + ';' },
       // Côté SUB (VFO B)
       { id: 'widthB', g: 'flt', label: 'WIDTH (VFO B)', type: 'width', modeKey: 'modeB', write: (v, s) => 'SH1' + pad(wCode(s && s.modeB, v), 2) + ';',
@@ -231,6 +242,8 @@
       if (c === 'SM1') { out.push('SM1' + pad(f.fr5 != null && f.fr5 < 2 ? 0 : Math.round(60 + 30 * Math.sin((f.t || 0) * 0.5)), 3) + ';'); return true; }
       if ((m = /^LK([0-3])$/.exec(c))) { f.ans['LK;'] = c; return true; }
       if (c === 'ID') { out.push('ID0362;'); return true; }
+      // R.FLT : réglage 0-5, relu 1-A (AUTO choisi : 15 kHz en SSB / AM / FM, 3 kHz ailleurs dans le simulateur)
+      if ((m = /^RF([01])([0-5])$/.exec(c))) { const v = +m[2]; f.ans['RF' + m[1] + ';'] = 'RF' + m[1] + (v === 0 ? '4' : '12378'[v - 1]); return true; }
       return false;
     },
     serial: { baudRate: 38400, stopBits: 2, portHint: 'adaptateur USB ↔ RS-232 (prise CAT du TRX)' },

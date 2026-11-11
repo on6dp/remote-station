@@ -269,7 +269,13 @@
     if (a.local === 'multiView') { viewTouched(); L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'M.SCOPE : scope, OSCILLOSCOPE et AF-FFT du récepteur sélectionné' : 'M.SCOPE : affichage normal', '', 2500); return render(); }
     if (a.local === 'pbtClr') { if (!needControl()) return; setCtl(sdk('pbtIn'), 128); setCtl(sdk('pbtOut'), 128); L.pbt76 = null; if (ICOM || DICOM) { L.pbtPopAt = Date.now(); L.pbtClrAt = Date.now(); render(); } return; }
     // Réglage à choix : valeur suivante (IC-7300 : P.AMP OFF → AMP1 → AMP2)
-    if (a.cycle) { const c = R.CONTROL[a.cycle]; if (!c || !c.options) return; const i = c.options.findIndex((o) => o[0] === s[a.cycle]); return setCtl(a.cycle, c.options[(i + 1) % c.options.length][0]); }
+    if (a.cycle) {
+      const c = R.CONTROL[a.cycle]; if (!c || !c.options) return;
+      // a.auto : réglage avec une position AUTO (0) relue à part (ex. R.FLT du FTDX5000 : roofAuto) → AUTO compte comme la position 0
+      const cur = a.auto && s[a.auto] ? 0 : s[a.cycle], i = c.options.findIndex((o) => o[0] === cur), nv = c.options[(i + 1) % c.options.length][0];
+      if (a.say) say(a.say + ' : ' + c.options[(i + 1) % c.options.length][1], '', 2000);
+      return setCtl(a.cycle, nv);
+    }
     // CONT/APF (FTDX10) : en CW, l'APF ; sinon le CONTOUR
     if (a.contApf) { const id = /^CW/.test(s.mode || '') && R.CONTROL.apf ? 'apf' : 'contour'; return setCtl(id, s[id] ? 0 : 1); }
     if (a.local === 'vc') {
