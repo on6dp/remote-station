@@ -1577,7 +1577,7 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 .win-btn { white-space: nowrap; }
 /* Cadre MODE : touches plus lisibles (LSB, USB, CW-L…) */
 #modeKeys .btn { font-size: 13px; letter-spacing: .03em; min-height: 28px; color: var(--v2-text-bright, #e8edf3); }
-#modeKeys .btn[aria-pressed='true'] { color: #fff; font-weight: 800; background: linear-gradient(180deg, #6fd0ff 0%, #2a9ae6 38%, #1466b0 70%, #0a3f74 100%); border-color: #a8e2ff; text-shadow: 0 1px 1px rgba(0,0,0,.45); box-shadow: 0 0 6px rgba(80,180,255,.45); }
+#modeKeys .btn[aria-pressed='true'] { color: #fff; font-weight: 800; background: linear-gradient(180deg, #2f86cc 0%, #1a5f9e 40%, #0f4277 72%, #072a4f 100%); border-color: #7cc4f5; text-shadow: 0 1px 1px rgba(0,0,0,.45); box-shadow: 0 0 6px rgba(80,180,255,.45); }
 /* Bouton PRENDRE / LIBÉRER LA MAIN : plus grand, couleur selon l'état, bien visible dans le bandeau */
 #ctrlBtn { font-size: 14px; font-weight: 800; letter-spacing: .05em; padding: 5px 14px; min-height: 34px; border-width: 2px; border-radius: 6px; }
 #ctrlBtn[data-state='free'], #ctrlBtn[data-state='here'] { background: linear-gradient(180deg, #2fbf4a, #1c8a33); border-color: #7dff9a; color: #fff;

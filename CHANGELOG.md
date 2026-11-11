@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.320** — Dashboard : dégradé bleu plus foncé sur le mode actif
 - **0.37.319** — Dashboard : petit filtre à la manière Icom (largeur = BW, position = SFT, bords rouge / bleu, deux filtres du TWIN PBT), badge BW au lieu de FIL sur les Icom ; mode actif en dégradé bleu, « Mode appliqué à » plus grand en blanc gras. Logbook : références SOTA (liste des sommets téléchargée, ADIF SOTA_REF / MY_SOTA_REF), Remarque plus courte, « Ma référence (activation) » juste à droite de QO-100
 - **0.37.318** — Dashboard : graduations du petit filtre (bas · centre · haut) en blanc gras
 - **0.37.317** — Dashboard : SFT à côté de BW au-dessus du S-mètre, petit filtre encadré de blanc et plus haut, chiffres de fréquence réduits pour lui laisser la place
