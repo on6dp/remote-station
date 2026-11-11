@@ -53,6 +53,7 @@
   const L = {
     fast: store.get('rs.face.fast', '0') === '1',
     fine: store.get('rs.face.fine', '0') === '1',
+    metSel: store.get('rs.face.i76met', 'Po'), metMulti: store.get('rs.face.i76mm', '0') === '1', // IC-7760 : mesure de l'aiguille du petit écran en émission (fenêtre METER)
     subDisp: parseInt(store.get('rs.face.subdisp', '0'), 10) || 0, // IC-7760 : petit écran (0 galvanomètre, 1 filtre)
     listening: false,
     bandOf(hz) { const b = BANDS.find((x) => hz >= x[1] && hz <= x[2]); return b ? b[0] : ''; },
@@ -216,6 +217,7 @@
     }
     if (a.local === 'exit' && L.agcTbl) { L.agcTbl = false; return render(); }
     if (a.local === 'exit' && L.i76pop) { L.i76pop = null; return render(); } // IC-7760 : EXIT ferme la fenêtre ANT / BW / SFT // IC-7760 : EXIT ferme le tableau AGC
+    if (a.local === 'exit' && L.metWin) { L.metWin = false; return render(); } // IC-7760 : fenêtre METER du petit écran
     if (a.local === 'exit' && L.i76ant) { L.i76ant = false; return render(); } // IC-7760 : écran ANTENNA
     // (IC-7760 : EXIT ne change pas l'écran choisi par M.SCOPE — on y revient en sortant des menus, comme sur le TRX)
     // IC-7760 M.SCOPE : scope + MULTI-FUNCTION METER → METER seul → scope seul → …, comme sur le TRX
@@ -807,6 +809,21 @@
       el('text', { x: lp[0] - 2, y: lp[1] + 3, class: 'mtr-name' + (isS ? ' big' : ''), 'text-anchor': 'end' }, g, name);
       g = g0;
     }
+    if (DICOM) {
+      // IC-7760 : dernière rangée, comme sur le TRX — ALC (arc rouge, à gauche) et Vd (44 – 52 V, à droite)
+      const r = 184;
+      el('path', { d: arcPath(cx, cy, r, 0.3, 0.55), class: 'mtr-arc alc76' }, g);
+      const la = arcPt(cx, cy, r - 9, 0.2);
+      el('text', { x: la[0], y: la[1] + 2, class: 'mtr-name alc76', 'text-anchor': 'middle' }, g, 'ALC');
+      el('path', { d: arcPath(cx, cy, r, 0.68, 0.9), class: 'mtr-arc' }, g);
+      for (const [f, lab] of [[0.7, '44'], [0.86, '52V']]) {
+        const p = arcPt(cx, cy, r, f), q = arcPt(cx, cy, r - 3, f), tp = arcPt(cx, cy, r - 10.5, f);
+        el('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1], class: 'mtr-tick' }, g);
+        el('text', { x: tp[0], y: tp[1], class: 'mtr-num', 'text-anchor': 'middle' }, g, lab);
+      }
+      const lv = arcPt(cx, cy, r - 3, 0.6);
+      el('text', { x: lv[0], y: lv[1] + 3, class: 'mtr-name', 'text-anchor': 'middle' }, g, 'Vd');
+    }
     if (FACE && FACE.meterFtx) { // barre VOL (volume AF de ce récepteur), sous l'arc SWR
       const ge = m.extra || g;
       el('text', { x: x0 + 18, y: y0 + 79, class: 'mtr-name big', 'text-anchor': 'start' }, ge, 'VOL');
@@ -994,8 +1011,10 @@
     const sm = DICOM && (FACE.subMeter || sl), slF = sl ? [sm.x, sm.y + 15, sm.w, Math.round(sm.h * 0.36)] : null; // (sm : tout le petit écran)
     LCD.fA = sl ? buildFilter(gw, ...slF) : buildFilter(gw, X(199 + dA), Y(14), 82, 72);
     LCD.mB = buildMeter(gmB, X(mxB), Y(DICOM ? 6 : 4), 190, 'B'); LCD.mB.g = gmB;
+    // IC-7760, un seul scope : les deux galvanomètres sont en haut du grand écran ; un 3e, copie de celui du récepteur sélectionné, pour le petit écran (SUB DISP)
+    if (DICOM) { const gmS = el('g', { style: 'display:none' }, gw); LCD.mS = buildMeter(gmS, X(85), Y(6), 190, 'S'); LCD.mS.g = gmS; }
     LCD.fB = sl ? buildFilter(gw, ...slF) : buildFilter(gw, X(199 + dB), Y(14), 82, 72);
-    if (DICOM) for (const m of [LCD.mA, LCD.mB]) { m.title.style.display = 'none'; const bar = m.title.previousSibling; if (bar && bar.getAttribute && bar.getAttribute('class') === 'lcd-tbar') bar.style.display = 'none'; }
+    if (DICOM) for (const m of [LCD.mA, LCD.mB, LCD.mS]) { m.title.style.display = 'none'; const bar = m.title.previousSibling; if (bar && bar.getAttribute && bar.getAttribute('class') === 'lcd-tbar') bar.style.display = 'none'; }
     if (FACE.statusBar) buildStatus(g, c);
     // FTX-1 : toucher le cadre du filtre (MAIN ou SUB) ouvre l'écran DSP de ce récepteur, comme sur le TRX
     // FTX-1 : toucher l'S-mètre ouvre le tableau METER (mesure de l'aiguille en émission), comme sur le TRX
@@ -3751,6 +3770,7 @@
         LCD.i76mT[sd] = ['translate(' + (sl.x + (sl.w - k * 190) / 2 + 4) + ',' + (sl.y + 8) + ') scale(' + k + ') translate(' + -X(mx) + ',' + -Y(6) + ')',
           'translate(' + (X(cx) - ks * 95) + ',' + Y(13) + ') scale(' + ks + ') translate(' + -X(mx) + ',' + -Y(6) + ')'];
         LCD['m' + sd].g.setAttribute('transform', LCD.i76mT[sd][0]);
+        if (sd === 'A' && LCD.mS) LCD.mS.g.setAttribute('transform', LCD.i76mT.A[0]);
         const mg = LCD['i76met' + sd] = el('g', { style: 'display:none' }, g);
         const mx0 = sd === 'B' ? 314 + 56 : 58;
         el('rect', { x: X(mx0 + 2), y: Y(16), width: 26, height: 9, rx: 1, class: 'i76-met' }, mg);
@@ -3758,8 +3778,52 @@
       }
       const sg = LCD.i76sub = el('g', {}, g);
       el('rect', { x: sl.x + 3, y: sl.y + 2.5, width: 20, height: 7, rx: 1, class: 'i76-met' }, sg);
-      el('text', { x: sl.x + 13, y: sl.y + 8, class: 'i76-mett', 'text-anchor': 'middle' }, sg, 'MET Po');
+      LCD.i76metT = el('text', { x: sl.x + 13, y: sl.y + 8, class: 'i76-mett', 'text-anchor': 'middle' }, sg, 'MET Po');
       LCD.i76date = el('text', { x: sl.x + sl.w / 2, y: sl.y + sl.h - 3, class: 'i76-date', 'text-anchor': 'middle' }, sg, '');
+      // Toucher le galvanomètre : fenêtre METER (mesure de l'aiguille en émission : Po, SWR, ALC, COMP, Vd, Id ; Multi-function), comme sur le TRX
+      const mh = el('rect', { x: sl.x, y: sl.y, width: sl.w, height: sl.h, class: 'hs lcd-hit' }, sg);
+      el('title', {}, mh, 'Galvanomètre : clic = fenêtre METER (mesure en émission : Po, SWR, ALC, COMP, Vd, Id ; Multi-function)');
+      mh.addEventListener('click', (ev) => { ev.stopPropagation(); L.metWin = !L.metWin; render(); });
+      // Multi-function : barres dans le petit écran, comme sur le TRX — S/Po (S au-dessus, Po dessous), ALC, COMP, SWR, Id
+      const smg = LCD.i76subM = el('g', { style: 'display:none' }, g);
+      el('rect', { x: sl.x + 1, y: sl.y + 1, width: sl.w - 2, height: sl.h - 2, class: 'i76-smbg' }, smg);
+      const bx0 = sl.x + 6, bw0 = sl.w - 14;
+      const SC_S = [[0.55 / 9, '1'], [0.55 * 3 / 9, '3'], [0.55 * 5 / 9, '5'], [0.55 * 7 / 9, '7'], [0.55, '9'], [0.7, '+20'], [0.85, '+40'], [1, '+60dB']];
+      const SC_PO = [[0, '0'], [0.1, '10'], [0.33, '50'], [0.57, '100'], [0.7, '150'], [0.83, '200'], [0.96, '250W']];
+      const scl = (y, sc, red) => { for (const [f, t] of sc) el('text', { x: bx0 + f * bw0 - (t.length > 3 && f >= 0.95 ? 6 : 0), y, class: 'i76sm-sc' + (red && /^\+/.test(t) ? ' red' : ''), 'text-anchor': 'middle' }, smg, t); };
+      const bar = (y, cls) => { el('line', { x1: bx0, y1: y, x2: bx0 + bw0, y2: y, class: 'i76-btr sm' }, smg); return el('line', { x1: bx0, y1: y, x2: bx0, y2: y, class: 'i76-bar sm' + (cls ? ' ' + cls : '') }, smg); };
+      const lab = (y, t) => el('text', { x: sl.x + 4, y, class: 'i76sm-l' }, smg, t);
+      let yy = sl.y + 9;
+      lab(yy, 'S/Po'); scl(yy + 8, SC_S, true); const bS = bar(yy + 12); scl(yy + 21, SC_PO); yy += 27;
+      lab(yy, 'ALC'); const bA = bar(yy + 5, 'red'); yy += 13;
+      lab(yy, 'COMP'); scl(yy + 8, [[0, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [1, 'dB']]); const bC = bar(yy + 12); yy += 20;
+      lab(yy, 'SWR'); scl(yy + 8, [[0, '1'], [i76SwrF(1.5), '1.5'], [i76SwrF(2), '2'], [i76SwrF(2.5), '2.5'], [i76SwrF(3), '3'], [1, '∞']]); const bW = bar(yy + 12); yy += 20;
+      lab(yy, 'Id'); scl(yy + 8, [[0, '0'], [1 / 3, '5'], [2 / 3, '10'], [1, '15A']]); const bI = bar(yy + 12);
+      LCD.subMt = { bS, bA, bC, bW, bI, bx0, bw0 };
+      el('rect', { x: sl.x, y: sl.y, width: sl.w, height: sl.h, class: 'hs lcd-hit' }, smg).addEventListener('click', (ev) => { ev.stopPropagation(); L.metWin = !L.metWin; render(); });
+      const mw = LCD.metWin = el('g', { style: 'display:none' }, g);
+      const wx = sl.x + 6, wy0 = sl.y + 6, ww = sl.w - 12, wh0 = sl.h - 12;
+      el('rect', { x: wx, y: wy0, width: ww, height: wh0, rx: 3, class: 'i76-mwbg' }, mw);
+      el('text', { x: wx + ww / 2, y: wy0 + 10, class: 'i76-mwt', 'text-anchor': 'middle' }, mw, 'METER');
+      const cw2 = (ww - 8) / 3, ch2 = (wh0 - 18) / 3;
+      LCD.metBtn = {};
+      [['Po', 0, 0], ['SWR', 1, 0], ['ALC', 2, 0], ['COMP', 0, 1], ['Vd', 1, 1], ['Id', 2, 1], ['Multi-function', 0, 2, 2], ['back', 2, 2]].forEach(([k, cx2, cy2, span]) => {
+        const x = wx + 4 + cx2 * cw2, y = wy0 + 14 + cy2 * ch2, w2 = cw2 * (span || 1) - 3, h2 = ch2 - 3;
+        const r = el('rect', { x, y, width: w2, height: h2, rx: 2, class: 'i76-mwk' }, mw);
+        el('text', { x: x + w2 / 2, y: y + h2 / 2 + 3.5, class: 'i76-mwkt', 'text-anchor': 'middle' }, mw, k === 'back' ? '↩' : k);
+        const hh = el('rect', { x, y, width: w2, height: h2, class: 'hs lcd-hit' }, mw);
+        el('title', {}, hh, k === 'back' ? 'Retour' : k === 'Multi-function' ? 'Multi-function : MULTI-FUNCTION METER sur le grand écran' : 'Aiguille en émission : ' + k);
+        hh.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          // le choix reste affiché (en bleu) ; on sort avec la flèche de retour, comme sur le TRX
+          // Multi-function : barres S/Po, ALC, COMP, SWR, Id dans le petit écran ; Po … Id : galvanomètre à aiguille
+          if (k === 'Multi-function') { L.metMulti = !L.metMulti; store.set('rs.face.i76mm', L.metMulti ? '1' : '0'); }
+          else if (k === 'back') L.metWin = false;
+          else { L.metSel = k; L.metMulti = false; store.set('rs.face.i76met', k); store.set('rs.face.i76mm', '0'); }
+          render();
+        });
+        LCD.metBtn[k] = r;
+      });
       // SUB DISP 2e page : filtre — [MAIN] [BW] [SFT] en haut, FIL / SHARP-SOFT / MN en bas, comme sur le TRX
       const sb2 = (gp, x, y, w, h, lab, fn, tip) => {
         const r = el('rect', { x, y, width: w, height: h, rx: 2.5, class: 'i76-sk' }, gp);
@@ -4261,10 +4325,43 @@
     LCD.i76sp.style.display = s.split ? '' : 'none';
     // Petit écran : aiguille du récepteur sélectionné (en émission : Po du MAIN), ou le filtre (SUB DISP)
     // Un seul scope : les deux galvanomètres sont en haut du grand écran (celui du SUB grisé sans DUAL-W) ; le petit écran montre alors le filtre
-    const msd = tx ? 'A' : activeSide(), sub = single && !(L.subDisp || 0) ? 1 : L.subDisp || 0;
+    // SUB DISP : galvanomètre → filtre → touches de bandes, avec un ou deux scopes (comme sur le TRX)
+    const msd = tx ? 'A' : activeSide(), sub = L.subDisp || 0;
     L.subEff = sub;
+    if (LCD.mS) {
+      const mm = !sub && !!L.metMulti, on = !sub && !mm, src = LCD['m' + msd], ms = LCD.mS, sel = L.metSel || 'Po';
+      ms.g.style.display = on ? '' : 'none';
+      LCD.i76subM.style.display = mm ? '' : 'none';
+      if (mm) {
+        const q = LCD.subMt, set = (b, f) => b.setAttribute('x2', (q.bx0 + Math.max(0, Math.min(1, f)) * q.bw0).toFixed(1));
+        const po = tx && R.poFrac && s.m5 != null ? R.poFrac(s.m5) * 200 : 0, swr = tx && R.swrValue ? R.swrValue(s.m6) : null;
+        const comp = tx && s.m3 != null ? (s.m3 <= 130 ? s.m3 / 130 * 15 : 15 + (s.m3 - 130) / 111 * 15) : 0, id = R.idValue && s.m7 != null ? R.idValue(s.m7) : 0;
+        set(q.bS, tx ? pwF(po) : sF(msd === 'B' ? s.smeterB : s.smeter)); set(q.bA, tx && s.m4 != null ? s.m4 / 255 : 0);
+        set(q.bC, comp / 25); set(q.bW, swr ? i76SwrF(swr) : 0); set(q.bI, tx ? id / 15 : 0);
+      }
+      LCD.i76metT.textContent = 'MET ' + sel;
+      if (on && tx) {
+        // En émission : la mesure choisie dans la fenêtre METER, sur son échelle du galvanomètre
+        const w = R.poFrac && s.m5 != null ? R.poFrac(s.m5) * 200 : 0, swr = R.swrValue ? R.swrValue(s.m6) : null;
+        const comp = s.m3 != null ? (s.m3 <= 130 ? s.m3 / 130 * 15 : 15 + (s.m3 - 130) / 111 * 15) : 0;
+        const vd = R.vdValue && s.m8 != null ? R.vdValue(s.m8) : null, id = R.idValue && s.m7 != null ? R.idValue(s.m7) : null;
+        const swrF = (x) => (x == null ? 0.05 : x <= 1.5 ? 0.05 + (x - 1) / 0.5 * 0.19 : x <= 2 ? 0.24 + (x - 1.5) / 0.5 * 0.12 : x <= 3 ? 0.36 + (x - 2) * 0.14 : Math.min(0.95, 0.5 + (x - 3) / 7 * 0.45));
+        const [f, t] = sel === 'SWR' ? [swrF(swr), swr ? 'SWR ' + swr.toFixed(1) : 'SWR'] : sel === 'ALC' ? [0.05 + Math.min(1, (s.m4 || 0) / 255) * 0.9, 'ALC']
+          : sel === 'COMP' ? [0.05 + Math.min(20, comp) / 20 * 0.88, 'COMP ' + Math.round(comp) + ' dB'] : sel === 'Vd' ? [vd ? Math.max(0.05, Math.min(0.95, 0.7 + (vd - 44) / 8 * 0.16)) : 0.05, vd ? 'Vd ' + vd.toFixed(1) + ' V' : 'Vd']
+            : sel === 'Id' ? [0.05 + Math.min(15, id || 0) / 15 * 0.9, id != null ? 'Id ' + id.toFixed(1) + ' A' : 'Id'] : [0.05 + Math.min(250, w) / 200 * 0.88, Math.round(w) + ' W'];
+        ms.f = ms.f == null ? f : ms.f + (f - ms.f) * 0.6;
+        const p = arcPt(ms.cx, ms.cy, 250, ms.f);
+        ms.needle.setAttribute('x2', p[0].toFixed(1)); ms.needle.setAttribute('y2', p[1].toFixed(1));
+        ms.val.textContent = t; ms.val.classList.add('tx');
+      } else if (on && src) { ms.f = null; for (const k2 of ['x2', 'y2']) ms.needle.setAttribute(k2, src.needle.getAttribute(k2)); ms.val.textContent = src.val.textContent; ms.val.classList.remove('tx'); }
+    }
+    if (LCD.metWin) {
+      if (sub) L.metWin = false;
+      LCD.metWin.style.display = L.metWin ? '' : 'none';
+      for (const k in LCD.metBtn) LCD.metBtn[k].classList.toggle('sel', L.metMulti ? k === 'Multi-function' : k === (L.metSel || 'Po'));
+    }
     for (const sd of ['A', 'B']) {
-      LCD['m' + sd].g.style.display = single || (!sub && sd === msd) ? '' : 'none';
+      LCD['m' + sd].g.style.display = single ? '' : 'none'; // petit écran : le 3e galvanomètre (LCD.mS)
       LCD['m' + sd].g.classList.toggle('i76dim', single && sd === 'B' && s.dualRx === 0 && s.vfoSel !== 1);
     }
     if (LCD.i76subF) {

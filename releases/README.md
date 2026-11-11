@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.282 | [RemoteStation-Setup-0.37.282.exe](0.37.282/RemoteStation-Setup-0.37.282.exe) | [remote-station-0.37.282.tar.gz](0.37.282/remote-station-0.37.282.tar.gz) |  — [empreintes SHA-256](0.37.282/SHA256SUMS.txt) |
 | 0.37.281 | [RemoteStation-Setup-0.37.281.exe](0.37.281/RemoteStation-Setup-0.37.281.exe) | [remote-station-0.37.281.tar.gz](0.37.281/remote-station-0.37.281.tar.gz) |  — [empreintes SHA-256](0.37.281/SHA256SUMS.txt) |
 | 0.37.280 | [RemoteStation-Setup-0.37.280.exe](0.37.280/RemoteStation-Setup-0.37.280.exe) | [remote-station-0.37.280.tar.gz](0.37.280/remote-station-0.37.280.tar.gz) | Versions relevées à la main (pas de commande CI-V) — [empreintes SHA-256](0.37.280/SHA256SUMS.txt) |
 | 0.37.279 | [RemoteStation-Setup-0.37.279.exe](0.37.279/RemoteStation-Setup-0.37.279.exe) | [remote-station-0.37.279.tar.gz](0.37.279/remote-station-0.37.279.tar.gz) | ANTENNA MEMORY / TEMP-M / [ANT] SW : administrateurs ; Network toujours en lecture seule — [empreintes SHA-256](0.37.279/SHA256SUMS.txt) |

@@ -919,3 +919,16 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face text.i76ant-t.dk { fill: #0a1a2a; }
 #face text.dimt { fill: #6d737c !important; }
 #face text.isub-l.dk { fill: #0a1a2a; }
+#face .mtr-arc.alc76 { stroke: #ff3a2a; stroke-width: 2.6; }
+#face text.mtr-name.alc76 { fill: #ff3a2a; }
+/* IC-7760 petit écran : fenêtre METER */
+#face .i76-mwbg { fill: #101418; stroke: #8a929e; stroke-width: .6; }
+#face text.i76-mwt { fill: #fff; font: 700 7px Arial, sans-serif; }
+#face .i76-mwk { fill: #5b6168; stroke: #9aa1aa; stroke-width: .5; }
+#face .i76-mwk.sel { fill: #1f8fff; }
+#face text.i76-mwkt { fill: #fff; font: 700 7.5px Arial, sans-serif; pointer-events: none; }
+#face .i76-smbg { fill: #000; }
+#face text.i76sm-l { fill: #fff; font: 700 6.5px Arial, sans-serif; }
+#face text.i76sm-sc { fill: #fff; font: 700 5.6px Arial, sans-serif; }
+#face text.i76sm-sc.red { fill: #ff3a2a; }
+#face .i76-btr.sm, #face .i76-bar.sm { stroke-width: 3; }
