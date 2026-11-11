@@ -3738,6 +3738,13 @@
     if (L.mmKind === 'notch') return [['_t', 'NOTCH', () => ['', ''], () => 0, 'none'],
       ['notchPos', 'POSITION', () => ['', ''], (s0) => (s0[sdk('notchPos')] != null ? s0[sdk('notchPos')] / 255 : 0.5), 'mark'],
       ['notchW', 'WIDTH', (s0) => [['WIDE', 'MID', 'NAR'][s0[sdk('notchW')]] || '—', ''], () => 0, 'none'], null, null, null];
+    // Colonne NB (NB mis en service) : LEVEL (récepteur sélectionné), DEPTH (1 – 10), WIDTH (1 – 100), au bouton MULTI
+    if (L.mmKind === 'nb') return [['_t', 'NB', () => ['', ''], () => 0, 'none'],
+      ['nbLvl', 'LEVEL', (s0) => ['', pct(s0[sdk('nbLvl')])], (s0) => pctOf(s0[sdk('nbLvl')])],
+      ['nbDepth', 'DEPTH', (s0) => ['', s0.nbDepth != null ? String(s0.nbDepth + 1) : '—'], (s0) => (s0.nbDepth != null ? (s0.nbDepth + 1) / 10 : 0)],
+      ['nbWidth', 'WIDTH', (s0) => ['', s0.nbWidth != null ? String(Math.round(1 + s0.nbWidth * 99 / 255)) : '—'], (s0) => (s0.nbWidth != null ? s0.nbWidth / 255 : 0)], null, null];
+    // Colonne NR (NR mis en service) : LEVEL du récepteur sélectionné
+    if (L.mmKind === 'nr') return [['_t', 'NR', () => ['', ''], () => 0, 'none'], ['nrLvl', 'LEVEL', (s0) => ['', pct(s0[sdk('nrLvl')])], (s0) => pctOf(s0[sdk('nrLvl')])], null, null, null, null];
     const cw = /^CW/.test(L.activeMode(s) || '');
     const pw = ['power', 'RF POWER', (s0) => ['HF', s0.power != null ? s0.power + 'W' : '—'], (s0) => (s0.power != null ? (s0.power - 5) / 195 : 0)];
     // DIGI-SEL : ON / OFF et repère de l'accord (14 13) sur une réglette, comme sur le TRX
@@ -3820,7 +3827,7 @@
     }
     if (!on) return;
     const items = i76MultiItems(s);
-    if (!items.some((it) => it && it[0] === L.funcSel)) L.funcSel = L.mmKind === 'notch' ? 'notchPos' : 'power';
+    if (!items.some((it) => it && it[0] === L.funcSel)) L.funcSel = L.mmKind === 'notch' ? 'notchPos' : L.mmKind === 'nb' ? 'nbLvl' : L.mmKind === 'nr' ? 'nrLvl' : 'power';
     LCD.i76mmRows.forEach((row, i) => {
       const it = items[i];
       row.id = it ? it[0] : null;
@@ -3893,9 +3900,12 @@
     }
     drawI76Multi(s);
     // NOTCH manuel (MN) mis en service sur le récepteur sélectionné : colonne NOTCH à droite (POSITION au bouton MULTI) ; coupé : elle se ferme
-    { const mn = !!s[sdk('notch')], was = LCD.i76mn;
-      if (was != null && mn !== was) { if (mn) { L.multiMenu = true; L.mmKind = 'notch'; L.funcSel = 'notchPos'; L.multiAt = Date.now(); } else if (L.mmKind === 'notch') { L.multiMenu = false; L.mmKind = null; } }
-      LCD.i76mn = mn; }
+    // (de même pour NB : colonne NB — LEVEL, DEPTH, WIDTH)
+    for (const [kind, key, first] of [['notch', 'notch', 'notchPos'], ['nb', 'nb', 'nbLvl'], ['nr', 'nr', 'nrLvl']]) {
+      const on = !!s[sdk(key)], was = (LCD.i76was = LCD.i76was || {})[kind];
+      if (was != null && on !== was) { if (on) { L.multiMenu = true; L.mmKind = kind; L.funcSel = first; L.multiAt = Date.now(); } else if (L.mmKind === kind) { L.multiMenu = false; L.mmKind = null; } }
+      LCD.i76was[kind] = on;
+    }
     agcCur(s); // suit le mode / FAST-MID-SLOW même tableau fermé (valeur relue fiable à l'ouverture)
     drawI76Agc(s);
     bstkNote(s);
@@ -5357,6 +5367,7 @@
   // IC-7760 : SIDETONE (colonne MULTI en CW, niveau de la tonalité locale, 1A 05 02 86)
   if (DICOM) FUNC_BY.sideTone = ['sideTone', 'SIDETONE', (s) => pct(s.sideTone), ctlStep('sideTone', 0, 255, 5), IO];
   if (DICOM) FUNC_BY.notchW = ['notchW', 'WIDTH', (s) => ['WIDE', 'MID', 'NAR'][s[sideKey('notchW')]] || '—', (s, d) => setCtl(sideKey('notchW'), ((s[sideKey('notchW')] || 0) + (d > 0 ? 1 : 2)) % 3), IO];
+  if (DICOM) { FUNC_BY.nbDepth = ['nbDepth', 'DEPTH', (s) => String((s.nbDepth || 0) + 1), ctlStep('nbDepth', 0, 9, 1), IO]; FUNC_BY.nbWidth = ['nbWidth', 'WIDTH', (s) => String(s.nbWidth), ctlStep('nbWidth', 0, 255, 3), IO]; }
   if (DICOM) FUNC_BY.dsShift = ['dsShift', 'DIGI-SEL', (s) => String(s[sideKey('dsShift')]), ctlStep('dsShift', 0, 255, 3), IO];
   if (!FUNC_BY[L.funcSel]) L.funcSel = 'power'; // choix gardé d'une autre face avant (autre TRX)
   function funcAdjust(id, d) {

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.273** — IC-7760 : MENU, SET Tone Control/TBW, FUNCTION ; colonnes NOTCH (POSITION, WIDTH), NB (LEVEL, DEPTH, WIDTH) et NR (LEVEL) au bouton MULTI ; MN (WIDE) dans FUNCTION ; repère N dans le petit écran
 - **0.37.272** — IC-7760 : MENU, SET Tone Control/TBW, FUNCTION sous le scope ; NOTCH manuel : MN (WIDE/MID/NAR) dans FUNCTION, case MN, colonne NOTCH, repère N et échelle dans le petit écran
 - **0.37.271** — IC-7760 : MENU, SET Tone Control/TBW, FUNCTION sous le scope ; NOTCH manuel : case MN, colonne NOTCH (POSITION au bouton MULTI, WIDTH), repère N et échelle dans le petit écran
 - **0.37.270** — IC-7760 : écran MENU, SET → Tone Control/TBW (fenêtres + / −) ; FUNCTION sous le scope comme sur le TRX (APF, NOTCH, NB, NR, TRACKING, VOX, TBW, MONI, DPD)

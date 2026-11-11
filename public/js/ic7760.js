@@ -101,6 +101,9 @@
   // Niveau de la tonalité locale CW (SET > CW-KEY Set > Side Tone Level : 1A 05 02 86, 0000 – 0255)
   const SIDETONE = [0x1A, 0x05, 0x02, 0x86];
   SLOW.push(q(...SIDETONE));
+  // NB : DEPTH (1A 05 03 63 : 00 – 09 = 1 – 10) et WIDTH (1A 05 03 64 : 0000 – 0255 = 1 – 100), colonne NB de l'écran
+  const NB_DEPTH = [0x1A, 0x05, 0x03, 0x63], NB_WIDTH = [0x1A, 0x05, 0x03, 0x64];
+  SLOW.push(q(...NB_DEPTH), q(...NB_WIDTH));
   // Scope du TRX : MAIN/SUB, SINGLE/DUAL, et pour chaque côté CENTER/FIX, SPAN, EDGE, HOLD
   SLOW.push(q(0x27, 0x12), q(0x27, 0x13));
   for (const sd of [0, 1]) SLOW.push(q(0x27, 0x14, sd), q(0x27, 0x15, sd), q(0x27, 0x16, sd), q(0x27, 0x17, sd));
@@ -112,7 +115,7 @@
 
   const STATE_KEYS = ['vfoSel', 'dualRx', 'txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'tracking', 'dpd', 'tuner', 'tuning',
     'mic', 'proc', 'procLvl', 'vox', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'voxGain', 'antiVox', 'tbw',
-    'fil', 'filB', 'filWi', 'filWiB', 'filShape', 'filShapeB', 'agcT', 'agcTB', 'sideTone', 'att', 'attB', 'ant', 'antB', 'rxAnt', 'rxAntB'];
+    'fil', 'filB', 'filWi', 'filWiB', 'filShape', 'filShapeB', 'agcT', 'agcTB', 'sideTone', 'nbDepth', 'nbWidth', 'att', 'attB', 'ant', 'antB', 'rxAnt', 'rxAntB'];
   for (const s of SIDE) if (s[2] !== 'smeter') STATE_KEYS.push(s[2], s[2] + 'B');
   STATE_KEYS.push('smeterB', 'scSel', 'scDual');
 
@@ -237,6 +240,8 @@
     { id: 'cwPitch', g: 'tx', label: 'CW PITCH', type: 'level', min: 300, max: 900, step: 5, unit: 'Hz', face: true, write: (v) => q(0x14, 0x09, ...lvlBytes(Math.round((v - 300) * 255 / 600))) },
     { id: 'moni', g: 'tx', label: 'MONITOR', type: 'toggle', face: true, write: setOn(0x16, 0x45) },
     { id: 'sideTone', g: 'tx', label: 'Niveau SIDETONE (CW)', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: (v) => q(...SIDETONE, ...lvlBytes(v)) },
+    { id: 'nbDepth', g: 'flt', label: 'NB DEPTH', type: 'level', min: 0, max: 9, step: 1, face: true, write: (v) => q(...NB_DEPTH, bcd(v)) },
+    { id: 'nbWidth', g: 'flt', label: 'NB WIDTH', type: 'level', min: 0, max: 255, step: 1, face: true, write: (v) => q(...NB_WIDTH, ...lvlBytes(v)) },
     { id: 'moniLvl', g: 'tx', label: 'Niveau MONITOR', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x15) },
     { id: 'bkin', g: 'tx', label: 'BK-IN', type: 'select', face: true, options: [[0, 'OFF'], [1, 'SEMI'], [2, 'FULL']], write: (v) => q(0x16, 0x47, v) },
     { id: 'voxGain', g: 'tx', label: 'VOX GAIN', type: 'level', min: 0, max: 255, step: 1, pct: true, face: true, write: setLvl(0x14, 0x16) },
@@ -309,7 +314,7 @@
     READ_FOR['scMode' + x] = q(0x27, 0x14, b); READ_FOR['scSpan' + x] = q(0x27, 0x15, b); READ_FOR['scEdge' + x] = q(0x27, 0x16, b); READ_FOR['scHold' + x] = q(0x27, 0x17, b);
   }
   for (const n in EX) READ_FOR['ex' + n] = q(0x1A, 0x05, bcd(Math.floor(n / 100)), bcd(n % 100));
-  READ_FOR.sideTone = q(...SIDETONE); READ_FOR.filWi = qs(0, 0x1A, 0x03); READ_FOR.filWiB = qs(1, 0x1A, 0x03); READ_FOR.rxAnt = qs(0, 0x12); READ_FOR.rxAntB = qs(1, 0x12); READ_FOR.agcT = qs(0, 0x1A, 0x04); READ_FOR.agcTB = qs(1, 0x1A, 0x04);
+  READ_FOR.sideTone = q(...SIDETONE); READ_FOR.nbDepth = q(...NB_DEPTH); READ_FOR.nbWidth = q(...NB_WIDTH); READ_FOR.filWi = qs(0, 0x1A, 0x03); READ_FOR.filWiB = qs(1, 0x1A, 0x03); READ_FOR.rxAnt = qs(0, 0x12); READ_FOR.rxAntB = qs(1, 0x12); READ_FOR.agcT = qs(0, 0x1A, 0x04); READ_FOR.agcTB = qs(1, 0x1A, 0x04);
   READ_FOR.scSel = q(0x27, 0x12); READ_FOR.scDual = q(0x27, 0x13);
   const CONTROL = {};
   CONTROLS.forEach((c) => { CONTROL[c.id] = c; });
@@ -415,6 +420,8 @@
     // 1A 04 : constante de temps de l'AGC choisie (mode et FAST/MID/SLOW en cours) : 00 OFF, 01 – 13 (tableau p. 19 du guide CI-V)
     if (c === 0x1A && d[0] === 0x04 && d.length >= 2) return { agcT: unbcd(d[1]) };
     if (c === 0x1A && d[0] === 0x05 && d[1] === 0x02 && d[2] === 0x86 && d.length >= 5) return { sideTone: lvlValue(d, 3) };
+    if (c === 0x1A && d[0] === 0x05 && d[1] === 0x03 && d[2] === 0x63 && d.length >= 4) return { nbDepth: unbcd(d[3]) };
+    if (c === 0x1A && d[0] === 0x05 && d[1] === 0x03 && d[2] === 0x64 && d.length >= 5) return { nbWidth: lvlValue(d, 3) };
     if (c === 0x1A && d[0] === 0x05 && d.length >= 4 && EX[unbcd(d[1]) * 100 + unbcd(d[2])]) {
       const n = unbcd(d[1]) * 100 + unbcd(d[2]), it = EX[n], b = d.slice(3);
       const raw = it.type === 'hl' ? (b.length >= 2 ? unbcd(b[0]) * 100 + unbcd(b[1]) : null) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F) : unbcd(b[0]);
@@ -622,6 +629,10 @@
         const n = unbcd(d[1]) * 100 + unbcd(d[2]), it = EX[n], ex = (this.ex = this.ex || {});
         if (d.length === 3) { const raw = ex[n] != null ? ex[n] : { hl: n === 10 || n === 11 || n === 12 ? 525 : 525, tone: 5, tbw6: n === 15 ? 1 : n === 16 ? 21 : n === 17 ? 30 : 1 }[it.type]; r(0x05, d[1], d[2], ...exBytes(it, raw)); }
         else { const b = d.slice(3); ex[n] = it.type === 'hl' ? unbcd(b[0]) * 100 + unbcd(b[1]) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F) : unbcd(b[0]); ok(); }
+      } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x03 && (d[2] === 0x63 || d[2] === 0x64)) {
+        const dep = d[2] === 0x63;
+        if (d.length === 3) r(0x05, 0x03, d[2], ...(dep ? [bcd(this.nbd != null ? this.nbd : 4)] : lvlBytes(this.nbw != null ? this.nbw : 128)));
+        else { if (dep) this.nbd = unbcd(d[3]); else this.nbw = lvlValue(d, 3); ok(); }
       } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x02 && d[2] === 0x86) {
         if (d.length === 3) r(0x05, 0x02, 0x86, ...lvlBytes(this.st != null ? this.st : 128)); else { this.st = lvlValue(d, 3); ok(); }
       } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x01 && d[2] === 0x29) {
