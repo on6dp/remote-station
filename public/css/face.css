@@ -895,3 +895,12 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face text.flt-scl.mid { fill: #fff; }
 #face .i76mm-c.ttl { fill: #2a3142; }
 #face .lcd text.icf-t2.i76f tspan.sm { font-size: 9.5px; }
+/* IC-7760 : MULTI-FUNCTION METER */
+#face .i76mt-lb { fill: #1a0d10; stroke: #e5482b; stroke-width: 0.8; }
+#face .i76mt-lb.g { stroke: #3ddc5a; }
+#face .lcd text.i76mt-lt { fill: #fff; font: 900 7px Arial, sans-serif; pointer-events: none; }
+#face .lcd text.i76mt-sc { fill: #f2f4f7; font: 800 6.6px Arial, sans-serif; pointer-events: none; }
+#face .lcd text.i76mt-sc.red { fill: #ff3b30; }
+#face .lcd text.i76mt-ph { fill: #ff8a1f; font: 900 7px Arial, sans-serif; }
+#face .i76mt-box { fill: none; stroke: #9aa1ab; stroke-width: 0.7; }
+#face .i76mt-pk { fill: #ff3b30; }

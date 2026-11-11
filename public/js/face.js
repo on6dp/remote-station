@@ -216,6 +216,7 @@
     }
     if (a.local === 'exit' && L.agcTbl) { L.agcTbl = false; return render(); }
     if (a.local === 'exit' && L.i76pop) { L.i76pop = null; return render(); } // IC-7760 : EXIT ferme la fenêtre ANT / BW / SFT // IC-7760 : EXIT ferme le tableau AGC
+    if (a.local === 'exit' && L.i76meter) { L.i76meter = false; return render(); } // IC-7760 : MULTI-FUNCTION METER
     if (a.local === 'exit' && L.hlDlg) { hlClose(true); return render(); } // IC-7760 : fenêtre HPF/LPF (les valeurs sont gardées)
     if (a.local === 'exit' && L.icSet && L.icSub) { subBack(); return render(); } // EXIT : un niveau plus haut
     if (a.local === 'exit' && (L.icMem || L.icRec || L.icSet)) { L.icMem = false; L.icRec = false; L.icSet = false; return render(); }
@@ -1214,6 +1215,7 @@
     // IC-7760 : colonne de touches Icom, écran FUNCTION Icom (15 touches, récepteur sélectionné) et menu MULTI (bouton MULTI poussé)
     if (DICOM) {
       buildI76(g, c); buildIcFunc(g, c, I76_FUNC); buildI76Multi(g, c); buildI76Agc(g, c); buildI76Pop(g, c);
+      buildI76Meter(g, c);
       buildI76Set(g, c); buildIcSetSub(g, c); buildHlDlg(g, c); // par-dessus l'écran du TRX
       // Écran MENU de l'IC-7760 (touche MENU) : 3 rangées de 5 touches, comme sur le TRX ; VOICE devient KEYER en CW et DECODE en RTTY
       const md = () => L.activeMode(S()) || '';
@@ -1223,7 +1225,7 @@
         ['AUDIO', 'AUDIO : écran M.SCOPE (scope, oscilloscope et AF-FFT du son reçu)', () => doAct({ act: { local: 'multiView' } })],
         [() => (/^CW/.test(md()) ? 'KEYER' : /^RTTY/.test(md()) ? 'DECODE' : 'VOICE'), () => (/^CW/.test(md()) ? 'KEYER : mémoires du manipulateur' : /^RTTY/.test(md()) ? 'DECODE : décodeur RTTY (onglet RTTY des modes numériques)' : 'VOICE : mémoires vocales du TRX') + ' — pas encore sur la page de l’IC-7760',
           () => (/^RTTY/.test(md()) ? digiOpen('rtty') : say((/^CW/.test(md()) ? 'KEYER' : 'VOICE') + ' : pas encore sur la page de l’IC-7760 (envoie une photo de l’écran).', '', 4000))],
-        ['METER', 'METER : Po, SWR, ALC, COMP, Id, Vd relus sur le TRX (en émission)', () => meterSay(false)],
+        ['METER', 'METER : MULTI-FUNCTION METER sous le scope (S, Po, ALC, COMP, SWR, Id ; S du SUB, Vd, TEMP), comme sur le TRX', () => { L.i76meter = true; L.func = false; render(); }],
         ['SWR', 'SWR : ROS relu sur le TRX (en émission)', () => meterSay(true)],
         soon('MEMORY'), soon('SCAN'), soon('MPAD'), soon('RECORD'),
         ['ANTENNA', 'ANTENNA : ANT 1 – 4 et RX ANT du récepteur sélectionné', () => { L.i76pop = { k: 'ant', sd: activeSide() }; render(); }],
@@ -3741,6 +3743,92 @@
   // (en CW : RF POWER, KEY SPEED, CW PITCH, DIGI-SEL, SIDETONE ; en RTTY / PSK : RF POWER, DIGI-SEL, MONITOR) ; clic = choisir, puis tourner le bouton MULTI (ou la molette ici) ;
   // le scope reste visible à gauche de la colonne
   const pctOf = (v) => (v == null ? 0 : v / 255);
+  // ---- IC-7760 : MULTI-FUNCTION METER (MENU → METER), sous le scope raccourci, comme sur le TRX :
+  // à gauche S, Po, ALC, COMP, SWR, Id ; à droite S du SUB, Vd et TEMP ; rangée du bas : P-HOLD (maintien des crêtes)
+  const pwF = (w) => { const P = [[0, 0], [10, 0.1], [50, 0.33], [100, 0.57], [150, 0.7], [200, 0.83], [250, 0.96]]; for (let i = 1; i < P.length; i++) if (w <= P[i][0]) return P[i - 1][1] + (w - P[i - 1][0]) / (P[i][0] - P[i - 1][0]) * (P[i][1] - P[i - 1][1]); return 0.96; };
+  const sF = (sm) => (sm == null ? 0 : sm <= 120 ? sm / 120 * 0.55 : Math.min(1, 0.55 + (sm - 120) / 121 * 0.45));
+  function buildI76Meter(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const m = LCD.i76mtG = el('g', { class: 'i76mt', style: 'display:none' }, g);
+    const x0 = X(57), w = c.w - 59, y0 = Y(I76_FTOP), h = c.h - I76_FTOP - 2;
+    el('rect', { x: x0, y: y0, width: w, height: h, class: 'mm-bg' }, m);
+    el('rect', { x: x0, y: y0, width: w, height: 12, class: 'i76agc-tb' }, m);
+    el('text', { x: x0 + w / 2, y: y0 + 9.5, class: 'i76agc-ttl', 'text-anchor': 'middle' }, m, 'MULTI-FUNCTION METER');
+    LCD.mtPh = el('text', { x: x0 + 3, y: y0 + 9.5, class: 'i76mt-ph', style: 'display:none' }, m, 'P-HOLD');
+    const rows = [['S', [[0.55 / 9, '1'], [0.55 * 3 / 9, '3'], [0.55 * 5 / 9, '5'], [0.55 * 7 / 9, '7'], [0.55, '9'], [0.7, '+20'], [0.85, '+40'], [1, '+60dB']]],
+      ['Po', [[0, '0'], [0.1, '10'], [0.33, '50'], [0.57, '100'], [0.7, '150'], [0.83, '200'], [0.96, '250W']]],
+      ['ALC', []], ['COMP', [[0, '0'], [0.2, '5'], [0.4, '10'], [0.6, '15'], [0.8, '20'], [1, 'dB']]],
+      ['SWR', [[0, '1'], [i76SwrF(1.5), '1.5'], [i76SwrF(2), '2'], [i76SwrF(2.5), '2.5'], [i76SwrF(3), '3'], [1, '∞']]],
+      ['Id', [[0, '0'], [1 / 3, '5'], [2 / 3, '10'], [1, '15A']]]];
+    const lx = x0 + 4, bx = x0 + 34, bw = w * 0.5 - 40, rh = (h - 12 - 24) / 6;
+    LCD.mtRows = rows.map(([lab, sc], i) => {
+      const y = y0 + 14 + i * rh;
+      el('rect', { x: lx, y: y + rh - 11, width: 26, height: 9, class: 'i76mt-lb' }, m);
+      el('text', { x: lx + 13, y: y + rh - 4, class: 'i76mt-lt', 'text-anchor': 'middle' }, m, lab);
+      for (const [f, t] of sc) el('text', { x: bx + f * bw - (t.length > 3 && f >= 0.95 ? 4 : 0), y: y + rh - 6, class: 'i76mt-sc' + (/^\+/.test(t) || t === '+60dB' ? ' red' : ''), 'text-anchor': 'middle' }, m, t);
+      el('line', { x1: bx, y1: y + rh - 2.5, x2: bx + bw, y2: y + rh - 2.5, class: 'i76-btr' }, m);
+      const bar = el('line', { x1: bx, y1: y + rh - 2.5, x2: bx, y2: y + rh - 2.5, class: 'i76-bar' + (lab === 'ALC' ? ' red' : '') }, m);
+      const pk = el('rect', { x: bx, y: y + rh - 4.5, width: 1.6, height: 4, class: 'i76mt-pk', style: 'display:none' }, m);
+      return { lab, bar, pk, bx, bw, peak: 0, pkAt: 0 };
+    });
+    // S du SUB, Vd, TEMP (à droite)
+    const rx = x0 + w * 0.5 + 6, rw = w * 0.5 - 14;
+    el('rect', { x: rx, y: y0 + 16, width: 14, height: 9, class: 'i76mt-lb g' }, m);
+    el('text', { x: rx + 7, y: y0 + 23, class: 'i76mt-lt', 'text-anchor': 'middle' }, m, 'S');
+    const sbx = rx + 22, sbw = rw - 24;
+    for (const [f, t] of rows[0][1]) el('text', { x: sbx + f * sbw - (t === '+60dB' ? 6 : 0), y: y0 + 31, class: 'i76mt-sc' + (/^\+/.test(t) ? ' red' : ''), 'text-anchor': 'middle' }, m, t);
+    el('line', { x1: sbx, y1: y0 + 35, x2: sbx + sbw, y2: y0 + 35, class: 'i76-btr' }, m);
+    LCD.mtSubBar = el('line', { x1: sbx, y1: y0 + 35, x2: sbx, y2: y0 + 35, class: 'i76-bar' }, m);
+    LCD.mtSub = { bx: sbx, bw: sbw };
+    const gauge = (y, lab, lo, hi, a, b) => {
+      const gx = rx + rw * 0.35, gw = rw * 0.55;
+      el('rect', { x: gx - 4, y, width: gw + 8, height: 22, class: 'i76mt-box' }, m);
+      el('text', { x: gx - 6, y: y - 1, class: 'i76mt-lt', 'text-anchor': 'start' }, m, lab);
+      el('text', { x: gx + gw * a, y: y + 8, class: 'i76mt-sc', 'text-anchor': 'middle' }, m, lo);
+      el('text', { x: gx + gw * b, y: y + 8, class: 'i76mt-sc', 'text-anchor': 'middle' }, m, hi);
+      el('line', { x1: gx, y1: y + 15, x2: gx + gw, y2: y + 15, class: 'i76-btr' }, m);
+      const bar = el('line', { x1: gx, y1: y + 15, x2: gx, y2: y + 15, class: 'i76-bar' }, m);
+      return { bar, gx, gw };
+    };
+    LCD.mtVd = gauge(y0 + 48, 'Vd', '44', '52V', 0.29, 0.86);
+    LCD.mtTemp = gauge(y0 + 80, 'TEMP', 'COOL', 'HOT', 0.12, 0.88);
+    // Rangée du bas : P-HOLD et touches vides, comme sur le TRX
+    const kb = y0 + h - 21, kw = (w - 4) / 6;
+    for (let i = 0; i < 6; i++) {
+      el('rect', { x: x0 + 2 + i * kw + 1.5, y: kb, width: kw - 3, height: 19, rx: 3, class: 'lcd-bot i76b' }, m);
+      if (!i) {
+        LCD.mtPhK = el('text', { x: x0 + 2 + kw / 2, y: kb + 13.5, class: 'lcd-bott i76bt', 'text-anchor': 'middle' }, m, 'P-HOLD');
+        const hh = el('rect', { x: x0 + 2, y: kb, width: kw, height: 19, class: 'hs lcd-hit' }, m);
+        el('title', {}, hh, 'P-HOLD : maintien des crêtes (sur la page)');
+        hh.addEventListener('click', (ev) => { ev.stopPropagation(); L.pHold = !L.pHold; render(); });
+      }
+    }
+  }
+  function drawI76Meter(s, tx) {
+    const m = LCD.i76mtG;
+    if (!m) return;
+    m.style.display = L.i76meter ? '' : 'none';
+    if (!L.i76meter) return;
+    LCD.mtPh.style.display = L.pHold ? '' : 'none';
+    const po = tx && R.poFrac && s.m5 != null ? R.poFrac(s.m5) * 200 : 0;
+    const comp = tx && s.m3 != null ? (s.m3 <= 130 ? s.m3 / 130 * 15 : 15 + (s.m3 - 130) / 111 * 15) : 0;
+    const swr = tx && R.swrValue ? R.swrValue(s.m6) : null;
+    const id = R.idValue && s.m7 != null ? R.idValue(s.m7) : 0;
+    const val = { S: tx ? 0 : sF(s.smeter), Po: pwF(po), ALC: tx && s.m4 != null ? Math.min(1, s.m4 / 255) : 0, COMP: Math.min(1, comp / 25), SWR: swr ? i76SwrF(swr) : 0, Id: Math.min(1, id / 15) };
+    const now = Date.now();
+    for (const r of LCD.mtRows) {
+      const f = Math.max(0, Math.min(1, val[r.lab] || 0));
+      r.bar.setAttribute('x2', (r.bx + f * r.bw).toFixed(1));
+      if (f >= r.peak || now - r.pkAt > 2000) { r.peak = f; r.pkAt = now; }
+      r.pk.style.display = L.pHold && r.peak > 0.01 ? '' : 'none';
+      r.pk.setAttribute('x', (r.bx + r.peak * r.bw - 0.8).toFixed(1));
+    }
+    LCD.mtSubBar.setAttribute('x2', (LCD.mtSub.bx + sF(s.dualRx !== 0 ? s.smeterB : 0) * LCD.mtSub.bw).toFixed(1));
+    const vd = R.vdValue && s.m8 != null ? R.vdValue(s.m8) : null;
+    LCD.mtVd.bar.setAttribute('x2', (LCD.mtVd.gx + (vd ? Math.max(0, Math.min(1, (vd - 40) / 14)) : 0) * LCD.mtVd.gw).toFixed(1));
+    LCD.mtTemp.bar.setAttribute('x2', LCD.mtTemp.gx); // TEMP : pas de commande CI-V pour la lire
+    LCD.mtPhK.classList.toggle('sel', !!L.pHold);
+  }
   function i76Col(kind) {
     L.multiMenu = true; L.mmKind = kind; L.funcSel = { nb: 'nbLvl', nr: 'nrLvl', notch: 'notchPos' }[kind]; L.multiAt = Date.now(); L.agcTbl = false; L.i76pop = null;
     render();
@@ -3863,7 +3951,7 @@
   const I76_SINGLE = { tx: 50, vfo: 65, freq: 71, tags: 69, sc: 72 };
   const I76_FTOP = 186; // haut du panneau FUNCTION de l'IC-7760 (le scope s'arrête au-dessus)
   function i76Layout(single) {
-    const key = (single ? 'S' : 'D') + (LCD.monoKey || '') + (LCD.i76mmOn ? 'm' : '') + (L.func ? 'f' : '');
+    const key = (single ? 'S' : 'D') + (LCD.monoKey || '') + (LCD.i76mmOn ? 'm' : '') + (L.func || L.i76meter ? 'f' : '');
     if (LCD.i76lay === key) return;
     LCD.i76lay = key;
     const d = single ? I76_SINGLE : { tx: 0, vfo: 0, freq: 0, tags: 0, sc: 0 }, tr = (e, dy) => e && e.setAttribute('transform', dy ? 'translate(0,' + dy + ')' : '');
@@ -3871,7 +3959,7 @@
     const box = LCD.scopeBox;
     if (LCD.scopeRect && box) { LCD.scopeRect.setAttribute('y', box.y + d.sc); LCD.scopeRect.setAttribute('height', box.h - d.sc); }
     // FUNCTION ouvert : le scope s'arrête au-dessus du panneau (raccourci), comme sur le TRX
-    const fh = L.func ? Math.max(1, I76_FTOP - 2 - (G.scopeY + d.sc)) : 0;
+    const fh = L.func || L.i76meter ? Math.max(1, I76_FTOP - 2 - (G.scopeY + d.sc)) : 0;
     if (LCD.placeScope) LCD.placeScope(-d.sc, fh || undefined);
     const cv = $('scope');
     if (cv && box && LCD.i76mmOn) cv.style.width = ((box.w - 88) / V.w * 100) + '%';
@@ -3923,6 +4011,7 @@
     drawI76Agc(s);
     bstkNote(s);
     drawI76Pop(s, tx);
+    drawI76Meter(s, tx);
     // « SPECTRUM SCOPE » caché quand le bandeau affiche un message au milieu (ex. « TRX éteint ou câble ? »)
     if (LCD.i76sst) LCD.i76sst.style.display = LCD.flags && LCD.flags.textContent ? 'none' : '';
     // Bandeau du scope : avec le scope du TRX, « Grid » du scope sélectionné (pas de la grille / 10 dB), comme sur le TRX

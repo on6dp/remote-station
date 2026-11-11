@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.275** — IC-7760 : MENU → METER = MULTI-FUNCTION METER sous le scope (S, Po, ALC, COMP, SWR, Id, S du SUB, Vd, TEMP, P-HOLD)
 - **0.37.274** — IC-7760 : MENU, SET Tone Control/TBW, FUNCTION ; NOTCH (colonne, MN (WIDE), repère N) ; NB / NR : clic = ON/OFF, appui d'1 s = colonne de réglages (NB LEVEL/DEPTH/WIDTH, NR LEVEL 0–15)
 - **0.37.273** — IC-7760 : MENU, SET Tone Control/TBW, FUNCTION ; colonnes NOTCH (POSITION, WIDTH), NB (LEVEL, DEPTH, WIDTH) et NR (LEVEL) au bouton MULTI ; MN (WIDE) dans FUNCTION ; repère N dans le petit écran
 - **0.37.272** — IC-7760 : MENU, SET Tone Control/TBW, FUNCTION sous le scope ; NOTCH manuel : MN (WIDE/MID/NAR) dans FUNCTION, case MN, colonne NOTCH, repère N et échelle dans le petit écran
