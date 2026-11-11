@@ -4104,6 +4104,12 @@
     el('rect', { x: x0, y: y0, width: w, height: c.h - I76_FTOP - 2, class: 'mm-bg' }, m);
     el('rect', { x: x0, y: y0, width: w, height: 12, class: 'i76agc-tb' }, m);
     el('text', { x: x0 + w / 2, y: y0 + 9.5, class: 'i76agc-ttl', 'text-anchor': 'middle' }, m, 'ANTENNA');
+    // Retour (comme EXIT) : à droite du titre
+    { const bx2 = x0 + w - 30; el('rect', { x: bx2, y: y0 + 1, width: 28, height: 10, rx: 2, class: 'lcd-bot i76b grey' }, m);
+      el('text', { x: bx2 + 14, y: y0 + 9.4, class: 'i76ant-h', 'text-anchor': 'middle' }, m, '↩');
+      const hb = el('rect', { x: bx2, y: y0, width: 28, height: 12, class: 'hs lcd-hit' }, m);
+      el('title', {}, hb, 'Retour (comme EXIT)');
+      hb.addEventListener('click', (ev) => { ev.stopPropagation(); L.i76ant = false; render(); }); }
     // ANTENNA MEMORY : 2 colonnes de 6 tranches
     const lw = w * 0.66, bx = x0 + 4, by = y0 + 15, rh = (h - 15 - 24) / 7;
     el('rect', { x: bx, y: by, width: lw, height: rh * 6 + 10, class: 'i76ant-box' }, m);
