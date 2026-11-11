@@ -2126,3 +2126,5 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 .badge { border-color: color-mix(in srgb, #c8d0dc 34%, var(--v2-badge-inactive-border)); }
 .badge.b-tx, .badge.b-rx { border-color: color-mix(in srgb, #c8d0dc 34%, var(--v2-badge-muted-border)); }
 .badge.b-info { border-color: color-mix(in srgb, #c8d0dc 42%, var(--v2-border-soft)); }
+/* « TX VFO-A (MAIN) / TX VFO-B (SUB) » : fond orange plein quand le SPLIT est enclenché */
+.vfo-top .txon.split { background: #ff8c1a; border-color: #ffb066; color: #1a0e00; box-shadow: 0 0 10px rgba(255, 140, 26, .45); }

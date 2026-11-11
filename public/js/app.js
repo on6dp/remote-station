@@ -1147,6 +1147,7 @@
       // TX en rouge sur le VFO d'émission (rouge vif pendant l'émission), RX en vert sur le VFO de réception
       badge($('tx' + w), 'TX', live && isTx ? (txing ? 'b-tx live' : 'b-tx armed') : 'b-tx');
       $('txOn' + w).hidden = !(live && isTx);
+      $('txOn' + w).classList.toggle('split', live && isTx && !!(pSplit != null ? Number(pSplit) : r.split)); // SPLIT : fond orange
       $('side' + w).classList.toggle('on', live && w === rxW); // MAIN / SUB : côté actif mis en évidence
       const sends = txing && (w === 'B' ? airOnB : !airOnB);
       badge($('rx' + w), 'RX', live && (dual ? !sends : w === rxW && !txing) ? 'b-rx on' : 'b-rx');
