@@ -72,7 +72,7 @@
     [0x14, 0x07, 'pbtIn', 'l'], [0x14, 0x08, 'pbtOut', 'l'], [0x14, 0x0D, 'notchPos', 'l'], [0x14, 0x12, 'nbLvl', 'l'],
     [0x15, 0x02, 'smeter', 'l'],
     [0x16, 0x02, 'preamp', 'b'], [0x16, 0x12, 'agc', 'b'], [0x16, 0x22, 'nb', 't'], [0x16, 0x32, 'apf', 'b'], [0x16, 0x40, 'nr', 't'],
-    [0x16, 0x41, 'dnf', 't'], [0x16, 0x48, 'notch', 't'], [0x16, 0x4E, 'digiSel', 't'], [0x16, 0x57, 'notchW', 'b'], [0x16, 0x65, 'ipPlus', 't']
+    [0x16, 0x41, 'dnf', 't'], [0x16, 0x48, 'notch', 't'], [0x16, 0x56, 'filShape', 'b'], [0x16, 0x4E, 'digiSel', 't'], [0x16, 0x57, 'notchW', 'b'], [0x16, 0x65, 'ipPlus', 't']
   ];
   // Réglages communs (sans 29)
   const COMMON = [
@@ -112,7 +112,7 @@
 
   const STATE_KEYS = ['vfoSel', 'dualRx', 'txVfo', 'split', 'rit', 'xit', 'clar', 'lock', 'tracking', 'tuner', 'tuning',
     'mic', 'proc', 'procLvl', 'vox', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'cwPitch', 'keySpeed', 'moniLvl', 'moni', 'bkin', 'voxGain', 'antiVox', 'tbw',
-    'fil', 'filB', 'filWi', 'filWiB', 'agcT', 'agcTB', 'sideTone', 'att', 'attB', 'ant', 'antB', 'rxAnt', 'rxAntB'];
+    'fil', 'filB', 'filWi', 'filWiB', 'filShape', 'filShapeB', 'agcT', 'agcTB', 'sideTone', 'att', 'attB', 'ant', 'antB', 'rxAnt', 'rxAntB'];
   for (const s of SIDE) if (s[2] !== 'smeter') STATE_KEYS.push(s[2], s[2] + 'B');
   STATE_KEYS.push('smeterB', 'scSel', 'scDual');
   for (const k of ['scMode', 'scSpan', 'scEdge', 'scHold']) STATE_KEYS.push(k, k + 'B');
@@ -193,6 +193,8 @@
     { id: 'notchPos', g: 'flt', sec: 'dsp', label: 'Position NOTCH', type: 'level', min: 0, max: 255, step: 1, cmd: [0x14, 0x0D] },
     { id: 'notchW', g: 'flt', label: 'Largeur NOTCH', type: 'select', face: true, options: [[0, 'WIDE'], [1, 'MID'], [2, 'NAR']], cmd: [0x16, 0x57], byte: true },
     { id: 'dnf', g: 'flt', label: 'AUTO NOTCH', badge: 'AN', type: 'toggle', cmd: [0x16, 0x41] },
+    // Forme du filtre DSP (16 56 : SHARP / SOFT)
+    { id: 'filShape', g: 'flt', label: 'Forme du filtre', type: 'select', face: true, options: [[0, 'SHARP'], [1, 'SOFT']], cmd: [0x16, 0x56], byte: true },
     { id: 'apf', g: 'flt', label: 'APF', type: 'select', face: true, options: [[0, 'OFF'], [1, 'WIDE'], [2, 'MID'], [3, 'NAR']], cmd: [0x16, 0x32], byte: true },
     { id: 'af', g: 'rx', label: 'AF', type: 'level', min: 0, max: 255, step: 1, pct: true, cmd: [0x14, 0x01] },
     { id: 'rf', g: 'rx', label: 'RF', type: 'level', min: 0, max: 255, step: 1, pct: true, cmd: [0x14, 0x02] },
@@ -203,6 +205,12 @@
     // Antenne ANT1 – ANT4 (12 0n + RX ANT gardé comme il est)
     { id: 'ant', g: 'rx', label: 'Antenne', type: 'select', noTx: true, options: [[1, 'ANT 1'], [2, 'ANT 2'], [3, 'ANT 3'], [4, 'ANT 4']],
       write: (v, s, b) => qs(b, 0x12, v - 1, (s && s['rxAnt' + (b ? 'B' : '')]) ? 1 : 0) },
+    // RX ANT de l'antenne choisie (12 0n 01) ; refusé par le TRX si le type d'antenne ne le permet pas (RX-I/O)
+    { id: 'rxAnt', g: 'rx', label: 'RX ANT', type: 'toggle', noTx: true, face: true,
+      write: (v, s, b) => qs(b, 0x12, Math.max(0, ((s && s['ant' + (b ? 'B' : '')]) || 1) - 1), v ? 1 : 0) },
+    // Largeur du filtre en service (1A 03 : SSB / CW / PSK 0 – 40, RTTY 0 – 31, AM 0 – 49 ; pas en FM)
+    { id: 'filWi', g: 'flt', label: 'Largeur du filtre', type: 'select', face: true, options: Array.from({ length: 50 }, (_, i) => [i, String(i)]),
+      write: (v, s, b) => qs(b, 0x1A, 0x03, bcd(v)), when: (s, b) => !/^FM/.test((s && s['mode' + (b ? 'B' : '')]) || '') },
     { id: 'digiSel', g: 'rx', label: 'DIGI-SEL', type: 'toggle', face: true, cmd: [0x16, 0x4E] },
     // Constante de temps de l'AGC (1A 04) : celle du mode et du FAST / MID / SLOW en cours (appui long sur AGC) ; pas en FM (fixe)
     { id: 'agcT', g: 'rx', label: 'Constante de temps AGC', type: 'select', face: true, options: Array.from({ length: 14 }, (_, i) => [i, i ? String(i) : 'OFF']),
@@ -234,7 +242,7 @@
       { id: 'scHold' + x, g: 'rx', label: 'HOLD du scope' + n, type: 'toggle', face: true, write: (v) => q(0x27, 0x17, b, v ? 1 : 0) });
     READ_FOR['scMode' + x] = q(0x27, 0x14, b); READ_FOR['scSpan' + x] = q(0x27, 0x15, b); READ_FOR['scEdge' + x] = q(0x27, 0x16, b); READ_FOR['scHold' + x] = q(0x27, 0x17, b);
   }
-  READ_FOR.sideTone = q(...SIDETONE); READ_FOR.agcT = qs(0, 0x1A, 0x04); READ_FOR.agcTB = qs(1, 0x1A, 0x04);
+  READ_FOR.sideTone = q(...SIDETONE); READ_FOR.filWi = qs(0, 0x1A, 0x03); READ_FOR.filWiB = qs(1, 0x1A, 0x03); READ_FOR.rxAnt = qs(0, 0x12); READ_FOR.rxAntB = qs(1, 0x12); READ_FOR.agcT = qs(0, 0x1A, 0x04); READ_FOR.agcTB = qs(1, 0x1A, 0x04);
   READ_FOR.scSel = q(0x27, 0x12); READ_FOR.scDual = q(0x27, 0x13);
   const CONTROL = {};
   CONTROLS.forEach((c) => { CONTROL[c.id] = c; });
@@ -524,7 +532,9 @@
         else { sc[k] = k === 'sp' ? freqValue(d, 2) : d[2]; ok(); }
       } else if (c === 0x1A && d[0] === 0x03) {
         const m = b ? v.modeB : v.mode;
-        if (d.length === 1) r(0x03, bcd([34, 28, 9][((m && m[2]) || 1) - 1] || 34)); else ok(); // 3,0 kHz / 2,4 kHz / 500 Hz
+        // Largeur par récepteur et par FIL (au départ 3,0 kHz / 2,4 kHz / 500 Hz)
+        const fw = (this.fw = this.fw || [[34, 28, 9], [34, 28, 9]])[b ? 1 : 0], fi = ((m && m[2]) || 1) - 1;
+        if (d.length === 1) r(0x03, bcd(fw[fi])); else { fw[fi] = unbcd(d[1]); ok(); }
       } else if (c === 0x1A && d[0] === 0x04) {
         // Constante de temps AGC du simulateur : une valeur par groupe de mode et par FAST / MID / SLOW (valeurs d'usine au départ)
         const m = b ? v.modeB : v.mode, gp = !m ? 0 : m[0] === 0x02 ? 2 : m[0] === 0x05 ? 3 : m[0] === 0x00 || m[0] === 0x01 ? 0 : 1;

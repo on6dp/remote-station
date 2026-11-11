@@ -44,7 +44,7 @@
     // Petit écran de la photo : le dessin du filtre du récepteur sélectionné (largeur, TWIN PBT, NOTCH), comme sur le TRX
     // Petit écran entier (galvanomètre à aiguille, « MET Po », date) ; subLcd = zone du dessin du filtre (SUB DISP)
     subMeter: { x: +(1156 * K).toFixed(2), y: +(80 * K).toFixed(2), w: +(228 * K).toFixed(2), h: +(150 * K).toFixed(2) },
-    subLcd: { x: +(1160 * K).toFixed(2), y: +(86 * K).toFixed(2), w: +(222 * K).toFixed(2), h: +(88 * K).toFixed(2) },
+    subLcd: { x: +(1162 * K).toFixed(2), y: +(98 * K).toFixed(2), w: +(218 * K).toFixed(2), h: +(70 * K).toFixed(2) },
     lcd: { x: +(322 * K).toFixed(2), y: +(57 * K).toFixed(2), w: 570, h: 318 },
     // Cases de l'écran, pour chaque récepteur
     cells: [['ANT', 'ant'], ['ATT', 'att'], ['P.AMP', 'preamp'], ['FILTER', 'fil'], ['AGC', 'agc']],
@@ -63,16 +63,8 @@
     bandGrid: [['160M', '1.8', 1840, 'LSB'], ['80M', '3.5', 3700, 'LSB'], ['60M', '5.0', 5357, null], ['40M', '7.0', 7100, 'LSB'],
       ['30M', '10', 10136, null], ['20M', '14', 14200, 'USB'], ['17M', '18', 18130, 'USB'], ['15M', '21', 21250, 'USB'],
       ['12M', '24.5', 24950, 'USB'], ['10M', '28', 28500, 'USB'], ['6M', '50', 50150, 'USB'], [null, 'GENE']],
-    // Petit écran (en haut à droite), avec SUB DISP sur le filtre : récepteur sélectionné, largeur du filtre ; FIL / APF / AN-MN dessous
-    texts: [
-      { x: 1160, y: 76, anchor: 'start', color: '#ff5a4a', font: FONT(13), text: (s) => (s.vfoSel === 1 ? 'SUB' : 'MAIN') },
-      { x: 1384, y: 76, anchor: 'end', color: '#e8eef8', font: FONT(13), text: (s) => 'BW ' + kHz(bwOf(s)) },
-      { x: 1193, y: 222, anchor: 'middle', color: '#f2f4f8', font: FONT(15), text: (s) => { const v = side('fil')(s); return v ? 'FIL' + v : ''; } },
-      { x: 1271, y: 222, anchor: 'middle', color: '#f2f4f8', font: FONT(15), text: (s) => ['', 'APF-W', 'APF-M', 'APF-N'][side('apf')(s)] || '' },
-      { x: 1349, y: 222, anchor: 'middle', color: '#f2f4f8', font: FONT(15), text: (s) => { const b = sb(s); return s['dnf' + b] ? 'AN' : s['notch' + b] ? 'MN' : ''; } }
-      // Textes du filtre seulement quand SUB DISP montre le filtre (au départ : galvanomètre, « MET Po » et la date, comme sur le TRX)
-    ].map((t) => { const f = t.text; t.text = (s, L) => (L && L.subDisp === 1 ? f(s) : ''); return t; })
-      .map((t) => SC(Object.assign(t, { font: t.font.replace(/(\d+)px/, (m, n) => (n * K).toFixed(1) + 'px') }))),
+    // Petit écran : dessiné par la page (galvanomètre / filtre / bandes, touche SUB DISP)
+    texts: [],
     leds: [
       // TX/RX de chaque récepteur : vert en réception, rouge en émission
       { x: 255, y: 198, w: 21, h: 7, rx: 3.5, color: '#3ddc5a', on: (s) => !!s.connected && !s.tx, bright: (s) => !!s.connected && !s.tx && (s.smeter || 0) > 0 },
@@ -111,7 +103,7 @@
       { id: 'xfc', cx: 1142, cy: 300, r: 25, tip: 'XFC : en SPLIT, tant qu’on le tient, on écoute sur la fréquence d’émission (MAIN et SUB échangés, puis remis au relâchement)', act: { hold: 'xfc' } },
       { id: 'mainKey', x: 1207, y: 272, w: 63, h: 24, tip: 'MAIN : le grand bouton et les touches agissent sur le récepteur MAIN (VFO-A)', act: { set: ['vfoSel', 0] }, led: (s) => s.vfoSel !== 1, ledColor: '#ff6040' },
       { id: 'subKey', x: 1274, y: 272, w: 70, h: 24, tip: 'SUB : le grand bouton et les touches agissent sur le récepteur SUB (VFO-B)', act: { set: ['vfoSel', 1] }, led: (s) => s.vfoSel === 1, ledColor: '#38b6ff' },
-      { id: 'subDisp', cx: 1375, cy: 282, r: 14, tip: 'SUB DISP : petit écran — galvanomètre à aiguille ⇄ filtre du récepteur sélectionné', act: { local: 'subDisp' } },
+      { id: 'subDisp', cx: 1375, cy: 282, r: 14, tip: 'SUB DISP : petit écran — galvanomètre, filtre du récepteur sélectionné, touches de bandes (à tour de rôle)', act: { local: 'subDisp' } },
       { id: 'mpad', cx: 1416, cy: 322, r: 14, tip: 'MPAD', act: info('MPAD (bloc-notes de fréquences) : pas encore relié.') },
       // Colonne de droite
       { id: 'change', x: 1460, y: 197, w: 45, h: 23, tip: 'CHANGE : échange MAIN et SUB ; appui d’au moins 1 s : MAIN = SUB', act: { action: 'swap', long: { action: 'aToB' } } },

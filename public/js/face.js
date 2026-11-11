@@ -214,7 +214,8 @@
       if (s.vox) return setCtl('vox', 0);
       return say('VOX : à distance, il ne peut pas être mis en service (seulement coupé) ; le BK-IN se règle en CW.', 'warn', 5000);
     }
-    if (a.local === 'exit' && L.agcTbl) { L.agcTbl = false; return render(); } // IC-7760 : EXIT ferme le tableau AGC
+    if (a.local === 'exit' && L.agcTbl) { L.agcTbl = false; return render(); }
+    if (a.local === 'exit' && L.i76pop) { L.i76pop = null; return render(); } // IC-7760 : EXIT ferme la fenêtre ANT / BW / SFT // IC-7760 : EXIT ferme le tableau AGC
     if (a.local === 'exit' && L.icSet && L.icSub) { subBack(); return render(); } // EXIT : un niveau plus haut
     if (a.local === 'exit' && (L.icMem || L.icRec || L.icSet)) { L.icMem = false; L.icRec = false; L.icSet = false; return render(); }
     if (a.local === 'mpadWrite') return mpadWrite();
@@ -240,7 +241,7 @@
     }
     // TWIN PBT : pousser le bouton (CLR) = PBT intérieur et extérieur au milieu
     // IC-7760 : SUB DISP = petit écran : galvanomètre (au départ) ⇄ filtre du récepteur sélectionné
-    if (a.local === 'subDisp') { L.subDisp = L.subDisp === 1 ? 0 : 1; store.set('rs.face.subdisp', String(L.subDisp)); say(L.subDisp ? 'SUB DISP : filtre du récepteur sélectionné dans le petit écran' : 'SUB DISP : galvanomètre dans le petit écran', '', 2500); return render(); }
+    if (a.local === 'subDisp') { L.subDisp = ((L.subDisp || 0) + 1) % 3; store.set('rs.face.subdisp', String(L.subDisp)); say('SUB DISP : ' + ['galvanomètre', 'filtre du récepteur sélectionné', 'touches de bandes'][L.subDisp] + ' dans le petit écran', '', 2500); return render(); }
     if (a.local === 'multiView') { viewTouched(); L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'M.SCOPE : scope, OSCILLOSCOPE et AF-FFT du récepteur sélectionné' : 'M.SCOPE : affichage normal', '', 2500); return render(); }
     if (a.local === 'pbtClr') { if (!needControl()) return; setCtl(sdk('pbtIn'), 128); setCtl(sdk('pbtOut'), 128); if (ICOM) { L.pbtPopAt = Date.now(); L.pbtClrAt = Date.now(); render(); } return; }
     // Réglage à choix : valeur suivante (IC-7300 : P.AMP OFF → AMP1 → AMP2)
@@ -1011,8 +1012,9 @@
       v.xr = x0 + half - 6;
       v.sel = el('rect', { x: x0 + 58, y: Y(126), width: half - 64, height: 1.6, class: 'lcd-sel' }, g);
       v.hit = el('rect', { x: x0 + 58, y: Y(92), width: half - 64, height: 34, class: 'hs lcd-hit' }, g);
-      el('title', {}, v.hit, 'Taper une fréquence pour le VFO ' + side);
-      v.hit.addEventListener('click', () => askFreq(side));
+      el('title', {}, v.hit, DICOM ? 'BAND STACKING REGISTER du ' + (side === 'B' ? 'SUB' : 'MAIN') + ' : bandes, F-INP (taper une fréquence)' : 'Taper une fréquence pour le VFO ' + side);
+      // IC-7760 : clic sur la fréquence → BAND STACKING REGISTER, comme sur le TRX
+      v.hit.addEventListener('click', (ev) => { if (DICOM) { ev.stopPropagation(); L.i76pop = { k: 'band', sd: side }; L.agcTbl = false; L.multiMenu = false; return render(); } askFreq(side); });
       // « CLAR RX   -90Hz » au-dessus de la fréquence (clarifier en service), comme sur le TRX ; molette dessus : décalage ±10 Hz
       v.clarG = el('g', { class: 'lcd-clar', style: 'display:none' }, g);
       // FTX-1 : « CLAR RXTX » à droite, juste avant le décalage (comme sur le TRX)
@@ -1162,7 +1164,7 @@
     buildModeMenu(g, c);
     if (SINGLE || FACE.bandGrid) buildBandMenu(g, c); // FTX-1 : tableau BAND du TRX (MAG BAND)
     // IC-7760 : colonne de touches Icom, écran FUNCTION Icom (15 touches, récepteur sélectionné) et menu MULTI (bouton MULTI poussé)
-    if (DICOM) { buildI76(g, c); buildIcFunc(g, c, I76_FUNC); buildI76Multi(g, c); buildI76Agc(g, c); }
+    if (DICOM) { buildI76(g, c); buildIcFunc(g, c, I76_FUNC); buildI76Multi(g, c); buildI76Agc(g, c); buildI76Pop(g, c); }
     if (ICOM) {
       // Écran MENU de l'IC-7300 : 2 pages de 5 × 2 touches, comme sur le TRX ; VOICE devient KEYER en CW et DECODE en RTTY
       const md = () => L.activeMode(S()) || '';
@@ -2934,6 +2936,206 @@
     el('title', {}, bh, 'Retour (comme EXIT)');
     bh.addEventListener('click', (ev) => { ev.stopPropagation(); L.agcTbl = false; render(); });
   }
+  // ---- Fenêtres ANT / BW / SFT (clic sur l'en-tête d'un récepteur)
+  const i76WMax = (m) => (/^AM/.test(m) ? 49 : /^RTTY/.test(m) ? 31 : 40);
+  function popVals(s) {
+    const p = L.i76pop, x = p.sd === 'B' ? 'B' : '', md = (x ? s.modeB : s.mode) || '';
+    const pp = L.popPend && Date.now() - L.popPend.at < 2500 && L.popPend.sd === p.sd ? L.popPend : null;
+    const wi = pp && pp.wi != null ? pp.wi : s['filWi' + x];
+    const pi = pp && pp.pi != null ? pp.pi : s['pbtIn' + x], po = pp && pp.po != null ? pp.po : s['pbtOut' + x];
+    const hz = /FM/.test(md) ? null : R.filHz ? R.filHz(md, wi) : null;
+    const sft = pi != null && po != null ? Math.round((((pi - 128) + (po - 128)) / 2) / 128 * (hz || 2400) / 2 / 10) * 10 : 0;
+    return { x, md, wi, pi, po, hz, sft };
+  }
+  function popTurn(n, ev) {
+    const p = L.i76pop, s = S();
+    if (!p || !needControl()) return;
+    const v = popVals(s), d = n > 0 ? 1 : -1;
+    if (p.k === 'bw') {
+      if (/^FM/.test(v.md)) return say('FM : largeurs FIL1 / FIL2 / FIL3 fixes (15 / 10 / 7 kHz).', '', 3000);
+      if (v.wi == null) return say('Largeur pas encore lue sur le TRX, un instant…', '', 2000);
+      const wi = Math.max(0, Math.min(i76WMax(v.md), v.wi + d));
+      L.popPend = { sd: p.sd, wi, at: Date.now() };
+      throttleSet('filWi' + v.x, wi, (y) => setCtl('filWi' + v.x, y));
+      if (ev) showTip(ev, 'BW ' + (R.filHz(v.md, wi) >= 1000 ? (R.filHz(v.md, wi) / 1000).toFixed(2) + ' kHz' : R.filHz(v.md, wi) + ' Hz'));
+    } else if (p.k === 'sft') {
+      if (v.pi == null || v.po == null) return;
+      const st = Math.max(1, Math.round(50 / ((v.hz || 2400) / 2) * 128)) * d;
+      const pi = Math.max(0, Math.min(255, v.pi + st)), po = Math.max(0, Math.min(255, v.po + st));
+      L.popPend = { sd: p.sd, pi, po, at: Date.now() };
+      throttleSet('pbtIn' + v.x, pi, (y) => setCtl('pbtIn' + v.x, y));
+      throttleSet('pbtOut' + v.x, po, (y) => setCtl('pbtOut' + v.x, y));
+    }
+    render();
+  }
+  // BAND STACKING (page) : dernière fréquence et mode de chaque bande, par récepteur, retenus par la page dans ce navigateur
+  const I76_BANDS = [['160M', '1.8', 1.8, 2.0, 1840, '00'], ['80M', '3.5', 3.5, 4.0, 3700, '00'], ['40M', '7', 7.0, 7.3, 7100, '00'], ['F-INP'],
+    ['30M', '10', 10.1, 10.15, 10136, '03'], ['20M', '14', 14.0, 14.35, 14200, '01'], ['17M', '18', 18.068, 18.168, 18130, '01'], null,
+    ['15M', '21', 21.0, 21.45, 21250, '01'], ['12M', '24', 24.89, 24.99, 24950, '01'], ['10M', '28', 28.0, 29.7, 28500, '01'], null,
+    ['6M', '50', 50.0, 54.0, 50150, '01'], ['GENE', 'GENE', 0, 0, 10000, '02'], null, ['BACK']];
+  let BSTK = {};
+  try { BSTK = JSON.parse(store.get('rs.face.i76bstk', '{}')) || {}; } catch (e) { BSTK = {}; }
+  let bstkSaved = 0;
+  const bandOf = (hz) => { const mhz = hz / 1e6; const b = I76_BANDS.find((x) => x && x[3] && mhz >= x[2] && mhz <= x[3]); return b ? b[0] : 'GENE'; };
+  function bstkNote(s) {
+    if (Date.now() < (L.bstkHold || 0)) return; // changement de bande en cours (fréquence et mode arrivent l'un après l'autre)
+    let ch = false;
+    for (const sd of ['A', 'B']) {
+      const x = sd === 'B' ? 'B' : '', hz = s['freq' + x], mc = s['modeCode' + x];
+      if (!hz || !mc) continue;
+      const k = sd + bandOf(hz), o = BSTK[k];
+      if (!o || o[0] !== hz || o[1] !== mc) { BSTK[k] = [hz, mc]; ch = true; }
+    }
+    if (ch && Date.now() - bstkSaved > 3000) { bstkSaved = Date.now(); store.set('rs.face.i76bstk', JSON.stringify(BSTK)); }
+  }
+  function bstkGo(sd, b) {
+    if (!needControl()) return;
+    L.bstkHold = Date.now() + 5000; // le mode se relit plus lentement que la fréquence
+    const o = BSTK[sd + b[0]];
+    const hz = o ? o[0] : b[4] * 1000, mc = o ? o[1] : b[5];
+    tuneTo(sd, hz);
+    if (mc && R.MODES[mc]) setTimeout(() => send({ t: 'set', mode: mc, sub: sd === 'B' }), 250);
+    say((b[0] === 'GENE' ? 'GENE' : b[1] + ' MHz') + ' — ' + (sd === 'B' ? 'SUB' : 'MAIN') + ' : ' + (hz / 1e6).toFixed(5) + ' ' + ((mc && R.MODES[mc]) || '') + (o ? ' (dernière utilisée)' : ''), '', 3000);
+  }
+  function buildI76Pop(g, c) {
+    const X = (v) => c.x + v, Y = (v) => c.y + v;
+    const m = LCD.i76pop = el('g', { class: 'i76pop', style: 'display:none' }, g);
+    const x0 = X(60), w = c.w - 64, y0 = Y(G.lowY), hh = G.botY + G.botH - G.lowY;
+    el('rect', { x: x0, y: y0, width: w, height: hh, rx: 2, class: 'i76agc-bg' }, m);
+    el('rect', { x: x0, y: y0, width: w, height: 15, class: 'i76agc-tb' }, m);
+    LCD.popTtl = el('text', { x: x0 + w / 2, y: y0 + 11, class: 'i76agc-ttl', 'text-anchor': 'middle' }, m, '');
+    const btn = (gp, x, y, bw, bh, lab, fn, tip) => {
+      const r = el('rect', { x, y, width: bw, height: bh, rx: 3, class: 'lcd-bot i76b grey' }, gp); // touches grises des fenêtres, comme sur le TRX
+      const t = el('text', { x: x + bw / 2, y: y + bh / 2 + 4.5, class: 'lcd-bott i76bt big', 'text-anchor': 'middle' }, gp, lab);
+      const h = el('rect', { x, y, width: bw, height: bh, class: 'hs lcd-hit' }, gp);
+      if (tip) el('title', {}, h, tip);
+      h.addEventListener('click', (ev) => { ev.stopPropagation(); fn(ev); });
+      return { r, t, h };
+    };
+    const side = () => L.i76pop.sd, xs = () => (side() === 'B' ? 'B' : '');
+    // ANT : ANT 1 – 4 et RX ANT (pas en émission)
+    const ga = LCD.popAnt = el('g', {}, m);
+    LCD.popAntB = [1, 2, 3, 4].map((n, i) => btn(ga, x0 + 14 + i * 74, y0 + 30, 66, 30, 'ANT ' + n, () => { if (needControl()) setCtl('ant' + xs(), n); }, 'Antenne ' + n));
+    LCD.popRx = btn(ga, x0 + 14, y0 + 72, 140, 26, 'RX ANT', () => { if (needControl()) setCtl('rxAnt' + xs(), S()['rxAnt' + xs()] ? 0 : 1); }, 'RX ANT : entrée réception séparée de l’antenne choisie (selon le type d’antenne réglé sur le TRX)');
+    // BW : FIL1 – FIL3 et largeur
+    const gb = LCD.popBw = el('g', {}, m);
+    LCD.popFil = [1, 2, 3].map((n, i) => btn(gb, x0 + 14 + i * 74, y0 + 30, 66, 30, 'FIL' + n, () => { if (needControl()) setCtl('fil' + xs(), n); }, 'Filtre ' + n));
+    btn(gb, x0 + 14, y0 + 72, 34, 30, '−', (ev) => popTurn(-1, ev), 'Plus étroit');
+    LCD.popBwV = el('text', { x: x0 + 14 + 34 + 76, y: y0 + 92, class: 'i76pop-v', 'text-anchor': 'middle' }, gb, '');
+    btn(gb, x0 + 14 + 34 + 152, y0 + 72, 34, 30, '+', (ev) => popTurn(1, ev), 'Plus large');
+    // SFT : décalage (PBT) et CLR
+    const gs = LCD.popSft = el('g', {}, m);
+    btn(gs, x0 + 14, y0 + 30, 34, 30, '−', (ev) => popTurn(-1, ev), 'Décaler vers le bas');
+    LCD.popSftV = el('text', { x: x0 + 14 + 34 + 76, y: y0 + 50, class: 'i76pop-v', 'text-anchor': 'middle' }, gs, '');
+    btn(gs, x0 + 14 + 34 + 152, y0 + 30, 34, 30, '+', (ev) => popTurn(1, ev), 'Décaler vers le haut');
+    btn(gs, x0 + 14 + 34 + 152 + 44, y0 + 30, 60, 30, 'CLR', () => { if (!needControl()) return; L.popPend = null; setCtl('pbtIn' + xs(), 128); setCtl('pbtOut' + xs(), 128); }, 'CLR : filtre remis au centre (PBT 0)');
+    LCD.popPbt = el('text', { x: x0 + 14, y: y0 + 82, class: 'i76pop-h' }, gs, '');
+    // BAND STACKING REGISTER : mode et fréquence, puis 1.8 3.5 7 F-INP / 10 14 18 / 21 24 28 / 50 GENE ↩, comme sur le TRX
+    const gk = LCD.popBand = el('g', {}, m);
+    LCD.popBMode = el('text', { x: x0 + 14, y: y0 + 34, class: 'i76pop-v' }, gk, '');
+    LCD.popBFreq = el('text', { x: x0 + w / 2 + 10, y: y0 + 36, class: 'i76pop-f', 'text-anchor': 'middle' }, gk, '');
+    const bw4 = (w - 28) / 4, bh4 = (hh - 46) / 4;
+    I76_BANDS.forEach((b, i) => {
+      if (!b) return;
+      const ci = i % 4, ri = Math.floor(i / 4), bx = x0 + 14 + ci * bw4, by = y0 + 44 + ri * bh4;
+      if (b[0] === 'BACK') btn(gk, bx + 4, by + 2, bw4 - 8, bh4 - 6, '↩', () => { L.i76pop = null; render(); }, 'Retour (comme EXIT)').t.classList.add('i76bk');
+      else if (b[0] === 'F-INP') btn(gk, bx + 4, by + 2, bw4 - 8, bh4 - 6, 'F-INP', () => { L.i76pop = { k: 'finp', sd: L.i76pop.sd }; L.finp = ''; render(); }, 'F-INP : taper une fréquence (clavier du TRX)');
+      else btn(gk, bx + 4, by + 2, bw4 - 8, bh4 - 6, b[1], () => { const sd = L.i76pop.sd; L.i76pop = null; render(); bstkGo(sd, b); }, b[0] === 'GENE' ? 'GENE : couverture générale (dernière fréquence hors bandes radioamateurs)' : 'Bande ' + b[1] + ' MHz : dernière fréquence et mode utilisés');
+    });
+    // F-INP : clavier du TRX (1 – 9, · , 0, CE ; SPLIT, MEMO, ENT, ↩). « 14.074 » ENT = 14,074 MHz ; « 7 » ENT = 7 MHz
+    const gf = LCD.popFinp = el('g', {}, m);
+    LCD.popFFreq = el('text', { x: x0 + w / 2, y: y0 + 38, class: 'i76pop-f', 'text-anchor': 'middle' }, gf, '');
+    const kw = (w - 28) / 4, kh = (hh - 48) / 4;
+    [['1', '2', '3', 'SPLIT'], ['4', '5', '6', 'MEMO'], ['7', '8', '9', 'ENT'], ['·(-)', '0', 'CE', 'BACK']].forEach((row, ri) => row.forEach((k3, ci) => {
+      const bx = x0 + 14 + ci * kw, by = y0 + 46 + ri * kh;
+      const lab = k3 === 'BACK' ? '↩' : k3;
+      const b = btn(gf, bx + 4, by + 2, kw - 8, kh - 6, lab, () => finpKey(k3), { SPLIT: 'SPLIT : la fréquence tapée va sur le SUB et SPLIT est mis en service', MEMO: 'MEMO : mémoires du TRX, pas à distance', ENT: 'ENT : aller sur la fréquence tapée', CE: 'CE : effacer', '·(-)': 'Point : sépare les MHz des kHz', BACK: 'Retour au BAND STACKING REGISTER' }[k3]);
+      if (k3 === 'BACK') b.t.classList.add('i76bk');
+    }));
+    LCD.popHint = el('text', { x: x0 + 14, y: y0 + hh - 10, class: 'i76pop-h' }, m, '');
+    // Retour ↩
+    LCD.popBack = btn(m, x0 + w - 66, y0 + hh - 34, 58, 28, '↩', () => { L.i76pop = null; render(); }, 'Retour (comme EXIT)');
+    LCD.popBack.t.classList.add('i76bk');
+    m.addEventListener('wheel', (ev) => { if (!L.i76pop || L.i76pop.k === 'ant' || L.i76pop.k === 'band') return; ev.preventDefault(); ev.stopPropagation(); if (ev.deltaY) popTurn(ev.deltaY < 0 ? 1 : -1, ev); }, { passive: false });
+  }
+  function finpHz() {
+    const t = L.finp || '';
+    if (!t || t === '.') return null;
+    const mhz = Number(t);
+    return mhz > 0 ? Math.round(mhz * 1e6) : null;
+  }
+  function finpKey(k) {
+    const p = L.i76pop;
+    if (!p) return;
+    const t = L.finp || '';
+    if (/^\d$/.test(k)) { const [a, b2] = t.split('.'); if (b2 != null ? b2.length < 6 : a.length < 2) L.finp = t + k; }
+    else if (k === '·(-)') { if (t.indexOf('.') < 0) L.finp = (t || '0') + '.'; }
+    else if (k === 'CE') L.finp = '';
+    else if (k === 'BACK') { L.i76pop = { k: 'band', sd: p.sd }; L.finp = ''; }
+    else if (k === 'MEMO') return say('MEMO : les mémoires du TRX ne sont pas accessibles à distance.', '', 3000);
+    else if (k === 'ENT' || k === 'SPLIT') {
+      const hz = finpHz();
+      if (!hz) return say('F-INP : tape une fréquence en MHz (ex. 14.074), puis ENT.', 'warn', 3000);
+      if (hz < (R.FREQ_MIN || 30000) || hz > (R.FREQ_MAX || 75e6)) return say('F-INP : ' + (hz / 1e6) + ' MHz hors des limites du TRX.', 'warn', 3000);
+      if (!needControl()) return;
+      if (k === 'ENT') tuneTo(p.sd, hz);
+      else { tuneTo('B', hz); if (!S().split) setCtl('split', 1); say('SPLIT : émission sur ' + (hz / 1e6).toFixed(5) + ' MHz (SUB)', '', 3000); }
+      L.i76pop = null; L.finp = '';
+    }
+    render();
+  }
+  document.addEventListener('keydown', (ev) => {
+    if (!L.i76pop || L.i76pop.k !== 'finp' || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    if (ev.target && /INPUT|TEXTAREA|SELECT/.test(ev.target.tagName)) return;
+    const k = /^\d$/.test(ev.key) ? ev.key : ev.key === '.' || ev.key === ',' ? '·(-)' : ev.key === 'Enter' ? 'ENT' : ev.key === 'Backspace' ? 'BS' : ev.key === 'Escape' ? 'BACK' : null;
+    if (!k) return;
+    ev.preventDefault();
+    if (k === 'BS') { L.finp = (L.finp || '').slice(0, -1); return render(); }
+    finpKey(k);
+  });
+  function drawI76Pop(s, tx) {
+    const m = LCD.i76pop;
+    if (!m) return;
+    const p = L.i76pop;
+    m.style.display = p ? '' : 'none';
+    if (!p) return;
+    const v = popVals(s), who = p.sd === 'B' ? 'SUB' : 'MAIN';
+    LCD.popAnt.style.display = p.k === 'ant' ? '' : 'none';
+    LCD.popBw.style.display = p.k === 'bw' ? '' : 'none';
+    LCD.popSft.style.display = p.k === 'sft' ? '' : 'none';
+    LCD.popBand.style.display = p.k === 'band' ? '' : 'none';
+    LCD.popFinp.style.display = p.k === 'finp' ? '' : 'none';
+    const full = p.k === 'band' || p.k === 'finp';
+    for (const e of [LCD.popBack.r, LCD.popBack.t, LCD.popBack.h, LCD.popHint]) e.style.display = full ? 'none' : '';
+    LCD.popTtl.textContent = { ant: 'ANTENNA', bw: 'FILTER', sft: 'SHIFT (PBT)', band: 'BAND STACKING REGISTER', finp: 'F-INP' }[p.k] + ' — ' + who;
+    if (p.k === 'finp') {
+      const t = L.finp || '', f = s['freq' + v.x];
+      if (t) LCD.popFFreq.textContent = t + ' MHz'; // saisie en cours (jaune) ; sinon la fréquence actuelle
+      else LCD.popFFreq.textContent = f ? Math.floor(f / 1e6) + '.' + String(Math.floor(f / 1000) % 1000).padStart(3, '0') + '.' + String(Math.floor(f / 10) % 100).padStart(2, '0') : '—';
+      LCD.popFFreq.classList.toggle('typing', !!t);
+      return;
+    }
+    if (p.k === 'band') {
+      const f = s['freq' + v.x];
+      LCD.popBMode.textContent = v.md || '';
+      LCD.popBFreq.textContent = f ? Math.floor(f / 1e6) + '.' + String(Math.floor(f / 1000) % 1000).padStart(3, '0') + '.' + String(Math.floor(f / 10) % 100).padStart(2, '0') : '—';
+      return;
+    }
+    if (p.k === 'ant') {
+      LCD.popAntB.forEach((b, i) => { const on = s['ant' + v.x] === i + 1; b.r.classList.toggle('sel', on); b.t.classList.toggle('sel', on); });
+      const rx = !!s['rxAnt' + v.x];
+      LCD.popRx.t.textContent = 'RX ANT ' + (rx ? 'ON' : 'OFF'); LCD.popRx.r.classList.toggle('sel', rx); LCD.popRx.t.classList.toggle('sel', rx);
+      LCD.popHint.textContent = tx ? 'En émission, l’antenne ne change pas.' : 'Clic sur une antenne ; RX ANT selon le type d’antenne réglé sur le TRX.';
+    } else if (p.k === 'bw') {
+      LCD.popFil.forEach((b, i) => { const on = s['fil' + v.x] === i + 1; b.r.classList.toggle('sel', on); b.t.classList.toggle('sel', on); });
+      LCD.popBwV.textContent = /FM/.test(v.md) ? 'BW fixe (FM)' : 'BW ' + (v.hz ? (v.hz >= 1000 ? (v.hz / 1000).toFixed(2) + ' kHz' : v.hz + ' Hz') : '—');
+      LCD.popHint.textContent = 'Grand bouton, molette ou − / + : largeur du FIL en service (' + (v.md || '—') + ').';
+    } else {
+      LCD.popSftV.textContent = 'SFT ' + (v.sft > 0 ? '+' : '') + v.sft + ' Hz';
+      LCD.popPbt.textContent = v.pi != null ? 'PBT IN ' + (v.pi > 128 ? '+' : '') + (v.pi - 128) + '   PBT OUT ' + (v.po > 128 ? '+' : '') + (v.po - 128) : '';
+      LCD.popHint.textContent = 'Grand bouton, molette ou − / + : les deux PBT ensemble (environ 50 Hz par cran).';
+    }
+  }
   function drawI76Agc(s) {
     const m = LCD.i76agc;
     if (!m) return;
@@ -2981,7 +3183,7 @@
       // Appui d'1 s sur AGC : tableau AGC (constantes de temps), comme sur le TRX
       let lpT = null, lpDone = false;
       if (id === 'agc') {
-        hit.addEventListener('pointerdown', () => { lpDone = false; clearTimeout(lpT); lpT = setTimeout(() => { lpDone = true; L.agcTbl = true; L.multiMenu = false; render(); }, 700); });
+        hit.addEventListener('pointerdown', () => { lpDone = false; clearTimeout(lpT); lpT = setTimeout(() => { lpDone = true; L.agcTbl = true; L.multiMenu = false; L.i76pop = null; render(); }, 700); });
         for (const e2 of ['pointerup', 'pointerleave', 'pointercancel']) hit.addEventListener(e2, () => clearTimeout(lpT));
       }
       hit.addEventListener('click', (ev) => {
@@ -3006,6 +3208,12 @@
       o.sft = el('text', { x: X(xb + 123), y: Y(11.6), class: 'i76-hdr', 'text-anchor': 'middle' }, h, 'SFT');
       o.nR = el('rect', { x: X(xb + 152), y: Y(2.5), width: 20, height: 12, rx: 1.5, class: 'i76-nb', style: 'display:none' }, h);
       o.nT = el('text', { x: X(xb + 162), y: Y(11.6), class: 'i76-nbt', 'text-anchor': 'middle', style: 'display:none' }, h, 'AN');
+      // Clic sur ANT, BW ou SFT de l'en-tête : petite fenêtre de réglage de ce récepteur, comme en touchant l'écran du TRX
+      for (const [k2, hx, hw, tip] of [['ant', 0, 36, 'ANT : choix de l’antenne (ANT 1 – 4) et RX ANT'], ['bw', 38, 56, 'BW : FIL1 / FIL2 / FIL3 et largeur du filtre (grand bouton)'], ['sft', 98, 50, 'SFT : décalage du filtre (PBT, grand bouton), CLR pour le remettre au centre']]) {
+        const hh = el('rect', { x: X(xb + hx), y: Y(1.5), width: hw, height: 14, class: 'hs lcd-hit' }, h);
+        el('title', {}, hh, tip + (sd === 'B' ? ' — SUB' : ' — MAIN'));
+        hh.addEventListener('click', (ev) => { ev.stopPropagation(); L.i76pop = L.i76pop && L.i76pop.k === k2 && L.i76pop.sd === sd ? null : { k: k2, sd }; L.agcTbl = false; L.multiMenu = false; L.popPend = null; render(); });
+      }
       o.side = el('text', { x: X(xb + 250), y: Y(11), class: 'i76-side', 'text-anchor': 'end', style: 'display:none' }, h, sd === 'A' ? 'MAIN' : 'SUB');
       // S-mètre en barre (S · 1 · 3 · 5 · 7 · 9 · +20 +40 +60dB) et SWR dessous, comme sur le grand écran du TRX ;
       // en émission, l'échelle du haut devient Po (0 – 200 W) pour le récepteur qui émet. Galvanomètre à aiguille : dans le petit écran.
@@ -3067,6 +3275,39 @@
       el('rect', { x: sl.x + 3, y: sl.y + 2.5, width: 20, height: 7, rx: 1, class: 'i76-met' }, sg);
       el('text', { x: sl.x + 13, y: sl.y + 8, class: 'i76-mett', 'text-anchor': 'middle' }, sg, 'MET Po');
       LCD.i76date = el('text', { x: sl.x + sl.w / 2, y: sl.y + sl.h - 3, class: 'i76-date', 'text-anchor': 'middle' }, sg, '');
+      // SUB DISP 2e page : filtre — [MAIN] [BW] [SFT] en haut, FIL / SHARP-SOFT / MN en bas, comme sur le TRX
+      const sb2 = (gp, x, y, w, h, lab, fn, tip) => {
+        const r = el('rect', { x, y, width: w, height: h, rx: 2.5, class: 'i76-sk' }, gp);
+        const t = el('text', { x: x + w / 2, y: y + h / 2 + 3.8, class: 'i76-skt', 'text-anchor': 'middle' }, gp, lab);
+        const hh = el('rect', { x, y, width: w, height: h, class: 'hs lcd-hit' }, gp);
+        if (tip) el('title', {}, hh, tip);
+        hh.addEventListener('click', (ev) => { ev.stopPropagation(); fn(ev); });
+        return { r, t };
+      };
+      const sf = LCD.i76subF = el('g', { style: 'display:none' }, g);
+      LCD.sfSideR = el('rect', { x: sl.x + 3, y: sl.y + 2, width: 26, height: 10, rx: 1, class: 'i76-sfside' }, sf);
+      LCD.sfSide = el('text', { x: sl.x + 16, y: sl.y + 9.6, class: 'i76-sfsidet', 'text-anchor': 'middle' }, sf, 'MAIN');
+      el('rect', { x: sl.x + 32, y: sl.y + 2, width: 66, height: 10, rx: 1, class: 'i76-box' }, sf);
+      LCD.sfBw = el('text', { x: sl.x + 35, y: sl.y + 9.6, class: 'i76-sfh' }, sf, 'BW');
+      el('rect', { x: sl.x + 101, y: sl.y + 2, width: sl.w - 104, height: 10, rx: 1, class: 'i76-box' }, sf);
+      LCD.sfSft = el('text', { x: sl.x + 104, y: sl.y + 9.6, class: 'i76-sfh' }, sf, 'SFT');
+      const kw3 = (sl.w - 8) / 3, ky = sl.y + sl.h - 25;
+      LCD.sfFil = sb2(sf, sl.x + 3, ky, kw3 - 2, 22, 'FIL1', () => { if (!needControl()) return; const x = activeSide() === 'B' ? 'B' : ''; setCtl('fil' + x, ((S()['fil' + x] || 1) % 3) + 1); }, 'FIL1 → FIL2 → FIL3 (récepteur sélectionné)');
+      LCD.sfShp = sb2(sf, sl.x + 3 + kw3, ky, kw3 - 2, 22, 'SHARP', () => { if (!needControl()) return; const x = activeSide() === 'B' ? 'B' : ''; setCtl('filShape' + x, S()['filShape' + x] ? 0 : 1); }, 'Forme du filtre : SHARP ⇄ SOFT');
+      LCD.sfMn = sb2(sf, sl.x + 3 + 2 * kw3, ky, kw3 - 2, 22, 'MN', () => { if (!needControl()) return; const x = activeSide() === 'B' ? 'B' : ''; setCtl('notch' + x, S()['notch' + x] ? 0 : 1); }, 'MN : notch manuel ON / OFF');
+      // SUB DISP 3e page : touches de bandes 1.8 … 50, GENE, F-INP (récepteur sélectionné), comme sur le TRX
+      const sbd = LCD.i76subB = el('g', { style: 'display:none' }, g);
+      const SB_KEYS = ['1.8', '3.5', '7', '10', '14', '18', '21', '24', '28', '50', 'GENE', 'F-INP'];
+      const bw3 = (sl.w - 6) / 3, bh3 = (sl.h - 6) / 4;
+      SB_KEYS.forEach((lab, i) => {
+        const x = sl.x + 3 + (i % 3) * bw3, y = sl.y + 3 + Math.floor(i / 3) * bh3;
+        sb2(sbd, x + 1, y + 1, bw3 - 2, bh3 - 2, lab, () => {
+          const sd = activeSide();
+          if (lab === 'F-INP') { L.i76pop = { k: 'finp', sd }; L.finp = ''; L.agcTbl = false; L.multiMenu = false; return render(); }
+          const b = I76_BANDS.find((x2) => x2 && x2[1] === lab);
+          if (b) bstkGo(sd, b);
+        }, lab === 'F-INP' ? 'F-INP : taper une fréquence' : lab === 'GENE' ? 'GENE : couverture générale' : 'Bande ' + lab + ' MHz : dernière fréquence et mode utilisés');
+      });
     }
     // DUAL-W (vert) et SPLIT (orange) entre les deux récepteurs, comme sur le TRX
     LCD.i76dw = el('g', { style: 'display:none' }, h);
@@ -3179,6 +3420,8 @@
     drawI76Multi(s);
     agcCur(s); // suit le mode / FAST-MID-SLOW même tableau fermé (valeur relue fiable à l'ouverture)
     drawI76Agc(s);
+    bstkNote(s);
+    drawI76Pop(s, tx);
     // « SPECTRUM SCOPE » caché quand le bandeau affiche un message au milieu (ex. « TRX éteint ou câble ? »)
     if (LCD.i76sst) LCD.i76sst.style.display = LCD.flags && LCD.flags.textContent ? 'none' : '';
     // Bandeau du scope : avec le scope du TRX, « Grid » du scope sélectionné (pas de la grille / 10 dB), comme sur le TRX
@@ -3249,8 +3492,25 @@
     LCD.i76dw.style.display = s.dualRx ? '' : 'none';
     LCD.i76sp.style.display = s.split ? '' : 'none';
     // Petit écran : aiguille du récepteur sélectionné (en émission : Po du MAIN), ou le filtre (SUB DISP)
-    const msd = tx ? 'A' : activeSide(), sub = L.subDisp === 1;
+    const msd = tx ? 'A' : activeSide(), sub = L.subDisp || 0;
     for (const sd of ['A', 'B']) LCD['m' + sd].g.style.display = !sub && sd === msd ? '' : 'none';
+    if (LCD.i76subF) {
+      LCD.i76subF.style.display = sub === 1 ? '' : 'none';
+      LCD.i76subB.style.display = sub === 2 ? '' : 'none';
+      if (sub === 1) {
+        const x = activeSide() === 'B' ? 'B' : '', md = (x ? s.modeB : s.mode) || '';
+        LCD.sfSide.textContent = x ? 'SUB' : 'MAIN';
+        const hz = /FM/.test(md) ? null : R.filHz ? R.filHz(md, s['filWi' + x]) : null;
+        LCD.sfBw.textContent = 'BW ' + (hz ? (hz >= 1000 ? (hz / 1000).toFixed(2) + 'k' : hz) : '—');
+        const pi = s['pbtIn' + x], po = s['pbtOut' + x];
+        const sft = pi != null && po != null ? Math.round((((pi - 128) + (po - 128)) / 2) / 128 * (hz || 2400) / 2 / 10) * 10 : 0;
+        LCD.sfSft.textContent = 'SFT ' + sft;
+        LCD.sfFil.t.textContent = 'FIL' + (s['fil' + x] || 1);
+        LCD.sfShp.t.textContent = s['filShape' + x] ? 'SOFT' : 'SHARP';
+        LCD.sfMn.t.textContent = s['dnf' + x] ? 'AN' : 'MN';
+        LCD.sfMn.r.classList.toggle('on', !!(s['notch' + x] || s['dnf' + x]));
+      }
+    }
     if (LCD.i76sub) {
       LCD.i76sub.style.display = sub ? 'none' : '';
       const d = new Date();
@@ -4919,6 +5179,7 @@
     if (ICOM && k.dial && L.iscRef && L.icView === 'scope') return refTurn(notches);
     // IC-7760, tableau AGC ouvert : le grand bouton règle la constante de temps de la case en cours, comme sur le TRX
     if (DICOM && k.dial && L.agcTbl) return agcTurn(notches, ev);
+    if (DICOM && k.dial && L.i76pop && (L.i76pop.k === 'bw' || L.i76pop.k === 'sft')) return popTurn(notches, ev); // fenêtre BW / SFT : le grand bouton la règle
     // VOICE → TX LEVEL ouvert : le grand bouton règle le niveau d'émission des mémoires vocales
     if (ICOM && k.dial && L.ivLvl && L.icView === 'voice') return vlvlTurn(notches);
     // Cadre NB LEVEL / DNR LEVEL ouvert (appui long sur NB / DNR) : le bouton MULTI règle ce niveau, comme sur le TRX
@@ -5813,7 +6074,7 @@
     $('scope').style.pointerEvents = ((ICOM || DICOM) && rfFresh()) || (FACE.meterFtx && $('scope').style.visibility === 'visible') ? 'auto' : ''; // FTX-1 : clic sur le spectre / la cascade = aller sur cette fréquence
     $('scope').style.cursor = (ICOM || DICOM) && rfFresh() ? 'crosshair' : '';
     LCD.hint.textContent = !live ? '' : st.audio && !st.audio.active ? 'Cascade : l’audio n’est pas activé sur la page Station' : 'Cascade : en attente du son de la station…';
-    $('scope').style.visibility = (fresh || rfFresh()) && !L.func && !L.agcTbl && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !(L.multiMenu && !DICOM) && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet && L.fdisp !== 2 ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom ; FTX-1 DISP 2 : pas de scope)
+    $('scope').style.visibility = (fresh || rfFresh()) && !L.func && !L.agcTbl && !L.i76pop && !L.modeMenu && !L.bandMenu && !L.icomMenu && !L.quickMenu && !(L.multiMenu && !DICOM) && !(L.icBig && L.icView !== 'scope') && !L.icMem && !L.icRec && !L.icSet && L.fdisp !== 2 ? 'visible' : 'hidden'; // (L.func : écran FUNCTION, Yaesu ou Icom ; FTX-1 DISP 2 : pas de scope)
     if (LCD.icm && L.icMeter && LCD.hint.style.display !== 'none') LCD.hint.setAttribute('y', LCD.Y(G.scopeY + 32)); else if (LCD.hint) LCD.hint.setAttribute('y', LCD.Y(G.scopeY + G.scopeH / 2 - 2));
     icPopCheck(s, live);
     if (ICOM) pbtPopDraw(s, live);
