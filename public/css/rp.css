@@ -2165,3 +2165,6 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 /* Panneau MODE : « Mode appliqué à VFO A » plus grand, en blanc gras */
 [data-panel="mode"] .sub-h { font-size: 13px; font-weight: 800; color: #fff; margin-top: 8px; letter-spacing: .02em; }
 [data-panel="mode"] .sub-h b { color: #fff; font-weight: 900; }
+/* MAIN / SUB dans la même couleur que A (vert foncé) / B (rose foncé) */
+#sec-dual [data-ctl="vfoSel"] .btn:nth-child(1)[aria-pressed='true'] { background: linear-gradient(180deg, #1f7a3a, #0f5226); border-color: #4fd17a; color: #fff; font-weight: 800; box-shadow: 0 0 8px rgba(40, 200, 100, .45); }
+#sec-dual [data-ctl="vfoSel"] .btn:nth-child(2)[aria-pressed='true'] { background: linear-gradient(180deg, #a3245e, #6e133d); border-color: #ff7ab3; color: #fff; font-weight: 800; box-shadow: 0 0 8px rgba(230, 60, 140, .45); }
