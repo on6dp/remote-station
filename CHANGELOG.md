@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.294** — IC-7760 : fréquences en MHz sous la cascade aussi en CENTER, selon le SPAN
 - **0.37.293** — IC-7760 : nouveau mode affiché tout de suite (relu au cycle suivant), libellés du MENU moins gras
 - **0.37.292** — IC-7760 : bandeau du scope comme sur le TRX (M S T, HOLD, vitesse, RBW, VBW, CENTER/FIX, MAIN/SUB, Grid)
 - **0.37.291** — Guide administrateur : TWIN-PBT de l'IC-7760 (BW / SFT, cadre, voyant)

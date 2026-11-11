@@ -2020,7 +2020,8 @@
     // Décimales selon le SPAN (comme le TRX) : ±2,5k → −2.0 … +2.0 ; ±5k et plus → nombres entiers (−4 … +4, −20 … +20, −200 … +200)
     const dec = f.f1 < 5000 ? 1 : 0;
     const kfmt = (hz, d2) => { const k = hz / 1000, a = Math.abs(k); return (k > 0 ? '+' : k < 0 ? '-' : '') + (a === 0 ? '0' : a.toFixed(d2 == null ? dec : d2)); };
-    if (!rfFix(f)) {
+    // IC-7760 : en CENTER aussi, fréquences en MHz sous la cascade (14.28 … 14.36 pour ±50k), selon le SPAN choisi, comme sur le TRX
+    if (!rfFix(f) && !DICOM) {
       for (let k = 1; k < 10; k++) c2.fillText(kfmt(-f.f1 + k * 2 * f.f1 / 10), x0 + w * k / 10, y0 + h - 3);
     } else {
       const span = hi - lo, raw = span / 7, p10 = Math.pow(10, Math.floor(Math.log10(raw))), st = [1, 2, 5, 10].map((m) => m * p10).find((v) => v >= raw) || 10 * p10;
