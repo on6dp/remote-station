@@ -796,8 +796,8 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .lcd text.i76-dwt { fill: #fff; font: 900 11px Arial, 'Liberation Sans', sans-serif; pointer-events: none; }
 #face .i76-div { stroke: #2a3040; stroke-width: 0.8; }
 #face .lcd-mode.i76 { fill: #2f6fd6; stroke: #7fb2ff; stroke-width: 0.8; }
-#face .i76-nb { fill: #1f6fd0; }
-#face .lcd text.i76-nbt { fill: #fff; font: 900 8.4px Arial, sans-serif; pointer-events: none; }
+#face .i76-nb { fill: #0b1530; stroke: #3a8fff; stroke-width: 1; } /* AN / MN : case sombre bordée de bleu, comme sur le TRX */
+#face .lcd text.i76-nbt { fill: #8fc4ff; font: 900 8px Arial, sans-serif; pointer-events: none; }
 #face .i76-met { fill: #3a4252; }
 #face .i76-mett { fill: #e6e9ef; font: 700 6px Arial, sans-serif; pointer-events: none; }
 #face .i76-freq { fill: #ffffff; font: 700 27px Arial, 'Liberation Sans', Helvetica, sans-serif; letter-spacing: 0.3px; pointer-events: none; }
@@ -889,3 +889,8 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .lcd text.icf-t1.dis { fill: #7d8594; }
 #face .lcd text.icf-t1.i76f { font-size: 13px; }
 #face .lcd text.icf-t2.i76f { font-size: 12px; }
+#face .flt-nmk { fill: #ff8a1f; }
+#face text.flt-nmkt { fill: #fff; font: 900 6px Arial, sans-serif; }
+#face text.flt-scl { fill: #ff8a1f; font: 800 6.5px Arial, sans-serif; }
+#face text.flt-scl.mid { fill: #fff; }
+#face .i76mm-c.ttl { fill: #2a3142; }

@@ -203,7 +203,7 @@
     }
     if (a.local === 'modeMenu') return L.modeMenu ? closeModeMenu() : openModeMenu();
     if (a.local === 'icomMenu' || a.local === 'quickMenu') return L[a.local] ? closeGrid(a.local) : openGrid(a.local);
-    if (a.local === 'multiMenu') { L.multiMenu = !L.multiMenu; L.multiAt = Date.now(); if (L.multiMenu && multiItems(s).indexOf(L.funcSel) < 0) L.funcSel = 'power'; return render(); }
+    if (a.local === 'multiMenu') { L.mmKind = null; L.multiMenu = !L.multiMenu; L.multiAt = Date.now(); if (L.multiMenu && multiItems(s).indexOf(L.funcSel) < 0) L.funcSel = 'power'; return render(); }
     if (a.local === 'expand') return toggleExpand();
     if (a.local === 'scopeMeter') return setIcBig(!L.icBig); // M.SCOPE : grand écran des mesures ⇄ écran par défaut
     if (a.local === 'notchCycle') return needControl() && notchCycle(s);
@@ -834,6 +834,13 @@
     f.vcA = va; f.vcB = vb; f.vcY = vy;
     f.cup = el('path', { d: '', class: 'flt-cup', style: 'display:none' }, g);
     f.nline = el('line', { x1: x0, y1: y0 + 6, x2: x0, y2: y0 + h - 6, class: 'flt-notch', style: 'display:none' }, g);
+    if (DICOM) {
+      // IC-7760 : repère « N » (triangle orange) du NOTCH au-dessus du filtre, et échelle 300 · 1500 · 2700 Hz dessous, comme sur le TRX
+      f.nmk = el('g', { style: 'display:none' }, g);
+      f.nmkT = el('path', { d: '', class: 'flt-nmk' }, f.nmk);
+      f.nmkL = el('text', { x: x0, y: y0 + 3, class: 'flt-nmkt', 'text-anchor': 'middle' }, f.nmk, 'N');
+      f.scl = [300, 1500, 2700].map((hz2) => ({ hz: hz2, t: el('text', { x: x0, y: y0 + h + 7, class: 'flt-scl' + (hz2 === 1500 ? ' mid' : ''), 'text-anchor': 'middle' }, g, String(hz2)) }));
+    }
     f.base = el('rect', { x: x0 + 6, y: y0 + h - 4, width: w - 12, height: 2.5, class: 'flt-base' }, g);
     // CW : indicateur d'accord sous le filtre, comme sur le TRX : « − » … « + », repère rouge au milieu (= le pitch),
     // et un petit trait gris à la fréquence du signal reçu ; trait au milieu = signal bien accordé (en RX comme en TX)
@@ -874,7 +881,9 @@
   // NOTCH du récepteur (MAIN : notch / notchFreq ; SUB : notchB / notchFreqB) : fréquence BF et place dans le cadre du filtre
   // (cadre = 4 kHz de large ; en bande latérale inférieure, le TRX montre la bande à l'envers)
   function notchOf(s, side, md, hz, sh) {
-    const on = side === 'B' ? s.notchB : s.notch, f = side === 'B' ? s.notchFreqB : s.notchFreq;
+    const on = side === 'B' ? s.notchB : s.notch;
+    // IC-7760 : position du NOTCH manuel (14 0D : 0 – 255) ≈ 300 – 2700 Hz de la BF (milieu : 1500 Hz)
+    const f = DICOM ? ((side === 'B' ? s.notchPosB : s.notchPos) != null ? 300 + (side === 'B' ? s.notchPosB : s.notchPos) / 255 * 2400 : null) : side === 'B' ? s.notchFreqB : s.notchFreq;
     if (!on || !f || /FM/.test(md)) return null;
     const rev = /^LSB$|-L$/.test(md) ? -1 : 1;
     return { f, rel: rev * (f - (audioCenter(md, hz) + (sh || 0))) / FLT_SPAN };
@@ -3579,8 +3588,9 @@
       o.bw = el('text', { x: X(xb + 66), y: Y(11.6), class: 'i76-hdr', 'text-anchor': 'middle' }, h, 'BW');
       o.hdrSft = el('rect', { x: X(xb + 98), y: Y(2.5), width: 50, height: 12, rx: 1.5, class: 'i76-box' }, h);
       o.sft = el('text', { x: X(xb + 123), y: Y(11.6), class: 'i76-hdr', 'text-anchor': 'middle' }, h, 'SFT');
-      o.nR = el('rect', { x: X(xb + 152), y: Y(2.5), width: 20, height: 12, rx: 1.5, class: 'i76-nb', style: 'display:none' }, h);
-      o.nT = el('text', { x: X(xb + 162), y: Y(11.6), class: 'i76-nbt', 'text-anchor': 'middle', style: 'display:none' }, h, 'AN');
+      // AN / MN (NOTCH) : petite case à droite de FIL, sur la ligne « VFO », comme sur le TRX
+      o.nR = el('rect', { x: X(xb + 114), y: Y(46.5), width: 20, height: 10, rx: 1.5, class: 'i76-nb', style: 'display:none' }, h);
+      o.nT = el('text', { x: X(xb + 124), y: Y(54.2), class: 'i76-nbt', 'text-anchor': 'middle', style: 'display:none' }, h, 'AN');
       // Clic sur ANT, BW ou SFT de l'en-tête : petite fenêtre de réglage de ce récepteur, comme en touchant l'écran du TRX
       for (const [k2, hx, hw, tip] of [['ant', 0, 36, 'ANT : choix de l’antenne (ANT 1 – 4) et RX ANT'], ['bw', 38, 56, 'BW : FIL1 / FIL2 / FIL3 et largeur du filtre (grand bouton)'], ['sft', 98, 50, 'SFT : décalage du filtre (PBT, grand bouton), CLR pour le remettre au centre']]) {
         const hh = el('rect', { x: X(xb + hx), y: Y(1.5), width: hw, height: 14, class: 'hs lcd-hit' }, h);
@@ -3631,8 +3641,8 @@
       o.filR = el('rect', { x: X(xb + 85), y: Y(46), width: 26, height: 11, rx: 1.5, class: 'i76-fil' }, v.g);
       o.filT = el('text', { x: X(xb + 98), y: Y(54.2), class: 'i76-filt', 'text-anchor': 'middle' }, v.g, 'FIL');
       // « F-INP » (orange) à droite de FIL pendant la saisie au clavier F-INP, comme sur le TRX ; s'éteint après ENT
-      o.fiR = el('rect', { x: X(xb + 115), y: Y(46.5), width: 36, height: 10, rx: 1.5, class: 'i76-finp', style: 'display:none' }, v.g);
-      o.fiT = el('text', { x: X(xb + 133), y: Y(54.2), class: 'i76-finpt', 'text-anchor': 'middle', style: 'display:none' }, v.g, 'F-INP');
+      o.fiR = el('rect', { x: X(xb + 139), y: Y(46.5), width: 36, height: 10, rx: 1.5, class: 'i76-finp', style: 'display:none' }, v.g);
+      o.fiT = el('text', { x: X(xb + 157), y: Y(54.2), class: 'i76-finpt', 'text-anchor': 'middle', style: 'display:none' }, v.g, 'F-INP');
       const fh = o.fh = el('rect', { x: X(xb + 85), y: Y(46), width: 26, height: 11, class: 'hs lcd-hit' }, v.g);
       el('title', {}, fh, 'FIL : filtre suivant (FIL1 → FIL2 → FIL3) de ce récepteur');
       fh.addEventListener('click', (ev) => { ev.stopPropagation(); if (needControl()) cycleCell(sd === 'B' ? 'filB' : 'fil'); });
@@ -3720,6 +3730,10 @@
   // le scope reste visible à gauche de la colonne
   const pctOf = (v) => (v == null ? 0 : v / 255);
   function i76MultiItems(s) {
+    // Colonne NOTCH (NOTCH manuel mis en service) : POSITION (repère, bouton MULTI) et WIDTH (WIDE / MID / NAR), comme sur le TRX
+    if (L.mmKind === 'notch') return [['_t', 'NOTCH', () => ['', ''], () => 0, 'none'],
+      ['notchPos', 'POSITION', () => ['', ''], (s0) => (s0[sdk('notchPos')] != null ? s0[sdk('notchPos')] / 255 : 0.5), 'mark'],
+      ['notchW', 'WIDTH', (s0) => [['WIDE', 'MID', 'NAR'][s0[sdk('notchW')]] || '—', ''], () => 0, 'none'], null, null, null];
     const cw = /^CW/.test(L.activeMode(s) || '');
     const pw = ['power', 'RF POWER', (s0) => ['HF', s0.power != null ? s0.power + 'W' : '—'], (s0) => (s0.power != null ? (s0.power - 5) / 195 : 0)];
     // DIGI-SEL : ON / OFF et repère de l'accord (14 13) sur une réglette, comme sur le TRX
@@ -3755,13 +3769,15 @@
         if (!row.id) return;
         // 1er clic = choisir la case (bouton MULTI pour la valeur) ; clic bref sur la case déjà choisie = sa fonction ON / OFF
         // (DIGI-SEL, COMP, MONITOR), comme sur le TRX ; RF POWER, MIC GAIN, KEY SPEED… n'ont pas d'ON / OFF
+        if (row.id === '_t') return;
+        if (row.id === 'notchW') { L.funcSel = 'notchW'; if (needControl()) funcAdjust('notchW', 1); return; } // WIDTH : WIDE → MID → NAR
         const tog = { dsShift: sdk('digiSel'), procLvl: 'proc', moniLvl: 'moni' }[row.id];
         if (tog && L.funcSel === row.id) { if (needControl()) { const v = S()[tog] ? 0 : 1; setCtl(tog, v); say(row.t.textContent + ' ' + (v ? 'ON' : 'OFF'), '', 1800); } return; }
         L.funcSel = row.id; store.set('rs.face.funcsel', row.id); render();
       });
       hit.addEventListener('wheel', (ev) => {
         ev.preventDefault();
-        if (!row.id || !Math.abs(ev.deltaY)) return;
+        if (!row.id || row.id === '_t' || !Math.abs(ev.deltaY)) return;
         L.funcSel = row.id;
         funcAdjust(row.id, ev.deltaY < 0 ? 1 : -1);
       }, { passive: false });
@@ -3772,7 +3788,7 @@
     el('text', { x: x0 + 6 + w / 2, y: Y(G.botY + G.botH / 2 + 4.5), class: 'i76mm-t i76bk', 'text-anchor': 'middle' }, m, '↩');
     const back = el('rect', { x: x0, y: Y(G.botY), width: w, height: G.botH - 1, class: 'hs lcd-hit' }, m);
     el('title', {}, back, 'Retour (comme EXIT ou MULTI)');
-    back.addEventListener('click', (ev) => { ev.stopPropagation(); L.multiMenu = false; render(); });
+    back.addEventListener('click', (ev) => { ev.stopPropagation(); L.multiMenu = false; L.mmKind = null; render(); });
   }
   function drawI76Multi(s) {
     const m = LCD.i76mm;
@@ -3800,7 +3816,7 @@
     }
     if (!on) return;
     const items = i76MultiItems(s);
-    if (!items.some((it) => it && it[0] === L.funcSel)) L.funcSel = 'power';
+    if (!items.some((it) => it && it[0] === L.funcSel)) L.funcSel = L.mmKind === 'notch' ? 'notchPos' : 'power';
     LCD.i76mmRows.forEach((row, i) => {
       const it = items[i];
       row.id = it ? it[0] : null;
@@ -3813,7 +3829,9 @@
       row.r.classList.toggle('on', !!it && L.funcSel === it[0]);
       for (const e of [row.t, row.v1, row.v2]) e.classList.toggle('on', !!it && L.funcSel === it[0]);
       row.r.classList.toggle('empty', !it);
-      row.tr.style.display = it ? '' : 'none'; // case vide : sans réglette, comme sur le TRX
+      row.tr.style.display = it && it[4] !== 'none' ? '' : 'none'; // case vide (ou titre, WIDTH) : sans réglette, comme sur le TRX
+      if (it && it[4] === 'none') row.bar.setAttribute('width', 0);
+      row.r.classList.toggle('ttl', !!it && it[0] === '_t');
     });
   }
   // IC-7760 : un seul scope → galvanomètres à aiguille en haut, fréquences plus grandes et plus bas, scope plus petit ;
@@ -3839,7 +3857,7 @@
       for (const e of [o.txR, o.txT]) tr(e, d.tx);
       if (single) { o.pw.setAttribute('x', +o.txR.getAttribute('x') + 25); o.pw.setAttribute('y', +o.txR.getAttribute('y') + 9); } else { o.pw.setAttribute('x', +o.txR.getAttribute('x')); o.pw.setAttribute('y', +o.txR.getAttribute('y') + 22); }
       tr(o.pw, d.tx);
-      for (const e of [v.lbl, v.badge, v.mode, o.mh, o.filR, o.filT, o.fh, o.fiR, o.fiT]) tr(e, d.vfo);
+      for (const e of [v.lbl, v.badge, v.mode, o.mh, o.filR, o.filT, o.fh, o.fiR, o.fiT, o.nR, o.nT]) tr(e, d.vfo);
       for (const e of [o.freq, v.hit, v.sel, o.dig]) tr(e, d.freq);
       o.freq.classList.toggle('big', !!single);
       tr(o.tags, d.tags);
@@ -3870,6 +3888,10 @@
       o.fiR.style.display = fi ? '' : 'none'; o.fiT.style.display = fi ? '' : 'none';
     }
     drawI76Multi(s);
+    // NOTCH manuel (MN) mis en service sur le récepteur sélectionné : colonne NOTCH à droite (POSITION au bouton MULTI) ; coupé : elle se ferme
+    { const mn = !!s[sdk('notch')], was = LCD.i76mn;
+      if (was != null && mn !== was) { if (mn) { L.multiMenu = true; L.mmKind = 'notch'; L.funcSel = 'notchPos'; L.multiAt = Date.now(); } else if (L.mmKind === 'notch') { L.multiMenu = false; L.mmKind = null; } }
+      LCD.i76mn = mn; }
     agcCur(s); // suit le mode / FAST-MID-SLOW même tableau fermé (valeur relue fiable à l'ouverture)
     drawI76Agc(s);
     bstkNote(s);
@@ -5330,6 +5352,7 @@
   for (const row of FUNC) for (const c of row) if (c) FUNC_BY[c[0]] = c;
   // IC-7760 : SIDETONE (colonne MULTI en CW, niveau de la tonalité locale, 1A 05 02 86)
   if (DICOM) FUNC_BY.sideTone = ['sideTone', 'SIDETONE', (s) => pct(s.sideTone), ctlStep('sideTone', 0, 255, 5), IO];
+  if (DICOM) FUNC_BY.notchW = ['notchW', 'WIDTH', (s) => ['WIDE', 'MID', 'NAR'][s[sideKey('notchW')]] || '—', (s, d) => setCtl(sideKey('notchW'), ((s[sideKey('notchW')] || 0) + (d > 0 ? 1 : 2)) % 3), IO];
   if (DICOM) FUNC_BY.dsShift = ['dsShift', 'DIGI-SEL', (s) => String(s[sideKey('dsShift')]), ctlStep('dsShift', 0, 255, 3), IO];
   if (!FUNC_BY[L.funcSel]) L.funcSel = 'power'; // choix gardé d'une autre face avant (autre TRX)
   function funcAdjust(id, d) {
@@ -6356,6 +6379,12 @@
       const nxc = nx == null ? 0 : Math.max(fl.x0 + 2, Math.min(fl.x0 + fl.w - 2, nx));
       fl.nline.setAttribute('x1', nxc); fl.nline.setAttribute('x2', nxc);
       fl.nline.style.display = nx != null && !inPass ? '' : 'none';
+      if (fl.nmk) {
+        fl.nmk.style.display = nx != null ? '' : 'none';
+        if (nx != null) { fl.nmkT.setAttribute('d', 'M' + (nxc - 3.5) + ' ' + (top - 6) + 'H' + (nxc + 3.5) + 'L' + nxc + ' ' + (top - 1) + 'Z'); fl.nmkL.setAttribute('x', nxc); fl.nmkL.setAttribute('y', top - 7); }
+        const rev = /^LSB$|-L$/.test(mode || '') ? -1 : 1, ac = audioCenter(mode || '', hz) + sh;
+        for (const q of fl.scl) { const x = cx + rev * (q.hz - ac) / FLT_SPAN * fl.w; q.t.setAttribute('x', x.toFixed(1)); q.t.style.display = x > fl.x0 + 6 && x < fl.x0 + fl.w - 6 && !/FM|AM/.test(mode || '') ? '' : 'none'; }
+      }
       // VC TUNE en service : repère rouge à la position (000-255) sous le filtre
       const vcOn = !!s['vc' + sfx], vcPos = vcShown(sfx, s);
       fl.vc.style.display = vcOn ? '' : 'none';
