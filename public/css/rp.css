@@ -2153,3 +2153,6 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 .vfo-flt .mf-c { stroke: #ffffff; stroke-width: .8; opacity: .8; }
 .vfo-flt .mf-s { fill: #f4f7fb; font: 700 7.5px Arial, sans-serif; }
 .vfo-flt .mf-s.edge { fill: #ff8a3c; }
+/* Ligne STEP : VFO réglé — A sur fond vert foncé, B sur fond rose foncé (un seul à la fois) */
+#tgtA[aria-pressed='true'] { background: linear-gradient(180deg, #1f7a3a, #0f5226); border-color: #4fd17a; color: #fff; font-weight: 800; box-shadow: 0 0 8px rgba(40, 200, 100, .45); }
+#tgtB[aria-pressed='true'] { background: linear-gradient(180deg, #a3245e, #6e133d); border-color: #ff7ab3; color: #fff; font-weight: 800; box-shadow: 0 0 8px rgba(230, 60, 140, .45); }
