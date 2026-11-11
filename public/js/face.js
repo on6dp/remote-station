@@ -1108,7 +1108,7 @@
       // Rangée du bas du FTDX10 : CENTER, 3DSS, MULTI, EXPAND, SPAN, SPEED (la fonction du bouton FUNC est dans la case près du VFO-B) ;
       // FTX-1 : CENTER, 3DSS, MULTI, SCOPE (réglages du scope : SCOPE MENU), SPAN, SPEED
       const by = (n) => BOT.find((b) => b[0] === n);
-      const extra = { REF: ['REF', () => openSmenu()], '<MENU1>': ['<MENU1>', () => openSmenu()],
+      const extra = { REF: ['REF', () => openSmenu()], '<MENU1>': ['<MENU1>', () => say('<MENU1> : cette rangée de touches est le MENU 1 du scope (la rangée MENU 2 n’est pas encore sur la page).', '', 3500)], // IC-7760 : pas le SCOPE MENU des Yaesu
         // IC-7760 : le scope de la page montre le son reçu (fixe autour du VFO) ; MAIN/SUB et DUAL comme les touches du TRX
         // Comme sur l'IC-7300 : CENTER ⇄ FIX ; appui long : CENTER ⇄ SCROLL-C, FIX ⇄ SCROLL-F
         'CENT/FIX': ['CENT/FIX', () => {
