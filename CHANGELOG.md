@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.269** — IC-7760 : écran MENU, SET → Tone Control/TBW (RX/TX, tous les modes) avec fenêtres de réglage + / − comme sur le TRX
 - **0.37.268** — IC-7760 : touche MENU = écran MENU du TRX (3 rangées : SCOPE, AUDIO, VOICE, METER, SWR, MEMORY, SCAN, MPAD, RECORD, ANTENNA, PRESET, SET)
 - **0.37.267** — IC-7760 : <MENU1> n'ouvre plus le SCOPE MENU des Yaesu
 - **0.37.266** — IC-7760 : DUAL coupé = un seul scope tout de suite (plus d'attente de 1,5 s)

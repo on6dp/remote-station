@@ -115,6 +115,57 @@
     'fil', 'filB', 'filWi', 'filWiB', 'filShape', 'filShapeB', 'agcT', 'agcTB', 'sideTone', 'att', 'attB', 'ant', 'antB', 'rxAnt', 'rxAntB'];
   for (const s of SIDE) if (s[2] !== 'smeter') STATE_KEYS.push(s[2], s[2] + 'B');
   STATE_KEYS.push('smeterB', 'scSel', 'scDual');
+
+  // ------------------------------------------------------------ écran SET (1A 05 xx xx), comme sur le TRX
+  // Arborescence : EX_TREE = dossiers (clé → [titre, [[clé, libellé]…]]), EX_MENUS = listes de réglages (clé → [titre, [[n°, libellé, type]…]]),
+  // EX_PARENT = dossier du dessus (null : liste SET). Types : hl (HPF/LPF du RX), tone (−5 … +5), tbw6 (bords de la bande d'émission SSB)
+  const EX_TREE = {
+    tone: ['Tone Control/TBW', [['toneRx', 'RX'], ['toneTx', 'TX']]],
+    toneRx: ['RX', [['rxSsb', 'SSB'], ['rxAm', 'AM'], ['rxFm', 'FM'], ['rxCw', 'CW'], ['rxRtty', 'RTTY'], ['rxPsk', 'PSK']]],
+    toneTx: ['TX', [['txSsb', 'SSB'], ['txSsbD', 'SSB-D'], ['txAm', 'AM'], ['txFm', 'FM']]]
+  };
+  const EX_MENUS = {
+    rxSsb: ['SSB', [[1, 'RX HPF/LPF', 'hl', 'SSB RX HPF/LPF'], [2, 'RX Bass', 'tone'], [3, 'RX Treble', 'tone']]],
+    rxAm: ['AM', [[4, 'RX HPF/LPF', 'hl', 'AM RX HPF/LPF'], [5, 'RX Bass', 'tone'], [6, 'RX Treble', 'tone']]],
+    rxFm: ['FM', [[7, 'RX HPF/LPF', 'hl', 'FM RX HPF/LPF'], [8, 'RX Bass', 'tone'], [9, 'RX Treble', 'tone']]],
+    rxCw: ['CW', [[10, 'RX HPF/LPF', 'hl', 'CW RX HPF/LPF']]],
+    rxRtty: ['RTTY', [[11, 'RX HPF/LPF', 'hl', 'RTTY RX HPF/LPF']]],
+    rxPsk: ['PSK', [[12, 'RX HPF/LPF', 'hl', 'PSK RX HPF/LPF']]],
+    txSsb: ['SSB', [[13, 'TX Bass', 'tone'], [14, 'TX Treble', 'tone'], [15, 'TBW (WIDE)', 'tbw6'], [16, 'TBW (MID)', 'tbw6'], [17, 'TBW (NAR)', 'tbw6']]],
+    txSsbD: ['SSB-D', [[18, 'TBW', 'tbw6']]],
+    txAm: ['AM', [[19, 'TX Bass', 'tone'], [20, 'TX Treble', 'tone']]],
+    txFm: ['FM', [[21, 'TX Bass', 'tone'], [22, 'TX Treble', 'tone']]]
+  };
+  const EX_PARENT = { tone: null, toneRx: 'tone', toneTx: 'tone' };
+  for (const k in EX_MENUS) EX_PARENT[k] = k.startsWith('rx') ? 'toneRx' : 'toneTx';
+  const EX = {};
+  for (const k in EX_MENUS) for (const it of EX_MENUS[k][1]) EX[it[0]] = { n: it[0], label: it[1], title: it[3] || (EX_MENUS[k][0] + ' ' + it[1]), type: it[2], opts: null, rw: true, menu: k };
+  const TBW_LO = [100, 120, 150, 200, 300, 500], TBW_HI = [2500, 2700, 2800, 2900];
+  const exFmt = (it, raw) => {
+    if (raw == null || raw === '') return '—';
+    const v = Number(raw), t = it.type;
+    if (t === 'tone') return (v > 5 ? '+' : '') + (v - 5);
+    if (t === 'hl') { const h = Math.floor(v / 100), l = v % 100; return (h ? h * 100 : '----') + ' - ' + (l >= 25 ? '----' : l * 100); }
+    if (t === 'tbw6') { const lo = Math.floor(v / 10), hi = v % 10; return TBW_LO[lo] + ' - ' + TBW_HI[hi]; }
+    return String(raw);
+  };
+  function exOk(it, raw) {
+    const v = Number(raw), t = it.type;
+    if (!Number.isInteger(v)) return false;
+    if (t === 'tone') return v >= 0 && v <= 10;
+    if (t === 'hl') { const h = Math.floor(v / 100), l = v % 100; return h >= 0 && h <= 20 && l >= 5 && l <= 25 && (h === 0 || l === 25 || h * 100 < l * 100); }
+    if (t === 'tbw6') return Math.floor(v / 10) <= 5 && v % 10 <= 3;
+    return false;
+  }
+  function exBytes(it, raw) {
+    const v = Number(raw), t = it.type;
+    if (t === 'hl') return [bcd(Math.floor(v / 100)), bcd(v % 100)];
+    if (t === 'tbw6') return [(Math.floor(v / 10) << 4) | (v % 10)];
+    return [bcd(v)];
+  }
+  const exRaw = (it, v) => v % 100000;
+  const exCode = (it, raw) => it.n * 100000 + Number(raw);
+  const STR_KEYS = Object.keys(EX).map((n) => 'ex' + n);
   for (const k of ['scMode', 'scSpan', 'scEdge', 'scHold']) STATE_KEYS.push(k, k + 'B');
 
   // CW PITCH : 0–255 = 300–900 Hz (pas de 5 Hz) ; KEY SPEED : 0–255 = 6–48 mots/min
@@ -153,6 +204,17 @@
     { id: 'aToB', g: 'vfo', label: 'A = B', type: 'action', write: () => q(0x07, 0xB1) }, // « Equalize Main and Sub bands »
     // XFC de la face avant : en SPLIT, MAIN et SUB échangés tant qu'on tient la touche (07 B0 à l'appui, 07 B0 au relâchement)
     { id: 'xfc', g: 'vfo', label: 'XFC', type: 'action', face: true, write: () => q(0x07, 0xB0) },
+    // Écran SET : relit un réglage 1A 05 (sans rien changer) ; exSet : n° × 100000 + valeur brute, refusé hors du tableau EX
+    { id: 'exRead', g: 'vfo', label: 'Lecture réglage SET', type: 'level', min: 1, max: 9999, step: 1, face: true,
+      check: (v) => { if (!EX[v]) throw new Error('réglage inconnu'); }, write: (v) => q(0x1A, 0x05, bcd(Math.floor(v / 100)), bcd(v % 100)) },
+    { id: 'exSet', g: 'vfo', label: 'Réglage SET', type: 'level', min: 100000, max: 999999999, step: 1, face: true,
+      check: (v) => {
+        const it = EX[Math.floor(v / 100000)];
+        if (!it) throw new Error('réglage inconnu');
+        if (!it.rw) throw new Error(it.label + ' : lecture seule à distance');
+        if (!exOk(it, exRaw(it, v))) throw new Error(it.label + ' : valeur hors plage');
+      },
+      write: (v) => { const it = EX[Math.floor(v / 100000)]; return q(0x1A, 0x05, bcd(Math.floor(it.n / 100)), bcd(it.n % 100), ...exBytes(it, exRaw(it, v))); } },
     { id: 'rit', g: 'vfo', label: 'RIT', type: 'toggle', write: setOn(0x21, 0x01) },
     { id: 'xit', g: 'vfo', label: 'XIT', type: 'toggle', write: setOn(0x21, 0x02) },
     {
@@ -244,6 +306,7 @@
       { id: 'scHold' + x, g: 'rx', label: 'HOLD du scope' + n, type: 'toggle', face: true, write: (v) => q(0x27, 0x17, b, v ? 1 : 0) });
     READ_FOR['scMode' + x] = q(0x27, 0x14, b); READ_FOR['scSpan' + x] = q(0x27, 0x15, b); READ_FOR['scEdge' + x] = q(0x27, 0x16, b); READ_FOR['scHold' + x] = q(0x27, 0x17, b);
   }
+  for (const n in EX) READ_FOR['ex' + n] = q(0x1A, 0x05, bcd(Math.floor(n / 100)), bcd(n % 100));
   READ_FOR.sideTone = q(...SIDETONE); READ_FOR.filWi = qs(0, 0x1A, 0x03); READ_FOR.filWiB = qs(1, 0x1A, 0x03); READ_FOR.rxAnt = qs(0, 0x12); READ_FOR.rxAntB = qs(1, 0x12); READ_FOR.agcT = qs(0, 0x1A, 0x04); READ_FOR.agcTB = qs(1, 0x1A, 0x04);
   READ_FOR.scSel = q(0x27, 0x12); READ_FOR.scDual = q(0x27, 0x13);
   const CONTROL = {};
@@ -350,6 +413,11 @@
     // 1A 04 : constante de temps de l'AGC choisie (mode et FAST/MID/SLOW en cours) : 00 OFF, 01 – 13 (tableau p. 19 du guide CI-V)
     if (c === 0x1A && d[0] === 0x04 && d.length >= 2) return { agcT: unbcd(d[1]) };
     if (c === 0x1A && d[0] === 0x05 && d[1] === 0x02 && d[2] === 0x86 && d.length >= 5) return { sideTone: lvlValue(d, 3) };
+    if (c === 0x1A && d[0] === 0x05 && d.length >= 4 && EX[unbcd(d[1]) * 100 + unbcd(d[2])]) {
+      const n = unbcd(d[1]) * 100 + unbcd(d[2]), it = EX[n], b = d.slice(3);
+      const raw = it.type === 'hl' ? (b.length >= 2 ? unbcd(b[0]) * 100 + unbcd(b[1]) : null) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F) : unbcd(b[0]);
+      return raw == null ? { ok: true } : { ['ex' + n]: String(raw) };
+    }
     if (c === 0x1A) return { ok: true };
     if (c === 0x00 && d.length >= 5) return { ok: true }; // transceive : relu par 25 00 / 25 01
     if (c === 0x01) return { ok: true };
@@ -547,6 +615,11 @@
           if (t[key] == null) t[key] = [[3, 8, 13], [1, 4, 6], [8, 10, 12]][gp][ag - 1];
           if (d.length === 1) r(0x04, bcd(t[key])); else { t[key] = unbcd(d[1]); ok(); }
         }
+      } else if (c === 0x1A && d[0] === 0x05 && d.length >= 3 && EX[unbcd(d[1]) * 100 + unbcd(d[2])]) {
+        // Réglages SET du simulateur : valeurs d'usine, gardées si on les change
+        const n = unbcd(d[1]) * 100 + unbcd(d[2]), it = EX[n], ex = (this.ex = this.ex || {});
+        if (d.length === 3) { const raw = ex[n] != null ? ex[n] : { hl: n === 10 || n === 11 || n === 12 ? 525 : 525, tone: 5, tbw6: n === 15 ? 1 : n === 16 ? 21 : n === 17 ? 30 : 1 }[it.type]; r(0x05, d[1], d[2], ...exBytes(it, raw)); }
+        else { const b = d.slice(3); ex[n] = it.type === 'hl' ? unbcd(b[0]) * 100 + unbcd(b[1]) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F) : unbcd(b[0]); ok(); }
       } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x02 && d[2] === 0x86) {
         if (d.length === 3) r(0x05, 0x02, 0x86, ...lvlBytes(this.st != null ? this.st : 128)); else { this.st = lvlValue(d, 3); ok(); }
       } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x01 && d[2] === 0x29) {
@@ -600,7 +673,8 @@
 
   const api = {
     ID, NAME, MODES, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX, POWER_RANGE, POWER_STEP, INIT,
-    FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS,
+    FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS, STR_KEYS,
+    EX, EX_MENUS, EX_TREE, EX_PARENT, exFmt, exOk, exCode,
     GROUPS, CONTROLS, CONTROL, validate, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
     smeterLabel, swrValue, vdValue, idValue, poFrac, filHz, bwText,
     // Badges du récepteur SUB sur le dashboard (deux récepteurs, comme le FTDX101)
