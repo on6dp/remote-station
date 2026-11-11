@@ -61,7 +61,7 @@
       if (r.widthCodeB != null) r.widthB = wRank(r.modeB, r.widthCodeB);
     },
     readForState: (id, st) => (['rit', 'xit', 'clar', 'clarClr'].indexOf(id) >= 0 ? (st.vfoSel === 1 ? 'OI;' : 'IF;')
-      : id === 'split' || id === 'txVfo' ? 'FT;' : id === 'width' ? 'SH0;' : id === 'widthB' ? 'SH1;' : id === 'roof' ? 'RF0;' : id === 'roofB' ? 'RF1;' : id === 'lock' || id === 'lockB' ? 'LK;' : null),
+      : id === 'split' || id === 'txVfo' ? 'FT;' : id === 'width' ? 'SH0;' : id === 'widthB' ? 'SH1;' : id === 'roof' ? 'RF0;' : id === 'roofB' ? 'RF1;' : id === 'ant' ? 'AN0;' : id === 'antB' ? 'AN1;' : id === 'lock' || id === 'lockB' ? 'LK;' : null),
     widthTable(mode) {
       if (isSsb(mode)) return SSB_24;
       if (Y.NARROW_MODES.indexOf(mode) >= 0) return NAR_16;
@@ -121,6 +121,8 @@
       { cmd: 'NR0;', re: /^NR0([01])$/, parse: (m) => ({ nr: +m[1] }), sim: 'NR00' },
       // Antenne : AN P1 → AN P1 P3 P4 (P3 = ANT 1-4, P4 = RX ANT)
       { cmd: 'AN0;', re: /^AN0([1-4])([01])?$/, parse: (m) => (m[2] != null ? { ant: +m[1], rxAnt: +m[2] } : { ant: +m[1] }), sim: 'AN010' },
+      // VFO-B (SUB) : AN 1 → AN 1 P3 P4 (manuel CAT : P1 = 1 Sub (VFO-B) Band)
+      { cmd: 'AN1;', re: /^AN1([1-4])([01])?$/, parse: (m) => (m[2] != null ? { antB: +m[1], rxAntB: +m[2] } : { antB: +m[1] }), sim: 'AN110' },
       { cmd: 'FR;', re: /^FR([0-3])$/, parse: (m) => ({ dualRx: +m[1] >= 2 ? 1 : 0, mainMute: +m[1] & 1 }), sim: 'FR2' },
       // Côté SUB (VFO B) : P1 = 1
       { cmd: 'SH1;', re: /^SH1(\d{2})$/, parse: (m) => ({ widthCodeB: +m[1] }), sim: 'SH113' },
@@ -150,10 +152,10 @@
       { cmd: 'VD;', re: /^VD(\d{4})$/, parse: (m) => ({ voxDelay: +m[1] }), sim: 'VD0500' }
     ],
     fastExtra: ['FR;'],
-    extraQueries: ['ID;', 'IF;', 'OI;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RI0;', 'BY;'],
+    extraQueries: ['ID;', 'IF;', 'OI;', 'AN0;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RI0;', 'BY;'],
     extraStateKeys: ['clarA', 'ritA', 'xitA', 'clarB', 'ritB', 'xitB', 'lockB', 'widthCode', 'widthCodeB', 'widthB', 'narrowB', 'nbB', 'nrB', 'dnfB', 'notchB',
       'agcB', 'rfB', 'afB', 'shiftB', 'attB', 'preampB', 'nbLvl', 'nrLvl', 'mainMute', 'bkin', 'keyer', 'cwPitch',
-      'sqlB', 'nbLvlB', 'moniLvl', 'keySpeed', 'voxGain', 'voxDelay', 'roof', 'roofB', 'roofAuto', 'roofAutoB'],
+      'sqlB', 'nbLvlB', 'moniLvl', 'keySpeed', 'voxGain', 'voxDelay', 'roof', 'roofB', 'roofAuto', 'roofAutoB', 'antB', 'rxAntB'],
     subBadges: true,
     // Phonie à distance : « SSB MIC SELECT » (menu 103) sur DATA (prise de l'interface son) le temps de l'émission,
     // puis remis comme avant (FRONT = micro de la face avant)
@@ -195,6 +197,7 @@
       { id: 'roof', g: 'flt', label: 'R.FLT (VFO A)', type: 'select', options: ROOF_SET, write: (v) => 'RF0' + v + ';' },
       { id: 'roofB', g: 'flt', label: 'R.FLT (VFO B)', type: 'select', options: ROOF_SET.slice(0, 4), write: (v) => 'RF1' + v + ';' },
       { id: 'ant', g: 'rx', label: 'Antenne', type: 'select', noTx: true, options: [[1, 'ANT 1'], [2, 'ANT 2'], [3, 'ANT 3'], [4, 'ANT 4']], write: (v) => 'AN0' + v + ';' },
+      { id: 'antB', g: 'rx', label: 'Antenne (VFO B)', type: 'select', noTx: true, options: [[1, 'ANT 1'], [2, 'ANT 2'], [3, 'ANT 3'], [4, 'ANT 4']], write: (v) => 'AN1' + v + ';' },
       // Côté SUB (VFO B)
       { id: 'widthB', g: 'flt', label: 'WIDTH (VFO B)', type: 'width', modeKey: 'modeB', write: (v, s) => 'SH1' + pad(wCode(s && s.modeB, v), 2) + ';',
         when: (s) => !!api.widthTableFn && !!api.widthTableFn(s.modeB) && !s.narrowB },
@@ -242,6 +245,8 @@
       if (c === 'SM1') { out.push('SM1' + pad(f.fr5 != null && f.fr5 < 2 ? 0 : Math.round(60 + 30 * Math.sin((f.t || 0) * 0.5)), 3) + ';'); return true; }
       if ((m = /^LK([0-3])$/.exec(c))) { f.ans['LK;'] = c; return true; }
       if (c === 'ID') { out.push('ID0362;'); return true; }
+      // Antenne : AN P1 P2 (P2 1-4), relu AN P1 P3 P4
+      if ((m = /^AN([01])([1-4])$/.exec(c))) { f.ans['AN' + m[1] + ';'] = 'AN' + m[1] + m[2] + '0'; return true; }
       // R.FLT : réglage 0-5, relu 1-A (AUTO choisi : 15 kHz en SSB / AM / FM, 3 kHz ailleurs dans le simulateur)
       if ((m = /^RF([01])([0-5])$/.exec(c))) { const v = +m[2]; f.ans['RF' + m[1] + ';'] = 'RF' + m[1] + (v === 0 ? '4' : '12378'[v - 1]); return true; }
       return false;

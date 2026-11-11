@@ -116,10 +116,8 @@
     const b = sd === 'B' ? 'B' : '';
     const live = (s) => !b || subOn(s);
     const m = (re) => (s) => live(s) && re.test(sideMode(s, b));
-    if (!b) {
-      for (let i = 0; i < 4; i++) vg('A.ant.' + i, GT, (s) => s.ant === i + 1);
-      vg('A.rx', GT, (s) => !!s.rxAnt);
-    }
+    for (let i = 0; i < 4; i++) vg(sd + '.ant.' + i, GT, (s) => live(s) && s['ant' + b] === i + 1);
+    vg(sd + '.rx', GT, (s) => live(s) && !!s['rxAnt' + b]);
     for (let i = 0; i < 4; i++) vg(sd + '.att.' + i, GT, (s) => live(s) && s['att' + b] === i);
     IPOS.forEach((t, i) => vg(sd + '.ipo.' + t, GT, (s) => live(s) && s['preamp' + b] === i));
     AGCS.forEach((t, i) => vg(sd + '.agc.' + t, GT, (s) => live(s) && s['agc' + b] === i));
@@ -190,7 +188,7 @@
       key({ id: 'vox', x: 22, y: 212, w: 24, h: 16, tip: 'VOX (ne peut être que coupé à distance)', act: { toggle: 'vox' }, on: (s) => !!s.vox }),
       key({ id: 'proc', x: 58, y: 212, w: 24, h: 16, tip: 'PROC : processeur de modulation', act: { toggle: 'proc' }, on: (s) => !!s.proc }),
       { id: 'rxAnt', x: 108, y: 152, w: 23, h: 24, tip: 'RX (antenne de réception séparée)', act: info('RX ANT : prise d’antenne de réception séparée, réglage au club.') },
-      key({ id: 'ant', x: 150, y: 152, w: 29, h: 24, tip: 'ANT 1-4 : antenne suivante (pas pendant une émission)', act: { cycle: 'ant' }, on: (s) => s.ant != null && s.ant > 1 }),
+      key({ id: 'ant', x: 150, y: 152, w: 29, h: 24, tip: 'ANT 1-4 : antenne suivante du VFO choisi par A / B (pas pendant une émission)', act: { cycle: 'ant', sided: true }, on: (s) => sbk('ant')(s) != null && sbk('ant')(s) > 1 }),
       // ATT, IPO, R.FLT, AGC : récepteur choisi par les touches A / B (VFO-A = MAIN, VFO-B = SUB), comme sur le TRX
       key({ id: 'att', x: 192, y: 152, w: 28, h: 24, tip: 'ATT : OFF → 6 → 12 → 18 dB (VFO choisi par A / B)', act: { cycle: 'att', sided: true }, on: (s) => !!sbk('att')(s) }),
       key({ id: 'ipo', x: 249, y: 152, w: 28, h: 24, tip: 'IPO : IPO1 → AMP1 → AMP2 → IPO2 (VFO choisi par A / B)', act: { cycle: 'preamp', sided: true }, on: (s) => sbk('preamp')(s) === 1 || sbk('preamp')(s) === 2 }),
