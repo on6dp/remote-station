@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.318** — Dashboard : graduations du petit filtre (bas · centre · haut) en blanc gras
 - **0.37.317** — Dashboard : SFT à côté de BW au-dessus du S-mètre, petit filtre encadré de blanc et plus haut, chiffres de fréquence réduits pour lui laisser la place
 - **0.37.316** — Dashboard : « BANDES » au lieu de « BANDS », STEP et BANDES un peu plus grands
 - **0.37.315** — Dashboard : VFO A sur fond vert foncé, VFO B sur fond rose foncé (ligne STEP)
