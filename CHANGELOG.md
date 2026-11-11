@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.311** — Dashboard : bouton SPLIT enclenché sur fond orange, SPLIT en blanc gras
 - **0.37.310** — Dashboard : « TX VFO-A (MAIN) » / « TX VFO-B (SUB) », fond orange en SPLIT
 - **0.37.309** — Carnet : colonnes déplaçables à la souris ; cases des VFO arrondies à bord clair
 - **0.37.308** — Carnet : séparations des colonnes visibles, ▾ de tri / filtre plus grand
