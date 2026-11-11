@@ -2985,6 +2985,7 @@
     const x0 = DICOM ? X(57) : X(6), y0 = DICOM ? Y(I76_FTOP) : Y(4), w = DICOM ? c.w - 59 : c.w - 12, h = DICOM ? c.h - I76_FTOP - 2 : c.h - 8;
     el('rect', { x: x0, y: y0, width: w, height: h, rx: DICOM ? 0 : 4, class: 'mm-bg' }, m);
     if (DICOM) {
+      el('rect', { x: X(3), y: Y(G.botY - 1), width: 55, height: G.botH + 2, class: 'mm-bg' }, m); // pas de « <MENU1> » sous la colonne de gauche
       el('rect', { x: x0, y: y0, width: w, height: 13, class: 'i76agc-tb' }, m);
       el('text', { x: x0 + w / 2, y: y0 + 10, class: 'i76agc-ttl', 'text-anchor': 'middle' }, m, 'FUNCTION');
     } else {
@@ -3792,13 +3793,14 @@
     };
     LCD.mtVd = gauge(y0 + 48, 'Vd', '44', '52V', 0.29, 0.86);
     LCD.mtTemp = gauge(y0 + 80, 'TEMP', 'COOL', 'HOT', 0.12, 0.88);
-    // Rangée du bas : P-HOLD et touches vides, comme sur le TRX
-    const kb = y0 + h - 21, kw = (w - 4) / 6;
-    for (let i = 0; i < 6; i++) {
-      el('rect', { x: x0 + 2 + i * kw + 1.5, y: kb, width: kw - 3, height: 19, rx: 3, class: 'lcd-bot i76b' }, m);
+    // Rangée du bas, sur toute la largeur de l'écran (à la place de <MENU1> SPAN…) : P-HOLD et touches vides, comme sur le TRX
+    const kb = Y(G.botY), kx = X(5), kw = (c.w - 10) / 7;
+    el('rect', { x: X(3), y: kb - 1, width: c.w - 6, height: G.botH + 2, class: 'mm-bg' }, m);
+    for (let i = 0; i < 7; i++) {
+      el('rect', { x: kx + i * kw + 1.5, y: kb + 1, width: kw - 3, height: G.botH - 2, rx: 3, class: 'lcd-bot i76b' }, m);
       if (!i) {
-        LCD.mtPhK = el('text', { x: x0 + 2 + kw / 2, y: kb + 13.5, class: 'lcd-bott i76bt', 'text-anchor': 'middle' }, m, 'P-HOLD');
-        const hh = el('rect', { x: x0 + 2, y: kb, width: kw, height: 19, class: 'hs lcd-hit' }, m);
+        LCD.mtPhK = el('text', { x: kx + kw / 2, y: kb + G.botH / 2 + 4, class: 'lcd-bott i76bt', 'text-anchor': 'middle' }, m, 'P-HOLD');
+        const hh = el('rect', { x: kx, y: kb, width: kw, height: G.botH, class: 'hs lcd-hit' }, m);
         el('title', {}, hh, 'P-HOLD : maintien des crêtes (sur la page)');
         hh.addEventListener('click', (ev) => { ev.stopPropagation(); L.pHold = !L.pHold; render(); });
       }
