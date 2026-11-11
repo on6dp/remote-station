@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.277** — IC-7760 : MULTI-FUNCTION METER (P-HOLD sur toute la largeur) ; TRX muet : rappel du RF deck (alimenté et relié à la tête de commande)
 - **0.37.276** — IC-7760 : MULTI-FUNCTION METER (MENU → METER) avec sa rangée du bas P-HOLD sur toute la largeur ; FUNCTION sans <MENU1> sous la colonne de gauche
 - **0.37.275** — IC-7760 : MENU → METER = MULTI-FUNCTION METER sous le scope (S, Po, ALC, COMP, SWR, Id, S du SUB, Vd, TEMP, P-HOLD)
 - **0.37.274** — IC-7760 : MENU, SET Tone Control/TBW, FUNCTION ; NOTCH (colonne, MN (WIDE), repère N) ; NB / NR : clic = ON/OFF, appui d'1 s = colonne de réglages (NB LEVEL/DEPTH/WIDTH, NR LEVEL 0–15)

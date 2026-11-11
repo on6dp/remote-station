@@ -721,7 +721,8 @@
     DUAL_AUDIO: false,
     Fake,
     serial: { baudRate: 115200, stopBits: 1, portHint: 'USB (A) : 1er des deux ports COM du port [USB B] de la tête de commande' },
-    hint: 'IC-7760 : câble USB entre le port [USB B] à l’arrière de la tête de commande et le PC (pilote USB Icom). Choisissez le 1er des deux ports COM (USB (A)). MENU → SET → Connectors → CI-V : « CI-V USB (A) Echo Back » = OFF, adresse CI-V B2h. « USB SEND » et « USB Keying » sur OFF. USB AF/IF Output : « Output Select » = AF. Modes numériques : MOD Input → « DATA1 MOD » = USB.'
+    hint: 'IC-7760 : câble USB entre le port [USB B] à l’arrière de la tête de commande et le PC (pilote USB Icom). Choisissez le 1er des deux ports COM (USB (A)). MENU → SET → Connectors → CI-V : « CI-V USB (A) Echo Back » = OFF, adresse CI-V B2h. « USB SEND » et « USB Keying » sur OFF. USB AF/IF Output : « Output Select » = AF. Modes numériques : MOD Input → « DATA1 MOD » = USB. Si le TRX ne répond pas : vérifier que le RF deck (le gros boîtier) est alimenté et relié à la tête de commande, puis redémarrer l’IC-7760 (sinon il affiche « The RF deck is not detected »).',
+    muteHint: 'TRX muet : RF deck alimenté et relié à la tête ?'
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else {

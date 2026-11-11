@@ -6592,7 +6592,7 @@
     if (activeSide() === 'B' && R && R.CONTROL.lockB ? s.lockB : s.lock) fl.push('LOCK');
     if (s.proc) fl.push('PROC');
     if (L.fine) fl.push('FINE'); else if (L.fast) fl.push('FAST');
-    LCD.flags.textContent = live ? fl.join('  ·  ') : (st.station ? 'TRX muet (éteint ou câble ?)' : 'Station hors ligne');
+    LCD.flags.textContent = live ? fl.join('  ·  ') : (st.station ? (R.muteHint || 'TRX muet (éteint ou câble ?)') : 'Station hors ligne') // IC-7760 : RF deck pas relié ?;
     LCD.flags.classList.toggle('tx', tx);
     // FTX-1 : bandeau du scope comme sur le TRX — « CENTER  FAST1  SPAN  200kHz » (D-MODE, SPEED, SPAN du TRX)
     // FTX-1 : fonction du bouton FUNC (SF) suivie dans les deux sens : celle choisie au TRX s'affiche ici (ex. D-COLOR),
