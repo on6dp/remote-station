@@ -156,13 +156,13 @@
     send({ t: 'set', mode: code, sub: activeSide() === 'B' });
   }
   const CYCLE = (FACE && FACE.cycle) || ['LSB', 'USB', 'CW-U', 'CW-L', 'AM', 'FM', 'DATA-U', 'DATA-L', 'RTTY-L', 'RTTY-U', 'PSK'];
-  // Touche « sided » (IC-7760) : la commande du récepteur sélectionné (NB → NB du SUB quand SUB est sélectionné)
+  // Touche « sided » (IC-7760, FTDX5000) : la commande du récepteur sélectionné (NB → NB du SUB quand SUB est sélectionné)
   function sidedAct(a) {
     if (!a || !a.sided || activeSide() !== 'B') return a;
     const b = (id) => (R.CONTROL[id + 'B'] ? id + 'B' : id);
     const o = Object.assign({}, a);
     if (o.toggle) o.toggle = b(o.toggle);
-    if (o.cycle) o.cycle = b(o.cycle);
+    if (o.cycle) { if (o.auto && o.cycle !== b(o.cycle)) o.auto += 'B'; o.cycle = b(o.cycle); }
     if (o.pop) o.pop = b(o.pop);
     if (o.long) o.long = sidedAct(Object.assign({ sided: true }, o.long));
     return o;
