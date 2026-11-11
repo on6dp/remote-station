@@ -1645,6 +1645,9 @@
   // IC-7760 : régions du canevas — DUAL (les deux scopes reçus récemment) : MAIN en haut, SUB en bas ; sinon le scope reçu en entier
   function rf76Regions(W, H) {
     const now = Date.now(), a = now - RFSS[0].at < 1500, b = now - RFSS[1].at < 1500;
+    // DUAL coupé (sur la page ou au TRX) : tout de suite un seul scope, celui du récepteur sélectionné (sans attendre la fin des trames de l'autre)
+    const st = S();
+    if (st.scDual === 0) { const sel = activeSide() === 'B' ? 1 : 0; return [{ sd: (sel ? b : a) || !(sel ? a : b) ? sel : 1 - sel, y0: 0, h: H }]; }
     if (a && b) { const h1 = Math.floor(H / 2) - 1; return [{ sd: 0, y0: 0, h: h1 }, { sd: 1, y0: h1 + 2, h: H - h1 - 2 }]; }
     return [{ sd: a || !b ? 0 : 1, y0: 0, h: H }];
   }

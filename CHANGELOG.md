@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.266** — IC-7760 : DUAL coupé = un seul scope tout de suite (plus d'attente de 1,5 s)
 - **0.37.265** — IC-7760 : voyants TX/RX — rouge pour le VFO qui émet, l'autre vert s'il reçoit (SPLIT ou DUAL-W)
 - **0.37.264** — IC-7760 : RFG ; petits voyants comme sur le TRX (POWER bleu, TUNER/NB/NR/APF/NOTCH blancs, VOX/BK-IN bleu)
 - **0.37.263** — IC-7760 : RFG quand le gain HF n'est pas au maximum ; voyant POWER bleu et voyant blanc de TUNER comme sur le TRX
