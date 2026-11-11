@@ -3160,7 +3160,7 @@
       if (!k3) return;
       const bx = x0 + 14 + ci * mw, by = y0 + 22 + ri * mh3;
       const b = btn(gm, bx + 5, by + 2, mw - 10, mh3 - 8, k3 === 'BACK' ? '↩' : k3, () => (k3 === 'BACK' ? (L.i76pop = null, render()) : modeKey(k3)),
-        { SSB: 'SSB : LSB sous 10 MHz, USB au-dessus', CW: 'CW ⇄ CW-R', RTTY: 'RTTY ⇄ RTTY-R', PSK: 'PSK ⇄ PSK-R', AM: 'AM', FM: 'FM', DATA: 'DATA : mode données (SSB, AM, FM) ON / OFF', BACK: 'Retour (comme EXIT)' }[k3]);
+        { SSB: 'SSB : LSB sous 10 MHz, USB au-dessus', CW: 'CW ⇄ CW-R', RTTY: 'RTTY ⇄ RTTY-R', PSK: 'PSK ⇄ PSK-R', AM: 'AM', FM: 'FM', DATA: 'DATA : USB-D1 (même sous 10 MHz)', BACK: 'Retour (comme EXIT)' }[k3]);
       if (k3 === 'BACK') b.t.classList.add('i76bk');
       LCD.popModeB[k3] = b;
     }));
@@ -3182,10 +3182,7 @@
     else if (k === 'PSK') code = base === '12' ? '13' : '12';
     else if (k === 'AM') code = '02';
     else if (k === 'FM') code = '05';
-    else if (k === 'DATA') {
-      if (!['00', '01', '02', '05'].includes(base)) return say('DATA : seulement en SSB, AM ou FM.', '', 3000);
-      code = base + (dat ? '' : 'D');
-    }
+    else if (k === 'DATA') code = dat && base === '01' ? (f < 10e6 ? '00' : '01') : '01D'; // DATA : toujours USB-D1 (même sous 10 MHz) ; 2e clic : retour en SSB
     if (!code || !R.MODES[code]) return;
     send({ t: 'set', mode: code, sub: p.sd === 'B' });
     L.popModeAt = { code, at: Date.now(), sd: p.sd };
@@ -3604,6 +3601,7 @@
     if (!LCD.i76) return;
     const single = !s.scDual;
     i76Layout(single);
+    for (const sd of ['A', 'B']) { const t = LCD['v' + sd].mode; if (/-D$/.test(t.textContent)) t.textContent += '1'; } // DATA1 du TRX : « USB-D1 »
     drawI76Multi(s);
     agcCur(s); // suit le mode / FAST-MID-SLOW même tableau fermé (valeur relue fiable à l'ouverture)
     drawI76Agc(s);
