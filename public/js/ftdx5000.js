@@ -38,6 +38,9 @@
   // État : roof = filtre en service (1 15k, 2 6k, 3 3k, 4 600, 5 300), roofAuto = 1 en AUTO
   const ROOF_ANS = { 1: [1, 0], 2: [2, 0], 3: [3, 0], 4: [1, 1], 5: [2, 1], 6: [3, 1], 7: [4, 0], 8: [5, 0], 9: [4, 1], A: [5, 1] };
   const ROOF_SET = [[0, 'AUTO'], [1, '15 kHz'], [2, '6 kHz'], [3, '3 kHz'], [4, '600 Hz'], [5, '300 Hz']];
+  // CO : nombre de chiffres de P3 repris de la réponse du TRX (manuel ambigu) ; par défaut ceux des valeurs listées (000 – 002, 01 – 40)
+  const coSet = (side, v, s) => 'CO' + side + '0' + pad(v, (s && s.coDig) || 3) + ';';
+  const coFreq = (side, hz, s) => { const d = (s && s.coFDig) || 2, n = d >= 3 && hz > 40 && s && s.coFHz ? hz : Math.round(hz / 100); return 'CO' + side + '1' + pad(Math.max(1, Math.min(d >= 4 ? 4000 : 40, n)), d) + ';'; };
   const roofParse = (b) => (m) => { const r = ROOF_ANS[m[1]]; return r ? { ['roof' + b]: r[0], ['roofAuto' + b]: r[1] } : {}; };
   const AGC = [[0, 'OFF'], [1, 'FAST'], [2, 'MID'], [3, 'SLOW'], [4, 'AUTO']];
   // FR (FUNCTION RX) : 0 = MAIN seul, 1 = MAIN coupé (SUB coupé), 2 = MAIN + SUB, 3 = SUB seul (MAIN coupé)
@@ -61,7 +64,7 @@
       if (r.widthCodeB != null) r.widthB = wRank(r.modeB, r.widthCodeB);
     },
     readForState: (id, st) => (['rit', 'xit', 'clar', 'clarClr'].indexOf(id) >= 0 ? (st.vfoSel === 1 ? 'OI;' : 'IF;')
-      : id === 'split' || id === 'txVfo' ? 'FT;' : id === 'width' ? 'SH0;' : id === 'widthB' ? 'SH1;' : id === 'roof' ? 'RF0;' : id === 'roofB' ? 'RF1;' : id === 'ant' ? 'AN0;' : id === 'antB' ? 'AN1;' : id === 'lock' || id === 'lockB' ? 'LK;' : null),
+      : id === 'split' || id === 'txVfo' ? 'FT;' : id === 'width' ? 'SH0;' : id === 'widthB' ? 'SH1;' : id === 'roof' ? 'RF0;' : id === 'roofB' ? 'RF1;' : id === 'ant' ? 'AN0;' : id === 'antB' ? 'AN1;' : id === 'contour' || id === 'apf' ? 'CO00;' : id === 'contourB' || id === 'apfB' ? 'CO10;' : id === 'contourFreq' ? 'CO01;' : id === 'contourFreqB' ? 'CO11;' : id === 'lock' || id === 'lockB' ? 'LK;' : null),
     widthTable(mode) {
       if (isSsb(mode)) return SSB_24;
       if (Y.NARROW_MODES.indexOf(mode) >= 0) return NAR_16;
@@ -98,7 +101,9 @@
       'ST;': null, // pas de commande ST sur le FTDX5000
       'CF000;': null,
       'CF001;': null,
-      'CO00;': null, // CONTOUR / APF : format de CO pas assez clair dans le manuel, pas utilisé
+      // CONTOUR / APF : lus avec les lectures « CO P1 P2; » ci-dessous (le manuel ne fixe pas le nombre de chiffres de P3 :
+      // la page reprend celui de la réponse du TRX pour ses réglages)
+      'CO00;': null,
       'CO02;': null,
       'LK;': { re: /^LK([0-7])$/, parse: (m) => { const v = +m[1]; return v >= 4 ? { lock: v & 1, lockB: (v >> 1) & 1 } : { lock: v === 1 ? 1 : 0, lockB: v === 3 ? 1 : 0 }; }, sim: 'LK0' },
       'SH0;': { re: /^SH0(\d{2})$/, parse: (m) => ({ widthCode: +m[1] }), sim: 'SH013' },
@@ -133,6 +138,11 @@
       { cmd: 'BP10;', re: /^BP10(\d{3})$/, parse: (m) => ({ notchB: +m[1] ? 1 : 0 }), sim: 'BP10000' },
       { cmd: 'RF0;', re: /^RF0([1-9A])$/, parse: roofParse(''), sim: 'RF04' },
       { cmd: 'RF1;', re: /^RF1([1-9A])$/, parse: roofParse('B'), sim: 'RF16' },
+      // CONTOUR / APF (CO P1 P2 ; manuel CAT) — P2 = 0 : P3 000 OFF, 001 CONTOUR ON, 002 APF ON ; P2 = 1 : fréquence du CONTOUR 01 – 40 (100 – 4000 Hz)
+      { cmd: 'CO00;', re: /^CO00(\d{2,4})$/, parse: (m) => ({ contour: +m[1] === 1 ? 1 : 0, apf: +m[1] === 2 ? 1 : 0, coDig: m[1].length }), sim: 'CO00000' },
+      { cmd: 'CO10;', re: /^CO10(\d{2,4})$/, parse: (m) => ({ contourB: +m[1] === 1 ? 1 : 0, apfB: +m[1] === 2 ? 1 : 0, coDig: m[1].length }), sim: 'CO10000' },
+      { cmd: 'CO01;', re: /^CO01(\d{2,4})$/, parse: (m) => ({ contourFreq: +m[1] <= 40 ? +m[1] * 100 : +m[1], coFDig: m[1].length }), sim: 'CO0110' },
+      { cmd: 'CO11;', re: /^CO11(\d{2,4})$/, parse: (m) => ({ contourFreqB: +m[1] <= 40 ? +m[1] * 100 : +m[1], coFDig: m[1].length }), sim: 'CO1110' },
       { cmd: 'GT1;', re: /^GT1(\d)$/, parse: (m) => ({ agcB: Math.min(4, +m[1]) }), sim: 'GT14' },
       { cmd: 'RG1;', re: /^RG1(\d{3})$/, parse: (m) => ({ rfB: +m[1] }), sim: 'RG1255' },
       { cmd: 'AG1;', re: /^AG1(\d{3})$/, parse: (m) => ({ afB: +m[1] }), sim: 'AG1128' },
@@ -155,7 +165,7 @@
     extraQueries: ['ID;', 'IF;', 'OI;', 'AN0;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RI0;', 'BY;'],
     extraStateKeys: ['clarA', 'ritA', 'xitA', 'clarB', 'ritB', 'xitB', 'lockB', 'widthCode', 'widthCodeB', 'widthB', 'narrowB', 'nbB', 'nrB', 'dnfB', 'notchB',
       'agcB', 'rfB', 'afB', 'shiftB', 'attB', 'preampB', 'nbLvl', 'nrLvl', 'mainMute', 'bkin', 'keyer', 'cwPitch',
-      'sqlB', 'nbLvlB', 'moniLvl', 'keySpeed', 'voxGain', 'voxDelay', 'roof', 'roofB', 'roofAuto', 'roofAutoB', 'antB', 'rxAntB'],
+      'sqlB', 'nbLvlB', 'moniLvl', 'keySpeed', 'voxGain', 'voxDelay', 'roof', 'roofB', 'roofAuto', 'roofAutoB', 'antB', 'rxAntB', 'contourB', 'apfB', 'contourFreq', 'contourFreqB', 'coDig', 'coFDig'],
     subBadges: true,
     // Phonie à distance : « SSB MIC SELECT » (menu 103) sur DATA (prise de l'interface son) le temps de l'émission,
     // puis remis comme avant (FRONT = micro de la face avant)
@@ -174,8 +184,9 @@
       lock: { write: (v) => 'LK' + (v ? 1 : 0) + ';' },
       width: { write: (v, s) => 'SH0' + pad(wCode(s && s.mode, v), 2) + ';' },
       shift: { min: -1000, max: 1000, write: (v) => 'IS0' + signed4(v) + ';' },
-      contour: null,
-      apf: null,
+      // CONTOUR / APF : même commande (CO P1 0), une seule des deux à la fois, comme sur le TRX
+      contour: { type: 'toggle', write: (v, s) => coSet(0, v ? 1 : 0, s) },
+      apf: { type: 'toggle', write: (v, s) => coSet(0, v ? 2 : 0, s), when: (s) => /^CW/.test(s.mode || '') },
       nb: { type: 'toggle', off0: false, write: (v) => 'NB0' + v + ';' },
       nr: { type: 'toggle', off0: false, write: (v) => 'NR0' + v + ';' },
       preamp: { options: PREAMP, write: (v) => 'PA0' + v + ';', when: (s) => s.freq != null && s.freq <= 60000000 },
@@ -197,6 +208,10 @@
       { id: 'roof', g: 'flt', label: 'R.FLT (VFO A)', type: 'select', options: ROOF_SET, write: (v) => 'RF0' + v + ';' },
       { id: 'roofB', g: 'flt', label: 'R.FLT (VFO B)', type: 'select', options: ROOF_SET.slice(0, 4), write: (v) => 'RF1' + v + ';' },
       { id: 'ant', g: 'rx', label: 'Antenne', type: 'select', noTx: true, options: [[1, 'ANT 1'], [2, 'ANT 2'], [3, 'ANT 3'], [4, 'ANT 4']], write: (v) => 'AN0' + v + ';' },
+      { id: 'contourB', g: 'flt', label: 'CONTOUR (VFO B)', type: 'toggle', write: (v, s) => coSet(1, v ? 1 : 0, s) },
+      { id: 'apfB', g: 'flt', label: 'APF (VFO B)', type: 'toggle', write: (v, s) => coSet(1, v ? 2 : 0, s), when: (s) => /^CW/.test(s.modeB || '') },
+      { id: 'contourFreq', g: 'flt', label: 'Fréquence CONTOUR', type: 'level', min: 100, max: 4000, step: 100, unit: 'Hz', write: (v, s) => coFreq(0, v, s) },
+      { id: 'contourFreqB', g: 'flt', label: 'Fréquence CONTOUR (VFO B)', type: 'level', min: 100, max: 4000, step: 100, unit: 'Hz', write: (v, s) => coFreq(1, v, s) },
       { id: 'antB', g: 'rx', label: 'Antenne (VFO B)', type: 'select', noTx: true, options: [[1, 'ANT 1'], [2, 'ANT 2'], [3, 'ANT 3'], [4, 'ANT 4']], write: (v) => 'AN1' + v + ';' },
       // Côté SUB (VFO B)
       { id: 'widthB', g: 'flt', label: 'WIDTH (VFO B)', type: 'width', modeKey: 'modeB', write: (v, s) => 'SH1' + pad(wCode(s && s.modeB, v), 2) + ';',
@@ -245,6 +260,8 @@
       if (c === 'SM1') { out.push('SM1' + pad(f.fr5 != null && f.fr5 < 2 ? 0 : Math.round(60 + 30 * Math.sin((f.t || 0) * 0.5)), 3) + ';'); return true; }
       if ((m = /^LK([0-3])$/.exec(c))) { f.ans['LK;'] = c; return true; }
       if (c === 'ID') { out.push('ID0362;'); return true; }
+      // CONTOUR / APF (simulateur : P3 sur 3 chiffres pour P2 = 0, 2 chiffres pour la fréquence)
+      if ((m = /^CO([01])([01])(\d{2,4})$/.exec(c))) { f.ans['CO' + m[1] + m[2] + ';'] = 'CO' + m[1] + m[2] + m[3]; return true; }
       // Antenne : AN P1 P2 (P2 1-4), relu AN P1 P3 P4
       if ((m = /^AN([01])([1-4])$/.exec(c))) { f.ans['AN' + m[1] + ';'] = 'AN' + m[1] + m[2] + '0'; return true; }
       // R.FLT : réglage 0-5, relu 1-A (AUTO choisi : 15 kHz en SSB / AM / FM, 3 kHz ailleurs dans le simulateur)

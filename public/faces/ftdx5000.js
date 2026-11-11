@@ -44,7 +44,7 @@
     return [
       { id: 'vrf' + sd, x: xs[0], y: 170, w: 20, h: 11, tip: 'VRF/μ-T ' + nm, act: info('VRF / μ-TUNE (présélecteur) : pas de commande CAT dans le manuel du FTDX5000, réglage au club.') },
       key({ id: 'shift' + sd, x: xs[1], y: 170, w: 20, h: 11, tip: 'SHIFT ' + nm + ' : se règle avec le centre du bouton dessous ; clic : SHIFT à 0', act: { set: ['shift' + b, 0] }, on: (s) => !!s['shift' + b] }),
-      { id: 'cont' + sd, x: xs[2], y: 170, w: 20, h: 11, tip: 'CONT/APF ' + nm, act: info('CONTOUR / APF : pas encore relié pour le FTDX5000 (format CAT à vérifier sur le TRX).') },
+      key({ id: 'cont' + sd, x: xs[2], y: 170, w: 20, h: 11, tip: 'CONT/APF ' + nm + ' : CONTOUR ON / OFF (en CW : APF) ; appui d’au moins 1 s : fréquence du CONTOUR (100 – 4000 Hz)', act: { contApf: sd, long: { pop: 'contourFreq' + b } }, on: (s) => !!(s['contour' + b] || s['apf' + b]) }),
       key({ id: 'notch' + sd, x: xs[0], y: 196, w: 20, h: 12, tip: 'NOTCH ' + nm + ' (manuel)', act: { toggle: 'notch' + b }, on: (s) => !!s['notch' + b] }),
       key({ id: 'width' + sd, x: xs[1], y: 196, w: 20, h: 12, tip: 'WIDTH ' + nm + ' : se règle avec la bague du bouton dessous ; clic : NARROW', act: { toggle: 'narrow' + b }, on: (s) => !!s['narrow' + b] }),
       { id: 'reset' + sd, x: xs[2], y: 196, w: 20, h: 12, tip: 'RESET ' + nm + ' : SHIFT à 0 et NARROW coupé', act: { set: ['shift' + b, 0], long: { set: ['narrow' + b, 0] } } }

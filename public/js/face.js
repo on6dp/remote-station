@@ -175,6 +175,13 @@
     if (a.local === 'autotune') return autoTune();
     if (a.pop) return popCtl(a.pop);
     if (a.local === 'listen') return L.listening ? stopListen() : startListen();
+    // CONT/APF (FTDX5000) : CONTOUR ON / OFF, ou APF en CW (même commande CO du TRX, une seule des deux à la fois)
+    if (a.contApf) {
+      const b = a.contApf === 'B' ? 'B' : '', cw = /^CW/.test((b ? s.modeB : s.mode) || ''), k = (cw ? 'apf' : 'contour') + b;
+      if (!R.CONTROL[k]) return;
+      say((cw ? 'APF ' : 'CONTOUR ') + (s[k] ? 'OFF' : 'ON') + (b ? ' (VFO-B)' : ' (VFO-A)'), '', 2000);
+      return setCtl(k, s[k] ? 0 : 1);
+    }
     // IC-7300 : pas de tableau de réglages façon Yaesu ; l'écran FUNCTION de l'Icom viendra (les niveaux se règlent par le menu MULTI, les fonctions par leurs touches)
     if (a.local === 'func' && ICOM) { L.func = !L.func; if (L.func) { L.icomMenu = L.quickMenu = false; L.icMem = L.icRec = L.icSet = false; } return render(); }
     if (a.local === 'func' && FTX1F) return ftxFuncPush();
