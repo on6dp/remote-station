@@ -95,8 +95,8 @@
       { id: 'transmit', x: 30, y: 186, w: 75, h: 32, tip: 'TRANSMIT : émission maintenue (clic : émission, clic suivant : réception) ; avec votre micro si « MICRO » est actif', act: { local: 'mox' }, led: (s, L) => !!L.mox, ledColor: '#ff3b30' },
       { id: 'tuner', x: 30, y: 254, w: 75, h: 32, tip: 'TUNER : coupleur d’antenne en service / hors service ; appui d’au moins 1 s : accord (émission courte, avec la main)', act: { toggle: 'tuner', long: { action: 'tune' } } },
       { id: 'vox', x: 30, y: 320, w: 75, h: 33, tip: 'VOX/BK-IN : en CW, BK-IN OFF → SEMI → FULL ; en phonie, VOX (à distance, il ne peut être que coupé)', act: { local: 'voxBk' }, },
-      { id: 'nb', x: 122, y: 320, w: 73, h: 33, tip: 'NB (récepteur sélectionné) — appui d’au moins 1 s : niveau NB', act: { toggle: 'nb', sided: true, long: { pop: 'nbLvl' } }, },
-      { id: 'nr', x: 205, y: 320, w: 72, h: 33, tip: 'NR (récepteur sélectionné) — appui d’au moins 1 s : niveau NR', act: { toggle: 'nr', sided: true, long: { pop: 'nrLvl' } }, },
+      { id: 'nb', x: 122, y: 320, w: 73, h: 33, tip: 'NB (récepteur sélectionné) — appui d’au moins 1 s : colonne NB (LEVEL, DEPTH, WIDTH)', act: { toggle: 'nb', sided: true, long: { local: 'colNb' } }, },
+      { id: 'nr', x: 205, y: 320, w: 72, h: 33, tip: 'NR (récepteur sélectionné) — appui d’au moins 1 s : colonne NR (LEVEL)', act: { toggle: 'nr', sided: true, long: { local: 'colNr' } }, },
       { id: 'phones', cx: 68, cy: 400, r: 22, tip: 'PHONES : écouter le TRX (clic : marche / arrêt)', act: { local: 'listen' }, led: (s, L) => L.listening, ledColor: '#3ddc5a', ring: true },
       { id: 'mic', cx: 75, cy: 510, r: 50, tip: 'MIC', act: info('Micro : phonie à distance par le bouton PTT sous la face avant (page TRX SSB).') },
       // Sous l'écran

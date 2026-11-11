@@ -243,6 +243,8 @@
     // TWIN PBT : pousser le bouton (CLR) = PBT intérieur et extérieur au milieu
     // IC-7760 : SUB DISP = petit écran : galvanomètre (au départ) ⇄ filtre du récepteur sélectionné
     // IC-7760 : DUAL-W met aussi les scopes en DUAL / SINGLE (sans DUAL-W, un seul scope : celui du VFO en cours)
+    // IC-7760 : appui d'au moins 1 s sur NB / NR (face avant ou écran FUNCTION) : colonne de réglages à droite
+    if (a.local === 'colNb' || a.local === 'colNr') { i76Col(a.local === 'colNb' ? 'nb' : 'nr'); return; }
     if (a.local === 'i76dualW') {
       if (!needControl()) return;
       const v = S().dualRx ? 0 : 1;
@@ -2964,8 +2966,8 @@
   const I76_FUNC = [
     ['APF', (s) => (isCw(s) ? ['OFF', 'WIDE', 'MID', 'NAR'][sdv('apf')(s)] || '—' : ''), (s) => isCw(s) && !!sdv('apf')(s), (s) => { if (!isCw(s)) return say('APF : seulement en CW.', '', 2500); setCtl(sdk('apf'), ((sdv('apf')(s) || 0) + 1) % 4); }, 'APF (CW) : OFF → WIDE → MID → NAR', (s) => !isCw(s)],
     ['NOTCH', (s) => (sdv('notch')(s) ? 'MN|(' + (['WIDE', 'MID', 'NAR'][sdv('notchW')(s)] || '—') + ')' : notchTxt(s)), (s) => !!(sdv('notch')(s) || sdv('dnf')(s)), () => doAct({ act: { local: 'notchCycle' } }), 'NOTCH : OFF → AN → MN → OFF (pas d’AN en CW) ; MN : largeur dans la colonne NOTCH'],
-    ['NB', (s) => onOff(sdv('nb')(s)), (s) => !!sdv('nb')(s), sdTog('nb'), 'NB marche / arrêt (récepteur sélectionné)'],
-    ['NR', (s) => onOff(sdv('nr')(s)), (s) => !!sdv('nr')(s), sdTog('nr'), 'NR marche / arrêt (récepteur sélectionné)'],
+    ['NB', (s) => onOff(sdv('nb')(s)), (s) => !!sdv('nb')(s), sdTog('nb'), 'NB : clic = ON / OFF ; appui d’au moins 1 s = colonne NB (LEVEL, DEPTH, WIDTH)', null, () => i76Col('nb')],
+    ['NR', (s) => onOff(sdv('nr')(s)), (s) => !!sdv('nr')(s), sdTog('nr'), 'NR : clic = ON / OFF ; appui d’au moins 1 s = colonne NR (LEVEL)', null, () => i76Col('nr')],
     ['TRACKING', (s) => onOff(s.tracking), (s) => !!s.tracking, (s) => setCtl('tracking', s.tracking ? 0 : 1), 'TRACKING : MAIN et SUB accordés ensemble'],
     [(s) => (isCw(s) ? 'BK-IN' : 'VOX'), (s) => (isCw(s) ? ['OFF', 'SEMI', 'FULL'][s.bkin] || '—' : onOff(s.vox)),
       (s) => (isCw(s) ? !!s.bkin : !!s.vox), () => doAct({ act: { local: 'voxBk' } }), 'En phonie : VOX (à distance, il ne peut être que coupé) ; en CW : BK-IN OFF → SEMI → FULL'],
@@ -2995,7 +2997,13 @@
       const t2 = el('text', { x: x + cw / 2, y: y + rh * 0.8, class: 'icf-t2' + (DICOM ? ' i76f' : ''), 'text-anchor': 'middle' }, m, '');
       const hit = el('rect', { x: x + 3, y, width: cw - 6, height: rh, class: 'hs lcd-hit' }, m);
       el('title', {}, hit, it[4]);
-      hit.addEventListener('click', (ev) => { ev.stopPropagation(); it[3](S()); render(); });
+      // IC-7760 : appui d'au moins 1 s (NB, NR) : colonne de réglages
+      let lpT = null, lpDone = false;
+      if (it[6]) {
+        hit.addEventListener('pointerdown', () => { lpDone = false; clearTimeout(lpT); lpT = setTimeout(() => { lpDone = true; it[6](); }, 700); });
+        for (const e2 of ['pointerup', 'pointerleave', 'pointercancel']) hit.addEventListener(e2, () => clearTimeout(lpT));
+      }
+      hit.addEventListener('click', (ev) => { ev.stopPropagation(); if (lpDone) { lpDone = false; return; } it[3](S()); render(); });
       return { r, t1, t2, it };
     });
     if (DICOM) { LCD.icfI76 = true; return; } // IC-7760 : pas de touche retour dans le panneau (FUNCTION ou EXIT pour le fermer)
@@ -3733,6 +3741,10 @@
   // (en CW : RF POWER, KEY SPEED, CW PITCH, DIGI-SEL, SIDETONE ; en RTTY / PSK : RF POWER, DIGI-SEL, MONITOR) ; clic = choisir, puis tourner le bouton MULTI (ou la molette ici) ;
   // le scope reste visible à gauche de la colonne
   const pctOf = (v) => (v == null ? 0 : v / 255);
+  function i76Col(kind) {
+    L.multiMenu = true; L.mmKind = kind; L.funcSel = { nb: 'nbLvl', nr: 'nrLvl', notch: 'notchPos' }[kind]; L.multiAt = Date.now(); L.agcTbl = false; L.i76pop = null;
+    render();
+  }
   function i76MultiItems(s) {
     // Colonne NOTCH (NOTCH manuel mis en service) : POSITION (repère, bouton MULTI) et WIDTH (WIDE / MID / NAR), comme sur le TRX
     if (L.mmKind === 'notch') return [['_t', 'NOTCH', () => ['', ''], () => 0, 'none'],
@@ -3744,7 +3756,8 @@
       ['nbDepth', 'DEPTH', (s0) => ['', s0.nbDepth != null ? String(s0.nbDepth + 1) : '—'], (s0) => (s0.nbDepth != null ? (s0.nbDepth + 1) / 10 : 0)],
       ['nbWidth', 'WIDTH', (s0) => ['', s0.nbWidth != null ? String(Math.round(1 + s0.nbWidth * 99 / 255)) : '—'], (s0) => (s0.nbWidth != null ? s0.nbWidth / 255 : 0)], null, null];
     // Colonne NR (NR mis en service) : LEVEL du récepteur sélectionné
-    if (L.mmKind === 'nr') return [['_t', 'NR', () => ['', ''], () => 0, 'none'], ['nrLvl', 'LEVEL', (s0) => ['', pct(s0[sdk('nrLvl')])], (s0) => pctOf(s0[sdk('nrLvl')])], null, null, null, null];
+    // (NR LEVEL affiché 0 – 15, comme sur le TRX : 14 06 de 0 à 255)
+    if (L.mmKind === 'nr') return [['_t', 'NR', () => ['', ''], () => 0, 'none'], ['nrLvl', 'LEVEL', (s0) => ['', s0[sdk('nrLvl')] != null ? String(Math.round(s0[sdk('nrLvl')] / 17)) : '—'], (s0) => (s0[sdk('nrLvl')] != null ? s0[sdk('nrLvl')] / 255 : 0)], null, null, null, null];
     const cw = /^CW/.test(L.activeMode(s) || '');
     const pw = ['power', 'RF POWER', (s0) => ['HF', s0.power != null ? s0.power + 'W' : '—'], (s0) => (s0.power != null ? (s0.power - 5) / 195 : 0)];
     // DIGI-SEL : ON / OFF et repère de l'accord (14 13) sur une réglette, comme sur le TRX
@@ -3900,10 +3913,10 @@
     }
     drawI76Multi(s);
     // NOTCH manuel (MN) mis en service sur le récepteur sélectionné : colonne NOTCH à droite (POSITION au bouton MULTI) ; coupé : elle se ferme
-    // (de même pour NB : colonne NB — LEVEL, DEPTH, WIDTH)
-    for (const [kind, key, first] of [['notch', 'notch', 'notchPos'], ['nb', 'nb', 'nbLvl'], ['nr', 'nr', 'nrLvl']]) {
+    // (NB et NR : leur colonne s'ouvre par un appui d'au moins 1 s sur NB / NR, comme sur le TRX ; elle se ferme s'ils sont coupés)
+    for (const [kind, key, first] of [['notch', 'notch', 'notchPos'], ['nb', 'nb', null], ['nr', 'nr', null]]) {
       const on = !!s[sdk(key)], was = (LCD.i76was = LCD.i76was || {})[kind];
-      if (was != null && on !== was) { if (on) { L.multiMenu = true; L.mmKind = kind; L.funcSel = first; L.multiAt = Date.now(); } else if (L.mmKind === kind) { L.multiMenu = false; L.mmKind = null; } }
+      if (was != null && on !== was) { if (on && first) { L.multiMenu = true; L.mmKind = kind; L.funcSel = first; L.multiAt = Date.now(); } else if (!on && L.mmKind === kind) { L.multiMenu = false; L.mmKind = null; } }
       LCD.i76was[kind] = on;
     }
     agcCur(s); // suit le mode / FAST-MID-SLOW même tableau fermé (valeur relue fiable à l'ouverture)
@@ -5367,6 +5380,7 @@
   // IC-7760 : SIDETONE (colonne MULTI en CW, niveau de la tonalité locale, 1A 05 02 86)
   if (DICOM) FUNC_BY.sideTone = ['sideTone', 'SIDETONE', (s) => pct(s.sideTone), ctlStep('sideTone', 0, 255, 5), IO];
   if (DICOM) FUNC_BY.notchW = ['notchW', 'WIDTH', (s) => ['WIDE', 'MID', 'NAR'][s[sideKey('notchW')]] || '—', (s, d) => setCtl(sideKey('notchW'), ((s[sideKey('notchW')] || 0) + (d > 0 ? 1 : 2)) % 3), IO];
+  if (DICOM) FUNC_BY.nrLvl = ['nrLvl', 'NR LEVEL', (s) => String(Math.round((s[sideKey('nrLvl')] || 0) / 17)), (s, d) => { const k = sideKey('nrLvl'), v = Math.round((s[k] || 0) / 17); setCtl(k, Math.max(0, Math.min(15, v + d)) * 17); }, IO];
   if (DICOM) { FUNC_BY.nbDepth = ['nbDepth', 'DEPTH', (s) => String((s.nbDepth || 0) + 1), ctlStep('nbDepth', 0, 9, 1), IO]; FUNC_BY.nbWidth = ['nbWidth', 'WIDTH', (s) => String(s.nbWidth), ctlStep('nbWidth', 0, 255, 3), IO]; }
   if (DICOM) FUNC_BY.dsShift = ['dsShift', 'DIGI-SEL', (s) => String(s[sideKey('dsShift')]), ctlStep('dsShift', 0, 255, 3), IO];
   if (!FUNC_BY[L.funcSel]) L.funcSel = 'power'; // choix gardé d'une autre face avant (autre TRX)
