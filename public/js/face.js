@@ -222,6 +222,8 @@
     // (IC-7760 : EXIT ne change pas l'écran choisi par M.SCOPE — on y revient en sortant des menus, comme sur le TRX)
     // IC-7760 M.SCOPE : scope + MULTI-FUNCTION METER → METER seul → scope seul → …, comme sur le TRX
     if (a.local === 'i76ms') {
+      // MULTI-FUNCTION METER ouvert par l'appui d'1 s sur l'échelle : M.SCOPE revient à l'écran précédent, comme sur le TRX
+      if (L.i76lpBack) { L.i76meter = L.i76lpBack[0]; L.i76mtOnly = L.i76lpBack[1]; L.i76lpBack = null; L.func = false; WF.drawn = false; return render(); }
       if (L.i76mtOnly) { L.i76mtOnly = false; L.i76meter = false; } else if (L.i76meter) { L.i76meter = false; L.i76mtOnly = true; } else L.i76meter = true;
       L.func = false; WF.drawn = false;
       say(L.i76meter ? 'M.SCOPE : scope et MULTI-FUNCTION METER' : L.i76mtOnly ? 'M.SCOPE : MULTI-FUNCTION METER seul' : 'M.SCOPE : scope seul', '', 2000);
@@ -3882,6 +3884,22 @@
     // Bandeau du scope : « SPECTRUM SCOPE » au milieu, comme sur le TRX
     LCD.i76sst = el('text', { x: X(250), y: Y(G.lowY + 8.5), class: 'i76-sst', 'text-anchor': 'middle' }, LCD.lowG, 'SPECTRUM SCOPE');
     for (const cg of [LCD.cgA, LCD.cgB]) cg.style.display = 'none';
+    // Appui d'1 s sur l'échelle de mesure du grand écran (barres ou aiguilles) : MULTI-FUNCTION METER seul, comme sur le TRX ; un 2e appui d'1 s : retour
+    const lpMeter = (gr, hitBox) => {
+      if (!gr) return;
+      gr.style.cursor = 'pointer';
+      if (hitBox) { try { const b = gr.getBBox(); if (b.width) el('rect', { x: b.x, y: b.y, width: b.width, height: b.height, fill: 'transparent', 'pointer-events': 'all' }, gr); } catch (e) { /* pas encore affiché */ } }
+      el('title', {}, gr, 'Appui d’1 seconde : MULTI-FUNCTION METER (un 2e appui d’1 s : retour)');
+      let tm = null;
+      gr.addEventListener('pointerdown', (ev) => { if (ev.button !== 0) return; ev.stopPropagation(); clearTimeout(tm); tm = setTimeout(() => {
+        tm = null; L.func = false; L.i76ant = false; WF.drawn = false;
+        if (L.i76lpBack) { L.i76meter = L.i76lpBack[0]; L.i76mtOnly = L.i76lpBack[1]; L.i76lpBack = null; } // 2e appui : écran d'avant
+        else { L.i76lpBack = [!!L.i76meter, !!L.i76mtOnly]; L.i76mtOnly = true; L.i76meter = false; say('MULTI-FUNCTION METER (M.SCOPE : écran précédent)', '', 2000); }
+        render();
+      }, 1000); });
+      for (const t of ['pointerup', 'pointerleave', 'pointercancel']) gr.addEventListener(t, () => { clearTimeout(tm); tm = null; });
+    };
+    for (const sd of ['A', 'B']) { lpMeter(LCD['i76' + sd].sb.g, true); lpMeter(LCD['m' + sd].g); } // (barres : textes sans clic → zone transparente)
   }
   // IC-7760 : bouton MULTI poussé = colonne à droite de l'écran, comme sur le TRX : RF POWER, MIC GAIN, COMP, DIGI-SEL, MONITOR
   // (en CW : RF POWER, KEY SPEED, CW PITCH, DIGI-SEL, SIDETONE ; en RTTY / PSK : RF POWER, DIGI-SEL, MONITOR) ; clic = choisir, puis tourner le bouton MULTI (ou la molette ici) ;

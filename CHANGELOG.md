@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.283** — IC-7760 : appui d'1 s sur l'échelle des mesures = MULTI-FUNCTION METER ; M.SCOPE revient à l'écran précédent
 - **0.37.282** — IC-7760 : petit écran galvanomètre (ALC, Vd), fenêtre METER (Po, SWR, ALC, COMP, Vd, Id, Multi-function), SUB DISP aussi avec un seul scope
 - **0.37.281** — IC-7760 : en sortant des menus, retour à l'écran choisi par M.SCOPE (EXIT ne le change plus)
 - **0.37.280** — IC-7760 : SET → Others → Information (Version, MAC, numéros de série)
