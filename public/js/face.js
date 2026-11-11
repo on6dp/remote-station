@@ -851,6 +851,7 @@
     f.bars = el('path', { d: '', class: 'flt-bars' }, g);
     f.roof = el('path', { d: '', class: 'flt-roof' }, g); // limites du filtre de toit (R.FIL), en pointillés
     f.trap = el('path', { d: '', class: 'flt-trap' }, g);
+    if (DICOM) f.bline = el('path', { d: '', class: 'flt-bline' }, g);
     if (FACE.meterFtx) g.appendChild(f.bars); // FTX-1 : spectre par-dessus l'intérieur gris du filtre
     f.center = el('line', { x1: x0 + w / 2, y1: y0 + 6, x2: x0 + w / 2, y2: y0 + h - 4, class: 'flt-ctr' }, g);
     // VC TUNE : barre au-dessus du filtre, comme sur le TRX : « − » … traits rouges … « + », repère rouge à la position du présélecteur
@@ -2677,6 +2678,12 @@
       return render();
     }
     if (it.other) return say(it.other[2] + '.', '', 5000);
+    if (DICOM && it.type === 'rgb' && it.rw) { // IC-7760 : fenêtre Waveform Color — R, G, B avec − / +, comme sur le TRX
+      const cur = subRaw(it);
+      if (cur == null) { subRead(); return say(it.label + ' : valeur pas encore relue sur le TRX.', 'warn', 2500); }
+      L.hlDlg = { it, rgb: String(cur).split(',').map(Number), sel: 0 };
+      return render();
+    }
     if (DICOM && /^(hl|tone|tbw6)$/.test(it.type) && it.rw) { // IC-7760 : fenêtre de réglage avec + / −, comme sur le TRX
       const cur = subRaw(it);
       if (cur == null) { subRead(); return say(it.label + ' : valeur pas encore relue sur le TRX.', 'warn', 2500); }
@@ -2912,7 +2919,7 @@
   // ---- IC-7760 : fenêtres de réglage de SET, comme sur le TRX — HPF/LPF et TBW : deux cases avec + / − ; Bass / Treble : − réglette +
   // ↩ (ou EXIT) envoie la valeur au TRX et revient à la liste, qui montre la nouvelle valeur
   const TBW_LO = [100, 120, 150, 200, 300, 500], TBW_HI = [2500, 2700, 2800, 2900];
-  const dlgCode = (D) => (D.it.type === 'hl' ? D.a * 100 + D.b : D.it.type === 'tbw6' ? D.a * 10 + D.b : D.a);
+  const dlgCode = (D) => (D.it.type === 'rgb' ? D.rgb.join(',') : D.it.type === 'hl' ? D.a * 100 + D.b : D.it.type === 'tbw6' ? D.a * 10 + D.b : D.a);
   function buildHlDlg(g, c) {
     const X = (v) => c.x + v, Y = (v) => c.y + v;
     const m = LCD.hlG = el('g', { class: 'mode-menu ic-menu', style: 'display:none' }, g);
@@ -2952,12 +2959,29 @@
     LCD.hlToneV = el('text', { x: cx, y: ty + 46, class: 'hl-v', 'text-anchor': 'middle' }, gt, '');
     const tz = el('rect', { x: cx - tw / 2, y: ty, width: tw, height: 50, class: 'hs lcd-hit' }, gt);
     tz.addEventListener('wheel', (ev) => { ev.preventDefault(); ev.stopPropagation(); if (ev.deltaY) dlgStep(0, ev.deltaY < 0 ? 1 : -1); }, { passive: false });
+    // Couleur : aperçu, puis R / G / B — « − », réglette, valeur, « + » (molette sur la réglette : ± 5)
+    const gr = LCD.hlRgb = el('g', {}, m);
+    LCD.hlSw = el('rect', { x: cx - 50, y: y0 + 28, width: 100, height: 22, class: 'hl-sw' }, gr);
+    LCD.hlRows = [0, 1, 2].map((k) => {
+      const ry = y0 + 60 + k * 40, tw2 = w * 0.42;
+      btn(gr, x0 + 18, ry, 56, 30, '−', () => { L.hlDlg.sel = k; dlgStep(k, -1); });
+      btn(gr, x0 + w - 74, ry, 56, 30, '+', () => { L.hlDlg.sel = k; dlgStep(k, 1); });
+      el('rect', { x: cx - tw2 / 2, y: ry + 4, width: tw2, height: 7, rx: 1.5, class: 'hl-track' }, gr);
+      const bar = el('rect', { x: cx - tw2 / 2 + 1, y: ry + 5, width: 0, height: 5, class: 'hl-bar rgb' + k }, gr);
+      const vb = el('rect', { x: cx - 22, y: ry + 12, width: 44, height: 20, class: 'hl-box' }, gr);
+      const v = el('text', { x: cx, y: ry + 28, class: 'hl-v', 'text-anchor': 'middle' }, gr, '');
+      const z = el('rect', { x: cx - tw2 / 2, y: ry, width: tw2, height: 32, class: 'hs lcd-hit' }, gr);
+      z.addEventListener('click', (ev) => { ev.stopPropagation(); L.hlDlg.sel = k; render(); });
+      z.addEventListener('wheel', (ev) => { ev.preventDefault(); ev.stopPropagation(); L.hlDlg.sel = k; if (ev.deltaY) dlgStep(k, ev.deltaY < 0 ? 5 : -5); }, { passive: false });
+      return { bar, v, vb, w: tw2 - 2 };
+    });
     btn(m, x0 + w - 62, y0 + h - 40, 54, 32, '↩', () => { hlClose(true); render(); });
   }
   function dlgStep(k, d) {
     const D = L.hlDlg;
     if (!D) return;
     const t = D.it.type;
+    if (t === 'rgb') { D.rgb[k] = Math.max(0, Math.min(255, D.rgb[k] + d)); return render(); }
     if (t === 'tone') D.a = Math.max(0, Math.min(10, D.a + d));
     else if (t === 'tbw6') { if (k) D.b = Math.max(0, Math.min(3, D.b + d)); else D.a = Math.max(0, Math.min(5, D.a + d)); }
     else {
@@ -2978,7 +3002,8 @@
     const nv = dlgCode(D), cur = subRaw(D.it);
     if (String(nv) === String(cur) || !needControl()) return;
     SUB.pend[D.it.n] = { v: String(nv), at: Date.now() };
-    setCtl('exSet', R.exCode(D.it, nv));
+    if (D.it.type === 'rgb') setCtl('exRgb', D.it.n * 1e9 + D.rgb[0] * 1e6 + D.rgb[1] * 1e3 + D.rgb[2]);
+    else setCtl('exSet', R.exCode(D.it, nv));
     SUB.readAt[D.it.n] = 0;
     setTimeout(() => { if (iControl()) send({ t: 'set', ctl: 'exRead', value: D.it.n }); }, 400);
   }
@@ -2988,9 +3013,15 @@
     LCD.hlG.style.display = D && L.icSet && L.icSub ? '' : 'none';
     if (!D) return;
     const t = D.it.type;
-    LCD.hlTtl.textContent = D.it.title || D.it.label;
-    LCD.hlPair.style.display = t === 'tone' ? 'none' : '';
+    LCD.hlTtl.textContent = t === 'rgb' ? D.it.label : D.it.title || D.it.label;
+    LCD.hlPair.style.display = t === 'tone' || t === 'rgb' ? 'none' : '';
     LCD.hlTone.style.display = t === 'tone' ? '' : 'none';
+    LCD.hlRgb.style.display = t === 'rgb' ? '' : 'none';
+    if (t === 'rgb') {
+      LCD.hlSw.style.fill = 'rgb(' + D.rgb.join(',') + ')';
+      LCD.hlRows.forEach((r, k) => { r.bar.setAttribute('width', r.w * D.rgb[k] / 255); r.v.textContent = String(D.rgb[k]); r.v.classList.toggle('sel', D.sel === k); r.vb.classList.toggle('sel', D.sel === k); r.vb.style.opacity = D.sel === k ? '' : '0'; });
+      return;
+    }
     if (t === 'tone') {
       LCD.hlBar.setAttribute('width', LCD.hlBarW * D.a / 10);
       LCD.hlToneV.textContent = (D.a > 5 ? '+' : D.a < 5 ? '−' : '') + Math.abs(D.a - 5);
@@ -4277,6 +4308,8 @@
   }
   function drawI76(s, tx) {
     if (!LCD.i76) return;
+    // Filter Effect Screen (forme et couleur du spectre du petit écran) : lu une fois sur le TRX
+    if (iControl() && s.ex192 == null && Date.now() - (L.fxAskAt || 0) > 30000) { L.fxAskAt = Date.now(); send({ t: 'set', ctl: 'exRead', value: 192 }); setTimeout(() => send({ t: 'set', ctl: 'exRead', value: 193 }), 150); }
     const single = !s.scDual;
     i76Layout(single);
     for (const sd of ['A', 'B']) {
@@ -7839,6 +7872,8 @@
         const cxf = fl.x0 + fl.w / 2 + (ff ? ff.off : 0) * fl.w, stepHz = (fl.w - 12) / n / fl.w * FLT_SPAN;
         // FTX-1 : spectre seulement dans la bande passante, comme sur le TRX
         const pin = (FACE.meterFtx || DICOM) && ff, pa = pin ? cxf - ff.fr * fl.w / 2 + 4 : -1e9, pb = pin ? cxf + ff.fr * fl.w / 2 - 4 : 1e9;
+        const fxLine = DICOM && String(S().ex192) === '0'; // Waveform Type Line : ligne blanche sur le spectre ; Fill : spectre seul
+        let dl = '';
         for (let i = 0; i < n; i++) {
           const x = fl.x0 + 6 + (i + 0.5) * (fl.w - 12) / n;
           if (x < pa || x > pb) continue;
@@ -7846,10 +7881,14 @@
           if (f < 0 || f > WF.rate / 2) continue;
           let m = 0;
           for (let j = Math.floor((f - stepHz / 2) / binHz), j1 = Math.max(j + 1, Math.ceil((f + stepHz / 2) / binHz)); j < j1; j++) if (j >= 0 && j < sp.length && sp[j] > m) m = sp[j];
-          const v = Math.max(0, Math.min(1, (m + lvl) / 1.5));
-          d += 'M' + x.toFixed(1) + ' ' + bot + 'V' + (bot - Math.pow(v, 1.4) * hh).toFixed(1);
+          const v = Math.max(0, Math.min(1, (m + lvl) / 1.5)), yv = (bot - Math.pow(v, 1.4) * hh).toFixed(1);
+          // IC-7760 SET → Display → Filter Effect Screen : Waveform Type Line = une ligne, Fill = barres pleines (comme sur le TRX)
+          d += 'M' + x.toFixed(1) + ' ' + bot + 'V' + yv;
+          if (fxLine) dl += (dl ? 'L' : 'M') + x.toFixed(1) + ' ' + yv;
         }
         fl.bars.setAttribute('d', d);
+        if (fl.bline) fl.bline.setAttribute('d', dl);
+        if (DICOM) { const c3 = S().ex193; fl.bars.style.stroke = c3 ? 'rgb(' + c3 + ')' : ''; }
         cwTune(side, fl, sp, ff);
         // IC-7760 : une ligne du petit waterfall (récepteur sélectionné), même échelle que le filtre
         const sw = LCD.sfWf;

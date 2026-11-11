@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.286 | [RemoteStation-Setup-0.37.286.exe](0.37.286/RemoteStation-Setup-0.37.286.exe) | [remote-station-0.37.286.tar.gz](0.37.286/remote-station-0.37.286.tar.gz) |  — [empreintes SHA-256](0.37.286/SHA256SUMS.txt) |
 | 0.37.285 | [RemoteStation-Setup-0.37.285.exe](0.37.285/RemoteStation-Setup-0.37.285.exe) | [remote-station-0.37.285.tar.gz](0.37.285/remote-station-0.37.285.tar.gz) |  — [empreintes SHA-256](0.37.285/SHA256SUMS.txt) |
 | 0.37.284 | [RemoteStation-Setup-0.37.284.exe](0.37.284/RemoteStation-Setup-0.37.284.exe) | [remote-station-0.37.284.tar.gz](0.37.284/remote-station-0.37.284.tar.gz) |  — [empreintes SHA-256](0.37.284/SHA256SUMS.txt) |
 | 0.37.283 | [RemoteStation-Setup-0.37.283.exe](0.37.283/RemoteStation-Setup-0.37.283.exe) | [remote-station-0.37.283.tar.gz](0.37.283/remote-station-0.37.283.tar.gz) |  — [empreintes SHA-256](0.37.283/SHA256SUMS.txt) |

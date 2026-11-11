@@ -176,7 +176,7 @@
   const EX_PARENT = { tone: null, toneRx: 'tone', toneTx: 'tone', net: null, netSeg: 'net', ant: null, disp: null, dispFx: 'disp' };
   for (const k in EX_MENUS) if (EX_PARENT[k] === undefined && k !== 'scope' && k !== 'edges') EX_PARENT[k] = k.startsWith('rx') ? 'toneRx' : 'toneTx';
   const EX = {};
-  for (const k in EX_MENUS) for (const it of EX_MENUS[k][1]) EX[it[0]] = { n: it[0], label: it[1], title: it[3] || (EX_MENUS[k][0] + ' ' + it[1]), type: Array.isArray(it[2]) ? 'list' : it[2], opts: Array.isArray(it[2]) ? it[2] : null, rw: !/^net/.test(k) && !(k === 'ant' && it[0] < 349) && ![193, 198, 199, 214, 215, 216].includes(it[0]), admin: /^net/.test(k), wAdmin: k === 'ant', menu: k };
+  for (const k in EX_MENUS) for (const it of EX_MENUS[k][1]) EX[it[0]] = { n: it[0], label: it[1], title: it[3] || (EX_MENUS[k][0] + ' ' + it[1]), type: Array.isArray(it[2]) ? 'list' : it[2], opts: Array.isArray(it[2]) ? it[2] : null, rw: !/^net/.test(k) && !(k === 'ant' && it[0] < 349) && ![198, 199].includes(it[0]), admin: /^net/.test(k), wAdmin: k === 'ant', menu: k };
   for (const n in EX) if (EX[n].type === 'edge') { const b = EDGE_BANDS[Math.floor((n - 224) / 4)]; EX[n].lo = b[0]; EX[n].hi = b[1]; }
   const edgeKHz = (b, o) => (b[o] >> 4) + unbcd(b[o + 1]) * 10 + unbcd(b[o + 2]) * 1000;
   const edgeBytes = (k) => [((k % 10) << 4), bcd(Math.floor(k / 10) % 100), bcd(Math.floor(k / 1000) % 100)];
@@ -276,6 +276,10 @@
         if (!(a >= it.lo && b <= it.hi && a < b)) throw new Error('bords : ' + it.lo / 1000 + ' à ' + it.hi / 1000 + ' MHz, bas < haut');
       },
       write: (v) => { const it = EX[Math.floor(v / 1e10)]; return q(0x1A, 0x05, bcd(Math.floor(it.n / 100)), bcd(it.n % 100), ...edgeBytes(Math.floor(v / 1e5) % 1e5), ...edgeBytes(v % 1e5)); } },
+    // Couleurs (Waveform Color…) : n° × 1e9 + R × 1e6 + G × 1e3 + B (0 – 255 chacun, 3 × 2 octets BCD)
+    { id: 'exRgb', g: 'vfo', label: 'Couleur SET', type: 'level', min: 1e9, max: 999999999999, step: 1, face: true,
+      check: (v) => { const it = EX[Math.floor(v / 1e9)], c3 = [Math.floor(v / 1e6) % 1000, Math.floor(v / 1e3) % 1000, v % 1000]; if (!it || it.type !== 'rgb') throw new Error('couleur inconnue'); if (!it.rw) throw new Error(it.label + ' : lecture seule à distance'); if (c3.some((x) => x > 255)) throw new Error('R, G, B : 0 à 255'); },
+      write: (v) => { const it = EX[Math.floor(v / 1e9)]; return q(0x1A, 0x05, bcd(Math.floor(it.n / 100)), bcd(it.n % 100), ...lvlBytes(Math.floor(v / 1e6) % 1000), ...lvlBytes(Math.floor(v / 1e3) % 1000), ...lvlBytes(v % 1000)); } },
     { id: 'rit', g: 'vfo', label: 'RIT', type: 'toggle', write: setOn(0x21, 0x01) },
     { id: 'xit', g: 'vfo', label: 'XIT', type: 'toggle', write: setOn(0x21, 0x02) },
     {
@@ -713,7 +717,7 @@
             list: n === 220 ? 2 : n === 188 ? 0 : n === 192 || n === 217 || n === 221 || n === 223 || n === 218 || n === 190 || n === 191 || n === 197 || n === 170 || n === 175 || n === 161 || (n >= 344 && n <= 346) || n === 362 ? 1 : 0 }[it.type];
           r(0x05, d[1], d[2], ...exBytes(it, raw));
         }
-        else { const b = d.slice(3); ex[n] = it.type === 'edge' ? edgeKHz(b, 0) + '-' + edgeKHz(b, 3) : it.type === 'pct' ? lvlValue(b, 0) : it.type === 'hl' || it.type === 'antm' ? unbcd(b[0]) * (it.type === 'antm' ? 10 : 100) + unbcd(b[1]) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F) : unbcd(b[0]); ok(); }
+        else { const b = d.slice(3); ex[n] = it.type === 'rgb' ? [lvlValue(b, 0), lvlValue(b, 2), lvlValue(b, 4)].join(',') : it.type === 'edge' ? edgeKHz(b, 0) + '-' + edgeKHz(b, 3) : it.type === 'pct' ? lvlValue(b, 0) : it.type === 'hl' || it.type === 'antm' ? unbcd(b[0]) * (it.type === 'antm' ? 10 : 100) + unbcd(b[1]) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F) : unbcd(b[0]); ok(); }
       } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x03 && (d[2] === 0x63 || d[2] === 0x64)) {
         const dep = d[2] === 0x63;
         if (d.length === 3) r(0x05, 0x03, d[2], ...(dep ? [bcd(this.nbd != null ? this.nbd : 4)] : lvlBytes(this.nbw != null ? this.nbw : 128)));

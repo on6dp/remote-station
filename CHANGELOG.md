@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.286** — IC-7760 : Filter Effect Screen (Line / Fill, Waveform Color R/G/B), couleurs du SCOPE SET réglables
 - **0.37.285** — IC-7760 : SCOPE SET (appui d'1 s sur EXPD/SET) avec Fixed Edges, rangée <MENU2> (REF, SPEED, RBW, VBW, MARKER)
 - **0.37.284** — IC-7760 : barres Multi-function du petit écran, fenêtre METER OFF / retour
 - **0.37.283** — IC-7760 : appui d'1 s sur l'échelle des mesures = MULTI-FUNCTION METER ; M.SCOPE revient à l'écran précédent

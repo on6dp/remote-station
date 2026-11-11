@@ -838,7 +838,7 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face text.i76-sfsidet { fill: #fff; font: 900 7px Arial, sans-serif; pointer-events: none; }
 #face text.i76-sfh { fill: #fff; font: 800 7px Arial, sans-serif; pointer-events: none; }
 #face[data-model='ic7760'] .flt-trap { stroke: #f2f4f7; }
-#face[data-model='ic7760'] .flt-bars { stroke: #3b8fff; }
+#face[data-model='ic7760'] .flt-bars { stroke: #3b8fff; fill: none; }
 #face .i76-finp { fill: #f28a1c; }
 #face .i76-dig { fill: #ffffff; pointer-events: none; }
 #face .lcd text.i76-rfg { fill: #ff8a1f; font: 900 10px Arial, 'Liberation Sans', sans-serif; }
@@ -932,3 +932,8 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face text.i76sm-sc { fill: #fff; font: 700 5.6px Arial, sans-serif; }
 #face text.i76sm-sc.red { fill: #ff3a2a; }
 #face .i76-btr.sm, #face .i76-bar.sm { stroke-width: 3; }
+#face .flt-bline { fill: none; stroke: #e8f0ff; stroke-width: .7; }
+#face .hl-sw { stroke: #8a929e; stroke-width: .8; }
+#face .hl-bar.rgb0 { fill: #ff3a2a; }
+#face .hl-bar.rgb1 { fill: #3ad04a; }
+#face .hl-bar.rgb2 { fill: #2f7dff; }
