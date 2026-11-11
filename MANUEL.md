@@ -883,6 +883,7 @@ En **FT8 · FT4 · FT2**, à la fin de la séquence, une petite fenêtre « **QS
 - La liste montre les 300 derniers QSO. La case **Rechercher** trouve un indicatif, un nom ou un opérateur ; le nombre de QSO trouvés s'affiche à côté.
 - **Clic sur une ligne** : le QSO s'ouvre dans la fiche. Son auteur **avec la main** (ou un administrateur) peut le modifier ou le supprimer ; tous les autres (membres sans la main, écouteurs, autres opérateurs) le voient **en lecture seule** (« Fermer » le referme). Personne ne peut jamais modifier ni supprimer le QSO d'un autre indicatif, sauf les administrateurs.
 - Colonnes : date, heure, indicatif, bande, fréquence, mode, reports, nom, QTH, **locator**, pays DXCC, préfixe, TX call, opérateur, références (IOTA, POTA…), états des envois (LoTW, eQSL, Club Log, QRZ).
+- **Ordre des colonnes** : cliquer sur le titre d'une colonne et, bouton gauche enfoncé, la glisser à un autre endroit (un trait bleu montre où elle ira). Ordre gardé dans votre navigateur ; double-clic sur un titre : ordre d'origine.
 - **Largeur des colonnes** : glisser le bord droit d'un titre de colonne (double-clic : largeur d'origine). Réglage gardé dans votre navigateur.
 - **Filtres** : le **▾** à côté de chaque titre propose les valeurs de la colonne (dates, bandes, modes, pays, TX call, état des envois…) avec leur nombre de QSO. Un choix filtre le carnet (le ▾ devient ●) ; plusieurs colonnes se combinent ; `✕ Filtres` les retire tous.
 

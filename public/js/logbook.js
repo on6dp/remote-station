@@ -150,6 +150,7 @@
     if (FORM) root.querySelectorAll('.lg-bar, .lg-tw, .lg-job').forEach((x) => { x.hidden = true; x.style.display = 'none'; });
     if (getComputedStyle(root).position === 'static') root.style.position = 'relative'; // menus des filtres de colonne
     initCols();
+    applyOrder();
     document.addEventListener('click', () => closeFlt());
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeFlt(); });
     q$('#lgFclr').addEventListener('click', () => { filt = {}; reload(); });
@@ -249,6 +250,7 @@
     try { saved = JSON.parse(localStorage.getItem('rs.lgcols') || '{}') || {}; } catch (e) { saved = {}; }
     const cols = Array.from(root.querySelectorAll('.lg-table col'));
     const ths = Array.from(root.querySelectorAll('.lg-table thead th'));
+    ths.forEach((th, i) => { th.dataset.c = (LG_COLS[i] || [])[0] || ''; });
     const store = () => { try { localStorage.setItem('rs.lgcols', JSON.stringify(saved)); } catch (e) { /* */ } };
     const apply = () => cols.forEach((c, i) => { const [k, w] = LG_COLS[i]; const v = saved[k] || w; c.style.width = v ? v + 'px' : ''; });
     apply();
@@ -266,6 +268,7 @@
       h.className = 'lg-rz';
       h.title = 'Glisser : largeur de la colonne · double-clic : largeur d’origine';
       th.appendChild(h);
+      colDrag(th, k);
       h.addEventListener('click', (e) => e.stopPropagation());
       h.addEventListener('dblclick', (e) => { e.stopPropagation(); delete saved[k]; apply(); store(); });
       h.addEventListener('pointerdown', (e) => {
@@ -281,6 +284,67 @@
         h.addEventListener('pointerup', up);
         h.addEventListener('pointercancel', up);
       });
+    });
+  }
+  // ------------------------------------------------------------------ ordre des colonnes (choix de chacun, gardé dans ce navigateur)
+  // Glisser l'intitulé d'une colonne (bouton gauche enfoncé) vers un autre endroit ; double-clic sur un intitulé : ordre d'origine
+  const NAT = LG_COLS.map(([k]) => k);
+  let colOrd = NAT.slice();
+  try { const o = JSON.parse(localStorage.getItem('rs.lgord') || 'null'); if (Array.isArray(o) && o.length === NAT.length && NAT.every((k) => o.indexOf(k) >= 0)) colOrd = o; } catch (e) { /* */ }
+  colOrd = colOrd.filter((k) => k !== 'fill').concat(['fill']); // la colonne de remplissage reste au bout
+  const isNat = () => colOrd.every((k, i) => k === NAT[i]);
+  // En-tête et largeurs : éléments repérés par data-c ; lignes du carnet (dessinées dans l'ordre d'origine) : réordonnées
+  function applyOrder(rowsOnly) {
+    if (!root) return;
+    if (!rowsOnly) {
+      const cg = root.querySelector('.lg-table colgroup'), tr = root.querySelector('.lg-table thead tr');
+      if (cg) colOrd.forEach((k) => { const c = cg.querySelector('col[data-c="' + k + '"]'); if (c) cg.appendChild(c); });
+      if (tr) colOrd.forEach((k) => { const t = tr.querySelector(':scope > th[data-c="' + k + '"]'); if (t) tr.appendChild(t); });
+    }
+    if (isNat()) return;
+    const idx = colOrd.map((k) => NAT.indexOf(k));
+    root.querySelectorAll('#lgBody tr[data-id]').forEach((r) => { const ch = Array.from(r.children); if (ch.length === NAT.length) r.append(...idx.map((i) => ch[i])); });
+  }
+  function colDrag(th, k) {
+    if (k === 'fill') return;
+    th.classList.add('lg-movable');
+    th.title = (th.title ? th.title + ' — ' : '') + 'glisser l’intitulé pour déplacer la colonne ; double-clic : ordre d’origine des colonnes';
+    th.addEventListener('dblclick', (e) => {
+      if (e.target.closest('.lg-rz, .lg-flt') || isNat()) return;
+      colOrd = NAT.slice(); try { localStorage.removeItem('rs.lgord'); } catch (er) { /* */ }
+      applyOrder(); drawList();
+    });
+    th.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || e.target.closest('.lg-rz, .lg-flt')) return;
+      const x0 = e.clientX;
+      let on = false, tgt = null, after = false;
+      const clear = () => root.querySelectorAll('.lg-table thead th').forEach((t) => t.classList.remove('lg-drop-l', 'lg-drop-r', 'lg-drag'));
+      const mv = (ev) => {
+        if (!on && Math.abs(ev.clientX - x0) < 6) return;
+        if (!on) { on = true; th.classList.add('lg-drag'); document.body.style.cursor = 'grabbing'; }
+        clear(); th.classList.add('lg-drag');
+        tgt = null;
+        for (const t of root.querySelectorAll('.lg-table thead th')) {
+          const r = t.getBoundingClientRect();
+          if (ev.clientX >= r.left && ev.clientX < r.right && t.dataset.c && t.dataset.c !== 'fill') { tgt = t; after = ev.clientX > r.left + r.width / 2; }
+        }
+        if (tgt && tgt !== th) tgt.classList.add(after ? 'lg-drop-r' : 'lg-drop-l');
+      };
+      const up = () => {
+        window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+        document.body.style.cursor = '';
+        clear();
+        if (!on || !tgt || tgt === th) return;
+        const o = colOrd.filter((x) => x !== k), j = o.indexOf(tgt.dataset.c);
+        o.splice(after ? j + 1 : j, 0, k);
+        colOrd = o.filter((x) => x !== 'fill').concat(['fill']);
+        try { localStorage.setItem('rs.lgord', JSON.stringify(colOrd)); } catch (er) { /* */ }
+        applyOrder(); drawList();
+        // pas de clic (tri / filtre) juste après un déplacement
+        const stop = (ce) => { ce.stopPropagation(); ce.preventDefault(); };
+        th.addEventListener('click', stop, { capture: true, once: true }); setTimeout(() => th.removeEventListener('click', stop, { capture: true }), 50);
+      };
+      window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
     });
   }
   // QRZ.com : nom et prénom, QTH, locator du correspondant (cases vides ; bouton ⇩ QRZ : remplace)
@@ -634,8 +698,8 @@
   const fltLabel = (col, v) => (v === '' ? '(vide)' : FLT_FMT[col] ? FLT_FMT[col](v) : v);
   function drawFilt() {
     if (!root) return;
-    root.querySelectorAll('.lg-table thead th').forEach((th, i) => {
-      const k = (LG_COLS[i] || [])[0];
+    root.querySelectorAll('.lg-table thead th').forEach((th) => {
+      const k = th.dataset.c;
       const b = th.querySelector('.lg-flt');
       if (!b) return;
       const on = filt[k] != null;
@@ -710,6 +774,7 @@
         '</td><td class="lg-loc">' + esc(q.gridsquare || '') + '</td><td class="lg-cty" title="' + esc(q.country || '') + '">' + esc(q.country || '') + '</td><td>' + esc(q.dxcc_pfx || '') + '</td><td class="txc">' + esc(q.station_callsign || '') + '</td><td class="op" title="' + esc(q.by && q.by !== q.operator ? 'Enregistré par ' + q.by : '') + '">' + esc(q.operator || q.by || '') + '</td>' + refsCell(q) +
         '<td class="lg-ctst" title="' + esc(q.contest_id ? 'Envoyé : ' + (q.stx_string || q.stx || '—') + ' · reçu : ' + (q.srx_string || q.srx || '—') : '') + '">' + esc(q.contest_id || '') + '</td>' +
         SV.map((s) => upCell(q, s)).join('') + '<td class="lg-fill"></td></tr>').join('');
+      applyOrder(true); // ordre des colonnes choisi par l'utilisateur
     }
     const c = q$('#lgCount');
     if (c) c.textContent = total + ' QSO au carnet' + (items.length < total ? ' · ' + items.length + ' affichés' : '');

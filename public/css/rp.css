@@ -2116,3 +2116,13 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 .lg-table th { border-right-color: rgba(200, 210, 225, .32); }
 .lg-table th:last-child, .lg-table td:last-child { border-right: 0; }
 .lg-flt { font-size: 14px; line-height: 1; padding: 0 3px; vertical-align: -1px; color: #c5d6e8; }
+/* Carnet : colonnes déplaçables (glisser l'intitulé) */
+.lg-table th.lg-movable { cursor: grab; user-select: none; }
+.lg-table th.lg-drag { opacity: .55; background: var(--v2-bg-input); }
+.lg-table th.lg-drop-l { box-shadow: inset 3px 0 0 var(--v2-accent-cyan-bright, #00d4ff); }
+.lg-table th.lg-drop-r { box-shadow: inset -3px 0 0 var(--v2-accent-cyan-bright, #00d4ff); }
+/* Cases des VFO (RX, TX, BW, MAIN / SUB, mode, ATT…AGC, RIT / XIT / CLEAR, lecture S) : encadré arrondi à bord clair, comme les boutons */
+.badge, .side-tag, .sm-read { border-radius: 7px; }
+.badge { border-color: color-mix(in srgb, #c8d0dc 34%, var(--v2-badge-inactive-border)); }
+.badge.b-tx, .badge.b-rx { border-color: color-mix(in srgb, #c8d0dc 34%, var(--v2-badge-muted-border)); }
+.badge.b-info { border-color: color-mix(in srgb, #c8d0dc 42%, var(--v2-border-soft)); }
