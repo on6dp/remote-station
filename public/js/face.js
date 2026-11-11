@@ -1022,7 +1022,35 @@
       v.hit = el('rect', { x: x0 + 58, y: Y(92), width: half - 64, height: 34, class: 'hs lcd-hit' }, g);
       el('title', {}, v.hit, DICOM ? 'BAND STACKING REGISTER du ' + (side === 'B' ? 'SUB' : 'MAIN') + ' : bandes, F-INP (taper une fréquence)' : 'Taper une fréquence pour le VFO ' + side);
       // IC-7760 : clic sur la fréquence → BAND STACKING REGISTER, comme sur le TRX
-      v.hit.addEventListener('click', (ev) => { if (DICOM) { ev.stopPropagation(); L.i76pop = { k: 'band', sd: side }; L.agcTbl = false; L.multiMenu = false; return render(); } askFreq(side); });
+      // IC-7760 : clic sur les MHz → BAND STACKING REGISTER ; clic sur un chiffre des kHz / Hz → repère ▼ sur ce chiffre
+      // (le grand bouton et la molette changent alors ce chiffre) ; appui d'1 s sur les MHz → repère sur les MHz. Comme sur le TRX.
+      let dLp = null, dLpDone = false;
+      if (DICOM) {
+        v.hit.addEventListener('pointerdown', (ev) => {
+          dLpDone = false; clearTimeout(dLp);
+          const dg = i76DigitAt(side, ev);
+          if (dg && dg.step === 1e6) dLp = setTimeout(() => { dLpDone = true; L.digit = L.digit && L.digit.sd === side && L.digit.step === 1e6 ? null : { sd: side, step: 1e6 }; render(); }, 700);
+        });
+        for (const e2 of ['pointerup', 'pointerleave', 'pointercancel']) v.hit.addEventListener(e2, () => clearTimeout(dLp));
+        v.hit.addEventListener('wheel', (ev) => {
+          ev.preventDefault(); ev.stopPropagation();
+          if (!ev.deltaY || !needControl()) return;
+          const s0 = S(), cur = side === 'B' ? s0.freqB : s0.freq;
+          if (cur == null) return;
+          const dg = L.digit && L.digit.sd === side ? L.digit : i76DigitAt(side, ev) || { step: 100 };
+          const hz = cur + (ev.deltaY < 0 ? 1 : -1) * dg.step;
+          tuneTo(side, hz);
+          showTip(ev, (side === 'B' ? 'SUB ' : 'MAIN ') + fmtFreq(hz) + ' MHz');
+        }, { passive: false });
+      }
+      v.hit.addEventListener('click', (ev) => {
+        if (!DICOM) return askFreq(side);
+        ev.stopPropagation();
+        if (dLpDone) { dLpDone = false; return; }
+        const dg = i76DigitAt(side, ev);
+        if (dg && dg.step < 1e6) { L.digit = L.digit && L.digit.sd === side && L.digit.step === dg.step ? null : { sd: side, step: dg.step }; return render(); }
+        L.i76pop = { k: 'band', sd: side }; L.agcTbl = false; L.multiMenu = false; render();
+      });
       // « CLAR RX   -90Hz » au-dessus de la fréquence (clarifier en service), comme sur le TRX ; molette dessus : décalage ±10 Hz
       v.clarG = el('g', { class: 'lcd-clar', style: 'display:none' }, g);
       // FTX-1 : « CLAR RXTX » à droite, juste avant le décalage (comme sur le TRX)
@@ -3190,6 +3218,26 @@
     say('MODE ' + (p.sd === 'B' ? 'SUB' : 'MAIN') + ' : ' + R.MODES[code], '', 2000);
     render();
   }
+  // Chiffre de la fréquence sous la souris (IC-7760) : pas en Hz (1 MHz, 100 kHz, 10 kHz, 1 kHz, 100 Hz, 10 Hz) et n° du caractère
+  function i76DigitAt(sd, ev) {
+    const o = LCD['i76' + sd], t = o && o.freq;
+    if (!t || !t.textContent || !t.getScreenCTM) return null;
+    const m = t.getScreenCTM();
+    if (!m) return null;
+    const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+    const p = pt.matrixTransform(m.inverse()), str = t.textContent, d1 = str.indexOf('.'), d2 = str.indexOf('.', d1 + 1);
+    let best = null;
+    for (let i = 0; i < str.length; i++) {
+      if (str[i] === '.') continue;
+      let e;
+      try { e = t.getExtentOfChar(i); } catch (er) { return null; }
+      const dx = p.x < e.x ? e.x - p.x : p.x > e.x + e.width ? p.x - e.x - e.width : 0;
+      if (!best || dx < best.dx) best = { i, dx };
+    }
+    if (!best) return null;
+    const i = best.i, step = i < d1 ? 1e6 : i < d2 ? [1e5, 1e4, 1e3][i - d1 - 1] : [100, 10][i - d2 - 1];
+    return step ? { i, step } : null;
+  }
   function finpHz() {
     const t = L.finp || '';
     if (!t || t === '.') return null;
@@ -3407,6 +3455,7 @@
       // Fin de la fréquence : MAIN alignée sur la fin de ses barres S / SWR, SUB au bord droit (ses barres y sont calées aussi)
       const fe = sd === 'B' ? x0 + 248 : x0 + 194;
       o.freq = el('text', { x: X(fe), y: Y(80), class: 'i76-freq', 'text-anchor': 'end' }, v.g, '');
+      o.dig = el('path', { d: '', class: 'i76-dig', style: 'display:none' }, v.g); // ▼ sur le chiffre choisi
       for (const [k2, val] of [['x', X(fe - 188)], ['y', Y(59)], ['width', 190], ['height', 23]]) v.hit.setAttribute(k2, val);
       for (const [k2, val] of [['x', X(fe - 158)], ['y', Y(82)], ['width', 160]]) v.sel.setAttribute(k2, val);
       // Voyants du récepteur (et RIT / ΔTX) sous la fréquence
@@ -3602,7 +3651,7 @@
       if (single) { o.pw.setAttribute('x', +o.txR.getAttribute('x') + 25); o.pw.setAttribute('y', +o.txR.getAttribute('y') + 9); } else { o.pw.setAttribute('x', +o.txR.getAttribute('x')); o.pw.setAttribute('y', +o.txR.getAttribute('y') + 22); }
       tr(o.pw, d.tx);
       for (const e of [v.lbl, v.badge, v.mode, o.mh, o.filR, o.filT, o.fh, o.fiR, o.fiT]) tr(e, d.vfo);
-      for (const e of [o.freq, v.hit, v.sel]) tr(e, d.freq);
+      for (const e of [o.freq, v.hit, v.sel, o.dig]) tr(e, d.freq);
       o.freq.classList.toggle('big', !!single);
       tr(o.tags, d.tags);
       LCD['m' + sd].g.setAttribute('transform', LCD.i76mT[sd][single ? 1 : 0]);
@@ -3617,6 +3666,15 @@
     for (const sd of ['A', 'B']) {
       const t = LCD['v' + sd].mode; if (/-D$/.test(t.textContent)) t.textContent += '1'; // DATA1 du TRX : « USB-D1 »
       const fi = !!(L.i76pop && L.i76pop.k === 'finp' && L.i76pop.sd === sd), o = LCD['i76' + sd];
+      // ▼ au-dessus du chiffre choisi (grand bouton / molette : ce chiffre)
+      const dg = L.digit && L.digit.sd === sd ? L.digit : null;
+      let dd = '';
+      if (dg && o.freq.textContent && o.freq.getExtentOfChar) {
+        const str = o.freq.textContent, d1 = str.indexOf('.'), d2 = str.indexOf('.', d1 + 1);
+        const idx = dg.step === 1e6 ? d1 - 1 : dg.step >= 1e3 ? d1 + 1 + [1e5, 1e4, 1e3].indexOf(dg.step) : d2 + 1 + [100, 10].indexOf(dg.step);
+        try { const e = o.freq.getExtentOfChar(idx), cx = e.x + e.width / 2, ty = e.y + e.height * 0.2; dd = 'M' + (cx - 3.2) + ' ' + (ty - 4) + 'H' + (cx + 3.2) + 'L' + cx + ' ' + ty + 'Z'; } catch (er) { dd = ''; }
+      }
+      o.dig.setAttribute('d', dd); o.dig.style.display = dd ? '' : 'none';
       o.fiR.style.display = fi ? '' : 'none'; o.fiT.style.display = fi ? '' : 'none';
     }
     drawI76Multi(s);
@@ -5473,7 +5531,9 @@
       if (cur == null) return;
       let step = k.multi ? (L.fast ? 10000 : 1000) : (L.fine ? 1 : L.fast ? 1000 : 100);
       if (DICOM && L.q14 && k.dial && !L.fine) step = step / 4; // 1/4 (CW / RTTY / PSK) : 25 Hz au lieu de 100 Hz par cran
-      const hz = Math.round((cur + notches * step) / step) * step;
+      // IC-7760 : ▼ sur un chiffre de ce VFO → le grand bouton change ce chiffre (les autres restent)
+      const dgt = DICOM && k.dial && L.digit && L.digit.sd === side ? L.digit.step : 0;
+      const hz = dgt ? cur + notches * dgt : Math.round((cur + notches * step) / step) * step;
       tuneTo(side, hz);
       if (L.sync && !k.multi) tuneTo(side === 'B' ? 'A' : 'B', hz); // SYNC : les deux VFO ensemble
       return showTip(ev, (side === 'B' ? 'SUB ' : 'MAIN ') + fmtFreq(hz) + ' MHz');

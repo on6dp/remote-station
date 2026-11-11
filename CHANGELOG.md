@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.262** — IC-7760 : ▼ sur un chiffre de la fréquence (clic sur kHz/Hz, appui long sur MHz) : grand bouton et molette changent ce chiffre, MAIN et SUB
 - **0.37.261** — IC-7760 : « F-INP » orange à côté de FIL pendant la saisie de fréquence (MAIN et SUB)
 - **0.37.260** — IC-7760 : colonne MULTI — clic bref sur la case déjà choisie = ON/OFF (DIGI-SEL, COMP, MONITOR)
 - **0.37.259** — IC-7760 : appui d'1 s sur DIGI-SEL = colonne MULTI avec l'accord du DIGI-SEL (14 13) ; COMP dans la colonne seulement quand il est en service

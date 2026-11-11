@@ -840,6 +840,7 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face[data-model='ic7760'] .flt-trap { stroke: #f2f4f7; }
 #face[data-model='ic7760'] .flt-bars { stroke: #3b8fff; }
 #face .i76-finp { fill: #f28a1c; }
+#face .i76-dig { fill: #ffffff; pointer-events: none; }
 #face .lcd text.i76-finpt { fill: #fff; font: 900 7.6px Arial, 'Liberation Sans', sans-serif; pointer-events: none; }
 #face .i76-date { fill: #e6e9ef; font: 700 8px Arial, sans-serif; pointer-events: none; }
 /* IC-7760 : tableau AGC (appui d'1 s sur AGC) */
