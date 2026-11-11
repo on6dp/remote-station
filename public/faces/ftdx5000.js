@@ -209,7 +209,7 @@
       key({ id: 'fast', x: 589, y: 147, w: 27, h: 13, tip: 'FAST : accord rapide (1 kHz par cran)', act: { local: 'fast' }, on: (s, L) => !!L.fast }),
       key({ id: 'lock', x: 620, y: 147, w: 25, h: 13, tip: 'LOCK : verrouille le grand bouton du TRX (administrateurs)', act: { local: 'lock' }, on: (s) => !!(s.vfoSel === 1 ? s.lockB : s.lock) }),
       { id: 'aToB', x: 600, y: 167, w: 40, h: 13, tip: 'A ► B : copie le VFO-A dans le VFO-B', act: { action: 'aToB' } },
-      { id: 'bToA', x: 600, y: 189, w: 40, h: 12, tip: 'A ◄ B : copie le VFO-B dans le VFO-A', act: { action: 'bToA' } },
+      { id: 'abSwap', x: 600, y: 189, w: 40, h: 12, tip: 'A ⇄ B : échange les fréquences (et modes) des VFO A et B', act: { action: 'swap' } },
       { id: 'vm', x: 600, y: 210, w: 40, h: 12, tip: 'V/M', act: info('Mémoires : pas encore reliées.') },
       { id: 'mToA', x: 600, y: 232, w: 40, h: 12, tip: 'M ► A', act: info('Mémoires : pas encore reliées.') },
       { id: 'aToM', x: 600, y: 253, w: 40, h: 13, tip: 'A ► M', act: info('Mémoires : pas encore reliées.') },

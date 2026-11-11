@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.304** — FTDX5000 : touche A ⇄ B échange les deux VFO (SV)
 - **0.37.303** — FTDX5000 : indicateur TX en case rouge vif, texte blanc gras, en émission
 - **0.37.302** — FTDX5000 : CONT/APF des deux VFO (commande CO), fréquence du CONTOUR
 - **0.37.301** — FTDX5000 : antenne du VFO-B (AN 1), touche ANT selon A / B
