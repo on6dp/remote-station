@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.257** — IC-7760 : fenêtres ANT/BW/SFT, MODE, BAND STACKING et F-INP ; SUB DISP galvanomètre/filtre/bandes ; DUAL-W = un ou deux scopes, écran du TRX en un seul scope (galvanomètres en haut) ; loupe sur le scope et accord en glissant la souris
 - **0.37.256** — IC-7760 : fenêtres ANT (1-4, RX ANT), BW (FIL, largeur), SFT (PBT, CLR) par clic sur l'en-tête ; clic sur la fréquence = BAND STACKING REGISTER et F-INP (clavier du TRX) ; SUB DISP : galvanomètre / filtre (FIL, SHARP/SOFT, MN) / bandes
 - **0.37.255** — IC-7760 : en-tête ANT/BW/SFT en blanc gras, VFO-B aligné à droite sur sa fréquence, fréquence du MAIN alignée sur ses S-mètres, DUAL-W/SPLIT plus grands entre les deux ; touches du bas plus proches du TRX
 - **0.37.254** — IC-7760 : touches du bas plus proches du TRX (bleu plus clair, texte blanc gras plus grand, DUAL/HOLD sans couleur à part)

@@ -241,6 +241,14 @@
     }
     // TWIN PBT : pousser le bouton (CLR) = PBT intérieur et extérieur au milieu
     // IC-7760 : SUB DISP = petit écran : galvanomètre (au départ) ⇄ filtre du récepteur sélectionné
+    // IC-7760 : DUAL-W met aussi les scopes en DUAL / SINGLE (sans DUAL-W, un seul scope : celui du VFO en cours)
+    if (a.local === 'i76dualW') {
+      if (!needControl()) return;
+      const v = S().dualRx ? 0 : 1;
+      setCtl('dualRx', v);
+      if (R.CONTROL.scDual && !!S().scDual !== !!v) setTimeout(() => setCtl('scDual', v), 150);
+      return;
+    }
     if (a.local === 'subDisp') { L.subDisp = ((L.subDisp || 0) + 1) % 3; store.set('rs.face.subdisp', String(L.subDisp)); say('SUB DISP : ' + ['galvanomètre', 'filtre du récepteur sélectionné', 'touches de bandes'][L.subDisp] + ' dans le petit écran', '', 2500); return render(); }
     if (a.local === 'multiView') { viewTouched(); L.multi = !L.multi; store.set('rs.face.multi', L.multi ? '1' : '0'); WF.drawn = false; say(L.multi ? 'M.SCOPE : scope, OSCILLOSCOPE et AF-FFT du récepteur sélectionné' : 'M.SCOPE : affichage normal', '', 2500); return render(); }
     if (a.local === 'pbtClr') { if (!needControl()) return; setCtl(sdk('pbtIn'), 128); setCtl(sdk('pbtOut'), 128); if (ICOM) { L.pbtPopAt = Date.now(); L.pbtClrAt = Date.now(); render(); } return; }
@@ -1625,11 +1633,12 @@
     const W = Math.max(50, Math.round(r.width)), H = Math.max(40, Math.round(r.height));
     if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; WF.drawn = false; }
     const regs = rf76Regions(W, H), key = regs.map((q) => q.sd + ':' + q.y0).join(',') + '|' + W + 'x' + H;
-    if (!WF.drawn || WF.rf76 !== key) { c2.fillStyle = '#000'; c2.fillRect(0, 0, W, H); WF.drawn = true; WF.rf76 = key; }
+    if (!WF.drawn || WF.rf76 !== key) { c2.fillStyle = '#000'; c2.fillRect(0, 0, W, H); WF.drawn = true; if (WF.rf76 !== key) zoomOff(); WF.rf76 = key; }
     const q = regs.find((x) => x.sd === F.side);
     if (!q || (S()['scHold' + (F.side ? 'B' : '')])) return;
     drawRf(c2, 0, q.y0, W, q.h, F);
     F.last = { m: F.m, f0: F.f0, f1: F.f1 };
+    if (ZM.on) zoomDraw(F);
     // En-tête : « FIX · MAIN » / « CENTER · SUB », cadre orange autour du scope du récepteur sélectionné (comme sur le TRX)
     const sel = (activeSide() === 'B' ? 1 : 0) === F.side;
     c2.font = 'bold 11px Arial, sans-serif'; c2.textAlign = 'center';
@@ -1653,16 +1662,107 @@
     const side = q.sd ? 'B' : 'A', md = (q.sd ? S().modeB : S().mode) || '', st = /^CW/.test(md) ? 10 : 100;
     return { side, hz: Math.round((lo + x * (hi - lo)) / st) * st };
   }
+  // IC-7760, comme en touchant l'écran du TRX :
+  //  - clic sur un scope : loupe (×3) autour du point cliqué ; clic dans la loupe : le VFO de ce scope va sur cette fréquence ;
+  //    nouveau clic hors de la loupe : elle s'éteint ;
+  //  - bouton de la souris enfoncé et glissé sur un scope : la fréquence suit la souris.
+  const ZM = { on: false, el: null, c2: null };
+  function zoomEl() {
+    if (ZM.el) return ZM.el;
+    const z = ZM.el = document.createElement('canvas');
+    z.className = 'fc-zoom'; z.hidden = true;
+    $('facePanel').appendChild(z);
+    ZM.c2 = z.getContext('2d');
+    z.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const r = z.getBoundingClientRect(), fx = (ev.clientX - r.left) / r.width;
+      const md = (ZM.sd ? S().modeB : S().mode) || '', st = /^CW/.test(md) ? 10 : 50;
+      const hz = Math.round((ZM.f0 + fx * (ZM.f1 - ZM.f0)) / st) * st;
+      zoomOff();
+      if (!needControl()) return;
+      tuneTo(ZM.sd ? 'B' : 'A', hz);
+      showTip(ev, (ZM.sd ? 'SUB ' : 'MAIN ') + (hz / 1e6).toFixed(5) + ' MHz');
+    });
+    z.addEventListener('wheel', (ev) => ev.preventDefault(), { passive: false });
+    return z;
+  }
+  function zoomOff() { ZM.on = false; if (ZM.el) ZM.el.hidden = true; }
+  function zoomOpen(ev) {
+    const cv = $('scope'), r = cv.getBoundingClientRect(), pr = $('facePanel').getBoundingClientRect();
+    const regs = rf76Regions(Math.round(r.width), Math.round(r.height)), y = ev.clientY - r.top;
+    const q = regs.find((x) => y >= x.y0 && y <= x.y0 + x.h), F = q && RFSS[q.sd];
+    if (!F || !F.last) return;
+    const [lo, hi] = rfEdges(F.last), fx = (ev.clientX - r.left) / r.width, span = (hi - lo) * 0.1;
+    const fc = Math.max(lo + span / 2, Math.min(hi - span / 2, lo + fx * (hi - lo)));
+    const bw = r.width * 0.3, bx = Math.max(0, Math.min(r.width - bw, (fc - lo) / (hi - lo) * r.width - bw / 2));
+    const z = zoomEl();
+    Object.assign(ZM, { on: true, sd: q.sd, f0: fc - span / 2, f1: fc + span / 2, fc, lo, hi });
+    z.style.left = ((r.left - pr.left + bx) / pr.width * 100) + '%';
+    z.style.top = ((r.top - pr.top + q.y0) / pr.height * 100) + '%';
+    z.style.width = (bw / pr.width * 100) + '%';
+    z.style.height = ((q.h - 15) / pr.height * 100) + '%';
+    z.width = Math.round(bw); z.height = Math.round(q.h - 15);
+    ZM.c2.fillStyle = '#000'; ZM.c2.fillRect(0, 0, z.width, z.height);
+    z.title = 'Clic : le ' + (q.sd ? 'SUB' : 'MAIN') + ' va sur la fréquence cliquée';
+    z.hidden = false;
+    if (F.d) zoomDraw(F);
+  }
+  // Loupe : spectre et cascade de la partie agrandie, écart (kHz) ou fréquence (MHz) en bas, cadre bleu clair
+  function zoomDraw(F) {
+    if (!ZM.on || F.side !== ZM.sd) return;
+    if (!F.last || Math.abs(rfEdges(F.last)[0] - ZM.lo) > 1 || Math.abs(rfEdges(F.last)[1] - ZM.hi) > 1) return zoomOff(); // bande ou SPAN changés
+    const z = ZM.el, c2 = ZM.c2, W = z.width, H = z.height, d = F.d, n = d.length;
+    const sh = Math.round(H * 0.42), wh = H - sh;
+    if (wh > 2) c2.drawImage(z, 0, sh, W, wh - 1, 0, sh + 1, W, wh - 1);
+    const pal = PALS[L.wfColor] || PALS[1], col = new Float32Array(W);
+    for (let px = 0; px < W; px++) {
+      const fi = ((ZM.f0 + (px + 0.5) / W * (ZM.f1 - ZM.f0)) - ZM.lo) / (ZM.hi - ZM.lo) * (n - 1);
+      const i0 = Math.max(0, Math.min(n - 2, Math.floor(fi))), t = fi - i0;
+      col[px] = (d[i0] * (1 - t) + d[i0 + 1] * t) / (F.max || 160);
+    }
+    const img = c2.createImageData(W, 1);
+    for (let px = 0; px < W; px++) {
+      const v = Math.max(0, Math.min(1, (col[px] - 0.12) * 1.6)), c = pal[Math.min(255, Math.round(v * 255))];
+      img.data[px * 4] = c[0]; img.data[px * 4 + 1] = c[1]; img.data[px * 4 + 2] = c[2]; img.data[px * 4 + 3] = 255;
+    }
+    c2.putImageData(img, 0, sh);
+    c2.fillStyle = '#0b1020'; c2.fillRect(0, 0, W, sh);
+    c2.beginPath(); c2.moveTo(0, sh);
+    for (let px = 0; px < W; px++) c2.lineTo(px + 0.5, sh - Math.min(1, col[px]) * (sh - 2));
+    c2.lineTo(W, sh); c2.closePath(); c2.fillStyle = 'rgba(190,215,255,.85)'; c2.fill(); c2.strokeStyle = '#4f9cff'; c2.stroke();
+    // fréquence du VFO dans la loupe
+    const s = S(), rx = ZM.sd ? s.freqB : s.freq;
+    if (rx && rx >= ZM.f0 && rx <= ZM.f1) { const x = Math.round((rx - ZM.f0) / (ZM.f1 - ZM.f0) * W) + 0.5; c2.strokeStyle = '#fff'; c2.lineWidth = 1.5; c2.beginPath(); c2.moveTo(x, 0); c2.lineTo(x, sh); c2.stroke(); c2.lineWidth = 1; }
+    const fix = rfFix(F.last), mid = (ZM.f0 + ZM.f1) / 2, ctr = (ZM.lo + ZM.hi) / 2;
+    const lab = fix ? (mid / 1e6).toFixed(3) : ((mid - ctr) / 1000 >= 0 ? '+' : '−') + Math.abs(Math.round((mid - ctr) / 1000));
+    c2.fillStyle = 'rgba(0,0,0,.7)'; c2.fillRect(W / 2 - 24, H - 16, 48, 15);
+    c2.fillStyle = '#fff'; c2.font = 'bold 13px Arial, sans-serif'; c2.textAlign = 'center'; c2.fillText(lab, W / 2, H - 4);
+    c2.strokeStyle = '#8fd3ff'; c2.lineWidth = 2; c2.strokeRect(1, 1, W - 2, H - 2); c2.lineWidth = 1;
+  }
   if (DICOM) {
     const cv0 = $('scope');
-    cv0.addEventListener('click', (ev) => {
-      if (!rfFresh() || L.multi) return;
-      const p = rf76FreqAt(ev);
-      if (!p || !needControl()) return;
-      tuneTo(p.side, p.hz);
-      showTip(ev, (p.side === 'B' ? 'SUB ' : 'MAIN ') + (p.hz / 1e6).toFixed(p.hz % 1000 ? 4 : 3) + ' MHz');
+    let drag = null;
+    cv0.addEventListener('pointerdown', (ev) => {
+      if (!rfFresh() || L.multi || ev.button !== 0) return;
+      drag = { x: ev.clientX, y: ev.clientY, moved: false, last: 0 };
+      try { cv0.setPointerCapture(ev.pointerId); } catch (e) { /* rien */ }
     });
-    cv0.addEventListener('mousemove', (ev) => { if (!rfFresh()) return; const p = rf76FreqAt(ev); cv0.title = p ? 'Clic : ' + (p.side === 'B' ? 'SUB ' : 'MAIN ') + (p.hz / 1e6).toFixed(4) + ' MHz' : ''; });
+    cv0.addEventListener('pointermove', (ev) => {
+      if (!rfFresh()) return;
+      const p = rf76FreqAt(ev);
+      cv0.title = p ? (p.side === 'B' ? 'SUB ' : 'MAIN ') + (p.hz / 1e6).toFixed(4) + ' MHz — clic : loupe ; glisser (bouton enfoncé) : la fréquence suit la souris' : '';
+      if (!drag || !(ev.buttons & 1)) return;
+      if (!drag.moved && Math.abs(ev.clientX - drag.x) + Math.abs(ev.clientY - drag.y) < 5) return;
+      if (!drag.moved) { drag.moved = true; zoomOff(); if (!needControl()) { drag = null; return; } }
+      if (p) { tuneTo(p.side, p.hz); if (Date.now() - drag.last > 120) { drag.last = Date.now(); showTip(ev, (p.side === 'B' ? 'SUB ' : 'MAIN ') + (p.hz / 1e6).toFixed(4) + ' MHz'); } }
+    });
+    cv0.addEventListener('pointerup', (ev) => {
+      const d0 = drag; drag = null;
+      if (!d0 || d0.moved || !rfFresh() || L.multi) return;
+      if (ZM.on) return zoomOff(); // nouveau clic hors de la loupe : elle s'éteint
+      zoomOpen(ev);
+    });
+    cv0.addEventListener('pointercancel', () => { drag = null; });
   }
   // Pas de la grille en FIX : largeur / 14, arrondi à 1 – 2 – 2,5 – 5 × 10ⁿ
   function rfGrid(span) { const raw = span / 14, p10 = Math.pow(10, Math.floor(Math.log10(raw))); return [1, 2, 2.5, 5, 10].map((m) => m * p10).find((v) => v >= raw * 0.999) || 10 * p10; }
@@ -3052,11 +3152,46 @@
       const b = btn(gf, bx + 4, by + 2, kw - 8, kh - 6, lab, () => finpKey(k3), { SPLIT: 'SPLIT : la fréquence tapée va sur le SUB et SPLIT est mis en service', MEMO: 'MEMO : mémoires du TRX, pas à distance', ENT: 'ENT : aller sur la fréquence tapée', CE: 'CE : effacer', '·(-)': 'Point : sépare les MHz des kHz', BACK: 'Retour au BAND STACKING REGISTER' }[k3]);
       if (k3 === 'BACK') b.t.classList.add('i76bk');
     }));
+    // MODE : SSB, CW, RTTY / PSK, AM, FM / DATA, ↩ — une 2e pression inverse (USB ⇄ LSB, CW ⇄ CW-R…), DATA met ou ôte -D
+    const gm = LCD.popMode = el('g', {}, m);
+    const mw = (w - 28) / 3, mh3 = (hh - 30) / 3;
+    LCD.popModeB = {};
+    [['SSB', 'CW', 'RTTY'], ['PSK', 'AM', 'FM'], ['DATA', null, 'BACK']].forEach((row, ri) => row.forEach((k3, ci) => {
+      if (!k3) return;
+      const bx = x0 + 14 + ci * mw, by = y0 + 22 + ri * mh3;
+      const b = btn(gm, bx + 5, by + 2, mw - 10, mh3 - 8, k3 === 'BACK' ? '↩' : k3, () => (k3 === 'BACK' ? (L.i76pop = null, render()) : modeKey(k3)),
+        { SSB: 'SSB : LSB sous 10 MHz, USB au-dessus', CW: 'CW ⇄ CW-R', RTTY: 'RTTY ⇄ RTTY-R', PSK: 'PSK ⇄ PSK-R', AM: 'AM', FM: 'FM', DATA: 'DATA : mode données (SSB, AM, FM) ON / OFF', BACK: 'Retour (comme EXIT)' }[k3]);
+      if (k3 === 'BACK') b.t.classList.add('i76bk');
+      LCD.popModeB[k3] = b;
+    }));
     LCD.popHint = el('text', { x: x0 + 14, y: y0 + hh - 10, class: 'i76pop-h' }, m, '');
     // Retour ↩
     LCD.popBack = btn(m, x0 + w - 66, y0 + hh - 34, 58, 28, '↩', () => { L.i76pop = null; render(); }, 'Retour (comme EXIT)');
     LCD.popBack.t.classList.add('i76bk');
     m.addEventListener('wheel', (ev) => { if (!L.i76pop || L.i76pop.k === 'ant' || L.i76pop.k === 'band') return; ev.preventDefault(); ev.stopPropagation(); if (ev.deltaY) popTurn(ev.deltaY < 0 ? 1 : -1, ev); }, { passive: false });
+  }
+  // Fenêtre MODE : codes du TRX (00 LSB, 01 USB, 02 AM, 03 CW, 04 RTTY, 05 FM, 07 CW-R, 08 RTTY-R, 12 PSK, 13 PSK-R ; « D » = DATA)
+  function modeKey(k) {
+    const p = L.i76pop;
+    if (!p || !needControl()) return;
+    const s = S(), x = p.sd === 'B' ? 'B' : '', cur = String(s['modeCode' + x] || ''), base = cur.replace('D', ''), dat = /D$/.test(cur), f = s['freq' + x] || 14e6;
+    let code = null;
+    if (k === 'SSB') code = f < 10e6 ? '00' : '01'; // SSB : LSB sous 10 MHz, USB au-dessus
+    else if (k === 'CW') code = base === '03' ? '07' : '03';
+    else if (k === 'RTTY') code = base === '04' ? '08' : '04';
+    else if (k === 'PSK') code = base === '12' ? '13' : '12';
+    else if (k === 'AM') code = '02';
+    else if (k === 'FM') code = '05';
+    else if (k === 'DATA') {
+      if (!['00', '01', '02', '05'].includes(base)) return say('DATA : seulement en SSB, AM ou FM.', '', 3000);
+      code = base + (dat ? '' : 'D');
+    }
+    if (!code || !R.MODES[code]) return;
+    send({ t: 'set', mode: code, sub: p.sd === 'B' });
+    L.popModeAt = { code, at: Date.now(), sd: p.sd };
+    L.i76pop = null; // le mode choisi, la fenêtre MODE s'éteint, comme sur le TRX
+    say('MODE ' + (p.sd === 'B' ? 'SUB' : 'MAIN') + ' : ' + R.MODES[code], '', 2000);
+    render();
   }
   function finpHz() {
     const t = L.finp || '';
@@ -3105,9 +3240,17 @@
     LCD.popSft.style.display = p.k === 'sft' ? '' : 'none';
     LCD.popBand.style.display = p.k === 'band' ? '' : 'none';
     LCD.popFinp.style.display = p.k === 'finp' ? '' : 'none';
-    const full = p.k === 'band' || p.k === 'finp';
+    LCD.popMode.style.display = p.k === 'mode' ? '' : 'none';
+    const full = p.k === 'band' || p.k === 'finp' || p.k === 'mode';
     for (const e of [LCD.popBack.r, LCD.popBack.t, LCD.popBack.h, LCD.popHint]) e.style.display = full ? 'none' : '';
-    LCD.popTtl.textContent = { ant: 'ANTENNA', bw: 'FILTER', sft: 'SHIFT (PBT)', band: 'BAND STACKING REGISTER', finp: 'F-INP' }[p.k] + ' — ' + who;
+    LCD.popTtl.textContent = { ant: 'ANTENNA', bw: 'FILTER', sft: 'SHIFT (PBT)', band: 'BAND STACKING REGISTER', finp: 'F-INP', mode: 'MODE' }[p.k] + ' — ' + who;
+    if (p.k === 'mode') {
+      const pm = L.popModeAt && Date.now() - L.popModeAt.at < 3000 && L.popModeAt.sd === p.sd ? L.popModeAt.code : null;
+      const cur = pm || String(s['modeCode' + v.x] || ''), base = cur.replace('D', '');
+      const on = { SSB: base === '00' || base === '01', CW: base === '03' || base === '07', RTTY: base === '04' || base === '08', PSK: base === '12' || base === '13', AM: base === '02', FM: base === '05', DATA: /D$/.test(cur) };
+      for (const k3 in on) { const b = LCD.popModeB[k3]; if (b) { b.r.classList.toggle('sel', on[k3]); b.t.classList.toggle('sel', on[k3]); } }
+      return;
+    }
     if (p.k === 'finp') {
       const t = L.finp || '', f = s['freq' + v.x];
       if (t) LCD.popFFreq.textContent = t + ' MHz'; // saisie en cours (jaune) ; sinon la fréquence actuelle
@@ -3219,6 +3362,7 @@
       // en émission, l'échelle du haut devient Po (0 – 200 W) pour le récepteur qui émet. Galvanomètre à aiguille : dans le petit écran.
       const bx = X(xb + 20), bw = 172;
       const sb = o.sb = { bx, bw };
+      const hb = h; { const h = sb.g = el('g', {}, hb);
       sb.sLab = el('text', { x: X(xb + 4), y: Y(22), class: 'i76-bsl' }, h, 'S');
       sb.sNums = el('g', {}, h); sb.pNums = el('g', { style: 'display:none' }, h);
       for (let n = 0; n <= 9; n++) {
@@ -3236,7 +3380,7 @@
       el('text', { x: X(xb + 1), y: Y(37), class: 'i76-bs' }, h, 'SWR');
       for (const [sw, t] of [[1, '1'], [1.5, '1.5'], [2, '2'], [2.5, '2.5'], [3, '3'], [99, '∞']]) el('text', { x: bx + bw * i76SwrF(sw) - (sw > 50 ? 3 : 0) + (sw === 1 ? 4 : 0), y: Y(37), class: 'i76-bs' + (sw > 50 ? ' inf' : ''), 'text-anchor': 'middle' }, h, t);
       el('line', { x1: bx, y1: Y(39), x2: bx + bw, y2: Y(39), class: 'i76-bu' }, h);
-      sb.swr = el('line', { x1: bx, y1: Y(41.5), x2: bx, y2: Y(41.5), class: 'i76-bar thin' }, h);
+      sb.swr = el('line', { x1: bx, y1: Y(41.5), x2: bx, y2: Y(41.5), class: 'i76-bar thin' }, h); }
       // TX (rouge) et puissance dessous, à gauche de « VFO [mode] [FIL] », comme sur le TRX
       o.txR = el('rect', { x: X(xb + 2), y: Y(45), width: 22, height: 13, rx: 1.5, class: 'i76-tx' }, h);
       o.txT = el('text', { x: X(xb + 13), y: Y(55.3), class: 'i76-txt', 'text-anchor': 'middle' }, h, 'TX');
@@ -3246,12 +3390,13 @@
       for (const [k2, val] of [['x', X(xb + 48)], ['y', Y(46)], ['width', 34], ['height', 11]]) v.badge.setAttribute(k2, val);
       v.badge.setAttribute('class', 'lcd-mode i76');
       v.mode.setAttribute('x', X(xb + 65)); v.mode.setAttribute('y', Y(54.6)); v.mode.setAttribute('class', 'lcd-modet i76');
-      const mh = el('rect', { x: X(xb + 48), y: Y(46), width: 34, height: 11, class: 'hs lcd-hit' }, v.g);
+      const mh = o.mh = el('rect', { x: X(xb + 48), y: Y(46), width: 34, height: 11, class: 'hs lcd-hit' }, v.g);
       el('title', {}, mh, 'Mode : clic pour le tableau des modes (récepteur sélectionné)');
-      mh.addEventListener('click', (ev) => { ev.stopPropagation(); if (activeSide() !== sd && needControl()) setCtl('vfoSel', sd === 'B' ? 1 : 0); openModeMenu(); });
+      // Clic sur le mode : fenêtre MODE du TRX (SSB CW RTTY / PSK AM FM / DATA) pour ce VFO
+      mh.addEventListener('click', (ev) => { ev.stopPropagation(); L.i76pop = { k: 'mode', sd }; L.agcTbl = false; L.multiMenu = false; render(); });
       o.filR = el('rect', { x: X(xb + 85), y: Y(46), width: 26, height: 11, rx: 1.5, class: 'i76-fil' }, v.g);
       o.filT = el('text', { x: X(xb + 98), y: Y(54.2), class: 'i76-filt', 'text-anchor': 'middle' }, v.g, 'FIL');
-      const fh = el('rect', { x: X(xb + 85), y: Y(46), width: 26, height: 11, class: 'hs lcd-hit' }, v.g);
+      const fh = o.fh = el('rect', { x: X(xb + 85), y: Y(46), width: 26, height: 11, class: 'hs lcd-hit' }, v.g);
       el('title', {}, fh, 'FIL : filtre suivant (FIL1 → FIL2 → FIL3) de ce récepteur');
       fh.addEventListener('click', (ev) => { ev.stopPropagation(); if (needControl()) cycleCell(sd === 'B' ? 'filB' : 'fil'); });
       // Fréquence en police Icom (la fréquence en 7 segments de l'écran Yaesu est cachée)
@@ -3270,7 +3415,18 @@
     if (sl) {
       // Galvanomètre (environ 190 × 90 unités avec ses échelles) entre « MET Po » et la date
       const k = Math.min(sl.w / 195, (sl.h - 24) / 90);
-      for (const [sd, mx] of [['A', 85], ['B', 341]]) LCD['m' + sd].g.setAttribute('transform', 'translate(' + (sl.x + (sl.w - k * 190) / 2 + 4) + ',' + (sl.y + 8) + ') scale(' + k + ') translate(' + -X(mx) + ',' + -Y(6) + ')');
+      // Galvanomètre : dans le petit écran (scopes en DUAL) ou en haut de chaque VFO (un seul scope), comme sur le TRX
+      LCD.i76mT = {};
+      for (const [sd, mx, cx] of [['A', 85, 186], ['B', 341, 470]]) {
+        const ks = 0.9;
+        LCD.i76mT[sd] = ['translate(' + (sl.x + (sl.w - k * 190) / 2 + 4) + ',' + (sl.y + 8) + ') scale(' + k + ') translate(' + -X(mx) + ',' + -Y(6) + ')',
+          'translate(' + (X(cx) - ks * 95) + ',' + Y(13) + ') scale(' + ks + ') translate(' + -X(mx) + ',' + -Y(6) + ')'];
+        LCD['m' + sd].g.setAttribute('transform', LCD.i76mT[sd][0]);
+        const mg = LCD['i76met' + sd] = el('g', { style: 'display:none' }, g);
+        const mx0 = sd === 'B' ? 314 + 56 : 58;
+        el('rect', { x: X(mx0 + 2), y: Y(16), width: 26, height: 9, rx: 1, class: 'i76-met' }, mg);
+        el('text', { x: X(mx0 + 15), y: Y(23), class: 'i76-mett', 'text-anchor': 'middle' }, mg, 'MET Po');
+      }
       const sg = LCD.i76sub = el('g', {}, g);
       el('rect', { x: sl.x + 3, y: sl.y + 2.5, width: 20, height: 7, rx: 1, class: 'i76-met' }, sg);
       el('text', { x: sl.x + 13, y: sl.y + 8, class: 'i76-mett', 'text-anchor': 'middle' }, sg, 'MET Po');
@@ -3415,8 +3571,39 @@
       row.tr.style.display = it ? '' : 'none'; // case vide : sans réglette, comme sur le TRX
     });
   }
+  // IC-7760 : un seul scope → galvanomètres à aiguille en haut, fréquences plus grandes et plus bas, scope plus petit ;
+  // deux scopes (DUAL) → S-mètres en barres, fréquences en haut, deux scopes. Comme sur le TRX.
+  const I76_SINGLE = { tx: 50, vfo: 65, freq: 71, tags: 69, sc: 72 };
+  function i76Layout(single) {
+    const key = (single ? 'S' : 'D') + (LCD.monoKey || '') + (LCD.i76mmOn ? 'm' : '');
+    if (LCD.i76lay === key) return;
+    LCD.i76lay = key;
+    const d = single ? I76_SINGLE : { tx: 0, vfo: 0, freq: 0, tags: 0, sc: 0 }, tr = (e, dy) => e && e.setAttribute('transform', dy ? 'translate(0,' + dy + ')' : '');
+    tr(LCD.lowG, d.sc);
+    const box = LCD.scopeBox;
+    if (LCD.scopeRect && box) { LCD.scopeRect.setAttribute('y', box.y + d.sc); LCD.scopeRect.setAttribute('height', box.h - d.sc); }
+    if (LCD.placeScope) LCD.placeScope(-d.sc);
+    const cv = $('scope');
+    if (cv && box && LCD.i76mmOn) cv.style.width = ((box.w - 88) / V.w * 100) + '%';
+    for (const sd of ['A', 'B']) {
+      const o = LCD['i76' + sd], v = LCD['v' + sd];
+      o.sb.g.style.display = single ? 'none' : '';
+      for (const e of [o.txR, o.txT]) tr(e, d.tx);
+      if (single) { o.pw.setAttribute('x', +o.txR.getAttribute('x') + 25); o.pw.setAttribute('y', +o.txR.getAttribute('y') + 9); } else { o.pw.setAttribute('x', +o.txR.getAttribute('x')); o.pw.setAttribute('y', +o.txR.getAttribute('y') + 22); }
+      tr(o.pw, d.tx);
+      for (const e of [v.lbl, v.badge, v.mode, o.mh, o.filR, o.filT, o.fh]) tr(e, d.vfo);
+      for (const e of [o.freq, v.hit, v.sel]) tr(e, d.freq);
+      o.freq.classList.toggle('big', !!single);
+      tr(o.tags, d.tags);
+      LCD['m' + sd].g.setAttribute('transform', LCD.i76mT[sd][single ? 1 : 0]);
+      LCD['i76met' + sd].style.display = single ? '' : 'none';
+    }
+    WF.drawn = false;
+  }
   function drawI76(s, tx) {
     if (!LCD.i76) return;
+    const single = !s.scDual;
+    i76Layout(single);
     drawI76Multi(s);
     agcCur(s); // suit le mode / FAST-MID-SLOW même tableau fermé (valeur relue fiable à l'ouverture)
     drawI76Agc(s);
@@ -3492,8 +3679,13 @@
     LCD.i76dw.style.display = s.dualRx ? '' : 'none';
     LCD.i76sp.style.display = s.split ? '' : 'none';
     // Petit écran : aiguille du récepteur sélectionné (en émission : Po du MAIN), ou le filtre (SUB DISP)
-    const msd = tx ? 'A' : activeSide(), sub = L.subDisp || 0;
-    for (const sd of ['A', 'B']) LCD['m' + sd].g.style.display = !sub && sd === msd ? '' : 'none';
+    // Un seul scope : les deux galvanomètres sont en haut du grand écran (celui du SUB grisé sans DUAL-W) ; le petit écran montre alors le filtre
+    const msd = tx ? 'A' : activeSide(), sub = single && !(L.subDisp || 0) ? 1 : L.subDisp || 0;
+    L.subEff = sub;
+    for (const sd of ['A', 'B']) {
+      LCD['m' + sd].g.style.display = single || (!sub && sd === msd) ? '' : 'none';
+      LCD['m' + sd].g.classList.toggle('i76dim', single && sd === 'B' && s.dualRx === 0 && s.vfoSel !== 1);
+    }
     if (LCD.i76subF) {
       LCD.i76subF.style.display = sub === 1 ? '' : 'none';
       LCD.i76subB.style.display = sub === 2 ? '' : 'none';
@@ -6000,7 +6192,7 @@
     else LCD.span.textContent = ['', 'SUB / MAIN · ', 'MAIN | SUB · ', 'FILTRES · '][L.disp] + spanLabel() + (L.hold ? ' · HOLD' : '');
     applyMono();
     ssFollow(s);
-    for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) || (L.fdisp === 1 && sd !== activeSide()) || (SINGLE && sd === 'B') || !!LCD.ich || (DICOM && (sd !== activeSide() || L.subDisp !== 1)) || (FACE.meterDy && L.expand) ? 'none' : ''; // FTX-1 : EXPAND couvre les filtres
+    for (const sd of ['A', 'B']) if (LCD['f' + sd]) LCD['f' + sd].g.style.display = L.disp === 3 || (L.mono && sd !== activeSide()) || (L.fdisp === 1 && sd !== activeSide()) || (SINGLE && sd === 'B') || !!LCD.ich || (DICOM && (sd !== activeSide() || L.subEff !== 1)) || (FACE.meterDy && L.expand) ? 'none' : ''; // FTX-1 : EXPAND couvre les filtres
     drawFunc(s);
     drawStatus(s);
     if (FACE.meterFtx) { ftxDispDraw(s); dspDraw(s); meterDraw(s); }

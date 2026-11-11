@@ -107,7 +107,7 @@
       { id: 'mpad', cx: 1416, cy: 322, r: 14, tip: 'MPAD', act: info('MPAD (bloc-notes de fréquences) : pas encore relié.') },
       // Colonne de droite
       { id: 'change', x: 1460, y: 197, w: 45, h: 23, tip: 'CHANGE : échange MAIN et SUB ; appui d’au moins 1 s : MAIN = SUB', act: { action: 'swap', long: { action: 'aToB' } } },
-      { id: 'dualW', x: 1515, y: 197, w: 45, h: 23, tip: 'DUAL-W : double réception (MAIN et SUB ensemble)', act: { toggle: 'dualRx' }, led: (s) => !!s.dualRx },
+      { id: 'dualW', x: 1515, y: 197, w: 45, h: 23, tip: 'DUAL-W : double réception (MAIN et SUB ensemble) ; sans DUAL-W, un seul scope (celui du VFO en cours)', act: { local: 'i76dualW' }, led: (s) => !!s.dualRx },
       { id: 'split', x: 1570, y: 197, w: 47, h: 23, tip: 'SPLIT : émission sur le SUB (fréquence d’émission en rouge)', act: { local: 'split' }, led: (s) => !!s.split },
       { id: 'rit', x: 1460, y: 392, w: 45, h: 25, tip: 'RIT ; le bouton RIT/ΔTX règle le décalage', act: { toggle: 'rit' }, led: (s) => !!s.rit },
       { id: 'dtx', x: 1515, y: 392, w: 45, h: 25, tip: 'ΔTX (XIT) ; le bouton RIT/ΔTX règle le décalage', act: { toggle: 'xit' }, led: (s) => !!s.xit },
