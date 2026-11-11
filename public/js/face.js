@@ -4369,11 +4369,9 @@
       const o = LCD['i76' + sd], x = sd === 'B' ? 'B' : '', md = (x ? s.modeB : s.mode) || '';
       const live = !x || s.dualRx !== 0 || s.vfoSel === 1;
       o.ant.textContent = s['ant' + x] ? 'ANT ' + s['ant' + x] + (s['rxAnt' + x] ? ' RX' : '') : 'ANT';
-      const hz = /FM/.test(md) ? null : R.filHz ? R.filHz(md, s['filWi' + x]) : null;
+      const pb = pbt76(s, x), hz = pb.hz; // bande passante avec le TWIN PBT (comme le cadre du TWIN-PBT)
       o.bw.textContent = 'BW ' + (hz ? (hz >= 1000 ? (hz / 1000).toFixed(2).replace(/0$/, '') + 'k' : hz) : '—');
-      const pi = s['pbtIn' + x], po = s['pbtOut' + x], fw = hz || 2400;
-      const sft = pi != null && po != null ? Math.round((((pi - 128) + (po - 128)) / 2) / 128 * fw / 2 / 10) * 10 : 0;
-      o.sft.textContent = 'SFT ' + sft;
+      o.sft.textContent = 'SFT ' + pb.sft;
       const nt = s['dnf' + x] ? 'AN' : s['notch' + x] ? 'MN' : '';
       o.nR.style.display = nt && live ? '' : 'none'; o.nT.style.display = nt && live ? '' : 'none'; o.nT.textContent = nt;
       o.side.classList.toggle('sel', activeSide() === sd);
@@ -4462,11 +4460,9 @@
       if (sub === 1) {
         const x = activeSide() === 'B' ? 'B' : '', md = (x ? s.modeB : s.mode) || '';
         LCD.sfSide.textContent = x ? 'SUB' : 'MAIN';
-        const hz = /FM/.test(md) ? null : R.filHz ? R.filHz(md, s['filWi' + x]) : null;
+        const pb = pbt76(s, x), hz = pb.hz;
         LCD.sfBw.textContent = 'BW ' + (hz ? (hz >= 1000 ? (hz / 1000).toFixed(2) + 'k' : hz) : '—');
-        const pi = s['pbtIn' + x], po = s['pbtOut' + x];
-        const sft = pi != null && po != null ? Math.round((((pi - 128) + (po - 128)) / 2) / 128 * (hz || 2400) / 2 / 25) * 25 : 0;
-        LCD.sfSft.textContent = 'SFT ' + sft;
+        LCD.sfSft.textContent = 'SFT ' + pb.sft;
         if (L.sfKeys && Date.now() - (L.sfKeysAt || 0) > 10000) L.sfKeys = false; // se cachent seules après 10 s
         LCD.sfKeysG.style.display = L.sfKeys ? '' : 'none';
         LCD.sfFil.t.textContent = 'FIL' + (s['fil' + x] || 1);
@@ -4807,7 +4803,8 @@
     const f = LCD.flt[fs], md = f.mode || '', fw = DICOM ? ((R.filHz && R.filHz(md, s['filWi' + px])) || f.hz) : filHz(md, s.fil) || f.hz;
     // CLR : les deux PBT au milieu tout de suite, sans attendre la relecture du TRX
     const clr = Date.now() - (L.pbtClrAt || 0) < 1500;
-    const hz = clr ? fw : Math.round(f.hz / 50) * 50, sh = clr ? 0 : Math.round(f.sh / 25) * 25, // pas du TRX : 50 Hz (BW), 25 Hz (SFT)
+    const pb = DICOM ? pbt76(s, px) : null;
+    const hz = pb ? pb.hz || fw : clr ? fw : Math.round(f.hz / 50) * 50, sh = pb ? pb.sft : clr ? 0 : Math.round(f.sh / 25) * 25, // pas du TRX : 50 Hz (BW), 25 Hz (SFT)
       c = audioCenter(md, fw), lo = c + sh - hz / 2, hi = c + sh + hz / 2;
     const q = (n) => e.querySelector('[data-k="' + n + '"]');
     q('bw').textContent = 'BW ' + (hz >= 1000 ? (Math.round(hz / 10) / 100).toFixed(2) + 'k' : Math.round(hz) + '');
@@ -6140,6 +6137,15 @@
   }
 
   // ------------------------------------------------------------ boutons rotatifs : molette, glisser
+  // IC-7760 : bande passante d'un récepteur avec son TWIN PBT (valeurs envoyées en priorité, avant la relecture du TRX) ;
+  // la même partout : en-tête BW / SFT, petit écran, cadre du TWIN-PBT — BW par 50 Hz, SFT par 25 Hz, comme sur le TRX
+  function pbt76(s, x) {
+    const md = (x ? s.modeB : s.mode) || '', fw = /FM/.test(md) ? null : R.filHz ? R.filHz(md, s['filWi' + x]) : null;
+    const c0 = L.pbt76 && Date.now() - L.pbt76.at < 2500 && L.pbt76.x === x ? L.pbt76 : null, clr = Date.now() - (L.pbtClrAt || 0) < 1500;
+    const pi = clr ? 128 : c0 ? c0.pi : s['pbtIn' + x] != null ? s['pbtIn' + x] : 128, po = clr ? 128 : c0 ? c0.po : s['pbtOut' + x] != null ? s['pbtOut' + x] : 128;
+    const w = fw || 2400, si = (pi - 128) / 128 * w / 2, so = (po - 128) / 128 * w / 2;
+    return { fw, pi, po, hz: fw ? Math.max(50, Math.round((fw - Math.abs(si - so)) / 50) * 50) : null, sft: Math.round((si + so) / 2 / 25) * 25 };
+  }
   function pbtTurn76(part, notches) {
     if (!needControl()) return;
     const s = S(), x = activeSide() === 'B' ? 'B' : '', c0 = L.pbt76 && Date.now() - L.pbt76.at < 1500 && L.pbt76.x === x ? L.pbt76 : null;
@@ -6856,7 +6862,7 @@
         // décale une moitié du filtre (0-255, 128 au milieu) ; la bande passante est ce qui reste entre les deux
         // IC-7760 : largeur lue sur le TRX (1A 03) pour chaque récepteur, et son TWIN PBT
         const fw = DICOM ? ((R.filHz && R.filHz(mode || '', s['filWi' + sfx])) || 2400) : filHz(mode || '', s.fil);
-        const pIn = s['pbtIn' + (DICOM ? sfx : '')], pOut = s['pbtOut' + (DICOM ? sfx : '')];
+        const pb76 = DICOM ? pbt76(s, sfx) : null, pIn = pb76 ? pb76.pi : s.pbtIn, pOut = pb76 ? pb76.po : s.pbtOut; // IC-7760 : valeurs envoyées en priorité
         const si = ((pIn != null ? pIn : 128) - 128) / 128 * fw / 2, so = ((pOut != null ? pOut : 128) - 128) / 128 * fw / 2;
         lo = -fw / 2 + Math.max(si, so); hi = fw / 2 + Math.min(si, so);
         if (hi - lo < 50) { const m = (lo + hi) / 2; lo = m - 25; hi = m + 25; }

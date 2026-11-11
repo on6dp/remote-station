@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.289** — IC-7760 : BW et SFT identiques dans l'en-tête, le petit écran et le cadre du TWIN-PBT
 - **0.37.288** — IC-7760 : voyant blanc du TWIN-PBT (bande passante décalée ou rétrécie)
 - **0.37.287** — IC-7760 : TWIN-PBT bague = BW, bouton = SFT, cadre BW / SFT sur le grand écran
 - **0.37.286** — IC-7760 : Filter Effect Screen (Line / Fill, Waveform Color R/G/B), couleurs du SCOPE SET réglables
