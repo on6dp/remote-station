@@ -217,7 +217,7 @@
     }
     if (a.local === 'exit' && L.agcTbl) { L.agcTbl = false; return render(); }
     if (a.local === 'exit' && L.i76pop) { L.i76pop = null; return render(); } // IC-7760 : EXIT ferme la fenêtre ANT / BW / SFT // IC-7760 : EXIT ferme le tableau AGC
-    if (a.local === 'exit' && L.metWin) { L.metWin = false; return render(); } // IC-7760 : fenêtre METER du petit écran
+    if (a.local === 'exit' && (L.metWin || L.metWin2)) { L.metWin = false; L.metWin2 = false; return render(); } // IC-7760 : fenêtre METER du petit écran
     if (a.local === 'exit' && L.i76ant) { L.i76ant = false; return render(); } // IC-7760 : écran ANTENNA
     // (IC-7760 : EXIT ne change pas l'écran choisi par M.SCOPE — on y revient en sortant des menus, comme sur le TRX)
     // IC-7760 M.SCOPE : scope + MULTI-FUNCTION METER → METER seul → scope seul → …, comme sur le TRX
@@ -3802,7 +3802,21 @@
       lab(yy, 'SWR'); scl(yy + 8, [[0, '1'], [i76SwrF(1.5), '1.5'], [i76SwrF(2), '2'], [i76SwrF(2.5), '2.5'], [i76SwrF(3), '3'], [1, '∞']]); const bW = bar(yy + 12); yy += 20;
       lab(yy, 'Id'); scl(yy + 8, [[0, '0'], [1 / 3, '5'], [2 / 3, '10'], [1, '15A']]); const bI = bar(yy + 12);
       LCD.subMt = { bS, bA, bC, bW, bI, bx0, bw0 };
-      el('rect', { x: sl.x, y: sl.y, width: sl.w, height: sl.h, class: 'hs lcd-hit' }, smg).addEventListener('click', (ev) => { ev.stopPropagation(); L.metWin = !L.metWin; render(); });
+      // Toucher les barres : petite fenêtre METER — OFF (retour au galvanomètre) et ↩, comme sur le TRX
+      el('rect', { x: sl.x, y: sl.y, width: sl.w, height: sl.h, class: 'hs lcd-hit' }, smg).addEventListener('click', (ev) => { ev.stopPropagation(); L.metWin2 = !L.metWin2; render(); });
+      const mw2 = LCD.metWin2 = el('g', { style: 'display:none' }, g);
+      { const x = sl.x + 6, y = sl.y + 4, w = sl.w - 12, h = 34;
+        el('rect', { x, y, width: w, height: h, rx: 3, class: 'i76-mwbg' }, mw2);
+        el('text', { x: x + w / 2, y: y + 9, class: 'i76-mwt', 'text-anchor': 'middle' }, mw2, 'METER');
+        const ks = [['OFF', x + 4, w * 0.68], ['↩', x + 8 + w * 0.68, w - w * 0.68 - 12]];
+        for (const [k, kx2, kw2] of ks) {
+          el('rect', { x: kx2, y: y + 13, width: kw2, height: h - 17, rx: 2, class: 'i76-mwk' }, mw2);
+          el('text', { x: kx2 + kw2 / 2, y: y + 13 + (h - 17) / 2 + 3.5, class: 'i76-mwkt', 'text-anchor': 'middle' }, mw2, k);
+          const hh = el('rect', { x: kx2, y: y + 13, width: kw2, height: h - 17, class: 'hs lcd-hit' }, mw2);
+          el('title', {}, hh, k === 'OFF' ? 'OFF : fin des barres Multi-function, retour au galvanomètre' : 'Retour');
+          hh.addEventListener('click', (ev) => { ev.stopPropagation(); L.metWin2 = false; if (k === 'OFF') { L.metMulti = false; store.set('rs.face.i76mm', '0'); } render(); });
+        }
+      }
       const mw = LCD.metWin = el('g', { style: 'display:none' }, g);
       const wx = sl.x + 6, wy0 = sl.y + 6, ww = sl.w - 12, wh0 = sl.h - 12;
       el('rect', { x: wx, y: wy0, width: ww, height: wh0, rx: 3, class: 'i76-mwbg' }, mw);
@@ -4375,6 +4389,8 @@
     }
     if (LCD.metWin) {
       if (sub) L.metWin = false;
+      if (sub || !L.metMulti) L.metWin2 = false;
+      LCD.metWin2.style.display = L.metWin2 ? '' : 'none';
       LCD.metWin.style.display = L.metWin ? '' : 'none';
       for (const k in LCD.metBtn) LCD.metBtn[k].classList.toggle('sel', L.metMulti ? k === 'Multi-function' : k === (L.metSel || 'Po'));
     }
