@@ -3748,6 +3748,9 @@
       o.bw = el('text', { x: X(xb + 66), y: Y(11.6), class: 'i76-hdr', 'text-anchor': 'middle' }, h, 'BW');
       o.hdrSft = el('rect', { x: X(xb + 98), y: Y(2.5), width: 50, height: 12, rx: 1.5, class: 'i76-box' }, h);
       o.sft = el('text', { x: X(xb + 123), y: Y(11.6), class: 'i76-hdr', 'text-anchor': 'middle' }, h, 'SFT');
+      // NOTCH manuel en service : case rouge « NOTCH » à droite de SFT dans l'en-tête, comme sur le TRX
+      o.hdrNo = el('rect', { x: X(xb + 152), y: Y(2.5), width: 38, height: 12, rx: 1.5, class: 'i76-notch', style: 'display:none' }, h);
+      o.hdrNoT = el('text', { x: X(xb + 171), y: Y(11.6), class: 'i76-notcht', 'text-anchor': 'middle', style: 'display:none' }, h, 'NOTCH');
       // AN / MN (NOTCH) : petite case à droite de FIL, sur la ligne « VFO », comme sur le TRX
       o.nR = el('rect', { x: X(xb + 114), y: Y(46.5), width: 20, height: 10, rx: 1.5, class: 'i76-nb', style: 'display:none' }, h);
       o.nT = el('text', { x: X(xb + 124), y: Y(54.2), class: 'i76-nbt', 'text-anchor': 'middle', style: 'display:none' }, h, 'AN');
@@ -4400,6 +4403,9 @@
       const pb = pbt76(s, x), hz = pb.hz; // bande passante avec le TWIN PBT (comme le cadre du TWIN-PBT)
       o.bw.textContent = 'BW ' + (hz ? (hz >= 1000 ? (hz / 1000).toFixed(2).replace(/0$/, '') + 'k' : hz) : '—');
       o.sft.textContent = 'SFT ' + pb.sft;
+      const nOn = !!s['notch' + x]; o.hdrNo.style.display = o.hdrNoT.style.display = nOn ? '' : 'none';
+      // RFG à côté de la case NOTCH (MAIN : à droite ; SUB : à gauche de ANT) quand elle est affichée, en DUAL
+      if (s.scDual && o.rfgXY) { const rx0 = +o.rfgXY[0][0]; o.rfg.setAttribute('x', nOn ? (sd === 'B' ? rx0 - 194 : rx0 + 18) : rx0); }
       const nt = s['dnf' + x] ? 'AN' : s['notch' + x] ? 'MN' : '';
       o.nR.style.display = nt && live ? '' : 'none'; o.nT.style.display = nt && live ? '' : 'none'; o.nT.textContent = nt;
       o.side.classList.toggle('sel', activeSide() === sd);
