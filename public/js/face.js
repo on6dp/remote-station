@@ -568,9 +568,11 @@
     // FACE.texts : afficheurs de la photo remplis par la page (FTDX5000 : fréquence du VFO-A en 7 segments, VFO-B, clarifier)
     const txts = el('g', { class: 'ftexts', 'pointer-events': 'none' }, svg);
     for (const t of FACE.texts || []) {
+      // t.box : case de couleur derrière le texte quand il est affiché (FTDX5000 : TX rouge vif en émission)
+      const bx = t.box ? el('rect', { x: t.box[0], y: t.box[1], width: t.box[2], height: t.box[3], rx: 2, fill: t.box[4], style: 'display:none' }, txts) : null;
       const e = t.seg ? el('path', { d: 'M0 0', fill: t.color }, txts)
         : el('text', { x: t.x, y: t.y, 'text-anchor': t.anchor || 'end', fill: t.color, style: 'font:' + (t.font || '600 ' + t.size + 'px ui-monospace,Consolas,monospace') }, txts);
-      textEls.push({ el: e, t });
+      textEls.push({ el: e, t, bx });
     }
     // Zones cliquables
     const hs = el('g', { class: 'hss' }, svg);
@@ -6845,6 +6847,7 @@
       try { v = live ? String(d.t.text(s, L) || '') : ''; } catch (e) { v = ''; }
       if (d.t.seg) d.el.setAttribute('d', v ? seg7(v, d.t.x, d.t.y, d.t.size) : 'M0 0');
       else if (d.el.textContent !== v) d.el.textContent = v;
+      if (d.bx) d.bx.style.display = v ? '' : 'none';
     }
     // Écran
     const subOn = s.dualRx !== 0;

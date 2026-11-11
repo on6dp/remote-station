@@ -143,7 +143,8 @@
     { x: 492, y: 410, anchor: 'end', color: YEL, font: FONT(14), text: (s) => ((s.clar || 0) < 0 ? '−' : '') + (Math.abs(s.clar || 0) / 1000).toFixed(3) },
     { x: 424, y: 519, anchor: 'middle', color: '#7fb0ff', font: FONT(10), text: (s) => (subOn(s) ? '' : 'SUB OFF') },
     // Voyants sous l'afficheur
-    ind('TX', 34, (s) => !!s.tx, '#ff4a3a'), ind('DUAL', 78, (s) => !!s.dualRx), ind('SPLIT', 128, (s) => !!s.split), ind('NAR', 177, (s) => !!(s.vfoSel === 1 ? s.narrowB : s.narrow)),
+    // TX : case rouge vif, « TX » blanc gras, en émission
+    Object.assign(ind('TX', 34, (s) => !!s.tx, '#ffffff'), { font: '800 12px DejaVu Sans,Arial,sans-serif', box: [17, 632, 34, 16, '#ff1a1a'] }), ind('DUAL', 78, (s) => !!s.dualRx), ind('SPLIT', 128, (s) => !!s.split), ind('NAR', 177, (s) => !!(s.vfoSel === 1 ? s.narrowB : s.narrow)),
     ind('LOCK', 222, (s) => !!(s.vfoSel === 1 ? s.lockB : s.lock)), ind('FAST', 268, (s, L) => !!L.fast), ind('RX CLAR', 327, (s) => !!s.rit), ind('TX CLAR', 392, (s) => !!s.xit),
     ind('PROC', 458, (s) => !!s.proc, '#ff5040')
   ];
