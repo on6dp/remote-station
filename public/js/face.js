@@ -2963,7 +2963,7 @@
   const isCw = (s) => /^CW/.test(L.activeMode(s) || '');
   const I76_FUNC = [
     ['APF', (s) => (isCw(s) ? ['OFF', 'WIDE', 'MID', 'NAR'][sdv('apf')(s)] || '—' : ''), (s) => isCw(s) && !!sdv('apf')(s), (s) => { if (!isCw(s)) return say('APF : seulement en CW.', '', 2500); setCtl(sdk('apf'), ((sdv('apf')(s) || 0) + 1) % 4); }, 'APF (CW) : OFF → WIDE → MID → NAR', (s) => !isCw(s)],
-    ['NOTCH', (s) => notchTxt(s), (s) => !!(sdv('notch')(s) || sdv('dnf')(s)), () => doAct({ act: { local: 'notchCycle' } }), 'NOTCH : OFF → AN → MN (pas d’AN en CW)'],
+    ['NOTCH', (s) => (sdv('notch')(s) ? 'MN|(' + (['WIDE', 'MID', 'NAR'][sdv('notchW')(s)] || '—') + ')' : notchTxt(s)), (s) => !!(sdv('notch')(s) || sdv('dnf')(s)), () => doAct({ act: { local: 'notchCycle' } }), 'NOTCH : OFF → AN → MN → OFF (pas d’AN en CW) ; MN : largeur dans la colonne NOTCH'],
     ['NB', (s) => onOff(sdv('nb')(s)), (s) => !!sdv('nb')(s), sdTog('nb'), 'NB marche / arrêt (récepteur sélectionné)'],
     ['NR', (s) => onOff(sdv('nr')(s)), (s) => !!sdv('nr')(s), sdTog('nr'), 'NR marche / arrêt (récepteur sélectionné)'],
     ['TRACKING', (s) => onOff(s.tracking), (s) => !!s.tracking, (s) => setCtl('tracking', s.tracking ? 0 : 1), 'TRACKING : MAIN et SUB accordés ensemble'],
@@ -3020,7 +3020,11 @@
         const parts = L1 === 'P.AMP/ATT' ? ['P.AMP/', 'ATT'] : [L1];
         parts.forEach((p, i) => { const ts = document.createElementNS('http://www.w3.org/2000/svg', 'tspan'); ts.setAttribute('x', b.t1.getAttribute('x')); ts.setAttribute('dy', i ? '1.05em' : parts.length > 1 ? '-0.45em' : '0'); ts.textContent = p; b.t1.appendChild(ts); });
       }
-      b.t2.textContent = val(s);
+      const v2 = val(s);
+      if (v2 && v2.indexOf('|') > 0) { // IC-7760 : « MN » et « (WIDE) » sur deux lignes, comme sur le TRX
+        b.t2.textContent = '';
+        v2.split('|').forEach((p, i) => { const ts = document.createElementNS('http://www.w3.org/2000/svg', 'tspan'); ts.setAttribute('x', b.t2.getAttribute('x')); ts.setAttribute('dy', i ? '0.95em' : '-0.35em'); if (i) ts.setAttribute('class', 'sm'); ts.textContent = p; b.t2.appendChild(ts); });
+      } else b.t2.textContent = v2;
       b.r.classList.toggle('on', !!on(s)); // AGC et TBW ont toujours une valeur : toujours encadrés, comme sur le TRX
       if (b.it[5]) { const off = !!b.it[5](s); b.r.classList.toggle('dis', off); b.t1.classList.toggle('dis', off); } // IC-7760 : APF grisé hors CW
     }
