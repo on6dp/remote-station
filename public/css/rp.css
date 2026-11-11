@@ -2138,3 +2138,8 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 }
 .lg-form .lg-row input:not([type='checkbox']):focus, .lg-form .lg-row select:focus { border-color: var(--v2-accent-cyan-bright, #00d4ff); outline: none; }
 .lg-myrefs .lg-ref input { border-color: #3fae3f !important; }
+/* Ligne MODES : l'onglet choisi sur fond bleu azur, texte blanc gras */
+.ctabs .ctab[aria-selected='true']:not([data-tab='log']):not([data-tab='sync']):not([data-tab='events']), .ctabs .ctab.picked {
+  background: linear-gradient(180deg, #2b95ff, #0a6fe0); border-color: #7cc0ff; color: #fff; font-weight: 800;
+  box-shadow: 0 0 10px rgba(0, 127, 255, .5); text-shadow: 0 1px 1px rgba(0, 0, 0, .35);
+}

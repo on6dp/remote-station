@@ -4944,7 +4944,14 @@
     else if (t === 'cw') cwModeAuto();
     else if (t === 'ssb') ssbModeAuto();
   }
+  // Dashboard : le mode choisi (sa page s'ouvre à part) reste marqué sur fond bleu azur dans la ligne MODES
+  function markPicked(t) {
+    if (POPUP) return;
+    document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.classList.toggle('picked', !!t && b.dataset.tab === t));
+    store.set('picked', t || '');
+  }
   function openModePage(t) {
+    markPicked(t);
     modeFor(t);
     if (t === 'cw') return popWin('/cw.html', 'rs-cwpage', 1240, 860);
     if (t === 'ssb') return popWin('/ssb.html', 'rs-ssbpage', 1240, 900);
@@ -5245,6 +5252,7 @@
         if (DATA_TABS[b.dataset.tab]) dataU(DATA_TABS[b.dataset.tab]);
         else if (b.dataset.tab === 'cw') cwModeAuto();
       }));
+      markPicked(store.get('picked', ''));
       $('dgFollow').addEventListener('click', (e) => { e.stopPropagation(); setFollow(!follow); if (follow) followView(); });
       setFollow(follow);
       $('dgDetach').addEventListener('click', (e) => {

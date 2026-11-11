@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.313** — Dashboard : mode choisi sur fond bleu azur dans la ligne MODES
 - **0.37.312** — SPLIT orange plus foncé ; fiche QSO : noms des champs en blanc gras, champs arrondis
 - **0.37.311** — Dashboard : bouton SPLIT enclenché sur fond orange, SPLIT en blanc gras
 - **0.37.310** — Dashboard : « TX VFO-A (MAIN) » / « TX VFO-B (SUB) », fond orange en SPLIT
