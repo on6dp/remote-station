@@ -2129,4 +2129,12 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 /* « TX VFO-A (MAIN) / TX VFO-B (SUB) » : fond orange plein quand le SPLIT est enclenché */
 .vfo-top .txon.split { background: #ff8c1a; border-color: #ffb066; color: #1a0e00; box-shadow: 0 0 10px rgba(255, 140, 26, .45); }
 /* Bouton SPLIT enclenché : fond orange, SPLIT en blanc gras (comme le rappel « TX VFO-B (SUB) ») */
-.btn[data-ctl='split'][aria-pressed='true'] { background: linear-gradient(180deg, #ff9a2e, #e8740a); border-color: #ffc27a; color: #fff; font-weight: 800; text-shadow: 0 1px 1px rgba(0,0,0,.45); box-shadow: 0 0 10px rgba(255, 140, 26, .5); }
+.btn[data-ctl='split'][aria-pressed='true'] { background: linear-gradient(180deg, #e06a00, #b34f00); border-color: #ff9a3c; color: #fff; font-weight: 800; text-shadow: 0 1px 1px rgba(0,0,0,.45); box-shadow: 0 0 10px rgba(255, 140, 26, .5); }
+/* Fiche QSO du carnet : noms des champs en blanc gras, champs à encadré arrondi et bord clair (comme les boutons) */
+.lg-form .lg-row label { color: #f4f7fb; font-weight: 800; font-size: 9.5px; }
+.lg-form .lg-row label.lg-ref { color: #ffd400; }
+.lg-form .lg-row input:not([type='checkbox']), .lg-form .lg-row select {
+  border-radius: 8px; border-color: color-mix(in srgb, #c8d0dc 42%, var(--v2-border));
+}
+.lg-form .lg-row input:not([type='checkbox']):focus, .lg-form .lg-row select:focus { border-color: var(--v2-accent-cyan-bright, #00d4ff); outline: none; }
+.lg-myrefs .lg-ref input { border-color: #3fae3f !important; }
