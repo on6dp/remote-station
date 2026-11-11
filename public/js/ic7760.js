@@ -142,13 +142,30 @@
     txFm: ['FM', [[21, 'TX Bass', 'tone'], [22, 'TX Treble', 'tone']]],
     net: ['NETWORK (* Valid after Restart)', [[161, 'DHCP *', ['OFF', 'ON']], [162, 'IP Address (LAN) *', 'ip'], [164, 'IP Address (Controller) *', 'ip'], [165, 'IP Address (RF Deck) *', 'ip'],
       [166, 'Subnet Mask *', 'mask'], [167, 'Default Gateway *', 'ip'], [168, 'Primary DNS Server *', 'ip'], [169, 'Secondary DNS Server *', 'ip'],
-      [170, 'Audio Buffer Size (via LAN) *', ['Small', 'Mid', 'Large']], [171, 'Connection from Different Segment *', ['OFF', 'ON']], [183, 'Network Name', 'name']]]
+      [170, 'Audio Buffer Size (via LAN) *', ['Small', 'Mid', 'Large']], [171, 'Connection from Different Segment *', ['OFF', 'ON']], [176, 'Network Name', 'name']]],
+    // Network → Different Segment Settings (réglages en vigueur du bloc RF sur un autre segment) : lecture seule aussi
+    netSeg: ['DIFFERENT SEGMENT SETTINGS (* Valid after Restart)', [[172, 'IP Address (RF Deck) *', 'ip'], [173, 'Subnet Mask (RF Deck) *', 'mask'], [174, 'Default Gateway (RF Deck) *', 'ip'], [175, 'Audio Buffer Size *', ['Small', 'Mid', 'Large']]]],
+    // SET → Display (1A 05 01 84 … 01 99), dans l'ordre du TRX ; Filter Effect Screen = sous-dossier (01 92, 01 93)
+    disp: ['DISPLAY', [[184, 'LCD Backlight', 'pct'], [185, 'LED Bright', 'pct'], [186, 'Display Font', ['Square', 'Round']], [187, 'Meter Response (Standard, Edgewise)', ['Slow', 'Mid', 'Fast']],
+      [188, 'Meter Type (Normal Screen)', ['Standard', 'Edgewise', 'Bar']], [189, 'Meter Type (Expand Screen)', ['Edgewise', 'Bar']], [190, 'Meter Peak Hold (Bar)', ['OFF', 'ON']], [191, 'Memory Name', ['OFF', 'ON']],
+      [194, 'Screen Saver', ['OFF', '15min', '30min', '60min']], [195, 'External Display', ['OFF', 'ON']], [196, 'External Display Resolution', ['800x480', '800x600']],
+      [197, 'Opening Message', ['OFF', 'ON']], [198, 'My Call', 'name'], [199, 'Display Language', ['English', 'Japanese']]]],
+    dispFx: ['FILTER EFFECT SCREEN', [[192, 'Waveform Type', ['Line', 'Fill']], [193, 'Waveform Color', 'rgb']]],
+    // MENU → ANTENNA (1A 05 03 44 … 03 62) : TYPE (connecteurs, lecture seule), ANTENNA MEMORY (antenne de chaque tranche de fréquences :
+    // ANT 1 – 4 et RX-ANT), Temporary Memory (TEMP-M) et [ANT] Switch (Manual / Auto) ; écriture réservée aux administrateurs
+    ant: ['ANTENNA', [[344, 'ANT2', ['OFF', 'ON']], [345, 'ANT3', ['OFF', 'ON']], [346, 'ANT4', ['OFF', 'ON']], [347, 'RX-ANT Connectors', ['RX-ANT', 'RX-I/O']],
+      [348, 'External Antenna Tuner', ['ANT1', 'ANT2', 'ANT3', 'ANT4']],
+      [349, '0.03 - 1.60', 'antm'], [350, '1.60 - 2.00', 'antm'], [351, '2.00 - 6.00', 'antm'], [352, '6.00 - 8.00', 'antm'], [353, '8.00 - 11.00', 'antm'], [354, '11.00 - 15.00', 'antm'],
+      [355, '15.00 - 20.00', 'antm'], [356, '20.00 - 22.00', 'antm'], [357, '22.00 - 26.00', 'antm'], [358, '26.00 - 30.00', 'antm'], [359, '30.00 - 45.00', 'antm'], [360, '45.00 - 60.00', 'antm'],
+      [361, 'Temporary Memory', ['OFF', 'ON']], [362, '[ANT] Switch', ['Manual', 'Auto']]]]
   };
+  // Tranches de l'ANTENNA MEMORY (MHz) : 1A 05 03 49 + i
+  const ANT_SEG = EX_MENUS.ant[1].filter((x) => x[2] === 'antm').map((x) => [x[0], ...x[1].split(' - ').map(Number)]);
   delete EX_TREE.net;
-  const EX_PARENT = { tone: null, toneRx: 'tone', toneTx: 'tone', net: null };
-  for (const k in EX_MENUS) if (k !== 'net') EX_PARENT[k] = k.startsWith('rx') ? 'toneRx' : 'toneTx';
+  const EX_PARENT = { tone: null, toneRx: 'tone', toneTx: 'tone', net: null, netSeg: 'net', ant: null, disp: null, dispFx: 'disp' };
+  for (const k in EX_MENUS) if (EX_PARENT[k] === undefined) EX_PARENT[k] = k.startsWith('rx') ? 'toneRx' : 'toneTx';
   const EX = {};
-  for (const k in EX_MENUS) for (const it of EX_MENUS[k][1]) EX[it[0]] = { n: it[0], label: it[1], title: it[3] || (EX_MENUS[k][0] + ' ' + it[1]), type: Array.isArray(it[2]) ? 'list' : it[2], opts: Array.isArray(it[2]) ? it[2] : null, rw: k !== 'net', admin: k === 'net', menu: k };
+  for (const k in EX_MENUS) for (const it of EX_MENUS[k][1]) EX[it[0]] = { n: it[0], label: it[1], title: it[3] || (EX_MENUS[k][0] + ' ' + it[1]), type: Array.isArray(it[2]) ? 'list' : it[2], opts: Array.isArray(it[2]) ? it[2] : null, rw: !/^net/.test(k) && !(k === 'ant' && it[0] < 349) && ![193, 198, 199].includes(it[0]), admin: /^net/.test(k), wAdmin: k === 'ant', menu: k };
   const TBW_LO = [100, 120, 150, 200, 300, 500], TBW_HI = [2500, 2700, 2800, 2900];
   const exFmt = (it, raw) => {
     if (raw == null || raw === '') return '—';
@@ -156,8 +173,11 @@
     if (t === 'tone') return (v > 5 ? '+' : '') + (v - 5);
     if (t === 'hl') { const h = Math.floor(v / 100), l = v % 100; return (h ? h * 100 : '----') + ' - ' + (l >= 25 ? '----' : l * 100); }
     if (t === 'tbw6') { const lo = Math.floor(v / 10), hi = v % 10; return TBW_LO[lo] + ' - ' + TBW_HI[hi]; }
-    if (t === 'list') return it.opts[v] != null ? it.opts[v] : String(raw);
-    if (t === 'mask') { const b = []; for (let i = 0; i < 4; i++) b.push(256 - Math.pow(2, 8 - Math.max(0, Math.min(8, v - i * 8)))); return b.map((x) => x % 256).join('.'); }
+    if (t === 'pct') return Math.round(v / 255 * 100) + '%';
+    if (t === 'rgb') { const [r2, g2, b2] = String(raw).split(','); return 'R:' + r2 + '  G:' + g2 + '  B:' + b2; }
+    if (t === 'antm') return String(Math.floor(v / 10) + 1) + (v % 10 ? ' + RX' : ''); // ANT 1 – 4 (+ RX-ANT)
+    if (t === 'list') return it.n === 161 && v ? 'ON (   .   .   .   )' : it.opts[v] != null ? it.opts[v] : String(raw);
+    if (t === 'mask') { const b = []; for (let i = 0; i < 4; i++) b.push(256 - Math.pow(2, 8 - Math.max(0, Math.min(8, v - i * 8)))); return b.map((x) => x % 256).join('.') + ' (' + v + 'bit)'; }
     return String(raw); // ip, name : déjà en texte
   };
   function exOk(it, raw) {
@@ -166,12 +186,18 @@
     if (t === 'tone') return v >= 0 && v <= 10;
     if (t === 'hl') { const h = Math.floor(v / 100), l = v % 100; return h >= 0 && h <= 20 && l >= 5 && l <= 25 && (h === 0 || l === 25 || h * 100 < l * 100); }
     if (t === 'tbw6') return Math.floor(v / 10) <= 5 && v % 10 <= 3;
+    if (t === 'antm') return v >= 0 && Math.floor(v / 10) <= 3 && v % 10 <= 1;
+    if (t === 'pct') return v >= 0 && v <= 255;
+    if (t === 'list') return v >= 0 && v < it.opts.length;
     return false;
   }
   function exBytes(it, raw) {
     const v = Number(raw), t = it.type;
     if (t === 'hl') return [bcd(Math.floor(v / 100)), bcd(v % 100)];
     if (t === 'tbw6') return [(Math.floor(v / 10) << 4) | (v % 10)];
+    if (t === 'antm') return [bcd(Math.floor(v / 10)), bcd(v % 10)];
+    if (t === 'pct') return lvlBytes(v);
+    if (t === 'rgb') return String(raw).split(',').map(Number).reduce((o, x) => o.concat(lvlBytes(x)), []);
     return [bcd(v)];
   }
   const exRaw = (it, v) => v % 100000;
@@ -433,9 +459,10 @@
     if (c === 0x1A && d[0] === 0x05 && d.length >= 4 && EX[unbcd(d[1]) * 100 + unbcd(d[2])]) {
       const n = unbcd(d[1]) * 100 + unbcd(d[2]), it = EX[n], b = d.slice(3);
       // IP : 4 octets de 2 octets BCD (centaines, dizaines-unités) ; nom : texte (16 caractères au plus)
-      const raw = it.type === 'hl' ? (b.length >= 2 ? unbcd(b[0]) * 100 + unbcd(b[1]) : null) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F)
+      const raw = it.type === 'hl' || it.type === 'antm' ? (b.length >= 2 ? unbcd(b[0]) * (it.type === 'antm' ? 10 : 100) + unbcd(b[1]) : null) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F)
         : it.type === 'ip' ? (b.length >= 8 ? [0, 2, 4, 6].map((o) => unbcd(b[o]) * 100 + unbcd(b[o + 1])).join('.') : null)
-        : it.type === 'name' ? String.fromCharCode(...b.filter((x) => x >= 0x20 && x < 0x7F)).trim() : unbcd(b[0]);
+        : it.type === 'name' ? String.fromCharCode(...b.filter((x) => x >= 0x20 && x < 0x7F)).trim()
+        : it.type === 'pct' ? (b.length >= 2 ? lvlValue(b, 0) : null) : it.type === 'rgb' ? (b.length >= 6 ? [lvlValue(b, 0), lvlValue(b, 2), lvlValue(b, 4)].join(',') : null) : unbcd(b[0]);
       return raw == null ? { ok: true } : { ['ex' + n]: String(raw) };
     }
     if (c === 0x1A) return { ok: true };
@@ -641,12 +668,12 @@
         if (d.length === 3) {
           // Network (simulateur) : adresses d'exemple, rien de réel
           const ipb = (s4) => s4.split('.').map(Number).reduce((o, x) => o.concat([bcd(Math.floor(x / 100)), bcd(x % 100)]), []);
-          if (it.type === 'ip') return r(0x05, d[1], d[2], ...ipb({ 162: '192.168.0.10', 164: '192.168.0.11', 165: '192.168.0.12', 167: '192.168.0.1', 168: '192.168.0.1', 169: '0.0.0.0' }[n] || '0.0.0.0'));
-          if (it.type === 'name') return r(0x05, d[1], d[2], ...Array.from('IC-7760 HEAD').map((ch) => ch.charCodeAt(0)));
-          const raw = ex[n] != null ? ex[n] : { hl: 525, tone: 5, tbw6: n === 15 ? 1 : n === 16 ? 21 : n === 17 ? 30 : 1, mask: 24, list: n === 170 ? 1 : n === 161 ? 1 : 0 }[it.type];
+          if (it.type === 'ip') return r(0x05, d[1], d[2], ...ipb({ 162: '192.168.0.10', 164: '192.168.0.11', 165: '192.168.0.12', 167: '192.168.0.1', 168: '192.168.0.1', 169: '0.0.0.0', 172: '192.168.100.10', 174: '192.168.100.1' }[n] || '0.0.0.0'));
+          if (it.type === 'name') return r(0x05, d[1], d[2], ...Array.from(n === 198 ? 'ON5VL' : 'IC-7760 HEAD').map((ch) => ch.charCodeAt(0)));
+          const raw = ex[n] != null ? ex[n] : { hl: 525, tone: 5, tbw6: n === 15 ? 1 : n === 16 ? 21 : n === 17 ? 30 : 1, mask: 24, antm: 0, pct: n === 184 ? 128 : 191, rgb: '96,192,255', list: n === 188 ? 0 : n === 190 || n === 191 || n === 197 || n === 170 || n === 175 || n === 161 || (n >= 344 && n <= 346) || n === 362 ? 1 : 0 }[it.type];
           r(0x05, d[1], d[2], ...exBytes(it, raw));
         }
-        else { const b = d.slice(3); ex[n] = it.type === 'hl' ? unbcd(b[0]) * 100 + unbcd(b[1]) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F) : unbcd(b[0]); ok(); }
+        else { const b = d.slice(3); ex[n] = it.type === 'pct' ? lvlValue(b, 0) : it.type === 'hl' || it.type === 'antm' ? unbcd(b[0]) * (it.type === 'antm' ? 10 : 100) + unbcd(b[1]) : it.type === 'tbw6' ? (b[0] >> 4) * 10 + (b[0] & 0x0F) : unbcd(b[0]); ok(); }
       } else if (c === 0x1A && d[0] === 0x05 && d[1] === 0x03 && (d[2] === 0x63 || d[2] === 0x64)) {
         const dep = d[2] === 0x63;
         if (d.length === 3) r(0x05, 0x03, d[2], ...(dep ? [bcd(this.nbd != null ? this.nbd : 4)] : lvlBytes(this.nbw != null ? this.nbw : 128)));
@@ -705,7 +732,7 @@
   const api = {
     ID, NAME, MODES, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX, POWER_RANGE, POWER_STEP, INIT,
     FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS, STR_KEYS,
-    EX, EX_MENUS, EX_TREE, EX_PARENT, exFmt, exOk, exCode,
+    EX, EX_MENUS, EX_TREE, EX_PARENT, exFmt, exOk, exCode, ANT_SEG,
     GROUPS, CONTROLS, CONTROL, validate, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
     smeterLabel, swrValue, vdValue, idValue, poFrac, filHz, bwText,
     // Badges du récepteur SUB sur le dashboard (deux récepteurs, comme le FTDX101)

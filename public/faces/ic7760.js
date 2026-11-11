@@ -102,7 +102,7 @@
       // Sous l'écran
       { id: 'menu', x: 320, y: 536, w: 90, h: 20, tip: 'MENU : écran MENU du TRX (SCOPE, AUDIO, VOICE, METER, SWR, MEMORY, SCAN, MPAD, RECORD, ANTENNA, PRESET, SET)', act: { local: 'icomMenu' } },
       { id: 'function', x: 437, y: 536, w: 90, h: 20, tip: 'FUNCTION : écran des fonctions du TRX (P.AMP, ATT, AGC, NOTCH, NB, NR, DIGI-SEL, IP+, APF… du récepteur sélectionné ; VOX/BK-IN, COMP, TBW, MONI, TRACKING, DUAL-W)', act: { local: 'func' }, led: (s, L) => L.func },
-      { id: 'mscope', x: 555, y: 536, w: 90, h: 20, tip: 'M.SCOPE : écran multi-fonctions (scope, OSCILLOSCOPE, AF-FFT du son reçu) ; 2e appui : retour', act: { local: 'multiView' }, led: (s, L) => !!L.multi },
+      { id: 'mscope', x: 555, y: 536, w: 90, h: 20, tip: 'M.SCOPE : scope + MULTI-FUNCTION METER → METER seul → scope seul (à chaque appui), comme sur le TRX', act: { local: 'i76ms' } },
       { id: 'quick', x: 675, y: 536, w: 90, h: 20, tip: 'QUICK : tableau des bandes', act: { local: 'bandMenu' } },
       { id: 'exit', x: 792, y: 536, w: 90, h: 20, tip: 'EXIT : ferme le tableau ou le menu ouvert', act: { local: 'exit' } },
       { id: 'rec', x: 920, y: 536, w: 53, h: 20, tip: 'REC', act: info('REC (enregistreur du TRX) : pas disponible à distance.') },

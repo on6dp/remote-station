@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.37.279 | [RemoteStation-Setup-0.37.279.exe](0.37.279/RemoteStation-Setup-0.37.279.exe) | [remote-station-0.37.279.tar.gz](0.37.279/remote-station-0.37.279.tar.gz) | ANTENNA MEMORY / TEMP-M / [ANT] SW : administrateurs ; Network toujours en lecture seule — [empreintes SHA-256](0.37.279/SHA256SUMS.txt) |
 | 0.37.278 | [RemoteStation-Setup-0.37.278.exe](0.37.278/RemoteStation-Setup-0.37.278.exe) | [remote-station-0.37.278.tar.gz](0.37.278/remote-station-0.37.278.tar.gz) | Network : lecture seule, jamais écrit, réservé aux administrateurs — [empreintes SHA-256](0.37.278/SHA256SUMS.txt) |
 | 0.37.277 | [RemoteStation-Setup-0.37.277.exe](0.37.277/RemoteStation-Setup-0.37.277.exe) | [remote-station-0.37.277.tar.gz](0.37.277/remote-station-0.37.277.tar.gz) | Ctrl+F5 sur /ic7760 et /station — [empreintes SHA-256](0.37.277/SHA256SUMS.txt) |
 | 0.37.276 | [RemoteStation-Setup-0.37.276.exe](0.37.276/RemoteStation-Setup-0.37.276.exe) | [remote-station-0.37.276.tar.gz](0.37.276/remote-station-0.37.276.tar.gz) | Ctrl+F5 sur /ic7760 — [empreintes SHA-256](0.37.276/SHA256SUMS.txt) |

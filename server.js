@@ -3648,6 +3648,8 @@ function onOperator(conn, m) {
         if ((m.ctl === 'lock' || m.ctl === 'lockB') && !conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'LOCK : réservé aux administrateurs' });
         // IC-7760 : SET → Network (adresses du réseau du club) : lecture réservée aux administrateurs, jamais d'écriture
         if (m.ctl === 'exRead' && R.EX && R.EX[Number(m.value)] && R.EX[Number(m.value)].admin && !conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Network : réservé aux administrateurs' });
+        // IC-7760 : MENU → ANTENNA (ANTENNA MEMORY, TEMP-M, [ANT] Switch) : quelle antenne pour quelle tranche = installation du club → administrateurs
+        if (m.ctl === 'exSet' && R.EX && R.EX[Math.floor(Number(m.value) / 100000)] && R.EX[Math.floor(Number(m.value) / 100000)].wAdmin && !conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'ANTENNA : réglages réservés aux administrateurs' });
         // FTX-1 : ATT / IPO du SUB pas réglables à distance — envoyés après passage sur SUB, ils changeaient quand même ceux du MAIN
         // (constaté au club le 06/11 : clic sur ATT du SUB → ATT du MAIN changé sur le TRX)
         if (R.ID === 'ftx1' && (m.ctl === 'attB' || m.ctl === 'preampB')) {
