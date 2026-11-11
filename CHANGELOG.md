@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.316** — Dashboard : « BANDES » au lieu de « BANDS », STEP et BANDES un peu plus grands
 - **0.37.315** — Dashboard : VFO A sur fond vert foncé, VFO B sur fond rose foncé (ligne STEP)
 - **0.37.314** — Dashboard : petit filtre BW / SFT dans l'écran de chaque VFO ; mode choisi en bleu azur
 - **0.37.313** — Dashboard : mode choisi sur fond bleu azur dans la ligne MODES
