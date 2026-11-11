@@ -172,7 +172,7 @@ sudo systemctl restart remote-station
 | `maxTxSeconds` | 120 | Durée maximale d'une émission |
 | `remoteVoice` | `true` | Phonie à distance (section 9). `false` : le PTT garde le micro du club |
 | `bandPlan` | `true` | MODE AUTO, plan de bande IARU Région 1 (section 10) |
-| `refData` | `true` | Téléchargement des listes IOTA / WWFF / POTA / BOTA / LLOTA pour le carnet (section 11). `false` : pas de téléchargement, les cases de référence restent utilisables à la main |
+| `refData` | `true` | Téléchargement des listes IOTA / WWFF / POTA / BOTA / LLOTA / SOTA pour le carnet (section 11). `false` : pas de téléchargement, les cases de référence restent utilisables à la main |
 | `autoSideband` | `true` | LSB sous 10 MHz, USB au-dessus, au changement de bande (section 10) |
 | `controlIdleMinutes` / `sessionIdleMinutes` | 15 / 15 | Main libérée / membre déconnecté après ce temps sans action |
 | `idleExempt` | ON6DP, ON4LUC, ON5VL | Jamais déconnectés pour inactivité (la main est quand même libérée) |
@@ -432,20 +432,21 @@ Ces deux automatismes n'agissent que si un membre a la main (rien ne change pour
 - Confirmations LoTW : lues pour l'indicatif choisi et reportées seulement sur ses QSO (date de dernière lecture gardée par indicatif).
 - Pas d'envoi UDP vers le logbook du PC du club pour un QSO fait sous un indicatif personnel.
 
-### Listes de références IOTA, WWFF, POTA, BOTA, LLOTA
+### Listes de références IOTA, WWFF, POTA, BOTA, LLOTA, SOTA
 
-- La fiche du QSO a des cases **IOTA, WWFF, POTA, BOTA, LLOTA** (2e ligne, à droite de Remarque) pour les références du correspondant, et une ligne « Ma réf. (activation) » (bouton à droite de QO-100) pour celles de la station. Une liste de choix s'ouvre pendant la frappe.
+- La fiche du QSO a des cases **IOTA, WWFF, POTA, BOTA, LLOTA, SOTA** (2e ligne, à droite de Remarque) pour les références du correspondant, et une ligne « Ma réf. (activation) » (bouton à droite de QO-100) pour celles de la station. Une liste de choix s'ouvre pendant la frappe.
 - Le serveur télécharge les listes mondiales lui-même, sans clé ni compte, dans `/opt/remote-station/refdata/<PROGRAMME>.json` :
   - POTA : `https://pota.app/all_parks_ext.csv`
   - WWFF : `https://wwff.co/wwff-data/wwff_directory.csv`
   - BOTA (WWBOTA) : `https://api.wwbota.org/bunkers/?format=CSV`
   - LLOTA : `https://llota.app/api/public/references`
   - IOTA : `https://www.iota-world.org/…/fulllist.json`
-- Premier téléchargement 20 s après le démarrage du service (une liste à la fois), puis vérification toutes les 6 h ; une liste est retéléchargée quand elle a plus de 7 jours (BOTA : 30 jours). Une liste en erreur garde la version précédente.
+  - SOTA : `https://storage.sota.org.uk/summitslist.csv` (environ 180 000 sommets, quelques dizaines de Mo ; les sommets retirés sont écartés ; locator calculé d'après la latitude / longitude)
+- Premier téléchargement 20 s après le démarrage du service (une liste à la fois), puis vérification toutes les 6 h ; une liste est retéléchargée quand elle a plus de 7 jours (BOTA et SOTA : 30 jours). Une liste en erreur garde la version précédente.
 - **État et mise à jour à la main** : onglet Logbooks → Synchronisation ▾ → **Listes de références…** (administrateurs) → « Mettre à jour maintenant ». Les erreurs s'affichent aussi dans `journalctl -u remote-station`.
 - Le VPS doit pouvoir joindre ces sites en HTTPS (sortie). `"refData": false` dans `config.json` coupe les téléchargements.
 - `refdata/` n'est pas à sauvegarder (il se retélécharge) et n'est jamais publié sur GitHub.
-- ADIF : `IOTA`, `POTA_REF`, `WWFF_REF`, `MY_IOTA`, `MY_POTA_REF`, `MY_WWFF_REF` ; BOTA en `SIG` = `WWBOTA` / `SIG_INFO` (LLOTA en `SIG` = `LLOTA` s'il n'y a pas de BOTA ; `MY_SIG` / `MY_SIG_INFO` pour la station), plus des champs `APP_REMOTESTATION_BOTA` / `APP_REMOTESTATION_LLOTA` (et `_MY_`) pour garder les deux.
+- ADIF : `IOTA`, `POTA_REF`, `WWFF_REF`, `SOTA_REF`, `MY_IOTA`, `MY_POTA_REF`, `MY_WWFF_REF`, `MY_SOTA_REF` ; BOTA en `SIG` = `WWBOTA` / `SIG_INFO` (LLOTA en `SIG` = `LLOTA` s'il n'y a pas de BOTA ; `MY_SIG` / `MY_SIG_INFO` pour la station), plus des champs `APP_REMOTESTATION_BOTA` / `APP_REMOTESTATION_LLOTA` (et `_MY_`) pour garder les deux.
 
 ---
 

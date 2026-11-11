@@ -38,7 +38,7 @@
   const LG_COLS = [['date', 98], ['utc', 58], ['call', 96], ['band', 70], ['mhz', 82], ['mode', 66], ['env', 58], ['recu', 64], ['nom', 116],
     ['qth', 136], ['loc', 70], ['dxcc', 116], ['pfx', 76], ['txc', 84], ['op', 84], ['refs', 150], ['ctst', 112], ['lotw', 62], ['eqsl', 62], ['cl', 46], ['qrz', 54], ['fill', 0]];
   // Références des programmes « on the air » : [champ du carnet, programme, exemple]
-  const REF_KEYS = [['iota', 'IOTA', 'EU-005'], ['wwff_ref', 'WWFF', 'ONFF-0001'], ['pota_ref', 'POTA', 'BE-0001'], ['bota_ref', 'BOTA', 'B/ON-0001'], ['llota_ref', 'LLOTA', 'CE-0001']];
+  const REF_KEYS = [['iota', 'IOTA', 'EU-005'], ['wwff_ref', 'WWFF', 'ONFF-0001'], ['pota_ref', 'POTA', 'BE-0001'], ['bota_ref', 'BOTA', 'B/ON-0001'], ['llota_ref', 'LLOTA', 'CE-0001'], ['sota_ref', 'SOTA', 'ON/ON-001']];
   let editing = null;      // QSO en cours de modification
   let lastTxCall = '';     // dernier TX call de la ligne Correspondant reporté dans la fiche
   let filt = {};           // filtres par colonne { date: '20261025', band: '20m', … }
@@ -83,7 +83,6 @@
         <label class="lg-w5">RST reçu <input name="rst_rcvd" maxlength="8"></label>
         <label class="lg-txc">TX call <select name="station" title="Indicatif sous lequel le QSO a été fait (STATION_CALLSIGN)"></select></label>
         <label class="lg-chk lg-qo" title="QSO via le satellite QO-100 : fréquence de montée 2400,xxx MHz (la FI du convertisseur est convertie)"><input type="checkbox" name="qo100"> QO-100</label>
-        <span class="lg-gap"></span>
         <button class="btn lg-myref-btn" type="button" data-a="myrefs" aria-pressed="false" title="Afficher les références de la station (le club active un parc, une île…) ; elles restent remplies d'un QSO à l'autre">＋ Ma référence (activation)</button>
       </div>
       <div class="lg-row">
@@ -122,7 +121,7 @@
           <button type="button" role="menuitem" data-s="qrz">QRZ…</button>
           <hr class="lg-msep">
           <button type="button" role="menuitem" data-a="cfg" title="Réglages des carnets en ligne, de QRZ.com et des ports UDP">⚙ Configuration…</button>
-          <button type="button" role="menuitem" data-a="refs" title="Listes IOTA, WWFF, POTA, BOTA, LLOTA téléchargées par le serveur : état et mise à jour">Listes de références…</button>
+          <button type="button" role="menuitem" data-a="refs" title="Listes IOTA, WWFF, POTA, BOTA, LLOTA, SOTA téléchargées par le serveur : état et mise à jour">Listes de références…</button>
         </div>
       </div>
       <div class="lg-menu">
@@ -137,7 +136,7 @@
     <div class="lg-tw">
       <table class="lg-table">
         <colgroup>${LG_COLS.map(([k]) => '<col data-c="' + k + '">').join('')}</colgroup>
-        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th class="r">MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th title="Locator (Maidenhead) du correspondant">Locator</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Préfixe principal de l'entité DXCC (ex. ON pour la Belgique, LA pour la Norvège)">Préfixe</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th><th title="Opérateur : indicatif personnel du membre qui a fait le QSO (même sous l'indicatif du club)">OP</th><th title="Références IOTA, WWFF, POTA, BOTA, LLOTA du correspondant ; ▲ = référence de la station (activation)">Réf.</th><th title="Contest pendant lequel le QSO a été fait (identifiant Cabrillo) ; au survol : échange envoyé / reçu">Contest</th>
+        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th class="r">MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th title="Locator (Maidenhead) du correspondant">Locator</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Préfixe principal de l'entité DXCC (ex. ON pour la Belgique, LA pour la Norvège)">Préfixe</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th><th title="Opérateur : indicatif personnel du membre qui a fait le QSO (même sous l'indicatif du club)">OP</th><th title="Références IOTA, WWFF, POTA, BOTA, LLOTA, SOTA du correspondant ; ▲ = référence de la station (activation)">Réf.</th><th title="Contest pendant lequel le QSO a été fait (identifiant Cabrillo) ; au survol : échange envoyé / reçu">Contest</th>
           <th class="c" title="LoTW (★ = confirmé)">LoTW</th><th class="c">eQSL</th><th class="c" title="Club Log">CL</th><th class="c">QRZ</th><th class="lg-fill"></th></tr></thead>
         <tbody id="lgBody"><tr><td colspan="22" class="lg-empty">Chargement du carnet…</td></tr></tbody>
       </table>
@@ -576,7 +575,7 @@
   let refsDlg = null;
   function openRefsDlg() {
     if (!me.admin) return say('Listes de références : réservé aux administrateurs.', 'warn');
-    const d = mkDlg('lg-refsdlg', '<form method="dialog"><h3>Listes de références (IOTA, WWFF, POTA, BOTA, LLOTA)</h3>' +
+    const d = mkDlg('lg-refsdlg', '<form method="dialog"><h3>Listes de références (IOTA, WWFF, POTA, BOTA, LLOTA, SOTA)</h3>' +
       '<p class="lg-note">Téléchargées par le serveur depuis les sites des programmes, puis mises à jour toutes seules chaque semaine. Le premier téléchargement a lieu quelques minutes après le démarrage du serveur.</p>' +
       '<table class="lg-reft"><tbody><tr><td colspan="4">Lecture…</td></tr></tbody></table>' +
       '<div class="lg-act"><button class="btn" type="button" data-a="go">Mettre à jour maintenant</button><button class="btn" value="x">Fermer</button></div></form>');

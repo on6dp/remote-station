@@ -262,9 +262,16 @@
     if (!hz && R2.widthTable) { const wt = R2.widthTable(md), wv = ctlValue('width' + B) != null ? Number(ctlValue('width' + B)) : r['width' + B]; if (wt && wv && wt[wv - 1]) hz = wt[wv - 1]; }
     if (!hz) hz = MF_DEF(md);
     if (r['shift' + B] != null) sft = Number(ctlValue('shift' + B) != null ? ctlValue('shift' + B) : r['shift' + B]) || 0; // Yaesu : IF SHIFT
-    const pi = r['pbtIn' + B], po = r['pbtOut' + B]; // Icom : TWIN PBT (bande passante rétrécie et décalée)
-    if (pi != null && po != null) { const a = (pi - 128) / 128 * hz / 2, b = (po - 128) / 128 * hz / 2; sft = (a + b) / 2; hz = Math.max(50, hz - Math.abs(a - b)); }
-    return { hz: Math.round(hz / 10) * 10, sft: Math.round(sft / 10) * 10, cw: /^CW/.test(md) };
+    const W = hz; let a = sft, b = sft;
+    const pi = r['pbtIn' + B], po = r['pbtOut' + B]; // Icom : TWIN PBT (deux filtres décalés, la bande passante est leur partie commune)
+    if (pi != null && po != null) { a = (pi - 128) / 128 * hz / 2; b = (po - 128) / 128 * hz / 2; sft = (a + b) / 2; hz = Math.max(50, hz - Math.abs(a - b)); }
+    return { hz: Math.round(hz / 10) * 10, sft: Math.round(sft / 10) * 10, cw: /^CW/.test(md), W, a: Math.round(a), b: Math.round(b) };
+  }
+  // Icom : « BW 2.8K » (largeur réelle, rétrécie par le TWIN PBT) au lieu de « FIL1 3.0K » ; FIL1/2/3 reste dans l'infobulle
+  function icomBw(w, r, txt) {
+    const d = miniFltData(w, r), el = $('width' + w), fil = String(txt || '').match(/^FIL\d/);
+    if (el && fil) el.dataset.fil = fil[0];
+    return d ? 'BW ' + bwK(d.hz) : String(txt || '—').replace(/^FIL\d\s*/, 'BW ').replace(/^BW $/, 'BW FIX');
   }
   function drawMiniFlt(w, r, live) {
     const sv = $('flt' + w);
@@ -274,23 +281,38 @@
     const sb = $('sft' + w);
     if (sb) { sb.hidden = !d; if (d) sb.textContent = 'SFT ' + (d.sft > 0 ? '+' : d.sft < 0 ? '−' : '') + Math.abs(d.sft); }
     if (w === 'B' && !RIG().SUB_BADGES) { const wb = $('widthB'); wb.hidden = !d; if (d) wb.textContent = 'BW ' + bwK(d.hz); }
-    const key = d ? d.hz + '/' + d.sft + '/' + d.cw : '';
+    const key = d ? d.hz + '/' + d.sft + '/' + d.cw + '/' + d.W + '/' + d.a + '/' + d.b : '';
     if (sv.dataset.k === key) return;
     sv.dataset.k = key;
     sv.style.visibility = d ? '' : 'hidden';
     if (!d) { sv.innerHTML = ''; return; }
-    const c0 = d.cw ? 700 : 1500, span = Math.max(4000, d.hz + 1200), x0 = 6, ww = 138, X = (f) => x0 + (f - (c0 - span / 2)) / span * ww;
-    const lo = c0 + d.sft - d.hz / 2, hi = c0 + d.sft + d.hz / 2, xl = X(lo), xh = X(hi), sl = Math.min(8, (xh - xl) / 4);
+    // Comme sur les Icom : fenêtre fixe (la largeur dessinée suit le BW, la position suit le SFT), bande passante orange,
+    // bord bas rouge, bord haut bleu ; avec le TWIN PBT décalé, les deux filtres sont dessinés en trait (rouge / bleu)
+    const c0 = d.cw ? 700 : 1500, span = d.cw ? Math.max(3000, d.W + 600) : Math.max(5000, d.W + 1200);
+    const x0 = 6, ww = 138, X = (f) => x0 + (f - (c0 - span / 2)) / span * ww, T = 3, BO = 37, SL = 6;
+    const trap = (lo, hi) => { const xl = X(lo), xh = X(hi), sl = Math.min(SL, (xh - xl) / 3); return [xl, xl + sl, xh - sl, xh]; };
+    const P = (q) => 'M' + q[0].toFixed(1) + ' ' + BO + 'L' + q[1].toFixed(1) + ' ' + T + 'L' + q[2].toFixed(1) + ' ' + T + 'L' + q[3].toFixed(1) + ' ' + BO;
+    const lo = c0 + d.sft - d.hz / 2, hi = c0 + d.sft + d.hz / 2, q = trap(lo, hi);
     const fmt = (v) => String(Math.max(0, Math.round(v / 10) * 10));
+    let outl = '';
+    if (d.a !== d.b) {
+      outl = '<path class="mf-o1" d="' + P(trap(c0 + d.a - d.W / 2, c0 + d.a + d.W / 2)) + '"/>' +
+             '<path class="mf-o2" d="' + P(trap(c0 + d.b - d.W / 2, c0 + d.b + d.W / 2)) + '"/>';
+    }
     sv.setAttribute('viewBox', '-4 -4 158 58');
     sv.innerHTML =
+      '<defs><clipPath id="mfc' + w + '"><rect x="' + x0 + '" y="-2" width="' + ww + '" height="42"/></clipPath></defs>' +
       '<rect class="mf-frame" x="-3" y="-3" width="156" height="56" rx="4"/>' +
-      '<line class="mf-base" x1="' + x0 + '" y1="37" x2="' + (x0 + ww) + '" y2="37"/>' +
-      '<path class="mf-pb" d="M' + xl.toFixed(1) + ' 37L' + (xl + sl).toFixed(1) + ' 3L' + (xh - sl).toFixed(1) + ' 3L' + xh.toFixed(1) + ' 37Z"/>' +
-      '<line class="mf-c" x1="' + X(c0).toFixed(1) + '" y1="0" x2="' + X(c0).toFixed(1) + '" y2="38"/>' +
-      '<text class="mf-s edge" x="' + Math.max(8, xl).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(lo) + '</text>' +
+      '<g clip-path="url(#mfc' + w + ')">' +
+      '<path class="mf-pb" d="' + P(q) + 'Z"/>' + outl +
+      '<line class="mf-lo" x1="' + q[0].toFixed(1) + '" y1="' + BO + '" x2="' + q[1].toFixed(1) + '" y2="' + T + '"/>' +
+      '<line class="mf-hi" x1="' + q[3].toFixed(1) + '" y1="' + BO + '" x2="' + q[2].toFixed(1) + '" y2="' + T + '"/>' +
+      '</g>' +
+      '<line class="mf-base" x1="' + x0 + '" y1="' + BO + '" x2="' + (x0 + ww) + '" y2="' + BO + '"/>' +
+      '<line class="mf-c" x1="' + X(c0).toFixed(1) + '" y1="0" x2="' + X(c0).toFixed(1) + '" y2="' + (BO + 1) + '"/>' +
+      '<text class="mf-s" x="' + Math.min(X(c0) - 20, Math.max(10, q[0])).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(lo) + '</text>' +
       '<text class="mf-s" x="' + X(c0).toFixed(1) + '" y="48" text-anchor="middle">' + c0 + '</text>' +
-      '<text class="mf-s edge" x="' + Math.min(142, xh).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(hi) + '</text>' +
+      '<text class="mf-s" x="' + Math.max(X(c0) + 20, Math.min(140, q[3])).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(hi) + '</text>' +
       '<title>Filtre du VFO ' + w + ' : largeur ' + d.hz + ' Hz, décalage ' + d.sft + ' Hz (BW / IF SHIFT, colonne de gauche)</title>';
   }
   function drawFreq(which, hz) {
@@ -1202,14 +1224,14 @@
     }
     const wt = RIG().widthTable && RIG().widthTable(r.mode);
     const wA = ctlValue('width') != null ? Number(ctlValue('width')) : r.width;
-    $('widthA').textContent = RIG().bwText ? (live ? RIG().bwText(Object.assign({}, r, { fil: ctlValue('fil') != null ? ctlValue('fil') : r.fil })) : '—') : 'BW ' + (live && r.narrow ? 'NAR' : live && wt && RIG().WIDTH_DEF && Number(wA) === 0 ? 'DEF' : live && wt && wA && wt[wA - 1] ? bwK(wt[wA - 1]) : live && r.mode && /AM|FM/.test(r.mode) ? 'FIX' : '—');
+    $('widthA').textContent = RIG().bwText ? (live ? icomBw('A', r, RIG().bwText(Object.assign({}, r, { fil: ctlValue('fil') != null ? ctlValue('fil') : r.fil }))) : '—') : 'BW ' + (live && r.narrow ? 'NAR' : live && wt && RIG().WIDTH_DEF && Number(wA) === 0 ? 'DEF' : live && wt && wA && wt[wA - 1] ? bwK(wt[wA - 1]) : live && r.mode && /AM|FM/.test(r.mode) ? 'FIX' : '—');
     // Largeur de filtre du récepteur SUB (FTX-1)
     $('widthB').hidden = !RIG().SUB_BADGES;
     if (RIG().SUB_BADGES) {
       const wtB = RIG().widthTable && RIG().widthTable(r.modeB);
       const wB = ctlValue('widthB') != null ? Number(ctlValue('widthB')) : r.widthB;
       // Icom à deux récepteurs (IC-7760) : filtre FIL1/2/3 et largeur du SUB
-      if (RIG().bwText) $('widthB').textContent = live ? RIG().bwText({ fil: ctlValue('filB') != null ? ctlValue('filB') : r.filB, filWi: r.filWiB, mode: r.modeB }) : '—';
+      if (RIG().bwText) $('widthB').textContent = live ? icomBw('B', r, RIG().bwText({ fil: ctlValue('filB') != null ? ctlValue('filB') : r.filB, filWi: r.filWiB, mode: r.modeB })) : '—';
       else $('widthB').textContent = 'BW ' + (live && r.narrowB ? 'NAR' : live && wtB && RIG().WIDTH_DEF && Number(wB) === 0 ? 'DEF' : live && wtB && wB && wtB[wB - 1] ? bwK(wtB[wB - 1]) : live && r.modeB && /AM|FM/.test(r.modeB) ? 'FIX' : '—');
     }
     drawMiniFlt('A', r, live); drawMiniFlt('B', r, live);
