@@ -3396,6 +3396,9 @@
       mh.addEventListener('click', (ev) => { ev.stopPropagation(); L.i76pop = { k: 'mode', sd }; L.agcTbl = false; L.multiMenu = false; render(); });
       o.filR = el('rect', { x: X(xb + 85), y: Y(46), width: 26, height: 11, rx: 1.5, class: 'i76-fil' }, v.g);
       o.filT = el('text', { x: X(xb + 98), y: Y(54.2), class: 'i76-filt', 'text-anchor': 'middle' }, v.g, 'FIL');
+      // « F-INP » (orange) à droite de FIL pendant la saisie au clavier F-INP, comme sur le TRX ; s'éteint après ENT
+      o.fiR = el('rect', { x: X(xb + 115), y: Y(46.5), width: 36, height: 10, rx: 1.5, class: 'i76-finp', style: 'display:none' }, v.g);
+      o.fiT = el('text', { x: X(xb + 133), y: Y(54.2), class: 'i76-finpt', 'text-anchor': 'middle', style: 'display:none' }, v.g, 'F-INP');
       const fh = o.fh = el('rect', { x: X(xb + 85), y: Y(46), width: 26, height: 11, class: 'hs lcd-hit' }, v.g);
       el('title', {}, fh, 'FIL : filtre suivant (FIL1 → FIL2 → FIL3) de ce récepteur');
       fh.addEventListener('click', (ev) => { ev.stopPropagation(); if (needControl()) cycleCell(sd === 'B' ? 'filB' : 'fil'); });
@@ -3598,7 +3601,7 @@
       for (const e of [o.txR, o.txT]) tr(e, d.tx);
       if (single) { o.pw.setAttribute('x', +o.txR.getAttribute('x') + 25); o.pw.setAttribute('y', +o.txR.getAttribute('y') + 9); } else { o.pw.setAttribute('x', +o.txR.getAttribute('x')); o.pw.setAttribute('y', +o.txR.getAttribute('y') + 22); }
       tr(o.pw, d.tx);
-      for (const e of [v.lbl, v.badge, v.mode, o.mh, o.filR, o.filT, o.fh]) tr(e, d.vfo);
+      for (const e of [v.lbl, v.badge, v.mode, o.mh, o.filR, o.filT, o.fh, o.fiR, o.fiT]) tr(e, d.vfo);
       for (const e of [o.freq, v.hit, v.sel]) tr(e, d.freq);
       o.freq.classList.toggle('big', !!single);
       tr(o.tags, d.tags);
@@ -3611,7 +3614,11 @@
     if (!LCD.i76) return;
     const single = !s.scDual;
     i76Layout(single);
-    for (const sd of ['A', 'B']) { const t = LCD['v' + sd].mode; if (/-D$/.test(t.textContent)) t.textContent += '1'; } // DATA1 du TRX : « USB-D1 »
+    for (const sd of ['A', 'B']) {
+      const t = LCD['v' + sd].mode; if (/-D$/.test(t.textContent)) t.textContent += '1'; // DATA1 du TRX : « USB-D1 »
+      const fi = !!(L.i76pop && L.i76pop.k === 'finp' && L.i76pop.sd === sd), o = LCD['i76' + sd];
+      o.fiR.style.display = fi ? '' : 'none'; o.fiT.style.display = fi ? '' : 'none';
+    }
     drawI76Multi(s);
     agcCur(s); // suit le mode / FAST-MID-SLOW même tableau fermé (valeur relue fiable à l'ouverture)
     drawI76Agc(s);
