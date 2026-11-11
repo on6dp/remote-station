@@ -17,6 +17,11 @@
   // Petit voyant rond (coordonnées de la photo) en chemin SVG à l'échelle de la page
   const circ = (cx, cy, r) => { cx *= K; cy *= K; r *= K; return 'M' + (cx - r).toFixed(2) + ' ' + cy.toFixed(2) + 'a' + r.toFixed(2) + ' ' + r.toFixed(2) + ' 0 1 0 ' + (2 * r).toFixed(2) + ' 0a' + r.toFixed(2) + ' ' + r.toFixed(2) + ' 0 1 0 ' + (-2 * r).toFixed(2) + ' 0Z'; };
   const pill = (x, y, w, h) => { const r = h / 2 * K, a = x * K + r, b = (x + w) * K - r, t = y * K; return 'M' + a.toFixed(2) + ' ' + t.toFixed(2) + 'H' + b.toFixed(2) + 'a' + r.toFixed(2) + ' ' + r.toFixed(2) + ' 0 0 1 0 ' + (2 * r).toFixed(2) + 'H' + a.toFixed(2) + 'a' + r.toFixed(2) + ' ' + r.toFixed(2) + ' 0 0 1 0 ' + (-2 * r).toFixed(2) + 'Z'; };
+  // Bande courbe au-dessus du grand bouton (photo : centre 1271 / 452, rayons 170 – 178), de l'angle a à b (degrés depuis le haut)
+  const arcBand = (a, b, r1 = 170, r2 = 178, cx = 1271, cy = 452) => {
+    const P = (r, d) => { const t = d * Math.PI / 180; return ((cx + r * Math.sin(t)) * K).toFixed(2) + ' ' + ((cy - r * Math.cos(t)) * K).toFixed(2); };
+    return 'M' + P(r2, a) + 'A' + (r2 * K).toFixed(2) + ' ' + (r2 * K).toFixed(2) + ' 0 0 1 ' + P(r2, b) + 'L' + P(r1, b) + 'A' + (r1 * K).toFixed(2) + ' ' + (r1 * K).toFixed(2) + ' 0 0 0 ' + P(r1, a) + 'Z';
+  };
   const pbtOn = (s) => { const x = s.vfoSel === 1 ? 'B' : ''; return [s['pbtIn' + x], s['pbtOut' + x]].some((v) => v != null && v !== 128); };
   const voxOn = (s) => (/^CW/.test((s.vfoSel === 1 ? s.modeB : s.mode) || '') ? !!s.bkin : !!s.vox);
   const SC = (o) => {
@@ -80,6 +85,9 @@
       ...[[140, 339, (s) => !!side('nb')(s)], [217.5, 339, (s) => !!side('nr')(s)], [139, 137.5, (s) => !!side('apf')(s)], [217.5, 137.5, (s) => !!(side('notch')(s) || side('dnf')(s))]]
         .map(([x, y, f]) => ({ path: circ(x, y, 4.4), color: '#ffffff', on: f, bright: f })),
       { path: circ(46.3, 339.5, 4.4), color: '#3fa9ff', on: voxOn, bright: voxOn },
+      // MAIN / SUB : bande courbe blanche au-dessus du grand bouton, sous le récepteur sélectionné, l'autre grise, comme sur le TRX
+      { path: arcBand(-22.5, -1.2), color: '#8f949b', cls: 'dark', on: (s) => s.vfoSel === 1 },
+      { path: arcBand(1.2, 22.5), color: '#ffffff', on: (s) => s.vfoSel === 1, bright: (s) => s.vfoSel === 1 },
       // TWIN-PBT : voyant blanc à droite du bouton dès que la bande passante est décalée ou rétrécie (PBT du récepteur sélectionné pas au milieu)
       { path: pill(1592.5, 266, 21, 6.6), color: '#ffffff', on: pbtOn, bright: pbtOn },
       // TX/RX de chaque récepteur : vert en réception, rouge en émission
@@ -119,8 +127,8 @@
       { id: 'mnKey', x: 1313, y: 196, w: 73, h: 38, tip: 'MN / AN : NOTCH du récepteur sélectionné', act: { local: 'notchCycle' } },
       // Autour du grand bouton
       { id: 'xfc', cx: 1142, cy: 300, r: 25, tip: 'XFC : en SPLIT, tant qu’on le tient, on écoute sur la fréquence d’émission (MAIN et SUB échangés, puis remis au relâchement)', act: { hold: 'xfc' } },
-      { id: 'mainKey', x: 1207, y: 272, w: 63, h: 24, tip: 'MAIN : le grand bouton et les touches agissent sur le récepteur MAIN (VFO-A)', act: { set: ['vfoSel', 0] }, led: (s) => s.vfoSel !== 1, ledColor: '#ff6040' },
-      { id: 'subKey', x: 1274, y: 272, w: 70, h: 24, tip: 'SUB : le grand bouton et les touches agissent sur le récepteur SUB (VFO-B)', act: { set: ['vfoSel', 1] }, led: (s) => s.vfoSel === 1, ledColor: '#38b6ff' },
+      { id: 'mainKey', x: 1207, y: 272, w: 63, h: 24, tip: 'MAIN : le grand bouton et les touches agissent sur le récepteur MAIN (VFO-A)', act: { set: ['vfoSel', 0] } },
+      { id: 'subKey', x: 1274, y: 272, w: 70, h: 24, tip: 'SUB : le grand bouton et les touches agissent sur le récepteur SUB (VFO-B)', act: { set: ['vfoSel', 1] } },
       { id: 'subDisp', cx: 1375, cy: 282, r: 14, tip: 'SUB DISP : petit écran — galvanomètre, filtre du récepteur sélectionné, touches de bandes (à tour de rôle)', act: { local: 'subDisp' } },
       { id: 'mpad', cx: 1416, cy: 322, r: 14, tip: 'MPAD', act: info('MPAD (bloc-notes de fréquences) : pas encore relié.') },
       // Colonne de droite

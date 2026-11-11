@@ -914,8 +914,8 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face .i76ant-row { fill: transparent; }
 #face .i76ant-row.sel { fill: #bfe3ff; }
 #face .i76ant-sep { stroke: #59606b; stroke-width: .5; }
-#face text.i76ant-h { fill: #fff; font: 700 7px Arial, sans-serif; }
-#face text.i76ant-t { fill: #fff; font: 600 7px Arial, sans-serif; }
+#face text.i76ant-h { fill: #fff; font: 800 7.6px Arial, sans-serif; }
+#face text.i76ant-t { fill: #fff; font: 700 7.6px Arial, sans-serif; }
 #face text.i76ant-t.dk { fill: #0a1a2a; }
 #face text.dimt { fill: #6d737c !important; }
 #face text.isub-l.dk { fill: #0a1a2a; }

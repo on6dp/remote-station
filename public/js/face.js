@@ -4158,6 +4158,8 @@
     if (!m) return;
     m.style.display = L.i76ant ? '' : 'none';
     if (!L.i76ant) return;
+    // valeurs pas encore lues (main prise après l'ouverture, ou relecture perdue) : nouvelle lecture toutes les 5 s
+    if (iControl() && exV(349) == null && Date.now() - (L.antAskAt || 0) > 5000) { L.antAskAt = Date.now(); antRead(); }
     const x = activeSide() === 'B' ? 'B' : '', sg = antSegOf((x ? s.freqB : s.freq) || 0);
     for (const r of LCD.antRows) {
       const v = exV(r.n);
