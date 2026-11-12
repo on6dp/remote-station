@@ -1375,7 +1375,7 @@
       const add = (txt, cls, ctl) => { const s = document.createElement('span'); badge(s, txt, cls); badgeCtl(s, C[ctl], rr); bB.appendChild(s); };
       const optLabel = (id, v) => { const o = C[id] && C[id].options && C[id].options.find((x) => x[0] === v); return o ? o[1] : null; };
       // ATT et préampli du côté SUB (essai) : le CAT ne les lit pas ; affichés d'après le dernier réglage envoyé (« ? » si aucun)
-      if (C.attB) add(rr.attB == null ? 'ATT ?' : 'ATT', rr.attB ? 'green' : '', 'attB');
+      if (C.attB) add(rr.attB == null ? 'ATT ?' : rr.attB && C.attB.type === 'select' ? 'ATT ' + (optLabel('attB', rr.attB) || '') : 'ATT', rr.attB ? 'green' : '', 'attB'); // ATT 6 / 12 / 18 dB comme le VFO A
       const pb = RIG().preampText && RIG().preampText(rr, 'B');
       if (C.preampB && pb && rr.freqB < 144000000) add(pb[0], pb[1] ? 'green' : '', 'preampB');
       else if (C.preampB && rr.freqB < 144000000) add(rr.preampB == null ? 'IPO ?' : ['IPO', 'AMP1', 'AMP2'][rr.preampB] || 'IPO', rr.preampB ? 'green' : '', 'preampB');
