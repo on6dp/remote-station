@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.3** — FT8 : « ■ Arrêter » sur la ligne des macros (à droite du texte libre, fond noir, cadre rouge) ; macros à cadre blanc, Tx1… en blanc gras ; bouton DUAL RX (un ou deux VFO affichés)
 - **0.38.2** — Modes numériques : spectre sous la cascade (VFO-A et VFO-B), hauteur réglable avec la poignée du bas ; la poignée entre cascade et spectre règle la cascade
 - **0.38.1** — Intitulés de colonnes en cases brun foncé, texte clair : listes FT8 / FT4 / FT2 et carnet de trafic du dashboard ; colonnes du carnet mieux séparées
 - **0.38.0** — FT8 HOUND : DXpéditions en FOX classique et en SuperFox (décodeur SuperFox de WSJT-X, Tx1 / Tx3 en 2e période, R+report sur la fréquence du FOX, RR73 = QSO terminé) ; listes FT8 : colonnes séparées, intitulés dans des cases claires en brun foncé

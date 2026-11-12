@@ -214,6 +214,7 @@
         <option value="any">auto au 1er RR73 / 73 (envoyé ou reçu)</option>
       </select></label>
       <label class="dg-chk spotlog" title="Cochée : chaque QSO FT8 / FT4 / FT2 enregistré dans le carnet (fiche ou log automatique) est aussi spoté sur le DX cluster, sous votre indicatif d’opérateur — pas le TX CALL. Les stations décodées partent de toute façon vers PSK Reporter."><input type="checkbox" data-spotlog> Spot cluster</label>
+      <button class="btn dg-dualrx" type="button" id="dgDualRx" hidden aria-pressed="false" title="DUAL RX : deux cascades, quatre colonnes et deux cartes de bande (VFO-A et VFO-B) ; clic : un seul VFO affiché (le TRX garde sa double réception). TRX en réception simple : clic = DUAL RX sur le TRX (avec la main).">DUAL RX</button>
       <span class="seg ft-txside" id="dgTxSide" title="FTDX101 en double réception : VFO d'émission (MAIN = VFO-A, SUB = VFO-B). Un double-clic sur un message choisit tout seul le VFO de la station appelée."><span class="dg-f">TX</span><button class="btn" type="button" data-side="A" aria-pressed="true">VFO-A</button><button class="btn" type="button" data-side="B" aria-pressed="false">VFO-B</button></span>
       <label class="dg-txc" id="dgTxcWrap" title="TX call : indicatif sous lequel partent les émissions numériques (FT8 / FT4 / FT2, RTTY, JTTY…) — celui de la station ou le vôtre. Choisi par celui qui a la main."><span class="dg-f">TX call</span> <select id="dgTxCall"></select></label>
       <button class="btn dg-stop" type="button" id="dgStop" disabled title="Arrête l'émission automatique (Halt Tx)">■ Arrêter</button>
@@ -888,6 +889,8 @@
   function ftDualWant() {
     // TRX à deux vrais récepteurs dont les deux voies arrivent séparément (FTDX101D / MP en DUAL RX) : dashboard, sa page
     // TRX DIGI et la face avant /ftdx101 ; FTX-1 : une seule cascade (sa double réception reste dans sa page de face avant)
+    // Bouton DUAL RX de la barre : affichage d'un seul VFO même quand le TRX reçoit sur les deux
+    if (store.get('dualview', '1') === '0') return false;
     return !!(!detached && dualAudioOn() && api.rig().ID !== 'ftx1' && ((tab === 'ftx' && FT_MODES.indexOf(mode) >= 0) || ['jt65', 'wspr', 'jtty', 'cw'].indexOf(tab) >= 0));
   }
   let ftDualPane = '';
@@ -4031,6 +4034,7 @@
       return b;
     };
     const f = $('msgFtx');
+    const stop = $('dgStop'); // « ■ Arrêter » : sur la ligne des macros, à droite du texte libre
     f.textContent = '';
     const hd = houndOn();
     ftxMsgs().forEach((t, i) => {
@@ -4049,6 +4053,7 @@
     const ed = mk(f, '', '✎', () => editFree(f.ownerDocument));
     ed.title = 'Modifier le texte libre (Tx7)';
     ed.classList.add('mini');
+    if (stop) f.appendChild(stop);
   }
   // ------------------------------------------------------------------ émission FT8 / FT4 / FT2
   // Clic sur Tx1…Tx7 : le serveur choisit le créneau, la page Station du club fabrique et joue le signal
@@ -4384,7 +4389,16 @@
   // HOUND (FT8 en DXpédition) : réglage de la station (st.hound) ; Tx1 et Tx3 seulement, 2e période imposée
   const houndOn = () => { const st = api && api.state && api.state(); return !!(st && st.hound && mode === 'FT8' && tab === 'ftx'); };
   let houndSeen = '';
+  // Bouton DUAL RX (TRX à deux récepteurs dont les deux voies arrivent séparément : FTDX101D / MP)
+  function dualRxUi() {
+    const b = $('dgDualRx');
+    if (!b || !api || !api.rig || !api.rig()) return;
+    const R = api.rig();
+    b.hidden = !(R.DUAL_AUDIO && R.ID !== 'ftx1') || detached;
+    b.setAttribute('aria-pressed', String(!!ftDual));
+  }
   function houndUi() {
+    dualRxUi();
     const sel = $('dgHound'), wrap = $('dgHoundWrap');
     if (!sel || !wrap || !api) return;
     const st = api.state();
@@ -5579,6 +5593,20 @@
       $('dgTxRx').addEventListener('click', () => setTx(sd() === 'B' ? rxFB : rxF, sd()));
       $('dgPar').value = store.get('ftxpar', 'auto');
       $('dgPar').addEventListener('change', () => { store.set('ftxpar', $('dgPar').value); ftxCfg(); });
+      $('dgDualRx').addEventListener('click', () => {
+        const st = api && api.state();
+        const trxDual = !!(st && st.radio && st.radio.dualRx === 1);
+        if (ftDual) { store.set('dualview', '0'); }
+        else {
+          store.set('dualview', '1');
+          if (!trxDual) {
+            if (!api.iControl()) api.say('Le TRX est en réception simple : prenez la main pour mettre DUAL RX en service.', 'warn');
+            else { api.send({ t: 'set', ctl: 'dualRx', value: 1 }); api.say('DUAL RX mis en service sur le TRX : les deux VFO s’affichent dans un instant.', '', 5000); }
+          }
+        }
+        if (applyFtDual()) announce();
+        dualRxUi();
+      });
       $('dgHound').addEventListener('change', () => {
         const v = Number($('dgHound').value) || 0;
         if (!api || !api.iControl()) { houndUi(); return api && api.say('Prenez d’abord la main pour choisir l’activité HOUND.', 'warn'); }

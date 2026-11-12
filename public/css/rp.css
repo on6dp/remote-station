@@ -2437,3 +2437,16 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 /* Spectre sous la cascade (hauteur réglable avec la poignée du bas) */
 .dg-wf canvas.dg-spec { height: 70px; cursor: default; border-top: 1px solid #2a3442; background: #05080d; }
 .dg-sgrip { z-index: 4; }
+/* Macros FT8 / FT4 / FT2 : identifiants Tx1… en blanc gras, cadre blanc ; « ■ Arrêter » au bout de la ligne */
+.ft-msgs .btn { border-color: #fff; }
+.ft-msgs .btn small { color: #fff; font-weight: 800; }
+.ft-msgs .btn.sel { border-color: var(--v2-accent-red-alt); }
+.ft-msgs .btn:disabled { border-color: rgba(255, 255, 255, .35); }
+.ft-msgs .dg-stop { margin-left: 6px; }
+/* « ■ Arrêter » : fond noir, cadre rouge, texte rouge clair (même actif) */
+#dgStop, .ctab-pane.hound #msgFtx #dgStop:disabled { opacity: 1; background: #000; border: 1px solid #ff5a4a; color: #ff8a7a; font-weight: 800; }
+#dgStop:not(:disabled) { background: #000; border-color: #ff3b2b; color: #ff5a4a; box-shadow: 0 0 6px rgba(255, 60, 40, .6); }
+/* Bouton DUAL RX de la page des modes numériques (comme celui du dashboard : mauve) */
+.dg-dualrx { border-color: #8a5cc4; color: #fff; font-weight: 800; }
+.dg-dualrx[hidden] { display: none; }
+.dg-dualrx[aria-pressed='true'] { background: linear-gradient(180deg, #6a3aa8, #3f1d6e); border-color: #c49bff; box-shadow: 0 0 8px rgba(160, 100, 255, .45); }
