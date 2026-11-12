@@ -33,7 +33,7 @@
     'att', 'preamp', 'preampVU', 'narrow', 'narrowB', 'nbB', 'nrB', 'notchB', 'dnfB', 'attB', 'preampB', 'agcB', 'rfB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'roofB'];
   // Réglages des cadres (RF front end, Filtre, DSP) qui suivent le VFO sélectionné (A / B) quand le TRX a leur équivalent côté SUB
   const SIDE_B = { nb: 'nbB', nr: 'nrB', notch: 'notchB', dnf: 'dnfB', narrow: 'narrowB', agc: 'agcB', rf: 'rfB', width: 'widthB',
-    notchFreq: 'notchFreqB', shift: 'shiftB', contour: 'contourB', apf: 'apfB', roof: 'roofB', contourFreq: 'contourFreqB', apfFreq: 'apfFreqB' };
+    notchFreq: 'notchFreqB', shift: 'shiftB', contour: 'contourB', apf: 'apfB', roof: 'roofB', contourFreq: 'contourFreqB', apfFreq: 'apfFreqB', nbLvl: 'nbLvlB', nrLvl: 'nrLvlB' };
   const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', roof: 'ROOFING', shift: 'IF shift', preamp: 'PRE', preampVU: 'AMP' };
 
   // Bouton HELP : manuel en français, ou en anglais si le navigateur n'est pas en français
@@ -718,7 +718,7 @@
     const step = span > 60 ? Math.max(st0, Math.round(span / 50 / st0) * st0) : st0; // 0–255 : ~2 % par cran
     const cur = Number(ctlValue(c.id));
     const v = Math.max(c.min, Math.min(c.max, (isFinite(cur) ? cur : c.min) + (ev.deltaY < 0 ? step : -step)));
-    ctlPending[c.id] = { v, at: Date.now() };
+    ctlPending[c.id] = { v, at: Date.now(), wheel: true };
     sendCtlThrottled(c);
     render();
     say(c.label + ' : ' + fmtCtl(c, v, (st && st.radio) || {}), '', 1200);
@@ -838,7 +838,7 @@
     for (const c of R.CONTROLS || []) if (order.indexOf(c) < 0) order.push(c);
     for (const c of order) {
       if (IN_VFO.indexOf(c.id) >= 0) continue; // RIT / XIT / CLEAR : sur les écrans VFO
-      if (c.id === 'contourFreqB' || c.id === 'apfFreqB') continue; // côté SUB : par le curseur du VFO sélectionné
+      if (c.id === 'contourFreqB' || c.id === 'apfFreqB' || c.id === 'nbLvlB' || c.id === 'nrLvlB') continue; // côté SUB : par le curseur du VFO sélectionné
       if (c.face && c.id !== 'contourFreq' && c.id !== 'apfFreq') continue; // réglages propres à la page Face avant (ex. AF du SUB, BK-IN du FTDX101) ; fréquences CONTOUR / APF aussi au dashboard
       if (LAYOUT.tx.indexOf(c.id) >= 0) continue; // gain micro, PROC, MIC EQ, niveau PROC, VOX : dans la page TRX SSB
       const box = $(where[c.id] || boxes[c.sec] || 'sec-other');
@@ -973,6 +973,8 @@
         inp.disabled = blocked || !avail;
         const p = ctlPending[c.id];
         if (!(p && Date.now() - p.at < 1500) && v != null) inp.value = v;
+        else if (p && p.wheel && Date.now() - p.at < 1500) inp.value = p.v; // molette sur un badge de l'écran VFO : la réglette suit tout de suite
+        rangeFill(inp);
         out.textContent = avail ? fmtCtl(c, v, r) : '—';
         if (c.type === 'width') {
           // NARROW enclenché sur ce côté : la radio impose sa largeur étroite, le curseur BW n'agit plus

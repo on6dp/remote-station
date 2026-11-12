@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.364** — Molette sur NB / DNR : les réglettes NIVEAU NB / DNR suivent tout de suite ; colonne de droite côté SUB quand SUB est actif
 - **0.37.363** — Cadre FILTRES : curseurs Fréquence CONTOUR et Fréquence APF (suivent le VFO sélectionné) ; cadran : 4 écrans (S/PO/SWR, S/PO/COMP, S/SWR/ALC, Po/Id/Vd)
 - **0.37.362** — Cadran à aiguille : 2 écrans de plus, S / SWR / ALC et Po / Id / Vd (clic = écran suivant)
 - **0.37.361** — Écrans VFO : molette sur NB / DNR = niveau (affiché dans le badge et la colonne de droite), sur NOTCH = fréquence du notch
