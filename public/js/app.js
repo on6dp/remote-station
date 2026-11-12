@@ -333,12 +333,47 @@
   try { for (const w of ['A', 'B']) { const v = localStorage.getItem('rs.am' + w); amSet[w] = AM_SETS.indexOf(v) >= 0 ? v : 'swr'; } } catch (e) { /* stockage bloqué */ }
   for (const w of ['A', 'B']) {
     const sv0 = $('am' + w);
-    if (sv0) sv0.addEventListener('click', () => {
-      amSet[w] = AM_SETS[(AM_SETS.indexOf(amSet[w]) + 1) % AM_SETS.length];
+    // Molette sur le cadran : écran suivant / précédent (le clic agrandit le cadran au milieu de l'écran)
+    if (sv0) sv0.addEventListener('wheel', (ev) => {
+      ev.preventDefault();
+      const k = AM_SETS.indexOf(amSet[w]) + (ev.deltaY > 0 ? 1 : -1);
+      amSet[w] = AM_SETS[(k + AM_SETS.length) % AM_SETS.length];
       try { localStorage.setItem('rs.am' + w, amSet[w]); } catch (e) { /* stockage bloqué */ }
       AM[w].key = '';
       render();
-    });
+    }, { passive: false });
+  }
+  // Clic sur un des trois cadres de l'écran VFO (filtre, cadran, spectre) : agrandi au milieu de l'écran ; nouveau clic
+  // (ou clic à côté, ou Échap) : il reprend sa place. Le cadre lui-même est déplacé : il reste vivant et réglable.
+  const VZ = { el: null, ph: null, ov: null };
+  function vzClose() {
+    if (!VZ.el) return;
+    VZ.ph.replaceWith(VZ.el);
+    VZ.el.classList.remove('vz-big');
+    VZ.el = VZ.ph = null;
+    VZ.ov.hidden = true;
+    fitKey.A = ''; fitKey.B = '';
+    render();
+  }
+  function vzOpen(el) {
+    if (VZ.el === el) return vzClose();
+    vzClose();
+    if (!VZ.ov) {
+      VZ.ov = document.createElement('div'); VZ.ov.className = 'vz-ov'; VZ.ov.hidden = true;
+      VZ.ov.addEventListener('click', (ev) => { if (ev.target === VZ.ov) vzClose(); });
+      document.body.appendChild(VZ.ov);
+      document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && VZ.el) vzClose(); });
+    }
+    const r = el.getBoundingClientRect();
+    VZ.ph = document.createElement('span'); VZ.ph.className = 'vz-ph'; VZ.ph.style.width = r.width + 'px'; VZ.ph.style.height = r.height + 'px';
+    el.replaceWith(VZ.ph);
+    VZ.el = el; el.classList.add('vz-big');
+    VZ.ov.appendChild(el); VZ.ov.hidden = false;
+    render();
+  }
+  for (const w of ['A', 'B']) for (const id of ['flt', 'am', 'sp']) {
+    const e0 = $(id + w);
+    if (e0) e0.addEventListener('click', (ev) => { ev.stopPropagation(); vzOpen(e0); });
   }
   // SWR → position sur l'échelle (1 · 1.5 · 2 · 3 · ∞)
   const swrFrac = (v) => (v == null || v <= 1 ? 0 : v <= 1.5 ? (v - 1) / 0.5 * 0.25 : v <= 2 ? 0.25 + (v - 1.5) / 0.5 * 0.17 : v <= 3 ? 0.42 + (v - 2) * 0.18 : Math.min(1, 0.6 + (v - 3) / 7 * 0.4));
@@ -455,7 +490,7 @@
         if (arc.unit) { const u = pt(rad, 1); h += '<text class="am-unit' + (arc.hot ? ' hot' : '') + '" x="' + (u[0] + 3).toFixed(1) + '" y="' + (u[1] + 9).toFixed(1) + '">' + arc.unit + '</text>'; }
       });
       h += '<g class="am-nd"><line x1="' + CX + '" y1="' + CY + '" x2="' + CX + '" y2="' + (CY - 252) + '"/></g>';
-      sv.innerHTML = h + '<title>Cadran du VFO ' + w + ' : clic = écran suivant (S / PO / SWR → S / PO / COMP → S / SWR / ALC → Po / Id / Vd)</title>';
+      sv.innerHTML = h + '<title>Cadran du VFO ' + w + ' : molette = écran suivant (S / PO / SWR → S / PO / COMP → S / SWR / ALC → Po / Id / Vd) ; clic = agrandir</title>';
       st.nd = sv.querySelector('.am-nd');
     }
     // Aiguille : réception = S-mètre (Po / Id / Vd : tension Vd) ; émission = PO (S / SWR / ALC : SWR)

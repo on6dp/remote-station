@@ -2382,3 +2382,9 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .vfo-am .sp-bars { stroke: #b8c2cf; stroke-width: .7; opacity: .9; }
 .vfo-am .sp-bars { fill: #9aa6b4; stroke: none; opacity: .9; }
 .freq-wrap .vfo-sp { cursor: ew-resize; }
+/* Cadre agrandi au milieu de l'écran (clic sur le filtre, le cadran ou le spectre ; nouveau clic : il reprend sa place) */
+.vz-ov { position: fixed; inset: 0; z-index: 900; background: rgba(0, 0, 0, .55); display: flex; align-items: center; justify-content: center; }
+.vz-ov[hidden] { display: none; }
+.vz-ov .vz-big { width: min(90vw, 1100px) !important; height: calc(min(90vw, 1100px) * 0.3874) !important; cursor: zoom-out !important; filter: drop-shadow(0 8px 30px rgba(0,0,0,.7)); }
+.vz-ph { display: inline-block; flex: none; border: 1px dashed rgba(255,255,255,.25); border-radius: 6px; }
+.freq-wrap .vfo-flt, .freq-wrap .vfo-am { cursor: zoom-in; }
