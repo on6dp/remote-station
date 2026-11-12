@@ -98,6 +98,9 @@
   // Onglet Logbooks dans la page (dashboard) ; page des modes numériques de la face avant : le carnet s'ouvre dans
   // une fenêtre à lui (/ftdx101/log.html), raccrochée à cette page (même connexion, voir RSLOGHOST)
   const logHere = () => !!window.RSLOG && !POPUP;
+  // Page TRX DIGI ouverte depuis le dashboard : la fiche du carnet (comme « Log QSO ») sert de fenêtre de QSO sous les macros FT
+  const QSOFORM = POPUP && !FACEP && !EMBED && !!window.RSLOG;
+  let qsoForm = false, qsoTapHost = null, qsoFillKey = '';
   let logWin = null, logInst = null, logMe = null, logSay = null;
   const logApi = (a) => (logSay && a ? Object.assign({}, a, { say: logSay }) : a); // messages dans la fenêtre du carnet
   const LOGW = () => (logInst && logWin && !logWin.closed ? logInst : null);
@@ -296,7 +299,8 @@
         <span class="fq-st" id="fqSt"></span>
         <button class="btn" type="button" id="fqLog" title="Ouvre la fiche « QSO » pour l’enregistrer dans le carnet (heure de début : choix du correspondant ; fin : maintenant)">LOG QSO</button>
         <button class="btn" type="button" id="fqClr" title="Efface le correspondant (indicatif, locator, reports)">EFFACER</button>
-      </div></div>
+      </div>
+      <div class="ft-qsolog" id="ftQsoLog" hidden></div></div>
     <p class="dg-tx" id="dgTxState">Émission : cliquez sur un message Tx1 à Tx7 ci-dessus : il part à chaque période jusqu’à la réponse, la séquence avance toute seule.</p>`;
   const RTTY_PANE = `
     <div class="dg-bar">
@@ -4085,8 +4089,36 @@
     }
     return null;
   }
+  // Fiche du carnet sous les macros (TRX DIGI du dashboard) : montée une fois, messages du carnet reçus par l'écoute du dashboard
+  function qsoFormTick() {
+    if (!QSOFORM || !api || !$('ftQsoLog')) return;
+    const L = window.RSLOG;
+    if (!qsoForm) {
+      qsoForm = true;
+      $('ftQso').hidden = true;
+      $('ftQsoLog').hidden = false;
+      L.init({ send: api.send, state: api.state, iControl: api.iControl, tag: 'ftqso', formOnly: true, say: api.say });
+      L.mount($('ftQsoLog'));
+    }
+    const h = window.opener && !window.opener.closed && window.opener.RSHOST;
+    if (h && h !== qsoTapHost) {
+      qsoTapHost = h;
+      h.tap((m) => { if (m && /^log_/.test(m.t)) L.onMessage(m); });
+      try { const me = h.me && h.me(); if (me) L.onHello(me); } catch (e) { /* */ }
+      L.show();
+    }
+    L.onState();
+    // Correspondant FT (double-clic, séquence) : indicatif, locator, reports et heure de début repris dans la fiche
+    const st = api.state();
+    const sq = st && st.seq;
+    const mine = !!(sq && sq.dx && dx.call && sq.dx === dx.call);
+    const rs = (mine && sq.rpt) || dx.rpt || '', rr = (mine && sq.rptRcvd) || dx.rptRx || '';
+    const key = [dx.call, dx.grid, rs, rr, dx.t0].join('|');
+    if (dx.call && key !== qsoFillKey && !L.editing()) { qsoFillKey = key; L.fill({ rst_sent: rs, rst_rcvd: rr, t0: dx.t0 }); }
+  }
   function drawQso() {
-    if (!$('ftQso')) return;
+    qsoFormTick();
+    if (!$('ftQso') || qsoForm) return;
     const put = (id, v) => { const el = $(id); if (el && el.ownerDocument.activeElement !== el && el.value !== v) el.value = v; };
     const st = api && api.state && api.state();
     const sq = st && st.seq;
@@ -4176,7 +4208,7 @@
     }
     if (!qso.gridsquare) delete qso.gridsquare;
     if (!qso.tx_pwr) delete qso.tx_pwr;
-    api.send({ t: 'log_add', qso, spot: !!(window.RSSPOT && RSSPOT.on()) });
+    api.send({ t: 'log_add', qso, spot: !!(window.RSSPOT && RSSPOT.on()), tag: qsoForm ? 'ftqso' : undefined });
     if (auto && api) api.say('Log automatique : QSO avec ' + q.call + ' enregistré dans le carnet.', '', 4000);
   }
   function qsoPrompt(q, note) {

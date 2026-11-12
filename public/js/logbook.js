@@ -50,6 +50,7 @@
   let lastExport = null;   // dernier export « QSO non envoyés à LoTW » (identifiants, pour les marquer envoyés)
   let pendingDupe = null;
   let lastLogged = '';     // dernier indicatif enregistré : pas repris de la ligne Correspondant juste après
+  let lastSaved = null;    // fiche seule (FORM) : dernier QSO enregistré d'ici (« Modifier le QSO », « Supprimer le QSO »)
 
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const q$ = (sel, el) => (el || root).querySelector(sel);
@@ -103,6 +104,8 @@
         <button class="btn btn-primary" type="submit" data-a="save">Enregistrer le QSO</button>
         <button class="btn" type="button" data-a="cancel" hidden>Annuler</button>
         <button class="btn" type="button" data-a="del" hidden>Supprimer</button>
+        <button class="btn lg-last" type="button" data-a="editlast" hidden disabled title="Rouvre le dernier QSO enregistré depuis cette fiche pour le corriger">Modifier le QSO</button>
+        <button class="btn lg-last" type="button" data-a="dellast" hidden disabled title="Supprime du carnet le dernier QSO enregistré depuis cette fiche">Supprimer le QSO</button>
         <label class="spotlog" title="Cochée : le QSO enregistré est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label>
         <span class="lg-fmsg" id="lgFmsg"></span>
       </div>
@@ -166,6 +169,22 @@
       endEdit();
     });
     f.mode.addEventListener('change', () => defaultRst(true));
+    // Fiche seule (pages TRX SSB, TRX DIGI) : le dernier QSO enregistré d'ici peut être corrigé ou supprimé
+    f.querySelector('[data-a="editlast"]').addEventListener('click', () => {
+      if (!lastSaved || !lastSaved.id) return;
+      if (!items.some((x) => x.id === lastSaved.id)) items = [lastSaved].concat(items);
+      startEdit(lastSaved.id);
+    });
+    f.querySelector('[data-a="dellast"]').addEventListener('click', () => {
+      const q = lastSaved;
+      if (!q || !q.id) return;
+      if (!window.confirm('Supprimer le QSO avec ' + q.call + ' du ' + fmtDate(q.qso_date) + ' ' + fmtTime(q.time_on) + ' UTC ?\nLes carnets en ligne ne sont pas modifiés.')) return;
+      api.send({ t: 'log_del', id: q.id });
+      lastSaved = null;
+      lastBtns();
+      fmsg('QSO avec ' + q.call + ' supprimé du carnet.', 'ok');
+    });
+    lastBtns();
     initRefs(f);
     f.call.addEventListener('input', () => {
       f.call.value = f.call.value.toUpperCase();
@@ -647,6 +666,7 @@
     for (const el of f.querySelectorAll('button[data-a="now"], button[data-a="trx"], button[data-a="qrz"]')) el.disabled = viewOnly;
     f.classList.add('editing');
     f.classList.toggle('viewonly', viewOnly);
+    lastBtns();
     const info = ' — opérateur ' + (q.operator || '?') + ', enregistré par ' + (q.by || '?') + (q.country ? ', ' + q.country : '') + '.';
     if (viewOnly) {
       const why = me.rxOnly ? 'indicatif d’écouteur' : q.by !== me.call ? 'QSO d’un autre opérateur' : 'prenez la main pour le modifier';
@@ -656,6 +676,16 @@
       qrzAsk(false); // nom, QTH ou locator manquants : repris de QRZ.com (à enregistrer avec « Modifier le QSO »)
     }
     drawList();
+  }
+  // « Modifier le QSO » / « Supprimer le QSO » (fiche seule) : visibles hors modification, actifs après un enregistrement
+  function lastBtns() {
+    const f = root && q$('#lgForm');
+    if (!f) return;
+    for (const b of f.querySelectorAll('[data-a="editlast"], [data-a="dellast"]')) {
+      b.hidden = !FORM || !!editing;
+      b.disabled = !lastSaved;
+      if (lastSaved) b.title = (b.dataset.a === 'editlast' ? 'Corriger' : 'Supprimer') + ' le dernier QSO enregistré d’ici : ' + lastSaved.call + ' (' + fmtTime(lastSaved.time_on) + ' UTC)';
+    }
   }
   function endEdit() {
     editing = null;
@@ -677,6 +707,7 @@
     f.classList.remove('editing');
     rights();
     fmsg('');
+    lastBtns();
     fromTrx(false);
     drawList();
   }
@@ -1163,7 +1194,8 @@
       if (root && !root.hidden) { clearTimeout(listTimer); listTimer = setTimeout(reload, 200); } else stale = true;
     } else if (m.t === 'log_saved') {
       const q = m.qso || {};
-      if (m.edited) { lastLogged = q.call; endEdit(); say('QSO avec ' + q.call + ' modifié.', ''); return; }
+      if (m.edited) { lastLogged = q.call; if (lastSaved && q.id === lastSaved.id) lastSaved = q; endEdit(); say('QSO avec ' + q.call + ' modifié.', ''); return; }
+      if (FORM && q.id) { lastSaved = q; lastBtns(); }
       const auto = SV.filter((s) => m.auto && m.auto[s]);
       const okMsg = '✓ QSO avec ' + q.call + ' enregistré (' + q.band + ' ' + modeName(q) + ').' + (auto.length ? ' Envoi automatique : ' + auto.map((s) => NAMES[s]).join(', ') + '.' : '');
       lastLogged = q.call;
@@ -1308,6 +1340,17 @@
         (v.grid ? ', ' + String(v.grid).toUpperCase() : v.sub ? ' (pas de locator sur sa fiche)' : ' (locator : abonnement XML QRZ.com nécessaire)') + '.', 'ok');
     },
     mount,
+    /** Fiche remplie avec le correspondant (ligne Correspondant / QSO FT8) : o = { rst_sent, rst_rcvd, t0 } */
+    fill(o) {
+      if (!root || editing) return;
+      fromTrx(true);
+      const f = q$('#lgForm');
+      if (!f) return;
+      if (o && o.rst_sent) f.rst_sent.value = o.rst_sent;
+      if (o && o.rst_rcvd != null) f.rst_rcvd.value = o.rst_rcvd;
+      if (o && o.t0) { const d = new Date(o.t0); const pad = (n) => String(n).padStart(2, '0'); f.date.value = d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); f.time.value = pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()); }
+    },
+    editing: () => !!editing,
     onHello(h) {
       me = { call: h.call, admin: !!h.admin, rxOnly: !!h.rxOnly, digiCall: h.digiCall || '', clubCalls: Array.isArray(h.clubCalls) ? h.clubCalls : [] };
       if (h.digiCall && calls.indexOf(h.digiCall) < 0) calls = [h.digiCall].concat(calls);

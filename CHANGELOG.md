@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.10** — TRX DIGI : fenêtre de QSO = fiche du carnet sous les macros (remplie avec le correspondant et les reports FT, sans Ma référence) ; Enregistrer / Modifier / Supprimer le QSO (aussi dans la page TRX SSB) ; messages de la fiche lisibles
 - **0.38.9** — FT8 / FT4 / FT2 : fenêtre de QSO sous les macros (indicatif, locator, pays / km / azimut, reports, début, étape ; LOG QSO, EFFACER)
 - **0.38.8** — Barre FT : FT8 / FT4 / FT2, ↺, TX ← RX, RX ← TX en cadre blanc, texte blanc gras ; mode choisi (ou bouton cliqué) : fond blanc, texte noir
 - **0.38.7** — « Ramener dans le dashboard » : texte blanc gras, cadre blanc

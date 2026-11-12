@@ -2476,3 +2476,14 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .ft-qso .btn:active { background: #fff; color: #000; }
 .ft-qso #fqLog { margin-left: auto; }
 .ft-qso.empty .fq-geo, .ft-qso.empty .fq-v { display: none; }
+/* Fiche du carnet sous les macros FT (TRX DIGI du dashboard) : sans « Ma référence (activation) » */
+.ft-qsolog { margin-top: 6px; }
+.ft-qsolog[hidden] { display: none; }
+.ft-qsolog .lg-myref-btn, .ft-qsolog .lg-myrefs { display: none !important; }
+.lg-last[hidden] { display: none; }
+.ft-qso[hidden] { display: none; }
+/* Messages de la fiche du carnet (fond jaune clair) : couleurs foncées lisibles */
+.lg-form .lg-fmsg { color: #3a2a10; font-weight: 700; font-size: 12px; }
+.lg-form .lg-fmsg.ok { color: #0b6b2a; }
+.lg-form .lg-fmsg.warn { color: #8a4b00; }
+.lg-form .lg-fmsg.err { color: #b00000; }
