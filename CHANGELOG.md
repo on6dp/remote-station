@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.7** — « Ramener dans le dashboard » : texte blanc gras, cadre blanc
 - **0.38.6** — Barre du haut des modes numériques : caractères plus grands
 - **0.38.5** — « Suivre l'opérateur » au repos : cadre blanc, texte blanc gras
 - **0.38.4** — Cartes de bande de l'onglet FT8 / FT4 / FT2 : plage des fréquences FT8 / FT4 / FT2 de la bande ± 20 kHz (ex. 20 m : 14054–14104 kHz)

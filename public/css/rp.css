@@ -2456,3 +2456,5 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dg-bar .dg-f, .dg-bar .dg-chk, .dg-bar .dg-chk.spotlog { font-size: 13px; }
 .dg-bar select { font-size: 13px; }
 .dg-bar .dg-f b { font-size: 14px; }
+/* « Ramener dans le dashboard » / ⧉ : texte blanc gras, cadre blanc */
+.ctab-detach { color: #fff; font-weight: 800; border: 1px solid #fff !important; }
