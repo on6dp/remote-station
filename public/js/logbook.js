@@ -635,7 +635,14 @@
     if (editing) api.send({ t: 'log_edit', id: editing.id, qso, tag: TAG || undefined });
     else api.send({ t: 'log_add', qso, force: !!force, tag: TAG || undefined, spot: !!(window.RSSPOT && RSSPOT.on()) });
     fmsg('Enregistrement…', '');
+    // Pas de réponse du serveur (liaison coupée, page du dashboard rechargée…) : on le dit au lieu de rester sur « Enregistrement… »
+    clearTimeout(saveWait);
+    saveWait = setTimeout(() => {
+      const el = q$('#lgFmsg');
+      if (el && /^Enregistrement/.test(el.textContent)) fmsg('Pas de réponse du serveur : QSO peut-être non enregistré. Vérifiez la connexion (ou rechargez la page) puis réessayez.', 'err');
+    }, 8000);
   }
+  let saveWait = 0;
   let viewOnly = false; // fiche ouverte en consultation (pas le droit de modifier ce QSO)
   function startEdit(id) {
     const q = items.find((x) => x.id === id);
@@ -1172,6 +1179,13 @@
 
   // ------------------------------------------------------------------ messages du serveur
   function onMessage(m) {
+    if (/^log_(saved|dupe)$/.test(m.t)) clearTimeout(saveWait);
+    // Refus du serveur pendant un enregistrement (droits, données invalides) : affiché sous la fiche
+    if (m.t === 'notice') {
+      const el = root && q$('#lgFmsg');
+      if (m.level === 'error' && el && /^Enregistrement/.test(el.textContent)) { clearTimeout(saveWait); fmsg(m.msg, 'err'); }
+      return;
+    }
     if (m.t === 'log_refs') return refResults(m);
     if (m.t === 'log_refs_status') return drawRefsDlg(m.status);
     if (m.t === 'log_values') {

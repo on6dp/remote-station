@@ -4122,13 +4122,15 @@
       qsoForm = true;
       $('ftQso').hidden = true;
       $('ftQsoLog').hidden = false;
-      L.init({ send: api.send, state: api.state, iControl: api.iControl, tag: 'ftqso', formOnly: true, say: api.say });
+      // Fonctions relues à chaque appel : le dashboard (et donc l'api) peut avoir été rechargé entre-temps
+      L.init({ send: (m) => api.send(m), state: () => api.state(), iControl: () => api.iControl(), tag: 'ftqso', formOnly: true, say: (...a) => api.say(...a) });
       L.mount($('ftQsoLog'));
     }
     const h = window.opener && !window.opener.closed && window.opener.RSHOST;
     if (h && h !== qsoTapHost) {
       qsoTapHost = h;
-      h.tap((m) => { if (m && /^log_/.test(m.t)) L.onMessage(m); });
+      // Jamais d'exception vers le dashboard : il retirerait cette écoute pour de bon (fiche bloquée sur « Enregistrement… »)
+      h.tap((m) => { try { if (m && (/^log_/.test(m.t) || (m.t === 'notice' && m.level === 'error'))) L.onMessage(m); } catch (e) { /* message ignoré */ } });
       try { const me = h.me && h.me(); if (me) L.onHello(me); } catch (e) { /* */ }
       L.show();
     }
