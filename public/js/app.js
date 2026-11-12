@@ -82,7 +82,7 @@
     const b = $('planBtn');
     if (!b) return;
     b.setAttribute('aria-pressed', String(planAuto()));
-    b.textContent = planAuto() ? 'Mode auto' : 'Mode auto : non';
+    b.textContent = 'Mode auto'; // enclenché ou non : le bouton (aria-pressed) le montre
     const r = st && st.radio;
     const BP = window.BANDPLAN;
     const seg = BP && r && r.freq ? BP.segment(target === 'B' ? r.freqB : r.freq) : null;

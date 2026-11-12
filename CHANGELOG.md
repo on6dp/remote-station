@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.47** — Bouton MODE AUTO : plus de « : NON » quand il est coupé
 - **0.38.46** — Double réception : barres des cascades VFO-A / VFO-B à la même hauteur quel que soit le VFO d'émission
 - **0.38.45** — Barre FT : Période, Activité, DX, Carnet et boutons à la même hauteur
 - **0.38.44** — « Seulement la chasse » : cadre blanc, fond bleu foncé quand il est activé
