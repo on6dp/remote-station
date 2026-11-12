@@ -268,7 +268,7 @@
       </div>
       <i class="dg-vsplit" id="dgSplit" title="Glisser à gauche ou à droite : largeur des deux listes (double-clic : moitié-moitié)"></i>
       <div class="dg-col">
-        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span></div>
+        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span><button class="dg-mini" type="button" id="dgClearRx" title="Vide cette liste (les messages suivants s'y ajoutent)">Effacer</button></div>
         <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span title="Préfixe de l’entité DXCC">Préf.</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgRx"></div>
       </div>
@@ -279,7 +279,7 @@
         <div class="dg-list" id="dgBandB"></div>
       </div>
       <div class="dg-col ft-colb dual-colb" hidden>
-        <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Fréquence RX <b id="dgRxFB">1500 Hz</b></span></div>
+        <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Fréquence RX <b id="dgRxFB">1500 Hz</b></span><button class="dg-mini" type="button" id="dgClearRxB" title="Vide cette liste (les messages suivants s'y ajoutent)">Effacer</button></div>
         <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span title="Préfixe de l’entité DXCC">Préf.</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgRxB"></div>
       </div>
@@ -5083,12 +5083,14 @@
       if (item.list.length) sep(band);
       for (const d of item.list) insertSorted(band, rowEl(item.slot, d, side), slotKey(item, item.tx ? 1 : 2));
     });
-    const mine = item.list.filter((d) => inRx(d, side));
+    const mine = item.slot > rxCut[B ? 'B' : 'A'] ? item.list.filter((d) => inRx(d, side)) : [];
     if (mine.length) {
       const rx = $(B ? 'dgRxB' : 'dgRx');
       stickToBottom(rx, () => { sep(rx); for (const d of mine) insertSorted(rx, rowEl(item.slot, d, side), slotKey(item, item.tx ? 1 : 2)); });
     }
   }
+  // « Effacer » de la colonne Fréquence RX : messages d'avant ce moment-là retirés de cette liste seulement
+  const rxCut = { A: 0, B: 0 };
   function inRx(d, side) { return d.tx || Math.abs(d.f - (side === 'B' ? rxFB : rxF)) <= RX_WIDTH || cls(d.msg) === 'me'; }
   function redrawRx(side) {
     const B = side === 'B';
@@ -5097,7 +5099,7 @@
     if (!rx) return;
     rx.textContent = '';
     for (const it of B ? histB : hist) {
-      if (it.mode !== mode) continue;
+      if (it.mode !== mode || it.slot <= rxCut[B ? 'B' : 'A']) continue;
       const mine = it.list.filter((d) => inRx(d, side));
       if (!mine.length) continue;
       const sk = slotKey(it, 0);
@@ -5553,6 +5555,8 @@
         api.send({ t: 'txcall', call: v });
       });
       $('dgClearB').addEventListener('click', () => { histB.length = 0; redrawAll(); });
+      $('dgClearRx').addEventListener('click', () => { rxCut.A = Date.now(); redrawRx(); });
+      $('dgClearRxB').addEventListener('click', () => { rxCut.B = Date.now(); redrawRx('B'); });
       document.querySelectorAll('#dgTxSide .btn').forEach((b) => b.addEventListener('click', () => setSide(b.dataset.side)));
       // Réglages de la cascade
       const wfUi = () => { $('wfGain').value = wfCfg.gain; $('wfZero').value = wfCfg.zero; $('wfFlat').checked = wfCfg.flat; $('wfPal').value = wfCfg.pal; $('wfSpd').value = String(wfCfg.spd); };

@@ -607,7 +607,7 @@ FT8 est un mode numérique fait pour les signaux très faibles : chaque station 
 **Les deux listes de messages**
 
 - **Activité de bande** (à gauche) : tous les messages décodés. Les **CQ** sont en vert, les messages adressés à votre TX call (ON5VL, OR0L ou le vôtre) en rouge, vos propres émissions en jaune. `Effacer` vide la liste.
-- **Fréquence RX** (à droite) : seulement les messages proches de votre fréquence de réception, c'est-à-dire votre QSO en cours.
+- **Fréquence RX** (à droite) : seulement les messages proches de votre fréquence de réception, c'est-à-dire votre QSO en cours. Chaque liste a son bouton `Effacer` : celui de l'Activité de bande vide l'historique des deux listes, celui de Fréquence RX ne vide que cette liste-là.
 - Un trait sépare chaque période ; les messages sont classés dans l'ordre chronologique.
 - **Largeur des deux listes** : glisser le trait vertical entre elles (double-clic : moitié-moitié).
 
