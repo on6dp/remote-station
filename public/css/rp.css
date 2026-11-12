@@ -2213,3 +2213,7 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 section.panel.tune-panel { background: linear-gradient(180deg, #4d5d72, #3f4e61); border-color: #6b7c92; }
 /* Fiche QSO : texte des boutons (Annuler, Supprimer, Maintenant…) en blanc gras */
 #lgForm .btn { color: #fff; font-weight: 800; }
+/* Recherche du carnet : fond jaune clair comme la fiche QSO, encadré blanc épais, texte foncé gras */
+#lgSearch.lg-search { min-width: 310px; background: #f6efc9; color: #111; font-weight: 700; border: 2px solid #fff; border-radius: 8px; }
+#lgSearch.lg-search::placeholder { color: #6b6450; font-weight: 600; }
+#lgSearch.lg-search:focus { border-color: var(--v2-accent-cyan-bright, #00d4ff); outline: none; }
