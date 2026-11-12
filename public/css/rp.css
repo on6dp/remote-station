@@ -2266,3 +2266,6 @@ section[data-panel="tx"] > .panel-h { color: #ffd400; }
 .vfo-am .am-nd line { stroke: #ff2a2a; stroke-width: 2.2; stroke-linecap: round; }
 .vfo-am .am-nd { transition: transform .15s linear; }
 .vfo-am.dim { opacity: .55; }
+/* Cadre DSP (NB, DNR, NOTCH, DNF…) : encadré blanc, nom en blanc ; enclenché = couleurs inversées (fond blanc, nom noir gras) */
+#sec-dsp .btn[data-ctl] { border-color: #fff; color: #fff; font-weight: 800; }
+#sec-dsp .btn[data-ctl][aria-pressed='true'] { background: #fff; color: #000; border-color: #fff; font-weight: 900; text-shadow: none; box-shadow: 0 0 8px rgba(255, 255, 255, .45); }
