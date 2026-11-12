@@ -2191,3 +2191,6 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 .panel-b > .ctl:has(> input[type=range]) { gap: 0; }
 .panel-b > .ctl:has(> input[type=range]) > input[type=range] { margin-top: 0; margin-bottom: 0; }
 .panel-b > .ctl:has(> input[type=range]) + .ctl:has(> input[type=range]) { margin-top: -4px; }
+/* Décompte de la main (15 min) : blanc gras ; orange sous 2 min */
+.ctl-timer { color: #fff; font-weight: 800; }
+.ctl-timer.low { color: #f59e0b; }

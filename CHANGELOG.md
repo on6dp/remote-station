@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.329** — Dashboard : décompte de la main (⏱) en blanc gras (orange sous 2 min)
 - **0.37.328** — Dashboard : curseurs (BW, IF SHIFT, NB, DNR…) plus serrés
 - **0.37.327** — Dashboard : « A · MAIN » en vert et « B · SUB » en rose dans les titres des cadres (RF FRONT END, DSP, FILTRES…)
 - **0.37.326** — Dashboard : étiquette SUB (côté actif du VFO B) sur fond blanc, texte noir gras
