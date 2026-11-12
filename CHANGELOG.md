@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.353** — Dashboard : chiffres du S-mètre du VFO B en blanc gras même quand la barre est inactive
 - **0.37.352** — Dashboard : RX / TX au repos encadrés de blanc, SUB en rose foncé, bande en blanc gras dans les écrans VFO
 - **0.37.351** — Dashboard : mode dans l'écran VFO plus grand, fond vert (VFO A) / rose (VFO B)
 - **0.37.350** — Dashboard : touches du panneau MODE un peu plus petites (la colonne remonte)

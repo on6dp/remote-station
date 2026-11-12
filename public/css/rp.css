@@ -2288,3 +2288,6 @@ section[data-panel="tx"] > .panel-h { color: #ffd400; }
 /* SUB toujours en rose foncé (plus lumineux quand c'est le côté actif) ; « · » et bande en blanc gras */
 .vfo-sub .side-tag { background: linear-gradient(180deg, #8a1f50, #5a1033); color: #fff; font-weight: 800; border-color: #d9609a; }
 .vfo-name { color: #fff; font-weight: 800; }
+/* S-mètre inactif (VFO B en réception simple) : seule la barre est atténuée, les chiffres restent en blanc gras (+20…+60 en rouge) */
+.smeter.smeter-dim { opacity: 1; }
+.smeter.smeter-dim > :not(.sm-scale) { opacity: .35; }
