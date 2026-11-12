@@ -2491,3 +2491,7 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dg-list, .dg-ftx .dg-list, .rt-rx, .ws-list, .jt-list { scrollbar-width: auto; scrollbar-color: #c3cfde #1b2534; }
 .bm-sb { width: 17px; scrollbar-width: auto; scrollbar-color: #c3cfde #1b2534; background: #1b2534; }
 .bm-body .bm-s { right: 19px; }
+/* Vitesse du spectre : X1 / X2 / X4, en haut à gauche du spectre */
+.dg-spspd { position: absolute; left: 6px; z-index: 5; display: inline-flex; gap: 2px; }
+.dg-spspd button { font: 800 10px/1 inherit; padding: 2px 5px; border: 1px solid #fff; border-radius: 3px; background: rgba(5, 8, 13, .8); color: #fff; cursor: pointer; }
+.dg-spspd button[aria-pressed='true'] { background: #fff; color: #000; }

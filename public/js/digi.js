@@ -240,6 +240,7 @@
       <i class="dg-mk dg-mk-bm" id="dgMkBM" hidden></i><i class="dg-mk dg-mk-bs" id="dgMkBS" hidden></i>
       <i class="cw-trx" id="cwTrxA" hidden title="Filtre du TRX (BW) : glisser une barre pour l'élargir ou le rétrécir (Ctrl + molette aussi)"><b></b><b></b><span></span></i>
       <i class="dg-grip" id="dgGrip" title="Glisser vers le haut ou le bas : hauteur de la cascade et des listes de messages (double-clic : taille d'origine)"></i>
+<span class="dg-spspd" id="dgSpSpd" title="Vitesse du spectre : X1 = moyenne lente (courbe calme), X2, X4 = suit les signaux plus vite"><button type="button" data-spspd="1">X1</button><button type="button" data-spspd="2">X2</button><button type="button" data-spspd="4">X4</button></span>
       <i class="dg-grip dg-sgrip" id="dgSGrip" title="Glisser vers le haut ou le bas : hauteur du spectre (double-clic : taille d'origine)"></i>
     </div></div>
       <div class="dg-wf ft-wfb" id="ftWfBox" hidden>
@@ -258,6 +259,7 @@
         <i class="dg-mk dg-mk-tx" id="ftMkTxB"></i><i class="dg-mk dg-mk-rx" id="ftMkRxB"></i>
         <i class="cw-trx" id="cwTrxB" hidden title="Filtre du TRX (BW) : glisser une barre pour l'élargir ou le rétrécir (Ctrl + molette aussi)"><b></b><b></b><span></span></i>
         <i class="dg-grip" id="ftGripB" title="Glisser vers le haut ou le bas : hauteur des cascades (double-clic : taille d'origine)"></i>
+<span class="dg-spspd" id="ftSpSpdB" title="Vitesse du spectre : X1 = moyenne lente (courbe calme), X2, X4 = suit les signaux plus vite"><button type="button" data-spspd="1">X1</button><button type="button" data-spspd="2">X2</button><button type="button" data-spspd="4">X4</button></span>
         <i class="dg-grip dg-sgrip" id="ftSGripB" title="Glisser vers le haut ou le bas : hauteur des spectres (double-clic : taille d'origine)"></i>
       </div>
     </div>
@@ -1041,10 +1043,18 @@
     sizeFB();
     drawScale();
   }
+  // Vitesse du spectre (boutons X1 / X2 / X4 en haut à gauche du spectre) : lissage plus ou moins long
+  const SP_ALPHA = { 1: 0.18, 2: 0.35, 4: 0.65 };
+  let spSpd = [1, 2, 4].indexOf(Number(store.get('spspd', '1'))) >= 0 ? Number(store.get('spspd', '1')) : 1;
+  function spSpdUi() {
+    document.querySelectorAll('.dg-spspd button').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.spspd) === spSpd)));
+  }
   // Spectre sous la cascade : taille en pixels de l'écran ; la poignée de la cascade se place entre les deux
   function sizeSpec(T, cv, wcv, grip) {
     if (!cv) return;
     if (grip && wcv) { grip.style.top = (wcv.offsetTop + wcv.offsetHeight - 5) + 'px'; grip.style.bottom = 'auto'; }
+    const sw = cv.parentElement && cv.parentElement.querySelector('.dg-spspd');
+    if (sw) sw.style.top = (cv.offsetTop + 4) + 'px';
     const dpr = wf.dpr || 1;
     const w = Math.round(Math.max(120, cv.clientWidth) * dpr), h = Math.round(Math.max(20, cv.clientHeight) * dpr);
     if (T.sp && T.sp.w === w && T.sp.h === h) return;
@@ -1204,6 +1214,7 @@
     const nHz = VW.span / df; // cases sur la largeur affichée
     const k0f = VW.lo / df;     // première case affichée (zoom RTTY / FT)
     // Spectre sous la cascade (VFO-A, et VFO-B en double réception) : niveau de chaque colonne, lissé dans le temps
+    const spA = SP_ALPHA[spSpd] || 0.18; // vitesse du spectre (X1, X2, X4)
     const SP = (T === wf || T === wfFB) && T.sp && T.sp.w ? T.sp : null;
     if (SP && (!SP.v || SP.v.length !== SP.w)) SP.v = new Float32Array(SP.w);
     for (let x = 0; x < T.w; x++) {
@@ -1217,7 +1228,7 @@
       if (C.flat) v = v - base + flatLvl;
       let i = Math.round(((v - floor + off) / range) * 255);
       i = i < 0 ? 0 : i > 255 ? 255 : i;
-      if (SP) { const xs = Math.min(SP.w - 1, Math.floor(x * SP.w / T.w)); SP.v[xs] = SP.v[xs] * 0.82 + i * 0.18; }
+      if (SP) { const xs = Math.min(SP.w - 1, Math.floor(x * SP.w / T.w)); SP.v[xs] = SP.v[xs] * (1 - spA) + i * spA; }
       d[x * 4] = CP[i * 3];
       d[x * 4 + 1] = CP[i * 3 + 1];
       d[x * 4 + 2] = CP[i * 3 + 2];
@@ -5713,6 +5724,9 @@
       fq('fqRptRx', (v) => { setDx({ rptRx: v }); syncDx(); });
       $('fqLog').addEventListener('click', qsoLogNow);
       $('fqClr').addEventListener('click', () => { setDx({ call: '', grid: '', rpt: '-10', rptRx: '' }); syncDx(); });
+      // Vitesse du spectre
+      document.querySelectorAll('.dg-spspd button').forEach((b) => b.addEventListener('click', () => { spSpd = Number(b.dataset.spspd) || 1; store.set('spspd', spSpd); spSpdUi(); }));
+      spSpdUi();
       // TX ← RX, RX ← TX, ↺ : couleurs inversées un instant au clic
       for (const id of ['dgQsy', 'dgTxRx', 'dgRxTx']) if ($(id)) $(id).addEventListener('click', () => { const b = $(id); b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 450); });
       $('dgDualRx').addEventListener('click', () => {

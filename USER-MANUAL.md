@@ -593,7 +593,7 @@ FT8 is a digital mode designed for very weak signals: each station sends a short
 
 **The waterfall**: **left click** = receive frequency (green « RX 1500 » flag and green line), **right click** = transmit frequency (red flag and red line). Button **held down** (left for receive, right for transmit): the line follows the mouse continuously, as in RTTY and CW (FT8 · FT4 · FT2, WSPR, JT65, JTTY); members following the operator see it move. For transmitting, choose a clear spot in the waterfall. A white line marks the start of each period, with the UTC time and the band.
 
-**The spectrum**, below the waterfall (like WSJT-X's "Spectrum"): green curve of the level of each audio frequency, averaged over the last lines (same Gain, Zero and Flat settings as the waterfall); a signal stands out as a peak. The **handle between the waterfall and the spectrum** sets the waterfall height; the **handle at the very bottom** sets the spectrum height (double-click: original size). With dual receive, VFO-B has its own spectrum, of the same height.
+**The spectrum**, below the waterfall (like WSJT-X's "Spectrum"): green curve of the level of each audio frequency, averaged over the last lines (same Gain, Zero and Flat settings as the waterfall); a signal stands out as a peak. At the top left of the spectrum, `X1` / `X2` / `X4` set its **speed**: X1 = slow average (calm curve), X4 = follows signals faster (kept in this browser). The **handle between the waterfall and the spectrum** sets the waterfall height; the **handle at the very bottom** sets the spectrum height (double-click: original size). With dual receive, VFO-B has its own spectrum, of the same height.
 
 **The two message lists**
 

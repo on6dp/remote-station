@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.14** — Spectre : vitesse X1 / X2 / X4 (boutons en haut à gauche du spectre)
 - **0.38.13** — Cartes de bande FT : fréquence d'appel du mode ± 20 kHz, recalées en passant de FT8 à FT4 / FT2 (plage gardée par mode)
 - **0.38.12** — Ascenseurs plus visibles (listes des modes numériques, cartes de bande) ; TRX DIGI : la fenêtre descend jusqu'en bas de l'écran (listes et cartes de bande plus hautes)
 - **0.38.11** — Double réception : même plage (largeur d'affichage) pour les cascades des deux VFO ; le zoom à la molette agit sur les deux
