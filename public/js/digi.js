@@ -209,11 +209,11 @@
         <option value="auto">AUTO</option><option value="0">0/15</option><option value="1">15/30</option>
       </select>
       <label class="dg-hound" id="dgHoundWrap" title="DXpédition en FT8 : HOUND = vous appelez une DXpédition qui trafique en FOX (FOX classique, plusieurs QSO à la fois) ou en SuperFox (un seul signal large de 1,5 kHz, jusqu'à 9 stations à la fois). Choisi par celui qui a la main, pour toute la station."><span class="dg-f">Activité</span> <select id="dgHound"><option value="0">NORMALE</option><option value="1">HOUND · FOX</option><option value="2">HOUND · SuperFox</option></select></label>
-      <label class="dg-chk dg-alog" title="Fin du QSO (RR73 / 73) : fiche « QSO terminé » à confirmer, ou QSO enregistré tout seul dans le carnet (Log automatically de WSJT-X)">Log <select id="dgAutoLog">
-        <option value="">fiche à confirmer</option>
-        <option value="sent">auto à l’envoi du RR73 / 73</option>
-        <option value="rcvd">auto à la réception du RR73 / 73</option>
-        <option value="any">auto au 1er RR73 / 73 (envoyé ou reçu)</option>
+      <label class="dg-chk dg-alog" title="Que faire du QSO dans le carnet à la fin du QSO (RR73 / 73) : vous demander (fenêtre « QSO terminé » avec « Enregistrer dans le carnet »), ou l’enregistrer tout seul (« Log automatically » de WSJT-X)">Carnet en fin de QSO <select id="dgAutoLog">
+        <option value="">me demander avant d’enregistrer</option>
+        <option value="sent">enregistrer seul quand j’envoie RR73 / 73</option>
+        <option value="rcvd">enregistrer seul quand je reçois RR73 / 73</option>
+        <option value="any">enregistrer seul au 1er RR73 / 73 (envoyé ou reçu)</option>
       </select></label>
       <label class="dg-chk spotlog" title="Cochée : chaque QSO FT8 / FT4 / FT2 enregistré dans le carnet (fiche ou log automatique) est aussi spoté sur le DX cluster, sous votre indicatif d’opérateur — pas le TX CALL. Les stations décodées partent de toute façon vers PSK Reporter."><input type="checkbox" data-spotlog> Spot cluster</label>
       <button class="btn dg-dualrx" type="button" id="dgDualRx" hidden aria-pressed="false" title="DUAL RX : deux cascades, quatre colonnes et deux cartes de bande (VFO-A et VFO-B) ; clic : un seul VFO affiché (le TRX garde sa double réception). TRX en réception simple : clic = DUAL RX sur le TRX (avec la main).">DUAL RX</button>
