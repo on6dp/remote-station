@@ -209,7 +209,6 @@
         <option value="auto">auto</option><option value="0">1re</option><option value="1">2e</option>
       </select>
       <label class="dg-hound" id="dgHoundWrap" title="DXpédition en FT8 : HOUND = vous appelez une DXpédition qui trafique en FOX (FOX classique, plusieurs QSO à la fois) ou en SuperFox (un seul signal large de 1,5 kHz, jusqu'à 9 stations à la fois). Choisi par celui qui a la main, pour toute la station."><span class="dg-f">Activité</span> <select id="dgHound"><option value="0">NORMALE</option><option value="1">HOUND · FOX</option><option value="2">HOUND · SuperFox</option></select></label>
-      <label class="dg-chk" title="En appel CQ (Tx6), celui qui vous répond devient le correspondant et la séquence continue toute seule (Call 1st de WSJT-X)"><input type="checkbox" id="dgCall1st"> Répondre au 1er</label>
       <label class="dg-chk dg-alog" title="Fin du QSO (RR73 / 73) : fiche « QSO terminé » à confirmer, ou QSO enregistré tout seul dans le carnet (Log automatically de WSJT-X)">Log <select id="dgAutoLog">
         <option value="">fiche à confirmer</option>
         <option value="sent">auto à l’envoi du RR73 / 73</option>
@@ -4192,7 +4191,7 @@
     if (/[{}]/.test(text)) return api.say('Message incomplet : choisissez d’abord le correspondant (double-clic sur son message) ou réglez votre locator.', 'warn');
     const m = FT_MODES.indexOf(mode) >= 0 ? mode : ftStored();
     api.send({ t: 'ftx_tx', mode: m, ntx: i + 1, f0: curTxF(), parity: txParity(i), dx: { call: dx.call, grid: dx.grid }, rpt: dx.rpt,
-      free: String(store.get('ftxfree', '')), call1st: store.get('call1st', '1') === '1', keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd() });
+      free: String(store.get('ftxfree', '')), call1st: false, keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd() });
   }
   const curTxF = () => (sd() === 'B' ? Math.round(Number(store.get('txfb', String(txFB))) || txFB) : Math.round(Number(store.get('txf', String(txF))) || txF));
   // Période d'émission : imposée, ou (auto) l'autre que celle du correspondant choisi par double-clic
@@ -4205,7 +4204,7 @@
   }
   function ftxCfg() {
     const st = api && api.state();
-    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), parity: txParity(ftxSel), call1st: store.get('call1st', '1') === '1', side: sd() });
+    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), parity: txParity(ftxSel), call1st: false, side: sd() });
   }
   // Fin de QSO (73 / RR73) : proposition d'enregistrement dans le carnet, comme « Prompt me to log QSO » de WSJT-X
   // Fin d'un QSO FT8 / FT4 / FT2 : fiche à confirmer, ou enregistrement automatique selon le choix « Log »
@@ -4538,7 +4537,6 @@
     const pane = document.querySelector('#centerPanel .ctab-pane[data-pane="ftx"]');
     if (pane) pane.classList.toggle('hound', on);
     if ($('dgPar')) { $('dgPar').disabled = on; if (on) $('dgPar').value = '1'; else if ($('dgPar').value !== store.get('ftxpar', 'auto')) $('dgPar').value = store.get('ftxpar', 'auto'); }
-    if ($('dgCall1st')) $('dgCall1st').disabled = on;
     const k = on + '|' + v;
     if (k !== houndSeen) { houndSeen = k; drawMsgs(); }
   }
@@ -5759,8 +5757,6 @@
         if (v) api.say(v === 2 ? 'HOUND SuperFox : le repère RX se place tout seul sur le signal SuperFox (750 Hz, puis là où il est décodé) ; double-cliquez sur le CQ du FOX, vous appelez en 2e période sur votre fréquence TX.'
           : 'HOUND (FOX classique) : double-cliquez sur le CQ du FOX ; vous appelez en 2e période au-dessus de 1000 Hz, le R+report part tout seul sur la fréquence où le FOX vous appelle.', '', 12000);
       });
-      $('dgCall1st').checked = store.get('call1st', '1') === '1';
-      $('dgCall1st').addEventListener('change', () => { store.set('call1st', $('dgCall1st').checked ? '1' : '0'); ftxCfg(); });
       if ($('dgAutoLog')) {
         $('dgAutoLog').value = store.get('ftautolog', '');
         $('dgAutoLog').addEventListener('change', () => {

@@ -162,7 +162,7 @@ FT8 is the easiest mode to use remotely: everything is done with the mouse and t
 5. **To answer a CQ**: click the station's **callsign** (dotted underline) or double-click its line. The TRX sends your call at the start of the next period.
 6. Let it run: the **sequence advances by itself** (report, R-report, RR73, 73). The bar below the lists is red while transmitting, green while receiving.
 7. As soon as the correspondent sends RR73, the **« Enregistrer le QSO »** (log the QSO) form opens already filled in: check it and save.
-8. To call CQ yourself: click `Tx6` (CQ). Tick **Répondre au 1er** (answer the first) so that the first station to answer is taken automatically.
+8. To call CQ yourself: click `Tx6` (CQ). When a station answers, double-click its message: the QSO then runs by itself.
 9. To stop everything: `■ Arrêter` (stop) (or the `Space` bar).
 
 <a id="p-log"></a>
@@ -585,7 +585,6 @@ FT8 is a digital mode designed for very weak signals: each station sends a short
 | `RX ← TX` | Receive on the transmit audio frequency. |
 | **Période** (period) auto / 1re / 2e | Which period to transmit in. « auto »: opposite to the chosen correspondent (almost always what you want); « 1re » (1st) = 00 and 30 s, « 2e » (2nd) = 15 and 45 s in FT8. |
 | **Activité** NORMALE / HOUND · FOX / HOUND · SuperFox | FT8 only. To work a **DXpedition** running FOX or SuperFox (see "HOUND" below). Chosen by whoever has control, for the whole station; purple when a HOUND mode is on. |
-| ☐ **Répondre au 1er** (answer the first) | When you call CQ (Tx6), the first station to answer becomes the correspondent and the QSO runs by itself (WSJT-X's "Call 1st"). |
 | ☐ **Spot cluster** | Each QSO logged (« QSO terminé » window, automatic logging or the Log QSO form of the RTTY, JTTY and CW tabs) is also spotted on the DX cluster under **your operator call**, not the TX call (same box in the « QSO terminé » window and in the TRX SSB / TRX CW pages). Independently of this box, the FT8 / FT4 / FT2 stations **decoded** by the station are sent every 5 minutes to **PSK Reporter** (pskreporter.info), under the station call and locator, as WSJT-X does. |
 | `DUAL RX` (FTDX101) | Purple when both VFOs are shown (two waterfalls, four columns, two band maps). Click: only one VFO shown (VFO-A), the rig keeps its dual receive; click again: both. With the rig in single receive, the click turns DUAL RX on in the rig (with control). |
 | `■ Arrêter` | At the end of the Tx1 to Tx7 message line, right of the free text (black background, red frame). Stops automatic transmission at once ("Halt Tx"). The `Space` bar does the same. |
@@ -888,7 +887,7 @@ The form at the top of the tab:
 | **RST envoyé** (sent), **RST reçu** (received), **Puiss. W** (power), **Remarque** (remark) | Reports from the Correspondant row, TRX power, free text. |
 | `Enregistrer dans le carnet` (save) / `Annuler` (cancel) | Adds the QSO (duplicate check as in the Logbooks tab) or closes without logging anything. |
 
-In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé** » (QSO finished) window summarises the QSO (callsign, locator, mode, frequency, reports, times): `Enregistrer dans le carnet` saves it, `Ne pas enregistrer` (don't save) closes it. The **Log** choice in the FT8 transmit bar (right of "Répondre au 1er") avoids this window: **auto when sending RR73 / 73** (like WSJT-X "Log automatically"), **auto when receiving RR73 / 73** (if the QSO ends with your sending and no RR73 / 73 received, the form still asks), or **auto at the first RR73 / 73** (sent or received); the QSO then goes into the logbook on its own (other station's name and QTH included when known) and a message confirms it. Without the automatic sequence, or for a forgotten QSO: **Logbooks** tab, type the call, `⇩ TRX` (TRX frequency and mode), the reports, then save.
+In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé** » (QSO finished) window summarises the QSO (callsign, locator, mode, frequency, reports, times): `Enregistrer dans le carnet` saves it, `Ne pas enregistrer` (don't save) closes it. The **Log** choice in the FT8 transmit bar (right of "Activité") avoids this window: **auto when sending RR73 / 73** (like WSJT-X "Log automatically"), **auto when receiving RR73 / 73** (if the QSO ends with your sending and no RR73 / 73 received, the form still asks), or **auto at the first RR73 / 73** (sent or received); the QSO then goes into the logbook on its own (other station's name and QTH included when known) and a message confirms it. Without the automatic sequence, or for a forgotten QSO: **Logbooks** tab, type the call, `⇩ TRX` (TRX frequency and mode), the reports, then save.
 
 <a id="l-liste"></a>
 ### 14.2 The QSO list
