@@ -2358,3 +2358,11 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .vfo.vfo-sub { border: 1.5px solid rgba(255, 122, 179, .55); }
 .vfo.txsel.vfo-main { border-color: #4fd17a; box-shadow: 0 0 0 1px rgba(79, 209, 122, .6), 0 0 22px -6px rgba(40, 200, 100, .7); }
 .vfo.txsel.vfo-sub { border-color: #ff7ab3; box-shadow: 0 0 0 1px rgba(255, 122, 179, .6), 0 0 22px -6px rgba(230, 60, 140, .7); }
+/* Cadran : écran « spectre BF » */
+.vfo-am .sp-bars { stroke: #c9d3df; stroke-width: 1.6; opacity: .85; }
+.vfo-am .sp-flt { fill: none; stroke: #ff3b30; stroke-width: 1.8; stroke-linejoin: round; }
+.vfo-am .sp-notch { stroke: #5fd0ff; stroke-width: 1.6; stroke-dasharray: 3 2; }
+.vfo-am .pb-nmark { fill: #5fd0ff; }
+.vfo-am .sp-base { stroke: #2f6fd6; stroke-width: 2.5; }
+.vfo-am .sp-ax { fill: #fff; font: 800 8px Arial, sans-serif; }
+.vfo-am .sp-msg { fill: #fff; font: 700 9px Arial, sans-serif; }

@@ -316,9 +316,9 @@
   // échelles S (S1…S9 blanc, +20…+60 bleu), PO en watts (pleine échelle du TRX connecté), puis SWR ou COMP (clic) ;
   // l'aiguille suit le S-mètre en réception et la puissance en émission ; redessiné quand on change de TRX
   const AM = { A: { key: '', nd: null }, B: { key: '', nd: null } };
-  // Clic sur le cadran : S / PO / SWR (par défaut) → S / PO / COMP → S / SWR / ALC → Po / Id / Vd → … ;
+  // Clic sur le cadran : S / PO / SWR (par défaut) → S / PO / COMP → S / SWR / ALC → Po / Id / Vd → spectre BF → … ;
   // choix gardé pour chaque VFO dans ce navigateur
-  const AM_SETS = ['swr', 'comp', 'alc', 'pid'];
+  const AM_SETS = ['swr', 'comp', 'alc', 'pid', 'spec'];
   const amSet = { A: 'swr', B: 'swr' };
   try { for (const w of ['A', 'B']) { const v = localStorage.getItem('rs.am' + w); amSet[w] = AM_SETS.indexOf(v) >= 0 ? v : 'swr'; } } catch (e) { /* stockage bloqué */ }
   for (const w of ['A', 'B']) {
@@ -348,9 +348,75 @@
     const arcs = set === 'comp' ? [S, PO, COMP] : set === 'alc' ? [S, SWR, ALC] : set === 'pid' ? [PO, ID, VD] : [S, PO, SWR];
     return { key: (R0.NAME || '') + '/' + pmax + '/' + set, arcs, set };
   };
+  // ------------------------------------------------------------ spectre BF (écran « spectre » du cadran) : le son reçu
+  // par « Écouter le TRX » (8 kHz), avec le filtre (rouge) et le NOTCH, comme le petit cadre de la face avant
+  const AUD = { buf: new Float32Array(1024), pos: 0, rate: 8000, at: 0, sm: null };
+  function audTap(pcm) {
+    for (let i = 0; i < pcm.length; i++) { AUD.buf[AUD.pos] = pcm[i]; AUD.pos = (AUD.pos + 1) % AUD.buf.length; }
+    AUD.rate = pcm.rate || 8000; AUD.at = Date.now();
+  }
+  function audSpectrum() {
+    const N = 1024, re = new Float32Array(N), im = new Float32Array(N);
+    for (let i = 0; i < N; i++) re[i] = AUD.buf[(AUD.pos + i) % N] * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1)));
+    for (let i = 1, j = 0; i < N; i++) { let b = N >> 1; for (; j & b; b >>= 1) j ^= b; j ^= b; if (i < j) { [re[i], re[j]] = [re[j], re[i]]; } }
+    for (let len = 2; len <= N; len <<= 1) {
+      const a = -2 * Math.PI / len, wr = Math.cos(a), wi = Math.sin(a);
+      for (let i = 0; i < N; i += len) {
+        let cr = 1, ci = 0;
+        for (let k = 0; k < len / 2; k++) {
+          const ur = re[i + k], ui = im[i + k], vr = re[i + k + len / 2] * cr - im[i + k + len / 2] * ci, vi = re[i + k + len / 2] * ci + im[i + k + len / 2] * cr;
+          re[i + k] = ur + vr; im[i + k] = ui + vi; re[i + k + len / 2] = ur - vr; im[i + k + len / 2] = ui - vi;
+          const t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t;
+        }
+      }
+    }
+    const out = new Float32Array(N / 2);
+    for (let i = 0; i < N / 2; i++) out[i] = 10 * Math.log10(re[i] * re[i] + im[i] * im[i] + 1e-10);
+    if (!AUD.sm || AUD.sm.length !== out.length) AUD.sm = out; else for (let i = 0; i < out.length; i++) AUD.sm[i] = AUD.sm[i] * 0.55 + out[i] * 0.45;
+    return AUD.sm;
+  }
+  function drawSpec(w, r, live) {
+    const sv = $('am' + w);
+    AM[w].key = 'spec';
+    const X0 = 10, X1 = 190, Y0 = 10, Y1 = 64, FMAX = 4000, X = (f) => X0 + Math.max(0, Math.min(1, f / FMAX)) * (X1 - X0);
+    let h = '<rect class="am-bg" x="1" y="1" width="198" height="82" rx="5"/>';
+    const fresh = Date.now() - AUD.at < 1500;
+    if (fresh && live) {
+      const sp = audSpectrum(), binHz = AUD.rate / 1024, n = 72;
+      let lo = 1e9, hi = -1e9;
+      for (let i = 2; i < sp.length; i++) { if (sp[i] < lo) lo = sp[i]; if (sp[i] > hi) hi = sp[i]; }
+      const floor = lo + 6, top = Math.max(floor + 30, hi);
+      let d = '';
+      for (let i = 0; i < n; i++) {
+        const f0 = i * FMAX / n, f1 = (i + 1) * FMAX / n;
+        let m = -1e9;
+        for (let j = Math.floor(f0 / binHz); j <= Math.ceil(f1 / binHz) && j < sp.length; j++) if (sp[j] > m) m = sp[j];
+        const v = Math.max(0, Math.min(1, (m - floor) / (top - floor)));
+        const x = (X0 + (i + 0.5) * (X1 - X0) / n).toFixed(1);
+        d += 'M' + x + ' ' + Y1 + 'V' + (Y1 - v * (Y1 - Y0 - 4)).toFixed(1);
+      }
+      h += '<path class="sp-bars" d="' + d + '"/>';
+    } else {
+      h += '<text class="sp-msg" x="100" y="38" text-anchor="middle">' + (live ? 'Cliquez « 🔊 Écouter le TRX »' : 'TRX hors ligne') + '</text>' +
+        '<text class="sp-msg" x="100" y="50" text-anchor="middle">' + (live ? 'pour voir le spectre BF' : '') + '</text>';
+    }
+    const d = live ? miniFltData(w, r) : null;
+    if (d) {
+      const c = d.cw ? 700 : 1500, lo = c + d.sft - d.hz / 2, hi = c + d.sft + d.hz / 2, a = X(lo), b = X(hi), k = Math.min(5, (b - a) / 4);
+      h += '<path class="sp-flt" d="M' + X0 + ' ' + Y1 + 'H' + a.toFixed(1) + 'L' + (a + k).toFixed(1) + ' ' + (Y0 + 2) + 'H' + (b - k).toFixed(1) + 'L' + b.toFixed(1) + ' ' + Y1 + 'H' + X1 + '"/>';
+      if (d.notch != null) { const xn = X(d.notch).toFixed(1); h += '<line class="sp-notch" x1="' + xn + '" y1="' + (Y0 + 2) + '" x2="' + xn + '" y2="' + Y1 + '"/><path class="pb-nmark" d="M' + (xn - 4) + ' ' + (Y0 - 4) + 'L' + xn + ' ' + (Y0 + 2) + 'L' + (+xn + 4) + ' ' + (Y0 - 4) + 'Z"/>'; }
+    }
+    h += '<line class="sp-base" x1="' + X0 + '" y1="' + (Y1 + 1) + '" x2="' + X1 + '" y2="' + (Y1 + 1) + '"/>';
+    for (const f of [0, 1000, 2000, 3000, 4000]) h += '<text class="sp-ax" x="' + X(f).toFixed(1) + '" y="78" text-anchor="middle">' + (f ? f / 1000 + 'k' : '0') + '</text>';
+    sv.innerHTML = h + '<title>Spectre BF du son reçu (Écouter le TRX) avec le filtre et le NOTCH ; clic : écran suivant</title>';
+    AM[w].nd = null;
+    sv.classList.toggle('dim', !live);
+  }
+  setInterval(() => { for (const w of ['A', 'B']) if (amSet[w] === 'spec' && st && st.radio) drawSpec(w, st.radio, !!st.radio.connected); }, 200);
   function drawAm(w, r, live, isTx, val) {
     const sv = $('am' + w);
     if (!sv) return;
+    if (amSet[w] === 'spec') return; // dessiné par drawSpec (5 fois par seconde)
     const sc = amScales(r || {}, w), st = AM[w];
     const CX = 110, CY = 262, A0 = -20, A1 = 18, RAD = [244, 226, 208];
     const pt = (rad, f) => { const a = (A0 + (A1 - A0) * f) * Math.PI / 180; return [CX + rad * Math.sin(a), CY - rad * Math.cos(a)]; };
@@ -1726,6 +1792,7 @@
     if ((VX() && VX().talking()) || (window.RSHOST && window.RSHOST.extTalk)) { player.next = 0; return; }
     const pcm = ULAW.decodeFrame(bytes);
     if (!pcm) return;
+    audTap(pcm);
     player.got++;
     const ctx = player.ctx;
     const now = ctx.currentTime;
