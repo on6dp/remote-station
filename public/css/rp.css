@@ -2599,3 +2599,8 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
    largeur et passent à la ligne de la même façon, quel que soit le VFO d'émission */
 .ft-dual #ftDialA::before, .ft-dual #ftDialB::before { content: 'TX '; font-size: 11px; font-weight: 800; visibility: hidden; }
 .ft-dual:not(.ft-txb) #ftDialA::before, .ft-dual.ft-txb #ftDialB::before { visibility: visible; }
+/* Double réception : ↺ au bout de la ligne sans jamais passer à la ligne, contenus calés en haut des deux côtés */
+.ft-dual .wf-ctl { position: relative; padding-right: 34px; align-content: flex-start; align-items: center; }
+.ft-dual .wf-ctl #wfReset, .ft-dual .wf-ctl #wfResetB { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); }
+/* « Logbook en fin de QSO » en jaune gras (comme DX, TX call) */
+.dg-bar .dg-ylw { color: #ffd400; font-weight: 800; }
