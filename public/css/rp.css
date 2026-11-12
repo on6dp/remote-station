@@ -2343,3 +2343,5 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .vfo-flt .pb-c { stroke: #fff; stroke-width: 1.2; }
 .vfo-flt .pb-l { fill: #fff; font: 800 12px Arial, sans-serif; }
 .vfo-flt .pb-notch { fill: #0d1428; stroke: #5fd0ff; stroke-width: 1.8; stroke-linejoin: round; }
+/* Cadran à aiguille : même encadré que le petit filtre (fond bleu nuit, bord blanc) */
+.vfo-am .am-bg { fill: #0d1428; stroke: #e6e9ef; stroke-width: 2; }
