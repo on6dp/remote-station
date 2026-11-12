@@ -2144,8 +2144,10 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
   box-shadow: 0 0 10px rgba(0, 127, 255, .5); text-shadow: 0 1px 1px rgba(0, 0, 0, .35);
 }
 /* Petit filtre dans l'écran de chaque VFO : dans l'espace libre à gauche de la fréquence, seulement s'il y a la place */
-.freq-wrap .vfo-flt { width: 180px; height: 66px; margin-right: auto; margin-left: 12px; align-self: center; flex: none; }
-@container (max-width: 560px) { .freq-wrap .vfo-flt { display: none; } }
+.freq-wrap .vfo-flt { width: 180px; height: 66px; flex: none; }
+.freq-wrap .vfo-meters { display: flex; align-items: center; gap: 10px; margin-right: auto; margin-left: 12px; align-self: center; flex: none; }
+.freq-wrap .vfo-meters.stack { flex-direction: column; gap: 6px; }
+@container (max-width: 560px) { .freq-wrap .vfo-meters { display: none; } }
 .vfo-flt .mf-box { fill: #0b0f14; stroke: #ffffff; stroke-width: 1.1; }
 .vfo-flt .mf-frame { fill: none; stroke: #ffffff; stroke-width: 1.1; opacity: .9; }
 .vfo-flt .mf-t { fill: #f4f7fb; font: 700 8px Arial, sans-serif; }
@@ -2250,3 +2252,17 @@ section[data-panel="tx"] > .panel-h { color: #ffd400; }
 .tb-right > .btn:not(#ctrlBtn):not(#logout), .tb-right > span > .btn { border: 2px solid #fff; border-radius: 7px; font-weight: 800; }
 .tb-right > .btn:not(#ctrlBtn):not(#logout):not(#statsBtn) { color: #fff; }
 .tb-right .zoom-btn { color: #fff; font-weight: 800; }
+/* Cadran à aiguille de l'écran VFO (entre le petit filtre et la fréquence) */
+.freq-wrap .vfo-am { width: 190px; height: 80px; flex: none; }
+.vfo-am .am-bg { fill: #07090c; stroke: #c8d0dc; stroke-width: 1; }
+.vfo-am .am-arc { fill: none; stroke: #f2f2f2; stroke-width: 1.6; }
+.vfo-am .am-arc.hot { stroke: #2f7bff; stroke-width: 2.6; }
+.vfo-am .am-tick { stroke: #f2f2f2; stroke-width: 1.1; }
+.vfo-am .am-tick.hot { stroke: #2f7bff; }
+.vfo-am .am-num { fill: #fff; font: 800 9px Arial, sans-serif; }
+.vfo-am .am-num.hot, .vfo-am .am-unit.hot { fill: #4d8dff; }
+.vfo-am .am-lab { fill: #fff; font: 800 9px Arial, sans-serif; }
+.vfo-am .am-unit { fill: #fff; font: 800 8px Arial, sans-serif; }
+.vfo-am .am-nd line { stroke: #ff2a2a; stroke-width: 2.2; stroke-linecap: round; }
+.vfo-am .am-nd { transition: transform .15s linear; }
+.vfo-am.dim { opacity: .55; }

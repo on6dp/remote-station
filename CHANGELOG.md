@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.346** — Dashboard : cadran à aiguille dans chaque VFO (S, PO en W, COMP Yaesu / SWR Icom ; aiguille S-mètre en RX, puissance en TX), à côté du petit filtre ou en dessous si la place manque ; échelles selon le TRX
 - **0.37.345** — Barre du haut : PRENDRE LA MAIN et DÉCONNEXION au format des autres boutons, boutons encadrés de blanc épais, AUTO / FENÊTRE / INSTALLER / HELP en blanc gras
 - **0.37.344** — Dashboard : titres de tous les cadres (MODE, ANTENNE, RF FRONT END…) en jaune vif ; titre « UTILISATEURS ACTIVITÉS » en jaune gras dans l'onglet activité
 - **0.37.343** — Dashboard : cadre TX — titre jaune vif, RX en blanc gras encadré de blanc, PTT arrondi

@@ -247,14 +247,22 @@
     el.style.fontSize = '';
     const unit = wrap.querySelector('.unit');
     // petit filtre à gauche de la fréquence : il garde sa taille, ce sont les chiffres de la fréquence qui se réduisent
-    const fl = wrap.querySelector('.vfo-flt'), flOn = fl && getComputedStyle(fl).display !== 'none';
+    // petit filtre + cadran à aiguille à gauche de la fréquence, côte à côte ; s'il n'y a pas la place
+    // (chiffres sous 40 px), ils passent l'un au-dessus de l'autre (l'écran VFO devient plus haut)
+    const vm = wrap.querySelector('.vfo-meters'), vmOn = vm && getComputedStyle(vm).display !== 'none';
+    if (vm) vm.classList.remove('stack');
+    const fl = wrap.querySelector('.vfo-flt');
     if (fl) fl.style.width = '';
-    const flW = () => (flOn ? fl.getBoundingClientRect().width + 18 : 0);
-    const need = () => el.offsetWidth + (unit ? unit.offsetWidth + 6 : 0) + flW();
-    for (let i = 0; i < 6 && need() > wrap.clientWidth; i++) {
-      const fs = parseFloat(getComputedStyle(el).fontSize);
-      el.style.fontSize = Math.max(14, Math.floor(fs * (wrap.clientWidth / need()) * 0.98)) + 'px';
-    }
+    const vmW = () => (vmOn ? vm.getBoundingClientRect().width + 18 : 0);
+    const need = () => el.offsetWidth + (unit ? unit.offsetWidth + 6 : 0) + vmW();
+    const shrink = () => {
+      for (let i = 0; i < 6 && need() > wrap.clientWidth; i++) {
+        const fs = parseFloat(getComputedStyle(el).fontSize);
+        el.style.fontSize = Math.max(14, Math.floor(fs * (wrap.clientWidth / need()) * 0.98)) + 'px';
+      }
+    };
+    shrink();
+    if (vmOn && parseFloat(getComputedStyle(el).fontSize) < 40) { vm.classList.add('stack'); el.style.fontSize = ''; shrink(); }
   }
   window.addEventListener('resize', () => { fitKey.A = ''; fitKey.B = ''; });
   // Largeur du filtre sur l'écran VFO : « 2.4K », « 500 », « 50 » (sous 1 kHz en Hz : 50 et 100 Hz ne se confondent plus)
@@ -281,6 +289,55 @@
     const d = miniFltData(w, r), el = $('width' + w), fil = String(txt || '').match(/^FIL\d/);
     if (el && fil) el.dataset.fil = fil[0];
     return d ? 'BW ' + bwK(d.hz) : String(txt || '—').replace(/^FIL\d\s*/, 'BW ').replace(/^BW $/, 'BW FIX');
+  }
+  // ------------------------------------------------------------ cadran à aiguille de chaque VFO (comme l'écran du FTDX5000) :
+  // échelles S (S1…S9 blanc, +20…+60 bleu), PO en watts (pleine échelle du TRX connecté), puis COMP (Yaesu) ou SWR (Icom) ;
+  // l'aiguille suit le S-mètre en réception et la puissance en émission ; redessiné quand on change de TRX
+  const AM = { A: { key: '', nd: null }, B: { key: '', nd: null } };
+  const amScales = (r) => {
+    const R0 = RIG(), icom = /^IC-|Icom/i.test(R0.NAME || '') || !!R0.CIV;
+    const rng = R0.POWER_RANGE && R0.POWER_RANGE[r.powerHead];
+    const pmax = (rng && rng[1]) || (R0.CONTROL && R0.CONTROL.power && R0.CONTROL.power.max) || 100;
+    const q = (v) => (v >= 10 ? String(Math.round(v)) : String(Math.round(v * 10) / 10));
+    const S = { lab: 'S', ticks: [[.06, '1'], [.18, '3'], [.30, '5'], [.42, '7'], [.533, '9'], [.69, '+20', 1], [.845, '+40', 1], [1, '+60', 1]], hot: .533, unit: '' };
+    const PO = { lab: icom ? 'Po' : 'PO', ticks: [0, .25, .5, .75, 1].map((f) => [f, q(pmax * f)]), unit: 'W' };
+    const third = icom
+      ? { lab: 'SWR', ticks: [[0, '1'], [.25, '1.5'], [.42, '2'], [.6, '3'], [1, '∞']], unit: '' }
+      : { lab: 'COMP', ticks: [[0, '0'], [.25, '5'], [.5, '10'], [.75, '15'], [1, '20']], unit: 'dB' };
+    return { key: (R0.NAME || '') + '/' + pmax, arcs: [S, PO, third] };
+  };
+  function drawAm(w, r, live, isTx, val) {
+    const sv = $('am' + w);
+    if (!sv) return;
+    const sc = amScales(r || {}), st = AM[w];
+    const CX = 110, CY = 262, A0 = -20, A1 = 18, RAD = [244, 226, 208];
+    const pt = (rad, f) => { const a = (A0 + (A1 - A0) * f) * Math.PI / 180; return [CX + rad * Math.sin(a), CY - rad * Math.cos(a)]; };
+    if (st.key !== sc.key) {
+      st.key = sc.key;
+      let h = '<rect class="am-bg" x="1" y="1" width="198" height="82" rx="5"/>';
+      sc.arcs.forEach((arc, i) => {
+        const rad = RAD[i], arcPath = (f0, f1) => { const p0 = pt(rad, f0), p1 = pt(rad, f1); return 'M' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + 'A' + rad + ' ' + rad + ' 0 0 1 ' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1); };
+        if (arc.hot) { h += '<path class="am-arc" d="' + arcPath(0, arc.hot) + '"/><path class="am-arc hot" d="' + arcPath(arc.hot, 1) + '"/>'; }
+        else h += '<path class="am-arc" d="' + arcPath(0, 1) + '"/>';
+        for (const [f, t, hot] of arc.ticks) {
+          const a = pt(rad, f), b = pt(rad + 4, f), l = pt(rad + 9, f);
+          h += '<line class="am-tick' + (hot ? ' hot' : '') + '" x1="' + a[0].toFixed(1) + '" y1="' + a[1].toFixed(1) + '" x2="' + b[0].toFixed(1) + '" y2="' + b[1].toFixed(1) + '"/>';
+          if (i === 0 || f > 0) h += '<text class="am-num' + (hot ? ' hot' : '') + '" x="' + l[0].toFixed(1) + '" y="' + (l[1] + 2).toFixed(1) + '" text-anchor="middle">' + t + '</text>';
+        }
+        const e = pt(rad, 0);
+        h += '<text class="am-lab" x="' + (e[0] - 4).toFixed(1) + '" y="' + (e[1] + 3).toFixed(1) + '" text-anchor="end">' + arc.lab + '</text>';
+        if (arc.unit) { const u = pt(rad, 1); h += '<text class="am-unit' + (i === 0 ? ' hot' : '') + '" x="' + (u[0] + 3).toFixed(1) + '" y="' + (u[1] + 9).toFixed(1) + '">' + arc.unit + '</text>'; }
+      });
+      h += '<g class="am-nd"><line x1="' + CX + '" y1="' + CY + '" x2="' + CX + '" y2="' + (CY - 252) + '"/></g>';
+      sv.innerHTML = h + '<title>Cadran du VFO ' + w + ' : S-mètre en réception, puissance (PO) en émission</title>';
+      st.nd = sv.querySelector('.am-nd');
+    }
+    let f = 0;
+    if (live && isTx) { const po = r.m5 == null ? 0 : RIG().poFrac ? RIG().poFrac(r.m5) : r.m5 / 255; f = Math.max(0, Math.min(1, po || 0)); }
+    else if (live && val != null) f = Math.max(0, Math.min(1, val / 255));
+    const ang = A0 + (A1 - A0) * f;
+    if (st.nd) { st.nd.setAttribute('transform', 'rotate(' + ang.toFixed(1) + ' ' + CX + ' ' + CY + ')'); st.nd.classList.toggle('tx', !!(live && isTx)); }
+    sv.classList.toggle('dim', !live);
   }
   function drawMiniFlt(w, r, live) {
     const sv = $('flt' + w);
@@ -1248,6 +1305,7 @@
     const txB = txing && r.txVfo === 1;
     const hasSmB = r.smeterB != null;
     const meterOn = (bars, sId, isTx, val) => {
+      drawAm(bars.slice(-1), r, live, isTx, val);
       const raw = isTx ? r.m5 : val;
       const n = live ? Math.round((Math.min(255, raw || 0) / 255) * 30) : 0;
       [...$(bars).children].forEach((b, i) => { b.classList.toggle('lit', i < n); b.classList.toggle('hot', isTx || i >= 16); });
@@ -1263,7 +1321,7 @@
     $('smB').classList.toggle('smeter-dim', onB ? false : !hasSmB || single);
     if (onB) meterOn('barsB', 'sB', txing, r.smeter);
     else if (hasSmB) meterOn('barsB', 'sB', txB, r.smeterB);
-    else { [...$('barsB').children].forEach((b) => b.classList.remove('lit')); $('sB').textContent = 'S —'; }
+    else { [...$('barsB').children].forEach((b) => b.classList.remove('lit')); $('sB').textContent = 'S —'; drawAm('B', r, false, false, null); }
     // RIT / XIT / SPLIT
     const kHz = (v) => { v = Number(v) || 0; return (v >= 0 ? '+' : '−') + (Math.abs(v) / 1000).toFixed(2) + ' kHz'; };
     const hasB = !!(RIG().CONTROL && RIG().CONTROL.ritB);
