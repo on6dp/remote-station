@@ -250,14 +250,13 @@
     fitKey[w] = key;
     el.style.fontSize = '';
     const unit = wrap.querySelector('.unit');
-    // petit filtre à gauche de la fréquence : il garde sa taille, ce sont les chiffres de la fréquence qui se réduisent
-    // petit filtre + cadran à aiguille à gauche de la fréquence, côte à côte ; s'il n'y a pas la place
-    // (chiffres sous 40 px), ils passent l'un au-dessus de l'autre (l'écran VFO devient plus haut)
+    // Trois cadres (filtre, cadran à aiguille, spectre BF) sur une ligne, à gauche de la fréquence : ils se réduisent
+    // (222 → 150 px) avant la fréquence ; s'il n'y a toujours pas la place (chiffres sous 40 px), la ligne des trois
+    // cadres passe sous la fréquence, sur toute la largeur de l'écran VFO (qui devient plus haut)
     const vm = wrap.querySelector('.vfo-meters'), vmOn = vm && getComputedStyle(vm).display !== 'none';
-    if (vm) vm.classList.remove('stack');
-    const fl = wrap.querySelector('.vfo-flt');
-    if (fl) fl.style.width = '';
-    const vmW = () => (vmOn ? vm.getBoundingClientRect().width + 18 : 0);
+    wrap.classList.remove('below');
+    if (vm) { vm.classList.remove('stack', 'stack2'); vm.style.removeProperty('--fw'); }
+    const vmW = () => (vmOn && !wrap.classList.contains('below') ? vm.getBoundingClientRect().width + 18 : 0);
     const need = () => el.offsetWidth + (unit ? unit.offsetWidth + 6 : 0) + vmW();
     const shrink = () => {
       for (let i = 0; i < 6 && need() > wrap.clientWidth; i++) {
@@ -266,7 +265,15 @@
       }
     };
     shrink();
-    if (vmOn && parseFloat(getComputedStyle(el).fontSize) < 40) { vm.classList.add('stack'); el.style.fontSize = ''; shrink(); }
+    if (!vmOn) return;
+    for (const fw of [200, 180, 160, 150]) {
+      if (parseFloat(getComputedStyle(el).fontSize) >= 40) return;
+      vm.style.setProperty('--fw', fw + 'px'); el.style.fontSize = ''; shrink();
+    }
+    if (parseFloat(getComputedStyle(el).fontSize) >= 40) return;
+    wrap.classList.add('below');
+    vm.style.setProperty('--fw', Math.max(120, Math.min(222, Math.floor((wrap.clientWidth - 24) / 3))) + 'px');
+    el.style.fontSize = ''; shrink();
   }
   window.addEventListener('resize', () => { fitKey.A = ''; fitKey.B = ''; });
   // Largeur du filtre sur l'écran VFO : « 2.4K », « 500 », « 50 » (sous 1 kHz en Hz : 50 et 100 Hz ne se confondent plus)
@@ -304,7 +311,10 @@
       const np = ctlValue('notchPos' + B) != null ? ctlValue('notchPos' + B) : r['notchPos' + B];
       nHz = nf != null ? Number(nf) : np != null ? 300 + Number(np) / 255 * 2400 : null;
     }
-    return { hz: Math.round(hz / 10) * 10, sft: Math.round(sft / 10) * 10, cw: /^CW/.test(md), W, a: Math.round(a), b: Math.round(b), md, notch: nHz == null ? null : Math.round(nHz) };
+    // CONTOUR en service : sa fréquence BF (petit demi-cercle bleu dans le haut du filtre, comme sur l'écran du TRX)
+    const cOn = !!(ctlValue('contour' + B) != null ? Number(ctlValue('contour' + B)) : r['contour' + B]);
+    const cf = cOn ? (ctlValue('contourFreq' + B) != null ? ctlValue('contourFreq' + B) : r['contourFreq' + B]) : null;
+    return { hz: Math.round(hz / 10) * 10, sft: Math.round(sft / 10) * 10, cw: /^CW/.test(md), W, a: Math.round(a), b: Math.round(b), md, notch: nHz == null ? null : Math.round(nHz), cont: cf == null ? null : Number(cf) };
   }
   // Icom : « BW 2.8K » (largeur réelle, rétrécie par le TWIN PBT) au lieu de « FIL1 3.0K » ; FIL1/2/3 reste dans l'infobulle
   function icomBw(w, r, txt) {
@@ -316,9 +326,9 @@
   // échelles S (S1…S9 blanc, +20…+60 bleu), PO en watts (pleine échelle du TRX connecté), puis SWR ou COMP (clic) ;
   // l'aiguille suit le S-mètre en réception et la puissance en émission ; redessiné quand on change de TRX
   const AM = { A: { key: '', nd: null }, B: { key: '', nd: null } };
-  // Clic sur le cadran : S / PO / SWR (par défaut) → S / PO / COMP → S / SWR / ALC → Po / Id / Vd → spectre BF → … ;
+  // Clic sur le cadran : S / PO / SWR (par défaut) → S / PO / COMP → S / SWR / ALC → Po / Id / Vd → … ;
   // choix gardé pour chaque VFO dans ce navigateur
-  const AM_SETS = ['swr', 'comp', 'alc', 'pid', 'spec'];
+  const AM_SETS = ['swr', 'comp', 'alc', 'pid'];
   const amSet = { A: 'swr', B: 'swr' };
   try { for (const w of ['A', 'B']) { const v = localStorage.getItem('rs.am' + w); amSet[w] = AM_SETS.indexOf(v) >= 0 ? v : 'swr'; } } catch (e) { /* stockage bloqué */ }
   for (const w of ['A', 'B']) {
@@ -376,10 +386,10 @@
     return AUD.sm;
   }
   function drawSpec(w, r, live) {
-    const sv = $('am' + w);
-    AM[w].key = 'spec';
+    const sv = $('sp' + w);
+    if (!sv || getComputedStyle(sv).display === 'none') return;
     const X0 = 10, X1 = 190, Y0 = 10, Y1 = 64, FMAX = 4000, X = (f) => X0 + Math.max(0, Math.min(1, f / FMAX)) * (X1 - X0);
-    let h = '<rect class="am-bg" x="1" y="1" width="198" height="82" rx="5"/>';
+    let h = '<rect class="am-bg" x="-7" y="1" width="214" height="82" rx="5"/>';
     const fresh = Date.now() - AUD.at < 1500;
     if (fresh && live) {
       const sp = audSpectrum(), binHz = AUD.rate / 1024, n = 72;
@@ -403,26 +413,31 @@
     const d = live ? miniFltData(w, r) : null;
     if (d) {
       const c = d.cw ? 700 : 1500, lo = c + d.sft - d.hz / 2, hi = c + d.sft + d.hz / 2, a = X(lo), b = X(hi), k = Math.min(5, (b - a) / 4);
-      h += '<path class="sp-flt" d="M' + X0 + ' ' + Y1 + 'H' + a.toFixed(1) + 'L' + (a + k).toFixed(1) + ' ' + (Y0 + 2) + 'H' + (b - k).toFixed(1) + 'L' + b.toFixed(1) + ' ' + Y1 + 'H' + X1 + '"/>';
-      if (d.notch != null) { const xn = X(d.notch).toFixed(1); h += '<line class="sp-notch" x1="' + xn + '" y1="' + (Y0 + 2) + '" x2="' + xn + '" y2="' + Y1 + '"/><path class="pb-nmark" d="M' + (xn - 4) + ' ' + (Y0 - 4) + 'L' + xn + ' ' + (Y0 + 2) + 'L' + (+xn + 4) + ' ' + (Y0 - 4) + 'Z"/>'; }
+      // NOTCH dans la bande passante : creux jusqu'en bas (comme sur l'écran du FTDX101), trait orange et petit carré orange en haut
+      const xn = d.notch != null ? X(d.notch) : null, nw = 4;
+      const inP = xn != null && xn - nw > a + k && xn + nw < b - k;
+      let fp = 'M' + X0 + ' ' + Y1 + 'H' + a.toFixed(1) + 'L' + (a + k).toFixed(1) + ' ' + (Y0 + 2);
+      if (inP) fp += 'H' + (xn - nw).toFixed(1) + 'L' + (xn - 1).toFixed(1) + ' ' + Y1 + 'L' + (xn + 1).toFixed(1) + ' ' + Y1 + 'L' + (xn + nw).toFixed(1) + ' ' + (Y0 + 2);
+      fp += 'H' + (b - k).toFixed(1) + 'L' + b.toFixed(1) + ' ' + Y1 + 'H' + X1;
+      h += '<path class="sp-flt" d="' + fp + '"/>';
+      if (d.cont != null) { const xc = X(d.cont); h += '<path class="sp-cont" d="M' + (xc - 6).toFixed(1) + ' ' + (Y0 + 4) + 'Q' + xc.toFixed(1) + ' ' + (Y0 + 18) + ' ' + (xc + 6).toFixed(1) + ' ' + (Y0 + 4) + '"/>'; }
+      if (xn != null) h += '<line class="sp-notch" x1="' + xn.toFixed(1) + '" y1="' + (Y0 - 2) + '" x2="' + xn.toFixed(1) + '" y2="' + Y1 + '"/><rect class="sp-nmk" x="' + (xn - 3).toFixed(1) + '" y="' + (Y0 - 8) + '" width="6" height="6"/>';
     }
     h += '<line class="sp-base" x1="' + X0 + '" y1="' + (Y1 + 1) + '" x2="' + X1 + '" y2="' + (Y1 + 1) + '"/>';
     for (const f of [0, 1000, 2000, 3000, 4000]) h += '<text class="sp-ax" x="' + X(f).toFixed(1) + '" y="78" text-anchor="middle">' + (f ? f / 1000 + 'k' : '0') + '</text>';
-    sv.innerHTML = h + '<title>Spectre BF du son reçu (Écouter le TRX) avec le filtre et le NOTCH ; clic : écran suivant</title>';
-    AM[w].nd = null;
+    sv.innerHTML = h + '<title>Spectre BF du son reçu (Écouter le TRX) avec le filtre et le NOTCH</title>';
     sv.classList.toggle('dim', !live);
   }
-  setInterval(() => { for (const w of ['A', 'B']) if (amSet[w] === 'spec' && st && st.radio) drawSpec(w, st.radio, !!st.radio.connected); }, 200);
+  setInterval(() => { for (const w of ['A', 'B']) if (st && st.radio) drawSpec(w, st.radio, !!st.radio.connected); }, 200);
   function drawAm(w, r, live, isTx, val) {
     const sv = $('am' + w);
     if (!sv) return;
-    if (amSet[w] === 'spec') return; // dessiné par drawSpec (5 fois par seconde)
     const sc = amScales(r || {}, w), st = AM[w];
     const CX = 110, CY = 262, A0 = -20, A1 = 18, RAD = [244, 226, 208];
     const pt = (rad, f) => { const a = (A0 + (A1 - A0) * f) * Math.PI / 180; return [CX + rad * Math.sin(a), CY - rad * Math.cos(a)]; };
     if (st.key !== sc.key) {
       st.key = sc.key;
-      let h = '<rect class="am-bg" x="1" y="1" width="198" height="82" rx="5"/>';
+      let h = '<rect class="am-bg" x="-7" y="1" width="214" height="82" rx="5"/>';
       sc.arcs.forEach((arc, i) => {
         const rad = RAD[i], arcPath = (f0, f1) => { const p0 = pt(rad, f0), p1 = pt(rad, f1); return 'M' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + 'A' + rad + ' ' + rad + ' 0 0 1 ' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1); };
         if (arc.hot) { h += '<path class="am-arc" d="' + arcPath(0, arc.hot) + '"/><path class="am-arc hot" d="' + arcPath(arc.hot, 1) + '"/>'; }
@@ -460,7 +475,7 @@
     const sb = $('sft' + w);
     if (sb) { sb.hidden = !d; if (d) sb.textContent = 'SFT ' + (d.sft > 0 ? '+' : d.sft < 0 ? '−' : '') + Math.abs(d.sft); }
     if (w === 'B' && !RIG().SUB_BADGES) { const wb = $('widthB'); wb.hidden = !d; if (d) wb.textContent = 'BW ' + bwK(d.hz); }
-    const key = d ? d.hz + '/' + d.sft + '/' + d.cw + '/' + d.W + '/' + d.a + '/' + d.b + '/' + d.md + '/' + d.notch : '';
+    const key = d ? d.hz + '/' + d.sft + '/' + d.cw + '/' + d.W + '/' + d.a + '/' + d.b + '/' + d.md + '/' + d.notch + '/' + d.cont : '';
     if (sv.dataset.k === key) return;
     sv.dataset.k = key;
     sv.style.visibility = d ? '' : 'hidden';
@@ -489,10 +504,11 @@
       (both ? '<path class="pb-f1" d="' + trap(x(c - fw / 2 + d.a), x(c + fw / 2 + d.a)) + '"/><path class="pb-f2" d="' + trap(x(c - fw / 2 + d.b), x(c + fw / 2 + d.b)) + '"/>' : '') +
       '<path class="pb-flt" d="' + trap(xl, xh) + '"/>' +
       // NOTCH : entaille en V dans la bande passante, à sa fréquence (comme sur l'écran des TRX)
-      (d.notch != null ? (() => { const xn = x(d.notch); return '<path class="pb-notch" d="M' + (xn - 9).toFixed(1) + ' 36L' + xn.toFixed(1) + ' 66L' + (xn + 9).toFixed(1) + ' 36Z"/>'; })() : '') +
+      (d.notch != null ? (() => { const xn = x(d.notch); return '<path class="pb-notch" d="M' + (xn - 7).toFixed(1) + ' 36L' + (xn - 2).toFixed(1) + ' 70H' + (xn + 2).toFixed(1) + 'L' + (xn + 7).toFixed(1) + ' 36Z"/><line class="pb-nline" x1="' + xn.toFixed(1) + '" y1="34" x2="' + xn.toFixed(1) + '" y2="70"/>'; })() : '') +
+      (d.cont != null ? (() => { const xc = x(d.cont); return '<path class="pb-cont" d="M' + (xc - 8).toFixed(1) + ' 39Q' + xc.toFixed(1) + ' 55 ' + (xc + 8).toFixed(1) + ' 39"/>'; })() : '') +
       '</g>' +
       // repère du NOTCH au-dessus du filtre : ▼ et sa fréquence, comme le « V » de l'écran du FTDX5000
-      (d.notch != null ? (() => { const xn = Math.max(20, Math.min(230, x(d.notch))); return '<path class="pb-nmark" d="M' + (xn - 5).toFixed(1) + ' 31L' + xn.toFixed(1) + ' 38L' + (xn + 5).toFixed(1) + ' 31Z"/>'; })() : '') +
+      (d.notch != null ? (() => { const xn = Math.max(20, Math.min(230, x(d.notch))); return '<rect class="pb-nmark" x="' + (xn - 4).toFixed(1) + '" y="30" width="8" height="7"/>'; })() : '') +
       '<line x1="' + (125 - half) + '" y1="70" x2="' + (125 + half) + '" y2="70" class="pb-base"/>' +
       '<line x1="' + x(c).toFixed(1) + '" y1="52" x2="' + x(c).toFixed(1) + '" y2="70" class="pb-c"/>' +
       '<text y="85" x="' + cl(Math.min(xl, x(c) - 34)) + '" class="pb-l" text-anchor="middle">' + fmt(lo) + '</text>' +

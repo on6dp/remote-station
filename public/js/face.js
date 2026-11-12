@@ -963,7 +963,8 @@
     return pts;
   }
   // Petit « V » bleu du CONTOUR, dans le haut du filtre (repassé en bleu par-dessus le trait rouge), comme sur le TRX
-  const contV = (x, top, nw, dep) => 'M' + (x - nw).toFixed(1) + ' ' + top.toFixed(1) + 'L' + x.toFixed(1) + ' ' + (top + dep).toFixed(1) + 'L' + (x + nw).toFixed(1) + ' ' + top.toFixed(1);
+  // demi-cercle bleu (comme sur l'écran du FTDX101)
+  const contV = (x, top, nw, dep) => 'M' + (x - nw).toFixed(1) + ' ' + top.toFixed(1) + 'Q' + x.toFixed(1) + ' ' + (top + dep * 2).toFixed(1) + ' ' + (x + nw).toFixed(1) + ' ' + top.toFixed(1);
   // FTX-1 : barre d'état en haut de l'écran, comme sur le TRX : FAST, VOX, TUNE (rouge : tuner en service) ANT1 / ANT2,
   // et à droite la fonction du bouton FUNC dans un cadre orange (ex. RF POWER, TUNER)
   function buildStatus(g, c) {
@@ -6948,15 +6949,16 @@
       // R.FIL plus étroit que le cadre : ses limites en pointillés (centrées sur le signal, sans IF SHIFT)
       const rw = roofHz ? roofHz / FLT_SPAN * fl.w : 0, rc = fl.x0 + fl.w / 2;
       fl.roof.setAttribute('d', rw && rw < fl.w - 4 ? 'M' + (rc - rw / 2).toFixed(1) + ' ' + (top - 3) + 'V' + bot + 'M' + (rc + rw / 2).toFixed(1) + ' ' + (top - 3) + 'V' + bot : '');
-      fl.trap.setAttribute('d', 'M' + trapPts(fl.x0, fl.w, cx, tw, top, bot, sl, [[nx, 4], [kx, 3.5, 7]]).map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
+      fl.trap.setAttribute('d', 'M' + trapPts(fl.x0, fl.w, cx, tw, top, bot, sl, [[nx, Math.max(4, fl.w * 0.045)], [kx, 3.5, 7]]).map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
       // NOTCH hors de la bande passante (sur les flancs ou au-delà) : simple trait rouge à sa place (au bord du cadre si plus loin)
       const inPass = nx != null && nx - 3 > cx - tw / 2 + sl && nx + 3 < cx + tw / 2 - sl;
       const nxc = nx == null ? 0 : Math.max(fl.x0 + 2, Math.min(fl.x0 + fl.w - 2, nx));
       fl.nline.setAttribute('x1', nxc); fl.nline.setAttribute('x2', nxc);
-      fl.nline.style.display = nx != null ? '' : 'none'; // trait pointillé rouge à la fréquence du NOTCH (aussi dans la bande passante, par-dessus le spectre)
+      fl.nline.style.display = nx != null ? '' : 'none'; // NOTCH : trait orange à sa fréquence, au milieu du creux, comme sur l'écran du FTDX101
+      fl.nline.classList.toggle('in', inPass);
       if (fl.nmk) {
         fl.nmk.style.display = nx != null ? '' : 'none';
-        if (nx != null) { fl.nmkT.setAttribute('d', 'M' + (nxc - 3.5) + ' ' + (top - 6) + 'H' + (nxc + 3.5) + 'L' + nxc + ' ' + (top - 1) + 'Z'); fl.nmkL.setAttribute('x', nxc); fl.nmkL.setAttribute('y', top - 7); }
+        if (nx != null) { fl.nmkT.setAttribute('d', DICOM ? 'M' + (nxc - 3.5) + ' ' + (top - 6) + 'H' + (nxc + 3.5) + 'L' + nxc + ' ' + (top - 1) + 'Z' : 'M' + (nxc - 3) + ' ' + (top - 7) + 'h6v6h-6Z'); /* Yaesu : petit carré orange, comme sur le TRX */ fl.nmkL.setAttribute('x', nxc); fl.nmkL.setAttribute('y', top - 7); fl.nmkL.style.display = DICOM ? '' : 'none'; }
         const rev = /^LSB$|-L$/.test(mode || '') ? -1 : 1, ac = audioCenter(mode || '', hz) + sh;
         for (const q of fl.scl || []) {
           const qhz = Math.max(0, Math.round((ac + (q.i - 1) * hz / 2) / 10) * 10), x = cx + rev * (qhz - ac) / FLT_SPAN * fl.w;

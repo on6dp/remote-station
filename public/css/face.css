@@ -954,3 +954,7 @@ body.face-page .tb-title .tb-logo + span + b + .tb-logo { display: none; }
 #face[data-model='ic7760'] .ic-lab { font-weight: 600; font-family: Arial, 'Liberation Sans', sans-serif; letter-spacing: .2px; }
 #face .i76-notch { fill: #e8433a; }
 #face text.i76-notcht { fill: #fff; font: 700 8px Arial, sans-serif; pointer-events: none; }
+/* NOTCH (comme sur l'écran du FTDX101) : creux jusqu'en bas dans la bande passante, trait orange plein à sa fréquence,
+   repère orange en haut ; plus de pointillés */
+#face .flt-notch { stroke: #ff9a1f; stroke-width: 1.4; stroke-dasharray: none; }
+#face .flt-nmk { fill: #ff9a1f; }

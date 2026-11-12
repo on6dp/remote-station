@@ -174,7 +174,8 @@
     const FAST = ['FA;', 'MD0;', 'FB;', 'MD1;', 'SM0;', 'TX;', 'FT;'].concat(spec.fastExtra || []); // fastExtra : lectures rapides propres à un TRX
     // Deux récepteurs (FTX-1) : S-mètre du côté SUB par READ METER « RM2 » (manuel CAT : RM P1 2 = S SUB-side ;
     // le FTX-1 ne répond pas à SM1), lu en double réception (FR00) ; en réception simple, SM0 = côté actif
-    const FAST_SUB = spec.subBadges ? ['RM2;'] : [];
+    // FTDX101 : « SM1; » (S-METER READING, P1 1 = SUB Band, 000-255 comme SM0) ; RM2 restait à 0 en double réception
+    const FAST_SUB = spec.fastSub || (spec.subBadges ? ['RM2;'] : []);
     // En émission : mesures COMP, ALC, PO, SWR, et aussi puissance et VOX (contrôles de sécurité plus rapides)
     const TXMETERS = ['RM3;', 'RM4;', 'RM5;', 'RM6;', P.read, 'VX;'];
     const SLOW = READS.map((r) => r.cmd).concat(['RM7;', 'RM8;']); // + IDD, VDD
@@ -361,7 +362,7 @@
           else if ((m = /^MD1([0-9A-Z])$/.exec(c)) && MODES_ALL[m[1]]) this.modeB = m[1];
           else if (c === 'FR') out.push('FR' + (this.mainMute ? '1' : '0') + (this.single ? '1' : '0') + ';');
           else if ((m = /^FR([01])([01])$/.exec(c))) { this.mainMute = m[1] === '1'; this.single = m[2] === '1'; } // FTDX101 : 1er chiffre = MAIN coupé
-          else if (c === 'SM1') { /* FTX-1 réel : pas de réponse à SM1 */ }
+          else if (c === 'SM1') { if (spec.fastSub && spec.fastSub.indexOf('SM1;') >= 0) out.push('SM1' + pad(this.single || this.tx ? 0 : Math.round(60 + 30 * Math.sin(this.t * 0.6)), 3) + ';'); /* FTX-1 réel : pas de réponse à SM1 */ }
           else if (c === 'RM2') out.push('RM2' + pad(this.single || this.tx ? 0 : Math.round(40 + 25 * Math.sin(this.t * 0.7)), 3) + (spec.rm3 ? '' : '000') + ';');
           else if (c === 'SM0') {
             this.t += 0.15;

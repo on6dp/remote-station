@@ -307,6 +307,7 @@
     extraQueries: ['RF0;', 'RF1;', 'ID;', 'IF;', 'AN0;', 'AN1;', 'FR;', 'FT;', 'SM1;', 'RM1;', 'RM2;', 'RM9;'],
     extraStateKeys: ['ssSpdA', 'ssPeakA', 'ssMarkerA', 'ssColorA', 'ssLevelA', 'ssSpanA', 'ssSpdB', 'ssPeakB', 'ssMarkerB', 'ssColorB', 'ssLevelB', 'ssSpanB', 'fastA', 'fastB', 'clarA', 'ritA', 'xitA', 'clarB', 'ritB', 'xitB', 'lockB', 'lockRaw', 'fastStep', 'moniLvl', 'voxGain', 'voxDelay', 'antiVox', 'rpt', 'rptB', 'encDec', 'encDecB', 'toneIdx', 'toneIdxB', 'nbLvlB', 'nrLvlB', 'mpvd', 'contourFreq', 'contourFreqB', 'apfFreq', 'apfFreqB', 'vc', 'vcB', 'vcPos', 'vcPosB', 'vcOk', 'vcOkB', 'afB', 'bkin', 'keyer', 'micEq', 'roof', 'roofB', 'nbLvl', 'nrLvl', 'attB', 'preampB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'widthB', 'nbB', 'nrB', 'notchB', 'dnfB', 'narrowB', 'agcB', 'rfB', 'cwPitch', 'mainMute'],
     subBadges: true,
+    fastSub: ['SM1;'], // S-mètre du récepteur SUB (manuel CAT FTDX101 : SM P1 = 1 SUB Band, 000 – 255)
     // CW : mémoire 1 du manipulateur (écrasée), lue par KY6 (« Message Keyer 1 Playback », manuel CAT 1912-D) ;
     // pas de commande d'arrêt de lecture : BI0 coupe le break-in, donc l'émission
     // CW : mémoire 1 du manipulateur mise en TEXT (menu CW MEMORY 1 = EX020208), texte écrit par KM1, lu par KY6 (Hamlib ;
