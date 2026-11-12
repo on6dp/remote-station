@@ -2388,3 +2388,16 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .vz-ov .vz-big { width: min(90vw, 1100px) !important; height: calc(min(90vw, 1100px) * 0.3874) !important; cursor: zoom-out !important; filter: drop-shadow(0 8px 30px rgba(0,0,0,.7)); }
 .vz-ph { display: inline-block; flex: none; border: 1px dashed rgba(255,255,255,.25); border-radius: 6px; }
 .freq-wrap .vfo-flt, .freq-wrap .vfo-am { cursor: zoom-in; }
+/* Cadre agrandi : bandeau d'identité du VFO au-dessus */
+.vz-ov { flex-direction: column; gap: 10px; }
+.vz-hd { width: min(90vw, 1100px); box-sizing: border-box; display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 18px;
+  padding: 8px 16px; border: 2px solid #2ee59d; border-radius: 10px; background: rgba(6,20,14,.92); color: #fff; font-weight: 700; }
+.vz-hd .vz-id { background: #1d9e63; color: #fff; padding: 2px 12px; border-radius: 6px; font-size: 22px; letter-spacing: .05em; }
+.vz-hd .vz-f { font-size: 30px; color: #6ff5c4; font-variant-numeric: tabular-nums; }
+.vz-hd .vz-f small { font-size: 14px; color: #ccc; }
+.vz-hd .vz-m { border: 2px solid #fff; border-radius: 6px; padding: 1px 10px; font-size: 18px; }
+.vz-hd .vz-b { font-size: 18px; }
+.vz-hd .vz-w { margin-left: auto; font-size: 16px; color: #ffd84a; letter-spacing: .04em; }
+.vz-hd.b { border-color: #ff4fa3; background: rgba(28,6,18,.92); }
+.vz-hd.b .vz-id { background: #c2185b; }
+.vz-hd.b .vz-f { color: #fff; }

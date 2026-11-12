@@ -345,7 +345,7 @@
   }
   // Clic sur un des trois cadres de l'écran VFO (filtre, cadran, spectre) : agrandi au milieu de l'écran ; nouveau clic
   // (ou clic à côté, ou Échap) : il reprend sa place. Le cadre lui-même est déplacé : il reste vivant et réglable.
-  const VZ = { el: null, ph: null, ov: null };
+  const VZ = { el: null, ph: null, ov: null, hd: null };
   function vzClose() {
     if (!VZ.el) return;
     VZ.ph.replaceWith(VZ.el);
@@ -368,8 +368,23 @@
     VZ.ph = document.createElement('span'); VZ.ph.className = 'vz-ph'; VZ.ph.style.width = r.width + 'px'; VZ.ph.style.height = r.height + 'px';
     el.replaceWith(VZ.ph);
     VZ.el = el; el.classList.add('vz-big');
-    VZ.ov.appendChild(el); VZ.ov.hidden = false;
+    if (!VZ.hd) { VZ.hd = document.createElement('div'); VZ.hd.className = 'vz-hd'; }
+    VZ.ov.appendChild(VZ.hd); VZ.ov.appendChild(el); VZ.ov.hidden = false;
     render();
+  }
+  // Bandeau du cadre agrandi : identité du VFO (vert A · MAIN, rose B · SUB), fréquence, mode, bande et nom du cadre
+  function vzTitle() {
+    if (!VZ.el || !VZ.hd) return;
+    const w = VZ.el.id.slice(-1), k = VZ.el.id.slice(0, -1);
+    const what = k === 'flt' ? 'Filtre BW / SFT' : k === 'sp' ? 'Spectre audio · NOTCH' : 'Cadran';
+    const tx = (s) => String(s || '').replace(/[<>&]/g, '');
+    const html = '<span class="vz-id">VFO ' + w + ' · ' + (w === 'B' ? 'SUB' : 'MAIN') + '</span>' +
+      '<span class="vz-f">' + tx($('freq' + w).textContent.trim().replace(/^[0.]*(?=[1-9])/, '')) + ' <small>MHz</small></span>' +
+      '<span class="vz-m">' + tx($('mode' + w).textContent) + '</span>' +
+      '<span class="vz-b">' + tx($('band' + w).textContent) + '</span>' +
+      '<span class="vz-w">' + what + '</span>';
+    if (VZ.hd.dataset.h !== html) { VZ.hd.dataset.h = html; VZ.hd.innerHTML = html; }
+    VZ.hd.classList.toggle('b', w === 'B');
   }
   for (const w of ['A', 'B']) for (const id of ['flt', 'am', 'sp']) {
     const e0 = $(id + w);
@@ -1780,7 +1795,7 @@
     } else {
       txLocalSince = 0;
       $('txTimer').textContent = '';
-    }
+    }    vzTitle();
   }
 
   // ------------------------------------------------------------ journal d'activité
