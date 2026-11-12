@@ -5600,6 +5600,8 @@
       $('dgTxRx').addEventListener('click', () => setTx(sd() === 'B' ? rxFB : rxF, sd()));
       $('dgPar').value = store.get('ftxpar', 'auto');
       $('dgPar').addEventListener('change', () => { store.set('ftxpar', $('dgPar').value); ftxCfg(); });
+      // TX ← RX, RX ← TX, ↺ : couleurs inversées un instant au clic
+      for (const id of ['dgQsy', 'dgTxRx', 'dgRxTx']) if ($(id)) $(id).addEventListener('click', () => { const b = $(id); b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 450); });
       $('dgDualRx').addEventListener('click', () => {
         const st = api && api.state();
         const trxDual = !!(st && st.radio && st.radio.dualRx === 1);

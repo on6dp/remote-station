@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.8** — Barre FT : FT8 / FT4 / FT2, ↺, TX ← RX, RX ← TX en cadre blanc, texte blanc gras ; mode choisi (ou bouton cliqué) : fond blanc, texte noir
 - **0.38.7** — « Ramener dans le dashboard » : texte blanc gras, cadre blanc
 - **0.38.6** — Barre du haut des modes numériques : caractères plus grands
 - **0.38.5** — « Suivre l'opérateur » au repos : cadre blanc, texte blanc gras

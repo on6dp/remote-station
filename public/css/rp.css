@@ -2458,3 +2458,6 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dg-bar .dg-f b { font-size: 14px; }
 /* « Ramener dans le dashboard » / ⧉ : texte blanc gras, cadre blanc */
 .ctab-detach { color: #fff; font-weight: 800; border: 1px solid #fff !important; }
+/* Barre FT : FT8 / FT4 / FT2, ↺, TX ← RX, RX ← TX : cadre blanc, texte blanc gras ; choisi (ou au clic) : fond blanc, texte noir */
+#dgModes .btn, #dgQsy, #dgTxRx, #dgRxTx { border: 1px solid #fff; color: #fff; font-weight: 800; background: transparent; }
+#dgModes .btn[aria-pressed='true'], #dgQsy:active, #dgTxRx:active, #dgRxTx:active, #dgQsy.flash, #dgTxRx.flash, #dgRxTx.flash { background: #fff; color: #000; border-color: #fff; }
