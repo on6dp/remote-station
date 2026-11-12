@@ -2234,3 +2234,9 @@ section.panel.tune-panel { background: linear-gradient(180deg, #4d5d72, #3f4e61)
 #sec-tune .btn[data-ctl='tune'].busy { background: linear-gradient(180deg, #e0241a, #8f0f08); border-color: #ff7a6e; color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,.45); box-shadow: 0 0 12px rgba(255, 40, 30, .6); }
 /* Ligne MAIN / SUB / SPLIT / DUAL RX / TXW / A→B… : texte blanc gras (LOCK garde son jaune) */
 #sec-dual .btn:not([data-ctl='lock']) { color: #fff; font-weight: 800; }
+/* Cadre TX : titre jaune vif ; RX en blanc gras, encadré blanc arrondi ; PTT arrondi comme les autres boutons */
+section[data-panel="tx"] > .panel-h { color: #ffd400; }
+.rxtx { border-radius: 7px; }
+.rxtx:not(.tx) { color: #fff; font-weight: 800; border-color: #fff; }
+.rxtx:not(.tx) i { border-color: #fff; }
+.ptt { border-radius: 9px; }
