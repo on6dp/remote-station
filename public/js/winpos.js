@@ -19,6 +19,16 @@
   }
   // Dans une fenêtre séparée : elle se replace (taille exacte) puis note sa place
   const me = String(window.name || '');
+  // Page TRX DIGI : la fenêtre descend jusqu'en bas de l'écran (listes de messages et cartes de bande plus hautes)
+  if (me === 'rs-digi' && window.opener) {
+    setTimeout(() => {
+      try {
+        const bottom = window.screenY + window.outerHeight;
+        const avail = (screen.availTop || 0) + screen.availHeight;
+        if (avail - bottom > 30 && window.screenY > -9000) window.resizeBy(0, avail - bottom);
+      } catch (e) { /* refusé par le navigateur */ }
+    }, 600);
+  }
   if (/^rs-[\w-]+$/.test(me) && window.opener) {
     let last = '';
     const save = () => {

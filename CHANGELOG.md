@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.12** — Ascenseurs plus visibles (listes des modes numériques, cartes de bande) ; TRX DIGI : la fenêtre descend jusqu'en bas de l'écran (listes et cartes de bande plus hautes)
 - **0.38.11** — Double réception : même plage (largeur d'affichage) pour les cascades des deux VFO ; le zoom à la molette agit sur les deux
 - **0.38.10** — TRX DIGI : fenêtre de QSO = fiche du carnet sous les macros (remplie avec le correspondant et les reports FT, sans Ma référence) ; Enregistrer / Modifier / Supprimer le QSO (aussi dans la page TRX SSB) ; messages de la fiche lisibles
 - **0.38.9** — FT8 / FT4 / FT2 : fenêtre de QSO sous les macros (indicatif, locator, pays / km / azimut, reports, début, étape ; LOG QSO, EFFACER)

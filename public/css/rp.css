@@ -2487,3 +2487,7 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .lg-form .lg-fmsg.ok { color: #0b6b2a; }
 .lg-form .lg-fmsg.warn { color: #8a4b00; }
 .lg-form .lg-fmsg.err { color: #b00000; }
+/* Ascenseurs plus visibles : listes des modes numériques et cartes de bande */
+.dg-list, .dg-ftx .dg-list, .rt-rx, .ws-list, .jt-list { scrollbar-width: auto; scrollbar-color: #c3cfde #1b2534; }
+.bm-sb { width: 17px; scrollbar-width: auto; scrollbar-color: #c3cfde #1b2534; background: #1b2534; }
+.bm-body .bm-s { right: 19px; }
