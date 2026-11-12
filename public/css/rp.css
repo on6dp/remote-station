@@ -2316,3 +2316,7 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 /* TX VFO-A (MAIN) vert / TX VFO-B (SUB) rose foncé, même en SPLIT (le bouton SPLIT reste orange) */
 #txOnA.txon, #txOnA.txon.split { background: linear-gradient(180deg, #1f7a3a, #0f5226); border-color: #4fd17a; color: #fff; font-weight: 800; box-shadow: 0 0 8px rgba(40, 200, 100, .45); }
 #txOnB.txon, #txOnB.txon.split { background: linear-gradient(180deg, #a3245e, #6e133d); border-color: #ff7ab3; color: #fff; font-weight: 800; box-shadow: 0 0 8px rgba(230, 60, 140, .45); }
+/* DX CLUSTER : plus de « <-> » ; inscription en vert quand le cluster est relié (orange : ouvert mais sans la main) */
+.dxc-btn .dxc-arrow { display: none; }
+.tb-right .dxc-btn.on { color: #39ff14; border-color: #39ff14; }
+.tb-right .dxc-btn.half { color: #f59e0b; }
