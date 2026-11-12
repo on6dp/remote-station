@@ -209,6 +209,7 @@
         <option value="auto">AUTO</option><option value="0">0/15</option><option value="1">15/30</option>
       </select>
       <label class="dg-hound" id="dgHoundWrap" title="DXpédition en FT8 : HOUND = vous appelez une DXpédition qui trafique en FOX (FOX classique, plusieurs QSO à la fois) ou en SuperFox (un seul signal large de 1,5 kHz, jusqu'à 9 stations à la fois). Choisi par celui qui a la main, pour toute la station."><span class="dg-f">Activité</span> <select id="dgHound"><option value="0">NORMALE</option><option value="1">HOUND · FOX</option><option value="2">HOUND · SuperFox</option></select></label>
+      <span class="dg-hunt" title="Chasse (DXpédition…) : indicatifs ou préfixes séparés par des espaces (ex. 3Y0K VP8 FT8W). Avec « Seulement la chasse », l’Activité de bande ne montre plus que leurs messages."><span class="dg-f">Chasse</span> <input id="dgHunt" type="text" spellcheck="false" autocomplete="off" placeholder="3Y0K VP8…" maxlength="80"> <button class="btn dg-huntonly" type="button" id="dgHuntOnly" aria-pressed="false" title="Clic : l’Activité de bande ne montre plus que les stations chassées ; nouveau clic : tout réafficher (filtre désactivé)">SEULEMENT LA CHASSE</button><button class="btn dg-huntclr" type="button" id="dgHuntClr" title="Contact fait : vider la chasse et tout réafficher">✕</button></span>
       <label class="dg-chk dg-alog" title="Que faire du QSO dans le carnet à la fin du QSO (RR73 / 73) : vous demander (fenêtre « QSO terminé » avec « Enregistrer dans le carnet »), ou l’enregistrer tout seul (« Log automatically » de WSJT-X)">Carnet en fin de QSO <select id="dgAutoLog">
         <option value="">MANUEL : me demander avant d’enregistrer</option>
         <option value="any">AUTOMATIQUE : RR73 reçu ou 73 envoyé</option>
@@ -5082,11 +5083,23 @@
     const c = senderOf(msg);
     return !!c && worked.has(c + '|' + curBand(ftDual ? side || 'A' : '') + '|' + mode);
   }
+  // Chasse : indicatifs / préfixes tapés dans « Chasse » ; « Seulement la chasse » ne montre plus que leurs messages
+  let huntList = String(store.get('hunt', '')).toUpperCase().split(/[\s,;]+/).filter((t) => t.length >= 2);
+  let huntOnly = store.get('huntonly', '0') === '1';
+  function huntMatch(msg) {
+    if (!huntList.length) return false;
+    return callsIn(String(msg || '')).some((c) => c.length >= 3 && /\d/.test(c) && huntList.some((t) => c === t || c.indexOf(t) === 0 || c.indexOf('/' + t) >= 0 || c.indexOf(t + '/') === 0));
+  }
+  function huntApply() {
+    const on = huntOnly && huntList.length > 0;
+    for (const id of ['dgBand', 'dgBandB']) if ($(id)) $(id).classList.toggle('hunt-on', on);
+    if ($('dgHuntOnly')) { $('dgHuntOnly').setAttribute('aria-pressed', String(huntOnly)); $('dgHuntOnly').disabled = !huntList.length; }
+  }
   function rowEl(slot, d, side) {
     const r = document.createElement('div');
     const k = d.tx ? 'tx' : cls(d.msg);
     const wk = !d.tx && k !== 'me' && isWorked(d.msg, side);
-    r.className = 'dg-row ft ' + k + (wk ? ' wkd' : '');
+    r.className = 'dg-row ft ' + k + (wk ? ' wkd' : '') + (!d.tx && huntMatch(d.msg) ? ' hunt' : '');
     r.title = d.tx ? 'Message émis' : (wk ? 'Déjà contacté sous ' + workedStation + ' sur cette bande dans ce mode · ' : '') + d.f + ' Hz · clic sur l’indicatif (souligné) ou double-clic : répondre à cette station (émission à la période suivante) · clic ailleurs : réception ici · clic droit : émission ici';
     const cells = d.tx ? [utc(slot), 'TX', '', d.f, d.msg] : [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
     // Pays DXCC, distance et azimut (direction de l'antenne) : dans l'info-bulle de l'indicatif (et de la ligne)
@@ -5841,6 +5854,24 @@
       fq('fqRptRx', (v) => { setDx({ rptRx: v }); syncDx(); });
       $('fqLog').addEventListener('click', qsoLogNow);
       $('fqClr').addEventListener('click', () => { setDx({ call: '', grid: '', rpt: '-10', rptRx: '' }); syncDx(); });
+      // Chasse (DXpédition)
+      if ($('dgHunt')) {
+        $('dgHunt').value = huntList.join(' ');
+        $('dgHunt').addEventListener('change', () => {
+          huntList = $('dgHunt').value.toUpperCase().split(/[\s,;]+/).filter((t) => t.length >= 2);
+          $('dgHunt').value = huntList.join(' ');
+          store.set('hunt', huntList.join(' '));
+          redrawAll();
+          huntApply();
+        });
+        $('dgHuntOnly').addEventListener('click', () => { huntOnly = !huntOnly; store.set('huntonly', huntOnly ? '1' : '0'); huntApply(); });
+        $('dgHuntClr').addEventListener('click', () => {
+          huntList = []; huntOnly = false; $('dgHunt').value = '';
+          store.set('hunt', ''); store.set('huntonly', '0');
+          redrawAll(); huntApply();
+        });
+        huntApply();
+      }
       // Vitesse du spectre
       document.querySelectorAll('.dg-spspd button').forEach((b) => b.addEventListener('click', () => { spSpd = Number(b.dataset.spspd) || 1; store.set('spspd', spSpd); spSpdUi(); }));
       spSpdUi();

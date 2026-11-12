@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.42** — FT8 / FT4 / FT2 : Chasse (indicatifs ou préfixes, ex. DXpédition) — messages surlignés, « Seulement la chasse » pour ne voir qu'eux, ✕ pour vider ; barres VFO-A / VFO-B alignées
 - **0.38.41** — Double réception : lignes de réglages des deux cascades à la même hauteur (VFO-A et VFO-B alignés)
 - **0.38.40** — Carte de bande : clic droit = spot de la station (même à côté de l'étiquette), plus jamais le menu « Enregistrer l'image » du navigateur
 - **0.38.39** — Carte de bande FT : clic droit sur une station décodée = spot au DX cluster sous le TX call (après confirmation)

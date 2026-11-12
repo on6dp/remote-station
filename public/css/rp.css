@@ -2577,3 +2577,13 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 /* ↺ des réglages de cascade : en bout de ligne sans la faire passer à la ligne ; curseurs un peu plus courts */
 .ft-dual .wf-ctl input[type='range'] { width: 70px; }
 .ft-dual .wf-ctl { align-content: center; }
+/* Chasse (DXpédition) : champ d'indicatifs, « Seulement la chasse » (enfoncé : fond blanc, texte noir), ✕ pour vider */
+.dg-hunt { display: inline-flex; align-items: center; gap: 6px; }
+.dg-hunt .dg-f { color: #ffd400; font-weight: 800; }
+.dg-hunt input { width: 150px; font: 800 13px/1.2 inherit; color: #ffd400; background: #000; border: 1px solid #fff; border-radius: 6px; padding: 3px 7px; text-transform: uppercase; }
+.dg-hunt .btn { border: 1px solid #fff; color: #fff; font-weight: 800; background: transparent; }
+.dg-hunt .dg-huntonly[aria-pressed='true'] { background: #ffd400; color: #000; border-color: #ffd400; }
+.dg-hunt .btn:disabled { opacity: .45; }
+.dg-row.ft.hunt { box-shadow: inset 4px 0 0 #ffd400; }
+.dg-row.ft.hunt .msg { color: #ffe680; }
+.dg-list.hunt-on .dg-row:not(.hunt), .dg-list.hunt-on .dg-sep { display: none; }
