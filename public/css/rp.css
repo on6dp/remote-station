@@ -2232,3 +2232,5 @@ section.panel.tune-panel { background: linear-gradient(180deg, #4d5d72, #3f4e61)
 #sec-tune .btn[data-ctl] { color: #fff; font-weight: 800; border-color: #fff; }
 #sec-tune .btn[data-ctl='tuner'][aria-pressed='true'] { background: linear-gradient(180deg, #6a3aa8, #3f1d6e); border-color: #c49bff; color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,.45); box-shadow: 0 0 8px rgba(160, 100, 255, .45); }
 #sec-tune .btn[data-ctl='tune'].busy { background: linear-gradient(180deg, #e0241a, #8f0f08); border-color: #ff7a6e; color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,.45); box-shadow: 0 0 12px rgba(255, 40, 30, .6); }
+/* Ligne MAIN / SUB / SPLIT / DUAL RX / TXW / A→B… : texte blanc gras (LOCK garde son jaune) */
+#sec-dual .btn:not([data-ctl='lock']) { color: #fff; font-weight: 800; }
