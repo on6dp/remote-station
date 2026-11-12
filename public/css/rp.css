@@ -2244,3 +2244,9 @@ section[data-panel="tx"] > .panel-h { color: #ffd400; }
 .panel > .panel-h { color: #ffd400; }
 /* Onglet activité : titre « UTILISATEURS ACTIVITÉS » en jaune gras */
 #events::before { content: 'UTILISATEURS ACTIVITÉS'; display: block; color: #ffd400; font-weight: 800; font-size: 13px; letter-spacing: .08em; padding: 4px 2px 8px; border-bottom: 1px solid var(--v2-border-dark, #2a3340); margin-bottom: 4px; }
+/* Barre du haut : PRENDRE LA MAIN et DÉCONNEXION au format des autres boutons (couleurs gardées) ;
+   autres boutons encadrés de blanc épais ; à droite de STATS, texte blanc gras */
+#ctrlBtn, #logout { font-size: 11.5px; letter-spacing: .05em; padding: 5px 12px; min-height: 0; border-width: 2px; border-radius: 7px; }
+.tb-right > .btn:not(#ctrlBtn):not(#logout), .tb-right > span > .btn { border: 2px solid #fff; border-radius: 7px; font-weight: 800; }
+.tb-right > .btn:not(#ctrlBtn):not(#logout):not(#statsBtn) { color: #fff; }
+.tb-right .zoom-btn { color: #fff; font-weight: 800; }
