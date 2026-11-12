@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.324** — Dashboard : échelle du S-mètre en blanc gras (+20 +40 +60 en rouge gras)
 - **0.37.323** — Dashboard : TX VFO-A (MAIN) en vert, TX VFO-B (SUB) en rose (orange en SPLIT) ; TXW blanc gras cerclé de blanc, fond blanc et texte noir quand on le maintient
 - **0.37.322** — Dashboard : DUAL RX sur fond mauve foncé quand il est en service (liseré mauve quand le TRX le permet mais qu'il est coupé)
 - **0.37.321** — Dashboard : MAIN en vert comme A, SUB en rose comme B

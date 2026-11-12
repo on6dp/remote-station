@@ -2177,3 +2177,6 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 /* TXW : blanc gras cerclé de blanc ; maintenu = fond blanc, texte noir gras */
 #sec-dual .txw-btn { color: #fff; font-weight: 800; border-color: #fff; }
 #sec-dual .txw-btn[aria-pressed='true'], #sec-dual .txw-btn.held { color: #000; background: #fff; border-color: #fff; font-weight: 900; }
+/* Échelle du S-mètre : S 1 3 5 7 9 en blanc gras (+20 +40 +60 restent en rouge, en gras) */
+.smeter .sm-scale span { color: #fff; font-weight: 800; font-size: 10px; }
+.smeter .sm-scale span.hot { color: #ff4d4d; font-weight: 800; }
