@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.40** — Carte de bande : clic droit = spot de la station (même à côté de l'étiquette), plus jamais le menu « Enregistrer l'image » du navigateur
 - **0.38.39** — Carte de bande FT : clic droit sur une station décodée = spot au DX cluster sous le TX call (après confirmation)
 - **0.38.38** — Cartes de bande FT8 / FT4 / FT2 : stations décodées ici affichées à leur fréquence réelle (pour chaque VFO), clic = choisir le correspondant ; rien n'est envoyé au DX cluster
 - **0.38.36** — Listes FT : titres de colonnes centrés et alignés sur les colonnes ; PFX (préfixe DXCC), FREQU

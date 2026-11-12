@@ -2497,10 +2497,20 @@
     body.addEventListener('click', (e) => e.stopPropagation());
     // Clic droit sur une station décodée ici : spot au DX cluster sous le TX call choisi (une à la fois, à la main)
     body.addEventListener('contextmenu', (e) => {
-      const b = e.target.closest && e.target.closest('.bm-s.bm-dec');
-      if (!b) return;
+      // Jamais le menu du navigateur (« Enregistrer l'image… ») sur la carte de bande
       e.preventDefault();
       e.stopPropagation();
+      // Étiquette sous la souris, même si le clic tombe sur le dessin de la carte ou sur le trait qui y mène
+      const doc = body.ownerDocument;
+      let b = e.target.closest && e.target.closest('.bm-s');
+      if (!b) b = (doc.elementsFromPoint(e.clientX, e.clientY) || []).find((el) => el.classList && el.classList.contains('bm-s')) || null;
+      if (!b) {
+        let best = null, bd = 9;
+        for (const el of $('bmLbls' + X).querySelectorAll('.bm-s')) { const r = el.getBoundingClientRect(); const dy = Math.abs(r.top + r.height / 2 - e.clientY); if (dy < bd) { bd = dy; best = el; } }
+        b = best;
+      }
+      if (!b) return;
+      if (!b.classList.contains('bm-dec')) { if (api) api.say('Clic droit : seulement pour les stations décodées ici (point vert) ; ce spot vient déjà du DX cluster.', 'warn', 4000); return; }
       const ds = decSpots[X ? 'B' : ''].get(b.dataset.k.split('|')[1]);
       if (!ds || !api) return;
       const st = api.state();
