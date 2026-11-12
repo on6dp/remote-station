@@ -290,7 +290,10 @@
       // Yaesu (WIDTH + SHIFT) dessiné comme le TWIN PBT : deux filtres de largeur nominale (rouge : bord bas de la bande
       // passante, bleu : bord haut) qui s'écartent quand on rétrécit le BW et coulissent ensemble avec le SHIFT ;
       // la bande passante est leur partie commune (orange)
-      W = Math.max(hz, /^CW/.test(md) ? 500 : /RTTY|PSK/.test(md) ? 500 : /AM/.test(md) ? 6000 : 3000);
+      // largeur nominale = la plus large du TRX dans ce mode (table des largeurs), sinon une valeur habituelle
+      const wt = R2.widthTable && R2.widthTable(md);
+      const wmax = wt && wt.length ? Math.max(...wt.filter((v) => v > 0)) : 0;
+      W = Math.max(hz, wmax || (/^CW/.test(md) ? 500 : /RTTY|PSK/.test(md) ? 500 : /AM/.test(md) ? 6000 : 3000));
       a = sft - (W - hz) / 2; b = sft + (W - hz) / 2;
     }
     // NOTCH manuel : Yaesu = fréquence BF (BP01), Icom = position 0–255 (≈ 300 à 2700 Hz, comme la page Face avant)
