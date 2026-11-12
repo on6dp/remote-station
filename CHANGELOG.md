@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.18** — Cartes de bande : largeur réglable aussi en double réception (poignée sur le bord intérieur, jusqu'à 120 px) ; TX call sur la ligne des onglets, après SYNCHRO
 - **0.38.17** — Cascades FT en double réception : « VFO-A · MAIN » / « VFO-B · SUB » de la taille et de la couleur de la fréquence
 - **0.38.16** — Barre FT : boutons et options plus espacés
 - **0.38.15** — Barre FT : « Période » écartée de la fréquence TX ; listes Période et Activité encadrées de blanc ; NORMALE en majuscules

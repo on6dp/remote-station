@@ -627,6 +627,8 @@
     add('sstv', 'dg ss', SSTV_PANE);
     for (const k in SOON) add(k, 'dg-soon', '<p>' + SOON[k] + '</p><p class="dg-note">En préparation.</p>');
     add('sync', 'dg-sync', SYNC_PANE);
+    // « TX call » : sur la ligne des onglets, juste après SYNCHRO (il vaut pour tous les modes)
+    { const txc = panel.querySelector('#dgTxcWrap'), syt = bar.querySelector('.ctab[data-tab="sync"]'); if (txc && syt) { txc.classList.add('ctab-txc'); syt.after(txc); } }
     if (logHere()) { add('log', 'lg', ''); window.RSLOG.mount(panel.lastElementChild); }
     // Carte de bande (DX cluster) : colonne à droite de la fenêtre, onglet RTTY
     const bm = document.createElement('aside');
@@ -658,7 +660,8 @@
       + '<div class="bm-r" title="Plage affichée pour cette bande (kHz), gardée par bande. Molette sur la carte : zoom · glisser : déplacer · double-clic : plage d’origine">'
       + '<input id="bmLoB" inputmode="decimal" aria-label="Début de la plage (kHz)"><span>–</span><input id="bmHiB" inputmode="decimal" aria-label="Fin de la plage (kHz)"><span>kHz</span></div>'
       + '<div class="bm-body" id="bmBodyB"><canvas id="bmCvB"></canvas><div class="bm-lbls" id="bmLblsB"></div><div class="bm-sb" id="bmSbB" title="Ascenseur : parcourir la bande (même largeur de plage)"><i></i></div></div>'
-      + '<div class="bm-f" id="bmFootB"></div>';
+      + '<div class="bm-f" id="bmFootB"></div>'
+      + '<i class="bm-grip" id="bmGripB" title="Glisser à gauche ou à droite : largeur des cartes de bande (double-clic : largeur d’origine)"></i>';
     panel.appendChild(bmB);
     add('away', 'dg-soon', '<p>Les modes numériques sont ouverts dans une <b>fenêtre séparée</b>.</p><p><button class="btn" type="button" id="dgBack">Ramener ici</button></p>');
   }
@@ -806,13 +809,9 @@
       applySpan();
       sizeCanvas();
     }
-    // TX call : dans la barre du haut de l'onglet affiché (FT8 / FT4 / FT2, RTTY, JTTY, CW, SSTV, WSPR, JT65)
-    const txc = $('dgTxcWrap'), paneEl = document.querySelector('#centerPanel .ctab-pane[data-pane="' + pane + '"]');
-    const bar = paneEl && paneEl.querySelector('.dg-bar');
-    if (txc && bar && txc.parentElement !== bar) {
-      if (pane === 'ftx') bar.insertBefore(txc, $('dgStop'));
-      else { const stx = bar.querySelector('.dg-note, .dg-status, .dg-tl'); if (stx) bar.insertBefore(txc, stx); else bar.appendChild(txc); }
-    }
+    // TX call : sur la ligne des onglets, juste après SYNCHRO (le même pour tous les modes)
+    const txc = $('dgTxcWrap'), syt = document.querySelector('#centerPanel .ctab[data-tab="sync"]');
+    if (txc && syt && txc.previousElementSibling !== syt) { txc.classList.add('ctab-txc'); syt.after(txc); }
     if (pane === 'sync') drawSync();
     sendView();
     if (pane === 'log' && window.RSLOG) window.RSLOG.show();
@@ -2505,7 +2504,7 @@
     const setW = (w, save) => {
       if (w == null) { root.style.removeProperty('--bm-w'); if (save) store.set('bmw', ''); }
       else {
-        w = Math.max(140, Math.min(520, Math.round(w)));
+        w = Math.max(120, Math.min(520, Math.round(w)));
         root.style.setProperty('--bm-w', w + 'px');
         if (save) store.set('bmw', String(w));
       }
@@ -2514,8 +2513,11 @@
       bmDraw();
     };
     const saved = Number(store.get('bmw', ''));
-    if (saved >= 140) setW(saved, false);
-    const grip = $('bmGrip');
+    if (saved >= 120) setW(saved, false);
+    // Poignées : carte du VFO-A (bord droit en double réception ou dans la page TRX DIGI, sinon bord gauche) ;
+    // carte du VFO-B (bord gauche). Les deux cartes ont la même largeur.
+    for (const grip of [$('bmGrip'), $('bmGripB')].filter(Boolean)) {
+    const isB = grip.id === 'bmGripB';
     grip.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -2523,8 +2525,8 @@
       const zf = (window.RSZOOM && window.RSZOOM.z()) || 1;
       const x0 = e.clientX, w0 = $('bandMap').getBoundingClientRect().width / zf;
       document.body.classList.add('bm-resizing');
-      // Page TRX DIGI : carte à gauche, poignée sur son bord droit (sens inversé)
-      const sg = document.body.classList.contains('digi-popup') && !$('centerPanel').classList.contains('bm-dual') ? -1 : 1;
+      // Carte à gauche (page TRX DIGI, ou VFO-A en double réception) : poignée sur son bord droit (sens inversé)
+      const sg = !isB && (document.body.classList.contains('digi-popup') || $('centerPanel').classList.contains('bm-dual')) ? -1 : 1;
       const mv = (ev) => setW(w0 - sg * (ev.clientX - x0) / zf, false);
       const up = (ev) => {
         grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up);
@@ -2536,6 +2538,7 @@
       grip.addEventListener('pointercancel', up);
     });
     grip.addEventListener('dblclick', (e) => { e.stopPropagation(); setW(null, true); });
+    }
     window.addEventListener('resize', () => { if (BM_TABS.indexOf(tab) >= 0) bmShow(); });
   }
   // En-têtes des deux décodeurs : centre, fréquence du signal suivi, décodeur de l'émission

@@ -2506,3 +2506,21 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dg-ftx > .dg-bar .dg-split { display: inline-flex; align-items: center; gap: 10px; }
 /* « VFO-A · MAIN » / « VFO-B · SUB » au-dessus des cascades : même taille et même couleur que la fréquence */
 .ft-dual .ft-wfa, .ft-wfbl { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: .3px; }
+/* Double réception : poignées de largeur des deux cartes de bande (VFO-A : bord droit, VFO-B : bord gauche) */
+#centerPanel.bm-dual > .bm .bm-grip { display: block; }
+#centerPanel.bm-dual > .bm:not(.bm-b) .bm-grip { left: auto; right: 0; }
+.bm.bm-b .bm-grip { left: 0; right: auto; }
+.bm:not(.bm-b) #bmGripB { display: none; }
+/* Carte de bande étroite : en-tête qui se replie (filtres sur deux lignes, sans « kHz ») */
+.bm { container-type: inline-size; }
+.bm-fw { flex-wrap: wrap; }
+@container (max-width: 170px) {
+  .bm-r > span:last-child { display: none; }
+  .bm-r input { font-size: 10px; padding: 2px 1px; }
+  .bm-fbtn, .bm-all { padding: 3px 4px; font-size: 10px; }
+  .bm-h .bm-band { font-size: 16px; }
+}
+/* « TX call » sur la ligne des onglets, après SYNCHRO */
+.ctabs .ctab-txc { margin-left: 16px; align-self: center; }
+.ctabs .ctab-txc .dg-f { font-size: 13px; }
+.ctabs .ctab-txc select { font-size: 13px; padding: 3px 6px; }
