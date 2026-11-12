@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.328** — Dashboard : curseurs (BW, IF SHIFT, NB, DNR…) plus serrés
 - **0.37.327** — Dashboard : « A · MAIN » en vert et « B · SUB » en rose dans les titres des cadres (RF FRONT END, DSP, FILTRES…)
 - **0.37.326** — Dashboard : étiquette SUB (côté actif du VFO B) sur fond blanc, texte noir gras
 - **0.37.325** — Dashboard : « VFO » des écrans VFO en blanc gras, un peu plus grand ; échelle du S-mètre plus grande

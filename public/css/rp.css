@@ -2187,3 +2187,7 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 /* Titres des cadres (RF FRONT END, DSP, FILTRES…) : « A · MAIN » en vert, « B · SUB » en rose, comme A / MAIN et B / SUB */
 .panel-h .ph-side { background: linear-gradient(180deg, #1f7a3a, #0f5226); color: #fff; font-weight: 800; border: 1px solid #4fd17a; }
 .panel-h .ph-side.b { background: linear-gradient(180deg, #a3245e, #6e133d); color: #fff; border-color: #ff7ab3; }
+/* Curseurs (BW, IF SHIFT, NB, DNR…) : lignes plus serrées */
+.panel-b > .ctl:has(> input[type=range]) { gap: 0; }
+.panel-b > .ctl:has(> input[type=range]) > input[type=range] { margin-top: 0; margin-bottom: 0; }
+.panel-b > .ctl:has(> input[type=range]) + .ctl:has(> input[type=range]) { margin-top: -4px; }
