@@ -20,7 +20,7 @@
   const LAYOUT = {
     ant: ['ant'],
     front: ['rf', 'agc'],
-    filter: ['width', 'roof', 'shift', 'contour', 'apf'],
+    filter: ['width', 'roof', 'shift', 'contour', 'contourFreq', 'apf', 'apfFreq'],
     dual: ['vfoSel', 'split', 'dualRx', 'aToB', 'bToA', 'swap', 'lock'],
     audio: ['af', 'sql'],
     dsp: ['nb', 'nr', 'notch', 'notchFreq', 'dnf'],
@@ -33,7 +33,7 @@
     'att', 'preamp', 'preampVU', 'narrow', 'narrowB', 'nbB', 'nrB', 'notchB', 'dnfB', 'attB', 'preampB', 'agcB', 'rfB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'roofB'];
   // Réglages des cadres (RF front end, Filtre, DSP) qui suivent le VFO sélectionné (A / B) quand le TRX a leur équivalent côté SUB
   const SIDE_B = { nb: 'nbB', nr: 'nrB', notch: 'notchB', dnf: 'dnfB', narrow: 'narrowB', agc: 'agcB', rf: 'rfB', width: 'widthB',
-    notchFreq: 'notchFreqB', shift: 'shiftB', contour: 'contourB', apf: 'apfB', roof: 'roofB' };
+    notchFreq: 'notchFreqB', shift: 'shiftB', contour: 'contourB', apf: 'apfB', roof: 'roofB', contourFreq: 'contourFreqB', apfFreq: 'apfFreqB' };
   const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', roof: 'ROOFING', shift: 'IF shift', preamp: 'PRE', preampVU: 'AMP' };
 
   // Bouton HELP : manuel en français, ou en anglais si le navigateur n'est pas en français
@@ -838,7 +838,8 @@
     for (const c of R.CONTROLS || []) if (order.indexOf(c) < 0) order.push(c);
     for (const c of order) {
       if (IN_VFO.indexOf(c.id) >= 0) continue; // RIT / XIT / CLEAR : sur les écrans VFO
-      if (c.face) continue; // réglages propres à la page Face avant (ex. AF du SUB, BK-IN du FTDX101)
+      if (c.id === 'contourFreqB' || c.id === 'apfFreqB') continue; // côté SUB : par le curseur du VFO sélectionné
+      if (c.face && c.id !== 'contourFreq' && c.id !== 'apfFreq') continue; // réglages propres à la page Face avant (ex. AF du SUB, BK-IN du FTDX101) ; fréquences CONTOUR / APF aussi au dashboard
       if (LAYOUT.tx.indexOf(c.id) >= 0) continue; // gain micro, PROC, MIC EQ, niveau PROC, VOX : dans la page TRX SSB
       const box = $(where[c.id] || boxes[c.sec] || 'sec-other');
       const label = SHORT[c.id] || c.label;
