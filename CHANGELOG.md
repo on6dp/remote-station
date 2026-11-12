@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.340** — Dashboard : boutons marche / arrêt des cadres (CONTOUR, APF, NB, DNR, NOTCH, PROC, MIC EQ, VOX…) encadrés de blanc, texte blanc gras, dégradé bleu comme le mode actif quand ils sont enclenchés
 - **0.37.339** — Dashboard : A · MAIN / B · SUB des titres de cadres arrondis, un peu plus grands
 - **0.37.338** — Dashboard : choix à plusieurs cases (AGC, ROOFING…) encadrés de blanc, texte blanc gras, case choisie en dégradé bleu comme le mode actif
 - **0.37.337** — Logbook : champ de recherche sur fond jaune clair, encadré blanc épais, plus large
