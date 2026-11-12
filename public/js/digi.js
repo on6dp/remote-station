@@ -233,7 +233,7 @@
       <canvas id="dgScale" height="44"></canvas>
       <canvas id="dgWf" height="140"></canvas>
       <canvas id="dgSpec" class="dg-spec" height="70" title="Spectre : niveau de chaque fréquence audio (moyenne des dernières lignes de la cascade, mêmes réglages Gain / Zéro / Plat)"></canvas>
-      <i class="dg-mk dg-mk-tx" id="dgMkTx"></i><i class="dg-mk dg-mk-rx" id="dgMkRx"></i>
+      <i class="dg-mk dg-mk-tx" id="dgMkTx"></i><i class="dg-mk dg-mk-rx" id="dgMkRx"></i><i class="dg-mk dg-mk-n" id="dgMkN" hidden></i>
       <i class="dg-mk dg-mk-bm" id="dgMkBM" hidden></i><i class="dg-mk dg-mk-bs" id="dgMkBS" hidden></i>
       <i class="cw-trx" id="cwTrxA" hidden title="Filtre du TRX (BW) : glisser une barre pour l'élargir ou le rétrécir (Ctrl + molette aussi)"><b></b><b></b><span></span></i>
       <i class="dg-grip" id="dgGrip" title="Glisser vers le haut ou le bas : hauteur de la cascade et des listes de messages (double-clic : taille d'origine)"></i>
@@ -253,7 +253,7 @@
         <canvas id="ftScaleB" height="44"></canvas>
         <canvas id="ftWfB" height="140" title="Cascade du VFO-B (SUB) : clic gauche = réception, clic droit = émission"></canvas>
         <canvas id="ftSpecB" class="dg-spec" height="70" title="Spectre du VFO-B"></canvas>
-        <i class="dg-mk dg-mk-tx" id="ftMkTxB"></i><i class="dg-mk dg-mk-rx" id="ftMkRxB"></i>
+        <i class="dg-mk dg-mk-tx" id="ftMkTxB"></i><i class="dg-mk dg-mk-rx" id="ftMkRxB"></i><i class="dg-mk dg-mk-n" id="ftMkNB" hidden></i>
         <i class="cw-trx" id="cwTrxB" hidden title="Filtre du TRX (BW) : glisser une barre pour l'élargir ou le rétrécir (Ctrl + molette aussi)"><b></b><b></b><span></span></i>
         <i class="dg-grip" id="ftGripB" title="Glisser vers le haut ou le bas : hauteur des cascades (double-clic : taille d'origine)"></i>
 <span class="dg-spspd" id="ftSpSpdB" title="Vitesse du spectre (la courbe seulement ; la cascade a sa propre « Vitesse ») : X1 = moyenne sur environ 6 s (courbe calme, les signaux réguliers ressortent), X2 = environ 2 s, X4 = presque instantané"><button type="button" data-spspd="1">X1</button><button type="button" data-spspd="2">X2</button><button type="button" data-spspd="4">X4</button></span>
@@ -882,7 +882,7 @@
     const cw = Math.max(120, Math.floor(c.clientWidth));
     const w = Math.round(cw * dpr);
     const h = Math.round(Math.max(40, c.clientHeight) * dpr);
-    for (const id of ['ftMkRxB', 'ftMkTxB', 'cwTrxB']) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
+    for (const id of ['ftMkRxB', 'ftMkTxB', 'cwTrxB', 'ftMkNB']) if ($(id)) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
     sizeSpec(wfFB, $('ftSpecB'), c, $('ftGripB'));
     if (w === wfFB.w && h === wfFB.h && wfFB.ctx) return;
     let old = null;
@@ -1008,7 +1008,7 @@
     const c = $('dgWf');
     const s = $('dgScale');
     // Repères RX / TX sous l'échelle (la barre de réglages au-dessus peut tenir sur une ou deux lignes)
-    for (const id of ['dgMkRx', 'dgMkTx', 'dgMkBM', 'dgMkBS', 'cwTrxA']) if ($(id)) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
+    for (const id of ['dgMkRx', 'dgMkTx', 'dgMkBM', 'dgMkBS', 'cwTrxA', 'dgMkN']) if ($(id)) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
     // Pixels de l'écran (pas les pixels CSS) : sur un écran à 125 / 150 %, la cascade reste aussi fine que l'écran le permet,
     // et une cascade agrandie avec la poignée montre plus d'historique au lieu d'étirer les lignes
     const dpr = Math.min(4, Math.max(1, (window.devicePixelRatio || 1) * (window.RSZOOM ? window.RSZOOM.z() : 1)));
@@ -1298,6 +1298,7 @@
       for (const id of ['ftMkRxB', 'ftMkTxB']) if ($(id)) $(id).style.display = 'none';
     }
     ticks(c, w);
+    for (const id of ['dgMkN', 'ftMkNB']) if ($(id)) $(id).hidden = true; // NOTCH : seulement FT8 / FT4 / FT2, JT65, JTTY
     if (tab === 'rtty') return drawRttyMarks(c, w);
     if (tab === 'wspr') return drawWsprMarks(c, w);
     if (tab !== 'cw') for (const id of ['cwTrxA', 'cwTrxB']) if ($(id)) $(id).hidden = true;
@@ -1338,6 +1339,15 @@
       }
     }
   }
+  // NOTCH manuel du TRX pour un VFO : Yaesu = fréquence BF (BP01 / BP11), Icom = position 0–255 (≈ 300 à 2700 Hz)
+  function notchHz(side) {
+    const r = (api && api.state && api.state() && api.state().radio) || {};
+    const S = side === 'B' ? 'B' : '';
+    if (!Number(r['notch' + S])) return null;
+    const nf = r['notchFreq' + S], np = r['notchPos' + S];
+    return nf != null ? Number(nf) : np != null ? 300 + Number(np) / 255 * 2400 : null;
+  }
+  let notchSeen = '';
   function drawFlags(c, w, side) {
     const B = side === 'B';
     const tf = B ? txFB : txF, rf = B ? rxFB : rxF;
@@ -1367,6 +1377,17 @@
     const pos = (el, f) => { el.style.left = ((f - VV.lo) / VV.span) * 100 + '%'; el.style.width = (bw / VV.span) * 100 + '%'; el.style.display = f + bw < VV.lo || f > VV.lo + VV.span ? 'none' : ''; };
     pos($(B ? 'ftMkRxB' : 'dgMkRx'), rf);
     pos($(B ? 'ftMkTxB' : 'dgMkTx'), tf);
+    // NOTCH du TRX en service : trait orange sur la cascade (et petit drapeau « NOTCH » sur l'échelle), pour chaque VFO
+    const nz = notchHz(side), mn = $(B ? 'ftMkNB' : 'dgMkN');
+    if (mn) {
+      const vis = nz != null && nz >= VV.lo && nz <= VV.lo + VV.span;
+      mn.hidden = !vis;
+      if (vis) {
+        mn.style.left = ((nz - VV.lo) / VV.span) * 100 + '%';
+        mn.dataset.l = 'NOTCH ' + Math.round(nz);
+        mn.title = 'NOTCH du TRX (VFO ' + (B ? 'B' : 'A') + ') à ' + Math.round(nz) + ' Hz : les signaux à cette fréquence sont coupés';
+      }
+    }
     $(B ? 'ftMkTxB' : 'dgMkTx').classList.toggle('mk-off', !txOn);
     if (B) { $('dgRxFB').textContent = Math.round(rf) + ' Hz'; if ($('jtRxFB2')) $('jtRxFB2').textContent = Math.round(rf) + ' Hz'; return; }
     $('dgRxF').textContent = Math.round(rxF) + ' Hz';
@@ -4544,6 +4565,7 @@
   let seqSeen = '';
   function ftxState() {
     houndUi();
+    { const k = notchHz('A') + '|' + notchHz('B'); if (k !== notchSeen) { notchSeen = k; drawScale(); } }
     drawQso();
     const st = api && api.state();
     const x = st && st.ftx;
