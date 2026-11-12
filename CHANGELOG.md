@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.44** — « Seulement la chasse » : cadre blanc, fond bleu foncé quand il est activé
 - **0.38.43** — Barre FT : champ « Chasse » renommé « DX »
 - **0.38.42** — FT8 / FT4 / FT2 : Chasse (indicatifs ou préfixes, ex. DXpédition) — messages surlignés, « Seulement la chasse » pour ne voir qu'eux, ✕ pour vider ; barres VFO-A / VFO-B alignées
 - **0.38.41** — Double réception : lignes de réglages des deux cascades à la même hauteur (VFO-A et VFO-B alignés)

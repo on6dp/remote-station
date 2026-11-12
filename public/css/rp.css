@@ -2587,3 +2587,6 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dg-row.ft.hunt { box-shadow: inset 4px 0 0 #ffd400; }
 .dg-row.ft.hunt .msg { color: #ffe680; }
 .dg-list.hunt-on .dg-row:not(.hunt), .dg-list.hunt-on .dg-sep { display: none; }
+/* « SEULEMENT LA CHASSE » : cadre blanc ; activé : fond bleu foncé, texte blanc */
+.dg-hunt .dg-huntonly { border: 1px solid #fff; color: #fff; }
+.dg-hunt .dg-huntonly[aria-pressed='true'] { background: linear-gradient(180deg, #1d4f9e, #0f2f66); border-color: #fff; color: #fff; box-shadow: 0 0 8px rgba(60, 130, 255, .45); }
