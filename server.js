@@ -2146,6 +2146,7 @@ function publicState() {
     trxEq: trxEqAvail() ? { on: eqOn() ? eqOn().call : null } : null,
     // Émission FT8 / FT4 / FT2 programmée ou en cours
     seq: seqPublic(),
+    hound: ftHound, // FT8 en DXpédition : 0 normal, 1 HOUND (FOX classique), 2 HOUND SuperFox
     cw: cwPublic(),
     ftx: ftxPend ? { id: ftxPend.id, state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call, seconds: ftxPend.seconds, sstv: ftxPend.sstv || undefined } : null,
     txCall: txCall(),
@@ -2509,6 +2510,14 @@ function ftxRequest(conn, m) {
 // retour sur Tx6 (CQ) et proposition d'enregistrer le QSO dans le carnet (comme « Prompt me to log QSO »).
 const PROG = { CALLING: 0, REPLYING: 1, REPORT: 2, ROGER_REPORT: 3, ROGERS: 4, SIGNOFF: 5 };
 const NTX_PROG = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 0 };
+// HOUND (FT8, DXpédition en FOX / SuperFox) : réglage de la station, choisi par celui qui a la main.
+// Règles de WSJT-X 3.x (HoundTransmissionPolicy) : le HOUND émet en 2e période (le FOX en 1re), appelle au-dessus
+// de 1000 Hz (FOX classique : fréquence tirée au hasard entre 1000 et 2900 Hz si plus bas), n'envoie que Tx1
+// (« FOX MOI LOCATOR ») et Tx3 (« FOX MOI R+report ») ; FOX classique : le R+report part sur la fréquence où le FOX
+// nous a appelés, puis à ±300 Hz s'il faut le répéter ; SuperFox : tout le QSO sur la fréquence d'appel. Le RR73 du
+// FOX termine le QSO (pas de 73). Sans RR73 dans les 11 périodes qui suivent son report : arrêt.
+let ftHound = 0;
+const HOUND_WAIT_PERIODS = 11;
 let seq = null; // { conn, on, mode, f0, parity, ntx, progress, dx: { call, grid }, rptSent, rptRcvd, free, call1st, watchMsg, watchSince, qsoStart }
 const seqMe = () => txCall();
 const seqGrid = () => String(cfg.stationGrid || '').toUpperCase().slice(0, 4);
@@ -2541,7 +2550,7 @@ function seqText(s) {
 function seqPublic() {
   if (!seq) return null;
   return { on: !!seq.on, mode: seq.mode, ntx: seq.ntx, dx: seq.dx.call, grid: seq.dx.grid, rpt: seq.rptSent, rptRcvd: seq.rptRcvd || '',
-    parity: seq.parity, call1st: !!seq.call1st, by: seq.conn.user.call, text: seqText(seq), side: seq.side || 'A' };
+    parity: seq.parity, call1st: !!seq.call1st, by: seq.conn.user.call, text: seqText(seq), side: seq.side || 'A', hound: seq.hound || 0, f0: seq.f0 };
 }
 function seqOff(reason, level) {
   if (!seq || !seq.on) return;
@@ -2566,8 +2575,20 @@ function seqNext() {
   if (controller !== seq.conn) return seqOff('main perdue');
   seqTxSide();
   if (seq.ntx >= 1 && seq.ntx <= 5 && !SEQ_CALL_RE.test(baseCall(seq.dx.call))) return seqOff('pas de correspondant (double-clic sur son message)', 'error');
-  const text = seqText(seq);
   const now = Date.now();
+  if (seq.hound) {
+    seq.parity = 1; // HOUND : toujours en 2e période (le FOX émet en 1re)
+    if (seq.ntx === 3 && seq.houndRptAt && now - seq.houndRptAt > HOUND_WAIT_PERIODS * FTX_SLOT[seq.mode]) {
+      seq.houndRptAt = 0;
+      return seqOff('pas de RR73 du FOX ' + seq.dx.call + ' après ' + HOUND_WAIT_PERIODS + ' périodes (rappelez-le avec Tx1)');
+    }
+    // FOX classique : appel au-dessus de 1000 Hz (sous 1000 Hz, c'est la zone du FOX) → fréquence tirée au hasard
+    if (seq.hound === 1 && seq.ntx === 1 && seq.f0 < 1000) {
+      seq.f0 = 1000 + Math.floor(Math.random() * 1900);
+      send(seq.conn, { t: 'notice', level: 'info', msg: 'HOUND : appel du FOX au-dessus de 1000 Hz → émission à ' + seq.f0 + ' Hz' });
+    }
+  }
+  const text = seqText(seq);
   if (text !== seq.watchMsg) { seq.watchMsg = text; seq.watchSince = now; }
   else if (now - seq.watchSince > cfg.ftxWatchdogMinutes * 60000) {
     return seqOff('même message depuis ' + cfg.ftxWatchdogMinutes + ' min sans réponse (chien de garde, comme WSJT-X)');
@@ -2633,6 +2654,7 @@ function seqReact(payload, d) {
 function seqOnDecodes(mode, slot, list, side) {
   if (!seq || !seq.on || seq.mode !== mode || !Array.isArray(list) || !FTX_SLOT[mode]) return;
   if ((seq.side || 'A') !== (side || 'A')) return; // QSO sur l'autre récepteur (FTDX101 : MAIN / SUB)
+  if (seq.hound) return seqHoundDecodes(list);
   const me = baseCall(seqMe());
   const theirParity = Math.round(slot / FTX_SLOT[mode]) % 2;
   const words = (d) => String(d.msg || '').toUpperCase().replace(/[<>]/g, '').split(/\s+/).filter(Boolean);
@@ -2680,6 +2702,43 @@ function seqOnDecodes(mode, slot, list, side) {
     }
   }
 }
+/**
+ * Message du FOX découpé en parties « DESTINATAIRE FOX CONTENU » : message DXpédition (FOX classique, jusqu'à deux
+ * stations par message : « K1ABC RR73; W9XYZ <KH7Z> -08 »), message standard (« W9XYZ KH7Z -08 ») ou partie SuperFox.
+ */
+function houndParts(msg) {
+  const t = String(msg || '').toUpperCase().trim();
+  const x = /^(\S+) RR73; (\S+) (\S+) ([+-]\d{2})$/.exec(t);
+  if (x) return [[x[1], x[3], 'RR73'], [x[2], x[3], x[4]]];
+  const w = t.split(/\s+/);
+  return w.length >= 3 ? [[w[0], w[1], w[2]]] : [];
+}
+/** HOUND : le FOX nous appelle (report → R+report) ou confirme (RR73 → QSO terminé et enregistré). */
+function seqHoundDecodes(list) {
+  const me = baseCall(seqMe());
+  const fox = baseCall(seq.dx.call);
+  for (const d of list) {
+    for (const [to, from, pl] of houndParts(d.msg)) {
+      if (baseCall(to) !== me) continue;
+      // Indicatif du FOX haché et pas encore connu (« <...> ») : c'est forcément lui (un seul FOX sur la fréquence)
+      if (baseCall(from) !== fox && !/^<?\.\.\.>?$/.test(from)) continue;
+      if (pl === 'RR73' || pl === 'RRR' || pl === '73') {
+        if (!seq.qsoStart) seq.qsoStart = Date.now();
+        send(seq.conn, { t: 'notice', level: 'info', msg: 'RR73 du FOX ' + seq.dx.call + ' : QSO confirmé !' });
+        return seqQsoDone('RR73 du FOX reçu');
+      }
+      if (!RPT_RE.test(pl)) continue;
+      seq.rptRcvd = pl;
+      seq.rptSent = fmtRpt(d.db); // notre report : le signal du FOX
+      seqSetNtx(3);
+      seq.houndRptAt = Date.now();
+      if (!seq.qsoStart) seq.qsoStart = Date.now();
+      if (seq.hound === 1 && d.f >= 200 && d.f <= 2900) { seq.houndFox = Math.round(d.f); seq.f0 = seq.houndFox; }
+      send(seq.conn, { t: 'notice', level: 'info', msg: 'Le FOX ' + seq.dx.call + ' vous appelle (' + pl + ') : réponse « ' + seqText(seq) + ' » à ' + seq.f0 + ' Hz' });
+      return seqChanged();
+    }
+  }
+}
 /** Proposition d'enregistrement du QSO dans le carnet (une seule fois par QSO). */
 function seqLogPrompt(s, why, again) {
   const call = s.dx.call;
@@ -2701,7 +2760,7 @@ function seqQsoDone(why) {
   const call = s.dx.call;
   if (ftxPend && ftxPend.state === 'wait' && ftxPend.conn === s.conn) ftxCancel('QSO terminé', true);
   s.on = false;
-  seqSetNtx(6);
+  seqSetNtx(s.hound ? 1 : 6); // HOUND : pas de CQ, on reste prêt à rappeler un FOX
   // Fiche déjà proposée (RR73 reçu) : la fin du QSO est signalée aussi (log automatique « à l'envoi du 73 »)
   seqLogPrompt(s, why, s.prompted === s.qsoStart);
   s.qsoStart = 0;
@@ -2717,6 +2776,8 @@ function seqAfterTx(p) {
   if (seq.parity == null) seq.parity = p.parity;
   if (p.ntx >= 1 && p.ntx <= 5 && !seq.qsoStart) seq.qsoStart = Date.now();
   if (p.ntx === 4 || p.ntx === 5) return seqQsoDone(p.ntx === 4 ? 'RR73 envoyé' : '73 envoyé');
+  // FOX classique : R+report à répéter → à 300 Hz de la fréquence du FOX (comme WSJT-X)
+  if (seq.hound === 1 && p.ntx === 3 && seq.houndFox) seq.f0 = seq.houndFox <= 600 ? seq.houndFox + 300 : seq.houndFox - 300;
   setTimeout(seqNext, 50);
 }
 /** Clic sur Tx1…Tx7 : émission auto de ce message. */
@@ -2731,6 +2792,8 @@ function seqStart(conn, m) {
   const call = String(dx.call || '').toUpperCase().trim().slice(0, 13);
   const grid = String(dx.grid || '').toUpperCase().trim().slice(0, 4);
   const free = String(m.free || '').toUpperCase().replace(/[^A-Z0-9 +\-./?]/g, '').trim().slice(0, 13);
+  const hound = mode === 'FT8' ? ftHound : 0;
+  if (hound && ntx !== 1 && ntx !== 3) return err('HOUND : seulement Tx1 (appel du FOX) et Tx3 (R + report). Pas de CQ ni de 73 : le FOX termine le QSO par RR73.');
   if (ntx <= 5 && !SEQ_CALL_RE.test(baseCall(call))) return err('Choisissez d’abord le correspondant (double-clic sur son message)');
   if (ntx === 7 && !free) return err('Texte libre vide');
   if ((ntx === 1 || ntx === 6) && !GRID4_RE.test(seqGrid())) return err('Locator de la station non configuré sur le serveur (stationGrid)');
@@ -2740,11 +2803,12 @@ function seqStart(conn, m) {
   const same = seq && seq.conn === conn && baseCall(seq.dx.call) === baseCall(call) && seq.mode === mode;
   seq = {
     conn, on: true, mode, f0,
-    parity: m.parity === 0 || m.parity === 1 ? m.parity : null,
+    parity: hound ? 1 : m.parity === 0 || m.parity === 1 ? m.parity : null,
+    hound, houndFox: 0, houndRptAt: 0,
     ntx, progress: NTX_PROG[ntx] != null ? NTX_PROG[ntx] : (same ? seq.progress : 0),
     dx: { call, grid: GRID4_RE.test(grid) ? grid : '' },
     rptSent: RPT_RE.test(String(m.rpt || '')) ? String(m.rpt) : fmtRpt(m.rpt),
-    rptRcvd: same ? seq.rptRcvd : '', free, call1st: m.call1st !== false,
+    rptRcvd: same ? seq.rptRcvd : '', free, call1st: !hound && m.call1st !== false,
     watchMsg: '', watchSince: 0, qsoStart: same ? seq.qsoStart : 0, txDial: 0, keyNow: !!m.keyNow,
     // Fréquence audio du correspondant (fréquence RX) : l'aide AP du décodeur pour ce QSO s'y applique (comme WSJT-X)
     rxf: Number(m.rxf) >= 100 && Number(m.rxf) <= 3000 ? Math.round(Number(m.rxf)) : (same && seq.rxf) || 0,
@@ -2763,9 +2827,11 @@ function seqStart(conn, m) {
 function seqCfg(conn, m) {
   if (!seq || seq.conn !== conn) return;
   const f0 = Math.round(Number(m.f0));
-  if (f0 >= 200 && f0 <= 2900) seq.f0 = f0;
-  if (m.parity === 0 || m.parity === 1 || m.parity === null) seq.parity = m.parity;
-  if (typeof m.call1st === 'boolean') seq.call1st = m.call1st;
+  // FOX classique : pendant le R+report, la fréquence est celle que fixe le FOX (pas le repère TX)
+  if (f0 >= 200 && f0 <= 2900 && !(seq.hound === 1 && seq.ntx === 3)) seq.f0 = f0;
+  if (seq.hound) seq.parity = 1;
+  else if (m.parity === 0 || m.parity === 1 || m.parity === null) seq.parity = m.parity;
+  if (typeof m.call1st === 'boolean' && !seq.hound) seq.call1st = m.call1st;
   // VFO d'émission changé pendant la séquence (FTDX101 en double réception) : pris en compte dès que le TRX est en réception
   if (m.side === 'A' || m.side === 'B') {
     const side = m.side === 'B' && ftTxBOk() ? 'B' : 'A';
@@ -3842,6 +3908,18 @@ function onOperator(conn, m) {
     case 'ftx_cfg':
       return seqCfg(conn, m);
 
+    case 'ftx_hound': {
+      // HOUND (FT8) : 0 normal, 1 FOX classique, 2 SuperFox — choisi par celui qui a la main, pour toute la station
+      if (controller !== conn) return send(conn, { t: 'notice', level: 'error', msg: 'Prenez d’abord la main' });
+      const v = [0, 1, 2].indexOf(Number(m.v)) >= 0 ? Number(m.v) : 0;
+      if (v === ftHound) return;
+      ftHound = v;
+      if (seq && seq.on && seq.mode === 'FT8') seqOff('mode ' + (v ? 'HOUND' : 'normal') + ' choisi');
+      journal('hound', { by: conn.user.call, v });
+      broadcast();
+      return;
+    }
+
     case 'cw':
       return cwRequest(conn, m);
 
@@ -4138,7 +4216,7 @@ function onStation(conn, m) {
   if (digi.worker) {
     const on = !!(seq && seq.on);
     const ap = { t: 'ap', mycall: txCall(), mygrid: String(cfg.stationGrid || ''), hiscall: on ? seq.dx.call : '', hisgrid: on ? seq.dx.grid : '',
-      qp: on ? seq.progress || 0 : 0, rx: seq ? seq.rxf || seq.f0 : 1500, tx: seq ? seq.f0 : 1500 };
+      qp: on ? seq.progress || 0 : 0, rx: seq ? seq.rxf || seq.f0 : 1500, tx: seq ? seq.f0 : 1500, hound: ftHound };
     // Le correspondant n'aide le décodeur que du côté de son QSO (MAIN ou SUB) ; l'autre côté garde notre indicatif
     const onB = on && seq.side === 'B';
     const apA = onB ? Object.assign({}, ap, { hiscall: '', hisgrid: '', qp: 0, rx: 1500, tx: 1500 }) : ap;

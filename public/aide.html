@@ -570,6 +570,7 @@ Un QSO complet prend environ une minute et demie. <b>FT4</b> est deux fois plus 
   <tr><td><span class="k">TX ← RX</span></td><td>Émettre sur la même fréquence audio que la réception.</td></tr>
   <tr><td><span class="k">RX ← TX</span></td><td>Recevoir sur la fréquence audio d'émission.</td></tr>
   <tr><td><b>Période</b> auto / 1re / 2e</td><td>Dans quelle période émettre. « auto » : à l'opposé du correspondant choisi (c'est presque toujours ce qu'il faut) ; « 1re » = 00 et 30 s, « 2e » = 15 et 45 s en FT8.</td></tr>
+  <tr><td><b>Activité</b> Normale / HOUND · FOX / HOUND · SuperFox</td><td>FT8 seulement. Pour contacter une <b>DXpédition</b> qui trafique en FOX ou en SuperFox (section « HOUND » plus bas). Choisi par celui qui a la main, pour toute la station ; en violet quand un mode HOUND est actif.</td></tr>
   <tr><td>☐ <b>Répondre au 1er</b></td><td>Quand vous lancez CQ (Tx6), la première station qui répond devient le correspondant et le QSO se déroule tout seul (« Call 1st » de WSJT-X).</td></tr>
   <tr><td>☐ <b>Spot cluster</b></td><td>Chaque QSO enregistré dans le carnet (fiche « QSO terminé », log automatique ou fiche Log QSO des onglets RTTY, JTTY et CW) est aussi spoté sur le DX cluster sous <b>votre indicatif d'opérateur</b>, pas le TX call (même case dans la fenêtre « QSO terminé » et dans les pages TRX SSB / TRX CW). Indépendamment de cette case, les stations FT8 / FT4 / FT2 <b>décodées</b> par la station sont envoyées toutes les 5 minutes à <b>PSK Reporter</b> (pskreporter.info), sous l'indicatif et le locator de la station, comme le fait WSJT-X.</td></tr>
   <tr><td><span class="k">■ Arrêter</span></td><td>Coupe l'émission automatique tout de suite (« Halt Tx »). La barre <kbd>Espace</kbd> fait de même.</td></tr>
@@ -616,6 +617,16 @@ Choisissez pour l'émission un endroit libre de la cascade. Un trait blanc marqu
   <li><b>Barre de période</b> (sous les listes) : <span class="grn">verte</span> en réception, <span class="red">rouge</span> en émission ; elle se remplit au cours de la période.</li>
   <li><b>Arrêts automatiques</b> : <span class="k">■ Arrêter</span> ou <kbd>Espace</kbd> ; le correspondant répond à quelqu'un d'autre ; le même message depuis 6 minutes sans réponse ; main perdue.</li>
   <li>En <b>SPLIT</b>, le message part sur l'autre VFO, comme le PTT.</li>
+</ul>
+<p><b>HOUND : contacter une DXpédition en FOX ou en SuperFox</b></p>
+<p>Les grandes DXpéditions FT8 trafiquent en <b>FOX</b> : la DXpédition (le FOX) fait plusieurs QSO à la fois, les stations qui l'appellent (les <b>HOUNDS</b>) suivent des règles précises que la Remote Station applique toute seule, comme WSJT-X.</p>
+<ul>
+  <li><b>Activité</b> (barre du haut, en FT8) : <b>HOUND · FOX</b> pour le FOX classique (plusieurs signaux FT8 sous 1000 Hz), <b>HOUND · SuperFox</b> pour le SuperFox (un seul signal large d'environ 1,5 kHz, vers 750 Hz, qui s'adresse à jusqu'à 9 stations à la fois). L'annonce de la DXpédition dit lequel utiliser, et sa fréquence (souvent pas la fréquence FT8 habituelle).</li>
+  <li><b>Appel</b> : double-clic sur le CQ du FOX → <b>Tx1</b> (« FOX ON5VL JO20 ») part en <b>2e période</b> (le FOX émet en 1re). Seuls <b>Tx1</b> et <b>Tx3</b> sont utilisables ; pas de CQ, pas de 73. La période est fixée sur « 2e ».</li>
+  <li><b>FOX classique</b> : on appelle <b>au-dessus de 1000 Hz</b> (si votre repère TX est plus bas, une fréquence est tirée au hasard entre 1000 et 2900 Hz). Quand le FOX vous donne un report, <b>Tx3</b> (« FOX ON5VL R-10 ») part tout seul <b>sur la fréquence où le FOX vous a appelé</b>, puis à 300 Hz de là s'il faut le répéter. Ses messages peuvent viser deux stations : « K1ABC RR73; ON5VL &lt;KH7Z&gt; -12 ».</li>
+  <li><b>SuperFox</b> : placez le repère <span class="grn">RX</span> (clic gauche) sur le bas du signal SuperFox (vers 750 Hz). La 1re période est décodée par le décodeur SuperFox de WSJT-X : chaque partie du message s'affiche sur sa ligne avec la marque <b>SF</b> (CQ, reports, RR73), et le mot de passe de la DXpédition avec la marque <b>OTP</b> (« $VERIFY$ … » : il prouve que le signal vient bien d'elle ; vérification possible sur 9dx.cc). Tout le QSO se fait sur votre fréquence d'appel (vous pouvez appeler n'importe où, aussi sous 1000 Hz).</li>
+  <li><b>Fin du QSO</b> : le <b>RR73</b> du FOX termine le QSO (on n'envoie pas de 73) ; la fiche « QSO terminé » s'ouvre (ou le QSO est enregistré tout seul selon le choix « Log »). Sans RR73 dans les 11 périodes qui suivent son report, l'émission s'arrête : rappelez-le avec Tx1.</li>
+  <li>Revenez sur <b>Normale</b> après la DXpédition : sinon les autres stations ne peuvent pas être appelées normalement (CQ, 73…).</li>
 </ul>
 <div class="tip"><b>Le décodeur</b>
 <ul>

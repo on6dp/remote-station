@@ -2401,3 +2401,26 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .vz-hd.b { border-color: #ff4fa3; background: rgba(28,6,18,.92); }
 .vz-hd.b .vz-id { background: #c2185b; }
 .vz-hd.b .vz-f { color: #fff; }
+/* HOUND (FT8 en DXpédition : FOX classique ou SuperFox) */
+.dg-hound { display: inline-flex; align-items: center; gap: 5px; }
+.dg-hound[hidden] { display: none; }
+.dg-hound select { font-weight: 700; color: #fff; }
+.dg-hound.on select { background: #6a1fb0; border-color: #d59bff; color: #fff; box-shadow: 0 0 6px rgba(190, 120, 255, .55); }
+.dg-hound.on .dg-f { color: #e2b8ff; font-weight: 800; }
+.dg-hound-tag { align-self: center; padding: 3px 9px; border-radius: 6px; background: #6a1fb0; border: 1px solid #d59bff; color: #fff; font: 800 12px/1.2 inherit; letter-spacing: .5px; white-space: nowrap; }
+.ctab-pane.hound #msgFtx .btn:disabled { opacity: .35; }
+.dg-sf { font-style: normal; font-size: 10px; font-weight: 800; color: #e2b8ff; margin-left: 4px; }
+.dg-row.sf .msg { color: #f0dcff; }
+/* Listes FT8 / FT4 / FT2 : colonnes séparées par un trait, intitulés dans des cases claires, texte brun foncé */
+.dg-th.ft, .dg-row.ft { column-gap: 0; }
+.dg-th.ft > span, .dg-row.ft > span { padding-inline: 4px; border-right: 1px solid rgba(150, 170, 195, .28); box-sizing: border-box; }
+.dg-th.ft > span:last-child, .dg-row.ft > span:last-child { border-right: 0; }
+.dg-th.ft { padding: 3px 6px; border-bottom: 0; }
+.dg-th.ft > span { background: #ecdcb6; color: #4a2508; font-weight: 800; font-size: 10.5px; letter-spacing: .6px; padding-block: 3px; border: 1px solid #8c6a3c; border-left-width: 0; }
+.dg-th.ft > span:first-child { border-left-width: 1px; border-radius: 4px 0 0 4px; }
+.dg-th.ft > span:last-child { border: 1px solid #8c6a3c; border-left-width: 0; border-radius: 0 4px 4px 0; }
+.dg-th.ft span:nth-child(5), .dg-row.ft span:nth-child(5) { padding-left: 8px; }
+.ft-dual .dg-th.ft > span:nth-child(5) { border-right: 1px solid #8c6a3c; border-radius: 0 4px 4px 0; }
+.ft-dual .dg-row.ft > span:nth-child(5) { border-right: 0; }
+.dg-th.ft, .dg-row.ft { grid-template-columns: 60px 36px 36px 46px minmax(130px, 3fr) minmax(0, 1.3fr) 60px 48px; }
+.ft-dual .dg-th.ft, .ft-dual .dg-row.ft { grid-template-columns: 56px 32px 34px 44px minmax(0, 1fr); }

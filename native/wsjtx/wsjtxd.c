@@ -11,6 +11,7 @@
  *     FT8 « classique » comme WSJT-X : stage=41 (11,8 s d'audio, phase 1) puis stage=50 (phase 2) sur le même id ;
  *     « mtd=1 » : décodeur multi-passes de type JTDX (plus lent, plus sensible), sur un id à part
  *   RELEASE id                              oublie l'audio d'une période
+ *   (HOUND : contest=7 hound=1, SuperFox : sf=1 even=1 date=AAMMJJ ; colonne ap des parties SuperFox = 100 + type)
  *   RESET                                   oublie tout l'historique
  * Sortie : « D snr dt fréq ap qualité message » par décodage, puis « E statut nombre ms ».
  */
@@ -43,7 +44,9 @@ static void on_obs(const decoder_observation *o, void *u)
   msg[38] = 0;
   for (int i = 37; i >= 0 && (msg[i] == ' ' || msg[i] == 0); i--) msg[i] = 0;
   if (!msg[0]) return;
-  printf("D\t%d\t%.2f\t%.1f\t%d\t%.2f\t%s\n", o->snr_db, o->dt_seconds, o->frequency_hz, o->ap_type, o->quality, msg);
+  /* SuperFox (HOUND) : colonne ap = 100 + type de la partie (1 CQ, 2 échange, 3 texte libre, 4 vérification OTP) */
+  int ap = o->mode == 8 && o->variant == DECODER_FT8_SUPERFOX ? 100 + o->superfox.kind : o->ap_type;
+  printf("D\t%d\t%.2f\t%.1f\t%d\t%.2f\t%s\n", o->snr_db, o->dt_seconds, o->frequency_hz, ap, o->quality, msg);
 }
 
 static double now_ms(void)
@@ -130,6 +133,12 @@ int main(void)
       else if (!strcmp(k, "even")) f8->even_sequence = (int)x;
       else if (!strcmp(k, "newband")) f8->band_changed = (int)x;
       else if (!strcmp(k, "src")) rq.source = (int)x;
+      /* HOUND (DXpédition) : contest=7 ; sf=1 = SuperFox (période paire : décodeur SuperFox) ; date=AAMMJJ */
+      else if (!strcmp(k, "contest")) { f8->contest = (int)x; f4->contest = (int)x; }
+      else if (!strcmp(k, "hound")) f8->hound = (int)x;
+      else if (!strcmp(k, "sf")) f8->superfox = (int)x;
+      else if (!strcmp(k, "date")) f8->date = (int)x;
+      else if (!strcmp(k, "tol")) f8->tolerance_hz = (int)x;
       else if (!strcmp(k, "mycall")) snprintf(mycall, sizeof mycall, "%s", v);
       else if (!strcmp(k, "mybase")) snprintf(mybase, sizeof mybase, "%s", v);
       else if (!strcmp(k, "hiscall")) snprintf(hiscall, sizeof hiscall, "%s", v);

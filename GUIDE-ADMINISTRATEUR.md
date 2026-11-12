@@ -344,6 +344,8 @@ Conseil : régler aussi le **temporisateur d'émission (TOT)** dans le menu du T
 
 **Ampli linéaire** : la limite de puissance porte sur le TRX ; un ampli externe doit être hors circuit quand un ON3 opère.
 
+**FT8 en HOUND (DXpédition FOX / SuperFox)** : choisi dans l'onglet FT8 (« Activité ») par celui qui a la main, pour toute la station ; noté dans le journal (`hound`, `v` : 0 normale, 1 FOX, 2 SuperFox). En HOUND, le serveur n'autorise que Tx1 et Tx3, en 2e période ; arrêt sans RR73 du FOX après 11 périodes. Le décodeur SuperFox est dans le moteur WSJT-X fourni (`lib/bin/wsjtxd`, `wsjtxd.exe`) : rien à installer. Pensez à remettre « Normale » après une DXpédition.
+
 ---
 
 ## 9. Phonie à distance et égaliseurs

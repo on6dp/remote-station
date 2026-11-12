@@ -594,6 +594,7 @@ FT8 est un mode numérique fait pour les signaux très faibles : chaque station 
 | `TX ← RX` | Émettre sur la même fréquence audio que la réception. |
 | `RX ← TX` | Recevoir sur la fréquence audio d'émission. |
 | **Période** auto / 1re / 2e | Dans quelle période émettre. « auto » : à l'opposé du correspondant choisi (c'est presque toujours ce qu'il faut) ; « 1re » = 00 et 30 s, « 2e » = 15 et 45 s en FT8. |
+| **Activité** Normale / HOUND · FOX / HOUND · SuperFox | FT8 seulement. Pour contacter une **DXpédition** qui trafique en FOX ou en SuperFox (section « HOUND » plus bas). Choisi par celui qui a la main, pour toute la station ; en violet quand un mode HOUND est actif. |
 | ☐ **Répondre au 1er** | Quand vous lancez CQ (Tx6), la première station qui répond devient le correspondant et le QSO se déroule tout seul (« Call 1st » de WSJT-X). |
 | ☐ **Spot cluster** | Chaque QSO enregistré dans le carnet (fiche « QSO terminé », log automatique ou fiche Log QSO des onglets RTTY, JTTY et CW) est aussi spoté sur le DX cluster sous **votre indicatif d'opérateur**, pas le TX call (même case dans la fenêtre « QSO terminé » et dans les pages TRX SSB / TRX CW). Indépendamment de cette case, les stations FT8 / FT4 / FT2 **décodées** par la station sont envoyées toutes les 5 minutes à **PSK Reporter** (pskreporter.info), sous l'indicatif et le locator de la station, comme le fait WSJT-X. |
 | `■ Arrêter` | Coupe l'émission automatique tout de suite (« Halt Tx »). La barre `Espace` fait de même. |
@@ -639,6 +640,17 @@ FT8 est un mode numérique fait pour les signaux très faibles : chaque station 
 - **Barre de période** (sous les listes) : verte en réception, rouge en émission ; elle se remplit au cours de la période.
 - **Arrêts automatiques** : `■ Arrêter` ou `Espace` ; le correspondant répond à quelqu'un d'autre ; le même message depuis 6 minutes sans réponse ; main perdue.
 - En **SPLIT**, le message part sur l'autre VFO, comme le PTT.
+
+**HOUND : contacter une DXpédition en FOX ou en SuperFox**
+
+Les grandes DXpéditions FT8 trafiquent en **FOX** : la DXpédition (le FOX) fait plusieurs QSO à la fois, les stations qui l'appellent (les **HOUNDS**) suivent des règles précises que la Remote Station applique toute seule, comme WSJT-X.
+
+- **Activité** (barre du haut, en FT8) : **HOUND · FOX** pour le FOX classique (plusieurs signaux FT8 sous 1000 Hz), **HOUND · SuperFox** pour le SuperFox (un seul signal large d'environ 1,5 kHz, vers 750 Hz, qui s'adresse à jusqu'à 9 stations à la fois). L'annonce de la DXpédition dit lequel utiliser, et sa fréquence (souvent pas la fréquence FT8 habituelle).
+- **Appel** : double-clic sur le CQ du FOX → **Tx1** (« FOX ON5VL JO20 ») part en **2e période** (le FOX émet en 1re). Seuls **Tx1** et **Tx3** sont utilisables ; pas de CQ, pas de 73. La période est fixée sur « 2e ».
+- **FOX classique** : on appelle **au-dessus de 1000 Hz** (si votre repère TX est plus bas, une fréquence est tirée au hasard entre 1000 et 2900 Hz). Quand le FOX vous donne un report, **Tx3** (« FOX ON5VL R-10 ») part tout seul **sur la fréquence où le FOX vous a appelé**, puis à 300 Hz de là s'il faut le répéter. Ses messages peuvent viser deux stations : « K1ABC RR73; ON5VL <KH7Z> -12 ».
+- **SuperFox** : placez le repère RX (clic gauche) sur le bas du signal SuperFox (vers 750 Hz). La 1re période est décodée par le décodeur SuperFox de WSJT-X : chaque partie du message s'affiche sur sa ligne avec la marque **SF** (CQ, reports, RR73), et le mot de passe de la DXpédition avec la marque **OTP** (« $VERIFY$ … » : il prouve que le signal vient bien d'elle ; vérification possible sur 9dx.cc). Tout le QSO se fait sur votre fréquence d'appel (vous pouvez appeler n'importe où, aussi sous 1000 Hz).
+- **Fin du QSO** : le **RR73** du FOX termine le QSO (on n'envoie pas de 73) ; la fiche « QSO terminé » s'ouvre (ou le QSO est enregistré tout seul selon le choix « Log »). Sans RR73 dans les 11 périodes qui suivent son report, l'émission s'arrête : rappelez-le avec Tx1.
+- Revenez sur **Normale** après la DXpédition : sinon les autres stations ne peuvent pas être appelées normalement (CQ, 73…).
 
 > [!TIP]
 > **Le décodeur**

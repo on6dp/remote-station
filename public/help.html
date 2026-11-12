@@ -561,6 +561,7 @@ A complete QSO takes about a minute and a half. <b>FT4</b> is twice as fast (7.5
   <tr><td><span class="k">TX ← RX</span></td><td>Transmit on the same audio frequency as receive.</td></tr>
   <tr><td><span class="k">RX ← TX</span></td><td>Receive on the transmit audio frequency.</td></tr>
   <tr><td><b>Période</b> (period) auto / 1re / 2e</td><td>Which period to transmit in. « auto »: opposite to the chosen correspondent (almost always what you want); « 1re » (1st) = 00 and 30 s, « 2e » (2nd) = 15 and 45 s in FT8.</td></tr>
+  <tr><td><b>Activité</b> Normale / HOUND · FOX / HOUND · SuperFox</td><td>FT8 only. To work a <b>DXpedition</b> running FOX or SuperFox (see "HOUND" below). Chosen by whoever has control, for the whole station; purple when a HOUND mode is on.</td></tr>
   <tr><td>☐ <b>Répondre au 1er</b> (answer the first)</td><td>When you call CQ (Tx6), the first station to answer becomes the correspondent and the QSO runs by itself (WSJT-X's "Call 1st").</td></tr>
   <tr><td>☐ <b>Spot cluster</b></td><td>Each QSO logged (« QSO terminé » window, automatic logging or the Log QSO form of the RTTY, JTTY and CW tabs) is also spotted on the DX cluster under <b>your operator call</b>, not the TX call (same box in the « QSO terminé » window and in the TRX SSB / TRX CW pages). Independently of this box, the FT8 / FT4 / FT2 stations <b>decoded</b> by the station are sent every 5 minutes to <b>PSK Reporter</b> (pskreporter.info), under the station call and locator, as WSJT-X does.</td></tr>
   <tr><td><span class="k">■ Arrêter</span></td><td>Stops automatic transmission at once ("Halt Tx"). The <kbd>Space</kbd> bar does the same.</td></tr>
@@ -607,6 +608,16 @@ For transmitting, choose a clear spot in the waterfall. A white line marks the s
   <li><b>Period bar</b> (below the lists): <span class="grn">green</span> while receiving, <span class="red">red</span> while transmitting; it fills up during the period.</li>
   <li><b>Automatic stops</b>: <span class="k">■ Arrêter</span> or <kbd>Space</kbd>; the correspondent answers someone else; the same message for 6 minutes without an answer; control lost.</li>
   <li>In <b>SPLIT</b>, the message goes out on the other VFO, like the PTT.</li>
+</ul>
+<p><b>HOUND: working a DXpedition in FOX or SuperFox mode</b></p>
+<p>Big FT8 DXpeditions run <b>FOX</b> mode: the DXpedition (the FOX) works several stations at once, and the callers (the <b>HOUNDS</b>) follow strict rules that the Remote Station applies by itself, as WSJT-X does.</p>
+<ul>
+  <li><b>Activité</b> (top bar, FT8): <b>HOUND · FOX</b> for classic FOX (several FT8 signals below 1000 Hz), <b>HOUND · SuperFox</b> for SuperFox (one wide signal of about 1.5 kHz around 750 Hz, addressing up to 9 stations at once). The DXpedition's announcement says which one and its frequency (often not the usual FT8 frequency).</li>
+  <li><b>Calling</b>: double-click the FOX's CQ → <b>Tx1</b> ("FOX ON5VL JO20") goes out in the <b>2nd period</b> (the FOX transmits in the 1st). Only <b>Tx1</b> and <b>Tx3</b> can be used; no CQ, no 73. The period is locked to "2e".</li>
+  <li><b>Classic FOX</b>: call <b>above 1000 Hz</b> (if your TX marker is lower, a random frequency between 1000 and 2900 Hz is used). When the FOX gives you a report, <b>Tx3</b> ("FOX ON5VL R-10") goes out by itself <b>on the frequency where the FOX called you</b>, then 300 Hz away if it must be repeated. Its messages can address two stations: "K1ABC RR73; ON5VL &lt;KH7Z&gt; -12".</li>
+  <li><b>SuperFox</b>: put the <span class="grn">RX</span> marker (left click) on the low edge of the SuperFox signal (around 750 Hz). The 1st period is decoded by WSJT-X's SuperFox decoder: each part of the message is shown on its own line marked <b>SF</b> (CQ, reports, RR73), and the DXpedition's password marked <b>OTP</b> ("$VERIFY$ …": it proves the signal really comes from the DXpedition; it can be checked on 9dx.cc). The whole QSO stays on your calling frequency (you may call anywhere, below 1000 Hz too).</li>
+  <li><b>End of QSO</b>: the FOX's <b>RR73</b> ends the QSO (no 73 is sent); the "QSO terminé" form opens (or the QSO is logged by itself, according to "Log"). With no RR73 within 11 periods after its report, transmitting stops: call it again with Tx1.</li>
+  <li>Go back to <b>Normale</b> after the DXpedition, otherwise other stations cannot be worked normally (CQ, 73…).</li>
 </ul>
 <div class="tip"><b>The decoder</b>
 <ul>

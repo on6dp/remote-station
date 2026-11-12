@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.0** — FT8 HOUND : DXpéditions en FOX classique et en SuperFox (décodeur SuperFox de WSJT-X, Tx1 / Tx3 en 2e période, R+report sur la fréquence du FOX, RR73 = QSO terminé) ; listes FT8 : colonnes séparées, intitulés dans des cases claires en brun foncé
 - **0.37.382** — TRX DIGI du dashboard : FTDX101 en DUAL RX = deux cascades, quatre colonnes (activité de bande et fréquence RX de chaque VFO) et deux cartes de bande (bande de chaque VFO) ; TRX à un seul récepteur : une cascade, deux colonnes, une carte
 - **0.37.381** — Cadres agrandis : bandeau d'identité du VFO (VFO A · MAIN en vert, VFO B · SUB en rose), fréquence, mode, bande et nom du cadre
 - **0.37.380** — Cadres RF FRONT END, FILTRES et DSP : suivent le VFO choisi (touches VFO A / B), comme les modes — B · SUB quand B est choisi (FTDX101, FTDX5000)

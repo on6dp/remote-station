@@ -205,6 +205,7 @@
       <select id="dgPar" class="dg-par" aria-label="Période d'émission" title="Période d'émission. Auto : à l'opposé du correspondant choisi (double-clic sur son message), sinon la prochaine période. 1re = 00 / 30 s en FT8.">
         <option value="auto">auto</option><option value="0">1re</option><option value="1">2e</option>
       </select>
+      <label class="dg-hound" id="dgHoundWrap" title="DXpédition en FT8 : HOUND = vous appelez une DXpédition qui trafique en FOX (FOX classique, plusieurs QSO à la fois) ou en SuperFox (un seul signal large de 1,5 kHz, jusqu'à 9 stations à la fois). Choisi par celui qui a la main, pour toute la station."><span class="dg-f">Activité</span> <select id="dgHound"><option value="0">Normale</option><option value="1">HOUND · FOX</option><option value="2">HOUND · SuperFox</option></select></label>
       <label class="dg-chk" title="En appel CQ (Tx6), celui qui vous répond devient le correspondant et la séquence continue toute seule (Call 1st de WSJT-X)"><input type="checkbox" id="dgCall1st"> Répondre au 1er</label>
       <label class="dg-chk dg-alog" title="Fin du QSO (RR73 / 73) : fiche « QSO terminé » à confirmer, ou QSO enregistré tout seul dans le carnet (Log automatically de WSJT-X)">Log <select id="dgAutoLog">
         <option value="">fiche à confirmer</option>
@@ -3900,7 +3901,13 @@
   function pickFromDecode(d, slot, side) {
     if (ftDual) { ftSide = side === 'B' ? 'B' : 'A'; sideBtns(); } // TX automatique sur le VFO de la station appelée
     if (slot && SLOT_MS[mode]) dxPar = { mode, call: '', parity: Math.round(slot / SLOT_MS[mode]) % 2 };
-    const w = d.msg.toUpperCase().split(/\s+/).map((x) => x.replace(/^<|>$/g, ''));
+    let w = d.msg.toUpperCase().split(/\s+/).map((x) => x.replace(/^<|>$/g, ''));
+    // Message DXpédition du FOX : la partie qui nous concerne (ou la 2e), réécrite « DESTINATAIRE FOX CONTENU »
+    const fx = foxOf(d.msg);
+    if (fx) {
+      const t = d.msg.toUpperCase().split(/\s+/);
+      w = stationCalls.indexOf(t[0]) >= 0 ? [t[0], fx, 'RR73'] : [t[2], fx, t[4]];
+    }
     let call = '';
     if (w[0] === 'CQ') call = CALL_RE.test(w[1] || '') ? w[1] : (w[2] || '');
     else call = w[1] || '';
@@ -3913,6 +3920,12 @@
     const toMe = stationCalls.indexOf(w[0]) >= 0;
     const p = toMe ? (w[2] || '') : '';
     ftxSel = !toMe ? 0 : GRID_RE.test(p) && p !== 'RR73' ? 1 : /^[+-]\d{2}$/.test(p) ? 2 : /^R[+-]\d{2}$/.test(p) ? 3 : /^(RRR|RR73)$/.test(p) ? 4 : p === '73' ? 4 : 0;
+    // HOUND : appel du FOX (Tx1), ou R + report (Tx3) s'il nous a déjà donné un report ; son RR73 : rien à envoyer
+    if (houndOn()) {
+      if (toMe && /^(RRR|RR73|73)$/.test(p)) { drawMsgs(); return api && api.say('Le FOX ' + call + ' vous a confirmé le QSO (RR73).', '', 5000); }
+      ftxSel = toMe && /^[+-]\d{2}$/.test(p) ? 2 : 0;
+      if (dxPar) dxPar.parity = 0;
+    }
     store.set('ftxsel', ftxSel);
     drawMsgs();
     // Comme WSJT-X (« Double-click on call sets Tx enable ») : avec la main, l'émission part à la période suivante
@@ -3958,11 +3971,18 @@
     };
     const f = $('msgFtx');
     f.textContent = '';
-    ftxMsgs().forEach((t, i) => mk(f, 'Tx' + (i + 1), t, () => ftxSend(i, t), i === ftxSel)
-      .title = 'Clic : ce message part à chaque période (FT8 / FT4 / FT2 selon l’onglet) jusqu’à la réponse ; la séquence avance toute seule. ■ Arrêter pour couper.');
+    const hd = houndOn();
+    ftxMsgs().forEach((t, i) => {
+      const b = mk(f, 'Tx' + (i + 1), t, () => ftxSend(i, t), i === ftxSel);
+      b.title = 'Clic : ce message part à chaque période (FT8 / FT4 / FT2 selon l’onglet) jusqu’à la réponse ; la séquence avance toute seule. ■ Arrêter pour couper.';
+      if (hd && i !== 0 && i !== 2) { b.disabled = true; b.title = 'HOUND : seulement Tx1 (appel du FOX) et Tx3 (R + report). Pas de CQ ni de 73 : le FOX termine le QSO par RR73.'; }
+      if (hd && i === 0) b.title = 'HOUND : appel du FOX en 2e période (FOX classique : au-dessus de 1000 Hz). Quand le FOX vous donne un report, Tx3 part tout seul ; son RR73 termine le QSO.';
+    });
+    if (hd) { const h = f.ownerDocument.createElement('span'); h.className = 'dg-hound-tag'; h.textContent = (api.state().hound === 2 ? 'HOUND · SuperFox' : 'HOUND · FOX'); f.insertBefore(h, f.firstChild); }
     // Tx7 : texte libre de 13 caractères au plus (comme WSJT-X)
     const free = String(store.get('ftxfree', '')).toUpperCase();
     const fb = mk(f, 'Tx7', free || 'texte libre…', () => (free ? ftxSend(6, free) : editFree(f.ownerDocument)), ftxSel === 6);
+    if (hd) fb.disabled = true;
     fb.title = 'Texte libre FT8 / FT4 / FT2 (13 caractères) · clic : émission · clic droit : modifier';
     fb.addEventListener('contextmenu', (e) => { e.preventDefault(); editFree(fb.ownerDocument); });
     const ed = mk(f, '', '✎', () => editFree(f.ownerDocument));
@@ -4300,9 +4320,30 @@
     }
   }
 
+  // HOUND (FT8 en DXpédition) : réglage de la station (st.hound) ; Tx1 et Tx3 seulement, 2e période imposée
+  const houndOn = () => { const st = api && api.state && api.state(); return !!(st && st.hound && mode === 'FT8' && tab === 'ftx'); };
+  let houndSeen = '';
+  function houndUi() {
+    const sel = $('dgHound'), wrap = $('dgHoundWrap');
+    if (!sel || !wrap || !api) return;
+    const st = api.state();
+    const v = (st && st.hound) || 0;
+    wrap.hidden = mode !== 'FT8';
+    if (document.activeElement !== sel) sel.value = String(v);
+    sel.disabled = !api.iControl();
+    wrap.classList.toggle('on', !!v);
+    const on = houndOn();
+    const pane = document.querySelector('#centerPanel .ctab-pane[data-pane="ftx"]');
+    if (pane) pane.classList.toggle('hound', on);
+    if ($('dgPar')) { $('dgPar').disabled = on; if (on) $('dgPar').value = '1'; else if ($('dgPar').value !== store.get('ftxpar', 'auto')) $('dgPar').value = store.get('ftxpar', 'auto'); }
+    if ($('dgCall1st')) $('dgCall1st').disabled = on;
+    const k = on + '|' + v;
+    if (k !== houndSeen) { houndSeen = k; drawMsgs(); }
+  }
   let lastTxAt = 0;
   let seqSeen = '';
   function ftxState() {
+    houndUi();
     const st = api && api.state();
     const x = st && st.ftx;
     const sq = st && st.seq;
@@ -4320,6 +4361,11 @@
     if (!hold && ftDual && !(sq && sq.on && mine) && rr && (rr.txVfo === 0 || rr.txVfo === 1) && (rr.txVfo === 1 ? 'B' : 'A') !== ftSide) {
       ftSide = rr.txVfo === 1 ? 'B' : 'A';
       sideBtns();
+      drawScale();
+    }
+    // HOUND : la fréquence d'émission est fixée par le serveur (appel au-dessus de 1000 Hz, fréquence du FOX…)
+    if (mine && sq.on && sq.hound && sq.f0 && sq.f0 !== curTxF()) {
+      if (sd() === 'B') { txFB = sq.f0; store.set('txfb', sq.f0); } else { txF = sq.f0; store.set('txf', sq.f0); }
       drawScale();
     }
     // Séquence automatique : le message choisi et le correspondant suivent ce que décide le serveur
@@ -4707,7 +4753,9 @@
   const pad = (n) => String(n).padStart(2, '0');
   // FT2 : périodes de 3,75 s (…:18,75) → dixième de seconde affiché
   const utc = (ms) => { const d = new Date(ms); return pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + (ms % 1000 ? '.' + Math.floor((ms % 1000) / 100) : ''); };
-  const callsIn = (msg) => msg.toUpperCase().split(/\s+/).map((w) => w.replace(/^<|>$/g, ''));
+  const callsIn = (msg) => msg.toUpperCase().split(/\s+/).map((w) => w.replace(/^<|>$|;$/g, ''));
+  // Message DXpédition du FOX : « K1ABC RR73; W9XYZ <KH7Z> -08 » → indicatif du FOX (4e mot)
+  const foxOf = (msg) => { const x = /^\S+ RR73; \S+ <?([A-Z0-9/]+)>? [+-]\d{2}$/.exec(String(msg || '').toUpperCase().trim()); return x ? x[1] : ''; };
   function cls(msg) {
     const w = callsIn(msg);
     if (w.some((x) => stationCalls.indexOf(x) >= 0)) return 'me';
@@ -4716,6 +4764,8 @@
   }
   // Indicatif de la station qui émet ce message (celui que reprend un double-clic), sinon ''
   function senderOf(msg) {
+    if (foxOf(msg)) return CALL_RE.test(foxOf(msg)) ? foxOf(msg) : '';
+    if (/^\$VERIFY\$/.test(String(msg))) return '';
     const w = callsIn(msg);
     const c = w[0] === 'CQ' ? (CALL_RE.test(w[1] || '') ? w[1] : w[2] || '') : w[1] || '';
     return CALL_RE.test(c) && stationCalls.indexOf(c) < 0 && String(msg).toUpperCase().indexOf(c) >= 0 ? c : '';
@@ -4764,6 +4814,16 @@
       }
       r.appendChild(s);
     });
+    // Partie d'un message SuperFox : repère « SF » (et « OTP » pour la vérification du FOX)
+    if (!d.tx && d.sf && r.querySelector('span.msg')) {
+      const a = document.createElement('i');
+      a.className = 'dg-sf';
+      a.textContent = d.sf === 4 ? ' OTP' : ' SF';
+      a.title = d.sf === 4 ? 'Mot de passe à usage unique (OTP) du SuperFox : il prouve que le signal vient bien de la DXpédition (vérifiable sur 9dx.cc avec l’indicatif, la date et l’heure)'
+        : 'Partie d’un message SuperFox (un seul signal large qui s’adresse à plusieurs stations à la fois)';
+      r.querySelector('span.msg').appendChild(a);
+      r.classList.add('sf');
+    }
     // Décodage aidé « a priori » (AP) : repère « a1 »… après le message, comme WSJT-X
     if (!d.tx && d.ap > 0 && r.querySelector('span.msg')) {
       const a = document.createElement('i');
@@ -5433,6 +5493,13 @@
       $('dgTxRx').addEventListener('click', () => setTx(sd() === 'B' ? rxFB : rxF, sd()));
       $('dgPar').value = store.get('ftxpar', 'auto');
       $('dgPar').addEventListener('change', () => { store.set('ftxpar', $('dgPar').value); ftxCfg(); });
+      $('dgHound').addEventListener('change', () => {
+        const v = Number($('dgHound').value) || 0;
+        if (!api || !api.iControl()) { houndUi(); return api && api.say('Prenez d’abord la main pour choisir l’activité HOUND.', 'warn'); }
+        api.send({ t: 'ftx_hound', v });
+        if (v) api.say(v === 2 ? 'HOUND SuperFox : placez le repère RX (clic gauche) sur le bas du signal SuperFox (vers 750 Hz), double-cliquez sur le CQ du FOX, vous appelez en 2e période sur votre fréquence TX.'
+          : 'HOUND (FOX classique) : double-cliquez sur le CQ du FOX ; vous appelez en 2e période au-dessus de 1000 Hz, le R+report part tout seul sur la fréquence où le FOX vous appelle.', '', 12000);
+      });
       $('dgCall1st').checked = store.get('call1st', '1') === '1';
       $('dgCall1st').addEventListener('change', () => { store.set('call1st', $('dgCall1st').checked ? '1' : '0'); ftxCfg(); });
       if ($('dgAutoLog')) {
