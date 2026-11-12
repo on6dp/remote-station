@@ -2547,3 +2547,5 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .vz-big .sp-line { stroke-width: 1.6; }
 /* TXW enfoncé : fond blanc, texte noir (plus fort que le blanc gras des boutons de la barre) */
 #sec-dual #txwBtn[aria-pressed='true'], #sec-dual #txwBtn.held, #sec-dual #txwBtn:active { color: #000; background: #fff; border-color: #fff; font-weight: 900; }
+/* « VFO-A · MAIN » et « VFO-B · SUB » : exactement la même police */
+.ft-dual .wf-ctl .ft-wfa, .ft-dual .ft-wfa, .wf-ctl .ft-wfbl, .ft-wfbl { font-family: Verdana, "DejaVu Sans", Arial, sans-serif; font-size: 16px; font-weight: 800; letter-spacing: .3px; color: #fff; line-height: 1.2; text-transform: none; }

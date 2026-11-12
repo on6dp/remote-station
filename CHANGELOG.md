@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.30** — « VFO-A · MAIN » et « VFO-B · SUB » : même police (16 px, blanc gras)
 - **0.38.29** — TXW enfoncé : texte noir sur fond blanc
 - **0.38.28** — Spectre BF des cadres VFO : courbe verte fine avec surface dégradée (comme le spectre des modes numériques), aussi en grand
 - **0.38.27** — Listes FT : bouton Effacer aussi dans les colonnes Fréquence RX (VFO-A et VFO-B)
