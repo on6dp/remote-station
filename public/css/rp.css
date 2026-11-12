@@ -2495,3 +2495,7 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dg-spspd { position: absolute; left: 6px; z-index: 5; display: inline-flex; gap: 2px; }
 .dg-spspd button { font: 800 10px/1 inherit; padding: 2px 5px; border: 1px solid #fff; border-radius: 3px; background: rgba(5, 8, 13, .8); color: #fff; cursor: pointer; }
 .dg-spspd button[aria-pressed='true'] { background: #fff; color: #000; }
+/* Barre FT : « Période » un peu écartée de la fréquence TX ; listes Période et Activité encadrées de blanc */
+.dg-bar .dg-perl { margin-left: 14px; }
+.dg-bar #dgPar, .dg-bar #dgHound { border: 1px solid #fff; color: #fff; font-weight: 800; }
+.dg-hound.on #dgHound { border-color: #fff; }

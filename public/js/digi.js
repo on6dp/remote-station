@@ -204,11 +204,11 @@
         <button class="btn" type="button" id="dgRxTx" title="Recevoir sur la fréquence d'émission">RX ← TX</button>
         <span class="dg-f tx">TX <b id="dgTxF">1500</b> Hz</span>
       </span>
-      <span class="dg-f">Période</span>
+      <span class="dg-f dg-perl">Période</span>
       <select id="dgPar" class="dg-par" aria-label="Période d'émission" title="Période d'émission. Auto : à l'opposé du correspondant choisi (double-clic sur son message), sinon la prochaine période. 1re = 00 / 30 s en FT8.">
         <option value="auto">auto</option><option value="0">1re</option><option value="1">2e</option>
       </select>
-      <label class="dg-hound" id="dgHoundWrap" title="DXpédition en FT8 : HOUND = vous appelez une DXpédition qui trafique en FOX (FOX classique, plusieurs QSO à la fois) ou en SuperFox (un seul signal large de 1,5 kHz, jusqu'à 9 stations à la fois). Choisi par celui qui a la main, pour toute la station."><span class="dg-f">Activité</span> <select id="dgHound"><option value="0">Normale</option><option value="1">HOUND · FOX</option><option value="2">HOUND · SuperFox</option></select></label>
+      <label class="dg-hound" id="dgHoundWrap" title="DXpédition en FT8 : HOUND = vous appelez une DXpédition qui trafique en FOX (FOX classique, plusieurs QSO à la fois) ou en SuperFox (un seul signal large de 1,5 kHz, jusqu'à 9 stations à la fois). Choisi par celui qui a la main, pour toute la station."><span class="dg-f">Activité</span> <select id="dgHound"><option value="0">NORMALE</option><option value="1">HOUND · FOX</option><option value="2">HOUND · SuperFox</option></select></label>
       <label class="dg-chk" title="En appel CQ (Tx6), celui qui vous répond devient le correspondant et la séquence continue toute seule (Call 1st de WSJT-X)"><input type="checkbox" id="dgCall1st"> Répondre au 1er</label>
       <label class="dg-chk dg-alog" title="Fin du QSO (RR73 / 73) : fiche « QSO terminé » à confirmer, ou QSO enregistré tout seul dans le carnet (Log automatically de WSJT-X)">Log <select id="dgAutoLog">
         <option value="">fiche à confirmer</option>
