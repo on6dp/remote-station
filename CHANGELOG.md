@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.349** — Dashboard : badges d'état de l'écran VFO (ATT, IPO, NB, DNR, NOTCH, DNF, NAR…) éteints encadrés de blanc, texte blanc gras
 - **0.37.348** — Dashboard : noms des boutons des cadres en blanc gras même sans la main (juste un peu atténués)
 - **0.37.347** — Dashboard : cadre DSP — boutons encadrés de blanc, noms en blanc ; enclenchés en couleurs inversées (fond blanc, nom noir gras)
 - **0.37.346** — Dashboard : cadran à aiguille dans chaque VFO (S, PO en W, COMP Yaesu / SWR Icom ; aiguille S-mètre en RX, puissance en TX), à côté du petit filtre ou en dessous si la place manque ; échelles selon le TRX

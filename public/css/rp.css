@@ -2271,3 +2271,6 @@ section[data-panel="tx"] > .panel-h { color: #ffd400; }
 #sec-dsp .btn[data-ctl][aria-pressed='true'] { background: #fff; color: #000; border-color: #fff; font-weight: 900; text-shadow: none; box-shadow: 0 0 8px rgba(255, 255, 255, .45); }
 /* Boutons des cadres sans la main (grisés) : nom quand même en blanc gras, juste un peu atténué */
 .panel-b .btn[data-ctl]:disabled, .panel-b .seg .btn:disabled, .panel-b .seg-fill .btn:disabled, #sec-dual .btn:disabled:not([data-ctl='lock']) { color: #fff; font-weight: 800; opacity: .72; border-color: #fff; }
+/* Badges d'état de l'écran VFO (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC…) éteints : encadré blanc, texte blanc gras ;
+   allumés : couleurs inchangées */
+.vfo-badges .badge:not(.amber):not(.green):not(.cyan) { border-color: #fff; color: #fff; font-weight: 800; }
