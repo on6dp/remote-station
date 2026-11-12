@@ -2330,3 +2330,5 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dxc-tel-it.cur span::before { content: '● '; }
 /* Cadre des mesures (Po, SWR, ALC, Id, Vd, COMP, S) : valeurs en blanc gras */
 .mt .mt-v, .mt.live .mt-v { color: #fff; font-weight: 800; }
+/* Cadre TX : « PUISSANCE » (et les autres intitulés) en jaune comme les autres réglages */
+[data-panel=tx] .ctl-label { color: var(--v2-accent-yellow); font-weight: 800; }

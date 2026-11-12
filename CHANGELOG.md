@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.366** — Cadre TX : PUISSANCE en jaune
 - **0.37.365** — Cadre DSP : DNF à côté de NOTCH
 - **0.37.364** — Molette sur NB / DNR : les réglettes NIVEAU NB / DNR suivent tout de suite ; colonne de droite côté SUB quand SUB est actif
 - **0.37.363** — Cadre FILTRES : curseurs Fréquence CONTOUR et Fréquence APF (suivent le VFO sélectionné) ; cadran : 4 écrans (S/PO/SWR, S/PO/COMP, S/SWR/ALC, Po/Id/Vd)
