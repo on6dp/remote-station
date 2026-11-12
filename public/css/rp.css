@@ -2269,3 +2269,5 @@ section[data-panel="tx"] > .panel-h { color: #ffd400; }
 /* Cadre DSP (NB, DNR, NOTCH, DNF…) : encadré blanc, nom en blanc ; enclenché = couleurs inversées (fond blanc, nom noir gras) */
 #sec-dsp .btn[data-ctl] { border-color: #fff; color: #fff; font-weight: 800; }
 #sec-dsp .btn[data-ctl][aria-pressed='true'] { background: #fff; color: #000; border-color: #fff; font-weight: 900; text-shadow: none; box-shadow: 0 0 8px rgba(255, 255, 255, .45); }
+/* Boutons des cadres sans la main (grisés) : nom quand même en blanc gras, juste un peu atténué */
+.panel-b .btn[data-ctl]:disabled, .panel-b .seg .btn:disabled, .panel-b .seg-fill .btn:disabled, #sec-dual .btn:disabled:not([data-ctl='lock']) { color: #fff; font-weight: 800; opacity: .72; border-color: #fff; }
