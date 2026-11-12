@@ -2522,12 +2522,14 @@
     if ($('bmPop')) $('bmPop').addEventListener('click', (e) => { e.stopPropagation(); document.dispatchEvent(new CustomEvent('rs-bm-pop')); });
     // Poignée sur le bord gauche : largeur de la carte de bande, gardée dans ce navigateur
     const root = document.documentElement;
-    const setW = (w, save) => {
-      if (w == null) { root.style.removeProperty('--bm-w'); if (save) store.set('bmw', ''); }
+    // b = carte du VFO-B (double réception) : sa propre largeur (--bm-wb), indépendante de celle du VFO-A
+    const setW = (w, save, b) => {
+      const v = b ? '--bm-wb' : '--bm-w', k = b ? 'bmwb' : 'bmw';
+      if (w == null) { root.style.removeProperty(v); if (save) store.set(k, ''); }
       else {
         w = Math.max(120, Math.min(520, Math.round(w)));
-        root.style.setProperty('--bm-w', w + 'px');
-        if (save) store.set('bmw', String(w));
+        root.style.setProperty(v, w + 'px');
+        if (save) store.set(k, String(w));
       }
       bmPlace();
       if (WF_TABS.indexOf(tab) >= 0) sizeCanvas();
@@ -2535,8 +2537,10 @@
     };
     const saved = Number(store.get('bmw', ''));
     if (saved >= 120) setW(saved, false);
+    const savedB = Number(store.get('bmwb', ''));
+    if (savedB >= 120) setW(savedB, false, true);
     // Poignées : carte du VFO-A (bord droit en double réception ou dans la page TRX DIGI, sinon bord gauche) ;
-    // carte du VFO-B (bord gauche). Les deux cartes ont la même largeur.
+    // carte du VFO-B (bord gauche). Chaque carte a sa propre largeur.
     for (const grip of [$('bmGrip'), $('bmGripB')].filter(Boolean)) {
     const isB = grip.id === 'bmGripB';
     grip.addEventListener('pointerdown', (e) => {
@@ -2544,21 +2548,21 @@
       e.stopPropagation();
       grip.setPointerCapture(e.pointerId);
       const zf = (window.RSZOOM && window.RSZOOM.z()) || 1;
-      const x0 = e.clientX, w0 = $('bandMap').getBoundingClientRect().width / zf;
+      const x0 = e.clientX, w0 = $(isB ? 'bandMapB' : 'bandMap').getBoundingClientRect().width / zf;
       document.body.classList.add('bm-resizing');
       // Carte à gauche (page TRX DIGI, ou VFO-A en double réception) : poignée sur son bord droit (sens inversé)
       const sg = !isB && (document.body.classList.contains('digi-popup') || $('centerPanel').classList.contains('bm-dual')) ? -1 : 1;
-      const mv = (ev) => setW(w0 - sg * (ev.clientX - x0) / zf, false);
+      const mv = (ev) => setW(w0 - sg * (ev.clientX - x0) / zf, false, isB);
       const up = (ev) => {
         grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up);
         document.body.classList.remove('bm-resizing');
-        setW(w0 - sg * (ev.clientX - x0) / zf, true);
+        setW(w0 - sg * (ev.clientX - x0) / zf, true, isB);
       };
       grip.addEventListener('pointermove', mv);
       grip.addEventListener('pointerup', up);
       grip.addEventListener('pointercancel', up);
     });
-    grip.addEventListener('dblclick', (e) => { e.stopPropagation(); setW(null, true); });
+    grip.addEventListener('dblclick', (e) => { e.stopPropagation(); setW(null, true, isB); });
     }
     window.addEventListener('resize', () => { if (BM_TABS.indexOf(tab) >= 0) bmShow(); });
   }

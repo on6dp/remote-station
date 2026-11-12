@@ -2561,3 +2561,8 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dg-mk.dg-mk-n { width: 0 !important; border-left: 2px dashed #ff9a1a; background: none; z-index: 3; }
 .dg-mk.dg-mk-n[hidden] { display: none; }
 .dg-mk.dg-mk-n::before { content: attr(data-l); position: absolute; top: 3px; left: 3px; padding: 1px 5px; border-radius: 3px; background: #ff9a1a; color: #000; font: 800 10px/1.3 Verdana, "DejaVu Sans", Arial, sans-serif; white-space: nowrap; }
+/* Double réception : la carte du VFO-B a sa propre largeur (--bm-wb), indépendante de celle du VFO-A */
+.bm.bm-b { width: var(--bm-wb, var(--bm-w)); }
+#centerPanel.bm-on.bm-dual > :not(.panel-h):not(.bm) { margin-left: var(--bm-w); margin-right: var(--bm-wb, var(--bm-w)); }
+:root { --bm-wb: 220px; }
+@media (max-width: 1500px) { :root { --bm-wb: 180px; } }
