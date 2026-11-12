@@ -23,7 +23,7 @@
     filter: ['width', 'roof', 'shift', 'contour', 'contourFreq', 'apf', 'apfFreq'],
     dual: ['vfoSel', 'split', 'dualRx', 'aToB', 'bToA', 'swap', 'lock'],
     audio: ['af', 'sql'],
-    dsp: ['nb', 'nr', 'notch', 'notchFreq', 'dnf'],
+    dsp: ['nb', 'nr', 'notch', 'dnf', 'notchFreq'],
     tune: ['tuner', 'tune'],
     tx: ['mic', 'proc', 'micEq', 'procLvl', 'vox']
   };
