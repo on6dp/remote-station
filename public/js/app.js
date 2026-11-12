@@ -945,7 +945,10 @@
     sendCtl(c, v);
   }
   // Côté réglé par les cadres RF front end / Filtre / DSP : le côté actif du TRX (MAIN / SUB)
-  const panelSide = () => (Number(ctlValue('vfoSel')) === 1 ? 'B' : 'A');
+  // Côté réglé par les cadres RF FRONT END / FILTRES / DSP : le VFO choisi (touches VFO A / B, ou MAIN / SUB).
+  // FTDX101 / FTDX5000 : commandes propres au côté SUB (P1 = 1), indépendantes du côté actif du TRX.
+  // FTX-1 : réglages SUB seulement quand le TRX est sur SUB (vfoSel).
+  const panelSide = () => (RIG().ID === 'ftx1' ? (Number(ctlValue('vfoSel')) === 1 ? 'B' : 'A') : (target === 'B' ? 'B' : 'A'));
   // Réglage effectivement visé : celui du côté SUB quand SUB est actif et que le TRX le permet
   function sc(c) {
     const b = panelSide() === 'B' && SIDE_B[c.id] && RIG().CONTROL && RIG().CONTROL[SIDE_B[c.id]];

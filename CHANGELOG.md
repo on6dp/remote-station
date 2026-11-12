@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.380** — Cadres RF FRONT END, FILTRES et DSP : suivent le VFO choisi (touches VFO A / B), comme les modes — B · SUB quand B est choisi (FTDX101, FTDX5000)
 - **0.37.379** — Écrans VFO : clic sur le filtre, le cadran ou le spectre = agrandi au milieu de l'écran (nouveau clic, clic à côté ou Échap : retour) ; écrans du cadran à la molette
 - **0.37.378** — Spectre BF : la molette déplace le NOTCH, FRÉQ. NOTCH de la colonne de droite suit
 - **0.37.377** — Spectre BF des écrans VFO plus fin : surface grise continue (plus de traits noirs entre les colonnes), bruit de fond en bas
