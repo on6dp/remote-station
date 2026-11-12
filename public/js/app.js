@@ -154,7 +154,7 @@
   (function utcClock() {
     const el = $('utcClock');
     if (!el) return;
-    const J = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'], p2 = (n) => String(n).padStart(2, '0');
+    const J = ['DIMANCHE', 'LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI'], p2 = (n) => String(n).padStart(2, '0');
     const tick = () => { const d = new Date(); el.textContent = J[d.getUTCDay()] + ' ' + p2(d.getUTCDate()) + '/' + p2(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear() + '  ' + p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes()) + ':' + p2(d.getUTCSeconds()) + ' GMT'; };
     tick();
     setInterval(tick, 1000);

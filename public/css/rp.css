@@ -2195,7 +2195,7 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 .ctl-timer { color: #fff; font-weight: 800; }
 .ctl-timer.low { color: #f59e0b; }
 /* Titre : date et heure GMT dans un cadre sous « Remote Station UBA-LGE » */
-.tb-title .tb-mid { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.tb-title .tb-mid { display: flex; flex-direction: column; align-items: center; gap: 7px; padding-top: 3px; }
 .tb-title .tb-name { white-space: nowrap; }
 .tb-title .tb-utc { font: 800 12.5px/1.2 ui-monospace, 'Roboto Mono', Consolas, monospace; color: #fff; white-space: pre; letter-spacing: .04em;
   padding: 2px 10px; border: 1px solid #c8d0dc; border-radius: 7px; background: #0b0f14; }
