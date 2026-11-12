@@ -428,7 +428,7 @@
     }
     h += '<line class="sp-base" x1="' + X0 + '" y1="' + (Y1 + 1) + '" x2="' + X1 + '" y2="' + (Y1 + 1) + '"/>';
     for (const f of [0, 1000, 2000, 3000, 4000]) h += '<text class="sp-ax" x="' + X(f).toFixed(1) + '" y="78" text-anchor="middle">' + (f ? f / 1000 + 'k' : '0') + '</text>';
-    sv.innerHTML = h + '<title>Spectre BF du son reçu (Écouter le TRX) avec le filtre et le NOTCH</title>';
+    sv.innerHTML = h + '<title>Spectre BF du son reçu (Écouter le TRX) avec le filtre et le NOTCH — molette : déplace le NOTCH</title>';
     sv.classList.toggle('dim', !live);
   }
   setInterval(() => { for (const w of ['A', 'B']) if (st && st.radio) drawSpec(w, st.radio, !!st.radio.connected); }, 200);
@@ -781,6 +781,20 @@
         if (ctlBlocked()) return say(ctlBlocked(), 'warn');
         if (y < 31 && x < 110) bwStep(w, ev.deltaY < 0, true);
         else sftStep(w, ev.deltaY < 0);
+      }, { passive: false });
+      // Spectre BF : la molette déplace le NOTCH (fréquence ; Icom : position) ; la colonne de droite suit
+      $('sp' + w).addEventListener('wheel', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (ctlBlocked()) return say(ctlBlocked(), 'warn');
+        const C = RIG().CONTROL || {}, x = w === 'B' ? 'B' : '';
+        const c = C['notchFreq' + x] || C['notchPos' + x];
+        if (!c) return say('Pas de NOTCH réglable pour ce VFO', 'warn');
+        const on = ctlValue('notch' + x);
+        const st0 = c.id.startsWith('notchPos') ? 2 : Math.max(c.step || 10, 20);
+        const v = setLvl(c, Number(ctlValue(c.id) != null ? ctlValue(c.id) : (c.min + c.max) / 2) + (ev.deltaY < 0 ? st0 : -st0));
+        render();
+        say('NOTCH : ' + fmtCtl(c, v, (st && st.radio) || {}) + (on ? '' : ' (NOTCH coupé : cliquez le badge NOTCH pour l’enclencher)'), on ? '' : 'warn', 1500);
       }, { passive: false });
       $('flt' + w).addEventListener('mousemove', (ev) => {
         const rc = $('flt' + w).getBoundingClientRect();

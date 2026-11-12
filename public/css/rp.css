@@ -2381,3 +2381,4 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .vfo-flt .pb-nl { fill: #ff9a1f; }
 .vfo-am .sp-bars { stroke: #b8c2cf; stroke-width: .7; opacity: .9; }
 .vfo-am .sp-bars { fill: #9aa6b4; stroke: none; opacity: .9; }
+.freq-wrap .vfo-sp { cursor: ew-resize; }
