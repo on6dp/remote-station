@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.351** — Dashboard : mode dans l'écran VFO plus grand, fond vert (VFO A) / rose (VFO B)
 - **0.37.350** — Dashboard : touches du panneau MODE un peu plus petites (la colonne remonte)
 - **0.37.349** — Dashboard : badges d'état de l'écran VFO (ATT, IPO, NB, DNR, NOTCH, DNF, NAR…) éteints encadrés de blanc, texte blanc gras
 - **0.37.348** — Dashboard : noms des boutons des cadres en blanc gras même sans la main (juste un peu atténués)

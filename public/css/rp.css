@@ -2277,3 +2277,7 @@ section[data-panel="tx"] > .panel-h { color: #ffd400; }
 /* Panneau MODE : touches un peu plus petites (la colonne remonte) */
 #modeKeys .btn { font-size: 11.5px; min-height: 24px; padding-block: 3px; }
 #modeKeys { gap: 4px; }
+/* Mode dans l'écran VFO : un peu plus grand, fond vert foncé (VFO A) / rose foncé (VFO B), texte blanc gras */
+#modeA.badge, #modeB.badge { font-size: 13px; font-weight: 800; padding: 3px 10px; color: #fff; }
+#modeA.badge { background: linear-gradient(180deg, #1f7a3a, #0f5226); border-color: #4fd17a; }
+#modeB.badge { background: linear-gradient(180deg, #a3245e, #6e133d); border-color: #ff7ab3; }
