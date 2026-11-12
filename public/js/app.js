@@ -423,12 +423,15 @@
       (both ? '<path class="pb-f1" d="' + trap(x(c - fw / 2 + d.a), x(c + fw / 2 + d.a)) + '"/><path class="pb-f2" d="' + trap(x(c - fw / 2 + d.b), x(c + fw / 2 + d.b)) + '"/>' : '') +
       '<path class="pb-flt" d="' + trap(xl, xh) + '"/>' +
       // NOTCH : entaille en V dans la bande passante, à sa fréquence (comme sur l'écran des TRX)
-      (d.notch != null ? (() => { const xn = x(d.notch); return '<path class="pb-notch" d="M' + (xn - 7).toFixed(1) + ' 36L' + xn.toFixed(1) + ' 64L' + (xn + 7).toFixed(1) + ' 36Z"/>'; })() : '') +
+      (d.notch != null ? (() => { const xn = x(d.notch); return '<path class="pb-notch" d="M' + (xn - 9).toFixed(1) + ' 36L' + xn.toFixed(1) + ' 66L' + (xn + 9).toFixed(1) + ' 36Z"/>'; })() : '') +
       '</g>' +
+      // repère du NOTCH au-dessus du filtre : ▼ et sa fréquence, comme le « V » de l'écran du FTDX5000
+      (d.notch != null ? (() => { const xn = Math.max(20, Math.min(230, x(d.notch))); return '<path class="pb-nmark" d="M' + (xn - 5).toFixed(1) + ' 31L' + xn.toFixed(1) + ' 38L' + (xn + 5).toFixed(1) + ' 31Z"/>'; })() : '') +
       '<line x1="' + (125 - half) + '" y1="70" x2="' + (125 + half) + '" y2="70" class="pb-base"/>' +
       '<line x1="' + x(c).toFixed(1) + '" y1="52" x2="' + x(c).toFixed(1) + '" y2="70" class="pb-c"/>' +
       '<text y="85" x="' + cl(Math.min(xl, x(c) - 34)) + '" class="pb-l" text-anchor="middle">' + fmt(lo) + '</text>' +
       '<text y="85" x="' + cl(x(c)) + '" class="pb-l" text-anchor="middle">' + c + '</text>' +
+      (d.notch != null ? '<text y="62" x="' + Math.max(24, Math.min(226, x(d.notch))).toFixed(1) + '" class="pb-nl" text-anchor="middle">N ' + d.notch + '</text>' : '') +
       '<text y="85" x="' + cl(Math.max(xh, x(c) + 34)) + '" class="pb-l" text-anchor="middle">' + fmt(hi) + '</text>' +
       '<title>Filtre du VFO ' + w + ' : largeur ' + d.hz + ' Hz, décalage ' + d.sft + ' Hz (molette sur la case BW : largeur ; sur la case SFT ou le dessin : décalage — comme BW / IF SHIFT de la colonne de gauche)' + (d.notch != null ? ' ; NOTCH ' + d.notch + ' Hz' : '') + '</title>';
   }

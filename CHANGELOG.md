@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.372** — Petit filtre : NOTCH bien visible (entaille en V, repère ▼ et sa fréquence)
 - **0.37.371** — Petit filtre : largeur nominale = la plus large du TRX dans le mode, les filtres rouge et bleu s'écartent dès que le BW est plus étroit (aussi en CW)
 - **0.37.370** — Cadran à aiguille : même encadré que le petit filtre
 - **0.37.369** — Petit filtre : molette sur la case BW = largeur, sur la case SFT ou le dessin = décalage (Icom : TWIN PBT) ; les curseurs de la colonne de gauche suivent

@@ -2345,3 +2345,6 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .vfo-flt .pb-notch { fill: #0d1428; stroke: #5fd0ff; stroke-width: 1.8; stroke-linejoin: round; }
 /* Cadran à aiguille : même encadré que le petit filtre (fond bleu nuit, bord blanc) */
 .vfo-am .am-bg { fill: #0d1428; stroke: #e6e9ef; stroke-width: 2; }
+.vfo-flt .pb-notch { fill: #0d1428; stroke: #5fd0ff; stroke-width: 2; }
+.vfo-flt .pb-nmark { fill: #5fd0ff; }
+.vfo-flt .pb-nl { fill: #5fd0ff; font: 800 10px Arial, sans-serif; paint-order: stroke; stroke: #0d1428; stroke-width: 3px; }
