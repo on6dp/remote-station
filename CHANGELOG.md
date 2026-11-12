@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.362** — Cadran à aiguille : 2 écrans de plus, S / SWR / ALC et Po / Id / Vd (clic = écran suivant)
 - **0.37.361** — Écrans VFO : molette sur NB / DNR = niveau (affiché dans le badge et la colonne de droite), sur NOTCH = fréquence du notch
 - **0.37.360** — Cadran à aiguille : S / PO / SWR par défaut, clic = S / PO / COMP (chaque VFO), filtre et cadran à la même hauteur ; valeurs des mesures en blanc gras
 - **0.37.359** — DX CLUSTER : choix du cluster telnet de chaque membre pour ses spots (liste lib/data/clusters.json + clusterList), sous les deux clusters web favoris ; choix gardé par indicatif

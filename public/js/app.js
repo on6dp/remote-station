@@ -298,18 +298,22 @@
   // échelles S (S1…S9 blanc, +20…+60 bleu), PO en watts (pleine échelle du TRX connecté), puis SWR ou COMP (clic) ;
   // l'aiguille suit le S-mètre en réception et la puissance en émission ; redessiné quand on change de TRX
   const AM = { A: { key: '', nd: null }, B: { key: '', nd: null } };
-  // Clic sur le cadran : S / PO / SWR (par défaut) ⇄ S / PO / COMP ; choix gardé pour chaque VFO dans ce navigateur
+  // Clic sur le cadran : S / PO / SWR (par défaut) → S / PO / COMP → S / SWR / ALC → Po / Id / Vd → … ;
+  // choix gardé pour chaque VFO dans ce navigateur
+  const AM_SETS = ['swr', 'comp', 'alc', 'pid'];
   const amSet = { A: 'swr', B: 'swr' };
-  try { for (const w of ['A', 'B']) amSet[w] = localStorage.getItem('rs.am' + w) === 'comp' ? 'comp' : 'swr'; } catch (e) { /* stockage bloqué */ }
+  try { for (const w of ['A', 'B']) { const v = localStorage.getItem('rs.am' + w); amSet[w] = AM_SETS.indexOf(v) >= 0 ? v : 'swr'; } } catch (e) { /* stockage bloqué */ }
   for (const w of ['A', 'B']) {
     const sv0 = $('am' + w);
     if (sv0) sv0.addEventListener('click', () => {
-      amSet[w] = amSet[w] === 'swr' ? 'comp' : 'swr';
+      amSet[w] = AM_SETS[(AM_SETS.indexOf(amSet[w]) + 1) % AM_SETS.length];
       try { localStorage.setItem('rs.am' + w, amSet[w]); } catch (e) { /* stockage bloqué */ }
       AM[w].key = '';
       render();
     });
   }
+  // SWR → position sur l'échelle (1 · 1.5 · 2 · 3 · ∞)
+  const swrFrac = (v) => (v == null || v <= 1 ? 0 : v <= 1.5 ? (v - 1) / 0.5 * 0.25 : v <= 2 ? 0.25 + (v - 1.5) / 0.5 * 0.17 : v <= 3 ? 0.42 + (v - 2) * 0.18 : Math.min(1, 0.6 + (v - 3) / 7 * 0.4));
   const amScales = (r, w) => {
     const R0 = RIG(), icom = /^IC-|Icom/i.test(R0.NAME || '') || !!R0.CIV;
     const rng = R0.POWER_RANGE && R0.POWER_RANGE[r.powerHead];
@@ -317,10 +321,14 @@
     const q = (v) => (v >= 10 ? String(Math.round(v)) : String(Math.round(v * 10) / 10));
     const S = { lab: 'S', ticks: [[.06, '1'], [.18, '3'], [.30, '5'], [.42, '7'], [.533, '9'], [.69, '+20', 1], [.845, '+40', 1], [1, '+60', 1]], hot: .533, unit: '' };
     const PO = { lab: icom ? 'Po' : 'PO', ticks: [0, .25, .5, .75, 1].map((f) => [f, q(pmax * f)]), unit: 'W' };
-    const third = amSet[w] === 'swr'
-      ? { lab: 'SWR', ticks: [[0, '1'], [.25, '1.5'], [.42, '2'], [.6, '3'], [1, '∞']], unit: '' }
-      : { lab: 'COMP', ticks: [[0, '0'], [.25, '5'], [.5, '10'], [.75, '15'], [1, '20']], unit: 'dB' };
-    return { key: (R0.NAME || '') + '/' + pmax + '/' + amSet[w], arcs: [S, PO, third] };
+    const SWR = { lab: 'SWR', ticks: [[0, '1'], [.25, '1.5'], [.42, '2'], [.6, '3'], [1, '∞']], unit: '' };
+    const COMP = { lab: 'COMP', ticks: [[0, '0'], [.25, '5'], [.5, '10'], [.75, '15'], [1, '20']], unit: 'dB' };
+    const ALC = { lab: 'ALC', ticks: [[0, '0'], [.25, '25'], [.5, '50'], [.75, '75'], [1, '100']], unit: '%' };
+    const ID = { lab: 'Id', ticks: [[0, '0'], [.2, '5'], [.4, '10'], [.6, '15'], [.8, '20'], [1, '25']], unit: 'A' };
+    const VD = { lab: 'Vd', ticks: [[0, '10'], [1 / 3, '12'], [2 / 3, '14'], [1, '16']], unit: 'V' };
+    const set = amSet[w];
+    const arcs = set === 'comp' ? [S, PO, COMP] : set === 'alc' ? [S, SWR, ALC] : set === 'pid' ? [PO, ID, VD] : [S, PO, SWR];
+    return { key: (R0.NAME || '') + '/' + pmax + '/' + set, arcs, set };
   };
   function drawAm(w, r, live, isTx, val) {
     const sv = $('am' + w);
@@ -338,19 +346,24 @@
         for (const [f, t, hot] of arc.ticks) {
           const a = pt(rad, f), b = pt(rad + 4, f), l = pt(rad + 9, f);
           h += '<line class="am-tick' + (hot ? ' hot' : '') + '" x1="' + a[0].toFixed(1) + '" y1="' + a[1].toFixed(1) + '" x2="' + b[0].toFixed(1) + '" y2="' + b[1].toFixed(1) + '"/>';
-          if (i === 0 || f > 0) h += '<text class="am-num' + (hot ? ' hot' : '') + '" x="' + l[0].toFixed(1) + '" y="' + (l[1] + 2).toFixed(1) + '" text-anchor="middle">' + t + '</text>';
+          if (arc.hot || f > 0) h += '<text class="am-num' + (hot ? ' hot' : '') + '" x="' + l[0].toFixed(1) + '" y="' + (l[1] + 2).toFixed(1) + '" text-anchor="middle">' + t + '</text>';
         }
         const e = pt(rad, 0);
         h += '<text class="am-lab" x="' + (e[0] - 4).toFixed(1) + '" y="' + (e[1] + 3).toFixed(1) + '" text-anchor="end">' + arc.lab + '</text>';
-        if (arc.unit) { const u = pt(rad, 1); h += '<text class="am-unit' + (i === 0 ? ' hot' : '') + '" x="' + (u[0] + 3).toFixed(1) + '" y="' + (u[1] + 9).toFixed(1) + '">' + arc.unit + '</text>'; }
+        if (arc.unit) { const u = pt(rad, 1); h += '<text class="am-unit' + (arc.hot ? ' hot' : '') + '" x="' + (u[0] + 3).toFixed(1) + '" y="' + (u[1] + 9).toFixed(1) + '">' + arc.unit + '</text>'; }
       });
       h += '<g class="am-nd"><line x1="' + CX + '" y1="' + CY + '" x2="' + CX + '" y2="' + (CY - 252) + '"/></g>';
-      sv.innerHTML = h + '<title>Cadran du VFO ' + w + ' : S-mètre en réception, puissance (PO) en émission. Clic : S / PO / SWR ⇄ S / PO / COMP</title>';
+      sv.innerHTML = h + '<title>Cadran du VFO ' + w + ' : clic = écran suivant (S / PO / SWR → S / PO / COMP → S / SWR / ALC → Po / Id / Vd)</title>';
       st.nd = sv.querySelector('.am-nd');
     }
+    // Aiguille : réception = S-mètre (Po / Id / Vd : tension Vd) ; émission = PO (S / SWR / ALC : SWR)
     let f = 0;
-    if (live && isTx) { const po = r.m5 == null ? 0 : RIG().poFrac ? RIG().poFrac(r.m5) : r.m5 / 255; f = Math.max(0, Math.min(1, po || 0)); }
-    else if (live && val != null) f = Math.max(0, Math.min(1, val / 255));
+    const R1 = RIG();
+    const poF = () => (r.m5 == null ? 0 : R1.poFrac ? R1.poFrac(r.m5) : r.m5 / 255) || 0;
+    if (live && isTx) f = sc.set === 'alc' ? swrFrac(R1.swrValue && r.m6 != null ? R1.swrValue(r.m6) : null) : poF();
+    else if (live && sc.set === 'pid') { const vd = R1.vdValue && r.m8 != null ? R1.vdValue(r.m8) : null; f = vd == null ? 0 : (vd - 10) / 6; }
+    else if (live && val != null) f = val / 255;
+    f = Math.max(0, Math.min(1, f || 0));
     const ang = A0 + (A1 - A0) * f;
     if (st.nd) { st.nd.setAttribute('transform', 'rotate(' + ang.toFixed(1) + ' ' + CX + ' ' + CY + ')'); st.nd.classList.toggle('tx', !!(live && isTx)); }
     sv.classList.toggle('dim', !live);
