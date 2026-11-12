@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.358** — DX CLUSTER en vert dès que le cluster est connecté (même sans la main)
 - **0.37.357** — Dashboard : ATT du VFO B (SUB) affiché avec ses dB (6 / 12 / 18 dB) comme le VFO A ; un clic passe au cran suivant
 - **0.37.356** — Barre du haut : « <-> » retiré, inscription DX CLUSTER en vert quand le cluster est relié (orange : ouvert sans la main)
 - **0.37.355** — Gain micro, PROC, MIC EQ, niveau PROC et VOX déplacés du dashboard vers la page TRX SSB (cadre MICRO DU TRX) ; bouton « Phonie : page TRX SSB » retiré ; RX en vert ; TX VFO-B (SUB) en rose et TX VFO-A (MAIN) en vert, même en SPLIT

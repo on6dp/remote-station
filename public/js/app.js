@@ -2048,8 +2048,7 @@
     const on = open.length > 0 && ctl;
     $('dxcArrow').classList.toggle('on', on);
     $('dxcArrow').classList.toggle('half', !on && open.length > 0); // cluster ouvert, mais pas la main : orange
-    $('dxcBtn').classList.toggle('on', on); // inscription DX CLUSTER en vert quand le cluster est relié
-    $('dxcBtn').classList.toggle('half', !on && open.length > 0);
+    $('dxcBtn').classList.toggle('on', open.length > 0); // inscription DX CLUSTER en vert dès qu'un cluster est ouvert et relié (avec ou sans la main)
     $('dxcBtn').title = on ? 'Relié à ' + open.map(dxcName).join(' et ') + ' : un clic sur un spot cale le TRX. Clic : ouvrir / montrer un cluster.'
       : open.length ? 'Cluster ouvert (' + open.map(dxcName).join(', ') + ') mais sans la main : prenez la main pour que ses spots calent le TRX.'
         : 'Aucun DX cluster relié : clic pour ouvrir dx.op0p.be ou cluster.op0p.be dans une fenêtre reliée au TRX.';
