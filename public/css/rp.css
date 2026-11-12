@@ -2499,3 +2499,8 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dg-bar .dg-perl { margin-left: 14px; }
 .dg-bar #dgPar, .dg-bar #dgHound { border: 1px solid #fff; color: #fff; font-weight: 800; }
 .dg-hound.on #dgHound { border-color: #fff; }
+/* Barre FT : plus d'espace entre les boutons et les options */
+.dg-ftx > .dg-bar { column-gap: 14px; }
+.dg-ftx > .dg-bar .dg-chk, .dg-ftx > .dg-bar .dg-alog, .dg-ftx > .dg-bar .dg-hound, .dg-ftx > .dg-bar .dg-txc { margin-inline: 4px; }
+.dg-ftx > .dg-bar .dg-alog select { margin-left: 6px; }
+.dg-ftx > .dg-bar .dg-split { display: inline-flex; align-items: center; gap: 10px; }

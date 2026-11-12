@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.16** — Barre FT : boutons et options plus espacés
 - **0.38.15** — Barre FT : « Période » écartée de la fréquence TX ; listes Période et Activité encadrées de blanc ; NORMALE en majuscules
 - **0.38.14** — Spectre : vitesse X1 / X2 / X4 (boutons en haut à gauche du spectre)
 - **0.38.13** — Cartes de bande FT : fréquence d'appel du mode ± 20 kHz, recalées en passant de FT8 à FT4 / FT2 (plage gardée par mode)
