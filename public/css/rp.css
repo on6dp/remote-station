@@ -2424,3 +2424,13 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .ft-dual .dg-row.ft > span:nth-child(5) { border-right: 0; }
 .dg-th.ft, .dg-row.ft { grid-template-columns: 60px 36px 36px 46px minmax(130px, 3fr) minmax(0, 1.3fr) 60px 48px; }
 .ft-dual .dg-th.ft, .ft-dual .dg-row.ft { grid-template-columns: 56px 32px 34px 44px minmax(0, 1fr); }
+/* Intitulés des listes FT8 : cases brun foncé, texte clair (inverse) */
+.dg-th.ft > span { background: #4a2508; color: #fff3dc; border-color: #b08850; }
+.dg-th.ft > span:last-child, .ft-dual .dg-th.ft > span:nth-child(5) { border-color: #b08850; }
+/* Carnet de trafic (page principale) : intitulés en cases brun foncé, texte clair ; colonnes mieux séparées */
+.lg-table th { background: #4a2508; color: #fff3dc; font-weight: 800; border: 1px solid #b08850; border-left-width: 0; }
+.lg-table th:first-child { border-left-width: 1px; }
+.lg-table th:last-child { border-right: 1px solid #b08850; }
+.lg-table td { border-right: 1px solid rgba(200, 210, 225, .28); }
+.lg-table th.flt-on, .lg-table th.flt-on .lg-flt { color: #7fe6ff; }
+.lg-table th.lg-drag { background: #6a3a14; }
