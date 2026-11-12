@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.334** — Dashboard : date GMT encore un peu plus bas sous le titre
 - **0.37.333** — Dashboard : date GMT un peu plus bas, jour en entier en majuscules
 - **0.37.332** — Logbook : fond de la fiche QSO en jaune clair (intitulés foncés, champs blancs) pour la distinguer de la liste
 - **0.37.331** — Logbook : champs de la fiche QSO sur fond jaune clair, texte foncé gras
