@@ -608,7 +608,7 @@ FT8 is a digital mode designed for very weak signals: each station sends a short
 | DT | Time offset of the signal (seconds). Close to 0 when everything is in step. |
 | Fréq | Audio frequency of the signal (Hz). |
 | Message | The decoded text, e.g. "CQ F4ABC JN18". A mark **a1**…**a7** at the end means a decode obtained with a priori help (see below). |
-| Préf. | DXCC entity prefix of the transmitting station (e.g. ON, F, DL, EA8). |
+| PFX | DXCC entity prefix of the transmitting station (e.g. ON, F, DL, EA8). |
 | Pays | DXCC country of the transmitting station. With dual receive (two VFOs), the Pays and km columns are hidden for lack of room: the **prefix** and **azimuth** (bearing) remain. |
 | km / Az | Distance and direction (azimuth in degrees) from the club. "≈": approximate (no locator in the message, centre of the country). |
 

@@ -618,8 +618,8 @@ FT8 est un mode numérique fait pour les signaux très faibles : chaque station 
 | DT | Décalage en temps du signal (secondes). Proche de 0 quand tout est bien calé. |
 | Fréq | Fréquence audio du signal (Hz). |
 | Message | Le texte décodé, par ex. « CQ F4ABC JN18 ». Une marque **a1**…**a7** à la fin indique un décodage obtenu grâce à l'aide a priori (voir plus bas). |
-| Préf. | Préfixe de l'entité DXCC de la station qui émet (ex. ON, F, DL, EA8). |
-| Pays | Pays DXCC de la station qui émet. En double réception (deux VFO), les colonnes Pays et km sont masquées faute de place : restent le **préfixe** et l'**azimut** (bearing). |
+| PFX | Préfixe de l'entité DXCC de la station qui émet (ex. ON, F, DL, EA8). |
+| Pays | Pays DXCC de la station qui émet. En double réception (deux VFO), les colonnes Pays et km sont masquées faute de place : restent le **préfixe (PFX)** et l'**azimut** (bearing). |
 | km / Az | Distance et direction (azimut en degrés) depuis le club. « ≈ » : approximatif (pas de locator dans le message, centre du pays). |
 
 - **Stations déjà contactées** : les messages d'une station déjà au carnet **sous le TX call actuel**, sur la même bande et dans le même mode, sont en vert barré (« worked before »). Avec un autre TX call, seuls les QSO faits sous cet indicatif comptent.

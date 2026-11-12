@@ -263,24 +263,24 @@
     <div class="dg-cols">
       <div class="dg-col">
         <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Activité de bande</span><button class="dg-mini" type="button" id="dgClear">Effacer</button></div>
-        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span title="Préfixe de l’entité DXCC">Préf.</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
+        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span title="Fréquence audio (Hz)">Frequ</span><span>Message</span><span title="Préfixe de l’entité DXCC">PFX</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgBand"></div>
       </div>
       <i class="dg-vsplit" id="dgSplit" title="Glisser à gauche ou à droite : largeur des deux listes (double-clic : moitié-moitié)"></i>
       <div class="dg-col">
         <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span><button class="dg-mini" type="button" id="dgClearRx" title="Vide cette liste (les messages suivants s'y ajoutent)">Effacer</button></div>
-        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span title="Préfixe de l’entité DXCC">Préf.</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
+        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span title="Fréquence audio (Hz)">Frequ</span><span>Message</span><span title="Préfixe de l’entité DXCC">PFX</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgRx"></div>
       </div>
       <!-- FTDX101 en double réception : les mêmes colonnes pour le récepteur SUB (VFO-B) -->
       <div class="dg-col ft-colb dual-colb" hidden>
         <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Activité de bande</span><button class="dg-mini" type="button" id="dgClearB">Effacer</button></div>
-        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span title="Préfixe de l’entité DXCC">Préf.</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
+        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span title="Fréquence audio (Hz)">Frequ</span><span>Message</span><span title="Préfixe de l’entité DXCC">PFX</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgBandB"></div>
       </div>
       <div class="dg-col ft-colb dual-colb" hidden>
         <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Fréquence RX <b id="dgRxFB">1500 Hz</b></span><button class="dg-mini" type="button" id="dgClearRxB" title="Vide cette liste (les messages suivants s'y ajoutent)">Effacer</button></div>
-        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span title="Préfixe de l’entité DXCC">Préf.</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
+        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span title="Fréquence audio (Hz)">Frequ</span><span>Message</span><span title="Préfixe de l’entité DXCC">PFX</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgRxB"></div>
       </div>
     </div>

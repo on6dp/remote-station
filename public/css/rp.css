@@ -2566,3 +2566,7 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 #centerPanel.bm-on.bm-dual > :not(.panel-h):not(.bm) { margin-left: var(--bm-w); margin-right: var(--bm-wb, var(--bm-w)); }
 :root { --bm-wb: 220px; }
 @media (max-width: 1500px) { :root { --bm-wb: 180px; } }
+/* Listes FT : titres centrés et alignés sur les colonnes (place de l'ascenseur réservée aussi sous les titres) */
+.dg-ftx .dg-list { scrollbar-gutter: stable; }
+.dg-th.ft { overflow-y: hidden; scrollbar-gutter: stable; scrollbar-width: auto; }
+.dg-th.ft > span, .dg-th.ft > span:nth-child(n) { text-align: center; }
