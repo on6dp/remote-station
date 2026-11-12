@@ -33,7 +33,7 @@
     'att', 'preamp', 'preampVU', 'narrow', 'narrowB', 'nbB', 'nrB', 'notchB', 'dnfB', 'attB', 'preampB', 'agcB', 'rfB', 'notchFreqB', 'shiftB', 'contourB', 'apfB', 'roofB'];
   // Réglages des cadres (RF front end, Filtre, DSP) qui suivent le VFO sélectionné (A / B) quand le TRX a leur équivalent côté SUB
   const SIDE_B = { nb: 'nbB', nr: 'nrB', notch: 'notchB', dnf: 'dnfB', narrow: 'narrowB', agc: 'agcB', rf: 'rfB', width: 'widthB',
-    notchFreq: 'notchFreqB', shift: 'shiftB', contour: 'contourB', apf: 'apfB', roof: 'roofB', contourFreq: 'contourFreqB', apfFreq: 'apfFreqB', nbLvl: 'nbLvlB', nrLvl: 'nrLvlB' };
+    notchFreq: 'notchFreqB', shift: 'shiftB', contour: 'contourB', apf: 'apfB', roof: 'roofB', contourFreq: 'contourFreqB', apfFreq: 'apfFreqB', nbLvl: 'nbLvlB', nrLvl: 'nrLvlB', lock: 'lockB' }; // LOCK : celui du VFO choisi (FTDX101 : LK2 / LK3 pour SUB)
   const SHORT = { clarClr: 'CLEAR', ant: 'ANT', aToB: 'A → B', bToA: 'B → A', swap: 'A ⇄ B', lock: 'LOCK', clar: 'Décal.', notchFreq: 'Fréq. notch', procLvl: 'Niveau proc', mic: 'Gain micro', sql: 'Squelch', af: 'AF level', rf: 'RF gain', width: 'BW', roof: 'ROOFING', shift: 'IF shift', preamp: 'PRE', preampVU: 'AMP' };
 
   // Bouton HELP : manuel en français, ou en anglais si le navigateur n'est pas en français
