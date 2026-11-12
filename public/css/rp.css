@@ -2240,3 +2240,7 @@ section[data-panel="tx"] > .panel-h { color: #ffd400; }
 .rxtx:not(.tx) { color: #fff; font-weight: 800; border-color: #fff; }
 .rxtx:not(.tx) i { border-color: #fff; }
 .ptt { border-radius: 9px; }
+/* Titres des cadres en jaune vif (MODE, ANTENNE, RF FRONT END, DSP, FILTRES, TX…) */
+.panel > .panel-h { color: #ffd400; }
+/* Onglet activité : titre « UTILISATEURS ACTIVITÉS » en jaune gras */
+#events::before { content: 'UTILISATEURS ACTIVITÉS'; display: block; color: #ffd400; font-weight: 800; font-size: 13px; letter-spacing: .08em; padding: 4px 2px 8px; border-bottom: 1px solid var(--v2-border-dark, #2a3340); margin-bottom: 4px; }

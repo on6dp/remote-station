@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.344** — Dashboard : titres de tous les cadres (MODE, ANTENNE, RF FRONT END…) en jaune vif ; titre « UTILISATEURS ACTIVITÉS » en jaune gras dans l'onglet activité
 - **0.37.343** — Dashboard : cadre TX — titre jaune vif, RX en blanc gras encadré de blanc, PTT arrondi
 - **0.37.342** — Dashboard : MAIN, SUB, SPLIT, DUAL RX, A→B, B→A, A⇄B en blanc gras
 - **0.37.341** — Dashboard : ACCORD (TUNER) en jaune vif, TUNER en mauve quand il est en service, TUNE en rouge pendant l'accord, texte blanc gras
