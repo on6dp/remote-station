@@ -295,25 +295,37 @@
     return d ? 'BW ' + bwK(d.hz) : String(txt || '—').replace(/^FIL\d\s*/, 'BW ').replace(/^BW $/, 'BW FIX');
   }
   // ------------------------------------------------------------ cadran à aiguille de chaque VFO (comme l'écran du FTDX5000) :
-  // échelles S (S1…S9 blanc, +20…+60 bleu), PO en watts (pleine échelle du TRX connecté), puis COMP (Yaesu) ou SWR (Icom) ;
+  // échelles S (S1…S9 blanc, +20…+60 bleu), PO en watts (pleine échelle du TRX connecté), puis SWR ou COMP (clic) ;
   // l'aiguille suit le S-mètre en réception et la puissance en émission ; redessiné quand on change de TRX
   const AM = { A: { key: '', nd: null }, B: { key: '', nd: null } };
-  const amScales = (r) => {
+  // Clic sur le cadran : S / PO / SWR (par défaut) ⇄ S / PO / COMP ; choix gardé pour chaque VFO dans ce navigateur
+  const amSet = { A: 'swr', B: 'swr' };
+  try { for (const w of ['A', 'B']) amSet[w] = localStorage.getItem('rs.am' + w) === 'comp' ? 'comp' : 'swr'; } catch (e) { /* stockage bloqué */ }
+  for (const w of ['A', 'B']) {
+    const sv0 = $('am' + w);
+    if (sv0) sv0.addEventListener('click', () => {
+      amSet[w] = amSet[w] === 'swr' ? 'comp' : 'swr';
+      try { localStorage.setItem('rs.am' + w, amSet[w]); } catch (e) { /* stockage bloqué */ }
+      AM[w].key = '';
+      render();
+    });
+  }
+  const amScales = (r, w) => {
     const R0 = RIG(), icom = /^IC-|Icom/i.test(R0.NAME || '') || !!R0.CIV;
     const rng = R0.POWER_RANGE && R0.POWER_RANGE[r.powerHead];
     const pmax = (rng && rng[1]) || (R0.CONTROL && R0.CONTROL.power && R0.CONTROL.power.max) || 100;
     const q = (v) => (v >= 10 ? String(Math.round(v)) : String(Math.round(v * 10) / 10));
     const S = { lab: 'S', ticks: [[.06, '1'], [.18, '3'], [.30, '5'], [.42, '7'], [.533, '9'], [.69, '+20', 1], [.845, '+40', 1], [1, '+60', 1]], hot: .533, unit: '' };
     const PO = { lab: icom ? 'Po' : 'PO', ticks: [0, .25, .5, .75, 1].map((f) => [f, q(pmax * f)]), unit: 'W' };
-    const third = icom
+    const third = amSet[w] === 'swr'
       ? { lab: 'SWR', ticks: [[0, '1'], [.25, '1.5'], [.42, '2'], [.6, '3'], [1, '∞']], unit: '' }
       : { lab: 'COMP', ticks: [[0, '0'], [.25, '5'], [.5, '10'], [.75, '15'], [1, '20']], unit: 'dB' };
-    return { key: (R0.NAME || '') + '/' + pmax, arcs: [S, PO, third] };
+    return { key: (R0.NAME || '') + '/' + pmax + '/' + amSet[w], arcs: [S, PO, third] };
   };
   function drawAm(w, r, live, isTx, val) {
     const sv = $('am' + w);
     if (!sv) return;
-    const sc = amScales(r || {}), st = AM[w];
+    const sc = amScales(r || {}, w), st = AM[w];
     const CX = 110, CY = 262, A0 = -20, A1 = 18, RAD = [244, 226, 208];
     const pt = (rad, f) => { const a = (A0 + (A1 - A0) * f) * Math.PI / 180; return [CX + rad * Math.sin(a), CY - rad * Math.cos(a)]; };
     if (st.key !== sc.key) {
@@ -333,7 +345,7 @@
         if (arc.unit) { const u = pt(rad, 1); h += '<text class="am-unit' + (i === 0 ? ' hot' : '') + '" x="' + (u[0] + 3).toFixed(1) + '" y="' + (u[1] + 9).toFixed(1) + '">' + arc.unit + '</text>'; }
       });
       h += '<g class="am-nd"><line x1="' + CX + '" y1="' + CY + '" x2="' + CX + '" y2="' + (CY - 252) + '"/></g>';
-      sv.innerHTML = h + '<title>Cadran du VFO ' + w + ' : S-mètre en réception, puissance (PO) en émission</title>';
+      sv.innerHTML = h + '<title>Cadran du VFO ' + w + ' : S-mètre en réception, puissance (PO) en émission. Clic : S / PO / SWR ⇄ S / PO / COMP</title>';
       st.nd = sv.querySelector('.am-nd');
     }
     let f = 0;

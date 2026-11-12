@@ -2144,7 +2144,7 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
   box-shadow: 0 0 10px rgba(0, 127, 255, .5); text-shadow: 0 1px 1px rgba(0, 0, 0, .35);
 }
 /* Petit filtre dans l'écran de chaque VFO : dans l'espace libre à gauche de la fréquence, seulement s'il y a la place */
-.freq-wrap .vfo-flt { width: 180px; height: 66px; flex: none; }
+.freq-wrap .vfo-flt { width: 196px; height: 72px; flex: none; }
 .freq-wrap .vfo-meters { display: flex; align-items: center; gap: 10px; margin-right: auto; margin-left: 12px; align-self: center; flex: none; }
 .freq-wrap .vfo-meters.stack { flex-direction: column; gap: 6px; }
 @container (max-width: 560px) { .freq-wrap .vfo-meters { display: none; } }
@@ -2253,7 +2253,7 @@ section[data-panel="tx"] > .panel-h { color: #ffd400; }
 .tb-right > .btn:not(#ctrlBtn):not(#logout):not(#statsBtn) { color: #fff; }
 .tb-right .zoom-btn { color: #fff; font-weight: 800; }
 /* Cadran à aiguille de l'écran VFO (entre le petit filtre et la fréquence) */
-.freq-wrap .vfo-am { width: 190px; height: 80px; flex: none; }
+.freq-wrap .vfo-am { width: 171px; height: 72px; flex: none; cursor: pointer; }
 .vfo-am .am-bg { fill: #07090c; stroke: #c8d0dc; stroke-width: 1; }
 .vfo-am .am-arc { fill: none; stroke: #f2f2f2; stroke-width: 1.6; }
 .vfo-am .am-arc.hot { stroke: #2f7bff; stroke-width: 2.6; }
@@ -2328,3 +2328,5 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dxc-tel-it:hover, .dxc-tel-it:focus-visible { background: var(--v2-bg-panel, #141c27); color: var(--v2-accent-cyan-bright, #00D4FF); }
 .dxc-tel-it.cur { color: #39ff14; }
 .dxc-tel-it.cur span::before { content: '● '; }
+/* Cadre des mesures (Po, SWR, ALC, Id, Vd, COMP, S) : valeurs en blanc gras */
+.mt .mt-v, .mt.live .mt-v { color: #fff; font-weight: 800; }

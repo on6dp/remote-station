@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.360** — Cadran à aiguille : S / PO / SWR par défaut, clic = S / PO / COMP (chaque VFO), filtre et cadran à la même hauteur ; valeurs des mesures en blanc gras
 - **0.37.359** — DX CLUSTER : choix du cluster telnet de chaque membre pour ses spots (liste lib/data/clusters.json + clusterList), sous les deux clusters web favoris ; choix gardé par indicatif
 - **0.37.358** — DX CLUSTER en vert dès que le cluster est connecté (même sans la main)
 - **0.37.357** — Dashboard : ATT du VFO B (SUB) affiché avec ses dB (6 / 12 / 18 dB) comme le VFO A ; un clic passe au cran suivant
