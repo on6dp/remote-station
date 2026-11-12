@@ -284,7 +284,19 @@
     </div>
     <div class="dg-prog" id="dgProg" title="Période en cours : vert = réception, rouge = émission"><i id="dgProgBar"></i><span id="dgProgTxt"></span></div>
     <!-- Messages Tx1 à Tx7 dans l'onglet, sous les listes (comme WSJT-X) -->
-    <div class="ft-tx"><div class="msgs-b ft-msgs" id="msgFtx"></div></div>
+    <div class="ft-tx"><div class="msgs-b ft-msgs" id="msgFtx"></div>
+      <div class="ft-qso" id="ftQso" title="QSO en cours : le correspondant choisi (double-clic sur son message) ; indicatif, locator et reports modifiables à la main">
+        <span class="fq-t">QSO</span>
+        <label>Indicatif <input id="fqCall" maxlength="12" spellcheck="false" autocomplete="off"></label>
+        <label>Locator <input id="fqGrid" maxlength="6" spellcheck="false" autocomplete="off"></label>
+        <span class="fq-geo" id="fqGeo"></span>
+        <label>Report env. <input id="fqRpt" maxlength="4"></label>
+        <label>reçu <input id="fqRptRx" maxlength="4"></label>
+        <span class="fq-v" id="fqT0"></span>
+        <span class="fq-st" id="fqSt"></span>
+        <button class="btn" type="button" id="fqLog" title="Ouvre la fiche « QSO » pour l’enregistrer dans le carnet (heure de début : choix du correspondant ; fin : maintenant)">LOG QSO</button>
+        <button class="btn" type="button" id="fqClr" title="Efface le correspondant (indicatif, locator, reports)">EFFACER</button>
+      </div></div>
     <p class="dg-tx" id="dgTxState">Émission : cliquez sur un message Tx1 à Tx7 ci-dessus : il part à chaque période jusqu’à la réponse, la séquence avance toute seule.</p>`;
   const RTTY_PANE = `
     <div class="dg-bar">
@@ -4057,10 +4069,58 @@
     if (hd) fb.disabled = true;
     fb.title = 'Texte libre FT8 / FT4 / FT2 (13 caractères) · clic : émission · clic droit : modifier';
     fb.addEventListener('contextmenu', (e) => { e.preventDefault(); editFree(fb.ownerDocument); });
+    drawQso();
     const ed = mk(f, '', '✎', () => editFree(f.ownerDocument));
     ed.title = 'Modifier le texte libre (Tx7)';
     ed.classList.add('mini');
     if (stop) f.appendChild(stop);
+  }
+  // Fenêtre de QSO (sous les messages Tx1 à Tx7) : fiche du correspondant
+  function dxGeo(call) {
+    const c = String(call || '').toUpperCase();
+    if (!c) return null;
+    for (const H of [hist, histB]) for (let i = H.length - 1; i >= 0; i--) {
+      const it = H[i];
+      for (const d of it.list || []) if (!d.tx && senderOf(d.msg) === c && (d.cty || d.km != null)) return d;
+    }
+    return null;
+  }
+  function drawQso() {
+    if (!$('ftQso')) return;
+    const put = (id, v) => { const el = $(id); if (el && el.ownerDocument.activeElement !== el && el.value !== v) el.value = v; };
+    const st = api && api.state && api.state();
+    const sq = st && st.seq;
+    const mine = !!(sq && sq.dx && dx.call && sq.dx === dx.call);
+    put('fqCall', dx.call || '');
+    put('fqGrid', dx.grid || '');
+    put('fqRpt', (mine && sq.rpt) || dx.rpt || '');
+    put('fqRptRx', (mine && sq.rptRcvd) || dx.rptRx || '');
+    const g = dxGeo(dx.call);
+    const geo = g ? [g.cty || '', g.km == null ? '' : (g.kmc ? '≈ ' : '') + g.km + ' km', g.az == null ? '' : g.az + '°'].filter(Boolean).join(' · ') : '';
+    if ($('fqGeo').textContent !== geo) $('fqGeo').textContent = geo;
+    const t0 = dx.call && dx.t0 ? 'Début ' + utc(dx.t0).slice(0, 2) + ':' + utc(dx.t0).slice(2, 4) + ' UTC' : '';
+    if ($('fqT0').textContent !== t0) $('fqT0').textContent = t0;
+    const x = st && st.ftx;
+    const stTxt = mine && sq.on ? (x && x.state === 'tx' ? '● Tx' + sq.ntx + ' en émission' : 'Tx' + sq.ntx + ' à la prochaine période') : dx.call ? 'en attente' : '';
+    if ($('fqSt').textContent !== stTxt) $('fqSt').textContent = stTxt;
+    $('fqSt').classList.toggle('on', !!(mine && sq.on));
+    $('ftQso').classList.toggle('empty', !dx.call);
+    $('fqLog').disabled = !dx.call;
+  }
+  // LOG QSO : fiche à confirmer, comme en fin de QSO
+  function qsoLogNow() {
+    if (!dx.call) return;
+    const st = api && api.state();
+    const r = (st && st.radio) || {};
+    const dial = Number(sd() === 'B' ? r.freqB : r.freq) || 0;
+    const t0 = new Date(dx.t0 || now()), t1 = new Date(now());
+    const d8 = (x) => x.toISOString().slice(0, 10).replace(/-/g, '');
+    const t6 = (x) => x.toISOString().slice(11, 19).replace(/:/g, '');
+    const sq = st && st.seq;
+    const mine = !!(sq && sq.dx === dx.call);
+    qsoPrompt({ call: dx.call, gridsquare: GRID_RE.test(dx.grid || '') ? dx.grid.slice(0, 4) : '', mode: FT_MODES.indexOf(mode) >= 0 ? mode : 'FT8', station: myCall,
+      freq: ((dial + curTxF()) / 1e6).toFixed(6), rst_sent: (mine && sq.rpt) || dx.rpt || '', rst_rcvd: (mine && sq.rptRcvd) || dx.rptRx || '',
+      qso_date: d8(t0), time_on: t6(t0), qso_date_off: d8(t1), time_off: t6(t1), tx_pwr: r.power || '' });
   }
   // ------------------------------------------------------------------ émission FT8 / FT4 / FT2
   // Clic sur Tx1…Tx7 : le serveur choisit le créneau, la page Station du club fabrique et joue le signal
@@ -4426,6 +4486,7 @@
   let seqSeen = '';
   function ftxState() {
     houndUi();
+    drawQso();
     const st = api && api.state();
     const x = st && st.ftx;
     const sq = st && st.seq;
@@ -5600,6 +5661,14 @@
       $('dgTxRx').addEventListener('click', () => setTx(sd() === 'B' ? rxFB : rxF, sd()));
       $('dgPar').value = store.get('ftxpar', 'auto');
       $('dgPar').addEventListener('change', () => { store.set('ftxpar', $('dgPar').value); ftxCfg(); });
+      // Fenêtre de QSO : saisie à la main du correspondant et des reports
+      const fq = (id, fn) => { const el = $(id); if (el) el.addEventListener('change', () => fn(el.value.trim().toUpperCase())); };
+      fq('fqCall', (v) => { setDx({ call: v }); syncDx(); });
+      fq('fqGrid', (v) => { setDx({ grid: v }); syncDx(); });
+      fq('fqRpt', (v) => { if (/^[+-]?\d{1,2}$/.test(v)) { setDx({ rpt: (/^[+-]/.test(v) ? v[0] : '+') + v.replace(/^[+-]/, '').padStart(2, '0') }); syncDx(); } });
+      fq('fqRptRx', (v) => { setDx({ rptRx: v }); syncDx(); });
+      $('fqLog').addEventListener('click', qsoLogNow);
+      $('fqClr').addEventListener('click', () => { setDx({ call: '', grid: '', rpt: '-10', rptRx: '' }); syncDx(); });
       // TX ← RX, RX ← TX, ↺ : couleurs inversées un instant au clic
       for (const id of ['dgQsy', 'dgTxRx', 'dgRxTx']) if ($(id)) $(id).addEventListener('click', () => { const b = $(id); b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 450); });
       $('dgDualRx').addEventListener('click', () => {

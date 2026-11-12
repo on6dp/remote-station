@@ -634,6 +634,8 @@ FT8 is a digital mode designed for very weak signals: each station sends a short
 - **Automatic stops**: `■ Arrêter` or `Space`; the correspondent answers someone else; the same message for 6 minutes without an answer; control lost.
 - In **SPLIT**, the message goes out on the other VFO, like the PTT.
 
+**The QSO window** (below the Tx1 to Tx7 messages): card of the current correspondent — **callsign** and **locator** (editable by hand, like WSJT-X's "DX Call / DX Grid"), country, distance and azimuth, **report sent** and **received**, start time (when the correspondent was chosen) and transmit step ("Tx3 à la prochaine période", "● Tx3 en émission"). `LOG QSO` opens the logbook form at any time (interrupted QSO, manual logging); `EFFACER` clears the correspondent.
+
 **HOUND: working a DXpedition in FOX or SuperFox mode**
 
 Big FT8 DXpeditions run **FOX** mode: the DXpedition (the FOX) works several stations at once, and the callers (the **HOUNDS**) follow strict rules that the Remote Station applies by itself, as WSJT-X does.
