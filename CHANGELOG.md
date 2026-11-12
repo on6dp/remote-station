@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.382** — TRX DIGI du dashboard : FTDX101 en DUAL RX = deux cascades, quatre colonnes (activité de bande et fréquence RX de chaque VFO) et deux cartes de bande (bande de chaque VFO) ; TRX à un seul récepteur : une cascade, deux colonnes, une carte
 - **0.37.381** — Cadres agrandis : bandeau d'identité du VFO (VFO A · MAIN en vert, VFO B · SUB en rose), fréquence, mode, bande et nom du cadre
 - **0.37.380** — Cadres RF FRONT END, FILTRES et DSP : suivent le VFO choisi (touches VFO A / B), comme les modes — B · SUB quand B est choisi (FTDX101, FTDX5000)
 - **0.37.379** — Écrans VFO : clic sur le filtre, le cadran ou le spectre = agrandi au milieu de l'écran (nouveau clic, clic à côté ou Échap : retour) ; écrans du cadran à la molette

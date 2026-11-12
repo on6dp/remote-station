@@ -880,7 +880,9 @@
   const dualTab = () => DUAL_TABS.indexOf(tab) >= 0;
   const viewB = () => zoomView('B') || { lo: WF_LO, span: WF_MAX_HZ }; // plage de la cascade B (zoom : FT et CW)
   function ftDualWant() {
-    return !!(/^\/ftdx101/.test(location.pathname) && !detached && dualAudioOn() && ((tab === 'ftx' && FT_MODES.indexOf(mode) >= 0) || ['jt65', 'wspr', 'jtty', 'cw'].indexOf(tab) >= 0));
+    // TRX à deux vrais récepteurs dont les deux voies arrivent séparément (FTDX101D / MP en DUAL RX) : dashboard, sa page
+    // TRX DIGI et la face avant /ftdx101 ; FTX-1 : une seule cascade (sa double réception reste dans sa page de face avant)
+    return !!(!detached && dualAudioOn() && api.rig().ID !== 'ftx1' && ((tab === 'ftx' && FT_MODES.indexOf(mode) >= 0) || ['jt65', 'wspr', 'jtty', 'cw'].indexOf(tab) >= 0));
   }
   let ftDualPane = '';
   /** Affiche ou retire la cascade et les colonnes du VFO-B (FTDX101 en double réception) ; true si changé. */
@@ -1866,7 +1868,7 @@
   let bmState = '', bmHost = '', bmRaf = 0, bmBand = '', bmLay = [];
   let bmBandB = '', bmLayB = []; // carte du VFO-B (double réception)
   // Deux cartes de bande (page /ftdx101, double réception) : FT8 / FT4 / FT2, et RTTY avec ses deux cascades
-  const bmDualOn = () => !!($('bandMapB') && ((ftDual && dualTab()) || (tab === 'rtty' && rtDualAudio && !detached && /^\/ftdx101/.test(location.pathname))));
+  const bmDualOn = () => !!($('bandMapB') && ((ftDual && dualTab()) || (tab === 'rtty' && rtDualAudio && !detached && api.rig && api.rig() && api.rig().ID !== 'ftx1')));
   const bmBandOfSide = (X) => (X ? bmBandB : bmBand);
   const bmLayOf = (X) => (X ? bmLayB : bmLay);
   let bmFilt = store.get('bmfilt', 'rtty') === 'all' ? 'all' : 'mode';
@@ -1981,7 +1983,8 @@
       return on;
     }
     const ws = document.querySelector('.workspace');
-    const far = !!(ws && BM_FAR_MQ && BM_FAR_MQ.matches && !POPUP && !bm.hidden && !p.classList.contains('collapsed') && p.closest('.workspace') === ws);
+    // Deux cartes de bande (double réception) : elles restent dans la fenêtre des modes, A à gauche, B à droite
+    const far = !!(ws && BM_FAR_MQ && BM_FAR_MQ.matches && !POPUP && !bm.hidden && !p.classList.contains('collapsed') && !p.classList.contains('bm-dual') && p.closest('.workspace') === ws);
     if (far && bm.parentElement !== ws) ws.appendChild(bm);
     if (!far && bm.parentElement !== p) p.appendChild(bm);
     if (document.body.classList.contains('bm-far') !== far) {
