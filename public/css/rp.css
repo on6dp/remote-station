@@ -2590,3 +2590,8 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 /* « SEULEMENT LA CHASSE » : cadre blanc ; activé : fond bleu foncé, texte blanc */
 .dg-hunt .dg-huntonly { border: 1px solid #fff; color: #fff; }
 .dg-hunt .dg-huntonly[aria-pressed='true'] { background: linear-gradient(180deg, #1d4f9e, #0f2f66); border-color: #fff; color: #fff; box-shadow: 0 0 8px rgba(60, 130, 255, .45); }
+/* Barre FT : Période, Activité, DX, Carnet et leurs boutons à la même hauteur (28 px) */
+.dg-ftx > .dg-bar #dgPar, .dg-ftx > .dg-bar #dgHound, .dg-ftx > .dg-bar #dgAutoLog, .dg-ftx > .dg-bar #dgHunt,
+.dg-ftx > .dg-bar .dg-hunt .btn { box-sizing: border-box; height: 28px; font-size: 13px; font-weight: 800; padding: 0 8px; border-radius: 6px; line-height: 26px; vertical-align: middle; }
+.dg-ftx > .dg-bar #dgHound { min-width: 0; }
+.dg-ftx > .dg-bar #dgAutoLog { width: auto; max-width: none; }
