@@ -210,10 +210,8 @@
       </select>
       <label class="dg-hound" id="dgHoundWrap" title="DXpédition en FT8 : HOUND = vous appelez une DXpédition qui trafique en FOX (FOX classique, plusieurs QSO à la fois) ou en SuperFox (un seul signal large de 1,5 kHz, jusqu'à 9 stations à la fois). Choisi par celui qui a la main, pour toute la station."><span class="dg-f">Activité</span> <select id="dgHound"><option value="0">NORMALE</option><option value="1">HOUND · FOX</option><option value="2">HOUND · SuperFox</option></select></label>
       <label class="dg-chk dg-alog" title="Que faire du QSO dans le carnet à la fin du QSO (RR73 / 73) : vous demander (fenêtre « QSO terminé » avec « Enregistrer dans le carnet »), ou l’enregistrer tout seul (« Log automatically » de WSJT-X)">Carnet en fin de QSO <select id="dgAutoLog">
-        <option value="">me demander avant d’enregistrer</option>
-        <option value="sent">enregistrer seul quand j’envoie RR73 / 73</option>
-        <option value="rcvd">enregistrer seul quand je reçois RR73 / 73</option>
-        <option value="any">enregistrer seul au 1er RR73 / 73 (envoyé ou reçu)</option>
+        <option value="">MANUEL : me demander avant d’enregistrer</option>
+        <option value="any">AUTOMATIQUE : RR73 reçu ou 73 envoyé</option>
       </select></label>
       <label class="dg-chk spotlog" title="Cochée : chaque QSO FT8 / FT4 / FT2 enregistré dans le carnet (fiche ou log automatique) est aussi spoté sur le DX cluster, sous votre indicatif d’opérateur — pas le TX CALL. Les stations décodées partent de toute façon vers PSK Reporter."><input type="checkbox" data-spotlog> Spot cluster</label>
       <button class="btn dg-dualrx" type="button" id="dgDualRx" hidden aria-pressed="false" title="DUAL RX : deux cascades, quatre colonnes et deux cartes de bande (VFO-A et VFO-B) ; clic : un seul VFO affiché (le TRX garde sa double réception). TRX en réception simple : clic = DUAL RX sur le TRX (avec la main).">DUAL RX</button>
@@ -4213,7 +4211,7 @@
     const q = m.qso;
     const key = q.call + '|' + q.qso_date + '|' + q.time_on;
     if (ftxLogged.has(key)) return;
-    const al = store.get('ftautolog', '');
+    const al = store.get('ftautolog', '') ? 'any' : ''; // anciens choix (envoi / réception) : automatique
     const sent = /envoy/.test(m.why || '');
     const rcvd = /re[çc]u/.test(m.why || '');
     if (al === 'any' || (al === 'sent' && sent) || (al === 'rcvd' && rcvd)) {
@@ -5769,7 +5767,7 @@
           : 'HOUND (FOX classique) : double-cliquez sur le CQ du FOX ; vous appelez en 2e période au-dessus de 1000 Hz, le R+report part tout seul sur la fréquence où le FOX vous appelle.', '', 12000);
       });
       if ($('dgAutoLog')) {
-        $('dgAutoLog').value = store.get('ftautolog', '');
+        $('dgAutoLog').value = store.get('ftautolog', '') ? 'any' : '';
         $('dgAutoLog').addEventListener('change', () => {
           store.set('ftautolog', $('dgAutoLog').value);
           if (api && $('dgAutoLog').value) api.say('Log automatique : les QSO FT8 / FT4 / FT2 terminés vont tout seuls dans le carnet (' + $('dgAutoLog').selectedOptions[0].textContent + ').', '', 5000);

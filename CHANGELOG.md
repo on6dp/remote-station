@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.26** — Carnet en fin de QSO : MANUEL (me demander) ou AUTOMATIQUE (RR73 reçu ou 73 envoyé) ; la fiche sous les macros reste disponible
 - **0.38.25** — Barre FT : « Log » devient « Carnet en fin de QSO » avec des choix plus clairs (me demander avant d'enregistrer, enregistrer seul quand j'envoie / je reçois RR73 / 73…)
 - **0.38.24** — Liste Période : AUTO, 0/15, 15/30 (FT4 : 0/7,5 · 7,5/15 ; FT2 : 0/3,75 · 3,75/7,5)
 - **0.38.23** — FT8 / FT4 / FT2 : case « Répondre au 1er » retirée (après un CQ, double-clic sur la station qui répond)
