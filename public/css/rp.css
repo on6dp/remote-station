@@ -2549,3 +2549,6 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 #sec-dual #txwBtn[aria-pressed='true'], #sec-dual #txwBtn.held, #sec-dual #txwBtn:active { color: #000; background: #fff; border-color: #fff; font-weight: 900; }
 /* « VFO-A · MAIN » et « VFO-B · SUB » : exactement la même police */
 .ft-dual .wf-ctl .ft-wfa, .ft-dual .ft-wfa, .wf-ctl .ft-wfbl, .ft-wfbl { font-family: Verdana, "DejaVu Sans", Arial, sans-serif; font-size: 16px; font-weight: 800; letter-spacing: .3px; color: #fff; line-height: 1.2; text-transform: none; }
+/* « VFO-A · MAIN » encadré sur fond vert foncé, « VFO-B · SUB » sur fond rose foncé (mêmes couleurs que les VFO A / B ailleurs) */
+.ft-vtag { font-style: normal; display: inline-block; padding: 1px 9px; border-radius: 5px; border: 1px solid #4fd17a; background: linear-gradient(180deg, #1f7a3a, #0f5226); color: #fff; font-weight: 800; }
+.ft-vtag.b { border-color: #ff7ab3; background: linear-gradient(180deg, #a3245e, #6e133d); }

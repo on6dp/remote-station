@@ -222,7 +222,7 @@
     </div>
     <div class="ft-wfrow"><div class="dg-wf-slot" data-slot="ftx"><div class="dg-wf">
       <div class="wf-ctl" title="Réglages de la cascade (comme WSJT-X)">
-        <span class="ft-wfa">VFO-A · MAIN <b id="ftDialA"></b><i class="ft-md" id="ftModeA"></i></span>
+        <span class="ft-wfa"><em class="ft-vtag">VFO-A · MAIN</em> <b id="ftDialA"></b><i class="ft-md" id="ftModeA"></i></span>
         <label title="Contraste : plus à droite, les signaux faibles ressortent davantage">Gain <input id="wfGain" type="range" min="-20" max="20" step="1" value="0"></label>
         <label title="Niveau du bruit de fond : plus à droite, le fond est plus clair">Zéro <input id="wfZero" type="range" min="-20" max="20" step="1" value="0"></label>
         <label title="Aplatit le bruit de fond sur toute la largeur (corrige la pente du filtre du TRX)"><input id="wfFlat" type="checkbox" checked> Plat</label>
@@ -242,7 +242,7 @@
     </div></div>
       <div class="dg-wf ft-wfb" id="ftWfBox" hidden>
         <div class="wf-ctl ft-wfh" title="Réglages de la cascade du VFO-B">
-          <span class="ft-wfbl">VFO-B · SUB <b id="ftDialB"></b><i class="ft-md" id="ftModeB"></i></span>
+          <span class="ft-wfbl"><em class="ft-vtag b">VFO-B · SUB</em> <b id="ftDialB"></b><i class="ft-md" id="ftModeB"></i></span>
           <label title="Contraste : plus à droite, les signaux faibles ressortent davantage">Gain <input id="wfGainB" type="range" min="-20" max="20" step="1" value="0"></label>
           <label title="Niveau du bruit de fond : plus à droite, le fond est plus clair">Zéro <input id="wfZeroB" type="range" min="-20" max="20" step="1" value="0"></label>
           <label title="Aplatit le bruit de fond sur toute la largeur (corrige la pente du filtre du TRX)"><input id="wfFlatB" type="checkbox" checked> Plat</label>
