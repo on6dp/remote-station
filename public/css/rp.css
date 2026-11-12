@@ -2209,3 +2209,5 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 #lgForm .lg-row input[name='call'] { color: #003a8c !important; font-weight: 800; }
 #lgForm .lg-row select option { background: #fff; color: #111; }
 #lgForm .lg-note, #lgForm .lg-msg { color: #333; }
+/* Cadre STEP / VFO / BANDES : fond gris-bleu plus clair (les boutons sombres ressortent) */
+section.panel.tune-panel { background: linear-gradient(180deg, #4d5d72, #3f4e61); border-color: #6b7c92; }
