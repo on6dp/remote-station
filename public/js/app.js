@@ -283,10 +283,25 @@
     if (!hz && R2.widthTable) { const wt = R2.widthTable(md), wv = ctlValue('width' + B) != null ? Number(ctlValue('width' + B)) : r['width' + B]; if (wt && wv && wt[wv - 1]) hz = wt[wv - 1]; }
     if (!hz) hz = MF_DEF(md);
     if (r['shift' + B] != null) sft = Number(ctlValue('shift' + B) != null ? ctlValue('shift' + B) : r['shift' + B]) || 0; // Yaesu : IF SHIFT
-    const W = hz; let a = sft, b = sft;
+    let W = hz, a = sft, b = sft;
     const pi = r['pbtIn' + B], po = r['pbtOut' + B]; // Icom : TWIN PBT (deux filtres décalés, la bande passante est leur partie commune)
     if (pi != null && po != null) { a = (pi - 128) / 128 * hz / 2; b = (po - 128) / 128 * hz / 2; sft = (a + b) / 2; hz = Math.max(50, hz - Math.abs(a - b)); }
-    return { hz: Math.round(hz / 10) * 10, sft: Math.round(sft / 10) * 10, cw: /^CW/.test(md), W, a: Math.round(a), b: Math.round(b), md };
+    else {
+      // Yaesu (WIDTH + SHIFT) dessiné comme le TWIN PBT : deux filtres de largeur nominale (rouge : bord bas de la bande
+      // passante, bleu : bord haut) qui s'écartent quand on rétrécit le BW et coulissent ensemble avec le SHIFT ;
+      // la bande passante est leur partie commune (orange)
+      W = Math.max(hz, /^CW/.test(md) ? 500 : /RTTY|PSK/.test(md) ? 500 : /AM/.test(md) ? 6000 : 3000);
+      a = sft - (W - hz) / 2; b = sft + (W - hz) / 2;
+    }
+    // NOTCH manuel : Yaesu = fréquence BF (BP01), Icom = position 0–255 (≈ 300 à 2700 Hz, comme la page Face avant)
+    const nOn = !!(ctlValue('notch' + B) != null ? Number(ctlValue('notch' + B)) : r['notch' + B]);
+    let nHz = null;
+    if (nOn) {
+      const nf = ctlValue('notchFreq' + B) != null ? ctlValue('notchFreq' + B) : r['notchFreq' + B];
+      const np = ctlValue('notchPos' + B) != null ? ctlValue('notchPos' + B) : r['notchPos' + B];
+      nHz = nf != null ? Number(nf) : np != null ? 300 + Number(np) / 255 * 2400 : null;
+    }
+    return { hz: Math.round(hz / 10) * 10, sft: Math.round(sft / 10) * 10, cw: /^CW/.test(md), W, a: Math.round(a), b: Math.round(b), md, notch: nHz == null ? null : Math.round(nHz) };
   }
   // Icom : « BW 2.8K » (largeur réelle, rétrécie par le TWIN PBT) au lieu de « FIL1 3.0K » ; FIL1/2/3 reste dans l'infobulle
   function icomBw(w, r, txt) {
@@ -376,43 +391,43 @@
     const sb = $('sft' + w);
     if (sb) { sb.hidden = !d; if (d) sb.textContent = 'SFT ' + (d.sft > 0 ? '+' : d.sft < 0 ? '−' : '') + Math.abs(d.sft); }
     if (w === 'B' && !RIG().SUB_BADGES) { const wb = $('widthB'); wb.hidden = !d; if (d) wb.textContent = 'BW ' + bwK(d.hz); }
-    const key = d ? d.hz + '/' + d.sft + '/' + d.cw + '/' + d.W + '/' + d.a + '/' + d.b + '/' + d.md : '';
+    const key = d ? d.hz + '/' + d.sft + '/' + d.cw + '/' + d.W + '/' + d.a + '/' + d.b + '/' + d.md + '/' + d.notch : '';
     if (sv.dataset.k === key) return;
     sv.dataset.k = key;
     sv.style.visibility = d ? '' : 'hidden';
     if (!d) { sv.innerHTML = ''; return; }
-    // Comme sur les Icom : fenêtre fixe (la largeur dessinée suit le BW, la position suit le SFT), bande passante orange,
-    // bord bas rouge, bord haut bleu ; avec le TWIN PBT décalé, les deux filtres sont dessinés en trait (rouge / bleu)
-    // Échelle de l'IC-7300 : filtres larges sur ≈ 7 kHz (AM 20 kHz), trait de base sur toute la largeur ;
-    // filtres étroits (< 1 kHz) agrandis, trait de base court au milieu ; trapèze moins haut que la fenêtre
-    const narrowF = d.W < 1000, AMm = /AM/.test(d.md || '');
-    const c0 = d.cw ? 700 : 1500, span = narrowF ? d.W / 0.38 : AMm ? 20000 : 7000;
-    const x0 = 6, ww = 138, X = (f) => x0 + ww / 2 + (f - c0) / span * ww, T = 12, BO = 37, SL = 5;
-    const bh = narrowF ? ww / 4 : ww / 2;
-    const trap = (lo, hi) => { const xl = X(lo), xh = X(hi), sl = Math.min(SL, (xh - xl) / 3); return [xl, xl + sl, xh - sl, xh]; };
-    const P = (q) => 'M' + q[0].toFixed(1) + ' ' + BO + 'L' + q[1].toFixed(1) + ' ' + T + 'L' + q[2].toFixed(1) + ' ' + T + 'L' + q[3].toFixed(1) + ' ' + BO;
-    const lo = c0 + d.sft - d.hz / 2, hi = c0 + d.sft + d.hz / 2, q = trap(lo, hi);
-    const fmt = (v) => String(Math.max(0, Math.round(v / 10) * 10));
-    let outl = '';
-    if (d.a !== d.b) {
-      outl = '<path class="mf-o1" d="' + P(trap(c0 + d.a - d.W / 2, c0 + d.a + d.W / 2)) + '"/>' +
-             '<path class="mf-o2" d="' + P(trap(c0 + d.b - d.W / 2, c0 + d.b + d.W / 2)) + '"/>';
-    }
-    sv.setAttribute('viewBox', '-4 -4 158 58');
+    // Comme le cadre TWIN PBT de l'IC-7300 (page /ic7300) : cases BW et SFT en haut, filtre en orange bordé de rouge,
+    // les deux PBT en rouge / bleu quand ils sont décalés (Icom), trait de base, repère du centre, bords en dessous ;
+    // échelle fixe ≈ 7 kHz (AM 20 kHz), filtres étroits (< 1 kHz) agrandis avec un trait de base court
+    const fw = d.W, narrowF = fw < 1000, AMm = /AM/.test(d.md || '');
+    const c = d.cw ? 700 : 1500, span = narrowF ? fw / 0.38 : AMm ? 20000 : 7000, half = narrowF ? 56 : 113;
+    const x = (v) => 125 + (v - c) / span * half * 2;
+    const lo = c + d.sft - d.hz / 2, hi = c + d.sft + d.hz / 2, xl = x(lo), xh = x(hi);
+    const trap = (a, b) => { const k2 = Math.min(8, (b - a) / 4); return 'M' + a.toFixed(1) + ' 70L' + (a + k2).toFixed(1) + ' 38H' + (b - k2).toFixed(1) + 'L' + b.toFixed(1) + ' 70Z'; };
+    const both = Math.abs(d.a - d.b) >= 25;
+    const bwT = 'BW ' + (d.hz >= 1000 ? (Math.round(d.hz / 10) / 100).toFixed(2) + 'k' : Math.round(d.hz) + '');
+    const sfT = (d.sft > 0 ? '+' : d.sft < 0 ? '−' : '') + Math.abs(Math.round(d.sft));
+    const cl = (xx) => Math.max(14, Math.min(236, xx)).toFixed(1);
+    const fmt = (v) => String(Math.max(0, Math.round(v)));
+    sv.setAttribute('viewBox', '0 0 250 90');
+    sv.setAttribute('preserveAspectRatio', 'none');
     sv.innerHTML =
-      '<defs><clipPath id="mfc' + w + '"><rect x="' + x0 + '" y="-2" width="' + ww + '" height="42"/></clipPath></defs>' +
-      '<rect class="mf-frame" x="-3" y="-3" width="156" height="56" rx="4"/>' +
+      '<defs><clipPath id="mfc' + w + '"><rect x="3" y="30" width="244" height="42"/></clipPath></defs>' +
+      '<rect x="1" y="1" width="248" height="88" rx="5" class="pb-bg"/>' +
+      '<rect x="10" y="7" width="96" height="21" rx="2" class="pb-box"/><text x="16" y="23" class="pb-t">' + bwT + '</text>' +
+      '<rect x="114" y="7" width="126" height="21" rx="2" class="pb-box"/><text x="120" y="23" class="pb-t">SFT</text><text x="232" y="23" class="pb-t" text-anchor="end">' + sfT + '</text>' +
       '<g clip-path="url(#mfc' + w + ')">' +
-      '<path class="mf-pb" d="' + P(q) + 'Z"/>' + outl +
-      '<line class="mf-lo" x1="' + q[0].toFixed(1) + '" y1="' + BO + '" x2="' + q[1].toFixed(1) + '" y2="' + T + '"/>' +
-      '<line class="mf-hi" x1="' + q[3].toFixed(1) + '" y1="' + BO + '" x2="' + q[2].toFixed(1) + '" y2="' + T + '"/>' +
+      (both ? '<path class="pb-f1" d="' + trap(x(c - fw / 2 + d.a), x(c + fw / 2 + d.a)) + '"/><path class="pb-f2" d="' + trap(x(c - fw / 2 + d.b), x(c + fw / 2 + d.b)) + '"/>' : '') +
+      '<path class="pb-flt" d="' + trap(xl, xh) + '"/>' +
+      // NOTCH : entaille en V dans la bande passante, à sa fréquence (comme sur l'écran des TRX)
+      (d.notch != null ? (() => { const xn = x(d.notch); return '<path class="pb-notch" d="M' + (xn - 7).toFixed(1) + ' 36L' + xn.toFixed(1) + ' 64L' + (xn + 7).toFixed(1) + ' 36Z"/>'; })() : '') +
       '</g>' +
-      '<line class="mf-base" x1="' + (x0 + ww / 2 - bh).toFixed(1) + '" y1="' + BO + '" x2="' + (x0 + ww / 2 + bh).toFixed(1) + '" y2="' + BO + '"/>' +
-      '<line class="mf-c" x1="' + X(c0).toFixed(1) + '" y1="' + (T + 10) + '" x2="' + X(c0).toFixed(1) + '" y2="' + (BO + 1) + '"/>' +
-      '<text class="mf-s" x="' + Math.min(X(c0) - 24, Math.max(12, q[0])).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(lo) + '</text>' +
-      '<text class="mf-s" x="' + X(c0).toFixed(1) + '" y="48" text-anchor="middle">' + c0 + '</text>' +
-      '<text class="mf-s" x="' + Math.max(X(c0) + 24, Math.min(138, q[3])).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(hi) + '</text>' +
-      '<title>Filtre du VFO ' + w + ' : largeur ' + d.hz + ' Hz, décalage ' + d.sft + ' Hz (BW / IF SHIFT, colonne de gauche)</title>';
+      '<line x1="' + (125 - half) + '" y1="70" x2="' + (125 + half) + '" y2="70" class="pb-base"/>' +
+      '<line x1="' + x(c).toFixed(1) + '" y1="52" x2="' + x(c).toFixed(1) + '" y2="70" class="pb-c"/>' +
+      '<text y="85" x="' + cl(Math.min(xl, x(c) - 34)) + '" class="pb-l" text-anchor="middle">' + fmt(lo) + '</text>' +
+      '<text y="85" x="' + cl(x(c)) + '" class="pb-l" text-anchor="middle">' + c + '</text>' +
+      '<text y="85" x="' + cl(Math.max(xh, x(c) + 34)) + '" class="pb-l" text-anchor="middle">' + fmt(hi) + '</text>' +
+      '<title>Filtre du VFO ' + w + ' : largeur ' + d.hz + ' Hz, décalage ' + d.sft + ' Hz (BW / IF SHIFT, colonne de gauche)' + (d.notch != null ? ' ; NOTCH ' + d.notch + ' Hz' : '') + '</title>';
   }
   function drawFreq(which, hz) {
     const s = hz == null ? '---------' : String(hz).padStart(9, '0');
@@ -584,14 +599,16 @@
       return c;
     };
     const clickOn = (id, fn) => $(id).addEventListener('click', (ev) => { ev.stopPropagation(); fn(); });
-    for (const [w, sfx] of [['A', ''], ['B', 'B']]) {
-      clickOn(w === 'A' ? 'ritBadge' : 'ritBBadge', () => { const c = ctlOr('rit' + sfx, 'RIT'); if (c) sendCtl(c, ctlValue('rit' + sfx) ? 0 : 1); });
-      clickOn(w === 'A' ? 'xitBadge' : 'xitBBadge', () => { const c = ctlOr('xit' + sfx, 'XIT'); if (c) sendCtl(c, ctlValue('xit' + sfx) ? 0 : 1); });
-      clickOn('clr' + w, () => { const c = ctlOr('clarClr' + sfx, 'CLEAR'); if (c) { ctlPending['clar' + sfx] = { v: 0, at: Date.now() }; sendCtl(c, null); } });
+    // TRX à un seul clarifier (FTDX101, FTDX5000, IC-7300…) : sur le VFO B, les mêmes RIT / XIT / CLEAR que le VFO A
+    const clarSfx = (w) => (w === 'B' && RIG().CONTROL && RIG().CONTROL.ritB ? 'B' : '');
+    for (const w of ['A', 'B']) {
+      clickOn(w === 'A' ? 'ritBadge' : 'ritBBadge', () => { const sfx = clarSfx(w), c = ctlOr('rit' + sfx, 'RIT'); if (c) sendCtl(c, ctlValue('rit' + sfx) ? 0 : 1); });
+      clickOn(w === 'A' ? 'xitBadge' : 'xitBBadge', () => { const sfx = clarSfx(w), c = ctlOr('xit' + sfx, 'XIT'); if (c) sendCtl(c, ctlValue('xit' + sfx) ? 0 : 1); });
+      clickOn('clr' + w, () => { const sfx = clarSfx(w), c = ctlOr('clarClr' + sfx, 'CLEAR'); if (c) { ctlPending['clar' + sfx] = { v: 0, at: Date.now() }; sendCtl(c, null); } });
       // Molette sur le décalage : ± 10 Hz (± 100 Hz avec Maj)
       for (const id of w === 'A' ? ['ritVal', 'xitVal'] : ['ritBVal', 'xitBVal']) {
         $(id).addEventListener('wheel', (ev) => {
-          const c = RIG().CONTROL && RIG().CONTROL['clar' + sfx];
+          const sfx = clarSfx(w), c = RIG().CONTROL && RIG().CONTROL['clar' + sfx];
           if (!c) return;
           ev.preventDefault();
           if (ctlBlocked()) return say(ctlBlocked(), 'warn');
@@ -1389,7 +1406,8 @@
     // RIT / XIT / SPLIT
     const kHz = (v) => { v = Number(v) || 0; return (v >= 0 ? '+' : '−') + (Math.abs(v) / 1000).toFixed(2) + ' kHz'; };
     const hasB = !!(RIG().CONTROL && RIG().CONTROL.ritB);
-    for (const [w, sfx, ids] of [['A', '', ['ritBadge', 'xitBadge', 'ritVal', 'xitVal']], ['B', 'B', ['ritBBadge', 'xitBBadge', 'ritBVal', 'xitBVal']]]) {
+    for (const [w, sfx0, ids] of [['A', '', ['ritBadge', 'xitBadge', 'ritVal', 'xitVal']], ['B', 'B', ['ritBBadge', 'xitBBadge', 'ritBVal', 'xitBVal']]]) {
+      const sfx = hasB ? sfx0 : ''; // un seul clarifier : le VFO B montre le même que le VFO A
       const on = (k) => !!(live && Number(ctlValue(k + sfx)));
       badge($(ids[0]), 'RIT', on('rit') ? 'b-clar amber' : 'b-clar');
       badge($(ids[1]), 'XIT', on('xit') ? 'b-clar amber' : 'b-clar');
@@ -1398,7 +1416,11 @@
       $(ids[2]).classList.toggle('on', on('rit'));
       $(ids[3]).classList.toggle('on', on('xit'));
       // TRX sans clarifier séparé pour le VFO B (FTDX10, IC-7300) : place gardée, rien d'affiché
-      if (w === 'B') $('vfoB').querySelector('.vfo-side').classList.toggle('na', !hasB);
+      if (w === 'B') {
+        $('vfoB').querySelector('.vfo-side').classList.remove('na');
+        const t = hasB ? '' : ' — le TRX n’a qu’un clarifier, commun aux deux VFO';
+        $('ritBBadge').title = 'RIT : cliquer pour l’allumer / l’éteindre' + t; $('xitBBadge').title = 'XIT : cliquer pour l’allumer / l’éteindre' + t;
+      }
     }
     // badges d'état du récepteur MAIN
     // Badges reconstruits à part, et remplacés seulement s'ils ont changé : sinon une mise à jour de l'état arrivée

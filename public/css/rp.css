@@ -2144,7 +2144,7 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
   box-shadow: 0 0 10px rgba(0, 127, 255, .5); text-shadow: 0 1px 1px rgba(0, 0, 0, .35);
 }
 /* Petit filtre dans l'écran de chaque VFO : dans l'espace libre à gauche de la fréquence, seulement s'il y a la place */
-.freq-wrap .vfo-flt { width: 196px; height: 72px; flex: none; }
+.freq-wrap .vfo-flt { width: 236px; height: 86px; flex: none; }
 .freq-wrap .vfo-meters { display: flex; align-items: center; gap: 10px; margin-right: auto; margin-left: 12px; align-self: center; flex: none; }
 .freq-wrap .vfo-meters.stack { flex-direction: column; gap: 6px; }
 @container (max-width: 560px) { .freq-wrap .vfo-meters { display: none; } }
@@ -2253,7 +2253,7 @@ section[data-panel="tx"] > .panel-h { color: #ffd400; }
 .tb-right > .btn:not(#ctrlBtn):not(#logout):not(#statsBtn) { color: #fff; }
 .tb-right .zoom-btn { color: #fff; font-weight: 800; }
 /* Cadran à aiguille de l'écran VFO (entre le petit filtre et la fréquence) */
-.freq-wrap .vfo-am { width: 171px; height: 72px; flex: none; cursor: pointer; }
+.freq-wrap .vfo-am { width: 205px; height: 86px; flex: none; cursor: pointer; }
 .vfo-am .am-bg { fill: #07090c; stroke: #c8d0dc; stroke-width: 1; }
 .vfo-am .am-arc { fill: none; stroke: #f2f2f2; stroke-width: 1.6; }
 .vfo-am .am-arc.hot { stroke: #2f7bff; stroke-width: 2.6; }
@@ -2332,3 +2332,14 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .mt .mt-v, .mt.live .mt-v { color: #fff; font-weight: 800; }
 /* Cadre TX : « PUISSANCE » (et les autres intitulés) en jaune comme les autres réglages */
 [data-panel=tx] .ctl-label { color: var(--v2-accent-yellow); font-weight: 800; }
+/* Petit filtre des écrans VFO : même dessin que le cadre TWIN PBT de l'IC-7300 */
+.vfo-flt .pb-bg { fill: #0d1428; stroke: #e6e9ef; stroke-width: 2; }
+.vfo-flt .pb-box { fill: none; stroke: #e6e9ef; stroke-width: 1.4; }
+.vfo-flt .pb-t { fill: #fff; font: 700 15px Arial, sans-serif; }
+.vfo-flt .pb-flt { fill: #f08a1c; stroke: #ff3b30; stroke-width: 1.5; }
+.vfo-flt .pb-f1 { fill: #c8282a; stroke: #ff3b30; stroke-width: 1.5; }
+.vfo-flt .pb-f2 { fill: #2f6fd6; stroke: #5fd0ff; stroke-width: 1.5; }
+.vfo-flt .pb-base { stroke: #e6e9ef; stroke-width: 1.6; }
+.vfo-flt .pb-c { stroke: #fff; stroke-width: 1.2; }
+.vfo-flt .pb-l { fill: #fff; font: 800 12px Arial, sans-serif; }
+.vfo-flt .pb-notch { fill: #0d1428; stroke: #5fd0ff; stroke-width: 1.8; stroke-linejoin: round; }
