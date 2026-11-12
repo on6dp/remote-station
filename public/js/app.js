@@ -508,6 +508,8 @@
     $('usersBtn').addEventListener('click', (ev) => { ev.stopPropagation(); closeRigMenu(); toggleUsersMenu(); });
     $('usersMenu').addEventListener('click', (ev) => ev.stopPropagation());
     $('badgesA').addEventListener('click', badgeClick);
+    $('badgesA').addEventListener('wheel', badgeWheel, { passive: false });
+    $('badgesB').addEventListener('wheel', badgeWheel, { passive: false });
     $('badgesB').addEventListener('click', badgeClick);
     document.addEventListener('click', () => { $('usersMenu').hidden = true; $('usersBtn').setAttribute('aria-expanded', 'false'); });
     document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !$('usersMenu').hidden) toggleUsersMenu(false); });
@@ -681,7 +683,32 @@
     if (!ok) return;
     el.dataset.ctl = c.id;
     el.classList.add('clk');
-    el.title = c.label + ' : clic pour ' + (c.type === 'select' ? 'passer au réglage suivant' : 'enclencher / couper');
+    el.title = c.label + ' : clic pour ' + (c.type === 'select' ? 'passer au réglage suivant' : 'enclencher / couper') + (badgeLvlCtl(c.id) ? ' ; molette : ' + badgeLvlCtl(c.id).label.toLowerCase() : '');
+  }
+  // Molette sur un badge de l'écran VFO : NB / DNR (niveau), NOTCH (fréquence du notch)… ; la colonne de droite suit
+  const BADGE_LVL = { nb: 'nbLvl', nr: 'nrLvl', nbB: 'nbLvlB', nrB: 'nrLvlB', notch: 'notchFreq', notchB: 'notchFreqB' };
+  const badgeLvlCtl = (id) => {
+    const C = RIG().CONTROL || {}, c = C[id];
+    if (!c) return null;
+    if (c.type === 'level' && c.off0) return c;              // FTX-1 : NB / DNR = niveau, 0 = arrêt
+    const l = BADGE_LVL[id] && C[BADGE_LVL[id]];
+    return l && l.type === 'level' ? l : c.type === 'level' ? c : null;
+  };
+  function badgeWheel(ev) {
+    const el = ev.target.closest('[data-ctl]');
+    if (!el) return;
+    const c = badgeLvlCtl(el.dataset.ctl);
+    if (!c) return;
+    ev.preventDefault();
+    if (ctlBlocked()) return say(ctlBlocked(), 'warn');
+    const span = (c.max - c.min) || 1, st0 = c.step || 1;
+    const step = span > 60 ? Math.max(st0, Math.round(span / 50 / st0) * st0) : st0; // 0–255 : ~2 % par cran
+    const cur = Number(ctlValue(c.id));
+    const v = Math.max(c.min, Math.min(c.max, (isFinite(cur) ? cur : c.min) + (ev.deltaY < 0 ? step : -step)));
+    ctlPending[c.id] = { v, at: Date.now() };
+    sendCtlThrottled(c);
+    render();
+    say(c.label + ' : ' + fmtCtl(c, v, (st && st.radio) || {}), '', 1200);
   }
   function badgeClick(ev) {
     const el = ev.target.closest('[data-ctl]');
@@ -1365,7 +1392,9 @@
       const add = (txt, cls, ctl) => { const s = document.createElement('span'); badge(s, txt, cls); badgeCtl(s, C[ctl], rr); bA.appendChild(s); };
       const optLabel = (id, v) => { const o = C[id] && C[id].options && C[id].options.find((x) => x[0] === v); return o ? o[1] : null; };
       // Interrupteur seul (« NB ») ou niveau avec arrêt à 0 (« NB 3 ») selon le pilote
-      const flag = (id, txt, cls) => { if (!C[id]) return; const t = C[id].badge || txt; add(rr[id] && C[id].type === 'level' ? t + ' ' + rr[id] : t, rr[id] ? cls : '', id); };
+      // allumé : avec son niveau (« NB 5 », « DNR 8 », « NB 20 % ») quand le TRX a un réglage de niveau à part
+      const lvlTxt = (id) => { const l = BADGE_LVL[id] && C[BADGE_LVL[id]]; const v = l ? ctlValue(l.id) : null; return l && l.type === 'level' && v != null && !/notch/i.test(id) ? ' ' + fmtCtl(l, v, rr) : ''; };
+      const flag = (id, txt, cls) => { if (!C[id]) return; const t = C[id].badge || txt; add(rr[id] && C[id].type === 'level' ? t + ' ' + rr[id] : rr[id] ? t + lvlTxt(id) : t, rr[id] ? cls : '', id); };
       if (C.att) add(rr.att && C.att.type === 'select' ? 'ATT ' + optLabel('att', rr.att) : C.att.badge || 'ATT', rr.att ? 'green' : '', 'att');
       const pa = RIG().preampText && RIG().preampText(rr, 'A');
       if (pa) add(pa[0], pa[1] ? 'green' : '', rr.freq >= 144000000 ? 'preampVU' : 'preamp');
@@ -1391,8 +1420,9 @@
       const pb = RIG().preampText && RIG().preampText(rr, 'B');
       if (C.preampB && pb && rr.freqB < 144000000) add(pb[0], pb[1] ? 'green' : '', 'preampB');
       else if (C.preampB && rr.freqB < 144000000) add(rr.preampB == null ? 'IPO ?' : ['IPO', 'AMP1', 'AMP2'][rr.preampB] || 'IPO', rr.preampB ? 'green' : '', 'preampB');
-      if (rr.nbB != null) add(rr.nbB ? 'NB ' + rr.nbB : 'NB', rr.nbB ? 'amber' : '', 'nbB');
-      if (rr.nrB != null) add(rr.nrB ? 'DNR ' + rr.nrB : 'DNR', rr.nrB ? 'amber' : '', 'nrB');
+      const lvlB = (id, on) => { if (!on) return ''; const l = C[BADGE_LVL[id]]; const v = l ? ctlValue(l.id) : null; return l && v != null ? ' ' + fmtCtl(l, v, rr) : C[id] && C[id].type === 'level' ? ' ' + on : ''; };
+      if (rr.nbB != null) add('NB' + lvlB('nbB', rr.nbB), rr.nbB ? 'amber' : '', 'nbB');
+      if (rr.nrB != null) add('DNR' + lvlB('nrB', rr.nrB), rr.nrB ? 'amber' : '', 'nrB');
       if (rr.notchB != null) add('NOTCH', rr.notchB ? 'amber' : '', 'notchB');
       if (rr.dnfB != null) add('DNF', rr.dnfB ? 'amber' : '', 'dnfB');
       if (rr.narrowB != null) add('NAR', rr.narrowB ? 'cyan' : '', 'narrowB');

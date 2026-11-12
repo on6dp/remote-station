@@ -262,6 +262,7 @@ En haut au centre, deux écrans : **VFO A (MAIN)** à gauche et **VFO B (SUB)** 
 > **Les badges cliquables (ATT, IPO / AMP, NB, DNR, NOTCH, DNF, NAR)**
 > - **Gris** = fonction coupée ; **en couleur** = en service (vert pour ATT et préampli, orange pour NB, DNR, NOTCH, DNF, bleu pour NAR). Au survol, le badge s'éclaircit et se cerne de pointillés, sans changer de couleur : on voit son état sous la souris.
 > - **Un seul clic** suffit : le nouvel état s'affiche aussitôt, puis la relecture du TRX le confirme dans la seconde. Si le badge revient à l'état d'avant, le TRX a refusé (fonction sans effet dans ce mode, par exemple) : le message sous les bandes le dit.
+> - **Molette de la souris** sur `NB`, `DNR` (ou NR) : change leur niveau (affiché dans le badge, « NB 5 », et dans « Niveau NB / DNR » de la colonne de droite) ; sur `NOTCH` : la fréquence du notch. Il faut avoir la main.
 > - Il faut avoir la main ; refusé pendant une émission. Au survol, une bulle rappelle le nom du réglage et ce que fait le clic.
 > - NB et DNR : le clic allume au dernier niveau utilisé (ou au milieu) et éteint ; le niveau exact se règle dans le cadre DSP. IPO / AMP1 / AMP2 et ATT à plusieurs crans (FTDX10, FTDX101 : 6 / 12 / 18 dB) : chaque clic passe au cran suivant.
 

@@ -262,6 +262,7 @@ At the top centre, two displays: **VFO A (MAIN)** on the left and **VFO B (SUB)*
 > **Clickable badges (ATT, IPO / AMP, NB, DNR, NOTCH, DNF, NAR)**
 > - **Grey** = function off; **coloured** = on (green for ATT and preamp, orange for NB, DNR, NOTCH, DNF, blue for NAR). On hover the badge only brightens and gets a dotted outline, without changing colour: you can see its state under the mouse.
 > - **One click** is enough: the new state shows at once, then the TRX read-back confirms it within a second. If the badge goes back to its previous state, the TRX refused it (function without effect in this mode, for example): the message under the bands says so.
+> - **Mouse wheel** on `NB`, `DNR` (or NR): changes their level (shown in the badge, « NB 5 », and in « Niveau NB / DNR » in the right column); on `NOTCH`: the notch frequency. You need control.
 > - You must have control; refused while transmitting. On hover, a tooltip recalls the name of the setting and what the click does.
 > - NB and DNR: the click switches on at the last level used (or mid-range) and off; the exact level is set in the DSP panel. IPO / AMP1 / AMP2 and multi-step ATT (FTDX10, FTDX101: 6 / 12 / 18 dB): each click goes to the next step.
 
