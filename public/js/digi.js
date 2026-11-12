@@ -231,10 +231,12 @@
       </div>
       <canvas id="dgScale" height="44"></canvas>
       <canvas id="dgWf" height="140"></canvas>
+      <canvas id="dgSpec" class="dg-spec" height="70" title="Spectre : niveau de chaque fréquence audio (moyenne des dernières lignes de la cascade, mêmes réglages Gain / Zéro / Plat)"></canvas>
       <i class="dg-mk dg-mk-tx" id="dgMkTx"></i><i class="dg-mk dg-mk-rx" id="dgMkRx"></i>
       <i class="dg-mk dg-mk-bm" id="dgMkBM" hidden></i><i class="dg-mk dg-mk-bs" id="dgMkBS" hidden></i>
       <i class="cw-trx" id="cwTrxA" hidden title="Filtre du TRX (BW) : glisser une barre pour l'élargir ou le rétrécir (Ctrl + molette aussi)"><b></b><b></b><span></span></i>
       <i class="dg-grip" id="dgGrip" title="Glisser vers le haut ou le bas : hauteur de la cascade et des listes de messages (double-clic : taille d'origine)"></i>
+      <i class="dg-grip dg-sgrip" id="dgSGrip" title="Glisser vers le haut ou le bas : hauteur du spectre (double-clic : taille d'origine)"></i>
     </div></div>
       <div class="dg-wf ft-wfb" id="ftWfBox" hidden>
         <div class="wf-ctl ft-wfh" title="Réglages de la cascade du VFO-B">
@@ -248,9 +250,11 @@
         </div>
         <canvas id="ftScaleB" height="44"></canvas>
         <canvas id="ftWfB" height="140" title="Cascade du VFO-B (SUB) : clic gauche = réception, clic droit = émission"></canvas>
+        <canvas id="ftSpecB" class="dg-spec" height="70" title="Spectre du VFO-B"></canvas>
         <i class="dg-mk dg-mk-tx" id="ftMkTxB"></i><i class="dg-mk dg-mk-rx" id="ftMkRxB"></i>
         <i class="cw-trx" id="cwTrxB" hidden title="Filtre du TRX (BW) : glisser une barre pour l'élargir ou le rétrécir (Ctrl + molette aussi)"><b></b><b></b><span></span></i>
         <i class="dg-grip" id="ftGripB" title="Glisser vers le haut ou le bas : hauteur des cascades (double-clic : taille d'origine)"></i>
+        <i class="dg-grip dg-sgrip" id="ftSGripB" title="Glisser vers le haut ou le bas : hauteur des spectres (double-clic : taille d'origine)"></i>
       </div>
     </div>
     <div class="dg-cols">
@@ -864,6 +868,7 @@
     const w = Math.round(cw * dpr);
     const h = Math.round(Math.max(40, c.clientHeight) * dpr);
     for (const id of ['ftMkRxB', 'ftMkTxB', 'cwTrxB']) $(id).style.top = (s.offsetTop + s.offsetHeight) + 'px';
+    sizeSpec(wfFB, $('ftSpecB'), c, $('ftGripB'));
     if (w === wfFB.w && h === wfFB.h && wfFB.ctx) return;
     let old = null;
     if (wfFB.ctx) { old = document.createElement('canvas'); old.width = wfFB.w; old.height = wfFB.h; old.getContext('2d').drawImage(c, 0, 0); }
@@ -993,6 +998,7 @@
     const ch = Math.max(40, Math.round(c.clientHeight || 140));
     const w = Math.round(cw * dpr);
     const h = Math.round(ch * dpr);
+    sizeSpec(wf, $('dgSpec'), c, $('dgGrip'));
     if (w === wf.w && h === wf.h && wf.ctx) { sizeB(); sizeFB(); return drawScale(); }
     let old = null;
     if (wf.ctx) { old = document.createElement('canvas'); old.width = wf.w; old.height = wf.h; old.getContext('2d').drawImage(c, 0, 0); }
@@ -1014,6 +1020,56 @@
     sizeB();
     sizeFB();
     drawScale();
+  }
+  // Spectre sous la cascade : taille en pixels de l'écran ; la poignée de la cascade se place entre les deux
+  function sizeSpec(T, cv, wcv, grip) {
+    if (!cv) return;
+    if (grip && wcv) { grip.style.top = (wcv.offsetTop + wcv.offsetHeight - 5) + 'px'; grip.style.bottom = 'auto'; }
+    const dpr = wf.dpr || 1;
+    const w = Math.round(Math.max(120, cv.clientWidth) * dpr), h = Math.round(Math.max(20, cv.clientHeight) * dpr);
+    if (T.sp && T.sp.w === w && T.sp.h === h) return;
+    cv.width = w; cv.height = h;
+    T.sp = { ctx: cv.getContext('2d'), w, h, v: null };
+    drawSpec(T);
+  }
+  // Courbe du spectre (comme le « Spectrum » de WSJT-X) : niveau lissé de chaque colonne de la cascade
+  function drawSpec(T) {
+    const S = T.sp;
+    if (!S || !S.ctx) return;
+    const c = S.ctx, w = S.w, h = S.h, dpr = wf.dpr || 1;
+    c.fillStyle = '#05080d';
+    c.fillRect(0, 0, w, h);
+    c.strokeStyle = 'rgba(120, 140, 165, .22)';
+    c.lineWidth = 1;
+    for (const f of [0.25, 0.5, 0.75]) { const y = Math.round(h * f) + 0.5; c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
+    const v = S.v;
+    if (!v || v.length !== w) return;
+    const top = 3 * dpr, H = h - top - 1;
+    // Lissage sur ± 2 pixels CSS (courbe lisible, les signaux restent nets)
+    const r = Math.max(1, Math.round(2 * dpr));
+    if (!S.sm || S.sm.length !== w) S.sm = new Float32Array(w);
+    for (let x = 0, acc = 0, n = 0; x < w; x++) {
+      acc = 0; n = 0;
+      for (let j = Math.max(0, x - r); j <= Math.min(w - 1, x + r); j++) { acc += v[j]; n++; }
+      S.sm[x] = acc / n;
+    }
+    const sm = S.sm;
+    const yOf = (x) => h - 1 - Math.min(1, sm[x] / 255) * H;
+    c.beginPath();
+    c.moveTo(0, h);
+    for (let x = 0; x < w; x++) c.lineTo(x, yOf(x));
+    c.lineTo(w, h);
+    c.closePath();
+    const g = c.createLinearGradient(0, top, 0, h);
+    g.addColorStop(0, 'rgba(111, 245, 196, .55)');
+    g.addColorStop(1, 'rgba(46, 229, 157, .08)');
+    c.fillStyle = g;
+    c.fill();
+    c.beginPath();
+    for (let x = 0; x < w; x++) { const y = yOf(x); if (x) c.lineTo(x, y); else c.moveTo(x, y); }
+    c.strokeStyle = '#6ff5c4';
+    c.lineWidth = Math.max(1, dpr);
+    c.stroke();
   }
   // Palette : bruit sombre → bleu → cyan → jaune → rouge
   const PALS = {
@@ -1127,6 +1183,9 @@
     const flatLvl = floor + 0; // fond aplati ramené au plancher moyen
     const nHz = VW.span / df; // cases sur la largeur affichée
     const k0f = VW.lo / df;     // première case affichée (zoom RTTY / FT)
+    // Spectre sous la cascade (VFO-A, et VFO-B en double réception) : niveau de chaque colonne, lissé dans le temps
+    const SP = (T === wf || T === wfFB) && T.sp && T.sp.w ? T.sp : null;
+    if (SP && (!SP.v || SP.v.length !== SP.w)) SP.v = new Float32Array(SP.w);
     for (let x = 0; x < T.w; x++) {
       // Interpolation entre deux cases (pas d'escalier quand la cascade est plus large que le nombre de cases)
       const fx = Math.max(0, Math.min(n - 1, k0f + (x + 0.5) / T.w * nHz - 0.5));
@@ -1138,12 +1197,14 @@
       if (C.flat) v = v - base + flatLvl;
       let i = Math.round(((v - floor + off) / range) * 255);
       i = i < 0 ? 0 : i > 255 ? 255 : i;
+      if (SP) { const xs = Math.min(SP.w - 1, Math.floor(x * SP.w / T.w)); SP.v[xs] = SP.v[xs] * 0.82 + i * 0.18; }
       d[x * 4] = CP[i * 3];
       d[x * 4 + 1] = CP[i * 3 + 1];
       d[x * 4 + 2] = CP[i * 3 + 2];
       d[x * 4 + 3] = 255;
     }
     ctx.putImageData(T.img, 0, 0);
+    if (SP) drawSpec(T);
     if (ftB && tday != null) {
       // Trait de début de période, comme sur la cascade du VFO-A
       const P = tab === 'wspr' ? 120000 : tab === 'jtty' || tab === 'cw' ? 0 : SLOT_MS[mode] || 15000;
@@ -5391,6 +5452,31 @@
         grip.addEventListener('pointercancel', up);
       });
       grip.addEventListener('dblclick', () => { $('dgWf').style.height = ''; const root = $('dgWf').closest('.dg') || document.documentElement; root.style.removeProperty('--dg-list-max'); store.set('wfh', '0'); if (wf.ctx) sizeCanvas(); });
+      }
+      // Hauteur du spectre sous la cascade (VFO-A et VFO-B ensemble), gardée dans ce navigateur
+      const SP_DEF = 70;
+      const setSpH = (h, save) => {
+        const v = Math.max(30, Math.min(320, Math.round(h)));
+        for (const id of ['dgSpec', 'ftSpecB']) if ($(id)) $(id).style.height = v + 'px';
+        if (save) store.set('sph', String(v));
+        if (wf.ctx) sizeCanvas();
+        return v;
+      };
+      if (Number(store.get('sph', '0')) > 0) setSpH(Number(store.get('sph', '0')), false);
+      for (const grip of ['dgSGrip', 'ftSGripB'].map($).filter(Boolean)) {
+        grip.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          grip.setPointerCapture(e.pointerId);
+          const y0 = e.clientY;
+          const zf = (window.RSZOOM && window.RSZOOM.z()) || 1;
+          const h0 = $('dgSpec').getBoundingClientRect().height / zf;
+          const mv = (ev) => setSpH(h0 + (ev.clientY - y0) / zf, false);
+          const up = (ev) => { grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up); setSpH(h0 + (ev.clientY - y0) / zf, true); };
+          grip.addEventListener('pointermove', mv);
+          grip.addEventListener('pointerup', up);
+          grip.addEventListener('pointercancel', up);
+        });
+        grip.addEventListener('dblclick', () => setSpH(SP_DEF, true));
       }
       // Séparateurs entre les deux listes (FT8 / FT4 / FT2 et JTTY) : largeur réglable, gardée dans ce navigateur
       const splits = Array.from($('dgSplit').ownerDocument.querySelectorAll('.dg-vsplit'));

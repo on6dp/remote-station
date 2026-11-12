@@ -602,6 +602,8 @@ FT8 est un mode numérique fait pour les signaux très faibles : chaque station 
 
 **La cascade** : **clic gauche** = fréquence de réception (drapeau vert « RX 1500 » et trait vert), **clic droit** = fréquence d'émission (drapeau rouge et trait rouge). Bouton **maintenu** (gauche pour la réception, droit pour l'émission) : le trait suit la souris en continu, comme en RTTY et en CW (FT8 · FT4 · FT2, WSPR, JT65, JTTY) ; ceux qui suivent l'opérateur le voient bouger. Choisissez pour l'émission un endroit libre de la cascade. Un trait blanc marque le début de chaque période, avec l'heure UTC et la bande.
 
+**Le spectre**, sous la cascade (comme le « Spectrum » de WSJT-X) : courbe verte du niveau de chaque fréquence audio, moyennée sur les dernières lignes (mêmes réglages Gain, Zéro et Plat que la cascade) ; un signal ressort comme un pic. La **poignée entre la cascade et le spectre** règle la hauteur de la cascade ; la **poignée tout en bas** règle la hauteur du spectre (double-clic : taille d'origine). En double réception, le VFO-B a aussi son spectre, de la même hauteur.
+
 **Les deux listes de messages**
 
 - **Activité de bande** (à gauche) : tous les messages décodés. Les **CQ** sont en vert, les messages adressés à votre TX call (ON5VL, OR0L ou le vôtre) en rouge, vos propres émissions en jaune. `Effacer` vide la liste.

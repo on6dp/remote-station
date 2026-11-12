@@ -2434,3 +2434,6 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .lg-table td { border-right: 1px solid rgba(200, 210, 225, .28); }
 .lg-table th.flt-on, .lg-table th.flt-on .lg-flt { color: #7fe6ff; }
 .lg-table th.lg-drag { background: #6a3a14; }
+/* Spectre sous la cascade (hauteur réglable avec la poignée du bas) */
+.dg-wf canvas.dg-spec { height: 70px; cursor: default; border-top: 1px solid #2a3442; background: #05080d; }
+.dg-sgrip { z-index: 4; }
