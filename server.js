@@ -966,6 +966,7 @@ function dxInfo(d) {
   const e = DXCC.lookup(call);
   if (!e) return;
   d.cty = e.name;
+  d.pfx = e.pfx; // préfixe DXCC (colonne « Préf. » des listes FT)
   const me = DXCC.gridLL(String(cfg.stationGrid || '').slice(0, 6));
   if (!me) return;
   const last = w[w.length - 1];
@@ -2793,7 +2794,7 @@ function seqStart(conn, m) {
   const grid = String(dx.grid || '').toUpperCase().trim().slice(0, 4);
   const free = String(m.free || '').toUpperCase().replace(/[^A-Z0-9 +\-./?]/g, '').trim().slice(0, 13);
   const hound = mode === 'FT8' ? ftHound : 0;
-  if (hound && ntx !== 1 && ntx !== 3) return err('HOUND : seulement Tx1 (appel du FOX) et Tx3 (R + report). Pas de CQ ni de 73 : le FOX termine le QSO par RR73.');
+  if (hound && ntx !== 1 && ntx !== 3 && ntx !== 5) return err('HOUND : seulement Tx1 (appel du FOX), Tx3 (R + report) et Tx5 (73). Pas de CQ : le FOX termine le QSO par RR73.');
   if (ntx <= 5 && !SEQ_CALL_RE.test(baseCall(call))) return err('Choisissez d’abord le correspondant (double-clic sur son message)');
   if (ntx === 7 && !free) return err('Texte libre vide');
   if ((ntx === 1 || ntx === 6) && !GRID4_RE.test(seqGrid())) return err('Locator de la station non configuré sur le serveur (stationGrid)');

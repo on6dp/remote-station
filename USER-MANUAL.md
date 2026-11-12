@@ -609,7 +609,8 @@ FT8 is a digital mode designed for very weak signals: each station sends a short
 | DT | Time offset of the signal (seconds). Close to 0 when everything is in step. |
 | Fréq | Audio frequency of the signal (Hz). |
 | Message | The decoded text, e.g. "CQ F4ABC JN18". A mark **a1**…**a7** at the end means a decode obtained with a priori help (see below). |
-| Pays | DXCC country of the transmitting station. |
+| Préf. | DXCC entity prefix of the transmitting station (e.g. ON, F, DL, EA8). |
+| Pays | DXCC country of the transmitting station. With dual receive (two VFOs), the Pays and km columns are hidden for lack of room: the **prefix** and **azimuth** (bearing) remain. |
 | km / Az | Distance and direction (azimuth in degrees) from the club. "≈": approximate (no locator in the message, centre of the country). |
 
 - **Stations already worked**: messages from a station already in the log **under the current TX call**, on the same band and in the same mode, are shown green and struck through ("worked before"). With another TX call, only QSOs made under that callsign count.
@@ -641,9 +642,9 @@ FT8 is a digital mode designed for very weak signals: each station sends a short
 Big FT8 DXpeditions run **FOX** mode: the DXpedition (the FOX) works several stations at once, and the callers (the **HOUNDS**) follow strict rules that the Remote Station applies by itself, as WSJT-X does.
 
 - **Activité** (top bar, FT8): **HOUND · FOX** for classic FOX (several FT8 signals below 1000 Hz), **HOUND · SuperFox** for SuperFox (one wide signal of about 1.5 kHz around 750 Hz, addressing up to 9 stations at once). The DXpedition's announcement says which one and its frequency (often not the usual FT8 frequency).
-- **Calling**: double-click the FOX's CQ → **Tx1** ("FOX ON5VL JO20") goes out in the **2nd period** (the FOX transmits in the 1st). Only **Tx1** and **Tx3** can be used; no CQ, no 73. The period is locked to "2e".
+- **Calling**: double-click the FOX's CQ → **Tx1** ("FOX ON5VL JO20") goes out in the **2nd period** (the FOX transmits in the 1st). Only **Tx1**, **Tx3** and **Tx5** (73, by hand: not needed, the FOX's RR73 already ends the QSO) can be used; no CQ. The period is locked to "2e".
 - **Classic FOX**: call **above 1000 Hz** (if your TX marker is lower, a random frequency between 1000 and 2900 Hz is used). When the FOX gives you a report, **Tx3** ("FOX ON5VL R-10") goes out by itself **on the frequency where the FOX called you**, then 300 Hz away if it must be repeated. Its messages can address two stations: "K1ABC RR73; ON5VL <KH7Z> -12".
-- **SuperFox**: put the RX marker (left click) on the low edge of the SuperFox signal (around 750 Hz). The 1st period is decoded by WSJT-X's SuperFox decoder: each part of the message is shown on its own line marked **SF** (CQ, reports, RR73), and the DXpedition's password marked **OTP** ("$VERIFY$ …": it proves the signal really comes from the DXpedition; it can be checked on 9dx.cc). The whole QSO stays on your calling frequency (you may call anywhere, below 1000 Hz too).
+- **SuperFox**: the RX marker moves by itself to the low edge of the SuperFox signal (750 Hz, then wherever the signal is decoded); the decoder searches 450 to 1050 Hz, then around its last position. The 1st period is decoded by WSJT-X's SuperFox decoder: each part of the message is shown on its own line marked **SF** (CQ, reports, RR73), and the DXpedition's password marked **OTP** ("$VERIFY$ …": it proves the signal really comes from the DXpedition; it can be checked on 9dx.cc). The whole QSO stays on your calling frequency (you may call anywhere, below 1000 Hz too).
 - **End of QSO**: the FOX's **RR73** ends the QSO (no 73 is sent); the "QSO terminé" form opens (or the QSO is logged by itself, according to "Log"). With no RR73 within 11 periods after its report, transmitting stops: call it again with Tx1.
 - Go back to **Normale** after the DXpedition, otherwise other stations cannot be worked normally (CQ, 73…).
 

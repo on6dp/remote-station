@@ -266,24 +266,24 @@
     <div class="dg-cols">
       <div class="dg-col">
         <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Activité de bande</span><button class="dg-mini" type="button" id="dgClear">Effacer</button></div>
-        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span>Pays</span><span>km</span><span>Az</span></div>
+        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span title="Préfixe de l’entité DXCC">Préf.</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgBand"></div>
       </div>
       <i class="dg-vsplit" id="dgSplit" title="Glisser à gauche ou à droite : largeur des deux listes (double-clic : moitié-moitié)"></i>
       <div class="dg-col">
         <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span></div>
-        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span>Pays</span><span>km</span><span>Az</span></div>
+        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span title="Préfixe de l’entité DXCC">Préf.</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgRx"></div>
       </div>
       <!-- FTDX101 en double réception : les mêmes colonnes pour le récepteur SUB (VFO-B) -->
       <div class="dg-col ft-colb dual-colb" hidden>
         <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Activité de bande</span><button class="dg-mini" type="button" id="dgClearB">Effacer</button></div>
-        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span>Pays</span><span>km</span><span>Az</span></div>
+        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span title="Préfixe de l’entité DXCC">Préf.</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgBandB"></div>
       </div>
       <div class="dg-col ft-colb dual-colb" hidden>
         <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Fréquence RX <b id="dgRxFB">1500 Hz</b></span></div>
-        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span>Pays</span><span>km</span><span>Az</span></div>
+        <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span>Fréq</span><span>Message</span><span title="Préfixe de l’entité DXCC">Préf.</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgRxB"></div>
       </div>
     </div>
@@ -4090,7 +4090,8 @@
     ftxMsgs().forEach((t, i) => {
       const b = mk(f, 'Tx' + (i + 1), t, () => ftxSend(i, t), i === ftxSel);
       b.title = 'Clic : ce message part à chaque période (FT8 / FT4 / FT2 selon l’onglet) jusqu’à la réponse ; la séquence avance toute seule. ■ Arrêter pour couper.';
-      if (hd && i !== 0 && i !== 2) { b.disabled = true; b.title = 'HOUND : seulement Tx1 (appel du FOX) et Tx3 (R + report). Pas de CQ ni de 73 : le FOX termine le QSO par RR73.'; }
+      if (hd && i !== 0 && i !== 2 && i !== 4) { b.disabled = true; b.title = 'HOUND : seulement Tx1 (appel du FOX), Tx3 (R + report) et Tx5 (73). Pas de CQ : le FOX termine le QSO par RR73.'; }
+      if (hd && i === 4) b.title = 'HOUND : 73 au FOX, envoyé une fois à la main (pas nécessaire : son RR73 termine déjà le QSO)';
       if (hd && i === 0) b.title = 'HOUND : appel du FOX en 2e période (FOX classique : au-dessus de 1000 Hz). Quand le FOX vous donne un report, Tx3 part tout seul ; son RR73 termine le QSO.';
     });
     if (hd) { const h = f.ownerDocument.createElement('span'); h.className = 'dg-hound-tag'; h.textContent = (api.state().hound === 2 ? 'HOUND · SuperFox' : 'HOUND · FOX'); f.insertBefore(h, f.firstChild); }
@@ -5035,7 +5036,8 @@
       r.querySelector('span.msg').appendChild(a);
     }
     // Pays DXCC, distance et azimut de la station qui émet (calculés par le serveur depuis le locator du club)
-    const ex = [[d.tx ? '' : d.cty || '', 'x cty', d.cty ? d.cty : ''],
+    const ex = [[d.tx ? '' : d.pfx || '', 'x pfx', d.pfx ? 'Préfixe DXCC : ' + d.pfx + (d.cty ? ' (' + d.cty + ')' : '') : ''],
+      [d.tx ? '' : d.cty || '', 'x cty', d.cty ? d.cty : ''],
       [d.tx || d.km == null ? '' : (d.kmc ? '≈' : '') + d.km, 'x', d.km == null ? '' : (d.kmc ? 'Distance approximative (centre du pays : pas de locator dans le message)' : 'Distance depuis le locator du club')],
       [d.tx || d.az == null ? '' : d.az + '°', 'x', d.az == null ? '' : 'Azimut (direction de l’antenne) depuis le club']];
     for (const [t, c, ti] of ex) { const e = document.createElement('span'); e.className = c; e.textContent = t; if (ti) e.title = ti; r.appendChild(e); }
@@ -5753,7 +5755,8 @@
         const v = Number($('dgHound').value) || 0;
         if (!api || !api.iControl()) { houndUi(); return api && api.say('Prenez d’abord la main pour choisir l’activité HOUND.', 'warn'); }
         api.send({ t: 'ftx_hound', v });
-        if (v) api.say(v === 2 ? 'HOUND SuperFox : placez le repère RX (clic gauche) sur le bas du signal SuperFox (vers 750 Hz), double-cliquez sur le CQ du FOX, vous appelez en 2e période sur votre fréquence TX.'
+        if (v === 2) { setRx(750); if (ftDual) setRx(750, 'B'); } // signal SuperFox : bas du signal vers 750 Hz ; ensuite, le repère suit le signal décodé
+        if (v) api.say(v === 2 ? 'HOUND SuperFox : le repère RX se place tout seul sur le signal SuperFox (750 Hz, puis là où il est décodé) ; double-cliquez sur le CQ du FOX, vous appelez en 2e période sur votre fréquence TX.'
           : 'HOUND (FOX classique) : double-cliquez sur le CQ du FOX ; vous appelez en 2e période au-dessus de 1000 Hz, le R+report part tout seul sur la fréquence où le FOX vous appelle.', '', 12000);
       });
       $('dgCall1st').checked = store.get('call1st', '1') === '1';
@@ -5899,6 +5902,9 @@
         H.push(it);
         while (H.length > 240) H.shift();
         if (m.mode === mode) addSlot(it, false, B ? 'B' : undefined);
+        // HOUND SuperFox : le repère RX se place tout seul sur le signal SuperFox décodé (bas du signal)
+        const sfd = houndOn() && (it.list || []).find((d) => d.sf && d.f >= 200 && d.f <= 2500);
+        if (sfd && Math.abs((B ? rxFB : rxF) - sfd.f) > 8) setRx(sfd.f, B ? 'B' : undefined);
         return true;
       }
       return false;

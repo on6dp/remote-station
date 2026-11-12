@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.22** — Listes FT : colonne Préf. (préfixe DXCC) ; en double réception, préfixe et azimut (bearing) affichés ; HOUND SuperFox : repère RX placé tout seul sur le signal ; HOUND : Tx5 (73) autorisé
 - **0.38.21** — Cascades : Gain, Zéro et Plat en blanc gras ; listes Couleurs / Vitesse à bord blanc arrondi
 - **0.38.20** — Spectre : info-bulle et aide des vitesses X1 / X2 / X4
 - **0.38.19** — Spectre : vitesses X1 / X2 / X4 bien distinctes (moyenne sur 6 s, 2 s, 0,3 s)

@@ -619,7 +619,8 @@ FT8 est un mode numérique fait pour les signaux très faibles : chaque station 
 | DT | Décalage en temps du signal (secondes). Proche de 0 quand tout est bien calé. |
 | Fréq | Fréquence audio du signal (Hz). |
 | Message | Le texte décodé, par ex. « CQ F4ABC JN18 ». Une marque **a1**…**a7** à la fin indique un décodage obtenu grâce à l'aide a priori (voir plus bas). |
-| Pays | Pays DXCC de la station qui émet. |
+| Préf. | Préfixe de l'entité DXCC de la station qui émet (ex. ON, F, DL, EA8). |
+| Pays | Pays DXCC de la station qui émet. En double réception (deux VFO), les colonnes Pays et km sont masquées faute de place : restent le **préfixe** et l'**azimut** (bearing). |
 | km / Az | Distance et direction (azimut en degrés) depuis le club. « ≈ » : approximatif (pas de locator dans le message, centre du pays). |
 
 - **Stations déjà contactées** : les messages d'une station déjà au carnet **sous le TX call actuel**, sur la même bande et dans le même mode, sont en vert barré (« worked before »). Avec un autre TX call, seuls les QSO faits sous cet indicatif comptent.
@@ -651,9 +652,9 @@ FT8 est un mode numérique fait pour les signaux très faibles : chaque station 
 Les grandes DXpéditions FT8 trafiquent en **FOX** : la DXpédition (le FOX) fait plusieurs QSO à la fois, les stations qui l'appellent (les **HOUNDS**) suivent des règles précises que la Remote Station applique toute seule, comme WSJT-X.
 
 - **Activité** (barre du haut, en FT8) : **HOUND · FOX** pour le FOX classique (plusieurs signaux FT8 sous 1000 Hz), **HOUND · SuperFox** pour le SuperFox (un seul signal large d'environ 1,5 kHz, vers 750 Hz, qui s'adresse à jusqu'à 9 stations à la fois). L'annonce de la DXpédition dit lequel utiliser, et sa fréquence (souvent pas la fréquence FT8 habituelle).
-- **Appel** : double-clic sur le CQ du FOX → **Tx1** (« FOX ON5VL JO20 ») part en **2e période** (le FOX émet en 1re). Seuls **Tx1** et **Tx3** sont utilisables ; pas de CQ, pas de 73. La période est fixée sur « 2e ».
+- **Appel** : double-clic sur le CQ du FOX → **Tx1** (« FOX ON5VL JO20 ») part en **2e période** (le FOX émet en 1re). Seuls **Tx1**, **Tx3** et **Tx5** (73, à la main : pas nécessaire, le RR73 du FOX termine déjà le QSO) sont utilisables ; pas de CQ. La période est fixée sur « 2e ».
 - **FOX classique** : on appelle **au-dessus de 1000 Hz** (si votre repère TX est plus bas, une fréquence est tirée au hasard entre 1000 et 2900 Hz). Quand le FOX vous donne un report, **Tx3** (« FOX ON5VL R-10 ») part tout seul **sur la fréquence où le FOX vous a appelé**, puis à 300 Hz de là s'il faut le répéter. Ses messages peuvent viser deux stations : « K1ABC RR73; ON5VL <KH7Z> -12 ».
-- **SuperFox** : placez le repère RX (clic gauche) sur le bas du signal SuperFox (vers 750 Hz). La 1re période est décodée par le décodeur SuperFox de WSJT-X : chaque partie du message s'affiche sur sa ligne avec la marque **SF** (CQ, reports, RR73), et le mot de passe de la DXpédition avec la marque **OTP** (« $VERIFY$ … » : il prouve que le signal vient bien d'elle ; vérification possible sur 9dx.cc). Tout le QSO se fait sur votre fréquence d'appel (vous pouvez appeler n'importe où, aussi sous 1000 Hz).
+- **SuperFox** : le repère RX se place tout seul sur le bas du signal SuperFox (750 Hz, puis là où le signal est décodé) ; le décodeur le cherche de 450 à 1050 Hz, puis autour de sa dernière position. La 1re période est décodée par le décodeur SuperFox de WSJT-X : chaque partie du message s'affiche sur sa ligne avec la marque **SF** (CQ, reports, RR73), et le mot de passe de la DXpédition avec la marque **OTP** (« $VERIFY$ … » : il prouve que le signal vient bien d'elle ; vérification possible sur 9dx.cc). Tout le QSO se fait sur votre fréquence d'appel (vous pouvez appeler n'importe où, aussi sous 1000 Hz).
 - **Fin du QSO** : le **RR73** du FOX termine le QSO (on n'envoie pas de 73) ; la fiche « QSO terminé » s'ouvre (ou le QSO est enregistré tout seul selon le choix « Log »). Sans RR73 dans les 11 périodes qui suivent son report, l'émission s'arrête : rappelez-le avec Tx1.
 - Revenez sur **Normale** après la DXpédition : sinon les autres stations ne peuvent pas être appelées normalement (CQ, 73…).
 
