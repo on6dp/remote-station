@@ -206,7 +206,7 @@
       </span>
       <span class="dg-f dg-perl">Période</span>
       <select id="dgPar" class="dg-par" aria-label="Période d'émission" title="Période d'émission. Auto : à l'opposé du correspondant choisi (double-clic sur son message), sinon la prochaine période. 1re = 00 / 30 s en FT8.">
-        <option value="auto">auto</option><option value="0">1re</option><option value="1">2e</option>
+        <option value="auto">AUTO</option><option value="0">0/15</option><option value="1">15/30</option>
       </select>
       <label class="dg-hound" id="dgHoundWrap" title="DXpédition en FT8 : HOUND = vous appelez une DXpédition qui trafique en FOX (FOX classique, plusieurs QSO à la fois) ou en SuperFox (un seul signal large de 1,5 kHz, jusqu'à 9 stations à la fois). Choisi par celui qui a la main, pour toute la station."><span class="dg-f">Activité</span> <select id="dgHound"><option value="0">NORMALE</option><option value="1">HOUND · FOX</option><option value="2">HOUND · SuperFox</option></select></label>
       <label class="dg-chk dg-alog" title="Fin du QSO (RR73 / 73) : fiche « QSO terminé » à confirmer, ou QSO enregistré tout seul dans le carnet (Log automatically de WSJT-X)">Log <select id="dgAutoLog">
@@ -5146,7 +5146,17 @@
     modeChanged();
     announce();
   }
+  // Liste Période : début et fin (s) de la 1re et de la 2e période du mode (FT8 0/15 · 15/30, FT4 0/7,5 · 7,5/15, FT2 0/3,75 · 3,75/7,5)
+  function parLabels() {
+    const p = $('dgPar');
+    if (!p) return;
+    const L = { FT8: 15, FT4: 7.5, FT2: 3.75 }[mode] || 15;
+    const f = (x) => String(x).replace('.', ',');
+    p.options[1].textContent = '0/' + f(L);
+    p.options[2].textContent = f(L) + '/' + f(2 * L);
+  }
   function modeChanged() {
+    parLabels();
     document.querySelectorAll('#dgModes .btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
     applyFtDual();
     lastBand = 0;
@@ -5721,6 +5731,7 @@
       });
       $('dgTxRx').addEventListener('click', () => setTx(sd() === 'B' ? rxFB : rxF, sd()));
       $('dgPar').value = store.get('ftxpar', 'auto');
+      parLabels();
       $('dgPar').addEventListener('change', () => { store.set('ftxpar', $('dgPar').value); ftxCfg(); });
       // Fenêtre de QSO : saisie à la main du correspondant et des reports
       const fq = (id, fn) => { const el = $(id); if (el) el.addEventListener('change', () => fn(el.value.trim().toUpperCase())); };

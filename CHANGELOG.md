@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.24** — Liste Période : AUTO, 0/15, 15/30 (FT4 : 0/7,5 · 7,5/15 ; FT2 : 0/3,75 · 3,75/7,5)
 - **0.38.23** — FT8 / FT4 / FT2 : case « Répondre au 1er » retirée (après un CQ, double-clic sur la station qui répond)
 - **0.38.22** — Listes FT : colonne Préf. (préfixe DXCC) ; en double réception, préfixe et azimut (bearing) affichés ; HOUND SuperFox : repère RX placé tout seul sur le signal ; HOUND : Tx5 (73) autorisé
 - **0.38.21** — Cascades : Gain, Zéro et Plat en blanc gras ; listes Couleurs / Vitesse à bord blanc arrondi
