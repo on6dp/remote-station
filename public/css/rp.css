@@ -2320,3 +2320,11 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dxc-btn .dxc-arrow { display: none; }
 .tb-right .dxc-btn.on { color: #39ff14; border-color: #39ff14; }
 .tb-right .dxc-btn.half { color: #f59e0b; }
+/* Menu DX CLUSTER : liste des clusters telnet (choix des spots de chaque membre) */
+.dxc-head2 { margin-top: 6px; border-top: 1px solid var(--v2-border, #2c3b50); padding-top: 7px; }
+.dxc-tel { display: flex; flex-direction: column; max-height: 50vh; overflow-y: auto; }
+.dxc-tel-it { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; border: 0; border-radius: 4px; background: none; color: var(--v2-text-bright); font: 700 12px inherit; text-align: left; cursor: pointer; }
+.dxc-tel-it small { color: var(--v2-text-dim); font-weight: 400; }
+.dxc-tel-it:hover, .dxc-tel-it:focus-visible { background: var(--v2-bg-panel, #141c27); color: var(--v2-accent-cyan-bright, #00D4FF); }
+.dxc-tel-it.cur { color: #39ff14; }
+.dxc-tel-it.cur span::before { content: '● '; }

@@ -19,3 +19,4 @@ logs/*.jsonl
 refdata/
 voicemem/
 tts/
+logs/cluster-pref.json

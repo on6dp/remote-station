@@ -1825,6 +1825,8 @@
         if (VX()) VX().onState(st);
         drawPlan();
         if (window.RSLOG && window.RSLOG.onState) window.RSLOG.onState();
+      } else if (m.t === 'cluster_list') {
+        drawClusterList(m.list || [], m.cur || '');
       } else if (m.t === 'events') {
         $('events').textContent = '';
         (m.list || []).forEach((e) => addEvent(e, false)); // déjà du plus récent au plus ancien
@@ -2041,6 +2043,23 @@
   const dxcSeen = {};
   const dxcWin = {};
   const dxcName = (o) => String(o || '').replace(/^https?:\/\//, '');
+  // Liste des clusters telnet (CC Cluster VE7CC) : chaque membre choisit celui de SES spots ; ● = le sien
+  function drawClusterList(list, cur) {
+    const box = $('dxcTel'), h = $('dxcTelH');
+    if (!box) return;
+    box.textContent = '';
+    box.hidden = h.hidden = list.length < 2;
+    for (const c of list) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'dxc-tel-it' + (c.key === cur ? ' cur' : ''); b.setAttribute('role', 'menuitemradio'); b.setAttribute('aria-checked', String(c.key === cur));
+      b.innerHTML = '<span></span><small></small>';
+      b.firstChild.textContent = c.name + (c.def ? ' (club)' : '');
+      b.lastChild.textContent = c.host + ':' + c.port + (c.info ? ' · ' + c.info : '');
+      b.title = 'Recevoir vos spots de ' + c.name + ' (' + c.host + ':' + c.port + ')';
+      b.addEventListener('click', (e) => { e.stopPropagation(); send({ t: 'cluster_pick', key: c.def ? '' : c.key }); });
+      box.appendChild(b);
+    }
+  }
   function dxcPaint() {
     const now = Date.now();
     const open = Object.keys(dxcSeen).filter((o) => now - dxcSeen[o] < 7000);

@@ -645,3 +645,10 @@ sudo nginx -t && sudo systemctl reload nginx && sudo certbot --nginx -d remote.o
 ---
 
 *Concept ON6DP, Paul (on6dp@on6dp.be) & IA Claude — Remote Station UBA-LGE, section de Liège.*
+
+### Clusters telnet au choix de chaque membre
+
+- Le menu **DX Cluster ▾** du dashboard propose, sous les deux clusters web, une liste de clusters telnet : chaque membre choisit celui de ses propres spots (carte de bande, pages des modes).
+- La liste vient de `lib/data/clusters.json` (tableau `{ "name", "host", "port", "info" }`) ; on peut en ajouter dans `config.json` avec `clusterList` (même format). Le cluster du club (`clusterHost` / `clusterPort`, nom `clusterName`, par défaut « OP0P ») est toujours en tête et reste celui par défaut.
+- Le choix de chaque indicatif est gardé dans `logs/cluster-pref.json` (à ne pas publier). Une seule liaison par cluster, partagée ; fermée 10 minutes après le départ du dernier membre qui l'utilise. Les commandes `clusterCmds` (ex. `set/skimmer`) ne sont envoyées qu'au cluster du club.
+- Les spots envoyés par les membres (case « Spot cluster », bouton SPOT) partent toujours au cluster du club.

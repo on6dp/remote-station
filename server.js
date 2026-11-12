@@ -859,33 +859,101 @@ let cluster = null;
 let spotBatch = [];
 let spotTimer = null;
 let clusterState = '';
-function clusterStart() {
-  const host = String(cfg.clusterHost || '').trim();
-  if (!host) return;
-  const call = String(cfg.clusterCall || ((cfg.digiCall || cfg.stationCall || '') + '-7')).toUpperCase().replace(/[^A-Z0-9/-]/g, '');
-  cluster = new Cluster({
-    host, port: Number(cfg.clusterPort) || 8000, call,
-    cmds: Array.isArray(cfg.clusterCmds) ? cfg.clusterCmds.map(String).filter((c) => c && c.length < 80) : [],
-    log: (m) => console.log(m),
+// Chaque membre peut choisir son cluster telnet (liste de lib/data/clusters.json + cfg.clusterList) pour SES spots
+// (carte de bande, pages des modes) ; choix gardé par indicatif (logs/cluster-pref.json). Par défaut : le cluster du club.
+// Une seule liaison par cluster, partagée par les membres qui l'ont choisi ; fermée 10 min après le départ du dernier.
+const CLUSTER_PREF_FILE = path.join(LOG_DIR, 'cluster-pref.json');
+let clusterPref = {};
+try { clusterPref = JSON.parse(fs.readFileSync(CLUSTER_PREF_FILE, 'utf8')) || {}; } catch (e) { clusterPref = {}; }
+const clusterKeyOf = (host, port) => String(host || '').trim().toLowerCase() + ':' + (Number(port) || 23);
+const clusterDefKey = () => clusterKeyOf(cfg.clusterHost, Number(cfg.clusterPort) || 8000);
+function clusterList() {
+  let base = [];
+  try { base = JSON.parse(fs.readFileSync(path.join(ROOT, 'lib', 'data', 'clusters.json'), 'utf8')); } catch (e) { base = []; }
+  const extra = Array.isArray(cfg.clusterList) ? cfg.clusterList : [];
+  const out = [], seen = new Set();
+  const def = String(cfg.clusterHost || '').trim();
+  if (def) { out.push({ name: cfg.clusterName || (/op0p\.be$/i.test(def) ? 'OP0P' : def), host: def, port: Number(cfg.clusterPort) || 8000, key: clusterDefKey(), def: true }); seen.add(clusterDefKey()); }
+  for (const c of extra.concat(base)) {
+    if (!c || !c.host || !/^[a-z0-9.-]{3,80}$/i.test(String(c.host))) continue;
+    const port = Number(c.port) || 23;
+    if (!(port > 0 && port < 65536)) continue;
+    const key = clusterKeyOf(c.host, port);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ name: String(c.name || c.host).slice(0, 40), host: String(c.host), port, key, info: String(c.info || '').slice(0, 60) });
+  }
+  return out;
+}
+const clPool = new Map(); // clé « hôte:port » → { c: Cluster, idle: date du départ du dernier membre }
+const connClusterKey = (conn) => {
+  const k = conn && conn.user && clusterPref[String(conn.user.call || '').toUpperCase()];
+  return k && clusterList().some((x) => x.key === k) ? k : clusterDefKey();
+};
+function clusterLoginCall() {
+  return String(cfg.clusterCall || ((cfg.digiCall || cfg.stationCall || '') + '-7')).toUpperCase().replace(/[^A-Z0-9/-]/g, '');
+}
+function clusterOpen(key) {
+  if (clPool.has(key)) return clPool.get(key);
+  const e = clusterList().find((x) => x.key === key);
+  if (!e) return null;
+  const ent = { c: null, idle: 0, batch: [], timer: null };
+  ent.c = new Cluster({
+    host: e.host, port: e.port, call: clusterLoginCall(),
+    // commandes après connexion (set/skimmer…) : seulement pour le cluster du club
+    cmds: e.def && Array.isArray(cfg.clusterCmds) ? cfg.clusterCmds.map(String).filter((c) => c && c.length < 80) : [],
+    log: (m) => console.log(m + (e.def ? '' : ' [' + e.name + ']')),
     onSpot: (sp) => {
-      spotBatch.push(sp);
-      if (spotTimer) return;
-      spotTimer = setTimeout(() => {
-        spotTimer = null;
-        const list = spotBatch; spotBatch = [];
-        const msg = JSON.stringify({ t: 'spot', list, state: cluster.state });
-        for (const c of ops) if (c.open) c.send(msg);
+      ent.batch.push(sp);
+      if (ent.timer) return;
+      ent.timer = setTimeout(() => {
+        ent.timer = null;
+        const list = ent.batch; ent.batch = [];
+        const msg = JSON.stringify({ t: 'spot', list, state: ent.c.state, host: e.name });
+        for (const c of ops) if (c.open && connClusterKey(c) === key) c.send(msg);
       }, 1500);
     }
   });
-  cluster.start();
-  // état de la liaison (connecté / déconnecté) annoncé quand il change
+  ent.c.start();
+  ent.state = '';
+  clPool.set(key, ent);
+  return ent;
+}
+// Spots du cluster choisi par ce membre (à la connexion et quand il change de cluster)
+function sendClusterSpots(conn) {
+  const key = connClusterKey(conn), ent = clusterOpen(key), e = clusterList().find((x) => x.key === key);
+  send(conn, { t: 'spots', list: ent ? ent.c.list() : [], state: ent ? ent.c.state : 'non configuré', host: e ? e.name : '', key });
+}
+function clusterStart() {
+  if (!String(cfg.clusterHost || '').trim()) return;
+  const ent = clusterOpen(clusterDefKey());
+  cluster = ent && ent.c;
+  // état de chaque liaison annoncé quand il change ; liaisons sans membre depuis 10 min fermées (sauf celle du club)
   setInterval(() => {
-    if (!cluster || cluster.state === clusterState) return;
-    clusterState = cluster.state;
-    const msg = JSON.stringify({ t: 'spot', list: [], state: clusterState });
-    for (const c of ops) if (c.open) c.send(msg);
+    const used = new Set();
+    for (const c of ops) if (c.open) used.add(connClusterKey(c));
+    for (const [key, ent] of clPool) {
+      if (key !== clusterDefKey() && !used.has(key)) {
+        if (!ent.idle) ent.idle = Date.now();
+        else if (Date.now() - ent.idle > 600000) { ent.c.stop(); clPool.delete(key); continue; }
+      } else ent.idle = 0;
+      if (ent.c.state === ent.state) continue;
+      ent.state = ent.c.state;
+      const msg = JSON.stringify({ t: 'spot', list: [], state: ent.state });
+      for (const c of ops) if (c.open && connClusterKey(c) === key) c.send(msg);
+    }
   }, 5000);
+}
+// Choix du cluster par un membre : seulement dans la liste ; « » = cluster du club
+function clusterPick(conn, key) {
+  const call = String(conn.user.call || '').toUpperCase();
+  const list = clusterList();
+  const e = key ? list.find((x) => x.key === key) : null;
+  if (key && !e) return send(conn, { t: 'notice', level: 'error', msg: 'Cluster inconnu' });
+  if (!e || e.def) delete clusterPref[call]; else clusterPref[call] = e.key;
+  fs.writeFile(CLUSTER_PREF_FILE, JSON.stringify(clusterPref), { mode: 0o600 }, (er) => { if (er) console.error('cluster-pref.json : ' + er.message); });
+  for (const c of ops) if (c.open && c.user && String(c.user.call || '').toUpperCase() === call) { sendClusterSpots(c); send(c, { t: 'cluster_list', list: list.map(({ name, key: k, info, def, host, port }) => ({ name, key: k, info, def: !!def, host, port })), cur: connClusterKey(c) }); }
+  send(conn, { t: 'notice', level: 'ok', msg: 'Spots : ' + (e ? e.name + ' (' + e.host + ':' + e.port + ')' : 'cluster du club') });
 }
 
 const DX_CALL_RE = /^(?=.*\d)(?=.*[A-Z])[A-Z0-9/]{3,15}$/;
@@ -3053,7 +3121,8 @@ function loggedIn(conn, call, rec, sessionTok) {
     qo100If: cfg.qo100If && typeof cfg.qo100If === 'object' ? cfg.qo100If : DEFAULTS.qo100If,
     session: sessionTok || null
   });
-  send(conn, { t: 'spots', list: cluster ? cluster.list() : [], state: cluster ? cluster.state : 'non configuré', host: cluster ? cfg.clusterHost : '' });
+  sendClusterSpots(conn);
+  send(conn, { t: 'cluster_list', list: clusterList().map(({ name, key, info, def, host, port }) => ({ name, key, info, def: !!def, host, port })), cur: connClusterKey(conn) });
   send(conn, { t: 'macros', data: macros[call] || {} });
   send(conn, { t: 'events', list: recentEvents });
   send(conn, { t: 'chatlog', list: chatLog });
@@ -3335,6 +3404,7 @@ function onOperator(conn, m) {
       return send(conn, { t: 'ssb_list', items });
     }
     case 'cluster_spot': return clusterSpot(conn, m.call, m.khz, m.cmt);
+    case 'cluster_pick': return clusterPick(conn, String(m.key || ''));
     case 'ctst_list': {
       // Log d'un contest (page TRX CW) : QSO du carnet avec cet identifiant, depuis la date donnée, pour les doublons,
       // les compteurs et la liste ; le carnet général reste la seule base
