@@ -150,6 +150,10 @@
     }
   }
   setInterval(drawCtlTimer, 1000);
+  // Curseurs : remplissage du rail jusqu'au curseur (variable CSS --p), à la main et quand la valeur vient du TRX
+  const rangeFill = (el) => { const lo = Number(el.min) || 0, hi = el.max === '' ? 100 : Number(el.max), v = Number(el.value); el.style.setProperty('--p', (hi > lo ? Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100)) : 0).toFixed(1) + '%'); };
+  document.addEventListener('input', (e) => { if (e.target && e.target.type === 'range') rangeFill(e.target); }, true);
+  setInterval(() => document.querySelectorAll('input[type=range]').forEach(rangeFill), 400);
   // Date et heure GMT sous le titre (celles du log)
   (function utcClock() {
     const el = $('utcClock');

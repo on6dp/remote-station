@@ -2291,3 +2291,13 @@ section[data-panel="tx"] > .panel-h { color: #ffd400; }
 /* S-mètre inactif (VFO B en réception simple) : seule la barre est atténuée, les chiffres restent en blanc gras (+20…+60 en rouge) */
 .smeter.smeter-dim { opacity: 1; }
 .smeter.smeter-dim > :not(.sm-scale) { opacity: .35; }
+/* Curseurs : rail bien visible (bord clair) et partie réglée remplie en bleu jusqu'au curseur */
+input[type='range'] { --p: 0%; }
+input[type='range']::-webkit-slider-runnable-track {
+  height: 8px; border-radius: 4px; border: 1px solid #c8d0dc;
+  background: linear-gradient(90deg, #2f86cc 0, #4fb3ff var(--p), #0b1016 var(--p), #0b1016 100%);
+}
+input[type='range']::-webkit-slider-thumb { margin-top: -7px; border-color: #fff; }
+input[type='range']::-moz-range-track { height: 8px; border-radius: 4px; border: 1px solid #c8d0dc; background: #0b1016; }
+input[type='range']::-moz-range-progress { height: 8px; border-radius: 4px; background: linear-gradient(90deg, #2f86cc, #4fb3ff); }
+input[type='range']::-moz-range-thumb { border-color: #fff; }
