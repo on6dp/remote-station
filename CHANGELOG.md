@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.377** — Spectre BF des écrans VFO plus fin : surface grise continue (plus de traits noirs entre les colonnes), bruit de fond en bas
 - **0.37.376** — Écrans VFO : 3 cadres de même largeur sur une ligne (filtre, cadran, spectre BF) ; NOTCH en creux avec trait et carré orange, CONTOUR en demi-cercle bleu (dashboard et faces avant) ; FTDX101 : S-mètre du SUB par SM1 en DUAL RX
 - **0.37.375** — Cadran : 5e écran « spectre BF » (son reçu avec Écouter le TRX, filtre en rouge, NOTCH), comme le petit cadre de la face avant
 - **0.37.374** — Écrans VFO toujours encadrés : A en vert, B en rose ; le VFO d'émission brille
