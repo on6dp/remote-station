@@ -240,7 +240,7 @@
       <i class="dg-mk dg-mk-bm" id="dgMkBM" hidden></i><i class="dg-mk dg-mk-bs" id="dgMkBS" hidden></i>
       <i class="cw-trx" id="cwTrxA" hidden title="Filtre du TRX (BW) : glisser une barre pour l'élargir ou le rétrécir (Ctrl + molette aussi)"><b></b><b></b><span></span></i>
       <i class="dg-grip" id="dgGrip" title="Glisser vers le haut ou le bas : hauteur de la cascade et des listes de messages (double-clic : taille d'origine)"></i>
-<span class="dg-spspd" id="dgSpSpd" title="Vitesse du spectre : X1 = moyenne lente (courbe calme), X2, X4 = suit les signaux plus vite"><button type="button" data-spspd="1">X1</button><button type="button" data-spspd="2">X2</button><button type="button" data-spspd="4">X4</button></span>
+<span class="dg-spspd" id="dgSpSpd" title="Vitesse du spectre (la courbe seulement ; la cascade a sa propre « Vitesse ») : X1 = moyenne sur environ 6 s (courbe calme, les signaux réguliers ressortent), X2 = environ 2 s, X4 = presque instantané"><button type="button" data-spspd="1">X1</button><button type="button" data-spspd="2">X2</button><button type="button" data-spspd="4">X4</button></span>
       <i class="dg-grip dg-sgrip" id="dgSGrip" title="Glisser vers le haut ou le bas : hauteur du spectre (double-clic : taille d'origine)"></i>
     </div></div>
       <div class="dg-wf ft-wfb" id="ftWfBox" hidden>
@@ -259,7 +259,7 @@
         <i class="dg-mk dg-mk-tx" id="ftMkTxB"></i><i class="dg-mk dg-mk-rx" id="ftMkRxB"></i>
         <i class="cw-trx" id="cwTrxB" hidden title="Filtre du TRX (BW) : glisser une barre pour l'élargir ou le rétrécir (Ctrl + molette aussi)"><b></b><b></b><span></span></i>
         <i class="dg-grip" id="ftGripB" title="Glisser vers le haut ou le bas : hauteur des cascades (double-clic : taille d'origine)"></i>
-<span class="dg-spspd" id="ftSpSpdB" title="Vitesse du spectre : X1 = moyenne lente (courbe calme), X2, X4 = suit les signaux plus vite"><button type="button" data-spspd="1">X1</button><button type="button" data-spspd="2">X2</button><button type="button" data-spspd="4">X4</button></span>
+<span class="dg-spspd" id="ftSpSpdB" title="Vitesse du spectre (la courbe seulement ; la cascade a sa propre « Vitesse ») : X1 = moyenne sur environ 6 s (courbe calme, les signaux réguliers ressortent), X2 = environ 2 s, X4 = presque instantané"><button type="button" data-spspd="1">X1</button><button type="button" data-spspd="2">X2</button><button type="button" data-spspd="4">X4</button></span>
         <i class="dg-grip dg-sgrip" id="ftSGripB" title="Glisser vers le haut ou le bas : hauteur des spectres (double-clic : taille d'origine)"></i>
       </div>
     </div>

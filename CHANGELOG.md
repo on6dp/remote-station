@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.20** — Spectre : info-bulle et aide des vitesses X1 / X2 / X4
 - **0.38.19** — Spectre : vitesses X1 / X2 / X4 bien distinctes (moyenne sur 6 s, 2 s, 0,3 s)
 - **0.38.18** — Cartes de bande : largeur réglable aussi en double réception (poignée sur le bord intérieur, jusqu'à 120 px) ; TX call sur la ligne des onglets, après SYNCHRO
 - **0.38.17** — Cascades FT en double réception : « VFO-A · MAIN » / « VFO-B · SUB » de la taille et de la couleur de la fréquence
