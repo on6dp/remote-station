@@ -2319,7 +2319,7 @@
       b.lastChild.textContent = ' ' + s.f.toFixed(1).replace('.', ',');
       b.title = s.dec
         ? s.call + ' · décodé ici (' + s.mode + ', ' + (s.db > 0 ? '+' : '') + s.db + ' dB) : « ' + s.cmt + ' » · il y a ' + min + ' min'
-          + (b.classList.contains('bm-wkd') ? ' · déjà contacté sur cette bande en ' + md.name : '') + '\nClic : comme un double-clic sur son message (correspondant, message à envoyer)'
+          + (b.classList.contains('bm-wkd') ? ' · déjà contacté sur cette bande en ' + md.name : '') + '\nClic : comme un double-clic sur son message (correspondant, message à envoyer)\nClic droit : spotter cette station sur le DX cluster (sous votre TX call)'
         : s.call + ' · ' + s.f.toFixed(1).replace('.', ',') + ' kHz · ' + (s.cmt || '—') + ' · de ' + s.de + ' · il y a ' + min + ' min'
         + (b.classList.contains('bm-wkd') ? ' · déjà contacté sur cette bande en ' + md.name : '') + '\nClic : le TRX se cale sur ce signal et l’indicatif passe dans Correspondant';
       lbls.appendChild(b);
@@ -2495,6 +2495,20 @@
       bmSetRange(bmBandOfSide(X), nlo, nhi);
     }, { passive: false });
     body.addEventListener('click', (e) => e.stopPropagation());
+    // Clic droit sur une station décodée ici : spot au DX cluster sous le TX call choisi (une à la fois, à la main)
+    body.addEventListener('contextmenu', (e) => {
+      const b = e.target.closest && e.target.closest('.bm-s.bm-dec');
+      if (!b) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const ds = decSpots[X ? 'B' : ''].get(b.dataset.k.split('|')[1]);
+      if (!ds || !api) return;
+      const st = api.state();
+      const tc = ($('dgTxCall') && $('dgTxCall').value) || (st && st.txCall) || 'ON5VL';
+      const cmt = ds.mode + ' ' + (ds.db > 0 ? '+' : '') + ds.db + ' dB ' + Math.round(ds.d.f) + ' Hz';
+      if (!b.ownerDocument.defaultView.confirm('Spotter ' + ds.call + ' sur le DX cluster ?\n\n' + ds.f.toFixed(1).replace('.', ',') + ' kHz « ' + cmt + ' »\nde ' + tc + ' (TX call)')) return;
+      api.send({ t: 'cluster_spot', call: ds.call, khz: ds.f, cmt, asTx: true });
+    });
     body.addEventListener('dblclick', (e) => {
       e.stopPropagation();
       if (e.target.closest('.bm-s')) return;

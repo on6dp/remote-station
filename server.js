@@ -816,12 +816,13 @@ const DXCC = require('./lib/dxcc.js');
 // l'INDICATIF DE L'OPÉRATEUR (son compte, ex. ON6DP), pas sous le TX CALL ni l'indicatif de connexion de la carte de
 // bande : une courte liaison telnet au même cluster est ouverte avec cet indicatif, le spot est envoyé, puis « bye ».
 // Réservé aux comptes qui émettent ; au plus 1 spot / 20 s et 30 / heure par opérateur.
-function clusterSpot(conn, callIn, khzIn, cmtIn) {
+// asTx : spot envoyé sous le TX call choisi par ce membre (ON5VL, OR0L… ou son propre indicatif) au lieu de son compte
+function clusterSpot(conn, callIn, khzIn, cmtIn, asTx) {
   if (!conn.user.tx || conn.user.rxOnly) return send(conn, { t: 'notice', level: 'error', msg: 'Spot : réservé aux comptes autorisés à émettre' });
   if (cfg.clusterSpot === false) return send(conn, { t: 'notice', level: 'warn', msg: 'Spot non envoyé : les spots au DX cluster sont coupés sur ce serveur (instance de test)' });
   const host = String(cfg.clusterHost || '').trim();
   if (!host) return send(conn, { t: 'notice', level: 'error', msg: 'Spot impossible : DX cluster non configuré' });
-  const op = String(conn.user.call || '').toUpperCase();
+  const op = String(asTx ? txCallFor(conn.user) : conn.user.call || '').toUpperCase();
   if (!/^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}(\/[A-Z0-9]{1,4})?$/.test(op)) return send(conn, { t: 'notice', level: 'error', msg: 'Spot : le compte ' + op + ' n’est pas un indicatif radioamateur' });
   const call = String(callIn || '').toUpperCase().trim();
   const khz = Math.round(Number(khzIn) * 10) / 10;
@@ -3470,7 +3471,7 @@ function onOperator(conn, m) {
       }
       return send(conn, { t: 'ssb_list', items });
     }
-    case 'cluster_spot': return clusterSpot(conn, m.call, m.khz, m.cmt);
+    case 'cluster_spot': return clusterSpot(conn, m.call, m.khz, m.cmt, m.asTx === true);
     case 'cluster_pick': return clusterPick(conn, String(m.key || ''));
     case 'ctst_list': {
       // Log d'un contest (page TRX CW) : QSO du carnet avec cet identifiant, depuis la date donnée, pour les doublons,
