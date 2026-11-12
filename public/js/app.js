@@ -787,6 +787,7 @@
     for (const c of order) {
       if (IN_VFO.indexOf(c.id) >= 0) continue; // RIT / XIT / CLEAR : sur les écrans VFO
       if (c.face) continue; // réglages propres à la page Face avant (ex. AF du SUB, BK-IN du FTDX101)
+      if (LAYOUT.tx.indexOf(c.id) >= 0) continue; // gain micro, PROC, MIC EQ, niveau PROC, VOX : dans la page TRX SSB
       const box = $(where[c.id] || boxes[c.sec] || 'sec-other');
       const label = SHORT[c.id] || c.label;
       const ref = { c };
@@ -1909,6 +1910,24 @@
       if (st) inst.onState(st);
     },
     detach(inst) { if (digiHost.inst === inst) releasePopup(); },
+    // Page TRX SSB : réglages micro du TRX (gain micro, PROC / COMP, MIC EQ, niveau, VOX), mêmes protections que le dashboard
+    txCtls() {
+      const R = RIG(), r = (st && st.radio) || {};
+      return LAYOUT.tx.map((id) => R.CONTROL && R.CONTROL[id]).filter((c) => c && !c.face).map((c) => {
+        const v = ctlValue(c.id);
+        return { id: c.id, label: SHORT[c.id] || c.label, type: c.type, min: c.min, max: c.max, step: c.step, offOnly: !!c.offOnly, value: v, text: fmtCtl(c, v, r) };
+      });
+    },
+    txSet(id, v) {
+      const c = RIG().CONTROL && RIG().CONTROL[id];
+      if (!c || LAYOUT.tx.indexOf(id) < 0) return 'Réglage inconnu';
+      const why = ctlBlocked();
+      if (why) return why;
+      if (c.offOnly && v) return c.label + ' ne peut pas être activé à distance (seulement coupé)';
+      if (c.type === 'level') { ctlPending[c.id] = { v, at: Date.now() }; sendCtlThrottled(c); render(); return ''; }
+      sendCtl(c, v);
+      return '';
+    },
     closePopup() { const w = digiHost.win; releasePopup(); if (w && !w.closed) try { w.close(); } catch (e) {} }
   };
   if (window.RSLOG) window.RSLOG.init(digiApi); // onglet « Logs » (monté par digi.js)

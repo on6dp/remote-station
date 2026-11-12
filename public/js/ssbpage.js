@@ -836,7 +836,7 @@
     }
     else if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && VX) VX.onMessage(m);
     else if (m.t === 'hello') { if (VX) VX.onHello(m); if (LOG && LOG.mounted) LOG.onHello(m); }
-    else if (m.t === 'state') { if (VX) VX.onState(); if (LOG && LOG.mounted) LOG.onState(); if (P.held && !api.iControl()) pttUp(); }
+    else if (m.t === 'state') { if (VX) VX.onState(); if (LOG && LOG.mounted) LOG.onState(); if (P.held && !api.iControl()) pttUp(); drawMic(); }
     else if (m.t === 'qrz_info' && LOG && LOG.mounted && LOG.onQrz) LOG.onQrz(m);
     else if (m.t === 'notice' && m.msg) toast(m.msg, m.level === 'error' ? 'warn' : '', 6000);
     else if (m.t === 'ssb_list') drawSsb(m.items || []);
@@ -942,6 +942,56 @@
     toast('TX call : ' + v + ' (émission et QSO enregistrés).', '', 4000);
   });
   setInterval(drawTxCall, 500);
+  // ------------------------------------------------------------------ micro du TRX (gain micro, PROC / COMP, MIC EQ, niveau, VOX)
+  // Envoyés par le dashboard (mêmes protections : main, émission bloquée…) ; VOX : seulement coupé à distance
+  const MIC = { key: '', refs: {}, drag: {} };
+  function drawMic() {
+    const box = $('ssMic'), body = $('ssMicB');
+    let list = [];
+    try { list = host && host.txCtls ? host.txCtls() : []; } catch (e) { list = []; }
+    box.hidden = !list.length;
+    if (!list.length) return;
+    const key = list.map((c) => c.id + c.type + c.max).join('|');
+    if (key !== MIC.key) {
+      MIC.key = key; MIC.refs = {}; body.textContent = '';
+      for (const c of list) {
+        if (c.type === 'level') {
+          const cell = document.createElement('div'); cell.className = 'ctl';
+          const hd = document.createElement('div'); hd.className = 'ctl-head';
+          const l = document.createElement('span'); l.className = 'ctl-label'; l.textContent = c.label;
+          const out = document.createElement('output'); out.className = 'ctl-val';
+          hd.append(l, out);
+          const inp = document.createElement('input'); inp.type = 'range'; inp.min = c.min; inp.max = c.max; inp.step = c.step || 1; inp.setAttribute('aria-label', c.label);
+          inp.addEventListener('pointerdown', () => { MIC.drag[c.id] = true; });
+          inp.addEventListener('pointerup', () => { setTimeout(() => { MIC.drag[c.id] = false; }, 1200); });
+          inp.addEventListener('input', () => { const why = host.txSet(c.id, Number(inp.value)); if (why) toast(why, 'warn'); });
+          cell.append(hd, inp); body.appendChild(cell);
+          MIC.refs[c.id] = { inp, out };
+        } else {
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = c.label; b.setAttribute('aria-pressed', 'false');
+          b.addEventListener('click', () => { const cur = (host.txCtls().find((x) => x.id === c.id) || {}).value; const why = host.txSet(c.id, cur ? 0 : 1); if (why) toast(why, 'warn'); });
+          body.appendChild(b);
+          MIC.refs[c.id] = { btn: b };
+        }
+      }
+    }
+    const ctl = api.iControl();
+    for (const c of list) {
+      const r = MIC.refs[c.id];
+      if (!r) continue;
+      if (r.inp) {
+        if (!MIC.drag[c.id] && c.value != null) r.inp.value = c.value;
+        r.out.textContent = c.text;
+        r.inp.disabled = !ctl;
+        const lo = Number(r.inp.min) || 0, hi = Number(r.inp.max) || 100;
+        r.inp.style.setProperty('--p', ((Number(r.inp.value) - lo) / (hi - lo || 1) * 100).toFixed(1) + '%');
+      } else {
+        r.btn.setAttribute('aria-pressed', String(!!c.value));
+        r.btn.disabled = !ctl || (c.offOnly && !c.value);
+        r.btn.title = c.offOnly ? (c.value ? 'Couper ' + c.label : c.label + ' ne peut pas être activé à distance') : '';
+      }
+    }
+  }
   function link() {
     const w = chain().find((x) => { try { return !!x.RSHOST; } catch (e) { return false; } }) || null;
     const h = w ? w.RSHOST : null;
@@ -953,6 +1003,7 @@
       $('cwpOrphan').hidden = true;
       voiceInit();
       logInit();
+      drawMic();
       askSsb();
       api.send({ t: 'vm_list' });
       drawContest();

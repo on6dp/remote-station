@@ -2301,3 +2301,18 @@ input[type='range']::-webkit-slider-thumb { margin-top: -7px; border-color: #fff
 input[type='range']::-moz-range-track { height: 8px; border-radius: 4px; border: 1px solid #c8d0dc; background: #0b1016; }
 input[type='range']::-moz-range-progress { height: 8px; border-radius: 4px; background: linear-gradient(90deg, #2f86cc, #4fb3ff); }
 input[type='range']::-moz-range-thumb { border-color: #fff; }
+/* Page TRX SSB : réglages micro du TRX */
+.ssb-mic { display: flex; flex-direction: column; gap: 6px; }
+.ssb-mic-h { color: #ffd400; font-weight: 800; font-size: 12px; letter-spacing: .08em; }
+.ssb-mic-b { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px 14px; align-items: end; }
+.ssb-mic-b .ctl-label { color: #ffd400; font-weight: 800; font-size: 11px; }
+.ssb-mic-b .ctl-val { color: #fff; font-weight: 800; }
+.ssb-mic-b .btn { border-color: #fff; color: #fff; font-weight: 800; min-height: 30px; }
+.ssb-mic-b .btn[aria-pressed='true'] { background: #fff; color: #000; }
+.ssb-mic-b .btn:disabled { opacity: .6; }
+/* Cadre TX du dashboard : RX en vert (on est en réception) */
+.rxtx:not(.tx) { color: #39ff14; border-color: #2fd16b; background: rgba(0, 120, 50, .25); }
+.rxtx:not(.tx) i { background: #39ff14; border-color: #39ff14; box-shadow: 0 0 6px rgba(57, 255, 20, .7); }
+/* TX VFO-A (MAIN) vert / TX VFO-B (SUB) rose foncé, même en SPLIT (le bouton SPLIT reste orange) */
+#txOnA.txon, #txOnA.txon.split { background: linear-gradient(180deg, #1f7a3a, #0f5226); border-color: #4fd17a; color: #fff; font-weight: 800; box-shadow: 0 0 8px rgba(40, 200, 100, .45); }
+#txOnB.txon, #txOnB.txon.split { background: linear-gradient(180deg, #a3245e, #6e133d); border-color: #ff7ab3; color: #fff; font-weight: 800; box-shadow: 0 0 8px rgba(230, 60, 140, .45); }

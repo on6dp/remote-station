@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.355** — Gain micro, PROC, MIC EQ, niveau PROC et VOX déplacés du dashboard vers la page TRX SSB (cadre MICRO DU TRX) ; bouton « Phonie : page TRX SSB » retiré ; RX en vert ; TX VFO-B (SUB) en rose et TX VFO-A (MAIN) en vert, même en SPLIT
 - **0.37.354** — Dashboard : rails des curseurs bien visibles (bord clair) et remplis en bleu jusqu'au curseur
 - **0.37.353** — Dashboard : chiffres du S-mètre du VFO B en blanc gras même quand la barre est inactive
 - **0.37.352** — Dashboard : RX / TX au repos encadrés de blanc, SUB en rose foncé, bande en blanc gras dans les écrans VFO

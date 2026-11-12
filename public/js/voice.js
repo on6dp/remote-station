@@ -100,17 +100,9 @@
       '<label class="vx-monvol" title="Volume de « M’écouter » dans votre casque (ne change pas ce qui part vers le TRX)">Volume <input type="range" id="vxMonVol" min="0" max="300" step="5" aria-label="Volume de M’écouter"><output id="vxMonVolV"></output></label>' +
       '</div>';
     anchor.after(box);
-    // Dashboard : la phonie (micro, égaliseurs, entrée / sortie son) est dans la page TRX SSB ; ici, un bouton pour l'ouvrir
-    if (V.api && V.api.away) {
-      box.classList.add('vx-away');
-      const go = document.createElement('button');
-      go.type = 'button';
-      go.className = 'btn vx-goto';
-      go.textContent = '🎙 Phonie : page TRX SSB';
-      go.title = 'Micro, égaliseur micro, égaliseur TRX, entrée et sortie son, M’écouter et PTT : dans la page TRX SSB (onglet SSB)';
-      go.addEventListener('click', () => { try { if (window.RSDIGI && window.RSDIGI.openModePage) window.RSDIGI.openModePage('ssb'); else window.open('/ssb.html', 'rs-ssbpage', 'width=1240,height=900'); } catch (e) {} });
-      box.after(go);
-    }
+    // Dashboard : la phonie (micro, égaliseurs, entrée / sortie son, réglages micro du TRX) est dans la page TRX SSB,
+    // ouverte par l'onglet SSB de la ligne MODES (plus de bouton « Phonie : page TRX SSB » ici)
+    if (V.api && V.api.away) box.classList.add('vx-away');
     // Face avant (/ftdx101) : une seule ligne « SSB CONFIGURATION · MICRO · EQUALIZER MICRO · niveau · EQUALIZER TRX »,
     // le reste (choix du micro, type, état, M'écouter et son volume) sur la ligne suivante
     if (V.api && V.api.compact) {
