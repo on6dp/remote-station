@@ -2353,3 +2353,8 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .vfo-side .vfo-id { display: flex; align-items: center; gap: 8px; margin-top: 6px; justify-content: flex-end; }
 .freq-wrap .vfo-meters { margin-left: 4px; }
 @container (max-width: 320px) { .vfo-mid { grid-template-columns: 1fr; } .vfo-mid .freq-wrap { grid-row: 1; } .vfo-mid .vfo-side { grid-row: 2; } }
+/* Écrans VFO : toujours encadrés (A en vert, B en rose, comme A / MAIN et B / SUB) ; le VFO d'émission brille */
+.vfo.vfo-main { border: 1.5px solid rgba(79, 209, 122, .55); }
+.vfo.vfo-sub { border: 1.5px solid rgba(255, 122, 179, .55); }
+.vfo.txsel.vfo-main { border-color: #4fd17a; box-shadow: 0 0 0 1px rgba(79, 209, 122, .6), 0 0 22px -6px rgba(40, 200, 100, .7); }
+.vfo.txsel.vfo-sub { border-color: #ff7ab3; box-shadow: 0 0 0 1px rgba(255, 122, 179, .6), 0 0 22px -6px rgba(230, 60, 140, .7); }
