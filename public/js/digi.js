@@ -4638,8 +4638,11 @@
   }
   let lastTxAt = 0;
   let seqSeen = '';
+  let eqKey = '';
   function ftxState() {
     houndUi();
+    // VFO d'émission ou largeur changés : lignes de réglages des cascades remises à la même hauteur
+    { const k = ftDual + '|' + sd() + '|' + window.innerWidth; if (k !== eqKey) { eqKey = k; eqCtl(); } }
     { const k = notchHz('A') + '|' + notchHz('B'); if (k !== notchSeen) { notchSeen = k; drawScale(); } }
     drawQso();
     const st = api && api.state();
