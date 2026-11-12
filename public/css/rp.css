@@ -2545,3 +2545,5 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .vfo-am .sp-fill { stroke: none; }
 .vfo-am .sp-line { fill: none; stroke: #6ff5c4; stroke-width: .7; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .vz-big .sp-line { stroke-width: 1.6; }
+/* TXW enfoncé : fond blanc, texte noir (plus fort que le blanc gras des boutons de la barre) */
+#sec-dual #txwBtn[aria-pressed='true'], #sec-dual #txwBtn.held, #sec-dual #txwBtn:active { color: #000; background: #fff; border-color: #fff; font-weight: 900; }
