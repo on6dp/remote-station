@@ -2182,3 +2182,5 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 .smeter .sm-scale span.hot { color: #ff4d4d; font-weight: 800; }
 /* « VFO » devant A / B sur les écrans VFO : blanc gras, un peu plus grand */
 .vfo-id .vfo-tag { color: #fff; font-weight: 800; font-size: 13px; }
+/* Étiquette SUB (côté actif) : fond blanc, texte noir gras */
+.vfo-sub .side-tag.on { background: #fff; color: #000; font-weight: 800; border-color: #fff; box-shadow: 0 0 10px rgba(255, 255, 255, .5); }

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.326** — Dashboard : étiquette SUB (côté actif du VFO B) sur fond blanc, texte noir gras
 - **0.37.325** — Dashboard : « VFO » des écrans VFO en blanc gras, un peu plus grand ; échelle du S-mètre plus grande
 - **0.37.324** — Dashboard : échelle du S-mètre en blanc gras (+20 +40 +60 en rouge gras)
 - **0.37.323** — Dashboard : TX VFO-A (MAIN) en vert, TX VFO-B (SUB) en rose (orange en SPLIT) ; TXW blanc gras cerclé de blanc, fond blanc et texte noir quand on le maintient
