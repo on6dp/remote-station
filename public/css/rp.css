@@ -2570,3 +2570,7 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dg-ftx .dg-list { scrollbar-gutter: stable; }
 .dg-th.ft { overflow-y: hidden; scrollbar-gutter: stable; scrollbar-width: auto; }
 .dg-th.ft > span, .dg-th.ft > span:nth-child(n) { text-align: center; }
+/* Carte de bande FT : stations décodées ici (petit point vert devant l'indicatif), CQ en vert comme les spots */
+.bm-s.bm-dec::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #4ed37b; margin-right: 4px; vertical-align: middle; }
+.bm-s.bm-dec b { color: #fff; }
+.bm-s.bm-dec.bm-cq b { color: #7CF29F; }

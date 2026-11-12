@@ -1985,6 +1985,24 @@
     return { name: m, want };
   }
   const BM_KEEP = 30 * 60000;
+  // Stations décodées ici (FT8 / FT4 / FT2) : sur la carte de bande à leur fréquence réelle (VFO + audio), comme JTDX.
+  // Une par indicatif et par VFO ('' = VFO-A, 'B' = VFO-B) ; oubliées après 4 min sans nouveau message.
+  const DEC_KEEP = 4 * 60000;
+  const decSpots = { '': new Map(), B: new Map() };
+  function decAdd(it, B) {
+    const st = api && api.state && api.state();
+    const r = (st && st.radio) || {};
+    const dial = Number(B ? r.freqB : r.freq) || 0;
+    if (!dial || FT_MODES.indexOf(it.mode) < 0) return;
+    const M = decSpots[B ? 'B' : ''];
+    for (const d of it.list || []) {
+      if (d.tx || !d.msg) continue;
+      const call = senderOf(d.msg);
+      if (!call || !CALL_RE.test(call)) continue;
+      M.set(call, { f: (dial + d.f) / 1000, call, cmt: d.msg, de: 'décodé ici', at: Date.now(), dec: true, db: d.db, mode: it.mode, d, slot: it.slot });
+    }
+    bmDraw();
+  }
   const bmSpots = new Map();
   let bmState = '', bmHost = '', bmRaf = 0, bmBand = '', bmLay = [];
   let bmBandB = '', bmLayB = []; // carte du VFO-B (double réception)
@@ -2261,7 +2279,14 @@
     const now = Date.now();
     for (const [k, s] of bmSpots) if (now - s.at > BM_KEEP) bmSpots.delete(k);
     const LH = 15, room = Math.max(1, Math.floor((H - 2) / LH));
-    let list = Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi && bmPass(s, X));
+    // Onglet FT : stations décodées ici (mode affiché), plus les spots du cluster des autres indicatifs
+    const decs = [];
+    if (tab === 'ftx') {
+      const M = decSpots[X ? 'B' : ''];
+      for (const [k, s] of M) if (now - s.at > DEC_KEEP) M.delete(k); else if (s.mode === mode) decs.push(s);
+    }
+    const decCalls = new Set(decs.map((s) => s.call));
+    let list = decs.filter((s) => s.f >= lo && s.f <= hi).concat(Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi && bmPass(s, X) && !decCalls.has(s.call)));
     if (list.length > room) list = list.sort((a, b) => b.at - a.at).slice(0, room);
     list.sort((a, b) => a.f - b.f);
     const pos = list.map((s) => yOf(s.f) - LH / 2);
@@ -2280,23 +2305,28 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'bm-s';
-      const cq = s.skim || /\bCQ\b|\bTEST\b|CONTEST/i.test(s.cmt);
+      const cq = s.dec ? /^CQ\b/i.test(s.cmt) : s.skim || /\bCQ\b|\bTEST\b|CONTEST/i.test(s.cmt);
       if (cq) b.classList.add('bm-cq');
+      if (s.dec) b.classList.add('bm-dec');
       if (worked.has(s.call + '|' + bandKey + '|' + md.name)) b.classList.add('bm-wkd');
       b.style.top = Math.round(pos[i]) + 'px';
       b.style.left = LX + 'px';
       b.style.opacity = String(Math.max(0.45, 1 - (now - s.at) / BM_KEEP * 0.55));
-      b.dataset.k = s.call + '|' + Math.round(s.f);
+      b.dataset.k = (s.dec ? 'dec|' : '') + s.call + '|' + Math.round(s.f);
       const min = Math.max(0, Math.round((now - s.at) / 60000));
       b.innerHTML = '<b></b><small></small>';
       b.firstChild.textContent = s.call;
       b.lastChild.textContent = ' ' + s.f.toFixed(1).replace('.', ',');
-      b.title = s.call + ' · ' + s.f.toFixed(1).replace('.', ',') + ' kHz · ' + (s.cmt || '—') + ' · de ' + s.de + ' · il y a ' + min + ' min'
+      b.title = s.dec
+        ? s.call + ' · décodé ici (' + s.mode + ', ' + (s.db > 0 ? '+' : '') + s.db + ' dB) : « ' + s.cmt + ' » · il y a ' + min + ' min'
+          + (b.classList.contains('bm-wkd') ? ' · déjà contacté sur cette bande en ' + md.name : '') + '\nClic : comme un double-clic sur son message (correspondant, message à envoyer)'
+        : s.call + ' · ' + s.f.toFixed(1).replace('.', ',') + ' kHz · ' + (s.cmt || '—') + ' · de ' + s.de + ' · il y a ' + min + ' min'
         + (b.classList.contains('bm-wkd') ? ' · déjà contacté sur cette bande en ' + md.name : '') + '\nClic : le TRX se cale sur ce signal et l’indicatif passe dans Correspondant';
       lbls.appendChild(b);
     });
-    const n = Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi).length;
-    $('bmFoot' + X).textContent = n + ' spot' + (n > 1 ? 's' : '') + (list.length < n ? ' (' + list.length + ' affichés)' : '');
+    const nd = decs.filter((s) => s.f >= lo && s.f <= hi).length;
+    const n = Array.from(bmSpots.values()).filter((s) => s.f >= lo && s.f <= hi && !decCalls.has(s.call)).length + nd;
+    $('bmFoot' + X).textContent = (tab === 'ftx' ? nd + ' décodé' + (nd > 1 ? 's' : '') + ' · ' : '') + n + ' en tout' + (list.length < n ? ' (' + list.length + ' affichés)' : '');
     const st = $('bmSt' + X);
     st.className = 'bm-st ' + (bmState === 'connecté' ? 'ok' : bmState ? 'ko' : '');
     st.title = 'DX cluster' + (bmHost ? ' ' + bmHost : '') + ' : ' + (bmState || 'pas de nouvelles') + ' · spots gardés 30 min';
@@ -2439,6 +2469,12 @@
       if (g.moved) return;
       const b = g.t.closest && g.t.closest('.bm-s');
       if (b) {
+        // Station décodée ici : comme un double-clic sur son message
+        if (/^dec\|/.test(b.dataset.k)) {
+          const ds = decSpots[X ? 'B' : ''].get(b.dataset.k.split('|')[1]);
+          if (ds && ds.d) pickFromDecode(ds.d, ds.slot, X ? 'B' : undefined);
+          return;
+        }
         const s = bmSpots.get(b.dataset.k);
         if (!s) return;
         // Spot CW (commentaire « CW », vitesse en WPM, ou skimmer) hors de l'onglet CW : TRX en CW, onglet CW, indicatif
@@ -5939,6 +5975,7 @@
         H.push(it);
         while (H.length > 240) H.shift();
         if (m.mode === mode) addSlot(it, false, B ? 'B' : undefined);
+        decAdd(it, B);
         // HOUND SuperFox : le repère RX se place tout seul sur le signal SuperFox décodé (bas du signal)
         const sfd = houndOn() && (it.list || []).find((d) => d.sf && d.f >= 200 && d.f <= 2500);
         if (sfd && Math.abs((B ? rxFB : rxF) - sfd.f) > 8) setRx(sfd.f, B ? 'B' : undefined);

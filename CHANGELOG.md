@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.38** — Cartes de bande FT8 / FT4 / FT2 : stations décodées ici affichées à leur fréquence réelle (pour chaque VFO), clic = choisir le correspondant ; rien n'est envoyé au DX cluster
 - **0.38.36** — Listes FT : titres de colonnes centrés et alignés sur les colonnes ; PFX (préfixe DXCC), FREQU
 - **0.38.35** — Double réception : largeur des deux cartes de bande réglable séparément
 - **0.38.34** — Cascades FT8 / FT4 / FT2 (JT65, JTTY) : NOTCH du TRX affiché (trait orange « NOTCH 1500 »), pour chaque VFO
