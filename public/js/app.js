@@ -432,7 +432,7 @@
     }
     const out = new Float32Array(N / 2);
     for (let i = 0; i < N / 2; i++) out[i] = 10 * Math.log10(re[i] * re[i] + im[i] * im[i] + 1e-10);
-    if (!AUD.sm || AUD.sm.length !== out.length) AUD.sm = out; else for (let i = 0; i < out.length; i++) AUD.sm[i] = AUD.sm[i] * 0.55 + out[i] * 0.45;
+    if (!AUD.sm || AUD.sm.length !== out.length) AUD.sm = out; else for (let i = 0; i < out.length; i++) AUD.sm[i] = AUD.sm[i] * 0.78 + out[i] * 0.22;
     return AUD.sm;
   }
   function drawSpec(w, r, live) {
@@ -442,23 +442,24 @@
     let h = '<rect class="am-bg" x="-7" y="1" width="214" height="82" rx="5"/>';
     const fresh = Date.now() - AUD.at < 1500;
     if (fresh && live) {
-      const sp = audSpectrum(), binHz = AUD.rate / 1024, n = 180; // fin, comme le spectre de l'écran du FTDX101
-      let lo = 1e9, hi = -1e9;
-      for (let i = 2; i < sp.length; i++) { if (sp[i] < lo) lo = sp[i]; if (sp[i] > hi) hi = sp[i]; }
-      // bruit de fond en bas (médiane du spectre), les signaux qui en sortent montent : comme le petit spectre du TRX
-      const med = Array.from(sp.slice(2, Math.min(sp.length, Math.ceil(FMAX / binHz)))).sort((p, q) => p - q);
+      // Courbe fine (une valeur par case de la FFT, ~8 Hz), lissée sur 5 cases : surface verte dégradée et trait vert,
+      // comme le spectre de la page des modes numériques
+      const sp = audSpectrum(), binHz = AUD.rate / 1024, nb = Math.min(sp.length - 1, Math.ceil(FMAX / binHz));
+      let hi = -1e9;
+      for (let i = 2; i <= nb; i++) if (sp[i] > hi) hi = sp[i];
+      // bruit de fond en bas (médiane du spectre), les signaux qui en sortent montent
+      const med = Array.from(sp.slice(2, nb)).sort((p, q) => p - q);
       const floor = med[Math.floor(med.length * 0.5)] - 4, top = Math.max(floor + 36, hi + 2);
-      // spectre plein (sans trait noir entre les colonnes) : une surface grise, colonne par colonne
-      let d = 'M' + X0 + ' ' + Y1;
-      for (let i = 0; i < n; i++) {
-        const f0 = i * FMAX / n, f1 = (i + 1) * FMAX / n;
-        let m = -1e9;
-        for (let j = Math.floor(f0 / binHz); j <= Math.ceil(f1 / binHz) && j < sp.length; j++) if (sp[j] > m) m = sp[j];
-        const v = Math.pow(Math.max(0, Math.min(1, (m - floor) / (top - floor))), 1.3);
-        const xa = (X0 + i * (X1 - X0) / n).toFixed(2), xb = (X0 + (i + 1) * (X1 - X0) / n).toFixed(2), y = (Y1 - v * (Y1 - Y0 - 4)).toFixed(1);
-        d += 'L' + xa + ' ' + y + 'L' + xb + ' ' + y;
+      let line = '';
+      for (let i = 0; i <= nb; i++) {
+        const g = (k) => sp[Math.max(0, Math.min(sp.length - 1, k))];
+        const m = (g(i - 2) + 2 * g(i - 1) + 3 * g(i) + 2 * g(i + 1) + g(i + 2)) / 9;
+        const v = Math.pow(Math.max(0, Math.min(1, (m - floor) / (top - floor))), 1.15);
+        line += (i ? 'L' : 'M') + X(i * binHz).toFixed(2) + ' ' + (Y1 - v * (Y1 - Y0 - 4)).toFixed(2);
       }
-      h += '<path class="sp-bars" d="' + d + 'L' + X1 + ' ' + Y1 + 'Z"/>';
+      h += '<defs><linearGradient id="spg' + w + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ff5c4" stop-opacity=".8"/><stop offset="1" stop-color="#1f9e6c" stop-opacity=".25"/></linearGradient></defs>';
+      h += '<path class="sp-fill" fill="url(#spg' + w + ')" d="' + line + 'L' + X(nb * binHz).toFixed(2) + ' ' + Y1 + 'L' + X0 + ' ' + Y1 + 'Z"/>';
+      h += '<path class="sp-line" d="' + line + '"/>';
     } else {
       h += '<text class="sp-msg" x="100" y="38" text-anchor="middle">' + (live ? 'Cliquez « 🔊 Écouter le TRX »' : 'TRX hors ligne') + '</text>' +
         '<text class="sp-msg" x="100" y="50" text-anchor="middle">' + (live ? 'pour voir le spectre BF' : '') + '</text>';

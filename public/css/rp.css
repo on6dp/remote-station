@@ -2541,3 +2541,7 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .ft-dual .dg-th.ft > span, .ft-dual .dg-row.ft > span { padding-inline: 2px; }
 .ft-dual .dg-th.ft > span { font-size: 9.5px; letter-spacing: .3px; }
 .ft-dual .dg-th.ft span:nth-child(5), .ft-dual .dg-row.ft span:nth-child(5) { padding-left: 5px; }
+/* Spectre BF du cadre VFO : courbe verte fine avec surface dégradée (comme le spectre des modes numériques) */
+.vfo-am .sp-fill { stroke: none; }
+.vfo-am .sp-line { fill: none; stroke: #6ff5c4; stroke-width: .7; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.vz-big .sp-line { stroke-width: 1.6; }
