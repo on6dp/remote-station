@@ -2552,3 +2552,8 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 /* « VFO-A · MAIN » encadré sur fond vert foncé, « VFO-B · SUB » sur fond rose foncé (mêmes couleurs que les VFO A / B ailleurs) */
 .ft-vtag { font-style: normal; display: inline-block; padding: 1px 9px; border-radius: 5px; border: 1px solid #4fd17a; background: linear-gradient(180deg, #1f7a3a, #0f5226); color: #fff; font-weight: 800; }
 .ft-vtag.b { border-color: #ff7ab3; background: linear-gradient(180deg, #a3245e, #6e133d); }
+/* Double réception : réglages de chaque cascade plus compacts pour tenir sur une ligne (VFO-A comme VFO-B) */
+.ft-dual .wf-ctl { gap: 4px 10px; }
+.ft-dual .wf-ctl input[type='range'] { width: 80px; }
+.ft-dual .wf-ctl select { max-width: 140px; }
+.ft-dual .wf-ctl .ft-md { margin-left: 4px; }
