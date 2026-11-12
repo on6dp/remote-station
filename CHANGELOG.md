@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.350** — Dashboard : touches du panneau MODE un peu plus petites (la colonne remonte)
 - **0.37.349** — Dashboard : badges d'état de l'écran VFO (ATT, IPO, NB, DNR, NOTCH, DNF, NAR…) éteints encadrés de blanc, texte blanc gras
 - **0.37.348** — Dashboard : noms des boutons des cadres en blanc gras même sans la main (juste un peu atténués)
 - **0.37.347** — Dashboard : cadre DSP — boutons encadrés de blanc, noms en blanc ; enclenchés en couleurs inversées (fond blanc, nom noir gras)

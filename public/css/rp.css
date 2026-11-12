@@ -2274,3 +2274,6 @@ section[data-panel="tx"] > .panel-h { color: #ffd400; }
 /* Badges d'état de l'écran VFO (ATT, IPO, NB, DNR, NOTCH, DNF, NAR, AGC…) éteints : encadré blanc, texte blanc gras ;
    allumés : couleurs inchangées */
 .vfo-badges .badge:not(.amber):not(.green):not(.cyan) { border-color: #fff; color: #fff; font-weight: 800; }
+/* Panneau MODE : touches un peu plus petites (la colonne remonte) */
+#modeKeys .btn { font-size: 11.5px; min-height: 24px; padding-block: 3px; }
+#modeKeys { gap: 4px; }
