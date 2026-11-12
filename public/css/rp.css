@@ -2504,3 +2504,5 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dg-ftx > .dg-bar .dg-chk, .dg-ftx > .dg-bar .dg-alog, .dg-ftx > .dg-bar .dg-hound, .dg-ftx > .dg-bar .dg-txc { margin-inline: 4px; }
 .dg-ftx > .dg-bar .dg-alog select { margin-left: 6px; }
 .dg-ftx > .dg-bar .dg-split { display: inline-flex; align-items: center; gap: 10px; }
+/* « VFO-A · MAIN » / « VFO-B · SUB » au-dessus des cascades : même taille et même couleur que la fréquence */
+.ft-dual .ft-wfa, .ft-wfbl { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: .3px; }
