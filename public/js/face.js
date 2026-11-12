@@ -884,11 +884,12 @@
     f.vcA = va; f.vcB = vb; f.vcY = vy;
     f.cup = el('path', { d: '', class: 'flt-cup', style: 'display:none' }, g);
     f.nline = el('line', { x1: x0, y1: y0 + 6, x2: x0, y2: y0 + h - 6, class: 'flt-notch', style: 'display:none' }, g);
+    // Repère « N » (triangle) du NOTCH au-dessus du filtre (tous les TRX : il suit la fréquence du NOTCH)
+    f.nmk = el('g', { style: 'display:none' }, g);
+    f.nmkT = el('path', { d: '', class: 'flt-nmk' }, f.nmk);
+    f.nmkL = el('text', { x: x0, y: y0 + 3, class: 'flt-nmkt', 'text-anchor': 'middle' }, f.nmk, 'N');
     if (DICOM) {
-      // IC-7760 : repère « N » (triangle orange) du NOTCH au-dessus du filtre, et échelle 300 · 1500 · 2700 Hz dessous, comme sur le TRX
-      f.nmk = el('g', { style: 'display:none' }, g);
-      f.nmkT = el('path', { d: '', class: 'flt-nmk' }, f.nmk);
-      f.nmkL = el('text', { x: x0, y: y0 + 3, class: 'flt-nmkt', 'text-anchor': 'middle' }, f.nmk, 'N');
+      // IC-7760 : échelle 300 · 1500 · 2700 Hz sous le filtre, comme sur le TRX
       // échelle du bas : bords de la bande passante (orange) et milieu (blanc), en Hz de BF : 0 · 1500 · 3000 pour 3,0 kHz
       const smE = FACE.subMeter || FACE.subLcd, sly = smE ? smE.y + smE.h - 3 : y0 + h + 7;
       f.scl = [0, 1, 2].map((i) => ({ i, t: el('text', { x: x0, y: sly, class: 'flt-scl' + (i === 1 ? ' mid' : ''), 'text-anchor': 'middle' }, g, '') }));
@@ -6947,17 +6948,17 @@
       // R.FIL plus étroit que le cadre : ses limites en pointillés (centrées sur le signal, sans IF SHIFT)
       const rw = roofHz ? roofHz / FLT_SPAN * fl.w : 0, rc = fl.x0 + fl.w / 2;
       fl.roof.setAttribute('d', rw && rw < fl.w - 4 ? 'M' + (rc - rw / 2).toFixed(1) + ' ' + (top - 3) + 'V' + bot + 'M' + (rc + rw / 2).toFixed(1) + ' ' + (top - 3) + 'V' + bot : '');
-      fl.trap.setAttribute('d', 'M' + trapPts(fl.x0, fl.w, cx, tw, top, bot, sl, [[nx, 3], [kx, 3.5, 7]]).map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
+      fl.trap.setAttribute('d', 'M' + trapPts(fl.x0, fl.w, cx, tw, top, bot, sl, [[nx, 4], [kx, 3.5, 7]]).map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
       // NOTCH hors de la bande passante (sur les flancs ou au-delà) : simple trait rouge à sa place (au bord du cadre si plus loin)
       const inPass = nx != null && nx - 3 > cx - tw / 2 + sl && nx + 3 < cx + tw / 2 - sl;
       const nxc = nx == null ? 0 : Math.max(fl.x0 + 2, Math.min(fl.x0 + fl.w - 2, nx));
       fl.nline.setAttribute('x1', nxc); fl.nline.setAttribute('x2', nxc);
-      fl.nline.style.display = nx != null && !inPass ? '' : 'none';
+      fl.nline.style.display = nx != null ? '' : 'none'; // trait pointillé rouge à la fréquence du NOTCH (aussi dans la bande passante, par-dessus le spectre)
       if (fl.nmk) {
         fl.nmk.style.display = nx != null ? '' : 'none';
         if (nx != null) { fl.nmkT.setAttribute('d', 'M' + (nxc - 3.5) + ' ' + (top - 6) + 'H' + (nxc + 3.5) + 'L' + nxc + ' ' + (top - 1) + 'Z'); fl.nmkL.setAttribute('x', nxc); fl.nmkL.setAttribute('y', top - 7); }
         const rev = /^LSB$|-L$/.test(mode || '') ? -1 : 1, ac = audioCenter(mode || '', hz) + sh;
-        for (const q of fl.scl) {
+        for (const q of fl.scl || []) {
           const qhz = Math.max(0, Math.round((ac + (q.i - 1) * hz / 2) / 10) * 10), x = cx + rev * (qhz - ac) / FLT_SPAN * fl.w;
           q.t.textContent = String(qhz); q.t.setAttribute('x', Math.max(fl.x0 + 7, Math.min(fl.x0 + fl.w - 7, x)).toFixed(1));
           q.t.style.display = !/FM|AM/.test(mode || '') ? '' : 'none';

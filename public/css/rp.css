@@ -2348,3 +2348,8 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .vfo-flt .pb-notch { fill: #0d1428; stroke: #5fd0ff; stroke-width: 2; }
 .vfo-flt .pb-nmark { fill: #5fd0ff; }
 .vfo-flt .pb-nl { fill: #5fd0ff; font: 800 10px Arial, sans-serif; paint-order: stroke; stroke: #0d1428; stroke-width: 3px; }
+/* « VFO A / CW-L » sous CLEAR (colonne de droite de l'écran VFO) : plus de place pour le filtre, le cadran et la fréquence */
+.vfo-mid { grid-template-columns: minmax(0, 1fr) auto; }
+.vfo-side .vfo-id { display: flex; align-items: center; gap: 8px; margin-top: 6px; justify-content: flex-end; }
+.freq-wrap .vfo-meters { margin-left: 4px; }
+@container (max-width: 320px) { .vfo-mid { grid-template-columns: 1fr; } .vfo-mid .freq-wrap { grid-row: 1; } .vfo-mid .vfo-side { grid-row: 2; } }

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.373** — Face avant (FTDX101…) : repère N et trait pointillé du NOTCH dans le filtre, qui suit sa fréquence ; dashboard : « VFO A / mode » sous CLEAR pour donner de la place au filtre et au cadran
 - **0.37.372** — Petit filtre : NOTCH bien visible (entaille en V, repère ▼ et sa fréquence)
 - **0.37.371** — Petit filtre : largeur nominale = la plus large du TRX dans le mode, les filtres rouge et bleu s'écartent dès que le BW est plus étroit (aussi en CW)
 - **0.37.370** — Cadran à aiguille : même encadré que le petit filtre
