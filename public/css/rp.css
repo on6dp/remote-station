@@ -2227,3 +2227,8 @@ section.panel.tune-panel { background: linear-gradient(180deg, #4d5d72, #3f4e61)
    enclenché = même dégradé bleu foncé que le mode actif */
 .panel-b .btn[data-ctl] { border-color: #fff; color: #fff; font-weight: 800; }
 .panel-b .btn[data-ctl][aria-pressed='true'] { color: #fff; font-weight: 800; background: linear-gradient(180deg, #2f86cc 0%, #1a5f9e 40%, #0f4277 72%, #072a4f 100%); border-color: #7cc4f5; text-shadow: 0 1px 1px rgba(0,0,0,.45); box-shadow: 0 0 6px rgba(80,180,255,.45); }
+/* Cadre ACCORD (TUNER) : titre jaune vif ; TUNER enclenché en mauve ; TUNE en rouge pendant l'accord ; texte blanc gras comme les modes */
+#panelTune > .panel-h { color: #ffd400; }
+#sec-tune .btn[data-ctl] { color: #fff; font-weight: 800; border-color: #fff; }
+#sec-tune .btn[data-ctl='tuner'][aria-pressed='true'] { background: linear-gradient(180deg, #6a3aa8, #3f1d6e); border-color: #c49bff; color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,.45); box-shadow: 0 0 8px rgba(160, 100, 255, .45); }
+#sec-tune .btn[data-ctl='tune'].busy { background: linear-gradient(180deg, #e0241a, #8f0f08); border-color: #ff7a6e; color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,.45); box-shadow: 0 0 12px rgba(255, 40, 30, .6); }

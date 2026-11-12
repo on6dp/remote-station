@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.341** — Dashboard : ACCORD (TUNER) en jaune vif, TUNER en mauve quand il est en service, TUNE en rouge pendant l'accord, texte blanc gras
 - **0.37.340** — Dashboard : boutons marche / arrêt des cadres (CONTOUR, APF, NB, DNR, NOTCH, PROC, MIC EQ, VOX…) encadrés de blanc, texte blanc gras, dégradé bleu comme le mode actif quand ils sont enclenchés
 - **0.37.339** — Dashboard : A · MAIN / B · SUB des titres de cadres arrondis, un peu plus grands
 - **0.37.338** — Dashboard : choix à plusieurs cases (AGC, ROOFING…) encadrés de blanc, texte blanc gras, case choisie en dégradé bleu comme le mode actif
