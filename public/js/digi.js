@@ -938,6 +938,7 @@
     jtRedrawB();
     cwCtlPlace();
     cwRowsB.length = 0;
+    ftSyncViews(); // même plage pour les deux cascades
     return true;
   }
   // « TX call » dans la barre FT (face avant /ftdx101 et fenêtre séparée) ; le dashboard a déjà le sien (ligne Correspondant)
@@ -2595,6 +2596,13 @@
     if (span === cur.span) return;
     const lo = span >= 3000 ? 0 : Math.max(0, Math.min(3000 - span, Math.round((f - x * span) / 10) * 10));
     ftSetView(side, lo, span);
+    // Double réception : les deux cascades gardent la même plage (même largeur d'affichage pour les deux VFO)
+    if (ftDual) ftSetView(side === 'B' ? 'A' : 'B', lo, span);
+  }
+  /** Double réception : la cascade du VFO-B prend la plage de celle du VFO-A */
+  function ftSyncViews() {
+    const a = zoomView('A'), b = zoomView('B');
+    if (ftDual && a && b && (a.lo !== b.lo || a.span !== b.span)) ftSetView('B', a.lo, a.span);
   }
   function ftSetView(side, lo, span) {
     const V = zoomView(side);
