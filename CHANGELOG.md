@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.352** — Dashboard : RX / TX au repos encadrés de blanc, SUB en rose foncé, bande en blanc gras dans les écrans VFO
 - **0.37.351** — Dashboard : mode dans l'écran VFO plus grand, fond vert (VFO A) / rose (VFO B)
 - **0.37.350** — Dashboard : touches du panneau MODE un peu plus petites (la colonne remonte)
 - **0.37.349** — Dashboard : badges d'état de l'écran VFO (ATT, IPO, NB, DNR, NOTCH, DNF, NAR…) éteints encadrés de blanc, texte blanc gras

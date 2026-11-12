@@ -2281,3 +2281,10 @@ section[data-panel="tx"] > .panel-h { color: #ffd400; }
 #modeA.badge, #modeB.badge { font-size: 13px; font-weight: 800; padding: 3px 10px; color: #fff; }
 #modeA.badge { background: linear-gradient(180deg, #1f7a3a, #0f5226); border-color: #4fd17a; }
 #modeB.badge { background: linear-gradient(180deg, #a3245e, #6e133d); border-color: #ff7ab3; }
+/* Écran VFO : RX / TX au repos encadrés de blanc, texte blanc (comme BW / SFT) ; SUB en rose foncé ; bande en blanc gras */
+.vfo-badges-top .badge.b-rx:not(.on), .badge.b-rx:not(.on), .badge.b-tx:not(.armed):not(.live) { border-color: #fff; color: #fff; font-weight: 800; }
+.vfo-sub .side-tag.on { background: linear-gradient(180deg, #a3245e, #6e133d); color: #fff; font-weight: 800; border-color: #ff7ab3; box-shadow: 0 0 10px rgba(230, 60, 140, .5); }
+#bandA, #bandB { color: #fff; font-weight: 800; }
+/* SUB toujours en rose foncé (plus lumineux quand c'est le côté actif) ; « · » et bande en blanc gras */
+.vfo-sub .side-tag { background: linear-gradient(180deg, #8a1f50, #5a1033); color: #fff; font-weight: 800; border-color: #d9609a; }
+.vfo-name { color: #fff; font-weight: 800; }
