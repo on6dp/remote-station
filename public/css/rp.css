@@ -2199,9 +2199,13 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 .tb-title .tb-name { white-space: nowrap; }
 .tb-title .tb-utc { font: 800 12.5px/1.2 ui-monospace, 'Roboto Mono', Consolas, monospace; color: #fff; white-space: pre; letter-spacing: .04em;
   padding: 2px 10px; border: 1px solid #c8d0dc; border-radius: 7px; background: #0b0f14; }
-/* Fiche QSO : champs sur fond jaune clair, texte foncé gras, pour bien les distinguer */
-.lg-form .lg-row input:not([type='checkbox']), .lg-form .lg-row select { background: #fff6c2 !important; color: #111 !important; font-weight: 700; border-color: #d9c56a; }
-.lg-form .lg-row input:not([type='checkbox'])::placeholder { color: #8a8460; font-weight: 500; }
-.lg-form .lg-row input[name='call'] { color: #003a8c !important; font-weight: 800; }
-.lg-form .lg-row select option { background: #fff; color: #111; }
-.lg-form .lg-row input:not([type='checkbox']):disabled, .lg-form .lg-row select:disabled { background: #d8d3b4 !important; color: #555 !important; }
+/* Fiche QSO (onglet Logbooks) : cadre sur fond jaune clair pour le distinguer de la liste ; intitulés foncés, champs blancs */
+#lgForm.lg-form { background: #f6efc9; border-color: #d9c56a; }
+#lgForm .lg-row label, #lgForm .lg-chk, #lgForm .lg-chk.lg-qo { color: #1a1a1a !important; }
+#lgForm .lg-row label.lg-ref, #lgForm .lg-refs-t { color: #8a5a00 !important; }
+#lgForm .lg-myrefs .lg-refs-t { color: #1d6b1d !important; }
+#lgForm .lg-row input:not([type='checkbox']), #lgForm .lg-row select { background: #fff !important; color: #111 !important; font-weight: 700; border-color: #b9a85a; }
+#lgForm .lg-row input:not([type='checkbox'])::placeholder { color: #9a9a9a; font-weight: 500; }
+#lgForm .lg-row input[name='call'] { color: #003a8c !important; font-weight: 800; }
+#lgForm .lg-row select option { background: #fff; color: #111; }
+#lgForm .lg-note, #lgForm .lg-msg { color: #333; }

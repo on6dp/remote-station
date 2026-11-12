@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.332** — Logbook : fond de la fiche QSO en jaune clair (intitulés foncés, champs blancs) pour la distinguer de la liste
 - **0.37.331** — Logbook : champs de la fiche QSO sur fond jaune clair, texte foncé gras
 - **0.37.330** — Dashboard : date et heure GMT sous « Remote Station UBA-LGE »
 - **0.37.329** — Dashboard : décompte de la main (⏱) en blanc gras (orange sous 2 min)
