@@ -2217,3 +2217,7 @@ section.panel.tune-panel { background: linear-gradient(180deg, #4d5d72, #3f4e61)
 #lgSearch.lg-search { min-width: 310px; background: #f6efc9; color: #111; font-weight: 700; border: 2px solid #fff; border-radius: 8px; }
 #lgSearch.lg-search::placeholder { color: #6b6450; font-weight: 600; }
 #lgSearch.lg-search:focus { border-color: var(--v2-accent-cyan-bright, #00d4ff); outline: none; }
+/* Choix à plusieurs cases dans les cadres (AGC OFF/FAST/MID/SLOW/AUTO…) : encadré blanc, texte blanc gras ;
+   la case choisie comme le mode actif (dégradé bleu foncé) */
+.panel-b .seg .btn, .panel-b .seg-fill .btn { border-color: #fff; color: #fff; font-weight: 800; }
+.panel-b .seg .btn[aria-pressed='true'], .panel-b .seg-fill .btn[aria-pressed='true'] { color: #fff; font-weight: 800; background: linear-gradient(180deg, #2f86cc 0%, #1a5f9e 40%, #0f4277 72%, #072a4f 100%); border-color: #7cc4f5; text-shadow: 0 1px 1px rgba(0,0,0,.45); box-shadow: 0 0 6px rgba(80,180,255,.45); }

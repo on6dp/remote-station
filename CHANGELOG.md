@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.338** — Dashboard : choix à plusieurs cases (AGC, ROOFING…) encadrés de blanc, texte blanc gras, case choisie en dégradé bleu comme le mode actif
 - **0.37.337** — Logbook : champ de recherche sur fond jaune clair, encadré blanc épais, plus large
 - **0.37.336** — Logbook : boutons de la fiche QSO (Annuler, Supprimer…) en blanc gras
 - **0.37.335** — Dashboard : cadre STEP / VFO / BANDES sur fond gris-bleu plus clair
