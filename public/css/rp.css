@@ -2524,3 +2524,6 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .ctabs .ctab-txc { margin-left: 16px; align-self: center; }
 .ctabs .ctab-txc .dg-f { font-size: 13px; }
 .ctabs .ctab-txc select { font-size: 13px; padding: 3px 6px; }
+/* Réglages des cascades : Gain, Zéro (et Plat) en blanc gras ; listes Couleurs / Vitesse à bord arrondi */
+.wf-ctl label { color: #fff; font-weight: 800; }
+.wf-ctl select { border: 1px solid #fff; border-radius: 8px; color: #fff; font-weight: 700; padding: 3px 8px; background: #0d1622; }
