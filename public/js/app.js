@@ -427,7 +427,7 @@
       '<text y="85" x="' + cl(Math.min(xl, x(c) - 34)) + '" class="pb-l" text-anchor="middle">' + fmt(lo) + '</text>' +
       '<text y="85" x="' + cl(x(c)) + '" class="pb-l" text-anchor="middle">' + c + '</text>' +
       '<text y="85" x="' + cl(Math.max(xh, x(c) + 34)) + '" class="pb-l" text-anchor="middle">' + fmt(hi) + '</text>' +
-      '<title>Filtre du VFO ' + w + ' : largeur ' + d.hz + ' Hz, décalage ' + d.sft + ' Hz (BW / IF SHIFT, colonne de gauche)' + (d.notch != null ? ' ; NOTCH ' + d.notch + ' Hz' : '') + '</title>';
+      '<title>Filtre du VFO ' + w + ' : largeur ' + d.hz + ' Hz, décalage ' + d.sft + ' Hz (molette sur la case BW : largeur ; sur la case SFT ou le dessin : décalage — comme BW / IF SHIFT de la colonne de gauche)' + (d.notch != null ? ' ; NOTCH ' + d.notch + ' Hz' : '') + '</title>';
   }
   function drawFreq(which, hz) {
     const s = hz == null ? '---------' : String(hz).padStart(9, '0');
@@ -620,38 +620,82 @@
         }, { passive: false });
       }
     }
-    // Molette sur « BW » de chaque écran VFO : largeur de filtre de ce VFO (VFO B : FTX-1, côté SUB)
+    // Molette sur « BW » de chaque écran VFO (badge du haut, ou case BW du petit filtre) : largeur de filtre de ce VFO ;
+    // sur la case SFT ou le dessin du filtre : IF SHIFT (Icom : TWIN PBT, les deux PBT ensemble ; BW : ils s'écartent)
+    const pbtIds = (w) => { const C = RIG().CONTROL || {}, x = w === 'B' ? 'B' : ''; return C['pbtIn' + x] && C['pbtOut' + x] ? [C['pbtIn' + x], C['pbtOut' + x]] : null; };
+    const setLvl = (c, v) => { v = Math.max(c.min, Math.min(c.max, v)); ctlPending[c.id] = { v, at: Date.now(), wheel: true }; sendCtlThrottled(c); return v; };
+    function bwStep(w, up, fromFlt) {
+      const R = RIG();
+      const C = R.CONTROL || {};
+      const r = (st && st.radio) || {};
+      const pb = fromFlt && pbtIds(w);
+      if (pb) { // Icom : BW = écart entre les deux PBT (plus étroit : ils s'écartent ; plus large : ils se rapprochent)
+        const pi = Number(ctlValue(pb[0].id) != null ? ctlValue(pb[0].id) : 128), po = Number(ctlValue(pb[1].id) != null ? ctlValue(pb[1].id) : 128);
+        const d = 4;
+        if (up) { if (pi === po) return; const s0 = pi > po ? -1 : 1; setLvl(pb[0], pi + s0 * Math.min(d, Math.abs(pi - po) / 2)); setLvl(pb[1], po - s0 * Math.min(d, Math.abs(pi - po) / 2)); }
+        else { const s0 = pi >= po ? 1 : -1; setLvl(pb[0], pi + s0 * d); setLvl(pb[1], po - s0 * d); }
+        render();
+        return;
+      }
+      const id = w === 'A' ? (C.width ? 'width' : C.fil ? 'fil' : null) : (C.widthB ? 'widthB' : null);
+      if (!id) return;
+      const c = C[id];
+      let v;
+      if (c.type === 'width') {
+        const t = R.widthTable && R.widthTable(r[c.modeKey || 'mode']);
+        if (!t) return say('Pas de réglage de largeur dans ce mode (' + (r[c.modeKey || 'mode'] || '?') + ')', 'warn');
+        if (c.when && !c.when(r)) return say(c.label + ' indisponible (NARROW enclenché ?)', 'warn');
+        // FTDX101 : 0 = largeur par défaut du TRX (en dessous du plus étroit)
+        const lo = R.WIDTH_DEF ? 0 : 1;
+        const cv = ctlValue(id) == null ? lo : Number(ctlValue(id));
+        v = Math.max(lo, Math.min(t.length, cv + (up ? 1 : -1)));
+      } else if (c.type === 'select') {
+        const o = c.options.map((x) => x[0]);
+        const k = Math.max(0, o.indexOf(Number(ctlValue(id))));
+        v = o[Math.max(0, Math.min(o.length - 1, k + (up ? 1 : -1)))];
+      } else return;
+      if (v === Number(ctlValue(id))) return;
+      ctlPending[c.id] = { v, at: Date.now(), wheel: true };
+      sendCtlThrottled(c);
+      render();
+    }
+    function sftStep(w, up) {
+      const C = RIG().CONTROL || {};
+      const pb = pbtIds(w);
+      if (pb) { // Icom : les deux PBT ensemble
+        const d = up ? 4 : -4;
+        for (const c of pb) setLvl(c, Number(ctlValue(c.id) != null ? ctlValue(c.id) : 128) + d);
+        render();
+        return;
+      }
+      const c = C[w === 'B' ? 'shiftB' : 'shift'];
+      if (!c) return say('Pas d’IF SHIFT pilotable pour ce VFO', 'warn');
+      if (c.when && !c.when((st && st.radio) || {})) return say(c.label + ' indisponible dans ce mode', 'warn');
+      setLvl(c, Number(ctlValue(c.id) || 0) + (up ? 1 : -1) * (c.step || 20));
+      render();
+    }
     for (const w of ['A', 'B']) {
       $('width' + w).addEventListener('wheel', (ev) => {
-        const R = RIG();
-        const C = R.CONTROL || {};
-        const id = w === 'A' ? (C.width ? 'width' : C.fil ? 'fil' : null) : (C.widthB ? 'widthB' : null);
-        if (!id) return;
         ev.preventDefault();
         ev.stopPropagation();
         if (ctlBlocked()) return say(ctlBlocked(), 'warn');
-        const c = C[id];
-        const r = (st && st.radio) || {};
-        const up = ev.deltaY < 0;
-        let v;
-        if (c.type === 'width') {
-          const t = R.widthTable && R.widthTable(r[c.modeKey || 'mode']);
-          if (!t) return say('Pas de réglage de largeur dans ce mode (' + (r[c.modeKey || 'mode'] || '?') + ')', 'warn');
-          if (c.when && !c.when(r)) return say(c.label + ' indisponible (NARROW enclenché ?)', 'warn');
-          // FTDX101 : 0 = largeur par défaut du TRX (en dessous du plus étroit)
-          const lo = R.WIDTH_DEF ? 0 : 1;
-          const cv = ctlValue(id) == null ? lo : Number(ctlValue(id));
-          v = Math.max(lo, Math.min(t.length, cv + (up ? 1 : -1)));
-        } else if (c.type === 'select') {
-          const o = c.options.map((x) => x[0]);
-          const i = Math.max(0, o.indexOf(Number(ctlValue(id))));
-          v = o[Math.max(0, Math.min(o.length - 1, i + (up ? 1 : -1)))];
-        } else return;
-        if (v === Number(ctlValue(id))) return;
-        ctlPending[c.id] = { v, at: Date.now() };
-        sendCtlThrottled(c);
-        render();
+        bwStep(w, ev.deltaY < 0, false);
       }, { passive: false });
+      // Petit filtre : case BW (en haut à gauche) = largeur ; case SFT et dessin du filtre = décalage
+      $('flt' + w).addEventListener('wheel', (ev) => {
+        const rc = $('flt' + w).getBoundingClientRect();
+        const x = (ev.clientX - rc.left) / rc.width * 250, y = (ev.clientY - rc.top) / rc.height * 90;
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (ctlBlocked()) return say(ctlBlocked(), 'warn');
+        if (y < 31 && x < 110) bwStep(w, ev.deltaY < 0, true);
+        else sftStep(w, ev.deltaY < 0);
+      }, { passive: false });
+      $('flt' + w).addEventListener('mousemove', (ev) => {
+        const rc = $('flt' + w).getBoundingClientRect();
+        const x = (ev.clientX - rc.left) / rc.width * 250, y = (ev.clientY - rc.top) / rc.height * 90;
+        $('flt' + w).style.cursor = y < 31 && x < 110 ? 'ew-resize' : 'col-resize';
+      });
     }
     // Voyants TX / RX cliquables : TX = VFO d'émission (SPLIT : TX sur B), RX = VFO de réception (MAIN / SUB)
     for (const w of ['A', 'B']) {

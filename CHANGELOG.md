@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.369** — Petit filtre : molette sur la case BW = largeur, sur la case SFT ou le dessin = décalage (Icom : TWIN PBT) ; les curseurs de la colonne de gauche suivent
 - **0.37.368** — Petit filtre comme le cadre TWIN PBT de l'IC-7300 (cases BW / SFT, deux filtres rouge / bleu qui s'écartent, partie commune orange, aussi sur Yaesu), NOTCH dessiné ; filtre et cadran plus grands ; RIT / XIT / CLEAR aussi sur le VFO B (clarifier commun)
 - **0.37.367** — Petit filtre des écrans VFO à la manière de l'IC-7300 : échelle fixe 7 kHz (étroits agrandis, AM 20 kHz), trapèze moins haut, BW et SFT indépendants
 - **0.37.366** — Cadre TX : PUISSANCE en jaune
