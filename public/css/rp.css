@@ -2171,3 +2171,9 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 /* DUAL RX (TRX à deux récepteurs) : fond mauve foncé quand il est en service, liseré mauve quand il est disponible mais coupé */
 #sec-dual .btn[data-ctl="dualRx"] { border-color: #8a5cc4; }
 #sec-dual .btn[data-ctl="dualRx"][aria-pressed='true'] { background: linear-gradient(180deg, #6a3aa8, #3f1d6e); border-color: #c49bff; color: #fff; font-weight: 800; box-shadow: 0 0 8px rgba(160, 100, 255, .45); }
+/* TX VFO-A (MAIN) en vert comme A / MAIN, TX VFO-B (SUB) en rose comme B / SUB ; SPLIT garde son fond orange */
+#txOnA.txon:not(.split) { background: linear-gradient(180deg, #1f7a3a, #0f5226); border-color: #4fd17a; color: #fff; font-weight: 800; box-shadow: 0 0 8px rgba(40, 200, 100, .45); }
+#txOnB.txon:not(.split) { background: linear-gradient(180deg, #a3245e, #6e133d); border-color: #ff7ab3; color: #fff; font-weight: 800; box-shadow: 0 0 8px rgba(230, 60, 140, .45); }
+/* TXW : blanc gras cerclé de blanc ; maintenu = fond blanc, texte noir gras */
+#sec-dual .txw-btn { color: #fff; font-weight: 800; border-color: #fff; }
+#sec-dual .txw-btn[aria-pressed='true'], #sec-dual .txw-btn.held { color: #000; background: #fff; border-color: #fff; font-weight: 900; }
