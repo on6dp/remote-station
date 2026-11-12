@@ -2221,3 +2221,5 @@ section.panel.tune-panel { background: linear-gradient(180deg, #4d5d72, #3f4e61)
    la case choisie comme le mode actif (dégradé bleu foncé) */
 .panel-b .seg .btn, .panel-b .seg-fill .btn { border-color: #fff; color: #fff; font-weight: 800; }
 .panel-b .seg .btn[aria-pressed='true'], .panel-b .seg-fill .btn[aria-pressed='true'] { color: #fff; font-weight: 800; background: linear-gradient(180deg, #2f86cc 0%, #1a5f9e 40%, #0f4277 72%, #072a4f 100%); border-color: #7cc4f5; text-shadow: 0 1px 1px rgba(0,0,0,.45); box-shadow: 0 0 6px rgba(80,180,255,.45); }
+/* A · MAIN / B · SUB dans les titres des cadres : arrondi comme les badges, un peu plus grand */
+.panel-h .ph-side { border-radius: 7px; font-size: 11.5px; padding: 2px 9px; letter-spacing: .04em; }
