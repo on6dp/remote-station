@@ -1043,7 +1043,7 @@
     drawScale();
   }
   // Vitesse du spectre (boutons X1 / X2 / X4 en haut à gauche du spectre) : lissage plus ou moins long
-  const SP_ALPHA = { 1: 0.18, 2: 0.35, 4: 0.65 };
+  const SP_TAU = { 1: 6, 2: 2, 4: 0.3 }; // secondes
   let spSpd = [1, 2, 4].indexOf(Number(store.get('spspd', '1'))) >= 0 ? Number(store.get('spspd', '1')) : 1;
   function spSpdUi() {
     document.querySelectorAll('.dg-spspd button').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.spspd) === spSpd)));
@@ -1213,7 +1213,10 @@
     const nHz = VW.span / df; // cases sur la largeur affichée
     const k0f = VW.lo / df;     // première case affichée (zoom RTTY / FT)
     // Spectre sous la cascade (VFO-A, et VFO-B en double réception) : niveau de chaque colonne, lissé dans le temps
-    const spA = SP_ALPHA[spSpd] || 0.18; // vitesse du spectre (X1, X2, X4)
+    // Vitesse du spectre (X1, X2, X4) : constante de temps de la moyenne (6 s, 2 s, 0,3 s), quel que soit le rythme des lignes
+    const tNow = performance.now(), dtS = T.spT ? Math.min(3, (tNow - T.spT) / 1000) : 0.2;
+    T.spT = tNow;
+    const spA = 1 - Math.exp(-dtS / (SP_TAU[spSpd] || 6));
     const SP = (T === wf || T === wfFB) && T.sp && T.sp.w ? T.sp : null;
     if (SP && (!SP.v || SP.v.length !== SP.w)) SP.v = new Float32Array(SP.w);
     for (let x = 0; x < T.w; x++) {
