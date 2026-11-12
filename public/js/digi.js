@@ -1921,7 +1921,13 @@
     '17m': [18095, 18110], '15m': [21070, 21100], '12m': [24910, 24925], '10m': [28070, 28130], '6m': [50300, 50330] };
   const BM_TABS = ['ftx', 'jt65', 'rtty', 'wspr', 'jtty', 'cw']; // pas en SSTV (une seule fréquence)
   const BM_ANY = /\b(RTTY|BPS|RY|CW|WPM|FT8|FT4|FT2|PSK\d*|SSB|USB|LSB|JT65|JT9|MSK144|Q65|OLIVIA|SSTV|FM|AM|WSPR|JTTY|BEACON|NCDXF)\b/i;
-  function bmGroup() { return tab === 'rtty' ? 'rtty' : tab === 'cw' ? 'cw' : 'dg'; }
+  function bmGroup() { return tab === 'rtty' ? 'rtty' : tab === 'cw' ? 'cw' : tab === 'ftx' ? 'ft' : 'dg'; }
+  // FT8 / FT4 / FT2 : de 20 kHz sous la plus basse à 20 kHz au-dessus de la plus haute des fréquences d'appel de la bande
+  function bmFtDef(band) {
+    const f = [];
+    for (const m of ['FT8', 'FT4', 'FT2']) for (const [b, k] of DIAL[m]) if (b.replace(/\s+/g, '') === band) f.push(k);
+    return f.length ? [Math.min.apply(null, f) - 20, Math.max.apply(null, f) + 20] : null;
+  }
   // Mode suivi par l'onglet : nom (filtre, « déjà contacté ») et mots qui le reconnaissent dans le commentaire du spot
   function bmMode() {
     const m = tab === 'ftx' ? mode : { rtty: 'RTTY', cw: 'CW', jt65: 'JT65', wspr: 'WSPR', jtty: 'JTTY' }[tab] || 'RTTY';
@@ -1957,7 +1963,8 @@
     const s = store.get(bmKey(band), '');
     const m = /^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/.exec(s);
     if (m && Number(m[2]) - Number(m[1]) >= 2) return [Number(m[1]), Number(m[2])];
-    const def = { rtty: BM_DEF, cw: BM_CW, dg: BM_DG }[bmGroup()];
+    if (bmGroup() === 'ft' && bmFtDef(band)) return bmFtDef(band);
+    const def = { rtty: BM_DEF, cw: BM_CW, dg: BM_DG, ft: BM_DG }[bmGroup()];
     if (def[band]) return def[band].slice();
     const b = BANDS_M.find((x) => x[2] === band);
     return b ? [b[0] * 1000, Math.min(b[1] * 1000, b[0] * 1000 + 300)] : [7030, 7120];

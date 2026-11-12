@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.4** — Cartes de bande de l'onglet FT8 / FT4 / FT2 : plage des fréquences FT8 / FT4 / FT2 de la bande ± 20 kHz (ex. 20 m : 14054–14104 kHz)
 - **0.38.3** — FT8 : « ■ Arrêter » sur la ligne des macros (à droite du texte libre, fond noir, cadre rouge) ; macros à cadre blanc, Tx1… en blanc gras ; bouton DUAL RX (un ou deux VFO affichés)
 - **0.38.2** — Modes numériques : spectre sous la cascade (VFO-A et VFO-B), hauteur réglable avec la poignée du bas ; la poignée entre cascade et spectre règle la cascade
 - **0.38.1** — Intitulés de colonnes en cases brun foncé, texte clair : listes FT8 / FT4 / FT2 et carnet de trafic du dashboard ; colonnes du carnet mieux séparées
