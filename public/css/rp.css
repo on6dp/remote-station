@@ -2574,3 +2574,6 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .bm-s.bm-dec::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #4ed37b; margin-right: 4px; vertical-align: middle; }
 .bm-s.bm-dec b { color: #fff; }
 .bm-s.bm-dec.bm-cq b { color: #7CF29F; }
+/* ↺ des réglages de cascade : en bout de ligne sans la faire passer à la ligne ; curseurs un peu plus courts */
+.ft-dual .wf-ctl input[type='range'] { width: 70px; }
+.ft-dual .wf-ctl { align-content: center; }

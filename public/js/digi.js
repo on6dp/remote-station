@@ -873,7 +873,17 @@
   }
   // FT8 / FT4 / FT2 en double réception : cascade du VFO-B à droite de celle du VFO-A, même hauteur
   const wfFB = { ctx: null, sctx: null, w: 0, h: 0, cw: 0, per: null };
+  // Double réception : lignes de réglages des deux cascades à la même hauteur (cascades et titres alignés)
+  function eqCtl() {
+    const a = document.querySelector('#centerPanel .dg-wf > .wf-ctl'), b = $('ftWfBox') && $('ftWfBox').querySelector('.wf-ctl');
+    if (!a || !b) return;
+    a.style.minHeight = ''; b.style.minHeight = '';
+    if (!ftDual) return;
+    const h = Math.max(a.offsetHeight, b.offsetHeight);
+    a.style.minHeight = b.style.minHeight = h + 'px';
+  }
   function sizeFB() {
+    eqCtl();
     const c = $('ftWfB');
     if (!ftDual || !c || !c.clientWidth) return;
     const s = $('ftScaleB');
