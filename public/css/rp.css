@@ -2450,3 +2450,5 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dg-dualrx { border-color: #8a5cc4; color: #fff; font-weight: 800; }
 .dg-dualrx[hidden] { display: none; }
 .dg-dualrx[aria-pressed='true'] { background: linear-gradient(180deg, #6a3aa8, #3f1d6e); border-color: #c49bff; box-shadow: 0 0 8px rgba(160, 100, 255, .45); }
+/* « Suivre l'opérateur » au repos : cadre blanc, texte blanc gras (enclenché : vert, inchangé) */
+.ctab-follow:not([aria-pressed='true']) { border-color: #fff; color: #fff; font-weight: 800; }
