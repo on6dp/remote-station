@@ -286,7 +286,7 @@
     const W = hz; let a = sft, b = sft;
     const pi = r['pbtIn' + B], po = r['pbtOut' + B]; // Icom : TWIN PBT (deux filtres décalés, la bande passante est leur partie commune)
     if (pi != null && po != null) { a = (pi - 128) / 128 * hz / 2; b = (po - 128) / 128 * hz / 2; sft = (a + b) / 2; hz = Math.max(50, hz - Math.abs(a - b)); }
-    return { hz: Math.round(hz / 10) * 10, sft: Math.round(sft / 10) * 10, cw: /^CW/.test(md), W, a: Math.round(a), b: Math.round(b) };
+    return { hz: Math.round(hz / 10) * 10, sft: Math.round(sft / 10) * 10, cw: /^CW/.test(md), W, a: Math.round(a), b: Math.round(b), md };
   }
   // Icom : « BW 2.8K » (largeur réelle, rétrécie par le TWIN PBT) au lieu de « FIL1 3.0K » ; FIL1/2/3 reste dans l'infobulle
   function icomBw(w, r, txt) {
@@ -376,15 +376,19 @@
     const sb = $('sft' + w);
     if (sb) { sb.hidden = !d; if (d) sb.textContent = 'SFT ' + (d.sft > 0 ? '+' : d.sft < 0 ? '−' : '') + Math.abs(d.sft); }
     if (w === 'B' && !RIG().SUB_BADGES) { const wb = $('widthB'); wb.hidden = !d; if (d) wb.textContent = 'BW ' + bwK(d.hz); }
-    const key = d ? d.hz + '/' + d.sft + '/' + d.cw + '/' + d.W + '/' + d.a + '/' + d.b : '';
+    const key = d ? d.hz + '/' + d.sft + '/' + d.cw + '/' + d.W + '/' + d.a + '/' + d.b + '/' + d.md : '';
     if (sv.dataset.k === key) return;
     sv.dataset.k = key;
     sv.style.visibility = d ? '' : 'hidden';
     if (!d) { sv.innerHTML = ''; return; }
     // Comme sur les Icom : fenêtre fixe (la largeur dessinée suit le BW, la position suit le SFT), bande passante orange,
     // bord bas rouge, bord haut bleu ; avec le TWIN PBT décalé, les deux filtres sont dessinés en trait (rouge / bleu)
-    const c0 = d.cw ? 700 : 1500, span = d.cw ? Math.max(3000, d.W + 600) : Math.max(5000, d.W + 1200);
-    const x0 = 6, ww = 138, X = (f) => x0 + (f - (c0 - span / 2)) / span * ww, T = 3, BO = 37, SL = 6;
+    // Échelle de l'IC-7300 : filtres larges sur ≈ 7 kHz (AM 20 kHz), trait de base sur toute la largeur ;
+    // filtres étroits (< 1 kHz) agrandis, trait de base court au milieu ; trapèze moins haut que la fenêtre
+    const narrowF = d.W < 1000, AMm = /AM/.test(d.md || '');
+    const c0 = d.cw ? 700 : 1500, span = narrowF ? d.W / 0.38 : AMm ? 20000 : 7000;
+    const x0 = 6, ww = 138, X = (f) => x0 + ww / 2 + (f - c0) / span * ww, T = 12, BO = 37, SL = 5;
+    const bh = narrowF ? ww / 4 : ww / 2;
     const trap = (lo, hi) => { const xl = X(lo), xh = X(hi), sl = Math.min(SL, (xh - xl) / 3); return [xl, xl + sl, xh - sl, xh]; };
     const P = (q) => 'M' + q[0].toFixed(1) + ' ' + BO + 'L' + q[1].toFixed(1) + ' ' + T + 'L' + q[2].toFixed(1) + ' ' + T + 'L' + q[3].toFixed(1) + ' ' + BO;
     const lo = c0 + d.sft - d.hz / 2, hi = c0 + d.sft + d.hz / 2, q = trap(lo, hi);
@@ -403,11 +407,11 @@
       '<line class="mf-lo" x1="' + q[0].toFixed(1) + '" y1="' + BO + '" x2="' + q[1].toFixed(1) + '" y2="' + T + '"/>' +
       '<line class="mf-hi" x1="' + q[3].toFixed(1) + '" y1="' + BO + '" x2="' + q[2].toFixed(1) + '" y2="' + T + '"/>' +
       '</g>' +
-      '<line class="mf-base" x1="' + x0 + '" y1="' + BO + '" x2="' + (x0 + ww) + '" y2="' + BO + '"/>' +
-      '<line class="mf-c" x1="' + X(c0).toFixed(1) + '" y1="0" x2="' + X(c0).toFixed(1) + '" y2="' + (BO + 1) + '"/>' +
-      '<text class="mf-s" x="' + Math.min(X(c0) - 20, Math.max(10, q[0])).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(lo) + '</text>' +
+      '<line class="mf-base" x1="' + (x0 + ww / 2 - bh).toFixed(1) + '" y1="' + BO + '" x2="' + (x0 + ww / 2 + bh).toFixed(1) + '" y2="' + BO + '"/>' +
+      '<line class="mf-c" x1="' + X(c0).toFixed(1) + '" y1="' + (T + 10) + '" x2="' + X(c0).toFixed(1) + '" y2="' + (BO + 1) + '"/>' +
+      '<text class="mf-s" x="' + Math.min(X(c0) - 24, Math.max(12, q[0])).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(lo) + '</text>' +
       '<text class="mf-s" x="' + X(c0).toFixed(1) + '" y="48" text-anchor="middle">' + c0 + '</text>' +
-      '<text class="mf-s" x="' + Math.max(X(c0) + 20, Math.min(140, q[3])).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(hi) + '</text>' +
+      '<text class="mf-s" x="' + Math.max(X(c0) + 24, Math.min(138, q[3])).toFixed(1) + '" y="48" text-anchor="middle">' + fmt(hi) + '</text>' +
       '<title>Filtre du VFO ' + w + ' : largeur ' + d.hz + ' Hz, décalage ' + d.sft + ' Hz (BW / IF SHIFT, colonne de gauche)</title>';
   }
   function drawFreq(which, hz) {

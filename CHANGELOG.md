@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.37.367** — Petit filtre des écrans VFO à la manière de l'IC-7300 : échelle fixe 7 kHz (étroits agrandis, AM 20 kHz), trapèze moins haut, BW et SFT indépendants
 - **0.37.366** — Cadre TX : PUISSANCE en jaune
 - **0.37.365** — Cadre DSP : DNF à côté de NOTCH
 - **0.37.364** — Molette sur NB / DNR : les réglettes NIVEAU NB / DNR suivent tout de suite ; colonne de droite côté SUB quand SUB est actif
