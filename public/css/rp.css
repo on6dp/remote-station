@@ -2180,3 +2180,5 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 /* Échelle du S-mètre : S 1 3 5 7 9 en blanc gras (+20 +40 +60 restent en rouge, en gras) */
 .smeter .sm-scale span { color: #fff; font-weight: 800; font-size: 10px; }
 .smeter .sm-scale span.hot { color: #ff4d4d; font-weight: 800; }
+/* « VFO » devant A / B sur les écrans VFO : blanc gras, un peu plus grand */
+.vfo-id .vfo-tag { color: #fff; font-weight: 800; font-size: 13px; }
