@@ -3108,3 +3108,10 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
   .ctab-pane.rt .rt-dual.rt-solo > .rt-vsplit { display: block !important; }
   .ctab-pane.rt .rt-logbox > .rt-logw { max-height: none; flex: 1 1 0; min-height: 100px; }
 }
+/* LOG RTTY : colonnes délimitées par un trait fin blanc, jusqu'en bas du cadre */
+.rt-log { height: 100%; }
+.rt-log tr { height: 1px; }
+.rt-log tr.rt-fill { height: auto; }
+.rt-log tr.rt-fill td { border-top: 0; }
+.rt-log th, .rt-log td { border-right: 1px solid rgba(255, 255, 255, .55); }
+.rt-log th:last-child, .rt-log td:last-child { border-right: 0; }

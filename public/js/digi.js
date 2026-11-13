@@ -5133,6 +5133,8 @@
       td.textContent = ctst ? 'Pas encore de QSO pour ce contest.' : 'Pas encore de QSO RTTY hors contest.';
       tr.appendChild(td); body.appendChild(tr);
     }
+    // Ligne vide qui remplit le bas du cadre : les traits des colonnes descendent jusqu'en bas
+    { const tr = document.createElement('tr'); tr.className = 'rt-fill'; for (let i = 0; i < cols.length; i++) tr.appendChild(document.createElement('td')); body.appendChild(tr); }
     const c = RT_CONTESTS.find((x) => x[0] === cid);
     $('rtLogInfo').textContent = (ctst ? '· ' + (c ? c[1] : cid) + ' · ' : '· hors contest · ') + (m.total || 0) + ' QSO' + ((m.total || 0) > (m.items || []).length ? ' (les ' + (m.items || []).length + ' derniers)' : '');
   }
