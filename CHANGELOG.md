@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.75** — LOG RTTY et LOG SSB : cadre blanc autour du log
 - **0.39.74** — Page SSB, log du contest : clic sur un indicatif = détails du QSO sous la ligne pour le corriger ou le supprimer ; LOG RTTY et logs SSB : largeur des colonnes réglable à la souris
 - **0.39.73** — Page TRX SSB : les 8 mémoires vocales sur la même ligne que Config. Macros, boutons moins hauts
 - **0.39.72** — Page TRX SSB : cadre LOG SSB comme le LOG RTTY (titre, nombre de QSO, agrandi au clic, menu EXPORTER : mes QSO SSB, ADIF avec filtres TX call / opérateur / dates)

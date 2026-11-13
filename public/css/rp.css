@@ -3223,3 +3223,6 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .col-grip { position: absolute; top: 0; right: 0; bottom: 0; width: 7px; cursor: col-resize; z-index: 2; touch-action: none; }
 .col-grip:hover { background: linear-gradient(to right, transparent 3px, #ffd400 3px, #ffd400 6px, transparent 6px); }
 table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellipsis; }
+/* LOG RTTY (et LOG SSB) : cadre blanc autour du log */
+.ctab-pane.rt .rt-logbox { border: 1px solid #fff; border-radius: 6px; }
+.ssb-qlogbox { border: 1px solid #fff; border-radius: 6px; padding: 6px 8px 8px; }
