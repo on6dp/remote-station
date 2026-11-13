@@ -3089,3 +3089,4 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .rt-iogrip::after { content: ''; position: absolute; left: 50%; top: 3px; width: 60px; height: 3px; margin-left: -30px; border-radius: 2px; background: var(--v2-border-panel, #3a4658); }
 .rt-iogrip:hover::after { background: var(--v2-accent-cyan, #00d4ff); }
 .ctab-pane.rt .rt-dual > .rt-vsplit { align-self: stretch; }
+.ctab-pane.rt #rtTxClear { display: none !important; } /* RTTY : chaque fenêtre a déjà son Effacer */
