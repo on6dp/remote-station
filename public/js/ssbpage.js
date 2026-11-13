@@ -744,6 +744,7 @@
       iControl: api.iControl, state: api.state, me: () => { try { return host.me ? host.me() : null; } catch (e) { return null; } },
       rig: () => { try { return host.api.rig(); } catch (e) { return {}; } },
       setSink: (id) => { try { if (host.setSink) host.setSink(id); } catch (e) {} },
+      txSet: (id, v) => { try { return host.txSet ? host.txSet(id, v) : 'Indisponible'; } catch (e) { return 'Indisponible'; } },
       sendBin: (buf) => { try { if (host.sendBin) host.sendBin(buf); } catch (e) {} } });
     try { VX.onHello(host.me ? host.me() : {}); } catch (e) {}
     // Réglages micro du TRX (GAIN MICRO, PROC, MIC EQ, NIVEAU PROC, VOX) sur la ligne SSB CONFIGURATION, à droite de TRX EQ ;
@@ -988,6 +989,7 @@
     const box = $('ssMic'), body = $('ssMicB');
     let list = [];
     try { list = host && host.txCtls ? host.txCtls() : []; } catch (e) { list = []; }
+    list = list.filter((c) => c.id !== 'micEq'); // MIC EQ : dans la fenêtre TRX EQ (bouton TRX EQ vert = en service)
     box.hidden = !list.length;
     if (!list.length) return;
     const key = list.map((c) => c.id + c.type + c.max).join('|');

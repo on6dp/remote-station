@@ -156,6 +156,8 @@
     // annoncée par la page Station (hors ligne, à recharger) et que le TRX n'a pas d'TRX EQ (FTX-1) : boutons grisés
     box.hidden = (!V.api.compact && !modes && !trxEq) || !V.api.me() || !V.api.me().canTx || V.api.me().rxOnly;
     $('vxTrxBtn').hidden = !trxEq;
+    // Page TRX SSB : TRX EQ vert = égaliseur du TRX en service (MIC EQ), fond noir = coupé
+    if (V.api.txSet) { const mv = st && st.radio ? st.radio.micEq : null; $('vxTrxBtn').classList.toggle('eq-off', mv === 0); $('vxTrxBtn').title = (mv === 0 ? 'TRX EQ — égaliseur du TRX COUPÉ (MIC EQ) : ' : mv === 1 ? 'TRX EQ — égaliseur du TRX EN SERVICE (MIC EQ) : ' : 'TRX EQ : ') + 'votre profil d’égaliseur du TRX ; MIC EQ (en service / coupé) se change dans la fenêtre'; }
     if (trxEq && R.TRX_EQ.icom) $('vxTrxBtn').title = 'Votre profil d’émission de l’IC-7300 (SET → Tone Control/TBW : Bass, Treble, TBW), mis au TRX quand vous prenez la main ; réglage du club remis quand vous la rendez';
     $('vxOn').hidden = !modes && !V.api.compact;
     // Page TRX SSB (auto) : le micro s'ouvre tout seul à l'ouverture de la page (il ne part vers le TRX qu'au PTT) ;
@@ -635,12 +637,20 @@
     d.innerHTML =
       '<div class="vx-eq-h"><b>TRX EQ</b><span>— ' + esc(R.NAME) + (E.icom ? ' · SET → Tone Control/TBW (émission)' : '') + '</span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
       '<p class="vx-hint" id="vxTrxState"></p>' +
+      // Page TRX SSB : MIC EQ (égaliseur du TRX en service / coupé) ici, plus de bouton à part ; TRX EQ vert = en service
+      '<p class="vx-miceq" hidden><button class="btn" type="button" data-a="miceq">MIC EQ</button> <span></span></p>' +
       body +
       '<p class="vx-hint">Ce sont les menus du TRX lui-même : votre profil y est mis quand vous prenez la main, et le réglage du club est remis quand vous la rendez. Il agit sur la modulation du TRX (micro du club et, si le TRX l’applique aussi à l’entrée USB, votre phonie à distance : à vérifier à l’écoute). Un essai part tout de suite au TRX ; « Enregistrer » le garde pour vos prochaines prises de main.</p>' +
       '<div class="vx-eq-f"><button class="btn" type="button" data-a="read">Lire le TRX</button><button class="btn" type="button" data-a="try">Essayer sur le TRX</button>' +
       '<button class="btn accent" type="button" data-a="save">Enregistrer mon profil</button><button class="btn" type="button" data-a="del">Supprimer mon profil</button>' +
       '<button class="btn" type="button" data-a="club" hidden>Enregistrer comme réglage du club</button><button class="btn" type="button" data-a="close">Fermer</button></div>';
     document.body.appendChild(d);
+    d.querySelector('[data-a="miceq"]').addEventListener('click', () => {
+      const st = V.api.state(), mv = st && st.radio ? st.radio.micEq : null;
+      const why = V.api.txSet && V.api.txSet('micEq', mv ? 0 : 1);
+      if (why) V.api.say(why, 'warn', 5000);
+      setTimeout(trxDrawState, 600);
+    });
     T.pr = null;
     trxFill();
     d.addEventListener('change', (ev) => {
@@ -709,7 +719,16 @@
     d.querySelector('#vxTrxState').innerHTML = 'Au TRX maintenant : <b>' + (on && on[0] !== '#' ? 'Profil de ' + esc(on) : 'réglage du club') + '</b>' +
       ' · Profil de ' + esc(who) + ' : <b>' + (i.mine ? 'enregistré' : 'aucun') + '</b>' + (i.club ? '' : ' · réglage du club : pas encore lu') +
       (T.dirty ? ' · <span class="warn">modifié, pas enregistré</span>' : '') + (ctl ? '' : '<br><span class="warn">Prenez la main pour lire le TRX ou y faire un essai.</span>') +
-      (st && st.radio && st.radio.micEq === 0 ? '<br><span class="warn">MIC EQ est coupé au TRX : l’égaliseur n’agit pas. Bouton « MIC EQ » du cadre TX pour le mettre en service.</span>' : '');
+      (st && st.radio && st.radio.micEq === 0 ? '<br><span class="warn">MIC EQ est coupé au TRX : l’égaliseur n’agit pas. ' + (V.api.txSet ? 'Bouton « MIC EQ » ci-dessous' : 'Bouton « MIC EQ » du cadre TX') + ' pour le mettre en service.</span>' : '');
+    const mq = d.querySelector('.vx-miceq'), mv = st && st.radio ? st.radio.micEq : null;
+    mq.hidden = !(V.api.txSet && mv != null);
+    if (!mq.hidden) {
+      const b = mq.querySelector('button');
+      b.textContent = mv ? 'MIC EQ : EN SERVICE' : 'MIC EQ : COUPÉ';
+      b.classList.toggle('on', !!mv);
+      b.disabled = !ctl;
+      mq.querySelector('span').textContent = ctl ? 'clic : ' + (mv ? 'couper' : 'mettre en service') + ' l’égaliseur du TRX' : 'prenez la main pour le changer';
+    }
     d.querySelector('[data-a="read"]').disabled = !ctl;
     d.querySelector('[data-a="try"]').disabled = !ctl;
     d.querySelector('[data-a="del"]').disabled = !i.mine;
