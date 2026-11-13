@@ -333,12 +333,14 @@
       const pcm = new Float32Array(raw.length);
       for (let i = 0; i < raw.length; i++) pcm[i] = ULAW_DEC[raw.charCodeAt(i)];
       ttsCtx = ttsCtx || new AudioContext();
+      if (ttsCtx.state === 'suspended') ttsCtx.resume();
       const buf = ttsCtx.createBuffer(1, pcm.length, 12000);
       buf.copyToChannel(pcm, 0);
       const src = ttsCtx.createBufferSource();
       src.buffer = buf;
       src.connect(ttsCtx.destination);
-      src.start();
+      // Départ 0,25 s plus tard : la sortie son (casque Bluetooth, carte USB) a le temps de se réveiller, le début n'est pas coupé
+      src.start(ttsCtx.currentTime + 0.25);
     } catch (e) { toast('Lecture impossible dans ce navigateur.', 'warn'); }
   }
   const ULAW_DEC = (() => {

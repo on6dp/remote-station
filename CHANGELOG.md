@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.05** — Messages vocaux : début du premier mot plus coupé (0,4 s de silence avant le message pour le passage en émission ; ▶ Écouter démarre 0,25 s plus tard, sortie son réveillée)
 - **0.39.04** — Messages vocaux en anglais : le Z de QRZ se dit « zed » (et plus « zee »)
 - **0.39.03** — Voix Kokoro : modèle chargé une seule fois (processus gardé en marche, démarré dès l'ouverture de la page SSB, arrêté après 15 min sans demande) : ▶ Écouter et Fabriquer sans les 2 à 3 s de chargement
 - **0.39.02** — Voix Kokoro : indicatif épelé d'un trait (plus de pause entre les lettres, comme « Victor … Lima ») ; virgules seulement avec une pause entre lettres ≥ 200 ms
