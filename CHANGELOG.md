@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.25** — Page SSB : cadre Propagation plus large (la liste des QSO prend juste sa largeur) ; indices à gauche, conditions HF et VHF à droite ; source dans le titre
 - **0.39.24** — Page SSB sans contest : cadre Propagation à droite des QSO (SFI, taches, A, K, rayons X, vent solaire, Bz, champ géomagnétique, bruit ; conditions HF jour / nuit avec le moment actuel en surbrillance ; VHF) — hamqsl.com (N0NBH), relu toutes les 30 min
 - **0.39.23** — Carnet : la liste tient dans la hauteur de l'écran — ascenseur horizontal en bas de ce qu'on voit, ascenseur de droite pour descendre dans la liste (barre du dessus retirée)
 - **0.39.22** — Dashboard, onglets Modes et Logbooks : le TX call reste visible et réglable en bas (seul sur la ligne QSO)

@@ -118,11 +118,14 @@
       <div class="ssb-qrow">
         <div class="cwp-clogw ssb-qlogw"><table class="cwp-clog ssb-qlog"><thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th>MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th>Nom</th><th>QTH</th><th>Pays</th><th>TX call</th><th>OP</th></tr></thead><tbody id="ssQLog"></tbody></table></div>
         <aside class="ssb-prop" id="ssProp" aria-label="Propagation">
-          <h3>Propagation <small id="ssPropT"></small></h3>
-          <div class="ssb-pgrid" id="ssPropG"><p class="cwp-note">Lecture des données de propagation…</p></div>
-          <table class="ssb-pband"><thead><tr><th>Bandes HF</th><th>Jour</th><th>Nuit</th></tr></thead><tbody id="ssPropB"></tbody></table>
-          <p class="ssb-pvhf" id="ssPropV"></p>
-          <p class="ssb-psrc">Source : <a href="https://www.hamqsl.com/solar.html" target="_blank" rel="noopener">hamqsl.com</a> (N0NBH, données NOAA) · relu toutes les 30 min</p>
+          <h3>Propagation <small id="ssPropT"></small><span class="ssb-psrc">Source : <a href="https://www.hamqsl.com/solar.html" target="_blank" rel="noopener">hamqsl.com</a> (N0NBH, données NOAA)</span></h3>
+          <div class="ssb-pbody">
+            <div class="ssb-pgrid" id="ssPropG"><p class="cwp-note">Lecture des données de propagation…</p></div>
+            <div class="ssb-pright">
+              <table class="ssb-pband"><thead><tr><th>Bandes HF</th><th>Jour</th><th>Nuit</th></tr></thead><tbody id="ssPropB"></tbody></table>
+              <p class="ssb-pvhf" id="ssPropV"></p>
+            </div>
+          </div>
         </aside>
       </div>
     </section>

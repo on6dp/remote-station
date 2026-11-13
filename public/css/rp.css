@@ -2920,3 +2920,23 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .ssb-psrc { margin: auto 0 0; font-size: 10px; color: var(--v2-text-dim); }
 .ssb-psrc a { color: #7fc3ff; }
 @media (max-width: 1100px) { .ssb-qrow { flex-direction: column; } .ssb-prop { flex: none; } }
+/* Propagation (page SSB) : la liste des QSO prend juste sa largeur, la propagation occupe le reste ;
+   indices à gauche (5 par ligne), conditions HF et VHF à droite */
+.ssb-qrow > .ssb-qlogw { flex: 0 1 auto; width: max-content; max-width: 58%; }
+.ssb-prop { flex: 1 1 520px; }
+.ssb-prop h3 { display: flex; align-items: baseline; gap: 6px; }
+.ssb-prop .ssb-psrc { margin: 0 0 0 auto; font-size: 10px; text-transform: none; letter-spacing: 0; font-weight: 400; }
+.ssb-pbody { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(220px, 1fr); gap: 10px; align-items: start; }
+.ssb-pbody .ssb-pgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.ssb-pbody .ssb-pv { padding: 4px 3px; }
+.ssb-pbody .ssb-pv b { font-size: 15px; }
+.ssb-pright { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ssb-pband td { padding: 2px 6px; }
+.ssb-prop { container-type: inline-size; }
+.ssb-pband td:first-child, .ssb-pband th { white-space: nowrap; }
+@container (max-width: 760px) {
+  .ssb-pbody { grid-template-columns: minmax(0, 1fr); }
+  .ssb-pbody .ssb-pgrid { grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); }
+  .ssb-prop h3 { flex-wrap: wrap; }
+}
+@media (max-width: 1100px) { .ssb-qrow > .ssb-qlogw { max-width: none; width: auto; } }
