@@ -370,7 +370,7 @@ Le membre active son micro dans le cadre TX (**SSB CONFIGURATION → Configurati
 
 ### Égaliseur du micro (navigateur)
 
-Chaque membre règle l'égaliseur de **son** micro (**Equalizer micro**) : coupe-bas, 3 bandes, coupe-haut, gain, réduction de bruit. Le type de micro est reconnu d'après le nom de l'entrée son. Les réglages sont gardés **par membre et par micro** dans `profiles.json` sur le serveur. Rien à faire pour l'administrateur.
+Chaque membre règle l'égaliseur de **son** micro (**MICRO EQ**) : coupe-bas, 3 bandes, coupe-haut, gain, réduction de bruit. Le type de micro est reconnu d'après le nom de l'entrée son. Les réglages sont gardés **par membre et par micro** dans `profiles.json` sur le serveur. Rien à faire pour l'administrateur.
 
 ### Égaliseur du TRX (Yaesu : menus PRMTRC)
 
