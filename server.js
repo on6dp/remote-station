@@ -3428,6 +3428,12 @@ function onOperator(conn, m) {
       sendWorked(false);
       return;
     }
+    case 'log_get': {
+      // Un QSO complet (page TRX SSB : détails d'un QSO du log du contest, pour le corriger)
+      const q = book.get(String(m.id || ''));
+      if (!q) return send(conn, { t: 'notice', level: 'error', msg: 'QSO introuvable' });
+      return send(conn, { t: 'log_one', qso: qsoForClient(q), can: !!logCanEdit(conn, q), why: logCanEdit(conn, q) ? '' : logEditWhy(conn, q), tag: logTag(m) });
+    }
     case 'log_del': {
       const q = book.get(m.id);
       if (!q) return;

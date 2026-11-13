@@ -3200,3 +3200,26 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .ssb-vk > #ssTts { flex: 1 1 100%; }
 .cwp-macro.ssb-vm { flex-direction: row; justify-content: center; align-items: baseline; gap: 6px; padding: 3px 6px; font-size: 12px; white-space: nowrap; overflow: hidden; }
 .cwp-macro.ssb-vm small { min-height: 0; font-size: 9px; }
+/* Page SSB, log du contest : clic sur l'indicatif = détails du QSO sous la ligne (par-dessus les QSO suivants), pour le corriger */
+.ssb-body .cwp-clogw { position: relative; }
+.ssb-clog td.ssb-qed { cursor: pointer; text-decoration: underline dotted rgba(255, 255, 255, .45); text-underline-offset: 3px; }
+.ssb-clog td.ssb-qed:hover { color: #ffd400 !important; }
+.ssb-body .ssb-clog tr.ssb-qsel td { background: #3a2a10 !important; }
+.ssb-qdet { position: absolute; left: 0; right: 0; z-index: 5; background: #0d1420; border: 1px solid #ffd400; border-radius: 6px; padding: 8px 10px 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .7); font-size: 12px; }
+.ssb-qdh { color: #fff; margin-bottom: 6px; } .ssb-qdh b { color: #ffd400; font-size: 14px; } .ssb-qdh small { color: var(--v2-text-dim); margin-left: 8px; }
+.ssb-qdg { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px 10px; }
+.ssb-qdg label { display: flex; flex-direction: column; gap: 2px; color: var(--v2-text-dim); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+.ssb-qdg input, .ssb-qdg select { background: #07090d; color: #fff; border: 1px solid #3a4658; border-radius: 4px; padding: 4px 6px; font: 600 13px inherit; text-transform: none; letter-spacing: 0; }
+.ssb-qdg input:focus, .ssb-qdg select:focus { border-color: #ffd400; outline: none; }
+.ssb-qdg .ssb-qdw { grid-column: span 3; }
+.ssb-qda { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.ssb-qdsave { background: #2ecc71; color: #000; border-color: #2ecc71; font-weight: 800; }
+.ssb-qddel { background: #3a1210; color: #ff8a7a; border-color: #b23a32; font-weight: 800; }
+.ssb-qdclose { margin-left: auto; font-weight: 800; }
+.ssb-qdmsg { color: #ffd400; } .ssb-qdro { color: #ff8a7a; }
+/* Logs (RTTY, SSB) : poignée au bord droit de chaque titre de colonne pour régler sa largeur */
+.rt-log th, .ssb-clog th, .ssb-qlog th { position: sticky; }
+.col-grip { position: absolute; top: 0; right: 0; bottom: 0; width: 7px; cursor: col-resize; z-index: 2; touch-action: none; }
+.col-grip:hover { background: linear-gradient(to right, transparent 3px, #ffd400 3px, #ffd400 6px, transparent 6px); }
+table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellipsis; }

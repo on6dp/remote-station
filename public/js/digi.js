@@ -14,6 +14,46 @@
     set(k, v) { try { localStorage.setItem('rs.dg.' + k, String(v)); } catch (e) {} }
   };
 
+  // Colonnes d'un log réglables à la souris : poignée au bord droit de chaque titre (glisser = largeur ; double-clic =
+  // largeurs d'origine) ; largeurs gardées dans ce navigateur, par tableau et par jeu de colonnes
+  function colResize(table, key, ST) {
+    if (!table) return;
+    const head = table.tHead && table.tHead.rows[0];
+    if (!head) return;
+    const ths = Array.from(head.cells);
+    const sig = key + ':' + ths.map((th) => th.textContent.replace(/[^A-Za-z#]/g, '').slice(0, 6)).join('.');
+    const apply = (ws) => {
+      if (!ws || ws.length !== ths.length) { table.style.tableLayout = ''; table.style.width = ''; ths.forEach((th) => { th.style.width = th.style.minWidth = th.style.maxWidth = ''; }); table.classList.remove('col-fixed'); return; }
+      ths.forEach((th, i) => { th.style.width = th.style.minWidth = th.style.maxWidth = ws[i] + 'px'; });
+      table.style.tableLayout = 'fixed';
+      table.style.width = ws.reduce((a, b) => a + b, 0) + 'px';
+      table.classList.add('col-fixed');
+    };
+    let saved = null;
+    try { saved = JSON.parse(ST.get('cols.' + sig, 'null')); } catch (e) { saved = null; }
+    apply(saved);
+    ths.forEach((th, i) => {
+      if (th.querySelector('.col-grip')) return;
+      const g = document.createElement('i');
+      g.className = 'col-grip';
+      g.title = 'Glisser : largeur de la colonne · double-clic : largeurs d’origine';
+      th.appendChild(g);
+      g.addEventListener('pointerdown', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        g.setPointerCapture(e.pointerId);
+        const ws = ths.map((x) => Math.round(x.getBoundingClientRect().width));
+        const x0 = e.clientX, w0 = ws[i];
+        const mv = (ev) => { ws[i] = Math.max(28, Math.round(w0 + ev.clientX - x0)); apply(ws); };
+        const up = () => { g.removeEventListener('pointermove', mv); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up); ST.set('cols.' + sig, JSON.stringify(ws)); };
+        g.addEventListener('pointermove', mv);
+        g.addEventListener('pointerup', up);
+        g.addEventListener('pointercancel', up);
+      });
+      g.addEventListener('dblclick', (e) => { e.stopPropagation(); ST.set('cols.' + sig, 'null'); apply(null); });
+      g.addEventListener('click', (e) => e.stopPropagation());
+    });
+  }
+
   // Fréquences d'appel usuelles (kHz, VFO en DATA-U / USB)
   const DIAL = {
     FT8: [['160 m', 1840], ['80 m', 3573], ['60 m', 5357], ['40 m', 7074], ['30 m', 10136], ['20 m', 14074], ['17 m', 18100],
@@ -5209,6 +5249,7 @@
       rtLogKey = key;
       head.textContent = '';
       for (const [h] of cols) { const th = document.createElement('th'); th.textContent = h; head.appendChild(th); }
+      colResize(head.closest('table'), 'rtlog', store);
     }
     const fmt = (q, k) => {
       const v = q[k] == null ? '' : String(q[k]);

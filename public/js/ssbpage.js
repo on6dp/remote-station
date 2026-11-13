@@ -11,6 +11,48 @@
     get(k, d) { try { const v = localStorage.getItem('rs.dg.' + k); return v == null ? d : v; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem('rs.dg.' + k, String(v)); } catch (e) {} }
   };
+
+  // Colonnes d'un log réglables à la souris : poignée au bord droit de chaque titre (glisser = largeur ; double-clic =
+  // largeurs d'origine) ; largeurs gardées dans ce navigateur, par tableau et par jeu de colonnes
+  function colResize(table, key, ST) {
+    if (!table) return;
+    const head = table.tHead && table.tHead.rows[0];
+    if (!head) return;
+    const ths = Array.from(head.cells);
+    const sig = key + ':' + ths.map((th) => th.textContent.replace(/[^A-Za-z#]/g, '').slice(0, 6)).join('.');
+    const apply = (ws) => {
+      if (!ws || ws.length !== ths.length) { table.style.tableLayout = ''; table.style.width = ''; ths.forEach((th) => { th.style.width = th.style.minWidth = th.style.maxWidth = ''; }); table.classList.remove('col-fixed'); return; }
+      ths.forEach((th, i) => { th.style.width = th.style.minWidth = th.style.maxWidth = ws[i] + 'px'; });
+      table.style.tableLayout = 'fixed';
+      table.style.width = ws.reduce((a, b) => a + b, 0) + 'px';
+      table.classList.add('col-fixed');
+    };
+    let saved = null;
+    try { saved = JSON.parse(ST.get('cols.' + sig, 'null')); } catch (e) { saved = null; }
+    apply(saved);
+    ths.forEach((th, i) => {
+      if (th.querySelector('.col-grip')) return;
+      const g = document.createElement('i');
+      g.className = 'col-grip';
+      g.title = 'Glisser : largeur de la colonne · double-clic : largeurs d’origine';
+      th.appendChild(g);
+      g.addEventListener('pointerdown', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        g.setPointerCapture(e.pointerId);
+        const ws = ths.map((x) => Math.round(x.getBoundingClientRect().width));
+        const x0 = e.clientX, w0 = ws[i];
+        const mv = (ev) => { ws[i] = Math.max(28, Math.round(w0 + ev.clientX - x0)); apply(ws); };
+        const up = () => { g.removeEventListener('pointermove', mv); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up); ST.set('cols.' + sig, JSON.stringify(ws)); };
+        g.addEventListener('pointermove', mv);
+        g.addEventListener('pointerup', up);
+        g.addEventListener('pointercancel', up);
+      });
+      g.addEventListener('dblclick', (e) => { e.stopPropagation(); ST.set('cols.' + sig, 'null'); apply(null); });
+      g.addEventListener('click', (e) => e.stopPropagation());
+    });
+  }
+  // Logs de la page : colonnes réglables (log du contest, QSO en phonie hors contest)
+  setTimeout(() => { colResize(document.querySelector('.ssb-clog'), 'ssbclog', LS); colResize(document.querySelector('.ssb-qlog'), 'ssbqlog', LS); }, 0);
   const C = window.RSCONTESTS || { SSB: [], BANDS: ['ALL'] };
   let hostWin = null;
   let host = null;
@@ -430,6 +472,8 @@
       if (p === 'dup') tr.className = 'dup';
       const cells = [q.t.slice(0, 2) + ':' + q.t.slice(2, 4), q.band, q.call, q.rs || '', q.stx, q.rr || '', q.srx, q.cn || q.dx || '', p === 'dup' ? '0 (doublon)' : p == null ? '…' : String(p), cname];
       cells.forEach((v, i) => { const td = document.createElement('td'); td.textContent = v == null ? '' : v; if (i === 8) td.className = 'r'; tr.appendChild(td); });
+      // Clic sur l'indicatif : détails du QSO sous la ligne, pour le corriger
+      if (q.id) { const tc = tr.children[2]; tc.classList.add('ssb-qed'); tc.title = 'Clic : détails du QSO (corriger une erreur, supprimer)'; tc.addEventListener('click', (e) => { e.stopPropagation(); qsoOpen(q.id, tr); }); }
       tb.appendChild(tr);
     }
     const per = {};
@@ -445,6 +489,79 @@
     drawScore();
     drawProb();
   }
+
+  // ------------------------------------------------------------------ détails d'un QSO du log du contest (correction)
+  // Clic sur un indicatif du log : le QSO complet est demandé au serveur, puis affiché sous sa ligne (par-dessus les QSO
+  // suivants) ; Enregistrer = le QSO corrigé remplace l'ancien dans le carnet général ; Supprimer ; Fermer (ou Échap)
+  const QE = { id: '', tr: null, el: null };
+  function qsoClose() {
+    if (QE.el) QE.el.remove();
+    QE.el = null; QE.id = '';
+    if (QE.tr) QE.tr.classList.remove('ssb-qsel');
+    QE.tr = null;
+    if (CL.pend) { CL.pend = false; drawLog(); }
+  }
+  function qsoOpen(id, tr) {
+    if (QE.id === id && QE.el) return qsoClose();
+    qsoClose();
+    QE.id = id; QE.tr = tr; tr.classList.add('ssb-qsel');
+    api.send({ t: 'log_get', id, tag: 'ssbedit' });
+  }
+  function qsoShow(m) {
+    const q = m.qso || {};
+    if (!QE.tr || q.id !== QE.id) return;
+    const wrap = QE.tr.closest('.cwp-clogw');
+    if (!wrap) return;
+    const esc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const d = String(q.qso_date || ''), t = String(q.time_on || '');
+    const el = document.createElement('div');
+    el.className = 'ssb-qdet';
+    const ro = m.can ? '' : ' disabled';
+    el.innerHTML = '<div class="ssb-qdh"><b>QSO avec ' + esc(q.call) + '</b> <small>' + esc(q.band || '') + ' · ' + esc(q.submode || q.mode || '') + ' · TX call ' + esc(q.station_callsign || '') + ' · opérateur ' + esc(q.operator || '') + (q.dxcc_pfx ? ' · DXCC ' + esc(q.dxcc_pfx) : '') + '</small></div>' +
+      '<div class="ssb-qdg">' +
+      '<label>Indicatif <input name="call" maxlength="15" value="' + esc(q.call) + '"' + ro + '></label>' +
+      '<label>Date UTC <input name="date" type="date" value="' + (d.length === 8 ? d.slice(0, 4) + '-' + d.slice(4, 6) + '-' + d.slice(6, 8) : '') + '"' + ro + '></label>' +
+      '<label>Heure UTC <input name="time" maxlength="8" value="' + (t.length >= 4 ? t.slice(0, 2) + ':' + t.slice(2, 4) + (t.length >= 6 ? ':' + t.slice(4, 6) : '') : '') + '"' + ro + '></label>' +
+      '<label>Fréquence MHz <input name="freq" inputmode="decimal" value="' + esc(q.freq) + '"' + ro + '></label>' +
+      '<label>Mode <select name="mode"' + ro + '>' + ['USB', 'LSB', 'SSB', 'AM', 'FM'].map((x) => '<option' + (x === (q.submode || q.mode) ? ' selected' : '') + '>' + x + '</option>').join('') + '</select></label>' +
+      '<label>RS envoyé <input name="rs" maxlength="8" value="' + esc(q.rst_sent) + '"' + ro + '></label>' +
+      '<label>TX # <input name="stx" maxlength="30" value="' + esc(q.stx_string || q.stx || '') + '"' + ro + '></label>' +
+      '<label>RS reçu <input name="rr" maxlength="8" value="' + esc(q.rst_rcvd) + '"' + ro + '></label>' +
+      '<label>RX # <input name="srx" maxlength="30" value="' + esc(q.srx_string || q.srx || '') + '"' + ro + '></label>' +
+      '<label>Nom <input name="name" maxlength="40" value="' + esc(q.name) + '"' + ro + '></label>' +
+      '<label>Contest <input name="ct" maxlength="40" value="' + esc(q.contest_id) + '"' + ro + '></label>' +
+      '<label class="ssb-qdw">Remarque <input name="comment" maxlength="200" value="' + esc(q.comment) + '"' + ro + '></label>' +
+      '</div><div class="ssb-qda">' + (m.can ? '<button type="button" class="btn ssb-qdsave">ENREGISTRER</button><button type="button" class="btn ssb-qddel">SUPPRIMER</button>' : '<span class="ssb-qdro">' + esc(m.why || 'Modification non permise') + '</span>') +
+      '<span class="ssb-qdmsg"></span><button type="button" class="btn ssb-qdclose">FERMER</button></div>';
+    QE.el = el;
+    wrap.appendChild(el);
+    el.style.top = (QE.tr.offsetTop + QE.tr.offsetHeight) + 'px';
+    el.addEventListener('click', (e) => e.stopPropagation());
+    const f = (n) => el.querySelector('[name="' + n + '"]');
+    el.querySelector('.ssb-qdclose').addEventListener('click', qsoClose);
+    if (!m.can) return;
+    el.querySelector('.ssb-qdsave').addEventListener('click', () => {
+      const tt = String(f('time').value).replace(/\D/g, '');
+      const fr = Number(String(f('freq').value).replace(',', '.'));
+      const qso = { call: f('call').value.trim().toUpperCase(), qso_date: f('date').value.replace(/\D/g, ''), time_on: (tt.length === 3 ? '0' + tt : tt).padEnd(6, '0').slice(0, 6),
+        time_off: q.time_off, qso_date_off: q.qso_date_off, freq: fr, mode: f('mode').value, rst_sent: f('rs').value.trim(), rst_rcvd: f('rr').value.trim(),
+        name: f('name').value.trim(), qth: q.qth, gridsquare: q.gridsquare, comment: f('comment').value.trim(), tx_pwr: q.tx_pwr,
+        contest_id: f('ct').value.trim().toUpperCase(), stx_string: f('stx').value.trim().toUpperCase(), srx_string: f('srx').value.trim().toUpperCase(),
+        station: q.station_callsign, qo100: q.sat_name === 'QO-100' };
+      if (/^\d{1,5}$/.test(qso.stx_string)) qso.stx = qso.stx_string;
+      if (/^\d{1,5}$/.test(qso.srx_string)) qso.srx = qso.srx_string;
+      for (const k of ['iota', 'wwff_ref', 'pota_ref', 'sota_ref', 'my_iota', 'my_wwff_ref', 'my_pota_ref', 'my_sota_ref']) if (q[k]) qso[k] = q[k];
+      if (!(fr > 0)) { el.querySelector('.ssb-qdmsg').textContent = 'Fréquence en MHz ?'; return; }
+      api.send({ t: 'log_edit', id: q.id, qso, tag: 'ssbpage' });
+      el.querySelector('.ssb-qdmsg').textContent = 'Enregistrement…';
+    });
+    el.querySelector('.ssb-qddel').addEventListener('click', () => {
+      if (!window.confirm('Supprimer du carnet le QSO avec ' + q.call + ' (' + (q.band || '') + ', ' + (t.slice(0, 2) + ':' + t.slice(2, 4)) + ' UTC) ?')) return;
+      api.send({ t: 'log_del', id: q.id });
+      qsoClose();
+    });
+  }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && QE.el) qsoClose(); });
 
   // ------------------------------------------------------------------ score estimé (règlement de chaque contest)
   // Chaque QSO du log du contest porte le pays DXCC et le continent du correspondant (dx, ct) et de la station (mp, mc).
@@ -945,7 +1062,9 @@
     else if (m.t === 'ssb_list') drawSsb(m.items || []);
     else if (m.t === 'tts_audio' && m.d) ttsPlay(m.d);
     else if (m.t === 'scp') { PR.q = m.q; PR.list = m.list || []; PR.n = m.n || 0; drawProb(); }
-    else if (m.t === 'ctst_list' && m.contest === CL.id) { CL.items = m.items || []; drawLog(); checkDupe(); }
+    else if (m.t === 'ctst_list' && m.contest === CL.id) { CL.items = m.items || []; if (QE.el) CL.pend = true; else drawLog(); checkDupe(); } // détails ouverts : log redessiné à leur fermeture
+    else if (m.t === 'log_one' && m.tag === 'ssbedit') qsoShow(m);
+    else if (m.t === 'log_saved' && m.edited && m.tag === 'ssbpage') { toast('QSO avec ' + ((m.qso && m.qso.call) || '') + ' corrigé dans le carnet.', '', 4000); qsoClose(); clearTimeout(onMsg.lt); onMsg.lt = setTimeout(askList, 300); }
     else if ((m.t === 'log_saved' || m.t === 'log_changed') && CL.id) { clearTimeout(onMsg.lt); onMsg.lt = setTimeout(askList, 400); }
     else if ((m.t === 'log_saved' || m.t === 'log_changed') && !def()) { clearTimeout(onMsg.st); onMsg.st = setTimeout(askSsb, 400); }
     else if (m.t === 'log_export' && m.tag === 'ssbpage') saveFile(m);
