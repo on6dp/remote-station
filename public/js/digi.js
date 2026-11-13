@@ -616,7 +616,7 @@
     det.type = 'button';
     det.id = 'dgDetach';
     const WIN = POPUP && !EMBED; // cette page est la fenêtre séparée
-    det.textContent = WIN ? (FROM_FACE ? '✕ Fermer' : '⧉ Ramener dans le dashboard') : '⧉';
+    det.textContent = WIN ? 'RETOUR' : '⧉';
     det.title = WIN ? (FROM_FACE ? 'Fermer la page des modes numériques (bouton « 📟 Modes numériques » de la face avant pour la rouvrir)' : 'Fermer cette fenêtre et ramener les modes numériques dans le dashboard') : 'Ouvrir les modes numériques dans une fenêtre séparée (autre écran…)';
     bar.appendChild(det);
     const panel = $('centerPanel');
@@ -654,7 +654,7 @@
         info.querySelector('#dgCtlChip').addEventListener('click', (e) => e.stopPropagation());
         window.RSCTL.mount(info.querySelector('#dgCtlChip'), { state: () => api && api.state(), me: () => hostMe() || txcMe, iControl: () => !!(api && api.iControl()), send: (m) => api && api.send(m) });
       }
-      // État de la BF / décodage et heure UTC : à gauche de « Ramener dans le dashboard » (une ligne de gagnée)
+      // État de la BF / décodage et heure UTC : à gauche de RETOUR (une ligne de gagnée)
       const tl = panel.querySelector('.dg-ftx .dg-tl');
       if (tl) { tl.classList.add('ctab-tl'); bar.insertBefore(tl, $('dgDetach')); }
     }
@@ -846,7 +846,7 @@
     { const det = $('dgDetach'); if (det && POPUP && !EMBED) {
       if (!det.dataset.txt) { det.dataset.txt = det.textContent; det.dataset.tip = det.title; }
       const back = pane === 'sync', hd = HEADS[lastModeTab] || ['TRX DIGI'];
-      det.textContent = back ? '↩ Retour ' + hd[0] : det.dataset.txt;
+      det.textContent = back ? 'RETOUR' : det.dataset.txt;
       det.title = back ? 'Revenir à la page ' + hd[0] : det.dataset.tip;
     } }
     const syb = document.querySelector('#centerPanel .ctab[data-tab="sync"]');
