@@ -2723,3 +2723,5 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 /* Page SSB : DUAL RX en mauve, comme sur les autres pages */
 .vfb-dual .vfb-drx { border-color: #8a5cc4; color: #fff; background: #121d2c; }
 .vfb-dual .vfb-drx.on { background: linear-gradient(180deg, #6a3aa8, #3f1d6e); border-color: #c49bff; color: #fff; box-shadow: 0 0 8px rgba(160, 100, 255, .45); }
+/* Page SSB : plus de cases kHz sous les écrans des VFO (la fréquence se règle sur les écrans, comme au dashboard) */
+.vfb.mir .vfb-in { display: none; }
