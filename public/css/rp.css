@@ -2798,6 +2798,5 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .ssb-rules:hover { background: #fff; color: #000; }
 /* MONITORING enclenché : fond bleu foncé, texte blanc gras (toutes les pages) */
 #vxMonBtn[aria-pressed='true'], .vx-mon #vxMonBtn[aria-pressed='true'], .fc-tx #vxMonBtn[aria-pressed='true'] { background: #0b3d91 !important; border-color: #58a6ff !important; color: #fff !important; font-weight: 800; }
-/* Pages SSB et CW, ligne des contests : noms des champs (Catégorie, Bande, Échange…) en blanc gras, même sans contest choisi */
-.cwp-ctst .cwp-ctrow label, .cwp-ctst .cwp-ctrow .cwp-nr { color: #fff !important; font-weight: 800; opacity: 1 !important; }
-.cwp-ctst .cwp-ctrow label .cwp-ctlab { color: #ffe600; }
+/* Pages SSB et CW : contest choisi → « Catégorie » en jaune vif */
+body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:has(#cwpCat) { color: #ffe600 !important; font-weight: 800; }
