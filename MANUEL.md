@@ -688,6 +688,8 @@ Même fenêtre que FT8, mais avec des périodes d'une minute ; le TRX va sur la 
 <a id="rtty"></a>
 ### 12.3 RTTY
 
+**Page TRX RTTY** (fenêtre séparée, ouverte par l'onglet RTTY du dashboard) : en-tête comme les pages SSB et FT8 — TX CALL, fréquence et mode du TRX, 👥 membres connectés, bouton de la main et `👁 SUIVRE L’OPÉRATEUR` — puis, en haut, les **écrans des deux VFO du dashboard** recopiés (S-mètre, filtre, cadran, spectre BF, badges ; clic et molette comme au dashboard) avec `SPLIT`, `A ⇄ B`, `A → B`, `DUAL RX` et `🎧 STÉRÉO` ; les cascades et les décodeurs dessous.
+
 Le RTTY est le « télétype » : on tape du texte qui défile chez le correspondant. Très utilisé en concours. L'onglet a **deux décodeurs indépendants** : **A** (VFO-A, à gauche) et **B** (VFO-B, à droite), chacun avec son texte reçu et ses réglages. Le FTX-1, le FTDX10 et l'IC-7300 n'envoient qu'un seul son au PC (le FTDX101 en réception simple ; en double réception, il envoie ses deux récepteurs en stéréo : une cascade par décodeur, A = MAIN, B = SUB) : il y a donc **une seule cascade**, sur toute la largeur, avec les repères des deux décodeurs. On suit ainsi deux stations de la même bande en même temps (concours, DX et son pile-up). Un TRX qui envoie ses deux récepteurs séparément (FTDX101D / MP) aura une cascade par décodeur, côte à côte.
 
 Au-dessus de la cascade, la ligne d'aide (« clic gauche : décodeur A… ») s'affiche **3 secondes** à l'arrivée sur l'onglet puis s'efface, pour laisser plus de place aux fenêtres de réception ; elle reste au survol de la cascade. La ligne d'état n'apparaît qu'en cas de problème (pas de BF, TRX pas en DATA-U…).

@@ -678,6 +678,8 @@ Same window as FT8, but with one-minute periods; the TRX goes to the JT65 freque
 <a id="rtty"></a>
 ### 12.3 RTTY
 
+**TRX RTTY page** (separate window, opened by the RTTY tab of the dashboard): header like the SSB and FT8 pages — TX CALL, TRX frequency and mode, 👥 connected members, control button and `👁 SUIVRE L’OPÉRATEUR` — then, at the top, **both dashboard VFO screens** copied (S-meter, filter, dial, AF spectrum, badges; click and wheel as on the dashboard) with `SPLIT`, `A ⇄ B`, `A → B`, `DUAL RX` and `🎧 STÉRÉO`; the waterfalls and decoders below.
+
 RTTY is radio "teletype": you type text that scrolls on the other station's screen. Widely used in contests. The tab has **two independent decoders**: **A** (VFO-A, left) and **B** (VFO-B, right), each with its own received text and settings. The FTX-1, FTDX10 and IC-7300 send a single audio stream to the PC (the FTDX101 in single receive; in dual receive it sends both receivers in stereo: one waterfall per decoder, A = MAIN, B = SUB), so there is **one waterfall**, full width, carrying the markers of both decoders. You can follow two stations on the same band at once (contest, a DX and its pile-up). A transceiver that sends its two receivers separately (FTDX101D / MP) will get one waterfall per decoder, side by side.
 
 Above the waterfall, the help line (« clic gauche : décodeur A… ») is shown for **3 seconds** when you open the tab, then disappears to leave more room for the receive windows; it stays as a tooltip on the waterfall. The status line only appears when something is wrong (no audio, TRX not in DATA-U…).

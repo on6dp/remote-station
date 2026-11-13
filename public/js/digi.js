@@ -654,6 +654,24 @@
         info.querySelector('#dgCtlChip').addEventListener('click', (e) => e.stopPropagation());
         window.RSCTL.mount(info.querySelector('#dgCtlChip'), { state: () => api && api.state(), me: () => hostMe() || txcMe, iControl: () => !!(api && api.iControl()), send: (m) => api && api.send(m) });
       }
+      // Page RTTY : les deux écrans VFO du dashboard en haut (comme la page SSB), SPLIT, A ⇄ B, DUAL RX, STÉRÉO ; les cascades dessous
+      if (window.RSVFOBOX) {
+        const rp = panel.querySelector('.ctab-pane[data-pane="rtty"]');
+        const dashW = () => { let w = window.opener; for (let i = 0; i < 4 && w; i++) { try { if (w.RSHOST && w.document.getElementById('vfoA')) return w; w = w.opener; } catch (e) { return null; } } return null; };
+        if (rp) {
+          const vb = document.createElement('section');
+          vb.className = 'cwp-box rt-vfo';
+          vb.id = 'rtVfo';
+          rp.prepend(vb);
+          window.RSVFOBOX.mount(vb, {
+            api: { send: (m) => api && api.send(m), state: () => (api ? api.state() : null), iControl: () => !!(api && api.iControl()) },
+            toast: (t, l) => api && api.say(t, l === 'warn' ? 'warn' : '', 4000), dual: true,
+            rig: () => { try { return api && api.rig ? api.rig() : {}; } catch (e) { return {}; } },
+            listen: () => { const w = dashW(); try { return w ? w.RSHOST.listen : null; } catch (e) { return null; } },
+            mirror: () => { const w = dashW(); try { return w && !w.closed ? w.document : null; } catch (e) { return null; } }
+          });
+        }
+      }
       // 👁 SUIVRE L'OPÉRATEUR juste à droite du bouton de la main, comme sur la page SSB (grisé pour celui qui a la main)
       fol.classList.add('dg-hdfol');
       fol.innerHTML = '👁 SUIVRE L’OPÉRATEUR';
