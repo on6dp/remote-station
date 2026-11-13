@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.31** — Pages FT8 / FT4 / FT2 et RTTY (fenêtre séparée) : 👁 SUIVRE L'OPÉRATEUR dans l'en-tête, à droite du bouton de la main, comme la page SSB (grisé pour celui qui a la main)
 - **0.39.30** — Aide / Help et guide administrateur à jour : Config. Macros (voix Kokoro et Piper, prononciations françaises, voix fabriquée une fois puis émise tout de suite), assistant carte son version 5, Chrome / Edge pour l'écoute, accès internet du serveur
 - **0.39.29** — Assistant carte son version 5 (PC du club) : priorité basse et surveillance de la carte son une fois par minute avec une requête ciblée — la version 4 pouvait hacher le son ; page Station : propose la version 5
 - **0.39.28** — Dashboard, RX audio : bouton 🎧 STÉRÉO (TRX à deux récepteurs, DUAL RX : VFO A à gauche, VFO B à droite), même réglage que la page SSB

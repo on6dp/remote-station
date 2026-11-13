@@ -654,6 +654,10 @@
         info.querySelector('#dgCtlChip').addEventListener('click', (e) => e.stopPropagation());
         window.RSCTL.mount(info.querySelector('#dgCtlChip'), { state: () => api && api.state(), me: () => hostMe() || txcMe, iControl: () => !!(api && api.iControl()), send: (m) => api && api.send(m) });
       }
+      // 👁 SUIVRE L'OPÉRATEUR juste à droite du bouton de la main, comme sur la page SSB (grisé pour celui qui a la main)
+      fol.classList.add('dg-hdfol');
+      fol.innerHTML = '👁 SUIVRE L’OPÉRATEUR';
+      info.appendChild(fol);
       // État de la BF / décodage et heure UTC : à gauche de RETOUR (une ligne de gagnée)
       const tl = panel.querySelector('.dg-ftx .dg-tl');
       if (tl) { tl.classList.add('ctab-tl'); bar.insertBefore(tl, $('dgDetach')); }
@@ -6290,7 +6294,9 @@
       // Suivre l'opérateur : bouton caché pour celui qui a la main, qui annonce son onglet
       const fb = $('dgFollow');
       const mine = !!(api && api.iControl());
-      if (fb) fb.hidden = mine;
+      // Fenêtre séparée (en-tête comme la page SSB) : toujours là, grisé pour celui qui a la main ; dashboard : caché
+      if (fb && fb.classList.contains('dg-hdfol')) { fb.hidden = false; fb.disabled = mine; }
+      else if (fb) fb.hidden = mine;
       // « Suivre l'opérateur » enclenché tout seul quand un autre membre a la main : à l'arrivée sur la page, et chaque
       // fois qu'un autre membre prend la main ensuite (un clic sur un onglet l'arrête jusqu'au prochain opérateur)
       const stF = api && api.state();
