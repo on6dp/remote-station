@@ -3041,3 +3041,7 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 /* RTTY : un seul VFO en service (ni SPLIT ni DUAL RX) → seulement les colonnes du VFO-A, sur toute la largeur */
 .rt-dual.rt-solo { grid-template-columns: minmax(0, 1fr) !important; }
 .rt-dual.rt-solo > .rt-side[data-ch="1"], .rt-dual.rt-solo > .rt-vsplit { display: none !important; }
+/* RTTY : la zone des VFO peut descendre jusqu'à des fenêtres TX / RX de 70 px (poignée sous les fenêtres) */
+.ctab-pane.rt .rt-dual { min-height: 0; }
+.ctab-pane.rt .rt-dual .rt-side .rt-io { min-height: 70px; }
+.ctab-pane.rt .rt-dual .rt-side .rt-io .rt-rx, .ctab-pane.rt .rt-dual .rt-side .rt-io .rt-txw, .ctab-pane.rt .rt-dual .rt-side .rt-io .rt-pane { min-height: 0; }

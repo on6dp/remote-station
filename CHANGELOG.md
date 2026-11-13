@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.47** — Page RTTY : la poignée sous les fenêtres TX / RX les réduit jusqu'à 70 px (avant : arrêt bien plus haut), pour voir le bas de la page sans ascenseur
 - **0.39.46** — Page RTTY : un seul VFO en service (ni SPLIT ni DUAL RX) → seulement les fenêtres du VFO-A, sur toute la largeur ; celles du VFO-B reviennent en SPLIT ou DUAL RX ON
 - **0.39.45** — Page RTTY en double réception : poignées des cascades et des spectres indépendantes (celle du VFO-A ne fait plus bouger le VFO-B, et l'inverse)
 - **0.39.44** — Page RTTY en double réception : Centrer et RX ici / TX ici à droite de « Vitesse » de la cascade de chaque VFO (une ligne de moins dans les en-têtes)

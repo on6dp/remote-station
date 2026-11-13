@@ -5084,7 +5084,17 @@
     const dual = $('rtDual'), grip = $('rtHGrip');
     const setH = (h, save) => {
       if (h == null) { dual.style.removeProperty('height'); dual.style.removeProperty('flex'); if (save) store.set('rtdualh', ''); }
-      else { h = Math.max(220, Math.round(h)); dual.style.height = h + 'px'; dual.style.flex = 'none'; if (save) store.set('rtdualh', String(h)); }
+      else {
+        // Plus petit possible : en-tête (et cascade en double réception) de chaque VFO + fenêtres TX / RX de RT_IO_MIN pixels
+        let min = 0;
+        for (const side of dual.querySelectorAll(':scope > .rt-side')) {
+          if (!side.offsetParent) continue;
+          let o = 0;
+          for (const k of side.children) if (!k.classList.contains('rt-io') && k.offsetParent) o += k.offsetHeight;
+          min = Math.max(min, o + RT_IO_MIN + 4);
+        }
+        h = Math.max(min || 100, Math.round(h)); dual.style.height = h + 'px'; dual.style.flex = 'none'; if (save) store.set('rtdualh', String(h));
+      }
       if (tab === 'rtty') sizeCanvas();
     };
     if (Number(store.get('rtdualh', '')) > 0) setH(Number(store.get('rtdualh', '')), false);
