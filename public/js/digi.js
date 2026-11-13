@@ -337,13 +337,13 @@
             <input type="range" id="rtSq" min="4" max="25" step="1" aria-label="Silencieux (VFO-A)"><output id="rtSqV">12</output></label>
           <span class="rt-tune" title="Accord : les deux barres doivent battre en alternance"><span>M</span><i><b id="rtM"></b></i><span>S</span><i><b id="rtS"></b></i></span>
           <span class="dg-f rx">Centre <b id="rtF">1500</b> Hz</span>
-          <button class="dg-mini rt-center" type="button" data-ch="0" title="Centrer : le TRX se déplace pour que le signal de ce décodeur soit au milieu de la cascade (1500 Hz)">⌖ Centrer</button>
-          <button class="dg-mini rt-txsel" type="button" data-ch="0" aria-pressed="false" title="L'émission RTTY part avec les réglages de ce décodeur (fréquence audio, shift, vitesse)">TX</button>
+          <span class="rt-hbtns" data-ch="0"><button class="dg-mini rt-center" type="button" data-ch="0" title="Centrer : le TRX se déplace pour que le signal de ce décodeur soit au milieu de la cascade (1500 Hz)">⌖ Centrer</button>
+          <button class="dg-mini rt-txsel" type="button" data-ch="0" aria-pressed="false" title="L'émission RTTY part avec les réglages de ce décodeur (fréquence audio, shift, vitesse)">TX</button></span>
           <button class="dg-mini" type="button" id="rtClear">Effacer</button>
         </div>
         <div class="dg-wf-slot" data-slot="rtty-a"></div>
         <div class="rt-io">
-          <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxt" data-ch="0" spellcheck="false" placeholder="TX VFO-A : texte à émettre, puis « Émettre » ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShow" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx0" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
+          <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxt" data-ch="0" spellcheck="false" placeholder="TX VFO-A : texte à émettre, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShow" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx0" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
           <div class="rt-pane"><pre class="rt-rx" id="rtRx"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx0" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
         </div>
       </div>
@@ -358,8 +358,8 @@
             <input type="range" id="rtSqB" min="4" max="25" step="1" aria-label="Silencieux (VFO-B)"><output id="rtSqVB">12</output></label>
           <span class="rt-tune" title="Accord : les deux barres doivent battre en alternance"><span>M</span><i><b id="rtMB"></b></i><span>S</span><i><b id="rtSB"></b></i></span>
           <span class="dg-f rx">Centre <b id="rtFB">1500</b> Hz</span>
-          <button class="dg-mini rt-center" type="button" data-ch="1" title="Centrer : le TRX se déplace pour que le signal de ce décodeur soit au milieu de la cascade (1500 Hz)">⌖ Centrer</button>
-          <button class="dg-mini rt-txsel" type="button" data-ch="1" aria-pressed="false" title="L'émission RTTY part avec les réglages de ce décodeur (fréquence audio, shift, vitesse)">TX</button>
+          <span class="rt-hbtns" data-ch="1"><button class="dg-mini rt-center" type="button" data-ch="1" title="Centrer : le TRX se déplace pour que le signal de ce décodeur soit au milieu de la cascade (1500 Hz)">⌖ Centrer</button>
+          <button class="dg-mini rt-txsel" type="button" data-ch="1" aria-pressed="false" title="L'émission RTTY part avec les réglages de ce décodeur (fréquence audio, shift, vitesse)">TX</button></span>
           <button class="dg-mini" type="button" id="rtClearB">Effacer</button>
         </div>
         <!-- Cascade propre au décodeur B : pour un TRX qui envoie ses deux récepteurs séparément (ex. FTDX101) ; cachée sinon -->
@@ -380,7 +380,7 @@
           <i class="dg-grip" id="rtGripB" title="Glisser vers le haut ou le bas : hauteur de la cascade du VFO-B, sans toucher à celle du VFO-A (double-clic : même hauteur que celle du VFO-A)"></i>
         </div>
         <div class="rt-io">
-          <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxtB" data-ch="1" spellcheck="false" placeholder="TX VFO-B : texte à émettre, puis « Émettre » ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-B : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShowB" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx1" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
+          <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxtB" data-ch="1" spellcheck="false" placeholder="TX VFO-B : texte à émettre, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-B : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShowB" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx1" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
           <div class="rt-pane"><pre class="rt-rx" id="rtRxB"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx1" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
         </div>
       </div>
@@ -929,6 +929,15 @@
       const slot = document.querySelector('.dg-wf-slot[data-slot="' + (pane === 'rtty' && dualAudio ? 'rtty-a' : pane) + '"]');
       const el = document.querySelector('.dg-wf:not(.rt-wfb):not(.ft-wfb)'); // cascade principale (pas celle du décodeur RTTY B ni du VFO-B en FT)
       if (slot && el && el.parentElement !== slot) slot.appendChild(el);
+      // RTTY double réception : Centrer et RX ici / TX ici à droite de « Vitesse » de la cascade de chaque VFO (une ligne
+      // de moins dans l'en-tête) ; sinon (une seule cascade pour les deux décodeurs) dans l'en-tête de chaque décodeur
+      for (const ch of [0, 1]) {
+        const w = document.querySelector('.rt-hbtns[data-ch="' + ch + '"]');
+        if (!w) continue;
+        const spd = $(ch ? 'wfSpdR' : 'wfSpd'), home = $(ch ? 'rtClearB' : 'rtClear');
+        if (pane === 'rtty' && dualAudio && spd) { if (spd.nextElementSibling !== w) spd.after(w); }
+        else if (home && home.previousElementSibling !== w) home.before(w);
+      }
       el.classList.toggle('is-rtty', pane === 'rtty' || pane === 'cw');
       for (const id of ['dgMkBM', 'dgMkBS']) if ($(id)) $(id).hidden = pane !== 'rtty' || dualAudio; // repères du décodeur RTTY B
       applyFtDual();
@@ -2849,7 +2858,7 @@
       const on = Number(b.dataset.ch) === rtTx;
       b.setAttribute('aria-pressed', String(on));
       b.textContent = on ? (txing ? '■ Arrêter' : '▶ TX ici') : 'RX ici';
-      b.title = on ? (txing ? 'Arrêter l’émission RTTY en cours (ou Échap)' : 'Émet le texte personnalisé (cadre du bas) sur la fréquence de ce décodeur, comme « Émettre ». Les macros F1 à F12 partent aussi d’ici.')
+      b.title = on ? (txing ? 'Arrêter l’émission RTTY en cours (ou Échap)' : 'Émet le texte de la fenêtre TX sur la fréquence de ce décodeur, comme F11 TX. Les macros F1 à F12 partent aussi d’ici.')
         : 'Fenêtre en réception seulement. Clic : elle devient la fenêtre d’émission (▶ TX ici), l’autre passe en RX ici. Un 2e clic émet le texte personnalisé.';
       b.closest('.rt-side').classList.toggle('rt-istx', on);
     });

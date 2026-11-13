@@ -3032,3 +3032,9 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 /* Page RTTY : bouton RÈGLEMENT à droite de la ligne des macros du contest */
 .rt-macline[hidden], .rtc-rules[hidden] { display: none; }
 .rt-macline > .rtc-rules { flex: none; margin-top: 6px; font-size: 11.5px; }
+/* Centrer / RX ici / TX ici : dans l'en-tête du décodeur, ou à droite de « Vitesse » de la cascade (RTTY double réception) */
+.rt-hbtns { display: inline-flex; gap: 6px; align-items: center; }
+.wf-ctl > .rt-hbtns { margin-left: 4px; }
+.rt-hbtns .rt-txsel[aria-pressed='true'] { color: #FFFFFF; background: var(--v2-accent-red-alt, #c0392b); border-color: var(--v2-accent-red-alt, #c0392b); }
+.rt-hbtns .rt-txsel[aria-pressed='false'] { color: #FFFFFF; background: #1e8e4e; border-color: #1e8e4e; }
+.rt-hbtns .rt-center { color: #fff; border-color: #c9d1d9; }
