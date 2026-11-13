@@ -51,15 +51,51 @@
         ev.preventDefault();
         if (ev.type === 'wheel') t.dispatchEvent(new W.WheelEvent('wheel', { deltaX: ev.deltaX, deltaY: ev.deltaY, deltaMode: ev.deltaMode, shiftKey: ev.shiftKey, ctrlKey: ev.ctrlKey, altKey: ev.altKey, bubbles: true, cancelable: true }));
         else {
-          if (ev.type === 'click' && t.closest('.vfo-meters')) return; // cadres agrandis : seulement dans le dashboard
+          // Cadres de l'écran VFO (filtre, cadran, spectre) : agrandis dans cette page, comme au dashboard
+          if (ev.type === 'click' && t.closest('.vfo-meters')) { const svg = t.closest('svg'); if (svg) zoomOpen(svg); return; }
           t.dispatchEvent(new W.MouseEvent(ev.type, { button: ev.button, shiftKey: ev.shiftKey, ctrlKey: ev.ctrlKey, bubbles: true, cancelable: true }));
         }
       };
+      // Agrandissement d'un cadre (copie vivante du cadre du dashboard, au milieu de l'écran) ; clic, clic à côté ou Échap : fermé
+      MR.zoom = null;
+      const zoomClose = () => { if (MR.zoom) { MR.zoom.ov.remove(); MR.zoom = null; } };
+      const zoomOpen = (svg) => {
+        const src = MR.src && svg.id && MR.src.ownerDocument.getElementById(svg.id.replace(/^m-/, ''));
+        if (!src) return;
+        zoomClose();
+        const ov = document.createElement('div'); ov.className = 'vz-ov';
+        const hd = document.createElement('div'); hd.className = 'vz-hd';
+        const big = document.createElement('div'); big.className = 'vz-bigw';
+        ov.append(hd, big);
+        ov.addEventListener('click', () => zoomClose());
+        // Molette sur le cadre agrandi (BW sur le filtre…) : comme au dashboard
+        big.addEventListener('wheel', (ev) => { ev.preventDefault(); const W = src.ownerDocument.defaultView; src.dispatchEvent(new W.WheelEvent('wheel', { deltaY: ev.deltaY, deltaX: ev.deltaX, deltaMode: ev.deltaMode, shiftKey: ev.shiftKey, ctrlKey: ev.ctrlKey, bubbles: true, cancelable: true })); }, { passive: false });
+        document.body.appendChild(ov);
+        MR.zoom = { src, ov, hd, big, html: '' };
+        zoomDraw();
+      };
+      document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') zoomClose(); });
+      MR.zoomClose = zoomClose;
       MR.box.addEventListener('wheel', fwd, { passive: false });
       MR.box.addEventListener('click', fwd);
       MR.box.addEventListener('contextmenu', fwd);
     }
+    function zoomDraw() {
+      const z = MR.zoom;
+      if (!z) return;
+      if (!z.src.isConnected) return MR.zoomClose();
+      const D = z.src.ownerDocument, w = z.src.id.slice(-1), k = z.src.id.slice(0, -1);
+      const tx = (id) => String((D.getElementById(id) || {}).textContent || '').replace(/[<>&]/g, '').trim();
+      const what = k === 'flt' ? 'Filtre BW / SFT' : k === 'sp' ? 'Spectre audio · NOTCH' : 'Cadran';
+      const h = '<span class="vz-id">VFO ' + w + ' · ' + (w === 'B' ? 'SUB' : 'MAIN') + '</span><span class="vz-f">' + tx('freq' + w).replace(/^[0.]*(?=[1-9])/, '') + ' <small>MHz</small></span>' +
+        '<span class="vz-m">' + tx('mode' + w) + '</span><span class="vz-b">' + tx('band' + w) + '</span><span class="vz-w">' + what + '</span>';
+      if (z.hd.dataset.h !== h) { z.hd.dataset.h = h; z.hd.innerHTML = h; }
+      z.hd.classList.toggle('b', w === 'B');
+      const html = z.src.outerHTML.replace(/ id="/g, ' id="z-').replace(/url\(#/g, 'url(#z-');
+      if (html !== z.html) { z.html = html; z.big.innerHTML = html; const sv = z.big.firstElementChild; if (sv) { sv.classList.add('vz-big'); sv.removeAttribute('style'); } }
+    }
     function mirror() {
+      zoomDraw();
       let d = null;
       try { d = opt.mirror(); } catch (e) { d = null; }
       const src = d && d.querySelector('.vfo-row[data-panel="vfo"]');

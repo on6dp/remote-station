@@ -2781,3 +2781,6 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .ssb-clog tr.dup td:nth-child(9) { text-decoration: none; color: #ff8a7a; }
 /* Pages SSB et CW : A ⇄ B et A → B avec un cadre blanc */
 .vfb-row button[data-a] { border: 1px solid #fff; color: #fff; font-weight: 800; }
+/* Page SSB : cadre de l'écran VFO agrandi (filtre, cadran, spectre), comme au dashboard */
+.vz-bigw { display: flex; justify-content: center; }
+.vz-bigw .vz-big { width: min(90vw, 1100px) !important; height: calc(min(90vw, 1100px) * 0.3874) !important; cursor: zoom-out; filter: drop-shadow(0 8px 30px rgba(0,0,0,.7)); }
