@@ -4894,7 +4894,7 @@
   function initContest() {
     const sel = $('rtcSel');
     if (!sel) return;
-    for (const [id, name] of RT_CONTESTS.slice().sort((a, b) => (/-OTHER$/.test(a[0]) - /-OTHER$/.test(b[0])) || a[1].localeCompare(b[1], 'fr', { sensitivity: 'base' }))) sel.add(new Option(name, id)); // ordre alphabétique
+    for (const [id, name] of RT_CONTESTS.slice().sort((a, b) => (!!a[0] - !!b[0]) || (/-OTHER$/.test(a[0]) - /-OTHER$/.test(b[0])) || a[1].localeCompare(b[1], 'fr', { sensitivity: 'base' }))) sel.add(new Option(id ? name : '— pas de contest —', id)); // « pas de contest » en tête, puis ordre alphabétique
     const ui = () => {
       sel.value = rtcId();
       $('rtcExch').value = rtcExch();
