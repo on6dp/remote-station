@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.84** — Pages SSB et CW : saisie du contest aux couleurs de la fiche des détails du QSO (fond crème, textes foncés)
 - **0.38.83** — Page SSB : clic sur le filtre, le cadran ou le spectre d'un écran VFO = agrandi au milieu de l'écran, comme au dashboard (copie vivante, molette active)
 - **0.38.82** — RIT / XIT / CLEAR indépendants par VFO sur FTDX101 et FTDX5000 (lus dans IF / OI) ; un clic sur l'écran d'un VFO sélectionne d'abord son côté (MAIN / SUB), puis la commande
 - **0.38.81** — Pages SSB et CW : A ⇄ B et A → B encadrés de blanc

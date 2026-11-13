@@ -2784,3 +2784,11 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 /* Page SSB : cadre de l'écran VFO agrandi (filtre, cadran, spectre), comme au dashboard */
 .vz-bigw { display: flex; justify-content: center; }
 .vz-bigw .vz-big { width: min(90vw, 1100px) !important; height: calc(min(90vw, 1100px) * 0.3874) !important; cursor: zoom-out; filter: drop-shadow(0 8px 30px rgba(0,0,0,.7)); }
+/* Pages SSB et CW, saisie du contest : mêmes couleurs que la fiche des détails du QSO (fond crème, textes foncés) */
+.cwp-entry { background: #f6efc9; border-color: #d9c56a; }
+.cwp-entry label, .cwp-entry label.spotlog, .cwp-entry label.spotlog.on { color: #1a1a1a !important; }
+.cwp-entry input:not([type='checkbox']) { background: #fff !important; color: #111 !important; border-color: #b9a85a !important; }
+.cwp-entry input#cwpECall { color: #003a8c !important; }
+.cwp-entry input:not([type='checkbox'])::placeholder { color: #9a9a9a; }
+.cwp-entry .cwp-esm button:not(.on) { background: #e3d9a8; color: #5a4d1a; }
+.cwp-entry .cwp-ewipe { background: #2a3442; color: #fff; }
