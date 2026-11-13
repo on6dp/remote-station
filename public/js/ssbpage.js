@@ -740,7 +740,7 @@
   const P = { held: false, hb: null, voiceOn: false };
   function voiceInit() {
     if (!VX || !host) return;
-    VX.init({ compact: true, send: api.send, say: (msg, lvl, ms) => toast(msg, lvl === 'warn' || lvl === 'error' ? 'warn' : '', ms),
+    VX.init({ compact: true, auto: true, send: api.send, say: (msg, lvl, ms) => toast(msg, lvl === 'warn' || lvl === 'error' ? 'warn' : '', ms),
       iControl: api.iControl, state: api.state, me: () => { try { return host.me ? host.me() : null; } catch (e) { return null; } },
       rig: () => { try { return host.api.rig(); } catch (e) { return {}; } },
       setSink: (id) => { try { if (host.setSink) host.setSink(id); } catch (e) {} },
@@ -889,7 +889,14 @@
   }
   $('cwpTake').addEventListener('click', () => api.send({ t: 'take' }));
   // Les deux VFO (SPLIT) : même main et mêmes commandes que le dashboard
-  if (window.RSVFOBOX) window.RSVFOBOX.mount($('cwpVfo'), { api, toast });
+  // DUAL RX et écoute au casque en stéréo (VFO A / MAIN à gauche, VFO B / SUB à droite) : écoute jouée par le dashboard
+  if (window.RSVFOBOX) window.RSVFOBOX.mount($('cwpVfo'), { api, toast, dual: true,
+    rig: () => { try { return host ? host.api.rig() : {}; } catch (e) { return {}; } },
+    listen: () => { try { return host ? host.listen : null; } catch (e) { return null; } },
+    // Écrans des deux VFO : ceux du dashboard (page générale), recopiés
+    mirror: () => { try { return hostWin && !hostWin.closed && hostWin.document.getElementById('vfoA') ? hostWin.document : null; } catch (e) { return null; } } });
+  // Ligne MICRO DU TRX (gain micro, PROC, MIC EQ, niveau PROC, VOX) dans le cadre des VFO, sous leurs écrans
+  { const mir = $('cwpVfo').querySelector('.vfb-mir'); if (mir) { mir.after($('ssMic')); $('ssMic').classList.add('vfb-mic'); } }
   // Carte de bande à gauche : spots SSB de la bande du TRX ; clic = indicatif + TRX sur la fréquence du spot (avec la main)
   // TRX à deux vrais récepteurs (état « dualRx » : IC-7760, FTDX101, FTDX5000…) : carte du VFO-A à gauche, du VFO-B à droite
   const twoRx = (r) => r && r.dualRx != null && r.freqB != null;

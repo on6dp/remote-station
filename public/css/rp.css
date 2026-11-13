@@ -2606,3 +2606,32 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .dg-bar .dg-ylw { color: #ffd400; font-weight: 800; }
 /* « TX » devant VFO-A / VFO-B (barre FT) en jaune gras */
 #dgTxSide > .dg-f { color: #ffd400; font-weight: 800; }
+/* SSB CONFIGURATION : « Entrée » et « Sortie » en jaune vif */
+.vx-io .vx-iol { color: #ffe600; font-weight: 800; letter-spacing: .5px; }
+/* Page TRX SSB : DUAL RX et écoute stéréo (VFO A / MAIN à gauche, VFO B / SUB à droite) */
+.vfb-row[hidden], .vfb-row button[hidden] { display: none; }
+.vfb-dual { margin-top: 2px; }
+.vfb-dual button { font-size: 12.5px; font-weight: 800; letter-spacing: .5px; padding: 4px 12px; border: 2px solid #fff; border-radius: 6px; }
+.vfb-dual .vfb-drx.on { background: #3fd07f; color: #000; border-color: #3fd07f; }
+.vfb-dual .vfb-st.on { background: #ff6fb5; color: #000; border-color: #ff6fb5; }
+.vfb-dual .vfb-st[aria-pressed="true"]:not(.on) { border-color: #ff6fb5; color: #ff6fb5; }
+.vfb.dual .vfb-col[data-v="0"] { border-color: #3fd07f; background: #08170f; }
+.vfb.dual .vfb-col[data-v="1"] { border-color: #ff6fb5; background: #1a0b14; }
+.vfb.dual .vfb-col[data-v="1"] .vfb-role { background: #4a1630; color: #ff9fcd; }
+.vfb.dual .vfb-col[data-v="0"] .vfb-h b { color: #3fd07f; }
+.vfb.dual .vfb-col[data-v="1"] .vfb-h b { color: #ff6fb5; }
+/* Page TRX SSB : écrans des VFO du dashboard recopiés au-dessus ; dessous, kHz A · SPLIT / DUAL RX / STÉRÉO · kHz B */
+.vfb.mir { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); row-gap: 6px; }
+.vfb.mir .vfb-mir { grid-column: 1 / -1; overflow: hidden; }
+.vfb.mir .vfb-mir .vfo-row { margin: 0; }
+.vfb.mir .vfb-col { border: 0; background: none; padding: 0; justify-content: center; }
+.vfb.mir .vfb-col[hidden] { display: flex; visibility: hidden; }
+.vfb.mir .vfb-col .vfb-h, .vfb.mir .vfb-col .vfb-f, .vfb.mir .vfb-col .vfb-m { display: none; }
+.vfb.mir .vfb-col[data-v="1"] { align-items: flex-end; }
+.vfb.mir .vfb-mid { flex-direction: row; flex-wrap: wrap; gap: 6px 10px; }
+.vfb.mir .vfb-note { flex-basis: 100%; }
+.vfb.mir.single { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+.vfb.mir.single .vfb-mid { order: 0; }
+.vfb .ssb-mic.vfb-mic { grid-column: 1 / -1; margin: 0; border: 0; border-top: 1px solid var(--v2-border); border-bottom: 1px solid var(--v2-border); border-radius: 0; background: none; padding: 6px 2px; }
+.vfb:not(.mir) .ssb-mic.vfb-mic { display: none; }
+.vfb.mir .vfb-col, .vfb.mir.dual .vfb-col[data-v] { border: 0; background: none; box-shadow: none; }

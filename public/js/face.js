@@ -378,7 +378,7 @@
     if (a.local === 'mox') return L.mox ? pttUp() : (pttDown() ? (L.mox = true, render()) : null);
     if (a.local === 'moni') {
       const VX = window.RSVOICE;
-      if (!VX || !VX.micOn()) return say('MONI = « M’écouter » : activez d’abord votre micro (Configuration micro, à droite de la face avant).', 'warn', 5000);
+      if (!VX || !VX.micOn()) return say('MONI = « MONITORING » : activez d’abord votre micro (Configuration micro, à droite de la face avant).', 'warn', 5000);
       VX.monitor(!VX.monitorOn());
       say(VX.monitorOn() ? 'MONI : vous entendez votre micro tel qu’il part (au casque).' : 'MONI coupé.', '', 3000);
       return render();
@@ -8852,7 +8852,7 @@
   boot('modes numériques', () => { if (window.RSDIGI) window.RSDIGI.init(digiApi); });
   boot('carte de bande', bmPopRestore);
   if (window.RSVOICE) boot('phonie', () => {
-    // Phonie (micro, égaliseurs, entrée / sortie son, M'écouter) : dans la page TRX SSB, comme pour le dashboard ;
+    // Phonie (micro, égaliseurs, entrée / sortie son, MONITORING) : dans la page TRX SSB, comme pour le dashboard ;
     // ici, le bouton « Phonie : page TRX SSB » (place gagnée en hauteur sous la face avant)
     window.RSVOICE.init({ compact: true, away: true, send, say, iControl, state: () => st, me: () => me, rig: () => R,
       // Sortie son choisie dans SSB CONFIGURATION : aussi pour l'écoute du TRX

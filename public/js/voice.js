@@ -90,21 +90,21 @@
       '<button class="btn vx-on" id="vxOn" type="button" aria-pressed="false" title="Activer votre micro : votre voix part vers le TRX pendant l’appui sur PTT (LSB / USB…) ; un nouveau clic le coupe">Configuration micro</button>' +
       '<button class="btn vx-trx" id="vxTrxBtn" type="button" hidden title="Égaliseur paramétrique du TRX (menus PRMTRC) : votre profil, mis au TRX quand vous prenez la main">Equalizer TRX</button>' +
       '<div class="vx-b" id="vxBody" hidden>' +
-      '<label class="vx-io" title="Entrée son : votre micro (ce qui part vers le TRX au PTT)">🎤 Entrée <select id="vxDev" aria-label="Entrée son (micro)"></select></label>' +
-      '<label class="vx-io vx-outl" title="Sortie son : où vous entendez le TRX et « M’écouter » (casque, haut-parleurs…)">🔊 Sortie <select id="vxOut" aria-label="Sortie son (casque, haut-parleurs)"></select></label>' +
+      '<label class="vx-io" title="Entrée son : votre micro (ce qui part vers le TRX au PTT)">🎤 <span class="vx-iol">Entrée</span> <select id="vxDev" aria-label="Entrée son (micro)"></select></label>' +
+      '<label class="vx-io vx-outl" title="Sortie son : où vous entendez le TRX et « MONITORING » (casque, haut-parleurs…)">🔊 <span class="vx-iol">Sortie</span> <select id="vxOut" aria-label="Sortie son (casque, haut-parleurs)"></select></label>' +
       '<div class="vx-type" id="vxType"></div>' +
       '<div class="vx-meter" title="Niveau de votre micro après l’égaliseur, en dB sous la saturation : visez le vert (−20 à −12 dB en parlant), jaune = fort, rouge = trop fort"><span class="vx-mt">Niveau micro</span><i id="vxLvl"></i>' + VX_SCALE + '<b id="vxClip">SAT</b></div>' +
       '<div class="vx-row"><button class="btn" id="vxEqBtn" type="button" title="Égaliseur de votre micro (dans le navigateur) : réglages gardés pour ce micro">Equalizer micro</button></div>' +
       '<div class="vx-note" id="vxNote"></div>' +
-      '<div class="vx-mon"><button class="btn" id="vxMonBtn" type="button" aria-pressed="false" title="Entendre votre micro tel qu’il partira (au casque seulement : effet Larsen avec des haut-parleurs)">🎧 M’écouter</button></div>' +
-      '<label class="vx-monvol" title="Volume de « M’écouter » dans votre casque (ne change pas ce qui part vers le TRX)">Volume <input type="range" id="vxMonVol" min="0" max="300" step="5" aria-label="Volume de M’écouter"><output id="vxMonVolV"></output></label>' +
+      '<div class="vx-mon"><button class="btn" id="vxMonBtn" type="button" aria-pressed="false" title="Entendre votre micro tel qu’il partira (au casque seulement : effet Larsen avec des haut-parleurs)">🎧 MONITORING</button></div>' +
+      '<label class="vx-monvol" title="Volume de « MONITORING » dans votre casque (ne change pas ce qui part vers le TRX)">Volume <input type="range" id="vxMonVol" min="0" max="300" step="5" aria-label="Volume de MONITORING"><output id="vxMonVolV"></output></label>' +
       '</div>';
     anchor.after(box);
     // Dashboard : la phonie (micro, égaliseurs, entrée / sortie son, réglages micro du TRX) est dans la page TRX SSB,
     // ouverte par l'onglet SSB de la ligne MODES (plus de bouton « Phonie : page TRX SSB » ici)
     if (V.api && V.api.away) box.classList.add('vx-away');
     // Face avant (/ftdx101) : une seule ligne « SSB CONFIGURATION · MICRO · EQUALIZER MICRO · niveau · EQUALIZER TRX »,
-    // le reste (choix du micro, type, état, M'écouter et son volume) sur la ligne suivante
+    // le reste (choix du micro, type, état, MONITORING et son volume) sur la ligne suivante
     if (V.api && V.api.compact) {
       box.classList.add('vx-compact');
       const meter = box.querySelector('.vx-meter'), eq = $('vxEqBtn'), row = eq.parentElement;
@@ -158,6 +158,12 @@
     $('vxTrxBtn').hidden = !trxEq;
     if (trxEq && R.TRX_EQ.icom) $('vxTrxBtn').title = 'Votre profil d’émission de l’IC-7300 (SET → Tone Control/TBW : Bass, Treble, TBW), mis au TRX quand vous prenez la main ; réglage du club remis quand vous la rendez';
     $('vxOn').hidden = !modes && !V.api.compact;
+    // Page TRX SSB (auto) : le micro s'ouvre tout seul à l'ouverture de la page (il ne part vers le TRX qu'au PTT) ;
+    // plus de bouton MICRO, sauf si l'ouverture a échoué (micro refusé, absent…) : il sert alors à réessayer
+    if (V.api.auto) {
+      if (!V.on && !V.starting && !V.autoTried && modes && V.api.me()) { V.autoTried = true; start().catch(() => {}); }
+      if (V.on || V.starting) $('vxOn').hidden = true;
+    }
     if (!trxEq && $('vxTrx')) $('vxTrx').remove();
     if ($('vxTrx')) trxDrawState();
     $('vxOn').setAttribute('aria-pressed', String(V.on));
@@ -192,7 +198,7 @@
   const txMode = (st) => (st && st.radio ? (st.radio.txVfo === 1 ? st.radio.modeB : st.radio.mode) : '') || '';
 
   // ------------------------------------------------------------ micro
-  // Sortie son (casque / haut-parleurs) : choisie ici, appliquée à l'écoute du TRX (page) et à « M'écouter » (setSinkId, Chrome / Edge)
+  // Sortie son (casque / haut-parleurs) : choisie ici, appliquée à l'écoute du TRX (page) et à « MONITORING » (setSinkId, Chrome / Edge)
   async function listOutputs() {
     const sel = $('vxOut');
     if (!sel || !navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
@@ -441,8 +447,8 @@
       '<label>Gain du micro <output data-o="gain"></output><input type="range" data-k="gain" min="20" max="400" step="5"></label></div>' +
       '<div class="vx-bands">' + bandRow(0) + bandRow(1) + bandRow(2) + '</div>' +
       '<div class="vx-eq-top"><label><input type="checkbox" data-k="ns"> Réduction de bruit</label><label><input type="checkbox" data-k="ec"> Anti-écho (haut-parleurs)</label><label><input type="checkbox" data-k="agc"> Gain automatique</label></div>' +
-      '<p class="vx-hint">Réglez en écoutant au casque (« 🎧 M’écouter »). La SSB passe 300 à 2700 Hz environ : un peu de coupe vers 300 Hz et de la présence vers 2 à 2,5 kHz font une voix qui porte. Gardez le niveau dans le vert. Le gain, la réduction de bruit et les autres options du micro valent pour ce micro seulement.</p>' +
-      '<div class="vx-eq-f"><button class="btn" type="button" data-a="mon" aria-pressed="false">🎧 M’écouter</button><button class="btn accent" type="button" data-a="save">Enregistrer pour ce micro</button><button class="btn" type="button" data-a="close">Fermer</button></div>';
+      '<p class="vx-hint">Réglez en écoutant au casque (« 🎧 MONITORING »). La SSB passe 300 à 2700 Hz environ : un peu de coupe vers 300 Hz et de la présence vers 2 à 2,5 kHz font une voix qui porte. Gardez le niveau dans le vert. Le gain, la réduction de bruit et les autres options du micro valent pour ce micro seulement.</p>' +
+      '<div class="vx-eq-f"><button class="btn" type="button" data-a="mon" aria-pressed="false">🎧 MONITORING</button><button class="btn accent" type="button" data-a="save">Enregistrer pour ce micro</button><button class="btn" type="button" data-a="close">Fermer</button></div>';
     document.body.appendChild(d);
     // Type du micro reconnu d'après son nom (il choisit le réglage proposé au départ) : affiché ici, dans l'égaliseur
     const mt = V.type || micType(V.label);
@@ -531,7 +537,7 @@
     for (let i = 0; i < N; i++) { const x = xOf(f[i]); const y = Math.max(0, Math.min(H, yOf(tot[i]))); if (i) g.lineTo(x, y); else g.moveTo(x, y); }
     g.stroke();
   }
-  // Volume de « M’écouter » (casque) : 0 à 300 %, gardé dans ce navigateur
+  // Volume de « MONITORING » (casque) : 0 à 300 %, gardé dans ce navigateur
   function monVol() { const v = Number(store.get('monvol', '100')); return Number.isFinite(v) ? Math.max(0, Math.min(300, v)) : 100; }
   if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange', () => { if (V.on) listOutputs().catch(() => {}); });
   function setMonitor(on) {
@@ -769,7 +775,7 @@
       return out;
     },
     level: () => V.peak || 0,
-    // Page Face avant : touche MONI = « M'écouter »
+    // Page Face avant : touche MONI = « MONITORING »
     micOn: () => !!V.on,
     monitor(on) { setMonitor(on); return V.monOn; },
     monitorOn: () => !!V.monOn,

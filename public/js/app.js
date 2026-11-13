@@ -1844,7 +1844,9 @@
 
   // ------------------------------------------------------------ écoute de la BF du TRX
   // Trames µ-law à 8 kHz reçues du serveur, jouées avec un petit tampon (~0,2 s) contre les à-coups du réseau.
-  const player = { on: false, ctx: null, gain: null, next: 0, got: 0, late: 0 };
+  // Stéréo (TRX à deux récepteurs en double réception, FTDX101) : MAIN dans l'oreille gauche, SUB dans la droite (page TRX SSB)
+  const player = { on: false, ctx: null, gain: null, next: 0, got: 0, late: 0, sink: '', stereo: (() => { try { return localStorage.getItem('rs.stereo') === '1'; } catch (e) { return false; } })() };
+  const listenMsg = (on) => ({ t: 'listen', on, stereo: on && player.stereo });
   function playerVolume() {
     const v = Number($('listenVol').value) / 100;
     if (player.gain) player.gain.gain.value = v;
@@ -1858,17 +1860,18 @@
       player.ctx = new AC();
       player.gain = player.ctx.createGain();
       player.gain.connect(player.ctx.destination);
+      if (player.sink && player.ctx.setSinkId) player.ctx.setSinkId(player.sink).catch(() => {});
       playerVolume();
     }
     player.ctx.resume();
     player.on = true;
     player.next = 0;
-    send({ t: 'listen', on: true });
+    send(listenMsg(true));
     drawListen();
   }
   function stopListen() {
     player.on = false;
-    send({ t: 'listen', on: false });
+    send(listenMsg(false));
     if (player.ctx) player.ctx.suspend();
     drawListen();
   }
@@ -1886,8 +1889,10 @@
     const now = ctx.currentTime;
     if (player.next < now + 0.05) player.next = now + 0.2;      // démarrage ou trou : on se recale avec 0,2 s d'avance
     else if (player.next > now + 0.8) { player.late++; return; } // trop de retard accumulé : on saute ce paquet
-    const buf = ctx.createBuffer(1, pcm.length, pcm.rate || ULAW.RATE);
+    const two = !!pcm.r; // trame stéréo (0x07) : MAIN à gauche, SUB à droite
+    const buf = ctx.createBuffer(two ? 2 : 1, pcm.length, pcm.rate || ULAW.RATE);
     buf.copyToChannel(pcm, 0);
+    if (two) buf.copyToChannel(pcm.r, 1);
     const src = ctx.createBufferSource();
     src.buffer = buf;
     src.connect(player.gain);
@@ -1906,7 +1911,7 @@
     $('listenInfo').textContent = !player.on
       ? (a.active ? 'Cliquez pour entendre la BF du TRX.' : 'La station n’envoie pas de son en ce moment.') + (a.listeners ? ' ' + a.listeners + ' à l’écoute.' : '')
       : !a.active ? 'En attente du son : l’audio n’est pas activé sur la page Station.'
-      : 'En écoute' + (a.listeners > 1 ? ' avec ' + (a.listeners - 1) + ' autre(s)' : '') + '.';
+      : 'En écoute' + (player.stereo && st && st.radio && st.radio.dualRx === 1 ? ' en stéréo (MAIN à gauche, SUB à droite)' : '') + (a.listeners > 1 ? ' avec ' + (a.listeners - 1) + ' autre(s)' : '') + '.';
     // Entrée son de la station muette alors que le TRX est connecté : carte son USB du TRX figée
     const sw = $('silentWarn');
     sw.hidden = !a.silent;
@@ -2083,7 +2088,7 @@
           try { localStorage.setItem('rs.sess', m.session); } catch (x) {}
         }
         if (!m.allowTx) say('Émission désactivée sur ce serveur : réglages et écoute uniquement.', 'warn', 8000);
-        if (player.on) send({ t: 'listen', on: true }); // reprise de l'écoute après une reconnexion
+        if (player.on) send(listenMsg(true)); // reprise de l'écoute après une reconnexion
         render();
       } else if (m.t === 'login_fail') {
         creds = null;
@@ -2191,6 +2196,20 @@
     sendBin,
     extTalk: false, // la page SSB émet sa voix : pas d'écho dans l'écoute du TRX
     tap(fn) { hostTaps.add(fn); return () => hostTaps.delete(fn); },
+    // Page TRX SSB : sortie son choisie (casque…) et écoute du TRX, en stéréo MAIN | SUB si demandé
+    setSink(id) { player.sink = id || ''; if (player.ctx && player.ctx.setSinkId) player.ctx.setSinkId(player.sink).catch(() => {}); },
+    listen: {
+      on: () => player.on,
+      stereo: () => player.stereo,
+      start: () => { if (!player.on) startListen(); return player.on; },
+      stop: () => { if (player.on) stopListen(); },
+      setStereo(v) {
+        player.stereo = !!v;
+        try { localStorage.setItem('rs.stereo', player.stereo ? '1' : '0'); } catch (e) {}
+        if (player.on) { player.next = 0; send(listenMsg(true)); }
+        drawListen();
+      }
+    },
     attach(win, inst, popupApi) {
       if (digiHost.win && digiHost.win !== win && !digiHost.win.closed) { try { digiHost.win.close(); } catch (e) {} }
       digiHost.win = win;
