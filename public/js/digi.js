@@ -406,7 +406,8 @@
           <button class="dg-mini" type="button" id="rtcNrP" title="Numéro suivant (+1)">+1</button>
           <button class="dg-mini" type="button" id="rtcNr1" title="Remettre le numéro de série à 001 (début du contest)">↺ 001</button>
         </div>
-        <div class="rt-macros rtc-macros" id="rtcMacros"></div>
+        <!-- Macros du contest choisi, puis le règlement du contest -->
+        <div class="rt-macline rtc-macline" id="rtcMacLine" hidden><div class="rt-macros rtc-macros" id="rtcMacros"></div><a id="rtcRules" class="ssb-rules rtc-rules" target="_blank" rel="noopener">RÈGLEMENT ↗</a></div>
         <div class="rt-tx-row" hidden>
           <div class="rt-tx-act">
             <button class="btn btn-tx" type="button" id="rtSend" title="Émet le texte en RTTY avec les réglages du décodeur marqué TX (A ou B), puis retour en réception">Émettre</button>
@@ -1678,6 +1679,13 @@
     ['XERTTY', 'XE RTTY', '599 <CNTR>'],
     ['RTTY-OTHER', 'Autre contest (échange libre)', '599 <CNTR>']
   ];
+  // Règlements officiels connus (relus le 13 novembre 2026) ; les autres : recherche sur le web
+  const RT_RULES = {
+    'CQ-WW-RTTY': 'https://cqwwrtty.com/rules.htm',
+    'CQ-WPX-RTTY': 'https://cqwpxrtty.com/rules.htm',
+    'ARRL-RTTY': 'https://www.arrl.org/rtty-roundup',
+    'DARC-WAEDC-RTTY': 'https://www.darc.de/der-club/referate/conteste/wae-dx-contest/en/wae-rules/'
+  };
   const rtcId = () => store.get('rtc', '');
   const rtcOn = () => !!rtcId();
   const rtcExch = () => { const id = rtcId(); const c = RT_CONTESTS.find((x) => x[0] === id); return store.get('rtcx_' + id, c ? c[2] : '599 <CNTR>'); };
@@ -5010,6 +5018,17 @@
     drawMacroRow($('rtMacros'), 'RTTY', (t, ins) => useMacro('RTTY', t, ins), null, rtcOn());
     drawMacroRow($('rtcMacros'), 'RTTYC', (t, ins) => useMacro('RTTY', t, ins), null, !rtcOn());
     if ($('rtcMacros')) $('rtcMacros').hidden = !rtcOn();
+    if ($('rtcMacLine')) $('rtcMacLine').hidden = !rtcOn();
+    // RÈGLEMENT : règlement officiel du contest choisi ; sans adresse connue, une recherche « <contest> RTTY contest rules <année> »
+    const rr = $('rtcRules'), rc = RT_CONTESTS.find((x) => x[0] === rtcId());
+    if (rr) {
+      rr.hidden = !rc || !rc[0] || /-OTHER$/.test(rc[0]);
+      if (rc && rc[0]) {
+        const url = RT_RULES[rc[0]], nm = rc[1].replace(/\s*\(.*\)\s*/g, ' ').trim();
+        rr.href = url || 'https://www.google.com/search?q=' + encodeURIComponent(nm + (/rtty|digi/i.test(nm) ? '' : ' RTTY') + ' contest rules ' + new Date().getUTCFullYear());
+        rr.title = url ? 'Règlement officiel du ' + rc[1] + ' (nouvel onglet)' : 'Règlement du ' + rc[1] + ' : recherche sur le web (nouvel onglet)';
+      }
+    }
     const nr = $('rtcNr');
     if (nr && document.activeElement !== nr) nr.value = String(Number(store.get('cntr', '1')) || 1).padStart(3, '0');
   }

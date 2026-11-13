@@ -3029,3 +3029,6 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .rt-macline .btn-log { border-color: var(--v2-accent-cyan); color: var(--v2-accent-cyan-bright); }
 /* Page RTTY : texte des macros en blanc (nom et touche F) */
 .ctab-pane.rt .rt-macros .btn, .ctab-pane.rt .rt-macros .btn small { color: #fff; }
+/* Page RTTY : bouton RÈGLEMENT à droite de la ligne des macros du contest */
+.rt-macline[hidden], .rtc-rules[hidden] { display: none; }
+.rt-macline > .rtc-rules { flex: none; margin-top: 6px; font-size: 11.5px; }

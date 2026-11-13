@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.43** — Page RTTY : bouton RÈGLEMENT à droite de la ligne des macros du contest (règlement officiel du contest choisi, sinon recherche sur le web)
 - **0.39.42** — Page RTTY : plus de bouton Émettre (F11 = TX, F12 = RX, Ctrl+Entrée) ni de ligne d'explication ; Effacer, Log QSO et Spot cluster à droite de la 1re rangée de macros ; texte des macros en blanc ; moins d'espace sous les VFO du haut
 - **0.39.41** — Page RTTY en double réception : spectre (courbe verte) aussi sous la cascade du VFO-B, comme le VFO-A ; moins d'espace entre les fenêtres des VFO et la ligne des macros
 - **0.39.40** — Page RTTY en double réception : la cascade du VFO-B garde la hauteur de sa poignée (elle ne se tassait plus qu'à quelques pixels) ; tirée vers le bas, les fenêtres TX / RX raccourcissent puis la zone des deux VFO s'agrandit
