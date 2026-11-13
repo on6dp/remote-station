@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.68** — Page SSB : DUAL RX en mauve, comme sur les autres pages
 - **0.38.67** — Page SSB : ligne MICRO DU TRX sans titre, chaque réglage sur une ligne (GAIN MICRO devant son curseur, NIVEAU PROC aussi) — une ligne de gagnée
 - **0.38.66** — Phonie : MICRO EQ n'est plus grisé hors phonie (égaliseur du navigateur utilisable dans tous les modes dès que le micro est ouvert) ; page SSB : micro fermé → MICRO EQ le rouvre puis ouvre l'égaliseur
 - **0.38.65** — Fenêtre TRX DIGI : « Ramener dans le dashboard » devient RETOUR sur toutes les pages des modes (pendant la synchro : retour à la page du mode)

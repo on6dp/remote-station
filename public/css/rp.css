@@ -2720,3 +2720,6 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .ssb-mic-b .ctl input[type='range'] { order: 1; width: 160px; flex: 0 1 160px; min-width: 80px; }
 .ssb-mic-b .ctl .ctl-val { order: 2; min-width: 28px; text-align: right; }
 .ssb-mic-b > .btn { min-width: 110px; }
+/* Page SSB : DUAL RX en mauve, comme sur les autres pages */
+.vfb-dual .vfb-drx { border-color: #8a5cc4; color: #fff; background: #121d2c; }
+.vfb-dual .vfb-drx.on { background: linear-gradient(180deg, #6a3aa8, #3f1d6e); border-color: #c49bff; color: #fff; box-shadow: 0 0 8px rgba(160, 100, 255, .45); }
