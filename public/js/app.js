@@ -410,10 +410,21 @@
   };
   // ------------------------------------------------------------ spectre BF (écran « spectre » du cadran) : le son reçu
   // par « Écouter le TRX » (8 kHz), avec le filtre (rouge) et le NOTCH, comme le petit cadre de la face avant
-  const AUD = { buf: new Float32Array(1024), pos: 0, rate: 8000, at: 0, sm: null };
+  // Un spectre par VFO : en double réception, le son arrive en stéréo (MAIN / VFO A à gauche, SUB / VFO B à droite) et
+  // chaque écran montre le sien ; en réception simple, seul l'écran du VFO qu'on entend montre un spectre
+  const AUDS = { A: { buf: new Float32Array(1024), pos: 0, rate: 8000, at: 0, sm: null }, B: { buf: new Float32Array(1024), pos: 0, rate: 8000, at: 0, sm: null } };
+  let AUD = AUDS.A;
+  function audPush(a, pcm) {
+    for (let i = 0; i < pcm.length; i++) { a.buf[a.pos] = pcm[i]; a.pos = (a.pos + 1) % a.buf.length; }
+    a.rate = pcm.rate || 8000; a.at = Date.now();
+  }
   function audTap(pcm) {
-    for (let i = 0; i < pcm.length; i++) { AUD.buf[AUD.pos] = pcm[i]; AUD.pos = (AUD.pos + 1) % AUD.buf.length; }
-    AUD.rate = pcm.rate || 8000; AUD.at = Date.now();
+    if (pcm.r) { audPush(AUDS.A, pcm); audPush(AUDS.B, pcm.r); return; }
+    const r = (st && st.radio) || {};
+    // Son d'un seul récepteur : celui du VFO B quand on l'écoute (FTDX101 : MAIN muet ; ou VFO B choisi), sinon le VFO A
+    const onB = r.dualRx !== 1 && (r.subMute != null ? (r.mainMute === 1 || (r.vfoSel === 1 && r.subMute === 0)) : r.vfoSel === 1);
+    if (r.dualRx === 1) { audPush(AUDS.A, pcm); audPush(AUDS.B, pcm); return; } // ancienne page Station : mélange
+    audPush(onB ? AUDS.B : AUDS.A, pcm);
   }
   function audSpectrum() {
     const N = 1024, re = new Float32Array(N), im = new Float32Array(N);
@@ -440,7 +451,9 @@
     if (!sv || getComputedStyle(sv).display === 'none') return;
     const X0 = 10, X1 = 190, Y0 = 10, Y1 = 64, FMAX = 4000, X = (f) => X0 + Math.max(0, Math.min(1, f / FMAX)) * (X1 - X0);
     let h = '<rect class="am-bg" x="-7" y="1" width="214" height="82" rx="5"/>';
-    const fresh = Date.now() - AUD.at < 1500;
+    AUD = AUDS[w];
+    const fresh = Date.now() - AUD.at < 1500, other = AUDS[w === 'A' ? 'B' : 'A'];
+    const quiet = !fresh && Date.now() - other.at < 1500; // on écoute l'autre VFO
     if (fresh && live) {
       // Courbe fine (une valeur par case de la FFT, ~8 Hz), lissée sur 5 cases : surface verte dégradée et trait vert,
       // comme le spectre de la page des modes numériques
@@ -461,7 +474,8 @@
       h += '<path class="sp-fill" fill="url(#spg' + w + ')" d="' + line + 'L' + X(nb * binHz).toFixed(2) + ' ' + Y1 + 'L' + X0 + ' ' + Y1 + 'Z"/>';
       h += '<path class="sp-line" d="' + line + '"/>';
     } else {
-      h += '<text class="sp-msg" x="100" y="38" text-anchor="middle">' + (live ? 'Cliquez « 🔊 Écouter le TRX »' : 'TRX hors ligne') + '</text>' +
+      h += quiet && live ? '<text class="sp-msg" x="100" y="38" text-anchor="middle">VFO pas écouté</text><text class="sp-msg" x="100" y="50" text-anchor="middle">(DUAL RX : les deux)</text>'
+        : '<text class="sp-msg" x="100" y="38" text-anchor="middle">' + (live ? 'Cliquez « 🔊 Écouter le TRX »' : 'TRX hors ligne') + '</text>' +
         '<text class="sp-msg" x="100" y="50" text-anchor="middle">' + (live ? 'pour voir le spectre BF' : '') + '</text>';
     }
     const d = live ? miniFltData(w, r) : null;
@@ -1892,7 +1906,8 @@
   // Trames µ-law à 8 kHz reçues du serveur, jouées avec un petit tampon (~0,2 s) contre les à-coups du réseau.
   // Stéréo (TRX à deux récepteurs en double réception, FTDX101) : MAIN dans l'oreille gauche, SUB dans la droite (page TRX SSB)
   const player = { on: false, ctx: null, gain: null, next: 0, got: 0, late: 0, sink: '', stereo: (() => { try { return localStorage.getItem('rs.stereo') === '1'; } catch (e) { return false; } })() };
-  const listenMsg = (on) => ({ t: 'listen', on, stereo: on && player.stereo });
+  // Double réception : le son arrive toujours en stéréo (spectre BF de chaque VFO) ; sans STÉRÉO, mélangé ici en mono
+  const listenMsg = (on) => ({ t: 'listen', on, stereo: !!on });
   function playerVolume() {
     const v = Number($('listenVol').value) / 100;
     if (player.gain) player.gain.gain.value = v;
@@ -1935,9 +1950,10 @@
     const now = ctx.currentTime;
     if (player.next < now + 0.05) player.next = now + 0.2;      // démarrage ou trou : on se recale avec 0,2 s d'avance
     else if (player.next > now + 0.8) { player.late++; return; } // trop de retard accumulé : on saute ce paquet
-    const two = !!pcm.r; // trame stéréo (0x07) : MAIN à gauche, SUB à droite
+    const two = !!pcm.r && player.stereo; // trame stéréo (0x07) : MAIN à gauche, SUB à droite
     const buf = ctx.createBuffer(two ? 2 : 1, pcm.length, pcm.rate || ULAW.RATE);
-    buf.copyToChannel(pcm, 0);
+    if (pcm.r && !two) { const m = new Float32Array(pcm.length); for (let i = 0; i < m.length; i++) m[i] = (pcm[i] + (pcm.r[i] || 0)) * 0.5; buf.copyToChannel(m, 0); }
+    else buf.copyToChannel(pcm, 0);
     if (two) buf.copyToChannel(pcm.r, 1);
     const src = ctx.createBufferSource();
     src.buffer = buf;
