@@ -916,6 +916,7 @@ In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé*
 | Indicatif | The correspondent. |
 | Bande, MHz, Mode | Band, exact frequency and mode. |
 | Env., Reçu | Reports sent and received. |
+| Éch. env., Éch. reçu | Contest: exchange sent and received (serial number, zone, letters… per the rules), right of each report, in yellow. |
 | Nom, QTH | First and last name, and town of the correspondent. A new QSO logged without name, QTH or locator (SSB or CW contest, automatic FT8…) is completed by itself from its QRZ.com record (empty boxes only, if the QRZ.com account is set). |
 | DXCC, Préfixe | Country of the correspondent (from their callsign) and its main prefix (ON for Belgium, LA for Norway, K for the USA…). |
 | TX call | The callsign under which the QSO was made (the club's or the operator's). |

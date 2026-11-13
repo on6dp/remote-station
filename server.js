@@ -983,7 +983,7 @@ function dxInfo(d) {
 const refsOf = (q, pre) => Object.keys(LB.REF_FIELDS).filter((k) => q[(pre || '') + k]).map((k) => LB.REF_FIELDS[k]);
 const LG_COL = {
   date: (q) => q.qso_date || '', utc: (q) => String(q.time_on || '').slice(0, 2), call: (q) => q.call || '', band: (q) => q.band || '',
-  mhz: (q) => String(q.freq || ''), mode: (q) => LB.modeName(q), env: (q) => q.rst_sent || '', recu: (q) => q.rst_rcvd || '',
+  mhz: (q) => String(q.freq || ''), mode: (q) => LB.modeName(q), env: (q) => q.rst_sent || '', stx: (q) => q.stx_string || q.stx || '', recu: (q) => q.rst_rcvd || '', srx: (q) => q.srx_string || q.srx || '',
   nom: (q) => q.name || '', qth: (q) => q.qth || '', loc: (q) => q.gridsquare || '', dxcc: (q) => q.country || ((DXCC.lookup(q.call) || {}).name || ''),
   pfx: (q) => (DXCC.lookup(q.call) || {}).pfx || '', ctst: (q) => q.contest_id || '',
   txc: (q) => q.station_callsign || '', op: (q) => q.operator || q.by || '',

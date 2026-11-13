@@ -926,6 +926,7 @@ En **FT8 · FT4 · FT2**, à la fin de la séquence, une petite fenêtre « **QS
 | Indicatif | Le correspondant. |
 | Bande, MHz, Mode | Bande, fréquence exacte et mode. |
 | Env., Reçu | Reports envoyé et reçu. |
+| Éch. env., Éch. reçu | Contest : échange envoyé et reçu (n° de série, zone, lettres… selon le règlement), à droite de chaque report, en jaune. |
 | Nom, QTH | Prénom et nom, et ville du correspondant. Un nouveau QSO enregistré sans nom, QTH ou locator (contest SSB ou CW, FT8 automatique…) est complété tout seul avec sa fiche QRZ.com (cases vides seulement, si le compte QRZ.com est réglé). |
 | DXCC, Préfixe | Pays du correspondant (d'après son indicatif) et son préfixe principal (ON pour la Belgique, LA pour la Norvège, K pour les USA…). |
 | TX call | L'indicatif sous lequel le QSO a été fait (celui du club ou celui de l'opérateur). |

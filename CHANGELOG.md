@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.97** — Carnet général : colonnes Éch. env. et Éch. reçu (échange de contest) à droite des reports, filtrables et déplaçables
 - **0.38.96** — Page SSB : listes de QSO (hors contest et log du contest) avec les entêtes brun foncé et les couleurs du carnet général
 - **0.38.95** — FTDX101 hors double réception : RX sur le VFO B met le récepteur SUB en réception et le MAIN en sourdine (FR10 ; RX sur A : FR01) et l'écoute envoie la BF du SUB ; DUAL RX = les deux récepteurs (FR00)
 - **0.38.94** — Page SSB : ÉCOUTER LE TRX / ARRÊTER L'ÉCOUTE de largeur fixe et curseurs un peu plus courts : la ligne ne passe plus à la ligne quand on lance l'écoute

@@ -35,7 +35,7 @@
   let items = [];
   let total = 0;
   // Colonnes du carnet : largeur par défaut (px), réglable à la souris (bord droit de l'en-tête), gardée dans ce navigateur
-  const LG_COLS = [['date', 98], ['utc', 58], ['call', 96], ['band', 70], ['mhz', 82], ['mode', 66], ['env', 58], ['recu', 64], ['nom', 116],
+  const LG_COLS = [['date', 98], ['utc', 58], ['call', 96], ['band', 70], ['mhz', 82], ['mode', 66], ['env', 58], ['stx', 78], ['recu', 64], ['srx', 78], ['nom', 116],
     ['qth', 136], ['loc', 70], ['dxcc', 116], ['pfx', 76], ['txc', 84], ['op', 84], ['refs', 150], ['ctst', 112], ['lotw', 62], ['eqsl', 62], ['cl', 46], ['qrz', 54], ['fill', 0]];
   // Références des programmes « on the air » : [champ du carnet, programme, exemple]
   const REF_KEYS = [['iota', 'IOTA', 'EU-005'], ['wwff_ref', 'WWFF', 'ONFF-0001'], ['pota_ref', 'POTA', 'BE-0001'], ['bota_ref', 'BOTA', 'B/ON-0001'], ['llota_ref', 'LLOTA', 'CE-0001'], ['sota_ref', 'SOTA', 'ON/ON-001']];
@@ -139,9 +139,9 @@
     <div class="lg-tw">
       <table class="lg-table">
         <colgroup>${LG_COLS.map(([k]) => '<col data-c="' + k + '">').join('')}</colgroup>
-        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th class="r">MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th title="Locator (Maidenhead) du correspondant">Locator</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Préfixe principal de l'entité DXCC (ex. ON pour la Belgique, LA pour la Norvège)">Préfixe</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th><th title="Opérateur : indicatif personnel du membre qui a fait le QSO (même sous l'indicatif du club)">OP</th><th title="Références IOTA, WWFF, POTA, BOTA, LLOTA, SOTA du correspondant ; ▲ = référence de la station (activation)">Réf.</th><th title="Contest pendant lequel le QSO a été fait (identifiant Cabrillo) ; au survol : échange envoyé / reçu">Contest</th>
+        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th class="r">MHz</th><th>Mode</th><th>Env.</th><th title="Contest : échange envoyé (n° de série, zone… selon le règlement)">Éch. env.</th><th>Reçu</th><th title="Contest : échange reçu (n° de série, zone… selon le règlement)">Éch. reçu</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th title="Locator (Maidenhead) du correspondant">Locator</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Préfixe principal de l'entité DXCC (ex. ON pour la Belgique, LA pour la Norvège)">Préfixe</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th><th title="Opérateur : indicatif personnel du membre qui a fait le QSO (même sous l'indicatif du club)">OP</th><th title="Références IOTA, WWFF, POTA, BOTA, LLOTA, SOTA du correspondant ; ▲ = référence de la station (activation)">Réf.</th><th title="Contest pendant lequel le QSO a été fait (identifiant Cabrillo) ; au survol : échange envoyé / reçu">Contest</th>
           <th class="c" title="LoTW (★ = confirmé)">LoTW</th><th class="c">eQSL</th><th class="c" title="Club Log">CL</th><th class="c">QRZ</th><th class="lg-fill"></th></tr></thead>
-        <tbody id="lgBody"><tr><td colspan="22" class="lg-empty">Chargement du carnet…</td></tr></tbody>
+        <tbody id="lgBody"><tr><td colspan="24" class="lg-empty">Chargement du carnet…</td></tr></tbody>
       </table>
     </div>
     <p class="lg-job" id="lgJob" aria-live="polite"></p>`;
@@ -322,7 +322,12 @@
   // Glisser l'intitulé d'une colonne (bouton gauche enfoncé) vers un autre endroit ; double-clic sur un intitulé : ordre d'origine
   const NAT = LG_COLS.map(([k]) => k);
   let colOrd = NAT.slice();
-  try { const o = JSON.parse(localStorage.getItem('rs.lgord') || 'null'); if (Array.isArray(o) && o.length === NAT.length && NAT.every((k) => o.indexOf(k) >= 0)) colOrd = o; } catch (e) { /* */ }
+  try {
+    const o = JSON.parse(localStorage.getItem('rs.lgord') || 'null');
+    // Ordre gardé d'une version sans les colonnes d'échange de contest : elles sont ajoutées après Env. et Reçu
+    if (Array.isArray(o)) for (const [k, after] of [['stx', 'env'], ['srx', 'recu']]) if (o.indexOf(k) < 0 && o.indexOf(after) >= 0) o.splice(o.indexOf(after) + 1, 0, k);
+    if (Array.isArray(o) && o.length === NAT.length && NAT.every((k) => o.indexOf(k) >= 0)) colOrd = o;
+  } catch (e) { /* */ }
   colOrd = colOrd.filter((k) => k !== 'fill').concat(['fill']); // la colonne de remplissage reste au bout
   const isNat = () => colOrd.every((k, i) => k === NAT[i]);
   // En-tête et largeurs : éléments repérés par data-c ; lignes du carnet (dessinées dans l'ordre d'origine) : réordonnées
@@ -832,12 +837,12 @@
     const body = q$('#lgBody');
     if (!body) return;
     if (!items.length) {
-      body.innerHTML = '<tr><td colspan="22" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche ou aux filtres.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
+      body.innerHTML = '<tr><td colspan="24" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche ou aux filtres.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
     } else {
       body.innerHTML = items.map((q) => '<tr data-id="' + esc(q.id) + '"' + (editing && editing.id === q.id ? ' class="sel"' : '') + ' title="Cliquer pour modifier">' +
         '<td>' + fmtDate(q.qso_date) + '</td><td>' + fmtTime(q.time_on) + '</td><td class="call">' + esc(q.call) + '</td><td>' + esc(q.band) +
         (q.sat_name ? ' <span class="sat">' + esc(q.sat_name) + '</span>' : '') + '</td><td class="r">' + esc(q.freq) + '</td><td>' + esc(modeName(q)) +
-        '</td><td>' + esc(q.rst_sent || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td class="grow">' + esc(q.name || '') + '</td><td class="lg-qth" title="' + esc(q.qth || '') + '">' + esc(q.qth || '') +
+        '</td><td>' + esc(q.rst_sent || '') + '</td><td class="lg-xch">' + esc(q.stx_string || q.stx || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td class="lg-xch">' + esc(q.srx_string || q.srx || '') + '</td><td class="grow">' + esc(q.name || '') + '</td><td class="lg-qth" title="' + esc(q.qth || '') + '">' + esc(q.qth || '') +
         '</td><td class="lg-loc">' + esc(q.gridsquare || '') + '</td><td class="lg-cty" title="' + esc(q.country || '') + '">' + esc(q.country || '') + '</td><td>' + esc(q.dxcc_pfx || '') + '</td><td class="txc">' + esc(q.station_callsign || '') + '</td><td class="op" title="' + esc(q.by && q.by !== q.operator ? 'Enregistré par ' + q.by : '') + '">' + esc(q.operator || q.by || '') + '</td>' + refsCell(q) +
         '<td class="lg-ctst" title="' + esc(q.contest_id ? 'Envoyé : ' + (q.stx_string || q.stx || '—') + ' · reçu : ' + (q.srx_string || q.srx || '—') : '') + '">' + esc(q.contest_id || '') + '</td>' +
         SV.map((s) => upCell(q, s)).join('') + '<td class="lg-fill"></td></tr>').join('');
