@@ -2800,3 +2800,11 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 #vxMonBtn[aria-pressed='true'], .vx-mon #vxMonBtn[aria-pressed='true'], .fc-tx #vxMonBtn[aria-pressed='true'] { background: #0b3d91 !important; border-color: #58a6ff !important; color: #fff !important; font-weight: 800; }
 /* Pages SSB et CW : contest choisi → « Catégorie » en jaune vif */
 body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:has(#cwpCat) { color: #ffe600 !important; font-weight: 800; }
+/* Page SSB : volume de l'écoute du TRX, à droite de ÉCOUTER LE TRX */
+.ss-lvol { display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; color: #fff; font-weight: 700; font-size: 11px; white-space: nowrap; }
+.ss-lvol[hidden] { display: none; }
+.ss-lvol input { width: 110px; }
+.ss-lvol output { min-width: 36px; color: #fff; }
+/* « Volume » (MONITORING) et « Volume TRX » en jaune vif */
+.vx-monvol, .ss-lvol { color: #ffe600 !important; font-weight: 800; }
+.vx .ss-listen { margin-left: 14px; }

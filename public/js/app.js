@@ -2237,6 +2237,8 @@
       on: () => player.on,
       stereo: () => player.stereo,
       start: () => { if (!player.on) startListen(); return player.on; },
+      // Volume de l'écoute (curseur du dashboard) : lu / réglé depuis la page TRX SSB
+      vol: (v) => { const e = $('listenVol'); if (!e) return null; if (v != null) { e.value = String(v); playerVolume(); } return { v: Number(e.value), max: Number(e.max) || 150 }; },
       stop: () => { if (player.on) stopListen(); },
       setStereo(v) {
         player.stereo = !!v;

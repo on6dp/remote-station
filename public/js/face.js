@@ -8702,6 +8702,7 @@
       on: () => !!L.listening,
       stereo: () => !!L.stereo,
       start: () => { if (!L.listening) startListen(); return !!L.listening; },
+      vol: (v) => { const e = $('listenVol'); if (!e) return null; if (v != null) { e.value = String(v); volume(); } return { v: Number(e.value), max: Number(e.max) || 200 }; },
       stop: () => { if (L.listening) stopListen(); },
       setStereo: (v) => setStereo(v)
     },

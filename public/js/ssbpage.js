@@ -779,6 +779,15 @@
         drawListenBtn();
       });
       $('vxMonBtn').after(b);
+      // Volume de l'écoute du TRX (celui du dashboard) — le « Volume » à côté de MONITORING est celui de votre voix
+      const vl = document.createElement('label');
+      vl.className = 'ss-lvol'; vl.id = 'ssLVolW';
+      vl.title = 'Volume de l’écoute du TRX (le même que dans le dashboard)';
+      vl.innerHTML = 'Volume TRX <input type="range" id="ssLVol" min="0" max="150" step="1"> <output id="ssLVolV"></output>';
+      vl.querySelector('input').addEventListener('input', (ev) => {
+        try { const r = host.listen.vol(Number(ev.target.value)); if (r) $('ssLVolV').textContent = r.v + ' %'; } catch (e) {}
+      });
+      b.after(vl);
       drawListenBtn();
     }
     // Réglages micro du TRX (GAIN MICRO, PROC, MIC EQ, NIVEAU PROC, VOX) sur la ligne SSB CONFIGURATION, à droite de TRX EQ ;
@@ -951,10 +960,20 @@
     try { ok = !!(host && host.listen); on = ok && host.listen.on(); } catch (e) { ok = false; }
     b.hidden = !ok;
     // À droite de MONITORING ; micro pas ouvert (ligne du micro cachée) : à droite du bouton MICRO
-    const body = $('vxBody'), mon = $('vxMonBtn'), mic = $('vxOn');
-    const where = body && body.hidden ? mic : mon;
+    // Ordre : MONITORING · Volume (votre voix) · ÉCOUTER LE TRX · Volume TRX
+    const body = $('vxBody'), mic = $('vxOn'), monv = $('vxMonVol') && $('vxMonVol').closest('label');
+    const where = body && body.hidden ? mic : monv || $('vxMonBtn');
     if (where && b.previousElementSibling !== where) where.after(b);
     b.setAttribute('aria-pressed', String(on));
+    const vw = $('ssLVolW');
+    if (vw) {
+      if (vw.previousElementSibling !== b) b.after(vw);
+      let r = null;
+      try { r = ok && host.listen.vol ? host.listen.vol() : null; } catch (e) { r = null; }
+      vw.hidden = !r;
+      const inp = $('ssLVol');
+      if (r && document.activeElement !== inp) { inp.max = String(r.max); inp.value = String(r.v); $('ssLVolV').textContent = r.v + ' %'; }
+    }
     const t = on ? '🔇 ARRÊTER L’ÉCOUTE' : '🔊 ÉCOUTER LE TRX';
     if (b.textContent !== t) b.textContent = t;
     b.title = on ? 'Vous entendez le TRX (BF reçue) : clic pour arrêter' : 'Entendre la BF du TRX dans votre casque ou vos haut-parleurs (sortie choisie dans « Sortie »)';
