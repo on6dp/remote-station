@@ -1975,7 +1975,9 @@ body:not(.cwp-inctst) .cwp-ctrow > :not(.cwp-ctl1) { opacity: .5; }
 .ssb-qlog tr:first-child td { color: #ffd400; }
 /* Dashboard : pas de titre « Activités » ; la ligne des onglets (Activité, modes, Logbooks…) monte en tête du cadre */
 #centerPanel > .panel-h { display: none; }
-#msgs.qso-off { display: none !important; }
+/* Onglets Modes et Logbooks : pas de ligne QSO, mais le TX call reste visible et réglable (seul sur la ligne) */
+#msgs.qso-off > :not(.msgs-h), #msgs.qso-off .msgs-h > :not(.txc) { display: none !important; }
+#msgs.qso-off { padding: 6px 12px; }
 .lg-row .lg-qrz { align-self: flex-end; color: #ffd400; border-color: #6b5a1a; font-weight: 800; }
 /* Dashboard : cadre SSB CONFIGURATION remplacé par le bouton de la page TRX SSB */
 .vx.vx-away { display: none !important; }
