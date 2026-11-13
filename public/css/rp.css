@@ -2852,3 +2852,6 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 /* Messages vocaux : Langue, Voix, Vitesse (et Espacement des lettres, sur la même ligne) en jaune vif */
 .ssb-ttsv label { color: #ffe600; font-weight: 800; }
 .ssb-ttsv label output { color: #fff; font-weight: 700; }
+/* Config. Macros : bouton ▶ Écouter sur fond bleu */
+.ssb-ttsr #ssTtsTry { background: #1f6fd1; border-color: #3d8bf0; color: #fff; }
+.ssb-ttsr #ssTtsTry:hover { background: #2f80e6; }

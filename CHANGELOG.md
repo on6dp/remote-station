@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.14** — Config. Macros : bouton ▶ Écouter sur fond bleu
 - **0.39.13** — Messages vocaux en français : 6, 8 et 5 de l'indicatif dits en entier (six, huit, cinq — plus « si Delta »)
 - **0.39.12** — TRX SSB : bouton « Messages vocaux… » renommé « Config. Macros »
 - **0.39.11** — Messages vocaux : Langue, Voix, Vitesse et Espacement des lettres en jaune vif
