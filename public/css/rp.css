@@ -3038,3 +3038,6 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .rt-hbtns .rt-txsel[aria-pressed='true'] { color: #FFFFFF; background: var(--v2-accent-red-alt, #c0392b); border-color: var(--v2-accent-red-alt, #c0392b); }
 .rt-hbtns .rt-txsel[aria-pressed='false'] { color: #FFFFFF; background: #1e8e4e; border-color: #1e8e4e; }
 .rt-hbtns .rt-center { color: #fff; border-color: #c9d1d9; }
+/* RTTY : un seul VFO en service (ni SPLIT ni DUAL RX) → seulement les colonnes du VFO-A, sur toute la largeur */
+.rt-dual.rt-solo { grid-template-columns: minmax(0, 1fr) !important; }
+.rt-dual.rt-solo > .rt-side[data-ch="1"], .rt-dual.rt-solo > .rt-vsplit { display: none !important; }

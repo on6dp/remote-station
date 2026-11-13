@@ -939,7 +939,7 @@
         else if (home && home.previousElementSibling !== w) home.before(w);
       }
       el.classList.toggle('is-rtty', pane === 'rtty' || pane === 'cw');
-      for (const id of ['dgMkBM', 'dgMkBS']) if ($(id)) $(id).hidden = pane !== 'rtty' || dualAudio; // repères du décodeur RTTY B
+      for (const id of ['dgMkBM', 'dgMkBS']) if ($(id)) $(id).hidden = pane !== 'rtty' || dualAudio || !!($('rtDual') && $('rtDual').classList.contains('rt-solo')); // repères du décodeur RTTY B
       applyFtDual();
       bmShow(); // deux cartes de bande selon la double réception (FT, RTTY)
       applySpan();
@@ -1826,7 +1826,7 @@
     rtKhz(c, w, rtDialOf(0));
     rttyMarks(c, w, rts[0], $('dgMkRx'), $('dgMkTx'), null, 'A');
     // Décodeur B : sur la même cascade, repères magenta (Mark) / vert (Space) — sauf s'il a sa propre cascade
-    if (!(wfB.sctx && $('rtWfB').clientWidth)) rttyMarks(c, w, rts[1], $('dgMkBM'), $('dgMkBS'), RT_COLS_B, 'B');
+    if (!(wfB.sctx && $('rtWfB').clientWidth) && !($('rtDual') && $('rtDual').classList.contains('rt-solo'))) rttyMarks(c, w, rts[1], $('dgMkBM'), $('dgMkBS'), RT_COLS_B, 'B'); // décodeur B caché (un seul VFO) : pas de repère
     // Cascade du décodeur B : même spectre (même BF du TRX), ses propres repères
     if (wfB.sctx) {
       rtKhz(wfB.sctx, wfB.cw, rtDialOf(1));
@@ -2825,6 +2825,16 @@
   function rtHeads() {
     const st = api && api.state && api.state();
     const r = st && st.radio;
+    // Un seul VFO en service (ni SPLIT ni DUAL RX) : seulement les colonnes du VFO-A, sur toute la largeur ;
+    // celles du VFO-B reviennent en SPLIT ou en DUAL RX ON
+    const solo = !!(r && !r.split && r.dualRx !== 1);
+    const dualEl = $('rtDual');
+    if (dualEl && dualEl.classList.contains('rt-solo') !== solo) {
+      dualEl.classList.toggle('rt-solo', solo);
+      if (solo && rtTx === 1) { rtTx = 0; store.set('rttx', '0'); if (applySpan()) drawScale(); sendView(); dtxState(st && st.ftx); }
+      for (const id of ['dgMkBM', 'dgMkBS']) if ($(id) && solo) $(id).hidden = true; // repères du décodeur B sur la cascade
+      if (tab === 'rtty') setTimeout(() => { sizeCanvas(); drawScale(); if (!solo) showTab(tab); }, 0);
+    }
     // Fréquence du signal suivi : porteuse du VFO réellement écouté ± fréquence audio (− en LSB / DATA-L).
     // En réception simple, les deux décodeurs lisent le même récepteur : B est alors rapporté au VFO écouté, pas au VFO-B.
     rts.forEach((x, ch) => {
