@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.64** — Fenêtre TRX DIGI, Synchro : le bouton de droite devient ↩ Retour TRX FT8/FT4/FT2 (retour à la page du mode, pas au dashboard)
 - **0.38.63** — Pages TRX DIGI, SSB et CW : 👥 membres connectés, indicatif et bouton de la main comme le dashboard. Page FT : DX filtré par Entrée, case vidée = tout le trafic (plus de SEULEMENT LA CHASSE ni ✕) ; Période et Activité en jaune vif gras
 - **0.38.62** — Page FT : SYNCHRO dans la barre de chaque VFO, à droite de TX … Hz (le SYNCHRO du haut n'apparaît que dans la synchro, pour revenir au mode)
 - **0.38.61** — Fenêtre TRX DIGI : état de la BF / décodage et heure UTC sur la ligne du haut, à gauche de Ramener dans le dashboard (une ligne de gagnée) ; mode DATA-U des cascades en plus grand

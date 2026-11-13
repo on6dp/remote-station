@@ -842,6 +842,13 @@
     document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
     // Synchro (heure du PC, décalage DT) : utile en FT8 / FT4 / FT2, WSPR, JT65 ; pas en RTTY, JTTY, CW, SSTV
     { const tl = document.querySelector('#ctabs .ctab-tl'); if (tl) tl.hidden = !(pane === 'ftx'); }
+    // Fenêtre séparée, Synchro : le bouton de droite ramène à la page du mode (FT8/FT4/FT2…) au lieu du dashboard
+    { const det = $('dgDetach'); if (det && POPUP && !EMBED) {
+      if (!det.dataset.txt) { det.dataset.txt = det.textContent; det.dataset.tip = det.title; }
+      const back = pane === 'sync', hd = HEADS[lastModeTab] || ['TRX DIGI'];
+      det.textContent = back ? '↩ Retour ' + hd[0] : det.dataset.txt;
+      det.title = back ? 'Revenir à la page ' + hd[0] : det.dataset.tip;
+    } }
     const syb = document.querySelector('#centerPanel .ctab[data-tab="sync"]');
     if (syb) syb.hidden = ['rtty', 'jtty', 'cw', 'sstv'].indexOf(t) >= 0 || (POPUP && !EMBED && pane === 'ftx'); // FT : SYNCHRO dans la barre de chaque VFO
     document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== pane; });
@@ -5823,6 +5830,8 @@
       setFollow(follow);
       $('dgDetach').addEventListener('click', (e) => {
         e.stopPropagation();
+        // Synchro ouverte depuis une page de mode : retour à cette page (FT8/FT4/FT2…), pas au dashboard
+        if (POPUP && !EMBED && tab === 'sync') return showTab(lastModeTab);
         if (POPUP && !EMBED) return window.close();
         // La fenêtre séparée s'ouvre sur le mode affiché
         if (MODE_TABS.indexOf(tab) >= 0) store.set('ptab', tab);
