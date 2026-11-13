@@ -3133,3 +3133,21 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .ctab-pane.rt #rtMacros > :nth-child(n+7) { grid-row: 2; }
 .ctab-pane.rt #rtMacros > .btn { justify-content: flex-start; }
 .ctab-pane.rt .rt-macline { flex-wrap: nowrap; }
+/* Page RTTY : ligne du QSO au-dessus des macros (CALL, RST, échange envoyé / reçu ou nom / QTH, LOG ↵, EFFACER, Spot) */
+.rt-entry { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 6px 8px 2px; }
+.rte-l { display: inline-flex; align-items: center; gap: 6px; color: #fff; font-weight: 800; font-size: 12px; letter-spacing: .3px; }
+.rte-l input { background: #07090d; color: #fff; border: 1px solid #3a4658; border-radius: 4px; padding: 4px 8px; font: 700 13px 'Roboto Mono', ui-monospace, monospace; }
+.rte-l input:focus { border-color: #f5ff00; outline: none; }
+.rte-call { width: 120px; text-transform: uppercase; color: #ffd400 !important; }
+.rte-s { width: 46px; text-align: center; }
+.rte-m { width: 110px; text-transform: uppercase; }
+#rtName.rte-m, #rtQth.rte-m { text-transform: none; }
+.rt-entry:not(.ctst) .rte-ct, .rt-entry.ctst .rte-nc { display: none; }
+.rte-log { background: #2ecc71; color: #000; border-color: #2ecc71; font-weight: 800; }
+.rte-log:hover { background: #45e08a; }
+.rte-clr { background: #1d2633; color: #fff; font-weight: 800; }
+.rte-spot { color: #fff; }
+.rte-flash { animation: rteFlash .8s ease-out; }
+@keyframes rteFlash { from { box-shadow: 0 0 0 3px rgba(245, 255, 0, .8); } to { box-shadow: 0 0 0 0 rgba(245, 255, 0, 0); } }
+.ctab-pane.rt .rt-macact { display: none !important; }
+.rt-rx .rt-rxl { cursor: pointer; }

@@ -394,8 +394,22 @@
       <!-- Émission sous la réception, sur toute la largeur (comme JTTY et FLDIGI) : macros F1 à F12 sur une ligne -->
       <div class="dg-col rt-tx-col">
         <!-- 1re rangée : macros F1 à F12, puis Effacer, Log QSO et Spot cluster à leur droite -->
+        <!-- Ligne du QSO (au-dessus des macros, en contest ou non) : CALL (clic sur un indicatif dans une fenêtre de trafic),
+             reports, échange envoyé / reçu (contest) ou nom / QTH (hors contest) ; LOG ↵ = dans le carnet tout de suite -->
+        <div class="rt-entry" id="rtEntry">
+          <label class="rte-l" title="Indicatif du correspondant : clic sur un indicatif dans une fenêtre de trafic, ou tapez-le ; les macros l’utilisent (&lt;CALL&gt;)">CALL <input id="rtCall" class="rte-call" maxlength="15" spellcheck="false" autocomplete="off"></label>
+          <label class="rte-l" title="Report envoyé">RST <input id="rtRst" class="rte-s" maxlength="3" autocomplete="off"></label>
+          <label class="rte-l rte-ct" title="Échange envoyé à ce correspondant (n° de série, zone… selon le contest)">Envoyé <input id="rtStx" class="rte-m" maxlength="20" spellcheck="false" autocomplete="off"></label>
+          <label class="rte-l" title="Report reçu">RST <input id="rtRstRx" class="rte-s" maxlength="3" autocomplete="off"></label>
+          <label class="rte-l rte-ct" title="Échange reçu du correspondant">Reçu <input id="rtSrx" class="rte-m" maxlength="20" spellcheck="false" autocomplete="off"></label>
+          <label class="rte-l rte-nc" title="Prénom du correspondant">Nom <input id="rtName" class="rte-m" maxlength="40" autocomplete="off"></label>
+          <label class="rte-l rte-nc" title="QTH du correspondant">QTH <input id="rtQth" class="rte-m" maxlength="60" autocomplete="off"></label>
+          <button class="btn rte-log" type="button" id="rtQLog" title="Enregistrer le QSO dans le carnet tout de suite (aussi : Entrée dans une case de cette ligne). Fiche complète (locator, remarque…) : macro Log / &lt;LOG&gt;">LOG ↵</button>
+          <button class="btn rte-clr" type="button" id="rtQClr" title="Effacer la ligne (nouveau correspondant)">EFFACER</button>
+          <label class="spotlog dg-spot rte-spot" title="Cochée : le QSO enregistré est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label>
+        </div>
         <div class="rt-macline"><div class="rt-macros" id="rtMacros"></div><div class="rt-tx-act2 rt-macact"><button class="btn" type="button" id="rtTxClear">Effacer</button>
-            <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station (correspondant, RST, heure…)">Log QSO</button><label class="spotlog dg-spot" title="Cochée : le QSO enregistré (Log QSO) est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label></div></div>
+            </div></div>
         <!-- Contest RTTY : choix du contest, échange envoyé, numéro de série, et ses macros (touches F1 à F12 quand un contest est choisi) -->
         <div class="rt-contest" id="rtContest">
           <label class="rtc-l" title="Contest RTTY : l'échange et les macros contest suivent ; touches F1 à F12 = macros contest">Contest
@@ -4419,6 +4433,11 @@
     put('dxRst', dx.rst || '599');
     put('dxRptRx', dx.rptRx || '');
     put('dxRstRx', dx.rstRx || '599');
+    put('rtRst', dx.rst || '599');
+    put('rtRstRx', dx.rstRx || '599');
+    put('rtName', dx.name || '');
+    put('rtQth', dx.qth || '');
+    if (typeof rtStxFill === 'function') rtStxFill();
     drawMsgs();
   }
   window.addEventListener('storage', (e) => { if (e.key === 'rs.dg.dx') { dx = loadDx(); syncDx(); } });
@@ -5194,6 +5213,7 @@
       $('rtcItu').value = store.get('rtitu', '27');
       $('rtContest').classList.toggle('on', rtcOn());
       drawRttyMacros();
+      if (typeof rtEntryUi === 'function') rtEntryUi();
     };
     sel.addEventListener('change', () => {
       store.set('rtc', sel.value);
@@ -5364,7 +5384,7 @@
     ta.focus();
   }
   function initMsgs() {
-    for (const [id, k] of [['dxCall', 'call'], ['dxGrid', 'grid'], ['dxRpt', 'rpt'], ['rtCall', 'call'], ['dxName', 'name'], ['dxQth', 'qth'], ['dxRst', 'rst'], ['dxRptRx', 'rptRx'], ['dxRstRx', 'rstRx']]) {
+    for (const [id, k] of [['dxCall', 'call'], ['dxGrid', 'grid'], ['dxRpt', 'rpt'], ['rtCall', 'call'], ['dxName', 'name'], ['dxQth', 'qth'], ['dxRst', 'rst'], ['dxRptRx', 'rptRx'], ['dxRstRx', 'rstRx'], ['rtRst', 'rst'], ['rtRstRx', 'rstRx'], ['rtName', 'name'], ['rtQth', 'qth']]) {
       const el = $(id);
       if (el) el.addEventListener('input', () => setDx({ [k]: el.value.trim() }));
     }
@@ -5374,6 +5394,96 @@
   }
   // ------------------------------------------------------------------ fiche du QSO → carnet de la station (RTTY, JTTY, CW…)
   // Comme « Save QSO » / <LOG> de FLDIGI : correspondant, nom, QTH, locator, RST de la ligne Correspondant ; fréquence et mode du TRX.
+  // ------------------------------------------------------------------ ligne du QSO RTTY (au-dessus des macros)
+  // Échange envoyé à ce correspondant : celui émis par une macro (<EXCH>), sinon celui à lui donner (sans le 599)
+  function rtStxVal() {
+    const dxc = String(dx.call || '').trim().toUpperCase();
+    return String(dxc && store.get('rtclastxc', '') === dxc ? store.get('rtclastx', macroText('<EXCH>')) : macroText('<EXCH>')).replace(/\b5NN\b/g, '599').replace(/^(599|5NN)\s*/, '');
+  }
+  function rtStxFill(force) {
+    const el = $('rtStx');
+    if (!el || (!force && el.ownerDocument.activeElement === el) || !rtcOn()) return;
+    const v = rtStxVal();
+    if (force || !el.dataset.edit || el.dataset.call !== String(dx.call || '')) { el.value = v; el.dataset.edit = ''; el.dataset.call = String(dx.call || ''); }
+  }
+  function rtEntryUi() {
+    const e = $('rtEntry');
+    if (!e) return;
+    e.classList.toggle('ctst', rtcOn());
+    rtStxFill();
+  }
+  function rtQuickLog() {
+    if (!api) return;
+    const st = api.state() || {}, r = st.radio || {};
+    const call = String($('rtCall').value || dx.call || '').trim().toUpperCase();
+    if (!/^(?=.*[0-9])[A-Z0-9/]{3,15}$/.test(call)) { api.say('Indicatif du correspondant ? (clic sur son indicatif dans la fenêtre de trafic, ou tapez-le dans CALL)', 'warn'); $('rtCall').focus(); return; }
+    const d = rtDialOf(rtTx);
+    const hz = d ? d.hz + d.sign * Math.round(rts[rtTx].f) : Number(r.freq) || 0;
+    if (!(hz > 0)) return api.say('Fréquence du TRX inconnue : QSO non enregistré.', 'warn');
+    const p2 = (n) => String(n).padStart(2, '0');
+    const end = new Date(now());
+    const t0 = Number(dx.t0) && end - Number(dx.t0) < 3 * 3600 * 1000 && end - Number(dx.t0) >= 0 ? new Date(Number(dx.t0)) : end;
+    const ymd = (x) => x.getUTCFullYear() + p2(x.getUTCMonth() + 1) + p2(x.getUTCDate());
+    const hms = (x) => p2(x.getUTCHours()) + p2(x.getUTCMinutes()) + p2(x.getUTCSeconds());
+    const qso = { call, qso_date: ymd(t0), time_on: hms(t0), time_off: hms(end), freq: Math.round(hz) / 1e6, mode: 'RTTY',
+      rst_sent: String($('rtRst').value || '599').trim(), rst_rcvd: String($('rtRstRx').value || '599').trim(),
+      name: rtcOn() ? dx.name || '' : String($('rtName').value || '').trim(), qth: rtcOn() ? dx.qth || '' : String($('rtQth').value || '').trim(),
+      gridsquare: String(dx.grid || '').toUpperCase(), tx_pwr: r.power ? String(Math.round(r.power)) : '', station: myCall };
+    const ct = rtcOn();
+    if (ct) {
+      qso.contest_id = rtcId();
+      qso.stx_string = String($('rtStx').value || '').trim().toUpperCase();
+      qso.srx_string = String($('rtSrx').value || '').trim().toUpperCase();
+      if (/^\d{1,5}$/.test(qso.stx_string)) qso.stx = qso.stx_string;
+      if (/^\d{1,5}$/.test(qso.srx_string)) qso.srx = qso.srx_string;
+    }
+    for (const k of Object.keys(qso)) if (qso[k] === '') delete qso[k];
+    api.send({ t: 'log_add', qso, spot: !!(window.RSSPOT && RSSPOT.on()) });
+    if (ct && /<CNTR>|<SERNO>/i.test(rtcExch())) cntrAfterLog(call); // n° de série suivant (une fois par correspondant)
+    rtQClear();
+  }
+  function rtQClear() {
+    setDx({ call: '', name: '', qth: '', grid: '', rstRx: '599' });
+    for (const id of ['rtSrx', 'rtName', 'rtQth', 'rtCall']) if ($(id)) $(id).value = '';
+    if ($('rtRstRx')) $('rtRstRx').value = '599';
+    rtStxFill(true);
+    if ($('rtCall')) $('rtCall').focus();
+  }
+  function initRtEntry() {
+    if (!$('rtEntry') || $('rtEntry').dataset.ok) return;
+    $('rtEntry').dataset.ok = '1';
+    $('rtQLog').addEventListener('click', rtQuickLog);
+    $('rtQClr').addEventListener('click', rtQClear);
+    $('rtStx').addEventListener('input', () => { $('rtStx').dataset.edit = '1'; });
+    for (const inp of $('rtEntry').querySelectorAll('input:not([type="checkbox"])')) {
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); inp.dispatchEvent(new Event('change')); setDx({ call: $('rtCall').value.trim() }); rtQuickLog(); } });
+    }
+    $('rtCall').addEventListener('input', () => { $('rtCall').value = $('rtCall').value.toUpperCase(); });
+    // Clic sur un indicatif dans une fenêtre de trafic : il va dans CALL (les macros l'utilisent)
+    for (const id of ['rtRx', 'rtRxB']) {
+      const el = $(id);
+      if (!el) continue;
+      el.addEventListener('click', (e) => {
+        const doc = el.ownerDocument;
+        let node = null, off = 0;
+        if (doc.caretRangeFromPoint) { const rg = doc.caretRangeFromPoint(e.clientX, e.clientY); if (rg) { node = rg.startContainer; off = rg.startOffset; } }
+        else if (doc.caretPositionFromPoint) { const cp = doc.caretPositionFromPoint(e.clientX, e.clientY); if (cp) { node = cp.offsetNode; off = cp.offset; } }
+        if (!node || node.nodeType !== 3) return;
+        const t = node.textContent, ok = (c) => /[A-Za-z0-9/]/.test(c);
+        let a = off, b = off;
+        while (a > 0 && ok(t[a - 1])) a--;
+        while (b < t.length && ok(t[b])) b++;
+        const w = t.slice(a, b).toUpperCase().replace(/^\/+|\/+$/g, '');
+        const mine = [myCall].concat(stationCalls || []).map((c) => String(c).toUpperCase());
+        if (!CALL_RE.test(w) || mine.indexOf(w) >= 0) return;
+        if (w !== String(dx.call || '').toUpperCase()) setDx({ call: w });
+        const c = $('rtCall');
+        if (c) { c.classList.remove('rte-flash'); void c.offsetWidth; c.classList.add('rte-flash'); }
+      });
+    }
+    setInterval(() => { if (tab === 'rtty') rtEntryUi(); }, 1000);
+    rtEntryUi();
+  }
   function logQso(docIn, modeIn) {
     if (!api) return;
     if (!window.RSLOG) return api.say('Carnet de trafic non disponible dans cette version du dashboard.', 'warn');
@@ -6385,6 +6495,7 @@
       for (const id of ['dgWf', 'dgScale']) $(id).addEventListener('wheel', (e) => { if (tab === 'cw' && e.ctrlKey) cwTrxWheel('A', e); else if (ZOOM_TABS.indexOf(tab) >= 0) ftZoom('A', e); }, { passive: false });
       initRtty();
       initContest();
+      initRtEntry();
       initWspr();
       initJtty();
       initCw();
