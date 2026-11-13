@@ -2758,3 +2758,6 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .vx-miceq[hidden] { display: none; }
 .vx-miceq .btn { font-weight: 800; border: 2px solid #6b7686; background: #000; color: #fff; }
 .vx-miceq .btn.on { background: linear-gradient(180deg, #1f9d45, #12692c); border-color: #39FF14; }
+/* Pages SSB et CW, saisie du contest : le nom de chaque champ devant la case (une ligne de gagnée) */
+.cwp-entry label { flex-direction: row; align-items: center; gap: 7px; }
+.cwp-entry label.spotlog { align-self: center; padding: 0 4px; }

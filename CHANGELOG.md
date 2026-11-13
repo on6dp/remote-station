@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.75** — Pages SSB et CW, saisie du contest : le nom de chaque champ devant sa case (une ligne de gagnée)
 - **0.38.74** — Page SSB : plus de bouton MIC EQ ; TRX EQ vert = égaliseur du TRX en service, fond noir = coupé ; MIC EQ se change dans la fenêtre TRX EQ
 - **0.38.73** — Carnet général (onglet Logbooks) : fiche du QSO cachée par défaut, bouton jaune DÉTAILS QSO ; elle s'ouvre au clic sur un QSO de la liste et se cache 2 s après l'enregistrement ; la recherche reste visible
 - **0.38.72** — Page SSB : réglages micro du TRX sur la ligne SSB CONFIGURATION (à droite de TRX EQ, Profil de … tout à droite) ; EQUALIZER TRX devient TRX EQ ; plus de note Réception/émission ; CONTESTS en jaune vif (SSB et CW)
