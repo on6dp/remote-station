@@ -299,7 +299,6 @@
     <div class="dg-prog" id="dgProg" title="Période en cours : vert = réception, rouge = émission"><i id="dgProgBar"></i><span id="dgProgTxt"></span></div>
     <!-- Messages Tx1 à Tx7 dans l'onglet, sous les listes (comme WSJT-X) -->
     <div class="ft-tx"><div class="msgs-b ft-msgs" id="msgFtx"></div>
-      <button type="button" class="ft-qso-tgl" id="ftQsoTgl" aria-expanded="true" title="Masquer la fiche du QSO pour agrandir les fenêtres de trafic (les macros restent) ; elle revient dès qu’on clique sur un indicatif">▾ FICHE QSO · masquer</button>
       <div class="ft-qso" id="ftQso" title="QSO en cours : le correspondant choisi (double-clic sur son message) ; indicatif, locator et reports modifiables à la main">
         <span class="fq-t">QSO</span>
         <label>Indicatif <input id="fqCall" maxlength="12" spellcheck="false" autocomplete="off"></label>
@@ -4187,14 +4186,24 @@
   // Période du correspondant (parité du créneau de son message) : on émet dans l'autre période
   let dxPar = null;
   const SLOT_MS = { FT8: 15000, FT4: 7500, FT2: 3750 };
-  // Fiche du QSO sous les macros : masquable (plus de place pour les fenêtres de trafic), revient au choix d'un indicatif
+  // Fiche du QSO sous les macros : cachée par défaut (plus de place pour les fenêtres de trafic) ; elle apparaît au choix
+  // d'un indicatif et se cache 2 s après l'enregistrement du QSO (log automatique ou ENREGISTRER LE QSO)
+  let qsoHideT = 0;
+  let qsoSeqDx = '';
+  let qsoBtn = null;
+  const qsoShown = () => { const box = $('msgFtx') && $('msgFtx').closest('.ft-tx'); return !!(box && !box.classList.contains('qso-hid')); };
   function qsoShow(on) {
-    const box = $('ftQsoTgl') && $('ftQsoTgl').parentElement;
-    if (!box) return;
-    box.classList.toggle('qso-hid', !on);
-    $('ftQsoTgl').setAttribute('aria-expanded', String(!!on));
-    $('ftQsoTgl').textContent = on ? '▾ FICHE QSO · masquer' : '▸ FICHE QSO · afficher';
-    store.set('qsohid', on ? '0' : '1');
+    clearTimeout(qsoHideT);
+    const box = $('msgFtx') && $('msgFtx').closest('.ft-tx');
+    if (box) box.classList.toggle('qso-hid', !on);
+    if (qsoBtn) qsoBtn.setAttribute('aria-pressed', String(!!on));
+  }
+  function qsoSaved(m) {
+    if (!m || m.t !== 'log_saved' || m.edited) return;
+    const call = String((m.qso && m.qso.call) || '').toUpperCase();
+    if (m.tag !== 'ftqso' && !(call && dx.call && call === String(dx.call).toUpperCase())) return;
+    clearTimeout(qsoHideT);
+    qsoHideT = setTimeout(() => qsoShow(false), 2000);
   }
   function pickFromDecode(d, slot, side) {
     qsoShow(true);
@@ -4291,6 +4300,17 @@
     ed.title = 'Modifier le texte libre (Tx7)';
     ed.classList.add('mini');
     if (stop) f.appendChild(stop);
+    // DÉTAILS QSO : affiche / cache la fiche du QSO (sous les macros) ; elle s'ouvre aussi au choix d'un indicatif
+    if (!qsoBtn) {
+      qsoBtn = f.ownerDocument.createElement('button');
+      qsoBtn.type = 'button';
+      qsoBtn.className = 'btn ft-qso-btn';
+      qsoBtn.textContent = 'DÉTAILS QSO';
+      qsoBtn.title = 'Affiche ou cache la fenêtre des détails du QSO. Elle s’ouvre aussi toute seule au clic sur un indicatif et se ferme 2 s après l’enregistrement du QSO.';
+      qsoBtn.addEventListener('click', () => qsoShow(!qsoShown()));
+    }
+    f.appendChild(qsoBtn);
+    qsoShow(qsoShown());
   }
   // Fenêtre de QSO (sous les messages Tx1 à Tx7) : fiche du correspondant
   function dxGeo(call) {
@@ -4318,7 +4338,7 @@
     if (h && h !== qsoTapHost) {
       qsoTapHost = h;
       // Jamais d'exception vers le dashboard : il retirerait cette écoute pour de bon (fiche bloquée sur « Enregistrement… »)
-      h.tap((m) => { try { if (m && (/^log_/.test(m.t) || (m.t === 'notice' && m.level === 'error'))) L.onMessage(m); } catch (e) { /* message ignoré */ } });
+      h.tap((m) => { try { if (m && (/^log_/.test(m.t) || (m.t === 'notice' && m.level === 'error'))) L.onMessage(m); qsoSaved(m); } catch (e) { /* message ignoré */ } });
       try { const me = h.me && h.me(); if (me) L.onHello(me); } catch (e) { /* */ }
       L.show();
     }
@@ -4326,6 +4346,8 @@
     // Correspondant FT (double-clic, séquence) : indicatif, locator, reports et heure de début repris dans la fiche
     const st = api.state();
     const sq = st && st.seq;
+    // Correspondant pris par la séquence (réponse à notre CQ…) : la fiche apparaît aussi
+    if (sq && sq.dx && api.iControl() && sq.dx !== qsoSeqDx) { qsoSeqDx = sq.dx; qsoShow(true); } else if (!sq || !sq.dx) qsoSeqDx = '';
     const mine = !!(sq && sq.dx && dx.call && sq.dx === dx.call);
     const rs = (mine && sq.rpt) || dx.rpt || '', rr = (mine && sq.rptRcvd) || dx.rptRx || '';
     const key = [dx.call, dx.grid, rs, rr, dx.t0].join('|');
@@ -5774,7 +5796,7 @@
       if (again) { announce(); return; } // fenêtre séparée raccrochée à un dashboard rechargé
       buildDom();
       bmInit();
-      if ($('ftQsoTgl')) { $('ftQsoTgl').addEventListener('click', () => qsoShow($('ftQsoTgl').parentElement.classList.contains('qso-hid'))); qsoShow(store.get('qsohid', '0') !== '1'); }
+      qsoShow(false);
       document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.addEventListener('click', (e) => {
         e.stopPropagation();
         if (b.dataset.tab === 'log' && LOGP) return openLogWin(); // carnet : dans sa propre fenêtre
@@ -6114,6 +6136,7 @@
       announce(); // reprise après reconnexion
     },
     onMessage(m) {
+      qsoSaved(m); // fiche du QSO cachée 2 s après l'enregistrement
       // Spot au DX cluster (case « Spot cluster ») : aussi affiché dans la fenêtre TRX DIGI
       if (m.t === 'notice' && /^Spot\b/.test(m.msg || '') && api && api.say && document.body.classList.contains('digi-popup')) api.say(m.msg, m.level === 'error' ? 'warn' : '', 5000);
       // Réponse à « Mettre à l'heure » (onglet Synchro) : aussi affichée dans la case PC du club

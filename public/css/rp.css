@@ -2663,10 +2663,10 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .cwp-follow[aria-pressed='true'] { background: #1f6feb; border-color: #58a6ff; }
 .cwp-follow:disabled { opacity: .45; cursor: default; }
 .cwp-follow[hidden] { display: none; }
-/* Page FT : fiche du QSO sous les macros masquable (les macros restent) ; elle revient au clic sur un indicatif */
-.ft-qso-tgl { display: block; width: 100%; margin: 6px 0 4px; padding: 2px 8px; text-align: left; background: #0d1622; color: #ffd400; font-weight: 800; font-size: 11.5px; letter-spacing: .5px; border: 1px solid var(--v2-border); border-radius: 5px; cursor: pointer; }
-.ft-qso-tgl:hover { border-color: #fff; }
+/* Page FT : fiche du QSO sous les macros, cachée par défaut ; bouton DÉTAILS QSO (jaune vif) sur la ligne des macros */
 .ft-tx.qso-hid .ft-qso, .ft-tx.qso-hid .ft-qsolog { display: none !important; }
+.ft-msgs .ft-qso-btn { margin-left: 10px; border: 2px solid #ffe600; color: #ffe600; background: transparent; font-weight: 900; letter-spacing: .5px; }
+.ft-msgs .ft-qso-btn[aria-pressed='true'] { background: #ffe600; color: #000; }
 /* Page FT : barre propre à chaque VFO, au-dessus de sa cascade — bande (fréquence d'appel), ↺, RX, TX ← RX, RX ← TX, TX */
 .ft-vbar { display: flex; align-items: center; gap: 10px; padding: 5px 8px; background: #0b1420; border-bottom: 1px solid var(--v2-border-dark); flex-wrap: nowrap; overflow: hidden; }
 .ctab-pane:not([data-pane='ftx']) .ft-vbar, .ctab-pane[data-pane='ftx']:not(.dg-ftx) .ft-vbar { display: none; }
