@@ -727,6 +727,17 @@
           ' : en réception simple, le changement de côté par le dashboard est bloqué (il a mis le FTX-1 en émission) ; pour écouter la fréquence du VFO B : A ⇄ B.', '', 8000);
       }
       if (c && RIG().VIRTUAL_SPLIT && iControl() && (w === 'A' || subOk) && Number(ctlValue('vfoSel')) !== (w === 'B' ? 1 : 0)) sendCtl(c, w === 'B' ? 1 : 0);
+      // FTDX101 (VFO d'émission choisi à part, FT2 / FT3) : A / B = travailler sur ce VFO — réception, et émission aussi
+      // hors SPLIT (en SPLIT, l'émission reste sur l'autre VFO)
+      const tv = RIG().CONTROL && RIG().CONTROL.txVfo;
+      if (c && tv && !RIG().VIRTUAL_SPLIT && iControl()) {
+        const v = w === 'B' ? 1 : 0, r0 = (st && st.radio) || {};
+        const rx = Number(ctlValue('vfoSel') != null ? ctlValue('vfoSel') : r0.vfoSel) === 1 ? 1 : 0;
+        const tx = Number(ctlValue('txVfo') != null ? ctlValue('txVfo') : r0.txVfo) === 1 ? 1 : 0;
+        const split = rx !== tx;
+        if (rx !== v) sendCtl(c, v);
+        if (!split && tx !== v) setTimeout(() => sendCtl(tv, v), 300);
+      }
     };
     $('tgtA').addEventListener('click', () => pickVfo('A'));
     $('tgtB').addEventListener('click', () => pickVfo('B'));

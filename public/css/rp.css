@@ -2835,3 +2835,6 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .ssb-body .ssb-clog td:last-child { color: #ffd400; }
 .ssb-body .ssb-clog tr.dup td { color: #8a95a5 !important; }
 .lg-table td.lg-xch { color: #ffd400; }
+/* LOCK : blanc comme les autres boutons quand il est coupé ; allumé (verrouillé) : fond orange, texte noir — plus de jaune trompeur */
+#sec-dual [data-ctl='lock']:not([aria-pressed='true']), [data-ctl='lock']:not([aria-pressed='true']) { color: #fff !important; border-color: #fff !important; font-weight: 800; background: transparent; }
+#sec-dual [data-ctl='lock'][aria-pressed='true'], [data-ctl='lock'][aria-pressed='true'] { background: linear-gradient(180deg, #ff9a1f, #c86400) !important; border-color: #ffd08a !important; color: #000 !important; font-weight: 900; }
