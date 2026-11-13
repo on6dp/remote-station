@@ -2812,3 +2812,13 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .ss-listenw { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; white-space: nowrap; }
 .ss-listenw .ss-listen { margin-left: 0; }
 .ss-listenw .ss-lvol { margin-left: 0; }
+/* Page SSB : le bouton garde la même largeur (ÉCOUTER LE TRX / ARRÊTER L'ÉCOUTE) et les curseurs rétrécissent un peu :
+   la ligne ne passe plus à la ligne quand on lance l'écoute */
+.ssb-body .ss-listenw .ss-listen { width: 178px; justify-content: center; text-align: center; white-space: nowrap; }
+.ssb-body .fc-tx .vx-monvol input, .ssb-body .vx .vx-monvol input { flex: 0 1 110px !important; width: 110px !important; min-width: 60px; }
+.ssb-body .ss-lvol input { width: 100px; flex: 0 1 100px; min-width: 60px; }
+.ssb-body .vx .vx-io select { max-width: 240px; min-width: 110px; flex: 0 1 240px; }
+.ssb-body .vx .vx-io select { max-width: 200px; flex-basis: 200px; }
+.ssb-body .fc-tx .vx-mon { margin-left: 16px; }
+.ssb-body .fc-tx .vx-monvol input, .ssb-body .vx .vx-monvol input { flex-basis: 100px !important; width: 100px !important; }
+.ssb-body .ss-lvol input { width: 90px; flex-basis: 90px; }
