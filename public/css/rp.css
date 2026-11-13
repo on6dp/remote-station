@@ -2735,3 +2735,5 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .cwp-head .cwp-trx { font-size: 22px; letter-spacing: 1px; margin-left: 10px; }
 .cwp-head .cwp-mode { font-size: 13px; font-weight: 800; margin-left: 14px; }
 .cwp-head .cwp-ctl { margin-left: 14px; }
+/* Page SSB : plus de boutons B = A −1…+10 (la fréquence se règle à la molette sur les écrans des VFO) */
+.vfb.mir .vfb-off { display: none; }

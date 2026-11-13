@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.71** — Page SSB : plus de boutons B = A −1…+10 (molette sur les écrans des VFO)
 - **0.38.70** — Pages TRX SSB et TRX CW : même en-tête que la fenêtre TRX DIGI (titre sur sa ligne, puis TX CALL, fréquence, mode, 👥, indicatif, main)
 - **0.38.69** — Page SSB : plus de cases kHz sous les écrans des VFO
 - **0.38.68** — Page SSB : DUAL RX en mauve, comme sur les autres pages
