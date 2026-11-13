@@ -3178,3 +3178,5 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .rt-logxm button { background: none; border: 0; color: #fff; font: 700 13px inherit; text-align: left; padding: 8px 14px; cursor: pointer; }
 .rt-logxm button:hover { background: #1d2633; }
 .qso-log.rt-expdlg .ql-g { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+/* Une fenêtre par VFO : pas de 2e cadre rouge autour de la ligne de saisie (le cadre rouge du VFO d'émission suffit) */
+.ctab-pane.rt .rt-side .rt-io > .rt-txbox > .rt-txw { box-shadow: none !important; border: 0 !important; }

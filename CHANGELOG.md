@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.69** — Page RTTY : plus de double trait rouge autour de la ligne de saisie du VFO d'émission
 - **0.39.68** — LOG RTTY : colonne Contest à droite de OP (nom du contest, vide hors contest)
 - **0.39.67** — LOG RTTY : menu EXPORTER (Mes QSO RTTY, ADIF avec filtres TX call / opérateur / dates / contest, Cabrillo d'un contest RTTY avec catégorie) ; export par opérateur pour les administrateurs
 - **0.39.66** — LOG RTTY : même style que les logs de la page SSB (titres en majuscules sur fond brun, traits, indicatif en blanc)
