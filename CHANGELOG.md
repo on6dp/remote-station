@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.04** — Messages vocaux en anglais : le Z de QRZ se dit « zed » (et plus « zee »)
 - **0.39.03** — Voix Kokoro : modèle chargé une seule fois (processus gardé en marche, démarré dès l'ouverture de la page SSB, arrêté après 15 min sans demande) : ▶ Écouter et Fabriquer sans les 2 à 3 s de chargement
 - **0.39.02** — Voix Kokoro : indicatif épelé d'un trait (plus de pause entre les lettres, comme « Victor … Lima ») ; virgules seulement avec une pause entre lettres ≥ 200 ms
 - **0.39.01** — Messages vocaux : voix Kokoro (les plus réalistes, hexgrad/Kokoro-82M, local sur le VPS) — deploy/install-kokoro.sh ; groupe Voix Kokoro en tête de la liste, choisi d'office
