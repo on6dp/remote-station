@@ -2854,7 +2854,10 @@
       // En grand : la fréquence du VFO, comme sur l'écran du TRX (14.078.540) ; en petit : celle du signal suivi
       // (porteuse ± centre Mark / Space, comme FLDIGI)
       const mhz = (hz) => { const t = String(Math.round(hz)).padStart(7, '0'); return t.slice(0, -6) + '.' + t.slice(-6, -3) + '.' + t.slice(-3); };
-      $('rtRf' + sfx).textContent = d ? mhz(d.hz) + (own ? '' : ' (VFO ' + d.vfo + ')') : '';
+      // Grande fréquence = celle du VFO de cette colonne (comme sur le TRX) ; si le TRX n'écoute pas ce VFO
+      // (réception simple sur l'autre), « pas écouté » : le décodeur lit alors le son de l'autre VFO
+      const ownHz = r ? Number(ch ? r.freqB : r.freq) || 0 : 0;
+      $('rtRf' + sfx).textContent = d ? mhz(own || !ownHz ? d.hz : ownHz) + (own ? '' : ' · pas écouté') : '';
       if ($('rtSig' + sfx)) $('rtSig' + sfx).textContent = d ? 'signal ' + ((d.hz + d.sign * x.f) / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kHz' : '';
       // Comme en FT8 : fréquence en grand, sur fond rouge (« TX ») pour le décodeur d'où part l'émission
       $('rtRf' + sfx).classList.toggle('tx', ch === rtTx && !!d);
@@ -3161,6 +3164,18 @@
     // Choisir une bande dans la liste y envoie directement le TRX (QSY)
     dial.addEventListener('change', () => { store.set('rtdial', dial.value); qsyTo(Number(dial.value)); });
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
+    // La liste du VFO-A suit la fréquence du VFO-A (changement de bande sur le TRX, A ⇄ B…) : fréquence RTTY la plus proche
+    const fillA = () => {
+      if (dial.ownerDocument.activeElement === dial) return;
+      const st = api && api.state(), f = st && st.radio && st.radio.freq;
+      const key = f ? Math.round(f / 1e5) : 0;
+      if (!f || dial.dataset.k === String(key)) return;
+      dial.dataset.k = String(key);
+      const L = withQo(RTTY_DIAL, 'RTTY').filter((x) => !x[2]);
+      const near = L.reduce((a, x) => (!a || Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a), null);
+      if (near && Math.abs(near[1] * 1000 - f) < 500000 && dial.value !== String(near[1])) { dial.value = String(near[1]); store.set('rtdial', dial.value); }
+    };
+    setInterval(fillA, 700);
     // Page RTTY : mêmes champs pour le VFO B (ligne SPLIT, à droite) ; Bande et Zoom communs aux deux cascades
     if ($('rtDialB')) {
       const db = $('rtDialB');
