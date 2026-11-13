@@ -404,6 +404,8 @@ function relayAudio(buf) {
       for (let i = 0; i < l.length; i++) l[i] = (l[i] + forListen[i]) * 0.5;
       return sendListen(l, left, forListen);
     }
+    // Réception simple sur le VFO B (FTDX101 : MAIN muet, FR10 ; ou SUB sélectionné) : on entend le SUB (voie droite)
+    if (radio.subMute != null && (radio.mainMute === 1 || (radio.vfoSel === 1 && radio.subMute === 0))) return sendListen(forListen);
     return sendListen(l);
   }
   if (buf[0] !== 0x01) return;
