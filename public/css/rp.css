@@ -3011,3 +3011,6 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
   .rt-dual > .rt-side > .rt-io { flex: 1 1 0; min-height: 70px; }
   .rt-dual .rt-side .rt-io .rt-pane, .rt-dual .rt-side .rt-io .rt-rx { min-height: 0; }
 }
+/* Page RTTY : moins d'espace entre les fenêtres des VFO et la ligne des macros (la poignée mange les écarts) */
+.ctab-pane.rt > .rt-hgrip { margin: -6px 0; }
+.ctab-pane.rt .rt-tx-col > .rt-macros { padding-top: 3px; }

@@ -374,7 +374,9 @@
           </div>
           <canvas id="rtScaleB" height="44" title="Règle des fréquences : molette ou glisser = accorder le VFO-B (le TRX suit), sur toute la bande"></canvas>
           <canvas id="rtWfB" height="140"></canvas>
+          <canvas id="rtSpecB" class="dg-spec" height="70" title="Spectre du VFO-B : niveau de chaque fréquence audio (moyenne des dernières lignes de sa cascade, mêmes réglages Gain / Zéro / Plat)"></canvas>
           <i class="dg-mk dg-mk-rx" id="rtMkMB"></i><i class="dg-mk dg-mk-tx" id="rtMkSB"></i>
+          <i class="dg-grip dg-sgrip" id="rtSGripB" title="Glisser vers le haut ou le bas : hauteur des spectres (double-clic : taille d'origine)"></i>
           <i class="dg-grip" id="rtGripB" title="Glisser vers le haut ou le bas : hauteur de la cascade du VFO-B, sans toucher à celle du VFO-A (double-clic : même hauteur que celle du VFO-A)"></i>
         </div>
         <div class="rt-io">
@@ -1009,6 +1011,7 @@
     const room = rtRoom(c);
     if (room >= 40) hB = Math.min(hB, room);
     c.style.height = hB + 'px';
+    sizeSpec(wfB, $('rtSpecB'), c, $('rtGripB')); // spectre sous la cascade, comme le VFO-A
     const dpr = wf.dpr || 1;
     const cw = Math.max(120, Math.floor(c.clientWidth));
     const w = Math.round(cw * dpr);
@@ -1384,7 +1387,7 @@
     const tNow = performance.now(), dtS = T.spT ? Math.min(3, (tNow - T.spT) / 1000) : 0.2;
     T.spT = tNow;
     const spA = 1 - Math.exp(-dtS / (SP_TAU[spSpd] || 6));
-    const SP = (T === wf || T === wfFB) && T.sp && T.sp.w ? T.sp : null;
+    const SP = (T === wf || T === wfFB || T === wfB) && T.sp && T.sp.w ? T.sp : null;
     if (SP && (!SP.v || SP.v.length !== SP.w)) SP.v = new Float32Array(SP.w);
     for (let x = 0; x < T.w; x++) {
       // Interpolation entre deux cases (pas d'escalier quand la cascade est plus large que le nombre de cases)
@@ -6086,13 +6089,13 @@
       const SP_DEF = 70;
       const setSpH = (h, save) => {
         const v = Math.max(30, Math.min(320, Math.round(h)));
-        for (const id of ['dgSpec', 'ftSpecB']) if ($(id)) $(id).style.height = v + 'px';
+        for (const id of ['dgSpec', 'ftSpecB', 'rtSpecB']) if ($(id)) $(id).style.height = v + 'px';
         if (save) store.set('sph', String(v));
         if (wf.ctx) sizeCanvas();
         return v;
       };
       if (Number(store.get('sph', '0')) > 0) setSpH(Number(store.get('sph', '0')), false);
-      for (const grip of ['dgSGrip', 'ftSGripB'].map($).filter(Boolean)) {
+      for (const grip of ['dgSGrip', 'ftSGripB', 'rtSGripB'].map($).filter(Boolean)) {
         grip.addEventListener('pointerdown', (e) => {
           e.preventDefault();
           grip.setPointerCapture(e.pointerId);
