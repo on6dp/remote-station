@@ -880,6 +880,15 @@
     for (const w of ['A', 'B']) {
       $('tx' + w).addEventListener('click', (ev) => {
         ev.stopPropagation();
+        // TRX avec choix direct du VFO d'émission (FTDX101 : FT2 = MAIN, FT3 = SUB), quel que soit le VFO de réception :
+        // TX sur A pendant qu'on reçoit sur B (et l'inverse) devient possible, sans passer par SPLIT
+        const tv = RIG().CONTROL && RIG().CONTROL.txVfo;
+        if (tv && !RIG().VIRTUAL_SPLIT) {
+          const v = w === 'B' ? 1 : 0;
+          const r0 = (st && st.radio) || {};
+          if (Number(ctlValue('txVfo') != null ? ctlValue('txVfo') : r0.txVfo) !== v) sendCtl(tv, v);
+          return;
+        }
         const c = RIG().CONTROL && RIG().CONTROL.split;
         if (!c) return say('Choix du VFO d’émission non disponible sur ce TRX', 'warn');
         // FTX-1 : émettre sur ce VFO = SPLIT si on écoute sur l'autre ; autres TRX : VFO d'émission
@@ -1568,7 +1577,7 @@
     const rxOnB = (pSel != null ? Number(pSel) : r.vfoSel) === 1;
     const txOnB = RIG().VIRTUAL_SPLIT
       ? ((pSplit != null ? Number(pSplit) : r.split ? 1 : 0) ? !rxOnB : rxOnB)
-      : pSplit != null ? Number(pSplit) === 1 : r.txVfo === 1;
+      : pSplit != null ? Number(pSplit) === 1 : Number(ctlValue('txVfo') != null ? ctlValue('txVfo') : r.txVfo) === 1;
     // Pendant l'émission : chiffres rouges sur le VFO qui émet vraiment d'après le TRX (FT relu), pas sur le choix affiché
     const airOnB = txing && (r.txReal === 0 || r.txReal === 1) ? r.txReal === 1 : txOnB;
     const rxW = (pSel != null ? Number(pSel) : r.vfoSel) === 1 ? 'B' : 'A'; // VFO en réception (MAIN, sauf si le TRX opère sur SUB)

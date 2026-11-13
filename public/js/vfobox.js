@@ -9,6 +9,25 @@
   const fmt = (hz) => { if (!hz) return '—'; const s = String(Math.round(hz)).padStart(7, '0'); return s.slice(0, -6) + '.' + s.slice(-6, -3) + '.' + s.slice(-3); };
   const khz = (hz) => (hz ? (hz / 1000).toFixed(2) : '');
 
+  // Met « cur » à l'image de « want » en gardant les éléments existants quand la balise est la même
+  function morph(cur, want) {
+    const a = cur.childNodes, b = want.childNodes;
+    let i = 0;
+    for (; i < b.length; i++) {
+      const w = b[i], c = a[i];
+      if (!c) { cur.appendChild(w.cloneNode(true)); continue; }
+      if (c.nodeType !== w.nodeType || c.nodeName !== w.nodeName) { cur.replaceChild(w.cloneNode(true), c); continue; }
+      if (w.nodeType === 3 || w.nodeType === 8) { if (c.nodeValue !== w.nodeValue) c.nodeValue = w.nodeValue; continue; }
+      if (w.nodeType !== 1) continue;
+      // Attributs
+      for (const at of Array.from(c.attributes)) if (!w.hasAttribute(at.name)) c.removeAttribute(at.name);
+      for (const at of Array.from(w.attributes)) if (c.getAttribute(at.name) !== at.value) c.setAttribute(at.name, at.value);
+      // SVG : contenu reconstruit d'un bloc (dessin), le reste : récursif
+      if (w.namespaceURI === 'http://www.w3.org/2000/svg' && w.nodeName.toLowerCase() === 'svg') { if (c.innerHTML !== w.innerHTML) c.innerHTML = w.innerHTML; }
+      else morph(c, w);
+    }
+    while (a.length > b.length) cur.removeChild(cur.lastChild);
+  }
   function mount(el, opt) {
     const api = opt.api;
     const toast = opt.toast || (() => {});
@@ -108,8 +127,12 @@
         MR.html = html;
         if (!MR.row) { MR.row = document.createElement('div'); MR.box.appendChild(MR.row); }
         MR.row.className = src.className;
-        MR.row.innerHTML = html;
-        MR.row.querySelectorAll('.detach-btn').forEach((x) => x.remove());
+        // Mise à jour en place (seulement ce qui a changé) : les boutons restent les mêmes éléments, un clic n'est plus
+        // perdu quand l'écran change entre l'appui et le relâchement (S-mètre qui bouge sans arrêt)
+        const t = document.createElement('div');
+        t.innerHTML = html;
+        t.querySelectorAll('.detach-btn').forEach((x) => x.remove());
+        morph(MR.row, t);
       }
       // Même largeur que dans le dashboard, mise à l'échelle de ce cadre
       const sw = src.getBoundingClientRect().width, bw = MR.box.clientWidth;
