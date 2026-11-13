@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.53** — Phonie : le bouton « Equalizer micro » s'appelle MICRO EQ (toutes les pages)
 - **0.38.52** — Page TRX SSB : écrans des VFO du dashboard recopiés (clic et molette actifs) avec la ligne MICRO DU TRX ; DUAL RX ON/OFF et écoute stéréo au casque (VFO A / MAIN à gauche, VFO B / SUB à droite) ; micro ouvert automatiquement (plus de bouton MICRO) ; Entrée / Sortie en jaune ; M'écouter devient MONITORING partout ; la sortie son choisie sert aussi à l'écoute du TRX
 - **0.38.51** — Écran VFO B : badge LOCK quand le LOCK de SUB est en service
 - **0.38.50** — Barre FT : « TX » (devant VFO-A / VFO-B) en jaune gras

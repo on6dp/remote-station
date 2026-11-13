@@ -94,7 +94,7 @@
       '<label class="vx-io vx-outl" title="Sortie son : où vous entendez le TRX et « MONITORING » (casque, haut-parleurs…)">🔊 <span class="vx-iol">Sortie</span> <select id="vxOut" aria-label="Sortie son (casque, haut-parleurs)"></select></label>' +
       '<div class="vx-type" id="vxType"></div>' +
       '<div class="vx-meter" title="Niveau de votre micro après l’égaliseur, en dB sous la saturation : visez le vert (−20 à −12 dB en parlant), jaune = fort, rouge = trop fort"><span class="vx-mt">Niveau micro</span><i id="vxLvl"></i>' + VX_SCALE + '<b id="vxClip">SAT</b></div>' +
-      '<div class="vx-row"><button class="btn" id="vxEqBtn" type="button" title="Égaliseur de votre micro (dans le navigateur) : réglages gardés pour ce micro">Equalizer micro</button></div>' +
+      '<div class="vx-row"><button class="btn" id="vxEqBtn" type="button" title="Égaliseur de votre micro (dans le navigateur) : réglages gardés pour ce micro">MICRO EQ</button></div>' +
       '<div class="vx-note" id="vxNote"></div>' +
       '<div class="vx-mon"><button class="btn" id="vxMonBtn" type="button" aria-pressed="false" title="Entendre votre micro tel qu’il partira (au casque seulement : effet Larsen avec des haut-parleurs)">🎧 MONITORING</button></div>' +
       '<label class="vx-monvol" title="Volume de « MONITORING » dans votre casque (ne change pas ce qui part vers le TRX)">Volume <input type="range" id="vxMonVol" min="0" max="300" step="5" aria-label="Volume de MONITORING"><output id="vxMonVolV"></output></label>' +
@@ -103,7 +103,7 @@
     // Dashboard : la phonie (micro, égaliseurs, entrée / sortie son, réglages micro du TRX) est dans la page TRX SSB,
     // ouverte par l'onglet SSB de la ligne MODES (plus de bouton « Phonie : page TRX SSB » ici)
     if (V.api && V.api.away) box.classList.add('vx-away');
-    // Face avant (/ftdx101) : une seule ligne « SSB CONFIGURATION · MICRO · EQUALIZER MICRO · niveau · EQUALIZER TRX »,
+    // Face avant (/ftdx101) : une seule ligne « SSB CONFIGURATION · MICRO · MICRO EQ · niveau · EQUALIZER TRX »,
     // le reste (choix du micro, type, état, MONITORING et son volume) sur la ligne suivante
     if (V.api && V.api.compact) {
       box.classList.add('vx-compact');
@@ -178,7 +178,7 @@
       $('vxProf').textContent = 'Profil de ' + (has ? who : '…');
       $('vxProf').classList.toggle('dim', !has);
     }
-    // Face avant : MICRO et EQUALIZER MICRO grisés hors phonie (DATA-U, CW, RTTY… : le micro ne sert pas)
+    // Face avant : MICRO et MICRO EQ grisés hors phonie (DATA-U, CW, RTTY… : le micro ne sert pas)
     const voiceMd = !!(modes && modes.indexOf(txMode(st)) >= 0);
     if (V.api.compact) {
       $('vxEqBtn').hidden = false;
@@ -386,7 +386,7 @@
     d.id = 'vxProfDlg';
     d.setAttribute('role', 'dialog');
     d.setAttribute('aria-label', 'Profil de ' + m.call);
-    // Valeurs d'Equalizer micro : coupe-bas, EQ1–EQ3 (fréquence, niveau, largeur), coupe-haut, gain, options
+    // Valeurs d'MICRO EQ : coupe-bas, EQ1–EQ3 (fréquence, niveau, largeur), coupe-haut, gain, options
     const sg = (v) => (v > 0 ? '+' : '') + v;
     const mics = (m.mics || []).map((x) => '<li><b>' + esc(x.label) + '</b>' +
       (m.mine ? ' <button class="btn" type="button" data-del="' + esc(x.label) + '">Supprimer</button>' : '') +
@@ -404,7 +404,7 @@
     const other = (m.trx || []).filter((r) => r !== m.rig);
     const now = !m.eqOn ? '—' : m.eqOn === '#club' ? 'réglage du club' : m.eqOn.charAt(0) === '#' ? 'en cours de mise au TRX' : 'Profil de ' + esc(m.eqOn);
     d.innerHTML = '<div class="vx-eq-h"><b>Profil de ' + esc(m.call) + '</b><span>' + (m.mine ? '' : ' — lecture seule') + '</span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
-      '<h4>Micros (Equalizer micro)</h4>' + (mics ? '<ul class="vx-proflist">' + mics + '</ul>' : '<p class="vx-hint">Aucun réglage de micro enregistré : réglez « Equalizer micro » puis « Enregistrer pour ce micro ».</p>') +
+      '<h4>Micros (MICRO EQ)</h4>' + (mics ? '<ul class="vx-proflist">' + mics + '</ul>' : '<p class="vx-hint">Aucun réglage de micro enregistré : réglez « MICRO EQ » puis « Enregistrer pour ce micro ».</p>') +
       '<h4>Égaliseur du TRX' + (m.rigName ? ' (' + esc(m.rigName) + ')' : '') + '</h4>' +
       '<p>' + (m.trxHere ? 'Profil enregistré : mis au TRX à chaque prise de main.' : 'Pas de profil enregistré pour ce TRX : c’est le réglage du club' + (m.clubHere ? '' : ' (pas encore lu)') + '.') +
       (other.length ? '<br>Aussi un profil pour : ' + other.map(esc).join(', ') + '.' : '') + '<br>Au TRX maintenant : ' + now + '.</p>' + trxVals +
@@ -420,14 +420,14 @@
     });
   }
   function openEq() {
-    if (!V.on) return V.api.say('Equalizer micro : activez d’abord votre micro (bouton « Micro »).', 'warn', 4000);
+    if (!V.on) return V.api.say('MICRO EQ : activez d’abord votre micro (bouton « Micro »).', 'warn', 4000);
     let d = $('vxEq');
     if (d) { d.remove(); return; }
     d = document.createElement('div');
     d.className = 'vx-eq';
     d.id = 'vxEq';
     d.setAttribute('role', 'dialog');
-    d.setAttribute('aria-label', 'Equalizer micro');
+    d.setAttribute('aria-label', 'MICRO EQ');
     const bandRow = (i) => {
       const r = BAND_RANGE[i];
       return '<fieldset class="vx-band"><legend>EQ' + (i + 1) + '</legend>' +
@@ -436,7 +436,7 @@
         '<label>Largeur (Q) <output data-o="q' + i + '"></output><input type="range" data-k="q' + i + '" min="0.3" max="6" step="0.1"></label></fieldset>';
     };
     d.innerHTML =
-      '<div class="vx-eq-h"><b>Equalizer micro</b><span id="vxEqMic"></span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
+      '<div class="vx-eq-h"><b>MICRO EQ</b><span id="vxEqMic"></span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
       '<canvas id="vxCurve" width="560" height="150" aria-label="Courbe de l’égaliseur"></canvas>' +
       '<div class="vx-eq-meter"><span class="vx-mt">Niveau micro</span><i id="vxLvl2"></i>' + VX_SCALE + '</div>' +
       '<div class="vx-eq-top"><label><input type="checkbox" data-k="on"> Égaliseur en service</label>' +
