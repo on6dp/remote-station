@@ -2944,3 +2944,9 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
   .ssb-prop h3 { flex-wrap: wrap; }
 }
 @media (max-width: 1100px) { .ssb-qrow > .ssb-qlogw { max-width: none; width: auto; } }
+/* Dashboard, RX audio : 🎧 STÉRÉO (DUAL RX : VFO A à gauche, VFO B à droite), rose comme sur la page SSB */
+.listen-st { width: 100%; margin-top: 6px; border: 2px solid #fff; font-weight: 800; letter-spacing: .5px; }
+.listen-st[hidden] { display: none; }
+.listen-st small { font-weight: 600; opacity: .8; margin-left: 6px; letter-spacing: 0; text-transform: none; }
+.listen-st[aria-pressed='true'] { border-color: #ff6fb5; color: #ff6fb5; }
+.listen-st.on { background: #ff6fb5; color: #000; border-color: #ff6fb5; }

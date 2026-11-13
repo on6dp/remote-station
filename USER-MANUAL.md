@@ -361,6 +361,7 @@ Below the buttons, « Mode appliqué à **VFO A** » (mode applied to VFO A) sho
 | Command | What it does | Who it affects |
 |---|---|---|
 | `🔊 Écouter le TRX` | Plays the receiver audio in your browser (listen to the TRX). A second click mutes it. | Only you (no control needed). |
+| `🎧 STÉRÉO` | Two-receiver TRX (FTDX101…), in DUAL RX: VFO A (MAIN) in the left ear, VFO B (SUB) in the right ear; off: both mixed. Each VFO screen's AF spectrum shows its own receiver. Same setting as STÉRÉO on the SSB page. | You only. |
 | **Volume** | Volume of your listening (0 to 150 %). | Only you. |
 | **AF LEVEL** | Volume of the TRX loudspeaker at the club. | Everybody (with control). Does not affect your listening or the decoders. |
 | **SQUELCH** | Mutes the audio until a signal rises above the threshold. | Everybody. Useful in FM; leave it at 0 on HF and in digital modes, otherwise the decoders no longer hear anything. |

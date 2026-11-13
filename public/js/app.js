@@ -706,6 +706,13 @@
     document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeRigMenu(); });
     $('audResetBtn').addEventListener('click', askAudioReset);
   $('listenBtn').addEventListener('click', () => (player.on ? stopListen() : startListen()));
+  // STÉRÉO (TRX à deux récepteurs) : MAIN / VFO A à gauche, SUB / VFO B à droite en DUAL RX ; même réglage que la page SSB
+  $('listenSt').addEventListener('click', () => {
+    player.stereo = !player.stereo;
+    try { localStorage.setItem('rs.stereo', player.stereo ? '1' : '0'); } catch (e) {}
+    player.next = 0;
+    drawListen();
+  });
     try { const v = localStorage.getItem('rs.vol'); if (v != null) $('listenVol').value = v; } catch (e) {}
     $('listenVol').addEventListener('input', playerVolume);
     playerVolume();
@@ -1974,6 +1981,10 @@
       ? (a.active ? 'Cliquez pour entendre la BF du TRX.' : 'La station n’envoie pas de son en ce moment.') + (a.listeners ? ' ' + a.listeners + ' à l’écoute.' : '')
       : !a.active ? 'En attente du son : l’audio n’est pas activé sur la page Station.'
       : 'En écoute' + (player.stereo && st && st.radio && st.radio.dualRx === 1 ? ' en stéréo (MAIN à gauche, SUB à droite)' : '') + (a.listeners > 1 ? ' avec ' + (a.listeners - 1) + ' autre(s)' : '') + '.';
+    const sb = $('listenSt'), two = !!(st && st.radio && st.radio.dualRx != null);
+    sb.hidden = !two;
+    sb.setAttribute('aria-pressed', String(!!player.stereo));
+    sb.classList.toggle('on', !!(player.stereo && st && st.radio && st.radio.dualRx === 1));
     // Entrée son de la station muette alors que le TRX est connecté : carte son USB du TRX figée
     const sw = $('silentWarn');
     sw.hidden = !a.silent;

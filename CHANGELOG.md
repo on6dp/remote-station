@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.28** — Dashboard, RX audio : bouton 🎧 STÉRÉO (TRX à deux récepteurs, DUAL RX : VFO A à gauche, VFO B à droite), même réglage que la page SSB
 - **0.39.27** — Spectre BF de chaque écran VFO : en DUAL RX, MAIN (VFO A) et SUB (VFO B) séparés (son reçu en stéréo, mélangé sur le PC si STÉRÉO n'est pas choisi) ; en réception simple, seul le VFO écouté montre son spectre
 - **0.39.26** — Page SSB : écrans des VFO recopiés recalculés pour la largeur de la page (plus de filtre coupé ni de VFO B par-dessus le VFO A quand la fenêtre du dashboard est plus petite) ; dashboard : TX call sur la ligne des onglets, à droite de SYNCHRO
 - **0.39.25** — Page SSB : cadre Propagation plus large (la liste des QSO prend juste sa largeur) ; indices à gauche, conditions HF et VHF à droite ; source dans le titre
