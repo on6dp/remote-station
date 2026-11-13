@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.53** — Page RTTY hors contest : seulement la liste des contests sur la ligne Contest (Échange, Prénom, zones et N° cachés)
 - **0.39.52** — Page RTTY : chaque colonne affiche la fréquence de son VFO (« pas écouté » si le TRX écoute l'autre) ; la liste des fréquences du VFO-A suit la bande du VFO-A comme celle du VFO-B
 - **0.39.51** — Page RTTY, FTDX101 en réception simple avec RX MAIN coupé (seul le SUB écouté) : le décodeur indique la fréquence du VFO-B réellement écouté, plus celle du VFO-A
 - **0.39.50** — Page RTTY : cadre LOG RTTY à droite des macros et du contest (dessous si l'écran est trop étroit)

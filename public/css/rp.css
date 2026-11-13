@@ -3058,3 +3058,5 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .ctab-pane.rt .rt-stack > .rt-tx-col { flex: 0 1 auto; min-width: 0; }
 .ctab-pane.rt .rt-stack > .rt-logbox { flex: 1 1 520px; min-width: 420px; display: flex; flex-direction: column; }
 .ctab-pane.rt .rt-logbox > .rt-logw { flex: 1 1 auto; min-height: 90px; max-height: 300px; overflow-x: auto; }
+/* Page RTTY hors contest : seulement la liste des contests (Échange, Prénom, zones, N° cachés) */
+.ctab-pane.rt .rt-contest:not(.on) > :not(:first-child) { display: none !important; }
