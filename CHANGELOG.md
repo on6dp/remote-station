@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.96** — Page SSB : listes de QSO (hors contest et log du contest) avec les entêtes brun foncé et les couleurs du carnet général
 - **0.38.95** — FTDX101 hors double réception : RX sur le VFO B met le récepteur SUB en réception et le MAIN en sourdine (FR10 ; RX sur A : FR01) et l'écoute envoie la BF du SUB ; DUAL RX = les deux récepteurs (FR00)
 - **0.38.94** — Page SSB : ÉCOUTER LE TRX / ARRÊTER L'ÉCOUTE de largeur fixe et curseurs un peu plus courts : la ligne ne passe plus à la ligne quand on lance l'écoute
 - **0.38.93** — FTDX101 : SPLIT ON envoie aussi l'émission sur l'autre VFO (ST1 + FT2/FT3) et reste allumé ; SPLIT OFF ramène l'émission sur le VFO de réception ; TX cliqué sur l'autre VFO = SPLIT ON affiché

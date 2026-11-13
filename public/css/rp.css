@@ -2822,3 +2822,15 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .ssb-body .fc-tx .vx-mon { margin-left: 16px; }
 .ssb-body .fc-tx .vx-monvol input, .ssb-body .vx .vx-monvol input { flex-basis: 100px !important; width: 100px !important; }
 .ssb-body .ss-lvol input { width: 90px; flex-basis: 90px; }
+/* Page SSB : listes de QSO (hors contest et log du contest) avec les entêtes et les couleurs du carnet général */
+.ssb-body .cwp-clog.ssb-qlog, .ssb-body .cwp-clog.ssb-clog { border-collapse: collapse; font-family: inherit; font-size: 11px; font-variant-numeric: tabular-nums; }
+.ssb-body .ssb-qlog th, .ssb-body .ssb-clog th { position: sticky; top: 0; background: #4a2508; color: #fff3dc; font-weight: 800; font-size: 9px; letter-spacing: .8px; text-transform: uppercase;
+  text-align: left; padding: 6px 14px 6px 6px; border: 1px solid #b08850; border-left-width: 0; white-space: nowrap; }
+.ssb-body .ssb-qlog th:first-child, .ssb-body .ssb-clog th:first-child { border-left-width: 1px; }
+.ssb-body .ssb-qlog td, .ssb-body .ssb-clog td { padding: 4px 14px 4px 6px; color: var(--v2-text-secondary); border-bottom: 1px solid var(--v2-border-dark); border-right: 1px solid rgba(200, 210, 225, .28); white-space: nowrap; }
+.ssb-body .ssb-qlog td:last-child, .ssb-body .ssb-clog td:last-child { border-right: 0; }
+.ssb-body .ssb-qlog tr:first-child td, .ssb-body .ssb-clog tr:first-child td { color: var(--v2-text-secondary); }
+.ssb-body .ssb-qlog td:nth-child(3), .ssb-body .ssb-clog td:nth-child(3) { color: var(--v2-text-bright) !important; font-weight: 700; }
+.ssb-body .ssb-qlog tbody tr:hover td, .ssb-body .ssb-clog tbody tr:hover td { background: var(--v2-bg-input); }
+.ssb-body .ssb-clog td:last-child { color: #ffd400; }
+.ssb-body .ssb-clog tr.dup td { color: #8a95a5 !important; }
