@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.80** — Page SSB : log du contest avec Env. / Éch. env., Reçu / Éch. reçu, DXCC, points par QSO selon le règlement (doublon = 0) et nom du contest ; colonnes rapprochées dans les listes de QSO
 - **0.38.79** — Page SSB : bouton 🔊 ÉCOUTER LE TRX à droite de MONITORING (aussi depuis la face avant) ; plus de note « Choisissez un contest »
 - **0.38.78** — Listes des contests (SSB, CW, RTTY) par ordre alphabétique, « Autre contest (échange libre) » à la fin
 - **0.38.77** — Page SSB : plus de bouton PROC ; NIVEAU PROC à 0 = PROC coupé (OFF), au-dessus de 0 = PROC en service tout seul

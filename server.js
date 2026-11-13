@@ -1024,7 +1024,7 @@ function qrzFill(q) {
 function ctstCty(q) {
   const e = DXCC.lookup(q.call) || {};
   const me = DXCC.lookup(q.station_callsign || cfg.callsign || '') || {};
-  return { dx: e.pfx || '', ct: e.cont || '', mp: me.pfx || '', mc: me.cont || '' };
+  return { dx: e.pfx || '', ct: e.cont || '', mp: me.pfx || '', mc: me.cont || '', cn: q.country || e.name || '' };
 }
 function qsoForClient(q) {
   const o = Object.assign({}, q);

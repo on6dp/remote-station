@@ -391,9 +391,25 @@
   function drawLog() {
     const tb = $('cwpCLog');
     tb.textContent = '';
+    // Points de chaque QSO selon le règlement du contest (doublon = 0), dans l'ordre chronologique
+    const d0 = def(), R0 = (d0 && RULES[d0.id]) || GENERIC, k0 = kit();
+    const my0 = { itu: k0 ? Number(k0.zones().itu) : 27, cqz: k0 ? Number(k0.zones().cqz) : 14 };
+    const pts = new Map(), seen0 = new Set();
+    for (const q of CL.items.slice().sort((a, b) => (tOf(a) < tOf(b) ? -1 : tOf(a) > tOf(b) ? 1 : 0))) {
+      const k = q.call + '|' + q.band;
+      if (seen0.has(k)) { pts.set(q, 'dup'); continue; }
+      seen0.add(k);
+      let p = null;
+      try { p = q.dx || q.ct ? R0.pts(q, my0) || 0 : null; } catch (e) { p = null; }
+      pts.set(q, p);
+    }
+    const cname = d0 ? d0.name : '';
     for (const q of CL.items.slice(-1500).reverse()) {
       const tr = document.createElement('tr');
-      for (const v of [q.t.slice(0, 2) + ':' + q.t.slice(2, 4), q.band, q.call, q.stx, q.srx]) { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); }
+      const p = pts.get(q);
+      if (p === 'dup') tr.className = 'dup';
+      const cells = [q.t.slice(0, 2) + ':' + q.t.slice(2, 4), q.band, q.call, q.rs || '', q.stx, q.rr || '', q.srx, q.cn || q.dx || '', p === 'dup' ? '0 (doublon)' : p == null ? '…' : String(p), cname];
+      cells.forEach((v, i) => { const td = document.createElement('td'); td.textContent = v == null ? '' : v; if (i === 8) td.className = 'r'; tr.appendChild(td); });
       tb.appendChild(tr);
     }
     const per = {};
@@ -633,7 +649,7 @@
     if (/^\d{1,5}$/.test(stx)) qso.stx = stx;
     if (/^\d{1,5}$/.test(srx)) qso.srx = srx;
     api.send({ t: 'log_add', qso, force: true, tag: 'ssbpage', spot: !!(window.RSSPOT && RSSPOT.on()) });
-    CL.items.push({ call, band: bandOf(mhz), d: qso.qso_date, t: hms, stx, srx });
+    CL.items.push({ call, band: bandOf(mhz), d: qso.qso_date, t: hms, stx, srx, rs: qso.rst_sent, rr: qso.rst_rcvd });
     if (/<CNTR>|<SERNO>/.test(exchTpl())) k.afterLog(call); // n° de série suivant (seulement s'il fait partie de l'échange)
     drawLog();
     for (const x of ['call', 'stx', 'srx']) E[x].value = '';

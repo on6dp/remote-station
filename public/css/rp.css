@@ -2772,3 +2772,10 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .vx .ss-listen { margin-left: 8px; border: 1px solid #fff; color: #fff; font-weight: 800; font-size: 11px; padding: 4px 12px; }
 .vx .ss-listen[aria-pressed='true'] { background: linear-gradient(180deg, #1f9d45, #12692c); border-color: #39FF14; color: #fff; }
 .vx .ss-listen[hidden] { display: none; }
+/* Page SSB : listes de QSO aux colonnes rapprochées (largeur selon le contenu) ; log du contest : Pts à droite, doublons grisés */
+.ssb-body .cwp-clog.ssb-qlog, .ssb-body .cwp-clog.ssb-clog { width: auto; min-width: 0; }
+.ssb-body .cwp-clog.ssb-qlog td, .ssb-body .cwp-clog.ssb-qlog th, .ssb-body .cwp-clog.ssb-clog td, .ssb-body .cwp-clog.ssb-clog th { padding-right: 16px; }
+.ssb-clog .r { text-align: right; }
+.ssb-clog td:nth-child(3) { color: #fff; font-weight: 800; }
+.ssb-clog tr.dup td { color: #8a95a5; text-decoration: line-through; }
+.ssb-clog tr.dup td:nth-child(9) { text-decoration: none; color: #ff8a7a; }
