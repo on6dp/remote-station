@@ -842,7 +842,7 @@
     // Synchro (heure du PC, décalage DT) : utile en FT8 / FT4 / FT2, WSPR, JT65 ; pas en RTTY, JTTY, CW, SSTV
     { const tl = document.querySelector('#ctabs .ctab-tl'); if (tl) tl.hidden = !(pane === 'ftx'); }
     const syb = document.querySelector('#centerPanel .ctab[data-tab="sync"]');
-    if (syb) syb.hidden = ['rtty', 'jtty', 'cw', 'sstv'].indexOf(t) >= 0;
+    if (syb) syb.hidden = ['rtty', 'jtty', 'cw', 'sstv'].indexOf(t) >= 0 || (POPUP && !EMBED && pane === 'ftx'); // FT : SYNCHRO dans la barre de chaque VFO
     document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== pane; });
     bmShow();
     // RTTY : l'aide de la cascade s'affiche 3 secondes à l'arrivée sur l'onglet, puis s'efface (reste au survol de la cascade)
@@ -5834,8 +5834,20 @@
       $('dgQsy').addEventListener('click', qsy);
       if ($('dgQsyB')) $('dgQsyB').addEventListener('click', qsyB);
       if ($('dgDialB')) $('dgDialB').addEventListener('change', () => { store.set('dialb.' + mode, $('dgDialB').value); qsyB(); });
+      // SYNCHRO dans la barre de chaque VFO, à droite de TX … Hz (fenêtre séparée) ; un nouveau clic sur SYNCHRO en haut revient au mode
+      if (POPUP && !EMBED) for (const id of ['ftVbarA', 'ftVbarB']) {
+        const bar = $(id);
+        if (!bar) continue;
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn ft-vsync';
+        b.textContent = 'SYNCHRO';
+        b.title = 'Synchronisation : heure du serveur, du PC du club et du vôtre, délai de la liaison, DT médian. Nouveau clic sur SYNCHRO (en haut) : retour au mode.';
+        b.addEventListener('click', () => showTab('sync'));
+        bar.appendChild(b);
+      }
       // Bande, ↺ et RX / TX du VFO-A : dans la barre du VFO-A (au-dessus de sa cascade), comme ceux du VFO-B
-      { const va = $('ftVbarA'), sp = $('dgRxF2') && $('dgRxF2').closest('.dg-split'); if (va && $('dgDial')) { va.append($('dgDial'), $('dgQsy')); if (sp) va.appendChild(sp); $('dgDial').title = 'Bande du VFO-A : fréquence d’appel du mode (le VFO-A y va, en DATA-U)'; } }
+      { const va = $('ftVbarA'), sp = $('dgRxF2') && $('dgRxF2').closest('.dg-split'); if (va && $('dgDial')) { va.append($('dgDial'), $('dgQsy')); if (sp) va.appendChild(sp); const vs = va.querySelector('.ft-vsync'); if (vs) va.appendChild(vs); $('dgDial').title = 'Bande du VFO-A : fréquence d’appel du mode (le VFO-A y va, en DATA-U)'; } }
       // Choisir une fréquence dans la liste y envoie directement le TRX (QSY)
       $('dgDial').addEventListener('change', () => { store.set('dial.' + mode, $('dgDial').value); qsy(); });
       $('dgClear').addEventListener('click', () => { hist.length = 0; redrawAll(); });

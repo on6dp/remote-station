@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.62** — Page FT : SYNCHRO dans la barre de chaque VFO, à droite de TX … Hz (le SYNCHRO du haut n'apparaît que dans la synchro, pour revenir au mode)
 - **0.38.61** — Fenêtre TRX DIGI : état de la BF / décodage et heure UTC sur la ligne du haut, à gauche de Ramener dans le dashboard (une ligne de gagnée) ; mode DATA-U des cascades en plus grand
 - **0.38.60** — Page FT : fiche du QSO cachée par défaut ; bouton jaune DÉTAILS QSO (affiche / cache) sur la ligne des macros ; elle s'ouvre au choix d'un indicatif et se ferme 2 s après l'enregistrement du QSO
 - **0.38.59** — Page FT : bande (fréquence d'appel), ↺, RX/TX, TX←RX, RX←TX dans la barre de chaque VFO ; le VFO-B a sa propre liste de bandes et ses propres RX/TX ; FT8/FT4/FT2, Période, Activité et DX restent en haut
