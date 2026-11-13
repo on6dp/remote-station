@@ -1,0 +1,2 @@
+f09616bbb76fd362b35ef04c94dda28819eb57348ff08be209d46c97d6ccdf7b  RemoteStation-Setup-0.38.99.exe
+4e4632d14c40fe9175b236c1cff3b8103e0925bbb9630bc083aea86f23d35350  remote-station-0.38.99.tar.gz
