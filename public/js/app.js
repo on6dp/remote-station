@@ -2143,7 +2143,7 @@
       if (window.RSLOG && /^log_/.test(m.t)) {
         window.RSLOG.onMessage(m);
         // QSO enregistré ou carnet changé : la page des modes numériques suit aussi (cadre LOG RTTY)
-        if ((m.t === 'log_saved' || m.t === 'log_changed') && DG()) { try { DG().onMessage(m); } catch (e) { /* page des modes numériques absente */ } }
+        if ((m.t === 'log_saved' || m.t === 'log_changed' || (m.t === 'log_export' && m.tag === 'rttypage')) && DG()) { try { DG().onMessage(m); } catch (e) { /* page des modes numériques absente */ } }
         return;
       }
       if (m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values') { if (VX()) VX().onMessage(m); return; }

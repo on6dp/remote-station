@@ -3151,3 +3151,8 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 @keyframes rteFlash { from { box-shadow: 0 0 0 3px rgba(245, 255, 0, .8); } to { box-shadow: 0 0 0 0 rgba(245, 255, 0, 0); } }
 .ctab-pane.rt .rt-macact { display: none !important; }
 .rt-rx .rt-rxl { cursor: pointer; }
+/* LOG RTTY : bouton EXPORTER ADIF à droite du titre (comme Synchronisation / Exporter du carnet) */
+.rt-loghd { display: flex; align-items: center; gap: 6px; }
+.rt-loghd .rt-logx { order: 3; margin-left: auto; color: #f5ff00; font-weight: 800; font-size: 11px; letter-spacing: .4px; padding: 3px 10px; border-radius: 6px; background: #121a26; border: 1px solid #3a4658; }
+.rt-loghd .rt-logx:hover { border-color: #f5ff00; }
+#rtLogZoom { order: 1; } #rtLogInfo { order: 2; }

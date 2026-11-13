@@ -435,7 +435,7 @@
       </div>
       <!-- LOG RTTY : les QSO RTTY du carnet général (hors contest, ou ceux du contest choisi), le plus récent en haut -->
       <div class="dg-col rt-logbox" id="rtLogBox">
-        <div class="rt-loghd"><b id="rtLogZoom" title="Clic : agrandir le log au centre de la page (nouveau clic, ou Échap : le remettre à sa place)">LOG RTTY ⤢</b> <span id="rtLogInfo"></span></div>
+        <div class="rt-loghd"><button class="btn rt-logx" type="button" id="rtLogAdi" title="Exporter en ADIF (.adi) les QSO RTTY affichés : hors contest, ou ceux du contest choisi (vos QSO sous ce TX call)">EXPORTER ADIF</button><b id="rtLogZoom" title="Clic : agrandir le log au centre de la page (nouveau clic, ou Échap : le remettre à sa place)">LOG RTTY ⤢</b> <span id="rtLogInfo"></span></div>
         <div class="cwp-clogw rt-logw"><table class="cwp-clog rt-log"><thead><tr id="rtLogHead"></tr></thead><tbody id="rtLogBody"></tbody></table></div>
       </div>
     </div>
@@ -3220,6 +3220,7 @@
       });
       g.addEventListener('dblclick', () => setIo(null, true));
     }
+    if ($('rtLogAdi')) $('rtLogAdi').addEventListener('click', rtLogExport);
     // LOG RTTY : clic sur son titre = log agrandi au centre de la page ; nouveau clic (ou Échap) = remis à sa place
     if ($('rtLogZoom')) {
       const box = $('rtLogBox');
@@ -5131,6 +5132,23 @@
     clearTimeout(rtLogT);
     rtLogT = setTimeout(() => { try { api.send({ t: 'mode_list', mode: 'RTTY', contest: rtcOn() ? rtcId() : '', limit: 300 }); } catch (e) { /* hors ligne */ } }, 250);
   }
+  // Export ADIF des QSO RTTY (hors contest, ou ceux du contest choisi) : fichier enregistré par le navigateur
+  function rtLogExport() {
+    if (!api) return;
+    const cid = rtcOn() ? rtcId() : '';
+    api.send({ t: 'log_export', fmt: 'adif', callsign: myCall, mine: true, modeOnly: 'RTTY', contest: cid || undefined, contestOnly: !!cid, tag: 'rttypage' });
+  }
+  function rtLogSave(m) {
+    const doc = ($('rtLogBox') && $('rtLogBox').ownerDocument) || document;
+    const blob = new Blob([m.data || ''], { type: (m.mime || 'text/plain') + ';charset=utf-8' });
+    const a = doc.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = m.name || 'rtty.adi';
+    doc.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    if (api && api.say) api.say((m.count || 0) + ' QSO RTTY dans ' + (m.name || 'le fichier') + ' (ADIF).', '', 5000);
+  }
   function rtLogDraw(m) {
     const body = $('rtLogBody'), head = $('rtLogHead');
     if (!body || !head) return;
@@ -5138,8 +5156,8 @@
     if ((m.contest || '') !== cid) return; // réponse d'un autre choix de contest
     const ctst = !!cid;
     const cols = ctst
-      ? [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['TX #', 'stx'], ['Reçu', 'rr'], ['RX #', 'srx'], ['Nom', 'name'], ['Pays', 'cn'], ['TX call', 'st'], ['OP', 'op']]
-      : [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['Reçu', 'rr'], ['Nom', 'name'], ['QTH', 'qth'], ['Loc.', 'grid'], ['Pays', 'cn'], ['TX call', 'st'], ['OP', 'op']];
+      ? [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['TX #', 'stx'], ['Reçu', 'rr'], ['RX #', 'srx'], ['DXCC', 'dx'], ['TX call', 'st'], ['OP', 'op']]
+      : [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['Reçu', 'rr'], ['Nom', 'name'], ['QTH', 'qth'], ['Loc.', 'grid'], ['DXCC', 'dx'], ['TX call', 'st'], ['OP', 'op']];
     const key = cols.map((c) => c[0]).join('|');
     if (key !== rtLogKey) {
       rtLogKey = key;
@@ -6644,6 +6662,7 @@
     onMessage(m) {
       qsoSaved(m); // fiche du QSO cachée 2 s après l'enregistrement
       if (m.t === 'mode_list' && m.mode === 'RTTY') { rtLogDraw(m); return true; }
+      if (m.t === 'log_export' && m.tag === 'rttypage') { rtLogSave(m); return true; }
       if (m.t === 'log_changed' || m.t === 'log_saved') rtLogAsk(); // QSO ajouté, modifié ou supprimé : le LOG RTTY suit
       // Spot au DX cluster (case « Spot cluster ») : aussi affiché dans la fenêtre TRX DIGI
       if (m.t === 'notice' && /^Spot\b/.test(m.msg || '') && api && api.say && document.body.classList.contains('digi-popup')) api.say(m.msg, m.level === 'error' ? 'warn' : '', 5000);
