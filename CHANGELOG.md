@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.13** — Messages vocaux en français : 6, 8 et 5 de l'indicatif dits en entier (six, huit, cinq — plus « si Delta »)
 - **0.39.12** — TRX SSB : bouton « Messages vocaux… » renommé « Config. Macros »
 - **0.39.11** — Messages vocaux : Langue, Voix, Vitesse et Espacement des lettres en jaune vif
 - **0.39.10** — TRX SSB : mémoires vocales F1–F8 et Messages vocaux aussi sans contest (au-dessus de la fiche du carnet)
