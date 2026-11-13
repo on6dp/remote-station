@@ -3090,3 +3090,4 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .rt-iogrip:hover::after { background: var(--v2-accent-cyan, #00d4ff); }
 .ctab-pane.rt .rt-dual > .rt-vsplit { align-self: stretch; }
 .ctab-pane.rt #rtTxClear { display: none !important; } /* RTTY : chaque fenêtre a déjà son Effacer */
+.rt-contest .rtc-l[hidden] { display: none !important; }

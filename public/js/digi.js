@@ -5103,7 +5103,7 @@
     if ((m.contest || '') !== cid) return; // réponse d'un autre choix de contest
     const ctst = !!cid;
     const cols = ctst
-      ? [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['TX #', 'stx'], ['Reçu', 'rr'], ['RX #', 'srx'], ['Pays', 'cn'], ['TX call', 'st'], ['OP', 'op']]
+      ? [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['TX #', 'stx'], ['Reçu', 'rr'], ['RX #', 'srx'], ['Nom', 'name'], ['Pays', 'cn'], ['TX call', 'st'], ['OP', 'op']]
       : [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['Reçu', 'rr'], ['Nom', 'name'], ['QTH', 'qth'], ['Loc.', 'grid'], ['Pays', 'cn'], ['TX call', 'st'], ['OP', 'op']];
     const key = cols.map((c) => c[0]).join('|');
     if (key !== rtLogKey) {
@@ -5171,6 +5171,8 @@
       $('rtcExch').disabled = !rtcOn();
       $('rtcCqz').value = store.get('rtcqz', '14');
       $('rtcName').value = store.get('rtcname', '');
+      // Prénom (le vôtre, balise <MYNAME>) : seulement pour un contest dont l'échange le demande (NAQP, NA Sprint…)
+      $('rtcName').closest('label').hidden = !/<MYNAME>/i.test(rtcExch());
       $('rtcItu').value = store.get('rtitu', '27');
       $('rtContest').classList.toggle('on', rtcOn());
       drawRttyMacros();
