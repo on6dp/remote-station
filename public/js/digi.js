@@ -649,6 +649,9 @@
       const after = panel.querySelector('#dgTxcWrap') || bar.querySelector('.ctab[data-tab="sync"]');
       if (after && after.parentElement === bar) after.after(info); else bar.prepend(info);
       info.querySelector('#dgHdTake').addEventListener('click', (e) => { e.stopPropagation(); if (api) api.send({ t: 'take' }); });
+      // État de la BF / décodage et heure UTC : à gauche de « Ramener dans le dashboard » (une ligne de gagnée)
+      const tl = panel.querySelector('.dg-ftx .dg-tl');
+      if (tl) { tl.classList.add('ctab-tl'); bar.insertBefore(tl, $('dgDetach')); }
     }
     if (logHere()) { add('log', 'lg', ''); window.RSLOG.mount(panel.lastElementChild); }
     // Carte de bande (DX cluster) : colonne à droite de la fenêtre, onglet RTTY
@@ -837,6 +840,7 @@
     }
     document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
     // Synchro (heure du PC, décalage DT) : utile en FT8 / FT4 / FT2, WSPR, JT65 ; pas en RTTY, JTTY, CW, SSTV
+    { const tl = document.querySelector('#ctabs .ctab-tl'); if (tl) tl.hidden = !(pane === 'ftx'); }
     const syb = document.querySelector('#centerPanel .ctab[data-tab="sync"]');
     if (syb) syb.hidden = ['rtty', 'jtty', 'cw', 'sstv'].indexOf(t) >= 0;
     document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== pane; });
@@ -5586,6 +5590,7 @@
     else txt = 'BF reçue · décodage OK' + (st.digi && st.digi.engine === 'wsjtx' ? ' (moteur WSJT-X)' : '') + (st.digi && st.digi.latency != null ? ' · délai ' + st.digi.latency + ' ms' : '');
     if (st && st.radio && st.radio.mode && !/DATA|USB|-D/i.test(st.radio.mode)) { txt += ' · mode ' + st.radio.mode + ' : passez en DATA-U'; warn = true; }
     el.textContent = txt;
+    el.title = txt;
     el.classList.toggle('warn', warn);
   }
   const now = () => Date.now() + clockOff; // heure du serveur

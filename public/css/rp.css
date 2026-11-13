@@ -2678,3 +2678,14 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 #dgQsyB, #dgTxRxB, #dgRxTxB { border: 1px solid #fff; color: #fff; font-weight: 800; background: transparent; }
 #dgQsyB:active, #dgTxRxB:active, #dgRxTxB:active, #dgQsyB.flash, #dgTxRxB.flash, #dgRxTxB.flash { background: #fff; color: #000; border-color: #fff; }
 .ft-wfb .ft-vbar { border-top: 0; }
+/* Fenêtre TRX DIGI : état de la BF / décodage et heure UTC sur la ligne du haut, à gauche de « Ramener dans le dashboard » */
+#ctabs .ctab-tl { flex: 0 1 auto; margin-left: auto; margin-right: 12px; min-width: 0; align-self: center; }
+#ctabs .ctab-tl[hidden] { display: none; }
+#ctabs .ctab-tl .dg-status { font-size: 11px; }
+#ctabs.dg-notabs { flex-wrap: nowrap; }
+#ctabs.dg-notabs > * { flex-shrink: 0; }
+#ctabs.dg-notabs > .ctab-gap { flex: 1 1 0; min-width: 0; }
+#ctabs.dg-notabs > .ctab-tl { flex: 0 1 auto; min-width: 60px; overflow: hidden; margin-left: 0; }
+#ctabs .ctab-tl .dg-status { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Mode du VFO (DATA-U…) à côté de la fréquence des cascades : caractères plus grands */
+.ft-md, .ft-dual .wf-ctl .ft-md { font-size: 13px; font-weight: 800; padding: 1px 8px; border-radius: 4px; vertical-align: 2px; }
