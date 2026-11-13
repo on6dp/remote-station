@@ -990,6 +990,10 @@
     let list = [];
     try { list = host && host.txCtls ? host.txCtls() : []; } catch (e) { list = []; }
     list = list.filter((c) => c.id !== 'micEq'); // MIC EQ : dans la fenêtre TRX EQ (bouton TRX EQ vert = en service)
+    // PROC : plus de bouton ; NIVEAU PROC à 0 = PROC coupé, au-dessus de 0 = PROC en service (mis tout seul)
+    const procC = list.find((c) => c.id === 'proc'), lvlC = list.find((c) => c.id === 'procLvl');
+    const procByLvl = !!(procC && lvlC);
+    if (procByLvl) list = list.filter((c) => c.id !== 'proc');
     box.hidden = !list.length;
     if (!list.length) return;
     const key = list.map((c) => c.id + c.type + c.max).join('|');
@@ -1005,7 +1009,21 @@
           const inp = document.createElement('input'); inp.type = 'range'; inp.min = c.min; inp.max = c.max; inp.step = c.step || 1; inp.setAttribute('aria-label', c.label);
           inp.addEventListener('pointerdown', () => { MIC.drag[c.id] = true; });
           inp.addEventListener('pointerup', () => { setTimeout(() => { MIC.drag[c.id] = false; }, 1200); });
-          inp.addEventListener('input', () => { const why = host.txSet(c.id, Number(inp.value)); if (why) toast(why, 'warn'); });
+          inp.addEventListener('input', () => {
+            const v = Number(inp.value);
+            if (c.id === 'procLvl' && MIC.procByLvl) {
+              const on = !!((host.txCtls().find((x) => x.id === 'proc') || {}).value);
+              let why = '';
+              if (v <= 0) { if (on) why = host.txSet('proc', 0); }
+              else {
+                why = host.txSet('procLvl', v);
+                if (!why && !on) why = host.txSet('proc', 1);
+              }
+              if (why) toast(why, 'warn');
+              return;
+            }
+            const why = host.txSet(c.id, v); if (why) toast(why, 'warn');
+          });
           cell.append(hd, inp); body.appendChild(cell);
           MIC.refs[c.id] = { inp, out };
         } else {
@@ -1016,13 +1034,16 @@
         }
       }
     }
+    MIC.procByLvl = procByLvl;
     const ctl = api.iControl();
     for (const c of list) {
       const r = MIC.refs[c.id];
       if (!r) continue;
       if (r.inp) {
-        if (!MIC.drag[c.id] && c.value != null) r.inp.value = c.value;
-        r.out.textContent = c.text;
+        const pOff = procByLvl && c.id === 'procLvl' && !procC.value;
+        if (!MIC.drag[c.id] && c.value != null) r.inp.value = pOff ? 0 : c.value;
+        r.out.textContent = pOff ? 'OFF' : c.text;
+        if (c.id === 'procLvl' && procByLvl) r.inp.title = 'NIVEAU PROC : à 0 = PROC coupé ; au-dessus de 0, PROC en service (SSB ou AM sur le VFO d’émission)';
         r.inp.disabled = !ctl;
         const lo = Number(r.inp.min) || 0, hi = Number(r.inp.max) || 100;
         r.inp.style.setProperty('--p', ((Number(r.inp.value) - lo) / (hi - lo || 1) * 100).toFixed(1) + '%');
