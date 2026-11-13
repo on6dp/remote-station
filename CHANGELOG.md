@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.73** — Page TRX SSB : les 8 mémoires vocales sur la même ligne que Config. Macros, boutons moins hauts
 - **0.39.72** — Page TRX SSB : cadre LOG SSB comme le LOG RTTY (titre, nombre de QSO, agrandi au clic, menu EXPORTER : mes QSO SSB, ADIF avec filtres TX call / opérateur / dates)
 - **0.39.71** — Page TRX SSB : voyant RX / TX retiré, bouton RETOUR à sa place (en haut à droite)
 - **0.39.70** — Pages TRX SSB et TRX CW : bouton RETOUR en haut à droite, comme les autres pages (ferme la page, la page d'origine repasse devant)
