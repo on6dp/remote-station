@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.66** — Phonie : MICRO EQ n'est plus grisé hors phonie (égaliseur du navigateur utilisable dans tous les modes dès que le micro est ouvert) ; page SSB : micro fermé → MICRO EQ le rouvre puis ouvre l'égaliseur
 - **0.38.65** — Fenêtre TRX DIGI : « Ramener dans le dashboard » devient RETOUR sur toutes les pages des modes (pendant la synchro : retour à la page du mode)
 - **0.38.64** — Fenêtre TRX DIGI, Synchro : le bouton de droite devient ↩ Retour TRX FT8/FT4/FT2 (retour à la page du mode, pas au dashboard)
 - **0.38.63** — Pages TRX DIGI, SSB et CW : 👥 membres connectés, indicatif et bouton de la main comme le dashboard. Page FT : DX filtré par Entrée, case vidée = tout le trafic (plus de SEULEMENT LA CHASSE ni ✕) ; Période et Activité en jaune vif gras

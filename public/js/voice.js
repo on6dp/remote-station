@@ -182,7 +182,7 @@
     const voiceMd = !!(modes && modes.indexOf(txMode(st)) >= 0);
     if (V.api.compact) {
       $('vxEqBtn').hidden = false;
-      $('vxEqBtn').classList.toggle('dim', !V.on || !voiceMd);
+      $('vxEqBtn').classList.toggle('dim', !V.on); // égaliseur du navigateur : utilisable dans tous les modes, dès que le micro est ouvert
       $('vxOn').classList.toggle('dim', !voiceMd);
       if (!voiceMd && modes) $('vxOn').title = 'Mode ' + (txMode(st) || '?') + ' : pas de phonie (le micro sert en ' + modes.join(' / ') + ').';
       else if (!modes && !V.on) $('vxOn').title = 'Phonie à distance pas disponible pour le moment (page Station du club hors ligne ou à recharger) : vous pouvez déjà préparer votre micro et son égaliseur.';
@@ -420,6 +420,8 @@
     });
   }
   function openEq() {
+    // Page TRX SSB : micro fermé (refusé, débranché…) : on le rouvre, puis l'égaliseur s'ouvre
+    if (!V.on && V.api.auto) { start().then(() => { if (V.on) openEq(); }).catch(() => {}); return; }
     if (!V.on) return V.api.say('MICRO EQ : activez d’abord votre micro (bouton « Micro »).', 'warn', 4000);
     let d = $('vxEq');
     if (d) { d.remove(); return; }
