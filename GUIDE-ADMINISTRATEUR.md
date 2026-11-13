@@ -76,6 +76,7 @@ Le serveur regarde toutes les 30 minutes sur GitHub (github.com/on6dp/remote-sta
 - Sécurité : le serveur Remote Station (utilisateur `remotestation`) ne fait qu'écrire le numéro de version voulu dans `/opt/remote-station/update/request`. C'est un service de root séparé (`remote-station-update.path` / `.service`, programme `/usr/local/sbin/remote-station-update`, que le service ne peut pas modifier) qui télécharge depuis l'adresse GitHub fixée dans ce programme, vérifie et installe. Le serveur n'a aucun droit d'administrateur du VPS.
 - Journal de chaque mise à jour : `sudo tail -40 /var/log/remote-station-update.log`.
 - Couper la vérification : `"updateCheck": false` dans `config.json`.
+- Accès internet du serveur utilisés : raw.githubusercontent.com (versions), www.hamqsl.com (propagation, toutes les 30 min, cadre Propagation de la page SSB).
 - L'instance de test (test.op0p.be) est mise à la même version par `install.sh`, comme avant.
 
 ### À la main
@@ -242,6 +243,17 @@ raccourci « Remote Station - Page Station » (Chrome avec les bons réglages, s
 7. Régler **Niveau d'émission** (numérique) et **Niveau phonie à distance** pour que l'ALC reste faible (section 9).
 8. Chrome → Paramètres → Performances : « Toujours garder ces sites actifs » → ajouter `remote.op0p.be` ; désactiver l'économiseur d'énergie. Windows : mise en veille sur **Jamais**.
 9. Garder la page Station **seule dans sa fenêtre** ; pour piloter depuis le PC du club, bouton « Ouvrir le dashboard dans une autre fenêtre ». **Une seule page Station à la fois**, quel que soit le PC.
+
+### Assistant carte son (PC du club)
+
+Petit programme Windows (PowerShell, tâche planifiée « RemoteStation carte son », compte SYSTEM) qui :
+- relance la carte son USB du TRX quand elle se fige (à la demande de la page Station ou du dashboard, seule après 45 s de silence) et la répare si Windows la met en erreur ;
+- coupe la mise en veille USB de Windows (cause fréquente d'une carte son figée) ;
+- met l'horloge de Windows à l'heure à la milliseconde, comme NetTime (au démarrage, toutes les heures, et bouton « ⟳ Mettre à l'heure » de l'onglet Synchro) — désinstaller NetTime.
+
+Installation ou mise à jour : sur la page Station (administrateur connecté), lien **« Télécharger l'assistant carte son »** (affiché tant que l'assistant manque ou n'est pas à la dernière version) → décompresser (remplacer l'ancien dossier) → double-clic sur `installer-carte-son.cmd` → « … en marche (version 5) ». **Version 5** : priorité basse et surveillance de la carte son une fois par minute (requête limitée à la carte son du TRX), plus légère pour le PC du club. Retrait : `retirer-carte-son.cmd`. Journal : `C:\ProgramData\RemoteStation\rs-carte-son.log`.
+
+**Membres** : pour écouter et piloter, **Chrome ou Edge** aussi. Sous Firefox, l'écoute du TRX peut être hachée.
 
 ### Réglages des TRX
 
@@ -585,7 +597,7 @@ Les mots de passe SSH, les clés et le jeton ne s'envoient jamais par e-mail ni 
 | « Remplacée par une autre page Station » | Une autre page Station est ouverte ailleurs : la fermer, puis « Enregistrer et reconnecter » |
 | Plus de son du TRX (alerte orange sur le dashboard) | Carte son USB figée : relancée seule par la page Station après 45 s de silence (assistant installé, une fois / 10 min) ; sinon menu STATION → « Relancer la carte son du TRX » (responsables). Assistant **version 2** (refaire `installer-carte-son.cmd` une fois) : coupe aussi la mise en veille USB de Windows à chaque démarrage (`powercfg` suspension sélective USB, `MSPower_DeviceEnable` des concentrateurs et cartes son USB) |
 | Onglet Synchro : « Serveur : NTP » NON SYNCHRONISÉ ou écart > 50 ms | Le VPS est la référence de tous les décodages et de l'instant d'émission. Vérifier `timedatectl` ; pour la milliseconde, installer chrony : `sudo apt install chrony` (remplace systemd-timesyncd), puis `chronyc tracking` (« System time » doit être de l'ordre de quelques ms) |
-| Heure de Windows du PC du club décalée (NetTime installé à la main) | Assistant carte son **version 4** : règle le service Windows Time (be.pool.ntp.org, europe.pool.ntp.org, time.cloudflare.com, interrogés toutes les 1 à 4 min), resynchronise au démarrage, toutes les heures et sur « ⟳ Mettre à l'heure » (onglet Synchro). L'écart du PC du club est de toute façon corrigé pour l'émission ; désinstaller NetTime pour éviter deux réglages concurrents |
+| Heure de Windows du PC du club décalée (NetTime installé à la main) | Assistant carte son **version 4 et plus** (version 5 conseillée : priorité basse, surveillance une fois par minute) : règle le service Windows Time (be.pool.ntp.org, europe.pool.ntp.org, time.cloudflare.com, interrogés toutes les 1 à 4 min), resynchronise au démarrage, toutes les heures et sur « ⟳ Mettre à l'heure » (onglet Synchro). L'écart du PC du club est de toute façon corrigé pour l'émission ; désinstaller NetTime pour éviter deux réglages concurrents |
 | Raies verticales régulières (tous les 25 Hz) sur toute la cascade | Deux captures du son envoyées en même temps par la page Station (relances successives) : corrigé en 0.37.176 ; en attendant, recharger la page Station (Ctrl+F5) et n'en garder qu'un seul onglet ouvert |
 | Carte son du TRX disparue de Windows (« Périphérique USB composite » en **Error**, plus d'« USB Audio CODEC » dans le Gestionnaire de périphériques) | Assistant **version 3** : la retire et la fait redétecter seul (surveillance toutes les 20 s, au plus une fois / 5 min ; aussi sur « Relancer la carte son du TRX »). La page Station ne prend jamais une autre carte son à sa place : alerte « Carte son du TRX absente », reprise automatique au retour. À la main (PowerShell administrateur) : `Get-PnpDevice \| Where-Object InstanceId -like 'USB\VID_0D8C*'` puis `pnputil /remove-device "<InstanceId>"` pour chaque ligne et `pnputil /scan-devices`. Si l'erreur revient souvent : câble USB court blindé avec ferrites, autre prise USB du PC (arrière, sans hub) |
 | Phonie : « le TRX n'a pas répondu à la lecture du menu… » | Liaison CAT perturbée ou TRX occupé : réessayer ; vérifier le modèle choisi sur la page Station |
