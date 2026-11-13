@@ -743,20 +743,43 @@
     const clickOn = (id, fn) => $(id).addEventListener('click', (ev) => { ev.stopPropagation(); fn(); });
     // TRX à un seul clarifier (FTDX101, FTDX5000, IC-7300…) : sur le VFO B, les mêmes RIT / XIT / CLEAR que le VFO A
     const clarSfx = (w) => (w === 'B' && RIG().CONTROL && RIG().CONTROL.ritB ? 'B' : '');
+    // FTDX101 / FTDX5000 : un clarifier par récepteur, lus à part (IF = VFO A, OI = VFO B), mais RT / XT / RC / RU agissent
+    // sur le côté sélectionné (MAIN / SUB) : on sélectionne d'abord le VFO de l'écran cliqué, puis la commande
+    const clarPerSide = () => { const r = (st && st.radio) || {}; return !(RIG().CONTROL && RIG().CONTROL.ritB) && r.ritA != null && r.ritB != null; };
+    const clarKey = (k, w) => (clarPerSide() ? k + w : k + clarSfx(w));
+    const clarOnSide = (w, fn) => {
+      if (!clarPerSide()) return fn();
+      const sel = Number(ctlValue('vfoSel')) === 1 ? 'B' : 'A';
+      if (sel === w) return fn();
+      const vs = RIG().CONTROL && RIG().CONTROL.vfoSel;
+      if (!vs) return say('Sélectionnez d’abord le VFO ' + w + ' sur le TRX.', 'warn');
+      sendCtl(vs, w === 'B' ? 1 : 0);
+      setTimeout(fn, 600);
+    };
     for (const w of ['A', 'B']) {
-      clickOn(w === 'A' ? 'ritBadge' : 'ritBBadge', () => { const sfx = clarSfx(w), c = ctlOr('rit' + sfx, 'RIT'); if (c) sendCtl(c, ctlValue('rit' + sfx) ? 0 : 1); });
-      clickOn(w === 'A' ? 'xitBadge' : 'xitBBadge', () => { const sfx = clarSfx(w), c = ctlOr('xit' + sfx, 'XIT'); if (c) sendCtl(c, ctlValue('xit' + sfx) ? 0 : 1); });
-      clickOn('clr' + w, () => { const sfx = clarSfx(w), c = ctlOr('clarClr' + sfx, 'CLEAR'); if (c) { ctlPending['clar' + sfx] = { v: 0, at: Date.now() }; sendCtl(c, null); } });
+      const clarSet = (k, label) => clarOnSide(w, () => {
+        const c = ctlOr(k + (clarPerSide() ? '' : clarSfx(w)), label);
+        if (!c) return;
+        const v = ctlValue(clarKey(k, w)) ? 0 : 1;
+        if (clarPerSide()) ctlPending[k + w] = { v, at: Date.now() };
+        sendCtl(c, v);
+      });
+      clickOn(w === 'A' ? 'ritBadge' : 'ritBBadge', () => clarSet('rit', 'RIT'));
+      clickOn(w === 'A' ? 'xitBadge' : 'xitBBadge', () => clarSet('xit', 'XIT'));
+      clickOn('clr' + w, () => clarOnSide(w, () => { const sfx = clarPerSide() ? '' : clarSfx(w), c = ctlOr('clarClr' + sfx, 'CLEAR'); if (c) { ctlPending[clarKey('clar', w)] = { v: 0, at: Date.now() }; sendCtl(c, null); } }));
       // Molette sur le décalage : ± 10 Hz (± 100 Hz avec Maj)
       for (const id of w === 'A' ? ['ritVal', 'xitVal'] : ['ritBVal', 'xitBVal']) {
         $(id).addEventListener('wheel', (ev) => {
-          const sfx = clarSfx(w), c = RIG().CONTROL && RIG().CONTROL['clar' + sfx];
+          const sfx = clarPerSide() ? '' : clarSfx(w), c = RIG().CONTROL && RIG().CONTROL['clar' + sfx];
           if (!c) return;
           ev.preventDefault();
           if (ctlBlocked()) return say(ctlBlocked(), 'warn');
+          // Clarifier par récepteur : le VFO de cet écran d'abord sélectionné (la molette agit ensuite sur lui)
+          if (clarPerSide() && (Number(ctlValue('vfoSel')) === 1 ? 'B' : 'A') !== w) return clarOnSide(w, () => {});
           const d = (ev.deltaY < 0 ? 1 : -1) * (ev.shiftKey ? 100 : 10);
-          const v = Math.max(c.min, Math.min(c.max, Number(ctlValue('clar' + sfx) || 0) + d));
+          const v = Math.max(c.min, Math.min(c.max, Number(ctlValue(clarKey('clar', w)) || 0) + d));
           ctlPending[c.id] = { v, at: Date.now() };
+          if (clarPerSide()) ctlPending['clar' + w] = { v, at: Date.now() };
           sendCtlThrottled(c);
           render();
         }, { passive: false });
@@ -1610,7 +1633,10 @@
     const kHz = (v) => { v = Number(v) || 0; return (v >= 0 ? '+' : '−') + (Math.abs(v) / 1000).toFixed(2) + ' kHz'; };
     const hasB = !!(RIG().CONTROL && RIG().CONTROL.ritB);
     for (const [w, sfx0, ids] of [['A', '', ['ritBadge', 'xitBadge', 'ritVal', 'xitVal']], ['B', 'B', ['ritBBadge', 'xitBBadge', 'ritBVal', 'xitBVal']]]) {
-      const sfx = hasB ? sfx0 : ''; // un seul clarifier : le VFO B montre le même que le VFO A
+      // Un clarifier par récepteur lu à part (FTDX101, FTDX5000 : ritA / ritB…) : chaque VFO le sien ;
+      // un seul clarifier : le VFO B montre le même que le VFO A
+      const own = !hasB && r.ritA != null && r.ritB != null;
+      const sfx = own ? w : hasB ? sfx0 : '';
       const on = (k) => !!(live && Number(ctlValue(k + sfx)));
       badge($(ids[0]), 'RIT', on('rit') ? 'b-clar amber' : 'b-clar');
       badge($(ids[1]), 'XIT', on('xit') ? 'b-clar amber' : 'b-clar');
@@ -1621,7 +1647,7 @@
       // TRX sans clarifier séparé pour le VFO B (FTDX10, IC-7300) : place gardée, rien d'affiché
       if (w === 'B') {
         $('vfoB').querySelector('.vfo-side').classList.remove('na');
-        const t = hasB ? '' : ' — le TRX n’a qu’un clarifier, commun aux deux VFO';
+        const t = hasB || own ? '' : ' — le TRX n’a qu’un clarifier, commun aux deux VFO';
         $('ritBBadge').title = 'RIT : cliquer pour l’allumer / l’éteindre' + t; $('xitBBadge').title = 'XIT : cliquer pour l’allumer / l’éteindre' + t;
       }
     }
