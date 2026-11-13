@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.38** — Page RTTY : pour chaque VFO, fenêtre TX à gauche et fenêtre RX à droite, côte à côte (au lieu de la fenêtre TX sous la réception)
 - **0.39.37** — Page RTTY : chaque VFO a sa fenêtre de réception (RX) et, dessous, sa fenêtre d'émission (TX) ; écrire dans la fenêtre TX d'un VFO le choisit pour l'émission (cadre rouge) ; Émettre / Ctrl+Entrée envoie le texte de cette fenêtre
 - **0.39.36** — Pages RTTY et FT en double réception : la poignée de la cascade du VFO-B règle sa hauteur seule, sans bouger celle du VFO-A (double-clic : même hauteur que la cascade A)
 - **0.39.35** — Page RTTY : liste des contests comme la page SSB (texte blanc, sans majuscules forcées, liste sombre ; « pas de contest » en tête puis ordre alphabétique)

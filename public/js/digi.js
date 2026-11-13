@@ -342,8 +342,10 @@
           <button class="dg-mini" type="button" id="rtClear">Effacer</button>
         </div>
         <div class="dg-wf-slot" data-slot="rtty-a"></div>
-        <pre class="rt-rx" id="rtRx"></pre>
-        <textarea class="rt-txw" id="rtTxt" data-ch="0" rows="3" spellcheck="false" placeholder="TX VFO-A : texte à émettre, puis « Émettre » ou Ctrl+Entrée (Maj+clic sur une macro : l’ajoute ici)…" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea>
+        <div class="rt-io">
+          <textarea class="rt-txw" id="rtTxt" data-ch="0" spellcheck="false" placeholder="TX VFO-A : texte à émettre, puis « Émettre » ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea>
+          <pre class="rt-rx" id="rtRx"></pre>
+        </div>
       </div>
       <i class="rt-vsplit" id="rtSplit" title="Glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié)"></i>
       <div class="dg-col rt-side" data-ch="1">
@@ -375,8 +377,10 @@
           <i class="dg-mk dg-mk-rx" id="rtMkMB"></i><i class="dg-mk dg-mk-tx" id="rtMkSB"></i>
           <i class="dg-grip" id="rtGripB" title="Glisser vers le haut ou le bas : hauteur de la cascade du VFO-B, sans toucher à celle du VFO-A (double-clic : même hauteur que celle du VFO-A)"></i>
         </div>
-        <pre class="rt-rx" id="rtRxB"></pre>
-        <textarea class="rt-txw" id="rtTxtB" data-ch="1" rows="3" spellcheck="false" placeholder="TX VFO-B : texte à émettre, puis « Émettre » ou Ctrl+Entrée (Maj+clic sur une macro : l’ajoute ici)…" title="Fenêtre d’émission du VFO-B : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea>
+        <div class="rt-io">
+          <textarea class="rt-txw" id="rtTxtB" data-ch="1" spellcheck="false" placeholder="TX VFO-B : texte à émettre, puis « Émettre » ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-B : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea>
+          <pre class="rt-rx" id="rtRxB"></pre>
+        </div>
       </div>
     </div>
     <i class="rt-hgrip" id="rtHGrip" title="Glisser vers le haut ou le bas : hauteur des fenêtres de décodage (VFO-A et VFO-B) — plus de place pour les macros en dessous (double-clic : taille d'origine)"></i>
