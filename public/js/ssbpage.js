@@ -111,7 +111,7 @@
     ex.disabled = !d;
     $('ssExchSh').textContent = d ? '→ ' + exchShown() : '';
     fillStx(false);
-    $('ssNote').textContent = d ? (d.when ? d.when + ' · ' : '') + (d.note || '') + (d.verif ? '' : ' * Catégories habituelles : à vérifier dans le règlement de l’année.') : 'Choisissez un contest.';
+    $('ssNote').textContent = d ? (d.when ? d.when + ' · ' : '') + (d.note || '') + (d.verif ? '' : ' * Catégories habituelles : à vérifier dans le règlement de l’année.') : ''; // sans contest : pas de note
     if (k) {
       const set = (el, v) => { if (document.activeElement !== el && el.value !== v) el.value = v; };
       set($('ssNr'), String(k.serial()).padStart(3, '0'));
@@ -748,6 +748,19 @@
       txSet: (id, v) => { try { return host.txSet ? host.txSet(id, v) : 'Indisponible'; } catch (e) { return 'Indisponible'; } },
       sendBin: (buf) => { try { if (host.sendBin) host.sendBin(buf); } catch (e) {} } });
     try { VX.onHello(host.me ? host.me() : {}); } catch (e) {}
+    // ÉCOUTER LE TRX : à droite de MONITORING (l'écoute est jouée par le dashboard ou la face avant qui a ouvert cette page)
+    if ($('vxMonBtn') && !$('ssListen')) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.id = 'ssListen'; b.className = 'btn ss-listen'; b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', () => {
+        const L = host && host.listen;
+        if (!L) return toast('Écoute indisponible : la page qui a ouvert celle-ci est fermée ou trop ancienne (rechargez-la).', 'warn');
+        if (L.on()) L.stop(); else if (!L.start()) toast('Le navigateur bloque le son : cliquez une fois dans le dashboard, puis réessayez.', 'warn', 6000);
+        drawListenBtn();
+      });
+      $('vxMonBtn').after(b);
+      drawListenBtn();
+    }
     // Réglages micro du TRX (GAIN MICRO, PROC, MIC EQ, NIVEAU PROC, VOX) sur la ligne SSB CONFIGURATION, à droite de TRX EQ ;
     // « Profil de … » tout à droite : tous les réglages sur une seule ligne
     { const t = $('vxTrxBtn'), m = $('ssMic'), pr = $('vxProf');
@@ -871,6 +884,7 @@
     $('cwpCtl').className = '';
     $('cwpTake').hidden = true;
     drawFollow();
+    drawListenBtn();
     const tx = !!(st && st.ptt && st.ptt.active) || !!r.tx;
     $('cwpTx').textContent = tx ? 'TX' : 'RX';
     // Grand PTT en rouge dès que le TRX émet (PTT de cette page, mémoire vocale, PTT d'une autre page)
@@ -910,6 +924,21 @@
     toast(on ? 'Suivi de l’opérateur : vos pages montrent le même mode et les mêmes repères que celui qui a la main.' : 'Suivi de l’opérateur arrêté.', '', 5000);
     drawFollow();
   });
+  function drawListenBtn() {
+    const b = $('ssListen');
+    if (!b) return;
+    let on = false, ok = false;
+    try { ok = !!(host && host.listen); on = ok && host.listen.on(); } catch (e) { ok = false; }
+    b.hidden = !ok;
+    // À droite de MONITORING ; micro pas ouvert (ligne du micro cachée) : à droite du bouton MICRO
+    const body = $('vxBody'), mon = $('vxMonBtn'), mic = $('vxOn');
+    const where = body && body.hidden ? mic : mon;
+    if (where && b.previousElementSibling !== where) where.after(b);
+    b.setAttribute('aria-pressed', String(on));
+    const t = on ? '🔇 ARRÊTER L’ÉCOUTE' : '🔊 ÉCOUTER LE TRX';
+    if (b.textContent !== t) b.textContent = t;
+    b.title = on ? 'Vous entendez le TRX (BF reçue) : clic pour arrêter' : 'Entendre la BF du TRX dans votre casque ou vos haut-parleurs (sortie choisie dans « Sortie »)';
+  }
   function drawFollow() {
     const b = $('ssFollow'), st = api.state(), mine = api.iControl();
     const on = following();

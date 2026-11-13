@@ -2764,3 +2764,11 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 /* Page SSB : PROC dans les couleurs de TRX EQ / MICRO EQ — vert en service, fond noir coupé */
 .ssb-mic-b .btn[data-id='proc'] { background: #000; border: 1px solid #6b7686; color: #fff; font-weight: 800; }
 .ssb-mic-b .btn[data-id='proc'][aria-pressed='true'] { background: linear-gradient(180deg, #1f9d45, #12692c); border-color: #39FF14; color: #fff; }
+/* Page SSB : ÉCOUTER LE TRX à droite de MONITORING */
+.vx-mon .ss-listen { margin-left: 8px; border: 1px solid #fff; color: #fff; font-weight: 800; }
+.vx-mon .ss-listen[aria-pressed='true'] { background: linear-gradient(180deg, #1f9d45, #12692c); border-color: #39FF14; color: #fff; }
+.vx-mon .ss-listen[hidden] { display: none; }
+#ssNote:empty { display: none; }
+.vx .ss-listen { margin-left: 8px; border: 1px solid #fff; color: #fff; font-weight: 800; font-size: 11px; padding: 4px 12px; }
+.vx .ss-listen[aria-pressed='true'] { background: linear-gradient(180deg, #1f9d45, #12692c); border-color: #39FF14; color: #fff; }
+.vx .ss-listen[hidden] { display: none; }

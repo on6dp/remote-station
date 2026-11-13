@@ -8697,6 +8697,14 @@
     setSink: (id) => { player.sink = id; if (player.ctx && player.ctx.setSinkId) player.ctx.setSinkId(id).catch(() => {}); },
     extTalk: false, // la page SSB émet sa voix : pas d'écho dans l'écoute du TRX
     tap(fn) { hostTaps.add(fn); return () => hostTaps.delete(fn); },
+    // Page TRX SSB : « Écouter le TRX » et stéréo MAIN | SUB, joués par cette page (comme le dashboard)
+    listen: {
+      on: () => !!L.listening,
+      stereo: () => !!L.stereo,
+      start: () => { if (!L.listening) startListen(); return !!L.listening; },
+      stop: () => { if (L.listening) stopListen(); },
+      setStereo: (v) => setStereo(v)
+    },
     attach(win, inst, popupApi) {
       if (digiHost.win && digiHost.win !== win && !digiHost.win.closed) { try { digiHost.win.close(); } catch (e) {} }
       bmPopClose(); // la carte de bande part avec les modes numériques (dans leur fenêtre)

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.79** — Page SSB : bouton 🔊 ÉCOUTER LE TRX à droite de MONITORING (aussi depuis la face avant) ; plus de note « Choisissez un contest »
 - **0.38.78** — Listes des contests (SSB, CW, RTTY) par ordre alphabétique, « Autre contest (échange libre) » à la fin
 - **0.38.77** — Page SSB : plus de bouton PROC ; NIVEAU PROC à 0 = PROC coupé (OFF), au-dessus de 0 = PROC en service tout seul
 - **0.38.76** — Page SSB : Ma référence (activation) fermée par défaut (et sans référence glissée en douce) ; PROC vert / noir comme TRX EQ ; PROC refusé avec explication hors SSB/AM sur le VFO d'émission ; PTT sans « ÉMISSION ». FTX-1 : PROC envoyé selon le manuel CAT (PR02 = ON, PR01 = OFF)
