@@ -2967,3 +2967,8 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .rt-vfoctl select { font: inherit; font-size: 13px; color: var(--v2-text-bright); background: var(--v2-bg-input); border: 1px solid var(--v2-border); border-radius: 5px; padding: 5px 8px; min-width: 0; }
 .rt-vfoctl #rtDial, .rt-vfoctl #rtDialB { min-width: 170px; }
 .rt-vfo.vfb.mir .vfb-col[hidden] { visibility: visible; } /* champs des deux VFO toujours là (même sans SPLIT ni DUAL RX) */
+/* Page RTTY : liste des contests comme la page SSB — texte blanc (aussi quand un contest est choisi), sans majuscules forcées,
+   liste déroulante sombre */
+.rt-contest #rtcSel, .rt-contest.on #rtcSel { color: #fff; background: #07090d; text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 12.5px; min-width: 230px; padding: 4px 6px; color-scheme: dark; }
+.rt-contest #rtcSel option { color: #fff; background: #07090d; }
+.rt-contest.on #rtcSel { border-color: #f5ff00; }

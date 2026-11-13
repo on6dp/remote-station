@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.35** — Page RTTY : liste des contests comme la page SSB (texte blanc, sans majuscules forcées, liste sombre ; « pas de contest » en tête puis ordre alphabétique)
 - **0.39.34** — Page RTTY : fréquence RTTY, ↺, Bande et Zoom sur la ligne SPLIT — VFO A à gauche, mêmes champs pour le VFO B à droite (le VFO B y va en DATA-U ; Bande et Zoom communs aux deux cascades)
 - **0.39.33** — Page RTTY : « — pas de contest — » de nouveau en tête de la liste des contests (il était classé parmi les P)
 - **0.39.32** — Page RTTY : écrans des deux VFO du dashboard en haut (comme la page SSB : S-mètre, filtre, cadran, spectre BF, SPLIT, A ⇄ B, A → B, DUAL RX, STÉRÉO), cascades dessous ; 👁 SUIVRE L'OPÉRATEUR dans l'en-tête des pages FT / RTTY
