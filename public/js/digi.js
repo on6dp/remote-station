@@ -326,6 +326,8 @@
     <!-- Une seule cascade (le TRX n'envoie qu'un son) avec les repères des deux décodeurs -->
     <div class="dg-wf-slot" data-slot="rtty"></div>
     <!-- Deux décodeurs RTTY côte à côte, largeur réglable ; émission sous les deux, sur toute la largeur -->
+    <!-- Grille de la page RTTY : VFO-A puis macros à gauche, VFO-B puis LOG RTTY à droite -->
+    <div class="rt-main" id="rtMain">
     <div class="rt-dual" id="rtDual">
       <div class="dg-col rt-side" data-ch="0">
         <div class="dg-h rt-hd">
@@ -422,6 +424,7 @@
         <div class="rt-loghd"><b id="rtLogZoom" title="Clic : agrandir le log au centre de la page (nouveau clic, ou Échap : le remettre à sa place)">LOG RTTY ⤢</b> <span id="rtLogInfo"></span></div>
         <div class="cwp-clogw rt-logw"><table class="cwp-clog rt-log"><thead><tr id="rtLogHead"></tr></thead><tbody id="rtLogBody"></tbody></table></div>
       </div>
+    </div>
     </div>`;
   const WSPR_PANE = `
     <div class="dg-bar">
@@ -3143,7 +3146,7 @@
     }
     $('rtScaleB').addEventListener('contextmenu', (e) => e.preventDefault());
     // Largeur des deux décodeurs (gardée dans ce navigateur)
-    const dual = $('rtDual');
+    const dual = $('rtMain') || $('rtDual'); // largeur commune : VFO-A / macros à gauche, VFO-B / LOG RTTY à droite
     const sp = $('rtSplit');
     const setSplit = (pct, save) => {
       if (pct == null) dual.style.removeProperty('--rt-left');

@@ -3091,3 +3091,20 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .ctab-pane.rt .rt-dual > .rt-vsplit { align-self: stretch; }
 .ctab-pane.rt #rtTxClear { display: none !important; } /* RTTY : chaque fenêtre a déjà son Effacer */
 .rt-contest .rtc-l[hidden] { display: none !important; }
+/* Page RTTY (écran large) : grille commune — à gauche le VFO-A puis les macros, à droite le VFO-B puis le LOG RTTY,
+   de la même largeur que le VFO-B ; le log commence juste sous le VFO-B (VFO-B réduit = log plus haut) et prend toute
+   la colonne de droite quand le VFO-B est inactif (ni SPLIT ni DUAL RX) */
+@media (min-width: 901px) {
+  .ctab-pane.rt .rt-main { display: grid; grid-template-columns: minmax(260px, var(--rt-left, 1fr)) 10px minmax(260px, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr); row-gap: 8px; flex: 1 1 auto; min-height: 0; align-items: start; }
+  .ctab-pane.rt .rt-main > .rt-dual, .ctab-pane.rt .rt-main > .rt-stack { display: contents; }
+  .ctab-pane.rt .rt-main > .rt-hgrip { display: none; }
+  .ctab-pane.rt .rt-dual > .rt-side[data-ch="0"] { grid-column: 1; grid-row: 1 / span 2; }
+  .ctab-pane.rt .rt-dual > .rt-vsplit { grid-column: 2; grid-row: 1 / span 2; align-self: stretch; }
+  .ctab-pane.rt .rt-dual > .rt-side[data-ch="1"] { grid-column: 3; grid-row: 1; }
+  .ctab-pane.rt .rt-stack > .rt-tx-col { grid-column: 1; grid-row: 3; align-self: stretch; }
+  .ctab-pane.rt .rt-stack > .rt-logbox { grid-column: 3; grid-row: 2 / span 2; align-self: stretch; min-width: 0; min-height: 160px; }
+  .ctab-pane.rt .rt-dual.rt-solo ~ .rt-stack > .rt-logbox { grid-row: 1 / span 3; }
+  .ctab-pane.rt .rt-dual.rt-solo > .rt-vsplit { display: block !important; }
+  .ctab-pane.rt .rt-logbox > .rt-logw { max-height: none; flex: 1 1 0; min-height: 100px; }
+}

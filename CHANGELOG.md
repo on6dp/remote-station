@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.60** — Page RTTY : LOG RTTY dans la colonne de droite, sous le VFO-B et de la même largeur ; réduire le VFO-B agrandit le log, VFO-B inactif = log sur toute la colonne
 - **0.39.59** — Page RTTY : Prénom (le vôtre) seulement pour les contests dont l'échange le demande ; colonne Nom (du correspondant) dans le LOG RTTY en contest
 - **0.39.58** — Page RTTY : plus de bouton Effacer à côté des macros (chaque fenêtre TX / RX a le sien)
 - **0.39.57** — Page RTTY : chaque VFO règle la hauteur de ses fenêtres TX / RX avec sa propre poignée (plus de poignée commune aux deux VFO)
