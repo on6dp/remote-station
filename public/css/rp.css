@@ -2796,3 +2796,5 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 /* Page SSB : bouton RÈGLEMENT du contest choisi (cadre blanc, comme les autres boutons) */
 .ssb-rules { color: #fff; border: 1px solid #fff; border-radius: 6px; padding: 3px 10px; font-weight: 800; letter-spacing: .3px; }
 .ssb-rules:hover { background: #fff; color: #000; }
+/* MONITORING enclenché : fond bleu foncé, texte blanc gras (toutes les pages) */
+#vxMonBtn[aria-pressed='true'], .vx-mon #vxMonBtn[aria-pressed='true'], .fc-tx #vxMonBtn[aria-pressed='true'] { background: #0b3d91 !important; border-color: #58a6ff !important; color: #fff !important; font-weight: 800; }
