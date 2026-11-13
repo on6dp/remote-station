@@ -5202,8 +5202,8 @@
     if ((m.contest || '') !== cid) return; // réponse d'un autre choix de contest
     const ctst = !!cid;
     const cols = ctst
-      ? [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['TX #', 'stx'], ['Reçu', 'rr'], ['RX #', 'srx'], ['DXCC', 'dx'], ['TX call', 'st'], ['OP', 'op']]
-      : [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['Reçu', 'rr'], ['Nom', 'name'], ['QTH', 'qth'], ['Loc.', 'grid'], ['DXCC', 'dx'], ['TX call', 'st'], ['OP', 'op']];
+      ? [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['TX #', 'stx'], ['Reçu', 'rr'], ['RX #', 'srx'], ['DXCC', 'dx'], ['TX call', 'st'], ['OP', 'op'], ['Contest', 'ct']]
+      : [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['Reçu', 'rr'], ['Nom', 'name'], ['QTH', 'qth'], ['Loc.', 'grid'], ['DXCC', 'dx'], ['TX call', 'st'], ['OP', 'op'], ['Contest', 'ct']];
     const key = cols.map((c) => c[0]).join('|');
     if (key !== rtLogKey) {
       rtLogKey = key;
@@ -5215,6 +5215,7 @@
       if (k === 'd') return v.length === 8 ? v.slice(6, 8) + '/' + v.slice(4, 6) + '/' + v.slice(0, 4) : v;
       if (k === 't') return v.length >= 4 ? v.slice(0, 2) + ':' + v.slice(2, 4) : v;
       if (k === 'freq') { const f = Number(v); return f ? f.toFixed(4) : ''; }
+      if (k === 'ct') { const c = v && RT_CONTESTS.find((x) => x[0] === v); return c ? c[1] : v; } // nom du contest ; hors contest : rien
       return v;
     };
     body.textContent = '';
