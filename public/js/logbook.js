@@ -146,6 +146,33 @@
     </div>
     <p class="lg-job" id="lgJob" aria-live="polite"></p>`;
 
+  // Ascenseur horizontal au-dessus du carnet (toujours visible, même quand le bas de la liste sort de l'écran) :
+  // il défile avec la liste ; caché quand toutes les colonnes tiennent. Aussi : Maj + molette sur la liste
+  function hScroll() {
+    const tw = q$('.lg-tw');
+    if (!tw) return;
+    const bar = document.createElement('div');
+    bar.className = 'lg-hsb';
+    bar.title = 'Faire défiler les colonnes (aussi : Maj + molette de la souris sur la liste)';
+    const inner = document.createElement('div');
+    bar.appendChild(inner);
+    tw.parentNode.insertBefore(bar, tw);
+    let lock = false;
+    const sync = (from, to) => { if (lock) return; lock = true; to.scrollLeft = from.scrollLeft; requestAnimationFrame(() => { lock = false; }); };
+    bar.addEventListener('scroll', () => sync(bar, tw));
+    tw.addEventListener('scroll', () => sync(tw, bar));
+    const fit = () => {
+      const t = tw.querySelector('table');
+      const w = t ? t.scrollWidth : tw.scrollWidth;
+      inner.style.width = w + 'px';
+      bar.hidden = !(w > tw.clientWidth + 1) || tw.hidden || tw.style.display === 'none';
+      if (!bar.hidden && bar.scrollLeft !== tw.scrollLeft) bar.scrollLeft = tw.scrollLeft;
+    };
+    if (window.ResizeObserver) { const ro = new ResizeObserver(fit); ro.observe(tw); const t = tw.querySelector('table'); if (t) ro.observe(t); }
+    window.addEventListener('resize', fit);
+    setInterval(fit, 1500); // colonnes déplacées, élargies ou montrées / cachées
+    fit();
+  }
   function mount(el) {
     root = el;
     root.innerHTML = PANE;
@@ -164,6 +191,7 @@
       fShow(false);
     }
     if (getComputedStyle(root).position === 'static') root.style.position = 'relative'; // menus des filtres de colonne
+    if (!FORM) hScroll();
     initCols();
     applyOrder();
     document.addEventListener('click', () => closeFlt());

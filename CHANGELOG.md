@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.21** — Carnet : ascenseur horizontal toujours visible au-dessus de la liste pour atteindre les colonnes de droite (aussi Maj + molette)
 - **0.39.20** — Dashboard : bande en service en couleurs inversées (fond blanc, écriture noire)
 - **0.39.19** — Dashboard : Volume (cadre RX audio) exactement du même jaune que AF level et Squelch
 - **0.39.18** — Dashboard : Volume de l'écoute du TRX en jaune vif
