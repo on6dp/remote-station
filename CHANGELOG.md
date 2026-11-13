@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.55** — Page FT : « Logbook en fin de QSO » devient « Paramètres Logbook »
 - **0.38.54** — Fenêtre TRX DIGI : bandeau de titre comme la page SSB (TX call · TRX FT8/FT4/FT2 · Remote Station · FT modes et contests ; TRX RTTY, WSPR, JT65, JTTY, CW, SSTV selon l'onglet), aussi dans le titre de la fenêtre
 - **0.38.53** — Phonie : le bouton « Equalizer micro » s'appelle MICRO EQ (toutes les pages)
 - **0.38.52** — Page TRX SSB : écrans des VFO du dashboard recopiés (clic et molette actifs) avec la ligne MICRO DU TRX ; DUAL RX ON/OFF et écoute stéréo au casque (VFO A / MAIN à gauche, VFO B / SUB à droite) ; micro ouvert automatiquement (plus de bouton MICRO) ; Entrée / Sortie en jaune ; M'écouter devient MONITORING partout ; la sortie son choisie sert aussi à l'écoute du TRX
