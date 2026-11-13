@@ -1761,9 +1761,10 @@
     { name: 'AGN?', text: '<TX>AGN? AGN?\n<RX>' },
     { name: 'NR?', text: '<TX>NR? NR?\n<RX>' },
     { name: 'QRZ?', text: '<TX>QRZ? <MYCALL>\n<RX>' },
-    { name: 'Merci', text: '<TX>TU 73 <MYCALL>\n<RX>' },
-    { name: 'Log', text: '<LOG>' },
-    { name: 'RYRY', text: '<TX>RYRYRYRYRYRY\n<RX>' }
+    // F10 / F11 / F12 : émission du texte tapé, retour en réception, fiche du QSO (habitude des contests RTTY)
+    { name: 'TX', text: '<TX>' },
+    { name: 'RX', text: '<RX>' },
+    { name: 'Log', text: '<LOG>' }
   ];
   // Balises des macros (champs standardisés de FLDIGI, et celles propres à la station), par groupe ; « #… » = titre de groupe
   const TAGS = [
