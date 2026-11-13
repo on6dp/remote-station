@@ -209,7 +209,7 @@
         <option value="auto">AUTO</option><option value="0">0/15</option><option value="1">15/30</option>
       </select>
       <label class="dg-hound" id="dgHoundWrap" title="DXpédition en FT8 : HOUND = vous appelez une DXpédition qui trafique en FOX (FOX classique, plusieurs QSO à la fois) ou en SuperFox (un seul signal large de 1,5 kHz, jusqu'à 9 stations à la fois). Choisi par celui qui a la main, pour toute la station."><span class="dg-f">Activité</span> <select id="dgHound"><option value="0">NORMALE</option><option value="1">HOUND · FOX</option><option value="2">HOUND · SuperFox</option></select></label>
-      <span class="dg-hunt" title="DX (chasse à une DXpédition…) : indicatifs ou préfixes séparés par des espaces (ex. 3Y0K VP8 FT8W). Avec « Seulement la chasse », l’Activité de bande ne montre plus que leurs messages."><span class="dg-f">DX</span> <input id="dgHunt" type="text" spellcheck="false" autocomplete="off" placeholder="3Y0K VP8…" maxlength="80"> <button class="btn dg-huntonly" type="button" id="dgHuntOnly" aria-pressed="false" title="Clic : l’Activité de bande ne montre plus que les stations chassées ; nouveau clic : tout réafficher (filtre désactivé)">SEULEMENT LA CHASSE</button><button class="btn dg-huntclr" type="button" id="dgHuntClr" title="Contact fait : vider la chasse et tout réafficher">✕</button></span>
+      <span class="dg-hunt" title="DX (chasse à une DXpédition…) : indicatifs ou préfixes séparés par des espaces (ex. 3Y0K VP8 FT8W). Entrée : l’Activité de bande ne montre plus que leurs messages. Case vidée : tout le trafic revient."><span class="dg-f">DX</span> <input id="dgHunt" type="text" spellcheck="false" autocomplete="off" placeholder="3Y0K VP8…" maxlength="80"></span>
       <label class="dg-chk dg-alog" title="Que faire du QSO dans le carnet à la fin du QSO (RR73 / 73) : vous demander (fenêtre « QSO terminé » avec « Enregistrer dans le carnet »), ou l’enregistrer tout seul (« Log automatically » de WSJT-X)"><span class="dg-f dg-ylw">Paramètres Logbook</span> <select id="dgAutoLog">
         <option value="">MANUEL : me demander avant d’enregistrer</option>
         <option value="any">AUTOMATIQUE : RR73 reçu ou 73 envoyé</option>
@@ -645,10 +645,15 @@
       const info = document.createElement('span');
       info.className = 'dg-trx';
       info.innerHTML = '<span class="cwp-trx" id="dgHdFreq" title="Fréquence du VFO choisi (VFO d’émission de la page)">—</span><span class="cwp-mode" id="dgHdMode">—</span>' +
-        '<span class="cwp-ctl"><span id="dgHdCtl">—</span><button class="cwp-take" type="button" id="dgHdTake" hidden>PRENDRE LA MAIN</button></span>';
+        '<span class="rs-ctlw" id="dgCtlChip"></span>';
       const after = panel.querySelector('#dgTxcWrap') || bar.querySelector('.ctab[data-tab="sync"]');
       if (after && after.parentElement === bar) after.after(info); else bar.prepend(info);
-      info.querySelector('#dgHdTake').addEventListener('click', (e) => { e.stopPropagation(); if (api) api.send({ t: 'take' }); });
+      // 👥 membres connectés, votre indicatif et le bouton de la main, comme en haut du dashboard
+      if (window.RSCTL) {
+        const hostMe = () => { let w = window.opener; for (let i = 0; i < 4 && w; i++) { try { if (w.RSHOST && w.RSHOST.me) return w.RSHOST.me(); w = w.opener; } catch (e) { return null; } } return null; };
+        info.querySelector('#dgCtlChip').addEventListener('click', (e) => e.stopPropagation());
+        window.RSCTL.mount(info.querySelector('#dgCtlChip'), { state: () => api && api.state(), me: () => hostMe() || txcMe, iControl: () => !!(api && api.iControl()), send: (m) => api && api.send(m) });
+      }
       // État de la BF / décodage et heure UTC : à gauche de « Ramener dans le dashboard » (une ligne de gagnée)
       const tl = panel.querySelector('.dg-ftx .dg-tl');
       if (tl) { tl.classList.add('ctab-tl'); bar.insertBefore(tl, $('dgDetach')); }
@@ -787,10 +792,6 @@
     if ($('dgHdMode').textContent !== md) $('dgHdMode').textContent = md;
     const ok = tab === 'cw' ? /CW/.test(md) : tab === 'rtty' ? /RTTY|DATA|-D|PKT|FSK/.test(md) : /DATA|-D|PKT/.test(md);
     $('dgHdMode').classList.toggle('bad', !!st && md !== '—' && !ok);
-    const me = !!(api && api.iControl());
-    $('dgHdCtl').textContent = me ? 'Vous avez la main' : st && st.controller ? 'Main : ' + st.controller : 'Personne n’a la main';
-    $('dgHdCtl').className = me ? 'ok' : '';
-    $('dgHdTake').hidden = me || !!(st && st.controller);
   }
   function drawHead() {
     drawTrxInfo();
@@ -5206,15 +5207,15 @@
   }
   // Chasse : indicatifs / préfixes tapés dans « Chasse » ; « Seulement la chasse » ne montre plus que leurs messages
   let huntList = String(store.get('hunt', '')).toUpperCase().split(/[\s,;]+/).filter((t) => t.length >= 2);
-  let huntOnly = store.get('huntonly', '0') === '1';
   function huntMatch(msg) {
     if (!huntList.length) return false;
     return callsIn(String(msg || '')).some((c) => c.length >= 3 && /\d/.test(c) && huntList.some((t) => c === t || c.indexOf(t) === 0 || c.indexOf('/' + t) >= 0 || c.indexOf(t + '/') === 0));
   }
   function huntApply() {
-    const on = huntOnly && huntList.length > 0;
+    // DX : indicatifs validés par Entrée = seulement leurs messages ; case vide = tout le trafic
+    const on = huntList.length > 0;
     for (const id of ['dgBand', 'dgBandB']) if ($(id)) $(id).classList.toggle('hunt-on', on);
-    if ($('dgHuntOnly')) { $('dgHuntOnly').setAttribute('aria-pressed', String(huntOnly)); $('dgHuntOnly').disabled = !huntList.length; }
+    if ($('dgHunt')) $('dgHunt').classList.toggle('on', on);
   }
   function rowEl(slot, d, side) {
     const r = document.createElement('div');
@@ -6058,12 +6059,15 @@
           redrawAll();
           huntApply();
         });
-        $('dgHuntOnly').addEventListener('click', () => { huntOnly = !huntOnly; store.set('huntonly', huntOnly ? '1' : '0'); huntApply(); });
-        $('dgHuntClr').addEventListener('click', () => {
-          huntList = []; huntOnly = false; $('dgHunt').value = '';
-          store.set('hunt', ''); store.set('huntonly', '0');
-          redrawAll(); huntApply();
+        // Case vidée (effacement) : plus aucun indicatif choisi, tout le trafic revient tout de suite
+        $('dgHunt').addEventListener('input', () => {
+          if ($('dgHunt').value.trim() || !huntList.length) return;
+          huntList = [];
+          store.set('hunt', '');
+          redrawAll();
+          huntApply();
         });
+        $('dgHunt').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('dgHunt').dispatchEvent(new Event('change')); } });
         huntApply();
       }
       // Vitesse du spectre

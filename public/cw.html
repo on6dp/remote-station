@@ -15,7 +15,7 @@
     <h1><span class="ssb-txc" id="cwpTxc" title="TX call : indicatif sous lequel on émet"></span>TRX CW <small>Remote Station</small></h1>
     <label class="cwp-txcl" title="TX CALL : indicatif sous lequel on émet et sous lequel les QSO vont dans le carnet (exports ADIF / Cabrillo). Avec la main seulement.">TX CALL <select id="cwpTxCall"></select></label>
     <div class="cwp-trx"><span id="cwpFreq">—</span> <span id="cwpMode" class="cwp-mode">—</span></div>
-    <div class="cwp-ctl"><span id="cwpCtl">—</span> <button class="cwp-take" type="button" id="cwpTake" hidden>PRENDRE LA MAIN</button></div>
+    <div class="cwp-ctl"><span class="rs-ctlw" id="cwpChip"></span><span id="cwpCtl"></span> <button class="cwp-take" type="button" id="cwpTake" hidden>PRENDRE LA MAIN</button></div>
     <div class="cwp-txbig" id="cwpTx">RX</div>
   </header>
   <p class="cwp-orphan" id="cwpOrphan" hidden>Cette page doit être ouverte depuis le dashboard (onglet CW → bouton « TRX CW »). Si le dashboard a été fermé, rouvrez-le : cette page s’y raccrochera.</p>
@@ -93,6 +93,7 @@
   <script src="/js/paddle.js"></script>
 <script src="/js/vfobox.js"></script>
 <script src="/js/bandmap-lite.js"></script>
+<script src="/js/ctlchip.js"></script>
 <script src="/js/cwpage.js"></script>
 </body>
 </html>

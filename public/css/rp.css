@@ -2693,3 +2693,21 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .ft-vbar .ft-vsync { margin-left: 6px; font-size: 11px; font-weight: 800; letter-spacing: .8px; padding: 0 12px; border: 1px solid var(--v2-accent-cyan); color: var(--v2-accent-cyan-bright); background: rgba(0, 212, 255, .08); border-radius: 5px; }
 .ft-vbar .ft-vsync:hover { background: rgba(0, 212, 255, .18); color: #fff; }
 .ctabs .ctab[hidden] { display: none !important; }
+/* Pages des modes (TRX DIGI, SSB, CW) : 👥 membres connectés, votre indicatif et le bouton de la main, comme le dashboard */
+.rs-ctl { display: inline-flex; align-items: center; gap: 12px; }
+.rs-ctl .rs-users { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid #fff; border-radius: 6px; background: #0d1622; color: #fff; font-size: 13px; font-weight: 800; cursor: default; }
+.rs-ctl .rs-users b { color: #fff; }
+.rs-ctl .rs-mecall { color: var(--main, #5fd8ff); font-weight: 800; font-size: 15px; letter-spacing: .5px; }
+.rs-ctl .rs-ctlb { font-size: 14px; font-weight: 800; letter-spacing: .05em; padding: 5px 14px; min-height: 34px; border: 2px solid var(--v2-border); border-radius: 6px; text-transform: uppercase; background: #0d1622; color: #fff; cursor: pointer; }
+.rs-ctl .rs-ctlb[data-state='free'] { background: linear-gradient(180deg, #2fbf4a, #1c8a33); border-color: #7dff9a; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.5); animation: ctlPulse 1.6s ease-in-out infinite; }
+.rs-ctl .rs-ctlb[data-state='free']:hover { background: linear-gradient(180deg, #3ad457, #22a03c); }
+.rs-ctl .rs-ctlb[data-state='mine'] { background: linear-gradient(180deg, #ff8a1f, #c85a00); border-color: #ffd08a; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.5); box-shadow: 0 0 10px rgba(255,138,31,.55); }
+.rs-ctl .rs-ctlb[data-state='admin'] { background: #2a2410; border-color: #ffd400; color: #ffd400; }
+.rs-ctl .rs-ctlb[data-state='busy'] { border-color: #5b6573; color: #aab3bf; }
+.rs-ctl .rs-ctlb:disabled { cursor: default; opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .rs-ctl .rs-ctlb[data-state='free'] { animation: none; } }
+.cwp-ctl #cwpCtl:empty { display: none; }
+.cwp-ctl .cwp-take[hidden] { display: none; }
+/* Page FT : « Période » et « Activité » en jaune vif gras ; case DX : cadre jaune quand le filtre est actif */
+.dg-bar .dg-perl, .dg-bar .dg-hound .dg-f, .dg-bar .dg-hound.on .dg-f { color: #ffe600; font-weight: 800; font-size: 13px; text-shadow: none; }
+#dgHunt.on { border-color: #ffd400; box-shadow: 0 0 6px rgba(255, 212, 0, .45); }

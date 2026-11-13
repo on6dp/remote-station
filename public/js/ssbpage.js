@@ -859,9 +859,10 @@
     $('cwpMode').textContent = md;
     $('cwpMode').classList.toggle('bad', !!st && !/^(USB|LSB)/.test(md));
     const me = api.iControl();
-    $('cwpCtl').textContent = !host ? 'dashboard non raccroché' : me ? 'Vous avez la main' : st && st.controller ? 'Main : ' + st.controller : 'Personne n’a la main';
-    $('cwpCtl').className = me ? 'ok' : '';
-    $('cwpTake').hidden = !host || me || !!(st && st.controller);
+    // Main : 👥, votre indicatif et le bouton de la main (ctlchip.js, comme le dashboard) ; ici, seulement « dashboard non raccroché »
+    $('cwpCtl').textContent = !host ? 'dashboard non raccroché' : '';
+    $('cwpCtl').className = '';
+    $('cwpTake').hidden = true;
     drawFollow();
     const tx = !!(st && st.ptt && st.ptt.active) || !!r.tx;
     $('cwpTx').textContent = tx ? 'TX' : 'RX';
@@ -889,6 +890,7 @@
     }
   }
   $('cwpTake').addEventListener('click', () => api.send({ t: 'take' }));
+  if (window.RSCTL) window.RSCTL.mount($('cwpChip'), { state: api.state, iControl: api.iControl, send: api.send, me: () => (host && host.me ? host.me() : null) });
   // « Suivre l'opérateur » (formation à distance) : le même que celui du dashboard, de la page TRX DIGI et de la face avant
   const DGS = () => { const out = []; try { const a = hostWin && hostWin.RSDIGI; if (a) out.push(a); const b = hostWin && hostWin.DG && hostWin.DG(); if (b && out.indexOf(b) < 0) out.push(b); } catch (e) {} return out; };
   const following = () => DGS().some((d) => { try { return !!(d.following && d.following()); } catch (e) { return false; } });
@@ -911,7 +913,7 @@
       : 'Suivre l’opérateur (formation à distance) : vos pages (dashboard, TRX DIGI, face avant) montrent le même mode et les mêmes repères que celui qui a la main.';
     // Suivi en marche : le mode affiché par l'opérateur, à côté de « Main : … »
     const v = st && st.view;
-    if (on && !mine && st && st.controller && v && v.tab && TABNAME[v.tab]) $('cwpCtl').textContent = 'Main : ' + st.controller + ' · sur ' + (v.tab === 'ftx' && v.mode ? v.mode : TABNAME[v.tab]);
+    if (on && !mine && st && st.controller && v && v.tab && TABNAME[v.tab]) $('cwpCtl').textContent = st.controller + ' · sur ' + (v.tab === 'ftx' && v.mode ? v.mode : TABNAME[v.tab]);
   }
 
   // Les deux VFO (SPLIT) : même main et mêmes commandes que le dashboard

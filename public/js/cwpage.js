@@ -210,6 +210,7 @@
     if (e.key === 'Escape') { const s = api.state(); if (s && s.cw) api.send({ t: 'cw_stop' }); }
   });
   $('cwpTake').addEventListener('click', () => api.send({ t: 'take' }));
+  if (window.RSCTL) window.RSCTL.mount($('cwpChip'), { state: api.state, iControl: api.iControl, send: api.send, me: () => (host && host.me ? host.me() : null) });
   // Les deux VFO (SPLIT) : même main et mêmes commandes que le dashboard
   if (window.RSVFOBOX) window.RSVFOBOX.mount($('cwpVfo'), { api, toast });
   // Carte de bande à gauche : spots CW de la bande du TRX ; clic = indicatif + TRX sur la fréquence du spot (avec la main)
@@ -547,9 +548,10 @@
     $('cwpMode').textContent = md;
     $('cwpMode').classList.toggle('bad', !!st && !/^CW/.test(md));
     const me = api.iControl();
-    $('cwpCtl').textContent = !host ? 'dashboard non raccroché' : me ? 'Vous avez la main' : st && st.controller ? 'Main : ' + st.controller : 'Personne n’a la main';
-    $('cwpCtl').className = me ? 'ok' : '';
-    $('cwpTake').hidden = !host || me || !!(st && st.controller);
+    // Main : 👥, votre indicatif et le bouton de la main (ctlchip.js, comme le dashboard)
+    $('cwpCtl').textContent = !host ? 'dashboard non raccroché' : '';
+    $('cwpCtl').className = '';
+    $('cwpTake').hidden = true;
     const cw = st && st.cw;
     // Macro ou texte émis : affiché dans la réception, en couleur d'émission (comme sur le dashboard)
     if (cw && !cw.live && cw.id !== drawState.lastId && cw.text) {
