@@ -3180,3 +3180,4 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .qso-log.rt-expdlg .ql-g { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
 /* Une fenêtre par VFO : pas de 2e cadre rouge autour de la ligne de saisie (le cadre rouge du VFO d'émission suffit) */
 .ctab-pane.rt .rt-side .rt-io > .rt-txbox > .rt-txw { box-shadow: none !important; border: 0 !important; }
+.cwp-head > .cwp-back { margin: 0 0 0 auto; align-self: center; }

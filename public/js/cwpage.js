@@ -210,6 +210,8 @@
     if (e.key === 'Escape') { const s = api.state(); if (s && s.cw) api.send({ t: 'cw_stop' }); }
   });
   $('cwpTake').addEventListener('click', () => api.send({ t: 'take' }));
+  // RETOUR (en haut à droite, comme les autres pages) : ferme cette page, la page d'origine repasse devant
+  $('cwpBack').addEventListener('click', () => { try { if (window.opener && !window.opener.closed) window.opener.focus(); } catch (e) { /* page d'origine fermée */ } window.close(); });
   if (window.RSCTL) window.RSCTL.mount($('cwpChip'), { state: api.state, iControl: api.iControl, send: api.send, me: () => (host && host.me ? host.me() : null) });
   // Les deux VFO (SPLIT) : même main et mêmes commandes que le dashboard
   if (window.RSVFOBOX) window.RSVFOBOX.mount($('cwpVfo'), { api, toast });

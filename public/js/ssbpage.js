@@ -961,6 +961,8 @@
     }
   }
   $('cwpTake').addEventListener('click', () => api.send({ t: 'take' }));
+  // RETOUR (en haut à droite, comme les autres pages) : ferme cette page, la page d'origine repasse devant
+  $('cwpBack').addEventListener('click', () => { try { if (window.opener && !window.opener.closed) window.opener.focus(); } catch (e) { /* page d'origine fermée */ } window.close(); });
   if (window.RSCTL) window.RSCTL.mount($('cwpChip'), { state: api.state, iControl: api.iControl, send: api.send, me: () => (host && host.me ? host.me() : null) });
   // « Suivre l'opérateur » (formation à distance) : le même que celui du dashboard, de la page TRX DIGI et de la face avant
   const DGS = () => { const out = []; try { const a = hostWin && hostWin.RSDIGI; if (a) out.push(a); const b = hostWin && hostWin.DG && hostWin.DG(); if (b && out.indexOf(b) < 0) out.push(b); } catch (e) {} return out; };
