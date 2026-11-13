@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.57** — Fenêtre TRX DIGI : plus d'onglets des modes ; à leur place SYNCHRO, TX CALL, fréquence du VFO choisi, mode, qui a la main, PRENDRE LA MAIN (comme la page SSB). Page SSB : 👁 SUIVRE L'OPÉRATEUR à côté de PRENDRE LA MAIN
 - **0.38.56** — Page FT en double réception : les barres des deux cascades ont toujours la même disposition (une ligne si tout tient dans les deux, sinon deux lignes identiques)
 - **0.38.55** — Page FT : « Logbook en fin de QSO » devient « Paramètres Logbook »
 - **0.38.54** — Fenêtre TRX DIGI : bandeau de titre comme la page SSB (TX call · TRX FT8/FT4/FT2 · Remote Station · FT modes et contests ; TRX RTTY, WSPR, JT65, JTTY, CW, SSTV selon l'onglet), aussi dans le titre de la fenêtre

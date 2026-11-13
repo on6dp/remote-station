@@ -627,6 +627,18 @@
     add('sync', 'dg-sync', SYNC_PANE);
     // « TX call » : sur la ligne des onglets, juste après SYNCHRO (il vaut pour tous les modes)
     { const txc = panel.querySelector('#dgTxcWrap'), syt = bar.querySelector('.ctab[data-tab="sync"]'); if (txc && syt) { txc.classList.add('ctab-txc'); syt.after(txc); } }
+    // Fenêtre séparée : plus d'onglets des modes (le mode est choisi dans le dashboard et nommé dans le bandeau du haut) ;
+    // à leur place, comme la page TRX SSB : fréquence du VFO choisi, mode, qui a la main, PRENDRE LA MAIN
+    if (WIN) {
+      bar.classList.add('dg-notabs');
+      const info = document.createElement('span');
+      info.className = 'dg-trx';
+      info.innerHTML = '<span class="cwp-trx" id="dgHdFreq" title="Fréquence du VFO choisi (VFO d’émission de la page)">—</span><span class="cwp-mode" id="dgHdMode">—</span>' +
+        '<span class="cwp-ctl"><span id="dgHdCtl">—</span><button class="cwp-take" type="button" id="dgHdTake" hidden>PRENDRE LA MAIN</button></span>';
+      const after = panel.querySelector('#dgTxcWrap') || bar.querySelector('.ctab[data-tab="sync"]');
+      if (after && after.parentElement === bar) after.after(info); else bar.prepend(info);
+      info.querySelector('#dgHdTake').addEventListener('click', (e) => { e.stopPropagation(); if (api) api.send({ t: 'take' }); });
+    }
     if (logHere()) { add('log', 'lg', ''); window.RSLOG.mount(panel.lastElementChild); }
     // Carte de bande (DX cluster) : colonne à droite de la fenêtre, onglet RTTY
     const bm = document.createElement('aside');
@@ -746,7 +758,28 @@
   // Fenêtre séparée (digi.html) : bandeau de titre comme la page TRX SSB — TX call, nom de la page selon l'onglet
   const HEADS = { ftx: ['TRX FT8/FT4/FT2', 'FT modes et contests'], jt65: ['TRX JT65', 'JT65'], rtty: ['TRX RTTY', 'RTTY et contests'],
     wspr: ['TRX WSPR', 'WSPR'], jtty: ['TRX JTTY', 'JTTY'], cw: ['TRX CW', 'CW et contests'], sstv: ['TRX SSTV', 'SSTV'] };
+  // Ligne du haut de la fenêtre séparée : fréquence et mode du VFO choisi (VFO d'émission de la page en double réception,
+  // sinon celui du TRX), qui a la main ; mode orange s'il ne convient pas à l'onglet (DATA pour FT8, RTTY, CW…)
+  const fmtHz = (hz) => { if (!hz) return '—'; const x = String(Math.round(hz)).padStart(7, '0'); return x.slice(0, -6) + '.' + x.slice(-6, -3) + '.' + x.slice(-3); };
+  function drawTrxInfo() {
+    if (!$('dgHdFreq')) return;
+    let st = null;
+    try { st = api && api.state(); } catch (e) { st = null; }
+    const r = (st && st.radio) || {};
+    const B = ftDual ? sd() === 'B' : r.vfoSel === 1;
+    const f = fmtHz(B ? r.freqB : r.freq), md = String((B ? r.modeB : r.mode) || '—');
+    if ($('dgHdFreq').textContent !== f) $('dgHdFreq').textContent = f;
+    $('dgHdFreq').classList.toggle('b', B && r.freqB != null);
+    if ($('dgHdMode').textContent !== md) $('dgHdMode').textContent = md;
+    const ok = tab === 'cw' ? /CW/.test(md) : tab === 'rtty' ? /RTTY|DATA|-D|PKT|FSK/.test(md) : /DATA|-D|PKT/.test(md);
+    $('dgHdMode').classList.toggle('bad', !!st && md !== '—' && !ok);
+    const me = !!(api && api.iControl());
+    $('dgHdCtl').textContent = me ? 'Vous avez la main' : st && st.controller ? 'Main : ' + st.controller : 'Personne n’a la main';
+    $('dgHdCtl').className = me ? 'ok' : '';
+    $('dgHdTake').hidden = me || !!(st && st.controller);
+  }
   function drawHead() {
+    drawTrxInfo();
     if (!POPUP || EMBED || !document.body.classList.contains('digi-popup')) return;
     let h = document.getElementById('dgHead');
     if (!h) {
@@ -769,10 +802,12 @@
     const t = (call ? call + ' ' : '') + hd[0] + ' — Remote Station';
     if (document.title !== t) document.title = t;
   }
+  let lastModeTab = 'ftx';
   function showTab(t) {
     if (!document.querySelector('#centerPanel .ctab[data-tab="' + t + '"]')) t = POPUP ? 'ftx' : 'events';
     const rtEnter = t === 'rtty' && (tab !== 'rtty' || !rtSeen) && !detached;
     tab = t;
+    if (t !== 'sync') lastModeTab = t;
     drawHead();
     // Ligne Correspondant : reports en dB (FT8 / FT4 / FT2, WSPR, JT65) ou RST 599 (RTTY, CW, SSTV, JTTY)
     const mb = document.getElementById('msgs');
@@ -1027,6 +1062,7 @@
     }
   }
   function sideBtns() {
+    setTimeout(drawTrxInfo, 0);
     document.querySelectorAll('#dgTxSide .btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.side === sd())));
     const pane = $('ftWfBox') && ($('ftWfBox').closest('.ctab-pane') || $('ftWfBox').parentElement);
     if (pane) pane.classList.toggle('ft-txb', sd() === 'B');
@@ -5578,6 +5614,9 @@
     },
     setDetached,
     followSync: (on) => setFollow(on, true), // « Suivre l'opérateur » changé sur la face avant
+    // Page TRX SSB : le même « Suivre l'opérateur » (dashboard, TRX DIGI et face avant)
+    following: () => follow,
+    setFollowAll: (on) => { setFollow(on); if (on) followView(); },
     curTab: () => (detached ? '' : tab), // onglet affiché (la face avant éclaire le bouton de ce mode)
     isPopup: POPUP,
     /** Mode numérique affiché (pour le carnet de trafic quand le TRX est en DATA) */
@@ -5668,6 +5707,8 @@
         // FT8 / RTTY / WSPR… : page des modes numériques sur ce mode)
         if (b.dataset.tab === 'ssb') return openModePage('ssb');
         if (!POPUP && PAGE_TABS.indexOf(b.dataset.tab) >= 0) return openModePage(b.dataset.tab);
+        // Fenêtre séparée sans onglets des modes : SYNCHRO ouvre la synchro, un nouveau clic revient au mode
+        if (POPUP && b.dataset.tab === 'sync' && tab === 'sync') return showTab(lastModeTab);
         // Choisir soi-même un autre onglet arrête le suivi de l'opérateur
         if (follow && api && !api.iControl()) { setFollow(false); api.say('Suivi de l’opérateur arrêté (onglet choisi).', '', 4000); }
         showTab(b.dataset.tab);

@@ -862,6 +862,7 @@
     $('cwpCtl').textContent = !host ? 'dashboard non raccroché' : me ? 'Vous avez la main' : st && st.controller ? 'Main : ' + st.controller : 'Personne n’a la main';
     $('cwpCtl').className = me ? 'ok' : '';
     $('cwpTake').hidden = !host || me || !!(st && st.controller);
+    drawFollow();
     const tx = !!(st && st.ptt && st.ptt.active) || !!r.tx;
     $('cwpTx').textContent = tx ? 'TX' : 'RX';
     // Grand PTT en rouge dès que le TRX émet (PTT de cette page, mémoire vocale, PTT d'une autre page)
@@ -888,6 +889,31 @@
     }
   }
   $('cwpTake').addEventListener('click', () => api.send({ t: 'take' }));
+  // « Suivre l'opérateur » (formation à distance) : le même que celui du dashboard, de la page TRX DIGI et de la face avant
+  const DGS = () => { const out = []; try { const a = hostWin && hostWin.RSDIGI; if (a) out.push(a); const b = hostWin && hostWin.DG && hostWin.DG(); if (b && out.indexOf(b) < 0) out.push(b); } catch (e) {} return out; };
+  const following = () => DGS().some((d) => { try { return !!(d.following && d.following()); } catch (e) { return false; } });
+  const TABNAME = { ftx: 'FT8 / FT4 / FT2', rtty: 'RTTY', wspr: 'WSPR', jt65: 'JT65', jtty: 'JTTY', cw: 'CW', sstv: 'SSTV', sync: 'Synchro' };
+  $('ssFollow').addEventListener('click', () => {
+    const on = !following();
+    const ds = DGS();
+    if (!ds.length) return toast('Suivi indisponible : le dashboard qui a ouvert cette page est fermé.', 'warn');
+    for (const d of ds) { try { if (d.setFollowAll) d.setFollowAll(on); else if (d.followSync) d.followSync(on); } catch (e) {} }
+    toast(on ? 'Suivi de l’opérateur : vos pages montrent le même mode et les mêmes repères que celui qui a la main.' : 'Suivi de l’opérateur arrêté.', '', 5000);
+    drawFollow();
+  });
+  function drawFollow() {
+    const b = $('ssFollow'), st = api.state(), mine = api.iControl();
+    const on = following();
+    b.hidden = !host;
+    b.setAttribute('aria-pressed', String(on));
+    b.disabled = mine;
+    b.title = mine ? 'Vous avez la main : les autres membres peuvent suivre votre écran (👁 Suivre l’opérateur chez eux).'
+      : 'Suivre l’opérateur (formation à distance) : vos pages (dashboard, TRX DIGI, face avant) montrent le même mode et les mêmes repères que celui qui a la main.';
+    // Suivi en marche : le mode affiché par l'opérateur, à côté de « Main : … »
+    const v = st && st.view;
+    if (on && !mine && st && st.controller && v && v.tab && TABNAME[v.tab]) $('cwpCtl').textContent = 'Main : ' + st.controller + ' · sur ' + (v.tab === 'ftx' && v.mode ? v.mode : TABNAME[v.tab]);
+  }
+
   // Les deux VFO (SPLIT) : même main et mêmes commandes que le dashboard
   // DUAL RX et écoute au casque en stéréo (VFO A / MAIN à gauche, VFO B / SUB à droite) : écoute jouée par le dashboard
   if (window.RSVFOBOX) window.RSVFOBOX.mount($('cwpVfo'), { api, toast, dual: true,
