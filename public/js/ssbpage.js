@@ -84,6 +84,13 @@
     $('cwpCtBody').hidden = !d;
     // Pas de contest : la fiche du carnet pour noter les QSO à la main
     const qb = $('ssQso');
+    // Mémoires vocales : aussi sans contest (les textes se changent) — sous le titre de la fiche du carnet ;
+    // en contest, à leur place sous la ligne d'entrée (au-dessus du score)
+    const vk = document.querySelector('.ssb-vk');
+    if (vk) {
+      if (d && vk.parentNode !== $('cwpCtBody').querySelector('.cwp-cleft')) $('cwpCtBody').querySelector('.cwp-cleft').insertBefore(vk, $('cwpCtBody').querySelector('.ssb-panels'));
+      else if (!d && vk.parentNode !== qb) qb.insertBefore(vk, qb.querySelector('.ssb-lg'));
+    }
     if (qb.hidden !== !!d) { qb.hidden = !!d; if (!d && LOG && LOG.mounted) LOG.show(); if (!d) askSsb(); }
     const cs = $('ssCat');
     cs.textContent = '';

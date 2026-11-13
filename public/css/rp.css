@@ -2845,3 +2845,7 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .ssb-ttsv #ssTtsV { max-width: 210px; }
 .ssb-ttsv #ssTtsLang { max-width: 170px; }
 @media (max-width: 1100px) { .ssb-ttsv { flex-wrap: wrap; } }
+
+/* Sans contest : les mémoires vocales restent, dans la fiche du carnet (la note sur la touche Entrée du contest est masquée) */
+.ssb-qso > .ssb-vk { flex: 0 0 auto; }
+.ssb-qso .ssb-vkct { display: none; }
