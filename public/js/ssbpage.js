@@ -746,6 +746,11 @@
       setSink: (id) => { try { if (host.setSink) host.setSink(id); } catch (e) {} },
       sendBin: (buf) => { try { if (host.sendBin) host.sendBin(buf); } catch (e) {} } });
     try { VX.onHello(host.me ? host.me() : {}); } catch (e) {}
+    // Réglages micro du TRX (GAIN MICRO, PROC, MIC EQ, NIVEAU PROC, VOX) sur la ligne SSB CONFIGURATION, à droite de TRX EQ ;
+    // « Profil de … » tout à droite : tous les réglages sur une seule ligne
+    { const t = $('vxTrxBtn'), m = $('ssMic'), pr = $('vxProf');
+      if (t && m && m.previousElementSibling !== t) { t.after(m); m.classList.add('vx-mic'); }
+      if (pr && m && m.nextElementSibling !== pr) m.after(pr); }
   }
   function pttReason() {
     const st = api.state();
@@ -923,8 +928,7 @@
     listen: () => { try { return host ? host.listen : null; } catch (e) { return null; } },
     // Écrans des deux VFO : ceux du dashboard (page générale), recopiés
     mirror: () => { try { return hostWin && !hostWin.closed && hostWin.document.getElementById('vfoA') ? hostWin.document : null; } catch (e) { return null; } } });
-  // Ligne MICRO DU TRX (gain micro, PROC, MIC EQ, niveau PROC, VOX) dans le cadre des VFO, sous leurs écrans
-  { const mir = $('cwpVfo').querySelector('.vfb-mir'); if (mir) { mir.after($('ssMic')); $('ssMic').classList.add('vfb-mic'); } }
+
   // Carte de bande à gauche : spots SSB de la bande du TRX ; clic = indicatif + TRX sur la fréquence du spot (avec la main)
   // TRX à deux vrais récepteurs (état « dualRx » : IC-7760, FTDX101, FTDX5000…) : carte du VFO-A à gauche, du VFO-B à droite
   const twoRx = (r) => r && r.dualRx != null && r.freqB != null;

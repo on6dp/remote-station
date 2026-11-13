@@ -2737,3 +2737,14 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .cwp-head .cwp-ctl { margin-left: 14px; }
 /* Page SSB : plus de boutons B = A −1…+10 (la fréquence se règle à la molette sur les écrans des VFO) */
 .vfb.mir .vfb-off { display: none; }
+/* Page SSB : réglages micro du TRX sur la ligne SSB CONFIGURATION (à droite de TRX EQ), Profil de … tout à droite */
+.vx .ssb-mic.vx-mic { display: inline-flex; flex: 0 1 auto; min-width: 0; margin: 0 0 0 10px; padding: 0 0 0 12px; border: 0; border-left: 1px solid var(--v2-border); border-radius: 0; background: none; }
+.vx .ssb-mic.vx-mic[hidden] { display: none; }
+.vx .ssb-mic.vx-mic .ssb-mic-b { flex-wrap: nowrap; gap: 6px 14px; }
+.vx .ssb-mic.vx-mic .ctl input[type='range'] { width: 110px; flex: 0 1 110px; min-width: 60px; }
+.vx .ssb-mic.vx-mic .ssb-mic-b > .btn { min-width: 64px; padding: 4px 10px; }
+.vx-compact .vx-mic ~ .vx-prof, .vx .vx-mic + #vxProf { margin-left: auto; }
+/* Page SSB : plus de note « Réception A, émission B » (RX / TX sont sur les écrans des VFO) */
+.vfb.mir .vfb-note { display: none; }
+/* Pages SSB et CW : « CONTESTS » en jaune vif */
+.cwp-ctl1 .cwp-ctlab { color: #ffe600; font-weight: 800; letter-spacing: .5px; }

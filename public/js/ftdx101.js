@@ -66,7 +66,7 @@
     const KTYPE = L(['OFF', 'BUG', 'ELEKEY-A', 'ELEKEY-B', 'ELEKEY-Y', 'ACS']);
     const EQF = [L(['OFF', '100', '200', '300', '400', '500', '600', '700']), L(['OFF', '700', '800', '900', '1000', '1100', '1200', '1300', '1400', '1500']),
       L(['OFF'].concat(Array.from({ length: 18 }, (_, i) => String(1500 + i * 100))))];
-    const eqRo = (d) => RO(d, 'réglé par EQUALIZER TRX (Profil de …)');
+    const eqRo = (d) => RO(d, 'réglé par TRX EQ (Profil de …)');
     const eq = (a, p) => [0, 1, 2].flatMap((b) => [[a + b * 3, p + 'PRMTRC EQ' + (b + 1) + ' FREQ', eqRo(EQF[b])], [a + b * 3 + 1, p + 'PRMTRC EQ' + (b + 1) + ' LEVEL', eqRo(N(-10, 10, 1, 'dB'))], [a + b * 3 + 2, p + 'PRMTRC EQ' + (b + 1) + ' BWTH', eqRo(N(1, 10))]]);
     const G = (id, group, name, items) => ({ id, group, name, items: items.map(([n, label, d]) => ({ id: id + String(n).padStart(2, '0'), n, label, d })) });
     return [

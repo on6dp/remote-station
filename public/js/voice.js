@@ -88,7 +88,7 @@
     box.innerHTML =
       '<div class="vx-h"><span class="vx-title">SSB configuration</span></div>' +
       '<button class="btn vx-on" id="vxOn" type="button" aria-pressed="false" title="Activer votre micro : votre voix part vers le TRX pendant l’appui sur PTT (LSB / USB…) ; un nouveau clic le coupe">Configuration micro</button>' +
-      '<button class="btn vx-trx" id="vxTrxBtn" type="button" hidden title="Égaliseur paramétrique du TRX (menus PRMTRC) : votre profil, mis au TRX quand vous prenez la main">Equalizer TRX</button>' +
+      '<button class="btn vx-trx" id="vxTrxBtn" type="button" hidden title="TRX EQ : égaliseur paramétrique du TRX (menus PRMTRC) : votre profil, mis au TRX quand vous prenez la main">TRX EQ</button>' +
       '<div class="vx-b" id="vxBody" hidden>' +
       '<label class="vx-io" title="Entrée son : votre micro (ce qui part vers le TRX au PTT)">🎤 <span class="vx-iol">Entrée</span> <select id="vxDev" aria-label="Entrée son (micro)"></select></label>' +
       '<label class="vx-io vx-outl" title="Sortie son : où vous entendez le TRX et « MONITORING » (casque, haut-parleurs…)">🔊 <span class="vx-iol">Sortie</span> <select id="vxOut" aria-label="Sortie son (casque, haut-parleurs)"></select></label>' +
@@ -103,7 +103,7 @@
     // Dashboard : la phonie (micro, égaliseurs, entrée / sortie son, réglages micro du TRX) est dans la page TRX SSB,
     // ouverte par l'onglet SSB de la ligne MODES (plus de bouton « Phonie : page TRX SSB » ici)
     if (V.api && V.api.away) box.classList.add('vx-away');
-    // Face avant (/ftdx101) : une seule ligne « SSB CONFIGURATION · MICRO · MICRO EQ · niveau · EQUALIZER TRX »,
+    // Face avant (/ftdx101) : une seule ligne « SSB CONFIGURATION · MICRO · MICRO EQ · niveau · TRX EQ »,
     // le reste (choix du micro, type, état, MONITORING et son volume) sur la ligne suivante
     if (V.api && V.api.compact) {
       box.classList.add('vx-compact');
@@ -153,7 +153,7 @@
     const R = V.api.rig && V.api.rig();
     const trxEq = !!(st && st.trxEq && R && R.TRX_EQ);
     // Face avant (compact) : la ligne reste toujours là (DIGI / SSB CONFIGURATION), même quand la phonie à distance n'est pas
-    // annoncée par la page Station (hors ligne, à recharger) et que le TRX n'a pas d'EQUALIZER TRX (FTX-1) : boutons grisés
+    // annoncée par la page Station (hors ligne, à recharger) et que le TRX n'a pas d'TRX EQ (FTX-1) : boutons grisés
     box.hidden = (!V.api.compact && !modes && !trxEq) || !V.api.me() || !V.api.me().canTx || V.api.me().rxOnly;
     $('vxTrxBtn').hidden = !trxEq;
     if (trxEq && R.TRX_EQ.icom) $('vxTrxBtn').title = 'Votre profil d’émission de l’IC-7300 (SET → Tone Control/TBW : Bass, Treble, TBW), mis au TRX quand vous prenez la main ; réglage du club remis quand vous la rendez';
@@ -617,7 +617,7 @@
     d.className = 'vx-eq vx-trxeq';
     d.id = 'vxTrx';
     d.setAttribute('role', 'dialog');
-    d.setAttribute('aria-label', 'Equalizer TRX');
+    d.setAttribute('aria-label', 'TRX EQ');
     const set = (k, title) => '<fieldset class="vx-set"><legend>' + title + '</legend><div class="vx-bands">' + [0, 1, 2].map((b) =>
       '<fieldset class="vx-band"><legend>' + BAND_NAMES[b] + '</legend>' +
       '<label>Fréquence <select data-t="' + k + b + 'f"><option value="0">coupée</option>' + E.FREQS[b].map((hz, i) => '<option value="' + (i + 1) + '">' + hz + ' Hz</option>').join('') + '</select></label>' +
@@ -633,7 +633,7 @@
         '<fieldset class="vx-set"><legend>AM et FM</legend>' + E.FIELDS.filter((f) => f.n >= 17).map(icRow).join('') + '</fieldset>'
       : set('n', 'PROC coupé (menus PRMTRC EQ)') + set('p', 'PROC en service (menus P PRMTRC EQ)');
     d.innerHTML =
-      '<div class="vx-eq-h"><b>Equalizer TRX</b><span>— ' + esc(R.NAME) + (E.icom ? ' · SET → Tone Control/TBW (émission)' : '') + '</span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
+      '<div class="vx-eq-h"><b>TRX EQ</b><span>— ' + esc(R.NAME) + (E.icom ? ' · SET → Tone Control/TBW (émission)' : '') + '</span><button class="btn" type="button" data-a="close" aria-label="Fermer">✕</button></div>' +
       '<p class="vx-hint" id="vxTrxState"></p>' +
       body +
       '<p class="vx-hint">Ce sont les menus du TRX lui-même : votre profil y est mis quand vous prenez la main, et le réglage du club est remis quand vous la rendez. Il agit sur la modulation du TRX (micro du club et, si le TRX l’applique aussi à l’entrée USB, votre phonie à distance : à vérifier à l’écoute). Un essai part tout de suite au TRX ; « Enregistrer » le garde pour vos prochaines prises de main.</p>' +

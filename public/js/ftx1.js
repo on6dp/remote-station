@@ -65,7 +65,7 @@
     const EQF = [C([[0, 'OFF']].concat(Array.from({ length: 7 }, (_, i) => [i + 1, (100 + i * 100) + 'Hz']))),
       C([[0, 'OFF']].concat(Array.from({ length: 9 }, (_, i) => [i + 1, (700 + i * 100) + 'Hz']))),
       C([[0, 'OFF']].concat(Array.from({ length: 18 }, (_, i) => [i + 1, (1500 + i * 100) + 'Hz'])))];
-    const eqRo = (d) => LOCK(d, 'réglé par EQUALIZER TRX (Profil de …)');
+    const eqRo = (d) => LOCK(d, 'réglé par TRX EQ (Profil de …)');
     const eq = (a, p) => [0, 1, 2].flatMap((b) => [[a + b * 3, p + 'PRMTRC EQ' + (b + 1) + ' FREQ', eqRo(EQF[b])], [a + b * 3 + 1, p + 'PRMTRC EQ' + (b + 1) + ' LEVEL', eqRo(TONE)], [a + b * 3 + 2, p + 'PRMTRC EQ' + (b + 1) + ' BWTH', eqRo(N(0, 10))]]);
     const MICK = L(['LOCK', 'QMB', '>/<', 'V/M', 'TUNER', 'VOX/MOX', 'MODE', 'ZIN/SPOT', 'SPLIT', 'FINE', 'NAR', 'NB', 'DNR', 'FREQ UP', 'FREQ DOWN', 'BAND UP', 'BAND DOWN', 'ATT', 'IPO', 'DNF', 'AGC']);
     // CTCSS (Table 1) et DCS (Table 2) du manuel CAT ; mémoires DTMF : texte, relu, modifié par l'écran DTMF (FUNC → DTMF)

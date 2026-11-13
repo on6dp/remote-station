@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.72** — Page SSB : réglages micro du TRX sur la ligne SSB CONFIGURATION (à droite de TRX EQ, Profil de … tout à droite) ; EQUALIZER TRX devient TRX EQ ; plus de note Réception/émission ; CONTESTS en jaune vif (SSB et CW)
 - **0.38.71** — Page SSB : plus de boutons B = A −1…+10 (molette sur les écrans des VFO)
 - **0.38.70** — Pages TRX SSB et TRX CW : même en-tête que la fenêtre TRX DIGI (titre sur sa ligne, puis TX CALL, fréquence, mode, 👥, indicatif, main)
 - **0.38.69** — Page SSB : plus de cases kHz sous les écrans des VFO
