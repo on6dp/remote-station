@@ -3181,3 +3181,4 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 /* Une fenêtre par VFO : pas de 2e cadre rouge autour de la ligne de saisie (le cadre rouge du VFO d'émission suffit) */
 .ctab-pane.rt .rt-side .rt-io > .rt-txbox > .rt-txw { box-shadow: none !important; border: 0 !important; }
 .cwp-head > .cwp-back { margin: 0 0 0 auto; align-self: center; }
+.ssb-body #cwpTx { display: none !important; } /* page SSB : plus de voyant RX / TX (le PTT devient rouge en émission) ; RETOUR à sa place */

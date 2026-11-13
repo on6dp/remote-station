@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.71** — Page TRX SSB : voyant RX / TX retiré, bouton RETOUR à sa place (en haut à droite)
 - **0.39.70** — Pages TRX SSB et TRX CW : bouton RETOUR en haut à droite, comme les autres pages (ferme la page, la page d'origine repasse devant)
 - **0.39.69** — Page RTTY : plus de double trait rouge autour de la ligne de saisie du VFO d'émission
 - **0.39.68** — LOG RTTY : colonne Contest à droite de OP (nom du contest, vide hors contest)
