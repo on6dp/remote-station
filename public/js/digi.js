@@ -1848,7 +1848,9 @@
     const r = st && st.radio;
     if (!r) return null;
     const dual = r.dualRx === 1 && r.freq && r.freqB;
-    const useB = dual ? ch === 1 : r.vfoSel === 1 && !!r.freqB;
+    // Réception simple : le VFO réellement écouté — FTDX101 : RX MAIN coupé (FR10) = on n'entend que le SUB (VFO-B)
+    const onB = r.subMute != null ? (r.mainMute === 1 || (r.vfoSel === 1 && r.subMute === 0)) : r.vfoSel === 1;
+    const useB = dual ? ch === 1 : onB && !!r.freqB;
     let hz = Number(useB ? r.freqB : r.freq) || 0;
     const pd = rtDialPend[useB ? 'B' : 'A'];
     if (pd && Date.now() - pd.t < 1500) hz = pd.hz; // accord en cours : la fréquence envoyée, pas encore relue
