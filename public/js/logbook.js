@@ -500,6 +500,8 @@
     const b = f.querySelector('[data-a="myrefs"]');
     b.setAttribute('aria-pressed', String(on));
     b.textContent = on ? '− Ma référence (activation)' : '＋ Ma référence (activation)';
+    // Page TRX SSB : jamais ouverte d'office (choix non gardé) ; ouverte à la main : les références gardées reviennent
+    if (SSBP) { restoreMyRefs(); return; }
     try { localStorage.setItem('rs.lg.myrefs', on ? '1' : '0'); } catch (e) { /* */ }
   }
   function saveMyRefs() {
@@ -512,6 +514,8 @@
     if (!f) return;
     let v = {};
     try { v = JSON.parse(localStorage.getItem('rs.lg.myrefv') || '{}') || {}; } catch (e) { v = {}; }
+    // Page TRX SSB, « Ma référence » fermée : pas de référence d'activation glissée en douce dans les QSO
+    if (SSBP && f.querySelector('.lg-myrefs').hidden) v = {};
     for (const [k] of REF_KEYS) f['my_' + k].value = v[k] || '';
   }
   function initRefs(f) {
@@ -529,6 +533,7 @@
     f.querySelector('[data-a="myrefs"]').addEventListener('click', () => showMyRefs(f.querySelector('.lg-myrefs').hidden));
     let on = false;
     try { on = localStorage.getItem('rs.lg.myrefs') === '1'; } catch (e) { /* */ }
+    if (SSBP) on = false; // page TRX SSB : « Ma référence (activation) » fermée par défaut
     showMyRefs(on);
     restoreMyRefs();
     for (const inp of f.querySelectorAll('.lg-ref input')) {

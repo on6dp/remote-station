@@ -2761,3 +2761,6 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 /* Pages SSB et CW, saisie du contest : le nom de chaque champ devant la case (une ligne de gagnée) */
 .cwp-entry label { flex-direction: row; align-items: center; gap: 7px; }
 .cwp-entry label.spotlog { align-self: center; padding: 0 4px; }
+/* Page SSB : PROC dans les couleurs de TRX EQ / MICRO EQ — vert en service, fond noir coupé */
+.ssb-mic-b .btn[data-id='proc'] { background: #000; border: 1px solid #6b7686; color: #fff; font-weight: 800; }
+.ssb-mic-b .btn[data-id='proc'][aria-pressed='true'] { background: linear-gradient(180deg, #1f9d45, #12692c); border-color: #39FF14; color: #fff; }

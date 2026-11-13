@@ -874,7 +874,7 @@
     $('cwpTx').textContent = tx ? 'TX' : 'RX';
     // Grand PTT en rouge dès que le TRX émet (PTT de cette page, mémoire vocale, PTT d'une autre page)
     $('ptt').classList.toggle('on-air', tx);
-    $('ptt').textContent = tx ? 'PTT · ÉMISSION' : 'PTT';
+    $('ptt').textContent = 'PTT'; // rouge en émission : pas besoin de le dire
     $('cwpTx').classList.toggle('on', tx);
     $('cwpTxSt').textContent = 'Émission : ' + (st && st.ptt && st.ptt.active ? (st.ptt.voice ? 'phonie / mémoire vocale de ' : 'PTT de ') + (st.ptt.by || '?') : 'aucune');
     $('cwpLink').textContent = 'Liaison : ' + (host ? 'par la page d’origine' : 'aucune');
@@ -1009,7 +1009,7 @@
           cell.append(hd, inp); body.appendChild(cell);
           MIC.refs[c.id] = { inp, out };
         } else {
-          const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = c.label; b.setAttribute('aria-pressed', 'false');
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.dataset.id = c.id; b.textContent = c.label; b.setAttribute('aria-pressed', 'false');
           b.addEventListener('click', () => { const cur = (host.txCtls().find((x) => x.id === c.id) || {}).value; const why = host.txSet(c.id, cur ? 0 : 1); if (why) toast(why, 'warn'); });
           body.appendChild(b);
           MIC.refs[c.id] = { btn: b };

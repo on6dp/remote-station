@@ -470,7 +470,9 @@
     // (rigs/yaesu/ftx1/ftx1_vfo.c). Le choix du VFO d'émission passe donc par FT0 (TX MAIN) / FT1 (TX SUB) ; ST n'est ni lu ni envoyé.
     splitIsFT: true,
     // SPLIT mis sur la face avant du TRX : lu (hwSplit) pour l'afficher ; jamais activé par CAT (ST1), seulement coupé (ST0)
-    readOverrides: { 'ST;': { re: /^ST([0-2])$/, parse: (m) => ({ hwSplit: m[1] === '0' ? 0 : 1 }), sim: 'ST0' } },
+    readOverrides: { 'ST;': { re: /^ST([0-2])$/, parse: (m) => ({ hwSplit: m[1] === '0' ? 0 : 1 }), sim: 'ST0' },
+      // PROC (manuel CAT FTX-1, PR) : P1 0 = processeur, P2 1 = OFF, 2 = ON (comme MIC EQ, PR1) ; « 0 » lu comme OFF
+      'PR0;': { re: /^PR0([0-2])$/, parse: (m) => ({ proc: m[1] === '2' ? 1 : 0 }), sim: 'PR01' } },
     // Sur le FTX-1, réception (VS) et émission (FT) basculent ensemble d'un côté à l'autre, et un VFO d'émission
     // différent de celui de réception peut faire émettre le TRX. Le choix du VFO d'émission (SPLIT, clic sur TX) est
     // donc gardé par le serveur (« SPLIT virtuel », comme Hamlib) et n'est envoyé au TRX qu'au moment d'émettre :
@@ -483,6 +485,7 @@
     // restait en émission dans l'état FT0 + VS1 (constaté au club le 25/10).
     splitSwap: true,
     controlOverrides: {
+      proc: { write: (v) => 'PR0' + (v ? 2 : 1) + ';' }, // manuel CAT : 1 = OFF, 2 = ON
       // FTX-1 : ATT et IPO / AMP1 / AMP2 sous 144 MHz, un seul préampli AMP (ON / OFF) en 144 et 430 MHz (constaté au club)
       // ATT et IPO / AMP1 / AMP2 propres à chaque côté ; le CAT (PA0 / RA0) agit sur le côté actif (constaté au club) :
       // côté SUB actif, la page Station repasse un instant sur MAIN pour régler ceux du VFO A (viaMain)

@@ -2234,6 +2234,12 @@
       const why = ctlBlocked();
       if (why) return why;
       if (c.offOnly && v) return c.label + ' ne peut pas être activé à distance (seulement coupé)';
+      // PROC : le TRX ne l'accepte qu'en SSB / AM sur le VFO d'émission (sinon il répond « ?; » et le bouton se rééteint)
+      if (id === 'proc' && v) {
+        const r = (st && st.radio) || {}, txB = r.txVfo === 1 || (r.split && r.vfoSel !== 1);
+        const m = String((txB ? r.modeB : r.mode) || '');
+        if (m && !/^(LSB|USB|AM)/.test(m)) return 'PROC : seulement en SSB ou AM sur le VFO d’émission (VFO ' + (txB ? 'B' : 'A') + ' en ' + m + ').';
+      }
       if (c.type === 'level') { ctlPending[c.id] = { v, at: Date.now() }; sendCtlThrottled(c); render(); return ''; }
       sendCtl(c, v);
       return '';
