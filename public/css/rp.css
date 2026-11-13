@@ -3053,3 +3053,8 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .rt-log td:nth-child(3) { color: #fff; font-weight: 800; }
 .rt-log td.rt-lognone { color: var(--v2-text-dim); font-style: italic; }
 .rt-log tr:first-child td.rt-lognone { color: var(--v2-text-dim); }
+/* Page RTTY : LOG RTTY à droite des macros et du contest (place libre), sous eux si l'écran est trop étroit */
+.ctab-pane.rt .rt-grid.rt-stack { flex-direction: row; flex-wrap: wrap; align-items: stretch; }
+.ctab-pane.rt .rt-stack > .rt-tx-col { flex: 0 1 auto; min-width: 0; }
+.ctab-pane.rt .rt-stack > .rt-logbox { flex: 1 1 520px; min-width: 420px; display: flex; flex-direction: column; }
+.ctab-pane.rt .rt-logbox > .rt-logw { flex: 1 1 auto; min-height: 90px; max-height: 300px; overflow-x: auto; }

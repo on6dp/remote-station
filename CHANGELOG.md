@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.50** — Page RTTY : cadre LOG RTTY à droite des macros et du contest (dessous si l'écran est trop étroit)
 - **0.39.49** — Page RTTY : en contest, seulement les macros du contest ; hors contest, seulement les macros habituelles (Effacer, Log QSO et Spot cluster suivent la rangée affichée)
 - **0.39.48** — Page RTTY : cadre LOG RTTY sous les macros — QSO RTTY du carnet général (hors contest, ou ceux du contest choisi avec les échanges), mis à jour à chaque QSO enregistré
 - **0.39.47** — Page RTTY : la poignée sous les fenêtres TX / RX les réduit jusqu'à 70 px (avant : arrêt bien plus haut), pour voir le bas de la page sans ascenseur
