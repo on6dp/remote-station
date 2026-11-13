@@ -2974,3 +2974,10 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .rt-contest.on #rtcSel { border-color: #f5ff00; }
 /* RTTY en double réception : chaque colonne (VFO-A, VFO-B) a sa propre hauteur de cascade — plus de lignes communes */
 @media (min-width: 901px) { .rt-dual > .rt-side { display: flex; flex-direction: column; } }
+/* RTTY : sous la fenêtre de réception de chaque VFO, sa fenêtre d'émission (TX) */
+.rt-side .rt-txw { flex: none; margin: 4px 0 0; min-height: 52px; resize: vertical; font: inherit; font-size: 13px; line-height: 1.4; text-transform: uppercase;
+  color: #ffd2c8; background: #170a0a; border: 1px solid #5a2a2a; border-radius: 4px; padding: 6px 8px; }
+.rt-side .rt-txw::placeholder { text-transform: none; color: #9a7f7a; }
+.rt-side.rt-istx .rt-txw { border-color: #ff5a4a; box-shadow: 0 0 0 1px rgba(255, 90, 74, .35) inset; }
+.rt-side:not(.rt-istx) .rt-txw { opacity: .7; }
+.rt-stack .rt-tx-row { justify-content: flex-end; }

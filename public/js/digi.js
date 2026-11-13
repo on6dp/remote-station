@@ -343,6 +343,7 @@
         </div>
         <div class="dg-wf-slot" data-slot="rtty-a"></div>
         <pre class="rt-rx" id="rtRx"></pre>
+        <textarea class="rt-txw" id="rtTxt" data-ch="0" rows="3" spellcheck="false" placeholder="TX VFO-A : texte à émettre, puis « Émettre » ou Ctrl+Entrée (Maj+clic sur une macro : l’ajoute ici)…" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea>
       </div>
       <i class="rt-vsplit" id="rtSplit" title="Glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié)"></i>
       <div class="dg-col rt-side" data-ch="1">
@@ -375,6 +376,7 @@
           <i class="dg-grip" id="rtGripB" title="Glisser vers le haut ou le bas : hauteur de la cascade du VFO-B, sans toucher à celle du VFO-A (double-clic : même hauteur que celle du VFO-A)"></i>
         </div>
         <pre class="rt-rx" id="rtRxB"></pre>
+        <textarea class="rt-txw" id="rtTxtB" data-ch="1" rows="3" spellcheck="false" placeholder="TX VFO-B : texte à émettre, puis « Émettre » ou Ctrl+Entrée (Maj+clic sur une macro : l’ajoute ici)…" title="Fenêtre d’émission du VFO-B : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea>
       </div>
     </div>
     <i class="rt-hgrip" id="rtHGrip" title="Glisser vers le haut ou le bas : hauteur des fenêtres de décodage (VFO-A et VFO-B) — plus de place pour les macros en dessous (double-clic : taille d'origine)"></i>
@@ -398,14 +400,13 @@
         </div>
         <div class="rt-macros rtc-macros" id="rtcMacros"></div>
         <div class="rt-tx-row">
-          <textarea id="rtTxt" rows="2" placeholder="Message personnalisé, puis « Émettre » (Maj+clic sur une macro : l'ajoute ici)…" spellcheck="false"></textarea>
           <div class="rt-tx-act">
             <button class="btn btn-tx" type="button" id="rtSend" title="Émet le texte en RTTY avec les réglages du décodeur marqué TX (A ou B), puis retour en réception">Émettre</button>
             <div class="rt-tx-act2"><button class="btn" type="button" id="rtTxClear">Effacer</button>
             <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station (correspondant, RST, heure…)">Log QSO</button><label class="spotlog dg-spot" title="Cochée : le QSO enregistré (Log QSO) est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label></div>
           </div>
         </div>
-        <p class="dg-tx rt-tx-note" id="rtTxState">Émission RTTY sous <b>ON5VL</b> : texte ci-dessus, puis « Émettre » (Ctrl+Entrée).</p>
+        <p class="dg-tx rt-tx-note" id="rtTxState">Émission RTTY sous <b>ON5VL</b> : texte de la fenêtre TX du VFO, puis « Émettre » (Ctrl+Entrée).</p>
       </div>
     </div>`;
   const WSPR_PANE = `
@@ -518,7 +519,7 @@
             <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station">Log QSO</button><label class="spotlog dg-spot" title="Cochée : le QSO enregistré (Log QSO) est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label></div>
           </div>
         </div>
-        <p class="dg-tx rt-tx-note" id="cwTxState">Émission CW sous <b class="dg-txcall">ON5VL</b> par le manipulateur du TRX : macro (émission directe) ou texte ci-dessus puis « Émettre » (Ctrl+Entrée).</p>
+        <p class="dg-tx rt-tx-note" id="cwTxState">Émission CW sous <b class="dg-txcall">ON5VL</b> par le manipulateur du TRX : macro (émission directe) ou texte de la fenêtre TX du VFO-' + (rtTx ? 'B' : 'A') + ' puis « Émettre » (Ctrl+Entrée).</p>
         <div id="cwKey"></div>
       </div>
     </div>`;
@@ -1558,6 +1559,8 @@
   const rt = rts[0];
   const RT_SFX = ['', 'B'];
   let rtTx = store.get('rttx', '0') === '1' ? 1 : 0; // décodeur dont les réglages servent à l'émission
+  // Fenêtre d'émission (texte à envoyer) du VFO choisi pour l'émission : une par VFO, sous sa fenêtre de réception
+  const rtTxtEl = () => $(rtTx ? 'rtTxtB' : 'rtTxt') || $('rtTxt');
   let rtDialKey = '';
   // ------------------------------------------------------------------ macros (comme FLDIGI : F1 à F12, modifiables)
   // <TX> en tête : la macro part tout de suite à l'émission (comme FLDIGI) ; <RX> : retour en réception (toujours fait en fin de message)
@@ -3134,9 +3137,12 @@
       mirrorSel($('rtZoomB'), $('rtZoom'));
       fillB();
     }
-    $('rtTxClear').addEventListener('click', () => { $('rtTxt').value = ''; });
+    $('rtTxClear').addEventListener('click', () => { const t = rtTxtEl(); if (t) t.value = ''; });
     $('rtSend').addEventListener('click', () => dtxClick('RTTY'));
-    $('rtTxt').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); dtxClick('RTTY'); } });
+    for (const t of ['rtTxt', 'rtTxtB'].map($).filter(Boolean)) {
+      t.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); dtxClick('RTTY'); } });
+      t.addEventListener('focus', () => pickTx(Number(t.dataset.ch) === 1 ? 1 : 0)); // écrire dans la fenêtre TX d'un VFO le choisit pour l'émission
+    }
     drawRttyMacros();
     rtHeads();
   }
@@ -4698,7 +4704,7 @@
     const x = st && st.ftx;
     // Pendant l'émission (ou si elle est prévue) : le bouton coupe
     if (x && x.mode === mode) return api.send({ t: 'ftx_stop' });
-    const el = mode === 'RTTY' ? $('rtTxt') : $('jtTxt');
+    const el = mode === 'RTTY' ? rtTxtEl() : $('jtTxt');
     if (!el.value.trim()) return api.say('Rien à émettre : tapez un texte ou choisissez une macro.', 'warn');
     dtxSend(mode, el.value, true);
   }
@@ -4757,8 +4763,7 @@
     }
     // Émission partie : le texte envoyé quitte la zone d'écriture et s'affiche dans la réception
     if (dtxPend && x && x.mode === dtxPend.mode && x.state === 'tx') {
-      const el = dtxPend.mode === 'RTTY' ? $('rtTxt') : $('jtTxt');
-      if (el && dtxPend.zone && el.value === dtxPend.text) el.value = '';
+      for (const el of dtxPend.mode === 'RTTY' ? [$('rtTxt'), $('rtTxtB')] : [$('jtTxt')]) if (el && dtxPend.zone && el.value === dtxPend.text) el.value = '';
       const rxEl = $(rtTx ? 'rtRxB' : 'rtRx');
       if (dtxPend.mode === 'RTTY' && rxEl) {
         // Texte exact émis (envoyé par le serveur) : gris tant qu'il attend, rouge lettre par lettre une fois parti
@@ -5116,7 +5121,7 @@
   }
   function insertRtty(t) {
     showTab('rtty');
-    const ta = $('rtTxt');
+    const ta = rtTxtEl();
     ta.value += macroText(t, true);
     ta.scrollTop = ta.scrollHeight;
     ta.focus();

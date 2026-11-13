@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.37** — Page RTTY : chaque VFO a sa fenêtre de réception (RX) et, dessous, sa fenêtre d'émission (TX) ; écrire dans la fenêtre TX d'un VFO le choisit pour l'émission (cadre rouge) ; Émettre / Ctrl+Entrée envoie le texte de cette fenêtre
 - **0.39.36** — Pages RTTY et FT en double réception : la poignée de la cascade du VFO-B règle sa hauteur seule, sans bouger celle du VFO-A (double-clic : même hauteur que la cascade A)
 - **0.39.35** — Page RTTY : liste des contests comme la page SSB (texte blanc, sans majuscules forcées, liste sombre ; « pas de contest » en tête puis ordre alphabétique)
 - **0.39.34** — Page RTTY : fréquence RTTY, ↺, Bande et Zoom sur la ligne SPLIT — VFO A à gauche, mêmes champs pour le VFO B à droite (le VFO B y va en DATA-U ; Bande et Zoom communs aux deux cascades)
