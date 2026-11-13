@@ -2887,5 +2887,5 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 #dgCtlChip .rs-ctlb { font-size: 11px; padding: 3px 10px; min-height: 0; line-height: 1.3; border-width: 1px; }
 /* Dashboard : boutons STEP, VFO A / B, ◀ ▶ et BANDES encadrés de blanc */
 #stepKeys .btn, #tgtA, #tgtB, #tuneDown, #tuneUp, #bandKeys .btn { border: 1px solid #fff; }
-/* Dashboard, ÉCOUTER LE TRX : « Volume » en jaune vif */
-.ctl-head:has(#listenVolOut) .ctl-label { color: #ffe600; font-weight: 800; }
+/* Dashboard, cadre RX audio : « Volume » (écoute) du même jaune que AF level et Squelch */
+.ctl-head:has(#listenVolOut) .ctl-label { color: var(--v2-accent-yellow); font-weight: 700; }

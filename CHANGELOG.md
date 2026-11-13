@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.19** — Dashboard : Volume (cadre RX audio) exactement du même jaune que AF level et Squelch
 - **0.39.18** — Dashboard : Volume de l'écoute du TRX en jaune vif
 - **0.39.17** — Dashboard : boutons STEP, VFO A / B, ◀ ▶ et BANDES encadrés de blanc
 - **0.39.16** — Page FT8 / FT4 / FT2 : PRENDRE LA MAIN / LIBÉRER LA MAIN à la taille normale des boutons
