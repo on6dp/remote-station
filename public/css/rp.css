@@ -2889,3 +2889,5 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 #stepKeys .btn, #tgtA, #tgtB, #tuneDown, #tuneUp, #bandKeys .btn { border: 1px solid #fff; }
 /* Dashboard, cadre RX audio : « Volume » (écoute) du même jaune que AF level et Squelch */
 .ctl-head:has(#listenVolOut) .ctl-label { color: var(--v2-accent-yellow); font-weight: 700; }
+/* Dashboard : bande en service en couleurs inversées (fond blanc, écriture noire) */
+#bandKeys .btn[aria-pressed='true'] { background: #fff; color: #000; border-color: #fff; font-weight: 800; text-shadow: none; }
