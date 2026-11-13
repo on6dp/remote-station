@@ -165,8 +165,8 @@
       b.querySelector('small').textContent = 'F' + n + ' · T' + n + (t && t.ms ? ' · ' + (t.ms / 1000).toFixed(1).replace('.', ',') + ' s' : '');
       b.querySelector('span').textContent = (t && t.name) || (t && t.ms ? 'T' + n : 'vide');
       const tt = S.tts && S.tts[n];
-      if (tt) { b.classList.add('tts'); b.querySelector('small').textContent += ' · ' + (/^(piper:)?fr/i.test(tt.voice || '') ? 'FR' : 'EN'); }
-      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message de synthèse ' + (/^(piper:)?fr/i.test(tt.voice || '') ? 'en français' : 'en anglais') + ', ' + tt.call + ')' : '') : 'Mémoire T' + n + ' vide : l’enregistrer sur la face avant (MENU → VOICE → REC) ou « Messages vocaux »';
+      if (tt) { b.classList.add('tts'); b.querySelector('small').textContent += ' · ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'FR' : 'EN'); }
+      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message de synthèse ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'en français' : 'en anglais') + ', ' + tt.call + ')' : '') : 'Mémoire T' + n + ' vide : l’enregistrer sur la face avant (MENU → VOICE → REC) ou « Messages vocaux »';
       b.addEventListener('click', () => playVm(n));
       box.appendChild(b);
     }
@@ -229,16 +229,23 @@
     const sel = $('ssTtsV');
     sel.textContent = '';
     // Voix naturelles (Piper, installées sur le serveur par deploy/install-voix.sh) : en premier, choisies d'office une fois
+    // Voix naturelles : Kokoro (les plus réalistes, deploy/install-kokoro.sh) puis Piper (deploy/install-voix.sh)
     const nat = (S.pv || []).filter((v) => v.lang === TT.lang);
-    const og = document.createElement('optgroup');
-    og.label = 'Voix naturelles (Piper)';
-    if (nat.length) for (const v of nat) og.appendChild(new Option(v.name, v.id));
-    else { const o = new Option('à installer sur le serveur (deploy/install-voix.sh)', ''); o.disabled = true; og.appendChild(o); }
-    sel.appendChild(og);
+    const ko = nat.filter((v) => v.kind === 'kokoro'), pi = nat.filter((v) => v.kind !== 'kokoro');
+    for (const [label, list] of [['Voix Kokoro (les plus réalistes)', ko], ['Voix Piper', pi]]) {
+      if (!list.length) continue;
+      const og = document.createElement('optgroup');
+      og.label = label;
+      for (const v of list) og.appendChild(new Option(v.name, v.id));
+      sel.appendChild(og);
+    }
+    if (!nat.length) { const o = new Option('Voix naturelles à installer sur le serveur (install-kokoro.sh / install-voix.sh)', ''); o.disabled = true; sel.appendChild(o); }
     TT.natAuto = TT.natAuto || {};
-    if (nat.length && !TT.natAuto[TT.lang] && !/^piper:/.test(TT.voice || '')) { TT.voice = nat[0].id; TT.natAuto[TT.lang] = 1; ttsSave(); }
+    if (nat.length && !TT.natAuto[TT.lang] && !/^(piper|kokoro):/.test(TT.voice || '')) { TT.voice = nat[0].id; TT.natAuto[TT.lang] = 1; ttsSave(); }
+    // Kokoro installé : choisi une fois d'office (le plus réaliste), à la place d'une voix Piper
+    if (ko.length && !TT.natAuto['k' + TT.lang] && !/^kokoro:/.test(TT.voice || '')) { TT.voice = ko[0].id; TT.natAuto['k' + TT.lang] = 1; ttsSave(); }
     // Seulement les voix naturelles : les voix espeak-ng (robotiques, hachées) ne sont plus proposées
-    if (nat.length && !/^piper:/.test(TT.voice || '')) { TT.voice = nat[0].id; ttsSave(); }
+    if (nat.length && !/^(piper|kokoro):/.test(TT.voice || '')) { TT.voice = nat[0].id; ttsSave(); }
     sel.disabled = !nat.length;
     sel.title = nat.length ? 'Voix naturelle (Piper) des messages vocaux' : 'Voix naturelles pas encore installées sur le serveur : sudo bash /opt/remote-station/deploy/install-voix.sh';
     sel.value = TT.voice;
@@ -301,7 +308,7 @@
   $('ssTtsLang').addEventListener('change', () => { TT.lang = $('ssTtsLang').value === 'fr' ? 'fr' : 'en'; ttsSave(); ttsDraw(); });
   $('ssTtsGo').addEventListener('click', () => {
     if (!host) return toast('Page d’origine fermée.', 'warn');
-    if (!/^piper:/.test(TT.voice || '')) return toast('Voix naturelles pas encore installées sur le serveur : sudo bash /opt/remote-station/deploy/install-voix.sh (puis Ctrl+F5).', 'warn', 9000);
+    if (!/^(piper|kokoro):/.test(TT.voice || '')) return toast('Voix naturelles pas encore installées sur le serveur : sudo bash /opt/remote-station/deploy/install-kokoro.sh (ou install-voix.sh), puis Ctrl+F5.', 'warn', 9000);
     const items = TT.items.map((it, i) => ({ n: i + 1, name: it.name, text: it.text, voice: TT.voice, speed: TT.speed, gap: TT.gap == null ? 70 : TT.gap, pron: pronObj(), on: it.on })).filter((x) => x.on !== false && x.text.trim());
     if (!items.length) return toast('Cochez au moins une mémoire.', 'warn');
     const busy = items.filter((x) => vmFilled(x.n) && !(S.tts && S.tts[x.n])).map((x) => 'T' + x.n);
@@ -314,7 +321,7 @@
   // ▶ Écouter : la voix choisie sur le message T1 (ou le premier coché), joué dans ce PC
   $('ssTtsTry').addEventListener('click', () => {
     if (!host) return toast('Page d’origine fermée.', 'warn');
-    if (!/^piper:/.test(TT.voice || '')) return toast('Voix naturelles pas encore installées sur le serveur : sudo bash /opt/remote-station/deploy/install-voix.sh (puis Ctrl+F5).', 'warn', 9000);
+    if (!/^(piper|kokoro):/.test(TT.voice || '')) return toast('Voix naturelles pas encore installées sur le serveur : sudo bash /opt/remote-station/deploy/install-kokoro.sh (ou install-voix.sh), puis Ctrl+F5.', 'warn', 9000);
     const it = TT.items.find((x) => x.on !== false && x.text.trim()) || TT.items[0];
     api.send({ t: 'vm_tts_try', text: it.text, voice: TT.voice, speed: TT.speed, gap: TT.gap == null ? 70 : TT.gap, pron: pronObj() });
     toast('Voix « ' + $('ssTtsV').selectedOptions[0].textContent + ' » : préparation…', '', 2500);

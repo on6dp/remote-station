@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.01** — Messages vocaux : voix Kokoro (les plus réalistes, hexgrad/Kokoro-82M, local sur le VPS) — deploy/install-kokoro.sh ; groupe Voix Kokoro en tête de la liste, choisi d'office
 - **0.39.00** — Messages vocaux (page SSB) : seulement les voix naturelles (Piper) ; plus de voix espeak-ng ; sans voix naturelle installée, la page indique la commande d'installation
 - **0.38.99** — Dashboard, FTDX101 : boutons A / B = travailler sur ce VFO (réception, et émission hors SPLIT : TX VFO-B (SUB)) ; LOCK blanc quand il est coupé, orange quand il est verrouillé
 - **0.38.98** — Carnet général et log du contest (page SSB) : colonnes d'échange renommées TX # et RX #

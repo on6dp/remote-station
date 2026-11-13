@@ -1408,7 +1408,7 @@ function vmSave(call, m) {
   fs.writeFile(path.join(VM_DIR, vmSafe(call) + '.json'), JSON.stringify(m), { mode: 0o600 }, (e) => { if (e) console.error('voicemem : ' + e.message); });
 }
 const vmFile = (call, n) => path.join(VM_DIR, vmSafe(call) + '-T' + n + '.ul');
-function vmSend(conn) { send(conn, { t: 'vm', meta: vmMeta(conn.user.call), tts: ttsGet(conn.user.call), ttsVoices: TTS.piperVoices(), playing: vmPlay && vmPlay.conn === conn ? { n: vmPlay.n, rep: !!vmPlay.rep } : null }); }
+function vmSend(conn) { send(conn, { t: 'vm', meta: vmMeta(conn.user.call), tts: ttsGet(conn.user.call), ttsVoices: TTS.kokoroVoices().concat(TTS.piperVoices()), playing: vmPlay && vmPlay.conn === conn ? { n: vmPlay.n, rep: !!vmPlay.rep } : null }); }
 // Messages vocaux en anglais fabriqués par espeak-ng (lib/tts.js) : texte, voix et vitesse gardés pour chaque mémoire
 // (voicemem/<INDICATIF>-tts.json) ; l'indicatif dit est toujours le TX call de l'opérateur : refaits quand il change
 const TTS = require('./lib/tts');
