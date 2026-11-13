@@ -1526,7 +1526,7 @@ function onVm(conn, m) {
   const call = conn.user.call, n = Math.round(Number(m.n));
   const okN = n >= 1 && n <= 8;
   switch (m.t) {
-    case 'vm_list': return vmSend(conn);
+    case 'vm_list': TTS.kokoroWarm(); return vmSend(conn); // page TRX SSB ouverte : Kokoro chargé d'avance
     case 'vm_put': {
       // Enregistrement envoyé en morceaux (36 ko, 48 ko en base64 : sous la limite de 64 ko d'un message) : { n, i, total, d (base64) }
       if (!okN || !conn.user.tx) return send(conn, { t: 'notice', level: 'warn', msg: 'Votre compte est en écoute seule : pas de mémoire vocale' });
