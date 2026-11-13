@@ -2667,3 +2667,14 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .ft-qso-tgl { display: block; width: 100%; margin: 6px 0 4px; padding: 2px 8px; text-align: left; background: #0d1622; color: #ffd400; font-weight: 800; font-size: 11.5px; letter-spacing: .5px; border: 1px solid var(--v2-border); border-radius: 5px; cursor: pointer; }
 .ft-qso-tgl:hover { border-color: #fff; }
 .ft-tx.qso-hid .ft-qso, .ft-tx.qso-hid .ft-qsolog { display: none !important; }
+/* Page FT : barre propre à chaque VFO, au-dessus de sa cascade — bande (fréquence d'appel), ↺, RX, TX ← RX, RX ← TX, TX */
+.ft-vbar { display: flex; align-items: center; gap: 10px; padding: 5px 8px; background: #0b1420; border-bottom: 1px solid var(--v2-border-dark); flex-wrap: nowrap; overflow: hidden; }
+.ctab-pane:not([data-pane='ftx']) .ft-vbar, .ctab-pane[data-pane='ftx']:not(.dg-ftx) .ft-vbar { display: none; }
+.ft-vbar select { font: inherit; font-size: 13px; font-weight: 700; color: var(--v2-text-bright); background: var(--v2-bg-input); border: 1px solid #fff; border-radius: 6px; padding: 3px 8px; min-width: 150px; height: 28px; }
+.ft-vbar .dg-split { display: inline-flex; align-items: center; gap: 10px; margin-left: 4px; }
+.ft-vbar .dg-f { font-size: 13px; }
+.ft-vbar .dg-f b { font-size: 14px; }
+.ft-vbar .btn { height: 28px; box-sizing: border-box; }
+#dgQsyB, #dgTxRxB, #dgRxTxB { border: 1px solid #fff; color: #fff; font-weight: 800; background: transparent; }
+#dgQsyB:active, #dgTxRxB:active, #dgRxTxB:active, #dgQsyB.flash, #dgTxRxB.flash, #dgRxTxB.flash { background: #fff; color: #000; border-color: #fff; }
+.ft-wfb .ft-vbar { border-top: 0; }

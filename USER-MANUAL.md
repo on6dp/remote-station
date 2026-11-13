@@ -582,8 +582,8 @@ FT8 is a digital mode designed for very weak signals: each station sends a short
 | Command | What it does |
 |---|---|
 | `FT8` / `FT4` / `FT2` | Chooses the mode; the TRX goes to that mode's calling frequency on its band. FT2 is the fast mode of Decodium (IU8LMC), incompatible with the "FT2" of WSJT-X Improved. |
-| Frequency list | Calling frequencies per band (e.g. 14.074 · 20m), and QO-100 (section 12.9). |
-| `↺` | Brings the TRX back to the chosen frequency (VFO A, DATA-U). |
+| Frequency list | Calling frequencies per band (e.g. 14.074 · 20m), and QO-100 (section 12.9). With `↺`, RX / TX, TX ← RX and RX ← TX, it is in **each VFO's bar**, above its waterfall: in dual receive, VFO-B has its own list (it goes to the chosen frequency, in DATA-U, without touching VFO-A) and its own RX / TX frequencies. FT8 / FT4 / FT2, Période, Activité and DX stay at the top, shared by both VFOs. |
+| `↺` | Brings the VFO back to the frequency chosen in its list (DATA-U). |
 | RX … Hz / TX … Hz | Receive (green) and transmit (red) audio frequencies within the 3 kHz passband. |
 | `TX ← RX` | Transmit on the same audio frequency as receive. |
 | `RX ← TX` | Receive on the transmit audio frequency. |

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.59** — Page FT : bande (fréquence d'appel), ↺, RX/TX, TX←RX, RX←TX dans la barre de chaque VFO ; le VFO-B a sa propre liste de bandes et ses propres RX/TX ; FT8/FT4/FT2, Période, Activité et DX restent en haut
 - **0.38.58** — Page FT : fiche du QSO masquable (FICHE QSO · masquer) pour agrandir les fenêtres de trafic ; macros à leur place ; elle revient au clic sur un indicatif
 - **0.38.57** — Fenêtre TRX DIGI : plus d'onglets des modes ; à leur place SYNCHRO, TX CALL, fréquence du VFO choisi, mode, qui a la main, PRENDRE LA MAIN (comme la page SSB). Page SSB : 👁 SUIVRE L'OPÉRATEUR à côté de PRENDRE LA MAIN
 - **0.38.56** — Page FT en double réception : les barres des deux cascades ont toujours la même disposition (une ligne si tout tient dans les deux, sinon deux lignes identiques)

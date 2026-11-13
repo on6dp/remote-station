@@ -222,6 +222,7 @@
       <span class="dg-tl"><span class="dg-status" id="dgStatus"></span><span class="dg-clock" id="dgClock">--:--:--</span></span>
     </div>
     <div class="ft-wfrow"><div class="dg-wf-slot" data-slot="ftx"><div class="dg-wf">
+      <div class="ft-vbar" id="ftVbarA"></div>
       <div class="wf-ctl" title="Réglages de la cascade (comme WSJT-X)">
         <span class="ft-wfa"><em class="ft-vtag">VFO-A · MAIN</em> <b id="ftDialA"></b><i class="ft-md" id="ftModeA"></i></span>
         <label title="Contraste : plus à droite, les signaux faibles ressortent davantage">Gain <input id="wfGain" type="range" min="-20" max="20" step="1" value="0"></label>
@@ -242,6 +243,16 @@
       <i class="dg-grip dg-sgrip" id="dgSGrip" title="Glisser vers le haut ou le bas : hauteur du spectre (double-clic : taille d'origine)"></i>
     </div></div>
       <div class="dg-wf ft-wfb" id="ftWfBox" hidden>
+        <div class="ft-vbar" id="ftVbarB">
+          <select id="dgDialB" aria-label="Fréquence d'appel du VFO-B" title="Bande du VFO-B : fréquence d'appel du mode (le VFO-B y va, en DATA-U)"></select>
+          <button class="btn dg-back" type="button" id="dgQsyB" title="Revenir sur cette fréquence (VFO B, en DATA-U)" aria-label="Revenir sur cette fréquence (VFO B, en DATA-U)">↺</button>
+          <span class="dg-split">
+            <span class="dg-f rx">RX <b id="dgRxF2B">1500</b> Hz</span>
+            <button class="btn" type="button" id="dgTxRxB" title="VFO-B : émettre sur la fréquence de réception">TX ← RX</button>
+            <button class="btn" type="button" id="dgRxTxB" title="VFO-B : recevoir sur la fréquence d'émission">RX ← TX</button>
+            <span class="dg-f tx">TX <b id="dgTxFB">1500</b> Hz</span>
+          </span>
+        </div>
         <div class="wf-ctl ft-wfh" title="Réglages de la cascade du VFO-B">
           <span class="ft-wfbl"><em class="ft-vtag b">VFO-B · SUB</em> <b id="ftDialB"></b><i class="ft-md" id="ftModeB"></i></span>
           <label title="Contraste : plus à droite, les signaux faibles ressortent davantage">Gain <input id="wfGainB" type="range" min="-20" max="20" step="1" value="0"></label>
@@ -1468,11 +1479,14 @@
       }
     }
     $(B ? 'ftMkTxB' : 'dgMkTx').classList.toggle('mk-off', !txOn);
+    if (B && $('dgRxF2B')) { $('dgRxF2B').textContent = Math.round(rxFB); $('dgTxFB').textContent = Math.round(txFB); }
     if (B) { $('dgRxFB').textContent = Math.round(rf) + ' Hz'; if ($('jtRxFB2')) $('jtRxFB2').textContent = Math.round(rf) + ' Hz'; return; }
     $('dgRxF').textContent = Math.round(rxF) + ' Hz';
     // Barre du haut : fréquences du VFO d'émission choisi
-    $('dgRxF2').textContent = Math.round(sd() === 'B' ? rxFB : rxF);
-    $('dgTxF').textContent = Math.round(sd() === 'B' ? txFB : txF);
+    // Barres des VFO : chacune ses fréquences RX / TX (VFO-A ici, VFO-B dans la sienne)
+    $('dgRxF2').textContent = Math.round(rxF);
+    $('dgTxF').textContent = Math.round(txF);
+    if ($('dgRxF2B')) { $('dgRxF2B').textContent = Math.round(rxFB); $('dgTxFB').textContent = Math.round(txFB); }
     if ($('jtRxF')) { $('jtRxF').textContent = Math.round(sd() === 'B' ? rxFB : rxF); $('jtTxF').textContent = Math.round(sd() === 'B' ? txFB : txF); $('jtRxF2').textContent = Math.round(rxF) + ' Hz'; }
   }
   // ------------------------------------------------------------------ RTTY
@@ -5332,6 +5346,53 @@
       sel.value = '';
     } else if (saved) sel.value = saved;
   }
+  // VFO-B (double réception) : sa propre liste de fréquences d'appel, sur la bande où il se trouve
+  let lastBandB = 0;
+  function fillDialB() {
+    const sel = $('dgDialB');
+    if (!sel) return;
+    sel.textContent = '';
+    fillList(sel, dialList(mode));
+    const st = api && api.state();
+    const f = st && st.radio && st.radio.freqB;
+    const near = f && nearList(mode, f).length ? nearList(mode, f).reduce((a, x) => (Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a)) : null;
+    if (near && Math.abs(near[1] * 1000 - f) < 500000) sel.value = String(near[1]);
+    else if (f) {
+      const o = document.createElement('option');
+      o.value = ''; o.disabled = true;
+      o.textContent = 'Pas de fréquence ' + mode + ' sur cette bande';
+      sel.insertBefore(o, sel.firstChild);
+      sel.value = '';
+    } else { const sv = store.get('dialb.' + mode, ''); if (sv) sel.value = sv; }
+  }
+  function followBandB() {
+    const st = api && api.state();
+    const f = st && st.radio && st.radio.freqB;
+    if (!f || !$('dgDialB')) return;
+    const band = nearList(mode, f).reduce((a, x) => (Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a))[1];
+    if (band !== lastBandB) { lastBandB = band; fillDialB(); }
+  }
+  function qsyB() {
+    if (!api) return;
+    if (!api.iControl()) { lastBandB = 0; followBandB(); return api.say('Prenez la main pour changer la fréquence du VFO-B.', 'warn'); }
+    const st = api.state();
+    if (st && st.ptt && st.ptt.active) return api.say('Réglage bloqué pendant l’émission.', 'warn');
+    const khz = Number($('dgDialB').value);
+    if (!khz) return api.say('Choisissez d’abord une fréquence d’appel dans la liste.', 'warn');
+    store.set('dialb.' + mode, khz);
+    api.setFreq(Math.round(khz * 1000), 'B', true);
+    const R = api.rig();
+    const mk = (R.MODE_KEYS || []).find((x) => /^(DATA-U|USB-D|D-U|USB-DATA)$/i.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
+    if (mk) {
+      const want = (n) => {
+        const r = api.state() && api.state().radio;
+        if (n && r && r.modeB === mk[1]) return;
+        api.send({ t: 'set', mode: mk[0], sub: true });
+        if (n < 2) setTimeout(() => want(n + 1), 1200);
+      };
+      setTimeout(() => want(0), 30);
+    }
+  }
   function setMode(m) {
     mode = m;
     if (m !== 'JT65') store.set('ftmode', m);
@@ -5353,6 +5414,8 @@
     applyFtDual();
     lastBand = 0;
     fillDial();
+    lastBandB = 0;
+    fillDialB();
     drawScale();
     redrawAll();
     bmFiltDraw(); // carte de bande : plage du nouveau mode (FT8 / FT4 / FT2)
@@ -5742,6 +5805,10 @@
       // Clic sur FT8 / FT4 : comme dans WSJT-X, le TRX va sur la fréquence d'appel de ce mode dans sa bande
       document.querySelectorAll('#dgModes .btn').forEach((b) => b.addEventListener('click', () => { setMode(b.dataset.mode); dataU(b.dataset.mode); autoQsy(); }));
       $('dgQsy').addEventListener('click', qsy);
+      if ($('dgQsyB')) $('dgQsyB').addEventListener('click', qsyB);
+      if ($('dgDialB')) $('dgDialB').addEventListener('change', () => { store.set('dialb.' + mode, $('dgDialB').value); qsyB(); });
+      // Bande, ↺ et RX / TX du VFO-A : dans la barre du VFO-A (au-dessus de sa cascade), comme ceux du VFO-B
+      { const va = $('ftVbarA'), sp = $('dgRxF2') && $('dgRxF2').closest('.dg-split'); if (va && $('dgDial')) { va.append($('dgDial'), $('dgQsy')); if (sp) va.appendChild(sp); $('dgDial').title = 'Bande du VFO-A : fréquence d’appel du mode (le VFO-A y va, en DATA-U)'; } }
       // Choisir une fréquence dans la liste y envoie directement le TRX (QSY)
       $('dgDial').addEventListener('change', () => { store.set('dial.' + mode, $('dgDial').value); qsy(); });
       $('dgClear').addEventListener('click', () => { hist.length = 0; redrawAll(); });
@@ -5929,7 +5996,8 @@
         e.preventDefault();
         useMacro(MODE, m.text, e.shiftKey);
       });
-      $('dgTxRx').addEventListener('click', () => setTx(sd() === 'B' ? rxFB : rxF, sd()));
+      $('dgTxRx').addEventListener('click', () => setTx(rxF));
+      if ($('dgTxRxB')) $('dgTxRxB').addEventListener('click', () => setTx(rxFB, 'B'));
       $('dgPar').value = store.get('ftxpar', 'auto');
       parLabels();
       $('dgPar').addEventListener('change', () => { store.set('ftxpar', $('dgPar').value); ftxCfg(); });
@@ -5963,7 +6031,7 @@
       document.querySelectorAll('.dg-spspd button').forEach((b) => b.addEventListener('click', () => { spSpd = Number(b.dataset.spspd) || 1; store.set('spspd', spSpd); spSpdUi(); }));
       spSpdUi();
       // TX ← RX, RX ← TX, ↺ : couleurs inversées un instant au clic
-      for (const id of ['dgQsy', 'dgTxRx', 'dgRxTx']) if ($(id)) $(id).addEventListener('click', () => { const b = $(id); b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 450); });
+      for (const id of ['dgQsy', 'dgTxRx', 'dgRxTx', 'dgQsyB', 'dgTxRxB', 'dgRxTxB']) if ($(id)) $(id).addEventListener('click', () => { const b = $(id); b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 450); });
       $('dgDualRx').addEventListener('click', () => {
         const st = api && api.state();
         const trxDual = !!(st && st.radio && st.radio.dualRx === 1);
@@ -5994,7 +6062,8 @@
         });
       }
       $('dgStop').addEventListener('click', () => api && api.send({ t: 'ftx_stop' }));
-      $('dgRxTx').addEventListener('click', () => setRx(sd() === 'B' ? txFB : txF, sd()));
+      $('dgRxTx').addEventListener('click', () => setRx(txF));
+      if ($('dgRxTxB')) $('dgRxTxB').addEventListener('click', () => setRx(txFB, 'B'));
       // Repli du panneau ou onglet du navigateur caché : le serveur arrête de décoder pour ce membre
       new MutationObserver(announce).observe($('centerPanel'), { attributes: true, attributeFilter: ['class'] });
       document.addEventListener('visibilitychange', announce);
@@ -6196,6 +6265,7 @@
       if (!f) return;
       const band = f ? nearList(mode, f).reduce((a, x) => (Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a))[1] : 0;
       if (band !== lastBand) { lastBand = band; fillDial(); }
+      followBandB();
   }
 
   // ------------------------------------------------------------------ fenêtre séparée (digi.html)

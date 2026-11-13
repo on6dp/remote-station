@@ -592,8 +592,8 @@ FT8 est un mode numérique fait pour les signaux très faibles : chaque station 
 | Commande | Ce qu'elle fait |
 |---|---|
 | `FT8` / `FT4` / `FT2` | Choisit le mode ; le TRX va sur la fréquence d'appel de ce mode dans sa bande. FT2 est le mode rapide de Decodium (IU8LMC), incompatible avec le « FT2 » de WSJT-X Improved. |
-| Liste des fréquences | Fréquences d'appel par bande (ex. 14.074 · 20m), et QO-100 (section 12.9). |
-| `↺` | Ramène le TRX sur la fréquence choisie (VFO A, DATA-U). |
+| Liste des fréquences | Fréquences d'appel par bande (ex. 14.074 · 20m), et QO-100 (section 12.9). Avec `↺`, RX / TX, TX ← RX et RX ← TX, elle est dans la **barre de chaque VFO**, au-dessus de sa cascade : en double réception, le VFO-B a sa propre liste (il va sur la fréquence choisie, en DATA-U, sans toucher au VFO-A) et ses propres fréquences RX / TX. FT8 / FT4 / FT2, Période, Activité et DX restent en haut, communs aux deux VFO. |
+| `↺` | Ramène le VFO sur la fréquence choisie dans sa liste (DATA-U). |
 | RX … Hz / TX … Hz | Fréquences audio de réception (vert) et d'émission (rouge) dans la bande de 3 kHz. |
 | `TX ← RX` | Émettre sur la même fréquence audio que la réception. |
 | `RX ← TX` | Recevoir sur la fréquence audio d'émission. |
