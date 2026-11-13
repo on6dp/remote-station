@@ -875,6 +875,8 @@ Onglet **Logbooks** (bouton cyan, à gauche de Log QSO et de Synchro) : le carne
 <a id="l-fiche"></a>
 ### 14.1 Enregistrer un QSO
 
+La fiche du QSO est **cachée par défaut** : le carnet prend toute la place, la recherche (indicatif, nom, opérateur) reste visible. Le bouton jaune `DÉTAILS QSO`, au début de la barre de recherche, l'affiche (nouveau QSO) ; un nouveau clic la cache. Un clic sur un QSO de la liste l'ouvre avec ce QSO ; elle se cache **2 secondes après l'enregistrement** (ou tout de suite avec Annuler).
+
 La fiche en haut de l'onglet :
 
 | Champ / bouton | Ce qu'il fait |

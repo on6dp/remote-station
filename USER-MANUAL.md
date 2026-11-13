@@ -865,6 +865,8 @@ QO-100 is a geostationary satellite reached on 2.4 GHz with an up-converter. The
 <a id="l-fiche"></a>
 ### 14.1 Logging a QSO
 
+The QSO form is **hidden by default**: the logbook takes all the room, the search (call, name, operator) stays visible. The yellow `DÉTAILS QSO` button, at the start of the search bar, shows it (new QSO); click again to hide it. A click on a QSO in the list opens it with that QSO; it hides **2 seconds after saving** (or at once with Annuler).
+
 The form at the top of the tab:
 
 | Field / button | What it does |

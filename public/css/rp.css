@@ -2748,3 +2748,7 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .vfb.mir .vfb-note { display: none; }
 /* Pages SSB et CW : « CONTESTS » en jaune vif */
 .cwp-ctl1 .cwp-ctlab { color: #ffe600; font-weight: 800; letter-spacing: .5px; }
+/* Carnet général (onglet Logbooks) : fiche du QSO cachée par défaut ; bouton jaune DÉTAILS QSO au début de la barre de recherche */
+.lg-fhid > .lg-form { display: none !important; }
+.lg-bar .lg-dbtn { border: 2px solid #ffe600; color: #ffe600; background: transparent; font-weight: 900; letter-spacing: .5px; }
+.lg-bar .lg-dbtn[aria-pressed='true'] { background: #ffe600; color: #000; }

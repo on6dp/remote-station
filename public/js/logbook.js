@@ -150,6 +150,19 @@
     root = el;
     root.innerHTML = PANE;
     if (FORM) root.querySelectorAll('.lg-bar, .lg-tw, .lg-job').forEach((x) => { x.hidden = true; x.style.display = 'none'; });
+    // Carnet général (onglet Logbooks) : fiche du QSO cachée par défaut ; bouton jaune DÉTAILS QSO (affiche / cache) au début
+    // de la barre de recherche ; elle s'ouvre au clic sur un QSO de la liste et se cache 2 s après l'enregistrement
+    if (!FORM && !SSBP) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn lg-dbtn';
+      b.id = 'lgDetails';
+      b.textContent = 'DÉTAILS QSO';
+      b.title = 'Affiche ou cache la fiche du QSO (nouveau QSO, ou détails d’un QSO de la liste : clic sur sa ligne)';
+      b.addEventListener('click', () => fShow(root.classList.contains('lg-fhid')));
+      q$('.lg-bar').prepend(b);
+      fShow(false);
+    }
     if (getComputedStyle(root).position === 'static') root.style.position = 'relative'; // menus des filtres de colonne
     initCols();
     applyOrder();
@@ -161,12 +174,13 @@
     f.addEventListener('submit', (e) => { e.preventDefault(); save(false); });
     f.querySelector('[data-a="now"]').addEventListener('click', () => { const n = utcNow(); f.date.value = n.date; f.time.value = n.time; });
     f.querySelector('[data-a="trx"]').addEventListener('click', () => fromTrx(true));
-    f.querySelector('[data-a="cancel"]').addEventListener('click', () => endEdit());
+    f.querySelector('[data-a="cancel"]').addEventListener('click', () => { endEdit(); fShow(false); });
     f.querySelector('[data-a="del"]').addEventListener('click', () => {
       if (!editing) return;
       if (!window.confirm('Supprimer le QSO avec ' + editing.call + ' du ' + fmtDate(editing.qso_date) + ' ' + fmtTime(editing.time_on) + ' UTC ?\nLes carnets en ligne ne sont pas modifiés.')) return;
       api.send({ t: 'log_del', id: editing.id });
       endEdit();
+      fShow(false, 2000);
     });
     f.mode.addEventListener('change', () => defaultRst(true));
     // Fiche seule (pages TRX SSB, TRX DIGI) : le dernier QSO enregistré d'ici peut être corrigé ou supprimé
@@ -644,9 +658,20 @@
   }
   let saveWait = 0;
   let viewOnly = false; // fiche ouverte en consultation (pas le droit de modifier ce QSO)
+  // Fiche du carnet général : affichée / cachée (DÉTAILS QSO)
+  let fHideT = 0;
+  function fShow(on, later) {
+    clearTimeout(fHideT);
+    if (!root || FORM || SSBP) return;
+    if (later && !on) { fHideT = setTimeout(() => fShow(false), later); return; }
+    root.classList.toggle('lg-fhid', !on);
+    const b = q$('#lgDetails');
+    if (b) b.setAttribute('aria-pressed', String(!!on));
+  }
   function startEdit(id) {
     const q = items.find((x) => x.id === id);
     if (!q) return;
+    fShow(true);
     // Tout le monde peut ouvrir la fiche ; modifier / supprimer : administrateur, ou auteur du QSO avec la main
     const ctl = !!(api && api.iControl && api.iControl());
     const can = me.admin || (!me.rxOnly && q.by === me.call && ctl);
@@ -1208,7 +1233,7 @@
       if (root && !root.hidden) { clearTimeout(listTimer); listTimer = setTimeout(reload, 200); } else stale = true;
     } else if (m.t === 'log_saved') {
       const q = m.qso || {};
-      if (m.edited) { lastLogged = q.call; if (lastSaved && q.id === lastSaved.id) lastSaved = q; endEdit(); say('QSO avec ' + q.call + ' modifié.', ''); return; }
+      if (m.edited) { lastLogged = q.call; if (lastSaved && q.id === lastSaved.id) lastSaved = q; endEdit(); say('QSO avec ' + q.call + ' modifié.', ''); fShow(false, 2000); return; }
       if (FORM && q.id) { lastSaved = q; lastBtns(); }
       const auto = SV.filter((s) => m.auto && m.auto[s]);
       const okMsg = '✓ QSO avec ' + q.call + ' enregistré (' + q.band + ' ' + modeName(q) + ').' + (auto.length ? ' Envoi automatique : ' + auto.map((s) => NAMES[s]).join(', ') + '.' : '');
@@ -1218,6 +1243,7 @@
       if (!root) return;
       // Fiche en cours de modification d'un autre QSO (QSO enregistré ailleurs, ex. fin de QSO FT8) : on n'y touche pas
       if (editing) { say(okMsg, 'ok'); return; }
+      fShow(false, 2000); // carnet général : fiche cachée 2 s après l'enregistrement
       const f = q$('#lgForm');
       for (const k of ['call', 'name', 'qth', 'gridsquare', 'comment', 'rst_rcvd']) f[k].value = '';
       qrzAsked = '';
@@ -1357,6 +1383,7 @@
     /** Fiche remplie avec le correspondant (ligne Correspondant / QSO FT8) : o = { rst_sent, rst_rcvd, t0 } */
     fill(o) {
       if (!root || editing) return;
+      fShow(true);
       fromTrx(true);
       const f = q$('#lgForm');
       if (!f) return;
