@@ -376,7 +376,7 @@
           <canvas id="rtWfB" height="140"></canvas>
           <canvas id="rtSpecB" class="dg-spec" height="70" title="Spectre du VFO-B : niveau de chaque fréquence audio (moyenne des dernières lignes de sa cascade, mêmes réglages Gain / Zéro / Plat)"></canvas>
           <i class="dg-mk dg-mk-rx" id="rtMkMB"></i><i class="dg-mk dg-mk-tx" id="rtMkSB"></i>
-          <i class="dg-grip dg-sgrip" id="rtSGripB" title="Glisser vers le haut ou le bas : hauteur des spectres (double-clic : taille d'origine)"></i>
+          <i class="dg-grip dg-sgrip" id="rtSGripB" title="Glisser vers le haut ou le bas : hauteur du spectre du VFO-B, sans toucher à celui du VFO-A (double-clic : taille d’origine)"></i>
           <i class="dg-grip" id="rtGripB" title="Glisser vers le haut ou le bas : hauteur de la cascade du VFO-B, sans toucher à celle du VFO-A (double-clic : même hauteur que celle du VFO-A)"></i>
         </div>
         <div class="rt-io">
@@ -6072,6 +6072,8 @@
       const WF_DEF = 140;
       const setWfH = (h, save) => {
         const v = Math.max(40, Math.min(420, Math.round(h)));
+        // Cascade du VFO-B qui suivait celle du VFO-A (jamais réglée) : elle garde sa hauteur actuelle, indépendante
+        if (!wfHB) { const cb = [$('rtWfB'), $('ftWfB')].find((c) => c && c.clientHeight); if (cb) { wfHB = cb.clientHeight; store.set('wfhb', String(wfHB)); } }
         if (tab === 'rtty' && rtDualAudio) rtGrow($('dgWf'), v, save); // RTTY double réception : la colonne s'agrandit au besoin
         $('dgWf').style.height = v + 'px';
         const root = $('dgWf').closest('.dg') || document.documentElement;
@@ -6117,13 +6119,13 @@
       const SP_DEF = 70;
       const setSpH = (h, save) => {
         const v = Math.max(30, Math.min(320, Math.round(h)));
-        for (const id of ['dgSpec', 'ftSpecB', 'rtSpecB']) if ($(id)) $(id).style.height = v + 'px';
+        for (const id of ['dgSpec', 'ftSpecB']) if ($(id)) $(id).style.height = v + 'px';
         if (save) store.set('sph', String(v));
         if (wf.ctx) sizeCanvas();
         return v;
       };
       if (Number(store.get('sph', '0')) > 0) setSpH(Number(store.get('sph', '0')), false);
-      for (const grip of ['dgSGrip', 'ftSGripB', 'rtSGripB'].map($).filter(Boolean)) {
+      for (const grip of ['dgSGrip', 'ftSGripB'].map($).filter(Boolean)) {
         grip.addEventListener('pointerdown', (e) => {
           e.preventDefault();
           grip.setPointerCapture(e.pointerId);
@@ -6137,6 +6139,28 @@
           grip.addEventListener('pointercancel', up);
         });
         grip.addEventListener('dblclick', () => setSpH(SP_DEF, true));
+      }
+      // RTTY double réception : spectre du VFO-B avec sa propre hauteur (sa poignée ne touche pas au VFO-A)
+      const setSpHB = (h, save) => {
+        const v = Math.max(30, Math.min(320, Math.round(h)));
+        if ($('rtSpecB')) $('rtSpecB').style.height = v + 'px';
+        if (save) store.set('sphb', String(v));
+        if (wf.ctx) sizeB();
+        return v;
+      };
+      if (Number(store.get('sphb', '0')) > 0) setSpHB(Number(store.get('sphb', '0')), false);
+      for (const grip of ['rtSGripB'].map($).filter(Boolean)) {
+        grip.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          grip.setPointerCapture(e.pointerId);
+          const y0 = e.clientY, zf = (window.RSZOOM && window.RSZOOM.z()) || 1, h0 = $('rtSpecB').getBoundingClientRect().height / zf;
+          const mv = (ev) => setSpHB(h0 + (ev.clientY - y0) / zf, false);
+          const up = (ev) => { grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up); setSpHB(h0 + (ev.clientY - y0) / zf, true); };
+          grip.addEventListener('pointermove', mv);
+          grip.addEventListener('pointerup', up);
+          grip.addEventListener('pointercancel', up);
+        });
+        grip.addEventListener('dblclick', () => setSpHB(SP_DEF, true));
       }
       // Séparateurs entre les deux listes (FT8 / FT4 / FT2 et JTTY) : largeur réglable, gardée dans ce navigateur
       const splits = Array.from($('dgSplit').ownerDocument.querySelectorAll('.dg-vsplit'));

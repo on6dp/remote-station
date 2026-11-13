@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.45** — Page RTTY en double réception : poignées des cascades et des spectres indépendantes (celle du VFO-A ne fait plus bouger le VFO-B, et l'inverse)
 - **0.39.44** — Page RTTY en double réception : Centrer et RX ici / TX ici à droite de « Vitesse » de la cascade de chaque VFO (une ligne de moins dans les en-têtes)
 - **0.39.43** — Page RTTY : bouton RÈGLEMENT à droite de la ligne des macros du contest (règlement officiel du contest choisi, sinon recherche sur le web)
 - **0.39.42** — Page RTTY : plus de bouton Émettre (F11 = TX, F12 = RX, Ctrl+Entrée) ni de ligne d'explication ; Effacer, Log QSO et Spot cluster à droite de la 1re rangée de macros ; texte des macros en blanc ; moins d'espace sous les VFO du haut
