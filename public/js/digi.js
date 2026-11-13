@@ -415,6 +415,11 @@
         </div>
         <p class="dg-tx rt-tx-note" id="rtTxState">Émission RTTY sous <b>ON5VL</b> : texte de la fenêtre TX du VFO, puis « Émettre » (Ctrl+Entrée).</p>
       </div>
+      <!-- LOG RTTY : les QSO RTTY du carnet général (hors contest, ou ceux du contest choisi), le plus récent en haut -->
+      <div class="dg-col rt-logbox" id="rtLogBox">
+        <div class="rt-loghd"><b>LOG RTTY</b> <span id="rtLogInfo"></span></div>
+        <div class="cwp-clogw rt-logw"><table class="cwp-clog rt-log"><thead><tr id="rtLogHead"></tr></thead><tbody id="rtLogBody"></tbody></table></div>
+      </div>
     </div>`;
   const WSPR_PANE = `
     <div class="dg-bar">
@@ -916,6 +921,7 @@
       // Ouverture de la fenêtre RTTY : repères des décodeurs sur 1500 Hz (le milieu de la cascade) ;
       // une seule cascade pour les deux décodeurs (TRX à un son) : B un peu plus haut, pour qu'on les distingue
       if (pane === 'rtty' && rtEnter) {
+        rtLogAsk();
         rtSeen = true;
         rts[0].f = 1500;
         rts[1].f = dualAudio ? 1500 : 2100;
@@ -5032,12 +5038,58 @@
     ed.addEventListener('click', () => editMacro(box.ownerDocument, mode, 0));
     box.appendChild(ed);
   }
+  // ------------------------------------------------------------------ LOG RTTY (cadre sous les macros)
+  // Les QSO RTTY du carnet général : hors contest, ou seulement ceux du contest choisi (avec les échanges envoyés / reçus)
+  let rtLogT = 0, rtLogKey = '';
+  function rtLogAsk() {
+    if (!api || !$('rtLogBody')) return;
+    clearTimeout(rtLogT);
+    rtLogT = setTimeout(() => { try { api.send({ t: 'mode_list', mode: 'RTTY', contest: rtcOn() ? rtcId() : '', limit: 300 }); } catch (e) { /* hors ligne */ } }, 250);
+  }
+  function rtLogDraw(m) {
+    const body = $('rtLogBody'), head = $('rtLogHead');
+    if (!body || !head) return;
+    const cid = rtcOn() ? rtcId() : '';
+    if ((m.contest || '') !== cid) return; // réponse d'un autre choix de contest
+    const ctst = !!cid;
+    const cols = ctst
+      ? [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['TX #', 'stx'], ['Reçu', 'rr'], ['RX #', 'srx'], ['Pays', 'cn'], ['TX call', 'st'], ['OP', 'op']]
+      : [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['Reçu', 'rr'], ['Nom', 'name'], ['QTH', 'qth'], ['Loc.', 'grid'], ['Pays', 'cn'], ['TX call', 'st'], ['OP', 'op']];
+    const key = cols.map((c) => c[0]).join('|');
+    if (key !== rtLogKey) {
+      rtLogKey = key;
+      head.textContent = '';
+      for (const [h] of cols) { const th = document.createElement('th'); th.textContent = h; head.appendChild(th); }
+    }
+    const fmt = (q, k) => {
+      const v = q[k] == null ? '' : String(q[k]);
+      if (k === 'd') return v.length === 8 ? v.slice(6, 8) + '/' + v.slice(4, 6) + '/' + v.slice(0, 4) : v;
+      if (k === 't') return v.length >= 4 ? v.slice(0, 2) + ':' + v.slice(2, 4) : v;
+      if (k === 'freq') { const f = Number(v); return f ? f.toFixed(4) : ''; }
+      return v;
+    };
+    body.textContent = '';
+    for (const q of m.items || []) {
+      const tr = document.createElement('tr');
+      for (const [, k] of cols) { const td = document.createElement('td'); td.textContent = fmt(q, k); tr.appendChild(td); }
+      body.appendChild(tr);
+    }
+    if (!(m.items || []).length) {
+      const tr = document.createElement('tr'), td = document.createElement('td');
+      td.colSpan = cols.length; td.className = 'rt-lognone';
+      td.textContent = ctst ? 'Pas encore de QSO pour ce contest.' : 'Pas encore de QSO RTTY hors contest.';
+      tr.appendChild(td); body.appendChild(tr);
+    }
+    const c = RT_CONTESTS.find((x) => x[0] === cid);
+    $('rtLogInfo').textContent = (ctst ? '· ' + (c ? c[1] : cid) + ' · ' : '· hors contest · ') + (m.total || 0) + ' QSO' + ((m.total || 0) > (m.items || []).length ? ' (les ' + (m.items || []).length + ' derniers)' : '');
+  }
   function drawRttyMacros() {
     // Contest choisi : les touches F1 à F12 passent aux macros contest (les macros habituelles restent au clic)
     drawMacroRow($('rtMacros'), 'RTTY', (t, ins) => useMacro('RTTY', t, ins), null, rtcOn());
     drawMacroRow($('rtcMacros'), 'RTTYC', (t, ins) => useMacro('RTTY', t, ins), null, !rtcOn());
     if ($('rtcMacros')) $('rtcMacros').hidden = !rtcOn();
     if ($('rtcMacLine')) $('rtcMacLine').hidden = !rtcOn();
+    rtLogAsk();
     // RÈGLEMENT : règlement officiel du contest choisi ; sans adresse connue, une recherche « <contest> RTTY contest rules <année> »
     const rr = $('rtcRules'), rc = RT_CONTESTS.find((x) => x[0] === rtcId());
     if (rr) {
@@ -6402,6 +6454,8 @@
     },
     onMessage(m) {
       qsoSaved(m); // fiche du QSO cachée 2 s après l'enregistrement
+      if (m.t === 'mode_list' && m.mode === 'RTTY') { rtLogDraw(m); return true; }
+      if (m.t === 'log_changed' || m.t === 'log_saved') rtLogAsk(); // QSO ajouté, modifié ou supprimé : le LOG RTTY suit
       // Spot au DX cluster (case « Spot cluster ») : aussi affiché dans la fenêtre TRX DIGI
       if (m.t === 'notice' && /^Spot\b/.test(m.msg || '') && api && api.say && document.body.classList.contains('digi-popup')) api.say(m.msg, m.level === 'error' ? 'warn' : '', 5000);
       // Réponse à « Mettre à l'heure » (onglet Synchro) : aussi affichée dans la case PC du club

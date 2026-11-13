@@ -3482,6 +3482,19 @@ function onOperator(conn, m) {
     }
     case 'cluster_spot': return clusterSpot(conn, m.call, m.khz, m.cmt, m.asTx === true);
     case 'cluster_pick': return clusterPick(conn, String(m.key || ''));
+    case 'mode_list': {
+      // Derniers QSO d'un mode (page RTTY : cadre LOG RTTY) : hors contest (contest vide) ou ceux d'un contest ;
+      // le carnet général reste la seule base
+      const mode = String(m.mode || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+      const id = String(m.contest || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 40);
+      const lim = Math.max(1, Math.min(1000, Number(m.limit) || 300));
+      const all = mode ? book.qsos.filter((q) => String(q.mode || '').toUpperCase() === mode && (id ? q.contest_id === id : !q.contest_id)) : [];
+      const items = all.slice(-lim).reverse().map((q) => ({
+        id: q.id, call: q.call, band: q.band, d: q.qso_date, t: q.time_on, freq: q.freq, rs: q.rst_sent || '', rr: q.rst_rcvd || '',
+        stx: q.stx_string || q.stx || '', srx: q.srx_string || q.srx || '', name: q.name || '', qth: q.qth || '', grid: q.gridsquare || '',
+        cn: q.country || '', st: q.station_callsign || '', op: q.operator || '' }));
+      return send(conn, { t: 'mode_list', mode, contest: id, total: all.length, items, tag: String(m.tag || '').slice(0, 20) });
+    }
     case 'ctst_list': {
       // Log d'un contest (page TRX CW) : QSO du carnet avec cet identifiant, depuis la date donnée, pour les doublons,
       // les compteurs et la liste ; le carnet général reste la seule base

@@ -3045,3 +3045,11 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .ctab-pane.rt .rt-dual { min-height: 0; }
 .ctab-pane.rt .rt-dual .rt-side .rt-io { min-height: 70px; }
 .ctab-pane.rt .rt-dual .rt-side .rt-io .rt-rx, .ctab-pane.rt .rt-dual .rt-side .rt-io .rt-txw, .ctab-pane.rt .rt-dual .rt-side .rt-io .rt-pane { min-height: 0; }
+/* Page RTTY : cadre LOG RTTY sous les macros (QSO RTTY du carnet général : hors contest ou du contest choisi) */
+.rt-logbox { flex: none; padding: 6px 8px 8px; gap: 4px; }
+.rt-loghd { font-size: 12px; color: var(--v2-text-dim); letter-spacing: .3px; }
+.rt-loghd b { color: #f5ff00; font-weight: 800; margin-right: 4px; }
+.rt-logw { min-height: 90px; max-height: 240px; }
+.rt-log td:nth-child(3) { color: #fff; font-weight: 800; }
+.rt-log td.rt-lognone { color: var(--v2-text-dim); font-style: italic; }
+.rt-log tr:first-child td.rt-lognone { color: var(--v2-text-dim); }
