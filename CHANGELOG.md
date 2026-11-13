@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.00** — Messages vocaux (page SSB) : seulement les voix naturelles (Piper) ; plus de voix espeak-ng ; sans voix naturelle installée, la page indique la commande d'installation
 - **0.38.99** — Dashboard, FTDX101 : boutons A / B = travailler sur ce VFO (réception, et émission hors SPLIT : TX VFO-B (SUB)) ; LOCK blanc quand il est coupé, orange quand il est verrouillé
 - **0.38.98** — Carnet général et log du contest (page SSB) : colonnes d'échange renommées TX # et RX #
 - **0.38.97** — Carnet général : colonnes Éch. env. et Éch. reçu (échange de contest) à droite des reports, filtrables et déplaçables

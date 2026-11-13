@@ -237,12 +237,10 @@
     sel.appendChild(og);
     TT.natAuto = TT.natAuto || {};
     if (nat.length && !TT.natAuto[TT.lang] && !/^piper:/.test(TT.voice || '')) { TT.voice = nat[0].id; TT.natAuto[TT.lang] = 1; ttsSave(); }
-    for (const [g, list] of TTS_VOICES[TT.lang]) {
-      const og = document.createElement('optgroup');
-      og.label = g;
-      for (const [v, l] of list) og.appendChild(new Option(l, v));
-      sel.appendChild(og);
-    }
+    // Seulement les voix naturelles : les voix espeak-ng (robotiques, hachées) ne sont plus proposées
+    if (nat.length && !/^piper:/.test(TT.voice || '')) { TT.voice = nat[0].id; ttsSave(); }
+    sel.disabled = !nat.length;
+    sel.title = nat.length ? 'Voix naturelle (Piper) des messages vocaux' : 'Voix naturelles pas encore installées sur le serveur : sudo bash /opt/remote-station/deploy/install-voix.sh';
     sel.value = TT.voice;
     if (sel.value !== TT.voice && sel.options.length) { const f = Array.from(sel.options).find((o) => !o.disabled); if (f) { sel.value = f.value; TT.voice = f.value; } }
   }
@@ -303,6 +301,7 @@
   $('ssTtsLang').addEventListener('change', () => { TT.lang = $('ssTtsLang').value === 'fr' ? 'fr' : 'en'; ttsSave(); ttsDraw(); });
   $('ssTtsGo').addEventListener('click', () => {
     if (!host) return toast('Page d’origine fermée.', 'warn');
+    if (!/^piper:/.test(TT.voice || '')) return toast('Voix naturelles pas encore installées sur le serveur : sudo bash /opt/remote-station/deploy/install-voix.sh (puis Ctrl+F5).', 'warn', 9000);
     const items = TT.items.map((it, i) => ({ n: i + 1, name: it.name, text: it.text, voice: TT.voice, speed: TT.speed, gap: TT.gap == null ? 70 : TT.gap, pron: pronObj(), on: it.on })).filter((x) => x.on !== false && x.text.trim());
     if (!items.length) return toast('Cochez au moins une mémoire.', 'warn');
     const busy = items.filter((x) => vmFilled(x.n) && !(S.tts && S.tts[x.n])).map((x) => 'T' + x.n);
@@ -315,6 +314,7 @@
   // ▶ Écouter : la voix choisie sur le message T1 (ou le premier coché), joué dans ce PC
   $('ssTtsTry').addEventListener('click', () => {
     if (!host) return toast('Page d’origine fermée.', 'warn');
+    if (!/^piper:/.test(TT.voice || '')) return toast('Voix naturelles pas encore installées sur le serveur : sudo bash /opt/remote-station/deploy/install-voix.sh (puis Ctrl+F5).', 'warn', 9000);
     const it = TT.items.find((x) => x.on !== false && x.text.trim()) || TT.items[0];
     api.send({ t: 'vm_tts_try', text: it.text, voice: TT.voice, speed: TT.speed, gap: TT.gap == null ? 70 : TT.gap, pron: pronObj() });
     toast('Voix « ' + $('ssTtsV').selectedOptions[0].textContent + ' » : préparation…', '', 2500);
