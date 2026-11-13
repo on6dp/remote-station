@@ -908,6 +908,7 @@
     else if (m.t === 'state') { if (VX) VX.onState(); if (LOG && LOG.mounted) LOG.onState(); if (P.held && !api.iControl()) pttUp(); drawMic(); }
     else if (m.t === 'qrz_info' && LOG && LOG.mounted && LOG.onQrz) LOG.onQrz(m);
     else if (m.t === 'notice' && m.msg) toast(m.msg, m.level === 'error' ? 'warn' : '', 6000);
+    else if (m.t === 'prop') drawProp(m);
     else if (m.t === 'ssb_list') drawSsb(m.items || []);
     else if (m.t === 'tts_audio' && m.d) ttsPlay(m.d);
     else if (m.t === 'scp') { PR.q = m.q; PR.list = m.list || []; PR.n = m.n || 0; drawProb(); }
@@ -1157,9 +1158,68 @@
       drawMic();
       askSsb();
       api.send({ t: 'vm_list' });
+      api.send({ t: 'prop_get' });
       drawContest();
     } else if (!h) { host = null; hostWin = null; $('cwpOrphan').hidden = false; }
   }
+  // ------------------------------------------------------------------ propagation (à droite des QSO hors contest)
+  // SFI, taches, A, K, rayons X, vent solaire, Bz, champ géomagnétique, bruit ; conditions HF jour / nuit (colonne de
+  // l'heure actuelle à la station en surbrillance, d'après la hauteur du soleil au locator de la station) ; VHF
+  const PROP = { m: null };
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function gridLL(g) {
+    g = String(g || '').toUpperCase();
+    if (!/^[A-R]{2}[0-9]{2}/.test(g)) return [50.63, 5.57]; // Liège
+    let lon = (g.charCodeAt(0) - 65) * 20 - 180 + Number(g[2]) * 2 + 1, lat = (g.charCodeAt(1) - 65) * 10 - 90 + Number(g[3]) + 0.5;
+    if (/^[A-X]{2}$/.test(g.slice(4, 6))) { lon += (g.charCodeAt(4) - 65) / 12 - 1 + 1 / 24; lat += (g.charCodeAt(5) - 65) / 24 - 0.5 + 1 / 48; }
+    return [lat, lon];
+  }
+  function sunUp(lat, lon) {
+    const d = new Date(), r = Math.PI / 180;
+    const n = (d - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5;
+    const decl = -23.44 * Math.cos(2 * Math.PI * (n + 10) / 365);
+    const ha = ((d.getUTCHours() + d.getUTCMinutes() / 60) * 15 + lon - 180) * r;
+    const el = Math.asin(Math.sin(lat * r) * Math.sin(decl * r) + Math.cos(lat * r) * Math.cos(decl * r) * Math.cos(ha)) / r;
+    return el > -6; // jour (crépuscule civil compris)
+  }
+  function drawProp(m) {
+    if (m) PROP.m = m;
+    m = PROP.m;
+    if (!m) return;
+    const d = m.data;
+    if (!d) { $('ssPropG').innerHTML = '<p class="cwp-note">Données de propagation indisponibles' + (m.err ? ' (' + esc(m.err) + ')' : '') + '.</p>'; return; }
+    const cls = (v, ok, mid) => (v == null ? '' : v <= ok ? 'pg' : v <= mid ? 'py' : 'pr');
+    const box = (lbl, v, c, tip) => '<div class="ssb-pv ' + (c || '') + '" title="' + esc(tip) + '"><span>' + lbl + '</span><b>' + esc(v == null || v === '' ? '—' : v) + '</b></div>';
+    const sfiC = d.sfi == null ? '' : d.sfi >= 150 ? 'pg' : d.sfi >= 100 ? 'py' : 'pr';
+    const xC = /^[X]/i.test(d.xray) ? 'pr' : /^M/i.test(d.xray) ? 'py' : d.xray ? 'pg' : '';
+    const bzC = d.bz == null ? '' : d.bz >= -2 ? 'pg' : d.bz >= -8 ? 'py' : 'pr';
+    const gmC = /quiet|calme/i.test(d.geomag) ? 'pg' : /unsettled|active/i.test(d.geomag) ? 'py' : d.geomag ? 'pr' : '';
+    $('ssPropG').innerHTML =
+      box('SFI', d.sfi, sfiC, 'Flux solaire à 10,7 cm : plus il est haut, mieux les bandes hautes (20 m à 10 m) passent') +
+      box('Taches', d.ssn, sfiC, 'Nombre de taches solaires') +
+      box('Indice A', d.a, cls(d.a, 7, 20), 'Activité géomagnétique sur 24 h : bas = bandes calmes') +
+      box('Indice K', d.k, cls(d.k, 2, 4), 'Activité géomagnétique des 3 dernières heures (0 à 9) : 0–2 calme, 3–4 agité, 5 et plus : orage') +
+      box('Rayons X', d.xray, xC, 'Rayons X du soleil (A, B, C : calme ; M, X : éruption, coupures possibles côté jour)') +
+      box('Vent sol.', d.wind == null ? null : Math.round(d.wind) + ' km/s', cls(d.wind, 450, 600), 'Vitesse du vent solaire') +
+      box('Bz', d.bz == null ? null : d.bz + ' nT', bzC, 'Composante Nord-Sud du champ magnétique interplanétaire : négative et forte = risque d’orage') +
+      box('Champ géo.', d.geomag, gmC, 'État du champ géomagnétique') +
+      box('Bruit', d.noise, '', 'Bruit de fond estimé (S-mètre)') +
+      (d.muf && !/norpt|no ?report/i.test(d.muf) ? box('MUF', d.muf + ' MHz', '', 'Fréquence maximale utilisable') : '');
+    const [la, lo] = gridLL((host && host.me && host.me() && host.me().stationGrid) || '');
+    const day = sunUp(la, lo);
+    const bc = (v) => (/good|bon/i.test(v) ? 'pg' : /fair|moyen/i.test(v) ? 'py' : /poor|mauvais/i.test(v) ? 'pr' : '');
+    const fr = (v) => ({ Good: 'Bonnes', Fair: 'Moyennes', Poor: 'Mauvaises' }[v] || v || '—');
+    $('ssPropB').innerHTML = (d.bands || []).map((b) => '<tr><td>' + esc(b.name.replace(/m-/g, ' – ').replace(/m$/, ' m')) + '</td><td class="' + bc(b.day) + (day ? ' now' : '') + '">' + esc(fr(b.day)) +
+      '</td><td class="' + bc(b.night) + (day ? '' : ' now') + '">' + esc(fr(b.night)) + '</td></tr>').join('');
+    document.querySelector('.ssb-pband thead th:nth-child(2)').className = day ? 'now' : '';
+    document.querySelector('.ssb-pband thead th:nth-child(3)').className = day ? '' : 'now';
+    const vh = (d.vhf || []).filter((v) => /europe|northern/i.test(v.loc));
+    const vfr = (v) => (/closed/i.test(v) ? 'fermée' : /open|high|mid|mhz/i.test(v) ? '<b class="pg">' + esc(v) + '</b>' : esc(v));
+    $('ssPropV').innerHTML = vh.length ? 'VHF : ' + vh.map((v) => esc(v.name === 'vhf-aurora' ? 'aurore' : v.loc === 'europe_6m' ? 'Es 6 m' : v.loc === 'europe_4m' ? 'Es 4 m' : v.loc === 'europe' ? 'Es 2 m' : v.name) + ' ' + vfr(v.v)).join(' · ') : '';
+    $('ssPropT').textContent = d.updated ? 'mis à jour ' + d.updated.replace(/\s+/g, ' ').replace(/ GMT$/, ' UTC') : '';
+  }
+  setInterval(() => { if (PROP.m) drawProp(); }, 60000); // jour / nuit
+
   window.addEventListener('pagehide', () => { pttUp(); if (untap) try { untap(); } catch (e) {} });
   fillContests();
   link();

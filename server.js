@@ -624,6 +624,8 @@ const LB = require('./lib/logbook.js');
 const REFDATA = require('./lib/refdata.js');
 const { Sync, SERVICES: LOG_SERVICES } = require('./lib/logsync.js');
 const VERSION = (() => { try { return require('./package.json').version; } catch (e) { return '0'; } })();
+// Facteurs de propagation (hamqsl.com, N0NBH) : relus toutes les 30 min, envoyés aux pages qui les affichent (page SSB)
+const PROP = new (require('./lib/prop.js').Prop)((msg) => { for (const c of ops) if (c.open && c.user && c.propSub) send(c, msg); });
 // Nouvelle version sur GitHub : « 🔔 Mise à jour » au dashboard des administrateurs (lib/update.js) ; updateCheck: false pour couper
 const UPD = new (require('./lib/update.js').Updater)({ root: ROOT, version: VERSION, enabled: cfg.updateCheck !== false,
   onChange: (st) => { for (const c of ops) if (c.open && c.user && c.user.admin) send(c, st); } });
@@ -3901,6 +3903,10 @@ function onOperator(conn, m) {
       for (const c of ops) if (c.open && c.user && c !== conn) send(c, { t: 'notice', level: 'warn', msg: 'Mise à jour du serveur vers ' + m.v + ' lancée par ' + conn.user.call + ' : la station sera coupée environ une minute.' });
       return;
     }
+    case 'prop_get':
+      conn.propSub = true;
+      if (!PROP.data && Date.now() - PROP.at > 60000) { PROP.at = Date.now(); PROP.fetch(); }
+      return send(conn, PROP.msg());
     case 'upd_check':
       if (!conn.user.admin) return;
       return UPD.check().then(() => send(conn, UPD.state()));

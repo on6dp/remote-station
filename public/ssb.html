@@ -115,7 +115,16 @@
       <h2 class="ssb-qh">Log du QSO <small>sans contest : fiche du carnet de trafic (Logbooks), fréquence et mode repris du TRX</small></h2>
       <div class="lg ssb-lg" id="ssLog"></div>
       <div class="ssb-qbar"><div class="cwp-cstats" id="ssQStats">—</div><label title="QSO en phonie hors contest exportés depuis cette date">Depuis <input type="date" id="ssQFrom"></label><button type="button" id="ssQAdi" class="ssb-adi" title="Fichier ADIF (.adi) de vos QSO en phonie hors contest depuis la date choisie">ADIF</button></div>
-      <div class="cwp-clogw ssb-qlogw"><table class="cwp-clog ssb-qlog"><thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th>MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th>Nom</th><th>QTH</th><th>Pays</th><th>TX call</th><th>OP</th></tr></thead><tbody id="ssQLog"></tbody></table></div>
+      <div class="ssb-qrow">
+        <div class="cwp-clogw ssb-qlogw"><table class="cwp-clog ssb-qlog"><thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th>MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th>Nom</th><th>QTH</th><th>Pays</th><th>TX call</th><th>OP</th></tr></thead><tbody id="ssQLog"></tbody></table></div>
+        <aside class="ssb-prop" id="ssProp" aria-label="Propagation">
+          <h3>Propagation <small id="ssPropT"></small></h3>
+          <div class="ssb-pgrid" id="ssPropG"><p class="cwp-note">Lecture des données de propagation…</p></div>
+          <table class="ssb-pband"><thead><tr><th>Bandes HF</th><th>Jour</th><th>Nuit</th></tr></thead><tbody id="ssPropB"></tbody></table>
+          <p class="ssb-pvhf" id="ssPropV"></p>
+          <p class="ssb-psrc">Source : <a href="https://www.hamqsl.com/solar.html" target="_blank" rel="noopener">hamqsl.com</a> (N0NBH, données NOAA) · relu toutes les 30 min</p>
+        </aside>
+      </div>
     </section>
   </main>
   <!-- TRX à deux récepteurs (IC-7760, FTDX101, FTDX5000…) : carte de bande du VFO-B, à droite -->
