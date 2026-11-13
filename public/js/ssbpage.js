@@ -778,7 +778,11 @@
         if (L.on()) L.stop(); else if (!L.start()) toast('Le navigateur bloque le son : cliquez une fois dans le dashboard, puis réessayez.', 'warn', 6000);
         drawListenBtn();
       });
-      $('vxMonBtn').after(b);
+      // Bouton et son volume dans un même bloc : toujours côte à côte, quelle que soit la mise en page de la ligne
+      const wrap = document.createElement('span');
+      wrap.className = 'ss-listenw'; wrap.id = 'ssListenW';
+      wrap.appendChild(b);
+      $('vxMonBtn').after(wrap);
       // Volume de l'écoute du TRX (celui du dashboard) — le « Volume » à côté de MONITORING est celui de votre voix
       const vl = document.createElement('label');
       vl.className = 'ss-lvol'; vl.id = 'ssLVolW';
@@ -787,7 +791,7 @@
       vl.querySelector('input').addEventListener('input', (ev) => {
         try { const r = host.listen.vol(Number(ev.target.value)); if (r) $('ssLVolV').textContent = r.v + ' %'; } catch (e) {}
       });
-      b.after(vl);
+      wrap.appendChild(vl);
       drawListenBtn();
     }
     // Réglages micro du TRX (GAIN MICRO, PROC, MIC EQ, NIVEAU PROC, VOX) sur la ligne SSB CONFIGURATION, à droite de TRX EQ ;
@@ -963,11 +967,11 @@
     // Ordre : MONITORING · Volume (votre voix) · ÉCOUTER LE TRX · Volume TRX
     const body = $('vxBody'), mic = $('vxOn'), monv = $('vxMonVol') && $('vxMonVol').closest('label');
     const where = body && body.hidden ? mic : monv || $('vxMonBtn');
-    if (where && b.previousElementSibling !== where) where.after(b);
+    const wrapE = $('ssListenW') || b;
+    if (where && wrapE.previousElementSibling !== where) where.after(wrapE);
     b.setAttribute('aria-pressed', String(on));
     const vw = $('ssLVolW');
     if (vw) {
-      if (vw.previousElementSibling !== b) b.after(vw);
       let r = null;
       try { r = ok && host.listen.vol ? host.listen.vol() : null; } catch (e) { r = null; }
       vw.hidden = !r;

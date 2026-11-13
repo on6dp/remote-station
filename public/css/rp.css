@@ -2808,3 +2808,7 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 /* « Volume » (MONITORING) et « Volume TRX » en jaune vif */
 .vx-monvol, .ss-lvol { color: #ffe600 !important; font-weight: 800; }
 .vx .ss-listen { margin-left: 14px; }
+/* Page SSB : ÉCOUTER LE TRX et Volume TRX toujours côte à côte */
+.ss-listenw { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; white-space: nowrap; }
+.ss-listenw .ss-listen { margin-left: 0; }
+.ss-listenw .ss-lvol { margin-left: 0; }

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.92** — Page SSB : Volume TRX toujours juste à côté de ÉCOUTER LE TRX / ARRÊTER L'ÉCOUTE
 - **0.38.91** — Page SSB : Volume TRX (volume de l'écoute du TRX) à droite de ÉCOUTER LE TRX ; le Volume de MONITORING reste celui de votre voix ; Volume en jaune vif
 - **0.38.90** — Page SSB : Catégorie en jaune vif quand un contest est choisi (sinon comme avant)
 - **0.38.89** — Page SSB : écrans des VFO avec exactement les couleurs du dashboard (TX VFO-B (SUB) rose foncé, modes…) ; Catégorie, Bande, Échange… en blanc gras
