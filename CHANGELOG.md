@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.55** — Page RTTY : clic sur le titre LOG RTTY = log agrandi au centre de la page (nouveau clic ou Échap : remis en place) ; macros du contest sur deux lignes alignées (F1 à F6, F7 à F12)
 - **0.39.54** — Macros contest RTTY par défaut : F10 TX (émettre le texte tapé), F11 RX (retour en réception), F12 Log (fiche du QSO)
 - **0.39.53** — Page RTTY hors contest : seulement la liste des contests sur la ligne Contest (Échange, Prénom, zones et N° cachés)
 - **0.39.52** — Page RTTY : chaque colonne affiche la fréquence de son VFO (« pas écouté » si le TRX écoute l'autre) ; la liste des fréquences du VFO-A suit la bande du VFO-A comme celle du VFO-B

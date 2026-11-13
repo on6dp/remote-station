@@ -417,7 +417,7 @@
       </div>
       <!-- LOG RTTY : les QSO RTTY du carnet général (hors contest, ou ceux du contest choisi), le plus récent en haut -->
       <div class="dg-col rt-logbox" id="rtLogBox">
-        <div class="rt-loghd"><b>LOG RTTY</b> <span id="rtLogInfo"></span></div>
+        <div class="rt-loghd"><b id="rtLogZoom" title="Clic : agrandir le log au centre de la page (nouveau clic, ou Échap : le remettre à sa place)">LOG RTTY ⤢</b> <span id="rtLogInfo"></span></div>
         <div class="cwp-clogw rt-logw"><table class="cwp-clog rt-log"><thead><tr id="rtLogHead"></tr></thead><tbody id="rtLogBody"></tbody></table></div>
       </div>
     </div>`;
@@ -3165,6 +3165,13 @@
     // Choisir une bande dans la liste y envoie directement le TRX (QSY)
     dial.addEventListener('change', () => { store.set('rtdial', dial.value); qsyTo(Number(dial.value)); });
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
+    // LOG RTTY : clic sur son titre = log agrandi au centre de la page ; nouveau clic (ou Échap) = remis à sa place
+    if ($('rtLogZoom')) {
+      const box = $('rtLogBox');
+      const zoom = (on) => { box.classList.toggle('rt-logbig', on); $('rtLogZoom').textContent = on ? 'LOG RTTY ⤡' : 'LOG RTTY ⤢'; };
+      $('rtLogZoom').addEventListener('click', () => zoom(!box.classList.contains('rt-logbig')));
+      box.ownerDocument.addEventListener('keydown', (e) => { if (e.key === 'Escape' && box.classList.contains('rt-logbig')) zoom(false); });
+    }
     // La liste du VFO-A suit la fréquence du VFO-A (changement de bande sur le TRX, A ⇄ B…) : fréquence RTTY la plus proche
     const fillA = () => {
       if (dial.ownerDocument.activeElement === dial) return;
