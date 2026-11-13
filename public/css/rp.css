@@ -2849,3 +2849,6 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 /* Sans contest : les mémoires vocales restent, dans la fiche du carnet (la note sur la touche Entrée du contest est masquée) */
 .ssb-qso > .ssb-vk { flex: 0 0 auto; }
 .ssb-qso .ssb-vkct { display: none; }
+/* Messages vocaux : Langue, Voix, Vitesse (et Espacement des lettres, sur la même ligne) en jaune vif */
+.ssb-ttsv label { color: #ffe600; font-weight: 800; }
+.ssb-ttsv label output { color: #fff; font-weight: 700; }
