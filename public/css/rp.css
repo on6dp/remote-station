@@ -2711,3 +2711,12 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 /* Page FT : « Période » et « Activité » en jaune vif gras ; case DX : cadre jaune quand le filtre est actif */
 .dg-bar .dg-perl, .dg-bar .dg-hound .dg-f, .dg-bar .dg-hound.on .dg-f { color: #ffe600; font-weight: 800; font-size: 13px; text-shadow: none; }
 #dgHunt.on { border-color: #ffd400; box-shadow: 0 0 6px rgba(255, 212, 0, .45); }
+/* Page SSB, ligne MICRO DU TRX : sans titre ; chaque réglage sur une seule ligne « GAIN MICRO ━━●━━ 50 » (une ligne de gagnée) */
+.ssb-mic .ssb-mic-h { display: none; }
+.ssb-mic-b { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; }
+.ssb-mic-b .ctl { display: flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; }
+.ssb-mic-b .ctl .ctl-head { display: contents; }
+.ssb-mic-b .ctl .ctl-label { order: 0; font-size: 12px; white-space: nowrap; }
+.ssb-mic-b .ctl input[type='range'] { order: 1; width: 160px; flex: 0 1 160px; min-width: 80px; }
+.ssb-mic-b .ctl .ctl-val { order: 2; min-width: 28px; text-align: right; }
+.ssb-mic-b > .btn { min-width: 110px; }

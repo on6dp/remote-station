@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.67** — Page SSB : ligne MICRO DU TRX sans titre, chaque réglage sur une ligne (GAIN MICRO devant son curseur, NIVEAU PROC aussi) — une ligne de gagnée
 - **0.38.66** — Phonie : MICRO EQ n'est plus grisé hors phonie (égaliseur du navigateur utilisable dans tous les modes dès que le micro est ouvert) ; page SSB : micro fermé → MICRO EQ le rouvre puis ouvre l'égaliseur
 - **0.38.65** — Fenêtre TRX DIGI : « Ramener dans le dashboard » devient RETOUR sur toutes les pages des modes (pendant la synchro : retour à la page du mode)
 - **0.38.64** — Fenêtre TRX DIGI, Synchro : le bouton de droite devient ↩ Retour TRX FT8/FT4/FT2 (retour à la page du mode, pas au dashboard)
