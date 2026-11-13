@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.17** — Dashboard : boutons STEP, VFO A / B, ◀ ▶ et BANDES encadrés de blanc
 - **0.39.16** — Page FT8 / FT4 / FT2 : PRENDRE LA MAIN / LIBÉRER LA MAIN à la taille normale des boutons
 - **0.39.15** — Dashboard : bouton « 🔔 Mise à jour X.Y.Z » pour les administrateurs (nouvelle version vérifiée sur GitHub toutes les 30 min, cloche qui sonne, nouveautés, Installer maintenant : téléchargement, empreinte SHA-256 vérifiée et install.sh par un service root séparé) — première fois : mise à jour à la main
 - **0.39.14** — Config. Macros : bouton ▶ Écouter sur fond bleu
