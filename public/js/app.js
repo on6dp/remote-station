@@ -1673,6 +1673,7 @@
       if (rr.narrowB != null) add('NAR', rr.narrowB ? 'cyan' : '', 'narrowB');
       if (rr.agcB != null && optLabel('agc', rr.agcB)) add('AGC ' + optLabel('agc', rr.agcB), 'cyan');
       if (rr.rfB != null && rr.rfB < 255) add('RFG ' + Math.round((rr.rfB / 255) * 100), 'amber');
+      if (rr.lockB) add('LOCK', 'amber'); // LOCK du côté SUB (FTDX101 : LK3)
     }
     for (const [id, nb] of [['badgesA', bA], ['badgesB', bB]]) {
       const el = $(id);

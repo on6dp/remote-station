@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.51** — Écran VFO B : badge LOCK quand le LOCK de SUB est en service
 - **0.38.50** — Barre FT : « TX » (devant VFO-A / VFO-B) en jaune gras
 - **0.38.49** — Barres des cascades VFO-A / VFO-B identiques (↺ en bout de ligne) ; « Logbook en fin de QSO » en jaune gras
 - **0.38.48** — LOCK : agit sur le VFO choisi (FTDX101 : LOCK de SUB quand VFO B est choisi)
