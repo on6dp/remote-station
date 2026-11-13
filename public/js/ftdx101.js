@@ -173,6 +173,8 @@
       { const v = b ? r.fastB : r.fastA; if (v != null) r.fastStep = v; }
       r.stSplit = r.split;
       if (r.split === 1 && r.txVfo != null && r.vfoSel != null && r.txVfo === (r.vfoSel === 1 ? 1 : 0)) r.split = 0;
+      // Émission sur l'autre VFO que celui de réception (TX choisi par FT2 / FT3) : c'est un SPLIT, affiché comme tel
+      if (r.txVfo != null && r.vfoSel != null && r.txVfo !== (r.vfoSel === 1 ? 1 : 0)) r.split = 1;
     },
     // FT (VFO d'émission), comme Hamlib pour les FTDX101 D / MP : lecture « FT0 » = émission sur MAIN, « FT1 » = sur SUB
     // (absolu, quel que soit le VFO sélectionné) ; réglage par FT2 (MAIN) / FT3 (SUB) — FT0 / FT1 servent à basculer
@@ -332,6 +334,10 @@
       att: { type: 'select', label: 'ATT', options: [[0, 'OFF'], [1, '6 dB'], [2, '12 dB'], [3, '18 dB']], write: (v) => 'RA0' + v + ';', when: (s) => s.freq != null && s.freq <= 75000000 },
       preamp: { when: (s) => s.freq != null && s.freq <= 75000000 },
       proc: { write: (v) => 'PR0' + (v ? 2 : 1) + ';' },
+      // SPLIT OFF : aussi l'émission ramenée sur le VFO de réception (FT2 = MAIN, FT3 = SUB), sinon un TX choisi sur l'autre
+      // VFO (clic sur TX) laisserait le SPLIT allumé
+      // SPLIT ON : émission sur l'autre VFO que celui de réception (FT3 / FT2) en plus de ST1
+      split: { write: (v, s) => (v ? 'ST1;FT' + (s && s.vfoSel === 1 ? 2 : 3) + ';' : 'ST0;FT' + (s && s.vfoSel === 1 ? 3 : 2) + ';') },
       sql: { max: 100, pct: false, unit: '%', write: (v) => 'SQ0' + pad(v, 3) + ';' },
       nb: { type: 'toggle', off0: false, write: (v) => 'NB0' + v + ';' },
       nr: { type: 'toggle', off0: false, write: (v) => 'NR0' + v + ';' },

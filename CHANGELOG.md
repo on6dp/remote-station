@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.93** — FTDX101 : SPLIT ON envoie aussi l'émission sur l'autre VFO (ST1 + FT2/FT3) et reste allumé ; SPLIT OFF ramène l'émission sur le VFO de réception ; TX cliqué sur l'autre VFO = SPLIT ON affiché
 - **0.38.92** — Page SSB : Volume TRX toujours juste à côté de ÉCOUTER LE TRX / ARRÊTER L'ÉCOUTE
 - **0.38.91** — Page SSB : Volume TRX (volume de l'écoute du TRX) à droite de ÉCOUTER LE TRX ; le Volume de MONITORING reste celui de votre voix ; Volume en jaune vif
 - **0.38.90** — Page SSB : Catégorie en jaune vif quand un contest est choisi (sinon comme avant)
