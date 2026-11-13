@@ -826,7 +826,7 @@
     drawHead();
     // Ligne Correspondant : reports en dB (FT8 / FT4 / FT2, WSPR, JT65) ou RST 599 (RTTY, CW, SSTV, JTTY)
     const mb = document.getElementById('msgs');
-    // Dashboard, onglets Modes et Logbooks : pas de ligne QSO (la fiche du carnet a déjà indicatif et reports) ; le TX call reste
+    // Dashboard, onglets Modes et Logbooks : pas de ligne QSO (la fiche du carnet a déjà indicatif et reports ; TX call à droite de SYNCHRO)
     if (mb && !POPUP) mb.classList.toggle('qso-off', t === 'log' || t === 'events');
     if (mb && ['ftx', 'wspr', 'jt65'].indexOf(t) >= 0) mb.dataset.rk = 'db';
     else if (mb && ['rtty', 'cw', 'sstv', 'jtty'].indexOf(t) >= 0) mb.dataset.rk = 'rst';
@@ -893,8 +893,10 @@
       sizeCanvas();
     }
     // TX call : sur la ligne des onglets, juste après SYNCHRO (le même pour tous les modes)
-    const txc = $('dgTxcWrap'), syt = document.querySelector('#centerPanel .ctab[data-tab="sync"]');
-    if (txc && syt && txc.previousElementSibling !== syt) { txc.classList.add('ctab-txc'); syt.after(txc); }
+    // (dashboard : son « TX call » de la ligne QSO est déplacé là ; ailleurs : celui de la barre FT)
+    const dsel = !POPUP && document.getElementById('txCallSel');
+    const txc = dsel ? dsel.closest('label') : $('dgTxcWrap'), syt = document.querySelector('#centerPanel .ctab[data-tab="sync"]');
+    if (txc && syt && txc.previousElementSibling !== syt) { txc.classList.add('ctab-txc'); if (dsel) txc.classList.add('dash-txc'); syt.after(txc); }
     if (pane === 'sync') drawSync();
     sendView();
     if (pane === 'log' && window.RSLOG) window.RSLOG.show();

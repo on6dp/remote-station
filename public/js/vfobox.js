@@ -113,6 +113,52 @@
       const html = z.src.outerHTML.replace(/ id="/g, ' id="z-').replace(/url\(#/g, 'url(#z-');
       if (html !== z.html) { z.html = html; z.big.innerHTML = html; const sv = z.big.firstElementChild; if (sv) { sv.classList.add('vz-big'); sv.removeAttribute('style'); } }
     }
+    // Taille de la fréquence et des trois cadres (filtre, cadran, spectre) : calculée ici pour la largeur de cette page,
+    // comme le fait le dashboard pour la sienne (sinon, fenêtre du dashboard plus petite : cadres hors de l'écran VFO)
+    MR.fit = {}; // par écran VFO (0, 1) : { key, fs, fw, below }
+    function fitStamp(t) {
+      t.querySelectorAll('.freq-wrap').forEach((wrap, i) => {
+        const f = MR.fit[i] || {};
+        const el = wrap.querySelector('.freq'), vm = wrap.querySelector('.vfo-meters');
+        wrap.classList.toggle('below', !!f.below);
+        if (el) { el.style.fontSize = f.fs || ''; if (!el.getAttribute('style')) el.removeAttribute('style'); }
+        if (vm) { vm.classList.remove('stack', 'stack2'); if (f.fw) vm.style.setProperty('--fw', f.fw); else vm.style.removeProperty('--fw'); if (!vm.getAttribute('style')) vm.removeAttribute('style'); }
+      });
+    }
+    function fitLive() {
+      if (!MR.row) return;
+      MR.row.querySelectorAll('.freq-wrap').forEach((wrap, i) => {
+        const el = wrap.querySelector('.freq');
+        if (!el) return;
+        const key = el.querySelectorAll('.d:not(.lead)').length + ':' + wrap.clientWidth + ':' + MR.row.style.zoom;
+        if (MR.fit[i] && MR.fit[i].key === key) return;
+        const unit = wrap.querySelector('.unit'), vm = wrap.querySelector('.vfo-meters');
+        wrap.classList.remove('below');
+        el.style.fontSize = '';
+        if (vm) { vm.classList.remove('stack', 'stack2'); vm.style.removeProperty('--fw'); }
+        const vmOn = vm && getComputedStyle(vm).display !== 'none';
+        const vmW = () => (vmOn && !wrap.classList.contains('below') ? vm.offsetWidth + 18 : 0);
+        const need = () => el.offsetWidth + (unit ? unit.offsetWidth + 6 : 0) + vmW();
+        const shrink = () => {
+          for (let k = 0; k < 6 && need() > wrap.clientWidth; k++) {
+            const fs = parseFloat(getComputedStyle(el).fontSize);
+            el.style.fontSize = Math.max(14, Math.floor(fs * (wrap.clientWidth / need()) * 0.98)) + 'px';
+          }
+        };
+        const big = () => parseFloat(getComputedStyle(el).fontSize) >= 40;
+        shrink();
+        let fw = '';
+        if (vmOn && !big()) {
+          for (const w of [200, 180, 160, 150]) { fw = w + 'px'; vm.style.setProperty('--fw', fw); el.style.fontSize = ''; shrink(); if (big()) break; }
+          if (!big()) {
+            wrap.classList.add('below');
+            fw = Math.max(120, Math.min(222, Math.floor((wrap.clientWidth - 24) / 3))) + 'px';
+            vm.style.setProperty('--fw', fw); el.style.fontSize = ''; shrink();
+          }
+        }
+        MR.fit[i] = { key, fs: el.style.fontSize, fw: vm && vm.style.getPropertyValue('--fw') ? fw : '', below: wrap.classList.contains('below') };
+      });
+    }
     function mirror() {
       zoomDraw();
       let d = null;
@@ -133,11 +179,19 @@
         const t = document.createElement('div');
         t.innerHTML = html;
         t.querySelectorAll('.detach-btn').forEach((x) => x.remove());
+        fitStamp(t);
         morph(MR.row, t);
       }
-      // Même largeur que dans le dashboard, mise à l'échelle de ce cadre
+      // Cadre de cette page plus étroit que l'écran du dashboard : même largeur que là-bas, réduite à l'échelle ; plus large :
+      // à sa vraie largeur, sans agrandissement (agrandi, le contenu calé pour le dashboard débordait des écrans VFO :
+      // filtre coupé à gauche, filtre du VFO B par-dessus le VFO A, quand la fenêtre du dashboard est plus petite)
       const sw = src.getBoundingClientRect().width, bw = MR.box.clientWidth;
-      if (sw > 100 && bw > 100) { MR.row.style.width = sw + 'px'; MR.row.style.zoom = String(Math.round(bw / sw * 1000) / 1000); }
+      if (sw > 100 && bw > 100) {
+        const w = bw >= sw ? bw : sw, z = bw >= sw ? '1' : String(Math.round(bw / sw * 1000) / 1000);
+        if (MR.row.style.width !== w + 'px') MR.row.style.width = w + 'px';
+        if (MR.row.style.zoom !== z) MR.row.style.zoom = z;
+      }
+      fitLive();
     }
     const need = () => {
       if (!api.iControl()) { toast('Prenez d’abord la main.', 'warn'); return false; }

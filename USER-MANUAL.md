@@ -155,7 +155,7 @@ Your microphone (PC microphone, headset, USB microphone…) is sent to the TRX w
 
 FT8 is the easiest mode to use remotely: everything is done with the mouse and the dashboard handles the sequence just like WSJT-X.
 
-1. Take control. In the **QSO** line at the bottom, choose the **TX call**: the club callsign (ON5VL) or your own.
+1. Take control. On the tab row, right of **SYNCHRO**, choose the **TX call**: the club callsign (ON5VL) or your own.
 2. `FT8 · FT4 · FT2` tab in the centre, `FT8` button, then choose a band in the frequency list (e.g. "14.074 · 20m"). The TRX goes there by itself, in DATA-U.
 3. Do a `TUNE` (Accord panel), then set a reasonable power (20 to 40 W is plenty for FT8).
 4. Wait one or two 15 s periods: the stations heard appear in **Activité de bande** (band activity). **CQ** calls are in green.
@@ -201,7 +201,7 @@ FT8 is the easiest mode to use remotely: everything is done with the mouse and t
 2. **Centre, top**: the two VFO displays (A / MAIN and B / SUB), the **Step** row (tuning step, VFO choice, SPLIT…) and the **band** row.
 3. **Centre, bottom**: the tab row (no title above it): Modes (station activity log), FT8 · FT4 · FT2, SSB, RTTY, WSPR, JT65, JTTY, CW, SSTV (a mode tab opens that mode's page: TRX SSB, TRX CW, or TRX DIGI on that mode, with a title band at the top like the SSB page: TX call, then the page name for the tab, e.g. "ON5VL TRX FT8/FT4/FT2 · Remote Station · FT modes et contests", "TRX RTTY", "TRX WSPR"… The window no longer has mode tabs (the mode is chosen in the dashboard): in their place, like the SSB page, `SYNCHRO` (click again: back to the mode), **TX CALL**, the **frequency of the chosen VFO** (the page's TX VFO in dual receive, pink for VFO-B), the mode (orange if unsuitable: DATA expected in FT8, CW in CW…), then, as at the top of the dashboard, **👥 number of connected members** (list on hover), your call and the control button (`PRENDRE LA MAIN` / `LIBÉRER LA MAIN` / "Main : call") — the same on the TRX SSB and TRX CW pages —, then the audio / decoding status and the UTC time, just left of "RETOUR"; each window — TRX SSB, TRX CW, TRX DIGI, logbook — reopens **at the place and size** it had when closed (TRX DIGI also stretches down to the bottom of the screen: taller message lists and band maps), and scrolls with the wheel when taller than the screen), then Logbooks (the dashboard opens on the **logbook**, which stays shown while the modes are in their own pages), the `Log QSO` button and Synchro.
 4. **Right column**: RX audio (listening), DSP (noise reduction), Accord (tuner), TX (PTT and power).
-5. Under the tabs: the **QSO** line (the station worked, its reports and the TX call), in the mode tabs and Synchro; in the **Modes** and **Logbooks** tabs only the **TX call** remains (transmit callsign choice, with control): the logbook form (DÉTAILS QSO) has the call and reports.
+5. Under the tabs: the **QSO** line (the station worked, its reports and the TX call), in the mode tabs and Synchro; it is hidden in the **Modes** and **Logbooks** tabs, where the logbook form (DÉTAILS QSO) has the call and reports. The **TX call** is on the tab row, right of SYNCHRO.
 
 - **Fold a panel**: click its title (for example "DSP"); a second click opens it again. Your choice is remembered.
 - **Separate window**: the `⧉` button of a panel opens it in its own window (section 11).
