@@ -3519,7 +3519,7 @@ function onOperator(conn, m) {
       // Log d'un contest (TRX CW) : seulement les QSO de ce contest
       if (m.contestOnly && m.contest) { const cid = String(m.contest).toUpperCase(); list = list.filter((q) => q.contest_id === cid); }
       // Page TRX SSB sans contest : les QSO en phonie BLU hors contest
-      if (m.phoneOnly) list = list.filter((q) => !q.contest_id && (/^(SSB|LSB|USB)$/.test(String(q.mode || '')) || /^(LSB|USB)$/.test(String(q.submode || ''))));
+      if (m.phoneOnly) list = list.filter((q) => (m.allContests || !q.contest_id) && (/^(SSB|LSB|USB)$/.test(String(q.mode || '')) || /^(LSB|USB)$/.test(String(q.submode || ''))));
       // Page RTTY : les QSO d'un mode (hors contest, sauf si un contest est demandé)
       const modeOnly = String(m.modeOnly || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
       if (modeOnly) list = list.filter((q) => String(q.mode || '').toUpperCase() === modeOnly && (m.contestOnly || m.allContests ? true : !q.contest_id));

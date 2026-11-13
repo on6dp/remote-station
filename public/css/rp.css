@@ -3182,3 +3182,14 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .ctab-pane.rt .rt-side .rt-io > .rt-txbox > .rt-txw { box-shadow: none !important; border: 0 !important; }
 .cwp-head > .cwp-back { margin: 0 0 0 auto; align-self: center; }
 .ssb-body #cwpTx { display: none !important; } /* page SSB : plus de voyant RX / TX (le PTT devient rouge en émission) ; RETOUR à sa place */
+/* Page SSB : LOG SSB comme le LOG RTTY (titre, nombre de QSO, menu EXPORTER, agrandi au clic sur le titre) */
+.ssb-qrow > .ssb-qlogbox { flex: 0 1 auto; width: max-content; max-width: 58%; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.ssb-qlogbox > .ssb-qlogw { flex: 1 1 auto; min-height: 160px; }
+.ssb-loghd b { color: #f5ff00; font-weight: 800; margin-right: 4px; cursor: pointer; user-select: none; }
+.ssb-loghd b:hover { text-decoration: underline; }
+.ssb-loghd #ssQStats { order: 2; color: var(--v2-text-dim); font-size: 12px; }
+.ssb-loghd #ssLogZoom { order: 1; }
+.ssb-qlogbox.rt-logbig { position: fixed; top: 6vh; left: 5vw; right: 5vw; bottom: 6vh; z-index: 60; max-width: none; width: auto;
+  background: #0b0f16; border: 1px solid #f5ff00; border-radius: 8px; box-shadow: 0 0 0 100vmax rgba(0, 0, 0, .55), 0 10px 40px rgba(0, 0, 0, .7); padding: 10px 14px; }
+.ssb-qlogbox.rt-logbig .cwp-clog { font-size: 14px; }
+@media (max-width: 1100px) { .ssb-qrow > .ssb-qlogbox { max-width: none; width: auto; } }

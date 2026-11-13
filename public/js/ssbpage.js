@@ -748,17 +748,50 @@
     api.send({ t: 'log_export', fmt: 'adif', callsign: k.myCall(), mine: true, contest: d.id, contestOnly: true,
       from: f.slice(0, 4) + '-' + f.slice(4, 6) + '-' + f.slice(6, 8), tag: 'ssbpage' });
   });
+  // LOG SSB : titre = log agrandi au centre de la page ; EXPORTER ▾ = vos QSO en phonie hors contest en un clic,
+  // ou une fenêtre de filtres (TX call, opérateur — tous les opérateurs pour un administrateur —, dates, contests)
   {
-    const qf = $('ssQFrom');
-    let v = LS.get('ssbqfrom', '');
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) { const d0 = new Date(Date.now() - 30 * 86400000); v = d0.toISOString().slice(0, 10); }
-    qf.value = v;
-    qf.addEventListener('change', () => LS.set('ssbqfrom', qf.value));
-    $('ssQAdi').addEventListener('click', () => {
+    const box = $('ssQBox');
+    const zoom = (on) => { box.classList.toggle('rt-logbig', on); $('ssLogZoom').textContent = on ? 'LOG SSB ⤡' : 'LOG SSB ⤢'; };
+    $('ssLogZoom').addEventListener('click', () => zoom(!box.classList.contains('rt-logbig')));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && box.classList.contains('rt-logbig')) zoom(false); });
+    const xm = $('ssLogXm');
+    $('ssLogX').addEventListener('click', (e) => { e.stopPropagation(); xm.hidden = !xm.hidden; });
+    document.addEventListener('click', () => { xm.hidden = true; });
+    const esc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const exp = (kind) => {
       const k = kit();
       if (!k) return;
-      api.send({ t: 'log_export', fmt: 'adif', callsign: k.myCall(), mine: true, phoneOnly: true, from: qf.value || '', tag: 'ssbpage' });
-    });
+      if (kind === 'mine') return api.send({ t: 'log_export', fmt: 'adif', callsign: k.myCall(), mine: true, phoneOnly: true, tag: 'ssbpage' });
+      let me = {};
+      try { me = (host && host.me && host.me()) || {}; } catch (e) { /* */ }
+      const adm = !!me.admin, my = String(me.call || '').toUpperCase();
+      const calls = Array.from(new Set([k.myCall()].concat(Array.from(document.querySelectorAll('#cwpTxCall option')).map((o) => o.value), my ? [my] : []).map((c) => String(c || '').toUpperCase()).filter(Boolean)));
+      const ops = Array.from(new Set(Array.from(document.querySelectorAll('#ssQLog tr')).map((tr) => (tr.lastChild && tr.lastChild.textContent) || '').filter((x) => /^[A-Z0-9/]{3,15}$/.test(x) && x !== my)));
+      const old = $('ssExpDlg');
+      if (old) old.remove();
+      const dlg = document.createElement('dialog');
+      dlg.id = 'ssExpDlg';
+      dlg.className = 'macro-dlg qso-log rt-expdlg';
+      dlg.innerHTML = '<form method="dialog"><h3>Exporter des QSO en phonie en ADIF (.adi)</h3><div class="ql-g">' +
+        '<label>TX call <select name="cs">' + (adm ? '<option value="">Tous les TX call</option>' : '') + calls.map((c) => '<option' + (c === String(k.myCall()).toUpperCase() ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select></label>' +
+        '<label>Opérateur <select name="op"><option value="mine">Mes QSO (' + esc(my) + ')</option>' + (adm ? '<option value="">Tous les opérateurs</option>' + ops.map((o) => '<option value="' + esc(o) + '">' + esc(o) + '</option>').join('') : '') + '</select></label>' +
+        '<label>QSO <select name="ct"><option value="">Phonie hors contest</option><option value="*">Toute la phonie (contests compris)</option></select></label><span></span>' +
+        '<label>Du <input type="date" name="from"></label><label>Au <input type="date" name="to"></label></div>' +
+        '<p class="md-prev">' + (adm ? 'Administrateur : tous les TX call et tous les opérateurs possibles.' : 'Vos QSO seulement : sous votre indicatif, ou faits par vous sous un indicatif de la station.') + ' Le log d’un contest (Cabrillo / ADIF) s’exporte dans le cadre du contest.</p>' +
+        '<div class="md-act"><span></span><button class="btn" value="cancel">Annuler</button><button class="btn btn-primary" type="button" data-a="go">Exporter</button></div></form>';
+      document.body.appendChild(dlg);
+      const f = dlg.querySelector('form');
+      dlg.querySelector('[data-a="go"]').addEventListener('click', () => {
+        const op = f.op.value;
+        api.send({ t: 'log_export', fmt: 'adif', callsign: f.cs.value, mine: op === 'mine', operator: op && op !== 'mine' ? op : undefined, phoneOnly: true,
+          allContests: f.ct.value === '*' || undefined, from: f.from.value || undefined, to: f.to.value || undefined, tag: 'ssbpage' });
+        dlg.close();
+      });
+      dlg.addEventListener('close', () => dlg.remove());
+      try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
+    };
+    xm.querySelectorAll('[data-x]').forEach((b) => b.addEventListener('click', () => { xm.hidden = true; exp(b.dataset.x); }));
   }
   function saveFile(m) {
     const blob = new Blob([m.data], { type: (m.mime || 'text/plain') + ';charset=utf-8' });
@@ -891,7 +924,7 @@
     }
     if (!items.length) tb.innerHTML = '<tr><td colspan="13">Aucun QSO en phonie hors contest dans le carnet.</td></tr>';
     const today = ymd(new Date());
-    $('ssQStats').innerHTML = '<b>' + items.length + '</b> derniers QSO en phonie (hors contest) · aujourd’hui <b>' + items.filter((q) => q.d === today).length + '</b> · aussi dans le carnet général (Logbooks)';
+    $('ssQStats').textContent = '· hors contest · ' + items.length + ' QSO' + (items.length ? ' · aujourd’hui ' + items.filter((q) => q.d === today).length : '');
   }
 
   // ------------------------------------------------------------------ messages du serveur, état
