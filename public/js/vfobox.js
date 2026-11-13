@@ -121,8 +121,9 @@
       el.classList.toggle('mir', !!src);
       if (!src) { MR.src = null; return; }
       MR.src = src;
-      // Ids et références des dégradés SVG préfixés (pas de doublon avec cette page)
-      const html = src.innerHTML.replace(/ id="/g, ' id="m-').replace(/url\(#/g, 'url(#m-');
+      // Mêmes ids qu'au dashboard (aucun doublon dans cette page) : ses règles de style par id s'appliquent aussi ici
+      // (TX VFO-B (SUB) en rose foncé, badges…)
+      const html = src.innerHTML;
       if (html !== MR.html || !MR.row) {
         MR.html = html;
         if (!MR.row) { MR.row = document.createElement('div'); MR.box.appendChild(MR.row); }

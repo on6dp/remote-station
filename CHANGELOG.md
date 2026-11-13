@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.89** — Page SSB : écrans des VFO avec exactement les couleurs du dashboard (TX VFO-B (SUB) rose foncé, modes…) ; Catégorie, Bande, Échange… en blanc gras
 - **0.38.88** — RX / TX des VFO : page SSB, écrans recopiés mis à jour en place (plus de clic perdu) ; FTDX101 : TX choisi directement par FT2 / FT3 (VFO d'émission), indépendant du VFO de réception ; affichage immédiat du choix
 - **0.38.87** — MONITORING enclenché : fond bleu foncé, texte blanc gras
 - **0.38.86** — Page SSB : bouton RÈGLEMENT pour chaque contest (règlement officiel ; sinon recherche web nom + rules + année) ; 7 adresses de règlements ajoutées
