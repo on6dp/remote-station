@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.07** — Messages vocaux en français : CQ se dit « cé kiou »
 - **0.39.06** — Voix Kokoro française (Siwis) ralentie de 20 % (elle parlait trop vite)
 - **0.39.05** — Messages vocaux : début du premier mot plus coupé (0,4 s de silence avant le message pour le passage en émission ; ▶ Écouter démarre 0,25 s plus tard, sortie son réveillée)
 - **0.39.04** — Messages vocaux en anglais : le Z de QRZ se dit « zed » (et plus « zee »)
