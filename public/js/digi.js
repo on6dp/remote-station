@@ -743,10 +743,37 @@
   let rtDualAudio = false; // RTTY : deux cascades (une par récepteur) — FTDX101 en double réception
   let rtSeen = false; // fenêtre RTTY déjà ouverte depuis le chargement de la page
   let rtBAuto = false; // décodeur B mis à 2100 Hz faute de savoir encore si le TRX envoie ses deux récepteurs
+  // Fenêtre séparée (digi.html) : bandeau de titre comme la page TRX SSB — TX call, nom de la page selon l'onglet
+  const HEADS = { ftx: ['TRX FT8/FT4/FT2', 'FT modes et contests'], jt65: ['TRX JT65', 'JT65'], rtty: ['TRX RTTY', 'RTTY et contests'],
+    wspr: ['TRX WSPR', 'WSPR'], jtty: ['TRX JTTY', 'JTTY'], cw: ['TRX CW', 'CW et contests'], sstv: ['TRX SSTV', 'SSTV'] };
+  function drawHead() {
+    if (!POPUP || EMBED || !document.body.classList.contains('digi-popup')) return;
+    let h = document.getElementById('dgHead');
+    if (!h) {
+      h = document.createElement('header');
+      h.id = 'dgHead';
+      h.className = 'cwp-head dg-head';
+      h.innerHTML = '<h1><span class="ssb-txc" id="dgHdCall" title="TX call : indicatif sous lequel on émet"></span><span id="dgHdName"></span> <small>Remote Station · <span id="dgHdSub"></span></small></h1>';
+      document.body.prepend(h);
+      document.body.classList.add('dg-hd');
+    }
+    const hd = HEADS[tab] || ['TRX DIGI', 'modes numériques'];
+    let st = null;
+    try { st = api && api.state(); } catch (e) { st = null; }
+    const call = String((st && st.txCall) || '').toUpperCase();
+    const c = call ? call + ' ' : '';
+    if ($('dgHdCall').textContent !== c) $('dgHdCall').textContent = c;
+    if ($('dgHdName').textContent !== hd[0]) { $('dgHdName').textContent = hd[0]; $('dgHdSub').textContent = hd[1]; }
+    const hh = h.offsetHeight + 8 + 'px';
+    if (document.body.style.getPropertyValue('--dg-hd') !== hh && h.offsetHeight) document.body.style.setProperty('--dg-hd', hh);
+    const t = (call ? call + ' ' : '') + hd[0] + ' — Remote Station';
+    if (document.title !== t) document.title = t;
+  }
   function showTab(t) {
     if (!document.querySelector('#centerPanel .ctab[data-tab="' + t + '"]')) t = POPUP ? 'ftx' : 'events';
     const rtEnter = t === 'rtty' && (tab !== 'rtty' || !rtSeen) && !detached;
     tab = t;
+    drawHead();
     // Ligne Correspondant : reports en dB (FT8 / FT4 / FT2, WSPR, JT65) ou RST 599 (RTTY, CW, SSTV, JTTY)
     const mb = document.getElementById('msgs');
     // Dashboard, onglets Modes et Logbooks : pas de ligne QSO (la fiche du carnet a déjà indicatif, reports et TX call)
@@ -6058,6 +6085,7 @@
     },
     onState() {
       drawTxCallDg();
+      drawHead();
       // Double réception allumée ou coupée : cascades et colonnes du VFO-B tout de suite (sans attendre le tour de 500 ms)
       if (dualTab() && applyFtDual()) announce();
       if (tab === 'rtty' && dualAudioOn() !== rtDualAudio) showTab(tab);

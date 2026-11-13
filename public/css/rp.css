@@ -2635,3 +2635,8 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .vfb .ssb-mic.vfb-mic { grid-column: 1 / -1; margin: 0; border: 0; border-top: 1px solid var(--v2-border); border-bottom: 1px solid var(--v2-border); border-radius: 0; background: none; padding: 6px 2px; }
 .vfb:not(.mir) .ssb-mic.vfb-mic { display: none; }
 .vfb.mir .vfb-col, .vfb.mir.dual .vfb-col[data-v] { border: 0; background: none; box-shadow: none; }
+/* Fenêtre séparée des modes numériques : bandeau de titre (TX call · TRX FT8/FT4/FT2 · Remote Station · FT modes et contests) */
+body.digi-popup.dg-hd { --dg-hd: 50px; }
+body.digi-popup .dg-head { margin: -10px -10px 8px; padding: 8px 14px; }
+body.digi-popup.dg-hd #centerPanel { min-height: calc(100vh - 20px - var(--dg-hd)); }
+body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height: calc(100vh - 20px - var(--dg-hd)); }
