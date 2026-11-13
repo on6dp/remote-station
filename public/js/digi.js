@@ -346,6 +346,7 @@
           <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxt" data-ch="0" spellcheck="false" placeholder="TX VFO-A : texte à émettre, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShow" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx0" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
           <div class="rt-pane"><pre class="rt-rx" id="rtRx"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx0" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
         </div>
+        <i class="rt-iogrip" data-ch="0" title="Glisser vers le haut ou le bas : hauteur des fenêtres TX / RX de ce VFO seulement (double-clic : taille d’origine)"></i>
       </div>
       <i class="rt-vsplit" id="rtSplit" title="Glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié)"></i>
       <div class="dg-col rt-side" data-ch="1">
@@ -383,6 +384,7 @@
           <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxtB" data-ch="1" spellcheck="false" placeholder="TX VFO-B : texte à émettre, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-B : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShowB" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx1" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
           <div class="rt-pane"><pre class="rt-rx" id="rtRxB"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx1" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
         </div>
+        <i class="rt-iogrip" data-ch="1" title="Glisser vers le haut ou le bas : hauteur des fenêtres TX / RX de ce VFO seulement (double-clic : taille d’origine)"></i>
       </div>
     </div>
     <i class="rt-hgrip" id="rtHGrip" title="Glisser vers le haut ou le bas : hauteur des fenêtres de décodage (VFO-A et VFO-B) — plus de place pour les macros en dessous (double-clic : taille d'origine)"></i>
@@ -1002,6 +1004,7 @@
   const RT_IO_MIN = 70; // RTTY : hauteur minimale des fenêtres TX / RX sous la cascade
   /** RTTY double réception : hauteur maximale de la cascade c dans sa colonne (fenêtres TX / RX du dessous : RT_IO_MIN) */
   function rtRoom(c) {
+    if (c && c.closest('.ctab-pane.rt')) return -1; // page RTTY : fenêtres TX / RX de hauteur propre (poignée de chaque VFO), la colonne suit
     const side = c && c.closest('.rt-side'), box = c && c.closest('.dg-wf');
     if (!side || !box || !side.offsetParent) return -1;
     let others = 0;
@@ -3165,6 +3168,28 @@
     // Choisir une bande dans la liste y envoie directement le TRX (QSY)
     dial.addEventListener('change', () => { store.set('rtdial', dial.value); qsyTo(Number(dial.value)); });
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
+    // Hauteur des fenêtres TX / RX de chaque VFO : sa propre poignée, gardée dans ce navigateur
+    for (const g of document.querySelectorAll('.rt-iogrip')) {
+      const ch = Number(g.dataset.ch) === 1 ? 1 : 0, io = g.previousElementSibling;
+      const setIo = (h, save) => {
+        if (h == null) { io.style.removeProperty('height'); if (save) store.set('rtioh' + ch, ''); return; }
+        const v = Math.max(70, Math.min(900, Math.round(h)));
+        io.style.height = v + 'px';
+        if (save) store.set('rtioh' + ch, String(v));
+      };
+      if (Number(store.get('rtioh' + ch, '')) > 0) setIo(Number(store.get('rtioh' + ch, '')), false);
+      g.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        g.setPointerCapture(e.pointerId);
+        const y0 = e.clientY, zf = (window.RSZOOM && window.RSZOOM.z()) || 1, h0 = io.getBoundingClientRect().height / zf;
+        const mv = (ev) => setIo(h0 + (ev.clientY - y0) / zf, false);
+        const up = (ev) => { g.removeEventListener('pointermove', mv); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up); setIo(h0 + (ev.clientY - y0) / zf, true); };
+        g.addEventListener('pointermove', mv);
+        g.addEventListener('pointerup', up);
+        g.addEventListener('pointercancel', up);
+      });
+      g.addEventListener('dblclick', () => setIo(null, true));
+    }
     // LOG RTTY : clic sur son titre = log agrandi au centre de la page ; nouveau clic (ou Échap) = remis à sa place
     if ($('rtLogZoom')) {
       const box = $('rtLogBox');

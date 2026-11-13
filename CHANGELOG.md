@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.57** — Page RTTY : chaque VFO règle la hauteur de ses fenêtres TX / RX avec sa propre poignée (plus de poignée commune aux deux VFO)
 - **0.39.56** — LOG RTTY : titres des colonnes en blanc, traits de séparation entre les colonnes
 - **0.39.55** — Page RTTY : clic sur le titre LOG RTTY = log agrandi au centre de la page (nouveau clic ou Échap : remis en place) ; macros du contest sur deux lignes alignées (F1 à F6, F7 à F12)
 - **0.39.54** — Macros contest RTTY par défaut : F10 TX (émettre le texte tapé), F11 RX (retour en réception), F12 Log (fiche du QSO)
