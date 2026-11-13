@@ -2793,3 +2793,6 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .cwp-entry .cwp-esm button:not(.on) { background: #e3d9a8; color: #5a4d1a; }
 .cwp-entry .cwp-ewipe { background: #2a3442; color: #fff; }
 .ssb-clog th { white-space: nowrap; }
+/* Page SSB : bouton RÈGLEMENT du contest choisi (cadre blanc, comme les autres boutons) */
+.ssb-rules { color: #fff; border: 1px solid #fff; border-radius: 6px; padding: 3px 10px; font-weight: 800; letter-spacing: .3px; }
+.ssb-rules:hover { background: #fff; color: #000; }

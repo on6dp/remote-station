@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.38.86** — Page SSB : bouton RÈGLEMENT pour chaque contest (règlement officiel ; sinon recherche web nom + rules + année) ; 7 adresses de règlements ajoutées
 - **0.38.85** — Page SSB : Échange, N°, Zone CQ et ITU sur la ligne CONTESTS, à droite de Assisté
 - **0.38.84** — Pages SSB et CW : saisie du contest aux couleurs de la fiche des détails du QSO (fond crème, textes foncés)
 - **0.38.83** — Page SSB : clic sur le filtre, le cadran ou le spectre d'un écran VFO = agrandi au milieu de l'écran, comme au dashboard (copie vivante, molette active)

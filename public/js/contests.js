@@ -81,8 +81,8 @@
         ['MXLP', 'Mono-op mixte, faible puissance', { OPERATOR: 'SINGLE-OP', POWER: 'LOW', MODE: 'MIXED', TRANSMITTER: 'ONE' }],
         ['UNL', 'Unlimited (mixte)', { OPERATOR: 'SINGLE-OP', ASSISTED: 'ASSISTED', MODE: 'MIXED', TRANSMITTER: 'ONE' }],
         ['QRP', 'QRP (mixte)', { OPERATOR: 'SINGLE-OP', POWER: 'QRP', MODE: 'MIXED', TRANSMITTER: 'ONE' }], CHECK] },
-    { id: 'RDXC', name: 'Russian DX Contest', when: '3e week-end de mars (CW et SSB)', exch: '59 <CNTR>', bands: true, assisted: true, mode: 'MIXED', cat: GENERIC },
-    { id: 'SPDX', name: 'SP DX Contest SSB', when: '1er week-end d’avril', exch: '59 <CNTR>', bands: true, assisted: true, note: 'Les stations hors Pologne ne contactent que les SP.', cat: GENERIC },
+    { id: 'RDXC', name: 'Russian DX Contest', url: 'https://rdxc.srr.ru/rules.html', when: '3e week-end de mars (CW et SSB)', exch: '59 <CNTR>', bands: true, assisted: true, mode: 'MIXED', cat: GENERIC },
+    { id: 'SPDX', name: 'SP DX Contest SSB', url: 'https://spdxcontest.pzk.org.pl/', when: '1er week-end d’avril', exch: '59 <CNTR>', bands: true, assisted: true, note: 'Les stations hors Pologne ne contactent que les SP.', cat: GENERIC },
     { id: 'HA-DX', name: 'HA DX Contest', when: '3e week-end de janvier (CW et SSB)', exch: '59 <CNTR>', bands: true, assisted: true, mode: 'MIXED', cat: GENERIC },
     { id: 'OK-OM-DX', name: 'OK/OM DX Contest SSB', when: '2e week-end de décembre', exch: '59 <CNTR>', bands: true, assisted: true, cat: GENERIC },
     { id: 'YODX-HF', name: 'YO DX HF Contest', when: 'fin août (CW et SSB)', exch: '59 <CNTR>', bands: true, assisted: true, mode: 'MIXED', cat: GENERIC },
@@ -92,12 +92,12 @@
     { id: 'WAG', name: 'Worked All Germany', when: '3e week-end d’octobre (CW et SSB)', exch: '59 <CNTR>', bands: true, assisted: true, mode: 'MIXED', note: 'Les stations hors Allemagne ne contactent que les DL.', cat: GENERIC },
     { id: 'REF-SSB', name: 'Coupe du REF SSB', when: 'fin février', exch: '59 <CNTR>', bands: true, assisted: true, note: 'Les stations hors France ne contactent que les F.', cat: GENERIC },
     { id: 'ARI-INTL-DX', name: 'ARI International DX', when: '1er week-end de mai (CW, SSB, RTTY)', exch: '59 <CNTR>', bands: true, assisted: true, mode: 'MIXED', cat: GENERIC },
-    { id: 'UKRAINIAN-DX', name: 'Ukrainian DX Contest', when: '1er week-end de novembre (CW et SSB)', exch: '59 <CNTR>', bands: true, assisted: true, mode: 'MIXED', cat: GENERIC },
+    { id: 'UKRAINIAN-DX', name: 'Ukrainian DX Contest', url: 'https://urdxc.org/', when: '1er week-end de novembre (CW et SSB)', exch: '59 <CNTR>', bands: true, assisted: true, mode: 'MIXED', cat: GENERIC },
     { id: 'CQ-M', name: 'CQ-M International DX', when: '2e week-end de mai (CW et SSB)', exch: '59 <CNTR>', bands: true, assisted: true, mode: 'MIXED', cat: GENERIC },
-    { id: 'ARRL-10', name: 'ARRL 10 m', when: '2e week-end de décembre (CW et SSB)', exch: '59 <CNTR>', bands: false, assisted: true, mode: 'MIXED', note: 'Bande 10 m seulement.', cat: GENERIC },
-    { id: 'AADX-SSB', name: 'All Asian DX Phone', when: '1er week-end de septembre', exch: '59 00', bands: true, assisted: true, note: 'Échange : RS + âge de l’opérateur (remplacer 00). Les stations hors Asie ne contactent que les Asiatiques.', cat: GENERIC },
-    { id: 'JIDX-SSB', name: 'JIDX Phone', when: '2e week-end de novembre', exch: '59 <CQZ>', bands: true, assisted: true, note: 'Les stations hors Japon ne contactent que les JA.', cat: GENERIC },
-    { id: 'LZ-DX', name: 'LZ DX Contest', when: '3e week-end de novembre (CW et SSB)', exch: '59 <ITUZ>', bands: true, assisted: true, mode: 'MIXED', cat: GENERIC },
+    { id: 'ARRL-10', name: 'ARRL 10 m', url: 'https://www.arrl.org/10-meter', when: '2e week-end de décembre (CW et SSB)', exch: '59 <CNTR>', bands: false, assisted: true, mode: 'MIXED', note: 'Bande 10 m seulement.', cat: GENERIC },
+    { id: 'AADX-SSB', name: 'All Asian DX Phone', url: 'https://www.jarl.org/English/4_Library/A-4-3_Contests/aadx_eng.html', when: '1er week-end de septembre', exch: '59 00', bands: true, assisted: true, note: 'Échange : RS + âge de l’opérateur (remplacer 00). Les stations hors Asie ne contactent que les Asiatiques.', cat: GENERIC },
+    { id: 'JIDX-SSB', name: 'JIDX Phone', url: 'https://jidx.org/', when: '2e week-end de novembre', exch: '59 <CQZ>', bands: true, assisted: true, note: 'Les stations hors Japon ne contactent que les JA.', cat: GENERIC },
+    { id: 'LZ-DX', name: 'LZ DX Contest', url: 'https://lzdx.bfra.bg/', when: '3e week-end de novembre (CW et SSB)', exch: '59 <ITUZ>', bands: true, assisted: true, mode: 'MIXED', cat: GENERIC },
     { id: 'SSB-OTHER', name: 'Autre contest (échange libre)', when: '', exch: '59 <CNTR>', bands: true, assisted: true, cat: GENERIC }
   ];
   const BANDS = ['ALL', '160M', '80M', '40M', '20M', '15M', '10M'];

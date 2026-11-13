@@ -103,9 +103,13 @@
     if (d) for (const o of d.overlays || []) ov.add(new Option(o, o));
     $('ssOvW').hidden = !d || !(d.overlays || []).length || !so;
     ov.value = st.ov || '';
+    // RÈGLEMENT : le règlement officiel du contest choisi ; sans adresse connue, une recherche « <contest> rules <année> »
     const r = $('ssRules');
-    r.hidden = !d || !d.url;
-    if (d && d.url) r.href = d.url;
+    r.hidden = !d || /-OTHER$/.test(d.id);
+    if (d) {
+      r.href = d.url || 'https://www.google.com/search?q=' + encodeURIComponent(d.name.replace(/\s*\(.*\)\s*/g, ' ').trim() + ' contest rules ' + new Date().getUTCFullYear());
+      r.title = d.url ? 'Règlement officiel du ' + d.name + ' (nouvel onglet)' : 'Règlement du ' + d.name + ' : recherche sur le web (nouvel onglet)';
+    }
     const ex = $('ssExch');
     if (document.activeElement !== ex) ex.value = d ? exchTpl() : '';
     ex.disabled = !d;
