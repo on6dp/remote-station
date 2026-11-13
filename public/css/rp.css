@@ -2983,3 +2983,23 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .rt-side.rt-istx .rt-io > .rt-txw { border-color: #ff5a4a; box-shadow: 0 0 0 1px rgba(255, 90, 74, .35) inset; }
 .rt-side:not(.rt-istx) .rt-io > .rt-txw { opacity: .7; }
 .rt-stack .rt-tx-row { justify-content: flex-end; }
+/* Page RTTY : pas de boutons X1 / X2 / X4 (vitesse du spectre) sur la cascade */
+.ctab-pane.rt .dg-spspd { display: none !important; }
+/* RTTY : fenêtres TX et RX côte à côte, chacune avec son bouton Effacer ; texte émis barré au fur et à mesure dans la fenêtre TX */
+.rt-pane { position: relative; flex: 1 1 0; min-width: 0; display: flex; }
+.rt-pane > .rt-rx, .rt-pane > .rt-txw { flex: 1 1 auto; min-width: 0; }
+.rt-io > .rt-pane > .rt-txw { margin: 0; resize: none; font: inherit; font-size: 13px; line-height: 1.5; text-transform: uppercase;
+  color: #ffd2c8; background: #170a0a; border: 1px solid #5a2a2a; border-radius: 4px; padding: 8px 10px; }
+.rt-io > .rt-pane > .rt-txw::placeholder { text-transform: none; color: #9a7f7a; }
+.rt-side.rt-istx .rt-pane > .rt-txw, .rt-side.rt-istx .rt-txshow { border-color: #ff5a4a; box-shadow: 0 0 0 1px rgba(255, 90, 74, .35) inset; }
+.rt-side:not(.rt-istx) .rt-pane > .rt-txw { opacity: .7; }
+.rt-txshow { position: absolute; inset: 0; margin: 0; padding: 8px 10px; overflow: auto; white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 13px; line-height: 1.5;
+  color: #ffd2c8; background: #170a0a; border: 1px solid #5a2a2a; border-radius: 4px; cursor: text; z-index: 1; }
+.rt-txshow[hidden] { display: none; }
+.rt-txshow .rt-txdone { text-decoration: line-through; text-decoration-color: #ff5a4a; text-decoration-thickness: 2px; color: #a9817b; }
+.rt-txshow .rt-txtodo { color: #fff; font-weight: 700; }
+.rt-txshow .rt-txwait { color: #c9b3ae; }
+.rt-txshow .rt-cut { opacity: .5; }
+.rt-clr { position: absolute; top: 4px; right: 16px; z-index: 2; font-size: 10px; padding: 1px 7px; opacity: .75; }
+.rt-clr:hover { opacity: 1; }
+#rtClear, #rtClearB { display: none; } /* remplacés par l'Effacer de chaque fenêtre */

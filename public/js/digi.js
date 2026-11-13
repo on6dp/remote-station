@@ -343,8 +343,8 @@
         </div>
         <div class="dg-wf-slot" data-slot="rtty-a"></div>
         <div class="rt-io">
-          <textarea class="rt-txw" id="rtTxt" data-ch="0" spellcheck="false" placeholder="TX VFO-A : texte à émettre, puis « Émettre » ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea>
-          <pre class="rt-rx" id="rtRx"></pre>
+          <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxt" data-ch="0" spellcheck="false" placeholder="TX VFO-A : texte à émettre, puis « Émettre » ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShow" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx0" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
+          <div class="rt-pane"><pre class="rt-rx" id="rtRx"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx0" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
         </div>
       </div>
       <i class="rt-vsplit" id="rtSplit" title="Glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié)"></i>
@@ -378,8 +378,8 @@
           <i class="dg-grip" id="rtGripB" title="Glisser vers le haut ou le bas : hauteur de la cascade du VFO-B, sans toucher à celle du VFO-A (double-clic : même hauteur que celle du VFO-A)"></i>
         </div>
         <div class="rt-io">
-          <textarea class="rt-txw" id="rtTxtB" data-ch="1" spellcheck="false" placeholder="TX VFO-B : texte à émettre, puis « Émettre » ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-B : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea>
-          <pre class="rt-rx" id="rtRxB"></pre>
+          <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxtB" data-ch="1" spellcheck="false" placeholder="TX VFO-B : texte à émettre, puis « Émettre » ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-B : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShowB" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx1" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
+          <div class="rt-pane"><pre class="rt-rx" id="rtRxB"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx1" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
         </div>
       </div>
     </div>
@@ -3064,7 +3064,7 @@
       setTimeout(rtHeads, 300);
     }));
     document.querySelectorAll('#rtDual .rt-side').forEach((side) => side.addEventListener('mousedown', (e) => {
-      if (e.button !== 0 || e.target.closest('select, input, label, .rt-center, .rt-txsel, #rtClear, #rtClearB, .rt-wfb')) return;
+      if (e.button !== 0 || e.target.closest('select, input, label, .rt-center, .rt-txsel, #rtClear, #rtClearB, .rt-wfb, .rt-clr')) return;
       pickTx(Number(side.dataset.ch));
     }));
     // Cascade du décodeur B : clic (gauche ou droit) = caler le décodeur B
@@ -3147,6 +3147,17 @@
       t.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); dtxClick('RTTY'); } });
       t.addEventListener('focus', () => pickTx(Number(t.dataset.ch) === 1 ? 1 : 0)); // écrire dans la fenêtre TX d'un VFO le choisit pour l'émission
     }
+    // Fenêtre TX : texte émis affiché barré au fur et à mesure ; un clic (ou Effacer) revient à la saisie
+    for (const id of ['rtTxShow', 'rtTxShowB']) { const sh = $(id); if (sh) sh.addEventListener('click', () => { if (rtLive && rtLive.tx && rtLive.tx.box === sh) return; sh.hidden = true; const t = sh.parentElement.querySelector('textarea'); if (t) t.focus(); }); }
+    // Effacer : chaque petite fenêtre (TX ou RX, VFO-A ou VFO-B) indépendamment
+    document.querySelectorAll('.rt-clr').forEach((b) => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const k = b.dataset.clr, ch = k.slice(-1) === '1' ? 1 : 0;
+      if (k.startsWith('rx')) { const c = $(ch ? 'rtClearB' : 'rtClear'); if (c) c.click(); return; }
+      const t = $(ch ? 'rtTxtB' : 'rtTxt'), sh = $(ch ? 'rtTxShowB' : 'rtTxShow');
+      if (t) t.value = '';
+      if (sh && !(rtLive && rtLive.tx && rtLive.tx.box === sh)) { sh.hidden = true; sh.textContent = ''; }
+    }));
     drawRttyMacros();
     rtHeads();
   }
@@ -4721,6 +4732,7 @@
     if (mode === 'RTTY') { const r = rts[rtTx]; Object.assign(m, { f0: Math.round(r.f), shift: r.shift, baud: r.baud, rev: !!r.rev }); }
     else m.f0 = curTxF();
     dtxPend = { mode, text, zone };
+    if (mode === 'RTTY') rtTxShow(rtTx, text.toUpperCase().replace(/\s+$/, ''), null); // texte de la macro (ou tapé) dans la fenêtre TX du VFO
     api.send(m);
   }
   // Filtre CW de l'onglet : règle aussi la largeur (BW) du TRX, au plus près, sur le VFO écouté (pour tous, comme le cadre Filtres)
@@ -4781,12 +4793,14 @@
         todo.className = 'rt-todo';
         s.append('\n', done, todo, '\n');
         rxEl.appendChild(s);
+        const tx = rtTxShow(rtTx, text, true);
         if (info && info.ms && info.ms.length === text.length) {
           todo.textContent = text;
-          rtLive = { id: x.id, at: x.at, text, ms: info.ms, seconds: info.seconds, done, todo, n: 0 };
+          rtLive = { id: x.id, at: x.at, text, ms: info.ms, seconds: info.seconds, done, todo, n: 0, tx };
           rtTick();
         } else {
           done.textContent = text;
+          if (tx) { tx.done.textContent = text; tx.todo.textContent = ''; }
         }
         rxEl.scrollTop = rxEl.scrollHeight;
       }
@@ -4796,12 +4810,26 @@
     if (rtLive && !(x && x.id === rtLive.id && x.state === 'tx')) {
       rtTick();
       rtLive.todo.classList.add('rt-cut');
+      if (rtLive.tx) rtLive.tx.todo.classList.add('rt-cut');
       rtLive = null;
       clearInterval(rtTimer);
       rtTimer = null;
     }
     if (rtLive && !rtTimer) rtTimer = setInterval(rtTick, 80);
     if (rtLive) rtTick();
+  }
+  // Fenêtre TX du VFO : texte de l'émission (gris en attente ; parti : barré lettre par lettre). live = true : suivi
+  function rtTxShow(ch, text, live) {
+    const sh = $(ch ? 'rtTxShowB' : 'rtTxShow');
+    if (!sh) return null;
+    for (const id of ['rtTxShow', 'rtTxShowB']) if ($(id) && $(id) !== sh && !live) { /* l'autre VFO garde son affichage */ }
+    sh.textContent = '';
+    const done = document.createElement('span'); done.className = 'rt-txdone';
+    const todo = document.createElement('span'); todo.className = live ? 'rt-txtodo' : 'rt-txwait';
+    todo.textContent = text;
+    sh.append(done, todo);
+    sh.hidden = false;
+    return { box: sh, done, todo };
   }
   // Suivi de l'émission RTTY lettre par lettre (minutage calculé par le serveur)
   let dtxInfo = null; // { id, mode, text, ms, seconds } : reçu du serveur à la préparation
@@ -4817,6 +4845,7 @@
       L.n = n;
       L.done.textContent = L.text.slice(0, n);
       L.todo.textContent = L.text.slice(n);
+      if (L.tx) { L.tx.done.textContent = L.text.slice(0, n); L.tx.todo.textContent = L.text.slice(n); }
     }
     const note = $('rtTxState');
     if (note && note.classList.contains('air')) {
