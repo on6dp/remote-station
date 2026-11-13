@@ -2893,11 +2893,5 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .ctl-head:has(#listenVolOut) .ctl-label { color: var(--v2-accent-yellow); font-weight: 700; }
 /* Dashboard : bande en service en couleurs inversées (fond blanc, écriture noire) */
 #bandKeys .btn[aria-pressed='true'] { background: #fff; color: #000; border-color: #fff; font-weight: 800; text-shadow: none; }
-/* Carnet : ascenseur horizontal au-dessus de la liste (colonnes de droite), bien visible */
-.lg-hsb { overflow-x: auto; overflow-y: hidden; height: 16px; flex: none; margin-bottom: 3px; border: 1px solid var(--v2-border-dark); border-radius: 6px; background: rgba(0, 0, 0, .35); scrollbar-color: #c8d0dc rgba(0, 0, 0, .35); color-scheme: dark; }
-.lg-hsb[hidden] { display: none; }
-.lg-hsb > div { height: 1px; }
-.lg-hsb::-webkit-scrollbar { height: 14px; }
-.lg-hsb::-webkit-scrollbar-thumb { background: #c8d0dc; border-radius: 7px; border: 3px solid #1a2230; }
-.lg-hsb::-webkit-scrollbar-track { background: rgba(0, 0, 0, .35); }
+/* Carnet : ascenseurs de la liste bien visibles */
 .lg-tw { scrollbar-color: #8a96a8 rgba(0, 0, 0, .3); }

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.23** — Carnet : la liste tient dans la hauteur de l'écran — ascenseur horizontal en bas de ce qu'on voit, ascenseur de droite pour descendre dans la liste (barre du dessus retirée)
 - **0.39.22** — Dashboard, onglets Modes et Logbooks : le TX call reste visible et réglable en bas (seul sur la ligne QSO)
 - **0.39.21** — Carnet : ascenseur horizontal toujours visible au-dessus de la liste pour atteindre les colonnes de droite (aussi Maj + molette)
 - **0.39.20** — Dashboard : bande en service en couleurs inversées (fond blanc, écriture noire)

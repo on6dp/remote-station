@@ -146,31 +146,22 @@
     </div>
     <p class="lg-job" id="lgJob" aria-live="polite"></p>`;
 
-  // Ascenseur horizontal au-dessus du carnet (toujours visible, même quand le bas de la liste sort de l'écran) :
-  // il défile avec la liste ; caché quand toutes les colonnes tiennent. Aussi : Maj + molette sur la liste
+  // Liste du carnet à la hauteur de l'écran : son ascenseur horizontal (colonnes de droite) reste en bas de ce qu'on voit,
+  // et l'ascenseur de droite fait descendre la liste (au lieu d'une liste plus haute que l'écran). Aussi : Maj + molette
   function hScroll() {
     const tw = q$('.lg-tw');
     if (!tw) return;
-    const bar = document.createElement('div');
-    bar.className = 'lg-hsb';
-    bar.title = 'Faire défiler les colonnes (aussi : Maj + molette de la souris sur la liste)';
-    const inner = document.createElement('div');
-    bar.appendChild(inner);
-    tw.parentNode.insertBefore(bar, tw);
-    let lock = false;
-    const sync = (from, to) => { if (lock) return; lock = true; to.scrollLeft = from.scrollLeft; requestAnimationFrame(() => { lock = false; }); };
-    bar.addEventListener('scroll', () => sync(bar, tw));
-    tw.addEventListener('scroll', () => sync(tw, bar));
+    let last = '';
     const fit = () => {
-      const t = tw.querySelector('table');
-      const w = t ? t.scrollWidth : tw.scrollWidth;
-      inner.style.width = w + 'px';
-      bar.hidden = !(w > tw.clientWidth + 1) || tw.hidden || tw.style.display === 'none';
-      if (!bar.hidden && bar.scrollLeft !== tw.scrollLeft) bar.scrollLeft = tw.scrollLeft;
+      if (tw.hidden || tw.style.display === 'none' || !tw.offsetParent) return;
+      const top = tw.getBoundingClientRect().top;
+      const h = Math.max(220, Math.floor(window.innerHeight - Math.max(0, top) - 14)) + 'px';
+      if (h !== last) { last = h; tw.style.height = h; tw.style.maxHeight = h; tw.style.flex = 'none'; }
     };
-    if (window.ResizeObserver) { const ro = new ResizeObserver(fit); ro.observe(tw); const t = tw.querySelector('table'); if (t) ro.observe(t); }
     window.addEventListener('resize', fit);
-    setInterval(fit, 1500); // colonnes déplacées, élargies ou montrées / cachées
+    document.addEventListener('scroll', () => requestAnimationFrame(fit), true); // colonne du dashboard qui défile
+    if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(fit)).observe(document.body);
+    setInterval(fit, 1000); // onglet Logbooks ouvert, fiche DÉTAILS QSO montrée / cachée
     fit();
   }
   function mount(el) {
