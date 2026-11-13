@@ -1,0 +1,7 @@
+[Unit]
+Description=Remote Station : installation de la mise à jour demandée depuis le dashboard
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/remote-station-update
+TimeoutStartSec=1200

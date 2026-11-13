@@ -133,6 +133,22 @@ rm -f "$TMPU"
 systemctl enable "$SVC" >/dev/null 2>&1
 systemctl restart "$SVC"
 
+# ------------------------------------------------------------------ 5b. mise à jour depuis le dashboard (bouton « 🔔 Mise à jour »)
+# Serveur du club seulement (/opt/remote-station) : programme de root hors du dossier du service, déclenché par update/request
+if [ "$APP" = /opt/remote-station ]; then
+  # copie puis renommage : le programme peut être en train de tourner (mise à jour lancée du dashboard)
+  install -m 755 -o root -g root "$APP/deploy/update.sh" /usr/local/sbin/.remote-station-update.new
+  mv -f /usr/local/sbin/.remote-station-update.new /usr/local/sbin/remote-station-update
+  CH=0
+  for u in remote-station-update.path remote-station-update.service; do
+    cmp -s "$APP/deploy/$u" "/etc/systemd/system/$u" 2>/dev/null || { install -m 644 "$APP/deploy/$u" "/etc/systemd/system/$u"; CH=1; }
+  done
+  [ "$CH" = 0 ] || systemctl daemon-reload
+  install -d -m 755 -o "$RUSER" -g "$RUSER" "$APP/update"
+  touch "$APP/update/enabled"; chown "$RUSER:$RUSER" "$APP/update/enabled"
+  systemctl enable --now remote-station-update.path >/dev/null 2>&1 || warn "mise à jour depuis le dashboard non activée (remote-station-update.path)"
+fi
+
 # ------------------------------------------------------------------ 6. site nginx (+ HTTPS)
 if [ -n "$DOMAINE" ]; then
   SITE=/etc/nginx/sites-available/$DOMAINE

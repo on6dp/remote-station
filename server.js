@@ -624,6 +624,9 @@ const LB = require('./lib/logbook.js');
 const REFDATA = require('./lib/refdata.js');
 const { Sync, SERVICES: LOG_SERVICES } = require('./lib/logsync.js');
 const VERSION = (() => { try { return require('./package.json').version; } catch (e) { return '0'; } })();
+// Nouvelle version sur GitHub : « 🔔 Mise à jour » au dashboard des administrateurs (lib/update.js) ; updateCheck: false pour couper
+const UPD = new (require('./lib/update.js').Updater)({ root: ROOT, version: VERSION, enabled: cfg.updateCheck !== false,
+  onChange: (st) => { for (const c of ops) if (c.open && c.user && c.user.admin) send(c, st); } });
 // Dans le dossier des journaux par défaut : le seul où le service systemd du VPS peut écrire (ReadWritePaths)
 const book = new LB.Logbook(cfg.logbookFile ? path.resolve(ROOT, cfg.logbookFile) : path.join(LOG_DIR, 'logbook.json'));
 const refs = new REFDATA.RefData(path.join(ROOT, 'refdata'), (msg) => console.error(msg));
@@ -3189,7 +3192,8 @@ function loggedIn(conn, call, rec, sessionTok) {
     stationGrid: String(cfg.stationGrid || '').toUpperCase(),
     stationQth: String(cfg.stationQth || '').toUpperCase(),
     qo100If: cfg.qo100If && typeof cfg.qo100If === 'object' ? cfg.qo100If : DEFAULTS.qo100If,
-    session: sessionTok || null
+    session: sessionTok || null,
+    version: VERSION
   });
   sendClusterSpots(conn);
   send(conn, { t: 'cluster_list', list: clusterList().map(({ name, key, info, def, host, port }) => ({ name, key, info, def: !!def, host, port })), cur: connClusterKey(conn) });
@@ -3197,6 +3201,7 @@ function loggedIn(conn, call, rec, sessionTok) {
   send(conn, { t: 'events', list: recentEvents });
   send(conn, { t: 'chatlog', list: chatLog });
   sendWorked(true, conn);
+  if (conn.user.admin) { const us = UPD.state(); if (us.latest || us.job) send(conn, us); }
   broadcast();
 }
 
@@ -3887,6 +3892,18 @@ function onOperator(conn, m) {
       return;
     }
 
+    case 'upd_install': {
+      // Mise à jour depuis le dashboard : administrateurs seulement ; le serveur ne fait qu'écrire la demande (update/request)
+      if (!conn.user.admin) return send(conn, { t: 'notice', level: 'warn', msg: 'Mise à jour : réservée aux administrateurs' });
+      const e = UPD.install(String(m.v || ''), conn.user.call);
+      journal('update_request', { call: conn.user.call, v: String(m.v || '').slice(0, 20), err: e || undefined });
+      if (e) return send(conn, { t: 'notice', level: 'warn', msg: e });
+      for (const c of ops) if (c.open && c.user && c !== conn) send(c, { t: 'notice', level: 'warn', msg: 'Mise à jour du serveur vers ' + m.v + ' lancée par ' + conn.user.call + ' : la station sera coupée environ une minute.' });
+      return;
+    }
+    case 'upd_check':
+      if (!conn.user.admin) return;
+      return UPD.check().then(() => send(conn, UPD.state()));
     case 'vm_list': case 'vm_put': case 'vm_get': case 'vm_del': case 'vm_name': case 'vm_set': case 'vm_play': case 'vm_stop': case 'vm_tts': case 'vm_tts_del': case 'vm_tts_try':
       return onVm(conn, m);
     case 'ptt':

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.15** — Dashboard : bouton « 🔔 Mise à jour X.Y.Z » pour les administrateurs (nouvelle version vérifiée sur GitHub toutes les 30 min, cloche qui sonne, nouveautés, Installer maintenant : téléchargement, empreinte SHA-256 vérifiée et install.sh par un service root séparé) — première fois : mise à jour à la main
 - **0.39.14** — Config. Macros : bouton ▶ Écouter sur fond bleu
 - **0.39.13** — Messages vocaux en français : 6, 8 et 5 de l'indicatif dits en entier (six, huit, cinq — plus « si Delta »)
 - **0.39.12** — TRX SSB : bouton « Messages vocaux… » renommé « Config. Macros »

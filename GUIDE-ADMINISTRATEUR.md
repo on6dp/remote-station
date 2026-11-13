@@ -63,6 +63,23 @@ Les membres, eux, ont le **manuel d'utilisation** ([MANUEL.md](MANUEL.md), aussi
 
 ## 3. Mettre à jour le serveur
 
+### Depuis le dashboard : bouton « 🔔 Mise à jour » (à partir de la 0.39.15)
+
+Le serveur regarde toutes les 30 minutes sur GitHub (github.com/on6dp/remote-station, dépôt public) si une version plus récente est publiée. Si oui, **les administrateurs** voient en haut à droite du dashboard un bouton jaune **🔔 Mise à jour X.Y.Z** : la cloche bouge et sonne (un « ding-dong ») à son apparition — si le navigateur bloque le son avant le premier clic, elle sonne au premier clic dans la page.
+
+1. Clic sur le bouton : version en service → nouvelle version, et la liste des nouveautés.
+2. **Installer maintenant** → confirmer. Le VPS télécharge le paquet officiel sur GitHub, **vérifie son empreinte SHA-256**, le décompresse dans `/opt` et lance `install.sh` (comme à la main). La station est coupée **environ une minute** ; tous les membres connectés sont prévenus.
+3. Pendant l'installation, le bouton passe en bleu ⏳ avec l'étape en cours ; en cas d'échec, rouge ⚠ avec la raison (bouton **Réessayer**).
+4. À la reconnexion, le dashboard affiche « ✓ Remote Station X.Y.Z installée : rechargez la page (Ctrl+F5) ».
+
+- **La toute première fois**, il faut faire la mise à jour **à la main** (ci-dessous) : c'est `install.sh` qui met en place le programme de mise à jour. Tant qu'il n'est pas en place, le volet du bouton montre les commandes à taper.
+- Sécurité : le serveur Remote Station (utilisateur `remotestation`) ne fait qu'écrire le numéro de version voulu dans `/opt/remote-station/update/request`. C'est un service de root séparé (`remote-station-update.path` / `.service`, programme `/usr/local/sbin/remote-station-update`, que le service ne peut pas modifier) qui télécharge depuis l'adresse GitHub fixée dans ce programme, vérifie et installe. Le serveur n'a aucun droit d'administrateur du VPS.
+- Journal de chaque mise à jour : `sudo tail -40 /var/log/remote-station-update.log`.
+- Couper la vérification : `"updateCheck": false` dans `config.json`.
+- L'instance de test (test.op0p.be) est mise à la même version par `install.sh`, comme avant.
+
+### À la main
+
 Chaque version est livrée sous forme d'archive `remote-station-X.Y.Z.tar.gz` (dossier [releases/](releases/README.md) du dépôt GitHub, avec ses empreintes SHA-256).
 
 1. Copier l'archive dans `/home/on6dp` avec **WinSCP** (supprimer les anciennes archives pour ne pas se tromper).
@@ -191,6 +208,7 @@ sudo systemctl restart remote-station
 | `stationEditors` | ON6DP, ON4LUC | Responsables de la station (section 2) |
 | `stationTz` | Europe/Brussels | Fuseau des statistiques |
 | `clusterHost`, `clusterPort`, `clusterCall`, `clusterCmds` | op0p.be, 8000 | DX cluster de la carte de bande ; `clusterHost` vide = sans cluster. Les spots des opérateurs (case « Spot cluster » au log) passent par une courte liaison au même cluster sous l'indicatif de leur compte (pas `clusterCall` ni le TX call) ; journal `spot` |
+| `updateCheck` | `true` | Vérifie toutes les 30 min sur GitHub si une nouvelle version existe : bouton « 🔔 Mise à jour » au dashboard des administrateurs (voir §3) ; `false` = pas de vérification |
 | `pskReporter`, `pskAntenna` | `true`, vide | Stations FT8 / FT4 / FT2 décodées envoyées à PSK Reporter (pskreporter.info) toutes les 5 min sous `digiCall` et `stationGrid`, comme WSJT-X (UDP vers report.pskreporter.info:4739) ; `false` = arrêt ; `pskAntenna` : texte d'antenne affiché sur la carte |
 | `qsyOrigins` | dx.op0p.be, cluster.op0p.be | Sites de DX cluster autorisés à caler le TRX sur un spot |
 | `ftx1SubCat`, `ftx1SubSingle` | `true`, `false` | FTX-1 : MAIN / SUB par le dashboard (en réception simple : refusé, sauf essais) |

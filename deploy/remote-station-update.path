@@ -1,0 +1,9 @@
+[Unit]
+Description=Remote Station : mise à jour demandée depuis le dashboard
+
+[Path]
+PathExists=/opt/remote-station/update/request
+Unit=remote-station-update.service
+
+[Install]
+WantedBy=multi-user.target

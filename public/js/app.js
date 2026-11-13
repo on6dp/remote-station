@@ -2134,8 +2134,11 @@
           try { localStorage.setItem('rs.sess', m.session); } catch (x) {}
         }
         if (!m.allowTx) say('Émission désactivée sur ce serveur : réglages et écoute uniquement.', 'warn', 8000);
+        updHello(m);
         if (player.on) send(listenMsg(true)); // reprise de l'écoute après une reconnexion
         render();
+      } else if (m.t === 'upd') {
+        updShow(m);
       } else if (m.t === 'login_fail') {
         creds = null;
         if (m.session) forgetSession();
@@ -2459,6 +2462,84 @@
     dxcShow(false);
   });
   document.addEventListener('click', (e) => { if (!$('dxcMenu').hidden && !e.target.closest('.dxc-wrap')) dxcShow(false); });
+
+  // ------------------------------------------------------------------ 🔔 Mise à jour (administrateurs)
+  // Le serveur vérifie GitHub toutes les 30 min ; nouvelle version : bouton « 🔔 Mise à jour x.y.z » qui sonne, bip à son
+  // apparition ; clic = nouveautés et « Installer maintenant » (le VPS télécharge, vérifie et installe, ~1 min de coupure)
+  var UPD = { m: null, beeped: '', pageVer: null, done: '' };
+  function updBeep() {
+    try {
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const go = () => {
+        const t0 = ac.currentTime + 0.03;
+        // « ding-dong » de cloche : deux notes avec harmonique, longue décroissance
+        [[1318.5, 0], [987.8, 0.32]].forEach(([f, dt]) => {
+          for (const [mul, a] of [[1, 0.22], [2.76, 0.05]]) {
+            const o = ac.createOscillator(), g = ac.createGain();
+            o.type = 'sine'; o.frequency.value = f * mul;
+            g.gain.setValueAtTime(0, t0 + dt);
+            g.gain.linearRampToValueAtTime(a, t0 + dt + 0.008);
+            g.gain.exponentialRampToValueAtTime(0.0005, t0 + dt + 0.9);
+            o.connect(g).connect(ac.destination);
+            o.start(t0 + dt); o.stop(t0 + dt + 0.95);
+          }
+        });
+        setTimeout(() => { try { ac.close(); } catch (e) {} }, 1600);
+      };
+      if (ac.state === 'suspended') {
+        // son bloqué avant le premier clic dans la page : il sonnera au premier clic
+        ac.resume().then(() => { if (ac.state === 'running') go(); });
+        const once = () => { document.removeEventListener('pointerdown', once, true); ac.resume().then(go); };
+        document.addEventListener('pointerdown', once, true);
+      } else go();
+    } catch (e) { /* pas de son */ }
+  }
+  function updEsc(t) { return String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function updOpen(on) {
+    $('updMenu').hidden = !on;
+    $('updBtn').setAttribute('aria-expanded', on ? 'true' : 'false');
+  }
+  function updShow(m) {
+    UPD.m = m;
+    const v = m.latest || (m.job && m.job.v) || '';
+    const show = !!(me && me.admin && v);
+    $('updWrap').hidden = !show;
+    if (!show) return updOpen(false);
+    $('updVer').textContent = v;
+    const job = m.job, busy = job && (job.state === 'wait' || job.state === 'run'), fail = job && job.state === 'fail';
+    $('updBtn').classList.toggle('upd-busy', !!busy);
+    $('updBtn').classList.toggle('upd-fail', !!fail);
+    $('updBtn').querySelector('.upd-bell').textContent = busy ? '⏳' : fail ? '⚠' : '🔔';
+    $('updHead').innerHTML = 'Version en service <b>' + updEsc(m.cur) + '</b> → nouvelle version <b>' + updEsc(v) + '</b>';
+    $('updNotes').innerHTML = (m.notes || []).map((n) => '<li><b>' + updEsc(n.v) + '</b> ' + updEsc(n.t.replace(/\*\*/g, '')) + '</li>').join('') || '<li>Nouveautés : voir CHANGELOG.md</li>';
+    $('updState').textContent = busy ? (job.msg || 'Installation en cours…') + (job.by ? ' (lancée par ' + job.by + ')' : '') : fail ? 'Échec : ' + job.msg : '';
+    $('updState').className = 'upd-state' + (fail ? ' upd-err' : '');
+    $('updGo').hidden = !m.can || !!busy;
+    $('updGo').textContent = fail ? 'Réessayer' : 'Installer maintenant';
+    const cmd = $('updCmd');
+    cmd.hidden = !!m.can;
+    if (!m.can) cmd.textContent = 'Installation à la main (une fois ; ensuite, ce bouton installe tout seul) :\nsudo tar -xzf remote-station-' + v + '.tar.gz -C /opt\nsudo bash /opt/remote-station/deploy/install.sh';
+    if (m.latest && UPD.beeped !== m.latest && !busy) { UPD.beeped = m.latest; updBeep(); }
+  }
+  function updHello(m) {
+    // Reconnexion après la mise à jour : la page vient d'une ancienne version
+    if (UPD.pageVer == null) { UPD.pageVer = m.version || ''; return; }
+    if (m.version && m.version !== UPD.pageVer && UPD.done !== m.version) {
+      UPD.done = m.version;
+      $('updWrap').hidden = true;
+      say('✓ Remote Station ' + m.version + ' installée : rechargez la page (Ctrl+F5) pour l’utiliser.', 'ok', 30000);
+    }
+  }
+  $('updBtn').addEventListener('click', (e) => { e.stopPropagation(); updOpen($('updMenu').hidden); });
+  $('updMenu').addEventListener('click', (e) => e.stopPropagation());
+  $('updLater').addEventListener('click', () => updOpen(false));
+  $('updGo').addEventListener('click', () => {
+    const m = UPD.m;
+    if (!m || !m.latest) return;
+    if (!confirm('Installer Remote Station ' + m.latest + ' maintenant ?\n\nLe VPS télécharge la version sur GitHub, vérifie son empreinte et l’installe : la station est coupée environ une minute (tous les membres connectés sont prévenus), puis chacun recharge sa page.')) return;
+    send({ t: 'upd_install', v: m.latest });
+  });
+  document.addEventListener('click', (e) => { if (!$('updMenu').hidden && !e.target.closest('.upd-wrap')) updOpen(false); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') dxcShow(false); });
   $('txCallSel').addEventListener('change', () => {
     if (!iControl()) return render();

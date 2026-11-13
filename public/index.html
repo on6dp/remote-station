@@ -63,6 +63,16 @@
           <span class="dxc-tel" id="dxcTel" hidden></span>
         </span>
       </span>
+      <span class="upd-wrap" id="updWrap" hidden>
+        <button class="btn upd-btn" id="updBtn" type="button" aria-haspopup="true" aria-expanded="false" title="Nouvelle version de Remote Station : cliquer pour voir les nouveautés et l'installer (administrateurs)"><span class="upd-bell" aria-hidden="true">🔔</span><span>Mise à jour</span><b id="updVer"></b></button>
+        <div class="rig-menu upd-menu" id="updMenu" hidden>
+          <p class="upd-head" id="updHead"></p>
+          <ul class="upd-notes" id="updNotes"></ul>
+          <p class="upd-state" id="updState"></p>
+          <div class="upd-act"><button class="btn upd-go" id="updGo" type="button">Installer maintenant</button><button class="btn" id="updLater" type="button">Plus tard</button></div>
+          <pre class="upd-cmd" id="updCmd" hidden></pre>
+        </div>
+      </span>
       <a class="btn help-btn" id="statsBtn" href="/stats" target="_blank" rel="noopener" title="Statistiques d'utilisation de la station (administrateurs)" hidden>📊 STATS</a>
       <a class="btn help-btn" id="helpBtn" href="/aide" target="_blank" rel="noopener" title="Manuel d'utilisation / User manual">HELP</a>
     </div>

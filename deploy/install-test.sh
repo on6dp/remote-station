@@ -68,7 +68,7 @@ VERSION="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$SRC/package.json" | hea
 mkdir -p "$DST"
 tar -C "$SRC" \
   --exclude=./config.json --exclude=./users.json --exclude=./users.json.tmp --exclude=./sessions.json --exclude=./macros.json \
-  --exclude=./profiles.json --exclude=./logs --exclude=./sstv --exclude=./voicemem --exclude=./tts --exclude=./releases --exclude=./.git \
+  --exclude=./profiles.json --exclude=./logs --exclude=./sstv --exclude=./voicemem --exclude=./tts --exclude=./releases --exclude=./update --exclude=./.git \
   --exclude='./comptes-*.csv' -cf - . | tar -C "$DST" -xf -
 # Voix de synthèse (Piper) : celles du serveur du club, partagées (lecture seule)
 [ -e "$DST/tts" ] || { [ -d "$SRC/tts" ] && ln -s "$SRC/tts" "$DST/tts"; } || true

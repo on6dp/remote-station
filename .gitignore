@@ -20,3 +20,6 @@ refdata/
 voicemem/
 tts/
 logs/cluster-pref.json
+
+# Demande de mise à jour depuis le dashboard (VPS)
+update/
