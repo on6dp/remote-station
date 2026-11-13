@@ -3014,3 +3014,18 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 /* Page RTTY : moins d'espace entre les fenêtres des VFO et la ligne des macros (la poignée mange les écarts) */
 .ctab-pane.rt > .rt-hgrip { margin: -6px 0; }
 .ctab-pane.rt .rt-tx-col > .rt-macros { padding-top: 3px; }
+/* Page RTTY : plus de bouton « Émettre » (F11 = TX, F12 = RX, Ctrl+Entrée) ni de ligne d'explication sous les macros ;
+   pas de ligne d'aide vide entre les VFO du haut et les fenêtres des décodeurs (sauf message d'état) */
+.ctab-pane.rt #rtSend, .ctab-pane.rt #rtTxState { display: none !important; }
+.ctab-pane.rt:has(#rtVfo) #rtTip { display: none; }
+.ctab-pane.rt:has(#rtVfo) > .dg-bar:not(:has(#rtStatus:not(:empty))) { display: none; }
+.ctab-pane.rt > #rtVfo { margin-bottom: 0; }
+/* Page RTTY : Effacer, Log QSO et Spot cluster à droite de la 1re rangée de macros */
+.ctab-pane.rt .rt-tx-row[hidden] { display: none; }
+.rt-macline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rt-macline > .rt-macros { flex: 0 1 auto; }
+.rt-macline > .rt-macact { flex: none; flex-wrap: nowrap; align-items: center; gap: 6px; padding: 6px 8px 0 0; }
+.rt-macline > .rt-macact .btn { flex: none; padding-block: 4px; }
+.rt-macline .btn-log { border-color: var(--v2-accent-cyan); color: var(--v2-accent-cyan-bright); }
+/* Page RTTY : texte des macros en blanc (nom et touche F) */
+.ctab-pane.rt .rt-macros .btn, .ctab-pane.rt .rt-macros .btn small { color: #fff; }

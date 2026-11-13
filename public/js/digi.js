@@ -389,7 +389,9 @@
     <div class="rt-grid rt-stack">
       <!-- Émission sous la réception, sur toute la largeur (comme JTTY et FLDIGI) : macros F1 à F12 sur une ligne -->
       <div class="dg-col rt-tx-col">
-        <div class="rt-macros" id="rtMacros"></div>
+        <!-- 1re rangée : macros F1 à F12, puis Effacer, Log QSO et Spot cluster à leur droite -->
+        <div class="rt-macline"><div class="rt-macros" id="rtMacros"></div><div class="rt-tx-act2 rt-macact"><button class="btn" type="button" id="rtTxClear">Effacer</button>
+            <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station (correspondant, RST, heure…)">Log QSO</button><label class="spotlog dg-spot" title="Cochée : le QSO enregistré (Log QSO) est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label></div></div>
         <!-- Contest RTTY : choix du contest, échange envoyé, numéro de série, et ses macros (touches F1 à F12 quand un contest est choisi) -->
         <div class="rt-contest" id="rtContest">
           <label class="rtc-l" title="Contest RTTY : l'échange et les macros contest suivent ; touches F1 à F12 = macros contest">Contest
@@ -405,11 +407,9 @@
           <button class="dg-mini" type="button" id="rtcNr1" title="Remettre le numéro de série à 001 (début du contest)">↺ 001</button>
         </div>
         <div class="rt-macros rtc-macros" id="rtcMacros"></div>
-        <div class="rt-tx-row">
+        <div class="rt-tx-row" hidden>
           <div class="rt-tx-act">
             <button class="btn btn-tx" type="button" id="rtSend" title="Émet le texte en RTTY avec les réglages du décodeur marqué TX (A ou B), puis retour en réception">Émettre</button>
-            <div class="rt-tx-act2"><button class="btn" type="button" id="rtTxClear">Effacer</button>
-            <button class="btn btn-log" type="button" data-log title="Enregistrer le QSO dans le carnet de la station (correspondant, RST, heure…)">Log QSO</button><label class="spotlog dg-spot" title="Cochée : le QSO enregistré (Log QSO) est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label></div>
           </div>
         </div>
         <p class="dg-tx rt-tx-note" id="rtTxState">Émission RTTY sous <b>ON5VL</b> : texte de la fenêtre TX du VFO, puis « Émettre » (Ctrl+Entrée).</p>
