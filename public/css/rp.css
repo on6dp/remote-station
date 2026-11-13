@@ -2883,3 +2883,5 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .upd-go[hidden] { display: none; }
 .upd-cmd { margin: 6px 0 0; padding: 6px; background: #07090d; border: 1px solid var(--v2-border); border-radius: 4px; white-space: pre-wrap; font-size: 11px; color: #cfe3ff; }
 .upd-cmd[hidden] { display: none; }
+/* Page FT8 / FT4 / FT2 (TRX DIGI) : PRENDRE LA MAIN / LIBÉRER LA MAIN à la taille des autres boutons de l'en-tête */
+#dgCtlChip .rs-ctlb { font-size: 11px; padding: 3px 10px; min-height: 0; line-height: 1.3; border-width: 1px; }
