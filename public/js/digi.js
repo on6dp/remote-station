@@ -288,6 +288,7 @@
     <div class="dg-prog" id="dgProg" title="Période en cours : vert = réception, rouge = émission"><i id="dgProgBar"></i><span id="dgProgTxt"></span></div>
     <!-- Messages Tx1 à Tx7 dans l'onglet, sous les listes (comme WSJT-X) -->
     <div class="ft-tx"><div class="msgs-b ft-msgs" id="msgFtx"></div>
+      <button type="button" class="ft-qso-tgl" id="ftQsoTgl" aria-expanded="true" title="Masquer la fiche du QSO pour agrandir les fenêtres de trafic (les macros restent) ; elle revient dès qu’on clique sur un indicatif">▾ FICHE QSO · masquer</button>
       <div class="ft-qso" id="ftQso" title="QSO en cours : le correspondant choisi (double-clic sur son message) ; indicatif, locator et reports modifiables à la main">
         <span class="fq-t">QSO</span>
         <label>Indicatif <input id="fqCall" maxlength="12" spellcheck="false" autocomplete="off"></label>
@@ -4172,7 +4173,17 @@
   // Période du correspondant (parité du créneau de son message) : on émet dans l'autre période
   let dxPar = null;
   const SLOT_MS = { FT8: 15000, FT4: 7500, FT2: 3750 };
+  // Fiche du QSO sous les macros : masquable (plus de place pour les fenêtres de trafic), revient au choix d'un indicatif
+  function qsoShow(on) {
+    const box = $('ftQsoTgl') && $('ftQsoTgl').parentElement;
+    if (!box) return;
+    box.classList.toggle('qso-hid', !on);
+    $('ftQsoTgl').setAttribute('aria-expanded', String(!!on));
+    $('ftQsoTgl').textContent = on ? '▾ FICHE QSO · masquer' : '▸ FICHE QSO · afficher';
+    store.set('qsohid', on ? '0' : '1');
+  }
   function pickFromDecode(d, slot, side) {
+    qsoShow(true);
     if (ftDual) { ftSide = side === 'B' ? 'B' : 'A'; sideBtns(); } // TX automatique sur le VFO de la station appelée
     if (slot && SLOT_MS[mode]) dxPar = { mode, call: '', parity: Math.round(slot / SLOT_MS[mode]) % 2 };
     let w = d.msg.toUpperCase().split(/\s+/).map((x) => x.replace(/^<|>$/g, ''));
@@ -5700,6 +5711,7 @@
       if (again) { announce(); return; } // fenêtre séparée raccrochée à un dashboard rechargé
       buildDom();
       bmInit();
+      if ($('ftQsoTgl')) { $('ftQsoTgl').addEventListener('click', () => qsoShow($('ftQsoTgl').parentElement.classList.contains('qso-hid'))); qsoShow(store.get('qsohid', '0') !== '1'); }
       document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.addEventListener('click', (e) => {
         e.stopPropagation();
         if (b.dataset.tab === 'log' && LOGP) return openLogWin(); // carnet : dans sa propre fenêtre

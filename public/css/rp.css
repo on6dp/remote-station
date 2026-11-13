@@ -2663,3 +2663,7 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .cwp-follow[aria-pressed='true'] { background: #1f6feb; border-color: #58a6ff; }
 .cwp-follow:disabled { opacity: .45; cursor: default; }
 .cwp-follow[hidden] { display: none; }
+/* Page FT : fiche du QSO sous les macros masquable (les macros restent) ; elle revient au clic sur un indicatif */
+.ft-qso-tgl { display: block; width: 100%; margin: 6px 0 4px; padding: 2px 8px; text-align: left; background: #0d1622; color: #ffd400; font-weight: 800; font-size: 11.5px; letter-spacing: .5px; border: 1px solid var(--v2-border); border-radius: 5px; cursor: pointer; }
+.ft-qso-tgl:hover { border-color: #fff; }
+.ft-tx.qso-hid .ft-qso, .ft-tx.qso-hid .ft-qsolog { display: none !important; }
