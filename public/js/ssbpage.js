@@ -57,7 +57,8 @@
   }
   function fillContests() {
     const sel = $('ssCtst');
-    for (const c of C.SSB) sel.add(new Option(c.name + (c.verif ? '' : ' *'), c.id));
+    // Ordre alphabétique (sans tenir compte des majuscules ni des accents)
+    for (const c of C.SSB.slice().sort((a, b) => (/-OTHER$/.test(a.id) - /-OTHER$/.test(b.id)) || a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))) sel.add(new Option(c.name + (c.verif ? '' : ' *'), c.id));
     sel.value = S.id;
     const bs = $('ssBand');
     for (const b of C.BANDS) bs.add(new Option(b === 'ALL' ? 'toutes' : b.toLowerCase(), b));

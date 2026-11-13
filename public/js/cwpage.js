@@ -147,7 +147,7 @@
     const k = kit();
     const sel = $('cwpCtst');
     if (!k || sel.options.length > 1) return;
-    for (const c of k.contests()) sel.add(new Option(c.name, c.id));
+    for (const c of k.contests().slice().sort((a, b) => (/-OTHER$/.test(a.id) - /-OTHER$/.test(b.id)) || a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))) sel.add(new Option(c.name, c.id)); // ordre alphabétique
   }
   function ctstDraw() {
     const k = kit();

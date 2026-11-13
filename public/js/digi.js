@@ -4870,7 +4870,7 @@
   function initContest() {
     const sel = $('rtcSel');
     if (!sel) return;
-    for (const [id, name] of RT_CONTESTS) sel.add(new Option(name, id));
+    for (const [id, name] of RT_CONTESTS.slice().sort((a, b) => (/-OTHER$/.test(a[0]) - /-OTHER$/.test(b[0])) || a[1].localeCompare(b[1], 'fr', { sensitivity: 'base' }))) sel.add(new Option(name, id)); // ordre alphabétique
     const ui = () => {
       sel.value = rtcId();
       $('rtcExch').value = rtcExch();
