@@ -2959,3 +2959,11 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .rt-vfo { margin-bottom: 6px; padding: 6px 8px; }
 .ctab-pane.rt:has(#rtVfo) .rt-rx { min-height: 110px; }
 .ctab-pane.rt:has(#rtVfo) #rtSplitBtn { display: none; }
+/* Page RTTY : fréquence RTTY, ↺, Bande, Zoom de chaque VFO sur la ligne SPLIT (VFO A à gauche, VFO B à droite de STÉRÉO) */
+.rt-vfo .vfb-col { flex-direction: row; align-items: center; }
+.rt-vfo .vfb-col[data-v="0"] { justify-content: flex-start; }
+.rt-vfo .vfb-col[data-v="1"] { justify-content: flex-end; }
+.rt-vfoctl { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.rt-vfoctl select { font: inherit; font-size: 13px; color: var(--v2-text-bright); background: var(--v2-bg-input); border: 1px solid var(--v2-border); border-radius: 5px; padding: 5px 8px; min-width: 0; }
+.rt-vfoctl #rtDial, .rt-vfoctl #rtDialB { min-width: 170px; }
+.rt-vfo.vfb.mir .vfb-col[hidden] { visibility: visible; } /* champs des deux VFO toujours là (même sans SPLIT ni DUAL RX) */

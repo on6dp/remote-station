@@ -670,6 +670,20 @@
             listen: () => { const w = dashW(); try { return w ? w.RSHOST.listen : null; } catch (e) { return null; } },
             mirror: () => { const w = dashW(); try { return w && !w.closed ? w.document : null; } catch (e) { return null; } }
           });
+          // Ligne SPLIT : à gauche, fréquence RTTY, ↺, Bande, Zoom du VFO A (déplacés de la barre de la cascade) ;
+          // à droite de STÉRÉO, les mêmes pour le VFO B
+          const ca = vb.querySelector('.vfb-col[data-v="0"]'), cb = vb.querySelector('.vfb-col[data-v="1"]');
+          if (ca && cb) {
+            const ga = document.createElement('div'), gb = document.createElement('div');
+            ga.className = gb.className = 'rt-vfoctl';
+            for (const id of ['rtDial', 'rtQsy', 'rtSpan', 'rtZoom']) { const x = rp.querySelector('#' + id); if (x) ga.appendChild(x); }
+            gb.innerHTML = '<select id="rtDialB" aria-label="Fréquence RTTY du VFO B" title="Fréquence RTTY du VFO B : le VFO B y va tout de suite (DATA-U)"></select>' +
+              '<button class="btn dg-back" type="button" id="rtQsyB" title="Remettre le VFO B sur cette fréquence (en DATA-U)" aria-label="Remettre le VFO B sur cette fréquence">↺</button>' +
+              '<select id="rtSpanB" aria-label="Largeur de la cascade du VFO B" title="Bande audio affichée (la même pour les deux cascades)">' + ga.querySelector('#rtSpan').innerHTML + '</select>' +
+              '<select id="rtZoomB" aria-label="Zoom de la cascade du VFO B" title="Zoom (le même pour les deux cascades)">' + ga.querySelector('#rtZoom').innerHTML + '</select>';
+            ca.prepend(ga);
+            cb.prepend(gb);
+          }
         }
       }
       // 👁 SUIVRE L'OPÉRATEUR juste à droite du bouton de la main, comme sur la page SSB (grisé pour celui qui a la main)
@@ -3076,6 +3090,47 @@
     // Choisir une bande dans la liste y envoie directement le TRX (QSY)
     dial.addEventListener('change', () => { store.set('rtdial', dial.value); qsyTo(Number(dial.value)); });
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
+    // Page RTTY : mêmes champs pour le VFO B (ligne SPLIT, à droite) ; Bande et Zoom communs aux deux cascades
+    if ($('rtDialB')) {
+      const db = $('rtDialB');
+      const fillB = () => {
+        const st = api && api.state(), f = st && st.radio && st.radio.freqB;
+        const L = withQo(RTTY_DIAL, 'RTTY');
+        const key = L.length + ':' + (f ? Math.round(f / 1e5) : 0);
+        if (db.dataset.k === key) return;
+        db.dataset.k = key;
+        fillList(db, L);
+        const near = f ? L.filter((x) => !x[2]).reduce((a, x) => (!a || Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a), null) : null;
+        if (near && Math.abs(near[1] * 1000 - f) < 500000) db.value = String(near[1]);
+        else db.value = store.get('rtdialb', '14085');
+      };
+      const qsyBr = () => {
+        if (!api) return;
+        if (!api.iControl()) { db.dataset.k = ''; fillB(); return api.say('Prenez la main pour changer la fréquence du VFO-B.', 'warn'); }
+        const st = api.state();
+        if (st && st.ptt && st.ptt.active) return api.say('Réglage bloqué pendant l’émission.', 'warn');
+        const khz = Number(db.value);
+        if (!khz) return;
+        store.set('rtdialb', String(khz));
+        api.setFreq(Math.round(khz * 1000), 'B', true);
+        const R = api.rig();
+        const mk = (R.MODE_KEYS || []).find((x) => /^(DATA-U|USB-D|D-U|USB-DATA)$/i.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
+        if (mk) {
+          const want = (n) => { const r = api.state() && api.state().radio; if (n && r && r.modeB === mk[1]) return; api.send({ t: 'set', mode: mk[0], sub: true }); if (n < 2) setTimeout(() => want(n + 1), 1200); };
+          setTimeout(() => want(0), 30);
+        }
+      };
+      db.addEventListener('change', qsyBr);
+      $('rtQsyB').addEventListener('click', qsyBr);
+      const mirrorSel = (b, a) => {
+        b.addEventListener('change', () => { a.value = b.value; a.dispatchEvent(new Event('change')); });
+        setInterval(() => { if (b.value !== a.value && b.ownerDocument.activeElement !== b) b.value = a.value; fillB(); }, 700);
+        b.value = a.value;
+      };
+      mirrorSel($('rtSpanB'), $('rtSpan'));
+      mirrorSel($('rtZoomB'), $('rtZoom'));
+      fillB();
+    }
     $('rtTxClear').addEventListener('click', () => { $('rtTxt').value = ''; });
     $('rtSend').addEventListener('click', () => dtxClick('RTTY'));
     $('rtTxt').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); dtxClick('RTTY'); } });
