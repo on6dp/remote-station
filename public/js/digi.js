@@ -435,7 +435,7 @@
       </div>
       <!-- LOG RTTY : les QSO RTTY du carnet général (hors contest, ou ceux du contest choisi), le plus récent en haut -->
       <div class="dg-col rt-logbox" id="rtLogBox">
-        <div class="rt-loghd"><button class="btn rt-logx" type="button" id="rtLogAdi" title="Exporter en ADIF (.adi) les QSO RTTY affichés : hors contest, ou ceux du contest choisi (vos QSO sous ce TX call)">EXPORTER ADIF</button><b id="rtLogZoom" title="Clic : agrandir le log au centre de la page (nouveau clic, ou Échap : le remettre à sa place)">LOG RTTY ⤢</b> <span id="rtLogInfo"></span></div>
+        <div class="rt-loghd"><span class="rt-logxw"><button class="btn rt-logx" type="button" id="rtLogAdi" title="Exporter des QSO RTTY : les vôtres en un clic, ou avec des filtres (TX call, opérateur, dates, contest), en ADIF ou Cabrillo">EXPORTER ▾</button><span class="rt-logxm" id="rtLogXm" hidden><button type="button" data-x="mine">Mes QSO RTTY (.adi)</button><button type="button" data-x="adif">ADIF (.adi)…</button><button type="button" data-x="cab">Cabrillo (.log)…</button></span></span><b id="rtLogZoom" title="Clic : agrandir le log au centre de la page (nouveau clic, ou Échap : le remettre à sa place)">LOG RTTY ⤢</b> <span id="rtLogInfo"></span></div>
         <div class="cwp-clogw rt-logw"><table class="cwp-clog rt-log"><thead><tr id="rtLogHead"></tr></thead><tbody id="rtLogBody"></tbody></table></div>
       </div>
     </div>
@@ -3220,7 +3220,12 @@
       });
       g.addEventListener('dblclick', () => setIo(null, true));
     }
-    if ($('rtLogAdi')) $('rtLogAdi').addEventListener('click', rtLogExport);
+    if ($('rtLogAdi')) {
+      const xm = $('rtLogXm');
+      $('rtLogAdi').addEventListener('click', (e) => { e.stopPropagation(); xm.hidden = !xm.hidden; });
+      xm.ownerDocument.addEventListener('click', () => { xm.hidden = true; });
+      xm.querySelectorAll('[data-x]').forEach((b) => b.addEventListener('click', () => { xm.hidden = true; rtLogExport(b.dataset.x); }));
+    }
     // LOG RTTY : clic sur son titre = log agrandi au centre de la page ; nouveau clic (ou Échap) = remis à sa place
     if ($('rtLogZoom')) {
       const box = $('rtLogBox');
@@ -5133,10 +5138,51 @@
     rtLogT = setTimeout(() => { try { api.send({ t: 'mode_list', mode: 'RTTY', contest: rtcOn() ? rtcId() : '', limit: 300 }); } catch (e) { /* hors ligne */ } }, 250);
   }
   // Export ADIF des QSO RTTY (hors contest, ou ceux du contest choisi) : fichier enregistré par le navigateur
-  function rtLogExport() {
+  // « Mes QSO RTTY » : vos QSO sous le TX call en cours (hors contest, ou ceux du contest choisi) ;
+  // « ADIF… » / « Cabrillo… » : fenêtre de filtres (TX call, opérateur, dates, contest), plusieurs opérateurs se partageant la station
+  let rtIsAdmin = false;
+  function rtLogExport(kind) {
     if (!api) return;
     const cid = rtcOn() ? rtcId() : '';
-    api.send({ t: 'log_export', fmt: 'adif', callsign: myCall, mine: true, modeOnly: 'RTTY', contest: cid || undefined, contestOnly: !!cid, tag: 'rttypage' });
+    if (kind === 'mine' || !kind) return api.send({ t: 'log_export', fmt: 'adif', callsign: myCall, mine: true, modeOnly: 'RTTY', contest: cid || undefined, contestOnly: !!cid, tag: 'rttypage' });
+    const doc = ($('rtLogBox') && $('rtLogBox').ownerDocument) || document;
+    const old = doc.getElementById('rtExpDlg');
+    if (old) old.remove();
+    const esc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const cab = kind === 'cab';
+    const me = String(opCall || '').toUpperCase();
+    const calls = Array.from(new Set([myCall].concat(stationCalls || [], me ? [me] : []).map((c) => String(c).toUpperCase()).filter(Boolean)));
+    const ops = Array.from(new Set(Array.from(document.querySelectorAll('#rtLogBody tr')).map((tr) => (tr.lastChild && tr.lastChild.textContent) || '').filter((x) => /^[A-Z0-9/]{3,15}$/.test(x))));
+    const ctsts = RT_CONTESTS.filter((c) => c[0] && !/-OTHER$/.test(c[0])).slice().sort((a, b) => a[1].localeCompare(b[1], 'fr', { sensitivity: 'base' }));
+    const dlg = doc.createElement('dialog');
+    dlg.id = 'rtExpDlg';
+    dlg.className = 'macro-dlg qso-log rt-expdlg';
+    dlg.innerHTML = '<form method="dialog"><h3>' + (cab ? 'Exporter un contest RTTY en Cabrillo (.log)' : 'Exporter des QSO RTTY en ADIF (.adi)') + '</h3><div class="ql-g">' +
+      '<label>TX call <select name="cs">' + (rtIsAdmin && !cab ? '<option value="">Tous les TX call</option>' : '') + calls.map((c) => '<option' + (c === String(myCall).toUpperCase() ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select></label>' +
+      '<label>Opérateur <select name="op"><option value="mine">Mes QSO (' + esc(me) + ')</option>' + (rtIsAdmin ? '<option value="">Tous les opérateurs</option>' + ops.filter((o) => o !== me).map((o) => '<option value="' + esc(o) + '">' + esc(o) + '</option>').join('') : '') + '</select></label>' +
+      '<label>QSO <select name="ct">' + (cab ? '' : '<option value="">RTTY hors contest</option><option value="*">Tous les QSO RTTY</option>') +
+        ctsts.map((c) => '<option value="' + esc(c[0]) + '"' + (c[0] === cid ? ' selected' : '') + '>Contest : ' + esc(c[1]) + '</option>').join('') + '</select></label>' +
+      '<label>Du <input type="date" name="from"></label><label>Au <input type="date" name="to"></label>' +
+      (cab ? '<label>Catégorie <select name="cop"><option value="SINGLE-OP">Mono-opérateur</option><option value="MULTI-OP">Multi-opérateur</option><option value="CHECKLOG">Checklog</option></select></label>' +
+        '<label>Puissance <select name="pw"><option value="HIGH">Forte (HIGH)</option><option value="LOW" selected>Faible (LOW)</option><option value="QRP">QRP</option></select></label>' +
+        '<label>Assistance <select name="as"><option value="NON-ASSISTED">Non assisté</option><option value="ASSISTED">Assisté (cluster, skimmer…)</option></select></label>' : '') +
+      '</div><p class="md-prev">' + (rtIsAdmin ? 'Administrateur : tous les TX call et tous les opérateurs possibles.' : 'Vos QSO seulement : sous votre indicatif, ou faits par vous sous un indicatif de la station.') +
+        (cab ? ' Cabrillo : vérifiez la catégorie dans le règlement du contest.' : '') + '</p>' +
+      '<div class="md-act"><span></span><button class="btn" value="cancel">Annuler</button><button class="btn btn-primary" type="button" data-a="go">Exporter</button></div></form>';
+    doc.body.appendChild(dlg);
+    const f = dlg.querySelector('form');
+    dlg.querySelector('[data-a="go"]').addEventListener('click', () => {
+      const ct = f.ct.value, op = f.op.value;
+      const msg = { t: 'log_export', fmt: cab ? 'cabrillo' : 'adif', callsign: f.cs.value, mine: op === 'mine', operator: op && op !== 'mine' ? op : undefined,
+        modeOnly: 'RTTY', from: f.from.value || undefined, to: f.to.value || undefined, tag: 'rttypage' };
+      if (ct === '*') msg.allContests = true;
+      else if (ct) { msg.contest = ct; msg.contestOnly = true; }
+      if (cab) msg.cat = { OPERATOR: f.cop.value, POWER: f.pw.value, ASSISTED: f.as.value, MODE: 'RTTY', TRANSMITTER: 'ONE' };
+      api.send(msg);
+      dlg.close();
+    });
+    dlg.addEventListener('close', () => dlg.remove());
+    try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
   }
   function rtLogSave(m) {
     const doc = ($('rtLogBox') && $('rtLogBox').ownerDocument) || document;
@@ -6653,6 +6699,7 @@
       if (info && info.qo100If && typeof info.qo100If === 'object') qoIf = Object.assign({}, info.qo100If);
       refillQo();
       if (me && me.call) opCall = me.call;
+      rtIsAdmin = !!(me && me.admin);
       if (me) txcMe = { call: String(me.call || '').toUpperCase(), canTx: me.canTx !== false, rxOnly: !!me.rxOnly, digiCall: String((info && info.digiCall) || 'ON5VL').toUpperCase(), clubs: info && Array.isArray(info.clubCalls) ? info.clubCalls.map((c) => String(c).toUpperCase()) : [] };
       drawTxCallDg();
       drawMsgs();

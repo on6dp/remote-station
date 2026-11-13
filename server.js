@@ -3522,13 +3522,15 @@ function onOperator(conn, m) {
       if (m.phoneOnly) list = list.filter((q) => !q.contest_id && (/^(SSB|LSB|USB)$/.test(String(q.mode || '')) || /^(LSB|USB)$/.test(String(q.submode || ''))));
       // Page RTTY : les QSO d'un mode (hors contest, sauf si un contest est demandé)
       const modeOnly = String(m.modeOnly || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
-      if (modeOnly) list = list.filter((q) => String(q.mode || '').toUpperCase() === modeOnly && (m.contestOnly ? true : !q.contest_id));
+      if (modeOnly) list = list.filter((q) => String(q.mode || '').toUpperCase() === modeOnly && (m.contestOnly || m.allContests ? true : !q.contest_id));
+      // Administrateur : les QSO d'un opérateur choisi (plusieurs opérateurs se partagent la station)
+      if (conn.user.admin && m.operator) { const op = String(m.operator).toUpperCase(); list = list.filter((q) => String(q.operator || '').toUpperCase() === op); }
       const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       const who = (String(m.callsign || 'TOUS').toUpperCase().replace(/[^A-Z0-9]/g, '')) + (m.mine ? '-' + me.replace(/[^A-Z0-9]/g, '') : '');
       if (m.fmt === 'cabrillo') {
         return send(conn, { t: 'log_export', name: (m.contestOnly && m.contest ? String(m.contest).toUpperCase().replace(/[^A-Z0-9-]/g, '') + '-' : '') + who + '-' + stamp + '.log', mime: 'text/plain', data: LB.toCabrillo(list, { callsign: m.callsign || cfg.digiCall, contest: m.contest, grid: cfg.stationGrid, club: cfg.clubName && /UBA/.test(cfg.clubName) ? 'UBA-LGE' : '', version: VERSION, cat: m.cat && typeof m.cat === 'object' ? m.cat : null, location: m.location }), count: list.length, tag: m.tag === 'cwpage' || m.tag === 'ssbpage' || m.tag === 'rttypage' ? m.tag : undefined });
       }
-      return send(conn, { t: 'log_export', name: (m.contestOnly && m.contest ? String(m.contest).toUpperCase().replace(/[^A-Z0-9-]/g, '') + '-' : m.phoneOnly ? 'SSB-' : modeOnly ? modeOnly + '-' : '') + who + '-' + stamp + (m.pending ? '-' + m.pending : '') + '.adi', mime: 'text/plain', data: LB.toAdif(list, 'RemoteStation', VERSION), count: list.length,
+      return send(conn, { t: 'log_export', name: (m.contestOnly && m.contest ? String(m.contest).toUpperCase().replace(/[^A-Z0-9-]/g, '') + '-' : m.phoneOnly ? 'SSB-' : modeOnly ? modeOnly + '-' : '') + who + (conn.user.admin && m.operator ? '-OP' + String(m.operator).toUpperCase().replace(/[^A-Z0-9]/g, '') : '') + '-' + stamp + (m.pending ? '-' + m.pending : '') + '.adi', mime: 'text/plain', data: LB.toAdif(list, 'RemoteStation', VERSION), count: list.length,
         pending: m.pending || '', ids: m.pending ? list.map((q) => q.id) : undefined, tag: m.tag === 'cwpage' || m.tag === 'ssbpage' || m.tag === 'rttypage' ? m.tag : undefined });
     }
     case 'log_cfg_get':

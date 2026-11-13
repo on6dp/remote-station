@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.67** — LOG RTTY : menu EXPORTER (Mes QSO RTTY, ADIF avec filtres TX call / opérateur / dates / contest, Cabrillo d'un contest RTTY avec catégorie) ; export par opérateur pour les administrateurs
 - **0.39.66** — LOG RTTY : même style que les logs de la page SSB (titres en majuscules sur fond brun, traits, indicatif en blanc)
 - **0.39.65** — LOG RTTY : colonne DXCC (préfixe) au lieu de Pays, plus de colonne Nom en contest ; bouton EXPORTER ADIF (QSO RTTY hors contest ou du contest choisi)
 - **0.39.64** — LOG RTTY : le QSO enregistré apparaît tout de suite dans le cadre (les messages du carnet n'arrivaient pas à la page RTTY ouverte depuis le dashboard)

@@ -3169,3 +3169,12 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .ctab-pane.rt .rt-log tr.rt-fill td { border-bottom: 0; }
 .ctab-pane.rt .rt-log tr.rt-fill:hover td { background: none; }
 .ctab-pane.rt .rt-log td.rt-lognone { color: var(--v2-text-dim) !important; font-weight: 400; }
+/* LOG RTTY : menu EXPORTER (comme celui du carnet) */
+.rt-logxw { order: 3; margin-left: auto; position: relative; }
+.rt-logxw .rt-logx { margin-left: 0; }
+.rt-logxm { position: absolute; right: 0; top: calc(100% + 4px); z-index: 70; display: flex; flex-direction: column; min-width: 200px; padding: 6px 0;
+  background: #111823; border: 1px solid #3a4658; border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, .6); }
+.rt-logxm[hidden] { display: none; }
+.rt-logxm button { background: none; border: 0; color: #fff; font: 700 13px inherit; text-align: left; padding: 8px 14px; cursor: pointer; }
+.rt-logxm button:hover { background: #1d2633; }
+.qso-log.rt-expdlg .ql-g { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
