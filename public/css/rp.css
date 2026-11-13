@@ -2779,3 +2779,5 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .ssb-clog td:nth-child(3) { color: #fff; font-weight: 800; }
 .ssb-clog tr.dup td { color: #8a95a5; text-decoration: line-through; }
 .ssb-clog tr.dup td:nth-child(9) { text-decoration: none; color: #ff8a7a; }
+/* Pages SSB et CW : A ⇄ B et A → B avec un cadre blanc */
+.vfb-row button[data-a] { border: 1px solid #fff; color: #fff; font-weight: 800; }
