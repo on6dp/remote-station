@@ -2725,3 +2725,13 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .vfb-dual .vfb-drx.on { background: linear-gradient(180deg, #6a3aa8, #3f1d6e); border-color: #c49bff; color: #fff; box-shadow: 0 0 8px rgba(160, 100, 255, .45); }
 /* Page SSB : plus de cases kHz sous les écrans des VFO (la fréquence se règle sur les écrans, comme au dashboard) */
 .vfb.mir .vfb-in { display: none; }
+/* Pages TRX SSB et TRX CW : même en-tête que la fenêtre TRX DIGI — le titre sur sa ligne, puis TX CALL, fréquence, mode, 👥, main… */
+.cwp-head { row-gap: 8px; padding-top: 0; }
+.cwp-head h1 { flex-basis: 100%; margin: 0 -14px; padding: 8px 14px 7px; border-bottom: 1px solid var(--v2-border); background: #0b1018; }
+.cwp-head .cwp-txcl { margin-left: 0; }
+/* Pages SSB et CW : 2e ligne de l'en-tête aux mêmes tailles que la fenêtre TRX DIGI */
+.cwp-head .cwp-txcl { font-size: 13px; color: #ffd400; }
+.cwp-head .cwp-txcl select { font-size: 13px; padding: 3px 6px; color: #f5ff00; background: #3b3a12; border: 1px solid #8a8f00; }
+.cwp-head .cwp-trx { font-size: 22px; letter-spacing: 1px; margin-left: 10px; }
+.cwp-head .cwp-mode { font-size: 13px; font-weight: 800; margin-left: 14px; }
+.cwp-head .cwp-ctl { margin-left: 14px; }
