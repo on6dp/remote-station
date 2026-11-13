@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.40** — Page RTTY en double réception : la cascade du VFO-B garde la hauteur de sa poignée (elle ne se tassait plus qu'à quelques pixels) ; tirée vers le bas, les fenêtres TX / RX raccourcissent puis la zone des deux VFO s'agrandit
 - **0.39.39** — Page RTTY : macro émise affichée dans la fenêtre TX du VFO, caractères barrés au fur et à mesure de l'émission ; bouton Effacer sur chacune des quatre fenêtres (TX / RX, VFO-A / VFO-B) ; plus de boutons X1 / X2 / X4 sur la cascade
 - **0.39.38** — Page RTTY : pour chaque VFO, fenêtre TX à gauche et fenêtre RX à droite, côte à côte (au lieu de la fenêtre TX sous la réception)
 - **0.39.37** — Page RTTY : chaque VFO a sa fenêtre de réception (RX) et, dessous, sa fenêtre d'émission (TX) ; écrire dans la fenêtre TX d'un VFO le choisit pour l'émission (cadre rouge) ; Émettre / Ctrl+Entrée envoie le texte de cette fenêtre

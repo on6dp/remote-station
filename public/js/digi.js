@@ -981,11 +981,34 @@
   // Hauteur de la cascade du VFO-B (double réception) : réglée par sa propre poignée, indépendamment de celle du VFO-A
   // (0 = même hauteur que la cascade A)
   let wfHB = Number(store.get('wfhb', '0')) || 0;
+  const RT_IO_MIN = 70; // RTTY : hauteur minimale des fenêtres TX / RX sous la cascade
+  /** RTTY double réception : hauteur maximale de la cascade c dans sa colonne (fenêtres TX / RX du dessous : RT_IO_MIN) */
+  function rtRoom(c) {
+    const side = c && c.closest('.rt-side'), box = c && c.closest('.dg-wf');
+    if (!side || !box || !side.offsetParent) return -1;
+    let others = 0;
+    for (const k of side.children) if (!k.contains(box) && !k.classList.contains('rt-io') && k.offsetParent) others += k.offsetHeight;
+    return side.clientHeight - others - (box.offsetHeight - c.offsetHeight) - RT_IO_MIN;
+  }
+  /** Poignée d'une cascade RTTY tirée vers le bas au-delà de la place : la zone des deux VFO s'agrandit d'autant
+   *  (les macros descendent), au lieu d'écraser les fenêtres TX / RX */
+  function rtGrow(c, h, save) {
+    const dual = $('rtDual'), room = rtRoom(c);
+    if (!dual || room < 0 || h <= room) return;
+    const nh = Math.round(dual.offsetHeight + (h - room));
+    dual.style.height = nh + 'px';
+    dual.style.flex = 'none';
+    if (save) store.set('rtdualh', String(nh));
+  }
   function sizeB() {
     const c = $('rtWfB');
     if (tab !== 'rtty' || !c || !c.clientWidth) return;
     const s = $('rtScaleB');
-    c.style.height = (wfHB > 0 ? wfHB : $('dgWf').clientHeight) + 'px'; // sa poignée, sinon la hauteur de la cascade A
+    let hB = wfHB > 0 ? wfHB : $('dgWf').clientHeight; // sa poignée, sinon la hauteur de la cascade A
+    // Pas plus haut que la place de la colonne : les fenêtres TX / RX du dessous gardent au moins RT_IO_MIN pixels
+    const room = rtRoom(c);
+    if (room >= 40) hB = Math.min(hB, room);
+    c.style.height = hB + 'px';
     const dpr = wf.dpr || 1;
     const cw = Math.max(120, Math.floor(c.clientWidth));
     const w = Math.round(cw * dpr);
@@ -6018,6 +6041,7 @@
       const WF_DEF = 140;
       const setWfH = (h, save) => {
         const v = Math.max(40, Math.min(420, Math.round(h)));
+        if (tab === 'rtty' && rtDualAudio) rtGrow($('dgWf'), v, save); // RTTY double réception : la colonne s'agrandit au besoin
         $('dgWf').style.height = v + 'px';
         const root = $('dgWf').closest('.dg') || document.documentElement;
         root.style.setProperty('--dg-list-max', Math.max(160, 360 + WF_DEF - v) + 'px');
@@ -6029,7 +6053,7 @@
       // Poignée sous la cascade du VFO-B (double réception) : sa hauteur à elle, sans toucher à la cascade A
       for (const grip of ['rtGripB', 'ftGripB'].map($).filter(Boolean)) {
         const cv = () => $(grip.id === 'rtGripB' ? 'rtWfB' : 'ftWfB');
-        const setB = (h, save) => { wfHB = Math.max(40, Math.min(420, Math.round(h))); if (save) store.set('wfhb', String(wfHB)); if (wf.ctx) { sizeB(); sizeFB(); } };
+        const setB = (h, save) => { wfHB = Math.max(40, Math.min(420, Math.round(h))); if (save) store.set('wfhb', String(wfHB)); if (grip.id === 'rtGripB') rtGrow(cv(), wfHB, save); if (wf.ctx) { sizeB(); sizeFB(); } };
         grip.addEventListener('pointerdown', (e) => {
           e.preventDefault();
           grip.setPointerCapture(e.pointerId);
