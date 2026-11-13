@@ -3156,3 +3156,16 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .rt-loghd .rt-logx { order: 3; margin-left: auto; color: #f5ff00; font-weight: 800; font-size: 11px; letter-spacing: .4px; padding: 3px 10px; border-radius: 6px; background: #121a26; border: 1px solid #3a4658; }
 .rt-loghd .rt-logx:hover { border-color: #f5ff00; }
 #rtLogZoom { order: 1; } #rtLogInfo { order: 2; }
+/* LOG RTTY : même style que les logs de la page SSB (titres en majuscules sur fond brun, traits, indicatif en blanc) */
+.ctab-pane.rt .cwp-clog.rt-log { border-collapse: collapse; font-family: inherit; font-size: 11px; font-variant-numeric: tabular-nums; }
+.ctab-pane.rt .rt-log th { position: sticky; top: 0; z-index: 1; background: #4a2508; color: #fff3dc; font-weight: 800; font-size: 9px; letter-spacing: .8px; text-transform: uppercase;
+  text-align: left; padding: 6px 14px 6px 6px; border: 1px solid #b08850; border-left-width: 0; white-space: nowrap; }
+.ctab-pane.rt .rt-log th:first-child { border-left-width: 1px; }
+.ctab-pane.rt .rt-log td { padding: 4px 14px 4px 6px; color: var(--v2-text-secondary); border-top: 0; border-bottom: 1px solid var(--v2-border-dark); border-right: 1px solid rgba(200, 210, 225, .28); white-space: nowrap; }
+.ctab-pane.rt .rt-log td:last-child { border-right: 0; }
+.ctab-pane.rt .rt-log tr:first-child td { color: var(--v2-text-secondary); }
+.ctab-pane.rt .rt-log td:nth-child(3) { color: var(--v2-text-bright) !important; font-weight: 700; }
+.ctab-pane.rt .rt-log tbody tr:hover td { background: var(--v2-bg-input); }
+.ctab-pane.rt .rt-log tr.rt-fill td { border-bottom: 0; }
+.ctab-pane.rt .rt-log tr.rt-fill:hover td { background: none; }
+.ctab-pane.rt .rt-log td.rt-lognone { color: var(--v2-text-dim) !important; font-weight: 400; }

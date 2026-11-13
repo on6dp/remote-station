@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.66** — LOG RTTY : même style que les logs de la page SSB (titres en majuscules sur fond brun, traits, indicatif en blanc)
 - **0.39.65** — LOG RTTY : colonne DXCC (préfixe) au lieu de Pays, plus de colonne Nom en contest ; bouton EXPORTER ADIF (QSO RTTY hors contest ou du contest choisi)
 - **0.39.64** — LOG RTTY : le QSO enregistré apparaît tout de suite dans le cadre (les messages du carnet n'arrivaient pas à la page RTTY ouverte depuis le dashboard)
 - **0.39.63** — Page RTTY : ligne du QSO au-dessus des macros (CALL — clic sur un indicatif dans la fenêtre de trafic —, RST, échange envoyé / reçu ou nom / QTH, LOG ↵, EFFACER, Spot cluster), en contest ou non
