@@ -2792,3 +2792,4 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 .cwp-entry input:not([type='checkbox'])::placeholder { color: #9a9a9a; }
 .cwp-entry .cwp-esm button:not(.on) { background: #e3d9a8; color: #5a4d1a; }
 .cwp-entry .cwp-ewipe { background: #2a3442; color: #fff; }
+.ssb-clog th { white-space: nowrap; }
