@@ -2640,3 +2640,11 @@ body.digi-popup.dg-hd { --dg-hd: 50px; }
 body.digi-popup .dg-head { margin: -10px -10px 8px; padding: 8px 14px; }
 body.digi-popup.dg-hd #centerPanel { min-height: calc(100vh - 20px - var(--dg-hd)); }
 body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height: calc(100vh - 20px - var(--dg-hd)); }
+/* Page FT en double réception : les deux barres des cascades ont toujours la même disposition — une ligne si tout tient
+   dans les deux, sinon deux lignes dans les deux (VFO, fréquence, mode ; puis Gain, Zéro, Plat, Couleurs, Vitesse) */
+.ft-dual .wf-ctl { flex-wrap: nowrap; overflow: hidden; }
+.ft-dual .wf-ctl > .ft-wfa, .ft-dual .wf-ctl > .ft-wfbl { flex-shrink: 0; white-space: nowrap; }
+.ft-dual .wf-ctl.ft-2l { flex-wrap: wrap; }
+.ft-dual .wf-ctl.ft-2l::before { content: ''; order: 1; flex-basis: 100%; height: 0; }
+.ft-dual .wf-ctl.ft-2l > * { order: 2; }
+.ft-dual .wf-ctl.ft-2l > .ft-wfa, .ft-dual .wf-ctl.ft-2l > .ft-wfbl { order: 0; }

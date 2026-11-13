@@ -906,7 +906,11 @@
     const a = document.querySelector('#centerPanel .dg-wf > .wf-ctl'), b = $('ftWfBox') && $('ftWfBox').querySelector('.wf-ctl');
     if (!a || !b) return;
     a.style.minHeight = ''; b.style.minHeight = '';
+    a.classList.remove('ft-2l'); b.classList.remove('ft-2l');
     if (!ftDual) return;
+    // Même disposition pour les deux barres : une ligne si tout tient dans les deux, sinon deux lignes dans les deux
+    const tight = (e) => e.offsetParent && e.scrollWidth > e.clientWidth + 1;
+    if (tight(a) || tight(b)) { a.classList.add('ft-2l'); b.classList.add('ft-2l'); }
     const h = Math.max(a.offsetHeight, b.offsetHeight);
     a.style.minHeight = b.style.minHeight = h + 'px';
   }
@@ -4669,7 +4673,7 @@
   function ftxState() {
     houndUi();
     // VFO d'émission ou largeur changés : lignes de réglages des cascades remises à la même hauteur
-    { const k = ftDual + '|' + sd() + '|' + window.innerWidth; if (k !== eqKey) { eqKey = k; eqCtl(); } }
+    { const k = ftDual + '|' + sd() + '|' + window.innerWidth + '|' + (($('ftDialA') || {}).className || '') + (($('ftDialA') || {}).textContent || '') + '|' + (($('ftDialB') || {}).className || '') + (($('ftDialB') || {}).textContent || '') + '|' + (($('centerPanel') || {}).className || ''); if (k !== eqKey) { eqKey = k; eqCtl(); } }
     { const k = notchHz('A') + '|' + notchHz('B'); if (k !== notchSeen) { notchSeen = k; drawScale(); } }
     drawQso();
     const st = api && api.state();
