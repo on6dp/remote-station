@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.09** — Messages vocaux : Espacement des lettres sur la ligne de Vitesse ; fin des messages nettoyée (plus de bruit après le dernier mot, voix Gilles), ponctuation finale ajoutée pour Piper
 - **0.39.08** — Messages vocaux en français : N épelé « Novembre », mois dits en français (septembre, octobre, décembre…)
 - **0.39.07** — Messages vocaux en français : CQ se dit « cé kiou »
 - **0.39.06** — Voix Kokoro française (Siwis) ralentie de 20 % (elle parlait trop vite)
