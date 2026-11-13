@@ -3115,3 +3115,21 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .rt-log tr.rt-fill td { border-top: 0; }
 .rt-log th, .rt-log td { border-right: 1px solid rgba(255, 255, 255, .55); }
 .rt-log th:last-child, .rt-log td:last-child { border-right: 0; }
+/* Page RTTY : une seule fenêtre par VFO — le texte reçu et le texte émis au même endroit, en couleurs différentes
+   (émis : rouge ; correspondant — son indicatif ou le nôtre — : vert ; reste du trafic : blanc) ; la ligne de saisie
+   du texte à émettre en bas de la même fenêtre */
+.ctab-pane.rt .rt-io { flex-direction: column; gap: 0; border: 1px solid var(--v2-border-dark, #222c3a); border-radius: 4px; overflow: hidden; }
+.ctab-pane.rt .rt-io > .rt-pane:not(.rt-txbox) { order: 1; flex: 1 1 0; min-height: 0; }
+.ctab-pane.rt .rt-io > .rt-txbox { order: 2; flex: none; height: 50px; border-top: 1px solid #3a4658; }
+.ctab-pane.rt .rt-io > .rt-txbox > .rt-txw { height: 100%; border: 0; border-radius: 0; font-size: 12.5px; padding: 4px 10px; }
+.ctab-pane.rt .rt-io .rt-txshow, .ctab-pane.rt .rt-io .rt-clr[data-clr^="tx"] { display: none !important; }
+.ctab-pane.rt .rt-io .rt-rx { border: 0; border-radius: 0; }
+.rt-rx .rt-rxl { color: #e9f7ff; }
+.rt-rx .rt-rxl.rt-corr { color: #5dfc8d; font-weight: 700; }
+.rt-rx .rt-txline { color: #ff5a4a; }
+/* Macros habituelles (hors contest) : aussi sur deux lignes alignées, F1 à F6 puis F7 à F12, Log QSO et Spot à droite */
+.ctab-pane.rt #rtMacros { display: grid; grid-auto-columns: max-content; gap: 4px; align-items: stretch; }
+.ctab-pane.rt #rtMacros > :nth-child(-n+6) { grid-row: 1; }
+.ctab-pane.rt #rtMacros > :nth-child(n+7) { grid-row: 2; }
+.ctab-pane.rt #rtMacros > .btn { justify-content: flex-start; }
+.ctab-pane.rt .rt-macline { flex-wrap: nowrap; }

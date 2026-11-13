@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.62** — Page RTTY : une seule fenêtre par VFO — texte reçu et émis au même endroit (émis en rouge, correspondant en vert, trafic en blanc), ligne de saisie en bas ; macros habituelles aussi sur deux lignes alignées
 - **0.39.61** — LOG RTTY : colonnes délimitées par un trait fin blanc, jusqu'en bas du cadre
 - **0.39.60** — Page RTTY : LOG RTTY dans la colonne de droite, sous le VFO-B et de la même largeur ; réduire le VFO-B agrandit le log, VFO-B inactif = log sur toute la colonne
 - **0.39.59** — Page RTTY : Prénom (le vôtre) seulement pour les contests dont l'échange le demande ; colonne Nom (du correspondant) dans le LOG RTTY en contest

@@ -345,7 +345,7 @@
         </div>
         <div class="dg-wf-slot" data-slot="rtty-a"></div>
         <div class="rt-io">
-          <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxt" data-ch="0" spellcheck="false" placeholder="TX VFO-A : texte à émettre, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShow" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx0" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
+          <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxt" data-ch="0" spellcheck="false" placeholder="Texte à émettre sur le VFO-A, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShow" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx0" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
           <div class="rt-pane"><pre class="rt-rx" id="rtRx"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx0" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
         </div>
         <i class="rt-iogrip" data-ch="0" title="Glisser vers le haut ou le bas : hauteur des fenêtres TX / RX de ce VFO seulement (double-clic : taille d’origine)"></i>
@@ -383,7 +383,7 @@
           <i class="dg-grip" id="rtGripB" title="Glisser vers le haut ou le bas : hauteur de la cascade du VFO-B, sans toucher à celle du VFO-A (double-clic : même hauteur que celle du VFO-A)"></i>
         </div>
         <div class="rt-io">
-          <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxtB" data-ch="1" spellcheck="false" placeholder="TX VFO-B : texte à émettre, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-B : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShowB" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx1" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
+          <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxtB" data-ch="1" spellcheck="false" placeholder="Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-B : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShowB" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx1" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
           <div class="rt-pane"><pre class="rt-rx" id="rtRxB"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx1" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
         </div>
         <i class="rt-iogrip" data-ch="1" title="Glisser vers le haut ou le bas : hauteur des fenêtres TX / RX de ce VFO seulement (double-clic : taille d’origine)"></i>
@@ -2988,12 +2988,25 @@
     wf.acc = null;
     return true;
   }
+  // Texte reçu, ligne par ligne : en vert les lignes du correspondant (son indicatif, ou le nôtre : on nous appelle),
+  // en blanc le reste du trafic ; le texte émis (lignes rt-txline) est en rouge
+  function rtCorrRe() {
+    const calls = [String(dx.call || '').trim().toUpperCase()].concat(stationCalls || [], [myCall]).map((c) => String(c || '').toUpperCase().replace(/[^A-Z0-9/]/g, '')).filter((c) => c.length >= 3);
+    return calls.length ? new RegExp('(^|[^A-Z0-9/])(' + Array.from(new Set(calls)).join('|') + ')(?![A-Z0-9])') : null;
+  }
   function rttyAppend(text, ch) {
     const el = $(ch === 1 ? 'rtRxB' : 'rtRx');
     if (!el) return;
     const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
-    el.appendChild(document.createTextNode(text));
-    if (el.textContent.length > 20000) el.textContent = el.textContent.slice(-15000);
+    const re = rtCorrRe();
+    const parts = String(text).split('\n');
+    parts.forEach((part, i) => {
+      if (!el._cur || el.lastChild !== el._cur) { el._cur = document.createElement('span'); el._cur.className = 'rt-rxl'; el.appendChild(el._cur); }
+      if (part) el._cur.appendChild(document.createTextNode(part));
+      if (re && !el._cur.classList.contains('rt-corr') && re.test(el._cur.textContent.toUpperCase())) el._cur.classList.add('rt-corr');
+      if (i < parts.length - 1) { el._cur.appendChild(document.createTextNode('\n')); el._cur = null; }
+    });
+    while (el.textContent.length > 20000 && el.firstChild) el.removeChild(el.firstChild);
     if (atEnd) el.scrollTop = el.scrollHeight;
   }
   function rttyLevels(m) {
