@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.36** — Pages RTTY et FT en double réception : la poignée de la cascade du VFO-B règle sa hauteur seule, sans bouger celle du VFO-A (double-clic : même hauteur que la cascade A)
 - **0.39.35** — Page RTTY : liste des contests comme la page SSB (texte blanc, sans majuscules forcées, liste sombre ; « pas de contest » en tête puis ordre alphabétique)
 - **0.39.34** — Page RTTY : fréquence RTTY, ↺, Bande et Zoom sur la ligne SPLIT — VFO A à gauche, mêmes champs pour le VFO B à droite (le VFO B y va en DATA-U ; Bande et Zoom communs aux deux cascades)
 - **0.39.33** — Page RTTY : « — pas de contest — » de nouveau en tête de la liste des contests (il était classé parmi les P)

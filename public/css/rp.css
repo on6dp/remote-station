@@ -2972,3 +2972,5 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 .rt-contest #rtcSel, .rt-contest.on #rtcSel { color: #fff; background: #07090d; text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 12.5px; min-width: 230px; padding: 4px 6px; color-scheme: dark; }
 .rt-contest #rtcSel option { color: #fff; background: #07090d; }
 .rt-contest.on #rtcSel { border-color: #f5ff00; }
+/* RTTY en double réception : chaque colonne (VFO-A, VFO-B) a sa propre hauteur de cascade — plus de lignes communes */
+@media (min-width: 901px) { .rt-dual > .rt-side { display: flex; flex-direction: column; } }

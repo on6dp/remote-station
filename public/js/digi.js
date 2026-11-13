@@ -267,7 +267,7 @@
         <canvas id="ftSpecB" class="dg-spec" height="70" title="Spectre du VFO-B"></canvas>
         <i class="dg-mk dg-mk-tx" id="ftMkTxB"></i><i class="dg-mk dg-mk-rx" id="ftMkRxB"></i><i class="dg-mk dg-mk-n" id="ftMkNB" hidden></i>
         <i class="cw-trx" id="cwTrxB" hidden title="Filtre du TRX (BW) : glisser une barre pour l'élargir ou le rétrécir (Ctrl + molette aussi)"><b></b><b></b><span></span></i>
-        <i class="dg-grip" id="ftGripB" title="Glisser vers le haut ou le bas : hauteur des cascades (double-clic : taille d'origine)"></i>
+        <i class="dg-grip" id="ftGripB" title="Glisser vers le haut ou le bas : hauteur de la cascade du VFO-B, sans toucher à celle du VFO-A (double-clic : même hauteur que celle du VFO-A)"></i>
 <span class="dg-spspd" id="ftSpSpdB" title="Vitesse du spectre (la courbe seulement ; la cascade a sa propre « Vitesse ») : X1 = moyenne sur environ 6 s (courbe calme, les signaux réguliers ressortent), X2 = environ 2 s, X4 = presque instantané"><button type="button" data-spspd="1">X1</button><button type="button" data-spspd="2">X2</button><button type="button" data-spspd="4">X4</button></span>
         <i class="dg-grip dg-sgrip" id="ftSGripB" title="Glisser vers le haut ou le bas : hauteur des spectres (double-clic : taille d'origine)"></i>
       </div>
@@ -372,7 +372,7 @@
           <canvas id="rtScaleB" height="44" title="Règle des fréquences : molette ou glisser = accorder le VFO-B (le TRX suit), sur toute la bande"></canvas>
           <canvas id="rtWfB" height="140"></canvas>
           <i class="dg-mk dg-mk-rx" id="rtMkMB"></i><i class="dg-mk dg-mk-tx" id="rtMkSB"></i>
-          <i class="dg-grip" id="rtGripB" title="Glisser vers le haut ou le bas : hauteur des cascades (double-clic : taille d'origine)"></i>
+          <i class="dg-grip" id="rtGripB" title="Glisser vers le haut ou le bas : hauteur de la cascade du VFO-B, sans toucher à celle du VFO-A (double-clic : même hauteur que celle du VFO-A)"></i>
         </div>
         <pre class="rt-rx" id="rtRxB"></pre>
       </div>
@@ -973,11 +973,14 @@
   // ------------------------------------------------------------------ cascade
   const wf = { ctx: null, sctx: null, w: 0, h: 140, img: null };
   const wfB = { ctx: null, sctx: null, w: 0, h: 0, cw: 0 }; // cascade du 2e décodeur RTTY (même spectre)
+  // Hauteur de la cascade du VFO-B (double réception) : réglée par sa propre poignée, indépendamment de celle du VFO-A
+  // (0 = même hauteur que la cascade A)
+  let wfHB = Number(store.get('wfhb', '0')) || 0;
   function sizeB() {
     const c = $('rtWfB');
     if (tab !== 'rtty' || !c || !c.clientWidth) return;
     const s = $('rtScaleB');
-    c.style.height = $('dgWf').clientHeight + 'px'; // même hauteur que la cascade A (poignée)
+    c.style.height = (wfHB > 0 ? wfHB : $('dgWf').clientHeight) + 'px'; // sa poignée, sinon la hauteur de la cascade A
     const dpr = wf.dpr || 1;
     const cw = Math.max(120, Math.floor(c.clientWidth));
     const w = Math.round(cw * dpr);
@@ -1015,7 +1018,7 @@
     const c = $('ftWfB');
     if (!ftDual || !c || !c.clientWidth) return;
     const s = $('ftScaleB');
-    c.style.height = $('dgWf').clientHeight + 'px';
+    c.style.height = (wfHB > 0 ? wfHB : $('dgWf').clientHeight) + 'px';
     const dpr = wf.dpr || 1;
     const cw = Math.max(120, Math.floor(c.clientWidth));
     const w = Math.round(cw * dpr);
@@ -5985,8 +5988,24 @@
         return v;
       };
       if (Number(store.get('wfh', '0')) > 0) setWfH(Number(store.get('wfh', '0')), false);
-      // Poignée sous chaque cascade (VFO-A, et VFO-B en double réception) : même hauteur pour les deux
-      for (const grip of ['dgGrip', 'rtGripB', 'ftGripB'].map($).filter(Boolean)) {
+      // Poignée sous la cascade du VFO-B (double réception) : sa hauteur à elle, sans toucher à la cascade A
+      for (const grip of ['rtGripB', 'ftGripB'].map($).filter(Boolean)) {
+        const cv = () => $(grip.id === 'rtGripB' ? 'rtWfB' : 'ftWfB');
+        const setB = (h, save) => { wfHB = Math.max(40, Math.min(420, Math.round(h))); if (save) store.set('wfhb', String(wfHB)); if (wf.ctx) { sizeB(); sizeFB(); } };
+        grip.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          grip.setPointerCapture(e.pointerId);
+          const y0 = e.clientY, zf = (window.RSZOOM && window.RSZOOM.z()) || 1, h0 = cv().getBoundingClientRect().height / zf;
+          const mv = (ev) => setB(h0 + (ev.clientY - y0) / zf, false);
+          const up = (ev) => { grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up); setB(h0 + (ev.clientY - y0) / zf, true); };
+          grip.addEventListener('pointermove', mv);
+          grip.addEventListener('pointerup', up);
+          grip.addEventListener('pointercancel', up);
+        });
+        grip.addEventListener('dblclick', () => { wfHB = 0; store.set('wfhb', '0'); if (wf.ctx) { sizeB(); sizeFB(); } }); // même hauteur que la cascade A
+      }
+      // Poignée sous la cascade du VFO-A
+      for (const grip of ['dgGrip'].map($).filter(Boolean)) {
       grip.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         grip.setPointerCapture(e.pointerId);
