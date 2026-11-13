@@ -2140,7 +2140,12 @@
       let m;
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if (hostTaps.size) runTaps(m);
-      if (window.RSLOG && /^log_/.test(m.t)) { window.RSLOG.onMessage(m); return; }
+      if (window.RSLOG && /^log_/.test(m.t)) {
+        window.RSLOG.onMessage(m);
+        // QSO enregistré ou carnet changé : la page des modes numériques suit aussi (cadre LOG RTTY)
+        if ((m.t === 'log_saved' || m.t === 'log_changed') && DG()) { try { DG().onMessage(m); } catch (e) { /* page des modes numériques absente */ } }
+        return;
+      }
       if (m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values') { if (VX()) VX().onMessage(m); return; }
       if (DG() && DG().onMessage(m)) return;
       if (m.t === 'hello') {

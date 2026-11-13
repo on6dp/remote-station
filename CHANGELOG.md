@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.64** — LOG RTTY : le QSO enregistré apparaît tout de suite dans le cadre (les messages du carnet n'arrivaient pas à la page RTTY ouverte depuis le dashboard)
 - **0.39.63** — Page RTTY : ligne du QSO au-dessus des macros (CALL — clic sur un indicatif dans la fenêtre de trafic —, RST, échange envoyé / reçu ou nom / QTH, LOG ↵, EFFACER, Spot cluster), en contest ou non
 - **0.39.62** — Page RTTY : une seule fenêtre par VFO — texte reçu et émis au même endroit (émis en rouge, correspondant en vert, trafic en blanc), ligne de saisie en bas ; macros habituelles aussi sur deux lignes alignées
 - **0.39.61** — LOG RTTY : colonnes délimitées par un trait fin blanc, jusqu'en bas du cadre
