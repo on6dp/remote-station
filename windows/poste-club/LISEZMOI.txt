@@ -10,7 +10,7 @@ A quoi ca sert
 Installation (une fois, sur le PC du club)
   1. Copier les fichiers de ce dossier dans un dossier du PC (ex. Bureau\assistant-carte-son).
   2. Double-clic sur installer-carte-son.cmd, accepter la demande d'administrateur.
-     Message attendu : "Assistant carte son installe et en marche (version 4)."
+     Message attendu : "Assistant carte son installe et en marche (version 5)."
   3. Recharger la page Station (Ctrl+F5) : la ligne "Assistant carte son" doit dire "en marche".
      La premiere fois que la page l'appelle, Chrome peut demander l'autorisation d'acceder aux
      appareils du reseau local : repondre "Autoriser".
@@ -30,6 +30,10 @@ regle sur be.pool.ntp.org, europe.pool.ntp.org et time.cloudflare.com, interroge
 demarrage puis toutes les heures, ou a la demande (onglet Synchro du dashboard, bouton du PC du club).
 NetTime n'est alors plus necessaire sur le PC du club (le desinstaller pour eviter deux reglages concurrents).
 Pour passer a la version 4 : refaire un double-clic sur installer-carte-son.cmd.
+Version 5 : plus legere. L'assistant tourne en priorite basse (le son du TRX dans Chrome passe toujours avant
+lui) et ne surveille plus la carte son qu'une fois par minute, avec une requete limitee a la carte son du TRX.
+Avec la version 4, la liste complete des peripheriques relue toutes les 20 s pouvait hacher le son sur un PC lent.
+Pour passer a la version 5 : retelecharger l'assistant (page Station) et refaire un double-clic sur installer-carte-son.cmd.
 Si la page Station constate 45 s d'entree son muette (TRX en reception), elle relance seule la carte son
 (une fois toutes les 10 minutes au plus) et previent sur le dashboard.
 

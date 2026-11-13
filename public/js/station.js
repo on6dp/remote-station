@@ -609,11 +609,11 @@
     $('tHelper').textContent = helperOk ? 'Assistant carte son : en marche (version ' + r.version + ' ; relance d’ici ou depuis le dashboard, seule après 45 s de silence' +
       (v2 ? ' ; surveille la carte son et la répare seule si Windows la met en erreur)' : ')') +
       (v2 ? ' — veille USB : ' + (r.veille || '?') + (carte ? ' — carte son du TRX : ' + carte : '') + (r.reparation ? ' — dernière réparation : ' + r.reparation : '') + hr +
-        (Number(r.version) < 4 ? ' — version 4 disponible (met aussi l’heure de Windows à la milliseconde, comme NetTime) : retélécharger l’assistant et refaire installer-carte-son.cmd' : '')
+        (Number(r.version) < 5 ? ' — version 5 disponible (plus légère : priorité basse, surveillance une fois par minute — la version 4 pouvait hacher le son ; met l’heure de Windows à la milliseconde) : retélécharger l’assistant et refaire installer-carte-son.cmd' : '')
         : ' — version 3 disponible (répare seule la carte son mise en erreur par Windows, coupe la veille USB) : retélécharger l’assistant et refaire installer-carte-son.cmd')
       : 'Assistant carte son : non installé sur ce PC (fichier installer-carte-son.cmd, voir l’aide) — pour relancer la carte son, éteindre et rallumer le TRX';
     $('btnAudReset').disabled = !helperOk || aud.resetting;
-    $('helperDl').hidden = helperOk && Number(r.version) >= 4;
+    $('helperDl').hidden = helperOk && Number(r.version) >= 5;
     return helperOk;
   }
   setTimeout(helperCheck, 1500);

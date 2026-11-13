@@ -11,7 +11,7 @@
 # - Version 3 : si Windows a mis la carte son en erreur (« Périphérique USB composite » en Error, partie son absente),
 #   un simple redémarrage ne suffit pas : l'assistant la retire et la fait redétecter (pnputil /remove-device puis
 #   /scan-devices), comme « Désinstaller » + « Rechercher les modifications sur le matériel ». Il surveille aussi
-#   lui-même cette carte son toutes les 20 s, même page Station fermée, et la répare seul (au plus une fois / 5 min).
+#   lui-même cette carte son (toutes les 20 s ; une fois par minute en version 5), même page Station fermée, et la répare seul (au plus une fois / 5 min).
 # - Version 4 : met l'horloge de Windows à l'heure à la milliseconde près, comme NetTime (service Windows Time réglé
 #   sur des serveurs NTP publics, interrogés souvent), au démarrage puis toutes les heures, ou à la demande ; écart
 #   mesuré avec w32tm.
@@ -22,7 +22,11 @@ param(
   [string[]]$Origines = @('https://remote.op0p.be')
 )
 $ErrorActionPreference = 'Stop'
-$Version = '4'
+$Version = '5'
+# Version 5 : l'assistant passe en priorité basse (le son du TRX dans Chrome passe toujours avant lui) et la surveillance
+# de la carte son est allégée (une fois par minute, requête ciblée sur la carte son du TRX au lieu de la liste complète
+# des périphériques de Windows) : avec la version 4, cette liste relue toutes les 20 s pouvait hacher le son d'un PC lent
+try { [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = [System.Diagnostics.ProcessPriorityClass]::Idle } catch { }
 # Messages de pnputil / powercfg lus dans la page de codes de la console (sinon « redÚmarrage » au lieu de « redémarrage »)
 try { [Console]::OutputEncoding = [Text.Encoding]::GetEncoding([Globalization.CultureInfo]::CurrentCulture.TextInfo.OEMCodePage) } catch { }
 $Journal = Join-Path $PSScriptRoot 'rs-carte-son.log'
@@ -33,6 +37,7 @@ if ($Surveille -notmatch '^[0-9a-f]{4}:[0-9a-f]{4}$') { $Surveille = '' }
 $Carte = ''
 $Reparation = ''
 $Mauvais = 0
+$Tour = 0
 $DerniereReparation = [datetime]::MinValue
 
 function Ecrire([string]$t) {
@@ -66,12 +71,19 @@ function Motif([string]$vid, [string]$prod) { 'USB\VID_' + $vid.ToUpper() + '&PI
 
 # État de la carte son du TRX : ok, erreur (périphérique USB en erreur), son absent (partie son pas démarrée), absente
 function EtatCarte([string]$vid, [string]$prod) {
-  $motif = Motif $vid $prod
-  $tous = @(Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue | Where-Object { $_.InstanceId -like $motif })
+  # Requête ciblée (WMI, périphériques présents) : seulement les fonctions de la carte son du TRX
+  $f = "DeviceID LIKE 'USB\\VID_" + $vid.ToUpper() + "&PID_" + $prod.ToUpper() + "%'"
+  $tous = @()
+  try { $tous = @(Get-CimInstance -ClassName Win32_PnPEntity -Filter $f -ErrorAction Stop) }
+  catch {
+    $motif = Motif $vid $prod
+    $tous = @(Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue | Where-Object { $_.InstanceId -like $motif } |
+      ForEach-Object { [pscustomobject]@{ DeviceID = $_.InstanceId; PNPClass = $_.Class; ConfigManagerErrorCode = $(if ($_.Status -eq 'OK') { 0 } else { 1 }) } })
+  }
   if ($tous.Count -eq 0) { return 'absente' }
-  if (@($tous | Where-Object { $_.Status -eq 'Error' -and $_.InstanceId -notmatch '&MI_' }).Count -gt 0) { return 'erreur' }
-  $son = @($tous | Where-Object { $_.Class -eq 'MEDIA' })
-  if ($son.Count -eq 0 -or @($son | Where-Object { $_.Status -ne 'OK' }).Count -gt 0) { return 'son absent' }
+  if (@($tous | Where-Object { $_.ConfigManagerErrorCode -ne 0 -and $_.DeviceID -notmatch '&MI_' }).Count -gt 0) { return 'erreur' }
+  $son = @($tous | Where-Object { $_.PNPClass -eq 'MEDIA' })
+  if ($son.Count -eq 0 -or @($son | Where-Object { $_.ConfigManagerErrorCode -ne 0 }).Count -gt 0) { return 'son absent' }
   return 'ok'
 }
 
@@ -153,7 +165,7 @@ function Relancer([string]$vid, [string]$prod) {
   return $r
 }
 
-# Surveillance (toutes les 20 s) de la carte son du TRX : en erreur deux fois de suite → réparation, au plus une fois / 5 min.
+# Surveillance (une fois par minute) de la carte son du TRX : en erreur deux fois de suite → réparation, au plus une fois / 5 min.
 # Carte son « absente » (TRX éteint, câble débranché) : rien à faire.
 function Surveiller {
   if (-not $script:Surveille) { return }
@@ -260,7 +272,8 @@ while ($ecoute.IsListening) {
   # Attente d'une demande de la page Station, avec un tour de surveillance de la carte son toutes les 20 s
   $att = $ecoute.BeginGetContext($null, $null)
   while (-not $att.AsyncWaitHandle.WaitOne(20000)) {
-    try { Surveiller } catch { Ecrire "surveillance : $($_.Exception.Message)" }
+    $script:Tour = ($script:Tour + 1) % 3
+    if ($script:Tour -eq 0) { try { Surveiller } catch { Ecrire "surveillance : $($_.Exception.Message)" } } # une fois par minute
     if (((Get-Date) - $DerniereHeure).TotalMinutes -ge 60) { try { ReglerHeure (-not $HeureReglee) | Out-Null; $HeureReglee = $true } catch { } }
   }
   $ctx = $ecoute.EndGetContext($att)
