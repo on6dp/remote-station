@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.49** — Page RTTY : en contest, seulement les macros du contest ; hors contest, seulement les macros habituelles (Effacer, Log QSO et Spot cluster suivent la rangée affichée)
 - **0.39.48** — Page RTTY : cadre LOG RTTY sous les macros — QSO RTTY du carnet général (hors contest, ou ceux du contest choisi avec les échanges), mis à jour à chaque QSO enregistré
 - **0.39.47** — Page RTTY : la poignée sous les fenêtres TX / RX les réduit jusqu'à 70 px (avant : arrêt bien plus haut), pour voir le bas de la page sans ascenseur
 - **0.39.46** — Page RTTY : un seul VFO en service (ni SPLIT ni DUAL RX) → seulement les fenêtres du VFO-A, sur toute la largeur ; celles du VFO-B reviennent en SPLIT ou DUAL RX ON

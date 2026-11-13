@@ -5089,6 +5089,14 @@
     drawMacroRow($('rtcMacros'), 'RTTYC', (t, ins) => useMacro('RTTY', t, ins), null, !rtcOn());
     if ($('rtcMacros')) $('rtcMacros').hidden = !rtcOn();
     if ($('rtcMacLine')) $('rtcMacLine').hidden = !rtcOn();
+    // Contest choisi : seulement les macros du contest (les macros habituelles sont cachées) ; sans contest : l'inverse.
+    // Effacer, Log QSO et Spot cluster suivent la rangée affichée.
+    const mainLine = $('rtMacros') && $('rtMacros').parentElement, act = document.querySelector('.rt-macact');
+    if (mainLine) mainLine.hidden = rtcOn();
+    if (act && $('rtcRules')) {
+      if (rtcOn() && act.parentElement !== $('rtcMacLine')) $('rtcRules').before(act);
+      else if (!rtcOn() && act.parentElement !== mainLine) mainLine.appendChild(act);
+    }
     rtLogAsk();
     // RÈGLEMENT : règlement officiel du contest choisi ; sans adresse connue, une recherche « <contest> RTTY contest rules <année> »
     const rr = $('rtcRules'), rc = RT_CONTESTS.find((x) => x[0] === rtcId());
