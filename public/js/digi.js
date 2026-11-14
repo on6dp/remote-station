@@ -375,7 +375,7 @@
           <span class="rt-name" id="rtNameA">VFO-A</span><span class="rt-rf" id="rtRf"></span><span class="rt-sig" id="rtSig"></span>
           <button class="dg-mini rt-2dec" type="button" id="rt2Dec" aria-pressed="false" hidden title="Un seul récepteur (ni SPLIT ni DUAL RX) : deux décodeurs sur la même cascade, comme FLDIGI : A1 (clic gauche) et A2 (clic droit, ou bouton droit maintenu pour faire glisser ses barres) ; deux signaux décodés en même temps. La fenêtre de A2 s’affiche dans la colonne de droite.">DUAL DÉCODEURS</button>
           <button class="dg-mini rt-2dec rt-4dec" type="button" id="rt4Dec" aria-pressed="false" hidden title="Un seul récepteur : 4 décodeurs sur la même cascade — A1 (clic gauche), A2 (clic droit), A3 (Ctrl + clic gauche), A4 (Ctrl + clic droit), ou choisir le décodeur dans BARRES puis clic gauche. Fenêtres de A3 sous A1, de A4 sous A2.">QUAD DÉCODEURS</button>
-          <span class="rt-bsel" id="rtBSel" hidden title="Décodeur dont les barres suivent le clic gauche sur la cascade (clic droit : toujours A2)"><span class="rt-bsl">BARRES</span><button class="dg-mini" type="button" data-b="0" aria-pressed="true">A1</button><button class="dg-mini" type="button" data-b="1" aria-pressed="false">A2</button><button class="dg-mini" type="button" data-b="2" aria-pressed="false">A3</button><button class="dg-mini" type="button" data-b="3" aria-pressed="false">A4</button></span>
+          <span class="rt-bsel" id="rtBSel" hidden title="Décodeur placé par le prochain clic gauche sur la cascade (une fois, puis retour à A1) ; clic droit : toujours A2"><span class="rt-bsl">BARRES</span><button class="dg-mini" type="button" data-b="0" aria-pressed="true">A1</button><button class="dg-mini" type="button" data-b="1" aria-pressed="false">A2</button><button class="dg-mini" type="button" data-b="2" aria-pressed="false">A3</button><button class="dg-mini" type="button" data-b="3" aria-pressed="false">A4</button></span>
           <select id="rtShift" aria-label="Shift (VFO-A)"><option value="170">170 Hz</option><option value="200">200 Hz</option><option value="425">425 Hz</option><option value="850">850 Hz</option></select>
           <select id="rtBaud" aria-label="Vitesse (VFO-A)"><option value="45.45">45,45 Bd</option><option value="50">50 Bd</option><option value="75">75 Bd</option><option value="100">100 Bd</option></select>
           <button class="dg-mini" type="button" id="rtRev" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>
@@ -2019,6 +2019,7 @@
       el.addEventListener('pointerdown', (e) => {
         if (tab !== 'rtty' || e.shiftKey || (e.button !== 0 && e.button !== 2)) return;
         mk = { el, id: e.pointerId, target: ch === 1 ? 1 : rtTarget(e, e.button === 2), t: 0 };
+        mk.once = ch !== 1 && e.button === 0 && !e.ctrlKey && rtBSel > 0; // BARRES A2 / A3 / A4 : pour ce placement seulement, puis retour à A1
         try { el.setPointerCapture(e.pointerId); } catch (err) { /* */ }
         el.style.cursor = 'ew-resize';
         move(e, false);
@@ -2028,6 +2029,7 @@
         if (!mk || mk.el !== el) return;
         move(e, true);
         el.style.cursor = '';
+        if (mk.once) setTimeout(() => { rtBSel = 0; rtHeads(); }, 60); // après le « click » qui suit
         mk = null;
       };
       el.addEventListener('pointerup', end);
