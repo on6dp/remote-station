@@ -894,6 +894,8 @@ QO-100 est un satellite géostationnaire qu'on atteint en 2,4 GHz avec un conver
 
 Onglet **Logbooks** (bouton cyan, à gauche de Log QSO et de Synchro) : le carnet de trafic de la station, partagé par tous les membres. Il sait envoyer les QSO vers **LoTW**, **eQSL**, **Club Log** et **QRZ.com**, les exporter en **ADIF** ou **Cabrillo**, et les transmettre en **UDP** aux logiciels de carnet du PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
 
+**Carnet en grand sur un autre écran** : le dashboard s'ouvre déjà sur le carnet ; un **nouveau clic sur LOGBOOKS** (carnet déjà affiché) l'ouvre dans **sa propre fenêtre**, à placer sur un deuxième écran (elle se rouvre à la même place et à la même taille). Elle montre **toutes les colonnes** (TX call, OP, références, contest, LoTW, eQSL, Club Log, QRZ…) et jusqu'à **1000 QSO** (300 dans le dashboard) ; un clic sur une ligne ouvre la fiche complète du QSO (DÉTAILS QSO). Cette fenêtre a ses propres recherche, filtres, encadré TX CALL et menus Synchronisation / Exporter, indépendants de ceux du dashboard ; un QSO enregistré ailleurs y apparaît tout de suite. Elle utilise la connexion du dashboard : si celui-ci est fermé, rouvrez-le puis cliquez deux fois sur LOGBOOKS.
+
 <a id="l-fiche"></a>
 ### 14.1 Enregistrer un QSO
 

@@ -3376,7 +3376,7 @@ function onOperator(conn, m) {
       if (col === 'date') vals.sort((a, b) => b[0].localeCompare(a[0]));
       else if (col === 'utc' || col === 'mhz') vals.sort((a, b) => Number(a[0]) - Number(b[0]));
       else vals.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-      return send(conn, { t: 'log_values', col, values: vals.slice(0, 400) });
+      return send(conn, { t: 'log_values', col, values: vals.slice(0, 400), tag: logTag(m) });
     }
     case 'log_list': {
       const all = lgFilter(book.query({ q: m.q, from: m.from, to: m.to }), m.f);
@@ -3384,7 +3384,7 @@ function onOperator(conn, m) {
       const txcalls = Array.from(new Set(book.qsos.map((q) => String(q.station_callsign || '').toUpperCase()).filter(Boolean))).sort();
       const lim = Math.max(1, Math.min(1000, Number(m.limit) || 200));
       return send(conn, { t: 'log_list', total: book.qsos.length, count: all.length, items: all.slice(-lim).reverse().map(qsoForClient),
-        calls: logCalls(conn), txcalls: conn.user.admin ? txcalls : undefined, stationCalls: stationCalls(), admin: !!conn.user.admin, services: LOG_SERVICES, auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto])) });
+        calls: logCalls(conn), txcalls: conn.user.admin ? txcalls : undefined, stationCalls: stationCalls(), admin: !!conn.user.admin, services: LOG_SERVICES, auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto])), tag: logTag(m) });
     }
     case 'log_merge': {
       // Doublon : la fiche déjà au carnet (ex. enregistrée en fin de QSO) est complétée (nom, QTH…) au lieu d'un 2e QSO
@@ -3551,10 +3551,10 @@ function onOperator(conn, m) {
       const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       const who = (String(m.callsign || 'TOUS').toUpperCase().replace(/[^A-Z0-9]/g, '')) + (m.mine ? '-' + me.replace(/[^A-Z0-9]/g, '') : '');
       if (m.fmt === 'cabrillo') {
-        return send(conn, { t: 'log_export', name: (m.contestOnly && m.contest ? String(m.contest).toUpperCase().replace(/[^A-Z0-9-]/g, '') + '-' : '') + who + '-' + stamp + '.log', mime: 'text/plain', data: LB.toCabrillo(list, { callsign: m.callsign || cfg.digiCall, contest: m.contest, grid: cfg.stationGrid, club: cfg.clubName && /UBA/.test(cfg.clubName) ? 'UBA-LGE' : '', version: VERSION, cat: m.cat && typeof m.cat === 'object' ? m.cat : null, location: m.location }), count: list.length, tag: m.tag === 'cwpage' || m.tag === 'ssbpage' || m.tag === 'rttypage' ? m.tag : undefined });
+        return send(conn, { t: 'log_export', name: (m.contestOnly && m.contest ? String(m.contest).toUpperCase().replace(/[^A-Z0-9-]/g, '') + '-' : '') + who + '-' + stamp + '.log', mime: 'text/plain', data: LB.toCabrillo(list, { callsign: m.callsign || cfg.digiCall, contest: m.contest, grid: cfg.stationGrid, club: cfg.clubName && /UBA/.test(cfg.clubName) ? 'UBA-LGE' : '', version: VERSION, cat: m.cat && typeof m.cat === 'object' ? m.cat : null, location: m.location }), count: list.length, tag: m.tag === 'cwpage' || m.tag === 'ssbpage' || m.tag === 'rttypage' || m.tag === 'big' ? m.tag : undefined });
       }
       return send(conn, { t: 'log_export', name: (m.view ? 'VUE-' : '') + (m.contestOnly && m.contest ? String(m.contest).toUpperCase().replace(/[^A-Z0-9-]/g, '') + '-' : m.phoneOnly ? 'SSB-' : modeOnly ? modeOnly + '-' : '') + who + (conn.user.admin && m.operator ? '-OP' + String(m.operator).toUpperCase().replace(/[^A-Z0-9]/g, '') : '') + '-' + stamp + (m.pending ? '-' + m.pending : '') + '.adi', mime: 'text/plain', data: LB.toAdif(list, 'RemoteStation', VERSION), count: list.length,
-        pending: m.pending || '', ids: m.pending ? list.map((q) => q.id) : undefined, tag: m.tag === 'cwpage' || m.tag === 'ssbpage' || m.tag === 'rttypage' ? m.tag : undefined });
+        pending: m.pending || '', ids: m.pending ? list.map((q) => q.id) : undefined, tag: m.tag === 'cwpage' || m.tag === 'ssbpage' || m.tag === 'rttypage' || m.tag === 'big' ? m.tag : undefined });
     }
     case 'log_cfg_get':
       if (!conn.user.admin) {

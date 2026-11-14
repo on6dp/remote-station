@@ -2141,6 +2141,11 @@
       try { m = JSON.parse(e.data); } catch (x) { return; }
       if (hostTaps.size) runTaps(m);
       if (window.RSLOG && /^log_/.test(m.t)) {
+        // Carnet en grand (fenêtre à part, autre écran) : ses réponses (tag « big ») lui reviennent ; les nouvelles du
+        // carnet (QSO ajouté, réglages…) vont aux deux ; liste, valeurs, export et fiches du dashboard : au dashboard seul
+        const LW = bigLog();
+        if (LW && m.tag === 'big') { try { LW.onMessage(m); } catch (x) { /* fenêtre fermée */ } return; }
+        if (LW && !m.tag && !/^log_(list|values|export|one|saved|dupe)$/.test(m.t)) { try { LW.onMessage(m); } catch (x) { /* fenêtre fermée */ } }
         window.RSLOG.onMessage(m);
         // QSO enregistré ou carnet changé : la page des modes numériques suit aussi (cadre LOG RTTY)
         if ((m.t === 'log_saved' || m.t === 'log_changed' || (m.t === 'log_export' && m.tag === 'rttypage')) && DG()) { try { DG().onMessage(m); } catch (e) { /* page des modes numériques absente */ } }
@@ -2151,6 +2156,7 @@
       if (m.t === 'hello') {
         me = m;
         if (window.RSLOG) window.RSLOG.onHello(m);
+        if (bigLog()) { try { bigLog().onHello(m); } catch (x) { /* fenêtre fermée */ } }
         if (DG()) DG().onHello(m, m);
         if (VX()) VX().onHello(m);
         send({ t: 'plan_pref', on: planAuto() });
@@ -2200,6 +2206,7 @@
         if (VX()) VX().onState(st);
         drawPlan();
         if (window.RSLOG && window.RSLOG.onState) window.RSLOG.onState();
+        if (bigLog() && bigLog().onState) { try { bigLog().onState(); } catch (x) { /* fenêtre fermée */ } }
       } else if (m.t === 'cluster_list') {
         drawClusterList(m.list || [], m.cur || '');
       } else if (m.t === 'events') {
@@ -2330,6 +2337,24 @@
     closePopup() { const w = digiHost.win; releasePopup(); if (w && !w.closed) try { w.close(); } catch (e) {} }
   };
   if (window.RSLOG) window.RSLOG.init(digiApi); // onglet « Logs » (monté par digi.js)
+  // Carnet en grand dans sa propre fenêtre (/log.html, 2e clic sur LOGBOOKS) : raccroché à cette page, même connexion ;
+  // ses demandes partent avec le tag « big » (réponses routées vers elle seule)
+  const bigLogHost = { win: null, inst: null };
+  function bigLog() { return bigLogHost.inst && bigLogHost.win && !bigLogHost.win.closed ? bigLogHost.inst : null; }
+  window.RSLOGHOST = {
+    attach(win, inst, toastFn) {
+      bigLogHost.win = win;
+      bigLogHost.inst = inst;
+      inst.init(Object.assign({}, digiApi, {
+        tag: 'big',
+        send: (m) => send(m && /^log_/.test(m.t) && !m.tag ? Object.assign({}, m, { tag: 'big' }) : m),
+        say: toastFn || say
+      }));
+      if (me) inst.onHello(me);
+      if (inst.onState) inst.onState();
+    },
+    detach(inst) { if (bigLogHost.inst === inst) { bigLogHost.inst = null; bigLogHost.win = null; } }
+  };
   if (window.RSDIGI) window.RSDIGI.init(digiApi);
   if ($('planBtn')) $('planBtn').addEventListener('click', () => {
     try { localStorage.setItem('rs.planauto', planAuto() ? '0' : '1'); } catch (e) { /* stockage bloqué */ }

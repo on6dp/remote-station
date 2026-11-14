@@ -159,7 +159,8 @@
   }
   function openLogWin() {
     if (logWin && !logWin.closed) { try { logWin.focus(); } catch (e) { /* */ } return; }
-    logWin = window.open(FACEP + '/log.html', 'rs-log', (window.RSWINPOS ? RSWINPOS.feat('rs-log', 1500, 900) : 'width=1500,height=900'));
+    const W = FACEP ? 1500 : 1900, H = FACEP ? 900 : 1000; // dashboard : carnet en grand, toutes les colonnes
+    logWin = window.open(FACEP + '/log.html', 'rs-log', (window.RSWINPOS ? RSWINPOS.feat('rs-log', W, H) : 'width=' + W + ',height=' + H));
     if (!logWin && api) api.say('Le navigateur a bloqué la fenêtre du carnet : autorisez les fenêtres (pop-up) pour ce site.', 'warn', 6000);
   }
   const HOST = !POPUP || EMBED; // page qui peut ouvrir la fenêtre séparée (dashboard ou face avant)
@@ -680,6 +681,7 @@
       b.setAttribute('role', 'tab');
       b.dataset.tab = id;
       b.textContent = label;
+      if (id === 'log' && !POPUP) b.title = 'Carnet de trafic de la station (tous les modes, tous les TX call). Carnet déjà affiché : nouveau clic = le carnet en grand dans sa propre fenêtre (autre écran), avec toutes les colonnes';
       bar.appendChild(b);
       // Log QSO (ligne Correspondant) : juste à droite de l'onglet Logbooks, avant Synchro
       if (id === 'log') { const lq = document.getElementById('dxLog'); if (lq) { lq.classList.add('ctab-log'); bar.appendChild(lq); } }
@@ -6536,6 +6538,8 @@
       document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.addEventListener('click', (e) => {
         e.stopPropagation();
         if (b.dataset.tab === 'log' && LOGP) return openLogWin(); // carnet : dans sa propre fenêtre
+        // Dashboard : carnet déjà affiché → nouveau clic = le carnet en grand dans sa fenêtre (autre écran)
+        if (b.dataset.tab === 'log' && !POPUP && tab === 'log' && window.RSLOGHOST) return openLogWin();
         // SSB : page SSB (contests en phonie, micro, PTT) ; dashboard : chaque mode ouvre sa page (CW : page CW,
         // FT8 / RTTY / WSPR… : page des modes numériques sur ce mode)
         if (b.dataset.tab === 'ssb') return openModePage('ssb');

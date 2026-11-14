@@ -793,7 +793,7 @@
     if (!api || !root) return;
     stale = false;
     if (FORM) return api.send({ t: 'log_cfg_get', quiet: true }); // fiche seule : juste la liste des TX call
-    api.send({ t: 'log_list', q: q$('#lgSearch').value.trim(), limit: 300, f: filt });
+    api.send({ t: 'log_list', q: q$('#lgSearch').value.trim(), limit: TAG === 'big' ? 1000 : 300, f: filt }); // carnet en grand (fenêtre à part) : 1000 lignes
     drawFilt();
     txfDraw();
   }
@@ -1334,7 +1334,7 @@
       } else if (root && !root.hidden && root.offsetParent) fmsg('QSO non enregistré (doublon).', 'warn'); else say('QSO non enregistré (doublon).', 'warn');
       pendingDupe = null;
     } else if (m.t === 'log_export') {
-      if (m.tag) return; // export demandé par la page TRX CW ou TRX SSB : c'est elle qui l'enregistre
+      if (m.tag && m.tag !== TAG) return; // export demandé par la page TRX CW ou TRX SSB : c'est elle qui l'enregistre
       download(m);
     } else if (m.t === 'log_job') {
       onJob(m);
