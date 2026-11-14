@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.40.6** — RTTY : décodeur grande sensibilité (AFC ±40 Hz, plusieurs instants de lecture, deux décisions dont une anti-fading sélectif, silencieux à hystérésis) : 2 à 3 dB de mieux. Carnet en grand : bouton RETOUR (fermer la fenêtre) et ↩ STATISTIQUES après un clic sur une case.
 - **0.40.5** — Statistiques DXCC : les 340 pays DXCC (même jamais contactés), filtre Pays, bouton ↩ CARNET et Échap, cases et lignes plus grandes, récapitulatif fixé en bas.
 - **0.40.4** — Statistiques DXCC : toutes les bandes HF, 6 m et SAT toujours affichées (160 à 6 m), plus 2 m / 70 cm s'il y a des QSO.
 - **0.40.3** — Statistiques DXCC façon Swisslog : colonnes SSB / CW / RTTY / FT8 / FT4 / FT2 sous chaque bande, cases C vert (confirmé) / W bleu (contacté) / - rouge, récapitulatif bandes × modes en dessous ; colonnes resserrées.

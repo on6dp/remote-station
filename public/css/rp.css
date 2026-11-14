@@ -3358,3 +3358,8 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .lg-ston .lg-bar > .lg-search, .lg-ston .lg-bar > .lg-txf, .lg-ston .lg-bar > .lg-count, .lg-ston .lg-bar > .lg-fclr { display: none !important; }
 .lg-sth .lg-stback { border: 2px solid #ffe600; color: #ffe600; background: transparent; font-weight: 900; letter-spacing: .5px; padding: 5px 12px; }
 .lg-sth .lg-stback:hover { background: #ffe600; color: #000; }
+.lg-bar .lg-tostat { border-color: #00d4ff; color: #00d4ff; }
+.lg-bar .lg-tostat:hover { background: #00d4ff; color: #000; }
+.lg-bar .lg-ret { margin-left: 10px; border-color: #fff; color: #fff; }
+.lg-bar .lg-ret:hover { background: #fff; color: #000; }
+.lg-bar .lg-tostat[hidden] { display: none; }

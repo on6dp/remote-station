@@ -1278,6 +1278,23 @@
     b.setAttribute('aria-pressed', 'false');
     const det = q$('#lgDetails');
     if (det) det.after(b); else q$('.lg-bar').prepend(b);
+    // Retour au tableau des statistiques après un clic sur une de ses cases (carnet filtré sur ce pays / cette bande)
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'btn lg-dbtn lg-tostat';
+    back.id = 'lgToStats';
+    back.textContent = '↩ STATISTIQUES';
+    back.title = 'Revenir au tableau des statistiques DXCC';
+    back.hidden = true;
+    b.after(back);
+    // Fenêtre du carnet en grand : RETOUR = la fermer et revenir au dashboard
+    const ret = document.createElement('button');
+    ret.type = 'button';
+    ret.className = 'btn lg-dbtn lg-ret';
+    ret.textContent = 'RETOUR';
+    ret.title = 'Fermer cette fenêtre et revenir au dashboard (le carnet reste dans le dashboard)';
+    ret.addEventListener('click', () => { const w = root.ownerDocument.defaultView; try { if (w.opener && !w.opener.closed) w.opener.focus(); } catch (e) { /* */ } w.close(); });
+    q$('.lg-bar').appendChild(ret);
     const box = document.createElement('div');
     box.className = 'lg-stw';
     box.id = 'lgStats';
@@ -1299,6 +1316,7 @@
       b.setAttribute('aria-pressed', String(on));
       box.hidden = !on;
       root.classList.toggle('lg-ston', on); // barre : recherche et filtres du carnet masqués pendant les statistiques
+      if (on && q$('#lgToStats')) q$('#lgToStats').hidden = true;
       q$('.lg-tw').hidden = on;
       q$('.lg-tw').style.display = on ? 'none' : '';
       if (on) ask(ST.data ? null : filt.txc || stCalls[0] || ''); // 1re ouverture : TX call du carnet, sinon l'indicatif du club
@@ -1323,8 +1341,11 @@
       const md = (ST.data && ST.data.mode) || (td.dataset.k && td.dataset.k !== 'AUT' ? td.dataset.k : '');
       if (md && !ST_GRP[md] && md !== 'SSB') filt.mode = md;
       show(false);
+      back.hidden = false;
       reload();
     });
+    back.addEventListener('click', () => { back.hidden = true; show(true); });
+    q$('#lgFclr').addEventListener('click', () => { back.hidden = true; });
     // Hauteur : jusqu'en bas de la fenêtre (comme la liste du carnet)
     const fit = () => { const t = q$('.lg-stt'), sm = q$('.lg-sts'); if (!t || box.hidden) return; const h = Math.max(200, Math.floor(window.innerHeight - t.getBoundingClientRect().top - (sm ? sm.offsetHeight + 8 : 0) - 14)) + 'px'; t.style.height = h; t.style.maxHeight = h; };
     window.addEventListener('resize', fit);
