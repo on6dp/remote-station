@@ -1090,7 +1090,7 @@
       '<fieldset><legend>Plage de dates (facultatif)</legend><label>Du <input type="date" name="from"></label><label>Au <input type="date" name="to"></label></fieldset>' +
       '<label class="lg-chk"><input type="checkbox" name="all"> Renvoyer aussi les QSO déjà envoyés</label>' +
       (s === 'clublog' && me.admin ? '<label class="lg-chk warn"><input type="checkbox" name="clear"> Effacer le log ClubLog existant (remplacé par tout le carnet de l’indicatif)</label>' : '') +
-      (lotw ? '' : '<label class="lg-w8">Temporisation (secondes) <input type="number" name="delay" min="0" max="120" step="1"></label>') +
+      (lotw || s === 'clublog' ? '' : '<label class="lg-w8">Temporisation (secondes) <input type="number" name="delay" min="0" max="120" step="1"><small>Pause entre deux QSO ; 1 s suffit.</small></label>') +
       '<p class="lg-pend">…</p>' +
       // Agent LoTW : TQSL du PC du membre (certificat jamais copié), relié au serveur
       (lotw ? '<fieldset class="lg-agent"><legend>Agent LoTW — TQSL de votre PC</legend><p class="lg-agst">…</p><div class="lg-agl"></div>' +
@@ -1309,8 +1309,10 @@
       (hint ? '<small>' + hint + '</small>' : '') + '</label>';
   }
   const textField = (label, name, v, hint, extra) => '<label>' + label + '<input name="' + name + '" value="' + esc(v) + '" ' + (extra || '') + '>' + (hint ? '<small>' + hint + '</small>' : '') + '</label>';
-  const common = (s, c) => '<label class="lg-chk"><input type="checkbox" name="' + s + '.auto"' + (c.auto ? ' checked' : '') + '> Télécharger automatiquement les QSO lors de leur enregistrement</label>' +
-    '<label class="lg-w8">Temporisation (secondes) <input type="number" min="0" max="120" name="' + s + '.delay" value="' + esc(c.delay) + '"><small>Pause entre deux QSO lors d’un envoi en lot.</small></label>';
+  // Onglets de ⚙ Configuration : indicatifs du club seulement (les membres règlent le leur dans la fenêtre du service)
+  const CLUBNOTE = '<p class="lg-note">Réglages des <b>indicatifs du club</b> (ON5VL, OR0L). Un indicatif personnel se règle dans la fenêtre de synchronisation du service (cadre jaune), par son titulaire.</p>';
+  const common = (s, c, noDelay) => CLUBNOTE + '<label class="lg-chk"><input type="checkbox" name="' + s + '.auto"' + (c.auto ? ' checked' : '') + '> Télécharger automatiquement les QSO lors de leur enregistrement</label>' +
+    (noDelay ? '' : '<label class="lg-w8">Temporisation (secondes) <input type="number" min="0" max="120" name="' + s + '.delay" value="' + esc(c.delay) + '"><small>Pause entre deux QSO lors d’un envoi en lot (1 s suffit).</small></label>');
   function udpRow(u) {
     const fmts = [['wsjtx-adif', 'WSJT-X « Logged ADIF » (type 12)'], ['wsjtx-qso', 'WSJT-X « QSO Logged » (type 5)'], ['n1mm', 'N1MM Logger+ (XML contactinfo)'], ['adif', 'ADIF brut']];
     return '<tr><td><input type="checkbox" data-k="enabled"' + (u.enabled ? ' checked' : '') + ' aria-label="Actif"></td>' +
@@ -1343,11 +1345,11 @@
         '<button type="button" data-t="' + k + '" aria-selected="' + (i === 0) + '">' + t + '</button>').join('') + '</div>' +
       helpTab('l-config') +
       // Club Log
-      '<div data-p="clublog" class="lg-pp">' + common('clublog', cfg.clublog) +
+      '<div data-p="clublog" class="lg-pp">' + common('clublog', cfg.clublog, true) +
       textField('Adresse e-mail', 'clublog.email', cfg.clublog.email, '', 'type="email" maxlength="200"') +
       secretField('Mot de passe', 'clublog', 'password', cfg, 'Un <b>mot de passe d’application</b> (Club Log → Settings → App Passwords) est conseillé.') +
-      secretField('Clé API', 'clublog', 'api', cfg, 'Clé de l’application Remote Station, demandée une fois au helpdesk de Club Log.') +
-      '<p class="lg-note">Un refus d’accès (erreur 403) arrête les envois automatiques jusqu’au prochain « OK » de cette fenêtre : Club Log bloque les programmes qui insistent.</p>' + testRow('clublog') + '</div>' +
+      secretField('Clé API', 'clublog', 'api', cfg, 'Clé du <b>logiciel</b> Remote Station, demandée une fois à support@clublog.org : elle sert à <b>tous</b> les indicatifs, ceux du club et ceux des membres (qui ne la voient jamais).') +
+      '<p class="lg-note">Club Log reçoit les QSO en un seul fichier : pas de temporisation. Un refus d’accès (erreur 403) arrête les envois jusqu’au prochain « OK » de cette fenêtre ; après plusieurs refus, Club Log bloque l’adresse du serveur une heure.</p>' + testRow('clublog') + '</div>' +
       // eQSL
       '<div data-p="eqsl" class="lg-pp" hidden>' + common('eqsl', cfg.eqsl) +
       textField('Indicatif (identifiant eQSL)', 'eqsl.user', cfg.eqsl.user, '', 'maxlength="20" style="text-transform:uppercase"') +
@@ -1355,14 +1357,16 @@
       textField('QTH Nickname (facultatif)', 'eqsl.nickname', cfg.eqsl.nickname, 'Si le compte eQSL a plusieurs QTH : le surnom exact du QTH du club.', 'maxlength="60"') +
       testRow('eqsl') + '</div>' +
       // LoTW
-      '<div data-p="lotw" class="lg-pp" hidden>' + common('lotw', cfg.lotw) +
-      textField('Programme TQSL', 'lotw.tqsl', cfg.lotw.tqsl, 'Sur le PC où le <b>certificat LoTW</b> est installé (serveur Windows du club). Le certificat et son mot de passe ne quittent jamais ce PC.', 'maxlength="300"') +
-      textField('Dossier TrustedQSL (facultatif)', 'lotw.tqslDir', cfg.lotw.tqslDir, 'Serveur Windows en service : dossier du compte où le certificat est importé, ex. C:\\Users\\Club\\AppData\\Roaming\\TrustedQSL.', 'maxlength="300"') +
-      textField('Lieu de station TQSL (Station Location)', 'lotw.location', cfg.lotw.location, 'Nom exact du lieu créé dans TQSL (ex. ON5VL Liège).', 'maxlength="100"') +
-      secretField('Mot de passe du certificat (si protégé)', 'lotw', 'password', cfg) +
+      '<div data-p="lotw" class="lg-pp" hidden>' + common('lotw', cfg.lotw, true) +
+      (cfg.lotw.tqslHere
+        ? textField('Programme TQSL', 'lotw.tqsl', cfg.lotw.tqsl, 'Sur le PC où le <b>certificat LoTW</b> est installé (serveur Windows du club). Le certificat et son mot de passe ne quittent jamais ce PC.', 'maxlength="300"') +
+          textField('Dossier TrustedQSL (facultatif)', 'lotw.tqslDir', cfg.lotw.tqslDir, 'Serveur Windows en service : dossier du compte où le certificat est importé, ex. C:\\Users\\Club\\AppData\\Roaming\\TrustedQSL.', 'maxlength="300"')
+        : '<p class="lg-note">Ce serveur n’a pas TQSL (VPS) : la signature se fait sur le PC où TQSL et le certificat sont installés, par l’<b>Agent LoTW</b> (Synchronisation LoTW → cadre Agent LoTW), ou par l’export à la main.</p>') +
+      textField('Lieu de station TQSL (Station Location)', 'lotw.location', cfg.lotw.location, 'Nom exact du lieu créé dans TQSL (ex. ON5VL Liège). Facultatif avec l’Agent LoTW si le PC n’a qu’un lieu pour l’indicatif.', 'maxlength="100"') +
+      (cfg.lotw.tqslHere ? secretField('Mot de passe du certificat (si protégé)', 'lotw', 'password', cfg) : '') +
       textField('Identifiant du site LoTW', 'lotw.login', cfg.lotw.login, 'Pour lire les confirmations (lotwreport.adi).', 'maxlength="40"') +
       secretField('Mot de passe du site LoTW', 'lotw', 'webPassword', cfg) +
-      '<p class="lg-note">Confirmations lues jusqu’au : <b>' + esc(cfg.lotw.lastConfirm || 'jamais') + '</b>. Serveur sans TQSL (VPS) : utilisez « Exporter pour TQSL » dans Synchronisation LoTW.</p>' +
+      '<p class="lg-note">Confirmations lues jusqu’au : <b>' + esc(cfg.lotw.lastConfirm || 'jamais') + '</b>.</p>' +
       testRow('lotw') + '</div>' +
       // QRZ
       '<div data-p="qrz" class="lg-pp" hidden>' + common('qrz', cfg.qrz) +

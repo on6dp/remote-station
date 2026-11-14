@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.16** — ⚙ Configuration simplifiée : réglages des indicatifs du club rappelés, clé API Club Log valable pour tous les indicatifs (membres compris), pas de temporisation pour Club Log et LoTW (un seul fichier), onglet LoTW sans champs TQSL sur un serveur sans TQSL et « Tester » qui vérifie l'Agent LoTW ; aide : la temporisation expliquée service par service.
 - **0.42.15** — Documentation : « En bref » des synchronisations (ce qu'il faut pour chaque service, ordre conseillé) et du réseau (qui règle quoi, stations connectées, corrections, logs en ligne), droits sur les QSO (auteur avec la main, administrateurs).
 - **0.42.14** — Dashboard : version de Remote Station (v.0.42.14) affichée à droite de la date GMT.
 - **0.42.13** — Documentation : vitesse des envois eQSL / QRZ (temporisation 1 s conseillée, gros lots par fichier), clé API Club Log (support@clublog.org) dans le manuel, l'aide et le guide administrateur.

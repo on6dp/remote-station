@@ -718,7 +718,8 @@ function credFor(s, call) {
     const k = acct && acct.key ? acct.key : (logCfg.qrz.keys || {})[call] || '';
     return Object.assign(base, { key: k, keys: Object.assign({}, logCfg.qrz.keys || {}, k ? { [call]: k } : {}) });
   }
-  if (!club) { for (const k of ACCT_FIELDS[s]) base[k] = ''; base.lastConfirm = ''; base.auto = false; }
+  // Indicatif personnel : jamais les identifiants du club… sauf la clé API Club Log, qui est celle du logiciel (une pour tous)
+  if (!club) { for (const k of ACCT_FIELDS[s]) if (!(s === 'clublog' && k === 'api')) base[k] = ''; base.lastConfirm = ''; base.auto = false; }
   if (acct) for (const k of ACCT_FIELDS[s]) if (acct[k]) base[k] = acct[k];
   // Indicatif personnel : ses propres options (envoi automatique, date des dernières confirmations LoTW)
   if (!club && acct) { base.auto = acct.auto === true; base.lastConfirm = acct.lastConfirm || ''; }
@@ -760,6 +761,8 @@ function logCfgPublic() {
   o.qrz.has_keys = {};
   for (const [c, v] of Object.entries(o.qrz.keys || {})) o.qrz.has_keys[c] = !!v;
   o.qrz.keys = {};
+  // TQSL présent sur ce serveur (serveur Windows du club) : sinon, l'Agent LoTW ou l'export à la main
+  try { o.lotw.tqslHere = !!logCfg.lotw.tqsl && fs.existsSync(logCfg.lotw.tqsl); } catch (e) { o.lotw.tqslHere = false; }
   return o;
 }
 function setLogCfg(n) {
