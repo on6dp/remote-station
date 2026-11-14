@@ -899,7 +899,7 @@
       applyOrder(true); // ordre des colonnes choisi par l'utilisateur
     }
     const c = q$('#lgCount');
-    if (c) c.textContent = total + ' QSO au carnet' + (items.length < total ? ' · ' + items.length + ' affichés' : '');
+    if (c) { c.textContent = total + ' QSO au carnet' + (items.length < total ? ' · ' + items.length + ' affichés' : ''); c.title = engine === 'sqlite' ? 'Carnet enregistré dans la base SQLite du serveur (logbook.db)' : engine === 'json' ? 'Carnet enregistré dans le fichier logbook.json du serveur' : ''; }
   }
 
   // ------------------------------------------------------------------ fenêtres (dialog)
@@ -922,6 +922,7 @@
   }
   // Export : administrateurs = tous les TX call du carnet ; membres = leur indicatif et leurs QSO sous les indicatifs du club
   let txcalls = [];
+  let engine = ''; // stockage du carnet sur le serveur : sqlite ou json
   let stCalls = [];
   function exportOptions() {
     const mine = String(me.call || '').toUpperCase();
@@ -1455,6 +1456,7 @@
       if (Array.isArray(m.stationCalls)) stCalls = m.stationCalls;
       if (Array.isArray(m.calls)) { calls = m.calls; rights(); }
       if (Array.isArray(m.txcalls)) txcalls = m.txcalls;
+      if (m.engine) engine = m.engine;
       if (Array.isArray(m.stationCalls)) stCalls = m.stationCalls;
       if (editing) editing = items.find((x) => x.id === editing.id) || editing;
       txfDraw();

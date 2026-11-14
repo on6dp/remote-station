@@ -884,7 +884,7 @@ QO-100 is a geostationary satellite reached on 2.4 GHz with an up-converter. The
 <a id="logs"></a>
 ## 14. Logbooks (station logbook)
 
-**Logbooks** tab (cyan button, left of Log QSO and Synchro): the station logbook, shared by all members. It can upload QSOs to **LoTW**, **eQSL**, **Club Log** and **QRZ.com**, export them as **ADIF** or **Cabrillo**, and forward them over **UDP** to logging programs on the PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…).
+**Logbooks** tab (cyan button, left of Log QSO and Synchro): the station logbook, shared by all members. It can upload QSOs to **LoTW**, **eQSL**, **Club Log** and **QRZ.com**, export them as **ADIF** or **Cabrillo**, and forward them over **UDP** to logging programs on the PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+…). On the server, the logbook is a **SQLite database**: each QSO is saved in a few milliseconds, even with hundreds of thousands of QSOs (hover the QSO count above the list to see it).
 
 **Large logbook on another screen**: the dashboard already opens on the logbook; **clicking LOGBOOKS again** (logbook already shown) opens it in **its own window**, to put on a second screen (it reopens at the same place and size). It shows **all columns** (TX call, OP, references, contest, LoTW, eQSL, Club Log, QRZ…) and up to **1000 QSOs** (300 in the dashboard); a click on a row opens the full QSO form (DÉTAILS QSO). This window has its own search, filters, TX CALL box and Synchronisation / Exporter menus, independent of the dashboard's; a QSO logged elsewhere shows up at once. It uses the dashboard's connection: if the dashboard is closed, reopen it and click LOGBOOKS twice.
 

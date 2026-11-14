@@ -632,7 +632,12 @@ const PROP = new (require('./lib/prop.js').Prop)((msg) => { for (const c of ops)
 const UPD = new (require('./lib/update.js').Updater)({ root: ROOT, version: VERSION, enabled: cfg.updateCheck !== false,
   onChange: (st) => { for (const c of ops) if (c.open && c.user && c.user.admin) send(c, st); } });
 // Dans le dossier des journaux par défaut : le seul où le service systemd du VPS peut écrire (ReadWritePaths)
-const book = new LB.Logbook(cfg.logbookFile ? path.resolve(ROOT, cfg.logbookFile) : path.join(LOG_DIR, 'logbook.json'));
+// Base SQLite logbook.db (Node.js 22.13 et plus), reprise automatique de logbook.json la première fois ; sinon logbook.json.
+// nodeName : nom de ce serveur / poste dans le log commun (mise en réseau)
+const book = new LB.Logbook(cfg.logbookFile ? path.resolve(ROOT, cfg.logbookFile) : path.join(LOG_DIR, 'logbook.json'), { node: cfg.nodeName || 'serveur' });
+{ const bi = book.info(); console.log('Carnet de trafic : ' + bi.qsos + ' QSO, ' + (bi.engine === 'sqlite' ? 'base SQLite ' + bi.file : 'fichier ' + bi.file)); }
+// Base SQLite : copie lisible logbook.json au démarrage puis chaque jour (secours si SQLite manquait un jour)
+if (book.engine === 'sqlite') { setTimeout(() => book.exportJson(), 60000).unref(); setInterval(() => book.exportJson(), 24 * 3600 * 1000).unref(); }
 const refs = new REFDATA.RefData(path.join(ROOT, 'refdata'), (msg) => console.error(msg));
 // Super Check Partial (indicatifs actifs en contest) : page TRX SSB, indicatifs probables
 const SCP = new (require('./lib/scp').Scp)(path.join(ROOT, 'refdata'), (msg) => console.log(msg));
@@ -3429,7 +3434,7 @@ function onOperator(conn, m) {
       const txcalls = Array.from(new Set(book.qsos.map((q) => String(q.station_callsign || '').toUpperCase()).filter(Boolean))).sort();
       const lim = Math.max(1, Math.min(1000, Number(m.limit) || 200));
       return send(conn, { t: 'log_list', total: book.qsos.length, count: all.length, items: all.slice(-lim).reverse().map(qsoForClient),
-        calls: logCalls(conn), txcalls: conn.user.admin ? txcalls : undefined, stationCalls: stationCalls(), admin: !!conn.user.admin, services: LOG_SERVICES, auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto])), tag: logTag(m) });
+        calls: logCalls(conn), txcalls: conn.user.admin ? txcalls : undefined, stationCalls: stationCalls(), admin: !!conn.user.admin, services: LOG_SERVICES, auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto])), tag: logTag(m), engine: book.engine });
     }
     case 'log_merge': {
       // Doublon : la fiche déjà au carnet (ex. enregistrée en fin de QSO) est complétée (nom, QTH…) au lieu d'un 2e QSO
@@ -4490,6 +4495,7 @@ server.listen(cfg.port, cfg.listen, () => {
 for (const sig of ['SIGTERM', 'SIGINT']) {
   process.on(sig, () => {
     if (ptt.active) stopPtt('arrêt du serveur');
+    try { book.close(); } catch (e) { /* carnet déjà fermé */ }
     setTimeout(() => process.exit(0), 300);
   });
 }

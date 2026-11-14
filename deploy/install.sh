@@ -83,6 +83,8 @@ if [ ${#PKGS[@]} -gt 0 ]; then
 fi
 node_ok || fin "Node.js 20 ou plus est nécessaire (trouvé : $(node -v 2>/dev/null || echo aucun))"
 info "Node.js $(node -v)"
+# Carnet de trafic en base SQLite intégrée à Node.js (node:sqlite) : Node.js 22.13 ou plus ; sinon il reste en logbook.json
+node -e 'require("node:sqlite")' >/dev/null 2>&1 && info "Carnet de trafic : base SQLite disponible (logs/logbook.db)" || echo "Attention : Node.js $(node -v) n’a pas SQLite (22.13 ou plus) : le carnet reste dans logs/logbook.json. Pour la base SQLite : mettre Node.js à jour (NodeSource 22 ou 24)."
 
 # ------------------------------------------------------------------ 2. utilisateur du service, droits
 if ! id "$RUSER" >/dev/null 2>&1; then
@@ -92,7 +94,7 @@ fi
 mkdir -p "$APP/logs"
 chown -R "$RUSER:$RUSER" "$APP"
 # Fichiers secrets : lisibles par le service seulement
-for f in config.json users.json sessions.json macros.json profiles.json logs/logbook.json logs/logbook-config.json logs/station-sessions.json; do
+for f in config.json users.json sessions.json macros.json profiles.json logs/logbook.json logs/logbook.db logs/logbook-config.json logs/station-sessions.json; do
   [ -f "$APP/$f" ] && chmod 600 "$APP/$f"
 done
 [ -d "$APP/voicemem" ] && chmod 700 "$APP/voicemem" # mémoires vocales des membres

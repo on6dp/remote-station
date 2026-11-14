@@ -448,7 +448,13 @@ Ces deux automatismes n'agissent que si un membre a la main (rien ne change pour
 
 ## 11. Carnet de trafic et logs en ligne
 
-- Le carnet est dans `/opt/remote-station/logs/logbook.json` ; les réglages des services (mots de passe, clés API LoTW, eQSL, Club Log, QRZ.com) dans `logs/logbook-config.json` (droits 600). **Jamais publiés**, et les mots de passe ne sont jamais renvoyés aux navigateurs.
+- **Base SQLite** (depuis 0.41.0) : le carnet est dans `/opt/remote-station/logs/logbook.db`, base SQLite intégrée à Node.js (`node:sqlite`, Node 22.13 ou plus ; le VPS a Node 24). Rien à installer ni à régler : pas de serveur de base de données, pas de mot de passe. MariaDB, présente sur le VPS pour un autre service, n'est pas utilisée.
+  - **Première fois** : reprise automatique de `logbook.json` (copie gardée : `logbook.json.avant-sqlite-<date>`), nombre de QSO vérifié ; en cas d'écart, rien n'est changé et le serveur reste sur `logbook.json`.
+  - Chaque QSO ajouté, corrigé ou supprimé est écrit seul (≈ 10 ms même avec 100 000 QSO, au lieu de réécrire tout le fichier).
+  - `logbook.json` reste une **copie lisible**, refaite au démarrage puis chaque jour : secours si un jour SQLite manquait (Node.js trop ancien, le serveur la relit alors et le signale dans le journal).
+  - Consulter la base : `sudo sqlite3 /opt/remote-station/logs/logbook.db "SELECT COUNT(*) FROM qsos;"` (lecture ; ne pas modifier pendant que le service tourne).
+  - Tables : `qsos` (une ligne par QSO : colonnes de recherche + `data` = le QSO complet en JSON, `node` = poste qui l'a fait, `version`, `modified`), `changes` (journal ajout / correction / suppression), `serials` (numéros de série de contest réservés par poste), `meta` (version du schéma, reprise). Préparées pour la mise en réseau (plusieurs postes, un log commun) ; `nodeName` dans config.json = nom de ce serveur dans le log commun (défaut : serveur).
+- Les réglages des services (mots de passe, clés API LoTW, eQSL, Club Log, QRZ.com) dans `logs/logbook-config.json` (droits 600). **Jamais publiés**, et les mots de passe ne sont jamais renvoyés aux navigateurs.
 - Configuration du club : **administrateurs** (onglet Logbooks → Synchronisation ▾ → ⚙ Configuration). Synchronisation : administrateurs pour tous les indicatifs, chaque membre pour le sien (ci-dessous).
 - Tous les membres (sauf écouteurs) enregistrent des QSO et peuvent modifier ou supprimer **les leurs** seulement. Les autres peuvent voir le détail d'un QSO, sans jamais le modifier.
 - Un QSO sous l'indicatif d'un membre n'est **jamais** envoyé aux carnets du club : il part vers les siens (s'il les a réglés) ou s'exporte en ADIF (« Mes QSO »).
@@ -532,7 +538,7 @@ Les données à protéger sont toutes dans `/opt/remote-station` :
 | `sessions.json` | Navigateurs restés connectés |
 | `macros.json` | Macros personnelles des membres |
 | `profiles.json` | Réglages de micro et profils d'égaliseur des membres, réglage du club de l'égaliseur du TRX |
-| `logs/` | Carnet (`logbook.json`), identifiants des carnets en ligne (`logbook-config.json`), journaux d'accès, relevés d'utilisation |
+| `logs/` | Carnet (`logbook.db`, base SQLite ; copie lisible `logbook.json`), identifiants des carnets en ligne (`logbook-config.json`), journaux d'accès, relevés d'utilisation |
 | `sstv/` | Images SSTV reçues |
 
 ### Avec le script `backup.sh` (recommandé)
@@ -581,6 +587,9 @@ sudo chown -R remotestation:remotestation /opt/remote-station && sudo systemctl 
 ```
 
 ---
+
+
+**Carnet en base SQLite** : `backup.sh` en fait d'abord une copie cohérente (`VACUUM INTO`, sans arrêter le service), mise dans l'archive sous le nom `logs/logbook.db` ; la base vivante et ses fichiers `-wal` / `-shm` ne sont pas archivés tels quels. À la restauration, ces fichiers `-wal` / `-shm` sont retirés ; une archive plus ancienne (carnet `logbook.json` seulement) met la base actuelle de côté (`logbook.db.avant-restauration-…`) et le serveur reprend le `logbook.json` restauré.
 
 ## 15. Fichiers secrets
 

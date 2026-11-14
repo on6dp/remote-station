@@ -12,6 +12,12 @@ dist/
 windows/.cache/
 logbook.json
 logbook.json.tmp
+logbook.json.avant-sqlite-*
+logbook.db
+logbook.db-wal
+logbook.db-shm
+logbook.sauvegarde.db
+logbook.db.avant-restauration-*
 logbook-config.json
 comptes-*.csv
 station-sessions.json

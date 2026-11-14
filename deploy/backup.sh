@@ -82,6 +82,28 @@ donnees() {
     }' "$APP"
 }
 
+# Carnet de trafic en base SQLite (logbook.db, en écriture pendant que le serveur tourne) : copie cohérente
+# logbook.sauvegarde.db faite par SQLite (VACUUM INTO), mise dans l'archive sous le nom logbook.db ; la base vivante
+# et ses fichiers -wal / -shm ne sont pas archivés tels quels
+TAROPT=(--exclude=logbook.db --exclude=logbook.db-wal --exclude=logbook.db-shm --transform='s,logbook\.sauvegarde\.db$,logbook.db,')
+INSTANTANES=()
+instantanes() {
+  local db snap
+  INSTANTANES=()
+  while IFS= read -r db; do
+    [ -f "$db" ] || continue
+    snap="$(dirname "$db")/logbook.sauvegarde.db"
+    if node -e '
+      const { DatabaseSync } = require("node:sqlite"); const [src, dst] = process.argv.slice(1);
+      try { require("fs").unlinkSync(dst); } catch (e) {}
+      const d = new DatabaseSync(src); d.exec("PRAGMA busy_timeout = 10000"); d.exec("VACUUM INTO '"'"'" + dst.replace(/'"'"'/g, "'"'"''"'"'") + "'"'"'"); d.close();' "$db" "$snap" 2>/dev/null; then
+      chmod 600 "$snap"; INSTANTANES+=("$snap")
+    else
+      echo "Attention : copie de $db impossible (Node.js 22.13 ou plus nécessaire) ; le carnet est sauvegardé par sa copie quotidienne logbook.json" >&2
+    fi
+  done < <(find "$APP" -maxdepth 3 -name logbook.db -type f 2>/dev/null)
+}
+
 sauver() {
   local quand tag nom f n
   mkdir -p "$DOSSIER"; chmod 700 "$DOSSIER"
@@ -90,15 +112,18 @@ sauver() {
   nom="$DOSSIER/remote-station-${tag:+$tag-}$quand.tar.gz"
   if [ "$COMPLET" = 1 ]; then
     info "Sauvegarde complète (programme + données) de $APP"
-    tar -czf "$nom" -C "$(dirname "$APP")" --exclude="$(basename "$APP")/refdata" "$(basename "$APP")"
+    instantanes
+    tar -czf "$nom" -C "$(dirname "$APP")" --exclude="$(basename "$APP")/refdata" "${TAROPT[@]}" "$(basename "$APP")"
   else
     info "Sauvegarde des données de $APP"
     mapfile -t LISTE < <(donnees)
     [ ${#LISTE[@]} -gt 0 ] || fin "aucune donnée trouvée dans $APP"
     sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$APP/package.json" | head -1 > "$APP/.version-sauvegarde"
-    tar -czf "$nom" -C "$APP" .version-sauvegarde "${LISTE[@]}"
+    instantanes
+    tar -czf "$nom" -C "$APP" "${TAROPT[@]}" .version-sauvegarde "${LISTE[@]}"
     rm -f "$APP/.version-sauvegarde"
   fi
+  for f in "${INSTANTANES[@]}"; do rm -f -- "$f"; done
   chmod 600 "$nom"
   chown "$(proprio "$DOSSIER")": "$nom" "$DOSSIER" 2>/dev/null || true
   vert "✓ $nom ($(du -h "$nom" | cut -f1))"
@@ -135,6 +160,12 @@ case "$ACTION" in
     COMPLET=0; sauver avant-restauration
     info "Arrêt du service"
     systemctl stop "$SVC" || true
+    # Carnet en base SQLite : les fichiers -wal / -shm de la base actuelle ne doivent pas se mélanger à la base restaurée ;
+    # archive d'avant la base (logbook.json seulement) : la base actuelle est mise de côté, le serveur reprendra logbook.json
+    while IFS= read -r db; do
+      rm -f -- "$db-wal" "$db-shm"
+      if ! printf '%s\n' "$CONTENU" | grep -q 'logbook\.db$'; then mv -- "$db" "$db.avant-restauration-$(date +%Y%m%d-%H%M)"; info "Base du carnet mise de côté : $db.avant-restauration-…"; fi
+    done < <(find "$APP" -maxdepth 3 -name logbook.db -type f 2>/dev/null)
     if [ "$TYPE" = complet ]; then
       tar -xzf "$FICHIER" -C "$(dirname "$APP")"
       [ "${PREMIER%%/*}" = "$(basename "$APP")" ] || echo "Attention : l'archive contenait le dossier ${PREMIER%%/*}/ (extrait à côté de $APP)"

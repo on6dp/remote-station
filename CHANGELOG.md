@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.41.0** — Carnet de trafic en base SQLite (logbook.db, intégrée à Node.js) : reprise automatique de logbook.json avec vérification, chaque QSO écrit seul (≈ 10 ms à 100 000 QSO), copie logbook.json quotidienne, sauvegardes cohérentes ; tables préparées pour la mise en réseau (poste, versions, journal des changements, numéros de série réservés).
 - **0.40.7** — FT8 en DUAL RX : passe profonde aussi pour le récepteur SUB (VFO-B), à la suite de celle du MAIN.
 - **0.40.6** — RTTY : décodeur grande sensibilité (AFC ±40 Hz, plusieurs instants de lecture, deux décisions dont une anti-fading sélectif, silencieux à hystérésis) : 2 à 3 dB de mieux. Carnet en grand : bouton RETOUR (fermer la fenêtre) et ↩ STATISTIQUES après un clic sur une case.
 - **0.40.5** — Statistiques DXCC : les 340 pays DXCC (même jamais contactés), filtre Pays, bouton ↩ CARNET et Échap, cases et lignes plus grandes, récapitulatif fixé en bas.
