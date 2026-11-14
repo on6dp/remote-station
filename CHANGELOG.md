@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.40.4** — Statistiques DXCC : toutes les bandes HF, 6 m et SAT toujours affichées (160 à 6 m), plus 2 m / 70 cm s'il y a des QSO.
 - **0.40.3** — Statistiques DXCC façon Swisslog : colonnes SSB / CW / RTTY / FT8 / FT4 / FT2 sous chaque bande, cases C vert (confirmé) / W bleu (contacté) / - rouge, récapitulatif bandes × modes en dessous ; colonnes resserrées.
 - **0.40.2** — Carnet en grand : 📊 STATISTIQUES DXCC par TX call, pays × bandes, C / P / D contacté ou confirmé (façon Swisslog), filtre par mode, clic = QSO dans le carnet.
 - **0.40.1** — LOGBOOKS : carnet déjà affiché, un nouveau clic ouvre le carnet en grand dans sa propre fenêtre (autre écran) : toutes les colonnes, 1000 QSO, recherche / filtres / exports indépendants.

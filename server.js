@@ -3401,6 +3401,8 @@ function onOperator(conn, m) {
         if (mk === 'AUT') { r.aut = r.aut || {}; r.aut[md] = 1; }
         if (!r.first || String(q.qso_date) < r.first) r.first = String(q.qso_date || '');
       }
+      // Bandes toujours montrées (HF + 6 m + satellite), plus celles du carnet en dehors de cette liste (2 m, 70 cm…)
+      for (const b of ['160m', '80m', '60m', '40m', '30m', '20m', '17m', '15m', '12m', '10m', '6m', 'SAT']) bands.add(b);
       const bl = BORD.filter((b) => bands.has(b)).concat(Array.from(bands).filter((b) => BORD.indexOf(b) < 0).sort());
       return send(conn, { t: 'log_stats', txc, mode: want, bands: bl, rows: Array.from(rows.values()), qsos: n,
         txcalls: Array.from(txcs).sort(), modes: Array.from(modes).sort(), tag: logTag(m) });
