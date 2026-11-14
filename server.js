@@ -3506,7 +3506,7 @@ function onOperator(conn, m) {
       const items = all.slice(-lim).reverse().map((q) => ({
         id: q.id, call: q.call, band: q.band, d: q.qso_date, t: q.time_on, freq: q.freq, rs: q.rst_sent || '', rr: q.rst_rcvd || '',
         stx: q.stx_string || q.stx || '', srx: q.srx_string || q.srx || '', name: q.name || '', qth: q.qth || '', grid: q.gridsquare || '',
-        cn: q.country || '', dx: (DXCC.lookup(q.call) || {}).pfx || '', st: q.station_callsign || '', op: q.operator || '', ct: q.contest_id || '' }));
+        cn: q.country || '', dx: ctstCty(q).dx, cc: ctstCty(q).ct, mp: ctstCty(q).mp, mc: ctstCty(q).mc, st: q.station_callsign || '', op: q.operator || '', ct: q.contest_id || '' }));
       return send(conn, { t: 'mode_list', mode, contest: id, total: all.length, items, tag: String(m.tag || '').slice(0, 20) });
     }
     case 'ctst_list': {

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.96** — LOG RTTY en contest : colonne Pts (points par QSO) et total des points pour CQ WW RTTY, CQ WPX RTTY et ARRL RTTY Roundup (doublons à 0)
 - **0.39.95** — Cascades : un peu plus d'espace entre la ligne de réglages (Gain, Zéro, Couleurs, Vitesse) et la règle des fréquences
 - **0.39.94** — Page RTTY : TRX mis tout seul en mode données (DATA-U Yaesu, USB-D Icom, USB+PKT / PKT-U Kenwood) à l'ouverture et au retour sur la page, aussi sur le VFO-B en SPLIT / DUAL RX, renvoyé si le TRX reprend le mode de la bande
 - **0.39.93** — Page RTTY : liste DÉCODEURS aux couleurs de DUAL RX (cadre gras mauve, cadre bleu au survol)

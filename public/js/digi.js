@@ -5321,20 +5321,40 @@
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
     if (api && api.say) api.say((m.count || 0) + ' QSO RTTY dans ' + (m.name || 'le fichier') + ' (ADIF).', '', 5000);
   }
+  // Points par QSO des contests RTTY dont le règlement est connu (relu sur les sites officiels le 14 novembre 2026) ;
+  // doublon (même indicatif, même bande ; ARRL : même indicatif) = 0 point. Autres contests : pas de colonne Points.
+  const RT_PTS = {
+    'CQ-WW-RTTY': { note: 'CQ WW RTTY : même pays 1 point, même continent 2, autre continent 3', pts: (q) => (q.dx && q.dx === q.mp ? 1 : q.cc === q.mc ? 2 : 3) },
+    'CQ-WPX-RTTY': { note: 'CQ WPX RTTY : même pays 1 point, même continent 2, autre continent 3 — doublés sur 40 et 80 m',
+      pts: (q) => { const k = /^(40|80|160)m$/.test(q.band) ? 2 : 1; return k * (q.dx && q.dx === q.mp ? 1 : q.cc === q.mc ? 2 : 3); } },
+    'ARRL-RTTY': { note: 'ARRL RTTY Roundup : 1 point par QSO (chaque station une fois par bande)', pts: () => 1 }
+  };
   function rtLogDraw(m) {
     const body = $('rtLogBody'), head = $('rtLogHead');
     if (!body || !head) return;
     const cid = rtcOn() ? rtcId() : '';
     if ((m.contest || '') !== cid) return; // réponse d'un autre choix de contest
     const ctst = !!cid;
+    const PR = ctst ? RT_PTS[cid] : null;
+    if (PR) {
+      // Points : du plus ancien au plus récent, doublons (même indicatif, même bande) à 0
+      const seen = new Set();
+      for (const q of (m.items || []).slice().reverse()) {
+        const k = q.call + '|' + q.band;
+        let p = 0;
+        try { p = seen.has(k) ? 0 : Number(PR.pts(q)) || 0; } catch (e) { p = 0; }
+        seen.add(k);
+        q.pts = p;
+      }
+    }
     const cols = ctst
-      ? [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['TX #', 'stx'], ['Reçu', 'rr'], ['RX #', 'srx'], ['DXCC', 'dx'], ['TX call', 'st'], ['OP', 'op'], ['Contest', 'ct']]
+      ? [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['TX #', 'stx'], ['Reçu', 'rr'], ['RX #', 'srx']].concat(PR ? [['Pts', 'pts']] : [], [['DXCC', 'dx']]).concat([['TX call', 'st'], ['OP', 'op'], ['Contest', 'ct']])
       : [['Date', 'd'], ['UTC', 't'], ['Indicatif', 'call'], ['Bande', 'band'], ['MHz', 'freq'], ['Env.', 'rs'], ['Reçu', 'rr'], ['Nom', 'name'], ['QTH', 'qth'], ['Loc.', 'grid'], ['DXCC', 'dx'], ['TX call', 'st'], ['OP', 'op'], ['Contest', 'ct']];
     const key = cols.map((c) => c[0]).join('|');
     if (key !== rtLogKey) {
       rtLogKey = key;
       head.textContent = '';
-      for (const [h] of cols) { const th = document.createElement('th'); th.textContent = h; head.appendChild(th); }
+      for (const [h] of cols) { const th = document.createElement('th'); th.textContent = h; if (h === 'Pts' && PR) th.title = PR.note + ' ; doublon : 0'; head.appendChild(th); }
       colResize(head.closest('table'), 'rtlog', store);
     }
     const fmt = (q, k) => {
@@ -5360,7 +5380,7 @@
     // Ligne vide qui remplit le bas du cadre : les traits des colonnes descendent jusqu'en bas
     { const tr = document.createElement('tr'); tr.className = 'rt-fill'; for (let i = 0; i < cols.length; i++) tr.appendChild(document.createElement('td')); body.appendChild(tr); }
     const c = RT_CONTESTS.find((x) => x[0] === cid);
-    $('rtLogInfo').textContent = (ctst ? '· ' + (c ? c[1] : cid) + ' · ' : '· hors contest · ') + (m.total || 0) + ' QSO' + ((m.total || 0) > (m.items || []).length ? ' (les ' + (m.items || []).length + ' derniers)' : '');
+    $('rtLogInfo').textContent = (ctst ? '· ' + (c ? c[1] : cid) + ' · ' : '· hors contest · ') + (m.total || 0) + ' QSO' + ((m.total || 0) > (m.items || []).length ? ' (les ' + (m.items || []).length + ' derniers)' : '') + (PR ? ' · ' + (m.items || []).reduce((a, q) => a + (q.pts || 0), 0) + ' points (sans multiplicateurs)' : '');
   }
   function drawRttyMacros() {
     // Contest choisi : les touches F1 à F12 passent aux macros contest (les macros habituelles restent au clic)
