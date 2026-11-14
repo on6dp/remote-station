@@ -3288,3 +3288,9 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .rt-wfbtns { display: none; align-items: center; gap: 6px; margin-left: 10px; }
 .ctab-pane.rt .rt-wfbtns { display: inline-flex; }
 .rt-wfbtns .dg-mini { font-size: 10.5px; padding: 2px 8px; }
+/* Liste DÉCODEURS (SINGLE / DUAL / QUAD) à la place des boutons DUAL et QUAD DÉCODEURS */
+.ctab-pane.rt #rt2Dec, .ctab-pane.rt #rt4Dec { display: none !important; }
+.rt-decsel { background: #121a26; color: #fff; border: 1px solid #8a5cc4; border-radius: 6px; font: 800 11px inherit; padding: 2px 6px; }
+.rt-decsel.on { background: linear-gradient(180deg, #6a3aa8, #3f1d6e); border-color: #c49bff; box-shadow: 0 0 8px rgba(160, 100, 255, .45); }
+.rt-decsel[hidden] { display: none !important; }
+.rt-decsel option { background: #121a26; color: #fff; }

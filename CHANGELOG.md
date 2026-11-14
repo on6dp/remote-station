@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.91** — Page RTTY : liste DÉCODEURS (SINGLE / DUAL / QUAD) à la place des boutons DUAL et QUAD DÉCODEURS
 - **0.39.90** — Page RTTY : DUAL / QUAD DÉCODEURS et BARRES sur la ligne de réglages de la cascade ; en-tête de A1 sur une ligne (RX ici / TX ici à côté de CENTRE)
 - **0.39.89** — Page RTTY : plus de réglage Silencieux (seuil fixe de 9 dB pour les 4 décodeurs)
 - **0.39.88** — Page RTTY : plus d'indicateurs Mark / Space (M / S) dans les en-têtes des décodeurs
