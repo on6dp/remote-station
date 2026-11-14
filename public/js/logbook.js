@@ -1019,6 +1019,32 @@
   function showDlgTab(d, t) {
     d.querySelectorAll('.lg-tabs [data-t]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.t === t)));
     d.querySelectorAll('[data-p]').forEach((p) => { p.hidden = p.dataset.p !== t; });
+    const h = d.querySelector('[data-p="' + t + '"][data-help]');
+    if (h) loadHelp(h, h.dataset.help);
+  }
+  // Onglet HELP des fenêtres du carnet : la section du manuel (/aide.html) dont l'identifiant est donné, jusqu'au titre
+  // suivant de même niveau (ou plus haut)
+  const helpTab = (id) => '<div data-p="help" class="lg-pp lg-nethelp" data-help="' + id + '" hidden><p>Chargement de l’aide…</p></div>';
+  function loadHelp(el, id) {
+    if (el.dataset.ok) return;
+    el.dataset.ok = '1';
+    fetch('/aide.html', { cache: 'no-cache' }).then((r) => r.text()).then((html) => {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const h = doc.getElementById(id);
+      if (!h) throw new Error('section absente');
+      const lvl = Number(h.tagName.slice(1)) || 3;
+      const out = document.createElement('div');
+      for (let n = h; n; n = n.nextElementSibling) {
+        if (n !== h && /^H[1-6]$/.test(n.tagName) && Number(n.tagName.slice(1)) <= lvl) break;
+        out.appendChild(document.importNode(n, true));
+      }
+      out.querySelectorAll('script, iframe, object').forEach((x) => x.remove());
+      el.textContent = '';
+      el.appendChild(out);
+      const a = document.createElement('p');
+      a.innerHTML = '<a href="/aide#' + id + '" target="_blank" rel="noopener">Ouvrir le manuel complet à cette section ↗</a>';
+      el.appendChild(a);
+    }).catch(() => { el.dataset.ok = ''; el.innerHTML = '<p>Aide indisponible : <a href="/aide#' + id + '" target="_blank" rel="noopener">ouvrir le manuel</a>.</p>'; });
   }
   // Export : administrateurs = tous les TX call du carnet ; membres = leur indicatif et leurs QSO sous les indicatifs du club
   let txcalls = [];
@@ -1052,7 +1078,8 @@
     const title = lotw ? 'Opérations LoTW' : 'Télécharger vers ' + NAMES[s];
     const d = mkDlg('lg-sync', '<form method="dialog">' +
       '<h3>' + title + '</h3>' +
-      '<div class="lg-tabs" role="tablist"><button type="button" data-t="det" aria-selected="true">Détails</button><button type="button" data-t="proc" aria-selected="false">Traitement</button></div>' +
+      '<div class="lg-tabs" role="tablist"><button type="button" data-t="det" aria-selected="true">Détails</button><button type="button" data-t="proc" aria-selected="false">Traitement</button><button type="button" data-t="help" aria-selected="false">HELP</button></div>' +
+      helpTab('help-' + s) +
       '<div data-p="det" class="lg-pp">' +
       (me.admin ? '<label>Indicatif (TX call) <select name="callsign">' + callOptions('Tous les indicatifs') + '</select></label>'
         : '<label>Indicatif (TX call) <select name="callsign"><option>' + esc(own) + '</option></select></label>' +
@@ -1259,8 +1286,9 @@
     const keys = Object.assign({}, cfg.qrz.has_keys || {});
     for (const c of calls) if (!(c in keys)) keys[c] = false;
     const d = mkDlg('lg-cfg', '<form method="dialog" autocomplete="off"><h3>Configuration de carnets de trafic en ligne</h3>' +
-      '<div class="lg-tabs" role="tablist">' + [['clublog', 'CLUBLOG'], ['eqsl', 'eQSL'], ['lotw', 'LoTW'], ['qrz', 'QRZ'], ['udp', 'UDP']].map(([k, t], i) =>
+      '<div class="lg-tabs" role="tablist">' + [['clublog', 'CLUBLOG'], ['eqsl', 'eQSL'], ['lotw', 'LoTW'], ['qrz', 'QRZ'], ['udp', 'UDP'], ['help', 'HELP']].map(([k, t], i) =>
         '<button type="button" data-t="' + k + '" aria-selected="' + (i === 0) + '">' + t + '</button>').join('') + '</div>' +
+      helpTab('l-config') +
       // Club Log
       '<div data-p="clublog" class="lg-pp">' + common('clublog', cfg.clublog) +
       textField('Adresse e-mail', 'clublog.email', cfg.clublog.email, '', 'type="email" maxlength="200"') +

@@ -982,6 +982,32 @@ In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé*
 - **Club callsigns and personal callsigns**: the credentials in the general configuration (14.5) are only used for the club callsigns (ON5VL, OR0L). A personal callsign (ON6DP…) needs **its own credentials**, otherwise its QSOs are marked « non configuré » (not configured). An upload mixing several TX calls is done group by group, each with its own credentials.
 - **LoTW operations**: export, sign with TQSL, upload, read confirmations, status. `Confirmations` only reads the confirmations received (★ in the list). With the server on the VPS (no TQSL): `Exporter pour TQSL (.adi)` (export for TQSL), sign the file with TQSL on the club PC, then `Marquer comme envoyés` (mark as sent).
 
+- **What you need**: a LoTW account for the callsign, its **certificate** (.p12 file) installed in **TQSL** on your PC, and a **Station Location** (callsign, locator, zones) created in TQSL. The certificate and its password **never go to the server**: signing is always done at your place.
+- **Uploading** (server on the VPS, the case of remote.op0p.be):
+   1. Synchronisation ▾ → **Synchronisation LoTW…**, choose the **TX call** (e.g. OR0L), possibly dates.
+   2. `Exporter pour TQSL (.adi)`: the file only contains the QSOs **not yet sent** to LoTW for this callsign (tick « Renvoyer aussi les QSO déjà envoyés » to resend all).
+   3. On your PC, **TQSL** → « Sign a log and upload it automatically to LoTW » → the .adi file → this callsign's Station Location: TQSL signs with the certificate and uploads to LoTW.
+   4. Back in the window: `Marquer comme envoyés` (mark as sent: these QSOs will not leave again at the next export; LoTW column of the logbook updated).
+- **Club Windows server with TQSL installed** (and the certificate on that PC): set the TQSL program, its folder and the Station Location in ⚙ Configuration → LoTW; `Télécharger` then signs and uploads directly.
+- **Confirmations**: `Confirmations` reads the QSOs confirmed on LoTW (★ in the logbook, green « C » in the DXCC statistics). Only the **LoTW website login and password** are needed (not the certificate): ⚙ Configuration → LoTW for club callsigns, yellow frame of this window for a personal callsign.
+- **Network**: export from **remote.op0p.be** (the master has all shared QSOs of all stations). QSOs made under a member's personal callsign (not shared) are exported from their own station, with their own certificate.
+- LoTW ignores a QSO it already has: sending a file again does not create duplicates.
+
+- **What you need**: an eQSL.cc account for the callsign. Credentials: the **callsign** (eQSL login) and the account **password**; **QTH Nickname** only if the account has several QTHs (the exact nickname of the club's). Club callsigns: ⚙ Configuration → eQSL; personal callsign: yellow frame of this window (`Enregistrer pour cet indicatif`).
+- **Uploading**: choose the TX call, possibly dates, then `Télécharger`: the server sends the QSOs not yet sent, one by one (Traitement tab: report QSO by QSO). **Temporisation**: pause between two QSOs so as not to be blocked by the site.
+- **Confirmations**: received eQSLs are viewed on the eQSL.cc site (Inbox).
+- **Automatic upload** of each new QSO: ⚙ Configuration → eQSL (club) or the box in this window (personal callsign). Turn it off during a contest if you don't want live uploads.
+
+- **What you need**: a Club Log account where the callsign is registered. Credentials: the account **e-mail**, an **app password** (Club Log → Settings → App Passwords, advised instead of the account password) and the **API key** of the Remote Station application (requested once from the Club Log helpdesk). Club callsigns: ⚙ Configuration → CLUBLOG; personal callsign: yellow frame of this window.
+- **Uploading**: TX call, possibly dates, then `Télécharger`; progress in the Traitement tab.
+- **« Effacer le log ClubLog existant »** replaces **all** the online log of this callsign with this logbook: only if this logbook is complete.
+- An access refusal (error 403) stops automatic uploads until the next successful try: Club Log blocks programs that insist. Check the app password and the API key.
+
+- **What you need**: a **QRZ logbook API key** per callsign (QRZ.com → Logbook → Settings → API Key; XML subscription or higher). Club callsigns: ⚙ Configuration → QRZ (one line per callsign); personal callsign: yellow frame of this window.
+- **Uploading**: TX call, possibly dates, then `Télécharger`; QSOs arrive in the callsign's QRZ logbook.
+- **Confirmations**: in the QRZ logbook on the site.
+- The QRZ.com account for « looking up correspondents » (name, QTH, locator) is another setting, in ⚙ Configuration → QRZ.
+
 <a id="l-config"></a>
 ### 14.5 Configuration
 

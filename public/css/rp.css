@@ -3378,3 +3378,6 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .lg-nethelp th, .lg-nethelp td { border: 1px solid rgba(255, 255, 255, .16); padding: 4px 7px; vertical-align: top; }
 .lg-nethelp a { color: #00d4ff; }
 .lg-nethelp[hidden], .lg-netcfg[hidden] { display: none; }
+.lg-nethelp .k { display: inline-block; padding: 0 6px; border: 1px solid #ffe600; border-radius: 4px; color: #ffe600; font-weight: 700; font-size: 12px; }
+.lg-nethelp h4 { margin: 4px 0 8px; color: #00d4ff; font-size: 15px; }
+.lg-nethelp ol, .lg-nethelp ul { padding-left: 22px; }

@@ -967,6 +967,43 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
   <li><b>Opérations LoTW</b> : exporter, signer avec TQSL, envoyer, lire les confirmations, statut. <span class="k">Confirmations</span> lit seulement les confirmations reçues (★ dans la liste). Avec le serveur sur le VPS (sans TQSL) : <span class="k">Exporter pour TQSL (.adi)</span>, signez le fichier avec TQSL sur le PC du club, puis <span class="k">Marquer comme envoyés</span>.</li>
 </ul>
 
+<h4 id="help-lotw">LoTW (ARRL Logbook of The World)</h4>
+<ul>
+  <li><b>Ce qu'il faut</b> : un compte LoTW pour l'indicatif, son <b>certificat</b> (fichier .p12) installé dans <b>TQSL</b> sur votre PC, et un <b>lieu de station</b> (Station Location : indicatif, locator, zones) créé dans TQSL. Le certificat et son mot de passe <b>ne vont jamais sur le serveur</b> : la signature se fait toujours chez vous.</li>
+  <li><b>Envoyer</b> (serveur sur le VPS, cas de remote.op0p.be) :
+    <ol>
+      <li>Synchronisation ▾ → <b>Synchronisation LoTW…</b>, choisissez le <b>TX call</b> (ex. OR0L), éventuellement des dates.</li>
+      <li><span class="k">Exporter pour TQSL (.adi)</span> : le fichier ne contient que les QSO <b>pas encore envoyés</b> à LoTW pour cet indicatif (cochez « Renvoyer aussi les QSO déjà envoyés » pour tout reprendre).</li>
+      <li>Sur votre PC, <b>TQSL</b> → « Sign a log and upload it automatically to LoTW » → le fichier .adi → le lieu de station de cet indicatif : TQSL signe avec le certificat et envoie à LoTW.</li>
+      <li>De retour dans la fenêtre : <span class="k">Marquer comme envoyés</span> (ces QSO ne repartiront plus au prochain export ; colonne LoTW du carnet à jour).</li>
+    </ol></li>
+  <li><b>Serveur Windows du club avec TQSL installé</b> (et le certificat sur ce PC) : réglez dans ⚙ Configuration → LoTW le programme TQSL, son dossier et le lieu de station ; <span class="k">Télécharger</span> signe et envoie alors directement.</li>
+  <li><b>Confirmations</b> : <span class="k">Confirmations</span> lit les QSO confirmés sur LoTW (★ dans le carnet, « C » vert dans les statistiques DXCC). Il faut seulement l'<b>identifiant et le mot de passe du site LoTW</b> (pas le certificat) : ⚙ Configuration → LoTW pour les indicatifs du club, cadre jaune de cette fenêtre pour un indicatif personnel.</li>
+  <li><b>Réseau</b> : faites l'export depuis <b>remote.op0p.be</b> (le maître a tous les QSO partagés de toutes les stations). Les QSO faits sous l'indicatif personnel d'un membre (non partagés) s'exportent depuis sa propre station, avec son propre certificat.</li>
+  <li>LoTW ignore un QSO déjà reçu : renvoyer un fichier ne crée pas de doublon.</li>
+</ul>
+<h4 id="help-eqsl">eQSL</h4>
+<ul>
+  <li><b>Ce qu'il faut</b> : un compte eQSL.cc pour l'indicatif. Identifiants : l'<b>indicatif</b> (identifiant eQSL) et le <b>mot de passe</b> du compte ; <b>QTH Nickname</b> seulement si le compte a plusieurs QTH (le surnom exact de celui du club). Indicatifs du club : ⚙ Configuration → eQSL ; indicatif personnel : cadre jaune de cette fenêtre (<span class="k">Enregistrer pour cet indicatif</span>).</li>
+  <li><b>Envoyer</b> : choisissez le TX call, éventuellement des dates, puis <span class="k">Télécharger</span> : le serveur envoie les QSO pas encore envoyés, un par un (onglet Traitement : compte rendu QSO par QSO). <b>Temporisation</b> : pause entre deux QSO pour ne pas être bloqué par le site.</li>
+  <li><b>Confirmations</b> : les eQSL reçues se consultent sur le site eQSL.cc (Inbox).</li>
+  <li><b>Envoi automatique</b> de chaque nouveau QSO : ⚙ Configuration → eQSL (club) ou case de cette fenêtre (indicatif personnel). À couper pendant un contest si on ne veut pas d'envois en direct.</li>
+</ul>
+<h4 id="help-clublog">Club Log</h4>
+<ul>
+  <li><b>Ce qu'il faut</b> : un compte Club Log où l'indicatif est enregistré. Identifiants : l'<b>e-mail</b> du compte, un <b>mot de passe d'application</b> (Club Log → Settings → App Passwords, conseillé plutôt que le mot de passe du compte) et la <b>clé API</b> de l'application Remote Station (demandée une fois au helpdesk de Club Log). Indicatifs du club : ⚙ Configuration → CLUBLOG ; indicatif personnel : cadre jaune de cette fenêtre.</li>
+  <li><b>Envoyer</b> : TX call, dates éventuelles, puis <span class="k">Télécharger</span> ; progression dans l'onglet Traitement.</li>
+  <li><b>« Effacer le log ClubLog existant »</b> remplace <b>tout</b> le log en ligne de cet indicatif par ce carnet : seulement si ce carnet est complet.</li>
+  <li>Un refus d'accès (erreur 403) arrête les envois automatiques jusqu'au prochain essai réussi : Club Log bloque les programmes qui insistent. Vérifiez le mot de passe d'application et la clé API.</li>
+</ul>
+<h4 id="help-qrz">QRZ.com (carnet QRZ)</h4>
+<ul>
+  <li><b>Ce qu'il faut</b> : une <b>clé API du carnet QRZ</b> par indicatif (QRZ.com → Logbook → Settings → API Key ; abonnement XML ou supérieur). Indicatifs du club : ⚙ Configuration → QRZ (une ligne par indicatif) ; indicatif personnel : cadre jaune de cette fenêtre.</li>
+  <li><b>Envoyer</b> : TX call, dates éventuelles, puis <span class="k">Télécharger</span> ; les QSO arrivent dans le carnet QRZ de l'indicatif.</li>
+  <li><b>Confirmations</b> : dans le carnet QRZ sur le site.</li>
+  <li>Le compte QRZ.com de « Recherche des correspondants » (nom, QTH, locator) est un autre réglage, dans ⚙ Configuration → QRZ.</li>
+</ul>
+
 <h3 id="l-config">14.5 Configuration</h3>
 <p><b>Synchronisation ▾ → ⚙ Configuration…</b> (administrateurs) : les réglages généraux, en onglets <b>CLUBLOG</b>, <b>eQSL</b>, <b>LoTW</b>, <b>QRZ</b> et <b>UDP</b>.</p>
 <ul>
