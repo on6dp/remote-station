@@ -2943,6 +2943,8 @@
     if (dualEl && dualEl.classList.contains('rt-2dec') !== two && tab === 'rtty') setTimeout(drawScale, 0); // repères A / B ↔ A1 / A2
     if ($('rtTxtB')) $('rtTxtB').placeholder = two ? 'Texte à émettre sur la fréquence de A2 (même VFO), puis F11 TX ou Ctrl+Entrée' : 'Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée';
     if (dualEl && dualEl.classList.contains('rt-4dec') !== four) { dualEl.classList.toggle('rt-4dec', four); if (!four) { rtBSel = Math.min(rtBSel, 1); if (rtTx >= 2) { rtTx = rtSideOf(rtTx); store.set('rttx', String(rtTx)); } } setTimeout(() => { announce(); if (tab === 'rtty') drawScale(); }, 0); }
+    // Liste DÉCODEURS : à droite du bouton DUAL RX des VFO du haut (même style) ; remise en place si le bloc des VFO est redessiné
+    { const sel = $('rtDecSel'), drx = document.querySelector('#rtVfo .vfb-drx'); if (sel && drx && sel.previousElementSibling !== drx) drx.after(sel); }
     if ($('rtDecSel')) { $('rtDecSel').hidden = !one; $('rtDecSel').value = four ? '4' : two ? '2' : '1'; $('rtDecSel').classList.toggle('on', two); }
     if ($('rt4Dec')) { $('rt4Dec').hidden = !one; $('rt4Dec').setAttribute('aria-pressed', String(four)); }
     if ($('rtBSel')) { $('rtBSel').hidden = !four; $('rtBSel').querySelectorAll('[data-b]').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.b) === rtBSel))); }
