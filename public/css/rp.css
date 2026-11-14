@@ -3234,3 +3234,7 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .dxc-tel-it span { white-space: nowrap; flex: none; }
 .dxc-tel-it small { text-align: right; }
 #dxcMenu { min-width: 340px; }
+/* RTTY, un seul récepteur : bouton « 2 DÉCODEURS » (deuxième paire de barres sur la même cascade) */
+.rt-2dec[hidden] { display: none !important; }
+.rt-2dec { color: #fff; border-color: #c9d1d9; }
+.rt-2dec[aria-pressed='true'] { background: #7a3cff; border-color: #a67bff; color: #fff; }

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.78** — Page RTTY, un seul récepteur : bouton 2 DÉCODEURS — deux paires de barres sur la même cascade, deux signaux décodés en même temps (fenêtre du décodeur B dans la colonne de droite)
 - **0.39.77** — Menu DX Cluster : liste de 225 clusters telnet (relevé DX-Cluster Realtime status), clusters belges en tête, case Chercher (indicatif, préfixe, adresse)
 - **0.39.76** — Aide (FR / EN) et guide administrateur mis à jour : page RTTY (une fenêtre par VFO, ligne du QSO, LOG RTTY, exports filtrés, colonnes réglables), page SSB (LOG SSB, correction d'un QSO de contest, RETOUR)
 - **0.39.75** — LOG RTTY et LOG SSB : cadre blanc autour du log

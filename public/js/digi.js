@@ -372,6 +372,7 @@
       <div class="dg-col rt-side" data-ch="0">
         <div class="dg-h rt-hd">
           <span class="rt-name">VFO-A</span><span class="rt-rf" id="rtRf"></span><span class="rt-sig" id="rtSig"></span>
+          <button class="dg-mini rt-2dec" type="button" id="rt2Dec" aria-pressed="false" hidden title="Un seul récepteur (ni SPLIT ni DUAL RX) : deuxième décodeur sur la même cascade — deux paires de barres, deux signaux décodés en même temps (clic droit sur la cascade = décodeur B). Sa fenêtre s’affiche dans la colonne de droite.">2 DÉCODEURS</button>
           <select id="rtShift" aria-label="Shift (VFO-A)"><option value="170">170 Hz</option><option value="200">200 Hz</option><option value="425">425 Hz</option><option value="850">850 Hz</option></select>
           <select id="rtBaud" aria-label="Vitesse (VFO-A)"><option value="45.45">45,45 Bd</option><option value="50">50 Bd</option><option value="75">75 Bd</option><option value="100">100 Bd</option></select>
           <button class="dg-mini" type="button" id="rtRev" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>
@@ -393,7 +394,7 @@
       <i class="rt-vsplit" id="rtSplit" title="Glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié)"></i>
       <div class="dg-col rt-side" data-ch="1">
         <div class="dg-h rt-hd">
-          <span class="rt-name">VFO-B</span><span class="rt-rf" id="rtRfB"></span><span class="rt-sig" id="rtSigB"></span>
+          <span class="rt-name" id="rtNameB">VFO-B</span><span class="rt-rf" id="rtRfB"></span><span class="rt-sig" id="rtSigB"></span>
           <select id="rtShiftB" aria-label="Shift (VFO-B)"><option value="170">170 Hz</option><option value="200">200 Hz</option><option value="425">425 Hz</option><option value="850">850 Hz</option></select>
           <select id="rtBaudB" aria-label="Vitesse (VFO-B)"><option value="45.45">45,45 Bd</option><option value="50">50 Bd</option><option value="75">75 Bd</option><option value="100">100 Bd</option></select>
           <button class="dg-mini" type="button" id="rtRevB" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>
@@ -2896,8 +2897,15 @@
     const r = st && st.radio;
     // Un seul VFO en service (ni SPLIT ni DUAL RX) : seulement les colonnes du VFO-A, sur toute la largeur ;
     // celles du VFO-B reviennent en SPLIT ou en DUAL RX ON
-    const solo = !!(r && !r.split && r.dualRx !== 1);
+    // Bouton « 2 DÉCODEURS » (un seul récepteur) : le décodeur B reste affiché, sur la même cascade (deux paires de barres)
+    const one = !!(r && !r.split && r.dualRx !== 1);
+    const two = one && store.get('rt2dec', '0') === '1';
+    const solo = one && !two;
     const dualEl = $('rtDual');
+    if ($('rt2Dec')) { $('rt2Dec').hidden = !one; $('rt2Dec').setAttribute('aria-pressed', String(two)); }
+    if ($('rtNameB')) $('rtNameB').textContent = two ? 'DÉCODEUR B' : 'VFO-B';
+    if ($('rtTxtB')) $('rtTxtB').placeholder = two ? 'Texte à émettre sur la fréquence du décodeur B (même VFO), puis F11 TX ou Ctrl+Entrée' : 'Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée';
+    if (dualEl) dualEl.classList.toggle('rt-2dec', two);
     if (dualEl && dualEl.classList.contains('rt-solo') !== solo) {
       dualEl.classList.toggle('rt-solo', solo);
       if (solo && rtTx === 1) { rtTx = 0; store.set('rttx', '0'); if (applySpan()) drawScale(); sendView(); dtxState(st && st.ftx); }
@@ -2911,7 +2919,8 @@
       if (!$('rtF' + sfx)) return;
       const d = rtDialOf(ch);
       $('rtF' + sfx).textContent = Math.round(x.f);
-      const own = d && d.vfo === (ch ? 'B' : 'A');
+      // « 2 DÉCODEURS » : le décodeur B lit le même récepteur que A ; sa fréquence est celle du VFO écouté
+      const own = d && (d.vfo === (ch ? 'B' : 'A') || (ch === 1 && two));
       // En grand : la fréquence du VFO, comme sur l'écran du TRX (14.078.540) ; en petit : celle du signal suivi
       // (porteuse ± centre Mark / Space, comme FLDIGI)
       const mhz = (hz) => { const t = String(Math.round(hz)).padStart(7, '0'); return t.slice(0, -6) + '.' + t.slice(-6, -3) + '.' + t.slice(-3); };
@@ -3238,6 +3247,7 @@
     // Choisir une bande dans la liste y envoie directement le TRX (QSY)
     dial.addEventListener('change', () => { store.set('rtdial', dial.value); qsyTo(Number(dial.value)); });
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
+    if ($('rt2Dec')) $('rt2Dec').addEventListener('click', () => { store.set('rt2dec', store.get('rt2dec', '0') === '1' ? '0' : '1'); rtHeads(); });
     // Hauteur des fenêtres TX / RX de chaque VFO : sa propre poignée, gardée dans ce navigateur
     for (const g of document.querySelectorAll('.rt-iogrip')) {
       const ch = Number(g.dataset.ch) === 1 ? 1 : 0, io = g.previousElementSibling;
