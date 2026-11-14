@@ -3369,6 +3369,22 @@ function onOperator(conn, m) {
       if (!conn.user.admin) return;
       refs.refresh(true).then(() => send(conn, { t: 'log_refs_status', status: refs.summary() })).catch(() => {});
       return send(conn, { t: 'notice', level: 'info', msg: 'Listes de références : téléchargement relancé (quelques minutes)' });
+    case 'serial': {
+      // Numéros de série de contest tenus par la base (lib/logbook.js serialOp) : deux navigateurs (ou, plus tard, deux
+      // postes du réseau) ne reçoivent jamais le même numéro ; « holder » = ce serveur / l'opérateur / son navigateur
+      if (!conn.user || conn.user.rxOnly) return;
+      const contest = String(m.contest || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 40);
+      const txc = String(m.txc || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 20);
+      const sid = String(m.sid || '').replace(/[^a-z0-9]/gi, '').slice(0, 16);
+      const op = ['lease', 'used', 'set', 'reset'].indexOf(m.op) >= 0 ? m.op : 'lease';
+      if (!contest || !txc || !sid || book.engine !== 'sqlite') return send(conn, { t: 'serial', contest, txc, nr: 0, off: true });
+      // Nouvelle édition (série remise à 1 pour tout le monde) : administrateur, ou l'opérateur qui a la main
+      if (op === 'reset' && !conn.user.admin && controller !== conn) return send(conn, Object.assign({ t: 'serial', contest, txc }, book.serialOp('lease', contest, txc, (cfg.nodeName || 'serveur') + '/' + conn.user.call + '/' + sid), { warn: 'Remise à 1 de la série : administrateur, ou l’opérateur qui a la main.' }));
+      let r;
+      try { r = book.serialOp(op, contest, txc, (cfg.nodeName || 'serveur') + '/' + conn.user.call + '/' + sid, Math.round(Number(m.nr)) || 0, String(m.call || '')); } catch (e) { return send(conn, { t: 'notice', level: 'error', msg: 'Numéro de série : ' + e.message }); }
+      if (op === 'reset') journal('serial_reset', { call: conn.user.call, contest, txc });
+      return send(conn, Object.assign({ t: 'serial', contest, txc }, r));
+    }
     case 'log_stats': {
       // Statistiques DXCC du carnet (fenêtre du carnet en grand), à la manière de Swisslog : pour un TX call, chaque pays
       // DXCC (entités WAE ramenées à leur pays) × bande, contacté / confirmé (LoTW ou QSL papier), par groupe de modes

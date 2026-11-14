@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.41.1** — Numéros de série de contest tenus par le serveur (base SQLite) pour les pages RTTY, CW et SSB : une seule série par contest et TX call, jamais le même numéro dans deux navigateurs, pas de trou pour un QSO abandonné, remise à 1 pour tous.
 - **0.41.0** — Carnet de trafic en base SQLite (logbook.db, intégrée à Node.js) : reprise automatique de logbook.json avec vérification, chaque QSO écrit seul (≈ 10 ms à 100 000 QSO), copie logbook.json quotidienne, sauvegardes cohérentes ; tables préparées pour la mise en réseau (poste, versions, journal des changements, numéros de série réservés).
 - **0.40.7** — FT8 en DUAL RX : passe profonde aussi pour le récepteur SUB (VFO-B), à la suite de celle du MAIN.
 - **0.40.6** — RTTY : décodeur grande sensibilité (AFC ±40 Hz, plusieurs instants de lecture, deux décisions dont une anti-fading sélectif, silencieux à hystérésis) : 2 à 3 dB de mieux. Carnet en grand : bouton RETOUR (fermer la fenêtre) et ↩ STATISTIQUES après un clic sur une case.

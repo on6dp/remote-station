@@ -250,6 +250,17 @@
     toast('TX call : ' + v + ' (émission et QSO enregistrés).', '', 4000);
   });
   setInterval(drawTxCall, 500);
+  // Numéro de série tenu par le serveur : demandé à l'ouverture, puis l'affichage suit ses réponses
+  let serAsked = '';
+  setInterval(() => {
+    const k = kit();
+    if (!k) return;
+    const id = k.contest();
+    if (!id) return;
+    if (k.serialFor && serAsked !== id) { serAsked = id; k.serialFor(id); }
+    const e = $('cwpNr'), v = String(k.serial()).padStart(3, '0');
+    if (e && document.activeElement !== e && e.value !== v) { e.value = v; $('cwpExchSh').textContent = '→ ' + k.exchShown(); }
+  }, 1000);
 
   // ------------------------------------------------------------------ log du contest (à la manière de N1MM)
   // Les QSO vont dans le carnet général (identifiant du contest, échanges envoyé / reçu) ; la page relit ceux du

@@ -1838,6 +1838,23 @@
   ];
   const cwcId = () => store.get('cwc', '');
   const cwcOn = () => !!cwcId();
+  // Numéros de série de contest tenus par le serveur (base du carnet) : une seule série par contest et par TX call,
+  // jamais le même numéro dans deux navigateurs ; ce navigateur garde son numéro « en main » jusqu'au QSO.
+  // Sans réponse du serveur (ancienne version, carnet en JSON) : le compteur local, comme avant.
+  const SER_SID = (() => { let x = store.get('sid', ''); if (!/^[a-z0-9]{6,16}$/.test(x)) { x = Math.random().toString(36).slice(2, 12); store.set('sid', x); } return x; })();
+  const serCur = () => (tab === 'cw' || macroCtx === 'CW' ? cwcId() : rtcId());
+  function serTxc() { const st = api && api.state && api.state(); return String((st && st.txCall) || myCall || '').toUpperCase(); }
+  function serSend(op, contest, extra) {
+    contest = String(contest || '').toUpperCase();
+    if (!api || !contest) return;
+    api.send(Object.assign({ t: 'serial', op, contest, txc: serTxc(), sid: SER_SID }, extra || {}));
+  }
+  function serShow(n) {
+    store.set('cntr', n);
+    store.set('cntrcall', '');
+    const pad = String(n).padStart(3, '0');
+    for (const id of ['rtcNr']) { const e = $(id); if (e && e.ownerDocument.activeElement !== e) e.value = pad; }
+  }
   const cwcExch = () => { const id = cwcId(); const c = CW_CONTESTS.find((x) => x[0] === id); return store.get('cwcx_' + id, c ? c[2] : '5NN <CNTR>'); };
   let macroCtx = ''; // macro en cours de préparation : 'CW' → échange du contest CW (sinon celui du contest RTTY)
   const cwText = (t, apply) => { macroCtx = 'CW'; try { return macroText(t, apply); } finally { macroCtx = ''; } };
@@ -3178,7 +3195,7 @@
     const d = new Date(now());
     const p2 = (n) => String(n).padStart(2, '0');
     let cntr = Number(store.get('cntr', '1')) || 1;
-    if (/<DECR>/.test(t) && apply) { cntr = Math.max(1, cntr - 1); store.set('cntr', cntr); store.set('cntrcall', ''); if ($('rtcNr')) $('rtcNr').value = String(cntr).padStart(3, '0'); }
+    if (/<DECR>/.test(t) && apply) { cntr = Math.max(1, cntr - 1); store.set('cntr', cntr); store.set('cntrcall', ''); if ($('rtcNr')) $('rtcNr').value = String(cntr).padStart(3, '0'); serSend('set', macroCtx === 'CW' ? cwcId() : rtcId(), { nr: cntr }); }
     if (/<CLRLOG>/.test(t) && apply) setTimeout(() => setDx({ call: '', name: '', qth: '', grid: '' }), 0);
     const st0 = api && api.state && api.state();
     const r0 = (st0 && st0.radio) || {};
@@ -3220,6 +3237,7 @@
       const who = up(dx.call) || '?';
       if (apply && store.get('cntrcall', '') !== who + '|' + cntr) {
         store.set('cntrcall', who + '|' + (cntr + 1));
+        serSend('used', macroCtx === 'CW' ? cwcId() : rtcId(), { nr: cntr, call: who }); // le serveur donne le suivant
         cntr++;
         store.set('cntr', cntr);
         if ($('rtcNr') && document.activeElement !== $('rtcNr')) $('rtcNr').value = pad3(cntr);
@@ -5491,6 +5509,7 @@
     };
     sel.addEventListener('change', () => {
       store.set('rtc', sel.value);
+      serSend('lease', sel.value); // numéro de série en main pour ce contest (tenu par le serveur)
       ui();
       if (api && sel.value) api.say('Contest ' + sel.options[sel.selectedIndex].text + ' : touches F1 à F12 = macros contest, échange « ' + macroText('<EXCH>') + ' ».', '', 5000);
     });
@@ -5498,9 +5517,9 @@
     $('rtcName').addEventListener('change', () => { store.set('rtcname', $('rtcName').value.toUpperCase().trim()); ui(); });
     $('rtcCqz').addEventListener('change', () => { store.set('rtcqz', String(Number($('rtcCqz').value) || 14)); ui(); });
     $('rtcItu').addEventListener('change', () => { store.set('rtitu', String(Number($('rtcItu').value) || 27)); ui(); });
-    $('rtcNr').addEventListener('change', () => { store.set('cntr', String(Math.max(1, Number($('rtcNr').value) || 1))); ui(); });
-    $('rtcNr1').addEventListener('click', () => { store.set('cntr', '1'); store.set('cntrcall', ''); ui(); });
-    const nrAdd = (k) => { store.set('cntr', String(Math.max(1, (Number(store.get('cntr', '1')) || 1) + k))); store.set('cntrcall', ''); ui(); };
+    $('rtcNr').addEventListener('change', () => { const n = Math.max(1, Number($('rtcNr').value) || 1); store.set('cntr', String(n)); serSend('set', rtcId(), { nr: n }); ui(); });
+    $('rtcNr1').addEventListener('click', () => { store.set('cntr', '1'); store.set('cntrcall', ''); serSend('reset', rtcId()); ui(); });
+    const nrAdd = (k) => { const n = Math.max(1, (Number(store.get('cntr', '1')) || 1) + k); store.set('cntr', String(n)); store.set('cntrcall', ''); serSend('set', rtcId(), { nr: n }); ui(); };
     $('rtcNrM').addEventListener('click', () => nrAdd(-1));
     $('rtcNrP').addEventListener('click', () => nrAdd(1));
     ui();
@@ -5847,10 +5866,11 @@
   }
 
   // QSO de contest enregistré : n° de série suivant, une fois par correspondant (pas si la macro TU <INCR> l'a déjà fait)
-  function cntrAfterLog(call) {
+  function cntrAfterLog(call, contest) {
     const who = String(call || '').toUpperCase().trim() || '?';
     let n = Number(store.get('cntr', '1')) || 1;
     if (store.get('cntrcall', '') === who + '|' + n) return;
+    serSend('used', contest || serCur(), { nr: n, call: who }); // le serveur répond avec le numéro suivant libre
     n++;
     store.set('cntr', n);
     store.set('cntrcall', who + '|' + n);
@@ -6493,19 +6513,22 @@
       editSet: (doc, set, i) => editMacro(doc, set || 'CW', i || 0),
       contests: () => CW_CONTESTS.map((c) => ({ id: c[0], name: c[1] })),
       contest: () => cwcId(),
-      setContest(id) { store.set('cwc', CW_CONTESTS.some((c) => c[0] === id) ? id : ''); },
+      setContest(id) { store.set('cwc', CW_CONTESTS.some((c) => c[0] === id) ? id : ''); serSend('lease', cwcId()); },
+      // Numéro de série en main pour ce contest (page TRX SSB : son propre contest), demandé au serveur
+      serialFor: (contest) => serSend('lease', contest || cwcId()),
       exch: () => cwcExch(),
       setExch(v) { const id = cwcId(); if (id) store.set('cwcx_' + id, String(v || '').toUpperCase().trim() || '5NN <CNTR>'); },
       exchShown: () => cwText('<EXCH>'),
       serial: () => Number(store.get('cntr', '1')) || 1,
-      setSerial(n) {
+      setSerial(n, contest) {
         n = Math.max(1, Math.min(9999, Math.round(Number(n)) || 1));
         store.set('cntr', n);
         store.set('cntrcall', '');
+        serSend('set', contest || cwcId(), { nr: n });
         if ($('rtcNr') && document.activeElement !== $('rtcNr')) $('rtcNr').value = String(n).padStart(3, '0');
       },
       // QSO enregistré dans le log du contest : n° de série suivant (sauf si la macro TU l'a déjà fait pour ce correspondant)
-      afterLog: (call) => cntrAfterLog(call),
+      afterLog: (call, contest) => cntrAfterLog(call, contest || cwcId()),
       utcNow: () => now(),
       zones: () => ({ cqz: store.get('rtcqz', '14'), itu: store.get('rtitu', '27'), name: store.get('rtcname', '') }),
       setZones(z) {
@@ -6535,6 +6558,8 @@
       buildDom();
       bmInit();
       qsoShow(false);
+      // Contest RTTY en cours : numéro de série en main, demandé au serveur (puis à chaque reconnexion, voir onHello)
+      setTimeout(() => { if (rtcOn()) serSend('lease', rtcId()); }, 1500);
       document.querySelectorAll('#centerPanel .ctab').forEach((b) => b.addEventListener('click', (e) => {
         e.stopPropagation();
         if (b.dataset.tab === 'log' && LOGP) return openLogWin(); // carnet : dans sa propre fenêtre
@@ -6982,6 +7007,13 @@
         return true;
       }
       if (m.t === 'dtx_text') { dtxInfo = m; return true; }
+      if (m.t === 'serial') {
+        // Numéro de série tenu par le serveur : il remplace le compteur de ce navigateur
+        if (m.nr > 0) serShow(m.nr);
+        if (m.warn && api) api.say(m.warn, 'warn', 6000);
+        else if (m.reset && api) api.say('Série du contest remise à 1 pour tous les postes.', '', 4000);
+        return true;
+      }
       if (m.t === 'rtty') { rttyAppend(m.text || '', [0, 1, 2, 3].indexOf(m.ch) >= 0 ? m.ch : 0); return true; }
       if (m.t === 'jtty') { if (m.side === 'B') jtUpdateB(m.u); else jtUpdate(m.u); return true; }
       if (m.t === 'cw') { cwAppend(m.text || '', m.ch === 1 ? 1 : 0); return true; }

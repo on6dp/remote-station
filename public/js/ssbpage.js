@@ -178,6 +178,7 @@
   $('ssCtst').addEventListener('change', () => {
     S.id = $('ssCtst').value;
     LS.set('ssbc', S.id);
+    { const k = kit(); if (k && k.serialFor && S.id) k.serialFor(S.id); } // numéro de série en main (tenu par le serveur)
     drawContest();
     const d = def();
     if (d) toast(d.name + ' : échange « ' + exchShown() + ' ».', '', 5000);
@@ -188,9 +189,9 @@
   $('ssAss').addEventListener('change', () => { const o = catState(); o.ass = $('ssAss').checked; saveCat(o); });
   $('ssOv').addEventListener('change', () => { const o = catState(); o.ov = $('ssOv').value; saveCat(o); });
   $('ssExch').addEventListener('change', () => { if (S.id) LS.set('ssbx_' + S.id, $('ssExch').value.toUpperCase().trim() || (def() || {}).exch || '59 <CNTR>'); drawContest(); });
-  $('ssNr').addEventListener('change', () => { const k = kit(); if (k) { k.setSerial($('ssNr').value); drawContest(); } });
-  $('ssNrM').addEventListener('click', () => { const k = kit(); if (k) { k.setSerial(k.serial() - 1); drawContest(); } });
-  $('ssNrP').addEventListener('click', () => { const k = kit(); if (k) { k.setSerial(k.serial() + 1); drawContest(); } });
+  $('ssNr').addEventListener('change', () => { const k = kit(); if (k) { k.setSerial($('ssNr').value, S.id); drawContest(); } });
+  $('ssNrM').addEventListener('click', () => { const k = kit(); if (k) { k.setSerial(k.serial() - 1, S.id); drawContest(); } });
+  $('ssNrP').addEventListener('click', () => { const k = kit(); if (k) { k.setSerial(k.serial() + 1, S.id); drawContest(); } });
   for (const [id, key] of [['ssCqz', 'cqz'], ['ssItu', 'itu'], ['ssName', 'name']]) {
     if (!$(id)) continue;
     $(id).addEventListener('change', () => { const k = kit(); if (k) { k.setZones({ [key]: $(id).value }); drawContest(); } });
@@ -787,7 +788,7 @@
     if (/^\d{1,5}$/.test(srx)) qso.srx = srx;
     api.send({ t: 'log_add', qso, force: true, tag: 'ssbpage', spot: !!(window.RSSPOT && RSSPOT.on()) });
     CL.items.push({ call, band: bandOf(mhz), d: qso.qso_date, t: hms, stx, srx, rs: qso.rst_sent, rr: qso.rst_rcvd });
-    if (/<CNTR>|<SERNO>/.test(exchTpl())) k.afterLog(call); // n° de série suivant (seulement s'il fait partie de l'échange)
+    if (/<CNTR>|<SERNO>/.test(exchTpl())) k.afterLog(call, S.id); // n° de série suivant (seulement s'il fait partie de l'échange ; tenu par le serveur)
     drawLog();
     for (const x of ['call', 'stx', 'srx']) E[x].value = '';
     delete E.stx.dataset.manual;
@@ -1381,5 +1382,14 @@
   drawContest();
   setInterval(link, 1000);
   setInterval(drawState, 250);
+  // Numéro de série tenu par le serveur : demandé à l'ouverture, puis l'affichage suit ses réponses
+  let serAsked = '';
+  setInterval(() => {
+    const k = kit();
+    if (!k || !S.id) return;
+    if (k.serialFor && serAsked !== S.id) { serAsked = S.id; k.serialFor(S.id); }
+    const e = $('ssNr'), v = String(k.serial()).padStart(3, '0');
+    if (e && document.activeElement !== e && e.value !== v) { e.value = v; $('ssExchSh').textContent = '→ ' + exchShown(); }
+  }, 1000);
   setInterval(() => { if (host) api.send({ t: 'vm_list' }); }, 30000);
 })();
