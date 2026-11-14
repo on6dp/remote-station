@@ -925,7 +925,7 @@
           return;
         }
         const c = RIG().CONTROL && RIG().CONTROL.split;
-        if (!c) return say('Choix du VFO d’émission non disponible sur ce TRX', 'warn');
+        if (!c) return say('Choix du VFO d’émission : pas disponible sur le ' + (RIG().NAME || 'TRX') + '.', 'warn');
         // FTX-1 : émettre sur ce VFO = SPLIT si on écoute sur l'autre ; autres TRX : VFO d'émission
         const rxB = Number(ctlValue('vfoSel')) === 1;
         const v = RIG().VIRTUAL_SPLIT ? ((w === 'B') !== rxB ? 1 : 0) : w === 'B' ? 1 : 0;

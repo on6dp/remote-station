@@ -15,6 +15,8 @@
   const MODEL = (location.pathname.replace(/^\/+|\/+$/g, '').split('/')[0] || 'ftdx101').toLowerCase();
   const FACE = (window.RS_FACES || {})[MODEL];
   const R = (window.RIGS || {})[MODEL];
+  // Fonction que ce modèle de TRX n'a pas (ou pas en CAT) : même message partout, avec le nom du TRX
+  const NA = (what) => what + ' : pas disponible sur le ' + ((R && R.NAME) || 'TRX') + '.';
   const ZONES = /[?&]zones=1/.test(location.search);
   // Partie de la photo affichée (face avant seule) : les positions restent celles de la photo d'origine
   const V = FACE ? (FACE.img || { x: 0, y: 0, w: FACE.w, h: FACE.h }) : { x: 0, y: 0, w: 1, h: 1 };
@@ -113,7 +115,7 @@
   function setCtl(id, v) {
     if (!needControl()) return;
     const c = R && R.CONTROL[id];
-    if (!c) return say('Commande non disponible sur ce TRX.', 'warn');
+    if (!c) return say(NA('Cette commande'), 'warn');
     let val = v;
     try { val = R.validate(id, v, S()); } catch (e) { return say(e.message, 'warn'); }
     if ((c.viaSub && activeSide() === 'A') || (c.viaMain && activeSide() === 'B')) L.hop = { side: activeSide(), until: Date.now() + 6000 };
@@ -288,7 +290,7 @@
     if (a.local === 'vc') {
       // VC TUNE (présélecteur) du récepteur actif ; en marche, MULTI l'accorde
       const id = activeSide() === 'B' ? 'vcB' : 'vc';
-      if (!R.CONTROL[id]) return say('VC TUNE : pas disponible sur ce TRX.', 'warn');
+      if (!R.CONTROL[id]) return say(NA('VC TUNE'), 'warn');
       if (!needControl()) return;
       const sk = id === 'vcB' ? 'vcOkB' : 'vcOk';
       if (s[sk] === 0) return say('VC TUNE : pas installé sur ce TRX (le TRX répond « non installé »).', 'warn', 5000);
@@ -387,7 +389,7 @@
     if (a.local === 'lock') {
       if (!(me && me.admin)) return say('LOCK : réservé aux administrateurs.', 'warn', 4000);
       const id = activeSide() === 'B' && R && R.CONTROL.lockB ? 'lockB' : 'lock';
-      if (!R || !R.CONTROL[id]) return say('LOCK : non disponible sur ce TRX.', 'warn');
+      if (!R || !R.CONTROL[id]) return say(NA('LOCK'), 'warn');
       setCtl(id, S()[id] ? 0 : 1);
       return render();
     }
@@ -440,7 +442,7 @@
     // FTX-1 : touche N/W (MODE) : appui bref = NARROW ⇄ WIDE sur le récepteur actif (appui d'1 s : tableau des modes)
     if (a.toggleSide) {
       const k = a.toggleSide + (activeSide() === 'B' ? 'B' : '');
-      if (!R.CONTROL[k]) return say('NARROW : pas disponible sur ce récepteur.', 'warn', 3000);
+      if (!R.CONTROL[k]) return say(NA('NARROW (sur ce récepteur)'), 'warn', 3000);
       const v = s[k] ? 0 : 1;
       say((activeSide() === 'B' ? 'SUB' : 'MAIN') + ' : ' + (v ? 'NARROW' : 'WIDE'), '', 2000);
       return setCtl(k, v);
@@ -5630,7 +5632,7 @@
   };
   const ctlStep = (id, lo, hi, step) => (s, d) => {
     const k = sideKey(id);
-    if (!R.CONTROL[k]) return say(FUNC_BY[id][1] + ' : pas disponible sur ce TRX.', 'warn', 3000);
+    if (!R.CONTROL[k]) return say(NA(FUNC_BY[id][1]), 'warn', 3000);
     if (fmOnly(id, s)) return;
     const cur = s[k] != null ? s[k] : lo;
     setCtl(k, Math.max(lo, Math.min(hi, Math.round((cur + d * step) / step) * step)));
@@ -5638,7 +5640,7 @@
   // Choix suivant au clic (RPT, ENC/DEC)
   const ctlCycle = (id, n) => (s, d) => {
     const k = sideKey(id);
-    if (!R.CONTROL[k]) return say(FUNC_BY[id][1] + ' : pas disponible sur ce TRX.', 'warn', 3000);
+    if (!R.CONTROL[k]) return say(NA(FUNC_BY[id][1]), 'warn', 3000);
     if (fmOnly(id, s)) return;
     setCtl(k, (((s[k] || 0) + (d > 0 ? 1 : n - 1)) % n));
   };

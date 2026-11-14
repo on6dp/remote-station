@@ -1345,7 +1345,7 @@ function trxEqInfo(conn) {
 function menuMsg(conn, m) {
   const M = station && rig().MENU;
   const no = (msg) => send(conn, { t: 'notice', level: 'warn', msg: 'Menu du TRX : ' + msg });
-  if (!M) return no('pas disponible pour ce TRX');
+  if (!M) return no('pas disponible sur le ' + (station ? rig().NAME : 'TRX'));
   // FTX-1 : menus … SETTING réservés aux administrateurs (ON6DP, ON4LUC) — paramètres essentiels du TRX
   if (M.admin && !conn.user.admin) return no('réservé aux administrateurs (ON6DP, ON4LUC)');
   if (station.caps.indexOf('exrw') < 0 || !radio.connected) return no('page Station du club à recharger, ou TRX non relié');
@@ -1400,7 +1400,7 @@ function menuMsg(conn, m) {
 const DTMF_IDS = Array.from({ length: 10 }, (_, i) => '0103' + (28 + i));
 function dtmfMsg(conn, m) {
   const no = (msg) => send(conn, { t: 'notice', level: 'warn', msg: 'DTMF : ' + msg });
-  if (!station || rig().ID !== 'ftx1') return no('pas disponible pour ce TRX');
+  if (!station || rig().ID !== 'ftx1') return no('pas disponible sur le ' + (station ? rig().NAME : 'TRX'));
   if (station.caps.indexOf('exrw') < 0 || !radio.connected) return no('page Station du club à recharger, ou TRX non relié');
   if (eqs.busy) return no('lecture ou écriture déjà en cours, un instant');
   const read = () => exCall('exread', { cmds: DTMF_IDS.map((i) => 'EX' + i + ';'), soft: true }, (vals, err) => {
@@ -1424,7 +1424,7 @@ function trxEqMsg(conn, m) {
   const E = station && rig().TRX_EQ;
   const no = (msg) => send(conn, { t: 'notice', level: 'warn', msg: 'Égaliseur du TRX : ' + msg });
   if (m.t === 'trxeq_get') return trxEqInfo(conn);
-  if (!E || !trxEqAvail()) return no(station && station.caps.indexOf('exrw') < 0 ? 'page Station du club à recharger' : 'pas disponible sur ce TRX');
+  if (!E || !trxEqAvail()) return no(station && station.caps.indexOf('exrw') < 0 ? 'page Station du club à recharger' : 'pas disponible sur le ' + (station ? rig().NAME : 'TRX'));
   if (m.t === 'trxeq_save' || m.t === 'trxeq_club') {
     const pr = E.clean(m.profile);
     if (!pr) return;
@@ -3991,7 +3991,7 @@ function onOperator(conn, m) {
       if (m.band != null) {
         const R = rig();
         if (!R.cmdBand || !R.BAND_CODES || !Object.prototype.hasOwnProperty.call(R.BAND_CODES, String(m.band))) {
-          return send(conn, { t: 'notice', level: 'error', msg: 'Bande non disponible sur ce TRX' });
+          return send(conn, { t: 'notice', level: 'error', msg: 'Cette bande : pas disponible sur le ' + rig().NAME + '.' });
         }
         toStation({ t: 'cmd', op: 'band', band: String(m.band), sub: !!m.sub });
       }
@@ -4080,7 +4080,7 @@ function onOperator(conn, m) {
       if (m.mode != null) {
         planMode[m.sub ? 'B' : 'A'] = now; // mode choisi par le dashboard : prioritaire sur le plan de bande
         const code = String(m.mode).toUpperCase();
-        if (rig().SETTABLE.indexOf(code) < 0) return send(conn, { t: 'notice', level: 'error', msg: 'Mode non disponible' });
+        if (rig().SETTABLE.indexOf(code) < 0) return send(conn, { t: 'notice', level: 'error', msg: 'Ce mode : pas disponible sur le ' + rig().NAME + '.' });
         toStation({ t: 'cmd', op: 'mode', code, sub: !!m.sub });
       }
       return broadcast();
@@ -4091,7 +4091,7 @@ function onOperator(conn, m) {
         if (txw && txw.conn === conn) { txw.beat = now; return; }
         if (txw || conn.txwRelease) return;
         if (ptt.active || radio.tx || (ftxPend && ftxPend.state === 'tx')) return send(conn, { t: 'notice', level: 'warn', msg: 'TXW : impossible pendant une émission.' });
-        if (!txwSwap(conn.user.call)) return send(conn, { t: 'notice', level: 'warn', msg: 'TXW : ce TRX ne permet pas l’échange des VFO.' });
+        if (!txwSwap(conn.user.call)) return send(conn, { t: 'notice', level: 'warn', msg: 'TXW (échange des VFO) : pas disponible sur le ' + rig().NAME + '.' });
         txw = { conn, since: now, beat: now };
         lastCtrlActivity = now;
         return broadcast();

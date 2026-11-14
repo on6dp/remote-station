@@ -1138,6 +1138,8 @@ These keys are ignored while you are typing in a text field.
 | Symptom | Likely cause and solution |
 |---|---|
 | Odd display, a button does not respond after an update | Old version in memory: `Ctrl` + `F5`. |
+| « … : pas disponible sur le Yaesu FTDX10 » (… : not available on the Yaesu FTDX10, or another TRX) | This TRX model does not have this function, or does not allow it over CAT (e.g. dual receive on the FTDX10 or the IC-7300, which have a single receiver). Nothing is sent to the TRX. Missing functions are often hidden too. |
+| « … : pas disponible à distance » (… : not available remotely) | The TRX has this function, but it is set at the club, on the TRX (SET menus, SD card, automatic SWR measurement…). |
 | « Ce navigateur n'est ni Chrome ni Edge » (this browser is neither Chrome nor Edge) | Open the page in Google Chrome or Microsoft Edge. |
 | Serveur lamp red | Your internet connection is down; the page reconnects by itself when it comes back. |
 | « Station hors ligne » (station offline) | The Station page on the club PC is closed or the PC has lost internet: tell a club manager. |

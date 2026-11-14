@@ -1151,6 +1151,8 @@ Ces touches sont ignorées pendant que vous tapez dans un champ de texte.
 | Symptôme | Cause probable et solution |
 |---|---|
 | Affichage bizarre, bouton qui ne réagit pas après une mise à jour | Ancienne version en mémoire : `Ctrl` + `F5`. |
+| « … : pas disponible sur le Yaesu FTDX10 » (ou un autre TRX) | Ce modèle de TRX n'a pas cette fonction, ou ne la permet pas par le CAT (ex. double réception sur le FTDX10 ou l'IC-7300, qui n'ont qu'un récepteur). Rien n'est envoyé au TRX. Les fonctions absentes sont aussi souvent cachées. |
+| « … : pas disponible à distance » | Le TRX a cette fonction, mais elle se règle au club, sur le TRX (menus SET, carte SD, mesure automatique du ROS…). |
 | « Ce navigateur n'est ni Chrome ni Edge » | Ouvrez la page dans Google Chrome ou Microsoft Edge. |
 | Voyant Serveur rouge | Votre connexion internet est coupée ; la page se reconnecte toute seule quand elle revient. |
 | « Station hors ligne » | La page Station du PC du club est fermée ou le PC n'a plus internet : prévenez un responsable du club. |
