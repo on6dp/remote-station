@@ -1,0 +1,2 @@
+6a61f912695fe8300fa3966c7299ece5e6145fc3dabee8a6a2b7c575dd9c5aa5  RemoteStation-Setup-0.42.7.exe
+d29f72d9ca7b024854cdb3a5c2450ec67d5e04656077b71c5a972d2ef2efdc6d  remote-station-0.42.7.tar.gz
