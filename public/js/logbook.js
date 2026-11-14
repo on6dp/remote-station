@@ -1262,8 +1262,126 @@
     return out;
   }
 
+  // ------------------------------------------------------------------ statistiques DXCC (carnet en grand), façon Swisslog
+  // Pour un TX call : chaque pays DXCC × bande ; lettres C (CW), P (phonie), D (numérique), en or si confirmé
+  // (LoTW ou QSL papier), en vert si seulement contacté. Clic sur une case : le carnet filtré sur ce pays et cette bande.
+  const ST = { on: false, data: null, sort: 'pfx', q: '' };
+  const ST_GRP = { C: 'CW', P: 'Phonie', D: 'Numérique' };
+  function statsSetup() {
+    if (!root || q$('#lgStatBtn')) return;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn lg-dbtn lg-statb';
+    b.id = 'lgStatBtn';
+    b.textContent = '📊 STATISTIQUES DXCC';
+    b.title = 'Pays DXCC contactés et confirmés, par bande et par mode, pour un TX call (à la manière de Swisslog)';
+    b.setAttribute('aria-pressed', 'false');
+    const det = q$('#lgDetails');
+    if (det) det.after(b); else q$('.lg-bar').prepend(b);
+    const box = document.createElement('div');
+    box.className = 'lg-stw';
+    box.id = 'lgStats';
+    box.hidden = true;
+    box.innerHTML = '<div class="lg-sth">' +
+      '<label class="lg-txf">TX call <select id="lgStTx" aria-label="TX call des statistiques"></select></label>' +
+      '<label class="lg-txf">Mode <select id="lgStMode" aria-label="Modes comptés"><option value="">Tous (C · P · D)</option><option value="C">CW</option><option value="P">Phonie</option><option value="D">Numérique</option></select></label>' +
+      '<label class="lg-txf">Tri <select id="lgStSort" aria-label="Ordre des pays"><option value="pfx">Préfixe</option><option value="name">Pays</option><option value="cont">Continent</option><option value="bands">Nombre de bandes</option><option value="n">Nombre de QSO</option></select></label>' +
+      '<input class="lg-search lg-stq" id="lgStQ" placeholder="Pays ou préfixe" aria-label="Chercher un pays">' +
+      '<span class="lg-stsum" id="lgStSum"></span>' +
+      '<span class="lg-stleg"><b class="w">C</b> CW · <b class="w">P</b> Phonie · <b class="w">D</b> Numérique — <b class="w">vert</b> contacté, <b class="c">or</b> confirmé (LoTW / QSL)</span></div>' +
+      '<div class="lg-stt"><table class="lg-sttab"><thead id="lgStHead"></thead><tbody id="lgStBody"><tr><td class="lg-empty">Chargement…</td></tr></tbody></table></div>';
+    q$('.lg-tw').after(box);
+    const ask = (txc) => api && api.send({ t: 'log_stats', txc: txc != null ? txc : q$('#lgStTx').value, mode: q$('#lgStMode').value });
+    const show = (on) => {
+      ST.on = on;
+      b.setAttribute('aria-pressed', String(on));
+      box.hidden = !on;
+      root.classList.toggle('lg-ston', on); // barre : recherche et filtres du carnet masqués pendant les statistiques
+      q$('.lg-tw').hidden = on;
+      q$('.lg-tw').style.display = on ? 'none' : '';
+      if (on) ask(ST.data ? null : filt.txc || stCalls[0] || ''); // 1re ouverture : TX call du carnet, sinon l'indicatif du club
+    };
+    b.addEventListener('click', () => show(!ST.on));
+    q$('#lgStTx').addEventListener('change', () => ask());
+    q$('#lgStMode').addEventListener('change', () => ask());
+    q$('#lgStSort').addEventListener('change', () => { ST.sort = q$('#lgStSort').value; statsDraw(); });
+    q$('#lgStQ').addEventListener('input', () => { ST.q = q$('#lgStQ').value.trim().toUpperCase(); statsDraw(); });
+    // Clic sur une case : retour au carnet, filtré sur ce TX call, ce pays (préfixe DXCC) et cette bande
+    q$('#lgStBody').addEventListener('click', (e) => {
+      const td = e.target.closest('td[data-b]');
+      if (!td) return;
+      const tr = td.closest('tr');
+      filt = {};
+      if (ST.data && ST.data.txc) filt.txc = ST.data.txc;
+      filt.pfx = tr.dataset.pfx;
+      if (td.dataset.b && td.dataset.b !== 'SAT') filt.band = td.dataset.b;
+      const md = ST.data && ST.data.mode;
+      if (md && !ST_GRP[md]) filt.mode = md;
+      show(false);
+      reload();
+    });
+    // Hauteur : jusqu'en bas de la fenêtre (comme la liste du carnet)
+    const fit = () => { const t = q$('.lg-stt'); if (!t || box.hidden) return; t.style.maxHeight = Math.max(220, Math.floor(window.innerHeight - t.getBoundingClientRect().top - 14)) + 'px'; };
+    window.addEventListener('resize', fit);
+    setInterval(fit, 1000);
+    ST.fit = fit;
+  }
+  function statsDraw() {
+    const d = ST.data;
+    if (!d || !root) return;
+    const tx = q$('#lgStTx');
+    const opts = d.txcalls || [];
+    if (tx.dataset.k !== opts.join(',')) {
+      tx.dataset.k = opts.join(',');
+      tx.textContent = '';
+      tx.add(new Option('Tous', ''));
+      for (const c of opts) tx.add(new Option(c, c));
+    }
+    tx.value = d.txc || '';
+    const ms = q$('#lgStMode');
+    const mk = (d.modes || []).join(',');
+    if (ms.dataset.k !== mk) {
+      ms.dataset.k = mk;
+      ms.querySelectorAll('option[data-m]').forEach((o) => o.remove());
+      for (const md of d.modes || []) { const o = new Option(md, md); o.dataset.m = '1'; ms.add(o); }
+    }
+    ms.value = d.mode || '';
+    const B = d.bands || [];
+    const grpView = !d.mode; // tous les modes : lettres C / P / D par case
+    // Totaux par bande : pays contactés / confirmés
+    const tot = B.map((b) => {
+      let w = 0, c = 0;
+      for (const r of d.rows) { const x = r.b[b]; if (x) { w++; if (x.c) c++; } }
+      return [w, c];
+    });
+    const allW = d.rows.length, allC = d.rows.filter((r) => Object.values(r.b).some((x) => x.c)).length;
+    q$('#lgStSum').innerHTML = '<b>' + esc(d.txc || 'Tous les TX call') + '</b> · ' + esc(d.mode ? (ST_GRP[d.mode] || d.mode) : 'tous modes') + ' : <b class="w">' + allW + '</b> DXCC contactés · <b class="c">' + allC + '</b> confirmés · ' + d.qsos.toLocaleString('fr-BE') + ' QSO';
+    const bl = (b) => (b === 'SAT' ? 'SAT' : b.replace(/m$/, '').replace(/cm$/, ' cm'));
+    q$('#lgStHead').innerHTML = '<tr><th>Préfixe</th><th class="lg-stn">Pays DXCC</th><th>Cont.</th>' + B.map((b) => '<th class="lg-stb">' + esc(bl(b)) + '</th>').join('') + '<th title="Nombre de bandes contactées">Bandes</th><th title="Nombre de QSO">QSO</th></tr>' +
+      '<tr class="lg-sttot"><th colspan="3" title="Pays contactés / confirmés sur chaque bande">Total contactés / confirmés</th>' + tot.map(([w, c]) => '<th><span class="w">' + w + '</span>/<span class="c">' + c + '</span></th>').join('') + '<th><span class="w">' + allW + '</span>/<span class="c">' + allC + '</span></th><th></th></tr>';
+    let rows = d.rows.slice();
+    if (ST.q) rows = rows.filter((r) => r.pfx.toUpperCase().indexOf(ST.q) === 0 || r.name.toUpperCase().indexOf(ST.q) >= 0);
+    const nb = (r) => Object.keys(r.b).length;
+    const cmp = { pfx: (a, b) => a.pfx.localeCompare(b.pfx), name: (a, b) => a.name.localeCompare(b.name), cont: (a, b) => a.cont.localeCompare(b.cont) || a.pfx.localeCompare(b.pfx),
+      bands: (a, b) => nb(b) - nb(a) || a.pfx.localeCompare(b.pfx), n: (a, b) => b.n - a.n || a.pfx.localeCompare(b.pfx) }[ST.sort] || ((a, b) => a.pfx.localeCompare(b.pfx));
+    rows.sort(cmp);
+    const cell = (x, b) => {
+      if (!x) return '<td data-b="' + esc(b) + '" class="e"></td>';
+      const t = grpView ? 'CPD'.split('').filter((g) => x.w.indexOf(g) >= 0).map((g) => '<b class="' + (x.c.indexOf(g) >= 0 ? 'c' : 'w') + '">' + g + '</b>').join('')
+        : '<b class="' + (x.c ? 'c' : 'w') + '">' + (x.c ? '✓' : '●') + '</b>';
+      const tip = 'CPD'.split('').filter((g) => x.w.indexOf(g) >= 0).map((g) => ST_GRP[g] + (x.c.indexOf(g) >= 0 ? ' confirmé' : ' contacté')).join(', ');
+      return '<td data-b="' + esc(b) + '" title="' + esc(bl(b) + ' : ' + tip + ' — clic : ces QSO dans le carnet') + '">' + t + '</td>';
+    };
+    q$('#lgStBody').innerHTML = rows.length ? rows.map((r) => '<tr data-pfx="' + esc(r.pfx) + '"><td class="lg-stp">' + esc(r.pfx) + '</td><td class="lg-stn">' + esc(r.name) + '</td><td>' + esc(r.cont) + '</td>' +
+      B.map((b) => cell(r.b[b], b)).join('') + '<td class="lg-stc">' + nb(r) + '</td><td class="lg-stc">' + r.n + '</td></tr>').join('')
+      : '<tr><td class="lg-empty" colspan="' + (B.length + 5) + '">Aucun QSO pour ce choix.</td></tr>';
+    if (ST.fit) ST.fit();
+  }
+
   // ------------------------------------------------------------------ messages du serveur
   function onMessage(m) {
+    if (m.t === 'log_stats') { ST.data = m; statsDraw(); return; }
+    if (m.t === 'log_changed' && ST.on && api) setTimeout(() => api.send({ t: 'log_stats', txc: q$('#lgStTx').value, mode: q$('#lgStMode').value }), 300);
     if (/^log_(saved|dupe)$/.test(m.t)) clearTimeout(saveWait);
     // Refus du serveur pendant un enregistrement (droits, données invalides) : affiché sous la fiche
     if (m.t === 'notice') {
@@ -1397,7 +1515,7 @@
   }
 
   window.RSLOG = {
-    init(a) { api = a; TAG = (a && a.tag) || ''; FORM = !!(a && a.formOnly); SSBP = !!(a && a.phone); },
+    init(a) { api = a; TAG = (a && a.tag) || ''; FORM = !!(a && a.formOnly); SSBP = !!(a && a.phone); if (TAG === 'big') statsSetup(); },
     // Fiche du carnet : fréquence et mode suivent tout seuls le VFO actif du TRX (sauf saisie à la main ou modification d'un QSO)
     onState() {
       if (!root || editing) return;

@@ -886,6 +886,8 @@ QO-100 is a geostationary satellite reached on 2.4 GHz with an up-converter. The
 
 **Large logbook on another screen**: the dashboard already opens on the logbook; **clicking LOGBOOKS again** (logbook already shown) opens it in **its own window**, to put on a second screen (it reopens at the same place and size). It shows **all columns** (TX call, OP, references, contest, LoTW, eQSL, Club Log, QRZ…) and up to **1000 QSOs** (300 in the dashboard); a click on a row opens the full QSO form (DÉTAILS QSO). This window has its own search, filters, TX CALL box and Synchronisation / Exporter menus, independent of the dashboard's; a QSO logged elsewhere shows up at once. It uses the dashboard's connection: if the dashboard is closed, reopen it and click LOGBOOKS twice.
 
+**📊 STATISTIQUES DXCC** (large logbook window, right of DÉTAILS QSO), in the way of Swisslog: for the chosen **TX call** (or all), the list of **DXCC entities** worked (prefix, country, continent) with one column per **band** (160 … 6 m, 2 m, 70 cm, **SAT** for QO-100). In each cell: **C** = CW, **P** = phone, **D** = digital (FT8, RTTY…), in green if worked, in gold if **confirmed** (LoTW or paper QSL). The **Mode** list limits the count to CW, phone, digital or one mode (FT8, RTTY…): the cells then show ● worked or ✓ confirmed. At the top of the table: entities worked / confirmed per band and in total; sort by prefix, country, continent, number of bands or QSOs; country search. A **click on a cell** goes back to the logbook, filtered on that TX call, entity and band. WAE entities (Sicily, Shetland…) count for their DXCC entity (Italy, Scotland…).
+
 <a id="l-fiche"></a>
 ### 14.1 Logging a QSO
 

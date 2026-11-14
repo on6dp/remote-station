@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.40.2** — Carnet en grand : 📊 STATISTIQUES DXCC par TX call, pays × bandes, C / P / D contacté ou confirmé (façon Swisslog), filtre par mode, clic = QSO dans le carnet.
 - **0.40.1** — LOGBOOKS : carnet déjà affiché, un nouveau clic ouvre le carnet en grand dans sa propre fenêtre (autre écran) : toutes les colonnes, 1000 QSO, recherche / filtres / exports indépendants.
 - **0.40.0** — Carnet (Logbooks) : encadré TX CALL pour filtrer la liste par indicatif, Exporter ▾ → Vue affichée (ADIF / Cabrillo) = exactement les QSO filtrés.
 - **0.39.99** — Page WSPR : les deux écrans VFO en haut (SPLIT, A ⇄ B, DUAL RX, STÉRÉO), fréquence WSPR et ↺ par VFO ; deux bandes à la fois en DUAL RX (2e cascade, 2e liste des stations entendues). Manuel : texte justifié, page élargie.

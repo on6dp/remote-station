@@ -992,7 +992,7 @@ const LG_COL = {
   date: (q) => q.qso_date || '', utc: (q) => String(q.time_on || '').slice(0, 2), call: (q) => q.call || '', band: (q) => q.band || '',
   mhz: (q) => String(q.freq || ''), mode: (q) => LB.modeName(q), env: (q) => q.rst_sent || '', stx: (q) => q.stx_string || q.stx || '', recu: (q) => q.rst_rcvd || '', srx: (q) => q.srx_string || q.srx || '',
   nom: (q) => q.name || '', qth: (q) => q.qth || '', loc: (q) => q.gridsquare || '', dxcc: (q) => q.country || ((DXCC.lookup(q.call) || {}).name || ''),
-  pfx: (q) => (DXCC.lookup(q.call) || {}).pfx || '', ctst: (q) => q.contest_id || '',
+  pfx: (q) => (DXCC.lookupDxcc(q.call) || {}).pfx || '', ctst: (q) => q.contest_id || '',
   txc: (q) => q.station_callsign || '', op: (q) => q.operator || q.by || '',
   refs: (q) => { const a = refsOf(q), b = refsOf(q, 'my_'); return a.concat(b.map((x) => 'ma ' + x)).join(' + '); },
   lotw: (q) => lgUp(q, 'lotw'), eqsl: (q) => lgUp(q, 'eqsl'), cl: (q) => lgUp(q, 'clublog'), qrz: (q) => lgUp(q, 'qrz')
@@ -3364,6 +3364,43 @@ function onOperator(conn, m) {
       if (!conn.user.admin) return;
       refs.refresh(true).then(() => send(conn, { t: 'log_refs_status', status: refs.summary() })).catch(() => {});
       return send(conn, { t: 'notice', level: 'info', msg: 'Listes de références : téléchargement relancé (quelques minutes)' });
+    case 'log_stats': {
+      // Statistiques DXCC du carnet (fenêtre du carnet en grand), à la manière de Swisslog : pour un TX call, chaque pays
+      // DXCC (entités WAE ramenées à leur pays) × bande, contacté / confirmé (LoTW ou QSL papier), par groupe de modes
+      const txc = String(m.txc || '').toUpperCase();
+      const want = String(m.mode || '');
+      const grp = (q) => { const md = String(LB.modeName(q) || '').toUpperCase(); return md === 'CW' ? 'C' : /^(SSB|USB|LSB|AM|FM|DIGITALVOICE|C4FM|DSTAR|DMR)$/.test(md) ? 'P' : 'D'; };
+      const BORD = ['2190m', '630m', '160m', '80m', '60m', '40m', '30m', '20m', '17m', '15m', '12m', '10m', '6m', '4m', '2m', '1.25m', '70cm', '33cm', '23cm', '13cm', '9cm', '6cm', '3cm', '1.25cm', 'SAT'];
+      const rows = new Map(), bands = new Set(), modes = new Set(), txcs = new Set();
+      let n = 0;
+      for (const q of book.qsos) {
+        const sc = String(q.station_callsign || '').toUpperCase();
+        if (sc) txcs.add(sc);
+        if (txc && sc !== txc) continue;
+        const md = String(LB.modeName(q) || '').toUpperCase();
+        if (md) modes.add(md);
+        const g = grp(q);
+        if (want && !(want === g || want === md)) continue;
+        const d = DXCC.lookupDxcc(q.call);
+        if (!d) continue;
+        const b = q.prop_mode === 'SAT' ? 'SAT' : String(q.band || '').toLowerCase();
+        if (!b) continue;
+        n++;
+        bands.add(b);
+        const conf = q.lotw_qsl_rcvd === 'Y' || q.qsl_rcvd === 'Y';
+        let r = rows.get(d.pfx);
+        if (!r) { r = { pfx: d.pfx, name: d.name, cont: d.cont, n: 0, b: {} }; rows.set(d.pfx, r); }
+        r.n++;
+        // Par bande : groupes de modes contactés (C / P / D) et confirmés
+        const c = r.b[b] || (r.b[b] = { w: '', c: '' });
+        if (c.w.indexOf(g) < 0) c.w += g;
+        if (conf && c.c.indexOf(g) < 0) c.c += g;
+        if (!r.first || String(q.qso_date) < r.first) r.first = String(q.qso_date || '');
+      }
+      const bl = BORD.filter((b) => bands.has(b)).concat(Array.from(bands).filter((b) => BORD.indexOf(b) < 0).sort());
+      return send(conn, { t: 'log_stats', txc, mode: want, bands: bl, rows: Array.from(rows.values()), qsos: n,
+        txcalls: Array.from(txcs).sort(), modes: Array.from(modes).sort(), tag: logTag(m) });
+    }
     case 'log_values': {
       // Valeurs d'une colonne du carnet (choix proposés sous son titre), avec leur nombre de QSO
       const col = String(m.col || '');
