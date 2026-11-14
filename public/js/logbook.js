@@ -1282,10 +1282,11 @@
     box.className = 'lg-stw';
     box.id = 'lgStats';
     box.hidden = true;
-    box.innerHTML = '<div class="lg-sth">' +
+    box.innerHTML = '<div class="lg-sth"><button type="button" class="btn lg-dbtn lg-stback" id="lgStBack" title="Revenir au carnet (Échap)">↩ CARNET</button>' +
       '<label class="lg-txf">TX call <select id="lgStTx" aria-label="TX call des statistiques"></select></label>' +
       '<label class="lg-txf">Mode <select id="lgStMode" aria-label="Modes comptés"><option value="">Tous (colonnes par mode)</option><option value="C">CW</option><option value="P">Phonie</option><option value="D">Numérique</option></select></label>' +
       '<label class="lg-txf">Tri <select id="lgStSort" aria-label="Ordre des pays"><option value="pfx">Préfixe</option><option value="name">Pays</option><option value="cont">Continent</option><option value="bands">Nombre de bandes</option></select></label>' +
+      '<label class="lg-txf">Pays <select id="lgStShow" aria-label="Pays affichés"><option value="">Tous les DXCC</option><option value="w">Contactés</option><option value="nc">Pas encore confirmés</option><option value="n">Jamais contactés</option></select></label>' +
       '<input class="lg-search lg-stq" id="lgStQ" placeholder="Pays ou préfixe" aria-label="Chercher un pays">' +
       '<span class="lg-stsum" id="lgStSum"></span>' +
       '<span class="lg-stleg"><i class="sc">C</i> confirmé (LoTW / QSL) · <i class="sw">W</i> contacté (worked) · <i class="sn">-</i> pas encore · clic sur une case : ces QSO dans le carnet</span></div>' +
@@ -1303,9 +1304,12 @@
       if (on) ask(ST.data ? null : filt.txc || stCalls[0] || ''); // 1re ouverture : TX call du carnet, sinon l'indicatif du club
     };
     b.addEventListener('click', () => show(!ST.on));
+    q$('#lgStBack').addEventListener('click', () => show(false));
+    root.ownerDocument.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ST.on && !root.ownerDocument.querySelector('dialog[open]')) show(false); });
     q$('#lgStTx').addEventListener('change', () => ask());
     q$('#lgStMode').addEventListener('change', () => ask());
     q$('#lgStSort').addEventListener('change', () => { ST.sort = q$('#lgStSort').value; statsDraw(); });
+    q$('#lgStShow').addEventListener('change', () => statsDraw());
     q$('#lgStQ').addEventListener('input', () => { ST.q = q$('#lgStQ').value.trim().toUpperCase(); statsDraw(); });
     // Clic sur une case : retour au carnet, filtré sur ce TX call, ce pays (préfixe DXCC) et cette bande
     q$('#lgStBody').addEventListener('click', (e) => {
@@ -1322,7 +1326,7 @@
       reload();
     });
     // Hauteur : jusqu'en bas de la fenêtre (comme la liste du carnet)
-    const fit = () => { const t = q$('.lg-stt'), sm = q$('.lg-sts'); if (!t || box.hidden) return; t.style.maxHeight = Math.max(200, Math.floor(window.innerHeight - t.getBoundingClientRect().top - (sm ? sm.offsetHeight + 8 : 0) - 14)) + 'px'; };
+    const fit = () => { const t = q$('.lg-stt'), sm = q$('.lg-sts'); if (!t || box.hidden) return; const h = Math.max(200, Math.floor(window.innerHeight - t.getBoundingClientRect().top - (sm ? sm.offsetHeight + 8 : 0) - 14)) + 'px'; t.style.height = h; t.style.maxHeight = h; };
     window.addEventListener('resize', fit);
     setInterval(fit, 1000);
     ST.fit = fit;
@@ -1359,14 +1363,18 @@
     const st = (x, k) => (!x ? 0 : k ? (x.m && x.m[k]) || 0 : x.c ? 2 : 1); // 0 rien, 1 contacté, 2 confirmé
     const cols = [];
     for (const b of B) for (const k of mks) cols.push([b, k]);
-    const allW = d.rows.length, allC = d.rows.filter((r) => Object.values(r.b).some((x) => x.c)).length;
-    q$('#lgStSum').innerHTML = '<b>' + esc(d.txc || 'Tous les TX call') + '</b> · ' + esc(d.mode ? (ST_GRP[d.mode] || d.mode) : 'tous modes') + ' : <b class="w">' + allW + '</b> DXCC contactés · <b class="c">' + allC + '</b> confirmés';
+    const allW = d.rows.filter((r) => Object.keys(r.b).length).length, allC = d.rows.filter((r) => Object.values(r.b).some((x) => x.c)).length;
+    q$('#lgStSum').innerHTML = '<b>' + esc(d.txc || 'Tous les TX call') + '</b> · ' + esc(d.mode ? (ST_GRP[d.mode] || d.mode) : 'tous modes') + ' : <b class="w">' + allW + '</b> DXCC contactés · <b class="c">' + allC + '</b> confirmés · ' + d.rows.length + ' pays DXCC';
     const bl = (b) => (b === 'SAT' ? 'SAT' : /cm$/.test(b) ? b.replace(/cm$/, ' cm') : b.replace(/m$/, ' m'));
     const first = (i) => (i % mks.length === 0 ? 'lg-stb0' : '');
     q$('#lgStHead').innerHTML = '<tr><th rowspan="2" class="lg-stn">Pays DXCC</th>' + B.map((b) => '<th class="lg-stb lg-stb0" colspan="' + mks.length + '">' + esc(bl(b)) + '</th>').join('') + '</tr>' +
       '<tr class="lg-stm">' + cols.map(([, k], i) => '<th class="' + first(i) + '"><span>' + esc(mkL(k)) + '</span></th>').join('') + '</tr>';
     let rows = d.rows.slice();
     if (ST.q) rows = rows.filter((r) => r.pfx.toUpperCase().indexOf(ST.q) === 0 || r.name.toUpperCase().indexOf(ST.q) >= 0);
+    const show = q$('#lgStShow') ? q$('#lgStShow').value : '';
+    if (show === 'w') rows = rows.filter((r) => Object.keys(r.b).length);
+    else if (show === 'n') rows = rows.filter((r) => !Object.keys(r.b).length);
+    else if (show === 'nc') rows = rows.filter((r) => !Object.values(r.b).some((x) => x.c));
     const nb = (r) => Object.keys(r.b).length;
     const cmp = { pfx: (a, b) => a.pfx.localeCompare(b.pfx), name: (a, b) => a.name.localeCompare(b.name), cont: (a, b) => a.cont.localeCompare(b.cont) || a.pfx.localeCompare(b.pfx),
       bands: (a, b) => nb(b) - nb(a) || a.pfx.localeCompare(b.pfx) }[ST.sort] || ((a, b) => a.pfx.localeCompare(b.pfx));
