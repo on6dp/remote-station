@@ -371,8 +371,8 @@
     <div class="rt-dual" id="rtDual">
       <div class="dg-col rt-side" data-ch="0">
         <div class="dg-h rt-hd">
-          <span class="rt-name">VFO-A</span><span class="rt-rf" id="rtRf"></span><span class="rt-sig" id="rtSig"></span>
-          <button class="dg-mini rt-2dec" type="button" id="rt2Dec" aria-pressed="false" hidden title="Un seul récepteur (ni SPLIT ni DUAL RX) : deuxième décodeur sur la même cascade — deux paires de barres, deux signaux décodés en même temps (clic droit sur la cascade = décodeur B). Sa fenêtre s’affiche dans la colonne de droite.">2 DÉCODEURS</button>
+          <span class="rt-name" id="rtNameA">VFO-A</span><span class="rt-rf" id="rtRf"></span><span class="rt-sig" id="rtSig"></span>
+          <button class="dg-mini rt-2dec" type="button" id="rt2Dec" aria-pressed="false" hidden title="Un seul récepteur (ni SPLIT ni DUAL RX) : deux décodeurs sur la même cascade, comme FLDIGI : A1 (clic gauche) et A2 (clic droit, ou bouton droit maintenu pour faire glisser ses barres) ; deux signaux décodés en même temps. La fenêtre de A2 s’affiche dans la colonne de droite.">2 DÉCODEURS</button>
           <select id="rtShift" aria-label="Shift (VFO-A)"><option value="170">170 Hz</option><option value="200">200 Hz</option><option value="425">425 Hz</option><option value="850">850 Hz</option></select>
           <select id="rtBaud" aria-label="Vitesse (VFO-A)"><option value="45.45">45,45 Bd</option><option value="50">50 Bd</option><option value="75">75 Bd</option><option value="100">100 Bd</option></select>
           <button class="dg-mini" type="button" id="rtRev" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>
@@ -1892,9 +1892,10 @@
   const RT_COLS_B = ['rgba(170, 51, 255, .6)', '#AA33FF', 'rgba(0, 160, 60, .55)', '#00A03C'];
   function drawRttyMarks(c, w) {
     rtKhz(c, w, rtDialOf(0));
-    rttyMarks(c, w, rts[0], $('dgMkRx'), $('dgMkTx'), null, 'A');
+    const two2 = !!($('rtDual') && $('rtDual').classList.contains('rt-2dec')); // un seul récepteur, 2 décodeurs : A1 et A2 (comme FLDIGI)
+    rttyMarks(c, w, rts[0], $('dgMkRx'), $('dgMkTx'), null, two2 ? 'A1' : 'A');
     // Décodeur B : sur la même cascade, repères magenta (Mark) / vert (Space) — sauf s'il a sa propre cascade
-    if (!(wfB.sctx && $('rtWfB').clientWidth) && !($('rtDual') && $('rtDual').classList.contains('rt-solo'))) rttyMarks(c, w, rts[1], $('dgMkBM'), $('dgMkBS'), RT_COLS_B, 'B'); // décodeur B caché (un seul VFO) : pas de repère
+    if (!(wfB.sctx && $('rtWfB').clientWidth) && !($('rtDual') && $('rtDual').classList.contains('rt-solo'))) rttyMarks(c, w, rts[1], $('dgMkBM'), $('dgMkBS'), RT_COLS_B, two2 ? 'A2' : 'B'); // décodeur B caché (un seul VFO) : pas de repère
     // Cascade du décodeur B : même spectre (même BF du TRX), ses propres repères
     if (wfB.sctx) {
       rtKhz(wfB.sctx, wfB.cw, rtDialOf(1));
@@ -2903,8 +2904,10 @@
     const solo = one && !two;
     const dualEl = $('rtDual');
     if ($('rt2Dec')) { $('rt2Dec').hidden = !one; $('rt2Dec').setAttribute('aria-pressed', String(two)); }
-    if ($('rtNameB')) $('rtNameB').textContent = two ? 'DÉCODEUR B' : 'VFO-B';
-    if ($('rtTxtB')) $('rtTxtB').placeholder = two ? 'Texte à émettre sur la fréquence du décodeur B (même VFO), puis F11 TX ou Ctrl+Entrée' : 'Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée';
+    if ($('rtNameB')) $('rtNameB').textContent = two ? 'VFO-A · A2' : 'VFO-B';
+    if ($('rtNameA')) $('rtNameA').textContent = two ? 'VFO-A · A1' : 'VFO-A';
+    if (dualEl && dualEl.classList.contains('rt-2dec') !== two && tab === 'rtty') setTimeout(drawScale, 0); // repères A / B ↔ A1 / A2
+    if ($('rtTxtB')) $('rtTxtB').placeholder = two ? 'Texte à émettre sur la fréquence de A2 (même VFO), puis F11 TX ou Ctrl+Entrée' : 'Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée';
     if (dualEl) dualEl.classList.toggle('rt-2dec', two);
     if (dualEl && dualEl.classList.contains('rt-solo') !== solo) {
       dualEl.classList.toggle('rt-solo', solo);
