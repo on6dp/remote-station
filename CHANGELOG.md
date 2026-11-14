@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.40.3** — Statistiques DXCC façon Swisslog : colonnes SSB / CW / RTTY / FT8 / FT4 / FT2 sous chaque bande, cases C vert (confirmé) / W bleu (contacté) / - rouge, récapitulatif bandes × modes en dessous ; colonnes resserrées.
 - **0.40.2** — Carnet en grand : 📊 STATISTIQUES DXCC par TX call, pays × bandes, C / P / D contacté ou confirmé (façon Swisslog), filtre par mode, clic = QSO dans le carnet.
 - **0.40.1** — LOGBOOKS : carnet déjà affiché, un nouveau clic ouvre le carnet en grand dans sa propre fenêtre (autre écran) : toutes les colonnes, 1000 QSO, recherche / filtres / exports indépendants.
 - **0.40.0** — Carnet (Logbooks) : encadré TX CALL pour filtrer la liste par indicatif, Exporter ▾ → Vue affichée (ADIF / Cabrillo) = exactement les QSO filtrés.

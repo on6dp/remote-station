@@ -1284,12 +1284,13 @@
     box.hidden = true;
     box.innerHTML = '<div class="lg-sth">' +
       '<label class="lg-txf">TX call <select id="lgStTx" aria-label="TX call des statistiques"></select></label>' +
-      '<label class="lg-txf">Mode <select id="lgStMode" aria-label="Modes comptés"><option value="">Tous (C · P · D)</option><option value="C">CW</option><option value="P">Phonie</option><option value="D">Numérique</option></select></label>' +
-      '<label class="lg-txf">Tri <select id="lgStSort" aria-label="Ordre des pays"><option value="pfx">Préfixe</option><option value="name">Pays</option><option value="cont">Continent</option><option value="bands">Nombre de bandes</option><option value="n">Nombre de QSO</option></select></label>' +
+      '<label class="lg-txf">Mode <select id="lgStMode" aria-label="Modes comptés"><option value="">Tous (colonnes par mode)</option><option value="C">CW</option><option value="P">Phonie</option><option value="D">Numérique</option></select></label>' +
+      '<label class="lg-txf">Tri <select id="lgStSort" aria-label="Ordre des pays"><option value="pfx">Préfixe</option><option value="name">Pays</option><option value="cont">Continent</option><option value="bands">Nombre de bandes</option></select></label>' +
       '<input class="lg-search lg-stq" id="lgStQ" placeholder="Pays ou préfixe" aria-label="Chercher un pays">' +
       '<span class="lg-stsum" id="lgStSum"></span>' +
-      '<span class="lg-stleg"><b class="w">C</b> CW · <b class="w">P</b> Phonie · <b class="w">D</b> Numérique — <b class="w">vert</b> contacté, <b class="c">or</b> confirmé (LoTW / QSL)</span></div>' +
-      '<div class="lg-stt"><table class="lg-sttab"><thead id="lgStHead"></thead><tbody id="lgStBody"><tr><td class="lg-empty">Chargement…</td></tr></tbody></table></div>';
+      '<span class="lg-stleg"><i class="sc">C</i> confirmé (LoTW / QSL) · <i class="sw">W</i> contacté (worked) · <i class="sn">-</i> pas encore · clic sur une case : ces QSO dans le carnet</span></div>' +
+      '<div class="lg-stt"><table class="lg-sttab"><thead id="lgStHead"></thead><tbody id="lgStBody"><tr><td class="lg-empty">Chargement…</td></tr></tbody></table></div>' +
+      '<div class="lg-sts"><table class="lg-stsum2"><thead id="lgSsHead"></thead><tbody id="lgSsBody"></tbody></table></div>';
     q$('.lg-tw').after(box);
     const ask = (txc) => api && api.send({ t: 'log_stats', txc: txc != null ? txc : q$('#lgStTx').value, mode: q$('#lgStMode').value });
     const show = (on) => {
@@ -1315,13 +1316,13 @@
       if (ST.data && ST.data.txc) filt.txc = ST.data.txc;
       filt.pfx = tr.dataset.pfx;
       if (td.dataset.b && td.dataset.b !== 'SAT') filt.band = td.dataset.b;
-      const md = ST.data && ST.data.mode;
-      if (md && !ST_GRP[md]) filt.mode = md;
+      const md = (ST.data && ST.data.mode) || (td.dataset.k && td.dataset.k !== 'AUT' ? td.dataset.k : '');
+      if (md && !ST_GRP[md] && md !== 'SSB') filt.mode = md;
       show(false);
       reload();
     });
     // Hauteur : jusqu'en bas de la fenêtre (comme la liste du carnet)
-    const fit = () => { const t = q$('.lg-stt'); if (!t || box.hidden) return; t.style.maxHeight = Math.max(220, Math.floor(window.innerHeight - t.getBoundingClientRect().top - 14)) + 'px'; };
+    const fit = () => { const t = q$('.lg-stt'), sm = q$('.lg-sts'); if (!t || box.hidden) return; t.style.maxHeight = Math.max(200, Math.floor(window.innerHeight - t.getBoundingClientRect().top - (sm ? sm.offsetHeight + 8 : 0) - 14)) + 'px'; };
     window.addEventListener('resize', fit);
     setInterval(fit, 1000);
     ST.fit = fit;
@@ -1347,34 +1348,55 @@
     }
     ms.value = d.mode || '';
     const B = d.bands || [];
-    const grpView = !d.mode; // tous les modes : lettres C / P / D par case
-    // Totaux par bande : pays contactés / confirmés
-    const tot = B.map((b) => {
-      let w = 0, c = 0;
-      for (const r of d.rows) { const x = r.b[b]; if (x) { w++; if (x.c) c++; } }
-      return [w, c];
-    });
+    // Tableau à la manière de Swisslog : une ligne par pays, sous chaque bande une colonne par mode (SSB, CW, RTTY, FT8,
+    // FT4, FT2, « Autres » s'il y en a) ; case verte C = confirmé, bleue W = contacté (worked), rouge - = pas encore.
+    // Mode ou groupe choisi : une colonne par bande. En dessous : le récapitulatif bandes × modes (contactés / confirmés).
+    const MK = ['SSB', 'CW', 'RTTY', 'FT8', 'FT4', 'FT2'];
+    const per = !d.mode;
+    const hasAut = per && d.rows.some((r) => Object.values(r.b).some((x) => x.m && x.m.AUT));
+    const mks = per ? MK.concat(hasAut ? ['AUT'] : []) : [''];
+    const mkL = (k) => (k === 'AUT' ? 'Autres' : k || (ST_GRP[d.mode] || d.mode));
+    const st = (x, k) => (!x ? 0 : k ? (x.m && x.m[k]) || 0 : x.c ? 2 : 1); // 0 rien, 1 contacté, 2 confirmé
+    const cols = [];
+    for (const b of B) for (const k of mks) cols.push([b, k]);
     const allW = d.rows.length, allC = d.rows.filter((r) => Object.values(r.b).some((x) => x.c)).length;
-    q$('#lgStSum').innerHTML = '<b>' + esc(d.txc || 'Tous les TX call') + '</b> · ' + esc(d.mode ? (ST_GRP[d.mode] || d.mode) : 'tous modes') + ' : <b class="w">' + allW + '</b> DXCC contactés · <b class="c">' + allC + '</b> confirmés · ' + d.qsos.toLocaleString('fr-BE') + ' QSO';
-    const bl = (b) => (b === 'SAT' ? 'SAT' : b.replace(/m$/, '').replace(/cm$/, ' cm'));
-    q$('#lgStHead').innerHTML = '<tr><th>Préfixe</th><th class="lg-stn">Pays DXCC</th><th>Cont.</th>' + B.map((b) => '<th class="lg-stb">' + esc(bl(b)) + '</th>').join('') + '<th title="Nombre de bandes contactées">Bandes</th><th title="Nombre de QSO">QSO</th></tr>' +
-      '<tr class="lg-sttot"><th colspan="3" title="Pays contactés / confirmés sur chaque bande">Total contactés / confirmés</th>' + tot.map(([w, c]) => '<th><span class="w">' + w + '</span>/<span class="c">' + c + '</span></th>').join('') + '<th><span class="w">' + allW + '</span>/<span class="c">' + allC + '</span></th><th></th></tr>';
+    q$('#lgStSum').innerHTML = '<b>' + esc(d.txc || 'Tous les TX call') + '</b> · ' + esc(d.mode ? (ST_GRP[d.mode] || d.mode) : 'tous modes') + ' : <b class="w">' + allW + '</b> DXCC contactés · <b class="c">' + allC + '</b> confirmés';
+    const bl = (b) => (b === 'SAT' ? 'SAT' : /cm$/.test(b) ? b.replace(/cm$/, ' cm') : b.replace(/m$/, ' m'));
+    const first = (i) => (i % mks.length === 0 ? 'lg-stb0' : '');
+    q$('#lgStHead').innerHTML = '<tr><th rowspan="2" class="lg-stn">Pays DXCC</th>' + B.map((b) => '<th class="lg-stb lg-stb0" colspan="' + mks.length + '">' + esc(bl(b)) + '</th>').join('') + '</tr>' +
+      '<tr class="lg-stm">' + cols.map(([, k], i) => '<th class="' + first(i) + '"><span>' + esc(mkL(k)) + '</span></th>').join('') + '</tr>';
     let rows = d.rows.slice();
     if (ST.q) rows = rows.filter((r) => r.pfx.toUpperCase().indexOf(ST.q) === 0 || r.name.toUpperCase().indexOf(ST.q) >= 0);
     const nb = (r) => Object.keys(r.b).length;
     const cmp = { pfx: (a, b) => a.pfx.localeCompare(b.pfx), name: (a, b) => a.name.localeCompare(b.name), cont: (a, b) => a.cont.localeCompare(b.cont) || a.pfx.localeCompare(b.pfx),
-      bands: (a, b) => nb(b) - nb(a) || a.pfx.localeCompare(b.pfx), n: (a, b) => b.n - a.n || a.pfx.localeCompare(b.pfx) }[ST.sort] || ((a, b) => a.pfx.localeCompare(b.pfx));
+      bands: (a, b) => nb(b) - nb(a) || a.pfx.localeCompare(b.pfx) }[ST.sort] || ((a, b) => a.pfx.localeCompare(b.pfx));
     rows.sort(cmp);
-    const cell = (x, b) => {
-      if (!x) return '<td data-b="' + esc(b) + '" class="e"></td>';
-      const t = grpView ? 'CPD'.split('').filter((g) => x.w.indexOf(g) >= 0).map((g) => '<b class="' + (x.c.indexOf(g) >= 0 ? 'c' : 'w') + '">' + g + '</b>').join('')
-        : '<b class="' + (x.c ? 'c' : 'w') + '">' + (x.c ? '✓' : '●') + '</b>';
-      const tip = 'CPD'.split('').filter((g) => x.w.indexOf(g) >= 0).map((g) => ST_GRP[g] + (x.c.indexOf(g) >= 0 ? ' confirmé' : ' contacté')).join(', ');
-      return '<td data-b="' + esc(b) + '" title="' + esc(bl(b) + ' : ' + tip + ' — clic : ces QSO dans le carnet') + '">' + t + '</td>';
+    const cell = (r, b, k, i) => {
+      const v = st(r.b[b], k);
+      const what = (k === 'AUT' ? 'autres modes (' + Object.keys(r.aut || {}).join(', ') + ')' : mkL(k));
+      const tip = r.name + ' · ' + bl(b) + ' · ' + what + ' : ' + (v === 2 ? 'confirmé' : v ? 'contacté' : 'pas encore') + (v ? ' — clic : ces QSO dans le carnet' : '');
+      return '<td data-b="' + esc(b) + '" data-k="' + k + '" class="' + (v === 2 ? 'sc' : v ? 'sw' : 'sn') + ' ' + first(i) + '" title="' + esc(tip) + '">' + (v === 2 ? 'C' : v ? 'W' : '-') + '</td>';
     };
-    q$('#lgStBody').innerHTML = rows.length ? rows.map((r) => '<tr data-pfx="' + esc(r.pfx) + '"><td class="lg-stp">' + esc(r.pfx) + '</td><td class="lg-stn">' + esc(r.name) + '</td><td>' + esc(r.cont) + '</td>' +
-      B.map((b) => cell(r.b[b], b)).join('') + '<td class="lg-stc">' + nb(r) + '</td><td class="lg-stc">' + r.n + '</td></tr>').join('')
-      : '<tr><td class="lg-empty" colspan="' + (B.length + 5) + '">Aucun QSO pour ce choix.</td></tr>';
+    q$('#lgStBody').innerHTML = rows.length ? rows.map((r) => '<tr data-pfx="' + esc(r.pfx) + '"><td class="lg-stn" title="' + esc(r.pfx + ' – ' + r.name + ' (' + r.cont + ')') + '"><b>' + esc(r.pfx) + '</b> – ' + esc(r.name) + '</td>' +
+      cols.map(([b, k], i) => cell(r, b, k, i)).join('') + '</tr>').join('')
+      : '<tr><td class="lg-empty" colspan="' + (cols.length + 1) + '">Aucun QSO pour ce choix.</td></tr>';
+    // Récapitulatif : pour chaque bande (lignes) et chaque mode (colonnes), pays contactés / confirmés ; Total = tous modes,
+    // dernière ligne = toutes bandes (pays distincts)
+    const cnt = (bs, k) => {
+      let w = 0, c = 0;
+      for (const r of d.rows) {
+        let v = 0;
+        for (const b of bs) { const x = r.b[b]; if (!x) continue; v = Math.max(v, k == null ? (x.c ? 2 : 1) : st(x, k)); }
+        if (v) { w++; if (v === 2) c++; }
+      }
+      return [w, c];
+    };
+    const sm = mks.filter((k) => k !== 'AUT' || hasAut);
+    q$('#lgSsHead').innerHTML = '<tr><th rowspan="2"></th>' + sm.map((k) => '<th colspan="2">' + esc(mkL(k)) + '</th>').join('') + (per ? '<th colspan="2">Total</th>' : '') + '</tr>' +
+      '<tr>' + sm.concat(per ? ['T'] : []).map(() => '<th>Contacté</th><th>Confirmé</th>').join('') + '</tr>';
+    const line = (lab, bs, cls) => '<tr class="' + (cls || '') + '"><th>' + esc(lab) + '</th>' + sm.map((k) => { const [w, c] = cnt(bs, k); return '<td>' + w + '</td><td>' + c + '</td>'; }).join('') +
+      (per ? (() => { const [w, c] = cnt(bs, null); return '<td class="t">' + w + '</td><td class="t">' + c + '</td>'; })() : '') + '</tr>';
+    q$('#lgSsBody').innerHTML = B.map((b) => line(b === 'SAT' ? 'SAT' : b, [b])).join('') + line('Total', B, 'tot');
     if (ST.fit) ST.fit();
   }
 

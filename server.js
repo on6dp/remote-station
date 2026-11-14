@@ -3392,9 +3392,13 @@ function onOperator(conn, m) {
         if (!r) { r = { pfx: d.pfx, name: d.name, cont: d.cont, n: 0, b: {} }; rows.set(d.pfx, r); }
         r.n++;
         // Par bande : groupes de modes contactés (C / P / D) et confirmés
-        const c = r.b[b] || (r.b[b] = { w: '', c: '' });
+        const c = r.b[b] || (r.b[b] = { w: '', c: '', m: {} });
         if (c.w.indexOf(g) < 0) c.w += g;
         if (conf && c.c.indexOf(g) < 0) c.c += g;
+        // Par mode (colonnes SSB, CW, RTTY, FT8, FT4, FT2, autres) : 1 contacté, 2 confirmé
+        const mk = /^(SSB|USB|LSB)$/.test(md) ? 'SSB' : ['CW', 'RTTY', 'FT8', 'FT4', 'FT2'].indexOf(md) >= 0 ? md : 'AUT';
+        c.m[mk] = Math.max(c.m[mk] || 0, conf ? 2 : 1);
+        if (mk === 'AUT') { r.aut = r.aut || {}; r.aut[md] = 1; }
         if (!r.first || String(q.qso_date) < r.first) r.first = String(q.qso_date || '');
       }
       const bl = BORD.filter((b) => bands.has(b)).concat(Array.from(bands).filter((b) => BORD.indexOf(b) < 0).sort());
