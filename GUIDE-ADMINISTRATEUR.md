@@ -485,6 +485,8 @@ Plusieurs serveurs Remote Station (un par TRX) partagent un log et une série de
 
 **Tester la reprise** (hors trafic) : `sudo systemctl stop remote-station` sur remote.op0p.be → 30 s plus tard, secours.op0p.be « ACTIF » ; `sudo systemctl start remote-station` → secours rend la main (événement « … la main lui est rendue »), remote.op0p.be « ACTIF ». Ne pas cliquer Enregistrer pendant le test (le compteur repart). Journal : `sudo journalctl -u remote-station | grep Réseau`.
 
+**Partage (0.42.6)** : réglage `share` d'une station (poste) : `club` (défaut, QSO dont le TX call est un indicatif du club — liste annoncée par le maître dans `net_chal`, gardée dans `meta` `net_club`), `contest` (QSO avec `contest_id`), `all`. Les autres QSO restent dans le carnet de la station. Les maîtres partagent tout.
+
 **Versions (0.42.3)** : le maître annonce sa version à la liaison ; le maître de secours, en attente, plus ancien que le maître → `UPD.installVersion(v)` (même mécanisme que 🔔 : `update/request` → `deploy/update.sh` → paquet GitHub vérifié SHA-256 → `install.sh`), une fois par version ; `"autoUpdate": false` dans config.json pour couper. Jamais vers une version plus ancienne. Stations : avertissement seulement (écran Réseau du maître en orange, message aux administrateurs de la station). Le secours doit être en 0.42.3 au moins pour s'aligner (une dernière mise à jour à la main).
 
 **Contest** : voir le manuel, section 14.6 (même TX call et même contest partout, série remise à 1 une seule fois, envoi automatique LoTW / Club Log / QRZ coupé dans ⚙ Configuration de chaque serveur, Cabrillo depuis le maître).

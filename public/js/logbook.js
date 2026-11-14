@@ -128,7 +128,7 @@
           <hr class="lg-msep">
           <button type="button" role="menuitem" data-a="cfg" title="Réglages des carnets en ligne, de QRZ.com et des ports UDP">⚙ Configuration…</button>
           <button type="button" role="menuitem" data-a="refs" title="Listes IOTA, WWFF, POTA, BOTA, LLOTA, SOTA téléchargées par le serveur : état et mise à jour">Listes de références…</button>
-          <button type="button" role="menuitem" data-a="net" title="Mise en réseau des serveurs Remote Station (à la manière de N1MM) : log commun et numéros de série partagés, maître et maître de secours">🌐 Réseau (log commun)…</button>
+          <button type="button" role="menuitem" data-a="net" title="Mise en réseau des serveurs Remote Station (à la manière de N1MM) : log commun et numéros de série partagés, maître et maître de secours">🌐 Réseau…</button>
         </div>
       </div>
       <div class="lg-menu">
@@ -917,6 +917,7 @@
       '<p class="lg-note">Plusieurs serveurs Remote Station (un par TRX, à des endroits différents) partagent <b>un seul log</b> et <b>une seule série de numéros</b> de contest (RTTY, CW, SSB), comme N1MM. Chaque serveur garde une copie complète du log. Les liaisons partent des postes vers le maître (HTTPS, port 443) : rien à ouvrir chez eux, même derrière un CGNAT.</p>' +
       '<label>Mode <select name="mode"><option value="off">Hors réseau (station seule)</option><option value="node">Poste : station distante (son TRX, son serveur), reliée au maître</option><option value="master">Maître (remote.op0p.be) ou maître de secours (secours.op0p.be)</option></select></label>' +
       '<label>Nom de ce serveur dans le réseau <input name="name" maxlength="24" placeholder="ON4LUC-1"></label>' +
+      '<label data-n>Partager avec le réseau <select name="share"><option value="club">Seulement les QSO sous les indicatifs du club</option><option value="contest">Seulement les QSO de contest</option><option value="all">Tous les QSO de cette station</option></select><small data-club></small></label>' +
       '<label data-m>Adresse de ce serveur (maître) <input name="self" maxlength="120" placeholder="remote.op0p.be"></label>' +
       '<label>Maîtres, par ordre de priorité (un par ligne ; la même liste sur tous les serveurs) <textarea name="masters" rows="3" placeholder="remote.op0p.be&#10;secours.op0p.be"></textarea></label>' +
       '<label>Clé du réseau (16 caractères au moins, la même partout ; jamais affichée) <input name="key" type="password" autocomplete="new-password" maxlength="200" placeholder="(inchangée)"></label>' +
@@ -951,11 +952,11 @@
       }
     };
     d.querySelectorAll('[data-nt]').forEach((b) => b.addEventListener('click', () => tab(b.dataset.nt)));
-    const upd = () => { d.querySelectorAll('[data-m]').forEach((x) => { x.hidden = f.mode.value !== 'master'; }); };
+    const upd = () => { d.querySelectorAll('[data-m]').forEach((x) => { x.hidden = f.mode.value !== 'master'; }); d.querySelectorAll('[data-n]').forEach((x) => { x.hidden = f.mode.value !== 'node'; }); };
     f.mode.addEventListener('change', upd);
     d.querySelector('[data-a="save"]').addEventListener('click', () => {
       d.querySelector('#lgNetErr').textContent = '';
-      api.send({ t: 'log_net_set', cfg: { mode: f.mode.value, name: f.name.value.trim(), self: f.self.value.trim(), masters: f.masters.value, key: f.key.value, since: f.since.value } });
+      api.send({ t: 'log_net_set', cfg: { mode: f.mode.value, name: f.name.value.trim(), self: f.self.value.trim(), masters: f.masters.value, key: f.key.value, since: f.since.value, share: f.share.value } });
       f.key.value = '';
     });
     d.dataset.filled = '';
@@ -975,8 +976,11 @@
       f.name.value = st.name || '';
       f.self.value = st.self || '';
       f.masters.value = (st.masters || []).join('\n');
+      f.share.value = st.share || 'club';
+      d.querySelector('[data-club]').textContent = (st.club || []).length ? 'Indicatifs du club : ' + st.club.join(', ') + '. Les autres QSO de cette station (indicatif personnel du membre…) restent dans son seul carnet.' : '';
       f.key.placeholder = st.hasKey ? '(inchangée : ' + st.keyLen + ' caractères)' : 'à choisir';
       d.querySelectorAll('[data-m]').forEach((x) => { x.hidden = f.mode.value !== 'master'; });
+      d.querySelectorAll('[data-n]').forEach((x) => { x.hidden = f.mode.value !== 'node'; });
       d.querySelector('[data-first]').hidden = st.mode !== 'off';
       if (st.mode === 'off') f.mode.addEventListener('change', () => { d.querySelector('[data-first]').hidden = f.mode.value !== 'node'; }); // seulement pour un poste qui rejoint le réseau
     }

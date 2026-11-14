@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.6** — Réseau : chaque station choisit ce qu'elle partage (seulement les QSO sous les indicatifs du club — par défaut —, seulement les QSO de contest, ou tous) ; menu renommé 🌐 Réseau.
 - **0.42.5** — Écran Réseau : version de ce serveur dans le titre de la colonne Serveur, versions des autres en vert (même version) ou orange (plus ancienne), message clair pour un secours trop ancien.
 - **0.42.4** — Carnet, LOG RTTY, LOG SSB et filtre de colonne : fréquence affichée en MHz avec 3 décimales (au kHz près, arrondie), la valeur exacte reste dans le carnet et l'ADIF.
 - **0.42.3** — Réseau : le maître de secours s'aligne tout seul sur la version du maître (mise à jour automatique, seulement en attente) ; stations plus anciennes signalées en orange au maître et à leurs administrateurs.

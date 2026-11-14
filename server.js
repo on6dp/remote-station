@@ -639,7 +639,7 @@ const book = new LB.Logbook(cfg.logbookFile ? path.resolve(ROOT, cfg.logbookFile
 // Base SQLite : copie lisible logbook.json au démarrage puis chaque jour (secours si SQLite manquait un jour)
 if (book.engine === 'sqlite') { setTimeout(() => book.exportJson(), 60000).unref(); setInterval(() => book.exportJson(), 24 * 3600 * 1000).unref(); }
 // Mise en réseau (lib/net.js) : log commun et numéros de série partagés entre serveurs ; réglages dans net.json (jamais publié)
-const NET = new (require('./lib/net.js').Net)({ book, file: cfg.netFile ? path.resolve(ROOT, cfg.netFile) : path.join(ROOT, 'net.json'), version: VERSION });
+const NET = new (require('./lib/net.js').Net)({ book, file: cfg.netFile ? path.resolve(ROOT, cfg.netFile) : path.join(ROOT, 'net.json'), version: VERSION, clubCalls: () => stationCalls() });
 NET.on('applied', (x) => {
   // QSO reçus d'un autre serveur : carnets, listes « déjà contacté » et pages RTTY / SSB / CW mis à jour
   if (x.n) { for (const c of ops) send(c, { t: 'log_changed' }); setTimeout(() => sendWorked(false), 0); }

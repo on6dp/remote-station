@@ -1013,6 +1013,7 @@ In the way of N1MM, several stations — each with **its TRX and its own Remote 
 | **Address of this server** | Masters only: remote.op0p.be, secours.op0p.be. |
 | **Masters** | By priority, one per line, **the same list everywhere**: remote.op0p.be then secours.op0p.be. |
 | **Network key** | At least 16 characters, the same everywhere; never shown nor sent (checked by computation on both sides). Give it to the stations by a safe means. |
+| **Share with the network** | Stations only. **Only QSOs under the club callsigns** (default; the list comes from the master: ON5VL, OR0L…): QSOs made under the member's personal callsign stay in their station's logbook only. **Only contest QSOs**: all those with a contest. **All QSOs** of this station. |
 | **Also send the QSOs since** | A station joining the network: its QSOs already made are not sent, except those since this date (e.g. if activation was forgotten at the start of a contest). |
 
 **State** (bottom of the screen): master **ACTIF** (active) or **en attente** (waiting), open links (server, since, last message, QSOs received / sent, backlog: 0 = up to date) and latest events. The « received / sent » figures also count corrections and deletions, and each server sends back what it receives (the other ignores it): it is not a duplicate. Avoid clicking Save on the master during a contest: it goes back to waiting for 40 s.

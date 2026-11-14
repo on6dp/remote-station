@@ -1026,6 +1026,7 @@ Menu **Synchronisation ▾** : il envoie les QSO du carnet vers les sites de con
 | **Adresse de ce serveur** | Maîtres seulement : remote.op0p.be, secours.op0p.be. |
 | **Maîtres** | Par ordre de priorité, un par ligne, **la même liste partout** : remote.op0p.be puis secours.op0p.be. |
 | **Clé du réseau** | 16 caractères au moins, la même partout ; jamais affichée ni envoyée (vérifiée par calcul des deux côtés). À transmettre aux stations par un moyen sûr. |
+| **Partager avec le réseau** | Postes seulement. **Seulement les QSO sous les indicatifs du club** (par défaut ; la liste vient du maître : ON5VL, OR0L…) : les QSO faits sous l'indicatif personnel du membre restent dans le seul carnet de sa station. **Seulement les QSO de contest** : tous ceux qui ont un contest. **Tous les QSO** de cette station. |
 | **Envoyer aussi les QSO depuis le** | Poste qui rejoint le réseau : ses QSO déjà faits ne partent pas, sauf ceux depuis cette date (par exemple si l'activation a été oubliée au début d'un contest). |
 
 **État** (bas de l'écran) : maître **ACTIF** ou **en attente**, liaisons ouvertes (serveur, depuis, dernier message, QSO reçus / envoyés, changements en retard : 0 = à jour) et derniers événements. Les chiffres « reçus / envoyés » comptent aussi les corrections et suppressions, et chaque serveur renvoie ce qu'il reçoit (l'autre l'ignore) : ce n'est pas un doublon. Évitez de cliquer sur Enregistrer sur le maître pendant un contest : il se remet 40 s en attente.
