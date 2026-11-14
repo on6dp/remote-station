@@ -3276,3 +3276,5 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .rt-hd > .rt-xhd[data-of="rtDecD"] .rt-name { color: #FF3CA0; }
 .rt-hd > .rt-xhd .rt-xc { color: var(--v2-text-dim); } .rt-hd > .rt-xhd .rt-xc b { color: #2ecc71; }
 .rt-hd > .rt-xhd .rt-xhint { display: none; }
+.rt-xhd .rt-swap { color: #fff; border-color: #c9d1d9; padding: 0 6px; font-size: 10px; }
+.rt-xhd .rt-swap:hover { background: #f5ff00; color: #000; border-color: #f5ff00; }

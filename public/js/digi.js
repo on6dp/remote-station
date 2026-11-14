@@ -391,7 +391,7 @@
         <div class="rt-io">
           <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxt" data-ch="0" spellcheck="false" placeholder="Texte à émettre sur le VFO-A, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShow" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx0" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
           <div class="rt-pane"><pre class="rt-rx" id="rtRx"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx0" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
-          <div class="rt-xdec" id="rtDecC" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A3</span><span class="rt-sig" id="rtSigC"></span><span class="rt-xc">centre <b id="rtFC"></b> Hz</span><span class="rt-xhint">Ctrl + clic gauche, ou BARRES : A3</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxC"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx2" title="Effacer cette fenêtre">Effacer</button></div></div>
+          <div class="rt-xdec" id="rtDecC" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A3</span><span class="rt-sig" id="rtSigC"></span><span class="rt-xc">centre <b id="rtFC"></b> Hz</span><button class="dg-mini rt-swap" type="button" data-sw="2" data-to="0" title="Échanger A3 et A1 : la station suivie par A3 passe sur A1, prête pour l’émission (son texte reçu la suit)">⇄ A1</button><button class="dg-mini rt-swap" type="button" data-sw="2" data-to="1" title="Échanger A3 et A2 : la station suivie par A3 passe sur A2, prête pour l’émission (son texte reçu la suit)">⇄ A2</button><span class="rt-xhint">Ctrl + clic gauche, ou BARRES : A3</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxC"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx2" title="Effacer cette fenêtre">Effacer</button></div></div>
         </div>
         <i class="rt-iogrip" data-ch="0" title="Glisser vers le haut ou le bas : hauteur des fenêtres TX / RX de ce VFO seulement (double-clic : taille d’origine)"></i>
       </div>
@@ -430,7 +430,7 @@
         <div class="rt-io">
           <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxtB" data-ch="1" spellcheck="false" placeholder="Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-B : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShowB" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx1" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
           <div class="rt-pane"><pre class="rt-rx" id="rtRxB"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx1" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
-          <div class="rt-xdec" id="rtDecD" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A4</span><span class="rt-sig" id="rtSigD"></span><span class="rt-xc">centre <b id="rtFD"></b> Hz</span><span class="rt-xhint">Ctrl + clic droit, ou BARRES : A4</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxD"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx3" title="Effacer cette fenêtre">Effacer</button></div></div>
+          <div class="rt-xdec" id="rtDecD" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A4</span><span class="rt-sig" id="rtSigD"></span><span class="rt-xc">centre <b id="rtFD"></b> Hz</span><button class="dg-mini rt-swap" type="button" data-sw="3" data-to="0" title="Échanger A4 et A1 : la station suivie par A4 passe sur A1, prête pour l’émission (son texte reçu la suit)">⇄ A1</button><button class="dg-mini rt-swap" type="button" data-sw="3" data-to="1" title="Échanger A4 et A2 : la station suivie par A4 passe sur A2, prête pour l’émission (son texte reçu la suit)">⇄ A2</button><span class="rt-xhint">Ctrl + clic droit, ou BARRES : A4</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxD"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx3" title="Effacer cette fenêtre">Effacer</button></div></div>
         </div>
         <i class="rt-iogrip" data-ch="1" title="Glisser vers le haut ou le bas : hauteur des fenêtres TX / RX de ce VFO seulement (double-clic : taille d’origine)"></i>
       </div>
@@ -3302,6 +3302,26 @@
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
     if ($('rt2Dec')) $('rt2Dec').addEventListener('click', () => { const on = $('rt2Dec').getAttribute('aria-pressed') === 'true'; store.set('rt2dec', on ? '0' : '1'); if (on) store.set('rt4dec', '0'); rtHeads(); });
     if ($('rt2Off')) $('rt2Off').addEventListener('click', (e) => { e.stopPropagation(); store.set('rt2dec', '0'); store.set('rt4dec', '0'); rtHeads(); });
+    // ⇄ A1 / ⇄ A2 (QUAD) : échange des fréquences (et du texte reçu) entre A3 / A4 et A1 / A2, qui devient le décodeur de l'émission
+    document.querySelectorAll('.rt-swap').forEach((b) => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const i = Number(b.dataset.sw), j = Number(b.dataset.to);
+      if (!(i === 2 || i === 3) || !(j === 0 || j === 1)) return;
+      const f = rts[j].f; rts[j].f = rts[i].f; rts[i].f = f;
+      const ids = ['rtRx', 'rtRxB', 'rtRxC', 'rtRxD'], a = $(ids[i]), c = $(ids[j]);
+      if (a && c) {
+        const fa = document.createDocumentFragment(), fc = document.createDocumentFragment();
+        while (a.firstChild) fa.appendChild(a.firstChild);
+        while (c.firstChild) fc.appendChild(c.firstChild);
+        a.appendChild(fc); c.appendChild(fa);
+        const t = a._cur; a._cur = c._cur; c._cur = t;
+        a.scrollTop = a.scrollHeight; c.scrollTop = c.scrollHeight;
+      }
+      saveRtty(true);
+      applySpan();
+      drawScale();
+      pickTx(j);
+    }));
     if ($('rt4Dec')) $('rt4Dec').addEventListener('click', () => { store.set('rt4dec', store.get('rt4dec', '0') === '1' ? '0' : '1'); rtHeads(); });
     if ($('rtBSel')) $('rtBSel').querySelectorAll('[data-b]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); rtBSel = Number(b.dataset.b) || 0; rtHeads(); }));
     // Hauteur des fenêtres TX / RX de chaque VFO : sa propre poignée, gardée dans ce navigateur

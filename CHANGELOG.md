@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.86** — Page RTTY, QUAD DÉCODEURS : boutons ⇄ A1 / ⇄ A2 dans les titres de A3 et A4 (échange de fréquence et du texte reçu, le décodeur A1 / A2 devient celui de l'émission)
 - **0.39.85** — Page RTTY, QUAD DÉCODEURS : titre de A3 / A4 remonté au bout de l'en-tête de son VFO (fenêtres de A3 / A4 au niveau de A1 / A2)
 - **0.39.84** — Page RTTY, QUAD DÉCODEURS : le choix BARRES (A2, A3, A4) ne vaut que pour le prochain clic gauche, ensuite le clic gauche redevient A1
 - **0.39.83** — Page RTTY, QUAD DÉCODEURS : fenêtres de trafic coupées en deux côte à côte (A1 | A3, A2 | A4) au lieu de fenêtres en dessous
