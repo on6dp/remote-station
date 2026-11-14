@@ -394,7 +394,7 @@
       <i class="rt-vsplit" id="rtSplit" title="Glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié)"></i>
       <div class="dg-col rt-side" data-ch="1">
         <div class="dg-h rt-hd">
-          <span class="rt-name" id="rtNameB">VFO-B</span><span class="rt-rf" id="rtRfB"></span><span class="rt-sig" id="rtSigB"></span>
+          <span class="rt-name" id="rtNameB">VFO-B</span><button class="dg-mini rt-2off" type="button" id="rt2Off" hidden title="Masquer A2 (2e décodeur) : le LOG RTTY reprend toute la colonne de droite. Le rallumer : bouton 2 DÉCODEURS de l’en-tête du VFO-A.">✕ MASQUER</button><span class="rt-rf" id="rtRfB"></span><span class="rt-sig" id="rtSigB"></span>
           <select id="rtShiftB" aria-label="Shift (VFO-B)"><option value="170">170 Hz</option><option value="200">200 Hz</option><option value="425">425 Hz</option><option value="850">850 Hz</option></select>
           <select id="rtBaudB" aria-label="Vitesse (VFO-B)"><option value="45.45">45,45 Bd</option><option value="50">50 Bd</option><option value="75">75 Bd</option><option value="100">100 Bd</option></select>
           <button class="dg-mini" type="button" id="rtRevB" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>
@@ -2905,6 +2905,7 @@
     const dualEl = $('rtDual');
     if ($('rt2Dec')) { $('rt2Dec').hidden = !one; $('rt2Dec').setAttribute('aria-pressed', String(two)); }
     if ($('rtNameB')) $('rtNameB').textContent = two ? 'VFO-A · A2' : 'VFO-B';
+    if ($('rt2Off')) $('rt2Off').hidden = !two;
     if ($('rtNameA')) $('rtNameA').textContent = two ? 'VFO-A · A1' : 'VFO-A';
     if (dualEl && dualEl.classList.contains('rt-2dec') !== two && tab === 'rtty') setTimeout(drawScale, 0); // repères A / B ↔ A1 / A2
     if ($('rtTxtB')) $('rtTxtB').placeholder = two ? 'Texte à émettre sur la fréquence de A2 (même VFO), puis F11 TX ou Ctrl+Entrée' : 'Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée';
@@ -3251,6 +3252,7 @@
     dial.addEventListener('change', () => { store.set('rtdial', dial.value); qsyTo(Number(dial.value)); });
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
     if ($('rt2Dec')) $('rt2Dec').addEventListener('click', () => { store.set('rt2dec', store.get('rt2dec', '0') === '1' ? '0' : '1'); rtHeads(); });
+    if ($('rt2Off')) $('rt2Off').addEventListener('click', (e) => { e.stopPropagation(); store.set('rt2dec', '0'); rtHeads(); });
     // Hauteur des fenêtres TX / RX de chaque VFO : sa propre poignée, gardée dans ce navigateur
     for (const g of document.querySelectorAll('.rt-iogrip')) {
       const ch = Number(g.dataset.ch) === 1 ? 1 : 0, io = g.previousElementSibling;

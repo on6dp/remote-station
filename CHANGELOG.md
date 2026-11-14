@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.80** — Page RTTY, 2 DÉCODEURS : bouton ✕ MASQUER dans l'en-tête de A2 (le LOG RTTY reprend toute la colonne)
 - **0.39.79** — Page RTTY, un seul récepteur, 2 DÉCODEURS : repères et fenêtres nommés A1 et A2 comme FLDIGI (clic gauche = A1, clic droit / bouton droit maintenu = A2)
 - **0.39.78** — Page RTTY, un seul récepteur : bouton 2 DÉCODEURS — deux paires de barres sur la même cascade, deux signaux décodés en même temps (fenêtre du décodeur B dans la colonne de droite)
 - **0.39.77** — Menu DX Cluster : liste de 225 clusters telnet (relevé DX-Cluster Realtime status), clusters belges en tête, case Chercher (indicatif, préfixe, adresse)
