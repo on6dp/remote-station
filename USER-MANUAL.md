@@ -666,7 +666,7 @@ Big FT8 DXpeditions run **FOX** mode: the DXpedition (the FOX) works several sta
 
 > [!TIP]
 > **The decoder**
-> - It is the **WSJT-X 3** engine, with the multi-pass decoder of **JTDX**. In FT8, three passes per period: an early one around 12 s (so you can answer right away), a normal one at the end of the signal, then a deep one that adds the weakest stations a few seconds later.
+> - It is the **WSJT-X 3** engine, with the multi-pass decoder of **JTDX**. In FT8, three passes per period: an early one around 12 s (so you can answer right away), a normal one at the end of the signal, then a deep one that adds the weakest stations a few seconds later. In dual receive (DUAL RX), the SUB receiver (VFO-B) also gets its deep pass, right after the MAIN one (only one at a time, so as not to overload the server).
 > - **A priori help (AP)**: during a QSO, the decoder knows who the correspondent is and which message is expected; it can then find it down to 2 to 3 dB lower. These decodes carry the mark a1 … a7.
 > - Sensitivity: FT8 about −22 dB (−24 dB with a priori help), FT4 about −17.5 dB. A database of ~100,000 callsigns (JTDX's) rejects very weak false decodes.
 

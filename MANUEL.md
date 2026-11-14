@@ -676,7 +676,7 @@ Les grandes DXpéditions FT8 trafiquent en **FOX** : la DXpédition (le FOX) fai
 
 > [!TIP]
 > **Le décodeur**
-> - C'est le moteur de **WSJT-X 3**, avec le décodeur multi-passes de **JTDX**. En FT8, trois passes par période : une anticipée vers 12 s (pour pouvoir répondre tout de suite), une normale à la fin du signal, puis une profonde qui ajoute les stations les plus faibles quelques secondes plus tard.
+> - C'est le moteur de **WSJT-X 3**, avec le décodeur multi-passes de **JTDX**. En FT8, trois passes par période : une anticipée vers 12 s (pour pouvoir répondre tout de suite), une normale à la fin du signal, puis une profonde qui ajoute les stations les plus faibles quelques secondes plus tard. En double réception (DUAL RX), le récepteur SUB (VFO-B) a aussi sa passe profonde, juste après celle du MAIN (une seule à la fois, pour ne pas surcharger le serveur).
 > - **Aide a priori (AP)** : pendant un QSO, le décodeur sait qui est le correspondant et quel message est attendu ; il le retrouve alors jusqu'à 2 à 3 dB plus bas. Ces décodages portent la marque a1 … a7.
 > - Sensibilité : FT8 vers −22 dB (−24 dB avec l'aide a priori), FT4 vers −17,5 dB. Une base de ~100 000 indicatifs (celle de JTDX) écarte les faux décodages très faibles.
 
