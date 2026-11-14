@@ -1674,6 +1674,8 @@
   // Décodeur visé par un clic sur la cascade : gauche = A1 (ou celui de BARRES), droit = A2 ; Ctrl + clic = A3 / A4 (QUAD)
   const rtTarget = (e, right) => { if (rtQuad()) { if (e.ctrlKey) return right ? 3 : 2; if (!right) return rtBSel; } return right ? 1 : 0; };
   store.set('rtsq9', '1');
+  // Plus de réglage Silencieux sur la page RTTY : seuil remis une fois à la valeur par défaut (9 dB) pour tous les décodeurs
+  if (store.get('rtsqfix', '') !== '1') { for (const r of rts) r.squelch = 9; store.set('rtsqfix', '1'); for (const [k, i] of [['rtty', 0], ['rttyb', 1], ['rttyc', 2], ['rttyd', 3]]) store.set(k, JSON.stringify(rts[i])); }
   const rt = rts[0];
   const RT_SFX = ['', 'B'];
   let rtTx = [0, 1, 2, 3].indexOf(Number(store.get('rttx', '0'))) >= 0 ? Number(store.get('rttx', '0')) : 0; // décodeur de l'émission (A3 / A4 : QUAD)
