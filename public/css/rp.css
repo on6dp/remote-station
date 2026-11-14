@@ -3226,3 +3226,11 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 /* LOG RTTY (et LOG SSB) : cadre blanc autour du log */
 .ctab-pane.rt .rt-logbox { border: 1px solid #fff; border-radius: 6px; }
 .ssb-qlogbox { border: 1px solid #fff; border-radius: 6px; padding: 6px 8px 8px; }
+/* Menu DX Cluster : case de recherche dans la liste des clusters telnet (plus de 200) */
+.dxc-telq { margin: 4px 8px 2px; padding: 5px 8px; background: #07090d; color: #fff; border: 1px solid #3a4658; border-radius: 4px; font: 600 12px inherit; }
+.dxc-telq:focus { border-color: var(--v2-accent-cyan, #00d4ff); outline: none; }
+.dxc-telq[hidden] { display: none; }
+.dxc-tel-none { color: var(--v2-text-dim); padding: 6px 10px; }
+.dxc-tel-it span { white-space: nowrap; flex: none; }
+.dxc-tel-it small { text-align: right; }
+#dxcMenu { min-width: 340px; }

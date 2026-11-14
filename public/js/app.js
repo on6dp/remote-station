@@ -2441,12 +2441,20 @@
   const dxcWin = {};
   const dxcName = (o) => String(o || '').replace(/^https?:\/\//, '');
   // Liste des clusters telnet (CC Cluster VE7CC) : chaque membre choisit celui de SES spots ; ● = le sien
+  // Liste des clusters telnet (plus de 200) : le cluster choisi et celui du club en tête, puis la liste ;
+  // la case « Chercher » filtre sur l'indicatif, le préfixe ou l'adresse
+  let clList = [], clCur = '';
   function drawClusterList(list, cur) {
-    const box = $('dxcTel'), h = $('dxcTelH');
+    const box = $('dxcTel'), h = $('dxcTelH'), qi = $('dxcTelQ');
     if (!box) return;
+    clList = list; clCur = cur;
     box.textContent = '';
     box.hidden = h.hidden = list.length < 2;
-    for (const c of list) {
+    if (qi) qi.hidden = list.length < 12;
+    const q = qi ? qi.value.trim().toUpperCase() : '';
+    const shown = list.filter((c) => c.def || c.key === cur || !q || String(c.name).toUpperCase().indexOf(q) === 0 || ((q.length >= 4 || q.indexOf('.') >= 0) && String(c.host).toUpperCase().indexOf(q) >= 0))
+      .sort((a, b) => (b.key === cur) - (a.key === cur) || (b.def ? 1 : 0) - (a.def ? 1 : 0));
+    for (const c of shown) {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'dxc-tel-it' + (c.key === cur ? ' cur' : ''); b.setAttribute('role', 'menuitemradio'); b.setAttribute('aria-checked', String(c.key === cur));
       b.innerHTML = '<span></span><small></small>';
@@ -2456,6 +2464,12 @@
       b.addEventListener('click', (e) => { e.stopPropagation(); send({ t: 'cluster_pick', key: c.def ? '' : c.key }); });
       box.appendChild(b);
     }
+    if (q && shown.length <= 2) { const p = document.createElement('small'); p.className = 'dxc-tel-none'; p.textContent = 'Aucun autre cluster pour « ' + q + ' ».'; box.appendChild(p); }
+  }
+  if ($('dxcTelQ')) {
+    $('dxcTelQ').addEventListener('input', () => drawClusterList(clList, clCur));
+    $('dxcTelQ').addEventListener('click', (e) => e.stopPropagation());
+    $('dxcTelQ').addEventListener('keydown', (e) => { if (e.key !== 'Escape') e.stopPropagation(); }); // pas de raccourcis clavier du dashboard en tapant
   }
   function dxcPaint() {
     const now = Date.now();

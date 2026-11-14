@@ -1,1 +1,1352 @@
-[]
+[
+ {
+  "name": "ON0DXK-5",
+  "host": "on0dxk.dyndns.org",
+  "port": 8000,
+  "info": "88 utilisateurs"
+ },
+ {
+  "name": "ON0LLV-5",
+  "host": "on0llv-5.on6ll.be",
+  "port": 7300,
+  "info": "10 utilisateurs"
+ },
+ {
+  "name": "ON0LLV-6",
+  "host": "on0llv-6.on6ll.be",
+  "port": 7373,
+  "info": "4 utilisateurs"
+ },
+ {
+  "name": "OP0P",
+  "host": "op0p.no-ip.org",
+  "port": 8000,
+  "info": ""
+ },
+ {
+  "name": "6L0NJ",
+  "host": "dxc.dx.or.kr",
+  "port": 23,
+  "info": "15 utilisateurs"
+ },
+ {
+  "name": "7N4TWL-7",
+  "host": "7n4twl.homeip.net",
+  "port": 8000,
+  "info": "37 utilisateurs"
+ },
+ {
+  "name": "9A0DXC",
+  "host": "9a0dxc.hamradio.hr",
+  "port": 8000,
+  "info": ""
+ },
+ {
+  "name": "9M2PJU-2",
+  "host": "9m2pju.hamradio.my",
+  "port": 7300,
+  "info": "22 utilisateurs"
+ },
+ {
+  "name": "AE3N-2",
+  "host": "dxc.ae3n.us",
+  "port": 7300,
+  "info": "28 utilisateurs"
+ },
+ {
+  "name": "AE5E",
+  "host": "dxspots.com",
+  "port": 23,
+  "info": "702 utilisateurs"
+ },
+ {
+  "name": "AI9T",
+  "host": "dxc.ai9t.com",
+  "port": 7300,
+  "info": "76 utilisateurs"
+ },
+ {
+  "name": "BG8NUD",
+  "host": "www.bg8nud.com",
+  "port": 7373,
+  "info": "27 utilisateurs"
+ },
+ {
+  "name": "BI4SCC",
+  "host": "spots.bi4scc.net",
+  "port": 7300,
+  "info": "11 utilisateurs"
+ },
+ {
+  "name": "CS5SEL-5",
+  "host": "hamradio.isel.ipl.pt",
+  "port": 41112,
+  "info": "30 utilisateurs"
+ },
+ {
+  "name": "CX2SA-8",
+  "host": "cx2sa.net",
+  "port": 7300,
+  "info": "6 utilisateurs"
+ },
+ {
+  "name": "DA0BCC-7",
+  "host": "dx.da0bcc.de",
+  "port": 7300,
+  "info": "96 utilisateurs"
+ },
+ {
+  "name": "DB0LJ-6",
+  "host": "dx.prgm.org",
+  "port": 41112,
+  "info": "38 utilisateurs"
+ },
+ {
+  "name": "DB0OVN-6",
+  "host": "db0ovn.dynet.com",
+  "port": 41112,
+  "info": "5 utilisateurs"
+ },
+ {
+  "name": "DB0SUE-7",
+  "host": "db0sue.de",
+  "port": 8000,
+  "info": "93 utilisateurs"
+ },
+ {
+  "name": "DD5XX-10",
+  "host": "gw.ham.to",
+  "port": 7000,
+  "info": "11 utilisateurs"
+ },
+ {
+  "name": "DH8WR",
+  "host": "ccc.dh8wr.com",
+  "port": 8000,
+  "info": "16 utilisateurs"
+ },
+ {
+  "name": "DH8WR-1",
+  "host": "ccc.dh8wr.com",
+  "port": 7373,
+  "info": "37 utilisateurs"
+ },
+ {
+  "name": "DJ1YFK-2",
+  "host": "rbn.telegraphy.de",
+  "port": 7000,
+  "info": "RBN (skimmers)"
+ },
+ {
+  "name": "DL1FLW-1",
+  "host": "leipzig2000.dyndns.org",
+  "port": 7300,
+  "info": ""
+ },
+ {
+  "name": "DL2ND-8",
+  "host": "194.36.145.88",
+  "port": 7373,
+  "info": "8215 utilisateurs"
+ },
+ {
+  "name": "DL8FCL-7",
+  "host": "dl8fcl.dyndns.org",
+  "port": 8001,
+  "info": "13 utilisateurs"
+ },
+ {
+  "name": "EA2CW-2",
+  "host": "cluster.gautxori.com",
+  "port": 7373,
+  "info": "2 utilisateurs"
+ },
+ {
+  "name": "EA2RCF-5",
+  "host": "rcfcloud.dyndns.org",
+  "port": 7300,
+  "info": "4 utilisateurs"
+ },
+ {
+  "name": "EA3CV-2",
+  "host": "dxcluster.cronux.net",
+  "port": 7300,
+  "info": "22 utilisateurs"
+ },
+ {
+  "name": "EA4FIT-2",
+  "host": "ea4fit.ddns.net",
+  "port": 8000,
+  "info": "7 utilisateurs"
+ },
+ {
+  "name": "EA4RCH-5",
+  "host": "ea4rch.dxfun.com",
+  "port": 8000,
+  "info": "626 utilisateurs"
+ },
+ {
+  "name": "EA4URE-2",
+  "host": "ea4ure.com",
+  "port": 7300,
+  "info": "222 utilisateurs"
+ },
+ {
+  "name": "EA4URE-5",
+  "host": "eadx.org",
+  "port": 7300,
+  "info": "221 utilisateurs"
+ },
+ {
+  "name": "EA5URM-5",
+  "host": "ea5urm.dns2go.com",
+  "port": 7000,
+  "info": "13 utilisateurs"
+ },
+ {
+  "name": "EA6VQ-1",
+  "host": "dxmaps.com",
+  "port": 7300,
+  "info": "31 utilisateurs"
+ },
+ {
+  "name": "ED1ZAC-5",
+  "host": "dx.ed1zac.net",
+  "port": 8000,
+  "info": "9 utilisateurs"
+ },
+ {
+  "name": "ED3ZAK-5",
+  "host": "ed3zak-5.ddns.net",
+  "port": 8000,
+  "info": "6 utilisateurs"
+ },
+ {
+  "name": "EI7MRE",
+  "host": "mayodx.ath.cx",
+  "port": 7300,
+  "info": "97 utilisateurs"
+ },
+ {
+  "name": "EI7SDX",
+  "host": "shandx.ath.cx",
+  "port": 5000,
+  "info": "10 utilisateurs"
+ },
+ {
+  "name": "F4BWT-3",
+  "host": "f4bwt.ampr.org",
+  "port": 7300,
+  "info": "9 utilisateurs"
+ },
+ {
+  "name": "F4EYQ-1",
+  "host": "ham.crx.cloud",
+  "port": 7300,
+  "info": ""
+ },
+ {
+  "name": "F4IAA-3",
+  "host": "f4iaadx.ddns.net",
+  "port": 7300,
+  "info": "8 utilisateurs"
+ },
+ {
+  "name": "F5MZN-3",
+  "host": "f5mzn.org",
+  "port": 9000,
+  "info": "70 utilisateurs"
+ },
+ {
+  "name": "F5UGQ-2",
+  "host": "dxspider.sysinf.fr",
+  "port": 7300,
+  "info": "10 utilisateurs"
+ },
+ {
+  "name": "F6BVP-3",
+  "host": "f6bvp.org",
+  "port": 7300,
+  "info": "18 utilisateurs"
+ },
+ {
+  "name": "F6GCP-3",
+  "host": "f6gcp-pat.ddns.net",
+  "port": 7300,
+  "info": "5 utilisateurs"
+ },
+ {
+  "name": "F6KVP-3",
+  "host": "dxcluster.arp75.org",
+  "port": 7373,
+  "info": "12 utilisateurs"
+ },
+ {
+  "name": "G3FCA-4",
+  "host": "dxs.ddns.net",
+  "port": 7300,
+  "info": "7 utilisateurs"
+ },
+ {
+  "name": "G3FCA-8",
+  "host": "arc6.ddns.net",
+  "port": 7373,
+  "info": "5714 utilisateurs"
+ },
+ {
+  "name": "G3LRS-2",
+  "host": "dxc.g3lrs.org.uk",
+  "port": 7300,
+  "info": "30 utilisateurs"
+ },
+ {
+  "name": "G6NHU-2",
+  "host": "dxspider.co.uk",
+  "port": 7300,
+  "info": "862 utilisateurs"
+ },
+ {
+  "name": "GB7BAA",
+  "host": "gb7baa.com",
+  "port": 7300,
+  "info": "45 utilisateurs"
+ },
+ {
+  "name": "GB7DJK",
+  "host": "gb7djk.dxcluster.net",
+  "port": 7300,
+  "info": "30 utilisateurs"
+ },
+ {
+  "name": "GB7DXC-5",
+  "host": "90.155.35.170",
+  "port": 7300,
+  "info": "15 utilisateurs"
+ },
+ {
+  "name": "GB7DXG",
+  "host": "gb7dxg.lebs.org.uk",
+  "port": 23,
+  "info": "11 utilisateurs"
+ },
+ {
+  "name": "GB7DXG-1",
+  "host": "gb7dxg-1.lebs.org.uk",
+  "port": 7300,
+  "info": "12 utilisateurs"
+ },
+ {
+  "name": "GB7DXS",
+  "host": "81.149.0.149",
+  "port": 7300,
+  "info": "46 utilisateurs"
+ },
+ {
+  "name": "GB7HTL",
+  "host": "gb7htl.packet-radio.com",
+  "port": 7300,
+  "info": "13 utilisateurs"
+ },
+ {
+  "name": "GB7MBC",
+  "host": "www.gb7mbc.net",
+  "port": 8000,
+  "info": "123 utilisateurs"
+ },
+ {
+  "name": "GB7NHR",
+  "host": "gb7nhr.dynu.net",
+  "port": 7300,
+  "info": "7 utilisateurs"
+ },
+ {
+  "name": "GB7RAU",
+  "host": "gb7rau.dxcluster.net",
+  "port": 7374,
+  "info": "16 utilisateurs"
+ },
+ {
+  "name": "GB7VAX",
+  "host": "gb7vax.serveftp.com",
+  "port": 7300,
+  "info": "11 utilisateurs"
+ },
+ {
+  "name": "HB9IAC-8",
+  "host": "dxc.iapc.ch",
+  "port": 8000,
+  "info": "16 utilisateurs"
+ },
+ {
+  "name": "HB9ON-8",
+  "host": "spider.hb9on.net",
+  "port": 8000,
+  "info": "8 utilisateurs"
+ },
+ {
+  "name": "HG8PRC",
+  "host": "hg8lxl.ham.hu",
+  "port": 8000,
+  "info": ""
+ },
+ {
+  "name": "I3ITX-6",
+  "host": "cluster.futuristic.it",
+  "port": 8000,
+  "info": "17 utilisateurs"
+ },
+ {
+  "name": "I8ZSE-1",
+  "host": "dxcluster.i8zse.eu",
+  "port": 7300,
+  "info": "4 utilisateurs"
+ },
+ {
+  "name": "IK2WAD-6",
+  "host": "ik2wad.com",
+  "port": 7300,
+  "info": "4 utilisateurs"
+ },
+ {
+  "name": "IK2XDE-6",
+  "host": "ik2xde.ddns.net",
+  "port": 8000,
+  "info": "29 utilisateurs"
+ },
+ {
+  "name": "IK4ICZ-5",
+  "host": "ik4icz.dyndns.org",
+  "port": 7300,
+  "info": "9 utilisateurs"
+ },
+ {
+  "name": "IK4ICZ-6",
+  "host": "ik4icz.dyndns.org",
+  "port": 8000,
+  "info": "26 utilisateurs"
+ },
+ {
+  "name": "IK5PWJ-6",
+  "host": "ik5pwj-6.dyndns.org",
+  "port": 8000,
+  "info": "27 utilisateurs"
+ },
+ {
+  "name": "IK5ZUK-6",
+  "host": "ik5zuk.ddns.net",
+  "port": 8000,
+  "info": "8 utilisateurs"
+ },
+ {
+  "name": "IK6IHL-6",
+  "host": "ik6ihl.dyndns.org",
+  "port": 7300,
+  "info": "3 utilisateurs"
+ },
+ {
+  "name": "IK7IMO-6",
+  "host": "ik7imo.ddns.net",
+  "port": 7000,
+  "info": "2 utilisateurs"
+ },
+ {
+  "name": "IK7NXU-6",
+  "host": "ik7nxu.dyndns.org",
+  "port": 7300,
+  "info": "6 utilisateurs"
+ },
+ {
+  "name": "IK8HJC-6",
+  "host": "ik8hjc.dyndns.org",
+  "port": 8000,
+  "info": "7 utilisateurs"
+ },
+ {
+  "name": "IQ1GP-6",
+  "host": "cluster.ari-rivarolo.org",
+  "port": 7000,
+  "info": "9 utilisateurs"
+ },
+ {
+  "name": "IQ1LA-6",
+  "host": "iq1la-6.dyndns-ip.com",
+  "port": 7300,
+  "info": "14 utilisateurs"
+ },
+ {
+  "name": "IQ8PQ-6",
+  "host": "iq8pq.aripozzuoli.com",
+  "port": 9000,
+  "info": "3 utilisateurs"
+ },
+ {
+  "name": "IQ8RB-6",
+  "host": "iq8rb.rblob.com",
+  "port": 8000,
+  "info": "4 utilisateurs"
+ },
+ {
+  "name": "IR2UGI-6",
+  "host": "ir2ugi.dyndns.org",
+  "port": 50000,
+  "info": "2 utilisateurs"
+ },
+ {
+  "name": "IR4U-6",
+  "host": "dxc.aricesena.it",
+  "port": 8000,
+  "info": "6 utilisateurs"
+ },
+ {
+  "name": "IT9OBK-6",
+  "host": "it9obk.org",
+  "port": 41112,
+  "info": "24 utilisateurs"
+ },
+ {
+  "name": "IU1BOW-2",
+  "host": "dxcluster.iu1bow.it",
+  "port": 7300,
+  "info": "3 utilisateurs"
+ },
+ {
+  "name": "IW0QNL-6",
+  "host": "iw0qnlserver.ns0.it",
+  "port": 9002,
+  "info": "2 utilisateurs"
+ },
+ {
+  "name": "IW1QLH-6",
+  "host": "cluster.hrdlog.net",
+  "port": 7300,
+  "info": "11 utilisateurs"
+ },
+ {
+  "name": "IW1QLH-7",
+  "host": "cluster.hrdlog.net",
+  "port": 7373,
+  "info": "10 utilisateurs"
+ },
+ {
+  "name": "IW2NOO-1",
+  "host": "iw2noy.ddns.net",
+  "port": 7300,
+  "info": "3 utilisateurs"
+ },
+ {
+  "name": "IW2NOY-2",
+  "host": "iw2noy.ddns.net",
+  "port": 7300,
+  "info": "3 utilisateurs"
+ },
+ {
+  "name": "IW5ECF-6",
+  "host": "ham.homelinux.org",
+  "port": 8000,
+  "info": "4 utilisateurs"
+ },
+ {
+  "name": "IW9FRA-6",
+  "host": "dxspider.iw9fra.com",
+  "port": 7300,
+  "info": "12 utilisateurs"
+ },
+ {
+  "name": "IZ2LSC-99",
+  "host": "pota-cluster.iz2lsc.eu",
+  "port": 7373,
+  "info": "52 utilisateurs"
+ },
+ {
+  "name": "IZ5ILU-6",
+  "host": "iz5ilu.ns0.it",
+  "port": 7300,
+  "info": "8 utilisateurs"
+ },
+ {
+  "name": "IZ7AUH-6",
+  "host": "dx.iz7auh.net",
+  "port": 8000,
+  "info": "52 utilisateurs"
+ },
+ {
+  "name": "IZ8BRI-2",
+  "host": "iz8bri.dyndns.org",
+  "port": 9000,
+  "info": "6 utilisateurs"
+ },
+ {
+  "name": "IZ8MBW-6",
+  "host": "dx.iz8mbw.net",
+  "port": 7300,
+  "info": "9 utilisateurs"
+ },
+ {
+  "name": "JA4PXC-11",
+  "host": "bld.dxscape.com",
+  "port": 8000,
+  "info": ""
+ },
+ {
+  "name": "JE3YEK",
+  "host": "ja3yaq.ampr.org",
+  "port": 9000,
+  "info": "16 utilisateurs"
+ },
+ {
+  "name": "JG1VGX-7",
+  "host": "ccc.jg1vgx.net",
+  "port": 7373,
+  "info": "31 utilisateurs"
+ },
+ {
+  "name": "JG1VGX-8",
+  "host": "arc.jg1vgx.net",
+  "port": 7000,
+  "info": "30 utilisateurs"
+ },
+ {
+  "name": "JG1VGX-9",
+  "host": "dxc.jg1vgx.net",
+  "port": 7300,
+  "info": "39 utilisateurs"
+ },
+ {
+  "name": "JH1RFM-9",
+  "host": "jh1rfm.ddo.jp",
+  "port": 7300,
+  "info": "55 utilisateurs"
+ },
+ {
+  "name": "K0XM-5",
+  "host": "dxc.k0xm.net",
+  "port": 7300,
+  "info": "15 utilisateurs"
+ },
+ {
+  "name": "K1RFI",
+  "host": "k1rfi.com",
+  "port": 7300,
+  "info": "77 utilisateurs"
+ },
+ {
+  "name": "K1SA",
+  "host": "sebago.ddns.net",
+  "port": 7373,
+  "info": "18 utilisateurs"
+ },
+ {
+  "name": "K1TTT",
+  "host": "k1ttt.net",
+  "port": 7373,
+  "info": "8112 utilisateurs"
+ },
+ {
+  "name": "K1VU",
+  "host": "k1vu.miketheactuary.com",
+  "port": 4242,
+  "info": "7571 utilisateurs"
+ },
+ {
+  "name": "K2CAN",
+  "host": "k2can.us",
+  "port": 7373,
+  "info": ""
+ },
+ {
+  "name": "K3LR",
+  "host": "dx.k3lr.com",
+  "port": 23,
+  "info": "8250 utilisateurs"
+ },
+ {
+  "name": "K4JW",
+  "host": "k4jw.no-ip.com",
+  "port": 41414,
+  "info": "24 utilisateurs"
+ },
+ {
+  "name": "K5DX",
+  "host": "dxc.tdxs.net",
+  "port": 7373,
+  "info": "9190 utilisateurs"
+ },
+ {
+  "name": "K7AR",
+  "host": "k7ar.net",
+  "port": 7374,
+  "info": "26 utilisateurs"
+ },
+ {
+  "name": "K7EK-1",
+  "host": "k7ek.ddns.net",
+  "port": 9000,
+  "info": "15 utilisateurs"
+ },
+ {
+  "name": "K9AJ",
+  "host": "dxc.k9aj.net",
+  "port": 23,
+  "info": "8 utilisateurs"
+ },
+ {
+  "name": "K9LC",
+  "host": "k9lc.ddns.net",
+  "port": 7300,
+  "info": "14 utilisateurs"
+ },
+ {
+  "name": "KA2PBT-1",
+  "host": "dx.ka2pbt.com",
+  "port": 7300,
+  "info": "2 utilisateurs"
+ },
+ {
+  "name": "KB2FAF-12",
+  "host": "kb2faf.net",
+  "port": 7300,
+  "info": "3 utilisateurs"
+ },
+ {
+  "name": "KB2SYD-5",
+  "host": "dx.scarcnj.org",
+  "port": 7300,
+  "info": "11 utilisateurs"
+ },
+ {
+  "name": "KB8PMY-3",
+  "host": "www.kb8pmy.net",
+  "port": 7300,
+  "info": "1 utilisateur"
+ },
+ {
+  "name": "KC9AOP-1",
+  "host": "dxspots.kc9aop.net",
+  "port": 7300,
+  "info": "8 utilisateurs"
+ },
+ {
+  "name": "KE2L-5",
+  "host": "dx.scarcnj.org",
+  "port": 7300,
+  "info": "14 utilisateurs"
+ },
+ {
+  "name": "KF2FK-1",
+  "host": "themaincomputer.net",
+  "port": 7300,
+  "info": "2 utilisateurs"
+ },
+ {
+  "name": "KF4LLF-8",
+  "host": "kf4llf.no-ip.org",
+  "port": 2300,
+  "info": ""
+ },
+ {
+  "name": "KG4V",
+  "host": "kg4v.miketheactuary.com",
+  "port": 4242,
+  "info": "5855 utilisateurs"
+ },
+ {
+  "name": "KQ8M",
+  "host": "kq8m.no-ip.org",
+  "port": 7373,
+  "info": "10 utilisateurs"
+ },
+ {
+  "name": "KQ8M-2",
+  "host": "kq8m.no-ip.org",
+  "port": 7374,
+  "info": "11 utilisateurs"
+ },
+ {
+  "name": "KQ8M-3",
+  "host": "kq8m.no-ip.org",
+  "port": 3608,
+  "info": ""
+ },
+ {
+  "name": "KQ8M-4",
+  "host": "kq8m.no-ip.org",
+  "port": 23,
+  "info": "13 utilisateurs"
+ },
+ {
+  "name": "KY9J-2",
+  "host": "dxc.ky9j.com",
+  "port": 7300,
+  "info": "3 utilisateurs"
+ },
+ {
+  "name": "LU9DA-6",
+  "host": "lu9da.no-ip.org",
+  "port": 9000,
+  "info": "13 utilisateurs"
+ },
+ {
+  "name": "LZ7A",
+  "host": "cluster.lz7aa.com",
+  "port": 7300,
+  "info": "17 utilisateurs"
+ },
+ {
+  "name": "MB6WV",
+  "host": "mb6wv.ddns.net",
+  "port": 7373,
+  "info": "1 utilisateur"
+ },
+ {
+  "name": "MX0NCA-2",
+  "host": "dxc.mx0nca.uk",
+  "port": 7300,
+  "info": "9 utilisateurs"
+ },
+ {
+  "name": "N0VD-7",
+  "host": "cluster.dxcentral.com",
+  "port": 23,
+  "info": "8 utilisateurs"
+ },
+ {
+  "name": "N2KI",
+  "host": "dxc.n2ki.com",
+  "port": 7300,
+  "info": "22 utilisateurs"
+ },
+ {
+  "name": "N2WLS-5",
+  "host": "dxc.n2wls.com",
+  "port": 7300,
+  "info": "3 utilisateurs"
+ },
+ {
+  "name": "N4ZKF-1",
+  "host": "dxc.n4zkf.com",
+  "port": 7373,
+  "info": "61 utilisateurs"
+ },
+ {
+  "name": "N6WS-6",
+  "host": "n6ws.ddns.net",
+  "port": 7300,
+  "info": "111 utilisateurs"
+ },
+ {
+  "name": "N8DXE",
+  "host": "n8dxe.dxengineering.com",
+  "port": 23,
+  "info": "6240 utilisateurs"
+ },
+ {
+  "name": "N8DXE-1",
+  "host": "n8dxe.dxengineering.com",
+  "port": 7373,
+  "info": "9490 utilisateurs"
+ },
+ {
+  "name": "N8USK",
+  "host": "dxc.km8v.com",
+  "port": 7373,
+  "info": "12 utilisateurs"
+ },
+ {
+  "name": "N9JR-2",
+  "host": "dx.n9jr.com",
+  "port": 7300,
+  "info": "6 utilisateurs"
+ },
+ {
+  "name": "NC7J-1",
+  "host": "dxc.nc7j.com",
+  "port": 7373,
+  "info": "8371 utilisateurs"
+ },
+ {
+  "name": "NC7J-2",
+  "host": "dxc.nc7j.com",
+  "port": 7300,
+  "info": "77 utilisateurs"
+ },
+ {
+  "name": "ND4X",
+  "host": "nd4x.com",
+  "port": 7373,
+  "info": "67 utilisateurs"
+ },
+ {
+  "name": "NP3N",
+  "host": "dxc.np3n.com",
+  "port": 7300,
+  "info": "5 utilisateurs"
+ },
+ {
+  "name": "NR1X-3",
+  "host": "nr1x.budlog.net",
+  "port": 7300,
+  "info": ""
+ },
+ {
+  "name": "NX9G",
+  "host": "dxc.f2f.us",
+  "port": 7300,
+  "info": "14 utilisateurs"
+ },
+ {
+  "name": "OH2J",
+  "host": "ham.connect.fi",
+  "port": 7300,
+  "info": "96 utilisateurs"
+ },
+ {
+  "name": "OK0DXI",
+  "host": "ok0dxi.nagano.cz",
+  "port": 41112,
+  "info": ""
+ },
+ {
+  "name": "OK2CQR-1",
+  "host": "hamqth.com",
+  "port": 7300,
+  "info": "139 utilisateurs"
+ },
+ {
+  "name": "OZ5BBS-7",
+  "host": "oz5bbs.no-ip.org",
+  "port": 8000,
+  "info": "16 utilisateurs"
+ },
+ {
+  "name": "PA0ESH-3",
+  "host": "5.2.72.156",
+  "port": 7300,
+  "info": "6 utilisateurs"
+ },
+ {
+  "name": "PA1RBZ",
+  "host": "pa1rbz.dyndns.org",
+  "port": 9000,
+  "info": "63 utilisateurs"
+ },
+ {
+  "name": "PA4JJ-1",
+  "host": "77.174.195.163",
+  "port": 8873,
+  "info": "2 utilisateurs"
+ },
+ {
+  "name": "PA4JJ-2",
+  "host": "77.174.195.163",
+  "port": 7300,
+  "info": "45 utilisateurs"
+ },
+ {
+  "name": "PA4JJ-3",
+  "host": "77.174.195.163",
+  "port": 7388,
+  "info": "2 utilisateurs"
+ },
+ {
+  "name": "PE1ITR-8",
+  "host": "dxc.pe1itr.com",
+  "port": 7300,
+  "info": "21 utilisateurs"
+ },
+ {
+  "name": "PI1LAP-1",
+  "host": "dx.packet-radio.nl",
+  "port": 7300,
+  "info": "9 utilisateurs"
+ },
+ {
+  "name": "PI1ZTM-7",
+  "host": "pi1ztm.ddns.net",
+  "port": 7373,
+  "info": "1 utilisateur"
+ },
+ {
+  "name": "PI4CC",
+  "host": "dxc.pi4cc.nl",
+  "port": 8000,
+  "info": "144 utilisateurs"
+ },
+ {
+  "name": "PY1TSP-1",
+  "host": "cluster.riodxgroup.com",
+  "port": 7000,
+  "info": "10 utilisateurs"
+ },
+ {
+  "name": "PY3NZ-8",
+  "host": "dxc.baependi.com.br",
+  "port": 8000,
+  "info": "9 utilisateurs"
+ },
+ {
+  "name": "PY5JO-11",
+  "host": "py5jo.no-ip.org",
+  "port": 8000,
+  "info": "3 utilisateurs"
+ },
+ {
+  "name": "R5ACQ-1",
+  "host": "r5acq.no-ip.org",
+  "port": 7373,
+  "info": "10 utilisateurs"
+ },
+ {
+  "name": "RA3ATX-8",
+  "host": "dx.rk3awl.ru",
+  "port": 7300,
+  "info": "12 utilisateurs"
+ },
+ {
+  "name": "RW3XA-8",
+  "host": "dx.feerc.ru",
+  "port": 8000,
+  "info": "29 utilisateurs"
+ },
+ {
+  "name": "S50ARX",
+  "host": "s50arx.hamradio.si",
+  "port": 7300,
+  "info": "67 utilisateurs"
+ },
+ {
+  "name": "S50DXS",
+  "host": "s50dxs.s53m.com",
+  "port": 8000,
+  "info": "57 utilisateurs"
+ },
+ {
+  "name": "SK3W-6",
+  "host": "sk3w.se",
+  "port": 8000,
+  "info": "98 utilisateurs"
+ },
+ {
+  "name": "SK6AW-1",
+  "host": "sm6.se",
+  "port": 8000,
+  "info": "15 utilisateurs"
+ },
+ {
+  "name": "SM4ONW-14",
+  "host": "cluster.sk4bw.net",
+  "port": 8000,
+  "info": "25 utilisateurs"
+ },
+ {
+  "name": "SM6HOC-2",
+  "host": "sm6hoc.se",
+  "port": 8000,
+  "info": "5 utilisateurs"
+ },
+ {
+  "name": "SM7IUN-1",
+  "host": "dxc.sm7iun.se",
+  "port": 7300,
+  "info": "21 utilisateurs"
+ },
+ {
+  "name": "SM7IUN-2",
+  "host": "dxc.sm7iun.se",
+  "port": 23,
+  "info": "18 utilisateurs"
+ },
+ {
+  "name": "SR4DXC",
+  "host": "dx.jestok.com",
+  "port": 7300,
+  "info": "86 utilisateurs"
+ },
+ {
+  "name": "SV5BYR-7",
+  "host": "sv5byr.no-ip.org",
+  "port": 7300,
+  "info": "6 utilisateurs"
+ },
+ {
+  "name": "TA2NC-2",
+  "host": "home.kayhan.name.tr",
+  "port": 7300,
+  "info": "1 utilisateur"
+ },
+ {
+  "name": "UA4CC",
+  "host": "zavod.remoltd.com",
+  "port": 8000,
+  "info": "23 utilisateurs"
+ },
+ {
+  "name": "UT4ULP-5",
+  "host": "dx.net.ua",
+  "port": 7300,
+  "info": "1 utilisateur"
+ },
+ {
+  "name": "VE1CFB",
+  "host": "sparc.no-ip.info",
+  "port": 7300,
+  "info": "2 utilisateurs"
+ },
+ {
+  "name": "VE2HEW-5",
+  "host": "dx.ve2hew.com",
+  "port": 7300,
+  "info": "5 utilisateurs"
+ },
+ {
+  "name": "VE2PKT-9",
+  "host": "ve2pkt.dyndns.org",
+  "port": 9000,
+  "info": "14 utilisateurs"
+ },
+ {
+  "name": "VE2REA",
+  "host": "ve2sg.net",
+  "port": 7300,
+  "info": "3 utilisateurs"
+ },
+ {
+  "name": "VE3CGR-5",
+  "host": "ve3cgr.dyndns.org",
+  "port": 7300,
+  "info": "14 utilisateurs"
+ },
+ {
+  "name": "VE3ZIN-2",
+  "host": "dxc.ve3zin.com",
+  "port": 7300,
+  "info": "13 utilisateurs"
+ },
+ {
+  "name": "VE6DXC",
+  "host": "dxc.middlebrook.ca",
+  "port": 8000,
+  "info": ""
+ },
+ {
+  "name": "VE6TN-7",
+  "host": "dxc.middlebrook.ca",
+  "port": 23,
+  "info": ""
+ },
+ {
+  "name": "VE7CC-1",
+  "host": "ve7cc.net",
+  "port": 23,
+  "info": ""
+ },
+ {
+  "name": "VE9SC",
+  "host": "ve9sc.no-ip.org",
+  "port": 6300,
+  "info": "12 utilisateurs"
+ },
+ {
+  "name": "VK2AZ-2",
+  "host": "dx.vkspotter.com",
+  "port": 7300,
+  "info": "8 utilisateurs"
+ },
+ {
+  "name": "VK5GR-2",
+  "host": "gate.vk5gr.id.au",
+  "port": 7300,
+  "info": "13 utilisateurs"
+ },
+ {
+  "name": "VK7HDM-2",
+  "host": "203.38.121.133",
+  "port": 7300,
+  "info": "4 utilisateurs"
+ },
+ {
+  "name": "W0MU-1",
+  "host": "w0mu.net",
+  "port": 7373,
+  "info": "18 utilisateurs"
+ },
+ {
+  "name": "W1DX",
+  "host": "dxusa.net",
+  "port": 7300,
+  "info": "132 utilisateurs"
+ },
+ {
+  "name": "W1NR",
+  "host": "dxc.w1nr.net",
+  "port": 23,
+  "info": "123 utilisateurs"
+ },
+ {
+  "name": "W1NR-9",
+  "host": "usdx.w1nr.net",
+  "port": 23,
+  "info": "9 utilisateurs"
+ },
+ {
+  "name": "W1WRA-2",
+  "host": "coax.w1wra.net",
+  "port": 7300,
+  "info": "3 utilisateurs"
+ },
+ {
+  "name": "W3GQ",
+  "host": "w3gq.no-ip.com",
+  "port": 7373,
+  "info": "12 utilisateurs"
+ },
+ {
+  "name": "W3LPL",
+  "host": "dxc.w3lpl.net",
+  "port": 23,
+  "info": "313 utilisateurs"
+ },
+ {
+  "name": "W3LPL-1",
+  "host": "dxc.w3lpl.net",
+  "port": 7373,
+  "info": "336 utilisateurs"
+ },
+ {
+  "name": "W3RGA-1",
+  "host": "w3rga.ddns.net",
+  "port": 7373,
+  "info": "5 utilisateurs"
+ },
+ {
+  "name": "W4DXA",
+  "host": "w3gq.no-ip.com",
+  "port": 23,
+  "info": "8591 utilisateurs"
+ },
+ {
+  "name": "W4MYA",
+  "host": "dxc.w4mya.us",
+  "port": 7373,
+  "info": "73 utilisateurs"
+ },
+ {
+  "name": "W6RFU",
+  "host": "ucsbdx.ece.ucsb.edu",
+  "port": 7300,
+  "info": "107 utilisateurs"
+ },
+ {
+  "name": "W7JD-1",
+  "host": "w7jd.ddns.net",
+  "port": 9000,
+  "info": "13 utilisateurs"
+ },
+ {
+  "name": "W8BS-2",
+  "host": "dx.w8bs.net",
+  "port": 7300,
+  "info": "3 utilisateurs"
+ },
+ {
+  "name": "W8WTS-2",
+  "host": "dxc.w8wts.net",
+  "port": 23,
+  "info": "8 utilisateurs"
+ },
+ {
+  "name": "W8WTS-3",
+  "host": "dxc.w8wts.net",
+  "port": 7373,
+  "info": "9 utilisateurs"
+ },
+ {
+  "name": "W9AEK",
+  "host": "dx.svs.com",
+  "port": 7300,
+  "info": "22 utilisateurs"
+ },
+ {
+  "name": "W9BG",
+  "host": "www.w9bg.com",
+  "port": 23,
+  "info": "4 utilisateurs"
+ },
+ {
+  "name": "W9DP",
+  "host": "206.71.220.150",
+  "port": 7373,
+  "info": "1 utilisateur"
+ },
+ {
+  "name": "W9YB",
+  "host": "w9yb-dx.student-orgs.purdue.edu",
+  "port": 23,
+  "info": "11 utilisateurs"
+ },
+ {
+  "name": "WA9PIE-2",
+  "host": "hrd.wa9pie.net",
+  "port": 8000,
+  "info": "1010 utilisateurs"
+ },
+ {
+  "name": "WB3FFV-2",
+  "host": "dxc.leadmon.net",
+  "port": 7300,
+  "info": "172 utilisateurs"
+ },
+ {
+  "name": "WB4QOJ-8",
+  "host": "wb4qoj.no-ip.org",
+  "port": 7373,
+  "info": "13 utilisateurs"
+ },
+ {
+  "name": "WB5VZL-1",
+  "host": "telnet.reversebeacon.net",
+  "port": 7000,
+  "info": "RBN (skimmers) · 163 utilisateurs"
+ },
+ {
+  "name": "WD4IXD",
+  "host": "dxc.wd4ixd.net",
+  "port": 23,
+  "info": "23 utilisateurs"
+ },
+ {
+  "name": "WP3CW",
+  "host": "dxc.np3a.com",
+  "port": 7373,
+  "info": ""
+ },
+ {
+  "name": "WT3Q",
+  "host": "wt3q.gofrc.org",
+  "port": 7300,
+  "info": "24 utilisateurs"
+ },
+ {
+  "name": "YO3FCA-5",
+  "host": "dxnode.ddns.net",
+  "port": 8888,
+  "info": "4 utilisateurs"
+ },
+ {
+  "name": "YO3FCA-8",
+  "host": "amprnet.ddns.net",
+  "port": 7301,
+  "info": "4 utilisateurs"
+ },
+ {
+  "name": "ZL2AQY-10",
+  "host": "olson.nz",
+  "port": 9000,
+  "info": "4 utilisateurs"
+ },
+ {
+  "name": "ZL2ARN-10",
+  "host": "zl2arn.ddns.net",
+  "port": 7300,
+  "info": "19 utilisateurs"
+ }
+]
