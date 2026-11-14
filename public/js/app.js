@@ -162,7 +162,10 @@
     const tick = () => { const d = new Date(); el.textContent = J[d.getUTCDay()] + ' ' + p2(d.getUTCDate()) + '/' + p2(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear() + '  ' + p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes()) + ':' + p2(d.getUTCSeconds()) + ' GMT'; };
     tick();
     setInterval(tick, 1000);
+    // Version du serveur à droite de la date (aussi avant la connexion)
+    fetch('/api/info', { cache: 'no-store' }).then((r) => r.json()).then((i) => showVer(i.version)).catch(() => {});
   })();
+  function showVer(v) { const e = $('appVer'); if (e && v) { e.textContent = 'v.' + v; e.hidden = false; } }
   function say(text, level, ms) {
     const el = $('msg');
     el.textContent = text || '';
@@ -2593,6 +2596,7 @@
     if (m.latest && UPD.beeped !== m.latest && !busy) { UPD.beeped = m.latest; updBeep(); }
   }
   function updHello(m) {
+    showVer(m.version);
     // Reconnexion après la mise à jour : la page vient d'une ancienne version
     if (UPD.pageVer == null) { UPD.pageVer = m.version || ''; return; }
     if (m.version && m.version !== UPD.pageVer && UPD.done !== m.version) {

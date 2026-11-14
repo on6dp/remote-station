@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.14** — Dashboard : version de Remote Station (v.0.42.14) affichée à droite de la date GMT.
 - **0.42.13** — Documentation : vitesse des envois eQSL / QRZ (temporisation 1 s conseillée, gros lots par fichier), clé API Club Log (support@clublog.org) dans le manuel, l'aide et le guide administrateur.
 - **0.42.12** — Club Log : après un blocage de l'adresse IP par le pare-feu de Club Log (403 nginx), plus aucun essai pendant une heure (chaque essai prolongeait le blocage) ; aide sur la clé API (support@clublog.org).
 - **0.42.11** — Club Log : erreur 403 expliquée (e-mail du compte, mot de passe d'application, indicatif du compte, clé API ; adresse IP bloquée environ une heure par le pare-feu de Club Log après des refus).

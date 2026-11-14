@@ -2221,6 +2221,9 @@ html:has(body.digi-popup), body.digi-popup, html:has(body.cwp-body), body.cwp-bo
 /* Titre : date et heure GMT dans un cadre sous « Remote Station UBA-LGE » */
 .tb-title .tb-mid { display: flex; flex-direction: column; align-items: center; gap: 11px; padding-top: 6px; }
 .tb-title .tb-name { white-space: nowrap; }
+.tb-title .tb-row { position: relative; display: flex; align-items: center; }
+.tb-title .tb-ver { position: absolute; left: 100%; margin-left: 10px; font: 700 12px/1.2 ui-monospace, 'Roboto Mono', Consolas, monospace; color: var(--v2-accent-cyan-bright); letter-spacing: .04em; white-space: nowrap; }
+.tb-title .tb-ver:empty { display: none; }
 .tb-title .tb-utc { font: 800 12.5px/1.2 ui-monospace, 'Roboto Mono', Consolas, monospace; color: #fff; white-space: pre; letter-spacing: .04em;
   padding: 2px 10px; border: 1px solid #c8d0dc; border-radius: 7px; background: #0b0f14; }
 /* Fiche QSO (onglet Logbooks) : cadre sur fond jaune clair pour le distinguer de la liste ; intitulés foncés, champs blancs */
