@@ -947,7 +947,7 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
   <li>Choose the service: <b>Synchronisation LoTW…</b>, <b>Synchronisation eQSL…</b>, <b>Club Log…</b> or <b>QRZ…</b>.</li>
   <li><b>Détails</b> (details) tab: choose the <b>callsign (TX call)</b> whose QSOs are uploaded (the current TX call is suggested).</li>
   <li>Just below, the yellow <b>« Identifiants &lt;service&gt; de &lt;indicatif&gt; »</b> (&lt;service&gt; credentials of &lt;callsign&gt;) box shows the credentials that will be used: login, password, key… A note says whether they belong to this callsign, come from the club configuration, or what is missing. Complete them if needed, then <span class="k">Enregistrer pour cet indicatif</span> (save for this callsign). Passwords stay on the server and are never displayed: a field left empty keeps the stored value, <span class="k">✕</span> deletes it, <span class="k">👁</span> shows what you type.</li>
-  <li>Optional: <b>date range</b>, <b>Renvoyer aussi les QSO déjà envoyés</b> (also resend QSOs already sent), <b>Temporisation</b> (delay in seconds between two QSOs, so as not to be blocked by the website). Club Log: « Effacer le log ClubLog existant » (clear the existing Club Log log) replaces the whole online log (only use it if this logbook is complete). The number of QSOs to upload is shown at the bottom.</li>
+  <li>Optional: <b>date range</b>, <b>Renvoyer aussi les QSO déjà envoyés</b> (also resend QSOs already sent), <b>Temporisation</b> (delay in seconds between two QSOs, so as not to be blocked by the website; 1 s advised for eQSL and QRZ.com, which only accept one QSO per upload). Club Log: « Effacer le log ClubLog existant » (clear the existing Club Log log) replaces the whole online log (only use it if this logbook is complete). The number of QSOs to upload is shown at the bottom.</li>
   <li><span class="k">Télécharger</span> (upload): the upload starts; the <b>Traitement</b> (processing) tab shows the progress and the report, QSO by QSO. <span class="k">Arrêt</span> (stop) interrupts it; <span class="k">Fermer</span> (close) closes the window: the upload continues on the server and its progress stays visible below the logbook list.</li>
 </ol>
 <ul>
@@ -982,7 +982,8 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
 <h4 id="help-eqsl">eQSL</h4>
 <ul>
   <li><b>What you need</b>: an eQSL.cc account for the callsign. Credentials: the <b>callsign</b> (eQSL login) and the account <b>password</b>; <b>QTH Nickname</b> only if the account has several QTHs: the <b>exact</b> nickname of a QTH of the eQSL account (eQSL.cc → My Profile → QTH Nicknames), not the TQSL Station Location; otherwise leave it empty. An unknown nickname gives « No match on APP_EQSL_QTH_NICKNAME » and stops the upload. Club callsigns: ⚙ Configuration → eQSL; personal callsign: yellow frame of this window (<span class="k">Enregistrer pour cet indicatif</span>).</li>
-  <li><b>Uploading</b>: choose the TX call, possibly dates, then <span class="k">Télécharger</span>: the server sends the QSOs not yet sent, one by one (Traitement tab: report QSO by QSO). <b>Temporisation</b>: pause between two QSOs so as not to be blocked by the site.</li>
+  <li><b>Uploading</b>: choose the TX call, possibly dates, then <span class="k">Télécharger</span>: the server sends the QSOs not yet sent, one by one (Traitement tab: report QSO by QSO). <b>Temporisation</b>: pause between two QSOs so as not to be blocked by the site (5 s by default); <b>1 second</b> is enough and 3 to 4 times faster (box of this window for one upload, ⚙ Configuration → eQSL to keep it). eQSL only accepts one QSO per upload and itself answers in 1 to 2 seconds.</li>
+  <li><b>Large batch</b> (contest, hundreds of QSOs): faster with a file: Exporter ▾ → ADIF, then upload the file on eQSL.cc (Upload ADIF file). A later <span class="k">Télécharger</span> of these QSOs is harmless: eQSL answers « duplicate » and they are marked as sent.</li>
   <li><b>Confirmations</b>: received eQSLs are viewed on the eQSL.cc site (Inbox).</li>
   <li><b>Automatic upload</b> of each new QSO: ⚙ Configuration → eQSL (club) or the box in this window (personal callsign). Turn it off during a contest if you don't want live uploads.</li>
 </ul>
@@ -996,7 +997,8 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
 <h4 id="help-qrz">QRZ.com (QRZ logbook)</h4>
 <ul>
   <li><b>What you need</b>: a <b>QRZ logbook API key</b> per callsign (QRZ.com → Logbook → Settings → API Key; XML subscription or higher). Club callsigns: ⚙ Configuration → QRZ (one line per callsign); personal callsign: yellow frame of this window.</li>
-  <li><b>Uploading</b>: TX call, possibly dates, then <span class="k">Télécharger</span>; QSOs arrive in the callsign's QRZ logbook.</li>
+  <li><b>Uploading</b>: TX call, possibly dates, then <span class="k">Télécharger</span>; QSOs arrive in the callsign's QRZ logbook, one per upload (the QRZ API does not accept several at once). <b>Temporisation</b>: 5 s by default; <b>1 second</b> is enough (box of this window, or ⚙ Configuration → QRZ to keep it).</li>
+  <li><b>Large batch</b>: Exporter ▾ → ADIF, then QRZ.com → Logbook → Settings → Import ADIF. A later <span class="k">Télécharger</span> of these QSOs is harmless: QRZ answers « duplicate » and they are marked as sent.</li>
   <li><b>Confirmations</b>: in the QRZ logbook on the site.</li>
   <li>The QRZ.com account for « looking up correspondents » (name, QTH, locator) is another setting, in ⚙ Configuration → QRZ.</li>
 </ul>

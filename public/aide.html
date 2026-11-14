@@ -957,7 +957,7 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
   <li>Choisissez le service : <b>Synchronisation LoTW…</b>, <b>Synchronisation eQSL…</b>, <b>Club Log…</b> ou <b>QRZ…</b>.</li>
   <li>Onglet <b>Détails</b> : choisissez l'<b>indicatif (TX call)</b> dont les QSO partent (le TX call en cours est proposé).</li>
   <li>Juste en dessous, le cadre jaune <b>« Identifiants &lt;service&gt; de &lt;indicatif&gt; »</b> montre les identifiants qui seront utilisés : identifiant, mot de passe, clé… Une note dit s'ils sont propres à cet indicatif, s'ils viennent de la configuration du club, ou ce qui manque. Complétez-les si besoin, puis <span class="k">Enregistrer pour cet indicatif</span>. Les mots de passe restent sur le serveur et ne sont jamais affichés : un champ laissé vide garde la valeur enregistrée, <span class="k">✕</span> l'efface, <span class="k">👁</span> montre ce que vous tapez.</li>
-  <li>Facultatif : <b>plage de dates</b>, <b>Renvoyer aussi les QSO déjà envoyés</b>, <b>Temporisation</b> (pause en secondes entre deux QSO, pour ne pas être bloqué par le site). Club Log : « Effacer le log ClubLog existant » remplace tout le log en ligne (à n'utiliser que si ce carnet est complet). Le nombre de QSO à envoyer s'affiche en bas.</li>
+  <li>Facultatif : <b>plage de dates</b>, <b>Renvoyer aussi les QSO déjà envoyés</b>, <b>Temporisation</b> (pause en secondes entre deux QSO, pour ne pas être bloqué par le site ; 1 s conseillée pour eQSL et QRZ.com, qui n'acceptent qu'un QSO par envoi). Club Log : « Effacer le log ClubLog existant » remplace tout le log en ligne (à n'utiliser que si ce carnet est complet). Le nombre de QSO à envoyer s'affiche en bas.</li>
   <li><span class="k">Télécharger</span> : l'envoi commence ; l'onglet <b>Traitement</b> montre la progression et le compte rendu, QSO par QSO. <span class="k">Arrêt</span> l'interrompt ; <span class="k">Fermer</span> ferme la fenêtre : l'envoi continue sur le serveur et sa progression reste affichée sous la liste du carnet.</li>
 </ol>
 <ul>
@@ -994,7 +994,8 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
 <h4 id="help-eqsl">eQSL</h4>
 <ul>
   <li><b>Ce qu'il faut</b> : un compte eQSL.cc pour l'indicatif. Identifiants : l'<b>indicatif</b> (identifiant eQSL) et le <b>mot de passe</b> du compte ; <b>QTH Nickname</b> seulement si le compte a plusieurs QTH : le surnom <b>exact</b> d'un QTH du compte eQSL (eQSL.cc → My Profile → QTH Nicknames), pas le lieu de station TQSL ; sinon laissez-le vide. Un surnom inconnu donne « No match on APP_EQSL_QTH_NICKNAME » et arrête l'envoi. Indicatifs du club : ⚙ Configuration → eQSL ; indicatif personnel : cadre jaune de cette fenêtre (<span class="k">Enregistrer pour cet indicatif</span>).</li>
-  <li><b>Envoyer</b> : choisissez le TX call, éventuellement des dates, puis <span class="k">Télécharger</span> : le serveur envoie les QSO pas encore envoyés, un par un (onglet Traitement : compte rendu QSO par QSO). <b>Temporisation</b> : pause entre deux QSO pour ne pas être bloqué par le site.</li>
+  <li><b>Envoyer</b> : choisissez le TX call, éventuellement des dates, puis <span class="k">Télécharger</span> : le serveur envoie les QSO pas encore envoyés, un par un (onglet Traitement : compte rendu QSO par QSO). <b>Temporisation</b> : pause entre deux QSO pour ne pas être bloqué par le site (5 s par défaut) ; <b>1 seconde</b> suffit et va 3 à 4 fois plus vite (case de cette fenêtre pour un envoi, ⚙ Configuration → eQSL pour la garder). eQSL n'accepte qu'un QSO par envoi et répond lui-même en 1 à 2 secondes.</li>
+  <li><b>Gros lot</b> (contest, centaines de QSO) : plus rapide par fichier : Exporter ▾ → ADIF, puis envoi du fichier sur eQSL.cc (Upload ADIF file). Un prochain <span class="k">Télécharger</span> de ces QSO est sans risque : eQSL répond « doublon » et ils sont notés envoyés.</li>
   <li><b>Confirmations</b> : les eQSL reçues se consultent sur le site eQSL.cc (Inbox).</li>
   <li><b>Envoi automatique</b> de chaque nouveau QSO : ⚙ Configuration → eQSL (club) ou case de cette fenêtre (indicatif personnel). À couper pendant un contest si on ne veut pas d'envois en direct.</li>
 </ul>
@@ -1008,7 +1009,8 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
 <h4 id="help-qrz">QRZ.com (carnet QRZ)</h4>
 <ul>
   <li><b>Ce qu'il faut</b> : une <b>clé API du carnet QRZ</b> par indicatif (QRZ.com → Logbook → Settings → API Key ; abonnement XML ou supérieur). Indicatifs du club : ⚙ Configuration → QRZ (une ligne par indicatif) ; indicatif personnel : cadre jaune de cette fenêtre.</li>
-  <li><b>Envoyer</b> : TX call, dates éventuelles, puis <span class="k">Télécharger</span> ; les QSO arrivent dans le carnet QRZ de l'indicatif.</li>
+  <li><b>Envoyer</b> : TX call, dates éventuelles, puis <span class="k">Télécharger</span> ; les QSO arrivent dans le carnet QRZ de l'indicatif, un par envoi (l'API QRZ n'en accepte pas plusieurs à la fois). <b>Temporisation</b> : 5 s par défaut ; <b>1 seconde</b> suffit (case de cette fenêtre, ou ⚙ Configuration → QRZ pour la garder).</li>
+  <li><b>Gros lot</b> : Exporter ▾ → ADIF, puis QRZ.com → Logbook → Settings → Import ADIF. Un prochain <span class="k">Télécharger</span> de ces QSO est sans risque : QRZ répond « doublon » et ils sont notés envoyés.</li>
   <li><b>Confirmations</b> : dans le carnet QRZ sur le site.</li>
   <li>Le compte QRZ.com de « Recherche des correspondants » (nom, QTH, locator) est un autre réglage, dans ⚙ Configuration → QRZ.</li>
 </ul>
