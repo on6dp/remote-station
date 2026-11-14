@@ -372,7 +372,7 @@
       <div class="dg-col rt-side" data-ch="0">
         <div class="dg-h rt-hd">
           <span class="rt-name" id="rtNameA">VFO-A</span><span class="rt-rf" id="rtRf"></span><span class="rt-sig" id="rtSig"></span>
-          <button class="dg-mini rt-2dec" type="button" id="rt2Dec" aria-pressed="false" hidden title="Un seul récepteur (ni SPLIT ni DUAL RX) : deux décodeurs sur la même cascade, comme FLDIGI : A1 (clic gauche) et A2 (clic droit, ou bouton droit maintenu pour faire glisser ses barres) ; deux signaux décodés en même temps. La fenêtre de A2 s’affiche dans la colonne de droite.">2 DÉCODEURS</button>
+          <button class="dg-mini rt-2dec" type="button" id="rt2Dec" aria-pressed="false" hidden title="Un seul récepteur (ni SPLIT ni DUAL RX) : deux décodeurs sur la même cascade, comme FLDIGI : A1 (clic gauche) et A2 (clic droit, ou bouton droit maintenu pour faire glisser ses barres) ; deux signaux décodés en même temps. La fenêtre de A2 s’affiche dans la colonne de droite.">DUAL DÉCODEURS</button>
           <select id="rtShift" aria-label="Shift (VFO-A)"><option value="170">170 Hz</option><option value="200">200 Hz</option><option value="425">425 Hz</option><option value="850">850 Hz</option></select>
           <select id="rtBaud" aria-label="Vitesse (VFO-A)"><option value="45.45">45,45 Bd</option><option value="50">50 Bd</option><option value="75">75 Bd</option><option value="100">100 Bd</option></select>
           <button class="dg-mini" type="button" id="rtRev" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>
@@ -394,7 +394,7 @@
       <i class="rt-vsplit" id="rtSplit" title="Glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié)"></i>
       <div class="dg-col rt-side" data-ch="1">
         <div class="dg-h rt-hd">
-          <span class="rt-name" id="rtNameB">VFO-B</span><button class="dg-mini rt-2off" type="button" id="rt2Off" hidden title="Masquer A2 (2e décodeur) : le LOG RTTY reprend toute la colonne de droite. Le rallumer : bouton 2 DÉCODEURS de l’en-tête du VFO-A.">✕ MASQUER</button><span class="rt-rf" id="rtRfB"></span><span class="rt-sig" id="rtSigB"></span>
+          <span class="rt-name" id="rtNameB">VFO-B</span><button class="dg-mini rt-2off" type="button" id="rt2Off" hidden title="Masquer A2 (2e décodeur) : le LOG RTTY reprend toute la colonne de droite. Le rallumer : bouton DUAL DÉCODEURS de l’en-tête du VFO-A.">✕ MASQUER</button><span class="rt-rf" id="rtRfB"></span><span class="rt-sig" id="rtSigB"></span>
           <select id="rtShiftB" aria-label="Shift (VFO-B)"><option value="170">170 Hz</option><option value="200">200 Hz</option><option value="425">425 Hz</option><option value="850">850 Hz</option></select>
           <select id="rtBaudB" aria-label="Vitesse (VFO-B)"><option value="45.45">45,45 Bd</option><option value="50">50 Bd</option><option value="75">75 Bd</option><option value="100">100 Bd</option></select>
           <button class="dg-mini" type="button" id="rtRevB" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>

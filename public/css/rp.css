@@ -3240,3 +3240,6 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .rt-2dec[aria-pressed='true'] { background: #7a3cff; border-color: #a67bff; color: #fff; }
 .rt-2off[hidden] { display: none !important; }
 .rt-2off { color: #fff; border-color: #c9d1d9; margin-left: 4px; }
+/* RTTY : DUAL DÉCODEURS comme les autres boutons DUAL — liseré mauve, fond mauve foncé quand il est allumé */
+.rt-hd .rt-2dec, .rt-2dec { border-color: #8a5cc4; color: #fff; font-weight: 800; }
+.rt-hd .rt-2dec[aria-pressed='true'], .rt-2dec[aria-pressed='true'] { background: linear-gradient(180deg, #6a3aa8, #3f1d6e) !important; border-color: #c49bff !important; color: #fff !important; box-shadow: 0 0 8px rgba(160, 100, 255, .45); }
