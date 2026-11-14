@@ -459,7 +459,7 @@ Ces deux automatismes n'agissent que si un membre a la main (rien ne change pour
 - Configuration du club : **administrateurs** (onglet Logbooks → Synchronisation ▾ → ⚙ Configuration). Synchronisation : administrateurs pour tous les indicatifs, chaque membre pour le sien (ci-dessous).
 - Tous les membres (sauf écouteurs) enregistrent des QSO et peuvent modifier ou supprimer **les leurs** seulement. Les autres peuvent voir le détail d'un QSO, sans jamais le modifier.
 - Un QSO sous l'indicatif d'un membre n'est **jamais** envoyé aux carnets du club : il part vers les siens (s'il les a réglés) ou s'exporte en ADIF (« Mes QSO »).
-- **LoTW** : le certificat (.p12 / .tq6) et son mot de passe restent sur le PC où **TQSL** est installé, jamais sur le VPS ni sur GitHub. Sur le VPS : « Exporter pour TQSL (.adi) », signer avec TQSL sur le PC du club, puis « Marquer comme envoyés ».
+- **LoTW** : le certificat (.p12 / .tq6) et son mot de passe restent sur le PC où **TQSL** est installé, jamais sur le VPS ni sur GitHub. Avec l'**Agent LoTW** (ci-dessous), ce PC signe et envoie lui-même ; sans agent, sur le VPS : « Exporter pour TQSL (.adi) », signer avec TQSL sur le PC, puis « Marquer comme envoyés ».
 - **UDP** (Swisslog, Log4OM, N1MM) : les paquets partent du serveur ; le PC qui les reçoit doit être joignable depuis le VPS.
 - **Exports par opérateur** (pages RTTY et SSB, menu EXPORTER ▾ des cadres LOG RTTY / LOG SSB) : plusieurs opérateurs se partagent la station ; un administrateur peut exporter en ADIF (et en Cabrillo pour un contest RTTY) les QSO de **tous** les TX call et de **tous** les opérateurs, ou d'un opérateur précis (nom de fichier `…-OP<INDICATIF>-…`), avec des dates du / au. Un membre n'exporte que ses propres QSO : le serveur l'impose, quels que soient les filtres choisis.
 - **Corrections** : un QSO du log d'un contest SSB se corrige en cliquant sur son indicatif (détails sous la ligne, Enregistrer / Supprimer) ; mêmes droits que l'onglet Logbooks (un membre ses propres QSO, un administrateur tous). Le QSO corrigé remplace l'ancien dans le carnet ; les envois déjà faits vers les logs en ligne restent notés (à refaire si nécessaire).
@@ -502,6 +502,19 @@ Fonctionnement : liaisons WebSocket sur `/ws` (HTTPS 443, nginx inchangé), touj
 - Un refus d'accès (mauvais mot de passe) bloque **seulement cet indicatif** jusqu'à ce que ses identifiants soient réenregistrés.
 - Confirmations LoTW : lues pour l'indicatif choisi et reportées seulement sur ses QSO (date de dernière lecture gardée par indicatif).
 - Pas d'envoi UDP vers le logbook du PC du club pour un QSO fait sous un indicatif personnel.
+
+### Agent LoTW (0.42.10)
+
+Le VPS n'a ni TQSL ni certificat. L'Agent LoTW (`agent/agent-lotw.js`, Node.js 22 ou plus, sans dépendance) tourne sur le PC d'un membre où TQSL et son certificat sont installés, et ouvre lui-même une liaison WebSocket vers `wss://remote.op0p.be/ws` (rien à ouvrir dans le routeur, fonctionne derrière un CGNAT).
+
+- **Appairage** : carnet → Synchronisation LoTW → cadre Agent LoTW → « Appairer un PC… » : code de 8 caractères (`log_agent_code`, 15 minutes, une seule fois). L'agent le présente (`lotw_agent_pair`) et reçoit un jeton propre à ce PC ; le serveur ne garde que son empreinte SHA-256 dans **`logs/lotw-agents.json`** (droits 600, jamais publié, sauvegardé avec `logs/`). Le mot de passe du membre n'est jamais demandé à l'agent. 6 codes faux depuis une adresse → 10 minutes de blocage.
+- **Droits** : l'agent d'un membre ne signe que son indicatif personnel (s'il émet sous son indicatif) ; celui d'un administrateur aussi les indicatifs du club. L'agent ne reçoit que des lots ADIF à signer (`lotw_sign`, 100 QSO au plus) et renvoie le code de sortie de TQSL (`lotw_signed`) ; il ne lit rien d'autre. Compte supprimé ou hors service → agent refusé. « Retirer » dans le carnet coupe le PC tout de suite.
+- **Signature** : `tqsl -x -u -d -a compliant -l <lieu> fichier.adi` sur le PC, avec `TQSLDIR` = dossier des données TQSL trouvé (Windows : `%APPDATA%\TrustedQSL`, cherché aussi dans les profils de `C:\Users` car le service tourne sous le compte Système ; Linux : `~/.tqsl`, avec `xvfb-run` sans écran). Lieu de station : celui des identifiants LoTW de l'indicatif s'il existe sur le PC, sinon le seul lieu de cet indicatif (les lieux de `station_data` sont annoncés au serveur et affichés dans le carnet). Mot de passe de certificat éventuel : `agent-lotw.js --mdp-certificat`, gardé dans `agent-lotw.json` sur ce PC seulement.
+- **Envoi automatique** coché pour l'indicatif : chaque nouveau QSO part par l'agent ; agent absent → rien n'est marqué, et à sa connexion les QSO des 30 derniers jours jamais présentés à LoTW partent. Agent déconnecté pendant une signature ou lieu de station à choisir → QSO laissés « à envoyer » (pas d'échec).
+- **Installation** : Windows : installateur, case « Agent LoTW (TQSL de ce PC) » (service WinSW `RemoteStationAgentLoTW`, dossier `Program Files\RemoteStation\agent-lotw` réservé au Système et aux administrateurs, raccourcis « Appairer l'Agent LoTW » et « État de l'Agent LoTW » ; silencieux : `/AGENT=1 /URL=https://remote.op0p.be /AGENTCODE=ABCD-EFGH /KIT=0`). Linux : `curl -fsSL https://remote.op0p.be/agent/install-agent-lotw.sh | sudo bash -s -- --serveur https://remote.op0p.be --code ABCD-EFGH` ou `sudo bash /opt/remote-station/deploy/install.sh --agent-lotw --serveur … --code …` (service systemd `remote-station-agent-lotw` sous le compte de l'utilisateur, commande `remote-station-agent-lotw --etat | --appairer CODE | --oublier | --mdp-certificat` ; `--desinstaller` pour le retirer). Le serveur publie `/agent/agent-lotw.js` et `/agent/install-agent-lotw.sh` (sans secret).
+- **Mise à jour** : le serveur annonce la version de l'agent livrée avec lui ; un agent plus ancien se recharge depuis `/agent/agent-lotw.js` et redémarre (service).
+- **Réseau** : l'agent se relie au serveur indiqué à l'appairage (remote.op0p.be) ; secours.op0p.be ne connaît pas ses appairages (les QSO attendent le retour du maître).
+- Journal : événements `lotw_agent_code`, `lotw_agent_paired`, `lotw_agent_on` / `_off`, `lotw_agent_refused`, `lotw_agent_del`. Côté PC : Windows « État de l'Agent LoTW » (fichier `RemoteStationAgentLoTW.out.log`), Linux `journalctl -u remote-station-agent-lotw -f`.
 
 ### Listes de références IOTA, WWFF, POTA, BOTA, LLOTA, SOTA
 
@@ -616,7 +629,7 @@ sudo chown -R remotestation:remotestation /opt/remote-station && sudo systemctl 
 ## 15. Fichiers secrets
 
 Ces fichiers restent **sur le VPS** (et dans vos sauvegardes privées), jamais dans le dépôt GitHub, dans une archive de version ni dans un message :
-`config.json` (jeton), `users.json`, `comptes-*.csv`, `sessions.json`, `macros.json`, `profiles.json`, `logs/logbook.json`, `logs/logbook-config.json`, `logs/station-sessions.json`, `logs/*.log`, `logs/usage-*.jsonl`, `sstv/`.
+`config.json` (jeton), `users.json`, `comptes-*.csv`, `sessions.json`, `macros.json`, `profiles.json`, `logs/logbook.json`, `logs/logbook-config.json`, `logs/station-sessions.json`, `logs/lotw-agents.json`, `logs/*.log`, `logs/usage-*.jsonl`, `sstv/`. Sur le PC d'un membre : `agent-lotw.json` (jeton d'appairage de l'Agent LoTW).
 Le certificat LoTW et son mot de passe ne quittent jamais le PC où TQSL est installé.
 Les mots de passe SSH, les clés et le jeton ne s'envoient jamais par e-mail ni par chat.
 

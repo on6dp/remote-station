@@ -230,6 +230,14 @@ const server = makeServer((req, res) => {
       version: VERSION
     });
   }
+  // Agent LoTW : programme et script d'installation Linux (publics : aucun secret dedans)
+  if (p === '/agent/agent-lotw.js' || p === '/agent/install-agent-lotw.sh') {
+    return fs.readFile(path.join(ROOT, 'agent', path.basename(p)), (err, data) => {
+      if (err) { res.writeHead(404); return res.end(); }
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff', 'Content-Disposition': 'inline; filename="' + path.basename(p) + '"' });
+      res.end(req.method === 'HEAD' ? undefined : data);
+    });
+  }
   p = ROUTES[p] || p;
   const fp = path.normalize(path.join(PUB, p));
   if (!fp.startsWith(PUB + path.sep) || /[:\0]/.test(path.relative(PUB, fp))) {
@@ -724,7 +732,8 @@ function autoFor(s, call) {
   const acct = logCfg[s] && logCfg[s].accounts && logCfg[s].accounts[call];
   if (!acct || acct.auto !== true) return false;
   const c = credFor(s, call);
-  return s === 'eqsl' ? !!(c.user && c.password) : s === 'clublog' ? !!(c.email && c.password && c.api) : s === 'qrz' ? !!c.key : !!(c.tqsl && c.location);
+  // LoTW : TQSL de ce serveur ou Agent LoTW du membre (s'il n'est pas connecté, les QSO partent dès son retour)
+  return s === 'eqsl' ? !!(c.user && c.password) : s === 'clublog' ? !!(c.email && c.password && c.api) : s === 'qrz' ? !!c.key : true;
 }
 // Logs en ligne en libre-service : un membre ne gère que son propre indicatif (identifiants, envois, confirmations)
 function ownLogCall(conn, call) {
@@ -807,7 +816,41 @@ function txCall() {
 // Indicatifs « à nous » pour les modes numériques : ceux de la station + celui sous lequel on émet en ce moment
 const myCalls = () => Array.from(new Set(stationCalls().concat(txCall())));
 const stationCalls = () => Array.from(new Set([cfg.digiCall].concat(Array.isArray(cfg.clubCalls) ? cfg.clubCalls : [], String(cfg.stationCall || '').split(/[\s/,]+/)).map((c) => String(c || '').toUpperCase()).filter((c) => /^[A-Z0-9]{3,10}$/.test(c))));
+// Agent LoTW (agent/agent-lotw.js) : TQSL du PC d'un membre, relié à ce serveur ; registre lotw-agents.json (jamais publié)
+const { LotwAgents } = require('./lib/lotw-agent.js');
+let agentUsers = { t: 0, u: {} };
+function agentOwner(call) {
+  if (Date.now() - agentUsers.t > 10000) { try { agentUsers = { t: Date.now(), u: auth.loadUsers(USERS_FILE) }; } catch (e) { /* fichier en cours d'écriture */ } }
+  const rec = agentUsers.u[call];
+  if (!rec || auth.userOff(rec)) return null;
+  const rxOnly = auth.isRxOnly(call, cfg.rxOnlyPrefixes);
+  return { call, admin: !!rec.admin, tx: rec.tx !== false && !rxOnly, rxOnly };
+}
+const AGENTS = new LotwAgents({
+  file: path.join(LOG_DIR, 'lotw-agents.json'),
+  owner: agentOwner,
+  // Indicatifs qu'un agent peut signer : celui de son titulaire (s'il émet sous son indicatif) ; un administrateur aussi ceux du club
+  calls: (owner) => {
+    const u = agentOwner(owner);
+    if (!u) return [];
+    const l = ownCallOk(u) && stationCalls().indexOf(owner) < 0 ? [owner] : [];
+    return Array.from(new Set(l.concat(u.admin ? stationCalls() : [])));
+  },
+  send: (c, m) => send(c, m),
+  journal: (ev, d) => journal(ev, d)
+});
+AGENTS.on('change', () => { for (const c of ops) if (c.wantAgents) send(c, { t: 'log_agents', list: AGENTS.list(c.user) }); });
+// Agent qui (re)vient : QSO récents (30 jours) jamais présentés à LoTW des indicatifs en envoi automatique
+AGENTS.on('ready', (ag) => setTimeout(() => {
+  const since = Date.now() - 30 * 86400000;
+  for (const call of AGENTS.servedCalls(ag)) {
+    if (!autoFor('lotw', call) || sync.isStopped('lotw', call)) continue;
+    const list = book.qsos.filter((q) => String(q.station_callsign || '').toUpperCase() === call && !(q.up && q.up.lotw) && (Number(q.created) || 0) >= since);
+    if (list.length) sync.run('lotw', list, { auto: true });
+  }
+}, 8000));
 const sync = new Sync({
+  lotwAgent: (call) => AGENTS.forCall(call),
   book, version: VERSION, station: String(cfg.digiCall || 'ON5VL').toUpperCase(), urls: cfg.logUrls, // logUrls : essais seulement
   getCfg: () => logCfg,
   getCred: (s, call) => credFor(s, call),
@@ -3697,6 +3740,20 @@ function onOperator(conn, m) {
       if (!conn.user.admin || LOG_SERVICES.indexOf(m.service) < 0) return;
       sync.test(m.service).then((r) => send(conn, { t: 'log_test', service: m.service, ok: r.ok, msg: r.msg }));
       return;
+    case 'log_agents':
+      conn.wantAgents = true;
+      return send(conn, { t: 'log_agents', list: AGENTS.list(conn.user) });
+    case 'log_agent_code': {
+      // Administrateur, ou membre qui émet sous son propre indicatif (ses QSO, son certificat)
+      if (!conn.user.admin && !ownLogCall(conn, conn.user.call)) return send(conn, { t: 'notice', level: 'error', msg: 'Agent LoTW : réservé aux administrateurs et aux membres qui émettent sous leur propre indicatif' });
+      const r = AGENTS.newCode(conn.user.call);
+      journal('lotw_agent_code', { call: conn.user.call, ip: conn.ip });
+      conn.wantAgents = true;
+      return send(conn, { t: 'log_agent_code', code: r.code, exp: r.exp, version: VERSION });
+    }
+    case 'log_agent_del':
+      if (!AGENTS.remove(String(m.id || ''), conn.user)) return send(conn, { t: 'notice', level: 'error', msg: 'Agent LoTW introuvable' });
+      return send(conn, { t: 'notice', level: 'info', msg: 'Agent LoTW retiré : ce PC ne peut plus signer (appairez-le à nouveau pour le reprendre).' });
     case 'log_acct_get': {
       const sv = String(m.service || ''), call = String(m.call || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
       if (!ACCT_FIELDS[sv] || !call) return;
@@ -4481,6 +4538,9 @@ ws.attach(server, {
       // Liaison d'un autre serveur Remote Station (mise en réseau) : même chemin /ws que les navigateurs
       if (conn.isNet) return NET.onConn(conn, m);
       if (m.t === 'net_hello' && !conn.user && !conn.isStation) { clearTimeout(authTimer); conn.isNet = true; return NET.accept(conn, m); }
+      // Agent LoTW (TQSL du PC d'un membre)
+      if (conn.isAgent) return AGENTS.onMsg(conn, m);
+      if ((m.t === 'lotw_agent' || m.t === 'lotw_agent_pair') && !conn.user && !conn.isStation) { clearTimeout(authTimer); return AGENTS.accept(conn, m); }
       if (conn.isStation) return onStation(conn, m);
       if (conn.user) {
         // Toute action du membre compte comme activité (sauf les pings automatiques)
@@ -4497,6 +4557,7 @@ ws.attach(server, {
     conn.on('close', () => {
       clearTimeout(authTimer);
       if (conn.isNet) return NET.connClosed(conn);
+      if (conn.isAgent) return AGENTS.closed(conn);
       // Connexion fermée avant toute identification (page Station qui n'arrive pas à s'annoncer, robot…)
       if (!conn.user && !conn.everStation) journal('ws_noauth', { ip: conn.ip, by: conn.closeBy || '?', code: conn.closeCode || null, s: Math.round((Date.now() - conn.openedAt) / 1000) });
       if (conn.isStation && station && station.conn === conn) {
@@ -4531,13 +4592,14 @@ ws.attach(server, {
 const allConns = () => {
   const s = new Set(ops);
   if (station) s.add(station.conn);
+  for (const c of AGENTS.conns()) s.add(c); // Agents LoTW : un PC éteint d'un coup ne doit pas rester « connecté »
   return s;
 };
 setInterval(() => {
   for (const c of allConns()) {
     if (!c.isAlive) {
       // Plus de réponse depuis 15 à 30 s : liaison morte (coupure réseau, changement d'adresse IP…)
-      journal('link_timeout', { who: c.isStation ? 'station' : (c.user ? c.user.call : '?'), ip: c.ip });
+      journal('link_timeout', { who: c.isStation ? 'station' : c.isAgent ? 'agent LoTW' : (c.user ? c.user.call : '?'), ip: c.ip });
       c.terminate();
       continue;
     }

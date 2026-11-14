@@ -1,6 +1,6 @@
 # Remote Station UBA-LGE — installation sous Windows 10 / 11 (64 bits)
 
-L'installateur `RemoteStation-Setup-<version>.exe` ne concerne que Remote Station. Il propose deux parties, à cocher :
+L'installateur `RemoteStation-Setup-<version>.exe` ne concerne que Remote Station. Il propose trois parties, à cocher :
 
 ## 1. PC du club (coché par défaut)
 
@@ -37,6 +37,22 @@ Google Chrome est conseillé (la page Station a besoin du port série Web Serial
   TQSL. Le certificat et son mot de passe restent sur ce PC. Le service tourne sous le compte Système : remplir aussi « Dossier TrustedQSL »
   avec le dossier du compte Windows où le certificat a été importé (`C:\Users\<nom>\AppData\Roaming\TrustedQSL`).
 - **Swisslog, N1MM… sur ce PC** : dans Configuration → UDP du dashboard, adresse 127.0.0.1 et le port attendu par le logbook.
+
+## 3. Agent LoTW (sur le PC où TQSL et votre certificat LoTW sont installés)
+
+Pour signer et envoyer à LoTW les QSO du carnet Remote Station sans export à la main. Ce PC n'a pas besoin d'être celui
+de la station : il doit seulement être allumé et relié à internet (fonctionne derrière un CGNAT, Starlink…).
+
+- Dans le dashboard d'abord : carnet → Synchronisation ▾ → Synchronisation LoTW… → cadre **Agent LoTW** → « Appairer un PC… » :
+  un code (ABCD-EFGH) valable 15 minutes.
+- Installateur : **décochez** « PC du club » si ce PC ne sert qu'à LoTW, cochez **« Agent LoTW (TQSL de ce PC) »**, puis donnez
+  l'adresse du serveur (https://remote.op0p.be) et le code.
+- L'agent tourne en **service Windows** (« Remote Station - Agent LoTW », démarrage automatique). Il trouve tout seul TQSL et
+  les lieux de station (Station Locations) du compte Windows qui a installé. Le certificat et son mot de passe restent sur ce PC.
+- Menu Démarrer → Remote Station : **Appairer l'Agent LoTW** (nouveau code, autre serveur) et **État de l'Agent LoTW**
+  (TQSL trouvé, lieux de station, journal).
+- Certificat protégé par un mot de passe : invite de commandes en administrateur,
+  `node "C:\Program Files\RemoteStation\agent-lotw\agent-lotw.js" --mdp-certificat`.
 
 ## Désinstallation
 

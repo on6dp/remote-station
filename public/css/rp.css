@@ -1160,6 +1160,8 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .lg-steps li.fail { color: var(--v2-accent-red-alt); }
 .lg-steps li.fail::before { content: '✗'; }
 .lg-steps li.skip { text-decoration: line-through; }
+.lg-steps li.info { color: var(--v2-accent-yellow); }
+.lg-steps li.info::before { content: 'ℹ'; }
 .lg-steps li.skip::before { content: '–'; }
 .lg-prog { height: 6px; border-radius: 3px; background: var(--v2-bg-input); overflow: hidden; }
 .lg-prog > div { height: 100%; width: 0; background: var(--v2-accent-green-medium); transition: width .3s; }
@@ -1318,6 +1320,20 @@ button[data-ctl='dnf'], button[data-ctl='dnfB'], button[data-ctl='tuner'] { font
 .lg-acct { border: 1px solid var(--v2-accent-yellow); border-radius: 6px; padding: 8px 10px; }
 .lg-acct legend { color: var(--v2-accent-yellow); font-weight: 700; padding: 0 4px; }
 .lg-acct legend b { color: #FFFFFF; }
+.lg-agent { border: 1px solid var(--v2-accent-cyan); border-radius: 6px; padding: 8px 10px; }
+.lg-agent legend { color: var(--v2-accent-cyan-bright); font-weight: 700; padding: 0 4px; }
+.lg-agst { margin: 0 0 6px; font-size: 12px; color: var(--v2-text-secondary); }
+.lg-agst.ok { color: var(--v2-accent-green-bright); }
+.lg-ag { display: flex; gap: 8px; align-items: center; justify-content: space-between; font-size: 12px; padding: 4px 0; border-top: 1px solid var(--v2-border); color: var(--v2-text-dim); }
+.lg-ag.on { color: var(--v2-text-primary, #fff); }
+.lg-ag.on > span::first-letter { color: var(--v2-accent-green-bright); }
+.lg-ag small { color: var(--v2-text-dim); }
+.lg-ag .lg-agx { padding: 2px 8px; font-size: 11px; }
+.lg-agcode { margin-top: 8px; padding: 8px 10px; border: 1px dashed var(--v2-accent-cyan); border-radius: 6px; font-size: 12px; }
+.lg-agcode p { margin: 0 0 6px; }
+.lg-agc { font-size: 18px; letter-spacing: 2px; color: var(--v2-accent-yellow); font-family: monospace; }
+.lg-cmd { display: block; margin-top: 3px; padding: 4px 6px; background: var(--v2-bg-input); border-radius: 4px; font-size: 11px; word-break: break-all; cursor: copy; user-select: all; }
+.lg-agcode a { color: var(--v2-accent-cyan-bright); }
 .lg-acf { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px 10px; }
 .lg-anote { margin: 6px 0 0; font-size: 12px; color: var(--v2-text-secondary); }
 .lg-anote.warn { color: var(--v2-accent-yellow); }

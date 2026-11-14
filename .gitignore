@@ -31,3 +31,7 @@ logs/cluster-pref.json
 
 # Demande de mise à jour depuis le dashboard (VPS)
 update/
+lotw-agents.json
+lotw-agents.json.tmp
+agent-lotw.json
+agent-lotw.json.tmp

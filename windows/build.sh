@@ -46,6 +46,7 @@ rm -rf "$STAGE/serveur/native" "$STAGE/serveur/windows" "$STAGE/serveur/deploy" 
        "$STAGE/serveur/.gitignore" "$STAGE/serveur/.gitattributes"
 cp "$ROOT/windows/setup.js" "$STAGE/serveur/windows-setup.js"
 cp "$ROOT/windows/outils/"*.cmd "$STAGE/outils/"
+mkdir -p "$STAGE/agent" && cp "$ROOT/agent/agent-lotw.js" "$STAGE/agent/"
 cp "$CACHE/WinSW-x64.exe" "$STAGE/WinSW-x64.exe"
 sed 's/$/\r/' "$ROOT/windows/LISEZMOI-WINDOWS.md" > "$STAGE/LISEZMOI-WINDOWS.txt"
 

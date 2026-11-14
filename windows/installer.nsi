@@ -2,7 +2,7 @@
 ; Construit par windows/build.sh (makensis) : kit du PC du club et/ou serveur Remote Station (service Windows).
 ;
 ; Installation silencieuse (essais, déploiement) :
-;   RemoteStation-Setup.exe /S [/KIT=0|1] [/SERVEUR=0|1] [/RESEAU=0|1] [/URL=https://remote.op0p.be]
+;   RemoteStation-Setup.exe /S [/KIT=0|1] [/SERVEUR=0|1] [/RESEAU=0|1] [/URL=https://remote.op0p.be] [/AGENT=0|1] [/AGENTCODE=ABCD-EFGH]
 
 Unicode true
 SetCompressor /SOLID lzma
@@ -54,6 +54,10 @@ Var Node
 Var OptKit
 Var OptSrv
 Var OptNet
+Var AgentUrl
+Var AgentCode
+Var AgentUrlBox
+Var AgentCodeBox
 
 ; ------------------------------------------------------------------ pages
 !define MUI_ICON "rs.ico"
@@ -65,6 +69,7 @@ Var OptNet
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_COMPONENTS
 Page custom UrlPage UrlPageLeave
+Page custom AgentPage AgentPageLeave
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_TEXT "$(TxtFinish)"
@@ -79,8 +84,8 @@ Page custom UrlPage UrlPageLeave
 !insertmacro MUI_RESERVEFILE_LANGDLL
 
 ; ------------------------------------------------------------------ textes
-LangString TxtWelcome ${LANG_FRENCH} "Cet assistant installe Remote Station sur ce PC Windows :$\r$\n$\r$\n• le kit du PC du club : page Station (liaison avec le TRX) et dashboard, avec les bons réglages de Chrome, lancement au démarrage de Windows ;$\r$\n$\r$\n• et/ou le serveur Remote Station lui-même (service Windows), si le club ne passe pas par le VPS.$\r$\n$\r$\nRien d'autre n'est installé ni modifié."
-LangString TxtWelcome ${LANG_ENGLISH} "This wizard installs Remote Station on this Windows PC:$\r$\n$\r$\n• the club PC kit: Station page (link with the transceiver) and dashboard, with the right Chrome settings, started with Windows;$\r$\n$\r$\n• and/or the Remote Station server itself (Windows service), if the club does not use the VPS.$\r$\n$\r$\nNothing else is installed or changed."
+LangString TxtWelcome ${LANG_FRENCH} "Cet assistant installe Remote Station sur ce PC Windows :$\r$\n$\r$\n• le kit du PC du club : page Station (liaison avec le TRX) et dashboard, avec les bons réglages de Chrome, lancement au démarrage de Windows ;$\r$\n$\r$\n• et/ou le serveur Remote Station lui-même (service Windows), si le club ne passe pas par le VPS ;$\r$\n$\r$\n• et/ou l'Agent LoTW, sur le PC où TQSL et votre certificat LoTW sont installés.$\r$\n$\r$\nRien d'autre n'est installé ni modifié."
+LangString TxtWelcome ${LANG_ENGLISH} "This wizard installs Remote Station on this Windows PC:$\r$\n$\r$\n• the club PC kit: Station page (link with the transceiver) and dashboard, with the right Chrome settings, started with Windows;$\r$\n$\r$\n• and/or the Remote Station server itself (Windows service), if the club does not use the VPS;$\r$\n$\r$\n• and/or the LoTW Agent, on the PC where TQSL and your LoTW certificate are installed.$\r$\n$\r$\nNothing else is installed or changed."
 LangString TxtFinish ${LANG_FRENCH} "Remote Station est installé.$\r$\n$\r$\nPC du club : ouvrez « Remote Station - Page Station » (bureau), collez le jeton de la station la première fois, choisissez le TRX, son port et « Activer l'audio ».$\r$\n$\r$\nServeur : menu Démarrer → Remote Station → « Ajouter un membre » pour créer les comptes."
 LangString TxtFinish ${LANG_ENGLISH} "Remote Station is installed.$\r$\n$\r$\nClub PC: open « Remote Station - Page Station » (desktop), paste the station token the first time, choose the transceiver, its port and « Activer l'audio » (enable audio).$\r$\n$\r$\nServer: Start menu → Remote Station → « Ajouter un membre » (add a member) to create the accounts."
 LangString TxtManual ${LANG_FRENCH} "Manuel d'utilisation"
@@ -117,6 +122,26 @@ LangString DescPower ${LANG_ENGLISH} "The PC no longer sleeps on mains power (ot
 LangString DescSrv ${LANG_FRENCH} "Le serveur Remote Station sur ce PC, en service Windows (port ${PORT}) ; Node.js est installé si besoin. Inutile si le club utilise le VPS."
 LangString DescSrv ${LANG_ENGLISH} "The Remote Station server on this PC, as a Windows service (port ${PORT}); Node.js is installed if needed. Not needed if the club uses the VPS."
 LangString DescNet ${LANG_FRENCH} "Ouvre le port ${PORT} dans le pare-feu : les membres du réseau local (ou d'internet, avec une redirection du routeur) peuvent se connecter."
+LangString DescAgent ${LANG_FRENCH} "Agent LoTW : sur le PC où TQSL et votre certificat LoTW sont installés. Il signe et envoie à LoTW les QSO du carnet Remote Station (service Windows ; le certificat ne quitte pas ce PC). Décochez les autres options si ce PC ne sert qu'à cela."
+LangString DescAgent ${LANG_ENGLISH} "LoTW Agent: on the PC where TQSL and your LoTW certificate are installed. It signs and uploads to LoTW the QSOs of the Remote Station logbook (Windows service; the certificate never leaves this PC). Untick the other options if this PC is only used for that."
+LangString TxtAgTitle ${LANG_FRENCH} "Agent LoTW"
+LangString TxtAgTitle ${LANG_ENGLISH} "LoTW Agent"
+LangString TxtAgSub ${LANG_FRENCH} "Liaison de l'agent avec le serveur Remote Station."
+LangString TxtAgSub ${LANG_ENGLISH} "Link between the agent and the Remote Station server."
+LangString TxtAgSrv ${LANG_FRENCH} "Adresse du serveur Remote Station :"
+LangString TxtAgSrv ${LANG_ENGLISH} "Remote Station server address:"
+LangString TxtAgCode ${LANG_FRENCH} "Code d'appairage (carnet de trafic → Opérations LoTW → Agent LoTW → « Appairer un PC… », valable 15 minutes) :"
+LangString TxtAgCode ${LANG_ENGLISH} "Pairing code (logbook → LoTW operations → LoTW Agent → « Appairer un PC… », valid 15 minutes):"
+LangString TxtAgHelp ${LANG_FRENCH} "Sans code maintenant : menu Démarrer → Remote Station → « Appairer l'Agent LoTW » plus tard.$\r$\nTQSL doit déjà être installé sur ce PC, avec votre certificat et un lieu de station (Station Location)."
+LangString TxtAgHelp ${LANG_ENGLISH} "No code now: Start menu → Remote Station → « Appairer l'Agent LoTW » later.$\r$\nTQSL must already be installed on this PC, with your certificate and a Station Location."
+LangString TxtAgFail ${LANG_FRENCH} "L'appairage de l'Agent LoTW a échoué :$\r$\n$\r$\n"
+LangString TxtAgFail ${LANG_ENGLISH} "LoTW Agent pairing failed:$\r$\n$\r$\n"
+LangString TxtAgFail2 ${LANG_FRENCH} "$\r$\n$\r$\nDemandez un nouveau code dans le carnet, puis : menu Démarrer → Remote Station → « Appairer l'Agent LoTW »."
+LangString TxtAgFail2 ${LANG_ENGLISH} "$\r$\n$\r$\nAsk for a new code in the logbook, then: Start menu → Remote Station → « Appairer l'Agent LoTW »."
+LangString TxtAgOk ${LANG_FRENCH} "Agent LoTW appairé et en service."
+LangString TxtAgOk ${LANG_ENGLISH} "LoTW Agent paired and running."
+LangString TxtAgNode ${LANG_FRENCH} "Node.js est introuvable : l'Agent LoTW n'a pas été installé en service.$\r$\n$\r$\nInstallez Node.js LTS depuis https://nodejs.org, puis relancez cette installation."
+LangString TxtAgNode ${LANG_ENGLISH} "Node.js was not found: the LoTW Agent service was not created.$\r$\n$\r$\nInstall Node.js LTS from https://nodejs.org, then run this setup again."
 LangString DescNet ${LANG_ENGLISH} "Opens port ${PORT} in the firewall: members on the local network (or the internet, with a router port forward) can connect."
 
 ; ------------------------------------------------------------------ fonctions utiles
@@ -366,12 +391,98 @@ SectionGroup /e "PC du club" GrpKit
   SectionEnd
 SectionGroupEnd
 
+Section /o "Agent LoTW (TQSL de ce PC)" SecAgent
+  !insertmacro FindNodeM
+  ${If} $Node == ""
+    ${IfNot} ${Silent}
+      MessageBox MB_YESNO|MB_ICONQUESTION "$(TxtNodeAsk)" IDNO agnonode
+    ${EndIf}
+    DetailPrint "winget install OpenJS.NodeJS.LTS"
+    nsExec::ExecToLog 'winget install -e --id OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements'
+    Pop $0
+    !insertmacro FindNodeM
+    agnonode:
+  ${EndIf}
+  ${If} $AgentUrl == ""
+    StrCpy $AgentUrl "${DEFAULT_URL}"
+  ${EndIf}
+  ; Mise à jour : service arrêté avant de remplacer le programme (réglages et appairage gardés)
+  ${If} ${FileExists} "$INSTDIR\agent-lotw\RemoteStationAgentLoTW.exe"
+    nsExec::ExecToLog '"$INSTDIR\agent-lotw\RemoteStationAgentLoTW.exe" stop'
+    Pop $0
+    Sleep 1500
+  ${EndIf}
+  SetOutPath "$INSTDIR\agent-lotw"
+  File "${STAGE}\agent\agent-lotw.js"
+  File /oname=RemoteStationAgentLoTW.exe "${STAGE}\WinSW-x64.exe"
+  SetOutPath "$INSTDIR\outils"
+  File "${STAGE}\outils\agent-appairer.cmd"
+  File "${STAGE}\outils\agent-etat.cmd"
+  ; Jeton d'appairage et mot de passe éventuel du certificat : lisibles par le système et les administrateurs seulement
+  nsExec::ExecToLog 'icacls "$INSTDIR\agent-lotw" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F'
+  Pop $0
+  SetShellVarContext all
+  CreateDirectory "$SMPROGRAMS\Remote Station"
+  CreateShortCut "$SMPROGRAMS\Remote Station\Appairer l'Agent LoTW.lnk" "$INSTDIR\outils\agent-appairer.cmd" "" "$INSTDIR\rs.ico"
+  CreateShortCut "$SMPROGRAMS\Remote Station\État de l'Agent LoTW.lnk" "$INSTDIR\outils\agent-etat.cmd" "" "$INSTDIR\rs.ico"
+  CreateShortCut "$SMPROGRAMS\Remote Station\Désinstaller Remote Station.lnk" "$INSTDIR\Desinstaller.exe" "" "$INSTDIR\rs.ico"
+  SetShellVarContext current
+  ${If} $Node == ""
+    ${IfNot} ${Silent}
+      MessageBox MB_OK|MB_ICONEXCLAMATION "$(TxtAgNode)"
+    ${EndIf}
+    Goto agdone
+  ${EndIf}
+  ; Appairage (code du carnet), sinon adresse du serveur seulement
+  ${If} $AgentCode != ""
+    nsExec::ExecToStack '"$Node" "$INSTDIR\agent-lotw\agent-lotw.js" --serveur "$AgentUrl" --appairer "$AgentCode"'
+    Pop $0
+    Pop $1
+    DetailPrint "$1"
+    ${If} $0 != 0
+    ${AndIfNot} ${Silent}
+      MessageBox MB_OK|MB_ICONEXCLAMATION "$(TxtAgFail)$1$(TxtAgFail2)"
+    ${EndIf}
+  ${Else}
+    nsExec::ExecToLog '"$Node" "$INSTDIR\agent-lotw\agent-lotw.js" --serveur "$AgentUrl" --etat'
+    Pop $0
+  ${EndIf}
+  ; Service Windows (compte Système) : TQSLDIR = données TQSL de l'utilisateur qui installe (certificats, lieux de station)
+  FileOpen $9 "$INSTDIR\agent-lotw\RemoteStationAgentLoTW.xml" w
+  FileWriteWord $9 0xFEFF
+  FileWriteUTF16LE $9 '<?xml version="1.0" encoding="UTF-16"?>$\r$\n'
+  FileWriteUTF16LE $9 '<service>$\r$\n'
+  FileWriteUTF16LE $9 '  <id>RemoteStationAgentLoTW</id>$\r$\n'
+  FileWriteUTF16LE $9 '  <name>Remote Station - Agent LoTW</name>$\r$\n'
+  FileWriteUTF16LE $9 '  <description>Signe avec TQSL de ce PC et envoie à LoTW les QSO du carnet Remote Station (le certificat reste sur ce PC).</description>$\r$\n'
+  FileWriteUTF16LE $9 '  <executable>$Node</executable>$\r$\n'
+  FileWriteUTF16LE $9 '  <arguments>"$INSTDIR\agent-lotw\agent-lotw.js"</arguments>$\r$\n'
+  FileWriteUTF16LE $9 '  <workingdirectory>$INSTDIR\agent-lotw</workingdirectory>$\r$\n'
+  ${If} ${FileExists} "$APPDATA\TrustedQSL\*.*"
+    FileWriteUTF16LE $9 '  <env name="TQSLDIR" value="$APPDATA\TrustedQSL"/>$\r$\n'
+  ${EndIf}
+  FileWriteUTF16LE $9 '  <startmode>Automatic</startmode>$\r$\n'
+  FileWriteUTF16LE $9 '  <delayedAutoStart>true</delayedAutoStart>$\r$\n'
+  FileWriteUTF16LE $9 '  <onfailure action="restart" delay="10 sec"/>$\r$\n'
+  FileWriteUTF16LE $9 '  <resetfailure>1 hour</resetfailure>$\r$\n'
+  FileWriteUTF16LE $9 '  <stoptimeout>10 sec</stoptimeout>$\r$\n'
+  FileWriteUTF16LE $9 '  <log mode="roll-by-size"><sizeThreshold>1024</sizeThreshold><keepFiles>3</keepFiles></log>$\r$\n'
+  FileWriteUTF16LE $9 '</service>$\r$\n'
+  FileClose $9
+  nsExec::ExecToLog '"$INSTDIR\agent-lotw\RemoteStationAgentLoTW.exe" install'
+  Pop $0
+  nsExec::ExecToLog '"$INSTDIR\agent-lotw\RemoteStationAgentLoTW.exe" start'
+  Pop $0
+  agdone:
+SectionEnd
+
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
   !insertmacro MUI_DESCRIPTION_TEXT ${SecKit} "$(DescKit)"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecAuto} "$(DescAuto)"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecPower} "$(DescPower)"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecSrv} "$(DescSrv)"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecNet} "$(DescNet)"
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecAgent} "$(DescAgent)"
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 ; ------------------------------------------------------------------ page « adresse du serveur »
@@ -394,6 +505,52 @@ Function UrlPage
   ${NSD_CreateLabel} 0 44u 100% 40u "$(TxtUrlHelp)"
   Pop $0
   nsDialogs::Show
+FunctionEnd
+
+; ------------------------------------------------------------------ page « Agent LoTW »
+Function AgentPage
+  ${IfNot} ${SectionIsSelected} ${SecAgent}
+    Abort
+  ${EndIf}
+  ${If} $AgentUrl == ""
+    StrCpy $0 $Url 16
+    ${If} $Url != ""
+    ${AndIf} $0 != "http://localhost"
+      StrCpy $AgentUrl $Url
+    ${Else}
+      StrCpy $AgentUrl "${DEFAULT_URL}"
+    ${EndIf}
+  ${EndIf}
+  !insertmacro MUI_HEADER_TEXT "$(TxtAgTitle)" "$(TxtAgSub)"
+  nsDialogs::Create 1018
+  Pop $0
+  ${NSD_CreateLabel} 0 0 100% 10u "$(TxtAgSrv)"
+  Pop $0
+  ${NSD_CreateText} 0 12u 100% 13u "$AgentUrl"
+  Pop $AgentUrlBox
+  ${NSD_CreateLabel} 0 34u 100% 20u "$(TxtAgCode)"
+  Pop $0
+  ${NSD_CreateText} 0 56u 40% 13u "$AgentCode"
+  Pop $AgentCodeBox
+  ${NSD_CreateLabel} 0 78u 100% 40u "$(TxtAgHelp)"
+  Pop $0
+  nsDialogs::Show
+FunctionEnd
+
+Function AgentPageLeave
+  ${NSD_GetText} $AgentUrlBox $AgentUrl
+  ${NSD_GetText} $AgentCodeBox $AgentCode
+  StrCpy $0 $AgentUrl 1 -1
+  ${If} $0 == "/"
+    StrCpy $AgentUrl $AgentUrl -1
+  ${EndIf}
+  StrCpy $0 $AgentUrl 8
+  StrCpy $1 $AgentUrl 16
+  ${If} $0 != "https://"
+  ${AndIf} $1 != "http://localhost"
+    MessageBox MB_OK|MB_ICONEXCLAMATION "$(TxtUrlBad)"
+    Abort
+  ${EndIf}
 FunctionEnd
 
 Function UrlPageLeave
@@ -470,6 +627,25 @@ Function .onInit
     !insertmacro UnselectSection ${SecAuto}
     !insertmacro UnselectSection ${SecPower}
   ${EndIf}
+  ClearErrors
+  ${GetOptions} $R0 "/AGENT=" $R1
+  ${IfNot} ${Errors}
+    ${If} $R1 == 1
+      !insertmacro SelectSection ${SecAgent}
+    ${Else}
+      !insertmacro UnselectSection ${SecAgent}
+    ${EndIf}
+  ${EndIf}
+  ClearErrors
+  ${GetOptions} $R0 "/AGENTCODE=" $R1
+  ${IfNot} ${Errors}
+    StrCpy $AgentCode $R1
+  ${EndIf}
+  ClearErrors
+  ${GetOptions} $R0 "/URL=" $R1
+  ${IfNot} ${Errors}
+    StrCpy $AgentUrl $R1
+  ${EndIf}
   ; L'option réseau est appliquée par la section serveur : on la connaît avant
   ${If} ${SectionIsSelected} ${SecNet}
     StrCpy $OptNet 1
@@ -505,6 +681,15 @@ Section "Uninstall"
   ${EndIf}
   nsExec::ExecToLog 'netsh advfirewall firewall delete rule name="${APP}"'
   Pop $0
+  ; Agent LoTW (l'appairage se retire aussi dans le carnet)
+  ${If} ${FileExists} "$INSTDIR\agent-lotw\RemoteStationAgentLoTW.exe"
+    nsExec::ExecToLog '"$INSTDIR\agent-lotw\RemoteStationAgentLoTW.exe" stop'
+    Pop $0
+    Sleep 1500
+    nsExec::ExecToLog '"$INSTDIR\agent-lotw\RemoteStationAgentLoTW.exe" uninstall'
+    Pop $0
+  ${EndIf}
+  RMDir /r "$INSTDIR\agent-lotw"
 
   ; Raccourcis (utilisateur courant et tous les utilisateurs)
   SetShellVarContext current

@@ -17,6 +17,9 @@
 #    --sans-https        pas de certificat (essais seulement : Chrome refuse alors le port série et le micro)
 #    --sauvegarde HH:MM  installe aussi la sauvegarde automatique quotidienne (deploy/backup.sh)
 #
+#  Agent LoTW seulement (PC Linux d'un membre où TQSL et son certificat sont installés ; pas de serveur) :
+#       sudo bash /opt/remote-station/deploy/install.sh --agent-lotw --serveur https://remote.op0p.be --code ABCD-EFGH
+#
 #  Rien n'est jamais effacé : config.json, users.json, le carnet (logs/), les macros, les profils… restent en place.
 #  Le jeton de la station n'est jamais affiché : la page Station le reprend toute seule (administrateur connecté).
 # =====================================================================================================
@@ -32,6 +35,9 @@ info() { printf '\033[1;36m» %s\033[0m\n' "$*"; }
 warn() { printf '\033[1;33m! %s\033[0m\n' "$*"; }
 fin()  { printf '\033[1;31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
 
+# Agent LoTW : script à part (agent/install-agent-lotw.sh), avec les options qui suivent
+if [ "${1:-}" = "--agent-lotw" ]; then shift; exec bash "$APP/agent/install-agent-lotw.sh" "$@"; fi
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --domaine) DOMAINE="${2:-}"; shift 2 ;;
@@ -40,7 +46,7 @@ while [ $# -gt 0 ]; do
     --port) PORT="${2:-}"; shift 2 ;;
     --sans-https) HTTPS=0; shift ;;
     --sauvegarde) SAUVE="${2:-}"; shift 2 ;;
-    -h|--help|--aide) sed -n '2,23p' "$0"; exit 0 ;;
+    -h|--help|--aide) sed -n '2,26p' "$0"; exit 0 ;;
     *) fin "option inconnue : $1 (voir --aide)" ;;
   esac
 done
@@ -94,7 +100,7 @@ fi
 mkdir -p "$APP/logs"
 chown -R "$RUSER:$RUSER" "$APP"
 # Fichiers secrets : lisibles par le service seulement
-for f in config.json users.json sessions.json macros.json profiles.json net.json logs/logbook.json logs/logbook.db logs/logbook-config.json logs/station-sessions.json; do
+for f in config.json users.json sessions.json macros.json profiles.json net.json logs/logbook.json logs/logbook.db logs/logbook-config.json logs/station-sessions.json logs/lotw-agents.json; do
   [ -f "$APP/$f" ] && chmod 600 "$APP/$f"
 done
 [ -d "$APP/voicemem" ] && chmod 700 "$APP/voicemem" # mémoires vocales des membres

@@ -970,16 +970,25 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
 <h4 id="help-lotw">LoTW (ARRL Logbook of The World)</h4>
 <ul>
   <li><b>Ce qu'il faut</b> : un compte LoTW pour l'indicatif, son <b>certificat</b> (fichier .p12) installé dans <b>TQSL</b> sur votre PC, et un <b>lieu de station</b> (Station Location : indicatif, locator, zones) créé dans TQSL. Le certificat et son mot de passe <b>ne vont jamais sur le serveur</b> : la signature se fait toujours chez vous.</li>
-  <li><b>Envoyer</b> (serveur sur le VPS, cas de remote.op0p.be) :
+  <li><b>Agent LoTW (conseillé)</b> : un petit programme sur le PC où TQSL et votre certificat sont déjà installés (pas forcément celui de la station). Il ouvre lui-même une liaison chiffrée vers le serveur : rien à ouvrir dans le routeur, il fonctionne aussi derrière un CGNAT (Starlink, 4G…). <span class="k">Synchronisation LoTW</span> envoie alors les QSO à ce PC, TQSL les signe et les envoie à LoTW, et le carnet les note « envoyés » tout seul : plus d'export à la main.
+    <ol>
+      <li>Synchronisation ▾ → <b>Synchronisation LoTW…</b> → cadre <b>Agent LoTW</b> → <span class="k">Appairer un PC…</span> : un <b>code</b> s'affiche (valable 15 minutes, une seule fois).</li>
+      <li><b>Windows</b> : lancez l'installateur RemoteStation-Setup (lien sous le code), cochez seulement <b>« Agent LoTW (TQSL de ce PC) »</b>, donnez l'adresse du serveur et le code. L'agent devient un service Windows (démarre avec le PC, redémarre seul). Plus tard : menu Démarrer → Remote Station → <b>Appairer l'Agent LoTW</b> / <b>État de l'Agent LoTW</b>.<br>
+        <b>Linux</b> (Debian, Ubuntu, Raspberry Pi) : copiez la commande affichée sous le code (<code>curl … | sudo bash …</code>) dans un terminal ; l'agent devient un service systemd sous votre compte.<br>
+        <b>Autre système</b> (macOS…) : Node.js 22 ou plus, le fichier agent-lotw.js (lien sous le code), puis les deux commandes affichées.</li>
+      <li>Le cadre affiche alors <b>● nom du PC — connecté</b> et les lieux de station TQSL trouvés sur ce PC. Le bon lieu est pris tout seul s'il n'y en a qu'un pour l'indicatif ; s'il y en a plusieurs, inscrivez son nom exact dans « Lieu de station TQSL » du cadre jaune.</li>
+    </ol>
+    Un membre n'appaire que pour <b>son</b> indicatif ; l'agent d'un administrateur signe aussi les indicatifs du club (si son PC a leurs certificats et lieux de station). <b>Envoi automatique</b> coché : chaque nouveau QSO part dès qu'il est enregistré ; PC éteint, les QSO des 30 derniers jours attendent et partent à sa prochaine connexion. Certificat protégé par un mot de passe : sur ce PC, <code>agent-lotw.js --mdp-certificat</code> (gardé sur ce PC seulement). <span class="k">Retirer</span> coupe un PC immédiatement (PC perdu, changé…).</li>
+  <li><b>Sans Agent LoTW</b> (procédure manuelle, serveur sur le VPS) :
     <ol>
       <li>Synchronisation ▾ → <b>Synchronisation LoTW…</b>, choisissez le <b>TX call</b> (ex. OR0L), éventuellement des dates.</li>
       <li><span class="k">Exporter pour TQSL (.adi)</span> : le fichier ne contient que les QSO <b>pas encore envoyés</b> à LoTW pour cet indicatif (cochez « Renvoyer aussi les QSO déjà envoyés » pour tout reprendre).</li>
       <li>Sur votre PC, <b>TQSL</b> → « Sign a log and upload it automatically to LoTW » → le fichier .adi → le lieu de station de cet indicatif : TQSL signe avec le certificat et envoie à LoTW.</li>
       <li>De retour dans la fenêtre : <span class="k">Marquer comme envoyés</span> (ces QSO ne repartiront plus au prochain export ; colonne LoTW du carnet à jour).</li>
-    </ol>Le gros bouton <span class="k">Synchronisation LoTW</span> ne sert que sur un serveur où TQSL est installé : sur le VPS, il rappelle seulement cette marche à suivre (rien n'est marqué en échec). Le mot de passe demandé pour les confirmations est celui du <b>site</b> lotw.arrl.org (identifiant = l'indicatif), pas celui du certificat.</li>
-  <li><b>Serveur Windows du club avec TQSL installé</b> (et le certificat sur ce PC) : réglez dans ⚙ Configuration → LoTW le programme TQSL, son dossier et le lieu de station ; <span class="k">Télécharger</span> signe et envoie alors directement.</li>
+    </ol>Sans agent connecté, <span class="k">Synchronisation LoTW</span> rappelle seulement cette marche à suivre (rien n'est marqué en échec). Le mot de passe demandé pour les confirmations est celui du <b>site</b> lotw.arrl.org (identifiant = l'indicatif), pas celui du certificat.</li>
+  <li><b>Serveur Windows du club avec TQSL installé</b> (et le certificat sur ce PC) : réglez dans ⚙ Configuration → LoTW le programme TQSL, son dossier et le lieu de station ; <span class="k">Synchronisation LoTW</span> signe et envoie alors directement.</li>
   <li><b>Confirmations</b> : <span class="k">Confirmations</span> lit les QSO confirmés sur LoTW (★ dans le carnet, « C » vert dans les statistiques DXCC). Il faut seulement l'<b>identifiant et le mot de passe du site LoTW</b> (pas le certificat) : ⚙ Configuration → LoTW pour les indicatifs du club, cadre jaune de cette fenêtre pour un indicatif personnel.</li>
-  <li><b>Réseau</b> : faites l'export depuis <b>remote.op0p.be</b> (le maître a tous les QSO partagés de toutes les stations). Les QSO faits sous l'indicatif personnel d'un membre (non partagés) s'exportent depuis sa propre station, avec son propre certificat.</li>
+  <li><b>Réseau</b> : l'Agent LoTW se relie à <b>remote.op0p.be</b> (le maître a tous les QSO partagés de toutes les stations). Si le maître est arrêté, les QSO attendent son retour. Les QSO faits sous l'indicatif personnel d'un membre (non partagés) s'envoient depuis sa propre station, avec son propre agent.</li>
   <li>LoTW ignore un QSO déjà reçu : renvoyer un fichier ne crée pas de doublon.</li>
 </ul>
 <h4 id="help-eqsl">eQSL</h4>

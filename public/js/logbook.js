@@ -1092,7 +1092,10 @@
       (s === 'clublog' && me.admin ? '<label class="lg-chk warn"><input type="checkbox" name="clear"> Effacer le log ClubLog existant (remplacé par tout le carnet de l’indicatif)</label>' : '') +
       (lotw ? '' : '<label class="lg-w8">Temporisation (secondes) <input type="number" name="delay" min="0" max="120" step="1"></label>') +
       '<p class="lg-pend">…</p>' +
-      (lotw ? '<div class="lg-alt"><p><b>Serveur sans TQSL</b> (VPS) : le certificat LoTW reste sur le PC du club. Exportez les QSO non envoyés, signez-les avec TQSL sur ce PC, puis notez-les comme envoyés.</p>' +
+      // Agent LoTW : TQSL du PC du membre (certificat jamais copié), relié au serveur
+      (lotw ? '<fieldset class="lg-agent"><legend>Agent LoTW — TQSL de votre PC</legend><p class="lg-agst">…</p><div class="lg-agl"></div>' +
+        '<div class="lg-btns"><button class="btn" type="button" data-a="agpair">Appairer un PC…</button></div><div class="lg-agcode" hidden></div></fieldset>' : '') +
+      (lotw ? '<div class="lg-alt"><p><b>Sans Agent LoTW</b> (serveur sans TQSL, comme le VPS) : exportez les QSO non envoyés, signez-les avec TQSL sur votre PC, puis notez-les comme envoyés.</p>' +
         '<div class="lg-btns"><button class="btn" type="button" data-a="exp">Exporter pour TQSL (.adi)</button><button class="btn" type="button" data-a="mark" disabled>Marquer comme envoyés</button></div></div>' : '') +
       '</div>' +
       '<div data-p="proc" class="lg-pp" hidden>' +
@@ -1153,6 +1156,16 @@
     if (lotw) d.querySelector('[data-a="confirm"]').addEventListener('click', () => go('confirm'));
     d.querySelector('[data-a="stop"]').addEventListener('click', () => { api.send({ t: 'log_sync', service: s, action: 'stop' }); syncLog('Arrêt demandé…'); });
     if (lotw) {
+      agents = null;
+      api.send({ t: 'log_agents' });
+      f.callsign.addEventListener('change', agentsDraw);
+      d.querySelector('[data-a="agpair"]').addEventListener('click', () => api.send({ t: 'log_agent_code' }));
+      d.querySelector('.lg-agl').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-agdel]');
+        if (!b || !agents) return;
+        const a = agents.find((x) => x.id === b.dataset.agdel);
+        if (a && window.confirm('Retirer l’Agent LoTW du PC « ' + a.name + ' » (' + a.owner + ') ?\nCe PC ne pourra plus signer de QSO tant qu’il n’est pas appairé à nouveau.')) api.send({ t: 'log_agent_del', id: a.id });
+      });
       d.querySelector('[data-a="exp"]').addEventListener('click', () => api.send(Object.assign({ t: 'log_export', fmt: 'adif', pending: 'lotw' }, filt())));
       d.querySelector('[data-a="mark"]').addEventListener('click', () => {
         if (!lastExport || !lastExport.ids.length) return;
@@ -1163,6 +1176,46 @@
         askPending();
       });
     }
+  }
+  // ---------- Agent LoTW
+  let agents = null;
+  let agentIds = null; // agents connus quand un code d'appairage est affiché
+  const hhmm = (t) => { const x = new Date(t); return String(x.getDate()).padStart(2, '0') + '/' + String(x.getMonth() + 1).padStart(2, '0') + ' ' + String(x.getHours()).padStart(2, '0') + ':' + String(x.getMinutes()).padStart(2, '0'); };
+  function agentsDraw() {
+    if (!sdlg || !sdlg.el.open || sdlg.service !== 'lotw') return;
+    const d = sdlg.el;
+    const call = d.querySelector('form').callsign.value;
+    const list = agents || [];
+    const on = list.filter((a) => a.on && (!call || a.calls.indexOf(call) >= 0));
+    const st = d.querySelector('.lg-agst');
+    if (agents == null) st.textContent = '…';
+    else if (on.length) {
+      const a = on.find((x) => x.locations.some((l) => l.call === call)) || on[0];
+      st.textContent = '✓ ' + (call ? 'QSO de ' + call : 'QSO') + ' signés par l’Agent LoTW du PC « ' + a.name + ' » : SYNCHRONISATION LOTW les signe et les envoie directement, sans export à la main.';
+    } else st.textContent = 'Aucun Agent LoTW connecté' + (call ? ' pour ' + call : '') + '. Installez-le sur le PC où TQSL et votre certificat sont installés (bouton « Appairer un PC… »), ou utilisez la procédure manuelle ci-dessous.';
+    st.className = 'lg-agst' + (on.length ? ' ok' : '');
+    d.querySelector('.lg-agl').innerHTML = list.map((a) => '<div class="lg-ag' + (a.on ? ' on' : '') + '"><span>' + (a.on ? '●' : '○') + ' <b>' + esc(a.name) + '</b>' + (me.admin ? ' (' + esc(a.owner) + ')' : '') +
+      (a.on ? ' — connecté depuis ' + hhmm(a.since) + (a.tqsl === false ? ' · <em>TQSL introuvable sur ce PC</em>' : '') + (a.old ? ' · mise à jour de l’agent en cours' : '') : ' — déconnecté' + (a.seen ? ' (vu le ' + hhmm(a.seen) + ')' : ' (jamais connecté)')) +
+      (a.locations.length ? '<br><small>Lieux de station TQSL : ' + a.locations.map((l) => esc(l.name) + ' (' + esc(l.call || '?') + ')' + (l.ok ? '' : ' — indicatif non permis')).join(', ') + '</small>' : '') +
+      '</span><button type="button" class="btn lg-agx" data-agdel="' + esc(a.id) + '" title="Retirer ce PC">Retirer</button></div>').join('');
+  }
+  function agentCode(m) {
+    if (!sdlg || !sdlg.el.open || sdlg.service !== 'lotw') return;
+    const box = sdlg.el.querySelector('.lg-agcode');
+    const o = location.origin;
+    const v = esc(m.version || '');
+    const cmd = (t) => '<code class="lg-cmd" title="Cliquer pour copier">' + esc(t) + '</code>';
+    box.innerHTML = '<p>Code d’appairage : <b class="lg-agc">' + esc(m.code) + '</b> — valable 15 minutes, une seule fois (jusqu’à ' + hhmm(m.exp) + ').</p>' +
+      '<p><b>Windows</b> : installateur <a href="https://github.com/on6dp/remote-station/raw/main/releases/' + v + '/RemoteStation-Setup-' + v + '.exe" target="_blank" rel="noopener">RemoteStation-Setup-' + v + '.exe</a>, cochez seulement « Agent LoTW (TQSL de ce PC) », puis donnez l’adresse ' + esc(o) + ' et ce code. ' +
+      'Déjà installé : menu Démarrer → Remote Station → « Appairer l’Agent LoTW ».</p>' +
+      '<p><b>Linux</b> (Debian, Ubuntu, Raspberry Pi) : ' + cmd('curl -fsSL ' + o + '/agent/install-agent-lotw.sh | sudo bash -s -- --serveur ' + o + ' --code ' + m.code) + '</p>' +
+      '<p><b>Autre</b> (macOS…, Node.js 22 ou plus) : <a href="' + esc(o) + '/agent/agent-lotw.js" target="_blank" rel="noopener">agent-lotw.js</a> puis ' + cmd('node agent-lotw.js --serveur ' + o + ' --appairer ' + m.code) + ' et ' + cmd('node agent-lotw.js') + '</p>';
+    box.hidden = false;
+    agentIds = (agents || []).map((a) => a.id);
+    box.onclick = (e) => {
+      const c = e.target.closest('.lg-cmd');
+      if (c && navigator.clipboard) navigator.clipboard.writeText(c.textContent).then(() => say('Commande copiée.', 'info'), () => {});
+    };
   }
   function busy(on) {
     if (!sdlg) return;
@@ -1644,6 +1697,18 @@
         p.textContent = m.n + ' QSO à envoyer vers ' + NAMES[m.service] + (m.busy ? ' · un envoi est déjà en cours' : '') + (m.stopped ? ' · envois arrêtés après un refus d’accès : vérifiez les identifiants puis enregistrez-les' : '');
         p.classList.toggle('warn', !!m.stopped);
       }
+    } else if (m.t === 'log_agents') {
+      const before = agentIds;
+      agents = m.list || [];
+      // Nouveau PC appairé pendant que le code était affiché : le code ne sert plus
+      if (before && agents.some((a) => before.indexOf(a.id) < 0) && sdlg && sdlg.el.open && sdlg.service === 'lotw') {
+        sdlg.el.querySelector('.lg-agcode').hidden = true;
+        agentIds = null;
+        say('Agent LoTW appairé.', 'info');
+      }
+      agentsDraw();
+    } else if (m.t === 'log_agent_code') {
+      agentCode(m);
     } else if (m.t === 'log_acct') {
       if (!sdlg || !sdlg.el.open || sdlg.service !== m.service) return;
       const f = sdlg.el.querySelector('form');
@@ -1651,7 +1716,7 @@
       const UI = {
         clublog: [['email', 'E-mail du compte Club Log'], ['password', 'Mot de passe', 1], ['api', 'Clé API (application)', 1]],
         eqsl: [['user', 'Indicatif / identifiant eQSL'], ['password', 'Mot de passe', 1], ['nickname', 'QTH nickname (facultatif)']],
-        lotw: [['location', 'Lieu de station TQSL (Station Location)'], ['password', 'Mot de passe du certificat (facultatif)', 1], ['login', 'Identifiant du site LoTW (confirmations)'], ['webPassword', 'Mot de passe du site LoTW', 1]],
+        lotw: [['location', 'Lieu de station TQSL (facultatif avec l’Agent LoTW si votre PC n’en a qu’un pour cet indicatif)'], ['password', 'Mot de passe du certificat (TQSL de ce serveur seulement ; avec l’Agent LoTW, il reste sur votre PC)', 1], ['login', 'Identifiant du site LoTW (confirmations)'], ['webPassword', 'Mot de passe du site LoTW', 1]],
         qrz: [['key', 'Clé API du logbook QRZ.com', 1]]
       }[m.service] || [];
       const box = sdlg.el.querySelector('.lg-acf');
@@ -1677,7 +1742,7 @@
         if (b.classList.contains('lg-eye')) i.type = i.type === 'password' ? 'text' : 'password';
         else if (b.dataset.aclr) { i.value = ''; i.dataset.clear = '1'; i.placeholder = 'sera effacé à l’enregistrement'; b.remove(); }
       };
-      const missing = UI.filter(([k, , sec]) => k !== 'nickname' && k !== 'login' && k !== 'webPassword' && !(m.service === 'lotw' && k === 'password') && !(sec ? m.has && m.has[k] : (m.fields || {})[k]));
+      const missing = UI.filter(([k, , sec]) => k !== 'nickname' && k !== 'login' && k !== 'webPassword' && !(m.service === 'lotw' && (k === 'password' || k === 'location')) && !(sec ? m.has && m.has[k] : (m.fields || {})[k]));
       const note = sdlg.el.querySelector('.lg-anote');
       note.textContent = (m.source === 'compte' ? 'Identifiants propres à ' + m.call + '.' : m.source === 'club' ? 'Identifiants généraux du club (⚙ Configuration), utilisés pour ' + m.call + ' ; vous pouvez lui en donner de propres ici.' : 'Aucun identifiant pour ' + m.call + ' : à renseigner avant la synchronisation.') +
         (missing.length ? ' Manque : ' + missing.map((x) => x[1].toLowerCase()).join(', ') + '.' : '') + (m.saved ? ' ✓ Enregistré.' : '');
