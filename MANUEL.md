@@ -1021,7 +1021,7 @@ Menu **Synchronisation ▾** : il envoie les QSO du carnet vers les sites de con
 
 | Réglage (Logbooks → Synchronisation ▾ → 🌐 Réseau, administrateurs) | Ce qu'il fait |
 |---|---|
-| **Mode** | **Hors réseau** (par défaut) : la station travaille seule. **Poste** : relié au maître (log commun, numéros du maître). **Maître** : remote.op0p.be et secours.op0p.be. |
+| **Mode** | **Hors réseau** (par défaut) : la station travaille seule. **Poste** : à choisir sur **chacune des stations distantes** (le serveur Remote Station installé à côté de son TRX, par exemple chez ON4LUC) : elle envoie ses QSO au log commun et reçoit ses numéros de série du maître. **Maître** : seulement sur remote.op0p.be et secours.op0p.be. En résumé : remote.op0p.be et secours.op0p.be = Maître ; toutes les autres stations du réseau = Poste. |
 | **Nom** | Nom de ce serveur dans le réseau : REMOTE, SECOURS, ON4LUC-1… |
 | **Adresse de ce serveur** | Maîtres seulement : remote.op0p.be, secours.op0p.be. |
 | **Maîtres** | Par ordre de priorité, un par ligne, **la même liste partout** : remote.op0p.be puis secours.op0p.be. |

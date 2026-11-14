@@ -3371,3 +3371,10 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .lg-nettab th, .lg-nettab td { border: 1px solid rgba(255, 255, 255, .15); padding: 2px 6px; text-align: left; }
 .lg-neterr { margin-right: auto; font-weight: 700; }
 .lg-net textarea, .lg-net input[name="self"], .lg-net input[name="key"] { text-transform: none; }
+.lg-net .lg-nettabs { margin-bottom: 8px; }
+.lg-nethelp { max-height: 62vh; overflow: auto; padding: 4px 10px; font-size: 13.5px; line-height: 1.5; text-align: justify; }
+.lg-nethelp h3 { margin: 4px 0 8px; color: #00d4ff; font-size: 15px; }
+.lg-nethelp table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13px; text-align: left; }
+.lg-nethelp th, .lg-nethelp td { border: 1px solid rgba(255, 255, 255, .16); padding: 4px 7px; vertical-align: top; }
+.lg-nethelp a { color: #00d4ff; }
+.lg-nethelp[hidden], .lg-netcfg[hidden] { display: none; }

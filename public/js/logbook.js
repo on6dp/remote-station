@@ -910,8 +910,10 @@
   function openNetDlg() {
     if (!me.admin) return say('Réseau : réservé aux administrateurs.', 'warn');
     const d = mkDlg('lg-net', '<form method="dialog"><h3>🌐 Réseau — log commun et numéros de série</h3><div class="lg-pp">' +
+      '<div class="lg-tabs lg-nettabs" role="tablist"><button type="button" data-nt="cfg" aria-selected="true">RÉGLAGES ET ÉTAT</button><button type="button" data-nt="help" aria-selected="false">HELP</button></div>' +
+      '<div class="lg-nethelp" id="lgNetHelp" hidden><p>Chargement de l’aide…</p></div><div class="lg-netcfg">' +
       '<p class="lg-note">Plusieurs serveurs Remote Station (un par TRX, à des endroits différents) partagent <b>un seul log</b> et <b>une seule série de numéros</b> de contest (RTTY, CW, SSB), comme N1MM. Chaque serveur garde une copie complète du log. Les liaisons partent des postes vers le maître (HTTPS, port 443) : rien à ouvrir chez eux, même derrière un CGNAT.</p>' +
-      '<label>Mode <select name="mode"><option value="off">Hors réseau (station seule)</option><option value="node">Poste (relié au maître)</option><option value="master">Maître (ou maître de secours)</option></select></label>' +
+      '<label>Mode <select name="mode"><option value="off">Hors réseau (station seule)</option><option value="node">Poste : station distante (son TRX, son serveur), reliée au maître</option><option value="master">Maître (remote.op0p.be) ou maître de secours (secours.op0p.be)</option></select></label>' +
       '<label>Nom de ce serveur dans le réseau <input name="name" maxlength="24" placeholder="ON4LUC-1"></label>' +
       '<label data-m>Adresse de ce serveur (maître) <input name="self" maxlength="120" placeholder="remote.op0p.be"></label>' +
       '<label>Maîtres, par ordre de priorité (un par ligne ; la même liste sur tous les serveurs) <textarea name="masters" rows="3" placeholder="remote.op0p.be&#10;secours.op0p.be"></textarea></label>' +
@@ -919,9 +921,34 @@
       '<label data-first>Envoyer aussi les QSO déjà faits depuis le (facultatif) <input name="since" type="date"></label>' +
       '<p class="lg-note">Maître de priorité 1 : actif en permanence (après avoir repris les données du secours à son démarrage). Secours : prend le relais si le maître ne répond plus depuis 30 s, et le lui rend à son retour. Postes : continuent seuls si aucun maître ne répond (numéros de série alors <b>provisoires</b>, signalés en orange).</p>' +
       '<div class="lg-netst" id="lgNetSt">…</div>' +
-      '</div><div class="md-act"><span class="lg-neterr" id="lgNetErr"></span><button class="btn" value="cancel">Fermer</button><button class="btn btn-primary" type="button" data-a="save">Enregistrer</button></div></form>');
+      '</div></div><div class="md-act"><span class="lg-neterr" id="lgNetErr"></span><button class="btn" value="cancel">Fermer</button><button class="btn btn-primary" type="button" data-a="save">Enregistrer</button></div></form>');
     netDlg = d;
     const f = d.querySelector('form');
+    // Onglet HELP : la section « Réseau » du manuel (14.6), lue dans /aide.html
+    const tab = (t) => {
+      d.querySelectorAll('[data-nt]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.nt === t)));
+      d.querySelector('.lg-netcfg').hidden = t !== 'cfg';
+      d.querySelector('[data-a="save"]').hidden = t !== 'cfg';
+      const h = d.querySelector('#lgNetHelp');
+      h.hidden = t !== 'help';
+      if (t === 'help' && !h.dataset.ok) {
+        fetch('/aide.html', { cache: 'no-cache' }).then((r) => r.text()).then((html) => {
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          const h3 = doc.getElementById('l-net');
+          if (!h3) throw new Error('section absente');
+          const out = document.createElement('div');
+          for (let n = h3; n; n = n.nextElementSibling) { if (n !== h3 && /^H[23]$/.test(n.tagName)) break; out.appendChild(document.importNode(n, true)); }
+          out.querySelectorAll('script, iframe, object').forEach((x) => x.remove());
+          h.textContent = '';
+          h.appendChild(out);
+          const a = document.createElement('p');
+          a.innerHTML = '<a href="/aide#l-net" target="_blank" rel="noopener">Ouvrir le manuel complet à cette section ↗</a>';
+          h.appendChild(a);
+          h.dataset.ok = '1';
+        }).catch(() => { h.innerHTML = '<p>Aide indisponible : <a href="/aide#l-net" target="_blank" rel="noopener">ouvrir le manuel, section 14.6</a>.</p>'; });
+      }
+    };
+    d.querySelectorAll('[data-nt]').forEach((b) => b.addEventListener('click', () => tab(b.dataset.nt)));
     const upd = () => { d.querySelectorAll('[data-m]').forEach((x) => { x.hidden = f.mode.value !== 'master'; }); };
     f.mode.addEventListener('change', upd);
     d.querySelector('[data-a="save"]').addEventListener('click', () => {
@@ -958,11 +985,11 @@
       : st.mode === 'master' ? (st.prio < 0 ? '⚠ Cette adresse n’est pas dans la liste des maîtres.' : (st.prio === 0 ? 'Maître prioritaire' : 'Maître de secours n° ' + st.prio) + ' — ' + (st.active ? '<b class="ok">ACTIF</b> (donne les numéros de série)' : '<b class="wait">en attente</b>' + (st.prio === 0 ? ' (reprise des données du secours, 40 s au plus)' : ' (le maître prioritaire est actif)')))
       : 'Poste — ' + (st.out && st.out.ready ? 'relié à <b>' + esc(st.out.name) + '</b>' + (st.out.active ? ' (actif)' : ' (en attente)') : '<b class="wait">pas de liaison avec un maître</b> (numéros provisoires)');
     const lq = (x) => (x ? esc(x.call) + ' · ' + esc(x.band) + ' ' + esc(x.mode) + ' · ' + esc(String(x.t).slice(6, 8) + '/' + String(x.t).slice(4, 6) + ' ' + String(x.t).slice(8, 10) + ':' + String(x.t).slice(10, 12)) + ' UTC' + (x.by ? ' · ' + esc(x.by) : '') : '—');
-    const rows = (st.peers || []).map((p) => '<tr><td><b>' + esc(p.name) + '</b>' + (p.master ? ' (maître)' : '') + (p.v ? '<br><small>v' + esc(p.v) + '</small>' : '') + '</td><td>' + (p.dir === 'in' ? 'entrante' : 'sortante') + '</td><td>' + ago(p.since) + '</td><td>' + ago(p.lastIn) + '</td><td>' + p.inQ + ' / ' + p.outQ + '</td><td>' + p.behind + '</td><td>' + lq(p.lastQso) + '</td></tr>').join('');
+    const rows = (st.peers || []).map((p) => '<tr><td><b>' + esc(p.name) + '</b>' + (p.master ? ' (maître)' : '') + (p.v ? '<br><small>v' + esc(p.v) + '</small>' : '') + '</td><td>' + (p.dir === 'in' ? 'entrante' : 'sortante') + '</td><td>' + ago(p.since) + '</td><td>' + ago(p.heard || p.lastIn) + '</td><td>' + p.inQ + ' / ' + p.outQ + '</td><td>' + p.behind + '</td><td>' + lq(p.lastQso) + '</td></tr>').join('');
     const nSt = (st.peers || []).filter((p) => !p.master).length;
     d.querySelector('#lgNetSt').innerHTML = '<p><b>État :</b> ' + role + '</p>' +
       (st.mode === 'master' ? '<p><b>' + nSt + '</b> station' + (nSt > 1 ? 's' : '') + ' reliée' + (nSt > 1 ? 's' : '') + ' à ce maître.</p>' : '') +
-      (rows ? '<table class="lg-nettab"><tr><th>Serveur (version)</th><th>Liaison</th><th>Depuis</th><th>Dernier message</th><th>QSO reçus / envoyés</th><th>Changements en retard</th><th>Dernier QSO reçu de lui</th></tr>' + rows + '</table>' : (st.mode !== 'off' ? '<p>Aucune liaison ouverte.</p>' : '')) +
+      (rows ? '<table class="lg-nettab"><tr><th>Serveur (version)</th><th>Liaison</th><th>Depuis</th><th title="Dernier signe de vie (un échange toutes les 3 s ; liaison coupée après 25 s sans nouvelles)">Dernier signe de vie</th><th>QSO reçus / envoyés</th><th>Changements en retard</th><th>Dernier QSO reçu de lui</th></tr>' + rows + '</table>' : (st.mode !== 'off' ? '<p>Aucune liaison ouverte.</p>' : '')) +
       ((st.events || []).length ? '<details><summary>Derniers événements</summary><ul>' + st.events.map((e) => '<li>' + new Date(e.t).toLocaleTimeString('fr-BE') + ' — ' + esc(e.msg) + '</li>').join('') + '</ul></details>' : '');
   }
   function mkDlg(cls, html) {

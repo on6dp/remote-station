@@ -1008,7 +1008,7 @@ In the way of N1MM, several stations — each with **its TRX and its own Remote 
 
 | Setting (Logbooks → Synchronisation ▾ → 🌐 Réseau, administrators) | What it does |
 |---|---|
-| **Mode** | **Hors réseau** (default): the station works alone. **Poste**: linked to the master (shared log, master's numbers). **Maître**: remote.op0p.be and secours.op0p.be. |
+| **Mode** | **Hors réseau** (default): the station works alone. **Poste**: to choose on **each remote station** (the Remote Station server installed next to its TRX, e.g. at ON4LUC's): it sends its QSOs to the shared log and gets its serial numbers from the master. **Maître**: only on remote.op0p.be and secours.op0p.be. In short: remote.op0p.be and secours.op0p.be = Maître; all other stations of the network = Poste. |
 | **Name** | Name of this server in the network: REMOTE, SECOURS, ON4LUC-1… |
 | **Address of this server** | Masters only: remote.op0p.be, secours.op0p.be. |
 | **Masters** | By priority, one per line, **the same list everywhere**: remote.op0p.be then secours.op0p.be. |
