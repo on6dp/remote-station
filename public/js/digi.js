@@ -391,9 +391,9 @@
         <div class="rt-io">
           <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxt" data-ch="0" spellcheck="false" placeholder="Texte à émettre sur le VFO-A, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShow" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx0" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
           <div class="rt-pane"><pre class="rt-rx" id="rtRx"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx0" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
+          <div class="rt-xdec" id="rtDecC" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A3</span><span class="rt-sig" id="rtSigC"></span><span class="rt-xc">centre <b id="rtFC"></b> Hz</span><span class="rt-xhint">Ctrl + clic gauche, ou BARRES : A3</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxC"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx2" title="Effacer cette fenêtre">Effacer</button></div></div>
         </div>
         <i class="rt-iogrip" data-ch="0" title="Glisser vers le haut ou le bas : hauteur des fenêtres TX / RX de ce VFO seulement (double-clic : taille d’origine)"></i>
-        <div class="rt-xdec" id="rtDecC" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A3</span><span class="rt-sig" id="rtSigC"></span><span class="rt-xc">centre <b id="rtFC"></b> Hz</span><span class="rt-xhint">Ctrl + clic gauche, ou BARRES : A3</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxC"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx2" title="Effacer cette fenêtre">Effacer</button></div></div>
       </div>
       <i class="rt-vsplit" id="rtSplit" title="Glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié)"></i>
       <div class="dg-col rt-side" data-ch="1">
@@ -430,9 +430,9 @@
         <div class="rt-io">
           <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxtB" data-ch="1" spellcheck="false" placeholder="Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-B : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShowB" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx1" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
           <div class="rt-pane"><pre class="rt-rx" id="rtRxB"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx1" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
+          <div class="rt-xdec" id="rtDecD" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A4</span><span class="rt-sig" id="rtSigD"></span><span class="rt-xc">centre <b id="rtFD"></b> Hz</span><span class="rt-xhint">Ctrl + clic droit, ou BARRES : A4</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxD"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx3" title="Effacer cette fenêtre">Effacer</button></div></div>
         </div>
         <i class="rt-iogrip" data-ch="1" title="Glisser vers le haut ou le bas : hauteur des fenêtres TX / RX de ce VFO seulement (double-clic : taille d’origine)"></i>
-        <div class="rt-xdec" id="rtDecD" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A4</span><span class="rt-sig" id="rtSigD"></span><span class="rt-xc">centre <b id="rtFD"></b> Hz</span><span class="rt-xhint">Ctrl + clic droit, ou BARRES : A4</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxD"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx3" title="Effacer cette fenêtre">Effacer</button></div></div>
       </div>
     </div>
     <i class="rt-hgrip" id="rtHGrip" title="Glisser vers le haut ou le bas : hauteur des fenêtres de décodage (VFO-A et VFO-B) — plus de place pour les macros en dessous (double-clic : taille d'origine)"></i>

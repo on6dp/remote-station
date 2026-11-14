@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.83** — Page RTTY, QUAD DÉCODEURS : fenêtres de trafic coupées en deux côte à côte (A1 | A3, A2 | A4) au lieu de fenêtres en dessous
 - **0.39.82** — Page RTTY, réception simple : QUAD DÉCODEURS — 4 décodeurs sur la même cascade (A1 clic gauche, A2 clic droit, A3 Ctrl + clic gauche, A4 Ctrl + clic droit, ou sélecteur BARRES)
 - **0.39.81** — Page RTTY : bouton DUAL DÉCODEURS (au lieu de 2 DÉCODEURS), mauve comme les autres boutons DUAL
 - **0.39.80** — Page RTTY, 2 DÉCODEURS : bouton ✕ MASQUER dans l'en-tête de A2 (le LOG RTTY reprend toute la colonne)
