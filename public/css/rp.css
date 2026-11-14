@@ -3303,3 +3303,4 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 #rtVfo .rt-decsel:hover { border-color: #58a6ff; }
 #rtVfo .rt-decsel.on { border-color: #c49bff; }
 #rtVfo .rt-decsel.on:hover { border-color: #58a6ff; }
+.wf-ctl { padding-top: 4px; padding-bottom: 8px; } /* un peu plus d'espace entre la ligne de réglages de la cascade et la règle des fréquences */
