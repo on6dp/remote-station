@@ -52,6 +52,8 @@
   let lastLogged = '';     // dernier indicatif enregistré : pas repris de la ligne Correspondant juste après
   let lastSaved = null;    // fiche seule (FORM) : dernier QSO enregistré d'ici (« Modifier le QSO », « Supprimer le QSO »)
 
+  // Fréquence affichée en MHz avec 3 décimales (au kHz près) : 7.057, 14.087, 21.190 (la valeur exacte reste dans le carnet et l'ADIF)
+  const mhz3 = (f) => { const n = Number(f); return n > 0 ? (Math.round(n * 1000) / 1000).toFixed(3) : ''; };
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const q$ = (sel, el) => (el || root).querySelector(sel);
   const pad = (n, l) => String(n).padStart(l || 2, '0');
@@ -893,7 +895,7 @@
     } else {
       body.innerHTML = items.map((q) => '<tr data-id="' + esc(q.id) + '"' + (editing && editing.id === q.id ? ' class="sel"' : '') + ' title="Cliquer pour modifier">' +
         '<td>' + fmtDate(q.qso_date) + '</td><td>' + fmtTime(q.time_on) + '</td><td class="call">' + esc(q.call) + '</td><td>' + esc(q.band) +
-        (q.sat_name ? ' <span class="sat">' + esc(q.sat_name) + '</span>' : '') + '</td><td class="r">' + esc(q.freq) + '</td><td>' + esc(modeName(q)) +
+        (q.sat_name ? ' <span class="sat">' + esc(q.sat_name) + '</span>' : '') + '</td><td class="r">' + esc(mhz3(q.freq)) + '</td><td>' + esc(modeName(q)) +
         '</td><td>' + esc(q.rst_sent || '') + '</td><td class="lg-xch">' + esc(q.stx_string || q.stx || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td class="lg-xch">' + esc(q.srx_string || q.srx || '') + '</td><td class="grow">' + esc(q.name || '') + '</td><td class="lg-qth" title="' + esc(q.qth || '') + '">' + esc(q.qth || '') +
         '</td><td class="lg-loc">' + esc(q.gridsquare || '') + '</td><td class="lg-cty" title="' + esc(q.country || '') + '">' + esc(q.country || '') + '</td><td>' + esc(q.dxcc_pfx || '') + '</td><td class="txc">' + esc(q.station_callsign || '') + '</td><td class="op" title="' + esc(q.by && q.by !== q.operator ? 'Enregistré par ' + q.by : '') + '">' + esc(q.operator || q.by || '') + '</td>' + refsCell(q) +
         '<td class="lg-ctst" title="' + esc(q.contest_id ? 'Envoyé : ' + (q.stx_string || q.stx || '—') + ' · reçu : ' + (q.srx_string || q.srx || '—') : '') + '">' + esc(q.contest_id || '') + '</td>' +

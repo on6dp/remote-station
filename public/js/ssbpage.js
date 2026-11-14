@@ -1033,7 +1033,7 @@
     const fd = (d) => d.slice(6, 8) + '/' + d.slice(4, 6) + '/' + d.slice(0, 4);
     for (const q of items) {
       const tr = document.createElement('tr');
-      for (const v of [fd(q.d), q.t.slice(0, 2) + ':' + q.t.slice(2, 4), q.call, q.band, q.freq, q.mode, q.rs, q.rr, q.name, q.qth, q.country, q.st, q.op]) {
+      for (const v of [fd(q.d), q.t.slice(0, 2) + ':' + q.t.slice(2, 4), q.call, q.band, Number(q.freq) > 0 ? (Math.round(Number(q.freq) * 1000) / 1000).toFixed(3) : '', q.mode, q.rs, q.rr, q.name, q.qth, q.country, q.st, q.op]) {
         const td = document.createElement('td');
         td.textContent = v == null ? '' : String(v);
         tr.appendChild(td);

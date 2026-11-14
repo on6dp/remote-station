@@ -5441,7 +5441,7 @@
       const v = q[k] == null ? '' : String(q[k]);
       if (k === 'd') return v.length === 8 ? v.slice(6, 8) + '/' + v.slice(4, 6) + '/' + v.slice(0, 4) : v;
       if (k === 't') return v.length >= 4 ? v.slice(0, 2) + ':' + v.slice(2, 4) : v;
-      if (k === 'freq') { const f = Number(v); return f ? f.toFixed(4) : ''; }
+      if (k === 'freq') { const f = Number(v); return f ? (Math.round(f * 1000) / 1000).toFixed(3) : ''; } // MHz au kHz près
       if (k === 'ct') { const c = v && RT_CONTESTS.find((x) => x[0] === v); return c ? c[1] : v; } // nom du contest ; hors contest : rien
       return v;
     };
