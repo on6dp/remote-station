@@ -708,7 +708,6 @@ Au-dessus de la cascade, la ligne d'aide (« clic gauche : décodeur A… ») s'
 | **Shift** (170, 200, 425, 850 Hz) / **Vitesse** (45,45 … 100 Bd) | Radioamateurs : 170 Hz et 45,45 bauds. |
 | `Inversé` | Échange Mark et Space si le texte reçu n'a aucun sens (signal « à l'envers »). |
 | **Silencieux** | Plus haut = moins de caractères au hasard sur le bruit ; trop haut, les signaux faibles ne sont plus décodés. |
-| Indicateur M / S | Les deux barres doivent battre en alternance quand le décodeur est bien calé. |
 | Centre … Hz | Fréquence audio où le décodeur est calé. |
 | `TX` / clic dans la fenêtre | Choisit le décodeur dont les réglages servent à l'émission (fréquence audio, shift, vitesse) : **un clic n'importe où dans la fenêtre VFO-A ou VFO-B** suffit, ou le bouton `TX` de son en-tête. Le bouton devient `▶ TX ici` (rouge), l'en-tête rosit et un cadre rouge entoure le décodeur ; l'autre fenêtre affiche `RX ici` en vert, avec un cadre vert (réception seule). Un clic sur `RX ici` inverse les rôles. Le zoom se centre sur lui. **Un clic sur `▶ TX ici` émet le texte** tapé dans la ligne de saisie de la fenêtre (comme `F11 TX`) ; pendant l'émission il devient `■ Arrêter`. Les macros `F1`…`F12` partent aussi sur cette fenêtre. |
 | `Effacer` | En haut à droite de la fenêtre : vide le texte (reçu et émis) de ce VFO. La fenêtre a un ascenseur et suit toujours le décodage le plus récent (l'historique le plus ancien est retiré au fur et à mesure) ; si vous remontez pour relire (molette ou ascenseur), elle reprend le suivi 10 s plus tard. |

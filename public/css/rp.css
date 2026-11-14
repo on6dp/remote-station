@@ -3282,3 +3282,4 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .ctab-pane.rt .rt-center { display: none !important; }
 .ctab-pane.rt .rt-dual.rt-4dec .rt-io > .rt-xdec.rt-xtx { box-shadow: inset 0 0 0 2px #e0302a; }
 .rt-xhd .rt-txsel { padding: 0 6px; font-size: 10px; }
+.ctab-pane.rt .rt-tune { display: none !important; } /* RTTY : plus d'indicateurs M / S dans les en-têtes */

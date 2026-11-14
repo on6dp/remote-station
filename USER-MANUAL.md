@@ -698,7 +698,6 @@ Above the waterfall, the help line (« clic gauche : décodeur A… ») is shown
 | **Shift** (170, 200, 425, 850 Hz) / **Speed** (45,45 … 100 Bd) | Amateur radio: 170 Hz and 45.45 baud. |
 | `Inversé` (reversed) | Swaps Mark and Space when the received text makes no sense (signal "upside down"). |
 | **Silencieux** (squelch) | Higher = fewer random characters on noise; too high and weak signals are no longer decoded. |
-| M / S indicator | The two bars should beat alternately when the decoder is tuned correctly. |
 | Centre … Hz | Audio frequency the decoder is tuned to. |
 | `TX` / click in the window | Chooses the decoder whose settings are used for transmitting (audio frequency, shift, speed): **one click anywhere in the VFO-A or VFO-B window** is enough, or the `TX` button in its header. The button becomes `▶ TX ici` (TX here, red), the header turns pink and a red frame surrounds the decoder; the other window shows `RX ici` (RX here) in green, with a green frame (receive only). A click on `RX ici` swaps the roles. The zoom centres on it. **A click on `▶ TX ici` transmits the text** typed in the window's input line (like `F11 TX`); while transmitting it becomes `■ Arrêter` (stop). Macros `F1`…`F12` also go out on this window. |
 | `Effacer` (clear) | Top right of the window: clears the text (received and sent) of this VFO. The window has a scroll bar and always follows the latest decoding (the oldest history is removed as it goes); if you scroll back to read (wheel or scroll bar), it resumes following 10 s later. |
