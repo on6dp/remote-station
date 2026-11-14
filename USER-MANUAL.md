@@ -1027,6 +1027,8 @@ In the way of N1MM, several stations — each with **its TRX and its own Remote 
 
 Automatic upload to online logs only leaves from the server where the QSO was logged: QSOs copied from another station are not sent again.
 
+**Versions**: update remote.op0p.be (🔔 Mise à jour); **secours.op0p.be follows by itself** the master's version within a minute (only while waiting, never while replacing it). Stations never update by themselves (no forced restart during a contest): the master's Network screen shows in orange those with an older version, and their administrators get a message; they update with 🔔 Mise à jour, outside contests.
+
 <a id="clavier"></a>
 ## 15. Keyboard shortcuts
 

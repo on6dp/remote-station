@@ -987,7 +987,12 @@
     const lq = (x) => (x ? esc(x.call) + ' · ' + esc(x.band) + ' ' + esc(x.mode) + ' · ' + esc(String(x.t).slice(6, 8) + '/' + String(x.t).slice(4, 6) + ' ' + String(x.t).slice(8, 10) + ':' + String(x.t).slice(10, 12)) + ' UTC' + (x.by ? ' · ' + esc(x.by) : '') : '—');
     const rows = (st.peers || []).map((p) => '<tr><td><b>' + esc(p.name) + '</b>' + (p.master ? ' (maître)' : '') + (p.v ? '<br><small>v' + esc(p.v) + '</small>' : '') + '</td><td>' + (p.dir === 'in' ? 'entrante' : 'sortante') + '</td><td>' + ago(p.since) + '</td><td>' + ago(p.heard || p.lastIn) + '</td><td>' + p.inQ + ' / ' + p.outQ + '</td><td>' + p.behind + '</td><td>' + lq(p.lastQso) + '</td></tr>').join('');
     const nSt = (st.peers || []).filter((p) => !p.master).length;
+    const vn = (v) => String(v || '0').split('.').map(Number).reduce((a, x) => a * 1000 + (x || 0), 0);
+    const old = (st.peers || []).filter((p) => p.v && vn(p.v) < vn(st.v));
+    const oldOut = st.out && st.out.v && vn(st.out.v) > vn(st.v);
     d.querySelector('#lgNetSt').innerHTML = '<p><b>État :</b> ' + role + '</p>' +
+      (old.length ? '<p class="wait">⚠ Version plus ancienne que ce serveur (' + esc(st.v) + ') : ' + old.map((p) => esc(p.name) + ' (' + esc(p.v) + ')').join(', ') + '. Le secours s’aligne tout seul ; les stations se mettent à jour par 🔔 Mise à jour, hors contest.</p>' : '') +
+      (oldOut ? '<p class="wait">⚠ Le maître ' + esc(st.out.name) + ' est en version ' + esc(st.out.v) + ', ce serveur en ' + esc(st.v) + (st.mode === 'master' ? ' : mise à jour automatique en cours ou à venir.' : ' : pensez à mettre ce serveur à jour (🔔 Mise à jour), hors contest.') + '</p>' : '') +
       (st.mode === 'master' ? '<p><b>' + nSt + '</b> station' + (nSt > 1 ? 's' : '') + ' reliée' + (nSt > 1 ? 's' : '') + ' à ce maître.</p>' : '') +
       (rows ? '<table class="lg-nettab"><tr><th>Serveur (version)</th><th>Liaison</th><th>Depuis</th><th title="Dernier signe de vie (un échange toutes les 3 s ; liaison coupée après 25 s sans nouvelles)">Dernier signe de vie</th><th>QSO reçus / envoyés</th><th>Changements en retard</th><th>Dernier QSO reçu de lui</th></tr>' + rows + '</table>' : (st.mode !== 'off' ? '<p>Aucune liaison ouverte.</p>' : '')) +
       ((st.events || []).length ? '<details><summary>Derniers événements</summary><ul>' + st.events.map((e) => '<li>' + new Date(e.t).toLocaleTimeString('fr-BE') + ' — ' + esc(e.msg) + '</li>').join('') + '</ul></details>' : '');

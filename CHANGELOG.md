@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.3** — Réseau : le maître de secours s'aligne tout seul sur la version du maître (mise à jour automatique, seulement en attente) ; stations plus anciennes signalées en orange au maître et à leurs administrateurs.
 - **0.42.2** — Écran Réseau : onglet HELP (section 14.6 du manuel), colonne « Dernier signe de vie », modes expliqués (Poste = chaque station distante, Maître = remote.op0p.be et secours.op0p.be).
 - **0.42.1** — Réseau : liste des stations reliées au maître (nombre, version, dernier QSO de chacune), messages d'état corrigés pour le maître prioritaire ; manuel section 14.6 (réseau, contests à plusieurs stations, reprise automatique) et guide administrateur (installation du secours, test de reprise).
 - **0.42.0** — Mise en réseau (log commun façon N1MM) : écran 🌐 Réseau (Logbooks → Synchronisation), modes hors réseau / poste / maître, clé du réseau, copie complète du log sur chaque serveur, numéros de série RTTY / CW / SSB donnés par le maître actif, maître de secours automatique (30 s) et retour au maître prioritaire.

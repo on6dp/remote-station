@@ -645,6 +645,27 @@ NET.on('applied', (x) => {
   if (x.n) { for (const c of ops) send(c, { t: 'log_changed' }); setTimeout(() => sendWorked(false), 0); }
 });
 setTimeout(() => NET.start(), 2000);
+// Version du maître du réseau plus récente que la nôtre : le maître de secours s'aligne tout seul (sans TRX ni opérateur,
+// et seulement en attente, jamais quand il remplace le maître) ; une station prévient ses administrateurs (elle choisit
+// le moment : jamais de mise à jour imposée pendant un contest). autoUpdate: false dans config.json pour couper.
+let netNewer = null, netAsked = '', netWarned = '';
+NET.on('masterVersion', (x) => {
+  const CMP = require('./lib/update.js').cmp;
+  if (CMP(x.v, VERSION) <= 0) { netNewer = null; return; }
+  netNewer = x;
+  if (NET.isMaster() && NET.prioOf() > 0) {
+    // Maître de secours en attente (le maître a repris la main) : mise à jour automatique, une fois par version
+    if (NET.active() || cfg.autoUpdate === false || netAsked === x.v) return;
+    netAsked = x.v;
+    const e = UPD.installVersion(x.v, 'réseau (' + x.name + ')');
+    journal('update_request', { call: 'réseau ' + x.name, v: x.v, err: e || undefined });
+    NET.ev(e ? 'Alignement sur la version ' + x.v + ' du maître impossible : ' + e : 'Alignement sur la version ' + x.v + ' du maître : mise à jour lancée');
+    return;
+  }
+  if (netWarned === x.v) return;
+  netWarned = x.v;
+  for (const c of ops) if (c.open && c.user && c.user.admin) send(c, { t: 'notice', level: 'warn', msg: 'Réseau : le maître ' + x.name + ' est en version ' + x.v + ', ce serveur en ' + VERSION + '. Pensez à le mettre à jour (🔔 Mise à jour), hors contest.' });
+});
 const refs = new REFDATA.RefData(path.join(ROOT, 'refdata'), (msg) => console.error(msg));
 // Super Check Partial (indicatifs actifs en contest) : page TRX SSB, indicatifs probables
 const SCP = new (require('./lib/scp').Scp)(path.join(ROOT, 'refdata'), (msg) => console.log(msg));
@@ -3218,6 +3239,7 @@ function loggedIn(conn, call, rec, sessionTok) {
   send(conn, { t: 'chatlog', list: chatLog });
   sendWorked(true, conn);
   if (conn.user.admin) { const us = UPD.state(); if (us.latest || us.job) send(conn, us); }
+  if (conn.user.admin && netNewer && !(NET.isMaster() && NET.prioOf() > 0)) send(conn, { t: 'notice', level: 'warn', msg: 'Réseau : le maître ' + netNewer.name + ' est en version ' + netNewer.v + ', ce serveur en ' + VERSION + '. Pensez à le mettre à jour (🔔 Mise à jour), hors contest.' });
   broadcast();
 }
 

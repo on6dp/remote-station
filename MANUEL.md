@@ -1040,6 +1040,8 @@ Menu **Synchronisation ▾** : il envoie les QSO du carnet vers les sites de con
 
 L'envoi automatique vers les logs en ligne ne part que du serveur où le QSO a été loggé : les QSO copiés depuis une autre station ne sont pas renvoyés.
 
+**Versions** : mettez à jour remote.op0p.be (🔔 Mise à jour) ; **secours.op0p.be s'aligne tout seul** sur la version du maître dans la minute (seulement quand il est en attente, jamais quand il le remplace). Les stations ne se mettent jamais à jour d'elles-mêmes (pas de redémarrage imposé pendant un contest) : l'écran Réseau du maître signale en orange celles qui ont une version plus ancienne, et leurs administrateurs reçoivent un message ; elles se mettent à jour par 🔔 Mise à jour, hors contest.
+
 <a id="clavier"></a>
 ## 15. Raccourcis clavier
 
