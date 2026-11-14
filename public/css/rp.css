@@ -3284,3 +3284,7 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .rt-xhd .rt-txsel { padding: 0 6px; font-size: 10px; }
 .ctab-pane.rt .rt-tune { display: none !important; } /* RTTY : plus d'indicateurs M / S dans les en-têtes */
 .ctab-pane.rt .rt-sq { display: none !important; } /* RTTY : plus de réglage Silencieux affiché (le seuil enregistré reste appliqué) */
+/* DUAL / QUAD DÉCODEURS et BARRES sur la ligne de réglages de la cascade (seulement sur la page RTTY) : l'en-tête de A1 tient sur une ligne */
+.rt-wfbtns { display: none; align-items: center; gap: 6px; margin-left: 10px; }
+.ctab-pane.rt .rt-wfbtns { display: inline-flex; }
+.rt-wfbtns .dg-mini { font-size: 10.5px; padding: 2px 8px; }

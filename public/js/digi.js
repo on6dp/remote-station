@@ -368,14 +368,17 @@
     <div class="dg-wf-slot" data-slot="rtty"></div>
     <!-- Deux décodeurs RTTY côte à côte, largeur réglable ; émission sous les deux, sur toute la largeur -->
     <!-- Grille de la page RTTY : VFO-A puis macros à gauche, VFO-B puis LOG RTTY à droite -->
+    <!-- DUAL / QUAD DÉCODEURS et BARRES : posés sur la ligne de réglages de la cascade (Gain, Zéro… Vitesse) au démarrage -->
+    <span class="rt-wfbtns" id="rtWfBtns">
+          <button class="dg-mini rt-2dec" type="button" id="rt2Dec" aria-pressed="false" hidden title="Un seul récepteur (ni SPLIT ni DUAL RX) : deux décodeurs sur la même cascade, comme FLDIGI : A1 (clic gauche) et A2 (clic droit, ou bouton droit maintenu pour faire glisser ses barres) ; deux signaux décodés en même temps. La fenêtre de A2 s’affiche dans la colonne de droite.">DUAL DÉCODEURS</button>
+          <button class="dg-mini rt-2dec rt-4dec" type="button" id="rt4Dec" aria-pressed="false" hidden title="Un seul récepteur : 4 décodeurs sur la même cascade — A1 (clic gauche), A2 (clic droit), A3 (Ctrl + clic gauche), A4 (Ctrl + clic droit), ou choisir le décodeur dans BARRES puis clic gauche. Fenêtres de A3 sous A1, de A4 sous A2.">QUAD DÉCODEURS</button>
+          <span class="rt-bsel" id="rtBSel" hidden title="Décodeur placé par le prochain clic gauche sur la cascade (une fois, puis retour à A1) ; clic droit : toujours A2"><span class="rt-bsl">BARRES</span><button class="dg-mini" type="button" data-b="0" aria-pressed="true">A1</button><button class="dg-mini" type="button" data-b="1" aria-pressed="false">A2</button><button class="dg-mini" type="button" data-b="2" aria-pressed="false">A3</button><button class="dg-mini" type="button" data-b="3" aria-pressed="false">A4</button></span>
+    </span>
     <div class="rt-main" id="rtMain">
     <div class="rt-dual" id="rtDual">
       <div class="dg-col rt-side" data-ch="0">
         <div class="dg-h rt-hd">
           <span class="rt-name" id="rtNameA">VFO-A</span><span class="rt-rf" id="rtRf"></span><span class="rt-sig" id="rtSig"></span>
-          <button class="dg-mini rt-2dec" type="button" id="rt2Dec" aria-pressed="false" hidden title="Un seul récepteur (ni SPLIT ni DUAL RX) : deux décodeurs sur la même cascade, comme FLDIGI : A1 (clic gauche) et A2 (clic droit, ou bouton droit maintenu pour faire glisser ses barres) ; deux signaux décodés en même temps. La fenêtre de A2 s’affiche dans la colonne de droite.">DUAL DÉCODEURS</button>
-          <button class="dg-mini rt-2dec rt-4dec" type="button" id="rt4Dec" aria-pressed="false" hidden title="Un seul récepteur : 4 décodeurs sur la même cascade — A1 (clic gauche), A2 (clic droit), A3 (Ctrl + clic gauche), A4 (Ctrl + clic droit), ou choisir le décodeur dans BARRES puis clic gauche. Fenêtres de A3 sous A1, de A4 sous A2.">QUAD DÉCODEURS</button>
-          <span class="rt-bsel" id="rtBSel" hidden title="Décodeur placé par le prochain clic gauche sur la cascade (une fois, puis retour à A1) ; clic droit : toujours A2"><span class="rt-bsl">BARRES</span><button class="dg-mini" type="button" data-b="0" aria-pressed="true">A1</button><button class="dg-mini" type="button" data-b="1" aria-pressed="false">A2</button><button class="dg-mini" type="button" data-b="2" aria-pressed="false">A3</button><button class="dg-mini" type="button" data-b="3" aria-pressed="false">A4</button></span>
           <select id="rtShift" aria-label="Shift (VFO-A)"><option value="170">170 Hz</option><option value="200">200 Hz</option><option value="425">425 Hz</option><option value="850">850 Hz</option></select>
           <select id="rtBaud" aria-label="Vitesse (VFO-A)"><option value="45.45">45,45 Bd</option><option value="50">50 Bd</option><option value="75">75 Bd</option><option value="100">100 Bd</option></select>
           <button class="dg-mini" type="button" id="rtRev" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>
@@ -3311,6 +3314,7 @@
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
     if ($('rt2Dec')) $('rt2Dec').addEventListener('click', () => { const on = $('rt2Dec').getAttribute('aria-pressed') === 'true'; store.set('rt2dec', on ? '0' : '1'); if (on) store.set('rt4dec', '0'); rtHeads(); });
     if ($('rt2Off')) $('rt2Off').addEventListener('click', (e) => { e.stopPropagation(); store.set('rt2dec', '0'); store.set('rt4dec', '0'); rtHeads(); });
+    { const wb = $('rtWfBtns'), spd = $('wfSpd'); if (wb && spd) spd.after(wb); } // ligne de réglages de la cascade
     if ($('rt4Dec')) $('rt4Dec').addEventListener('click', () => { store.set('rt4dec', store.get('rt4dec', '0') === '1' ? '0' : '1'); rtHeads(); });
     if ($('rtBSel')) $('rtBSel').querySelectorAll('[data-b]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); rtBSel = Number(b.dataset.b) || 0; rtHeads(); }));
     // Hauteur des fenêtres TX / RX de chaque VFO : sa propre poignée, gardée dans ce navigateur
