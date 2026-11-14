@@ -3298,3 +3298,8 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 #rtVfo .rt-decsel { font: 800 12.5px Verdana, "DejaVu Sans", "Bitstream Vera Sans", Arial, sans-serif; letter-spacing: .5px; padding: 3px 10px; height: 27px; border-radius: 6px;
   background: #121a26; color: #fff; border: 1px solid #8a5cc4; margin-left: 6px; }
 #rtVfo .rt-decsel.on { background: linear-gradient(180deg, #6a3aa8, #3f1d6e); border-color: #c49bff; box-shadow: 0 0 8px rgba(160, 100, 255, .45); }
+/* Liste DÉCODEURS : exactement comme DUAL RX — cadre gras (2 px) mauve, fond bleu nuit, cadre bleu au survol */
+#rtVfo .rt-decsel { border: 2px solid #8a5cc4; background: #121d2c; padding: 2px 10px; cursor: pointer; }
+#rtVfo .rt-decsel:hover { border-color: #58a6ff; }
+#rtVfo .rt-decsel.on { border-color: #c49bff; }
+#rtVfo .rt-decsel.on:hover { border-color: #58a6ff; }
