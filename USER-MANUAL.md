@@ -952,6 +952,8 @@ In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé*
 | Exporter ▾ menu (export) | What it does |
 |---|---|
 | **Mes QSO (.adi)** (my QSOs) | Immediately downloads the QSOs made under **your** callsign (TX call), to import into your own logging program. |
+| **Vue affichée (.adi)** (displayed view) | Downloads exactly the QSOs of the list: the **TX call** chosen in the yellow `TX CALL` box of the bar (right of the search field), the search text and the column filters (▾ under the titles). The whole log is filtered, not only the 300 rows shown. Example: TX CALL = OR0L, Contest column = UBA-DX, then Vue affichée. A member only gets their own QSOs among them. |
+| **Vue affichée (Cabrillo)…** | The same selection as Cabrillo 3: first choose one TX call (one callsign per file), then type the contest identifier. |
 | **ADIF (.adi)…** | Selection window: TX call and date range, then download of an ADIF 3 file. A member exports their own QSOs (under their callsign, or those they made themselves under ON5VL / OR0L: « mes QSO sous cet indicatif », my QSOs under this callsign); administrators export every TX call. |
 | **Cabrillo (.log)…** | Same choice, plus the contest name: Cabrillo 3 file to send to a contest's organisers. |
 

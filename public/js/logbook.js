@@ -112,6 +112,7 @@
     </form>
     <div class="lg-bar">
       <input class="lg-search" id="lgSearch" placeholder="Rechercher (indicatif, nom, opérateur)" aria-label="Rechercher dans le carnet">
+      <label class="lg-txf" title="Ne montrer que les QSO faits sous cet indicatif (TX call) ; Exporter ▾ → « Vue affichée » les exporte ensuite">TX call <select id="lgTxf" aria-label="Filtrer le carnet par TX call"><option value="">Tous</option></select></label>
       <span class="lg-count" id="lgCount"></span>
       <button class="btn lg-fclr" type="button" id="lgFclr" hidden title="Retirer tous les filtres de colonne">✕ Filtres</button>
       <span class="lg-sp"></span>
@@ -131,6 +132,9 @@
         <button class="btn" type="button" data-m="exp" aria-haspopup="true" aria-expanded="false">Exporter ▾</button>
         <div class="lg-mlist" role="menu" hidden>
           <button type="button" role="menuitem" data-xm="1">Mes QSO (.adi)</button>
+          <button type="button" role="menuitem" data-xv="adif" title="Exactement les QSO de la liste : TX call choisi, recherche et filtres de colonne (tout le carnet, pas seulement les lignes affichées)">Vue affichée (.adi)</button>
+          <button type="button" role="menuitem" data-xv="cabrillo" title="Les QSO de la liste en Cabrillo (un seul TX call : choisissez-le d'abord)">Vue affichée (Cabrillo)…</button>
+          <hr class="lg-msep">
           <button type="button" role="menuitem" data-x="adif">ADIF (.adi)…</button>
           <button type="button" role="menuitem" data-x="cabrillo">Cabrillo (.log)…</button>
         </div>
@@ -263,6 +267,17 @@
     root.querySelectorAll('[data-x]').forEach((b) => b.addEventListener('click', () => { closeMenus(); openExport(b.dataset.x); }));
     // « Mes QSO » : tous les QSO faits sous mon indicatif personnel (TX call), en ADIF, tout de suite
     root.querySelectorAll('[data-xm]').forEach((b) => b.addEventListener('click', () => { closeMenus(); api.send({ t: 'log_export', fmt: 'adif', callsign: me.call }); }));
+    // TX call : filtre de la liste (le même que celui de la colonne TX call) ; « Vue affichée » exporte ce que la liste montre
+    q$('#lgTxf').addEventListener('change', () => { const v = q$('#lgTxf').value; if (v) filt.txc = v; else delete filt.txc; reload(); });
+    root.querySelectorAll('[data-xv]').forEach((b) => b.addEventListener('click', () => {
+      closeMenus();
+      const v = { t: 'log_export', view: true, q: q$('#lgSearch').value.trim(), f: Object.assign({}, filt), callsign: filt.txc || '' };
+      if (b.dataset.xv === 'adif') return api.send(Object.assign(v, { fmt: 'adif' }));
+      if (!filt.txc) return say('Cabrillo : choisissez d’abord un TX call (un seul indicatif par fichier).', 'warn');
+      const c = prompt('Concours (CONTEST, identifiant Cabrillo)', filt.ctst || 'DX');
+      if (c == null) return;
+      api.send(Object.assign(v, { fmt: 'cabrillo', contest: String(c).trim().toUpperCase() || 'DX' }));
+    }));
     root.querySelector('.lg-mlist [data-a="cfg"]').addEventListener('click', () => { closeMenus(); openCfg(); });
     root.querySelector('.lg-mlist [data-a="refs"]').addEventListener('click', () => { closeMenus(); openRefsDlg(); });
     q$('#lgBody').addEventListener('click', (e) => {
@@ -780,6 +795,22 @@
     if (FORM) return api.send({ t: 'log_cfg_get', quiet: true }); // fiche seule : juste la liste des TX call
     api.send({ t: 'log_list', q: q$('#lgSearch').value.trim(), limit: 300, f: filt });
     drawFilt();
+    txfDraw();
+  }
+  // Liste TX call de la barre : indicatifs de la station, ceux du carnet (administrateur), le vôtre
+  function txfDraw() {
+    const sel = q$('#lgTxf');
+    if (!sel) return;
+    const l = Array.from(new Set(stCalls.concat(txcalls, calls, [String(me.call || '').toUpperCase(), filt.txc || '']).filter(Boolean)));
+    const key = l.join(',');
+    if (sel.dataset.k !== key) {
+      sel.dataset.k = key;
+      sel.textContent = '';
+      sel.add(new Option('Tous', ''));
+      for (const c of l) sel.add(new Option(c, c));
+    }
+    sel.value = filt.txc || '';
+    sel.classList.toggle('on', !!filt.txc);
   }
   // ------------------------------------------------------------------ filtres par colonne (choix sous chaque titre)
   const FLT_FMT = {
@@ -1257,6 +1288,7 @@
       if (Array.isArray(m.txcalls)) txcalls = m.txcalls;
       if (Array.isArray(m.stationCalls)) stCalls = m.stationCalls;
       if (editing) editing = items.find((x) => x.id === editing.id) || editing;
+      txfDraw();
       drawList();
     } else if (m.t === 'log_changed') {
       if (root && !root.hidden) { clearTimeout(listTimer); listTimer = setTimeout(reload, 200); } else stale = true;

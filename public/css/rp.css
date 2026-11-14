@@ -3314,3 +3314,9 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .rt-vfoctl[hidden] { display: none !important; }
 .rt-vfo.ws-vfo #rtDecWrap { display: none !important; }
 .rt-vfoctl #wsDial, .rt-vfoctl #wsDialB { min-width: 190px; }
+/* Carnet : filtre TX call de la barre (export « Vue affichée ») — même encadré jaune que DÉTAILS QSO */
+.lg-bar .lg-txf { display: inline-flex; align-items: center; gap: 6px; padding: 2px 4px 2px 10px; border: 2px solid #ffe600; border-radius: 6px; color: #ffe600; font-size: 12px; font-weight: 900; letter-spacing: .5px; text-transform: uppercase; cursor: pointer; }
+.lg-bar .lg-txf select { font: inherit; font-size: 13px; font-weight: 900; letter-spacing: .3px; color: #ffe600; background: transparent; border: 0; padding: 3px 4px; cursor: pointer; }
+.lg-bar .lg-txf select option { color: #e8eef6; background: #10161f; }
+.lg-bar .lg-txf:has(select.on) { background: #ffe600; color: #000; }
+.lg-bar .lg-txf select.on { color: #000; }

@@ -3529,6 +3529,15 @@ function onOperator(conn, m) {
         if (m.callsign !== me && !(m.mine && stationCalls().indexOf(m.callsign) >= 0)) { m.callsign = me; m.mine = false; }
       }
       let list = book.query({ from: m.from, to: m.to }).filter((q) => (!m.callsign || q.station_callsign === m.callsign) && (!m.mine || q.operator === me || q.by === me));
+      // Carnet (onglet Logbooks) : « Vue affichée » = les QSO de la liste (recherche, TX call et filtres de colonne) ;
+      // un membre n'en reçoit que ses propres QSO (son indicatif, ou faits par lui sous l'indicatif du club)
+      if (m.view) {
+        list = lgFilter(book.query({ q: m.q, from: m.from, to: m.to }), m.f);
+        if (!conn.user.admin) list = list.filter((q) => String(q.station_callsign || '').toUpperCase() === me || q.operator === me || q.by === me);
+        m.callsign = String((m.f && m.f.txc) || m.callsign || '').toUpperCase();
+        m.mine = false;
+        m.pending = '';
+      }
       if (m.pending && LOG_SERVICES.indexOf(m.pending) >= 0) list = sync.pending(m.pending, { from: m.from, to: m.to, callsign: m.callsign });
       // Log d'un contest (TRX CW) : seulement les QSO de ce contest
       if (m.contestOnly && m.contest) { const cid = String(m.contest).toUpperCase(); list = list.filter((q) => q.contest_id === cid); }
@@ -3544,7 +3553,7 @@ function onOperator(conn, m) {
       if (m.fmt === 'cabrillo') {
         return send(conn, { t: 'log_export', name: (m.contestOnly && m.contest ? String(m.contest).toUpperCase().replace(/[^A-Z0-9-]/g, '') + '-' : '') + who + '-' + stamp + '.log', mime: 'text/plain', data: LB.toCabrillo(list, { callsign: m.callsign || cfg.digiCall, contest: m.contest, grid: cfg.stationGrid, club: cfg.clubName && /UBA/.test(cfg.clubName) ? 'UBA-LGE' : '', version: VERSION, cat: m.cat && typeof m.cat === 'object' ? m.cat : null, location: m.location }), count: list.length, tag: m.tag === 'cwpage' || m.tag === 'ssbpage' || m.tag === 'rttypage' ? m.tag : undefined });
       }
-      return send(conn, { t: 'log_export', name: (m.contestOnly && m.contest ? String(m.contest).toUpperCase().replace(/[^A-Z0-9-]/g, '') + '-' : m.phoneOnly ? 'SSB-' : modeOnly ? modeOnly + '-' : '') + who + (conn.user.admin && m.operator ? '-OP' + String(m.operator).toUpperCase().replace(/[^A-Z0-9]/g, '') : '') + '-' + stamp + (m.pending ? '-' + m.pending : '') + '.adi', mime: 'text/plain', data: LB.toAdif(list, 'RemoteStation', VERSION), count: list.length,
+      return send(conn, { t: 'log_export', name: (m.view ? 'VUE-' : '') + (m.contestOnly && m.contest ? String(m.contest).toUpperCase().replace(/[^A-Z0-9-]/g, '') + '-' : m.phoneOnly ? 'SSB-' : modeOnly ? modeOnly + '-' : '') + who + (conn.user.admin && m.operator ? '-OP' + String(m.operator).toUpperCase().replace(/[^A-Z0-9]/g, '') : '') + '-' + stamp + (m.pending ? '-' + m.pending : '') + '.adi', mime: 'text/plain', data: LB.toAdif(list, 'RemoteStation', VERSION), count: list.length,
         pending: m.pending || '', ids: m.pending ? list.map((q) => q.id) : undefined, tag: m.tag === 'cwpage' || m.tag === 'ssbpage' || m.tag === 'rttypage' ? m.tag : undefined });
     }
     case 'log_cfg_get':

@@ -963,6 +963,8 @@ En **FT8 · FT4 · FT2**, à la fin de la séquence, une petite fenêtre « **QS
 | Menu Exporter ▾ | Ce qu'il fait |
 |---|---|
 | **Mes QSO (.adi)** | Télécharge tout de suite les QSO faits sous **votre** indicatif (TX call), à importer dans votre propre logiciel de carnet. |
+| **Vue affichée (.adi)** | Télécharge exactement les QSO de la liste : le **TX call** choisi dans l'encadré jaune `TX CALL` de la barre (à droite de la recherche), le texte de la recherche et les filtres de colonne (▾ sous les titres). C'est tout le carnet qui est filtré, pas seulement les 300 lignes affichées. Exemple : TX CALL = OR0L, colonne Contest = UBA-DX, puis Vue affichée. Un membre ne reçoit que ses propres QSO parmi eux. |
+| **Vue affichée (Cabrillo)…** | La même sélection en Cabrillo 3 : choisissez d'abord un TX call (un seul indicatif par fichier), puis tapez l'identifiant du concours. |
 | **ADIF (.adi)…** | Fenêtre de choix : TX call et plage de dates, puis téléchargement d'un fichier ADIF 3. Un membre exporte ses QSO (sous son indicatif, ou ceux qu'il a faits lui-même sous ON5VL / OR0L : « mes QSO sous cet indicatif ») ; les administrateurs exportent tous les TX call. |
 | **Cabrillo (.log)…** | Même choix, plus le nom du concours : fichier Cabrillo 3 à envoyer aux organisateurs d'un concours. |
 
