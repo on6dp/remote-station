@@ -43,6 +43,7 @@
    - [14.3 Exporter](#l-export)
    - [14.4 Synchronisation (LoTW, eQSL, Club Log, QRZ)](#l-sync)
    - [14.5 Configuration](#l-config)
+   - [14.6 Réseau : log commun et contests à plusieurs stations](#l-net)
 - [15. Raccourcis clavier](#clavier)
 - [16. Problèmes fréquents](#problemes)
 - [17. Pour les administrateurs](#admin)
@@ -1012,6 +1013,32 @@ Menu **Synchronisation ▾** : il envoie les QSO du carnet vers les sites de con
 | QRZ.com | Une clé API du carnet QRZ par indicatif (QRZ → Logbook → Settings), abonnement XML ou supérieur. |
 | LoTW | **TQSL** et le **certificat** de l'indicatif installés sur le PC où tourne le serveur, le nom du « Station Location » de TQSL, et l'identifiant du site LoTW pour les confirmations. Le certificat et son mot de passe ne quittent jamais ce PC. |
 | UDP | Adresse, port et format attendus par le logiciel : WSJT-X « Logged ADIF » (Swisslog, Log4OM, HRD Logbook ; port 2237 en général), N1MM (port 12060), ou ADIF brut. Les paquets partent du serveur : 127.0.0.1 si le serveur tourne sur le PC du club. |
+
+<a id="l-net"></a>
+### 14.6 Réseau : log commun et contests à plusieurs stations
+
+À la manière de N1MM, plusieurs stations — chacune avec **son TRX et son propre serveur Remote Station** (installateur Windows, case « Serveur Remote Station », sur un PC à côté du TRX) — partagent **un seul log** et **une seule série de numéros de série** de contest. Chaque opérateur garde la main sur **son** TRX : toutes les stations émettent en même temps. **remote.op0p.be** est le **maître** (il tient le log commun et donne les numéros) ; **secours.op0p.be** (un second VPS, sans TRX) garde une copie complète et prend le relais si le maître tombe. Pas de VPN : les stations se connectent au maître en HTTPS (port 443), rien à ouvrir chez elles, même derrière un CGNAT (Starlink…).
+
+| Réglage (Logbooks → Synchronisation ▾ → 🌐 Réseau, administrateurs) | Ce qu'il fait |
+|---|---|
+| **Mode** | **Hors réseau** (par défaut) : la station travaille seule. **Poste** : relié au maître (log commun, numéros du maître). **Maître** : remote.op0p.be et secours.op0p.be. |
+| **Nom** | Nom de ce serveur dans le réseau : REMOTE, SECOURS, ON4LUC-1… |
+| **Adresse de ce serveur** | Maîtres seulement : remote.op0p.be, secours.op0p.be. |
+| **Maîtres** | Par ordre de priorité, un par ligne, **la même liste partout** : remote.op0p.be puis secours.op0p.be. |
+| **Clé du réseau** | 16 caractères au moins, la même partout ; jamais affichée ni envoyée (vérifiée par calcul des deux côtés). À transmettre aux stations par un moyen sûr. |
+| **Envoyer aussi les QSO depuis le** | Poste qui rejoint le réseau : ses QSO déjà faits ne partent pas, sauf ceux depuis cette date (par exemple si l'activation a été oubliée au début d'un contest). |
+
+**État** (bas de l'écran) : maître **ACTIF** ou **en attente**, liaisons ouvertes (serveur, depuis, dernier message, QSO reçus / envoyés, changements en retard : 0 = à jour) et derniers événements. Les chiffres « reçus / envoyés » comptent aussi les corrections et suppressions, et chaque serveur renvoie ce qu'il reçoit (l'autre l'ignore) : ce n'est pas un doublon. Évitez de cliquer sur Enregistrer sur le maître pendant un contest : il se remet 40 s en attente.
+
+**Reprise automatique** : si remote.op0p.be ne répond plus depuis 30 s, secours.op0p.be devient **ACTIF** et les stations s'y rebranchent toutes seules ; au retour de remote.op0p.be, le secours lui renvoie les QSO faits entre-temps puis lui rend la main, et les stations reviennent. Sans aucun maître joignable, une station continue seule : ses numéros de série sont alors **provisoires** (message orange « N° PROVISOIRE ») — à vérifier après le contest.
+
+**Contest à plusieurs stations** :
+
+1. **Avant** : même version partout ; chaque station en mode **Poste**, « relié à REMOTE (actif) » ; le **même TX CALL** partout (ex. OR0L) ; le **même contest** choisi dans la page RTTY, CW ou SSB ; la série remise à 1 **une seule fois**, depuis une seule station (vaut pour toutes) ; envoi automatique vers LoTW / Club Log / QRZ / eQSL coupé si on n'en veut pas en direct (⚙ Configuration → onglets CLUBLOG, eQSL, LoTW, QRZ → décocher « Télécharger automatiquement… », sur chaque serveur).
+2. **Pendant** : chacun trafique sur son TRX ; les numéros viennent du maître (jamais deux fois le même) ; chaque QSO part tout de suite au maître puis vers toutes les stations : le log du contest de chaque station montre les QSO de toutes (points, multiplicateurs, doublons communs).
+3. **Après** : écran Réseau du maître, toutes les stations à 0 en retard ; Cabrillo depuis le carnet en grand de remote.op0p.be (TX CALL = OR0L, filtre de la colonne Contest, Exporter ▾ → Vue affichée (Cabrillo)) ; envois LoTW / Club Log en lot (Synchronisation ▾), puis envoi automatique recoché.
+
+L'envoi automatique vers les logs en ligne ne part que du serveur où le QSO a été loggé : les QSO copiés depuis une autre station ne sont pas renvoyés.
 
 <a id="clavier"></a>
 ## 15. Raccourcis clavier

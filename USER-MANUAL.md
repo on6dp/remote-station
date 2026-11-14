@@ -43,6 +43,7 @@
    - [14.3 Exporting](#l-export)
    - [14.4 Synchronisation (LoTW, eQSL, Club Log, QRZ)](#l-sync)
    - [14.5 Configuration](#l-config)
+   - [14.6 Network: shared log and multi-station contests](#l-net)
 - [15. Keyboard shortcuts](#clavier)
 - [16. Common problems](#problemes)
 - [17. For administrators](#admin)
@@ -999,6 +1000,32 @@ In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé*
 | QRZ.com | One QRZ logbook API key per callsign (QRZ → Logbook → Settings), XML subscription or higher. |
 | LoTW | **TQSL** and the callsign's **certificate** installed on the PC running the server, the TQSL "Station Location" name, and the LoTW website login for confirmations. The certificate and its password never leave that PC. |
 | UDP | Address, port and format expected by the program: WSJT-X "Logged ADIF" (Swisslog, Log4OM, HRD Logbook; usually port 2237), N1MM (port 12060), or raw ADIF. Packets are sent by the server: 127.0.0.1 if the server runs on the club PC. |
+
+<a id="l-net"></a>
+### 14.6 Network: shared log and multi-station contests
+
+In the way of N1MM, several stations — each with **its TRX and its own Remote Station server** (Windows installer, « Serveur Remote Station » box, on a PC next to the TRX) — share **one log** and **one series of contest serial numbers**. Each operator keeps control of **their** TRX: all stations transmit at the same time. **remote.op0p.be** is the **master** (it keeps the shared log and gives the numbers); **secours.op0p.be** (a second VPS, no TRX) keeps a complete copy and takes over if the master fails. No VPN: stations connect to the master over HTTPS (port 443), nothing to open at home, even behind a CGNAT (Starlink…).
+
+| Setting (Logbooks → Synchronisation ▾ → 🌐 Réseau, administrators) | What it does |
+|---|---|
+| **Mode** | **Hors réseau** (default): the station works alone. **Poste**: linked to the master (shared log, master's numbers). **Maître**: remote.op0p.be and secours.op0p.be. |
+| **Name** | Name of this server in the network: REMOTE, SECOURS, ON4LUC-1… |
+| **Address of this server** | Masters only: remote.op0p.be, secours.op0p.be. |
+| **Masters** | By priority, one per line, **the same list everywhere**: remote.op0p.be then secours.op0p.be. |
+| **Network key** | At least 16 characters, the same everywhere; never shown nor sent (checked by computation on both sides). Give it to the stations by a safe means. |
+| **Also send the QSOs since** | A station joining the network: its QSOs already made are not sent, except those since this date (e.g. if activation was forgotten at the start of a contest). |
+
+**State** (bottom of the screen): master **ACTIF** (active) or **en attente** (waiting), open links (server, since, last message, QSOs received / sent, backlog: 0 = up to date) and latest events. The « received / sent » figures also count corrections and deletions, and each server sends back what it receives (the other ignores it): it is not a duplicate. Avoid clicking Save on the master during a contest: it goes back to waiting for 40 s.
+
+**Automatic takeover**: if remote.op0p.be has not answered for 30 s, secours.op0p.be becomes **ACTIF** and the stations reconnect to it by themselves; when remote.op0p.be returns, the backup sends it the QSOs made meanwhile, then hands back, and the stations come back. With no master reachable, a station carries on alone: its serial numbers are then **provisional** (orange « N° PROVISOIRE » message) — to check after the contest.
+
+**Multi-station contest**:
+
+1. **Before**: same version everywhere; each station in **Poste** mode, « relié à REMOTE (actif) »; the **same TX CALL** everywhere (e.g. OR0L); the **same contest** chosen in the RTTY, CW or SSB page; the series reset to 1 **once**, from one station only (applies to all); automatic upload to LoTW / Club Log / QRZ / eQSL turned off if you don't want live uploads (⚙ Configuration → CLUBLOG, eQSL, LoTW, QRZ tabs → untick « Télécharger automatiquement… », on each server).
+2. **During**: everyone operates on their TRX; numbers come from the master (never the same twice); each QSO goes at once to the master then to all stations: each station's contest log shows the QSOs of all (shared points, multipliers, dupes).
+3. **After**: master's Network screen, all stations at 0 backlog; Cabrillo from the large logbook of remote.op0p.be (TX CALL = OR0L, Contest column filter, Exporter ▾ → Vue affichée (Cabrillo)); LoTW / Club Log uploads in batch (Synchronisation ▾), then automatic upload ticked again.
+
+Automatic upload to online logs only leaves from the server where the QSO was logged: QSOs copied from another station are not sent again.
 
 <a id="clavier"></a>
 ## 15. Keyboard shortcuts

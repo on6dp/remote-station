@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.1** — Réseau : liste des stations reliées au maître (nombre, version, dernier QSO de chacune), messages d'état corrigés pour le maître prioritaire ; manuel section 14.6 (réseau, contests à plusieurs stations, reprise automatique) et guide administrateur (installation du secours, test de reprise).
 - **0.42.0** — Mise en réseau (log commun façon N1MM) : écran 🌐 Réseau (Logbooks → Synchronisation), modes hors réseau / poste / maître, clé du réseau, copie complète du log sur chaque serveur, numéros de série RTTY / CW / SSB donnés par le maître actif, maître de secours automatique (30 s) et retour au maître prioritaire.
 - **0.41.1** — Numéros de série de contest tenus par le serveur (base SQLite) pour les pages RTTY, CW et SSB : une seule série par contest et TX call, jamais le même numéro dans deux navigateurs, pas de trou pour un QSO abandonné, remise à 1 pour tous.
 - **0.41.0** — Carnet de trafic en base SQLite (logbook.db, intégrée à Node.js) : reprise automatique de logbook.json avec vérification, chaque QSO écrit seul (≈ 10 ms à 100 000 QSO), copie logbook.json quotidienne, sauvegardes cohérentes ; tables préparées pour la mise en réseau (poste, versions, journal des changements, numéros de série réservés).

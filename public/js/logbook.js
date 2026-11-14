@@ -949,16 +949,20 @@
       f.key.placeholder = st.hasKey ? '(inchangée : ' + st.keyLen + ' caractères)' : 'à choisir';
       d.querySelectorAll('[data-m]').forEach((x) => { x.hidden = f.mode.value !== 'master'; });
       d.querySelector('[data-first]').hidden = st.mode !== 'off';
+      if (st.mode === 'off') f.mode.addEventListener('change', () => { d.querySelector('[data-first]').hidden = f.mode.value !== 'node'; }); // seulement pour un poste qui rejoint le réseau
     }
     if (m.err) d.querySelector('#lgNetErr').textContent = '✗ ' + m.err;
     else if (m.ok) { d.querySelector('#lgNetErr').textContent = '✓ Enregistré'; f.key.placeholder = st.hasKey ? '(inchangée : ' + st.keyLen + ' caractères)' : 'à choisir'; }
     const ago = (t) => (t ? Math.max(0, Math.round((Date.now() - t) / 1000)) + ' s' : '—');
     const role = st.mode === 'off' ? 'Hors réseau : cette station travaille seule.'
-      : st.mode === 'master' ? (st.prio < 0 ? '⚠ Cette adresse n’est pas dans la liste des maîtres.' : (st.prio === 0 ? 'Maître prioritaire' : 'Maître de secours n° ' + st.prio) + ' — ' + (st.active ? '<b class="ok">ACTIF</b> (donne les numéros de série)' : '<b class="wait">en attente</b>'))
+      : st.mode === 'master' ? (st.prio < 0 ? '⚠ Cette adresse n’est pas dans la liste des maîtres.' : (st.prio === 0 ? 'Maître prioritaire' : 'Maître de secours n° ' + st.prio) + ' — ' + (st.active ? '<b class="ok">ACTIF</b> (donne les numéros de série)' : '<b class="wait">en attente</b>' + (st.prio === 0 ? ' (reprise des données du secours, 40 s au plus)' : ' (le maître prioritaire est actif)')))
       : 'Poste — ' + (st.out && st.out.ready ? 'relié à <b>' + esc(st.out.name) + '</b>' + (st.out.active ? ' (actif)' : ' (en attente)') : '<b class="wait">pas de liaison avec un maître</b> (numéros provisoires)');
-    const rows = (st.peers || []).map((p) => '<tr><td>' + esc(p.name) + (p.master ? ' (maître)' : '') + '</td><td>' + (p.dir === 'in' ? 'entrante' : 'sortante') + '</td><td>' + ago(p.since) + '</td><td>' + ago(p.lastIn) + '</td><td>' + p.inQ + ' / ' + p.outQ + '</td><td>' + p.behind + '</td></tr>').join('');
+    const lq = (x) => (x ? esc(x.call) + ' · ' + esc(x.band) + ' ' + esc(x.mode) + ' · ' + esc(String(x.t).slice(6, 8) + '/' + String(x.t).slice(4, 6) + ' ' + String(x.t).slice(8, 10) + ':' + String(x.t).slice(10, 12)) + ' UTC' + (x.by ? ' · ' + esc(x.by) : '') : '—');
+    const rows = (st.peers || []).map((p) => '<tr><td><b>' + esc(p.name) + '</b>' + (p.master ? ' (maître)' : '') + (p.v ? '<br><small>v' + esc(p.v) + '</small>' : '') + '</td><td>' + (p.dir === 'in' ? 'entrante' : 'sortante') + '</td><td>' + ago(p.since) + '</td><td>' + ago(p.lastIn) + '</td><td>' + p.inQ + ' / ' + p.outQ + '</td><td>' + p.behind + '</td><td>' + lq(p.lastQso) + '</td></tr>').join('');
+    const nSt = (st.peers || []).filter((p) => !p.master).length;
     d.querySelector('#lgNetSt').innerHTML = '<p><b>État :</b> ' + role + '</p>' +
-      (rows ? '<table class="lg-nettab"><tr><th>Serveur</th><th>Liaison</th><th>Depuis</th><th>Dernier reçu</th><th>QSO reçus / envoyés</th><th>Changements en retard</th></tr>' + rows + '</table>' : (st.mode !== 'off' ? '<p>Aucune liaison ouverte.</p>' : '')) +
+      (st.mode === 'master' ? '<p><b>' + nSt + '</b> station' + (nSt > 1 ? 's' : '') + ' reliée' + (nSt > 1 ? 's' : '') + ' à ce maître.</p>' : '') +
+      (rows ? '<table class="lg-nettab"><tr><th>Serveur (version)</th><th>Liaison</th><th>Depuis</th><th>Dernier message</th><th>QSO reçus / envoyés</th><th>Changements en retard</th><th>Dernier QSO reçu de lui</th></tr>' + rows + '</table>' : (st.mode !== 'off' ? '<p>Aucune liaison ouverte.</p>' : '')) +
       ((st.events || []).length ? '<details><summary>Derniers événements</summary><ul>' + st.events.map((e) => '<li>' + new Date(e.t).toLocaleTimeString('fr-BE') + ' — ' + esc(e.msg) + '</li>').join('') + '</ul></details>' : '');
   }
   function mkDlg(cls, html) {
