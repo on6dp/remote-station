@@ -765,6 +765,8 @@ Le WSPR sert à étudier la propagation : des balises de faible puissance émett
 - Les balises WSPR occupent seulement **200 Hz** de la bande audio, de **1400 à 1600 Hz** (rappel en haut de l'onglet) : la fréquence de la liste (ex. 14,0956 MHz) est celle du VFO en USB / DATA-U.
 - Le bouton `↺` ramène le VFO A sur la fréquence WSPR choisie ; `Effacer` vide la liste ; le nombre de stations entendues s'affiche dans le titre.
 - L'horloge indique l'heure UTC du serveur : chaque période de 2 minutes commence aux minutes paires.
+- **Page TRX WSPR (fenêtre séparée)** : en haut, les **deux écrans VFO** du dashboard, comme sur la page RTTY, avec la ligne `SPLIT`, `A ⇄ B`, `A → B`, `DUAL RX` et `🎧 STÉRÉO`. Sur cette ligne, à gauche la **fréquence WSPR du VFO A** et son `↺`, à droite celle du **VFO B** et son `↺` : le VFO B y va tout de suite, en DATA-U (USB-D…). Chaque liste suit la bande de son VFO quand on change de bande sur le TRX.
+- **Deux bandes à la fois** (TRX à deux récepteurs, FTDX101D / MP) : mettez le VFO A sur une bande WSPR (ex. 20 m) et le VFO B sur une autre (ex. 40 m), puis `DUAL RX ON`. Une deuxième cascade (VFO-B · SUB) et une deuxième liste **VFO-B · Stations WSPR entendues** s'affichent à droite, avec leur propre bouton Effacer, ainsi que la carte de bande du VFO B. Sur un TRX à un seul récepteur, seule la bande du VFO A est décodée.
 
 <a id="jtty"></a>
 ### 12.5 JTTY

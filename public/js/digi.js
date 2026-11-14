@@ -766,6 +766,20 @@
               '<select id="rtZoomB" aria-label="Zoom de la cascade du VFO B" title="Zoom (le même pour les deux cascades)">' + ga.querySelector('#rtZoom').innerHTML + '</select>';
             ca.prepend(ga);
             cb.prepend(gb);
+            ga.dataset.p = gb.dataset.p = 'rtty';
+            // Page WSPR : le même bloc des VFO (déplacé en haut de l'onglet affiché) ; fréquence WSPR et ↺ de chaque VFO
+            const wp = panel.querySelector('.ctab-pane[data-pane="wspr"]');
+            if (wp && $('wsDial')) {
+              const wa = document.createElement('div'), wb = document.createElement('div');
+              wa.className = wb.className = 'rt-vfoctl';
+              wa.dataset.p = wb.dataset.p = 'wspr';
+              wa.hidden = wb.hidden = true;
+              for (const id of ['wsDial', 'wsQsy']) { const x = wp.querySelector('#' + id); if (x) wa.appendChild(x); }
+              wb.innerHTML = '<select id="wsDialB" aria-label="Fréquence WSPR du VFO B" title="Fréquence WSPR du VFO B : le VFO B y va tout de suite (DATA-U). Avec DUAL RX, ses stations entendues s’affichent à droite"></select>' +
+                '<button class="btn dg-back" type="button" id="wsQsyB" title="Remettre le VFO B sur cette fréquence WSPR (en DATA-U)" aria-label="Remettre le VFO B sur cette fréquence WSPR">↺</button>';
+              ca.prepend(wa);
+              cb.prepend(wb);
+            }
           }
         }
       }
@@ -971,6 +985,13 @@
     const syb = document.querySelector('#centerPanel .ctab[data-tab="sync"]');
     if (syb) syb.hidden = ['rtty', 'jtty', 'cw', 'sstv'].indexOf(t) >= 0 || (POPUP && !EMBED && pane === 'ftx'); // FT : SYNCHRO dans la barre de chaque VFO
     document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== pane; });
+    // Bloc des deux VFO (fenêtre séparée) : en haut de la page RTTY ou WSPR, avec les champs de ce mode sur la ligne SPLIT
+    { const vb = $('rtVfo'), pe = document.querySelector('#centerPanel .ctab-pane[data-pane="' + pane + '"]');
+      if (vb && pe && (pane === 'rtty' || pane === 'wspr')) {
+        if (vb.parentElement !== pe) pe.prepend(vb);
+        vb.querySelectorAll('.rt-vfoctl[data-p]').forEach((g) => { g.hidden = g.dataset.p !== pane; });
+        vb.classList.toggle('ws-vfo', pane === 'wspr');
+      } }
     bmShow();
     // RTTY : l'aide de la cascade s'affiche 3 secondes à l'arrivée sur l'onglet, puis s'efface (reste au survol de la cascade)
     if (pane === 'rtty' && $('rtTip')) {
@@ -3522,6 +3543,43 @@
     $('wsQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
     $('wsClear').addEventListener('click', () => { wsHist.length = 0; wsRedraw(); $('wsCount').textContent = ''; });
     $('wsClearB').addEventListener('click', () => { wsHistB.length = 0; wsRedraw(); $('wsCountB').textContent = ''; });
+    // Les listes suivent la bande de chaque VFO (changement de bande sur le TRX, A ⇄ B…) : fréquence WSPR la plus proche
+    const near = (f) => { if (!f) return null; const n = WSPR_DIAL.reduce((a, x) => (!a || Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a), null); return n && Math.abs(n[1] * 1000 - f) < 500000 ? n : null; };
+    const follow = (sel, key, fq, sk) => {
+      if (!sel || sel.ownerDocument.activeElement === sel) return;
+      const st = api && api.state(), f = st && st.radio && st.radio[fq];
+      const k = f ? String(Math.round(f / 1e5)) : '';
+      if (!f || sel.dataset.k === k) return;
+      sel.dataset.k = k;
+      const n = near(f);
+      if (n && sel.value !== String(n[1])) { sel.value = String(n[1]); store.set(sk, sel.value); }
+    };
+    const db = $('wsDialB');
+    if (db) {
+      for (const o of dial.options) db.appendChild(o.cloneNode(true));
+      db.value = store.get('wsdialb', '7038.6');
+      const qsyBw = () => {
+        if (!api) return;
+        if (!api.iControl()) { db.dataset.k = ''; follow(db, 'b', 'freqB', 'wsdialb'); return api.say('Prenez la main pour changer la fréquence du VFO-B.', 'warn'); }
+        const st = api.state();
+        if (st && st.ptt && st.ptt.active) return api.say('Réglage bloqué pendant l’émission.', 'warn');
+        const khz = Number(db.value);
+        if (!khz) return;
+        store.set('wsdialb', String(khz));
+        api.setFreq(Math.round(khz * 1000), 'B', true);
+        const R = api.rig();
+        const mk = (R.MODE_KEYS || []).find((x) => DATA_RE.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
+        if (mk) {
+          const want = (n) => { const r = api.state() && api.state().radio; if (n && r && r.modeB === mk[1]) return; api.send({ t: 'set', mode: mk[0], sub: true }); if (n < 2) setTimeout(() => want(n + 1), 1200); };
+          setTimeout(() => want(0), 30);
+        }
+        const r = st && st.radio;
+        if (r && r.dualRx !== 1 && api.rig().DUAL_AUDIO) api.say('VFO-B sur ' + db.options[db.selectedIndex].textContent + ' : mettez DUAL RX en marche pour décoder aussi cette bande.', '', 5000);
+      };
+      db.addEventListener('change', qsyBw);
+      $('wsQsyB').addEventListener('click', qsyBw);
+    }
+    setInterval(() => { if (tab !== 'wspr') return; follow(dial, 'a', 'freq', 'wsdial'); follow(db, 'b', 'freqB', 'wsdialb'); }, 700);
   }
   function wsClock() {
     const t = now() / 1000;

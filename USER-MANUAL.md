@@ -755,6 +755,8 @@ WSPR is used to study propagation: low-power beacons transmit their callsign, lo
 - WSPR beacons only use **200 Hz** of the audio band, from **1400 to 1600 Hz** (reminder at the top of the tab): the frequency in the list (e.g. 14.0956 MHz) is the VFO frequency in USB / DATA-U.
 - The `↺` button brings VFO A back to the chosen WSPR frequency; `Effacer` (clear) empties the list; the number of stations heard shows in the title.
 - The clock shows the server UTC time: each 2-minute period starts on even minutes.
+- **TRX WSPR page (separate window)**: at the top, the dashboard's **two VFO displays**, as on the RTTY page, with the line `SPLIT`, `A ⇄ B`, `A → B`, `DUAL RX` and `🎧 STÉRÉO`. On that line, on the left the **WSPR frequency of VFO A** and its `↺`, on the right that of **VFO B** and its `↺`: VFO B goes there at once, in DATA-U (USB-D…). Each list follows its VFO's band when the band is changed on the TRX.
+- **Two bands at once** (TRX with two receivers, FTDX101D / MP): put VFO A on one WSPR band (e.g. 20 m) and VFO B on another (e.g. 40 m), then `DUAL RX ON`. A second waterfall (VFO-B · SUB) and a second list **VFO-B · Stations WSPR entendues** (stations heard) appear on the right, with their own Effacer (clear) button, plus the VFO B band map. On a single-receiver TRX, only the VFO A band is decoded.
 
 <a id="jtty"></a>
 ### 12.5 JTTY

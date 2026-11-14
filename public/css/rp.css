@@ -3310,3 +3310,7 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .rt-decl { color: #fff; font: 800 12.5px Verdana, "DejaVu Sans", "Bitstream Vera Sans", Arial, sans-serif; letter-spacing: .5px; }
 #rtVfo .rt-decw .rt-decsel { margin-left: 0; width: auto; min-width: 0; }
 .rt-decl { display: none !important; } /* liste SINGLE / DUAL / QUAD seule (sens dans l'infobulle) */
+/* Page WSPR : le bloc des deux VFO de la page RTTY (déplacé), sans la liste des décodeurs RTTY */
+.rt-vfoctl[hidden] { display: none !important; }
+.rt-vfo.ws-vfo #rtDecWrap { display: none !important; }
+.rt-vfoctl #wsDial, .rt-vfoctl #wsDialB { min-width: 190px; }
