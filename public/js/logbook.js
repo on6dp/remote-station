@@ -126,6 +126,7 @@
           <hr class="lg-msep">
           <button type="button" role="menuitem" data-a="cfg" title="Réglages des carnets en ligne, de QRZ.com et des ports UDP">⚙ Configuration…</button>
           <button type="button" role="menuitem" data-a="refs" title="Listes IOTA, WWFF, POTA, BOTA, LLOTA, SOTA téléchargées par le serveur : état et mise à jour">Listes de références…</button>
+          <button type="button" role="menuitem" data-a="net" title="Mise en réseau des serveurs Remote Station (à la manière de N1MM) : log commun et numéros de série partagés, maître et maître de secours">🌐 Réseau (log commun)…</button>
         </div>
       </div>
       <div class="lg-menu">
@@ -280,6 +281,7 @@
     }));
     root.querySelector('.lg-mlist [data-a="cfg"]').addEventListener('click', () => { closeMenus(); openCfg(); });
     root.querySelector('.lg-mlist [data-a="refs"]').addEventListener('click', () => { closeMenus(); openRefsDlg(); });
+    root.querySelector('.lg-mlist [data-a="net"]').addEventListener('click', () => { closeMenus(); openNetDlg(); });
     q$('#lgBody').addEventListener('click', (e) => {
       const tr = e.target.closest('tr[data-id]');
       if (tr) startEdit(tr.dataset.id);
@@ -302,7 +304,7 @@
     const canSync = me.admin || myLogCall() !== '';
     q$('[data-m="sync"]').disabled = !canSync;
     q$('[data-m="sync"]').title = canSync ? (me.admin ? '' : 'Vos QSO sous ' + myLogCall() + ' vers VOS logs en ligne (vos propres identifiants)') : 'Réservé aux administrateurs et aux membres qui émettent sous leur propre indicatif';
-    root.querySelectorAll('.lg-mlist [data-a="cfg"], .lg-mlist [data-a="refs"]').forEach((b) => { b.hidden = !me.admin; });
+    root.querySelectorAll('.lg-mlist [data-a="cfg"], .lg-mlist [data-a="refs"], .lg-mlist [data-a="net"]').forEach((b) => { b.hidden = !me.admin; });
     const sep = root.querySelector('.lg-mlist .lg-msep');
     if (sep) sep.hidden = !me.admin;
     const sel = f.station;
@@ -903,6 +905,62 @@
   }
 
   // ------------------------------------------------------------------ fenêtres (dialog)
+  // ---------- 🌐 Réseau : mise en réseau des serveurs (administrateurs)
+  let netDlg = null;
+  function openNetDlg() {
+    if (!me.admin) return say('Réseau : réservé aux administrateurs.', 'warn');
+    const d = mkDlg('lg-net', '<form method="dialog"><h3>🌐 Réseau — log commun et numéros de série</h3><div class="lg-pp">' +
+      '<p class="lg-note">Plusieurs serveurs Remote Station (un par TRX, à des endroits différents) partagent <b>un seul log</b> et <b>une seule série de numéros</b> de contest (RTTY, CW, SSB), comme N1MM. Chaque serveur garde une copie complète du log. Les liaisons partent des postes vers le maître (HTTPS, port 443) : rien à ouvrir chez eux, même derrière un CGNAT.</p>' +
+      '<label>Mode <select name="mode"><option value="off">Hors réseau (station seule)</option><option value="node">Poste (relié au maître)</option><option value="master">Maître (ou maître de secours)</option></select></label>' +
+      '<label>Nom de ce serveur dans le réseau <input name="name" maxlength="24" placeholder="ON4LUC-1"></label>' +
+      '<label data-m>Adresse de ce serveur (maître) <input name="self" maxlength="120" placeholder="remote.op0p.be"></label>' +
+      '<label>Maîtres, par ordre de priorité (un par ligne ; la même liste sur tous les serveurs) <textarea name="masters" rows="3" placeholder="remote.op0p.be&#10;secours.op0p.be"></textarea></label>' +
+      '<label>Clé du réseau (16 caractères au moins, la même partout ; jamais affichée) <input name="key" type="password" autocomplete="new-password" maxlength="200" placeholder="(inchangée)"></label>' +
+      '<label data-first>Envoyer aussi les QSO déjà faits depuis le (facultatif) <input name="since" type="date"></label>' +
+      '<p class="lg-note">Maître de priorité 1 : actif en permanence (après avoir repris les données du secours à son démarrage). Secours : prend le relais si le maître ne répond plus depuis 30 s, et le lui rend à son retour. Postes : continuent seuls si aucun maître ne répond (numéros de série alors <b>provisoires</b>, signalés en orange).</p>' +
+      '<div class="lg-netst" id="lgNetSt">…</div>' +
+      '</div><div class="md-act"><span class="lg-neterr" id="lgNetErr"></span><button class="btn" value="cancel">Fermer</button><button class="btn btn-primary" type="button" data-a="save">Enregistrer</button></div></form>');
+    netDlg = d;
+    const f = d.querySelector('form');
+    const upd = () => { d.querySelectorAll('[data-m]').forEach((x) => { x.hidden = f.mode.value !== 'master'; }); };
+    f.mode.addEventListener('change', upd);
+    d.querySelector('[data-a="save"]').addEventListener('click', () => {
+      d.querySelector('#lgNetErr').textContent = '';
+      api.send({ t: 'log_net_set', cfg: { mode: f.mode.value, name: f.name.value.trim(), self: f.self.value.trim(), masters: f.masters.value, key: f.key.value, since: f.since.value } });
+      f.key.value = '';
+    });
+    d.dataset.filled = '';
+    api.send({ t: 'log_net_get' });
+    const iv = setInterval(() => { if (!d.isConnected) return clearInterval(iv); api.send({ t: 'log_net_get' }); }, 3000);
+    d.addEventListener('close', () => { clearInterval(iv); netDlg = null; });
+    upd();
+  }
+  function netShow(m) {
+    const d = netDlg;
+    if (!d || !d.isConnected) return;
+    const st = m.st || {};
+    const f = d.querySelector('form');
+    if (!d.dataset.filled) {
+      d.dataset.filled = '1';
+      f.mode.value = st.mode || 'off';
+      f.name.value = st.name || '';
+      f.self.value = st.self || '';
+      f.masters.value = (st.masters || []).join('\n');
+      f.key.placeholder = st.hasKey ? '(inchangée : ' + st.keyLen + ' caractères)' : 'à choisir';
+      d.querySelectorAll('[data-m]').forEach((x) => { x.hidden = f.mode.value !== 'master'; });
+      d.querySelector('[data-first]').hidden = st.mode !== 'off';
+    }
+    if (m.err) d.querySelector('#lgNetErr').textContent = '✗ ' + m.err;
+    else if (m.ok) { d.querySelector('#lgNetErr').textContent = '✓ Enregistré'; f.key.placeholder = st.hasKey ? '(inchangée : ' + st.keyLen + ' caractères)' : 'à choisir'; }
+    const ago = (t) => (t ? Math.max(0, Math.round((Date.now() - t) / 1000)) + ' s' : '—');
+    const role = st.mode === 'off' ? 'Hors réseau : cette station travaille seule.'
+      : st.mode === 'master' ? (st.prio < 0 ? '⚠ Cette adresse n’est pas dans la liste des maîtres.' : (st.prio === 0 ? 'Maître prioritaire' : 'Maître de secours n° ' + st.prio) + ' — ' + (st.active ? '<b class="ok">ACTIF</b> (donne les numéros de série)' : '<b class="wait">en attente</b>'))
+      : 'Poste — ' + (st.out && st.out.ready ? 'relié à <b>' + esc(st.out.name) + '</b>' + (st.out.active ? ' (actif)' : ' (en attente)') : '<b class="wait">pas de liaison avec un maître</b> (numéros provisoires)');
+    const rows = (st.peers || []).map((p) => '<tr><td>' + esc(p.name) + (p.master ? ' (maître)' : '') + '</td><td>' + (p.dir === 'in' ? 'entrante' : 'sortante') + '</td><td>' + ago(p.since) + '</td><td>' + ago(p.lastIn) + '</td><td>' + p.inQ + ' / ' + p.outQ + '</td><td>' + p.behind + '</td></tr>').join('');
+    d.querySelector('#lgNetSt').innerHTML = '<p><b>État :</b> ' + role + '</p>' +
+      (rows ? '<table class="lg-nettab"><tr><th>Serveur</th><th>Liaison</th><th>Depuis</th><th>Dernier reçu</th><th>QSO reçus / envoyés</th><th>Changements en retard</th></tr>' + rows + '</table>' : (st.mode !== 'off' ? '<p>Aucune liaison ouverte.</p>' : '')) +
+      ((st.events || []).length ? '<details><summary>Derniers événements</summary><ul>' + st.events.map((e) => '<li>' + new Date(e.t).toLocaleTimeString('fr-BE') + ' — ' + esc(e.msg) + '</li>').join('') + '</ul></details>' : '');
+  }
   function mkDlg(cls, html) {
     const d = document.createElement('dialog');
     d.className = 'macro-dlg lg-dlg ' + cls;
@@ -1433,6 +1491,7 @@
   // ------------------------------------------------------------------ messages du serveur
   function onMessage(m) {
     if (m.t === 'log_stats') { ST.data = m; statsDraw(); return; }
+    if (m.t === 'log_net') { netShow(m); return; }
     if (m.t === 'log_changed' && ST.on && api) setTimeout(() => api.send({ t: 'log_stats', txc: q$('#lgStTx').value, mode: q$('#lgStMode').value }), 300);
     if (/^log_(saved|dupe)$/.test(m.t)) clearTimeout(saveWait);
     // Refus du serveur pendant un enregistrement (droits, données invalides) : affiché sous la fiche

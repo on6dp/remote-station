@@ -94,7 +94,7 @@ fi
 mkdir -p "$APP/logs"
 chown -R "$RUSER:$RUSER" "$APP"
 # Fichiers secrets : lisibles par le service seulement
-for f in config.json users.json sessions.json macros.json profiles.json logs/logbook.json logs/logbook.db logs/logbook-config.json logs/station-sessions.json; do
+for f in config.json users.json sessions.json macros.json profiles.json net.json logs/logbook.json logs/logbook.db logs/logbook-config.json logs/station-sessions.json; do
   [ -f "$APP/$f" ] && chmod 600 "$APP/$f"
 done
 [ -d "$APP/voicemem" ] && chmod 700 "$APP/voicemem" # mémoires vocales des membres

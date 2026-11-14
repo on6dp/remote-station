@@ -72,7 +72,7 @@ donnees() {
   node -e '
     const fs = require("fs"), path = require("path"), app = process.argv[1];
     let c = {}; try { c = JSON.parse(fs.readFileSync(path.join(app, "config.json"), "utf8")); } catch (e) {}
-    const out = new Set(["config.json", "users.json", "sessions.json", "macros.json", "profiles.json", "sstv", c.logDir || "logs"]);
+    const out = new Set(["config.json", "users.json", "sessions.json", "macros.json", "profiles.json", "net.json", "sstv", c.logDir || "logs"]);
     for (const k of ["usersFile", "logbookFile", "logbookConfig"]) if (c[k]) out.add(c[k]);
     try { for (const f of fs.readdirSync(app)) if (/^comptes-.*\.csv$/.test(f)) out.add(f); } catch (e) {}
     for (const f of out) {

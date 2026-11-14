@@ -19,6 +19,8 @@ logbook.db-shm
 logbook.sauvegarde.db
 logbook.db.avant-restauration-*
 logbook-config.json
+net.json
+net.json.tmp
 comptes-*.csv
 station-sessions.json
 logs/*.jsonl

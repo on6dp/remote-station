@@ -472,6 +472,17 @@ Ces deux automatismes n'agissent que si un membre a la main (rien ne change pour
 - **FT8 en double réception** (0.40.7) : passe profonde aussi pour le récepteur SUB, dans son propre processus `wsjtxd` (`wsjDeepB`), jamais en même temps que celle du MAIN (`deepBusy` partagé : celle qui attend part dès que l'autre est finie, tant que la période est dans la mémoire audio).
 - **Manuel** (`/aide`, `/help`) : texte justifié (césure automatique, aligné à gauche sur téléphone) et page élargie à 1500 px (`public/css/manual.css`).
 
+### Mise en réseau (log commun, 0.42.0)
+
+Plusieurs serveurs Remote Station (un par TRX) partagent un log et une série de numéros de série, à la manière de N1MM (`lib/net.js`, réglages dans `net.json`, droits 600, jamais publié, sauvegardé par `backup.sh`).
+
+1. **Choisir une clé du réseau** (16 caractères au moins), la même pour tous ; la donner aux stations par un moyen sûr (jamais par le dépôt GitHub ni un forum).
+2. **remote.op0p.be** : Logbooks → Synchronisation ▾ → 🌐 Réseau → mode **Maître**, nom (ex. REMOTE), adresse `remote.op0p.be`, maîtres `remote.op0p.be` puis `secours.op0p.be`, la clé → Enregistrer.
+3. **secours.op0p.be** (VPS 89.117.57.161 : `install.sh --domaine secours.op0p.be --email … --admin ON6DP`, sans TRX) : même écran, mode **Maître**, nom SECOURS, adresse `secours.op0p.be`, **la même liste de maîtres**, la même clé.
+4. **Chaque station** (serveur local, installateur Windows « Serveur Remote Station ») : mode **Poste**, nom (ex. ON4LUC-1), la même liste de maîtres, la clé. Ses QSO d'avant l'activation ne partent pas, sauf la case « depuis le … ».
+
+Fonctionnement : liaisons WebSocket sur `/ws` (HTTPS 443, nginx inchangé), toujours du poste vers le maître ; authentification HMAC-SHA256 dans les deux sens (la clé ne circule jamais). Chaque serveur garde le log complet (base SQLite) ; à chaque liaison, chacun envoie à l'autre ses changements depuis le dernier reçu (journal `changes`, curseurs `recv:<nom>` dans `meta`) ; la version la plus récente d'un QSO l'emporte (`edited` / `created`), les suppressions laissent une trace (`tombs`). Numéros de série : donnés par le **maître actif** ; ses lignes `serials` sont recopiées partout (colonne `mod`). Maître de priorité 1 : actif quand le secours lui a rendu ses données (ou 40 s après son démarrage) ; secours : actif si aucun maître plus prioritaire ne répond depuis 30 s, rend la main à son retour (`net_moved` : ses postes se rebranchent). Poste sans maître : numéros **provisoires** (série locale, message orange). Journal du service : lignes « Réseau : … ».
+
 ### Logs en ligne par indicatif
 
 - Chaque indicatif a **ses propres identifiants** (eQSL, Club Log, clé API QRZ, lieu de station TQSL et identifiant du site LoTW), gardés dans `logs/logbook-config.json` (droits 600), jamais renvoyés aux navigateurs.

@@ -98,7 +98,7 @@ fi
 mkdir -p "$DST/logs"
 chown -R "$RUSER:$RUSER" "$DST"
 [ -L "$DST/tts" ] && chown -h "$RUSER:$RUSER" "$DST/tts" || true
-for f in config.json users.json sessions.json macros.json profiles.json logs/logbook.json logs/logbook.db logs/logbook-config.json logs/station-sessions.json; do
+for f in config.json users.json sessions.json macros.json profiles.json net.json logs/logbook.json logs/logbook.db logs/logbook-config.json logs/station-sessions.json; do
   [ -f "$DST/$f" ] && chmod 600 "$DST/$f"
 done
 PORT="$(node -p 'try { require(process.argv[1]).port || 9001 } catch (e) { 9001 }' "$DST/config.json")"

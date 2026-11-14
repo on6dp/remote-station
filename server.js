@@ -638,6 +638,13 @@ const book = new LB.Logbook(cfg.logbookFile ? path.resolve(ROOT, cfg.logbookFile
 { const bi = book.info(); console.log('Carnet de trafic : ' + bi.qsos + ' QSO, ' + (bi.engine === 'sqlite' ? 'base SQLite ' + bi.file : 'fichier ' + bi.file)); }
 // Base SQLite : copie lisible logbook.json au démarrage puis chaque jour (secours si SQLite manquait un jour)
 if (book.engine === 'sqlite') { setTimeout(() => book.exportJson(), 60000).unref(); setInterval(() => book.exportJson(), 24 * 3600 * 1000).unref(); }
+// Mise en réseau (lib/net.js) : log commun et numéros de série partagés entre serveurs ; réglages dans net.json (jamais publié)
+const NET = new (require('./lib/net.js').Net)({ book, file: cfg.netFile ? path.resolve(ROOT, cfg.netFile) : path.join(ROOT, 'net.json'), version: VERSION });
+NET.on('applied', (x) => {
+  // QSO reçus d'un autre serveur : carnets, listes « déjà contacté » et pages RTTY / SSB / CW mis à jour
+  if (x.n) { for (const c of ops) send(c, { t: 'log_changed' }); setTimeout(() => sendWorked(false), 0); }
+});
+setTimeout(() => NET.start(), 2000);
 const refs = new REFDATA.RefData(path.join(ROOT, 'refdata'), (msg) => console.error(msg));
 // Super Check Partial (indicatifs actifs en contest) : page TRX SSB, indicatifs probables
 const SCP = new (require('./lib/scp').Scp)(path.join(ROOT, 'refdata'), (msg) => console.log(msg));
@@ -3369,6 +3376,15 @@ function onOperator(conn, m) {
       if (!conn.user.admin) return;
       refs.refresh(true).then(() => send(conn, { t: 'log_refs_status', status: refs.summary() })).catch(() => {});
       return send(conn, { t: 'notice', level: 'info', msg: 'Listes de références : téléchargement relancé (quelques minutes)' });
+    case 'log_net_get':
+      if (!conn.user.admin) return;
+      return send(conn, { t: 'log_net', st: NET.status() });
+    case 'log_net_set':
+      // Écran Réseau (administrateurs) : mode, nom du poste, maîtres, clé (jamais renvoyée aux navigateurs)
+      if (!conn.user.admin) return;
+      try { NET.set(m.cfg || {}); } catch (e) { return send(conn, { t: 'log_net', st: NET.status(), err: e.message }); }
+      journal('net_set', { call: conn.user.call, mode: NET.cfg.mode, name: NET.cfg.name });
+      return send(conn, { t: 'log_net', st: NET.status(), ok: true });
     case 'serial': {
       // Numéros de série de contest tenus par la base (lib/logbook.js serialOp) : deux navigateurs (ou, plus tard, deux
       // postes du réseau) ne reçoivent jamais le même numéro ; « holder » = ce serveur / l'opérateur / son navigateur
@@ -3379,11 +3395,13 @@ function onOperator(conn, m) {
       const op = ['lease', 'used', 'set', 'reset'].indexOf(m.op) >= 0 ? m.op : 'lease';
       if (!contest || !txc || !sid || book.engine !== 'sqlite') return send(conn, { t: 'serial', contest, txc, nr: 0, off: true });
       // Nouvelle édition (série remise à 1 pour tout le monde) : administrateur, ou l'opérateur qui a la main
-      if (op === 'reset' && !conn.user.admin && controller !== conn) return send(conn, Object.assign({ t: 'serial', contest, txc }, book.serialOp('lease', contest, txc, (cfg.nodeName || 'serveur') + '/' + conn.user.call + '/' + sid), { warn: 'Remise à 1 de la série : administrateur, ou l’opérateur qui a la main.' }));
-      let r;
-      try { r = book.serialOp(op, contest, txc, (cfg.nodeName || 'serveur') + '/' + conn.user.call + '/' + sid, Math.round(Number(m.nr)) || 0, String(m.call || '')); } catch (e) { return send(conn, { t: 'notice', level: 'error', msg: 'Numéro de série : ' + e.message }); }
+      if (op === 'reset' && !conn.user.admin && controller !== conn) return send(conn, { t: 'serial', contest, txc, nr: 0, warn: 'Remise à 1 de la série : administrateur, ou l’opérateur qui a la main.' });
+      // Réseau : le maître actif donne le numéro (poste : demandé au maître, provisoire si la liaison manque)
       if (op === 'reset') journal('serial_reset', { call: conn.user.call, contest, txc });
-      return send(conn, Object.assign({ t: 'serial', contest, txc }, r));
+      NET.serial(op, contest, txc, conn.user.call + '/' + sid, Math.round(Number(m.nr)) || 0, String(m.call || ''))
+        .then((r) => send(conn, Object.assign({ t: 'serial', contest, txc }, r)))
+        .catch((e) => send(conn, { t: 'notice', level: 'error', msg: 'Numéro de série : ' + e.message }));
+      return;
     }
     case 'log_stats': {
       // Statistiques DXCC du carnet (fenêtre du carnet en grand), à la manière de Swisslog : pour un TX call, chaque pays
@@ -4438,6 +4456,9 @@ ws.attach(server, {
         return;
       }
       if (!m || typeof m.t !== 'string') return;
+      // Liaison d'un autre serveur Remote Station (mise en réseau) : même chemin /ws que les navigateurs
+      if (conn.isNet) return NET.onConn(conn, m);
+      if (m.t === 'net_hello' && !conn.user && !conn.isStation) { clearTimeout(authTimer); conn.isNet = true; return NET.accept(conn, m); }
       if (conn.isStation) return onStation(conn, m);
       if (conn.user) {
         // Toute action du membre compte comme activité (sauf les pings automatiques)
@@ -4453,6 +4474,7 @@ ws.attach(server, {
 
     conn.on('close', () => {
       clearTimeout(authTimer);
+      if (conn.isNet) return NET.connClosed(conn);
       // Connexion fermée avant toute identification (page Station qui n'arrive pas à s'annoncer, robot…)
       if (!conn.user && !conn.everStation) journal('ws_noauth', { ip: conn.ip, by: conn.closeBy || '?', code: conn.closeCode || null, s: Math.round((Date.now() - conn.openedAt) / 1000) });
       if (conn.isStation && station && station.conn === conn) {

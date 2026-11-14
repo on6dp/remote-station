@@ -3363,3 +3363,11 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .lg-bar .lg-ret { margin-left: 10px; border-color: #fff; color: #fff; }
 .lg-bar .lg-ret:hover { background: #fff; color: #000; }
 .lg-bar .lg-tostat[hidden] { display: none; }
+/* Carnet : écran Réseau (mise en réseau des serveurs) */
+.lg-net textarea { width: 100%; font: inherit; }
+.lg-netst { margin-top: 8px; padding: 8px 10px; border: 1px solid var(--v2-border-dark, #2a3444); border-radius: 6px; font-size: 13px; }
+.lg-netst .ok { color: #3ddc84; } .lg-netst .wait { color: #ffb020; }
+.lg-nettab { border-collapse: collapse; width: 100%; margin: 6px 0; font-size: 12.5px; }
+.lg-nettab th, .lg-nettab td { border: 1px solid rgba(255, 255, 255, .15); padding: 2px 6px; text-align: left; }
+.lg-neterr { margin-right: auto; font-weight: 700; }
+.lg-net textarea, .lg-net input[name="self"], .lg-net input[name="key"] { text-transform: none; }
