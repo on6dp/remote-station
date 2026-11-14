@@ -391,7 +391,7 @@
         <div class="rt-io">
           <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxt" data-ch="0" spellcheck="false" placeholder="Texte à émettre sur le VFO-A, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShow" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx0" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
           <div class="rt-pane"><pre class="rt-rx" id="rtRx"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx0" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
-          <div class="rt-xdec" id="rtDecC" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A3</span><span class="rt-sig" id="rtSigC"></span><span class="rt-xc">centre <b id="rtFC"></b> Hz</span><button class="dg-mini rt-swap" type="button" data-sw="2" data-to="0" title="Échanger A3 et A1 : la station suivie par A3 passe sur A1, prête pour l’émission (son texte reçu la suit)">⇄ A1</button><button class="dg-mini rt-swap" type="button" data-sw="2" data-to="1" title="Échanger A3 et A2 : la station suivie par A3 passe sur A2, prête pour l’émission (son texte reçu la suit)">⇄ A2</button><span class="rt-xhint">Ctrl + clic gauche, ou BARRES : A3</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxC"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx2" title="Effacer cette fenêtre">Effacer</button></div></div>
+          <div class="rt-xdec" id="rtDecC" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A3</span><span class="rt-sig" id="rtSigC"></span><span class="rt-xc">centre <b id="rtFC"></b> Hz</span><button class="dg-mini rt-txsel" type="button" data-ch="2" aria-pressed="false">RX ici</button><span class="rt-xhint">Ctrl + clic gauche, ou BARRES : A3</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxC"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx2" title="Effacer cette fenêtre">Effacer</button></div></div>
         </div>
         <i class="rt-iogrip" data-ch="0" title="Glisser vers le haut ou le bas : hauteur des fenêtres TX / RX de ce VFO seulement (double-clic : taille d’origine)"></i>
       </div>
@@ -430,7 +430,7 @@
         <div class="rt-io">
           <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxtB" data-ch="1" spellcheck="false" placeholder="Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-B : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShowB" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx1" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
           <div class="rt-pane"><pre class="rt-rx" id="rtRxB"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx1" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
-          <div class="rt-xdec" id="rtDecD" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A4</span><span class="rt-sig" id="rtSigD"></span><span class="rt-xc">centre <b id="rtFD"></b> Hz</span><button class="dg-mini rt-swap" type="button" data-sw="3" data-to="0" title="Échanger A4 et A1 : la station suivie par A4 passe sur A1, prête pour l’émission (son texte reçu la suit)">⇄ A1</button><button class="dg-mini rt-swap" type="button" data-sw="3" data-to="1" title="Échanger A4 et A2 : la station suivie par A4 passe sur A2, prête pour l’émission (son texte reçu la suit)">⇄ A2</button><span class="rt-xhint">Ctrl + clic droit, ou BARRES : A4</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxD"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx3" title="Effacer cette fenêtre">Effacer</button></div></div>
+          <div class="rt-xdec" id="rtDecD" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A4</span><span class="rt-sig" id="rtSigD"></span><span class="rt-xc">centre <b id="rtFD"></b> Hz</span><button class="dg-mini rt-txsel" type="button" data-ch="3" aria-pressed="false">RX ici</button><span class="rt-xhint">Ctrl + clic droit, ou BARRES : A4</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxD"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx3" title="Effacer cette fenêtre">Effacer</button></div></div>
         </div>
         <i class="rt-iogrip" data-ch="1" title="Glisser vers le haut ou le bas : hauteur des fenêtres TX / RX de ce VFO seulement (double-clic : taille d’origine)"></i>
       </div>
@@ -1676,9 +1676,10 @@
   store.set('rtsq9', '1');
   const rt = rts[0];
   const RT_SFX = ['', 'B'];
-  let rtTx = store.get('rttx', '0') === '1' ? 1 : 0; // décodeur dont les réglages servent à l'émission
+  let rtTx = [0, 1, 2, 3].indexOf(Number(store.get('rttx', '0'))) >= 0 ? Number(store.get('rttx', '0')) : 0; // décodeur de l'émission (A3 / A4 : QUAD)
   // Fenêtre d'émission (texte à envoyer) du VFO choisi pour l'émission : une par VFO, sous sa fenêtre de réception
-  const rtTxtEl = () => $(rtTx ? 'rtTxtB' : 'rtTxt') || $('rtTxt');
+  const rtSideOf = (ch) => (ch === 1 || ch === 3 ? 1 : 0); // A1, A3 : colonne de gauche ; A2, A4 : colonne de droite
+  const rtTxtEl = () => $(rtSideOf(rtTx) ? 'rtTxtB' : 'rtTxt') || $('rtTxt');
   let rtDialKey = '';
   // ------------------------------------------------------------------ macros (comme FLDIGI : F1 à F12, modifiables)
   // <TX> en tête : la macro part tout de suite à l'émission (comme FLDIGI) ; <RX> : retour en réception (toujours fait en fin de message)
@@ -2935,7 +2936,7 @@
     if ($('rtNameA')) $('rtNameA').textContent = two ? 'VFO-A · A1' : 'VFO-A';
     if (dualEl && dualEl.classList.contains('rt-2dec') !== two && tab === 'rtty') setTimeout(drawScale, 0); // repères A / B ↔ A1 / A2
     if ($('rtTxtB')) $('rtTxtB').placeholder = two ? 'Texte à émettre sur la fréquence de A2 (même VFO), puis F11 TX ou Ctrl+Entrée' : 'Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée';
-    if (dualEl && dualEl.classList.contains('rt-4dec') !== four) { dualEl.classList.toggle('rt-4dec', four); if (!four) rtBSel = Math.min(rtBSel, 1); setTimeout(() => { announce(); if (tab === 'rtty') drawScale(); }, 0); }
+    if (dualEl && dualEl.classList.contains('rt-4dec') !== four) { dualEl.classList.toggle('rt-4dec', four); if (!four) { rtBSel = Math.min(rtBSel, 1); if (rtTx >= 2) { rtTx = rtSideOf(rtTx); store.set('rttx', String(rtTx)); } } setTimeout(() => { announce(); if (tab === 'rtty') drawScale(); }, 0); }
     if ($('rt4Dec')) { $('rt4Dec').hidden = !one; $('rt4Dec').setAttribute('aria-pressed', String(four)); }
     if ($('rtBSel')) { $('rtBSel').hidden = !four; $('rtBSel').querySelectorAll('[data-b]').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.b) === rtBSel))); }
     for (const id of ['rtDecC', 'rtDecD']) if ($(id)) $(id).hidden = !four;
@@ -2960,7 +2961,7 @@
     if (dualEl) dualEl.classList.toggle('rt-2dec', two);
     if (dualEl && dualEl.classList.contains('rt-solo') !== solo) {
       dualEl.classList.toggle('rt-solo', solo);
-      if (solo && rtTx === 1) { rtTx = 0; store.set('rttx', '0'); if (applySpan()) drawScale(); sendView(); dtxState(st && st.ftx); }
+      if (solo && rtTx !== 0) { rtTx = 0; store.set('rttx', '0'); if (applySpan()) drawScale(); sendView(); dtxState(st && st.ftx); }
       for (const id of ['dgMkBM', 'dgMkBS']) if ($(id) && solo) $(id).hidden = true; // repères du décodeur B sur la cascade
       if (tab === 'rtty') setTimeout(() => { sizeCanvas(); drawScale(); if (!solo) showTab(tab); }, 0);
     }
@@ -3003,8 +3004,10 @@
       b.textContent = on ? (txing ? '■ Arrêter' : '▶ TX ici') : 'RX ici';
       b.title = on ? (txing ? 'Arrêter l’émission RTTY en cours (ou Échap)' : 'Émet le texte de la fenêtre TX sur la fréquence de ce décodeur, comme F11 TX. Les macros F1 à F12 partent aussi d’ici.')
         : 'Fenêtre en réception seulement. Clic : elle devient la fenêtre d’émission (▶ TX ici), l’autre passe en RX ici. Un 2e clic émet le texte personnalisé.';
-      b.closest('.rt-side').classList.toggle('rt-istx', on);
     });
+    // Cadre rouge : colonne du décodeur de l'émission (A1 / A3 à gauche, A2 / A4 à droite) ; fenêtre de A3 / A4 surlignée
+    document.querySelectorAll('#rtDual > .rt-side').forEach((sd) => sd.classList.toggle('rt-istx', rtSideOf(rtTx) === Number(sd.dataset.ch)));
+    for (const [id, ch] of [['rtDecC', 2], ['rtDecD', 3]]) if ($(id)) $(id).classList.toggle('rt-xtx', rtTx === ch);
   }
   function setRttyF(f, ch) {
     const r = rts[ch || 0];
@@ -3246,7 +3249,8 @@
     rtDragInit(['rtWfB', 'rtScaleB'], 1);
     // Décodeur de l'émission : bouton TX de son en-tête, ou clic n'importe où dans sa fenêtre (VFO-A / VFO-B)
     const pickTx = (ch) => {
-      ch = ch === 1 ? 1 : 0;
+      ch = [0, 1, 2, 3].indexOf(ch) >= 0 ? ch : 0;
+      if (ch >= 2 && !rtQuad()) ch = 0;
       if (ch === rtTx) return;
       rtTx = ch;
       store.set('rttx', String(rtTx));
@@ -3258,13 +3262,16 @@
     };
     // Bouton de la fenêtre déjà choisie (« ▶ TX ici ») : émet le texte personnalisé (comme « Émettre »), ou arrête l'émission
     document.querySelectorAll('.rt-txsel').forEach((b) => b.addEventListener('click', () => {
-      const ch = Number(b.dataset.ch) === 1 ? 1 : 0;
+      const ch = Number(b.dataset.ch) || 0;
       if (ch !== rtTx) return pickTx(ch);
       dtxClick('RTTY');
       setTimeout(rtHeads, 300);
     }));
     document.querySelectorAll('#rtDual .rt-side').forEach((side) => side.addEventListener('mousedown', (e) => {
       if (e.button !== 0 || e.target.closest('select, input, label, .rt-center, .rt-txsel, #rtClear, #rtClearB, .rt-wfb, .rt-clr')) return;
+      const x = e.target.closest('#rtDecC, #rtDecD, .rt-xhd');
+      if (x) return pickTx((x.id || x.dataset.of) === 'rtDecC' ? 2 : 3); // clic dans la fenêtre (ou le titre) de A3 / A4
+      if (e.target.closest('textarea') && rtSideOf(rtTx) === Number(side.dataset.ch)) return; // ligne de saisie : garde A3 / A4
       pickTx(Number(side.dataset.ch));
     }));
     // Cascade du décodeur B : clic (gauche ou droit) = caler le décodeur B
@@ -3302,26 +3309,6 @@
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
     if ($('rt2Dec')) $('rt2Dec').addEventListener('click', () => { const on = $('rt2Dec').getAttribute('aria-pressed') === 'true'; store.set('rt2dec', on ? '0' : '1'); if (on) store.set('rt4dec', '0'); rtHeads(); });
     if ($('rt2Off')) $('rt2Off').addEventListener('click', (e) => { e.stopPropagation(); store.set('rt2dec', '0'); store.set('rt4dec', '0'); rtHeads(); });
-    // ⇄ A1 / ⇄ A2 (QUAD) : échange des fréquences (et du texte reçu) entre A3 / A4 et A1 / A2, qui devient le décodeur de l'émission
-    document.querySelectorAll('.rt-swap').forEach((b) => b.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const i = Number(b.dataset.sw), j = Number(b.dataset.to);
-      if (!(i === 2 || i === 3) || !(j === 0 || j === 1)) return;
-      const f = rts[j].f; rts[j].f = rts[i].f; rts[i].f = f;
-      const ids = ['rtRx', 'rtRxB', 'rtRxC', 'rtRxD'], a = $(ids[i]), c = $(ids[j]);
-      if (a && c) {
-        const fa = document.createDocumentFragment(), fc = document.createDocumentFragment();
-        while (a.firstChild) fa.appendChild(a.firstChild);
-        while (c.firstChild) fc.appendChild(c.firstChild);
-        a.appendChild(fc); c.appendChild(fa);
-        const t = a._cur; a._cur = c._cur; c._cur = t;
-        a.scrollTop = a.scrollHeight; c.scrollTop = c.scrollHeight;
-      }
-      saveRtty(true);
-      applySpan();
-      drawScale();
-      pickTx(j);
-    }));
     if ($('rt4Dec')) $('rt4Dec').addEventListener('click', () => { store.set('rt4dec', store.get('rt4dec', '0') === '1' ? '0' : '1'); rtHeads(); });
     if ($('rtBSel')) $('rtBSel').querySelectorAll('[data-b]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); rtBSel = Number(b.dataset.b) || 0; rtHeads(); }));
     // Hauteur des fenêtres TX / RX de chaque VFO : sa propre poignée, gardée dans ce navigateur
@@ -3416,7 +3403,7 @@
     $('rtSend').addEventListener('click', () => dtxClick('RTTY'));
     for (const t of ['rtTxt', 'rtTxtB'].map($).filter(Boolean)) {
       t.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); dtxClick('RTTY'); } });
-      t.addEventListener('focus', () => pickTx(Number(t.dataset.ch) === 1 ? 1 : 0)); // écrire dans la fenêtre TX d'un VFO le choisit pour l'émission
+      t.addEventListener('focus', () => { const ch = Number(t.dataset.ch) === 1 ? 1 : 0; if (rtSideOf(rtTx) !== ch) pickTx(ch); }); // écrire dans la ligne de saisie d'une colonne la choisit pour l'émission (A3 / A4 gardés)
     }
     // Fenêtre TX : texte émis affiché barré au fur et à mesure ; un clic (ou Effacer) revient à la saisie
     for (const id of ['rtTxShow', 'rtTxShowB']) { const sh = $(id); if (sh) sh.addEventListener('click', () => { if (rtLive && rtLive.tx && rtLive.tx.box === sh) return; sh.hidden = true; const t = sh.parentElement.querySelector('textarea'); if (t) t.focus(); }); }
@@ -5051,13 +5038,13 @@
       if (note) {
         note.classList.toggle('air', mine && x.state === 'tx');
         note.textContent = mine ? (x.state === 'tx' ? '● En émission ' + mode + ' (' + x.by + ') : « ' + x.text + ' »' : 'Préparation de l’émission ' + mode + '…')
-          : mode === 'RTTY' ? 'Émission RTTY sous ' + myCall + ', réglages du décodeur ' + (rtTx ? 'B' : 'A') + ' (' + Math.round(rts[rtTx].f) + ' Hz) : macro (émission directe) ou texte ci-dessus puis « Émettre » (Ctrl+Entrée).' : 'Émission JTTY sous ' + myCall + ' : macro (émission directe) ou message ci-dessus puis « Émettre » (Entrée).';
+          : mode === 'RTTY' ? 'Émission RTTY sous ' + myCall + ', réglages du décodeur ' + (['A', 'B', 'A3', 'A4'][rtTx]) + ' (' + Math.round(rts[rtTx].f) + ' Hz) : macro (émission directe) ou texte ci-dessus puis « Émettre » (Ctrl+Entrée).' : 'Émission JTTY sous ' + myCall + ' : macro (émission directe) ou message ci-dessus puis « Émettre » (Entrée).';
       }
     }
     // Émission partie : le texte envoyé quitte la zone d'écriture et s'affiche dans la réception
     if (dtxPend && x && x.mode === dtxPend.mode && x.state === 'tx') {
       for (const el of dtxPend.mode === 'RTTY' ? [$('rtTxt'), $('rtTxtB')] : [$('jtTxt')]) if (el && dtxPend.zone && el.value === dtxPend.text) el.value = '';
-      const rxEl = $(rtTx ? 'rtRxB' : 'rtRx');
+      const rxEl = $(['rtRx', 'rtRxB', 'rtRxC', 'rtRxD'][rtTx] || 'rtRx');
       if (dtxPend.mode === 'RTTY' && rxEl) {
         // Texte exact émis (envoyé par le serveur) : gris tant qu'il attend, rouge lettre par lettre une fois parti
         const info = dtxInfo && dtxInfo.id === x.id ? dtxInfo : null;
@@ -5097,7 +5084,7 @@
   }
   // Fenêtre TX du VFO : texte de l'émission (gris en attente ; parti : barré lettre par lettre). live = true : suivi
   function rtTxShow(ch, text, live) {
-    const sh = $(ch ? 'rtTxShowB' : 'rtTxShow');
+    const sh = $(rtSideOf(ch) ? 'rtTxShowB' : 'rtTxShow');
     if (!sh) return null;
     for (const id of ['rtTxShow', 'rtTxShowB']) if ($(id) && $(id) !== sh && !live) { /* l'autre VFO garde son affichage */ }
     sh.textContent = '';
