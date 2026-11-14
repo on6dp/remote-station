@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.12** — Club Log : après un blocage de l'adresse IP par le pare-feu de Club Log (403 nginx), plus aucun essai pendant une heure (chaque essai prolongeait le blocage) ; aide sur la clé API (support@clublog.org).
 - **0.42.11** — Club Log : erreur 403 expliquée (e-mail du compte, mot de passe d'application, indicatif du compte, clé API ; adresse IP bloquée environ une heure par le pare-feu de Club Log après des refus).
 - **0.42.10** — **Agent LoTW** : petit programme sur le PC où TQSL et le certificat sont installés (Windows : case de l'installateur, service ; Linux : `install-agent-lotw.sh`, service systemd), appairé par un code du carnet, relié au serveur par une liaison sortante (CGNAT, Starlink) : SYNCHRONISATION LOTW et l'envoi automatique signent et envoient par TQSL de ce PC et marquent les QSO envoyés ; certificat jamais copié, QSO en attente partis au retour du PC ; étape « Exporter » neutre sans agent ; liaisons WebSocket fermées sans trame de fermeture détectées tout de suite.
 - **0.42.9** — eQSL : QTH Nickname inconnu du compte → envoi arrêté dès le premier QSO avec une explication en français (au lieu de 9 erreurs identiques).
