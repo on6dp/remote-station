@@ -993,7 +993,7 @@ In **FT8 · FT4 · FT2**, at the end of the sequence, a small « **QSO terminé*
 - **Network**: export from **remote.op0p.be** (the master has all shared QSOs of all stations). QSOs made under a member's personal callsign (not shared) are exported from their own station, with their own certificate.
 - LoTW ignores a QSO it already has: sending a file again does not create duplicates.
 
-- **What you need**: an eQSL.cc account for the callsign. Credentials: the **callsign** (eQSL login) and the account **password**; **QTH Nickname** only if the account has several QTHs (the exact nickname of the club's). Club callsigns: ⚙ Configuration → eQSL; personal callsign: yellow frame of this window (`Enregistrer pour cet indicatif`).
+- **What you need**: an eQSL.cc account for the callsign. Credentials: the **callsign** (eQSL login) and the account **password**; **QTH Nickname** only if the account has several QTHs: the **exact** nickname of a QTH of the eQSL account (eQSL.cc → My Profile → QTH Nicknames), not the TQSL Station Location; otherwise leave it empty. An unknown nickname gives « No match on APP_EQSL_QTH_NICKNAME » and stops the upload. Club callsigns: ⚙ Configuration → eQSL; personal callsign: yellow frame of this window (`Enregistrer pour cet indicatif`).
 - **Uploading**: choose the TX call, possibly dates, then `Télécharger`: the server sends the QSOs not yet sent, one by one (Traitement tab: report QSO by QSO). **Temporisation**: pause between two QSOs so as not to be blocked by the site.
 - **Confirmations**: received eQSLs are viewed on the eQSL.cc site (Inbox).
 - **Automatic upload** of each new QSO: ⚙ Configuration → eQSL (club) or the box in this window (personal callsign). Turn it off during a contest if you don't want live uploads.

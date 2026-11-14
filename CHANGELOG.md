@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.9** — eQSL : QTH Nickname inconnu du compte → envoi arrêté dès le premier QSO avec une explication en français (au lieu de 9 erreurs identiques).
 - **0.42.8** — LoTW sur un serveur sans TQSL (VPS) : le bouton Synchronisation LoTW rappelle la marche à suivre (Exporter pour TQSL, signer avec TQSL sur le PC, Marquer comme envoyés) au lieu de marquer les QSO en échec.
 - **0.42.7** — Carnet : onglet HELP dans les fenêtres LoTW, eQSL, Club Log, QRZ et ⚙ Configuration ; manuel 14.4 détaillé par service (LoTW avec TQSL pas à pas, eQSL, Club Log, QRZ).
 - **0.42.6** — Réseau : chaque station choisit ce qu'elle partage (seulement les QSO sous les indicatifs du club — par défaut —, seulement les QSO de contest, ou tous) ; menu renommé 🌐 Réseau.
