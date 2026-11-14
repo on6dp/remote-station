@@ -991,6 +991,7 @@
       // une seule cascade pour les deux décodeurs (TRX à un son) : B un peu plus haut, pour qu'on les distingue
       if (pane === 'rtty' && rtEnter) {
         rtLogAsk();
+        setTimeout(() => dataU('RTTY'), 400); // arrivée sur la page RTTY : TRX en mode données (DATA-U, USB-D…)
         rtSeen = true;
         rts[0].f = 1500;
         rts[1].f = dualAudio ? 1500 : 2100;
@@ -3393,7 +3394,7 @@
         store.set('rtdialb', String(khz));
         api.setFreq(Math.round(khz * 1000), 'B', true);
         const R = api.rig();
-        const mk = (R.MODE_KEYS || []).find((x) => /^(DATA-U|USB-D|D-U|USB-DATA)$/i.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
+        const mk = (R.MODE_KEYS || []).find((x) => DATA_RE.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
         if (mk) {
           const want = (n) => { const r = api.state() && api.state().radio; if (n && r && r.modeB === mk[1]) return; api.send({ t: 'set', mode: mk[0], sub: true }); if (n < 2) setTimeout(() => want(n + 1), 1200); };
           setTimeout(() => want(0), 30);
@@ -6041,7 +6042,7 @@
     store.set('dialb.' + mode, khz);
     api.setFreq(Math.round(khz * 1000), 'B', true);
     const R = api.rig();
-    const mk = (R.MODE_KEYS || []).find((x) => /^(DATA-U|USB-D|D-U|USB-DATA)$/i.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
+    const mk = (R.MODE_KEYS || []).find((x) => DATA_RE.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
     if (mk) {
       const want = (n) => {
         const r = api.state() && api.state().radio;
@@ -6106,7 +6107,7 @@
     const mk = want === 'CW'
       ? (khz < 10000 ? (R.MODE_KEYS || []).find((x) => /^(CW-L|CW-R|CW-LSB)$/i.test(x[1])) : null)
         || (R.MODE_KEYS || []).find((x) => /^(CW-U|CW|CW-USB)$/i.test(x[1]))
-      : (R.MODE_KEYS || []).find((x) => /^(DATA-U|USB-D|D-U|USB-DATA)$/i.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
+      : (R.MODE_KEYS || []).find((x) => DATA_RE.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
     if (mk) {
       // Changement de bande : certains TRX (FTX-1) rappellent ensuite le mode mémorisé de la bande, par-dessus le nôtre.
       // Le mode est donc renvoyé tant que le TRX ne le confirme pas (2 essais de plus).
@@ -6171,17 +6172,34 @@
     api.send({ t: 'set', mode: mk[0], sub: side });
     api.say('TRX mis en ' + mk[1] + ' pour la phonie.', '', 3000);
   }
+  // Mode « données » du TRX pour les modes numériques : DATA-U (Yaesu), USB-D / D-USB (Icom), USB+PKT / PKT-U (Kenwood…),
+  // sinon USB — sur le VFO écouté, et aussi sur le VFO-B en SPLIT ou en DUAL RX (il reçoit ou émet) ; renvoyé tant que le TRX
+  // ne le confirme pas (certains rappellent le mode mémorisé de la bande)
+  const DATA_RE = /^(DATA-U|USB-D|D-USB|D-U|USB-DATA|DATA-USB|PKT-U|PKTUSB|USB\+PKT|USB-PKT)$/i;
   function dataU(label) {
     if (!api || !api.iControl()) return;
     const st = api.state();
     const r = st && st.radio;
     if (!r || !r.connected || r.tx || (st.ptt && st.ptt.active) || st.ftx || st.cw) return;
     const R = api.rig();
-    const mk = (R.MODE_KEYS || []).find((x) => /^(DATA-U|USB-D|D-U|USB-DATA)$/i.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
-    const side = r.vfoSel === 1;
-    if (!mk || (side ? r.modeB : r.mode) === mk[1]) return;
-    api.send({ t: 'set', mode: mk[0], sub: side });
-    api.say('TRX mis en ' + mk[1] + ' pour ' + label + '.', '', 3000);
+    const mk = (R.MODE_KEYS || []).find((x) => DATA_RE.test(x[1])) || (R.MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
+    if (!mk) return;
+    const sides = new Set([r.vfoSel === 1]);
+    if ((r.dualRx === 1 || r.split === 1) && r.freqB) { sides.add(false); sides.add(true); }
+    let done = false;
+    for (const sub of sides) {
+      if ((sub ? r.modeB : r.mode) === mk[1]) continue;
+      done = true;
+      const want = (n) => {
+        const x = api.state() && api.state().radio;
+        if (n && x && (sub ? x.modeB : x.mode) === mk[1]) return;
+        if (x && x.tx) return;
+        api.send({ t: 'set', mode: mk[0], sub });
+        if (n < 2) setTimeout(() => want(n + 1), 1200);
+      };
+      setTimeout(() => want(0), sub ? 250 : 30);
+    }
+    if (done) api.say('TRX mis en ' + mk[1] + ' pour ' + label + '.', '', 3000);
   }
   // Clic sur l'onglet CW (avec la main) : TRX mis en CW sur le VFO écouté — CW-L sous 10 MHz, CW-U au-dessus
   // (IC-7300 : CW-R / CW), comme pour les spots et la liste de fréquences
