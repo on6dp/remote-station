@@ -2939,6 +2939,17 @@
     if ($('rt4Dec')) { $('rt4Dec').hidden = !one; $('rt4Dec').setAttribute('aria-pressed', String(four)); }
     if ($('rtBSel')) { $('rtBSel').hidden = !four; $('rtBSel').querySelectorAll('[data-b]').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.b) === rtBSel))); }
     for (const id of ['rtDecC', 'rtDecD']) if ($(id)) $(id).hidden = !four;
+    // Titre de A3 / A4 remonté au bout de l'en-tête de son VFO (place libre à droite de la 2e ligne) : sa fenêtre commence
+    // au même niveau que celle de A1 / A2
+    for (const [id, side] of [['rtDecC', 0], ['rtDecD', 1]]) {
+      const box = $(id), hd = box && box.querySelector('.rt-xhd'), sh = document.querySelector('#rtDual > .rt-side[data-ch="' + side + '"] > .rt-hd');
+      if (!box || !sh) continue;
+      const h = hd || sh.querySelector('.rt-xhd[data-of="' + id + '"]');
+      if (!h) continue;
+      h.dataset.of = id;
+      if (four && h.parentElement !== sh) sh.appendChild(h);
+      else if (!four && h.parentElement !== box) box.prepend(h);
+    }
     if (four) {
       const d0 = rtDialOf(0);
       for (const [ch, sfx] of [[2, 'C'], [3, 'D']]) {

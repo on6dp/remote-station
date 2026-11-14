@@ -3269,3 +3269,10 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .ctab-pane.rt .rt-dual.rt-4dec .rt-io > .rt-txbox { grid-column: 1 / span 2; grid-row: 2; }
 .rt-xdec .rt-xhd { padding: 2px 8px; }
 .rt-xdec .rt-xhint { display: none; }
+/* QUAD : titre de A3 / A4 au bout de l'en-tête du VFO (à droite), sans cadre */
+.rt-hd > .rt-xhd { margin-left: auto; background: none; border: 0; padding: 0 4px; display: flex; align-items: baseline; gap: 8px; font-size: 12px; }
+.rt-hd > .rt-xhd .rt-name { font-weight: 800; }
+.rt-hd > .rt-xhd[data-of="rtDecC"] .rt-name { color: #FF7800; }
+.rt-hd > .rt-xhd[data-of="rtDecD"] .rt-name { color: #FF3CA0; }
+.rt-hd > .rt-xhd .rt-xc { color: var(--v2-text-dim); } .rt-hd > .rt-xhd .rt-xc b { color: #2ecc71; }
+.rt-hd > .rt-xhd .rt-xhint { display: none; }
