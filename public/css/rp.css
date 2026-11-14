@@ -3243,3 +3243,22 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 /* RTTY : DUAL DÉCODEURS comme les autres boutons DUAL — liseré mauve, fond mauve foncé quand il est allumé */
 .rt-hd .rt-2dec, .rt-2dec { border-color: #8a5cc4; color: #fff; font-weight: 800; }
 .rt-hd .rt-2dec[aria-pressed='true'], .rt-2dec[aria-pressed='true'] { background: linear-gradient(180deg, #6a3aa8, #3f1d6e) !important; border-color: #c49bff !important; color: #fff !important; box-shadow: 0 0 8px rgba(160, 100, 255, .45); }
+/* RTTY, QUAD DÉCODEURS (réception simple) : repères A3 (orange / cyan) et A4 (rose / vert clair), fenêtres sous A1 et A2 */
+.dg-wf .dg-mk-cm { border-left: 0; background: rgba(255, 120, 0, .22); box-shadow: inset 0 0 0 2px rgba(255, 120, 0, .95); }
+.dg-wf .dg-mk-cs { border-left: 0; background: rgba(0, 200, 220, .22); box-shadow: inset 0 0 0 2px rgba(0, 200, 220, .95); }
+.dg-wf .dg-mk-dm { border-left: 0; background: rgba(255, 60, 160, .22); box-shadow: inset 0 0 0 2px rgba(255, 60, 160, .95); }
+.dg-wf .dg-mk-ds { border-left: 0; background: rgba(150, 230, 0, .22); box-shadow: inset 0 0 0 2px rgba(150, 230, 0, .95); }
+.rt-xdec { flex: none; display: flex; flex-direction: column; border: 1px solid #3a4658; border-radius: 4px; margin-top: 6px; height: 170px; overflow: hidden; }
+.rt-xdec[hidden] { display: none !important; }
+.rt-xdec .rt-xhd { display: flex; align-items: baseline; gap: 10px; padding: 4px 8px; background: #101722; border-bottom: 1px solid #3a4658; font-size: 12px; }
+.rt-xdec .rt-name { color: #ffd400; font-weight: 800; }
+#rtDecC .rt-name { color: #FF7800; } #rtDecD .rt-name { color: #FF3CA0; }
+.rt-xdec .rt-xc { color: var(--v2-text-dim); } .rt-xdec .rt-xc b { color: #2ecc71; }
+.rt-xdec .rt-xhint { margin-left: auto; color: var(--v2-text-dim); font-size: 10.5px; }
+.rt-xdec .rt-pane { position: relative; flex: 1 1 0; min-height: 0; display: flex; }
+.rt-xdec .rt-rx { flex: 1 1 auto; min-height: 0; margin: 0; border: 0; border-radius: 0; }
+.rt-bsel { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; }
+.rt-bsel[hidden] { display: none !important; }
+.rt-bsel .rt-bsl { color: var(--v2-text-dim); font-size: 10px; font-weight: 800; letter-spacing: .4px; margin-right: 2px; }
+.rt-bsel .dg-mini { color: #fff; padding: 1px 6px; }
+.rt-bsel .dg-mini[aria-pressed='true'] { background: #f5ff00; color: #000; border-color: #f5ff00; }

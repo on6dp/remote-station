@@ -277,6 +277,7 @@
       <canvas id="dgSpec" class="dg-spec" height="70" title="Spectre : niveau de chaque fréquence audio (moyenne des dernières lignes de la cascade, mêmes réglages Gain / Zéro / Plat)"></canvas>
       <i class="dg-mk dg-mk-tx" id="dgMkTx"></i><i class="dg-mk dg-mk-rx" id="dgMkRx"></i><i class="dg-mk dg-mk-n" id="dgMkN" hidden></i>
       <i class="dg-mk dg-mk-bm" id="dgMkBM" hidden></i><i class="dg-mk dg-mk-bs" id="dgMkBS" hidden></i>
+      <i class="dg-mk dg-mk-cm" id="dgMkCM" hidden></i><i class="dg-mk dg-mk-cs" id="dgMkCS" hidden></i><i class="dg-mk dg-mk-dm" id="dgMkDM" hidden></i><i class="dg-mk dg-mk-ds" id="dgMkDS" hidden></i>
       <i class="cw-trx" id="cwTrxA" hidden title="Filtre du TRX (BW) : glisser une barre pour l'élargir ou le rétrécir (Ctrl + molette aussi)"><b></b><b></b><span></span></i>
       <i class="dg-grip" id="dgGrip" title="Glisser vers le haut ou le bas : hauteur de la cascade et des listes de messages (double-clic : taille d'origine)"></i>
 <span class="dg-spspd" id="dgSpSpd" title="Vitesse du spectre (la courbe seulement ; la cascade a sa propre « Vitesse ») : X1 = moyenne sur environ 6 s (courbe calme, les signaux réguliers ressortent), X2 = environ 2 s, X4 = presque instantané"><button type="button" data-spspd="1">X1</button><button type="button" data-spspd="2">X2</button><button type="button" data-spspd="4">X4</button></span>
@@ -373,6 +374,8 @@
         <div class="dg-h rt-hd">
           <span class="rt-name" id="rtNameA">VFO-A</span><span class="rt-rf" id="rtRf"></span><span class="rt-sig" id="rtSig"></span>
           <button class="dg-mini rt-2dec" type="button" id="rt2Dec" aria-pressed="false" hidden title="Un seul récepteur (ni SPLIT ni DUAL RX) : deux décodeurs sur la même cascade, comme FLDIGI : A1 (clic gauche) et A2 (clic droit, ou bouton droit maintenu pour faire glisser ses barres) ; deux signaux décodés en même temps. La fenêtre de A2 s’affiche dans la colonne de droite.">DUAL DÉCODEURS</button>
+          <button class="dg-mini rt-2dec rt-4dec" type="button" id="rt4Dec" aria-pressed="false" hidden title="Un seul récepteur : 4 décodeurs sur la même cascade — A1 (clic gauche), A2 (clic droit), A3 (Ctrl + clic gauche), A4 (Ctrl + clic droit), ou choisir le décodeur dans BARRES puis clic gauche. Fenêtres de A3 sous A1, de A4 sous A2.">QUAD DÉCODEURS</button>
+          <span class="rt-bsel" id="rtBSel" hidden title="Décodeur dont les barres suivent le clic gauche sur la cascade (clic droit : toujours A2)"><span class="rt-bsl">BARRES</span><button class="dg-mini" type="button" data-b="0" aria-pressed="true">A1</button><button class="dg-mini" type="button" data-b="1" aria-pressed="false">A2</button><button class="dg-mini" type="button" data-b="2" aria-pressed="false">A3</button><button class="dg-mini" type="button" data-b="3" aria-pressed="false">A4</button></span>
           <select id="rtShift" aria-label="Shift (VFO-A)"><option value="170">170 Hz</option><option value="200">200 Hz</option><option value="425">425 Hz</option><option value="850">850 Hz</option></select>
           <select id="rtBaud" aria-label="Vitesse (VFO-A)"><option value="45.45">45,45 Bd</option><option value="50">50 Bd</option><option value="75">75 Bd</option><option value="100">100 Bd</option></select>
           <button class="dg-mini" type="button" id="rtRev" aria-pressed="false" title="Échange Mark et Space (signal reçu « à l'envers »)">Inversé</button>
@@ -390,6 +393,7 @@
           <div class="rt-pane"><pre class="rt-rx" id="rtRx"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx0" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
         </div>
         <i class="rt-iogrip" data-ch="0" title="Glisser vers le haut ou le bas : hauteur des fenêtres TX / RX de ce VFO seulement (double-clic : taille d’origine)"></i>
+        <div class="rt-xdec" id="rtDecC" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A3</span><span class="rt-sig" id="rtSigC"></span><span class="rt-xc">centre <b id="rtFC"></b> Hz</span><span class="rt-xhint">Ctrl + clic gauche, ou BARRES : A3</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxC"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx2" title="Effacer cette fenêtre">Effacer</button></div></div>
       </div>
       <i class="rt-vsplit" id="rtSplit" title="Glisser à gauche ou à droite : largeur des deux décodeurs (double-clic : moitié-moitié)"></i>
       <div class="dg-col rt-side" data-ch="1">
@@ -428,6 +432,7 @@
           <div class="rt-pane"><pre class="rt-rx" id="rtRxB"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx1" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
         </div>
         <i class="rt-iogrip" data-ch="1" title="Glisser vers le haut ou le bas : hauteur des fenêtres TX / RX de ce VFO seulement (double-clic : taille d’origine)"></i>
+        <div class="rt-xdec" id="rtDecD" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A4</span><span class="rt-sig" id="rtSigD"></span><span class="rt-xc">centre <b id="rtFD"></b> Hz</span><span class="rt-xhint">Ctrl + clic droit, ou BARRES : A4</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxD"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx3" title="Effacer cette fenêtre">Effacer</button></div></div>
       </div>
     </div>
     <i class="rt-hgrip" id="rtHGrip" title="Glisser vers le haut ou le bas : hauteur des fenêtres de décodage (VFO-A et VFO-B) — plus de place pour les macros en dessous (double-clic : taille d'origine)"></i>
@@ -1044,7 +1049,7 @@
     }
     if (watching && tab === 'sstv') { api.send({ t: 'digi', mode: 'SSTV', hist: ssNeedHist }); ssNeedHist = false; return; }
     if (watching && tab === 'jtty') { api.send({ t: 'digi', mode: 'JTTY', hist: jtNeedHist, ftDual }); jtNeedHist = false; return; }
-    if (watching && tab === 'rtty') return api.send({ t: 'digi', mode: 'RTTY', rtty: rts[0], rtty2: rts[1], rtDual: rtDualAudio });
+    if (watching && tab === 'rtty') { rtQuadSync(); return api.send({ t: 'digi', mode: 'RTTY', rtty: rts[0], rtty2: rts[1], rtDual: rtDualAudio, rtty3: rtQuad() ? rts[2] : null, rtty4: rtQuad() ? rts[3] : null }); }
     if (watching && tab === 'wspr') { api.send({ t: 'digi', mode: 'WSPR', hist: wsNeedHist, ftDual }); wsNeedHist = false; return; }
     // Onglet Synchro : le décodage FT8 / FT4 continue (mesures de la case Décodages et du DT médian en direct)
     const syncTab = tab === 'sync' && !$('centerPanel').classList.contains('collapsed') && !document.hidden && /^FT[48]$/.test(mode);
@@ -1661,7 +1666,13 @@
       // l'ancien réglage par défaut (12) passe à 9 une fois
       squelch: !o.squelch || (Number(o.squelch) === 12 && store.get('rtsq9', '') !== '1') ? 9 : Number(o.squelch) };
   };
-  const rts = [rtLoad('rtty', 1500), rtLoad('rttyb', 2100)];
+  const rts = [rtLoad('rtty', 1500), rtLoad('rttyb', 2100), rtLoad('rttyc', 1200), rtLoad('rttyd', 2400)]; // A3, A4 : réception simple, QUAD DÉCODEURS
+  let rtBSel = 0; // QUAD : décodeur dont les barres suivent le clic gauche
+  // A3 / A4 : mêmes shift, vitesse, inversion et silencieux que A1 (seule la fréquence audio change)
+  const rtQuadSync = () => { for (const i of [2, 3]) Object.assign(rts[i], { shift: rts[0].shift, baud: rts[0].baud, rev: rts[0].rev, squelch: rts[0].squelch }); };
+  const rtQuad = () => !!($('rtDual') && $('rtDual').classList.contains('rt-4dec'));
+  // Décodeur visé par un clic sur la cascade : gauche = A1 (ou celui de BARRES), droit = A2 ; Ctrl + clic = A3 / A4 (QUAD)
+  const rtTarget = (e, right) => { if (rtQuad()) { if (e.ctrlKey) return right ? 3 : 2; if (!right) return rtBSel; } return right ? 1 : 0; };
   store.set('rtsq9', '1');
   const rt = rts[0];
   const RT_SFX = ['', 'B'];
@@ -1853,6 +1864,8 @@
   function saveRtty(reannounce) {
     store.set('rtty', JSON.stringify(rts[0]));
     store.set('rttyb', JSON.stringify(rts[1]));
+    store.set('rttyc', JSON.stringify(rts[2]));
+    store.set('rttyd', JSON.stringify(rts[3]));
     if (reannounce) announce();
     sendView();
   }
@@ -1890,12 +1903,22 @@
     pos(mkS, fs);
   }
   const RT_COLS_B = ['rgba(170, 51, 255, .6)', '#AA33FF', 'rgba(0, 160, 60, .55)', '#00A03C'];
+  const RT_COLS_C = ['rgba(255, 120, 0, .6)', '#FF7800', 'rgba(0, 200, 220, .55)', '#00C8DC'];
+  const RT_COLS_D = ['rgba(255, 60, 160, .6)', '#FF3CA0', 'rgba(150, 230, 0, .55)', '#96E600'];
   function drawRttyMarks(c, w) {
     rtKhz(c, w, rtDialOf(0));
     const two2 = !!($('rtDual') && $('rtDual').classList.contains('rt-2dec')); // un seul récepteur, 2 décodeurs : A1 et A2 (comme FLDIGI)
     rttyMarks(c, w, rts[0], $('dgMkRx'), $('dgMkTx'), null, two2 ? 'A1' : 'A');
     // Décodeur B : sur la même cascade, repères magenta (Mark) / vert (Space) — sauf s'il a sa propre cascade
     if (!(wfB.sctx && $('rtWfB').clientWidth) && !($('rtDual') && $('rtDual').classList.contains('rt-solo'))) rttyMarks(c, w, rts[1], $('dgMkBM'), $('dgMkBS'), RT_COLS_B, two2 ? 'A2' : 'B'); // décodeur B caché (un seul VFO) : pas de repère
+    // QUAD DÉCODEURS (réception simple) : A3 (orange / cyan) et A4 (rose / vert clair) sur la même cascade
+    const q4 = rtQuad();
+    for (const id of ['dgMkCM', 'dgMkCS', 'dgMkDM', 'dgMkDS']) if ($(id)) $(id).hidden = !q4 || tab !== 'rtty';
+    if (q4) {
+      rtQuadSync();
+      rttyMarks(c, w, rts[2], $('dgMkCM'), $('dgMkCS'), RT_COLS_C, 'A3');
+      rttyMarks(c, w, rts[3], $('dgMkDM'), $('dgMkDS'), RT_COLS_D, 'A4');
+    }
     // Cascade du décodeur B : même spectre (même BF du TRX), ses propres repères
     if (wfB.sctx) {
       rtKhz(wfB.sctx, wfB.cw, rtDialOf(1));
@@ -1995,7 +2018,7 @@
       };
       el.addEventListener('pointerdown', (e) => {
         if (tab !== 'rtty' || e.shiftKey || (e.button !== 0 && e.button !== 2)) return;
-        mk = { el, id: e.pointerId, target: ch === 1 ? 1 : e.button === 2 ? 1 : 0, t: 0 };
+        mk = { el, id: e.pointerId, target: ch === 1 ? 1 : rtTarget(e, e.button === 2), t: 0 };
         try { el.setPointerCapture(e.pointerId); } catch (err) { /* */ }
         el.style.cursor = 'ew-resize';
         move(e, false);
@@ -2507,7 +2530,7 @@
         c.strokeRect(0.5, Math.max(0, y0) + 0.5, W - 1, Math.max(2, Math.min(H, y1) - Math.max(0, y0)) - 1);
       }
       if (tab === 'rtty') {
-        rts.forEach((x, ch) => {
+        rts.slice(0, 2).forEach((x, ch) => {
           const dd = rtDialOf(ch);
           if (!dd || dd.vfo !== d.vfo) return;
           line((dd.hz + dd.sign * x.f) / 1000, ch ? '#AA33FF' : '#E0A800', (ch ? 'B' : 'A') + (ch === rtTx ? ' TX' : ' RX'), ch === rtTx);
@@ -2900,7 +2923,8 @@
     // celles du VFO-B reviennent en SPLIT ou en DUAL RX ON
     // Bouton « 2 DÉCODEURS » (un seul récepteur) : le décodeur B reste affiché, sur la même cascade (deux paires de barres)
     const one = !!(r && !r.split && r.dualRx !== 1);
-    const two = one && store.get('rt2dec', '0') === '1';
+    const four = one && store.get('rt4dec', '0') === '1';
+    const two = one && (four || store.get('rt2dec', '0') === '1');
     const solo = one && !two;
     const dualEl = $('rtDual');
     if ($('rt2Dec')) { $('rt2Dec').hidden = !one; $('rt2Dec').setAttribute('aria-pressed', String(two)); }
@@ -2909,6 +2933,17 @@
     if ($('rtNameA')) $('rtNameA').textContent = two ? 'VFO-A · A1' : 'VFO-A';
     if (dualEl && dualEl.classList.contains('rt-2dec') !== two && tab === 'rtty') setTimeout(drawScale, 0); // repères A / B ↔ A1 / A2
     if ($('rtTxtB')) $('rtTxtB').placeholder = two ? 'Texte à émettre sur la fréquence de A2 (même VFO), puis F11 TX ou Ctrl+Entrée' : 'Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée';
+    if (dualEl && dualEl.classList.contains('rt-4dec') !== four) { dualEl.classList.toggle('rt-4dec', four); if (!four) rtBSel = Math.min(rtBSel, 1); setTimeout(() => { announce(); if (tab === 'rtty') drawScale(); }, 0); }
+    if ($('rt4Dec')) { $('rt4Dec').hidden = !one; $('rt4Dec').setAttribute('aria-pressed', String(four)); }
+    if ($('rtBSel')) { $('rtBSel').hidden = !four; $('rtBSel').querySelectorAll('[data-b]').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.b) === rtBSel))); }
+    for (const id of ['rtDecC', 'rtDecD']) if ($(id)) $(id).hidden = !four;
+    if (four) {
+      const d0 = rtDialOf(0);
+      for (const [ch, sfx] of [[2, 'C'], [3, 'D']]) {
+        if ($('rtF' + sfx)) $('rtF' + sfx).textContent = Math.round(rts[ch].f);
+        if ($('rtSig' + sfx)) $('rtSig' + sfx).textContent = d0 ? 'signal ' + ((d0.hz + d0.sign * rts[ch].f) / 1000).toLocaleString('fr-BE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kHz' : '';
+      }
+    }
     if (dualEl) dualEl.classList.toggle('rt-2dec', two);
     if (dualEl && dualEl.classList.contains('rt-solo') !== solo) {
       dualEl.classList.toggle('rt-solo', solo);
@@ -2918,7 +2953,7 @@
     }
     // Fréquence du signal suivi : porteuse du VFO réellement écouté ± fréquence audio (− en LSB / DATA-L).
     // En réception simple, les deux décodeurs lisent le même récepteur : B est alors rapporté au VFO écouté, pas au VFO-B.
-    rts.forEach((x, ch) => {
+    rts.slice(0, 2).forEach((x, ch) => {
       const sfx = RT_SFX[ch];
       if (!$('rtF' + sfx)) return;
       const d = rtDialOf(ch);
@@ -3062,7 +3097,7 @@
     return calls.length ? new RegExp('(^|[^A-Z0-9/])(' + Array.from(new Set(calls)).join('|') + ')(?![A-Z0-9])') : null;
   }
   function rttyAppend(text, ch) {
-    const el = $(ch === 1 ? 'rtRxB' : 'rtRx');
+    const el = $(['rtRx', 'rtRxB', 'rtRxC', 'rtRxD'][ch] || 'rtRx');
     if (!el) return;
     const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
     const re = rtCorrRe();
@@ -3078,6 +3113,7 @@
   }
   function rttyLevels(m) {
     // Barres Mark / Space : 0 à 40 dB au-dessus du plancher
+    if (m.ch === 2 || m.ch === 3) return; // A3 / A4 : pas de barres de niveau
     const sfx = RT_SFX[m.ch === 1 ? 1 : 0];
     if (!$('rtM' + sfx)) return;
     $('rtM' + sfx).style.width = Math.max(0, Math.min(100, (m.m / 40) * 100)) + '%';
@@ -3142,7 +3178,7 @@
     return out;
   }
   function initRtty() {
-    rts.forEach((r, ch) => {
+    rts.slice(0, 2).forEach((r, ch) => {
       const sfx = RT_SFX[ch];
       $('rtShift' + sfx).value = String(r.shift);
       $('rtBaud' + sfx).value = String(r.baud);
@@ -3251,8 +3287,10 @@
     // Choisir une bande dans la liste y envoie directement le TRX (QSY)
     dial.addEventListener('change', () => { store.set('rtdial', dial.value); qsyTo(Number(dial.value)); });
     $('rtQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
-    if ($('rt2Dec')) $('rt2Dec').addEventListener('click', () => { store.set('rt2dec', store.get('rt2dec', '0') === '1' ? '0' : '1'); rtHeads(); });
-    if ($('rt2Off')) $('rt2Off').addEventListener('click', (e) => { e.stopPropagation(); store.set('rt2dec', '0'); rtHeads(); });
+    if ($('rt2Dec')) $('rt2Dec').addEventListener('click', () => { const on = $('rt2Dec').getAttribute('aria-pressed') === 'true'; store.set('rt2dec', on ? '0' : '1'); if (on) store.set('rt4dec', '0'); rtHeads(); });
+    if ($('rt2Off')) $('rt2Off').addEventListener('click', (e) => { e.stopPropagation(); store.set('rt2dec', '0'); store.set('rt4dec', '0'); rtHeads(); });
+    if ($('rt4Dec')) $('rt4Dec').addEventListener('click', () => { store.set('rt4dec', store.get('rt4dec', '0') === '1' ? '0' : '1'); rtHeads(); });
+    if ($('rtBSel')) $('rtBSel').querySelectorAll('[data-b]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); rtBSel = Number(b.dataset.b) || 0; rtHeads(); }));
     // Hauteur des fenêtres TX / RX de chaque VFO : sa propre poignée, gardée dans ce navigateur
     for (const g of document.querySelectorAll('.rt-iogrip')) {
       const ch = Number(g.dataset.ch) === 1 ? 1 : 0, io = g.previousElementSibling;
@@ -3353,6 +3391,7 @@
     document.querySelectorAll('.rt-clr').forEach((b) => b.addEventListener('click', (e) => {
       e.stopPropagation();
       const k = b.dataset.clr, ch = k.slice(-1) === '1' ? 1 : 0;
+      if (k === 'rx2' || k === 'rx3') { const el = $(k === 'rx2' ? 'rtRxC' : 'rtRxD'); if (el) { el.textContent = ''; el._cur = null; } return; } // A3, A4
       if (k.startsWith('rx')) { const c = $(ch ? 'rtClearB' : 'rtClear'); if (c) c.click(); return; }
       const t = $(ch ? 'rtTxtB' : 'rtTxt'), sh = $(ch ? 'rtTxShowB' : 'rtTxShow');
       if (t) t.value = '';
@@ -5581,7 +5620,7 @@
     }
     $('rtCall').addEventListener('input', () => { $('rtCall').value = $('rtCall').value.toUpperCase(); });
     // Clic sur un indicatif dans une fenêtre de trafic : il va dans CALL (les macros l'utilisent)
-    for (const id of ['rtRx', 'rtRxB']) {
+    for (const id of ['rtRx', 'rtRxB', 'rtRxC', 'rtRxD']) {
       const el = $(id);
       if (!el) continue;
       el.addEventListener('click', (e) => {
@@ -6597,9 +6636,9 @@
         $(id).addEventListener('click', (e) => {
           if (tab === 'cw' && cwDragged) { cwDragged = false; return; } // fin d'un glisser : position gardée telle quelle
           if (tab === 'rtty' && id === 'dgScale') return; // RTTY : la règle accorde le VFO (molette, glisser), les repères se règlent dans la cascade
-          return tab === 'sstv' ? null : tab === 'rtty' ? setRttyF(fAt(e), 0) : tab === 'cw' ? setCwF(fAt(e), true) : setRx(fAt(e));
+          return tab === 'sstv' ? null : tab === 'rtty' ? setRttyF(fAt(e), rtTarget(e, false)) : tab === 'cw' ? setCwF(fAt(e), true) : setRx(fAt(e));
         });
-        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'sstv') return; if (tab === 'rtty') { if (id !== 'dgScale') setRttyF(fAt(e), 1); } else if (tab === 'cw') setCwF(fAt(e), false); else setTx(fAt(e)); });
+        $(id).addEventListener('contextmenu', (e) => { e.preventDefault(); if (tab === 'sstv') return; if (tab === 'rtty') { if (id !== 'dgScale') setRttyF(fAt(e), rtTarget(e, true)); } else if (tab === 'cw') setCwF(fAt(e), false); else setTx(fAt(e)); });
       }
       // Cascade du VFO-B (FT8 / FT4 / FT2 en double réception) : clic gauche = réception, clic droit = émission
       const fAtB = (e) => { const r = e.currentTarget.getBoundingClientRect(); const V = ftV('B'); return V.lo + ((e.clientX - r.left) / r.width) * V.span; };
@@ -6810,7 +6849,7 @@
         return true;
       }
       if (m.t === 'dtx_text') { dtxInfo = m; return true; }
-      if (m.t === 'rtty') { rttyAppend(m.text || '', m.ch === 1 ? 1 : 0); return true; }
+      if (m.t === 'rtty') { rttyAppend(m.text || '', [0, 1, 2, 3].indexOf(m.ch) >= 0 ? m.ch : 0); return true; }
       if (m.t === 'jtty') { if (m.side === 'B') jtUpdateB(m.u); else jtUpdate(m.u); return true; }
       if (m.t === 'cw') { cwAppend(m.text || '', m.ch === 1 ? 1 : 0); return true; }
       if (/^sstv_/.test(m.t)) return ssMessage(m);

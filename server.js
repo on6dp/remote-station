@@ -500,7 +500,7 @@ function updateDigi() {
     if (wantB !== digi.ftB) { digi.ftB = wantB; digi.worker.postMessage({ t: 'ftb', on: wantB }); }
     digi.worker.postMessage({ t: 'dial', hz: radio.freq || 0, hzB: radio.freqB || 0 });
     const cfgs = {};
-    for (const c of ops) if (c.digi === 'RTTY') for (const r of [c.rtty, rttyB(c)]) if (r) cfgs[r.key] = r;
+    for (const c of ops) if (c.digi === 'RTTY') for (const r of [c.rtty, rttyB(c), c.rtty3, c.rtty4]) if (r) cfgs[r.key] = r;
     digi.worker.postMessage({ t: 'rtty', cfgs: Object.values(cfgs) });
     const cwc = {};
     for (const c of ops) if (c.digi === 'CW') for (const r of [c.cw, cwB(c)]) if (r) cwc[r.key] = r;
@@ -541,6 +541,8 @@ function onDigi(m) {
       if (c.rtty && c.rtty.key === m.key) c.send(out(0));
       const b = rttyB(c);
       if (b && b.key === m.key) c.send(out(1));
+      if (c.rtty3 && c.rtty3.key === m.key) c.send(out(2)); // A3, A4 (réception simple)
+      if (c.rtty4 && c.rtty4.key === m.key) c.send(out(3));
     }
     return;
   }
@@ -3306,6 +3308,9 @@ function onOperator(conn, m) {
       let mode = DIGI_MODES.indexOf(m.mode) >= 0 ? m.mode : null;
       const rc = mode === 'RTTY' ? rttyCfg(m.rtty) : null;
       const rc2 = mode === 'RTTY' && rc ? rttyCfg(m.rtty2) : null; // 2e décodeur RTTY (VFO-B), facultatif
+      // 3e et 4e décodeurs RTTY (A3, A4 : même récepteur que A1, page RTTY en réception simple), facultatifs
+      const rc3 = mode === 'RTTY' && rc && !m.rtDual ? rttyCfg(m.rtty3) : null;
+      const rc4 = mode === 'RTTY' && rc && !m.rtDual ? rttyCfg(m.rtty4) : null;
       if (mode === 'RTTY' && !rc) mode = null;
       const cc = mode === 'CW' ? cwCfg(m.cw) : null;
       if (mode === 'CW' && !cc) mode = null;
@@ -3313,12 +3318,15 @@ function onOperator(conn, m) {
       // 2e décodeur RTTY sur la voie droite (récepteur SUB) : la page l'affiche avec sa propre cascade (double réception)
       const rtDual = mode === 'RTTY' && !!m.rtDual;
       const changed = conn.digi !== mode || !!conn.rtDual !== rtDual || (conn.rtty && conn.rtty.key) !== (rc && rc.key) || (conn.rtty2 && conn.rtty2.key) !== (rc2 && rc2.key) ||
+        (conn.rtty3 && conn.rtty3.key) !== (rc3 && rc3.key) || (conn.rtty4 && conn.rtty4.key) !== (rc4 && rc4.key) ||
         (conn.cw && conn.cw.key) !== (cc && cc.key) || (conn.cw2 && conn.cw2.key) !== (cc2 && cc2.key);
       const dual = !!m.ftDual && FT_DUAL_MODES.indexOf(mode) >= 0;
       if (dual !== !!conn.ftDual) { conn.ftDual = dual; if (!changed) updateDigi(); }
       conn.digi = mode;
       conn.rtty = rc;
       conn.rtty2 = rc2;
+      conn.rtty3 = rc3;
+      conn.rtty4 = rc4;
       conn.rtDual = rtDual;
       conn.cw = cc;
       conn.cw2 = cc2;
