@@ -917,7 +917,7 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
 <h3 id="l-liste">14.2 La liste des QSO</h3>
 <ul>
   <li>La liste montre les 300 derniers QSO. La case <b>Rechercher</b> trouve un indicatif, un nom ou un opérateur ; le nombre de QSO trouvés s'affiche à côté.</li>
-  <li><b>Clic sur une ligne</b> : le QSO s'ouvre dans la fiche. Son auteur <b>avec la main</b> (ou un administrateur) peut le modifier ou le supprimer ; tous les autres (membres sans la main, écouteurs, autres opérateurs) le voient <b>en lecture seule</b> (« Fermer » le referme). Personne ne peut jamais modifier ni supprimer le QSO d'un autre indicatif, sauf les administrateurs.</li>
+  <li><b>Clic sur une ligne</b> : le QSO s'ouvre dans la fiche. Son auteur <b>avec la main</b> (ou un administrateur) peut le modifier ou le supprimer ; tous les autres (membres sans la main, écouteurs, autres opérateurs) le voient <b>en lecture seule</b> (« Fermer » le referme). Un QSO appartient à l'opérateur qui l'a <b>enregistré</b>, quel que soit l'indicatif d'émission (TX call) : voir « Qui peut modifier ou supprimer un QSO » ci-dessous.</li>
   <li>Colonnes : date, heure, indicatif, bande, fréquence, mode, reports, nom, QTH, <b>locator</b>, pays DXCC, préfixe, TX call, opérateur, références (IOTA, POTA…), états des envois (LoTW, eQSL, Club Log, QRZ).</li>
   <li>Colonnes de droite hors de l'écran : <b>ascenseur horizontal en bas de la liste</b> (la liste tient dans la hauteur de l'écran : ascenseur de droite pour descendre dans le carnet), ou <kbd>Maj</kbd> + molette de la souris sur la liste.</li>
   <li><b>VFO A / B</b> de la ligne STEP (VFO réglé par la molette, les flèches et les bandes) : A sur fond vert foncé, B sur fond rose foncé, un seul à la fois.</li>
@@ -942,6 +942,16 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
   <tr><td>LoTW, eQSL, CL, QRZ</td><td>État de l'envoi vers chaque service : <b>·</b> pas encore envoyé, <b>✓</b> envoyé, <b>✗</b> refusé (survol = détail), <b>★</b> confirmé sur LoTW.</td></tr>
 </table>
 
+<h4 id="l-droits">Qui peut modifier ou supprimer un QSO</h4>
+<p>Un QSO appartient à l'opérateur qui l'a <b>enregistré</b>, quel que soit l'indicatif d'émission (TX call). Deux membres qui trafiquent sous ON5VL ne peuvent donc pas effacer le travail l'un de l'autre. Le serveur fait lui-même ce contrôle : un membre ne peut pas le contourner depuis son navigateur, et chaque modification ou suppression est inscrite au journal du serveur avec l'indicatif de son auteur.</p>
+<table>
+  <tr><th>Qui</th><th>QSO qu'il a enregistrés lui-même (sous son indicatif, ON5VL ou OR0L)</th><th>QSO enregistrés par un autre opérateur</th></tr>
+  <tr><td><b>Membre</b> (ex. ON1ZZZ)</td><td>modifier / supprimer, <b>seulement quand il a la main</b></td><td>consultation seulement</td></tr>
+  <tr><td><b>Écouteur</b> (ONL…)</td><td>consultation seulement</td><td>consultation seulement</td></tr>
+  <tr><td><b>Administrateur</b> (⚙ → Membres, colonne administrateur)</td><td>tout</td><td>tout (corrections, nettoyage)</td></tr>
+</table>
+<p>Exemple pour ON1ZZZ : un QSO qu'il a fait sous ON1ZZZ ou sous ON5VL / OR0L, il peut le corriger ou le supprimer quand il a la main ; un QSO fait par ON4LUC sous ON5VL, ou par n'importe quel autre membre, il ne peut que le consulter. En <b>réseau</b> (14.6), la règle est appliquée par le serveur où l'on fait la correction ; la correction ou la suppression passe ensuite à toutes les stations.</p>
+
 <h3 id="l-export">14.3 Exporter</h3>
 <table>
   <tr><th>Menu Exporter ▾</th><th>Ce qu'il fait</th></tr>
@@ -954,6 +964,15 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
 
 <h3 id="l-sync">14.4 Synchronisation (LoTW, eQSL, Club Log, QRZ)</h3>
 <p>Menu <b>Synchronisation ▾</b> : il envoie les QSO du carnet vers les sites de confirmation. Une fenêtre par service, comme dans Swisslog. Les <b>administrateurs</b> gèrent tous les indicatifs (club et membres). Chaque <b>membre</b> qui émet sous son propre indicatif s'en sert pour <b>ses</b> QSO (voir « Vos propres logs en ligne » ci-dessous).</p>
+<p><b>En bref : ce qu'il faut pour chaque service</b> (indicatifs du club : ⚙ Configuration, par un administrateur ; indicatif personnel : cadre jaune de la fenêtre du service, par le membre lui-même) :</p>
+<table>
+  <tr><th>Service</th><th>À préparer une fois</th><th>Envoi</th><th>Vitesse</th></tr>
+  <tr><td><b>LoTW</b></td><td>TQSL, le certificat et un lieu de station sur <b>votre PC</b> ; l'<b>Agent LoTW</b> installé et appairé sur ce PC (une fois) ; pour les confirmations : identifiant et mot de passe du <b>site</b> lotw.arrl.org</td><td><span class="k">Synchronisation LoTW</span> : signé par TQSL de votre PC et envoyé ; sans agent : export .adi, TQSL à la main, <span class="k">Marquer comme envoyés</span></td><td>un seul fichier (rapide)</td></tr>
+  <tr><td><b>eQSL</b></td><td>indicatif (identifiant eQSL), mot de passe ; QTH Nickname seulement si le compte a plusieurs QTH (le nom exact)</td><td><span class="k">Télécharger</span></td><td>un QSO par envoi : temporisation 1 s conseillée</td></tr>
+  <tr><td><b>Club Log</b></td><td>e-mail du compte, <b>mot de passe d'application</b> (Club Log → Settings → App Passwords), l'indicatif enregistré dans ce compte, la <b>clé API</b> du logiciel (une pour tout le club, demandée à support@clublog.org)</td><td><span class="k">Télécharger</span></td><td>un seul fichier (rapide)</td></tr>
+  <tr><td><b>QRZ.com</b></td><td>la clé API du carnet QRZ de l'indicatif (QRZ → Logbook → Settings ; abonnement XML ou supérieur)</td><td><span class="k">Télécharger</span></td><td>un QSO par envoi : temporisation 1 s conseillée</td></tr>
+</table>
+<p>Ordre conseillé la première fois : 1) les identifiants (et l'Agent LoTW) ; 2) <span class="k">Enregistrer pour cet indicatif</span> ; 3) un envoi à la main pour vérifier (onglet Traitement) ; 4) seulement ensuite, la case <b>Envoyer automatiquement chaque nouveau QSO</b>. Un refus d'accès arrête les envois de cet indicatif : corrigez les identifiants avant de réessayer (Club Log bloque même l'adresse du serveur pendant une heure après plusieurs refus). Les QSO jamais partis restent « à envoyer » : rien n'est perdu. Chaque fenêtre a un onglet <b>HELP</b> avec le détail de son service.</p>
 <ol>
   <li>Choisissez le service : <b>Synchronisation LoTW…</b>, <b>Synchronisation eQSL…</b>, <b>Club Log…</b> ou <b>QRZ…</b>.</li>
   <li>Onglet <b>Détails</b> : choisissez l'<b>indicatif (TX call)</b> dont les QSO partent (le TX call en cours est proposé).</li>
@@ -963,9 +982,10 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
 </ol>
 <ul>
   <li><b>Indicatifs du club et indicatifs personnels</b> : les identifiants de la configuration générale (14.5) ne servent qu'aux indicatifs du club (ON5VL, OR0L). Un indicatif personnel (ON6DP…) a besoin de <b>ses propres identifiants</b>, sinon ses QSO sont marqués « non configuré ». Un envoi qui mélange plusieurs TX call est fait groupe par groupe, chacun avec ses identifiants.</li>
-  <li><b>Vos propres logs en ligne (membres)</b> : dans la fenêtre, l'indicatif est le vôtre et ne peut pas être changé. Entrez <b>vos</b> identifiants (eQSL, Club Log, clé API QRZ, identifiant du site LoTW), puis <span class="k">Enregistrer pour cet indicatif</span> : ils restent sur le serveur, ne sont jamais affichés, et personne d'autre ne peut s'en servir. Cochez <b>Envoyer automatiquement chaque nouveau QSO</b> pour que chaque QSO fait sous votre indicatif parte tout seul vers ce service (la case n'existe pas pour ON5VL / OR0L : l'envoi automatique du club se règle dans ⚙ Configuration ; un administrateur choisit son propre indicatif dans la liste pour la voir). Vos QSO ne partent jamais vers les comptes du club, et ceux du club jamais vers les vôtres. LoTW : <span class="k">Exporter pour TQSL</span> (vos QSO), signez avec <b>votre</b> TQSL, puis <span class="k">Marquer comme envoyés</span> ; <span class="k">Confirmations</span> lit vos confirmations avec l'identifiant de votre compte LoTW.</li>
+  <li><b>Vos propres logs en ligne (membres)</b> : dans la fenêtre, l'indicatif est le vôtre et ne peut pas être changé. Entrez <b>vos</b> identifiants (eQSL, Club Log, clé API QRZ, identifiant du site LoTW), puis <span class="k">Enregistrer pour cet indicatif</span> : ils restent sur le serveur, ne sont jamais affichés, et personne d'autre ne peut s'en servir. Cochez <b>Envoyer automatiquement chaque nouveau QSO</b> pour que chaque QSO fait sous votre indicatif parte tout seul vers ce service (la case n'existe pas pour ON5VL / OR0L : l'envoi automatique du club se règle dans ⚙ Configuration ; un administrateur choisit son propre indicatif dans la liste pour la voir). Vos QSO ne partent jamais vers les comptes du club, et ceux du club jamais vers les vôtres. LoTW : installez l'<b>Agent LoTW</b> sur le PC où se trouvent <b>votre</b> TQSL et <b>votre</b> certificat (voir LoTW ci-dessous) ; <span class="k">Synchronisation LoTW</span> signe et envoie alors vos QSO. Sans agent : <span class="k">Exporter pour TQSL</span> (vos QSO), signez avec votre TQSL, puis <span class="k">Marquer comme envoyés</span>. <span class="k">Confirmations</span> lit vos confirmations avec l'identifiant de votre compte LoTW.</li>
   <li>Un mot de passe refusé n'arrête que l'indicatif concerné (ceux du club et des autres membres continuent) ; corrigez-le puis enregistrez-le.</li>
-  <li><b>Opérations LoTW</b> : exporter, signer avec TQSL, envoyer, lire les confirmations, statut. <span class="k">Confirmations</span> lit seulement les confirmations reçues (★ dans la liste). Avec le serveur sur le VPS (sans TQSL) : <span class="k">Exporter pour TQSL (.adi)</span>, signez le fichier avec TQSL sur le PC du club, puis <span class="k">Marquer comme envoyés</span>.</li>
+  <li><b>Opérations LoTW</b> : exporter, signer avec TQSL, envoyer, lire les confirmations, statut. <span class="k">Confirmations</span> lit seulement les confirmations reçues (★ dans la liste). Le serveur sur le VPS n'a pas TQSL : la signature se fait sur le PC où TQSL et le certificat sont installés, par l'<b>Agent LoTW</b> (cadre « Agent LoTW » de la fenêtre) ou, sans agent, avec <span class="k">Exporter pour TQSL (.adi)</span>, TQSL à la main, puis <span class="k">Marquer comme envoyés</span>.</li>
+  <li><b>En réseau</b> (14.6) : faites les synchronisations depuis <b>remote.op0p.be</b>, qui a les QSO partagés de toutes les stations ; c'est aussi à lui que l'Agent LoTW se relie. L'envoi automatique d'un nouveau QSO ne part que du serveur où il a été enregistré.</li>
 </ul>
 
 <h4 id="help-lotw">LoTW (ARRL Logbook of The World)</h4>
@@ -1036,6 +1056,21 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
 
 <h3 id="l-net">14.6 Réseau : log commun et contests à plusieurs stations</h3>
 <p>À la manière de N1MM, plusieurs stations — chacune avec <b>son TRX et son propre serveur Remote Station</b> (installateur Windows, case « Serveur Remote Station », sur un PC à côté du TRX) — partagent <b>un seul log</b> et <b>une seule série de numéros de série</b> de contest. Chaque opérateur garde la main sur <b>son</b> TRX : toutes les stations émettent en même temps. <b>remote.op0p.be</b> est le <b>maître</b> (il tient le log commun et donne les numéros) ; <b>secours.op0p.be</b> (un second VPS, sans TRX) garde une copie complète et prend le relais si le maître tombe. Pas de VPN : les stations se connectent au maître en HTTPS (port 443), rien à ouvrir chez elles, même derrière un CGNAT (Starlink…).</p>
+<p><b>En bref : qui règle quoi</b></p>
+<table>
+  <tr><th>Serveur</th><th>Mode</th><th>Nom</th><th>Adresse de ce serveur</th><th>Maîtres (même liste partout)</th><th>Clé</th></tr>
+  <tr><td>remote.op0p.be (TRX du club, priorité 1)</td><td><b>Maître</b></td><td>REMOTE</td><td>remote.op0p.be</td><td rowspan="4">remote.op0p.be<br>secours.op0p.be</td><td rowspan="4">la même partout</td></tr>
+  <tr><td>secours.op0p.be (VPS sans TRX, priorité 2)</td><td><b>Maître</b></td><td>SECOURS</td><td>secours.op0p.be</td></tr>
+  <tr><td>Station d'un membre (serveur Remote Station à côté de son TRX)</td><td><b>Poste</b></td><td>ON4LUC-1…</td><td>—</td></tr>
+  <tr><td>Station qui ne participe pas</td><td><b>Hors réseau</b></td><td>—</td><td>—</td></tr>
+</table>
+<ul>
+  <li><b>Ce que le réseau n'est pas</b> : il ne sert pas à prendre la main sur le TRX d'une autre station. Les membres connectés à remote.op0p.be pilotent toujours le seul TRX du club, une personne à la fois ; pour émettre <b>en même temps</b>, chaque station a son propre TRX et son propre serveur, et le réseau met leurs logs et leurs numéros de série en commun.</li>
+  <li><b>Voir les stations connectées</b> : écran 🌐 Réseau de remote.op0p.be, tableau des liaisons (une ligne par station : nom, depuis quand, QSO reçus et envoyés, retard). Une station absente du tableau n'est pas reliée : vérifiez son mode, la liste des maîtres et la clé.</li>
+  <li><b>Hors contest</b> : rien de particulier ; chaque station partage ses QSO sous les indicatifs du club (réglage « Partager avec le réseau ») et garde pour elle ceux de l'indicatif personnel de ses membres.</li>
+  <li><b>Corrections et suppressions</b> : elles passent à toutes les stations ; les droits (« Qui peut modifier ou supprimer un QSO », 14.2) sont appliqués par le serveur où on les fait.</li>
+  <li><b>Logs en ligne</b> : synchronisations LoTW, Club Log, eQSL, QRZ depuis remote.op0p.be (il a les QSO de toutes les stations) ; l'Agent LoTW se relie à remote.op0p.be. Si remote.op0p.be est arrêté, les envois attendent son retour.</li>
+</ul>
 <table>
   <tr><th>Réglage (Logbooks → Synchronisation ▾ → 🌐 Réseau, administrateurs)</th><th>Ce qu'il fait</th></tr>
   <tr><td><b>Mode</b></td><td><b>Hors réseau</b> (par défaut) : la station travaille seule. <b>Poste</b> : à choisir sur <b>chacune des stations distantes</b> (le serveur Remote Station installé à côté de son TRX, par exemple chez ON4LUC) : elle envoie ses QSO au log commun et reçoit ses numéros de série du maître. <b>Maître</b> : seulement sur remote.op0p.be et secours.op0p.be. En résumé : remote.op0p.be et secours.op0p.be = Maître ; toutes les autres stations du réseau = Poste.</td></tr>

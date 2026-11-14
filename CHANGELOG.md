@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.15** — Documentation : « En bref » des synchronisations (ce qu'il faut pour chaque service, ordre conseillé) et du réseau (qui règle quoi, stations connectées, corrections, logs en ligne), droits sur les QSO (auteur avec la main, administrateurs).
 - **0.42.14** — Dashboard : version de Remote Station (v.0.42.14) affichée à droite de la date GMT.
 - **0.42.13** — Documentation : vitesse des envois eQSL / QRZ (temporisation 1 s conseillée, gros lots par fichier), clé API Club Log (support@clublog.org) dans le manuel, l'aide et le guide administrateur.
 - **0.42.12** — Club Log : après un blocage de l'adresse IP par le pare-feu de Club Log (403 nginx), plus aucun essai pendant une heure (chaque essai prolongeait le blocage) ; aide sur la clé API (support@clublog.org).

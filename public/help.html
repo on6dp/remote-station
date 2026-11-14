@@ -908,7 +908,7 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
 <h3 id="l-liste">14.2 The QSO list</h3>
 <ul>
   <li>The list shows the last 300 QSOs. The <b>Rechercher</b> (search) box finds a callsign, a name or an operator; the number of QSOs found is shown next to it.</li>
-  <li><b>Click a row</b>: the QSO opens in the form. Its author <b>with control</b> (or an administrator) can edit or delete it; everyone else (members without control, listeners, other operators) sees it <b>read-only</b> (« Fermer » closes it). Nobody can ever edit or delete a QSO logged by another callsign, except administrators.</li>
+  <li><b>Click a row</b>: the QSO opens in the form. Its author <b>with control</b> (or an administrator) can edit or delete it; everyone else (members without control, listeners, other operators) sees it <b>read-only</b> (« Fermer » closes it). A QSO belongs to the operator who <b>logged</b> it, whatever the transmit callsign (TX call): see « Who can edit or delete a QSO » below.</li>
   <li>Columns: date, time, callsign, band, frequency, mode, reports, name, QTH, <b>locator</b>, DXCC country, prefix, TX call, operator, references (IOTA, POTA…), <b>Contest</b> (contest during which the QSO was made, Cabrillo identifier such as CQ-WW-SSB, filled by the TRX SSB / TRX CW pages and the RTTY contest; hover: sent and received exchange), upload states (LoTW, eQSL, Club Log, QRZ).</li>
   <li>Right-hand columns off screen: <b>horizontal scroll bar at the bottom of the list</b> (the list fits the screen height: right-hand scroll bar to go down the logbook), or <kbd>Shift</kbd> + mouse wheel over the list.</li>
   <li><b>VFO A / B</b> of the STEP row (VFO tuned by the wheel, arrows and bands): A on dark green, B on dark pink, only one at a time.</li>
@@ -932,6 +932,16 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
   <tr><td>LoTW, eQSL, CL, QRZ</td><td>Upload state for each service: <b>·</b> not sent yet, <b>✓</b> sent, <b>✗</b> rejected (hover = details), <b>★</b> confirmed on LoTW.</td></tr>
 </table>
 
+<h4 id="l-droits">Who can edit or delete a QSO</h4>
+<p>A QSO belongs to the operator who <b>logged</b> it, whatever the transmit callsign (TX call). Two members operating as ON5VL therefore cannot erase each other's work. The server makes this check itself: a member cannot bypass it from their browser, and every edit or deletion is written in the server log with its author's callsign.</p>
+<table>
+  <tr><th>Who</th><th>QSOs they logged themselves (under their callsign, ON5VL or OR0L)</th><th>QSOs logged by another operator</th></tr>
+  <tr><td><b>Member</b> (e.g. ON1ZZZ)</td><td>edit / delete, <b>only while they have control</b></td><td>view only</td></tr>
+  <tr><td><b>Listener</b> (ONL…)</td><td>view only</td><td>view only</td></tr>
+  <tr><td><b>Administrator</b> (⚙ → Members, administrator column)</td><td>everything</td><td>everything (corrections, cleaning)</td></tr>
+</table>
+<p>Example for ON1ZZZ: a QSO he made as ON1ZZZ or as ON5VL / OR0L, he can correct or delete while he has control; a QSO made by ON4LUC as ON5VL, or by any other member, he can only view. In a <b>network</b> (14.6), the rule is applied by the server where the correction is made; the correction or deletion then goes to all stations.</p>
+
 <h3 id="l-export">14.3 Exporting</h3>
 <table>
   <tr><th>Exporter ▾ menu (export)</th><th>What it does</th></tr>
@@ -944,6 +954,15 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
 
 <h3 id="l-sync">14.4 Synchronisation (LoTW, eQSL, Club Log, QRZ)</h3>
 <p><b>Synchronisation ▾</b> menu: it uploads the logbook QSOs to the confirmation websites. One window per service, as in Swisslog. <b>Administrators</b> handle every callsign (club and members). Each <b>member</b> who transmits under their own callsign uses it for <b>their own</b> QSOs: the callsign is theirs and cannot be changed; they enter <b>their own</b> credentials (kept on the server, never shown, usable by nobody else), can tick « send each new QSO automatically » (not shown for ON5VL / OR0L: the club's automatic upload is set in ⚙ Configuration), and their QSOs never go to the club accounts (nor the club's to theirs). A refused password only stops that callsign.</p>
+<p><b>In short: what each service needs</b> (club callsigns: ⚙ Configuration, by an administrator; personal callsign: yellow frame of the service window, by the member):</p>
+<table>
+  <tr><th>Service</th><th>To prepare once</th><th>Upload</th><th>Speed</th></tr>
+  <tr><td><b>LoTW</b></td><td>TQSL, the certificate and a Station Location on <b>your PC</b>; the <b>LoTW Agent</b> installed and paired on that PC (once); for confirmations: login and password of the lotw.arrl.org <b>website</b></td><td><span class="k">Synchronisation LoTW</span>: signed by TQSL on your PC and uploaded; without agent: .adi export, TQSL by hand, <span class="k">Marquer comme envoyés</span></td><td>one file (fast)</td></tr>
+  <tr><td><b>eQSL</b></td><td>callsign (eQSL login), password; QTH Nickname only if the account has several QTHs (the exact name)</td><td><span class="k">Télécharger</span></td><td>one QSO per upload: 1 s delay advised</td></tr>
+  <tr><td><b>Club Log</b></td><td>account e-mail, <b>app password</b> (Club Log → Settings → App Passwords), the callsign registered in that account, the software <b>API key</b> (one for the whole club, requested from support@clublog.org)</td><td><span class="k">Télécharger</span></td><td>one file (fast)</td></tr>
+  <tr><td><b>QRZ.com</b></td><td>the callsign's QRZ logbook API key (QRZ → Logbook → Settings; XML subscription or higher)</td><td><span class="k">Télécharger</span></td><td>one QSO per upload: 1 s delay advised</td></tr>
+</table>
+<p>Advised order the first time: 1) the credentials (and the LoTW Agent); 2) <span class="k">Enregistrer pour cet indicatif</span>; 3) one manual upload to check (Traitement tab); 4) only then, the <b>send each new QSO automatically</b> box. An access refusal stops the uploads of that callsign: fix the credentials before trying again (Club Log even blocks the server's address for one hour after several refusals). QSOs never sent stay « to send »: nothing is lost. Each window has a <b>HELP</b> tab with the details of its service.</p>
 <ol>
   <li>Choose the service: <b>Synchronisation LoTW…</b>, <b>Synchronisation eQSL…</b>, <b>Club Log…</b> or <b>QRZ…</b>.</li>
   <li><b>Détails</b> (details) tab: choose the <b>callsign (TX call)</b> whose QSOs are uploaded (the current TX call is suggested).</li>
@@ -953,7 +972,8 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
 </ol>
 <ul>
   <li><b>Club callsigns and personal callsigns</b>: the credentials in the general configuration (14.5) are only used for the club callsigns (ON5VL, OR0L). A personal callsign (ON6DP…) needs <b>its own credentials</b>, otherwise its QSOs are marked « non configuré » (not configured). An upload mixing several TX calls is done group by group, each with its own credentials.</li>
-  <li><b>LoTW operations</b>: export, sign with TQSL, upload, read confirmations, status. <span class="k">Confirmations</span> only reads the confirmations received (★ in the list). With the server on the VPS (no TQSL): <span class="k">Exporter pour TQSL (.adi)</span> (export for TQSL), sign the file with TQSL on the club PC, then <span class="k">Marquer comme envoyés</span> (mark as sent).</li>
+  <li><b>LoTW operations</b>: export, sign with TQSL, upload, read confirmations, status. <span class="k">Confirmations</span> only reads the confirmations received (★ in the list). The server on the VPS has no TQSL: signing is done on the PC where TQSL and the certificate are installed, by the <b>LoTW Agent</b> (« Agent LoTW » frame of the window) or, without agent, with <span class="k">Exporter pour TQSL (.adi)</span> (export for TQSL), TQSL by hand, then <span class="k">Marquer comme envoyés</span> (mark as sent).</li>
+  <li><b>In a network</b> (14.6): run the synchronisations from <b>remote.op0p.be</b>, which has the shared QSOs of all stations; the LoTW Agent also connects to it. The automatic upload of a new QSO only leaves from the server where it was logged.</li>
 </ul>
 
 <h4 id="help-lotw">LoTW (ARRL Logbook of The World)</h4>
@@ -1024,6 +1044,21 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
 
 <h3 id="l-net">14.6 Network: shared log and multi-station contests</h3>
 <p>In the way of N1MM, several stations — each with <b>its TRX and its own Remote Station server</b> (Windows installer, « Serveur Remote Station » box, on a PC next to the TRX) — share <b>one log</b> and <b>one series of contest serial numbers</b>. Each operator keeps control of <b>their</b> TRX: all stations transmit at the same time. <b>remote.op0p.be</b> is the <b>master</b> (it keeps the shared log and gives the numbers); <b>secours.op0p.be</b> (a second VPS, no TRX) keeps a complete copy and takes over if the master fails. No VPN: stations connect to the master over HTTPS (port 443), nothing to open at home, even behind a CGNAT (Starlink…).</p>
+<p><b>In short: who sets what</b></p>
+<table>
+  <tr><th>Server</th><th>Mode</th><th>Name</th><th>Address of this server</th><th>Masters (same list everywhere)</th><th>Key</th></tr>
+  <tr><td>remote.op0p.be (club TRX, priority 1)</td><td><b>Maître</b> (master)</td><td>REMOTE</td><td>remote.op0p.be</td><td rowspan="4">remote.op0p.be<br>secours.op0p.be</td><td rowspan="4">the same everywhere</td></tr>
+  <tr><td>secours.op0p.be (VPS without TRX, priority 2)</td><td><b>Maître</b> (master)</td><td>SECOURS</td><td>secours.op0p.be</td></tr>
+  <tr><td>A member's station (Remote Station server next to their TRX)</td><td><b>Poste</b> (station)</td><td>ON4LUC-1…</td><td>—</td></tr>
+  <tr><td>Station not taking part</td><td><b>Hors réseau</b> (off network)</td><td>—</td><td>—</td></tr>
+</table>
+<ul>
+  <li><b>What the network is not</b>: it does not let you take control of another station's TRX. Members connected to remote.op0p.be still operate the club's single TRX, one person at a time; to transmit <b>at the same time</b>, each station has its own TRX and its own server, and the network shares their logs and serial numbers.</li>
+  <li><b>See the connected stations</b>: 🌐 Réseau screen of remote.op0p.be, table of links (one line per station: name, since when, QSOs received and sent, backlog). A station missing from the table is not linked: check its mode, the masters list and the key.</li>
+  <li><b>Outside contests</b>: nothing special; each station shares its QSOs under the club callsigns (« Partager avec le réseau » setting) and keeps those of its members' personal callsigns.</li>
+  <li><b>Corrections and deletions</b>: they go to all stations; the rights (« Who can edit or delete a QSO », 14.2) are applied by the server where they are made.</li>
+  <li><b>Online logs</b>: LoTW, Club Log, eQSL, QRZ synchronisations from remote.op0p.be (it has the QSOs of all stations); the LoTW Agent connects to remote.op0p.be. If remote.op0p.be is stopped, uploads wait for its return.</li>
+</ul>
 <table>
   <tr><th>Setting (Logbooks → Synchronisation ▾ → 🌐 Réseau, administrators)</th><th>What it does</th></tr>
   <tr><td><b>Mode</b></td><td><b>Hors réseau</b> (default): the station works alone. <b>Poste</b>: to choose on <b>each remote station</b> (the Remote Station server installed next to its TRX, e.g. at ON4LUC's): it sends its QSOs to the shared log and gets its serial numbers from the master. <b>Maître</b>: only on remote.op0p.be and secours.op0p.be. In short: remote.op0p.be and secours.op0p.be = Maître; all other stations of the network = Poste.</td></tr>

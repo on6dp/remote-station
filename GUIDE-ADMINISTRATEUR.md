@@ -494,6 +494,23 @@ Plusieurs serveurs Remote Station (un par TRX) partagent un log et une série de
 
 Fonctionnement : liaisons WebSocket sur `/ws` (HTTPS 443, nginx inchangé), toujours du poste vers le maître ; authentification HMAC-SHA256 dans les deux sens (la clé ne circule jamais). Chaque serveur garde le log complet (base SQLite) ; à chaque liaison, chacun envoie à l'autre ses changements depuis le dernier reçu (journal `changes`, curseurs `recv:<nom>` dans `meta`) ; la version la plus récente d'un QSO l'emporte (`edited` / `created`), les suppressions laissent une trace (`tombs`). Numéros de série : donnés par le **maître actif** ; ses lignes `serials` sont recopiées partout (colonne `mod`). Maître de priorité 1 : actif quand le secours lui a rendu ses données (ou 40 s après son démarrage) ; secours : actif si aucun maître plus prioritaire ne répond depuis 30 s, rend la main à son retour (`net_moved` : ses postes se rebranchent). Poste sans maître : numéros **provisoires** (série locale, message orange). Journal du service : lignes « Réseau : … ».
 
+### Droits sur le carnet (qui modifie ou supprime un QSO)
+
+- Un QSO appartient à l'opérateur qui l'a **enregistré** (champ `by` du QSO), quel que soit le TX call. Contrôle côté serveur (`logCanEdit` : administrateur, ou `q.by` = le membre **et** il a la main), pour `log_edit`, `log_del` et `log_merge` ; refus : « QSO enregistré par … : seul son auteur (avec la main) ou un administrateur peut le modifier ou le supprimer ». Écouteurs : consultation seulement.
+- Membre ON1ZZZ : ses QSO sous ON1ZZZ, ON5VL ou OR0L → oui avec la main ; QSO de ON4LUC sous ON5VL ou d'un autre membre → non. Administrateurs (⚙ → Membres) : tous les QSO.
+- Journal : `log_edit`, `log_del` avec l'indicatif de l'auteur de la correction. En réseau, le contrôle est fait par le serveur où l'on corrige ; la correction ou la suppression (`tombs`) passe ensuite à tous les serveurs.
+
+### Synchronisation et réseau : en bref
+
+| Serveur | Mode réseau | Synchronisations LoTW / Club Log / eQSL / QRZ |
+|---|---|---|
+| remote.op0p.be | Maître (priorité 1) | **ici** (tous les QSO partagés) ; Agent LoTW relié ici |
+| secours.op0p.be | Maître (priorité 2) | non (prend le relais du log seulement) |
+| station d'un membre | Poste | ses QSO personnels (non partagés), avec ses propres identifiants / son agent |
+
+- Première mise en service d'un service : identifiants (et Agent LoTW) → « Enregistrer pour cet indicatif » → un envoi à la main → seulement ensuite l'envoi automatique.
+- L'envoi automatique d'un nouveau QSO part du serveur où il a été enregistré ; les QSO reçus d'une autre station partent par la synchronisation (bouton) depuis remote.op0p.be, ou au retour de l'Agent LoTW (QSO des 30 derniers jours jamais présentés à LoTW).
+
 ### Logs en ligne par indicatif
 
 - Chaque indicatif a **ses propres identifiants** (eQSL, Club Log, clé API QRZ, lieu de station TQSL et identifiant du site LoTW), gardés dans `logs/logbook-config.json` (droits 600), jamais renvoyés aux navigateurs.
