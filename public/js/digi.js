@@ -370,7 +370,8 @@
     <!-- Grille de la page RTTY : VFO-A puis macros à gauche, VFO-B puis LOG RTTY à droite -->
     <!-- DUAL / QUAD DÉCODEURS et BARRES : posés sur la ligne de réglages de la cascade (Gain, Zéro… Vitesse) au démarrage -->
     <span class="rt-wfbtns" id="rtWfBtns">
-          <select id="rtDecSel" class="rt-decsel" hidden aria-label="Nombre de décodeurs" title="Un seul récepteur (ni SPLIT ni DUAL RX) : nombre de décodeurs sur la même cascade — SINGLE = A1 ; DUAL = A1 (clic gauche) et A2 (clic droit) ; QUAD = en plus A3 (Ctrl + clic gauche) et A4 (Ctrl + clic droit)"><option value="1">DÉCODEURS : SINGLE</option><option value="2">DÉCODEURS : DUAL</option><option value="4">DÉCODEURS : QUAD</option></select>
+          <span class="rt-decw" id="rtDecWrap" hidden><span class="rt-decl">DÉCODEURS</span>
+          <select id="rtDecSel" class="rt-decsel" aria-label="Nombre de décodeurs" title="Un seul récepteur (ni SPLIT ni DUAL RX) : nombre de décodeurs sur la même cascade — SINGLE = A1 ; DUAL = A1 (clic gauche) et A2 (clic droit) ; QUAD = en plus A3 (Ctrl + clic gauche) et A4 (Ctrl + clic droit)"><option value="1">SINGLE</option><option value="2">DUAL</option><option value="4">QUAD</option></select></span>
           <button class="dg-mini rt-2dec" type="button" id="rt2Dec" aria-pressed="false" hidden title="Un seul récepteur (ni SPLIT ni DUAL RX) : deux décodeurs sur la même cascade, comme FLDIGI : A1 (clic gauche) et A2 (clic droit, ou bouton droit maintenu pour faire glisser ses barres) ; deux signaux décodés en même temps. La fenêtre de A2 s’affiche dans la colonne de droite.">DUAL DÉCODEURS</button>
           <button class="dg-mini rt-2dec rt-4dec" type="button" id="rt4Dec" aria-pressed="false" hidden title="Un seul récepteur : 4 décodeurs sur la même cascade — A1 (clic gauche), A2 (clic droit), A3 (Ctrl + clic gauche), A4 (Ctrl + clic droit), ou choisir le décodeur dans BARRES puis clic gauche. Fenêtres de A3 sous A1, de A4 sous A2.">QUAD DÉCODEURS</button>
           <span class="rt-bsel" id="rtBSel" hidden title="Décodeur placé par le prochain clic gauche sur la cascade (une fois, puis retour à A1) ; clic droit : toujours A2"><span class="rt-bsl">BARRES</span><button class="dg-mini" type="button" data-b="0" aria-pressed="true">A1</button><button class="dg-mini" type="button" data-b="1" aria-pressed="false">A2</button><button class="dg-mini" type="button" data-b="2" aria-pressed="false">A3</button><button class="dg-mini" type="button" data-b="3" aria-pressed="false">A4</button></span>
@@ -2945,8 +2946,9 @@
     if ($('rtTxtB')) $('rtTxtB').placeholder = two ? 'Texte à émettre sur la fréquence de A2 (même VFO), puis F11 TX ou Ctrl+Entrée' : 'Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée';
     if (dualEl && dualEl.classList.contains('rt-4dec') !== four) { dualEl.classList.toggle('rt-4dec', four); if (!four) { rtBSel = Math.min(rtBSel, 1); if (rtTx >= 2) { rtTx = rtSideOf(rtTx); store.set('rttx', String(rtTx)); } } setTimeout(() => { announce(); if (tab === 'rtty') drawScale(); }, 0); }
     // Liste DÉCODEURS : à droite du bouton DUAL RX des VFO du haut (même style) ; remise en place si le bloc des VFO est redessiné
-    { const sel = $('rtDecSel'), drx = document.querySelector('#rtVfo .vfb-drx'); if (sel && drx && sel.previousElementSibling !== drx) drx.after(sel); }
-    if ($('rtDecSel')) { $('rtDecSel').hidden = !one; $('rtDecSel').value = four ? '4' : two ? '2' : '1'; $('rtDecSel').classList.toggle('on', two); }
+    { const sel = $('rtDecWrap'), drx = document.querySelector('#rtVfo .vfb-drx'); if (sel && drx && sel.previousElementSibling !== drx) drx.after(sel); }
+    if ($('rtDecWrap')) $('rtDecWrap').hidden = !one;
+    if ($('rtDecSel')) { $('rtDecSel').value = four ? '4' : two ? '2' : '1'; $('rtDecSel').classList.toggle('on', two); }
     if ($('rt4Dec')) { $('rt4Dec').hidden = !one; $('rt4Dec').setAttribute('aria-pressed', String(four)); }
     if ($('rtBSel')) { $('rtBSel').hidden = !four; $('rtBSel').querySelectorAll('[data-b]').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.b) === rtBSel))); }
     for (const id of ['rtDecC', 'rtDecD']) if ($(id)) $(id).hidden = !four;

@@ -3304,3 +3304,8 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 #rtVfo .rt-decsel.on { border-color: #c49bff; }
 #rtVfo .rt-decsel.on:hover { border-color: #58a6ff; }
 .wf-ctl { padding-top: 4px; padding-bottom: 8px; } /* un peu plus d'espace entre la ligne de réglages de la cascade et la règle des fréquences */
+/* DÉCODEURS : étiquette + liste courte (SINGLE / DUAL / QUAD) */
+.rt-decw { display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; }
+.rt-decw[hidden] { display: none !important; }
+.rt-decl { color: #fff; font: 800 12.5px Verdana, "DejaVu Sans", "Bitstream Vera Sans", Arial, sans-serif; letter-spacing: .5px; }
+#rtVfo .rt-decw .rt-decsel { margin-left: 0; width: auto; min-width: 0; }
