@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.98** — Page RTTY : liste SINGLE / DUAL / QUAD seule, sans l'étiquette DÉCODEURS
 - **0.39.97** — Page RTTY : étiquette DÉCODEURS et liste courte (SINGLE / DUAL / QUAD)
 - **0.39.96** — LOG RTTY en contest : colonne Pts (points par QSO) et total des points pour CQ WW RTTY, CQ WPX RTTY et ARRL RTTY Roundup (doublons à 0)
 - **0.39.95** — Cascades : un peu plus d'espace entre la ligne de réglages (Gain, Zéro, Couleurs, Vitesse) et la règle des fréquences

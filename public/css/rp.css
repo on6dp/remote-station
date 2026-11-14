@@ -3309,3 +3309,4 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .rt-decw[hidden] { display: none !important; }
 .rt-decl { color: #fff; font: 800 12.5px Verdana, "DejaVu Sans", "Bitstream Vera Sans", Arial, sans-serif; letter-spacing: .5px; }
 #rtVfo .rt-decw .rt-decsel { margin-left: 0; width: auto; min-width: 0; }
+.rt-decl { display: none !important; } /* liste SINGLE / DUAL / QUAD seule (sens dans l'infobulle) */
