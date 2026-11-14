@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.39.76** — Aide (FR / EN) et guide administrateur mis à jour : page RTTY (une fenêtre par VFO, ligne du QSO, LOG RTTY, exports filtrés, colonnes réglables), page SSB (LOG SSB, correction d'un QSO de contest, RETOUR)
 - **0.39.75** — LOG RTTY et LOG SSB : cadre blanc autour du log
 - **0.39.74** — Page SSB, log du contest : clic sur un indicatif = détails du QSO sous la ligne pour le corriger ou le supprimer ; LOG RTTY et logs SSB : largeur des colonnes réglable à la souris
 - **0.39.73** — Page TRX SSB : les 8 mémoires vocales sur la même ligne que Config. Macros, boutons moins hauts

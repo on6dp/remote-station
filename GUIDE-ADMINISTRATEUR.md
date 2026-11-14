@@ -454,6 +454,9 @@ Ces deux automatismes n'agissent que si un membre a la main (rien ne change pour
 - Un QSO sous l'indicatif d'un membre n'est **jamais** envoyé aux carnets du club : il part vers les siens (s'il les a réglés) ou s'exporte en ADIF (« Mes QSO »).
 - **LoTW** : le certificat (.p12 / .tq6) et son mot de passe restent sur le PC où **TQSL** est installé, jamais sur le VPS ni sur GitHub. Sur le VPS : « Exporter pour TQSL (.adi) », signer avec TQSL sur le PC du club, puis « Marquer comme envoyés ».
 - **UDP** (Swisslog, Log4OM, N1MM) : les paquets partent du serveur ; le PC qui les reçoit doit être joignable depuis le VPS.
+- **Exports par opérateur** (pages RTTY et SSB, menu EXPORTER ▾ des cadres LOG RTTY / LOG SSB) : plusieurs opérateurs se partagent la station ; un administrateur peut exporter en ADIF (et en Cabrillo pour un contest RTTY) les QSO de **tous** les TX call et de **tous** les opérateurs, ou d'un opérateur précis (nom de fichier `…-OP<INDICATIF>-…`), avec des dates du / au. Un membre n'exporte que ses propres QSO : le serveur l'impose, quels que soient les filtres choisis.
+- **Corrections** : un QSO du log d'un contest SSB se corrige en cliquant sur son indicatif (détails sous la ligne, Enregistrer / Supprimer) ; mêmes droits que l'onglet Logbooks (un membre ses propres QSO, un administrateur tous). Le QSO corrigé remplace l'ancien dans le carnet ; les envois déjà faits vers les logs en ligne restent notés (à refaire si nécessaire).
+- **Page RTTY** : la ligne du QSO (CALL, RST, échanges, LOG ↵) enregistre directement dans le carnet, sans fiche ; nom, QTH et locator manquants sont complétés par QRZ.com si le compte QRZ est configuré (⚙ Configuration). Le cadre LOG RTTY montre les 300 derniers QSO RTTY (hors contest, ou du contest choisi).
 
 ### Logs en ligne par indicatif
 
