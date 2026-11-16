@@ -499,6 +499,7 @@
       <span class="dg-f">Bande WSPR : <b>1400 – 1600 Hz</b> audio</span>
       <span class="dg-clock" id="wsClock">--:--</span>
       <span class="dg-status" id="wsStatus"></span>
+      <button class="btn ws-whb" type="button" id="whBtn" title="Qui a entendu votre balise WSPR ? Les spots envoyés à WSPRnet par les stations du monde entier">📡 Qui m’a entendu ?</button>
     </div>
     <div class="ft-wfrow"><div class="dg-wf-slot" data-slot="wspr"></div></div>
     <div class="ws-cols">
@@ -513,6 +514,24 @@
       <div class="ws-th"><span>UTC</span><span>dB</span><span>DT</span><span>Fréquence</span><span>Dérive</span><span>Indicatif</span><span>Locator</span><span>Puiss.</span><span>Distance</span></div>
       <div class="dg-list ws-list" id="wsListB"></div>
     </div>
+    </div>
+    <!-- Qui m'a entendu ? : spots de WSPRnet (base publique wspr.live), demandés par le serveur -->
+    <div class="ws-heard" id="whBox" hidden>
+      <div class="dg-h"><span>📡 Qui m’a entendu ? <b id="whCount"></b></span><span class="dg-note">spots envoyés à WSPRnet par les stations qui vous ont décodé · 1 à 3 minutes de délai</span><button class="dg-mini" type="button" id="whClose">Fermer</button></div>
+      <div class="wh-bar">
+        <label>Indicatif <input id="whCall" maxlength="15" autocomplete="off" spellcheck="false"></label>
+        <select id="whDir" aria-label="Sens"><option value="tx">qui a entendu cet indicatif</option><option value="rx">ce que cet indicatif a entendu</option></select>
+        <label>Période <select id="whH"><option value="1">1 heure</option><option value="6">6 heures</option><option value="24" selected>24 heures</option><option value="168">7 jours</option></select></label>
+        <label>Bande <select id="whBand"><option value="">toutes</option></select></label>
+        <label>Vue <select id="whView"><option value="st">une ligne par station</option><option value="all">tous les spots</option></select></label>
+        <button class="btn" type="button" id="whGo">Actualiser</button>
+        <label class="wh-auto"><input type="checkbox" id="whAuto"> toutes les 2 min</label>
+        <span class="wh-st" id="whSt"></span>
+      </div>
+      <p class="wh-sum" id="whSum"></p>
+      <div class="wh-th" id="whHead"></div>
+      <div class="dg-list wh-list" id="whList"></div>
+      <p class="dg-note wh-src">Données : <a href="https://wspr.live" target="_blank" rel="noopener">wspr.live</a> (base publique des spots de WSPRnet). Carte : <a href="https://www.wsprnet.org/drupal/wsprnet/map" target="_blank" rel="noopener">wsprnet.org</a>. Seules les stations qui envoient leurs décodes à WSPRnet apparaissent.</p>
     </div>`;
   const JTTY_PANE = `
     <div class="dg-bar">
@@ -3550,7 +3569,96 @@
     pos($('dgMkRx'), 1400, 200);
     pos($('dgMkTx'), 1400, 0);
   }
+  // ------------------------------------------------------------------ Qui m'a entendu ? (spots WSPRnet via wspr.live, par le serveur)
+  const WH = { rows: null, sort: 'time', timer: null, last: null };
+  const WH_BANDS = [['160m', 1.8e6, 2e6], ['80m', 3.5e6, 4e6], ['60m', 5.25e6, 5.45e6], ['40m', 7e6, 7.3e6], ['30m', 10.1e6, 10.15e6], ['20m', 14e6, 14.35e6], ['17m', 18.068e6, 18.168e6],
+    ['15m', 21e6, 21.45e6], ['12m', 24.89e6, 24.99e6], ['10m', 28e6, 29.7e6], ['6m', 50e6, 54e6], ['2m', 144e6, 148e6], ['70cm', 430e6, 440e6]];
+  const whBand = (hz) => { const b = WH_BANDS.find((x) => hz >= x[1] && hz <= x[2]); return b ? b[0] : (hz / 1e6).toFixed(3); };
+  function whAsk() {
+    const call = $('whCall').value.toUpperCase().trim();
+    if (!/^[A-Z0-9/]{3,15}$/.test(call)) { $('whSt').textContent = 'Indicatif ?'; return; }
+    store.set('whcall', call);
+    $('whSt').textContent = 'Recherche…';
+    api.send({ t: 'wspr_heard', call, dir: $('whDir').value, hours: Number($('whH').value), band: $('whBand').value });
+  }
+  function whDraw(m) {
+    if (m) WH.last = m;
+    m = WH.last;
+    if (!m) return;
+    const st = $('whSt');
+    if (m.error) st.textContent = '⚠ ' + m.error; else st.textContent = m.at ? 'mis à jour ' + new Date(m.at).toISOString().slice(11, 16) + ' UTC' : '';
+    const rows = m.rows || [];
+    const tx = m.dir !== 'rx';
+    const who = (r) => (tx ? r[2] : r[4]), loc = (r) => (tx ? r[3] : r[5]);
+    const per = { 1: '1 heure', 6: '6 heures', 24: '24 heures', 168: '7 jours' }[m.hours] || m.hours + ' h';
+    const stations = new Map();
+    for (const r of rows) {
+      const k = who(r);
+      const o = stations.get(k) || { r, n: 0, best: -99, bands: new Set(), last: '' };
+      o.n++; if (r[7] > o.best) o.best = r[7]; o.bands.add(whBand(r[1])); if (r[0] > o.last) { o.last = r[0]; o.r = r; }
+      stations.set(k, o);
+    }
+    const far = rows.reduce((a, r) => (!a || r[6] > a[6] ? r : a), null);
+    const perBand = {};
+    for (const r of rows) { const b = whBand(r[1]); perBand[b] = (perBand[b] || 0) + 1; }
+    $('whCount').textContent = rows.length ? '(' + stations.size + ' stations)' : '';
+    $('whSum').textContent = !rows.length ? (m.error ? '' : (tx ? 'Personne n’a encore signalé ' + m.call : m.call + ' n’a signalé aucun décode') + ' à WSPRnet sur les dernières ' + per + (m.band ? ' en ' + m.band : '') + '.' + (tx ? ' Une balise doit émettre plusieurs périodes ; les spots arrivent 1 à 3 minutes après la fin de la période.' : ''))
+      : (tx ? stations.size + ' station' + (stations.size > 1 ? 's ont' : ' a') + ' entendu ' + m.call : m.call + ' a entendu ' + stations.size + ' station' + (stations.size > 1 ? 's' : '')) + ' en ' + per + ' · ' + rows.length + ' spot' + (rows.length > 1 ? 's' : '') +
+        (far ? ' · le plus loin : ' + who(far) + (loc(far) ? ' (' + loc(far) + ')' : '') + ' à ' + far[6].toLocaleString('fr-BE') + ' km' : '') +
+        ' · ' + Object.keys(perBand).map((b) => b + ' : ' + perBand[b]).join(', ');
+    const all = $('whView').value === 'all';
+    const head = ['UTC', 'Bande', tx ? 'Reçu par' : 'Station', 'Locator', 'Distance', 'dB', 'Dérive', 'Puissance', all ? 'Fréquence' : 'Spots'];
+    const keys = ['time', 'band', 'call', 'loc', 'dist', 'db', 'drift', 'pwr', all ? 'freq' : 'n'];
+    const H = $('whHead');
+    H.textContent = '';
+    head.forEach((h, i) => {
+      const sp = document.createElement('span');
+      sp.textContent = h + (WH.sort === keys[i] ? ' ▾' : '');
+      sp.title = 'Trier par ' + h.toLowerCase();
+      sp.addEventListener('click', () => { WH.sort = keys[i]; whDraw(); });
+      H.appendChild(sp);
+    });
+    let list = all ? rows.map((r) => ({ r, n: 1, best: r[7], bands: new Set([whBand(r[1])]), last: r[0] })) : Array.from(stations.values());
+    const val = (o) => ({ time: o.last, band: Array.from(o.bands).join(' '), call: who(o.r), loc: loc(o.r), dist: o.r[6], db: o.best, drift: o.r[9], pwr: o.r[8], freq: o.r[1], n: o.n }[WH.sort]);
+    list.sort((a, b) => { const x = val(a), y = val(b); return typeof x === 'number' ? y - x : (WH.sort === 'time' ? String(y).localeCompare(String(x)) : String(x).localeCompare(String(y))); });
+    const L = $('whList');
+    L.textContent = '';
+    for (const o of list.slice(0, 1000)) {
+      const r = o.r;
+      const d = document.createElement('div');
+      d.className = 'wh-row';
+      const cells = [o.last.slice(5, 16).replace('-', '/'), Array.from(o.bands).join(' '), who(r), loc(r) || '—', r[6].toLocaleString('fr-BE') + ' km', (o.best >= 0 ? '+' : '') + o.best, r[9], r[8] + ' dBm (' + dbmW(r[8]) + ')',
+        all ? (r[1] / 1e6).toFixed(6) + ' MHz' : String(o.n)];
+      for (const v of cells) { const sp = document.createElement('span'); sp.textContent = String(v); d.appendChild(sp); }
+      d.title = (tx ? who(r) + ' a reçu ' + m.call : m.call + ' a reçu ' + who(r)) + ' : ' + r[0] + ' UTC, ' + (r[1] / 1e6).toFixed(6) + ' MHz, ' + r[7] + ' dB, ' + r[6] + ' km' + (all ? '' : ' (dernier spot ; meilleur rapport ' + o.best + ' dB)');
+      L.appendChild(d);
+    }
+  }
+  function initWh() {
+    for (const [b] of WH_BANDS) { const o = document.createElement('option'); o.value = b; o.textContent = b; $('whBand').appendChild(o); }
+    const open = (on) => {
+      $('whBox').hidden = !on;
+      store.set('whopen', on ? '1' : '0');
+      clearInterval(WH.timer);
+      if (on) {
+        if (!$('whCall').value) $('whCall').value = store.get('whcall', '') || myCall;
+        whAsk();
+        if ($('whAuto').checked) WH.timer = setInterval(() => { if (!$('whBox').hidden) whAsk(); }, 120000);
+      }
+    };
+    $('whBtn').addEventListener('click', () => open($('whBox').hidden));
+    $('whClose').addEventListener('click', () => open(false));
+    $('whGo').addEventListener('click', whAsk);
+    $('whCall').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') whAsk(); });
+    for (const id of ['whDir', 'whH', 'whBand']) $(id).addEventListener('change', whAsk);
+    $('whView').addEventListener('change', () => { store.set('whview', $('whView').value); whDraw(); });
+    $('whView').value = store.get('whview', 'st') === 'all' ? 'all' : 'st';
+    $('whAuto').checked = store.get('whauto', '1') === '1';
+    $('whAuto').addEventListener('change', () => { store.set('whauto', $('whAuto').checked ? '1' : '0'); open(true); });
+    if (store.get('whopen', '0') === '1') setTimeout(() => open(true), 1500);
+  }
   function initWspr() {
+    initWh();
     const dial = $('wsDial');
     for (const [b, khz] of WSPR_DIAL) {
       const o = document.createElement('option');
@@ -6974,6 +7082,7 @@
           sySync(m.level === 'error' ? 'err' : 'ok', String(m.msg).replace(/^Heure du PC du club : /, ''));
         }
       }
+      if (m.t === 'wspr_heard') { whDraw(m); return true; }
       if (m.t === 'qrz_info') { qrzInfo(m); if (window.RSLOG && window.RSLOG.onQrz) window.RSLOG.onQrz(m); if (LOGW() && LOGW().onQrz) LOGW().onQrz(m); return true; }
       if (LOGP && /^log_/.test(m.t)) { if (LOGW()) LOGW().onMessage(m); return true; } // carnet de trafic (sa fenêtre)
       if (m.t === 'ftx_qso' && m.qso) { ftxQsoEnd(m); return true; }

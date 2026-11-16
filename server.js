@@ -135,6 +135,41 @@ fs.mkdirSync(LOG_DIR, { recursive: true });
 const PUBLIC_EVENTS = ['login', 'logout', 'control_take', 'control_release', 'tx_start', 'tx_stop', 'tune', 'power_limit', 'rig_switch', 'swr_cut', 'tune_fail', 'tx_watchdog',
   'station_online', 'station_offline', 'trx_online', 'trx_offline'];
 const recentEvents = [];
+// ---------------------------------------------------------------- WSPR : qui a entendu une balise ? (base publique wspr.live = spots de WSPRnet)
+// Requête HTTP en lecture seule (https://db1.wspr.live/?query=…), 20 par minute au plus pour tout le monde : cache de 90 s et
+// 10 requêtes par minute au plus depuis ce serveur. Indicatif limité à [A-Z0-9/], durée et bande choisies dans une liste.
+const WSH = { cache: new Map(), times: [] };
+const WSH_BANDS = { '160m': [1.8e6, 2.0e6], '80m': [3.5e6, 4.0e6], '60m': [5.25e6, 5.45e6], '40m': [7.0e6, 7.3e6], '30m': [10.1e6, 10.15e6], '20m': [14.0e6, 14.35e6],
+  '17m': [18.068e6, 18.168e6], '15m': [21.0e6, 21.45e6], '12m': [24.89e6, 24.99e6], '10m': [28.0e6, 29.7e6], '6m': [50e6, 54e6], '2m': [144e6, 148e6], '70cm': [430e6, 440e6] };
+async function wsprHeard(conn, m) {
+  const call = String(m.call || '').toUpperCase().trim();
+  const hours = [1, 6, 24, 168].indexOf(Number(m.hours)) >= 0 ? Number(m.hours) : 24;
+  const band = WSH_BANDS[m.band] ? m.band : '';
+  const dir = m.dir === 'rx' ? 'rx' : 'tx'; // tx : qui a entendu cet indicatif ; rx : ce que cet indicatif a entendu (s'il envoie à WSPRnet)
+  const reply = (o) => send(conn, Object.assign({ t: 'wspr_heard', call, hours, band, dir }, o));
+  if (!/^[A-Z0-9/]{3,15}$/.test(call)) return reply({ error: 'Indicatif invalide' });
+  const key = dir + '|' + call + '|' + hours + '|' + band;
+  const c = WSH.cache.get(key);
+  if (c && Date.now() - c.at < 90000) return reply({ rows: c.rows, at: c.at });
+  WSH.times = WSH.times.filter((t) => Date.now() - t < 60000);
+  if (WSH.times.length >= 10) return reply({ error: 'Trop de demandes vers wspr.live : réessayez dans une minute', rows: c ? c.rows : null, at: c ? c.at : 0 });
+  WSH.times.push(Date.now());
+  const who = dir === 'tx' ? 'tx_sign' : 'rx_sign';
+  const fr = band ? ' AND frequency BETWEEN ' + WSH_BANDS[band][0] + ' AND ' + WSH_BANDS[band][1] : '';
+  const q = 'SELECT time, frequency, rx_sign, rx_loc, tx_sign, tx_loc, distance, snr, power, drift FROM wspr.rx WHERE time > now() - INTERVAL ' + hours + ' HOUR AND ' +
+    who + " = '" + call + "'" + fr + ' ORDER BY time DESC LIMIT 2000 FORMAT JSONCompact';
+  try {
+    const r = await fetch((process.env.RS_WSPRLIVE || 'https://db1.wspr.live/') + '?query=' + encodeURIComponent(q), { signal: AbortSignal.timeout(20000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    const rows = (Array.isArray(j.data) ? j.data : []).map((x) => [String(x[0]), Number(x[1]), String(x[2]), String(x[3]), String(x[4]), String(x[5]), Number(x[6]), Number(x[7]), Number(x[8]), Number(x[9])]);
+    WSH.cache.set(key, { at: Date.now(), rows });
+    if (WSH.cache.size > 50) WSH.cache.delete(WSH.cache.keys().next().value);
+    return reply({ rows, at: Date.now() });
+  } catch (e) {
+    return reply({ error: 'wspr.live injoignable (' + String(e.message || e).slice(0, 80) + ')', rows: c ? c.rows : null, at: c ? c.at : 0 });
+  }
+}
 function journal(ev, data) {
   const d = new Date();
   const line = JSON.stringify(Object.assign({ ts: d.toISOString(), ev }, data)) + '\n';
@@ -4111,6 +4146,7 @@ function onOperator(conn, m) {
       for (const c of ops) if (c.open && c.user && c !== conn) send(c, { t: 'notice', level: 'warn', msg: 'Mise à jour du serveur vers ' + m.v + ' lancée par ' + conn.user.call + ' : la station sera coupée environ une minute.' });
       return;
     }
+    case 'wspr_heard': return wsprHeard(conn, m);
     case 'prop_get':
       conn.propSub = true;
       if (!PROP.data && Date.now() - PROP.at > 60000) { PROP.at = Date.now(); PROP.fetch(); }

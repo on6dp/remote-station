@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.19** — WSPR : « 📡 Qui m'a entendu ? » — les stations qui ont décodé votre balise et l'ont signalé à WSPRnet (base publique wspr.live) : résumé (nombre de stations, la plus lointaine, spots par bande), une ligne par station ou tous les spots, tri par colonne, période 1 h à 7 jours, bande, mise à jour toutes les 2 minutes.
 - **0.42.18** — Page TRX SSB : « 🎙 Ma voix » pour enregistrer les mémoires vocales T1 … T8 avec sa propre voix, au micro du PC, pour tous les TRX (● REC / ■ STOP, ▶ réécoute sans émettre, nom, ✕ effacer ; origine de chaque mémoire affichée : votre voix, synthèse ou vide).
 - **0.42.17** — Fonction absente du TRX : même message partout, avec le nom du modèle (« … : pas disponible sur le Yaesu FTDX10 ») ; « pas disponible à distance » pour ce qui se règle au club ; expliqué dans Problèmes fréquents.
 - **0.42.16** — ⚙ Configuration simplifiée : réglages des indicatifs du club rappelés, clé API Club Log valable pour tous les indicatifs (membres compris), pas de temporisation pour Club Log et LoTW (un seul fichier), onglet LoTW sans champs TQSL sur un serveur sans TQSL et « Tester » qui vérifie l'Agent LoTW ; aide : la temporisation expliquée service par service.

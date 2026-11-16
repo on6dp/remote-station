@@ -897,6 +897,24 @@ body.digi-popup .rt-rx { max-height: none; }
 .ws-row:hover { background: rgba(154, 120, 224, .1); }
 .ws-row.me { background: rgba(255, 32, 32, .2); }
 .ws-list { max-height: 380px; }
+.ws-whb { margin-left: auto; font-weight: 800; }
+.ws-heard { margin-top: 10px; border: 1px solid var(--v2-border); border-radius: 6px; background: var(--v2-bg-panel, #0b111a); display: flex; flex-direction: column; min-width: 0; }
+.wh-bar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 6px 8px; font-size: 12px; font-weight: 700; color: #fff; }
+.wh-bar label { display: inline-flex; gap: 6px; align-items: center; }
+.wh-bar input#whCall { width: 110px; text-transform: uppercase; font-family: "Roboto Mono", ui-monospace, monospace; font-weight: 800; background: #07090d; color: #fff; border: 1px solid var(--v2-border); border-radius: 4px; padding: 3px 6px; }
+.wh-bar select { background: #07090d; color: #fff; border: 1px solid var(--v2-border); border-radius: 4px; padding: 2px 6px; color-scheme: dark; font-weight: 700; }
+.wh-st { color: var(--v2-text-dim); font-weight: 700; }
+.wh-sum { margin: 0; padding: 2px 8px 6px; font-size: 12.5px; font-weight: 700; color: var(--v2-accent-green-bright); }
+.wh-th, .wh-row { display: grid; grid-template-columns: 86px 60px 110px 66px 82px 40px 44px 128px 120px; justify-content: start; gap: 6px; padding: 2px 8px; font-size: 11.5px; }
+.wh-th { color: var(--v2-text-dim); font-size: 9.5px; letter-spacing: .8px; text-transform: uppercase; border-bottom: 1px solid var(--v2-border-dark); padding-block: 4px; }
+.wh-th span { cursor: pointer; user-select: none; }
+.wh-th span:hover { color: #fff; }
+.wh-row { color: var(--v2-text-secondary); font-family: "Roboto Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+.wh-row span:nth-child(3) { color: #fff; font-weight: 800; }
+.wh-th span:nth-child(n+5):nth-child(-n+9), .wh-row span:nth-child(n+5):nth-child(-n+9) { text-align: right; }
+.wh-list { max-height: 360px; overflow: auto; }
+.wh-src { padding: 4px 8px 6px; }
+.wh-src a { color: var(--v2-accent-cyan-bright); }
 body.digi-popup .ws-list { max-height: none; }
 
 /* ------------------------------------------------------------ cadres détachables (panels.js) */
