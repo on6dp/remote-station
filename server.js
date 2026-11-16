@@ -1638,7 +1638,8 @@ function onVm(conn, m) {
       let buf;
       try { buf = fs.readFileSync(vmFile(call, n)); } catch (e) { buf = Buffer.alloc(0); }
       const total = Math.max(1, Math.ceil(buf.length / 45000));
-      for (let i = 0; i < total; i++) send(conn, { t: 'vm_data', n, i, total, d: buf.subarray(i * 45000, (i + 1) * 45000).toString('base64') });
+      const tag = m.tag === 'ssb' ? 'ssb' : undefined; // page TRX SSB : la face avant ne la joue pas aussi
+      for (let i = 0; i < total; i++) send(conn, { t: 'vm_data', n, i, total, tag, d: buf.subarray(i * 45000, (i + 1) * 45000).toString('base64') });
       return;
     }
     case 'vm_del': {

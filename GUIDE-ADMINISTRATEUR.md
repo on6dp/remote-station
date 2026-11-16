@@ -494,6 +494,10 @@ Plusieurs serveurs Remote Station (un par TRX) partagent un log et une série de
 
 Fonctionnement : liaisons WebSocket sur `/ws` (HTTPS 443, nginx inchangé), toujours du poste vers le maître ; authentification HMAC-SHA256 dans les deux sens (la clé ne circule jamais). Chaque serveur garde le log complet (base SQLite) ; à chaque liaison, chacun envoie à l'autre ses changements depuis le dernier reçu (journal `changes`, curseurs `recv:<nom>` dans `meta`) ; la version la plus récente d'un QSO l'emporte (`edited` / `created`), les suppressions laissent une trace (`tombs`). Numéros de série : donnés par le **maître actif** ; ses lignes `serials` sont recopiées partout (colonne `mod`). Maître de priorité 1 : actif quand le secours lui a rendu ses données (ou 40 s après son démarrage) ; secours : actif si aucun maître plus prioritaire ne répond depuis 30 s, rend la main à son retour (`net_moved` : ses postes se rebranchent). Poste sans maître : numéros **provisoires** (série locale, message orange). Journal du service : lignes « Réseau : … ».
 
+### Mémoires vocales à sa propre voix (0.42.18)
+
+Page TRX SSB → **🎙 Ma voix** : chaque membre enregistre T1 … T8 au micro de son PC, pour tous les TRX (avant : seulement l'écran VOICE de la face avant IC-7300). Mêmes messages serveur que la face avant (`vm_put` en morceaux µ-law 12 kHz, `vm_name`, `vm_del`, `vm_get` avec `tag: 'ssb'` pour que la face avant ne rejoue pas l'écoute). Fichiers `voicemem/<INDICATIF>-T<n>.ul` (30 s au plus, droits 600, jamais publiés) ; une mémoire enregistrée au micro efface le message de synthèse du même numéro. Émission par le serveur (`vm_play`) avec les sécurités du PTT, quel que soit le TRX.
+
 ### Droits sur le carnet (qui modifie ou supprime un QSO)
 
 - Un QSO appartient à l'opérateur qui l'a **enregistré** (champ `by` du QSO), quel que soit le TX call. Contrôle côté serveur (`logCanEdit` : administrateur, ou `q.by` = le membre **et** il a la main), pour `log_edit`, `log_del` et `log_merge` ; refus : « QSO enregistré par … : seul son auteur (avec la main) ou un administrateur peut le modifier ou le supprimer ». Écouteurs : consultation seulement.

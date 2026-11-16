@@ -64,7 +64,7 @@
             <span class="cwp-dupe" id="cwpDupe"></span>
           </div>
           <div class="ssb-vk">
-            <span class="ssb-vkh">Mémoires vocales <small>F1 à F8 · Échap : arrêt</small><button type="button" class="ssb-ttsb" id="ssTtsBtn" title="Messages standard en anglais ou en français fabriqués par le serveur, avec votre TX call épelé en alphabet phonétique">🗣 Config. Macros</button></span>
+            <span class="ssb-vkh">Mémoires vocales <small>F1 à F8 · Échap : arrêt</small><button type="button" class="ssb-ttsb" id="ssTtsBtn" title="Messages standard en anglais ou en français fabriqués par le serveur, avec votre TX call épelé en alphabet phonétique">🗣 Config. Macros</button><button type="button" class="ssb-ttsb" id="ssRecBtn" title="Enregistrer les mémoires T1 … T8 avec votre propre voix, au micro de ce PC (tous les TRX)">🎙 Ma voix</button></span>
             <div class="cwp-macros" id="ssVk"></div>
             <div class="ssb-tts" id="ssTts" hidden>
               <p class="cwp-note">Messages dits par la voix de synthèse du serveur (Kokoro ou Piper), en anglais ou en français (un jeu de messages par langue). <b>{CALL}</b> = votre TX call, épelé en alphabet phonétique (<span id="ssTtsEx"></span>) ; quand le TX call change, les messages sont refaits tout seuls. Cochez les mémoires à remplacer.</p>
@@ -86,7 +86,12 @@
                 <button type="button" id="ssTtsX" title="Fermer ce cadre (réglages gardés ; « Config. Macros » pour le rouvrir)">✕ Fermer</button>
               </div>
             </div>
-            <p class="cwp-note ssb-vkct">T1 = CQ, T3 = TU / QRZ, T4 = votre indicatif pour la touche Entrée. Enregistrement : face avant, MENU → VOICE → REC. L’échange (n° de série) se dit au micro avec le PTT ci-dessus.</p>
+            <div class="ssb-tts ssb-rec" id="ssRec" hidden>
+              <p class="cwp-note">Vos mémoires <b>T1 … T8</b> avec <b>votre propre voix</b>, pour tous les TRX : mettez votre <b>micro</b> en service (cadre micro ci-dessus), puis <b>● REC</b>, parlez (30 s au plus), <b>■ STOP</b>. <b>▶</b> pour réécouter dans ce PC (rien n'est émis), <b>✕</b> pour effacer. Gardées sur le serveur pour vous seul ; elles remplacent le message de synthèse de la même mémoire. Rien n'est enregistré pendant une émission.</p>
+              <div class="ssb-recl" id="ssRecL"></div>
+              <div class="ssb-ttsr"><span class="ssb-recm" id="ssRecM"></span><button type="button" id="ssRecX">✕ Fermer</button></div>
+            </div>
+            <p class="cwp-note ssb-vkct">T1 = CQ, T3 = TU / QRZ, T4 = votre indicatif pour la touche Entrée. Votre voix : <b>🎙 Ma voix</b> ; voix de synthèse : <b>🗣 Config. Macros</b>. L’échange (n° de série) se dit au micro avec le PTT ci-dessus.</p>
           </div>
           <div class="ssb-panels">
             <div class="ssb-pan ssb-score">

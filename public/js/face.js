@@ -8313,7 +8313,7 @@
       if (hostTaps.size) runTaps(m);
       if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && window.RSVOICE) { window.RSVOICE.onMessage(m); return; }
       if (m.t === 'vm') { VM.meta = m.meta; VM.playing = m.playing; L.vlvP = null; render(); return; } // mémoires vocales (VOICE TX)
-      if (m.t === 'vm_data') { vmOnData(m); return; }
+      if (m.t === 'vm_data') { if (!m.tag) vmOnData(m); return; } // tag : demandée par une autre page (TRX SSB)
       if (m.t === 'scope') { if (ICOM) rfsOn(m); else if (DICOM) rfsOn76(m); return; } // scope du TRX (IC-7300 ; IC-7760 : MAIN et SUB)
       if (m.t === 'spots' || m.t === 'spot') bmvOnSpots(m); // cartes de bande A / B autour du TRX
       if (m.t === 'menu_vals') return menuVals(m);

@@ -216,7 +216,7 @@
       b.querySelector('span').textContent = (t && t.name) || (t && t.ms ? 'T' + n : 'vide');
       const tt = S.tts && S.tts[n];
       if (tt) { b.classList.add('tts'); b.querySelector('small').textContent += ' · ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'FR' : 'EN'); }
-      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message de synthèse ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'en français' : 'en anglais') + ', ' + tt.call + ')' : '') : 'Mémoire T' + n + ' vide : l’enregistrer sur la face avant (MENU → VOICE → REC) ou « Messages vocaux »';
+      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message de synthèse ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'en français' : 'en anglais') + ', ' + tt.call + ')' : '') : 'Mémoire T' + n + ' vide : l’enregistrer avec « 🎙 Ma voix » (votre micro) ou « 🗣 Config. Macros » (voix de synthèse)';
       b.addEventListener('click', () => playVm(n));
       box.appendChild(b);
     }
@@ -340,7 +340,7 @@
     $('ssTtsGo').textContent = 'GÉNÉRER' + (c ? ' POUR ' + c : '');
   }
   $('ssTtsX').addEventListener('click', () => { $('ssTts').hidden = true; });
-  $('ssTtsBtn').addEventListener('click', () => { const p = $('ssTts'); p.hidden = !p.hidden; if (!p.hidden) ttsDraw(); });
+  $('ssTtsBtn').addEventListener('click', () => { const p = $('ssTts'); p.hidden = !p.hidden; if (!p.hidden) { $('ssRec').hidden = true; ttsDraw(); } });
   $('ssTtsV').addEventListener('change', () => { TT.voice = $('ssTtsV').value; ttsSave(); });
   $('ssTtsS').addEventListener('input', () => { TT.speed = Number($('ssTtsS').value); $('ssTtsSo').textContent = TT.speed + ' mots/min'; ttsSave(); });
   $('ssTtsG').addEventListener('input', () => { TT.gap = Number($('ssTtsG').value); $('ssTtsGo2').textContent = TT.gap + ' ms'; ttsSave(); });
@@ -399,9 +399,127 @@
     return t;
   })();
   function vmFilled(n) { const t = S.vm && S.vm.t && S.vm.t[n - 1]; return !!(t && t.ms); }
+
+  // ------------------------------------------------------------------ 🎙 Ma voix : T1 … T8 enregistrées au micro de ce PC (tous les TRX)
+  const REC = { n: 0, t0: 0, timer: null, dl: null, ctx: null, src: null, playN: 0 };
+  const REC_MAX = 30; // secondes
+  function recMsg(t, warn) { const e = $('ssRecM'); e.textContent = t || ''; e.classList.toggle('warn', !!warn); }
+  function recDraw() {
+    if ($('ssRec').hidden) return;
+    const L = $('ssRecL');
+    for (let n = 1; n <= 8; n++) {
+      let row = L.querySelector('[data-n="' + n + '"]');
+      if (!row) {
+        row = document.createElement('div');
+        row.className = 'ssb-reci'; row.dataset.n = n;
+        row.innerHTML = '<b>T' + n + '</b><input class="nm" maxlength="16" spellcheck="false" placeholder="nom (CQ, QRZ…)"><span class="st"></span>' +
+          '<button type="button" class="rec">● REC</button><button type="button" class="pl" title="Réécouter dans ce PC (rien n’est émis)">▶</button><button type="button" class="dl" title="Effacer cette mémoire">✕</button>';
+        const nm = row.querySelector('.nm');
+        nm.addEventListener('change', () => api.send({ t: 'vm_name', n, name: nm.value.toUpperCase() }));
+        nm.addEventListener('keydown', (e) => { if (e.key === 'Enter') nm.blur(); e.stopPropagation(); });
+        row.querySelector('.rec').addEventListener('click', () => (REC.n === n ? recStop() : recStart(n)));
+        row.querySelector('.pl').addEventListener('click', () => recListen(n));
+        row.querySelector('.dl').addEventListener('click', () => {
+          if (!vmFilled(n)) return;
+          if (!window.confirm('Effacer la mémoire T' + n + ' ?')) return;
+          api.send({ t: 'vm_del', n });
+        });
+        L.appendChild(row);
+      }
+      const t = S.vm && S.vm.t && S.vm.t[n - 1];
+      const tt = S.tts && S.tts[n];
+      const nm = row.querySelector('.nm');
+      if (document.activeElement !== nm) nm.value = (t && t.name) || '';
+      const st = row.querySelector('.st');
+      if (REC.n === n) {
+        const s = Math.min(REC_MAX, (VX && VX.recLen ? VX.recLen() : 0) / 12000);
+        st.textContent = '● ' + s.toFixed(1).replace('.', ',') + ' / ' + REC_MAX + ' s';
+        st.className = 'st on';
+      } else {
+        st.textContent = t && t.ms ? (t.ms / 1000).toFixed(1).replace('.', ',') + ' s · ' + (tt ? 'synthèse ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'FR' : 'EN') : 'votre voix') : 'vide';
+        st.className = 'st' + (t && t.ms ? (tt ? ' tts' : ' mine') : '');
+      }
+      const rb = row.querySelector('.rec');
+      rb.textContent = REC.n === n ? '■ STOP' : '● REC';
+      rb.classList.toggle('on', REC.n === n);
+      rb.disabled = !!REC.n && REC.n !== n;
+      row.querySelector('.pl').disabled = !vmFilled(n) || !!REC.n;
+      row.querySelector('.pl').classList.toggle('on', REC.playN === n);
+      row.querySelector('.dl').disabled = !vmFilled(n) || !!REC.n;
+    }
+  }
+  function recStart(n) {
+    if (!host) return toast('Page d’origine fermée : rouvrez le TRX SSB depuis le dashboard.', 'warn');
+    if (!VX || !VX.recStart) return toast('Micro indisponible dans cette page.', 'warn');
+    if (!VX.micOn()) { recMsg('Mettez d’abord votre micro en service (cadre micro ci-dessus), puis ● REC.', true); return toast('REC : mettez d’abord votre micro en service.', 'warn', 5000); }
+    const st = api.state();
+    if ((st && st.tx) || P.held) return toast('REC : pas pendant une émission.', 'warn', 3000);
+    recListenStop();
+    if (!VX.recStart(12000 * REC_MAX)) return toast('REC : micro pas prêt.', 'warn');
+    REC.n = n; REC.t0 = Date.now();
+    recMsg('Enregistrement de T' + n + ' : parlez, puis ■ STOP (' + REC_MAX + ' s au plus).');
+    clearInterval(REC.timer);
+    REC.timer = setInterval(() => { if (!REC.n) return clearInterval(REC.timer); if (VX.recLen() >= 12000 * REC_MAX) recStop(); else recDraw(); }, 100);
+    recDraw();
+  }
+  function recStop() {
+    const n = REC.n;
+    REC.n = 0; clearInterval(REC.timer);
+    const pcm = VX && VX.recStop ? VX.recStop() : null;
+    if (!n || !pcm) { recDraw(); return; }
+    if (pcm.length < 6000) { recMsg('Trop court : 0,5 s au moins.', true); recDraw(); return; }
+    // Petit fondu au début et à la fin (pas de clic), puis envoi au serveur en µ-law 12 kHz, morceaux de 36 ko
+    const f = Math.min(240, pcm.length >> 2);
+    for (let i = 0; i < f; i++) { pcm[i] *= i / f; pcm[pcm.length - 1 - i] *= i / f; }
+    const u = window.ULAW.encodeFrame(pcm, 12000, 0x05).subarray(1), CH = 36000, total = Math.ceil(u.length / CH);
+    for (let i = 0; i < total; i++) {
+      let s2 = '';
+      const part = u.subarray(i * CH, (i + 1) * CH);
+      for (let j = 0; j < part.length; j += 8192) s2 += String.fromCharCode.apply(null, part.subarray(j, j + 8192));
+      api.send({ t: 'vm_put', n, i, total, d: btoa(s2) });
+    }
+    recMsg('T' + n + ' envoyée au serveur (' + (pcm.length / 12000).toFixed(1).replace('.', ',') + ' s).');
+    recDraw();
+  }
+  function recListen(n) {
+    if (REC.playN === n) return recListenStop();
+    if (!vmFilled(n)) return;
+    REC.dl = { n, parts: [] };
+    api.send({ t: 'vm_get', n, tag: 'ssb' });
+  }
+  function recListenStop() { if (REC.src) { try { REC.src.stop(); } catch (e) { /* */ } } REC.src = null; REC.playN = 0; recDraw(); }
+  function recOnData(m) {
+    if (!REC.dl || REC.dl.n !== m.n) return;
+    REC.dl.parts[m.i] = m.d;
+    if (REC.dl.parts.filter((x) => x != null).length < m.total) return;
+    const raw = atob(REC.dl.parts.join(''));
+    REC.dl = null;
+    if (!raw.length) return toast('T' + m.n + ' : mémoire vide.', 'warn');
+    const pcm = new Float32Array(raw.length);
+    for (let i = 0; i < raw.length; i++) pcm[i] = ULAW_DEC[raw.charCodeAt(i)];
+    try {
+      recListenStop();
+      REC.ctx = REC.ctx || new AudioContext();
+      if (REC.ctx.state === 'suspended') REC.ctx.resume();
+      const b = REC.ctx.createBuffer(1, pcm.length, 12000);
+      b.copyToChannel(pcm, 0);
+      const src = REC.src = REC.ctx.createBufferSource();
+      src.buffer = b; src.connect(REC.ctx.destination);
+      src.onended = () => { if (REC.src === src) { REC.src = null; REC.playN = 0; recDraw(); } };
+      src.start(REC.ctx.currentTime + 0.15);
+      REC.playN = m.n;
+      recDraw();
+    } catch (e) { toast('Lecture impossible dans ce navigateur.', 'warn'); }
+  }
+  $('ssRecBtn').addEventListener('click', () => {
+    const p = $('ssRec');
+    p.hidden = !p.hidden;
+    if (!p.hidden) { $('ssTts').hidden = true; const on = !!(VX && VX.micOn()); recMsg(on ? '' : 'Micro hors service : mettez-le en service pour enregistrer.', !on); recDraw(); }
+  });
+  $('ssRecX').addEventListener('click', () => { if (REC.n) recStop(); recListenStop(); $('ssRec').hidden = true; });
   function playVm(n) {
     if (!host) return toast('Dashboard non raccroché.', 'warn');
-    if (!vmFilled(n)) return toast('Mémoire T' + n + ' vide : l’enregistrer sur la face avant (MENU → VOICE → REC).', 'warn');
+    if (!vmFilled(n)) return toast('Mémoire T' + n + ' vide : enregistrez-la avec « 🎙 Ma voix » ou « 🗣 Config. Macros ».', 'warn');
     api.send({ t: 'vm_play', n });
   }
 
@@ -1053,7 +1171,9 @@
       const pv = Array.isArray(m.ttsVoices) ? m.ttsVoices : [];
       if (JSON.stringify(pv) !== JSON.stringify(S.pv || [])) { S.pv = pv; if (!$('ssTts').hidden) ttsVoices(); }
       drawVk();
+      recDraw();
     }
+    else if (m.t === 'vm_data' && m.tag === 'ssb') recOnData(m);
     else if ((m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values' || m.t === 'profile') && VX) VX.onMessage(m);
     else if (m.t === 'hello') { if (VX) VX.onHello(m); if (LOG && LOG.mounted) LOG.onHello(m); }
     else if (m.t === 'state') { if (VX) VX.onState(); if (LOG && LOG.mounted) LOG.onState(); if (P.held && !api.iControl()) pttUp(); drawMic(); }
