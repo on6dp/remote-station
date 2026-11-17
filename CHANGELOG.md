@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.45** — FT : le premier message après un clic (bouton Tx, touche F1 à F7, double-clic) part sans attendre le décodage ; seuls les messages suivants de la séquence l'attendent.
 - **0.42.44** — Carnet : 📥 Importer un fichier ADIF (Swisslog, Log4OM, WSJT-X…) — tout le fichier ou certaines années, doublons ignorés, rien n'est renvoyé aux logs en ligne, 150 Mo au plus ; statistiques sur toutes les années. Recherches DXCC mémorisées (gros carnets).
 - **0.42.43** — FT : la séquence attend le décodage (passe normale) de la période précédente avant d'émettre — plus de message « comme si rien n'était reçu » remplacé 1 s plus tard. Cadrans : aiguille rouge en réception (signal), repères seuls en émission. Statistiques : valeurs des listes en blanc gras.
 - **0.42.42** — Cadrans à aiguille des VFO : un repère de niveau par échelle (S, PO, SWR, COMP, ALC, Id, Vd, chacun de sa couleur), les trois mesures lisibles en même temps.

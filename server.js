@@ -3211,7 +3211,7 @@ function seqStart(conn, m) {
     worked: (seq && seq.conn === conn && seq.mode === mode && seq.worked) || new Set(),
     watchMsg: '', watchSince: 0, qsoStart: same ? seq.qsoStart : 0, txDial: 0, keyNow: !!m.keyNow,
     // Abandon d'un correspondant muet : après « maxRep » envois du même message (0 = jamais, comme WSJT-X)
-    maxRep: seqMaxRep(m.maxRep), rep: 0, repText: '', giveUp: false, giveUpT: null,
+    maxRep: seqMaxRep(m.maxRep), rep: 0, repText: '', giveUp: false, giveUpT: null, fresh: true,
     // Fréquence audio du correspondant (fréquence RX) : l'aide AP du décodeur pour ce QSO s'y applique (comme WSJT-X)
     rxf: Number(m.rxf) >= 100 && Number(m.rxf) <= 3000 ? Math.round(Number(m.rxf)) : (same && seq.rxf) || 0,
     // Récepteur du correspondant (FTDX101 en double réception) : l'émission part sur ce VFO (A = MAIN, B = SUB)
@@ -3381,6 +3381,8 @@ async function audioRequest(conn, m) {
 function ftxHoldUntil(p) {
   const P = FTX_SLOT[p.mode];
   if (!P || p.mode === 'FT2' || !seq || !seq.on || seq.conn !== p.conn || seq.hound) return 0;
+  // Premier message après un clic (bouton Tx, touche F1…F7, double-clic) : l'opérateur vient de choisir, il part sans attendre
+  if (seq.fresh) return 0;
   // Seulement si une réponse peut changer le message : QSO en cours (Tx1 à Tx5), ou CQ avec « répondre au 1er »
   if (!((p.ntx >= 1 && p.ntx <= 5) || (p.ntx === 6 && seq.call1st))) return 0;
   if (!digi.worker || Date.now() - (digi.last || 0) > 60000) return 0; // pas de décodeur actif : on n'attend rien
@@ -3412,6 +3414,7 @@ function ftxKey(p) {
     }
   }
   if (!p.ready) return ftxCancel('la page Station n’a pas préparé le signal à temps');
+  if (seq && seq.conn === p.conn) seq.fresh = false; // les messages suivants de la séquence attendent le décodage
   if (controller !== p.conn) return ftxCancel('main perdue');
   if (ptt.active) return ftxCancel('émission déjà en cours');
   const why = txBlockReason(p.conn);
