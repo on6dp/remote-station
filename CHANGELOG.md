@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.38** — Page FT : le rappel « clic gauche : RX · clic droit : TX · double-clic : correspondant » retiré de l'en-tête Fréquence RX (il est dans l'aide et le guide admin) ; en-têtes des colonnes à la même hauteur.
 - **0.42.37** — Page FT : en-têtes des colonnes Activité de bande, Fréquence RX et DXCC à la même hauteur (intitulés et listes alignés).
 - **0.42.36** — Page FT8 / FT4 / FT2 : touches F1 à F7 = Tx1 à Tx7 (comme un clic), Échap = ARRÊTER.
 - **0.42.35** — Carnet en grand : bandeau « TX CALL LOGBOOK » / « TX CALL LOGBOOK STATISTIQUES » comme les pages TRX ; statistiques ouvertes sur le TX call en service et mises à jour après chaque QSO.

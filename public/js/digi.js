@@ -330,7 +330,7 @@
       </div>
       <i class="dg-vsplit" id="dgSplit" title="Glisser à gauche ou à droite : largeur des deux listes (double-clic : moitié-moitié)"></i>
       <div class="dg-col">
-        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span><span class="dg-hb"><button class="dg-mini dx-btn" type="button" id="dgDxBtn" aria-pressed="false" title="Pays DXCC contactés et confirmés en FT8 / FT4 / FT2, par bande, sous le TX call (à droite ; en double réception : panneau par-dessus la colonne VFO-B)">🌍 DXCC</button><button class="dg-mini" type="button" id="dgClearRx" title="Vide cette liste (les messages suivants s'y ajoutent)">Effacer</button></span></div>
+        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-hb"><button class="dg-mini dx-btn" type="button" id="dgDxBtn" aria-pressed="false" title="Pays DXCC contactés et confirmés en FT8 / FT4 / FT2, par bande, sous le TX call (à droite ; en double réception : panneau par-dessus la colonne VFO-B)">🌍 DXCC</button><button class="dg-mini" type="button" id="dgClearRx" title="Vide cette liste (les messages suivants s'y ajoutent)">Effacer</button></span></div>
         <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span title="Fréquence audio (Hz)">Frequ</span><span>Message</span><span title="Préfixe de l’entité DXCC">PFX</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgRx"></div>
       </div>
@@ -561,7 +561,7 @@
       </div>
       <i class="dg-vsplit" title="Glisser à gauche ou à droite : largeur des deux listes (double-clic : moitié-moitié)"></i>
       <div class="dg-col">
-        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Fréquence RX <b id="jtRxF2">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span></div>
+        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Fréquence RX <b id="jtRxF2">1500 Hz</b></span></div>
         <div class="dg-list jt-chat" id="jtRx"></div>
       </div>
       <!-- FTDX101 en double réception : messages JTTY reçus par le récepteur SUB (VFO-B) -->
@@ -571,7 +571,7 @@
         <div class="dg-list" id="jtBandB"></div>
       </div>
       <div class="dg-col ft-colb dual-colb" hidden>
-        <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Fréquence RX <b id="jtRxFB2">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span></div>
+        <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Fréquence RX <b id="jtRxFB2">1500 Hz</b></span></div>
         <div class="dg-list jt-chat" id="jtRxB"></div>
       </div>
     </div>
