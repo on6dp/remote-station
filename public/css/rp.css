@@ -1658,6 +1658,38 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 .ft-txside .btn[data-side="A"][aria-pressed="true"] { background: #b8860b; border-color: #ffcf4a; color: #fff; }
 .ft-txside .btn[data-side="B"][aria-pressed="true"] { background: #2456b8; border-color: #7fb2ff; color: #fff; }
 .ft-dual .dg-cols { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 6px; }
+/* Pays DXCC FT par bande : 3e colonne en mono VFO ; en double réception, panneau par-dessus la colonne VFO-B (bouton 🌍 DXCC) */
+.dg-cols { position: relative; }
+.dg-cols.has-dx { grid-template-columns: minmax(240px, var(--dg-left, 1fr)) 10px minmax(240px, 1fr) minmax(330px, 440px); }
+.dg-cols.has-dx > .ft-dxcc { margin-left: 6px; }
+.ft-dxcc[hidden] { display: none !important; }
+.ft-dxcc.dx-over { position: absolute; top: 0; right: 0; bottom: 0; width: min(460px, 48%); z-index: 6; box-shadow: -6px 0 18px rgba(0, 0, 0, .55); }
+.ft-dual .dg-cols > .ft-dxcc { border-top: 2px solid #3a7bd5; }
+.ft-dxcc .dg-h { flex-wrap: nowrap; }
+.ft-dxcc .dg-h b { color: #ffd479; letter-spacing: .5px; }
+.ft-dxcc .dg-h select { font-size: 10px; padding: 1px 2px; background: var(--v2-bg-darker); color: var(--v2-text); border: 1px solid var(--v2-border-dark); border-radius: 3px; }
+.dg-hb { display: inline-flex; gap: 4px; }
+.dx-btn[aria-pressed="true"] { background: #1f4f8a; color: #fff; border-color: #3a7bd5; }
+.ft-dxcc .dx-wrap { flex: 1; overflow: auto; min-height: 0; max-height: var(--dg-list-max, 360px); scrollbar-width: thin; }
+body.digi-popup .ft-dxcc .dx-wrap { max-height: none; }
+.dx-t { width: 100%; border-collapse: collapse; font: 11px/1.25 var(--v2-mono, monospace); }
+.dx-t th { position: sticky; top: 0; z-index: 1; background: var(--v2-bg-darker); color: var(--v2-text-dim); font-size: 10px; font-weight: 600; padding: 3px 2px; border-bottom: 1px solid var(--v2-border-dark); text-align: center; }
+.dx-t th:nth-child(2) { text-align: left; }
+.dx-t td { padding: 1px 2px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, .04); }
+.dx-t td.pf { color: #cfe3ff; font-weight: 600; text-align: left; white-space: nowrap; }
+.dx-t td.ct { text-align: left; color: var(--v2-text); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dx-t td.w { color: #1b1b1b; background: #e0b84a; font-weight: 700; }
+.dx-t td.c { color: #08230f; background: #4cc26a; font-weight: 700; }
+.dx-t .cur { box-shadow: inset 1px 0 0 #3a7bd5, inset -1px 0 0 #3a7bd5; }
+.dx-t th.cur { color: #fff; background: #1f4f8a; }
+.dx-t td.cur:not(.w):not(.c) { background: rgba(58, 123, 213, .12); }
+.dx-t tr.dx-new td { background-color: rgba(220, 60, 60, .22); }
+.dx-t tr.dx-newb td:not(.w):not(.c) { background-color: rgba(230, 150, 40, .16); }
+.dx-t tr.dx-hrd td.pf { text-decoration: underline dotted; }
+.dx-t tr.dx-sep td { height: 4px; padding: 0; background: #7a8494; }
+.dx-t .dx-tag { font-style: normal; font-size: 9px; font-weight: 700; padding: 0 3px; margin-right: 4px; border-radius: 2px; background: #c83c3c; color: #fff; }
+.dx-t tr.dx-newb .dx-tag { background: #d98a1e; color: #1b1b1b; }
+.dx-none { color: var(--v2-text-dim); padding: 10px !important; font-style: italic; }
 .ft-dual .dg-cols > .dg-col:nth-child(3) { margin-right: 9px; position: relative; } /* l'espace entre les colonnes A et B */
 /* Ligne de séparation gris moyen entre le décodage du VFO-A et celui du VFO-B (cascades et colonnes) */
 .ft-dual .dg-cols > .dg-col:nth-child(3)::after { content: ''; position: absolute; top: -2px; bottom: -1px; right: -9px; width: 3px; border-radius: 2px; background: #7a8494; }
@@ -3449,3 +3481,4 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .lg-nethelp .k { display: inline-block; padding: 0 6px; border: 1px solid #ffe600; border-radius: 4px; color: #ffe600; font-weight: 700; font-size: 12px; }
 .lg-nethelp h4 { margin: 4px 0 8px; color: #00d4ff; font-size: 15px; }
 .lg-nethelp ol, .lg-nethelp ul { padding-left: 22px; }
+@media (max-width: 900px) { .dg-cols.has-dx { grid-template-columns: 1fr; } .dg-cols.has-dx > .ft-dxcc { margin-left: 0; } }

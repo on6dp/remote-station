@@ -761,6 +761,7 @@
     for (const k of ['rst_sent', 'rst_rcvd', 'name', 'qth', 'gridsquare', 'tx_pwr', 'comment']) f[k].value = q[k] || '';
     for (const [k] of REF_KEYS) { f[k].value = q[k] || ''; f['my_' + k].value = q['my_' + k] || ''; }
     if (REF_KEYS.some(([k]) => q['my_' + k])) showMyRefs(true);
+    if (q.station_callsign && calls.indexOf(q.station_callsign) < 0) { calls = calls.concat([q.station_callsign]); rights(); }
     if (calls.indexOf(q.station_callsign) >= 0) f.station.value = q.station_callsign;
     f.qo100.checked = q.sat_name === 'QO-100';
     qrzAsked = '';
@@ -1814,6 +1815,8 @@
       const s0 = api && api.state && api.state();
       const tc = s0 && s0.txCall ? String(s0.txCall).toUpperCase() : '';
       const f0 = q$('#lgForm');
+      // TX call absent de la liste de la fiche (ex. OR0L choisi dans la page FT) : ajouté, pour que la fiche montre et enregistre le bon
+      if (f0 && tc && calls.indexOf(tc) < 0) { calls = calls.concat([tc]); rights(); }
       if (f0 && tc && [...f0.station.options].some((o) => o.value === tc)) {
         if (tc !== lastTxCall) { delete f0.station.dataset.manual; lastTxCall = tc; }
         if (!f0.station.dataset.manual && f0.station.value !== tc) f0.station.value = tc;
@@ -1864,7 +1867,8 @@
     editing: () => !!editing,
     onHello(h) {
       me = { call: h.call, admin: !!h.admin, rxOnly: !!h.rxOnly, digiCall: h.digiCall || '', clubCalls: Array.isArray(h.clubCalls) ? h.clubCalls : [] };
-      if (h.digiCall && calls.indexOf(h.digiCall) < 0) calls = [h.digiCall].concat(calls);
+      // Indicatifs de la station (tous, pas seulement le premier) : la fiche des pages TRX (sans liste du carnet) n'a que ceux-ci
+      for (const c of me.clubCalls.concat(h.digiCall ? [h.digiCall] : []).map((x) => String(x).toUpperCase()).reverse()) if (c && calls.indexOf(c) < 0) calls = [c].concat(calls);
       rights();
       stale = true;
       if (root && !root.hidden) reload();

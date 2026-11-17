@@ -1111,6 +1111,8 @@ function dxInfo(d) {
   if (!e) return;
   d.cty = e.name;
   d.pfx = e.pfx; // préfixe DXCC (colonne « Préf. » des listes FT)
+  const ed = DXCC.lookupDxcc(call);
+  if (ed && ed.pfx !== e.pfx) d.dxp = ed.pfx; // entité DXCC (WAE ramenée à son pays) : statistiques DXCC de la page FT
   const me = DXCC.gridLL(String(cfg.stationGrid || '').slice(0, 6));
   if (!me) return;
   const last = w[w.length - 1];
@@ -3647,6 +3649,28 @@ function onOperator(conn, m) {
       for (const e of DXCC.entities()) if (!rows.has(e.pfx)) rows.set(e.pfx, { pfx: e.pfx, name: e.name, cont: e.cont, n: 0, b: {} });
       return send(conn, { t: 'log_stats', txc, mode: want, bands: bl, rows: Array.from(rows.values()), qsos: n,
         txcalls: Array.from(txcs).sort(), modes: Array.from(modes).sort(), tag: logTag(m) });
+    }
+    case 'ft_dxcc': {
+      // Page FT8 / FT4 / FT2 : pays DXCC contactés / confirmés par bande en FT (sous un TX call), à côté des listes
+      const txc = String(m.txc || txCallFor(conn.user) || '').toUpperCase().slice(0, 15);
+      const want = ['FT8', 'FT4', 'FT2'].indexOf(m.mode) >= 0 ? [m.mode] : ['FT8', 'FT4', 'FT2'];
+      const BANDS = ['160m', '80m', '60m', '40m', '30m', '20m', '17m', '15m', '12m', '10m', '6m'];
+      const rows = new Map();
+      let n = 0;
+      for (const q of book.qsos) {
+        if (String(q.station_callsign || '').toUpperCase() !== txc) continue;
+        const md = String(LB.modeName(q) || '').toUpperCase();
+        if (want.indexOf(md) < 0) continue;
+        const b = String(q.band || '').toLowerCase();
+        const d = DXCC.lookupDxcc(q.call);
+        if (!d || !b) continue;
+        n++;
+        const conf = q.lotw_qsl_rcvd === 'Y' || q.qsl_rcvd === 'Y'; // comme les statistiques du carnet (eQSL ne compte pas pour le DXCC)
+        let r = rows.get(d.pfx);
+        if (!r) { r = { p: d.pfx, n: d.name, b: {} }; rows.set(d.pfx, r); }
+        r.b[b] = Math.max(r.b[b] || 0, conf ? 2 : 1);
+      }
+      return send(conn, { t: 'ft_dxcc', txc, mode: want.length === 1 ? want[0] : 'FT', bands: BANDS, rows: Array.from(rows.values()), qsos: n, total: DXCC.entities().length });
     }
     case 'log_values': {
       // Valeurs d'une colonne du carnet (choix proposés sous son titre), avec leur nombre de QSO

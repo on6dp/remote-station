@@ -327,10 +327,12 @@
       </div>
       <i class="dg-vsplit" id="dgSplit" title="Glisser à gauche ou à droite : largeur des deux listes (double-clic : moitié-moitié)"></i>
       <div class="dg-col">
-        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span><button class="dg-mini" type="button" id="dgClearRx" title="Vide cette liste (les messages suivants s'y ajoutent)">Effacer</button></div>
+        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-note">clic gauche : RX · clic droit : TX · double-clic : correspondant</span><span class="dg-hb"><button class="dg-mini dx-btn" type="button" id="dgDxBtn" aria-pressed="false" title="Pays DXCC contactés et confirmés en FT8 / FT4 / FT2, par bande, sous le TX call (à droite ; en double réception : panneau par-dessus la colonne VFO-B)">🌍 DXCC</button><button class="dg-mini" type="button" id="dgClearRx" title="Vide cette liste (les messages suivants s'y ajoutent)">Effacer</button></span></div>
         <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span title="Fréquence audio (Hz)">Frequ</span><span>Message</span><span title="Préfixe de l’entité DXCC">PFX</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgRx"></div>
       </div>
+      <!-- Pays DXCC en FT8 / FT4 / FT2 par bande (mono VFO : 3e colonne ; double réception : panneau par-dessus, bouton 🌍 DXCC) -->
+      <div class="dg-col ft-dxcc" id="dgDx" hidden></div>
       <!-- FTDX101 en double réception : les mêmes colonnes pour le récepteur SUB (VFO-B) -->
       <div class="dg-col ft-colb dual-colb" hidden>
         <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Activité de bande</span><button class="dg-mini" type="button" id="dgClearB">Effacer</button></div>
@@ -1233,6 +1235,7 @@
     }
     box.hidden = !want;
     document.querySelectorAll('.dual-colb').forEach((e) => { e.hidden = !want; });
+    dxLayout();
     if (!want) { wfFB.ctx = null; wfFB.w = 0; }
     needHist = true; wsNeedHist = true; jtNeedHist = true; // décodages du VFO-B déjà reçus par le serveur
     sideBtns();
@@ -6055,6 +6058,94 @@
     const c = w[0] === 'CQ' ? (CALL_RE.test(w[1] || '') ? w[1] : w[2] || '') : w[1] || '';
     return CALL_RE.test(c) && stationCalls.indexOf(c) < 0 && String(msg).toUpperCase().indexOf(c) >= 0 ? c : '';
   }
+  // ---------------------------------------------------------------------------------------------------------------
+  // Pays DXCC en FT8 / FT4 / FT2, par bande, sous le TX call (colonne à droite de « Fréquence RX » en mono VFO ;
+  // panneau escamotable par-dessus la colonne VFO-B en double réception). C = confirmé (LoTW / QSL), W = contacté.
+  // En tête : les pays entendus dans les dernières périodes et pas encore contactés (NEW) ou pas sur cette bande (NEW BANDE).
+  const dxEsc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const DXS = { on: store.get('dxccOn', '1') === '1', open: false, mode: store.get('dxccMode', 'FT'), data: null, t: 0, txc: '' };
+  const DX_BANDS = ['160m', '80m', '60m', '40m', '30m', '20m', '17m', '15m', '12m', '10m', '6m'];
+  function dxShown() { const p = $('dgDx'); return !!p && FT_MODES.indexOf(mode) >= 0 && (ftDual ? DXS.open : DXS.on); }
+  function dxAsk(delay) {
+    if (!api || !dxShown()) return;
+    clearTimeout(DXS.t);
+    DXS.t = setTimeout(() => {
+      const st = api.state && api.state();
+      DXS.txc = String((st && st.txCall) || '').toUpperCase();
+      api.send({ t: 'ft_dxcc', txc: DXS.txc, mode: DXS.mode });
+    }, delay || 200);
+  }
+  function dxLayout() {
+    const p = $('dgDx');
+    if (!p) return;
+    const show = dxShown();
+    p.hidden = !show;
+    p.classList.toggle('dx-over', ftDual);
+    if (p.parentElement) p.parentElement.classList.toggle('has-dx', show && !ftDual);
+    const b = $('dgDxBtn');
+    if (b) b.setAttribute('aria-pressed', String(show));
+    if (show) { if (!DXS.data) dxDraw(); dxAsk(); }
+  }
+  function dxToggle() {
+    if (ftDual) DXS.open = !DXS.open;
+    else { DXS.on = !DXS.on; store.set('dxccOn', DXS.on ? '1' : '0'); }
+    dxLayout();
+  }
+  /** Pays entendus dans les 4 dernières périodes du mode affiché : préfixe DXCC → { cty, calls } */
+  function dxHeard() {
+    const out = new Map();
+    for (const H of ftDual ? [hist, histB] : [hist]) {
+      const its = H.filter((it) => it.mode === mode).slice(-4);
+      for (const it of its) for (const d of it.list || []) {
+        const p = d.tx ? '' : d.dxp || d.pfx;
+        if (!p) continue;
+        const c = senderOf(d.msg);
+        const o = out.get(p) || { cty: d.cty || '', calls: [] };
+        if (c && o.calls.indexOf(c) < 0 && o.calls.length < 6) o.calls.push(c);
+        out.set(p, o);
+      }
+    }
+    return out;
+  }
+  function dxDraw() {
+    const p = $('dgDx');
+    if (!p || p.hidden) return;
+    const D = DXS.data || { rows: [], qsos: 0, total: 340, txc: '' };
+    const band = curBand(ftDual ? sd() : '');
+    const rows = new Map((D.rows || []).map((r) => [r.p, r]));
+    const heard = dxHeard();
+    const conf = (D.rows || []).filter((r) => Object.values(r.b).some((v) => v === 2)).length;
+    const top = [], rest = [];
+    for (const [pf, h] of heard) {
+      const r = rows.get(pf);
+      if (!r) top.push({ p: pf, n: h.cty, b: {}, tag: 'NEW', calls: h.calls });
+      else if (band && !r.b[band]) top.push(Object.assign({}, r, { tag: 'NEW BANDE', calls: h.calls }));
+    }
+    top.sort((a, b) => (a.tag === b.tag ? a.p.localeCompare(b.p) : a.tag === 'NEW' ? -1 : 1));
+    const inTop = new Set(top.map((r) => r.p));
+    for (const r of D.rows || []) if (!inTop.has(r.p)) rest.push(Object.assign({ heard: heard.get(r.p) }, r));
+    rest.sort((a, b) => a.p.localeCompare(b.p));
+    const bl = (b) => b.replace(/m$/, '');
+    const cell = (r, b) => { const v = r.b[b] || 0; return '<td class="' + (b === band ? 'cur ' : '') + (v === 2 ? 'c' : v === 1 ? 'w' : '') + '">' + (v === 2 ? 'C' : v === 1 ? 'W' : '') + '</td>'; };
+    const line = (r) => {
+      const ttl = (r.n || '') + (r.calls && r.calls.length ? ' — entendu : ' + r.calls.join(', ') : r.heard && r.heard.calls.length ? ' — entendu : ' + r.heard.calls.join(', ') : '');
+      return '<tr class="' + (r.tag === 'NEW' ? 'dx-new' : r.tag ? 'dx-newb' : r.heard ? 'dx-hrd' : '') + '" title="' + dxEsc(ttl) + '"><td class="pf">' + dxEsc(r.p) + '</td><td class="ct">' + (r.tag ? '<i class="dx-tag">' + r.tag + '</i>' : '') + dxEsc(r.n || '') + '</td>' + DX_BANDS.map((b) => cell(r, b)).join('') + '</tr>';
+    };
+    const modeSel = '<select id="dgDxMode" aria-label="Modes comptés">' + [['FT', 'FT8+FT4+FT2'], ['FT8', 'FT8'], ['FT4', 'FT4'], ['FT2', 'FT2']].map((o) => '<option value="' + o[0] + '"' + (DXS.mode === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select>';
+    const keep = p.querySelector('.dx-wrap') ? p.querySelector('.dx-wrap').scrollTop : 0;
+    p.innerHTML = '<div class="dg-h"><span>DXCC <b>' + dxEsc(D.txc || DXS.txc || '') + '</b></span>' + modeSel +
+      '<span class="dg-note" title="Pays DXCC contactés (toutes bandes) / confirmés (LoTW ou QSL papier), sur ' + (D.qsos || 0) + ' QSO">' + (D.rows || []).length + ' pays · ' + conf + ' conf.</span>' +
+      (ftDual ? '<button class="dg-mini" type="button" data-dxx title="Fermer">✕</button>' : '') + '</div>' +
+      '<div class="dx-wrap"><table class="dx-t"><thead><tr><th>Pfx</th><th>Pays</th>' + DX_BANDS.map((b) => '<th class="' + (b === band ? 'cur' : '') + '">' + bl(b) + '</th>').join('') + '</tr></thead><tbody>' +
+      top.map(line).join('') + (top.length && rest.length ? '<tr class="dx-sep"><td colspan="' + (DX_BANDS.length + 2) + '"></td></tr>' : '') + rest.map(line).join('') +
+      (!top.length && !rest.length ? '<tr><td colspan="' + (DX_BANDS.length + 2) + '" class="dx-none">Aucun QSO ' + (DXS.mode === 'FT' ? 'FT8 / FT4 / FT2' : DXS.mode) + ' sous ce TX call.</td></tr>' : '') +
+      '</tbody></table></div>';
+    p.querySelector('.dx-wrap').scrollTop = keep;
+    p.querySelector('#dgDxMode').addEventListener('change', (e) => { DXS.mode = e.target.value; store.set('dxccMode', DXS.mode); dxAsk(); });
+    const x = p.querySelector('[data-dxx]');
+    if (x) x.addEventListener('click', dxToggle);
+  }
+
   // Stations déjà contactées sous le TX CALL actuel (envoyées par le serveur) : « INDICATIF|BANDE|MODE »
   let worked = new Set();
   let workedStation = '';
@@ -6303,6 +6394,7 @@
   }
   function modeChanged() {
     parLabels();
+    setTimeout(dxLayout, 0); // pas de statistiques DXCC FT en JT65
     document.querySelectorAll('#dgModes .btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
     applyFtDual();
     lastBand = 0;
@@ -6794,6 +6886,8 @@
       });
       $('dgClearB').addEventListener('click', () => { histB.length = 0; redrawAll(); });
       $('dgClearRx').addEventListener('click', () => { rxCut.A = Date.now(); redrawRx(); });
+      if ($('dgDxBtn')) $('dgDxBtn').addEventListener('click', dxToggle);
+      setTimeout(dxLayout, 0);
       $('dgClearRxB').addEventListener('click', () => { rxCut.B = Date.now(); redrawRx('B'); });
       document.querySelectorAll('#dgTxSide .btn').forEach((b) => b.addEventListener('click', () => setSide(b.dataset.side)));
       // Réglages de la cascade
@@ -7172,7 +7266,9 @@
         bmDraw();
         return true;
       }
+      if (m.t === 'ft_dxcc') { DXS.data = m; dxDraw(); return true; }
       if (m.t === 'worked') {
+        dxAsk(1500); // un QSO de plus (ou un autre TX call) : statistiques DXCC à jour
         worked = new Set(Array.isArray(m.list) ? m.list : []);
         workedStation = String(m.station || '');
         if (FT_MODES.indexOf(mode) >= 0 && $('dgBand')) redrawAll();
@@ -7242,6 +7338,7 @@
         while (H.length > 240) H.shift();
         if (m.mode === mode) addSlot(it, false, B ? 'B' : undefined);
         decAdd(it, B);
+        if (m.mode === mode && dxShown()) dxDraw(); // pays entendus : nouveaux en tête
         // HOUND SuperFox : le repère RX se place tout seul sur le signal SuperFox décodé (bas du signal)
         const sfd = houndOn() && (it.list || []).find((d) => d.sf && d.f >= 200 && d.f <= 2500);
         if (sfd && Math.abs((B ? rxFB : rxF) - sfd.f) > 8) setRx(sfd.f, B ? 'B' : undefined);
@@ -7275,6 +7372,12 @@
         dtxState(stx.ftx); // notes « Émission RTTY / JTTY sous … »
       }
       cwTxState(stx && stx.cw);
+      // Statistiques DXCC : autre TX call → redemandées ; autre bande → colonne mise en avant et « NEW BANDE » à jour
+      if (dxShown()) {
+        const db = curBand(ftDual ? sd() : '');
+        if (tc && tc !== DXS.txc) dxAsk();
+        else if (db !== DXS.band) { DXS.band = db; dxDraw(); }
+      }
       // Notes « Émission CW / SSTV sous … » : même indicatif que TX CALL
       for (const el of document.querySelectorAll('.dg-txcall')) if (el.textContent !== myCall) el.textContent = myCall;
       // Suivre l'opérateur : bouton caché pour celui qui a la main, qui annonce son onglet
