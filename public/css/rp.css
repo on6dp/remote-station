@@ -3554,3 +3554,7 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .dg-ftx .dg-cols .dg-h .dg-note { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 auto; }
 .dg-ftx .dg-cols .dg-h .dg-hb { flex-shrink: 0; }
 .dg-ftx:not(.ft-dual) .ft-dxcc .dx-t th { padding-block: 3px; }
+/* Un récepteur : réglages de la cascade sur la ligne de la bande (une seule ligne ; passe à la ligne si la fenêtre est étroite) */
+.ft-vbar:has(.in-vbar) { flex-wrap: wrap; row-gap: 4px; }
+.ft-vbar .wf-ctl.in-vbar { background: none; border: 0; padding: 0; margin-left: auto; flex-wrap: nowrap; gap: 4px 12px; }
+.ft-vbar .wf-ctl.in-vbar .ft-wfa { display: none; }

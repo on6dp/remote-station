@@ -983,6 +983,7 @@
   }
   let lastModeTab = 'ftx';
   function showTab(t) {
+    setTimeout(ctlRow, 0); // réglages de la cascade : sur la ligne de la bande (FT, un récepteur) ou dessous
     if (!document.querySelector('#centerPanel .ctab[data-tab="' + t + '"]')) t = POPUP ? 'ftx' : 'events';
     const rtEnter = t === 'rtty' && (tab !== 'rtty' || !rtSeen) && !detached;
     tab = t;
@@ -1171,9 +1172,20 @@
   }
   // FT8 / FT4 / FT2 en double réception : cascade du VFO-B à droite de celle du VFO-A, même hauteur
   const wfFB = { ctx: null, sctx: null, w: 0, h: 0, cw: 0, per: null };
+  /** Un récepteur (IC-7300…), onglet FT8 / FT4 / FT2 : les réglages de la cascade (Gain, Zéro, Plat, Couleurs, Vitesse)
+   *  passent sur la ligne de la bande (bande, ↺, RX / TX, SYNCHRO) — une seule ligne ; ailleurs, sous elle comme avant */
+  function ctlRow() {
+    const a = $('wfGain') && $('wfGain').closest('.wf-ctl'), va = $('ftVbarA');
+    if (!a || !va) return;
+    const one = !ftDual && (tab === 'ftx' || tab === 'jt65') && !detached;
+    if (one && a.parentElement !== va) { va.appendChild(a); a.classList.add('in-vbar'); }
+    else if (!one && a.parentElement === va) { va.after(a); a.classList.remove('in-vbar'); }
+    else return;
+    if (wf.ctx) sizeCanvas();
+  }
   // Double réception : lignes de réglages des deux cascades à la même hauteur (cascades et titres alignés)
   function eqCtl() {
-    const a = document.querySelector('#centerPanel .dg-wf > .wf-ctl'), b = $('ftWfBox') && $('ftWfBox').querySelector('.wf-ctl');
+    const a = $('wfGain') && $('wfGain').closest('.wf-ctl'), b = $('ftWfBox') && $('ftWfBox').querySelector('.wf-ctl');
     if (!a || !b) return;
     a.style.minHeight = ''; b.style.minHeight = '';
     a.classList.remove('ft-2l'); b.classList.remove('ft-2l');
@@ -1239,6 +1251,7 @@
     box.hidden = !want;
     document.querySelectorAll('.dual-colb').forEach((e) => { e.hidden = !want; });
     dxLayout();
+    ctlRow();
     if (!want) { wfFB.ctx = null; wfFB.w = 0; }
     needHist = true; wsNeedHist = true; jtNeedHist = true; // décodages du VFO-B déjà reçus par le serveur
     sideBtns();
