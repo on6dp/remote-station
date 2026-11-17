@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.48** — Alertes FT : pays contacté mais pas encore confirmé (LoTW / QSL papier), et pas encore confirmé sur cette bande (au choix), chacun de sa couleur.
 - **0.42.47** — Carnet : bouton « Import/Export ▾ » avec les parties EXPORT et IMPORT ; « 📥 Importer .ADI… ».
 - **0.42.46** — FT : départ du signal plus rapide après un clic ou F1…F7 en cours de période (0,5 s au lieu de 0,7 s et plus) ; si la page Station tarde à rendre le signal, le départ l'attend (jusqu'à 0,8 s) au lieu d'être annulé.
 - **0.42.45** — FT : le premier message après un clic (bouton Tx, touche F1 à F7, double-clic) part sans attendre le décodage ; seuls les messages suivants de la séquence l'attendent.

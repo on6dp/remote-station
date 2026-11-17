@@ -3599,3 +3599,8 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .lg-impdlg .warn { color: #ff9f1a; font-weight: 700; }
 .lg-mhd { margin: 4px 6px 2px; padding: 4px 6px 2px; border-top: 1px solid var(--v2-border); color: #ffe600; font-size: 10.5px; font-weight: 900; letter-spacing: 1.2px; }
 .lg-mlist > .lg-mhd:first-child { border-top: 0; margin-top: 0; }
+/* Alertes : pays contacté mais pas encore confirmé (doré), pas confirmé sur cette bande (olive) */
+.al-sw.al-nc, .dg-row.al.al-nc { background: #a0761a; }
+.al-sw.al-ncb, .dg-row.al.al-ncb { background: #5f5a22; }
+.dg-row.alc.al-nc .dg-call { background: #a0761a; }
+.dg-row.alc.al-ncb .dg-call { background: #5f5a22; }

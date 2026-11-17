@@ -937,7 +937,7 @@ function workedNow() {
   if (workedCache.sig !== sig) {
     const set = new Set();
     // Alertes des listes FT (comme JTDX) : pays DXCC « D… », zones CQ « Z… », locators « G… » déjà contactés → « bande|mode »
-    const ent = {};
+    const ent = {}, conf = {};
     const add = (k, v) => { const a = ent[k] || (ent[k] = []); if (a.indexOf(v) < 0) a.push(v); };
     for (const q of book.qsos) {
       if (String(q.station_callsign || '').toUpperCase() !== st) continue;
@@ -946,12 +946,14 @@ function workedNow() {
       const bm = q.band + '|' + md;
       const d = DXCC.lookupDxcc(q.call);
       if (d) add('D' + d.pfx, bm);
+      // Pays confirmés (LoTW ou QSL papier) : alerte « contacté, pas encore confirmé »
+      if (d && (q.lotw_qsl_rcvd === 'Y' || q.qsl_rcvd === 'Y')) { const a = conf['D' + d.pfx] || (conf['D' + d.pfx] = []); if (a.indexOf(bm) < 0) a.push(bm); }
       const z = Number(q.cqz) || (d && d.cq);
       if (z) add('Z' + z, bm);
       const g = String(q.gridsquare || '').toUpperCase().slice(0, 4);
       if (/^[A-R]{2}\d{2}$/.test(g)) add('G' + g, bm);
     }
-    workedCache = { sig, set, st, ent };
+    workedCache = { sig, set, st, ent, conf };
   }
   return workedCache;
 }
@@ -965,7 +967,7 @@ function sendWorked(force, only) {
   if (!force && sig === workedSig) return;
   workedSig = sig;
   const set = workedNow().set;
-  const msg = { t: 'worked', station: st, list: Array.from(set), ent: workedNow().ent };
+  const msg = { t: 'worked', station: st, list: Array.from(set), ent: workedNow().ent, conf: workedNow().conf };
   if (only) return send(only, msg);
   for (const c of ops) send(c, msg);
 }

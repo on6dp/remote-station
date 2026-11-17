@@ -6251,17 +6251,19 @@
   // Alertes des listes FT (comme JTDX, sans JTAlert) : couleur de la ligne selon ce qui est déjà fait sous le TX call
   // (carnet de la station) — pays DXCC, zone CQ, locator, indicatif ; nouveau partout ou seulement sur cette bande.
   // Modes comptés : FT8 + FT4 + FT2 (par défaut), tous les modes, ou le mode affiché seulement.
-  const AL_KINDS = [['dx', 'Nouveau pays DXCC'], ['dxb', 'Nouveau pays DXCC sur cette bande'], ['cq', 'Nouvelle zone CQ'], ['cqb', 'Nouvelle zone CQ sur cette bande'],
+  const AL_KINDS = [['dx', 'Nouveau pays DXCC'], ['dxb', 'Nouveau pays DXCC sur cette bande'],
+    ['nc', 'Pays contacté, pas encore confirmé (LoTW / QSL)'], ['ncb', 'Pays pas encore confirmé sur cette bande'], ['cq', 'Nouvelle zone CQ'], ['cqb', 'Nouvelle zone CQ sur cette bande'],
     ['gr', 'Nouveau locator'], ['grb', 'Nouveau locator sur cette bande'], ['call', 'Nouvel indicatif (jamais contacté)'], ['callb', 'Indicatif pas encore contacté sur cette bande']];
   const AL = (() => {
     let o = null;
     try { o = JSON.parse(store.get('alerts', '') || 'null'); } catch (e) { o = null; }
-    const def = { on: true, rows: 'all', scope: 'ft', dx: true, dxb: true, cq: true, cqb: true, gr: true, grb: false, call: true, callb: false, wkd: true, strike: true };
+    const def = { on: true, rows: 'all', scope: 'ft', dx: true, dxb: true, nc: true, ncb: false, cq: true, cqb: true, gr: true, grb: false, call: true, callb: false, wkd: true, strike: true };
     return Object.assign(def, o && typeof o === 'object' ? o : {});
   })();
-  let alEnt = {}, alCalls = new Map();
+  let alEnt = {}, alConf = {}, alCalls = new Map();
   function alIndex(m) {
     alEnt = m && m.ent && typeof m.ent === 'object' ? m.ent : {};
+    alConf = m && m.conf && typeof m.conf === 'object' ? m.conf : {};
     alCalls = new Map();
     for (const k of worked) { const i = k.indexOf('|'); const c = k.slice(0, i); const a = alCalls.get(c) || []; a.push(k.slice(i + 1)); alCalls.set(c, a); }
   }
@@ -6285,6 +6287,9 @@
     const D = ent && alEnt['D' + ent], Z = d.cqz && alEnt['Z' + d.cqz], G = grid && alEnt['G' + grid], C = alCalls.get(call);
     if (ent && AL.dx && !alHas(D, '')) return T('dx', d.cty || ent);
     if (ent && AL.dxb && band && !alHas(D, band)) return T('dxb', (d.cty || ent) + ' sur ' + band);
+    const K = ent && alConf['D' + ent];
+    if (ent && AL.nc && !alHas(K, '')) return T('nc', d.cty || ent);
+    if (ent && AL.ncb && band && !alHas(K, band)) return T('ncb', (d.cty || ent) + ' sur ' + band);
     if (d.cqz && AL.cq && !alHas(Z, '')) return T('cq', 'zone ' + d.cqz);
     if (d.cqz && AL.cqb && band && !alHas(Z, band)) return T('cqb', 'zone ' + d.cqz + ' sur ' + band);
     if (grid && AL.gr && !alHas(G, '')) return T('gr', grid);
