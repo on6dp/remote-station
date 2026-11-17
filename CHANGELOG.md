@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.35** — Carnet en grand : bandeau « TX CALL LOGBOOK » / « TX CALL LOGBOOK STATISTIQUES » comme les pages TRX ; statistiques ouvertes sur le TX call en service et mises à jour après chaque QSO.
 - **0.42.34** — 📊 STATISTIQUES du carnet : s'ouvrent sur le TX call en service (OR0L…) au lieu du premier indicatif du club ; mises à jour après chaque QSO en gardant le diplôme, le TX call et le mode choisis. Colonnes SSB, CW, FT8, FT4, FT2, RTTY, DATA.
 - **0.42.33** — 📊 STATISTIQUES du carnet : sous chaque bande, toujours les colonnes SSB, CW, FT8, FT4, FT2, RTTY et DATA (tous les modes numériques réunis), aussi dans le récapitulatif.
 - **0.42.32** — Statistiques d'utilisation (📊 STATS) : « Par indicatif » devient « Par opérateur » ; nouveau tableau « Par indicatif » (TX call : ON5VL, OR0L, OP0P…) avec temps avec la main sous ce TX call, émission, QSO, jours, opérateurs, bandes et modes.

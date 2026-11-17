@@ -1551,11 +1551,14 @@
       if (on && q$('#lgToStats')) q$('#lgToStats').hidden = true;
       q$('.lg-tw').hidden = on;
       q$('.lg-tw').style.display = on ? 'none' : '';
+      headDraw();
       // 1re ouverture : TX call du filtre du carnet, sinon celui sous lequel on émet (OR0L…), sinon l'indicatif du club
       const stx = api && api.state && api.state();
       if (on) ask(ST.data ? null : filt.txc || (stx && stx.txCall) || stCalls[0] || '');
     };
     b.addEventListener('click', () => show(!ST.on));
+    headDraw();
+    setInterval(headDraw, 1000); // TX call en service ou filtre du carnet changés
     q$('#lgStBack').addEventListener('click', () => show(false));
     root.ownerDocument.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ST.on && !root.ownerDocument.querySelector('dialog[open]')) show(false); });
     q$('#lgStTx').addEventListener('change', () => ask());
@@ -1586,6 +1589,33 @@
     window.addEventListener('resize', fit);
     setInterval(fit, 1000);
     ST.fit = fit;
+  }
+  /** Bandeau de titre du carnet en grand (comme les pages TRX) : TX call, puis LOGBOOK ou LOGBOOK STATISTIQUES */
+  function headDraw() {
+    if (TAG !== 'big' || !root) return;
+    const doc = root.ownerDocument;
+    let h = doc.getElementById('lgHead');
+    if (!h) {
+      h = doc.createElement('header');
+      h.id = 'lgHead';
+      h.className = 'cwp-head dg-head lg-head';
+      h.innerHTML = '<h1><span class="ssb-txc" id="lgHdCall" title="TX call"></span><span id="lgHdName"></span> <small>Remote Station · <span id="lgHdSub"></span></small></h1>';
+      doc.body.prepend(h);
+      doc.body.classList.add('dg-hd');
+    }
+    let st = null;
+    try { st = api && api.state && api.state(); } catch (e) { st = null; }
+    // Statistiques : le TX call choisi dans le tableau (« TOUS » s'il n'y en a pas) ; carnet : celui du filtre, sinon celui en service
+    const call = ST.on ? (ST.data ? ST.data.txc || 'TOUS' : '') : filt.txc || (st && st.txCall) || '';
+    const c = call ? String(call).toUpperCase() + ' ' : '';
+    const name = ST.on ? 'LOGBOOK STATISTIQUES' : 'LOGBOOK';
+    const sub = ST.on ? 'diplômes ' + ((ST.data && ST.data.award) || 'DXCC') + ' par bande et par mode' : 'carnet de trafic';
+    const hc = doc.getElementById('lgHdCall'), hn = doc.getElementById('lgHdName'), hs = doc.getElementById('lgHdSub');
+    if (hc.textContent !== c) hc.textContent = c;
+    if (hn.textContent !== name) hn.textContent = name;
+    if (hs.textContent !== sub) hs.textContent = sub;
+    const t = c + name + ' — Remote Station';
+    if (doc.title !== t) doc.title = t;
   }
   function statsDraw() {
     const d = ST.data;
@@ -1667,6 +1697,7 @@
       (per ? (() => { const [w, c] = cnt(bs, null); return '<td class="t">' + w + '</td><td class="t">' + c + '</td>'; })() : '') + '</tr>';
     q$('#lgSsBody').innerHTML = B.map((b) => line(b === 'SAT' ? 'SAT' : b, [b])).join('') + line('Total', B, 'tot');
     if (ST.fit) ST.fit();
+    headDraw();
   }
 
   // ------------------------------------------------------------------ messages du serveur
