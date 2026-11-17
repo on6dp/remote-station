@@ -563,6 +563,11 @@
     }
     return cal[cal.length - 1][1];
   }
+  /** S-mètre en dB par rapport à S9 (0120 = S9, 0241 = S9+60 dB ; 6 dB par point S en dessous) */
+  function smeterDb(v) {
+    if (v == null) return null;
+    return v < 120 ? -54 + (v / 120) * 54 : Math.min(60, ((v - 120) / 121) * 60);
+  }
   function smeterLabel(v) {
     if (v == null) return '—';
     if (v < 120) return 'S' + Math.max(0, Math.min(8, Math.round((v / 120) * 9)));
@@ -753,7 +758,7 @@
     ALC_FULL: 120,
     FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS, STR_KEYS, observe, TRX_EQ,
     GROUPS, CONTROLS, CONTROL, validate, SC_SPANS, EX, EX_MENUS, exFmt, exOk, exCode, EDGE_BANDS, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
-    smeterLabel, swrValue, vdValue, idValue, poFrac,
+    smeterLabel, smeterDb, swrValue, vdValue, idValue, poFrac,
     bwText: (r) => (r.fil ? 'FIL' + r.fil : '—'),
     // Scope du TRX vers la page Station : scope en service et sortie de la courbe par le CI-V (27 10 01, 27 11 01) ; arrêt : 27 11 00
     SCOPE: { on: [q(0x27, 0x10, 0x01), q(0x27, 0x11, 0x01)], off: [q(0x27, 0x11, 0x00)], points: 475, max: 160 },

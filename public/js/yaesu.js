@@ -294,6 +294,13 @@
       return null;
     }
 
+    /** S-mètre en dB par rapport à S9 (S9 = 0, 6 dB par point S en dessous) : base de l'affichage en dBm (S9 = −73 dBm) */
+    function smeterDb(v) {
+      if (v == null) return null;
+      const C = [[0, -54], [26, -48], [39, -42], [52, -36], [65, -30], [78, -24], [91, -18], [103, -12], [117, -6], [130, 0], [165, 10], [200, 20], [240, 40], [255, 50]];
+      for (let i = 1; i < C.length; i++) if (v <= C[i][0]) return C[i - 1][1] + ((v - C[i - 1][0]) / (C[i][0] - C[i - 1][0])) * (C[i][1] - C[i - 1][1]);
+      return 50;
+    }
     function smeterLabel(v) {
       if (v == null) return '—';
       let l = 'S0';
@@ -554,7 +561,7 @@
       GROUPS: [['vfo', 'VFO et SPLIT'], ['flt', 'Filtres et DSP'], ['rx', 'Réception'], ['tx', 'Émission']],
       CONTROLS, CONTROL, validate, widthTable, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
       BAND_CODES, cmdBand: BAND_CODES ? cmdBand : null,
-      smeterLabel, swrValue, vdValue, idValue, Fake, FakeFTX1: Fake,
+      smeterLabel, smeterDb, swrValue, vdValue, idValue, Fake, FakeFTX1: Fake,
       serial: spec.serial, hint: spec.hint
     };
   }

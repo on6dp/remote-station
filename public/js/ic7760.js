@@ -571,6 +571,11 @@
     }
     return cal[cal.length - 1][1];
   }
+  /** S-mètre en dB par rapport à S9 (0120 = S9, 0241 = S9+60 dB ; 6 dB par point S en dessous) */
+  function smeterDb(v) {
+    if (v == null) return null;
+    return v < 120 ? -54 + (v / 120) * 54 : Math.min(60, ((v - 120) / 121) * 60);
+  }
   function smeterLabel(v) {
     if (v == null) return '—';
     if (v < 120) return 'S' + Math.max(0, Math.min(8, Math.round((v / 120) * 9)));
@@ -781,7 +786,7 @@
     FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS, STR_KEYS,
     EX, EX_MENUS, EX_TREE, EX_PARENT, exFmt, exOk, exCode, ANT_SEG,
     GROUPS, CONTROLS, CONTROL, validate, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,
-    smeterLabel, swrValue, vdValue, idValue, poFrac, filHz, bwText,
+    smeterLabel, smeterDb, swrValue, vdValue, idValue, poFrac, filHz, bwText,
     // Badges du récepteur SUB sur le dashboard (deux récepteurs, comme le FTDX101)
     SUB_BADGES: true,
     preampText: (r, side) => { const v = side === 'B' ? r.preampB : r.preamp; return v == null ? null : [['PRE OFF', 'P.AMP1', 'P.AMP2'][v] || 'PRE', !!v]; },

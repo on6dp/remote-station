@@ -934,8 +934,22 @@ function workedNow() {
   const sig = st + ':' + book.rev;
   if (workedCache.sig !== sig) {
     const set = new Set();
-    for (const q of book.qsos) if (String(q.station_callsign || '').toUpperCase() === st) set.add(q.call + '|' + q.band + '|' + (q.submode || q.mode));
-    workedCache = { sig, set, st };
+    // Alertes des listes FT (comme JTDX) : pays DXCC « D… », zones CQ « Z… », locators « G… » déjà contactés → « bande|mode »
+    const ent = {};
+    const add = (k, v) => { const a = ent[k] || (ent[k] = []); if (a.indexOf(v) < 0) a.push(v); };
+    for (const q of book.qsos) {
+      if (String(q.station_callsign || '').toUpperCase() !== st) continue;
+      const md = q.submode || q.mode;
+      set.add(q.call + '|' + q.band + '|' + md);
+      const bm = q.band + '|' + md;
+      const d = DXCC.lookupDxcc(q.call);
+      if (d) add('D' + d.pfx, bm);
+      const z = Number(q.cqz) || (d && d.cq);
+      if (z) add('Z' + z, bm);
+      const g = String(q.gridsquare || '').toUpperCase().slice(0, 4);
+      if (/^[A-R]{2}\d{2}$/.test(g)) add('G' + g, bm);
+    }
+    workedCache = { sig, set, st, ent };
   }
   return workedCache;
 }
@@ -949,7 +963,7 @@ function sendWorked(force, only) {
   if (!force && sig === workedSig) return;
   workedSig = sig;
   const set = workedNow().set;
-  const msg = { t: 'worked', station: st, list: Array.from(set) };
+  const msg = { t: 'worked', station: st, list: Array.from(set), ent: workedNow().ent };
   if (only) return send(only, msg);
   for (const c of ops) send(c, msg);
 }
@@ -1113,6 +1127,7 @@ function dxInfo(d) {
   d.pfx = e.pfx; // préfixe DXCC (colonne « Préf. » des listes FT)
   const ed = DXCC.lookupDxcc(call);
   if (ed && ed.pfx !== e.pfx) d.dxp = ed.pfx; // entité DXCC (WAE ramenée à son pays) : statistiques DXCC de la page FT
+  if (e.cq) d.cqz = e.cq; // zone CQ (alertes « nouvelle zone » des listes FT)
   const me = DXCC.gridLL(String(cfg.stationGrid || '').slice(0, 6));
   if (!me) return;
   const last = w[w.length - 1];
@@ -3590,6 +3605,7 @@ function onOperator(conn, m) {
       if (changed) updateDigi();
       // Historique : à l'ouverture, ou sur demande (fenêtre séparée qui s'ouvre, retour dans le dashboard)
       if (digi.hist[mode] && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.hist[mode] });
+      if (m.hist) sendWorked(true, conn); // fenêtre séparée qui s'ouvre : stations déjà contactées (barrées) et alertes
       if (conn.ftDual && digi.histB[mode] && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.histB[mode], side: 'B' });
       if (mode === 'JTTY' && (changed || m.hist)) send(conn, { t: 'jtty_hist', items: Array.from(digi.jtty.values()) });
       if (mode === 'JTTY' && conn.ftDual && (changed || m.hist)) send(conn, { t: 'jtty_hist', items: Array.from(digi.jttyB.values()), side: 'B' });
@@ -3695,7 +3711,10 @@ function onOperator(conn, m) {
     }
     case 'ft_dxcc': {
       // Page FT8 / FT4 / FT2 : pays DXCC contactés / confirmés par bande en FT (sous un TX call), à côté des listes
-      const txc = String(m.txc || txCallFor(conn.user) || '').toUpperCase().slice(0, 15);
+      // TX call choisi dans le tableau (un de ceux du carnet de ce membre : indicatifs de la station et le sien), sinon celui en service
+      const mine = logCalls(conn);
+      let txc = String(m.txc || '').toUpperCase().slice(0, 15);
+      if (!txc || (mine.indexOf(txc) < 0 && !conn.user.admin)) txc = String(txCallFor(conn.user) || '').toUpperCase();
       const want = ['FT8', 'FT4', 'FT2'].indexOf(m.mode) >= 0 ? [m.mode] : ['FT8', 'FT4', 'FT2'];
       const BANDS = ['160m', '80m', '60m', '40m', '30m', '20m', '17m', '15m', '12m', '10m', '6m'];
       const rows = new Map();
@@ -3713,7 +3732,7 @@ function onOperator(conn, m) {
         if (!r) { r = { p: d.pfx, n: d.name, b: {} }; rows.set(d.pfx, r); }
         r.b[b] = Math.max(r.b[b] || 0, conf ? 2 : 1);
       }
-      return send(conn, { t: 'ft_dxcc', txc, mode: want.length === 1 ? want[0] : 'FT', bands: BANDS, rows: Array.from(rows.values()), qsos: n, total: DXCC.entities().length });
+      return send(conn, { t: 'ft_dxcc', txc, calls: mine, mode: want.length === 1 ? want[0] : 'FT', bands: BANDS, rows: Array.from(rows.values()), qsos: n, total: DXCC.entities().length });
     }
     case 'log_values': {
       // Valeurs d'une colonne du carnet (choix proposés sous son titre), avec leur nombre de QSO

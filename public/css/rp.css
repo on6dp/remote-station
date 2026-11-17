@@ -1660,12 +1660,15 @@ td.lg-refc { font-size: 11.5px; max-width: 150px; overflow: hidden; text-overflo
 .ft-dual .dg-cols { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 6px; }
 /* Pays DXCC FT par bande : 3e colonne en mono VFO ; en double réception, panneau par-dessus la colonne VFO-B (bouton 🌍 DXCC) */
 .dg-cols { position: relative; }
-.dg-cols.has-dx { grid-template-columns: minmax(240px, var(--dg-left, 1fr)) 10px minmax(240px, 1fr) minmax(330px, 440px); }
+.dg-cols.has-dx { grid-template-columns: minmax(240px, var(--dg-left, 1fr)) 10px minmax(240px, 1fr) var(--dx-w, 440px); }
 .dg-cols.has-dx > .ft-dxcc { margin-left: 6px; }
 .ft-dxcc[hidden] { display: none !important; }
-.ft-dxcc.dx-over { position: absolute; top: 0; right: 0; bottom: 0; width: min(460px, 48%); z-index: 6; box-shadow: -6px 0 18px rgba(0, 0, 0, .55); }
+.ft-dxcc.dx-over { position: absolute; top: 0; right: 0; bottom: 0; width: min(var(--dx-w, 460px), 70%); z-index: 6; box-shadow: -6px 0 18px rgba(0, 0, 0, .55); }
 .ft-dual .dg-cols > .ft-dxcc { border-top: 2px solid #3a7bd5; }
 .ft-dxcc .dg-h { flex-wrap: nowrap; }
+.ft-dxcc .dx-grip { position: absolute; left: -5px; top: 0; bottom: 0; width: 9px; cursor: ew-resize; z-index: 3; }
+.ft-dxcc .dx-grip::after { content: ''; position: absolute; left: 3px; top: 50%; height: 40px; margin-top: -20px; width: 3px; border-radius: 2px; background: #5d6c80; }
+.ft-dxcc .dx-grip:hover::after { background: #3a7bd5; }
 .ft-dxcc .dg-h b { color: #ffd479; letter-spacing: .5px; }
 .ft-dxcc .dg-h select { font-size: 10px; padding: 1px 2px; background: var(--v2-bg-darker); color: var(--v2-text); border: 1px solid var(--v2-border-dark); border-radius: 3px; }
 .dg-hb { display: inline-flex; gap: 4px; }
@@ -3482,3 +3485,40 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .lg-nethelp h4 { margin: 4px 0 8px; color: #00d4ff; font-size: 15px; }
 .lg-nethelp ol, .lg-nethelp ul { padding-left: 22px; }
 @media (max-width: 900px) { .dg-cols.has-dx { grid-template-columns: 1fr; } .dg-cols.has-dx > .ft-dxcc { margin-left: 0; } }
+/* Alertes des listes FT (comme JTDX) : ligne CQ colorée selon ce qui reste à faire ; autres messages : l'indicatif */
+.al-btn[aria-pressed="true"] { background: #5a1f6e; color: #fff; border-color: #b05ad0; }
+.dg-col { position: relative; }
+.al-pop { position: absolute; top: 30px; left: 8px; z-index: 20; width: min(420px, calc(100% - 16px)); padding: 10px 12px; border: 1px solid #b05ad0; border-radius: 6px; background: #121722; box-shadow: 0 8px 24px rgba(0, 0, 0, .6); font-size: 12px; color: var(--v2-text); display: flex; flex-direction: column; gap: 5px; }
+.al-pop label { display: flex; align-items: center; gap: 6px; }
+.al-pop .al-on { font-weight: 700; color: #ffd479; }
+.al-pop select { font-size: 11px; background: var(--v2-bg-darker); color: var(--v2-text); border: 1px solid var(--v2-border-dark); border-radius: 3px; }
+.al-pop p { margin: 4px 0; color: var(--v2-text-dim); font-size: 11px; line-height: 1.35; }
+.al-pop button { align-self: flex-end; }
+.al-sw { display: inline-block; width: 26px; height: 12px; border-radius: 2px; }
+.al-sw.al-dx, .dg-row.cq.al-dx { background: #b3125f; }
+.al-sw.al-dxb, .dg-row.cq.al-dxb { background: #6d2c8f; }
+.al-sw.al-cq, .dg-row.cq.al-cq { background: #b25b00; }
+.al-sw.al-cqb, .dg-row.cq.al-cqb { background: #75561a; }
+.al-sw.al-gr, .dg-row.cq.al-gr { background: #0d6b9a; }
+.al-sw.al-grb, .dg-row.cq.al-grb { background: #2b4f68; }
+.al-sw.al-call, .dg-row.cq.al-call { background: #1d7a3a; }
+.al-sw.al-callb, .dg-row.cq.al-callb { background: #2e5a3c; }
+.dg-row.cq.al span, .dg-row.cq.al span.msg, .dg-row.cq.al span:last-child { color: #fff; }
+.dg-row.cq.al .x { color: #f2f2f2; }
+.dg-row.al:not(.cq) .dg-call { padding: 0 3px; border-radius: 2px; color: #fff; }
+.dg-row.al-dx:not(.cq) .dg-call { background: #b3125f; }
+.dg-row.al-dxb:not(.cq) .dg-call { background: #6d2c8f; }
+.dg-row.al-cq:not(.cq) .dg-call { background: #b25b00; }
+.dg-row.al-cqb:not(.cq) .dg-call { background: #75561a; }
+.dg-row.al-gr:not(.cq) .dg-call { background: #0d6b9a; }
+.dg-row.al-grb:not(.cq) .dg-call { background: #2b4f68; }
+.dg-row.al-call:not(.cq) .dg-call { background: #1d7a3a; }
+.dg-row.al-callb:not(.cq) .dg-call { background: #2e5a3c; }
+
+/* Signal reçu (S-mètre) à côté de « Activité de bande » */
+.dg-sig { margin-left: 10px; margin-right: auto; font: 600 11px/1 var(--v2-mono, monospace); letter-spacing: 0; text-transform: none; color: #7fe3a0; white-space: nowrap; }
+.dg-sig.tx { color: #ff6b5e; }
+/* Double réception : colonnes étroites → le signal passe sous le titre, « Alertes » réduit à 🎨 */
+.ft-dual .dg-cols .dg-h:has(.dg-sig) { flex-wrap: wrap; row-gap: 2px; }
+.ft-dual .dg-sig { order: 9; flex-basis: 100%; margin: 0; }
+.ft-dual .al-btn .al-t { display: none; }

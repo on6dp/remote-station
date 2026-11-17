@@ -324,7 +324,7 @@
     </div>
     <div class="dg-cols">
       <div class="dg-col">
-        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Activité de bande</span><button class="dg-mini" type="button" id="dgClear">Effacer</button></div>
+        <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Activité de bande</span><span class="dg-sig" id="dgSigA" title="Signal reçu (S-mètre du TRX) : point S, puissance en dBm (S9 = −73 dBm, 6 dB par point S, selon l’étalonnage du S-mètre du TRX) et écart en dB par rapport à S9"></span><span class="dg-hb"><button class="dg-mini al-btn" type="button" id="dgAlBtn" aria-pressed="false" title="Couleurs des lignes selon ce qui est déjà fait ou pas (comme JTDX, sans JTAlert) : nouveau pays DXCC, nouvelle zone CQ, nouveau locator, nouvel indicatif — sur toutes les bandes ou sur cette bande">🎨<span class="al-t"> Alertes</span></button><button class="dg-mini" type="button" id="dgClear">Effacer</button></span></div>
         <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span title="Fréquence audio (Hz)">Frequ</span><span>Message</span><span title="Préfixe de l’entité DXCC">PFX</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgBand"></div>
       </div>
@@ -338,7 +338,7 @@
       <div class="dg-col ft-dxcc" id="dgDx" hidden></div>
       <!-- FTDX101 en double réception : les mêmes colonnes pour le récepteur SUB (VFO-B) -->
       <div class="dg-col ft-colb dual-colb" hidden>
-        <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Activité de bande</span><button class="dg-mini" type="button" id="dgClearB">Effacer</button></div>
+        <div class="dg-h"><span><i class="ft-sd b">VFO-B · </i>Activité de bande</span><span class="dg-sig" id="dgSigB" title="Signal reçu (S-mètre du TRX) : point S, puissance en dBm (S9 = −73 dBm, 6 dB par point S, selon l’étalonnage du S-mètre du TRX) et écart en dB par rapport à S9"></span><button class="dg-mini" type="button" id="dgClearB">Effacer</button></div>
         <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span title="Fréquence audio (Hz)">Frequ</span><span>Message</span><span title="Préfixe de l’entité DXCC">PFX</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgBandB"></div>
       </div>
@@ -6067,7 +6067,7 @@
   // panneau escamotable par-dessus la colonne VFO-B en double réception). C = confirmé (LoTW / QSL), W = contacté.
   // En tête : les pays entendus dans les dernières périodes et pas encore contactés (NEW) ou pas sur cette bande (NEW BANDE).
   const dxEsc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const DXS = { on: store.get('dxccOn', '1') === '1', open: false, mode: store.get('dxccMode', 'FT'), data: null, t: 0, txc: '' };
+  const DXS = { on: store.get('dxccOn', '1') === '1', open: false, mode: store.get('dxccMode', 'FT'), data: null, t: 0, txc: '', pick: store.get('dxccCall', ''), w: Number(store.get('dxccW', '')) || 0 };
   const DX_BANDS = ['160m', '80m', '60m', '40m', '30m', '20m', '17m', '15m', '12m', '10m', '6m'];
   function dxShown() { const p = $('dgDx'); return !!p && FT_MODES.indexOf(mode) >= 0 && (ftDual ? DXS.open : DXS.on); }
   function dxAsk(delay) {
@@ -6076,7 +6076,7 @@
     DXS.t = setTimeout(() => {
       const st = api.state && api.state();
       DXS.txc = String((st && st.txCall) || '').toUpperCase();
-      api.send({ t: 'ft_dxcc', txc: DXS.txc, mode: DXS.mode });
+      api.send({ t: 'ft_dxcc', txc: DXS.pick || DXS.txc, mode: DXS.mode });
     }, delay || 200);
   }
   function dxLayout() {
@@ -6086,6 +6086,7 @@
     p.hidden = !show;
     p.classList.toggle('dx-over', ftDual);
     if (p.parentElement) p.parentElement.classList.toggle('has-dx', show && !ftDual);
+    if (p.parentElement && DXS.w) p.parentElement.style.setProperty('--dx-w', DXS.w + 'px');
     const b = $('dgDxBtn');
     if (b) b.setAttribute('aria-pressed', String(show));
     if (show) { if (!DXS.data) dxDraw(); dxAsk(); }
@@ -6137,7 +6138,13 @@
     };
     const modeSel = '<select id="dgDxMode" aria-label="Modes comptés">' + [['FT', 'FT8+FT4+FT2'], ['FT8', 'FT8'], ['FT4', 'FT4'], ['FT2', 'FT2']].map((o) => '<option value="' + o[0] + '"' + (DXS.mode === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select>';
     const keep = p.querySelector('.dx-wrap') ? p.querySelector('.dx-wrap').scrollTop : 0;
-    p.innerHTML = '<div class="dg-h"><span>DXCC <b>' + dxEsc(D.txc || DXS.txc || '') + '</b></span>' + modeSel +
+    // TX call des statistiques : celui en service (par défaut) ou un autre indicatif du carnet (station, le vôtre)
+    const cur = D.txc || DXS.txc || '';
+    const calls = Array.from(new Set((D.calls || []).concat(cur ? [cur] : [])));
+    const callSel = '<select id="dgDxCall" aria-label="TX call des statistiques" title="Statistiques DXCC de quel indicatif : celui sous lequel vous émettez (par défaut), ou un autre indicatif du carnet">' +
+      '<option value=""' + (!DXS.pick ? ' selected' : '') + '>TX call (' + dxEsc(DXS.txc || cur) + ')</option>' +
+      calls.map((c) => '<option value="' + dxEsc(c) + '"' + (DXS.pick === c ? ' selected' : '') + '>' + dxEsc(c) + '</option>').join('') + '</select>';
+    p.innerHTML = '<i class="dx-grip" title="Glisser à gauche ou à droite : largeur du tableau DXCC (double-clic : largeur d’origine)"></i><div class="dg-h"><span>DXCC</span>' + callSel + modeSel +
       '<span class="dg-note" title="Pays DXCC contactés (toutes bandes) / confirmés (LoTW ou QSL papier), sur ' + (D.qsos || 0) + ' QSO">' + (D.rows || []).length + ' pays · ' + conf + ' conf.</span>' +
       (ftDual ? '<button class="dg-mini" type="button" data-dxx title="Fermer">✕</button>' : '') + '</div>' +
       '<div class="dx-wrap"><table class="dx-t"><thead><tr><th>Pfx</th><th>Pays</th>' + DX_BANDS.map((b) => '<th class="' + (b === band ? 'cur' : '') + '">' + bl(b) + '</th>').join('') + '</tr></thead><tbody>' +
@@ -6146,8 +6153,113 @@
       '</tbody></table></div>';
     p.querySelector('.dx-wrap').scrollTop = keep;
     p.querySelector('#dgDxMode').addEventListener('change', (e) => { DXS.mode = e.target.value; store.set('dxccMode', DXS.mode); dxAsk(); });
+    p.querySelector('#dgDxCall').addEventListener('change', (e) => { DXS.pick = e.target.value; store.set('dxccCall', DXS.pick); dxAsk(); });
+    // Largeur du tableau : poignée au bord gauche (gardée dans ce navigateur)
+    const grip = p.querySelector('.dx-grip');
+    const setW = (w, save) => {
+      const cols = p.parentElement;
+      if (!w) { DXS.w = 0; cols.style.removeProperty('--dx-w'); } else { DXS.w = Math.round(Math.max(260, Math.min(1000, w))); cols.style.setProperty('--dx-w', DXS.w + 'px'); }
+      if (save) store.set('dxccW', DXS.w || '');
+    };
+    grip.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      grip.setPointerCapture(e.pointerId);
+      const x0 = e.clientX, zf = (window.RSZOOM && window.RSZOOM.z()) || 1, w0 = p.getBoundingClientRect().width / zf;
+      const mv = (ev) => setW(w0 + (x0 - ev.clientX) / zf, false);
+      const up = (ev) => { grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up); setW(w0 + (x0 - ev.clientX) / zf, true); };
+      grip.addEventListener('pointermove', mv);
+      grip.addEventListener('pointerup', up);
+      grip.addEventListener('pointercancel', up);
+    });
+    grip.addEventListener('dblclick', () => setW(0, true));
     const x = p.querySelector('[data-dxx]');
     if (x) x.addEventListener('click', dxToggle);
+  }
+
+  /** Signal reçu à côté de « Activité de bande » : S-mètre du TRX en point S, dBm (S9 = −73 dBm) et dB par rapport à S9 */
+  function sigDraw(st) {
+    const r = st && st.radio, R = api && api.rig && api.rig();
+    const tx = !!(st && st.ptt && st.ptt.active);
+    for (const [id, v] of [['dgSigA', r && r.smeter], ['dgSigB', r && r.smeterB]]) {
+      const e = $(id);
+      if (!e) continue;
+      let t = '';
+      if (tx) t = 'TX';
+      else if (v != null && R && R.smeterDb) {
+        const db = Math.round(R.smeterDb(v));
+        t = R.smeterLabel(v) + ' · ' + (db - 73) + ' dBm · ' + (db >= 0 ? '+' : '') + db + ' dB';
+      }
+      if (e.textContent !== t) e.textContent = t;
+      e.classList.toggle('tx', tx);
+    }
+  }
+  // ---------------------------------------------------------------------------------------------------------------
+  // Alertes des listes FT (comme JTDX, sans JTAlert) : couleur de la ligne selon ce qui est déjà fait sous le TX call
+  // (carnet de la station) — pays DXCC, zone CQ, locator, indicatif ; nouveau partout ou seulement sur cette bande.
+  // Modes comptés : FT8 + FT4 + FT2 (par défaut), tous les modes, ou le mode affiché seulement.
+  const AL_KINDS = [['dx', 'Nouveau pays DXCC'], ['dxb', 'Nouveau pays DXCC sur cette bande'], ['cq', 'Nouvelle zone CQ'], ['cqb', 'Nouvelle zone CQ sur cette bande'],
+    ['gr', 'Nouveau locator'], ['grb', 'Nouveau locator sur cette bande'], ['call', 'Nouvel indicatif (jamais contacté)'], ['callb', 'Indicatif pas encore contacté sur cette bande']];
+  const AL = (() => {
+    let o = null;
+    try { o = JSON.parse(store.get('alerts', '') || 'null'); } catch (e) { o = null; }
+    const def = { on: true, scope: 'ft', dx: true, dxb: true, cq: true, cqb: true, gr: true, grb: false, call: true, callb: false };
+    return Object.assign(def, o && typeof o === 'object' ? o : {});
+  })();
+  let alEnt = {}, alCalls = new Map();
+  function alIndex(m) {
+    alEnt = m && m.ent && typeof m.ent === 'object' ? m.ent : {};
+    alCalls = new Map();
+    for (const k of worked) { const i = k.indexOf('|'); const c = k.slice(0, i); const a = alCalls.get(c) || []; a.push(k.slice(i + 1)); alCalls.set(c, a); }
+  }
+  const alModeOk = (md) => AL.scope === 'all' ? true : AL.scope === 'mode' ? md === mode : FT_MODES.indexOf(md) >= 0 && md !== 'JT65';
+  /** Déjà fait ? list = ['bande|mode'…] ; band = '' : sur n'importe quelle bande */
+  function alHas(list, band) {
+    if (!list) return false;
+    for (const bm of list) { const i = bm.indexOf('|'); if ((!band || bm.slice(0, i) === band) && alModeOk(bm.slice(i + 1))) return true; }
+    return false;
+  }
+  function alStatus(d, side) {
+    if (!AL.on || FT_MODES.indexOf(mode) < 0) return null;
+    const call = senderOf(d.msg);
+    if (!call) return null;
+    const band = curBand(ftDual ? side || 'A' : '');
+    const w = String(d.msg || '').toUpperCase().split(/\s+/);
+    const last = w[w.length - 1];
+    const grid = /^[A-R]{2}\d{2}$/.test(last) && last !== 'RR73' ? last : '';
+    const ent = d.dxp || d.pfx;
+    const T = (k, x) => ({ k, t: AL_KINDS.find((a) => a[0] === k)[1] + (x ? ' (' + x + ')' : '') });
+    const D = ent && alEnt['D' + ent], Z = d.cqz && alEnt['Z' + d.cqz], G = grid && alEnt['G' + grid], C = alCalls.get(call);
+    if (ent && AL.dx && !alHas(D, '')) return T('dx', d.cty || ent);
+    if (ent && AL.dxb && band && !alHas(D, band)) return T('dxb', (d.cty || ent) + ' sur ' + band);
+    if (d.cqz && AL.cq && !alHas(Z, '')) return T('cq', 'zone ' + d.cqz);
+    if (d.cqz && AL.cqb && band && !alHas(Z, band)) return T('cqb', 'zone ' + d.cqz + ' sur ' + band);
+    if (grid && AL.gr && !alHas(G, '')) return T('gr', grid);
+    if (grid && AL.grb && band && !alHas(G, band)) return T('grb', grid + ' sur ' + band);
+    if (AL.call && !alHas(C, '')) return T('call', call);
+    if (AL.callb && band && !alHas(C, band)) return T('callb', call + ' sur ' + band);
+    return null;
+  }
+  function alSave() { store.set('alerts', JSON.stringify(AL)); const b = $('dgAlBtn'); if (b) b.setAttribute('aria-pressed', String(!!AL.on)); redrawAll(); }
+  /** Petite fenêtre des alertes (sous le bouton 🎨 Alertes) : quoi colorer, modes comptés, légende des couleurs */
+  function alPanel() {
+    const b = $('dgAlBtn');
+    let p = $('dgAlPop');
+    if (p) { p.remove(); return; }
+    p = b.ownerDocument.createElement('div');
+    p.id = 'dgAlPop';
+    p.className = 'al-pop';
+    p.innerHTML = '<label class="al-on"><input type="checkbox" data-k="on"> Couleurs d’alerte dans les listes</label>' +
+      '<label>Déjà fait = contacté en <select data-k="scope"><option value="ft">FT8 / FT4 / FT2</option><option value="all">n’importe quel mode</option><option value="mode">ce mode seulement</option></select> sous le TX call</label>' +
+      AL_KINDS.map(([k, t]) => '<label class="al-l"><input type="checkbox" data-k="' + k + '"> <i class="al-sw al-' + k + '"></i> ' + t + '</label>').join('') +
+      '<p>Ordre : la première alerte de la liste l’emporte. Lignes CQ : toute la ligne colorée ; autres messages : l’indicatif seulement. Déjà contacté sur cette bande dans ce mode : vert barré. Survol d’une ligne : l’alerte en clair.</p>' +
+      '<button class="dg-mini" type="button" data-x>Fermer</button>';
+    b.closest('.dg-col').appendChild(p);
+    p.querySelectorAll('[data-k]').forEach((e) => {
+      const k = e.dataset.k;
+      if (e.type === 'checkbox') e.checked = !!AL[k]; else e.value = AL[k];
+      e.addEventListener('change', () => { AL[k] = e.type === 'checkbox' ? e.checked : e.value; alSave(); });
+    });
+    p.querySelector('[data-x]').addEventListener('click', () => p.remove());
   }
 
   // Stations déjà contactées sous le TX CALL actuel (envoyées par le serveur) : « INDICATIF|BANDE|MODE »
@@ -6182,12 +6294,16 @@
     const k = d.tx ? 'tx' : cls(d.msg);
     const wk = !d.tx && k !== 'me' && isWorked(d.msg, side);
     r.className = 'dg-row ft ' + k + (wk ? ' wkd' : '') + (!d.tx && huntMatch(d.msg) ? ' hunt' : '');
+    // Alertes (comme JTDX) : nouveau pays DXCC, zone CQ, locator, indicatif — ligne CQ colorée, sinon l'indicatif seul
+    const al = !d.tx && !wk && k !== 'me' ? alStatus(d, side) : null;
+    if (al) r.classList.add('al', 'al-' + al.k);
     if (d.tx && d.txAt) r.dataset.txat = String(d.txAt);
     r.title = d.tx ? 'Message émis' : (wk ? 'Déjà contacté sous ' + workedStation + ' sur cette bande dans ce mode · ' : '') + d.f + ' Hz · clic sur l’indicatif (souligné) ou double-clic : répondre à cette station (émission à la période suivante) · clic ailleurs : réception ici · clic droit : émission ici';
     const cells = d.tx ? [utc(slot), 'TX', '', d.f, d.msg] : [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
     // Pays DXCC, distance et azimut (direction de l'antenne) : dans l'info-bulle de l'indicatif (et de la ligne)
     const geo = d.tx ? '' : [d.cty || '', d.km == null ? '' : (d.kmc ? '≈ ' : '') + d.km + ' km', d.az == null ? '' : 'azimut ' + d.az + '°'].filter(Boolean).join(' · ');
     if (geo) r.title = senderOf(d.msg) + ' — ' + geo + '\n' + r.title;
+    if (al) r.title = '★ ' + al.t + '\n' + r.title;
     cells.forEach((v, i) => {
       const s = document.createElement('span');
       if (i === 4) s.className = 'msg';
@@ -6891,6 +7007,7 @@
       $('dgClearB').addEventListener('click', () => { histB.length = 0; redrawAll(); });
       $('dgClearRx').addEventListener('click', () => { rxCut.A = Date.now(); redrawRx(); });
       if ($('dgDxBtn')) $('dgDxBtn').addEventListener('click', dxToggle);
+      if ($('dgAlBtn')) { $('dgAlBtn').setAttribute('aria-pressed', String(!!AL.on)); $('dgAlBtn').addEventListener('click', alPanel); }
       setTimeout(dxLayout, 0);
       $('dgClearRxB').addEventListener('click', () => { rxCut.B = Date.now(); redrawRx('B'); });
       document.querySelectorAll('#dgTxSide .btn').forEach((b) => b.addEventListener('click', () => setSide(b.dataset.side)));
@@ -7283,6 +7400,7 @@
       if (m.t === 'worked') {
         dxAsk(1500); // un QSO de plus (ou un autre TX call) : statistiques DXCC à jour
         worked = new Set(Array.isArray(m.list) ? m.list : []);
+        alIndex(m);
         workedStation = String(m.station || '');
         if (FT_MODES.indexOf(mode) >= 0 && $('dgBand')) redrawAll();
         return true;
@@ -7385,6 +7503,7 @@
         dtxState(stx.ftx); // notes « Émission RTTY / JTTY sous … »
       }
       cwTxState(stx && stx.cw);
+      sigDraw(stx);
       // Statistiques DXCC : autre TX call → redemandées ; autre bande → colonne mise en avant et « NEW BANDE » à jour
       if (dxShown()) {
         const db = curBand(ftDual ? sd() : '');
