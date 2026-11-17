@@ -1541,6 +1541,7 @@
     q$('.lg-tw').after(box);
     const ask = (txc) => api && api.send({ t: 'log_stats', txc: txc != null ? txc : q$('#lgStTx').value, mode: q$('#lgStMode').value, award: q$('#lgStAw').value });
     try { const a = localStorage.getItem('rs.lgaward'); if (a && q$('#lgStAw').querySelector('option[value="' + a + '"]')) q$('#lgStAw').value = a; } catch (e) { /* */ }
+    ST.ask = () => ask();
     q$('#lgStAw').addEventListener('change', () => { try { localStorage.setItem('rs.lgaward', q$('#lgStAw').value); } catch (e) { /* */ } ask(); });
     const show = (on) => {
       ST.on = on;
@@ -1550,7 +1551,9 @@
       if (on && q$('#lgToStats')) q$('#lgToStats').hidden = true;
       q$('.lg-tw').hidden = on;
       q$('.lg-tw').style.display = on ? 'none' : '';
-      if (on) ask(ST.data ? null : filt.txc || stCalls[0] || ''); // 1re ouverture : TX call du carnet, sinon l'indicatif du club
+      // 1re ouverture : TX call du filtre du carnet, sinon celui sous lequel on émet (OR0L…), sinon l'indicatif du club
+      const stx = api && api.state && api.state();
+      if (on) ask(ST.data ? null : filt.txc || (stx && stx.txCall) || stCalls[0] || '');
     };
     b.addEventListener('click', () => show(!ST.on));
     q$('#lgStBack').addEventListener('click', () => show(false));
@@ -1670,7 +1673,7 @@
   function onMessage(m) {
     if (m.t === 'log_stats') { ST.data = m; statsDraw(); return; }
     if (m.t === 'log_net') { netShow(m); return; }
-    if (m.t === 'log_changed' && ST.on && api) setTimeout(() => api.send({ t: 'log_stats', txc: q$('#lgStTx').value, mode: q$('#lgStMode').value }), 300);
+    if (m.t === 'log_changed' && ST.on && api) setTimeout(() => { if (ST.ask) ST.ask(); }, 300); // nouveau QSO : statistiques à jour (même diplôme, TX call, mode)
     if (/^log_(saved|dupe)$/.test(m.t)) clearTimeout(saveWait);
     // Refus du serveur pendant un enregistrement (droits, données invalides) : affiché sous la fiche
     if (m.t === 'notice') {
