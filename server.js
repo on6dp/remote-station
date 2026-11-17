@@ -3760,10 +3760,12 @@ function onOperator(conn, m) {
         if (c.w.indexOf(g) < 0) c.w += g;
         if (conf && c.c.indexOf(g) < 0) c.c += g;
         // Par mode (colonnes SSB, CW, RTTY, FT8, FT4, FT2, autres) : 1 contacté, 2 confirmé
-        // Une colonne par mode réellement présent (SSB, CW, RTTY, FT8, FT4, FT2, JTTY, JT65, SSTV, FM…)
-        const mk = /^(SSB|USB|LSB)$/.test(md) ? 'SSB' : md || 'AUT';
-        c.m[mk] = Math.max(c.m[mk] || 0, conf ? 2 : 1);
-        mcols.add(mk);
+        // Colonnes de chaque bande, dans l'ordre : SSB (phonie), CW, FT8, FT4, FT2, RTTY, DATA (tous les modes numériques)
+        const v = conf ? 2 : 1;
+        const set = (k) => { c.m[k] = Math.max(c.m[k] || 0, v); mcols.add(k); };
+        if (g === 'P') set('SSB');
+        else if (g === 'C') set('CW');
+        else { if (['FT8', 'FT4', 'FT2', 'RTTY'].indexOf(md) >= 0) set(md); set('DATA'); }
         if (!r.first || String(q.qso_date) < r.first) r.first = String(q.qso_date || '');
       }
       // Bandes toujours montrées (HF + 6 m + satellite), plus celles du carnet en dehors de cette liste (2 m, 70 cm…)
@@ -3771,8 +3773,7 @@ function onOperator(conn, m) {
       const bl = BORD.filter((b) => bands.has(b)).concat(Array.from(bands).filter((b) => BORD.indexOf(b) < 0).sort());
       // Toute la liste du diplôme, même jamais contactée (cases rouges), comme Swisslog (WPX, IOTA, locators : contactés seulement)
       for (const e of AWARDS[award].all()) if (!rows.has(e.k)) rows.set(e.k, { pfx: e.k, name: e.name, cont: e.cont || '', n: 0, b: {} });
-      const MORD = ['SSB', 'CW', 'RTTY', 'FT8', 'FT4', 'FT2', 'JTTY', 'JT65', 'JT9', 'MSK144', 'Q65', 'PSK31', 'PSK', 'OLIVIA', 'SSTV', 'FM', 'AM'];
-      const mc = MORD.filter((x) => mcols.has(x)).concat(Array.from(mcols).filter((x) => MORD.indexOf(x) < 0).sort());
+      const mc = ['SSB', 'CW', 'FT8', 'FT4', 'FT2', 'RTTY', 'DATA']; // toujours les mêmes colonnes, dans cet ordre
       return send(conn, { t: 'log_stats', txc, mode: want, award, awards: Object.keys(AWARDS).map((k) => [k, AWARDS[k].label, AWARDS[k].col]), bands: bl, rows: Array.from(rows.values()), qsos: n,
         mcols: mc, txcalls: Array.from(txcs).sort(), modes: Array.from(modes).sort(), tag: logTag(m) });
     }

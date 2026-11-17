@@ -1571,7 +1571,7 @@
       else filt.aw = ST.data.award + ':' + tr.dataset.pfx; // zone, préfixe WPX, île IOTA… (filtre calculé par le serveur)
       if (td.dataset.b && td.dataset.b !== 'SAT') filt.band = td.dataset.b;
       const md = (ST.data && ST.data.mode) || (td.dataset.k && td.dataset.k !== 'AUT' ? td.dataset.k : '');
-      if (md && !ST_GRP[md] && md !== 'SSB' && md !== 'AUT') filt.mode = md;
+      if (md && !ST_GRP[md] && md !== 'SSB' && md !== 'AUT' && md !== 'DATA') filt.mode = md;
       show(false);
       back.hidden = false;
       reload();
@@ -1609,13 +1609,14 @@
     // FT4, FT2, « Autres » s'il y en a) ; case verte C = confirmé, bleue W = contacté (worked), rouge - = pas encore.
     // Mode ou groupe choisi : une colonne par bande. En dessous : le récapitulatif bandes × modes (contactés / confirmés).
     // Colonnes de modes : ceux réellement présents dans le carnet pour ce choix (SSB, CW, RTTY, FT8, FT4, FT2, JTTY, SSTV…)
-    const MK = d.mcols && d.mcols.length ? d.mcols : ['SSB', 'CW', 'RTTY', 'FT8', 'FT4', 'FT2'];
+    const MK = d.mcols && d.mcols.length ? d.mcols : ['SSB', 'CW', 'FT8', 'FT4', 'FT2', 'RTTY', 'DATA'];
     const per = !d.mode;
     const hasAut = false;
     const mks = per ? MK : [''];
     const AW = (d.awards || []).find((a) => a[0] === (d.award || 'DXCC')) || ['DXCC', 'DXCC (pays)', 'Pays DXCC'];
     if (q$('#lgStAw') && d.award) q$('#lgStAw').value = d.award;
     const mkL = (k) => (k === 'AUT' ? 'Autres' : k || (ST_GRP[d.mode] || d.mode));
+    const mkT = (k) => (k === 'SSB' ? 'SSB (toute la phonie : SSB, AM, FM…)' : k === 'DATA' ? 'DATA : tous les modes numériques (FT8, FT4, FT2, RTTY, JTTY, PSK, SSTV…)' : mkL(k));
     const st = (x, k) => (!x ? 0 : k ? (x.m && x.m[k]) || 0 : x.c ? 2 : 1); // 0 rien, 1 contacté, 2 confirmé
     const cols = [];
     for (const b of B) for (const k of mks) cols.push([b, k]);
@@ -1625,7 +1626,7 @@
     const bl = (b) => (b === 'SAT' ? 'SAT' : /cm$/.test(b) ? b.replace(/cm$/, ' cm') : b.replace(/m$/, ' m'));
     const first = (i) => (i % mks.length === 0 ? 'lg-stb0' : '');
     q$('#lgStHead').innerHTML = '<tr><th rowspan="2" class="lg-stn">' + esc(AW[2]) + '</th>' + B.map((b) => '<th class="lg-stb lg-stb0" colspan="' + mks.length + '">' + esc(bl(b)) + '</th>').join('') + '</tr>' +
-      '<tr class="lg-stm">' + cols.map(([, k], i) => '<th class="' + first(i) + '"><span>' + esc(mkL(k)) + '</span></th>').join('') + '</tr>';
+      '<tr class="lg-stm">' + cols.map(([, k], i) => '<th class="' + first(i) + (k === 'DATA' ? ' lg-stdata' : '') + '" title="' + esc(mkT(k)) + '"><span>' + esc(mkL(k)) + '</span></th>').join('') + '</tr>';
     let rows = d.rows.slice();
     if (ST.q) rows = rows.filter((r) => r.pfx.toUpperCase().indexOf(ST.q) === 0 || r.name.toUpperCase().indexOf(ST.q) >= 0);
     const show = q$('#lgStShow') ? q$('#lgStShow').value : '';
@@ -1638,9 +1639,9 @@
     rows.sort(cmp);
     const cell = (r, b, k, i) => {
       const v = st(r.b[b], k);
-      const what = mkL(k);
+      const what = mkT(k);
       const tip = r.name + ' · ' + bl(b) + ' · ' + what + ' : ' + (v === 2 ? 'confirmé' : v ? 'contacté' : 'pas encore') + (v ? ' — clic : ces QSO dans le carnet' : '');
-      return '<td data-b="' + esc(b) + '" data-k="' + k + '" class="' + (v === 2 ? 'sc' : v ? 'sw' : 'sn') + ' ' + first(i) + '" title="' + esc(tip) + '">' + (v === 2 ? 'C' : v ? 'W' : '-') + '</td>';
+      return '<td data-b="' + esc(b) + '" data-k="' + k + '" class="' + (v === 2 ? 'sc' : v ? 'sw' : 'sn') + ' ' + first(i) + (k === 'DATA' ? ' lg-stdata' : '') + '" title="' + esc(tip) + '">' + (v === 2 ? 'C' : v ? 'W' : '-') + '</td>';
     };
     q$('#lgStBody').innerHTML = rows.length ? rows.map((r) => '<tr data-pfx="' + esc(r.pfx) + '"><td class="lg-stn" title="' + esc(r.pfx + ' – ' + r.name + (r.cont ? ' (' + r.cont + ')' : '')) + '"><b>' + esc(['WAZ', 'ITU'].indexOf(AW[0]) >= 0 ? String(Number(r.pfx)) : r.pfx) + '</b>' + (r.name && ['WAZ', 'ITU'].indexOf(AW[0]) < 0 ? ' – ' + esc(r.name) : '') + '</td>' +
       cols.map(([b, k], i) => cell(r, b, k, i)).join('') + '</tr>').join('')
