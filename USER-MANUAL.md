@@ -172,7 +172,7 @@ FT8 is the easiest mode to use remotely: everything is done with the mouse and t
 1. After a digital QSO, the form opens by itself (FT8) or with the `Log QSO` button (JTTY, CW; also on the tab row, right of Logbooks); in RTTY, `LOG ↵` on the QSO line logs it at once.
 2. For a phone QSO: `LOGS` tab, type the callsign (the UTC time fills in by itself), click `⇩ TRX` (take from the TRX) to copy the frequency and mode, then complete the reports.
 3. `Enregistrer le QSO` (save the QSO) (or `Enter`). The QSO appears in the list. Under the club callsign, it is also uploaded to the online logbooks if the administrators have set that up.
-4. To get your QSOs into your own logging program: **Exporter ▾ → Mes QSO (.adi)** (Export → My QSOs).
+4. To get your QSOs into your own logging program: **Import/Export ▾ → Mes QSO (.adi)** (Export → My QSOs).
 
 <a id="ecran"></a>
 ## 5. The screen at a glance
@@ -918,7 +918,7 @@ QO-100 is a geostationary satellite reached on 2.4 GHz with an up-converter. The
 
 **Large logbook on another screen**: the dashboard already opens on the logbook; **clicking LOGBOOKS again** (logbook already shown) opens it in **its own window**, to put on a second screen (it reopens at the same place and size). It shows **all columns** (TX call, OP, references, contest, LoTW, eQSL, Club Log, QRZ…) and up to **1000 QSOs** (300 in the dashboard); a click on a row opens the full QSO form (DÉTAILS QSO). This window has its own search, filters, TX CALL box and Synchronisation / Exporter menus, independent of the dashboard's; a QSO logged elsewhere shows up at once. It uses the dashboard's connection: if the dashboard is closed, reopen it and click LOGBOOKS twice.
 
-**📥 Importer un fichier ADIF** (import an ADIF file, logbook `Exporter ▾` menu, since 0.42.44): your full log exported as ADIF by Swisslog, Log4OM, WSJT-X… (150 MB max per file, i.e. several hundred thousand QSOs; 162,000 QSOs ≈ 35 to 60 MB, imported in about ten seconds). Once the file is chosen, the window counts the QSOs **per year** and per callsign (STATION_CALLSIGN): tick the years to import — all at once, or year by year (duplicates are skipped, so re-importing is safe). **TX call**: the one used for QSOs without one in the file; "l'imposer à tous les QSO" applies it to all. The statistics (📊) always count **all years** together. Imported QSOs are marked "already sent" to LoTW, eQSL, Club Log and QRZ: **nothing is sent again** to the online logs; the file's confirmations (LOTW_QSL_RCVD, QSL_RCVD) are kept and count in the statistics. Duplicate = same call, band and mode within 30 min (already in the logbook or in the file). Administrators: all callsigns (ON6DP, OP0P, ON5VL…); members: only their own callsign.
+**📥 Importer .ADI** (import an ADIF file, logbook `Import/Export ▾` menu, since 0.42.44): your full log exported as ADIF by Swisslog, Log4OM, WSJT-X… (150 MB max per file, i.e. several hundred thousand QSOs; 162,000 QSOs ≈ 35 to 60 MB, imported in about ten seconds). Once the file is chosen, the window counts the QSOs **per year** and per callsign (STATION_CALLSIGN): tick the years to import — all at once, or year by year (duplicates are skipped, so re-importing is safe). **TX call**: the one used for QSOs without one in the file; "l'imposer à tous les QSO" applies it to all. The statistics (📊) always count **all years** together. Imported QSOs are marked "already sent" to LoTW, eQSL, Club Log and QRZ: **nothing is sent again** to the online logs; the file's confirmations (LOTW_QSL_RCVD, QSL_RCVD) are kept and count in the statistics. Duplicate = same call, band and mode within 30 min (already in the logbook or in the file). Administrators: all callsigns (ON6DP, OP0P, ON5VL…); members: only their own callsign.
 
 **📊 STATISTIQUES** (large logbook window, right of DÉTAILS QSO), in the way of Swisslog: for the chosen **TX call** (or all), one row per **DXCC entity** (prefix – country), **all 340 entities**, even those never worked (**Pays** list: all, worked, not yet confirmed, never worked) and, under each **band** (always 160, 80, 60, 40, 30, 20, 17, 15, 12, 10, 6 m and **SAT** for QO-100, plus 2 m, 70 cm… if there are QSOs), one column per **mode**: SSB, CW, RTTY, FT8, FT4, FT2 (and « Autres », other modes, if any). Cell C = **confirmed** (LoTW or paper QSL), W = worked, - = not yet. Below, the **summary**: for each band, the number of entities worked / confirmed in each mode and in total, then the Total row (all bands). The **Mode** list limits the table to CW, phone, digital or one mode (one column per band); sort by prefix, country, continent or number of bands; country search. A **click on a cell** goes back to the logbook, filtered on that TX call, entity, band (and mode). WAE entities (Sicily, Shetland…) count for their DXCC entity (Italy, Scotland…). `↩ CARNET` (or Esc, or clicking 📊 STATISTIQUES DXCC again): back to the logbook.
 
@@ -1002,8 +1002,9 @@ Example for ON1ZZZ: a QSO he made as ON1ZZZ or as ON5VL / OR0L, he can correct o
 <a id="l-export"></a>
 ### 14.3 Exporting
 
-| Exporter ▾ menu (export) | What it does |
+| Import/Export ▾ menu (export) | What it does |
 |---|---|
+| 📥 Importer .ADI… (IMPORT part) | Your ADIF log (Swisslog…) into the logbook, whole or by years, duplicates skipped, nothing sent again to online logs (see « 📥 Importer .ADI » above). |
 | **Mes QSO (.adi)** (my QSOs) | Immediately downloads the QSOs made under **your** callsign (TX call), to import into your own logging program. |
 | **Vue affichée (.adi)** (displayed view) | Downloads exactly the QSOs of the list: the **TX call** chosen in the yellow `TX CALL` box of the bar (right of the search field), the search text and the column filters (▾ under the titles). The whole log is filtered, not only the 300 rows shown. Example: TX CALL = OR0L, Contest column = UBA-DX, then Vue affichée. A member only gets their own QSOs among them. |
 | **Vue affichée (Cabrillo)…** | The same selection as Cabrillo 3: first choose one TX call (one callsign per file), then type the contest identifier. |
@@ -1065,7 +1066,7 @@ Where to set it: the **Temporisation** box of the service window applies to **th
 
 - **What you need**: an eQSL.cc account for the callsign. Credentials: the **callsign** (eQSL login) and the account **password**; **QTH Nickname** only if the account has several QTHs: the **exact** nickname of a QTH of the eQSL account (eQSL.cc → My Profile → QTH Nicknames), not the TQSL Station Location; otherwise leave it empty. An unknown nickname gives « No match on APP_EQSL_QTH_NICKNAME » and stops the upload. Club callsigns: ⚙ Configuration → eQSL; personal callsign: yellow frame of this window (`Enregistrer pour cet indicatif`).
 - **Uploading**: choose the TX call, possibly dates, then `Télécharger`: the server sends the QSOs not yet sent, one by one (Traitement tab: report QSO by QSO). **Temporisation**: pause between two QSOs so as not to be blocked by the site (5 s by default); **1 second** is enough and 3 to 4 times faster (box of this window for one upload, ⚙ Configuration → eQSL to keep it). eQSL only accepts one QSO per upload and itself answers in 1 to 2 seconds.
-- **Large batch** (contest, hundreds of QSOs): faster with a file: Exporter ▾ → ADIF, then upload the file on eQSL.cc (Upload ADIF file). A later `Télécharger` of these QSOs is harmless: eQSL answers « duplicate » and they are marked as sent.
+- **Large batch** (contest, hundreds of QSOs): faster with a file: Import/Export ▾ → ADIF, then upload the file on eQSL.cc (Upload ADIF file). A later `Télécharger` of these QSOs is harmless: eQSL answers « duplicate » and they are marked as sent.
 - **Confirmations**: received eQSLs are viewed on the eQSL.cc site (Inbox).
 - **Automatic upload** of each new QSO: ⚙ Configuration → eQSL (club) or the box in this window (personal callsign). Turn it off during a contest if you don't want live uploads.
 
@@ -1077,7 +1078,7 @@ Where to set it: the **Temporisation** box of the service window applies to **th
 
 - **What you need**: a **QRZ logbook API key** per callsign (QRZ.com → Logbook → Settings → API Key; XML subscription or higher). Club callsigns: ⚙ Configuration → QRZ (one line per callsign); personal callsign: yellow frame of this window.
 - **Uploading**: TX call, possibly dates, then `Télécharger`; QSOs arrive in the callsign's QRZ logbook, one per upload (the QRZ API does not accept several at once). **Temporisation**: 5 s by default; **1 second** is enough (box of this window, or ⚙ Configuration → QRZ to keep it).
-- **Large batch**: Exporter ▾ → ADIF, then QRZ.com → Logbook → Settings → Import ADIF. A later `Télécharger` of these QSOs is harmless: QRZ answers « duplicate » and they are marked as sent.
+- **Large batch**: Import/Export ▾ → ADIF, then QRZ.com → Logbook → Settings → Import ADIF. A later `Télécharger` of these QSOs is harmless: QRZ answers « duplicate » and they are marked as sent.
 - **Confirmations**: in the QRZ logbook on the site.
 - The QRZ.com account for « looking up correspondents » (name, QTH, locator) is another setting, in ⚙ Configuration → QRZ.
 
@@ -1138,7 +1139,7 @@ In the way of N1MM, several stations — each with **its TRX and its own Remote 
 
 1. **Before**: same version everywhere; each station in **Poste** mode, « relié à REMOTE (actif) »; the **same TX CALL** everywhere (e.g. OR0L); the **same contest** chosen in the RTTY, CW or SSB page; the series reset to 1 **once**, from one station only (applies to all); automatic upload to LoTW / Club Log / QRZ / eQSL turned off if you don't want live uploads (⚙ Configuration → CLUBLOG, eQSL, LoTW, QRZ tabs → untick « Télécharger automatiquement… », on each server).
 2. **During**: everyone operates on their TRX; numbers come from the master (never the same twice); each QSO goes at once to the master then to all stations: each station's contest log shows the QSOs of all (shared points, multipliers, dupes).
-3. **After**: master's Network screen, all stations at 0 backlog; Cabrillo from the large logbook of remote.op0p.be (TX CALL = OR0L, Contest column filter, Exporter ▾ → Vue affichée (Cabrillo)); LoTW / Club Log uploads in batch (Synchronisation ▾), then automatic upload ticked again.
+3. **After**: master's Network screen, all stations at 0 backlog; Cabrillo from the large logbook of remote.op0p.be (TX CALL = OR0L, Contest column filter, Import/Export ▾ → Vue affichée (Cabrillo)); LoTW / Club Log uploads in batch (Synchronisation ▾), then automatic upload ticked again.
 
 Automatic upload to online logs only leaves from the server where the QSO was logged: QSOs copied from another station are not sent again.
 

@@ -114,7 +114,7 @@
     </form>
     <div class="lg-bar">
       <input class="lg-search" id="lgSearch" placeholder="Rechercher (indicatif, nom, opérateur)" aria-label="Rechercher dans le carnet">
-      <label class="lg-txf" title="Ne montrer que les QSO faits sous cet indicatif (TX call) ; Exporter ▾ → « Vue affichée » les exporte ensuite">TX call <select id="lgTxf" aria-label="Filtrer le carnet par TX call"><option value="">Tous</option></select></label>
+      <label class="lg-txf" title="Ne montrer que les QSO faits sous cet indicatif (TX call) ; Import/Export ▾ → « Vue affichée » les exporte ensuite">TX call <select id="lgTxf" aria-label="Filtrer le carnet par TX call"><option value="">Tous</option></select></label>
       <span class="lg-count" id="lgCount"></span>
       <button class="btn lg-fclr" type="button" id="lgFclr" hidden title="Retirer tous les filtres de colonne">✕ Filtres</button>
       <span class="lg-msel" id="lgMsel" hidden><b id="lgMselN"></b><button class="btn" type="button" id="lgMselAll" title="Sélectionner tous les QSO affichés">Tout sélectionner</button><button class="btn lg-mdel" type="button" id="lgMselDel">🗑 Supprimer la sélection</button><button class="btn" type="button" id="lgMselX" title="Désélectionner (Échap)">✕</button></span>
@@ -133,16 +133,17 @@
         </div>
       </div>
       <div class="lg-menu">
-        <button class="btn" type="button" data-m="exp" aria-haspopup="true" aria-expanded="false">Exporter ▾</button>
+        <button class="btn" type="button" data-m="exp" aria-haspopup="true" aria-expanded="false">Import/Export ▾</button>
         <div class="lg-mlist" role="menu" hidden>
+          <div class="lg-mhd">EXPORT</div>
           <button type="button" role="menuitem" data-xm="1">Mes QSO (.adi)</button>
           <button type="button" role="menuitem" data-xv="adif" title="Exactement les QSO de la liste : TX call choisi, recherche et filtres de colonne (tout le carnet, pas seulement les lignes affichées)">Vue affichée (.adi)</button>
           <button type="button" role="menuitem" data-xv="cabrillo" title="Les QSO de la liste en Cabrillo (un seul TX call : choisissez-le d'abord)">Vue affichée (Cabrillo)…</button>
           <hr class="lg-msep">
           <button type="button" role="menuitem" data-x="adif">ADIF (.adi)…</button>
           <button type="button" role="menuitem" data-x="cabrillo">Cabrillo (.log)…</button>
-          <hr class="lg-msep">
-          <button type="button" role="menuitem" data-a="imp" title="Importer un log ADIF (Swisslog, Log4OM, WSJT-X…) dans le carnet : tout le fichier ou certaines années, doublons ignorés, rien n'est renvoyé aux logs en ligne">📥 Importer un fichier ADIF…</button>
+          <div class="lg-mhd">IMPORT</div>
+          <button type="button" role="menuitem" data-a="imp" title="Importer un log ADIF (Swisslog, Log4OM, WSJT-X…) dans le carnet : tout le fichier ou certaines années, doublons ignorés, rien n'est renvoyé aux logs en ligne">📥 Importer .ADI…</button>
         </div>
       </div>
     </div>
@@ -1054,7 +1055,7 @@
   let imp = null;
   function openImport() {
     if (me.rxOnly) return say('Indicatif d’écouteur : pas d’import.', 'warn');
-    const d = mkDlg('lg-impdlg', '<form method="dialog"><h3>📥 Importer un fichier ADIF</h3>' +
+    const d = mkDlg('lg-impdlg', '<form method="dialog"><h3>📥 Importer .ADI</h3>' +
       '<p class="lg-dhint">Log exporté en ADIF (.adi / .adif) par Swisslog, Log4OM, WSJT-X… Vous pouvez importer <b>tout le fichier ou seulement certaines années</b> (puis les autres plus tard) : les statistiques comptent toujours toutes les années. Les doublons (même indicatif, bande et mode à 30 min près) sont ignorés ; les QSO importés sont notés « déjà envoyés » à LoTW, eQSL, Club Log et QRZ (rien ne repart). ' + (me.admin ? 'Administrateur : tous les indicatifs.' : 'Seulement les QSO faits sous votre indicatif ' + esc(me.call) + '.') + '</p>' +
       '<label class="lg-impf">Fichier <input type="file" name="file" accept=".adi,.adif,.ADI,.ADIF,.txt"></label>' +
       '<div id="lgImpInfo" class="lg-impinfo"></div>' +
