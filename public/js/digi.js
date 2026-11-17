@@ -257,6 +257,7 @@
       </select></label>
       <label class="dg-chk dg-after" title="Quand vous lancez CQ (Tx6) : répondre tout seul à la station qui vous appelle (la plus forte), et à la fin du QSO répondre à la suivante qui vous appelait aussi, sinon relancer CQ — comme WSJT-X avec « Call 1st » et le Tx laissé en service. Le chien de garde arrête un CQ resté sans réponse."><span class="dg-f dg-ylw">Après un QSO</span> <select id="dgAfter">
         <option value="cq">CQ : répondre au suivant, sinon relancer CQ</option>
+        <option value="always">Toujours CQ : après chaque QSO (même un appel), suivant sinon CQ</option>
         <option value="first">CQ : répondre au 1er, puis arrêter</option>
         <option value="stop">Arrêter (répondre à la main)</option>
       </select></label>
@@ -351,6 +352,7 @@
     <div class="dg-prog" id="dgProg" title="Période en cours : vert = réception, rouge = émission"><i id="dgProgBar"></i><span id="dgProgTxt"></span></div>
     <!-- Messages Tx1 à Tx7 dans l'onglet, sous les listes (comme WSJT-X) -->
     <div class="ft-tx"><div class="msgs-b ft-msgs" id="msgFtx"></div>
+      <div class="ft-queue" id="ftQueue" hidden></div>
       <div class="ft-qso" id="ftQso" title="QSO en cours : le correspondant choisi (double-clic sur son message) ; indicatif, locator et reports modifiables à la main">
         <span class="fq-t">QSO</span>
         <label>Indicatif <input id="fqCall" maxlength="12" spellcheck="false" autocomplete="off"></label>
@@ -4808,6 +4810,44 @@
     clearTimeout(qsoHideT);
     qsoHideT = setTimeout(() => qsoShow(false), 2000);
   }
+  /** Maj + clic sur l'indicatif (ou Maj + double-clic) : station ajoutée à la file d'attente, appelée après le QSO en cours */
+  function queueAdd(d, slot) {
+    if (!api) return;
+    const w = String(d.msg || '').toUpperCase().split(/\s+/).map((x) => x.replace(/^<|>$/g, ''));
+    const call = senderOf(d.msg);
+    if (!call) return api.say('Pas d’indicatif à mettre en file d’attente dans ce message.', 'warn');
+    const last = w[w.length - 1];
+    api.send({ t: 'ftx_queue', op: 'add', call, db: d.db, f: d.f, slot, grid: GRID_RE.test(last) && last !== 'RR73' ? last : '' });
+  }
+  /** File d'attente (sous les messages Tx1 à Tx7) : ceux qui vous appellent pendant le QSO, et ceux ajoutés à la main */
+  let queueSig = '';
+  function queueDraw(st) {
+    const box = $('ftQueue');
+    if (!box) return;
+    const sq = st && st.seq;
+    const now = Date.now();
+    const P = SLOT_MS[sq && sq.mode] || 15000;
+    // Ceux qui n'appellent plus depuis 2 périodes ne seront plus pris : retirés de l'affichage
+    const q = sq && sq.on && Array.isArray(sq.queue) ? sq.queue.filter((x) => x.manual || now - x.at <= 2 * P + 2000) : [];
+    const mine = !!(api && api.iControl());
+    const sig = JSON.stringify(q.map((x) => [x.call, x.db, x.top, x.manual, x.dupe, Math.floor((now - x.at) / 5000)])) + mine;
+    if (sig === queueSig) return;
+    queueSig = sig;
+    box.hidden = !q.length;
+    if (!q.length) { box.textContent = ''; return; }
+    const age = (t) => { const s = Math.max(0, Math.round((now - t) / 1000)); return s < 60 ? s + ' s' : Math.floor(s / 60) + ' min'; };
+    box.innerHTML = '<span class="fq-t" title="Stations prises dans cet ordre à la fin du QSO en cours (ou quand le correspondant ne répond plus) : d’abord celle mise en tête (★), puis celles ajoutées à la main (✋, appelées en Tx1), puis la plus forte de celles qui vous appellent. Ajouter : Maj + clic sur un indicatif (ou Maj + double-clic sur un message).">File d’attente</span>' +
+      q.map((x, i) => '<span class="fqi' + (x.top ? ' top' : '') + (x.manual ? ' man' : '') + (x.dupe ? ' dupe' : '') + '" data-c="' + x.call + '" title="' + x.call + ' · ' + (x.manual && !x.msg.split(' ')[0] ? '' : '« ' + x.msg + ' » · ') + (x.db >= 0 ? '+' : '') + x.db + ' dB · ' + x.f + ' Hz · il y a ' + age(x.at) + (x.dupe ? ' · déjà contacté (ne sera pas pris)' : '') + (mine ? '\nClic : le prendre en premier · ✕ : le retirer' : '') + '">' +
+        '<b>' + (i + 1) + '</b> ' + (x.top ? '★ ' : x.manual ? '✋ ' : '') + x.call + ' <small>' + (x.db >= 0 ? '+' : '') + x.db + ' · ' + age(x.at) + '</small>' + (mine ? '<i data-x="' + x.call + '" title="Retirer de la file">✕</i>' : '') + '</span>').join('') +
+      (mine ? '<button class="dg-mini" type="button" data-clr title="Vider la file d’attente">Vider</button>' : '');
+    if (!mine) return;
+    box.querySelectorAll('.fqi').forEach((e) => e.addEventListener('click', (ev) => {
+      const x = ev.target.closest('[data-x]');
+      api.send({ t: 'ftx_queue', op: x ? 'del' : 'top', call: x ? x.dataset.x : e.dataset.c });
+    }));
+    const clr = box.querySelector('[data-clr]');
+    if (clr) clr.addEventListener('click', () => api.send({ t: 'ftx_queue', op: 'clear' }));
+  }
   function pickFromDecode(d, slot, side) {
     qsoShow(true);
     if (ftDual) { ftSide = side === 'B' ? 'B' : 'A'; sideBtns(); } // TX automatique sur le VFO de la station appelée
@@ -5004,9 +5044,9 @@
     if (/[{}]/.test(text)) return api.say('Message incomplet : choisissez d’abord le correspondant (double-clic sur son message) ou réglez votre locator.', 'warn');
     const m = FT_MODES.indexOf(mode) >= 0 ? mode : ftStored();
     api.send({ t: 'ftx_tx', mode: m, ntx: i + 1, f0: curTxF(), parity: txParity(i), dx: { call: dx.call, grid: dx.grid }, rpt: dx.rpt,
-      free: String(store.get('ftxfree', '')), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq', maxRep: ftMaxRep(), keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd() });
+      free: String(store.get('ftxfree', '')), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq' || ftAfter() === 'always', cqAlways: ftAfter() === 'always', maxRep: ftMaxRep(), keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd() });
   }
-  const ftAfter = () => { const v = store.get('ftxafter', 'cq'); return v === 'first' || v === 'stop' ? v : 'cq'; };
+  const ftAfter = () => { const v = store.get('ftxafter', 'cq'); return v === 'first' || v === 'stop' || v === 'always' ? v : 'cq'; };
   const curTxF = () => (sd() === 'B' ? Math.round(Number(store.get('txfb', String(txFB))) || txFB) : Math.round(Number(store.get('txf', String(txF))) || txF));
   // Période d'émission : imposée, ou (auto) l'autre que celle du correspondant choisi par double-clic
   function txParity(i) {
@@ -5019,7 +5059,7 @@
   function ftMaxRep() { const n = Number(store.get('ftxmaxrep', '4')); return [0, 3, 4, 5, 6, 8].indexOf(n) >= 0 ? n : 4; }
   function ftxCfg() {
     const st = api && api.state();
-    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), rxf: sd() === 'B' ? rxFB : rxF, parity: txParity(ftxSel), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq', maxRep: ftMaxRep(), side: sd() });
+    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), rxf: sd() === 'B' ? rxFB : rxF, parity: txParity(ftxSel), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq' || ftAfter() === 'always', cqAlways: ftAfter() === 'always', maxRep: ftMaxRep(), side: sd() });
   }
   // Fin de QSO (73 / RR73) : proposition d'enregistrement dans le carnet, comme « Prompt me to log QSO » de WSJT-X
   // Fin d'un QSO FT8 / FT4 / FT2 : fiche à confirmer, ou enregistrement automatique selon le choix « Log »
@@ -6338,7 +6378,7 @@
         c.className = 'dg-call';
         c.textContent = who;
         c.title = who + (geo ? ' — ' + geo : '') + '\nClic : répondre à ' + who + ' (émission à la période suivante, avec la main)';
-        c.addEventListener('click', (e) => { e.stopPropagation(); pickFromDecode(d, slot, side); });
+        c.addEventListener('click', (e) => { e.stopPropagation(); if (e.shiftKey) queueAdd(d, slot); else pickFromDecode(d, slot, side); });
         s.appendChild(c);
         s.appendChild(document.createTextNode(String(v).slice(k + who.length)));
       }
@@ -6370,7 +6410,7 @@
     for (const [t, c, ti] of ex) { const e = document.createElement('span'); e.className = c; e.textContent = t; if (ti) e.title = ti; r.appendChild(e); }
     r.addEventListener('click', () => setRx(d.f, side));
     r.addEventListener('contextmenu', (e) => { e.preventDefault(); setTx(d.f, side); });
-    r.addEventListener('dblclick', () => { if (!d.tx) pickFromDecode(d, slot, side); });
+    r.addEventListener('dblclick', (e) => { if (d.tx) return; if (e.shiftKey) queueAdd(d, slot); else pickFromDecode(d, slot, side); });
     return r;
   }
   function sepEl(slot, m) {
@@ -7344,7 +7384,7 @@
         $('dgAfter').addEventListener('change', () => {
           store.set('ftxafter', $('dgAfter').value);
           ftxCfg();
-          if (api) api.say({ cq: 'Après un QSO : réponse à la station suivante qui vous appelait, sinon CQ relancé tout seul.', first: 'Après un QSO : réponse automatique au 1er qui répond à votre CQ, puis arrêt à la fin du QSO.', stop: 'Après un QSO : arrêt ; vous choisissez vous-même la station suivante (double-clic).' }[$('dgAfter').value], '', 6000);
+          if (api) api.say({ always: 'Après chaque QSO, même quand vous aviez répondu à un CQ (73 reçu ou envoyé) : réponse à la station suivante qui vous appelait, sinon votre CQ relancé tout seul.', cq: 'Après un QSO : réponse à la station suivante qui vous appelait, sinon CQ relancé tout seul.', first: 'Après un QSO : réponse automatique au 1er qui répond à votre CQ, puis arrêt à la fin du QSO.', stop: 'Après un QSO : arrêt ; vous choisissez vous-même la station suivante (double-clic).' }[$('dgAfter').value], '', 6000);
         });
       }
       $('dgStop').addEventListener('click', () => api && api.send({ t: 'ftx_stop' }));
@@ -7540,6 +7580,7 @@
       }
       cwTxState(stx && stx.cw);
       sigDraw(stx);
+      queueDraw(stx);
       // Statistiques DXCC : autre TX call → redemandées ; autre bande → colonne mise en avant et « NEW BANDE » à jour
       if (dxShown()) {
         const db = curBand(ftDual ? sd() : '');

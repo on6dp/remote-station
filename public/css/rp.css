@@ -3558,3 +3558,15 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .ft-vbar:has(.in-vbar) { flex-wrap: wrap; row-gap: 4px; }
 .ft-vbar .wf-ctl.in-vbar { background: none; border: 0; padding: 0; margin-left: auto; flex-wrap: nowrap; gap: 4px 12px; }
 .ft-vbar .wf-ctl.in-vbar .ft-wfa { display: none; }
+/* File d'attente FT (sous les messages Tx1 à Tx7) */
+.ft-queue { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 5px 8px; margin: 4px 0; border: 1px solid #3a7bd5; border-radius: 8px; background: rgba(31, 79, 138, .18); font-size: 12px; }
+.ft-queue[hidden] { display: none; }
+.ft-queue .fq-t { color: #ffe600; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; font-size: 11px; margin-right: 4px; }
+.ft-queue .fqi { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border: 1px solid #5d6c80; border-radius: 12px; background: #121a28; color: #fff; font-weight: 700; cursor: pointer; }
+.ft-queue .fqi b { color: #8fb8ff; }
+.ft-queue .fqi small { color: var(--v2-text-dim); font-weight: 400; }
+.ft-queue .fqi.top { border-color: #ffd400; background: #3a2f00; }
+.ft-queue .fqi.man { border-color: #b05ad0; }
+.ft-queue .fqi.dupe { opacity: .55; text-decoration: line-through; }
+.ft-queue .fqi i { font-style: normal; color: #ff6b5e; margin-left: 2px; }
+.ft-queue .fqi i:hover { color: #fff; }

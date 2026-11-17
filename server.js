@@ -2775,7 +2775,54 @@ function seqText(s) {
 function seqPublic() {
   if (!seq) return null;
   return { on: !!seq.on, mode: seq.mode, ntx: seq.ntx, dx: seq.dx.call, grid: seq.dx.grid, rpt: seq.rptSent, rptRcvd: seq.rptRcvd || '',
-    parity: seq.parity, call1st: !!seq.call1st, by: seq.conn.user.call, text: seqText(seq), side: seq.side || 'A', hound: seq.hound || 0, f0: seq.f0, rxf: seq.rxf || 0 };
+    parity: seq.parity, call1st: !!seq.call1st, by: seq.conn.user.call, text: seqText(seq), side: seq.side || 'A', hound: seq.hound || 0, f0: seq.f0, rxf: seq.rxf || 0,
+    queue: seqQueue(seq) };
+}
+/** File d'attente visible (page FT) : ceux qui appellent pendant un QSO + ceux ajoutés à la main, dans l'ordre où ils seront pris */
+function seqQueue(s) {
+  if (!s || !s.waiting || !s.waiting.size) return [];
+  const P = FTX_SLOT[s.mode] || 15000;
+  const now = Date.now();
+  const out = [];
+  for (const [k, v] of s.waiting) {
+    if (!v.manual && now - v.at > 2 * P + 2000) continue; // n'appelle plus : retiré au prochain choix
+    out.push({ call: v.w[1], db: v.d.db, f: Math.round(v.d.f || 0), at: v.at, manual: !!v.manual, top: !!v.top, msg: String(v.w.slice(0, 3).join(' ')), dupe: s.worked.has(k) || isDupeNow(v.w[1], s.mode) });
+  }
+  return out.sort((a, b) => (b.top - a.top) || (b.manual - a.manual) || (b.db - a.db)).slice(0, 12);
+}
+/** Ordres de la file d'attente (celui qui a la main) : ajouter une station décodée, la retirer, la mettre en tête, tout vider */
+function seqQueueCmd(conn, m) {
+  const err = (msg) => send(conn, { t: 'notice', level: 'error', msg });
+  if (controller !== conn) return err('Prenez d’abord la main');
+  if (!seq || seq.conn !== conn || !seq.on) return err('File d’attente : lancez d’abord CQ ou un QSO (Tx1 à Tx6), elle se remplit pendant l’émission');
+  const call = String(m.call || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 13);
+  const k = baseCall(call);
+  if (m.op === 'clear') { seq.waiting.clear(); broadcast(); return; }
+  if (!SEQ_CALL_RE.test(k)) return err('File d’attente : indicatif invalide');
+  if (m.op === 'del') { seq.waiting.delete(k); broadcast(); return; }
+  if (m.op === 'top') {
+    const v = seq.waiting.get(k);
+    if (!v) return;
+    for (const x of seq.waiting.values()) x.top = false;
+    v.top = true;
+    v.at = Date.now(); // gardé jusqu'à son tour
+    v.manual = true;
+    broadcast();
+    return;
+  }
+  if (m.op === 'add') {
+    if (baseCall(seq.dx.call) === k) return err(call + ' est déjà le correspondant en cours');
+    const P = FTX_SLOT[seq.mode] || 15000;
+    const slot = Number(m.slot) || Date.now();
+    const db = Math.max(-30, Math.min(30, Math.round(Number(m.db) || -10)));
+    const f = Math.round(Number(m.f) || 0);
+    const grid = /^[A-R]{2}\d{2}$/.test(String(m.grid || '').toUpperCase()) ? String(m.grid).toUpperCase() : '';
+    // Ajout à la main : on l'appellera (Tx1) à son tour, sur la période opposée à la sienne
+    seq.waiting.set(k, { d: { db, f }, w: [seqMe(), call, grid || ''], at: Date.now(), parity: Math.round(slot / P) % 2, manual: true, call1: true, grid });
+    if (seq.waiting.size > 40) seq.waiting.delete(seq.waiting.keys().next().value);
+    send(conn, { t: 'notice', level: 'info', msg: call + ' ajouté à la file d’attente : appelé après le QSO en cours' });
+    broadcast();
+  }
 }
 function seqOff(reason, level) {
   if (!seq || !seq.on) return;
@@ -2897,15 +2944,19 @@ function seqOnDecodes(mode, slot, list, side) {
   const words = (d) => String(d.msg || '').toUpperCase().replace(/[<>]/g, '').split(/\s+/).filter(Boolean);
   const dxBase = baseCall(seq.dx.call);
   // 0) Ceux qui nous appellent pendant un QSO (« MOI LUI locator / report ») : file d'attente pour la fin du QSO
-  if (seq.cqRun) {
+  let qChanged = false;
+  if (seq.cqRun || seq.waiting.size) {
     for (const d of list) {
       const w = words(d);
       if (w.length < 3 || baseCall(w[0]) !== me || !SEQ_CALL_RE.test(baseCall(w[1])) || baseCall(w[1]) === dxBase) continue;
       if (!((GRID4_RE.test(w[2]) && w[2] !== 'RR73') || RPT_RE.test(w[2]) || RRPT_RE.test(w[2]))) continue;
-      seq.waiting.set(baseCall(w[1]), { d, w, at: Date.now(), parity: theirParity });
+      const old = seq.waiting.get(baseCall(w[1]));
+      seq.waiting.set(baseCall(w[1]), { d, w, at: Date.now(), parity: theirParity, top: !!(old && old.top) });
+      qChanged = true;
     }
     if (seq.waiting.size > 40) seq.waiting.delete(seq.waiting.keys().next().value);
   }
+  if (qChanged) setTimeout(broadcast, 0); // file d'attente visible dans la page FT
   // 1) le correspondant
   if (dxBase && seq.ntx !== 6) {
     for (const d of list) {
@@ -2963,21 +3014,24 @@ function seqGiveUp(s) {
   const who = s.dx.call, n = s.rep;
   s.rep = 0; s.repText = '';
   if (ftxPend && ftxPend.state === 'wait' && ftxPend.conn === s.conn) ftxCancel('sans réponse', true);
-  if (s.cqRun && s.autoCq && controller === s.conn) {
+  const manualQ = Array.from(s.waiting.values()).some((v) => v.manual && baseCall(v.w[1]) !== baseCall(who));
+  if ((s.cqRun || manualQ) && s.autoCq && controller === s.conn) {
     s.waiting.delete(baseCall(who));
     s.qsoStart = 0;
     s.rptRcvd = '';
-    return seqNextCaller(s, who + ' ne répond plus (' + n + ' essais)');
+    return seqNextCaller(s, who + ' ne répond plus (' + n + ' essais)', !s.cqRun);
   }
   seqOff('pas de réponse de ' + who + ' après ' + n + ' essais du même message');
 }
 /** Appel CQ : réponse à la station suivante de la file (la plus forte, pas déjà contactée), sinon CQ relancé. */
-function seqNextCaller(s, why) {
+function seqNextCaller(s, why, manualOnly) {
   const P = FTX_SLOT[s.mode] || 15000;
   let next = null;
+  const rank = (v) => (v.top ? 2 : 0) + (v.manual ? 1 : 0);
   for (const [k, v] of s.waiting) {
-    if (Date.now() - v.at > 2 * P + 2000 || s.worked.has(k) || isDupeNow(v.w[1], s.mode)) { s.waiting.delete(k); continue; }
-    if (!next || v.d.db > next.d.db) next = v;
+    if (manualOnly && !v.manual) continue;
+    if ((!v.manual && Date.now() - v.at > 2 * P + 2000) || s.worked.has(k) || isDupeNow(v.w[1], s.mode)) { s.waiting.delete(k); continue; }
+    if (!next || rank(v) > rank(next) || (rank(v) === rank(next) && v.d.db > next.d.db)) next = v;
   }
   s.on = true;
   s.watchMsg = ''; s.watchSince = 0;
@@ -2989,8 +3043,22 @@ function seqNextCaller(s, why) {
     s.rptSent = fmtRpt(next.d.db);
     s.parity = 1 - next.parity;
     s.progress = PROG.CALLING;
-    seqReact(next.w[2], next.d);
-    send(s.conn, { t: 'notice', level: 'info', msg: (why ? why + ' : ' : '') + next.w[1] + ' vous appelait aussi : réponse automatique « ' + seqText(s) + ' »' });
+    if (next.call1) {
+      // Ajouté à la main (il ne nous appelait pas) : on l'appelle (Tx1)
+      s.dx.grid = next.grid || '';
+      s.rptRcvd = '';
+      s.qsoStart = 0;
+      seqSetNtx(1);
+      send(s.conn, { t: 'notice', level: 'info', msg: (why ? why + ' : ' : '') + 'file d’attente → appel de ' + next.w[1] + ' « ' + seqText(s) + ' »' });
+    } else {
+      seqReact(next.w[2], next.d);
+      send(s.conn, { t: 'notice', level: 'info', msg: (why ? why + ' : ' : '') + next.w[1] + ' vous appelait aussi : réponse automatique « ' + seqText(s) + ' »' });
+    }
+  } else if (manualOnly) {
+    s.on = false;
+    updateDigi();
+    broadcast();
+    return;
   } else {
     s.dx = { call: '', grid: '' };
     s.rptSent = '';
@@ -3077,6 +3145,8 @@ function seqQsoDone(why) {
   if (s.worked && SEQ_CALL_RE.test(baseCall(call))) s.worked.add(baseCall(call));
   // Appel CQ (comme WSJT-X, Tx non coupé après le 73) : réponse au suivant de la file, sinon CQ relancé
   if (wasOn && s.cqRun && s.autoCq && !s.hound && controller === s.conn) return seqNextCaller(s, '');
+  // Pas en appel CQ (on appelait quelqu'un) : stations ajoutées à la main à la file d'attente, appelées l'une après l'autre
+  if (wasOn && !s.hound && s.autoCq !== false && controller === s.conn && Array.from(s.waiting.values()).some((v) => v.manual)) return seqNextCaller(s, '', true);
   updateDigi();
   broadcast();
 }
@@ -3131,7 +3201,8 @@ function seqStart(conn, m) {
     rptSent: RPT_RE.test(String(m.rpt || '')) ? String(m.rpt) : fmtRpt(m.rpt),
     rptRcvd: same ? seq.rptRcvd : '', free, call1st: !hound && m.call1st !== false,
     // Appel CQ en cours (Tx6, ou QSO d'un CQ) : à la fin du QSO, réponse au suivant qui appelle, sinon CQ relancé (autoCq)
-    cqRun: !hound && (ntx === 6 || (same && !!seq.cqRun && ntx >= 2)), autoCq: !hound && m.autoCq !== false,
+    // « Toujours CQ » (cqAlways) : même un QSO commencé en répondant à un CQ se termine par le CQ relancé (ou le suivant)
+    cqRun: !hound && (ntx === 6 || m.cqAlways === true || (same && !!seq.cqRun && ntx >= 2)), autoCq: !hound && m.autoCq !== false, cqAlways: !hound && m.cqAlways === true,
     waiting: (seq && seq.conn === conn && seq.mode === mode && seq.waiting) || new Map(),
     worked: (seq && seq.conn === conn && seq.mode === mode && seq.worked) || new Set(),
     watchMsg: '', watchSince: 0, qsoStart: same ? seq.qsoStart : 0, txDial: 0, keyNow: !!m.keyNow,
@@ -3169,6 +3240,7 @@ function seqCfg(conn, m) {
   if (typeof m.call1st === 'boolean' && !seq.hound) seq.call1st = m.call1st;
   if (typeof m.autoCq === 'boolean' && !seq.hound) seq.autoCq = m.autoCq;
   if (m.maxRep != null) seq.maxRep = seqMaxRep(m.maxRep);
+  if (typeof m.cqAlways === 'boolean' && !seq.hound) { seq.cqAlways = m.cqAlways; if (m.cqAlways) seq.cqRun = true; }
   // Fréquence RX changée (clic sur la cascade) : l'aide AP du décodeur pour le QSO s'y applique tout de suite
   if (Number(m.rxf) >= 100 && Number(m.rxf) <= 3000 && Math.round(Number(m.rxf)) !== seq.rxf) { seq.rxf = Math.round(Number(m.rxf)); updateDigi(); }
   // VFO d'émission changé pendant la séquence (FTDX101 en double réception) : pris en compte dès que le TRX est en réception
@@ -4461,6 +4533,9 @@ function onOperator(conn, m) {
 
     case 'ftx_cfg':
       return seqCfg(conn, m);
+
+    case 'ftx_queue':
+      return seqQueueCmd(conn, m);
 
     case 'ftx_hound': {
       // HOUND (FT8) : 0 normal, 1 FOX classique, 2 SuperFox — choisi par celui qui a la main, pour toute la station
