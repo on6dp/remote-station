@@ -3580,3 +3580,20 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 /* Statistiques du carnet : la valeur choisie (DXCC (pays), TX call, mode, tri, lignes) en blanc gras, le libellé reste jaune */
 .lg-sth .lg-txf select { color: #fff; font-weight: 800; }
 .lg-sth .lg-txf select option { color: #fff; font-weight: 700; }
+/* Import ADIF (carnet) : années en grille de cases à cocher, cadres arrondis, libellés en gras */
+.lg-impdlg { width: min(760px, 94vw); }
+.lg-impdlg .lg-impf { display: flex; align-items: center; gap: 10px; font-weight: 700; margin: 8px 0; }
+.lg-impdlg .lg-impf input[type=file] { flex: 1; padding: 6px; border: 1px solid #5d6c80; border-radius: 8px; }
+.lg-impdlg .lg-impy { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 4px 10px; max-height: 210px; overflow: auto; margin: 8px 0; padding: 8px 10px; border: 1px solid #5d6c80; border-radius: 8px; }
+.lg-impdlg .lg-impy legend { font-weight: 800; padding: 0 6px; }
+.lg-impdlg .lg-impy label { display: flex; align-items: center; gap: 6px; font-weight: 700; margin: 0; white-space: nowrap; }
+.lg-impdlg .lg-impy label input { width: auto; margin: 0; }
+.lg-impdlg .lg-impy small { color: var(--v2-text-dim); font-weight: 400; }
+.lg-impdlg label:has(> input[name=force]) { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.lg-impdlg label > input[name=force] { width: auto; margin: 0; }
+.lg-impdlg .lg-txf { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; }
+.lg-impdlg .lg-txf select { width: auto; border-radius: 8px; font-weight: 700; }
+.lg-impdlg .lg-imprg { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.lg-impdlg .lg-imprg progress { flex: 0 0 260px; height: 14px; }
+.lg-impdlg .ok { color: #39ff14; font-weight: 700; }
+.lg-impdlg .warn { color: #ff9f1a; font-weight: 700; }

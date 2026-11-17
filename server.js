@@ -970,6 +970,7 @@ function sendWorked(force, only) {
   for (const c of ops) send(c, msg);
 }
 const DXCC = require('./lib/dxcc.js');
+const IMPORT = require('./lib/adifimport.js');
 
 // Spot vers le DX cluster (case « Spot au log » cochée à l'enregistrement du QSO, ou bouton SPOT) : envoyé sous
 // l'INDICATIF DE L'OPÉRATEUR (son compte, ex. ON6DP), pas sous le TX CALL ni l'indicatif de connexion de la carte de
@@ -4576,6 +4577,40 @@ function onOperator(conn, m) {
 
     case 'ftx_queue':
       return seqQueueCmd(conn, m);
+
+    case 'log_import': {
+      // Import d'un log ADIF par lots (fenêtre « Importer un fichier ADIF » du carnet) : administrateurs (tous les
+      // indicatifs), membres (leur propre indicatif seulement)
+      const fail = (msg) => { conn.logImport = null; return send(conn, { t: 'log_import', op: 'fail', msg, tag: logTag(m) }); };
+      if (conn.user.rxOnly) return fail('Indicatif d’écouteur : pas d’import');
+      if (m.op === 'start') {
+        const mine = String(conn.user.call || '').toUpperCase();
+        const allowed = (c) => !!c && (conn.user.admin || (c === mine && ownCallOk(conn.user)));
+        const txc = String(m.txc || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
+        if (txc && !allowed(txc)) return fail('Vous ne pouvez importer que des QSO faits sous votre propre indicatif');
+        if (Number(m.size) > 150 * 1024 * 1024) return fail('Fichier trop gros (150 Mo au plus) : importez-le année par année');
+        conn.logImport = new IMPORT.ImportJob({ book, by: mine, txc, force: m.force ? txc : '', allowed });
+        journal('log_import_start', { call: mine, txc, size: Number(m.size) || 0, records: Number(m.records) || 0 });
+        return send(conn, { t: 'log_import', op: 'ready', tag: logTag(m) });
+      }
+      const job = conn.logImport;
+      if (!job) return fail('Import non commencé (ou interrompu) : recommencez');
+      if (m.op === 'data') {
+        try { job.feed(String(m.data || '')); } catch (e) { return fail('Lecture impossible : ' + e.message); }
+        return send(conn, { t: 'log_import', op: 'ack', part: m.part, st: job.state(), tag: logTag(m) });
+      }
+      if (m.op === 'end' || m.op === 'cancel') {
+        try { job.flush(); } catch (e) { return fail('Écriture impossible : ' + e.message); }
+        conn.logImport = null;
+        const st = job.state();
+        journal('log_import', { call: conn.user.call, added: st.added, dupes: st.dupes, bad: st.bad, cancel: m.op === 'cancel' });
+        if (book.error) send(conn, { t: 'notice', level: 'error', msg: 'ATTENTION : carnet non écrit sur le disque du serveur (' + book.error + ')' });
+        for (const c of ops) send(c, { t: 'log_changed' });
+        sendWorked(false);
+        return send(conn, { t: 'log_import', op: 'done', cancel: m.op === 'cancel', st, tag: logTag(m) });
+      }
+      return;
+    }
 
     case 'ftx_hound': {
       // HOUND (FT8) : 0 normal, 1 FOX classique, 2 SuperFox — choisi par celui qui a la main, pour toute la station

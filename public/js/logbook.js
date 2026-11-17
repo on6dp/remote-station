@@ -141,6 +141,8 @@
           <hr class="lg-msep">
           <button type="button" role="menuitem" data-x="adif">ADIF (.adi)…</button>
           <button type="button" role="menuitem" data-x="cabrillo">Cabrillo (.log)…</button>
+          <hr class="lg-msep">
+          <button type="button" role="menuitem" data-a="imp" title="Importer un log ADIF (Swisslog, Log4OM, WSJT-X…) dans le carnet : tout le fichier ou certaines années, doublons ignorés, rien n'est renvoyé aux logs en ligne">📥 Importer un fichier ADIF…</button>
         </div>
       </div>
     </div>
@@ -285,6 +287,7 @@
     root.querySelector('.lg-mlist [data-a="cfg"]').addEventListener('click', () => { closeMenus(); openCfg(); });
     root.querySelector('.lg-mlist [data-a="refs"]').addEventListener('click', () => { closeMenus(); openRefsDlg(); });
     root.querySelector('.lg-mlist [data-a="net"]').addEventListener('click', () => { closeMenus(); openNetDlg(); });
+    root.querySelector('.lg-mlist [data-a="imp"]').addEventListener('click', () => { closeMenus(); openImport(); });
     q$('#lgBody').addEventListener('click', (e) => {
       const tr = e.target.closest('tr[data-id]');
       if (!tr) return;
@@ -1044,6 +1047,125 @@
       (rows ? '<table class="lg-nettab"><tr><th>Serveur (version)<br><small>ce serveur : v' + esc(st.v || '?') + '</small></th><th>Liaison</th><th>Depuis</th><th title="Dernier signe de vie (un échange toutes les 3 s ; liaison coupée après 25 s sans nouvelles)">Dernier signe de vie</th><th>QSO reçus / envoyés</th><th>Changements en retard</th><th>Dernier QSO reçu de lui</th></tr>' + rows + '</table>' : (st.mode !== 'off' ? '<p>Aucune liaison ouverte.</p>' : '')) +
       ((st.events || []).length ? '<details><summary>Derniers événements</summary><ul>' + st.events.map((e) => '<li>' + new Date(e.t).toLocaleTimeString('fr-BE') + ' — ' + esc(e.msg) + '</li>').join('') + '</ul></details>' : '');
   }
+  // ------------------------------------------------------------------ import d'un log ADIF (Swisslog…), par années
+  // Le fichier est lu ici : en-tête retiré, enregistrements comptés par année et par TX call (STATION_CALLSIGN) ; on choisit
+  // les années, puis les enregistrements partent par lots de moins de 50 Ko (4 lots en route au plus) ; le serveur
+  // ajoute les QSO valides, ignore les doublons et ne renvoie rien aux logs en ligne.
+  let imp = null;
+  function openImport() {
+    if (me.rxOnly) return say('Indicatif d’écouteur : pas d’import.', 'warn');
+    const d = mkDlg('lg-impdlg', '<form method="dialog"><h3>📥 Importer un fichier ADIF</h3>' +
+      '<p class="lg-dhint">Log exporté en ADIF (.adi / .adif) par Swisslog, Log4OM, WSJT-X… Vous pouvez importer <b>tout le fichier ou seulement certaines années</b> (puis les autres plus tard) : les statistiques comptent toujours toutes les années. Les doublons (même indicatif, bande et mode à 30 min près) sont ignorés ; les QSO importés sont notés « déjà envoyés » à LoTW, eQSL, Club Log et QRZ (rien ne repart). ' + (me.admin ? 'Administrateur : tous les indicatifs.' : 'Seulement les QSO faits sous votre indicatif ' + esc(me.call) + '.') + '</p>' +
+      '<label class="lg-impf">Fichier <input type="file" name="file" accept=".adi,.adif,.ADI,.ADIF,.txt"></label>' +
+      '<div id="lgImpInfo" class="lg-impinfo"></div>' +
+      '<div class="lg-imprg" hidden><progress id="lgImpBar" max="1" value="0"></progress> <span id="lgImpTxt"></span></div>' +
+      '<div class="lg-dbtns"><button class="btn" type="button" data-go disabled>IMPORTER</button><button class="btn" type="button" data-stop hidden>INTERROMPRE</button><button class="btn" value="close" data-close>FERMER</button></div></form>');
+    const f = d.querySelector('form'), info = d.querySelector('#lgImpInfo');
+    const st = { recs: [], years: {}, calls: {} };
+    f.file.addEventListener('change', () => {
+      const file = f.file.files[0];
+      if (!file) return;
+      if (file.size > 150 * 1024 * 1024) { info.innerHTML = '<p class="warn">Fichier trop gros (' + Math.round(file.size / 1048576) + ' Mo, 150 Mo au plus) : exportez-le en plusieurs fois (par année) depuis votre logiciel.</p>'; return; }
+      info.textContent = 'Lecture de ' + file.name + '…';
+      const rd = new FileReader();
+      rd.onload = () => {
+        let t = String(rd.result || '');
+        const h = t.search(/<eoh>/i);
+        if (h >= 0) t = t.slice(h + 5);
+        const parts = t.split(/<eor>/i);
+        st.recs = []; st.years = {}; st.calls = {};
+        for (const p of parts) {
+          if (!/<call:/i.test(p)) continue;
+          const y = (/<qso_date:\d+(?::\w)?>(\d{4})/i.exec(p) || [])[1] || '?';
+          const mm = /<station_callsign:(\d+)(?::\w)?>/i.exec(p);
+          const sc = mm ? p.substr(mm.index + mm[0].length, Number(mm[1])).toUpperCase().trim() : '';
+          st.recs.push({ y, t: p.trim() });
+          st.years[y] = (st.years[y] || 0) + 1;
+          if (sc) st.calls[sc] = (st.calls[sc] || 0) + 1;
+        }
+        const ys = Object.keys(st.years).sort();
+        const cs = Object.keys(st.calls).sort((a, b) => st.calls[b] - st.calls[a]);
+        const opts = Array.from(new Set((me.admin ? calls : [String(me.call).toUpperCase()]).concat(me.admin ? cs : []))).filter(Boolean);
+        info.innerHTML = '<p><b>' + st.recs.length.toLocaleString('fr-BE') + '</b> QSO dans ' + esc(file.name) + ' (' + (file.size / 1048576).toFixed(1).replace('.', ',') + ' Mo)' +
+          (cs.length ? ' · indicatif(s) du fichier : ' + cs.map((c) => '<b>' + esc(c) + '</b> (' + st.calls[c].toLocaleString('fr-BE') + ')').join(', ') : ' · pas de STATION_CALLSIGN dans le fichier') + '</p>' +
+          '<fieldset class="lg-impy"><legend>Années à importer <button class="dg-mini" type="button" data-all>tout</button> <button class="dg-mini" type="button" data-none>rien</button></legend>' +
+          ys.map((y) => '<label><input type="checkbox" name="y" value="' + esc(y) + '" checked> ' + esc(y) + ' <small>(' + st.years[y].toLocaleString('fr-BE') + ')</small></label>').join('') + '</fieldset>' +
+          '<label class="lg-txf">TX call <select name="txc">' + opts.map((c) => '<option' + (c === (cs[0] || (me.admin ? '' : me.call)) ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select></label> ' +
+          '<label><input type="checkbox" name="force"' + (cs.length ? '' : ' checked') + '> l’imposer à tous les QSO</label>' +
+          '<p class="lg-dhint">Sans la case : chaque QSO garde l’indicatif du fichier (STATION_CALLSIGN) et ce TX call ne sert qu’aux QSO qui n’en ont pas.</p>' +
+          '<p id="lgImpSel"></p>';
+        const sel = () => { const n = Array.from(f.querySelectorAll('[name="y"]:checked')).reduce((a, x) => a + st.years[x.value], 0); d.querySelector('#lgImpSel').innerHTML = '<b>' + n.toLocaleString('fr-BE') + '</b> QSO choisis.'; d.querySelector('[data-go]').disabled = !n; };
+        f.querySelectorAll('[name="y"]').forEach((x) => x.addEventListener('change', sel));
+        d.querySelector('[data-all]').addEventListener('click', () => { f.querySelectorAll('[name="y"]').forEach((x) => { x.checked = true; }); sel(); });
+        d.querySelector('[data-none]').addEventListener('click', () => { f.querySelectorAll('[name="y"]').forEach((x) => { x.checked = false; }); sel(); });
+        sel();
+      };
+      rd.onerror = () => { info.textContent = 'Lecture du fichier impossible.'; };
+      rd.readAsText(file, 'latin1'); // ADIF : texte ASCII (accents éventuels en ISO-8859-1)
+    });
+    d.querySelector('[data-go]').addEventListener('click', () => {
+      const ys = new Set(Array.from(f.querySelectorAll('[name="y"]:checked')).map((x) => x.value));
+      const recs = st.recs.filter((r) => ys.has(r.y)).map((r) => r.t);
+      if (!recs.length) return;
+      // Lots de moins de 50 Ko (taille en octets, le texte peut contenir des accents)
+      const enc = new TextEncoder(), chunks = [];
+      let cur = '', sz = 0;
+      for (const r of recs) {
+        const s0 = r + '<eor>\n', b = enc.encode(s0).length;
+        if (b > 48000) continue; // enregistrement anormal
+        if (sz + b > 48000) { chunks.push(cur); cur = ''; sz = 0; }
+        cur += s0; sz += b;
+      }
+      if (cur) chunks.push(cur);
+      imp = { d, chunks, next: 0, inflight: 0, total: recs.length, done: false, started: Date.now() };
+      d.dataset.busy = '1';
+      d.querySelector('[data-go]').disabled = true;
+      d.querySelector('[data-stop]').hidden = false;
+      d.querySelector('[data-close]').disabled = true;
+      f.file.disabled = true;
+      d.querySelector('.lg-imprg').hidden = false;
+      d.querySelector('#lgImpBar').max = chunks.length;
+      api.send({ t: 'log_import', op: 'start', txc: f.txc ? f.txc.value : '', force: !!(f.force && f.force.checked), size: chunks.reduce((a, c) => a + c.length, 0), records: recs.length });
+    });
+    d.querySelector('[data-stop]').addEventListener('click', () => { if (imp && !imp.done) { imp.stop = true; api.send({ t: 'log_import', op: 'cancel' }); } });
+    d.addEventListener('close', () => { if (imp && imp.d === d && !imp.done) api.send({ t: 'log_import', op: 'cancel' }); imp = null; });
+  }
+  function impPump() {
+    while (imp && !imp.stop && imp.inflight < 4 && imp.next < imp.chunks.length) {
+      api.send({ t: 'log_import', op: 'data', part: imp.next, data: imp.chunks[imp.next] });
+      imp.next++; imp.inflight++;
+    }
+    if (imp && !imp.stop && imp.next >= imp.chunks.length && imp.inflight === 0 && !imp.ending) { imp.ending = true; api.send({ t: 'log_import', op: 'end' }); }
+  }
+  function impMsg(m) {
+    if (!imp || !imp.d.isConnected) return;
+    const d = imp.d, txt = d.querySelector('#lgImpTxt');
+    const fin = (html) => {
+      imp.done = true;
+      d.dataset.busy = '';
+      d.querySelector('[data-stop]').hidden = true;
+      d.querySelector('[data-close]').disabled = false;
+      d.querySelector('#lgImpInfo').insertAdjacentHTML('beforeend', html);
+    };
+    if (m.op === 'fail') return fin('<p class="warn">✗ ' + esc(m.msg) + '</p>');
+    if (m.op === 'ready') return impPump();
+    const s = m.st || {};
+    if (m.op === 'ack') {
+      imp.inflight--;
+      d.querySelector('#lgImpBar').value = imp.next - imp.inflight;
+      txt.textContent = (s.n || 0).toLocaleString('fr-BE') + ' / ' + imp.total.toLocaleString('fr-BE') + ' QSO lus · ' + (s.added || 0).toLocaleString('fr-BE') + ' ajoutés · ' + (s.dupes || 0).toLocaleString('fr-BE') + ' doublons';
+      return impPump();
+    }
+    if (m.op === 'done') {
+      d.querySelector('#lgImpBar').value = d.querySelector('#lgImpBar').max;
+      const why = Object.entries(s.why || {}).map(([k, v]) => k + ' ' + v).join(', ');
+      const ys = Object.entries(s.years || {}).sort().map(([y, n]) => y + ' : ' + n.toLocaleString('fr-BE')).join(' · ');
+      fin('<p class="ok">' + (m.cancel ? '■ Import interrompu.' : '✓ Import terminé') + ' en ' + Math.round((Date.now() - imp.started) / 1000) + ' s : <b>' + (s.added || 0).toLocaleString('fr-BE') + '</b> QSO ajoutés' +
+        (Object.keys(s.calls || {}).length ? ' (' + Object.entries(s.calls).map(([c, n]) => esc(c) + ' ' + n.toLocaleString('fr-BE')).join(', ') + ')' : '') +
+        ', <b>' + (s.dupes || 0).toLocaleString('fr-BE') + '</b> doublons ignorés' + (s.bad ? ', <b>' + s.bad + '</b> illisibles (' + esc(why) + ')' : '') + (s.denied ? ', <b>' + s.denied + '</b> refusés (autre indicatif que le vôtre)' : '') + '.</p>' +
+        (ys ? '<p class="lg-dhint">Ajoutés par année : ' + ys + '</p>' : ''));
+    }
+  }
   function mkDlg(cls, html) {
     const d = document.createElement('dialog');
     d.className = 'macro-dlg lg-dlg ' + cls;
@@ -1704,6 +1826,7 @@
   function onMessage(m) {
     if (m.t === 'log_stats') { ST.data = m; statsDraw(); return; }
     if (m.t === 'log_net') { netShow(m); return; }
+    if (m.t === 'log_import') { impMsg(m); return; }
     if (m.t === 'log_changed' && ST.on && api) setTimeout(() => { if (ST.ask) ST.ask(); }, 300); // nouveau QSO : statistiques à jour (même diplôme, TX call, mode)
     if (/^log_(saved|dupe)$/.test(m.t)) clearTimeout(saveWait);
     // Refus du serveur pendant un enregistrement (droits, données invalides) : affiché sous la fiche
