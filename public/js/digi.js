@@ -4873,7 +4873,7 @@
     const hd = houndOn();
     ftxMsgs().forEach((t, i) => {
       const b = mk(f, 'Tx' + (i + 1), t, () => ftxSend(i, t), i === ftxSel);
-      b.title = 'Clic : ce message part à chaque période (FT8 / FT4 / FT2 selon l’onglet) jusqu’à la réponse ; la séquence avance toute seule. ■ Arrêter pour couper.';
+      b.title = 'Clic (ou touche F' + (i + 1) + ') : ce message part à chaque période (FT8 / FT4 / FT2 selon l’onglet) jusqu’à la réponse ; la séquence avance toute seule. ■ Arrêter (ou Échap) pour couper.';
       if (hd && i !== 0 && i !== 2 && i !== 4) { b.disabled = true; b.title = 'HOUND : seulement Tx1 (appel du FOX), Tx3 (R + report) et Tx5 (73). Pas de CQ : le FOX termine le QSO par RR73.'; }
       if (hd && i === 4) b.title = 'HOUND : 73 au FOX, envoyé une fois à la main (pas nécessaire : son RR73 termine déjà le QSO)';
       if (hd && i === 0) b.title = 'HOUND : appel du FOX en 2e période (FOX classique : au-dessus de 1000 Hz). Quand le FOX vous donne un report, Tx3 part tout seul ; son RR73 termine le QSO.';
@@ -4883,7 +4883,7 @@
     const free = String(store.get('ftxfree', '')).toUpperCase();
     const fb = mk(f, 'Tx7', free || 'texte libre…', () => (free ? ftxSend(6, free) : editFree(f.ownerDocument)), ftxSel === 6);
     if (hd) fb.disabled = true;
-    fb.title = 'Texte libre FT8 / FT4 / FT2 (13 caractères) · clic : émission · clic droit : modifier';
+    fb.title = 'Texte libre FT8 / FT4 / FT2 (13 caractères) · clic ou F7 : émission · clic droit : modifier';
     fb.addEventListener('contextmenu', (e) => { e.preventDefault(); editFree(fb.ownerDocument); });
     drawQso();
     const ed = mk(f, '', '✎', () => editFree(f.ownerDocument));
@@ -7213,6 +7213,21 @@
       cwTrxDragInit();
       initSstv();
       initMsgs();
+      // FT8 / FT4 / FT2 (et JT65) : F1 à F7 = Tx1 à Tx7 (comme un clic sur le bouton), Échap = ■ Arrêter
+      document.addEventListener('keydown', (e) => {
+        if (tab !== 'ftx' && tab !== 'jt65') return;
+        if (detached || e.ctrlKey || e.altKey || e.metaKey || e.repeat) return;
+        if (e.key === 'Escape') {
+          const x = api && api.state() && api.state().ftx;
+          if (x && (FT_MODES.indexOf(x.mode) >= 0 || x.mode === 'JT65')) { e.preventDefault(); api.send({ t: 'ftx_stop' }); }
+          return;
+        }
+        const n = /^F([1-7])$/.exec(e.key);
+        if (!n || !$('msgFtx')) return;
+        const b = Array.from($('msgFtx').querySelectorAll('button')).find((x) => { const s = x.querySelector('small'); return s && s.textContent === 'Tx' + n[1]; });
+        e.preventDefault(); // pas l'aide du navigateur (F1) ni le rechargement de la page (F5 ; Ctrl + F5 recharge toujours)
+        if (b && !b.disabled) b.click();
+      });
       // Touches F1 à F12 dans la fenêtre RTTY : macros (comme FLDIGI)
       document.addEventListener('keydown', (e) => {
         const MODE = { rtty: 'RTTY', jtty: 'JTTY', cw: 'CW', sstv: 'SSTV' }[tab];
