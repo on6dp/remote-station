@@ -2508,6 +2508,7 @@ const FTX_T0 = 500; // début du signal après le début de la période (ms), co
 // le correspondant décode encore (DT jusqu'à +2,5 s en FT8)
 const FTX_LATE = { FT8: 2300, FT4: 800, FT2: 250 };
 const FTX_KEY_LEAD = 400; // passage en émission avant le début du signal (ms)
+const FTX_PREP = 450;     // délai minimal entre la demande et le départ du signal (codage par la page Station ; 700 avant la 0.42.46)
 // Réponse par clic sur un indicatif : PTT dès que la page Station a préparé le signal (au clic), si le départ du
 // signal est assez proche ; le signal part quand même au début de la période (sinon le correspondant ne le décode pas)
 // Clic pendant notre propre période d'émission : départ immédiat (comme WSJT-X), message tronqué à la fin de la période.
@@ -2673,7 +2674,7 @@ function cwEnd(reason, fromStation) {
 /** Prochain départ du signal : début de période + 0,5 s, parité imposée ou non, au plus tôt dans 0,9 s. */
 function ftxSlot(mode, parity, now, lateMax) {
   const P = FTX_SLOT[mode];
-  const earliest = now + 700; // le temps que la page Station fabrique le signal
+  const earliest = now + FTX_PREP; // le temps que la page Station fabrique le signal (s'il tarde : ftxKey l'attend un peu)
   const late = lateMax != null ? lateMax : FTX_LATE[mode];
   for (let k = Math.floor(now / P); k < Math.floor(now / P) + 4; k++) {
     if (parity != null && k % 2 !== parity) continue;
@@ -2716,7 +2717,7 @@ function ftxRequest(conn, m) {
   if (!digiModeOk(md)) return err('Mettez d’abord le VFO d’émission en ' + digiModeName() + ' (mode actuel : ' + (md || '?') + ')');
   const now = Date.now();
   // Réponse cliquée : on peut partir en retard dans notre période (le message est coupé à la fin de la période)
-  const lateMax = m.keyNow ? FTX_SLOT[mode] - FTX_T0 - 700 - FTX_CLICK_MIN[mode] : null;
+  const lateMax = m.keyNow ? FTX_SLOT[mode] - FTX_T0 - FTX_PREP - FTX_CLICK_MIN[mode] : null;
   const slot = ftxSlot(mode, m.parity === 0 || m.parity === 1 ? m.parity : null, now, lateMax);
   if (!slot) return err('Aucun créneau trouvé');
   if (ftxPend) ftxCancel('remplacée par le nouveau message', true);
@@ -2897,7 +2898,7 @@ function seqChanged() {
       && ptt.active && ptt.digi && ptt.digi.id === p.id) {
     const P = FTX_SLOT[p.mode];
     const nominal = Math.floor(p.at / P) * P + FTX_T0;
-    if (Date.now() + 700 + 300 - nominal <= FTX_LATE[p.mode]) {
+    if (Date.now() + FTX_PREP + 300 - nominal <= FTX_LATE[p.mode]) {
       stopPtt(FTX_SWITCH);
       seq.parity = Math.floor(p.at / P) % 2;
     }
@@ -3413,7 +3414,11 @@ function ftxKey(p) {
       return;
     }
   }
-  if (!p.ready) return ftxCancel('la page Station n’a pas préparé le signal à temps');
+  if (!p.ready) {
+    // Signal pas encore revenu de la page Station : on l'attend jusqu'à 0,8 s (départ décalé d'autant), puis abandon
+    if (!p.waitReady) { p.waitReady = true; clearTimeout(p.timer); p.timer = setTimeout(() => { if (ftxPend === p && !p.ready) ftxCancel('la page Station n’a pas préparé le signal à temps'); }, 800); }
+    return;
+  }
   if (seq && seq.conn === p.conn) seq.fresh = false; // les messages suivants de la séquence attendent le décodage
   if (controller !== p.conn) return ftxCancel('main perdue');
   if (ptt.active) return ftxCancel('émission déjà en cours');
@@ -4781,6 +4786,8 @@ function onStation(conn, m) {
     }
     p.seconds = Number(m.seconds) || 0;
     p.sent = String(m.text || p.text).slice(0, 40);
+    // Le départ attendait ce signal : il part tout de suite (un peu en retard sur l'heure prévue)
+    if (p.waitReady && p.state === 'wait') { p.waitReady = false; clearTimeout(p.timer); p.at = Math.max(p.at, Date.now() + FTX_KEY_LEAD); ftxKey(p); return; }
     // Réponse cliquée : le TRX passe en émission tout de suite (le signal part à l'heure prévue)
     if (p.keyNow && p.state === 'wait' && !ptt.active && p.at - Date.now() > FTX_KEY_LEAD) { clearTimeout(p.timer); ftxKey(p); return; }
     return broadcast();
