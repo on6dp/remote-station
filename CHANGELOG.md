@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.25** — FT8/FT4/FT2 : « Sans réponse » (3, 4, 5, 6, 8 essais ou jamais) — correspondant muet après N envois du même message : en appel CQ, réponse à une autre station qui appelait, sinon CQ relancé ; sinon arrêt.
 - **0.42.24** — Page FT : tableau 🌍 DXCC (pays FT8/FT4/FT2 contactés / confirmés par bande, pays entendus NEW / NEW BANDE en tête ; 3e colonne en mono VFO, panneau par-dessus le VFO-B en double réception). Fiche DÉTAILS QSO : le TX call affiché et enregistré est celui en service (OR0L), plus ON5VL par défaut.
 - **0.42.23** — FT : quand la séquence prend une station (réponse à votre CQ, appel suivant), la ligne verte RX de la cascade va sur sa tonalité, comme WSJT-X.
 - **0.42.22** — FT : les administrateurs règlent sur la ligne « Émission FT » le niveau d'émission (− / +) et la limite d'ALC (sans limite, 5 à 100 %), appliqués tout de suite par la page Station du club ; limite gardée par le serveur.

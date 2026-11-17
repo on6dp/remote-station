@@ -260,6 +260,9 @@
         <option value="first">CQ : répondre au 1er, puis arrêter</option>
         <option value="stop">Arrêter (répondre à la main)</option>
       </select></label>
+      <label class="dg-chk dg-after" title="Correspondant qui ne répond plus : après ce nombre d'envois du même message (appel Tx1, report Tx2 ou R+report Tx3) sans réponse, et la période suivante écoutée, on l'abandonne. En appel CQ (« Après un QSO » = répondre au suivant) : réponse à une autre station qui vous appelait, sinon CQ relancé ; sinon l'émission s'arrête. « Jamais » : comme WSJT-X (seul le chien de garde arrête)."><span class="dg-f dg-ylw">Sans réponse</span> <select id="dgMaxRep">
+        <option value="3">3 essais</option><option value="4">4 essais</option><option value="5">5 essais</option><option value="6">6 essais</option><option value="8">8 essais</option><option value="0">jamais</option>
+      </select></label>
       <label class="dg-chk spotlog" title="Cochée : chaque QSO FT8 / FT4 / FT2 enregistré dans le carnet (fiche ou log automatique) est aussi spoté sur le DX cluster, sous votre indicatif d’opérateur — pas le TX CALL. Les stations décodées partent de toute façon vers PSK Reporter."><input type="checkbox" data-spotlog> Spot cluster</label>
       <button class="btn dg-dualrx" type="button" id="dgDualRx" hidden aria-pressed="false" title="DUAL RX : deux cascades, quatre colonnes et deux cartes de bande (VFO-A et VFO-B) ; clic : un seul VFO affiché (le TRX garde sa double réception). TRX en réception simple : clic = DUAL RX sur le TRX (avec la main).">DUAL RX</button>
       <span class="seg ft-txside" id="dgTxSide" title="FTDX101 en double réception : VFO d'émission (MAIN = VFO-A, SUB = VFO-B). Un double-clic sur un message choisit tout seul le VFO de la station appelée."><span class="dg-f">TX</span><button class="btn" type="button" data-side="A" aria-pressed="true">VFO-A</button><button class="btn" type="button" data-side="B" aria-pressed="false">VFO-B</button></span>
@@ -4988,7 +4991,7 @@
     if (/[{}]/.test(text)) return api.say('Message incomplet : choisissez d’abord le correspondant (double-clic sur son message) ou réglez votre locator.', 'warn');
     const m = FT_MODES.indexOf(mode) >= 0 ? mode : ftStored();
     api.send({ t: 'ftx_tx', mode: m, ntx: i + 1, f0: curTxF(), parity: txParity(i), dx: { call: dx.call, grid: dx.grid }, rpt: dx.rpt,
-      free: String(store.get('ftxfree', '')), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq', keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd() });
+      free: String(store.get('ftxfree', '')), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq', maxRep: ftMaxRep(), keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd() });
   }
   const ftAfter = () => { const v = store.get('ftxafter', 'cq'); return v === 'first' || v === 'stop' ? v : 'cq'; };
   const curTxF = () => (sd() === 'B' ? Math.round(Number(store.get('txfb', String(txFB))) || txFB) : Math.round(Number(store.get('txf', String(txF))) || txF));
@@ -5000,9 +5003,10 @@
     if (i < 5 && dxPar && dxPar.mode === m && dxPar.call === dx.call) return 1 - dxPar.parity;
     return null;
   }
+  function ftMaxRep() { const n = Number(store.get('ftxmaxrep', '4')); return [0, 3, 4, 5, 6, 8].indexOf(n) >= 0 ? n : 4; }
   function ftxCfg() {
     const st = api && api.state();
-    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), rxf: sd() === 'B' ? rxFB : rxF, parity: txParity(ftxSel), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq', side: sd() });
+    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), rxf: sd() === 'B' ? rxFB : rxF, parity: txParity(ftxSel), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq', maxRep: ftMaxRep(), side: sd() });
   }
   // Fin de QSO (73 / RR73) : proposition d'enregistrement dans le carnet, comme « Prompt me to log QSO » de WSJT-X
   // Fin d'un QSO FT8 / FT4 / FT2 : fiche à confirmer, ou enregistrement automatique selon le choix « Log »
@@ -7171,6 +7175,15 @@
         $('dgAutoLog').addEventListener('change', () => {
           store.set('ftautolog', $('dgAutoLog').value);
           if (api && $('dgAutoLog').value) api.say('Log automatique : les QSO FT8 / FT4 / FT2 terminés vont tout seuls dans le carnet (' + $('dgAutoLog').selectedOptions[0].textContent + ').', '', 5000);
+        });
+      }
+      if ($('dgMaxRep')) {
+        $('dgMaxRep').value = String(ftMaxRep());
+        $('dgMaxRep').addEventListener('change', () => {
+          store.set('ftxmaxrep', $('dgMaxRep').value);
+          ftxCfg();
+          const n = ftMaxRep();
+          if (api) api.say(n ? 'Sans réponse après ' + n + ' essais du même message : station suivante qui vous appelait, sinon CQ (en appel CQ), sinon arrêt.' : 'Sans réponse : on insiste jusqu’au chien de garde (comme WSJT-X).', '', 6000);
         });
       }
       if ($('dgAfter')) {

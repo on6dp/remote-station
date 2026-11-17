@@ -2737,6 +2737,18 @@ function seqNext() {
     }
   }
   const text = seqText(seq);
+  // Même message déjà envoyé « maxRep » fois sans réponse (Tx1 à Tx3) : on attend encore les décodages de la période
+  // qui suit, puis on abandonne ce correspondant (appel CQ : station suivante qui appelait, sinon CQ ; sinon arrêt)
+  if (text !== seq.repText && seq.giveUp) { clearTimeout(seq.giveUpT); seq.giveUp = false; }
+  if (!seq.hound && seq.maxRep > 0 && seq.ntx >= 1 && seq.ntx <= 3 && text === seq.repText && seq.rep >= seq.maxRep) {
+    if (!seq.giveUp) {
+      const s = seq, P = FTX_SLOT[s.mode] || 15000;
+      s.giveUp = true;
+      // filet de sécurité si aucun décodage n'arrive : fin de la période de réception suivante + 4 s
+      s.giveUpT = setTimeout(() => seqGiveUp(s), (Math.floor(now / P) + 2) * P - now + 4000);
+    }
+    return;
+  }
   if (text !== seq.watchMsg) { seq.watchMsg = text; seq.watchSince = now; }
   else if (now - seq.watchSince > cfg.ftxWatchdogMinutes * 60000) {
     return seqOff('même message depuis ' + cfg.ftxWatchdogMinutes + ' min sans réponse (chien de garde, comme WSJT-X)');
@@ -2863,6 +2875,54 @@ function seqOnDecodes(mode, slot, list, side) {
       return seqChanged();
     }
   }
+  // 3) Décodages de la période qui suit le dernier essai, toujours sans réponse du correspondant : on l'abandonne
+  if (seq.giveUp && seq.parity != null && theirParity !== seq.parity) seqGiveUp(seq);
+}
+/** Correspondant muet après « maxRep » essais du même message : station suivante qui appelait, CQ relancé, ou arrêt. */
+function seqGiveUp(s) {
+  if (!s || seq !== s || !s.on || !s.giveUp) return;
+  clearTimeout(s.giveUpT);
+  s.giveUp = false;
+  const who = s.dx.call, n = s.rep;
+  s.rep = 0; s.repText = '';
+  if (ftxPend && ftxPend.state === 'wait' && ftxPend.conn === s.conn) ftxCancel('sans réponse', true);
+  if (s.cqRun && s.autoCq && controller === s.conn) {
+    s.waiting.delete(baseCall(who));
+    s.qsoStart = 0;
+    s.rptRcvd = '';
+    return seqNextCaller(s, who + ' ne répond plus (' + n + ' essais)');
+  }
+  seqOff('pas de réponse de ' + who + ' après ' + n + ' essais du même message');
+}
+/** Appel CQ : réponse à la station suivante de la file (la plus forte, pas déjà contactée), sinon CQ relancé. */
+function seqNextCaller(s, why) {
+  const P = FTX_SLOT[s.mode] || 15000;
+  let next = null;
+  for (const [k, v] of s.waiting) {
+    if (Date.now() - v.at > 2 * P + 2000 || s.worked.has(k) || isDupeNow(v.w[1], s.mode)) { s.waiting.delete(k); continue; }
+    if (!next || v.d.db > next.d.db) next = v;
+  }
+  s.on = true;
+  s.watchMsg = ''; s.watchSince = 0;
+  s.rep = 0; s.repText = '';
+  if (next) {
+    s.waiting.delete(baseCall(next.w[1]));
+    s.dx = { call: next.w[1], grid: '' };
+    if (next.d.f >= 100 && next.d.f <= 3000) s.rxf = Math.round(next.d.f);
+    s.rptSent = fmtRpt(next.d.db);
+    s.parity = 1 - next.parity;
+    s.progress = PROG.CALLING;
+    seqReact(next.w[2], next.d);
+    send(s.conn, { t: 'notice', level: 'info', msg: (why ? why + ' : ' : '') + next.w[1] + ' vous appelait aussi : réponse automatique « ' + seqText(s) + ' »' });
+  } else {
+    s.dx = { call: '', grid: '' };
+    s.rptSent = '';
+    seqSetNtx(6);
+    send(s.conn, { t: 'notice', level: 'info', msg: (why ? why + ' : p' : 'P') + 'ersonne d’autre ne vous appelle : CQ relancé' });
+  }
+  updateDigi();
+  broadcast();
+  setTimeout(seqNext, 50);
 }
 /**
  * Message du FOX découpé en parties « DESTINATAIRE FOX CONTENU » : message DXpédition (FOX classique, jusqu'à deux
@@ -2939,34 +2999,7 @@ function seqQsoDone(why) {
   s.rptRcvd = '';
   if (s.worked && SEQ_CALL_RE.test(baseCall(call))) s.worked.add(baseCall(call));
   // Appel CQ (comme WSJT-X, Tx non coupé après le 73) : réponse au suivant de la file, sinon CQ relancé
-  if (wasOn && s.cqRun && s.autoCq && !s.hound && controller === s.conn) {
-    const P = FTX_SLOT[s.mode] || 15000;
-    let next = null;
-    for (const [k, v] of s.waiting) {
-      if (Date.now() - v.at > 2 * P + 2000 || s.worked.has(k) || isDupeNow(v.w[1], s.mode)) { s.waiting.delete(k); continue; }
-      if (!next || v.d.db > next.d.db) next = v;
-    }
-    s.on = true;
-    s.watchMsg = ''; s.watchSince = 0;
-    if (next) {
-      s.waiting.delete(baseCall(next.w[1]));
-      s.dx = { call: next.w[1], grid: '' };
-      if (next.d.f >= 100 && next.d.f <= 3000) s.rxf = Math.round(next.d.f);
-      s.rptSent = fmtRpt(next.d.db);
-      s.parity = 1 - next.parity;
-      s.progress = PROG.CALLING;
-      seqReact(next.w[2], next.d);
-      send(s.conn, { t: 'notice', level: 'info', msg: next.w[1] + ' vous appelait aussi : réponse automatique « ' + seqText(s) + ' »' });
-    } else {
-      s.dx = { call: '', grid: '' };
-      s.rptSent = '';
-      send(s.conn, { t: 'notice', level: 'info', msg: 'Personne d’autre ne vous appelle : CQ relancé' });
-    }
-    updateDigi();
-    broadcast();
-    setTimeout(seqNext, 50);
-    return;
-  }
+  if (wasOn && s.cqRun && s.autoCq && !s.hound && controller === s.conn) return seqNextCaller(s, '');
   updateDigi();
   broadcast();
 }
@@ -2980,12 +3013,19 @@ function seqAfterTx(p) {
   // RR73 / 73 d'un QSO déjà fini (73 reçu pendant l'émission, QSO suivant commencé) : rien à terminer
   if ((p.ntx === 4 || p.ntx === 5) && seq.dx && String(p.text || '').indexOf(seq.dx.call + ' ') !== 0) return setTimeout(seqNext, 50);
   if (p.ntx === 4 || p.ntx === 5) return seqQsoDone(p.ntx === 4 ? 'RR73 envoyé' : '73 envoyé');
+  // Essais du même message (Tx1 à Tx3) : compte remis à zéro dès que le message change (réponse reçue)
+  if (p.ntx >= 1 && p.ntx <= 3) {
+    if (p.text === seq.repText) seq.rep++;
+    else { seq.repText = p.text; seq.rep = 1; }
+  } else { seq.repText = ''; seq.rep = 0; }
   // FOX classique : R+report à répéter → à 300 Hz de la fréquence du FOX (comme WSJT-X)
   if (seq.hound === 1 && p.ntx === 3 && seq.houndFox) seq.f0 = seq.houndFox <= 600 ? seq.houndFox + 300 : seq.houndFox - 300;
   setTimeout(seqNext, 50);
 }
 /** Clic sur Tx1…Tx7 : émission auto de ce message. */
+function seqMaxRep(v) { v = Number(v); return Number.isInteger(v) && v >= 0 && v <= 20 ? v : 4; }
 function seqStart(conn, m) {
+  if (seq && seq.giveUpT) clearTimeout(seq.giveUpT);
   const err = (msg) => send(conn, { t: 'notice', level: 'error', msg });
   if (controller !== conn) return err('Prenez d’abord la main');
   const mode = String(m.mode || '');
@@ -3018,6 +3058,8 @@ function seqStart(conn, m) {
     waiting: (seq && seq.conn === conn && seq.mode === mode && seq.waiting) || new Map(),
     worked: (seq && seq.conn === conn && seq.mode === mode && seq.worked) || new Set(),
     watchMsg: '', watchSince: 0, qsoStart: same ? seq.qsoStart : 0, txDial: 0, keyNow: !!m.keyNow,
+    // Abandon d'un correspondant muet : après « maxRep » envois du même message (0 = jamais, comme WSJT-X)
+    maxRep: seqMaxRep(m.maxRep), rep: 0, repText: '', giveUp: false, giveUpT: null,
     // Fréquence audio du correspondant (fréquence RX) : l'aide AP du décodeur pour ce QSO s'y applique (comme WSJT-X)
     rxf: Number(m.rxf) >= 100 && Number(m.rxf) <= 3000 ? Math.round(Number(m.rxf)) : (same && seq.rxf) || 0,
     // Récepteur du correspondant (FTDX101 en double réception) : l'émission part sur ce VFO (A = MAIN, B = SUB)
@@ -3049,6 +3091,7 @@ function seqCfg(conn, m) {
   else if (m.parity === 0 || m.parity === 1 || m.parity === null) seq.parity = m.parity;
   if (typeof m.call1st === 'boolean' && !seq.hound) seq.call1st = m.call1st;
   if (typeof m.autoCq === 'boolean' && !seq.hound) seq.autoCq = m.autoCq;
+  if (m.maxRep != null) seq.maxRep = seqMaxRep(m.maxRep);
   // Fréquence RX changée (clic sur la cascade) : l'aide AP du décodeur pour le QSO s'y applique tout de suite
   if (Number(m.rxf) >= 100 && Number(m.rxf) <= 3000 && Math.round(Number(m.rxf)) !== seq.rxf) { seq.rxf = Math.round(Number(m.rxf)); updateDigi(); }
   // VFO d'émission changé pendant la séquence (FTDX101 en double réception) : pris en compte dès que le TRX est en réception
