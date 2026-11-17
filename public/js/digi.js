@@ -5355,6 +5355,7 @@
   let lastTxAt = 0;
   let lastTxIt = null; // ligne TX de l’émission en cours (fréquence mise à jour si elle change pendant l’émission)
   let seqSeen = '';
+  let seqRxSeen = ''; // correspondant + fréquence RX déjà suivis (ligne verte sur la tonalité du correspondant)
   let eqKey = '';
   function ftxState() {
     houndUi();
@@ -5389,6 +5390,13 @@
     // Séquence automatique : le message choisi et le correspondant suivent ce que décide le serveur
     if (mine) {
       const key = [sq.ntx, sq.dx, sq.grid, sq.rpt, sq.on].join('|');
+      // Correspondant pris par la séquence (réponse à votre CQ, appel suivant) : la ligne verte RX va sur sa tonalité, comme WSJT-X
+      const rk = (sq.dx || '') + '|' + (sq.side || 'A');
+      if (rk !== seqRxSeen) {
+        seqRxSeen = rk;
+        const cur = sq.side === 'B' && ftDual ? rxFB : rxF;
+        if (sq.dx && sq.rxf >= 100 && sq.rxf <= 3000 && Math.abs(sq.rxf - cur) > 2) setRx(sq.rxf, sq.side === 'B' && ftDual ? 'B' : undefined);
+      }
       if (key !== seqSeen) {
         seqSeen = key;
         ftxSel = sq.ntx - 1;

@@ -2696,7 +2696,7 @@ function seqText(s) {
 function seqPublic() {
   if (!seq) return null;
   return { on: !!seq.on, mode: seq.mode, ntx: seq.ntx, dx: seq.dx.call, grid: seq.dx.grid, rpt: seq.rptSent, rptRcvd: seq.rptRcvd || '',
-    parity: seq.parity, call1st: !!seq.call1st, by: seq.conn.user.call, text: seqText(seq), side: seq.side || 'A', hound: seq.hound || 0, f0: seq.f0 };
+    parity: seq.parity, call1st: !!seq.call1st, by: seq.conn.user.call, text: seqText(seq), side: seq.side || 'A', hound: seq.hound || 0, f0: seq.f0, rxf: seq.rxf || 0 };
 }
 function seqOff(reason, level) {
   if (!seq || !seq.on) return;

@@ -1,6 +1,6 @@
 {
   "name": "remote-station",
-  "version": "0.42.22",
+  "version": "0.42.23",
   "description": "Pilotage à distance du FTX-1 du club (Web Serial + VPS)",
   "main": "server.js",
   "private": true,
