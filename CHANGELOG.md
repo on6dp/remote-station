@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.37** — Page FT : en-têtes des colonnes Activité de bande, Fréquence RX et DXCC à la même hauteur (intitulés et listes alignés).
 - **0.42.36** — Page FT8 / FT4 / FT2 : touches F1 à F7 = Tx1 à Tx7 (comme un clic), Échap = ARRÊTER.
 - **0.42.35** — Carnet en grand : bandeau « TX CALL LOGBOOK » / « TX CALL LOGBOOK STATISTIQUES » comme les pages TRX ; statistiques ouvertes sur le TX call en service et mises à jour après chaque QSO.
 - **0.42.34** — 📊 STATISTIQUES du carnet : s'ouvrent sur le TX call en service (OR0L…) au lieu du premier indicatif du club ; mises à jour après chaque QSO en gardant le diplôme, le TX call et le mode choisis. Colonnes SSB, CW, FT8, FT4, FT2, RTTY, DATA.

@@ -3547,3 +3547,10 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 /* Statistiques du carnet : colonne DATA (tous les modes numériques) mise à part dans chaque bande */
 .lg-sttab th.lg-stdata span { color: #ffe600; }
 .lg-sttab td.lg-stdata, .lg-sttab th.lg-stdata { box-shadow: inset 2px 0 0 rgba(255, 230, 0, .55); }
+/* Page FT (un récepteur) : les en-têtes des trois colonnes (Activité de bande, Fréquence RX, DXCC) à la même hauteur,
+   donc les intitulés des colonnes et les listes alignés ; la note « clic gauche… » se raccourcit au lieu de passer à la ligne */
+.dg-ftx:not(.ft-dual) .dg-cols > .dg-col > .dg-h { height: 40px; box-sizing: border-box; flex-wrap: nowrap; padding-block: 0; overflow: hidden; }
+.dg-ftx:not(.ft-dual) .dg-cols > .dg-col > .dg-h > span:first-child { white-space: nowrap; flex-shrink: 0; }
+.dg-ftx .dg-cols .dg-h .dg-note { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 auto; }
+.dg-ftx .dg-cols .dg-h .dg-hb { flex-shrink: 0; }
+.dg-ftx:not(.ft-dual) .ft-dxcc .dx-t th { padding-block: 3px; }
