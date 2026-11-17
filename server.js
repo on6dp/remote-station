@@ -2100,7 +2100,8 @@ function usageTick(now) {
   const users = Array.from(new Set(Array.from(ops).map((c) => c.user.call)));
   if (!users.length && !controller) { usage.txS = 0; return; }
   const line = { ts: prev, c: controller ? controller.user.call : null, u: users, f: txFreq() || null,
-    m: STATS.modeName(radio.txVfo === 1 ? radio.modeB : radio.mode, usageDigi()), tx: Math.round(Math.min(60, usage.txS)), rig: station ? rig().NAME : '' };
+    m: STATS.modeName(radio.txVfo === 1 ? radio.modeB : radio.mode, usageDigi()), tx: Math.round(Math.min(60, usage.txS)), rig: station ? rig().NAME : '',
+    x: controller ? String(txCallFor(controller.user) || '').toUpperCase() || null : null }; // TX call en service (statistiques par TX call)
   usage.txS = 0;
   fs.appendFile(path.join(LOG_DIR, 'usage-' + new Date(prev).toISOString().slice(0, 7) + '.jsonl'), JSON.stringify(line) + '\n', { mode: 0o600 }, (e) => { if (e) console.error('usage : ' + e.message); });
 }

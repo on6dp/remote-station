@@ -46,7 +46,7 @@
   }
   function fail(msg) { $('out').innerHTML = '<div class="msg">' + esc(msg) + '</div>'; }
 
-  const chips = (list, unit) => '<span class="chips">' + list.slice(0, 6).map(([k, v]) => '<span>' + esc(k) + (unit ? ' · ' + unit(v) : '') + '</span>').join('') + (list.length > 6 ? '<span>+' + (list.length - 6) + '</span>' : '') + '</span>';
+  const chips = (list, unit) => '<span class="chips">' + list.slice(0, 6).map(([k, v]) => '<span>' + esc(k) + (unit && unit(v) ? ' · ' + unit(v) : '') + '</span>').join('') + (list.length > 6 ? '<span>+' + (list.length - 6) + '</span>' : '') + '</span>';
   function hbars(list) {
     const max = Math.max(1, ...list.map((x) => x[1]));
     const tot = list.reduce((a, x) => a + x[1], 0) || 1;
@@ -90,9 +90,15 @@
       '<div class="card"><b>' + T.sessions + '</b><span>sessions</span></div>' +
       '<div class="card"><b>' + ms(T.txS) + '</b><span>en émission</span></div>' +
       '<div class="card"><b>' + T.qsos + '</b><span>QSO au carnet</span></div></div>';
-    h += '<h2>Par indicatif</h2><div class="tw"><table><thead><tr><th>Indicatif</th><th class="r" title="Temps avec la main">Utilisation</th><th class="r" title="Temps connecté au dashboard (avec ou sans la main)">Connecté</th><th class="r">Émission</th><th class="r">Sessions</th><th class="r">Jours</th><th class="r">QSO</th><th>Bandes</th><th>Modes</th><th>Dernière fois</th></tr></thead><tbody>' +
+    h += '<h2>Par opérateur</h2><div class="tw"><table><thead><tr><th>Opérateur</th><th class="r" title="Temps avec la main">Utilisation</th><th class="r" title="Temps connecté au dashboard (avec ou sans la main)">Connecté</th><th class="r">Émission</th><th class="r">Sessions</th><th class="r">Jours</th><th class="r">QSO</th><th>Bandes</th><th>Modes</th><th>Dernière fois</th></tr></thead><tbody>' +
       (d.calls.map((c) => '<tr><td class="call" data-call="' + esc(c.call) + '" title="Voir seulement ' + esc(c.call) + '">' + esc(c.call) + '</td><td class="r">' + hm(c.ctlMin) + '</td><td class="r">' + hm(c.onlineMin) + '</td><td class="r">' + ms(c.txS) + '</td><td class="r">' + c.sessions + '</td><td class="r">' + c.days + '</td><td class="r">' + c.qsos + '</td><td>' + chips(c.bands, hm) + '</td><td>' + chips(c.modes, hm) + '</td><td>' + (c.last ? dt(c.last) : '—') + '</td></tr>').join('') ||
         '<tr><td colspan="10" class="note">Personne sur cette période.</td></tr>') + '</tbody></table></div>';
+    // Par indicatif (TX call) : sous quel indicatif on a émis (ON5VL, OR0L, OP0P, le sien…), par qui, sur quelles bandes et dans quels modes
+    const nq = (v) => v + ' QSO';
+    const tl = d.txcalls || [];
+    h += '<h2>Par indicatif <small class="note">(TX call sous lequel on émet' + (d.call ? ', QSO de ' + esc(d.call) : '') + ')</small></h2><div class="tw"><table><thead><tr><th>Indicatif</th><th class="r" title="Temps avec la main sous ce TX call (relevé depuis la 0.42.32)">Utilisation</th><th class="r">Émission</th><th class="r">QSO</th><th class="r">Jours</th><th>Opérateurs</th><th>Bandes</th><th>Modes</th><th>Dernier QSO</th></tr></thead><tbody>' +
+      (tl.map((t) => '<tr><td class="call">' + esc(t.call) + '</td><td class="r">' + (t.ctlMin ? hm(t.ctlMin) : '—') + '</td><td class="r">' + (t.ctlMin ? ms(t.txS) : '—') + '</td><td class="r">' + t.qsos + '</td><td class="r">' + t.days + '</td><td>' + chips(t.ops, (v) => (v ? v + ' QSO' : '')) + '</td><td>' + chips(t.bands, nq) + '</td><td>' + chips(t.modes, nq) + '</td><td>' + (t.last ? dt(t.last) : '—') + '</td></tr>').join('') ||
+        '<tr><td colspan="9" class="note">Aucun QSO sur cette période.</td></tr>') + '</tbody></table></div>';
     h += '<div class="grid2"><div><h2>Bandes</h2>' + hbars(d.bands) + '</div><div><h2>Modes</h2>' + hbars(d.modes) + '</div></div>';
     h += '<h2>Jours</h2>' + daysChart(d.days, d.from, d.to);
     h += '<h2>Jours de la semaine et heures (heure belge)</h2>' + heat(d.heat);

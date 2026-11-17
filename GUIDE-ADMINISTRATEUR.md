@@ -586,7 +586,8 @@ Le VPS n'a ni TQSL ni certificat. L'Agent LoTW (`agent/agent-lotw.js`, Node.js 2
 
 Bouton **📊 STATS** du dashboard (administrateurs), page https://remote.op0p.be/stats :
 
-- par indicatif : temps avec la main, temps connecté, émission, sessions, jours, QSO, bandes et modes ;
+- par opérateur : temps avec la main, temps connecté, émission, sessions, jours, QSO, bandes et modes ;
+- par indicatif (TX call, 0.42.32) : minutes avec la main sous ce TX call (champ `x` des lignes `usage-*.jsonl`, relevé depuis la 0.42.32), émission, QSO du carnet (`station_callsign`) avec leurs opérateurs, bandes et modes ;
 - graphiques par bande, par mode, par jour, carte jours × heures (heure belge) ;
 - journal des sessions, **export CSV** pour Excel.
 
