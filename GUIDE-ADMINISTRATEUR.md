@@ -499,7 +499,7 @@ Fonctionnement : liaisons WebSocket sur `/ws` (HTTPS 443, nginx inchangé), touj
 - **Après un QSO** (liste de la barre FT) : `cq` (défaut) = réponse au plus fort qui répond au CQ, puis à la fin du QSO au suivant qui appelait (décodé dans les 2 dernières périodes, file `seq.waiting`), sinon CQ relancé (`seq.cqRun`, `seq.autoCq`) ; `first` = réponse au 1er puis arrêt ; `stop` = rien d'automatique. Stations déjà contactées (même bande, même mode, TX call en service, ou déjà faites dans la série) jamais reprises toutes seules (`isDupeNow`). Le chien de garde (`ftxWatchdogMinutes`) arrête un CQ sans réponse.
 - **Fréquence TX changée pendant l'émission** : `ftx_cfg` → `ftxretune` vers la page Station, qui refait le signal à la nouvelle fréquence et le reprend au même instant (`txRetune`) ; message prévu pas encore parti : refait à la nouvelle fréquence. Fréquence RX : l'aide AP du décodeur la suit tout de suite (`seq.rxf`).
 - **Émission FT : …** sur la page FT : état de la sortie son de la page Station (`tx_out` → `state.audio.out` : carte, niveau, limite ALC).
-- **ALC** : limiteur `digiAlcMax` = 10 % par défaut ; IC-7300 / IC-7760 : `ALC_FULL` = 120 (CI-V 15 13 : 0 à 120 = zone ALC), aussi pour l'affichage.
+- **ALC** : limiteur `digiAlcMax` = 10 % par défaut, réglable par les administrateurs sur la ligne « Émission FT » de la page FT (liste ALC max ; message `tx_set`, gardé dans `logs/station-tx.json`, qui l'emporte sur config.json) avec le niveau d'émission (− / +, appliqué par la page Station) ; IC-7300 / IC-7760 : `ALC_FULL` = 120 (CI-V 15 13 : 0 à 120 = zone ALC), aussi pour l'affichage.
 
 ### Carnet : suppression de plusieurs QSO (0.42.20)
 

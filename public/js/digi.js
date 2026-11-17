@@ -6488,6 +6488,23 @@
     el.title = txt + (txt ? ' — réglage : page Station du PC du club (administrateurs), cadre « Audio du TRX » : sortie son vers le TRX et niveau d’émission' : '');
     el.className = 'dg-txout' + (cls ? ' ' + cls : '');
     if (rtIsAdmin && txt) {
+      // Administrateurs : niveau BF vers le TRX et limite d'ALC, réglés d'ici (la page Station du club les applique)
+      if (o && (o.ok || o.paused)) {
+        const box = document.createElement('span');
+        box.className = 'dg-txadm';
+        box.innerHTML = ' · <button type="button" class="dg-mini" data-lv="-5" title="Baisser le niveau d’émission de 5 %">−</button><b>' + o.level + ' %</b><button type="button" class="dg-mini" data-lv="5" title="Monter le niveau d’émission de 5 %">+</button>' +
+          ' <label title="Limite d’ALC en émission numérique : au-delà, la page Station baisse toute seule le niveau d’émission (administrateurs)">ALC max <select>' +
+          [0, 5, 10, 15, 20, 25, 30, 40, 50, 70, 100].map((v) => '<option value="' + v + '"' + (v === (o.alcMax || 0) ? ' selected' : '') + '>' + (v ? v + ' %' : 'sans limite') + '</option>').join('') + '</select></label>';
+        box.querySelectorAll('[data-lv]').forEach((b) => b.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const lv = Math.max(1, Math.min(100, (o.level || 30) + Number(b.dataset.lv)));
+          api.send({ t: 'tx_set', level: lv });
+        }));
+        const sel = box.querySelector('select');
+        sel.addEventListener('click', (e) => e.stopPropagation());
+        sel.addEventListener('change', () => { api.send({ t: 'tx_set', alcMax: Number(sel.value) }); api.say('Limite d’ALC en émission numérique : ' + (Number(sel.value) ? sel.value + ' %' : 'sans limite') + '.', '', 4000); });
+        el.appendChild(box);
+      }
       const a = document.createElement('a');
       a.href = '/station'; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ' · page Station';
       el.appendChild(a);

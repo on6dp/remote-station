@@ -187,6 +187,15 @@
         if (aud.ctx) ws.send(JSON.stringify({ t: 'audio_state', active: true }));
         txOutSent = ''; sendTxOut();
         try { ws.send(JSON.stringify({ t: 'ping', ts: Date.now() })); } catch (e) {} // première mesure de l'horloge
+      } else if (m.t === 'tx_set') {
+        // Administrateur (page FT) : limite d'ALC et niveau BF vers le TRX
+        if (Number.isFinite(m.alcMax)) { ALC_MAX = m.alcMax > 0 ? m.alcMax : 0; log('Limite d’ALC en émission numérique : ' + (ALC_MAX ? ALC_MAX + ' %' : 'sans limite') + ' (administrateur)'); }
+        if (Number.isFinite(m.level) && m.level >= 1 && m.level <= 100) {
+          store.set('txlevel', String(m.level));
+          if (tx.gain && tx.ctx) tx.gain.gain.setTargetAtTime(txLevel() / 100, tx.ctx.currentTime, 0.05);
+          log('Niveau d’émission : ' + m.level + ' % (administrateur)');
+        }
+        drawTxOut();
       } else if (m.t === 'pong') {
         onPong(m);
       } else if (m.t === 'audio_want') {
@@ -908,7 +917,7 @@
     $('audTxPct').textContent = txLevel() + ' %';
     $('tAudioOut').textContent = !tx.ctx ? 'Sortie vers le TRX : aucune (émission FT8 / FT4 / FT2 impossible)'
       : tx.ctx.state !== 'running' ? 'Sortie vers le TRX en pause : cliquez n’importe où sur la page pour la relancer'
-      : 'Sortie vers le TRX : ' + tx.label + (tx.src ? ' · émission en cours' : voice && voice.on ? ' · phonie à distance en cours' : '');
+      : 'Sortie vers le TRX : ' + tx.label + ' · limite d’ALC ' + (ALC_MAX ? ALC_MAX + ' %' : 'aucune') + (tx.src ? ' · émission en cours' : voice && voice.on ? ' · phonie à distance en cours' : '');
     sendTxOut();
   }
   // État de la sortie son vers le TRX, montré aux opérateurs sur la page FT8 / FT4 / FT2 (« Émission FT : … »)

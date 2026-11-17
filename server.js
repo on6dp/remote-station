@@ -129,6 +129,10 @@ if (!cfg.stationToken || cfg.stationToken.length < 24) {
 const USERS_FILE = path.resolve(ROOT, cfg.usersFile);
 const LOG_DIR = path.resolve(ROOT, cfg.logDir);
 fs.mkdirSync(LOG_DIR, { recursive: true });
+// Réglages d'émission numérique changés par un administrateur depuis la page FT (limite d'ALC) : gardés ici, pas dans config.json
+const TXSET_FILE = path.join(LOG_DIR, 'station-tx.json');
+try { const t = JSON.parse(fs.readFileSync(TXSET_FILE, 'utf8')); if (Number.isFinite(t.alcMax)) cfg.digiAlcMax = t.alcMax; } catch (e) { /* réglage de config.json */ }
+const ALC_CHOICES = [0, 5, 10, 15, 20, 25, 30, 40, 50, 70, 100];
 
 // ---------------------------------------------------------------- journal des accès
 // Événements visibles par les membres connectés (sans adresse IP)
@@ -4261,6 +4265,21 @@ function onOperator(conn, m) {
       conn.propSub = true;
       if (!PROP.data && Date.now() - PROP.at > 60000) { PROP.at = Date.now(); PROP.fetch(); }
       return send(conn, PROP.msg());
+    case 'tx_set': {
+      // Administrateurs : limite d'ALC (émission numérique) et niveau BF envoyé au TRX par la page Station
+      if (!conn.user.admin) return send(conn, { t: 'notice', level: 'error', msg: 'Réglage de l’émission : réservé aux administrateurs' });
+      if (!station) return send(conn, { t: 'notice', level: 'error', msg: 'Page Station du club hors ligne' });
+      const o = {};
+      if (m.alcMax != null && ALC_CHOICES.indexOf(Number(m.alcMax)) >= 0) {
+        o.alcMax = cfg.digiAlcMax = Number(m.alcMax);
+        try { fs.writeFileSync(TXSET_FILE, JSON.stringify({ alcMax: o.alcMax }) + '\n', { mode: 0o600 }); } catch (e) { /* gardé jusqu'au redémarrage */ }
+      }
+      if (m.level != null && Number(m.level) >= 1 && Number(m.level) <= 100) o.level = Math.round(Number(m.level));
+      if (!Object.keys(o).length) return;
+      toStation(Object.assign({ t: 'tx_set' }, o));
+      journal('tx_set', Object.assign({ call: conn.user.call }, o));
+      return;
+    }
     case 'upd_check':
       if (!conn.user.admin) return;
       return UPD.check().then(() => send(conn, Object.assign(UPD.state(), { asked: true })));

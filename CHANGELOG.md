@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.22** — FT : les administrateurs règlent sur la ligne « Émission FT » le niveau d'émission (− / +) et la limite d'ALC (sans limite, 5 à 100 %), appliqués tout de suite par la page Station du club ; limite gardée par le serveur.
 - **0.42.21** — Mise à jour : recherche toutes les 15 minutes (au lieu de 30) et à chaque connexion d'un administrateur ; clic sur la version (à droite de la date) = chercher tout de suite.
 - **0.42.20** — FT8 / FT4 / FT2 : « Après un QSO » — en CQ, réponse automatique à la station suivante qui appelait, sinon CQ relancé (ou 1er seulement, ou arrêt) ; jamais de réponse automatique à une station déjà contactée (barrée dès la fin du QSO) ; fréquence TX changée pendant l'émission appliquée tout de suite (signal repris au même instant), fréquence RX suivie tout de suite ; ligne « Émission FT : sortie son du club » ; ALC : limite 10 % par défaut et échelle IC-7300 / IC-7760 corrigée (0 à 120). Carnet : sélection de plusieurs QSO (Ctrl+clic, Maj+clic) et suppression d'un coup.
 - **0.42.19** — WSPR : « 📡 Qui m'a entendu ? » — les stations qui ont décodé votre balise et l'ont signalé à WSPRnet (base publique wspr.live) : résumé (nombre de stations, la plus lointaine, spots par bande), une ligne par station ou tous les spots, tri par colonne, période 1 h à 7 jours, bande, mise à jour toutes les 2 minutes.
