@@ -3534,3 +3534,13 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .dg-row.wkd.nostrike span.msg, .dg-row.wkd.nostrike span:last-child, .dg-row.wkd.nostrike .dg-call { text-decoration: none; }
 .dx-t.col-fixed td.ct { max-width: none; }
 .dx-t th { position: sticky; }
+/* Tableau DXCC : intitulés en cases comme les listes FT (brun foncé, texte clair), colonnes séparées par un trait */
+.dx-t { border-collapse: separate; border-spacing: 0; }
+.dx-t th { background: #4a2508; color: #fff3dc; font-weight: 800; letter-spacing: .5px; border: 1px solid #b08850; border-left-width: 0; padding: 4px 6px; }
+.dx-t th:first-child { border-left-width: 1px; border-radius: 4px 0 0 4px; }
+.dx-t th:last-child { border-radius: 0 4px 4px 0; }
+.dx-t th.cur { background: #1f4f8a; color: #fff; border-color: #3a7bd5; }
+.dx-t td { border-right: 1px solid rgba(150, 170, 195, .22); }
+.dx-t td:last-child { border-right: 0; }
+.dx-t td.pf, .dx-t th:first-child { padding-left: 6px; }
+.dx-t th .col-grip::after { content: ''; position: absolute; right: 2px; top: 25%; bottom: 25%; width: 2px; border-radius: 1px; background: rgba(255, 243, 220, .35); }
