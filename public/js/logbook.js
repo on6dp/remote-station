@@ -1500,8 +1500,8 @@
     b.type = 'button';
     b.className = 'btn lg-dbtn lg-statb';
     b.id = 'lgStatBtn';
-    b.textContent = '📊 STATISTIQUES DXCC';
-    b.title = 'Pays DXCC contactés et confirmés, par bande et par mode, pour un TX call (à la manière de Swisslog)';
+    b.textContent = '📊 STATISTIQUES';
+    b.title = 'Diplômes DXCC, WAZ, ITU, WAE, WAC, WAS, WPX, IOTA et locators : contactés et confirmés, par bande et par mode, pour un TX call (à la manière de Swisslog)';
     b.setAttribute('aria-pressed', 'false');
     const det = q$('#lgDetails');
     if (det) det.after(b); else q$('.lg-bar').prepend(b);
@@ -1511,7 +1511,7 @@
     back.className = 'btn lg-dbtn lg-tostat';
     back.id = 'lgToStats';
     back.textContent = '↩ STATISTIQUES';
-    back.title = 'Revenir au tableau des statistiques DXCC';
+    back.title = 'Revenir au tableau des statistiques';
     back.hidden = true;
     b.after(back);
     // Fenêtre du carnet en grand : RETOUR = la fermer et revenir au dashboard
@@ -1527,17 +1527,21 @@
     box.id = 'lgStats';
     box.hidden = true;
     box.innerHTML = '<div class="lg-sth"><button type="button" class="btn lg-dbtn lg-stback" id="lgStBack" title="Revenir au carnet (Échap)">↩ CARNET</button>' +
+      '<label class="lg-txf lg-staw">Diplôme <select id="lgStAw" aria-label="Diplôme" title="DXCC (pays), WAZ (zones CQ), ITU (zones UIT), WAE (pays d’Europe, entités WAE comprises), WAC (continents), WAS (États US, d’après le champ État du QSO), WPX (préfixes), IOTA (îles, d’après la référence IOTA du QSO), locators (carrés de 4 caractères)">' +
+      [['DXCC', 'DXCC (pays)'], ['WAZ', 'WAZ (zones CQ)'], ['ITU', 'ITU (zones UIT)'], ['WAE', 'WAE (Europe)'], ['WAC', 'WAC (continents)'], ['WAS', 'WAS (États US)'], ['WPX', 'WPX (préfixes)'], ['IOTA', 'IOTA (îles)'], ['GRID', 'Locators (carrés)']].map((o) => '<option value="' + o[0] + '">' + o[1] + '</option>').join('') + '</select></label>' +
       '<label class="lg-txf">TX call <select id="lgStTx" aria-label="TX call des statistiques"></select></label>' +
       '<label class="lg-txf">Mode <select id="lgStMode" aria-label="Modes comptés"><option value="">Tous (colonnes par mode)</option><option value="C">CW</option><option value="P">Phonie</option><option value="D">Numérique</option></select></label>' +
-      '<label class="lg-txf">Tri <select id="lgStSort" aria-label="Ordre des pays"><option value="pfx">Préfixe</option><option value="name">Pays</option><option value="cont">Continent</option><option value="bands">Nombre de bandes</option></select></label>' +
-      '<label class="lg-txf">Pays <select id="lgStShow" aria-label="Pays affichés"><option value="">Tous les DXCC</option><option value="w">Contactés</option><option value="nc">Pas encore confirmés</option><option value="n">Jamais contactés</option></select></label>' +
-      '<input class="lg-search lg-stq" id="lgStQ" placeholder="Pays ou préfixe" aria-label="Chercher un pays">' +
+      '<label class="lg-txf">Tri <select id="lgStSort" aria-label="Ordre des lignes"><option value="pfx">Référence</option><option value="name">Nom</option><option value="cont">Continent</option><option value="bands">Nombre de bandes</option></select></label>' +
+      '<label class="lg-txf">Lignes <select id="lgStShow" aria-label="Lignes affichées"><option value="">Toutes</option><option value="w">Contactées</option><option value="nc">Pas encore confirmées</option><option value="n">Jamais contactées</option></select></label>' +
+      '<input class="lg-search lg-stq" id="lgStQ" placeholder="Chercher (nom, référence)" aria-label="Chercher">' +
       '<span class="lg-stsum" id="lgStSum"></span>' +
       '<span class="lg-stleg"><i class="sc">C</i> confirmé (LoTW / QSL) · <i class="sw">W</i> contacté (worked) · <i class="sn">-</i> pas encore · clic sur une case : ces QSO dans le carnet</span></div>' +
       '<div class="lg-stt"><table class="lg-sttab"><thead id="lgStHead"></thead><tbody id="lgStBody"><tr><td class="lg-empty">Chargement…</td></tr></tbody></table></div>' +
       '<div class="lg-sts"><table class="lg-stsum2"><thead id="lgSsHead"></thead><tbody id="lgSsBody"></tbody></table></div>';
     q$('.lg-tw').after(box);
-    const ask = (txc) => api && api.send({ t: 'log_stats', txc: txc != null ? txc : q$('#lgStTx').value, mode: q$('#lgStMode').value });
+    const ask = (txc) => api && api.send({ t: 'log_stats', txc: txc != null ? txc : q$('#lgStTx').value, mode: q$('#lgStMode').value, award: q$('#lgStAw').value });
+    try { const a = localStorage.getItem('rs.lgaward'); if (a && q$('#lgStAw').querySelector('option[value="' + a + '"]')) q$('#lgStAw').value = a; } catch (e) { /* */ }
+    q$('#lgStAw').addEventListener('change', () => { try { localStorage.setItem('rs.lgaward', q$('#lgStAw').value); } catch (e) { /* */ } ask(); });
     const show = (on) => {
       ST.on = on;
       b.setAttribute('aria-pressed', String(on));
@@ -1563,10 +1567,11 @@
       const tr = td.closest('tr');
       filt = {};
       if (ST.data && ST.data.txc) filt.txc = ST.data.txc;
-      filt.pfx = tr.dataset.pfx;
+      if (!ST.data || !ST.data.award || ST.data.award === 'DXCC') filt.pfx = tr.dataset.pfx;
+      else filt.aw = ST.data.award + ':' + tr.dataset.pfx; // zone, préfixe WPX, île IOTA… (filtre calculé par le serveur)
       if (td.dataset.b && td.dataset.b !== 'SAT') filt.band = td.dataset.b;
       const md = (ST.data && ST.data.mode) || (td.dataset.k && td.dataset.k !== 'AUT' ? td.dataset.k : '');
-      if (md && !ST_GRP[md] && md !== 'SSB') filt.mode = md;
+      if (md && !ST_GRP[md] && md !== 'SSB' && md !== 'AUT') filt.mode = md;
       show(false);
       back.hidden = false;
       reload();
@@ -1603,19 +1608,23 @@
     // Tableau à la manière de Swisslog : une ligne par pays, sous chaque bande une colonne par mode (SSB, CW, RTTY, FT8,
     // FT4, FT2, « Autres » s'il y en a) ; case verte C = confirmé, bleue W = contacté (worked), rouge - = pas encore.
     // Mode ou groupe choisi : une colonne par bande. En dessous : le récapitulatif bandes × modes (contactés / confirmés).
-    const MK = ['SSB', 'CW', 'RTTY', 'FT8', 'FT4', 'FT2'];
+    // Colonnes de modes : ceux réellement présents dans le carnet pour ce choix (SSB, CW, RTTY, FT8, FT4, FT2, JTTY, SSTV…)
+    const MK = d.mcols && d.mcols.length ? d.mcols : ['SSB', 'CW', 'RTTY', 'FT8', 'FT4', 'FT2'];
     const per = !d.mode;
-    const hasAut = per && d.rows.some((r) => Object.values(r.b).some((x) => x.m && x.m.AUT));
-    const mks = per ? MK.concat(hasAut ? ['AUT'] : []) : [''];
+    const hasAut = false;
+    const mks = per ? MK : [''];
+    const AW = (d.awards || []).find((a) => a[0] === (d.award || 'DXCC')) || ['DXCC', 'DXCC (pays)', 'Pays DXCC'];
+    if (q$('#lgStAw') && d.award) q$('#lgStAw').value = d.award;
     const mkL = (k) => (k === 'AUT' ? 'Autres' : k || (ST_GRP[d.mode] || d.mode));
     const st = (x, k) => (!x ? 0 : k ? (x.m && x.m[k]) || 0 : x.c ? 2 : 1); // 0 rien, 1 contacté, 2 confirmé
     const cols = [];
     for (const b of B) for (const k of mks) cols.push([b, k]);
     const allW = d.rows.filter((r) => Object.keys(r.b).length).length, allC = d.rows.filter((r) => Object.values(r.b).some((x) => x.c)).length;
-    q$('#lgStSum').innerHTML = '<b>' + esc(d.txc || 'Tous les TX call') + '</b> · ' + esc(d.mode ? (ST_GRP[d.mode] || d.mode) : 'tous modes') + ' : <b class="w">' + allW + '</b> DXCC contactés · <b class="c">' + allC + '</b> confirmés · ' + d.rows.length + ' pays DXCC';
+    const full = ['WPX', 'IOTA', 'GRID'].indexOf(AW[0]) < 0; // diplômes à liste fermée : « sur N »
+    q$('#lgStSum').innerHTML = '<b>' + esc(d.txc || 'Tous les TX call') + '</b> · ' + esc(AW[0] === 'GRID' ? 'Locators' : AW[0]) + ' · ' + esc(d.mode ? (ST_GRP[d.mode] || d.mode) : 'tous modes') + ' : <b class="w">' + allW + '</b> contactés · <b class="c">' + allC + '</b> confirmés' + (full ? ' sur ' + d.rows.length : '');
     const bl = (b) => (b === 'SAT' ? 'SAT' : /cm$/.test(b) ? b.replace(/cm$/, ' cm') : b.replace(/m$/, ' m'));
     const first = (i) => (i % mks.length === 0 ? 'lg-stb0' : '');
-    q$('#lgStHead').innerHTML = '<tr><th rowspan="2" class="lg-stn">Pays DXCC</th>' + B.map((b) => '<th class="lg-stb lg-stb0" colspan="' + mks.length + '">' + esc(bl(b)) + '</th>').join('') + '</tr>' +
+    q$('#lgStHead').innerHTML = '<tr><th rowspan="2" class="lg-stn">' + esc(AW[2]) + '</th>' + B.map((b) => '<th class="lg-stb lg-stb0" colspan="' + mks.length + '">' + esc(bl(b)) + '</th>').join('') + '</tr>' +
       '<tr class="lg-stm">' + cols.map(([, k], i) => '<th class="' + first(i) + '"><span>' + esc(mkL(k)) + '</span></th>').join('') + '</tr>';
     let rows = d.rows.slice();
     if (ST.q) rows = rows.filter((r) => r.pfx.toUpperCase().indexOf(ST.q) === 0 || r.name.toUpperCase().indexOf(ST.q) >= 0);
@@ -1629,11 +1638,11 @@
     rows.sort(cmp);
     const cell = (r, b, k, i) => {
       const v = st(r.b[b], k);
-      const what = (k === 'AUT' ? 'autres modes (' + Object.keys(r.aut || {}).join(', ') + ')' : mkL(k));
+      const what = mkL(k);
       const tip = r.name + ' · ' + bl(b) + ' · ' + what + ' : ' + (v === 2 ? 'confirmé' : v ? 'contacté' : 'pas encore') + (v ? ' — clic : ces QSO dans le carnet' : '');
       return '<td data-b="' + esc(b) + '" data-k="' + k + '" class="' + (v === 2 ? 'sc' : v ? 'sw' : 'sn') + ' ' + first(i) + '" title="' + esc(tip) + '">' + (v === 2 ? 'C' : v ? 'W' : '-') + '</td>';
     };
-    q$('#lgStBody').innerHTML = rows.length ? rows.map((r) => '<tr data-pfx="' + esc(r.pfx) + '"><td class="lg-stn" title="' + esc(r.pfx + ' – ' + r.name + ' (' + r.cont + ')') + '"><b>' + esc(r.pfx) + '</b> – ' + esc(r.name) + '</td>' +
+    q$('#lgStBody').innerHTML = rows.length ? rows.map((r) => '<tr data-pfx="' + esc(r.pfx) + '"><td class="lg-stn" title="' + esc(r.pfx + ' – ' + r.name + (r.cont ? ' (' + r.cont + ')' : '')) + '"><b>' + esc(['WAZ', 'ITU'].indexOf(AW[0]) >= 0 ? String(Number(r.pfx)) : r.pfx) + '</b>' + (r.name && ['WAZ', 'ITU'].indexOf(AW[0]) < 0 ? ' – ' + esc(r.name) : '') + '</td>' +
       cols.map(([b, k], i) => cell(r, b, k, i)).join('') + '</tr>').join('')
       : '<tr><td class="lg-empty" colspan="' + (cols.length + 1) + '">Aucun QSO pour ce choix.</td></tr>';
     // Récapitulatif : pour chaque bande (lignes) et chaque mode (colonnes), pays contactés / confirmés ; Total = tous modes,

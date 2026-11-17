@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.31** — 📊 STATISTIQUES du carnet en grand (façon Swisslog) : diplômes DXCC, WAZ, ITU, WAE, WAC, WAS, WPX, IOTA et locators, par bande et par mode (colonnes des modes présents : SSB, CW, RTTY, FT8, FT4, FT2, JTTY…), contactés / confirmés ; clic sur une case = QSO correspondants. Carnet : champs État, zones CQ / UIT, continent gardés.
 - **0.42.30** — Tableau DXCC de la page FT : intitulés en cases comme les listes FT, colonnes séparées par un trait, toutes réglables (Pfx compris) au bord droit de leur titre.
 - **0.42.29** — Tableau DXCC de la page FT : colonnes réglables à la souris (bord droit de chaque titre, double-clic : largeurs d'origine). Déjà contacté en vert vif, barré au choix.
 - **0.42.28** — Alertes FT : indicatif déjà contacté (cette bande, ce mode) en vert vif, barré ou non au choix. Tableau DXCC : TX CALL et MODES en jaune, listes arrondies, caractères plus grands.

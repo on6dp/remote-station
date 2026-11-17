@@ -1155,9 +1155,67 @@ function lgUp(q, s) {
 }
 const lgKey = (q, col) => String(LG_COL[col](q));
 function lgFilter(list, f) {
-  const fs = Object.entries(f && typeof f === 'object' ? f : {}).filter(([k, v]) => LG_COL[k] && v != null && v !== '');
+  const fs = Object.entries(f && typeof f === 'object' ? f : {}).filter(([k, v]) => (LG_COL[k] || k === 'aw') && v != null && v !== '');
   if (!fs.length) return list;
-  return list.filter((q) => fs.every(([k, v]) => lgKey(q, k) === String(v)));
+  // « aw » = « DIPLÔME:clé » (case du tableau des statistiques : zone CQ 14, préfixe WPX ON4, île EU-005…)
+  const aw = (q, v) => { const i = String(v).indexOf(':'); const a = String(v).slice(0, i); const d = AWARDS[a] && awardKey(q, a); return !!d && d.k === String(v).slice(i + 1); };
+  return list.filter((q) => fs.every(([k, v]) => (k === 'aw' ? aw(q, v) : lgKey(q, k) === String(v))));
+}
+// ---------------------------------------------------------------- diplômes des statistiques du carnet (façon Swisslog)
+/** Préfixe WPX d'un indicatif (règles du CQ WPX) : ON4ABC → ON4, HG19ABC → HG19, EA8/ON4ABC → EA8, K1ABC/4 → K4, PA/ON4ABC → PA0 */
+function wpxPrefix(call) {
+  let c = String(call || '').toUpperCase().replace(/^<|>$/g, '').trim();
+  const parts = c.split('/').filter((p) => p && !/^(P|M|MM|AM|QRP|A|R|B|J|LH|T)$/.test(p));
+  if (!parts.length) return '';
+  const base = parts.slice().sort((a, b) => b.length - a.length)[0];
+  const pre = (x) => { const m = /^(.*\d)[A-Z]*$/.exec(x); return m ? m[1] : x.slice(0, 2) + '0'; };
+  if (parts.length > 1) {
+    const o = parts.find((p) => p !== base) || '';
+    if (/^\d$/.test(o)) { const bp = pre(base); return bp.replace(/\d+$/, '') + o; } // K1ABC/4 → K4
+    if (o.length <= 4) return /\d$/.test(o) ? o : /\d/.test(o) ? pre(o) : o + '0';   // EA8/… → EA8 ; PA/… → PA0
+  }
+  return pre(base);
+}
+const CONTS = [['AF', 'Afrique'], ['AS', 'Asie'], ['EU', 'Europe'], ['NA', 'Amérique du Nord'], ['OC', 'Océanie'], ['SA', 'Amérique du Sud']];
+const US_STATES = [['AL', 'Alabama'], ['AK', 'Alaska'], ['AZ', 'Arizona'], ['AR', 'Arkansas'], ['CA', 'California'], ['CO', 'Colorado'], ['CT', 'Connecticut'], ['DE', 'Delaware'], ['FL', 'Florida'], ['GA', 'Georgia'],
+  ['HI', 'Hawaii'], ['ID', 'Idaho'], ['IL', 'Illinois'], ['IN', 'Indiana'], ['IA', 'Iowa'], ['KS', 'Kansas'], ['KY', 'Kentucky'], ['LA', 'Louisiana'], ['ME', 'Maine'], ['MD', 'Maryland'],
+  ['MA', 'Massachusetts'], ['MI', 'Michigan'], ['MN', 'Minnesota'], ['MS', 'Mississippi'], ['MO', 'Missouri'], ['MT', 'Montana'], ['NE', 'Nebraska'], ['NV', 'Nevada'], ['NH', 'New Hampshire'], ['NJ', 'New Jersey'],
+  ['NM', 'New Mexico'], ['NY', 'New York'], ['NC', 'North Carolina'], ['ND', 'North Dakota'], ['OH', 'Ohio'], ['OK', 'Oklahoma'], ['OR', 'Oregon'], ['PA', 'Pennsylvania'], ['RI', 'Rhode Island'], ['SC', 'South Carolina'],
+  ['SD', 'South Dakota'], ['TN', 'Tennessee'], ['TX', 'Texas'], ['UT', 'Utah'], ['VT', 'Vermont'], ['VA', 'Virginia'], ['WA', 'Washington'], ['WV', 'West Virginia'], ['WI', 'Wisconsin'], ['WY', 'Wyoming']];
+const pad2 = (n) => String(n).padStart(2, '0');
+/** Diplômes : libellé, intitulé de la 1re colonne, liste complète (lignes jamais contactées) */
+const AWARDS = {
+  DXCC: { label: 'DXCC (pays)', col: 'Pays DXCC', all: () => DXCC.entities().map((e) => ({ k: e.pfx, name: e.name, cont: e.cont })) },
+  WAZ: { label: 'WAZ (zones CQ)', col: 'Zone CQ', all: () => Array.from({ length: 40 }, (x, i) => ({ k: pad2(i + 1), name: 'Zone CQ ' + (i + 1) })) },
+  ITU: { label: 'ITU (zones UIT)', col: 'Zone UIT', all: () => Array.from({ length: 90 }, (x, i) => ({ k: pad2(i + 1), name: 'Zone UIT ' + (i + 1) })) },
+  WAE: { label: 'WAE (Europe)', col: 'Pays WAE', all: () => DXCC.entitiesAll().filter((e) => e.cont === 'EU').map((e) => ({ k: e.pfx, name: e.name, cont: 'EU' })) },
+  WAC: { label: 'WAC (continents)', col: 'Continent', all: () => CONTS.map(([k, name]) => ({ k, name, cont: k })) },
+  WAS: { label: 'WAS (États US)', col: 'État US', all: () => US_STATES.map(([k, name]) => ({ k, name, cont: 'NA' })) },
+  WPX: { label: 'WPX (préfixes)', col: 'Préfixe WPX', all: () => [] },
+  IOTA: { label: 'IOTA (îles)', col: 'Île IOTA', all: () => [] },
+  GRID: { label: 'Locators (carrés)', col: 'Locator', all: () => [] }
+};
+/** Clé d'un QSO pour un diplôme : { k, name, cont } ou null (QSO qui ne compte pas) */
+function awardKey(q, award) {
+  const call = q.call;
+  switch (award) {
+    case 'DXCC': { const d = DXCC.lookupDxcc(call); return d ? { k: d.pfx, name: d.name, cont: d.cont } : null; }
+    case 'WAZ': { const z = Number(q.cqz) || (DXCC.lookup(call) || {}).cq; return z >= 1 && z <= 40 ? { k: pad2(z), name: 'Zone CQ ' + z } : null; }
+    case 'ITU': { const z = Number(q.ituz) || (DXCC.lookup(call) || {}).itu; return z >= 1 && z <= 90 ? { k: pad2(z), name: 'Zone UIT ' + z } : null; }
+    case 'WAE': { const e = DXCC.lookup(call); return e && e.cont === 'EU' ? { k: e.pfx, name: e.name, cont: 'EU' } : null; }
+    case 'WAC': { const c = String(q.cont || (DXCC.lookup(call) || {}).cont || '').toUpperCase(); const x = CONTS.find((y) => y[0] === c); return x ? { k: x[0], name: x[1], cont: x[0] } : null; }
+    case 'WAS': {
+      const d = DXCC.lookupDxcc(call);
+      const st = String(q.state || '').toUpperCase().trim();
+      if (!d || ['K', 'KL', 'KH6'].indexOf(d.pfx) < 0) return null;
+      const x = US_STATES.find((y) => y[0] === st);
+      return x ? { k: x[0], name: x[1], cont: 'NA' } : null;
+    }
+    case 'WPX': { const p = wpxPrefix(call); return p ? { k: p, name: (DXCC.lookup(call) || {}).name || '', cont: (DXCC.lookup(call) || {}).cont || '' } : null; }
+    case 'IOTA': { const r = String(q.iota || '').toUpperCase().trim(); return /^[A-Z]{2}-\d{3}$/.test(r) ? { k: r, name: (DXCC.lookup(call) || {}).name || '', cont: r.slice(0, 2) } : null; }
+    case 'GRID': { const g = String(q.gridsquare || '').toUpperCase().slice(0, 4); return /^[A-R]{2}\d{2}$/.test(g) ? { k: g, name: (DXCC.lookup(call) || {}).name || '', cont: '' } : null; }
+  }
+  return null;
 }
 // Modifier, compléter ou supprimer un QSO : administrateurs, ou l'auteur du QSO (compte qui l'a enregistré) qui a la main.
 // Sans la main (membre ou écouteur) : consultation seulement ; jamais le QSO d'un autre indicatif.
@@ -1176,6 +1234,9 @@ function qrzFill(q) {
   qrzx.lookup(q.call).then((v) => {
     if (!v) return;
     const add = { name: titleCase([v.fname || v.nick, v.name].filter(Boolean).join(' ')).slice(0, 40), qth: String(v.qth || '').slice(0, 60), gridsquare: String(v.grid || '').toUpperCase().slice(0, 6) };
+    // État US (diplôme WAS des statistiques) : seulement pour les États-Unis, Alaska et Hawaï
+    const dx = DXCC.lookupDxcc(q.call);
+    if (dx && ['K', 'KL', 'KH6'].indexOf(dx.pfx) >= 0 && /^[A-Z]{2}$/.test(String(v.state || '').toUpperCase())) add.state = String(v.state).toUpperCase();
     const done = book.merge(q.id, add);
     if (done && done.length) for (const c of ops) send(c, { t: 'log_changed' });
   }).catch(() => {});
@@ -3669,9 +3730,11 @@ function onOperator(conn, m) {
       // DXCC (entités WAE ramenées à leur pays) × bande, contacté / confirmé (LoTW ou QSL papier), par groupe de modes
       const txc = String(m.txc || '').toUpperCase();
       const want = String(m.mode || '');
+      // Diplôme : DXCC (par défaut), WAZ (zones CQ), ITU (zones UIT), WAE, WPX, IOTA, WAC (continents), locators, WAS (États US)
+      const award = AWARDS[m.award] ? m.award : 'DXCC';
       const grp = (q) => { const md = String(LB.modeName(q) || '').toUpperCase(); return md === 'CW' ? 'C' : /^(SSB|USB|LSB|AM|FM|DIGITALVOICE|C4FM|DSTAR|DMR)$/.test(md) ? 'P' : 'D'; };
       const BORD = ['2190m', '630m', '160m', '80m', '60m', '40m', '30m', '20m', '17m', '15m', '12m', '10m', '6m', '4m', '2m', '1.25m', '70cm', '33cm', '23cm', '13cm', '9cm', '6cm', '3cm', '1.25cm', 'SAT'];
-      const rows = new Map(), bands = new Set(), modes = new Set(), txcs = new Set();
+      const rows = new Map(), bands = new Set(), modes = new Set(), txcs = new Set(), mcols = new Set();
       let n = 0;
       for (const q of book.qsos) {
         const sc = String(q.station_callsign || '').toUpperCase();
@@ -3681,33 +3744,36 @@ function onOperator(conn, m) {
         if (md) modes.add(md);
         const g = grp(q);
         if (want && !(want === g || want === md)) continue;
-        const d = DXCC.lookupDxcc(q.call);
+        const d = awardKey(q, award);
         if (!d) continue;
         const b = q.prop_mode === 'SAT' ? 'SAT' : String(q.band || '').toLowerCase();
         if (!b) continue;
         n++;
         bands.add(b);
         const conf = q.lotw_qsl_rcvd === 'Y' || q.qsl_rcvd === 'Y';
-        let r = rows.get(d.pfx);
-        if (!r) { r = { pfx: d.pfx, name: d.name, cont: d.cont, n: 0, b: {} }; rows.set(d.pfx, r); }
+        let r = rows.get(d.k);
+        if (!r) { r = { pfx: d.k, name: d.name, cont: d.cont || '', n: 0, b: {} }; rows.set(d.k, r); }
         r.n++;
         // Par bande : groupes de modes contactés (C / P / D) et confirmés
         const c = r.b[b] || (r.b[b] = { w: '', c: '', m: {} });
         if (c.w.indexOf(g) < 0) c.w += g;
         if (conf && c.c.indexOf(g) < 0) c.c += g;
         // Par mode (colonnes SSB, CW, RTTY, FT8, FT4, FT2, autres) : 1 contacté, 2 confirmé
-        const mk = /^(SSB|USB|LSB)$/.test(md) ? 'SSB' : ['CW', 'RTTY', 'FT8', 'FT4', 'FT2'].indexOf(md) >= 0 ? md : 'AUT';
+        // Une colonne par mode réellement présent (SSB, CW, RTTY, FT8, FT4, FT2, JTTY, JT65, SSTV, FM…)
+        const mk = /^(SSB|USB|LSB)$/.test(md) ? 'SSB' : md || 'AUT';
         c.m[mk] = Math.max(c.m[mk] || 0, conf ? 2 : 1);
-        if (mk === 'AUT') { r.aut = r.aut || {}; r.aut[md] = 1; }
+        mcols.add(mk);
         if (!r.first || String(q.qso_date) < r.first) r.first = String(q.qso_date || '');
       }
       // Bandes toujours montrées (HF + 6 m + satellite), plus celles du carnet en dehors de cette liste (2 m, 70 cm…)
       for (const b of ['160m', '80m', '60m', '40m', '30m', '20m', '17m', '15m', '12m', '10m', '6m', 'SAT']) bands.add(b);
       const bl = BORD.filter((b) => bands.has(b)).concat(Array.from(bands).filter((b) => BORD.indexOf(b) < 0).sort());
-      // Tous les pays DXCC, même jamais contactés (cases rouges), comme Swisslog
-      for (const e of DXCC.entities()) if (!rows.has(e.pfx)) rows.set(e.pfx, { pfx: e.pfx, name: e.name, cont: e.cont, n: 0, b: {} });
-      return send(conn, { t: 'log_stats', txc, mode: want, bands: bl, rows: Array.from(rows.values()), qsos: n,
-        txcalls: Array.from(txcs).sort(), modes: Array.from(modes).sort(), tag: logTag(m) });
+      // Toute la liste du diplôme, même jamais contactée (cases rouges), comme Swisslog (WPX, IOTA, locators : contactés seulement)
+      for (const e of AWARDS[award].all()) if (!rows.has(e.k)) rows.set(e.k, { pfx: e.k, name: e.name, cont: e.cont || '', n: 0, b: {} });
+      const MORD = ['SSB', 'CW', 'RTTY', 'FT8', 'FT4', 'FT2', 'JTTY', 'JT65', 'JT9', 'MSK144', 'Q65', 'PSK31', 'PSK', 'OLIVIA', 'SSTV', 'FM', 'AM'];
+      const mc = MORD.filter((x) => mcols.has(x)).concat(Array.from(mcols).filter((x) => MORD.indexOf(x) < 0).sort());
+      return send(conn, { t: 'log_stats', txc, mode: want, award, awards: Object.keys(AWARDS).map((k) => [k, AWARDS[k].label, AWARDS[k].col]), bands: bl, rows: Array.from(rows.values()), qsos: n,
+        mcols: mc, txcalls: Array.from(txcs).sort(), modes: Array.from(modes).sort(), tag: logTag(m) });
     }
     case 'ft_dxcc': {
       // Page FT8 / FT4 / FT2 : pays DXCC contactés / confirmés par bande en FT (sous un TX call), à côté des listes
