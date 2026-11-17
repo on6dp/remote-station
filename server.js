@@ -645,6 +645,8 @@ function onDigi(m) {
     }
     const item = { slot: m.slot, list: m.list };
     const sideB = m.ch === 1;
+    // Passe normale reçue pour cette période (FT8 / FT4) : une émission de la séquence qui l'attendait peut partir
+    if (FTX_SLOT[m.mode] && (m.phase === 'normal' || (!m.phase && !m.early))) { digi.normal = digi.normal || {}; digi.normal[(sideB ? 'B' : 'A') + m.mode] = Math.max(digi.normal[(sideB ? 'B' : 'A') + m.mode] || 0, m.slot); setTimeout(ftxHoldCheck, 0); }
     const h = (sideB ? digi.histB : digi.hist)[m.mode];
     if (!h) return;
     h.push(item);
@@ -2685,6 +2687,7 @@ function ftxCancel(reason, quiet) {
   const p = ftxPend;
   if (!p) return;
   clearTimeout(p.timer);
+  clearTimeout(p.holdT);
   ftxPend = null;
   if (!quiet && seq && seq.on && seq.conn === p.conn) { seq.on = false; updateDigi(); }
   if (ptt.active && ptt.digi && ptt.digi.id === p.id) stopPtt(reason);
@@ -3368,8 +3371,45 @@ async function audioRequest(conn, m) {
 }
 
 /** Juste avant le créneau : dernières vérifications puis passage en émission avec le signal préparé. */
+/**
+ * Séquence automatique (QSO en cours, ou CQ en attente d'une réponse) : avant de partir, on attend la passe normale du
+ * décodeur pour la période qui vient de finir (elle arrive ~0,5 à 1,5 s après le début de la nôtre : audio venu du
+ * club par internet, puis calcul). Sinon le message part « comme si rien n'était reçu » puis est remplacé 1 s plus tard.
+ * Attente bornée : départ en retard d'au plus ~1,1 s en FT8 (le décodeur d'en face l'accepte, DT un peu plus grand).
+ */
+function ftxHoldUntil(p) {
+  const P = FTX_SLOT[p.mode];
+  if (!P || p.mode === 'FT2' || !seq || !seq.on || seq.conn !== p.conn || seq.hound) return 0;
+  // Seulement si une réponse peut changer le message : QSO en cours (Tx1 à Tx5), ou CQ avec « répondre au 1er »
+  if (!((p.ntx >= 1 && p.ntx <= 5) || (p.ntx === 6 && seq.call1st))) return 0;
+  if (!digi.worker || Date.now() - (digi.last || 0) > 60000) return 0; // pas de décodeur actif : on n'attend rien
+  const k = Math.floor(p.at / P);
+  const prev = (k - 1) * P;
+  const got = (digi.normal || {})[(seq.side || 'A') + p.mode] || 0;
+  if (got >= prev) return 0; // déjà reçue
+  const until = k * P + FTX_T0 + Math.min(FTX_LATE[p.mode] - 500, 1500) - FTX_KEY_LEAD;
+  return until > Date.now() + 50 ? until : 0;
+}
+function ftxHoldCheck() {
+  const p = ftxPend;
+  if (!p || !p.hold || p.state !== 'wait') return;
+  if (ftxHoldUntil(p)) return; // toujours rien
+  clearTimeout(p.holdT);
+  p.hold = false;
+  p.holdDone = true;
+  p.at = Math.max(p.at, Date.now() + FTX_KEY_LEAD); // départ un peu après le début nominal
+  ftxKey(p);
+}
 function ftxKey(p) {
   if (ftxPend !== p) return;
+  if (!p.holdDone) {
+    const until = ftxHoldUntil(p);
+    if (until) {
+      p.hold = true;
+      p.holdT = setTimeout(() => { if (ftxPend !== p || !p.hold) return; p.hold = false; p.holdDone = true; p.at = Math.max(p.at, Date.now() + FTX_KEY_LEAD); ftxKey(p); }, until - Date.now());
+      return;
+    }
+  }
   if (!p.ready) return ftxCancel('la page Station n’a pas préparé le signal à temps');
   if (controller !== p.conn) return ftxCancel('main perdue');
   if (ptt.active) return ftxCancel('émission déjà en cours');

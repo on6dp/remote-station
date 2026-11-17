@@ -3577,3 +3577,6 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .mk-alc path { fill: #00d4ff; } .mk-id path { fill: #ff6bd6; } .mk-vd path { fill: #4ce0b3; }
 .am-lab.lk-s { fill: #39ff14; } .am-lab.lk-po { fill: #ff9f1a; } .am-lab.lk-swr { fill: #ffd400; } .am-lab.lk-comp { fill: #c77dff; }
 .am-lab.lk-alc { fill: #00d4ff; } .am-lab.lk-id { fill: #ff6bd6; } .am-lab.lk-vd { fill: #4ce0b3; }
+/* Statistiques du carnet : la valeur choisie (DXCC (pays), TX call, mode, tri, lignes) en blanc gras, le libellé reste jaune */
+.lg-sth .lg-txf select { color: #fff; font-weight: 800; }
+.lg-sth .lg-txf select option { color: #fff; font-weight: 700; }

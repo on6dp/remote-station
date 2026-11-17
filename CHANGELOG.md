@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.43** — FT : la séquence attend le décodage (passe normale) de la période précédente avant d'émettre — plus de message « comme si rien n'était reçu » remplacé 1 s plus tard. Cadrans : aiguille rouge en réception (signal), repères seuls en émission. Statistiques : valeurs des listes en blanc gras.
 - **0.42.42** — Cadrans à aiguille des VFO : un repère de niveau par échelle (S, PO, SWR, COMP, ALC, Id, Vd, chacun de sa couleur), les trois mesures lisibles en même temps.
 - **0.42.41** — FT : file d'attente visible (ceux qui vous appellent pendant le QSO, ajout à la main par Maj + clic, mise en tête, retrait) prise à la fin du QSO sans perdre de période ; « Après un QSO » : nouvelle option « Toujours CQ » (CQ relancé aussi après un QSO commencé en répondant à un CQ, 73 reçu ou envoyé).
 - **0.42.40** — Page FT, TRX à un récepteur : réglages de la cascade (Gain, Zéro, Plat, Couleurs, Vitesse) sur la même ligne que la bande, RX / TX et SYNCHRO.

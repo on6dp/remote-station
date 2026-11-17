@@ -547,7 +547,8 @@
     else if (live && val != null) f = val / 255;
     f = Math.max(0, Math.min(1, f || 0));
     const ang = A0 + (A1 - A0) * f;
-    if (st.nd) { st.nd.setAttribute('transform', 'rotate(' + ang.toFixed(1) + ' ' + CX + ' ' + CY + ')'); st.nd.classList.toggle('tx', !!(live && isTx)); }
+    // Aiguille rouge : la réception seulement (S-mètre ; Vd sur l'écran PO / Id / Vd) ; en émission, les repères seuls
+    if (st.nd) { st.nd.setAttribute('transform', 'rotate(' + ang.toFixed(1) + ' ' + CX + ' ' + CY + ')'); st.nd.classList.toggle('tx', !!(live && isTx)); st.nd.style.opacity = live && isTx ? '0' : '1'; }
     // Repères : la valeur de chaque échelle (S en réception ; PO, SWR, COMP, ALC en émission ; Id et Vd toujours)
     const mkF = {
       s: live && !isTx && val != null ? val / 255 : null,
@@ -560,7 +561,10 @@
     };
     for (const m of st.mk || []) {
       // Toujours trois repères (TRX en ligne) : une mesure sans objet (S en émission, PO / SWR / ALC / COMP en réception) reste au début de son échelle
-      const v = live ? mkF[m.dataset.k] || 0 : null;
+      // Repères : en émission (PO, SWR, COMP, ALC, Id, Vd) ; en réception, seulement Id (l'aiguille montre le S ou la tension Vd)
+      const k = m.dataset.k;
+      const show = live && (isTx ? k !== 's' : k === 'id');
+      const v = show ? mkF[k] || 0 : null;
       m.style.opacity = v == null ? '0' : '1';
       if (v != null) m.setAttribute('transform', 'rotate(' + (A0 + (A1 - A0) * Math.max(0, Math.min(1, v))).toFixed(1) + ' ' + CX + ' ' + CY + ')');
     }
