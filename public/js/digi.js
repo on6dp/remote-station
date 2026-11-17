@@ -6142,9 +6142,9 @@
     const cur = D.txc || DXS.txc || '';
     const calls = Array.from(new Set((D.calls || []).concat(cur ? [cur] : [])));
     const callSel = '<select id="dgDxCall" aria-label="TX call des statistiques" title="Statistiques DXCC de quel indicatif : celui sous lequel vous émettez (par défaut), ou un autre indicatif du carnet">' +
-      '<option value=""' + (!DXS.pick ? ' selected' : '') + '>TX call (' + dxEsc(DXS.txc || cur) + ')</option>' +
+      '<option value=""' + (!DXS.pick ? ' selected' : '') + '>' + dxEsc(DXS.txc || cur) + ' (en service)</option>' +
       calls.map((c) => '<option value="' + dxEsc(c) + '"' + (DXS.pick === c ? ' selected' : '') + '>' + dxEsc(c) + '</option>').join('') + '</select>';
-    p.innerHTML = '<i class="dx-grip" title="Glisser à gauche ou à droite : largeur du tableau DXCC (double-clic : largeur d’origine)"></i><div class="dg-h"><span>DXCC</span>' + callSel + modeSel +
+    p.innerHTML = '<i class="dx-grip" title="Glisser à gauche ou à droite : largeur du tableau DXCC (double-clic : largeur d’origine)"></i><div class="dg-h"><span>DXCC</span><label class="dx-lab">TX CALL ' + callSel + '</label><label class="dx-lab">Modes ' + modeSel + '</label>' +
       '<span class="dg-note" title="Pays DXCC contactés (toutes bandes) / confirmés (LoTW ou QSL papier), sur ' + (D.qsos || 0) + ' QSO">' + (D.rows || []).length + ' pays · ' + conf + ' conf.</span>' +
       (ftDual ? '<button class="dg-mini" type="button" data-dxx title="Fermer">✕</button>' : '') + '</div>' +
       '<div class="dx-wrap"><table class="dx-t"><thead><tr><th>Pfx</th><th>Pays</th>' + DX_BANDS.map((b) => '<th class="' + (b === band ? 'cur' : '') + '">' + bl(b) + '</th>').join('') + '</tr></thead><tbody>' +
