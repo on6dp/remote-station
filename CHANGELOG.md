@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.29** — Tableau DXCC de la page FT : colonnes réglables à la souris (bord droit de chaque titre, double-clic : largeurs d'origine). Déjà contacté en vert vif, barré au choix.
 - **0.42.28** — Alertes FT : indicatif déjà contacté (cette bande, ce mode) en vert vif, barré ou non au choix. Tableau DXCC : TX CALL et MODES en jaune, listes arrondies, caractères plus grands.
 - **0.42.27** — Tableau DXCC de la page FT : libellés TX CALL et MODES en jaune, listes à bords arrondis en blanc gras, caractères du tableau plus grands.
 - **0.42.26** — FT : 🎨 Alertes (lignes colorées comme JTDX : nouveau pays DXCC, zone CQ, locator, indicatif, partout ou sur la bande) ; signal reçu en S, dBm et dB à côté de Activité de bande ; tableau DXCC : choix du TX call et largeur réglable ; fenêtre séparée : stations déjà contactées barrées dès l'ouverture.

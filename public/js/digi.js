@@ -6152,6 +6152,7 @@
       (!top.length && !rest.length ? '<tr><td colspan="' + (DX_BANDS.length + 2) + '" class="dx-none">Aucun QSO ' + (DXS.mode === 'FT' ? 'FT8 / FT4 / FT2' : DXS.mode) + ' sous ce TX call.</td></tr>' : '') +
       '</tbody></table></div>';
     p.querySelector('.dx-wrap').scrollTop = keep;
+    colResize(p.querySelector('.dx-t'), 'dxcc', store); // largeur des colonnes (poignée au bord droit de chaque titre)
     p.querySelector('#dgDxMode').addEventListener('change', (e) => { DXS.mode = e.target.value; store.set('dxccMode', DXS.mode); dxAsk(); });
     p.querySelector('#dgDxCall').addEventListener('change', (e) => { DXS.pick = e.target.value; store.set('dxccCall', DXS.pick); dxAsk(); });
     // Largeur du tableau : poignée au bord gauche (gardée dans ce navigateur)

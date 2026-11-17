@@ -3532,3 +3532,5 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .dg-row.wkd.wkv span, .dg-row.wkd.wkv span.msg, .dg-row.wkd.wkv span:last-child { color: #39ff14; opacity: 1; }
 .dg-row.wkd.wkv span.msg { font-weight: 700; }
 .dg-row.wkd.nostrike span.msg, .dg-row.wkd.nostrike span:last-child, .dg-row.wkd.nostrike .dg-call { text-decoration: none; }
+.dx-t.col-fixed td.ct { max-width: none; }
+.dx-t th { position: sticky; }
