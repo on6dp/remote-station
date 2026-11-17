@@ -204,7 +204,7 @@ sudo systemctl restart remote-station
 | `maxSwr`, `swrHoldMs` | 2,5, 700 ms | Coupure de l'émission sur ROS élevé (0 = pas de protection) |
 | `tunerAuto` | `true` | Tuner remis en service à chaque changement de bande HF / 6 m |
 | `txSilenceSeconds`, `txHardMaxSeconds` | 120, 300 | Chien de garde de la page Station (TRX en émission sans modulation / en continu) ; en modes numériques (DATA, RTTY, PSK), 20 s sans modulation au plus (`txSilenceDigiMs`) |
-| `digiAlcMax` | 0 | Limiteur d'ALC en émission numérique (%) ; 0 = sans |
+| `digiAlcMax` | 10 | Limiteur d'ALC en émission numérique (% de la zone ALC du TRX ; Icom : 0 à 120 en CI-V = 100 %) ; 0 = sans |
 | `ftxWatchdogMinutes` | 6 | Arrêt d'une séquence FT8 / FT4 / FT2 sans réponse |
 | `stationEditors` | ON6DP, ON4LUC | Responsables de la station (section 2) |
 | `stationTz` | Europe/Brussels | Fuseau des statistiques |
@@ -493,6 +493,17 @@ Plusieurs serveurs Remote Station (un par TRX) partagent un log et une série de
 **Contest** : voir le manuel, section 14.6 (même TX call et même contest partout, série remise à 1 une seule fois, envoi automatique LoTW / Club Log / QRZ coupé dans ⚙ Configuration de chaque serveur, Cabrillo depuis le maître).
 
 Fonctionnement : liaisons WebSocket sur `/ws` (HTTPS 443, nginx inchangé), toujours du poste vers le maître ; authentification HMAC-SHA256 dans les deux sens (la clé ne circule jamais). Chaque serveur garde le log complet (base SQLite) ; à chaque liaison, chacun envoie à l'autre ses changements depuis le dernier reçu (journal `changes`, curseurs `recv:<nom>` dans `meta`) ; la version la plus récente d'un QSO l'emporte (`edited` / `created`), les suppressions laissent une trace (`tombs`). Numéros de série : donnés par le **maître actif** ; ses lignes `serials` sont recopiées partout (colonne `mod`). Maître de priorité 1 : actif quand le secours lui a rendu ses données (ou 40 s après son démarrage) ; secours : actif si aucun maître plus prioritaire ne répond depuis 30 s, rend la main à son retour (`net_moved` : ses postes se rebranchent). Poste sans maître : numéros **provisoires** (série locale, message orange). Journal du service : lignes « Réseau : … ».
+
+### FT8 / FT4 / FT2 : enchaînement des QSO et émission (0.42.20)
+
+- **Après un QSO** (liste de la barre FT) : `cq` (défaut) = réponse au plus fort qui répond au CQ, puis à la fin du QSO au suivant qui appelait (décodé dans les 2 dernières périodes, file `seq.waiting`), sinon CQ relancé (`seq.cqRun`, `seq.autoCq`) ; `first` = réponse au 1er puis arrêt ; `stop` = rien d'automatique. Stations déjà contactées (même bande, même mode, TX call en service, ou déjà faites dans la série) jamais reprises toutes seules (`isDupeNow`). Le chien de garde (`ftxWatchdogMinutes`) arrête un CQ sans réponse.
+- **Fréquence TX changée pendant l'émission** : `ftx_cfg` → `ftxretune` vers la page Station, qui refait le signal à la nouvelle fréquence et le reprend au même instant (`txRetune`) ; message prévu pas encore parti : refait à la nouvelle fréquence. Fréquence RX : l'aide AP du décodeur la suit tout de suite (`seq.rxf`).
+- **Émission FT : …** sur la page FT : état de la sortie son de la page Station (`tx_out` → `state.audio.out` : carte, niveau, limite ALC).
+- **ALC** : limiteur `digiAlcMax` = 10 % par défaut ; IC-7300 / IC-7760 : `ALC_FULL` = 120 (CI-V 15 13 : 0 à 120 = zone ALC), aussi pour l'affichage.
+
+### Carnet : suppression de plusieurs QSO (0.42.20)
+
+Ctrl+clic / Maj+clic sur les lignes, barre « N QSO sélectionnés » → `log_del_many` (5000 au plus) ; chaque QSO selon `logCanEdit` (auteur avec la main ou administrateur), refus comptés et signalés ; journal `log_del_many`.
 
 ### WSPR : qui m'a entendu ? (0.42.19)
 

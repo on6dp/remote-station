@@ -93,7 +93,7 @@
   const core = new StationCore({
     rig: RIG,
     keyer,
-    txAudio: { prepare: (...a) => txPrepare(...a), prepareSamples: (...a) => txPrepareSamples(...a), play: (...a) => txPlay(...a), stop: () => txStop(),
+    txAudio: { prepare: (...a) => txPrepare(...a), prepareSamples: (...a) => txPrepareSamples(...a), play: (...a) => txPlay(...a), stop: () => txStop(), retune: (...a) => txRetune(...a),
       voiceReady: () => voiceReady(), voiceStart: () => voiceStart(), voiceStop: () => voiceStop() },
     writeSerial(s) {
       if (sim) return sim.write(s);
@@ -185,6 +185,7 @@
         }
         core.wsOpened();
         if (aud.ctx) ws.send(JSON.stringify({ t: 'audio_state', active: true }));
+        txOutSent = ''; sendTxOut();
         try { ws.send(JSON.stringify({ t: 'ping', ts: Date.now() })); } catch (e) {} // première mesure de l'horloge
       } else if (m.t === 'pong') {
         onPong(m);
@@ -908,6 +909,16 @@
     $('tAudioOut').textContent = !tx.ctx ? 'Sortie vers le TRX : aucune (émission FT8 / FT4 / FT2 impossible)'
       : tx.ctx.state !== 'running' ? 'Sortie vers le TRX en pause : cliquez n’importe où sur la page pour la relancer'
       : 'Sortie vers le TRX : ' + tx.label + (tx.src ? ' · émission en cours' : voice && voice.on ? ' · phonie à distance en cours' : '');
+    sendTxOut();
+  }
+  // État de la sortie son vers le TRX, montré aux opérateurs sur la page FT8 / FT4 / FT2 (« Émission FT : … »)
+  let txOutSent = '';
+  function sendTxOut() {
+    const o = { t: 'tx_out', ok: !!(tx.ctx && tx.ctx.state === 'running'), paused: !!(tx.ctx && tx.ctx.state !== 'running'), label: tx.ctx ? String(tx.label || '').slice(0, 80) : '', level: txLevel(), alcMax: ALC_MAX };
+    const k = JSON.stringify(o);
+    if (k === txOutSent || !ws || ws.readyState !== 1) return;
+    txOutSent = k;
+    ws.send(k);
   }
   async function listOutputs() {
     if (!navigator.mediaDevices) return [];
@@ -973,8 +984,34 @@
     if (!(f >= 100 && f <= 3000)) return { ok: false, err: 'fréquence audio hors plage (100 à 3000 Hz)' };
     const r = tx.enc.encode(mode, text, tx.ctx.sampleRate, f);
     if (!r) return { ok: false, err: 'message impossible à coder en ' + mode + ' : « ' + String(text).slice(0, 40) + ' »' };
-    tx.prep = { id, samples: r.samples };
+    tx.prep = { id, samples: r.samples, mode, text, f0: f };
     return { ok: true, text: r.text, seconds: r.seconds };
+  }
+  // Nouvelle fréquence audio pendant l'émission FT8 / FT4 / FT2 (clic sur la cascade) : le signal est refait à la nouvelle
+  // fréquence et repris au même instant du message, sans attendre la période suivante (comme WSJT-X)
+  function txRetune(id, f0) {
+    const c = tx.cur, ctx = tx.ctx;
+    const f = Number(f0);
+    if (!c || c.id !== id || !tx.src || !ctx || !tx.enc || !(f >= 100 && f <= 3000) || f === c.f0) return false;
+    const r = tx.enc.encode(c.mode, c.text, ctx.sampleRate, f);
+    if (!r) return false;
+    const t = ctx.currentTime + 0.01;
+    const off = Math.max(0, t - c.when);
+    if (off >= r.samples.length / ctx.sampleRate - 0.05) return false; // message presque fini
+    const buf = ctx.createBuffer(1, r.samples.length, ctx.sampleRate);
+    buf.copyToChannel(r.samples, 0);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(tx.gain);
+    const old = tx.src;
+    src.onended = old.onended;
+    old.onended = null;
+    tx.src = src;
+    src.start(Math.max(t, c.when), off);
+    try { old.stop(t); } catch (e) { /* déjà fini */ }
+    c.f0 = f;
+    log('Fréquence d’émission changée pendant l’émission : ' + f + ' Hz (reprise à ' + off.toFixed(1).replace('.', ',') + ' s)');
+    return true;
   }
   // RTTY / JTTY : signal déjà fabriqué par le serveur (entiers 16 bits en base64, `rate` Hz)
   function txPrepareSamples(id, rate, b64) {
@@ -991,8 +1028,9 @@
   function txPlay(id, atLocal, onEnd) {
     const ctx = tx.ctx;
     if (!tx.prep || tx.prep.id !== id || !ctx || ctx.state !== 'running') return false;
-    const s = tx.prep.samples;
-    const rate = tx.prep.rate || ctx.sampleRate;
+    const p = tx.prep;
+    const s = p.samples;
+    const rate = p.rate || ctx.sampleRate;
     tx.prep = null;
     txStop();
     const buf = ctx.createBuffer(1, s.length, rate);
@@ -1003,7 +1041,8 @@
     // Heure de départ dans l'horloge audio, en tenant compte du retard de la sortie son
     const lat = ctx.outputLatency || ctx.baseLatency || 0;
     const when = Math.max(ctx.currentTime + 0.02, ctx.currentTime + (atLocal - Date.now()) / 1000 - lat);
-    src.onended = () => { if (tx.src === src) { tx.src = null; alcStop(); drawTxOut(); onEnd(); } };
+    const cur = tx.cur = { id, when, mode: p.mode, text: p.text, f0: p.f0 };
+    src.onended = () => { if (tx.cur === cur) { tx.src = null; tx.cur = null; alcStop(); drawTxOut(); onEnd(); } };
     src.start(when);
     tx.src = src;
     alcStart();
@@ -1014,7 +1053,7 @@
   // Pendant l'émission, le niveau BF envoyé au TRX baisse tout seul tant que l'ALC dépasse ALC_MAX % ; le niveau
   // atteint est gardé pour les émissions suivantes. Il ne remonte jamais tout seul (ALC à 0 = réglage idéal).
   // Réglé par le serveur (config.json « digiAlcMax », par ex. 8) ; 0 = limiteur coupé.
-  let ALC_MAX = 0;
+  var ALC_MAX = 0; // var : lu par sendTxOut() avant cette ligne
   let alcTimer = null;
   let alcLast = 0;
   function alcStart() {
@@ -1023,7 +1062,7 @@
     alcTimer = setInterval(() => {
       const r = core.radio;
       if (!ALC_MAX || !tx.src || !r || !r.tx || r.m4 == null || !tx.gain) return;
-      const pct = (r.m4 / 255) * 100;
+      const pct = Math.min(100, (r.m4 / ((core.rig && core.rig.ALC_FULL) || 255)) * 100); // Icom : 0 à 120 = zone ALC
       if (pct <= ALC_MAX || Date.now() - alcLast < 700) return; // laisser la mesure suivre le réglage précédent
       alcLast = Date.now();
       const was = txLevel();
@@ -1105,6 +1144,7 @@
   function txStop() {
     const src = tx.src;
     tx.src = null;
+    tx.cur = null;
     alcStop();
     if (src) { src.onended = null; try { src.stop(); } catch (e) {} }
   }

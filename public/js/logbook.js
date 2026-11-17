@@ -117,6 +117,7 @@
       <label class="lg-txf" title="Ne montrer que les QSO faits sous cet indicatif (TX call) ; Exporter ▾ → « Vue affichée » les exporte ensuite">TX call <select id="lgTxf" aria-label="Filtrer le carnet par TX call"><option value="">Tous</option></select></label>
       <span class="lg-count" id="lgCount"></span>
       <button class="btn lg-fclr" type="button" id="lgFclr" hidden title="Retirer tous les filtres de colonne">✕ Filtres</button>
+      <span class="lg-msel" id="lgMsel" hidden><b id="lgMselN"></b><button class="btn" type="button" id="lgMselAll" title="Sélectionner tous les QSO affichés">Tout sélectionner</button><button class="btn lg-mdel" type="button" id="lgMselDel">🗑 Supprimer la sélection</button><button class="btn" type="button" id="lgMselX" title="Désélectionner (Échap)">✕</button></span>
       <span class="lg-sp"></span>
       <div class="lg-menu">
         <button class="btn" type="button" data-m="sync" aria-haspopup="true" aria-expanded="false">Synchronisation ▾</button>
@@ -286,8 +287,34 @@
     root.querySelector('.lg-mlist [data-a="net"]').addEventListener('click', () => { closeMenus(); openNetDlg(); });
     q$('#lgBody').addEventListener('click', (e) => {
       const tr = e.target.closest('tr[data-id]');
-      if (tr) startEdit(tr.dataset.id);
+      if (!tr) return;
+      // Ctrl+clic : ajouter / retirer de la sélection ; Maj+clic : toute la plage depuis le dernier clic ; clic simple : modifier
+      if (e.ctrlKey || e.metaKey || e.shiftKey) {
+        e.preventDefault();
+        const ids = items.map((q) => q.id);
+        const id = tr.dataset.id;
+        if (e.shiftKey && msel.anchor && ids.indexOf(msel.anchor) >= 0) {
+          const a = ids.indexOf(msel.anchor), b = ids.indexOf(id);
+          for (let i = Math.min(a, b); i <= Math.max(a, b); i++) msel.ids.add(ids[i]);
+        } else if (msel.ids.has(id)) msel.ids.delete(id);
+        else msel.ids.add(id);
+        msel.anchor = id;
+        window.getSelection && window.getSelection().removeAllRanges();
+        return drawMsel();
+      }
+      if (msel.ids.size) { msel.ids.clear(); drawMsel(); }
+      startEdit(tr.dataset.id);
     });
+    q$('#lgMselAll').addEventListener('click', () => { for (const q of items) msel.ids.add(q.id); drawMsel(); });
+    q$('#lgMselX').addEventListener('click', () => { msel.ids.clear(); drawMsel(); });
+    q$('#lgMselDel').addEventListener('click', () => {
+      const ids = Array.from(msel.ids);
+      if (!ids.length) return;
+      const calls = items.filter((q) => msel.ids.has(q.id)).slice(0, 8).map((q) => q.call).join(', ');
+      if (!window.confirm('Supprimer définitivement ' + ids.length + ' QSO du carnet ?\n' + calls + (ids.length > 8 ? '…' : '') + '\n\nSeuls ceux que vous avez le droit de supprimer le seront (les vôtres avec la main ; tous pour un administrateur).')) return;
+      api.send({ t: 'log_del_many', ids });
+    });
+    root.addEventListener('keydown', (e) => { if (e.key === 'Escape' && msel.ids.size && !e.target.closest('input, select, textarea, dialog')) { msel.ids.clear(); drawMsel(); } });
     fromTrx(false);
     rights();
   }
@@ -887,13 +914,25 @@
     const when = new Date(u.t).toLocaleString('fr-BE');
     return '<td class="c ' + (u.ok ? 'ok' : 'ko') + '" title="' + esc(when + ' — ' + u.msg) + '">' + (u.ok ? '✓' : '✗') + '</td>';
   }
+  // Sélection de plusieurs QSO (Ctrl+clic, Maj+clic) pour les supprimer d'un coup
+  const msel = { ids: new Set(), anchor: '' };
+  function drawMsel() {
+    const body = q$('#lgBody');
+    if (!body) return;
+    const shown = new Set(items.map((q) => q.id));
+    for (const id of Array.from(msel.ids)) if (!shown.has(id)) msel.ids.delete(id); // QSO supprimés ou filtrés
+    body.querySelectorAll('tr[data-id]').forEach((tr) => tr.classList.toggle('msel', msel.ids.has(tr.dataset.id)));
+    const n = msel.ids.size;
+    q$('#lgMsel').hidden = !n;
+    q$('#lgMselN').textContent = n + ' QSO sélectionné' + (n > 1 ? 's' : '');
+  }
   function drawList() {
     const body = q$('#lgBody');
     if (!body) return;
     if (!items.length) {
       body.innerHTML = '<tr><td colspan="24" class="lg-empty">' + (total ? 'Aucun QSO ne correspond à la recherche ou aux filtres.' : 'Carnet vide : enregistrez votre premier QSO ci-dessus.') + '</td></tr>';
     } else {
-      body.innerHTML = items.map((q) => '<tr data-id="' + esc(q.id) + '"' + (editing && editing.id === q.id ? ' class="sel"' : '') + ' title="Cliquer pour modifier">' +
+      body.innerHTML = items.map((q) => '<tr data-id="' + esc(q.id) + '"' + (editing && editing.id === q.id ? ' class="sel"' : '') + ' title="Clic : modifier · Ctrl+clic : sélectionner plusieurs QSO · Maj+clic : une plage">' +
         '<td>' + fmtDate(q.qso_date) + '</td><td>' + fmtTime(q.time_on) + '</td><td class="call">' + esc(q.call) + '</td><td>' + esc(q.band) +
         (q.sat_name ? ' <span class="sat">' + esc(q.sat_name) + '</span>' : '') + '</td><td class="r">' + esc(mhz3(q.freq)) + '</td><td>' + esc(modeName(q)) +
         '</td><td>' + esc(q.rst_sent || '') + '</td><td class="lg-xch">' + esc(q.stx_string || q.stx || '') + '</td><td>' + esc(q.rst_rcvd || '') + '</td><td class="lg-xch">' + esc(q.srx_string || q.srx || '') + '</td><td class="grow">' + esc(q.name || '') + '</td><td class="lg-qth" title="' + esc(q.qth || '') + '">' + esc(q.qth || '') +
@@ -902,6 +941,7 @@
         SV.map((s) => upCell(q, s)).join('') + '<td class="lg-fill"></td></tr>').join('');
       applyOrder(true); // ordre des colonnes choisi par l'utilisateur
     }
+    drawMsel();
     const c = q$('#lgCount');
     if (c) { c.textContent = total + ' QSO au carnet' + (items.length < total ? ' · ' + items.length + ' affichés' : ''); c.title = engine === 'sqlite' ? 'Carnet enregistré dans la base SQLite du serveur (logbook.db)' : engine === 'json' ? 'Carnet enregistré dans le fichier logbook.json du serveur' : ''; }
   }

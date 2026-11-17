@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.20** — FT8 / FT4 / FT2 : « Après un QSO » — en CQ, réponse automatique à la station suivante qui appelait, sinon CQ relancé (ou 1er seulement, ou arrêt) ; jamais de réponse automatique à une station déjà contactée (barrée dès la fin du QSO) ; fréquence TX changée pendant l'émission appliquée tout de suite (signal repris au même instant), fréquence RX suivie tout de suite ; ligne « Émission FT : sortie son du club » ; ALC : limite 10 % par défaut et échelle IC-7300 / IC-7760 corrigée (0 à 120). Carnet : sélection de plusieurs QSO (Ctrl+clic, Maj+clic) et suppression d'un coup.
 - **0.42.19** — WSPR : « 📡 Qui m'a entendu ? » — les stations qui ont décodé votre balise et l'ont signalé à WSPRnet (base publique wspr.live) : résumé (nombre de stations, la plus lointaine, spots par bande), une ligne par station ou tous les spots, tri par colonne, période 1 h à 7 jours, bande, mise à jour toutes les 2 minutes.
 - **0.42.18** — Page TRX SSB : « 🎙 Ma voix » pour enregistrer les mémoires vocales T1 … T8 avec sa propre voix, au micro du PC, pour tous les TRX (● REC / ■ STOP, ▶ réécoute sans émettre, nom, ✕ effacer ; origine de chaque mémoire affichée : votre voix, synthèse ou vide).
 - **0.42.17** — Fonction absente du TRX : même message partout, avec le nom du modèle (« … : pas disponible sur le Yaesu FTDX10 ») ; « pas disponible à distance » pour ce qui se règle au club ; expliqué dans Problèmes fréquents.

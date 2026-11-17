@@ -410,6 +410,12 @@
           else this.log('Message ' + m.mode + ' refusé : ' + r.err, 'st-bad');
           return;
         }
+        if (m.op === 'ftxretune') {
+          // Fréquence audio changée pendant l'émission FT8 / FT4 / FT2 : signal refait et repris au même instant
+          const ok = !!(this.txAudio && this.txAudio.retune && this.digiTx && this.digiTx.id === m.id && this.txAudio.retune(m.id, m.f0));
+          this.sendWs({ t: 'ftx_retuned', id: m.id, f0: m.f0, ok });
+          return;
+        }
         if (m.op === 'freq') {
           (this.lastFreqAt = this.lastFreqAt || {}).freq = Date.now();
           this._write(FTX1.cmdFreq(m.hz));

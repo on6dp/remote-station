@@ -4082,7 +4082,7 @@
     const comp = tx && s.m3 != null ? (s.m3 <= 130 ? s.m3 / 130 * 15 : 15 + (s.m3 - 130) / 111 * 15) : 0;
     const swr = tx && R.swrValue ? R.swrValue(s.m6) : null;
     const id = R.idValue && s.m7 != null ? R.idValue(s.m7) : 0;
-    const val = { S: tx ? 0 : sF(s.smeter), Po: pwF(po), ALC: tx && s.m4 != null ? Math.min(1, s.m4 / 255) : 0, COMP: Math.min(1, comp / 25), SWR: swr ? i76SwrF(swr) : 0, Id: Math.min(1, id / 15) };
+    const val = { S: tx ? 0 : sF(s.smeter), Po: pwF(po), ALC: tx && s.m4 != null ? Math.min(1, s.m4 / (R.ALC_FULL || 255)) : 0, COMP: Math.min(1, comp / 25), SWR: swr ? i76SwrF(swr) : 0, Id: Math.min(1, id / 15) };
     const now = Date.now();
     for (const r of M.mtRows) {
       const f = Math.max(0, Math.min(1, val[r.lab] || 0));
@@ -4485,7 +4485,7 @@
         const q = LCD.subMt, set = (b, f) => b.setAttribute('x2', (q.bx0 + Math.max(0, Math.min(1, f)) * q.bw0).toFixed(1));
         const po = tx && R.poFrac && s.m5 != null ? R.poFrac(s.m5) * 200 : 0, swr = tx && R.swrValue ? R.swrValue(s.m6) : null;
         const comp = tx && s.m3 != null ? (s.m3 <= 130 ? s.m3 / 130 * 15 : 15 + (s.m3 - 130) / 111 * 15) : 0, id = R.idValue && s.m7 != null ? R.idValue(s.m7) : 0;
-        set(q.bS, tx ? pwF(po) : sF(msd === 'B' ? s.smeterB : s.smeter)); set(q.bA, tx && s.m4 != null ? s.m4 / 255 : 0);
+        set(q.bS, tx ? pwF(po) : sF(msd === 'B' ? s.smeterB : s.smeter)); set(q.bA, tx && s.m4 != null ? Math.min(1, s.m4 / (R.ALC_FULL || 255)) : 0);
         set(q.bC, comp / 25); set(q.bW, swr ? i76SwrF(swr) : 0); set(q.bI, tx ? id / 15 : 0);
       }
       LCD.i76metT.textContent = 'MET ' + sel;

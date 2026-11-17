@@ -1823,7 +1823,8 @@
     meter('mtPo', tx && po != null, tx && po != null ? Math.round(po * 100) + ' %' : '0 W', tx && po != null ? po : 0);
     const swr = R.swrValue && r.m6 != null ? R.swrValue(r.m6) : null;
     meter('mtSwr', tx && swr != null, tx && swr != null ? swr.toFixed(1) : '1.0', tx && swr != null ? (swr - 1) / 4 : 0);
-    meter('mtAlc', tx && r.m4 != null, tx && r.m4 != null ? Math.round((r.m4 / 255) * 100) + ' %' : '0 %', tx && r.m4 != null ? r.m4 / 255 : 0);
+    const alcF = tx && r.m4 != null ? Math.min(1, r.m4 / (RIG().ALC_FULL || 255)) : 0; // Icom : 0 à 120 = zone ALC
+    meter('mtAlc', tx && r.m4 != null, Math.round(alcF * 100) + ' %', alcF);
     const idA = R.idValue ? R.idValue(r.m7) : null;
     meter('mtId', live && idA != null && idA > 0.05, live && idA != null ? idA.toFixed(1) + ' A' : '—', live && idA != null ? idA / 25 : 0);
     const vd = R.vdValue ? R.vdValue(r.m8) : null;

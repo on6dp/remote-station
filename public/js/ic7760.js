@@ -777,6 +777,7 @@
 
   const api = {
     ID, NAME, MODES, SETTABLE, MODE_KEYS, FREQ_MIN, FREQ_MAX, POWER_RANGE, POWER_STEP, INIT,
+    ALC_FULL: 120, // ALC (CI-V 15 13) : 0 à 120 = toute la zone ALC
     FAST, SLOW, SLOW_PER_TICK, TXMETERS, POLL_MS, FRAME_GAP_MS, readFor, TX_SOURCE_UNKNOWN: true, STATE_KEYS, STR_KEYS,
     EX, EX_MENUS, EX_TREE, EX_PARENT, exFmt, exOk, exCode, ANT_SEG,
     GROUPS, CONTROLS, CONTROL, validate, widthTable: () => null, cmdFreq, cmdFreqB, cmdMode, cmdPower, cmdPtt, parse, Splitter,

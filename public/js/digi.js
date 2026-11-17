@@ -255,12 +255,17 @@
         <option value="">MANUEL : me demander avant d’enregistrer</option>
         <option value="any">AUTOMATIQUE : RR73 reçu ou 73 envoyé</option>
       </select></label>
+      <label class="dg-chk dg-after" title="Quand vous lancez CQ (Tx6) : répondre tout seul à la station qui vous appelle (la plus forte), et à la fin du QSO répondre à la suivante qui vous appelait aussi, sinon relancer CQ — comme WSJT-X avec « Call 1st » et le Tx laissé en service. Le chien de garde arrête un CQ resté sans réponse."><span class="dg-f dg-ylw">Après un QSO</span> <select id="dgAfter">
+        <option value="cq">CQ : répondre au suivant, sinon relancer CQ</option>
+        <option value="first">CQ : répondre au 1er, puis arrêter</option>
+        <option value="stop">Arrêter (répondre à la main)</option>
+      </select></label>
       <label class="dg-chk spotlog" title="Cochée : chaque QSO FT8 / FT4 / FT2 enregistré dans le carnet (fiche ou log automatique) est aussi spoté sur le DX cluster, sous votre indicatif d’opérateur — pas le TX CALL. Les stations décodées partent de toute façon vers PSK Reporter."><input type="checkbox" data-spotlog> Spot cluster</label>
       <button class="btn dg-dualrx" type="button" id="dgDualRx" hidden aria-pressed="false" title="DUAL RX : deux cascades, quatre colonnes et deux cartes de bande (VFO-A et VFO-B) ; clic : un seul VFO affiché (le TRX garde sa double réception). TRX en réception simple : clic = DUAL RX sur le TRX (avec la main).">DUAL RX</button>
       <span class="seg ft-txside" id="dgTxSide" title="FTDX101 en double réception : VFO d'émission (MAIN = VFO-A, SUB = VFO-B). Un double-clic sur un message choisit tout seul le VFO de la station appelée."><span class="dg-f">TX</span><button class="btn" type="button" data-side="A" aria-pressed="true">VFO-A</button><button class="btn" type="button" data-side="B" aria-pressed="false">VFO-B</button></span>
       <label class="dg-txc" id="dgTxcWrap" title="TX call : indicatif sous lequel partent les émissions numériques (FT8 / FT4 / FT2, RTTY, JTTY…) — celui de la station ou le vôtre. Choisi par celui qui a la main."><span class="dg-f">TX call</span> <select id="dgTxCall"></select></label>
       <button class="btn dg-stop" type="button" id="dgStop" disabled title="Arrête l'émission automatique (Halt Tx)">■ Arrêter</button>
-      <span class="dg-tl"><span class="dg-status" id="dgStatus"></span><span class="dg-clock" id="dgClock">--:--:--</span></span>
+      <span class="dg-tl"><span class="dg-txout" id="dgTxOut"></span><span class="dg-status" id="dgStatus"></span><span class="dg-clock" id="dgClock">--:--:--</span></span>
     </div>
     <div class="ft-wfrow"><div class="dg-wf-slot" data-slot="ftx"><div class="dg-wf">
       <div class="ft-vbar" id="ftVbarA"></div>
@@ -4980,8 +4985,9 @@
     if (/[{}]/.test(text)) return api.say('Message incomplet : choisissez d’abord le correspondant (double-clic sur son message) ou réglez votre locator.', 'warn');
     const m = FT_MODES.indexOf(mode) >= 0 ? mode : ftStored();
     api.send({ t: 'ftx_tx', mode: m, ntx: i + 1, f0: curTxF(), parity: txParity(i), dx: { call: dx.call, grid: dx.grid }, rpt: dx.rpt,
-      free: String(store.get('ftxfree', '')), call1st: false, keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd() });
+      free: String(store.get('ftxfree', '')), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq', keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd() });
   }
+  const ftAfter = () => { const v = store.get('ftxafter', 'cq'); return v === 'first' || v === 'stop' ? v : 'cq'; };
   const curTxF = () => (sd() === 'B' ? Math.round(Number(store.get('txfb', String(txFB))) || txFB) : Math.round(Number(store.get('txf', String(txF))) || txF));
   // Période d'émission : imposée, ou (auto) l'autre que celle du correspondant choisi par double-clic
   function txParity(i) {
@@ -4993,7 +4999,7 @@
   }
   function ftxCfg() {
     const st = api && api.state();
-    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), parity: txParity(ftxSel), call1st: false, side: sd() });
+    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), rxf: sd() === 'B' ? rxFB : rxF, parity: txParity(ftxSel), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq', side: sd() });
   }
   // Fin de QSO (73 / RR73) : proposition d'enregistrement dans le carnet, comme « Prompt me to log QSO » de WSJT-X
   // Fin d'un QSO FT8 / FT4 / FT2 : fiche à confirmer, ou enregistrement automatique selon le choix « Log »
@@ -5347,6 +5353,7 @@
     if (k !== houndSeen) { houndSeen = k; drawMsgs(); }
   }
   let lastTxAt = 0;
+  let lastTxIt = null; // ligne TX de l’émission en cours (fréquence mise à jour si elle change pendant l’émission)
   let seqSeen = '';
   let eqKey = '';
   function ftxState() {
@@ -5401,9 +5408,14 @@
       el.classList.toggle('air', !!(x && x.state === 'tx'));
     }
     // Message émis : ajouté aux listes comme dans WSJT-X
+    // Fréquence changée pendant l'émission : la ligne TX déjà affichée prend la nouvelle fréquence
+    if (x && x.state === 'tx' && x.at === lastTxAt && lastTxIt && lastTxIt.list[0].f !== x.f0) {
+      lastTxIt.list[0].f = x.f0;
+      document.querySelectorAll('.dg-row[data-txat="' + x.at + '"] > span:nth-child(4)').forEach((e) => { e.textContent = String(x.f0); });
+    }
     if (x && x.state === 'tx' && x.at !== lastTxAt && FT_MODES.indexOf(x.mode) >= 0) {
       lastTxAt = x.at;
-      const it = { slot: Math.floor((x.at - 500) / 100) * 100, mode: x.mode, tx: true, list: [{ tx: true, db: 0, dt: 0, f: x.f0, msg: x.text }] };
+      const it = lastTxIt = { slot: Math.floor((x.at - 500) / 100) * 100, mode: x.mode, tx: true, list: [{ tx: true, db: 0, dt: 0, f: x.f0, msg: x.text, txAt: x.at }] };
       // Double réception : dans les colonnes du VFO qui émet
       const onB = ftDual && sq && sq.on && sq.side === 'B';
       (onB ? histB : hist).push(it);
@@ -5999,6 +6011,7 @@
       store.set('rxfb', v);
       drawScale();
       if (tab === 'jtty') jtRedrawB();
+      ftxCfg(); // émission auto en cours : l'aide au décodage suit la nouvelle fréquence RX tout de suite
       return redrawRx('B');
     }
     rxF = v;
@@ -6007,6 +6020,7 @@
     bmDraw();
     redrawRx();
     if (tab === 'jtty') jtRedraw();
+    ftxCfg(); // émission auto en cours : l'aide au décodage suit la nouvelle fréquence RX tout de suite
     sendView();
   }
 
@@ -6065,6 +6079,7 @@
     const k = d.tx ? 'tx' : cls(d.msg);
     const wk = !d.tx && k !== 'me' && isWorked(d.msg, side);
     r.className = 'dg-row ft ' + k + (wk ? ' wkd' : '') + (!d.tx && huntMatch(d.msg) ? ' hunt' : '');
+    if (d.tx && d.txAt) r.dataset.txat = String(d.txAt);
     r.title = d.tx ? 'Message émis' : (wk ? 'Déjà contacté sous ' + workedStation + ' sur cette bande dans ce mode · ' : '') + d.f + ' Hz · clic sur l’indicatif (souligné) ou double-clic : répondre à cette station (émission à la période suivante) · clic ailleurs : réception ici · clic droit : émission ici';
     const cells = d.tx ? [utc(slot), 'TX', '', d.f, d.msg] : [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
     // Pays DXCC, distance et azimut (direction de l'antenne) : dans l'info-bulle de l'indicatif (et de la ligne)
@@ -6453,6 +6468,30 @@
     el.textContent = txt;
     el.title = txt;
     el.classList.toggle('warn', warn);
+    if (tab === 'ftx') txOutLine(st);
+  }
+  // « Émission FT : … » : sortie son vers le TRX sur la page Station du club (d'où part le signal FT8 / FT4 / FT2)
+  function txOutLine(st) {
+    const el = $('dgTxOut');
+    if (!el) return;
+    const o = st && st.station && st.audio ? st.audio.out : null;
+    let txt = '', cls = '';
+    if (!st || !st.station) txt = '';
+    else if (!o) { txt = 'Émission FT : état de la sortie son inconnu (page Station du club à recharger)'; cls = 'warn'; }
+    else if (o.paused) { txt = '⚠ Émission FT : sortie son du club en pause (cliquer sur la page Station du club)'; cls = 'warn'; }
+    else if (!o.ok) { txt = '⚠ Émission FT impossible : pas de sortie son vers le TRX (page Station du club → Audio du TRX)'; cls = 'bad'; }
+    else txt = 'Émission FT : sortie son du club active' + (o.label ? ' (' + o.label.replace(/^(Haut-parleurs|Speakers)\s*/i, '').replace(/^\((.*)\)$/, '$1') + ')' : '') + ' · niveau ' + o.level + ' %' + (o.alcMax ? ' · ALC limité à ' + o.alcMax + ' %' : '');
+    const k = txt + cls + rtIsAdmin;
+    if (el.dataset.k === k) return;
+    el.dataset.k = k;
+    el.textContent = txt;
+    el.title = txt + (txt ? ' — réglage : page Station du PC du club (administrateurs), cadre « Audio du TRX » : sortie son vers le TRX et niveau d’émission' : '');
+    el.className = 'dg-txout' + (cls ? ' ' + cls : '');
+    if (rtIsAdmin && txt) {
+      const a = document.createElement('a');
+      a.href = '/station'; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ' · page Station';
+      el.appendChild(a);
+    }
   }
   const now = () => Date.now() + clockOff; // heure du serveur
   function progBar() {
@@ -7015,6 +7054,14 @@
           if (api && $('dgAutoLog').value) api.say('Log automatique : les QSO FT8 / FT4 / FT2 terminés vont tout seuls dans le carnet (' + $('dgAutoLog').selectedOptions[0].textContent + ').', '', 5000);
         });
       }
+      if ($('dgAfter')) {
+        $('dgAfter').value = ftAfter();
+        $('dgAfter').addEventListener('change', () => {
+          store.set('ftxafter', $('dgAfter').value);
+          ftxCfg();
+          if (api) api.say({ cq: 'Après un QSO : réponse à la station suivante qui vous appelait, sinon CQ relancé tout seul.', first: 'Après un QSO : réponse automatique au 1er qui répond à votre CQ, puis arrêt à la fin du QSO.', stop: 'Après un QSO : arrêt ; vous choisissez vous-même la station suivante (double-clic).' }[$('dgAfter').value], '', 6000);
+        });
+      }
       $('dgStop').addEventListener('click', () => api && api.send({ t: 'ftx_stop' }));
       $('dgRxTx').addEventListener('click', () => setRx(txF));
       if ($('dgRxTxB')) $('dgRxTxB').addEventListener('click', () => setRx(txFB, 'B'));
@@ -7085,7 +7132,13 @@
       if (m.t === 'wspr_heard') { whDraw(m); return true; }
       if (m.t === 'qrz_info') { qrzInfo(m); if (window.RSLOG && window.RSLOG.onQrz) window.RSLOG.onQrz(m); if (LOGW() && LOGW().onQrz) LOGW().onQrz(m); return true; }
       if (LOGP && /^log_/.test(m.t)) { if (LOGW()) LOGW().onMessage(m); return true; } // carnet de trafic (sa fenêtre)
-      if (m.t === 'ftx_qso' && m.qso) { ftxQsoEnd(m); return true; }
+      if (m.t === 'ftx_qso' && m.qso) {
+        // QSO terminé : la station est barrée tout de suite (même avant l'enregistrement dans le carnet)
+        const q = m.qso, b = curBand(ftDual ? sd() : '');
+        if (q.call && b && q.mode) { worked.add(String(q.call).toUpperCase() + '|' + b + '|' + q.mode); if (FT_MODES.indexOf(mode) >= 0 && $('dgBand')) redrawAll(); }
+        ftxQsoEnd(m);
+        return true;
+      }
       if (m.t === 'spots' || m.t === 'spot') {
         if (m.t === 'spots') bmSpots.clear();
         bmAdd(m.list);

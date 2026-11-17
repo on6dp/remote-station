@@ -61,7 +61,7 @@ const DEFAULTS = {
   // clusterSpot : false = aucun spot envoyé au cluster (instance de test, deploy/install-test.sh)
   clusterSpot: true,
   clusterCmds: ['set/skimmer'],
-  digiAlcMax: 30, // émission numérique : ALC maximal (%) au-delà duquel la page Station baisse le niveau BF ; 0 = pas de limite
+  digiAlcMax: 10, // émission numérique : ALC maximal (% de la zone ALC du TRX) au-delà duquel la page Station baisse le niveau BF ; 0 = pas de limite
   ftxWatchdogMinutes: 6, // émission auto FT8 / FT4 / FT2 : arrêt si le même message part depuis ce temps (WSJT-X : 6 min)
   pttHeartbeatMs: 1500,
   controlIdleMinutes: 15,
@@ -922,13 +922,29 @@ function logCalls(conn) { return Array.from(new Set(stationCalls().concat(ownCal
 // Stations déjà contactées sous l'indicatif d'émission actuel (TX CALL) : « INDICATIF|BANDE|MODE », pour les marquer
 // dans les listes des modes numériques (vert barré). Renvoyé quand le carnet ou le TX CALL change.
 let workedSig = '';
+// Stations déjà contactées sous le TX call en service : « INDICATIF|bande|mode » (barrées dans les listes FT, et jamais
+// reprises toutes seules par la séquence automatique)
+let workedCache = { sig: '', set: new Set() };
+function workedNow() {
+  const st = txCall();
+  const sig = st + ':' + book.rev;
+  if (workedCache.sig !== sig) {
+    const set = new Set();
+    for (const q of book.qsos) if (String(q.station_callsign || '').toUpperCase() === st) set.add(q.call + '|' + q.band + '|' + (q.submode || q.mode));
+    workedCache = { sig, set, st };
+  }
+  return workedCache;
+}
+function isDupeNow(call, mode) {
+  const f = (seq && seq.side === 'B' ? radio.freqB : radio.freq) || txFreq();
+  return !!f && workedNow().set.has(String(call || '').toUpperCase() + '|' + LB.bandOf(f / 1e6) + '|' + mode);
+}
 function sendWorked(force, only) {
   const st = txCall();
   const sig = st + ':' + book.rev;
   if (!force && sig === workedSig) return;
   workedSig = sig;
-  const set = new Set();
-  for (const q of book.qsos) if (String(q.station_callsign || '').toUpperCase() === st) set.add(q.call + '|' + q.band + '|' + (q.submode || q.mode));
+  const set = workedNow().set;
   const msg = { t: 'worked', station: st, list: Array.from(set) };
   if (only) return send(only, msg);
   for (const c of ops) send(c, msg);
@@ -2283,7 +2299,7 @@ function publicState() {
     txFreq: txFreq(),
     swrLock: swrLocked() ? { freq: swrLock.freq, swr: swrLock.swr != null ? Math.round(swrLock.swr * 10) / 10 : null, tune: !!swrLock.tune, band: swrLock.band || null, text: swrLockText() } : null,
     maxSwr: cfg.maxSwr,
-    audio: { active: !!(station && audio.active), listeners: listeners(true), silent: !!(station && audio.silent) },
+    audio: { active: !!(station && audio.active), listeners: listeners(true), silent: !!(station && audio.silent), out: station && audio.out ? audio.out : null },
     digi: { modes: Array.from(digiModes()), latency: digi.latency, engine: digi.engine || '', ms: digi.ms || 0, timing: digi.timing || null,
       ntp: ntpState.at ? ntpState : null, club: station && station.clock ? station.clock : null },
     rigName: station ? rig().NAME : null,
@@ -2726,7 +2742,7 @@ function seqNext() {
 /** Message changé par une réponse : l'émission prévue (pas encore partie) est remplacée. */
 function seqChanged() {
   if (seq && seq.on && ftxPend && ftxPend.state === 'wait' && ftxPend.conn === seq.conn
-      && (ftxPend.text !== seqText(seq) || ftxPend.parity !== seq.parity)) ftxCancel('message changé', true);
+      && (ftxPend.text !== seqText(seq) || ftxPend.parity !== seq.parity || ftxPend.f0 !== seq.f0)) ftxCancel('message changé', true);
   // Réponse décodée alors que notre émission de cette période vient de partir (ex. RR73 reçu pendant qu'on renvoie
   // R-report) : si le nouveau message peut encore partir dans cette période (départ en retard accepté), on coupe
   // et on repart aussitôt avec lui, au lieu de perdre une période (comme le changement de message en cours de WSJT-X)
@@ -2785,6 +2801,16 @@ function seqOnDecodes(mode, slot, list, side) {
   const theirParity = Math.round(slot / FTX_SLOT[mode]) % 2;
   const words = (d) => String(d.msg || '').toUpperCase().replace(/[<>]/g, '').split(/\s+/).filter(Boolean);
   const dxBase = baseCall(seq.dx.call);
+  // 0) Ceux qui nous appellent pendant un QSO (« MOI LUI locator / report ») : file d'attente pour la fin du QSO
+  if (seq.cqRun) {
+    for (const d of list) {
+      const w = words(d);
+      if (w.length < 3 || baseCall(w[0]) !== me || !SEQ_CALL_RE.test(baseCall(w[1])) || baseCall(w[1]) === dxBase) continue;
+      if (!((GRID4_RE.test(w[2]) && w[2] !== 'RR73') || RPT_RE.test(w[2]) || RRPT_RE.test(w[2]))) continue;
+      seq.waiting.set(baseCall(w[1]), { d, w, at: Date.now(), parity: theirParity });
+    }
+    if (seq.waiting.size > 40) seq.waiting.delete(seq.waiting.keys().next().value);
+  }
   // 1) le correspondant
   if (dxBase && seq.ntx !== 6) {
     for (const d of list) {
@@ -2812,6 +2838,8 @@ function seqOnDecodes(mode, slot, list, side) {
       const w = words(d);
       if (w.length < 3 || baseCall(w[0]) !== me || !SEQ_CALL_RE.test(baseCall(w[1]))) continue;
       if (!((GRID4_RE.test(w[2]) && w[2] !== 'RR73') || RPT_RE.test(w[2]) || RRPT_RE.test(w[2]))) continue;
+      // Déjà contacté (même bande, même mode, ce TX call) : pas de réponse automatique (double-clic pour lui répondre quand même)
+      if (seq.worked.has(baseCall(w[1])) || isDupeNow(w[1], mode)) { seqDupeNote(w[1]); continue; }
       if (!best || d.db > best.d.db) best = { d, w };
     }
     if (best) {
@@ -2822,6 +2850,8 @@ function seqOnDecodes(mode, slot, list, side) {
       seq.qsoStart = 0;
       seq.parity = 1 - theirParity;
       seq.progress = PROG.CALLING;
+      seq.cqRun = true;
+      seq.waiting.delete(baseCall(best.w[1]));
       seqReact(best.w[2], best.d);
       send(seq.conn, { t: 'notice', level: 'info', msg: best.w[1] + ' répond à votre CQ : réponse automatique « ' + seqText(seq) + ' »' });
       return seqChanged();
@@ -2879,18 +2909,58 @@ function seqLogPrompt(s, why, again) {
     freq: ((dial + s.f0) / 1e6).toFixed(6), rst_sent: s.rptSent || '', rst_rcvd: s.rptRcvd || '',
     qso_date: d8(start), time_on: t6(start), qso_date_off: d8(end), time_off: t6(end), tx_pwr: radio.power || '' } });
 }
+/** Station déjà contactée qui répond au CQ : prévenir une fois (pas de réponse automatique). */
+function seqDupeNote(call) {
+  if (!seq) return;
+  seq.dupeNoted = seq.dupeNoted || new Set();
+  const k = baseCall(call);
+  if (seq.dupeNoted.has(k)) return;
+  seq.dupeNoted.add(k);
+  send(seq.conn, { t: 'notice', level: 'warn', msg: call + ' vous appelle mais est déjà contacté sur cette bande dans ce mode : pas de réponse automatique (double-clic sur son message pour lui répondre quand même)' });
+}
 /** Fin du QSO : émission auto coupée, retour sur CQ, proposition d'enregistrement dans le carnet. */
 function seqQsoDone(why) {
   const s = seq;
   if (!s) return;
   const call = s.dx.call;
   if (ftxPend && ftxPend.state === 'wait' && ftxPend.conn === s.conn) ftxCancel('QSO terminé', true);
+  const wasOn = s.on;
   s.on = false;
   seqSetNtx(s.hound ? 1 : 6); // HOUND : pas de CQ, on reste prêt à rappeler un FOX
   // Fiche déjà proposée (RR73 reçu) : la fin du QSO est signalée aussi (log automatique « à l'envoi du 73 »)
   seqLogPrompt(s, why, s.prompted === s.qsoStart);
   s.qsoStart = 0;
   s.rptRcvd = '';
+  if (s.worked && SEQ_CALL_RE.test(baseCall(call))) s.worked.add(baseCall(call));
+  // Appel CQ (comme WSJT-X, Tx non coupé après le 73) : réponse au suivant de la file, sinon CQ relancé
+  if (wasOn && s.cqRun && s.autoCq && !s.hound && controller === s.conn) {
+    const P = FTX_SLOT[s.mode] || 15000;
+    let next = null;
+    for (const [k, v] of s.waiting) {
+      if (Date.now() - v.at > 2 * P + 2000 || s.worked.has(k) || isDupeNow(v.w[1], s.mode)) { s.waiting.delete(k); continue; }
+      if (!next || v.d.db > next.d.db) next = v;
+    }
+    s.on = true;
+    s.watchMsg = ''; s.watchSince = 0;
+    if (next) {
+      s.waiting.delete(baseCall(next.w[1]));
+      s.dx = { call: next.w[1], grid: '' };
+      if (next.d.f >= 100 && next.d.f <= 3000) s.rxf = Math.round(next.d.f);
+      s.rptSent = fmtRpt(next.d.db);
+      s.parity = 1 - next.parity;
+      s.progress = PROG.CALLING;
+      seqReact(next.w[2], next.d);
+      send(s.conn, { t: 'notice', level: 'info', msg: next.w[1] + ' vous appelait aussi : réponse automatique « ' + seqText(s) + ' »' });
+    } else {
+      s.dx = { call: '', grid: '' };
+      s.rptSent = '';
+      send(s.conn, { t: 'notice', level: 'info', msg: 'Personne d’autre ne vous appelle : CQ relancé' });
+    }
+    updateDigi();
+    broadcast();
+    setTimeout(seqNext, 50);
+    return;
+  }
   updateDigi();
   broadcast();
 }
@@ -2901,6 +2971,8 @@ function seqAfterTx(p) {
   // Période « auto » sans correspondant (CQ) : on garde celle de la première émission (une période sur deux)
   if (seq.parity == null) seq.parity = p.parity;
   if (p.ntx >= 1 && p.ntx <= 5 && !seq.qsoStart) seq.qsoStart = Date.now();
+  // RR73 / 73 d'un QSO déjà fini (73 reçu pendant l'émission, QSO suivant commencé) : rien à terminer
+  if ((p.ntx === 4 || p.ntx === 5) && seq.dx && String(p.text || '').indexOf(seq.dx.call + ' ') !== 0) return setTimeout(seqNext, 50);
   if (p.ntx === 4 || p.ntx === 5) return seqQsoDone(p.ntx === 4 ? 'RR73 envoyé' : '73 envoyé');
   // FOX classique : R+report à répéter → à 300 Hz de la fréquence du FOX (comme WSJT-X)
   if (seq.hound === 1 && p.ntx === 3 && seq.houndFox) seq.f0 = seq.houndFox <= 600 ? seq.houndFox + 300 : seq.houndFox - 300;
@@ -2935,6 +3007,10 @@ function seqStart(conn, m) {
     dx: { call, grid: GRID4_RE.test(grid) ? grid : '' },
     rptSent: RPT_RE.test(String(m.rpt || '')) ? String(m.rpt) : fmtRpt(m.rpt),
     rptRcvd: same ? seq.rptRcvd : '', free, call1st: !hound && m.call1st !== false,
+    // Appel CQ en cours (Tx6, ou QSO d'un CQ) : à la fin du QSO, réponse au suivant qui appelle, sinon CQ relancé (autoCq)
+    cqRun: !hound && (ntx === 6 || (same && !!seq.cqRun && ntx >= 2)), autoCq: !hound && m.autoCq !== false,
+    waiting: (seq && seq.conn === conn && seq.mode === mode && seq.waiting) || new Map(),
+    worked: (seq && seq.conn === conn && seq.mode === mode && seq.worked) || new Set(),
     watchMsg: '', watchSince: 0, qsoStart: same ? seq.qsoStart : 0, txDial: 0, keyNow: !!m.keyNow,
     // Fréquence audio du correspondant (fréquence RX) : l'aide AP du décodeur pour ce QSO s'y applique (comme WSJT-X)
     rxf: Number(m.rxf) >= 100 && Number(m.rxf) <= 3000 ? Math.round(Number(m.rxf)) : (same && seq.rxf) || 0,
@@ -2954,10 +3030,21 @@ function seqCfg(conn, m) {
   if (!seq || seq.conn !== conn) return;
   const f0 = Math.round(Number(m.f0));
   // FOX classique : pendant le R+report, la fréquence est celle que fixe le FOX (pas le repère TX)
-  if (f0 >= 200 && f0 <= 2900 && !(seq.hound === 1 && seq.ntx === 3)) seq.f0 = f0;
+  if (f0 >= 200 && f0 <= 2900 && !(seq.hound === 1 && seq.ntx === 3)) {
+    seq.f0 = f0;
+    // Émission en cours : le signal change de fréquence tout de suite (page Station : refait et repris au même instant)
+    const p = ftxPend;
+    if (p && p.state === 'tx' && p.conn === seq.conn && p.f0 !== f0 && FTX_SLOT[p.mode]) {
+      p.f0 = f0;
+      toStation({ t: 'cmd', op: 'ftxretune', id: p.id, f0 });
+    }
+  }
   if (seq.hound) seq.parity = 1;
   else if (m.parity === 0 || m.parity === 1 || m.parity === null) seq.parity = m.parity;
   if (typeof m.call1st === 'boolean' && !seq.hound) seq.call1st = m.call1st;
+  if (typeof m.autoCq === 'boolean' && !seq.hound) seq.autoCq = m.autoCq;
+  // Fréquence RX changée (clic sur la cascade) : l'aide AP du décodeur pour le QSO s'y applique tout de suite
+  if (Number(m.rxf) >= 100 && Number(m.rxf) <= 3000 && Math.round(Number(m.rxf)) !== seq.rxf) { seq.rxf = Math.round(Number(m.rxf)); updateDigi(); }
   // VFO d'émission changé pendant la séquence (FTDX101 en double réception) : pris en compte dès que le TRX est en réception
   if (m.side === 'A' || m.side === 'B') {
     const side = m.side === 'B' && ftTxBOk() ? 'B' : 'A';
@@ -3639,6 +3726,24 @@ function onOperator(conn, m) {
       for (const c of ops) send(c, { t: 'log_changed' });
       sendWorked(false);
       return;
+    }
+    case 'log_del_many': {
+      // Plusieurs QSO d'un coup (Ctrl+clic / Maj+clic dans le carnet) : chacun selon les droits habituels
+      if (!Array.isArray(m.ids)) return;
+      let n = 0, refused = 0, why = '';
+      for (const id of m.ids.slice(0, 5000)) {
+        const q = book.get(String(id));
+        if (!q) continue;
+        if (!logCanEdit(conn, q)) { refused++; if (!why) why = logEditWhy(conn, q); continue; }
+        book.remove(q.id);
+        n++;
+      }
+      if (n) {
+        journal('log_del_many', { call: conn.user.call, n });
+        for (const c of ops) send(c, { t: 'log_changed' });
+        sendWorked(false);
+      }
+      return send(conn, { t: 'notice', level: refused ? 'warn' : 'info', msg: n + ' QSO supprimé' + (n > 1 ? 's' : '') + (refused ? ' ; ' + refused + ' refusé' + (refused > 1 ? 's' : '') + ' (' + why + ')' : '') });
     }
     case 'log_pending':
       if (LOG_SERVICES.indexOf(m.service) < 0) return;
@@ -4327,6 +4432,10 @@ function onStation(conn, m) {
     });
     return;
   }
+  if (m.t === 'ftx_retuned') {
+    if (ftxPend && ftxPend.id === m.id && controller) send(controller, { t: 'notice', level: m.ok ? 'info' : 'warn', msg: m.ok ? 'Émission : fréquence changée tout de suite, ' + m.f0 + ' Hz' : 'Émission : nouvelle fréquence (' + m.f0 + ' Hz) à la prochaine période (page Station du club à recharger, ou message presque fini)' });
+    return;
+  }
   if (m.t === 'ftx_ready') {
     const p = ftxPend;
     if (!p || p.id !== m.id) return;
@@ -4424,6 +4533,11 @@ function onStation(conn, m) {
   }
   if (m.t === 'audio_state') {
     audio.active = !!m.active;
+    return broadcast();
+  }
+  // Sortie son vers le TRX (émission FT8 / FT4 / FT2, RTTY…) : affichée sur la page FT
+  if (m.t === 'tx_out') {
+    audio.out = { ok: !!m.ok, paused: !!m.paused, label: String(m.label || '').slice(0, 80), level: Math.round(Number(m.level)) || 0, alcMax: Math.round(Number(m.alcMax)) || 0 };
     return broadcast();
   }
   if (m.t === 'ports' && m.ports && typeof m.ports === 'object' && station && station.conn === conn) {
