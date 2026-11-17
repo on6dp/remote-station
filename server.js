@@ -3407,7 +3407,12 @@ function loggedIn(conn, call, rec, sessionTok) {
   send(conn, { t: 'events', list: recentEvents });
   send(conn, { t: 'chatlog', list: chatLog });
   sendWorked(true, conn);
-  if (conn.user.admin) { const us = UPD.state(); if (us.latest || us.job) send(conn, us); }
+  if (conn.user.admin) {
+    const us = UPD.state();
+    if (us.latest || us.job) send(conn, us);
+    // Administrateur qui se connecte : nouvelle recherche si la dernière date de plus de 5 minutes (le bouton apparaît dès qu'il y en a une)
+    else if (UPD.enabled && Date.now() - (UPD.checked || 0) > 5 * 60000) UPD.check().then(() => { const s2 = UPD.state(); if (s2.latest && conn.open) send(conn, s2); }).catch(() => {});
+  }
   if (conn.user.admin && netNewer && !(NET.isMaster() && NET.prioOf() > 0)) send(conn, { t: 'notice', level: 'warn', msg: 'Réseau : le maître ' + netNewer.name + ' est en version ' + netNewer.v + ', ce serveur en ' + VERSION + '. Pensez à le mettre à jour (🔔 Mise à jour), hors contest.' });
   broadcast();
 }
@@ -4258,7 +4263,7 @@ function onOperator(conn, m) {
       return send(conn, PROP.msg());
     case 'upd_check':
       if (!conn.user.admin) return;
-      return UPD.check().then(() => send(conn, UPD.state()));
+      return UPD.check().then(() => send(conn, Object.assign(UPD.state(), { asked: true })));
     case 'vm_list': case 'vm_put': case 'vm_get': case 'vm_del': case 'vm_name': case 'vm_set': case 'vm_play': case 'vm_stop': case 'vm_tts': case 'vm_tts_del': case 'vm_tts_try':
       return onVm(conn, m);
     case 'ptt':

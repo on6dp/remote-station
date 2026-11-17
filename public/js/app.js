@@ -166,6 +166,12 @@
     fetch('/api/info', { cache: 'no-store' }).then((r) => r.json()).then((i) => showVer(i.version)).catch(() => {});
   })();
   function showVer(v) { const e = $('appVer'); if (e && v) { e.textContent = 'v.' + v; e.hidden = false; } }
+  // Clic sur la version (administrateurs) : chercher tout de suite une nouvelle version sur GitHub
+  if ($('appVer')) $('appVer').addEventListener('click', () => {
+    if (!me || !me.admin) return;
+    say('Recherche d’une nouvelle version…', '', 3000);
+    send({ t: 'upd_check' });
+  });
   function say(text, level, ms) {
     const el = $('msg');
     el.textContent = text || '';
@@ -2181,6 +2187,7 @@
         render();
       } else if (m.t === 'upd') {
         updShow(m);
+        if (m.asked) say(m.latest ? '🔔 Nouvelle version ' + m.latest + ' disponible : bouton « Mise à jour » en haut.' : m.err ? 'Recherche de mise à jour impossible : ' + m.err : '✓ Remote Station est à jour (' + m.cur + ').', m.latest ? 'ok' : m.err ? 'warn' : 'ok', 6000);
       } else if (m.t === 'login_fail') {
         creds = null;
         if (m.session) forgetSession();
