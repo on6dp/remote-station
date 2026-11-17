@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.39** — Alertes FT : toute la ligne colorée pour tous les messages, comme JTDX (réglage « Colorer » : ou seulement les CQ).
 - **0.42.38** — Page FT : le rappel « clic gauche : RX · clic droit : TX · double-clic : correspondant » retiré de l'en-tête Fréquence RX (il est dans l'aide et le guide admin) ; en-têtes des colonnes à la même hauteur.
 - **0.42.37** — Page FT : en-têtes des colonnes Activité de bande, Fréquence RX et DXCC à la même hauteur (intitulés et listes alignés).
 - **0.42.36** — Page FT8 / FT4 / FT2 : touches F1 à F7 = Tx1 à Tx7 (comme un clic), Échap = ARRÊTER.

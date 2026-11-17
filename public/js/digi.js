@@ -6203,7 +6203,7 @@
   const AL = (() => {
     let o = null;
     try { o = JSON.parse(store.get('alerts', '') || 'null'); } catch (e) { o = null; }
-    const def = { on: true, scope: 'ft', dx: true, dxb: true, cq: true, cqb: true, gr: true, grb: false, call: true, callb: false, wkd: true, strike: true };
+    const def = { on: true, rows: 'all', scope: 'ft', dx: true, dxb: true, cq: true, cqb: true, gr: true, grb: false, call: true, callb: false, wkd: true, strike: true };
     return Object.assign(def, o && typeof o === 'object' ? o : {});
   })();
   let alEnt = {}, alCalls = new Map();
@@ -6250,11 +6250,12 @@
     p.id = 'dgAlPop';
     p.className = 'al-pop';
     p.innerHTML = '<label class="al-on"><input type="checkbox" data-k="on"> Couleurs d’alerte dans les listes</label>' +
+      '<label>Colorer <select data-k="rows"><option value="all">toute la ligne, tous les messages (comme JTDX)</option><option value="cq">toute la ligne des CQ, l’indicatif seul ailleurs</option></select></label>' +
       '<label>Déjà fait = contacté en <select data-k="scope"><option value="ft">FT8 / FT4 / FT2</option><option value="all">n’importe quel mode</option><option value="mode">ce mode seulement</option></select> sous le TX call</label>' +
       AL_KINDS.map(([k, t]) => '<label class="al-l"><input type="checkbox" data-k="' + k + '"> <i class="al-sw al-' + k + '"></i> ' + t + '</label>').join('') +
       '<label class="al-l"><input type="checkbox" data-k="wkd"> <i class="al-sw al-wkd"></i> Déjà contacté sur cette bande dans ce mode : <b class="al-wkt">vert vif</b></label>' +
       '<label class="al-l al-sub"><input type="checkbox" data-k="strike"> … et barré</label>' +
-      '<p>Ordre : la première alerte de la liste l’emporte. Lignes CQ : toute la ligne colorée ; autres messages : l’indicatif seulement. Survol d’une ligne : l’alerte en clair.</p>' +
+      '<p>Ordre : la première alerte de la liste l’emporte. Les messages qui vous sont adressés restent en rouge. Survol d’une ligne : l’alerte en clair.</p>' +
       '<button class="dg-mini" type="button" data-x>Fermer</button>';
     b.closest('.dg-col').appendChild(p);
     p.querySelectorAll('[data-k]').forEach((e) => {
@@ -6299,7 +6300,8 @@
     r.className = 'dg-row ft ' + k + (wk ? ' wkd' : '') + (!d.tx && huntMatch(d.msg) ? ' hunt' : '');
     // Alertes (comme JTDX) : nouveau pays DXCC, zone CQ, locator, indicatif — ligne CQ colorée, sinon l'indicatif seul
     const al = !d.tx && !wk && k !== 'me' ? alStatus(d, side) : null;
-    if (al) r.classList.add('al', 'al-' + al.k);
+    // Toute la ligne colorée (comme JTDX ; ou seulement les CQ, l'indicatif seul pour les autres messages, au choix)
+    if (al) r.classList.add(k === 'cq' || AL.rows !== 'cq' ? 'al' : 'alc', 'al-' + al.k);
     // Déjà contacté (cette bande, ce mode) : vert vif, barré ou non (réglages des alertes)
     if (wk && AL.on && AL.wkd) r.classList.add('wkv');
     if (wk && AL.on && !AL.strike) r.classList.add('nostrike');

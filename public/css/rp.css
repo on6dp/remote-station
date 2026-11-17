@@ -3497,25 +3497,25 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .al-pop p { margin: 4px 0; color: var(--v2-text-dim); font-size: 11px; line-height: 1.35; }
 .al-pop button { align-self: flex-end; }
 .al-sw { display: inline-block; width: 26px; height: 12px; border-radius: 2px; }
-.al-sw.al-dx, .dg-row.cq.al-dx { background: #b3125f; }
-.al-sw.al-dxb, .dg-row.cq.al-dxb { background: #6d2c8f; }
-.al-sw.al-cq, .dg-row.cq.al-cq { background: #b25b00; }
-.al-sw.al-cqb, .dg-row.cq.al-cqb { background: #75561a; }
-.al-sw.al-gr, .dg-row.cq.al-gr { background: #0d6b9a; }
-.al-sw.al-grb, .dg-row.cq.al-grb { background: #2b4f68; }
-.al-sw.al-call, .dg-row.cq.al-call { background: #1d7a3a; }
-.al-sw.al-callb, .dg-row.cq.al-callb { background: #2e5a3c; }
-.dg-row.cq.al span, .dg-row.cq.al span.msg, .dg-row.cq.al span:last-child { color: #fff; }
-.dg-row.cq.al .x { color: #f2f2f2; }
-.dg-row.al:not(.cq) .dg-call { padding: 0 3px; border-radius: 2px; color: #fff; }
-.dg-row.al-dx:not(.cq) .dg-call { background: #b3125f; }
-.dg-row.al-dxb:not(.cq) .dg-call { background: #6d2c8f; }
-.dg-row.al-cq:not(.cq) .dg-call { background: #b25b00; }
-.dg-row.al-cqb:not(.cq) .dg-call { background: #75561a; }
-.dg-row.al-gr:not(.cq) .dg-call { background: #0d6b9a; }
-.dg-row.al-grb:not(.cq) .dg-call { background: #2b4f68; }
-.dg-row.al-call:not(.cq) .dg-call { background: #1d7a3a; }
-.dg-row.al-callb:not(.cq) .dg-call { background: #2e5a3c; }
+.al-sw.al-dx, .dg-row.al.al-dx { background: #b3125f; }
+.al-sw.al-dxb, .dg-row.al.al-dxb { background: #6d2c8f; }
+.al-sw.al-cq, .dg-row.al.al-cq { background: #b25b00; }
+.al-sw.al-cqb, .dg-row.al.al-cqb { background: #75561a; }
+.al-sw.al-gr, .dg-row.al.al-gr { background: #0d6b9a; }
+.al-sw.al-grb, .dg-row.al.al-grb { background: #2b4f68; }
+.al-sw.al-call, .dg-row.al.al-call { background: #1d7a3a; }
+.al-sw.al-callb, .dg-row.al.al-callb { background: #2e5a3c; }
+.dg-row.al span, .dg-row.al span.msg, .dg-row.al span:last-child { color: #fff; }
+.dg-row.al .x { color: #f2f2f2; }
+.dg-row.alc .dg-call { padding: 0 3px; border-radius: 2px; color: #fff; }
+.dg-row.alc.al-dx .dg-call { background: #b3125f; }
+.dg-row.alc.al-dxb .dg-call { background: #6d2c8f; }
+.dg-row.alc.al-cq .dg-call { background: #b25b00; }
+.dg-row.alc.al-cqb .dg-call { background: #75561a; }
+.dg-row.alc.al-gr .dg-call { background: #0d6b9a; }
+.dg-row.alc.al-grb .dg-call { background: #2b4f68; }
+.dg-row.alc.al-call .dg-call { background: #1d7a3a; }
+.dg-row.alc.al-callb .dg-call { background: #2e5a3c; }
 
 /* Signal reçu (S-mètre) à côté de « Activité de bande » */
 .dg-sig { margin-left: 10px; margin-right: auto; font: 600 11px/1 var(--v2-mono, monospace); letter-spacing: 0; text-transform: none; color: #7fe3a0; white-space: nowrap; }
