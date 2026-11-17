@@ -3570,3 +3570,10 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .ft-queue .fqi.dupe { opacity: .55; text-decoration: line-through; }
 .ft-queue .fqi i { font-style: normal; color: #ff6b5e; margin-left: 2px; }
 .ft-queue .fqi i:hover { color: #fff; }
+/* Cadran des VFO : un repère de niveau par échelle (S vert, PO orange, SWR jaune, COMP violet, ALC bleu, Id rose, Vd turquoise) */
+.am-mk path { stroke: #0b1018; stroke-width: .6; }
+.am-mk { transition: transform .15s linear, opacity .2s; }
+.mk-s path { fill: #39ff14; } .mk-po path { fill: #ff9f1a; } .mk-swr path { fill: #ffd400; } .mk-comp path { fill: #c77dff; }
+.mk-alc path { fill: #00d4ff; } .mk-id path { fill: #ff6bd6; } .mk-vd path { fill: #4ce0b3; }
+.am-lab.lk-s { fill: #39ff14; } .am-lab.lk-po { fill: #ff9f1a; } .am-lab.lk-swr { fill: #ffd400; } .am-lab.lk-comp { fill: #c77dff; }
+.am-lab.lk-alc { fill: #00d4ff; } .am-lab.lk-id { fill: #ff6bd6; } .am-lab.lk-vd { fill: #4ce0b3; }

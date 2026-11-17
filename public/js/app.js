@@ -406,13 +406,13 @@
     const rng = R0.POWER_RANGE && R0.POWER_RANGE[r.powerHead];
     const pmax = (rng && rng[1]) || (R0.CONTROL && R0.CONTROL.power && R0.CONTROL.power.max) || 100;
     const q = (v) => (v >= 10 ? String(Math.round(v)) : String(Math.round(v * 10) / 10));
-    const S = { lab: 'S', ticks: [[.06, '1'], [.18, '3'], [.30, '5'], [.42, '7'], [.533, '9'], [.69, '+20', 1], [.845, '+40', 1], [1, '+60', 1]], hot: .533, unit: '' };
-    const PO = { lab: icom ? 'Po' : 'PO', ticks: [0, .25, .5, .75, 1].map((f) => [f, q(pmax * f)]), unit: 'W' };
-    const SWR = { lab: 'SWR', ticks: [[0, '1'], [.25, '1.5'], [.42, '2'], [.6, '3'], [1, '∞']], unit: '' };
-    const COMP = { lab: 'COMP', ticks: [[0, '0'], [.25, '5'], [.5, '10'], [.75, '15'], [1, '20']], unit: 'dB' };
-    const ALC = { lab: 'ALC', ticks: [[0, '0'], [.25, '25'], [.5, '50'], [.75, '75'], [1, '100']], unit: '%' };
-    const ID = { lab: 'Id', ticks: [[0, '0'], [.2, '5'], [.4, '10'], [.6, '15'], [.8, '20'], [1, '25']], unit: 'A' };
-    const VD = { lab: 'Vd', ticks: [[0, '10'], [1 / 3, '12'], [2 / 3, '14'], [1, '16']], unit: 'V' };
+    const S = { k: 's', lab: 'S', ticks: [[.06, '1'], [.18, '3'], [.30, '5'], [.42, '7'], [.533, '9'], [.69, '+20', 1], [.845, '+40', 1], [1, '+60', 1]], hot: .533, unit: '' };
+    const PO = { k: 'po', lab: icom ? 'Po' : 'PO', ticks: [0, .25, .5, .75, 1].map((f) => [f, q(pmax * f)]), unit: 'W' };
+    const SWR = { k: 'swr', lab: 'SWR', ticks: [[0, '1'], [.25, '1.5'], [.42, '2'], [.6, '3'], [1, '∞']], unit: '' };
+    const COMP = { k: 'comp', lab: 'COMP', ticks: [[0, '0'], [.25, '5'], [.5, '10'], [.75, '15'], [1, '20']], unit: 'dB' };
+    const ALC = { k: 'alc', lab: 'ALC', ticks: [[0, '0'], [.25, '25'], [.5, '50'], [.75, '75'], [1, '100']], unit: '%' };
+    const ID = { k: 'id', lab: 'Id', ticks: [[0, '0'], [.2, '5'], [.4, '10'], [.6, '15'], [.8, '20'], [1, '25']], unit: 'A' };
+    const VD = { k: 'vd', lab: 'Vd', ticks: [[0, '10'], [1 / 3, '12'], [2 / 3, '14'], [1, '16']], unit: 'V' };
     const set = amSet[w];
     const arcs = set === 'comp' ? [S, PO, COMP] : set === 'alc' ? [S, SWR, ALC] : set === 'pid' ? [PO, ID, VD] : [S, PO, SWR];
     return { key: (R0.NAME || '') + '/' + pmax + '/' + set, arcs, set };
@@ -525,12 +525,18 @@
           if (arc.hot || f > 0) h += '<text class="am-num' + (hot ? ' hot' : '') + '" x="' + l[0].toFixed(1) + '" y="' + (l[1] + 2).toFixed(1) + '" text-anchor="middle">' + t + '</text>';
         }
         const e = pt(rad, 0);
-        h += '<text class="am-lab" x="' + (e[0] - 4).toFixed(1) + '" y="' + (e[1] + 3).toFixed(1) + '" text-anchor="end">' + arc.lab + '</text>';
+        h += '<text class="am-lab lk-' + arc.k + '" x="' + (e[0] - 4).toFixed(1) + '" y="' + (e[1] + 3).toFixed(1) + '" text-anchor="end">' + arc.lab + '</text>';
         if (arc.unit) { const u = pt(rad, 1); h += '<text class="am-unit' + (arc.hot ? ' hot' : '') + '" x="' + (u[0] + 3).toFixed(1) + '" y="' + (u[1] + 9).toFixed(1) + '">' + arc.unit + '</text>'; }
+      });
+      // Un repère de niveau par échelle (petit triangle de couleur sous l'arc) : chaque mesure a le sien, l'aiguille en suit une
+      sc.arcs.forEach((arc, i) => {
+        const y = CY - RAD[i];
+        h += '<g class="am-mk mk-' + arc.k + '" data-k="' + arc.k + '"><path d="M' + CX + ' ' + (y + 1) + 'L' + (CX - 3.6) + ' ' + (y + 8) + 'L' + (CX + 3.6) + ' ' + (y + 8) + 'Z"/></g>';
       });
       h += '<g class="am-nd"><line x1="' + CX + '" y1="' + CY + '" x2="' + CX + '" y2="' + (CY - 252) + '"/></g>';
       sv.innerHTML = h + '<title>Cadran du VFO ' + w + ' : molette = écran suivant (S / PO / SWR → S / PO / COMP → S / SWR / ALC → Po / Id / Vd) ; clic = agrandir</title>';
       st.nd = sv.querySelector('.am-nd');
+      st.mk = Array.from(sv.querySelectorAll('.am-mk'));
     }
     // Aiguille : réception = S-mètre (Po / Id / Vd : tension Vd) ; émission = PO (S / SWR / ALC : SWR)
     let f = 0;
@@ -542,6 +548,22 @@
     f = Math.max(0, Math.min(1, f || 0));
     const ang = A0 + (A1 - A0) * f;
     if (st.nd) { st.nd.setAttribute('transform', 'rotate(' + ang.toFixed(1) + ' ' + CX + ' ' + CY + ')'); st.nd.classList.toggle('tx', !!(live && isTx)); }
+    // Repères : la valeur de chaque échelle (S en réception ; PO, SWR, COMP, ALC en émission ; Id et Vd toujours)
+    const mkF = {
+      s: live && !isTx && val != null ? val / 255 : null,
+      po: live && isTx ? poF() : null,
+      swr: live && isTx && R1.swrValue && r.m6 != null ? swrFrac(R1.swrValue(r.m6)) : null,
+      comp: live && isTx && r.m3 != null ? r.m3 / 255 : null,
+      alc: live && isTx && r.m4 != null ? r.m4 / (R1.ALC_FULL || 255) : null,
+      id: live && R1.idValue && r.m7 != null ? (R1.idValue(r.m7) || 0) / 25 : null,
+      vd: live && R1.vdValue && r.m8 != null ? ((R1.vdValue(r.m8) || 10) - 10) / 6 : null
+    };
+    for (const m of st.mk || []) {
+      // Toujours trois repères (TRX en ligne) : une mesure sans objet (S en émission, PO / SWR / ALC / COMP en réception) reste au début de son échelle
+      const v = live ? mkF[m.dataset.k] || 0 : null;
+      m.style.opacity = v == null ? '0' : '1';
+      if (v != null) m.setAttribute('transform', 'rotate(' + (A0 + (A1 - A0) * Math.max(0, Math.min(1, v))).toFixed(1) + ' ' + CX + ' ' + CY + ')');
+    }
     sv.classList.toggle('dim', !live);
   }
   function drawMiniFlt(w, r, live) {
