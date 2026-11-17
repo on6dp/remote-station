@@ -6202,7 +6202,7 @@
   const AL = (() => {
     let o = null;
     try { o = JSON.parse(store.get('alerts', '') || 'null'); } catch (e) { o = null; }
-    const def = { on: true, scope: 'ft', dx: true, dxb: true, cq: true, cqb: true, gr: true, grb: false, call: true, callb: false };
+    const def = { on: true, scope: 'ft', dx: true, dxb: true, cq: true, cqb: true, gr: true, grb: false, call: true, callb: false, wkd: true, strike: true };
     return Object.assign(def, o && typeof o === 'object' ? o : {});
   })();
   let alEnt = {}, alCalls = new Map();
@@ -6251,7 +6251,9 @@
     p.innerHTML = '<label class="al-on"><input type="checkbox" data-k="on"> Couleurs d’alerte dans les listes</label>' +
       '<label>Déjà fait = contacté en <select data-k="scope"><option value="ft">FT8 / FT4 / FT2</option><option value="all">n’importe quel mode</option><option value="mode">ce mode seulement</option></select> sous le TX call</label>' +
       AL_KINDS.map(([k, t]) => '<label class="al-l"><input type="checkbox" data-k="' + k + '"> <i class="al-sw al-' + k + '"></i> ' + t + '</label>').join('') +
-      '<p>Ordre : la première alerte de la liste l’emporte. Lignes CQ : toute la ligne colorée ; autres messages : l’indicatif seulement. Déjà contacté sur cette bande dans ce mode : vert barré. Survol d’une ligne : l’alerte en clair.</p>' +
+      '<label class="al-l"><input type="checkbox" data-k="wkd"> <i class="al-sw al-wkd"></i> Déjà contacté sur cette bande dans ce mode : <b class="al-wkt">vert vif</b></label>' +
+      '<label class="al-l al-sub"><input type="checkbox" data-k="strike"> … et barré</label>' +
+      '<p>Ordre : la première alerte de la liste l’emporte. Lignes CQ : toute la ligne colorée ; autres messages : l’indicatif seulement. Survol d’une ligne : l’alerte en clair.</p>' +
       '<button class="dg-mini" type="button" data-x>Fermer</button>';
     b.closest('.dg-col').appendChild(p);
     p.querySelectorAll('[data-k]').forEach((e) => {
@@ -6297,6 +6299,9 @@
     // Alertes (comme JTDX) : nouveau pays DXCC, zone CQ, locator, indicatif — ligne CQ colorée, sinon l'indicatif seul
     const al = !d.tx && !wk && k !== 'me' ? alStatus(d, side) : null;
     if (al) r.classList.add('al', 'al-' + al.k);
+    // Déjà contacté (cette bande, ce mode) : vert vif, barré ou non (réglages des alertes)
+    if (wk && AL.on && AL.wkd) r.classList.add('wkv');
+    if (wk && AL.on && !AL.strike) r.classList.add('nostrike');
     if (d.tx && d.txAt) r.dataset.txat = String(d.txAt);
     r.title = d.tx ? 'Message émis' : (wk ? 'Déjà contacté sous ' + workedStation + ' sur cette bande dans ce mode · ' : '') + d.f + ' Hz · clic sur l’indicatif (souligné) ou double-clic : répondre à cette station (émission à la période suivante) · clic ailleurs : réception ici · clic droit : émission ici';
     const cells = d.tx ? [utc(slot), 'TX', '', d.f, d.msg] : [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];

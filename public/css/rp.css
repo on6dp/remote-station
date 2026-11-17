@@ -3524,3 +3524,11 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .ft-dual .dg-cols .dg-h:has(.dg-sig) { flex-wrap: wrap; row-gap: 2px; }
 .ft-dual .dg-sig { order: 9; flex-basis: 100%; margin: 0; }
 .ft-dual .al-btn .al-t { display: none; }
+/* Déjà contacté (cette bande, ce mode) : vert vif (réglage des alertes), barré ou non */
+.al-sw.al-wkd { background: #39ff14; }
+.al-pop .al-wkt { color: #39ff14; }
+.al-pop .al-sub { padding-left: 22px; }
+.dg-row.wkd.wkv { background: rgba(57, 255, 20, .1); }
+.dg-row.wkd.wkv span, .dg-row.wkd.wkv span.msg, .dg-row.wkd.wkv span:last-child { color: #39ff14; opacity: 1; }
+.dg-row.wkd.wkv span.msg { font-weight: 700; }
+.dg-row.wkd.nostrike span.msg, .dg-row.wkd.nostrike span:last-child, .dg-row.wkd.nostrike .dg-call { text-decoration: none; }
