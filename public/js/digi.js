@@ -5053,7 +5053,10 @@
     api.send({ t: 'ftx_tx', mode: m, ntx: i + 1, f0: curTxF(), parity: txParity(i), dx: { call: dx.call, grid: dx.grid }, rpt: dx.rpt,
       free: String(store.get('ftxfree', '')), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq' || ftAfter() === 'always', cqAlways: ftAfter() === 'always', maxRep: ftMaxRep(), keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd() });
   }
-  const ftAfter = () => { const v = store.get('ftxafter', 'cq'); return v === 'first' || v === 'stop' || v === 'always' ? v : 'cq'; };
+  // « Après un QSO » : par défaut (0.42.52) « Toujours CQ » — après chaque QSO (73 / RR73), le suivant qui appelait, sinon
+  // votre CQ relancé tout seul ; ■ Arrêter si on ne veut pas continuer. L'ancien défaut « cq » est passé une fois à « always ».
+  (() => { if (store.get('ftxafter2', '') !== '1') { if (store.get('ftxafter', 'cq') === 'cq') store.set('ftxafter', 'always'); store.set('ftxafter2', '1'); } })();
+  const ftAfter = () => { const v = store.get('ftxafter', 'always'); return v === 'first' || v === 'stop' || v === 'cq' ? v : 'always'; };
   const curTxF = () => (sd() === 'B' ? Math.round(Number(store.get('txfb', String(txFB))) || txFB) : Math.round(Number(store.get('txf', String(txF))) || txF));
   // Période d'émission : imposée, ou (auto) l'autre que celle du correspondant choisi par double-clic
   function txParity(i) {

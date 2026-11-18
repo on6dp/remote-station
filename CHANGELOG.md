@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.52** — FT : « Après un QSO » = « Toujours CQ » par défaut — après le RR73 / 73 (QSO au carnet), réponse au suivant qui appelait, sinon votre CQ relancé tout seul ; ■ Arrêter pour ne pas continuer.
 - **0.42.51** — Page FT : annonce en vert « ✓ QSO enregistré dans le carnet : indicatif · bande · mode · TX call » dès que le QSO est dans le carnet.
 - **0.42.50** — FT : on peut appeler une station qui termine un QSO avec une autre — l'émission continue (sur votre tonalité) au lieu de s'arrêter, et ces appels ne comptent pas dans « Sans réponse » ; la séquence suit dès qu'elle vous répond.
 - **0.42.49** — Tableau DXCC de la page FT : colonnes des bandes étroites (un W ou un C), les 11 bandes tiennent dans le tableau ; anciennes largeurs enregistrées oubliées.

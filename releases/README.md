@@ -2,6 +2,7 @@
 
 | Version | Windows 10 / 11 | Serveur Linux (VPS) | Notes |
 |---|---|---|---|
+| 0.42.52 | — (installateur Windows non refait pour cette version) | [remote-station-0.42.52.tar.gz](0.42.52/remote-station-0.42.52.tar.gz) |  — [empreintes SHA-256](0.42.52/SHA256SUMS.txt) |
 | 0.42.51 | — (installateur Windows non refait pour cette version) | [remote-station-0.42.51.tar.gz](0.42.51/remote-station-0.42.51.tar.gz) |  — [empreintes SHA-256](0.42.51/SHA256SUMS.txt) |
 | 0.42.50 | — (installateur Windows non refait pour cette version) | [remote-station-0.42.50.tar.gz](0.42.50/remote-station-0.42.50.tar.gz) |  — [empreintes SHA-256](0.42.50/SHA256SUMS.txt) |
 | 0.42.49 | — (installateur Windows non refait pour cette version) | [remote-station-0.42.49.tar.gz](0.42.49/remote-station-0.42.49.tar.gz) |  — [empreintes SHA-256](0.42.49/SHA256SUMS.txt) |
