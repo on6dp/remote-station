@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.69** — RTTY : en ouvrant la page RTTY (onglet, dashboard ou boutons MODES de la face avant), le TRX va sur la fréquence RTTY de sa bande (ex. 40 m : 7,074 FT8 → 7,040, DATA-U) s'il n'est pas déjà dans le segment RTTY ; les boutons MODES de la face avant font aussi le QSY FT.
 - **0.42.68** — RTTY : bouton ■ Arrêter bien visible à droite des macros (rouge pendant l'émission) — coupe tout de suite une mauvaise macro, comme Échap ou F12 RX.
 - **0.42.67** — Face avant : RF POWER (menu MULTI, FUNC…) affiché et pris en compte tout de suite, sans attendre la relecture sur le TRX ; IC-7300 : infobulle de FUNCTION à jour.
 - **0.42.66** — RTTY / JTTY / SSTV : le TRX ne repasse plus en réception avant la fin du signal (PTT relâché après le son encore dans la carte son, + 0,2 s) ; RTTY : un peu plus de repos après le dernier caractère. Recharger la page Station.

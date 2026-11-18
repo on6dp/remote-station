@@ -6691,6 +6691,7 @@
     // Page des modes numériques (fenêtre séparée) sur ce mode ; déjà ouverte : elle y passe
     store.set('ptab', t);
     if (t === 'ftx') store.set('enterqsy', String(Date.now())); // la page FT va sur la fréquence d'appel de la bande
+    if (t === 'rtty') store.set('enterqsyrt', String(Date.now())); // la page RTTY va sur la fréquence RTTY de la bande
     try {
       const d = window.DG && window.DG();
       if (d && d !== window.RSDIGI && d.goTab) { d.goTab(t); const w = window.open('', 'rs-digi'); if (w) w.focus(); return w; }
@@ -6786,6 +6787,29 @@
     $('dgDial').value = String(near[1]);
     qsy();
     api.say(mode + ' : le TRX va sur ' + near[1].toLocaleString('fr-BE', { minimumFractionDigits: near[1] % 1 ? 1 : 0 }) + ' kHz (' + near[0] + ', DATA-U).', '', 5000);
+  }
+  /**
+   * Arrivée sur la page RTTY (onglet cliqué, page ouverte depuis le dashboard) avec la main : si le TRX n'est pas dans le
+   * segment RTTY de sa bande (à 10 kHz de la fréquence RTTY de la liste, et pas sur une fréquence d'appel FT8 / FT4 /
+   * JT65), il y va en DATA-U / USB-D (ex. 40 m : 7,074 FT8 → 7,040). Rien pendant une émission ou une séquence FT.
+   */
+  function enterRtQsyCheck() {
+    const t = Number(store.get('enterqsyrt', '0'));
+    if (!t) return;
+    if (Date.now() - t > 15000) { store.set('enterqsyrt', '0'); return; }
+    const st = api && api.state();
+    if (!st || !st.radio || !st.radio.freq || !st.station) return; // état pas encore là : on réessaie au suivant
+    store.set('enterqsyrt', '0');
+    if (!api.iControl() || (st.ptt && st.ptt.active) || st.ftx || (st.seq && st.seq.on) || st.radio.tx) return;
+    const f = st.radio.freq;
+    const near = RTTY_DIAL.reduce((a, x) => (Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a));
+    const d = Math.abs(near[1] * 1000 - f);
+    if (d > 600000) return; // pas de fréquence RTTY sur cette bande
+    const onFt = ['FT8', 'FT4', 'JT65'].some((m) => (DIAL[m] || []).some((x) => Math.abs(x[1] * 1000 - f) <= 3000));
+    if (d <= 10000 && !onFt) return; // déjà dans le segment RTTY
+    if ($('rtDial')) { $('rtDial').value = String(near[1]); store.set('rtdial', String(near[1])); }
+    qsyTo(near[1]);
+    api.say('RTTY : le TRX va sur ' + near[1].toLocaleString('fr-BE') + ' kHz (' + near[0] + ', DATA-U).', '', 5000);
   }
   function autoQsy() {
     const st = api && api.state();
@@ -6986,6 +7010,9 @@
       if (MODE_TABS.indexOf(t) < 0) return false;
       if (t === 'ftx' && FT_MODES.indexOf(m) >= 0 && m !== mode) setMode(m);
       if (t !== tab) showTab(t);
+      // Bouton d'un mode (face avant, dashboard) : le TRX va sur la fréquence de ce mode s'il n'y est pas (avec la main)
+      if (t === 'ftx') { store.set('enterqsy', String(Date.now())); setTimeout(enterQsyCheck, 300); }
+      if (t === 'rtty') { store.set('enterqsyrt', String(Date.now())); setTimeout(enterRtQsyCheck, 300); }
       return true;
     },
     setDetached,
@@ -7097,6 +7124,7 @@
         if (follow && api && !api.iControl()) { setFollow(false); api.say('Suivi de l’opérateur arrêté (onglet choisi).', '', 4000); }
         showTab(b.dataset.tab);
         if (b.dataset.tab === 'ftx') { store.set('enterqsy', String(Date.now())); setTimeout(enterQsyCheck, 300); }
+        if (b.dataset.tab === 'rtty') { store.set('enterqsyrt', String(Date.now())); setTimeout(enterRtQsyCheck, 300); }
         if (DATA_TABS[b.dataset.tab]) dataU(DATA_TABS[b.dataset.tab]);
         else if (b.dataset.tab === 'cw') cwModeAuto();
       }));
@@ -7702,6 +7730,7 @@
       const R = api && api.rig && api.rig();
       if (R && R.ID !== lastRig) { lastRig = R.ID; refillQo(); }
       if (tab === 'ftx' || tab === 'jt65') { status(); followBand(); enterQsyCheck(); }
+      if (tab === 'rtty') enterRtQsyCheck();
       ftxState();
     }
   };

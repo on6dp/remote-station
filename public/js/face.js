@@ -8413,7 +8413,12 @@
   // Page des modes numériques sur un onglet donné : déjà ouverte → elle y passe ; sinon ouverte dessus
   let digiWin = null;
   function digiOpen(tab, mode) {
-    try { localStorage.setItem('rs.dg.ptab', tab); if (mode) localStorage.setItem('rs.dg.ftmode', mode); } catch (e) { /* stockage refusé */ }
+    try {
+      localStorage.setItem('rs.dg.ptab', tab); if (mode) localStorage.setItem('rs.dg.ftmode', mode);
+      // Page ouverte sur ce mode : elle met le TRX sur la fréquence du mode s'il n'y est pas (FT8 / FT4 / FT2, RTTY)
+      if (tab === 'ftx') localStorage.setItem('rs.dg.enterqsy', String(Date.now()));
+      if (tab === 'rtty') localStorage.setItem('rs.dg.enterqsyrt', String(Date.now()));
+    } catch (e) { /* stockage refusé */ }
     if (digiWin && !digiWin.closed) {
       try { if (digiWin.RSDIGI && digiWin.RSDIGI.goTab) digiWin.RSDIGI.goTab(tab, mode); digiWin.focus(); return; } catch (e) { /* fenêtre en cours de chargement */ }
     }
