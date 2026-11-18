@@ -1173,6 +1173,7 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .lg-eye, .lg-clr { font: inherit; font-size: 12px; line-height: 1; color: var(--v2-text-secondary); background: var(--v2-bg-input); border: 1px solid var(--v2-border); border-radius: 5px; padding: 6px 8px; cursor: pointer; }
 .lg-clr { color: var(--v2-accent-red-alt); }
 .lg-note { margin: 0; font-size: 11px; color: var(--v2-text-dim); }
+.lg-keep { grid-column: 1 / -1; margin: 4px 0; padding: 6px 9px; font-size: 11.5px; font-weight: 600; line-height: 1.35; color: #ffe08a; background: rgba(255, 200, 40, .08); border: 1px solid rgba(255, 200, 40, .55); border-radius: 8px; }
 .lg-note[hidden], .lg-pp label[hidden] { display: none; }
 .lg-pend { margin: 0; font-size: 12px; color: var(--v2-accent-cyan-bright); }
 .lg-pend.warn { color: var(--v2-accent-yellow); }

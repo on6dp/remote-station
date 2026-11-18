@@ -14,6 +14,14 @@
   const SV = ['lotw', 'eqsl', 'clublog', 'qrz'];
   const NAMES = { lotw: 'LoTW', eqsl: 'eQSL', clublog: 'Club Log', qrz: 'QRZ.com' };
   // Libellés communs du menu, du titre de la fenêtre et de son bouton d'envoi
+  // Identifiants gardés par le serveur sans jamais être réaffichés : seul l'opérateur les connaît
+  const KEEP = {
+    clublog: 'Club Log : créez un nouveau jeton (clublog.org → Settings → API → Tokens) et supprimez l’ancien.',
+    qrz: 'QRZ.com : la clé API se relit sur QRZ.com → Logbook → Settings.',
+    eqsl: 'eQSL : changez le mot de passe sur eQSL.cc.',
+    lotw: 'LoTW : mot de passe du site à refaire sur lotw.arrl.org ; le certificat n’est jamais dans Remote Station (gardez la sauvegarde .tbk de TQSL ; perdu = nouveau certificat à demander à l’ARRL).'
+  };
+  const keepNote = (s) => '<p class="lg-keep">🔒 <b>Vous seul connaissez ces identifiants.</b> Remote Station les garde sur le serveur sans <b>jamais les réafficher</b>, ni à vous ni à personne : <b>perdus, ils ne peuvent pas être récupérés</b> par Remote Station. Notez-les en lieu sûr. En cas de perte : ' + (s ? KEEP[s] : Object.values(KEEP).join(' ')) + '</p>';
   const SYNC = { lotw: 'Synchronisation LoTW', eqsl: 'Synchronisation eQSL', clublog: 'Synchronisation ClubLog', qrz: 'Synchronisation QRZ Logbook' };
   const SHORT = { lotw: 'LoTW', eqsl: 'eQSL', clublog: 'CL', qrz: 'QRZ' };
   const MODES = ['SSB', 'USB', 'LSB', 'CW', 'AM', 'FM', 'RTTY', 'FT8', 'FT4', 'FT2', 'JT65', 'JTTY', 'SSTV', 'PSK31', 'WSPR', 'C4FM', 'DATA'];
@@ -1509,7 +1517,7 @@
     const d = mkDlg('lg-cfg', '<form method="dialog" autocomplete="off"><h3>Configuration de carnets de trafic en ligne</h3>' +
       '<div class="lg-tabs" role="tablist">' + [['clublog', 'CLUBLOG'], ['eqsl', 'eQSL'], ['lotw', 'LoTW'], ['qrz', 'QRZ'], ['udp', 'UDP'], ['help', 'HELP']].map(([k, t], i) =>
         '<button type="button" data-t="' + k + '" aria-selected="' + (i === 0) + '">' + t + '</button>').join('') + '</div>' +
-      helpTab('l-config') +
+      helpTab('l-config') + keepNote('') +
       // Club Log
       '<div data-p="clublog" class="lg-pp">' + common('clublog', cfg.clublog, true) +
       textField('Adresse e-mail', 'clublog.email', cfg.clublog.email, '', 'type="email" maxlength="200"') +
@@ -1943,6 +1951,7 @@
           (m.source === 'compte' && m.has && m.has[k] ? '<button type="button" class="lg-clr" data-aclr="' + k + '" title="Effacer la valeur enregistrée pour cet indicatif">✕</button>' : '') + '</span>'
         : '<input data-af="' + k + '" value="' + esc((m.fields || {})[k] || '') + '" autocomplete="off" readonly data-noauto="1">') + '</label>').join('') +
         // Club Log : où se crée le jeton (les deux autres cases ne servent qu'à l'ancienne méthode)
+        keepNote(m.service) +
         (m.service === 'clublog' ? '<p class="lg-note" style="grid-column:1/-1;margin:0">Jeton : clublog.org → Settings → <b>API</b> → Tokens → Create token (commence par <b>cl_</b>). Avec un jeton, e-mail et mot de passe ne servent pas : laissez-les vides (✕).</p>' : '') +
         // Indicatif personnel : envoi automatique de chaque nouveau QSO (le club se règle dans ⚙ Configuration)
         // Indicatif du club (administrateurs) : choix propre à cet indicatif, sinon le réglage commun de ⚙ Configuration
