@@ -746,7 +746,7 @@
     document.addEventListener('click', closeRigMenu);
     document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeRigMenu(); });
     $('audResetBtn').addEventListener('click', askAudioReset);
-  $('listenBtn').addEventListener('click', () => (player.on ? stopListen() : startListen()));
+  $('listenBtn').addEventListener('click', () => { if (player.on) stopListen(); else startListen(); listenChoice(player.on); });
   // STÉRÉO (TRX à deux récepteurs) : MAIN / VFO A à gauche, SUB / VFO B à droite en DUAL RX ; même réglage que la page SSB
   $('listenSt').addEventListener('click', () => {
     player.stereo = !player.stereo;
@@ -1966,6 +1966,30 @@
     $('listenVolOut').textContent = Math.round(v * 100) + ' %';
     try { localStorage.setItem('rs.vol', String($('listenVol').value)); } catch (e) {}
   }
+  // Écoute du TRX en marche par défaut (dernier choix gardé : « Arrêter l'écoute » la laisse coupée aux visites suivantes).
+  // Sans clic sur la page (reconnexion automatique), le navigateur retient le son : il démarre au premier clic ou touche.
+  // Jamais si la sortie son de ce PC est la carte son d'un TRX (PC du club : le son repartirait vers le TRX).
+  function autoListen(isOn, start) {
+    let want = '1';
+    try { want = localStorage.getItem('rs.listenAuto') || '1'; } catch (e) { /* */ }
+    if (want !== '1' || isOn()) return;
+    const go = () => {
+      if (isOn()) return;
+      start();
+      const ctx = player.ctx;
+      if (!ctx || ctx.state === 'running') return;
+      const kick = () => { document.removeEventListener('pointerdown', kick, true); document.removeEventListener('keydown', kick, true); if (isOn() && player.ctx) player.ctx.resume(); };
+      document.addEventListener('pointerdown', kick, true);
+      document.addEventListener('keydown', kick, true);
+    };
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return go();
+    navigator.mediaDevices.enumerateDevices().then((devs) => {
+      const cur = devs.filter((d) => d.kind === 'audiooutput').find((d) => d.deviceId === (player.sink || 'default'));
+      if (cur && /USB Audio CODEC|CODEC USB/i.test(cur.label || '')) return;
+      go();
+    }).catch(go);
+  }
+  const listenChoice = (on) => { try { localStorage.setItem('rs.listenAuto', on ? '1' : '0'); } catch (e) { /* */ } };
   function startListen() {
     if (!player.ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -2219,6 +2243,7 @@
         if (!m.allowTx) say('Émission désactivée sur ce serveur : réglages et écoute uniquement.', 'warn', 8000);
         updHello(m);
         if (player.on) send(listenMsg(true)); // reprise de l'écoute après une reconnexion
+        else autoListen(() => player.on, startListen);
         render();
       } else if (m.t === 'upd') {
         updShow(m);

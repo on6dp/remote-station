@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.74** — Écoute du TRX en marche par défaut à la connexion (dashboard et face avant) ; « Arrêter l'écoute » est retenu pour les visites suivantes ; jamais automatique si la sortie son du PC est la carte son d'un TRX.
 - **0.42.73** — RTTY : bouton ■ Arrêter toujours actif (cadre rouge, plus grisé), rouge plein pendant l'émission.
 - **0.42.72** — IC-7300 / FTDX10 (un seul récepteur) : la rangée ATT, P.AMP, NB, NR, MN, AN, AGC s'affiche aussi sous le VFO B (mêmes réglages, communs aux deux VFO).
 - **0.42.71** — RTTY : le bouton ■ Arrêter est maintenant visible, à droite des macros (F6 73 / F12 RX), aussi en contest — il était caché par la mise en page de la page RTTY.
