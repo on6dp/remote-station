@@ -1783,6 +1783,9 @@
       if (rr.rfB != null && rr.rfB < 255) add('RFG ' + Math.round((rr.rfB / 255) * 100), 'amber');
       if (rr.lockB) add('LOCK', 'amber'); // LOCK du côté SUB (FTDX101 : LK3)
     }
+    // TRX à un seul récepteur (IC-7300, FTDX10) : ATT, P.AMP, NB, NR, NOTCH, AGC… sont ceux de l'unique récepteur, communs
+    // aux VFO A et B : la même rangée s'affiche aussi sous le VFO B (un clic y règle le même récepteur)
+    if (live && !RIG().SUB_BADGES && rr.freqB != null && !bB.childNodes.length) bB.innerHTML = bA.innerHTML;
     for (const [id, nb] of [['badgesA', bA], ['badgesB', bB]]) {
       const el = $(id);
       if (el.innerHTML !== nb.innerHTML) el.replaceChildren(...nb.childNodes);
