@@ -1051,7 +1051,9 @@
     const lat = ctx.outputLatency || ctx.baseLatency || 0;
     const when = Math.max(ctx.currentTime + 0.02, ctx.currentTime + (atLocal - Date.now()) / 1000 - lat);
     const cur = tx.cur = { id, when, mode: p.mode, text: p.text, f0: p.f0 };
-    src.onended = () => { if (tx.cur === cur) { tx.src = null; tx.cur = null; alcStop(); drawTxOut(); onEnd(); } };
+    // Fin du signal dans l'horloge audio : la carte son a encore « lat » secondes de son à sortir vers le TRX. Le PTT
+    // n'est relâché qu'après (plus 0,2 s de marge), sinon la fin du message RTTY / JTTY / SSTV était coupée
+    src.onended = () => { if (tx.cur === cur) { tx.src = null; tx.cur = null; alcStop(); drawTxOut(); setTimeout(onEnd, Math.round(lat * 1000) + 200); } };
     src.start(when);
     tx.src = src;
     alcStart();
