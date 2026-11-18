@@ -3888,6 +3888,9 @@
     else if (!st.audio || !st.audio.active) { txt = 'La page Station n’envoie pas la BF : « Activer l’audio » sur le PC du club'; warn = true; }
     else txt = jtLast && Date.now() - jtLast < 60000 ? 'BF reçue · réception JTTY en cours' : 'BF reçue · à l’écoute (décodage continu, 200 à 2800 Hz)';
     if (st && st.radio && st.radio.mode && !/DATA|USB|-D/i.test(st.radio.mode)) { txt += ' · mode ' + st.radio.mode + ' : passez en DATA-U'; warn = true; }
+    // Onglet FT : seulement les problèmes (la ligne « Émission FT » et ses réglages occupent la place ; l'état du
+    // décodage est dans l'onglet SYNCHRO)
+    if (tab === 'ftx' && !warn) txt = '';
     el.textContent = txt;
     el.classList.toggle('warn', warn);
   }
@@ -6801,6 +6804,9 @@
     else if (!lastDecode || Date.now() - lastDecode > (mode === 'JT65' ? 130000 : mode === 'FT8' ? 40000 : mode === 'FT2' ? 10000 : 20000)) txt = 'BF reçue · décodage au prochain cycle' + (mode === 'JT65' ? ' (vers la 52e seconde de chaque minute)' : '') + '…';
     else txt = 'BF reçue · décodage OK' + (st.digi && st.digi.engine === 'wsjtx' ? ' (moteur WSJT-X)' : '') + (st.digi && st.digi.latency != null ? ' · délai ' + st.digi.latency + ' ms' : '');
     if (st && st.radio && st.radio.mode && !/DATA|USB|-D/i.test(st.radio.mode)) { txt += ' · mode ' + st.radio.mode + ' : passez en DATA-U'; warn = true; }
+    // Onglet FT : seulement les problèmes (la ligne « Émission FT » et ses réglages occupent la place ; l'état du
+    // décodage est dans l'onglet SYNCHRO)
+    if (tab === 'ftx' && !warn) txt = '';
     el.textContent = txt;
     el.title = txt;
     el.classList.toggle('warn', warn);

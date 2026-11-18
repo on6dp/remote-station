@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.60** — Page FT : plus de texte superposé en haut à droite — « BF reçue · décodage OK… » retiré (seuls les problèmes s'affichent ; l'état du décodage est dans SYNCHRO).
 - **0.42.59** — FT : annonce « ✓ QSO sauvegardé dans le logbook » à chaque QSO enregistré, aussi quand la séquence automatique est déjà passée à la station suivante, et seulement après l'écriture par le serveur.
 - **0.42.58** — FT8 « 2 à la fois » : aussi avec les indicatifs composés (F5OYA/P, HA/ES3H…), transmis par leur empreinte (« DL1AAA RR73; <HA/ES3H> <OR0L> -06 ») ; recharger la page Station.
 - **0.42.57** — FT8 : double-clic sur un indicatif avec préfixe (HA/ES3H, EA8/ON4ABC…) — avant « Pas d'indicatif à reprendre dans ce message » ; son appel sans locator (« <OR0L> HA/ES3H ») → réponse avec report (Tx2).
