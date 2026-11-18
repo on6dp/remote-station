@@ -6117,7 +6117,10 @@
     const s = S();
     if (!needControl()) return;
     const w = Math.max(5, Math.min((me && me.maxWatts) || 100, (s.power || 0) + d));
+    // Valeur affichée tout de suite (avant : attente de la relecture sur le TRX, ~1 s) ; les crans suivants partent d'elle
+    pend.power = { v: w, at: Date.now() };
     send({ t: 'set', power: w });
+    render();
   }
   function askFreq(side) {
     if (!needControl()) return;

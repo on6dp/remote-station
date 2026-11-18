@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.67** — Face avant : RF POWER (menu MULTI, FUNC…) affiché et pris en compte tout de suite, sans attendre la relecture sur le TRX ; IC-7300 : infobulle de FUNCTION à jour.
 - **0.42.66** — RTTY / JTTY / SSTV : le TRX ne repasse plus en réception avant la fin du signal (PTT relâché après le son encore dans la carte son, + 0,2 s) ; RTTY : un peu plus de repos après le dernier caractère. Recharger la page Station.
 - **0.42.65** — RTTY QUAD : décodeurs nommés dans l'ordre de leurs fenêtres, de gauche à droite — A1 | A2 (colonne de gauche), A3 | A4 (colonne de droite) ; Ctrl + clic gauche = A2, clic droit = A3.
 - **0.42.64** — Club Log : « Tester » affiche aussi la vérification de Club Log pour l'adresse du serveur (check.php : refus et blocages récents) ; blocage du pare-feu respecté même après un redémarrage du serveur (aucun essai pendant 65 min).
