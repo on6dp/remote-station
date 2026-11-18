@@ -48,7 +48,12 @@
   const LG_COLS = [['date', 98], ['utc', 58], ['call', 96], ['band', 70], ['mhz', 82], ['mode', 66], ['env', 58], ['stx', 78], ['recu', 64], ['srx', 78], ['nom', 116],
     ['qth', 136], ['loc', 70], ['dxcc', 116], ['pfx', 76], ['txc', 84], ['op', 84], ['refs', 150], ['ctst', 112], ['lotw', 62], ['eqsl', 62], ['cl', 46], ['qrz', 54], ['fill', 0]];
   // Références des programmes « on the air » : [champ du carnet, programme, exemple]
-  const REF_KEYS = [['iota', 'IOTA', 'EU-005'], ['wwff_ref', 'WWFF', 'ONFF-0001'], ['pota_ref', 'POTA', 'BE-0001'], ['bota_ref', 'BOTA', 'B/ON-0001'], ['llota_ref', 'LLOTA', 'CE-0001'], ['sota_ref', 'SOTA', 'ON/ON-001']];
+  // [champ, programme, exemple, saisie libre (pas de liste téléchargée par le serveur)]
+  const REF_KEYS = [['iota', 'IOTA', 'EU-005'], ['wwff_ref', 'WWFF', 'ONFF-0001'], ['pota_ref', 'POTA', 'BE-0001'], ['bota_ref', 'BOTA', 'B/ON-0001'], ['llota_ref', 'LLOTA', 'CE-0001'], ['sota_ref', 'SOTA', 'ON/ON-001'],
+    ['dme_ref', 'DME', 'réf. DME', 1], ['dci_ref', 'DCI', 'DCI-TE-021', 1], ['dai_ref', 'DAI', 'réf. DAI', 1], ['arlhs_ref', 'ARLHS', 'BEL-001', 1]];
+  const REF_FULL = { DME: 'DME (communes espagnoles, URE)', DCI: 'DCI (châteaux italiens)', DAI: 'DAI (abbayes italiennes)', ARLHS: 'ARLHS (phares)' };
+  const refInput = (k, p, ph, free, my) => '<label class="lg-ref"' + (my ? '' : ' title="' + (free ? 'Référence ' + (REF_FULL[p] || p) + ' du correspondant, à taper (pas de liste)' : 'Référence ' + p + ' du correspondant : tapez le début de la référence ou un morceau du nom, puis choisissez dans la liste') + '"') + '>' + p +
+    ' <input name="' + (my ? 'my_' : '') + k + '"' + (free ? '' : ' data-prog="' + p + '"') + (my ? ' data-my="1"' : '') + ' maxlength="80" placeholder="' + ph + '" autocomplete="off"></label>';
   let editing = null;      // QSO en cours de modification
   let lastTxCall = '';     // dernier TX call de la ligne Correspondant reporté dans la fiche
   let filt = {};           // filtres par colonne { date: '20261025', band: '20m', … }
@@ -106,11 +111,11 @@
         <label class="lg-w5">Puiss. W <input name="tx_pwr" inputmode="decimal" maxlength="5"></label>
         <label class="lg-rem">Remarque <input name="comment" maxlength="200"></label>
         <span class="lg-gap"></span>
-        ${REF_KEYS.map(([k, p, ph]) => '<label class="lg-ref" title="Référence ' + p + ' du correspondant : tapez le début de la référence ou un morceau du nom, puis choisissez dans la liste">' + p + ' <input name="' + k + '" data-prog="' + p + '" maxlength="80" placeholder="' + ph + '" autocomplete="off"></label>').join('')}
+        ${REF_KEYS.map(([k, p, ph, free]) => refInput(k, p, ph, free)).join('')}
       </div>
       <div class="lg-row lg-refs lg-myrefs" hidden>
         <span class="lg-refs-t" title="Références de la station pendant une activation : gardées d'un QSO à l'autre jusqu'à ce que vous les effaciez">Ma réf. (activation)</span>
-        ${REF_KEYS.map(([k, p, ph]) => '<label class="lg-ref">' + p + ' <input name="my_' + k + '" data-prog="' + p + '" data-my="1" maxlength="80" placeholder="' + ph + '" autocomplete="off"></label>').join('')}
+        ${REF_KEYS.map(([k, p, ph, free]) => refInput(k, p, ph, free, 1)).join('')}
       </div>
       <div class="lg-row lg-act">
         <button class="btn btn-primary" type="submit" data-a="save">Enregistrer le QSO</button>
@@ -160,7 +165,7 @@
     <div class="lg-tw">
       <table class="lg-table">
         <colgroup>${LG_COLS.map(([k]) => '<col data-c="' + k + '">').join('')}</colgroup>
-        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th class="r">MHz</th><th>Mode</th><th>Env.</th><th title="Contest : échange envoyé (n° de série, zone… selon le règlement)">TX #</th><th>Reçu</th><th title="Contest : échange reçu (n° de série, zone… selon le règlement)">RX #</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th title="Locator (Maidenhead) du correspondant">Locator</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Préfixe principal de l'entité DXCC (ex. ON pour la Belgique, LA pour la Norvège)">Préfixe</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th><th title="Opérateur : indicatif personnel du membre qui a fait le QSO (même sous l'indicatif du club)">OP</th><th title="Références IOTA, WWFF, POTA, BOTA, LLOTA, SOTA du correspondant ; ▲ = référence de la station (activation)">Réf.</th><th title="Contest pendant lequel le QSO a été fait (identifiant Cabrillo) ; au survol : échange envoyé / reçu">Contest</th>
+        <thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th class="r">MHz</th><th>Mode</th><th>Env.</th><th title="Contest : échange envoyé (n° de série, zone… selon le règlement)">TX #</th><th>Reçu</th><th title="Contest : échange reçu (n° de série, zone… selon le règlement)">RX #</th><th class="grow">Nom</th><th class="lg-qth">QTH</th><th title="Locator (Maidenhead) du correspondant">Locator</th><th class="lg-cty" title="Pays DXCC (fichier cty.dat)">DXCC</th><th title="Préfixe principal de l'entité DXCC (ex. ON pour la Belgique, LA pour la Norvège)">Préfixe</th><th title="Indicatif sous lequel le QSO a été fait (celui de TX CALL du dashboard)">TX call</th><th title="Opérateur : indicatif personnel du membre qui a fait le QSO (même sous l'indicatif du club)">OP</th><th title="Références IOTA, WWFF, POTA, BOTA, LLOTA, SOTA, DME, DCI, DAI, ARLHS du correspondant ; ▲ = référence de la station (activation)">Réf.</th><th title="Contest pendant lequel le QSO a été fait (identifiant Cabrillo) ; au survol : échange envoyé / reçu">Contest</th>
           <th class="c" title="LoTW (★ = confirmé)">LoTW</th><th class="c">eQSL</th><th class="c" title="Club Log">CL</th><th class="c">QRZ</th><th class="lg-fill"></th></tr></thead>
         <tbody id="lgBody"><tr><td colspan="24" class="lg-empty">Chargement du carnet…</td></tr></tbody>
       </table>
@@ -635,6 +640,7 @@
   // Morceau en cours de frappe (après la dernière virgule)
   const refPart = (v) => { const i = v.lastIndexOf(','); return (i >= 0 ? v.slice(i + 1) : v).trim(); };
   function askRefs(inp) {
+    if (!inp.dataset.prog) { closeRefs(); return; } // DME, DCI, DAI, ARLHS : saisie libre, pas de liste
     RS.input = inp;
     clearTimeout(RS.timer);
     RS.timer = setTimeout(() => {
@@ -709,7 +715,7 @@
   function drawRefsDlg(st) {
     if (!refsDlg || !st) return;
     refsDlg.querySelector('tbody').innerHTML = '<tr><th>Liste</th><th>Références</th><th>Téléchargée</th><th>État</th></tr>' +
-      REF_KEYS.map(([, pr]) => {
+      REF_KEYS.filter((x) => !x[3]).map(([, pr]) => {
         const x = st[pr] || {};
         return '<tr><td><b>' + pr + '</b></td><td>' + (x.count || 0).toLocaleString('fr-BE') + '</td><td>' + (x.at ? new Date(x.at).toLocaleString('fr-BE') : '—') + '</td><td>' +
           (x.busy ? 'téléchargement…' : x.err ? '<span class="lg-bad">' + esc(x.err) + '</span>' : x.count ? 'OK' : 'pas encore téléchargée') + '</td></tr>';
