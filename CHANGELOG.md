@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.86** — Libellés uniformes : Synchronisation LoTW, eQSL, ClubLog, QRZ Logbook et Listes (menu, titre de fenêtre et bouton d’envoi) ; aide et guide : mise en route LoTW pas à pas, codes de TQSL, case Serveur à ne pas cocher
 - **0.42.85** — Agent LoTW 2 : accents de la réponse de TQSL lus correctement (Windows) ; mise à jour automatique des agents
 - **0.42.84** — Aide : installateur de l’Agent LoTW plus ancien que le serveur (normal, l’agent se met à jour seul) et avertissement SmartScreen de Windows
 - **0.42.83** — Agent LoTW : le lien de l’installateur Windows (Appairer un PC…) pointe vers le dernier installateur construit (0.42.42) au lieu d’une page 404

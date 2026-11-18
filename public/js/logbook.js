@@ -3,7 +3,7 @@
  *
  *  - Saisie d'un QSO, pré-remplie avec la fréquence et le mode du TRX et la ligne Correspondant.
  *  - Carnet de trafic de la station (serveur : logbook.json), état des envois LoTW / eQSL / Club Log / QRZ.
- *  - Menu Synchronisation (administrateurs) : fenêtres « Télécharger vers … » (Détails / Traitement), comme Swisslog.
+ *  - Menu Synchronisation : fenêtres « Synchronisation LoTW / eQSL / ClubLog / QRZ Logbook » (Détails / Traitement), comme Swisslog.
  *  - Exporter : ADIF (.adi) ou Cabrillo (.log).
  *  - Configuration (administrateurs) : un onglet par service + UDP vers les logbooks du PC (Swisslog, N1MM, Log4OM…).
  *    Les mots de passe et clés restent sur le serveur : la page ne reçoit que « enregistré / non enregistré ».
@@ -13,6 +13,8 @@
   'use strict';
   const SV = ['lotw', 'eqsl', 'clublog', 'qrz'];
   const NAMES = { lotw: 'LoTW', eqsl: 'eQSL', clublog: 'Club Log', qrz: 'QRZ.com' };
+  // Libellés communs du menu, du titre de la fenêtre et de son bouton d'envoi
+  const SYNC = { lotw: 'Synchronisation LoTW', eqsl: 'Synchronisation eQSL', clublog: 'Synchronisation ClubLog', qrz: 'Synchronisation QRZ Logbook' };
   const SHORT = { lotw: 'LoTW', eqsl: 'eQSL', clublog: 'CL', qrz: 'QRZ' };
   const MODES = ['SSB', 'USB', 'LSB', 'CW', 'AM', 'FM', 'RTTY', 'FT8', 'FT4', 'FT2', 'JT65', 'JTTY', 'SSTV', 'PSK31', 'WSPR', 'C4FM', 'DATA'];
   const DIGI = ['FT8', 'FT4', 'FT2', 'JT65', 'JTTY', 'WSPR'];
@@ -124,11 +126,11 @@
         <div class="lg-mlist" role="menu" hidden>
           <button type="button" role="menuitem" data-s="lotw">Synchronisation LoTW…</button>
           <button type="button" role="menuitem" data-s="eqsl">Synchronisation eQSL…</button>
-          <button type="button" role="menuitem" data-s="clublog">Club Log…</button>
-          <button type="button" role="menuitem" data-s="qrz">QRZ…</button>
+          <button type="button" role="menuitem" data-s="clublog">Synchronisation ClubLog…</button>
+          <button type="button" role="menuitem" data-s="qrz">Synchronisation QRZ Logbook…</button>
           <hr class="lg-msep">
           <button type="button" role="menuitem" data-a="cfg" title="Réglages des carnets en ligne, de QRZ.com et des ports UDP">⚙ Configuration…</button>
-          <button type="button" role="menuitem" data-a="refs" title="Listes IOTA, WWFF, POTA, BOTA, LLOTA, SOTA téléchargées par le serveur : état et mise à jour">Listes de références…</button>
+          <button type="button" role="menuitem" data-a="refs" title="Listes IOTA, WWFF, POTA, BOTA, LLOTA, SOTA téléchargées par le serveur : état et mise à jour">Synchronisation Listes…</button>
           <button type="button" role="menuitem" data-a="net" title="Mise en réseau des serveurs Remote Station (à la manière de N1MM) : log commun et numéros de série partagés, maître et maître de secours">🌐 Réseau…</button>
         </div>
       </div>
@@ -686,8 +688,8 @@
   // État des listes (administrateurs) : nombre de références, date du téléchargement, erreur ; « Mettre à jour maintenant »
   let refsDlg = null;
   function openRefsDlg() {
-    if (!me.admin) return say('Listes de références : réservé aux administrateurs.', 'warn');
-    const d = mkDlg('lg-refsdlg', '<form method="dialog"><h3>Listes de références (IOTA, WWFF, POTA, BOTA, LLOTA, SOTA)</h3>' +
+    if (!me.admin) return say('Synchronisation Listes : réservé aux administrateurs.', 'warn');
+    const d = mkDlg('lg-refsdlg', '<form method="dialog"><h3>Synchronisation Listes (IOTA, WWFF, POTA, BOTA, LLOTA, SOTA)</h3>' +
       '<p class="lg-note">Téléchargées par le serveur depuis les sites des programmes, puis mises à jour toutes seules chaque semaine. Le premier téléchargement a lieu quelques minutes après le démarrage du serveur.</p>' +
       '<table class="lg-reft"><tbody><tr><td colspan="4">Lecture…</td></tr></tbody></table>' +
       '<div class="lg-act"><button class="btn" type="button" data-a="go">Mettre à jour maintenant</button><button class="btn" value="x">Fermer</button></div></form>');
@@ -1231,7 +1233,7 @@
     return c && !me.rxOnly && calls.indexOf(c) >= 0 && stCalls.indexOf(c) < 0 ? c : '';
   }
 
-  // ---------- Synchronisation (Télécharger vers …)
+  // ---------- Synchronisation (LoTW, eQSL, ClubLog, QRZ Logbook)
   const STEPS = [['export', 'Exporter les QSOs'], ['sign', 'Signer les QSOs (TQSL)'], ['upload', 'Téléchargement vers LoTW'], ['fetch', 'Obtenir les confirmations LoTW'],
     ['import', 'Importer les confirmations'], ['status', 'Statut d’actualisation']];
   function openSync(s) {
@@ -1239,7 +1241,7 @@
     if (!me.admin && !own) return say('Synchronisation : réservée aux administrateurs et aux membres qui émettent sous leur propre indicatif.', 'warn');
     if (sdlg && sdlg.el.open) sdlg.el.close();
     const lotw = s === 'lotw';
-    const title = lotw ? 'Opérations LoTW' : 'Télécharger vers ' + NAMES[s];
+    const title = SYNC[s];
     const d = mkDlg('lg-sync', '<form method="dialog">' +
       '<h3>' + title + '</h3>' +
       '<div class="lg-tabs" role="tablist"><button type="button" data-t="det" aria-selected="true">Détails</button><button type="button" data-t="proc" aria-selected="false">Traitement</button><button type="button" data-t="help" aria-selected="false">HELP</button></div>' +
@@ -1268,7 +1270,7 @@
       '</div>' +
       '<div class="md-act">' + (lotw ? '<button class="btn" type="button" data-a="confirm" title="Lire seulement les confirmations reçues sur LoTW">Confirmations</button>' : '') +
       '<span></span><button class="btn" type="button" data-a="stop" disabled>Arrêt</button><button class="btn" value="cancel" data-a="close">Fermer</button>' +
-      '<button class="btn btn-primary" type="button" data-a="go">' + (lotw ? 'Synchronisation LoTW' : 'Télécharger') + '</button></div></form>');
+      '<button class="btn btn-primary" type="button" data-a="go">' + SYNC[s] + '</button></div></form>');
     sdlg = { service: s, el: d, job: null };
     tabs(d);
     const f = d.querySelector('form');
