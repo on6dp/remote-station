@@ -3609,3 +3609,6 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .dx-t:not(.col-fixed) th:first-child { width: 46px; }
 .dx-t:not(.col-fixed) td.ct { max-width: 118px; }
 .dg-cols.has-dx { grid-template-columns: minmax(240px, var(--dg-left, 1fr)) 10px minmax(240px, 1fr) var(--dx-w, 510px); }
+/* Annonce « QSO enregistré dans le carnet » (page FT) : en vert */
+.dg-toast.ok:not(:empty) { color: #39ff14; border-color: #39ff14 !important; font-weight: 700; }
+.msg.ok { color: #39ff14; font-weight: 700; }

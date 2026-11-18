@@ -4807,6 +4807,13 @@
     if (!m || m.t !== 'log_saved' || m.edited) return;
     const call = String((m.qso && m.qso.call) || '').toUpperCase();
     if (m.tag !== 'ftqso' && !(call && dx.call && call === String(dx.call).toUpperCase())) return;
+    // Annonce visible dans cette page (elle passe devant le dashboard) : le QSO est bien dans le carnet
+    const q = m.qso || {};
+    const key = (q.id || '') + call;
+    if (key && key !== qsoSaved.last) {
+      qsoSaved.last = key;
+      if (api) api.say('✓ QSO enregistré dans le carnet : ' + call + (q.band ? ' · ' + q.band : '') + (q.submode || q.mode ? ' · ' + (q.submode || q.mode) : '') + (q.station_callsign ? ' · TX call ' + q.station_callsign : ''), 'ok', 6000);
+    }
     clearTimeout(qsoHideT);
     qsoHideT = setTimeout(() => qsoShow(false), 2000);
   }
