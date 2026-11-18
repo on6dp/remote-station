@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.53** — Page FT8 / FT4 / FT2 : en y arrivant (onglet ou page ouverte depuis le dashboard), le TRX va tout seul sur la fréquence d'appel de sa bande s'il n'y est pas (ex. 20 m SSB → 14,074 MHz DATA-U).
 - **0.42.52** — FT : « Après un QSO » = « Toujours CQ » par défaut — après le RR73 / 73 (QSO au carnet), réponse au suivant qui appelait, sinon votre CQ relancé tout seul ; ■ Arrêter pour ne pas continuer.
 - **0.42.51** — Page FT : annonce en vert « ✓ QSO enregistré dans le carnet : indicatif · bande · mode · TX call » dès que le QSO est dans le carnet.
 - **0.42.50** — FT : on peut appeler une station qui termine un QSO avec une autre — l'émission continue (sur votre tonalité) au lieu de s'arrêter, et ces appels ne comptent pas dans « Sans réponse » ; la séquence suit dès qu'elle vous répond.

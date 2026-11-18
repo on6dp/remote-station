@@ -6670,6 +6670,7 @@
     if (t === 'ssb') return popWin('/ssb.html', 'rs-ssbpage', 1240, 900);
     // Page des modes numériques (fenêtre séparée) sur ce mode ; déjà ouverte : elle y passe
     store.set('ptab', t);
+    if (t === 'ftx') store.set('enterqsy', String(Date.now())); // la page FT va sur la fréquence d'appel de la bande
     try {
       const d = window.DG && window.DG();
       if (d && d !== window.RSDIGI && d.goTab) { d.goTab(t); const w = window.open('', 'rs-digi'); if (w) w.focus(); return w; }
@@ -6739,6 +6740,32 @@
     if (!mk) return;
     api.send({ t: 'set', mode: mk[0], sub: side });
     api.say('TRX mis en ' + mk[1] + ' pour la CW.', '', 3000);
+  }
+  /**
+   * Arrivée sur la page FT8 / FT4 / FT2 (onglet cliqué, page ouverte depuis le dashboard) avec la main : si le TRX n'est
+   * pas sur une fréquence d'appel du mode (ex. passé sur 20 m en SSB à 14,205), il y va (14,074 en DATA-U). Rien pendant
+   * une émission ou une séquence en cours, ni si le TRX est déjà dans le segment FT (à 3 kHz près).
+   */
+  function enterQsyCheck() {
+    const t = Number(store.get('enterqsy', '0'));
+    if (!t) return;
+    if (Date.now() - t > 15000) { store.set('enterqsy', '0'); return; }
+    const st = api && api.state();
+    if (!st || !st.radio || !st.radio.freq || !st.station) return; // état pas encore là : on réessaie au suivant
+    store.set('enterqsy', '0');
+    enterQsy();
+  }
+  function enterQsy() {
+    const st = api && api.state();
+    if (!st || !st.radio || !api.iControl() || FT_MODES.indexOf(mode) < 0) return;
+    if ((st.ptt && st.ptt.active) || st.ftx || (st.seq && st.seq.on) || st.radio.tx) return;
+    const f = st.radio.freq;
+    const near = nearList(mode, f).reduce((a, x) => (Math.abs(x[1] * 1000 - f) < Math.abs(a[1] * 1000 - f) ? x : a));
+    const d = Math.abs(near[1] * 1000 - f);
+    if (d <= 3000 || d > 600000) return; // déjà dans le segment FT, ou pas de fréquence de ce mode sur cette bande
+    $('dgDial').value = String(near[1]);
+    qsy();
+    api.say(mode + ' : le TRX va sur ' + near[1].toLocaleString('fr-BE', { minimumFractionDigits: near[1] % 1 ? 1 : 0 }) + ' kHz (' + near[0] + ', DATA-U).', '', 5000);
   }
   function autoQsy() {
     const st = api && api.state();
@@ -7034,6 +7061,7 @@
         // Choisir soi-même un autre onglet arrête le suivi de l'opérateur
         if (follow && api && !api.iControl()) { setFollow(false); api.say('Suivi de l’opérateur arrêté (onglet choisi).', '', 4000); }
         showTab(b.dataset.tab);
+        if (b.dataset.tab === 'ftx') { store.set('enterqsy', String(Date.now())); setTimeout(enterQsyCheck, 300); }
         if (DATA_TABS[b.dataset.tab]) dataU(DATA_TABS[b.dataset.tab]);
         else if (b.dataset.tab === 'cw') cwModeAuto();
       }));
@@ -7628,7 +7656,7 @@
       // Autre TRX (couverture différente) : les fréquences QO-100 proposées changent
       const R = api && api.rig && api.rig();
       if (R && R.ID !== lastRig) { lastRig = R.ID; refillQo(); }
-      if (tab === 'ftx' || tab === 'jt65') { status(); followBand(); }
+      if (tab === 'ftx' || tab === 'jt65') { status(); followBand(); enterQsyCheck(); }
       ftxState();
     }
   };
