@@ -3035,7 +3035,13 @@
     if ($('rtTxtB')) $('rtTxtB').placeholder = two ? 'Texte à émettre sur la fréquence de ' + (four ? 'A3' : 'A2') + ' (même VFO), puis F11 TX ou Ctrl+Entrée' : 'Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée';
     if (dualEl && dualEl.classList.contains('rt-4dec') !== four) { dualEl.classList.toggle('rt-4dec', four); if (!four) { rtBSel = Math.min(rtBSel, 1); if (rtTx >= 2) { rtTx = rtSideOf(rtTx); store.set('rttx', String(rtTx)); } } setTimeout(() => { announce(); if (tab === 'rtty') drawScale(); }, 0); }
     // Liste DÉCODEURS : à droite du bouton DUAL RX des VFO du haut (même style) ; remise en place si le bloc des VFO est redessiné
-    { const sel = $('rtDecWrap'), drx = document.querySelector('#rtVfo .vfb-drx'); if (sel && drx && sel.previousElementSibling !== drx) drx.after(sel); }
+    // TRX sans DUAL RX (IC-7300, FTDX10 : ligne DUAL RX cachée) : la liste reste sur la ligne de la cascade (après Vitesse)
+    {
+      const sel = $('rtDecWrap'), drx = document.querySelector('#rtVfo .vfb-drx'), wb = $('rtWfBtns');
+      const drxOk = !!(drx && drx.offsetParent);
+      if (sel && drxOk && sel.previousElementSibling !== drx) drx.after(sel);
+      else if (sel && !drxOk && wb && sel.parentElement !== wb) wb.prepend(sel);
+    }
     if ($('rtDecWrap')) $('rtDecWrap').hidden = !one;
     if ($('rtDecSel')) { $('rtDecSel').value = four ? '4' : two ? '2' : '1'; $('rtDecSel').classList.toggle('on', two); }
     if ($('rt4Dec')) { $('rt4Dec').hidden = !one; $('rt4Dec').setAttribute('aria-pressed', String(four)); }

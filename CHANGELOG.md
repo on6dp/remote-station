@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.78** — RTTY sur IC-7300 / FTDX10 : la liste SINGLE / DUAL / QUAD (décodeurs A1 à A4) est de nouveau visible, sur la ligne de la cascade après « Vitesse » (elle était cachée avec la ligne DUAL RX).
 - **0.42.77** — Bouton d'écoute renommé « 🔊 Activer BF TRX » / « 🔇 Désactiver BF TRX » (dashboard, face avant, aide) : plus de confusion avec l'arrêt du TRX.
 - **0.42.76** — Écoute du TRX : retour au fonctionnement d'avant la 0.42.74 — elle ne démarre qu'au clic sur « Écouter le TRX » (plus d'écoute automatique à la connexion).
 - **0.42.75** — IC-7300 / IC-7760 : badge MONI dans la rangée ATT · P.AMP · NB… du VFO (dashboard, pages FT, RTTY, CW) : un clic met le moniteur en marche ou le coupe.
