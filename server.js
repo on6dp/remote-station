@@ -4228,8 +4228,22 @@ function onOperator(conn, m) {
     case 'log_pending':
       if (LOG_SERVICES.indexOf(m.service) < 0) return;
       if (!conn.user.admin && !ownLogCall(conn, m.callsign)) return;
-      return send(conn, { t: 'log_pending', service: m.service, n: sync.pending(m.service, { from: m.from, to: m.to, callsign: m.callsign, all: !!m.all }).length,
+    {
+      const pl = sync.pending(m.service, { from: m.from, to: m.to, callsign: m.callsign, all: !!m.all });
+      // Détail : jamais envoyés / en échec (par motif) / déjà envoyés (« Renvoyer aussi »), et dates du plus ancien au plus récent
+      const why = {};
+      let never = 0, done = 0, d0 = '', d1 = '';
+      for (const q of pl) {
+        const u = q.up && q.up[m.service];
+        if (!u) never++;
+        else if (u.ok) done++;
+        else { const k = String(u.msg || 'échec').replace(/\s*\(Agent LoTW[^)]*\)/, '').replace(/ — .*/, '').slice(0, 70); why[k] = (why[k] || 0) + 1; }
+        if (!d0 || q.qso_date < d0) d0 = q.qso_date;
+        if (!d1 || q.qso_date > d1) d1 = q.qso_date;
+      }
+      return send(conn, { t: 'log_pending', service: m.service, n: pl.length, never, done, why: Object.entries(why).sort((a, b) => b[1] - a[1]).slice(0, 4), d0, d1,
         busy: !!sync.busy[m.service], stopped: sync.isStopped(m.service, m.callsign) });
+    }
     case 'log_mark': {
       // QSO signés à la main avec TQSL (serveur sans certificat, ex. le VPS) : notés « envoyés »
       if (LOG_SERVICES.indexOf(m.service) < 0 || !Array.isArray(m.ids)) return;

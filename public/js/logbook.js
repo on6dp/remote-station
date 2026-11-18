@@ -1933,7 +1933,9 @@
     } else if (m.t === 'log_pending') {
       if (sdlg && sdlg.el.open && sdlg.service === m.service) {
         const p = sdlg.el.querySelector('.lg-pend');
-        p.textContent = m.n + ' QSO à envoyer vers ' + NAMES[m.service] + (m.busy ? ' · un envoi est déjà en cours' : '') + (m.stopped ? ' · envois arrêtés après un refus d’accès : vérifiez les identifiants puis enregistrez-les' : '');
+        const dd = (d) => d ? d.slice(6, 8) + '/' + d.slice(4, 6) + '/' + d.slice(0, 4) : '';
+        const det = m.n ? [m.never ? m.never + ' jamais envoyé(s)' : '', m.done ? m.done + ' déjà envoyé(s) (renvoi)' : ''].concat((m.why || []).map(([k, n]) => n + ' en échec : ' + k)).filter(Boolean) : [];
+        p.textContent = m.n + ' QSO à envoyer vers ' + NAMES[m.service] + (m.n && m.d0 ? ' (du ' + dd(m.d0) + ' au ' + dd(m.d1) + ')' : '') + (det.length ? ' — ' + det.join(' · ') : '') + (m.busy ? ' · un envoi est déjà en cours' : '') + (m.stopped ? ' · envois arrêtés après un refus d’accès : vérifiez les identifiants puis enregistrez-les' : '');
         p.classList.toggle('warn', !!m.stopped);
       }
     } else if (m.t === 'log_agents') {
