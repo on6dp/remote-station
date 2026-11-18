@@ -473,7 +473,7 @@
           <button class="btn rte-clr" type="button" id="rtQClr" title="Effacer la ligne (nouveau correspondant)">EFFACER</button>
           <label class="spotlog dg-spot rte-spot" title="Cochée : le QSO enregistré est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label>
         </div>
-        <div class="rt-macline"><div class="rt-macros" id="rtMacros"></div><button class="btn dg-stop rt-stop" type="button" id="rtStop" disabled title="Arrête tout de suite l’émission RTTY en cours (mauvaise macro…) — aussi la touche Échap">■ Arrêter</button><div class="rt-tx-act2 rt-macact"><button class="btn" type="button" id="rtTxClear">Effacer</button>
+        <div class="rt-macline"><div class="rt-macros" id="rtMacros"></div><button class="btn dg-stop rt-stop" type="button" id="rtStop" title="Arrête tout de suite l’émission RTTY en cours (mauvaise macro…) — aussi la touche Échap">■ Arrêter</button><div class="rt-tx-act2 rt-macact"><button class="btn" type="button" id="rtTxClear">Effacer</button>
             </div></div>
         <!-- Contest RTTY : choix du contest, échange envoyé, numéro de série, et ses macros (touches F1 à F12 quand un contest est choisi) -->
         <div class="rt-contest" id="rtContest">
@@ -3099,7 +3099,7 @@
     }
     const fx = st && st.ftx;
     const txing = !!(fx && fx.mode === 'RTTY');
-    if ($('rtStop')) { $('rtStop').disabled = !txing; $('rtStop').classList.toggle('on', txing); }
+    if ($('rtStop')) $('rtStop').classList.toggle('on', txing); // toujours cliquable ; rouge plein pendant l'émission
     document.querySelectorAll('.rt-txsel').forEach((b) => {
       const on = Number(b.dataset.ch) === rtTx;
       b.setAttribute('aria-pressed', String(on));
@@ -3506,7 +3506,11 @@
     }
     $('rtTxClear').addEventListener('click', () => { const t = rtTxtEl(); if (t) t.value = ''; });
     // ■ Arrêter : émission RTTY en cours (ou en préparation) coupée tout de suite, comme Échap
-    $('rtStop').addEventListener('click', () => { const x = api && api.state() && api.state().ftx; if (x && x.mode === 'RTTY') api.send({ t: 'ftx_stop' }); });
+    $('rtStop').addEventListener('click', () => {
+      const st = api && api.state(), x = st && st.ftx;
+      if ((x && x.mode === 'RTTY') || (st && st.ptt && st.ptt.active && st.ptt.digi)) return api.send({ t: 'ftx_stop' });
+      api.say('Pas d’émission RTTY en cours.', '', 2500);
+    });
     $('rtSend').addEventListener('click', () => dtxClick('RTTY'));
     for (const t of ['rtTxt', 'rtTxtB'].map($).filter(Boolean)) {
       t.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); dtxClick('RTTY'); } });

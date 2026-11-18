@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.73** — RTTY : bouton ■ Arrêter toujours actif (cadre rouge, plus grisé), rouge plein pendant l'émission.
 - **0.42.72** — IC-7300 / FTDX10 (un seul récepteur) : la rangée ATT, P.AMP, NB, NR, MN, AN, AGC s'affiche aussi sous le VFO B (mêmes réglages, communs aux deux VFO).
 - **0.42.71** — RTTY : le bouton ■ Arrêter est maintenant visible, à droite des macros (F6 73 / F12 RX), aussi en contest — il était caché par la mise en page de la page RTTY.
 - **0.42.70** — RTTY QUAD : souris dans l'ordre des noms — A1 clic gauche, A2 clic droit, A3 Ctrl + clic gauche, A4 Ctrl + clic droit.
