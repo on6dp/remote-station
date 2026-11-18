@@ -56,6 +56,7 @@
   <a href="#l-liste">14.2 La liste des QSO</a>
   <a href="#l-export">14.3 Exporter</a>
   <a href="#l-sync">14.4 Synchronisation (LoTW, eQSL, Club Log, QRZ)</a>
+  <a href="#l-sync-pas">14.4 bis Pas à pas : régler et vérifier chaque service</a>
   <a href="#l-config">14.5 Configuration</a>
   <a href="#l-net">14.6 Réseau : log commun et contests à plusieurs stations</a>
   <a href="#clavier">15. Raccourcis clavier</a>
@@ -999,6 +1000,39 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
 <h3 id="l-sync">14.4 Synchronisation (LoTW, eQSL, Club Log, QRZ)</h3>
 <p>Menu <b>Synchronisation ▾</b> : il envoie les QSO du carnet vers les sites de confirmation. Une fenêtre par service, comme dans Swisslog. Les <b>administrateurs</b> gèrent tous les indicatifs (club et membres). <b>Chaque QSO part vers le compte de son TX call</b>. ⚙ Configuration contient les réglages <b>communs</b> à ON5VL et OR0L (jamais utilisés pour un indicatif personnel) ; si un indicatif du club a son propre compte (eQSL, QRZ.com, Club Log…), choisissez-le dans la fenêtre du service : ses identifiants et son envoi automatique (cadre jaune, « Enregistrer pour cet indicatif », depuis la 0.42.62) remplacent les réglages communs pour lui seul. Chaque <b>membre</b> qui émet sous son propre indicatif s'en sert pour <b>ses</b> QSO (voir « Vos propres logs en ligne » ci-dessous).</p>
 <div class="warn">🔒 <b>Vous seul connaissez vos identifiants.</b> Jetons et clés API (Club Log, QRZ.com), mots de passe (eQSL, site LoTW) : une fois enregistrés, Remote Station les garde sur le serveur et <b>ne les réaffiche jamais</b>, ni à vous ni à personne (la fenêtre n'indique que « enregistré »). <b>S'ils sont perdus, Remote Station ne peut pas les récupérer</b> : notez-les en lieu sûr (gestionnaire de mots de passe). En cas de perte, il faut en refaire chez le service : Club Log → nouveau jeton (Settings → API → Tokens, puis supprimer l'ancien) ; QRZ.com → la clé API se relit dans Logbook → Settings ; eQSL → nouveau mot de passe sur eQSL.cc ; LoTW → mot de passe du site à refaire sur lotw.arrl.org. Le <b>certificat LoTW</b> et son mot de passe ne sont jamais dans Remote Station : ils restent dans TQSL sur votre PC ; gardez la sauvegarde de TQSL (fichier .tbk) — certificat perdu sans sauvegarde = nouveau certificat à demander à l'ARRL. Ne montrez jamais ces valeurs (ni en capture d'écran).</div>
+<h4 id="l-sync-pas">Pas à pas : régler et vérifier chaque service</h4>
+<p><b>Chaque QSO part vers le compte de son TX call</b> : réglez chaque service <b>une fois par indicatif</b>, dans la fenêtre du service → <b>Indicatif (TX call)</b> → cadre jaune → <span class="k">Enregistrer pour cet indicatif</span>. ⚙ Configuration ne contient que les réglages communs à ON5VL et OR0L : jamais les identifiants d'un indicatif personnel.</p>
+<p><b>Même ordre pour les quatre services</b> :</p>
+<ol>
+  <li>Créer ou retrouver les identifiants sur le site du service.</li>
+  <li>Les mettre dans le cadre jaune de l'indicatif, puis <span class="k">Enregistrer pour cet indicatif</span>.</li>
+  <li>Lire en bas de la fenêtre le nombre de QSO à envoyer et leurs dates ; pour n'envoyer que les récents, remplir <b>Plage de dates</b>.</li>
+  <li>Cliquer le bouton bleu <span class="k">Synchronisation …</span> et suivre l'onglet <b>Traitement</b> jusqu'à « Terminé ».</li>
+  <li>Vérifier sur le site du service qu'un QSO récent y est.</li>
+  <li>Seulement alors : cocher <b>Envoyer automatiquement chaque nouveau QSO</b>, puis enregistrer.</li>
+</ol>
+<table>
+  <tr><th>Service</th><th>Identifiants (cadre jaune)</th><th>Premier envoi réussi</th></tr>
+  <tr><td><b>LoTW</b></td><td>Agent LoTW appairé (PC avec TQSL et le certificat ; installateur : <b>seulement</b> « Agent LoTW », jamais « Serveur ») ; <b>Lieu de station TQSL</b> (nom exact ; son locator est celui envoyé) ; identifiant et mot de passe du <b>site</b> lotw.arrl.org (confirmations) ; mot de passe du certificat : vide</td><td>Exporter, Signer, Téléchargement en vert ; « TQSL 0 : signé et envoyé » ou « TQSL 8 : déjà sur LoTW (doublons) » ; vérifier sur lotw.arrl.org (Most Recent QSOs)</td></tr>
+  <tr><td><b>Club Log</b></td><td><b>Jeton cl_…</b> (clublog.org → Settings → API → Tokens → Create token, <b>sans</b> Test mode, copié tout de suite) ; E-mail et Mot de passe effacés (✕)</td><td>« ✓ n QSO : QSO enregistré dans Club Log » ; le nombre de QSO monte dans Settings → Callsigns</td></tr>
+  <tr><td><b>QRZ Logbook</b></td><td>Clé API du carnet QRZ de l'indicatif (QRZ.com → Logbook → Settings) ; temporisation 1 s</td><td>« ✓ » ou « doublon » pour chaque QSO ; QSO visibles dans le carnet QRZ</td></tr>
+  <tr><td><b>eQSL</b></td><td>Indicatif et mot de passe eQSL.cc ; QTH nickname <b>vide</b> si un seul QTH (sinon le surnom exact du compte) ; temporisation 1 s</td><td>« ✓ ajouté » ou « déjà reçu (doublon) » ; QSO dans l'Outbox d'eQSL.cc</td></tr>
+</table>
+<p><b>Confirmations LoTW</b> : la première lecture reprend tout l'historique de l'indicatif (65 000 QSL : une vingtaine de minutes ou plus) ; laissez-la finir. Elle n'ajoute aucun QSO : elle met la ★ sur ceux déjà au carnet. Ensuite, lecture automatique toutes les heures, rapide.</p>
+<p><b>En cas de problème</b> (rien n'est perdu : un QSO non parti reste « à envoyer ») :</p>
+<table>
+  <tr><th>Message</th><th>Que faire</th></tr>
+  <tr><td>« envois arrêtés après un refus d'accès »</td><td>Corriger les identifiants du cadre jaune, puis <span class="k">Enregistrer pour cet indicatif</span>.</td></tr>
+  <tr><td>Plus de QSO à envoyer que prévu</td><td>Lire le détail sous le nombre (dates, jamais envoyés, en échec), puis mettre une <b>Plage de dates</b>.</td></tr>
+  <tr><td>LoTW : « Aucun Agent LoTW connecté »</td><td>Allumer le PC où TQSL est installé, sinon refaire « Appairer un PC… ».</td></tr>
+  <tr><td>LoTW : « TQSL 8 : QSO écartés… lieu de station »</td><td>Dans TQSL, vérifier le locator du lieu de station et son nom exact dans le cadre jaune.</td></tr>
+  <tr><td>LoTW : « LoTW indisponible (HTTP 503) »</td><td>Rien : site LoTW surchargé ; la lecture horaire réessaie. Ne pas cliquer CONFIRMATIONS en boucle.</td></tr>
+  <tr><td>Club Log : « jeton Club Log refusé (401 / 403) »</td><td>Créer un nouveau jeton (sans Test mode), le coller, enregistrer.</td></tr>
+  <tr><td>Club Log : « trop de requêtes (429) »</td><td>Attendre l'heure indiquée, puis relancer.</td></tr>
+  <tr><td>eQSL : « No match on APP_EQSL_QTH_NICKNAME »</td><td>Vider le QTH nickname, ou mettre le surnom exact du compte eQSL.</td></tr>
+  <tr><td>QRZ : clé API refusée</td><td>Recopier la clé depuis QRZ.com → Logbook → Settings, puis enregistrer.</td></tr>
+</table>
+
 <p><b>Synchronisation Listes…</b> (administrateurs, même menu) : état et mise à jour des listes de références IOTA, WWFF, POTA, BOTA, LLOTA et SOTA téléchargées par le serveur (bouton « Mettre à jour maintenant »).</p>
 <p><b>Confirmations LoTW lues toutes seules</b> (depuis la 0.42.54) : 3 minutes après le démarrage du serveur puis <b>toutes les heures</b>, les confirmations LoTW sont lues pour chaque indicatif dont l'identifiant et le mot de passe du <b>site</b> lotw.arrl.org sont réglés (indicatifs du club et comptes personnels). Les QSO confirmés passent en <b>C</b> dans les statistiques (📊), dans le tableau DXCC de la page FT et dans l'alerte « pas encore confirmé », sans rien cliquer. La dernière ligne sous la liste du carnet montre la dernière lecture. Le bouton « Importer les confirmations » reste disponible pour une lecture immédiate.</p>
 <p><b>En bref : ce qu'il faut pour chaque service</b> (indicatifs du club : ⚙ Configuration, par un administrateur ; indicatif personnel : cadre jaune de la fenêtre du service, par le membre lui-même) :</p>

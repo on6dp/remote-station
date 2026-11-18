@@ -603,6 +603,21 @@ Page TRX SSB → **🎙 Ma voix** : chaque membre enregistre T1 … T8 au micro 
 - **⚙ Configuration** (0.42.16) : onglets = indicatifs du club ; la clé API Club Log de ⚙ Configuration sert aussi aux indicatifs personnels (`credFor` ne la vide pas ; un membre peut en mettre une propre) ; pas de temporisation pour Club Log et LoTW (un fichier) ; onglet LoTW sans TQSL sur le serveur (`tqslHere` faux) : champs Programme / Dossier / mot de passe du certificat masqués, « Tester » vérifie l'Agent LoTW connecté pour `digiCall` et son lieu de station.
 - **Club Log, clé API** : elle identifie le logiciel Remote Station (pas un membre) ; une seule pour tout le club, demandée par e-mail à support@clublog.org (le développeur, ON6DP) ; chaque membre met ensuite l'e-mail de son compte et un mot de passe d'application (Club Log → Settings → App Passwords). Ce n'est **pas** le jeton de la station.
 
+### Synchronisation des logs en ligne : pas à pas (à transmettre aux membres)
+
+Chaque QSO part vers le compte de son **TX call** : chaque service se règle **une fois par indicatif**, dans sa fenêtre (Synchronisation ▾ → service → Indicatif → cadre jaune → « Enregistrer pour cet indicatif »). ⚙ Configuration = réglages communs à ON5VL / OR0L seulement, jamais ceux d'un indicatif personnel. Les identifiants ne sont jamais réaffichés : seul l'opérateur les connaît.
+
+Même ordre pour les quatre services : 1) identifiants créés sur le site du service ; 2) cadre jaune → Enregistrer ; 3) lire le nombre de QSO à envoyer et leur détail (plage de dates si besoin) ; 4) bouton « Synchronisation … », suivre l'onglet Traitement jusqu'à « Terminé » ; 5) vérifier sur le site du service ; 6) seulement alors, cocher l'envoi automatique et réenregistrer.
+
+| Service | Identifiants (cadre jaune) | Premier envoi réussi |
+| --- | --- | --- |
+| LoTW | Agent LoTW appairé (installateur : seulement « Agent LoTW », jamais « Serveur ») ; lieu de station TQSL (son locator est celui envoyé) ; identifiant et mot de passe du site lotw.arrl.org ; mot de passe du certificat vide | Exporter / Signer / Téléchargement en vert ; « TQSL 0 » ou « TQSL 8 : déjà sur LoTW (doublons) » |
+| Club Log | Jeton `cl_…` (Settings → API → Tokens, sans Test mode) ; e-mail et mot de passe vides | « ✓ n QSO : QSO enregistré dans Club Log » |
+| QRZ Logbook | Clé API du carnet QRZ de l'indicatif ; temporisation 1 s | « ✓ » ou « doublon » par QSO |
+| eQSL | Indicatif + mot de passe eQSL.cc ; QTH nickname vide si un seul QTH ; temporisation 1 s | « ✓ ajouté » ou « doublon » |
+
+Confirmations LoTW : la première lecture reprend tout l'historique (65 000 QSL ≈ 20 min ou plus), n'ajoute aucun QSO, met la ★ sur ceux du carnet ; ensuite lecture horaire rapide. Messages fréquents et remèdes : manuel, section « Pas à pas : régler et vérifier chaque service » (aide.html#l-sync-pas). Version partageable (document Claude) : « Synchronisation des logs en ligne — guide pas à pas ».
+
 ### Agent LoTW (0.42.10)
 
 **Mise en route pas à pas (administrateur, indicatifs du club)** :

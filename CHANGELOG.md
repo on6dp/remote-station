@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.98** — Aide, help et guide administrateur : pas à pas pour régler et vérifier LoTW, Club Log, QRZ Logbook et eQSL, avec les messages fréquents et quoi faire
 - **0.42.97** — LoTW : TQSL 8 avec le bon locator = doublons (déjà sur LoTW), plus un faux écart de lieu ; carnet écrit dès l’envoi, avant la lecture des confirmations
 - **0.42.96** — Confirmations LoTW : rapport deux fois plus léger, une seule lecture à la fois par indicatif, avancement sur une seule ligne
 - **0.42.95** — Logbook du PC (Swisslog, Log4OM, HRD…) : chaque nouveau QSO transmis par l’Agent LoTW (UDP vers 127.0.0.1 du PC), même derrière un CGNAT ; agent version 3

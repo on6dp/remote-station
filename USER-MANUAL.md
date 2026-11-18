@@ -42,6 +42,7 @@
    - [14.2 The QSO list](#l-liste)
    - [14.3 Exporting](#l-export)
    - [14.4 Synchronisation (LoTW, eQSL, Club Log, QRZ)](#l-sync)
+   - [14.4 bis Step by step: set up and check each service](#l-sync-pas)
    - [14.5 Configuration](#l-config)
    - [14.6 Network: shared log and multi-station contests](#l-net)
 - [15. Keyboard shortcuts](#clavier)
@@ -1026,6 +1027,40 @@ Example for ON1ZZZ: a QSO he made as ON1ZZZ or as ON5VL / OR0L, he can correct o
 
 > [!WARNING]
 > 🔒 **Only you know your credentials.** Tokens and API keys (Club Log, QRZ.com), passwords (eQSL, LoTW website): once saved, Remote Station keeps them on the server and **never shows them again**, to you or anyone (the window only says « enregistré », stored). **If they are lost, Remote Station cannot recover them**: keep them somewhere safe (password manager). If lost, make new ones at the service: Club Log → new token (Settings → API → Tokens, then delete the old one); QRZ.com → the API key can be read again in Logbook → Settings; eQSL → new password on eQSL.cc; LoTW → reset the website password on lotw.arrl.org. The **LoTW certificate** and its password are never in Remote Station: they stay in TQSL on your PC; keep TQSL's backup (.tbk file) — a certificate lost without backup means requesting a new one from the ARRL. Never show these values (not even in a screenshot).
+
+**Each QSO goes to the account of its TX call**: set up each service **once per callsign**, in the service window → **Indicatif (TX call)** → yellow frame → `Enregistrer pour cet indicatif`. ⚙ Configuration only holds the settings shared by ON5VL and OR0L: never a personal callsign's credentials.
+
+**Same order for the four services**:
+
+1. Create or find the credentials on the service's website.
+2. Put them in the callsign's yellow frame, then `Enregistrer pour cet indicatif`.
+3. Read at the bottom of the window the number of QSOs to upload and their dates; to send only recent ones, fill **Plage de dates** (date range).
+4. Click the blue `Synchronisation …` button and follow the **Traitement** tab until « Terminé » (done).
+5. Check on the service's website that a recent QSO is there.
+6. Only then: tick **send each new QSO automatically** and save.
+
+| Service | Credentials (yellow frame) | First successful upload |
+|---|---|---|
+| **LoTW** | LoTW Agent paired (PC with TQSL and the certificate; installer: **only** « Agent LoTW », never « Serveur »); **Lieu de station TQSL** (exact name; its locator is the one sent); **website** login and password of lotw.arrl.org (confirmations); certificate password: empty | Export, Sign, Upload in green; « TQSL 0 : signé et envoyé » or « TQSL 8 : déjà sur LoTW (doublons) »; check on lotw.arrl.org (Most Recent QSOs) |
+| **Club Log** | **cl_… token** (clublog.org → Settings → API → Tokens → Create token, **without** Test mode, copied at once); E-mail and Password cleared (✕) | « ✓ n QSO : QSO enregistré dans Club Log »; the QSO count rises in Settings → Callsigns |
+| **QRZ Logbook** | The callsign's QRZ logbook API key (QRZ.com → Logbook → Settings); delay 1 s | « ✓ » or « doublon » for each QSO; QSOs visible in the QRZ logbook |
+| **eQSL** | eQSL.cc callsign and password; QTH nickname **empty** if one QTH only (otherwise the account's exact nickname); delay 1 s | « ✓ ajouté » or « déjà reçu (doublon) »; QSOs in the eQSL.cc Outbox |
+
+**LoTW confirmations**: the first read takes the callsign's whole history (65,000 QSLs: about twenty minutes or more); let it finish. It adds no QSO: it puts the ★ on those already in the logbook. Then automatic, quick reads every hour.
+
+**If something goes wrong** (nothing is lost: a QSO not sent stays « to send »):
+
+| Message | What to do |
+|---|---|
+| « envois arrêtés après un refus d'accès » (uploads stopped after a refusal) | Fix the yellow frame's credentials, then `Enregistrer pour cet indicatif`. |
+| More QSOs to upload than expected | Read the detail under the number (dates, never sent, failed), then set a **date range**. |
+| LoTW: « Aucun Agent LoTW connecté » | Switch on the PC where TQSL is installed, otherwise pair it again. |
+| LoTW: « TQSL 8 : QSO écartés… lieu de station » | In TQSL, check the Station Location's locator and its exact name in the yellow frame. |
+| LoTW: « LoTW indisponible (HTTP 503) » | Nothing: LoTW website overloaded; the hourly read retries. Do not click CONFIRMATIONS repeatedly. |
+| Club Log: « jeton Club Log refusé (401 / 403) » | Create a new token (without Test mode), paste it, save. |
+| Club Log: « trop de requêtes (429) » | Wait until the time shown, then try again. |
+| eQSL: « No match on APP_EQSL_QTH_NICKNAME » | Empty the QTH nickname, or enter the eQSL account's exact nickname. |
+| QRZ: API key refused | Copy the key again from QRZ.com → Logbook → Settings, then save. |
 
 **Synchronisation Listes…** (administrators, same menu): status and update of the IOTA, WWFF, POTA, BOTA, LLOTA and SOTA reference lists downloaded by the server (« Mettre à jour maintenant » button, update now).
 
