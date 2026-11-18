@@ -5072,7 +5072,9 @@
   function ftMaxRep() { const n = Number(store.get('ftxmaxrep', '4')); return [0, 3, 4, 5, 6, 8].indexOf(n) >= 0 ? n : 4; }
   function ftxCfg() {
     const st = api && api.state();
-    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), rxf: sd() === 'B' ? rxFB : rxF, parity: txParity(ftxSel), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq' || ftAfter() === 'always', cqAlways: ftAfter() === 'always', dual: ftDual2(), maxRep: ftMaxRep(), side: sd() });
+    // Période : seulement si elle est imposée (paire / impaire) ; en « auto », le serveur garde celle du QSO en cours
+    const ps = $('dgPar') ? $('dgPar').value : store.get('ftxpar', 'auto');
+    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), rxf: sd() === 'B' ? rxFB : rxF, parity: ps === '0' || ps === '1' ? Number(ps) : undefined, call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq' || ftAfter() === 'always', cqAlways: ftAfter() === 'always', dual: ftDual2(), maxRep: ftMaxRep(), side: sd() });
   }
   // Fin de QSO (73 / RR73) : proposition d'enregistrement dans le carnet, comme « Prompt me to log QSO » de WSJT-X
   // Fin d'un QSO FT8 / FT4 / FT2 : fiche à confirmer, ou enregistrement automatique selon le choix « Log »

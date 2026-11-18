@@ -2850,6 +2850,8 @@ const RPT_RE = /^[+-]\d{2}$/;
 const RRPT_RE = /^R[+-]\d{2}$/;
 const GRID4_RE = /^[A-R]{2}[0-9]{2}$/;
 const SEQ_CALL_RE = /^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}[A-Z]$/;
+// Appel d'un indicatif composé (« <ON5VL> HA/ES3H », sans locator : le format ne le permet pas), comme un appel avec locator
+const NSCALL = (w) => w.length === 2 && w[1].indexOf('/') > 0 && SEQ_CALL_RE.test(baseCall(w[1]));
 
 function seqText(s) {
   const me = seqMe();
@@ -2861,7 +2863,7 @@ function seqText(s) {
     case 3: return c + ' ' + me + ' R' + r;
     // Réponse double (MSHV, FOX de WSJT-X) : RR73 au correspondant et report au suivant de la file, dans la même émission
     case 4: return s.dual2 ? c + ' RR73; ' + s.dual2.call + ' <' + me + '> ' + s.dual2.rpt : c + ' ' + me + ' RR73';
-    case 5: return c + ' ' + me + ' 73';
+    case 5: return s.dual2 ? c + ' RR73; ' + s.dual2.call + ' <' + me + '> ' + s.dual2.rpt : c + ' ' + me + ' 73'; // son RR73 reçu : notre RR73 vaut 73
     case 6: return 'CQ ' + me + ' ' + seqGrid();
     default: return String(s.free || '');
   }
@@ -2926,7 +2928,7 @@ function seqQueueCmd(conn, m) {
  * main doit être appelée d'abord.
  */
 function seqDualPick(s) {
-  if (!s || !s.dual || s.hound || s.mode !== 'FT8' || !s.cqRun || s.autoCq === false || s.ntx !== 4 || s.parity == null) return null;
+  if (!s || !s.dual || s.hound || s.mode !== 'FT8' || !s.cqRun || s.autoCq === false || (s.ntx !== 4 && s.ntx !== 5) || s.parity == null) return null;
   if (!station || station.caps.indexOf('ftxdx') < 0) return null;
   if (!/^[A-Z0-9]{3,6}$/.test(s.dx.call) || !/^[A-Z0-9/]{3,11}$/.test(seqMe())) return null;
   const P = FTX_SLOT[s.mode] || 15000, now = Date.now();
@@ -2978,7 +2980,7 @@ function seqNext() {
       send(seq.conn, { t: 'notice', level: 'info', msg: 'HOUND : appel du FOX au-dessus de 1000 Hz → émission à ' + seq.f0 + ' Hz' });
     }
   }
-  seq.dual2 = seq.ntx === 4 ? seqDualPick(seq) : null;
+  seq.dual2 = seq.ntx === 4 || seq.ntx === 5 ? seqDualPick(seq) : null;
   const text = seqText(seq);
   // Même message déjà envoyé « maxRep » fois sans réponse (Tx1 à Tx3) : on attend encore les décodages de la période
   // qui suit, puis on abandonne ce correspondant (appel CQ : station suivante qui appelait, sinon CQ ; sinon arrêt)
@@ -3030,9 +3032,9 @@ function seqReact(payload, d) {
   // « RR73 » a la forme d'un locator (RR73 = carré au milieu de l'océan) : c'est toujours la fin de QSO, comme dans WSJT-X
   if (p === 'RR73' || p === 'RRR') {
     seqSetNtx(5);
-  } else if (GRID4_RE.test(p)) {
-    // Réponse à notre CQ avec son locator → on lui donne son report
-    seq.dx.grid = p;
+  } else if (GRID4_RE.test(p) || (p === '' && seq.progress <= PROG.REPORT)) {
+    // Réponse à notre CQ avec son locator (indicatif composé : sans locator) → on lui donne son report
+    if (p) seq.dx.grid = p;
     seq.rptSent = fmtRpt(d.db);
     seqSetNtx(2);
   } else if (RPT_RE.test(p)) {
@@ -3067,8 +3069,9 @@ function seqOnDecodes(mode, slot, list, side) {
   if (seq.cqRun || seq.waiting.size) {
     for (const d of list) {
       const w = words(d);
-      if (w.length < 3 || baseCall(w[0]) !== me || !SEQ_CALL_RE.test(baseCall(w[1])) || baseCall(w[1]) === dxBase) continue;
-      if (!((GRID4_RE.test(w[2]) && w[2] !== 'RR73') || RPT_RE.test(w[2]) || RRPT_RE.test(w[2]))) continue;
+      if (baseCall(w[0]) !== me || (w.length < 3 && !NSCALL(w)) || !SEQ_CALL_RE.test(baseCall(w[1])) || baseCall(w[1]) === dxBase) continue;
+      if (w.length >= 3 && !((GRID4_RE.test(w[2]) && w[2] !== 'RR73') || RPT_RE.test(w[2]) || RRPT_RE.test(w[2]))) continue;
+      if (w.length < 3) w.push('');
       const old = seq.waiting.get(baseCall(w[1]));
       seq.waiting.set(baseCall(w[1]), { d, w, at: Date.now(), parity: theirParity, top: !!(old && old.top) });
       qChanged = true;
@@ -3077,7 +3080,7 @@ function seqOnDecodes(mode, slot, list, side) {
   }
   if (qChanged) setTimeout(broadcast, 0); // file d'attente visible dans la page FT
   // RR73 pas encore parti et quelqu'un vient d'appeler : il reçoit son report dans le même message (réponse double)
-  if (qChanged && seq.dual && seq.ntx === 4 && !seq.dual2) { const d2 = seqDualPick(seq); if (d2) { seq.dual2 = d2; setTimeout(seqChanged, 0); } }
+  if (qChanged && seq.dual && (seq.ntx === 4 || seq.ntx === 5) && !seq.dual2) { const d2 = seqDualPick(seq); if (d2) { seq.dual2 = d2; setTimeout(seqChanged, 0); } }
   // 1) le correspondant
   if (dxBase && seq.ntx !== 6) {
     for (const d of list) {
@@ -3110,8 +3113,9 @@ function seqOnDecodes(mode, slot, list, side) {
     let best = null;
     for (const d of list) {
       const w = words(d);
-      if (w.length < 3 || baseCall(w[0]) !== me || !SEQ_CALL_RE.test(baseCall(w[1]))) continue;
-      if (!((GRID4_RE.test(w[2]) && w[2] !== 'RR73') || RPT_RE.test(w[2]) || RRPT_RE.test(w[2]))) continue;
+      if (baseCall(w[0]) !== me || (w.length < 3 && !NSCALL(w)) || !SEQ_CALL_RE.test(baseCall(w[1]))) continue;
+      if (w.length >= 3 && !((GRID4_RE.test(w[2]) && w[2] !== 'RR73') || RPT_RE.test(w[2]) || RRPT_RE.test(w[2]))) continue;
+      if (w.length < 3) w.push('');
       // Déjà contacté (même bande, même mode, ce TX call) : pas de réponse automatique (double-clic pour lui répondre quand même)
       if (seq.worked.has(baseCall(w[1])) || isDupeNow(w[1], mode)) { seqDupeNote(w[1]); continue; }
       if (!best || d.db > best.d.db) best = { d, w };
@@ -3157,14 +3161,16 @@ function seqNextCaller(s, why, manualOnly) {
   const P = FTX_SLOT[s.mode] || 15000;
   let next = null;
   const rank = (v) => (v.top ? 2 : 0) + (v.manual ? 1 : 0);
+  // Réponse double qui vient de partir : le suivant est celui qui a reçu son report dans le RR73 (il n'est pas rappelé),
+  // même si son dernier appel date de plus de 2 périodes (il attend maintenant notre report, il n'appelle plus)
+  const take = s.dualTake;
+  s.dualTake = null;
   for (const [k, v] of s.waiting) {
+    if (take && k === take.key) continue;
     if (manualOnly && !v.manual) continue;
     if ((!v.manual && Date.now() - v.at > 2 * P + 2000) || s.worked.has(k) || isDupeNow(v.w[1], s.mode)) { s.waiting.delete(k); continue; }
     if (!next || rank(v) > rank(next) || (rank(v) === rank(next) && v.d.db > next.d.db)) next = v;
   }
-  // Réponse double qui vient de partir : le suivant est celui qui a reçu son report dans le RR73 (il n'est pas rappelé)
-  const take = s.dualTake;
-  s.dualTake = null;
   if (take && s.waiting.has(take.key)) next = s.waiting.get(take.key);
   s.on = true;
   s.watchMsg = ''; s.watchSince = 0;
@@ -3305,7 +3311,7 @@ function seqAfterTx(p) {
   if (p.ntx >= 1 && p.ntx <= 5 && !seq.qsoStart) seq.qsoStart = Date.now();
   // RR73 / 73 d'un QSO déjà fini (73 reçu pendant l'émission, QSO suivant commencé) : rien à terminer
   if ((p.ntx === 4 || p.ntx === 5) && seq.dx && String(p.text || '').indexOf(seq.dx.call + ' ') !== 0) return setTimeout(seqNext, 50);
-  if (p.ntx === 4 && seq.dual2 && String(p.text || '').indexOf('RR73; ' + seq.dual2.call + ' ') > 0) seq.dualTake = seq.dual2;
+  if ((p.ntx === 4 || p.ntx === 5) && seq.dual2 && String(p.text || '').indexOf('RR73; ' + seq.dual2.call + ' ') > 0) seq.dualTake = seq.dual2;
   if (p.ntx === 4 || p.ntx === 5) return seqQsoDone(p.ntx === 4 ? 'RR73 envoyé' : '73 envoyé');
   // Essais du même message (Tx1 à Tx3) : compte remis à zéro dès que le message change (réponse reçue)
   if (p.ntx >= 1 && p.ntx <= 3) {
@@ -3384,7 +3390,10 @@ function seqCfg(conn, m) {
     }
   }
   if (seq.hound) seq.parity = 1;
-  else if (m.parity === 0 || m.parity === 1 || m.parity === null) seq.parity = m.parity;
+  // Période imposée (liste « Période » : paire / impaire) seulement. Jamais remise à « auto » en cours de séquence :
+  // la page envoie ses réglages à chaque clic (fréquence RX, cases…) et la période du QSO repartait au plus tôt —
+  // CQ ou report émis dans la même période que le correspondant (jamais entendus).
+  else if (m.parity === 0 || m.parity === 1) seq.parity = m.parity;
   if (typeof m.call1st === 'boolean' && !seq.hound) seq.call1st = m.call1st;
   if (typeof m.autoCq === 'boolean' && !seq.hound) seq.autoCq = m.autoCq;
   if (typeof m.dual === 'boolean' && !seq.hound) seq.dual = m.dual;
