@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.90** — LoTW : TQSL 8 avec un lieu de station différent (MY_GRIDSQUARE…) n’est plus compté comme envoyé ; les QSO concernés redeviennent « à envoyer » et le message explique quoi faire dans TQSL
 - **0.42.89** — Confirmations LoTW : suivi de la lecture (LoTW répond après … s, Mo reçus), attente portée à 5 min, ARRÊT l’interrompt
 - **0.42.88** — UDP : boutons pour Swisslog, HRD Logbook, Log4OM, Logger32, DXLab, DXBase, N1MM Logger+ et ADIF brut, avec port, format et réglage à faire dans chaque logbook
 - **0.42.87** — Identifiants des logs en ligne : avertissement « vous seul les connaissez, Remote Station ne les réaffiche jamais et ne peut pas les récupérer » dans chaque fenêtre, ⚙ Configuration, le manuel et le guide
