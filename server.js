@@ -805,8 +805,9 @@ function credFor(s, call) {
 // son titulaire (ou un administrateur) l'a demandé dans ses identifiants — jamais avec ceux du club
 function autoFor(s, call) {
   call = String(call || '').toUpperCase();
-  if (!call || stationCalls().indexOf(call) >= 0) return !!(logCfg[s] && logCfg[s].auto);
   const acct = logCfg[s] && logCfg[s].accounts && logCfg[s].accounts[call];
+  // Indicatif du club : son propre choix (fenêtre du service, cadre jaune) s'il en a un, sinon celui de ⚙ Configuration
+  if (!call || stationCalls().indexOf(call) >= 0) return acct && typeof acct.auto === 'boolean' ? acct.auto : !!(logCfg[s] && logCfg[s].auto);
   if (!acct || acct.auto !== true) return false;
   const c = credFor(s, call);
   // LoTW : TQSL de ce serveur ou Agent LoTW du membre (s'il n'est pas connecté, les QSO partent dès son retour)
@@ -827,7 +828,8 @@ function acctPublic(s, call) {
   }
   out.source = acct ? 'compte' : stationCalls().indexOf(call) >= 0 ? 'club' : 'aucun';
   out.club = stationCalls().indexOf(call) >= 0;
-  out.auto = out.club ? !!(logCfg[s] && logCfg[s].auto) : !!(acct && acct.auto === true);
+  out.auto = out.club ? (acct && typeof acct.auto === 'boolean' ? acct.auto : !!(logCfg[s] && logCfg[s].auto)) : !!(acct && acct.auto === true);
+  out.autoOwn = !!(acct && typeof acct.auto === 'boolean');
   return out;
 }
 function logCfgPublic() {
@@ -4382,8 +4384,11 @@ function onOperator(conn, m) {
         if (v === '__effacer__' || v === '') delete a[k]; else a[k] = String(v).slice(0, 300);
       }
       // Envoi automatique des nouveaux QSO de cet indicatif (indicatif personnel ; pour le club : ⚙ Configuration)
-      if (stationCalls().indexOf(call) < 0 && typeof m.auto === 'boolean') { if (m.auto) a.auto = true; else delete a.auto; }
-      if (Object.keys(a).some((k) => k !== 'lastConfirm' && k !== 'auto')) logCfg[sv].accounts[call] = a; else delete logCfg[sv].accounts[call];
+      // Indicatif du club (administrateurs) : oui / non propre à cet indicatif, à la place du réglage commun de ⚙ Configuration
+      const clubCall = stationCalls().indexOf(call) >= 0;
+      if (clubCall && conn.user.admin && typeof m.auto === 'boolean') a.auto = m.auto;
+      else if (!clubCall && typeof m.auto === 'boolean') { if (m.auto) a.auto = true; else delete a.auto; }
+      if (Object.keys(a).some((k) => k !== 'lastConfirm' && k !== 'auto') || (clubCall && typeof a.auto === 'boolean')) logCfg[sv].accounts[call] = a; else delete logCfg[sv].accounts[call];
       saveLogCfg();
       sync.resetStops();
       journal('log_acct', { call: conn.user.call, service: sv, for: call });

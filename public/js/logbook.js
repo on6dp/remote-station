@@ -1474,7 +1474,7 @@
   }
   const textField = (label, name, v, hint, extra) => '<label>' + label + '<input name="' + name + '" value="' + esc(v) + '" ' + (extra || '') + '>' + (hint ? '<small>' + hint + '</small>' : '') + '</label>';
   // Onglets de ⚙ Configuration : indicatifs du club seulement (les membres règlent le leur dans la fenêtre du service)
-  const CLUBNOTE = '<p class="lg-note">Réglages des <b>indicatifs du club</b> (ON5VL, OR0L). Un indicatif personnel se règle dans la fenêtre de synchronisation du service (cadre jaune), par son titulaire.</p>';
+  const CLUBNOTE = '<p class="lg-note">Réglages <b>communs aux indicatifs du club</b> (ON5VL, OR0L) — jamais utilisés pour un indicatif personnel. Un indicatif du club qui a <b>son propre compte</b> (eQSL, QRZ.com, Club Log…) : Synchronisation ▾ → le service → choisir l’indicatif → cadre jaune → ses identifiants et son envoi automatique, qui remplacent ceux d’ici pour lui seul. Un indicatif personnel se règle au même endroit, par son titulaire.</p>';
   const common = (s, c, noDelay) => CLUBNOTE + '<label class="lg-chk"><input type="checkbox" name="' + s + '.auto"' + (c.auto ? ' checked' : '') + '> Télécharger automatiquement les QSO lors de leur enregistrement</label>' +
     (noDelay ? '' : '<label class="lg-w8">Temporisation (secondes) <input type="number" min="0" max="120" name="' + s + '.delay" value="' + esc(c.delay) + '"><small>Pause entre deux QSO lors d’un envoi en lot (1 s suffit).</small></label>');
   function udpRow(u) {
@@ -1941,8 +1941,10 @@
           (m.source === 'compte' && m.has && m.has[k] ? '<button type="button" class="lg-clr" data-aclr="' + k + '" title="Effacer la valeur enregistrée pour cet indicatif">✕</button>' : '') + '</span>'
         : '<input data-af="' + k + '" value="' + esc((m.fields || {})[k] || '') + '" autocomplete="off" readonly data-noauto="1">') + '</label>').join('') +
         // Indicatif personnel : envoi automatique de chaque nouveau QSO (le club se règle dans ⚙ Configuration)
-        (m.club ? '<p class="lg-note">Envoi automatique des QSO de ' + esc(m.call) + ' (indicatif du club) : ⚙ Configuration.' + (me.admin ? ' Votre indicatif personnel : choisissez-le dans la liste ci-dessus.' : '') + '</p>'
-          : '<label class="lg-chk"><input type="checkbox" data-aauto' + (m.auto ? ' checked' : '') + '> Envoyer automatiquement chaque nouveau QSO de ' + esc(m.call) + ' vers ' + esc(NAMES[m.service]) + '</label>');
+        // Indicatif du club (administrateurs) : choix propre à cet indicatif, sinon le réglage commun de ⚙ Configuration
+        (m.club && !me.admin ? '<p class="lg-note">Envoi automatique des QSO de ' + esc(m.call) + ' (indicatif du club) : réglé par un administrateur.</p>'
+          : '<label class="lg-chk"><input type="checkbox" data-aauto' + (m.auto ? ' checked' : '') + '> Envoyer automatiquement chaque nouveau QSO de ' + esc(m.call) + ' vers ' + esc(NAMES[m.service]) + '</label>' +
+            (m.club ? '<p class="lg-note">' + (m.autoOwn ? 'Choix propre à ' + esc(m.call) + '.' : 'Réglage commun aux indicatifs du club (⚙ Configuration) ; « Enregistrer pour cet indicatif » le rend propre à ' + esc(m.call) + '.') + '</p>' : ''));
       box.querySelectorAll('[data-noauto]').forEach((i) => {
         const on = () => i.removeAttribute('readonly');
         i.addEventListener('focus', on);

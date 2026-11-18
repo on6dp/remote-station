@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.62** — Logs en ligne : un indicatif du club (OR0L, ON5VL) peut avoir ses propres identifiants ET son propre envoi automatique (fenêtre du service → l'indicatif → cadre jaune), à la place des réglages communs de ⚙ Configuration ; texte de ⚙ Configuration clarifié.
 - **0.42.61** — Annonce « ✓ QSO sauvegardé dans le logbook » : plus effacée aussitôt par l'avis suivant (spot envoyé au DX cluster, CQ relancé…), qui s'ajoute derrière.
 - **0.42.60** — Page FT : plus de texte superposé en haut à droite — « BF reçue · décodage OK… » retiré (seuls les problèmes s'affichent ; l'état du décodage est dans SYNCHRO).
 - **0.42.59** — FT : annonce « ✓ QSO sauvegardé dans le logbook » à chaque QSO enregistré, aussi quand la séquence automatique est déjà passée à la station suivante, et seulement après l'écriture par le serveur.
