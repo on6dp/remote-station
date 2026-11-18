@@ -708,7 +708,7 @@ function onDigi(m) {
 // ---------------------------------------------------------------- carnet de trafic et carnets en ligne (version « extended »)
 const LB = require('./lib/logbook.js');
 const REFDATA = require('./lib/refdata.js');
-const { Sync, SERVICES: LOG_SERVICES } = require('./lib/logsync.js');
+const { Sync, SERVICES: LOG_SERVICES, udpPacket } = require('./lib/logsync.js');
 const VERSION = (() => { try { return require('./package.json').version; } catch (e) { return '0'; } })();
 // Dernier installateur Windows publié (releases/<v>/RemoteStation-Setup-<v>.exe) : à changer quand il est reconstruit
 const WIN_INSTALLER = '0.42.42';
@@ -4188,6 +4188,8 @@ function onOperator(conn, m) {
         const club = stationCalls().indexOf(q.station_callsign) >= 0;
         const auto = Object.fromEntries(LOG_SERVICES.map((s) => [s, autoFor(s, q.station_callsign) && !sync.isStopped(s, q.station_callsign)]));
         sync.auto(q, { udp: club, by: club ? '' : String(q.station_callsign || '') });
+        // Logbook du PC de l'opérateur (Swisslog, Log4OM…) par son Agent LoTW, même derrière un CGNAT
+        try { AGENTS.forward(q, (fmt) => udpPacket(q, fmt)); } catch (e) { console.error('Agent UDP : ' + e.message); }
         if (!club && !LOG_SERVICES.some((s) => auto[s])) send(conn, { t: 'notice', level: 'info', msg: 'QSO enregistré sous ' + q.station_callsign + ' : pas d’envoi vers les logs en ligne du club. Vos propres logs en ligne : Synchronisation ▾ (vos identifiants, envoi automatique possible).' });
         send(conn, { t: 'log_saved', qso: qsoForClient(q), auto, tag: logTag(m) });
         qrzFill(q);
@@ -4396,6 +4398,9 @@ function onOperator(conn, m) {
       // Lien de l'installateur Windows : le dernier construit (il n'y en a pas à chaque version ; l'agent se met ensuite à jour seul)
       return send(conn, { t: 'log_agent_code', code: r.code, exp: r.exp, version: VERSION, installer: WIN_INSTALLER });
     }
+    case 'log_agent_udp':
+      if (!AGENTS.setUdp(String(m.id || ''), conn.user, m.udp, m.all)) return send(conn, { t: 'notice', level: 'error', msg: 'Agent LoTW introuvable' });
+      return send(conn, { t: 'notice', level: 'info', msg: 'Logbook du PC enregistré : chaque nouveau QSO lui sera transmis par l’Agent LoTW.' });
     case 'log_agent_del':
       if (!AGENTS.remove(String(m.id || ''), conn.user)) return send(conn, { t: 'notice', level: 'error', msg: 'Agent LoTW introuvable' });
       return send(conn, { t: 'notice', level: 'info', msg: 'Agent LoTW retiré : ce PC ne peut plus signer (appairez-le à nouveau pour le reprendre).' });

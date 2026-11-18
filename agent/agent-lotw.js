@@ -25,8 +25,9 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execFile } = require('child_process');
+const dgram = require('dgram');
 
-const AGENT_VERSION = 2;
+const AGENT_VERSION = 3;
 const argv = process.argv.slice(2);
 const arg = (n) => { const i = argv.indexOf(n); return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : null; };
 const has = (n) => argv.indexOf(n) >= 0;
@@ -213,6 +214,11 @@ function run() {
       } else if (m.t === 'lotw_agent_fail') {
         log('Refusé par le serveur : ' + m.msg);
         if (m.forget) { const x = loadCfg(); delete x.token; delete x.id; saveCfg(x); cfgStamp = stampOf(); }
+      } else if (m.t === 'lotw_udp' && Number.isInteger(m.port) && m.port > 0 && m.port < 65536 && typeof m.data === 'string' && m.data.length < 90000) {
+        // QSO à transmettre au logbook de CE PC (Swisslog, Log4OM…) : toujours vers 127.0.0.1, jamais ailleurs
+        const buf = Buffer.from(m.data, 'base64');
+        const sock = dgram.createSocket('udp4');
+        sock.send(buf, m.port, '127.0.0.1', (e) => { if (e) log('UDP ' + m.port + ' : ' + e.message); else log('QSO ' + (m.call || '') + ' transmis au logbook du PC (port ' + m.port + ')'); sock.close(); });
       } else if (m.t === 'lotw_sign' && typeof m.rid === 'string' && typeof m.adif === 'string' && typeof m.location === 'string') {
         // Un lot à la fois (TQSL n'aime pas deux signatures simultanées)
         queue = queue.then(async () => {

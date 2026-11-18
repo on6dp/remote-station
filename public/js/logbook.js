@@ -1341,6 +1341,13 @@
       f.callsign.addEventListener('change', agentsDraw);
       d.querySelector('[data-a="agpair"]').addEventListener('click', () => api.send({ t: 'log_agent_code' }));
       d.querySelector('.lg-agl').addEventListener('click', (e) => {
+        const sv = e.target.closest('[data-agudpsave]');
+        if (sv) {
+          const box = sv.closest('[data-agudp]');
+          const g = (k) => box.querySelector('[data-k="' + k + '"]');
+          api.send({ t: 'log_agent_udp', id: sv.dataset.agudpsave, udp: [{ on: g('on').checked, port: Number(g('port').value), format: g('format').value }], all: g('all').checked });
+          return;
+        }
         const b = e.target.closest('[data-agdel]');
         if (!b || !agents) return;
         const a = agents.find((x) => x.id === b.dataset.agdel);
@@ -1377,7 +1384,21 @@
     d.querySelector('.lg-agl').innerHTML = list.map((a) => '<div class="lg-ag' + (a.on ? ' on' : '') + '"><span>' + (a.on ? '●' : '○') + ' <b>' + esc(a.name) + '</b>' + (me.admin ? ' (' + esc(a.owner) + ')' : '') +
       (a.on ? ' — connecté depuis ' + hhmm(a.since) + (a.tqsl === false ? ' · <em>TQSL introuvable sur ce PC</em>' : '') + (a.old ? ' · mise à jour de l’agent en cours' : '') : ' — déconnecté' + (a.seen ? ' (vu le ' + hhmm(a.seen) + ')' : ' (jamais connecté)')) +
       (a.locations.length ? '<br><small>Lieux de station TQSL : ' + a.locations.map((l) => esc(l.name) + ' (' + esc(l.call || '?') + ')' + (l.ok ? '' : ' — indicatif non permis')).join(', ') + '</small>' : '') +
-      '</span><button type="button" class="btn lg-agx" data-agdel="' + esc(a.id) + '" title="Retirer ce PC">Retirer</button></div>').join('');
+      '</span><button type="button" class="btn lg-agx" data-agdel="' + esc(a.id) + '" title="Retirer ce PC">Retirer</button>' + agentUdpRow(a) + '</div>').join('');
+  }
+  // Logbook du PC de l'agent (Swisslog, Log4OM, HRD…) : chaque nouveau QSO lui est transmis en UDP par l'agent (127.0.0.1)
+  function agentUdpRow(a) {
+    if (!me.admin && a.owner !== me.call) return '';
+    const d = (a.udp && a.udp[0]) || { on: false, port: 2337, format: 'wsjtx-adif' };
+    const fm = [['wsjtx-adif', 'WSJT-X « Logged ADIF »'], ['wsjtx-qso', 'WSJT-X « QSO Logged »'], ['n1mm', 'N1MM (XML)'], ['adif', 'ADIF brut']];
+    return '<div class="lg-agudp" data-agudp="' + esc(a.id) + '"><b>Logbook de ce PC</b> (Swisslog, Log4OM, HRD…) : ' +
+      '<label class="lg-chk"><input type="checkbox" data-k="on"' + (d.on ? ' checked' : '') + '> recevoir chaque nouveau QSO</label> ' +
+      '<label>port UDP <input data-k="port" type="number" min="1" max="65535" value="' + esc(d.port) + '"></label> ' +
+      '<label>format <select data-k="format">' + fm.map(([k, t]) => '<option value="' + k + '"' + (k === d.format ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></label> ' +
+      '<label class="lg-chk" title="Sinon : seulement les QSO faits sous votre indicatif ' + esc(a.owner) + '"><input type="checkbox" data-k="all"' + (a.udpAll ? ' checked' : '') + '> aussi mes QSO sous les indicatifs du club</label> ' +
+      '<button type="button" class="btn" data-agudpsave="' + esc(a.id) + '">Enregistrer</button>' +
+      (a.udpWait ? ' <small>' + a.udpWait + ' QSO en attente (PC éteint)</small>' : '') +
+      '<br><small>Les QSO que vous faites (opérateur ' + esc(a.owner) + ') sont envoyés par l’agent à 127.0.0.1 de ce PC, sur ce port : réglez le même port dans le logbook (Swisslog : interface WSJT-X / JTDX UDP). PC éteint : envoyés à sa reconnexion.</small></div>';
   }
   function agentCode(m) {
     if (!sdlg || !sdlg.el.open || sdlg.service !== 'lotw') return;
