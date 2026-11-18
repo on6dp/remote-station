@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.93** — Confirmations LoTW : message clair quand LoTW est indisponible (HTTP 503, surcharge ou maintenance)
 - **0.42.92** — Synchronisation : détail des QSO à envoyer (dates, jamais envoyés, en échec avec le motif)
 - **0.42.91** — Carnet : références DME, DCI, DAI et ARLHS dans la fiche du QSO (saisie libre), colonne Réf., export et import ADIF (SIG / SIG_INFO, APP_REMOTESTATION_…)
 - **0.42.90** — LoTW : TQSL 8 avec un lieu de station différent (MY_GRIDSQUARE…) n’est plus compté comme envoyé ; les QSO concernés redeviennent « à envoyer » et le message explique quoi faire dans TQSL
