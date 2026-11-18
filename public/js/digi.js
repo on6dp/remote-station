@@ -4806,16 +4806,20 @@
     if (box) box.classList.toggle('qso-hid', !on);
     if (qsoBtn) qsoBtn.setAttribute('aria-pressed', String(!!on));
   }
+  const ftLogPend = new Set(); // indicatifs des QSO envoyés au carnet depuis cette page (annonce à la confirmation du serveur)
   function qsoSaved(m) {
     if (!m || m.t !== 'log_saved' || m.edited) return;
     const call = String((m.qso && m.qso.call) || '').toUpperCase();
-    if (m.tag !== 'ftqso' && !(call && dx.call && call === String(dx.call).toUpperCase())) return;
+    // QSO enregistré depuis cette page (fiche, log automatique), même si la séquence est déjà passée au suivant
+    const mine = ftLogPend.has(call);
+    if (m.tag !== 'ftqso' && !mine && !(call && dx.call && call === String(dx.call).toUpperCase())) return;
+    ftLogPend.delete(call);
     // Annonce visible dans cette page (elle passe devant le dashboard) : le QSO est bien dans le carnet
     const q = m.qso || {};
     const key = (q.id || '') + call;
     if (key && key !== qsoSaved.last) {
       qsoSaved.last = key;
-      if (api) api.say('✓ QSO enregistré dans le carnet : ' + call + (q.band ? ' · ' + q.band : '') + (q.submode || q.mode ? ' · ' + (q.submode || q.mode) : '') + (q.station_callsign ? ' · TX call ' + q.station_callsign : ''), 'ok', 6000);
+      if (api) api.say('✓ QSO sauvegardé dans le logbook : ' + call + (q.band ? ' · ' + q.band : '') + (q.submode || q.mode ? ' · ' + (q.submode || q.mode) : '') + (q.station_callsign ? ' · TX call ' + q.station_callsign : ''), 'ok', 6000);
     }
     clearTimeout(qsoHideT);
     qsoHideT = setTimeout(() => qsoShow(false), 2000);
@@ -5107,8 +5111,9 @@
     }
     if (!qso.gridsquare) delete qso.gridsquare;
     if (!qso.tx_pwr) delete qso.tx_pwr;
+    // L'annonce « ✓ QSO sauvegardé » vient de la réponse du serveur (QSO bien écrit dans le carnet)
+    ftLogPend.add(String(q.call || '').toUpperCase());
     api.send({ t: 'log_add', qso, spot: !!(window.RSSPOT && RSSPOT.on()), tag: qsoForm ? 'ftqso' : undefined });
-    if (auto && api) api.say('Log automatique : QSO avec ' + q.call + ' enregistré dans le carnet.', '', 4000);
   }
   function qsoPrompt(q, note) {
     const doc = ($('msgFtx') && $('msgFtx').ownerDocument) || document;
@@ -6061,6 +6066,7 @@
         if (/^\d{1,5}$/.test(qso.srx_string)) qso.srx = qso.srx_string;
       }
       for (const k of Object.keys(qso)) if (qso[k] === '') delete qso[k];
+      ftLogPend.add(String(call || '').toUpperCase());
       api.send({ t: 'log_add', qso, spot: !!(window.RSSPOT && RSSPOT.on()) });
       if (ctst && ctst.nr && qso.contest_id) cntrAfterLog(call); // n° de série suivant (une fois par correspondant)
       dlg.close();

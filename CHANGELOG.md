@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.59** — FT : annonce « ✓ QSO sauvegardé dans le logbook » à chaque QSO enregistré, aussi quand la séquence automatique est déjà passée à la station suivante, et seulement après l'écriture par le serveur.
 - **0.42.58** — FT8 « 2 à la fois » : aussi avec les indicatifs composés (F5OYA/P, HA/ES3H…), transmis par leur empreinte (« DL1AAA RR73; <HA/ES3H> <OR0L> -06 ») ; recharger la page Station.
 - **0.42.57** — FT8 : double-clic sur un indicatif avec préfixe (HA/ES3H, EA8/ON4ABC…) — avant « Pas d'indicatif à reprendre dans ce message » ; son appel sans locator (« <OR0L> HA/ES3H ») → réponse avec report (Tx2).
 - **0.42.56** — FT8 : période du QSO plus jamais remise à « auto » par un clic dans la page (CQ ou report émis dans la période du correspondant) ; réponse double aussi à la place du 73 ; la station qui a reçu son report dans le RR73 n'est plus oubliée (CQ relancé à tort) ; appels d'indicatifs composés sans locator (« <OR0L> HA/ES3H ») pris en compte.
