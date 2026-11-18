@@ -1431,7 +1431,9 @@
   function syncLog(line) {
     if (!sdlg || !line) return;
     const pre = sdlg.el.querySelector('.lg-log');
-    pre.textContent += line + '\n';
+    // Avancement (« … 19,6 Mo reçus ») : une seule ligne, mise à jour
+    if (/^… /.test(line) && /\n… [^\n]*\n$/.test(pre.textContent)) pre.textContent = pre.textContent.replace(/… [^\n]*\n$/, line + '\n');
+    else pre.textContent += line + '\n';
     pre.scrollTop = pre.scrollHeight;
   }
   function onJob(m) {

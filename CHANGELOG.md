@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.96** — Confirmations LoTW : rapport deux fois plus léger, une seule lecture à la fois par indicatif, avancement sur une seule ligne
 - **0.42.95** — Logbook du PC (Swisslog, Log4OM, HRD…) : chaque nouveau QSO transmis par l’Agent LoTW (UDP vers 127.0.0.1 du PC), même derrière un CGNAT ; agent version 3
 - **0.42.94** — Locator des QSO = celui du lieu de station TQSL de chaque indicatif (déjà connu de LoTW) : à l’envoi vers LoTW et dans chaque nouveau QSO
 - **0.42.93** — Confirmations LoTW : message clair quand LoTW est indisponible (HTTP 503, surcharge ou maintenance)
