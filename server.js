@@ -2930,11 +2930,14 @@ function seqQueueCmd(conn, m) {
 function seqDualPick(s) {
   if (!s || !s.dual || s.hound || s.mode !== 'FT8' || !s.cqRun || s.autoCq === false || (s.ntx !== 4 && s.ntx !== 5) || s.parity == null) return null;
   if (!station || station.caps.indexOf('ftxdx') < 0) return null;
-  if (!/^[A-Z0-9]{3,6}$/.test(s.dx.call) || !/^[A-Z0-9/]{3,11}$/.test(seqMe())) return null;
+  // Indicatif composé (F5OYA/P, HA/ES3H) : transmis par son empreinte (« <HA/ES3H> »), page Station 0.42.58 et plus
+  const cx = station.caps.indexOf('ftxdx2') >= 0;
+  const okCall = (c) => /^[A-Z0-9]{3,6}$/.test(c) || (cx && /^[A-Z0-9/]{3,11}$/.test(c) && c.indexOf('/') > 0);
+  if (!okCall(s.dx.call) || !/^[A-Z0-9/]{3,11}$/.test(seqMe())) return null;
   const P = FTX_SLOT[s.mode] || 15000, now = Date.now();
   let best = null;
   for (const [k, v] of s.waiting) {
-    const ok = !v.manual && !v.call1 && /^[A-Z0-9]{3,6}$/.test(v.w[1]) && SEQ_CALL_RE.test(v.w[1]) && GRID4_RE.test(v.w[2]) && v.w[2] !== 'RR73'
+    const ok = !v.manual && !v.call1 && okCall(v.w[1]) && SEQ_CALL_RE.test(baseCall(v.w[1])) && ((GRID4_RE.test(v.w[2]) && v.w[2] !== 'RR73') || (v.w[2] === '' && v.w[1].indexOf('/') > 0))
       && now - v.at <= 2 * P + 2000 && v.parity === 1 - s.parity && !s.worked.has(k) && !isDupeNow(v.w[1], s.mode);
     if (v.top && !ok) return null; // station mise en tête à la main : elle passe d'abord, seule
     if (!ok) continue;

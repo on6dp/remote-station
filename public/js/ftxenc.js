@@ -18,7 +18,9 @@
   // RR73 à A et report à B dans une seule émission. 77 bits : indicatif A (28) · indicatif B (28) · empreinte 10 bits
   // de notre indicatif · report (5 bits, pair, -30 à +32) · n3 = 1 · i3 = 0 ; puis CRC-14, LDPC (174, 91), tonalités
   // Costas + Gray et synthèse GFSK comme ft8_lib / WSJT-X.
-  const DX_RE = /^([A-Z0-9]{3,6}) RR73; ([A-Z0-9]{3,6}) <([A-Z0-9/]{3,11})> ([+-]\d{2})$/;
+  // Indicatif composé (F5OYA/P, HA/ES3H) : transmis par son empreinte 22 bits (« <HA/ES3H> » chez le correspondant, qui
+  // connaît la sienne), comme les indicatifs entre crochets des messages standard
+  const DX_RE = /^<?([A-Z0-9/]{3,11})>? RR73; <?([A-Z0-9/]{3,11})>? <([A-Z0-9/]{3,11})> ([+-]\d{2})$/;
   const GEN = ('8329ce11bf31eaf509f27fc0761c264e25c2593354931320dc265902fb277c6410a1bdc01b3f417858cd2dd33ec7f620' +
     '09fda4fee04195fd034783a0077cccc11b8873ed5c3d48a029b62afe3ca036f4fe1a9da06054faf5f35d96d3b0c8c3e0' +
     'e20798e4310eed27884ae900775c9c08e80e26ddae563180b0b811028c2bf997213487c018a0c9231fc60adf5c5ea320' +
@@ -57,6 +59,23 @@
     if (i.some((x) => x < 0)) return -1;
     const n = ((((i[0] * 36 + i[1]) * 10 + i[2]) * 27 + i[3]) * 27 + i[4]) * 27 + i[5];
     return 2063592 + 4194304 + n;
+  }
+  /** Indicatif → 28 bits : standard, sinon empreinte 22 bits (NTOKENS + n22, comme pack28 de ft8_lib) */
+  function pack28h(call) {
+    const n = call.indexOf('/') < 0 ? pack28(call) : -1;
+    if (n >= 0) return n;
+    const h = hash22(call);
+    return h < 0 ? -1 : 2063592 + h;
+  }
+  function hash22(call) {
+    let n58 = 0n;
+    const T = ' 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ/';
+    for (let i = 0; i < 11; i++) {
+      const j = i < call.length ? T.indexOf(call[i]) : 0;
+      if (j < 0) return -1;
+      n58 = n58 * 38n + BigInt(j);
+    }
+    return Number(((47055833459n * n58) & 0xFFFFFFFFFFFFFFFFn) >> 42n) & 0x3FFFFF;
   }
   /** Empreinte 10 bits d'un indicatif (ihashcall de WSJT-X) */
   function hash10(call) {
@@ -139,14 +158,15 @@
   }
   function encodeDx(t, rate, f0) {
     const x = DX_RE.exec(t);
-    const a = pack28(x[1]), b = pack28(x[2]), h = hash10(x[3]);
+    const a = pack28h(x[1]), b = pack28h(x[2]), h = hash10(x[3]);
     if (a < 0 || b < 0 || h < 0) return null;
     const rpt = Math.max(-30, Math.min(32, 2 * Math.round(Number(x[4]) / 2)));
     const payload = bits77([[a, 28], [b, 28], [h, 10], [(rpt + 30) / 2, 5], [1, 3], [0, 3]]);
     const tones = ft8Tones(payload);
     const samples = synthFt8(tones, f0, Math.round(rate));
     const r2 = (rpt >= 0 ? '+' : '-') + String(Math.abs(rpt)).padStart(2, '0');
-    return { samples, text: x[1] + ' RR73; ' + x[2] + ' <' + x[3] + '> ' + r2, tones: Array.from(tones), seconds: samples.length / rate };
+    const show = (c) => (c.indexOf('/') < 0 ? c : '<' + c + '>');
+    return { samples, text: show(x[1]) + ' RR73; ' + show(x[2]) + ' <' + x[3] + '> ' + r2, tones: Array.from(tones), seconds: samples.length / rate };
   }
   /** Essais : charge utile 77 bits → tonalités (comparaison avec ft8_lib) */
   const _test = { ft8Tones, bits77, pack28, hash10, synthFt8 };
