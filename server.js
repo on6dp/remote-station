@@ -799,6 +799,8 @@ function credFor(s, call) {
   if (acct) for (const k of ACCT_FIELDS[s]) if (acct[k]) base[k] = acct[k];
   // Indicatif personnel : ses propres options (envoi automatique, date des dernières confirmations LoTW)
   if (!club && acct) { base.auto = acct.auto === true; base.lastConfirm = acct.lastConfirm || ''; }
+  // Indicatif du club : sa propre date de dernière lecture LoTW (sinon l'ancienne date commune)
+  if (club && acct && acct.lastConfirm) base.lastConfirm = acct.lastConfirm;
   return base;
 }
 // Envoi automatique d'un nouveau QSO : réglage du club pour ON5VL / OR0L ; pour un indicatif personnel, seulement si
@@ -826,7 +828,8 @@ function acctPublic(s, call) {
     const secret = (SECRETS[s] || []).indexOf(k) >= 0 || (s === 'qrz' && k === 'key');
     if (secret) out.has[k] = !!c[k]; else out.fields[k] = c[k] || '';
   }
-  out.source = acct ? 'compte' : stationCalls().indexOf(call) >= 0 ? 'club' : 'aucun';
+  const own = !!acct && Object.keys(acct).some((k) => k !== 'lastConfirm' && k !== 'auto');
+  out.source = own ? 'compte' : stationCalls().indexOf(call) >= 0 ? 'club' : 'aucun';
   out.club = stationCalls().indexOf(call) >= 0;
   out.auto = out.club ? (acct && typeof acct.auto === 'boolean' ? acct.auto : !!(logCfg[s] && logCfg[s].auto)) : !!(acct && acct.auto === true);
   out.autoOwn = !!(acct && typeof acct.auto === 'boolean');
@@ -959,8 +962,13 @@ const sync = new Sync({
   getAuto: (s, call) => autoFor(s, call),
   setLastConfirm: (d, call) => {
     call = String(call || '').toUpperCase();
-    const acct = call && stationCalls().indexOf(call) < 0 && logCfg.lotw.accounts && logCfg.lotw.accounts[call];
-    if (acct) acct.lastConfirm = d; else if (!call || stationCalls().indexOf(call) >= 0) logCfg.lotw.lastConfirm = d;
+    // Date de la dernière lecture gardée par indicatif (chacun son compte LoTW : ON5VL, OR0L, ON6DP…)
+    if (!call) logCfg.lotw.lastConfirm = d;
+    else {
+      logCfg.lotw.accounts = logCfg.lotw.accounts || {};
+      const acct = logCfg.lotw.accounts[call] || (logCfg.lotw.accounts[call] = {});
+      acct.lastConfirm = d;
+    }
     saveLogCfg();
   },
   log: (m) => console.error('Logs : ' + m),
@@ -4388,7 +4396,7 @@ function onOperator(conn, m) {
       const clubCall = stationCalls().indexOf(call) >= 0;
       if (clubCall && conn.user.admin && typeof m.auto === 'boolean') a.auto = m.auto;
       else if (!clubCall && typeof m.auto === 'boolean') { if (m.auto) a.auto = true; else delete a.auto; }
-      if (Object.keys(a).some((k) => k !== 'lastConfirm' && k !== 'auto') || (clubCall && typeof a.auto === 'boolean')) logCfg[sv].accounts[call] = a; else delete logCfg[sv].accounts[call];
+      if (Object.keys(a).some((k) => k !== 'lastConfirm' && k !== 'auto') || (clubCall && typeof a.auto === 'boolean') || a.lastConfirm) logCfg[sv].accounts[call] = a; else delete logCfg[sv].accounts[call];
       saveLogCfg();
       sync.resetStops();
       journal('log_acct', { call: conn.user.call, service: sv, for: call });
