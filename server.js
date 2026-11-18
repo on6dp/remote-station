@@ -710,6 +710,8 @@ const LB = require('./lib/logbook.js');
 const REFDATA = require('./lib/refdata.js');
 const { Sync, SERVICES: LOG_SERVICES } = require('./lib/logsync.js');
 const VERSION = (() => { try { return require('./package.json').version; } catch (e) { return '0'; } })();
+// Dernier installateur Windows publié (releases/<v>/RemoteStation-Setup-<v>.exe) : à changer quand il est reconstruit
+const WIN_INSTALLER = '0.42.42';
 // Facteurs de propagation (hamqsl.com, N0NBH) : relus toutes les 30 min, envoyés aux pages qui les affichent (page SSB)
 const PROP = new (require('./lib/prop.js').Prop)((msg) => { for (const c of ops) if (c.open && c.user && c.propSub) send(c, msg); });
 // Nouvelle version sur GitHub : « 🔔 Mise à jour » au dashboard des administrateurs (lib/update.js) ; updateCheck: false pour couper
@@ -4371,7 +4373,8 @@ function onOperator(conn, m) {
       const r = AGENTS.newCode(conn.user.call);
       journal('lotw_agent_code', { call: conn.user.call, ip: conn.ip });
       conn.wantAgents = true;
-      return send(conn, { t: 'log_agent_code', code: r.code, exp: r.exp, version: VERSION });
+      // Lien de l'installateur Windows : le dernier construit (il n'y en a pas à chaque version ; l'agent se met ensuite à jour seul)
+      return send(conn, { t: 'log_agent_code', code: r.code, exp: r.exp, version: VERSION, installer: WIN_INSTALLER });
     }
     case 'log_agent_del':
       if (!AGENTS.remove(String(m.id || ''), conn.user)) return send(conn, { t: 'notice', level: 'error', msg: 'Agent LoTW introuvable' });

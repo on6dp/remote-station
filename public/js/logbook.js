@@ -1367,7 +1367,7 @@
     if (!sdlg || !sdlg.el.open || sdlg.service !== 'lotw') return;
     const box = sdlg.el.querySelector('.lg-agcode');
     const o = location.origin;
-    const v = esc(m.version || '');
+    const v = esc(m.installer || m.version || '');
     const cmd = (t) => '<code class="lg-cmd" title="Cliquer pour copier">' + esc(t) + '</code>';
     box.innerHTML = '<p>Code d’appairage : <b class="lg-agc">' + esc(m.code) + '</b> — valable 15 minutes, une seule fois (jusqu’à ' + hhmm(m.exp) + ').</p>' +
       '<p><b>Windows</b> : installateur <a href="https://github.com/on6dp/remote-station/raw/main/releases/' + v + '/RemoteStation-Setup-' + v + '.exe" target="_blank" rel="noopener">RemoteStation-Setup-' + v + '.exe</a>, cochez seulement « Agent LoTW (TQSL de ce PC) », puis donnez l’adresse ' + esc(o) + ' et ce code. ' +
