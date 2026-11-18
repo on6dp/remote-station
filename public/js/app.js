@@ -1759,6 +1759,8 @@
       flag('dnf', 'DNF', 'amber');
       flag('narrow', 'NAR', 'cyan');
       if (rr.agc != null && optLabel('agc', rr.agc)) add('AGC ' + optLabel('agc', rr.agc), 'cyan');
+      // MONI (IC-7300, IC-7760…) : écoute de sa propre émission, à couper d'ici depuis toutes les pages (FT, RTTY, CW…)
+      if (C.moni && C.moni.type === 'toggle') add('MONI', rr.moni ? 'amber' : '', 'moni');
       if (rr.rf != null && rr.rf < 255) add('RFG ' + Math.round((rr.rf / 255) * 100), 'amber');
       if (rr.lock) add('LOCK', 'amber');
     }

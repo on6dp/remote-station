@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.75** — IC-7300 / IC-7760 : badge MONI dans la rangée ATT · P.AMP · NB… du VFO (dashboard, pages FT, RTTY, CW) : un clic met le moniteur en marche ou le coupe.
 - **0.42.74** — Écoute du TRX en marche par défaut à la connexion (dashboard et face avant) ; « Arrêter l'écoute » est retenu pour les visites suivantes ; jamais automatique si la sortie son du PC est la carte son d'un TRX.
 - **0.42.73** — RTTY : bouton ■ Arrêter toujours actif (cadre rouge, plus grisé), rouge plein pendant l'émission.
 - **0.42.72** — IC-7300 / FTDX10 (un seul récepteur) : la rangée ATT, P.AMP, NB, NR, MN, AN, AGC s'affiche aussi sous le VFO B (mêmes réglages, communs aux deux VFO).
