@@ -1512,8 +1512,8 @@
       '<div data-p="clublog" class="lg-pp">' + common('clublog', cfg.clublog, true) +
       textField('Adresse e-mail', 'clublog.email', cfg.clublog.email, '', 'type="email" maxlength="200"') +
       secretField('Mot de passe', 'clublog', 'password', cfg, 'Un <b>mot de passe d’application</b> (Club Log → Settings → App Passwords) est conseillé.') +
-      secretField('Clé API', 'clublog', 'api', cfg, 'Clé du <b>logiciel</b> Remote Station, demandée une fois à support@clublog.org : elle sert à <b>tous</b> les indicatifs, ceux du club et ceux des membres (qui ne la voient jamais).') +
-      '<p class="lg-note">Club Log reçoit les QSO en un seul fichier : pas de temporisation. Un refus d’accès (erreur 403) arrête les envois jusqu’au prochain « OK » de cette fenêtre ; après plusieurs refus, Club Log bloque l’adresse du serveur une heure.</p>' + testRow('clublog') + '</div>' +
+      secretField('Jeton Club Log (cl_…) ou clé API', 'clublog', 'api', cfg, '<b>Conseillé : un jeton</b> (Club Log → Settings → API → Tokens → Create token), qui commence par <b>cl_</b>. Avec un jeton, l’e-mail et le mot de passe ne servent plus, et il ne vaut que pour les indicatifs <b>de ce compte</b> Club Log (jamais prêté aux indicatifs des membres). Ancienne méthode : clé API du logiciel demandée à support@clublog.org, avec e-mail et mot de passe d’application.') +
+      '<p class="lg-note">Club Log reçoit les QSO par lots (jeton : 100 QSO par requête), pas de temporisation. Un refus d’accès (erreur 401/403) arrête les envois jusqu’au prochain « OK » de cette fenêtre ; après plusieurs refus, Club Log bloque l’adresse du serveur une heure.</p>' + testRow('clublog') + '</div>' +
       // eQSL
       '<div data-p="eqsl" class="lg-pp" hidden>' + common('eqsl', cfg.eqsl) +
       textField('Indicatif (identifiant eQSL)', 'eqsl.user', cfg.eqsl.user, '', 'maxlength="20" style="text-transform:uppercase"') +
@@ -1927,7 +1927,7 @@
       const f = sdlg.el.querySelector('form');
       if (f.callsign.value !== m.call) return;
       const UI = {
-        clublog: [['email', 'E-mail du compte Club Log'], ['password', 'Mot de passe', 1], ['api', 'Clé API (application)', 1]],
+        clublog: [['api', 'Jeton Club Log (cl_…) — Club Log → Settings → API → Tokens ; ou ancienne clé API', 1], ['email', 'E-mail du compte Club Log (pas utile avec un jeton)'], ['password', 'Mot de passe d’application (pas utile avec un jeton)', 1]],
         eqsl: [['user', 'Indicatif / identifiant eQSL'], ['password', 'Mot de passe', 1], ['nickname', 'QTH nickname (facultatif)']],
         lotw: [['location', 'Lieu de station TQSL (facultatif avec l’Agent LoTW si votre PC n’en a qu’un pour cet indicatif)'], ['password', 'Mot de passe du certificat (TQSL de ce serveur seulement ; avec l’Agent LoTW, il reste sur votre PC)', 1], ['login', 'Identifiant du site LoTW (confirmations)'], ['webPassword', 'Mot de passe du site LoTW', 1]],
         qrz: [['key', 'Clé API du logbook QRZ.com', 1]]

@@ -1031,7 +1031,7 @@ Example for ON1ZZZ: a QSO he made as ON1ZZZ or as ON5VL / OR0L, he can correct o
 |---|---|---|---|
 | **LoTW** | TQSL, the certificate and a Station Location on **your PC**; the **LoTW Agent** installed and paired on that PC (once); for confirmations: login and password of the lotw.arrl.org **website** | `Synchronisation LoTW`: signed by TQSL on your PC and uploaded; without agent: .adi export, TQSL by hand, `Marquer comme envoyés` | one file (fast) |
 | **eQSL** | callsign (eQSL login), password; QTH Nickname only if the account has several QTHs (the exact name) | `Télécharger` | one QSO per upload: 1 s delay advised |
-| **Club Log** | account e-mail, **app password** (Club Log → Settings → App Passwords), the callsign registered in that account, the software **API key** (one for the whole club, requested from support@clublog.org) | `Télécharger` | one file (fast) |
+| **Club Log** | **a Club Log token** (starts with **cl_**; Club Log → Settings → **API** → Tokens → Create token), the callsign registered in that account. Old method: account e-mail, app password and the software API key (requested from support@clublog.org) | `Télécharger` | batches of 100 QSOs (fast) |
 | **QRZ.com** | the callsign's QRZ logbook API key (QRZ → Logbook → Settings; XML subscription or higher) | `Télécharger` | one QSO per upload: 1 s delay advised |
 
 Advised order the first time: 1) the credentials (and the LoTW Agent); 2) `Enregistrer pour cet indicatif`; 3) one manual upload to check (Traitement tab); 4) only then, the **send each new QSO automatically** box. An access refusal stops the uploads of that callsign: fix the credentials before trying again (Club Log even blocks the server's address for one hour after several refusals). QSOs never sent stay « to send »: nothing is lost. Each window has a **HELP** tab with the details of its service.
@@ -1047,7 +1047,7 @@ Advised order the first time: 1) the credentials (and the LoTW Agent); 2) `Enreg
 | Service | How QSOs leave | Delay |
 |---|---|---|
 | **LoTW** | one file, signed by TQSL (LoTW Agent or the server's TQSL) | none (no box) |
-| **Club Log** | one file for a batch; one QSO at a time only for automatic upload, when it is logged | none (no box) |
+| **Club Log** | batches of 100 QSOs (token) or one file (old method); one QSO at a time only for automatic upload, when it is logged | none (no box) |
 | **eQSL** | one QSO per upload | **1 s advised** (5 s by default); 0 possible but not advised |
 | **QRZ.com** | one QSO per upload | **1 s advised** (5 s by default); 0 possible but not advised |
 
@@ -1079,7 +1079,8 @@ Where to set it: the **Temporisation** box of the service window applies to **th
 - **Confirmations**: received eQSLs are viewed on the eQSL.cc site (Inbox).
 - **Automatic upload** of each new QSO: ⚙ Configuration → eQSL (club) or the box in this window (personal callsign). Turn it off during a contest if you don't want live uploads.
 
-- **What you need**: a Club Log account where the callsign is registered. Credentials: the account **e-mail**, an **app password** (Club Log → Settings → App Passwords, advised instead of the account password) and the **API key** of the Remote Station application (requested once from the Club Log helpdesk). Club callsigns: ⚙ Configuration → CLUBLOG; personal callsign: yellow frame of this window.
+- **Club Log token** (since 0.42.81, advised): on clublog.org, Settings → **API** → Tokens → **Create token** (without « Test mode »). Paste the string of letters and digits, starting with **cl_**, into the **Jeton Club Log** box (the callsign's yellow frame, or ⚙ Configuration → CLUBLOG), then `Enregistrer pour cet indicatif`. The e-mail, password and helpdesk API key are then no longer used. The token opens **the whole account** that created it: it works for every callsign of that account (Settings → Callsigns) and is never lent to members' callsigns. Show it to nobody (not even in a screenshot); if it was seen, delete it on Club Log and create a new one. `Tester` (⚙ Configuration) checks each token without sending anything. Uploads: **100 QSOs per request**, each QSO with its own result (stored, duplicate, or refused with Club Log's reason); « Effacer le log existant » sends a full ADIF file that Club Log imports within a few minutes. A refused token (401 / 403) or too many requests (429) stops that callsign's uploads until it is saved again.
+- **Old method**: a Club Log account where the callsign is registered. Credentials: the account **e-mail**, an **app password** (Club Log → Settings → App Passwords, advised instead of the account password) and the **API key** of the Remote Station application (requested once from the Club Log helpdesk). Club callsigns: ⚙ Configuration → CLUBLOG; personal callsign: yellow frame of this window.
 - **Uploading**: TX call, possibly dates, then `Télécharger`; progress in the Traitement tab.
 - **Temporisation** (delay): none for Club Log (no box): an upload leaves in **one file**, processed by Club Log within seconds; only automatic upload sends one QSO at a time, when it is logged.
 - **« Effacer le log ClubLog existant »** replaces **all** the online log of this callsign with this logbook: only if this logbook is complete.

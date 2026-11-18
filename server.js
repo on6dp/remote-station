@@ -796,6 +796,8 @@ function credFor(s, call) {
   }
   // Indicatif personnel : jamais les identifiants du club… sauf la clé API Club Log, qui est celle du logiciel (une pour tous)
   if (!club) { for (const k of ACCT_FIELDS[s]) if (!(s === 'clublog' && k === 'api')) base[k] = ''; base.lastConfirm = ''; base.auto = false; }
+  // … sauf si cette « clé » est un jeton Club Log (cl_…) : il ouvre le compte du club, jamais prêté à un indicatif personnel
+  if (!club && s === 'clublog' && /^cl_/i.test(String(base.api || '').trim())) base.api = '';
   if (acct) for (const k of ACCT_FIELDS[s]) if (acct[k]) base[k] = acct[k];
   // Indicatif personnel : ses propres options (envoi automatique, date des dernières confirmations LoTW)
   if (!club && acct) { base.auto = acct.auto === true; base.lastConfirm = acct.lastConfirm || ''; }
@@ -813,7 +815,7 @@ function autoFor(s, call) {
   if (!acct || acct.auto !== true) return false;
   const c = credFor(s, call);
   // LoTW : TQSL de ce serveur ou Agent LoTW du membre (s'il n'est pas connecté, les QSO partent dès son retour)
-  return s === 'eqsl' ? !!(c.user && c.password) : s === 'clublog' ? !!(c.email && c.password && c.api) : s === 'qrz' ? !!c.key : true;
+  return s === 'eqsl' ? !!(c.user && c.password) : s === 'clublog' ? !!(/^cl_/i.test(String(c.api || '').trim()) || (c.email && c.password && c.api)) : s === 'qrz' ? !!c.key : true;
 }
 // Logs en ligne en libre-service : un membre ne gère que son propre indicatif (identifiants, envois, confirmations)
 function ownLogCall(conn, call) {
@@ -959,6 +961,7 @@ const sync = new Sync({
   book, version: VERSION, station: String(cfg.digiCall || 'ON5VL').toUpperCase(), urls: cfg.logUrls, // logUrls : essais seulement
   getCfg: () => logCfg,
   getCred: (s, call) => credFor(s, call),
+  clubCalls: () => stationCalls(),
   getAuto: (s, call) => autoFor(s, call),
   setClublogFw: (t) => { logCfg.clublog.fwUntil = t; saveLogCfg(); },
   setLastConfirm: (d, call) => {
