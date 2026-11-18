@@ -1749,7 +1749,7 @@
   const rtQuad = () => !!($('rtDual') && $('rtDual').classList.contains('rt-4dec'));
   // Décodeur visé par un clic sur la cascade : gauche = A1 (ou celui de BARRES), droit = A2 ; Ctrl + clic = A3 / A4 (QUAD)
   // QUAD : A1 clic gauche, A2 clic droit, A3 Ctrl + clic gauche, A4 Ctrl + clic droit (décodeurs internes 0, 2, 1, 3)
-  const rtTarget = (e, right) => { if (rtQuad()) { if (e.ctrlKey) return right ? 3 : 1; return right ? 2 : rtBSel; } return right ? 1 : 0; };
+  const rtTarget = (e, right) => { if (rtQuad()) { if (e.ctrlKey) return right ? 3 : 1; return right ? 2 : rtBSel; } return right ? 1 : Math.min(rtBSel, 1); };
   store.set('rtsq9', '1');
   // Plus de réglage Silencieux sur la page RTTY : seuil remis une fois à la valeur par défaut (9 dB) pour tous les décodeurs
   if (store.get('rtsqfix', '') !== '1') { for (const r of rts) r.squelch = 9; store.set('rtsqfix', '1'); for (const [k, i] of [['rtty', 0], ['rttyb', 1], ['rttyc', 2], ['rttyd', 3]]) store.set(k, JSON.stringify(rts[i])); }
@@ -3045,7 +3045,17 @@
     if ($('rtDecWrap')) $('rtDecWrap').hidden = !one;
     if ($('rtDecSel')) { $('rtDecSel').value = four ? '4' : two ? '2' : '1'; $('rtDecSel').classList.toggle('on', two); }
     if ($('rt4Dec')) { $('rt4Dec').hidden = !one; $('rt4Dec').setAttribute('aria-pressed', String(four)); }
-    if ($('rtBSel')) { $('rtBSel').hidden = !four; $('rtBSel').querySelectorAll('[data-b]').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.b) === rtBSel))); }
+    // BARRES : en QUAD A1 A2 A3 A4 ; en DUAL A1 A2 (le 2e décodeur, interne 1, s'appelle alors A2)
+    if (!two) rtBSel = 0;
+    if ($('rtBSel')) {
+      $('rtBSel').hidden = !two;
+      $('rtBSel').querySelectorAll('[data-b]').forEach((b) => {
+        const n = Number(b.dataset.b);
+        b.hidden = !four && n >= 2;
+        if (n === 1) b.textContent = four ? 'A3' : 'A2';
+        b.setAttribute('aria-pressed', String(n === rtBSel));
+      });
+    }
     for (const id of ['rtDecC', 'rtDecD']) if ($(id)) $(id).hidden = !four;
     // Titre de A3 / A4 remonté au bout de l'en-tête de son VFO (place libre à droite de la 2e ligne) : sa fenêtre commence
     // au même niveau que celle de A1 / A2

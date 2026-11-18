@@ -3616,3 +3616,4 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 #rtStop { flex: none; align-self: flex-start; margin-top: 6px; font-weight: 700; border-radius: 8px; border: 2px solid #ff5a4a; color: #ff8a80; }
 #rtStop { background: #2a1214; cursor: pointer; }
 #rtStop.on { color: #fff; background: #c62828; border-color: #ff5a4a; box-shadow: 0 0 10px rgba(255, 90, 74, .55); }
+.rt-bsel [data-b][hidden] { display: none !important; } /* DUAL : A1 A2 seulement (0.42.79) */
