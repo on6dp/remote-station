@@ -1556,13 +1556,12 @@
       testRow('qrzxml') + '</div>' +
       // UDP
       '<div data-p="udp" class="lg-pp" hidden>' +
-      '<p class="lg-note">Chaque QSO enregistré est aussi envoyé en UDP aux logbooks du PC (Swisslog, HRD Logbook, Log4OM, N1MM Logger+, DXKeeper…). ' +
+      '<p class="lg-note">Chaque QSO enregistré est aussi envoyé en UDP aux logbooks du PC (Swisslog, HRD Logbook, Log4OM, Logger32, DXLab, DXBase, N1MM Logger+…). ' +
       'Les paquets partent du <b>serveur</b> : avec le serveur Windows sur le PC du club, adresse 127.0.0.1 ; depuis le VPS, il faut une adresse joignable depuis internet (redirection de port).</p>' +
       '<table class="lg-grid" data-g="udp"><thead><tr><th>Actif</th><th>Nom</th><th>Adresse</th><th>Port</th><th>Format</th><th></th></tr></thead><tbody>' +
       (cfg.udp || []).map(udpRow).join('') + '</tbody></table>' +
-      '<div class="lg-btns"><button class="btn" type="button" data-u="wsjtx">+ WSJT-X (port 2237)</button><button class="btn" type="button" data-u="n1mm">+ N1MM Logger+ (port 12060)</button>' +
-      '<button class="btn" type="button" data-u="adif">+ ADIF brut</button></div>' +
-      '<p class="lg-note">Ports habituels, à vérifier dans les réglages du logbook. Swisslog, Log4OM et HRD Logbook acceptent le format WSJT-X.</p></div>' +
+      '<div class="lg-btns lg-udpp">' + Object.entries(UDP_PRESETS).map(([k, p]) => '<button class="btn" type="button" data-u="' + k + '" title="' + esc(p.tip) + '">+ ' + esc(p.btn) + '</button>').join('') + '</div>' +
+      '<p class="lg-note">Un bouton ajoute une ligne avec le port et le format habituels de ce logbook (survolez-le pour le réglage à faire dans le logbook) ; vérifiez-les dans ses réglages. Deux logbooks sur le même PC : des ports différents.</p></div>' +
       '<div class="md-act"><span></span><button class="btn" value="cancel">Annuler</button><button class="btn btn-primary" type="button" data-a="ok">OK</button></div></form>');
     cdlg = { el: d };
     d.addEventListener('close', () => { if (cdlg && cdlg.el === d) cdlg = null; });
@@ -1587,8 +1586,8 @@
       } else if (b.dataset.a === 'addq') {
         d.querySelector('[data-g="qrz"] tbody').insertAdjacentHTML('beforeend', qrzRow('', false));
       } else if (b.dataset.u) {
-        const p = { wsjtx: { label: 'Swisslog', port: 2237, format: 'wsjtx-adif' }, n1mm: { label: 'N1MM', port: 12060, format: 'n1mm' }, adif: { label: '', port: '', format: 'adif' } }[b.dataset.u];
-        d.querySelector('[data-g="udp"] tbody').insertAdjacentHTML('beforeend', udpRow(Object.assign({ enabled: true, host: '127.0.0.1' }, p)));
+        const p = UDP_PRESETS[b.dataset.u];
+        if (p) d.querySelector('[data-g="udp"] tbody').insertAdjacentHTML('beforeend', udpRow({ enabled: true, host: '127.0.0.1', label: p.label, port: p.port, format: p.format }));
       } else if (b.dataset.test) {
         const out = d.querySelector('[data-tr="' + b.dataset.test + '"]');
         out.textContent = 'Enregistrez d’abord (OK) les réglages modifiés · test en cours…';
@@ -1599,6 +1598,17 @@
       }
     });
   }
+  // Logbooks du PC : port et format habituels (réglables ensuite dans la ligne)
+  const UDP_PRESETS = {
+    swisslog: { btn: 'Swisslog (2237)', label: 'Swisslog', port: 2237, format: 'wsjtx-adif', tip: 'Swisslog : interface WSJT-X / JTDX (UDP), port 2237' },
+    hrd: { btn: 'HRD Logbook (2333)', label: 'HRD Logbook', port: 2333, format: 'adif', tip: 'Ham Radio Deluxe, Logbook : Tools → Configure → QSO Forwarding, réception UDP « WSJT-X » port 2333 (ADIF)' },
+    log4om: { btn: 'Log4OM (2333)', label: 'Log4OM', port: 2333, format: 'adif', tip: 'Log4OM 2 : Settings → Program configuration → Software integration → Connections, UDP inbound de type ADIF_MESSAGE, port 2333 (ou JT_MESSAGE port 2237 avec le format WSJT-X)' },
+    logger32: { btn: 'Logger32 (2237)', label: 'Logger32', port: 2237, format: 'wsjtx-adif', tip: 'Logger32 : liaison UDP WSJT-X, port 2237' },
+    dxlab: { btn: 'DXLab (2237)', label: 'DXLab SpotCollector', port: 2237, format: 'wsjtx-adif', tip: 'DXLab : SpotCollector → Config → WSJT-X, port 2237 ; SpotCollector inscrit le QSO dans DXKeeper. Rien n’arrive : essayez le format « QSO Logged » (type 5)' },
+    dxbase: { btn: 'DXBase (2237)', label: 'DXBase', port: 2237, format: 'wsjtx-adif', tip: 'DXBase : liaison WSJT-X (UDP) — port et format à vérifier dans DXBase' },
+    n1mm: { btn: 'N1MM Logger+ (12060)', label: 'N1MM Logger+', port: 12060, format: 'n1mm', tip: 'N1MM Logger+ : Config → Configure Ports… → Broadcast Data, réception contactinfo, port 12060' },
+    adif: { btn: 'ADIF brut', label: '', port: '', format: 'adif', tip: 'Autre logbook qui reçoit des enregistrements ADIF en UDP' }
+  };
   const testRow = (s) => '<div class="lg-btns"><button class="btn" type="button" data-test="' + s + '">Tester</button><span class="lg-tres" data-tr="' + s + '"></span></div>';
   function readCfg(f) {
     const v = (n) => { const i = f.elements[n]; if (!i) return undefined; if (i.type === 'checkbox') return i.checked; if (i.dataset.clear === '1' && !i.value) return '__effacer__'; return i.value.trim(); };

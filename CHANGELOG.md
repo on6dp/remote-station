@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.88** — UDP : boutons pour Swisslog, HRD Logbook, Log4OM, Logger32, DXLab, DXBase, N1MM Logger+ et ADIF brut, avec port, format et réglage à faire dans chaque logbook
 - **0.42.87** — Identifiants des logs en ligne : avertissement « vous seul les connaissez, Remote Station ne les réaffiche jamais et ne peut pas les récupérer » dans chaque fenêtre, ⚙ Configuration, le manuel et le guide
 - **0.42.86** — Libellés uniformes : Synchronisation LoTW, eQSL, ClubLog, QRZ Logbook et Listes (menu, titre de fenêtre et bouton d’envoi) ; aide et guide : mise en route LoTW pas à pas, codes de TQSL, case Serveur à ne pas cocher
 - **0.42.85** — Agent LoTW 2 : accents de la réponse de TQSL lus correctement (Windows) ; mise à jour automatique des agents
