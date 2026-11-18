@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.71** — RTTY : le bouton ■ Arrêter est maintenant visible, à droite des macros (F6 73 / F12 RX), aussi en contest — il était caché par la mise en page de la page RTTY.
 - **0.42.70** — RTTY QUAD : souris dans l'ordre des noms — A1 clic gauche, A2 clic droit, A3 Ctrl + clic gauche, A4 Ctrl + clic droit.
 - **0.42.69** — RTTY : en ouvrant la page RTTY (onglet, dashboard ou boutons MODES de la face avant), le TRX va sur la fréquence RTTY de sa bande (ex. 40 m : 7,074 FT8 → 7,040, DATA-U) s'il n'est pas déjà dans le segment RTTY ; les boutons MODES de la face avant font aussi le QSY FT.
 - **0.42.68** — RTTY : bouton ■ Arrêter bien visible à droite des macros (rouge pendant l'émission) — coupe tout de suite une mauvaise macro, comme Échap ou F12 RX.

@@ -1,0 +1,2 @@
+Impossible de lire /home/claude/remote-station/config-tx.json : ENOENT: no such file or directory, open '/home/claude/remote-station/config-tx.json'
+Lancez d’abord : node init-config.js

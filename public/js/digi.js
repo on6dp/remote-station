@@ -473,7 +473,7 @@
           <button class="btn rte-clr" type="button" id="rtQClr" title="Effacer la ligne (nouveau correspondant)">EFFACER</button>
           <label class="spotlog dg-spot rte-spot" title="Cochée : le QSO enregistré est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label>
         </div>
-        <div class="rt-macline"><div class="rt-macros" id="rtMacros"></div><div class="rt-tx-act2 rt-macact"><button class="btn dg-stop rt-stop" type="button" id="rtStop" disabled title="Arrête tout de suite l’émission RTTY en cours (mauvaise macro…) — aussi la touche Échap">■ Arrêter</button><button class="btn" type="button" id="rtTxClear">Effacer</button>
+        <div class="rt-macline"><div class="rt-macros" id="rtMacros"></div><button class="btn dg-stop rt-stop" type="button" id="rtStop" disabled title="Arrête tout de suite l’émission RTTY en cours (mauvaise macro…) — aussi la touche Échap">■ Arrêter</button><div class="rt-tx-act2 rt-macact"><button class="btn" type="button" id="rtTxClear">Effacer</button>
             </div></div>
         <!-- Contest RTTY : choix du contest, échange envoyé, numéro de série, et ses macros (touches F1 à F12 quand un contest est choisi) -->
         <div class="rt-contest" id="rtContest">
@@ -5693,6 +5693,12 @@
     if (act && $('rtcRules')) {
       if (rtcOn() && act.parentElement !== $('rtcMacLine')) $('rtcRules').before(act);
       else if (!rtcOn() && act.parentElement !== mainLine) mainLine.appendChild(act);
+    }
+    // ■ Arrêter : toujours à droite des macros affichées (habituelles ou du contest)
+    const stopB = $('rtStop');
+    if (stopB && $('rtcMacros')) {
+      if (rtcOn() && stopB.previousElementSibling !== $('rtcMacros')) $('rtcMacros').after(stopB);
+      else if (!rtcOn() && stopB.previousElementSibling !== $('rtMacros')) $('rtMacros').after(stopB);
     }
     rtLogAsk();
     // RÈGLEMENT : règlement officiel du contest choisi ; sans adresse connue, une recherche « <contest> RTTY contest rules <année> »

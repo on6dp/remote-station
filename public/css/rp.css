@@ -3613,6 +3613,6 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .dg-toast.ok:not(:empty) { color: #39ff14; border-color: #39ff14 !important; font-weight: 700; }
 .msg.ok { color: #39ff14; font-weight: 700; }
 /* RTTY : ■ Arrêter à côté des macros (0.42.68) — rouge vif pendant l'émission, grisé sinon */
-#rtStop { margin-right: 6px; font-weight: 700; border-radius: 8px; }
+#rtStop { flex: none; align-self: flex-start; margin-top: 6px; font-weight: 700; border-radius: 8px; border: 2px solid #ff5a4a; color: #ff8a80; }
 #rtStop:disabled { opacity: .45; cursor: default; }
 #rtStop.on { color: #fff; background: #c62828; border-color: #ff5a4a; box-shadow: 0 0 10px rgba(255, 90, 74, .55); }
