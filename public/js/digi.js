@@ -7718,6 +7718,10 @@
     // Annonces : en jaune fluo, clignotantes pendant 3 s pour attirer l'attention, puis fixes jusqu'à leur fin
     const toast = (msg, level, ms) => {
       const el = $('dgToast');
+      // Annonce verte encore récente (« ✓ QSO sauvegardé… ») : l'avis suivant s'ajoute derrière au lieu de l'effacer
+      if (msg && level !== 'error' && level !== 'ok' && Date.now() - (toast.ok || 0) < 5000 && el.textContent) {
+        msg = el.textContent + '  ·  ' + msg; level = 'ok'; ms = Math.max(ms || 0, 7000);
+      } else if (level === 'ok') toast.ok = Date.now();
       el.textContent = msg || '';
       el.className = 'dg-toast ' + (level || '');
       if (msg) { void el.offsetWidth; el.classList.add('blink'); }

@@ -172,8 +172,14 @@
     say('Recherche d’une nouvelle version…', '', 3000);
     send({ t: 'upd_check' });
   });
+  let sayOk = 0; // heure de la dernière annonce verte (« ✓ QSO sauvegardé… »)
   function say(text, level, ms) {
     const el = $('msg');
+    // Annonce verte encore récente : un avis qui suit (spot envoyé, réponse automatique…) s'ajoute derrière au lieu de
+    // l'effacer — sinon « QSO sauvegardé » disparaissait aussitôt
+    if (text && level !== 'error' && level !== 'ok' && Date.now() - sayOk < 5000 && el.textContent) {
+      text = el.textContent + '  ·  ' + text; level = 'ok'; ms = Math.max(ms || 0, 7000);
+    } else if (level === 'ok') sayOk = Date.now();
     el.textContent = text || '';
     el.className = 'msg' + (level ? ' ' + level : '');
     clearTimeout(msgTimer);

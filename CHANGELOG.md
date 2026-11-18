@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.61** — Annonce « ✓ QSO sauvegardé dans le logbook » : plus effacée aussitôt par l'avis suivant (spot envoyé au DX cluster, CQ relancé…), qui s'ajoute derrière.
 - **0.42.60** — Page FT : plus de texte superposé en haut à droite — « BF reçue · décodage OK… » retiré (seuls les problèmes s'affichent ; l'état du décodage est dans SYNCHRO).
 - **0.42.59** — FT : annonce « ✓ QSO sauvegardé dans le logbook » à chaque QSO enregistré, aussi quand la séquence automatique est déjà passée à la station suivante, et seulement après l'écriture par le serveur.
 - **0.42.58** — FT8 « 2 à la fois » : aussi avec les indicatifs composés (F5OYA/P, HA/ES3H…), transmis par leur empreinte (« DL1AAA RR73; <HA/ES3H> <OR0L> -06 ») ; recharger la page Station.
