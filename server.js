@@ -425,9 +425,34 @@ function sendListen(pcm, l, r) {
     c.send(out);
   }
 }
+// Fluidité (onglet Synchro) : le serveur a-t-il été bloqué (calcul trop long), l'audio de la station arrive-t-il par
+// à-coups ? Plus grand blocage et plus grand trou entre deux trames audio sur les 2 dernières minutes, avec leur heure.
+const flow = { lag: [], gap: [], lastAudio: 0, tick: 0 };
+function flowNote(list, ms) {
+  const now = Date.now();
+  list.push({ ms, at: now });
+  while (list.length && now - list[0].at > 120000) list.shift();
+  if (list.length > 200) list.splice(0, list.length - 200);
+}
+setInterval(() => {
+  const now = Date.now();
+  const lag = flow.tick ? now - flow.tick - 250 : 0; // 1er passage : le démarrage (lecture du carnet) ne compte pas
+  flow.tick = now;
+  if (lag > 400) { flowNote(flow.lag, lag); if (lag > 2000) console.error('Serveur bloqué ' + (lag / 1000).toFixed(1) + ' s'); }
+}, 250).unref();
+function flowState() {
+  const now = Date.now();
+  const top = (l) => { let b = null; for (const x of l) if (now - x.at <= 120000 && (!b || x.ms > b.ms)) b = x; return b ? { ms: b.ms, ago: now - b.at } : null; };
+  return { lag: top(flow.lag), gap: top(flow.gap), wk: workedCache.ms != null ? workedCache.ms : null, qsos: book.qsos.length };
+}
 function relayAudio(buf) {
   if (!buf || buf.length < 2 || buf.length > 4000) return;
   audio.frames++;
+  if (buf[0] === 0x02) {
+    const now = Date.now();
+    if (flow.lastAudio && now - flow.lastAudio > 400 && now - flow.lastAudio < 60000) flowNote(flow.gap, now - flow.lastAudio);
+    flow.lastAudio = now;
+  }
   const dualAudio = !!(station && station.rig && station.rig.DUAL_AUDIO);
   if (buf[0] === 0x02 || buf[0] === 0x04) {
     const right = buf[0] === 0x04;
@@ -884,6 +909,27 @@ const AGENTS = new LotwAgents({
   journal: (ev, d) => journal(ev, d)
 });
 AGENTS.on('change', () => { for (const c of ops) if (c.wantAgents) send(c, { t: 'log_agents', list: AGENTS.list(c.user) }); });
+// Lecture automatique des confirmations LoTW : 3 min après le démarrage puis toutes les heures, pour chaque indicatif dont
+// l'identifiant et le mot de passe du site LoTW sont réglés (club et comptes personnels). Les QSO confirmés passent en
+// « C » dans les statistiques et le tableau DXCC de la page FT, et l'alerte « pas encore confirmé » se met à jour.
+// Coupée par « lotw.autoConfirm »: false dans logbook-config.json.
+let lotwAutoBusy = false;
+async function lotwAutoConfirm() {
+  if (lotwAutoBusy || logCfg.lotw.autoConfirm === false) return;
+  lotwAutoBusy = true;
+  try {
+    const calls = Array.from(new Set(stationCalls().concat(Object.keys(logCfg.lotw.accounts || {})).map((c) => String(c).toUpperCase())));
+    for (const call of calls) {
+      const c = credFor('lotw', call);
+      if (!c.login || !c.webPassword || sync.isStopped('lotw', call)) continue;
+      const r = await sync.confirmLotw('', call, true).catch((e) => ({ ok: false, msg: e.message }));
+      if (r && r.n) journal('lotw_confirm_auto', { call, n: r.n });
+      if (r && !r.ok) console.error('LoTW, lecture automatique des confirmations de ' + call + ' : ' + r.msg);
+    }
+  } finally { lotwAutoBusy = false; }
+}
+setTimeout(lotwAutoConfirm, 3 * 60000).unref();
+setInterval(lotwAutoConfirm, 3600000).unref();
 // Agent qui (re)vient : QSO récents (30 jours) jamais présentés à LoTW des indicatifs en envoi automatique
 AGENTS.on('ready', (ag) => setTimeout(() => {
   const since = Date.now() - 30 * 86400000;
@@ -930,48 +976,78 @@ function logCalls(conn) { return Array.from(new Set(stationCalls().concat(ownCal
 let workedSig = '';
 // Stations déjà contactées sous le TX call en service : « INDICATIF|bande|mode » (barrées dans les listes FT, et jamais
 // reprises toutes seules par la séquence automatique)
-let workedCache = { sig: '', set: new Set() };
+let workedCache = { sig: '', has: () => false };
+const Z_KEY = Array.from({ length: 41 }, (x, i) => 'Z' + i);
+const D_KEY = new Map(), G_KEY = new Map();
 function workedNow() {
   const st = txCall();
   const sig = st + ':' + book.rev;
   if (workedCache.sig !== sig) {
-    const set = new Set();
-    // Alertes des listes FT (comme JTDX) : pays DXCC « D… », zones CQ « Z… », locators « G… » déjà contactés → « bande|mode »
-    const ent = {}, conf = {};
-    const add = (k, v) => { const a = ent[k] || (ent[k] = []); if (a.indexOf(v) < 0) a.push(v); };
+    // Par bande puis par mode : indicatifs contactés, et pour les alertes des listes FT (comme JTDX) pays DXCC « D… »,
+    // zones CQ « Z… », locators « G… » déjà contactés, pays confirmés (LoTW ou QSL papier). Sans fabriquer une chaîne
+    // par QSO : un carnet de 200 000 QSO se parcourt en quelques dizaines de ms.
+    const B = new Map();
+    const t0 = Date.now();
     for (const q of book.qsos) {
-      if (String(q.station_callsign || '').toUpperCase() !== st) continue;
+      const sc = q.station_callsign;
+      if (sc !== st && String(sc || '').toUpperCase() !== st) continue;
+      let mb = B.get(q.band);
+      if (!mb) B.set(q.band, (mb = new Map()));
       const md = q.submode || q.mode;
-      set.add(q.call + '|' + q.band + '|' + md);
-      const bm = q.band + '|' + md;
-      const d = DXCC.lookupDxcc(q.call);
-      if (d) add('D' + d.pfx, bm);
-      // Pays confirmés (LoTW ou QSL papier) : alerte « contacté, pas encore confirmé »
-      if (d && (q.lotw_qsl_rcvd === 'Y' || q.qsl_rcvd === 'Y')) { const a = conf['D' + d.pfx] || (conf['D' + d.pfx] = []); if (a.indexOf(bm) < 0) a.push(bm); }
+      let e = mb.get(md);
+      if (!e) mb.set(md, (e = { bm: q.band + '|' + md, calls: new Set(), keys: new Set(), conf: new Set() }));
+      e.calls.add(q.call);
+      const d = DXCC.peekDxcc(q.call);
+      if (d) {
+        let dk = D_KEY.get(d.pfx);
+        if (!dk) D_KEY.set(d.pfx, (dk = 'D' + d.pfx));
+        e.keys.add(dk);
+        if (q.lotw_qsl_rcvd === 'Y' || q.qsl_rcvd === 'Y') e.conf.add(dk);
+      }
       const z = Number(q.cqz) || (d && d.cq);
-      if (z) add('Z' + z, bm);
-      const g = String(q.gridsquare || '').toUpperCase().slice(0, 4);
-      if (/^[A-R]{2}\d{2}$/.test(g)) add('G' + g, bm);
+      if (z >= 1 && z <= 40) e.keys.add(Z_KEY[z]);
+      const gs = q.gridsquare;
+      if (gs && gs.length >= 4) {
+        let gk = G_KEY.get(gs);
+        if (gk === undefined) { const g = gs.slice(0, 4).toUpperCase(); gk = /^[A-R]{2}\d{2}$/.test(g) ? 'G' + g : ''; if (G_KEY.size < 200000) G_KEY.set(gs, gk); }
+        if (gk) e.keys.add(gk);
+      }
     }
-    workedCache = { sig, set, st, ent, conf };
+    const ent = {}, conf = {}, bms = {};
+    for (const mb of B.values()) for (const e of mb.values()) {
+      bms[e.bm] = Array.from(e.calls).join(' ');
+      for (const k of e.keys) (ent[k] || (ent[k] = [])).push(e.bm);
+      for (const k of e.conf) (conf[k] || (conf[k] = [])).push(e.bm);
+    }
+    const has = (call, band, mode) => { const mb = B.get(band); const e = mb && mb.get(mode); return !!e && e.calls.has(call); };
+    workedCache = { sig, has, st, ent, conf, bms, ms: Date.now() - t0, json: '' };
   }
   return workedCache;
 }
 function isDupeNow(call, mode) {
   const f = (seq && seq.side === 'B' ? radio.freqB : radio.freq) || txFreq();
-  return !!f && workedNow().set.has(String(call || '').toUpperCase() + '|' + LB.bandOf(f / 1e6) + '|' + mode);
+  return !!f && workedNow().has(String(call || '').toUpperCase(), LB.bandOf(f / 1e6), mode);
 }
+// Envoi aux pages : une seule mise en forme pour toutes (« bande|mode » → indicatifs séparés par des espaces : 3 fois
+// plus court qu'une liste « INDICATIF|bande|mode »). Plusieurs changements rapprochés (QSO enregistré, puis complété
+// par QRZ.com, puis noté envoyé à LoTW…) : un seul calcul et un seul envoi, au plus tôt 1,5 s après le premier.
+let workedTimer = null;
 function sendWorked(force, only) {
-  const st = txCall();
-  const sig = st + ':' + book.rev;
-  if (!force && sig === workedSig) return;
-  workedSig = sig;
-  const set = workedNow().set;
-  const msg = { t: 'worked', station: st, list: Array.from(set), ent: workedNow().ent, conf: workedNow().conf };
-  if (only) return send(only, msg);
-  for (const c of ops) send(c, msg);
+  if (only) return workedSend(only);
+  if (force) { clearTimeout(workedTimer); workedTimer = null; return workedSend(); }
+  if (txCall() + ':' + book.rev === workedSig || workedTimer) return;
+  workedTimer = setTimeout(() => { workedTimer = null; if (txCall() + ':' + book.rev !== workedSig) workedSend(); }, 1500);
+}
+function workedSend(only) {
+  const w = workedNow();
+  workedSig = w.sig;
+  if (!w.json) w.json = JSON.stringify({ t: 'worked', station: w.st, bm: w.bms, ent: w.ent, conf: w.conf });
+  if (only) { if (only.open) only.send(w.json); return; }
+  for (const c of ops) if (c.open) c.send(w.json);
 }
 const DXCC = require('./lib/dxcc.js');
+let txcallsCache = { rev: -1, list: [] }; // TX call présents dans le carnet (liste du carnet)
+let ftDxccCache = { k: '', v: null }; // tableau DXCC de la page FT (ft_dxcc) : dernier calcul
 const IMPORT = require('./lib/adifimport.js');
 
 // Spot vers le DX cluster (case « Spot au log » cochée à l'enregistrement du QSO, ou bouton SPOT) : envoyé sous
@@ -1204,21 +1280,21 @@ const AWARDS = {
 function awardKey(q, award) {
   const call = q.call;
   switch (award) {
-    case 'DXCC': { const d = DXCC.lookupDxcc(call); return d ? { k: d.pfx, name: d.name, cont: d.cont } : null; }
-    case 'WAZ': { const z = Number(q.cqz) || (DXCC.lookup(call) || {}).cq; return z >= 1 && z <= 40 ? { k: pad2(z), name: 'Zone CQ ' + z } : null; }
-    case 'ITU': { const z = Number(q.ituz) || (DXCC.lookup(call) || {}).itu; return z >= 1 && z <= 90 ? { k: pad2(z), name: 'Zone UIT ' + z } : null; }
-    case 'WAE': { const e = DXCC.lookup(call); return e && e.cont === 'EU' ? { k: e.pfx, name: e.name, cont: 'EU' } : null; }
-    case 'WAC': { const c = String(q.cont || (DXCC.lookup(call) || {}).cont || '').toUpperCase(); const x = CONTS.find((y) => y[0] === c); return x ? { k: x[0], name: x[1], cont: x[0] } : null; }
+    case 'DXCC': { const d = DXCC.peekDxcc(call); return d ? { k: d.pfx, name: d.name, cont: d.cont } : null; }
+    case 'WAZ': { const z = Number(q.cqz) || (DXCC.peek(call) || {}).cq; return z >= 1 && z <= 40 ? { k: pad2(z), name: 'Zone CQ ' + z } : null; }
+    case 'ITU': { const z = Number(q.ituz) || (DXCC.peek(call) || {}).itu; return z >= 1 && z <= 90 ? { k: pad2(z), name: 'Zone UIT ' + z } : null; }
+    case 'WAE': { const e = DXCC.peek(call); return e && e.cont === 'EU' ? { k: e.pfx, name: e.name, cont: 'EU' } : null; }
+    case 'WAC': { const c = String(q.cont || (DXCC.peek(call) || {}).cont || '').toUpperCase(); const x = CONTS.find((y) => y[0] === c); return x ? { k: x[0], name: x[1], cont: x[0] } : null; }
     case 'WAS': {
-      const d = DXCC.lookupDxcc(call);
+      const d = DXCC.peekDxcc(call);
       const st = String(q.state || '').toUpperCase().trim();
       if (!d || ['K', 'KL', 'KH6'].indexOf(d.pfx) < 0) return null;
       const x = US_STATES.find((y) => y[0] === st);
       return x ? { k: x[0], name: x[1], cont: 'NA' } : null;
     }
-    case 'WPX': { const p = wpxPrefix(call); return p ? { k: p, name: (DXCC.lookup(call) || {}).name || '', cont: (DXCC.lookup(call) || {}).cont || '' } : null; }
-    case 'IOTA': { const r = String(q.iota || '').toUpperCase().trim(); return /^[A-Z]{2}-\d{3}$/.test(r) ? { k: r, name: (DXCC.lookup(call) || {}).name || '', cont: r.slice(0, 2) } : null; }
-    case 'GRID': { const g = String(q.gridsquare || '').toUpperCase().slice(0, 4); return /^[A-R]{2}\d{2}$/.test(g) ? { k: g, name: (DXCC.lookup(call) || {}).name || '', cont: '' } : null; }
+    case 'WPX': { const p = wpxPrefix(call); return p ? { k: p, name: (DXCC.peek(call) || {}).name || '', cont: (DXCC.peek(call) || {}).cont || '' } : null; }
+    case 'IOTA': { const r = String(q.iota || '').toUpperCase().trim(); return /^[A-Z]{2}-\d{3}$/.test(r) ? { k: r, name: (DXCC.peek(call) || {}).name || '', cont: r.slice(0, 2) } : null; }
+    case 'GRID': { const g = String(q.gridsquare || '').toUpperCase().slice(0, 4); return /^[A-R]{2}\d{2}$/.test(g) ? { k: g, name: (DXCC.peek(call) || {}).name || '', cont: '' } : null; }
   }
   return null;
 }
@@ -2389,7 +2465,7 @@ function publicState() {
     maxSwr: cfg.maxSwr,
     audio: { active: !!(station && audio.active), listeners: listeners(true), silent: !!(station && audio.silent), out: station && audio.out ? audio.out : null },
     digi: { modes: Array.from(digiModes()), latency: digi.latency, engine: digi.engine || '', ms: digi.ms || 0, timing: digi.timing || null,
-      ntp: ntpState.at ? ntpState : null, club: station && station.clock ? station.clock : null },
+      ntp: ntpState.at ? ntpState : null, club: station && station.clock ? station.clock : null, flow: flowState() },
     rigName: station ? rig().NAME : null,
     rigModel: station ? rig().ID : null,
     // TRX dont le port série est mémorisé sur le PC du club (changement à distance possible)
@@ -2773,7 +2849,8 @@ function seqText(s) {
     case 1: return c + ' ' + me + ' ' + seqGrid();
     case 2: return c + ' ' + me + ' ' + r;
     case 3: return c + ' ' + me + ' R' + r;
-    case 4: return c + ' ' + me + ' RR73';
+    // Réponse double (MSHV, FOX de WSJT-X) : RR73 au correspondant et report au suivant de la file, dans la même émission
+    case 4: return s.dual2 ? c + ' RR73; ' + s.dual2.call + ' <' + me + '> ' + s.dual2.rpt : c + ' ' + me + ' RR73';
     case 5: return c + ' ' + me + ' 73';
     case 6: return 'CQ ' + me + ' ' + seqGrid();
     default: return String(s.free || '');
@@ -2782,7 +2859,7 @@ function seqText(s) {
 function seqPublic() {
   if (!seq) return null;
   return { on: !!seq.on, mode: seq.mode, ntx: seq.ntx, dx: seq.dx.call, grid: seq.dx.grid, rpt: seq.rptSent, rptRcvd: seq.rptRcvd || '',
-    parity: seq.parity, call1st: !!seq.call1st, by: seq.conn.user.call, text: seqText(seq), side: seq.side || 'A', hound: seq.hound || 0, f0: seq.f0, rxf: seq.rxf || 0,
+    parity: seq.parity, call1st: !!seq.call1st, dual: !!seq.dual, dual2: seq.dual2 ? seq.dual2.call : '', by: seq.conn.user.call, text: seqText(seq), side: seq.side || 'A', hound: seq.hound || 0, f0: seq.f0, rxf: seq.rxf || 0,
     queue: seqQueue(seq) };
 }
 /** File d'attente visible (page FT) : ceux qui appellent pendant un QSO + ceux ajoutés à la main, dans l'ordre où ils seront pris */
@@ -2831,6 +2908,30 @@ function seqQueueCmd(conn, m) {
     broadcast();
   }
 }
+/**
+ * Réponse double (comme MSHV en « Multi Answering » ou le FOX de WSJT-X, sur une seule tonalité) : au moment d'envoyer
+ * RR73 au correspondant, le suivant de la file qui nous a appelés (avec son locator, sur la même période) reçoit son
+ * report dans le même message : « A RR73; B <MOI> -08 » (message DXpédition 0.1 : indicatifs standard, report pair).
+ * Rien si la page Station ne sait pas coder ce message, en FT4 / FT2, en HOUND, ou si une station passée en tête à la
+ * main doit être appelée d'abord.
+ */
+function seqDualPick(s) {
+  if (!s || !s.dual || s.hound || s.mode !== 'FT8' || !s.cqRun || s.autoCq === false || s.ntx !== 4 || s.parity == null) return null;
+  if (!station || station.caps.indexOf('ftxdx') < 0) return null;
+  if (!/^[A-Z0-9]{3,6}$/.test(s.dx.call) || !/^[A-Z0-9/]{3,11}$/.test(seqMe())) return null;
+  const P = FTX_SLOT[s.mode] || 15000, now = Date.now();
+  let best = null;
+  for (const [k, v] of s.waiting) {
+    const ok = !v.manual && !v.call1 && /^[A-Z0-9]{3,6}$/.test(v.w[1]) && SEQ_CALL_RE.test(v.w[1]) && GRID4_RE.test(v.w[2]) && v.w[2] !== 'RR73'
+      && now - v.at <= 2 * P + 2000 && v.parity === 1 - s.parity && !s.worked.has(k) && !isDupeNow(v.w[1], s.mode);
+    if (v.top && !ok) return null; // station mise en tête à la main : elle passe d'abord, seule
+    if (!ok) continue;
+    if (!best || (v.top && !best.top) || (v.top === best.top && v.d.db > best.d.db)) best = v;
+  }
+  if (!best) return null;
+  const db = Math.max(-30, Math.min(30, 2 * Math.round(Number(best.d.db) / 2)));
+  return { call: best.w[1], rpt: fmtRpt(db), key: baseCall(best.w[1]) };
+}
 function seqOff(reason, level) {
   if (!seq || !seq.on) return;
   seq.on = false;
@@ -2867,6 +2968,7 @@ function seqNext() {
       send(seq.conn, { t: 'notice', level: 'info', msg: 'HOUND : appel du FOX au-dessus de 1000 Hz → émission à ' + seq.f0 + ' Hz' });
     }
   }
+  seq.dual2 = seq.ntx === 4 ? seqDualPick(seq) : null;
   const text = seqText(seq);
   // Même message déjà envoyé « maxRep » fois sans réponse (Tx1 à Tx3) : on attend encore les décodages de la période
   // qui suit, puis on abandonne ce correspondant (appel CQ : station suivante qui appelait, sinon CQ ; sinon arrêt)
@@ -2964,6 +3066,8 @@ function seqOnDecodes(mode, slot, list, side) {
     if (seq.waiting.size > 40) seq.waiting.delete(seq.waiting.keys().next().value);
   }
   if (qChanged) setTimeout(broadcast, 0); // file d'attente visible dans la page FT
+  // RR73 pas encore parti et quelqu'un vient d'appeler : il reçoit son report dans le même message (réponse double)
+  if (qChanged && seq.dual && seq.ntx === 4 && !seq.dual2) { const d2 = seqDualPick(seq); if (d2) { seq.dual2 = d2; setTimeout(seqChanged, 0); } }
   // 1) le correspondant
   if (dxBase && seq.ntx !== 6) {
     for (const d of list) {
@@ -3046,10 +3150,27 @@ function seqNextCaller(s, why, manualOnly) {
     if ((!v.manual && Date.now() - v.at > 2 * P + 2000) || s.worked.has(k) || isDupeNow(v.w[1], s.mode)) { s.waiting.delete(k); continue; }
     if (!next || rank(v) > rank(next) || (rank(v) === rank(next) && v.d.db > next.d.db)) next = v;
   }
+  // Réponse double qui vient de partir : le suivant est celui qui a reçu son report dans le RR73 (il n'est pas rappelé)
+  const take = s.dualTake;
+  s.dualTake = null;
+  if (take && s.waiting.has(take.key)) next = s.waiting.get(take.key);
   s.on = true;
   s.watchMsg = ''; s.watchSince = 0;
   s.rep = 0; s.repText = '';
-  if (next) {
+  if (next && take && baseCall(next.w[1]) === take.key) {
+    s.waiting.delete(take.key);
+    s.dx = { call: next.w[1], grid: GRID4_RE.test(next.w[2]) ? next.w[2] : '' };
+    if (next.d.f >= 100 && next.d.f <= 3000) s.rxf = Math.round(next.d.f);
+    s.rptSent = take.rpt;
+    s.rptRcvd = '';
+    s.parity = 1 - next.parity;
+    s.progress = PROG.CALLING;
+    seqSetNtx(2);
+    s.qsoStart = Date.now();
+    // Son report est déjà parti une fois (dans le RR73) : s'il ne répond pas, il le reçoit à nouveau en message normal
+    s.repText = seqText(s); s.rep = 1;
+    send(s.conn, { t: 'notice', level: 'info', msg: 'Réponse double : RR73 envoyé et report ' + take.rpt + ' donné à ' + next.w[1] + ' dans la même émission' });
+  } else if (next) {
     s.waiting.delete(baseCall(next.w[1]));
     s.dx = { call: next.w[1], grid: '' };
     if (next.d.f >= 100 && next.d.f <= 3000) s.rxf = Math.round(next.d.f);
@@ -3172,6 +3293,7 @@ function seqAfterTx(p) {
   if (p.ntx >= 1 && p.ntx <= 5 && !seq.qsoStart) seq.qsoStart = Date.now();
   // RR73 / 73 d'un QSO déjà fini (73 reçu pendant l'émission, QSO suivant commencé) : rien à terminer
   if ((p.ntx === 4 || p.ntx === 5) && seq.dx && String(p.text || '').indexOf(seq.dx.call + ' ') !== 0) return setTimeout(seqNext, 50);
+  if (p.ntx === 4 && seq.dual2 && String(p.text || '').indexOf('RR73; ' + seq.dual2.call + ' ') > 0) seq.dualTake = seq.dual2;
   if (p.ntx === 4 || p.ntx === 5) return seqQsoDone(p.ntx === 4 ? 'RR73 envoyé' : '73 envoyé');
   // Essais du même message (Tx1 à Tx3) : compte remis à zéro dès que le message change (réponse reçue)
   if (p.ntx >= 1 && p.ntx <= 3) {
@@ -3216,6 +3338,7 @@ function seqStart(conn, m) {
     // Appel CQ en cours (Tx6, ou QSO d'un CQ) : à la fin du QSO, réponse au suivant qui appelle, sinon CQ relancé (autoCq)
     // « Toujours CQ » (cqAlways) : même un QSO commencé en répondant à un CQ se termine par le CQ relancé (ou le suivant)
     cqRun: !hound && (ntx === 6 || m.cqAlways === true || (same && !!seq.cqRun && ntx >= 2)), autoCq: !hound && m.autoCq !== false, cqAlways: !hound && m.cqAlways === true,
+    dual: !hound && m.dual === true, dual2: null, dualTake: null,
     waiting: (seq && seq.conn === conn && seq.mode === mode && seq.waiting) || new Map(),
     worked: (seq && seq.conn === conn && seq.mode === mode && seq.worked) || new Set(),
     watchMsg: '', watchSince: 0, qsoStart: same ? seq.qsoStart : 0, txDial: 0, keyNow: !!m.keyNow,
@@ -3252,6 +3375,7 @@ function seqCfg(conn, m) {
   else if (m.parity === 0 || m.parity === 1 || m.parity === null) seq.parity = m.parity;
   if (typeof m.call1st === 'boolean' && !seq.hound) seq.call1st = m.call1st;
   if (typeof m.autoCq === 'boolean' && !seq.hound) seq.autoCq = m.autoCq;
+  if (typeof m.dual === 'boolean' && !seq.hound) seq.dual = m.dual;
   if (m.maxRep != null) seq.maxRep = seqMaxRep(m.maxRep);
   if (typeof m.cqAlways === 'boolean' && !seq.hound) { seq.cqAlways = m.cqAlways; if (m.cqAlways) seq.cqRun = true; }
   // Fréquence RX changée (clic sur la cascade) : l'aide AP du décodeur pour le QSO s'y applique tout de suite
@@ -3735,6 +3859,8 @@ function onOperator(conn, m) {
     case 'time_sync': {
       // Mettre à l'heure Windows sur le PC du club (assistant version 4, comme NetTime)
       if (!isEditor(conn.user.call)) return send(conn, { t: 'notice', level: 'error', msg: 'Réservé aux responsables de la station' });
+      // Le décodeur repart aussi de zéro : horloge de l'audio et délai de la liaison recalculés
+      if (digi.worker) { digi.worker.postMessage({ t: 'reset' }); digi.timing = null; }
       if (!station) return send(conn, { t: 'notice', level: 'error', msg: 'Station hors ligne' });
       if (station.caps.indexOf('timesync') < 0) return send(conn, { t: 'notice', level: 'error', msg: 'Page Station trop ancienne : rechargez-la d’abord' });
       journal('time_sync', { call: conn.user.call });
@@ -3914,14 +4040,18 @@ function onOperator(conn, m) {
       if (!txc || (mine.indexOf(txc) < 0 && !conn.user.admin)) txc = String(txCallFor(conn.user) || '').toUpperCase();
       const want = ['FT8', 'FT4', 'FT2'].indexOf(m.mode) >= 0 ? [m.mode] : ['FT8', 'FT4', 'FT2'];
       const BANDS = ['160m', '80m', '60m', '40m', '30m', '20m', '17m', '15m', '12m', '10m', '6m'];
+      // Même carnet, même TX call, même mode : réponse déjà calculée (plusieurs pages ouvertes, chaque QSO)
+      const ck = txc + '|' + want.join(',') + '|' + book.rev;
+      if (ftDxccCache.k === ck) return send(conn, Object.assign({}, ftDxccCache.v, { calls: mine }));
       const rows = new Map();
       let n = 0;
       for (const q of book.qsos) {
-        if (String(q.station_callsign || '').toUpperCase() !== txc) continue;
+        const sc = q.station_callsign;
+        if (sc !== txc && String(sc || '').toUpperCase() !== txc) continue;
         const md = String(LB.modeName(q) || '').toUpperCase();
         if (want.indexOf(md) < 0) continue;
         const b = String(q.band || '').toLowerCase();
-        const d = DXCC.lookupDxcc(q.call);
+        const d = DXCC.peekDxcc(q.call);
         if (!d || !b) continue;
         n++;
         const conf = q.lotw_qsl_rcvd === 'Y' || q.qsl_rcvd === 'Y'; // comme les statistiques du carnet (eQSL ne compte pas pour le DXCC)
@@ -3929,7 +4059,9 @@ function onOperator(conn, m) {
         if (!r) { r = { p: d.pfx, n: d.name, b: {} }; rows.set(d.pfx, r); }
         r.b[b] = Math.max(r.b[b] || 0, conf ? 2 : 1);
       }
-      return send(conn, { t: 'ft_dxcc', txc, calls: mine, mode: want.length === 1 ? want[0] : 'FT', bands: BANDS, rows: Array.from(rows.values()), qsos: n, total: DXCC.entities().length });
+      const v = { t: 'ft_dxcc', txc, mode: want.length === 1 ? want[0] : 'FT', bands: BANDS, rows: Array.from(rows.values()), qsos: n, total: DXCC.entities().length };
+      ftDxccCache = { k: ck, v };
+      return send(conn, Object.assign({}, v, { calls: mine }));
     }
     case 'log_values': {
       // Valeurs d'une colonne du carnet (choix proposés sous son titre), avec leur nombre de QSO
@@ -3948,7 +4080,12 @@ function onOperator(conn, m) {
     case 'log_list': {
       const all = lgFilter(book.query({ q: m.q, from: m.from, to: m.to }), m.f);
       // TX call présents dans le carnet (export par indicatif)
-      const txcalls = Array.from(new Set(book.qsos.map((q) => String(q.station_callsign || '').toUpperCase()).filter(Boolean))).sort();
+      if (txcallsCache.rev !== book.rev) {
+        const t = new Set();
+        for (const q of book.qsos) if (q.station_callsign) t.add(String(q.station_callsign).toUpperCase());
+        txcallsCache = { rev: book.rev, list: Array.from(t).sort() };
+      }
+      const txcalls = txcallsCache.list;
       const lim = Math.max(1, Math.min(1000, Number(m.limit) || 200));
       return send(conn, { t: 'log_list', total: book.qsos.length, count: all.length, items: all.slice(-lim).reverse().map(qsoForClient),
         calls: logCalls(conn), txcalls: conn.user.admin ? txcalls : undefined, stationCalls: stationCalls(), admin: !!conn.user.admin, services: LOG_SERVICES, auto: Object.fromEntries(LOG_SERVICES.map((s) => [s, !!logCfg[s].auto])), tag: logTag(m), engine: book.engine });
@@ -4055,7 +4192,7 @@ function onOperator(conn, m) {
         sync.mark(q, m.service, { ok: true, msg: 'envoyé à la main (' + conn.user.call + ')' });
         n++;
       }
-      book.save();
+      book.flush();
       journal('log_mark', { call: conn.user.call, service: m.service, n });
       send(conn, { t: 'notice', level: 'info', msg: n + ' QSO notés comme envoyés à ' + m.service.toUpperCase() });
       for (const c of ops) send(c, { t: 'log_changed' });

@@ -264,6 +264,7 @@
       <label class="dg-chk dg-after" title="Correspondant qui ne répond plus : après ce nombre d'envois du même message (appel Tx1, report Tx2 ou R+report Tx3) sans réponse, et la période suivante écoutée, on l'abandonne. En appel CQ (« Après un QSO » = répondre au suivant) : réponse à une autre station qui vous appelait, sinon CQ relancé ; sinon l'émission s'arrête. « Jamais » : comme WSJT-X (seul le chien de garde arrête)."><span class="dg-f dg-ylw">Sans réponse</span> <select id="dgMaxRep">
         <option value="3">3 essais</option><option value="4">4 essais</option><option value="5">5 essais</option><option value="6">6 essais</option><option value="8">8 essais</option><option value="0">jamais</option>
       </select></label>
+      <label class="dg-chk dg-dual" title="Réponse double, comme MSHV (« Multi Answering ») ou le FOX de WSJT-X : en appel CQ, au moment d'envoyer RR73, la station suivante qui vous appelait reçoit son report dans la même émission — « K1ABC RR73; W9XYZ &lt;ON5VL&gt; -08 ». Un QSO de gagné toutes les 30 s. FT8 seulement, indicatifs standard ; report arrondi au nombre pair. WSJT-X, JTDX et MSHV récents décodent ce message ; si la station ne répond pas, son report repart en message normal."><input type="checkbox" id="dgDual"> 2 à la fois</label>
       <label class="dg-chk spotlog" title="Cochée : chaque QSO FT8 / FT4 / FT2 enregistré dans le carnet (fiche ou log automatique) est aussi spoté sur le DX cluster, sous votre indicatif d’opérateur — pas le TX CALL. Les stations décodées partent de toute façon vers PSK Reporter."><input type="checkbox" data-spotlog> Spot cluster</label>
       <button class="btn dg-dualrx" type="button" id="dgDualRx" hidden aria-pressed="false" title="DUAL RX : deux cascades, quatre colonnes et deux cartes de bande (VFO-A et VFO-B) ; clic : un seul VFO affiché (le TRX garde sa double réception). TRX en réception simple : clic = DUAL RX sur le TRX (avec la main).">DUAL RX</button>
       <span class="seg ft-txside" id="dgTxSide" title="FTDX101 en double réception : VFO d'émission (MAIN = VFO-A, SUB = VFO-B). Un double-clic sur un message choisit tout seul le VFO de la station appelée."><span class="dg-f">TX</span><button class="btn" type="button" data-side="A" aria-pressed="true">VFO-A</button><button class="btn" type="button" data-side="B" aria-pressed="false">VFO-B</button></span>
@@ -693,6 +694,7 @@
       <div class="sy-box"><span>Liaison station → serveur</span><b id="syLat">—</b><small>délai mesuré et corrigé automatiquement</small></div>
       <div class="sy-box"><span>DT médian</span><b id="syDt">—</b><small id="syDtNote">derniers décodages FT8 / FT4</small></div>
       <div class="sy-box"><span>Décodages (dernière période)</span><b id="syDec">—</b><small id="syDecNote">arrivée de chaque passe après le début de la période</small></div>
+      <div class="sy-box"><span>Fluidité (2 dernières min)</span><b id="syFlow">—</b><small id="syFlowNote">blocages du serveur et trous dans l’audio de la station</small></div>
     </div>
     <p class="sy-note">Le décodage et l'instant d'émission se calent sur l'horloge du serveur (synchronisée par NTP) : l'écart du PC du club
       est mesuré et corrigé tout seul, celui de votre PC n'intervient pas. Le délai de la liaison est mesuré d'après les stations décodées ;
@@ -5051,7 +5053,7 @@
     if (/[{}]/.test(text)) return api.say('Message incomplet : choisissez d’abord le correspondant (double-clic sur son message) ou réglez votre locator.', 'warn');
     const m = FT_MODES.indexOf(mode) >= 0 ? mode : ftStored();
     api.send({ t: 'ftx_tx', mode: m, ntx: i + 1, f0: curTxF(), parity: txParity(i), dx: { call: dx.call, grid: dx.grid }, rpt: dx.rpt,
-      free: String(store.get('ftxfree', '')), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq' || ftAfter() === 'always', cqAlways: ftAfter() === 'always', maxRep: ftMaxRep(), keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd() });
+      free: String(store.get('ftxfree', '')), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq' || ftAfter() === 'always', cqAlways: ftAfter() === 'always', dual: ftDual2(), maxRep: ftMaxRep(), keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd() });
   }
   // « Après un QSO » : par défaut (0.42.52) « Toujours CQ » — après chaque QSO (73 / RR73), le suivant qui appelait, sinon
   // votre CQ relancé tout seul ; ■ Arrêter si on ne veut pas continuer. L'ancien défaut « cq » est passé une fois à « always ».
@@ -5066,10 +5068,11 @@
     if (i < 5 && dxPar && dxPar.mode === m && dxPar.call === dx.call) return 1 - dxPar.parity;
     return null;
   }
+  function ftDual2() { return store.get('ftxdual', '0') === '1' && mode === 'FT8'; }
   function ftMaxRep() { const n = Number(store.get('ftxmaxrep', '4')); return [0, 3, 4, 5, 6, 8].indexOf(n) >= 0 ? n : 4; }
   function ftxCfg() {
     const st = api && api.state();
-    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), rxf: sd() === 'B' ? rxFB : rxF, parity: txParity(ftxSel), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq' || ftAfter() === 'always', cqAlways: ftAfter() === 'always', maxRep: ftMaxRep(), side: sd() });
+    if (st && st.seq && st.seq.on && st.seq.by === opCall) api.send({ t: 'ftx_cfg', f0: curTxF(), rxf: sd() === 'B' ? rxFB : rxF, parity: txParity(ftxSel), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq' || ftAfter() === 'always', cqAlways: ftAfter() === 'always', dual: ftDual2(), maxRep: ftMaxRep(), side: sd() });
   }
   // Fin de QSO (73 / RR73) : proposition d'enregistrement dans le carnet, comme « Prompt me to log QSO » de WSJT-X
   // Fin d'un QSO FT8 / FT4 / FT2 : fiche à confirmer, ou enregistrement automatique selon le choix « Log »
@@ -6938,6 +6941,18 @@
       $('syDecNote').textContent = 'anticipée ' + f(tm.early) + ' · normale ' + f(tm.normal) + ' · profonde ' + f(tm.deep) +
         (tm.normal && tm.normal.at > P + 2000 ? ' — serveur lent : réponses parfois une période plus tard' : '');
     }
+    // Fluidité : blocage du serveur (calcul trop long) ou audio de la station arrivé par à-coups → décodages en retard
+    const fl = st && st.digi && st.digi.flow;
+    if (fl && $('syFlow')) {
+      const sec = (x) => (x.ms / 1000).toFixed(1).replace('.', ',') + ' s';
+      const ago = (x) => 'il y a ' + (x.ago < 60000 ? Math.round(x.ago / 1000) + ' s' : Math.round(x.ago / 60000) + ' min');
+      const bad = (fl.lag && fl.lag.ms > 1500) || (fl.gap && fl.gap.ms > 1500);
+      $('syFlow').textContent = bad ? 'à-coups' : 'fluide';
+      $('syFlow').className = bad ? 'warn' : 'ok';
+      $('syFlowNote').textContent = 'serveur bloqué : ' + (fl.lag ? sec(fl.lag) + ' (' + ago(fl.lag) + ')' : 'jamais') +
+        ' · trou audio station : ' + (fl.gap ? sec(fl.gap) + ' (' + ago(fl.gap) + ')' : 'aucun') +
+        (fl.qsos ? ' · carnet ' + fl.qsos.toLocaleString('fr-BE') + ' QSO' + (fl.wk != null ? ' (' + fl.wk + ' ms)' : '') : '');
+    }
     $('syDtNote').textContent = m ? m.n + ' messages récents' + (Math.abs(m.med) > 0.3 ? ' · recalage en cours' : ' · calé') : 'en attente de décodages FT8 / FT4';
   }
 
@@ -7422,6 +7437,14 @@
           if (api) api.say(n ? 'Sans réponse après ' + n + ' essais du même message : station suivante qui vous appelait, sinon CQ (en appel CQ), sinon arrêt.' : 'Sans réponse : on insiste jusqu’au chien de garde (comme WSJT-X).', '', 6000);
         });
       }
+      if ($('dgDual')) {
+        $('dgDual').checked = store.get('ftxdual', '0') === '1';
+        $('dgDual').addEventListener('change', () => {
+          store.set('ftxdual', $('dgDual').checked ? '1' : '0');
+          ftxCfg();
+          if (api) api.say($('dgDual').checked ? 'Réponse double (FT8, en appel CQ) : le RR73 et le report de la station suivante partent dans la même émission.' : 'Réponse double coupée : une station à la fois.', '', 6000);
+        });
+      }
       if ($('dgAfter')) {
         $('dgAfter').value = ftAfter();
         $('dgAfter').addEventListener('change', () => {
@@ -7518,7 +7541,9 @@
       if (m.t === 'ft_dxcc') { DXS.data = m; dxDraw(); return true; }
       if (m.t === 'worked') {
         dxAsk(1500); // un QSO de plus (ou un autre TX call) : statistiques DXCC à jour
+        // « bande|mode » → indicatifs séparés par des espaces (ancienne forme : liste « INDICATIF|bande|mode »)
         worked = new Set(Array.isArray(m.list) ? m.list : []);
+        if (m.bm && typeof m.bm === 'object') for (const bm of Object.keys(m.bm)) for (const c of String(m.bm[bm]).split(' ')) if (c) worked.add(c + '|' + bm);
         alIndex(m);
         workedStation = String(m.station || '');
         if (FT_MODES.indexOf(mode) >= 0 && $('dgBand')) redrawAll();

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.54** — Décodage FT en retard avec un gros carnet (≈ 200 000 QSO) corrigé : le serveur ne reparcourt plus tout le carnet plusieurs fois après chaque QSO (stations contactées, tableau DXCC, sauvegarde complète après chaque envoi LoTW / Club Log / eQSL / QRZ) ; décodeur insensible aux rafales d'audio en retard ; onglet Synchro : case Fluidité (blocages du serveur, trous audio de la station) ; ⟳ Mettre à l'heure recale aussi le décodeur. Lecture automatique des confirmations LoTW toutes les heures. FT8 : case « 2 à la fois » — RR73 et report de la station suivante dans la même émission (« A RR73; B <TXCALL> -08 », comme MSHV / FOX de WSJT-X).
 - **0.42.53** — Page FT8 / FT4 / FT2 : en y arrivant (onglet ou page ouverte depuis le dashboard), le TRX va tout seul sur la fréquence d'appel de sa bande s'il n'y est pas (ex. 20 m SSB → 14,074 MHz DATA-U).
 - **0.42.52** — FT : « Après un QSO » = « Toujours CQ » par défaut — après le RR73 / 73 (QSO au carnet), réponse au suivant qui appelait, sinon votre CQ relancé tout seul ; ■ Arrêter pour ne pas continuer.
 - **0.42.51** — Page FT : annonce en vert « ✓ QSO enregistré dans le carnet : indicatif · bande · mode · TX call » dès que le QSO est dans le carnet.
