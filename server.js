@@ -671,7 +671,17 @@ function onDigi(m) {
     const item = { slot: m.slot, list: m.list };
     const sideB = m.ch === 1;
     // Passe normale reçue pour cette période (FT8 / FT4) : une émission de la séquence qui l'attendait peut partir
-    if (FTX_SLOT[m.mode] && (m.phase === 'normal' || (!m.phase && !m.early))) { digi.normal = digi.normal || {}; digi.normal[(sideB ? 'B' : 'A') + m.mode] = Math.max(digi.normal[(sideB ? 'B' : 'A') + m.mode] || 0, m.slot); setTimeout(ftxHoldCheck, 0); }
+    if (FTX_SLOT[m.mode] && (m.phase === 'normal' || (!m.phase && !m.early))) {
+      const key = (sideB ? 'B' : 'A') + m.mode;
+      digi.normal = digi.normal || {};
+      digi.normal[key] = Math.max(digi.normal[key] || 0, m.slot);
+      // Arrivée de la passe normale après la fin de la période (ms) : l'attente avant d'émettre se règle dessus
+      digi.normalLate = digi.normalLate || {};
+      const l = digi.normalLate[key] || (digi.normalLate[key] = []);
+      l.push(Date.now() - m.slot - FTX_SLOT[m.mode]);
+      if (l.length > 6) l.shift();
+      setTimeout(ftxHoldCheck, 0);
+    }
     const h = (sideB ? digi.histB : digi.hist)[m.mode];
     if (!h) return;
     h.push(item);
@@ -3074,6 +3084,7 @@ function seqOnDecodes(mode, slot, list, side) {
       const w = words(d);
       if (w.length < 2 || baseCall(w[1]) !== dxBase) continue;
       if (baseCall(w[0]) === me) {
+        seq.heardSlot = slot;
         seq.parity = 1 - theirParity;
         if (d.f >= 100 && d.f <= 3000) seq.rxf = Math.round(d.f);
         if (seqReact(w[2], d)) return seqQsoDone('73 reçu');
@@ -3106,6 +3117,7 @@ function seqOnDecodes(mode, slot, list, side) {
       if (!best || d.db > best.d.db) best = { d, w };
     }
     if (best) {
+      seq.heardSlot = slot;
       seq.dx = { call: best.w[1], grid: '' };
       if (best.d.f >= 100 && best.d.f <= 3000) seq.rxf = Math.round(best.d.f);
       seq.rptSent = fmtRpt(best.d.db);
@@ -3523,7 +3535,18 @@ function ftxHoldUntil(p) {
   const prev = (k - 1) * P;
   const got = (digi.normal || {})[(seq.side || 'A') + p.mode] || 0;
   if (got >= prev) return 0; // déjà reçue
-  const until = k * P + FTX_T0 + Math.min(FTX_LATE[p.mode] - 500, 1500) - FTX_KEY_LEAD;
+  if ((seq.heardSlot || 0) >= prev) return 0; // réponse du correspondant déjà décodée (passe anticipée) : message à jour
+  // Attente réglée sur les dernières périodes : juste le temps qu'il faut à la passe normale (+ 0,3 s), 1 s au plus.
+  // Décodages trop tardifs pour arriver dans ce délai (serveur bloqué, audio en retard) : on n'attend pas du tout —
+  // attendre ne ferait que retarder l'émission sans la réponse.
+  const late = ((digi.normalLate || {})[(seq.side || 'A') + p.mode] || []).slice().sort((a, b) => a - b);
+  const cap = Math.min(FTX_LATE[p.mode] - 500, 1000);
+  let wait = cap;
+  if (late.length >= 3) {
+    if (late[late.length >> 1] > cap) return 0;
+    wait = Math.max(300, Math.min(cap, late[late.length - 1] + 300));
+  }
+  const until = k * P + FTX_T0 + wait - FTX_KEY_LEAD;
   return until > Date.now() + 50 ? until : 0;
 }
 function ftxHoldCheck() {
