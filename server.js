@@ -991,7 +991,13 @@ const sync = new Sync({
 function logCtx(conn, m) {
   const calls = logCalls(conn);
   const st = String((m && m.station) || cfg.digiCall || calls[0] || '').toUpperCase();
-  return { operator: conn.user.call, stationCallsign: calls.indexOf(st) >= 0 ? st : calls[0], myGrid: cfg.stationGrid || '' };
+  const sc = calls.indexOf(st) >= 0 ? st : calls[0];
+  // Locator du QSO : celui du lieu de station TQSL de ce TX call (déjà connu de LoTW), sinon celui de la station
+  return { operator: conn.user.call, stationCallsign: sc, myGrid: myGridFor(sc) };
+}
+function myGridFor(call) {
+  try { const g = AGENTS.gridFor(call, (credFor('lotw', call) || {}).location); if (/^[A-R]{2}\d{2}([A-X]{2})?$/i.test(g)) return g.toUpperCase(); } catch (e) { /* */ }
+  return cfg.stationGrid || '';
 }
 // Indicatifs de station proposés dans le carnet : ceux du club, plus le sien (QSO faits sous son indicatif)
 // Page qui a envoyé le QSO (page TRX SSB…) : renvoyée avec la réponse, chaque page ne traite que les siennes
