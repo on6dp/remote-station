@@ -4727,7 +4727,8 @@
   const loadDx = () => { try { return Object.assign({ call: '', grid: '', rpt: '-10', rptRx: '', name: '', qth: '', rst: '599', rstRx: '599' }, JSON.parse(store.get('dx', '{}')) || {}); } catch (e) { return { call: '', grid: '', rpt: '-10', rptRx: '', name: '', qth: '', rst: '599', rstRx: '599' }; } };
   let dx = loadDx();
   let ftxSel = Number(store.get('ftxsel', '5')) || 0;
-  const CALL_RE = /^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}[A-Z](\/[A-Z0-9]+)?$/;
+  // Indicatif, avec préfixe ou suffixe éventuel (HA/ES3H, F5OYA/P)
+  const CALL_RE = /^([A-Z0-9]{1,4}\/)?[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}[A-Z](\/[A-Z0-9]+)?$/;
   const GRID_RE = /^[A-R]{2}[0-9]{2}([A-X]{2})?$/;
   const fmtRpt = (db) => (db >= 0 ? '+' : '-') + String(Math.min(30, Math.abs(Math.round(db)))).padStart(2, '0');
   function setDx(o) {
@@ -4879,7 +4880,8 @@
     // Message suivant comme WSJT-X : réponse à un CQ → Tx1 ; message qui nous est adressé → selon son contenu
     const toMe = stationCalls.indexOf(w[0]) >= 0;
     const p = toMe ? (w[2] || '') : '';
-    ftxSel = !toMe ? 0 : GRID_RE.test(p) && p !== 'RR73' ? 1 : /^[+-]\d{2}$/.test(p) ? 2 : /^R[+-]\d{2}$/.test(p) ? 3 : /^(RRR|RR73)$/.test(p) ? 4 : p === '73' ? 4 : 0;
+    // Appel d'un indicatif composé sans locator (« <ON5VL> HA/ES3H ») : comme un appel avec locator → report (Tx2)
+    ftxSel = !toMe ? 0 : (GRID_RE.test(p) && p !== 'RR73') || p === '' ? 1 : /^[+-]\d{2}$/.test(p) ? 2 : /^R[+-]\d{2}$/.test(p) ? 3 : /^(RRR|RR73)$/.test(p) ? 4 : p === '73' ? 4 : 0;
     // HOUND : appel du FOX (Tx1), ou R + report (Tx3) s'il nous a déjà donné un report ; son RR73 : rien à envoyer
     if (houndOn()) {
       if (toMe && /^(RRR|RR73|73)$/.test(p)) { drawMsgs(); return api && api.say('Le FOX ' + call + ' vous a confirmé le QSO (RR73).', '', 5000); }
