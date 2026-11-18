@@ -385,10 +385,10 @@
     <!-- DUAL / QUAD DÉCODEURS et BARRES : posés sur la ligne de réglages de la cascade (Gain, Zéro… Vitesse) au démarrage -->
     <span class="rt-wfbtns" id="rtWfBtns">
           <span class="rt-decw" id="rtDecWrap" hidden><span class="rt-decl">DÉCODEURS</span>
-          <select id="rtDecSel" class="rt-decsel" aria-label="Nombre de décodeurs" title="Un seul récepteur (ni SPLIT ni DUAL RX) : nombre de décodeurs sur la même cascade — SINGLE = A1 ; DUAL = A1 (clic gauche) et A2 (clic droit) ; QUAD = en plus A3 (Ctrl + clic gauche) et A4 (Ctrl + clic droit)"><option value="1">SINGLE</option><option value="2">DUAL</option><option value="4">QUAD</option></select></span>
+          <select id="rtDecSel" class="rt-decsel" aria-label="Nombre de décodeurs" title="Un seul récepteur (ni SPLIT ni DUAL RX) : nombre de décodeurs sur la même cascade — SINGLE = A1 ; DUAL = A1 (clic gauche) et A2 (clic droit) ; QUAD = A1 (clic gauche), A2 (Ctrl + clic gauche), A3 (clic droit), A4 (Ctrl + clic droit), dans cet ordre de gauche à droite"><option value="1">SINGLE</option><option value="2">DUAL</option><option value="4">QUAD</option></select></span>
           <button class="dg-mini rt-2dec" type="button" id="rt2Dec" aria-pressed="false" hidden title="Un seul récepteur (ni SPLIT ni DUAL RX) : deux décodeurs sur la même cascade, comme FLDIGI : A1 (clic gauche) et A2 (clic droit, ou bouton droit maintenu pour faire glisser ses barres) ; deux signaux décodés en même temps. La fenêtre de A2 s’affiche dans la colonne de droite.">DUAL DÉCODEURS</button>
-          <button class="dg-mini rt-2dec rt-4dec" type="button" id="rt4Dec" aria-pressed="false" hidden title="Un seul récepteur : 4 décodeurs sur la même cascade — A1 (clic gauche), A2 (clic droit), A3 (Ctrl + clic gauche), A4 (Ctrl + clic droit), ou choisir le décodeur dans BARRES puis clic gauche. Fenêtres de A3 sous A1, de A4 sous A2.">QUAD DÉCODEURS</button>
-          <span class="rt-bsel" id="rtBSel" hidden title="Décodeur placé par le prochain clic gauche sur la cascade (une fois, puis retour à A1) ; clic droit : toujours A2"><span class="rt-bsl">BARRES</span><button class="dg-mini" type="button" data-b="0" aria-pressed="true">A1</button><button class="dg-mini" type="button" data-b="1" aria-pressed="false">A2</button><button class="dg-mini" type="button" data-b="2" aria-pressed="false">A3</button><button class="dg-mini" type="button" data-b="3" aria-pressed="false">A4</button></span>
+          <button class="dg-mini rt-2dec rt-4dec" type="button" id="rt4Dec" aria-pressed="false" hidden title="Un seul récepteur : 4 décodeurs sur la même cascade, de gauche à droite — A1 (clic gauche), A2 (Ctrl + clic gauche), A3 (clic droit), A4 (Ctrl + clic droit), ou choisir le décodeur dans BARRES puis clic gauche.">QUAD DÉCODEURS</button>
+          <span class="rt-bsel" id="rtBSel" hidden title="Décodeur placé par le prochain clic gauche sur la cascade (une fois, puis retour à A1) ; clic droit : toujours A3"><span class="rt-bsl">BARRES</span><button class="dg-mini" type="button" data-b="0" aria-pressed="true">A1</button><button class="dg-mini" type="button" data-b="2" aria-pressed="false">A2</button><button class="dg-mini" type="button" data-b="1" aria-pressed="false">A3</button><button class="dg-mini" type="button" data-b="3" aria-pressed="false">A4</button></span>
     </span>
     <div class="rt-main" id="rtMain">
     <div class="rt-dual" id="rtDual">
@@ -410,7 +410,7 @@
         <div class="rt-io">
           <div class="rt-pane rt-txbox"><textarea class="rt-txw" id="rtTxt" data-ch="0" spellcheck="false" placeholder="Texte à émettre sur le VFO-A, puis F11 TX ou Ctrl+Entrée" title="Fenêtre d’émission du VFO-A : taper ici choisit ce VFO pour l’émission RTTY (réglages de son décodeur)"></textarea><pre class="rt-txshow" id="rtTxShow" hidden title="Texte émis : barré au fur et à mesure (clic : revenir à la saisie)"></pre><button class="dg-mini rt-clr" type="button" data-clr="tx0" title="Effacer cette fenêtre d’émission (TX)">Effacer</button></div>
           <div class="rt-pane"><pre class="rt-rx" id="rtRx"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx0" title="Effacer cette fenêtre de réception (RX)">Effacer</button></div>
-          <div class="rt-xdec" id="rtDecC" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A3</span><span class="rt-sig" id="rtSigC"></span><span class="rt-xc">centre <b id="rtFC"></b> Hz</span><button class="dg-mini rt-txsel" type="button" data-ch="2" aria-pressed="false">RX ici</button><span class="rt-xhint">Ctrl + clic gauche, ou BARRES : A3</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxC"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx2" title="Effacer cette fenêtre">Effacer</button></div></div>
+          <div class="rt-xdec" id="rtDecC" hidden><div class="rt-xhd"><span class="rt-name">VFO-A · A2</span><span class="rt-sig" id="rtSigC"></span><span class="rt-xc">centre <b id="rtFC"></b> Hz</span><button class="dg-mini rt-txsel" type="button" data-ch="2" aria-pressed="false">RX ici</button><span class="rt-xhint">Ctrl + clic gauche, ou BARRES : A2</span></div><div class="rt-pane"><pre class="rt-rx" id="rtRxC"></pre><button class="dg-mini rt-clr" type="button" data-clr="rx2" title="Effacer cette fenêtre">Effacer</button></div></div>
         </div>
         <i class="rt-iogrip" data-ch="0" title="Glisser vers le haut ou le bas : hauteur des fenêtres TX / RX de ce VFO seulement (double-clic : taille d’origine)"></i>
       </div>
@@ -2006,13 +2006,13 @@
     const two2 = !!($('rtDual') && $('rtDual').classList.contains('rt-2dec')); // un seul récepteur, 2 décodeurs : A1 et A2 (comme FLDIGI)
     rttyMarks(c, w, rts[0], $('dgMkRx'), $('dgMkTx'), null, two2 ? 'A1' : 'A');
     // Décodeur B : sur la même cascade, repères magenta (Mark) / vert (Space) — sauf s'il a sa propre cascade
-    if (!(wfB.sctx && $('rtWfB').clientWidth) && !($('rtDual') && $('rtDual').classList.contains('rt-solo'))) rttyMarks(c, w, rts[1], $('dgMkBM'), $('dgMkBS'), RT_COLS_B, two2 ? 'A2' : 'B'); // décodeur B caché (un seul VFO) : pas de repère
+    if (!(wfB.sctx && $('rtWfB').clientWidth) && !($('rtDual') && $('rtDual').classList.contains('rt-solo'))) rttyMarks(c, w, rts[1], $('dgMkBM'), $('dgMkBS'), RT_COLS_B, two2 ? (rtQuad() ? 'A3' : 'A2') : 'B'); // décodeur B caché (un seul VFO) : pas de repère
     // QUAD DÉCODEURS (réception simple) : A3 (orange / cyan) et A4 (rose / vert clair) sur la même cascade
     const q4 = rtQuad();
     for (const id of ['dgMkCM', 'dgMkCS', 'dgMkDM', 'dgMkDS']) if ($(id)) $(id).hidden = !q4 || tab !== 'rtty';
     if (q4) {
       rtQuadSync();
-      rttyMarks(c, w, rts[2], $('dgMkCM'), $('dgMkCS'), RT_COLS_C, 'A3');
+      rttyMarks(c, w, rts[2], $('dgMkCM'), $('dgMkCS'), RT_COLS_C, 'A2');
       rttyMarks(c, w, rts[3], $('dgMkDM'), $('dgMkDS'), RT_COLS_D, 'A4');
     }
     // Cascade du décodeur B : même spectre (même BF du TRX), ses propres repères
@@ -3026,11 +3026,12 @@
     const solo = one && !two;
     const dualEl = $('rtDual');
     if ($('rt2Dec')) { $('rt2Dec').hidden = !one; $('rt2Dec').setAttribute('aria-pressed', String(two)); }
-    if ($('rtNameB')) $('rtNameB').textContent = two ? 'VFO-A · A2' : 'VFO-B';
+    // QUAD : noms dans l'ordre de gauche à droite — A1, A2 (colonne de gauche), A3, A4 (colonne de droite)
+    if ($('rtNameB')) $('rtNameB').textContent = two ? 'VFO-A · ' + (four ? 'A3' : 'A2') : 'VFO-B';
     if ($('rt2Off')) $('rt2Off').hidden = !two;
     if ($('rtNameA')) $('rtNameA').textContent = two ? 'VFO-A · A1' : 'VFO-A';
     if (dualEl && dualEl.classList.contains('rt-2dec') !== two && tab === 'rtty') setTimeout(drawScale, 0); // repères A / B ↔ A1 / A2
-    if ($('rtTxtB')) $('rtTxtB').placeholder = two ? 'Texte à émettre sur la fréquence de A2 (même VFO), puis F11 TX ou Ctrl+Entrée' : 'Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée';
+    if ($('rtTxtB')) $('rtTxtB').placeholder = two ? 'Texte à émettre sur la fréquence de ' + (four ? 'A3' : 'A2') + ' (même VFO), puis F11 TX ou Ctrl+Entrée' : 'Texte à émettre sur le VFO-B, puis F11 TX ou Ctrl+Entrée';
     if (dualEl && dualEl.classList.contains('rt-4dec') !== four) { dualEl.classList.toggle('rt-4dec', four); if (!four) { rtBSel = Math.min(rtBSel, 1); if (rtTx >= 2) { rtTx = rtSideOf(rtTx); store.set('rttx', String(rtTx)); } } setTimeout(() => { announce(); if (tab === 'rtty') drawScale(); }, 0); }
     // Liste DÉCODEURS : à droite du bouton DUAL RX des VFO du haut (même style) ; remise en place si le bloc des VFO est redessiné
     { const sel = $('rtDecWrap'), drx = document.querySelector('#rtVfo .vfb-drx'); if (sel && drx && sel.previousElementSibling !== drx) drx.after(sel); }
@@ -5329,7 +5330,7 @@
       if (note) {
         note.classList.toggle('air', mine && x.state === 'tx');
         note.textContent = mine ? (x.state === 'tx' ? '● En émission ' + mode + ' (' + x.by + ') : « ' + x.text + ' »' : 'Préparation de l’émission ' + mode + '…')
-          : mode === 'RTTY' ? 'Émission RTTY sous ' + myCall + ', réglages du décodeur ' + (['A', 'B', 'A3', 'A4'][rtTx]) + ' (' + Math.round(rts[rtTx].f) + ' Hz) : macro (émission directe) ou texte ci-dessus puis « Émettre » (Ctrl+Entrée).' : 'Émission JTTY sous ' + myCall + ' : macro (émission directe) ou message ci-dessus puis « Émettre » (Entrée).';
+          : mode === 'RTTY' ? 'Émission RTTY sous ' + myCall + ', réglages du décodeur ' + ((rtQuad() ? ['A1', 'A3', 'A2', 'A4'] : ['A', 'B', 'A3', 'A4'])[rtTx]) + ' (' + Math.round(rts[rtTx].f) + ' Hz) : macro (émission directe) ou texte ci-dessus puis « Émettre » (Ctrl+Entrée).' : 'Émission JTTY sous ' + myCall + ' : macro (émission directe) ou message ci-dessus puis « Émettre » (Entrée).';
       }
     }
     // Émission partie : le texte envoyé quitte la zone d'écriture et s'affiche dans la réception
