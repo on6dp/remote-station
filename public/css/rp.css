@@ -1366,7 +1366,7 @@ button[data-ctl='dnf'], button[data-ctl='dnfB'], button[data-ctl='tuner'] { font
 .lg-agc { font-size: 18px; letter-spacing: 2px; color: var(--v2-accent-yellow); font-family: monospace; }
 .lg-cmd { display: block; margin-top: 3px; padding: 4px 6px; background: var(--v2-bg-input); border-radius: 4px; font-size: 11px; word-break: break-all; cursor: copy; user-select: all; }
 .lg-agcode a { color: var(--v2-accent-cyan-bright); }
-.lg-acf { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px 10px; }
+.lg-acf { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px 10px; align-items: end; }
 .lg-anote { margin: 6px 0 0; font-size: 12px; color: var(--v2-text-secondary); }
 .lg-anote.warn { color: var(--v2-accent-yellow); }
 /* RTTY : deux décodeurs côte à côte (A = VFO-A, B = VFO-B), largeur réglable par le trait du milieu */

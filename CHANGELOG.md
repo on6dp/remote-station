@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.82** — Club Log : cases du cadre jaune plus courtes (Jeton Club Log, E-mail et Mot de passe « sans jeton ») et rappel de l’endroit où créer le jeton
 - **0.42.81** — Club Log : jeton de la nouvelle API (cl_…) — plus besoin de la clé API du helpdesk ni du mot de passe ; envois par lots de 100 QSO avec un résultat par QSO ; Tester vérifie chaque jeton ; texte du test check.php corrigé
 - **0.42.80** — Club Log : un refus (403) affiche la réponse exacte de Club Log, au lieu de conclure à tort à un blocage du pare-feu ; enregistrer les identifiants permet de réessayer tout de suite ; rappel : mot de passe d'application obligatoire.
 - **0.42.79** — RTTY : BARRES aussi en DUAL (A1 A2) — choisir le décodeur placé par le prochain clic gauche, pratique sur tablette ; en QUAD A1 A2 A3 A4.

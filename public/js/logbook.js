@@ -1927,7 +1927,7 @@
       const f = sdlg.el.querySelector('form');
       if (f.callsign.value !== m.call) return;
       const UI = {
-        clublog: [['api', 'Jeton Club Log (cl_…) — Club Log → Settings → API → Tokens ; ou ancienne clé API', 1], ['email', 'E-mail du compte Club Log (pas utile avec un jeton)'], ['password', 'Mot de passe d’application (pas utile avec un jeton)', 1]],
+        clublog: [['api', 'Jeton Club Log (cl_…)', 1], ['email', 'E-mail (sans jeton)'], ['password', 'Mot de passe (sans jeton)', 1]],
         eqsl: [['user', 'Indicatif / identifiant eQSL'], ['password', 'Mot de passe', 1], ['nickname', 'QTH nickname (facultatif)']],
         lotw: [['location', 'Lieu de station TQSL (facultatif avec l’Agent LoTW si votre PC n’en a qu’un pour cet indicatif)'], ['password', 'Mot de passe du certificat (TQSL de ce serveur seulement ; avec l’Agent LoTW, il reste sur votre PC)', 1], ['login', 'Identifiant du site LoTW (confirmations)'], ['webPassword', 'Mot de passe du site LoTW', 1]],
         qrz: [['key', 'Clé API du logbook QRZ.com', 1]]
@@ -1940,6 +1940,8 @@
           '<button type="button" class="lg-eye" title="Afficher / masquer" aria-label="Afficher le mot de passe">👁</button>' +
           (m.source === 'compte' && m.has && m.has[k] ? '<button type="button" class="lg-clr" data-aclr="' + k + '" title="Effacer la valeur enregistrée pour cet indicatif">✕</button>' : '') + '</span>'
         : '<input data-af="' + k + '" value="' + esc((m.fields || {})[k] || '') + '" autocomplete="off" readonly data-noauto="1">') + '</label>').join('') +
+        // Club Log : où se crée le jeton (les deux autres cases ne servent qu'à l'ancienne méthode)
+        (m.service === 'clublog' ? '<p class="lg-note" style="grid-column:1/-1;margin:0">Jeton : clublog.org → Settings → <b>API</b> → Tokens → Create token (commence par <b>cl_</b>). Avec un jeton, e-mail et mot de passe ne servent pas : laissez-les vides (✕).</p>' : '') +
         // Indicatif personnel : envoi automatique de chaque nouveau QSO (le club se règle dans ⚙ Configuration)
         // Indicatif du club (administrateurs) : choix propre à cet indicatif, sinon le réglage commun de ⚙ Configuration
         (m.club && !me.admin ? '<p class="lg-note">Envoi automatique des QSO de ' + esc(m.call) + ' (indicatif du club) : réglé par un administrateur.</p>'
