@@ -1300,7 +1300,7 @@ body.panel-popup .msgs-row { grid-template-columns: 74px minmax(0, 1fr); }
 .dg-h > span:first-child { color: var(--v2-accent-yellow); }
 /* Station meters : noms des mesures en jaune */
 .meters .mt-l { color: var(--v2-accent-yellow); font-weight: 700; }
-/* AGC et Correspondant en jaune fluo, Écouter le TRX en vert fluo */
+/* AGC et Correspondant en jaune fluo, Activer BF TRX en vert fluo */
 .ctl[data-ctl='agc'] .ctl-label, .ctl[data-ctl='agcB'] .ctl-label, .ctl[data-ctl='roof'] .ctl-label, .dx-lbl { color: var(--v2-accent-yellow) !important; font-weight: 700; }
 #listenBtn { font-weight: 700; }
 #listenBtn:not([aria-pressed='true']) { color: #39FF14; }
@@ -1572,7 +1572,7 @@ body.bm-resizing { cursor: ew-resize; user-select: none; }
 .vx-monvol output { min-width: 34px; text-align: right; color: var(--v2-text-bright, #fff); font-variant-numeric: tabular-nums; }
 .vx-trxeq .vx-eq-f .btn, .vx-eq .vx-eq-f .btn { color: #fff !important; font-weight: 800; }
 .vx-eq .vx-eq-f .btn:disabled { opacity: .45; }
-/* « M'écouter » : vert gras comme « Écouter le TRX » */
+/* « M'écouter » : vert gras comme « Activer BF TRX » */
 #vxMonBtn, .vx-eq [data-a='mon'] { font-weight: 700; }
 #vxMonBtn:not([aria-pressed='true']), .vx-eq [data-a='mon']:not([aria-pressed='true']) { color: #39FF14 !important; }
 /* Grand écran : carte de bande en 4e colonne, tout à droite (après la colonne des réglages) */
@@ -1582,7 +1582,7 @@ body.bm-resizing { cursor: ew-resize; user-select: none; }
     border: 1px solid var(--v2-border-panel); border-radius: var(--v2-panel-radius); overflow: hidden; }
   body.bm-far #centerPanel.bm-on > :not(.panel-h):not(.bm) { margin-right: 0; }
 }
-/* Bouton « Equalizer » (égaliseur du TRX) : vert gras comme « Écouter le TRX » */
+/* Bouton « Equalizer » (égaliseur du TRX) : vert gras comme « Activer BF TRX » */
 #vxTrxBtn, #vxEqBtn { font-weight: 800; color: #fff !important; background: linear-gradient(180deg, #1f9d45, #12692c) !important; border-color: #39FF14 !important; }
 #vxTrxBtn:hover, #vxEqBtn:hover { filter: brightness(1.12); }
 /* MODE AUTO (plan de bande IARU Région 1), à droite des touches de bande */
@@ -2875,7 +2875,7 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 /* Page SSB : PROC dans les couleurs de TRX EQ / MICRO EQ — vert en service, fond noir coupé */
 .ssb-mic-b .btn[data-id='proc'] { background: #000; border: 1px solid #6b7686; color: #fff; font-weight: 800; }
 .ssb-mic-b .btn[data-id='proc'][aria-pressed='true'] { background: linear-gradient(180deg, #1f9d45, #12692c); border-color: #39FF14; color: #fff; }
-/* Page SSB : ÉCOUTER LE TRX à droite de MONITORING */
+/* Page SSB : ACTIVER BF TRX à droite de MONITORING */
 .vx-mon .ss-listen { margin-left: 8px; border: 1px solid #fff; color: #fff; font-weight: 800; }
 .vx-mon .ss-listen[aria-pressed='true'] { background: linear-gradient(180deg, #1f9d45, #12692c); border-color: #39FF14; color: #fff; }
 .vx-mon .ss-listen[hidden] { display: none; }
@@ -2911,7 +2911,7 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 #vxMonBtn[aria-pressed='true'], .vx-mon #vxMonBtn[aria-pressed='true'], .fc-tx #vxMonBtn[aria-pressed='true'] { background: #0b3d91 !important; border-color: #58a6ff !important; color: #fff !important; font-weight: 800; }
 /* Pages SSB et CW : contest choisi → « Catégorie » en jaune vif */
 body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:has(#cwpCat) { color: #ffe600 !important; font-weight: 800; }
-/* Page SSB : volume de l'écoute du TRX, à droite de ÉCOUTER LE TRX */
+/* Page SSB : volume de l'écoute du TRX, à droite de ACTIVER BF TRX */
 .ss-lvol { display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; color: #fff; font-weight: 700; font-size: 11px; white-space: nowrap; }
 .ss-lvol[hidden] { display: none; }
 .ss-lvol input { width: 110px; }
@@ -2919,11 +2919,11 @@ body.cwp-inctst .cwp-ctrow label:has(#ssCat), body.cwp-inctst .cwp-ctrow label:h
 /* « Volume » (MONITORING) et « Volume TRX » en jaune vif */
 .vx-monvol, .ss-lvol { color: #ffe600 !important; font-weight: 800; }
 .vx .ss-listen { margin-left: 14px; }
-/* Page SSB : ÉCOUTER LE TRX et Volume TRX toujours côte à côte */
+/* Page SSB : ACTIVER BF TRX et Volume TRX toujours côte à côte */
 .ss-listenw { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; white-space: nowrap; }
 .ss-listenw .ss-listen { margin-left: 0; }
 .ss-listenw .ss-lvol { margin-left: 0; }
-/* Page SSB : le bouton garde la même largeur (ÉCOUTER LE TRX / ARRÊTER L'ÉCOUTE) et les curseurs rétrécissent un peu :
+/* Page SSB : le bouton garde la même largeur (ACTIVER BF TRX / ARRÊTER L'ÉCOUTE) et les curseurs rétrécissent un peu :
    la ligne ne passe plus à la ligne quand on lance l'écoute */
 .ssb-body .ss-listenw .ss-listen { width: 178px; justify-content: center; text-align: center; white-space: nowrap; }
 .ssb-body .fc-tx .vx-monvol input, .ssb-body .vx .vx-monvol input { flex: 0 1 110px !important; width: 110px !important; min-width: 60px; }

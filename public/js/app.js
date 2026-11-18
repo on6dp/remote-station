@@ -424,7 +424,7 @@
     return { key: (R0.NAME || '') + '/' + pmax + '/' + set, arcs, set };
   };
   // ------------------------------------------------------------ spectre BF (écran « spectre » du cadran) : le son reçu
-  // par « Écouter le TRX » (8 kHz), avec le filtre (rouge) et le NOTCH, comme le petit cadre de la face avant
+  // par « Activer BF TRX » (8 kHz), avec le filtre (rouge) et le NOTCH, comme le petit cadre de la face avant
   // Un spectre par VFO : en double réception, le son arrive en stéréo (MAIN / VFO A à gauche, SUB / VFO B à droite) et
   // chaque écran montre le sien ; en réception simple, seul l'écran du VFO qu'on entend montre un spectre
   const AUDS = { A: { buf: new Float32Array(1024), pos: 0, rate: 8000, at: 0, sm: null }, B: { buf: new Float32Array(1024), pos: 0, rate: 8000, at: 0, sm: null } };
@@ -490,7 +490,7 @@
       h += '<path class="sp-line" d="' + line + '"/>';
     } else {
       h += quiet && live ? '<text class="sp-msg" x="100" y="38" text-anchor="middle">VFO pas écouté</text><text class="sp-msg" x="100" y="50" text-anchor="middle">(DUAL RX : les deux)</text>'
-        : '<text class="sp-msg" x="100" y="38" text-anchor="middle">' + (live ? 'Cliquez « 🔊 Écouter le TRX »' : 'TRX hors ligne') + '</text>' +
+        : '<text class="sp-msg" x="100" y="38" text-anchor="middle">' + (live ? 'Cliquez « 🔊 Activer BF TRX »' : 'TRX hors ligne') + '</text>' +
         '<text class="sp-msg" x="100" y="50" text-anchor="middle">' + (live ? 'pour voir le spectre BF' : '') + '</text>';
     }
     const d = live ? miniFltData(w, r) : null;
@@ -508,7 +508,7 @@
     }
     h += '<line class="sp-base" x1="' + X0 + '" y1="' + (Y1 + 1) + '" x2="' + X1 + '" y2="' + (Y1 + 1) + '"/>';
     for (const f of [0, 1000, 2000, 3000, 4000]) h += '<text class="sp-ax" x="' + X(f).toFixed(1) + '" y="78" text-anchor="middle">' + (f ? f / 1000 + 'k' : '0') + '</text>';
-    sv.innerHTML = h + '<title>Spectre BF du son reçu (Écouter le TRX) avec le filtre et le NOTCH — molette : déplace le NOTCH</title>';
+    sv.innerHTML = h + '<title>Spectre BF du son reçu (Activer BF TRX) avec le filtre et le NOTCH — molette : déplace le NOTCH</title>';
     sv.classList.toggle('dim', !live);
   }
   setInterval(() => { for (const w of ['A', 'B']) if (st && st.radio) drawSpec(w, st.radio, !!st.radio.connected); }, 200);
@@ -2022,7 +2022,7 @@
   function drawListen() {
     const b = $('listenBtn');
     b.setAttribute('aria-pressed', String(player.on));
-    b.textContent = player.on ? '🔇 Arrêter l’écoute' : '🔊 Écouter le TRX';
+    b.textContent = player.on ? '🔇 Désactiver BF TRX' : '🔊 Activer BF TRX';
     const a = (st && st.audio) || {};
     $('listenInfo').textContent = !player.on
       ? (a.active ? 'Cliquez pour entendre la BF du TRX.' : 'La station n’envoie pas de son en ce moment.') + (a.listeners ? ' ' + a.listeners + ' à l’écoute.' : '')

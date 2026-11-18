@@ -7175,7 +7175,7 @@
     if (cb.dataset.state !== state) cb.dataset.state = state;
     const lb = $('listenBtn');
     lb.setAttribute('aria-pressed', String(L.listening));
-    lb.textContent = L.listening ? '🔇 Arrêter l’écoute' : '🔊 Écouter le TRX';
+    lb.textContent = L.listening ? '🔇 Désactiver BF TRX' : '🔊 Activer BF TRX';
     $('stereoBtn').setAttribute('aria-pressed', String(L.stereo));
     $('stereoBtn').hidden = !(R && R.DUAL_AUDIO);
     // Autre TRX en service : cette face avant n'est pas la bonne
@@ -8707,7 +8707,7 @@
     setSink: (id) => { player.sink = id; if (player.ctx && player.ctx.setSinkId) player.ctx.setSinkId(id).catch(() => {}); },
     extTalk: false, // la page SSB émet sa voix : pas d'écho dans l'écoute du TRX
     tap(fn) { hostTaps.add(fn); return () => hostTaps.delete(fn); },
-    // Page TRX SSB : « Écouter le TRX » et stéréo MAIN | SUB, joués par cette page (comme le dashboard)
+    // Page TRX SSB : « Activer BF TRX » et stéréo MAIN | SUB, joués par cette page (comme le dashboard)
     listen: {
       on: () => !!L.listening,
       stereo: () => !!L.stereo,

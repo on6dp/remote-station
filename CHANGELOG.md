@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.77** — Bouton d'écoute renommé « 🔊 Activer BF TRX » / « 🔇 Désactiver BF TRX » (dashboard, face avant, aide) : plus de confusion avec l'arrêt du TRX.
 - **0.42.76** — Écoute du TRX : retour au fonctionnement d'avant la 0.42.74 — elle ne démarre qu'au clic sur « Écouter le TRX » (plus d'écoute automatique à la connexion).
 - **0.42.75** — IC-7300 / IC-7760 : badge MONI dans la rangée ATT · P.AMP · NB… du VFO (dashboard, pages FT, RTTY, CW) : un clic met le moniteur en marche ou le coupe.
 - **0.42.74** — Écoute du TRX en marche par défaut à la connexion (dashboard et face avant) ; « Arrêter l'écoute » est retenu pour les visites suivantes ; jamais automatique si la sortie son du PC est la carte son d'un TRX.

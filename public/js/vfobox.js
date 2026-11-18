@@ -243,7 +243,7 @@
           else if (api.iControl()) { ctl('dualRx', 1); toast('Stéréo : DUAL RX en marche ; VFO A (MAIN) à gauche, VFO B (SUB) à droite.', '', 5000); }
           else toast('Stéréo : il faut DUAL RX (prenez la main pour le mettre en marche).', 'warn', 6000);
         } else toast('Stéréo : VFO A (MAIN) dans l’oreille gauche, VFO B (SUB) dans l’oreille droite.', '', 4000);
-        if (!L.on() && !L.start()) toast('Cliquez sur « Écouter le TRX » dans le dashboard pour entendre le son.', 'warn', 6000);
+        if (!L.on() && !L.start()) toast('Cliquez sur « Activer BF TRX » dans le dashboard pour entendre le son.', 'warn', 6000);
       } else toast('Stéréo coupée : les deux récepteurs mélangés dans les deux oreilles.', '', 4000);
       draw();
     });
