@@ -26,7 +26,7 @@ const os = require('os');
 const path = require('path');
 const { execFile } = require('child_process');
 
-const AGENT_VERSION = 1;
+const AGENT_VERSION = 2;
 const argv = process.argv.slice(2);
 const arg = (n) => { const i = argv.indexOf(n); return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : null; };
 const has = (n) => argv.indexOf(n) >= 0;
@@ -128,13 +128,20 @@ function sign(c, location, adif) {
     }
     const data = findDataDir(c);
     const env = data ? Object.assign({}, process.env, { TQSLDIR: data }) : process.env;
-    execFile(cmd, full, { timeout: 240000, windowsHide: true, env }, (err, stdout, stderr) => {
+    execFile(cmd, full, { timeout: 240000, windowsHide: true, env, encoding: 'buffer' }, (err, stdout, stderr) => {
       fs.rm(dir, { recursive: true, force: true }, () => {});
       const code = err ? (typeof err.code === 'number' ? err.code : -1) : 0;
-      const out = String(stderr || stdout || '').split(/\r?\n/).filter(Boolean).slice(-3).join(' ').slice(0, 300);
+      const out = decodeOut(stderr && stderr.length ? stderr : stdout).split(/\r?\n/).filter(Boolean).slice(-3).join(' ').slice(0, 300);
       resolve({ code, out, err: code === -1 && err ? String(err.message).slice(0, 200) : '' });
     });
   });
+}
+
+// Sortie de TQSL : UTF-8, sinon page de codes Windows (TQSL en français sous Windows : « télécharger » en cp1252)
+function decodeOut(b) {
+  if (!b || !b.length) return '';
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(b); } catch (e) { /* pas de l'UTF-8 */ }
+  try { return new TextDecoder('windows-1252').decode(b); } catch (e) { return Buffer.from(b).toString('latin1'); }
 }
 
 // ------------------------------------------------------------------ commandes ponctuelles
