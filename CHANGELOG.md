@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.64** — Club Log : « Tester » affiche aussi la vérification de Club Log pour l'adresse du serveur (check.php : refus et blocages récents) ; blocage du pare-feu respecté même après un redémarrage du serveur (aucun essai pendant 65 min).
 - **0.42.63** — LoTW : un compte par indicatif — date de dernière lecture des confirmations gardée séparément pour chaque indicatif du club (ON5VL, OR0L) comme pour les indicatifs personnels.
 - **0.42.62** — Logs en ligne : un indicatif du club (OR0L, ON5VL) peut avoir ses propres identifiants ET son propre envoi automatique (fenêtre du service → l'indicatif → cadre jaune), à la place des réglages communs de ⚙ Configuration ; texte de ⚙ Configuration clarifié.
 - **0.42.61** — Annonce « ✓ QSO sauvegardé dans le logbook » : plus effacée aussitôt par l'avis suivant (spot envoyé au DX cluster, CQ relancé…), qui s'ajoute derrière.

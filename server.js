@@ -960,6 +960,7 @@ const sync = new Sync({
   getCfg: () => logCfg,
   getCred: (s, call) => credFor(s, call),
   getAuto: (s, call) => autoFor(s, call),
+  setClublogFw: (t) => { logCfg.clublog.fwUntil = t; saveLogCfg(); },
   setLastConfirm: (d, call) => {
     call = String(call || '').toUpperCase();
     // Date de la dernière lecture gardée par indicatif (chacun son compte LoTW : ON5VL, OR0L, ON6DP…)
