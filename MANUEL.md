@@ -365,7 +365,7 @@ Sous les boutons, « Mode appliqué à **VFO A** » indique quel VFO change de m
 
 | Commande | Ce qu'elle fait | Pour qui |
 |---|---|---|
-| `🔊 Écouter le TRX` | Fait entendre le son du récepteur dans votre navigateur. Un deuxième clic coupe. **En marche par défaut** dès la connexion (depuis la 0.42.74) ; « 🔇 Arrêter l'écoute » est retenu pour vos visites suivantes, jusqu'à ce que vous la remettiez. Après une reconnexion automatique, le navigateur attend votre premier clic sur la page pour jouer le son. Jamais en automatique si la sortie son de ce PC est la carte son d'un TRX. | Vous seul (pas besoin de la main). |
+| `🔊 Écouter le TRX` | Fait entendre le son du récepteur dans votre navigateur. Un deuxième clic coupe. | Vous seul (pas besoin de la main). |
 | `🎧 STÉRÉO` | TRX à deux récepteurs (FTDX101…), en DUAL RX : VFO A (MAIN) dans l'oreille gauche, VFO B (SUB) dans l'oreille droite ; éteint : les deux mélangés. Le spectre BF de chaque écran VFO montre son propre récepteur. Même réglage que STÉRÉO de la page SSB. | Vous seul. |
 | **Volume** | Volume de votre écoute (0 à 150 %). | Vous seul. |
 | **AF LEVEL** | Volume du haut-parleur du TRX au club. | Tout le monde (avec la main). N'influence pas votre écoute ni les décodeurs. |
