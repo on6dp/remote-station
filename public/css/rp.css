@@ -3604,3 +3604,8 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .al-sw.al-ncb, .dg-row.al.al-ncb { background: #5f5a22; }
 .dg-row.alc.al-nc .dg-call { background: #a0761a; }
 .dg-row.alc.al-ncb .dg-call { background: #5f5a22; }
+/* Tableau DXCC : colonnes des bandes étroites (une lettre W / C), Pfx étroite, le nom du pays prend le reste */
+.dx-t:not(.col-fixed) th.b, .dx-t:not(.col-fixed) td.b { width: 30px; min-width: 28px; max-width: 34px; padding-left: 0; padding-right: 0; }
+.dx-t:not(.col-fixed) th:first-child { width: 46px; }
+.dx-t:not(.col-fixed) td.ct { max-width: 118px; }
+.dg-cols.has-dx { grid-template-columns: minmax(240px, var(--dg-left, 1fr)) 10px minmax(240px, 1fr) var(--dx-w, 510px); }

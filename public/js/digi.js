@@ -6184,7 +6184,7 @@
     for (const r of D.rows || []) if (!inTop.has(r.p)) rest.push(Object.assign({ heard: heard.get(r.p) }, r));
     rest.sort((a, b) => a.p.localeCompare(b.p));
     const bl = (b) => b.replace(/m$/, '');
-    const cell = (r, b) => { const v = r.b[b] || 0; return '<td class="' + (b === band ? 'cur ' : '') + (v === 2 ? 'c' : v === 1 ? 'w' : '') + '">' + (v === 2 ? 'C' : v === 1 ? 'W' : '') + '</td>'; };
+    const cell = (r, b) => { const v = r.b[b] || 0; return '<td class="b ' + (b === band ? 'cur ' : '') + (v === 2 ? 'c' : v === 1 ? 'w' : '') + '">' + (v === 2 ? 'C' : v === 1 ? 'W' : '') + '</td>'; };
     const line = (r) => {
       const ttl = (r.n || '') + (r.calls && r.calls.length ? ' — entendu : ' + r.calls.join(', ') : r.heard && r.heard.calls.length ? ' — entendu : ' + r.heard.calls.join(', ') : '');
       return '<tr class="' + (r.tag === 'NEW' ? 'dx-new' : r.tag ? 'dx-newb' : r.heard ? 'dx-hrd' : '') + '" title="' + dxEsc(ttl) + '"><td class="pf">' + dxEsc(r.p) + '</td><td class="ct">' + (r.tag ? '<i class="dx-tag">' + r.tag + '</i>' : '') + dxEsc(r.n || '') + '</td>' + DX_BANDS.map((b) => cell(r, b)).join('') + '</tr>';
@@ -6200,12 +6200,12 @@
     p.innerHTML = '<i class="dx-grip" title="Glisser à gauche ou à droite : largeur du tableau DXCC (double-clic : largeur d’origine)"></i><div class="dg-h"><span>DXCC</span><label class="dx-lab">TX CALL ' + callSel + '</label><label class="dx-lab">Modes ' + modeSel + '</label>' +
       '<span class="dg-note" title="Pays DXCC contactés (toutes bandes) / confirmés (LoTW ou QSL papier), sur ' + (D.qsos || 0) + ' QSO">' + (D.rows || []).length + ' pays · ' + conf + ' conf.</span>' +
       (ftDual ? '<button class="dg-mini" type="button" data-dxx title="Fermer">✕</button>' : '') + '</div>' +
-      '<div class="dx-wrap"><table class="dx-t"><thead><tr><th>Pfx</th><th>Pays</th>' + DX_BANDS.map((b) => '<th class="' + (b === band ? 'cur' : '') + '">' + bl(b) + '</th>').join('') + '</tr></thead><tbody>' +
+      '<div class="dx-wrap"><table class="dx-t"><thead><tr><th>Pfx</th><th>Pays</th>' + DX_BANDS.map((b) => '<th class="b' + (b === band ? ' cur' : '') + '">' + bl(b) + '</th>').join('') + '</tr></thead><tbody>' +
       top.map(line).join('') + (top.length && rest.length ? '<tr class="dx-sep"><td colspan="' + (DX_BANDS.length + 2) + '"></td></tr>' : '') + rest.map(line).join('') +
       (!top.length && !rest.length ? '<tr><td colspan="' + (DX_BANDS.length + 2) + '" class="dx-none">Aucun QSO ' + (DXS.mode === 'FT' ? 'FT8 / FT4 / FT2' : DXS.mode) + ' sous ce TX call.</td></tr>' : '') +
       '</tbody></table></div>';
     p.querySelector('.dx-wrap').scrollTop = keep;
-    colResize(p.querySelector('.dx-t'), 'dxcc', store); // largeur des colonnes (poignée au bord droit de chaque titre)
+    colResize(p.querySelector('.dx-t'), 'dxcc2', store); // largeur des colonnes (poignée au bord droit de chaque titre) ; « dxcc2 » : anciennes largeurs trop larges oubliées
     p.querySelector('#dgDxMode').addEventListener('change', (e) => { DXS.mode = e.target.value; store.set('dxccMode', DXS.mode); dxAsk(); });
     p.querySelector('#dgDxCall').addEventListener('change', (e) => { DXS.pick = e.target.value; store.set('dxccCall', DXS.pick); dxAsk(); });
     // Largeur du tableau : poignée au bord gauche (gardée dans ce navigateur)
