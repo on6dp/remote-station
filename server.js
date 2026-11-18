@@ -2978,9 +2978,15 @@ function seqOnDecodes(mode, slot, list, side) {
         if ((pl === 'RR73' || pl === 'RRR') && seq.qsoStart) seqLogPrompt(seq, pl + ' reçu');
         return seqChanged();
       }
-      // On l'appelait (Tx1) et il répond à quelqu'un d'autre sur notre fréquence → arrêt (WSJT-X)
-      if (seq.progress === PROG.REPLYING && !/^(CQ|QRZ|DE)$/.test(w[0]) && Math.abs(d.f - seq.f0) <= 100) {
-        return seqOff(seq.dx.call + ' répond à ' + w[0]);
+      // On l'appelait (Tx1) et il termine un QSO avec quelqu'un d'autre : on continue d'appeler (sur notre tonalité, sans
+      // gêner ce QSO), et ces appels ne comptent pas dans « Sans réponse » tant qu'il est occupé (WSJT-X s'arrêtait ici)
+      if (seq.progress === PROG.REPLYING && !/^(CQ|QRZ|DE)$/.test(w[0]) && baseCall(w[0]) !== me) {
+        seq.repText = ''; seq.rep = 0;
+        if (seq.giveUp) { clearTimeout(seq.giveUpT); seq.giveUp = false; setTimeout(seqChanged, 0); } // l'abandon prévu est annulé : on rappelle
+        if (seq.busyNote !== baseCall(w[0])) {
+          seq.busyNote = baseCall(w[0]);
+          send(seq.conn, { t: 'notice', level: 'info', msg: seq.dx.call + ' termine un QSO avec ' + w[0] + ' : on continue de l’appeler (« ' + seqText(seq) + ' »)' });
+        }
       }
     }
   }

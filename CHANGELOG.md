@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.50** — FT : on peut appeler une station qui termine un QSO avec une autre — l'émission continue (sur votre tonalité) au lieu de s'arrêter, et ces appels ne comptent pas dans « Sans réponse » ; la séquence suit dès qu'elle vous répond.
 - **0.42.49** — Tableau DXCC de la page FT : colonnes des bandes étroites (un W ou un C), les 11 bandes tiennent dans le tableau ; anciennes largeurs enregistrées oubliées.
 - **0.42.48** — Alertes FT : pays contacté mais pas encore confirmé (LoTW / QSL papier), et pas encore confirmé sur cette bande (au choix), chacun de sa couleur.
 - **0.42.47** — Carnet : bouton « Import/Export ▾ » avec les parties EXPORT et IMPORT ; « 📥 Importer .ADI… ».
