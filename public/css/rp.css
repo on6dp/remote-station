@@ -3755,3 +3755,5 @@ label.lg-txf:has(#lgTxf) select { height: 24px; padding: 0 6px; border-radius: 7
 .tb-card .tb-sub { display: flex; align-items: baseline; gap: 10px; }
 .tb-card .tb-sub .tb-ver { position: static; margin: 0; font: 700 11px/1.3 ui-monospace, 'Roboto Mono', Consolas, monospace; color: #8aa3c4; letter-spacing: .5px; text-transform: none; }
 .tb-card .tb-sub .tb-ver:hover { color: #fff; }
+/* 0.43.29 : bande bleue du titre des pages des modes jusqu'au bord droit (marges négatives de 14 px des deux côtés) */
+.cwp-head h1 { flex-basis: calc(100% + 28px); max-width: none; box-sizing: border-box; }

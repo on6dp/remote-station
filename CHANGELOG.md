@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.29** — Pages des modes : bande bleue du titre jusqu'au bord droit
 - **0.43.28** — Bandeau : version à droite du lieu
 - **0.43.27** — Bandeau du haut sur fond bleu nuit, logo éclairci
 - **0.43.26** — Horloges UTC / Liège / date sur les pages des modes, le carnet en grand et la page Propagation
