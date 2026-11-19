@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.34** — Pages des modes, carnet en grand et Propagation : carte complète du bandeau (logo, nom, lieu, version, horloges)
 - **0.43.33** — WSPR : Qui m'a entendu ? sur la ligne de la bande, à droite du décompte
 - **0.43.32** — Accord à la souris : plus d'aller-retour entre l'ancienne et la nouvelle fréquence
 - **0.43.31** — Pages SSB et CW : bouton SPLIT au même format que A ⇄ B et A → B
