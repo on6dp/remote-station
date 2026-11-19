@@ -3816,3 +3816,7 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .ss-slot.sel { border-color: #F2CF4A; box-shadow: 0 0 0 1.5px #F2CF4A; }
 /* 0.43.52 : SSTV — Réception plus étroite par défaut (≈ 38 %), Émission plus large ; séparateur toujours réglable */
 .ss-grid { grid-template-columns: minmax(220px, var(--ss-left, 38%)) 10px minmax(260px, 1fr); }
+/* 0.43.54 : SSTV — image agrandie au centre de l'écran (800 px de large, réduite si la fenêtre est plus petite) */
+.ss-bigov { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.78); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: zoom-out; }
+.ss-bigov canvas { max-width: calc(100vw - 40px); max-height: calc(100vh - 80px); width: auto; height: auto; border-radius: 10px; border: 2px solid #F2CF4A; box-shadow: 0 10px 40px rgba(0,0,0,.6); background: #000; }
+.ss-bigov p { margin: 0; font: 700 12px/1.3 system-ui, 'Segoe UI', Arial, sans-serif; color: #dbe6f3; }

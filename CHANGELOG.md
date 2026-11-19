@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.54** — SSTV : clic sur une image = affichée en grand (800 px) au centre de l'écran
 - **0.43.53** — SSTV : enregistrement de l'image reçue en PNG ou JPG
 - **0.43.52** — SSTV : fenêtre Réception plus étroite par défaut, Émission plus large
 - **0.43.51** — SPLIT et réglages du TRX : plus d'aller-retour à l'écran après un clic

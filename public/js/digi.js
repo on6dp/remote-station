@@ -4855,6 +4855,34 @@
     dial.addEventListener('change', () => { store.set('ssdial', dial.value); qsyTo(Number(dial.value)); });
     $('ssQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
     $('ssSave').addEventListener('click', () => ssSave('png'));
+    // Clic sur l'image reçue ou sur l'image à émettre : agrandie au centre de l'écran (800 px de large, comme une image
+    // 800 × 600), clic ou Échap pour la refermer
+    const ssBig = (src, label) => {
+      if (!src || !src.width || !src.height) return;
+      const ov = document.createElement('div');
+      ov.className = 'ss-bigov';
+      ov.title = 'Clic ou Échap : fermer';
+      const c = document.createElement('canvas');
+      const W = 800, H = Math.round(800 * src.height / src.width);
+      c.width = W;
+      c.height = H;
+      const x = c.getContext('2d');
+      x.imageSmoothingQuality = 'high';
+      x.drawImage(src, 0, 0, W, H);
+      const cap = document.createElement('p');
+      cap.textContent = label + ' · ' + src.width + ' × ' + src.height + ' (affichée en ' + W + ' × ' + H + ') · clic ou Échap : fermer';
+      ov.append(c, cap);
+      const close = () => { ov.remove(); document.removeEventListener('keydown', esc, true); };
+      const esc = (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
+      ov.addEventListener('click', close);
+      document.addEventListener('keydown', esc, true);
+      document.body.appendChild(ov);
+    };
+    $('ssCanvas').addEventListener('click', () => { if (ssShown) ssBig($('ssCanvas'), 'Image reçue'); });
+    $('ssCanvas').style.cursor = 'zoom-in';
+    $('ssCompose').addEventListener('click', () => ssBig($('ssCompose'), 'Image à émettre'));
+    $('ssCompose').style.cursor = 'zoom-in';
+    $('ssCompose').title = 'Clic : voir l’image en grand (800 px de large)';
     $('ssSaveJ').addEventListener('click', () => ssSave('jpg'));
     const tm = $('ssTxMode');
     for (const id of SS_TX_MODES) { const o = document.createElement('option'); o.value = id; o.textContent = SSTV.MODES[id].name; tm.appendChild(o); }
