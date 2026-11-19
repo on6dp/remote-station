@@ -149,6 +149,7 @@
       attach(win, inst, say) {
         logWin = win;
         logInst = inst;
+        try { if (window.RSLOG && window.RSLOG !== inst && inst.setFilters) inst.setFilters(window.RSLOG.filters()); } catch (e) { /* carnet de cette page pas encore monté */ }
         logSay = say || null;
         inst.init(logApi(api));
         if (logMe) inst.onHello(logMe);

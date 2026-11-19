@@ -2031,6 +2031,9 @@
   }
 
   window.RSLOG = {
+    // Carnet en grand (autre fenêtre) : il reprend les filtres de ce carnet (Filtre log, filtres de colonnes)
+    filters() { return JSON.parse(JSON.stringify(filt || {})); },
+    setFilters(f) { filt = f && typeof f === 'object' ? JSON.parse(JSON.stringify(f)) : {}; if (root) txfDraw(); },
     init(a) { api = a; TAG = (a && a.tag) || ''; FORM = !!(a && a.formOnly); SSBP = !!(a && a.phone); if (TAG === 'big') statsSetup(); },
     // Fiche du carnet : fréquence et mode suivent tout seuls le VFO actif du TRX (sauf saisie à la main ou modification d'un QSO)
     onState() {

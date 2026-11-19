@@ -2411,6 +2411,7 @@
     attach(win, inst, toastFn) {
       bigLogHost.win = win;
       bigLogHost.inst = inst;
+      try { if (window.RSLOG && window.RSLOG !== inst && inst.setFilters) inst.setFilters(window.RSLOG.filters()); } catch (e) { /* carnet de cette page pas encore monté */ }
       inst.init(Object.assign({}, digiApi, {
         tag: 'big',
         send: (m) => send(m && /^log_/.test(m.t) && !m.tag ? Object.assign({}, m, { tag: 'big' }) : m),

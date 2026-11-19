@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.23** — Carnet en grand : il reprend le Filtre log et les filtres de colonnes du carnet d'où il est ouvert
 - **0.43.22** — Filtre log actif lisible : indicatif en jaune sur fond sombre dans le cadre jaune
 - **0.43.21** — Décompte ⏱ à gauche du bouton des connectés ; aide et help complétés (Filtre log, QRZ, format des boutons)
 - **0.43.20** — Synchronisation : « Synchronisation QRZ » (sans Logbook) dans le menu, la fenêtre et l’aide
