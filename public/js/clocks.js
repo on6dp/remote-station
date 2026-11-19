@@ -15,7 +15,9 @@
     'header .rsclk{margin-left:auto}' +
     // Carte complète comme le bandeau du dashboard : logo, nom + lieu · version, puis les trois horloges
     '.rscard{display:inline-flex;align-items:center;gap:12px;flex:none !important;align-self:center;margin-left:12px;padding:4px 12px;border-radius:12px;background:linear-gradient(90deg,#1b3a66 0%,#14305a 45%,#102748 100%);border:1.5px solid #2c5185;box-shadow:0 2px 14px rgba(0,0,0,.45),0 0 18px rgba(44,81,133,.35);text-transform:none;letter-spacing:normal;white-space:nowrap}' +
-    'header .rscard{margin-left:auto}' +
+    '.wrap > header .rscard, body > header:not(.cwp-head) .rscard{margin-left:auto}' +
+    // Pages des modes : la carte remplace le sous-titre « Remote Station · … » du titre, avant les tuiles de propagation
+    '.cwp-head h1 > small{display:none !important}.cwp-head h1 .rscard{margin-left:16px}' +
     '.rscard .rsclk{margin-left:0}.rscard .rsclk .bx{background:#0b1422;border-color:#35598c}.rscard .rsclk .bx.u{border-color:#22d3ee}' +
     '.rscard img{height:38px;width:auto;filter:brightness(1.45) saturate(1.1) drop-shadow(0 0 5px rgba(255,255,255,.22))}' +
     '.rscard .mid{display:flex;flex-direction:column;align-items:flex-start;gap:3px}' +
@@ -59,9 +61,16 @@
     kc('pl').textContent = parts.slice(1).join(' · ');
     if (i.version) kc('v').textContent = 'v.' + i.version;
   }).catch(() => {});
-  // À droite de la ligne du titre (pages des modes : titre créé un peu après le chargement), sinon de l'en-tête (Propagation)
+  // Pages des modes : juste après le titre, à la place du sous-titre (titre créé un peu après le chargement) ;
+  // page Propagation : à droite de l'en-tête
   const place = () => {
-    const t = document.querySelector('.cwp-head h1') || document.querySelector('body > .wrap > header, body > header');
+    const h1 = document.querySelector('.cwp-head h1');
+    if (h1) {
+      const spw = h1.querySelector(':scope > .spw');
+      if (spw) { if (card.nextElementSibling !== spw) h1.insertBefore(card, spw); } else if (card.parentNode !== h1) h1.appendChild(card);
+      return;
+    }
+    const t = document.querySelector('body > .wrap > header, body > header');
     if (t && (card.parentNode !== t || t.lastElementChild !== card)) t.appendChild(card);
   };
   tick();

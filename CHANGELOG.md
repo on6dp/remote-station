@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.35** — Pages des modes : sous-titre retiré, carte du bandeau juste après le titre
 - **0.43.34** — Pages des modes, carnet en grand et Propagation : carte complète du bandeau (logo, nom, lieu, version, horloges)
 - **0.43.33** — WSPR : Qui m'a entendu ? sur la ligne de la bande, à droite du décompte
 - **0.43.32** — Accord à la souris : plus d'aller-retour entre l'ancienne et la nouvelle fréquence
