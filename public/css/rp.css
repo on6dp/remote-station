@@ -3697,3 +3697,12 @@ dialog.qso-log .btn { color: #fff; font-weight: 800; }
 .ctabs .dash-txc select, .ctabs .ctab-txc select { height: 24px; padding: 0 6px; font-size: 12px; }
 .ctabs .ctab-follow { gap: 6px; }
 .ctabs .ctab-txc[hidden], .ctabs .dash-txc[hidden], .ctabs .ctab-follow[hidden], .ctabs .ctab-log[hidden], .ctabs .ctab[hidden] { display: none !important; }
+/* Barre du carnet : DÉTAILS QSO, recherche, TX CALL, SYNCHRONISATION ▾ et IMPORT/EXPORT ▾ au même format
+   (32 px de haut, arrondi 8 px, texte 11 px gras en capitales), alignés au centre */
+#lgDetails, #lgSearch.lg-search, .lg-bar .lg-txf, label.lg-txf:has(#lgTxf), .lg-menu > .btn { height: 32px; box-sizing: border-box; border-radius: 8px; border-width: 1.5px; border-style: solid; align-self: center; margin-top: 0; margin-bottom: 0; }
+#lgDetails, .lg-menu > .btn { display: inline-flex; align-items: center; padding: 0 14px; font-size: 11px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; line-height: 1; }
+.lg-menu > .btn { border-color: var(--v2-accent-yellow, #ffe600); }
+#lgSearch.lg-search { padding: 0 10px; font-size: 12.5px; }
+label.lg-txf:has(#lgTxf) { display: inline-flex; align-items: center; gap: 8px; padding: 0 4px 0 12px; font-size: 11px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
+label.lg-txf:has(#lgTxf) select { height: 24px; padding: 0 6px; border-radius: 7px; font-size: 12.5px; }
+#lgDetails + *, .lg-count { align-self: center; }
