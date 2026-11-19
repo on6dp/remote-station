@@ -163,17 +163,23 @@
       zoomDraw();
       let d = null;
       try { d = opt.mirror(); } catch (e) { d = null; }
-      const src = d && d.querySelector('.vfo-row[data-panel="vfo"]');
+      // Ligne des deux VFO du dashboard (0.43.15 : VFO A et VFO B détachables séparément, data-panel « vfoa » / « vfob ») ;
+      // un VFO détaché dans une fenêtre à part n'est plus dans la ligne : les deux sont alors repris là où ils sont
+      const row = d && d.querySelector('.vfo-row');
+      const va = d && d.getElementById('vfoA'), vb = d && d.getElementById('vfoB');
+      const inRow = !!(row && va && vb && row.contains(va) && row.contains(vb));
+      const src = inRow ? row : (va || vb || null);
       el.classList.toggle('mir', !!src);
       if (!src) { MR.src = null; return; }
-      MR.src = src;
+      // VFO détaché : « ligne » virtuelle [VFO A, VFO B] pour renvoyer les clics au bon élément du dashboard
+      MR.src = inRow ? src : { childNodes: [va, vb].filter(Boolean), ownerDocument: d };
       // Mêmes ids qu'au dashboard (aucun doublon dans cette page) : ses règles de style par id s'appliquent aussi ici
       // (TX VFO-B (SUB) en rose foncé, badges…)
-      const html = src.innerHTML;
+      const html = inRow ? row.innerHTML : (va ? va.outerHTML : '') + (vb ? vb.outerHTML : '');
       if (html !== MR.html || !MR.row) {
         MR.html = html;
         if (!MR.row) { MR.row = document.createElement('div'); MR.box.appendChild(MR.row); }
-        MR.row.className = src.className;
+        MR.row.className = 'vfo-row';
         // Mise à jour en place (seulement ce qui a changé) : les boutons restent les mêmes éléments, un clic n'est plus
         // perdu quand l'écran change entre l'appui et le relâchement (S-mètre qui bouge sans arrêt)
         const t = document.createElement('div');
@@ -185,7 +191,7 @@
       // Cadre de cette page plus étroit que l'écran du dashboard : même largeur que là-bas, réduite à l'échelle ; plus large :
       // à sa vraie largeur, sans agrandissement (agrandi, le contenu calé pour le dashboard débordait des écrans VFO :
       // filtre coupé à gauche, filtre du VFO B par-dessus le VFO A, quand la fenêtre du dashboard est plus petite)
-      const sw = src.getBoundingClientRect().width, bw = MR.box.clientWidth;
+      const sw = inRow ? row.getBoundingClientRect().width : (va ? va.getBoundingClientRect().width : 0) + (vb ? vb.getBoundingClientRect().width : 0) + (va && vb ? 10 : 0), bw = MR.box.clientWidth;
       if (sw > 100 && bw > 100) {
         const w = bw >= sw ? bw : sw, z = bw >= sw ? '1' : String(Math.round(bw / sw * 1000) / 1000);
         if (MR.row.style.width !== w + 'px') MR.row.style.width = w + 'px';
