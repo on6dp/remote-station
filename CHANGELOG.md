@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.52** — SSTV : fenêtre Réception plus étroite par défaut, Émission plus large
 - **0.43.51** — SPLIT et réglages du TRX : plus d'aller-retour à l'écran après un clic
 - **0.43.50** — SSTV : 5 images prêtes à émettre, chacune avec son fond et ses textes
 - **0.43.49** — SSTV et JTTY : ligne BF reçue retirée, réglages de la cascade sur la ligne de la bande

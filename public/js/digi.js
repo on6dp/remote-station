@@ -331,7 +331,7 @@
         <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span title="Fréquence audio (Hz)">Frequ</span><span>Message</span><span title="Préfixe de l’entité DXCC">PFX</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
         <div class="dg-list" id="dgBand"></div>
       </div>
-      <i class="dg-vsplit" id="dgSplit" title="Glisser à gauche ou à droite : largeur des deux listes (double-clic : moitié-moitié)"></i>
+      <i class="dg-vsplit" id="dgSplit" title="Glisser à gauche ou à droite : largeur des deux listes (double-clic : largeurs d’origine, Réception ≈ 38 %)"></i>
       <div class="dg-col">
         <div class="dg-h"><span><i class="ft-sd">VFO-A · </i>Fréquence RX <b id="dgRxF">1500 Hz</b></span><span class="dg-hb"><button class="dg-mini dx-btn" type="button" id="dgDxBtn" aria-pressed="false" title="Pays DXCC contactés et confirmés en FT8 / FT4 / FT2, par bande, sous le TX call (à droite ; en double réception : panneau par-dessus la colonne VFO-B)">🌍 DXCC</button><button class="dg-mini" type="button" id="dgClearRx" title="Vide cette liste (les messages suivants s'y ajoutent)">Effacer</button></span></div>
         <div class="dg-th ft"><span>UTC</span><span>dB</span><span>DT</span><span title="Fréquence audio (Hz)">Frequ</span><span>Message</span><span title="Préfixe de l’entité DXCC">PFX</span><span>Pays</span><span>km</span><span title="Azimut (bearing) depuis le club, en degrés">Az</span></div>
@@ -7515,8 +7515,8 @@
         const grid = sp.parentElement;
         const setSs = (pct, save) => {
           if (pct == null) grid.style.removeProperty('--ss-left');
-          else grid.style.setProperty('--ss-left', Math.max(25, Math.min(75, pct)).toFixed(1) + '%');
-          if (save) store.set('sssplit', pct == null ? '' : Math.max(25, Math.min(75, pct)).toFixed(1));
+          else grid.style.setProperty('--ss-left', Math.max(20, Math.min(75, pct)).toFixed(1) + '%');
+          if (save) store.set('sssplit', pct == null ? '' : Math.max(20, Math.min(75, pct)).toFixed(1));
           if (save && typeof ssTx !== 'undefined' && ssTx) ssTxTick(); // repère d'émission recalé sur l'image
         };
         if (Number(store.get('sssplit', '')) > 0) setSs(Number(store.get('sssplit', '')), false);

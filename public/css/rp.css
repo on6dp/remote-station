@@ -3814,3 +3814,5 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .ss-slot > i { position: absolute; left: 4px; top: 3px; font: 800 10px/1 system-ui, 'Segoe UI', Arial, sans-serif; font-style: normal; color: #fff; background: rgba(0,0,0,.6); border-radius: 4px; padding: 2px 5px; }
 .ss-slot:hover { border-color: var(--v2-accent-cyan-bright); }
 .ss-slot.sel { border-color: #F2CF4A; box-shadow: 0 0 0 1.5px #F2CF4A; }
+/* 0.43.52 : SSTV — Réception plus étroite par défaut (≈ 38 %), Émission plus large ; séparateur toujours réglable */
+.ss-grid { grid-template-columns: minmax(220px, var(--ss-left, 38%)) 10px minmax(260px, 1fr); }
