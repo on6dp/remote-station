@@ -1023,12 +1023,13 @@
     const syb = document.querySelector('#centerPanel .ctab[data-tab="sync"]');
     if (syb) syb.hidden = ['rtty', 'jtty', 'cw', 'sstv'].indexOf(t) >= 0 || (POPUP && !EMBED && pane === 'ftx'); // FT : SYNCHRO dans la barre de chaque VFO
     document.querySelectorAll('#centerPanel .ctab-pane').forEach((p) => { p.hidden = p.dataset.pane !== pane; });
-    // Bloc des deux VFO (fenêtre séparée) : en haut de la page RTTY ou WSPR, avec les champs de ce mode sur la ligne SPLIT
+    // Bloc des deux VFO (fenêtre séparée) : en haut de la page RTTY, WSPR, JTTY ou SSTV, avec les champs de ce mode sur la ligne SPLIT
     { const vb = $('rtVfo'), pe = document.querySelector('#centerPanel .ctab-pane[data-pane="' + pane + '"]');
-      if (vb && pe && (pane === 'rtty' || pane === 'wspr')) {
+      if (vb && pe && ['rtty', 'wspr', 'jtty', 'sstv'].indexOf(pane) >= 0) {
         if (vb.parentElement !== pe) pe.prepend(vb);
+        vb.hidden = false;
         vb.querySelectorAll('.rt-vfoctl[data-p]').forEach((g) => { g.hidden = g.dataset.p !== pane; });
-        vb.classList.toggle('ws-vfo', pane === 'wspr');
+        vb.classList.toggle('ws-vfo', pane !== 'rtty'); // décodage RTTY de la ligne SPLIT : page RTTY seulement
       } }
     bmShow();
     // RTTY : l'aide de la cascade s'affiche 3 secondes à l'arrivée sur l'onglet, puis s'efface (reste au survol de la cascade)

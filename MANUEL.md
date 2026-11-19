@@ -816,6 +816,8 @@ Le WSPR sert à étudier la propagation : des balises de faible puissance émett
 <a id="jtty"></a>
 ### 12.5 JTTY
 
+**Les deux VFO** (0.43.42) : dans la fenêtre des modes numériques, cet onglet affiche en haut les deux écrans VFO du dashboard (VFO A / MAIN et VFO B / SUB), avec SPLIT, A ⇄ B et A → B, comme les onglets RTTY et WSPR.
+
 - Mode de WSJT-X 3.3 pour le clavier à clavier et les concours : pas de périodes, chaque message apparaît **trame après trame** (1,9 s) ; `▌` = message en cours de réception.
 - Comme en FT8 : clic gauche = réception, clic droit = émission, double-clic = correspondant. Deux listes : Activité JTTY et Fréquence RX.
 - Macros `F1` à `F8` : un clic émet tout de suite, **Maj+clic** les ajoute au message.
@@ -878,6 +880,8 @@ Le WSPR sert à étudier la propagation : des balises de faible puissance émett
 
 <a id="sstv"></a>
 ### 12.7 SSTV
+
+**Les deux VFO** (0.43.42) : dans la fenêtre des modes numériques, cet onglet affiche en haut les deux écrans VFO du dashboard (VFO A / MAIN et VFO B / SUB), avec SPLIT, A ⇄ B et A → B, comme les onglets RTTY et WSPR.
 
 - **Réception** : les images arrivent toutes seules (code VIS) et s'affichent ligne après ligne. Modes Martin, Scottie, Robot et PD. La **galerie** garde les 12 dernières (clic = afficher) ; `PNG` enregistre l'image affichée sur votre PC.
 - **Préparer une image** : `Images du PC…` (ou glisser-déposer une image), carte CQ, mire ou image reçue ; elle est recadrée au format du mode choisi. Le trait vertical entre **Réception SSTV** et **Émission** se glisse pour régler leur largeur (double-clic : moitié-moitié). **Format conseillé : 800 × 600 pixels** (paysage 4:3, JPG ou PNG, moins de 5 Mo) : aucun recadrage en Robot 36 / 72, 1 à 3 % coupés à gauche et à droite dans les autres modes ; gardez l'essentiel au centre et laissez de la place en haut et en bas pour les textes. Vos images viennent de **votre** PC (n'importe où, par internet) et restent dans **votre navigateur** (10 au plus, la plus ancienne s'efface) ; à l'émission, seule l'image émise passe par le serveur, le temps de fabriquer le signal, sans y être enregistrée. Trois lignes de texte (haut, centre, bas) avec les balises `<CALL>`, `<MYCALL>`, `<RST>`… ; taille et couleur du texte. Clic droit sur une vignette : la retirer.

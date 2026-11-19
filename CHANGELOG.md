@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.42** — JTTY et SSTV : les deux VFO en haut de l'onglet, comme RTTY et WSPR
 - **0.43.41** — Propagation : SFI à 0 de hamqsl ignoré (dernière valeur correcte, sinon flux 10,7 cm NOAA)
 - **0.43.40** — Pages des modes : Prendre / Libérer la main, Déconnexion et Suivre l'opérateur à la même taille
 - **0.43.39** — Pages des modes : bouton DÉCONNEXION à droite de Prendre / Libérer la main

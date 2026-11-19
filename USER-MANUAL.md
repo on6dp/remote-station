@@ -806,6 +806,8 @@ WSPR is used to study propagation: low-power beacons transmit their callsign, lo
 <a id="jtty"></a>
 ### 12.5 JTTY
 
+**Both VFOs** (0.43.42): in the digital modes window, this tab shows the dashboard's two VFO screens at the top (VFO A / MAIN and VFO B / SUB), with SPLIT, A ⇄ B and A → B, like the RTTY and WSPR tabs.
+
 - WSJT-X 3.3 mode for keyboard-to-keyboard and contests: no periods, each message appears **frame by frame** (1.9 s); `▌` = message still being received.
 - As in FT8: left click = receive, right click = transmit, double-click = correspondent. Two lists: Activité JTTY (JTTY activity) and Fréquence RX (RX frequency).
 - Macros `F1` to `F8`: a click transmits at once, **Shift+click** adds them to the message.
@@ -868,6 +870,8 @@ WSPR is used to study propagation: low-power beacons transmit their callsign, lo
 
 <a id="sstv"></a>
 ### 12.7 SSTV
+
+**Both VFOs** (0.43.42): in the digital modes window, this tab shows the dashboard's two VFO screens at the top (VFO A / MAIN and VFO B / SUB), with SPLIT, A ⇄ B and A → B, like the RTTY and WSPR tabs.
 
 - **Receiving**: pictures arrive by themselves (VIS code) and are drawn line by line. Martin, Scottie, Robot and PD modes. The **gallery** keeps the last 12 (click = show); `PNG` saves the picture shown to your PC.
 - **Preparing a picture**: `Images du PC…` (pictures from your PC) (or drag and drop a picture), CQ card, test pattern or received picture; it is cropped to the format of the chosen mode. The vertical line between **Réception SSTV** and **Émission** can be dragged to set their width (double click: half and half). **Recommended size: 800 × 600 pixels** (landscape 4:3, JPG or PNG, under 5 MB): no cropping in Robot 36 / 72, 1 to 3 % cut left and right in the other modes; keep the essentials in the centre and leave room at the top and bottom for the texts. Your pictures come from **your** PC (anywhere, over the internet) and stay in **your browser** (10 at most, the oldest is removed); when transmitting, only the transmitted picture goes through the server, just to build the signal, without being saved there. Three text lines (top, centre, bottom) with the tags `<CALL>`, `<MYCALL>`, `<RST>`…; text size and colour. Right click a thumbnail: remove it.
