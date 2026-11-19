@@ -306,6 +306,8 @@ Sous les écrans VFO.
 
 **Horloges** (0.43.26) : les pages des modes (CW, SSB, numériques), le carnet en grand et la page Propagation ont, à côté de leur titre (pages des modes : juste après le titre, à la place de l'ancien sous-titre « Remote Station · … », 0.43.35), la même carte que le bandeau du dashboard (0.43.34) : logo, nom de la station, lieu et version, puis les trois cadres `UTC` (heure du log), `LIÈGE` (heure locale de la station) et le jour avec la date UTC. Sur une fenêtre étroite, le nom puis le logo s'effacent et seules les horloges restent.
 
+**Déconnexion depuis une page des modes** (0.43.39) : dans les pages CW, SSB et des modes numériques, le bouton rouge `DÉCONNEXION` est à droite de `PRENDRE / LIBÉRER LA MAIN`. Il libère la main, déconnecte le dashboard (retour à l'écran de connexion, mot de passe demandé la prochaine fois) et ferme la page. Pensez à vous déconnecter en fin de trafic, même si vous êtes sur une page des modes.
+
 La ligne grise sous les bandes rappelle les gestes utiles ; la ligne de messages juste en dessous affiche les confirmations et les refus.
 
 **Zoom de la fenêtre des modes numériques** : Ctrl + / Ctrl − / Ctrl 0 (ou Ctrl + molette) agrandissent ou réduisent cette fenêtre seule, sans toucher à la face avant ni au dashboard (réglage gardé pour la fenêtre).

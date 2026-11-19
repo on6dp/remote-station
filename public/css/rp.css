@@ -3763,3 +3763,8 @@ label.lg-txf:has(#lgTxf) select { height: 24px; padding: 0 6px; border-radius: 7
 .vfb-split.on { background: #ffd400; color: #000; border-color: #ffd400; }
 /* 0.43.33 : WSPR — « Qui m'a entendu ? » sur la ligne de la bande, à droite du décompte (une ligne de gagnée) */
 .dg-bar #whBtn.ws-whb { margin-left: 12px; align-self: center; }
+/* 0.43.39 : pages des modes — DÉCONNEXION à droite du bouton de la main (même rouge que celui du dashboard) */
+.rs-ctl .rs-logout { font-size: 14px; font-weight: 800; letter-spacing: .05em; padding: 5px 14px; min-height: 34px; border: 2px solid #ff8a80; border-radius: 6px; text-transform: uppercase;
+  background: linear-gradient(180deg, #e8352a, #a8170f); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.5); cursor: pointer; }
+.rs-ctl .rs-logout:hover { background: linear-gradient(180deg, #ff4a3d, #c21d14); }
+#dgCtlChip .rs-logout { font-size: 11px; padding: 3px 10px; min-height: 0; line-height: 1.3; border-width: 1px; }

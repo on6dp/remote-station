@@ -306,6 +306,8 @@ Below the VFO displays.
 
 **Clocks** (0.43.26): the mode pages (CW, SSB, digital), the large logbook and the Propagation page show, next to their title (mode pages: right after the title, in place of the former « Remote Station · … » subtitle, 0.43.35), the same card as the dashboard banner (0.43.34): logo, station name, place and version, then the three boxes `UTC` (log time), `LIÈGE` (station local time) and the weekday with the UTC date. In a narrow window the name then the logo are hidden and only the clocks remain.
 
+**Logging out from a mode page** (0.43.39): on the CW, SSB and digital mode pages, the red `DÉCONNEXION` button is right of `PRENDRE / LIBÉRER LA MAIN`. It releases control, logs the dashboard out (back to the login screen, password asked next time) and closes the page. Remember to log out at the end of your session, even from a mode page.
+
 The grey line below the bands is a reminder of useful actions; the message line just below it shows confirmations and refusals.
 
 <a id="gauche"></a>
