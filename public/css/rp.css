@@ -3674,3 +3674,6 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .vfo-row > .vfo > .detach-btn.floating { top: 2px; right: 6px; left: auto; transform: none; }
 body.panel-popup > .vfo { margin: 26px 8px 8px; }
 body.panel-popup > .vfo > .detach-btn.floating { top: -22px; right: 2px; }
+/* Bandeau de propagation : tuiles centrées dans leur cadre bleu (même marge à gauche et à droite) */
+.tune-panel > .spw { justify-content: center; }
+.cwp-head h1 .spw.spw-head { justify-content: center; }
