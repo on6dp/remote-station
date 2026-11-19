@@ -49,6 +49,7 @@
 - [16. Common problems](#problemes)
 - [17. For administrators](#admin)
 - [18. The club PC (Station page)](#club)
+- [19. Installing Remote Station (Windows or Linux)](#installer)
 
 > [!NOTE]
 > The dashboard runs in **Google Chrome** or **Microsoft Edge**, on a PC, Mac, tablet or phone. It is designed for a **1920 × 1080** screen or larger; on a smaller screen, the panels stack one below the other. The interface is in French: button and field names are quoted below as they appear on screen, with an English translation. After a server update, press `Ctrl` + `F5` to reload the page.
@@ -1402,3 +1403,45 @@ The TRX's built-in USB sound card sometimes freezes silent: empty level bar on t
 - If the restart is not enough: switch the TRX off and on (the FTX-1 cannot be switched on by CAT).
 
 Server installation and settings: see the Administrator guide, `GUIDE-ADMINISTRATEUR.md` (project repository).
+
+<a id="installer"></a>
+## 19. Installing Remote Station (Windows or Linux)
+
+For another club, a personal station or a backup server. The program is the same; two ways to install it:
+
+|  | Linux server (VPS or PC) | Windows 10 / 11 PC |
+|---|---|---|
+| **For whom** | **Recommended for a club**: reachable from anywhere over HTTPS, always on | Single station, no VPS, on the PC next to the TRX |
+| **File** | `remote-station-X.Y.Z.tar.gz` | `RemoteStation-Setup-X.Y.Z.exe` |
+| **Updates** | 🔔 button of the dashboard (administrator) | Run a newer installer (settings, accounts and log kept); the 🔔 shows the new version but does not install it |
+| **HTTPS** | Let's Encrypt certificate installed automatically | Needed for internet access (certificate or tunnel) |
+
+Files are downloaded from GitHub: repository **on6dp/remote-station**, folder **releases** (the table shows for each version whether a Windows installer exists, with SHA-256 checksums).
+
+### Linux: which version?
+
+- **Debian 12 or 13**, or **Ubuntu 22.04 or 24.04 LTS**, **64-bit Intel / AMD (x86-64)**: VPS or PC. These are the systems the install script is made for (it uses `apt`).
+- **Node.js**: installed by the script (version 22 if the system one is too old). Node.js **22.13 or later** for the SQLite log database.
+- A **site name** (DNS A record, e.g. remote.myclub.be) already pointing to the server: HTTPS is required for the serial port and microphone in Chrome.
+- **Raspberry Pi and other ARM**: not recommended. The server starts, but without the native programs: FT8 / FT4 with the fallback decoder (less sensitive), no JT65, JTTY or digital SSTV (DRM).
+
+### Linux: installation
+
+1. Copy the archive `remote-station-X.Y.Z.tar.gz` to the server, into your home folder (WinSCP from Windows).
+2. In a terminal (PuTTY), one command at a time: `sudo tar -xzf ~/remote-station-X.Y.Z.tar.gz -C /opt` `sudo bash /opt/remote-station/deploy/install.sh --domaine remote.myclub.be --email you@example.be --admin YOURCALL --sauvegarde 03:30`
+3. The script installs Node.js, nginx and the HTTPS certificate, creates the service, the station token (never shown), the first administrator (password asked) and the daily backup, then checks that the server answers.
+4. Open **https://remote.myclub.be**, log in, then set the club name, station callsign and locator (administrators' guide, section 5).
+
+Run again on an existing server, the script just updates and deletes nothing. Afterwards, updates are done with the 🔔.
+
+### Windows 10 / 11: installation
+
+- **Windows 10 or 11, 64-bit**. Double-click `RemoteStation-Setup-X.Y.Z.exe` and accept the administrator prompt. Windows may show "Windows protected your PC" (unsigned installer): **More info** → **Run anyway**.
+- Tick the parts you want:
+   - **Club PC**: Station page and dashboard shortcuts, Station page at Windows start-up, no sleep (section 18);
+   - **Remote Station server**: only without a VPS. Windows service on port 9000; **Node.js 20 or later** needed (the installer offers to install it; 22.13 or later recommended). On this PC: **http://localhost:9000**. From the internet: forward the router port and use HTTPS (certificate in `config.json` or a tunnel, e.g. Cloudflare Tunnel);
+   - **LoTW agent**: on the PC that has TQSL and the LoTW certificate (section 14.4).
+- Start menu → **Remote Station**: add a member, station token, configuration, restart the server, logs.
+- Details: file `LISEZMOI-WINDOWS.txt` installed with the program.
+
+**What works under Windows**: everything, as under Linux (FT8 with the WSJT-X engine, JT65, JTTY, analog SSTV). **Digital SSTV (DRM)**: since 0.43.63, with a Windows installer of that version or later; otherwise the `Numérique` button of the SSTV tab is greyed out.

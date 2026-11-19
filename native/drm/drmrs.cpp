@@ -10,9 +10,11 @@
 #include <cstring>
 #include <string>
 #include "reedsolomoncoder.h"
+#include "binio.h"
 QString rxDRMImagesPath = "";
 int main(int argc, char **argv)
 {
+  binaryStdio();
   if (argc < 4) { fprintf(stderr, "usage : drmrs enc N ext | drmrs dec N segments taille [manquants]\n"); return 2; }
   QByteArray ba;
   { char buf[65536]; size_t n; while ((n = fread(buf, 1, sizeof buf, stdin)) > 0) ba.append(buf, (int)n); }

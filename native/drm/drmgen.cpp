@@ -15,6 +15,7 @@
 #include "common/CDrmTransmitter.h"
 #include "csoundout.h"
 #include "drmparams.h"
+#include "binio.h"
 
 int numTxFrames;
 bool stopDRM;
@@ -50,6 +51,7 @@ bool CSoundOut::Write(CVector<_SAMPLE> &psData)
 
 int main(int argc, char **argv)
 {
+  binaryStdio();
   if (argc < 10) { fprintf(stderr, "usage : drmgen fichier nom format mode bande entrelacement qam protection indicatif\n"); return 2; }
   FILE *f = fopen(argv[1], "rb");
   if (!f) { fprintf(stderr, "fichier introuvable\n"); return 2; }

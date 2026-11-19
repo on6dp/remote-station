@@ -266,6 +266,7 @@ const server = makeServer((req, res) => {
       maxTxSeconds: cfg.maxTxSeconds,
       txRanges: cfg.txRanges,
       qsyOrigins: qsyOrigins(),
+      drm: { rx: DRM.available(), tx: DRM.txAvailable() }, // SSTV numérique : programmes DRM présents sur ce serveur
       version: VERSION
     });
   }

@@ -3,7 +3,7 @@
 #
 # Besoins : node (lecture de la version), git, makensis (NSIS 3 ; ex. paquet « nsis », ou le makensis Linux des
 # binaires d'electron-builder : MAKENSIS=/chemin/linux/makensis NSISDIR=/chemin/nsis), curl (WinSW, une fois).
-# Les programmes Windows lib/bin/jt65.exe, lib/bin/jttyd.exe et lib/bin/jttygen.exe sont dans le dépôt. Pour les recompiler :
+# Les programmes Windows lib/bin/jt65.exe, jttyd.exe, jttygen.exe, wsjtxd.exe et drmd.exe, drmgen.exe, drmrs.exe (native/drm/build.sh) sont dans le dépôt. Pour les recompiler :
 #   MINGW=/chemin/xpack-mingw-w64-gcc-14.2.0-1/bin WSJTX=/chemin/wsjtx FT8LIB=/chemin/ft8_lib windows/build.sh
 set -eu
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -42,7 +42,7 @@ STAGE=$(mktemp -d)
 trap 'rm -rf "$STAGE"' EXIT
 mkdir -p "$STAGE/serveur" "$STAGE/outils"
 (cd "$ROOT" && git ls-files -z --cached --others --exclude-standard | grep -zv "^releases/" | tar --null -T - -cf -) | tar -xf - -C "$STAGE/serveur"
-rm -rf "$STAGE/serveur/native" "$STAGE/serveur/windows" "$STAGE/serveur/deploy" "$STAGE/serveur/releases" "$STAGE/serveur/lib/bin/jt65" "$STAGE/serveur/lib/bin/jttyd" "$STAGE/serveur/lib/bin/jttygen" "$STAGE/serveur/lib/bin/wsjtxd" \
+rm -rf "$STAGE/serveur/native" "$STAGE/serveur/windows" "$STAGE/serveur/deploy" "$STAGE/serveur/releases" "$STAGE/serveur/lib/bin/jt65" "$STAGE/serveur/lib/bin/jttyd" "$STAGE/serveur/lib/bin/jttygen" "$STAGE/serveur/lib/bin/wsjtxd" "$STAGE/serveur/lib/bin/drmd" "$STAGE/serveur/lib/bin/drmgen" "$STAGE/serveur/lib/bin/drmrs" \
        "$STAGE/serveur/.gitignore" "$STAGE/serveur/.gitattributes"
 cp "$ROOT/windows/setup.js" "$STAGE/serveur/windows-setup.js"
 cp "$ROOT/windows/outils/"*.cmd "$STAGE/outils/"

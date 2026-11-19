@@ -63,6 +63,7 @@
   <a href="#problemes">16. Problèmes fréquents</a>
   <a href="#admin">17. Pour les administrateurs</a>
   <a href="#club">18. Le PC du club (page Station)</a>
+  <a href="#installer">19. Installer Remote Station (Windows ou Linux)</a>
 </nav>
 
 <div class="note">Le dashboard fonctionne dans <b>Google Chrome</b> ou <b>Microsoft Edge</b>, sur PC, Mac, tablette ou téléphone.
@@ -1373,6 +1374,49 @@ Le navigateur du PC du club, qui garde le jeton de la station, se reconnecte aus
   <li>Si la relance ne suffit pas : éteindre et rallumer le TRX (le FTX-1 ne peut pas être rallumé par CAT).</li>
 </ul>
 <p>Installation et réglages du serveur : voir le <b>Guide des administrateurs</b>, <code>GUIDE-ADMINISTRATEUR.md</code> (dépôt du projet).</p>
+
+<h2 id="installer">19. Installer Remote Station (Windows ou Linux)</h2>
+<p>Pour un autre club, une station personnelle ou un serveur de secours. Le programme est le même ; deux façons de l'installer :</p>
+<table>
+  <tr><th></th><th>Serveur Linux (VPS ou PC)</th><th>PC Windows 10 / 11</th></tr>
+  <tr><td><b>Pour qui</b></td><td><b>Conseillé pour un club</b> : accessible de partout en HTTPS, toujours allumé</td><td>Station seule, sans VPS, sur le PC à côté du TRX</td></tr>
+  <tr><td><b>Fichier</b></td><td><code>remote-station-X.Y.Z.tar.gz</code></td><td><code>RemoteStation-Setup-X.Y.Z.exe</code></td></tr>
+  <tr><td><b>Mises à jour</b></td><td>Bouton 🔔 du dashboard (administrateur)</td><td>Relancer un installateur plus récent (réglages, comptes et carnet gardés) ; la 🔔 signale la nouvelle version mais ne l'installe pas</td></tr>
+  <tr><td><b>HTTPS</b></td><td>Certificat Let's Encrypt installé tout seul</td><td>À prévoir pour un accès par internet (certificat ou tunnel)</td></tr>
+</table>
+<p>Les fichiers se téléchargent sur GitHub : dépôt <b>on6dp/remote-station</b>, dossier <b>releases</b> (le tableau indique pour chaque version si un installateur Windows existe, avec les empreintes SHA-256).</p>
+
+<h3>Linux : quelle version ?</h3>
+<ul>
+  <li><b>Debian 12 ou 13</b>, ou <b>Ubuntu 22.04 ou 24.04 LTS</b>, en <b>64 bits Intel / AMD (x86-64)</b> : VPS ou PC. Ce sont les systèmes prévus par le script d'installation (il utilise <code>apt</code>).</li>
+  <li><b>Node.js</b> : installé par le script (version 22 si celle du système est trop ancienne). Node.js <b>22.13 ou plus</b> pour le carnet en base SQLite.</li>
+  <li>Un <b>nom de site</b> (enregistrement DNS A, par exemple remote.monclub.be) déjà dirigé vers le serveur : le HTTPS est obligatoire pour le port série et le micro dans Chrome.</li>
+  <li><b>Raspberry Pi et autres ARM</b> : déconseillé. Le serveur démarre, mais sans les programmes natifs : FT8 / FT4 avec le décodeur de secours (moins sensible), ni JT65, ni JTTY, ni SSTV numérique (DRM).</li>
+</ul>
+<h3>Linux : installation</h3>
+<ol>
+  <li>Copier l'archive <code>remote-station-X.Y.Z.tar.gz</code> sur le serveur, dans votre dossier personnel (WinSCP depuis Windows).</li>
+  <li>Dans un terminal (PuTTY), une commande à la fois :<br>
+    <code>sudo tar -xzf ~/remote-station-X.Y.Z.tar.gz -C /opt</code><br>
+    <code>sudo bash /opt/remote-station/deploy/install.sh --domaine remote.monclub.be --email vous@exemple.be --admin VOTREINDICATIF --sauvegarde 03:30</code></li>
+  <li>Le script installe Node.js, nginx et le certificat HTTPS, crée le service, le jeton de la station (jamais affiché), le premier administrateur (mot de passe demandé) et la sauvegarde quotidienne, puis vérifie que le serveur répond.</li>
+  <li>Ouvrir <b>https://remote.monclub.be</b>, se connecter, puis régler le nom du club, l'indicatif et le locator de la station (guide des administrateurs, section 5).</li>
+</ol>
+<p>Relancé sur un serveur existant, le script fait une simple mise à jour et ne supprime rien. Ensuite, les mises à jour se font avec la 🔔.</p>
+
+<h3>Windows 10 / 11 : installation</h3>
+<ul>
+  <li><b>Windows 10 ou 11, 64 bits</b>. Double-clic sur <code>RemoteStation-Setup-X.Y.Z.exe</code> et accepter la demande d'administrateur. Windows peut afficher « Windows a protégé votre ordinateur » (installateur non signé) : <b>Informations complémentaires</b> → <b>Exécuter quand même</b>.</li>
+  <li>Cocher les parties voulues :
+    <ul>
+      <li><b>PC du club</b> : raccourcis de la page Station et du dashboard, page Station au démarrage de Windows, pas de mise en veille (section 18) ;</li>
+      <li><b>Serveur Remote Station</b> : seulement sans VPS. Service Windows sur le port 9000 ; <b>Node.js 20 ou plus</b> nécessaire (l'installateur propose de l'installer ; 22.13 ou plus conseillé). Sur ce PC : <b>http://localhost:9000</b>. Depuis internet : rediriger le port du routeur et passer en HTTPS (certificat dans <code>config.json</code> ou tunnel, par exemple Cloudflare Tunnel) ;</li>
+      <li><b>Agent LoTW</b> : sur le PC qui a TQSL et le certificat LoTW (section 14.4).</li>
+    </ul></li>
+  <li>Menu Démarrer → <b>Remote Station</b> : ajouter un membre, jeton de la station, configuration, redémarrer le serveur, journaux.</li>
+  <li>Détails : fichier <code>LISEZMOI-WINDOWS.txt</code> installé avec le programme.</li>
+</ul>
+<p><b>Ce qui fonctionne sous Windows</b> : tout, comme sous Linux (FT8 avec le moteur de WSJT-X, JT65, JTTY, SSTV analogique). <b>SSTV numérique (DRM)</b> : depuis la 0.43.63, avec un installateur Windows de cette version ou plus récent ; sinon le bouton <span class="k">Numérique</span> de l'onglet SSTV est grisé.</p>
 
 <footer>Remote Station UBA-LGE — ON5VL / OR0L. Décodeurs : WSJT-X 3 (GPL v3 : FT8, FT4, FT2, WSPR, JT65, JTTY ; base d'indicatifs de JTDX), ft8_lib (MIT, secours et émission) ; pays DXCC : cty.dat (AD1C) ; voir TIERS.md.
 <a href="/help">English version</a></footer>

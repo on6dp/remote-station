@@ -13,6 +13,7 @@
 #include <string>
 #include <unistd.h>
 #include "drm.h"
+#include "binio.h"
 #include "drmproto.h"
 #include "demodulator.h"
 #include "sourcedecoder.h"
@@ -53,6 +54,7 @@ bool sourceDecoder::decode()
 
 int main()
 {
+  binaryStdio();
   srcDecoder = new sourceDecoder;
   demodulatorPtr = new demodulator;
   avgSNR = 0; avgSNRAvailable = false;

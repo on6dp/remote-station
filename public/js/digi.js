@@ -4373,6 +4373,7 @@
   }
   function ssRxToggle(k) {
     const o = k === 'a' ? 'n' : 'a';
+    if ($('ssRxN').disabled) return; // DRM indisponible : l'analogique reste seul affiché
     if (ssRxF[k] && !ssRxF[o]) ssRxF[o] = true; // au moins une famille affichée : un clic sur la seule allumée allume l'autre
     else ssRxF[k] = !ssRxF[k];
     store.set('ssrxf', JSON.stringify(ssRxF));
@@ -5159,6 +5160,20 @@
     $('ssDrmRs').value = store.get('ssdrmrs', '0');
     for (const id of ['ssDrmSize', 'ssDrmQ', 'ssDrmRs']) $(id).addEventListener(id === 'ssDrmQ' ? 'input' : 'change', () => { store.set({ ssDrmSize: 'ssdrmsize', ssDrmQ: 'ssdrmq', ssDrmRs: 'ssdrmrs' }[id], $(id).value); ssCompose(); });
     { const v0 = store.get('sstvtx', 'M1'); ssFamFill(isDrm(v0)); tm.value = v0; if (!tm.value) tm.value = tm.options[0].value; }
+    // Serveur sans programmes DRM (autre système que Linux / Windows 64 bits) : bouton Numérique grisé, avec l'explication
+    fetch('/api/info', { cache: 'no-store' }).then((r) => r.json()).then((i) => {
+      const d = i && i.drm;
+      if (!d) return;
+      const why = 'SSTV numérique (DRM) indisponible : les programmes DRM (lib/bin/drmd, drmgen, drmrs) manquent sur ce serveur ou ne fonctionnent pas sur son système (Linux ou Windows 64 bits nécessaire).';
+      if (!d.tx) {
+        $('ssFamN').disabled = true; $('ssFamN').title = why;
+        if (isDrm(tm.value)) ssFam(false);
+      }
+      if (!d.rx) {
+        $('ssRxN').disabled = true; $('ssRxN').title = why;
+        ssRxF.n = false; ssRxF.a = true; ssRxApply();
+      }
+    }).catch(() => {});
     $('ssRxA').addEventListener('click', () => ssRxToggle('a'));
     $('ssRxN').addEventListener('click', () => ssRxToggle('n'));
     ssRxApply();

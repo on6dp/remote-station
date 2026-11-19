@@ -3875,3 +3875,4 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 #ssDrm[hidden]{display:none !important}
 .ss-tx > .dg-h{justify-content:flex-start}
 .ss-tx > .dg-h #ssDur{margin-left:auto}
+.ss-fam button:disabled{opacity:.4;cursor:not-allowed;background:#101924 !important;color:#64748b !important;box-shadow:none !important}
