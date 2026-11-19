@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.56** — SSTV : 10 images prêtes à émettre au lieu de 5
 - **0.43.55** — SSTV : bouton 📁 sur chaque image prête pour choisir une image du PC
 - **0.43.54** — SSTV : clic sur une image = affichée en grand (800 px) au centre de l'écran
 - **0.43.53** — SSTV : enregistrement de l'image reçue en PNG ou JPG

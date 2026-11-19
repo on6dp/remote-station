@@ -877,7 +877,7 @@ WSPR is used to study propagation: low-power beacons transmit their callsign, lo
 
 **Saving a received image** (0.43.53): `PNG` (lossless) or `JPG` (smaller) buttons at the top of the SSTV reception window.
 
-**5 images ready to send** (0.43.50): below the background thumbnails, the **Prêtes à émettre** row has 5 slots. Click a free slot (+): the current image (background and three text lines, size, colour) is stored in it. Click a ready image: it comes back into the editor, ready to go with `Émettre`; its edits (text, background) stay stored in it. Click again: release it. The small `📁` button at the top right of each slot picks an image on your PC directly for that slot (0.43.55; its texts are kept). Right-click: empty the slot. Tags (<CALL>, <RST>…) are replaced when sending. Kept in this browser.
+**10 images ready to send** (0.43.50; 10 since 0.43.56): below the background thumbnails, the **Prêtes à émettre** row has 10 slots. Click a free slot (+): the current image (background and three text lines, size, colour) is stored in it. Click a ready image: it comes back into the editor, ready to go with `Émettre`; its edits (text, background) stay stored in it. Click again: release it. The small `📁` button at the top right of each slot picks an image on your PC directly for that slot (0.43.55; its texts are kept). Right-click: empty the slot. Tags (<CALL>, <RST>…) are replaced when sending. Kept in this browser.
 
 **Both VFOs** (0.43.42): in the digital modes window, this tab shows the dashboard's two VFO screens at the top (VFO A / MAIN and VFO B / SUB), with SPLIT, A ⇄ B and A → B, like the RTTY and WSPR tabs.
 

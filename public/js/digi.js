@@ -4621,15 +4621,16 @@
     $('ssDur').textContent = m.w + ' × ' + m.h + ' · ' + Math.floor(d / 60) + ' min ' + String(Math.round(d % 60)).padStart(2, '0') + ' s';
     ssSlotSave();
   }
-  // ---- 5 images prêtes à émettre : chaque emplacement garde son fond et ses textes. Clic sur un emplacement vide :
+  // ---- 10 images prêtes à émettre : chaque emplacement garde son fond et ses textes. Clic sur un emplacement vide :
   // l'image en cours y est rangée ; clic sur une image prête : elle revient dans l'éditeur (les retouches y sont
   // gardées) ; clic droit : vider l'emplacement. Gardées dans ce navigateur.
   let ssSlots = [];
   try { ssSlots = JSON.parse(store.get('sstvslots', '[]')) || []; } catch (e) { ssSlots = []; }
-  while (ssSlots.length < 5) ssSlots.push(null);
-  ssSlots.length = 5;
+  const SS_SLOTS = 10; // images prêtes à émettre (5 avant la 0.43.56)
+  while (ssSlots.length < SS_SLOTS) ssSlots.push(null);
+  ssSlots.length = SS_SLOTS;
   let ssSlotOn = Number(store.get('sstvslot', '-1'));
-  if (!(ssSlotOn >= 0 && ssSlotOn < 5 && ssSlots[ssSlotOn])) ssSlotOn = -1;
+  if (!(ssSlotOn >= 0 && ssSlotOn < SS_SLOTS && ssSlots[ssSlotOn])) ssSlotOn = -1;
   // Fond d'une image du PC : par son repère stable (les numéros changent quand on en retire une)
   const ssSelOut = (sel) => /^u\d+$/.test(sel) && ssSrc[Number(sel.slice(1))] ? 'i:' + ssSrc[Number(sel.slice(1))].id : sel;
   const ssSelIn = (sel) => {
