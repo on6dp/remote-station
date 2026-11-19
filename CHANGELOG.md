@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.45** — WSPR : décompte et Qui m'a entendu ? juste à droite de la bande audio
 - **0.43.44** — WSPR : ligne BF reçue retirée (affichée seulement en cas de problème)
 - **0.43.43** — Taille d'affichage : les pages des modes, le carnet en grand et la page Propagation suivent le réglage du dashboard
 - **0.43.42** — JTTY et SSTV : les deux VFO en haut de l'onglet, comme RTTY et WSPR

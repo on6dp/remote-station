@@ -3788,3 +3788,5 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .cwp-body { min-height: calc(100vh / var(--zoom, 1)); }
 .ssb-body .cwp-clogw { max-height: calc(52vh / var(--zoom, 1)); }
 #wsStatus[hidden] { display: none !important; } /* 0.43.44 : WSPR, ligne d'état seulement pour un problème */
+/* 0.43.45 : WSPR — « Prochaine période dans … » et « Qui m'a entendu ? » juste à droite de « Bande WSPR : … audio » */
+.dg-bar #wsClock { margin-left: 16px; align-self: center; }
