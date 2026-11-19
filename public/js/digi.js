@@ -650,7 +650,7 @@
     <div class="dg-wf-slot" data-slot="sstv"></div>
     <div class="ss-grid">
       <div class="dg-col ss-rx">
-        <div class="dg-h"><span>Réception SSTV <b id="ssCap"></b></span><span class="dg-note">Martin, Scottie, Robot, PD : départ automatique sur le code VIS</span><button class="dg-mini" type="button" id="ssSave" title="Enregistrer l'image affichée sur votre PC">PNG</button><button class="dg-mini" type="button" id="ssSaveJ" title="Enregistrer l'image affichée sur votre PC en JPG (fichier plus léger, qualité 92 %)">JPG</button></div>
+        <div class="dg-h"><span class="ss-rxt">Réception SSTV <b id="ssCap"></b></span><span class="dg-note">Martin, Scottie, Robot, PD : départ automatique sur le code VIS</span><span class="ss-saveb"><button class="dg-mini" type="button" id="ssSave" title="Enregistrer l'image affichée sur votre PC">PNG</button><button class="dg-mini" type="button" id="ssSaveJ" title="Enregistrer l'image affichée sur votre PC en JPG (fichier plus léger, qualité 92 %)">JPG</button></span></div>
         <div class="ss-view"><canvas id="ssCanvas" width="320" height="256"></canvas><p class="ss-empty" id="ssEmpty">En attente d'une image…</p></div>
         <div class="ss-gal" id="ssGal" aria-label="Dernières images reçues"></div>
       </div>
