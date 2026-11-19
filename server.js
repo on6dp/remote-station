@@ -507,6 +507,7 @@ const DIGI_MODES = ['FT8', 'FT4', 'FT2', 'RTTY', 'WSPR', 'JT65', 'JTTY', 'CW', '
 const { SstvStore } = require('./lib/sstv-store.js');
 const sstvStore = new SstvStore(path.join(ROOT, 'sstv'), (m) => console.error(m));
 function sstvSendImage(conn, it) {
+  if (it.kind === 'file') return send(conn, { t: 'sstv_file', img: sstvStore.meta(it), mime: it.mime, b64: it.data.toString('base64') });
   send(conn, { t: 'sstv_img', img: sstvStore.meta(it) });
   for (let y = 0; y < it.lines; y++) conn.send(sstvStore.frame(it, y));
 }
@@ -624,6 +625,18 @@ function onDigi(m) {
       if (c.rtty3 && c.rtty3.key === m.key) c.send(out(2)); // A3, A4 (réception simple)
       if (c.rtty4 && c.rtty4.key === m.key) c.send(out(3));
     }
+    return;
+  }
+  if (m.t === 'drm_st' || m.t === 'drm_prog') {
+    // SSTV numérique : état du récepteur (synchro, mode, SNR, constellation) et avancement du fichier en cours
+    const out = JSON.stringify(m.t === 'drm_st' ? Object.assign({ t: 'drm_st' }, m.m) : Object.assign({ t: 'drm_prog' }, m.p));
+    for (const c of ops) if (c.digi === 'SSTV') c.send(out);
+    return;
+  }
+  if (m.t === 'drm_file') {
+    const it = sstvStore.addFile(m.f);
+    journal('drm_rx', { file: m.f.name, size: it.data.length, call: m.f.call || '', snr: m.f.snr });
+    for (const c of ops) if (c.digi === 'SSTV') send(c, { t: 'sstv_end', img: sstvStore.meta(it), drm: true });
     return;
   }
   if (m.t === 'sstv') {
@@ -3462,6 +3475,7 @@ function sstvMaxSeconds() {
   return Math.max(30, Math.min(Number(cfg.maxSstvSeconds) || 300, (Number(cfg.txHardMaxSeconds) || 300) - 5));
 }
 const JTTY_GEN = path.join(ROOT, 'lib', 'bin', 'jttygen' + (process.platform === 'win32' ? '.exe' : ''));
+const DRM = require('./lib/drm-rx.js');
 const AUDIO_RATE = 12000;
 function jttyWave(text, f0) {
   return new Promise((resolve, reject) => {
@@ -3478,7 +3492,21 @@ async function audioRequest(conn, m) {
   if (mode !== 'RTTY' && mode !== 'JTTY' && mode !== 'SSTV') return err('Mode inconnu');
   // SSTV : image envoyée avant par morceaux (sstv_up), au format du mode (largeur × hauteur × 3 octets RGB)
   let sstv = null;
-  if (mode === 'SSTV') {
+  let drmTx = null;
+  if (mode === 'SSTV' && m.drm && typeof m.drm === 'object') {
+    // SSTV numérique (HamDRM) : image JPEG / PNG envoyée avant par morceaux (sstv_up), codée ici par lib/bin/drmgen
+    const up = conn.sstvUp;
+    if (!up || up.id !== String(m.up || '') || up.got !== up.n) return err('Image DRM incomplète : réessayez');
+    const file = Buffer.concat(up.parts);
+    conn.sstvUp = null;
+    const k = DRM.sniff(file, '');
+    if (k.ext !== 'jpg' && k.ext !== 'png') return err('Image DRM : JPEG ou PNG seulement');
+    if (file.length > 150000) return err('Image DRM trop lourde (' + Math.round(file.length / 1000) + ' Ko, 150 Ko au plus) : baissez la qualité ou la taille');
+    const d = m.drm;
+    const pick = (v, list, def) => (list.indexOf(Number(v)) >= 0 ? Number(v) : def);
+    drmTx = { file, ext: k.ext, mode: pick(d.mode, [0, 1, 2], 1), bw: pick(d.bw, [0, 1], 1), il: pick(d.il, [0, 1], 0), qam: pick(d.qam, [0, 1, 2], 1), prot: pick(d.prot, [0, 1], 1), rs: pick(d.rs, [0, 1, 2, 3, 4], 0) };
+    if (drmTx.mode === 0 && drmTx.qam === 2) drmTx.prot = 0; // mode A en 64-QAM : protection haute seulement (dernier segment perdu sinon)
+  } else if (mode === 'SSTV') {
     const M = SSTV_ENC.MODES[String(m.sstv || '')];
     if (!M) return err('Mode SSTV inconnu');
     const up = conn.sstvUp;
@@ -3502,16 +3530,31 @@ async function audioRequest(conn, m) {
   if (why) return err('Émission refusée : ' + why);
   const md = (radio.txVfo === 1 ? radio.modeB : radio.mode) || '';
   if (!digiModeOk(md)) return err('Mettez d’abord le VFO d’émission en ' + digiModeName() + ' (mode actuel : ' + (md || '?') + ') : le signal ' + mode + ' passe par la carte son');
-  const f0 = sstv ? 1900 : Math.round(Number(m.f0));
+  const f0 = sstv || drmTx ? 1900 : Math.round(Number(m.f0));
   if (!(f0 >= 300 && f0 <= 2800)) return err('Fréquence d’émission audio hors plage (300 à 2800 Hz)');
-  let text = sstv ? 'image ' + sstv.M.name : String(m.text || '').toUpperCase().replace(/\r/g, '').replace(/[^\n -~]/g, '').replace(/[ \t]+/g, ' ');
+  let text = drmTx ? 'image DRM ' + ['A', 'B', 'E'][drmTx.mode] + ' ' + ['4', '16', '64'][drmTx.qam] + '-QAM' + (drmTx.rs ? ' RS' + drmTx.rs : '') : sstv ? 'image ' + sstv.M.name : String(m.text || '').toUpperCase().replace(/\r/g, '').replace(/[^\n -~]/g, '').replace(/[ \t]+/g, ' ');
   text = mode === 'JTTY' ? text.replace(/\s*\n\s*/g, ' ').trim() : text.replace(/^\n+|\s+$/g, '');
   if (!text) return err('Rien à émettre : tapez un texte ou choisissez une macro');
   if (text.length > (mode === 'JTTY' ? 160 : 600)) return err('Texte trop long (' + (mode === 'JTTY' ? 160 : 600) + ' caractères au plus)');
   let pcm;
   let charMs = null; // RTTY : fin de chaque caractère (ms depuis le début du signal), pour la page de l'opérateur
   try {
-    if (sstv) {
+    if (drmTx) {
+      const call = (txCallFor(conn.user) || 'NOCALL').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 9);
+      const d = new Date();
+      const base = call.replace(/\//g, '-') + '-' + String(d.getUTCHours()).padStart(2, '0') + String(d.getUTCMinutes()).padStart(2, '0');
+      let data = drmTx.file, ext = drmTx.ext;
+      if (drmTx.rs) { data = await DRM.drmRsEncode(drmTx.file, drmTx.rs, drmTx.ext); ext = 'rs' + drmTx.rs; }
+      const w = await DRM.drmWave(data, base, ext, drmTx, call);
+      pcm = new Int16Array(w.length);
+      const ramp = Math.round(AUDIO_RATE * 0.005);
+      for (let i = 0; i < w.length; i++) {
+        const g = Math.min(1, i / ramp, (w.length - 1 - i) / ramp);
+        pcm[i] = Math.round(w[i] * g);
+      }
+      const sec = pcm.length / AUDIO_RATE;
+      if (sec > sstvMaxSeconds()) return err('Émission DRM trop longue : ' + Math.round(sec) + ' s (limite du serveur : ' + sstvMaxSeconds() + ' s) ; choisissez une QAM plus rapide ou une image plus légère');
+    } else if (sstv) {
       // Image entière : en-tête VOX + VIS puis lignes (mêmes fréquences que l'aperçu « Écouter » du dashboard)
       const w = SSTV_ENC.encode(sstv.M.id, sstv.rgb, AUDIO_RATE, 3);
       pcm = new Int16Array(w.length);
@@ -3549,17 +3592,17 @@ async function audioRequest(conn, m) {
     return err('Émission ' + mode + ' impossible : ' + e.message);
   }
   const seconds = pcm.length / AUDIO_RATE;
-  if (!sstv && seconds > cfg.maxTxSeconds - 2) return err('Texte trop long : ' + Math.round(seconds) + ' s d’émission (limite du serveur : ' + cfg.maxTxSeconds + ' s)');
+  if (!sstv && !drmTx && seconds > cfg.maxTxSeconds - 2) return err('Texte trop long : ' + Math.round(seconds) + ' s d’émission (limite du serveur : ' + cfg.maxTxSeconds + ' s)');
   if (controller !== conn || ptt.active || ftxPend) return; // situation changée pendant la fabrication du signal
   const p = { id: ++ftxSeq, conn, mode, text, f0, at: 0, parity: 0, state: 'wait', ready: false, seconds, sent: text.replace(/\n/g, ' ').slice(0, 60), timer: null, ntx: 0, kind: 'audio',
-    maxS: sstv ? Math.ceil(seconds) + 5 : 0, sstv: sstv ? sstv.M.id : null };
+    maxS: sstv || drmTx ? Math.ceil(seconds) + 5 : 0, sstv: sstv ? sstv.M.id : drmTx ? 'DRM' : null };
   ftxPend = p;
   lastCtrlActivity = Date.now();
   // Texte exact émis et minutage lettre par lettre : la page de l'opérateur colore chaque lettre une fois partie
   send(conn, { t: 'dtx_text', id: p.id, mode, text, ms: charMs, seconds: Math.round(seconds * 10) / 10 });
   toStation({ t: 'cmd', op: 'audioprep', id: p.id, mode, rate: AUDIO_RATE, data: Buffer.from(pcm.buffer, pcm.byteOffset, pcm.byteLength).toString('base64') });
   // Page Station trop lente à recevoir le signal : abandon
-  p.timer = setTimeout(() => { if (ftxPend === p && !p.ready) ftxCancel('la page Station n’a pas reçu le signal à temps'); }, sstv ? 45000 : 20000);
+  p.timer = setTimeout(() => { if (ftxPend === p && !p.ready) ftxCancel('la page Station n’a pas reçu le signal à temps'); }, sstv || drmTx ? 45000 : 20000);
   broadcast();
 }
 
@@ -4005,6 +4048,7 @@ function onOperator(conn, m) {
       if (conn.digi !== 'SSTV') return;
       if (controller !== conn && !conn.user.admin) return send(conn, { t: 'notice', level: 'warn', msg: 'Synchro SSTV : prenez la main pour régler la réception (elle est commune à tous les membres).' });
       const op = String(m.op || '');
+      if (op === 'drm_restart') { if (digi.worker) digi.worker.postMessage({ t: 'drm_restart' }); return; }
       if (['force', 'auto', 'redo'].indexOf(op) < 0 || !digi.worker) return;
       if (op === 'auto') sstvAuto = !!m.on;
       digi.worker.postMessage({ t: 'sstv_ctl', op, mode: String(m.mode || '').slice(0, 8), on: !!m.on, ppm: m.ppm == null ? null : Number(m.ppm), dx: Number(m.dx) || 0 });

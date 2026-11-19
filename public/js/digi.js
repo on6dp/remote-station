@@ -661,6 +661,12 @@
     <div class="ss-grid">
       <div class="dg-col ss-rx">
         <div class="dg-h"><span class="ss-rxt">Réception SSTV <b id="ssCap"></b></span><span class="dg-note">Martin, Scottie, Robot, PD : départ automatique sur le code VIS</span><span class="ss-saveb"><button class="dg-mini" type="button" id="ssSave" title="Enregistrer l'image affichée sur votre PC">PNG</button><button class="dg-mini" type="button" id="ssSaveJ" title="Enregistrer l'image affichée sur votre PC en JPG (fichier plus léger, qualité 92 %)">JPG</button></span></div>
+        <div class="ss-drm" id="ssDrm" title="Synchro DRM (SSTV numérique) : le récepteur se cale tout seul sur le signal — temps (début des symboles), fréquence (écart du TRX), trame (400 ms), FAC (paramètres de l'émetteur)">
+          <span class="ss-drmt">DRM</span><i data-k="ts">Temps</i><i data-k="fs">Fréquence</i><i data-k="frs">Trame</i><i data-k="fac">FAC</i>
+          <span class="ss-drmi" id="ssDrmI">en attente d'un signal DRM</span>
+          <canvas id="ssDrmC" width="56" height="56" title="Constellation des cellules de données (points nets = bon signal)"></canvas>
+          <button class="dg-mini" type="button" id="ssDrmRst" title="Relancer la synchro DRM (après un changement de fréquence, par exemple)">↻</button>
+        </div>
         <div class="ss-view"><canvas id="ssCanvas" width="320" height="256"></canvas><p class="ss-empty" id="ssEmpty">En attente d'une image…</p></div>
         <div class="ss-gal" id="ssGal" aria-label="Dernières images reçues"></div>
       </div>
@@ -668,6 +674,12 @@
       <div class="dg-col ss-tx">
         <div class="dg-h"><span class="ss-rxt">Émission SSTV</span>
           <select id="ssTxMode" aria-label="Mode d'émission"></select><span class="dg-note" id="ssDur"></span></div>
+        <div class="ss-drmopt" id="ssDrmOpt" hidden>
+          <label>Image <select id="ssDrmSize" aria-label="Taille de l'image DRM"><option value="320x240">320 × 240</option><option value="640x480">640 × 480</option><option value="800x600">800 × 600</option></select></label>
+          <label title="Qualité JPEG : plus basse = fichier plus léger, émission plus courte">Qualité <input type="range" id="ssDrmQ" min="30" max="95" step="5" value="70"><b id="ssDrmQV">70</b></label>
+          <label title="Reed-Solomon (compatible EasyPal) : l'image est reconstituée même si une partie des segments est perdue (RS1 : 11 %, RS2 : 24 %, RS3 : 36 %, RS4 : 49 %), au prix d'une émission plus longue">Reed-Solomon <select id="ssDrmRs" aria-label="Reed-Solomon"><option value="0">aucun</option><option value="1">RS1 (+14 %)</option><option value="2">RS2 (+33 %)</option><option value="3">RS3 (+59 %)</option><option value="4">RS4 (+99 %)</option></select></label>
+          <span class="dg-note">JPEG · bande 2,5 kHz · entrelacement long</span>
+        </div>
         <div class="ss-src">
           <label class="btn ss-file" title="Choisir une ou plusieurs images sur votre PC (JPG, PNG…). Format conseillé : 800 × 600 (4:3, paysage) ; une autre taille est recadrée au centre. Les images restent dans votre navigateur (10 au plus) ; seule l'image émise passe par le serveur, sans y être gardée.">Images du PC…<input type="file" id="ssFile" accept="image/*" multiple hidden></label>
           <span class="ss-fmt" title="Format conseillé pour vos images SSTV : 800 × 600 pixels, paysage (4:3). Robot 36 / 72 : sans recadrage ; les autres modes : environ 1 à 3 % coupés à gauche et à droite.">800 × 600 conseillé</span>
@@ -4303,7 +4315,7 @@
   }
 
   // ------------------------------------------------------------------ SSTV : réception (décodeur du serveur) et préparation des images à émettre
-  const SSTV_DIAL = [['80 m', 3735], ['40 m', 7165], ['20 m', 14230], ['20 m (2)', 14233], ['17 m', 18160], ['15 m', 21340], ['12 m', 24975], ['10 m', 28680], ['6 m', 50510]];
+  const SSTV_DIAL = [['80 m', 3735], ['80 m · DRM', 3733], ['40 m', 7165], ['20 m', 14230], ['20 m · DRM', 14233], ['17 m', 18160], ['15 m', 21340], ['12 m', 24975], ['10 m', 28680], ['6 m', 50510]];
   let ssNeedHist = true;
   const ssImgs = new Map(); // id → { meta, data: ImageData | null }
   let ssShown = 0;
@@ -4318,6 +4330,19 @@
     const it = ssImgs.get(id);
     if (!it) return;
     ssShown = id;
+    if (it.meta.kind === 'file' && !it.data) {
+      // Fichier DRM pas encore chargé (ou pas une image affichable)
+      const ctx = ssCanvasFor({ w: 320, h: 240 });
+      ctx.fillStyle = '#05080d'; ctx.fillRect(0, 0, 320, 240);
+      ctx.fillStyle = '#9fb0c8'; ctx.font = '700 13px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(it.raw ? 'Fichier reçu : ' + (it.meta.file || it.meta.name) : 'Chargement…', 160, 112);
+      if (it.raw) { ctx.font = '12px sans-serif'; ctx.fillText(/jp2/.test(it.raw.mime) ? 'JPEG 2000 : non affiché · PNG / JPG = télécharger le fichier' : 'Pas une image · PNG / JPG = télécharger le fichier', 160, 134); }
+      else api.send({ t: 'sstv_get', id });
+      $('ssEmpty').hidden = true;
+      ssCaption();
+      ssGallery();
+      return;
+    }
     const ctx = ssCanvasFor(it.meta);
     if (it.data) ctx.putImageData(it.data, 0, 0);
     else { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, it.meta.w, it.meta.h); api.send({ t: 'sstv_get', id }); }
@@ -4329,7 +4354,7 @@
     const it = ssImgs.get(ssShown);
     if (!it) { $('ssCap').textContent = ''; return; }
     const m = it.meta;
-    $('ssCap').textContent = m.name + ' · ' + utc(m.at).replace(/(\d\d)(\d\d)(\d\d)/, '$1:$2') + ' UTC' + (m.done ? (m.ok ? '' : ' · incomplète') : ' · en cours');
+    $('ssCap').textContent = m.name + ' · ' + utc(m.at).replace(/(\d\d)(\d\d)(\d\d)/, '$1:$2') + ' UTC' + (m.kind === 'file' ? (m.call ? ' · de ' + m.call : '') + (m.snr != null ? ' · ' + Math.round(m.snr) + ' dB' : '') : m.done ? (m.ok ? '' : ' · incomplète') : ' · en cours');
   }
   function ssGallery() {
     const g = $('ssGal');
@@ -4339,19 +4364,25 @@
     for (const it of list) {
       const c = document.createElement('canvas');
       c.width = 96;
-      c.height = Math.round(96 * it.meta.h / it.meta.w);
+      c.height = it.meta.w > 0 && it.meta.h > 0 ? Math.round(96 * it.meta.h / it.meta.w) : 72;
       c.className = 'ss-thumb' + (it.meta.id === ssShown ? ' sel' : '');
       c.title = it.meta.name + ' · ' + utc(it.meta.at).replace(/(\d\d)(\d\d)(\d\d)/, '$1:$2') + ' UTC';
       const x = c.getContext('2d');
       if (it.data) { const t = document.createElement('canvas'); t.width = it.meta.w; t.height = it.meta.h; t.getContext('2d').putImageData(it.data, 0, 0); x.drawImage(t, 0, 0, c.width, c.height); }
-      else if (it.thumb) {
+      else if (it.thumb && it.thumb.url) {
+        // Fichier DRM : l'image elle-même, réduite par le navigateur
+        const im = new Image();
+        im.onload = () => { const k = Math.min(c.width / im.width, c.height / im.height); x.fillStyle = '#000'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, (c.width - im.width * k) / 2, (c.height - im.height * k) / 2, im.width * k, im.height * k); };
+        im.src = it.thumb.url;
+      } else if (it.thumb) {
         // Vignette envoyée par le serveur (image complète chargée au clic)
         const raw = atob(it.thumb.b64);
         const id = new ImageData(it.thumb.w, it.thumb.h);
         for (let i = 0, j = 0; i < raw.length; i += 3, j += 4) { id.data[j] = raw.charCodeAt(i); id.data[j + 1] = raw.charCodeAt(i + 1); id.data[j + 2] = raw.charCodeAt(i + 2); id.data[j + 3] = 255; }
         const t = document.createElement('canvas'); t.width = it.thumb.w; t.height = it.thumb.h; t.getContext('2d').putImageData(id, 0, 0);
         x.drawImage(t, 0, 0, c.width, c.height);
-      } else { x.fillStyle = '#10161f'; x.fillRect(0, 0, c.width, c.height); x.fillStyle = '#8b98a8'; x.font = '10px sans-serif'; x.fillText(it.meta.mode, 6, 14); }
+      } else { x.fillStyle = '#10161f'; x.fillRect(0, 0, c.width, c.height); x.fillStyle = '#8b98a8'; x.font = '10px sans-serif'; x.fillText(it.meta.mode, 6, 14); if (it.meta.kind === 'file') x.fillText(String(it.meta.file || '').slice(-14), 6, 30); }
+      if (it.meta.kind === 'file') c.classList.add('ss-drmth');
       c.addEventListener('click', () => ssShow(it.meta.id));
       g.appendChild(c);
     }
@@ -4392,6 +4423,18 @@
   function ssSave(fmt) {
     const jpg = fmt === 'jpg';
     const it = ssImgs.get(ssShown);
+    if (it && it.meta.kind === 'file' && it.raw) {
+      // Fichier DRM pas affichable (JPEG 2000, texte…) : téléchargé tel quel
+      const bin = atob(it.raw.b64);
+      const u8 = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([u8], { type: it.raw.mime }));
+      a.download = it.meta.file || 'drm.bin';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      return;
+    }
     if (!it || !it.data) return api && api.say('Pas d’image à enregistrer.', 'warn');
     const c = document.createElement('canvas');
     c.width = it.meta.w;
@@ -4409,8 +4452,49 @@
       setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
     }, jpg ? 'image/jpeg' : 'image/png', jpg ? 0.92 : undefined);
   }
+  // Synchro DRM : voyants, mode, SNR, écart de fréquence, indicatif et constellation
+  let drmAt = 0;
+  function drmStatus(m) {
+    const box = $('ssDrm');
+    if (!box) return;
+    drmAt = Date.now();
+    for (const k of ['ts', 'fs', 'frs', 'fac']) { const e = box.querySelector('i[data-k="' + k + '"]'); if (e) e.classList.toggle('on', m[k] === 1); }
+    box.classList.toggle('lock', m.frs === 1 && m.fac === 1);
+    const QAM = { 0: '64-QAM', 1: '16-QAM', 3: '4-QAM' };
+    $('ssDrmI').textContent = m.frs === 1 && m.fac === 1
+      ? 'Mode ' + ['A', 'B', 'E', 'E'][m.mode] + ' · ' + (QAM[m.qam] || 'QAM ?') + ' · ' + (m.il ? 'court' : 'long') + ' · ' + m.snr.toFixed(1) + ' dB · ' + (m.fo - 350 >= 0 ? '+' : '') + (m.fo - 350).toFixed(0) + ' Hz' + (m.call ? ' · ' + m.call : '')
+      : m.ts === 1 ? 'signal DRM détecté, synchronisation…' : 'en attente d’un signal DRM';
+    const c = $('ssDrmC');
+    const x = c.getContext('2d');
+    x.fillStyle = '#05080d'; x.fillRect(0, 0, c.width, c.height);
+    x.strokeStyle = '#1c2633'; x.beginPath(); x.moveTo(c.width / 2, 0); x.lineTo(c.width / 2, c.height); x.moveTo(0, c.height / 2); x.lineTo(c.width, c.height / 2); x.stroke();
+    const p = m.c || [];
+    x.fillStyle = '#5ee0f5';
+    for (let i = 0; i + 1 < p.length; i += 2) { const px = c.width / 2 + p[i] * c.width * 0.36, py = c.height / 2 - p[i + 1] * c.height * 0.36; if (px >= 0 && py >= 0 && px < c.width && py < c.height) x.fillRect(px, py, 1.5, 1.5); }
+  }
   function ssMessage(m) {
     if (m.t === 'sstv_opt') { if ($('ssAuto')) $('ssAuto').checked = m.auto !== false; return true; }
+    if (m.t === 'sstv_file') {
+      // Fichier DRM : image décodée par le navigateur (JPEG, PNG, GIF), sinon gardé pour le téléchargement
+      const it = ssAdd(m.img);
+      const im = new Image();
+      im.onload = () => {
+        it.meta.w = im.naturalWidth; it.meta.h = im.naturalHeight;
+        const t = document.createElement('canvas'); t.width = it.meta.w; t.height = it.meta.h;
+        const tx = t.getContext('2d'); tx.drawImage(im, 0, 0);
+        it.data = tx.getImageData(0, 0, t.width, t.height);
+        if (ssShown === it.meta.id) ssShow(it.meta.id);
+        ssGallery();
+      };
+      im.onerror = () => { it.raw = { mime: m.mime, b64: m.b64 }; if (ssShown === it.meta.id) ssShow(it.meta.id); };
+      if (/^image\/(jpeg|png|gif)$/.test(m.mime)) im.src = 'data:' + m.mime + ';base64,' + m.b64; else im.onerror();
+      return true;
+    }
+    if (m.t === 'drm_st') { drmStatus(m); return true; }
+    if (m.t === 'drm_prog') {
+      if (m.total > 0 && m.got < m.total && $('ssProg')) { $('ssProg').style.width = Math.round(m.got * 100 / m.total) + '%'; $('ssProgT').textContent = 'DRM · ' + (m.name || '…') + ' · segment ' + m.got + ' / ' + m.total; }
+      return true;
+    }
     if (m.t === 'sstv_list') {
       for (const meta of m.items || []) { const th = meta.thumb; delete meta.thumb; const it = ssAdd(meta); if (th) it.thumb = th; }
       const last = (m.items || []).slice(-1)[0];
@@ -4444,6 +4528,8 @@
       if (ssLive === m.img.id) ssLive = 0;
       ssLast = Date.now();
       ssProgress(null);
+      // Fichier DRM reçu : affiché tout de suite
+      if (m.drm) { ssProgress(null); ssShow(m.img.id); if (api) api.say('DRM : image reçue' + (m.img.call ? ' de ' + m.img.call : '') + ' (' + (m.img.file || m.img.name) + ')', 'ok', 5000); }
       // Image redressée par le serveur (pente corrigée) : on la recharge
       if (m.refreshed) { it.data = null; if (ssShown === m.img.id) api.send({ t: 'sstv_get', id: m.img.id }); }
       ssCaption();
@@ -4481,6 +4567,19 @@
   }
 
   // --- Préparation de l'image à émettre : images du PC, texte par-dessus, aperçu au format du mode
+  // SSTV numérique (HamDRM, compatible EasyPal / QSSTV) : mode A / B / E, QAM, protection ; durée ≈ 15 s + octets × b
+  const DRM_PRESETS = {
+    'DRM-B16': { name: 'DRM B · 16-QAM (conseillé)', mode: 1, qam: 1, prot: 1, b: 0.0028 },
+    'DRM-B4': { name: 'DRM B · 4-QAM (robuste)', mode: 1, qam: 0, prot: 1, b: 0.00651 },
+    'DRM-E4': { name: 'DRM E · 4-QAM (très robuste, DX)', mode: 2, qam: 0, prot: 1, b: 0.01037 },
+    'DRM-E16': { name: 'DRM E · 16-QAM (robuste)', mode: 2, qam: 1, prot: 1, b: 0.004213 },
+    'DRM-B64': { name: 'DRM B · 64-QAM (bon signal)', mode: 1, qam: 2, prot: 1, b: 0.001867 },
+    'DRM-A16': { name: 'DRM A · 16-QAM (signal fort, local)', mode: 0, qam: 1, prot: 1, b: 0.002027 },
+    'DRM-A64': { name: 'DRM A · 64-QAM (très fort signal)', mode: 0, qam: 2, prot: 0, b: 0.001627 }
+  };
+  const DRM_RS = [1, 255 / 224, 255 / 192, 255 / 160, 255 / 128]; // surcoût du Reed-Solomon RS1 à RS4
+  const isDrm = (id) => !!DRM_PRESETS[id];
+  let ssJpg = null; // dernière image DRM préparée { blob, size, w, h }
   const SS_TX_MODES = ['M1', 'M2', 'S1', 'S2', 'SDX', 'R36', 'R72', 'PD50', 'PD90', 'PD120', 'PD160', 'PD180', 'PD240', 'PD290'];
   let ssSrc = []; // { name, url } (images du PC, réduites, gardées dans ce navigateur)
   try { ssSrc = JSON.parse(store.get('sstvsrc', '[]')) || []; } catch (e) { ssSrc = []; }
@@ -4640,12 +4739,34 @@
   function ssCompose() {
     const c = $('ssCompose');
     if (!c) return;
-    const m = SSTV.MODES[$('ssTxMode').value] || SSTV.MODES.M1;
+    const id = $('ssTxMode').value;
+    const P = DRM_PRESETS[id];
+    if ($('ssDrmOpt')) $('ssDrmOpt').hidden = !P;
+    const mmss = (d) => Math.floor(d / 60) + ' min ' + String(Math.round(d % 60)).padStart(2, '0') + ' s';
+    if (P) {
+      // DRM : image au format choisi, codée en JPEG ; durée estimée d'après la taille du fichier
+      const [w, h] = String($('ssDrmSize').value || '320x240').split('x').map(Number);
+      if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+      c.dataset.sel = ssSel;
+      ssDraw(c, w, h, ssCfgNow());
+      if ($('ssDrmQV')) $('ssDrmQV').textContent = $('ssDrmQ').value;
+      clearTimeout(ssCompose.t);
+      ssCompose.t = setTimeout(() => c.toBlob((blob) => {
+        if (!blob) return;
+        ssJpg = { blob, size: blob.size, w, h };
+        const rs = Number($('ssDrmRs').value) || 0;
+        const d = 15 + blob.size * DRM_RS[rs] * P.b;
+        $('ssDur').textContent = w + ' × ' + h + ' · JPEG ' + (blob.size / 1000).toFixed(1) + ' Ko' + (rs ? ' + RS' + rs : '') + ' · ≈ ' + mmss(d) + (blob.size > 150000 ? ' · trop lourde (150 Ko au plus)' : '');
+      }, 'image/jpeg', (Number($('ssDrmQ').value) || 70) / 100), 350); // laisse le temps aux images du PC de se dessiner
+      ssSlotSave();
+      return;
+    }
+    const m = SSTV.MODES[id] || SSTV.MODES.M1;
     if (c.width !== m.w || c.height !== m.h) { c.width = m.w; c.height = m.h; }
     c.dataset.sel = ssSel;
     ssDraw(c, m.w, m.h, ssCfgNow());
     const d = SSTV.duration(m.id);
-    $('ssDur').textContent = m.w + ' × ' + m.h + ' · ' + Math.floor(d / 60) + ' min ' + String(Math.round(d % 60)).padStart(2, '0') + ' s';
+    $('ssDur').textContent = m.w + ' × ' + m.h + ' · ' + mmss(d);
     ssSlotSave();
   }
   // ---- 10 images prêtes à émettre : chaque emplacement garde son fond et ses textes. Clic sur un emplacement vide :
@@ -4765,6 +4886,7 @@
   function ssSignal(rate) {
     const c = $('ssCompose');
     const id = $('ssTxMode').value;
+    if (isDrm(id)) return null; // DRM : signal fabriqué par le serveur (pas d'écoute locale)
     const px = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
     return SSTV.encode(id, px, rate, 4);
   }
@@ -4784,6 +4906,29 @@
     ssCompose();
     const c = $('ssCompose');
     const id = $('ssTxMode').value;
+    if (isDrm(id)) {
+      // DRM : image JPEG (taille et qualité choisies) envoyée au serveur, qui fabrique le signal HamDRM
+      const P = DRM_PRESETS[id];
+      c.toBlob((blob) => {
+        if (!blob) return api.say('Image pas prête : réessayez.', 'warn');
+        if (blob.size > 150000) return api.say('Image DRM trop lourde (' + Math.round(blob.size / 1000) + ' Ko, 150 Ko au plus) : baissez la qualité ou la taille.', 'warn');
+        blob.arrayBuffer().then((ab) => {
+          const b = new Uint8Array(ab);
+          const CH = 42000;
+          const n = Math.ceil(b.length / CH);
+          const up = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+          for (let i = 0; i < n; i++) {
+            const part = b.subarray(i * CH, Math.min(b.length, (i + 1) * CH));
+            let bin = '';
+            for (let k = 0; k < part.length; k += 8192) bin += String.fromCharCode.apply(null, part.subarray(k, k + 8192));
+            api.send({ t: 'sstv_up', id: up, i, n, data: btoa(bin) });
+          }
+          api.send({ t: 'dtx', mode: 'SSTV', up, drm: { mode: P.mode, bw: 1, il: 0, qam: P.qam, prot: P.prot, rs: Number($('ssDrmRs').value) || 0 } });
+          api.say('Image DRM (' + (b.length / 1000).toFixed(1) + ' Ko) envoyée au serveur, préparation de l’émission…', 'info');
+        });
+      }, 'image/jpeg', (Number($('ssDrmQ').value) || 70) / 100);
+      return;
+    }
     const M = SSTV.MODES[id];
     if (!M || c.width !== M.w || c.height !== M.h) return api.say('Image pas prête : réessayez.', 'warn');
     const px = c.getContext('2d').getImageData(0, 0, M.w, M.h).data;
@@ -4833,7 +4978,7 @@
     if (!T || !note) return;
     const x = T.x;
     const M = T.M;
-    const name = M ? M.name : 'SSTV';
+    const name = M ? M.name : x.sstv === 'DRM' ? 'DRM (SSTV numérique)' : 'SSTV';
     if (x.state !== 'tx') {
       note.textContent = 'Préparation de l’émission SSTV (' + name + ', ' + Math.round(x.seconds || 0) + ' s) : signal envoyé à la page Station…';
       if (mask) { mask.hidden = !M; if (M) ssMask(mask, 0, M); }
@@ -4867,6 +5012,7 @@
   let ssPlayer = null;
   function ssPlay() {
     if (ssPlayer) { try { ssPlayer.src.stop(); ssPlayer.ctx.close(); } catch (e) {} ssPlayer = null; $('ssPlay').textContent = '▶ Écouter'; return; }
+    if (isDrm($('ssTxMode').value)) return api && api.say('Écoute locale : en SSTV analogique seulement (le signal DRM est fabriqué par le serveur au moment d’émettre).', 'warn');
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const sig = ssSignal(ctx.sampleRate);
     const buf = ctx.createBuffer(1, sig.length, ctx.sampleRate);
@@ -4884,6 +5030,7 @@
   function ssWav() {
     const rate = 12000;
     const sig = ssSignal(rate);
+    if (!sig) return api && api.say('WAV : en SSTV analogique seulement.', 'warn');
     const b = new ArrayBuffer(44 + sig.length * 2);
     const v = new DataView(b);
     const str = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
@@ -4910,6 +5057,7 @@
     dial.addEventListener('change', () => { store.set('ssdial', dial.value); qsyTo(Number(dial.value)); });
     $('ssQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
     $('ssSave').addEventListener('click', () => ssSave('png'));
+    $('ssDrmRst').addEventListener('click', () => api && api.send({ t: 'sstv_ctl', op: 'drm_restart' }));
     // ---- Synchro SSTV (sur le signal) : départ sans VIS, pente automatique, dernière image redressée / recentrée
     {
       const btn = $('ssSyBtn'), menu = $('ssSyMenu');
@@ -4964,7 +5112,17 @@
     $('ssCompose').title = 'Clic : voir l’image en grand (800 px de large)';
     $('ssSaveJ').addEventListener('click', () => ssSave('jpg'));
     const tm = $('ssTxMode');
-    for (const id of SS_TX_MODES) { const o = document.createElement('option'); o.value = id; o.textContent = SSTV.MODES[id].name; tm.appendChild(o); }
+    { const g = document.createElement('optgroup'); g.label = 'SSTV analogique';
+      for (const id of SS_TX_MODES) { const o = document.createElement('option'); o.value = id; o.textContent = SSTV.MODES[id].name; g.appendChild(o); }
+      tm.appendChild(g);
+      const g2 = document.createElement('optgroup'); g2.label = 'SSTV numérique (DRM, EasyPal)';
+      for (const id of Object.keys(DRM_PRESETS)) { const o = document.createElement('option'); o.value = id; o.textContent = DRM_PRESETS[id].name; g2.appendChild(o); }
+      tm.appendChild(g2); }
+    // Réglages propres au DRM : taille et qualité de l'image JPEG, Reed-Solomon
+    $('ssDrmSize').value = store.get('ssdrmsize', '320x240');
+    $('ssDrmQ').value = store.get('ssdrmq', '70');
+    $('ssDrmRs').value = store.get('ssdrmrs', '0');
+    for (const id of ['ssDrmSize', 'ssDrmQ', 'ssDrmRs']) $(id).addEventListener(id === 'ssDrmQ' ? 'input' : 'change', () => { store.set({ ssDrmSize: 'ssdrmsize', ssDrmQ: 'ssdrmq', ssDrmRs: 'ssdrmrs' }[id], $(id).value); ssCompose(); });
     tm.value = store.get('sstvtx', 'M1');
     tm.addEventListener('change', () => { store.set('sstvtx', tm.value); ssCompose(); });
     const defs = ['<CALL> DE <MYCALL>', '', 'UR <RST> · <MYLOC>', '', ''];

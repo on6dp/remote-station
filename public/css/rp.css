@@ -3846,3 +3846,18 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .ss-syr b { min-width: 70px; text-align: right; font-family: ui-monospace, Consolas, monospace; color: #b79cf0; }
 .ss-syt { margin-top: 2px; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #9fb0c8; border-top: 1px solid var(--v2-border-dark); padding-top: 8px; }
 .ss-sya { flex: 1; }
+/* 0.43.61 : SSTV numérique (DRM) — synchro DRM dans la réception, réglages DRM dans l'émission */
+.ss-drm { display: flex; align-items: center; gap: 6px; padding: 5px 8px; flex: none; border-bottom: 1px solid var(--v2-border-dark); font-size: 11px; flex-wrap: wrap; }
+.ss-drmt { font-weight: 900; letter-spacing: .08em; color: #9fb0c8; }
+.ss-drm.lock .ss-drmt { color: #22c55e; }
+.ss-drm i { font-style: normal; font-weight: 800; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; border: 1px solid #334155; color: #64748b; background: #0b1018; }
+.ss-drm i.on { color: #04121a; background: #22c55e; border-color: #22c55e; }
+.ss-drmi { flex: 1; min-width: 160px; color: #cfd8e6; font-weight: 700; }
+.ss-drm canvas { width: 40px; height: 40px; border-radius: 6px; border: 1px solid var(--v2-border-dark); background: #05080d; }
+.ss-drmopt { display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; padding: 6px 8px 0; font-size: 12px; font-weight: 700; color: #fff; flex: none; }
+.ss-drmopt label { display: inline-flex; align-items: center; gap: 6px; }
+.ss-drmopt select { background: #07090d; color: #fff; border: 1px solid var(--v2-border); border-radius: 6px; padding: 2px 6px; font-weight: 700; color-scheme: dark; }
+.ss-drmopt input[type=range] { width: 110px; }
+.ss-drmopt b { min-width: 22px; color: #F2CF4A; font-family: ui-monospace, Consolas, monospace; }
+.ss-drmopt[hidden] { display: none; }
+.ss-thumb.ss-drmth { border-color: #22c55e66; }
