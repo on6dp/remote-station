@@ -3707,6 +3707,30 @@
       }
     };
     $('whBtn').addEventListener('click', () => open($('whBox').hidden));
+    // Liste « Stations WSPR entendues » : hauteur réglable (poignée en dessous), gardée dans ce navigateur
+    { const cols = document.querySelector('#centerPanel .ws-cols');
+      if (cols && !cols.nextElementSibling?.classList.contains('ws-grip')) {
+        const g = document.createElement('div');
+        g.className = 'ws-grip';
+        g.title = 'Glisser vers le haut ou le bas : hauteur de la liste des stations entendues · double-clic : hauteur d’origine';
+        cols.after(g);
+        const setH = (h) => {
+          if (h > 0) { cols.style.height = h + 'px'; cols.style.flex = '0 0 auto'; cols.classList.add('ws-sized'); }
+          else { cols.style.height = ''; cols.style.flex = ''; cols.classList.remove('ws-sized'); }
+        };
+        setH(Number(store.get('wsh', '0')) || 0);
+        g.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          g.setPointerCapture(e.pointerId);
+          const zf = (window.RSZOOM && window.RSZOOM.z()) || 1, y0 = e.clientY, h0 = cols.getBoundingClientRect().height / zf;
+          const mv = (ev) => setH(Math.max(90, Math.round(h0 + (ev.clientY - y0) / zf)));
+          const up = () => { g.removeEventListener('pointermove', mv); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up); store.set('wsh', String(Math.round(cols.getBoundingClientRect().height / zf))); };
+          g.addEventListener('pointermove', mv);
+          g.addEventListener('pointerup', up);
+          g.addEventListener('pointercancel', up);
+        });
+        g.addEventListener('dblclick', () => { setH(0); store.set('wsh', '0'); });
+      } }
     $('whClose').addEventListener('click', () => open(false));
     $('whGo').addEventListener('click', whAsk);
     $('whCall').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') whAsk(); });

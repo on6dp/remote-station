@@ -804,6 +804,8 @@ Réglages du cluster (administrateur, `config.json`, puis redémarrer le service
 <a id="wspr"></a>
 ### 12.4 WSPR
 
+**Hauteur de la liste** (0.43.47) : la liste **Stations WSPR entendues** se règle en hauteur avec la petite poignée juste en dessous (glisser vers le haut ou le bas ; double-clic : hauteur d'origine), gardée dans ce navigateur. `Fermer` du cadre « Qui m'a entendu ? » le referme (comme un nouveau clic sur le bouton du haut).
+
 Le WSPR sert à étudier la propagation : des balises de faible puissance émettent leur indicatif, leur locator et leur puissance toutes les 2 minutes. Choisissez la bande dans la liste ; une dizaine de secondes après chaque minute paire, la liste se complète : heure, dB, DT, fréquence, dérive, indicatif, locator, puissance et distance depuis la station. Réception seulement.
 
 - Les balises WSPR occupent seulement **200 Hz** de la bande audio, de **1400 à 1600 Hz** (rappel en haut de l'onglet) : la fréquence de la liste (ex. 14,0956 MHz) est celle du VFO en USB / DATA-U.
