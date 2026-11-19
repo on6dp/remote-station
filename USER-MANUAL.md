@@ -333,7 +333,7 @@ The grey line below the bands is a reminder of useful actions; the message line 
 | `AM` / `AM-N`, `FM` / `FM-N`, `DATA-FM` | Amplitude modulation, frequency modulation (N = narrow), digital over FM (repeaters, packet…). |
 | IC-7300: `CW` / `CW-R`, `RTTY` / `RTTY-R`, `USB-D` / `LSB-D`, `AM-D`, `FM-D` | Icom names: CW = CW-U, CW-R = CW-L (reverse); **USB-D** replaces DATA-U for the dashboard digital modes. |
 
-Below the buttons, « Mode appliqué à **VFO A** » (mode applied to VFO A) shows which VFO changes mode (the one chosen with A / B).
+The chip in the title (**A · MAIN**, **B · SUB**, or **A** / **B** on a transceiver without SUB) shows which VFO changes mode: the one chosen with A / B, as in the Filter and DSP panels.
 
 **Filtres** (filters)
 

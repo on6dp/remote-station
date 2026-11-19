@@ -1823,7 +1823,18 @@
     $$('#stepKeys .btn').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.step) === step)));
     $('tgtA').setAttribute('aria-pressed', String(target === 'A'));
     $('tgtB').setAttribute('aria-pressed', String(target === 'B'));
-    $('modeTarget').textContent = 'VFO ' + target;
+    // Cadre Mode : VFO auquel le mode s'applique, dans le titre (même pastille que Filtre / DSP ; aussi sur les TRX sans SUB)
+    {
+      const h = document.querySelector('[data-panel="mode"] > .panel-h');
+      if (h) {
+        let t = h.querySelector('.ph-side');
+        if (!t) { t = document.createElement('span'); t.className = 'ph-side'; h.appendChild(t); }
+        const sb = !!(RIG().CONTROL && RIG().CONTROL.nbB);
+        t.textContent = target + (sb ? (target === 'B' ? ' · SUB' : ' · MAIN') : '');
+        t.title = 'Mode appliqué au VFO ' + target;
+        t.classList.toggle('b', target === 'B');
+      }
+    }
     // Cadres RF front end, Filtre, DSP : VFO réglé indiqué dans le titre (TRX avec réglages propres au côté SUB)
     const sideB = !!(RIG().CONTROL && RIG().CONTROL.nbB);
     for (const k of ['rf', 'filter', 'dsp']) {

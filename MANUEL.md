@@ -335,7 +335,7 @@ La ligne grise sous les bandes rappelle les gestes utiles ; la ligne de messages
 | `AM` / `AM-N`, `FM` / `FM-N`, `DATA-FM` | Modulation d'amplitude, de fréquence (N = étroit), numérique en FM (relais, packet…). |
 | IC-7300 : `CW` / `CW-R`, `RTTY` / `RTTY-R`, `USB-D` / `LSB-D`, `AM-D`, `FM-D` | Noms Icom : CW = CW-U, CW-R = CW-L (inversé) ; **USB-D** remplace DATA-U pour les modes numériques du dashboard. |
 
-Sous les boutons, « Mode appliqué à **VFO A** » indique quel VFO change de mode (celui choisi avec A / B).
+La pastille du titre (**A · MAIN**, **B · SUB**, ou **A** / **B** sur un TRX sans SUB) indique quel VFO change de mode : celui choisi avec A / B, comme dans les cadres Filtre et DSP.
 
 **Filtres**
 
