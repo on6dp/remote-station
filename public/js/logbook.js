@@ -22,7 +22,7 @@
     lotw: 'LoTW : mot de passe du site à refaire sur lotw.arrl.org ; le certificat n’est jamais dans Remote Station (gardez la sauvegarde .tbk de TQSL ; perdu = nouveau certificat à demander à l’ARRL).'
   };
   const keepNote = (s) => '<p class="lg-keep">🔒 <b>Vous seul connaissez ces identifiants.</b> Remote Station les garde sur le serveur sans <b>jamais les réafficher</b>, ni à vous ni à personne : <b>perdus, ils ne peuvent pas être récupérés</b> par Remote Station. Notez-les en lieu sûr. En cas de perte : ' + (s ? KEEP[s] : Object.values(KEEP).join(' ')) + '</p>';
-  const SYNC = { lotw: 'Synchronisation LoTW', eqsl: 'Synchronisation eQSL', clublog: 'Synchronisation ClubLog', qrz: 'Synchronisation QRZ Logbook' };
+  const SYNC = { lotw: 'Synchronisation LoTW', eqsl: 'Synchronisation eQSL', clublog: 'Synchronisation ClubLog', qrz: 'Synchronisation QRZ' };
   const SHORT = { lotw: 'LoTW', eqsl: 'eQSL', clublog: 'CL', qrz: 'QRZ' };
   const MODES = ['SSB', 'USB', 'LSB', 'CW', 'AM', 'FM', 'RTTY', 'FT8', 'FT4', 'FT2', 'JT65', 'JTTY', 'SSTV', 'PSK31', 'WSPR', 'C4FM', 'DATA'];
   const DIGI = ['FT8', 'FT4', 'FT2', 'JT65', 'JTTY', 'WSPR'];
@@ -140,7 +140,7 @@
           <button type="button" role="menuitem" data-s="lotw">Synchronisation LoTW…</button>
           <button type="button" role="menuitem" data-s="eqsl">Synchronisation eQSL…</button>
           <button type="button" role="menuitem" data-s="clublog">Synchronisation ClubLog…</button>
-          <button type="button" role="menuitem" data-s="qrz">Synchronisation QRZ Logbook…</button>
+          <button type="button" role="menuitem" data-s="qrz">Synchronisation QRZ…</button>
           <hr class="lg-msep">
           <button type="button" role="menuitem" data-a="cfg" title="Réglages des carnets en ligne, de QRZ.com et des ports UDP">⚙ Configuration…</button>
           <button type="button" role="menuitem" data-a="refs" title="Listes IOTA, WWFF, POTA, BOTA, LLOTA, SOTA téléchargées par le serveur : état et mise à jour">Synchronisation Listes…</button>
