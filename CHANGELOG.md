@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.37** — Pages CW et SSB : stations spotées à droite du titre, sur plusieurs lignes si besoin
 - **0.43.36** — Page CW : les deux VFO toujours affichés (écrans du dashboard), SPLIT au choix de l'opérateur
 - **0.43.35** — Pages des modes : sous-titre retiré, carte du bandeau juste après le titre
 - **0.43.34** — Pages des modes, carnet en grand et Propagation : carte complète du bandeau (logo, nom, lieu, version, horloges)

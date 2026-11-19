@@ -3763,3 +3763,8 @@ label.lg-txf:has(#lgTxf) select { height: 24px; padding: 0 6px; border-radius: 7
 .vfb-split.on { background: #ffd400; color: #000; border-color: #ffd400; }
 /* 0.43.33 : WSPR — « Qui m'a entendu ? » sur la ligne de la bande, à droite du décompte (une ligne de gagnée) */
 .dg-bar #whBtn.ws-whb { margin-left: 12px; align-self: center; }
+/* 0.43.37 : pages CW et SSB — boutons des stations spotées à droite du titre « Stations spotées sur … », sur plusieurs lignes si besoin */
+.ssb-pan.ssb-prob { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 14px; row-gap: 4px; align-items: start; align-content: start; }
+.ssb-pan.ssb-prob > h3 { grid-column: 1; margin: 0; white-space: nowrap; line-height: 26px; }
+.ssb-pan.ssb-prob > .ssb-prl { grid-column: 2; }
+.ssb-pan.ssb-prob > .cwp-note { grid-column: 1 / -1; }
