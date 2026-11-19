@@ -4481,8 +4481,8 @@
       try { localStorage.setItem('rs.dg.sstvsrc', JSON.stringify(ssSrc)); return; } catch (e) { if (!ssSrc.length) return; ssSrc.shift(); }
     }
   }
-  function ssLoadFiles(files) {
-    for (const f of Array.from(files || []).slice(0, 10)) {
+  function ssLoadFiles(files, onAdded) {
+    for (const f of Array.from(files || []).slice(0, onAdded ? 1 : 10)) {
       if (!/^image\//.test(f.type)) continue;
       const rd = new FileReader();
       rd.onload = () => {
@@ -4500,6 +4500,7 @@
           ssSel = 'u' + (ssSrc.length - 1);
           store.set('sstvsel', ssSel);
           ssSaveSrc();
+          if (onAdded) onAdded(ssSel);
           ssThumbs();
           ssCompose();
         };
@@ -4683,9 +4684,35 @@
         const p = document.createElement('span');
         p.textContent = '+';
         b.appendChild(p);
-        b.title = 'Emplacement libre n° ' + (i + 1) + ' : clic = y ranger l’image en cours (fond et textes)';
+        b.title = 'Emplacement libre n° ' + (i + 1) + ' : clic = y ranger l’image en cours (fond et textes) · 📁 = choisir une image sur votre PC pour cet emplacement';
       }
       b.appendChild(n);
+      // 📁 : choisir une image du PC directement pour cet emplacement (les textes de l'emplacement sont gardés)
+      const fb = document.createElement('span');
+      fb.className = 'ss-slot-f';
+      fb.textContent = '📁';
+      fb.title = 'Choisir une image sur votre PC pour l’emplacement n° ' + (i + 1);
+      fb.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'image/*';
+        inp.addEventListener('change', () => {
+          ssLoadFiles(inp.files, (sel) => {
+            if (ssSlots[i]) ssSlotLoad(i); // textes de l'emplacement repris, puis son fond remplacé par l'image choisie
+            ssSel = sel;
+            store.set('sstvsel', sel);
+            const c = ssCfgNow();
+            c.sel = ssSelOut(c.sel);
+            ssSlots[i] = c;
+            ssSlotOn = i;
+            ssSlotsStore();
+            ssSlotsDraw();
+          });
+        });
+        inp.click();
+      });
+      b.appendChild(fb);
       b.addEventListener('click', () => {
         // Nouveau clic sur l'image prête déjà choisie : on la lâche (les retouches ne la modifient plus)
         if (ssSlots[i] && i === ssSlotOn) { ssSlotOn = -1; ssSlotsStore(); ssSlotsDraw(); return; }

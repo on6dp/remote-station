@@ -887,7 +887,7 @@ Le WSPR sert à étudier la propagation : des balises de faible puissance émett
 
 **Enregistrer une image reçue** (0.43.53) : boutons `PNG` (sans perte) ou `JPG` (plus léger) en haut de la fenêtre Réception SSTV.
 
-**5 images prêtes à émettre** (0.43.50) : sous les vignettes de fond, la ligne **Prêtes à émettre** a 5 emplacements. Clic sur un emplacement libre (+) : l'image en cours (fond et trois lignes de texte, taille, couleur) y est rangée. Clic sur une image prête : elle revient dans l'éditeur, prête à partir avec `Émettre` ; ses retouches (texte, fond) y restent gardées. Nouveau clic : la lâcher. Clic droit : vider l'emplacement. Les balises (<CALL>, <RST>…) sont remplacées au moment de l'émission. Gardées dans ce navigateur.
+**5 images prêtes à émettre** (0.43.50) : sous les vignettes de fond, la ligne **Prêtes à émettre** a 5 emplacements. Clic sur un emplacement libre (+) : l'image en cours (fond et trois lignes de texte, taille, couleur) y est rangée. Clic sur une image prête : elle revient dans l'éditeur, prête à partir avec `Émettre` ; ses retouches (texte, fond) y restent gardées. Nouveau clic : la lâcher. Le petit bouton `📁` en haut à droite de chaque emplacement choisit une image sur votre PC directement pour cet emplacement (0.43.55 ; ses textes sont gardés). Clic droit : vider l'emplacement. Les balises (<CALL>, <RST>…) sont remplacées au moment de l'émission. Gardées dans ce navigateur.
 
 **Les deux VFO** (0.43.42) : dans la fenêtre des modes numériques, cet onglet affiche en haut les deux écrans VFO du dashboard (VFO A / MAIN et VFO B / SUB), avec SPLIT, A ⇄ B et A → B, comme les onglets RTTY et WSPR.
 
