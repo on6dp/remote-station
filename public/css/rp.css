@@ -3677,3 +3677,14 @@ body.panel-popup > .vfo > .detach-btn.floating { top: -22px; right: 2px; }
 /* Bandeau de propagation : tuiles centrées dans leur cadre bleu (même marge à gauche et à droite) */
 .tune-panel > .spw { justify-content: center; }
 .cwp-head h1 .spw.spw-head { justify-content: center; }
+/* Fenêtre « Enregistrer le QSO » (FT, RTTY, CW…) : même fond jaune clair que la fiche QSO du carnet (Détail QSO),
+   intitulés foncés, cases blanches ; titre « TX call — ENREGISTRER LE QSO » en blanc gras sur bandeau bleu nuit */
+dialog.qso-log { background: #f6efc9; border-color: #d9c56a; color: #1a1a1a; }
+dialog.qso-log > form > h3.ql-title { margin: -14px -16px 2px; padding: 11px 16px; font-size: 14px; color: #fff; font-weight: 900; letter-spacing: .8px; text-transform: uppercase;
+  background: linear-gradient(90deg, #1b3a66 0%, #14305a 45%, #102748 100%); border-bottom: 1px solid #2c5185; border-radius: 10px 10px 0 0; }
+dialog.qso-log .ql-g label { color: #1a1a1a !important; font-weight: 800; }
+dialog.qso-log input:not([type='checkbox']), dialog.qso-log select, dialog.qso-log textarea { background: #fff !important; color: #111 !important; font-weight: 700; border-color: #b9a85a !important; }
+dialog.qso-log input[name='call'] { color: #003a8c !important; font-weight: 800; }
+dialog.qso-log select option { background: #fff; color: #111; }
+dialog.qso-log .spotlog, dialog.qso-log .ql-note, dialog.qso-log p { color: #1a1a1a; }
+dialog.qso-log .btn { color: #fff; font-weight: 800; }

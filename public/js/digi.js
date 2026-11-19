@@ -6056,7 +6056,10 @@
     const dlg = doc.createElement('dialog');
     dlg.id = 'qsoLogDlg';
     dlg.className = 'macro-dlg qso-log';
-    dlg.innerHTML = '<form method="dialog"><h3>Enregistrer le QSO</h3><div class="ql-g">' +
+    // Titre : TX call sous lequel le QSO va dans le carnet, puis « Enregistrer le QSO » (bandeau bleu nuit, blanc gras)
+    let qlTxc = '';
+    try { const st = api && api.state(); qlTxc = String((st && st.txCall) || '').toUpperCase(); } catch (e) { qlTxc = ''; }
+    dlg.innerHTML = '<form method="dialog"><h3 class="ql-title">' + (qlTxc ? esc(qlTxc) + ' — ' : '') + 'Enregistrer le QSO</h3><div class="ql-g">' +
       '<label>Indicatif <input name="call" maxlength="15" value="' + esc(dx.call) + '"></label>' +
       '<label>Date UTC <input name="date" type="date" value="' + ymd(t0) + '"></label>' +
       '<label>Début UTC <input name="time" maxlength="5" value="' + hhmm(t0) + '"></label>' +
