@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.26** — Horloges UTC / Liège / date sur les pages des modes, le carnet en grand et la page Propagation
 - **0.43.25** — Nouveau bandeau du haut : nom et lieu, heure UTC, heure locale de Liège et date en trois cadres ; indicatifs retirés du bandeau
 - **0.43.24** — Carnet en grand sans filtre : bandeau GLOBAL LOGBOOK
 - **0.43.23** — Carnet en grand : il reprend le Filtre log et les filtres de colonnes du carnet d'où il est ouvert
