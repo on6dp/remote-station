@@ -14,6 +14,39 @@
   const xr = (c) => { const m = /^([ABCMX])/.exec(String(c || '')); return m ? m[1] : ''; };
   const sNum = (t) => { const m = /S(\d)(?:\s*-\s*S?(\d))?/i.exec(String(t || '')); return m ? Number(m[2] || m[1]) : null; };
 
+  // ---- Lever / coucher du soleil (algorithme de SunCalc, V. Agafonkin) au locator de la station, en UTC
+  const RAD = Math.PI / 180, DAY = 864e5, J1970 = 2440588, J2000 = 2451545, OBL = RAD * 23.4397, J0 = 0.0009;
+  function gridLL(g) {
+    const m = /^([A-R])([A-R])(\d)(\d)(?:([A-X])([A-X]))?/i.exec(String(g || ''));
+    if (!m) return null;
+    const U = (c) => c.toUpperCase().charCodeAt(0) - 65;
+    let lon = U(m[1]) * 20 - 180 + Number(m[3]) * 2, lat = U(m[2]) * 10 - 90 + Number(m[4]);
+    if (m[5]) { lon += U(m[5]) * (5 / 60) + 2.5 / 60; lat += U(m[6]) * (2.5 / 60) + 1.25 / 60; } else { lon += 1; lat += 0.5; }
+    return { lat, lon };
+  }
+  function sunTimes(date, lat, lon) {
+    const lw = RAD * -lon, phi = RAD * lat;
+    const d = date / DAY - 0.5 + J1970 - J2000;
+    const n = Math.round(d - J0 - lw / (2 * Math.PI));
+    const transit = (ht) => J0 + (ht + lw) / (2 * Math.PI) + n;
+    const ds = transit(0);
+    const M = RAD * (357.5291 + 0.98560028 * ds);
+    const L = M + RAD * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M)) + RAD * 102.9372 + Math.PI;
+    const dec = Math.asin(Math.sin(OBL) * Math.sin(L));
+    const tJ = (a) => J2000 + a + 0.0053 * Math.sin(M) - 0.0069 * Math.sin(2 * L);
+    const noon = tJ(ds);
+    const fromJ = (j) => (j + 0.5 - J1970) * DAY;
+    const at = (h) => {
+      const c = (Math.sin(h * RAD) - Math.sin(phi) * Math.sin(dec)) / (Math.cos(phi) * Math.cos(dec));
+      if (c < -1 || c > 1) return null; // soleil qui ne se lève pas ou ne se couche pas
+      const set = tJ(transit(Math.acos(c)));
+      return [fromJ(noon - (set - noon)), fromJ(set)];
+    };
+    const r = at(-0.833), c = at(-6);
+    return { rise: r && r[0], set: r && r[1], dawn: c && c[0], dusk: c && c[1] };
+  }
+  const utc = (t) => (t ? new Date(t).toISOString().slice(11, 16) : '—');
+
   /** Liste des tuiles, dans l'ordre d'importance (le bandeau n'affiche que celles qui tiennent) */
   function tiles(m) {
     const d = (m && m.data) || {}, r = (m && m.rt) || {};
@@ -21,6 +54,14 @@
     const T = [];
     T.push({ k: 'sfi', l: 'Flux solaire (SFI)', s: 'SFI', v: fr(d.sfi), c: lvl(d.sfi, 90, 150, true), t: d.sfi == null ? '' : d.sfi >= 150 ? 'Élevé' : d.sfi >= 90 ? 'Moyen' : 'Faible', n: 'Flux radio solaire à 10,7 cm : plus il est haut, mieux passent les bandes hautes (20 à 10 m)' });
     T.push({ k: 'kp', l: 'Indice Kp (temps réel)', s: 'Kp', v: fr(kp, 1), c: kp == null ? '' : kp < 3 ? 'g' : kp < 5 ? 'o' : 'r', t: kp == null ? '' : kp < 3 ? 'Calme' : kp < 4 ? 'Instable' : kp < 5 ? 'Actif' : 'Orage G' + Math.min(5, Math.floor(kp) - 4), n: 'Agitation géomagnétique (0 à 9)' + (r.kp3h != null ? ' — moyenne 3 h : ' + fr(r.kp3h, 1) : ''), line: r.kpLine });
+    const ll = gridLL(m && m.grid);
+    if (ll) {
+      const now = Date.now(), s = sunTimes(now, ll.lat, ll.lon);
+      const day = s.rise && s.set && now >= s.rise && now < s.set;
+      const grey = (s.rise && Math.abs(now - s.rise) < 1800e3) || (s.set && Math.abs(now - s.set) < 1800e3);
+      T.push({ k: 'sun', l: 'Soleil (UTC)', s: 'Soleil UTC', v: '↑' + utc(s.rise) + ' ↓' + utc(s.set), c: grey ? 'o' : day ? 'g' : '', t: grey ? 'Ligne grise' : day ? 'Jour' : 'Nuit',
+        n: 'Lever et coucher du soleil à la station (' + m.grid + '), en heure UTC (GMT) ; crépuscule civil (ligne grise) : aube ' + utc(s.dawn) + ', crépuscule ' + utc(s.dusk) + ' UTC' });
+    }
     T.push({ k: 'muf', l: 'MUF estimée (' + (r.mufSt || 'Dourbes') + ')', s: 'MUF', v: fr(r.muf, 1), u: 'MHz', c: r.muf == null ? '' : r.muf >= 21 ? 'g' : r.muf >= 14 ? 'o' : 'r',
       t: r.muf == null ? '' : 'Jusqu’au ' + ((BANDS.find((b) => r.muf >= b[0]) || [0, '80 m'])[1]), n: 'Fréquence maximale utilisable pour un bond de 3 000 km, mesurée par l’ionosonde de ' + (r.mufSt || 'Dourbes') + (r.fof2 != null ? ' : foF2 ' + fr(r.fof2, 1) + ' MHz' + (r.mf != null ? ' × facteur M(3000)F2 ' + fr(r.mf, 2) + ' = MUF ' + fr(r.muf, 1) + ' MHz' : '') : '') + (r.mufAt ? ' à ' + new Date(r.mufAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' }) : '') });
     T.push({ k: 'a', l: 'Indice A', s: 'A', v: fr(d.a), c: lvl(d.a, 10, 30), t: d.a == null ? '' : d.a < 10 ? 'Calme' : d.a < 30 ? 'Instable' : 'Perturbé', n: 'Agitation géomagnétique moyenne sur 24 h' });
@@ -61,5 +102,31 @@
     el.hidden = !(m && (m.data || (m.rt && m.rt.kp != null)));
   }
 
-  window.SPW = { tiles, strip, spark, esc, fr };
+  /**
+   * Fenêtres des modes (TRX DIGI, TRX SSB, TRX CW) : même bandeau, alimenté par le dashboard qui les a ouvertes
+   * (RSHOST : messages « prop » du serveur ; RSPROP : le dernier reçu). Clic : page Propagation.
+   */
+  function attach(el) {
+    if (!el) return;
+    let host = null, untap = null, last = null;
+    const show = (m) => { if (m && m.t === 'prop') { last = m; strip(el, m); } };
+    const link = () => {
+      let w = window.opener, hw = null;
+      for (let i = 0; i < 4 && w; i++) { try { if (w.closed) break; if (w.RSHOST) { hw = w; break; } w = w.opener; } catch (e) { break; } }
+      const h = hw ? hw.RSHOST : null;
+      if (h === host) return;
+      if (untap) { try { untap(); } catch (e) { /* */ } }
+      host = h; untap = null;
+      if (!h) return;
+      try { untap = h.tap ? h.tap(show) : null; if (hw.RSPROP) show(hw.RSPROP); else h.api.send({ t: 'prop_get' }); } catch (e) { /* dashboard fermé */ }
+    };
+    link();
+    setInterval(link, 5000);
+    setInterval(() => { if (last) strip(el, last); }, 60000); // soleil : jour / ligne grise / nuit
+    const go = () => window.open('/prop', 'rs-prop', 'width=1280,height=860');
+    el.addEventListener('click', go);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+  }
+
+  window.SPW = { tiles, strip, spark, esc, fr, attach, sunTimes, gridLL };
 })();

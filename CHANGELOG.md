@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.3** — Bandeau de propagation aussi dans TRX DIGI, TRX SSB et TRX CW ; lever et coucher du soleil en UTC à la station ; TX CALL dans un encadré jaune arrondi partout
 - **0.43.2** — Propagation : facteur M(3000)F2 de l’ionosonde de Dourbes (MUF = foF2 × M) au survol de la tuile MUF et sur la page Propagation
 - **0.43.1** — Cadre Mode : la pastille du titre (A · MAIN / B · SUB) remplace la ligne « Mode appliqué à VFO … »
 - **0.43.0** — Propagation et météo spatiale : bandeau dans la barre Step / Bandes (SFI, Kp temps réel, MUF de Dourbes, A, rayons X, Bz / Bt, vent solaire, échelles NOAA, bruit, taches, protons, aurore ; NOAA SWPC toutes les 5 min) et page Propagation (/prop) avec courbes et historique jour par jour ; TX CALL en blanc gras

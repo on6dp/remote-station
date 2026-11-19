@@ -20,6 +20,8 @@
     <div class="cwp-txbig" id="cwpTx">RX</div>
     <button class="ctab-detach cwp-back" type="button" id="cwpBack" title="Fermer cette page et revenir à la page qui l’a ouverte (dashboard ou face avant)">RETOUR</button>
   </header>
+  <!-- Propagation et météo spatiale (spw.js), comme dans le dashboard : clic = page Propagation -->
+  <div class="spw spw-page" id="spw" role="link" tabindex="0" hidden></div>
   <p class="cwp-orphan" id="cwpOrphan" hidden>Cette page doit être ouverte depuis le dashboard (onglet SSB) ou la face avant (bouton SSB de la ligne MODES). Si le dashboard a été fermé, rouvrez-le : cette page s’y raccrochera.</p>
   <div class="cwp-wrap">
   <!-- Carte de bande (spots du DX cluster) de la bande du TRX, à gauche -->
@@ -157,5 +159,7 @@
 <script src="/js/contests.js"></script>
 <script src="/js/ctlchip.js"></script>
 <script src="/js/ssbpage.js"></script>
+<script src="/js/spw.js"></script>
+<script>SPW.attach(document.getElementById('spw'));</script>
 </body>
 </html>

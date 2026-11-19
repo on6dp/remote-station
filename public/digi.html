@@ -11,6 +11,8 @@
 <body class="digi-popup" data-digi-popup="1">
   <!-- Fenêtre séparée des modes numériques : elle utilise la connexion du dashboard qui l'a ouverte -->
   <p class="dg-orphan" id="dgOrphan" hidden>Cette fenêtre doit être ouverte depuis le dashboard (bouton ⧉ à côté des onglets). Si le dashboard a été fermé, rouvrez-le : cette fenêtre s'y raccrochera.</p>
+  <!-- Propagation et météo spatiale (spw.js), comme dans le dashboard : clic = page Propagation -->
+  <div class="spw spw-page" id="spw" role="link" tabindex="0" hidden></div>
   <section class="panel activity" id="centerPanel">
     <div class="ctabs" role="tablist" aria-label="Modes numériques" id="ctabs"></div>
   </section>
@@ -23,5 +25,7 @@
 <script src="/js/ctlchip.js"></script>
 <script src="/js/vfobox.js"></script>
 <script src="/js/digi.js"></script>
+<script src="/js/spw.js"></script>
+<script>SPW.attach(document.getElementById('spw'));</script>
 </body>
 </html>

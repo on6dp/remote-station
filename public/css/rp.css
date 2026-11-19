@@ -3642,3 +3642,7 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 /* TX CALL : indicatifs en blanc gras dans toutes les listes (dashboard, carnet, pages TRX DIGI / SSB / CW) */
 .dg-txc select, .ctabs .dash-txc select, .ctabs .ctab-txc select, .cwp-txcl select, .cwp-head .cwp-txcl select, .lg-row .lg-txc select, .lg-txc select, .msgs-h .txc select { color: #fff !important; font-weight: 800 !important; }
 .dg-txc select option, .dash-txc select option, .ctab-txc select option, .cwp-txcl select option, .lg-txc select option, .msgs-h .txc select option { color: #fff; font-weight: 800; background: #0d141d; }
+.spw-page { margin: 6px 12px 4px; justify-content: flex-start; align-self: stretch; height: 60px; flex: none; }
+/* TX CALL : encadré jaune arrondi partout (comme celui du carnet), liste aux bords arrondis */
+.cwp-txcl, .cwp-head .cwp-txcl, .dg-txc, .ctabs .dash-txc, .ctabs .ctab-txc, .msgs-h .txc { border: 1.5px solid #ffd400; border-radius: 10px; padding: 3px 6px 3px 10px; background: rgba(255, 212, 0, .06); font-weight: 800; }
+.cwp-txcl select, .cwp-head .cwp-txcl select, .dg-txc select, .ctabs .dash-txc select, .ctabs .ctab-txc select, .msgs-h .txc select { border-radius: 7px !important; }

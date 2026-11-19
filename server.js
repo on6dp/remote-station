@@ -715,7 +715,7 @@ const WIN_INSTALLER = '0.42.42';
 // Facteurs de propagation (hamqsl.com, N0NBH) : relus toutes les 30 min, envoyés aux pages qui les affichent (page SSB)
 // Temps réel (NOAA SWPC, ionosonde de Dourbes) toutes les 5 min ; historique par jour dans logs/prop-history.json
 const PROP_WATCH = new Set(); // pages /prop ouvertes (connexion à part, session d'un membre)
-const PROP = new (require('./lib/prop.js').Prop)((msg) => { for (const c of ops) if (c.open && c.user && c.propSub) send(c, msg); for (const c of PROP_WATCH) send(c, msg); }, { histFile: path.join(LOG_DIR, 'prop-history.json') });
+const PROP = new (require('./lib/prop.js').Prop)((msg) => { for (const c of ops) if (c.open && c.user && c.propSub) send(c, msg); for (const c of PROP_WATCH) send(c, msg); }, { histFile: path.join(LOG_DIR, 'prop-history.json'), grid: () => cfg.stationGrid || '' });
 // Nouvelle version sur GitHub : « 🔔 Mise à jour » au dashboard des administrateurs (lib/update.js) ; updateCheck: false pour couper
 const UPD = new (require('./lib/update.js').Updater)({ root: ROOT, version: VERSION, enabled: cfg.updateCheck !== false,
   onChange: (st) => { for (const c of ops) if (c.open && c.user && c.user.admin) send(c, st); } });

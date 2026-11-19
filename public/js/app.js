@@ -2211,7 +2211,7 @@
       }
       if (m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values') { if (VX()) VX().onMessage(m); return; }
       // Propagation : bandeau de la barre Step / Bandes (le message suit aussi son chemin vers les autres pages)
-      if (m.t === 'prop' && window.SPW) { SPW.strip($('spw'), m); }
+      if (m.t === 'prop') { window.RSPROP = m; if (window.SPW) SPW.strip($('spw'), m); }
       if (DG() && DG().onMessage(m)) return;
       if (m.t === 'hello') {
         me = m;
@@ -2722,6 +2722,7 @@
     showLogin('');
   }
   setInterval(() => { if (st && st.ptt && st.ptt.active) render(); }, 500);
+  setInterval(() => { if (window.RSPROP && window.SPW) SPW.strip($('spw'), window.RSPROP); }, 60000); // soleil : jour / ligne grise / nuit
   // Bandeau de propagation : clic ou Entrée → page Propagation (fenêtre à part)
   { const sp = $('spw'); if (sp) { const go = () => window.open('/prop', 'rs-prop', 'width=1280,height=860'); sp.addEventListener('click', go); sp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); }); } }
 })();
