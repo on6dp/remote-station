@@ -3718,7 +3718,23 @@
           if (h > 0) { cols.style.height = h + 'px'; cols.style.flex = '0 0 auto'; cols.classList.add('ws-sized'); }
           else { cols.style.height = ''; cols.style.flex = ''; cols.classList.remove('ws-sized'); }
         };
-        setH(Number(store.get('wsh', '0')) || 0);
+        // Cadre « Qui m'a entendu ? » fermé : la liste prend toute la hauteur (pas de poignée) ; ouvert : la hauteur réglée
+        // à la poignée (170 px au départ), pour voir les deux cadres
+        const sync = () => {
+          const open = !$('whBox').hidden;
+          g.hidden = !open;
+          if (open) { setH(Number(store.get('wsh', '0')) || 170); return; }
+          // Fenêtre séparée : la liste descend jusqu'au bas de la fenêtre (pas d'ascenseur de page)
+          if (POPUP && cols.offsetParent) {
+            const zf = (window.RSZOOM && window.RSZOOM.z()) || 1;
+            setH(Math.max(120, Math.floor((window.innerHeight - cols.getBoundingClientRect().top) / zf - 14)));
+          } else setH(0);
+        };
+        sync();
+        new MutationObserver(sync).observe($('whBox'), { attributes: true, attributeFilter: ['hidden'] });
+        window.addEventListener('resize', () => { clearTimeout(sync.t); sync.t = setTimeout(sync, 120); });
+        document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.ctab')) setTimeout(sync, 80); });
+        setInterval(() => { if (cols.offsetParent && $('whBox').hidden) sync(); }, 1000); // cascade ou VFO qui changent de hauteur
         g.addEventListener('pointerdown', (e) => {
           e.preventDefault();
           g.setPointerCapture(e.pointerId);
@@ -3729,7 +3745,7 @@
           g.addEventListener('pointerup', up);
           g.addEventListener('pointercancel', up);
         });
-        g.addEventListener('dblclick', () => { setH(0); store.set('wsh', '0'); });
+        g.addEventListener('dblclick', () => { store.set('wsh', '0'); sync(); });
       } }
     $('whClose').addEventListener('click', () => open(false));
     $('whGo').addEventListener('click', whAsk);

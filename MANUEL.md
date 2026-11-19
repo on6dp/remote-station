@@ -804,7 +804,7 @@ Réglages du cluster (administrateur, `config.json`, puis redémarrer le service
 <a id="wspr"></a>
 ### 12.4 WSPR
 
-**Hauteur de la liste** (0.43.47) : la liste **Stations WSPR entendues** se règle en hauteur avec la petite poignée juste en dessous (glisser vers le haut ou le bas ; double-clic : hauteur d'origine), gardée dans ce navigateur. `Fermer` du cadre « Qui m'a entendu ? » le referme (comme un nouveau clic sur le bouton du haut).
+**Hauteur de la liste** (0.43.47, 0.43.48) : cadre « Qui m'a entendu ? » fermé, la liste **Stations WSPR entendues** descend jusqu'au bas de la fenêtre ; ouvert, la liste se réduit pour laisser voir les deux cadres, et sa hauteur se règle avec la petite poignée juste en dessous (glisser vers le haut ou le bas ; double-clic : hauteur d'origine), gardée dans ce navigateur. `Fermer` du cadre « Qui m'a entendu ? » le referme (comme un nouveau clic sur le bouton du haut).
 
 Le WSPR sert à étudier la propagation : des balises de faible puissance émettent leur indicatif, leur locator et leur puissance toutes les 2 minutes. Choisissez la bande dans la liste ; une dizaine de secondes après chaque minute paire, la liste se complète : heure, dB, DT, fréquence, dérive, indicatif, locator, puissance et distance depuis la station. Réception seulement.
 

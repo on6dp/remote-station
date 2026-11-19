@@ -794,7 +794,7 @@ Cluster settings (administrator, `config.json`, then restart the service): `clus
 <a id="wspr"></a>
 ### 12.4 WSPR
 
-**List height** (0.43.47): the **Stations WSPR entendues** list height is set with the small grip just below it (drag up or down; double-click: original height), kept in this browser. `Fermer` in the « Qui m'a entendu ? » box closes it (like another click on the top button).
+**List height** (0.43.47, 0.43.48): with the « Qui m'a entendu ? » box closed, the **Stations WSPR entendues** list goes down to the bottom of the window; open, the list shrinks so both boxes are visible, and its height is set with the small grip just below it (drag up or down; double-click: original height), kept in this browser. `Fermer` in the « Qui m'a entendu ? » box closes it (like another click on the top button).
 
 WSPR is used to study propagation: low-power beacons transmit their callsign, locator and power every 2 minutes. Choose the band in the list; about ten seconds after each even minute, the list grows: time, dB, DT, frequency, drift, callsign, locator, power and distance from the station. Receive only.
 

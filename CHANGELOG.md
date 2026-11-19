@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.48** — WSPR : liste pleine hauteur quand Qui m'a entendu ? est fermé, réduite quand il est ouvert
 - **0.43.47** — WSPR : Fermer de Qui m'a entendu ? corrigé ; liste des stations entendues réglable en hauteur
 - **0.43.46** — WSPR : réglages de la cascade (Gain, Zéro, Plat, Couleurs, Vitesse) à droite de Qui m'a entendu ?
 - **0.43.45** — WSPR : décompte et Qui m'a entendu ? juste à droite de la bande audio

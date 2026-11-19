@@ -3801,3 +3801,4 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .ws-cols.ws-sized .ws-list { flex: 1 1 auto; min-height: 0; max-height: none; overflow: auto; }
 .ws-grip { height: 8px; margin: 2px 0 0; border-radius: 4px; cursor: ns-resize; background: repeating-linear-gradient(90deg, transparent 0 6px, rgba(195,207,222,.35) 6px 10px) center / 60px 2px no-repeat, rgba(255,255,255,.03); touch-action: none; }
 .ws-grip:hover { background-color: rgba(88,166,255,.18); }
+.ws-grip[hidden] { display: none !important; }
