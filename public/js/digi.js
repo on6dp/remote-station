@@ -6881,7 +6881,8 @@
     const k = txt + cls + rtIsAdmin;
     if (el.dataset.k === k) return;
     el.dataset.k = k;
-    el.textContent = txt;
+    // Administrateurs, sortie active : niveau et ALC sont dans les réglages à côté → texte réduit à « Émission FT » (détail au survol)
+    el.textContent = rtIsAdmin && o && o.ok && !cls ? 'Émission FT' : txt;
     el.title = txt + (txt ? ' — réglage : page Station du PC du club (administrateurs), cadre « Audio du TRX » : sortie son vers le TRX et niveau d’émission' : '');
     el.className = 'dg-txout' + (cls ? ' ' + cls : '');
     if (rtIsAdmin && txt) {
@@ -6889,7 +6890,7 @@
       if (o && (o.ok || o.paused)) {
         const box = document.createElement('span');
         box.className = 'dg-txadm';
-        box.innerHTML = ' · <button type="button" class="dg-mini" data-lv="-5" title="Baisser le niveau d’émission de 5 %">−</button><b>' + o.level + ' %</b><button type="button" class="dg-mini" data-lv="5" title="Monter le niveau d’émission de 5 %">+</button>' +
+        box.innerHTML = ' · Niveau <button type="button" class="dg-mini" data-lv="-5" title="Baisser le niveau d’émission de 5 %">−</button><b>' + o.level + ' %</b><button type="button" class="dg-mini" data-lv="5" title="Monter le niveau d’émission de 5 %">+</button>' +
           ' <label title="Limite d’ALC en émission numérique : au-delà, la page Station baisse toute seule le niveau d’émission (administrateurs)">ALC max <select>' +
           [0, 5, 10, 15, 20, 25, 30, 40, 50, 70, 100].map((v) => '<option value="' + v + '"' + (v === (o.alcMax || 0) ? ' selected' : '') + '>' + (v ? v + ' %' : 'sans limite') + '</option>').join('') + '</select></label>';
         box.querySelectorAll('[data-lv]').forEach((b) => b.addEventListener('click', (e) => {
