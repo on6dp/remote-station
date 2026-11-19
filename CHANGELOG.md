@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.60** — Synchro SSTV : départ sans VIS, correction de pente automatique ou manuelle, recentrage de la dernière image
 - **0.43.59** — SSTV : textes verticaux à gauche et à droite de l'image ; titre Émission SSTV
 - **0.43.58** — HamDRM étape 1 : modem DRM (émetteur, récepteur, Reed-Solomon) compilé depuis QSSTV, reconstitution des fichiers ; pas encore dans l'interface
 - **0.43.57** — SSTV : PNG et JPG côte à côte, titre de la réception sur une ligne

@@ -322,6 +322,8 @@ const freqCmd = { A: null, B: null };
 const FREQ_CMD_HOLD = 2500;
 // Derniers réglages demandés (contrôles du pilote) : même garde que la fréquence
 const ctlCmd = {};
+// Synchro SSTV : correction automatique de pente du décodeur (commun à tous)
+let sstvAuto = true;
 let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
@@ -569,6 +571,7 @@ function updateDigi() {
   if (modes.size) startDigi();
   if (digi.worker) {
     digi.worker.postMessage({ t: 'modes', modes: Array.from(modes) });
+    if (!sstvAuto && modes.has && modes.has('SSTV')) digi.worker.postMessage({ t: 'sstv_ctl', op: 'auto', on: false });
     // Décodage FT du récepteur SUB : quelqu'un l'a demandé (ou l'émission auto est sur le VFO-B) et le TRX le permet
     let wantB = false;
     for (const c of ops) if (ftDualConn(c)) wantB = true;
@@ -633,6 +636,9 @@ function onDigi(m) {
     } else if (e.t === 'line') {
       const it = sstvStore.line(e);
       if (it) { const fr = sstvStore.frame(it, e.y); for (const c of watchers) c.send(fr); }
+    } else if (e.t === 'redo') {
+      const it = sstvStore.redo(e);
+      if (it) for (const c of watchers) send(c, { t: 'sstv_end', img: sstvStore.meta(it), refreshed: true, slant: e.slant, redo: true });
     } else if (e.t === 'end') {
       const it = sstvStore.end(e);
       if (it) for (const c of watchers) send(c, { t: 'sstv_end', img: sstvStore.meta(it), refreshed: !!e.rgb, slant: e.slant, why: e.why });
@@ -3990,10 +3996,22 @@ function onOperator(conn, m) {
       if (conn.ftDual && digi.histB[mode] && (changed || m.hist)) send(conn, { t: 'ftx_hist', mode, items: digi.histB[mode], side: 'B' });
       if (mode === 'JTTY' && (changed || m.hist)) send(conn, { t: 'jtty_hist', items: Array.from(digi.jtty.values()) });
       if (mode === 'JTTY' && conn.ftDual && (changed || m.hist)) send(conn, { t: 'jtty_hist', items: Array.from(digi.jttyB.values()), side: 'B' });
-      if (mode === 'SSTV' && (changed || m.hist)) send(conn, { t: 'sstv_list', items: sstvStore.list() });
+      if (mode === 'SSTV' && (changed || m.hist)) { send(conn, { t: 'sstv_list', items: sstvStore.list() }); send(conn, { t: 'sstv_opt', auto: sstvAuto }); }
       return;
     }
 
+    case 'sstv_ctl': {
+      // Synchro SSTV : le décodeur est commun à tous les membres, seul celui qui a la main (ou un administrateur) le règle
+      if (conn.digi !== 'SSTV') return;
+      if (controller !== conn && !conn.user.admin) return send(conn, { t: 'notice', level: 'warn', msg: 'Synchro SSTV : prenez la main pour régler la réception (elle est commune à tous les membres).' });
+      const op = String(m.op || '');
+      if (['force', 'auto', 'redo'].indexOf(op) < 0 || !digi.worker) return;
+      if (op === 'auto') sstvAuto = !!m.on;
+      digi.worker.postMessage({ t: 'sstv_ctl', op, mode: String(m.mode || '').slice(0, 8), on: !!m.on, ppm: m.ppm == null ? null : Number(m.ppm), dx: Number(m.dx) || 0 });
+      if (op === 'auto') for (const c of ops) if (c.digi === 'SSTV') send(c, { t: 'sstv_opt', auto: sstvAuto });
+      if (op === 'force') journal('sstv_force', { call: conn.user.call, mode: m.mode });
+      return;
+    }
     case 'sstv_get': {
       // Image demandée par un membre (galerie, ou image recalculée en fin de réception)
       const it = conn.digi === 'SSTV' && sstvStore.get(Number(m.id));

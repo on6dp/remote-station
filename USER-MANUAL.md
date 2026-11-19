@@ -875,6 +875,8 @@ WSPR is used to study propagation: low-power beacons transmit their callsign, lo
 
 **Viewing an image large** (0.43.54): click the received image or the image to send: it is shown in the centre of the screen, 800 pixels wide (smaller if the window is smaller); click or Esc to close. The dark bands left and right of the image to send are normal: the image has the format of the chosen mode (Martin M1: 320 × 256) and keeps its proportions in a wider box.
 
+**SSTV sync** (0.43.60): `SYNCHRO SSTV ▾` button on the band line. In SSTV, sync is on the signal (VIS code at the start, 1200 Hz pulses at the start of every line), not on the clock as in FT8. The menu offers: **Start without VIS** (choose the mode then ▶ Start: reception begins at once, when the VIS code was missed or covered by QRM); **Automatic slant correction** (ticked: the image is straightened from the sync pulses when the sender's sound-card clock differs); for the **last received image**, **Slant** (ppm) and **Shift** (ms, image cut left or right), applied at once and saved; `↺ Automatique` returns to the measured slant. The decoder is shared by all members: you need control (or be an administrator).
+
 **Vertical texts** (0.43.59): below the three text lines, two fields **⇡ left text** and **⇣ right text** write vertically along the left (read bottom to top) and right (read top to bottom) edges of the image, same size, colour and tags; also kept in the ready images.
 
 **Saving a received image** (0.43.53): `PNG` (lossless) or `JPG` (smaller) buttons at the top of the SSTV reception window.

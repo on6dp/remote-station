@@ -645,6 +645,16 @@
       <button class="btn dg-back" type="button" id="ssQsy" title="Revenir sur cette fréquence SSTV (VFO A)" aria-label="Revenir sur cette fréquence SSTV (VFO A)">↺</button>
       <span class="dg-f">Image : <b>1500 – 2300 Hz</b> · synchro 1200 Hz</span>
       <span class="ss-prog"><i><b id="ssProg"></b></i><span id="ssProgT"></span></span>
+      <span class="ss-syw"><button class="btn ss-syb" type="button" id="ssSyBtn" aria-haspopup="true" aria-expanded="false" title="Synchro SSTV : synchronisation sur le signal (départ sans code VIS, correction de pente, redresser ou recentrer la dernière image reçue)">Synchro SSTV ▾</button>
+        <span class="ss-sym" id="ssSyMenu" hidden>
+          <b class="ss-syh">Synchro SSTV <small>sur le signal (code VIS, impulsions 1200 Hz) — pas sur l'heure</small></b>
+          <span class="ss-syr"><span>Départ sans VIS</span><select id="ssFmode" aria-label="Mode de la réception forcée"></select><button class="btn" type="button" id="ssForce" title="Démarre tout de suite la réception dans ce mode (code VIS raté ou couvert par le QRM) ; l'image se cale ensuite sur les impulsions de synchro">▶ Démarrer</button></span>
+          <label class="ss-syr"><input type="checkbox" id="ssAuto" checked> Correction automatique de la pente <small>(horloge de la carte son de l'émetteur)</small></label>
+          <span class="ss-syt">Dernière image reçue</span>
+          <span class="ss-syr"><span>Inclinaison</span><input type="range" id="ssSlant" min="-3000" max="3000" step="10" value="0" aria-label="Inclinaison (ppm)"><b id="ssSlantV">auto</b></span>
+          <span class="ss-syr"><span>Décalage</span><input type="range" id="ssShift" min="-40" max="40" step="0.5" value="0" aria-label="Décalage horizontal (ms)"><b id="ssShiftV">0 ms</b></span>
+          <span class="ss-syr"><button class="btn" type="button" id="ssSyAuto" title="Revenir à la pente mesurée automatiquement et sans décalage">↺ Automatique</button><small class="ss-sya">Commun à tous les membres : il faut avoir la main.</small></span>
+        </span></span>
       <span class="dg-status" id="ssStatus"></span>
     </div>
     <div class="dg-wf-slot" data-slot="sstv"></div>
@@ -1190,7 +1200,7 @@
     const one = !ftDual && (tab === 'ftx' || tab === 'jt65') && !detached;
     // WSPR, SSTV, JTTY : réglages de la cascade sur la ligne de la bande (une ligne de gagnée) — à droite de « Qui m'a
     // entendu ? » (WSPR), de « synchro 1200 Hz » et de la barre de réception (SSTV), de la note du mode (JTTY)
-    const wb = tab === 'wspr' ? $('whBtn') : tab === 'sstv' ? ($('ssProg') && $('ssProg').closest('.ss-prog')) : tab === 'jtty' ? ($('jtStatus') && $('jtStatus').parentElement.querySelector('.dg-note')) : null;
+    const wb = tab === 'wspr' ? $('whBtn') : tab === 'sstv' ? ($('ssSyBtn') && $('ssSyBtn').closest('.ss-syw')) : tab === 'jtty' ? ($('jtStatus') && $('jtStatus').parentElement.querySelector('.dg-note')) : null;
     if (wb) { if (a.previousElementSibling !== wb) { wb.after(a); a.classList.add('in-wsbar'); a.classList.remove('in-vbar'); } else return; }
     else if (one) { if (a.parentElement !== va) { va.appendChild(a); a.classList.add('in-vbar'); a.classList.remove('in-wsbar'); } else return; }
     else if (a.previousElementSibling !== va) { va.after(a); a.classList.remove('in-vbar', 'in-wsbar'); }
@@ -4400,6 +4410,7 @@
     }, jpg ? 'image/jpeg' : 'image/png', jpg ? 0.92 : undefined);
   }
   function ssMessage(m) {
+    if (m.t === 'sstv_opt') { if ($('ssAuto')) $('ssAuto').checked = m.auto !== false; return true; }
     if (m.t === 'sstv_list') {
       for (const meta of m.items || []) { const th = meta.thumb; delete meta.thumb; const it = ssAdd(meta); if (th) it.thumb = th; }
       const last = (m.items || []).slice(-1)[0];
@@ -4899,6 +4910,30 @@
     dial.addEventListener('change', () => { store.set('ssdial', dial.value); qsyTo(Number(dial.value)); });
     $('ssQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
     $('ssSave').addEventListener('click', () => ssSave('png'));
+    // ---- Synchro SSTV (sur le signal) : départ sans VIS, pente automatique, dernière image redressée / recentrée
+    {
+      const btn = $('ssSyBtn'), menu = $('ssSyMenu');
+      const fm = $('ssFmode');
+      for (const id of Object.keys(SSTV.MODES)) { const o = document.createElement('option'); o.value = id; o.textContent = SSTV.MODES[id].name; fm.appendChild(o); }
+      fm.value = store.get('ssfmode', 'M1');
+      fm.addEventListener('change', () => store.set('ssfmode', fm.value));
+      const show = (on) => { menu.hidden = !on; btn.setAttribute('aria-expanded', String(on)); };
+      btn.addEventListener('click', (e) => { e.stopPropagation(); show(menu.hidden); });
+      menu.addEventListener('click', (e) => e.stopPropagation());
+      document.addEventListener('click', () => show(false));
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') show(false); });
+      const ctl = (o) => api && api.send(Object.assign({ t: 'sstv_ctl' }, o));
+      $('ssForce').addEventListener('click', () => { ctl({ op: 'force', mode: fm.value }); show(false); });
+      $('ssAuto').addEventListener('change', () => ctl({ op: 'auto', on: $('ssAuto').checked }));
+      const sl = $('ssSlant'), sh = $('ssShift');
+      let manual = false, t = 0;
+      const lab = () => { $('ssSlantV').textContent = manual ? (Number(sl.value) > 0 ? '+' : '') + sl.value + ' ppm' : 'auto'; $('ssShiftV').textContent = (Number(sh.value) > 0 ? '+' : '') + sh.value + ' ms'; };
+      const redo = () => { clearTimeout(t); t = setTimeout(() => ctl({ op: 'redo', ppm: manual ? Number(sl.value) : null, dx: Number(sh.value) }), 250); };
+      sl.addEventListener('input', () => { manual = true; lab(); redo(); });
+      sh.addEventListener('input', () => { lab(); redo(); });
+      $('ssSyAuto').addEventListener('click', () => { manual = false; sl.value = 0; sh.value = 0; lab(); ctl({ op: 'redo', ppm: null, dx: 0 }); });
+      lab();
+    }
     // Clic sur l'image reçue ou sur l'image à émettre : agrandie au centre de l'écran (800 px de large, comme une image
     // 800 × 600), clic ou Échap pour la refermer
     const ssBig = (src, label) => {

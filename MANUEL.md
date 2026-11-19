@@ -885,6 +885,8 @@ Le WSPR sert à étudier la propagation : des balises de faible puissance émett
 
 **Voir une image en grand** (0.43.54) : clic sur l'image reçue ou sur l'image à émettre : elle s'affiche au centre de l'écran sur 800 pixels de large (réduite si la fenêtre est plus petite) ; clic ou Échap pour la refermer. Les bandes sombres à gauche et à droite de l'image à émettre sont normales : l'image a le format du mode choisi (Martin M1 : 320 × 256) et garde ses proportions dans un cadre plus large.
 
+**Synchro SSTV** (0.43.60) : bouton `SYNCHRO SSTV ▾` sur la ligne de la bande. En SSTV, la synchro se fait sur le signal (code VIS au départ, impulsions à 1200 Hz au début de chaque ligne), pas sur l'heure comme en FT8. Le menu propose : **Départ sans VIS** (choisir le mode puis ▶ Démarrer : la réception commence tout de suite, quand le code VIS a été raté ou couvert par le QRM) ; **Correction automatique de la pente** (cochée : l'image est redressée d'après les impulsions de synchro quand l'horloge de la carte son de l'émetteur diffère) ; pour la **dernière image reçue**, **Inclinaison** (en ppm) et **Décalage** (en ms, image coupée à gauche ou à droite), appliqués aussitôt et enregistrés ; `↺ Automatique` revient à la pente mesurée. Le décodeur est commun à tous les membres : il faut avoir la main (ou être administrateur).
+
 **Textes verticaux** (0.43.59) : sous les trois lignes de texte, deux champs **⇡ Texte à gauche** et **⇣ Texte à droite** écrivent verticalement le long des bords gauche (lu de bas en haut) et droit (lu de haut en bas) de l'image, mêmes taille, couleur et balises ; gardés aussi dans les images prêtes.
 
 **Enregistrer une image reçue** (0.43.53) : boutons `PNG` (sans perte) ou `JPG` (plus léger) en haut de la fenêtre Réception SSTV.
