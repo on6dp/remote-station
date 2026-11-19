@@ -2752,7 +2752,7 @@ input[type='range']::-moz-range-thumb { border-color: #fff; }
 .vfb:not(.mir) .ssb-mic.vfb-mic { display: none; }
 .vfb.mir .vfb-col, .vfb.mir.dual .vfb-col[data-v] { border: 0; background: none; box-shadow: none; }
 /* Fenêtre séparée des modes numériques : bandeau de titre (TX call · TRX FT8/FT4/FT2 · Remote Station · FT modes et contests) */
-body.digi-popup.dg-hd { --dg-hd: 50px; }
+body.digi-popup.dg-hd { --dg-hd: 74px; }
 body.digi-popup .dg-head { margin: -10px -10px 8px; padding: 8px 14px; }
 body.digi-popup.dg-hd #centerPanel { min-height: calc(100vh - 20px - var(--dg-hd)); }
 body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height: calc(100vh - 20px - var(--dg-hd)); }
@@ -3646,3 +3646,11 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 /* TX CALL : encadré jaune arrondi partout (comme celui du carnet), liste aux bords arrondis */
 .cwp-txcl, .cwp-head .cwp-txcl, .dg-txc, .ctabs .dash-txc, .ctabs .ctab-txc, .msgs-h .txc { border: 1.5px solid #ffd400; border-radius: 10px; padding: 3px 6px 3px 10px; background: rgba(255, 212, 0, .06); font-weight: 800; }
 .cwp-txcl select, .cwp-head .cwp-txcl select, .dg-txc select, .ctabs .dash-txc select, .ctabs .ctab-txc select, .msgs-h .txc select { border-radius: 7px !important; }
+/* Pages des modes : titre plus grand, bandeau de propagation sur la même ligne, à droite */
+.cwp-head h1 { display: flex; align-items: center; gap: 10px; font-size: 26px; }
+.cwp-head h1 small { font-size: 12px; }
+.cwp-head h1 .spw.spw-head { margin: 0 0 0 auto; height: 54px; flex: 0 1 auto; align-self: center; text-transform: none; letter-spacing: normal; font-size: 13px; justify-content: flex-end; min-width: 0; }
+.cwp-head h1 .spw.spw-head .spw-t { height: 54px; }
+.cwp-head h1 { white-space: nowrap; }
+.cwp-head h1 > :not(.spw) { flex: none; }
+.cwp-head h1 .spw.spw-head { white-space: normal; flex: 1 1 0; }

@@ -120,8 +120,12 @@
       if (!h) return;
       try { untap = h.tap ? h.tap(show) : null; if (hw.RSPROP) show(hw.RSPROP); else h.api.send({ t: 'prop_get' }); } catch (e) { /* dashboard fermé */ }
     };
+    // Dans la ligne du titre de la page (TRX DIGI : titre créé un peu après le chargement), poussé à droite
+    const place = () => { const h1 = document.querySelector('.cwp-head h1'); if (h1 && el.parentNode !== h1) { h1.appendChild(el); el.classList.add('spw-head'); } };
+    place();
+    setTimeout(place, 600);
     link();
-    setInterval(link, 5000);
+    setInterval(() => { place(); link(); }, 5000);
     setInterval(() => { if (last) strip(el, last); }, 60000); // soleil : jour / ligne grise / nuit
     const go = () => window.open('/prop', 'rs-prop', 'width=1280,height=860');
     el.addEventListener('click', go);
