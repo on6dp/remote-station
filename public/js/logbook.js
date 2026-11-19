@@ -2106,4 +2106,21 @@
     },
     onMessage
   };
+  // F12 : enregistrer le QSO — fenêtre « Enregistrer le QSO » ou « QSO terminé » ouverte, sinon la fiche QSO du carnet
+  // (Détail QSO, page TRX SSB…) quand un indicatif y est tapé. Ailleurs, F12 garde son rôle habituel.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'F12' || e.repeat) return;
+    const vis = (b) => b && !b.disabled && !b.hidden && b.offsetParent !== null;
+    const dlg = Array.from(document.querySelectorAll('dialog[open]')).reverse().find((d) => vis(d.querySelector('[data-a="save"], [data-a="log"]')));
+    let b = dlg ? dlg.querySelector('[data-a="save"], [data-a="log"]') : null;
+    if (!b) {
+      const f = document.getElementById('lgForm');
+      const c = f && f.querySelector('[name="call"]');
+      if (f && vis(f.querySelector('[data-a="save"]')) && c && String(c.value || '').trim()) b = f.querySelector('[data-a="save"]');
+    }
+    if (!vis(b)) return;
+    e.preventDefault();
+    e.stopPropagation(); // la fenêtre ne l'enregistre pas une 2e fois
+    b.click();
+  }, true);
 })();

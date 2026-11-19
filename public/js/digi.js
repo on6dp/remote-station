@@ -5157,6 +5157,8 @@
       esc(q.time_on.slice(0, 2) + ':' + q.time_on.slice(2, 4)) + '–' + esc(q.time_off.slice(0, 2) + ':' + q.time_off.slice(2, 4)) + ' UTC</p>' +
       '<div class="md-act">' + (window.RSSPOT ? RSSPOT.html() : '') + '<button class="btn" type="button" data-a="log">Enregistrer dans le carnet</button><button class="btn" type="button" data-a="no">Ne pas enregistrer</button></div></div>';
     doc.body.appendChild(dlg);
+    // F12 : enregistrer dans le carnet (comme le bouton)
+    dlg.addEventListener('keydown', (e) => { if (e.key === 'F12') { e.preventDefault(); e.stopPropagation(); const b = dlg.querySelector('[data-a="log"]'); if (b && !b.disabled) b.click(); } });
     try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
     dlg.addEventListener('close', () => dlg.remove());
     dlg.querySelector('[data-a="log"]').addEventListener('click', () => {
@@ -6079,6 +6081,8 @@
       '<p class="md-prev ql-msg"></p>' +
       '<div class="md-act">' + (window.RSSPOT ? RSSPOT.html() : '<span></span>') + '<button class="btn" value="cancel">Annuler</button><button class="btn btn-primary" type="button" data-a="save">Enregistrer dans le carnet</button></div></form>';
     doc.body.appendChild(dlg);
+    // F12 : enregistrer (comme le bouton « Enregistrer dans le carnet »)
+    dlg.addEventListener('keydown', (e) => { if (e.key === 'F12') { e.preventDefault(); e.stopPropagation(); const b = dlg.querySelector('[data-a="save"]'); if (b && !b.disabled) b.click(); } });
     const f = dlg.querySelector('form');
     const msg = dlg.querySelector('.ql-msg');
     f.mode.addEventListener('change', () => {

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.14** — F12 enregistre le QSO dans le carnet (fenêtres Enregistrer le QSO / QSO terminé, fiche QSO du carnet)
 - **0.43.13** — Ligne des onglets : LOGBOOKS, LOG QSO, SYNCHRO, TX CALL et SUIVRE L’OPÉRATEUR au même format et alignés
 - **0.43.12** — Fenêtre Enregistrer le QSO : fond jaune clair comme la fiche QSO du carnet, titre « TX call — ENREGISTRER LE QSO » en blanc gras
 - **0.43.11** — Bandeau de propagation : tuiles centrées, même marge à gauche et à droite

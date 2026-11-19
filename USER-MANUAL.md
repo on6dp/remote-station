@@ -1216,6 +1216,7 @@ Automatic upload to online logs only leaves from the server where the QSO was lo
 | `Space` (hold) | PTT; in FT8 / FT4 / FT2, stops automatic transmission. Also works from a separate window. |
 | `W` (hold) | TXW: listen on the transmit frequency (SPLIT). |
 | `↑` `↓` | Frequency ± one step (the one on the Step row). |
+| `F12` | **Save the QSO to the logbook** (since 0.43.14): when the « Enregistrer le QSO » or « QSO terminé » window is open, or when the logbook QSO form (QSO details, TRX SSB page) holds a callsign — like the save button. Otherwise F12 keeps its role (F12 macro in RTTY / CW). |
 | `F1` … `F12` | Macros in the RTTY and CW tabs (`F1`…`F8` in JTTY). |
 | `Ctrl` + `Enter` / `Enter` | Transmit the typed text in RTTY and CW / in JTTY. |
 | `Esc` | Stop the current RTTY, JTTY or CW transmission. |

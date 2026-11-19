@@ -1229,6 +1229,7 @@ L'envoi automatique vers les logs en ligne ne part que du serveur où le QSO a �
 | `Espace` (maintenir) | PTT ; en FT8 / FT4 / FT2, arrête l'émission automatique. Fonctionne aussi depuis une fenêtre séparée. |
 | `W` (maintenir) | TXW : écoute de la fréquence d'émission (SPLIT). |
 | `↑` `↓` | Fréquence ± un pas (celui de la ligne Step). |
+| `F12` | **Enregistrer le QSO dans le carnet** (depuis la 0.43.14) : quand la fenêtre « Enregistrer le QSO » ou « QSO terminé » est ouverte, ou quand la fiche QSO du carnet (Détail QSO, page TRX SSB) contient un indicatif — comme le bouton d'enregistrement. Sinon, F12 garde son rôle (macro F12 en RTTY / CW). |
 | `F1` … `F12` | Macros dans les onglets RTTY et CW (`F1`…`F8` en JTTY). |
 | `Ctrl` + `Entrée` / `Entrée` | Émettre le texte tapé en RTTY et en CW / en JTTY. |
 | `Échap` | Arrêter l'émission RTTY, JTTY ou CW en cours. |
