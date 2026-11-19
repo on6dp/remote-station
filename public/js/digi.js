@@ -660,7 +660,7 @@
     <div class="dg-wf-slot" data-slot="sstv"></div>
     <div class="ss-grid">
       <div class="dg-col ss-rx">
-        <div class="dg-h"><span class="ss-rxt">Réception SSTV <b id="ssCap"></b></span><span class="dg-note">Martin, Scottie, Robot, PD : départ automatique sur le code VIS</span><span class="ss-saveb"><button class="dg-mini" type="button" id="ssSave" title="Enregistrer l'image affichée sur votre PC">PNG</button><button class="dg-mini" type="button" id="ssSaveJ" title="Enregistrer l'image affichée sur votre PC en JPG (fichier plus léger, qualité 92 %)">JPG</button></span></div>
+        <div class="dg-h"><span class="ss-rxt">Réception SSTV <b id="ssCap"></b></span><span class="ss-fam" role="group" aria-label="Affichage de la réception"><button type="button" id="ssRxA" title="Afficher la SSTV analogique (Synchro SSTV, images Martin, Scottie, Robot, PD dans la galerie). Le décodeur écoute toujours : une image qui arrive s'affiche quand même.">Analogique</button><button type="button" class="n" id="ssRxN" title="Afficher la SSTV numérique (ligne Synchro DRM, fichiers DRM dans la galerie). Le décodeur écoute toujours : un fichier qui arrive s'affiche quand même.">Numérique</button></span><span class="dg-note" id="ssRxNote">Martin, Scottie, Robot, PD : départ automatique sur le code VIS</span><span class="ss-saveb"><button class="dg-mini" type="button" id="ssSave" title="Enregistrer l'image affichée sur votre PC">PNG</button><button class="dg-mini" type="button" id="ssSaveJ" title="Enregistrer l'image affichée sur votre PC en JPG (fichier plus léger, qualité 92 %)">JPG</button></span></div>
         <div class="ss-drm" id="ssDrm" title="Synchro DRM (SSTV numérique) : le récepteur se cale tout seul sur le signal — temps (début des symboles), fréquence (écart du TRX), trame (400 ms), FAC (paramètres de l'émetteur)">
           <span class="ss-drmt">DRM</span><i data-k="ts">Temps</i><i data-k="fs">Fréquence</i><i data-k="frs">Trame</i><i data-k="fac">FAC</i>
           <span class="ss-drmi" id="ssDrmI">en attente d'un signal DRM</span>
@@ -673,6 +673,7 @@
       <i class="ss-vsplit" id="ssSplit" title="Glisser à gauche ou à droite : largeur des fenêtres Réception et Émission (double-clic : moitié-moitié)"></i>
       <div class="dg-col ss-tx">
         <div class="dg-h"><span class="ss-rxt">Émission SSTV</span>
+          <span class="ss-fam" role="group" aria-label="Famille de modes"><button type="button" id="ssFamA" title="SSTV analogique : Martin, Scottie, Robot, PD (image balayée ligne par ligne, lisible même avec du bruit)">Analogique</button><button type="button" class="n" id="ssFamN" title="SSTV numérique DRM (EasyPal, QSSTV) : fichier image transmis sans perte, mais il faut un signal correct">Numérique</button></span>
           <select id="ssTxMode" aria-label="Mode d'émission"></select><span class="dg-note" id="ssDur"></span></div>
         <div class="ss-drmopt" id="ssDrmOpt" hidden>
           <label>Image <select id="ssDrmSize" aria-label="Taille de l'image DRM"><option value="320x240">320 × 240</option><option value="640x480">640 × 480</option><option value="800x600">800 × 600</option></select></label>
@@ -4356,12 +4357,34 @@
     const m = it.meta;
     $('ssCap').textContent = m.name + ' · ' + utc(m.at).replace(/(\d\d)(\d\d)(\d\d)/, '$1:$2') + ' UTC' + (m.kind === 'file' ? (m.call ? ' · de ' + m.call : '') + (m.snr != null ? ' · ' + Math.round(m.snr) + ' dB' : '') : m.done ? (m.ok ? '' : ' · incomplète') : ' · en cours');
   }
+  // Réception : familles affichées (les deux décodeurs écoutent toujours en même temps)
+  const ssRxF = { a: true, n: true };
+  try { const v = JSON.parse(store.get('ssrxf', '{"a":true,"n":true}')); if (v && (v.a || v.n)) { ssRxF.a = !!v.a; ssRxF.n = !!v.n; } } catch (e) { /* valeur par défaut */ }
+  function ssRxApply() {
+    const A = $('ssRxA'), N = $('ssRxN');
+    if (!A) return;
+    A.classList.toggle('on', ssRxF.a); N.classList.toggle('on', ssRxF.n);
+    A.setAttribute('aria-pressed', String(ssRxF.a)); N.setAttribute('aria-pressed', String(ssRxF.n));
+    const d = $('ssDrm'); if (d) d.hidden = !ssRxF.n;
+    const sy = $('ssSyBtn') && $('ssSyBtn').closest('.ss-syw'); if (sy) sy.classList.toggle('ss-off', !ssRxF.a);
+    $('ssRxNote').textContent = ssRxF.a && ssRxF.n ? 'analogique et DRM décodés en même temps'
+      : ssRxF.a ? 'Martin, Scottie, Robot, PD : départ automatique sur le code VIS' : 'DRM (EasyPal, QSSTV) : synchro automatique';
+    ssGallery();
+  }
+  function ssRxToggle(k) {
+    const o = k === 'a' ? 'n' : 'a';
+    if (ssRxF[k] && !ssRxF[o]) ssRxF[o] = true; // au moins une famille affichée : un clic sur la seule allumée allume l'autre
+    else ssRxF[k] = !ssRxF[k];
+    store.set('ssrxf', JSON.stringify(ssRxF));
+    ssRxApply();
+  }
   function ssGallery() {
     const g = $('ssGal');
     if (!g) return;
     g.textContent = '';
     const list = Array.from(ssImgs.values()).sort((a, b) => b.meta.at - a.meta.at);
     for (const it of list) {
+      if (it.meta.kind === 'file' ? !ssRxF.n : !ssRxF.a) continue; // famille masquée (boutons Analogique / Numérique de la réception)
       const c = document.createElement('canvas');
       c.width = 96;
       c.height = it.meta.w > 0 && it.meta.h > 0 ? Math.round(96 * it.meta.h / it.meta.w) : 72;
@@ -5112,19 +5135,36 @@
     $('ssCompose').title = 'Clic : voir l’image en grand (800 px de large)';
     $('ssSaveJ').addEventListener('click', () => ssSave('jpg'));
     const tm = $('ssTxMode');
-    { const g = document.createElement('optgroup'); g.label = 'SSTV analogique';
-      for (const id of SS_TX_MODES) { const o = document.createElement('option'); o.value = id; o.textContent = SSTV.MODES[id].name; g.appendChild(o); }
-      tm.appendChild(g);
-      const g2 = document.createElement('optgroup'); g2.label = 'SSTV numérique (DRM, EasyPal)';
-      for (const id of Object.keys(DRM_PRESETS)) { const o = document.createElement('option'); o.value = id; o.textContent = DRM_PRESETS[id].name; g2.appendChild(o); }
-      tm.appendChild(g2); }
+    // Deux boutons : Analogique (Martin, Scottie, Robot, PD) et Numérique (DRM) ; la liste ne montre que les modes de la famille choisie
+    // (dernier mode de chaque famille gardé dans ce navigateur)
+    const ssFamFill = (dig) => {
+      tm.textContent = '';
+      const ids = dig ? Object.keys(DRM_PRESETS) : SS_TX_MODES;
+      for (const id of ids) { const o = document.createElement('option'); o.value = id; o.textContent = dig ? DRM_PRESETS[id].name.replace(/^DRM /, '') : SSTV.MODES[id].name; tm.appendChild(o); }
+      $('ssFamA').classList.toggle('on', !dig); $('ssFamN').classList.toggle('on', dig);
+      $('ssFamA').setAttribute('aria-pressed', String(!dig)); $('ssFamN').setAttribute('aria-pressed', String(dig));
+      tm.title = dig ? 'Mode DRM : A = signal fort, B = usage courant, E = DX difficile ; 4-QAM robuste, 16-QAM conseillé, 64-QAM rapide mais fragile' : 'Mode SSTV analogique (durée et définition : voir l’aide)';
+    };
+    const ssFam = (dig) => {
+      if (isDrm(tm.value) === dig && tm.options.length) return;
+      ssFamFill(dig);
+      const want = store.get(dig ? 'sstvtxn' : 'sstvtxa', dig ? 'DRM-B16' : 'M1');
+      tm.value = [...tm.options].some((o) => o.value === want) ? want : tm.options[0].value;
+      store.set('sstvtx', tm.value);
+      ssCompose();
+    };
     // Réglages propres au DRM : taille et qualité de l'image JPEG, Reed-Solomon
     $('ssDrmSize').value = store.get('ssdrmsize', '320x240');
     $('ssDrmQ').value = store.get('ssdrmq', '70');
     $('ssDrmRs').value = store.get('ssdrmrs', '0');
     for (const id of ['ssDrmSize', 'ssDrmQ', 'ssDrmRs']) $(id).addEventListener(id === 'ssDrmQ' ? 'input' : 'change', () => { store.set({ ssDrmSize: 'ssdrmsize', ssDrmQ: 'ssdrmq', ssDrmRs: 'ssdrmrs' }[id], $(id).value); ssCompose(); });
-    tm.value = store.get('sstvtx', 'M1');
-    tm.addEventListener('change', () => { store.set('sstvtx', tm.value); ssCompose(); });
+    { const v0 = store.get('sstvtx', 'M1'); ssFamFill(isDrm(v0)); tm.value = v0; if (!tm.value) tm.value = tm.options[0].value; }
+    $('ssRxA').addEventListener('click', () => ssRxToggle('a'));
+    $('ssRxN').addEventListener('click', () => ssRxToggle('n'));
+    ssRxApply();
+    $('ssFamA').addEventListener('click', () => ssFam(false));
+    $('ssFamN').addEventListener('click', () => ssFam(true));
+    tm.addEventListener('change', () => { store.set('sstvtx', tm.value); store.set(isDrm(tm.value) ? 'sstvtxn' : 'sstvtxa', tm.value); ssCompose(); });
     const defs = ['<CALL> DE <MYCALL>', '', 'UR <RST> · <MYLOC>', '', ''];
     ['ssT0', 'ssT1', 'ssT2', 'ssT3', 'ssT4'].forEach((id, i) => {
       const el = $(id);

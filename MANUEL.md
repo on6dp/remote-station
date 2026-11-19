@@ -883,9 +883,48 @@ Le WSPR sert à étudier la propagation : des balises de faible puissance émett
 <a id="sstv"></a>
 ### 12.7 SSTV
 
+**Analogique ou Numérique** (0.43.62) : deux boutons en haut de chaque fenêtre.
+
+- **Émission** : `Analogique` (bleu) ou `Numérique` (violet) choisit la famille ; la liste à côté ne montre que ses modes. Le dernier mode choisi dans chaque famille est gardé dans votre navigateur.
+- **Réception** : les deux décodeurs écoutent **toujours en même temps** (une image analogique ou un fichier DRM qui arrive s'affiche quoi qu'il arrive). Les boutons choisissent ce qui est affiché : `Analogique` = bouton Synchro SSTV et images analogiques dans la galerie ; `Numérique` = ligne Synchro DRM et fichiers DRM dans la galerie. Les deux allumés par défaut ; au moins un reste allumé. Choix gardé dans votre navigateur.
+
+**SSTV analogique** : l'image est balayée ligne par ligne, chaque point devient une fréquence entre 1500 Hz (noir) et 2300 Hz (blanc), avec une impulsion à 1200 Hz au début des lignes. Elle reste lisible avec du bruit ou du fading (l'image est simplement plus « neigeuse »), mais n'est jamais parfaite. Le **code VIS** au début (environ 1 s) annonce le mode : le récepteur démarre tout seul.
+
+| Mode | Durée | Définition | Couleur | Quand l'utiliser |
+|---|---|---|---|---|
+| **Martin M1** | 1 min 56 s | 320 × 256 | RVB (vert, bleu, rouge) | Le mode le plus courant **en Europe** : le choix par défaut pour un QSO SSTV sur 14 230 / 3 735 kHz. |
+| **Martin M2** | 1 min | 320 × 256 | RVB | Deux fois plus rapide que M1, un peu moins fin dans le sens horizontal : réponse rapide, bande chargée. |
+| **Scottie S1** | 1 min 51 s | 320 × 256 | RVB | L'équivalent de Martin M1 le plus courant **aux États-Unis** : pour répondre à une station américaine. |
+| **Scottie S2** | 1 min 13 s | 320 × 256 | RVB | Version rapide de S1. |
+| **Scottie DX** | 4 min 31 s | 320 × 256 | RVB | Très lent, donc plus de signal par point : meilleure image sur un **signal faible (DX)**, mais plus exposé au QRM pendant 4 minutes et demie. |
+| **Robot 36** | 38 s | 320 × 240 | luminance + couleur une ligne sur deux | Le plus rapide : couleurs moins précises, mais idéal pour un échange rapide, un **relais FM / ISS** (l'ISS émet le plus souvent en PD 120). |
+| **Robot 72** | 1 min 14 s | 320 × 240 | luminance + couleur complète | Comme Robot 36, avec des couleurs nettes. |
+| **PD 50** / **PD 90** | 51 s / 1 min 32 s | 320 × 256 | luminance + couleur (deux lignes par balayage) | Les modes PD sont d'excellente qualité pour leur durée ; PD 90 est un très bon compromis. |
+| **PD 120** | 2 min 8 s | 640 × 496 | idem | Haute définition, très utilisé (et par l'**ISS**). |
+| **PD 160** | 2 min 43 s | 512 × 400 | idem | Définition moyenne, balayage plus lent : plus robuste que PD 120. |
+| **PD 180** / **PD 240** | 3 min 9 s / 4 min 10 s | 640 × 496 | idem | Même définition que PD 120, plus lents : plus robustes sur un signal moyen. |
+| **PD 290** | 4 min 50 s | 800 × 616 | idem | La plus haute définition : pour un très bon signal et une belle image. |
+
+**SSTV numérique (DRM)** : l'image est envoyée comme un **fichier** (JPEG), en HamDRM (EasyPal, QSSTV) : une bande de 2,5 kHz remplie de porteuses (OFDM). Tant que le signal est suffisant, l'image arrive **exactement comme elle est partie**, sans neige ; sous le seuil, rien n'arrive (ou il manque des segments). Pas de code VIS : le récepteur se cale tout seul sur le signal (voyants Temps, Fréquence, Trame, FAC) et lit les réglages de l'émetteur (FAC). La durée dépend surtout de la **taille du fichier** : environ 15 s de démarrage et de fin, plus le temps du fichier. Exemples pour une image 320 × 240 en qualité 70 (environ 6 Ko) :
+
+| Mode | Durée (6 Ko) | Signification |
+|---|---|---|
+| **B · 16-QAM** (conseillé) | ≈ 32 s | Le réglage habituel d'EasyPal sur 20 m et 80 m : bon équilibre vitesse / robustesse. |
+| **B · 4-QAM** | ≈ 54 s | Même mode B, deux fois moins d'informations par porteuse : passe avec un signal plus faible. |
+| **E · 4-QAM** | ≈ 1 min 17 s | Le plus robuste : pour le **DX**, l'écho et le fading profond. Le plus lent. |
+| **E · 16-QAM** | ≈ 40 s | Mode E (propagation difficile) avec un débit moyen. |
+| **B · 64-QAM** | ≈ 26 s | Rapide, mais demande un **bon signal** (S9, peu de fading). |
+| **A · 16-QAM** / **A · 64-QAM** | ≈ 27 s / 25 s | Les plus rapides : signal **fort et stable** (onde de sol, contact local, NVIS proche). Sur une liaison lointaine, ils échouent. |
+
+- **La lettre A, B ou E** est le « mode de robustesse » du DRM : A = peu de protection contre les échos (signal direct), **B** = la propagation ionosphérique courante, **E** = la plus forte protection contre les échos et l'effet Doppler (moins de porteuses, symboles plus longs).
+- **4, 16 ou 64-QAM** : nombre d'états par porteuse. 4-QAM porte 2 bits, 16-QAM 4 bits, 64-QAM 6 bits : plus de bits = plus rapide, mais il faut plus de rapport signal/bruit (de l'ordre de 6 dB, 12 dB et 20 dB ou plus). La **constellation** de la ligne DRM en montre les points : 4, 16 ou 64 petits paquets nets = bon signal ; un nuage flou = trop de bruit pour cette QAM.
+- **Entrelacement long** (toujours ici) : les données sont étalées sur 2 s, ce qui résiste mieux au fading qu'un entrelacement court.
+- **Reed-Solomon** (RS1 à RS4) : ajoute de la redondance ; l'image est reconstituée même s'il manque une partie des segments (RS1 : 11 %, RS2 : 24 %, RS3 : 36 %, RS4 : 49 %), au prix d'une émission plus longue (+14 % à +99 %). Utile sur une liaison qui « décroche » de temps en temps.
+- **Taille et qualité** : 320 × 240 en qualité 60 à 70 suffit pour un QSO ; 640 × 480 ou 800 × 600 multiplient la durée par 3 à 6.
+
 **Voir une image en grand** (0.43.54) : clic sur l'image reçue ou sur l'image à émettre : elle s'affiche au centre de l'écran sur 800 pixels de large (réduite si la fenêtre est plus petite) ; clic ou Échap pour la refermer. Les bandes sombres à gauche et à droite de l'image à émettre sont normales : l'image a le format du mode choisi (Martin M1 : 320 × 256) et garde ses proportions dans un cadre plus large.
 
-**SSTV numérique (DRM)** (0.43.61, compatible EasyPal et QSSTV) : **réception** automatique, en même temps que la SSTV analogique — la ligne **DRM** en haut de la réception montre la Synchro DRM (voyants `Temps`, `Fréquence`, `Trame`, `FAC` verts quand le récepteur est calé), le mode (A, B, E), la QAM, l'entrelacement, le SNR, l'écart de fréquence du TRX, l'indicatif de l'émetteur et la constellation ; `↻` relance la synchro (après un changement de fréquence). L'avancement du fichier (segment n / total) s'affiche dans la barre de réception ; l'image reçue (JPEG, PNG ou GIF) arrive dans la galerie, de même pour les fichiers Reed-Solomon (.rs1 à .rs4) dès que la correction peut les reconstituer. Un fichier JPEG 2000 n'est pas affiché : PNG / JPG le télécharge tel quel. **Émission** : choisir un mode **DRM** dans la liste des modes (groupe « SSTV numérique ») : B · 16-QAM (conseillé), B · 4-QAM (robuste), E · 4-QAM (DX difficile), E · 16-QAM, B · 64-QAM, A · 16-QAM ou A · 64-QAM (signal fort) ; puis la taille de l'image (320 × 240 à 800 × 600), la qualité JPEG et le Reed-Solomon (aucun, RS1 à RS4). La taille du fichier et la durée estimée s'affichent en haut à droite ; 150 Ko au plus. Fréquences d'appel DRM : 14 233 kHz USB (jour), 3 733 kHz LSB (nuit). Comme en SSTV analogique : VFO en DATA-U, puissance réduite (émission continue), la main est nécessaire. « Écouter » et « WAV » : SSTV analogique seulement.
+**SSTV numérique (DRM)** (0.43.61, compatible EasyPal et QSSTV) : **réception** automatique, en même temps que la SSTV analogique — la ligne **DRM** en haut de la réception montre la Synchro DRM (voyants `Temps`, `Fréquence`, `Trame`, `FAC` verts quand le récepteur est calé), le mode (A, B, E), la QAM, l'entrelacement, le SNR, l'écart de fréquence du TRX, l'indicatif de l'émetteur et la constellation ; `↻` relance la synchro (après un changement de fréquence). L'avancement du fichier (segment n / total) s'affiche dans la barre de réception ; l'image reçue (JPEG, PNG ou GIF) arrive dans la galerie, de même pour les fichiers Reed-Solomon (.rs1 à .rs4) dès que la correction peut les reconstituer. Un fichier JPEG 2000 n'est pas affiché : PNG / JPG le télécharge tel quel. **Émission** : bouton `Numérique` puis un mode **DRM** dans la liste : B · 16-QAM (conseillé), B · 4-QAM (robuste), E · 4-QAM (DX difficile), E · 16-QAM, B · 64-QAM, A · 16-QAM ou A · 64-QAM (signal fort) ; puis la taille de l'image (320 × 240 à 800 × 600), la qualité JPEG et le Reed-Solomon (aucun, RS1 à RS4). La taille du fichier et la durée estimée s'affichent en haut à droite ; 150 Ko au plus. Fréquences d'appel DRM : 14 233 kHz USB (jour), 3 733 kHz LSB (nuit). Comme en SSTV analogique : VFO en DATA-U, puissance réduite (émission continue), la main est nécessaire. « Écouter » et « WAV » : SSTV analogique seulement.
 
 **Synchro SSTV** (0.43.60) : bouton `SYNCHRO SSTV ▾` sur la ligne de la bande. En SSTV, la synchro se fait sur le signal (code VIS au départ, impulsions à 1200 Hz au début de chaque ligne), pas sur l'heure comme en FT8. Le menu propose : **Départ sans VIS** (choisir le mode puis ▶ Démarrer : la réception commence tout de suite, quand le code VIS a été raté ou couvert par le QRM) ; **Correction automatique de la pente** (cochée : l'image est redressée d'après les impulsions de synchro quand l'horloge de la carte son de l'émetteur diffère) ; pour la **dernière image reçue**, **Inclinaison** (en ppm) et **Décalage** (en ms, image coupée à gauche ou à droite), appliqués aussitôt et enregistrés ; `↺ Automatique` revient à la pente mesurée. Le décodeur est commun à tous les membres : il faut avoir la main (ou être administrateur).
 

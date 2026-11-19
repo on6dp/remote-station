@@ -3861,3 +3861,17 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .ss-drmopt b { min-width: 22px; color: #F2CF4A; font-family: ui-monospace, Consolas, monospace; }
 .ss-drmopt[hidden] { display: none; }
 .ss-thumb.ss-drmth { border-color: #22c55e66; }
+
+/* 0.43.62 — SSTV : deux boutons Analogique / Numérique devant la liste des modes d'émission */
+.ss-fam{display:inline-flex;border:1.5px solid #2b3b4e;border-radius:9px;overflow:hidden;margin:0 6px 0 8px;flex:none}
+.ss-fam button{font:800 11.5px/1 system-ui,"Segoe UI",Arial,sans-serif;letter-spacing:.4px;padding:5px 10px;border:0;background:#101924;color:#94a3b8;cursor:pointer}
+.ss-fam button + button{border-left:1.5px solid #2b3b4e}
+.ss-fam button:hover{color:#e2e8f0;background:#16273a}
+.ss-fam button.on{background:#0e4f63;color:#fff;box-shadow:inset 0 0 0 1px #22d3ee}
+.ss-fam button.n.on{background:#4a2a6b;box-shadow:inset 0 0 0 1px #c084fc}
+/* Réception SSTV : familles affichées (Analogique / Numérique, les deux par défaut) */
+.ss-rx .dg-h .ss-fam{margin-left:10px}
+.ss-syw.ss-off{display:none !important}
+#ssDrm[hidden]{display:none !important}
+.ss-tx > .dg-h{justify-content:flex-start}
+.ss-tx > .dg-h #ssDur{margin-left:auto}
