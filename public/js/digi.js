@@ -1186,8 +1186,9 @@
     const a = $('wfGain') && $('wfGain').closest('.wf-ctl'), va = $('ftVbarA');
     if (!a || !va) return;
     const one = !ftDual && (tab === 'ftx' || tab === 'jt65') && !detached;
-    // WSPR : réglages de la cascade sur la ligne de la bande, à droite de « Qui m'a entendu ? » (une ligne de gagnée)
-    const wb = tab === 'wspr' ? $('whBtn') : null;
+    // WSPR, SSTV, JTTY : réglages de la cascade sur la ligne de la bande (une ligne de gagnée) — à droite de « Qui m'a
+    // entendu ? » (WSPR), de « synchro 1200 Hz » et de la barre de réception (SSTV), de la note du mode (JTTY)
+    const wb = tab === 'wspr' ? $('whBtn') : tab === 'sstv' ? ($('ssProg') && $('ssProg').closest('.ss-prog')) : tab === 'jtty' ? ($('jtStatus') && $('jtStatus').parentElement.querySelector('.dg-note')) : null;
     if (wb) { if (a.previousElementSibling !== wb) { wb.after(a); a.classList.add('in-wsbar'); a.classList.remove('in-vbar'); } else return; }
     else if (one) { if (a.parentElement !== va) { va.appendChild(a); a.classList.add('in-vbar'); a.classList.remove('in-wsbar'); } else return; }
     else if (a.previousElementSibling !== va) { va.after(a); a.classList.remove('in-vbar', 'in-wsbar'); }
@@ -3960,12 +3961,13 @@
     let warn = false;
     if (!st || !st.station) { txt = 'Station hors ligne'; warn = true; }
     else if (!st.audio || !st.audio.active) { txt = 'La page Station n’envoie pas la BF : « Activer l’audio » sur le PC du club'; warn = true; }
-    else txt = jtLast && Date.now() - jtLast < 60000 ? 'BF reçue · réception JTTY en cours' : 'BF reçue · à l’écoute (décodage continu, 200 à 2800 Hz)';
-    if (st && st.radio && st.radio.mode && !/DATA|USB|-D/i.test(st.radio.mode)) { txt += ' · mode ' + st.radio.mode + ' : passez en DATA-U'; warn = true; }
+    else txt = ''; // BF reçue : rien à dire (la ligne ne s'affiche que pour un problème)
+    if (st && st.radio && st.radio.mode && !/DATA|USB|-D/i.test(st.radio.mode)) { txt = (txt ? txt + ' · ' : '') + 'mode ' + st.radio.mode + ' : passez en DATA-U'; warn = true; }
     // Onglet FT : seulement les problèmes (la ligne « Émission FT » et ses réglages occupent la place ; l'état du
     // décodage est dans l'onglet SYNCHRO)
     if (tab === 'ftx' && !warn) txt = '';
     el.textContent = txt;
+    el.hidden = !txt;
     el.classList.toggle('warn', warn);
   }
 
@@ -4457,9 +4459,10 @@
     let warn = false;
     if (!st || !st.station) { txt = 'Station hors ligne'; warn = true; }
     else if (!st.audio || !st.audio.active) { txt = 'La page Station n’envoie pas la BF : « Activer l’audio » sur le PC du club'; warn = true; }
-    else txt = ssLive ? 'BF reçue · réception en cours' : 'BF reçue · en attente d’une image (code VIS)';
-    if (st && st.radio && st.radio.mode && /CW|AM|LSB/i.test(st.radio.mode)) { txt += ' · mode ' + st.radio.mode + ' : SSTV en USB / DATA-U'; warn = true; }
+    else txt = ''; // BF reçue : rien à dire (la barre de réception montre l'image en cours) ; la ligne ne s'affiche que pour un problème
+    if (st && st.radio && st.radio.mode && /CW|AM|LSB/i.test(st.radio.mode)) { txt = (txt ? txt + ' · ' : '') + 'mode ' + st.radio.mode + ' : SSTV en USB / DATA-U'; warn = true; }
     el.textContent = txt;
+    el.hidden = !txt;
     el.classList.toggle('warn', warn);
   }
 
