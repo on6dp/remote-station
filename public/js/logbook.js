@@ -1777,8 +1777,9 @@
     }
     let st = null;
     try { st = api && api.state && api.state(); } catch (e) { st = null; }
-    // Statistiques : le TX call choisi dans le tableau (« TOUS » s'il n'y en a pas) ; carnet : celui du filtre, sinon celui en service
-    const call = ST.on ? (ST.data ? ST.data.txc || 'TOUS' : '') : filt.txc || (st && st.txCall) || '';
+    // Statistiques : le TX call choisi dans le tableau (« TOUS » s'il n'y en a pas) ; carnet : celui du Filtre log, sinon « GLOBAL » (tous les indicatifs)
+    void st;
+    const call = ST.on ? (ST.data ? ST.data.txc || 'TOUS' : '') : filt.txc || 'GLOBAL';
     const c = call ? String(call).toUpperCase() + ' ' : '';
     const name = ST.on ? 'LOGBOOK STATISTIQUES' : 'LOGBOOK';
     const sub = ST.on ? 'diplômes ' + ((ST.data && ST.data.award) || 'DXCC') + ' par bande et par mode' : 'carnet de trafic';
