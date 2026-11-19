@@ -812,6 +812,8 @@ WSPR is used to study propagation: low-power beacons transmit their callsign, lo
 <a id="cw"></a>
 ### 12.6 CW
 
+**Both VFOs** (0.43.36): the CW page always shows both VFOs, like the FT modes page (the dashboard's VFO A and VFO B screens mirrored), whether SPLIT is on or not. To work split: `PRENDRE LA MAIN`, then `SPLIT` (receive on VFO A, transmit on VFO B) and set VFO B (wheel on its digits, `A → B` then offset…). `A ⇄ B` swaps the two VFOs; another click on SPLIT goes back to simplex on VFO A.
+
 | Command | What it does |
 |---|---|
 | Frequency list + `↺` | CW frequencies per band; the TRX switches to CW. |

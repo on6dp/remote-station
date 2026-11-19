@@ -279,7 +279,7 @@
       const L = lst();
       const stereo = !!(dual && L && L.stereo() && rig().DUAL_AUDIO);
       // Sans SPLIT ni DUAL RX : seulement le VFO actif ; DUAL RX : les deux (MAIN = A, SUB = B)
-      const both = split || dual;
+      const both = split || dual || !!opt.always; // always : les deux VFO affichés même sans SPLIT (page CW)
       el.classList.toggle('single', !both);
       el.classList.toggle('dual', dual);
       cols.forEach((c, v) => {

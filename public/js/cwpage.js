@@ -213,8 +213,12 @@
   // RETOUR (en haut à droite, comme les autres pages) : ferme cette page, la page d'origine repasse devant
   $('cwpBack').addEventListener('click', () => { try { if (window.opener && !window.opener.closed) window.opener.focus(); } catch (e) { /* page d'origine fermée */ } window.close(); });
   if (window.RSCTL) window.RSCTL.mount($('cwpChip'), { state: api.state, iControl: api.iControl, send: api.send, me: () => (host && host.me ? host.me() : null) });
-  // Les deux VFO (SPLIT) : même main et mêmes commandes que le dashboard
-  if (window.RSVFOBOX) window.RSVFOBOX.mount($('cwpVfo'), { api, toast });
+  // Les deux VFO (SPLIT) : même main et mêmes commandes que le dashboard ; les deux VFO toujours affichés (comme la page
+  // des modes FT), l'opérateur choisit SPLIT ou non ; écrans des VFO du dashboard recopiés quand il est ouvert
+  if (window.RSVFOBOX) window.RSVFOBOX.mount($('cwpVfo'), { api, toast, dual: true, always: true,
+    rig: () => { try { return host ? host.api.rig() : {}; } catch (e) { return {}; } },
+    listen: () => { try { return host ? host.listen : null; } catch (e) { return null; } },
+    mirror: () => { try { return hostWin && !hostWin.closed && hostWin.document.getElementById('vfoA') ? hostWin.document : null; } catch (e) { return null; } } });
   // Carte de bande à gauche : spots CW de la bande du TRX ; clic = indicatif + TRX sur la fréquence du spot (avec la main)
   if (window.RSBMAP) setTimeout(() => window.RSBMAP.mount($('xBm'), { api, kit, mode: 'CW',
     worked: (call, band) => (CL.id && CL.items.some((q) => q.call === call && q.band === band) ? 'dup' : ''),

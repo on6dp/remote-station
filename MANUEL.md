@@ -822,6 +822,8 @@ Le WSPR sert à étudier la propagation : des balises de faible puissance émett
 <a id="cw"></a>
 ### 12.6 CW
 
+**Les deux VFO** (0.43.36) : la page CW affiche toujours les deux VFO, comme la page des modes FT (écrans VFO A et VFO B du dashboard recopiés), que le SPLIT soit en service ou non. Pour trafiquer en split : `PRENDRE LA MAIN`, puis `SPLIT` (réception sur le VFO A, émission sur le VFO B) et réglez le VFO B (molette sur ses chiffres, `A → B` puis décalage…). `A ⇄ B` échange les deux VFO ; un nouveau clic sur SPLIT revient en simplex sur le VFO A.
+
 | Commande | Ce qu'elle fait |
 |---|---|
 | Liste des fréquences + `↺` | Fréquences CW par bande ; le TRX passe en CW. |
