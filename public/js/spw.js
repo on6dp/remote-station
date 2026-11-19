@@ -63,7 +63,7 @@
         n: 'Lever et coucher du soleil à la station (' + m.grid + '), en heure UTC (GMT) ; crépuscule civil (ligne grise) : aube ' + utc(s.dawn) + ', crépuscule ' + utc(s.dusk) + ' UTC' });
     }
     T.push({ k: 'muf', l: 'MUF estimée (' + (r.mufSt || 'Dourbes') + ')', s: 'MUF', v: fr(r.muf, 1), u: 'MHz', c: r.muf == null ? '' : r.muf >= 21 ? 'g' : r.muf >= 14 ? 'o' : 'r',
-      t: r.muf == null ? '' : 'Jusqu’au ' + ((BANDS.find((b) => r.muf >= b[0]) || [0, '80 m'])[1]), n: 'Fréquence maximale utilisable pour un bond de 3 000 km, mesurée par l’ionosonde de ' + (r.mufSt || 'Dourbes') + (r.fof2 != null ? ' : foF2 ' + fr(r.fof2, 1) + ' MHz' + (r.mf != null ? ' × facteur M(3000)F2 ' + fr(r.mf, 2) + ' = MUF ' + fr(r.muf, 1) + ' MHz' : '') : '') + (r.mufAt ? ' à ' + new Date(r.mufAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' }) : '') });
+      t: r.muf == null ? '' : 'Jusqu’au ' + ((BANDS.find((b) => r.muf >= b[0]) || [0, '80 m'])[1]), n: 'Fréquence maximale utilisable pour un bond de 3 000 km, mesurée par l’ionosonde de ' + (r.mufSt || 'Dourbes') + (r.fof2 != null ? ' : foF2 ' + fr(r.fof2, 1) + ' MHz' + (r.mf != null ? ' × facteur M(3000)F2 ' + fr(r.mf, 2) + ' = MUF ' + fr(r.muf, 1) + ' MHz' : '') : '') + (r.mufAt ? ' à ' + new Date(r.mufAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' }) : '') + (r.mufKm ? ' (' + r.mufKm + ' km de la station)' : '') + (r.muf == null ? ' — aucune ionosonde proche à jour pour le moment' : '') });
     T.push({ k: 'a', l: 'Indice A', s: 'A', v: fr(d.a), c: lvl(d.a, 10, 30), t: d.a == null ? '' : d.a < 10 ? 'Calme' : d.a < 30 ? 'Instable' : 'Perturbé', n: 'Agitation géomagnétique moyenne sur 24 h' });
     const x = r.xray || d.xray;
     T.push({ k: 'x', l: 'Rayons X', s: 'X', v: x || '—', c: !x ? '' : /[AB]/.test(xr(x)) ? 'g' : xr(x) === 'C' ? 'o' : 'r', t: !x ? '' : /[AB]/.test(xr(x)) ? 'Calme' : xr(x) === 'C' ? 'Modéré' : xr(x) === 'M' ? 'Fort' : 'Extrême', n: 'Éruptions solaires (A, B, C calme ; M, X : coupures possibles côté jour)' + (r.xrayPeak ? ' — pic sur 6 h : ' + r.xrayPeak : '') });
@@ -71,8 +71,15 @@
     T.push({ k: 'bz', l: 'Champ Bz / Bt', s: 'Bz', v: fr(bz, 1), u: r.bt != null ? '/ ' + fr(r.bt, 1) + ' nT' : 'nT', c: bz == null ? '' : bz >= -2 ? 'g' : bz >= -10 ? 'o' : 'r', t: bz == null ? '' : bz >= 0 ? 'Orienté nord' : bz >= -2 ? 'Neutre' : 'Orienté sud', n: 'Bz négatif = énergie transmise à la magnétosphère (risque d’orage)' });
     const w = r.wind != null ? r.wind : d.wind;
     T.push({ k: 'w', l: 'Vent solaire', s: 'Vent', v: fr(w), u: 'km/s', c: w == null ? '' : w < 400 ? 'g' : w < 600 ? 'o' : 'r', t: w == null ? '' : w < 400 ? 'Calme' : w < 600 ? 'Soutenu' : 'Rapide', n: 'Vitesse mesurée par DSCOVR / ACE au point L1' });
-    const sc = r.scales;
-    T.push({ k: 'n', l: 'Échelles NOAA', s: 'NOAA', v: sc ? 'R' + sc.R + ' · S' + sc.S + ' · G' + sc.G : '—', c: !sc ? '' : !sc.R && !sc.S && !sc.G ? 'g' : Math.max(sc.R, sc.S, sc.G) <= 2 ? 'o' : 'r', t: !sc ? '' : !sc.R && !sc.S && !sc.G ? 'Aucune alerte' : 'Alerte', n: 'R : coupure radio · S : protons · G : orage géomagnétique (0 à 5)' });
+    // Échelles NOAA : celles du SWPC ; sinon déduites des mesures (G du Kp, S des protons, R des rayons X)
+    let sc = r.scales, scEst = false;
+    if (!sc && (kp != null || x || r.proton != null)) {
+      const xm = /^([MX])(\d+(?:\.\d+)?)/.exec(String(x || '')), xv = xm ? (xm[1] === 'X' ? 10 : 1) * Number(xm[2]) : 0;
+      const pp = r.proton != null ? r.proton : d.proton;
+      sc = { R: xv >= 20 ? 4 : xv >= 10 ? 3 : xv >= 5 ? 2 : xv >= 1 ? 1 : 0, S: pp >= 1e4 ? 4 : pp >= 1e3 ? 3 : pp >= 100 ? 2 : pp >= 10 ? 1 : 0, G: kp >= 9 ? 5 : kp >= 5 ? Math.floor(kp) - 4 : 0 };
+      scEst = true;
+    }
+    T.push({ k: 'n', l: 'Échelles NOAA', s: 'NOAA', v: sc ? 'R' + sc.R + ' · S' + sc.S + ' · G' + sc.G : '—', c: !sc ? '' : !sc.R && !sc.S && !sc.G ? 'g' : Math.max(sc.R, sc.S, sc.G) <= 2 ? 'o' : 'r', t: !sc ? '' : !sc.R && !sc.S && !sc.G ? 'Aucune alerte' : 'Alerte', n: 'R : coupure radio · S : protons · G : orage géomagnétique (0 à 5)' + (scEst ? ' — estimées d’après les rayons X, les protons et le Kp (échelles du SWPC indisponibles)' : '') });
     const ns = sNum(d.noise);
     T.push({ k: 'no', l: 'Bruit de fond', s: 'Bruit', v: d.noise || '—', c: ns == null ? '' : ns <= 1 ? 'g' : ns <= 4 ? 'o' : 'r', t: ns == null ? '' : ns <= 1 ? 'Faible' : ns <= 4 ? 'Modéré' : 'Fort', n: 'Bruit géomagnétique estimé' });
     T.push({ k: 'ssn', l: 'Taches solaires', s: 'Taches', v: fr(d.ssn), c: lvl(d.ssn, 50, 120, true), t: d.ssn == null ? '' : d.ssn >= 120 ? 'Élevé' : d.ssn >= 50 ? 'Moyen' : 'Faible', n: 'Nombre de Wolf du jour' });

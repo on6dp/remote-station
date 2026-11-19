@@ -3662,3 +3662,10 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 /* FT : « 2 à la fois » et « Spot cluster » à droite de SYNCHRO (barre du VFO-A) */
 .ft-vbar .dg-chk { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 13px; font-weight: 700; color: var(--v2-text-bright); margin-left: 6px; }
 .ft-vbar .dg-chk[hidden] { display: none; }
+/* Dashboard : bandeau de propagation sur le même bleu nuit que l'en-tête des pages des modes */
+.tune-panel > .spw { background: linear-gradient(90deg, #1b3a66 0%, #14305a 45%, #102748 100%); border: 1px solid #2c5185; border-radius: 10px; padding: 5px 6px; height: 72px; box-sizing: border-box; }
+.tune-panel > .spw .spw-t { background: rgba(6, 12, 22, .62); border-color: #3a5f93; }
+.tune-panel > .spw:hover .spw-t { border-color: #6f9ad6; }
+/* Carnet : listes TX call (filtre « Tous », statistiques, envois) en blanc gras aussi */
+.lg-txf select, #lgTxf, #lgStTx { color: #fff !important; font-weight: 800 !important; }
+.lg-txf select option { color: #fff; font-weight: 800; background: #0d141d; }

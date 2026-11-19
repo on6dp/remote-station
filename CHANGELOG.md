@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.9** — Bandeau de propagation du dashboard en bleu nuit ; MUF de l’ionosonde la plus proche à jour (Dourbes en premier) ; échelles NOAA estimées si le SWPC ne répond pas ; TX call « Tous » du carnet en blanc gras
 - **0.43.8** — Pages des modes : titre « ON5VL - FT8/FT4/FT2 », « OR0L - RTTY », « ON6DP - SSB »… (tiret à la place de TRX)
 - **0.43.7** — TRX FT8/FT4/FT2 : « 2 à la fois » et « Spot cluster » à droite de SYNCHRO
 - **0.43.6** — Pages des modes : bandeau du titre en bleu nuit (au lieu du noir), tuiles de propagation qui ressortent
