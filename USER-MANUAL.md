@@ -875,6 +875,8 @@ WSPR is used to study propagation: low-power beacons transmit their callsign, lo
 
 **Viewing an image large** (0.43.54): click the received image or the image to send: it is shown in the centre of the screen, 800 pixels wide (smaller if the window is smaller); click or Esc to close. The dark bands left and right of the image to send are normal: the image has the format of the chosen mode (Martin M1: 320 × 256) and keeps its proportions in a wider box.
 
+**Vertical texts** (0.43.59): below the three text lines, two fields **⇡ left text** and **⇣ right text** write vertically along the left (read bottom to top) and right (read top to bottom) edges of the image, same size, colour and tags; also kept in the ready images.
+
 **Saving a received image** (0.43.53): `PNG` (lossless) or `JPG` (smaller) buttons at the top of the SSTV reception window.
 
 **10 images ready to send** (0.43.50; 10 since 0.43.56): below the background thumbnails, the **Prêtes à émettre** row has 10 slots. Click a free slot (+): the current image (background and three text lines, size, colour) is stored in it. Click a ready image: it comes back into the editor, ready to go with `Émettre`; its edits (text, background) stay stored in it. Click again: release it. The small `📁` button at the top right of each slot picks an image on your PC directly for that slot (0.43.55; its texts are kept). Right-click: empty the slot. Tags (<CALL>, <RST>…) are replaced when sending. Kept in this browser.

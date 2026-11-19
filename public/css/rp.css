@@ -3827,3 +3827,6 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 /* 0.43.57 : SSTV — PNG et JPG côte à côte, titre « Réception SSTV » sur une ligne, quelle que soit la largeur */
 .ss-saveb { display: inline-flex; gap: 6px; flex: none; }
 .ss-rx .dg-h .ss-rxt { white-space: nowrap; flex: none; }
+/* 0.43.59 : SSTV — textes verticaux à gauche et à droite de l'image */
+.ss-vtext { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ss-vtext input { min-width: 0; }

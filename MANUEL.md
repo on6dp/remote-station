@@ -885,6 +885,8 @@ Le WSPR sert à étudier la propagation : des balises de faible puissance émett
 
 **Voir une image en grand** (0.43.54) : clic sur l'image reçue ou sur l'image à émettre : elle s'affiche au centre de l'écran sur 800 pixels de large (réduite si la fenêtre est plus petite) ; clic ou Échap pour la refermer. Les bandes sombres à gauche et à droite de l'image à émettre sont normales : l'image a le format du mode choisi (Martin M1 : 320 × 256) et garde ses proportions dans un cadre plus large.
 
+**Textes verticaux** (0.43.59) : sous les trois lignes de texte, deux champs **⇡ Texte à gauche** et **⇣ Texte à droite** écrivent verticalement le long des bords gauche (lu de bas en haut) et droit (lu de haut en bas) de l'image, mêmes taille, couleur et balises ; gardés aussi dans les images prêtes.
+
 **Enregistrer une image reçue** (0.43.53) : boutons `PNG` (sans perte) ou `JPG` (plus léger) en haut de la fenêtre Réception SSTV.
 
 **10 images prêtes à émettre** (0.43.50 ; 10 depuis la 0.43.56) : sous les vignettes de fond, la ligne **Prêtes à émettre** a 10 emplacements. Clic sur un emplacement libre (+) : l'image en cours (fond et trois lignes de texte, taille, couleur) y est rangée. Clic sur une image prête : elle revient dans l'éditeur, prête à partir avec `Émettre` ; ses retouches (texte, fond) y restent gardées. Nouveau clic : la lâcher. Le petit bouton `📁` en haut à droite de chaque emplacement choisit une image sur votre PC directement pour cet emplacement (0.43.55 ; ses textes sont gardés). Clic droit : vider l'emplacement. Les balises (<CALL>, <RST>…) sont remplacées au moment de l'émission. Gardées dans ce navigateur.

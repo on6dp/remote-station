@@ -656,7 +656,7 @@
       </div>
       <i class="ss-vsplit" id="ssSplit" title="Glisser à gauche ou à droite : largeur des fenêtres Réception et Émission (double-clic : moitié-moitié)"></i>
       <div class="dg-col ss-tx">
-        <div class="dg-h"><span>Émission</span>
+        <div class="dg-h"><span class="ss-rxt">Émission SSTV</span>
           <select id="ssTxMode" aria-label="Mode d'émission"></select><span class="dg-note" id="ssDur"></span></div>
         <div class="ss-src">
           <label class="btn ss-file" title="Choisir une ou plusieurs images sur votre PC (JPG, PNG…). Format conseillé : 800 × 600 (4:3, paysage) ; une autre taille est recadrée au centre. Les images restent dans votre navigateur (10 au plus) ; seule l'image émise passe par le serveur, sans y être gardée.">Images du PC…<input type="file" id="ssFile" accept="image/*" multiple hidden></label>
@@ -670,6 +670,7 @@
             <input id="ssT0" maxlength="40" spellcheck="false" autocomplete="off" placeholder="Texte en haut" aria-label="Texte en haut" title="Texte en haut de l'image">
             <input id="ssT1" maxlength="40" spellcheck="false" autocomplete="off" placeholder="Texte au centre" aria-label="Texte au centre" title="Texte au centre de l'image">
             <input id="ssT2" maxlength="40" spellcheck="false" autocomplete="off" placeholder="Texte en bas" aria-label="Texte en bas" title="Texte en bas de l'image">
+            <div class="ss-vtext"><input id="ssT3" maxlength="30" spellcheck="false" autocomplete="off" placeholder="⇡ Texte à gauche (vertical)" aria-label="Texte à gauche, vertical" title="Texte écrit verticalement le long du bord gauche de l'image (lu de bas en haut)"><input id="ssT4" maxlength="30" spellcheck="false" autocomplete="off" placeholder="⇣ Texte à droite (vertical)" aria-label="Texte à droite, vertical" title="Texte écrit verticalement le long du bord droit de l'image (lu de haut en bas)"></div>
             <div class="ss-opt">
               <select id="ssSize" aria-label="Taille du texte"><option value="0.075">Petit</option><option value="0.1">Moyen</option><option value="0.13">Grand</option></select>
               <input type="color" id="ssColor" value="#ffe14a" aria-label="Couleur du texte" title="Couleur du texte">
@@ -4572,7 +4573,7 @@
   }
   // Réglages de l'image composée : fond (ssSel), trois lignes de texte, taille et couleur du texte
   function ssCfgNow() {
-    return { sel: ssSel, t: [$('ssT0').value, $('ssT1').value, $('ssT2').value], size: $('ssSize').value, color: $('ssColor').value };
+    return { sel: ssSel, t: [$('ssT0').value, $('ssT1').value, $('ssT2').value, $('ssT3').value, $('ssT4').value], size: $('ssSize').value, color: $('ssColor').value };
   }
   /** Dessine une image SSTV (fond + textes) dans le canvas c, aux dimensions w × h, selon les réglages cfg */
   function ssDraw(c, w, h, cfg) {
@@ -4583,6 +4584,21 @@
       x.textAlign = 'center';
       x.lineJoin = 'round';
       const lines = [[cfg.t[0], size * 1.05, 'top'], [cfg.t[1], h / 2, 'middle'], [cfg.t[2], h - size * 0.5, 'bottom']];
+      // Textes verticaux le long des bords gauche (lu de bas en haut) et droit (lu de haut en bas)
+      for (const [t, side] of [[cfg.t[3], -1], [cfg.t[4], 1]]) {
+        const txt = macroText(String(t || ''), false).replace(/\?\?\?/g, 'CQ').replace(/\s*\n\s*/g, ' ').trim();
+        if (!txt) continue;
+        x.save();
+        x.translate(side < 0 ? size * 0.75 : w - size * 0.75, h / 2);
+        x.rotate(side * Math.PI / 2);
+        x.textBaseline = 'middle';
+        x.lineWidth = Math.max(h < 120 ? 1.5 : 3, size / 6);
+        x.strokeStyle = '#000';
+        x.strokeText(txt, 0, 0, h * 0.94);
+        x.fillStyle = cfg.color || '#ffe14a';
+        x.fillText(txt, 0, 0, h * 0.94);
+        x.restore();
+      }
       for (const [t, y, base] of lines) {
         // Sans correspondant : « CQ » à la place de « ??? »
         const txt = macroText(String(t || ''), false).replace(/\?\?\?/g, 'CQ').replace(/\s*\n\s*/g, ' ').replace(/^[\s·\-–]+|[\s·\-–]+$/g, '').trim();
@@ -4654,7 +4670,7 @@
     if (!c) return;
     ssSel = ssSelIn(c.sel);
     store.set('sstvsel', ssSel);
-    ['ssT0', 'ssT1', 'ssT2'].forEach((id, k) => { $(id).value = c.t[k] || ''; store.set(id, $(id).value); });
+    ['ssT0', 'ssT1', 'ssT2', 'ssT3', 'ssT4'].forEach((id, k) => { $(id).value = c.t[k] || ''; store.set(id, $(id).value); });
     $('ssSize').value = c.size || '0.1'; store.set('sssize', $('ssSize').value);
     $('ssColor').value = c.color || '#ffe14a'; store.set('sscolor', $('ssColor').value);
   }
@@ -4680,7 +4696,7 @@
         c.dataset.sel = sel;
         ssDraw(c, 128, 96, Object.assign({}, cfg, { sel }));
         b.appendChild(c);
-        b.title = 'Image prête n° ' + (i + 1) + (cfg.t.filter(Boolean).length ? ' : ' + cfg.t.filter(Boolean).join(' · ') : '') + ' — clic : la reprendre (fond et textes modifiables, gardés dans cette image) · nouveau clic : la lâcher · clic droit : vider';
+        b.title = 'Image prête n° ' + (i + 1) + ((cfg.t || []).filter(Boolean).length ? ' : ' + cfg.t.filter(Boolean).join(' · ') : '') + ' — clic : la reprendre (fond et textes modifiables, gardés dans cette image) · nouveau clic : la lâcher · clic droit : vider';
       } else {
         const p = document.createElement('span');
         p.textContent = '+';
@@ -4916,8 +4932,8 @@
     for (const id of SS_TX_MODES) { const o = document.createElement('option'); o.value = id; o.textContent = SSTV.MODES[id].name; tm.appendChild(o); }
     tm.value = store.get('sstvtx', 'M1');
     tm.addEventListener('change', () => { store.set('sstvtx', tm.value); ssCompose(); });
-    const defs = ['<CALL> DE <MYCALL>', '', 'UR <RST> · <MYLOC>'];
-    ['ssT0', 'ssT1', 'ssT2'].forEach((id, i) => {
+    const defs = ['<CALL> DE <MYCALL>', '', 'UR <RST> · <MYLOC>', '', ''];
+    ['ssT0', 'ssT1', 'ssT2', 'ssT3', 'ssT4'].forEach((id, i) => {
       const el = $(id);
       el.value = store.get(id, defs[i]);
       el.addEventListener('input', () => { store.set(id, el.value); ssCompose(); });
