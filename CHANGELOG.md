@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.21** — Décompte ⏱ à gauche du bouton des connectés ; aide et help complétés (Filtre log, QRZ, format des boutons)
 - **0.43.20** — Synchronisation : « Synchronisation QRZ » (sans Logbook) dans le menu, la fenêtre et l’aide
 - **0.43.19** — Carnet : « Filtre log » au lieu de « TX call » (filtre des QSO affichés, à ne pas confondre avec l’indicatif d’émission) ; onglet MODES encadré de jaune
 - **0.43.18** — Écran VFO : le spectre BF s’agrandit en un seul clic (comme le filtre et le cadran)
