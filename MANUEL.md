@@ -187,7 +187,7 @@ Les boutons du bandeau du haut, les onglets des panneaux et la barre du carnet o
 | `● Serveur` | Voyant de liaison entre votre navigateur et le serveur. | Vert = connecté. Rouge ou gris : vérifiez votre internet, la page se reconnecte toute seule. |
 | `● Station` | Voyant de la page Station du PC du club. | Vert = le PC du club est en ligne. Pour les administrateurs, un clic ouvre le menu du TRX (section 17). |
 | `● FTDX5000` | Le TRX en service (FTX-1, FTDX10, FTDX101D / MP, FTDX5000, IC-7300 ou IC-7760). La liste des TRX est dans le menu **Station** (administrateurs). | Vert = le TRX répond par le CAT ; rouge = le TRX émet. |
-| Cadre au centre | Logo du club, nom de la station et lieu (ex. « Liège, Belgium »). Les indicatifs de la station sont dans le titre de l'onglet du navigateur. | — |
+| Cadre au centre (fond bleu nuit) | Logo du club, nom de la station et lieu (ex. « Liège, Belgium »). Les indicatifs de la station sont dans le titre de l'onglet du navigateur. | — |
 | `👥 n` | Nombre de membres connectés. | Ouvre le volet **Opérateurs** : qui est là, qui a la main, discussion (section 10). Un point rouge signale un nouveau message. |
 | Votre indicatif | Le compte avec lequel vous êtes connecté. | — |
 | Trois cadres `UTC` · `LIÈGE` · jour | Heure UTC (cadre cyan, celle du log), heure locale de la station (Belgique, heure d'été comprise, quel que soit le fuseau de votre PC) et date UTC avec le jour, à la seconde. | — |

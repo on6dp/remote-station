@@ -187,7 +187,7 @@ The top banner buttons, the panel tabs and the logbook bar all share the same fo
 | `● Serveur` | Link lamp between your browser and the server. | Green = connected. Red or grey: check your internet connection; the page reconnects by itself. |
 | `● Station` | Lamp of the Station page on the club PC. | Green = the club PC is online. For administrators, a click opens the TRX menu (section 17). |
 | `● FTDX5000` | The transceiver in use (FTX-1, FTDX10, FTDX101D / MP, FTDX5000, IC-7300 or IC-7760). The list of transceivers is in the **Station** menu (administrators). | Green = the TRX answers over CAT; red = the TRX is transmitting. |
-| Box in the centre | Club logo, station name and place (e.g. "Liège, Belgium"). The station callsigns are in the browser tab title. | — |
+| Box in the centre (navy blue) | Club logo, station name and place (e.g. "Liège, Belgium"). The station callsigns are in the browser tab title. | — |
 | `👥 n` | Number of members online. | Opens the **Opérateurs** (operators) panel: who is there, who has control, chat (section 10). A red dot means a new message. |
 | Your callsign | The account you are logged in with. | — |
 | Three boxes `UTC` · `LIÈGE` · day | UTC time (cyan box, as used in the log), the station's local time (Belgium, summer time included, whatever your PC's time zone) and the UTC date with the weekday, to the second. | — |
