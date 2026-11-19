@@ -36,3 +36,7 @@ lotw-agents.json.tmp
 agent-lotw.json
 agent-lotw.json.tmp
 station-tx.json
+
+# Historique de la propagation (serveur)
+logs/prop-history.json
+logs/prop-history.json.tmp

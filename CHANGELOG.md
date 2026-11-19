@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.0** — Propagation et météo spatiale : bandeau dans la barre Step / Bandes (SFI, Kp temps réel, MUF de Dourbes, A, rayons X, Bz / Bt, vent solaire, échelles NOAA, bruit, taches, protons, aurore ; NOAA SWPC toutes les 5 min) et page Propagation (/prop) avec courbes et historique jour par jour ; TX CALL en blanc gras
 - **0.42.99** — Page Station : TX0 renvoyé si le TRX reste en émission après un message FT4 / FT8 (constaté deux fois), signalé à l’opérateur ; aide et guide : page Station ouverte en permanence, commandes PowerShell (&)
 - **0.42.98** — Aide, help et guide administrateur : pas à pas pour régler et vérifier LoTW, Club Log, QRZ Logbook et eQSL, avec les messages fréquents et quoi faire
 - **0.42.97** — LoTW : TQSL 8 avec le bon locator = doublons (déjà sur LoTW), plus un faux écart de lieu ; carnet écrit dès l’envoi, avant la lecture des confirmations

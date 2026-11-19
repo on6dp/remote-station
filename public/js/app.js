@@ -2199,6 +2199,8 @@
         return;
       }
       if (m.t === 'mic_profile' || m.t === 'trxeq' || m.t === 'trxeq_values') { if (VX()) VX().onMessage(m); return; }
+      // Propagation : bandeau de la barre Step / Bandes (le message suit aussi son chemin vers les autres pages)
+      if (m.t === 'prop' && window.SPW) { SPW.strip($('spw'), m); }
       if (DG() && DG().onMessage(m)) return;
       if (m.t === 'hello') {
         me = m;
@@ -2207,6 +2209,7 @@
         if (DG()) DG().onHello(m, m);
         if (VX()) VX().onHello(m);
         send({ t: 'plan_pref', on: planAuto() });
+        send({ t: 'prop_get' }); // bandeau de propagation, mis à jour ensuite par le serveur (5 min)
         drawPlan();
         if (/^Liaison perdue/.test($('msg').textContent)) say('');
         $('login').hidden = true;
@@ -2708,4 +2711,6 @@
     showLogin('');
   }
   setInterval(() => { if (st && st.ptt && st.ptt.active) render(); }, 500);
+  // Bandeau de propagation : clic ou Entrée → page Propagation (fenêtre à part)
+  { const sp = $('spw'); if (sp) { const go = () => window.open('/prop', 'rs-prop', 'width=1280,height=860'); sp.addEventListener('click', go); sp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); }); } }
 })();

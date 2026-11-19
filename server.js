@@ -210,7 +210,7 @@ const TYPES = {
 function qsyOrigins() {
   return (Array.isArray(cfg.qsyOrigins) ? cfg.qsyOrigins : DEFAULTS.qsyOrigins).map(String).filter((o) => /^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o));
 }
-const ROUTES = { '/': '/index.html', '/ftdx101': '/face.html', '/station': '/station.html', '/digi': '/digi.html', '/ftdx101/digi.html': '/digi.html', '/ftdx101/log.html': '/log.html', '/ftdx101/digi': '/digi.html', '/ftdx101/': '/face.html', '/ftdx10': '/face.html', '/ftdx10/': '/face.html', '/ftdx10/digi.html': '/digi.html', '/ftdx10/digi': '/digi.html', '/ftdx10/log.html': '/log.html', '/ic7300': '/face.html', '/ic7300/': '/face.html', '/ic7300/digi.html': '/digi.html', '/ic7300/digi': '/digi.html', '/ic7300/log.html': '/log.html', '/ftx1': '/face.html', '/ftx1/': '/face.html', '/ftx1/digi.html': '/digi.html', '/ftx1/digi': '/digi.html', '/ftx1/log.html': '/log.html', '/ftdx5000': '/face.html', '/ftdx5000/': '/face.html', '/ftdx5000/digi.html': '/digi.html', '/ftdx5000/digi': '/digi.html', '/ftdx5000/log.html': '/log.html', '/aide': '/aide.html', '/help': '/help.html', '/stats': '/stats.html', '/detache': '/detache.html', '/cw': '/cw.html', '/ssb': '/ssb.html', '/ic7760': '/face.html', '/ic7760/': '/face.html', '/ic7760/digi.html': '/digi.html', '/ic7760/digi': '/digi.html', '/ic7760/log.html': '/log.html' };
+const ROUTES = { '/': '/index.html', '/ftdx101': '/face.html', '/station': '/station.html', '/digi': '/digi.html', '/ftdx101/digi.html': '/digi.html', '/ftdx101/log.html': '/log.html', '/ftdx101/digi': '/digi.html', '/ftdx101/': '/face.html', '/ftdx10': '/face.html', '/ftdx10/': '/face.html', '/ftdx10/digi.html': '/digi.html', '/ftdx10/digi': '/digi.html', '/ftdx10/log.html': '/log.html', '/ic7300': '/face.html', '/ic7300/': '/face.html', '/ic7300/digi.html': '/digi.html', '/ic7300/digi': '/digi.html', '/ic7300/log.html': '/log.html', '/ftx1': '/face.html', '/ftx1/': '/face.html', '/ftx1/digi.html': '/digi.html', '/ftx1/digi': '/digi.html', '/ftx1/log.html': '/log.html', '/ftdx5000': '/face.html', '/ftdx5000/': '/face.html', '/ftdx5000/digi.html': '/digi.html', '/ftdx5000/digi': '/digi.html', '/ftdx5000/log.html': '/log.html', '/aide': '/aide.html', '/help': '/help.html', '/stats': '/stats.html', '/prop': '/prop.html', '/detache': '/detache.html', '/cw': '/cw.html', '/ssb': '/ssb.html', '/ic7760': '/face.html', '/ic7760/': '/face.html', '/ic7760/digi.html': '/digi.html', '/ic7760/digi': '/digi.html', '/ic7760/log.html': '/log.html' };
 
 function sendJson(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -713,7 +713,9 @@ const VERSION = (() => { try { return require('./package.json').version; } catch
 // Dernier installateur Windows publié (releases/<v>/RemoteStation-Setup-<v>.exe) : à changer quand il est reconstruit
 const WIN_INSTALLER = '0.42.42';
 // Facteurs de propagation (hamqsl.com, N0NBH) : relus toutes les 30 min, envoyés aux pages qui les affichent (page SSB)
-const PROP = new (require('./lib/prop.js').Prop)((msg) => { for (const c of ops) if (c.open && c.user && c.propSub) send(c, msg); });
+// Temps réel (NOAA SWPC, ionosonde de Dourbes) toutes les 5 min ; historique par jour dans logs/prop-history.json
+const PROP_WATCH = new Set(); // pages /prop ouvertes (connexion à part, session d'un membre)
+const PROP = new (require('./lib/prop.js').Prop)((msg) => { for (const c of ops) if (c.open && c.user && c.propSub) send(c, msg); for (const c of PROP_WATCH) send(c, msg); }, { histFile: path.join(LOG_DIR, 'prop-history.json') });
 // Nouvelle version sur GitHub : « 🔔 Mise à jour » au dashboard des administrateurs (lib/update.js) ; updateCheck: false pour couper
 const UPD = new (require('./lib/update.js').Updater)({ root: ROOT, version: VERSION, enabled: cfg.updateCheck !== false,
   onChange: (st) => { for (const c of ops) if (c.open && c.user && c.user.admin) send(c, st); } });
@@ -5268,6 +5270,15 @@ ws.attach(server, {
       }
       if (m.t === 'login') return onLogin(conn, m).catch((e) => console.error(e));
       if (m.t === 'stats') return onStats(conn, m, authTimer);
+      if (m.t === 'prop_watch') {
+        // Page Propagation (/prop) : tout membre connecté dans ce navigateur ; mises à jour envoyées à chaque relecture
+        const s = typeof m.session === 'string' && m.session ? sessions[sessHash(m.session)] : null;
+        const rec = s && s.exp > Date.now() ? auth.loadUsers(USERS_FILE)[s.call] : null;
+        if (!rec || auth.userOff(rec)) return send(conn, { t: 'prop_fail', msg: 'Connectez-vous d’abord au dashboard dans ce navigateur, puis rechargez cette page.' });
+        clearTimeout(authTimer);
+        if (!conn.propWatch) { conn.propWatch = true; PROP_WATCH.add(conn); conn.on('close', () => PROP_WATCH.delete(conn)); }
+        return send(conn, PROP.msg());
+      }
       if (m.t === 'station') return onStationAuth(conn, m);
     });
 

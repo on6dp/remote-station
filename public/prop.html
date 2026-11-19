@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propagation — Remote Station</title>
+<meta name="theme-color" content="#0e131b">
+<link rel="stylesheet" href="/css/rp-tokens.css">
+<style>
+  :root { color-scheme: dark; --f: Verdana, 'DejaVu Sans', Arial, sans-serif; --ctl: #00d4ff; --g: #3ecf6e; --o: #f2a33a; --r: #ff5c5c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #070b11; color: var(--v2-text-primary, #e6edf5); font: 13px/1.45 var(--f); }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 16px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--v2-border-dark, #1d2733); padding-bottom: 10px; }
+  h1 { margin: 0; font-size: 19px; } h1 span { color: var(--ctl); }
+  header small { color: var(--v2-text-secondary, #9fb0c2); font-weight: 700; }
+  h2 { font-size: 13px; letter-spacing: .8px; text-transform: uppercase; color: #f2cf4a; margin: 22px 0 8px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-top: 14px; }
+  .t { background: #0d141d; border: 1px solid var(--v2-border-dark, #1d2733); border-radius: 10px; padding: 10px 12px; min-height: 118px; }
+  .t .l { font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--v2-text-secondary, #9fb0c2); }
+  .t .v { display: flex; align-items: baseline; gap: 6px; margin: 4px 0; }
+  .t .v b { font-size: 28px; font-weight: 900; color: #fff; }
+  .t .v small { font-weight: 700; color: var(--v2-text-secondary, #9fb0c2); }
+  .t .v svg { margin-left: auto; color: var(--ctl); }
+  .t .st { display: inline-flex; align-items: center; gap: 6px; padding: 1px 8px; border-radius: 10px; background: #142130; font-weight: 800; font-size: 12px; }
+  .t .st i { width: 8px; height: 8px; border-radius: 50%; background: #6b7a8c; }
+  .t.g .st i { background: var(--g); } .t.o .st i { background: var(--o); } .t.r .st i { background: var(--r); }
+  .t p { margin: 6px 0 0; font-size: 11.5px; color: var(--v2-text-secondary, #9fb0c2); }
+  .box { background: #0d141d; border: 1px solid var(--v2-border-dark, #1d2733); border-radius: 10px; padding: 12px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  svg text { font: 10px var(--f); fill: #9fb0c2; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #16202b; }
+  th { color: var(--v2-text-secondary, #9fb0c2); font-size: 11px; text-transform: uppercase; letter-spacing: .4px; }
+  td b { font-weight: 800; }
+  .c-good { color: var(--g); font-weight: 800; } .c-fair { color: var(--o); font-weight: 800; } .c-poor { color: var(--r); font-weight: 800; }
+  .note { color: var(--v2-text-secondary, #9fb0c2); font-size: 12px; }
+  .msg { padding: 12px; border: 1px solid var(--r); border-radius: 10px; margin-top: 14px; font-weight: 700; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11.5px; font-weight: 700; color: var(--v2-text-secondary, #9fb0c2); margin-top: 6px; }
+  .legend i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+  a { color: var(--ctl); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1><span>Propagation</span> et météo spatiale</h1><small id="upd">Connexion…</small></header>
+  <div id="out"><p class="note">Chargement…</p></div>
+</div>
+<script src="/js/spw.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const { esc, fr, tiles, spark } = window.SPW;
+  let sess = null;
+  try { sess = localStorage.getItem('rs.sess'); } catch (e) { /* */ }
+  if (!sess) { $('out').innerHTML = '<div class="msg">Connectez-vous d’abord au dashboard dans ce navigateur, puis rechargez cette page.</div>'; return; }
+  let last = null;
+  function connect() {
+    const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
+    ws.onopen = () => ws.send(JSON.stringify({ t: 'prop_watch', session: sess }));
+    ws.onmessage = (e) => {
+      let m; try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (m.t === 'prop_fail') { $('out').innerHTML = '<div class="msg">' + esc(m.msg) + '</div>'; ws.close(); return; }
+      if (m.t === 'prop') { last = m; draw(m); }
+    };
+    ws.onclose = () => { $('upd').textContent = 'Liaison perdue : reconnexion…'; setTimeout(connect, 15000); };
+  }
+  connect();
+  setInterval(() => { if (last) stamp(last); }, 30000);
+
+  const hhmm = (t) => new Date(t).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' });
+  function stamp(m) {
+    const r = m.rt || {};
+    $('upd').textContent = 'Temps réel : ' + (r.at ? hhmm(r.at) + ' (toutes les 5 min)' : '—') + ' · hamqsl : ' + (m.at ? hhmm(m.at) : '—') + (r.errs && r.errs.length ? ' · indisponible : ' + r.errs.map((x) => x.split(' ')[0]).join(', ') : '');
+  }
+  // Courbe ou barres en SVG : séries [[x, y]…], axe y de 0 à max
+  function chart(series, o) {
+    const W = 640, H = o.h || 170, L = 34, B = 20, T = 8, R = 8;
+    const xs = series.flatMap((s) => s.pts.map((p) => p[0]));
+    if (!xs.length) return '<p class="note">Pas encore de données.</p>';
+    const x0 = Math.min(...xs), x1 = Math.max(...xs) || x0 + 1;
+    const ymax = o.max || Math.max(1, ...series.flatMap((s) => s.pts.map((p) => p[1] || 0))) * 1.1;
+    const X = (x) => L + (x1 === x0 ? 0 : (x - x0) / (x1 - x0)) * (W - L - R), Y = (y) => H - B - (y / ymax) * (H - B - T);
+    let g = '';
+    for (let i = 0; i <= 4; i++) { const v = ymax * i / 4; g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" stroke="#1d2733"/><text x="' + (L - 4) + '" y="' + (Y(v) + 3).toFixed(1) + '" text-anchor="end">' + (ymax >= 20 ? Math.round(v) : v.toFixed(1)) + '</text>'; }
+    (o.zones || []).forEach((z) => { g += '<rect x="' + L + '" width="' + (W - L - R) + '" y="' + Y(z[1]).toFixed(1) + '" height="' + (Y(z[0]) - Y(z[1])).toFixed(1) + '" fill="' + z[2] + '" opacity=".07"/>'; });
+    const lab = o.xlab || ((x) => new Date(x).toLocaleDateString('fr-BE', { day: '2-digit', month: '2-digit' }));
+    for (let i = 0; i <= 5; i++) { const x = x0 + (x1 - x0) * i / 5; g += '<text x="' + X(x).toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle">' + esc(lab(x)) + '</text>'; }
+    series.forEach((s) => {
+      if (o.bars) {
+        const bw = Math.max(2, (W - L - R) / s.pts.length - 2);
+        s.pts.forEach((p) => { g += '<rect x="' + (X(p[0]) - bw / 2).toFixed(1) + '" y="' + Y(p[1]).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + (H - B - Y(p[1])).toFixed(1) + '" rx="1.5" fill="' + (s.col ? s.col(p[1]) : s.c) + '"><title>' + esc(lab(p[0]) + ' : ' + fr(p[1], 1)) + '</title></rect>'; });
+      } else {
+        const pts = s.pts.filter((p) => p[1] != null);
+        g += '<polyline fill="none" stroke="' + s.c + '" stroke-width="2" points="' + pts.map((p) => X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join(' ') + '"/>';
+        pts.forEach((p) => { g += '<circle cx="' + X(p[0]).toFixed(1) + '" cy="' + Y(p[1]).toFixed(1) + '" r="2.5" fill="' + s.c + '"><title>' + esc(s.n + ' ' + lab(p[0]) + ' : ' + fr(p[1], 1)) + '</title></circle>'; });
+      }
+    });
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="' + esc(o.label || '') + '">' + g + '</svg>' +
+      (series.length > 1 || o.legend ? '<div class="legend">' + series.map((s) => '<span><i style="background:' + s.c + '"></i>' + esc(s.n) + '</span>').join('') + '</div>' : '');
+  }
+  const kpCol = (k) => (k < 3 ? '#3ecf6e' : k < 5 ? '#f2a33a' : '#ff5c5c');
+  const cond = (v) => '<span class="c-' + esc(String(v || '').toLowerCase()) + '">' + esc({ Good: 'Bonnes', Fair: 'Moyennes', Poor: 'Mauvaises' }[v] || v || '—') + '</span>';
+
+  function draw(m) {
+    stamp(m);
+    const d = m.data || {}, r = m.rt || {};
+    const T = tiles(m);
+    let h = '<div class="tiles">' + T.map((x) => '<div class="t ' + (x.c || '') + '"><div class="l">' + esc(x.l) + '</div><div class="v"><b>' + esc(x.v) + '</b>' + (x.u ? '<small>' + esc(x.u) + '</small>' : '') + (x.line ? spark(x.line, 80, 24) : '') + '</div>' +
+      (x.t ? '<span class="st"><i></i>' + esc(x.t) + '</span>' : '') + '<p>' + esc(x.n) + '</p></div>').join('') + '</div>';
+    h += '<div class="grid2"><div><h2>Kp, les dernières heures (minute par minute)</h2><div class="box">' +
+      chart([{ n: 'Kp', c: '#00d4ff', pts: r.kpLine || [] }], { max: 9, h: 170, label: 'Kp temps réel', xlab: (x) => new Date(x).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' }), zones: [[0, 3, '#3ecf6e'], [3, 5, '#f2a33a'], [5, 9, '#ff5c5c']] }) + '</div></div>' +
+      '<div><h2>Kp sur 7 jours (par 3 heures)</h2><div class="box">' + chart([{ n: 'Kp', c: '#00d4ff', col: kpCol, pts: r.kpDays || [] }], { max: 9, h: 170, bars: true, label: 'Kp 7 jours' }) + '</div></div></div>';
+    const hist = (m.hist || []).map((x) => Object.assign({ t: Date.parse(x.d + 'T12:00:00Z') }, x));
+    h += '<h2>Évolution jour par jour (relevés de ce serveur)</h2><div class="grid2"><div class="box">' +
+      chart([{ n: 'Flux solaire (SFI)', c: '#f2cf4a', pts: hist.map((x) => [x.t, x.sfi]) }, { n: 'Taches solaires', c: '#c792ea', pts: hist.map((x) => [x.t, x.ssn]) }], { h: 180, label: 'SFI et taches par jour' }) +
+      '</div><div class="box">' + chart([{ n: 'MUF max (MHz)', c: '#3ecf6e', pts: hist.map((x) => [x.t, x.muf]) }, { n: 'Kp max', c: '#ff5c5c', pts: hist.map((x) => [x.t, x.kp]) }, { n: 'Indice A', c: '#f2a33a', pts: hist.map((x) => [x.t, x.a]) }], { h: 180, label: 'MUF, Kp et A par jour' }) + '</div></div>' +
+      '<p class="note">L’historique se remplit au fil des jours : une ligne par jour, gardée 120 jours par le serveur.</p>';
+    if (d.bands && d.bands.length) {
+      h += '<div class="grid2"><div><h2>Conditions HF (hamqsl)</h2><div class="box"><table><tr><th>Bandes</th><th>Jour</th><th>Nuit</th></tr>' +
+        d.bands.map((b) => '<tr><td><b>' + esc(b.name) + '</b></td><td>' + cond(b.day) + '</td><td>' + cond(b.night) + '</td></tr>').join('') + '</table></div></div>';
+      h += '<div><h2>VHF et ionosphère</h2><div class="box"><table><tr><th>Phénomène</th><th>Lieu</th><th>État</th></tr>' +
+        (d.vhf || []).map((v) => '<tr><td><b>' + esc(v.name.replace(/-/g, ' ')) + '</b></td><td>' + esc(v.loc.replace(/_/g, ' ')) + '</td><td>' + esc(v.v) + '</td></tr>').join('') +
+        '<tr><td><b>foF2</b></td><td>' + esc(r.mufSt || 'Dourbes') + '</td><td>' + (r.fof2 != null ? fr(r.fof2, 1) + ' MHz' : '—') + '</td></tr>' +
+        '<tr><td><b>Champ géomagnétique</b></td><td>—</td><td>' + esc(d.geomag || '—') + '</td></tr></table></div></div></div>';
+    }
+    h += '<p class="note">Sources : <a href="https://www.swpc.noaa.gov/" target="_blank" rel="noopener">NOAA SWPC</a> (Kp, vent solaire, Bz / Bt, rayons X, protons, échelles R / S / G, toutes les 5 min) · ' +
+      '<a href="https://prop.kc2g.com/" target="_blank" rel="noopener">KC2G</a> / GIRO (ionosonde de Dourbes : MUF 3 000 km, foF2) · ' +
+      '<a href="https://www.hamqsl.com/solar.html" target="_blank" rel="noopener">N0NBH hamqsl.com</a> (SFI, taches, A, bruit, aurore, conditions par bande, toutes les 30 min).</p>';
+    $('out').innerHTML = h;
+  }
+})();
+</script>
+</body>
+</html>

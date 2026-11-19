@@ -3622,3 +3622,23 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 #rtStop { background: #2a1214; cursor: pointer; }
 #rtStop.on { color: #fff; background: #c62828; border-color: #ff5a4a; box-shadow: 0 0 10px rgba(255, 90, 74, .55); }
 .rt-bsel [data-b][hidden] { display: none !important; } /* DUAL : A1 A2 seulement (0.42.79) */
+
+/* ---- Propagation et météo spatiale (spw.js) : à droite des lignes Step et Bandes ---- */
+.tune-panel { grid-template-columns: minmax(0, max-content) minmax(0, 1fr); column-gap: 18px; }
+.tune-panel > * { grid-column: 1 / -1; }
+.tune-panel > .toolbar, .tune-panel > .band-row { grid-column: 1; }
+.tune-panel > .spw { grid-column: 2; grid-row: 1 / span 2; align-self: stretch; }
+.spw { display: flex; flex-wrap: wrap; justify-content: flex-end; align-content: flex-start; align-self: center; gap: 6px 6px; overflow: hidden; height: 60px; cursor: pointer; min-width: 0; }
+.spw[hidden] { display: none; }
+.spw-t { display: grid; grid-template-rows: auto auto auto; height: 60px; align-content: center; min-width: 74px; padding: 4px 8px; border: 1px solid var(--v2-border-dark); border-radius: 8px; background: rgba(255, 255, 255, .03); line-height: 1.15; }
+.spw:hover .spw-t { border-color: var(--v2-border); }
+.spw-l { font-size: 9.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; color: #c9d4e0; white-space: nowrap; }
+.spw-t b { font-size: 15px; font-weight: 800; color: var(--v2-text-bright); white-space: nowrap; }
+.spw-t b small { font-size: 10px; font-weight: 600; color: var(--v2-text-dim); }
+.spw-st { font-size: 10px; font-weight: 700; color: var(--v2-text-secondary); white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+.spw-st i { width: 7px; height: 7px; border-radius: 50%; background: #6b7a8c; flex: none; }
+.spw-t.g .spw-st i { background: #3ecf6e; } .spw-t.o .spw-st i { background: #f2a33a; } .spw-t.r .spw-st i { background: #ff5c5c; }
+@media (max-width: 1500px) { .tune-panel > .spw { grid-column: 1 / -1; grid-row: auto; justify-content: flex-start; } }
+/* TX CALL : indicatifs en blanc gras dans toutes les listes (dashboard, carnet, pages TRX DIGI / SSB / CW) */
+.dg-txc select, .ctabs .dash-txc select, .ctabs .ctab-txc select, .cwp-txcl select, .cwp-head .cwp-txcl select, .lg-row .lg-txc select, .lg-txc select, .msgs-h .txc select { color: #fff !important; font-weight: 800 !important; }
+.dg-txc select option, .dash-txc select option, .ctab-txc select option, .cwp-txcl select option, .lg-txc select option, .msgs-h .txc select option { color: #fff; font-weight: 800; background: #0d141d; }
