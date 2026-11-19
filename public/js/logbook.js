@@ -129,7 +129,7 @@
     </form>
     <div class="lg-bar">
       <input class="lg-search" id="lgSearch" placeholder="Rechercher (indicatif, nom, opérateur)" aria-label="Rechercher dans le carnet">
-      <label class="lg-txf" title="Ne montrer que les QSO faits sous cet indicatif (TX call) ; Import/Export ▾ → « Vue affichée » les exporte ensuite">TX call <select id="lgTxf" aria-label="Filtrer le carnet par TX call"><option value="">Tous</option></select></label>
+      <label class="lg-txf" title="Filtre du carnet : ne montrer que les QSO faits sous cet indicatif (TX call) ; Import/Export ▾ → « Vue affichée » les exporte ensuite. Ce n’est pas l’indicatif d’émission (TX CALL de la ligne des onglets)">Filtre log <select id="lgTxf" aria-label="Filtrer le carnet par TX call"><option value="">Tous</option></select></label>
       <span class="lg-count" id="lgCount"></span>
       <button class="btn lg-fclr" type="button" id="lgFclr" hidden title="Retirer tous les filtres de colonne">✕ Filtres</button>
       <span class="lg-msel" id="lgMsel" hidden><b id="lgMselN"></b><button class="btn" type="button" id="lgMselAll" title="Sélectionner tous les QSO affichés">Tout sélectionner</button><button class="btn lg-mdel" type="button" id="lgMselDel">🗑 Supprimer la sélection</button><button class="btn" type="button" id="lgMselX" title="Désélectionner (Échap)">✕</button></span>
