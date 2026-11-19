@@ -3787,3 +3787,4 @@ body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height
 body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .cwp-body { min-height: calc(100vh / var(--zoom, 1)); }
 .ssb-body .cwp-clogw { max-height: calc(52vh / var(--zoom, 1)); }
+#wsStatus[hidden] { display: none !important; } /* 0.43.44 : WSPR, ligne d'état seulement pour un problème */

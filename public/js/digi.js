@@ -3776,8 +3776,10 @@
     let warn = false;
     if (!st || !st.station) { txt = 'Station hors ligne'; warn = true; }
     else if (!st.audio || !st.audio.active) { txt = 'La page Station n’envoie pas la BF : « Activer l’audio » sur le PC du club'; warn = true; }
-    else txt = wsLast ? 'BF reçue · dernier décodage à ' + utc(wsLast).replace(/(\d\d)(\d\d)(\d\d)/, '$1:$2') + ' UTC' : 'BF reçue · premier décodage à la fin de la période en cours' + (busy ? '' : '…');
+    else txt = ''; // BF reçue : rien à dire (la ligne ne s'affiche que pour un problème : station hors ligne, pas de BF)
+    void busy;
     el.textContent = txt;
+    el.hidden = !txt;
     el.classList.toggle('warn', warn);
   }
 
