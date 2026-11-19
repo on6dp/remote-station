@@ -3777,3 +3777,13 @@ body .cwp-follow, body .dg-trx .ctab-follow.dg-hdfol, body .ctab-follow.dg-hdfol
 body .cwp-follow[aria-pressed='true'], body .dg-trx .ctab-follow.dg-hdfol[aria-pressed='true'], body .ctab-follow.dg-hdfol[aria-pressed='true'] { background: #1f6feb; border-color: #58a6ff; color: #fff; }
 body .cwp-follow:disabled, body .ctab-follow.dg-hdfol:disabled { opacity: .45; cursor: default; }
 body .ctab-follow.dg-hdfol .fol-x { display: inline; }
+/* 0.43.43 : pages des modes agrandies / réduites (zoom.js, même réglage que le dashboard) — hauteurs en vh divisées par le zoom */
+body.digi-popup { min-height: calc(100vh / var(--zoom, 1)); }
+body.digi-popup #centerPanel { min-height: calc(100vh / var(--zoom, 1) - 20px); }
+body.digi-popup .dg { min-height: calc(100vh / var(--zoom, 1) - 80px); }
+body.digi-popup #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height: calc(100vh / var(--zoom, 1) - 20px); }
+body.digi-popup.dg-hd #centerPanel { min-height: calc(100vh / var(--zoom, 1) - 20px - var(--dg-hd)); }
+body.digi-popup.dg-hd #centerPanel:has(.ctab-pane.dg-ftx:not([hidden])) { height: calc(100vh / var(--zoom, 1) - 20px - var(--dg-hd)); }
+body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
+.cwp-body { min-height: calc(100vh / var(--zoom, 1)); }
+.ssb-body .cwp-clogw { max-height: calc(52vh / var(--zoom, 1)); }

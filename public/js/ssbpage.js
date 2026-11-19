@@ -39,9 +39,10 @@
       g.addEventListener('pointerdown', (e) => {
         e.preventDefault(); e.stopPropagation();
         g.setPointerCapture(e.pointerId);
-        const ws = ths.map((x) => Math.round(x.getBoundingClientRect().width));
+        const zf = (window.RSZOOM && window.RSZOOM.z()) || 1; // page agrandie (zoom.js) : pixels de l'écran → pixels CSS
+        const ws = ths.map((x) => Math.round(x.getBoundingClientRect().width / zf));
         const x0 = e.clientX, w0 = ws[i];
-        const mv = (ev) => { ws[i] = Math.max(28, Math.round(w0 + ev.clientX - x0)); apply(ws); };
+        const mv = (ev) => { ws[i] = Math.max(28, Math.round(w0 + (ev.clientX - x0) / zf)); apply(ws); };
         const up = () => { g.removeEventListener('pointermove', mv); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up); ST.set('cols.' + sig, JSON.stringify(ws)); };
         g.addEventListener('pointermove', mv);
         g.addEventListener('pointerup', up);

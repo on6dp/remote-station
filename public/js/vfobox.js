@@ -191,7 +191,10 @@
       // Cadre de cette page plus étroit que l'écran du dashboard : même largeur que là-bas, réduite à l'échelle ; plus large :
       // à sa vraie largeur, sans agrandissement (agrandi, le contenu calé pour le dashboard débordait des écrans VFO :
       // filtre coupé à gauche, filtre du VFO B par-dessus le VFO A, quand la fenêtre du dashboard est plus petite)
-      const sw = inRow ? row.getBoundingClientRect().width : (va ? va.getBoundingClientRect().width : 0) + (vb ? vb.getBoundingClientRect().width : 0) + (va && vb ? 10 : 0), bw = MR.box.clientWidth;
+      // Largeurs du dashboard en pixels CSS (getBoundingClientRect compte son agrandissement, zoom.js)
+      let hz = 1;
+      try { hz = (d.defaultView && d.defaultView.RSZOOM && d.defaultView.RSZOOM.z()) || 1; } catch (e) { hz = 1; }
+      const sw = (inRow ? row.getBoundingClientRect().width : (va ? va.getBoundingClientRect().width : 0) + (vb ? vb.getBoundingClientRect().width : 0) + (va && vb ? 10 * hz : 0)) / hz, bw = MR.box.clientWidth;
       if (sw > 100 && bw > 100) {
         const w = bw >= sw ? bw : sw, z = bw >= sw ? '1' : String(Math.round(bw / sw * 1000) / 1000);
         if (MR.row.style.width !== w + 'px') MR.row.style.width = w + 'px';

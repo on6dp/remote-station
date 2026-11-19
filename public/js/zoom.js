@@ -1,5 +1,6 @@
 /*
- * zoom.js — taille du dashboard adaptée à l'écran.
+ * zoom.js — taille du dashboard adaptée à l'écran (et des pages des modes, du carnet en grand et de la page Propagation,
+ * qui suivent le même réglage).
  * Le dashboard est dessiné pour un écran 1920 × 1080. Sur un écran plus grand (2560 × 1440, 4K…), « Auto » agrandit
  * tout dans la même proportion pour remplir l'écran, sans rien déplacer ; on peut aussi choisir la taille soi-même.
  * Réglage gardé dans ce navigateur. Sur un écran plus petit que 1920, la mise en page s'adapte déjà toute seule
@@ -106,6 +107,12 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') show(false); });
     label();
   }
+  // Pages des modes, carnet en grand, Propagation : même réglage que le dashboard (même navigateur), suivi en direct
+  window.addEventListener('storage', (e) => {
+    if (e.key !== KEY) return;
+    pref = e.newValue || 'auto';
+    apply();
+  });
   let t = 0;
   window.addEventListener('resize', (e) => {
     if (!e.isTrusted) return; // notre propre signal après un changement de taille
