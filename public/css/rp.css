@@ -3757,3 +3757,7 @@ label.lg-txf:has(#lgTxf) select { height: 24px; padding: 0 6px; border-radius: 7
 .tb-card .tb-sub .tb-ver:hover { color: #fff; }
 /* 0.43.29 : bande bleue du titre des pages des modes jusqu'au bord droit (marges négatives de 14 px des deux côtés) */
 .cwp-head h1 { flex-basis: calc(100% + 28px); max-width: none; box-sizing: border-box; }
+/* 0.43.31 : SPLIT au même format que A ⇄ B et A → B (cadre blanc fin, même taille) ; activé = fond jaune */
+.vfb-split, .vfb-row button[data-a] { font: 800 12px/1.2 system-ui, 'Segoe UI', Arial, sans-serif; letter-spacing: .5px; padding: 3px 8px; border-radius: 4px; }
+.vfb-split { border: 1px solid #fff; background: #121d2c; color: #fff; }
+.vfb-split.on { background: #ffd400; color: #000; border-color: #ffd400; }
