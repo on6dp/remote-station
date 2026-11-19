@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.58** — HamDRM étape 1 : modem DRM (émetteur, récepteur, Reed-Solomon) compilé depuis QSSTV, reconstitution des fichiers ; pas encore dans l'interface
 - **0.43.57** — SSTV : PNG et JPG côte à côte, titre de la réception sur une ligne
 - **0.43.56** — SSTV : 10 images prêtes à émettre au lieu de 5
 - **0.43.55** — SSTV : bouton 📁 sur chaque image prête pour choisir une image du PC

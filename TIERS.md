@@ -84,3 +84,10 @@ SOFTWARE.
 
 `public/fonts/roboto-mono-*.woff2`, repris des fichiers embarqués par RigPlane Core (issus de Google Fonts).
 Licence : SIL Open Font License 1.1 — voir `public/fonts/LICENSES.md`.
+
+## Modem HamDRM de QSSTV (SSTV numérique, compatible EasyPal)
+
+`lib/bin/drmgen` (émetteur), `lib/bin/drmd` (récepteur) et `lib/bin/drmrs` (Reed-Solomon .rs1 à .rs4) sont compilés par `native/drm/build.sh` à partir du dépôt https://github.com/ON4QZ/QSSTV (commit 31c323ccb848bade1dbab0a96890073f7b9455ea) : `src/drmtx` (cœur Dream de l'émetteur, adapté par PA0MBO), `src/drmrx` (récepteur RXAMADRM de PA0MBO, adapté par ON4QZ), `src/utils/reedsolomoncoder.cpp` et `rs.cpp`, coefficients du filtre de Hilbert de `src/dsp/filterparam.cpp`. Sans Qt ni FFTW : `native/drm/shim/qtshim.h` et `native/drm/shim/fftw3.h` les remplacent ; le décodeur de fichiers de QSSTV est remplacé par `lib/hamdrm.js` (même logique MOT) et la sortie son par celle de `native/drm/drmgen.cpp`. Seule modification du code repris : 12 blocs de fin au lieu de 5 (`MOTSlideShow.cpp`), pour vider l'entrelaceur long avant la fin de l'émission.
+
+- Copyright Volker Fischer et l'équipe Dream (TU Darmstadt), Ties Bos (PA0MBO), Johan Maes (ON4QZ)
+- Licence : GNU GPL v3 (QSSTV ; parties Dream sous GPL v2 ou ultérieure) — texte dans `native/wspr/COPYING`
