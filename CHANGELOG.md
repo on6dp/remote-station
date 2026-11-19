@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.40** — Pages des modes : Prendre / Libérer la main, Déconnexion et Suivre l'opérateur à la même taille
 - **0.43.39** — Pages des modes : bouton DÉCONNEXION à droite de Prendre / Libérer la main
 - **0.43.38** — Pages CW et SSB : stations spotées de nouveau sous le titre (0.43.37 annulée)
 - **0.43.37** — Pages CW et SSB : stations spotées à droite du titre, sur plusieurs lignes si besoin
