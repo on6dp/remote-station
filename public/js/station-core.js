@@ -243,6 +243,19 @@
           this._write(FTX1.cmdPtt(false));
           this.log('Sécurité : CAT TX inattendu, TX0 envoyé');
         }
+        // Toujours en émission plus d'une seconde après la fin d'une émission numérique (TX0 perdu ou sans effet) :
+        // TX0 renvoyé, puis retour complet sur le VFO de réception ; signalé au serveur (journal) dès la 1re fois
+        const g = this.unkeyGuard;
+        if (g && (p.tx === 0 || this.catKeyed || this.cw || Date.now() - g.at > 30000)) this.unkeyGuard = null;
+        else if (g && p.tx > 0 && Date.now() - g.at > 1000 && Date.now() - g.last > 700) {
+          g.n++; g.last = Date.now();
+          this._write(FTX1.cmdPtt(false));
+          if (FTX1.UNKEY_EXTRA) this._write(FTX1.UNKEY_EXTRA);
+          if (g.n >= 2 && FTX1.VIRTUAL_SPLIT && FTX1.cmdVfoSel) { this._write(FTX1.cmdVfoSel(this.radio.vfoSel ? 1 : 0)); this._write(FTX1.cmdTxVfo(this.radio.vfoSel ? 1 : 0)); }
+          const why = 'le TRX est encore en émission ' + ((Date.now() - g.at) / 1000).toFixed(1) + ' s après la fin de l’émission numérique (TX' + p.tx + ', VFO ' + (this.radio.vfoSel ? 'SUB/B' : 'MAIN/A') + ', émission sur ' + (this.radio.txVfo ? 'B' : 'A') + ', split ' + (this.radio.split ? 'oui' : 'non') + ') : TX0 renvoyé (' + g.n + ')';
+          this.log('Sécurité : ' + why, 'st-bad');
+          if (g.n === 1 || g.n === 4) { this._diag('TX qui ne retombe pas'); if (this.wsUp) this.sendWs({ t: 'safety', reason: why }); }
+        }
         // Radio passée en émission juste après un réglage envoyé à distance (ex. SPLIT du FTX-1) : ce n'est pas
         // une émission voulue (PTT) → retour en réception, et on le signale
         if (p.tx > 0 && !this.catKeyed && this.lastCtl && Date.now() - this.lastCtl.at < (this.lastCtl.long ? 8000 : 1500)) {
@@ -1059,6 +1072,7 @@
       const d = this.digiTx;
       if (!d || d.started) return;
       d.started = true;
+      this.digiTxAt = Date.now(); // dernière émission numérique : surveillance du retour en réception (unkey)
       const ok = this.txAudio && this.txAudio.play(d.id, d.at, () => {
         if (this.digiTx !== d) return;
         this.digiTx = null;
@@ -1094,6 +1108,9 @@
 
     unkey(reason) {
       const was = this.catKeyed;
+      // Après une émission numérique (FT8 / FT4…) : le TRX doit être en réception dans la seconde ; sinon TX0 renvoyé
+      // (constaté en FT4 : TRX resté en émission plusieurs périodes après TX0, deux fois, au hasard)
+      if (was && this.digiTxAt && Date.now() - this.digiTxAt < 60000) this.unkeyGuard = { at: Date.now(), n: 0, last: 0, why: reason };
       if (this.ftWait) { clearTimeout(this.ftWait.timer); this.ftWait = null; }
       if (this.waitFn) { const w = this.waitFn; this.waitFn = null; clearTimeout(w.timer); w.cb(null); } // lecture en cours abandonnée
       clearTimeout(this.keyTimer);

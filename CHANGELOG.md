@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.42.99** — Page Station : TX0 renvoyé si le TRX reste en émission après un message FT4 / FT8 (constaté deux fois), signalé à l’opérateur ; aide et guide : page Station ouverte en permanence, commandes PowerShell (&)
 - **0.42.98** — Aide, help et guide administrateur : pas à pas pour régler et vérifier LoTW, Club Log, QRZ Logbook et eQSL, avec les messages fréquents et quoi faire
 - **0.42.97** — LoTW : TQSL 8 avec le bon locator = doublons (déjà sur LoTW), plus un faux écart de lieu ; carnet écrit dès l’envoi, avant la lecture des confirmations
 - **0.42.96** — Confirmations LoTW : rapport deux fois plus léger, une seule lecture à la fois par indicatif, avancement sur une seule ligne
