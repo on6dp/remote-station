@@ -124,6 +124,7 @@
       h += '<div><h2>VHF et ionosphère</h2><div class="box"><table><tr><th>Phénomène</th><th>Lieu</th><th>État</th></tr>' +
         (d.vhf || []).map((v) => '<tr><td><b>' + esc(v.name.replace(/-/g, ' ')) + '</b></td><td>' + esc(v.loc.replace(/_/g, ' ')) + '</td><td>' + esc(v.v) + '</td></tr>').join('') +
         '<tr><td><b>foF2</b></td><td>' + esc(r.mufSt || 'Dourbes') + '</td><td>' + (r.fof2 != null ? fr(r.fof2, 1) + ' MHz' : '—') + '</td></tr>' +
+        '<tr><td><b>Facteur M(3000)F2</b></td><td>' + esc(r.mufSt || 'Dourbes') + '</td><td>' + (r.mf != null ? fr(r.mf, 2) + ' (MUF 3 000 km = foF2 × M = ' + fr(r.muf, 1) + ' MHz)' : '—') + '</td></tr>' +
         '<tr><td><b>Champ géomagnétique</b></td><td>—</td><td>' + esc(d.geomag || '—') + '</td></tr></table></div></div></div>';
     }
     h += '<p class="note">Sources : <a href="https://www.swpc.noaa.gov/" target="_blank" rel="noopener">NOAA SWPC</a> (Kp, vent solaire, Bz / Bt, rayons X, protons, échelles R / S / G, toutes les 5 min) · ' +
