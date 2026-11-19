@@ -943,8 +943,9 @@
   let rtSeen = false; // fenêtre RTTY déjà ouverte depuis le chargement de la page
   let rtBAuto = false; // décodeur B mis à 2100 Hz faute de savoir encore si le TRX envoie ses deux récepteurs
   // Fenêtre séparée (digi.html) : bandeau de titre comme la page TRX SSB — TX call, nom de la page selon l'onglet
-  const HEADS = { ftx: ['TRX FT8/FT4/FT2', 'FT modes et contests'], jt65: ['TRX JT65', 'JT65'], rtty: ['TRX RTTY', 'RTTY et contests'],
-    wspr: ['TRX WSPR', 'WSPR'], jtty: ['TRX JTTY', 'JTTY'], cw: ['TRX CW', 'CW et contests'], sstv: ['TRX SSTV', 'SSTV'] };
+  // Titre : « ON5VL - FT8/FT4/FT2 » (TX call, tiret, mode)
+  const HEADS = { ftx: ['FT8/FT4/FT2', 'FT modes et contests'], jt65: ['JT65', 'JT65'], rtty: ['RTTY', 'RTTY et contests'],
+    wspr: ['WSPR', 'WSPR'], jtty: ['JTTY', 'JTTY'], cw: ['CW', 'CW et contests'], sstv: ['SSTV', 'SSTV'] };
   // Ligne du haut de la fenêtre séparée : fréquence et mode du VFO choisi (VFO d'émission de la page en double réception,
   // sinon celui du TRX), qui a la main ; mode orange s'il ne convient pas à l'onglet (DATA pour FT8, RTTY, CW…)
   const fmtHz = (hz) => { if (!hz) return '—'; const x = String(Math.round(hz)).padStart(7, '0'); return x.slice(0, -6) + '.' + x.slice(-6, -3) + '.' + x.slice(-3); };
@@ -973,16 +974,16 @@
       document.body.prepend(h);
       document.body.classList.add('dg-hd');
     }
-    const hd = HEADS[tab] || ['TRX DIGI', 'modes numériques'];
+    const hd = HEADS[tab] || ['DIGI', 'modes numériques'];
     let st = null;
     try { st = api && api.state(); } catch (e) { st = null; }
     const call = String((st && st.txCall) || '').toUpperCase();
-    const c = call ? call + ' ' : '';
+    const c = call ? call + ' - ' : '';
     if ($('dgHdCall').textContent !== c) $('dgHdCall').textContent = c;
     if ($('dgHdName').textContent !== hd[0]) { $('dgHdName').textContent = hd[0]; $('dgHdSub').textContent = hd[1]; }
     const hh = h.offsetHeight + 8 + 'px';
     if (document.body.style.getPropertyValue('--dg-hd') !== hh && h.offsetHeight) document.body.style.setProperty('--dg-hd', hh);
-    const t = (call ? call + ' ' : '') + hd[0] + ' — Remote Station';
+    const t = (call ? call + ' - ' : '') + hd[0] + ' — Remote Station';
     if (document.title !== t) document.title = t;
   }
   let lastModeTab = 'ftx';

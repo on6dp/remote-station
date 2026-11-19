@@ -1219,7 +1219,7 @@
     // Indicatif du titre : le TX call choisi dans la fiche (sans contest), sinon celui d'émission de la station
     const fsel = !$('ssQso').hidden ? document.querySelector('#ssLog select[name="station"]') : null;
     const tcall = (fsel && fsel.dataset.manual && fsel.value) || (st && st.txCall) || '';
-    $('ssTxc').textContent = tcall ? String(tcall).toUpperCase() + ' ' : '';
+    $('ssTxc').textContent = tcall ? String(tcall).toUpperCase() + ' - ' : ''; // « ON5VL - SSB »
     const k = kit();
     if (k) {
       // Indicatif choisi ailleurs (spot cliqué dans une BAND MAP…) : dans la case Indicatif
