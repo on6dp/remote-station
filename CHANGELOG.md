@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.18** — Écran VFO : le spectre BF s’agrandit en un seul clic (comme le filtre et le cadran)
 - **0.43.17** — Bandeau du haut : tous les boutons au même format (PRENDRE LA MAIN et DÉCONNEXION réduits)
 - **0.43.16** — Onglets des modes (MODES, FT8…, SSTV) au même format que LOGBOOKS, LOG QSO, SYNCHRO et TX CALL
 - **0.43.15** — Barre du carnet : DÉTAILS QSO, recherche, TX CALL, SYNCHRONISATION et IMPORT/EXPORT au même format et alignés

@@ -403,7 +403,11 @@
   }
   for (const w of ['A', 'B']) for (const id of ['flt', 'am', 'sp']) {
     const e0 = $(id + w);
-    if (e0) e0.addEventListener('click', (ev) => { ev.stopPropagation(); vzOpen(e0); });
+    if (!e0) continue;
+    // Spectre : redessiné plusieurs fois par seconde (l'élément sous la souris est remplacé entre l'appui et le relâchement,
+    // le « click » se perdait : il fallait cliquer deux fois) → agrandi dès l'appui du bouton, comme un clic sur les deux autres
+    if (id === 'sp') e0.addEventListener('pointerdown', (ev) => { if (ev.button !== 0) return; ev.stopPropagation(); ev.preventDefault(); vzOpen(e0); });
+    else e0.addEventListener('click', (ev) => { ev.stopPropagation(); vzOpen(e0); });
   }
   // SWR → position sur l'échelle (1 · 1.5 · 2 · 3 · ∞)
   const swrFrac = (v) => (v == null || v <= 1 ? 0 : v <= 1.5 ? (v - 1) / 0.5 * 0.25 : v <= 2 ? 0.25 + (v - 1.5) / 0.5 * 0.17 : v <= 3 ? 0.42 + (v - 2) * 0.18 : Math.min(1, 0.6 + (v - 3) / 7 * 0.4));
