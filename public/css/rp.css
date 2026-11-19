@@ -3654,3 +3654,8 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .cwp-head h1 { white-space: nowrap; }
 .cwp-head h1 > :not(.spw) { flex: none; }
 .cwp-head h1 .spw.spw-head { white-space: normal; flex: 1 1 0; }
+/* Pages des modes : bandeau du titre en bleu nuit dégradé (au lieu du noir), tuiles plus sombres pour ressortir */
+.cwp-head h1 { background: linear-gradient(90deg, #1b3a66 0%, #14305a 45%, #102748 100%); border-bottom: 1px solid #2c5185; }
+.cwp-head h1 small { color: #b9cbe3; }
+.cwp-head h1 .spw.spw-head .spw-t { background: rgba(6, 12, 22, .62); border-color: #3a5f93; }
+.cwp-head h1 .spw.spw-head:hover .spw-t { border-color: #6f9ad6; }
