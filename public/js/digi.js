@@ -512,8 +512,8 @@
       <button class="btn dg-back" type="button" id="wsQsy" title="Revenir sur cette fréquence WSPR (VFO A)" aria-label="Revenir sur cette fréquence WSPR (VFO A)">↺</button>
       <span class="dg-f">Bande WSPR : <b>1400 – 1600 Hz</b> audio</span>
       <span class="dg-clock" id="wsClock">--:--</span>
-      <span class="dg-status" id="wsStatus"></span>
       <button class="btn ws-whb" type="button" id="whBtn" title="Qui a entendu votre balise WSPR ? Les spots envoyés à WSPRnet par les stations du monde entier">📡 Qui m’a entendu ?</button>
+      <span class="dg-status" id="wsStatus"></span>
     </div>
     <div class="ft-wfrow"><div class="dg-wf-slot" data-slot="wspr"></div></div>
     <div class="ws-cols">
