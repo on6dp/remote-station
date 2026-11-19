@@ -159,7 +159,19 @@
     const el = $('utcClock');
     if (!el) return;
     const J = ['DIMANCHE', 'LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI'], p2 = (n) => String(n).padStart(2, '0');
-    const tick = () => { const d = new Date(); el.textContent = J[d.getUTCDay()] + ' ' + p2(d.getUTCDate()) + '/' + p2(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear() + '  ' + p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes()) + ':' + p2(d.getUTCSeconds()) + ' GMT'; };
+    const t = $('utcTime'), dt = $('utcDate'), dy = $('utcDay'), lt = $('locTime');
+    let locFmt = null;
+    try { locFmt = new Intl.DateTimeFormat('fr-BE', { timeZone: 'Europe/Brussels', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }); } catch (e) { locFmt = null; }
+    const tick = () => {
+      const d = new Date();
+      const hm = p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes()) + ':' + p2(d.getUTCSeconds());
+      const day = p2(d.getUTCDate()) + '/' + p2(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear();
+      if (t) t.textContent = hm; else el.textContent = J[d.getUTCDay()] + ' ' + day + '  ' + hm + ' GMT';
+      if (dt && dt.textContent !== day) dt.textContent = day;
+      if (dy && dy.textContent !== J[d.getUTCDay()]) dy.textContent = J[d.getUTCDay()];
+      // Heure locale de la station (Belgique, heure d'été comprise), quel que soit le fuseau du navigateur
+      if (lt) lt.textContent = locFmt ? locFmt.format(d).replace(/\./g, ':') : p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds());
+    };
     tick();
     setInterval(tick, 1000);
     // Version du serveur à droite de la date (aussi avant la connexion)
@@ -2695,10 +2707,15 @@
     // Titre : indicatif(s) de la station puis nom, ex. « ON5VL / OR0L  Remote Station UBA-LGE »
     const full = (i.stationCall ? i.stationCall + '  ' : '') + i.clubName;
     document.title = full;
-    $('clubName').textContent = i.clubName;
     // Version du serveur, visible au survol du titre et dans le bouton HELP
     if (i.version) { $('clubName').title = 'Remote Station v' + i.version; $('helpBtn').title = 'Mode d’emploi · Remote Station v' + i.version; }
+    // Bandeau : « Remote Station UBA-LGE - Liège, Belgium » → nom, puis le lieu en dessous (indicatifs dans le titre de l'onglet seulement)
     $('stationCall').textContent = i.stationCall || '';
+    const parts = String(i.clubName || '').split(/\s+[-–—]\s+/);
+    $('clubName').textContent = parts[0] || i.clubName || '';
+    const town = (parts[1] || '').split(',')[0].trim();
+    if ($('locLabel') && town) $('locLabel').textContent = town.toUpperCase();
+    if ($('clubPlace')) $('clubPlace').textContent = parts.slice(1).join(' · ').replace(/,\s*/g, ', ');
     const lt = $('loginTitle');
     lt.textContent = '';
     if (i.stationCall) {
