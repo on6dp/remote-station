@@ -46,6 +46,10 @@
   let target = 'A';
   const pend = { A: null, B: null };
   const pendAt = { A: 0, B: 0 };
+  // Fréquence demandée (molette, glisser…) affichée jusqu'à ce que le TRX la confirme (4 s au plus) : sans cela, un état
+  // du TRX encore à l'ancienne fréquence la faisait revenir un instant (aller-retour entre l'ancienne et la nouvelle)
+  const PEND_HOLD = 4000;
+  const pendNew = { A: false, B: false };
   let sendTimer = null;
   let retry = 0;
   let pttHeld = false;
@@ -656,7 +660,7 @@
 
   // ------------------------------------------------------------ accord
   function currentFreq(which) {
-    if (pend[which] != null && Date.now() - pendAt[which] < 1500) return pend[which];
+    if (pend[which] != null && Date.now() - pendAt[which] < PEND_HOLD) return pend[which];
     return st && st.radio ? (which === 'B' ? st.radio.freqB : st.radio.freq) : null;
   }
   function tune(delta, which) {
@@ -673,12 +677,13 @@
     hz = Math.round(Math.min(RIG().FREQ_MAX, Math.max(RIG().FREQ_MIN, hz)));
     pend[which] = hz;
     pendAt[which] = Date.now();
+    pendNew[which] = true;
     render();
     const flush = () => {
       sendTimer = null;
       const msg = { t: 'set' };
-      if (pend.A != null && Date.now() - pendAt.A < 1500) msg.freq = pend.A;
-      if (pend.B != null && Date.now() - pendAt.B < 1500) msg.freqB = pend.B;
+      if (pend.A != null && pendNew.A) { msg.freq = pend.A; pendNew.A = false; }
+      if (pend.B != null && pendNew.B) { msg.freqB = pend.B; pendNew.B = false; }
       send(msg);
     };
     if (now) { clearTimeout(sendTimer); return flush(); }
@@ -2277,7 +2282,8 @@
           hadControl = false;
           if (!st.controller) send({ t: 'take' });
         }
-        for (const w of ['A', 'B']) if (pend[w] != null && (w === 'A' ? st.radio.freq : st.radio.freqB) === pend[w]) pend[w] = null;
+        // TRX à la fréquence demandée (et plus rien en attente d'envoi) : affichée encore 0,7 s (un état plus ancien, encore en route, ne la fait pas revenir), puis celle du TRX
+        for (const w of ['A', 'B']) if (pend[w] != null && !pendNew[w] && (w === 'A' ? st.radio.freq : st.radio.freqB) === pend[w]) pendAt[w] = Math.min(pendAt[w], Date.now() - PEND_HOLD + 700);
         if (RIG().ID !== ctlModel) buildControls();
         render();
         if (DG()) DG().onState(st);

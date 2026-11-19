@@ -40,7 +40,9 @@
   // ------------------------------------------------------------ état
   let ws = null, me = null, st = null, creds = null, retry = 0, lastMsg = 0;
   const pend = {};                       // réglage → { v, at } : affichage immédiat, avant la relecture du TRX
-  const pendF = { A: null, B: null, atA: 0, atB: 0 };
+  const pendF = { A: null, B: null, atA: 0, atB: 0, newA: false, newB: false };
+  // Fréquence demandée affichée jusqu'à ce que le TRX la confirme (4 s au plus) : plus d'aller-retour avec l'ancienne
+  const PEND_HOLD = 4000;
   const sendTimers = {};
   const BANDS = [['160M', 1.8e6, 2.0e6], ['80M', 3.5e6, 4.0e6], ['60M', 5.25e6, 5.45e6], ['40M', 7.0e6, 7.3e6], ['30M', 10.1e6, 10.15e6],
     ['20M', 14.0e6, 14.35e6], ['17M', 18.068e6, 18.168e6], ['15M', 21.0e6, 21.45e6], ['12M', 24.89e6, 24.99e6], ['10M', 28.0e6, 29.7e6],
@@ -75,8 +77,8 @@
     const s = Object.assign({}, (st && st.radio) || {});
     const now = Date.now();
     for (const k in pend) { if (now - pend[k].at < 1500) s[k] = pend[k].v; else delete pend[k]; }
-    if (pendF.A != null && now - pendF.atA < 1500) s.freq = pendF.A;
-    if (pendF.B != null && now - pendF.atB < 1500) s.freqB = pendF.B;
+    if (pendF.A != null && now - pendF.atA < PEND_HOLD) s.freq = pendF.A;
+    if (pendF.B != null && now - pendF.atB < PEND_HOLD) s.freqB = pendF.B;
     return s;
   }
   const iControl = () => !!(st && me && st.controllerCid != null && st.controllerCid === me.cid);
@@ -127,13 +129,13 @@
   function tuneTo(side, hz) {
     if (!needControl()) return;
     hz = Math.round(Math.max(R.FREQ_MIN || 30000, Math.min(R.FREQ_MAX || 75e6, hz)));
-    if (side === 'B') { pendF.B = hz; pendF.atB = Date.now(); } else { pendF.A = hz; pendF.atA = Date.now(); }
+    if (side === 'B') { pendF.B = hz; pendF.atB = Date.now(); pendF.newB = true; } else { pendF.A = hz; pendF.atA = Date.now(); pendF.newA = true; }
     if (!sendTimers.freq) {
       sendTimers.freq = setTimeout(() => {
         sendTimers.freq = 0;
         const m = { t: 'set' };
-        if (pendF.A != null && Date.now() - pendF.atA < 1500) m.freq = pendF.A;
-        if (pendF.B != null && Date.now() - pendF.atB < 1500) m.freqB = pendF.B;
+        if (pendF.A != null && pendF.newA) { m.freq = pendF.A; pendF.newA = false; }
+        if (pendF.B != null && pendF.newB) { m.freqB = pendF.B; pendF.newB = false; }
         send(m);
       }, 70);
     }
@@ -8351,6 +8353,8 @@
         document.addEventListener('pointerdown', () => { send({ t: 'stay' }); say(''); }, { once: true });
       } else if (m.t === 'state') {
         st = m;
+        // TRX à la fréquence demandée : affichée encore 0,7 s, puis celle du TRX
+        if (st.radio) for (const w of ['A', 'B']) if (pendF[w] != null && !pendF['new' + w] && (w === 'A' ? st.radio.freq : st.radio.freqB) === pendF[w]) pendF['at' + w] = Math.min(pendF['at' + w], Date.now() - PEND_HOLD + 700);
         render();
         opsDraw();
         followTick();

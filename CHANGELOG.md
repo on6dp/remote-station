@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.32** — Accord à la souris : plus d'aller-retour entre l'ancienne et la nouvelle fréquence
 - **0.43.31** — Pages SSB et CW : bouton SPLIT au même format que A ⇄ B et A → B
 - **0.43.30** — Pages SSB et CW : écrans VFO A et VFO B du dashboard de nouveau recopiés (zone vide et petit cadre VFO A corrigés)
 - **0.43.29** — Pages des modes : bande bleue du titre jusqu'au bord droit

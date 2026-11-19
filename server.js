@@ -317,6 +317,9 @@ let txSel = 0; // SPLIT virtuel (FTX-1) : SPLIT enclenché (1) ou non ; envoyé 
 // Le VFO de réception est celui d'avant le PTT (le TRX peut changer de côté actif pendant l'émission).
 const rxSide = () => (ptt.active && (ptt.rx === 0 || ptt.rx === 1) ? ptt.rx : radio.vfoSel === 1 ? 1 : 0);
 const txSide = () => (txSel ? 1 - rxSide() : rxSide());
+// Dernière fréquence demandée par VFO (voir la lecture du TRX : pas de retour à l'ancienne fréquence)
+const freqCmd = { A: null, B: null };
+const FREQ_CMD_HOLD = 2500;
 let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
@@ -4631,6 +4634,7 @@ function onOperator(conn, m) {
         }
         toStation({ t: 'cmd', op: 'freq', hz });
         radio.freq = hz; // affichage optimiste, corrigé au prochain polling
+        freqCmd.A = { hz, at: Date.now() };
       }
       if (m.freqB != null) {
         const hz = Math.round(Number(m.freqB));
@@ -4639,6 +4643,7 @@ function onOperator(conn, m) {
         }
         toStation({ t: 'cmd', op: 'freqB', hz });
         radio.freqB = hz;
+        freqCmd.B = { hz, at: Date.now() };
       }
       if (m.band != null) {
         const R = rig();
@@ -5128,6 +5133,14 @@ function onStation(conn, m) {
     powerHead: typeof r.powerHead === 'string' && Object.prototype.hasOwnProperty.call(rig().POWER_RANGE, r.powerHead) ? r.powerHead : null,
     model: station && station.rig ? station.rig.ID : null
   };
+  // Fréquence demandée il y a moins de 2,5 s : une lecture du TRX encore à l'ancienne fréquence (polling parti avant la
+  // commande) ne la fait pas revenir un instant (aller-retour à l'écran entre l'ancienne et la nouvelle fréquence)
+  for (const w of ['A', 'B']) {
+    const c = freqCmd[w], k = w === 'A' ? 'freq' : 'freqB';
+    if (!c) continue;
+    if (radio[k] === c.hz || Date.now() - c.at > FREQ_CMD_HOLD) freqCmd[w] = null;
+    else if (radio[k] != null) radio[k] = c.hz;
+  }
   // Réglages propres au pilote (SPLIT, filtres, mesures…) : nombres uniquement
   for (const k of rig().STATE_KEYS || []) radio[k] = Number.isFinite(r[k]) ? r[k] : null;
   // CW manipulée sur le TRX lui-même (ou break-in rapide) : la réception entre les lettres ne fait pas clignoter
