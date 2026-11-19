@@ -663,6 +663,7 @@
           <span class="ss-fmt" title="Format conseillé pour vos images SSTV : 800 × 600 pixels, paysage (4:3). Robot 36 / 72 : sans recadrage ; les autres modes : environ 1 à 3 % coupés à gauche et à droite.">800 × 600 conseillé</span>
           <div class="ss-thumbs" id="ssThumbs"></div>
         </div>
+        <div class="ss-slots" id="ssSlots" aria-label="Images prêtes à émettre"></div>
         <div class="ss-txbody">
           <div class="ss-cview"><canvas id="ssCompose" class="ss-compose" width="320" height="256"></canvas><div class="ss-txmask" id="ssTxMask" hidden></div></div>
           <div class="ss-text">
@@ -4470,6 +4471,7 @@
   const SS_TX_MODES = ['M1', 'M2', 'S1', 'S2', 'SDX', 'R36', 'R72', 'PD50', 'PD90', 'PD120', 'PD160', 'PD180', 'PD240', 'PD290'];
   let ssSrc = []; // { name, url } (images du PC, réduites, gardées dans ce navigateur)
   try { ssSrc = JSON.parse(store.get('sstvsrc', '[]')) || []; } catch (e) { ssSrc = []; }
+  ssSrc.forEach((o, i) => { if (o && !o.id) o.id = 'p' + i + '-' + Math.random().toString(36).slice(2, 8); }); // repère stable (images prêtes)
   let ssSel = store.get('sstvsel', 'cq');
   const ssImgCache = new Map();
   function ssSaveSrc() {
@@ -4492,7 +4494,7 @@
           c.height = Math.round(im.height * k);
           c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
           const url = c.toDataURL('image/jpeg', 0.85);
-          ssSrc.push({ name: f.name.slice(0, 60), url });
+          ssSrc.push({ name: f.name.slice(0, 60), url, id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) });
           while (ssSrc.length > 10) ssSrc.shift();
           ssSel = 'u' + (ssSrc.length - 1);
           store.set('sstvsel', ssSel);
@@ -4566,34 +4568,33 @@
     const ih = im.height * k;
     x.drawImage(im, (w - iw) / 2, (h - ih) / 2, iw, ih);
   }
-  function ssCompose() {
-    const c = $('ssCompose');
-    if (!c) return;
-    const m = SSTV.MODES[$('ssTxMode').value] || SSTV.MODES.M1;
-    if (c.width !== m.w || c.height !== m.h) { c.width = m.w; c.height = m.h; }
+  // Réglages de l'image composée : fond (ssSel), trois lignes de texte, taille et couleur du texte
+  function ssCfgNow() {
+    return { sel: ssSel, t: [$('ssT0').value, $('ssT1').value, $('ssT2').value], size: $('ssSize').value, color: $('ssColor').value };
+  }
+  /** Dessine une image SSTV (fond + textes) dans le canvas c, aux dimensions w × h, selon les réglages cfg */
+  function ssDraw(c, w, h, cfg) {
     const x = c.getContext('2d');
-    const w = m.w;
-    const h = m.h;
     const texts = () => {
-      const size = Math.round(h * (Number($('ssSize').value) || 0.1));
+      const size = Math.round(h * (Number(cfg.size) || 0.1));
       x.font = '700 ' + size + 'px "Roboto", "Arial", sans-serif';
       x.textAlign = 'center';
       x.lineJoin = 'round';
-      const lines = [[$('ssT0').value, size * 1.05, 'top'], [$('ssT1').value, h / 2, 'middle'], [$('ssT2').value, h - size * 0.5, 'bottom']];
+      const lines = [[cfg.t[0], size * 1.05, 'top'], [cfg.t[1], h / 2, 'middle'], [cfg.t[2], h - size * 0.5, 'bottom']];
       for (const [t, y, base] of lines) {
         // Sans correspondant : « CQ » à la place de « ??? »
         const txt = macroText(String(t || ''), false).replace(/\?\?\?/g, 'CQ').replace(/\s*\n\s*/g, ' ').replace(/^[\s·\-–]+|[\s·\-–]+$/g, '').trim();
         if (!txt) continue;
         x.textBaseline = base === 'top' ? 'middle' : base === 'bottom' ? 'alphabetic' : 'middle';
         const yy = base === 'top' ? size * 0.75 : y;
-        x.lineWidth = Math.max(3, size / 6);
+        x.lineWidth = Math.max(h < 120 ? 1.5 : 3, size / 6);
         x.strokeStyle = '#000';
         x.strokeText(txt, w / 2, yy, w * 0.96);
-        x.fillStyle = $('ssColor').value || '#ffe14a';
+        x.fillStyle = cfg.color || '#ffe14a';
         x.fillText(txt, w / 2, yy, w * 0.96);
       }
     };
-    const sel = ssSel;
+    const sel = cfg.sel;
     if (sel === 'bars') { ssBars(x, w, h); texts(); }
     else if (sel === 'rx' && ssImgs.get(ssShown) && ssImgs.get(ssShown).data) {
       const it = ssImgs.get(ssShown);
@@ -4604,10 +4605,106 @@
       ssCover(x, t, w, h);
       texts();
     } else if (/^u\d+$/.test(sel) && ssSrc[Number(sel.slice(1))]) {
-      ssImage(ssSrc[Number(sel.slice(1))].url, (im) => { if (ssSel !== sel) return; ssCover(x, im, w, h); texts(); });
+      ssImage(ssSrc[Number(sel.slice(1))].url, (im) => { if (c.dataset.sel && c.dataset.sel !== sel) return; ssCover(x, im, w, h); texts(); });
     } else { ssBackground(x, w, h); texts(); }
+  }
+  function ssCompose() {
+    const c = $('ssCompose');
+    if (!c) return;
+    const m = SSTV.MODES[$('ssTxMode').value] || SSTV.MODES.M1;
+    if (c.width !== m.w || c.height !== m.h) { c.width = m.w; c.height = m.h; }
+    c.dataset.sel = ssSel;
+    ssDraw(c, m.w, m.h, ssCfgNow());
     const d = SSTV.duration(m.id);
     $('ssDur').textContent = m.w + ' × ' + m.h + ' · ' + Math.floor(d / 60) + ' min ' + String(Math.round(d % 60)).padStart(2, '0') + ' s';
+    ssSlotSave();
+  }
+  // ---- 5 images prêtes à émettre : chaque emplacement garde son fond et ses textes. Clic sur un emplacement vide :
+  // l'image en cours y est rangée ; clic sur une image prête : elle revient dans l'éditeur (les retouches y sont
+  // gardées) ; clic droit : vider l'emplacement. Gardées dans ce navigateur.
+  let ssSlots = [];
+  try { ssSlots = JSON.parse(store.get('sstvslots', '[]')) || []; } catch (e) { ssSlots = []; }
+  while (ssSlots.length < 5) ssSlots.push(null);
+  ssSlots.length = 5;
+  let ssSlotOn = Number(store.get('sstvslot', '-1'));
+  if (!(ssSlotOn >= 0 && ssSlotOn < 5 && ssSlots[ssSlotOn])) ssSlotOn = -1;
+  // Fond d'une image du PC : par son repère stable (les numéros changent quand on en retire une)
+  const ssSelOut = (sel) => /^u\d+$/.test(sel) && ssSrc[Number(sel.slice(1))] ? 'i:' + ssSrc[Number(sel.slice(1))].id : sel;
+  const ssSelIn = (sel) => {
+    if (!/^i:/.test(String(sel || ''))) return sel || 'cq';
+    const k = ssSrc.findIndex((o) => o && 'i:' + o.id === sel);
+    return k >= 0 ? 'u' + k : 'cq';
+  };
+  function ssSlotsStore() { store.set('sstvslots', JSON.stringify(ssSlots)); store.set('sstvslot', String(ssSlotOn)); }
+  function ssSlotSave() {
+    if (ssSlotOn < 0 || !ssSlots[ssSlotOn]) return;
+    const c = ssCfgNow();
+    c.sel = ssSelOut(c.sel);
+    if (JSON.stringify(c) === JSON.stringify(ssSlots[ssSlotOn])) return;
+    ssSlots[ssSlotOn] = c;
+    ssSlotsStore();
+    clearTimeout(ssSlotSave.t);
+    ssSlotSave.t = setTimeout(ssSlotsDraw, 250);
+  }
+  function ssSlotLoad(i) {
+    const c = ssSlots[i];
+    if (!c) return;
+    ssSel = ssSelIn(c.sel);
+    store.set('sstvsel', ssSel);
+    ['ssT0', 'ssT1', 'ssT2'].forEach((id, k) => { $(id).value = c.t[k] || ''; store.set(id, $(id).value); });
+    $('ssSize').value = c.size || '0.1'; store.set('sssize', $('ssSize').value);
+    $('ssColor').value = c.color || '#ffe14a'; store.set('sscolor', $('ssColor').value);
+  }
+  function ssSlotsDraw() {
+    const box = $('ssSlots');
+    if (!box) return;
+    box.textContent = '';
+    const lab = document.createElement('span');
+    lab.className = 'ss-slots-l';
+    lab.textContent = 'Prêtes à émettre';
+    box.appendChild(lab);
+    ssSlots.forEach((cfg, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ss-slot' + (cfg ? '' : ' empty') + (i === ssSlotOn ? ' sel' : '');
+      const n = document.createElement('i');
+      n.textContent = String(i + 1);
+      if (cfg) {
+        const c = document.createElement('canvas');
+        c.width = 128;
+        c.height = 96;
+        const sel = ssSelIn(cfg.sel);
+        c.dataset.sel = sel;
+        ssDraw(c, 128, 96, Object.assign({}, cfg, { sel }));
+        b.appendChild(c);
+        b.title = 'Image prête n° ' + (i + 1) + (cfg.t.filter(Boolean).length ? ' : ' + cfg.t.filter(Boolean).join(' · ') : '') + ' — clic : la reprendre (fond et textes modifiables, gardés dans cette image) · nouveau clic : la lâcher · clic droit : vider';
+      } else {
+        const p = document.createElement('span');
+        p.textContent = '+';
+        b.appendChild(p);
+        b.title = 'Emplacement libre n° ' + (i + 1) + ' : clic = y ranger l’image en cours (fond et textes)';
+      }
+      b.appendChild(n);
+      b.addEventListener('click', () => {
+        // Nouveau clic sur l'image prête déjà choisie : on la lâche (les retouches ne la modifient plus)
+        if (ssSlots[i] && i === ssSlotOn) { ssSlotOn = -1; ssSlotsStore(); ssSlotsDraw(); return; }
+        if (!ssSlots[i]) { const c = ssCfgNow(); c.sel = ssSelOut(c.sel); ssSlots[i] = c; }
+        else ssSlotLoad(i);
+        ssSlotOn = i;
+        ssSlotsStore();
+        ssThumbs();
+        ssCompose();
+        ssSlotsDraw();
+      });
+      b.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        ssSlots[i] = null;
+        if (ssSlotOn === i) ssSlotOn = -1;
+        ssSlotsStore();
+        ssSlotsDraw();
+      });
+      box.appendChild(b);
+    });
   }
   function ssSignal(rate) {
     const c = $('ssCompose');
@@ -4796,6 +4893,7 @@
     zone.addEventListener('drop', (e) => { e.preventDefault(); zone.classList.remove('drop'); ssLoadFiles(e.dataTransfer.files); });
     ssThumbs();
     ssCompose();
+    ssSlotsDraw();
   }
 
   // ------------------------------------------------------------------ correspondant (ligne sous les onglets) et messages Tx1 à Tx7

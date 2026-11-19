@@ -3804,3 +3804,13 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .ws-grip[hidden] { display: none !important; }
 /* 0.43.49 : SSTV et JTTY — ligne d'état seulement pour un problème ; réglages de la cascade sur la ligne de la bande */
 #ssStatus[hidden], #jtStatus[hidden] { display: none !important; }
+/* 0.43.50 : SSTV — 5 images prêtes à émettre (fond + textes propres à chacune) */
+.ss-slots { display: flex; align-items: center; gap: 8px; padding: 8px 8px 0; flex: none; flex-wrap: wrap; }
+.ss-slots-l { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #F2CF4A; margin-right: 2px; }
+.ss-slot { position: relative; width: 104px; height: 78px; padding: 0; border: 1.5px solid var(--v2-border); border-radius: 8px; background: #05080d; cursor: pointer; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; }
+.ss-slot canvas { width: 100%; height: 100%; display: block; }
+.ss-slot.empty { border-style: dashed; color: var(--v2-text-dim); }
+.ss-slot.empty > span { font-size: 26px; font-weight: 300; line-height: 1; }
+.ss-slot > i { position: absolute; left: 4px; top: 3px; font: 800 10px/1 system-ui, 'Segoe UI', Arial, sans-serif; font-style: normal; color: #fff; background: rgba(0,0,0,.6); border-radius: 4px; padding: 2px 5px; }
+.ss-slot:hover { border-color: var(--v2-accent-cyan-bright); }
+.ss-slot.sel { border-color: #F2CF4A; box-shadow: 0 0 0 1.5px #F2CF4A; }
