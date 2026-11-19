@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.46** — WSPR : réglages de la cascade (Gain, Zéro, Plat, Couleurs, Vitesse) à droite de Qui m'a entendu ?
 - **0.43.45** — WSPR : décompte et Qui m'a entendu ? juste à droite de la bande audio
 - **0.43.44** — WSPR : ligne BF reçue retirée (affichée seulement en cas de problème)
 - **0.43.43** — Taille d'affichage : les pages des modes, le carnet en grand et la page Propagation suivent le réglage du dashboard

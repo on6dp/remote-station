@@ -1066,6 +1066,7 @@
       const slot = document.querySelector('.dg-wf-slot[data-slot="' + (pane === 'rtty' && dualAudio ? 'rtty-a' : pane) + '"]');
       const el = document.querySelector('.dg-wf:not(.rt-wfb):not(.ft-wfb)'); // cascade principale (pas celle du décodeur RTTY B ni du VFO-B en FT)
       if (slot && el && el.parentElement !== slot) slot.appendChild(el);
+      try { ctlRow(); } catch (e) { /* tout début du chargement : variables de la cascade pas encore prêtes */ } // réglages de la cascade : ligne de la bande (FT, WSPR) ou au-dessus de la cascade
       // RTTY double réception : Centrer et RX ici / TX ici à droite de « Vitesse » de la cascade de chaque VFO (une ligne
       // de moins dans l'en-tête) ; sinon (une seule cascade pour les deux décodeurs) dans l'en-tête de chaque décodeur
       for (const ch of [0, 1]) {
@@ -1185,8 +1186,11 @@
     const a = $('wfGain') && $('wfGain').closest('.wf-ctl'), va = $('ftVbarA');
     if (!a || !va) return;
     const one = !ftDual && (tab === 'ftx' || tab === 'jt65') && !detached;
-    if (one && a.parentElement !== va) { va.appendChild(a); a.classList.add('in-vbar'); }
-    else if (!one && a.parentElement === va) { va.after(a); a.classList.remove('in-vbar'); }
+    // WSPR : réglages de la cascade sur la ligne de la bande, à droite de « Qui m'a entendu ? » (une ligne de gagnée)
+    const wb = tab === 'wspr' ? $('whBtn') : null;
+    if (wb) { if (a.previousElementSibling !== wb) { wb.after(a); a.classList.add('in-wsbar'); a.classList.remove('in-vbar'); } else return; }
+    else if (one) { if (a.parentElement !== va) { va.appendChild(a); a.classList.add('in-vbar'); a.classList.remove('in-wsbar'); } else return; }
+    else if (a.previousElementSibling !== va) { va.after(a); a.classList.remove('in-vbar', 'in-wsbar'); }
     else return;
     if (wf.ctx) sizeCanvas();
   }
