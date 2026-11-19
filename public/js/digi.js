@@ -650,7 +650,7 @@
     <div class="dg-wf-slot" data-slot="sstv"></div>
     <div class="ss-grid">
       <div class="dg-col ss-rx">
-        <div class="dg-h"><span>Réception SSTV <b id="ssCap"></b></span><span class="dg-note">Martin, Scottie, Robot, PD : départ automatique sur le code VIS</span><button class="dg-mini" type="button" id="ssSave" title="Enregistrer l'image affichée sur votre PC">PNG</button></div>
+        <div class="dg-h"><span>Réception SSTV <b id="ssCap"></b></span><span class="dg-note">Martin, Scottie, Robot, PD : départ automatique sur le code VIS</span><button class="dg-mini" type="button" id="ssSave" title="Enregistrer l'image affichée sur votre PC">PNG</button><button class="dg-mini" type="button" id="ssSaveJ" title="Enregistrer l'image affichée sur votre PC en JPG (fichier plus léger, qualité 92 %)">JPG</button></div>
         <div class="ss-view"><canvas id="ssCanvas" width="320" height="256"></canvas><p class="ss-empty" id="ssEmpty">En attente d'une image…</p></div>
         <div class="ss-gal" id="ssGal" aria-label="Dernières images reçues"></div>
       </div>
@@ -4378,7 +4378,8 @@
     const p = meta ? Math.min(100, Math.round((meta.lines / meta.h) * 100)) : 0;
     if ($('ssProg')) { $('ssProg').style.width = p + '%'; $('ssProgT').textContent = meta && !meta.done ? meta.name + ' · ligne ' + meta.lines + ' / ' + meta.h : ''; }
   }
-  function ssSave() {
+  function ssSave(fmt) {
+    const jpg = fmt === 'jpg';
     const it = ssImgs.get(ssShown);
     if (!it || !it.data) return api && api.say('Pas d’image à enregistrer.', 'warn');
     const c = document.createElement('canvas');
@@ -4387,7 +4388,7 @@
     c.getContext('2d').putImageData(it.data, 0, 0);
     const d = new Date(it.meta.at);
     const p2 = (n) => String(n).padStart(2, '0');
-    const name = 'SSTV-' + d.getUTCFullYear() + p2(d.getUTCMonth() + 1) + p2(d.getUTCDate()) + '-' + p2(d.getUTCHours()) + p2(d.getUTCMinutes()) + '-' + it.meta.mode + '.png';
+    const name = 'SSTV-' + d.getUTCFullYear() + p2(d.getUTCMonth() + 1) + p2(d.getUTCDate()) + '-' + p2(d.getUTCHours()) + p2(d.getUTCMinutes()) + '-' + it.meta.mode + (jpg ? '.jpg' : '.png');
     c.toBlob((blob) => {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -4395,7 +4396,7 @@
       document.body.appendChild(a);
       a.click();
       setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-    }, 'image/png');
+    }, jpg ? 'image/jpeg' : 'image/png', jpg ? 0.92 : undefined);
   }
   function ssMessage(m) {
     if (m.t === 'sstv_list') {
@@ -4853,7 +4854,8 @@
     dial.value = store.get('ssdial', '14230');
     dial.addEventListener('change', () => { store.set('ssdial', dial.value); qsyTo(Number(dial.value)); });
     $('ssQsy').addEventListener('click', () => qsyTo(Number(dial.value)));
-    $('ssSave').addEventListener('click', ssSave);
+    $('ssSave').addEventListener('click', () => ssSave('png'));
+    $('ssSaveJ').addEventListener('click', () => ssSave('jpg'));
     const tm = $('ssTxMode');
     for (const id of SS_TX_MODES) { const o = document.createElement('option'); o.value = id; o.textContent = SSTV.MODES[id].name; tm.appendChild(o); }
     tm.value = store.get('sstvtx', 'M1');
