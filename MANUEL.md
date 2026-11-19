@@ -513,7 +513,7 @@ Onglet `SSB` de la ligne des onglets du dashboard, ou bouton `SSB` de la ligne *
 <a id="disposition"></a>
 ## 11. Disposition et fenêtres séparées
 
-- Bouton `⧉` en haut à droite d'un cadre : le cadre s'ouvre dans **sa propre fenêtre**, à placer où vous voulez (sur un 2e écran…). Dans cette fenêtre, `⧉ Ramener` le remet dans le dashboard.
+- Bouton `⧉` en haut à droite d'un cadre : le cadre s'ouvre dans **sa propre fenêtre**, à placer où vous voulez (sur un 2e écran…). Dans cette fenêtre, `⧉ Ramener` le remet dans le dashboard. Les écrans **VFO A (MAIN)** et **VFO B (SUB)** ont chacun le leur (depuis la 0.43.10) : chacun peut aller dans sa propre fenêtre, séparément.
 - Le bouton `⧉` à droite des onglets ouvre **tous les modes numériques** dans une fenêtre séparée. `RETOUR` (ou `Ramener ici` dans le dashboard) les remet en place.
 - La barre `Espace` (PTT) fonctionne aussi depuis une fenêtre séparée.
 - La disposition est retenue : au chargement suivant, les fenêtres se rouvrent à leur place si Chrome **autorise les fenêtres pop-up** pour remote.op0p.be (icône à droite de la barre d'adresse → Toujours autoriser).

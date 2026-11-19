@@ -3669,3 +3669,8 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 /* Carnet : listes TX call (filtre « Tous », statistiques, envois) en blanc gras aussi */
 .lg-txf select, #lgTxf, #lgStTx { color: #fff !important; font-weight: 800 !important; }
 .lg-txf select option { color: #fff; font-weight: 800; background: #0d141d; }
+/* VFO A et VFO B : chacun détachable (⧉ en haut à droite de chaque écran) ; seul dans sa fenêtre, il prend toute la largeur */
+.vfo-row > .vfo { position: relative; }
+.vfo-row > .vfo > .detach-btn.floating { top: 2px; right: 6px; left: auto; transform: none; }
+body.panel-popup > .vfo { margin: 26px 8px 8px; }
+body.panel-popup > .vfo > .detach-btn.floating { top: -22px; right: 2px; }
