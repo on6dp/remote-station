@@ -3659,3 +3659,6 @@ table.col-fixed td, table.col-fixed th { overflow: hidden; text-overflow: ellips
 .cwp-head h1 small { color: #b9cbe3; }
 .cwp-head h1 .spw.spw-head .spw-t { background: rgba(6, 12, 22, .62); border-color: #3a5f93; }
 .cwp-head h1 .spw.spw-head:hover .spw-t { border-color: #6f9ad6; }
+/* FT : « 2 à la fois » et « Spot cluster » à droite de SYNCHRO (barre du VFO-A) */
+.ft-vbar .dg-chk { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 13px; font-weight: 700; color: var(--v2-text-bright); margin-left: 6px; }
+.ft-vbar .dg-chk[hidden] { display: none; }

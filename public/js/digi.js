@@ -7188,7 +7188,12 @@
         bar.appendChild(b);
       }
       // Bande, ↺ et RX / TX du VFO-A : dans la barre du VFO-A (au-dessus de sa cascade), comme ceux du VFO-B
-      { const va = $('ftVbarA'), sp = $('dgRxF2') && $('dgRxF2').closest('.dg-split'); if (va && $('dgDial')) { va.append($('dgDial'), $('dgQsy')); if (sp) va.appendChild(sp); const vs = va.querySelector('.ft-vsync'); if (vs) va.appendChild(vs); $('dgDial').title = 'Bande du VFO-A : fréquence d’appel du mode (le VFO-A y va, en DATA-U)'; } }
+      { const va = $('ftVbarA'), sp = $('dgRxF2') && $('dgRxF2').closest('.dg-split'); if (va && $('dgDial')) { va.append($('dgDial'), $('dgQsy')); if (sp) va.appendChild(sp); const vs = va.querySelector('.ft-vsync'); if (vs) va.appendChild(vs);
+        // « 2 à la fois » et « Spot cluster » : à droite de SYNCHRO, dans la barre du VFO-A
+        const du = $('dgDual') && $('dgDual').closest('label'), sl = du && du.parentNode ? du.parentNode.querySelector('.spotlog') : null;
+        if (du) va.appendChild(du);
+        if (sl) va.appendChild(sl);
+        $('dgDial').title = 'Bande du VFO-A : fréquence d’appel du mode (le VFO-A y va, en DATA-U)'; } }
       // Choisir une fréquence dans la liste y envoie directement le TRX (QSY)
       $('dgDial').addEventListener('change', () => { store.set('dial.' + mode, $('dgDial').value); qsy(); });
       $('dgClear').addEventListener('click', () => { hist.length = 0; redrawAll(); });

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.7** — TRX FT8/FT4/FT2 : « 2 à la fois » et « Spot cluster » à droite de SYNCHRO
 - **0.43.6** — Pages des modes : bandeau du titre en bleu nuit (au lieu du noir), tuiles de propagation qui ressortent
 - **0.43.5** — Pages des modes (TRX DIGI, SSB, CW) : bandeau de propagation sur la ligne du titre, à droite ; titre en plus grand
 - **0.43.4** — TRX DIGI : ligne « Émission FT » réduite chez les administrateurs (niveau et ALC max dans les réglages à côté, détail au survol)
