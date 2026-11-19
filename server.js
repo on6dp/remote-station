@@ -320,6 +320,8 @@ const txSide = () => (txSel ? 1 - rxSide() : rxSide());
 // Dernière fréquence demandée par VFO (voir la lecture du TRX : pas de retour à l'ancienne fréquence)
 const freqCmd = { A: null, B: null };
 const FREQ_CMD_HOLD = 2500;
+// Derniers réglages demandés (contrôles du pilote) : même garde que la fréquence
+const ctlCmd = {};
 let radio = { connected: false, freq: null, mode: null, modeCode: null, freqB: null, modeB: null, modeCodeB: null, tx: 0, smeter: 0 };
 const ops = new Set(); // connexions opérateurs authentifiées
 let controller = null; // connexion qui a la main
@@ -4721,7 +4723,7 @@ function onOperator(conn, m) {
           tuneWatch = { freq: txFreq(), at: Date.now(), saw: false, endAt: 0, call: conn.user.call, conn };
         }
         toStation({ t: 'cmd', op: 'ctl', id: m.ctl, value: v, by: conn.user.call, subOk: !!cfg.ftx1SubCat, subSingle: !!cfg.ftx1SubSingle });
-        if (c.type !== 'action') radio[m.ctl] = v; // affichage optimiste
+        if (c.type !== 'action') { radio[m.ctl] = v; ctlCmd[m.ctl] = { v, at: Date.now() }; } // affichage optimiste
         if (R.VIRTUAL_SPLIT && m.ctl === 'vfoSel') radio.txVfo = txSide(); // l'émission suit la réception (ou l'autre VFO en SPLIT)
       }
       if (m.power != null) {
@@ -5143,6 +5145,13 @@ function onStation(conn, m) {
   }
   // Réglages propres au pilote (SPLIT, filtres, mesures…) : nombres uniquement
   for (const k of rig().STATE_KEYS || []) radio[k] = Number.isFinite(r[k]) ? r[k] : null;
+  // Réglage demandé il y a moins de 2,5 s (SPLIT, ATT, NB…) : une lecture du TRX encore à l'ancienne valeur (polling parti
+  // avant la commande) ne le fait pas revenir un instant (aller-retour à l'écran, ex. SPLIT ON → OFF → ON)
+  for (const k of Object.keys(ctlCmd)) {
+    const c = ctlCmd[k];
+    if (radio[k] === c.v || Date.now() - c.at > FREQ_CMD_HOLD) delete ctlCmd[k];
+    else if (radio[k] != null) radio[k] = c.v;
+  }
   // CW manipulée sur le TRX lui-même (ou break-in rapide) : la réception entre les lettres ne fait pas clignoter
   // l'affichage ; il reste « émission » 1,5 s après la dernière lecture en émission
   if (radio.tx) cwTxSeenAt = Date.now();
