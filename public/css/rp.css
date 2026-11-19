@@ -3720,3 +3720,7 @@ label.lg-txf:has(#lgTxf) select { height: 24px; padding: 0 6px; border-radius: 7
 #usersBtn, #ctrlBtn, #logout, #dxcBtn, #statsBtn, #zoomBtn, #winBtn, #installBtn, #helpBtn { border-radius: 8px !important; height: 32px !important; }
 /* Onglet MODES : même encadré jaune que DÉTAILS QSO */
 .ctabs .ctab[data-tab='events'] { border-color: var(--v2-accent-yellow, #ffe600) !important; color: var(--v2-accent-yellow, #ffe600); }
+/* 0.43.22 : Filtre log actif — indicatif lisible (jaune sur fond sombre dans le cadre jaune) */
+.lg-bar .lg-txf:has(select.on) { color: #000 !important; }
+#lgTxf.on, .lg-bar .lg-txf select.on { color: #ffe600 !important; background: #0d141d !important; border-radius: 7px; font-weight: 900 !important; outline: none; }
+#lgTxf:focus-visible { outline: 2px solid #000; outline-offset: 1px; }
