@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.64** — FreeDV : page de phonie numérique HF (RADE, 700D, 700E, 1600) avec tous les TRX, réception des quatre modes en même temps, émission codée par le serveur, indicatif, stations entendues, log FREEDV
 - **0.43.63** — SSTV numérique (DRM) sous Windows : drmd.exe, drmgen.exe, drmrs.exe ; bouton Numérique grisé si le DRM manque ; aide : installer Remote Station sous Windows ou Linux (versions conseillées)
 - **0.43.62** — SSTV : boutons Analogique / Numérique en émission et en réception ; aide : signification des modes SSTV analogiques et DRM
 - **0.43.61** — SSTV numérique (DRM, compatible EasyPal) : réception automatique avec Synchro DRM et constellation, émission des images en DRM (modes A/B/E, QAM, Reed-Solomon)

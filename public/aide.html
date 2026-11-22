@@ -50,6 +50,7 @@
   <a href="#sstv">12.7 SSTV</a>
   <a href="#synchro">12.8 Synchro</a>
   <a href="#qo100">12.9 QO-100</a>
+  <a href="#freedv">12.10 FreeDV</a>
   <a href="#messages">13. Correspondant, macros et balises</a>
   <a href="#logs">14. Logbooks (carnet de trafic)</a>
   <a href="#l-fiche">14.1 Enregistrer un QSO</a>
@@ -927,6 +928,25 @@ Choisissez la bande dans la liste ; une dizaine de secondes après chaque minute
 <p>QO-100 est un satellite géostationnaire qu'on atteint en 2,4 GHz avec un convertisseur. Les listes FT8 · FT4, RTTY et CW proposent « <b>QO-100 · FI 2 m / 70 cm</b> » :
 la fréquence à mettre sur le TRX <b>avant le convertisseur</b>, pour monter sur 2400,040 MHz (FT8 / FT4), 2400,025 MHz (CW) ou 2400,090 MHz (RTTY).
 Exemple : FT8 sur <b>432,540 MHz</b> avec le convertisseur 70 cm du club. Seules les FI que le TRX branché peut atteindre sont proposées (FTX-1).</p>
+
+<h3 id="freedv">12.10 FreeDV (phonie numérique HF)</h3>
+<p><b>FreeDV</b> est la phonie numérique des radioamateurs en HF : la voix est codée en données dans une bande d'environ 1,5 kHz, émise en <b>USB</b> sur toutes les bandes. La station le fait avec <b>tous les TRX</b> : le serveur décode la BF du TRX et code votre voix (lib/bin/fdvd, avec les bibliothèques de FreeDV). La page s'ouvre avec le bouton <span class="k">FreeDV</span> de la ligne MODES (dashboard ou face avant) ; c'est la page SSB, sans les contests ni les mémoires vocales, avec un cadre <b>FREEDV</b> en plus. Le TRX passe tout seul en USB.</p>
+<table>
+  <tr><th>Mode</th><th>Signification</th></tr>
+  <tr><td><b>RADE</b> (conseillé)</td><td>Le mode actuel de FreeDV, le plus utilisé (14 236 kHz…) : réseau neuronal (Radio Autoencoder) et vocodeur FARGAN ; voix naturelle, robuste sur un signal faible, pas de constellation.</td></tr>
+  <tr><td><b>700D</b></td><td>Le plus utilisé des anciens modes : passe sous le bruit (vers −2 dB de SNR), voix un peu « codée ».</td></tr>
+  <tr><td><b>700E</b></td><td>Comme 700D, mieux adapté au fading rapide (DX, propagation difficile).</td></tr>
+  <tr><td><b>1600</b></td><td>Le mode historique : meilleure voix des anciens modes, mais il faut un signal plus fort.</td></tr>
+</table>
+<ul>
+  <li><b>Réception</b> : les <b>quatre modes écoutent en même temps</b> ; celui qui se cale est entendu, il n'y a rien à choisir. Voyants : jaune = calé, bleu = entendu. À côté : <b>SNR</b>, <b>écart de fréquence</b> (corrigé tout seul) et <b>indicatif</b> du correspondant (envoyé dans le canal texte de FreeDV ; en RADE, à la fin de chaque passage). La <b>constellation</b> (700D, 700E, 1600) montre la qualité du signal : 4 groupes de points nets = bon signal.</li>
+  <li><b>Écoute</b> : <span class="k">Voix décodée</span> (la voix, silence tant qu'aucun signal FreeDV n'est calé) ou <span class="k">Signal du TRX</span> (le son du TRX tel quel). Il faut <b>ÉCOUTER LE TRX</b> allumé (ligne SSB CONFIGURATION). Ce choix ne change que votre écoute.</li>
+  <li><b>Émission</b> : choisir le mode (RADE par défaut), mettre le <b>MICRO</b> en service, puis <b>PTT</b> (ou la barre d'espace) et parler. Votre voix est codée par le serveur ; votre <b>TX call</b> part dans le canal texte. Au relâchement, la fin du signal part encore (≈ 0,2 à 0,5 s) avant le retour en réception.</li>
+  <li><b>Stations entendues</b> : heure, indicatif, mode, SNR, fréquence ; un clic met l'indicatif dans la fiche du QSO.</li>
+  <li><b>Fréquences</b> : 3 625, 7 177, 14 236, 18 118, 21 313, 24 933 et 28 330 kHz (USB), en un clic avec la main.</li>
+  <li><b>Log</b> : la fiche du carnet enregistre le mode <b>FREEDV</b> (ADIF : MODE DIGITALVOICE, SUBMODE FREEDV) ; LOG FREEDV montre les QSO en FreeDV, EXPORTER en fait un fichier ADIF.</li>
+  <li><b>Réglages du TRX</b> : USB, filtre d'au moins 2,7 kHz, <b>compresseur (PROC) coupé</b>, niveau sans ALC, puissance réduite (FreeDV émet en continu pendant le PTT, comme le FT8).</li>
+</ul>
 
 <h2 id="messages">13. Correspondant, macros et balises</h2>
 <p><b>La ligne Correspondant</b> (sous les onglets des modes numériques)</p>

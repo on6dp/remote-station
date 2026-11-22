@@ -24,9 +24,9 @@
   const keepNote = (s) => '<p class="lg-keep">🔒 <b>Vous seul connaissez ces identifiants.</b> Remote Station les garde sur le serveur sans <b>jamais les réafficher</b>, ni à vous ni à personne : <b>perdus, ils ne peuvent pas être récupérés</b> par Remote Station. Notez-les en lieu sûr. En cas de perte : ' + (s ? KEEP[s] : Object.values(KEEP).join(' ')) + '</p>';
   const SYNC = { lotw: 'Synchronisation LoTW', eqsl: 'Synchronisation eQSL', clublog: 'Synchronisation ClubLog', qrz: 'Synchronisation QRZ' };
   const SHORT = { lotw: 'LoTW', eqsl: 'eQSL', clublog: 'CL', qrz: 'QRZ' };
-  const MODES = ['SSB', 'USB', 'LSB', 'CW', 'AM', 'FM', 'RTTY', 'FT8', 'FT4', 'FT2', 'JT65', 'JTTY', 'SSTV', 'PSK31', 'WSPR', 'C4FM', 'DATA'];
+  const MODES = ['SSB', 'USB', 'LSB', 'CW', 'AM', 'FM', 'RTTY', 'FT8', 'FT4', 'FT2', 'JT65', 'JTTY', 'SSTV', 'PSK31', 'WSPR', 'C4FM', 'FREEDV', 'DATA'];
   const DIGI = ['FT8', 'FT4', 'FT2', 'JT65', 'JTTY', 'WSPR'];
-  const PHONE = ['SSB', 'USB', 'LSB', 'AM', 'FM', 'C4FM'];
+  const PHONE = ['SSB', 'USB', 'LSB', 'AM', 'FM', 'C4FM', 'FREEDV'];
   const CONTESTS = ['DX', 'UBA-DX-CW', 'UBA-DX-SSB', 'UBA-SPRING-CW', 'UBA-SPRING-SSB', 'ON-CONTEST', 'IARU-HF', 'CQ-WW-CW', 'CQ-WW-SSB', 'CQ-WPX-CW',
     'CQ-WPX-SSB', 'ARRL-DX-CW', 'ARRL-DX-SSB', 'WAE-CW', 'WAE-SSB', 'EU-HF', 'IARU-VHF', 'IARU-UHF',
     'CQ-WW-RTTY', 'CQ-WPX-RTTY', 'ARRL-RTTY', 'BARTG-RTTY', 'BARTG-SPRINT', 'SARTG-RTTY', 'DARC-WAEDC-RTTY', 'EA-RTTY', 'SP-DX-RTTY', 'VOLTA-RTTY',
@@ -42,6 +42,7 @@
   let TAG = '';
   let FORM = false;
   let SSBP = false; // page TRX SSB : mode USB ou LSB seulement
+  let FDVP = false; // page FreeDV : mode FREEDV seulement
   let items = [];
   let total = 0;
   // Colonnes du carnet : largeur par défaut (px), réglable à la souris (bord droit de l'en-tête), gardée dans ce navigateur
@@ -215,7 +216,7 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeFlt(); });
     q$('#lgFclr').addEventListener('click', () => { filt = {}; reload(); });
     const f = q$('#lgForm');
-    for (const m of SSBP ? ['USB', 'LSB'] : MODES) f.mode.add(new Option(m, m));
+    for (const m of FDVP ? ['FREEDV'] : SSBP ? ['USB', 'LSB'] : MODES) f.mode.add(new Option(m, m));
     f.addEventListener('submit', (e) => { e.preventDefault(); save(false); });
     f.querySelector('[data-a="now"]').addEventListener('click', () => { const n = utcNow(); f.date.value = n.date; f.time.value = n.time; });
     f.querySelector('[data-a="trx"]').addEventListener('click', () => fromTrx(true));
@@ -493,6 +494,7 @@
   // ------------------------------------------------------------------ pré-remplissage (TRX + correspondant)
   function trxMode(rm) {
     const m = String(rm || '').toUpperCase();
+    if (FDVP) return 'FREEDV';
     if (SSBP) {
       // Page TRX SSB : LSB / USB du TRX, sinon d'après la fréquence (LSB sous 10 MHz, sauf 60 m)
       if (/^LSB/.test(m)) return 'LSB';
@@ -2035,7 +2037,7 @@
     // Carnet en grand (autre fenêtre) : il reprend les filtres de ce carnet (Filtre log, filtres de colonnes)
     filters() { return JSON.parse(JSON.stringify(filt || {})); },
     setFilters(f) { filt = f && typeof f === 'object' ? JSON.parse(JSON.stringify(f)) : {}; if (root) txfDraw(); },
-    init(a) { api = a; TAG = (a && a.tag) || ''; FORM = !!(a && a.formOnly); SSBP = !!(a && a.phone); if (TAG === 'big') statsSetup(); },
+    init(a) { api = a; TAG = (a && a.tag) || ''; FORM = !!(a && a.formOnly); SSBP = !!(a && a.phone); FDVP = !!(a && a.freedv); if (TAG === 'big') statsSetup(); },
     // Fiche du carnet : fréquence et mode suivent tout seuls le VFO actif du TRX (sauf saisie à la main ou modification d'un QSO)
     onState() {
       if (!root || editing) return;

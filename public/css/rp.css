@@ -3876,3 +3876,36 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .ss-tx > .dg-h{justify-content:flex-start}
 .ss-tx > .dg-h #ssDur{margin-left:auto}
 .ss-fam button:disabled{opacity:.4;cursor:not-allowed;background:#101924 !important;color:#64748b !important;box-shadow:none !important}
+
+/* 0.43.64 — Page FreeDV (fdv.html = page SSB sans contests ni mémoires vocales, plus le cadre FREEDV) */
+.fdv-body .cwp-ctst, .fdv-body .ssb-vk { display: none !important; }
+.fdv-box { padding: 8px 12px; border-radius: 12px; }
+.fdv-box.sync { box-shadow: inset 0 0 0 1.5px #22d3ee, 0 0 14px rgba(34,211,238,.18); }
+.fdv-h { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 8px; }
+.fdv-t { font: 900 15px/1 system-ui, "Segoe UI", Arial, sans-serif; letter-spacing: 1.5px; color: #c084fc; }
+.fdv-lamps { display: inline-flex; gap: 6px; }
+.fdv-lamps i { font: 800 11px/1 system-ui, "Segoe UI", Arial, sans-serif; font-style: normal; padding: 4px 8px; border-radius: 8px; border: 1.5px solid #2b3b4e; background: #101924; color: #64748b; }
+.fdv-lamps i.sy { color: #fde68a; border-color: #a16207; }
+.fdv-lamps i.act { color: #04131a; background: #22d3ee; border-color: #22d3ee; }
+.fdv-kv { font: 700 12px/1.2 system-ui, "Segoe UI", Arial, sans-serif; color: #94a3b8; }
+.fdv-kv b { font: 900 15px/1.1 ui-monospace, "Roboto Mono", Consolas, monospace; color: #fff; margin-left: 4px; }
+.fdv-callw b { color: #fde047; font-size: 17px; letter-spacing: .5px; }
+.fdv-row { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+.fdv-sc { border-radius: 10px; border: 1.5px solid #2b3b4e; background: #0b1422; flex: none; }
+.fdv-col { display: flex; flex-direction: column; gap: 7px; flex: 1 1 360px; min-width: 300px; }
+.fdv-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fdv-lab { font: 800 11px/1 system-ui, "Segoe UI", Arial, sans-serif; color: #fff; letter-spacing: .6px; text-transform: uppercase; min-width: 86px; }
+.fdv-seg { display: inline-flex; border: 1.5px solid #2b3b4e; border-radius: 9px; overflow: hidden; }
+.fdv-seg button { font: 800 12px/1 system-ui, "Segoe UI", Arial, sans-serif; padding: 6px 11px; border: 0; background: #101924; color: #94a3b8; cursor: pointer; }
+.fdv-seg button + button { border-left: 1.5px solid #2b3b4e; }
+.fdv-seg button:hover { color: #e2e8f0; background: #16273a; }
+.fdv-seg button.on { background: #4a2a6b; color: #fff; box-shadow: inset 0 0 0 1px #c084fc; }
+.fdv-qrg { display: inline-flex; gap: 5px; flex-wrap: wrap; }
+.fdv-qrg button { font: 800 11.5px/1 ui-monospace, "Roboto Mono", Consolas, monospace; padding: 5px 8px; border-radius: 8px; border: 1.5px solid #2b3b4e; background: #101924; color: #cbd5e1; cursor: pointer; }
+.fdv-qrg button:hover { border-color: #22d3ee; color: #fff; }
+.fdv-heard { flex: 1 1 300px; min-width: 260px; max-height: 170px; overflow: auto; border: 1.5px solid #2b3b4e; border-radius: 10px; }
+.fdv-hh { font: 800 11px/1 system-ui, "Segoe UI", Arial, sans-serif; color: #fff; letter-spacing: .5px; text-transform: uppercase; padding: 6px 8px; position: sticky; top: 0; background: #0f1a28; }
+.fdv-hh small { color: #94a3b8; text-transform: none; letter-spacing: 0; font-weight: 600; margin-left: 6px; }
+.fdv-htab { width: 100%; }
+.fdv-htab tbody tr[data-call] { cursor: pointer; }
+.fdv-htab tbody tr[data-call]:hover td { background: #16273a; }

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRX FreeDV — Remote Station</title>
+<meta name="theme-color" content="#0b1018">
+<link rel="stylesheet" href="/css/rp-tokens.css">
+<link rel="stylesheet" href="/css/rp.css">
+<link rel="stylesheet" href="/css/face.css">
+<script src="/js/zoom.js"></script>
+</head>
+<body class="cwp-body ssb-body fdv-body">
+  <!-- Page FreeDV : phonie numérique HF (RADE, 700D, 700E, 1600), avec la bibliothèque codec2 de FreeDV côté serveur (lib/bin/fdvd).
+       Même page que la SSB (micro, PTT, fiche du carnet, propagation) sans les contests ni les mémoires vocales ;
+       ssbpage.js voit la classe fdv-body. Même connexion que la page qui l'a ouverte. -->
+  <header class="cwp-head">
+    <h1><span class="ssb-txc" id="ssTxc" title="TX call : indicatif sous lequel on émet"></span>FreeDV <small>Remote Station · phonie numérique HF</small></h1>
+    <label class="cwp-txcl" title="TX CALL : indicatif sous lequel on émet et sous lequel les QSO vont dans le carnet (exports ADIF / Cabrillo). Avec la main seulement.">TX CALL <select id="cwpTxCall"></select></label>
+    <div class="cwp-trx"><span id="cwpFreq">—</span> <span id="cwpMode" class="cwp-mode">—</span></div>
+    <div class="cwp-ctl"><span class="rs-ctlw" id="cwpChip"></span><span id="cwpCtl"></span> <button class="cwp-take" type="button" id="cwpTake" hidden>PRENDRE LA MAIN</button><button class="cwp-follow" type="button" id="ssFollow" aria-pressed="false">👁 SUIVRE L’OPÉRATEUR</button></div>
+    <div class="cwp-txbig" id="cwpTx">RX</div>
+    <button class="ctab-detach cwp-back" type="button" id="cwpBack" title="Fermer cette page et revenir à la page qui l’a ouverte (dashboard ou face avant)">RETOUR</button>
+  </header>
+  <!-- Propagation et météo spatiale (spw.js), comme dans le dashboard : clic = page Propagation -->
+  <div class="spw spw-page" id="spw" role="link" tabindex="0" hidden></div>
+  <p class="cwp-orphan" id="cwpOrphan" hidden>Cette page doit être ouverte depuis le dashboard (onglet FreeDV) ou la face avant (bouton FreeDV de la ligne MODES). Si le dashboard a été fermé, rouvrez-le : cette page s’y raccrochera.</p>
+  <div class="cwp-wrap">
+  <!-- Carte de bande (spots du DX cluster) de la bande du TRX, à gauche -->
+  <aside class="cwp-box xbm-box" id="xBm" aria-label="Carte de bande"></aside>
+  <main class="cwp-main ssb-main">
+    <section class="cwp-box fc-tx ssb-tx" id="fcTx">
+      <button class="btn ptt" id="ptt" type="button" title="Maintenir pour émettre en FreeDV (ou la barre d’espace hors des cases de saisie). Votre voix est codée par le serveur dans le mode choisi ci-dessous.">PTT</button>
+    </section>
+    <!-- FreeDV : réception (tous les modes en même temps), mode d'émission, écoute, stations entendues -->
+    <section class="cwp-box fdv-box" id="fdvBox" aria-label="FreeDV">
+      <div class="fdv-h">
+        <b class="fdv-t">FREEDV</b>
+        <span class="fdv-lamps" id="fdvLamps" title="Synchronisation de chaque mode : les quatre écoutent en même temps, celui qui se cale est entendu (jaune : calé ; bleu : entendu)"></span>
+        <span class="fdv-kv">Reçu <b id="fdvAct">—</b></span>
+        <span class="fdv-kv" title="Rapport signal / bruit estimé (bande de 3 kHz)">SNR <b id="fdvSnr">—</b></span>
+        <span class="fdv-kv" title="Écart de fréquence entre le correspondant et le TRX, corrigé tout seul">Écart <b id="fdvFo">—</b></span>
+        <span class="fdv-kv fdv-callw" title="Indicatif envoyé par le correspondant dans le canal texte de FreeDV">Indicatif <b id="fdvCall">—</b></span>
+      </div>
+      <div class="fdv-row">
+        <canvas class="fdv-sc" id="fdvSc" width="132" height="132" title="Constellation (QPSK, modes 700D, 700E, 1600) : 4 groupes de points nets = bon signal ; un nuage = trop de bruit. RADE n’en a pas."></canvas>
+        <div class="fdv-col">
+          <div class="fdv-line"><span class="fdv-lab">Émission</span><span class="fdv-seg" id="fdvTxSeg" role="group" aria-label="Mode d'émission FreeDV"></span><span class="cwp-note" id="fdvTxNote"></span></div>
+          <div class="fdv-line"><span class="fdv-lab">Écoute</span><span class="fdv-seg" id="fdvHear" role="group" aria-label="Écoute"><button type="button" data-h="dec" title="La voix décodée par FreeDV (silence tant qu’aucun signal FreeDV n’est calé)">Voix décodée</button><button type="button" data-h="raw" title="Le son du TRX tel quel (on entend le signal FreeDV, comme un bruit de modem)">Signal du TRX</button></span></div>
+          <div class="fdv-line"><span class="fdv-lab">Fréquences</span><span class="fdv-qrg" id="fdvQrg"></span></div>
+          <p class="cwp-note" id="fdvNote"></p>
+        </div>
+        <div class="fdv-heard">
+          <div class="fdv-hh">Stations entendues <small>clic = dans la fiche du QSO</small></div>
+          <table class="cwp-clog fdv-htab"><thead><tr><th>UTC</th><th>Indicatif</th><th>Mode</th><th>SNR</th><th>kHz</th></tr></thead><tbody id="fdvHeard"></tbody></table>
+        </div>
+      </div>
+    </section>
+    <!-- Réglages micro du TRX (gain micro, PROC / COMP, MIC EQ, niveau, VOX) : déplacés ici depuis le cadre TX du dashboard -->
+    <section class="cwp-box ssb-mic" id="ssMic" hidden aria-label="Micro du TRX"><div class="ssb-mic-h">MICRO DU TRX</div><div class="ssb-mic-b" id="ssMicB"></div></section>
+    <!-- Les deux VFO (TRX à deux VFO) : SPLIT, réception sur l'un, émission sur l'autre -->
+    <section class="cwp-box" id="cwpVfo" hidden></section>
+    <section class="cwp-box cwp-ctst">
+      <div class="cwp-ctrow">
+        <label class="cwp-ctl1"><span class="cwp-ctlab">Contests</span> <select id="ssCtst"><option value="">— pas de contest —</option></select></label>
+        <label>Catégorie <select id="ssCat"></select></label>
+        <label id="ssPwrW">Puissance <select id="ssPwr"><option value="HIGH">forte (HIGH)</option><option value="LOW">faible (LOW)</option><option value="QRP">QRP</option></select></label>
+        <label id="ssBandW">Bande <select id="ssBand"></select></label>
+        <label id="ssAssW" class="cwp-chk" title="Aide de spots (DX cluster, skimmer…) utilisée"><input type="checkbox" id="ssAss"> Assisté</label>
+        <!-- Échange, n° de série, zones : sur la même ligne que le contest, à droite de Assisté -->
+        <label title="Échange envoyé : &lt;CNTR&gt; = n° de série, &lt;CQZ&gt; = zone CQ, &lt;ITUZ&gt; = zone ITU">Échange <input id="ssExch" maxlength="30" spellcheck="false"></label>
+        <span class="cwp-exsh" id="ssExchSh" title="À annoncer"></span>
+        <span class="cwp-nr" title="Numéro de série à annoncer : il passe au suivant à chaque QSO enregistré">N° <button type="button" id="ssNrM">−1</button><input id="ssNr" maxlength="4" inputmode="numeric"><button type="button" id="ssNrP">+1</button></span>
+        <label>Zone CQ <input id="ssCqz" maxlength="2" inputmode="numeric" class="cwp-z"></label>
+        <label>ITU <input id="ssItu" maxlength="2" inputmode="numeric" class="cwp-z"></label>
+        <label id="ssOvW">Overlay <select id="ssOv"><option value="">—</option></select></label>
+        <a id="ssRules" class="ssb-rules" target="_blank" rel="noopener" hidden>RÈGLEMENT ↗</a>
+      </div>
+      <p class="cwp-note" id="ssNote"></p>
+      <div class="cwp-cgrid" id="cwpCtBody" hidden>
+        <div class="cwp-cleft">
+          <div class="cwp-entry" title="Entrée : comme l’ESM de N1MM (voir l’aide) · Espace : champ suivant · Alt+W : effacer">
+            <span class="cwp-esm"><button type="button" id="cwpRun" title="Vous appelez CQ : Entrée = CQ (T1), puis échange reçu, puis log + TU (T3)">RUN</button><button type="button" id="cwpSp" title="Vous répondez : Entrée = votre indicatif (T4), puis log">S&amp;P</button></span>
+            <label>Indicatif <input id="cwpECall" maxlength="15" autocomplete="off" spellcheck="false"></label>
+            <label>RS <input id="cwpERs" maxlength="3" class="cwp-rst" title="Report envoyé"></label>
+            <label>Envoyé <input id="cwpEStx" maxlength="30" spellcheck="false" title="Échange annoncé (rempli tout seul)"></label>
+            <label>RS <input id="cwpERr" maxlength="3" class="cwp-rst" title="Report reçu"></label>
+            <label>Reçu <input id="cwpESrx" maxlength="30" autocomplete="off" spellcheck="false" title="Échange reçu (n° de série, zone…)"></label>
+            <button type="button" class="cwp-elog" id="cwpELog">LOG ↵</button>
+            <button type="button" class="cwp-ewipe" id="cwpEWipe" title="Effacer la ligne (Alt+W)">EFFACER</button>
+            <label class="spotlog" title="Cochée : chaque QSO enregistré (LOG) est aussi spoté sur le DX cluster sous votre indicatif d’opérateur — pas le TX CALL. Même réglage dans toutes les pages."><input type="checkbox" data-spotlog> Spot cluster</label>
+            <span class="cwp-dupe" id="cwpDupe"></span>
+          </div>
+          <div class="ssb-vk">
+            <span class="ssb-vkh">Mémoires vocales <small>F1 à F8 · Échap : arrêt</small><button type="button" class="ssb-ttsb" id="ssTtsBtn" title="Messages standard en anglais ou en français fabriqués par le serveur, avec votre TX call épelé en alphabet phonétique">🗣 Config. Macros</button><button type="button" class="ssb-ttsb" id="ssRecBtn" title="Enregistrer les mémoires T1 … T8 avec votre propre voix, au micro de ce PC (tous les TRX)">🎙 Ma voix</button></span>
+            <div class="cwp-macros" id="ssVk"></div>
+            <div class="ssb-tts" id="ssTts" hidden>
+              <p class="cwp-note">Messages dits par la voix de synthèse du serveur (Kokoro ou Piper), en anglais ou en français (un jeu de messages par langue). <b>{CALL}</b> = votre TX call, épelé en alphabet phonétique (<span id="ssTtsEx"></span>) ; quand le TX call change, les messages sont refaits tout seuls. Cochez les mémoires à remplacer.</p>
+              <div class="ssb-ttsr ssb-ttsv">
+                <label>Langue <select id="ssTtsLang"><option value="en">Anglais</option><option value="fr">Français (Coupe du REF…)</option></select></label>
+                <label>Voix <select id="ssTtsV"></select></label>
+                <button type="button" id="ssTtsTry" title="Écouter la voix choisie sur le message T1, dans ce PC (rien n'est émis)">▶ Écouter</button>
+                <label>Vitesse <input type="range" id="ssTtsS" min="100" max="320" step="5"><output id="ssTtsSo"></output></label>
+                <label title="Petite pause entre les mots épelés de l’indicatif (alphabet phonétique)">Espacement des lettres <input type="range" id="ssTtsG" min="0" max="300" step="10"><output id="ssTtsGo2"></output></label>
+              </div>
+              <details class="ssb-pron"><summary>Prononciations</summary>
+                <p class="cwp-note">Un mot par ligne, « mot=dit comme » : par exemple <code>Romeo=Roméo</code> ou <code>Mike=Maïk</code>. Gardées pour chaque langue ; en français, l'alphabet international est déjà adapté (Roméo, Zoulou, Québec…). <b>▶ Écouter</b> pour vérifier.</p>
+                <textarea id="ssTtsP" rows="3" spellcheck="false"></textarea>
+              </details>
+              <div class="ssb-ttsl" id="ssTtsL"></div>
+              <div class="ssb-ttsr">
+                <button type="button" id="ssTtsDef" title="Remettre les messages proposés">Messages par défaut</button>
+                <button type="button" class="ssb-ttsgo" id="ssTtsGo" title="Fabrique les mémoires cochées puis ferme ce cadre (réglages gardés)">GÉNÉRER</button>
+                <button type="button" id="ssTtsX" title="Fermer ce cadre (réglages gardés ; « Config. Macros » pour le rouvrir)">✕ Fermer</button>
+              </div>
+            </div>
+            <div class="ssb-tts ssb-rec" id="ssRec" hidden>
+              <p class="cwp-note">Vos mémoires <b>T1 … T8</b> avec <b>votre propre voix</b>, pour tous les TRX : mettez votre <b>micro</b> en service (cadre micro ci-dessus), puis <b>● REC</b>, parlez (30 s au plus), <b>■ STOP</b>. <b>▶</b> pour réécouter dans ce PC (rien n'est émis), <b>✕</b> pour effacer. Gardées sur le serveur pour vous seul ; elles remplacent le message de synthèse de la même mémoire. Rien n'est enregistré pendant une émission.</p>
+              <div class="ssb-recl" id="ssRecL"></div>
+              <div class="ssb-ttsr"><span class="ssb-recm" id="ssRecM"></span><button type="button" id="ssRecX">✕ Fermer</button></div>
+            </div>
+            <p class="cwp-note ssb-vkct">T1 = CQ, T3 = TU / QRZ, T4 = votre indicatif pour la touche Entrée. Votre voix : <b>🎙 Ma voix</b> ; voix de synthèse : <b>🗣 Config. Macros</b>. L’échange (n° de série) se dit au micro avec le PTT ci-dessus.</p>
+          </div>
+          <div class="ssb-panels">
+            <div class="ssb-pan ssb-score">
+              <h3>Score <small id="ssScNote"></small></h3>
+              <table class="cwp-clog ssb-tab"><thead><tr><th>Bande</th><th>QSO</th><th>Points</th><th>Mult.</th></tr></thead><tbody id="ssScB"></tbody>
+                <tfoot><tr><td>Total</td><td id="ssScQ">0</td><td id="ssScP">0</td><td id="ssScM">0</td></tr></tfoot></table>
+              <p class="ssb-total">Score estimé <b id="ssScT">0</b></p>
+              <h3>Évolution <small>par heure UTC</small></h3>
+              <table class="cwp-clog ssb-tab"><thead><tr><th>Heure</th><th>QSO</th><th>Cumul</th><th>Score</th></tr></thead><tbody id="ssEvo"></tbody></table>
+            </div>
+            <div class="ssb-pan ssb-prob">
+              <h3 id="ssPrH">Indicatifs probables</h3>
+              <div class="ssb-prl" id="ssPr"></div>
+              <p class="cwp-note" id="ssPrNote"></p>
+            </div>
+          </div>
+        </div>
+        <div class="cwp-cright">
+          <div class="cwp-cstats" id="cwpCStats">—</div>
+          <div class="cwp-clogw"><table class="cwp-clog ssb-clog"><thead><tr><th>UTC</th><th>Bande</th><th>Indicatif</th><th title="Report envoyé">Env.</th><th title="Échange envoyé (n° de série, zone… selon le règlement)">TX #</th><th title="Report reçu">Reçu</th><th title="Échange reçu (n° de série, zone… selon le règlement)">RX #</th><th>DXCC</th><th class="r" title="Points du QSO selon le règlement du contest (0 = doublon ou QSO sans point)">Pts</th><th>Contest</th></tr></thead><tbody id="cwpCLog"></tbody></table></div>
+          <div class="cwp-crow2"><label title="QSO de ce contest comptés depuis cette date (doublons, compteurs, Cabrillo)">Depuis <input type="date" id="cwpFrom"></label><button type="button" id="ssAdi" class="ssb-adi" title="Fichier ADIF (.adi) des QSO de ce contest (depuis la date choisie), pour un autre logiciel ou un carnet en ligne">ADIF</button><button type="button" id="cwpCab" title="Fichier Cabrillo de ce contest, avec la catégorie choisie">CABRILLO</button></div>
+        </div>
+      </div>
+    </section>
+    <!-- Sans contest : fiche de QSO du carnet (comme l'onglet Logbooks), les QSO vont dans le carnet général -->
+    <section class="cwp-box ssb-qso" id="ssQso" hidden>
+      <h2 class="ssb-qh">Log du QSO <small>fiche du carnet de trafic (Logbooks) : mode FREEDV, fréquence reprise du TRX</small></h2>
+      <div class="lg ssb-lg" id="ssLog"></div>
+      <div class="ssb-qrow">
+        <!-- LOG SSB (comme le LOG RTTY) : titre (clic = agrandi au centre de la page), nombre de QSO, menu EXPORTER -->
+        <div class="ssb-qlogbox" id="ssQBox">
+          <div class="rt-loghd ssb-loghd"><b id="ssLogZoom" title="Clic : agrandir le log au centre de la page (nouveau clic, ou Échap : le remettre à sa place)">LOG FREEDV ⤢</b> <span id="ssQStats"></span><span class="rt-logxw"><button class="btn rt-logx" type="button" id="ssLogX" title="Exporter des QSO en FreeDV : les vôtres en un clic, ou avec des filtres (TX call, opérateur, dates)">EXPORTER ▾</button><span class="rt-logxm" id="ssLogXm" hidden><button type="button" data-x="mine">Mes QSO FreeDV (.adi)</button><button type="button" data-x="adif">ADIF (.adi)…</button></span></span></div>
+  <div class="cwp-clogw ssb-qlogw"><table class="cwp-clog ssb-qlog"><thead><tr><th>Date</th><th>UTC</th><th>Indicatif</th><th>Bande</th><th>MHz</th><th>Mode</th><th>Env.</th><th>Reçu</th><th>Nom</th><th>QTH</th><th>Pays</th><th>TX call</th><th>OP</th></tr></thead><tbody id="ssQLog"></tbody></table></div>
+        </div>
+        <aside class="ssb-prop" id="ssProp" aria-label="Propagation">
+          <h3>Propagation <small id="ssPropT"></small><span class="ssb-psrc">Source : <a href="https://www.hamqsl.com/solar.html" target="_blank" rel="noopener">hamqsl.com</a> (N0NBH, données NOAA)</span></h3>
+          <div class="ssb-pbody">
+            <div class="ssb-pgrid" id="ssPropG"><p class="cwp-note">Lecture des données de propagation…</p></div>
+            <div class="ssb-pright">
+              <table class="ssb-pband"><thead><tr><th>Bandes HF</th><th>Jour</th><th>Nuit</th></tr></thead><tbody id="ssPropB"></tbody></table>
+              <p class="ssb-pvhf" id="ssPropV"></p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <!-- TRX à deux récepteurs (IC-7760, FTDX101, FTDX5000…) : carte de bande du VFO-B, à droite -->
+  <aside class="cwp-box xbm-box xbm-right" id="xBmB" aria-label="Carte de bande du VFO-B" hidden></aside>
+  </div>
+  <footer class="cwp-foot">
+    <span id="cwpLink">Liaison : —</span>
+    <span id="cwpTxSt">Émission : —</span>
+  </footer>
+  <p class="dg-toast" id="cwpToast" role="status"></p>
+<script src="/js/spotlog.js"></script>
+<script src="/js/winpos.js"></script>
+  <script src="/js/ulaw.js"></script>
+<script src="/js/voice.js"></script>
+<script src="/js/logbook.js"></script>
+<script src="/js/vfobox.js"></script>
+<script src="/js/bandmap-lite.js"></script>
+<script src="/js/contests.js"></script>
+<script src="/js/ctlchip.js"></script>
+<script src="/js/ssbpage.js"></script>
+<script src="/js/spw.js"></script>
+<script src="/js/clocks.js"></script>
+<script>SPW.attach(document.getElementById('spw'));</script>
+</body>
+</html>

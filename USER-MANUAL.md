@@ -36,6 +36,7 @@
    - [12.7 SSTV](#sstv)
    - [12.8 Synchro](#synchro)
    - [12.9 QO-100](#qo100)
+   - [12.10 FreeDV](#freedv)
 - [13. Correspondent, macros and tags](#messages)
 - [14. Logbooks (station logbook)](#logs)
    - [14.1 Logging a QSO](#l-fiche)
@@ -952,6 +953,26 @@ A monitoring tab: it shows whether the clocks and the link are in step. There is
 ### 12.9 QO-100
 
 QO-100 is a geostationary satellite reached on 2.4 GHz with an up-converter. The FT8 · FT4, RTTY and CW lists offer « **QO-100 · FI 2 m / 70 cm** » (IF 2 m / 70 cm): the frequency to set on the TRX **before the converter**, to uplink on 2400.040 MHz (FT8 / FT4), 2400.025 MHz (CW) or 2400.090 MHz (RTTY). Example: FT8 on **432.540 MHz** with the club's 70 cm converter. Only the IFs the connected TRX can reach are offered (FTX-1).
+
+<a id="freedv"></a>
+### 12.10 FreeDV (HF digital voice)
+
+**FreeDV** is the amateur HF digital voice: speech is coded into data in a band of about 1.5 kHz, sent in **USB** on all bands. The station does it with **every TRX**: the server decodes the TRX audio and codes your voice (lib/bin/fdvd, with the FreeDV libraries). The page opens with the `FreeDV` button of the MODES line (dashboard or front panel); it is the SSB page, without contests or voice memories, plus a **FREEDV** panel. The TRX goes to USB by itself.
+
+| Mode | Meaning |
+|---|---|
+| **RADE** (recommended) | The current FreeDV mode, the most used (14,236 kHz…): neural network (Radio Autoencoder) and FARGAN vocoder; natural voice, robust on weak signals, no constellation. |
+| **700D** | The most used of the older modes: works below the noise (about −2 dB SNR), slightly "coded" voice. |
+| **700E** | Like 700D, better suited to fast fading (DX, difficult propagation). |
+| **1600** | The historical mode: best voice of the older modes, but needs a stronger signal. |
+
+- **Reception**: the **four modes listen at the same time**; the one that locks is heard, nothing to choose. Lamps: yellow = locked, blue = heard. Next to them: **SNR**, **frequency offset** (corrected automatically) and the correspondent's **callsign** (sent in the FreeDV text channel; in RADE, at the end of each over). The **constellation** (700D, 700E, 1600) shows signal quality: 4 tight clusters = good signal.
+- **Listening**: `Voix décodée` (the voice, silence while no FreeDV signal is locked) or `Signal du TRX` (the TRX audio as is). **ÉCOUTER LE TRX** must be on (SSB CONFIGURATION line). This choice only changes your own listening.
+- **Transmit**: choose the mode (RADE by default), switch the **MICRO** on, then **PTT** (or the space bar) and speak. Your voice is coded by the server; your **TX call** goes in the text channel. On release, the end of the signal is still sent (≈ 0.2 to 0.5 s) before returning to receive.
+- **Stations heard**: time, callsign, mode, SNR, frequency; a click puts the callsign in the QSO form.
+- **Frequencies**: 3,625, 7,177, 14,236, 18,118, 21,313, 24,933 and 28,330 kHz (USB), one click with control.
+- **Log**: the logbook form records mode **FREEDV** (ADIF: MODE DIGITALVOICE, SUBMODE FREEDV); LOG FREEDV lists FreeDV QSOs, EXPORTER makes an ADIF file.
+- **TRX settings**: USB, filter of at least 2.7 kHz, **compressor (PROC) off**, level without ALC, reduced power (FreeDV transmits continuously during PTT, like FT8).
 
 <a id="messages"></a>
 ## 13. Correspondent, macros and tags

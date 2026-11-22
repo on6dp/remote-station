@@ -225,7 +225,7 @@
   // ------------------------------------------------------------------ construction des onglets et des fenêtres
   // Même code pour le centre du dashboard et pour la fenêtre séparée (digi.html, sans l'onglet Activité).
   const TABS = [
-    ['events', 'Modes'], ['ftx', 'FT8 · FT4 · FT2'], ['ssb', 'SSB'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['log', 'Logbooks'], ['sync', 'Synchro']
+    ['events', 'Modes'], ['ftx', 'FT8 · FT4 · FT2'], ['ssb', 'SSB'], ['fdv', 'FreeDV'], ['rtty', 'RTTY'], ['wspr', 'WSPR'], ['jt65', 'JT65'], ['jtty', 'JTTY'], ['cw', 'CW'], ['sstv', 'SSTV'], ['log', 'Logbooks'], ['sync', 'Synchro']
   ];
   const MODE_TABS = ['ftx', 'rtty', 'wspr', 'jt65', 'jtty', 'cw', 'sstv', 'sync'];
   const WF_TABS = ['ftx', 'jt65', 'rtty', 'wspr', 'jtty', 'cw', 'sstv']; // onglets avec cascade
@@ -7182,6 +7182,7 @@
     if (DATA_TABS[t]) dataU(DATA_TABS[t]);
     else if (t === 'cw') cwModeAuto();
     else if (t === 'ssb') ssbModeAuto();
+    else if (t === 'fdv') fdvModeAuto();
   }
   // Dashboard : le mode choisi (sa page s'ouvre à part) reste marqué sur fond bleu azur dans la ligne MODES
   function markPicked(t) {
@@ -7194,6 +7195,7 @@
     modeFor(t);
     if (t === 'cw') return popWin('/cw.html', 'rs-cwpage', 1240, 860);
     if (t === 'ssb') return popWin('/ssb.html', 'rs-ssbpage', 1240, 900);
+    if (t === 'fdv') return popWin('/fdv.html', 'rs-fdvpage', 1240, 900);
     // Page des modes numériques (fenêtre séparée) sur ce mode ; déjà ouverte : elle y passe
     store.set('ptab', t);
     if (t === 'ftx') store.set('enterqsy', String(Date.now())); // la page FT va sur la fréquence d'appel de la bande
@@ -7205,6 +7207,19 @@
     return popWin(FACEP ? FACEP + '/digi.html' : '/digi.html', 'rs-digi', 1200, 860);
   }
   // Onglet SSB (avec la main) : LSB sous 10 MHz, USB au-dessus (60 m : USB), si le TRX n'est pas déjà en phonie BLU
+  // FreeDV : toujours en USB (toutes les bandes), comme FreeDV sur PC
+  function fdvModeAuto() {
+    if (!api || !api.iControl()) return;
+    const st = api.state();
+    const r = st && st.radio;
+    if (!r || !r.connected || r.tx || (st.ptt && st.ptt.active) || st.ftx || st.cw) return;
+    const side = r.vfoSel === 1;
+    if (/^USB$/i.test((side ? r.modeB : r.mode) || '')) return;
+    const mk = (api.rig().MODE_KEYS || []).find((x) => /^USB$/i.test(x[1]));
+    if (!mk) return;
+    api.send({ t: 'set', mode: mk[0], sub: side });
+    api.say('TRX mis en USB pour FreeDV.', '', 3000);
+  }
   function ssbModeAuto() {
     if (!api || !api.iControl()) return;
     const st = api.state();
@@ -7623,7 +7638,7 @@
         if (b.dataset.tab === 'log' && !POPUP && tab === 'log' && window.RSLOGHOST) return openLogWin();
         // SSB : page SSB (contests en phonie, micro, PTT) ; dashboard : chaque mode ouvre sa page (CW : page CW,
         // FT8 / RTTY / WSPR… : page des modes numériques sur ce mode)
-        if (b.dataset.tab === 'ssb') return openModePage('ssb');
+        if (b.dataset.tab === 'ssb' || b.dataset.tab === 'fdv') return openModePage(b.dataset.tab);
         if (!POPUP && PAGE_TABS.indexOf(b.dataset.tab) >= 0) return openModePage(b.dataset.tab);
         // Fenêtre séparée sans onglets des modes : SYNCHRO ouvre la synchro, un nouveau clic revient au mode
         if (POPUP && b.dataset.tab === 'sync' && tab === 'sync') return showTab(lastModeTab);

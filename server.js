@@ -210,7 +210,7 @@ const TYPES = {
 function qsyOrigins() {
   return (Array.isArray(cfg.qsyOrigins) ? cfg.qsyOrigins : DEFAULTS.qsyOrigins).map(String).filter((o) => /^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o));
 }
-const ROUTES = { '/': '/index.html', '/ftdx101': '/face.html', '/station': '/station.html', '/digi': '/digi.html', '/ftdx101/digi.html': '/digi.html', '/ftdx101/log.html': '/log.html', '/ftdx101/digi': '/digi.html', '/ftdx101/': '/face.html', '/ftdx10': '/face.html', '/ftdx10/': '/face.html', '/ftdx10/digi.html': '/digi.html', '/ftdx10/digi': '/digi.html', '/ftdx10/log.html': '/log.html', '/ic7300': '/face.html', '/ic7300/': '/face.html', '/ic7300/digi.html': '/digi.html', '/ic7300/digi': '/digi.html', '/ic7300/log.html': '/log.html', '/ftx1': '/face.html', '/ftx1/': '/face.html', '/ftx1/digi.html': '/digi.html', '/ftx1/digi': '/digi.html', '/ftx1/log.html': '/log.html', '/ftdx5000': '/face.html', '/ftdx5000/': '/face.html', '/ftdx5000/digi.html': '/digi.html', '/ftdx5000/digi': '/digi.html', '/ftdx5000/log.html': '/log.html', '/aide': '/aide.html', '/help': '/help.html', '/stats': '/stats.html', '/prop': '/prop.html', '/detache': '/detache.html', '/cw': '/cw.html', '/ssb': '/ssb.html', '/ic7760': '/face.html', '/ic7760/': '/face.html', '/ic7760/digi.html': '/digi.html', '/ic7760/digi': '/digi.html', '/ic7760/log.html': '/log.html' };
+const ROUTES = { '/': '/index.html', '/ftdx101': '/face.html', '/station': '/station.html', '/digi': '/digi.html', '/ftdx101/digi.html': '/digi.html', '/ftdx101/log.html': '/log.html', '/ftdx101/digi': '/digi.html', '/ftdx101/': '/face.html', '/ftdx10': '/face.html', '/ftdx10/': '/face.html', '/ftdx10/digi.html': '/digi.html', '/ftdx10/digi': '/digi.html', '/ftdx10/log.html': '/log.html', '/ic7300': '/face.html', '/ic7300/': '/face.html', '/ic7300/digi.html': '/digi.html', '/ic7300/digi': '/digi.html', '/ic7300/log.html': '/log.html', '/ftx1': '/face.html', '/ftx1/': '/face.html', '/ftx1/digi.html': '/digi.html', '/ftx1/digi': '/digi.html', '/ftx1/log.html': '/log.html', '/ftdx5000': '/face.html', '/ftdx5000/': '/face.html', '/ftdx5000/digi.html': '/digi.html', '/ftdx5000/digi': '/digi.html', '/ftdx5000/log.html': '/log.html', '/aide': '/aide.html', '/help': '/help.html', '/stats': '/stats.html', '/prop': '/prop.html', '/detache': '/detache.html', '/cw': '/cw.html', '/ssb': '/ssb.html', '/fdv': '/fdv.html', '/freedv': '/fdv.html', '/ic7760': '/face.html', '/ic7760/': '/face.html', '/ic7760/digi.html': '/digi.html', '/ic7760/digi': '/digi.html', '/ic7760/log.html': '/log.html' };
 
 function sendJson(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -382,7 +382,7 @@ function listeners(heard) {
   for (const c of ops) if (c.listen && !(heard && c.listenMute)) n++; // heard : sans les cascades seules (page Face avant, son coupé)
   return n;
 }
-function audioWanted() { return listeners() > 0 || digiModes().size > 0; }
+function audioWanted() { return listeners() > 0 || digiModes().size > 0 || fdvConns().length > 0; }
 // Scope du TRX (IC-7300) : demandé par les pages Face avant ouvertes (abonnement renouvelé toutes les 20 s) ;
 // la page Station ne fait sortir la courbe du CI-V que s'il y a quelqu'un pour la voir
 let scopeWant = false;
@@ -405,6 +405,51 @@ function updateAudioWant() {
     toStation({ t: 'audio_want', on: want });
   }
 }
+// ---------------------------------------------------------------- FreeDV (phonie numérique HF : RADE, 700D, 700E, 1600)
+// Page FreeDV ouverte (conn.fdv = { tx, hear, at }) : la BF du TRX passe dans lib/bin/fdvd (tous les modes écoutent),
+// la voix décodée remplace la BF dans l'écoute de ceux qui l'ont choisi (hear 'dec'). Émission : voir startPtt / voiceIn.
+const fdv = { rx: null, st: null, stAt: 0, heard: [] };
+const fdvConns = () => { const now = Date.now(), out = []; for (const c of ops) if (c.fdv && now - c.fdv.at < 45000) out.push(c); return out; };
+function fdvUpdate() {
+  const want = fdvConns().length > 0;
+  if (want && !fdv.rx && FDV.available()) {
+    fdv.rx = new FDV.FdvRx(fdvVoice, fdvStatus, fdvCall, (msg) => console.error(msg));
+    if (!fdv.rx.start()) fdv.rx = null;
+  } else if (!want && fdv.rx) { fdv.rx.stop(); fdv.rx = null; fdv.st = null; }
+  updateAudioWant();
+}
+setInterval(() => { if (fdv.rx || fdvConns().length) fdvUpdate(); }, 10000).unref();
+function fdvVoice(f) {
+  let fr = null;
+  for (const c of ops) {
+    if (!c.listen || !c.fdv || c.fdv.hear !== 'dec' || c.backlog >= 32768) continue;
+    if (vmPlay && vmPlay.mon && vmPlay.conn === c && ptt.active) continue;
+    if (!fr) fr = Buffer.from(ULAW.encodeFrame(f, 12000));
+    c.send(fr);
+  }
+}
+function fdvStatus(m) {
+  const now = Date.now();
+  const act = (m.m || []).find((x) => x.n === m.act) || null;
+  fdv.st = { act: m.act || '', snr: act ? act.snr : null, fo: act ? act.fo : null, m: (m.m || []).map((x) => ({ n: x.n, s: x.s })) };
+  if (now - fdv.stAt < 380) return; // 2,5 fois par seconde au plus
+  fdv.stAt = now;
+  const msg = { t: 'fdv_st', st: fdv.st, c: act && Array.isArray(m.c) ? m.c.slice(0, 400) : [] };
+  for (const c of fdvConns()) send(c, msg);
+}
+function fdvCall(x) {
+  const call = String(x.call || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 12);
+  if (!/^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}(\/[A-Z0-9]+)?$|^[A-Z0-9]+\/[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}$/.test(call)) return; // pas un indicatif
+  const now = Date.now();
+  const hz = radio.vfoSel === 1 && radio.freqB ? radio.freqB : radio.freq;
+  let h = fdv.heard.find((y) => y.call === call);
+  if (!h) { h = { call, first: now }; fdv.heard.unshift(h); if (fdv.heard.length > 50) fdv.heard.pop(); }
+  else { fdv.heard.splice(fdv.heard.indexOf(h), 1); fdv.heard.unshift(h); }
+  Object.assign(h, { at: now, mode: x.mode, snr: fdv.st ? fdv.st.snr : null, hz: hz || 0 });
+  const msg = { t: 'fdv_heard', items: fdv.heard, last: call };
+  for (const c of fdvConns()) send(c, msg);
+}
+
 // Trame audio de la station → décodeur et chaque membre à l'écoute (un client trop lent saute des trames
 // au lieu d'accumuler du retard). 0x01 : µ-law 8 kHz (ancienne page Station), 0x02 : PCM 16 bits 12 kHz.
 // TRX à deux récepteurs en stéréo (FTDX101) : trame gauche (0x02, MAIN) puis trame droite (0x04, SUB).
@@ -415,6 +460,7 @@ function sendListen(pcm, l, r) {
   let out = null, st2 = null;
   for (const c of ops) {
     if (!c.listen || c.backlog >= 32768) continue;
+    if (c.fdv && c.fdv.hear === 'dec' && fdv.rx) continue; // page FreeDV : la voix décodée à la place (fdvVoice)
     // Mémoire vocale avec Auto Monitor : l'opérateur entend sa mémoire seule (pas mélangée au retour du TRX : son haché)
     if (vmPlay && vmPlay.mon && vmPlay.conn === c && ptt.active) continue;
     // Écoute en stéréo (page Face avant, double réception) : MAIN à gauche, SUB à droite, dans une seule trame 0x07
@@ -468,6 +514,7 @@ function relayAudio(buf) {
     const pcm = ULAW.decodeFrame(buf);
     if (!pcm) return;
     const forListen = listeners() ? Float32Array.from(pcm) : null;
+    if (fdv.rx && !right) fdv.rx.feed(Float32Array.from(pcm)); // FreeDV : récepteur principal (voie gauche)
     if (digi.worker && digiModes().size) digi.worker.postMessage({ t: 'audio', samples: pcm, at: Date.now(), ch: right ? 1 : 0 }, [pcm.buffer]);
     if (!forListen) { stereo.l = null; return; }
     if (!dualAudio) return sendListen(forListen);
@@ -2569,6 +2616,7 @@ function stopPtt(reason) {
   if (digiEnd && sentP) setTimeout(() => seqAfterTx(sentP), 0);
   const wasVoice = !!ptt.voice;
   const voiceFrames = ptt.voiceFrames || 0;
+  if (ptt.fdv) ptt.fdv.kill();
   ptt = { active: false, conn: null, since: 0, lastBeat: 0 };
   pttEndAt = Date.now();
   toStation({ t: 'cmd', op: 'ptt', on: false, reason });
@@ -2593,9 +2641,28 @@ function voiceIn(conn, buf) {
   const now = Date.now();
   if (!conn.vf || now - conn.vf.t > 1000) conn.vf = { t: now, n: 0 };
   if (++conn.vf.n > 120) return; // au plus 120 trames par seconde (2,4 × le débit normal)
+  if (ptt.fdv) { const pcm = ULAW.decodeFrame(buf); if (pcm) ptt.fdv.voice(pcm); return; } // FreeDV : codée par fdvd (fdvTxFrame)
   if (station.conn.backlog > 262144) return;
   station.conn.send(buf);
   ptt.voiceFrames = (ptt.voiceFrames || 0) + 1;
+}
+// FreeDV : trame du signal codé (12 kHz, 20 ms) → page Station, comme la voix en phonie
+function fdvTxFrame(f) {
+  if (!ptt.active || !ptt.fdv || !station || station.conn.backlog > 262144) return;
+  station.conn.send(Buffer.from(ULAW.encodeFrame(f, 12000, 0x05)));
+  ptt.voiceFrames = (ptt.voiceFrames || 0) + 1;
+}
+// Fin de parole en FreeDV : le codeur termine sa dernière trame (≈ 0,2 à 0,5 s), puis le TRX repasse en réception
+function fdvTxRelease() {
+  const tx = ptt.fdv;
+  if (!tx || ptt.fdvEnding) return false;
+  ptt.fdvEnding = true;
+  const c = ptt.conn;
+  const done = () => { if (ptt.active && ptt.fdv === tx) setTimeout(() => { if (ptt.active && ptt.fdv === tx && ptt.conn === c) stopPtt('relâché'); }, 250); };
+  tx.onEnd = done;
+  tx.finish();
+  setTimeout(() => { if (ptt.active && ptt.fdv === tx) stopPtt('relâché'); }, 2500); // sécurité
+  return true;
 }
 // Opérateur qui a parlé en phonie à distance : quand il rend la main (ou coupe son micro), la page Station remet
 // tout de suite la source de modulation du club (sinon après 20 s sans émission en phonie)
@@ -2606,7 +2673,7 @@ function voiceRelease(reason) {
   toStation({ t: 'cmd', op: 'voiceoff', reason });
 }
 
-function startPtt(conn, voice) {
+function startPtt(conn, voice, wantFdv) {
   if (rig().VIRTUAL_SPLIT && txSide() && station && station.caps.indexOf('txsel') < 0) {
     return send(conn, { t: 'notice', level: 'error', msg: 'PTT refusé : la page Station du club est une ancienne version (émission sur le VFO B impossible). Rechargez-la : voyant STATION → « Recharger la page Station ».' });
   }
@@ -2625,6 +2692,13 @@ function startPtt(conn, voice) {
   }
   const now = Date.now();
   ptt = { active: true, conn, since: now, lastBeat: now, voice: vmode };
+  // Page FreeDV : la voix est codée en FreeDV (RADE, 700D, 700E ou 1600) avant de partir vers la page Station
+  if (vmode && wantFdv && conn.fdv && conn.fdv.tx && Date.now() - conn.fdv.at < 45000) {
+    if (!FDV.available()) { ptt = { active: false, conn: null, since: 0, lastBeat: 0 }; voiceUser = null; return send(conn, { t: 'notice', level: 'error', msg: 'PTT refusé : FreeDV indisponible sur ce serveur (lib/bin/fdvd)' }); }
+    if (vmode !== 'USB' && vmode !== 'DATA-U') { ptt = { active: false, conn: null, since: 0, lastBeat: 0 }; voiceUser = null; return send(conn, { t: 'notice', level: 'error', msg: 'PTT refusé : FreeDV s’émet en USB (mode actuel : ' + vmode + ')' }); }
+    ptt.fdv = new FDV.FdvTx(conn.fdv.tx, txCallFor(conn.user), fdvTxFrame, null, (msg) => console.error(msg));
+    ptt.fdvMode = ptt.fdv.mode;
+  }
   lastCtrlActivity = now;
   // SPLIT virtuel : VFO d'émission envoyé avec le PTT, sauf si le TRX est déjà en SPLIT par sa face avant (il s'en charge)
   const tv = txSide();
@@ -3477,6 +3551,7 @@ function sstvMaxSeconds() {
 }
 const JTTY_GEN = path.join(ROOT, 'lib', 'bin', 'jttygen' + (process.platform === 'win32' ? '.exe' : ''));
 const DRM = require('./lib/drm-rx.js');
+const FDV = require('./lib/freedv.js');
 const AUDIO_RATE = 12000;
 function jttyWave(text, f0) {
   return new Promise((resolve, reject) => {
@@ -4115,7 +4190,7 @@ function onOperator(conn, m) {
       const want = String(m.mode || '');
       // Diplôme : DXCC (par défaut), WAZ (zones CQ), ITU (zones UIT), WAE, WPX, IOTA, WAC (continents), locators, WAS (États US)
       const award = AWARDS[m.award] ? m.award : 'DXCC';
-      const grp = (q) => { const md = String(LB.modeName(q) || '').toUpperCase(); return md === 'CW' ? 'C' : /^(SSB|USB|LSB|AM|FM|DIGITALVOICE|C4FM|DSTAR|DMR)$/.test(md) ? 'P' : 'D'; };
+      const grp = (q) => { const md = String(LB.modeName(q) || '').toUpperCase(); return md === 'CW' ? 'C' : /^(SSB|USB|LSB|AM|FM|DIGITALVOICE|C4FM|FREEDV|DSTAR|DMR)$/.test(md) ? 'P' : 'D'; };
       const BORD = ['2190m', '630m', '160m', '80m', '60m', '40m', '30m', '20m', '17m', '15m', '12m', '10m', '6m', '4m', '2m', '1.25m', '70cm', '33cm', '23cm', '13cm', '9cm', '6cm', '3cm', '1.25cm', 'SAT'];
       const rows = new Map(), bands = new Set(), modes = new Set(), txcs = new Set(), mcols = new Set();
       let n = 0;
@@ -4347,6 +4422,27 @@ function onOperator(conn, m) {
       const q = String(m.q || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
       return send(conn, { t: 'scp', q, list: SCP.search(q, Number(m.n) || 30), n: SCP.calls.length });
     }
+    case 'fdv': {
+      // Page FreeDV : ouverte (mode d'émission, écoute de la voix décodée ou du signal), renouvelé toutes les 10 s ; fermée
+      if (!m.on) { conn.fdv = null; fdvUpdate(); return; }
+      const first = !conn.fdv;
+      conn.fdv = { tx: FDV.MODES.indexOf(m.tx) >= 0 ? m.tx : 'RADE', hear: m.hear === 'raw' ? 'raw' : 'dec', at: Date.now() };
+      fdvUpdate();
+      if (first) send(conn, { t: 'fdv_hello', ok: FDV.available(), modes: FDV.MODES, heard: fdv.heard, st: fdv.st });
+      return;
+    }
+    case 'fdv_list': {
+      // Page FreeDV : les derniers QSO en FreeDV du carnet général
+      const n = Math.max(10, Math.min(1000, Number(m.n) || 300));
+      const items = [];
+      for (let i = book.qsos.length - 1; i >= 0 && items.length < n; i--) {
+        const q = book.qsos[i];
+        if (String(q.submode || '').toUpperCase() !== 'FREEDV') continue;
+        items.push({ id: q.id, call: q.call, band: q.band, mode: LB.modeName(q), d: q.qso_date, t: q.time_on, freq: q.freq, rs: q.rst_sent || '', rr: q.rst_rcvd || '',
+          name: q.name || '', qth: q.qth || '', grid: q.gridsquare || '', country: (DXCC.lookup(q.call) || {}).name || q.country || '', op: q.operator || q.by || '', st: q.station_callsign || '' });
+      }
+      return send(conn, { t: 'fdv_list', items });
+    }
     case 'ssb_list': {
       // Page TRX SSB sans contest : les derniers QSO en phonie BLU (SSB, LSB, USB) hors contest, ceux du carnet général
       const n = Math.max(10, Math.min(1000, Number(m.n) || 300));
@@ -4409,6 +4505,7 @@ function onOperator(conn, m) {
       // Page TRX SSB sans contest : les QSO en phonie BLU hors contest
       if (m.phoneOnly) list = list.filter((q) => (m.allContests || !q.contest_id) && (/^(SSB|LSB|USB)$/.test(String(q.mode || '')) || /^(LSB|USB)$/.test(String(q.submode || ''))));
       // Page RTTY : les QSO d'un mode (hors contest, sauf si un contest est demandé)
+      if (m.fdvOnly) list = list.filter((q) => String(q.submode || '').toUpperCase() === 'FREEDV');
       const modeOnly = String(m.modeOnly || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
       if (modeOnly) list = list.filter((q) => String(q.mode || '').toUpperCase() === modeOnly && (m.contestOnly || m.allContests ? true : !q.contest_id));
       // Administrateur : les QSO d'un opérateur choisi (plusieurs opérateurs se partagent la station)
@@ -4418,7 +4515,7 @@ function onOperator(conn, m) {
       if (m.fmt === 'cabrillo') {
         return send(conn, { t: 'log_export', name: (m.contestOnly && m.contest ? String(m.contest).toUpperCase().replace(/[^A-Z0-9-]/g, '') + '-' : '') + who + '-' + stamp + '.log', mime: 'text/plain', data: LB.toCabrillo(list, { callsign: m.callsign || cfg.digiCall, contest: m.contest, grid: cfg.stationGrid, club: cfg.clubName && /UBA/.test(cfg.clubName) ? 'UBA-LGE' : '', version: VERSION, cat: m.cat && typeof m.cat === 'object' ? m.cat : null, location: m.location }), count: list.length, tag: m.tag === 'cwpage' || m.tag === 'ssbpage' || m.tag === 'rttypage' || m.tag === 'big' ? m.tag : undefined });
       }
-      return send(conn, { t: 'log_export', name: (m.view ? 'VUE-' : '') + (m.contestOnly && m.contest ? String(m.contest).toUpperCase().replace(/[^A-Z0-9-]/g, '') + '-' : m.phoneOnly ? 'SSB-' : modeOnly ? modeOnly + '-' : '') + who + (conn.user.admin && m.operator ? '-OP' + String(m.operator).toUpperCase().replace(/[^A-Z0-9]/g, '') : '') + '-' + stamp + (m.pending ? '-' + m.pending : '') + '.adi', mime: 'text/plain', data: LB.toAdif(list, 'RemoteStation', VERSION), count: list.length,
+      return send(conn, { t: 'log_export', name: (m.view ? 'VUE-' : '') + (m.contestOnly && m.contest ? String(m.contest).toUpperCase().replace(/[^A-Z0-9-]/g, '') + '-' : m.phoneOnly ? 'SSB-' : m.fdvOnly ? 'FREEDV-' : modeOnly ? modeOnly + '-' : '') + who + (conn.user.admin && m.operator ? '-OP' + String(m.operator).toUpperCase().replace(/[^A-Z0-9]/g, '') : '') + '-' + stamp + (m.pending ? '-' + m.pending : '') + '.adi', mime: 'text/plain', data: LB.toAdif(list, 'RemoteStation', VERSION), count: list.length,
         pending: m.pending || '', ids: m.pending ? list.map((q) => q.id) : undefined, tag: m.tag === 'cwpage' || m.tag === 'ssbpage' || m.tag === 'rttypage' || m.tag === 'big' ? m.tag : undefined });
     }
     case 'log_cfg_get':
@@ -4866,10 +4963,11 @@ function onOperator(conn, m) {
           ptt.lastBeat = now;
           lastCtrlActivity = now;
         } else if (!ptt.active) {
-          startPtt(conn, !!m.voice);
+          startPtt(conn, !!m.voice, !!m.fdv);
         }
       } else {
         conn.needRelease = false;
+        if (ptt.active && ptt.conn === conn && ptt.fdv) { ptt.lastBeat = now + 3000; fdvTxRelease(); return; } // FreeDV : fin du signal d'abord
         if (ptt.active && ptt.conn === conn) stopPtt('relâché');
       }
       return;
@@ -5387,6 +5485,7 @@ ws.attach(server, {
       }
       if (conn.user) {
         ops.delete(conn);
+        if (conn.fdv) { conn.fdv = null; fdvUpdate(); }
         if (conn.digi) updateDigi();
         else if (conn.listen) updateAudioWant();
         if (ptt.active && ptt.conn === conn) stopPtt('opérateur déconnecté');

@@ -7,6 +7,10 @@
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
+  // Page FreeDV (fdv.html) : même page sans les contests ni les mémoires vocales (classe fdv-body), mode FREEDV au carnet
+  const FDV = document.body.classList.contains('fdv-body');
+  const PTAG = FDV ? 'fdvpage' : 'ssbpage';
+  const PMODE = FDV ? 'fdv' : 'ssb';
   const LS = {
     get(k, d) { try { const v = localStorage.getItem('rs.dg.' + k); return v == null ? d : v; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem('rs.dg.' + k, String(v)); } catch (e) {} }
@@ -81,7 +85,7 @@
   }
 
   // ------------------------------------------------------------------ contest, catégorie, échange
-  const S = { id: LS.get('ssbc', ''), vm: null, playing: null, pv: [] };
+  const S = { id: FDV ? '' : LS.get('ssbc', ''), vm: null, playing: null, pv: [] };
   const def = () => C.SSB.find((c) => c.id === S.id) || null;
   const catKey = () => 'ssbcat_' + S.id;
   function catState() {
@@ -672,7 +676,7 @@
       if (/^\d{1,5}$/.test(qso.srx_string)) qso.srx = qso.srx_string;
       for (const k of ['iota', 'wwff_ref', 'pota_ref', 'sota_ref', 'my_iota', 'my_wwff_ref', 'my_pota_ref', 'my_sota_ref']) if (q[k]) qso[k] = q[k];
       if (!(fr > 0)) { el.querySelector('.ssb-qdmsg').textContent = 'Fréquence en MHz ?'; return; }
-      api.send({ t: 'log_edit', id: q.id, qso, tag: 'ssbpage' });
+      api.send({ t: 'log_edit', id: q.id, qso, tag: PTAG });
       el.querySelector('.ssb-qdmsg').textContent = 'Enregistrement…';
     });
     el.querySelector('.ssb-qddel').addEventListener('click', () => {
@@ -818,7 +822,7 @@
     askScp();
     // Spot cliqué : le TRX va sur sa fréquence (en LSB / USB) si vous avez la main
     if (spot && api.iControl()) {
-      try { host.api.setFreq(Math.round(spot.f * 1000)); setTimeout(() => { try { if (hostWin.RSDIGI) hostWin.RSDIGI.modeFor('ssb'); } catch (e) {} }, 500); } catch (e) {}
+      try { host.api.setFreq(Math.round(spot.f * 1000)); setTimeout(() => { try { if (hostWin.RSDIGI) hostWin.RSDIGI.modeFor(PMODE); } catch (e) {} }, 500); } catch (e) {}
     }
     drawProb();
     if (CL.esm === 'sp' && vmFilled(4)) toast('Entrée : votre indicatif (T4).', '', 2500);
@@ -905,7 +909,7 @@
       rst_sent: E.rs.value.trim() || '59', rst_rcvd: E.rr.value.trim() || '59', contest_id: CL.id, stx_string: stx, srx_string: srx, station: k.myCall() };
     if (/^\d{1,5}$/.test(stx)) qso.stx = stx;
     if (/^\d{1,5}$/.test(srx)) qso.srx = srx;
-    api.send({ t: 'log_add', qso, force: true, tag: 'ssbpage', spot: !!(window.RSSPOT && RSSPOT.on()) });
+    api.send({ t: 'log_add', qso, force: true, tag: PTAG, spot: !!(window.RSSPOT && RSSPOT.on()) });
     CL.items.push({ call, band: bandOf(mhz), d: qso.qso_date, t: hms, stx, srx, rs: qso.rst_sent, rr: qso.rst_rcvd });
     if (/<CNTR>|<SERNO>/.test(exchTpl())) k.afterLog(call, S.id); // n° de série suivant (seulement s'il fait partie de l'échange ; tenu par le serveur)
     drawLog();
@@ -974,7 +978,7 @@
     if (!k || !d) return;
     const f = fromDate();
     api.send({ t: 'log_export', fmt: 'cabrillo', callsign: k.myCall(), mine: true, contest: d.id, contestOnly: true, cat: cabCat(), location: d.location || '',
-      from: f.slice(0, 4) + '-' + f.slice(4, 6) + '-' + f.slice(6, 8), tag: 'ssbpage' });
+      from: f.slice(0, 4) + '-' + f.slice(4, 6) + '-' + f.slice(6, 8), tag: PTAG });
   });
   // ADIF (.adi) : QSO du contest (même choix que le Cabrillo) ; sans contest : QSO en phonie hors contest
   $('ssAdi').addEventListener('click', () => {
@@ -983,7 +987,7 @@
     if (!k || !d) return;
     const f = fromDate();
     api.send({ t: 'log_export', fmt: 'adif', callsign: k.myCall(), mine: true, contest: d.id, contestOnly: true,
-      from: f.slice(0, 4) + '-' + f.slice(4, 6) + '-' + f.slice(6, 8), tag: 'ssbpage' });
+      from: f.slice(0, 4) + '-' + f.slice(4, 6) + '-' + f.slice(6, 8), tag: PTAG });
   });
   // LOG SSB : titre = log agrandi au centre de la page ; EXPORTER ▾ = vos QSO en phonie hors contest en un clic,
   // ou une fenêtre de filtres (TX call, opérateur — tous les opérateurs pour un administrateur —, dates, contests)
@@ -999,7 +1003,7 @@
     const exp = (kind) => {
       const k = kit();
       if (!k) return;
-      if (kind === 'mine') return api.send({ t: 'log_export', fmt: 'adif', callsign: k.myCall(), mine: true, phoneOnly: true, tag: 'ssbpage' });
+      if (kind === 'mine') return api.send({ t: 'log_export', fmt: 'adif', callsign: k.myCall(), mine: true, phoneOnly: !FDV, fdvOnly: FDV || undefined, tag: PTAG });
       let me = {};
       try { me = (host && host.me && host.me()) || {}; } catch (e) { /* */ }
       const adm = !!me.admin, my = String(me.call || '').toUpperCase();
@@ -1021,8 +1025,8 @@
       const f = dlg.querySelector('form');
       dlg.querySelector('[data-a="go"]').addEventListener('click', () => {
         const op = f.op.value;
-        api.send({ t: 'log_export', fmt: 'adif', callsign: f.cs.value, mine: op === 'mine', operator: op && op !== 'mine' ? op : undefined, phoneOnly: true,
-          allContests: f.ct.value === '*' || undefined, from: f.from.value || undefined, to: f.to.value || undefined, tag: 'ssbpage' });
+        api.send({ t: 'log_export', fmt: 'adif', callsign: f.cs.value, mine: op === 'mine', operator: op && op !== 'mine' ? op : undefined, phoneOnly: !FDV, fdvOnly: FDV || undefined,
+          allContests: f.ct.value === '*' || undefined, from: f.from.value || undefined, to: f.to.value || undefined, tag: PTAG });
         dlg.close();
       });
       dlg.addEventListener('close', () => dlg.remove());
@@ -1105,11 +1109,12 @@
     if (why) return toast(why, 'warn');
     P.held = true;
     P.voiceOn = !!(VX && VX.txStart());
+    if (FDV && !P.voiceOn) { P.held = false; return toast('FreeDV a besoin de votre voix : activez « MICRO » (SSB CONFIGURATION) pour parler depuis ce PC.', 'warn', 6000); }
     if (host) host.extTalk = P.voiceOn;
-    api.send({ t: 'ptt', on: true, voice: P.voiceOn });
-    P.hb = setInterval(() => api.send({ t: 'ptt', on: true, voice: P.voiceOn }), 400);
+    api.send({ t: 'ptt', on: true, voice: P.voiceOn, fdv: FDV || undefined });
+    P.hb = setInterval(() => api.send({ t: 'ptt', on: true, voice: P.voiceOn, fdv: FDV || undefined }), 400);
     $('ptt').classList.add('held');
-    if (!P.voiceOn) toast('PTT sans votre micro : activez « MICRO » (SSB CONFIGURATION) pour parler depuis ce PC.', 'warn', 5000);
+    if (!P.voiceOn) toast(FDV ? 'PTT sans votre micro : FreeDV a besoin de votre voix. Activez « MICRO » (SSB CONFIGURATION) pour parler depuis ce PC.' : 'PTT sans votre micro : activez « MICRO » (SSB CONFIGURATION) pour parler depuis ce PC.', 'warn', 5000);
   }
   function pttUp() {
     if (!P.held) return;
@@ -1137,7 +1142,7 @@
   const LOG = window.RSLOG || null;
   function logInit() {
     if (!LOG || !host) return;
-    LOG.init({ send: api.send, state: api.state, iControl: api.iControl, tag: 'ssbpage', formOnly: true, phone: true,
+    LOG.init({ send: api.send, state: api.state, iControl: api.iControl, tag: PTAG, formOnly: true, phone: true, freedv: FDV,
       say: (msg, lvl, ms) => toast(msg, lvl === 'warn' || lvl === 'error' ? 'warn' : '', ms) });
     if (!LOG.mounted) { LOG.mount($('ssLog')); LOG.mounted = true; }
     try { const me = host.me ? host.me() : null; if (me) LOG.onHello(me); } catch (e) {}
@@ -1145,7 +1150,7 @@
   }
 
   // QSO en phonie hors contest (ceux du carnet général) : liste sous la fiche
-  function askSsb() { if (host && !def()) api.send({ t: 'ssb_list', n: 300 }); }
+  function askSsb() { if (host && !def()) api.send({ t: FDV ? 'fdv_list' : 'ssb_list', n: 300 }); }
   function drawSsb(items) {
     const tb = $('ssQLog');
     tb.textContent = '';
@@ -1159,9 +1164,104 @@
       }
       tb.appendChild(tr);
     }
-    if (!items.length) tb.innerHTML = '<tr><td colspan="13">Aucun QSO en phonie hors contest dans le carnet.</td></tr>';
+    if (!items.length) tb.innerHTML = '<tr><td colspan="13">' + (FDV ? 'Aucun QSO en FreeDV dans le carnet.' : 'Aucun QSO en phonie hors contest dans le carnet.') + '</td></tr>';
     const today = ymd(new Date());
-    $('ssQStats').textContent = '· hors contest · ' + items.length + ' QSO' + (items.length ? ' · aujourd’hui ' + items.filter((q) => q.d === today).length : '');
+    $('ssQStats').textContent = (FDV ? '· ' : '· hors contest · ') + items.length + ' QSO' + (items.length ? ' · aujourd’hui ' + items.filter((q) => q.d === today).length : '');
+  }
+
+  // ------------------------------------------------------------------ FreeDV (page fdv.html)
+  // Le serveur décode la BF du TRX (RADE, 700D, 700E et 1600 en même temps, lib/bin/fdvd) et code votre voix au PTT dans le mode
+  // choisi. La page s'annonce toutes les 10 s ({t:'fdv'}) : sans elle, le serveur arrête le décodeur.
+  const FD = { tx: LS.get('fdvtx', 'RADE'), hear: LS.get('fdvhear', 'dec'), ok: true, st: null, heard: [], c: [] };
+  const FDV_MODES = [['RADE', 'Le mode actuel de FreeDV (le plus utilisé, 14 236 kHz…) : voix naturelle, robuste, réseau neuronal (Radio Autoencoder)'],
+    ['700D', 'Le plus utilisé des anciens modes : robuste sur un signal faible, voix un peu « codée »'],
+    ['700E', 'Comme 700D, mieux adapté au fading rapide (propagation difficile, DX)'], ['1600', 'Le mode historique : meilleure voix, mais demande un signal plus fort']];
+  // Fréquences d'activité FreeDV (USB, toutes bandes)
+  const FDV_QRG = [[3625, '80 m'], [7177, '40 m'], [14236, '20 m'], [18118, '17 m'], [21313, '15 m'], [24933, '12 m'], [28330, '10 m']];
+  function fdvAnnounce() { if (FDV && host) api.send({ t: 'fdv', on: true, tx: FD.tx, hear: FD.hear }); }
+  function fdvInit() {
+    if (!FDV || fdvInit.done) return;
+    fdvInit.done = true;
+    const seg = $('fdvTxSeg');
+    for (const [m, tip] of FDV_MODES) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.dataset.m = m; b.textContent = m; b.title = tip;
+      b.addEventListener('click', () => { FD.tx = m; LS.set('fdvtx', m); fdvAnnounce(); fdvDraw(); });
+      seg.appendChild(b);
+    }
+    $('fdvHear').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { FD.hear = b.dataset.h; LS.set('fdvhear', FD.hear); fdvAnnounce(); fdvDraw(); }));
+    const q = $('fdvQrg');
+    for (const [k, band] of FDV_QRG) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = (k / 1000).toFixed(3).replace('.', ','); b.title = band + ' : ' + k.toLocaleString('fr-BE') + ' kHz USB (avec la main)';
+      b.addEventListener('click', () => {
+        if (!api.iControl()) return toast('Prenez la main pour changer de fréquence.', 'warn');
+        try { host.api.setFreq(k * 1000); setTimeout(() => { try { if (hostWin.RSDIGI) hostWin.RSDIGI.modeFor('fdv'); } catch (e) {} }, 500); } catch (e) {}
+      });
+      q.appendChild(b);
+    }
+    $('fdvHeard').addEventListener('click', (e) => {
+      const tr = e.target.closest('tr[data-call]');
+      if (!tr) return;
+      const c = tr.dataset.call;
+      const k = kit();
+      if (k && k.setCall) k.setCall(c); // le dashboard suit aussi (correspondant)
+      // Fiche du QSO : heure, fréquence du TRX, indicatif (recherche QRZ comme si on l'avait tapé)
+      const inp = document.querySelector('#ssLog input[name="call"]');
+      if (!inp) return toast('Indicatif : ' + c, '', 3000);
+      try { if (LOG && LOG.fill && !LOG.editing()) LOG.fill({ t0: Date.now() }); } catch (x) { /* fiche occupée */ }
+      inp.value = c;
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+      inp.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    setInterval(fdvAnnounce, 10000);
+    window.addEventListener('pagehide', () => { try { api.send({ t: 'fdv', on: false }); } catch (e) {} });
+    fdvDraw();
+  }
+  function fdvMsg(m) {
+    if (m.t === 'fdv_hello') { FD.ok = !!m.ok; FD.heard = m.heard || []; if (m.st) FD.st = m.st; fdvDraw(); fdvHeard(); }
+    else if (m.t === 'fdv_st') { FD.st = m.st; FD.c = m.c || []; fdvDraw(); fdvScope(); }
+    else if (m.t === 'fdv_heard') { FD.heard = m.items || []; fdvHeard(); if (m.last) { FD.last = { call: m.last, at: Date.now() }; fdvDraw(); toast('FreeDV : ' + m.last + ' entendu.', '', 3000); } }
+  }
+  function fdvDraw() {
+    if (!FDV) return;
+    $('fdvTxSeg').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.m === FD.tx));
+    $('fdvHear').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.h === FD.hear));
+    const st = FD.st || { m: [], act: '' };
+    $('fdvLamps').innerHTML = FDV_MODES.map(([n]) => { const x = (st.m || []).find((y) => y.n === n); return '<i class="' + (st.act === n ? 'act' : x && x.s ? 'sy' : '') + '">' + n + '</i>'; }).join('');
+    const on = !!st.act;
+    $('fdvAct').textContent = on ? st.act : '—';
+    $('fdvSnr').textContent = on && st.snr != null ? Math.round(st.snr) + ' dB' : '—';
+    $('fdvFo').textContent = on && st.fo != null ? (st.fo > 0 ? '+' : '') + Math.round(st.fo) + ' Hz' : '—';
+    $('fdvBox').classList.toggle('sync', on);
+    // Indicatif du correspondant : le dernier reçu (canal texte), pendant 2 minutes
+    $('fdvCall').textContent = FD.last && Date.now() - FD.last.at < 120000 ? FD.last.call : '—';
+    $('fdvTxNote').textContent = 'votre indicatif (TX call) part dans le canal texte de FreeDV';
+    $('fdvNote').textContent = !FD.ok ? 'FreeDV indisponible sur ce serveur (programme lib/bin/fdvd absent ou système non pris en charge).'
+      : FD.hear === 'dec' ? 'Écoute : « ÉCOUTER LE TRX » doit être allumé ; silence tant qu’aucun signal FreeDV n’est calé. TRX en USB, filtre d’au moins 2,7 kHz, compresseur (PROC) coupé.'
+        : 'Écoute du signal brut : on entend le modem FreeDV, pas la voix. Repassez sur « Voix décodée » pour la voix.';
+  }
+  function fdvScope() {
+    const cv = $('fdvSc');
+    const g = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    g.fillStyle = '#0b1422'; g.fillRect(0, 0, W, H);
+    g.strokeStyle = '#1e3350'; g.beginPath(); g.moveTo(W / 2, 4); g.lineTo(W / 2, H - 4); g.moveTo(4, H / 2); g.lineTo(W - 4, H / 2); g.stroke();
+    const c = FD.c || [];
+    if (FD.st && FD.st.act === 'RADE') { g.fillStyle = '#c084fc'; g.font = '800 12px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText('RADE', W / 2, H / 2 - 4); g.fillStyle = '#94a3b8'; g.font = '600 10px system-ui, sans-serif'; g.fillText('pas de constellation', W / 2, H / 2 + 12); return; }
+    let mx = 0;
+    for (let i = 0; i < c.length; i++) mx = Math.max(mx, Math.abs(c[i]));
+    if (!mx) return;
+    const k = (W / 2 - 8) / mx;
+    g.fillStyle = FD.st && FD.st.act ? '#5ee0f5' : '#64748b';
+    for (let i = 0; i + 1 < c.length; i += 2) g.fillRect(W / 2 + c[i] * k - 1, H / 2 - c[i + 1] * k - 1, 2.4, 2.4);
+  }
+  function fdvHeard() {
+    const tb = $('fdvHeard');
+    if (!tb) return;
+    const p2 = (n) => String(n).padStart(2, '0');
+    tb.innerHTML = FD.heard.length ? FD.heard.slice(0, 30).map((h) => { const d = new Date(h.at); return '<tr data-call="' + h.call + '" title="Cliquer : ' + h.call + ' dans la fiche du QSO"><td>' + p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes()) + '</td><td><b>' + h.call + '</b></td><td>' + (h.mode || '') + '</td><td>' + (h.snr == null ? '' : Math.round(h.snr)) + '</td><td>' + (h.hz ? (h.hz / 1000).toFixed(1) : '') + '</td></tr>'; }).join('')
+      : '<tr><td colspan="5">Personne pour l’instant.</td></tr>';
   }
 
   // ------------------------------------------------------------------ messages du serveur, état
@@ -1181,15 +1281,17 @@
     else if (m.t === 'qrz_info' && LOG && LOG.mounted && LOG.onQrz) LOG.onQrz(m);
     else if (m.t === 'notice' && m.msg) toast(m.msg, m.level === 'error' ? 'warn' : '', 6000);
     else if (m.t === 'prop') drawProp(m);
-    else if (m.t === 'ssb_list') drawSsb(m.items || []);
+    else if (m.t === 'ssb_list' && !FDV) drawSsb(m.items || []);
+    else if (m.t === 'fdv_list' && FDV) drawSsb(m.items || []);
+    else if (FDV && /^fdv_/.test(m.t)) fdvMsg(m);
     else if (m.t === 'tts_audio' && m.d) ttsPlay(m.d);
     else if (m.t === 'scp') { PR.q = m.q; PR.list = m.list || []; PR.n = m.n || 0; drawProb(); }
     else if (m.t === 'ctst_list' && m.contest === CL.id) { CL.items = m.items || []; if (QE.el) CL.pend = true; else drawLog(); checkDupe(); } // détails ouverts : log redessiné à leur fermeture
     else if (m.t === 'log_one' && m.tag === 'ssbedit') qsoShow(m);
-    else if (m.t === 'log_saved' && m.edited && m.tag === 'ssbpage') { toast('QSO avec ' + ((m.qso && m.qso.call) || '') + ' corrigé dans le carnet.', '', 4000); qsoClose(); clearTimeout(onMsg.lt); onMsg.lt = setTimeout(askList, 300); }
+    else if (m.t === 'log_saved' && m.edited && m.tag === PTAG) { toast('QSO avec ' + ((m.qso && m.qso.call) || '') + ' corrigé dans le carnet.', '', 4000); qsoClose(); clearTimeout(onMsg.lt); onMsg.lt = setTimeout(askList, 300); }
     else if ((m.t === 'log_saved' || m.t === 'log_changed') && CL.id) { clearTimeout(onMsg.lt); onMsg.lt = setTimeout(askList, 400); }
     else if ((m.t === 'log_saved' || m.t === 'log_changed') && !def()) { clearTimeout(onMsg.st); onMsg.st = setTimeout(askSsb, 400); }
-    else if (m.t === 'log_export' && m.tag === 'ssbpage') saveFile(m);
+    else if (m.t === 'log_export' && m.tag === PTAG) saveFile(m);
     // Fiche du carnet (sans contest) : réponses à ses QSO, liste des TX call, références
     if (LOG && LOG.mounted && /^(log_saved|log_dupe|log_cfg|log_refs)$/.test(m.t)) LOG.onMessage(m);
   }
@@ -1201,7 +1303,7 @@
     $('cwpFreq').textContent = fmtF(B ? r.freqB : r.freq);
     const md = (B ? r.modeB : r.mode) || '—';
     $('cwpMode').textContent = md;
-    $('cwpMode').classList.toggle('bad', !!st && !/^(USB|LSB)/.test(md));
+    $('cwpMode').classList.toggle('bad', !!st && !(FDV ? /^USB/ : /^(USB|LSB)/).test(md));
     const me = api.iControl();
     // Main : 👥, votre indicatif et le bouton de la main (ctlchip.js, comme le dashboard) ; ici, seulement « dashboard non raccroché »
     $('cwpCtl').textContent = !host ? 'dashboard non raccroché' : '';
@@ -1220,7 +1322,7 @@
     // Indicatif du titre : le TX call choisi dans la fiche (sans contest), sinon celui d'émission de la station
     const fsel = !$('ssQso').hidden ? document.querySelector('#ssLog select[name="station"]') : null;
     const tcall = (fsel && fsel.dataset.manual && fsel.value) || (st && st.txCall) || '';
-    $('ssTxc').textContent = tcall ? String(tcall).toUpperCase() + ' - ' : ''; // « ON5VL - SSB »
+    $('ssTxc').textContent = tcall ? String(tcall).toUpperCase() + ' - ' : ''; // « ON5VL - SSB » (« ON5VL - FreeDV »)
     const k = kit();
     if (k) {
       // Indicatif choisi ailleurs (spot cliqué dans une BAND MAP…) : dans la case Indicatif
@@ -1317,7 +1419,7 @@
       if (k) k.setCall(call);
       if (api.iControl() && host && host.api.setFreq) {
         // Deux récepteurs : cette carte est celle du VFO-A
-        try { const st = api.state(); host.api.setFreq(Math.round(s.f * 1000), twoRx(st && st.radio) ? 'A' : undefined); setTimeout(() => { try { if (hostWin.RSDIGI) hostWin.RSDIGI.modeFor('ssb'); } catch (e) {} }, 500); } catch (e) {}
+        try { const st = api.state(); host.api.setFreq(Math.round(s.f * 1000), twoRx(st && st.radio) ? 'A' : undefined); setTimeout(() => { try { if (hostWin.RSDIGI) hostWin.RSDIGI.modeFor(PMODE); } catch (e) {} }, 500); } catch (e) {}
       } else if (!api.iControl()) toast('Indicatif repris ; prenez la main pour aller sur sa fréquence.', 'warn', 4000);
     } });
   // TX CALL : indicatif d'émission (et des QSO enregistrés), comme dans la page TRX DIGI ; avec la main
@@ -1433,6 +1535,7 @@
       logInit();
       drawMic();
       askSsb();
+      if (FDV) { fdvInit(); fdvAnnounce(); }
       api.send({ t: 'vm_list' });
       api.send({ t: 'prop_get' });
       drawContest();

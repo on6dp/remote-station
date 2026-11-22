@@ -8891,12 +8891,12 @@
     // numériques (/ftdx101/digi.html) s'ouvre sur ce mode (FT8 / FT4 / FT2, RTTY…), ou y passe si elle est déjà ouverte
     const vxBox = document.querySelector('.fc-tx .vx'), vxH = vxBox && vxBox.querySelector('.vx-h');
     if (vxBox && vxH) {
-      const DIGI_MODES = [['FT8/FT4/FT2', 'ftx'], ['SSB', 'ssb'], ['RTTY', 'rtty'], ['WSPR', 'wspr'], ['JT65', 'jt65'], ['JTTY', 'jtty'], ['CW', 'cw'], ['SSTV', 'sstv']];
+      const DIGI_MODES = [['FT8/FT4/FT2', 'ftx'], ['SSB', 'ssb'], ['FreeDV', 'fdv'], ['RTTY', 'rtty'], ['WSPR', 'wspr'], ['JT65', 'jt65'], ['JTTY', 'jtty'], ['CW', 'cw'], ['SSTV', 'sstv']];
       const row = document.createElement('div');
       row.className = 'fc-digirow';
       row.innerHTML = '<div class="vx-h fc-digih"><span class="vx-title">Modes</span></div>' +
         DIGI_MODES.map(([lab, t, m]) => '<button type="button" class="btn fc-digim" data-tab="' + t + '"' + (m ? ' data-mode="' + m + '"' : '') + ' title="' +
-          (t === 'ssb' ? 'Page SSB : phonie et contests (micro, PTT, échange, log, mémoires vocales)' : t === 'cw' ? 'Page CW : clé, macros, contests, réception CW' : 'Modes numériques : ' + lab + ' (page séparée)') + '">' + lab + '</button>').join('');
+          (t === 'ssb' ? 'Page SSB : phonie et contests (micro, PTT, échange, log, mémoires vocales)' : t === 'fdv' ? 'Page FreeDV : phonie numérique HF (RADE, 700D, 700E, 1600), micro, PTT, log' : t === 'cw' ? 'Page CW : clé, macros, contests, réception CW' : 'Modes numériques : ' + lab + ' (page séparée)') + '">' + lab + '</button>').join('');
       // Phonie dans la page TRX SSB (cadre SSB CONFIGURATION caché) : la ligne MODES avant ce cadre, toujours visible
       if (vxBox.classList.contains('vx-away')) vxBox.before(row); else vxBox.insertBefore(row, vxH);
       // Les deux titres (DIGI / SSB CONFIGURATION) sur une ligne et de même largeur : les boutons s'alignent dessous
@@ -8913,7 +8913,7 @@
         const b = e.target.closest('.fc-digim');
         if (!b) return;
         // SSB et CW : leur page à elles (TRX mis en LSB / USB ou en CW si vous avez la main)
-        if ((b.dataset.tab === 'ssb' || b.dataset.tab === 'cw') && window.RSDIGI && window.RSDIGI.openModePage) { window.RSDIGI.openModePage(b.dataset.tab); return; }
+        if ((b.dataset.tab === 'ssb' || b.dataset.tab === 'fdv' || b.dataset.tab === 'cw') && window.RSDIGI && window.RSDIGI.openModePage) { window.RSDIGI.openModePage(b.dataset.tab); return; }
         digiOpen(b.dataset.tab, b.dataset.mode || '');
       });
       // Mode affiché dans la page des modes numériques : son bouton en bleu clair (rien si la page est fermée)
