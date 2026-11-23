@@ -29,7 +29,8 @@ mkdir -p "$B/fb/pipeline" "$B/fb/util/logging"
 for f in rade_text.cpp rade_text.h ldpc_encode.cpp ldpc_encode.h ldpc_decode.cpp ldpc_decode.h HRA_56_56.h; do cp "$FB/src/pipeline/$f" "$B/fb/pipeline/"; done
 cp "$HERE/shim/ulog.h" "$B/fb/util/logging/ulog.h"
 
-RADE_SRCS="rade_api.c rade_enc.c rade_dec.c rade_enc_data.c rade_dec_data.c rade_dsp.c rade_ofdm.c rade_bpf.c rade_acq.c rade_tx.c rade_rx.c rade_enc_v2.c rade_dec_v2.c rade_sync.c rade_enc_v2_data.c rade_dec_v2_data.c rade_sync_data.c rade_v2_ofdm.c rade_tx_v2.c rade_rx_v2.c"
+# RADE V1 seulement : les poids de V2 (rade_enc_v2_data.c, rade_dec_v2_data.c, ≈ 12 Mo) sont remplacés par rade_v2_stub.c
+RADE_SRCS="rade_api.c rade_enc.c rade_dec.c rade_enc_data.c rade_dec_data.c rade_dsp.c rade_ofdm.c rade_bpf.c rade_acq.c rade_tx.c rade_rx.c rade_enc_v2.c rade_dec_v2.c rade_sync.c rade_sync_data.c rade_v2_ofdm.c rade_tx_v2.c rade_rx_v2.c"
 
 # 3. Opus avec FARGAN (correctifs de rade_c), puis fdvd ; $1 = préfixe du compilateur ('' ou x86_64-w64-mingw32-), $2 = sortie
 build() {
@@ -48,6 +49,7 @@ build() {
   for f in "$B"/c2src/*.c; do $CC -std=gnu11 -DGIT_HASH=\"310777b\" -c -I"$C2/src" -I"$B/c2/codec2" -I"$B/c2" "$f" -o "c2_$(basename "$f").o"; done
   for f in rade_text ldpc_encode ldpc_decode; do $CXX -c -DIS_BUILDING_RADE_API=1 -I"$B/fb/pipeline" -I"$RS" $OPI "$B/fb/pipeline/$f.cpp" -o "$f.o"; done
   $CC -c -DIS_BUILDING_RADE_API=1 -I"$HERE" -I"$RS" $OPI -I"$B/fb/pipeline" "$HERE/rade_part.c" -o rade_part.o
+  $CC -c -DIS_BUILDING_RADE_API=1 -I"$RS" $OPI "$HERE/rade_v2_stub.c" -o rade_v2_stub.o
   $CC -c -I"$HERE" -I"$C2/src" -I"$B/c2/codec2" -I"$B/c2" "$HERE/fdvd.c" -o fdvd.o
   ${P}g++ -static -o "$OUT" ./*.o "$OP/.libs/libopus.a" -lm ${P:+-lssp}
   ${P}strip "$OUT"

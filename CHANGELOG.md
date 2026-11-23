@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.67** — Version plus légère : FreeDV sans les poids inutilisés de RADE V2 (programme deux fois plus petit), programmes Windows hors de l'archive Linux
 - **0.43.66** — FreeDV : bouton à droite de SSTV dans la ligne MODES ; Stations entendues sur toute la hauteur du cadre
 - **0.43.65** — Page FreeDV : VFO au-dessus du cadre FREEDV, comme les autres pages des modes ; indicatif du correspondant dans l'en-tête du cadre
 - **0.43.64** — FreeDV : page de phonie numérique HF (RADE, 700D, 700E, 1600) avec tous les TRX, réception des quatre modes en même temps, émission codée par le serveur, indicatif, stations entendues, log FREEDV
