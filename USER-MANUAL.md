@@ -957,7 +957,7 @@ QO-100 is a geostationary satellite reached on 2.4 GHz with an up-converter. The
 <a id="freedv"></a>
 ### 12.10 FreeDV (HF digital voice)
 
-**FreeDV** is the amateur HF digital voice: speech is coded into data in a band of about 1.5 kHz, sent in **USB** on all bands. The station does it with **every TRX**: the server decodes the TRX audio and codes your voice (lib/bin/fdvd, with the FreeDV libraries). The page opens with the `FreeDV` button of the MODES line (dashboard or front panel); it is the SSB page, without contests or voice memories, plus a **FREEDV** panel. The TRX goes to USB by itself.
+**FreeDV** is the amateur HF digital voice: speech is coded into data in a band of about 1.5 kHz, sent in **USB** on all bands. The station does it with **every TRX**: the server decodes the TRX audio and codes your voice (lib/bin/fdvd, with the FreeDV libraries). The page opens with the `FreeDV` button of the MODES line (dashboard or front panel); it is the SSB page, without contests or voice memories, plus a **FREEDV** panel, below the VFOs (same order as the other pages: PTT, VFOs, then the mode panel). The TRX goes to USB by itself.
 
 | Mode | Meaning |
 |---|---|
