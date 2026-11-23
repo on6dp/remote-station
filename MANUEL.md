@@ -967,7 +967,7 @@ QO-100 est un satellite géostationnaire qu'on atteint en 2,4 GHz avec un conver
 <a id="freedv"></a>
 ### 12.10 FreeDV (phonie numérique HF)
 
-**FreeDV** est la phonie numérique des radioamateurs en HF : la voix est codée en données dans une bande d'environ 1,5 kHz, émise en **USB** sur toutes les bandes. La station le fait avec **tous les TRX** : le serveur décode la BF du TRX et code votre voix (lib/bin/fdvd, avec les bibliothèques de FreeDV). La page s'ouvre avec le bouton `FreeDV` de la ligne MODES (dashboard ou face avant) ; c'est la page SSB, sans les contests ni les mémoires vocales, avec un cadre **FREEDV** en plus, sous les VFO (même ordre que les autres pages : PTT, VFO, puis le cadre du mode). Le TRX passe tout seul en USB.
+**FreeDV** est la phonie numérique des radioamateurs en HF : la voix est codée en données dans une bande d'environ 1,5 kHz, émise en **USB** sur toutes les bandes. La station le fait avec **tous les TRX** : le serveur décode la BF du TRX et code votre voix (lib/bin/fdvd, avec les bibliothèques de FreeDV). La page s'ouvre avec le bouton `FreeDV` de la ligne MODES, à droite de SSTV (dashboard ou face avant) ; c'est la page SSB, sans les contests ni les mémoires vocales, avec un cadre **FREEDV** en plus, sous les VFO (même ordre que les autres pages : PTT, VFO, puis le cadre du mode). Le TRX passe tout seul en USB.
 
 | Mode | Signification |
 |---|---|

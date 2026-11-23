@@ -3909,3 +3909,7 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .fdv-htab { width: 100%; }
 .fdv-htab tbody tr[data-call] { cursor: pointer; }
 .fdv-htab tbody tr[data-call]:hover td { background: #16273a; }
+/* 0.43.66 — FreeDV : « Stations entendues » sur toute la hauteur du cadre (défilement dans la liste) */
+.fdv-row { align-items: stretch; }
+.fdv-heard { position: relative; max-height: none; min-height: 132px; flex: 1 1 420px; }
+.fdv-hin { position: absolute; inset: 0; overflow: auto; }

@@ -8891,7 +8891,7 @@
     // numériques (/ftdx101/digi.html) s'ouvre sur ce mode (FT8 / FT4 / FT2, RTTY…), ou y passe si elle est déjà ouverte
     const vxBox = document.querySelector('.fc-tx .vx'), vxH = vxBox && vxBox.querySelector('.vx-h');
     if (vxBox && vxH) {
-      const DIGI_MODES = [['FT8/FT4/FT2', 'ftx'], ['SSB', 'ssb'], ['FreeDV', 'fdv'], ['RTTY', 'rtty'], ['WSPR', 'wspr'], ['JT65', 'jt65'], ['JTTY', 'jtty'], ['CW', 'cw'], ['SSTV', 'sstv']];
+      const DIGI_MODES = [['FT8/FT4/FT2', 'ftx'], ['SSB', 'ssb'], ['RTTY', 'rtty'], ['WSPR', 'wspr'], ['JT65', 'jt65'], ['JTTY', 'jtty'], ['CW', 'cw'], ['SSTV', 'sstv'], ['FreeDV', 'fdv']];
       const row = document.createElement('div');
       row.className = 'fc-digirow';
       row.innerHTML = '<div class="vx-h fc-digih"><span class="vx-title">Modes</span></div>' +
