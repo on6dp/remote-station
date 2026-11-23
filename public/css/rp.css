@@ -3913,3 +3913,11 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .fdv-row { align-items: stretch; }
 .fdv-heard { position: relative; max-height: none; min-height: 132px; flex: 1 1 420px; }
 .fdv-hin { position: absolute; inset: 0; overflow: auto; }
+/* 0.43.68 — FT : GUET (appel automatique d'un indicatif dès qu'il est libre, « Wait and Call ») */
+.dg-guet { display: inline-flex; align-items: center; gap: 6px; }
+.dg-guet .dg-f { color: #fb923c; font-weight: 800; }
+.dg-guet input { width: 130px; font: 800 13px/1.2 inherit; color: #fb923c; background: #000; border: 1px solid #fff; border-radius: 6px; padding: 3px 7px; text-transform: uppercase; }
+.dg-guet input.on { border-color: #fb923c; box-shadow: 0 0 8px rgba(251,146,60,.45); }
+.dg-guet #dgGuetOn { min-width: 44px; border-radius: 6px; font-weight: 900; }
+.dg-guet #dgGuetOn.on { background: #fb923c; color: #000; border-color: #fb923c; animation: dgGuetPulse 1.6s ease-in-out infinite; }
+@keyframes dgGuetPulse { 50% { box-shadow: 0 0 10px rgba(251,146,60,.8); } }

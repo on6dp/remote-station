@@ -252,6 +252,7 @@
       </select>
       <label class="dg-hound" id="dgHoundWrap" title="DXpédition en FT8 : HOUND = vous appelez une DXpédition qui trafique en FOX (FOX classique, plusieurs QSO à la fois) ou en SuperFox (un seul signal large de 1,5 kHz, jusqu'à 9 stations à la fois). Choisi par celui qui a la main, pour toute la station."><span class="dg-f">Activité</span> <select id="dgHound"><option value="0">NORMALE</option><option value="1">HOUND · FOX</option><option value="2">HOUND · SuperFox</option></select></label>
       <span class="dg-hunt" title="DX (chasse à une DXpédition…) : indicatifs ou préfixes séparés par des espaces (ex. 3Y0K VP8 FT8W). Entrée : l’Activité de bande ne montre plus que leurs messages. Case vidée : tout le trafic revient."><span class="dg-f">DX</span> <input id="dgHunt" type="text" spellcheck="false" autocomplete="off" placeholder="3Y0K VP8…" maxlength="80"></span>
+      <span class="dg-guet" title="GUET (comme « Wait and Call » de WSJT-X Improved) : indicatifs complets séparés par des espaces. Bouton allumé et main prise : dès qu’une de ces stations est décodée libre (CQ, 73, RR73 ou RRR), elle est appelée toute seule (Tx1, comme un double-clic), 3 fois au plus sans réponse ; si elle répond, la séquence automatique termine le QSO. Déjà contactée sur cette bande dans ce mode : pas appelée. ■ Arrêter, ou relâcher la main, éteint le guet."><span class="dg-f">GUET</span> <input id="dgGuet" type="text" spellcheck="false" autocomplete="off" placeholder="indicatif…" maxlength="60"><button class="btn dg-mini" type="button" id="dgGuetOn" aria-pressed="false">OFF</button></span>
       <label class="dg-chk dg-alog" title="Que faire du QSO dans le carnet à la fin du QSO (RR73 / 73) : vous demander (fenêtre « QSO terminé » avec « Enregistrer dans le carnet »), ou l’enregistrer tout seul (« Log automatically » de WSJT-X)"><span class="dg-f dg-ylw">Paramètres Logbook</span> <select id="dgAutoLog">
         <option value="">MANUEL : me demander avant d’enregistrer</option>
         <option value="any">AUTOMATIQUE : RR73 reçu ou 73 envoyé</option>
@@ -5362,7 +5363,7 @@
     const clr = box.querySelector('[data-clr]');
     if (clr) clr.addEventListener('click', () => api.send({ t: 'ftx_queue', op: 'clear' }));
   }
-  function pickFromDecode(d, slot, side) {
+  function pickFromDecode(d, slot, side, ov) {
     qsoShow(true);
     if (ftDual) { ftSide = side === 'B' ? 'B' : 'A'; sideBtns(); } // TX automatique sur le VFO de la station appelée
     if (slot && SLOT_MS[mode]) dxPar = { mode, call: '', parity: Math.round(slot / SLOT_MS[mode]) % 2 };
@@ -5399,7 +5400,7 @@
     if (api && api.iControl() && FT_MODES.indexOf(mode) >= 0) {
       const t = ftxMsgs()[ftxSel];
       if (t) {
-        ftxSend(ftxSel, t, true); // PTT au clic (le signal part au début de la période)
+        ftxSend(ftxSel, t, true, ov); // PTT au clic (le signal part au début de la période)
         // Retour immédiat : quand part la réponse
         setTimeout(() => {
           const x = api.state() && api.state().ftx;
@@ -5551,7 +5552,7 @@
   }
   // ------------------------------------------------------------------ émission FT8 / FT4 / FT2
   // Clic sur Tx1…Tx7 : le serveur choisit le créneau, la page Station du club fabrique et joue le signal
-  function ftxSend(i, text, keyNow) {
+  function ftxSend(i, text, keyNow, ov) {
     ftxSel = i;
     store.set('ftxsel', i);
     drawMsgs();
@@ -5559,7 +5560,7 @@
     if (/[{}]/.test(text)) return api.say('Message incomplet : choisissez d’abord le correspondant (double-clic sur son message) ou réglez votre locator.', 'warn');
     const m = FT_MODES.indexOf(mode) >= 0 ? mode : ftStored();
     api.send({ t: 'ftx_tx', mode: m, ntx: i + 1, f0: curTxF(), parity: txParity(i), dx: { call: dx.call, grid: dx.grid }, rpt: dx.rpt,
-      free: String(store.get('ftxfree', '')), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq' || ftAfter() === 'always', cqAlways: ftAfter() === 'always', dual: ftDual2(), maxRep: ftMaxRep(), keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd() });
+      free: String(store.get('ftxfree', '')), call1st: ftAfter() !== 'stop', autoCq: ftAfter() === 'cq' || ftAfter() === 'always', cqAlways: ftAfter() === 'always', dual: ftDual2(), maxRep: ftMaxRep(), keyNow: !!keyNow, rxf: sd() === 'B' ? rxFB : rxF, side: sd(), ...(ov || {}) });
   }
   // « Après un QSO » : par défaut (0.42.52) « Toujours CQ » — après chaque QSO (73 / RR73), le suivant qui appelait, sinon
   // votre CQ relancé tout seul ; ■ Arrêter si on ne veut pas continuer. L'ancien défaut « cq » est passé une fois à « always ».
@@ -6887,6 +6888,57 @@
     for (const id of ['dgBand', 'dgBandB']) if ($(id)) $(id).classList.toggle('hunt-on', on);
     if ($('dgHunt')) $('dgHunt').classList.toggle('on', on);
   }
+  // GUET (« Wait and Call » de WSJT-X Improved) : stations guettées appelées toutes seules dès qu'elles sont libres
+  // (CQ, 73, RR73, RRR), 3 envois au plus sans réponse (maxRep 3), sans CQ ni réponse aux autres ensuite
+  const guet = { list: String(store.get('guet', '')).toUpperCase().split(/[\s,;]+/).filter((t) => CALL_RE.test(t)), on: false, last: '' };
+  function guetDraw() {
+    const b = $('dgGuetOn');
+    if (!b) return;
+    b.textContent = guet.on ? 'ON' : 'OFF';
+    b.setAttribute('aria-pressed', String(guet.on));
+    b.classList.toggle('on', guet.on);
+    if ($('dgGuet')) $('dgGuet').classList.toggle('on', guet.on);
+  }
+  function guetSet(on, why) {
+    if (on && !guet.list.length) return api && api.say('GUET : tapez d’abord l’indicatif à guetter.', 'warn');
+    if (on && !(api && api.iControl())) return api && api.say('GUET : prenez la main d’abord (l’appel part tout seul).', 'warn');
+    if (on && FT_MODES.indexOf(mode) < 0) return api && api.say('GUET : seulement en FT8, FT4 ou FT2.', 'warn');
+    if (guet.on === on) return guetDraw();
+    guet.on = on;
+    guet.last = '';
+    guetDraw();
+    if (api) api.say(on ? 'GUET allumé : ' + guet.list.join(', ') + ' appelé' + (guet.list.length > 1 ? 's' : '') + ' dès qu’il' + (guet.list.length > 1 ? 's sont libres' : ' est libre') + ' (CQ, 73, RR73, RRR), 3 fois au plus.' : 'GUET éteint' + (why ? ' (' + why + ')' : '') + '.', '', 6000);
+  }
+  const guetIs = (c, t) => c === t || c.indexOf(t + '/') === 0 || c.endsWith('/' + t);
+  /** Nouvelle période décodée : une station guettée libre ? → appel (comme un double-clic sur son message) */
+  function guetCheck(it, side) {
+    if (!guet.on || !api) return;
+    if (!api.iControl()) return guetSet(false, 'main relâchée');
+    if (FT_MODES.indexOf(mode) < 0 || it.mode !== mode) return;
+    const st = api.state() || {};
+    const sq = st.seq;
+    const busy = (sq && sq.on) || st.ftx || (st.ptt && st.ptt.active);
+    for (const d of it.list || []) {
+      if (d.tx) continue;
+      const w = String(d.msg || '').toUpperCase().split(/\s+/).map((x) => x.replace(/^<|>$/g, ''));
+      let who = '', free = false;
+      if (w[0] === 'CQ') { who = CALL_RE.test(w[1] || '') ? w[1] : (w[2] || ''); free = true; }
+      else { who = w[1] || ''; free = /^(73|RR73|RRR)$/.test(w[w.length - 1] || '') && stationCalls.indexOf(w[0]) < 0; }
+      if (!free || !who) continue;
+      const t = guet.list.find((x) => guetIs(who, x));
+      if (!t) continue;
+      if (isWorked(d.msg, side)) { if (guet.last !== 'wkd' + who) { guet.last = 'wkd' + who; api.say('GUET : ' + who + ' libre, mais déjà contacté sur cette bande dans ce mode : pas appelé.', '', 6000); } continue; }
+      if (busy) {
+        if (sq && sq.on && sq.dx === who) return; // déjà en cours avec lui
+        if (guet.last !== 'busy' + it.slot) { guet.last = 'busy' + it.slot; api.say('GUET : ' + who + ' est libre, mais un QSO ou une émission est en cours : pas d’appel (■ Arrêter pour le laisser appeler).', 'warn', 8000); }
+        return;
+      }
+      guet.last = who + it.slot;
+      api.say('GUET : ' + who + ' libre (' + w.slice(0, 3).join(' ') + ') : appel automatique, 3 fois au plus.', '', 8000);
+      pickFromDecode(d, it.slot, side, { maxRep: 3, autoCq: false, cqAlways: false, call1st: false });
+      return;
+    }
+  }
   function rowEl(slot, d, side) {
     const r = document.createElement('div');
     const k = d.tx ? 'tx' : cls(d.msg);
@@ -7907,7 +7959,7 @@
         if (detached || e.ctrlKey || e.altKey || e.metaKey || e.repeat) return;
         if (e.key === 'Escape') {
           const x = api && api.state() && api.state().ftx;
-          if (x && (FT_MODES.indexOf(x.mode) >= 0 || x.mode === 'JT65')) { e.preventDefault(); api.send({ t: 'ftx_stop' }); }
+          if (guet.on) guetSet(false, 'Échap'); if (x && (FT_MODES.indexOf(x.mode) >= 0 || x.mode === 'JT65')) { e.preventDefault(); api.send({ t: 'ftx_stop' }); }
           return;
         }
         const n = /^F([1-7])$/.exec(e.key);
@@ -7949,6 +8001,23 @@
       $('fqLog').addEventListener('click', qsoLogNow);
       $('fqClr').addEventListener('click', () => { setDx({ call: '', grid: '', rpt: '-10', rptRx: '' }); syncDx(); });
       // Chasse (DXpédition)
+      if ($('dgGuet')) {
+        $('dgGuet').value = guet.list.join(' ');
+        const upd = () => {
+          const raw = $('dgGuet').value.toUpperCase().split(/[\s,;]+/).filter(Boolean);
+          guet.list = raw.filter((t) => CALL_RE.test(t)).slice(0, 8);
+          $('dgGuet').value = guet.list.join(' ');
+          store.set('guet', guet.list.join(' '));
+          if (raw.length > guet.list.length && api) api.say('GUET : indicatifs complets seulement (pas de préfixe).', 'warn');
+          if (!guet.list.length && guet.on) guetSet(false, 'plus d’indicatif');
+          else if (guet.on && api) api.say('GUET : ' + guet.list.join(', ') + '.', '', 4000);
+        };
+        $('dgGuet').addEventListener('change', upd);
+        $('dgGuet').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); upd(); } });
+        $('dgGuetOn').addEventListener('click', () => { upd(); guetSet(!guet.on); });
+        setInterval(() => { if (guet.on && api && !api.iControl()) guetSet(false, 'main relâchée'); }, 2000);
+        guetDraw();
+      }
       if ($('dgHunt')) {
         $('dgHunt').value = huntList.join(' ');
         $('dgHunt').addEventListener('change', () => {
@@ -8028,7 +8097,7 @@
           if (api) api.say({ always: 'Après chaque QSO, même quand vous aviez répondu à un CQ (73 reçu ou envoyé) : réponse à la station suivante qui vous appelait, sinon votre CQ relancé tout seul.', cq: 'Après un QSO : réponse à la station suivante qui vous appelait, sinon CQ relancé tout seul.', first: 'Après un QSO : réponse automatique au 1er qui répond à votre CQ, puis arrêt à la fin du QSO.', stop: 'Après un QSO : arrêt ; vous choisissez vous-même la station suivante (double-clic).' }[$('dgAfter').value], '', 6000);
         });
       }
-      $('dgStop').addEventListener('click', () => api && api.send({ t: 'ftx_stop' }));
+      $('dgStop').addEventListener('click', () => { if (guet.on) guetSet(false, '■ Arrêter'); if (api) api.send({ t: 'ftx_stop' }); });
       $('dgRxTx').addEventListener('click', () => setRx(txF));
       if ($('dgRxTxB')) $('dgRxTxB').addEventListener('click', () => setRx(txFB, 'B'));
       // Repli du panneau ou onglet du navigateur caché : le serveur arrête de décoder pour ce membre
@@ -8188,6 +8257,7 @@
         while (H.length > 240) H.shift();
         if (m.mode === mode) addSlot(it, false, B ? 'B' : undefined);
         decAdd(it, B);
+        guetCheck(it, B ? 'B' : undefined);
         if (m.mode === mode && dxShown()) dxDraw(); // pays entendus : nouveaux en tête
         // HOUND SuperFox : le repère RX se place tout seul sur le signal SuperFox décodé (bas du signal)
         const sfd = houndOn() && (it.list || []).find((d) => d.sf && d.f >= 200 && d.f <= 2500);
