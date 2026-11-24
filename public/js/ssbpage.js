@@ -203,7 +203,7 @@
   }
 
   // ------------------------------------------------------------------ mémoires vocales (VOICE TX)
-  // 24 mémoires en 2 lignes de 12 : F1 … F12 (T1 … T12) dans un cadre rouge, Ctrl+F1 … Ctrl+F12 (T13 … T24) dans un cadre bleu
+  // 24 mémoires en 2 lignes de 12 : F1 … F12 (T1 … T12), chaque bouton encadré en rouge ; Ctrl+F1 … Ctrl+F12 (T13 … T24), encadrés en bleu
   const VM_N = 24;
   const vmKey = (n) => (n <= 12 ? 'F' + n : 'Ctrl+F' + (n - 12));
   // Nom lisible d'une voix de synthèse (Kokoro / Piper : nom donné par le serveur ; espeak-ng : ancienne voix robotique)
@@ -216,13 +216,12 @@
     if (sig === box.dataset.sig) return;
     box.dataset.sig = sig;
     box.textContent = '';
-    // Un cadre par ligne : rouge autour de F1 … F12, bleu autour de Ctrl+F1 … Ctrl+F12
-    const rows = [1, 2].map((r) => { const d = document.createElement('div'); d.className = 'ssb-vrow r' + r; box.appendChild(d); return d; });
     for (let n = 1; n <= VM_N; n++) {
       const t = meta && meta.t && meta.t[n - 1];
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'cwp-macro ssb-vm' + (t && t.ms ? ' tx' : ' empty') + (pl === n ? ' play' : '');
+      // chaque bouton de la 1re ligne (F1 … F12) encadré en rouge, de la 2e ligne (Ctrl+F1 … Ctrl+F12) en bleu
+      b.className = 'cwp-macro ssb-vm ' + (n <= 12 ? 'vr1' : 'vr2') + (t && t.ms ? ' tx' : ' empty') + (pl === n ? ' play' : '');
       b.innerHTML = '<small></small><span></span>';
       // 2 lignes de 12 : touche et durée en haut, nom en dessous (T1 … T24 dans l'infobulle)
       // touche (F1 … F12, Ctrl+F1 … Ctrl+F12) en vert, puis la durée
@@ -240,7 +239,7 @@
       b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + ' (' + vmKey(n) + ')' + (tt ? ' (message de synthèse ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'en français' : 'en anglais') + ', voix ' + voiceName(tt.voice) + ', ' + tt.call + ')' +
         (other ? '\n⚠ Pas la voix choisie (' + voiceName(TT.voice) + ') : 🗣 Config. Macros → cochez T' + n + ' → GÉNÉRER pour la refaire.' : '') : '') : 'Mémoire T' + n + ' vide : l’enregistrer avec « 🎙 Ma voix » (votre micro) ou « 🗣 Config. Macros » (voix de synthèse)';
       b.addEventListener('click', () => playVm(n));
-      rows[n <= 12 ? 0 : 1].appendChild(b);
+      box.appendChild(b);
     }
   }
   // Messages standard en anglais ou en français (fabriqués sur le serveur par espeak-ng, TX call épelé)
