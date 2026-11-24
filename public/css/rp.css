@@ -3939,3 +3939,6 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .ssb-ttsl, #ssRecL { max-height: 52vh; overflow: auto; padding-right: 4px; }
 /* Mémoires vocales : ligne du titre (Mémoires vocales … Ma voix) en haut, les 4 colonnes en dessous sur toute la largeur */
 .ssb-vk > #ssVk, .ssb-vk #ssVk { flex: 1 1 100%; width: 100%; }
+/* Mémoires vocales : 4 colonnes serrées à gauche sous la ligne du titre (plus étalées sur toute la largeur) */
+.ssb-vk > #ssVk, .ssb-vk #ssVk { grid-template-columns: repeat(4, minmax(0, 250px)); justify-content: start; }
+.cwp-macro.ssb-vm { justify-content: flex-start; }
