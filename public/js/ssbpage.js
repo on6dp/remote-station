@@ -220,9 +220,11 @@
       const t = meta && meta.t && meta.t[n - 1];
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'cwp-macro ssb-vm' + (t && t.ms ? ' tx' : ' empty') + (pl === n ? ' play' : '');
+      // 1re ligne (F1 … F12) encadrée en rouge, 2e ligne (Ctrl+F1 … Ctrl+F12) en bleu
+      b.className = 'cwp-macro ssb-vm ' + (n <= 12 ? 'vr1' : 'vr2') + (t && t.ms ? ' tx' : ' empty') + (pl === n ? ' play' : '');
       b.innerHTML = '<small></small><span></span>';
-      b.querySelector('small').textContent = vmKey(n) + ' · T' + n + (t && t.ms ? ' · ' + (t.ms / 1000).toFixed(1).replace('.', ',') + ' s' : '');
+      // 2 lignes de 12 : touche et durée en haut, nom en dessous (T1 … T24 dans l'infobulle)
+      b.querySelector('small').textContent = vmKey(n) + (t && t.ms ? ' · ' + (t.ms / 1000).toFixed(1).replace('.', ',') + ' s' : '');
       b.querySelector('span').textContent = (t && t.name) || (t && t.ms ? 'T' + n : 'vide');
       const tt = S.tts && S.tts[n];
       // Mémoire faite avec une autre voix que celle choisie dans « Config. Macros » (ancienne génération, autre langue,

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.76** — Mémoires vocales (TRX SSB et FreeDV) en 2 lignes de 12 : F1–F12 en cadres rouges, Ctrl+F1–F12 en cadres bleus ; 6 par ligne quand le cadre est étroit (contest).
 - **0.43.75** — Pages TRX SSB et FreeDV : Mémoires vocales à la place de la ligne Log du QSO, titre en haut et 4 colonnes serrées à gauche
 - **0.43.74** — Pages TRX SSB et FreeDV : ligne « Log du QSO » retirée
 - **0.43.73** — Autres indicatifs personnels d'un membre (ON6DP : OP0P) dans sa liste TX call seulement (adduser.js --indicatifs), signés par son Agent LoTW ; mémoires vocales : titre en haut, 4 colonnes en dessous
