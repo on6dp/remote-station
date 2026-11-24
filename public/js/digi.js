@@ -1317,7 +1317,8 @@
     const club = txcMe.digiCall;
     const clubs = txcMe.clubs.length ? txcMe.clubs : [club];
     const mine = txcMe.call;
-    const opts = clubs.concat(txcMe.canTx && !txcMe.rxOnly && mine && clubs.indexOf(mine) < 0 ? [mine] : []);
+    const own = txcMe.canTx && !txcMe.rxOnly && mine ? [mine].concat(txcMe.mine2 || []) : []; // le sien et ses autres indicatifs (ON6DP : OP0P)
+    const opts = Array.from(new Set(clubs.concat(own.filter((c) => clubs.indexOf(c) < 0))));
     if (sel.dataset.opts !== opts.join(',')) {
       sel.dataset.opts = opts.join(',');
       sel.textContent = '';
@@ -8177,7 +8178,7 @@
       refillQo();
       if (me && me.call) opCall = me.call;
       rtIsAdmin = !!(me && me.admin);
-      if (me) txcMe = { call: String(me.call || '').toUpperCase(), canTx: me.canTx !== false, rxOnly: !!me.rxOnly, digiCall: String((info && info.digiCall) || 'ON5VL').toUpperCase(), clubs: info && Array.isArray(info.clubCalls) ? info.clubCalls.map((c) => String(c).toUpperCase()) : [] };
+      if (me) txcMe = { call: String(me.call || '').toUpperCase(), mine2: Array.isArray(me.myCalls) ? me.myCalls.map((c) => String(c).toUpperCase()) : [], canTx: me.canTx !== false, rxOnly: !!me.rxOnly, digiCall: String((info && info.digiCall) || 'ON5VL').toUpperCase(), clubs: info && Array.isArray(info.clubCalls) ? info.clubCalls.map((c) => String(c).toUpperCase()) : [] };
       drawTxCallDg();
       drawMsgs();
       if (info && info.stationCall) { baseCalls = String(info.stationCall).toUpperCase().split(/[\s/,]+/).filter(Boolean).concat(Array.isArray(info.clubCalls) ? info.clubCalls.map((c) => String(c).toUpperCase()) : []); stationCalls = Array.from(new Set(baseCalls.concat(myCall))); }

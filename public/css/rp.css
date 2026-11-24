@@ -3937,3 +3937,5 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .ssb-vk > #ssVk, .ssb-vk #ssVk { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(6, auto); grid-auto-flow: column; }
 @media (max-width: 900px) { .ssb-vk #ssVk { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(12, auto); } }
 .ssb-ttsl, #ssRecL { max-height: 52vh; overflow: auto; padding-right: 4px; }
+/* Mémoires vocales : ligne du titre (Mémoires vocales … Ma voix) en haut, les 4 colonnes en dessous sur toute la largeur */
+.ssb-vk > #ssVk, .ssb-vk #ssVk { flex: 1 1 100%; width: 100%; }

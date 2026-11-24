@@ -9,6 +9,8 @@
  *   node adduser.js --enable ON4ABC   le réactive
  *   node adduser.js --until ON4ABC 2027-03-31   accès jusqu'à cette date incluse (fin d'affiliation) ; sans date : sans limite
  *   node adduser.js --until-all 2027-03-31        même date pour tous les membres sauf les administrateurs (sans date : sans limite)
+ *   node adduser.js --indicatifs ON6DP OP0P   autres indicatifs personnels du membre (proposés dans sa liste TX call,
+ *                                     signés par son Agent LoTW) ; sans indicatif après le sien : retirés
  *   node adduser.js --list            liste les membres
  *   node adduser.js F4ABC --exception indicatif étranger admis par exception (ajouté à « allowedCalls » de config.json ;
  *                                     redémarrer le service ensuite)
@@ -47,10 +49,20 @@ function askHidden(q) {
     for (const c of calls) {
       const u = users[c];
       const off = auth.userOff(u);
-      console.log(c.padEnd(12) + (u.admin ? 'admin  ' : '       ') + (u.tx === false ? 'écoute seule' : 'TX autorisé ') +
+      console.log(c.padEnd(12) + (u.admin ? 'admin  ' : '       ') + (u.tx === false ? 'écoute seule' : 'TX autorisé ') + (Array.isArray(u.calls) && u.calls.length ? '  + ' + u.calls.join(', ') : '') +
         (off ? '  ** ' + off.toUpperCase() + ' **' : u.until ? '  (jusqu’au ' + u.until.split('-').reverse().join('/') + ')' : ''));
     }
     return;
+  }
+  if (args[0] === '--indicatifs') {
+    const c = auth.normCall(args[1]);
+    if (!users[c]) return console.log(c + ' n’existe pas.');
+    const list = args.slice(2).join(' ').toUpperCase().split(/[\s,;]+/).filter(Boolean);
+    const bad = list.filter((x) => !/^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}[A-Z](\/[A-Z0-9]{1,4})?$/.test(x) || x === c);
+    if (bad.length) return console.log('Indicatif refusé : ' + bad.join(', '));
+    if (list.length) users[c].calls = Array.from(new Set(list)).slice(0, 4); else delete users[c].calls;
+    auth.saveUsers(USERS, users);
+    return console.log(c + (list.length ? ' : autres indicatifs ' + users[c].calls.join(', ') + ' (TX call de ' + c + ' seulement). Reconnexion du membre pour les voir.' : ' : plus d’autre indicatif.'));
   }
   if (args[0] === '--disable' || args[0] === '--enable') {
     const c = auth.normCall(args[1]);

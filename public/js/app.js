@@ -1610,7 +1610,9 @@
     const club = String(me.digiCall || 'ON5VL').toUpperCase();
     const clubs = Array.isArray(me.clubCalls) && me.clubCalls.length ? me.clubCalls.map((c) => String(c).toUpperCase()) : [club];
     const mine = String(me.call || '').toUpperCase();
-    const opts = clubs.concat(me.canTx && !me.rxOnly && mine && clubs.indexOf(mine) < 0 ? [mine] : []);
+    // Le sien, puis ses autres indicatifs personnels (ON6DP : OP0P), seulement pour ce membre
+    const own = me.canTx && !me.rxOnly && mine ? [mine].concat(Array.isArray(me.myCalls) ? me.myCalls.map((c) => String(c).toUpperCase()) : []) : [];
+    const opts = Array.from(new Set(clubs.concat(own.filter((c) => clubs.indexOf(c) < 0))));
     if (sel.dataset.opts !== opts.join(',')) {
       sel.dataset.opts = opts.join(',');
       sel.textContent = '';

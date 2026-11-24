@@ -926,7 +926,7 @@ function autoFor(s, call) {
 // Logs en ligne en libre-service : un membre ne gère que son propre indicatif (identifiants, envois, confirmations)
 function ownLogCall(conn, call) {
   call = String(call || '').toUpperCase();
-  return !!call && call === String(conn.user.call || '').toUpperCase() && ownCallOk(conn.user) && stationCalls().indexOf(call) < 0;
+  return !!call && ownCalls(conn.user).indexOf(call) >= 0 && stationCalls().indexOf(call) < 0;
 }
 function acctPublic(s, call) {
   const c = credFor(s, call);
@@ -994,11 +994,20 @@ const ftTxSlots = [];
 const norm = (s) => String(s || '').toUpperCase().replace(/\s+/g, ' ').trim();
 // « Émettre sous » (modes numériques) : indicatif de celui qui a la main s'il l'a choisi, sinon celui de la station (digiCall)
 const txChoice = new Map(); // indicatif du membre → TX call choisi (un indicatif du club, ou le sien)
-const ownCallOk = (u) => !!(u && u.tx && !u.rxOnly && /^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}[A-Z](\/[A-Z0-9]{1,4})?$/.test(String(u.call || '')));
+const CALL_OWN_RE = /^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}[A-Z](\/[A-Z0-9]{1,4})?$/;
+const ownCallOk = (u) => !!(u && u.tx && !u.rxOnly && CALL_OWN_RE.test(String(u.call || '')));
+/** Autres indicatifs personnels d'un membre (users.json « calls », réglé par « node adduser.js --indicatifs ON6DP OP0P ») */
+function extraCalls(rec, call) {
+  const me = String(call || '').toUpperCase();
+  return (Array.isArray(rec && rec.calls) ? rec.calls : []).map((c) => String(c || '').toUpperCase().trim())
+    .filter((c, i, a) => CALL_OWN_RE.test(c) && c !== me && a.indexOf(c) === i && stationCalls().indexOf(c) < 0).slice(0, 4);
+}
+/** Indicatifs personnels sous lesquels ce membre peut émettre : le sien, puis ses autres indicatifs (ON6DP : OP0P) */
+const ownCalls = (u) => (ownCallOk(u) ? [String(u.call).toUpperCase()].concat(Array.isArray(u.calls) ? u.calls : []) : []);
 /** TX call que ce membre utiliserait (choix valable, sinon l'indicatif principal de la station) */
 function txCallFor(u) {
   const ch = u ? txChoice.get(u.call) : '';
-  if (ch && ch === String(u.call).toUpperCase() && ownCallOk(u)) return ch;
+  if (ch && ownCalls(u).indexOf(ch) >= 0) return ch;
   if (ch && stationCalls().indexOf(ch) >= 0) return ch;
   return String(cfg.digiCall || 'ON5VL').toUpperCase();
 }
@@ -1016,7 +1025,7 @@ function agentOwner(call) {
   const rec = agentUsers.u[call];
   if (!rec || auth.userOff(rec)) return null;
   const rxOnly = auth.isRxOnly(call, cfg.rxOnlyPrefixes);
-  return { call, admin: !!rec.admin, tx: rec.tx !== false && !rxOnly, rxOnly };
+  return { call, admin: !!rec.admin, tx: rec.tx !== false && !rxOnly, rxOnly, calls: extraCalls(rec, call) };
 }
 const AGENTS = new LotwAgents({
   file: path.join(LOG_DIR, 'lotw-agents.json'),
@@ -1025,9 +1034,11 @@ const AGENTS = new LotwAgents({
   calls: (owner) => {
     const u = agentOwner(owner);
     if (!u) return [];
-    const l = ownCallOk(u) && stationCalls().indexOf(owner) < 0 ? [owner] : [];
+    const l = ownCalls(u).filter((c) => stationCalls().indexOf(c) < 0); // le sien et ses autres indicatifs (ON6DP : OP0P)
     return Array.from(new Set(l.concat(u.admin ? stationCalls() : [])));
   },
+  // Logbook du PC (Swisslog…) : QSO faits sous ses autres indicatifs personnels aussi
+  extra: (owner) => { const u = agentOwner(owner); return u ? u.calls : []; },
   send: (c, m) => send(c, m),
   journal: (ev, d) => journal(ev, d)
 });
@@ -1106,7 +1117,7 @@ function myGridFor(call) {
 // Indicatifs de station proposés dans le carnet : ceux du club, plus le sien (QSO faits sous son indicatif)
 // Page qui a envoyé le QSO (page TRX SSB…) : renvoyée avec la réponse, chaque page ne traite que les siennes
 const logTag = (m) => (typeof m.tag === 'string' && /^[a-z]{1,16}$/.test(m.tag) ? m.tag : undefined);
-function logCalls(conn) { return Array.from(new Set(stationCalls().concat(ownCallOk(conn.user) ? [String(conn.user.call).toUpperCase()] : []))); }
+function logCalls(conn) { return Array.from(new Set(stationCalls().concat(ownCalls(conn.user)))); }
 // Stations déjà contactées sous l'indicatif d'émission actuel (TX CALL) : « INDICATIF|BANDE|MODE », pour les marquer
 // dans les listes des modes numériques (vert barré). Renvoyé quand le carnet ou le TX CALL change.
 let workedSig = '';
@@ -3958,7 +3969,7 @@ function onStats(conn, m, authTimer) {
 function loggedIn(conn, call, rec, sessionTok) {
   const now = Date.now();
   const rxOnly = auth.isRxOnly(call, cfg.rxOnlyPrefixes);
-  conn.user = { call, admin: !!rec.admin, tx: rec.tx !== false && !rxOnly, rxOnly, maxWatts: rxOnly ? 0 : maxWattsFor(call) };
+  conn.user = { call, admin: !!rec.admin, tx: rec.tx !== false && !rxOnly, rxOnly, maxWatts: rxOnly ? 0 : maxWattsFor(call), calls: extraCalls(rec, call) };
   // Un compte = une adresse IP à la fois : onglets et appareils d'un même réseau permis ; une connexion depuis une autre
   // adresse ferme les anciennes (prêt de compte), qui devront retaper le mot de passe. Les administrateurs sont prévenus.
   const kicked = [];
@@ -3991,6 +4002,7 @@ function loggedIn(conn, call, rec, sessionTok) {
     editor: isEditor(call),
     canTx: conn.user.tx,
     rxOnly: conn.user.rxOnly,
+    myCalls: ownCalls(conn.user).slice(1), // autres indicatifs personnels (TX call)
     allowTx: cfg.allowTx,
     maxTxSeconds: cfg.maxTxSeconds,
     maxWatts: conn.user.maxWatts,
@@ -4776,7 +4788,7 @@ function onOperator(conn, m) {
       const mine = String(conn.user.call).toUpperCase();
       let want = typeof m.call === 'string' ? m.call.toUpperCase().trim() : m.own ? mine : String(cfg.digiCall || 'ON5VL').toUpperCase();
       if (want === mine && stationCalls().indexOf(want) < 0 && !ownCallOk(conn.user)) return send(conn, { t: 'notice', level: 'error', msg: 'Votre indicatif ne peut pas émettre (compte d’écouteur ou sans émission).' });
-      if (want !== mine && stationCalls().indexOf(want) < 0) return send(conn, { t: 'notice', level: 'error', msg: 'Indicatif ' + want + ' non prévu comme TX call' });
+      if (stationCalls().indexOf(want) < 0 && ownCalls(conn.user).indexOf(want) < 0) return send(conn, { t: 'notice', level: 'error', msg: 'Indicatif ' + want + ' non prévu comme TX call' });
       const before = txCallFor(conn.user);
       if (seq && seq.on && controller === conn && before !== want) return send(conn, { t: 'notice', level: 'warn', msg: 'Arrêtez d’abord l’émission automatique en cours (■ Arrêter) pour changer d’indicatif.' });
       txChoice.set(conn.user.call, want);
@@ -5028,7 +5040,7 @@ function onOperator(conn, m) {
       if (conn.user.rxOnly) return fail('Indicatif d’écouteur : pas d’import');
       if (m.op === 'start') {
         const mine = String(conn.user.call || '').toUpperCase();
-        const allowed = (c) => !!c && (conn.user.admin || (c === mine && ownCallOk(conn.user)));
+        const allowed = (c) => !!c && (conn.user.admin || ownCalls(conn.user).indexOf(c) >= 0);
         const txc = String(m.txc || '').toUpperCase().replace(/[^A-Z0-9/]/g, '').slice(0, 15);
         if (txc && !allowed(txc)) return fail('Vous ne pouvez importer que des QSO faits sous votre propre indicatif');
         if (Number(m.size) > 150 * 1024 * 1024) return fail('Fichier trop gros (150 Mo au plus) : importez-le année par année');
