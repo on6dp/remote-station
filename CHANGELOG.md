@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.77** — Mémoires vocales : un cadre rouge autour de F1–F12 et un cadre bleu autour de Ctrl+F1–F12 ; touches F1… et Ctrl+F1… en vert.
 - **0.43.76** — Mémoires vocales (TRX SSB et FreeDV) en 2 lignes de 12 : F1–F12 en cadres rouges, Ctrl+F1–F12 en cadres bleus ; 6 par ligne quand le cadre est étroit (contest).
 - **0.43.75** — Pages TRX SSB et FreeDV : Mémoires vocales à la place de la ligne Log du QSO, titre en haut et 4 colonnes serrées à gauche
 - **0.43.74** — Pages TRX SSB et FreeDV : ligne « Log du QSO » retirée

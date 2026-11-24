@@ -3953,8 +3953,14 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 @container (max-width: 1000px) { #ssVk { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; } }
 .cwp-macro.ssb-vm small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 /* 1re ligne (F1 … F12) : cadres rouges ; 2e ligne (Ctrl+F1 … Ctrl+F12) : cadres bleus (plus pâles quand la mémoire est vide) */
-.cwp-macro.ssb-vm.vr1 { border: 1.5px solid #e0362b; }
-.cwp-macro.ssb-vm.vr2 { border: 1.5px solid #2f7ff0; }
-.cwp-macro.ssb-vm.vr1.empty { border-color: #7a2a25; }
-.cwp-macro.ssb-vm.vr2.empty { border-color: #23477e; }
+/* 0.43.77 — un cadre rouge autour de F1 … F12, un cadre bleu autour de Ctrl+F1 … Ctrl+F12 */
+.ssb-vk > #ssVk, .ssb-vk #ssVk { display: flex; flex-direction: column; gap: 6px; }
+.ssb-vrow { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; padding: 4px; border: 2px solid; border-radius: 8px; }
+.ssb-vrow.r1 { border-color: #e0362b; background: rgba(224, 54, 43, .07); }
+.ssb-vrow.r2 { border-color: #2f7ff0; background: rgba(47, 127, 240, .07); }
+@media (max-width: 1100px) { .ssb-vrow { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@container (max-width: 1000px) { .ssb-vrow { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 .cwp-macro.ssb-vm.play { border-color: #ff5a4a; }
+/* touches F1 … F12 et Ctrl+F1 … Ctrl+F12 en vert */
+.vk-k { color: #22c55e; font-weight: 800; }
+.cwp-macro.ssb-vm small .vk-k { color: #34d058; }

@@ -203,7 +203,7 @@
   }
 
   // ------------------------------------------------------------------ mémoires vocales (VOICE TX)
-  // 24 mémoires en 4 colonnes de 6 : F1 … F6 | F7 … F12 | Ctrl+F1 … Ctrl+F6 | Ctrl+F7 … Ctrl+F12 (T1 … T24)
+  // 24 mémoires en 2 lignes de 12 : F1 … F12 (T1 … T12) dans un cadre rouge, Ctrl+F1 … Ctrl+F12 (T13 … T24) dans un cadre bleu
   const VM_N = 24;
   const vmKey = (n) => (n <= 12 ? 'F' + n : 'Ctrl+F' + (n - 12));
   // Nom lisible d'une voix de synthèse (Kokoro / Piper : nom donné par le serveur ; espeak-ng : ancienne voix robotique)
@@ -216,25 +216,31 @@
     if (sig === box.dataset.sig) return;
     box.dataset.sig = sig;
     box.textContent = '';
+    // Un cadre par ligne : rouge autour de F1 … F12, bleu autour de Ctrl+F1 … Ctrl+F12
+    const rows = [1, 2].map((r) => { const d = document.createElement('div'); d.className = 'ssb-vrow r' + r; box.appendChild(d); return d; });
     for (let n = 1; n <= VM_N; n++) {
       const t = meta && meta.t && meta.t[n - 1];
       const b = document.createElement('button');
       b.type = 'button';
-      // 1re ligne (F1 … F12) encadrée en rouge, 2e ligne (Ctrl+F1 … Ctrl+F12) en bleu
-      b.className = 'cwp-macro ssb-vm ' + (n <= 12 ? 'vr1' : 'vr2') + (t && t.ms ? ' tx' : ' empty') + (pl === n ? ' play' : '');
+      b.className = 'cwp-macro ssb-vm' + (t && t.ms ? ' tx' : ' empty') + (pl === n ? ' play' : '');
       b.innerHTML = '<small></small><span></span>';
       // 2 lignes de 12 : touche et durée en haut, nom en dessous (T1 … T24 dans l'infobulle)
-      b.querySelector('small').textContent = vmKey(n) + (t && t.ms ? ' · ' + (t.ms / 1000).toFixed(1).replace('.', ',') + ' s' : '');
+      // touche (F1 … F12, Ctrl+F1 … Ctrl+F12) en vert, puis la durée
+      const sm = b.querySelector('small');
+      const kk = document.createElement('b');
+      kk.className = 'vk-k';
+      kk.textContent = vmKey(n);
+      sm.append(kk, t && t.ms ? ' · ' + (t.ms / 1000).toFixed(1).replace('.', ',') + ' s' : '');
       b.querySelector('span').textContent = (t && t.name) || (t && t.ms ? 'T' + n : 'vide');
       const tt = S.tts && S.tts[n];
       // Mémoire faite avec une autre voix que celle choisie dans « Config. Macros » (ancienne génération, autre langue,
       // voix espeak robotique) : marquée en orange, pour la refaire (cocher T1 à T8 puis GÉNÉRER)
       const other = !!(tt && tt.voice !== TT.voice);
-      if (tt) { b.classList.add('tts'); b.classList.toggle('other', other); b.querySelector('small').textContent += ' · ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'FR' : 'EN') + (other ? ' ⚠' : ''); }
+      if (tt) { b.classList.add('tts'); b.classList.toggle('other', other); sm.append(' · ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'FR' : 'EN') + (other ? ' ⚠' : '')); }
       b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + ' (' + vmKey(n) + ')' + (tt ? ' (message de synthèse ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'en français' : 'en anglais') + ', voix ' + voiceName(tt.voice) + ', ' + tt.call + ')' +
         (other ? '\n⚠ Pas la voix choisie (' + voiceName(TT.voice) + ') : 🗣 Config. Macros → cochez T' + n + ' → GÉNÉRER pour la refaire.' : '') : '') : 'Mémoire T' + n + ' vide : l’enregistrer avec « 🎙 Ma voix » (votre micro) ou « 🗣 Config. Macros » (voix de synthèse)';
       b.addEventListener('click', () => playVm(n));
-      box.appendChild(b);
+      rows[n <= 12 ? 0 : 1].appendChild(b);
     }
   }
   // Messages standard en anglais ou en français (fabriqués sur le serveur par espeak-ng, TX call épelé)
