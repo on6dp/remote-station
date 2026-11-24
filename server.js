@@ -1872,6 +1872,7 @@ function ttsMake(conn, items, quiet) {
         fs.writeFileSync(vmFile(call, n), data, { mode: 0o600 });
         meta.t[n - 1].ms = Math.round(data.length / 12);
         if (it.name != null) meta.t[n - 1].name = String(it.name || '').replace(/[^\x20-\x7E]/g, '').slice(0, 16);
+        if (/^(piper|kokoro):/.test(it.voice || '')) store._v = it.voice; // dernière voix naturelle choisie
         store[n] = { text: String(it.text).slice(0, 300), voice: it.voice || 'en-us', speed: Number(it.speed) || 160, gap: Number.isFinite(Number(it.gap)) ? Number(it.gap) : 70, pron: ttsPron(it.pron), call: tc };
         ok++;
       } catch (e) {
@@ -1894,7 +1895,9 @@ function ttsMake(conn, items, quiet) {
 // TX call changé : les messages fabriqués avec l'ancien indicatif sont refaits
 function ttsRefresh(conn) {
   const store = ttsGet(conn.user.call), tc = txCallFor(conn.user);
-  const items = Object.keys(store).filter((n) => store[n] && store[n].call !== tc).map((n) => Object.assign({ n: Number(n) }, store[n]));
+  // Une mémoire faite avec une ancienne voix espeak (robotique, plus proposée) est refaite avec la dernière voix naturelle choisie
+  const items = Object.keys(store).filter((n) => /^[1-8]$/.test(n) && store[n] && store[n].call !== tc)
+    .map((n) => Object.assign({ n: Number(n) }, store[n], store._v && !/^(piper|kokoro):/.test(store[n].voice || '') ? { voice: store._v } : {}));
   return items.length ? ttsMake(conn, items, true) : Promise.resolve();
 }
 // Lecture en cours : { conn, n, buf, tab (gain TX LEVEL), pos, t0, rep, since, wait }

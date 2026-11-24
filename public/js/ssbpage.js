@@ -203,11 +203,13 @@
   }
 
   // ------------------------------------------------------------------ mémoires vocales (VOICE TX)
+  // Nom lisible d'une voix de synthèse (Kokoro / Piper : nom donné par le serveur ; espeak-ng : ancienne voix robotique)
+  const voiceName = (id) => { const v = (S.pv || []).find((x) => x.id === id); return v ? v.name : /^(piper|kokoro):/.test(id || '') ? String(id).replace(/^(piper|kokoro):/, '') : 'espeak (ancienne voix robotique)'; };
   function drawVk() {
     const box = $('ssVk');
     const meta = S.vm;
     const pl = S.playing ? S.playing.n : 0;
-    const sig = JSON.stringify(meta) + '|' + pl + '|' + JSON.stringify(S.tts || {});
+    const sig = JSON.stringify(meta) + '|' + pl + '|' + JSON.stringify(S.tts || {}) + '|' + TT.voice + '|' + (S.pv || []).length;
     if (sig === box.dataset.sig) return;
     box.dataset.sig = sig;
     box.textContent = '';
@@ -220,8 +222,12 @@
       b.querySelector('small').textContent = 'F' + n + ' · T' + n + (t && t.ms ? ' · ' + (t.ms / 1000).toFixed(1).replace('.', ',') + ' s' : '');
       b.querySelector('span').textContent = (t && t.name) || (t && t.ms ? 'T' + n : 'vide');
       const tt = S.tts && S.tts[n];
-      if (tt) { b.classList.add('tts'); b.querySelector('small').textContent += ' · ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'FR' : 'EN'); }
-      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message de synthèse ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'en français' : 'en anglais') + ', ' + tt.call + ')' : '') : 'Mémoire T' + n + ' vide : l’enregistrer avec « 🎙 Ma voix » (votre micro) ou « 🗣 Config. Macros » (voix de synthèse)';
+      // Mémoire faite avec une autre voix que celle choisie dans « Config. Macros » (ancienne génération, autre langue,
+      // voix espeak robotique) : marquée en orange, pour la refaire (cocher T1 à T8 puis GÉNÉRER)
+      const other = !!(tt && tt.voice !== TT.voice);
+      if (tt) { b.classList.add('tts'); b.classList.toggle('other', other); b.querySelector('small').textContent += ' · ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'FR' : 'EN') + (other ? ' ⚠' : ''); }
+      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message de synthèse ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'en français' : 'en anglais') + ', voix ' + voiceName(tt.voice) + ', ' + tt.call + ')' +
+        (other ? '\n⚠ Pas la voix choisie (' + voiceName(TT.voice) + ') : 🗣 Config. Macros → cochez T' + n + ' → GÉNÉRER pour la refaire.' : '') : '') : 'Mémoire T' + n + ' vide : l’enregistrer avec « 🎙 Ma voix » (votre micro) ou « 🗣 Config. Macros » (voix de synthèse)';
       b.addEventListener('click', () => playVm(n));
       box.appendChild(b);
     }
@@ -317,7 +323,13 @@
     TT.items.forEach((it, i) => {
       const row = document.createElement('div');
       row.className = 'ssb-ttsi';
-      row.innerHTML = '<label><input type="checkbox"> T' + (i + 1) + '</label><input class="nm" maxlength="16" spellcheck="false"><input class="tx" maxlength="200" spellcheck="false">';
+      row.innerHTML = '<label><input type="checkbox"> T' + (i + 1) + '</label><input class="nm" maxlength="16" spellcheck="false"><input class="tx" maxlength="200" spellcheck="false"><small class="vv"></small>';
+      // Voix avec laquelle la mémoire est faite en ce moment (orange : pas la voix choisie ci-dessus)
+      const tt = S.tts && S.tts[i + 1];
+      const vv = row.querySelector('.vv');
+      vv.textContent = tt ? voiceName(tt.voice) : (S.vm && S.vm.t && S.vm.t[i] && S.vm.t[i].ms ? 'au micro' : 'vide');
+      vv.classList.toggle('other', !!(tt && tt.voice !== TT.voice));
+      vv.title = tt ? 'Faite avec la voix ' + voiceName(tt.voice) + (tt.voice !== TT.voice ? ' : pas la voix choisie, cochez-la et GÉNÉRER pour la refaire' : '') : '';
       const [cb, nm, tx] = row.querySelectorAll('input');
       cb.checked = it.on !== false;
       nm.value = it.name;
@@ -346,7 +358,7 @@
   }
   $('ssTtsX').addEventListener('click', () => { $('ssTts').hidden = true; });
   $('ssTtsBtn').addEventListener('click', () => { const p = $('ssTts'); p.hidden = !p.hidden; if (!p.hidden) { $('ssRec').hidden = true; ttsDraw(); } });
-  $('ssTtsV').addEventListener('change', () => { TT.voice = $('ssTtsV').value; ttsSave(); });
+  $('ssTtsV').addEventListener('change', () => { TT.voice = $('ssTtsV').value; ttsSave(); ttsDraw(); drawVk(); });
   $('ssTtsS').addEventListener('input', () => { TT.speed = Number($('ssTtsS').value); $('ssTtsSo').textContent = TT.speed + ' mots/min'; ttsSave(); });
   $('ssTtsG').addEventListener('input', () => { TT.gap = Number($('ssTtsG').value); $('ssTtsGo2').textContent = TT.gap + ' ms'; ttsSave(); });
   $('ssTtsP').addEventListener('input', () => { TT.pron = TT.pron || {}; TT.pron[TT.lang] = $('ssTtsP').value; ttsSave(); });
@@ -360,6 +372,7 @@
     return o;
   }
   $('ssTtsDef').addEventListener('click', () => { TT.items = defItems(TT.lang); ttsSave(); ttsDraw(); });
+  if ($('ssTtsAll')) $('ssTtsAll').addEventListener('click', () => { for (const it of TT.items) it.on = true; ttsSave(); ttsDraw(); });
   $('ssTtsLang').addEventListener('change', () => { TT.lang = $('ssTtsLang').value === 'fr' ? 'fr' : 'en'; ttsSave(); ttsDraw(); });
   $('ssTtsGo').addEventListener('click', () => {
     if (!host) return toast('Page d’origine fermée.', 'warn');
