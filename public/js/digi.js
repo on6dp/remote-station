@@ -722,6 +722,9 @@
       <div class="sy-box"><span>DT médian</span><b id="syDt">—</b><small id="syDtNote">derniers décodages FT8 / FT4</small></div>
       <div class="sy-box"><span>Décodages (dernière période)</span><b id="syDec">—</b><small id="syDecNote">arrivée de chaque passe après le début de la période</small></div>
       <div class="sy-box"><span>Fluidité (2 dernières min)</span><b id="syFlow">—</b><small id="syFlowNote">blocages du serveur et trous dans l’audio de la station</small></div>
+      <div class="sy-box sy-late"><span>Décodages en retard (plus de 2 s après la fin de la période : réponse trop tardive)</span><b id="syLate">—</b>
+        <small>Notés par le serveur, même fenêtre fermée : heure (UTC), retard, temps du décodeur, serveur bloqué, trou dans l’audio de la station, charge du serveur, autres décodeurs en marche, et la cause la plus probable.</small>
+        <ol class="sy-latel" id="syLateList"></ol></div>
     </div>
     <p class="sy-note">Le décodage et l'instant d'émission se calent sur l'horloge du serveur (synchronisée par NTP) : l'écart du PC du club
       est mesuré et corrigé tout seul, celui de votre PC n'intervient pas. Le délai de la liaison est mesuré d'après les stations décodées ;
@@ -7571,7 +7574,37 @@
         ' · trou audio station : ' + (fl.gap ? sec(fl.gap) + ' (' + ago(fl.gap) + ')' : 'aucun') +
         (fl.qsos ? ' · carnet ' + fl.qsos.toLocaleString('fr-BE') + ' QSO' + (fl.wk != null ? ' (' + fl.wk + ' ms)' : '') : '');
     }
+    syLateDraw(st && st.digi && st.digi.late);
     $('syDtNote').textContent = m ? m.n + ' messages récents' + (Math.abs(m.med) > 0.3 ? ' · recalage en cours' : ' · calé') : 'en attente de décodages FT8 / FT4';
+  }
+
+  // Décodages FT8 / FT4 en retard notés par le serveur (onglet Synchro) : les 10 derniers, avec la cause probable
+  function syLateDraw(list) {
+    const ol = $('syLateList');
+    if (!ol) return;
+    list = Array.isArray(list) ? list : [];
+    const key = list.length ? list[list.length - 1].t + ':' + list.length : '0';
+    if (ol.dataset.k === key) return;
+    ol.dataset.k = key;
+    const s1 = (ms) => (ms / 1000).toFixed(1).replace('.', ',') + ' s';
+    const p2 = (n) => String(n).padStart(2, '0');
+    const esc = (x) => String(x == null ? '' : x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const recent = list.filter((e) => Date.now() - e.t < 3600000).length;
+    $('syLate').textContent = list.length ? recent + ' dans la dernière heure' : 'aucun';
+    $('syLate').className = recent ? 'warn' : 'ok';
+    ol.innerHTML = list.slice().reverse().map((e) => {
+      const d = new Date(e.t);
+      // Cause la plus probable : audio du club par à-coups, serveur bloqué, décodeur lent (serveur chargé), ou départ tardif de la passe
+      const cause = e.gap >= 1000 ? 'audio du club arrivé par à-coups (liaison internet du club)'
+        : e.lag >= 1000 ? 'serveur bloqué (calcul trop long dans le serveur)'
+          : e.dec != null && e.dec >= 2500 ? 'décodeur lent : serveur trop chargé' + (e.also && e.also.length ? ' (autres décodeurs en marche)' : '')
+            : 'passe du décodeur lancée en retard (audio en retard ou file du décodeur)';
+      return '<li><b>' + p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes()) + ':' + p2(d.getUTCSeconds()) + '</b> · ' + esc(e.mode) + (e.side === 'B' ? ' (SUB)' : '') +
+        ' · <b class="warn">+' + s1(e.late) + '</b> · décodeur ' + (e.dec != null ? s1(e.dec) : '?') + ' · serveur bloqué ' + s1(e.lag || 0) +
+        ' · trou audio ' + s1(e.gap || 0) + ' · charge ' + String(e.load).replace('.', ',') + ' / ' + e.cpus + ' cœurs' +
+        (e.also && e.also.length ? ' · aussi : ' + esc(e.also.join(', ')) : '') + (e.tx ? ' · en émission' : '') +
+        '<br><small>→ ' + cause + '</small></li>';
+    }).join('');
   }
 
   // ------------------------------------------------------------------ interface avec app.js

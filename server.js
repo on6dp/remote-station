@@ -494,6 +494,34 @@ setInterval(() => {
   flow.tick = now;
   if (lag > 400) { flowNote(flow.lag, lag); if (lag > 2000) console.error('Serveur bloqué ' + (lag / 1000).toFixed(1) + ' s'); }
 }, 250).unref();
+// Décodages FT8 / FT4 en retard (passe normale plus de 2 s après la fin de la période : la réponse ne peut plus partir à
+// temps) : notés avec ce qui se passait (temps du décodeur, blocage du serveur, trous dans l'audio de la station, charge du
+// serveur, autres décodeurs en marche), gardés dans logs/ft-late.jsonl et montrés dans l'onglet Synchro, pour trouver la
+// cause après coup.
+const FT_LATE_FILE = path.join(LOG_DIR, 'ft-late.jsonl');
+const ftLate = (() => {
+  try { return fs.readFileSync(FT_LATE_FILE, 'utf8').trim().split('\n').slice(-40).map((l) => JSON.parse(l)); } catch (e) { return []; }
+})();
+function ftLateNote(m, side, late) {
+  const now = Date.now();
+  const win = (l) => { let b = 0; for (const x of l) if (now - x.at <= 20000 && x.ms > b) b = x.ms; return b; };
+  const dm = Array.from(digiModes());
+  const also = [];
+  if (dm.indexOf('SSTV') >= 0) also.push(DRM.available() ? 'SSTV + DRM' : 'SSTV');
+  if (fdv.rx) also.push('FreeDV');
+  for (const x of dm) if (x !== m.mode && x !== 'SSTV') also.push(x);
+  const os = require('os');
+  const e = { t: now, mode: m.mode, side, late, dec: Number.isFinite(m.ms) ? m.ms : null, lat: m.latency, lag: win(flow.lag), gap: win(flow.gap),
+    load: Math.round(os.loadavg()[0] * 100) / 100, cpus: os.cpus().length, also, lis: listeners(), tx: !!(ptt.active || (ftxPend && ftxPend.state === 'tx')) };
+  ftLate.push(e);
+  if (ftLate.length > 40) ftLate.splice(0, ftLate.length - 40);
+  console.error('Décodage ' + m.mode + ' en retard : +' + (late / 1000).toFixed(1) + ' s après la fin de la période (décodeur ' + (e.dec != null ? (e.dec / 1000).toFixed(1) + ' s' : '?') +
+    ', serveur bloqué ' + (e.lag / 1000).toFixed(1) + ' s, trou audio ' + (e.gap / 1000).toFixed(1) + ' s, charge ' + e.load + ' / ' + e.cpus + (also.length ? ', aussi ' + also.join(', ') : '') + ')');
+  fs.appendFile(FT_LATE_FILE, JSON.stringify(e) + '\n', () => {
+    // Fichier gardé court : les 200 dernières lignes
+    if (Math.random() < 0.05) fs.readFile(FT_LATE_FILE, 'utf8', (err, txt) => { if (!err) { const l = txt.trim().split('\n'); if (l.length > 200) fs.writeFile(FT_LATE_FILE, l.slice(-200).join('\n') + '\n', () => {}); } });
+  });
+}
 function flowState() {
   const now = Date.now();
   const top = (l) => { let b = null; for (const x of l) if (now - x.at <= 120000 && (!b || x.ms > b.ms)) b = x; return b ? { ms: b.ms, ago: now - b.at } : null; };
@@ -750,7 +778,9 @@ function onDigi(m) {
       // Arrivée de la passe normale après la fin de la période (ms) : l'attente avant d'émettre se règle dessus
       digi.normalLate = digi.normalLate || {};
       const l = digi.normalLate[key] || (digi.normalLate[key] = []);
-      l.push(Date.now() - m.slot - FTX_SLOT[m.mode]);
+      const lateMs = Date.now() - m.slot - FTX_SLOT[m.mode];
+      l.push(lateMs);
+      if (lateMs > 2000 && lateMs < 60000) ftLateNote(m, sideB ? 'B' : 'A', lateMs);
       if (l.length > 6) l.shift();
       setTimeout(ftxHoldCheck, 0);
     }
@@ -2571,7 +2601,7 @@ function publicState() {
     maxSwr: cfg.maxSwr,
     audio: { active: !!(station && audio.active), listeners: listeners(true), silent: !!(station && audio.silent), out: station && audio.out ? audio.out : null },
     digi: { modes: Array.from(digiModes()), latency: digi.latency, engine: digi.engine || '', ms: digi.ms || 0, timing: digi.timing || null,
-      ntp: ntpState.at ? ntpState : null, club: station && station.clock ? station.clock : null, flow: flowState() },
+      ntp: ntpState.at ? ntpState : null, club: station && station.clock ? station.clock : null, flow: flowState(), late: ftLate.slice(-10) },
     rigName: station ? rig().NAME : null,
     rigModel: station ? rig().ID : null,
     // TRX dont le port série est mémorisé sur le PC du club (changement à distance possible)

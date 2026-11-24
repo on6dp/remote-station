@@ -3921,3 +3921,10 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .dg-guet #dgGuetOn { min-width: 44px; border-radius: 6px; font-weight: 900; }
 .dg-guet #dgGuetOn.on { background: #fb923c; color: #000; border-color: #fb923c; animation: dgGuetPulse 1.6s ease-in-out infinite; }
 @keyframes dgGuetPulse { 50% { box-shadow: 0 0 10px rgba(251,146,60,.8); } }
+/* 0.43.69 — onglet Synchro : décodages FT8 / FT4 en retard notés par le serveur, avec la cause probable */
+.sy-box.sy-late { grid-column: 1 / -1; }
+.sy-latel { margin: 4px 0 0; padding-left: 20px; display: grid; gap: 5px; font-size: 11.5px; color: var(--v2-text-secondary); max-height: 260px; overflow: auto; }
+.sy-latel li { line-height: 1.45; }
+.sy-latel b { font-size: 11.5px; color: var(--v2-text-bright); }
+.sy-latel b.warn { color: var(--v2-accent-yellow); }
+.sy-latel small { color: var(--v2-accent-cyan-bright, #67e8f9); font-size: 11px; }
