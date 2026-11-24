@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.79** — Carnet : envoi en attente (⏳), refus en ✗ rouge avec la raison (aussi quand les envois sont arrêtés après un refus d'accès) ; nouvel essai automatique toutes les 10 min des envois eQSL / Club Log / QRZ perdus ou en échec passager (3 derniers jours) ; une liaison coupée ne bloque plus la file d'envoi.
 - **0.43.78** — Mémoires vocales : chaque bouton encadré, en rouge pour F1–F12 et en bleu pour Ctrl+F1–F12 (au lieu d'un cadre par ligne) ; touches en vert.
 - **0.43.77** — Mémoires vocales : un cadre rouge autour de F1–F12 et un cadre bleu autour de Ctrl+F1–F12 ; touches F1… et Ctrl+F1… en vert.
 - **0.43.76** — Mémoires vocales (TRX SSB et FreeDV) en 2 lignes de 12 : F1–F12 en cadres rouges, Ctrl+F1–F12 en cadres bleus ; 6 par ligne quand le cadre est étroit (contest).

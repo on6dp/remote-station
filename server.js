@@ -1069,7 +1069,7 @@ AGENTS.on('ready', (ag) => setTimeout(() => {
   const since = Date.now() - 30 * 86400000;
   for (const call of AGENTS.servedCalls(ag)) {
     if (!autoFor('lotw', call) || sync.isStopped('lotw', call)) continue;
-    const list = book.qsos.filter((q) => String(q.station_callsign || '').toUpperCase() === call && !(q.up && q.up.lotw) && (Number(q.created) || 0) >= since);
+    const list = book.qsos.filter((q) => String(q.station_callsign || '').toUpperCase() === call && !(q.up && q.up.lotw && !q.up.lotw.wait) && (Number(q.created) || 0) >= since);
     if (list.length) sync.run('lotw', list, { auto: true });
   }
 }, 8000));
@@ -1103,6 +1103,11 @@ const sync = new Sync({
     }
   }
 });
+// Envois automatiques perdus ou en échec passager (eQSL, Club Log, QRZ) : nouvel essai 2 min après le démarrage, puis toutes
+// les 10 minutes (voir Sync.retry : QSO des 3 derniers jours seulement, 5 essais au plus)
+const syncRetry = () => { try { if (sync.retry()) for (const c of ops) send(c, { t: 'log_changed' }); } catch (e) { console.error('Envois automatiques, nouvel essai : ' + e.message); } };
+setTimeout(syncRetry, 2 * 60000).unref();
+setInterval(syncRetry, 10 * 60000).unref();
 function logCtx(conn, m) {
   const calls = logCalls(conn);
   const st = String((m && m.station) || cfg.digiCall || calls[0] || '').toUpperCase();
@@ -1379,7 +1384,7 @@ const LG_COL = {
 function lgUp(q, s) {
   if (s === 'lotw' && q.lotw_qsl_rcvd === 'Y') return 'confirmé';
   const u = q.up && q.up[s];
-  return !u ? 'pas envoyé' : u.ok ? 'envoyé' : 'refusé';
+  return !u ? 'pas envoyé' : u.ok ? 'envoyé' : u.wait ? 'en attente' : 'refusé';
 }
 const lgKey = (q, col) => String(LG_COL[col](q));
 function lgFilter(list, f) {
@@ -4437,16 +4442,17 @@ function onOperator(conn, m) {
       const pl = sync.pending(m.service, { from: m.from, to: m.to, callsign: m.callsign, all: !!m.all });
       // Détail : jamais envoyés / en échec (par motif) / déjà envoyés (« Renvoyer aussi »), et dates du plus ancien au plus récent
       const why = {};
-      let never = 0, done = 0, d0 = '', d1 = '';
+      let never = 0, done = 0, wait = 0, d0 = '', d1 = '';
       for (const q of pl) {
         const u = q.up && q.up[m.service];
         if (!u) never++;
         else if (u.ok) done++;
+        else if (u.wait) wait++;
         else { const k = String(u.msg || 'échec').replace(/\s*\(Agent LoTW[^)]*\)/, '').replace(/ — .*/, '').slice(0, 70); why[k] = (why[k] || 0) + 1; }
         if (!d0 || q.qso_date < d0) d0 = q.qso_date;
         if (!d1 || q.qso_date > d1) d1 = q.qso_date;
       }
-      return send(conn, { t: 'log_pending', service: m.service, n: pl.length, never, done, why: Object.entries(why).sort((a, b) => b[1] - a[1]).slice(0, 4), d0, d1,
+      return send(conn, { t: 'log_pending', service: m.service, n: pl.length, never, done, wait, why: Object.entries(why).sort((a, b) => b[1] - a[1]).slice(0, 4), d0, d1,
         busy: !!sync.busy[m.service], stopped: sync.isStopped(m.service, m.callsign) });
     }
     case 'log_mark': {

@@ -3961,3 +3961,7 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 /* touches F1 … F12 et Ctrl+F1 … Ctrl+F12 en vert */
 .vk-k { color: #22c55e; font-weight: 800; }
 .cwp-macro.ssb-vm small .vk-k { color: #34d058; }
+
+/* 0.43.79 — carnet : envoi en attente (⏳) ; refus (✗) en rouge vif */
+.lg-table td.wt { color: #f59e0b; font-size: 11px; }
+.lg-table td.ko { color: #ff3b30; font-weight: 800; }

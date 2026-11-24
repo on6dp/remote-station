@@ -933,9 +933,12 @@
   function upCell(q, s) {
     const u = q.up && q.up[s];
     if (s === 'lotw' && q.lotw_qsl_rcvd === 'Y') return '<td class="c ok" title="Confirmé sur LoTW' + (q.lotw_qslrdate ? ' le ' + fmtDate(q.lotw_qslrdate) : '') + '">★</td>';
-    if (!u) return '<td class="c no" title="Pas encore envoyé">·</td>';
+    // · jamais présenté (envoi automatique pas en service pour ce service ou cet indicatif) ; ⏳ en attente ; ✓ reçu ; ✗ refusé
+    if (!u) return '<td class="c no" title="Pas envoyé : envoi automatique pas en service pour ' + NAMES[s] + ' sous ' + esc(q.station_callsign || 'cet indicatif') + ' quand le QSO a été enregistré. Synchronisation ▾ → ' + NAMES[s] + ' pour l’envoyer.">·</td>';
     const when = new Date(u.t).toLocaleString('fr-BE');
-    return '<td class="c ' + (u.ok ? 'ok' : 'ko') + '" title="' + esc(when + ' — ' + u.msg) + '">' + (u.ok ? '✓' : '✗') + '</td>';
+    if (u.wait) return '<td class="c wt" title="' + esc(when + ' — ' + (u.msg || 'en attente d’envoi')) + '">⏳</td>';
+    const again = !u.ok && u.retry && (u.n || 1) < 5 ? ' — nouvel essai automatique dans 10 minutes au plus' : '';
+    return '<td class="c ' + (u.ok ? 'ok' : 'ko') + '" title="' + esc(when + ' — ' + u.msg + again) + '">' + (u.ok ? '✓' : '✗') + '</td>';
   }
   // Sélection de plusieurs QSO (Ctrl+clic, Maj+clic) pour les supprimer d'un coup
   const msel = { ids: new Set(), anchor: '' };
@@ -1960,7 +1963,7 @@
       if (sdlg && sdlg.el.open && sdlg.service === m.service) {
         const p = sdlg.el.querySelector('.lg-pend');
         const dd = (d) => d ? d.slice(6, 8) + '/' + d.slice(4, 6) + '/' + d.slice(0, 4) : '';
-        const det = m.n ? [m.never ? m.never + ' jamais envoyé(s)' : '', m.done ? m.done + ' déjà envoyé(s) (renvoi)' : ''].concat((m.why || []).map(([k, n]) => n + ' en échec : ' + k)).filter(Boolean) : [];
+        const det = m.n ? [m.never ? m.never + ' jamais envoyé(s)' : '', m.wait ? m.wait + ' en attente (envoi automatique)' : '', m.done ? m.done + ' déjà envoyé(s) (renvoi)' : ''].concat((m.why || []).map(([k, n]) => n + ' en échec : ' + k)).filter(Boolean) : [];
         p.textContent = m.n + ' QSO à envoyer vers ' + NAMES[m.service] + (m.n && m.d0 ? ' (du ' + dd(m.d0) + ' au ' + dd(m.d1) + ')' : '') + (det.length ? ' — ' + det.join(' · ') : '') + (m.busy ? ' · un envoi est déjà en cours' : '') + (m.stopped ? ' · envois arrêtés après un refus d’accès : vérifiez les identifiants puis enregistrez-les' : '');
         p.classList.toggle('warn', !!m.stopped);
       }
