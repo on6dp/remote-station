@@ -152,6 +152,9 @@ Votre micro (celui de votre PC, un micro-casque, un micro USB…) part vers le T
 > [!NOTE]
 > Au club, la page Station met le menu « source de modulation » du TRX sur USB juste avant votre émission, puis le remet comme avant 20 s après votre dernière émission ou dès que vous rendez la main : le micro du club refonctionne. Le niveau de votre voix à l'entrée du TRX se règle sur la page Station (« Niveau phonie à distance ») : l'ALC doit à peine bouger.
 
+> [!NOTE]
+> **Voix hachée ou robotique sur l'air** (corrigé dans la 0.43.70) : la page Station lit maintenant la phonie à distance et les mémoires vocales avec un **lecteur continu** (plus de raccord toutes les 20 ms) et une **file d'attente** de 0,15 s qui grandit toute seule (0,6 s au plus) si le son arrive par à-coups : un seul petit silence au lieu d'une voix hachée. Les mémoires vocales partent avec 0,5 s d'avance. Si le son est quand même arrivé par à-coups, un message le dit à la fin de l'émission (nombre de trous, file d'attente atteinte). **Page Station à recharger au club** pour en profiter. Pendant une mémoire vocale, votre micro n'est plus mélangé à la mémoire.
+
 **Égaliseur du TRX** (FTX-1, FTDX10, FTDX101) : bouton `TRX EQ` du même cadre. Ce sont les menus PRMTRC EQ1 à EQ3 du TRX (PROC coupé, puis PROC en service). Prenez la main, `Lire le TRX`, réglez, `Essayer sur le TRX`, puis `Enregistrer mon profil` : votre profil est mis au TRX chaque fois que vous prenez la main, et le réglage du club est remis quand vous la rendez. Les administrateurs peuvent enregistrer le réglage du club.
 
 <a id="p-ft8"></a>

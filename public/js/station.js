@@ -150,7 +150,7 @@
     setTimeout(closePrev, 10000);
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
     // caps : ce que sait faire cette version de la page (ftsplit : SPLIT du FTX-1 par FT0 / FT1, sans ST1)
-    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq', 'ftxtx', 'audiotx', 'audioreset', 'cwtx', 'cwprep', 'cwkey', 'voicetx', 'exrw', 'rfscope', 'timesync', 'ftxdx', 'ftxdx2'] }));
+    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq', 'ftxtx', 'audiotx', 'audioreset', 'cwtx', 'cwprep', 'cwkey', 'voicetx', 'exrw', 'rfscope', 'timesync', 'ftxdx', 'ftxdx2', 'vbuf'] }));
     ws.binaryType = 'arraybuffer';
     lastServerMsg = Date.now();
     ws.onmessage = (e) => {
@@ -540,6 +540,64 @@
   // Capture de l'entrée son choisie, rééchantillonnée à 8 kHz par le navigateur, codée en µ-law,
   // envoyée par paquets de 40 ms (320 échantillons) seulement quand un membre écoute.
   const aud = { ctx: null, stream: null, want: false, sent: 0, peak: 0, hf: 0, quietSince: 0, silent: false, resetting: false };
+  // Phonie à distance (voix des membres, mémoires vocales) : lecteur continu dans la carte son vers le TRX. La voix arrive
+  // par trames de 20 ms (12 kHz) ; elle est mise en file et lue sans interruption, rééchantillonnée en continu (pas de
+  // raccord toutes les 20 ms). File d'attente : 0,15 s au départ ; si le son arrive par à-coups (liaison internet,
+  // serveur occupé), la lecture s'arrête le temps de remplir de nouveau la file, qui grandit de 0,1 s (0,6 s au plus) :
+  // un seul trou au lieu d'une voix hachée. Trop d'avance (plus de 0,9 s au-delà de la file) : le plus ancien est jeté.
+  const VOICE_WORKLET = `
+    class RsVoice extends AudioWorkletProcessor {
+      constructor() {
+        super();
+        this.cap = 12000 * 4; this.q = new Float32Array(this.cap); this.r = 0; this.w = 0; this.n = 0;
+        this.step = 12000 / sampleRate; this.pos = 0; this.last = 0;
+        this.play = false; this.started = false; this.tgt = 0.15; this.under = 0; this.late = 0; this.frames = 0; this.maxTgt = 0.15;
+        this.pend = false; this.fade = 1; // pend : file vidée, compté comme trou seulement si la voix continue (sinon c'est la fin)
+        this.port.onmessage = (e) => {
+          const m = e.data;
+          if (m && m.s) this.push(m.s);
+          else if (m && m.t === 'stats') this.port.postMessage({ frames: this.frames, under: this.under, late: this.late, tgt: this.maxTgt });
+        };
+      }
+      push(s) {
+        this.frames++;
+        if (this.pend) { this.pend = false; this.under++; this.tgt = Math.min(0.6, this.tgt + 0.1); this.maxTgt = Math.max(this.maxTgt, this.tgt); }
+        for (let i = 0; i < s.length; i++) {
+          if (this.n >= this.cap) { this.r = (this.r + 1) % this.cap; this.n--; }
+          this.q[this.w] = s[i]; this.w = (this.w + 1) % this.cap; this.n++;
+        }
+        if (this.play && this.n > (this.tgt + 0.9) * 12000) {
+          const drop = this.n - Math.round(this.tgt * 12000);
+          this.r = (this.r + drop) % this.cap; this.n -= drop; this.late++;
+        }
+      }
+      process(inputs, outputs) {
+        const out = outputs[0][0];
+        if (!out) return true;
+        let i = 0;
+        if (!this.play) {
+          if (this.n >= this.tgt * 12000) { this.play = true; this.fade = this.started ? 0 : 1; } // reprise en fondu (pas de clic)
+          else { for (; i < out.length; i++) { this.last *= 0.97; out[i] = this.last; } return true; }
+        }
+        for (; i < out.length; i++) {
+          if (this.n < 2) {
+            // File vide : on attend de la remplir de nouveau (une file plus grande si ce n'est pas le début)
+            this.play = false;
+            if (this.started) this.pend = true;
+            for (; i < out.length; i++) { this.last *= 0.97; out[i] = this.last; }
+            break;
+          }
+          const a = this.q[this.r], b = this.q[(this.r + 1) % this.cap];
+          if (this.fade < 1) this.fade = Math.min(1, this.fade + 1 / 240);
+          const v = (a + (b - a) * this.pos) * this.fade;
+          out[i] = v; this.last = v; this.started = true;
+          this.pos += this.step;
+          while (this.pos >= 1) { this.pos -= 1; this.r = (this.r + 1) % this.cap; this.n--; }
+        }
+        return true;
+      }
+    }
+    registerProcessor('rs-voice', RsVoice);`;
   const CAPTURE_WORKLET = `
     class RsCapture extends AudioWorkletProcessor {
       // Voie gauche (ou unique) ; voie droite gardée à part quand elle existe (FTDX101 : récepteur SUB)
@@ -977,6 +1035,14 @@
       tx.gain.connect(ctx.destination);
       tx.ctx = ctx;
       tx.label = o.textContent;
+      // Lecteur continu de la phonie à distance (sinon : ancienne lecture trame par trame)
+      tx.voiceWk = false;
+      try {
+        const url = URL.createObjectURL(new Blob([VOICE_WORKLET], { type: 'application/javascript' }));
+        await ctx.audioWorklet.addModule(url);
+        URL.revokeObjectURL(url);
+        tx.voiceWk = tx.ctx === ctx;
+      } catch (e) { log('Phonie à distance : lecteur continu indisponible (' + e.message + '), lecture trame par trame', 'st-warn'); }
       ctx.onstatechange = drawTxOut;
       log('Sortie son vers le TRX : ' + o.textContent);
       if (PC_CARD.test(o.textContent)) log('Attention : « ' + o.textContent + ' » est une carte son du PC : la modulation numérique n’ira pas dans le TRX', 'st-warn');
@@ -1107,6 +1173,10 @@
       voice.gain.connect(tx.ctx.destination);
     }
     voice.gain.gain.value = voiceLevel() / 100;
+    voice.node = null;
+    if (tx.voiceWk) {
+      try { voice.node = new AudioWorkletNode(tx.ctx, 'rs-voice', { numberOfInputs: 0, outputChannelCount: [1] }); voice.node.connect(voice.gain); } catch (e) { voice.node = null; }
+    }
     voice.on = true;
     voice.next = 0;
     voice.last = null;
@@ -1118,14 +1188,29 @@
   function voiceStop() {
     if (!voice.on) return;
     voice.on = false;
-    if (voice.gain) { try { voice.gain.disconnect(); } catch (e) {} voice.gain = null; } // coupe aussi la fin déjà prévue
-    log('Phonie à distance : ' + voice.frames + ' trames jouées' + (voice.under ? ', ' + voice.under + ' trou(s) réseau' : '') + (voice.late ? ', ' + voice.late + ' rattrapage(s) du retard' : ''));
-    drawTxOut();
+    const node = voice.node, gain = voice.gain;
+    voice.node = null;
+    voice.gain = null;
+    const done = (st) => {
+      try { if (node) node.disconnect(); } catch (e) {}
+      try { if (gain) gain.disconnect(); } catch (e) {} // coupe aussi la fin déjà prévue
+      const fr = st ? st.frames : voice.frames, un = st ? st.under : voice.under, la = st ? st.late : voice.late;
+      log('Phonie à distance : ' + fr + ' trames jouées' + (un ? ', ' + un + ' trou(s) réseau' : '') + (la ? ', ' + la + ' rattrapage(s) du retard' : '') + (st && st.tgt > 0.15 ? ', file portée à ' + st.tgt.toFixed(2) + ' s' : ''), un || la ? 'st-warn' : '');
+      // Au serveur : l'opérateur sait si sa voix est arrivée par à-coups au club
+      if (fr && ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'voice_stats', frames: fr, under: un, late: la, tgt: st ? st.tgt : 0.15, wk: !!st }));
+      drawTxOut();
+    };
+    if (!node) return done(null);
+    let ok = false;
+    node.port.onmessage = (e) => { if (!ok) { ok = true; done(e.data); } };
+    node.port.postMessage({ t: 'stats' });
+    setTimeout(() => { if (!ok) { ok = true; done(null); } }, 300);
   }
   function voiceFrame(u8) {
     if (!voice || !voice.on || !core.catKeyed || !tx.ctx || !voice.gain || u8[0] !== 0x05) return;
     const s = ULAW.decodeFrame(u8);
     if (!s || !s.length) return;
+    if (voice.node) { voice.frames++; voice.node.port.postMessage({ s }, [s.buffer]); return; } // lecteur continu
     const ctx = tx.ctx;
     const now = ctx.currentTime;
     if (voice.next < now + 0.02) { if (voice.frames) voice.under++; voice.next = now + 0.15; voice.last = null; }

@@ -1940,8 +1940,10 @@ function vmGo() {
     const now = Date.now();
     ptt.lastBeat = now; lastCtrlActivity = now;
     const due = Math.floor((now - p.t0) / 20);
-    // 8 trames (160 ms) d'avance : la page Station a de quoi absorber les à-coups du réseau sans trou dans la modulation
-    while (p.pos < p.buf.length && p.pos / VM_FRAME < due + 8) {
+    // Avance : 8 trames (160 ms) ; 25 (0,5 s) pour une page Station à lecteur continu (« vbuf ») : une mémoire n'a pas
+    // besoin d'être en direct, la file d'attente du club absorbe alors les à-coups du réseau et du serveur sans trou
+    const lead = station && station.caps && station.caps.indexOf('vbuf') >= 0 ? 25 : 8;
+    while (p.pos < p.buf.length && p.pos / VM_FRAME < due + lead) {
       const len = Math.min(VM_FRAME, p.buf.length - p.pos), fr = Buffer.alloc(len + 1);
       fr[0] = 0x05;
       for (let i = 0; i < len; i++) fr[i + 1] = p.tab[p.buf[p.pos + i]];
@@ -2634,6 +2636,8 @@ function toStation(obj) {
 }
 
 // ---------------------------------------------------------------- PTT
+// Dernière émission en phonie : la page Station dit ensuite si la voix est arrivée par à-coups (voice_stats)
+let lastVoiceTx = null;
 function stopPtt(reason) {
   if (!ptt.active) return;
   const who = ptt.conn;
@@ -2647,6 +2651,7 @@ function stopPtt(reason) {
   const wasVoice = !!ptt.voice;
   const voiceFrames = ptt.voiceFrames || 0;
   if (ptt.fdv) ptt.fdv.kill();
+  if (wasVoice) lastVoiceTx = { conn: who, at: Date.now(), vm: !!ptt.vm };
   ptt = { active: false, conn: null, since: 0, lastBeat: 0 };
   pttEndAt = Date.now();
   toStation({ t: 'cmd', op: 'ptt', on: false, reason });
@@ -2668,6 +2673,7 @@ function voiceModes() {
 function voiceIn(conn, buf) {
   if (!buf || buf.length < 2 || buf.length > 1500 || buf[0] !== 0x05) return;
   if (!ptt.active || ptt.conn !== conn || !ptt.voice || !station) return;
+  if (ptt.vm) return; // mémoire vocale en cours : le micro ne s'y mélange pas (deux voix entrelacées = voix hachée)
   const now = Date.now();
   if (!conn.vf || now - conn.vf.t > 1000) conn.vf = { t: now, n: 0 };
   if (++conn.vf.n > 120) return; // au plus 120 trames par seconde (2,4 × le débit normal)
@@ -5180,6 +5186,17 @@ function onStation(conn, m) {
     const now = Date.now();
     const out = JSON.stringify({ t: 'scope', m: [0, 1, 2, 3].indexOf(m.m) >= 0 ? m.m : 0, f0: m.f0, f1: m.f1, oor: m.oor ? 1 : 0, d: m.d, s: m.s === 1 ? 1 : 0 }); // s : 1 = scope du SUB (IC-7760)
     for (const c of ops) if (c.scopeSub && now - c.scopeSub < 45000 && (c.backlog || 0) < 65536) c.send(out);
+    return;
+  }
+  if (m.t === 'voice_stats') {
+    // Fin d'une émission en phonie : trames jouées, trous (son arrivé trop tard), rattrapages, file d'attente du club
+    const fr = Math.max(0, Number(m.frames) || 0), un = Math.max(0, Number(m.under) || 0), la = Math.max(0, Number(m.late) || 0);
+    const lv = lastVoiceTx && Date.now() - lastVoiceTx.at < 15000 ? lastVoiceTx : null;
+    journal('voice_stats', { call: lv ? lv.conn.user.call : '', frames: fr, under: un, late: la, tgt: Number(m.tgt) || 0, vm: lv ? lv.vm : undefined, player: m.wk ? 'continu' : 'trames' });
+    if (lv && (un || la) && lv.conn.open !== false) {
+      send(lv.conn, { t: 'notice', level: 'warn', msg: (lv.vm ? 'Mémoire vocale' : 'Phonie') + ' : le son est arrivé par à-coups au PC du club (' + un + ' trou' + (un > 1 ? 's' : '') +
+        (la ? ', ' + la + ' rattrapage' + (la > 1 ? 's' : '') : '') + ' sur ' + fr + ' trames)' + (m.wk ? ' ; la file d’attente du club a été portée à ' + (Number(m.tgt) || 0.15).toFixed(2).replace('.', ',') + ' s' : ' ; page Station à recharger pour le lecteur continu') + '.' });
+    }
     return;
   }
   if (m.t === 'diag') {

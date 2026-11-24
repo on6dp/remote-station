@@ -152,6 +152,9 @@ Your microphone (PC microphone, headset, USB microphone…) is sent to the TRX w
 > [!NOTE]
 > At the club, the Station page switches the TRX “modulation source” menu to USB just before your transmission, and puts it back 20 s after your last transmission or as soon as you release control: the club microphone works again. The level of your voice at the TRX input is set on the Station page (“Niveau phonie à distance”): the ALC should barely move.
 
+> [!NOTE]
+> **Choppy or robotic voice on air** (fixed in 0.43.70): the Station page now plays remote voice and voice memories with a **continuous player** (no more joins every 20 ms) and a 0.15 s **queue** that grows by itself (0.6 s at most) if the sound arrives in bursts: one short silence instead of a choppy voice. Voice memories are sent 0.5 s ahead. If the sound still arrived in bursts, a message says so at the end of the transmission (number of gaps, queue reached). **Reload the Station page at the club** to benefit. During a voice memory, your microphone is no longer mixed into it.
+
 **TRX equaliser** (FTX-1, FTDX10, FTDX101): `TRX EQ` button in the same panel. These are the TRX's own PRMTRC EQ1 to EQ3 menus (PROC off, then PROC on). Take control, `Lire le TRX`, adjust, `Essayer sur le TRX`, then `Enregistrer mon profil`: your profile is put on the TRX whenever you take control, and the club setting is restored when you release it. Administrators can save the club setting.
 
 <a id="p-ft8"></a>

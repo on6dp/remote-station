@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.70** — Phonie à distance et mémoires vocales : lecteur continu et file d'attente adaptative à la page Station (fini la voix hachée ou robotique), mémoires envoyées avec 0,5 s d'avance, message si le son est arrivé par à-coups
 - **0.43.69** — Onglet Synchro : décodages FT8 / FT4 en retard notés par le serveur (retard, décodeur, blocage, trou audio, charge, autres décodeurs) avec la cause probable
 - **0.43.68** — FT8 / FT4 / FT2 : GUET, appel automatique d'un indicatif dès qu'il est libre (CQ, 73, RR73, RRR), 3 appels au plus, comme Wait and Call de WSJT-X Improved
 - **0.43.67** — Version plus légère : FreeDV sans les poids inutilisés de RADE V2 (programme deux fois plus petit), programmes Windows hors de l'archive Linux
