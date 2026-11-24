@@ -1824,19 +1824,20 @@ function trxEqMsg(conn, m) {
     });
   }
 }
-// ---------------------------------------------------------------- mémoires vocales T1 … T8 de chaque membre (VOICE TX de la face avant)
+// ---------------------------------------------------------------- mémoires vocales T1 … T24 de chaque membre (VOICE TX de la face avant : T1 … T8 ; page TRX SSB : les 24)
 // L'IC-7300 garde les siennes sur une carte SD : à distance, elles sont enregistrées au micro de l'opérateur (page Face avant)
 // et gardées ici, dossier voicemem/ (µ-law 12 kHz, 30 s au plus) ; le serveur les émet lui-même en phonie, au rythme réel.
 const VM_DIR = path.join(ROOT, 'voicemem');
 const VM_MAX = 30 * 12000; // 30 s
 const VM_FRAME = 240;      // 20 ms à 12 kHz
+const VM_N = 24;           // T1 … T24 (page TRX SSB : F1 … F12, Ctrl+F1 … Ctrl+F12 ; face avant : T1 … T8)
 const vmSafe = (call) => String(call || '').toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 20);
 function vmMeta(call) {
   let m = null;
   try { m = JSON.parse(fs.readFileSync(path.join(VM_DIR, vmSafe(call) + '.json'), 'utf8')); } catch (e) { m = null; }
   m = m && typeof m === 'object' ? m : {};
   const t = Array.isArray(m.t) ? m.t : [];
-  return { t: Array.from({ length: 8 }, (_, i) => ({ name: String((t[i] && t[i].name) || '').slice(0, 16), ms: Math.max(0, Number(t[i] && t[i].ms) || 0) })),
+  return { t: Array.from({ length: VM_N }, (_, i) => ({ name: String((t[i] && t[i].name) || '').slice(0, 16), ms: Math.max(0, Number(t[i] && t[i].ms) || 0) })),
     level: Number.isFinite(m.level) ? Math.max(0, Math.min(255, m.level)) : 128, mon: m.mon === 0 ? 0 : 1, rep: Number.isFinite(m.rep) ? Math.max(1, Math.min(15, m.rep)) : 5 };
 }
 function vmSave(call, m) {
@@ -1863,7 +1864,7 @@ function ttsMake(conn, items, quiet) {
     let ok = 0;
     for (const it of items) {
       const n = Math.round(Number(it.n));
-      if (!(n >= 1 && n <= 8)) continue;
+      if (!(n >= 1 && n <= VM_N)) continue;
       if (vmPlay && vmPlay.conn.user.call === call && vmPlay.n === n) continue; // en cours d'émission : au prochain changement
       try {
         const r = await TTS.synth(it.text, tc, { voice: it.voice, speed: it.speed, gap: it.gap, pron: it.pron });
@@ -1896,7 +1897,7 @@ function ttsMake(conn, items, quiet) {
 function ttsRefresh(conn) {
   const store = ttsGet(conn.user.call), tc = txCallFor(conn.user);
   // Une mémoire faite avec une ancienne voix espeak (robotique, plus proposée) est refaite avec la dernière voix naturelle choisie
-  const items = Object.keys(store).filter((n) => /^[1-8]$/.test(n) && store[n] && store[n].call !== tc)
+  const items = Object.keys(store).filter((n) => /^\d{1,2}$/.test(n) && Number(n) >= 1 && Number(n) <= VM_N && store[n] && store[n].call !== tc)
     .map((n) => Object.assign({ n: Number(n) }, store[n], store._v && !/^(piper|kokoro):/.test(store[n].voice || '') ? { voice: store._v } : {}));
   return items.length ? ttsMake(conn, items, true) : Promise.resolve();
 }
@@ -1965,7 +1966,7 @@ function vmGo() {
 }
 function onVm(conn, m) {
   const call = conn.user.call, n = Math.round(Number(m.n));
-  const okN = n >= 1 && n <= 8;
+  const okN = n >= 1 && n <= VM_N;
   switch (m.t) {
     case 'vm_list': TTS.kokoroWarm(); return vmSend(conn); // page TRX SSB ouverte : Kokoro chargé d'avance
     case 'vm_put': {
@@ -2021,7 +2022,7 @@ function onVm(conn, m) {
     case 'vm_tts': {
       // Messages vocaux en anglais (page TRX SSB) : [{ n, text, name, voice, speed }] ; l'indicatif est le TX call
       if (!conn.user.tx) return send(conn, { t: 'notice', level: 'warn', msg: 'Votre compte est en écoute seule : pas de mémoire vocale' });
-      const items = (Array.isArray(m.items) ? m.items : []).slice(0, 8).filter((it) => it && typeof it.text === 'string' && it.text.trim());
+      const items = (Array.isArray(m.items) ? m.items : []).slice(0, VM_N).filter((it) => it && typeof it.text === 'string' && it.text.trim());
       if (!items.length) return;
       ttsMake(conn, items, false);
       return;

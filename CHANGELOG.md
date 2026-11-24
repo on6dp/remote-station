@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.72** — Page TRX SSB : 24 mémoires vocales en 4 colonnes de 6 (F1-F6, F7-F12, Ctrl+F1-F6, Ctrl+F7-F12), Config. Macros et Ma voix à 24 lignes
 - **0.43.71** — Mémoires vocales : voix de chaque mémoire affichée (orange si ce n'est pas la voix choisie), bouton Tout cocher, anciennes voix espeak refaites avec la voix naturelle choisie
 - **0.43.70** — Phonie à distance et mémoires vocales : lecteur continu et file d'attente adaptative à la page Station (fini la voix hachée ou robotique), mémoires envoyées avec 0,5 s d'avance, message si le son est arrivé par à-coups
 - **0.43.69** — Onglet Synchro : décodages FT8 / FT4 en retard notés par le serveur (retard, décodeur, blocage, trou audio, charge, autres décodeurs) avec la cause probable

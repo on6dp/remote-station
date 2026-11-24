@@ -203,6 +203,9 @@
   }
 
   // ------------------------------------------------------------------ mémoires vocales (VOICE TX)
+  // 24 mémoires en 4 colonnes de 6 : F1 … F6 | F7 … F12 | Ctrl+F1 … Ctrl+F6 | Ctrl+F7 … Ctrl+F12 (T1 … T24)
+  const VM_N = 24;
+  const vmKey = (n) => (n <= 12 ? 'F' + n : 'Ctrl+F' + (n - 12));
   // Nom lisible d'une voix de synthèse (Kokoro / Piper : nom donné par le serveur ; espeak-ng : ancienne voix robotique)
   const voiceName = (id) => { const v = (S.pv || []).find((x) => x.id === id); return v ? v.name : /^(piper|kokoro):/.test(id || '') ? String(id).replace(/^(piper|kokoro):/, '') : 'espeak (ancienne voix robotique)'; };
   function drawVk() {
@@ -213,20 +216,20 @@
     if (sig === box.dataset.sig) return;
     box.dataset.sig = sig;
     box.textContent = '';
-    for (let n = 1; n <= 8; n++) {
+    for (let n = 1; n <= VM_N; n++) {
       const t = meta && meta.t && meta.t[n - 1];
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'cwp-macro ssb-vm' + (t && t.ms ? ' tx' : ' empty') + (pl === n ? ' play' : '');
       b.innerHTML = '<small></small><span></span>';
-      b.querySelector('small').textContent = 'F' + n + ' · T' + n + (t && t.ms ? ' · ' + (t.ms / 1000).toFixed(1).replace('.', ',') + ' s' : '');
+      b.querySelector('small').textContent = vmKey(n) + ' · T' + n + (t && t.ms ? ' · ' + (t.ms / 1000).toFixed(1).replace('.', ',') + ' s' : '');
       b.querySelector('span').textContent = (t && t.name) || (t && t.ms ? 'T' + n : 'vide');
       const tt = S.tts && S.tts[n];
       // Mémoire faite avec une autre voix que celle choisie dans « Config. Macros » (ancienne génération, autre langue,
       // voix espeak robotique) : marquée en orange, pour la refaire (cocher T1 à T8 puis GÉNÉRER)
       const other = !!(tt && tt.voice !== TT.voice);
       if (tt) { b.classList.add('tts'); b.classList.toggle('other', other); b.querySelector('small').textContent += ' · ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'FR' : 'EN') + (other ? ' ⚠' : ''); }
-      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + (tt ? ' (message de synthèse ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'en français' : 'en anglais') + ', voix ' + voiceName(tt.voice) + ', ' + tt.call + ')' +
+      b.title = t && t.ms ? 'Émet la mémoire vocale T' + n + ' (' + vmKey(n) + ')' + (tt ? ' (message de synthèse ' + (/^(piper:)?fr|^kokoro:f/i.test(tt.voice || '') ? 'en français' : 'en anglais') + ', voix ' + voiceName(tt.voice) + ', ' + tt.call + ')' +
         (other ? '\n⚠ Pas la voix choisie (' + voiceName(TT.voice) + ') : 🗣 Config. Macros → cochez T' + n + ' → GÉNÉRER pour la refaire.' : '') : '') : 'Mémoire T' + n + ' vide : l’enregistrer avec « 🎙 Ma voix » (votre micro) ou « 🗣 Config. Macros » (voix de synthèse)';
       b.addEventListener('click', () => playVm(n));
       box.appendChild(b);
@@ -264,18 +267,22 @@
     fr: [['Voix féminines', [['fr+f2', 'Femme 1'], ['fr+f3', 'Femme 2'], ['fr+f4', 'Femme 3'], ['fr+Annie', 'Annie'], ['fr+linda', 'Linda'], ['fr+victoria', 'Victoria']]],
       ['Voix masculines', [['fr', 'Homme'], ['fr+m3', 'Homme grave']]]]
   };
-  const defItems = (lang) => TTS_DEFS[lang].map((x) => Object.assign({ on: true }, x));
+  // T1 … T8 : messages proposés ; T9 … T24 : vides (à écrire), non cochés
+  const defItems = (lang) => TTS_DEFS[lang].map((x) => Object.assign({ on: true }, x)).concat(Array.from({ length: VM_N - 8 }, () => ({ on: false, name: '', text: '' })));
   function ttsLoad() {
     let o = null;
     try { o = JSON.parse(LS.get('ssbtts', 'null')); } catch (e) { o = null; }
     o = o && typeof o === 'object' ? o : {};
     // Ancien format (anglais seul) : repris comme jeu anglais
-    if (Array.isArray(o.items) && o.items.length === 8 && !o.sets) { o.sets = { en: o.items }; o.voices = { en: o.voice || 'en-us+f2' }; }
+    if (Array.isArray(o.items) && o.items.length >= 8 && !o.sets) { o.sets = { en: o.items }; o.voices = { en: o.voice || 'en-us+f2' }; }
     delete o.items; delete o.voice;
     o.sets = o.sets || {};
     o.voices = o.voices || {};
     for (const l of ['en', 'fr']) {
-      if (!Array.isArray(o.sets[l]) || o.sets[l].length !== 8) o.sets[l] = defItems(l);
+      if (!Array.isArray(o.sets[l]) || o.sets[l].length < 8) o.sets[l] = defItems(l);
+      // Anciennes listes de 8 : complétées jusqu'à T24 (messages déjà écrits gardés)
+      else if (o.sets[l].length < VM_N) o.sets[l] = o.sets[l].concat(defItems(l).slice(o.sets[l].length));
+      else if (o.sets[l].length > VM_N) o.sets[l] = o.sets[l].slice(0, VM_N);
       if (!o.voices[l]) o.voices[l] = l === 'fr' ? 'fr+f2' : 'en-us+f2';
     }
     o.lang = o.lang === 'fr' ? 'fr' : 'en';
@@ -323,7 +330,7 @@
     TT.items.forEach((it, i) => {
       const row = document.createElement('div');
       row.className = 'ssb-ttsi';
-      row.innerHTML = '<label><input type="checkbox"> T' + (i + 1) + '</label><input class="nm" maxlength="16" spellcheck="false"><input class="tx" maxlength="200" spellcheck="false"><small class="vv"></small>';
+      row.innerHTML = '<label title="' + vmKey(i + 1) + '"><input type="checkbox"> T' + (i + 1) + '</label><input class="nm" maxlength="16" spellcheck="false"><input class="tx" maxlength="200" spellcheck="false"><small class="vv"></small>';
       // Voix avec laquelle la mémoire est faite en ce moment (orange : pas la voix choisie ci-dessus)
       const tt = S.tts && S.tts[i + 1];
       const vv = row.querySelector('.vv');
@@ -371,7 +378,8 @@
     }
     return o;
   }
-  $('ssTtsDef').addEventListener('click', () => { TT.items = defItems(TT.lang); ttsSave(); ttsDraw(); });
+  // Messages proposés : T1 … T8 seulement (T9 … T24 gardés tels quels)
+  $('ssTtsDef').addEventListener('click', () => { TT.items = defItems(TT.lang).slice(0, 8).concat(TT.items.slice(8)); ttsSave(); ttsDraw(); });
   if ($('ssTtsAll')) $('ssTtsAll').addEventListener('click', () => { for (const it of TT.items) it.on = true; ttsSave(); ttsDraw(); });
   $('ssTtsLang').addEventListener('change', () => { TT.lang = $('ssTtsLang').value === 'fr' ? 'fr' : 'en'; ttsSave(); ttsDraw(); });
   $('ssTtsGo').addEventListener('click', () => {
@@ -425,12 +433,12 @@
   function recDraw() {
     if ($('ssRec').hidden) return;
     const L = $('ssRecL');
-    for (let n = 1; n <= 8; n++) {
+    for (let n = 1; n <= VM_N; n++) {
       let row = L.querySelector('[data-n="' + n + '"]');
       if (!row) {
         row = document.createElement('div');
         row.className = 'ssb-reci'; row.dataset.n = n;
-        row.innerHTML = '<b>T' + n + '</b><input class="nm" maxlength="16" spellcheck="false" placeholder="nom (CQ, QRZ…)"><span class="st"></span>' +
+        row.innerHTML = '<b title="' + vmKey(n) + '">T' + n + '</b><input class="nm" maxlength="16" spellcheck="false" placeholder="nom (CQ, QRZ…)"><span class="st"></span>' +
           '<button type="button" class="rec">● REC</button><button type="button" class="pl" title="Réécouter dans ce PC (rien n’est émis)">▶</button><button type="button" class="dl" title="Effacer cette mémoire">✕</button>';
         const nm = row.querySelector('.nm');
         nm.addEventListener('change', () => api.send({ t: 'vm_name', n, name: nm.value.toUpperCase() }));
@@ -976,8 +984,10 @@
   $('cwpEWipe').addEventListener('click', wipe);
   document.addEventListener('keydown', (e) => {
     if ((e.key === 'w' || e.key === 'W') && e.altKey) { e.preventDefault(); wipe(); return; }
-    const f = /^F([1-8])$/.exec(e.key);
-    if (f && !e.ctrlKey && !e.altKey && !e.metaKey) { e.preventDefault(); playVm(Number(f[1])); return; }
+    // F1 … F12 : T1 … T12 ; Ctrl+F1 … Ctrl+F12 : T13 … T24 (Ctrl+F4 est gardé par Windows : il ferme la fenêtre)
+    const f = /^F(\d{1,2})$/.exec(e.key);
+    const fn = f ? Number(f[1]) : 0;
+    if (fn >= 1 && fn <= 12 && !e.altKey && !e.metaKey && !e.shiftKey) { e.preventDefault(); playVm(fn + (e.ctrlKey ? 12 : 0)); return; }
     if (e.key === 'Escape') api.send({ t: 'vm_stop' });
   });
   $('cwpFrom').addEventListener('change', () => {
