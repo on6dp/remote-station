@@ -677,11 +677,11 @@
     $('tHelper').textContent = helperOk ? 'Assistant carte son : en marche (version ' + r.version + ' ; relance d’ici ou depuis le dashboard, seule après 45 s de silence' +
       (v2 ? ' ; surveille la carte son et la répare seule si Windows la met en erreur)' : ')') +
       (v2 ? ' — veille USB : ' + (r.veille || '?') + (carte ? ' — carte son du TRX : ' + carte : '') + (r.reparation ? ' — dernière réparation : ' + r.reparation : '') + hr +
-        (Number(r.version) < 5 ? ' — version 5 disponible (plus légère : priorité basse, surveillance une fois par minute — la version 4 pouvait hacher le son ; met l’heure de Windows à la milliseconde) : retélécharger l’assistant et refaire installer-carte-son.cmd' : '')
+        (Number(r.version) < 6 ? ' — version 6 disponible (mise à l’heure de Windows directe comme NetTime, toutes les 15 min ; priorité basse) : retélécharger l’assistant et refaire installer-carte-son.cmd' : '')
         : ' — version 3 disponible (répare seule la carte son mise en erreur par Windows, coupe la veille USB) : retélécharger l’assistant et refaire installer-carte-son.cmd')
       : 'Assistant carte son : non installé sur ce PC (fichier installer-carte-son.cmd, voir l’aide) — pour relancer la carte son, éteindre et rallumer le TRX';
     $('btnAudReset').disabled = !helperOk || aud.resetting;
-    $('helperDl').hidden = helperOk && Number(r.version) >= 5;
+    $('helperDl').hidden = helperOk && Number(r.version) >= 6;
     return helperOk;
   }
   setTimeout(helperCheck, 1500);
@@ -939,7 +939,22 @@
   // ------------------------------------------------------------ horloge du VPS
   // L'émission FT8 / FT4 / FT2 part à l'heure du VPS (synchronisé par NTP) : l'horloge de Windows peut être
   // décalée de plusieurs secondes. Écart mesuré à chaque « pong » (aller-retour le plus court = mesure la plus fiable).
-  const clk = { best: Infinity, at: 0, off: null };
+  const clk = { best: Infinity, at: 0, off: null, wall: null };
+  // Saut de l'horloge de Windows (NetTime, assistant, service Windows Time) : Date.now() saute, pas performance.now().
+  // L'écart avec le VPS est corrigé tout de suite du même saut, puis remesuré (avant : jusqu'à 2 min d'émissions
+  // décalées du saut après chaque mise à l'heure).
+  setInterval(() => {
+    const w = Date.now() - performance.now();
+    if (clk.wall == null) { clk.wall = w; return; }
+    const jump = w - clk.wall;
+    clk.wall = w;
+    if (Math.abs(jump) < 25) return;
+    // Plus d'une minute : sortie de veille plutôt qu'une mise à l'heure → seulement une nouvelle mesure
+    if (clk.off != null && Math.abs(jump) < 60000) { clk.off = Math.round(clk.off - jump); core.setClock(clk.off); }
+    clk.best = Infinity;
+    log('Horloge de Windows ' + (jump > 0 ? 'avancée' : 'reculée') + ' de ' + Math.abs(Math.round(jump)) + ' ms : écart avec le VPS corrigé pour l’émission numérique');
+    try { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'ping', ts: Date.now() })); } catch (e) {}
+  }, 1000);
   function onPong(m) {
     if (!Number.isFinite(m.now) || !Number.isFinite(m.ts)) return;
     const t = Date.now();

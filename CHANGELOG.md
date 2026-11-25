@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.80** — Heure du PC du club : assistant carte son version 6 qui saute directement à la bonne heure comme NetTime (toutes les 15 min) ; la page Station rattrape tout de suite un saut de l'horloge de Windows pour l'émission FT.
 - **0.43.79** — Carnet : envoi en attente (⏳), refus en ✗ rouge avec la raison (aussi quand les envois sont arrêtés après un refus d'accès) ; nouvel essai automatique toutes les 10 min des envois eQSL / Club Log / QRZ perdus ou en échec passager (3 derniers jours) ; une liaison coupée ne bloque plus la file d'envoi.
 - **0.43.78** — Mémoires vocales : chaque bouton encadré, en rouge pour F1–F12 et en bleu pour Ctrl+F1–F12 (au lieu d'un cadre par ligne) ; touches en vert.
 - **0.43.77** — Mémoires vocales : un cadre rouge autour de F1–F12 et un cadre bleu autour de Ctrl+F1–F12 ; touches F1… et Ctrl+F1… en vert.

@@ -34,6 +34,11 @@ Version 5 : plus legere. L'assistant tourne en priorite basse (le son du TRX dan
 lui) et ne surveille plus la carte son qu'une fois par minute, avec une requete limitee a la carte son du TRX.
 Avec la version 4, la liste complete des peripheriques relue toutes les 20 s pouvait hacher le son sur un PC lent.
 Pour passer a la version 5 : retelecharger l'assistant (page Station) et refaire un double-clic sur installer-carte-son.cmd.
+Version 6 : la mise a l'heure saute directement a la bonne heure, comme NetTime, au lieu de laisser le service
+Windows Time rattraper l'ecart peu a peu (il lui fallait des heures pour 1 ou 2 secondes). Controle toutes les
+15 minutes, correction des 20 ms d'ecart. NetTime n'est plus necessaire : le desinstaller (deux reglages qui se
+contrarient). Pour passer a la version 6 : retelecharger l'assistant (page Station) et refaire un double-clic sur
+installer-carte-son.cmd.
 Si la page Station constate 45 s d'entree son muette (TRX en reception), elle relance seule la carte son
 (une fois toutes les 10 minutes au plus) et previent sur le dashboard.
 

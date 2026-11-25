@@ -716,7 +716,7 @@
       <div class="sy-box"><span>Serveur : NTP</span><b id="syNtp">—</b><small id="syNtpNote">synchronisation du serveur sur l’heure mondiale</small></div>
       <div class="sy-box"><span>PC du club</span><b id="syClub">—</b><small id="syClubNote">écart avec le serveur</small>
         <small class="sy-res" id="syClubRes"></small>
-        <button class="btn sy-btn" type="button" id="syClubSync" title="Met l’horloge de Windows du PC du club à l’heure (serveurs NTP publics, comme NetTime) par l’assistant carte son version 4 — responsables de la station">⟳ Mettre à l’heure</button></div>
+        <button class="btn sy-btn" type="button" id="syClubSync" title="Met l’horloge de Windows du PC du club à l’heure (serveurs NTP publics, comme NetTime) par l’assistant carte son (version 6 : saut direct à la bonne heure) — responsables de la station">⟳ Mettre à l’heure</button></div>
       <div class="sy-box"><span>Votre PC</span><b id="syPc">—</b><small id="syPcNote">écart avec le serveur</small></div>
       <div class="sy-box"><span>Liaison station → serveur</span><b id="syLat">—</b><small>délai mesuré et corrigé automatiquement</small></div>
       <div class="sy-box"><span>DT médian</span><b id="syDt">—</b><small id="syDtNote">derniers décodages FT8 / FT4</small></div>
@@ -729,7 +729,8 @@
     <p class="sy-note">Le décodage et l'instant d'émission se calent sur l'horloge du serveur (synchronisée par NTP) : l'écart du PC du club
       est mesuré et corrigé tout seul, celui de votre PC n'intervient pas. Le délai de la liaison est mesuré d'après les stations décodées ;
       un DT médian proche de 0,0 s montre que tout est calé. Le PC du club peut quand même être mis à l'heure à la milliseconde
-      (bouton ci-dessus, et tout seul toutes les heures) par l'assistant carte son version 4 : NetTime n'est alors plus nécessaire.</p>`;
+      (bouton ci-dessus, et tout seul toutes les 15 minutes) par l'assistant carte son version 6, qui saute directement à la bonne heure comme
+      NetTime : NetTime n'est alors plus nécessaire. Un saut de l'horloge de Windows est aussi rattrapé tout de suite par la page Station.</p>`;
 
   function buildDom() {
     const bar = $('ctabs');

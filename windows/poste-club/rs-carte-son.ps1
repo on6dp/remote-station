@@ -15,6 +15,9 @@
 # - Version 4 : met l'horloge de Windows à l'heure à la milliseconde près, comme NetTime (service Windows Time réglé
 #   sur des serveurs NTP publics, interrogés souvent), au démarrage puis toutes les heures, ou à la demande ; écart
 #   mesuré avec w32tm.
+# - Version 6 : la mise à l'heure saute directement à la bonne heure, comme NetTime (Set-Date), au lieu de laisser le
+#   service Windows Time rattraper l'écart peu à peu (il lui fallait des heures pour 1 ou 2 secondes) ; contrôle
+#   toutes les 15 minutes, correction dès 20 ms d'écart.
 # - Lancé au démarrage de Windows par la tâche planifiée « RemoteStation carte son » (voir installer-carte-son.cmd).
 # - Journal : rs-carte-son.log, à côté de ce fichier.
 param(
@@ -22,7 +25,7 @@ param(
   [string[]]$Origines = @('https://remote.op0p.be')
 )
 $ErrorActionPreference = 'Stop'
-$Version = '5'
+$Version = '6'
 # Version 5 : l'assistant passe en priorité basse (le son du TRX dans Chrome passe toujours avant lui) et la surveillance
 # de la carte son est allégée (une fois par minute, requête ciblée sur la carte son du TRX au lieu de la liste complète
 # des périphériques de Windows) : avec la version 4, cette liste relue toutes les 20 s pouvait hacher le son d'un PC lent
@@ -226,9 +229,9 @@ CouperVeilleUsb
 $NtpServeurs = 'be.pool.ntp.org,0x8 0.europe.pool.ntp.org,0x8 time.cloudflare.com,0x8'
 $Heure = @{ ecart = $null; quand = ''; msg = 'pas encore mesurée' }
 $DerniereHeure = [datetime]::MinValue
-# Écart de l'horloge de ce PC avec un serveur NTP (ms ; positif : ce PC est en retard), médiane de 3 mesures
+# Écart de l'horloge de ce PC avec un serveur NTP (ms ; positif : ce PC est en retard), médiane de 5 mesures
 function MesurerHeure {
-  $o = (& w32tm.exe /stripchart /computer:be.pool.ntp.org /dataonly /samples:3 2>&1 | Out-String)
+  $o = (& w32tm.exe /stripchart /computer:be.pool.ntp.org /dataonly /samples:5 2>&1 | Out-String)
   $v = @()
   # Windows en français : virgule décimale possible
   foreach ($m in [regex]::Matches($o, '([+-]\d+[.,]\d+)s')) { $v += [double]($m.Groups[1].Value -replace ',', '.') }
@@ -249,11 +252,23 @@ function ReglerHeure([bool]$config) {
       & w32tm.exe /config /manualpeerlist:"$NtpServeurs" /syncfromflags:manual /update 2>&1 | Out-Null
     }
     $avant = MesurerHeure
+    $saut = ''
+    # Comme NetTime : saut direct à la bonne heure (le service Windows Time, lui, rattrape l'écart très lentement)
+    if ($avant -ne $null -and [math]::Abs($avant) -ge 20 -and [math]::Abs($avant) -lt 86400000) {
+      Set-Date -Adjust ([TimeSpan]::FromMilliseconds($avant)) | Out-Null
+      $apres = MesurerHeure
+      # Garde-fou : écart plus grand après le saut (sens inversé) → correction dans l'autre sens
+      if ($apres -ne $null -and [math]::Abs($apres) -gt [math]::Abs($avant)) {
+        Set-Date -Adjust ([TimeSpan]::FromMilliseconds(-$apres)) | Out-Null
+        Ecrire "heure : sens corrigé (écart $apres ms après le premier saut)"
+      }
+      $saut = ' (saut de ' + [math]::Round($avant) + ' ms)'
+    }
     & w32tm.exe /resync /force 2>&1 | Out-Null
     Start-Sleep -Seconds 2
     $apres = MesurerHeure
     $script:DerniereHeure = Get-Date
-    $script:Heure = @{ ecart = $apres; quand = (Get-Date -Format 'dd/MM HH:mm'); msg = 'avant ' + $(if ($avant -ne $null) { "$avant ms" } else { '?' }) + ', après ' + $(if ($apres -ne $null) { "$apres ms" } else { '?' }) }
+    $script:Heure = @{ ecart = $apres; quand = (Get-Date -Format 'dd/MM HH:mm'); msg = 'avant ' + $(if ($avant -ne $null) { "$avant ms" } else { '?' }) + ', après ' + $(if ($apres -ne $null) { "$apres ms" } else { '?' }) + $saut }
     Ecrire "heure : $($script:Heure.msg)"
     return @{ ok = ($apres -ne $null); avant = $avant; apres = $apres; msg = 'horloge du PC du club : écart ' + $script:Heure.msg + ' (serveurs ' + ($NtpServeurs -replace ',0x8', '') + ')' }
   } catch {
@@ -274,7 +289,8 @@ while ($ecoute.IsListening) {
   while (-not $att.AsyncWaitHandle.WaitOne(20000)) {
     $script:Tour = ($script:Tour + 1) % 3
     if ($script:Tour -eq 0) { try { Surveiller } catch { Ecrire "surveillance : $($_.Exception.Message)" } } # une fois par minute
-    if (((Get-Date) - $DerniereHeure).TotalMinutes -ge 60) { try { ReglerHeure (-not $HeureReglee) | Out-Null; $HeureReglee = $true } catch { } }
+    $depuis = ((Get-Date) - $DerniereHeure).TotalMinutes
+    if ($depuis -ge 15 -or $depuis -lt -5) { try { ReglerHeure (-not $HeureReglee) | Out-Null; $HeureReglee = $true } catch { } }
   }
   $ctx = $ecoute.EndGetContext($att)
   try {
