@@ -932,14 +932,19 @@
   }
   function upCell(q, s) {
     const u = q.up && q.up[s];
-    if (s === 'lotw' && q.lotw_qsl_rcvd === 'Y') return '<td class="c ok" title="Confirmé sur LoTW' + (q.lotw_qslrdate ? ' le ' + fmtDate(q.lotw_qslrdate) : '') + '">★</td>';
-    if (s === 'eqsl' && q.eqsl_qsl_rcvd === 'Y') return '<td class="c ok" title="eQSL reçue' + (q.eqsl_qslrdate ? ' le ' + fmtDate(q.eqsl_qslrdate) : '') + '">★</td>';
+    // ★ jaune : confirmé ; ✗ rouge : le correspondant n'utilise pas ce service (pas de confirmation à attendre)
+    if (s === 'lotw' && q.lotw_qsl_rcvd === 'Y') return '<td class="c cf" title="Confirmé sur LoTW' + (q.lotw_qslrdate ? ' le ' + fmtDate(q.lotw_qslrdate) : '') + '">★</td>';
+    if (s === 'eqsl' && q.eqsl_qsl_rcvd === 'Y') return '<td class="c cf" title="eQSL reçue' + (q.eqsl_qslrdate ? ' le ' + fmtDate(q.eqsl_qslrdate) : '') + ' (ne compte pas pour le DXCC)">★</td>';
+    const mine = u ? ' — votre QSO : ' + (u.ok ? 'envoyé' : u.wait ? 'en attente' : 'pas envoyé') + ' le ' + new Date(u.t).toLocaleString('fr-BE') : '';
+    if (s === 'lotw' && q.nolotw != null) return '<td class="c nu" title="' + esc(q.call + ' n’envoie pas à LoTW : ' + (q.nolotw ? 'dernier envoi le ' + fmtDate(String(q.nolotw)) + ', il y a plus d’un an' : 'absent de la liste des utilisateurs LoTW de l’ARRL') + ' — pas de confirmation à attendre' + mine) + '">✗</td>';
+    if (s === 'eqsl' && q.noeqsl) return '<td class="c nu" title="' + esc(q.call + ' n’est pas membre AG d’eQSL (liste « Authenticity Guaranteed ») : confirmation peu probable (il peut avoir un compte eQSL sans AG)' + mine) + '">✗</td>';
     // · jamais présenté (envoi automatique pas en service pour ce service ou cet indicatif) ; ⏳ en attente ; ✓ reçu ; ✗ refusé
     if (!u) return '<td class="c no" title="Pas envoyé : envoi automatique pas en service pour ' + NAMES[s] + ' sous ' + esc(q.station_callsign || 'cet indicatif') + ' quand le QSO a été enregistré. Synchronisation ▾ → ' + NAMES[s] + ' pour l’envoyer.">·</td>';
     const when = new Date(u.t).toLocaleString('fr-BE');
     if (u.wait) return '<td class="c wt" title="' + esc(when + ' — ' + (u.msg || 'en attente d’envoi')) + '">⏳</td>';
     const again = !u.ok && u.retry && (u.n || 1) < 5 ? ' — nouvel essai automatique dans 10 minutes au plus' : '';
-    return '<td class="c ' + (u.ok ? 'ok' : 'ko') + '" title="' + esc(when + ' — ' + u.msg + again) + '">' + (u.ok ? '✓' : '✗') + '</td>';
+    // Envoi refusé : ⚠ orange (la croix rouge est pour un correspondant qui n'utilise pas le service)
+    return '<td class="c ' + (u.ok ? 'ok' : 'ko') + '" title="' + esc(when + ' — ' + (u.ok ? '' : 'envoi refusé ou pas parti : ') + u.msg + again) + '">' + (u.ok ? '✓' : '⚠') + '</td>';
   }
   // Sélection de plusieurs QSO (Ctrl+clic, Maj+clic) pour les supprimer d'un coup
   const msel = { ids: new Set(), anchor: '' };

@@ -868,6 +868,9 @@ NET.on('masterVersion', (x) => {
 const refs = new REFDATA.RefData(path.join(ROOT, 'refdata'), (msg) => console.error(msg));
 // Super Check Partial (indicatifs actifs en contest) : page TRX SSB, indicatifs probables
 const SCP = new (require('./lib/scp').Scp)(path.join(ROOT, 'refdata'), (msg) => console.log(msg));
+// Utilisateurs de LoTW (envoi dans l'année) et membres eQSL AG : croix rouge du carnet quand le correspondant n'y est pas
+const QSLU = new (require('./lib/qslusers').QslUsers)(path.join(ROOT, 'refdata'), (msg) => console.log(msg));
+QSLU.start();
 if (!process.env.RS_NO_SCP) SCP.start();
 if (cfg.refData !== false) {
   setTimeout(() => refs.refresh().catch(() => {}), 20000);
@@ -1405,6 +1408,8 @@ const LG_COL = {
 function lgUp(q, s) {
   if (s === 'lotw' && q.lotw_qsl_rcvd === 'Y') return 'confirmé';
   if (s === 'eqsl' && q.eqsl_qsl_rcvd === 'Y') return 'confirmé';
+  const nu = s === 'lotw' ? QSLU.lotwUser(q.call) : s === 'eqsl' ? QSLU.eqslUser(q.call) : null;
+  if (nu && !nu.ok) return 'pas utilisateur';
   const u = q.up && q.up[s];
   return !u ? 'pas envoyé' : u.ok ? 'envoyé' : u.wait ? 'en attente' : 'refusé';
 }
@@ -1507,6 +1512,9 @@ function qsoForClient(q) {
   const e = DXCC.lookup(o.call);
   if (!o.country && e) o.country = e.name;
   if (e) o.dxcc_pfx = e.pfx;
+  // Correspondant absent de LoTW (pas d'envoi depuis un an) / de la liste eQSL AG : pas de confirmation à attendre
+  if (q.lotw_qsl_rcvd !== 'Y') { const u = QSLU.lotwUser(q.call); if (u && !u.ok) o.nolotw = u.last || 0; }
+  if (q.eqsl_qsl_rcvd !== 'Y') { const u = QSLU.eqslUser(q.call); if (u && !u.ok) o.noeqsl = 1; }
   return o;
 }
 
@@ -3141,7 +3149,7 @@ function seqDualPick(s) {
   let best = null;
   for (const [k, v] of s.waiting) {
     const ok = !v.manual && !v.call1 && okCall(v.w[1]) && SEQ_CALL_RE.test(baseCall(v.w[1])) && ((GRID4_RE.test(v.w[2]) && v.w[2] !== 'RR73') || (v.w[2] === '' && v.w[1].indexOf('/') > 0))
-      && now - v.at <= 2 * P + 2000 && v.parity === 1 - s.parity && !s.worked.has(k) && !isDupeNow(v.w[1], s.mode);
+      && now - v.at <= 4 * P + 2000 && v.parity === 1 - s.parity && !s.worked.has(k) && !isDupeNow(v.w[1], s.mode);
     if (v.top && !ok) return null; // station mise en tête à la main : elle passe d'abord, seule
     if (!ok) continue;
     if (!best || (v.top && !best.top) || (v.top === best.top && v.d.db > best.d.db)) best = v;
@@ -3312,6 +3320,27 @@ function seqOnDecodes(mode, slot, list, side) {
           send(seq.conn, { t: 'notice', level: 'info', msg: seq.dx.call + ' termine un QSO avec ' + w[0] + ' : on continue de l’appeler (« ' + seqText(seq) + ' »)' });
         }
       }
+    }
+  }
+  // 1 bis) RR73 pas reçu : le correspondant qu'on vient de finir renvoie son R-report (ou son report) juste après notre
+  // RR73 → RR73 renvoyé (2 fois au plus, comme WSJT-X), avant de répondre à quelqu'un d'autre. Le QSO n'est pas noté deux fois.
+  const ld = seq.lastDone;
+  if (ld && seq.ntx === 6 && ld.n < 2 && Date.now() - ld.at < 2 * FTX_SLOT[mode] + 5000) {
+    for (const d of list) {
+      const w = words(d);
+      if (baseCall(w[0]) !== me || baseCall(w[1]) !== ld.call || !(RRPT_RE.test(w[2] || '') || RPT_RE.test(w[2] || ''))) continue;
+      ld.n++;
+      ld.at = Date.now();
+      seq.dx = { call: ld.full, grid: ld.grid || '' };
+      seq.rptSent = ld.rptSent || seq.rptSent;
+      seq.rptRcvd = String(w[2]).replace(/^R/, '');
+      seq.parity = 1 - theirParity;
+      if (d.f >= 100 && d.f <= 3000) seq.rxf = Math.round(d.f);
+      seq.resend = true;
+      seq.dual2 = null;
+      seqSetNtx(4);
+      send(seq.conn, { t: 'notice', level: 'info', msg: ld.full + ' n’a pas reçu votre RR73 (il renvoie « ' + w[2] + ' ») : RR73 renvoyé' });
+      return seqChanged();
     }
   }
   // 2) Appel CQ + « Répondre au 1er » : le plus fort de ceux qui nous répondent devient le correspondant
@@ -3496,8 +3525,13 @@ function seqQsoDone(why) {
   const wasOn = s.on;
   s.on = false;
   seqSetNtx(s.hound ? 1 : 6); // HOUND : pas de CQ, on reste prêt à rappeler un FOX
+  // RR73 envoyé : ce correspondant peut encore le redemander (son R-report revient) pendant 2 périodes
+  if (why === 'RR73 envoyé' && !s.resend) s.lastDone = { call: baseCall(call), full: call, grid: s.dx.grid, rptSent: s.rptSent, at: Date.now(), n: 0 };
+  else if (s.resend && s.lastDone) s.lastDone.at = Date.now();
   // Fiche déjà proposée (RR73 reçu) : la fin du QSO est signalée aussi (log automatique « à l'envoi du 73 »)
-  seqLogPrompt(s, why, s.prompted === s.qsoStart);
+  // RR73 renvoyé à un QSO déjà fini : déjà noté, pas de seconde fiche
+  if (!s.resend) seqLogPrompt(s, why, s.prompted === s.qsoStart);
+  s.resend = false;
   s.qsoStart = 0;
   s.rptRcvd = '';
   if (s.worked && SEQ_CALL_RE.test(baseCall(call))) s.worked.add(baseCall(call));
