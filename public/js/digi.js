@@ -6026,7 +6026,10 @@
       document.querySelectorAll('.dg-row[data-txat="' + x.at + '"] > span:nth-child(3)').forEach((e) => {
         e.textContent = x.txDt.toFixed(1);
         e.classList.toggle('dg-txlate', late);
-        e.title = 'DT de votre émission : signal parti ' + (x.txDt >= 0 ? x.txDt.toFixed(1) + ' s après' : (-x.txDt).toFixed(1) + ' s avant') + ' l’heure normale' + (late ? ' — en retard : les autres stations le décodent mal ou pas du tout' : '');
+        const y = x.txWhy || {};
+        e.title = 'DT de votre émission : signal parti ' + (x.txDt >= 0 ? x.txDt.toFixed(1) + ' s après' : (-x.txDt).toFixed(1) + ' s avant') + ' l’heure normale' + (late ? ' — en retard : les autres stations le décodent mal ou pas du tout' : '') +
+          (x.txWhy ? '\nattente du décodage de la période : ' + y.hold + ' ms · ordre d’émission donné ' + y.lead + ' ms avant le départ prévu' +
+            (y.key != null ? ' · page Station : signal lancé ' + y.key + ' ms après l’ordre (TRX en émission, choix du VFO…)' : '') + ' · retard du signal sur l’heure demandée : ' + y.late + ' ms' : '');
       });
     }
     if (x && x.state === 'tx' && x.at !== lastTxAt && FT_MODES.indexOf(x.mode) >= 0) {

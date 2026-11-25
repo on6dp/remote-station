@@ -577,7 +577,7 @@
             this.catKeyed = true;
             this.lastKa = Date.now();
             // Émission numérique : le signal préparé part à l'heure dite (heure du VPS ramenée à l'heure de ce PC)
-            this.digiTx = m.digi && m.digi.id ? { id: m.digi.id, at: Number(m.digi.at) - this.clockOffset, started: false } : null;
+            this.digiTx = m.digi && m.digi.id ? { id: m.digi.id, at: Number(m.digi.at) - this.clockOffset, started: false, cmdAt: Date.now() } : null;
             // Phonie à distance : source de modulation mise sur USB avant d'émettre
             if (m.voice) return this._voiceKey(m);
             // Autre émission juste après une émission en phonie : micro du club remis d'abord
@@ -1080,7 +1080,9 @@
         this.sendWs({ t: 'ftx_done', id: d.id });
       });
       // Heure réelle de départ du signal (DT de notre émission vu par les autres stations, dans la page FT)
-      if (ok && this.txAudio.late) this.sendWs({ t: 'ftx_started', id: d.id, late: this.txAudio.late() });
+      // keyMs : temps entre l'ordre d'émission et le signal lancé (choix du VFO d'émission, échange A ⇄ B…) : le serveur
+      // donne l'ordre d'autant plus tôt la fois suivante
+      if (ok && this.txAudio.late) this.sendWs({ t: 'ftx_started', id: d.id, late: this.txAudio.late(), keyMs: d.cmdAt ? Date.now() - d.cmdAt : null });
       if (!ok) {
         this.digiTx = null;
         const why = 'signal numérique introuvable ou sortie son vers le TRX indisponible';

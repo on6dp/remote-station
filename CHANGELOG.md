@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.90** — FT8 : passe normale dès 13,5 s d'audio, bande coupée en 3 morceaux décodés en même temps (serveur à 6 cœurs) : décodages avant la fin de la période. Passe QSO : le correspondant d'abord ; émission retenue jusqu'à 1,3 s si sa réponse est encore cherchée. Ordre d'émission donné plus tôt si le TRX tarde (VFO, SPLIT). 2 à la fois : plus de coupure et relance en retard pour ajouter le 2e QSO. Infobulle du DT de la ligne TX : d'où vient le retard.
 - **0.43.89** — FT8 : passe QSO renforcée (profondeur Deep + a8 autour du correspondant si sa réponse n'est pas trouvée tout de suite) : réponse faible (−22 / −23 dB) moins d'une seconde après la fin de la période. Ligne TX de la page FT : DT réel de votre émission (orange si départ trop tardif).
 - **0.43.88** — Fiche DÉTAILS QSO : tableau LOTW | EQSL | CL | QRZ en haut à droite de la fiche, sur son fond jaune.
 - **0.43.87** — FT8 : passe normale dans un décodeur à part, sur un état neuf : environ 1 s au lieu de 2 à 3 s sur une bande chargée (fin de période connue plus tôt). L'ancienne passe normale tourne en même temps sur un autre cœur et ajoute les signaux faibles cachés (« normale 2 »).
