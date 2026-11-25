@@ -90,6 +90,7 @@
   // ------------------------------------------------------------------ onglet
   const PANE = `
     <form class="lg-form" id="lgForm" autocomplete="off" spellcheck="false">
+      <div class="lg-qsl" id="lgQsl" hidden></div>
       <div class="lg-row">
         <label class="lg-call">Indicatif <input name="call" maxlength="15" required placeholder="ON4XX"></label>
         <label>Date UTC <input name="date" type="date" required></label>
@@ -118,7 +119,6 @@
         <span class="lg-refs-t" title="Références de la station pendant une activation : gardées d'un QSO à l'autre jusqu'à ce que vous les effaciez">Ma réf. (activation)</span>
         ${REF_KEYS.map(([k, p, ph, free]) => refInput(k, p, ph, free, 1)).join('')}
       </div>
-      <div class="lg-row lg-qsl" id="lgQsl" hidden></div>
       <div class="lg-row lg-act">
         <button class="btn btn-primary" type="submit" data-a="save">Enregistrer le QSO</button>
         <button class="btn" type="button" data-a="cancel" hidden>Annuler</button>
@@ -964,6 +964,8 @@
   function drawQsl(q) {
     const el = root && q$('#lgQsl');
     if (!el) return;
+    const f = q$('#lgForm');
+    if (f) f.classList.toggle('lg-hasq', !!q);
     if (!q) { el.hidden = true; el.innerHTML = ''; return; }
     // Petit tableau comme les colonnes du carnet : LoTW | eQSL | CL | QRZ (+ carte QSL papier si notée) ; détail au survol
     const cols = SV.map((s) => [s === 'clublog' ? 'CL' : s === 'qrz' ? 'QRZ' : NAMES[s], upInfo(q, s)]);
