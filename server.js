@@ -455,6 +455,12 @@ function fdvCall(x) {
 // TRX à deux récepteurs en stéréo (FTDX101) : trame gauche (0x02, MAIN) puis trame droite (0x04, SUB).
 // La voie droite sert au décodeur RTTY B et, en double réception, l'écoute reçoit le mélange des deux (comme au casque).
 const stereo = { l: null, at: 0 };
+/** Son de la bande coupé pour l'écoute : émission numérique en cours, et audio capté après le départ du signal */
+function digiMute() {
+  if (!ptt.active || !ptt.digi) return false;
+  const start = Number(ptt.digi.at) || ptt.since;
+  return Date.now() - (Number(digi.latency) || 0) >= start;
+}
 function sendListen(pcm, l, r) {
   if (!listeners()) return;
   let out = null, st2 = null;
@@ -463,6 +469,9 @@ function sendListen(pcm, l, r) {
     if (c.fdv && c.fdv.hear === 'dec' && fdv.rx) continue; // page FreeDV : la voix décodée à la place (fdvVoice)
     // Mémoire vocale avec Auto Monitor : l'opérateur entend sa mémoire seule (pas mélangée au retour du TRX : son haché)
     if (vmPlay && vmPlay.mon && vmPlay.conn === c && ptt.active) continue;
+    // Émission numérique (FT8, FT4, RTTY…) partie : plus de son de la bande. L'audio arrive du club avec un délai : coupé
+    // dès que ce qui arrive a été capté après le départ du signal (avant : on entendait encore la bande dans le cycle d'émission)
+    if (digiMute()) continue;
     // Écoute en stéréo (page Face avant, double réception) : MAIN à gauche, SUB à droite, dans une seule trame 0x07
     if (c.listenStereo && l && r) {
       if (!st2) {
@@ -1060,6 +1069,17 @@ async function lotwAutoConfirm() {
       if (r && (r.n || r.received)) journal('lotw_confirm_auto', { call, n: r.n || 0, received: r.received || 0 });
       if (r && !r.ok) console.error('LoTW, lecture automatique des confirmations de ' + call + ' : ' + r.msg);
     }
+    // eQSL reçues : même rythme, pour chaque indicatif qui a un compte eQSL (club et comptes personnels)
+    if (logCfg.eqsl.autoConfirm !== false) {
+      const ecalls = Array.from(new Set(stationCalls().concat(Object.keys(logCfg.eqsl.accounts || {})).map((c) => String(c).toUpperCase())));
+      for (const call of ecalls) {
+        const c = credFor('eqsl', call);
+        if (!c.user || !c.password || sync.isStopped('eqsl', call)) continue;
+        const r = await sync.confirmEqsl('', call, true).catch((e) => ({ ok: false, msg: e.message }));
+        if (r && r.n) journal('eqsl_confirm_auto', { call, n: r.n });
+        if (r && !r.ok) console.error('eQSL, lecture automatique des eQSL reçues de ' + call + ' : ' + r.msg);
+      }
+    }
   } finally { lotwAutoBusy = false; }
 }
 setTimeout(lotwAutoConfirm, 3 * 60000).unref();
@@ -1081,13 +1101,14 @@ const sync = new Sync({
   clubCalls: () => stationCalls(),
   getAuto: (s, call) => autoFor(s, call),
   setClublogFw: (t) => { logCfg.clublog.fwUntil = t; saveLogCfg(); },
-  setLastConfirm: (d, call) => {
+  setLastConfirm: (d, call, s) => {
     call = String(call || '').toUpperCase();
-    // Date de la dernière lecture gardée par indicatif (chacun son compte LoTW : ON5VL, OR0L, ON6DP…)
-    if (!call) logCfg.lotw.lastConfirm = d;
+    s = s === 'eqsl' ? 'eqsl' : 'lotw';
+    // Date de la dernière lecture gardée par indicatif (chacun son compte LoTW / eQSL : ON5VL, OR0L, ON6DP…)
+    if (!call) logCfg[s].lastConfirm = d;
     else {
-      logCfg.lotw.accounts = logCfg.lotw.accounts || {};
-      const acct = logCfg.lotw.accounts[call] || (logCfg.lotw.accounts[call] = {});
+      logCfg[s].accounts = logCfg[s].accounts || {};
+      const acct = logCfg[s].accounts[call] || (logCfg[s].accounts[call] = {});
       acct.lastConfirm = d;
     }
     saveLogCfg();
@@ -1383,6 +1404,7 @@ const LG_COL = {
 };
 function lgUp(q, s) {
   if (s === 'lotw' && q.lotw_qsl_rcvd === 'Y') return 'confirmé';
+  if (s === 'eqsl' && q.eqsl_qsl_rcvd === 'Y') return 'confirmé';
   const u = q.up && q.up[s];
   return !u ? 'pas envoyé' : u.ok ? 'envoyé' : u.wait ? 'en attente' : 'refusé';
 }
@@ -3809,7 +3831,7 @@ function ftxKey(p) {
     ftTxSlots.push({ mode: p.mode, slot: Math.floor(p.at / FTX_SLOT[p.mode]) * FTX_SLOT[p.mode], text: p.sent || p.text });
     while (ftTxSlots.length > 30) ftTxSlots.shift();
   }
-  ptt = { active: true, conn: p.conn, since: now, lastBeat: now, digi: { id: p.id, mode: p.mode, maxS: p.maxS || 0 } };
+  ptt = { active: true, conn: p.conn, since: now, lastBeat: now, digi: { id: p.id, mode: p.mode, maxS: p.maxS || 0, at: p.at } };
   lastCtrlActivity = now;
   const tv = txSide();
   ptt.rx = radio.vfoSel === 1 ? 1 : 0;
@@ -4671,6 +4693,7 @@ function onOperator(conn, m) {
       }
       if (m.action === 'stop') return sync.stop(m.service);
       if (m.service === 'lotw' && m.action === 'confirm') { sync.confirmLotw(conn.user.call, m.callsign); return; }
+      if (m.service === 'eqsl' && m.action === 'confirm') { sync.confirmEqsl(conn.user.call, m.callsign); return; }
       if (LOG_SERVICES.indexOf(m.service) < 0) return;
       // Club Log « effacer le log existant » : tout le carnet de l'indicatif, en un seul fichier
       const f = { from: m.from, to: m.to, callsign: m.callsign, all: !!m.all || !!m.clear };

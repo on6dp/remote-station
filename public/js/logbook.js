@@ -933,6 +933,7 @@
   function upCell(q, s) {
     const u = q.up && q.up[s];
     if (s === 'lotw' && q.lotw_qsl_rcvd === 'Y') return '<td class="c ok" title="Confirmé sur LoTW' + (q.lotw_qslrdate ? ' le ' + fmtDate(q.lotw_qslrdate) : '') + '">★</td>';
+    if (s === 'eqsl' && q.eqsl_qsl_rcvd === 'Y') return '<td class="c ok" title="eQSL reçue' + (q.eqsl_qslrdate ? ' le ' + fmtDate(q.eqsl_qslrdate) : '') + '">★</td>';
     // · jamais présenté (envoi automatique pas en service pour ce service ou cet indicatif) ; ⏳ en attente ; ✓ reçu ; ✗ refusé
     if (!u) return '<td class="c no" title="Pas envoyé : envoi automatique pas en service pour ' + NAMES[s] + ' sous ' + esc(q.station_callsign || 'cet indicatif') + ' quand le QSO a été enregistré. Synchronisation ▾ → ' + NAMES[s] + ' pour l’envoyer.">·</td>';
     const when = new Date(u.t).toLocaleString('fr-BE');
@@ -1291,7 +1292,8 @@
       (lotw ? '<ol class="lg-steps">' + STEPS.map(([id, t]) => '<li data-s="' + id + '">' + t + '</li>').join('') + '</ol>' : '') +
       '<div class="lg-prog"><div></div></div><p class="lg-cnt"></p><pre class="lg-log"></pre>' +
       '</div>' +
-      '<div class="md-act">' + (lotw ? '<button class="btn" type="button" data-a="confirm" title="Lire seulement les confirmations reçues sur LoTW">Confirmations</button>' : '') +
+      '<div class="md-act">' + (lotw ? '<button class="btn" type="button" data-a="confirm" title="Lire seulement les confirmations reçues sur LoTW">Confirmations</button>'
+        : s === 'eqsl' ? '<button class="btn" type="button" data-a="confirm" title="Lire les eQSL reçues (boîte de réception eQSL.cc) : ★ dans la colonne eQSL du carnet">eQSL reçues</button>' : '') +
       '<span></span><button class="btn" type="button" data-a="stop" disabled>Arrêt</button><button class="btn" value="cancel" data-a="close">Fermer</button>' +
       '<button class="btn btn-primary" type="button" data-a="go">' + SYNC[s] + '</button></div></form>');
     sdlg = { service: s, el: d, job: null };
@@ -1351,7 +1353,7 @@
       api.send(m);
     };
     d.querySelector('[data-a="go"]').addEventListener('click', () => go('send'));
-    if (lotw) d.querySelector('[data-a="confirm"]').addEventListener('click', () => go('confirm'));
+    if (lotw || s === 'eqsl') d.querySelector('[data-a="confirm"]').addEventListener('click', () => go('confirm'));
     d.querySelector('[data-a="stop"]').addEventListener('click', () => { api.send({ t: 'log_sync', service: s, action: 'stop' }); syncLog('Arrêt demandé…'); });
     if (lotw) {
       agents = null;

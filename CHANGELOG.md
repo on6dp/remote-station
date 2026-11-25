@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.83** — FT8 : passe QSO rapide (± 200 Hz autour du correspondant et de votre fréquence) dès 13,5 s, décodage a8 seulement dans la passe profonde, passe profonde en pause pendant les passes rapides : la réponse du correspondant arrive avant votre émission suivante. Son de la bande coupé pendant une émission numérique. eQSL reçues lues (bouton et toutes les heures) : ★ dans la colonne eQSL.
 - **0.43.82** — Bandeau : « ⏱ TX auto FT » au lieu de « ⏱ en émission » quand l'émission automatique FT est en service mais que le TRX est en réception ; « ⏱ CW en cours » pendant un envoi CW.
 - **0.43.81** — LoTW : guide à voyants dans la fenêtre Synchronisation LoTW (TQSL, lieu de station, Agent, identifiant du site) et « Je préfère envoyer moi-même avec TQSL » ; QSO envoyés à LoTW par un autre moyen (TQSL, QRZ.com, Swisslog) vus à la lecture horaire (✓).
 - **0.43.80** — Heure du PC du club : assistant carte son version 6 qui saute directement à la bonne heure comme NetTime (toutes les 15 min) ; la page Station rattrape tout de suite un saut de l'horloge de Windows pour l'émission FT.
