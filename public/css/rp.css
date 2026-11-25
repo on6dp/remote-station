@@ -3988,3 +3988,5 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .lg-table td.cf { color: #ffd60a; font-size: 16px; font-weight: 900; line-height: 1; text-shadow: 0 0 4px rgba(255, 214, 10, .45); }
 .lg-table td.nu { color: #ff3b30; font-weight: 900; font-size: 14px; }
 .lg-table td.ko { color: #ff9f0a; font-weight: 800; font-size: 13px; }
+/* 0.43.85 — liste FT : pays, distance et azimut en blanc sur toutes les lignes (le préfixe garde sa couleur) */
+.dg-row.ft span.x.cty, .dg-row.ft span.x:not(.pfx):not(.cty) { color: #ffffff !important; }

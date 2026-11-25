@@ -266,7 +266,7 @@
       <label class="dg-chk dg-after" title="Correspondant qui ne répond plus : après ce nombre d'envois du même message (appel Tx1, report Tx2 ou R+report Tx3) sans réponse, et la période suivante écoutée, on l'abandonne. En appel CQ (« Après un QSO » = répondre au suivant) : réponse à une autre station qui vous appelait, sinon CQ relancé ; sinon l'émission s'arrête. « Jamais » : comme WSJT-X (seul le chien de garde arrête)."><span class="dg-f dg-ylw">Sans réponse</span> <select id="dgMaxRep">
         <option value="3">3 essais</option><option value="4">4 essais</option><option value="5">5 essais</option><option value="6">6 essais</option><option value="8">8 essais</option><option value="0">jamais</option>
       </select></label>
-      <label class="dg-chk dg-dual" title="Réponse double, comme MSHV (« Multi Answering ») ou le FOX de WSJT-X : en appel CQ, au moment d'envoyer RR73, la station suivante qui vous appelait reçoit son report dans la même émission — « K1ABC RR73; W9XYZ &lt;ON5VL&gt; -08 ». Un QSO de gagné toutes les 30 s. FT8 seulement, indicatifs standard ; report arrondi au nombre pair. WSJT-X, JTDX et MSHV récents décodent ce message ; si la station ne répond pas, son report repart en message normal."><input type="checkbox" id="dgDual"> 2 à la fois</label>
+      <label class="dg-chk dg-dual" title="Deux QSO en même temps, comme MSHV (« Multi Answering ») : en appel CQ, un 2e correspondant (le meilleur de ceux qui vous appellent) est mené en même temps que le premier. Chaque émission porte deux signaux : à votre fréquence TX et 60 Hz plus haut en FT8 (100 Hz en FT4), chacun à la moitié de l'amplitude (−6 dB par station, même puissance crête : BF modérée, ALC à 0). Quand le premier QSO finit, le 2e devient le premier et une autre station prend sa place. Page Station 0.43.85 ou plus ; sinon (ancienne page) : message double « K1ABC RR73; W9XYZ &lt;ON5VL&gt; -08 » au moment du RR73."><input type="checkbox" id="dgDual"> 2 à la fois</label>
       <label class="dg-chk spotlog" title="Cochée : chaque QSO FT8 / FT4 / FT2 enregistré dans le carnet (fiche ou log automatique) est aussi spoté sur le DX cluster, sous votre indicatif d’opérateur — pas le TX CALL. Les stations décodées partent de toute façon vers PSK Reporter."><input type="checkbox" data-spotlog> Spot cluster</label>
       <button class="btn dg-dualrx" type="button" id="dgDualRx" hidden aria-pressed="false" title="DUAL RX : deux cascades, quatre colonnes et deux cartes de bande (VFO-A et VFO-B) ; clic : un seul VFO affiché (le TRX garde sa double réception). TRX en réception simple : clic = DUAL RX sur le TRX (avec la main).">DUAL RX</button>
       <span class="seg ft-txside" id="dgTxSide" title="FTDX101 en double réception : VFO d'émission (MAIN = VFO-A, SUB = VFO-B). Un double-clic sur un message choisit tout seul le VFO de la station appelée."><span class="dg-f">TX</span><button class="btn" type="button" data-side="A" aria-pressed="true">VFO-A</button><button class="btn" type="button" data-side="B" aria-pressed="false">VFO-B</button></span>
@@ -5621,9 +5621,13 @@
     ftLogPend.add(String(q.call || '').toUpperCase());
     api.send({ t: 'log_add', qso, spot: !!(window.RSSPOT && RSSPOT.on()), tag: qsoForm ? 'ftqso' : undefined });
   }
+  // Fiches en attente : « 2 à la fois » peut finir deux QSO dans la même émission ; la 2e fiche s'ouvre après la 1re
+  const qsoQueue = [];
+  function qsoNext() { const n = qsoQueue.shift(); if (n) setTimeout(() => qsoPrompt(n[0], n[1]), 200); }
   function qsoPrompt(q, note) {
     const doc = ($('msgFtx') && $('msgFtx').ownerDocument) || document;
     const old = doc.getElementById('qsoDlg');
+    if (old && old.open) { qsoQueue.push([q, note]); return; }
     if (old) old.remove();
     const dlg = doc.createElement('dialog');
     dlg.id = 'qsoDlg';
@@ -5637,12 +5641,14 @@
     // F12 : enregistrer dans le carnet (comme le bouton)
     dlg.addEventListener('keydown', (e) => { if (e.key === 'F12') { e.preventDefault(); e.stopPropagation(); const b = dlg.querySelector('[data-a="log"]'); if (b && !b.disabled) b.click(); } });
     try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
-    dlg.addEventListener('close', () => dlg.remove());
+    let gone = false;
+    const done = () => { if (gone) return; gone = true; dlg.remove(); qsoNext(); };
+    dlg.addEventListener('close', done);
     dlg.querySelector('[data-a="log"]').addEventListener('click', () => {
       ftxLogAdd(q, false);
-      dlg.remove();
+      done();
     });
-    dlg.querySelector('[data-a="no"]').addEventListener('click', () => dlg.remove());
+    dlg.querySelector('[data-a="no"]').addEventListener('click', done);
   }
   // ------------------------------------------------------------------ émission RTTY / JTTY (signal fabriqué par le serveur)
   let dtxPend = null; // { mode, text } : texte à effacer de la zone d'écriture une fois l'émission partie
@@ -5997,9 +6003,10 @@
     }
     if (el) {
       const hm = (ms) => { const d = new Date(ms); return pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + (ms % 1000 >= 100 && ms % 1000 !== 500 ? '.' + Math.floor((ms % 1000) / 100) : ''); };
-      const auto = sq && sq.on ? 'Émission auto (' + sq.by + ') · Tx' + sq.ntx + ' · ' : '';
-      el.textContent = x && x.state === 'tx' ? '● ' + auto + 'en émission ' + x.mode + ' : « ' + x.text + ' » à ' + x.f0 + ' Hz'
-        : x ? auto + x.mode + ' prévu à ' + hm(x.at - 500) + ' UTC : « ' + x.text + ' » à ' + x.f0 + ' Hz'
+      const auto = sq && sq.on ? 'Émission auto (' + sq.by + ') · Tx' + sq.ntx + (sq.b ? ' · 2e QSO : ' + sq.b.call + ' (Tx' + sq.b.ntx + ')' : '') + ' · ' : '';
+      const x2 = x && x.extra && x.extra[0] ? ' + « ' + x.extra[0].text + ' » à ' + x.extra[0].f0 + ' Hz' : '';
+      el.textContent = x && x.state === 'tx' ? '● ' + auto + 'en émission ' + x.mode + ' : « ' + x.text + ' » à ' + x.f0 + ' Hz' + x2
+        : x ? auto + x.mode + ' prévu à ' + hm(x.at - 500) + ' UTC : « ' + x.text + ' » à ' + x.f0 + ' Hz' + x2
         : sq && sq.on ? auto + '« ' + sq.text + ' » à la prochaine période'
         : 'Émission : clic sur Tx1 à Tx7 (en bas) → à chaque période jusqu’à la réponse, séquence automatique comme WSJT-X.';
       el.classList.toggle('on', !!(x || (sq && sq.on)));
@@ -6013,7 +6020,9 @@
     }
     if (x && x.state === 'tx' && x.at !== lastTxAt && FT_MODES.indexOf(x.mode) >= 0) {
       lastTxAt = x.at;
-      const it = lastTxIt = { slot: Math.floor((x.at - 500) / 100) * 100, mode: x.mode, tx: true, list: [{ tx: true, db: 0, dt: 0, f: x.f0, msg: x.text, txAt: x.at }] };
+      // « 2 à la fois » : une ligne TX par signal émis
+      const it = lastTxIt = { slot: Math.floor((x.at - 500) / 100) * 100, mode: x.mode, tx: true, list: [{ tx: true, db: 0, dt: 0, f: x.f0, msg: x.text, txAt: x.at }]
+        .concat((x.extra || []).map((e) => ({ tx: true, db: 0, dt: 0, f: e.f0, msg: e.text, txAt: x.at }))) };
       // Double réception : dans les colonnes du VFO qui émet
       const onB = ftDual && sq && sq.on && sq.side === 'B';
       (onB ? histB : hist).push(it);
@@ -8121,7 +8130,7 @@
         $('dgDual').addEventListener('change', () => {
           store.set('ftxdual', $('dgDual').checked ? '1' : '0');
           ftxCfg();
-          if (api) api.say($('dgDual').checked ? 'Réponse double (FT8, en appel CQ) : le RR73 et le report de la station suivante partent dans la même émission.' : 'Réponse double coupée : une station à la fois.', '', 6000);
+          if (api) api.say($('dgDual').checked ? '2 à la fois (FT8 / FT4, en appel CQ) : deux QSO en même temps, deux signaux (60 Hz d’écart en FT8, 100 Hz en FT4), chacun à −6 dB.' : '2 à la fois coupé : une station à la fois.', '', 7000);
         });
       }
       if ($('dgAfter')) {

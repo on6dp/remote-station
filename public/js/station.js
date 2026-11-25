@@ -150,7 +150,7 @@
     setTimeout(closePrev, 10000);
     ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
     // caps : ce que sait faire cette version de la page (ftsplit : SPLIT du FTX-1 par FT0 / FT1, sans ST1)
-    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq', 'ftxtx', 'audiotx', 'audioreset', 'cwtx', 'cwprep', 'cwkey', 'voicetx', 'exrw', 'rfscope', 'timesync', 'ftxdx', 'ftxdx2', 'vbuf'] }));
+    ws.onopen = () => ws.send(JSON.stringify({ t: 'station', token, model: MODEL, ports: rememberedPorts(), page: PAGE_ID, caps: ['ftsplit', 'autoreload', 'txsel', 'catq', 'ftxtx', 'audiotx', 'audioreset', 'cwtx', 'cwprep', 'cwkey', 'voicetx', 'exrw', 'rfscope', 'timesync', 'ftxdx', 'ftxdx2', 'vbuf', 'ftxmulti'] }));
     ws.binaryType = 'arraybuffer';
     lastServerMsg = Date.now();
     ws.onmessage = (e) => {
@@ -1066,7 +1066,7 @@
     }
     drawTxOut();
   }
-  function txPrepare(id, mode, text, f0) {
+  function txPrepare(id, mode, text, f0, extra) {
     if (!tx.enc) return { ok: false, err: 'codeur FT8 / FT4 / FT2 pas encore chargé sur la page Station' };
     if (!tx.ctx) return { ok: false, err: 'aucune sortie son vers le TRX choisie sur la page Station' };
     if (tx.ctx.state !== 'running') { tx.ctx.resume().catch(() => {}); return { ok: false, err: 'sortie son vers le TRX en pause sur la page Station (un clic sur la page au club la relance)' }; }
@@ -1074,6 +1074,23 @@
     if (!(f >= 100 && f <= 3000)) return { ok: false, err: 'fréquence audio hors plage (100 à 3000 Hz)' };
     const r = tx.enc.encode(mode, text, tx.ctx.sampleRate, f);
     if (!r) return { ok: false, err: 'message impossible à coder en ' + mode + ' : « ' + String(text).slice(0, 40) + ' »' };
+    // « 2 à la fois » (comme MSHV) : 2e message sur une autre fréquence audio, joué en même temps ; chaque signal à la
+    // moitié de l'amplitude (même puissance crête qu'un seul signal)
+    const xs = Array.isArray(extra) ? extra.slice(0, 1) : [];
+    if (xs.length) {
+      const mix = new Float32Array(r.samples.length);
+      for (let i = 0; i < mix.length; i++) mix[i] = r.samples[i] * 0.5;
+      const texts = [r.text];
+      for (const e of xs) {
+        const fe = Number(e.f0);
+        const r2 = fe >= 100 && fe <= 3000 ? tx.enc.encode(mode, e.text, tx.ctx.sampleRate, fe) : null;
+        if (!r2) return { ok: false, err: '2e message impossible à coder en ' + mode + ' : « ' + String(e.text).slice(0, 40) + ' »' };
+        for (let i = 0; i < mix.length && i < r2.samples.length; i++) mix[i] += r2.samples[i] * 0.5;
+        texts.push(r2.text);
+      }
+      tx.prep = { id, samples: mix, mode, text, f0: f, multi: true };
+      return { ok: true, text: r.text, texts, seconds: r.seconds };
+    }
     tx.prep = { id, samples: r.samples, mode, text, f0: f };
     return { ok: true, text: r.text, seconds: r.seconds };
   }
@@ -1082,7 +1099,7 @@
   function txRetune(id, f0) {
     const c = tx.cur, ctx = tx.ctx;
     const f = Number(f0);
-    if (!c || c.id !== id || !tx.src || !ctx || !tx.enc || !(f >= 100 && f <= 3000) || f === c.f0) return false;
+    if (!c || c.id !== id || !tx.src || !ctx || !tx.enc || !(f >= 100 && f <= 3000) || f === c.f0 || c.multi) return false; // deux signaux : à la période suivante
     const r = tx.enc.encode(c.mode, c.text, ctx.sampleRate, f);
     if (!r) return false;
     const t = ctx.currentTime + 0.01;
@@ -1131,7 +1148,7 @@
     // Heure de départ dans l'horloge audio, en tenant compte du retard de la sortie son
     const lat = ctx.outputLatency || ctx.baseLatency || 0;
     const when = Math.max(ctx.currentTime + 0.02, ctx.currentTime + (atLocal - Date.now()) / 1000 - lat);
-    const cur = tx.cur = { id, when, mode: p.mode, text: p.text, f0: p.f0 };
+    const cur = tx.cur = { id, when, mode: p.mode, text: p.text, f0: p.f0, multi: !!p.multi };
     // Fin du signal dans l'horloge audio : la carte son a encore « lat » secondes de son à sortir vers le TRX. Le PTT
     // n'est relâché qu'après (plus 0,2 s de marge), sinon la fin du message RTTY / JTTY / SSTV était coupée
     src.onended = () => { if (tx.cur === cur) { tx.src = null; tx.cur = null; alcStop(); drawTxOut(); setTimeout(onEnd, Math.round(lat * 1000) + 200); } };

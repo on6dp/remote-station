@@ -416,10 +416,11 @@
           let r;
           if (!this.txAudio) r = { ok: false, err: 'cette page Station ne sait pas émettre en numérique' };
           else {
-            try { r = this.txAudio.prepare(m.id, m.mode, m.text, m.f0); } catch (e) { r = { ok: false, err: e.message }; }
+            try { r = this.txAudio.prepare(m.id, m.mode, m.text, m.f0, m.extra); } catch (e) { r = { ok: false, err: e.message }; }
           }
           this.sendWs(Object.assign({ t: 'ftx_ready', id: m.id }, r));
-          if (r.ok) this.log('Message ' + m.mode + ' prêt : « ' + r.text + ' » (' + r.seconds.toFixed(1).replace('.', ',') + ' s, ' + m.f0 + ' Hz)');
+          if (r.ok) this.log('Message ' + m.mode + ' prêt : « ' + r.text + ' » (' + r.seconds.toFixed(1).replace('.', ',') + ' s, ' + m.f0 + ' Hz)' +
+            (Array.isArray(m.extra) && m.extra[0] && r.texts ? ' + « ' + r.texts[1] + ' » (' + m.extra[0].f0 + ' Hz)' : ''));
           else this.log('Message ' + m.mode + ' refusé : ' + r.err, 'st-bad');
           return;
         }
