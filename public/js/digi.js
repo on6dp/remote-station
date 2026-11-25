@@ -7585,7 +7585,7 @@
       const P = SLOT_MS[(tm.normal || tm.early || {}).mode] || 15000;
       $('syDec').textContent = tm.normal ? '+' + (tm.normal.at / 1000).toFixed(1).replace('.', ',') + ' s' : '—';
       $('syDec').className = tm.normal && tm.normal.at > P + 2000 ? 'warn' : 'ok';
-      $('syDecNote').textContent = 'anticipée ' + f(tm.early) + ' · normale ' + f(tm.normal) + ' · profonde ' + f(tm.deep) +
+      $('syDecNote').textContent = 'anticipée ' + f(tm.early) + ' · normale ' + f(tm.normal) + (tm.normal2 ? ' · normale 2 ' + f(tm.normal2) : '') + ' · profonde ' + f(tm.deep) +
         (tm.normal && tm.normal.at > P + 2000 ? ' — serveur lent : réponses parfois une période plus tard' : '');
     }
     // Fluidité : blocage du serveur (calcul trop long) ou audio de la station arrivé par à-coups → décodages en retard
