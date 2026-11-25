@@ -3965,3 +3965,21 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 /* 0.43.79 — carnet : envoi en attente (⏳) ; refus (✗) en rouge vif */
 .lg-table td.wt { color: #f59e0b; font-size: 11px; }
 .lg-table td.ko { color: #ff3b30; font-weight: 800; }
+
+/* 0.43.81 — Synchronisation LoTW : guide pas à pas avec voyants */
+.lg-pp fieldset.lg-guide, fieldset.lg-guide { border: 1.5px solid #3b82f6 !important; border-radius: 10px !important; padding: 8px 12px 10px; margin: 6px 0 10px; background: rgba(59, 130, 246, .06); }
+.lg-guide legend { font-weight: 800; padding: 0 6px; }
+.lg-gsteps { list-style: none; margin: 4px 0 6px; padding: 0; display: grid; gap: 6px; }
+.lg-gsteps li { display: flex; gap: 10px; align-items: flex-start; }
+.lg-gsteps li b { font-weight: 800; }
+.lg-gsteps li small { display: block; opacity: .85; font-size: 12px; margin-top: 1px; }
+.lg-gl { flex: 0 0 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; color: #fff; background: #6b7280; }
+.lg-gsteps li.ok .lg-gl { background: #16a34a; }
+.lg-gsteps li.ko .lg-gl { background: #dc2626; }
+.lg-gsum { margin: 4px 0 6px; font-weight: 700; }
+.lg-gsum.ok { color: #22c55e; }
+.lg-gsum.warn { color: #f59e0b; }
+.lg-alt { border-radius: 10px; transition: box-shadow .3s, background .3s; }
+.lg-alt.lg-hl { box-shadow: 0 0 0 2px #f59e0b; background: rgba(245, 158, 11, .10); }
+.lg-table td.ok[title*="autre moyen"] { color: #22c55e; }
+.lg-agst.warn { color: #f59e0b; }

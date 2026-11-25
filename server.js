@@ -1057,7 +1057,7 @@ async function lotwAutoConfirm() {
       const c = credFor('lotw', call);
       if (!c.login || !c.webPassword || sync.isStopped('lotw', call)) continue;
       const r = await sync.confirmLotw('', call, true).catch((e) => ({ ok: false, msg: e.message }));
-      if (r && r.n) journal('lotw_confirm_auto', { call, n: r.n });
+      if (r && (r.n || r.received)) journal('lotw_confirm_auto', { call, n: r.n || 0, received: r.received || 0 });
       if (r && !r.ok) console.error('LoTW, lecture automatique des confirmations de ' + call + ' : ' + r.msg);
     }
   } finally { lotwAutoBusy = false; }

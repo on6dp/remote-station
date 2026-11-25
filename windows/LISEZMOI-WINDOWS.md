@@ -46,8 +46,11 @@ Google Chrome est conseillé (la page Station a besoin du port série Web Serial
 Pour signer et envoyer à LoTW les QSO du carnet Remote Station sans export à la main. Ce PC n'a pas besoin d'être celui
 de la station : il doit seulement être allumé et relié à internet (fonctionne derrière un CGNAT, Starlink…).
 
-- Dans le dashboard d'abord : carnet → Synchronisation ▾ → Synchronisation LoTW… → cadre **Agent LoTW** → « Appairer un PC… » :
-  un code (ABCD-EFGH) valable 15 minutes.
+- Avant tout, dans TQSL sur ce PC : le **certificat** de l'indicatif (fichier .p12 : Fichier → Charger un fichier de certificat)
+  et un **lieu de station** pour cet indicatif (Lieux de station → Ajouter : indicatif, DXCC, locator).
+- Dans le dashboard : carnet → Synchronisation ▾ → Synchronisation LoTW… → choisissez l'indicatif. Le cadre bleu **« LoTW pour … :
+  ce qu'il faut »** (0.43.81) montre avec des voyants ✓ / ✗ ce qui est prêt et ce qui manque : TQSL, lieu de station, Agent connecté,
+  identifiant du site LoTW (confirmations). Puis cadre **Agent LoTW** → « Appairer un PC… » : un code (ABCD-EFGH) valable 15 minutes.
 - Installateur : **décochez** « PC du club » si ce PC ne sert qu'à LoTW, cochez **« Agent LoTW (TQSL de ce PC) »**, puis donnez
   l'adresse du serveur (https://remote.op0p.be) et le code.
 - L'agent tourne en **service Windows** (« Remote Station - Agent LoTW », démarrage automatique). Il trouve tout seul TQSL et
@@ -56,6 +59,11 @@ de la station : il doit seulement être allumé et relié à internet (fonctionn
   (TQSL trouvé, lieux de station, journal).
 - Certificat protégé par un mot de passe : invite de commandes en administrateur,
   `node "C:\Program Files\RemoteStation\agent-lotw\agent-lotw.js" --mdp-certificat`.
+
+- **Sans Agent** : carnet → Synchronisation LoTW… → « Je préfère envoyer moi-même avec TQSL » (exporter, signer et envoyer avec
+  TQSL, marquer comme envoyés), ou envoi par QRZ.com (certificat déposé chez QRZ). Avec l'identifiant du site LoTW, le carnet voit
+  quand même les QSO arrivés dans LoTW (✓) et les confirmations (★).
+- **Indicatifs du club** (ON5VL, OR0L) : rien à faire pour les membres, l'Agent d'un administrateur les signe.
 
 ## Désinstallation
 

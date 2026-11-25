@@ -1145,6 +1145,15 @@ In FT8, this form opens by itself at the end of the QSO; a macro containing <cod
 <ul>
   <li>🔒 <b>Only you know your LoTW credentials.</b> The website password is kept by the server and never shown again: <b>if lost, Remote Station cannot recover it</b> (reset it on lotw.arrl.org). The <b>certificate</b> and its password never leave your PC: keep TQSL's backup (.tbk); a certificate lost without backup means requesting a new one from the ARRL.</li>
   <li><b>What you need</b>: a LoTW account for the callsign, its <b>certificate</b> (.p12 file) installed in <b>TQSL</b> on your PC, and a <b>Station Location</b> (callsign, locator, zones) created in TQSL. The certificate and its password <b>never go to the server</b>: signing is always done at your place.</li>
+  <li><b>4-light guide</b> (0.43.81): at the top of the <b>Synchronisation LoTW</b> window, pick the callsign: the blue box <b>"LoTW pour …: ce qu'il faut"</b> shows what is ready (green ✓), what is missing (red ✗, with what to do) or cannot be checked yet (grey ?, while no Agent is connected):
+    <ol>
+      <li><b>TQSL and the certificate</b> of the callsign on your PC (TQSL: lotw.arrl.org; .p12 certificate: TQSL → File → Load Callsign Certificate from File);</li>
+      <li><b>a station location</b> for this callsign in TQSL (Station Locations → Add: callsign, DXCC, locator); the Agent sees it within 30 seconds;</li>
+      <li><b>the LoTW Agent connected</b> (Windows installer, only "Agent LoTW", and the code from "Appairer un PC…");</li>
+      <li><b>the LoTW website login and password</b> (Credentials box): ★ confirmations read every hour.</li>
+    </ol>
+    First 3 green: "✓ Tout est prêt", QSOs go out by themselves. Don't want to install the Agent? Button <span class="k">Je préfère envoyer moi-même avec TQSL</span> (I'd rather upload with TQSL myself): it shows the manual procedure (export, TQSL, "Marquer comme envoyés").</li>
+  <li><b>QSOs uploaded another way</b> (0.43.81): uploaded to LoTW by TQSL by hand, by <b>QRZ.com</b> (certificate stored at QRZ, "Export and send to LoTW") or by your PC's logger (Swisslog…), they are seen by the server at its hourly read (with the LoTW website login): LoTW column <b>✓</b> "dans LoTW: envoyé par un autre moyen" (last 60 days), then <b>★</b> when confirmed. The logbook thus shows the real state, whatever the path. For the <b>club</b> callsigns (ON5VL, OR0L), members have nothing to do: an administrator's Agent signs them.</li>
   <li><b>LoTW Agent (recommended)</b>: a small program on the PC where TQSL and your certificate are already installed (not necessarily the station PC). It opens an encrypted link to the server by itself: nothing to open in the router, it also works behind a CGNAT (Starlink, 4G…). <span class="k">Synchronisation LoTW</span> then sends the QSOs to that PC, TQSL signs and uploads them to LoTW, and the logbook marks them « sent » by itself: no more manual export.
     <ol>
       <li>Synchronisation ▾ → <b>Synchronisation LoTW…</b> → <b>Agent LoTW</b> frame → <span class="k">Appairer un PC…</span> (pair a PC): a <b>code</b> is shown (valid 15 minutes, once).</li>
@@ -1430,7 +1439,7 @@ The club PC's browser, which keeps the station token, also logs back in by itsel
     <ul>
       <li><b>Club PC</b>: Station page and dashboard shortcuts, Station page at Windows start-up, no sleep (section 18);</li>
       <li><b>Remote Station server</b>: only without a VPS. Windows service on port 9000; <b>Node.js 20 or later</b> needed (the installer offers to install it; 22.13 or later recommended). On this PC: <b>http://localhost:9000</b>. From the internet: forward the router port and use HTTPS (certificate in <code>config.json</code> or a tunnel, e.g. Cloudflare Tunnel);</li>
-      <li><b>LoTW agent</b>: on the PC that has TQSL and the LoTW certificate (section 14.4).</li>
+      <li><b>LoTW agent</b>: on the PC that has TQSL and the LoTW certificate (section 14.4). Before: the certificate and a <b>station location</b> for each callsign in TQSL. After: logbook → Synchronisation ▾ → Synchronisation LoTW… → the blue box <b>"LoTW pour …: ce qu'il faut"</b> shows what is ready (✓) and what is missing (✗). No Agent: uploading with TQSL by hand or via QRZ.com still works, and the logbook still sees ✓ and ★ (LoTW website login).</li>
     </ul></li>
   <li>Start menu → <b>Remote Station</b>: add a member, station token, configuration, restart the server, logs.</li>
   <li>Details: file <code>LISEZMOI-WINDOWS.txt</code> installed with the program.</li>

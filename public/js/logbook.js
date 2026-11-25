@@ -1269,6 +1269,9 @@
       (me.admin ? '<label>Indicatif (TX call) <select name="callsign">' + callOptions('Tous les indicatifs') + '</select></label>'
         : '<label>Indicatif (TX call) <select name="callsign"><option>' + esc(own) + '</option></select></label>' +
           '<p class="lg-note">Vos QSO faits sous <b>' + esc(own) + '</b> partent vers <b>vos</b> comptes, avec <b>vos</b> identifiants (gardés sur le serveur, jamais affichés). Les QSO sous ON5VL / OR0L restent gérés par les administrateurs.</p>') +
+      // LoTW : guide pas à pas avec voyants (ce qui est prêt, ce qui manque) pour l'indicatif choisi
+      (lotw ? '<fieldset class="lg-guide"><legend>LoTW pour <b data-gcall>—</b> : ce qu’il faut</legend><ol class="lg-gsteps"></ol><p class="lg-gsum"></p>' +
+        '<div class="lg-btns"><button class="btn" type="button" data-a="gmanual" title="Sans Agent LoTW : exporter, signer avec TQSL, marquer comme envoyés">Je préfère envoyer moi-même avec TQSL</button></div></fieldset>' : '') +
       // Identifiants du service pour l'indicatif choisi : à vérifier avant chaque synchronisation (un compte par indicatif)
       '<fieldset class="lg-acct"><legend>Identifiants ' + NAMES[s] + ' de <b data-acall>—</b></legend><div class="lg-acf"></div><p class="lg-anote"></p>' +
       '<div class="lg-btns"><button type="button" class="btn" data-a="acct">Enregistrer pour cet indicatif</button></div></fieldset>' +
@@ -1280,7 +1283,8 @@
       // Agent LoTW : TQSL du PC du membre (certificat jamais copié), relié au serveur
       (lotw ? '<fieldset class="lg-agent"><legend>Agent LoTW — TQSL de votre PC</legend><p class="lg-agst">…</p><div class="lg-agl"></div>' +
         '<div class="lg-btns"><button class="btn" type="button" data-a="agpair">Appairer un PC…</button></div><div class="lg-agcode" hidden></div></fieldset>' : '') +
-      (lotw ? '<div class="lg-alt"><p><b>Sans Agent LoTW</b> (serveur sans TQSL, comme le VPS) : exportez les QSO non envoyés, signez-les avec TQSL sur votre PC, puis notez-les comme envoyés.</p>' +
+      (lotw ? '<div class="lg-alt"><p><b>Sans Agent LoTW, avec TQSL à la main</b> : <b>1.</b> <b>Exporter pour TQSL (.adi)</b> (QSO pas encore envoyés) ; <b>2.</b> dans TQSL sur votre PC : <b>Signer et envoyer</b> ce fichier ; <b>3.</b> <b>Marquer comme envoyés</b>. ' +
+        'Par QRZ.com aussi (certificat déposé chez QRZ, « Export and send to LoTW »). Dans les deux cas, avec l’identifiant du site LoTW, le carnet voit tout seul les QSO arrivés dans LoTW (✓) et les confirmations (★).</p>' +
         '<div class="lg-btns"><button class="btn" type="button" data-a="exp">Exporter pour TQSL (.adi)</button><button class="btn" type="button" data-a="mark" disabled>Marquer comme envoyés</button></div></div>' : '') +
       '</div>' +
       '<div data-p="proc" class="lg-pp" hidden>' +
@@ -1299,6 +1303,8 @@
     if (cur) f.callsign.value = cur;
     const acctAsk = () => {
       const c = f.callsign.value;
+      sdlg.acct = null;
+      guideDraw();
       d.querySelector('[data-acall]').textContent = c || '—';
       const box = d.querySelector('.lg-acf');
       d.querySelector('[data-a="acct"]').hidden = !c;
@@ -1307,6 +1313,13 @@
       api.send({ t: 'log_acct_get', service: s, call: c });
     };
     f.callsign.addEventListener('change', acctAsk);
+    const gm = d.querySelector('[data-a="gmanual"]');
+    if (gm) gm.addEventListener('click', () => {
+      const alt = d.querySelector('.lg-alt');
+      alt.classList.add('lg-hl');
+      alt.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => alt.classList.remove('lg-hl'), 4000);
+    });
     acctAsk();
     d.querySelector('[data-a="acct"]').addEventListener('click', () => {
       const c = f.callsign.value;
@@ -1383,13 +1396,66 @@
     if (agents == null) st.textContent = '…';
     else if (on.length) {
       const a = on.find((x) => x.locations.some((l) => l.call === call)) || on[0];
-      st.textContent = '✓ ' + (call ? 'QSO de ' + call : 'QSO') + ' signés par l’Agent LoTW du PC « ' + a.name + ' » : SYNCHRONISATION LOTW les signe et les envoie directement, sans export à la main.';
+      const noLoc = call && !a.locations.some((l) => l.call === call);
+      st.textContent = noLoc ? '✗ Agent LoTW du PC « ' + a.name + ' » connecté, mais TQSL n’y a aucun lieu de station pour ' + call + ' (voir le guide en haut).'
+        : '✓ ' + (call ? 'QSO de ' + call : 'QSO') + ' signés par l’Agent LoTW du PC « ' + a.name + ' » : SYNCHRONISATION LOTW les signe et les envoie directement, sans export à la main.';
+      st.className = 'lg-agst' + (noLoc ? ' warn' : ' ok');
+      return void finishAgents(d, list);
     } else st.textContent = 'Aucun Agent LoTW connecté' + (call ? ' pour ' + call : '') + '. Installez-le sur le PC où TQSL et votre certificat sont installés (bouton « Appairer un PC… »), ou utilisez la procédure manuelle ci-dessous.';
-    st.className = 'lg-agst' + (on.length ? ' ok' : '');
+    st.className = 'lg-agst';
+    finishAgents(d, list);
+  }
+  function finishAgents(d, list) {
     d.querySelector('.lg-agl').innerHTML = list.map((a) => '<div class="lg-ag' + (a.on ? ' on' : '') + '"><span>' + (a.on ? '●' : '○') + ' <b>' + esc(a.name) + '</b>' + (me.admin ? ' (' + esc(a.owner) + ')' : '') +
       (a.on ? ' — connecté depuis ' + hhmm(a.since) + (a.tqsl === false ? ' · <em>TQSL introuvable sur ce PC</em>' : '') + (a.old ? ' · mise à jour de l’agent en cours' : '') : ' — déconnecté' + (a.seen ? ' (vu le ' + hhmm(a.seen) + ')' : ' (jamais connecté)')) +
       (a.locations.length ? '<br><small>Lieux de station TQSL : ' + a.locations.map((l) => esc(l.name) + ' (' + esc(l.call || '?') + ')' + (l.ok ? '' : ' — indicatif non permis')).join(', ') + '</small>' : '') +
       '</span><button type="button" class="btn lg-agx" data-agdel="' + esc(a.id) + '" title="Retirer ce PC">Retirer</button>' + agentUdpRow(a) + '</div>').join('');
+    guideDraw();
+  }
+  /**
+   * Guide LoTW de l'indicatif choisi : 1. TQSL sur le PC · 2. lieu de station de l'indicatif · 3. Agent LoTW connecté ·
+   * 4. identifiant du site LoTW (confirmations). Voyants ✓ / ✗, ou ? tant qu'aucun Agent connecté ne peut le vérifier.
+   */
+  function guideDraw() {
+    if (!sdlg || !sdlg.el.open || sdlg.service !== 'lotw') return;
+    const d = sdlg.el;
+    const g = d.querySelector('.lg-guide');
+    if (!g) return;
+    const call = d.querySelector('form').callsign.value;
+    g.querySelector('[data-gcall]').textContent = call || '—';
+    const ol = g.querySelector('.lg-gsteps');
+    const sum = g.querySelector('.lg-gsum');
+    if (!call) { ol.innerHTML = ''; sum.textContent = 'Choisissez un indicatif (TX call) pour voir ce qui est prêt et ce qui manque.'; sum.className = 'lg-gsum'; return; }
+    if (agents == null) { ol.innerHTML = ''; sum.textContent = '…'; sum.className = 'lg-gsum'; return; }
+    const mine = agents.filter((a) => (a.calls || []).indexOf(call) >= 0);
+    const on = mine.filter((a) => a.on);
+    const a = on.find((x) => x.locations.some((l) => l.call === call)) || on[0] || null;
+    const acct = sdlg.acct && sdlg.acct.call === call ? sdlg.acct : null;
+    const pc = (x) => 'PC « ' + x.name + ' »';
+    const st = [];
+    st.push(!a ? ['unk', 'TQSL et le certificat de ' + call + ' sur votre PC', 'TQSL se télécharge sur lotw.arrl.org ; certificat : TQSL → Fichier → Charger un fichier de certificat (.p12). Vérifié dès que l’Agent LoTW est connecté.']
+      : a.tqsl === false ? ['ko', 'TQSL introuvable sur le ' + pc(a), 'Installez TQSL (lotw.arrl.org) sur ce PC, puis chargez le certificat de ' + call + ' (.p12).']
+      : ['ok', 'TQSL trouvé sur le ' + pc(a), '']);
+    const locs = a ? a.locations.filter((l) => l.call === call) : [];
+    st.push(!a ? ['unk', 'Un lieu de station pour ' + call + ' dans TQSL', 'TQSL → Lieux de station → Ajouter : indicatif ' + call + ', DXCC, locator. Vérifié dès que l’Agent LoTW est connecté.']
+      : locs.length ? ['ok', 'Lieu de station ' + locs.map((l) => '« ' + l.name + ' »').join(', ') + ' pour ' + call, locs.length > 1 ? 'Plusieurs lieux : inscrivez le bon dans « Lieu de station TQSL » ci-dessous.' : '']
+      : ['ko', 'Aucun lieu de station pour ' + call + ' dans TQSL', 'Sur le ' + pc(a) + ' : TQSL → Lieux de station → Ajouter : indicatif ' + call + ', DXCC, locator. L’Agent le voit dans les 30 secondes.']);
+    st.push(a ? ['ok', 'Agent LoTW connecté (' + pc(a) + ')', 'Il signe et envoie les QSO de ' + call + ' ; le certificat ne quitte jamais ce PC.']
+      : mine.length ? ['ko', 'Agent LoTW déconnecté (' + pc(mine[0]) + ')', 'Allumez ce PC (l’Agent démarre avec Windows) : les QSO attendent (⏳) et partent dès son retour.']
+      : ['ko', 'Pas encore d’Agent LoTW pour ' + call, 'Bouton « Appairer un PC… » plus bas : un code et le lien de l’installateur Windows (cochez seulement « Agent LoTW »). Ou bien : « Je préfère envoyer moi-même avec TQSL ».']);
+    const conf = !!(acct && acct.fields && acct.fields.login && acct.has && acct.has.webPassword);
+    st.push(!acct ? ['unk', 'Identifiant du site LoTW (confirmations ★)', '']
+      : conf ? ['ok', 'Confirmations ★ lues toutes les heures', 'Les QSO envoyés par un autre moyen (TQSL à la main, QRZ.com…) passent aussi à ✓ quand ils arrivent dans LoTW.']
+      : ['ko', 'Identifiant et mot de passe du site LoTW à renseigner', 'Cadre « Identifiants LoTW » ci-dessous : ceux de lotw.arrl.org (pas le mot de passe du certificat). Sans eux, pas de ★.']);
+    ol.innerHTML = st.map(([c, t, x], i) => '<li class="' + c + '"><span class="lg-gl">' + (c === 'ok' ? '✓' : c === 'ko' ? '✗' : '?') + '</span><span><b>' + (i + 1) + '. ' + esc(t) + '</b>' +
+      (x ? '<small>' + esc(x) + '</small>' : '') + '</span></li>').join('');
+    const ready = st.slice(0, 3).every((x) => x[0] === 'ok');
+    const auto = acct ? !!acct.auto : null;
+    sum.textContent = ready
+      ? (auto === false ? '✓ Prêt. Envoi automatique pas coché : cochez « Envoyer automatiquement chaque nouveau QSO » ci-dessous, ou cliquez SYNCHRONISATION LOTW de temps en temps.'
+        : '✓ Tout est prêt : les QSO de ' + call + ' partent vers LoTW sans rien faire' + (conf ? ', et les confirmations ★ arrivent toutes seules.' : '.'))
+      : 'Il manque ' + st.slice(0, 3).filter((x) => x[0] !== 'ok').length + ' étape(s) pour l’envoi automatique. Pas envie d’installer l’Agent ? « Je préfère envoyer moi-même avec TQSL ».';
+    sum.className = 'lg-gsum' + (ready ? ' ok' : ' warn');
   }
   // Logbook du PC de l'agent (Swisslog, Log4OM, HRD…) : chaque nouveau QSO lui est transmis en UDP par l'agent (127.0.0.1)
   function agentUdpRow(a) {
@@ -1983,6 +2049,8 @@
       if (!sdlg || !sdlg.el.open || sdlg.service !== m.service) return;
       const f = sdlg.el.querySelector('form');
       if (f.callsign.value !== m.call) return;
+      sdlg.acct = m;
+      guideDraw();
       const UI = {
         clublog: [['api', 'Jeton Club Log (cl_…)', 1], ['email', 'E-mail (sans jeton)'], ['password', 'Mot de passe (sans jeton)', 1]],
         eqsl: [['user', 'Indicatif / identifiant eQSL'], ['password', 'Mot de passe', 1], ['nickname', 'QTH nickname (facultatif)']],

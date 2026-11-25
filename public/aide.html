@@ -1157,6 +1157,15 @@ En FT8, cette fiche s'ouvre toute seule à la fin du QSO ; une macro qui contien
 <ul>
   <li>🔒 <b>Vous seul connaissez vos identifiants LoTW.</b> Le mot de passe du site est gardé par le serveur sans jamais être réaffiché : <b>perdu, Remote Station ne peut pas le récupérer</b> (à refaire sur lotw.arrl.org). Le <b>certificat</b> et son mot de passe ne quittent jamais votre PC : gardez la sauvegarde de TQSL (.tbk) ; certificat perdu sans sauvegarde = nouveau certificat à demander à l'ARRL.</li>
   <li><b>Ce qu'il faut</b> : un compte LoTW pour l'indicatif, son <b>certificat</b> (fichier .p12) installé dans <b>TQSL</b> sur votre PC, et un <b>lieu de station</b> (Station Location : indicatif, locator, zones) créé dans TQSL. Le certificat et son mot de passe <b>ne vont jamais sur le serveur</b> : la signature se fait toujours chez vous.</li>
+  <li><b>Guide en 4 voyants</b> (0.43.81) : en haut de la fenêtre <b>Synchronisation LoTW</b>, choisissez l'indicatif : le cadre bleu <b>« LoTW pour … : ce qu'il faut »</b> montre ce qui est prêt (✓ vert), ce qui manque (✗ rouge, avec quoi faire) ou pas encore vérifiable (? gris, tant qu'aucun Agent n'est connecté) :
+    <ol>
+      <li><b>TQSL et le certificat</b> de l'indicatif sur votre PC (TQSL : lotw.arrl.org ; certificat .p12 : TQSL → Fichier → Charger un fichier de certificat) ;</li>
+      <li><b>un lieu de station</b> pour cet indicatif dans TQSL (Lieux de station → Ajouter : indicatif, DXCC, locator) ; l'Agent le voit dans les 30 secondes ;</li>
+      <li><b>l'Agent LoTW connecté</b> (installateur Windows, seulement « Agent LoTW », et le code d'« Appairer un PC… ») ;</li>
+      <li><b>l'identifiant et le mot de passe du site LoTW</b> (cadre Identifiants) : confirmations ★ lues toutes les heures.</li>
+    </ol>
+    Les 3 premiers au vert : « ✓ Tout est prêt », les QSO partent tout seuls. Pas envie d'installer l'Agent ? Bouton <span class="k">Je préfère envoyer moi-même avec TQSL</span> : il montre la procédure manuelle (export, TQSL, « Marquer comme envoyés »).</li>
+  <li><b>QSO envoyés par un autre moyen</b> (0.43.81) : envoyés à LoTW par TQSL à la main, par <b>QRZ.com</b> (certificat déposé chez QRZ, « Export and send to LoTW ») ou par le logiciel de votre PC (Swisslog…), ils sont vus par le serveur à sa lecture horaire (avec l'identifiant du site LoTW) : colonne LoTW <b>✓</b> « dans LoTW : envoyé par un autre moyen » (60 derniers jours), puis <b>★</b> à la confirmation. Le carnet montre donc l'état réel, quel que soit le chemin. Pour les indicatifs du <b>club</b> (ON5VL, OR0L), les membres n'ont rien à faire : l'Agent d'un administrateur les signe.</li>
   <li><b>Agent LoTW (conseillé)</b> : un petit programme sur le PC où TQSL et votre certificat sont déjà installés (pas forcément celui de la station). Il ouvre lui-même une liaison chiffrée vers le serveur : rien à ouvrir dans le routeur, il fonctionne aussi derrière un CGNAT (Starlink, 4G…). <span class="k">Synchronisation LoTW</span> envoie alors les QSO à ce PC, TQSL les signe et les envoie à LoTW, et le carnet les note « envoyés » tout seul : plus d'export à la main.
     <ol>
       <li>Synchronisation ▾ → <b>Synchronisation LoTW…</b> → cadre <b>Agent LoTW</b> → <span class="k">Appairer un PC…</span> : un <b>code</b> s'affiche (valable 15 minutes, une seule fois).</li>
@@ -1442,7 +1451,7 @@ Le navigateur du PC du club, qui garde le jeton de la station, se reconnecte aus
     <ul>
       <li><b>PC du club</b> : raccourcis de la page Station et du dashboard, page Station au démarrage de Windows, pas de mise en veille (section 18) ;</li>
       <li><b>Serveur Remote Station</b> : seulement sans VPS. Service Windows sur le port 9000 ; <b>Node.js 20 ou plus</b> nécessaire (l'installateur propose de l'installer ; 22.13 ou plus conseillé). Sur ce PC : <b>http://localhost:9000</b>. Depuis internet : rediriger le port du routeur et passer en HTTPS (certificat dans <code>config.json</code> ou tunnel, par exemple Cloudflare Tunnel) ;</li>
-      <li><b>Agent LoTW</b> : sur le PC qui a TQSL et le certificat LoTW (section 14.4).</li>
+      <li><b>Agent LoTW</b> : sur le PC qui a TQSL et le certificat LoTW (section 14.4). Avant : le certificat et un <b>lieu de station</b> pour chaque indicatif dans TQSL. Après : carnet → Synchronisation ▾ → Synchronisation LoTW… → le cadre bleu <b>« LoTW pour … : ce qu'il faut »</b> montre ce qui est prêt (✓) et ce qui manque (✗). Pas d'Agent : l'envoi par TQSL à la main ou par QRZ.com reste possible, et le carnet voit quand même ✓ et ★ (identifiant du site LoTW).</li>
     </ul></li>
   <li>Menu Démarrer → <b>Remote Station</b> : ajouter un membre, jeton de la station, configuration, redémarrer le serveur, journaux.</li>
   <li>Détails : fichier <code>LISEZMOI-WINDOWS.txt</code> installé avec le programme.</li>
