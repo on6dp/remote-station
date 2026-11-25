@@ -1521,11 +1521,13 @@ function ctlTimer(now) {
   if (!c || now - (c.ctlTimerAt || 0) < 1000) return;
   c.ctlTimerAt = now;
   const busy = !!(ptt.active || radio.tx || ftxPend || cwJob || (seq && seq.on));
+  // Pourquoi le décompte est suspendu : vraie émission, séquence FT automatique armée (réception entre deux émissions), CW
+  const why = ptt.active || radio.tx ? 'tx' : cwJob ? 'cw' : busy ? 'ft' : '';
   let idle = cfg.controlIdleMinutes * 60000 - (now - lastCtrlActivity);
   const lim = Number(cfg.sessionIdleMinutes) * 60000;
   if (lim > 0 && !idleExempt(c)) idle = Math.min(idle, lim - (now - (c.lastActive || now)));
   const warnS = Math.max(15, Number(cfg.controlWarnSeconds) || 120);
-  send(c, { t: 'ctl_timer', idle: busy ? null : Math.max(0, Math.round(idle)), busy,
+  send(c, { t: 'ctl_timer', idle: busy ? null : Math.max(0, Math.round(idle)), busy, why,
     fair: fair.warnAt ? Math.max(0, Math.round(fair.warnAt + warnS * 1000 - now)) : 0, to: fair.warnAt && fair.to ? fair.to.user.call : '',
     held: fair.since ? Math.round(now - fair.since) : 0 });
 }

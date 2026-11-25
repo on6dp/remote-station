@@ -145,8 +145,10 @@
       el.textContent = '⏱ main → ' + T.to + ' dans ' + mmss(T.fair - gone);
       el.title = T.to + ' a demandé la main : vous l’avez depuis ' + Math.round(T.held / 60000) + ' min. Elle lui sera passée à la fin du décompte (après votre émission en cours).';
     } else if (T.idle == null) {
-      el.textContent = '⏱ en émission';
-      el.title = 'Pas de libération de la main ni de déconnexion pendant une émission.';
+      // Séquence FT automatique armée (TX activé, CQ, GUET) : on peut être en réception entre deux émissions
+      el.textContent = T.why === 'ft' ? '⏱ TX auto FT' : T.why === 'cw' ? '⏱ CW en cours' : '⏱ en émission';
+      el.title = (T.why === 'ft' ? 'Émission automatique FT en service (TX activé, appel CQ ou GUET), même pendant la réception entre deux émissions. ' : '') +
+        'Pas de libération de la main ni de déconnexion tant qu’elle dure.';
     } else {
       el.textContent = '⏱ ' + mmss(T.idle - gone);
       el.title = 'Sans aucune action de votre part, la main sera libérée (et vous serez déconnecté) à la fin de ce décompte. Chaque réglage ou émission le remet à zéro.' +
@@ -2312,7 +2314,7 @@
         if (catWait) { const w = catWait; catWait = null; w(m.reply); }
         else if (!catOut('← ' + m.reply)) say('CAT ' + m.cmd + ' → ' + m.reply, '', 10000);
       } else if (m.t === 'ctl_timer') {
-        ctlT = { at: Date.now(), idle: m.idle, busy: m.busy, fair: m.fair, to: m.to, held: m.held };
+        ctlT = { at: Date.now(), idle: m.idle, busy: m.busy, why: m.why || '', fair: m.fair, to: m.to, held: m.held };
         drawCtlTimer();
       } else if (m.t === 'notice') {
         if (m.pttCut) { pttCut = true; if (VX()) VX().txEnd(); }

@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.82** — Bandeau : « ⏱ TX auto FT » au lieu de « ⏱ en émission » quand l'émission automatique FT est en service mais que le TRX est en réception ; « ⏱ CW en cours » pendant un envoi CW.
 - **0.43.81** — LoTW : guide à voyants dans la fenêtre Synchronisation LoTW (TQSL, lieu de station, Agent, identifiant du site) et « Je préfère envoyer moi-même avec TQSL » ; QSO envoyés à LoTW par un autre moyen (TQSL, QRZ.com, Swisslog) vus à la lecture horaire (✓).
 - **0.43.80** — Heure du PC du club : assistant carte son version 6 qui saute directement à la bonne heure comme NetTime (toutes les 15 min) ; la page Station rattrape tout de suite un saut de l'horloge de Windows pour l'émission FT.
 - **0.43.79** — Carnet : envoi en attente (⏳), refus en ✗ rouge avec la raison (aussi quand les envois sont arrêtés après un refus d'accès) ; nouvel essai automatique toutes les 10 min des envois eQSL / Club Log / QRZ perdus ou en échec passager (3 derniers jours) ; une liaison coupée ne bloque plus la file d'envoi.
