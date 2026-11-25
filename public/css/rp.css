@@ -3990,3 +3990,17 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .lg-table td.ko { color: #ff9f0a; font-weight: 800; font-size: 13px; }
 /* 0.43.85 — liste FT : pays, distance et azimut en blanc sur toutes les lignes (le préfixe garde sa couleur) */
 .dg-row.ft span.x.cty, .dg-row.ft span.x:not(.pfx):not(.cty) { color: #ffffff !important; }
+/* Fiche du QSO (DÉTAILS QSO) : état sur LoTW, eQSL, Club Log, QRZ.com — petit tableau comme les colonnes du carnet */
+.lg-qsl { align-items: center; }
+.lg-qsl[hidden] { display: none !important; }
+.lg-qtab { border-collapse: separate; border-spacing: 0; border: 1px solid #3a4352; border-radius: 8px; overflow: hidden; background: #0d121b; }
+.lg-qtab th { padding: 3px 14px; font-size: 11px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: .04em;
+  background: #2a2014; border-bottom: 1px solid #a0761a; border-right: 1px solid #3a4352; }
+.lg-qtab td { padding: 3px 14px; text-align: center; font-weight: 900; font-size: 14px; line-height: 1.2; border-right: 1px solid #252c38; cursor: default; }
+.lg-qtab th:last-child, .lg-qtab td:last-child { border-right: 0; }
+.lg-qtab td.ok { color: #22c55e; }
+.lg-qtab td.cf { color: #ffd60a; font-size: 16px; text-shadow: 0 0 4px rgba(255, 214, 10, .45); }
+.lg-qtab td.nu { color: #ff3b30; }
+.lg-qtab td.ko { color: #ff9f0a; }
+.lg-qtab td.wt { color: #f59e0b; font-size: 12px; }
+.lg-qtab td.no { color: #6b7280; }

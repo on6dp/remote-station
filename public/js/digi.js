@@ -7027,11 +7027,26 @@
     s.textContent = '— ' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + (slot % 1000 ? '.' + Math.floor((slot % 1000) / 100) : '') + ' UTC · ' + m + ' —';
     return s;
   }
+  // Listes FT : toujours en bas (trafic récent), sauf pendant 8 s après que l'opérateur a remonté la liste lui-même
+  // (molette, glisser l'ascenseur, doigt, touches) pour relire un message plus ancien
+  const SCROLL_HOLD = 8000;
+  function holdHook(el) {
+    if (el.dataset.hk) return;
+    el.dataset.hk = '1';
+    const hold = () => { el.dataset.hold = String(Date.now()); };
+    el.addEventListener('wheel', hold, { passive: true });
+    el.addEventListener('touchmove', hold, { passive: true });
+    el.addEventListener('keydown', hold);
+    // Clic dans l'ascenseur (à droite de la zone des lignes)
+    el.addEventListener('pointerdown', (e) => { if (e.offsetX > el.clientWidth) hold(); });
+    el.addEventListener('scroll', () => { if (el.scrollHeight - el.scrollTop - el.clientHeight < 30) el.dataset.hold = '0'; }, { passive: true });
+  }
   function stickToBottom(el, fn) {
+    holdHook(el);
     const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
     fn();
     while (el.children.length > 400) el.removeChild(el.firstChild);
-    if (atEnd) el.scrollTop = el.scrollHeight;
+    if (atEnd || Date.now() - (Number(el.dataset.hold) || 0) > SCROLL_HOLD) el.scrollTop = el.scrollHeight;
   }
   // Ordre chronologique : les décodages de la passe profonde (quelques secondes après la fin de la période) et
   // nos émissions sont rangés à leur place (période, puis émission avant les décodages de cette période)

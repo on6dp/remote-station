@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.86** — Club Log : correspondances (★ colonne CL, jeton cl_… ou ancienne méthode, toutes les heures) et ✗ rouge pour les stations qui n'envoient pas leur log à Club Log (liste publique). Fiche DÉTAILS QSO : petit tableau LOTW | EQSL | CL | QRZ. Listes FT toujours en bas (retour 8 s après un défilement à la main). 2 à la fois : avis si la page Station du club n'est pas à jour.
 - **0.43.85** — « 2 à la fois » : deux QSO en même temps comme MSHV (deux signaux : 60 Hz d'écart en FT8, 100 Hz en FT4, −6 dB chacun) ; fiches de fin de QSO à la suite ; colonnes pays / km / azimut en blanc. Page Station du club à recharger.
 - **0.43.84** — Carnet : ★ confirmé en jaune vif ; ✗ rouge si le correspondant n'utilise pas LoTW (liste ARRL, envoi dans l'année) ou n'est pas membre eQSL AG ; ⚠ orange pour un envoi refusé. FT8 : RR73 renvoyé si le correspondant renvoie son R-report ; réponse double avec une station qui a appelé jusqu'à 2 min avant.
 - **0.43.83** — FT8 : passe QSO rapide (± 200 Hz autour du correspondant et de votre fréquence) dès 13,5 s, décodage a8 seulement dans la passe profonde, passe profonde en pause pendant les passes rapides : la réponse du correspondant arrive avant votre émission suivante. Son de la bande coupé pendant une émission numérique. eQSL reçues lues (bouton et toutes les heures) : ★ dans la colonne eQSL.

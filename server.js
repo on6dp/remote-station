@@ -869,7 +869,12 @@ const refs = new REFDATA.RefData(path.join(ROOT, 'refdata'), (msg) => console.er
 // Super Check Partial (indicatifs actifs en contest) : page TRX SSB, indicatifs probables
 const SCP = new (require('./lib/scp').Scp)(path.join(ROOT, 'refdata'), (msg) => console.log(msg));
 // Utilisateurs de LoTW (envoi dans l'année) et membres eQSL AG : croix rouge du carnet quand le correspondant n'y est pas
-const QSLU = new (require('./lib/qslusers').QslUsers)(path.join(ROOT, 'refdata'), (msg) => console.log(msg));
+const QSLU = new (require('./lib/qslusers').QslUsers)(path.join(ROOT, 'refdata'), (msg) => console.log(msg), {
+  // Liste des utilisateurs Club Log : clé API classique du club (jamais un jeton cl_…, jamais affichée)
+  clublogKey: () => { const k = String(((typeof logCfg !== 'undefined' && logCfg.clublog) || {}).api || '').trim(); return /^cl_/i.test(k) ? '' : k; },
+  // … ou le jeton Club Log du club (cl_…), seulement si le fichier public n'est pas lisible
+  clublogToken: () => { const k = String(((typeof logCfg !== 'undefined' && logCfg.clublog) || {}).api || '').trim(); return /^cl_/i.test(k) ? k : ''; }
+});
 QSLU.start();
 if (!process.env.RS_NO_SCP) SCP.start();
 if (cfg.refData !== false) {
@@ -1083,6 +1088,19 @@ async function lotwAutoConfirm() {
         if (r && !r.ok) console.error('eQSL, lecture automatique des eQSL reçues de ' + call + ' : ' + r.msg);
       }
     }
+    // Correspondances Club Log : même rythme, pour chaque indicatif qui a ses identifiants Club Log (clé API classique)
+    if (logCfg.clublog.autoConfirm !== false) {
+      const ccalls = Array.from(new Set(stationCalls().concat(Object.keys(logCfg.clublog.accounts || {})).map((c) => String(c).toUpperCase())));
+      for (const call of ccalls) {
+        const c = credFor('clublog', call);
+        // Jeton cl_… (API REST) ou ancienne méthode (e-mail, mot de passe d'application, clé API classique)
+        const tokOk = /^cl_/i.test(String(c.api || '').trim());
+        if ((!tokOk && !(c.email && c.password && c.api)) || sync.isStopped('clublog', call)) continue;
+        const r = await sync.confirmClublog('', call, true).catch((e) => ({ ok: false, msg: e.message }));
+        if (r && r.n) journal('clublog_confirm_auto', { call, n: r.n });
+        if (r && !r.ok) console.error('Club Log, lecture automatique des correspondances de ' + call + ' : ' + r.msg);
+      }
+    }
   } finally { lotwAutoBusy = false; }
 }
 setTimeout(lotwAutoConfirm, 3 * 60000).unref();
@@ -1106,7 +1124,7 @@ const sync = new Sync({
   setClublogFw: (t) => { logCfg.clublog.fwUntil = t; saveLogCfg(); },
   setLastConfirm: (d, call, s) => {
     call = String(call || '').toUpperCase();
-    s = s === 'eqsl' ? 'eqsl' : 'lotw';
+    s = s === 'eqsl' || s === 'clublog' ? s : 'lotw';
     // Date de la dernière lecture gardée par indicatif (chacun son compte LoTW / eQSL : ON5VL, OR0L, ON6DP…)
     if (!call) logCfg[s].lastConfirm = d;
     else {
@@ -1408,7 +1426,8 @@ const LG_COL = {
 function lgUp(q, s) {
   if (s === 'lotw' && q.lotw_qsl_rcvd === 'Y') return 'confirmé';
   if (s === 'eqsl' && q.eqsl_qsl_rcvd === 'Y') return 'confirmé';
-  const nu = s === 'lotw' ? QSLU.lotwUser(q.call) : s === 'eqsl' ? QSLU.eqslUser(q.call) : null;
+  if (s === 'clublog' && q.clublog_match === 'Y') return 'confirmé';
+  const nu = s === 'lotw' ? QSLU.lotwUser(q.call) : s === 'eqsl' ? QSLU.eqslUser(q.call) : s === 'clublog' ? QSLU.clublogUser(q.call) : null;
   if (nu && !nu.ok) return 'pas utilisateur';
   const u = q.up && q.up[s];
   return !u ? 'pas envoyé' : u.ok ? 'envoyé' : u.wait ? 'en attente' : 'refusé';
@@ -1515,6 +1534,7 @@ function qsoForClient(q) {
   // Correspondant absent de LoTW (pas d'envoi depuis un an) / de la liste eQSL AG : pas de confirmation à attendre
   if (q.lotw_qsl_rcvd !== 'Y') { const u = QSLU.lotwUser(q.call); if (u && !u.ok) o.nolotw = u.last || 0; }
   if (q.eqsl_qsl_rcvd !== 'Y') { const u = QSLU.eqslUser(q.call); if (u && !u.ok) o.noeqsl = 1; }
+  if (q.clublog_match !== 'Y') { const u = QSLU.clublogUser(q.call); if (u && !u.ok) o.noclublog = u.last || 0; }
   return o;
 }
 
@@ -3304,6 +3324,15 @@ const MULTI_DF = { FT8: 60, FT4: 100 };
 function multiOn(s) {
   return !!(s && s.dual && !s.hound && (s.mode === 'FT8' || s.mode === 'FT4') && s.cqRun && s.autoCq !== false && station && station.caps.indexOf('ftxmulti') >= 0);
 }
+/** Case « 2 à la fois » cochée mais page Station du club d'avant la 0.43.85 (pas de « ftxmulti ») : dit une fois quoi faire */
+function multiWarn(s) {
+  if (!s || !s.dual || s.hound || !(s.mode === 'FT8' || s.mode === 'FT4') || !station) return;
+  const ok = station.caps.indexOf('ftxmulti') >= 0;
+  if (ok || s.multiWarned === station.conn) return;
+  s.multiWarned = station.conn;
+  send(s.conn, { t: 'notice', level: 'warn', msg: '2 à la fois : la page Station du club n’est pas à jour (version d’avant la 0.43.85) : elle ne sait pas émettre deux signaux. Un QSO à la fois, avec seulement le report au suivant dans le RR73. Rechargez la page Station : sur le PC du club, ou à distance (administrateur) avec « ↻ Recharger la page Station » du menu du TRX.' });
+  journal('ft_multi_old_station', { call: s.conn.user && s.conn.user.call });
+}
 function multiF0(s) { const d = MULTI_DF[s.mode] || 60; return s.f0 + d <= 2950 ? s.f0 + d : s.f0 - d; }
 /** 2e QSO : le meilleur de ceux qui appellent (appel récent, pas déjà contacté), dès qu'un QSO est en cours */
 function multiFill(s) {
@@ -3714,6 +3743,7 @@ function seqStart(conn, m) {
     side: m.side === 'B' && ftTxBOk() ? 'B' : 'A'
   };
   seqTxSide();
+  multiWarn(seq);
   lastCtrlActivity = Date.now();
   // Émission en cours (message précédent) : le nouveau message part à la période suivante
   if (ftxPend && ftxPend.state === 'wait') ftxCancel('remplacée par le nouveau message', true);
@@ -3742,7 +3772,7 @@ function seqCfg(conn, m) {
   else if (m.parity === 0 || m.parity === 1) seq.parity = m.parity;
   if (typeof m.call1st === 'boolean' && !seq.hound) seq.call1st = m.call1st;
   if (typeof m.autoCq === 'boolean' && !seq.hound) seq.autoCq = m.autoCq;
-  if (typeof m.dual === 'boolean' && !seq.hound) seq.dual = m.dual;
+  if (typeof m.dual === 'boolean' && !seq.hound) { seq.dual = m.dual; multiWarn(seq); }
   if (m.maxRep != null) seq.maxRep = seqMaxRep(m.maxRep);
   if (typeof m.cqAlways === 'boolean' && !seq.hound) { seq.cqAlways = m.cqAlways; if (m.cqAlways) seq.cqRun = true; }
   // Fréquence RX changée (clic sur la cascade) : l'aide AP du décodeur pour le QSO s'y applique tout de suite
@@ -4835,6 +4865,7 @@ function onOperator(conn, m) {
       if (m.action === 'stop') return sync.stop(m.service);
       if (m.service === 'lotw' && m.action === 'confirm') { sync.confirmLotw(conn.user.call, m.callsign); return; }
       if (m.service === 'eqsl' && m.action === 'confirm') { sync.confirmEqsl(conn.user.call, m.callsign); return; }
+      if (m.service === 'clublog' && m.action === 'confirm') { sync.confirmClublog(conn.user.call, m.callsign); return; }
       if (LOG_SERVICES.indexOf(m.service) < 0) return;
       // Club Log « effacer le log existant » : tout le carnet de l'indicatif, en un seul fichier
       const f = { from: m.from, to: m.to, callsign: m.callsign, all: !!m.all || !!m.clear };

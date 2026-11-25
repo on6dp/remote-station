@@ -118,6 +118,7 @@
         <span class="lg-refs-t" title="Références de la station pendant une activation : gardées d'un QSO à l'autre jusqu'à ce que vous les effaciez">Ma réf. (activation)</span>
         ${REF_KEYS.map(([k, p, ph, free]) => refInput(k, p, ph, free, 1)).join('')}
       </div>
+      <div class="lg-row lg-qsl" id="lgQsl" hidden></div>
       <div class="lg-row lg-act">
         <button class="btn btn-primary" type="submit" data-a="save">Enregistrer le QSO</button>
         <button class="btn" type="button" data-a="cancel" hidden>Annuler</button>
@@ -796,6 +797,7 @@
     for (const el of f.querySelectorAll('button[data-a="now"], button[data-a="trx"], button[data-a="qrz"]')) el.disabled = viewOnly;
     f.classList.add('editing');
     f.classList.toggle('viewonly', viewOnly);
+    drawQsl(q);
     lastBtns();
     const info = ' — opérateur ' + (q.operator || '?') + ', enregistré par ' + (q.by || '?') + (q.country ? ', ' + q.country : '') + '.';
     if (viewOnly) {
@@ -819,6 +821,7 @@
   }
   function endEdit() {
     editing = null;
+    drawQsl(null);
     const f = q$('#lgForm');
     if (viewOnly) {
       viewOnly = false;
@@ -930,21 +933,48 @@
       add(lab, n, v, filt[col] === v);
     }
   }
-  function upCell(q, s) {
+  // État d'un QSO pour un service : { cls, ic, txt (fiche du QSO), tip (infobulle) } — même code que la colonne du carnet
+  function upInfo(q, s) {
     const u = q.up && q.up[s];
+    const N = NAMES[s];
     // ★ jaune : confirmé ; ✗ rouge : le correspondant n'utilise pas ce service (pas de confirmation à attendre)
-    if (s === 'lotw' && q.lotw_qsl_rcvd === 'Y') return '<td class="c cf" title="Confirmé sur LoTW' + (q.lotw_qslrdate ? ' le ' + fmtDate(q.lotw_qslrdate) : '') + '">★</td>';
-    if (s === 'eqsl' && q.eqsl_qsl_rcvd === 'Y') return '<td class="c cf" title="eQSL reçue' + (q.eqsl_qslrdate ? ' le ' + fmtDate(q.eqsl_qslrdate) : '') + ' (ne compte pas pour le DXCC)">★</td>';
-    const mine = u ? ' — votre QSO : ' + (u.ok ? 'envoyé' : u.wait ? 'en attente' : 'pas envoyé') + ' le ' + new Date(u.t).toLocaleString('fr-BE') : '';
-    if (s === 'lotw' && q.nolotw != null) return '<td class="c nu" title="' + esc(q.call + ' n’envoie pas à LoTW : ' + (q.nolotw ? 'dernier envoi le ' + fmtDate(String(q.nolotw)) + ', il y a plus d’un an' : 'absent de la liste des utilisateurs LoTW de l’ARRL') + ' — pas de confirmation à attendre' + mine) + '">✗</td>';
-    if (s === 'eqsl' && q.noeqsl) return '<td class="c nu" title="' + esc(q.call + ' n’est pas membre AG d’eQSL (liste « Authenticity Guaranteed ») : confirmation peu probable (il peut avoir un compte eQSL sans AG)' + mine) + '">✗</td>';
-    // · jamais présenté (envoi automatique pas en service pour ce service ou cet indicatif) ; ⏳ en attente ; ✓ reçu ; ✗ refusé
-    if (!u) return '<td class="c no" title="Pas envoyé : envoi automatique pas en service pour ' + NAMES[s] + ' sous ' + esc(q.station_callsign || 'cet indicatif') + ' quand le QSO a été enregistré. Synchronisation ▾ → ' + NAMES[s] + ' pour l’envoyer.">·</td>';
+    if (s === 'lotw' && q.lotw_qsl_rcvd === 'Y') return { cls: 'cf', ic: '★', txt: 'confirmé' + (q.lotw_qslrdate ? ' le ' + fmtDate(q.lotw_qslrdate) : ''), tip: 'Confirmé sur LoTW' + (q.lotw_qslrdate ? ' le ' + fmtDate(q.lotw_qslrdate) : '') };
+    if (s === 'eqsl' && q.eqsl_qsl_rcvd === 'Y') return { cls: 'cf', ic: '★', txt: 'eQSL reçue' + (q.eqsl_qslrdate ? ' le ' + fmtDate(q.eqsl_qslrdate) : ''), tip: 'eQSL reçue' + (q.eqsl_qslrdate ? ' le ' + fmtDate(q.eqsl_qslrdate) : '') + ' (ne compte pas pour le DXCC)' };
+    if (s === 'clublog' && q.clublog_match === 'Y') return { cls: 'cf', ic: '★', txt: 'correspondance' + (q.clublog_matchdate ? ' le ' + fmtDate(q.clublog_matchdate) : ''), tip: 'Correspondance Club Log : ' + q.call + ' a ce QSO dans son log Club Log (ne compte pas pour le DXCC)' };
+    const sent = u ? (u.ok ? 'envoyé' : u.wait ? 'en attente' : 'pas envoyé') + ' le ' + new Date(u.t).toLocaleString('fr-BE') : '';
+    const mine = sent ? ' — votre QSO : ' + sent : '';
+    const nu = (txt, tip) => ({ cls: 'nu', ic: '✗', txt: txt + (u && u.ok ? ' (envoyé)' : ''), tip: tip + mine });
+    if (s === 'lotw' && q.nolotw != null) return nu('n’utilise pas LoTW', q.call + ' n’envoie pas à LoTW : ' + (q.nolotw ? 'dernier envoi le ' + fmtDate(String(q.nolotw)) + ', il y a plus d’un an' : 'absent de la liste des utilisateurs LoTW de l’ARRL') + ' — pas de confirmation à attendre');
+    if (s === 'clublog' && q.noclublog != null) return nu('n’utilise pas Club Log', q.call + ' n’envoie pas son log à Club Log : ' + (q.noclublog ? 'dernier envoi le ' + fmtDate(String(q.noclublog)) + ', il y a plus d’un an' : 'aucun envoi dans l’année') + ' — pas de correspondance à attendre');
+    if (s === 'eqsl' && q.noeqsl) return nu('pas membre AG d’eQSL', q.call + ' n’est pas membre AG d’eQSL (liste « Authenticity Guaranteed ») : confirmation peu probable (il peut avoir un compte eQSL sans AG)');
+    // · jamais présenté (envoi automatique pas en service pour ce service ou cet indicatif) ; ⏳ en attente ; ✓ reçu ; ⚠ refusé
+    if (!u) return { cls: 'no', ic: '·', txt: 'pas envoyé', tip: 'Pas envoyé : envoi automatique pas en service pour ' + N + ' sous ' + (q.station_callsign || 'cet indicatif') + ' quand le QSO a été enregistré. Synchronisation ▾ → ' + N + ' pour l’envoyer.' };
     const when = new Date(u.t).toLocaleString('fr-BE');
-    if (u.wait) return '<td class="c wt" title="' + esc(when + ' — ' + (u.msg || 'en attente d’envoi')) + '">⏳</td>';
+    if (u.wait) return { cls: 'wt', ic: '⏳', txt: 'en attente d’envoi', tip: when + ' — ' + (u.msg || 'en attente d’envoi') };
     const again = !u.ok && u.retry && (u.n || 1) < 5 ? ' — nouvel essai automatique dans 10 minutes au plus' : '';
     // Envoi refusé : ⚠ orange (la croix rouge est pour un correspondant qui n'utilise pas le service)
-    return '<td class="c ' + (u.ok ? 'ok' : 'ko') + '" title="' + esc(when + ' — ' + (u.ok ? '' : 'envoi refusé ou pas parti : ') + u.msg + again) + '">' + (u.ok ? '✓' : '⚠') + '</td>';
+    if (u.ok) return { cls: 'ok', ic: '✓', txt: 'envoyé le ' + when, tip: when + ' — ' + (u.msg || 'envoyé') };
+    return { cls: 'ko', ic: '⚠', txt: 'refusé le ' + when, tip: when + ' — envoi refusé ou pas parti : ' + u.msg + again };
+  }
+  function upCell(q, s) {
+    const i = upInfo(q, s);
+    return '<td class="c ' + i.cls + '" title="' + esc(i.tip) + '">' + i.ic + '</td>';
+  }
+  // Fiche du QSO (DÉTAILS QSO) : envoyé / reçu / confirmé sur LoTW, eQSL, Club Log, QRZ.com (et carte QSL papier)
+  function drawQsl(q) {
+    const el = root && q$('#lgQsl');
+    if (!el) return;
+    if (!q) { el.hidden = true; el.innerHTML = ''; return; }
+    // Petit tableau comme les colonnes du carnet : LoTW | eQSL | CL | QRZ (+ carte QSL papier si notée) ; détail au survol
+    const cols = SV.map((s) => [s === 'clublog' ? 'CL' : s === 'qrz' ? 'QRZ' : NAMES[s], upInfo(q, s)]);
+    if (q.qsl_rcvd === 'Y' || q.qsl_sent === 'Y') {
+      const r = q.qsl_rcvd === 'Y';
+      cols.push(['QSL', { cls: r ? 'cf' : 'ok', ic: r ? '★' : '✓', tip: 'Carte QSL papier ' + (r ? 'reçue' + (q.qslrdate ? ' le ' + fmtDate(q.qslrdate) : '') + ' (compte pour le DXCC)' : 'envoyée' + (q.qslsdate ? ' le ' + fmtDate(q.qslsdate) : '')) }]);
+    }
+    const h = '<table class="lg-qtab"><thead><tr>' + cols.map(([n]) => '<th>' + n + '</th>').join('') + '</tr></thead><tbody><tr>' +
+      cols.map(([n, i]) => '<td class="' + i.cls + '" title="' + esc(n + ' : ' + i.tip) + '">' + i.ic + '</td>').join('') + '</tr></tbody></table>';
+    el.innerHTML = h;
+    el.hidden = false;
   }
   // Sélection de plusieurs QSO (Ctrl+clic, Maj+clic) pour les supprimer d'un coup
   const msel = { ids: new Set(), anchor: '' };
@@ -959,6 +989,8 @@
     q$('#lgMselN').textContent = n + ' QSO sélectionné' + (n > 1 ? 's' : '');
   }
   function drawList() {
+    // Fiche ouverte : états des carnets en ligne mis à jour avec la liste (envoi terminé, confirmation reçue…)
+    if (editing) { const e = items.find((x) => x.id === editing.id); if (e) drawQsl(e); }
     const body = q$('#lgBody');
     if (!body) return;
     if (!items.length) {
@@ -1298,7 +1330,8 @@
       '<div class="lg-prog"><div></div></div><p class="lg-cnt"></p><pre class="lg-log"></pre>' +
       '</div>' +
       '<div class="md-act">' + (lotw ? '<button class="btn" type="button" data-a="confirm" title="Lire seulement les confirmations reçues sur LoTW">Confirmations</button>'
-        : s === 'eqsl' ? '<button class="btn" type="button" data-a="confirm" title="Lire les eQSL reçues (boîte de réception eQSL.cc) : ★ dans la colonne eQSL du carnet">eQSL reçues</button>' : '') +
+        : s === 'eqsl' ? '<button class="btn" type="button" data-a="confirm" title="Lire les eQSL reçues (boîte de réception eQSL.cc) : ★ dans la colonne eQSL du carnet">eQSL reçues</button>'
+        : s === 'clublog' ? '<button class="btn" type="button" data-a="confirm" title="Lire les correspondances Club Log (le correspondant a le même QSO dans son log) : ★ dans la colonne CL du carnet. Avec le jeton Club Log (cl_…) de l’indicatif, ou l’ancienne méthode (e-mail, mot de passe d’application, clé API). Aussi tout seul toutes les heures.">Correspondances</button>' : '') +
       '<span></span><button class="btn" type="button" data-a="stop" disabled>Arrêt</button><button class="btn" value="cancel" data-a="close">Fermer</button>' +
       '<button class="btn btn-primary" type="button" data-a="go">' + SYNC[s] + '</button></div></form>');
     sdlg = { service: s, el: d, job: null };
@@ -1358,7 +1391,7 @@
       api.send(m);
     };
     d.querySelector('[data-a="go"]').addEventListener('click', () => go('send'));
-    if (lotw || s === 'eqsl') d.querySelector('[data-a="confirm"]').addEventListener('click', () => go('confirm'));
+    if (lotw || s === 'eqsl' || s === 'clublog') d.querySelector('[data-a="confirm"]').addEventListener('click', () => go('confirm'));
     d.querySelector('[data-a="stop"]').addEventListener('click', () => { api.send({ t: 'log_sync', service: s, action: 'stop' }); syncLog('Arrêt demandé…'); });
     if (lotw) {
       agents = null;
