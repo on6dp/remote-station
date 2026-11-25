@@ -2665,7 +2665,7 @@ function publicState() {
     hound: ftHound, // FT8 en DXpédition : 0 normal, 1 HOUND (FOX classique), 2 HOUND SuperFox
     cw: cwPublic(),
     ftx: ftxPend ? { id: ftxPend.id, state: ftxPend.state, mode: ftxPend.mode, text: ftxPend.sent || ftxPend.text, at: ftxPend.at, f0: ftxPend.f0, by: ftxPend.conn.user.call, seconds: ftxPend.seconds, sstv: ftxPend.sstv || undefined,
-      extra: ftxPend.extra ? ftxPend.extra.map((e) => ({ text: e.sent || e.text, f0: e.f0 })) : undefined } : null,
+      extra: ftxPend.extra ? ftxPend.extra.map((e) => ({ text: e.sent || e.text, f0: e.f0 })) : undefined, txDt: ftxPend.txDt } : null,
     txCall: txCall(),
     txw: txw ? txw.conn.user.call : null,
     view: ctlView && controller && ctlView.conn === controller ? { tab: ctlView.tab, mode: ctlView.mode, marks: ctlView.marks || null } : null,
@@ -5457,6 +5457,22 @@ function onStation(conn, m) {
   if (m.t === 'exread_reply' || m.t === 'exwrite_reply') return exReply(m);
   if (m.t === 'ftx_done') {
     if (ptt.active && ptt.digi && ptt.digi.id === m.id) stopPtt(FTX_END);
+    return;
+  }
+  // Départ réel de notre signal FT : DT vu par les autres stations (0 = à l'heure, comme WSJT-X), montré sur la ligne TX
+  if (m.t === 'ftx_started') {
+    const p = ftxPend;
+    const late = Number(m.late);
+    if (p && p.id === m.id && FTX_SLOT[p.mode] && Number.isFinite(late) && Math.abs(late) < 20000) {
+      const P = FTX_SLOT[p.mode];
+      const t0 = Math.floor(p.at / P) * P + (p.mode === 'FT8' || p.mode === 'FT4' ? FTX_T0 : 0);
+      p.txDt = Math.round((p.at - t0 + late) / 100) / 10;
+      if (p.txDt > 1.5 && p.mode === 'FT8' || p.txDt > 0.8 && p.mode === 'FT4') {
+        console.error('Émission ' + p.mode + ' partie en retard : DT +' + p.txDt.toFixed(1) + ' s (attente du décodage ' + Math.round(p.at - t0) + ' ms, départ du signal ' + Math.round(late) + ' ms)');
+        journal('ftx_late_start', { mode: p.mode, dt: p.txDt, hold: Math.round(p.at - t0), late: Math.round(late) });
+      }
+      broadcast();
+    }
     return;
   }
   if (m.t === 'cat_reply') {

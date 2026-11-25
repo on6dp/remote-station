@@ -6018,11 +6018,22 @@
       lastTxIt.list[0].f = x.f0;
       document.querySelectorAll('.dg-row[data-txat="' + x.at + '"] > span:nth-child(4)').forEach((e) => { e.textContent = String(x.f0); });
     }
+    // DT de notre émission (départ réel du signal, mesuré par la page Station) : colonne DT de la ligne TX
+    if (x && x.at === lastTxAt && lastTxIt && Number.isFinite(x.txDt) && lastTxIt.txDt !== x.txDt) {
+      lastTxIt.txDt = x.txDt;
+      for (const d of lastTxIt.list) d.txDt = x.txDt;
+      const late = x.txDt > (x.mode === 'FT4' ? 0.8 : 1.5);
+      document.querySelectorAll('.dg-row[data-txat="' + x.at + '"] > span:nth-child(3)').forEach((e) => {
+        e.textContent = x.txDt.toFixed(1);
+        e.classList.toggle('dg-txlate', late);
+        e.title = 'DT de votre émission : signal parti ' + (x.txDt >= 0 ? x.txDt.toFixed(1) + ' s après' : (-x.txDt).toFixed(1) + ' s avant') + ' l’heure normale' + (late ? ' — en retard : les autres stations le décodent mal ou pas du tout' : '');
+      });
+    }
     if (x && x.state === 'tx' && x.at !== lastTxAt && FT_MODES.indexOf(x.mode) >= 0) {
       lastTxAt = x.at;
       // « 2 à la fois » : une ligne TX par signal émis
-      const it = lastTxIt = { slot: Math.floor((x.at - 500) / 100) * 100, mode: x.mode, tx: true, list: [{ tx: true, db: 0, dt: 0, f: x.f0, msg: x.text, txAt: x.at }]
-        .concat((x.extra || []).map((e) => ({ tx: true, db: 0, dt: 0, f: e.f0, msg: e.text, txAt: x.at }))) };
+      const it = lastTxIt = { slot: Math.floor((x.at - 500) / 100) * 100, mode: x.mode, tx: true, txDt: x.txDt, list: [{ tx: true, db: 0, dt: 0, f: x.f0, msg: x.text, txAt: x.at, txDt: x.txDt }]
+        .concat((x.extra || []).map((e) => ({ tx: true, db: 0, dt: 0, f: e.f0, msg: e.text, txAt: x.at, txDt: x.txDt }))) };
       // Double réception : dans les colonnes du VFO qui émet
       const onB = ftDual && sq && sq.on && sq.side === 'B';
       (onB ? histB : hist).push(it);
@@ -6967,7 +6978,7 @@
     if (wk && AL.on && !AL.strike) r.classList.add('nostrike');
     if (d.tx && d.txAt) r.dataset.txat = String(d.txAt);
     r.title = d.tx ? 'Message émis' : (wk ? 'Déjà contacté sous ' + workedStation + ' sur cette bande dans ce mode · ' : '') + d.f + ' Hz · clic sur l’indicatif (souligné) ou double-clic : répondre à cette station (émission à la période suivante) · clic ailleurs : réception ici · clic droit : émission ici';
-    const cells = d.tx ? [utc(slot), 'TX', '', d.f, d.msg] : [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
+    const cells = d.tx ? [utc(slot), 'TX', Number.isFinite(d.txDt) ? d.txDt.toFixed(1) : '', d.f, d.msg] : [utc(slot), (d.db >= 0 ? '+' : '') + d.db, d.dt.toFixed(1), d.f, d.msg];
     // Pays DXCC, distance et azimut (direction de l'antenne) : dans l'info-bulle de l'indicatif (et de la ligne)
     const geo = d.tx ? '' : [d.cty || '', d.km == null ? '' : (d.kmc ? '≈ ' : '') + d.km + ' km', d.az == null ? '' : 'azimut ' + d.az + '°'].filter(Boolean).join(' · ');
     if (geo) r.title = senderOf(d.msg) + ' — ' + geo + '\n' + r.title;

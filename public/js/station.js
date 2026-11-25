@@ -93,7 +93,7 @@
   const core = new StationCore({
     rig: RIG,
     keyer,
-    txAudio: { prepare: (...a) => txPrepare(...a), prepareSamples: (...a) => txPrepareSamples(...a), play: (...a) => txPlay(...a), stop: () => txStop(), retune: (...a) => txRetune(...a),
+    txAudio: { prepare: (...a) => txPrepare(...a), prepareSamples: (...a) => txPrepareSamples(...a), play: (...a) => txPlay(...a), stop: () => txStop(), retune: (...a) => txRetune(...a), late: () => tx.lastLate,
       voiceReady: () => voiceReady(), voiceStart: () => voiceStart(), voiceStop: () => voiceStop() },
     writeSerial(s) {
       if (sim) return sim.write(s);
@@ -1148,6 +1148,8 @@
     // Heure de départ dans l'horloge audio, en tenant compte du retard de la sortie son
     const lat = ctx.outputLatency || ctx.baseLatency || 0;
     const when = Math.max(ctx.currentTime + 0.02, ctx.currentTime + (atLocal - Date.now()) / 1000 - lat);
+    // Retard réel du départ du signal sur l'heure demandée (ms) : TRX passé en émission trop tard, page occupée…
+    tx.lastLate = Math.round((when - ctx.currentTime + lat) * 1000 + Date.now() - atLocal);
     const cur = tx.cur = { id, when, mode: p.mode, text: p.text, f0: p.f0, multi: !!p.multi };
     // Fin du signal dans l'horloge audio : la carte son a encore « lat » secondes de son à sortir vers le TRX. Le PTT
     // n'est relâché qu'après (plus 0,2 s de marge), sinon la fin du message RTTY / JTTY / SSTV était coupée

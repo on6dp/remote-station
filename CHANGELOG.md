@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.89** — FT8 : passe QSO renforcée (profondeur Deep + a8 autour du correspondant si sa réponse n'est pas trouvée tout de suite) : réponse faible (−22 / −23 dB) moins d'une seconde après la fin de la période. Ligne TX de la page FT : DT réel de votre émission (orange si départ trop tardif).
 - **0.43.88** — Fiche DÉTAILS QSO : tableau LOTW | EQSL | CL | QRZ en haut à droite de la fiche, sur son fond jaune.
 - **0.43.87** — FT8 : passe normale dans un décodeur à part, sur un état neuf : environ 1 s au lieu de 2 à 3 s sur une bande chargée (fin de période connue plus tôt). L'ancienne passe normale tourne en même temps sur un autre cœur et ajoute les signaux faibles cachés (« normale 2 »).
 - **0.43.86** — Club Log : correspondances (★ colonne CL, jeton cl_… ou ancienne méthode, toutes les heures) et ✗ rouge pour les stations qui n'envoient pas leur log à Club Log (liste publique). Fiche DÉTAILS QSO : petit tableau LOTW | EQSL | CL | QRZ. Listes FT toujours en bas (retour 8 s après un défilement à la main). 2 à la fois : avis si la page Station du club n'est pas à jour.

@@ -4008,3 +4008,5 @@ body.panel-popup { min-height: calc(100vh / var(--zoom, 1)); }
 .lg-qtab td.ko { color: #c2410c; }
 .lg-qtab td.wt { color: #b45309; font-size: 13px; }
 .lg-qtab td.no { color: #8a8a8a; }
+/* 0.43.89 — page FT : DT de notre émission en retard (signal parti trop tard) */
+.dg-row span.dg-txlate { color: #ff9f0a !important; font-weight: 800; }

@@ -1079,6 +1079,8 @@
         this.digiTx = null;
         this.sendWs({ t: 'ftx_done', id: d.id });
       });
+      // Heure réelle de départ du signal (DT de notre émission vu par les autres stations, dans la page FT)
+      if (ok && this.txAudio.late) this.sendWs({ t: 'ftx_started', id: d.id, late: this.txAudio.late() });
       if (!ok) {
         this.digiTx = null;
         const why = 'signal numérique introuvable ou sortie son vers le TRX indisponible';
