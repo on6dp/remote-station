@@ -2,7 +2,7 @@
  * dxcommander.js — « TRX » DX Commander (DXLab Suite) : la page Station passe par Commander, qui pilote le TRX du club
  * (n'importe quel modèle qu'il connaît) et le partage avec les autres logiciels du PC (DXKeeper, Swisslog, WSJT-X…).
  *
- * Liaison : page Station → assistant Windows du club (http://127.0.0.1:18099/dxc, version 7 ou plus)
+ * Liaison : page Station → relais DX Commander du PC du club (http://127.0.0.1:18098/dxc, rs-dxcommander.ps1)
  *           → DX Commander sur le même PC (TCP 127.0.0.1, port 52002 par défaut : « TCP Network Service » de Commander).
  * Messages : ceux de « Commander TCP/IP Messages » (DXLab), écrits comme WSJT-X les écrit :
  *   <command:N>Nom<parameters:M>paramètres, chaque paramètre <nom:longueur>valeur.
@@ -161,7 +161,7 @@
     smeterLabel: () => 'S —',
     smeterDb: () => null,
     // Particularités de cette liaison (page Station, serveur)
-    TRANSPORT: 'dxc', // pas de port série : l'assistant Windows du club relaie vers Commander
+    TRANSPORT: 'dxc', // pas de port série : le relais DX Commander du PC du club (port 18098) parle à Commander
     NO_METERS: true, // pas de mesure de puissance de sortie : pas de coupure « en émission sans modulation »
     TX_UNCONFIRMED: true, // CmdSendTx pas toujours pris en charge : pas de « TX1 renvoyé » si l'émission n'est pas relue
     NO_POWER_SET: true, // puissance jamais commandée (déclarée sur la page Station)
@@ -172,7 +172,7 @@
     CW: null, VOICE: null, SCOPE: null, TRX_EQ: null,
     Fake,
     serial: { baudRate: 0, stopBits: 1, portHint: 'DX Commander (TCP 52002, sur ce PC)' },
-    hint: 'DX Commander (DXLab) : Commander pilote le TRX et le partage avec les autres logiciels de ce PC. Dans Commander : Configuration → Ports → « TCP Network Service » : « Accept commands » coché (port de base 52000, commandes sur 52002). Il faut l’assistant Windows du club version 7 (il relaie vers Commander). Indiquez ci-dessous la puissance réglée sur le TRX : Commander ne la transmet pas, elle sert au contrôle de la limite de licence de chaque opérateur.'
+    hint: 'DX Commander (DXLab) : Commander pilote le TRX et le partage avec les autres logiciels de ce PC. Dans Commander : Configuration → Ports → « TCP Network Service » : « Accept commands » coché (port de base 52000, commandes sur 52002). Il faut le relais DX Commander sur ce PC (dans le zip « Télécharger l’assistant carte son » : installer-dxcommander.cmd). Indiquez ci-dessous la puissance réglée sur le TRX : Commander ne la transmet pas, elle sert au contrôle de la limite de licence de chaque opérateur.'
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else {

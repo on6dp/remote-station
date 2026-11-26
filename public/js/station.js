@@ -97,7 +97,9 @@
   // ------------------------------------------------------------ DX Commander (par l'assistant Windows du club)
   // Messages de Commander envoyés par paquets à http://127.0.0.1:18099/dxc ; ses réponses reviennent au pilote ligne par
   // ligne. Jamais de réglage perdu : seules de vieilles lectures sont oubliées si Commander prend du retard.
-  const dxc = { q: [], busy: false, fails: 0 };
+  const dxc = { q: [], busy: false, fails: 0, ok: false };
+  // Relais DX Commander : petit programme à part de l'assistant carte son (rs-dxcommander.ps1, installer-dxcommander.cmd)
+  const DXC_RELAY = 'http://127.0.0.1:18098';
   const isQuery = (l) => /^<command:\d+>Cmd(Get|Send)/.test(l);
   function dxcWrite(s) {
     if (typeof s !== 'string') return;
@@ -110,7 +112,7 @@
     dxc.busy = true;
     const batch = dxc.q.splice(0, 8);
     try {
-      const r = await fetch(HELPER + '/dxc', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: batch.join('\n'), cache: 'no-store' });
+      const r = await fetch(DXC_RELAY + '/dxc', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: batch.join('\n'), cache: 'no-store' });
       const j = await r.json();
       if (!j || !j.ok) throw new Error((j && j.msg) || 'réponse inattendue de l’assistant');
       dxc.fails = 0;
@@ -137,19 +139,15 @@
     const p = Math.round(Number(store.get('dxc.port', '52002'))) || 52002;
     let j = null;
     try {
-      const r = await fetch(HELPER + '/dxc/hello?port=' + p, { cache: 'no-store' });
+      const r = await fetch(DXC_RELAY + '/dxc/hello?port=' + p, { cache: 'no-store' });
       j = await r.json();
     } catch (e) {
-      log('DX Commander : assistant Windows du club injoignable (http://127.0.0.1:18099) — installé et lancé ? (version 7 ou plus)', 'st-bad');
+      // Relais pas installé (ou bloqué par l'antivirus) : dit une fois, pas à chaque essai (toutes les 10 s)
+      if (manual || dxc.why !== 'absent') log('DX Commander : relais DX Commander injoignable sur ce PC (http://127.0.0.1:18098) — « Télécharger l’assistant carte son », décompresser, double-clic sur installer-dxcommander.cmd ; s’il ne démarre pas, exception dans l’antivirus pour C:\\ProgramData\\RemoteStation\\rs-dxcommander.ps1', 'st-bad');
+      dxc.why = 'absent';
       return false;
     }
-    if (!j || j.msg === 'inconnu' || Number(j.version) < 7) {
-      // Ancien assistant (il ne connaît pas /dxc) : dit une fois, pas à chaque essai (toutes les 10 s)
-      const why = 'v' + ((j && j.version) || '?');
-      if (manual || dxc.why !== why) log('DX Commander : il faut l’assistant Windows du club version 7 (celui en marche est plus ancien : voir la ligne « Assistant carte son » plus haut) — « Télécharger l’assistant carte son », décompresser, double-clic sur installer-carte-son.cmd', 'st-bad');
-      dxc.why = why;
-      return false;
-    }
+    if (!j || j.msg === 'inconnu') { log('DX Commander : réponse inattendue du relais', 'st-bad'); return false; }
     if (!j.ok) {
       // Essais automatiques toutes les 10 s : même message une seule fois
       if (manual || dxc.why !== j.msg) log('DX Commander : ' + (j.msg || 'ne répond pas'), manual ? 'st-bad' : 'st-warn');
@@ -161,7 +159,7 @@
     // la fréquence à la façon de Windows (« 14 074,000 » ou « 14,074.000 ») ; sinon celui de l'assistant
     let dec = j.dec;
     try {
-      const r2 = await fetch(HELPER + '/dxc', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: '<command:11>CmdSendFreq<parameters:0>', cache: 'no-store' });
+      const r2 = await fetch(DXC_RELAY + '/dxc', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: '<command:11>CmdSendFreq<parameters:0>', cache: 'no-store' });
       const j2 = await r2.json();
       const m = j2 && j2.ok && /^<CmdFreq:\d+>(.*)$/.exec(String((j2.r || [])[0] || ''));
       const d = m && /\d([.,])\d{3}\s*$/.exec(m[1]);
@@ -169,6 +167,7 @@
     } catch (e) { /* lu plus tard */ }
     RIG.setDecimal(dec);
     j.dec = dec;
+    dxc.ok = true;
     port = { dxc: true };
     dxc.q = []; dxc.fails = 0; dxc.busy = false;
     core.serialOpened();
@@ -836,12 +835,11 @@
     $('tHelper').textContent = helperOk ? 'Assistant carte son : en marche (version ' + r.version + ' ; relance d’ici ou depuis le dashboard, seule après 45 s de silence' +
       (v2 ? ' ; surveille la carte son et la répare seule si Windows la met en erreur)' : ')') +
       (v2 ? ' — veille USB : ' + (r.veille || '?') + (carte ? ' — carte son du TRX : ' + carte : '') + (r.reparation ? ' — dernière réparation : ' + r.reparation : '') + hr +
-        (DXC && Number(r.version) < 7 ? ' — version 7 NÉCESSAIRE pour DX Commander (relais vers Commander) : retélécharger l’assistant et refaire installer-carte-son.cmd'
-          : Number(r.version) < 6 ? ' — version 6 disponible (mise à l’heure de Windows directe comme NetTime, toutes les 15 min ; priorité basse) : retélécharger l’assistant et refaire installer-carte-son.cmd' : '')
+        (Number(r.version) < 6 ? ' — version 6 disponible (mise à l’heure de Windows directe comme NetTime, toutes les 15 min ; priorité basse) : retélécharger l’assistant et refaire installer-carte-son.cmd' : '')
         : ' — version 3 disponible (répare seule la carte son mise en erreur par Windows, coupe la veille USB) : retélécharger l’assistant et refaire installer-carte-son.cmd')
       : 'Assistant carte son : non installé sur ce PC (fichier installer-carte-son.cmd, voir l’aide) — pour relancer la carte son, éteindre et rallumer le TRX';
     $('btnAudReset').disabled = !helperOk || aud.resetting;
-    $('helperDl').hidden = helperOk && Number(r.version) >= (DXC ? 7 : 6);
+    $('helperDl').hidden = helperOk && Number(r.version) >= 6 && !(DXC && !dxc.ok);
     return helperOk;
   }
   setTimeout(helperCheck, 1500);

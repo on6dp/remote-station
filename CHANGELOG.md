@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.95** — Assistant carte son version 8 (comme la 6) : le relais vers DX Commander, qui faisait bloquer tout l'assistant par l'antivirus AVG, devient un petit programme à part (installer-dxcommander.cmd, port 18098), dans le même zip. L'installateur contourne un ancien fichier verrouillé par l'antivirus.
 - **0.43.94** — Page Station, modèle DX Commander : l'avis « assistant Windows version 7 nécessaire » n'est plus répété toutes les 10 s.
 - **0.43.93** — Aide, guide et LISEZMOI de l'assistant : démarrage automatique de DX Commander avec Windows (la page Station s'y connecte toute seule), réglages VSPE (« Not allowed to block read flow »), CW de l'IC-7300 à travers VSPE.
 - **0.43.92** — Nouveau modèle de TRX « DX Commander (DXLab) » : la page Station passe par Commander (fréquence, mode, PTT ; FT8 / FT4 et phonie), qui garde le TRX partagé avec les autres logiciels du PC du club. Assistant Windows version 7 (relais vers Commander, retour en réception si la page se tait pendant une émission). Puissance réglée sur le TRX déclarée sur la page Station (limite de licence).

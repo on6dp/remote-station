@@ -14,11 +14,18 @@ if ($t) {
 }
 if ($Retirer) {
   Remove-Item -Force $Script -ErrorAction SilentlyContinue
+  Remove-Item -Force (Join-Path $Dest 'rs-carte-son-8.ps1') -ErrorAction SilentlyContinue
   Write-Host 'Assistant carte son retiré.'
   exit 0
 }
 New-Item -ItemType Directory -Force -Path $Dest | Out-Null
-Copy-Item -Force (Join-Path $PSScriptRoot 'rs-carte-son.ps1') $Script
+# Ancien fichier bloqué (antivirus qui a signalé la version 7) : installé sous un autre nom, l'ancien reste de côté
+try { Copy-Item -Force (Join-Path $PSScriptRoot 'rs-carte-son.ps1') $Script }
+catch {
+  $Script = Join-Path $Dest 'rs-carte-son-8.ps1'
+  Write-Host "Ancien fichier verrouillé (antivirus ?) : installation sous $Script"
+  Copy-Item -Force (Join-Path $PSScriptRoot 'rs-carte-son.ps1') $Script
+}
 $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument ('-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $Script + '"')
 $quand = New-ScheduledTaskTrigger -AtStartup
 $qui = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest

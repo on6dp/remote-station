@@ -10,7 +10,7 @@ A quoi ca sert
 Installation (une fois, sur le PC du club)
   1. Copier les fichiers de ce dossier dans un dossier du PC (ex. Bureau\assistant-carte-son).
   2. Double-clic sur installer-carte-son.cmd, accepter la demande d'administrateur.
-     Message attendu : "Assistant carte son installe et en marche (version 5)."
+     Message attendu : "Assistant carte son installe et en marche (version 8)."
   3. Recharger la page Station (Ctrl+F5) : la ligne "Assistant carte son" doit dire "en marche".
      La premiere fois que la page l'appelle, Chrome peut demander l'autorisation d'acceder aux
      appareils du reseau local : repondre "Autoriser".
@@ -39,16 +39,23 @@ Windows Time rattraper l'ecart peu a peu (il lui fallait des heures pour 1 ou 2 
 15 minutes, correction des 20 ms d'ecart. NetTime n'est plus necessaire : le desinstaller (deux reglages qui se
 contrarient). Pour passer a la version 6 : retelecharger l'assistant (page Station) et refaire un double-clic sur
 installer-carte-son.cmd.
-Version 7 : relais vers DX Commander (DXLab), pour le modele "DX Commander" de la page Station. Commander pilote
-le TRX et le partage avec les autres logiciels du PC ; la page Station lui envoie frequence, mode et PTT par
-l'assistant (Commander n'accepte que les logiciels du meme PC). Dans Commander : Configuration, onglet Ports,
-"TCP Network Service" : cocher "Accept commands" (port de base 52000, commandes sur 52002). Securite : si la page
-Station ne donne plus de nouvelles pendant 3 s alors que le TRX emet, l'assistant le remet lui-meme en reception.
-L'assistant ne lance pas Commander : le faire demarrer avec Windows (touche Windows + R, shell:startup, Entree,
-puis copier dans ce dossier un raccourci vers DX Commander ou vers DXLab Launcher). La page Station se connecte
-toute seule des que Commander est ouvert (nouvel essai toutes les 10 s).
-Pour passer a la version 7 : retelecharger l'assistant (page Station) et refaire un double-clic sur
-installer-carte-son.cmd.
+Version 8 : comme la version 6. Le relais vers DX Commander de la version 7 est sorti de l'assistant : l'antivirus
+AVG bloquait tout l'assistant a cause de lui (relance de la carte son et mise a l'heure comprises). Pour passer a la
+version 8 : retelecharger l'assistant (page Station) et refaire un double-clic sur installer-carte-son.cmd. Si
+l'ancien fichier est bloque par l'antivirus, l'installateur l'installe sous rs-carte-son-8.ps1.
+
+Relais DX Commander (seulement pour le modele "DX Commander" de la page Station)
+  Commander pilote le TRX et le partage avec les autres logiciels du PC ; la page Station lui envoie frequence,
+  mode et PTT par ce relais (Commander n'accepte que les logiciels du meme PC). Installation : double-clic sur
+  installer-dxcommander.cmd (message attendu : "Relais DX Commander installe et en marche (version 1).").
+  Dans Commander : Configuration, onglet Ports, "TCP Network Service" : cocher "Accept commands" (port de base
+  52000, commandes sur 52002). Securite : si la page Station ne donne plus de nouvelles pendant 3 s alors que le
+  TRX emet, le relais le remet lui-meme en reception. Le relais ne lance pas Commander : le faire demarrer avec
+  Windows (touche Windows + R, shell:startup, Entree, puis copier dans ce dossier un raccourci vers DX Commander ou
+  vers DXLab Launcher). La page Station se connecte toute seule des que Commander est ouvert (essai toutes les 10 s).
+  Antivirus : si le relais ne demarre pas, ajouter une exception pour C:\ProgramData\RemoteStation\rs-dxcommander.ps1.
+  Il ecoute sur http://127.0.0.1:18098. Journal : C:\ProgramData\RemoteStation\rs-dxcommander.log.
+  Pour l'enlever : double-clic sur retirer-dxcommander.cmd.
 Si la page Station constate 45 s d'entree son muette (TRX en reception), elle relance seule la carte son
 (une fois toutes les 10 minutes au plus) et previent sur le dashboard.
 
