@@ -88,7 +88,8 @@
     $('btnPort').textContent = 'Se connecter à DX Commander';
     $('btnClose').textContent = 'Fermer la liaison';
     for (const id of ['cfgBaudL', 'cfgStopL']) { const el = $(id); if (el) el.hidden = true; }
-    for (const id of ['cfgDxcPortL', 'cfgDxcWattsL', 'cfgDxcSeqL']) { const el = $(id); if (el) el.hidden = false; }
+    for (const id of ['cfgDxcPortL', 'cfgDxcWattsL', 'cfgDxcLagL', 'cfgDxcSeqL']) { const el = $(id); if (el) el.hidden = false; }
+    if ($('cfgDxcLag')) $('cfgDxcLag').value = store.get('dxc.lag', '800');
     $('cfgDxcPort').value = store.get('dxc.port', '52002');
     $('cfgDxcWatts').value = store.get('dxc.watts', '100');
     if ($('cfgDxcSeq')) $('cfgDxcSeq').value = dxcSeqText(dxcSeqList(store.get('dxc.seq', '')));
@@ -108,7 +109,8 @@
     return out.slice(0, 32);
   }
   function dxcSeqText(list) { return list.map((x) => x.n + ' = ' + x.label).join('\n'); }
-  function dxcSeqSend() { if (DXC) core.sendWs({ t: 'dxc_seq', list: dxcSeqList(store.get('dxc.seq', '')) }); }
+  // Avec les séquences : délai de Commander pour passer en émission (le serveur donne l'ordre d'émission d'autant plus tôt)
+  function dxcSeqSend() { if (DXC) core.sendWs({ t: 'dxc_seq', list: dxcSeqList(store.get('dxc.seq', '')), lag: Number(store.get('dxc.lag', '800')) }); }
   // ------------------------------------------------------------ DX Commander (par l'assistant Windows du club)
   // Messages de Commander envoyés par paquets à http://127.0.0.1:18098/dxc ; ses réponses reviennent au pilote ligne par
   // ligne. Jamais de réglage perdu : seules de vieilles lectures sont oubliées si Commander prend du retard. Le relais
@@ -1540,6 +1542,8 @@
       if (tp >= 1 && tp <= 65535) store.set('dxc.port', String(tp)); else log('Port TCP de DX Commander : 1 à 65535', 'st-bad');
       const w = Math.round(Number($('cfgDxcWatts').value));
       if (w >= 1 && w <= 2000) { store.set('dxc.watts', String(w)); RIG.setWatts(w); } else log('Puissance réglée sur le TRX : 1 à 2000 W', 'st-bad');
+      const lg = Math.round(Number($('cfgDxcLag') ? $('cfgDxcLag').value : 800));
+      if (lg >= 0 && lg <= 1500) store.set('dxc.lag', String(lg)); else log('Délai de DX Commander pour passer en émission : 0 à 1500 ms', 'st-bad');
       if ($('cfgDxcSeq')) {
         const sq = dxcSeqList($('cfgDxcSeq').value);
         store.set('dxc.seq', dxcSeqText(sq));

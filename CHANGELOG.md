@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.97** — DX Commander : l'ordre d'émission FT8 / FT4 part plus tôt pour compenser le temps que met Commander à faire passer le TRX en émission (réglage « Délai de DX Commander pour passer en émission » de la page Station, 800 ms par défaut).
 - **0.43.96** — DX Commander : relais version 2 (passage en émission et changements de bande sans retard : lectures de Commander en fond, commandes envoyées tout de suite) ; boutons des séquences de Commander au tableau de bord (cadre « DX Commander », seulement avec ce modèle, réglés sur la page Station) ; installateur unique du PC du club installer-poste-club.cmd (VSPE conseillé, DX Commander, OmniRig : déjà installé → passer ou écraser ; assistant carte son, relais, démarrage avec Windows, menu Démarrer) ; aide : VSPE de préférence, DX Commander avec des fonctions en moins.
 - **0.43.95** — Assistant carte son version 8 (comme la 6) : le relais vers DX Commander, qui faisait bloquer tout l'assistant par l'antivirus AVG, devient un petit programme à part (installer-dxcommander.cmd, port 18098), dans le même zip. L'installateur contourne un ancien fichier verrouillé par l'antivirus.
 - **0.43.94** — Page Station, modèle DX Commander : l'avis « assistant Windows version 7 nécessaire » n'est plus répété toutes les 10 s.

@@ -2844,10 +2844,13 @@ const FTX_KEY_LEAD = 400; // passage en émission avant le début du signal (ms)
 // par le TRX, échange A ⇄ B en SPLIT…) : temps mesuré aux dernières émissions + la liaison + 150 ms, 1,5 s au plus
 const ftxKeyMs = [];
 function keyLead() {
-  if (ftxKeyMs.length < 2) return FTX_KEY_LEAD;
+  // Modèle DX Commander : Commander met du temps à faire passer le TRX en émission, et la page Station ne le voit pas
+  // (pas de relecture fiable) ; délai réglé sur la page Station (station.keyLag), ajouté dès la première émission
+  const lag = station && station.keyLag && rig().ID === 'dxcommander' ? station.keyLag + (linkMs() || 0) + 150 : 0;
+  if (ftxKeyMs.length < 2) return Math.round(Math.max(FTX_KEY_LEAD, Math.min(1500, lag)));
   const a = ftxKeyMs.slice().sort((x, y) => x - y);
   const need = a[Math.max(0, a.length - 2)] + (linkMs() || 0) + 150; // 2e plus long des dernières (un raté isolé ne compte pas)
-  return Math.round(Math.max(FTX_KEY_LEAD, Math.min(1500, need)));
+  return Math.round(Math.max(FTX_KEY_LEAD, Math.min(1500, Math.max(need, lag))));
 }
 function linkMs() { const r = station && station.clock && Number(station.clock.rtt); return Number.isFinite(r) ? Math.max(0, Math.min(800, r / 2)) : 0; }
 const FTX_PREP = 450;     // délai minimal entre la demande et le départ du signal (codage par la page Station ; 700 avant la 0.42.46)
@@ -5533,6 +5536,9 @@ function onStation(conn, m) {
       if (n >= 1 && n <= 32 && label && !list.some((y) => y.n === n)) list.push({ n, label });
     }
     station.dxcSeq = list;
+    // Délai de Commander pour passer en émission (ms, réglé sur la page Station) : l'ordre d'émission part d'autant plus tôt
+    const lag = Math.round(Number(m.lag));
+    station.keyLag = lag >= 0 && lag <= 1500 ? lag : 0;
     if (DRIVERS.dxcommander && DRIVERS.dxcommander.setSeqs) DRIVERS.dxcommander.setSeqs(list.map((x) => x.n));
     broadcast();
     return;
