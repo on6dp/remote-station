@@ -144,7 +144,10 @@
       return false;
     }
     if (!j || j.msg === 'inconnu' || Number(j.version) < 7) {
-      log('DX Commander : il faut l’assistant Windows du club version 7 (celui-ci : ' + ((j && j.version) || '?') + ') — retéléchargez-le et refaites installer-carte-son.cmd', 'st-bad');
+      // Ancien assistant (il ne connaît pas /dxc) : dit une fois, pas à chaque essai (toutes les 10 s)
+      const why = 'v' + ((j && j.version) || '?');
+      if (manual || dxc.why !== why) log('DX Commander : il faut l’assistant Windows du club version 7 (celui en marche est plus ancien : voir la ligne « Assistant carte son » plus haut) — « Télécharger l’assistant carte son », décompresser, double-clic sur installer-carte-son.cmd', 'st-bad');
+      dxc.why = why;
       return false;
     }
     if (!j.ok) {
