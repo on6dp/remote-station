@@ -18,6 +18,12 @@
 # - Version 6 : la mise à l'heure saute directement à la bonne heure, comme NetTime (Set-Date), au lieu de laisser le
 #   service Windows Time rattraper l'écart peu à peu (il lui fallait des heures pour 1 ou 2 secondes) ; contrôle
 #   toutes les 15 minutes, correction dès 20 ms d'écart.
+# - Version 7 : relais vers DX Commander (DXLab) pour le modèle « DX Commander » de la page Station. La page envoie les
+#   messages TCP de Commander (CmdGetFreq, CmdSetFreq, CmdSetMode, CmdTX, CmdRX…) à /dxc ; l'assistant les passe à
+#   Commander sur ce PC (127.0.0.1, port 52002 par défaut) et rend ses réponses. Seulement une courte liste de messages
+#   de Commander (pas de SPLIT). Sécurité : TRX passé en émission par la page puis plus de nouvelles d'elle pendant 3 s
+#   (page fermée, Chrome planté…) → CmdRX envoyé par l'assistant lui-même. Le tour de surveillance de la carte son et
+#   la mise à l'heure continuent pendant ce trafic (avant : seulement après 20 s sans aucune demande).
 # - Lancé au démarrage de Windows par la tâche planifiée « RemoteStation carte son » (voir installer-carte-son.cmd).
 # - Journal : rs-carte-son.log, à côté de ce fichier.
 param(
@@ -25,7 +31,7 @@ param(
   [string[]]$Origines = @('https://remote.op0p.be')
 )
 $ErrorActionPreference = 'Stop'
-$Version = '6'
+$Version = '7'
 # Version 5 : l'assistant passe en priorité basse (le son du TRX dans Chrome passe toujours avant lui) et la surveillance
 # de la carte son est allégée (une fois par minute, requête ciblée sur la carte son du TRX au lieu de la liste complète
 # des périphériques de Windows) : avec la version 4, cette liste relue toutes les 20 s pouvait hacher le son d'un PC lent
@@ -278,6 +284,67 @@ function ReglerHeure([bool]$config) {
 }
 $HeureReglee = $false # réglage complet du service de temps au 1er tour de surveillance (l'assistant répond déjà)
 
+# ---------------------------------------------------------------- DX Commander (version 7)
+$Dxc = $null          # liaison TCP avec Commander
+$DxcPort = 52002
+$DxcTx = $false       # émission demandée par la page (CmdTX) et pas encore relâchée (CmdRX)
+$DxcVu = Get-Date     # dernière demande de la page
+# Messages relayés : lectures, fréquence, mode, PTT (rien d'autre : ni SPLIT, ni séquences, ni CW)
+$DxcPermis = @('CmdGetFreq', 'CmdGetTXFreq', 'CmdSendFreq', 'CmdSendMode', 'CmdSendSplit', 'CmdSendTx', 'CmdSetFreq', 'CmdSetMode', 'CmdTX', 'CmdRX')
+function DxcFermer { try { if ($script:Dxc) { $script:Dxc.Close() } } catch { }; $script:Dxc = $null }
+function DxcOuvrir([int]$p) {
+  if ($script:Dxc -and $script:Dxc.Connected -and $p -eq $script:DxcPort) { return $true }
+  DxcFermer
+  $script:DxcPort = $p
+  $c = New-Object System.Net.Sockets.TcpClient
+  $iar = $c.BeginConnect('127.0.0.1', $p, $null, $null)
+  if (-not $iar.AsyncWaitHandle.WaitOne(1500)) { try { $c.Close() } catch { }; return $false }
+  try { $c.EndConnect($iar) } catch { try { $c.Close() } catch { }; return $false }
+  $c.NoDelay = $true
+  $script:Dxc = $c
+  # Liaison en service : priorité normale (en priorité basse, un PC chargé retarderait le PTT)
+  try { [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = [System.Diagnostics.ProcessPriorityClass]::Normal } catch { }
+  Ecrire "DX Commander joint sur le port $p"
+  return $true
+}
+function DxcEchange([string]$m) {
+  $s = $script:Dxc.GetStream()
+  $buf = New-Object byte[] 4096
+  while ($script:Dxc.Available -gt 0) { $null = $s.Read($buf, 0, $buf.Length) } # reste d'une réponse précédente
+  $b = [Text.Encoding]::ASCII.GetBytes($m)
+  $s.Write($b, 0, $b.Length)
+  if ($m -match '^<command:\d+>CmdTX<') { $script:DxcTx = $true }
+  if ($m -match '^<command:\d+>CmdRX<') { $script:DxcTx = $false }
+  if ($m -notmatch '^<command:\d+>Cmd(Get|Send)') { return '' }
+  # Réponse : <CmdXxx:n>valeur (n caractères), 0,8 s au plus
+  $t0 = [Environment]::TickCount
+  $txt = ''
+  while ([Environment]::TickCount - $t0 -lt 800) {
+    if ($script:Dxc.Available -gt 0) {
+      $n = $s.Read($buf, 0, $buf.Length)
+      $txt += [Text.Encoding]::Default.GetString($buf, 0, $n)
+      if ($txt -match '^<(\w+):(\d+)>') { $need = $Matches[0].Length + [int]$Matches[2]; if ($txt.Length -ge $need) { return $txt.Substring(0, $need) } }
+    } else { Start-Sleep -Milliseconds 3 }
+  }
+  return $txt
+}
+# Sécurité : la page a fait émettre le TRX puis ne donne plus de nouvelles depuis 3 s → retour en réception
+function DxcVeille {
+  if ($script:DxcTx -and ((Get-Date) - $script:DxcVu).TotalSeconds -ge 3) {
+    $script:DxcTx = $false
+    Ecrire 'DX Commander : plus de nouvelles de la page Station pendant une émission : CmdRX envoyé'
+    try { if (DxcOuvrir $script:DxcPort) { DxcEchange '<command:5>CmdRX<parameters:0>' | Out-Null } } catch { DxcFermer }
+  }
+}
+$DernierTour = Get-Date
+function TourDeSurveillance {
+  $script:DernierTour = Get-Date
+  $script:Tour = ($script:Tour + 1) % 3
+  if ($script:Tour -eq 0) { try { Surveiller } catch { Ecrire "surveillance : $($_.Exception.Message)" } } # une fois par minute
+  $depuis = ((Get-Date) - $script:DerniereHeure).TotalMinutes
+  if ($depuis -ge 15 -or $depuis -lt -5) { try { ReglerHeure (-not $script:HeureReglee) | Out-Null; $script:HeureReglee = $true } catch { } }
+}
+
 $ecoute = New-Object System.Net.HttpListener
 $ecoute.Prefixes.Add("http://127.0.0.1:$Port/")
 try { $ecoute.Start() } catch { Ecrire "impossible d'écouter sur le port $Port : $($_.Exception.Message)"; exit 1 }
@@ -286,11 +353,9 @@ Ecrire "démarré (version $Version, port $Port, sites autorisés : $($Origines 
 while ($ecoute.IsListening) {
   # Attente d'une demande de la page Station, avec un tour de surveillance de la carte son toutes les 20 s
   $att = $ecoute.BeginGetContext($null, $null)
-  while (-not $att.AsyncWaitHandle.WaitOne(20000)) {
-    $script:Tour = ($script:Tour + 1) % 3
-    if ($script:Tour -eq 0) { try { Surveiller } catch { Ecrire "surveillance : $($_.Exception.Message)" } } # une fois par minute
-    $depuis = ((Get-Date) - $DerniereHeure).TotalMinutes
-    if ($depuis -ge 15 -or $depuis -lt -5) { try { ReglerHeure (-not $HeureReglee) | Out-Null; $HeureReglee = $true } catch { } }
+  while (-not $att.AsyncWaitHandle.WaitOne(1000)) {
+    DxcVeille
+    if (((Get-Date) - $DernierTour).TotalSeconds -ge 20) { TourDeSurveillance }
   }
   $ctx = $ecoute.EndGetContext($att)
   try {
@@ -305,6 +370,32 @@ while ($ecoute.IsListening) {
     } elseif ($chemin -eq '/etat') {
       if ($Surveille) { try { $script:Carte = EtatCarte $Surveille.Substring(0, 4) $Surveille.Substring(5, 4) } catch { } }
       Repondre $ctx 200 @{ ok = $true; version = $Version; veille = $Veille; surveille = $Surveille; carte = $Carte; reparation = $Reparation; heure = $Heure }
+    } elseif ($chemin -eq '/dxc/hello' -and $o) {
+      $p = 52002
+      try { $p = [int]$req.QueryString['port'] } catch { }
+      if ($p -lt 1 -or $p -gt 65535) { $p = 52002 }
+      $ok = $false
+      try { $ok = DxcOuvrir $p } catch { $ok = $false }
+      $dec = [Globalization.CultureInfo]::CurrentCulture.NumberFormat.NumberDecimalSeparator
+      $txt = if ($ok) { 'DX Commander joint' } else { "DX Commander ne répond pas sur le port $p de ce PC : lancé ? Configuration → Ports → TCP Network Service : « Accept commands » coché (port de base 52000 → commandes sur 52002)" }
+      Repondre $ctx 200 @{ ok = $ok; version = $Version; dec = $dec; port = $p; msg = $txt }
+    } elseif ($chemin -eq '/dxc' -and $req.HttpMethod -eq 'POST' -and $o) {
+      $lu = New-Object System.IO.StreamReader($req.InputStream, [Text.Encoding]::UTF8)
+      $corps = $lu.ReadToEnd()
+      $lu.Close()
+      $script:DxcVu = Get-Date
+      $lignes = @($corps -split "`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+      $mal = $lignes | Where-Object { -not ($_ -match '^<command:(\d+)>(Cmd\w+)<parameters:(\d+)>' -and ($DxcPermis -contains $Matches[2])) } | Select-Object -First 1
+      if ($lignes.Count -gt 20) { Repondre $ctx 400 @{ ok = $false; msg = 'trop de messages' } }
+      elseif ($mal) { Ecrire "DX Commander : message refusé « $($mal.Substring(0, [Math]::Min(40, $mal.Length))) »"; Repondre $ctx 400 @{ ok = $false; msg = 'message refusé par l''assistant' } }
+      elseif (-not (DxcOuvrir $script:DxcPort)) { Repondre $ctx 200 @{ ok = $false; msg = "DX Commander ne répond pas sur le port $($script:DxcPort)" } }
+      else {
+        $rep = @()
+        $err = $null
+        foreach ($l in $lignes) { try { $rep += (DxcEchange $l) } catch { $err = $_.Exception.Message; DxcFermer; break } }
+        if ($err) { Repondre $ctx 200 @{ ok = $false; msg = "liaison avec DX Commander coupée : $err" } }
+        else { Repondre $ctx 200 @{ ok = $true; r = $rep } }
+      }
     } elseif ($chemin -eq '/heure' -and $req.HttpMethod -eq 'POST' -and $o) {
       Repondre $ctx 200 (ReglerHeure $true)
     } elseif ($chemin -eq '/surveiller' -and $req.HttpMethod -eq 'POST' -and $o) {
@@ -336,4 +427,7 @@ while ($ecoute.IsListening) {
     Ecrire "erreur : $($_.Exception.Message)"
     try { Repondre $ctx 500 @{ ok = $false; msg = $_.Exception.Message } } catch { }
   }
+  # Trafic continu (DX Commander) : la surveillance et la sécurité d'émission tournent quand même
+  DxcVeille
+  if (((Get-Date) - $DernierTour).TotalSeconds -ge 20) { TourDeSurveillance }
 }

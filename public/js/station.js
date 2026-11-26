@@ -82,6 +82,96 @@
   });
   $('rigHint').textContent = RIG.hint || '';
   $('rigHint').hidden = !RIG.hint;
+  // DX Commander : pas de port série (l'assistant Windows relaie vers Commander) ; port TCP et puissance déclarée
+  const DXC = RIG.TRANSPORT === 'dxc';
+  if (DXC) {
+    $('btnPort').textContent = 'Se connecter à DX Commander';
+    $('btnClose').textContent = 'Fermer la liaison';
+    for (const id of ['cfgBaudL', 'cfgStopL']) { const el = $(id); if (el) el.hidden = true; }
+    for (const id of ['cfgDxcPortL', 'cfgDxcWattsL']) { const el = $(id); if (el) el.hidden = false; }
+    $('cfgDxcPort').value = store.get('dxc.port', '52002');
+    $('cfgDxcWatts').value = store.get('dxc.watts', '100');
+    const cwRow = $('cwPortRow'); if (cwRow) cwRow.style.display = 'none'; // pas de manipulation CW par Commander
+    RIG.setWatts(Number(store.get('dxc.watts', '100')));
+  }
+  // ------------------------------------------------------------ DX Commander (par l'assistant Windows du club)
+  // Messages de Commander envoyés par paquets à http://127.0.0.1:18099/dxc ; ses réponses reviennent au pilote ligne par
+  // ligne. Jamais de réglage perdu : seules de vieilles lectures sont oubliées si Commander prend du retard.
+  const dxc = { q: [], busy: false, fails: 0 };
+  const isQuery = (l) => /^<command:\d+>Cmd(Get|Send)/.test(l);
+  function dxcWrite(s) {
+    if (typeof s !== 'string') return;
+    for (const l of s.split('\n')) if (l) dxc.q.push(l);
+    while (dxc.q.length > 40) { const i = dxc.q.findIndex(isQuery); if (i < 0) break; dxc.q.splice(i, 1); }
+    dxcPump();
+  }
+  async function dxcPump() {
+    if (dxc.busy || !dxc.q.length || !port || !port.dxc) return;
+    dxc.busy = true;
+    const batch = dxc.q.splice(0, 8);
+    try {
+      const r = await fetch(HELPER + '/dxc', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: batch.join('\n'), cache: 'no-store' });
+      const j = await r.json();
+      if (!j || !j.ok) throw new Error((j && j.msg) || 'réponse inattendue de l’assistant');
+      dxc.fails = 0;
+      const rep = (j.r || []).filter((x) => typeof x === 'string' && x);
+      if (rep.length && port && port.dxc) core.onSerialData(enc.encode(rep.join('\n') + '\n'));
+    } catch (e) {
+      dxc.fails++;
+      if (dxc.fails === 1 || dxc.fails % 20 === 0) log('DX Commander : ' + e.message, 'st-warn');
+      // Retour en réception jamais perdu : renvoyé
+      const rx = batch.filter((l) => /CmdRX/.test(l));
+      if (rx.length) dxc.q.unshift(...rx);
+      if (dxc.fails >= 10) {
+        log('DX Commander ne répond plus : liaison fermée, nouvel essai dans 10 s', 'st-bad');
+        dxc.busy = false;
+        await closePort(false);
+        return;
+      }
+      await new Promise((res) => setTimeout(res, 300));
+    }
+    dxc.busy = false;
+    if (dxc.q.length) setTimeout(dxcPump, 0);
+  }
+  async function dxcConnect(manual) {
+    const p = Math.round(Number(store.get('dxc.port', '52002'))) || 52002;
+    let j = null;
+    try {
+      const r = await fetch(HELPER + '/dxc/hello?port=' + p, { cache: 'no-store' });
+      j = await r.json();
+    } catch (e) {
+      log('DX Commander : assistant Windows du club injoignable (http://127.0.0.1:18099) — installé et lancé ? (version 7 ou plus)', 'st-bad');
+      return false;
+    }
+    if (!j || j.msg === 'inconnu' || Number(j.version) < 7) {
+      log('DX Commander : il faut l’assistant Windows du club version 7 (celui-ci : ' + ((j && j.version) || '?') + ') — retéléchargez-le et refaites installer-carte-son.cmd', 'st-bad');
+      return false;
+    }
+    if (!j.ok) {
+      // Essais automatiques toutes les 10 s : même message une seule fois
+      if (manual || dxc.why !== j.msg) log('DX Commander : ' + (j.msg || 'ne répond pas'), manual ? 'st-bad' : 'st-warn');
+      dxc.why = j.msg;
+      return false;
+    }
+    dxc.why = '';
+    // Séparateur décimal attendu par Commander (celui de la session Windows où il tourne) : lu sur CmdSendFreq, qui écrit
+    // la fréquence à la façon de Windows (« 14 074,000 » ou « 14,074.000 ») ; sinon celui de l'assistant
+    let dec = j.dec;
+    try {
+      const r2 = await fetch(HELPER + '/dxc', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: '<command:11>CmdSendFreq<parameters:0>', cache: 'no-store' });
+      const j2 = await r2.json();
+      const m = j2 && j2.ok && /^<CmdFreq:\d+>(.*)$/.exec(String((j2.r || [])[0] || ''));
+      const d = m && /\d([.,])\d{3}\s*$/.exec(m[1]);
+      if (d) dec = d[1];
+    } catch (e) { /* lu plus tard */ }
+    RIG.setDecimal(dec);
+    j.dec = dec;
+    port = { dxc: true };
+    dxc.q = []; dxc.fails = 0; dxc.busy = false;
+    core.serialOpened();
+    log('Liaison avec DX Commander ouverte (port ' + p + ', séparateur décimal « ' + (j.dec || '.') + ' »)');
+    return true;
+  }
 
   // Manipulation CW par la ligne DTR du 2e port USB du TRX (FTX-1 : « Standard COM Port ») : ouvert à côté du port CAT
   let cwPort = null;
@@ -97,6 +187,7 @@
       voiceReady: () => voiceReady(), voiceStart: () => voiceStart(), voiceStop: () => voiceStop() },
     writeSerial(s) {
       if (sim) return sim.write(s);
+      if (port && port.dxc) return dxcWrite(s);
       if (!writer) return;
       const bytes = typeof s === 'string' ? enc.encode(s) : s;
       writeChain = writeChain.then(() => writer && writer.write(bytes)).catch((e) => log('Écriture série : ' + e.message, 'st-bad'));
@@ -349,6 +440,7 @@
     const p = port;
     port = null;
     core.serialClosed();
+    if (p.dxc) { dxc.q = []; if (manual) log('Liaison avec DX Commander fermée'); return; }
     try { if (reader) { await reader.cancel(); reader.releaseLock(); } } catch (e) {}
     try { if (writer) { await writeChain; writer.releaseLock(); } } catch (e) {}
     reader = null;
@@ -434,6 +526,7 @@
     return false;
   }
   async function reopenRemembered() {
+    if (DXC) { if (Number(store.get(PORT_KEY, '-1')) >= 0) await dxcConnect(); else log('DX Commander : cliquez sur « Se connecter à DX Commander »'); return; }
     if (!('serial' in navigator)) return;
     const ports = await navigator.serial.getPorts();
     const idx = Number(store.get(PORT_KEY, '-1'));
@@ -458,7 +551,7 @@
   let recycling = false;
   let lastPortTry = 0;
   setInterval(async () => {
-    if (sim || recycling || !('serial' in navigator)) return;
+    if (sim || recycling || (!DXC && !('serial' in navigator))) return;
     const now = Date.now();
     const remembered = Number(store.get(PORT_KEY, '-1')) >= 0;
     if (port) {
@@ -487,6 +580,14 @@
   }, 3000);
 
   $('btnPort').addEventListener('click', async () => {
+    if (DXC) {
+      stopSim();
+      await closePort(false);
+      store.set(PORT_KEY, '0');
+      if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'ports', ports: rememberedPorts() }));
+      await dxcConnect(true);
+      return;
+    }
     if (!('serial' in navigator)) return;
     stopSim();
     try {
@@ -732,11 +833,12 @@
     $('tHelper').textContent = helperOk ? 'Assistant carte son : en marche (version ' + r.version + ' ; relance d’ici ou depuis le dashboard, seule après 45 s de silence' +
       (v2 ? ' ; surveille la carte son et la répare seule si Windows la met en erreur)' : ')') +
       (v2 ? ' — veille USB : ' + (r.veille || '?') + (carte ? ' — carte son du TRX : ' + carte : '') + (r.reparation ? ' — dernière réparation : ' + r.reparation : '') + hr +
-        (Number(r.version) < 6 ? ' — version 6 disponible (mise à l’heure de Windows directe comme NetTime, toutes les 15 min ; priorité basse) : retélécharger l’assistant et refaire installer-carte-son.cmd' : '')
+        (DXC && Number(r.version) < 7 ? ' — version 7 NÉCESSAIRE pour DX Commander (relais vers Commander) : retélécharger l’assistant et refaire installer-carte-son.cmd'
+          : Number(r.version) < 6 ? ' — version 6 disponible (mise à l’heure de Windows directe comme NetTime, toutes les 15 min ; priorité basse) : retélécharger l’assistant et refaire installer-carte-son.cmd' : '')
         : ' — version 3 disponible (répare seule la carte son mise en erreur par Windows, coupe la veille USB) : retélécharger l’assistant et refaire installer-carte-son.cmd')
       : 'Assistant carte son : non installé sur ce PC (fichier installer-carte-son.cmd, voir l’aide) — pour relancer la carte son, éteindre et rallumer le TRX';
     $('btnAudReset').disabled = !helperOk || aud.resetting;
-    $('helperDl').hidden = helperOk && Number(r.version) >= 6;
+    $('helperDl').hidden = helperOk && Number(r.version) >= (DXC ? 7 : 6);
     return helperOk;
   }
   setTimeout(helperCheck, 1500);
@@ -1404,6 +1506,12 @@
     }
     store.set('baud.' + MODEL, $('cfgBaud').value);
     store.set('stop.' + MODEL, $('cfgStop').value);
+    if (DXC) {
+      const tp = Math.round(Number($('cfgDxcPort').value));
+      if (tp >= 1 && tp <= 65535) store.set('dxc.port', String(tp)); else log('Port TCP de DX Commander : 1 à 65535', 'st-bad');
+      const w = Math.round(Number($('cfgDxcWatts').value));
+      if (w >= 1 && w <= 2000) { store.set('dxc.watts', String(w)); RIG.setWatts(w); } else log('Puissance réglée sur le TRX : 1 à 2000 W', 'st-bad');
+    }
     if ($('cfgModel').value !== MODEL) {
       store.set('model', $('cfgModel').value);
       log('Modèle changé : rechargement de la page');

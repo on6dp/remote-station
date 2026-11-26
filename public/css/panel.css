@@ -515,6 +515,7 @@ button, input, select { font: inherit; color: inherit; }
 .st-read { font-size: 1.25rem; color: var(--vfd); background: var(--glass); border-radius: 6px; padding: 8px 12px; margin: 10px 0; }
 .st-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
 .st-form label { display: grid; gap: 4px; font-size: .9rem; }
+.st-form label[hidden] { display: none; }
 .st-form input, .st-form select {
   width: 100%; min-width: 0;
   padding: 7px 8px; border-radius: 6px; border: 1px solid #15171a; background: #191b1e;

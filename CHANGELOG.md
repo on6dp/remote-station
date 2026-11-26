@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.92** — Nouveau modèle de TRX « DX Commander (DXLab) » : la page Station passe par Commander (fréquence, mode, PTT ; FT8 / FT4 et phonie), qui garde le TRX partagé avec les autres logiciels du PC du club. Assistant Windows version 7 (relais vers Commander, retour en réception si la page se tait pendant une émission). Puissance réglée sur le TRX déclarée sur la page Station (limite de licence).
 - **0.43.91** — Page Station : port CAT partagé avec VSPE (ports virtuels) — à la réouverture, la page essaie les ports virtuels autorisés et garde celui où le bon TRX répond (Icom : adresse CI-V ; Yaesu : réponse à ID;). Aide : configuration VSPE et pièges (vitesse, USB SEND / USB Keying OFF).
 - **0.43.90** — FT8 : passe normale dès 13,5 s d'audio, bande coupée en 3 morceaux décodés en même temps (serveur à 6 cœurs) : décodages avant la fin de la période. Passe QSO : le correspondant d'abord ; émission retenue jusqu'à 1,3 s si sa réponse est encore cherchée. Ordre d'émission donné plus tôt si le TRX tarde (VFO, SPLIT). 2 à la fois : plus de coupure et relance en retard pour ajouter le 2e QSO. Infobulle du DT de la ligne TX : d'où vient le retard.
 - **0.43.89** — FT8 : passe QSO renforcée (profondeur Deep + a8 autour du correspondant si sa réponse n'est pas trouvée tout de suite) : réponse faible (−22 / −23 dB) moins d'une seconde après la fin de la période. Ligne TX de la page FT : DT réel de votre émission (orange si départ trop tardif).

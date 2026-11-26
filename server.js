@@ -18,7 +18,8 @@ const DRIVERS = {
   ftdx101: require('./public/js/ftdx101.js'),
   ftdx5000: require('./public/js/ftdx5000.js'),
   ic7300: require('./public/js/ic7300.js'),
-  ic7760: require('./public/js/ic7760.js')
+  ic7760: require('./public/js/ic7760.js'),
+  dxcommander: require('./public/js/dxcommander.js')
 };
 const DEFAULT_RIG = DRIVERS.ftx1;
 const rig = () => (station && station.rig) || DEFAULT_RIG;
@@ -2179,7 +2180,7 @@ let catAsk = null; // dernière lecture CAT demandée par un administrateur (ré
 let stationBounce = null; // rechargement à distance d'une ancienne page Station en cours
 const STATION_CODE = (() => {
   const h = crypto.createHash('sha256');
-  for (const f of ['station.html', 'js/station.js', 'js/station-core.js', 'js/yaesu.js', 'js/ftx1.js', 'js/ftdx10.js', 'js/ftdx101.js', 'js/ftdx5000.js', 'js/ic7300.js', 'js/ic7760.js', 'js/rigs-catalog.js', 'js/ulaw.js', 'js/ftxenc.js', 'js/ftx-enc.wasm']) {
+  for (const f of ['station.html', 'js/station.js', 'js/station-core.js', 'js/yaesu.js', 'js/ftx1.js', 'js/ftdx10.js', 'js/ftdx101.js', 'js/ftdx5000.js', 'js/ic7300.js', 'js/ic7760.js', 'js/dxcommander.js', 'js/rigs-catalog.js', 'js/ulaw.js', 'js/ftxenc.js', 'js/ftx-enc.wasm']) {
     try { h.update(fs.readFileSync(path.join(PUB, f))); } catch (e) { h.update(f); }
   }
   return h.digest('hex').slice(0, 16);
@@ -2359,6 +2360,7 @@ function maxWattsFor(call) {
 let lastPowerFix = 0;
 function limitPower(conn, why) {
   if (!conn || !conn.user || conn.user.rxOnly || radio.power == null || radio.power <= conn.user.maxWatts) return false;
+  if (rig().NO_POWER_SET) return false; // DX Commander : puissance déclarée, jamais commandée (l'émission est refusée)
   const range = rig().POWER_RANGE[radio.powerHead];
   if (!range || conn.user.maxWatts < range[0]) return false;
   const now = Date.now();
@@ -2611,7 +2613,7 @@ function txBlockReason(conn, forTune) {
     !inTxRange(txFreq()) ? 'fréquence d’émission hors des bandes autorisées' + (radio.txVfo === 1 ? ' (VFO B en SPLIT)' : '') :
     licenceBandWhy(conn.user.call, txFreq()) ? licenceBandWhy(conn.user.call, txFreq()) :
     radio.power == null ? 'puissance du TRX inconnue' :
-    radio.power > conn.user.maxWatts ? 'puissance ' + radio.power + ' W au-delà de votre limite (' + conn.user.maxWatts + ' W)' :
+    radio.power > conn.user.maxWatts ? 'puissance ' + radio.power + ' W au-delà de votre limite (' + conn.user.maxWatts + ' W)' + (rig().NO_POWER_SET ? ' — puissance déclarée sur la page Station (' + rig().NAME + ' ne la transmet pas) : à baisser au club sur le TRX et sur la page Station' : '') :
     forTune && radio.tuner == null ? 'pas de boîte d’accord sur ce TRX (FTX-1 : ampli SPA-1 débranché ?)' :
     !forTune && swrLocked() ? swrLockText() :
     null;
@@ -5172,6 +5174,7 @@ function onOperator(conn, m) {
       }
       if (m.power != null) {
         const w = Number(m.power);
+        if (rig().NO_POWER_SET) return send(conn, { t: 'notice', level: 'error', msg: 'Puissance : à régler sur le TRX au club (' + rig().NAME + ' ne la transmet pas ; puissance déclarée : ' + (radio.power || '?') + ' W)' });
         const range = rig().POWER_RANGE[radio.powerHead];
         if (!range) return send(conn, { t: 'notice', level: 'error', msg: 'Puissance non réglable : type de tête du TRX inconnu' });
         if (conn.user.rxOnly) return send(conn, { t: 'notice', level: 'error', msg: 'Indicatif d’écouteur : réglage de puissance non autorisé' });

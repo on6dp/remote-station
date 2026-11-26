@@ -11,6 +11,7 @@
     { id: 'ftdx5000', name: 'Yaesu FTDX5000', protocol: 'CAT Yaesu (RS-232)', ready: true },
     { id: 'ic7300', name: 'Icom IC-7300', protocol: 'CI-V', ready: true },
     { id: 'ic7760', name: 'Icom IC-7760', protocol: 'CI-V (USB de la tête de commande)', ready: true },
+    { id: 'dxcommander', name: 'DX Commander (DXLab)', protocol: 'TCP, par l’assistant Windows du club (version 7)', ready: true },
     { id: 'ic705', name: 'Icom IC-705', protocol: 'CI-V', ready: false },
     { id: 'ic7610', name: 'Icom IC-7610', protocol: 'CI-V', ready: false },
     { id: 'ic9700', name: 'Icom IC-9700', protocol: 'CI-V', ready: false },

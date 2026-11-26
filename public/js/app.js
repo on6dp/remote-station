@@ -214,6 +214,8 @@
     return b ? b[0] : 'GEN';
   }
   function powerRangeText(r) {
+    // DX Commander : puissance déclarée sur la page Station (réglée à la main sur le TRX)
+    if (RIG().NO_POWER_SET) return ' · puissance réglée sur le TRX au club (déclarée : ' + (r.power || '?') + ' W)';
     const range = RIG().POWER_RANGE && RIG().POWER_RANGE[r.powerHead];
     if (!range) return '';
     const fmt = (w) => String(w).replace('.', ',');

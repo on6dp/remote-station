@@ -93,13 +93,19 @@
         <input id="cfgToken" class="masked" type="text" name="rs-station-token" autocomplete="off" autocapitalize="off"
                spellcheck="false" data-lpignore="true" data-1p-ignore placeholder="jeton (48 caractères)">
       </label>
-      <label>Vitesse (bps)
+      <label id="cfgBaudL">Vitesse (bps)
         <select id="cfgBaud">
           <option>4800</option><option>9600</option><option>19200</option><option selected>38400</option><option>57600</option><option>115200</option>
         </select>
       </label>
-      <label>Bits de stop
+      <label id="cfgStopL">Bits de stop
         <select id="cfgStop"><option value="1" selected>1</option><option value="2">2</option></select>
+      </label>
+      <label id="cfgDxcPortL" hidden>Port TCP de DX Commander
+        <input id="cfgDxcPort" type="number" min="1" max="65535" step="1" value="52002" title="Port des commandes de Commander : port de base du « TCP Network Service » + 2 (52000 → 52002)">
+      </label>
+      <label id="cfgDxcWattsL" hidden>Puissance réglée sur le TRX (W)
+        <input id="cfgDxcWatts" type="number" min="1" max="2000" step="1" value="100" title="Commander ne transmet pas la puissance : elle sert à refuser l’émission aux opérateurs dont la licence est limitée en dessous. Réglez-la vraiment sur le TRX.">
       </label>
     </form>
     <p class="st-help" id="cfgLock" hidden>🔒 Jeton, vitesse et bits de stop verrouillés (pour éviter une fausse manœuvre). Pour les modifier : « Se déconnecter » en haut, puis se reconnecter avec l’indicatif ON6DP ou ON4LUC et son mot de passe.</p>
@@ -124,6 +130,7 @@
 <script src="/js/ftdx5000.js"></script>
 <script src="/js/ic7300.js"></script>
 <script src="/js/ic7760.js"></script>
+<script src="/js/dxcommander.js"></script>
 <script src="/js/ulaw.js"></script>
 <script src="/js/ftxenc.js"></script>
 <script>
@@ -134,7 +141,7 @@
     document.getElementById('stAdmin').hidden = false;
     // Jeton, vitesse et bits de stop : verrouillés sauf pour les indicatifs autorisés (stationEditors : ON6DP, ON4LUC)
     if (!a.edit) {
-      for (const id of ['cfgToken', 'cfgBaud', 'cfgStop']) {
+      for (const id of ['cfgToken', 'cfgBaud', 'cfgStop', 'cfgDxcPort', 'cfgDxcWatts']) {
         const el = document.getElementById(id);
         el.disabled = true;
         el.title = 'Verrouillé : seuls ON6DP et ON4LUC, connectés à cette page avec leur indicatif, peuvent le modifier';

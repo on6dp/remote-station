@@ -286,6 +286,8 @@
       // Modulation présente si la puissance de sortie dépasse ~4 % de la pleine échelle (SSB : rien sans voix)
       const po = this.radio.m5;
       if (po != null && po > (this.rig.PO_MOD_MIN || 8)) this.lastMod = now;
+      // Liaison sans mesure de puissance (DX Commander) : seule la durée maximale d'émission reste contrôlée
+      if (this.rig.NO_METERS) this.lastMod = now;
       // Modes numériques (DATA, RTTY, PSK) : 20 s sans modulation suffisent (carte son figée pendant une série FT8…) ;
       // phonie et CW : délai normal (pauses de la voix et du manipulateur)
       const md = String((this.radio.vfoSel === 1 ? this.radio.modeB : this.radio.mode) || '');
@@ -1047,6 +1049,8 @@
      */
     _checkKeyed(by) {
       clearTimeout(this.keyTimer);
+      // Émission pas toujours relue (DX Commander : CmdSendTx pas pris en charge par tous les TRX) : pas de TX1 renvoyé
+      if (this.rig.TX_UNCONFIRMED) return;
       const at = Date.now();
       let tries = 0;
       const check = () => {
