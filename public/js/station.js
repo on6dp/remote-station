@@ -317,7 +317,7 @@
       await p.open({ baudRate, dataBits: 8, stopBits, parity: 'none', flowControl: 'none', bufferSize: 4096 });
     } catch (e) {
       log('Ouverture du port impossible : ' + e.message + ' (port déjà utilisé par un autre logiciel ?)', 'st-bad');
-      return;
+      return false;
     }
     // RTS/DTR au repos : évite toute émission accidentelle si RPTT SELECT est configuré
     try { await p.setSignals({ dataTerminalReady: false, requestToSend: false }); } catch (e) {}
@@ -326,8 +326,9 @@
     reader = p.readable.getReader();
     core.serialOpened();
     const info = p.getInfo ? p.getInfo() : {};
-    log('Port ouvert à ' + baudRate + ' bps, ' + stopBits + ' bit(s) de stop' + (info.usbVendorId ? ' (USB ' + info.usbVendorId.toString(16) + ':' + (info.usbProductId || 0).toString(16) + ')' : ''));
+    log('Port ouvert à ' + baudRate + ' bps, ' + stopBits + ' bit(s) de stop' + (info.usbVendorId ? ' (USB ' + info.usbVendorId.toString(16) + ':' + (info.usbProductId || 0).toString(16) + ')' : ' (port virtuel : VSPE, com0com… — même vitesse à régler dans le partage du port)'));
     readLoop();
+    return true;
   }
 
   async function readLoop() {
@@ -335,7 +336,7 @@
       for (;;) {
         const { value, done } = await reader.read();
         if (done) break;
-        if (value) core.onSerialData(value); // octets bruts : le pilote les découpe (texte Yaesu ou trames CI-V)
+        if (value) { if (idTap) idTap.feed(value); core.onSerialData(value); } // octets bruts : le pilote les découpe (texte Yaesu ou trames CI-V)
       }
     } catch (e) {
       log('Lecture série interrompue : ' + e.message, 'st-warn');
@@ -382,12 +383,65 @@
     if (p) store.set(PORT_KEY + '.id', JSON.stringify(portIdent(p, ports)));
     return p;
   }
+  // Ports virtuels (VSPE, com0com… pour partager le port CAT avec d'autres logiciels) : Chrome n'en donne ni le nom
+  // (COM16) ni d'identité USB, et leur ordre dans sa liste peut changer. Le port mémorisé est donc vérifié à la
+  // réouverture : on essaie les ports virtuels autorisés (le mémorisé d'abord) et on garde celui où CE TRX répond
+  // (Icom : son adresse CI-V ; Yaesu : la même réponse à « ID; » que lors du choix du port).
+  const isVirt = (p) => { const i = (p && p.getInfo && p.getInfo()) || {}; return !i.usbVendorId && !i.usbProductId; };
+  const YAESU_ID = (RIG.CAT_QUERIES || []).indexOf('ID;') >= 0;
+  let idTap = null;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  function waitId(ms) {
+    return new Promise((resolve) => {
+      let buf = '';
+      const t = setTimeout(() => { idTap = null; resolve(''); }, ms);
+      idTap = { feed: (v) => {
+        for (const b of v) buf += String.fromCharCode(b);
+        const m = buf.match(/ID(\d{3,4});/);
+        if (m) { clearTimeout(t); idTap = null; resolve(m[1]); } else if (buf.length > 4000) buf = buf.slice(-200);
+      } };
+    });
+  }
+  // Port virtuel choisi à la main : réponse à « ID; » retenue (Yaesu) pour le reconnaître ensuite
+  async function learnId() {
+    if (!YAESU_ID || !port || !isVirt(port)) return;
+    await sleep(1500);
+    if (!port || !core.radio.connected) return;
+    const w = waitId(3000);
+    core._write('ID;', true);
+    const id = await w;
+    if (id) { store.set(PORT_KEY + '.idr', id); log('Port virtuel : ' + RIG.NAME + ' reconnu (ID ' + id + ')'); }
+  }
+  async function probeVirtual(ports, first) {
+    const virt = ports.filter(isVirt);
+    const order = [first].concat(virt.filter((q) => q !== first)).filter(Boolean);
+    const want = YAESU_ID ? store.get(PORT_KEY + '.idr', '') : '';
+    for (const q of order) {
+      if (!(await openPort(q))) continue;
+      const t0 = Date.now();
+      while (Date.now() - t0 < 3500 && port === q && !core.radio.connected) await sleep(150);
+      let id = '';
+      if (want && port === q && core.radio.connected) { const w = waitId(2500); core._write('ID;', true); id = await w; }
+      if (port === q && core.radio.connected && (!want || id === want)) {
+        rememberPort(q, ports);
+        if (q !== first) log('Port virtuel du ' + RIG.NAME + ' retrouvé (le ' + (virt.indexOf(q) + 1) + 'e des ports virtuels autorisés)');
+        return true;
+      }
+      log('Port virtuel ' + (virt.indexOf(q) + 1) + ' de ' + virt.length + ' : ' + (core.radio.connected ? 'un autre TRX y répond (ID ' + (id || '?') + ')' : 'le ' + RIG.NAME + ' n’y répond pas') + ' — essai du suivant', 'st-warn');
+      await closePort(false);
+      await sleep(300);
+    }
+    return false;
+  }
   async function reopenRemembered() {
     if (!('serial' in navigator)) return;
     const ports = await navigator.serial.getPorts();
     const idx = Number(store.get(PORT_KEY, '-1'));
     const rp = findRemembered(ports);
-    if (rp) {
+    if (rp && isVirt(rp) && ports.filter(isVirt).length > 1) {
+      log('Réouverture du port virtuel mémorisé pour ' + RIG.NAME + ' (vérifié : c’est bien lui qui répond ?)');
+      if (!(await probeVirtual(ports, rp))) log('Aucun des ports virtuels autorisés ne répond comme le ' + RIG.NAME + ' : partage du port (VSPE) démarré ? vitesse ? sinon « Choisir le port du TRX »', 'st-bad');
+    } else if (rp) {
       log('Réouverture du port mémorisé pour ' + RIG.NAME);
       await openPort(rp);
     } else if (idx >= 0) {
@@ -440,8 +494,9 @@
       await closePort(false);
       const ports = await navigator.serial.getPorts();
       rememberPort(p, ports);
+      store.set(PORT_KEY + '.idr', '');
       if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'ports', ports: rememberedPorts() }));
-      await openPort(p);
+      if (await openPort(p)) learnId();
     } catch (e) {
       if (e.name !== 'NotFoundError') log('Choix du port : ' + e.message, 'st-bad');
     }
