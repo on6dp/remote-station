@@ -44,6 +44,9 @@ le TRX et le partage avec les autres logiciels du PC ; la page Station lui envoi
 l'assistant (Commander n'accepte que les logiciels du meme PC). Dans Commander : Configuration, onglet Ports,
 "TCP Network Service" : cocher "Accept commands" (port de base 52000, commandes sur 52002). Securite : si la page
 Station ne donne plus de nouvelles pendant 3 s alors que le TRX emet, l'assistant le remet lui-meme en reception.
+L'assistant ne lance pas Commander : le faire demarrer avec Windows (touche Windows + R, shell:startup, Entree,
+puis copier dans ce dossier un raccourci vers DX Commander ou vers DXLab Launcher). La page Station se connecte
+toute seule des que Commander est ouvert (nouvel essai toutes les 10 s).
 Pour passer a la version 7 : retelecharger l'assistant (page Station) et refaire un double-clic sur
 installer-carte-son.cmd.
 Si la page Station constate 45 s d'entree son muette (TRX en reception), elle relance seule la carte son
