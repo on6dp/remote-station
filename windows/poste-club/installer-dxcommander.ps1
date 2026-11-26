@@ -29,7 +29,7 @@ $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument ('-NoProfi
 $quand = New-ScheduledTaskTrigger -AtStartup
 $qui = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
 $regl = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) `
-  -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
+  -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew -Priority 4 # priorité normale (7 par défaut : en dessous)
 Register-ScheduledTask -TaskName $Nom -Action $action -Trigger $quand -Principal $qui -Settings $regl `
   -Description 'Remote Station : relais vers DX Commander (DXLab) pour la page Station (http://127.0.0.1:18098)' | Out-Null
 Start-ScheduledTask -TaskName $Nom

@@ -1149,7 +1149,7 @@
       }
     }
     if (c.id === 'vfoSel' && v != null) target = v ? 'B' : 'A'; // MAIN / SUB : les cadres suivent ce VFO
-    if (c.type !== 'action') ctlPending[c.id] = { v, at: Date.now() };
+    if (c.type !== 'action' && c.type !== 'seq') ctlPending[c.id] = { v, at: Date.now() };
     send({ t: 'set', ctl: c.id, value: v });
     // Tuner mis en service mais relu « hors service » : le TRX ne l'a pas pris (menu du TRX, tuner absent…)
     if (c.id === 'tuner' && v === 1) {
@@ -1191,6 +1191,7 @@
     for (const k in LAYOUT) for (const id of LAYOUT[k]) { where[id] = boxes[k]; if (R.CONTROL && R.CONTROL[id]) order.push(R.CONTROL[id]); }
     for (const c of R.CONTROLS || []) if (order.indexOf(c) < 0) order.push(c);
     for (const c of order) {
+      if (c.custom) continue; // séquences DX Commander : cadre à part (dxcSeqDraw)
       if (IN_VFO.indexOf(c.id) >= 0) continue; // RIT / XIT / CLEAR : sur les écrans VFO
       if (c.id === 'contourFreqB' || c.id === 'apfFreqB' || c.id === 'nbLvlB' || c.id === 'nrLvlB') continue; // côté SUB : par le curseur du VFO sélectionné
       if (c.face && c.id !== 'contourFreq' && c.id !== 'apfFreq') continue; // réglages propres à la page Face avant (ex. AF du SUB, BK-IN du FTDX101) ; fréquences CONTOUR / APF aussi au dashboard
@@ -1284,7 +1285,36 @@
   }
   let trxSince = 0;
   let lastBand = null, warnBand = null, warnAt = 0; // bande affichée / bande changée en attente d'un TUNE
+  // Modèle « DX Commander » choisi sur la page Station : boutons des séquences de commandes de Commander que la page
+  // Station propose (n° et nom choisis au club) ; cadre caché pour tous les autres modèles
+  let dxcSeqKey = '';
+  function dxcSeqDraw(r, onAir) {
+    const box = $('panelDxcSeq');
+    if (!box) return;
+    const list = st && st.rigModel === 'dxcommander' && Array.isArray(st.dxcSeq) ? st.dxcSeq : [];
+    box.hidden = !list.length;
+    const keys = $('dxcSeqKeys');
+    const key = list.map((x) => x.n + '=' + x.label).join('|');
+    if (key !== dxcSeqKey) {
+      dxcSeqKey = key;
+      keys.textContent = '';
+      for (const x of list) {
+        const b = mkBtn(x.label, 'accent');
+        b.dataset.seq = String(x.n);
+        b.title = 'Lance la séquence n° ' + x.n + ' de DX Commander (« ' + x.label + ' »)';
+        b.addEventListener('click', () => sendCtl({ id: 'seq', type: 'seq' }, x.n));
+        keys.appendChild(b);
+      }
+    }
+    const off = !iControl() || onAir || !r.connected;
+    for (const b of keys.querySelectorAll('button')) {
+      b.disabled = off;
+      if (off) b.title = !iControl() ? 'Prenez la main pour lancer une séquence' : onAir ? 'Pas pendant une émission' : 'TRX pas connecté';
+      else b.title = 'Lance la séquence n° ' + b.dataset.seq + ' de DX Commander (« ' + b.textContent + ' »)';
+    }
+  }
   function updateControls(r, onAir) {
+    dxcSeqDraw(r, onAir);
     const blocked = !iControl() || onAir;
     if (!r.connected) trxSince = 0; else if (!trxSince) trxSince = Date.now();
     // Pas de boîte d'accord (ex. FTX-1 sans l'ampli SPA-1) : la radio ne répond pas à la lecture du tuner → on cache TUNER et TUNE

@@ -88,29 +88,52 @@
     $('btnPort').textContent = 'Se connecter à DX Commander';
     $('btnClose').textContent = 'Fermer la liaison';
     for (const id of ['cfgBaudL', 'cfgStopL']) { const el = $(id); if (el) el.hidden = true; }
-    for (const id of ['cfgDxcPortL', 'cfgDxcWattsL']) { const el = $(id); if (el) el.hidden = false; }
+    for (const id of ['cfgDxcPortL', 'cfgDxcWattsL', 'cfgDxcSeqL']) { const el = $(id); if (el) el.hidden = false; }
     $('cfgDxcPort').value = store.get('dxc.port', '52002');
     $('cfgDxcWatts').value = store.get('dxc.watts', '100');
+    if ($('cfgDxcSeq')) $('cfgDxcSeq').value = dxcSeqText(dxcSeqList(store.get('dxc.seq', '')));
+    RIG.setSeqs(dxcSeqList(store.get('dxc.seq', '')).map((x) => x.n));
     const cwRow = $('cwPortRow'); if (cwRow) cwRow.style.display = 'none'; // pas de manipulation CW par Commander
     RIG.setWatts(Number(store.get('dxc.watts', '100')));
   }
+  // Séquences de Commander proposées au tableau de bord : « n° = nom » par ligne (n° 1 à 32, nom de 20 caractères au plus)
+  function dxcSeqList(txt) {
+    const out = [];
+    for (const l of String(txt || '').split(/\r?\n/)) {
+      const m = /^\s*(\d{1,2})\s*[=:;-]?\s*(.+?)\s*$/.exec(l);
+      if (!m) continue;
+      const n = Number(m[1]), label = m[2].replace(/[<>\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 20);
+      if (n >= 1 && n <= 32 && label && !out.some((x) => x.n === n)) out.push({ n, label });
+    }
+    return out.slice(0, 32);
+  }
+  function dxcSeqText(list) { return list.map((x) => x.n + ' = ' + x.label).join('\n'); }
+  function dxcSeqSend() { if (DXC) core.sendWs({ t: 'dxc_seq', list: dxcSeqList(store.get('dxc.seq', '')) }); }
   // ------------------------------------------------------------ DX Commander (par l'assistant Windows du club)
-  // Messages de Commander envoyés par paquets à http://127.0.0.1:18099/dxc ; ses réponses reviennent au pilote ligne par
-  // ligne. Jamais de réglage perdu : seules de vieilles lectures sont oubliées si Commander prend du retard.
+  // Messages de Commander envoyés par paquets à http://127.0.0.1:18098/dxc ; ses réponses reviennent au pilote ligne par
+  // ligne. Jamais de réglage perdu : seules de vieilles lectures sont oubliées si Commander prend du retard. Le relais
+  // (version 2) lit Commander de son côté et répond aux lectures tout de suite ; les commandes partent sans attendre.
   const dxc = { q: [], busy: false, fails: 0, ok: false };
   // Relais DX Commander : petit programme à part de l'assistant carte son (rs-dxcommander.ps1, installer-dxcommander.cmd)
   const DXC_RELAY = 'http://127.0.0.1:18098';
   const isQuery = (l) => /^<command:\d+>Cmd(Get|Send)/.test(l);
   function dxcWrite(s) {
     if (typeof s !== 'string') return;
-    for (const l of s.split('\n')) if (l) dxc.q.push(l);
+    for (const l of s.split('\n')) {
+      if (!l) continue;
+      // Même lecture déjà en attente : pas deux fois (Commander en retard ne doit pas faire grossir la file)
+      if (isQuery(l)) { if (dxc.q.indexOf(l) < 0) dxc.q.push(l); continue; }
+      // Commandes (émission, fréquence, mode, séquence) devant les lectures en attente, dans leur ordre : elles partent tout de suite
+      const i = dxc.q.findIndex(isQuery);
+      if (i < 0) dxc.q.push(l); else dxc.q.splice(i, 0, l);
+    }
     while (dxc.q.length > 40) { const i = dxc.q.findIndex(isQuery); if (i < 0) break; dxc.q.splice(i, 1); }
     dxcPump();
   }
   async function dxcPump() {
     if (dxc.busy || !dxc.q.length || !port || !port.dxc) return;
     dxc.busy = true;
-    const batch = dxc.q.splice(0, 8);
+    const batch = dxc.q.splice(0, 20);
     try {
       const r = await fetch(DXC_RELAY + '/dxc', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: batch.join('\n'), cache: 'no-store' });
       const j = await r.json();
@@ -133,7 +156,8 @@
       await new Promise((res) => setTimeout(res, 300));
     }
     dxc.busy = false;
-    if (dxc.q.length) setTimeout(dxcPump, 0);
+    // Paquet suivant sans minuterie (Chrome ralentit les minuteries des fenêtres en arrière-plan)
+    if (dxc.q.length) Promise.resolve().then(dxcPump);
   }
   async function dxcConnect(manual) {
     const p = Math.round(Number(store.get('dxc.port', '52002'))) || 52002;
@@ -143,7 +167,7 @@
       j = await r.json();
     } catch (e) {
       // Relais pas installé (ou bloqué par l'antivirus) : dit une fois, pas à chaque essai (toutes les 10 s)
-      if (manual || dxc.why !== 'absent') log('DX Commander : relais DX Commander injoignable sur ce PC (http://127.0.0.1:18098) — « Télécharger l’assistant carte son », décompresser, double-clic sur installer-dxcommander.cmd ; s’il ne démarre pas, exception dans l’antivirus pour C:\\ProgramData\\RemoteStation\\rs-dxcommander.ps1', 'st-bad');
+      if (manual || dxc.why !== 'absent') log('DX Commander : relais DX Commander injoignable sur ce PC (http://127.0.0.1:18098) — « Télécharger l’assistant carte son », décompresser, double-clic sur installer-poste-club.cmd (ou installer-dxcommander.cmd) ; s’il ne démarre pas, exception dans l’antivirus pour C:\\ProgramData\\RemoteStation\\rs-dxcommander.ps1', 'st-bad');
       dxc.why = 'absent';
       return false;
     }
@@ -155,6 +179,9 @@
       return false;
     }
     dxc.why = '';
+    // Relais d'avant la version 2 : il attendait chaque réponse de Commander, l'ordre d'émission partait avec des secondes de retard
+    dxc.old = !(Number(j.version) >= 2);
+    if (dxc.old) log('DX Commander : relais DX Commander ancien (version ' + (j.version || '?') + ') — passage en émission et changements de bande lents. Installez la nouvelle version : « Télécharger l’assistant carte son », décompresser, double-clic sur installer-poste-club.cmd', 'st-bad');
     // Séparateur décimal attendu par Commander (celui de la session Windows où il tourne) : lu sur CmdSendFreq, qui écrit
     // la fréquence à la façon de Windows (« 14 074,000 » ou « 14,074.000 ») ; sinon celui de l'assistant
     let dec = j.dec;
@@ -277,6 +304,7 @@
           if (down >= 5) log('Liaison rétablie après ' + down + ' s (' + d.how + ')', 'st-warn');
         }
         core.wsOpened();
+        dxcSeqSend(); // modèle DX Commander : boutons des séquences de Commander pour le tableau de bord
         if (aud.ctx) ws.send(JSON.stringify({ t: 'audio_state', active: true }));
         txOutSent = ''; sendTxOut();
         try { ws.send(JSON.stringify({ t: 'ping', ts: Date.now() })); } catch (e) {} // première mesure de l'horloge
@@ -839,7 +867,7 @@
         : ' — version 3 disponible (répare seule la carte son mise en erreur par Windows, coupe la veille USB) : retélécharger l’assistant et refaire installer-carte-son.cmd')
       : 'Assistant carte son : non installé sur ce PC (fichier installer-carte-son.cmd, voir l’aide) — pour relancer la carte son, éteindre et rallumer le TRX';
     $('btnAudReset').disabled = !helperOk || aud.resetting;
-    $('helperDl').hidden = helperOk && Number(r.version) >= 6 && !(DXC && !dxc.ok);
+    $('helperDl').hidden = helperOk && Number(r.version) >= 6 && !(DXC && (!dxc.ok || dxc.old));
     return helperOk;
   }
   setTimeout(helperCheck, 1500);
@@ -1512,6 +1540,13 @@
       if (tp >= 1 && tp <= 65535) store.set('dxc.port', String(tp)); else log('Port TCP de DX Commander : 1 à 65535', 'st-bad');
       const w = Math.round(Number($('cfgDxcWatts').value));
       if (w >= 1 && w <= 2000) { store.set('dxc.watts', String(w)); RIG.setWatts(w); } else log('Puissance réglée sur le TRX : 1 à 2000 W', 'st-bad');
+      if ($('cfgDxcSeq')) {
+        const sq = dxcSeqList($('cfgDxcSeq').value);
+        store.set('dxc.seq', dxcSeqText(sq));
+        $('cfgDxcSeq').value = dxcSeqText(sq);
+        RIG.setSeqs(sq.map((x) => x.n));
+        dxcSeqSend();
+      }
     }
     if ($('cfgModel').value !== MODEL) {
       store.set('model', $('cfgModel').value);

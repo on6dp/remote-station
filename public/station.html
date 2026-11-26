@@ -107,6 +107,9 @@
       <label id="cfgDxcWattsL" hidden>Puissance réglée sur le TRX (W)
         <input id="cfgDxcWatts" type="number" min="1" max="2000" step="1" value="100" title="Commander ne transmet pas la puissance : elle sert à refuser l’émission aux opérateurs dont la licence est limitée en dessous. Réglez-la vraiment sur le TRX.">
       </label>
+      <label id="cfgDxcSeqL" hidden>Séquences de Commander en boutons au tableau de bord (une par ligne : n° = nom)
+        <textarea id="cfgDxcSeq" rows="3" maxlength="800" spellcheck="false" placeholder="3 = ATU&#10;5 = Ant 2" title="N° de la séquence dans Commander (User-defined Controls : 1 à 32) et nom du bouton (20 caractères au plus). Ne proposez pas de séquence qui fait émettre ou change la puissance : le serveur ne peut pas les contrôler."></textarea>
+      </label>
     </form>
     <p class="st-help" id="cfgLock" hidden>🔒 Jeton, vitesse et bits de stop verrouillés (pour éviter une fausse manœuvre). Pour les modifier : « Se déconnecter » en haut, puis se reconnecter avec l’indicatif ON6DP ou ON4LUC et son mot de passe.</p>
     <div class="st-actions">
@@ -141,7 +144,7 @@
     document.getElementById('stAdmin').hidden = false;
     // Jeton, vitesse et bits de stop : verrouillés sauf pour les indicatifs autorisés (stationEditors : ON6DP, ON4LUC)
     if (!a.edit) {
-      for (const id of ['cfgToken', 'cfgBaud', 'cfgStop', 'cfgDxcPort', 'cfgDxcWatts']) {
+      for (const id of ['cfgToken', 'cfgBaud', 'cfgStop', 'cfgDxcPort', 'cfgDxcWatts', 'cfgDxcSeq']) {
         const el = document.getElementById(id);
         el.disabled = true;
         el.title = 'Verrouillé : seuls ON6DP et ON4LUC, connectés à cette page avec leur indicatif, peuvent le modifier';

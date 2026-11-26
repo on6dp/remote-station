@@ -2,6 +2,7 @@
 
 ## v0.15 — FT2
 
+- **0.43.96** — DX Commander : relais version 2 (passage en émission et changements de bande sans retard : lectures de Commander en fond, commandes envoyées tout de suite) ; boutons des séquences de Commander au tableau de bord (cadre « DX Commander », seulement avec ce modèle, réglés sur la page Station) ; installateur unique du PC du club installer-poste-club.cmd (VSPE conseillé, DX Commander, OmniRig : déjà installé → passer ou écraser ; assistant carte son, relais, démarrage avec Windows, menu Démarrer) ; aide : VSPE de préférence, DX Commander avec des fonctions en moins.
 - **0.43.95** — Assistant carte son version 8 (comme la 6) : le relais vers DX Commander, qui faisait bloquer tout l'assistant par l'antivirus AVG, devient un petit programme à part (installer-dxcommander.cmd, port 18098), dans le même zip. L'installateur contourne un ancien fichier verrouillé par l'antivirus.
 - **0.43.94** — Page Station, modèle DX Commander : l'avis « assistant Windows version 7 nécessaire » n'est plus répété toutes les 10 s.
 - **0.43.93** — Aide, guide et LISEZMOI de l'assistant : démarrage automatique de DX Commander avec Windows (la page Station s'y connecte toute seule), réglages VSPE (« Not allowed to block read flow »), CW de l'IC-7300 à travers VSPE.

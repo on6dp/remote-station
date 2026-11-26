@@ -1,5 +1,28 @@
 Remote Station UBA-LGE - assistant "carte son du TRX" (PC du club)
 
+Le plus simple : TOUT INSTALLER D'UN COUP
+  Double-clic sur installer-poste-club.cmd, accepter la demande d'administrateur, puis repondre aux questions
+  (Entree = reponse proposee). Dans l'ordre :
+   1. VSPE (Eterlogic) : partage du port CAT du TRX entre la page Station et les autres logiciels (log, WSJT-X...).
+      C'est la solution conseillee : la page Station parle directement au TRX (S-metre, filtres, DSP, menus,
+      spectre, passage en emission rapide).
+   2. DX Commander (DXLab) : fonctionne aussi, mais avec des fonctions en moins sur la page Station (frequence,
+      mode, emission et sequences de Commander ; pas de S-metre, filtres, DSP, menus ni spectre).
+   3. OmniRig : seulement si un autre logiciel du club en a besoin (la page Station ne l'utilise pas ; OmniRig et
+      la page Station ne peuvent pas ouvrir le meme port COM : avec VSPE, chacun son port virtuel).
+   4. l'assistant carte son (ci-dessous), 5. le relais DX Commander et DX Commander au demarrage de Windows,
+   6. la page Station au demarrage de Windows (Chrome, reglages anti-coupure), 7. le menu Demarrer "Remote Station"
+      (page Station, DX Commander, VSPE, journaux, retrait, ce lisez-moi).
+  VSPE, DX Commander ou OmniRig deja installe : le programme demande P = PASSER (garder la version installee) ou
+  E = ECRASER (reinstaller par-dessus). VSPE ecrase : sa configuration des ports (autostart.vspe) est gardee de cote
+  et remise en place ; gardez la cle de licence de VSPE 64 bits sous la main. DX Commander s'installe et se met a
+  jour par DXLab Launcher (Configuration, onglet "DXLab Apps", ligne Commander : Install, Upgrade ou Restore).
+  Leurs programmes d'installation ne sont pas dans ce zip : le programme les cherche dans ce dossier, son
+  sous-dossier "logiciels" et Telechargements ; sinon il ouvre leur page officielle de telechargement.
+  Antivirus : rien n'est regle automatiquement. Si AVG bloque un fichier (ex. "IDP.Generic" sur rs-dxcommander.ps1),
+  ajouter vous-meme une exception pour C:\ProgramData\RemoteStation\ et pour ce dossier, sortir le fichier de la
+  quarantaine et relancer installer-poste-club.cmd.
+
 A quoi ca sert
   La carte son USB integree au TRX se fige parfois en silence : la barre de niveau de la page Station
   reste vide et la cascade ne montre plus qu'un ronflement tout a gauche. Avant, il fallait eteindre et
@@ -47,7 +70,11 @@ l'ancien fichier est bloque par l'antivirus, l'installateur l'installe sous rs-c
 Relais DX Commander (seulement pour le modele "DX Commander" de la page Station)
   Commander pilote le TRX et le partage avec les autres logiciels du PC ; la page Station lui envoie frequence,
   mode et PTT par ce relais (Commander n'accepte que les logiciels du meme PC). Installation : double-clic sur
-  installer-dxcommander.cmd (message attendu : "Relais DX Commander installe et en marche (version 1).").
+  installer-poste-club.cmd ou installer-dxcommander.cmd (message attendu : "Relais DX Commander installe et en
+  marche (version 2).").
+  Version 2 : le relais lit Commander de son cote, en continu, et repond tout de suite a la page Station ; l'ordre
+  d'emission et les changements de frequence partent sans attendre derriere les lectures. Avec la version 1, le TRX
+  passait en emission plusieurs secondes trop tard et les changements de bande etaient lents.
   Dans Commander : Configuration, onglet Ports, "TCP Network Service" : cocher "Accept commands" (port de base
   52000, commandes sur 52002). Securite : si la page Station ne donne plus de nouvelles pendant 3 s alors que le
   TRX emet, le relais le remet lui-meme en reception. Le relais ne lance pas Commander : le faire demarrer avec
@@ -55,6 +82,8 @@ Relais DX Commander (seulement pour le modele "DX Commander" de la page Station)
   vers DXLab Launcher). La page Station se connecte toute seule des que Commander est ouvert (essai toutes les 10 s).
   Antivirus : si le relais ne demarre pas, ajouter une exception pour C:\ProgramData\RemoteStation\rs-dxcommander.ps1.
   Il ecoute sur http://127.0.0.1:18098. Journal : C:\ProgramData\RemoteStation\rs-dxcommander.log.
+  Sequences de Commander en boutons au tableau de bord : page Station, Reglages, "Sequences de Commander" (une par
+  ligne : n = nom, ex. "3 = ATU"). Ne proposer aucune sequence qui fait emettre ou change la puissance.
   Pour l'enlever : double-clic sur retirer-dxcommander.cmd.
 Si la page Station constate 45 s d'entree son muette (TRX en reception), elle relance seule la carte son
 (une fois toutes les 10 minutes au plus) et previent sur le dashboard.

@@ -8,7 +8,8 @@
  *   <command:N>Nom<parameters:M>paramètres, chaque paramètre <nom:longueur>valeur.
  *   Lectures : CmdGetFreq → <CmdFreq:n>14,074.000 (kHz, virgule des milliers, point décimal), CmdGetTXFreq → <CmdTXFreq:n>…,
  *   CmdSendMode → <CmdMode:n>USB, CmdSendSplit → <CmdSplit:n>ON / OFF, CmdSendTx → <CmdTX:n>ON / OFF (pas sur tous les TRX).
- *   Réglages : CmdSetFreq (xcvrfreq en kHz, séparateur décimal de Windows au club), CmdSetMode, CmdTX / CmdRX.
+ *   Réglages : CmdSetFreq (xcvrfreq en kHz, séparateur décimal de Windows au club), CmdSetMode, CmdTX / CmdRX ;
+ *   seqindex <1:n>0…31 : lance la séquence de commandes n° 1 à 32 de Commander (boutons du tableau de bord).
  * Ce que Commander ne transmet pas : mesures (S-mètre, puissance, ROS, ALC), filtres, DSP, menus, puissance d'émission,
  * accord, spectre du TRX. La puissance réglée sur le TRX est déclarée sur la page Station (contrôle de la limite de
  * licence de chaque opérateur). SPLIT et VFO B non commandés : derrière Commander, le modèle du TRX n'est pas connu
@@ -75,11 +76,21 @@
   const POWER_RANGE = { C: [1, 2000] };
   const POWER_STEP = { C: 1 };
 
-  // Aucun réglage par Commander (filtres, DSP, menus…) : liste vide
+  // Aucun réglage par Commander (filtres, DSP, menus…). Seule commande : lancer une séquence de commandes de Commander
+  // (« User-defined Controls », n° 1 à 32), par les boutons du tableau de bord que la page Station propose (liste SEQS)
+  let SEQS = null; // numéros proposés (page Station du club, relayés par le serveur) ; null : pas encore connus
+  const SEQ = { id: 'seq', g: 'seq', label: 'Séquence DX Commander', type: 'seq', custom: true, noTx: true,
+    write: (v) => msg('seqindex', par('1', String(v - 1))) }; // seqindex 0 = séquence n° 1
   const GROUPS = [];
-  const CONTROLS = [];
-  const CONTROL = {};
-  function validate() { throw new Error('réglage pas disponible par DX Commander'); }
+  const CONTROLS = [SEQ];
+  const CONTROL = { seq: SEQ };
+  function validate(id, value) {
+    if (id !== 'seq') throw new Error('réglage pas disponible par DX Commander');
+    const n = Number(value);
+    if (!(Number.isInteger(n) && n >= 1 && n <= 32)) throw new Error('séquence DX Commander : n° 1 à 32');
+    if (!SEQS || SEQS.indexOf(n) < 0) throw new Error('séquence DX Commander n° ' + n + ' : pas proposée par la page Station du club');
+    return n;
+  }
   const readFor = () => null;
 
   // ------------------------------------------------------------ réponses
@@ -146,6 +157,7 @@
         else if (c === 'CmdSetMode') { const n = pv('1'); if (n) v.mode = n; }
         else if (c === 'CmdTX') v.tx = 1;
         else if (c === 'CmdRX') v.tx = 0;
+        else if (c === 'seqindex') v.seq = Number(pv('1')) + 1;
       }
       if (out.length && this.onData) { const txt = out.join('\n') + '\n'; setTimeout(() => this.onData && this.onData(txt), 10); }
     }
@@ -168,11 +180,12 @@
     NO_SPLIT: true,
     setDecimal: (d) => { if (d === ',' || d === '.') DEC = d; },
     setWatts: (w) => { w = Math.round(Number(w)); if (w >= 1 && w <= 2000) WATTS = w; },
+    setSeqs: (l) => { SEQS = Array.isArray(l) ? l.map(Number).filter((n) => Number.isInteger(n) && n >= 1 && n <= 32) : null; },
     hzOf,
     CW: null, VOICE: null, SCOPE: null, TRX_EQ: null,
     Fake,
     serial: { baudRate: 0, stopBits: 1, portHint: 'DX Commander (TCP 52002, sur ce PC)' },
-    hint: 'DX Commander (DXLab) : Commander pilote le TRX et le partage avec les autres logiciels de ce PC. Dans Commander : Configuration → Ports → « TCP Network Service » : « Accept commands » coché (port de base 52000, commandes sur 52002). Il faut le relais DX Commander sur ce PC (dans le zip « Télécharger l’assistant carte son » : installer-dxcommander.cmd). Indiquez ci-dessous la puissance réglée sur le TRX : Commander ne la transmet pas, elle sert au contrôle de la limite de licence de chaque opérateur.'
+    hint: 'DX Commander (DXLab) : Commander pilote le TRX et le partage avec les autres logiciels de ce PC. Dans Commander : Configuration → Ports → « TCP Network Service » : « Accept commands » coché (port de base 52000, commandes sur 52002). Il faut le relais DX Commander sur ce PC (dans le zip « Télécharger l’assistant carte son » : installer-poste-club.cmd). Indiquez ci-dessous la puissance réglée sur le TRX : Commander ne la transmet pas, elle sert au contrôle de la limite de licence de chaque opérateur. Moins de fonctions qu’en liaison directe (pas de S-mètre, filtres, DSP, menus, spectre) : pour partager le port du TRX avec les autres logiciels, VSPE (Eterlogic) est préférable.'
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else {

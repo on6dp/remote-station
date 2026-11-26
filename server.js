@@ -2689,6 +2689,8 @@ function publicState() {
       ntp: ntpState.at ? ntpState : null, club: station && station.clock ? station.clock : null, flow: flowState(), late: ftLate.slice(-10) },
     rigName: station ? rig().NAME : null,
     rigModel: station ? rig().ID : null,
+    // Modèle DX Commander : boutons des séquences de Commander (n° et nom) proposés par la page Station
+    dxcSeq: station && rig().ID === 'dxcommander' && station.dxcSeq && station.dxcSeq.length ? station.dxcSeq : null,
     // TRX dont le port série est mémorisé sur le PC du club (changement à distance possible)
     rigPorts: station ? station.ports : {}
   };
@@ -5168,8 +5170,9 @@ function onOperator(conn, m) {
           if (!(swrLock && swrLock.tune)) swrLock = null;
           tuneWatch = { freq: txFreq(), at: Date.now(), saw: false, endAt: 0, call: conn.user.call, conn };
         }
+        if (c.type === 'seq') journal('dxc_seq', { call: conn.user.call, n: v, label: ((station.dxcSeq || []).find((x) => x.n === v) || {}).label || '' });
         toStation({ t: 'cmd', op: 'ctl', id: m.ctl, value: v, by: conn.user.call, subOk: !!cfg.ftx1SubCat, subSingle: !!cfg.ftx1SubSingle });
-        if (c.type !== 'action') { radio[m.ctl] = v; ctlCmd[m.ctl] = { v, at: Date.now() }; } // affichage optimiste
+        if (c.type !== 'action' && c.type !== 'seq') { radio[m.ctl] = v; ctlCmd[m.ctl] = { v, at: Date.now() }; } // affichage optimiste
         if (R.VIRTUAL_SPLIT && m.ctl === 'vfoSel') radio.txVfo = txSide(); // l'émission suit la réception (ou l'autre VFO en SPLIT)
       }
       if (m.power != null) {
@@ -5408,6 +5411,7 @@ function onStationAuth(conn, m) {
     caps: Array.isArray(m.caps) ? m.caps.map(String).slice(0, 40) : [] };
   conn.isStation = true;
   conn.everStation = true;
+  if (DRIVERS.dxcommander && DRIVERS.dxcommander.setSeqs) DRIVERS.dxcommander.setSeqs(null); // séquences : redites par la nouvelle page
   journal('station_online', { ip: conn.ip, model });
   // Fin d'un rechargement à distance d'une ancienne page : retour sur le TRX d'origine
   if (stationBounce && model === stationBounce.temp && Date.now() - stationBounce.at < 120000) {
@@ -5517,6 +5521,20 @@ function onStation(conn, m) {
       send(catAsk.conn, { t: 'cat_answer', cmd: String(m.cmd).slice(0, 12), reply: String(m.reply).slice(0, 60) });
     }
     catAsk = null;
+    return;
+  }
+  if (m.t === 'dxc_seq') {
+    // Modèle DX Commander : séquences de Commander proposées en boutons au tableau de bord (n° 1 à 32 et nom, choisis
+    // sur la page Station du club) ; seules celles-ci peuvent être lancées
+    const list = [];
+    if (Array.isArray(m.list)) for (const x of m.list.slice(0, 32)) {
+      const n = Math.round(Number(x && x.n));
+      const label = String((x && x.label) || '').replace(/[\u0000-\u001f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 20);
+      if (n >= 1 && n <= 32 && label && !list.some((y) => y.n === n)) list.push({ n, label });
+    }
+    station.dxcSeq = list;
+    if (DRIVERS.dxcommander && DRIVERS.dxcommander.setSeqs) DRIVERS.dxcommander.setSeqs(list.map((x) => x.n));
+    broadcast();
     return;
   }
   if (m.t === 'trx_note') {
